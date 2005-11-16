@@ -1,6 +1,6 @@
 __version_id__ = "$Id: IntelligentDiff.py 4080 2005-09-13 13:49:47Z tihocan $"
 
-import copy, os, shutil, string, sys
+import copy, os, string
 
 from   programs                      import PyTestError
 
@@ -18,24 +18,6 @@ class Resources:
     memorize = classmethod(memorize)                                
 
     def single_link(cls, path_to, resource, target_dir, must_exist=True):
-      
-        ## Under Cygwin, links are not appropriate as they are ".lnk" files,
-        ## not properly opened by PLearn. Thus we need to copy the files.
-        def system_symlink( resource, target ):
-            if (sys.platform == "cygwin"):
-                if (os.path.isdir(resource)):
-                    vprint( "Recursively copying resource: %s <- %s." \
-                            % ( target, resource ), 3 )
-                    shutil.copytree( resource, target, symlinks = False )
-                else:
-                    vprint( "Copying resource: %s <- %s." \
-                            % ( target, resource ), 3 )
-                    shutil.copy( resource, target )
-
-            else:
-                vprint( "Linking resource: %s -> %s." % ( target, resource ), 3 )
-                os.symlink( resource, target )
-
         ## Paths to the resource and target files
         resource_path = resource
         target_path   = target_dir
@@ -44,14 +26,13 @@ class Resources:
         if not os.path.isabs( resource_path ):
             resource_path = os.path.join( path_to, resource )
             target_path = os.path.join( path_to, target_dir, resource )
-        else:
-            target_path = os.path.join(target_dir, os.path.basename(resource))
-        assert not os.path.exists( target_path ), target_path
+            assert not os.path.exists( target_path ), target_path
         
         ## Linking
         if os.path.exists( resource_path ):
-            ## Linking
-            system_symlink( resource_path, target_path )
+            link_cmd = "ln -s %s %s" % ( resource_path, target_path )
+            vprint( "Linking resource: %s." % link_cmd, 3 )
+            os.system( link_cmd )
 
         elif must_exist:
             raise PyTestError(
@@ -88,20 +69,15 @@ class Resources:
         return md5
     md5sum = classmethod(md5sum)
 
-    def unlink_resources(cls, resources, target_dir):
-        for resource in resources:
-            path = os.path.join(target_dir, os.path.basename(resource))
+    def unlink_resources(cls, target_dir):
+        dirlist = os.listdir( target_dir )
+        for f in dirlist:
+            path = os.path.join( target_dir, f )
             if os.path.islink( path ):
                 vprint( "Removing link: %s." % path, 3 ) 
                 os.remove( path )
-            elif os.path.isfile( path ):
-                vprint( "Removing file: %s." % path, 3 )
-                os.remove( path )
-            elif os.path.isdir( path ):
-                vprint( "Removing directory: %s." % path, 3 )
-                os.remove( path )
-
     unlink_resources = classmethod(unlink_resources)
+        
 
 class IntelligentDiff:    
     
@@ -181,11 +157,6 @@ class IntelligentDiff:
         return self.differences
 
     def diff_directories(self, bench, other):
-        if toolkit.isvmat( bench ):
-            ### Ex: a '.dmat' directory represents a PLearn DiskVMatrix
-            self.diff_files(bench, other)
-            return
-
         other_list = os.listdir( other )
         toolkit.exempt_list_of( other_list,
                                 ppath.special_directories )
@@ -208,12 +179,10 @@ class IntelligentDiff:
             return
 
         if toolkit.isvmat( bench ):
-            diff_template = 'plearn_tests --no-version vmat diff %s %s ' \
-                            + str(self.test.precision)
+            diff_template = 'plearn --no-version vmat diff %s %s'
 
         if bench.endswith('_rw'):
-            diff_template = 'plearn_tests --no-version diff %s %s ' \
-                            + str(self.test.precision)
+            diff_template = 'plearn --no-version diff %s %s 1e-6'
         
         bench_dir = os.path.dirname(bench)
         other_dir = os.path.dirname(other)
@@ -242,9 +211,9 @@ class IntelligentDiff:
         
         ## Creating a temporary directory
         tmp_dir    = "%s.idiff_%s"\
-                     % (other, toolkit.date_time_random_string('_', '_', '-'))
+                     % (other, toolkit.date_time_random_string())
         os.mkdir( tmp_dir )
-        self.test.link_resources( tmp_dir )
+        self.test.linkResources( tmp_dir )
 
         ## Creating the canonized files
         os.chdir( tmp_dir )

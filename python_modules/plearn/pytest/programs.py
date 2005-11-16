@@ -71,7 +71,7 @@ class Program(PyTestObject):
                 "instead."
                 )
 
-    def get_name(self):
+    def getName(self):
         return self.name
         
     def get_path(self):
@@ -191,7 +191,7 @@ class Compilable(PyTestObject):
         raise NotImplementedError
     
 class GlobalCompilableProgram(GlobalProgram, Compilable):
-    def get_name(self):
+    def getName(self):
         return self.name+' --no-version'
 
     def path_to_target(self):

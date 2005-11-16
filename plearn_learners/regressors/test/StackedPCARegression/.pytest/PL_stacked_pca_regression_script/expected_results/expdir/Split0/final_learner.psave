@@ -1,0 +1,79 @@
+*1 ->StackedLearner(
+base_learners = 1 [ *2 ->PCA(
+ncomponents = 2 ;
+sigmasq = 0 ;
+normalize = 1 ;
+algo = "classical" ;
+horizon = -1 ;
+normalize_warning = 0 ;
+mu = 4 [ 0.0497776000000000537 0.104000866666666733 1.2889038000000006 0.203573999999998978 ] ;
+eigenvals = 2 [ 118.672460110070972 2.49715033832618793 ] ;
+eigenvecs = 2  4  [ 
+-0.044732322043845682 	-0.0758632537261853951 	-0.982297988853390702 	-0.165331325504956606 	
+0.533389571247938066 	-0.280198984783957883 	-0.135043923445805569 	0.786604877273427427 	
+]
+;
+expdir = "PYTEST__PL_stacked_pca_regression_script__RESULTS:expdir/Split0/LearnerExpdir/Base0/" ;
+seed = -1 ;
+stage = 1 ;
+n_examples = 150 ;
+inputsize = 4 ;
+targetsize = 2 ;
+weightsize = 0 ;
+forget_when_training_set_changes = 0 ;
+nstages = 1 ;
+report_progress = 1 ;
+verbosity = 1 ;
+nservers = 0 ;
+save_trainingset_prefix = "" ;
+oldest_observation = -1  )
+] ;
+combiner = *3 ->LinearRegressor(
+include_bias = 1 ;
+cholesky = 1 ;
+weight_decay = 0 ;
+output_learned_weights = 0 ;
+weights = 3  2  [ 
+16.0069061333333558 	17.6304524666666822 	
+-87.2554510136209274 	-52.8943537258218441 	
+-35.9391743888709172 	-3.77263769686746908 	
+]
+;
+AIC = 6.05769163403523425 ;
+BIC = 6.17811704579908483 ;
+resid_variance = 2 [ 21.4698224052213469 381.110381493486273 ] ;
+expdir = "PYTEST__PL_stacked_pca_regression_script__RESULTS:expdir/Split0/LearnerExpdir/Combiner/" ;
+stage = 0 ;
+n_examples = 150 ;
+inputsize = 2 ;
+targetsize = 2 ;
+weightsize = 0 ;
+forget_when_training_set_changes = 0 ;
+nstages = 1 ;
+report_progress = 1 ;
+verbosity = 1 ;
+nservers = 0 ;
+save_trainingset_prefix = ""  )
+;
+default_operation = "mean" ;
+splitter = *0 ;
+base_train_splitter = *0 ;
+train_base_learners = 1 ;
+normalize_base_learners_output = 0 ;
+precompute_base_learners_output = 1 ;
+put_raw_input = 0 ;
+share_learner = 0 ;
+nsep = 1 ;
+expdir = "" ;
+seed = -1 ;
+stage = 1 ;
+n_examples = 150 ;
+inputsize = 4 ;
+targetsize = 2 ;
+weightsize = 0 ;
+forget_when_training_set_changes = 0 ;
+nstages = 1 ;
+report_progress = 1 ;
+verbosity = 1 ;
+nservers = 0 ;
+save_trainingset_prefix = ""  )

@@ -1,0 +1,191 @@
+
+#####  Asserts  ###########################################################
+
+
+#####  The special dirnames . and ..  #####################################
+
+PPath('./foo/bar') == 'foo/bar'                             True
+
+PPath('foo/./bar') == 'foo/bar'                             True
+
+PPath('foo/../bar') == 'bar'                                True
+
+PPath('./foo/bar/../bar/../../foo/./bar') == 'foo/bar'      True
+
+PPath('././foo/bar') / PPath('../bar/../../foo/./bar') == 'foo/bar'
+
+                                                            True
+
+
+#####  Operators  #########################################################
+
+PPath('') == ''                                             True
+
+PPath('foo/bar') / '' == 'foo/bar/'                         True
+
+PPath('foo/bar') / 'file.cc' == 'foo/bar/file.cc'           True
+
+PPath('foo/bar/') / 'file.cc' == 'foo/bar/file.cc'          True
+
+
+#####  Methods up and dirname  ############################################
+
+PPath('PL_ROOT:').up()                                      FATAL ERROR: In PPath::up - Cannot go up on directory 'PL_ROOT:'
+
+PPath('').up()                                              FATAL ERROR: In PPath::up - Cannot go up on directory ''
+
+PPath('PL_ROOT:foo').up() == 'PL_ROOT:'                     True
+
+PPath('foo/bar').up() == 'foo'                              True
+
+PPath('foo/bar/').up() == 'foo'                             True
+
+PPath('foo.cc').dirname() == '.'                            True
+
+PPath('foo/bar').dirname() == 'foo'                         True
+
+PPath('foo/bar/').dirname() == 'foo/bar'                    True
+
+PPath('foo/bar/hi.cc').dirname() == 'foo/bar'               True
+
+
+#####  Methods extension and no_extension  ################################
+
+PPath('foo/bar/hi.cc').extension() == 'cc'                  True
+
+PPath('foo/bar.dir/hi.cc').extension() == 'cc'              True
+
+PPath('foo/bar/hi.').extension() == ''                      True
+
+PPath('foo/bar/hi').extension() == ''                       True
+
+PPath('foo/bar.dir/hi').extension() == ''                   True
+
+PPath('foo/bar/hi.cc').no_extension() == 'foo/bar/hi'       True
+
+PPath('foo/bar.d/hi.cc').no_extension() == 'foo/bar.d/hi'   True
+
+PPath('foo/bar.d/hi').no_extension() == 'foo/bar.d/hi'      True
+
+PPath('foo/bar.d/hi.').no_extension() == 'foo/bar.d/hi.'    True
+
+
+#####  Methods addProtocol() and removeProtocol()  ########################
+
+PPath('/foo/bar').addProtocol()                             file:/foo/bar
+
+PPath('foo/bar').addProtocol()                              FATAL ERROR: In PPath::addProtocol - A protocol can only be added to an absolute path, and 'foo/bar' is relative
+
+PPath('file:/foo/bar').removeProtocol()                     PL_ROOT:foo/bar
+
+PPath('PL_ROOT:foo/bar').removeProtocol()                   PL_ROOT:foo/bar
+
+
+#####  PPath comparisons  #################################################
+
+PPath('foo') == 'foo/'                                      True
+
+!(PPath('foo') != 'foo/')                                   True
+
+PPath('') == ''                                             True
+
+!(PPath('') != '')                                          True
+
+PPath('/foo/bar') == 'file:/foo/bar'                        True
+
+!(PPath('/foo/bar') != 'file:/foo/bar')                     True
+
+PPath('ftp:/foo/bar') == 'ftp:/foo/bar/'                    True
+
+!(PPath('ftp:/foo/bar') != 'ftp:/foo/bar/')                 True
+
+PPath('PL_ROOT:foo') != 'ftp:/foo'                          True
+
+PPath('file:/foo') != 'http:/foo'                           True
+
+
+#####  Canonical paths  ###################################################
+
+./foo                                                       foo
+
+./                                                          ./
+
+.                                                           .
+
+PL_ROOT:.                                                   PL_ROOT:
+
+PL_ROOT:./                                                  PL_ROOT:
+
+PL_ROOT:./foo                                               PL_ROOT:foo
+
+foo/.                                                       foo
+
+foo/./                                                      foo/
+
+foo/./bar                                                   foo/bar
+
+foo/.bar                                                    foo/.bar
+
+foo./bar                                                    foo./bar
+
+PL_ROOT:..                                                  FATAL ERROR: In PPath::resolveDots - 'PL_ROOT:..' is invalid
+
+PL_ROOT:../foo                                              FATAL ERROR: In PPath::resolveDots - 'PL_ROOT:../foo' is invalid
+
+../foo                                                      ../foo
+
+foo/..                                                      .
+
+foo/../                                                     ./
+
+PL_ROOT:foo/..                                              PL_ROOT:
+
+PL_ROOT:foo/../                                             PL_ROOT:
+
+foo/../bar                                                  bar
+
+PL_ROOT:foo/../bar                                          PL_ROOT:bar
+
+PL_ROOT:..foo                                               PL_ROOT:..foo
+
+foo../                                                      foo../
+
+../../../foo                                                ../../../foo
+
+foo/../../..                                                ../..
+
+.././../foo/./bar/../foobar                                 ../../foo/foobar
+
+foo/bar/foobar/.././../../foobi/../foobo/../..              ..
+
+foo/bar/foobar/.././../../foobi/../foobo/                   foobo/
+
+PL_ROOT:foo/bar/foobar/.././../../foobi/../                 PL_ROOT:
+
+PLEARNDIR:                                                  PLEARNDIR:
+
+PLEARNDIR:/.                                                PLEARNDIR:
+
+PLEARNDIR:/                                                 PLEARNDIR:/
+
+PLEARNDIR:/foo                                              PLEARNDIR:foo
+
+PLEARNDIR:/foo/                                             PLEARNDIR:foo/
+
+PLEARNDIR:/foo/../                                          PLEARNDIR:/
+
+
+#####  Platform-dependent tests.  #########################################
+
+PPath('./foo//bar\toto')
+  DOS: == 'foo/bar/toto'      POSIX: Rejected               True
+
+isAbsPath()
+  DOS: r:/dorionc             POSIX: /home/dorionc          True
+
+absolute('HOME:dorionc') == ...
+  DOS: r:/dorionc             POSIX: /home/dorionc          True
+
+absolute('HOME:dorionc').drive() == ...
+  DOS: r:                     POSIX:                        True
+

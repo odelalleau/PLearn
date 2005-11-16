@@ -1,0 +1,6 @@
+basic_function called with arg[0]=64
+The C function returned the charming value 42
+X::f() called with i=13370 and arg[0]=128
+X::g() called with i=13370 and arg[0]=128
+The C method 1 returned the charming value 1337
+The C method 2 returned the charming value 2674

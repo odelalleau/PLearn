@@ -1,0 +1,71 @@
+Python code to be executed: 
+>>>import sys
+from numarray import *
+
+def nullary():
+    print >>sys.stderr, 'Called nullary()'
+
+def unary_int(x):
+    assert isinstance(x,int)
+    return x
+
+def unary_long(x):
+    assert isinstance(x,long)
+    return x
+
+def unary_float(x):
+    assert isinstance(x,float)
+    return x
+
+def unary_str(x):
+    assert isinstance(x,str)
+    return x
+
+def unary_vec(x):
+    assert isinstance(x,numarraycore.NumArray) and len(x.shape) == 1
+    return x
+
+def unary_mat(x):
+    print >>sys.stderr, 'Called unary_mat with:\n',x
+    assert isinstance(x,numarraycore.NumArray) and len(x.shape) == 2
+    return x
+
+def unary_list_str(x):
+    assert isinstance(x,list)
+    return x
+
+def unary_dict(x):
+    assert isinstance(x,dict)
+    return x
+
+def binary(a,b):
+    return a,b
+
+def ternary(a,b,c):
+    return a,b,c
+
+def quaternary(a,b,c,d):
+    return a,b,c,d
+<<<
+isInvokable(nullary)        : 1
+Calling nullary             : Called nullary()
+Calling unary_int(42)       : 42
+Calling unary_long(42L)     : 42
+Calling unary_float(42.01)  : 42.01
+Calling unary_str('Hello')  : Hello
+Calling unary_vec(v)        : 2           3           5           7           11          13          17          19          23          
+Calling unary_mat(m)        : 
+Called unary_mat with:
+[[  2.   3.   5.]
+ [  7.  11.  13.]
+ [ 17.  19.  23.]]
+2           3           5           
+7           11          13          
+17          19          23          
+
+Calling unary_list_str(tvs) : Cela        est         juste       et          bon         
+Calling unary_list_str(vecs): Cela        est         juste       et          bon         
+Calling unary_dict(mapsd)   : {"Oui" : 16 , "bon" : 512 , "est" : 64 , "et" : 256 , "il" : 32 , "juste" : 128 }
+Calling binary(2,4)         : 2           4           
+Calling ternary(2,4,8)      : 2           4           8           
+Calling quaternary(2,4,8,16): 2           4           8           16          

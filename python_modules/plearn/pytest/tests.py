@@ -7,11 +7,16 @@ from plearn.pyplearn.plearn_repr import python_repr
 from programs                   import *
 from PyTestCore                 import *
 from IntelligentDiff            import *          
+from plearn.utilities.moresh    import *
 from plearn.utilities.verbosity import *
 
 import plearn.utilities.version_control as version_control
 from plearn.utilities.version_control import is_under_version_control
 from plearn.utilities.Bindings import Bindings
+
+vprint('NotImplementedError("This should be done within the ppath module.")', 0)
+ppath.pytest_dir = ".pytest"
+
 
 def config_file_path( directory = None ):
     """The path to a pytest configuration file.
@@ -45,7 +50,7 @@ class StatsBook(dict):
     def inc(self, key):
         self[key] += 1 
         
-class TestStatus(PyPLearnObject):    
+class TestStatus(PyPLearnObject):
     _logfile_basename = 'STATUS.log'
     _completion_types = [ "PASSED", "DISABLED", "FAILED", "SKIPPED" ]
     _status_types     = [ "NEW", "STARTED" ] + _completion_types
@@ -100,12 +105,12 @@ class TestStatus(PyPLearnObject):
         else:
             assert log is None
 
-    def __str__(self):
+    def __str__(self):        
         if self.status == "FAILED":
             if self.test.compilationSucceeded():
                 return "** FAILED **"
             else:
-                return "*C FAILED C*"
+                return "*C FAILED C*"            
         return self.status
         
 if __name__ == '__main__':
@@ -124,7 +129,7 @@ class Test(PyTestObject):
 
     @ivar name: The name of the Test must uniquely determine the
     test. Among others, it will be used to identify the test's results
-    ( pytest/*_results/I{name}/ ) and to report test informations.
+    (.PyTest/I{name}/*_results/) and to report test informations.
     @type name: String
 
     @ivar description: The description must provide other users an
@@ -160,8 +165,17 @@ class Test(PyTestObject):
 
     @ivar precision: The precision (absolute and relative) used when comparing
     floating numbers in the test output (default = 1e-6)
-    @type precision: Float
+    @type precision: Float    
     """
+    # Static methods
+    def expectedResults():
+        return "expected_results"
+    expectedResults = staticmethod(expectedResults) 
+    
+    def runResults():
+        return "run_results"
+    runResults = staticmethod(runResults) 
+    
     # Class variables
     _test_count    = 0
     _log_count     = 0
@@ -182,14 +196,11 @@ class Test(PyTestObject):
         # Resets the instance counter
         cls._test_count = 1        
     restrictTo = classmethod(restrictTo)
-    
-    _expected_results = os.path.join(ppath.pytest_dir, "expected_results")
-    _run_results      = os.path.join(ppath.pytest_dir, "run_results")
 
     # Names of test for which the results were removed from version control
     # by ensure_results_directory
     _results_vc_removed = []
-    
+
     # Options
     name        = PLOption(None)
     description = PLOption('')
@@ -198,7 +209,7 @@ class Test(PyTestObject):
     resources   = PLOption([])
     precision   = PLOption(1e-6)
     disabled    = PLOption(False)
-
+    
     def _optionFormat(self, option_pair, indent_level, inner_repr):
         optname, val = option_pair
         if optname == "description" and self.description.find('\n')!=-1:
@@ -209,6 +220,8 @@ class Test(PyTestObject):
         PyTestObject.__init__(self, **overrides)        
 
         self._directory = os.getcwd()
+        self._results_directory = os.path.join(self._directory, ppath.pytest_dir, self.name)
+        
         self._metaprotocol = string.replace( "PYTEST__%s__RESULTS" %
                                              self.name, ':', '_'
                                              )
@@ -261,7 +274,10 @@ class Test(PyTestObject):
         B{Note} that the call will raise an exception if the program
         is not compilable.
         """
-        return self.program.compilationSucceeded()
+        try:
+            return self.program.compilationSucceeded()
+        except AttributeError:
+            return True # Non-compilable program
 
     def compile(self):
         """Forwards compilation request to the program.
@@ -272,9 +288,9 @@ class Test(PyTestObject):
         self.sanity_check()        
         self.program.compile()
 
-    def ensure_results_directory(self, results):
-        if os.path.exists( results ):
-            if is_under_version_control( results ):
+    def ensureResultsDirectory(self, results_path):
+        if os.path.exists( results_path ):
+            if is_under_version_control( results_path ):
                 answer = None
                 while not answer in ['yes', 'no']:
                     answer = raw_input( "Results %s already are under version control! Are you sure "
@@ -284,16 +300,16 @@ class Test(PyTestObject):
                     raise PyTestError("Results creation interrupted by user")
 
                 ## YES
-                version_control.recursive_remove( results )
-                version_control.commit( ppath.pytest_dir, 'Removal of %s for new results creation.'%results )
-                self._results_vc_removed.append(self.get_name())
+                version_control.recursive_remove(results_path)
+                version_control.commit(ppath.pytest_dir, 'Removal of %s for new results creation.'%results_path)
+                self._results_vc_removed.append(self.getName())
 
             ## Will have been removed under svn
-            if ( os.path.exists(results) ):
-                shutil.rmtree(results)
+            if ( os.path.exists(results_path) ):
+                shutil.rmtree(results_path)
 
         ## Make a fresh directory
-        os.makedirs( results )
+        os.makedirs( results_path )
 
     def formatted_description(self):
         fdesc = [ "In %s"%self.directory(), "" ]
@@ -303,7 +319,7 @@ class Test(PyTestObject):
 
         return string.join(["    "+line for line in fdesc], '\n')
         
-    def get_name(self):
+    def getName(self):
         return self.name
     
     def get_path(self):
@@ -335,53 +351,54 @@ class Test(PyTestObject):
                 vprint("-"*(C+N+S+H), 1)
                 
             self.__class__._log_count += 1
-            vpformat(str(self._log_count), self.get_name(),
+            vpformat(str(self._log_count), self.getName(),
                      str(self._status), TestStatus.summary())
 
-    def test_results(self, results):
-        if results in [Test._expected_results, Test._run_results]:
-            return os.path.join( results, self.name )
-        return results
+    def resultsDirectory(self, path=''):
+        assert path in ['', Test.expectedResults(), Test.runResults()], path
+        return os.path.join(self._results_directory, path)
         
-    def link_resources(self, results):
+    def linkResources(self, results_path):
         """Sets up all appropriate links and environment variables required by a test.
 
-        @param results: Either Test._expected_results or Test._run_results
-        (checked in test_results()).
+        @param results: Either Test.expectedResults() or Test.runResults().
 
         @returns: Returns the test's results directory path.
         @rtype: StringType.
         """
         self.sanity_check()
 
-        ## Validates the results value and return this test's results path.
-        test_results = self.test_results( results )        
-        self.ensure_results_directory( test_results )
+        try:
+            # Validates the results value and return this test's results
+            # path.
+            test_results = self.resultsDirectory(results_path)
+        except AssertionError:
+            # linkResources may be used from outside the test's standard
+            # structure (see IntelligentDiff for an example)
+            test_results = results_path
+            
+        self.ensureResultsDirectory(test_results)
 
         ## Link 'physical' resources
         resources = []
-        resources.extend( self.resources )
-        Resources.link_resources( self.directory(), resources, test_results )
+        resources.extend(self.resources)
+        resources.append(self.program._path)
+        Resources.link_resources(self.directory(), resources, test_results)
 
         ## What remains of this method is used to make the following
         ## binding visible to the test program. It must be removed after
         ## the test ran (done in unlink_resources()).        
         metapath = os.path.abspath(test_results)
-        ppath.add_binding( self.metaprotocol(), metapath )
+        ppath.add_binding(self.metaprotocol(), metapath)
 
         ## This PLEARN_CONFIGS directory specific to this test::
         ##     - It must not be in the test_results (diff...) BUT;
         ##     - It must not be in a directory shared with other test's (multithread access...)
         internal_plearn_configs =\
-            os.path.join( os.path.abspath(results), ## It must not be in the test_results 
-
-                          ".plearn_%s" % self.name  ## It must not be in a
-                                                    ## directory shared
-                                                    ## with other test's
-                          )
+            os.path.join(os.path.abspath(self._results_directory), ".plearn")
 
         ## Ensure that the directory exists
-        if not os.path.exists( internal_plearn_configs ):
+        if not os.path.exists(internal_plearn_configs):
             os.mkdir( internal_plearn_configs )
 
         ## Create a new ppath.config file
@@ -397,22 +414,24 @@ class Test(PyTestObject):
         os.environ[ 'PLEARN_DATE_TIME' ] = 'NO'
 
         ## Returns the test's results directory path
+        vprint("Resources linked in %s."%test_results, 2)
         return test_results
 
-    def unlink_resources(self, test_results):
-        """Removes links made by and environment variables set by I{link_resources}.
+    def unlinkResources(self, test_results):
+        """Removes links made by and environment variables set by I{linkResources}.
 
-        @param test_results: B{Must} be the value returned by I{link_resources}.
+        @param test_results: B{Must} be the value returned by I{linkResources}.
         """
-        Resources.unlink_resources( self.resources, test_results )
-        ppath.remove_binding( self.metaprotocol() )
+        Resources.unlink_resources( test_results )
+        ppath.remove_binding(self.metaprotocol())
         os.environ[ 'PLEARN_DATE_TIME' ] = 'YES'
-
+        vprint("Resources unlinked.", 2)
+        
 class Routine( PyTestObject ):
     test = PLOption(None)
 
-    def __init__( self, **overrides ):        
-        PyTestObject.__init__( self, **overrides ) 
+    def __init__(self, **overrides):        
+        PyTestObject.__init__(self, **overrides) 
         os.chdir( self.test.directory() )
         
     def compile_program(self):
@@ -430,21 +449,8 @@ class Routine( PyTestObject ):
         vprint("Compilation succeedded.", 2)
         return True
 
-    ## Overrides run and succeeded
     def start(self):
         raise NotImplementedError("Abstract method: please implement.")
-        # try:
-        #     if self.test.is_disabled():
-        #         vprint("Test %s is disabled." % self.test.name, 2)
-        #         self.test.setStatus("DISABLED")
-        #     else:                
-        #         self.routine()
-        # 
-        # except PyTestError, e: 
-        #     if Routine._report_traceback:
-        #         raise
-        #     else:
-        #         self.test.setStatus("SKIPPED", e.pretty_str())            
                     
 class CompilationRoutine(Routine):
     """Launches the compilation of target tests' compilable files."""    
@@ -463,6 +469,7 @@ class ResultsRelatedRoutine(Routine):
             self.run_test( APPROPRIATE_DIRECTORY )
     """    
     no_compile_option = PLOption(False)
+    run_log = PLOption('RUN.log')
 
     def clean_cwd( self ):
         dirlist = os.listdir( os.getcwd() )
@@ -485,30 +492,26 @@ class ResultsRelatedRoutine(Routine):
         vprint("\nRunning program:", 2)
         vprint("----------------", 2)
 
-        test_results  = self.test.link_resources( results )
+        test_results  = self.test.linkResources(results)
 
-        run_command   = ( "%s %s >& %s" \
-                          % ( os.path.join(os.path.dirname(self.test.program.get_path()), \
-                                           self.test.program.get_name()),                 \
-                              self.test.arguments, self.test.name+'.run_log' )            \
-                        )
-        
-        vprint(run_command, 2)
+        run_command   = ( "./%s %s >& %s"
+                          % ( self.test.program.getName(), self.test.arguments, self.run_log )
+                          )        
 
         ## Run the test from inside the test_results directory and return
         ## to the cwd
-        cwd = os.getcwd()
-        os.chdir( test_results )
+        pushd(test_results)
+        vprint("In %s: %s"%(os.getcwd(), run_command), 2)
         os.system(run_command)
-        self.clean_cwd( )
-        os.chdir( cwd )
+        self.clean_cwd()
+        popd()
 
-        ## Clean directory from linked / copied resources.
-        self.test.unlink_resources( test_results )
         ## Set the status and quit
         self.status_hook()
+        self.test.unlinkResources(test_results)
 
     def status_hook(self):
+        """Overriden by subclasses to set the test's status."""
         raise NotImplementedError
         
 class ResultsCreationRoutine(ResultsRelatedRoutine):
@@ -525,8 +528,8 @@ class ResultsCreationRoutine(ResultsRelatedRoutine):
     B{Do not modify} the results directory manually.
     """
     def start(self):
-        self.run_test( Test._expected_results )
-        if Test._results_vc_removed:            
+        self.run_test(Test.expectedResults())
+        if Test._results_vc_removed:
             vprint("\n*** Results were changed for the following test%s: %s. "
                    "Once you've checked the results validity, DO NOT FORGET to do a 'pytest vc_add'."
                    % (toolkit.plural(len(Test._results_vc_removed)), ', '.join(Test._results_vc_removed)),
@@ -538,13 +541,12 @@ class ResultsCreationRoutine(ResultsRelatedRoutine):
 class RunTestRoutine( ResultsRelatedRoutine ):        
     """Compares current results to expected ones.
     
-    B{Note that}, before a test can be ran, it must defines its
-    expected results. In the current context, all outputs (standard
-    output and files) of a test are stored by the results mode in a
-    'pytest' subdirectory directory.
+    B{Note that}, before a test can be ran, it its expected results must be
+    defined. All outputs (standard output and files) of a test are stored
+    by the results mode in a .PyTest subdirectory.
 
     The run mode will thereafter be able to compare results obtained
-    on a new run to the ones kept in the results directory.
+    on a new run to the ones kept in the expected results directory.
 
     B{Do not modify} the results directory manually.
     """
@@ -552,14 +554,14 @@ class RunTestRoutine( ResultsRelatedRoutine ):
     run_results      = PLOption(None)
 
     def __init__( self, **overrides ):
-        ResultsRelatedRoutine.__init__( self, **overrides )
-        self.expected_results = self.test.test_results( Test._expected_results )
-        self.run_results      = self.test.test_results( Test._run_results )
+        ResultsRelatedRoutine.__init__(self, **overrides)
+        self.expected_results = self.test.resultsDirectory( Test.expectedResults() )
+        self.run_results      = self.test.resultsDirectory( Test.runResults() )
         if os.path.exists(self.run_results):
             shutil.rmtree(self.run_results)
         
         if ( not self.test.disabled and
-             not os.path.exists( self.expected_results ) ):
+             not os.path.exists(self.expected_results) ):
             raise PyTestError(
                 "%s\n Expected results must be generated by the 'results' mode "
                 "prior to any use of the 'run' mode."
@@ -567,16 +569,15 @@ class RunTestRoutine( ResultsRelatedRoutine ):
                 )
 
     def start(self):        
-        self.run_test( Test._run_results )
+        self.run_test(Test.runResults())
     
     def status_hook(self):
-        idiff  =  IntelligentDiff( self.test )
-        diffs  =  idiff.diff( self.expected_results, self.run_results )
+        idiff = IntelligentDiff( self.test )
+        diffs = idiff.diff(self.expected_results, self.run_results)
         if diffs == []:
             self.test.setStatus("PASSED")
         else:
-            report_path = os.path.join( Test._run_results,
-                                        self.test.get_name()+'.failed' )
-            toolkit.lines_to_file( diffs, report_path )
-            self.test.setStatus("FAILED")
+            report_path = os.path.join(self.test.resultsDirectory(), "FAILURE.log")
+            toolkit.lines_to_file(diffs, report_path)
+            self.test.setStatus("FAILED", log="Should contain diff lines!")
         

@@ -132,13 +132,8 @@ class PyTestMode(Mode):
                 ignored.extend( [ '    '+ign for ign in ignored_directories ] )
                 vprint.highlight( ignored, highlighter='x' ) 
 
-        self.restrictTo(self.options.test_name)
-
-    def restrictTo(self, test_name):
-        """If a single test is to be ran, restrict the loaded test to that only one."""
-        if test_name:
-            Test.restrictTo(test_name)
-            
+        if hasattr(self.options, 'test_name') and self.options.test_name:
+            Test.restrictTo(self.options.test_name)
 
 class ignore(PyTestMode):
     """Causes the target hierarchy to be ignored by PyTest.
@@ -293,9 +288,9 @@ class vc_add( PyTestMode ):
             try:
                 version_control.add( config_path )
                 version_control.add( ppath.pytest_dir )
-                version_control.add( Test._expected_results )
                 for test in tests:
-                    version_control.recursive_add( test.test_results( Test._expected_results ) )
+                    version_control.add( test.resultsDirectory() )
+                    version_control.recursive_add( test.resultsDirectory(Test.expectedResults()) )
             except version_control.VersionControlError:
                 raise PyTestError(
                     "The directory in which lies a config file must be added to version control by user.\n"
@@ -380,11 +375,12 @@ class add(FamilyConfigMode):
 
         ProgClass = globals()[options.program_type]
         program = ProgClass(name=options.program_name)
-	
-	resources = []
-        if options.resources != "":
-            resources = options.resources.split(',')
 
+        # Avoiding [""] in place of the empty list
+        resources = []                               
+        if options.resources != "":                 
+            resources = options.resources.split(',')
+        
         # Caught by Test's instances management         
         Test( name=test_name, program=program,
               arguments=options.arguments,
@@ -418,26 +414,26 @@ class update(FamilyConfigMode):
     config mode should be enough to migrate an old PyTest config file
     the new format.
 
-    This mode can also be used with options --test-name and --new-name to
-    rename a test (works only under SVN).
-    """
-    def option_groups(cls, parser):
-        update_options = OptionGroup( parser, "Mode Specific Options --- %s" % cls.__name__,
-                                      "Available under %s mode only." % cls.__name__ )
-
-        update_options.add_option( '--test-name',
-                                   default=None,
-                                   help='The test to be renamed.',
-                                   )
-
-        update_options.add_option( "--new-name",                                   
-                                   default=None,
-                                   help="Must be used in conjunction with --test-name: Test which name is "
-                                   "'test_name' will be renamed to 'new_name'." 
-                                   )
-
-        return [ update_options ]
-    option_groups = classmethod(option_groups)
+    This mode can also be used with options --test-name and --new-name to                                     
+    rename a test (works only under SVN).                                                                     
+    """                                                                                                       
+    def option_groups(cls, parser):                                                                           
+        update_options = OptionGroup( parser, "Mode Specific Options --- %s" % cls.__name__,                  
+                                      "Available under %s mode only." % cls.__name__ )                        
+                                                                                                              
+        update_options.add_option( '--test-name',                                                                 
+                                   default=None,                                                              
+                                   help='The test to be renamed.',                                            
+                                   )                                                                          
+                                                                                                              
+        update_options.add_option( "--new-name",                                                              
+                                   default=None,                                                              
+                                   help="Must be used in conjunction with --test-name: Test which name is "   
+                                   "'test_name' will be renamed to 'new_name'."                               
+                                   )                                                                          
+                                                                                                              
+        return [ update_options ]                                                                             
+    option_groups = classmethod(option_groups)                                                                
 
     def test_hook(self, test):
         """Does nothing.
@@ -448,29 +444,16 @@ class update(FamilyConfigMode):
         any FamilyConfigMode. For the Test class' internal behavior,
         changes will be made to support
         """
-        name = self.options.test_name
-        if name is not None and test.name == name:
-            new_name = self.options.new_name
+        name = self.options.test_name                                                                     
+        if name is not None and test.name == name:                                                        
+            new_name = self.options.new_name                                                              
             assert new_name is not None,\
-                "Options --test-name and --new-name must be used together."
-            
-            assert os.getcwd() == test.directory()
-            expected_results = test.test_results(Test._expected_results)
-            
-            walker = os.walk(expected_results, topdown=False)
-            for root, dirs, files in walker:
-                if root.find(".svn") != -1:
-                    continue
-                
-                for fname in dirs+files:
-                    if fname.find(name) != -1:
-                        old_path = os.path.join(root, fname)
-                        new_path = os.path.join(root, fname.replace(name, new_name))
-                        os.system('svn mv --force %s %s'%(old_path, new_path))
-
-            os.system('svn mv --force %s %s'%(expected_results, expected_results.replace(name, new_name)))
+                "Options --test-name and --new-name must be used together."                               
+                                                                                                          
+            assert os.getcwd() == test.directory()                                                        
+            results = test.resultsDirectory()                                  
+            os.system('svn mv --force %s %s'%(results, results.replace(name, new_name)))                                                                                           
             test.name = new_name
-                        
     
 class RoutineBasedMode(PyTestMode):
     #
@@ -498,20 +481,7 @@ class RoutineBasedMode(PyTestMode):
     #    
     def __init__( self, targets, options ):
         super(RoutineBasedMode, self).__init__(targets, options)
-
-        self.report_traceback = options.traceback
-
-        # test_instances = None
-        # if self.options.test_name:
-        #     test_instances = [( self.options.test_name,
-        #                         Test._instances_map[ self.options.test_name ]
-        #                         )]
-        #     Test._test_count = 1
-        #     
-        # else:
-        #     test_instances = Test._instances_map.items()
-        test_instances = Test._instances_map.items()
-        
+        test_instances = Test._instances_map.items()        
         self.dispatch_tests(test_instances)
 
     def dispatch_tests(self, test_instances):
@@ -532,7 +502,6 @@ class RoutineBasedMode(PyTestMode):
                         raise
                     else:
                         test.setStatus("SKIPPED", e.pretty_str())
-
 
 class compile(RoutineBasedMode):
     def routine_type(cls, options=None): return CompilationRoutine

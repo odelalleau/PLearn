@@ -1,0 +1,130 @@
+
+- - - - - - - - - - -
+Building object structure from:
+Z(sub_objects = [])
+
+Built structure: 
+*1 ->Z(
+dummy_option1 = "" ;
+sub_objects = TVec(0 0 *0 )
+;
+dummy_option2 = 0  )
+
+Now traversing the graph in breadth-first:
+Encountered class "Z" at option ""
+
+Traversing only Y objects in depth-first:
+
+Broadcast a call to X::printName()
+
+Broadcast a call to Y::printName()
+
+Broadcast a breadth-first call to X::method1("foo")
+
+Broadcast a breadth-first call to X::method1(option_name)
+
+Broadcast a breadth-first call to X::method2("foo",42)
+
+- - - - - - - - - - -
+Building object structure from:
+Z(sub_objects = [X(name="X1"),          
+                 *1->X(name="X2"),      
+                 Y(name="Y3"),          
+                 *1,                      
+                 *2->Y(name="Y5"),      
+                 X(name="X6",           
+                   child = X(child = Y(name = "innerY"))) 
+                 *2])
+
+Built structure: 
+*1 ->Z(
+dummy_option1 = "" ;
+sub_objects = 7 [ *2 ->X(
+name = "X1" ;
+child = *0  )
+*3 ->X(
+name = "X2" ;
+child = *0  )
+*4 ->Y(
+name = "Y3" ;
+child = *0  )
+*3  *5 ->Y(
+name = "Y5" ;
+child = *0  )
+*6 ->X(
+name = "X6" ;
+child = *7 ->X(
+name = "" ;
+child = *8 ->Y(
+name = "innerY" ;
+child = *0  )
+ )
+ )
+*5  ] ;
+dummy_option2 = 0  )
+
+Now traversing the graph in breadth-first:
+Encountered class "Z" at option ""
+Encountered class "X" at option "sub_objects[0]"
+... and name is: X1
+Encountered class "X" at option "sub_objects[1]"
+... and name is: X2
+Encountered class "Y" at option "sub_objects[2]"
+... and name is: Y3
+Encountered class "Y" at option "sub_objects[4]"
+... and name is: Y5
+Encountered class "X" at option "sub_objects[5]"
+... and name is: X6
+Encountered class "X" at option "sub_objects[5].child"
+... and name is: 
+Encountered class "Y" at option "sub_objects[5].child.child"
+... and name is: innerY
+
+Traversing only Y objects in depth-first:
+Encountered class "Y" at option "sub_objects[5].child.child"
+... and name is: innerY
+Encountered class "Y" at option "sub_objects[4]"
+... and name is: Y5
+Encountered class "Y" at option "sub_objects[2]"
+... and name is: Y3
+
+Broadcast a call to X::printName()
+X::printName: X6
+X::printName: 
+Y::printName: innerY
+Y::printName: Y5
+Y::printName: Y3
+X::printName: X2
+X::printName: X1
+
+Broadcast a call to Y::printName()
+Y::printName: innerY
+Y::printName: Y5
+Y::printName: Y3
+
+Broadcast a breadth-first call to X::method1("foo")
+X::method1: name='X1'  arg1='foo'
+X::method1: name='X2'  arg1='foo'
+X::method1: name='Y3'  arg1='foo'
+X::method1: name='Y5'  arg1='foo'
+X::method1: name='X6'  arg1='foo'
+X::method1: name=''  arg1='foo'
+X::method1: name='innerY'  arg1='foo'
+
+Broadcast a breadth-first call to X::method1(option_name)
+X::method1: name='X1'  arg1='sub_objects[0]'
+X::method1: name='X2'  arg1='sub_objects[1]'
+X::method1: name='Y3'  arg1='sub_objects[2]'
+X::method1: name='Y5'  arg1='sub_objects[4]'
+X::method1: name='X6'  arg1='sub_objects[5]'
+X::method1: name=''  arg1='sub_objects[5].child'
+X::method1: name='innerY'  arg1='sub_objects[5].child.child'
+
+Broadcast a breadth-first call to X::method2("foo",42)
+X::method1: name='X1'  arg1='foo'  arg2='42'
+X::method1: name='X2'  arg1='foo'  arg2='42'
+X::method1: name='Y3'  arg1='foo'  arg2='42'
+X::method1: name='Y5'  arg1='foo'  arg2='42'
+X::method1: name='X6'  arg1='foo'  arg2='42'
+X::method1: name=''  arg1='foo'  arg2='42'
+X::method1: name='innerY'  arg1='foo'  arg2='42'
