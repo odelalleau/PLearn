@@ -294,7 +294,7 @@ class Test(PyTestObject):
                 answer = None
                 while not answer in ['yes', 'no']:
                     answer = raw_input( "Results %s already are under version control! Are you sure "
-                                        "you want to generate new results (yes or no)? " % results )
+                                        "you want to generate new results (yes or no)? " % results_path )
 
                 if answer == 'no':
                     raise PyTestError("Results creation interrupted by user")
