@@ -1605,17 +1605,61 @@ void GaussMix::setInput(const Vec& input, bool call_parent) const {
 
     if (type_id == TYPE_GENERAL) {
         // We need to compute E[Y|x,j].
-        x_minus_mu_x.resize(n_input);
-        Vec mu_target;
-        for (int j = 0; j < L; j++) {
-            x_minus_mu_x << input_part;
-            x_minus_mu_x -= center(j).subVec(0, n_input);
-            mu_target = center_y_x(j);
-            if (n_input > 0)
-                product(mu_target, y_x_mat[j], x_minus_mu_x);
-            else
-                mu_target.fill(0);
-            mu_target += center(j).subVec(n_input, n_target);
+        if (!input_part.hasMissing()) {
+            // Simple case: the input part has no missing value, and we can
+            // re-use the quantities computed in setInputTargetSizes(..).
+            x_minus_mu_x.resize(n_input);
+            Vec mu_target;
+            for (int j = 0; j < L; j++) {
+                x_minus_mu_x << input_part;
+                x_minus_mu_x -= center(j).subVec(0, n_input);
+                mu_target = center_y_x(j);
+                if (n_input > 0)
+                    product(mu_target, y_x_mat[j], x_minus_mu_x);
+                else
+                    mu_target.fill(0);
+                mu_target += center(j).subVec(n_input, n_target);
+            }
+        } else {
+            // TODO Implement. Note that this will only occur in testing phase,
+            // not training, so that it might not be so important to get it
+            // optimized.
+            assert( !input_part.hasMissing() ); // This will crash (on purpose)
+            /*
+            // More complex case: the input part has missing values.
+            // We must do similar computations, but considering missing values
+            // as part of the 'target' part.
+            // TODO There is some code duplication with setInputTargetSizes(..)
+            Vec eigenvals;
+            for (int j = 0; j < L; j++) {
+                if (stage_joint_cov_computed[j] != this->stage) {
+                    stage_joint_cov_computed[j] = this->stage;
+                    Mat& cov = joint_cov[j];
+                    cov.resize(D, D);
+                    eigenvals = eigenvalues(j);
+                    real lambda0 = max(var_min, eigenvals->lastElement());
+                    cov.fill(0);
+                    Mat& eigenvectors_j = eigenvectors[j];
+
+                    assert( eigenvectors_j.width() == D );
+
+                    for (int k = 0; k < n_eigen_computed - 1; k++)
+                        externalProductScaleAcc(
+                                cov, eigenvectors_j(k), eigenvectors_j(k),
+                                max(var_min, eigenvals[k]) - lambda0);
+
+                    for (int i = 0; i < D; i++)
+                        cov(i,i) += lambda0;
+
+                    // By construction, the resulting matrix is symmetric. However,
+                    // it may happen that it is not exactly the case due to numerical
+                    // approximations. Thus we ensure it is perfectly symmetric.
+                    assert( cov.isSymmetric(false) );
+                    fillItSymmetric(cov);
+                }
+            }
+            // K1 = cov(non missing input_part).
+            */
         }
     }
  
@@ -1801,6 +1845,7 @@ bool GaussMix::setInputTargetSizes(int n_i, int n_t,
             y_x_mat[j].resize(n_target, n_input);
             // TODO Keep this test?
 //            if (n_target > 0) {
+            // TODO Document y_x_mat.
             if (n_input > 0) {
                 cross_cov = full_cov_j.subMat(n_input,0, n_target, n_input);
                 product(work_mat1, cross_cov, inv_cov_x);
@@ -1840,6 +1885,12 @@ void GaussMix::train()
     if (stage == 0) {
         // n_tries.resize(0); TODO See
         resizeDataBeforeTraining();
+
+        /*
+        // TODO Doc + move elsewhere?
+        stage_joint_cov_computed.resize(L);
+        stage_joint_cov_computed.fill(-1);
+        */
 
         // Get sample weights.
         if (train_set->weightsize() <= 0)
