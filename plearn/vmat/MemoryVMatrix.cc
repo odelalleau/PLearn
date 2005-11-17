@@ -158,7 +158,7 @@ void MemoryVMatrix::build_()
         // Restore data so that it is equal to memory_data.
         data = memory_data;
     
-    if ( fieldnames.length() == data.width() )
+    if ( fieldnames.length() == memory_data.width() )
         declareFieldNames(fieldnames);    
 }
 
