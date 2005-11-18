@@ -52,14 +52,17 @@ PLEARN_IMPLEMENT_OBJECT(IsMissingVariable,
                         "ONE LINE DESCR",
                         "NO HELP");
 
-IsMissingVariable::IsMissingVariable(Variable* input1, bool parall)
-    : inherited(input1, parall?input1->length():1, parall?input1->width():1), parallel(parall)
+IsMissingVariable::IsMissingVariable(Variable* input1, bool parall, bool the_set_parallel_missing_output, real the_parallel_missing_output)
+    : inherited(input1, parall?input1->length():1, parall?input1->width():1), parallel(parall), set_parallel_missing_output(the_set_parallel_missing_output), parallel_missing_output(the_parallel_missing_output)
 {}
 
 void
 IsMissingVariable::declareOptions(OptionList &ol)
 {
     declareOption(ol, "parallel", &IsMissingVariable::parallel, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+    declareOption(ol, "parallel_missing_output", &IsMissingVariable::parallel_missing_output, OptionBase::buildoption, "");
+    declareOption(ol, "set_parallel_missing_output", &IsMissingVariable::set_parallel_missing_output, OptionBase::buildoption, "");
     inherited::declareOptions(ol);
 }
 
@@ -75,8 +78,19 @@ void IsMissingVariable::recomputeSize(int& l, int& w) const
 void IsMissingVariable::fprop()
 {
     if (parallel)
-        for(int i=0; i<nelems(); i++)
-            valuedata[i] = finite(input->valuedata[i]);
+    {
+        if(!set_parallel_missing_output)
+            for(int i=0; i<nelems(); i++)
+                valuedata[i] = finite(input->valuedata[i]);
+        else
+            for(int i=0; i<nelems(); i++)
+            {
+                if(!finite(input->valuedata[i]))
+                    valuedata[i] = parallel_missing_output;
+                else
+                    valuedata[i] = input->valuedata[i];
+            }
+    }
     else
     {
         bool nomissing=true;

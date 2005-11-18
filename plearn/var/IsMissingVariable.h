@@ -55,12 +55,19 @@ class IsMissingVariable: public UnaryVariable
     typedef UnaryVariable inherited;
 
 protected:
-    bool parallel; // if true then output 1 value per input, otherwise output 1 if ANY of the inputs is missing
+    //! if true then output 1 value per input, otherwise output 1 if ANY of the inputs is missing
+    bool parallel; 
+    //! Indication that, instead of outputing 0 if the input value is NaN, 1 otherwise,
+    //! this variable will output parallel_missing_output if the input value is NaN, 
+    //! or the actual input value otherwise
+    bool set_parallel_missing_output;
+    //! Output value when input is missing (NaN)
+    real parallel_missing_output;
 
 public:
     //!  Default constructor for persistence
     IsMissingVariable() {}
-    IsMissingVariable(Variable* input1, bool parallel=0);
+    IsMissingVariable(Variable* input1, bool parallel=0, bool set_parallel_missing_output=0, real parallel_missing_output=0);
 
     PLEARN_DECLARE_OBJECT(IsMissingVariable);
     static void declareOptions(OptionList &ol);
@@ -76,7 +83,7 @@ public:
 
 DECLARE_OBJECT_PTR(IsMissingVariable);
 
-inline Var isMissing(Var x) { return new IsMissingVariable(x); }
+inline Var isMissing(Var x, bool parallel=0, bool set_parallel_missing_output=0, real parallel_missing_output=0) { return new IsMissingVariable(x, parallel,set_parallel_missing_output,parallel_missing_output); }
 
 } // end of namespace PLearn
 
