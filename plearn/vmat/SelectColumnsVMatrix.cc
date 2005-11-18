@@ -297,6 +297,40 @@ string SelectColumnsVMatrix::getValString(int col, real val) const {
     return source->getValString(the_col, val);
 }
 
+PP<Dictionary> SelectColumnsVMatrix::getDictionary(int col) const
+{
+    if(col>=width_)
+        PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
+    static int the_col;
+    the_col = indices[col];
+    if (the_col == -1)
+        return 0;
+    return source->getDictionary(the_col);
+}
+
+
+Vec SelectColumnsVMatrix::getValues(int row, int col) const
+{
+    if(col>=width_)
+        PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
+    static int the_col;
+    the_col = indices[col];
+    if (the_col == -1)
+        return Vec(0);
+    return source->getValues(row,the_col);
+}
+
+Vec SelectColumnsVMatrix::getValues(const Vec& input, int col) const
+{
+    if(col>=width_)
+        PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
+    static int the_col;
+    the_col = indices[col];
+    if (the_col == -1)
+        return Vec(0);
+    return source->getValues(input, the_col);
+}
+
 } // end of namespcae PLearn
 
 

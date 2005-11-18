@@ -237,6 +237,46 @@ real ConcatColumnsVMatrix::dot(int i, const Vec& v) const
     return res;
 }
 
+PP<Dictionary> ConcatColumnsVMatrix::getDictionary(int col) const
+{
+    if(col>=width_)
+        PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
+    int pos=0,k=0;
+    while(col>=pos+array[k]->width())
+    {
+        pos += array[k]->width();
+        k++;
+    }
+    return array[k]->getDictionary(col-pos);
+}
+
+
+Vec ConcatColumnsVMatrix::getValues(int row, int col) const
+{
+    if(col>=width_)
+        PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
+    int pos=0,k=0;
+    while(col>=pos+array[k]->width())
+    {
+        pos += array[k]->width();
+        k++;
+    }
+    return array[k]->getValues(row,col-pos);
+}
+
+Vec ConcatColumnsVMatrix::getValues(const Vec& input, int col) const
+{
+    if(col>=width_)
+        PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
+    int pos=0,k=0;
+    while(col>=pos+array[k]->width())
+    {
+        pos += array[k]->width();
+        k++;
+    }
+    return array[k]->getValues(input, col-pos);
+
+}
 
 } // end of namespcae PLearn
 
