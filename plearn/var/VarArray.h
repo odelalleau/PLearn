@@ -196,7 +196,7 @@ public:
   with step_size possibly scaled down s.t. box constraints are satisfied
   return true if box constraints have been hit with the update
 */
-    bool update(real step_size);
+    bool update(real step_size, bool clear=false);
 
     //! value += step_size*gradient; gradient.clear();
     inline void updateAndClear();

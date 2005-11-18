@@ -505,7 +505,7 @@ bool Variable::update(Vec step_sizes, Vec direction_vec, real coeff, real b)
     return hit;
 }
 
-bool Variable::update(real step_size)
+bool Variable::update(real step_size, bool clear)
 {
     bool hit=false;
     if(min_value>-FLT_MAX || max_value<FLT_MAX)
@@ -533,8 +533,8 @@ bool Variable::update(real step_size)
                             params[i]=max_value;
                             hit = true;
                         }
-                        //if (allows_partial_update)
-                        //  direction[i]=0;
+                        if (clear)
+                            direction[i]=0;
                     }
                 }
                 //rows_to_update.resize(0);
@@ -558,8 +558,8 @@ bool Variable::update(real step_size)
                     params[i]=max_value;
                     hit = true;
                 }
-                //if (allows_partial_update)
-                //  direction[i]=0;
+                if (clear)
+                    direction[i]=0;
             }
         }
     }
@@ -578,7 +578,8 @@ bool Variable::update(real step_size)
                     for(int i=0; i<width(); i++)
                     {
                         params[i] += step_size*direction[i];      
-                        //direction[i] = 0;
+                        if (clear)
+                            direction[i] = 0;
                     }
                 }
                 //rows_to_update.resize(0);
@@ -590,7 +591,11 @@ bool Variable::update(real step_size)
             real* direction = matGradient[row];
             real* params = matValue[row];      
             for(int i=0; i<width(); i++)
+            {
                 params[i] += step_size*direction[i];      
+                if (clear)
+                    direction[i] = 0;
+            }
         }
     }
     return hit;

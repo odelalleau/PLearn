@@ -950,13 +950,13 @@ real VarArray::maxUpdate(Vec direction)
     return max_step_size;
 }
 
-bool VarArray::update(real step_size)
+bool VarArray::update(real step_size, bool clear)
 {
     bool hit = false;
     iterator array = data();
     for(int i=0; i<size(); i++)
         if (!array[i].isNull())
-            hit = hit || array[i]->update(step_size);
+            hit = hit || array[i]->update(step_size,clear);
     return hit;
 }
 
