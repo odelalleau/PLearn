@@ -255,7 +255,6 @@ void OverlappingAdaBoost::train()
     real weight;
     Vec theta(outputsize());
     real max_weight;
-    real sum_of_square_weights;
 
     Mat examples_error;
     //static TVec<int> train_indices;
@@ -321,7 +320,6 @@ void OverlappingAdaBoost::train()
         }
 
         max_weight = max(example_weights.toVec());
-        sum_of_square_weights = sum(example_weights.toVec());
         VMat weak_learner_training_set;
         VMat weak_learner_validation_set;
         {
