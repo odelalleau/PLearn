@@ -56,6 +56,7 @@
 #include <plearn/db/getDataSet.h>
 #include <plearn/display/Gnuplot.h>
 #include <plearn/io/openFile.h>
+#include <plearn/io/load_and_save.h>
 
 // norman: added check
 #ifdef WIN32
@@ -1542,7 +1543,13 @@ int vmatmain(int argc, char** argv)
             //      "       conditioning field <condfield#> \n"
             "   or: vmat diststat <dataset> <inputsize>\n"
             "       Will compute and output basic statistics on the euclidean distance \n"
-            "       between two consecutive input points \n\n"
+            "       between two consecutive input points \n"
+            "   or: vmat dictionary <dataset>\n"
+            "       Will create <dataset>.field#.dict, where # is the\n"
+            "       field (column) number, starting at 0. Those files contain the plearn\n"
+            "       scripts of the Dictionary objets for each field.\n"
+            "   or: vmat catstr <dataset>\n"
+            "       Will output the content of <dataset>, using its string mappings\n\n"
             "<dataset> is a parameter understandable by getDataSet. This includes \n"
             "all matrix file formats. Type 'vmat help dataset' to see what other\n"
             "<dataset> strings are available." << endl;
@@ -1924,6 +1931,22 @@ int vmatmain(int argc, char** argv)
                 pout<<tmp<<endl;
             }
     }
+    else if(command=="catstr")
+    {
+        if(argc!=3)
+            PLERROR("'vmat cat' must be used that way : vmat cat FILE");
+        string dbname = argv[2];
+        VMat vm = getDataSet(dbname);
+        Vec tmp(vm.width());
+        TVec<string> tmpstr(vm.width());
+        for(int i=0;i<vm.length();i++)
+        {
+            vm->getRow(i,tmp);
+            for(int j=0; j<tmpstr.length(); j++)
+                tmpstr[j] = vm->getValString(j,tmp[j]);
+            pout<<tmpstr<<endl;
+        }
+    }
     else if(command=="sascat")
     {
         if(argc!=4)
@@ -1964,6 +1987,16 @@ int vmatmain(int argc, char** argv)
             PLERROR("Bad number of arguments. Syntax for option plot:\n"
                     "%s plot <dbname0> <col0>[:<row0>:<nrows0>] {<dbnameN> <colN>[:<rowN>:<nrowsN>]}", argv[0]);
         plotVMats(argv+2, argc-2);
+    }
+    else if(command=="dictionary")
+    {
+        string vmat_file = argv[2];        
+        VMat vmat = getDataSet(vmat_file);
+        for(int i=0; i<vmat->width(); i++)
+        {
+            string dico_name = vmat_file + ".col" + tostring(i) + ".dict";
+            save(dico_name,*(vmat->getDictionary(i)));
+        }
     }
     else if(command=="help")
     {
