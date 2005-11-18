@@ -422,9 +422,34 @@ DECLARE_OBJECT_PP(Var, Variable);
 // set value += gradient and clears the gradient
 inline void Variable::updateAndClear()
 {
-    for(int i=0; i<nelems(); i++)
-        valuedata[i] += gradientdata[i];
-    gradient.clear();
+    /*
+    */
+    if (allows_partial_update && gradient_status!=2)
+    {
+        if (gradient_status!=0)
+        {
+            for (int r=0;r<rows_to_update.length();r++)
+            {
+                int row = rows_to_update[r];
+                real* direction = matGradient[row];
+                real* params = matValue[row];
+                for(int i=0; i<width(); i++)
+                {
+                    params[i] += direction[i];
+                    direction[i] = 0;
+                }              
+            }
+            rows_to_update.resize(0);
+            gradient_status=0;
+        }
+    }
+    else for (int row=0;row<length();row++)
+    {
+        for(int i=0; i<nelems(); i++)
+            valuedata[i] += gradientdata[i];
+        gradient.clear();
+    }
+
 }
 
 void varDeepCopyField(Var& field, CopiesMap& copies);
