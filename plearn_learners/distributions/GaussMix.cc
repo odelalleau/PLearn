@@ -580,6 +580,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const
     static Vec eigenvals_missing;
     static Mat eigenvecs_missing;
     static TVec<int> non_missing;
+    static Mat dummy_mat;
 
     if (type_id == TYPE_SPHERICAL || type_id == TYPE_DIAGONAL) {
         // Easy case: the covariance matrix is diagonal.
@@ -702,6 +703,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const
                                 0.5 * (1.0 / lambda - one_over_lambda0)
                                     * square(dot(eigenvecs(k), y_centered));
                     }
+                    // TODO Doc (allow resize of eigenvecs_missing).
+                    eigenvecs = dummy_mat;
                 }
             } else {
             log_likelihood = log_coeff[j];
