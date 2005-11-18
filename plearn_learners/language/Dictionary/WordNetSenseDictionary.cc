@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// WordNetDictionary.cc
+// WordNetSenseDictionary.cc
 //
 // Copyright (C) 2004 Hugo Larochelle, Christopher Kermorvant
 // 
@@ -38,7 +38,7 @@
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
 
-/*! \file WordSenseNetDictionary.cc */
+/*! \file WordNetSenseDictionary.cc */
 
 
 #include "WordNetSenseDictionary.h"
@@ -202,8 +202,8 @@ TVec<string> stemsOfWord(string word)
 }
 
 
-WordNetSenseDictionary::WordNetSenseDictionary()
-    : options_stem_words(false), symbol_type("sense_key")
+WordNetSenseDictionary::WordNetSenseDictionary()    
+    : options_stem_words(false), options_to_lower_case(false), symbol_type("sense_key")
 {
     if(wninit()<0)
         PLERROR("In WordNetSenseDictionary(): could not open WordNet database files");

@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// WordNetDictionary.h
+// WordNetSenseDictionary.h
 //
 // Copyright (C) 2004 Hugo Larochelle Christopher Kermorvant
 // 
