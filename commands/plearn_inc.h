@@ -239,7 +239,8 @@
 #include <plearn/vmat/IndexedVMatrix.h>
 #include <plearn/vmat/JulianizeVMatrix.h>
 #include <plearn/vmat/KNNVMatrix.h>
-#include <plearn/vmat/LemmatizeVMatrix.h>
+// Commented out because triggers WordNet, which does not work really fine yet.
+//#include <plearn/vmat/LemmatizeVMatrix.h>
 #include <plearn/vmat/LocalNeighborsDifferencesVMatrix.h>
 #include <plearn/vmat/LocallyPrecomputedVMatrix.h>
 #include <plearn/vmat/MultiInstanceVMatrix.h>
