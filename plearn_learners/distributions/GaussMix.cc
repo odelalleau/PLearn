@@ -570,6 +570,17 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const
     static real log_likelihood;
     static Vec eigenvals; // TODO Doc
     static Mat eigenvecs; // TODO Doc
+
+    // TODO Doc
+    // Stuff when missing values.
+    // TODO There may be useless stuff here!
+    static Vec mu_y_missing;
+    static Mat cov_y_missing;
+    static Vec y_missing;
+    static Vec eigenvals_missing;
+    static Mat eigenvecs_missing;
+    static TVec<int> non_missing;
+
     if (type_id == TYPE_SPHERICAL || type_id == TYPE_DIAGONAL) {
         // Easy case: the covariance matrix is diagonal.
         if (is_input) {
@@ -605,8 +616,94 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const
             assert( !is_input );
             assert( y.length() == n_target );
 
-            assert( !y.hasMissing() ); // TODO Deal with this case.
+            //assert( !y.hasMissing() ); // TODO Deal with this case.
 
+            if (y.hasMissing()) {
+                // We need to recompute the whole shit. TODO Better doc.
+                // First the full covariance.
+                Mat& cov_y = joint_cov[j];
+                real var_min = square(sigma_min);
+                if (stage_joint_cov_computed[j] != this->stage) {
+                    stage_joint_cov_computed[j] = this->stage;
+                    cov_y.resize(D, D);
+                    eigenvals = eigenvalues(j);
+                    real lambda0 = max(var_min, eigenvals->lastElement());
+                    cov_y.fill(0);
+                    Mat& eigenvectors_j = eigenvectors[j];
+
+                    assert( eigenvectors_j.width() == D );
+
+                    for (int k = 0; k < n_eigen_computed - 1; k++)
+                        externalProductScaleAcc(
+                                cov_y, eigenvectors_j(k), eigenvectors_j(k),
+                                max(var_min, eigenvals[k]) - lambda0);
+
+                    for (int i = 0; i < D; i++)
+                        cov_y(i,i) += lambda0;
+
+                    // By construction, the resulting matrix is symmetric. However,
+                    // it may happen that it is not exactly the case due to numerical
+                    // approximations. Thus we ensure it is perfectly symmetric.
+                    assert( cov_y.isSymmetric(false) );
+                    fillItSymmetric(cov_y);
+                }
+                // Then extract what we want.
+                non_missing.resize(0);
+                for (int k = 0; k < n_target; k++)
+                    if (!is_missing(y[k]))
+                        non_missing.append(k);
+                mu_y = center(j).subVec(0, n_target);
+                int n_non_missing = non_missing.length();
+                mu_y_missing.resize(n_non_missing);
+                y_missing.resize(n_non_missing);
+                cov_y_missing.resize(n_non_missing, n_non_missing);
+                for (int k = 0; k < n_non_missing; k++) {
+                    mu_y_missing[k] = mu_y[non_missing[k]];
+                    y_missing[k] = y[non_missing[k]];
+                    for (int j = 0; j < n_non_missing; j++) {
+                        cov_y_missing(k,j) =
+                            cov_y(non_missing[k], non_missing[j]);
+                    }
+                }
+                if (n_non_missing == 0) {
+                    log_likelihood = 0;
+                } else {
+                    // Perform SVD of cov_y_missing.
+                    eigenVecOfSymmMat(cov_y_missing, n_non_missing,
+                                      eigenvals_missing, eigenvecs_missing);
+
+                    mu_y = mu_y_missing;
+                    eigenvals = eigenvals_missing;
+                    eigenvecs = eigenvecs_missing;
+
+                    y_centered.resize(n_non_missing);
+                    y_centered << y_missing;
+                    y_centered -= mu_y;
+                    real squared_norm_y_centered = pownorm(y_centered);
+                    int n_eig = n_non_missing;
+
+                    real lambda0 = max(var_min, eigenvals.lastElement());
+                    assert( lambda0 > 0 );
+                    real one_over_lambda0 = 1.0 / lambda0;
+
+                    log_likelihood = precomputeGaussianLogCoefficient(
+                                         eigenvals, n_non_missing);
+                    // log_likelihood -= 0.5  * 1/lambda_0 * ||y - mu||^2
+                    log_likelihood -=
+                        0.5 * one_over_lambda0 * squared_norm_y_centered;
+
+                    for (int k = 0; k < n_eig - 1; k++) {
+                        // log_likelihood -= 0.5 * (1/lambda_k - 1/lambda_0)
+                        //                       * ((y - mu)'.v_k)^2
+                        real lambda = max(var_min, eigenvals[k]);
+                        assert( lambda > 0 );
+                        if (lambda > lambda0)
+                            log_likelihood -=
+                                0.5 * (1.0 / lambda - one_over_lambda0)
+                                    * square(dot(eigenvecs(k), y_centered));
+                    }
+                }
+            } else {
             log_likelihood = log_coeff[j];
 
             mu_y = center(j).subVec(0, n_target);
@@ -634,6 +731,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const
                 if (lambda > lambda0)
                     log_likelihood -= 0.5 * (1.0 / lambda - one_over_lambda0)
                                       * square(dot(eigenvecs(k), y_centered));
+            }
             }
         } else {
             assert( !y.hasMissing() ); // TODO Deal with this case.
@@ -1419,7 +1517,7 @@ void GaussMix::precomputeAllGaussianLogCoefficients()
 // precomputeGaussianLogCoefficient //
 //////////////////////////////////////
 real GaussMix::precomputeGaussianLogCoefficient(const Vec& eigenvals,
-                                                int dimension)
+                                                int dimension) const
 {
     int n_eig = eigenvals.length();
     assert( dimension >= n_eig );
@@ -1519,8 +1617,10 @@ void GaussMix::resizeDataBeforeTraining() {
 
     alpha.resize(L);
     eigenvectors.resize(0);
+    joint_cov.resize(0);
     mean_training.resize(0);
     sigma.resize(0);
+    stage_joint_cov_computed.resize(0);
     stddev_training.resize(0);
 
     center.resize(L, D);
@@ -1538,13 +1638,18 @@ void GaussMix::resizeDataBeforeTraining() {
         diags.resize(L, D);
     } else {
         assert( type_id == TYPE_GENERAL );
+
+        joint_cov.resize(L);
+        eigenvectors.resize(L);
+        stage_joint_cov_computed.resize(L);
+        stage_joint_cov_computed.fill(-1);
+
         if (n_eigen == -1 || n_eigen == D)
             // We need to compute all eigenvectors.
             n_eigen_computed = D;
         else
             n_eigen_computed = n_eigen + 1;
         eigenvalues.resize(L, n_eigen_computed);
-        eigenvectors.resize(L);
         for (int i = 0; i < eigenvectors.length(); i++)
             eigenvectors[i].resize(n_eigen_computed, D);
     }

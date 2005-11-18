@@ -67,13 +67,11 @@ protected:
     // * protected options *
     // *********************
 
-    /*
     // TODO Doc: full covariance matrix, used in 'setInput' and computed only
     // once / stage.
-    TVec<Mat> joint_cov;
+    mutable TVec<Mat> joint_cov;
     // TODO Doc + put default = -1.
     TVec<int> stage_joint_cov_computed;
-    */
 
     Mat center_y_x; // TODO DOcument
 
@@ -214,7 +212,8 @@ protected:
     void precomputeAllGaussianLogCoefficients();
 
     // TODO Document.
-    real precomputeGaussianLogCoefficient(const Vec& eigenvals, int dimension);
+    real precomputeGaussianLogCoefficient(const Vec& eigenvals, int dimension)
+                                          const;
 
     //! Make sure everything has the right size when training starts.
     void resizeDataBeforeTraining();
