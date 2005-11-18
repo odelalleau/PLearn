@@ -288,9 +288,11 @@ class vc_add( PyTestMode ):
             try:
                 version_control.add( config_path )
                 version_control.add( ppath.pytest_dir )
+                version_control.ignore( ppath.pytest_dir, [ '*.compilation_log' ] )
                 for test in tests:
                     version_control.add( test.resultsDirectory() )
                     version_control.recursive_add( test.resultsDirectory(Test.expectedResults()) )
+                    version_control.ignore( test.resultsDirectory(), [ '.plearn', Test.runResults() ] )
             except version_control.VersionControlError:
                 raise PyTestError(
                     "The directory in which lies a config file must be added to version control by user.\n"

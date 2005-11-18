@@ -1,4 +1,4 @@
-import os
+import os, tempfile
 from ppath import ppath
 from verbosity import vprint
 
@@ -22,7 +22,35 @@ def commit(files, msg):
 
     vprint("\n+++ Commiting (from "+ os.getcwd() +"):\n" + commit_cmd, 1)
     os.system(commit_cmd) 
-    
+
+def ignore( path, list_of_paths ):
+    get_ign_prop_cmd = "svn propget --strict svn:ignore %s" % path
+    h = os.popen(get_ign_prop_cmd)
+    already_ignored = h.readlines()
+    h.close()
+    to_ignore = []
+
+    # Remove trailing carriage returns.
+    for file in already_ignored:
+        to_ignore.append(file.strip(os.linesep))
+
+    for added in list_of_paths:
+        if added not in to_ignore:
+            to_ignore.append(added)
+
+    to_ignore_full_string = ""
+    for file in to_ignore:
+        to_ignore_full_string += file + os.linesep
+    propfile = tempfile.NamedTemporaryFile()
+    propfile.write(to_ignore_full_string)
+    propfile.flush()
+    # Remove trailing carriage return.
+    to_ignore_full_string = to_ignore_full_string.strip(os.linesep)
+    ignore_cmd = "svn propset svn:ignore -F %s %s" % (propfile.name, path)
+    result = __report_status( ignore_cmd )
+    propfile.close()
+    return result
+
 def last_user_to_commit(file_path):
     raise NotImplementedError
 

@@ -32,6 +32,9 @@ def commit(files, msg):
     errors = commit_process.fromchild.readlines()
     vprint("%s" % string.join( errors, '' ), 1)
 
+def ignore( path, list_of_paths ):
+    raise NotImplementedError
+
 def last_user_to_commit(file_path):
     """Returns username of the last person to commit the file corresponding to I{file_path}."""
     file_path = os.path.abspath(file_path)

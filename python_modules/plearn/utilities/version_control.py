@@ -30,6 +30,10 @@ def is_under_version_control( path ):
     return ( os.path.isdir( os.path.join(path, cvs_directory) ) or
              os.path.isdir( os.path.join(path, subversion_hidden) ) )        
 
+# Ignore in 'path' all files given by 'list_of_paths'.
+def ignore( path, list_of_paths ):
+    get_vc_module().ignore( path, list_of_paths )
+
 # Return current revision of repository in 'repository_path'.
 # The current revision is stored in the file
 # 'repository_revision_dir'/'repository_name'_'svn or cvs'_repository_revision
