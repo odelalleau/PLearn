@@ -238,7 +238,7 @@ void SubVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies) {
 PP<Dictionary> SubVMatrix::getDictionary(int col) const
 {
 #ifdef BOUNDCHECK
-    if(col<0 || col>width())
+    if(col<0 || col>=width())
         PLERROR("In SubVMatrix::getDictionary(col) OUT OF BOUND access");
 #endif
     return parent->getDictionary(col+jstart);
@@ -247,7 +247,7 @@ PP<Dictionary> SubVMatrix::getDictionary(int col) const
 Vec SubVMatrix::getValues(int row, int col) const
 {
 #ifdef BOUNDCHECK
-    if(row<0 || row>=length() || col<0 || col>width())
+    if(row<0 || row>=length() || col<0 || col>=width())
         PLERROR("In SubVMatrix::getValues(row,col) OUT OF BOUND access");
 #endif
     return parent->getValues(row+istart,col+jstart);
@@ -256,7 +256,7 @@ Vec SubVMatrix::getValues(int row, int col) const
 Vec SubVMatrix::getValues(const Vec& input, int col) const
 {
 #ifdef BOUNDCHECK
-    if(col<0 || col>width())
+    if(col<0 || col>=width())
         PLERROR("In SubVMatrix::getValues(row,col) OUT OF BOUND access");
 #endif
     return parent->getValues(input.subVec(jstart,input.length()-jstart),col+jstart);
