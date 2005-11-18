@@ -95,6 +95,7 @@
 #include <plearn_learners/language/Dictionary/Dictionary.h>
 #include <plearn_learners/language/Dictionary/FileDictionary.h>
 #include <plearn_learners/language/Dictionary/VecDictionary.h>
+#include <plearn_learners/language/Dictionary/ConditionalDictionary.h>
 
 /****************
  * HyperCommand *
@@ -147,6 +148,7 @@
 // Generic
 #include <plearn_learners/generic/AddCostToLearner.h>
 #include <plearn_learners/generic/AddLayersNNet.h>
+#include <plearn_learners/generic/DistRepNNet.h>
 #include <plearn_learners/generic/NNet.h>
 #include <plearn_learners/generic/SelectInputSubsetLearner.h>
 #include <plearn_learners/generic/StackedLearner.h>
@@ -237,6 +239,7 @@
 #include <plearn/vmat/IndexedVMatrix.h>
 #include <plearn/vmat/JulianizeVMatrix.h>
 #include <plearn/vmat/KNNVMatrix.h>
+#include <plearn/vmat/LemmatizeVMatrix.h>
 #include <plearn/vmat/LocalNeighborsDifferencesVMatrix.h>
 #include <plearn/vmat/LocallyPrecomputedVMatrix.h>
 #include <plearn/vmat/MultiInstanceVMatrix.h>
@@ -247,6 +250,7 @@
 #include <plearn/vmat/PrecomputedVMatrix.h>
 #include <plearn/vmat/ProcessDatasetVMatrix.h>
 #include <plearn/vmat/ProcessingVMatrix.h>
+#include <plearn/vmat/ProcessSymbolicSequenceVMatrix.h>
 #include <plearn/vmat/RankedVMatrix.h>
 #include <plearn/vmat/RegularGridVMatrix.h>
 #include <plearn/vmat/RemoveDuplicateVMatrix.h>

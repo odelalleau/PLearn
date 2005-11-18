@@ -58,6 +58,11 @@
  **********/
 #include <commands/PLearnCommands/VMatCommand.h>
 
+/**************
+ * Dictionary *
+ **************/
+//#include <plearn_learners/language/Dictionary/WordNetSenseDictionary.h>
+
 /*********
  * Torch *
  *********/
