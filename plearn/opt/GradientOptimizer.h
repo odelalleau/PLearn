@@ -70,6 +70,9 @@ public:
     // Options (also available through setOption)
     real start_learning_rate;
     real decrease_constant;
+    //! Indication that a stochastic hack to accelerate
+    //! stochastic gradient descent should be used 
+    bool use_stochastic_hack;
 
     // optionally the user can instead of using the decrease_constant
     // use a fixed schedule. This matrix has 2 columns: iteration_threshold and learning_rate_factor

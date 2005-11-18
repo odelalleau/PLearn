@@ -56,7 +56,9 @@ GradientOptimizer::GradientOptimizer(real the_start_learning_rate,
     :inherited(n_updates, filename, every_iterations),
      learning_rate(0.),   
      start_learning_rate(the_start_learning_rate),
-     decrease_constant(the_decrease_constant) {}
+     decrease_constant(the_decrease_constant),
+     use_stochastic_hack(true)
+{}
 
 GradientOptimizer::GradientOptimizer(VarArray the_params, Var the_cost,
                                      real the_start_learning_rate, 
@@ -66,7 +68,8 @@ GradientOptimizer::GradientOptimizer(VarArray the_params, Var the_cost,
     : inherited(the_params,the_cost, n_updates, filename, every_iterations),
       learning_rate(0.),
       start_learning_rate(the_start_learning_rate),
-      decrease_constant(the_decrease_constant)
+      decrease_constant(the_decrease_constant),
+      use_stochastic_hack(true)
 { }
 
 GradientOptimizer::GradientOptimizer(VarArray the_params, Var the_cost, 
@@ -79,7 +82,8 @@ GradientOptimizer::GradientOptimizer(VarArray the_params, Var the_cost,
                 n_updates, filename, every_iterations),
       learning_rate(0.),
       start_learning_rate(the_start_learning_rate),
-      decrease_constant(the_decrease_constant)
+      decrease_constant(the_decrease_constant),
+      use_stochastic_hack(true)
 { }
 
 
@@ -99,7 +103,13 @@ void GradientOptimizer::declareOptions(OptionList& ol)
                   "and learning_rate_factor. As soon as the iteration number goes above the iteration_threshold,\n"
                   "the corresponding learning_rate_factor is applied (multiplied) to the start_learning_rate to\n"
                   "obtain the learning_rate.\n");
+    declareOption(ol, "use_stochastic_hack", &GradientOptimizer::use_stochastic_hack, OptionBase::buildoption, 
+                  "Indication that a stochastic hack to accelerate stochastic gradient descent should be used.\n"
+                  );
 
+
+//! 
+    //! 
     inherited::declareOptions(ol);
 }
 
@@ -164,7 +174,7 @@ real GradientOptimizer::optimize()
     SumOfVariable* sumofvar = dynamic_cast<SumOfVariable*>((Variable*)cost);
     Array<Mat> oldgradientlocations;
     // bool stochastic_hack = false;
-    bool stochastic_hack = sumofvar!=0 && sumofvar->nsamples==1;
+    bool stochastic_hack = use_stochastic_hack && sumofvar!=0 && sumofvar->nsamples==1;
     // stochastic_hack=false;
     if(stochastic_hack)
     {
@@ -227,7 +237,7 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll)
     // so that gradients are "accumulated" directly in the parameters, thus updating them!
     SumOfVariable* sumofvar = dynamic_cast<SumOfVariable*>((Variable*)cost);
     Array<Mat> oldgradientlocations;
-    bool stochastic_hack = sumofvar!=0 && sumofvar->nsamples==1;
+    bool stochastic_hack = use_stochastic_hack && sumofvar!=0 && sumofvar->nsamples==1;
     //stochastic_hack=false;
     if(stochastic_hack)
         // make the gradient and values fields of parameters point to the same place,
