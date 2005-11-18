@@ -104,7 +104,13 @@ VMatCommand::VMatCommand():
         // "       conditioning field <condfield#> \n"
         "   or: vmat diststat <dataset> <inputsize>\n"
         "       Will compute and output basic statistics on the euclidean distance \n"
-        "       between two consecutive input points \n\n"
+        "       between two consecutive input points \n"
+        "   or: vmat dictionary <dataset>\n"
+        "       Will create <dataset>.field#.dict, where # is the\n"
+        "       field (column) number, starting at 0. Those files contain the plearn\n"
+        "       scripts of the Dictionary objets for each field.\n"
+        "   or: vmat catstr <dataset>\n"
+        "       Will output the content of <dataset>, using its string mappings\n\n"
         "<dataset> is a parameter understandable by getDataSet: \n"
         + getDataSetHelp()
         ) 
