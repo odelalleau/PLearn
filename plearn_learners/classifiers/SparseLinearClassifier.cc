@@ -283,15 +283,26 @@ void SparseLinearClassifier::build_()
             costs[k] = neg_log_pi(output, target);
         }
       } 
-      else if(cost_funcs[k]=="class_error")
+      else 
+      
+      if(cost_funcs[k]=="class_error")
         costs[k] = classification_loss(output, target);
-      else if(cost_funcs[k]=="binary_class_error")
+      else 
+        
+          if(cost_funcs[k]=="binary_class_error")
         costs[k] = binary_classification_loss(output, target);
       else if(cost_funcs[k]=="multiclass_error")
-        costs[k] = multiclass_loss(output, target);
-      else if(cost_funcs[k]=="cross_entropy")
-        costs[k] = cross_entropy(output, target);
-        else */
+      costs[k] = multiclass_loss(output, target);
+      else 
+        */
+      if(cost_funcs[k]=="cross_entropy")
+      {
+        if(weights_are_in_input)
+          costs[k] = dot(sampleweight,cross_entropy(output, target));
+        else
+          costs[k] = sum(cross_entropy(output, target));
+      }
+      else 
       if(cost_funcs[k]=="conf_rated_adaboost_cost")
       {
         if(output_transfer_func != "sigmoid")
@@ -375,6 +386,7 @@ void SparseLinearClassifier::build_()
       output_and_target_to_cost = Func(sampleweight & output & target,test_costs);
     else
       output_and_target_to_cost = Func(output & target,test_costs);
+    initializeParams();
     if (parameters.size()>0 && parameters.nelems() == classify->parameters.nelems())
       classify->parameters.copyValuesFrom(parameters);
     parameters.resize(classify->parameters.size());
