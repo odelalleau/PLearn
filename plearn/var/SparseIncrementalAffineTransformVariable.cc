@@ -283,7 +283,7 @@ void SparseIncrementalAffineTransformVariable::bprop()
           n_weights++; 
           int maxi, maxj;
           absargmax(sums,maxi,maxj);
-          input2->matValue(maxi+1,maxj) = start_grad_prop * sums(maxi,maxj)/n_grad_samples;
+          //input2->matValue(maxi+1,maxj) = start_grad_prop * sums(maxi,maxj)/n_grad_samples;
           //positions[maxj].push_back(maxi);
           if(positions(0,maxj) == 0)
             positions(0,maxj) = 1;
