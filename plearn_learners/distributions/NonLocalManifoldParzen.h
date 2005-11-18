@@ -132,6 +132,15 @@ protected:
     //! Predictions for F
     TVec<Mat> Fs;
 
+    //! Position of the current example in 
+    //! the training set
+    int curpos;
+
+    VMat train_set_with_targets;
+    VMat targets_vmat;
+    Var totalcost;
+    int nsamples;
+
 public:
 
     // ************************
@@ -200,12 +209,24 @@ public:
     real svd_threshold;
     //! Number of steps in the random walk
     int rw_n_step;
-    //! Size of the step;
+    //! Size of the step
     real rw_size_step;
+    //! Which principal component to follow
+    int rw_ith_component;
+    //! File name for the rw saves
+    string rw_file_name;
+    //! Number of iterations between rw saves
+    int rw_save_every;
     //! Indication that the predicted parameters should be stored
     bool store_prediction;
     //! Parameters to share
     VarArray shared_parameters;
+    //! Number of optimizer stages
+    int optstage_per_lstage;
+    //! Number of iterations since the last save
+    //! after which the parameters
+    //! must be saved
+    int save_every;
 
     // ****************
     // * Constructors *

@@ -95,14 +95,14 @@ using namespace std;
 
 
 NonLocalManifoldParzen::NonLocalManifoldParzen() 
-/* ### Initialize all fields to their default value here */
     :  //weight_embedding(1),
-weight_decay(0), penalty_type("L2_square"),
+    curpos(0),
+    weight_decay(0), penalty_type("L2_square"),
 //noise_grad_factor(0.01),noise(0), noise_type("gaussian"), omit_last(0),
 learn_mu(true), 
 //magnified_version(false), 
 reference_set(0), sigma_init(0.1), sigma_min(0.00001), nneighbors(5), nneighbors_density(-1), mu_nneighbors(2), ncomponents(1), sigma_threshold_factor(1), variances_transfer_function("softplus"), architecture_type("single_neural_network"),
-n_hidden_units(-1), batch_size(1), svd_threshold(1e-8),store_prediction(false)
+    n_hidden_units(-1), batch_size(1), svd_threshold(1e-8), rw_n_step(1000), rw_size_step(0.01), rw_ith_component(0), rw_file_name("random_walk_"), rw_save_every(100), store_prediction(false), optstage_per_lstage(-1), save_every(-1)
 {
 }
 
@@ -247,6 +247,17 @@ void NonLocalManifoldParzen::declareOptions(OptionList& ol)
                   "Size of the steps in the random walk (for compute output).\n"
         );
 
+    declareOption(ol, "rw_ith_component", &NonLocalManifoldParzen::rw_ith_component, OptionBase::buildoption,
+                  "Which principal component to follow.\n"
+        );
+
+    declareOption(ol, "rw_save_every", &NonLocalManifoldParzen::rw_save_every, OptionBase::buildoption,
+                  "Number of iterations between savings of random walk results.\n"
+        );
+    declareOption(ol, "rw_file_name", &NonLocalManifoldParzen::rw_file_name, OptionBase::buildoption,
+                  "File name for the random walk saves.\n"
+        );
+
     declareOption(ol, "store_prediction", &NonLocalManifoldParzen::store_prediction, OptionBase::buildoption,
                   "Indication that the predicted parameters should be stored.\n"
                   "This may make testing faster. Note that the predictions are\n"
@@ -254,6 +265,17 @@ void NonLocalManifoldParzen::declareOptions(OptionList& ol)
                   "modified later on (e.g. if the parameters of the predictor are shared), then\n"
                   "this option might give different testing results.\n"
         );
+
+    declareOption(ol, "optstage_per_lstage", &NonLocalManifoldParzen::optstage_per_lstage, OptionBase::buildoption,
+                  "Number of optimizer stages. If < 0, then it is determined as a function of\n"
+                  "the training set length and of the batch size.\n"
+        );
+
+    declareOption(ol, "save_every", &NonLocalManifoldParzen::save_every, OptionBase::buildoption,
+                  "Number of iterations since the last save after which the parameters must be saved.\n"
+                  "If < 0, then the parameters are saved at the end of train().\n"
+        );
+
 
 //  declareOption(ol, "noise", &NonLocalManifoldParzen::noise, OptionBase::buildoption,
 //		"Noise parameter for the training data. For uniform noise, this gives the half the length \n" "of the uniform window (centered around the origin), and for gaussian noise, this gives the variance of the noise in all directions.\n"
@@ -274,6 +296,11 @@ void NonLocalManifoldParzen::declareOptions(OptionList& ol)
     declareOption(ol, "reference_set", &NonLocalManifoldParzen::reference_set, OptionBase::learntoption,
                   "Reference points for density computation.\n"
         );
+
+    declareOption(ol, "curpos", &NonLocalManifoldParzen::curpos, OptionBase::learntoption,
+                  "Position of the current example in the training set.\n"
+        );
+    
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -742,7 +769,6 @@ void NonLocalManifoldParzen::forget()
     
 void NonLocalManifoldParzen::train()
 {
-
     // Check whether gradient descent is going to be done
     // If not, then we don't need to store the parameters,
     // except for sn...
@@ -763,9 +789,12 @@ void NonLocalManifoldParzen::train()
     // Set train_stats if not already done.
     if (!train_stats)
         train_stats = new VecStatsCollector();
-
+    /*
     VMat train_set_with_targets;
     VMat targets_vmat;
+    Var totalcost;
+    int nsamples;
+    */
     if (!cost_of_one_example)
         PLERROR("NonLocalManifoldParzen::train: build has not been run after setTrainingSet!");
     /*
@@ -779,26 +808,31 @@ void NonLocalManifoldParzen::train()
       targets_vmat = hconcat(local_neighbors_differences(train_set, nneighbors, false, true),random_neighbors_differences(train_set,1,false,true));
       else*/
   
-    targets_vmat = local_neighbors_differences(train_set, nneighbors, false, true);
-
-    train_set_with_targets = hconcat(train_set, targets_vmat);
-    train_set_with_targets->defineSizes(inputsize()+ inputsize()*nneighbors+1+nneighbors /*+ (architecture_type == "embedding_neural_network" ? inputsize()+1:0)*/,0);
-    int nsamples = batch_size>0 ? batch_size : train_set->length();
-
-    Var totalcost = meanOf(train_set_with_targets, cost_of_one_example, nsamples);
-
-    if(optimizer)
+    if(stage == 0)
     {
-        if(shared_parameters.size()!=0)
-            optimizer->setToOptimize(shared_parameters, totalcost);  
-        else
-            optimizer->setToOptimize(parameters, totalcost);  
-        optimizer->build();
+        targets_vmat = local_neighbors_differences(train_set, nneighbors, false, true);
+        
+        train_set_with_targets = hconcat(train_set, targets_vmat);
+        train_set_with_targets->defineSizes(inputsize()+ inputsize()*nneighbors+1+nneighbors /*+ (architecture_type == "embedding_neural_network" ? inputsize()+1:0)*/,0);
+        nsamples = batch_size>0 ? batch_size : train_set->length();
+        
+        totalcost = meanOf(train_set_with_targets, cost_of_one_example, nsamples);
+
+        if(optimizer)
+        {
+            if(shared_parameters.size()!=0)
+                optimizer->setToOptimize(shared_parameters, totalcost);  
+            else
+                optimizer->setToOptimize(parameters, totalcost);  
+            optimizer->build();
+        }
+        else PLERROR("NonLocalManifoldParzen::train can't train without setting an optimizer first!");
     }
-    else PLERROR("NonLocalManifoldParzen::train can't train without setting an optimizer first!");
+
+    dynamic_cast<SumOfVariable*>( (Variable*) totalcost)->curpos = curpos;
   
     // number of optimizer stages corresponding to one learner stage (one epoch)
-    int optstage_per_lstage = train_set->length()/nsamples;
+    if(optstage_per_lstage < 0) optstage_per_lstage = train_set->length()/nsamples;
 
     ProgressBar* pb = 0;
     if(report_progress>0)
@@ -818,6 +852,23 @@ void NonLocalManifoldParzen::train()
         if(verbosity>2)
             cout << "Epoch " << stage << " train objective: " << train_stats->getMean() << endl;
         ++stage;
+        if(stage%save_every == 0 && store_prediction && !flag)
+        {
+            for(int t=0; t<L;t++)
+            {
+                reference_set->getRow(t,neighbor_row);
+                predictor->fprop(neighbor_row, F.toVec() & mus(t) & sns.subVec(t,1));                   
+                // N.B. this is the SVD of F'
+                lapackSVD(F, Ut_svd, S_svd, V_svd,'A',1.5);
+                for (int k=0;k<ncomponents;k++)
+                {
+                    sms(t,k) = mypow(S_svd[k],2);                
+                    Fs[t](k) << Ut_svd(k);
+                }    
+                
+            }
+        }
+
         if(pb)
             pb->update(stage-initial_stage);
       
@@ -828,7 +879,7 @@ void NonLocalManifoldParzen::train()
     if(pb)
         delete pb;
 
-    if(store_prediction && !flag)
+    if(save_every < 0 && store_prediction && !flag)
     {
         for(int t=0; t<L;t++)
         {
@@ -844,7 +895,7 @@ void NonLocalManifoldParzen::train()
 
         }
     }
-//  update_reference_set_parameters();
+    curpos = dynamic_cast<SumOfVariable*>( (Variable*) totalcost)->curpos;
 }
 
 //////////////////////
@@ -1079,31 +1130,69 @@ void NonLocalManifoldParzen::computeOutput(const Vec& input, Vec& output) const
         break;
     case 'r':
     {
-        //int rw_n_step = 100000;
-        //real step = 0.001;
-        //int save_every = 100;
-        //string fsave = "";
-        //VMat temp;
+        string fsave = "";
+        VMat temp;
+        real step_size = rw_size_step;
+        real dp;        
         t_row << input;
+        Vec last_F(inputsize());
         for(int s=0; s<rw_n_step;s++)
         {
+            if(s == 0) 
+            {
+                predictor->fprop(t_row, F.toVec() & mu_temp & sn_temp);
+                last_F << F(rw_ith_component);
+            }
             predictor->fprop(t_row, F.toVec() & mu_temp & sn_temp);
     
             // N.B. this is the SVD of F'
             lapackSVD(F, Ut_svd, S_svd, V_svd,'A',1.5);
-            F(0) << Ut_svd(0);
-            /*
-              if(s % save_every == 0)
-              {
-              fsave = "nlmp_walk_" + tostring(s) + ".amat";
-              temp = new MemoryVMatrix(t_row.toMat(1,t_row.length()));
-              temp->saveAMAT(fsave,false,true);
-              //PLearn::save(fsave,t_row);
-              }
-            */
-            t_row += rw_size_step*F(0);
+            F(rw_ith_component) << Ut_svd(rw_ith_component);
+            
+            if(s % rw_save_every == 0)
+            {
+                fsave = rw_file_name + tostring(s) + ".amat";
+                temp = new MemoryVMatrix(t_row.toMat(1,t_row.length()));
+                temp->saveAMAT(fsave,false,true);
+                //PLearn::save(fsave,t_row);
+            }
+            dp = dot(last_F,F(rw_ith_component));
+            if(dp>0) dp = 1;
+            else dp = -1;
+            t_row += step_size*F(rw_ith_component)*abs(S_svd[rw_ith_component])*dp;
+            last_F << dp*F(rw_ith_component);
         }
         output << t_row;
+
+        t_row << input;
+        for(int s=0; s<rw_n_step;s++)
+        {
+            if(s == 0) 
+            {
+                predictor->fprop(t_row, F.toVec() & mu_temp & sn_temp);
+                last_F << (-1.0)*F(rw_ith_component);
+            }
+
+            
+            predictor->fprop(t_row, F.toVec() & mu_temp & sn_temp);
+    
+            // N.B. this is the SVD of F'
+            lapackSVD(F, Ut_svd, S_svd, V_svd,'A',1.5);
+            F(rw_ith_component) << Ut_svd(rw_ith_component);
+            
+            if(s % rw_save_every == 0)
+            {
+                fsave = rw_file_name + tostring(-s) + ".amat";
+                temp = new MemoryVMatrix(t_row.toMat(1,t_row.length()));
+                temp->saveAMAT(fsave,false,true);
+                //PLearn::save(fsave,t_row);
+            }
+            dp = dot(last_F,F(rw_ith_component));
+            if(dp>0) dp = 1;
+            else dp = -1;
+            t_row += step_size*F(rw_ith_component)*abs(S_svd[rw_ith_component])*dp;
+            last_F << dp*F(rw_ith_component);
+        }
         break;
     }
     case 't':
