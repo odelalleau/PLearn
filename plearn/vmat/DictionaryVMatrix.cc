@@ -76,7 +76,7 @@ real DictionaryVMatrix::getStringVal(int col, const string & str) const
 {
     int ret = dictionaries[col]->getId(str);
     if(ret == -1) return MISSING_VALUE;
-    else return dictionaries[col]->getId(str);
+    else return ret;
 }
 
 string DictionaryVMatrix::getValString(int col, real val) const
@@ -157,7 +157,7 @@ void DictionaryVMatrix::build_()
             tokens = split(line, delimiters);
 
             // Set n_attributes
-            if(k==0 && it==0)
+            if(it==0)
             {
                 n_attributes = int(tokens.size());
                 data.resize(length_,n_attributes);
@@ -198,6 +198,12 @@ void DictionaryVMatrix::build_()
         }       
     }
     width_ = n_attributes;
+
+    // Making sure that the dictionaries cannot be
+    // updated anymore, since they should contain
+    // all the needed information about the data
+    for(int i=0; i<dictionaries.length(); i++)
+        dictionaries[i]->setUpdateMode(NO_UPDATE);
 }
 
 // ### Nothing to add here, simply calls build_
