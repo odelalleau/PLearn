@@ -1994,8 +1994,11 @@ int vmatmain(int argc, char** argv)
         VMat vmat = getDataSet(vmat_file);
         for(int i=0; i<vmat->width(); i++)
         {
-            string dico_name = vmat_file + ".col" + tostring(i) + ".dict";
-            save(dico_name,*(vmat->getDictionary(i)));
+            if(vmat->getDictionary(i))
+            {
+                string dico_name = vmat_file + ".col" + tostring(i) + ".dict";
+                save(dico_name,*(vmat->getDictionary(i)));
+            }
         }
     }
     else if(command=="help")
