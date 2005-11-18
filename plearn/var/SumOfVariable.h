@@ -63,12 +63,14 @@ public:
     Vec input_value;
     Vec input_gradient;
     Vec output_value;
+    //! Indication that sizefprop should be used on f
+    bool do_sizeprop;
     
 public:
     //!  protected default constructor for persistence
     SumOfVariable() : distr(), f(), nsamples(), curpos() {}
     //!  Sum_{inputs \in distr} f(inputs)
-    SumOfVariable(VMat the_distr, Func the_f, int the_nsamples=-1);
+    SumOfVariable(VMat the_distr, Func the_f, int the_nsamples=-1, bool the_do_resizeprop=false);
     
     PLEARN_DECLARE_OBJECT(SumOfVariable);
     static void declareOptions(OptionList &ol);
@@ -92,20 +94,20 @@ protected:
 DECLARE_OBJECT_PTR(SumOfVariable);
 
 //!  sumOf
-inline Var sumOf(VMat distr, Func f, int nsamples)
-{ return new SumOfVariable(distr,f,nsamples); }
+inline Var sumOf(VMat distr, Func f, int nsamples, bool the_do_sizeprop=false)
+{ return new SumOfVariable(distr,f,nsamples,the_do_sizeprop); }
 
 //!  deprecated old version do not use!
-inline Var sumOf(Var output, const VarArray& inputs, VMat distr, int nsamples, VarArray parameters=VarArray())
-{ return sumOf(distr,Func(inputs,output),nsamples); }
+inline Var sumOf(Var output, const VarArray& inputs, VMat distr, int nsamples, VarArray parameters=VarArray(), bool the_do_sizeprop=false)
+{ return sumOf(distr,Func(inputs,output),nsamples,the_do_sizeprop); }
 
 //!  meanOf
-inline Var meanOf(VMat distr, Func f, int nsamples)
-{ return new SumOfVariable(distr,f/nsamples,nsamples); }
+inline Var meanOf(VMat distr, Func f, int nsamples, bool the_do_sizeprop=false)
+{ return new SumOfVariable(distr,f/nsamples,nsamples, the_do_sizeprop); }
 
 //!  deprecated old version do not use!
-inline Var meanOf(Var output, const VarArray& inputs, VMat distr, int nsamples, VarArray parameters=VarArray())
-{ return meanOf(distr, Func(inputs,output), nsamples); }
+inline Var meanOf(Var output, const VarArray& inputs, VMat distr, int nsamples, VarArray parameters=VarArray(), bool the_do_sizeprop=false)
+{ return meanOf(distr, Func(inputs,output), nsamples, the_do_sizeprop); }
 
 } // end of namespace PLearn
 

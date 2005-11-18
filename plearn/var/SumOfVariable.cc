@@ -55,7 +55,7 @@ PLEARN_IMPLEMENT_OBJECT(SumOfVariable,
                         "Variable that sums the value of a Func evaluated on each row of a VMat",
                         "NO HELP");
 
-SumOfVariable::SumOfVariable(VMat the_distr, Func the_f, int the_nsamples)
+SumOfVariable::SumOfVariable(VMat the_distr, Func the_f, int the_nsamples,bool the_do_sizeprop)
     : inherited(nonInputParentsOfPath(the_f->inputs,the_f->outputs), 
                 the_f->outputs[0]->length(), 
                 the_f->outputs[0]->width()),
@@ -64,7 +64,8 @@ SumOfVariable::SumOfVariable(VMat the_distr, Func the_f, int the_nsamples)
       //input_gradient(the_distr->inputsize()+the_distr->targetsize()+the_distr->weightsize()), 
       input_value(the_distr->width()),
       input_gradient(the_distr->width()),
-      output_value(the_f->outputs[0]->size())
+      output_value(the_f->outputs[0]->size()),
+      do_sizeprop(the_do_sizeprop)
 {
     build_();
 }
@@ -129,7 +130,8 @@ void SumOfVariable::fprop()
         input_value.resize(distr->width());
         distr->getRow(curpos, input_value);
         input_value.resize(distr->inputsize()+distr->targetsize()+distr->weightsize());
-        f->fprop(input_value, value);
+        if(do_sizeprop) f->sizefprop(input_value, value);
+        else f->fprop(input_value, value);
         if(++curpos == distr->length())
             curpos = 0;
     }
@@ -148,7 +150,8 @@ void SumOfVariable::fprop()
             input_value.resize(distr->width());
             distr->getRow(i, input_value);
             input_value.resize(distr->inputsize()+distr->targetsize()+distr->weightsize());
-            f->fprop(input_value, output_value);
+            if(do_sizeprop) f->sizefprop(input_value, output_value);
+            else f->fprop(input_value, output_value);
             dummy_value += output_value;
         }
         MPI_Allreduce(dummy_value.data(), value.data(), value.length(), PLMPI_REAL, MPI_SUM, MPI_COMM_WORLD);
@@ -158,7 +161,8 @@ void SumOfVariable::fprop()
             input_value.resize(distr->width());
             distr->getRow(curpos, input_value);
             input_value.resize(distr->inputsize()+distr->targetsize()+distr->weightsize());
-            f->fprop(input_value, output_value);
+            if(do_sizeprop) f->sizefprop(input_value, output_value);
+            else f->fprop(input_value, output_value);
             value += output_value;
             if(++curpos == distr->length())
                 curpos = 0;
@@ -182,7 +186,8 @@ void SumOfVariable::fbprop()
         distr->getRow(curpos, input_value);
         input_value.resize(distr->inputsize()+distr->targetsize()+distr->weightsize());
         //displayFunction(f, true, false, 250);
-        f->fbprop(input_value, value, input_gradient, gradient);
+        if(do_sizeprop) f->sizefbprop(input_value, value, input_gradient, gradient);
+        else f->fbprop(input_value, value, input_gradient, gradient);
         //displayFunction(f, true, false, 250);
         if(++curpos == distr->length()) 
             curpos = 0;
@@ -202,7 +207,8 @@ void SumOfVariable::fbprop()
             input_value.resize(distr->width());
             distr->getRow(i, input_value);
             input_value.resize(distr->inputsize()+distr->targetsize()+distr->weightsize());
-            f->fbprop(input_value, output_value, input_gradient, gradient);
+            if(do_sizeprop) f->sizefbprop(input_value, output_value, input_gradient, gradient);
+            else f->fbprop(input_value, output_value, input_gradient, gradient);
             dummy_value += output_value;
         }
         MPI_Allreduce(dummy_value.data(), value.data(), value.length(), PLMPI_REAL, MPI_SUM, MPI_COMM_WORLD);
@@ -223,7 +229,8 @@ void SumOfVariable::fbprop()
             static bool display_fn=false;
             if (display_fn)
                 displayFunction(f, true, false, 250);
-            f->fbprop(input_value, output_value, input_gradient, gradient);
+            if(do_sizeprop) f->sizefbprop(input_value, output_value, input_gradient, gradient);
+            else f->fbprop(input_value, output_value, input_gradient, gradient);
             value += output_value;
             if(++curpos == distr->length()) 
                 curpos = 0;
@@ -313,8 +320,10 @@ void SumOfVariable::printInfo(bool print_gradient)
         input_value.resize(distr->width());
         distr->getRow(curpos++,input_value);
         input_value.resize(distr->inputsize()+distr->targetsize()+distr->weightsize());
+        
+        if(do_sizeprop) f->sizefprop(input_value,output_value);
         if (print_gradient)
-            f->fbprop(input_value, output_value, input_gradient, gradient);
+            f->fbprop(input_value, output_value, input_gradient, gradient);        
         else
             f->fprop(input_value, output_value);
         value += output_value;
