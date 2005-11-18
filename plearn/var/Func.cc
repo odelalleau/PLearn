@@ -210,6 +210,20 @@ void Function::fprop(const Array<Vec>& in, const Array<Vec>& out) const
     outputs >> out;
 }
 
+void Function::sizefprop(const Vec& in, const Vec& out) const
+{
+    inputs << in;
+    fproppath.sizefprop();
+    outputs >> out;
+}
+
+void Function::sizefprop(const Array<Vec>& in, const Array<Vec>& out) const
+{
+    inputs << in;
+    fproppath.sizefprop();
+    outputs >> out;
+}
+
 real Function::operator()(const Vec& input1, const Vec& input2) const
 {
     if(inputs.size()!=2 || outputsize!=1)
@@ -247,6 +261,42 @@ void Function::fbprop(const Array<Vec>& in, const Array<Vec>& out, const Array<V
     fproppath.clearGradient();
     outputs.copyGradientFrom(output_gradient);
     fproppath.fbprop();
+    outputs >> out;
+    inputs.copyGradientTo(input_gradient);
+
+#ifdef BOUNDCHECK
+    if (out.hasMissing())
+        PLERROR("Function::fbprop: detected MISSING_VALUE in function output!");
+#endif
+}
+
+void Function::sizefbprop(const Vec& in, const Vec& out, const Vec& input_gradient, const Vec& output_gradient)
+{
+    inputs << in;
+    inputs.clearGradient();
+    fproppath.clearGradient();
+    outputs.copyGradientFrom(output_gradient);
+    fproppath.sizefbprop();
+    outputs >> out;
+    inputs.copyGradientTo(input_gradient);
+
+#ifdef BOUNDCHECK
+    if (out.hasMissing())
+        PLERROR("Function::fbprop: detected MISSING_VALUE in function output!");
+  
+    //static bool displayvargraph=false;
+    //if (displayvargraph)
+    //  displayVarGraph(outputs,true);
+#endif
+}
+
+void Function::sizefbprop(const Array<Vec>& in, const Array<Vec>& out, const Array<Vec>& input_gradient, const Array<Vec>& output_gradient)
+{
+    inputs << in;
+    inputs.clearGradient();
+    fproppath.clearGradient();
+    outputs.copyGradientFrom(output_gradient);
+    fproppath.sizefbprop();
     outputs >> out;
     inputs.copyGradientTo(input_gradient);
 

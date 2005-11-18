@@ -784,6 +784,35 @@ void VarArray::fbprop()
     }
 }
 
+void VarArray::sizefbprop()
+{
+    iterator array = data();
+    for(int i=0; i<size()-1; i++)
+        if (!array[i].isNull())
+            array[i]->sizefprop();
+
+    if (size() > 0) {
+        {
+            last()->sizeprop();
+            last()->fbprop();
+        }
+
+#ifdef BOUNDCHECK
+        if (last()->gradient.hasMissing())
+            PLERROR("VarArray::fbprop has NaN gradient");
+#endif    
+        for(int i=size()-2; i>=0; i--)
+            if (!array[i].isNull())
+            {
+#ifdef BOUNDCHECK
+                if (array[i]->gradient.hasMissing())
+                    PLERROR("VarArray::fbprop has NaN gradient");
+#endif    
+                array[i]->bprop();
+            }
+    }
+}
+
 void VarArray::fbbprop()
 {
     iterator array = data();

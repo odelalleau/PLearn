@@ -143,6 +143,9 @@ public:
     void fprop(const Vec& in, const Vec& out) const;
     void fprop(const Array<Vec>& in, const Array<Vec>& out) const;
 
+    void sizefprop(const Vec& in, const Vec& out) const;
+    void sizefprop(const Array<Vec>& in, const Array<Vec>& out) const;
+
 /*!   when put_gradient_on_first_element_only, a gradient of 1 is put
   in only the first element of the output gradient this is a hack
   that is useful for having a SumOfVariable computing several
@@ -151,7 +154,11 @@ public:
     void fbprop(const Vec& in, const Vec& out, const Vec& input_gradient, const Vec& output_gradient);
     void fbprop(const Array<Vec>& in, const Array<Vec>& out, 
                 const Array<Vec>& input_gradient, const Array<Vec>& output_gradient);
-
+    
+    void sizefbprop(const Vec& in, const Vec& out, const Vec& input_gradient, const Vec& output_gradient);
+    void sizefbprop(const Array<Vec>& in, const Array<Vec>& out, 
+                const Array<Vec>& input_gradient, const Array<Vec>& output_gradient);
+    
     //!  given input, compute output, gradient (=doutput/dinput) and hessian (=d^2output/dinput^2)
     void fbbprop(const Vec& in, const Vec& out, const Vec& gradient, const Mat& hessian);
     //!  same thing but accumulate output, gradient and hessian

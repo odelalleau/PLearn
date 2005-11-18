@@ -148,6 +148,7 @@ public:
     void bbprop();
     void rfprop();
     void fbprop();
+    void sizefbprop();
     void fbbprop();
 
     void fillGradient(real value);
