@@ -377,6 +377,9 @@ public:
     void makeSharedRValue(PP<Storage<real> > storage, int offset_=0);
     void makeSharedRValue(Vec& v, int offset_=0);
 
+    // make this var point to the same things as v, using default operator=
+    void makePointTo(Variable* v) { *this = *v; }
+
     virtual bool isConstant() { return false; }
 
 /*!     find all constant sources that influence this Variable, build 
