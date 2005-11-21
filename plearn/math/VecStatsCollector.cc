@@ -384,8 +384,9 @@ Vec VecStatsCollector::getStdError() const
 // getCovariance //
 ///////////////////
 void VecStatsCollector::getCovariance(Mat& covar) const {
-    // Formula used to compute an unbiased estimate of the covariance with a
-    // positive (semi)-definite matrix. Notations:
+    // Formula used to compute an unbiased estimate of the covariance (note
+    // that it may not yield a positive semi-definite matrix).
+    // Notations:
     // x(k)_i                       = i-th coordinate of k-th sample 
     // sum^i_k   f(i,k)             = sum over k of f(i,k)   for k such that
     //                                x(k)_i is not missing
