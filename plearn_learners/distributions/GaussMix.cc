@@ -440,8 +440,19 @@ void GaussMix::computeMeansAndCovariances() {
             eigenVecOfSymmMat(covariance, n_eigen_computed, eigenvals,
                                                             eigenvectors[j]);
             assert( eigenvals.length() == n_eigen_computed );
-            // Make sure there are no negative eigenvalues.
+
+            // Currently, the returned covariance matrix returned is not
+            // guaranteed to be semi-definite positive. Thus we need to ensure
+            // it is the case, by thresholding the negative eigenvalues to the
+            // smallest positive one.
             for (int i = n_eigen_computed - 1; i >= 0; i--)
+                if (eigenvals[i] > 0) {
+                    for (int k = i + 1; k < n_eigen_computed; k++)
+                        eigenvals[k] = eigenvals[i];
+                    break;
+                }
+
+            /*
                 if (eigenvals[i] < 0)
                     if (is_equal(eigenvals[i], 0))
                         // The eigenvalue is approximately zero: must be the
@@ -456,6 +467,7 @@ void GaussMix::computeMeansAndCovariances() {
                     // found a non-negative one, we can be sure all other
                     // eigenvalues are also non-negative.
                     break;
+                    */
         }
     }
     /*
