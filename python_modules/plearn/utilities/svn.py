@@ -102,6 +102,12 @@ def repository_revision( path ):
         print 'Could not find SVN revision number:', e
         return "NO_REVISION"
 
+def update( path ):
+    up_cmd = "svn update %s" % path
+    vprint("Updating: %s" % up_cmd, 2)    
+
+    return __report_status( up_cmd )
+
 
 ## def remove( path ):
 ##     rm_cmd = "svn remove -N %s" % path

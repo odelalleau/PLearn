@@ -302,6 +302,9 @@ class Test(PyTestObject):
                 ## YES
                 version_control.recursive_remove(results_path)
                 version_control.commit(ppath.pytest_dir, 'Removal of %s for new results creation.'%results_path)
+                ## Need to update the directory that was just committed: this is
+                ## important e.g. with SubVersion to ensure it is up-to-date.
+                version_control.update(ppath.pytest_dir)
                 self._results_vc_removed.append(self.getName())
 
             ## Will have been removed under svn

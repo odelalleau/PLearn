@@ -82,6 +82,9 @@ def recursive_remove( path ):
     os.system( rm_cmd )
     
     return True
+
+def update( path ):
+    raise NotImplementedError
     
 ## def remove( path ):
 ##     rm_cmd = "cvs remove " + path
