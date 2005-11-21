@@ -3,7 +3,7 @@
 // VMat_basic_stats.cc
 //
 // Copyright (C) 2004 Pascal Vincent 
-// Copyright (C) 2005 Université de Montréal
+// Copyright (C) 2005 University of Montreal
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -311,7 +311,7 @@ void computeInputMeanAndCovar(const VMat& d, Vec& meanvec, Mat& covarmat)
     VecStatsCollector sc;
     sc.compute_covariance = true;
     sc.build();
-    int n  = d->length();
+    int n = d->length();
     Vec input, target;
     real weight;
     for (int i = 0; i < n; i++) {

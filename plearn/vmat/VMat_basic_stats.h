@@ -3,6 +3,7 @@
 // VMat_basic_stats.h
 //
 // Copyright (C) 2004 Pascal Vincent 
+// Copyright (C) 2005 University of Montreal
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
