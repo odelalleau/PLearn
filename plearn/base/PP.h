@@ -185,10 +185,10 @@ public:
     inline PP<T>& operator=(const PP<T>& other)
     { return operator=((T*)other); }
 
-    inline bool operator==(const PP<T>& other)
+    inline bool operator==(const PP<T>& other) const
     { return ptr==other.ptr; }
 
-    inline bool operator==(const T* other)
+    inline bool operator==(const T* other) const
     { return ptr==other; }
 
     inline ~PP()
