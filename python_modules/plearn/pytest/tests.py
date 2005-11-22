@@ -514,6 +514,8 @@ class ResultsRelatedRoutine(Routine):
         self.clean_cwd()
         popd()
 
+        ## Unlink all resources.
+        self.test.unlinkResources(test_results)
         ## Set the status and quit
         self.status_hook()
 
