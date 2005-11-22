@@ -116,6 +116,9 @@ protected:
     Vec log_coeff_x;
     Vec log_coeff_y_x;
 
+    // TODO Doc.
+    mutable bool previous_input_part_had_missing;
+
     /*
     TVec<Mat> cov_x;            //!< The covariance of x.
 
@@ -184,7 +187,7 @@ protected:
 
        // TODO Document
         virtual bool setInputTargetSizes(int n_input, int n_target,
-                                                     bool call_parent = true);
+                                         bool call_parent = true) const;
 
     //! TODO Document
     void getInitialWeightsFrom(const VMat& vmat);

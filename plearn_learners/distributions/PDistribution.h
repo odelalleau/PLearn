@@ -72,10 +72,10 @@ protected:
     // * protected options *
     // *********************
 
-    /*mutable*/ int n_input;
+    mutable int n_input;
     // mutable TVec<int> cond_sort;
     // mutable int n_margin;
-    /*mutable*/ int n_target;
+    mutable int n_target;
     int n_input_;
     int n_target_;
     // TODO Document the _ and not _, and make sure options point to the right
@@ -250,7 +250,7 @@ public:
 
     // TODO Document
     virtual bool setInputTargetSizes(int n_input, int n_target,
-                                     bool call_parent = true);
+                                     bool call_parent = true) const;
 
     //! Set the value for the input part of a conditional probability.
     //! This needs to be implemented in subclasses if there is something
