@@ -593,6 +593,13 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const
     static Mat eigenvecs_missing;
     static TVec<int> non_missing;
     static Mat dummy_mat;
+    static Mat work_mat1, work_mat2;
+    static Mat eigenvalues_x_miss;
+    static TVec<Mat> eigenvectors_x_miss;
+    static Mat full_cov;
+    static Mat cov_x_j;
+    static Vec y_non_missing;
+    static Vec center_non_missing;
 
     if (type_id == TYPE_SPHERICAL || type_id == TYPE_DIAGONAL) {
         // Easy case: the covariance matrix is diagonal.
@@ -749,7 +756,138 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const
             }
             }
         } else {
-            assert( !y.hasMissing() ); // TODO Deal with this case.
+            if (y.hasMissing()) {
+                // TODO Code duplication is ugly.
+            if (is_input) {
+            non_missing.resize(0);
+            for (int k = 0; k < y.length(); k++)
+                if (!is_missing(y[k]))
+                    non_missing.append(k);
+            /*
+                else
+                    missing.append(k);
+                    */
+            int n_non_missing = non_missing.length();
+            // int n_missing = missing.length();
+            int n_target_ext = n_target + (n_input - n_non_missing);
+            // assert( n_missing + n_non_missing == n_input );
+
+            work_mat1.resize(n_target_ext, n_non_missing);
+            work_mat2.resize(n_target_ext, n_target_ext);
+            Vec eigenvals;
+            real var_min = square(sigma_min);
+            eigenvalues_x_miss.resize(L, n_non_missing);
+            eigenvectors_x_miss.resize(L);
+                // Compute the mean and covariance of x and y|x for the j-th
+                // Gaussian (we will need them to compute the likelihood).
+                // TODO Do we really compute the mean of y|x here?
+                // TODO Check all this big shit.
+
+                // First we compute the joint covariance matrix from the
+                // eigenvectors and eigenvalues:
+                // full_cov = sum_k (lambda_k - lambda0) v_k v_k' + lambda0.I
+                // TODO Do we really need to compute the full matrix?
+
+                assert( n_input + n_target == D );
+
+                Mat& full_cov_j = full_cov;
+                full_cov_j.resize(D, D);
+                eigenvals = eigenvalues(j);
+                real lambda0 = max(var_min, eigenvals[n_eigen_computed - 1]);
+
+                full_cov_j.fill(0);
+                Mat& eigenvectors_j = eigenvectors[j];
+                assert( eigenvectors_j.width() == D );
+
+                for (int k = 0; k < n_eigen_computed - 1; k++)
+                    externalProductScaleAcc(
+                            full_cov_j, eigenvectors_j(k),
+                            eigenvectors_j(k),
+                            max(var_min, eigenvals[k]) - lambda0);
+
+                for (int i = 0; i < D; i++)
+                    full_cov_j(i,i) += lambda0;
+
+                // By construction, the resulting matrix is symmetric. However,
+                // it may happen that it is not exactly the case due to numerical
+                // approximations. Thus we ensure it is perfectly symmetric.
+                assert( full_cov_j.isSymmetric(false) );
+                fillItSymmetric(full_cov_j);
+
+                // Extract the covariance of the input x.
+                Mat cov_x_j_miss = full_cov.subMat(0, 0, n_input, n_input);
+                cov_x_j.resize(n_non_missing, n_non_missing);
+                for (int k = 0; k < n_non_missing; k++)
+                    for (int p = k; p < n_non_missing; p++)
+                        cov_x_j(k,p) = cov_x_j(p,k) =
+                            cov_x_j_miss(non_missing[k], non_missing[p]);
+
+                // Compute its SVD.
+                eigenvectors_x_miss[j].resize(n_non_missing, n_non_missing);
+                eigenvals = eigenvalues_x_miss(j);
+                eigenVecOfSymmMat(cov_x_j, n_non_missing, eigenvals,
+                                  eigenvectors_x_miss[j]);
+                // TODO Add note that cov_x_j is destroyed?
+                // Remark: actually this is probably not a problem here since
+                // it is a memory copy.
+
+
+            y_non_missing.resize(n_non_missing);
+            center_non_missing.resize(n_non_missing);
+                for (int k = 0; k < n_non_missing; k++) {
+                    center_non_missing[k] = center(j, non_missing[k]);
+                    y_non_missing[k] = y[non_missing[k]];
+                }
+
+
+                log_likelihood =
+                    precomputeGaussianLogCoefficient(eigenvals, n_non_missing);
+                eigenvecs = eigenvectors_x_miss[j];
+                y_centered.resize(n_non_missing);
+                y_centered << y_non_missing;
+                mu = center_non_missing;
+
+                /*
+                log_likelihood = log_coeff_x[j];
+                mu = center(j).subVec(0, n_input);
+                eigenvals = eigenvalues_x(j);
+                eigenvecs = eigenvectors_x[j];
+                y_centered.resize(n_input);
+                */
+            } else {
+                log_likelihood = log_coeff_y_x[j];
+                //mu = center(j).subVec(n_input, n_target); // TODO WRONG!
+                mu = center_y_x(j);
+                eigenvals = eigenvalues_y_x(j);
+                eigenvecs = eigenvectors_y_x[j];
+                y_centered.resize(n_target);
+            }
+
+            // y_centered << y;
+            y_centered -= mu;
+
+            real squared_norm_y_centered = pownorm(y_centered);
+            real var_min = square(sigma_min);
+            int n_eig = eigenvals.length();
+
+            real lambda0 = max(var_min, eigenvals.lastElement());
+            assert( lambda0 > 0 );
+
+            real one_over_lambda0 = 1.0 / lambda0;
+            // log_likelihood -= 0.5  * 1/lambda_0 * ||y - mu||^2
+            log_likelihood -= 0.5 * one_over_lambda0 * squared_norm_y_centered;
+
+            for (int k = 0; k < n_eig - 1; k++) {
+                // log_likelihood -= 0.5 * (1/lambda_k - 1/lambda_0)
+                //                       * ((y - mu)'.v_k)^2
+                real lambda = max(var_min, eigenvals[k]);
+                assert( lambda > 0 );
+                assert( lambda >= lambda0 );
+                if (lambda > lambda0)
+                    log_likelihood -= 0.5 * (1.0 / lambda - one_over_lambda0)
+                                      * square(dot(eigenvecs(k), y_centered));
+            }
+            } else {
 
             if (is_input) {
                 log_likelihood = log_coeff_x[j];
@@ -789,6 +927,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const
                 if (lambda > lambda0)
                     log_likelihood -= 0.5 * (1.0 / lambda - one_over_lambda0)
                                       * square(dot(eigenvecs(k), y_centered));
+            }
             }
         }
     }
@@ -1588,10 +1727,13 @@ void GaussMix::resizeDataBeforeUsing()
 {
     eigenvectors_x.resize(0);
     eigenvectors_y_x.resize(0);
+    joint_cov.resize(0);
     log_coeff.resize(0);
     log_coeff_x.resize(0);
     log_coeff_y_x.resize(0);
+    stage_joint_cov_computed.resize(0);
     y_x_mat.resize(0);
+
 
     center_y_x.resize(0, 0);
     eigenvalues_x.resize(0, 0);
@@ -1605,8 +1747,11 @@ void GaussMix::resizeDataBeforeUsing()
 
         eigenvectors_x.resize(L);
         eigenvectors_y_x.resize(L);
+        joint_cov.resize(L);
         log_coeff_x.resize(L);
         log_coeff_y_x.resize(L);
+        stage_joint_cov_computed.resize(L);
+        stage_joint_cov_computed.fill(-1);
         y_x_mat.resize(L);
 
         if (n_input >= 0)
@@ -1632,10 +1777,8 @@ void GaussMix::resizeDataBeforeTraining() {
 
     alpha.resize(L);
     eigenvectors.resize(0);
-    joint_cov.resize(0);
     mean_training.resize(0);
     sigma.resize(0);
-    stage_joint_cov_computed.resize(0);
     stddev_training.resize(0);
 
     center.resize(L, D);
@@ -1654,10 +1797,7 @@ void GaussMix::resizeDataBeforeTraining() {
     } else {
         assert( type_id == TYPE_GENERAL );
 
-        joint_cov.resize(L);
         eigenvectors.resize(L);
-        stage_joint_cov_computed.resize(L);
-        stage_joint_cov_computed.fill(-1);
 
         if (n_eigen == -1 || n_eigen == D)
             // We need to compute all eigenvectors.
@@ -1699,6 +1839,16 @@ void GaussMix::resizeDataBeforeTraining() {
 void GaussMix::setInput(const Vec& input, bool call_parent) const {
     static Vec log_p_x_j_alphaj;
     static Vec x_minus_mu_x; // Used to store 'x - mu_x'.
+    static TVec<int> missing, non_missing;
+    static Mat work_mat1, work_mat2;
+    static Mat full_cov;
+    static Mat cov_x_j;
+    static Mat inv_cov_x;
+    static Mat cov_y_x;
+    static Mat cross_cov;
+    static TVec<Mat> eigenvectors_x_miss;
+    static Mat eigenvalues_x_miss;
+    static TVec<Mat> y_x_mat_miss;
 
     if (call_parent)
         inherited::setInput(input);
@@ -1744,7 +1894,168 @@ void GaussMix::setInput(const Vec& input, bool call_parent) const {
             // TODO Implement. Note that this will only occur in testing phase,
             // not training, so that it might not be so important to get it
             // optimized.
-            assert( !input_part.hasMissing() ); // This will crash (on purpose)
+            // assert( !input_part.hasMissing() ); // This will crash (on purpose)
+            // TODO Code duplication is ugly!
+            non_missing.resize(0);
+            missing.resize(0);
+            for (int k = 0; k < input_part.length(); k++)
+                if (!is_missing(input_part[k]))
+                    non_missing.append(k);
+                else
+                    missing.append(k);
+            int n_non_missing = non_missing.length();
+            int n_missing = missing.length();
+            int n_target_ext = n_target + n_missing;
+            assert( n_missing + n_non_missing == n_input );
+
+            work_mat1.resize(n_target_ext, n_non_missing);
+            work_mat2.resize(n_target_ext, n_target_ext);
+            Vec eigenvals;
+            real var_min = square(sigma_min);
+            eigenvalues_x_miss.resize(L, n_non_missing);
+            eigenvectors_x_miss.resize(L);
+            for (int j = 0; j < L; j++) {
+                // Compute the mean and covariance of x and y|x for the j-th
+                // Gaussian (we will need them to compute the likelihood).
+                // TODO Do we really compute the mean of y|x here?
+
+                // First we compute the joint covariance matrix from the
+                // eigenvectors and eigenvalues:
+                // full_cov = sum_k (lambda_k - lambda0) v_k v_k' + lambda0.I
+                // TODO Do we really need to compute the full matrix?
+
+                assert( n_input + n_target == D );
+
+                Mat& full_cov_j = full_cov;
+                full_cov_j.resize(D, D);
+                eigenvals = eigenvalues(j);
+                real lambda0 = max(var_min, eigenvals[n_eigen_computed - 1]);
+
+                full_cov_j.fill(0);
+                Mat& eigenvectors_j = eigenvectors[j];
+                assert( eigenvectors_j.width() == D );
+
+                for (int k = 0; k < n_eigen_computed - 1; k++)
+                    externalProductScaleAcc(
+                            full_cov_j, eigenvectors_j(k),
+                            eigenvectors_j(k),
+                            max(var_min, eigenvals[k]) - lambda0);
+
+                for (int i = 0; i < D; i++)
+                    full_cov_j(i,i) += lambda0;
+
+                // By construction, the resulting matrix is symmetric. However,
+                // it may happen that it is not exactly the case due to numerical
+                // approximations. Thus we ensure it is perfectly symmetric.
+                assert( full_cov_j.isSymmetric(false) );
+                fillItSymmetric(full_cov_j);
+
+                // Extract the covariance of the input x.
+                Mat cov_x_j_miss = full_cov.subMat(0, 0, n_input, n_input);
+                cov_x_j.resize(n_non_missing, n_non_missing);
+                for (int k = 0; k < n_non_missing; k++)
+                    for (int p = k; p < n_non_missing; p++)
+                        cov_x_j(k,p) = cov_x_j(p,k) =
+                            cov_x_j_miss(non_missing[k], non_missing[p]);
+
+                // Compute its SVD.
+                eigenvectors_x_miss[j].resize(n_non_missing, n_non_missing);
+                eigenvals = eigenvalues_x_miss(j);
+                eigenVecOfSymmMat(cov_x_j, n_non_missing, eigenvals,
+                                  eigenvectors_x_miss[j]);
+                // TODO Add note that cov_x_j is destroyed?
+                // Remark: actually this is probably not a problem here since
+                // it is a memory copy.
+
+                // And its inverse (we'll need it for the covariance of y|x).
+                inv_cov_x.resize(n_non_missing, n_non_missing);
+                inv_cov_x.fill(0);
+                if (n_non_missing > 0) {
+                    // I am not sure about this assert, but since we extract the
+                    // covariance of x from a matrix whose eigenvalues are all more
+                    // than 'var_min', it looks like the eigenvalues of the
+                    // covariance of x should also be more than 'var_min'. If I am
+                    // wrong, remove the assert and see if it is needed to
+                    // potentially set lambda0 to var_min.
+                    assert( eigenvals.lastElement() >= var_min );
+                    lambda0 = eigenvals.lastElement();
+                    real one_over_lambda0 = 1 / lambda0;
+                    Mat& eigenvectors_x_j = eigenvectors_x_miss[j];
+                    // TODO Are the formula below correct?
+                    for (int k = 0; k < n_non_missing - 1; k++)
+                        externalProductScaleAcc(
+                                inv_cov_x, eigenvectors_x_j(k), eigenvectors_x_j(k),
+                                1 / max(var_min, eigenvals[k]) - one_over_lambda0);
+                    for (int i = 0; i < n_non_missing; i++)
+                        inv_cov_x(i,i) += one_over_lambda0;
+                }
+
+                // Compute the covariance of y|x.
+                // It is only needed when there is an input part, since otherwise
+                // we can simply use the full covariance.
+                // TODO See if we can use simpler formulas.
+                Mat& cov_y_x_j = cov_y_x; // TODO Can we get rid of cov_y_x_j?
+                cov_y_x_j.resize(n_target_ext, n_target_ext);
+                cov_y_x_j.subMat(0, 0, n_target, n_target) <<
+                    full_cov_j.subMat(n_input, n_input, n_target, n_target);
+                for (int k = 0; k < n_missing; k++) {
+                    int x_missing = missing[k];
+                    for (int p = 0; p < n_target_ext; p++) {
+                        if (p < n_target)
+                            cov_y_x_j(n_target + k, p) =
+                                cov_y_x_j(p, n_target + k) =
+                                full_cov_j(x_missing, p);
+                        else
+                            cov_y_x_j(n_target + k, p) =
+                                cov_y_x_j(p, n_target + k) =
+                                full_cov_j(x_missing, missing[p - n_target]);
+                    }
+                }
+                    
+                y_x_mat_miss.resize(L);
+                y_x_mat_miss[j].resize(n_target, n_non_missing);
+                // TODO Keep this test?
+                //            if (n_target > 0) {
+                // TODO Document y_x_mat_miss.
+                if (n_non_missing > 0) {
+                    cross_cov =
+                        full_cov_j.subMat(n_non_missing, 0,
+                                          n_target_ext, n_non_missing);
+                    product(work_mat1, cross_cov, inv_cov_x);
+                    productTranspose(work_mat2, work_mat1, cross_cov);
+                    cov_y_x_j -= work_mat2;
+                    y_x_mat_miss[j] << work_mat1.subMat(0, 0,
+                                                   n_target, n_non_missing);
+                }
+                //            }
+                // Compute SVD of the covariance of y|x.
+                eigenvectors_y_x[j].resize(n_target, n_target);
+                eigenvals = eigenvalues_y_x(j);
+                // Extract the covariance of the target part we are really
+                // interested in.
+                cov_y_x = cov_y_x_j.subMat(0, 0, n_target, n_target);
+                // Ensure covariance matrix is perfectly symmetric.
+                assert( cov_y_x.isSymmetric(false, true) );
+                fillItSymmetric(cov_y_x);
+                eigenVecOfSymmMat(cov_y_x, n_target, eigenvals, eigenvectors_y_x[j]);
+                log_coeff_y_x[j] =
+                    precomputeGaussianLogCoefficient(eigenvals, n_target);
+            }
+
+            x_minus_mu_x.resize(n_non_missing);
+            Vec mu_target;
+            for (int j = 0; j < L; j++) {
+                for (int k = 0; k < n_non_missing; k++)
+                    x_minus_mu_x[k] =
+                        input_part[non_missing[k]] - center(j, non_missing[k]);
+                mu_target = center_y_x(j);
+                if (n_non_missing > 0)
+                    product(mu_target, y_x_mat_miss[j], x_minus_mu_x);
+                else
+                    mu_target.fill(0);
+                mu_target += center(j).subVec(n_input, n_target);
+            }
+
             /*
             // More complex case: the input part has missing values.
             // We must do similar computations, but considering missing values
@@ -1890,6 +2201,7 @@ bool GaussMix::setInputTargetSizes(int n_i, int n_t,
         for (int j = 0; j < L; j++) {
             // Compute the mean and covariance of x and y|x for the j-th
             // Gaussian (we will need them to compute the likelihood).
+            // TODO Do we really compute the mean of y|x here?
 
             // First we compute the joint covariance matrix from the
             // eigenvectors and eigenvalues:

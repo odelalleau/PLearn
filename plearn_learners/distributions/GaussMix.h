@@ -106,7 +106,7 @@ protected:
 
     // TODO Check.
     TVec<Mat> eigenvectors_x;   //!< The eigenvectors of the covariance of X.
-    Mat eigenvalues_x;  //!< The eigenvalues of the covariance of X.
+    mutable Mat eigenvalues_x;  //!< The eigenvalues of the covariance of X.
 //    TVec<Mat> full_cov;         //!< The full covariance matrix.
     TVec<Mat> y_x_mat;          //!< The product K2 * K1^-1 to compute E[Y|x].
     TVec<Mat> eigenvectors_y_x; //!< The eigenvectors of the covariance of Y|x.
