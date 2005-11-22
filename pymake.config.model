@@ -207,6 +207,10 @@ if domain_name.endswith('iro.umontreal.ca'):
         numpy_site_packages = '$HOME/local-cygwin/lib/python2.4/site-packages/numarray'
     else:
         numpy_includedirs   = [ '/u/lisa/local/' + platform + '/include/' ]
+        ### Python needs the 32 bits include directories when compiling in 32 bits
+        ### (with the -m32 option), otherwise compilation with fail.
+        if force_32bits:
+            numpy_includedirs.append('/u/lisa/local/' + platform + '/include32/')
         ### NB: The '-lutil' is necessary on i386 LISA computers.
         numpy_site_packages = '/u/lisa/local/' + platform + '/lib/python2.4/site-packages/numarray -lutil'
 elif domain_name.endswith('.ms'):
