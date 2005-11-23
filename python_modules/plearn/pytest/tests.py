@@ -514,6 +514,7 @@ class ResultsRelatedRoutine(Routine):
 
         ## Unlink all resources.
         self.test.unlinkResources(test_results)
+
         ## Set the status and quit
         self.status_hook()
 
