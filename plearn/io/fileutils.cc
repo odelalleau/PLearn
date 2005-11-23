@@ -500,7 +500,7 @@ int countNonBlankLinesOfFile(const PPath& filename)
 /////////////////
 PPath newFilename(const PPath& directory, const string& prefix, bool is_directory)
 {
-#if defined(_MINGW_) || defined(WIN32)
+#if defined(_MINGW_) || (defined(WIN32) && !defined(__CYGWIN__))
     PLERROR("This call is not yet implemented for this platform");
     return "";
 #else
