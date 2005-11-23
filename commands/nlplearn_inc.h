@@ -52,8 +52,8 @@
 /*******************************************************************************
  * Python (experimental) -- python includes must come FIRST, as per Python doc *
  *******************************************************************************/
-// #include <plearn/python/PythonCodeSnippet.h>
-// #include <plearn/python/PythonProcessedVMatrix.h>
+#include <plearn/python/PythonCodeSnippet.h>
+#include <plearn/python/PythonProcessedVMatrix.h>
 
 
 /*****************
