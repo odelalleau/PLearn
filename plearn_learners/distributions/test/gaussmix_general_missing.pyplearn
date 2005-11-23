@@ -9,7 +9,7 @@ def main():
     l_type = [ "general" ]
     l_n_eigen = [ -1, 2 ]
     l_kmeans_iterations = [ 5 ]
-    l_n_input = [ 0 ]
+    l_n_input = [ 0, 2 ]
     l_seed = [ 123456 ]
     l_nstages = [ 10 ]
 
