@@ -79,13 +79,14 @@ class Resources:
                         
             if toolkit.isvmat( resource ):
                 metadatadir = resource + '.metadata'
-                link_result = cls.single_link( path_to, metadatadir,
-                                               target_dir,  False )
-                if link_result:
-                    ## Link has been successfully performed: we must add the
-                    ## metadata directory to the list of resources, so that it
-                    ## is correctly unlinked at a later time.
-                    resources_to_append.append(metadatadir)
+                if metadatadir not in resources:
+                    link_result = cls.single_link( path_to, metadatadir,
+                                                   target_dir,  False )
+                    if link_result:
+                        ## Link has been successfully performed: we must add the
+                        ## metadata directory to the list of resources, so that it
+                        ## is correctly unlinked at a later time.
+                        resources_to_append.append(metadatadir)
         resources.extend(resources_to_append)
 
     link_resources = classmethod(link_resources)
