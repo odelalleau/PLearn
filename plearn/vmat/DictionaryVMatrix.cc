@@ -36,7 +36,7 @@
  * $Id$ 
  ******************************************************* */
 
-// Authors: Christopher Kermorvant
+// Authors: Hugo Larochelle
 
 /*! \file DictionaryVMatrix.cc */
 
@@ -51,20 +51,36 @@ using namespace std;
 
 
 DictionaryVMatrix::DictionaryVMatrix()
-    :delimiters(" \t") 
+    :python(), delimiters(" \t"), code("")
     /* ### Initialise all fields to their default value */
 {
     data=0;
-    // ### You may or may not want to call build_() to finish building the object
     // build_();
 }
 
 PLEARN_IMPLEMENT_OBJECT(DictionaryVMatrix,
                         "VMat of text files, encoded  with Dictionaries",
                         "The lines of the text files that are empty or commented\n"
-                        "out using the character # or ommited. If not Dictionary\n"
+                        "out using the character # are ommited. If no Dictionary\n"
                         "objects are given by the user, then new Dictionary objects\n"
                         "are created and updated from the text files.\n"
+                        "A Python script can be provided to preprocess each\n"
+                        "row of all files. The script must define a function called\n"
+                        "process_string_row(string_row), where string_row is a list of\n"
+                        "strings corresponding to the symbolic fields of a row in\n"
+                        "the input files. This function must return a list of processed\n"
+                        "strings, which will consist of the actual data contained by\n"
+                        "the VMatrix. Note that process_string_row can return a list\n"
+                        "that has more or less strings then the input files has fields.\n"
+                        "The length of the returned list will determine the width of\n"
+                        "the VMatrix. Here is an example of a Python code that\n"
+                        "puts the first field to lower case and does nothing to the second:\n"
+                        "\n"
+                        "\"def process_string_row(string_row):\\n"
+                        "         ret = string_row[:]\\n"
+                        "         ret[0] = string_row[0].lower()\\n"
+                        "         ret[1] = string_row[1]\\n "
+                        "         return ret \""
     );
 
 void DictionaryVMatrix::getNewRow(int i, const Vec& v) const
@@ -128,6 +144,8 @@ void DictionaryVMatrix::declareOptions(OptionList& ol)
                   "Encoded Matrix\n");
     declareOption(ol, "delimiters", &DictionaryVMatrix::delimiters, OptionBase::buildoption,
                   "Delimiters for file fields (or attributs)\n");
+    declareOption(ol, "code", &DictionaryVMatrix::code, OptionBase::buildoption,
+                  "Snippet of python code that processes the text in the input files\n");
     declareOption(ol, "data", &DictionaryVMatrix::data, OptionBase::buildoption,
                   "Matrix containing the concatenated and encoded text files\n");
   
@@ -140,8 +158,16 @@ void DictionaryVMatrix::build_()
 {
     string line = "";
     vector<string> tokens;
+    TVec<string> tokens_vec;
     int it=0; 
-
+    
+    if (!python && code != "") 
+    {
+        python = new PythonCodeSnippet(code);
+        assert( python );
+        python->build();
+    }
+    
     if(data.length()!=0) data.clear();
     
     length_ = 0;
@@ -155,7 +181,22 @@ void DictionaryVMatrix::build_()
         while (!input_stream.eof()){
             getNextNonBlankLine(input_stream, line);
             tokens = split(line, delimiters);
-
+            
+            if(python)
+            {
+                tokens_vec.resize(tokens.size());
+                for(int i=0; i<tokens_vec.length(); i++)
+                    tokens_vec[i] = tokens[i];
+                tokens_vec = python->invoke("process_string_row",tokens_vec).as<TVec<string> >();
+                tokens.resize(tokens_vec.length());
+                for(int i=0; i<tokens_vec.length(); i++)
+                    tokens[i] = tokens_vec[i];                
+            }
+            
+            /*
+            for(int i=0; i<to_lower_case.size(); i++)
+                tokens[to_lower_case[i]] = lowerstring(tokens[to_lower_case[i]]);
+            */
             // Set n_attributes
             if(it==0)
             {

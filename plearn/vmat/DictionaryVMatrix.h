@@ -36,7 +36,7 @@
  * $Id$ 
  ******************************************************* */
 
-// Authors: Christopher Kermorvant
+// Authors: Hugo Larochelle
 
 /*! \file DictionaryVMatrix.h */
 
@@ -44,6 +44,7 @@
 #ifndef DictionaryVMatrix_INC
 #define DictionaryVMatrix_INC
 
+#include <plearn/python/PythonCodeSnippet.h>
 #include <plearn/vmat/RowBufferedVMatrix.h>
 #include <plearn/base/stringutils.h>
 #include <plearn_learners/language/Dictionary/Dictionary.h>
@@ -54,6 +55,29 @@
 namespace PLearn {
 using namespace std;
 
+
+//! VMat of text files, encoded  with Dictionaries,
+//! The lines of the text files that are empty or commented
+//! out using the character # are ommited. If no Dictionary
+//! objects are given by the user, then new Dictionary objects
+//! are created and updated from the text files.
+//! A Python script can be provided to preprocess each
+//! row of all files. The script must define a function called
+//! process_string_row(string_row), where string_row is a list of
+//! strings corresponding to the symbolic fields of a row in
+//! the input files. This function must return a list of processed
+//! strings, which will consist of the actual data contained by
+//! the VMatrix. Note that process_string_row can return a list
+//! that has more or less strings then the input files has fields.
+//! The length of the returned list will determine the width of
+//! the VMatrix. Here is an example of a Python code that
+//! puts the first field to lower case and does nothing to the second:
+//! 
+//! "def process_string_row(string_row):
+//!          ret = string_row[:]
+//!          ret[0] = string_row[0].lower()
+//!          ret[1] = string_row[1] 
+//!          return ret "
 class DictionaryVMatrix: public RowBufferedVMatrix
 {
 
@@ -73,13 +97,16 @@ protected:
     //! Number of attributes in the input text file (\t separated)
     int n_attributes;
 
+    //! Python code snippets
+    PP<PythonCodeSnippet> python;
+
 public:
 
     // ************************
     // * public build options *
     // ************************
 
-    //! The text input file which is processed with dictionaries 
+    //! The text input files which are processed with dictionaries 
     TVec<PPath> file_names;
 
     //! The dictionaries, one for each attributes
@@ -91,6 +118,8 @@ public:
     //! String delimiters for input file fields
     string delimiters;
 
+    //! Snippet of python code that processes the text in the input files
+    string code;
 
     // ****************
     // * Constructors *
