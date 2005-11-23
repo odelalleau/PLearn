@@ -383,9 +383,7 @@ class Test(PyTestObject):
         self.ensureResultsDirectory(test_results)
 
         ## Link 'physical' resources
-        resources = []
-        resources.extend(self.resources)
-        Resources.link_resources(self.directory(), resources, test_results)
+        Resources.link_resources(self.directory(), self.resources, test_results)
 
         ## What remains of this method is used to make the following
         ## binding visible to the test program. It must be removed after

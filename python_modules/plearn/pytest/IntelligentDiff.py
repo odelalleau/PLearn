@@ -17,6 +17,7 @@ class Resources:
             cls.name_resolution[abspath] = fname        
     memorize = classmethod(memorize)                                
 
+    ## Create a link from target to resource.
     def single_link(cls, path_to, resource, target_dir, must_exist=True):
         ## Under Cygwin, links are not appropriate as they are ".lnk" files,
         ## not properly opened by PLearn. Thus we need to copy the files.
@@ -48,13 +49,14 @@ class Resources:
 
         
         ## Linking
+        linked = False
         if os.path.exists( resource_path ):
             system_symlink( resource_path, target_path )
-
+            linked = True
 
         elif must_exist:
             raise PyTestError(
-                "In %s: %s used as a resource but path doesn't exist."
+                "In %s: %s used as a resource but path does not exist."
                 % ( os.getcwd(), resource )
                 )
 
@@ -62,19 +64,30 @@ class Resources:
         cls.memorize( resource_path, resource )                
         cls.memorize( target_path, resource )                
 
-        return (resource_path, target_path)        
+        if linked:
+            return (resource_path, target_path)
+        else:
+            return ()
 
     single_link = classmethod(single_link)
     
     ## Class methods
     def link_resources(cls, path_to, resources, target_dir): 
+        resources_to_append = []
         for resource in resources:
             cls.single_link( path_to, resource, target_dir )
                         
             if toolkit.isvmat( resource ):
-                cls.single_link( path_to, resource+'.metadata',
-                                  target_dir,  False  )
-                
+                metadatadir = resource + '.metadata'
+                link_result = cls.single_link( path_to, metadatadir,
+                                               target_dir,  False )
+                if link_result:
+                    ## Link has been successfully performed: we must add the
+                    ## metadata directory to the list of resources, so that it
+                    ## is correctly unlinked at a later time.
+                    resources_to_append.append(metadatadir)
+        resources.extend(resources_to_append)
+
     link_resources = classmethod(link_resources)
 
     def md5sum(cls, path_to_ressource):
@@ -89,7 +102,8 @@ class Resources:
 
     def unlink_resources(cls, resources, target_dir):
         for resource in resources:
-            path = os.path.join(target_dir, os.path.basename(resource))
+            res = os.path.basename(resource)
+            path = os.path.join(target_dir, res)
             if os.path.islink( path ):
                 vprint( "Removing link: %s." % path, 3 ) 
                 os.remove( path )
@@ -98,7 +112,7 @@ class Resources:
                 os.remove( path )
             elif os.path.isdir( path ):
                 vprint( "Removing directory: %s." % path, 3 )
-                os.remove( path )
+                shutil.rmtree( path )
 
     unlink_resources = classmethod(unlink_resources)
         
