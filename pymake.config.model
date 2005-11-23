@@ -178,11 +178,17 @@ optionalLibrary( name = 'ncurses',
                  triggers = 'curses.h',
                  linkeroptions = '-lncurses'
                  )
+if( (platform=='linux-x86_64') & (not force_32bits) ):
+    wn_includedirs = '/u/lisa/WordNet/LINUX_64/v2.0/include'
+    wn_linkeroptions = '-L /u/lisa/WordNet/LINUX_64/v2.0/lib -lwn'
+else:
+    wn_includedirs = '/u/lisa/WordNet/v2.0/include'
+    wn_linkeroptions = '-L /u/lisa/WordNet/v2.0/lib -lwn'
 
 optionalLibrary( name = 'wordnet',
                  triggers = 'wn.h',
-                 includedirs = '/u/lisa/WordNet/v2.0/include',
-                 linkeroptions = '-L /u/lisa/WordNet/v2.0/lib -lwn'
+                 includedirs = wn_includedirs,
+                 linkeroptions = wn_linkeroptions
                  )
 
 optionalLibrary( name = 'X',
