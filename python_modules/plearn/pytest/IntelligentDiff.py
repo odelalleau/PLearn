@@ -275,6 +275,11 @@ class IntelligentDiff:
 
         ## Actual comparison
         self.diff_files(bench_rw, other_rw)
+
+        ## Clean linked resources.
+        self.test.unlinkResources( tmp_dir )
+        
+        ## Move back to original directory.
         os.chdir( directory_when_called )
         
 ##         else:
