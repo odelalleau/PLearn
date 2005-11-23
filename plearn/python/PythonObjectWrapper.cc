@@ -78,6 +78,12 @@ void PythonObjectWrapper::initializePython()
 
 //#####  ConvertFromPyObject  #################################################
 
+bool ConvertFromPyObject<bool>::convert(PyObject* pyobj)
+{
+    assert( pyobj );
+    return bool(PyObject_IsTrue(pyobj));
+}
+
 int ConvertFromPyObject<int>::convert(PyObject* pyobj)
 {
     assert( pyobj );

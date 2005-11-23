@@ -55,6 +55,7 @@
 // From PLearn
 #include <plearn/math/TVec.h>
 #include <plearn/math/TMat.h>
+#include <plearn/vmat/VMat.h>
 #include <plearn/base/tostring.h>
 
 
@@ -80,6 +81,12 @@ void PLPythonConversionError(const char* function_name, PyObject* pyobj);
 template <class T>
 class ConvertFromPyObject
 { };
+
+template <>
+struct ConvertFromPyObject<bool>
+{
+    static bool convert(PyObject*);
+};
 
 template <>
 struct ConvertFromPyObject<int>
@@ -254,6 +261,18 @@ public:
         return Py_None;
     }
     
+    static PyObject* newPyObject(const bool& x)
+    {
+        if (x) {
+            Py_XINCREF(Py_True);
+            return Py_True;
+        }
+        else {
+            Py_XINCREF(Py_False);
+            return Py_False;
+        }
+    }
+    
     static PyObject* newPyObject(const int& x)
     {
         return PyInt_FromLong(long(x));
@@ -285,6 +304,19 @@ public:
     //! PLearn Mat: use numarray
     static PyObject* newPyObject(const Mat&);
 
+    //! PLearn VMat.  Very inefficient for now: convert to a temporary Mat
+    //! and then bridge to using numarray.  Fieldnames and other metainfos
+    //! are lost when converting to Python.
+    //!
+    //! @TODO  Must provide a complete Python wrapper over VMatrix objects
+    static PyObject* newPyObject(const VMat& vm)
+    {
+        if (vm.isNull())
+            return newPyObject(Mat());
+        else
+            return newPyObject(vm.toMat());
+    }
+    
     //! Generic vector: create a Python list of those objects recursively
     template <class T>
     static PyObject* newPyObject(const TVec<T>&);
