@@ -62,7 +62,7 @@ protected:
     Vec values;
 
 public:
-    //protected:
+ 
     VMat distr;
     Var output;
     Var comp_input;
