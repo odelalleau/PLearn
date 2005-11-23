@@ -35,7 +35,7 @@ def main():
         dataset = pl.AutoVMatrix(specification = "PLEARNDIR:plearn_learners/regressors/test/LinearRegressor/data.amat")
         ptesters.append(
             pl.PTester(
-                expdir = "expdir_gaussmix_diagonal_L=%s_type=%s_kmeans_iterations=%s_n_input=%s_seed=%s_nstages=%s" \
+                expdir = "expdir_%s_%s_%s_%s_%s_%s" \
                         % ( gm.L, gm.type, gm.kmeans_iterations, gm.n_input, gm.seed, gm.nstages ),
                 dataset = dataset,
                 splitter = pl.TrainTestSplitter( test_fraction = 0.25 ),

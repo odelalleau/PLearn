@@ -22,7 +22,7 @@ def main():
         # Create the appropriate PTester.
         ptesters.append(
             pl.PTester(
-                expdir = "expdir_manifold_parzen2_ncomponents=%s_nneighbors=%s" \
+                expdir = "expdir_%s_%s" \
                         % ( distr.ncomponents, distr.nneighbors ),
                 dataset = \
                     pl.AutoVMatrix( specification = "PLEARNDIR:plearn_learners/regressors/test/LinearRegressor/data.amat" ),

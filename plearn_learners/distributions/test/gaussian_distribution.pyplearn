@@ -25,7 +25,7 @@ def main():
         # Create the appropriate PTester.
         ptesters.append(
             pl.PTester(
-                expdir = "expdir_gaussian_distribution_k=%s_use_last_eig=%s_seed=%s" \
+                expdir = "expdir_%s_%s_%s" \
                         % ( distr.k, distr.use_last_eig, distr.seed ),
                 dataset = \
                     pl.AutoVMatrix( specification = "PLEARNDIR:plearn_learners/regressors/test/LinearRegressor/data.amat" ),

@@ -47,7 +47,7 @@ def main():
 
         ptesters.append(
             pl.PTester(
-                expdir = "expdir_gaussmix_general_L=%s_type=%s_n_eigen=%s_kmeans_iterations=%s_n_input=%s_seed=%s_nstages=%s" \
+                expdir = "expdir_%s_%s_%s_%s_%s_%s_%s" \
                         % ( gm.L, gm.type, gm.n_eigen, gm.kmeans_iterations, gm.n_input, gm.seed, gm.nstages ),
                 dataset = dataset,
                 splitter = pl.TrainTestSplitter( test_fraction = 0.25 ),
