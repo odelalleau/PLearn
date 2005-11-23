@@ -221,6 +221,36 @@ PythonCodeSnippet::invoke(const char* function_name) const
 }
 
 
+// N-argument function call
+PythonObjectWrapper
+PythonCodeSnippet::invoke(const char* function_name,
+                          const TVec<PythonObjectWrapper>& args) const
+{
+    PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
+                                           function_name);
+    // pFunc: Borrowed reference
+
+    PyObject* return_value = 0;
+    if (pFunc && PyCallable_Check(pFunc)) {
+
+        // Create argument tuple.  Warning: PyTuple_SetItem STEALS references.
+        PyObject* pArgs = PyTuple_New(args.size());
+        for (int i=0, n=args.size() ; i<n ; ++i)
+            PyTuple_SetItem(pArgs, i, args[i].getPyObject());
+        
+        return_value = PyObject_CallObject(pFunc, pArgs);
+        Py_XDECREF(pArgs);
+        if (! return_value)
+            handlePythonErrors();
+    }
+    else
+        PLERROR("PythonCodeSnippet::invoke: cannot call function '%s'",
+                function_name);
+
+    return PythonObjectWrapper(return_value);
+}
+
+
 //#####  Function Injection Interface  ########################################
 
 // This is the function actually called by Python

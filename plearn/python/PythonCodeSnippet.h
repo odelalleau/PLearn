@@ -150,6 +150,12 @@ public:
     //! Call the specified function taking 0 arguments.
     PythonObjectWrapper invoke(const char* function_name) const;
 
+    //! Call the specified function taking n arguments.  NOTE: the
+    //! PythonObjectWrapper passed as arguments MUST be created with the
+    //! 'transfer_ownership' option.
+    PythonObjectWrapper invoke(const char* function_name,
+                               const TVec<PythonObjectWrapper>& args) const;
+    
     //! Call the specified function with 1 argument.
     template <class T>
     PythonObjectWrapper invoke(const char* function_name,
