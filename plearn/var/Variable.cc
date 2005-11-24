@@ -601,6 +601,37 @@ bool Variable::update(real step_size, bool clear)
     return hit;
 }
 
+void Variable::updateWithWeightDecay(real step_size, real weight_decay, bool L1, bool clear)
+{
+    // we do unconstrained update only here
+    for (int row=0;row<length();row++)
+    {
+        real* direction = matGradient[row];
+        real* params = matValue[row];      
+        if (L1)
+        {
+            real delta = step_size*weight_decay;
+            for(int i=0; i<width(); i++)
+            {
+                real pi = params[i];
+                params[i] += step_size*direction[i];
+                if (pi>delta)
+                    params[i] -= delta;
+                else if (pi<-delta)
+                    params[i] += delta;
+                if (clear)
+                    direction[i] = 0;
+            }
+        else // L2
+            for(int i=0; i<width(); i++)
+            {
+                params[i] += step_size*(direction[i] - weight_decay*params[i]);
+                if (clear)
+                    direction[i] = 0;
+            }
+    }
+}
+
 
 // set value = value + step_size * gradient
 // with step_size possibly scaled down s.t. box constraints are satisfied

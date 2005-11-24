@@ -198,6 +198,15 @@ public:
 */
     bool update(real step_size, bool clear=false);
 
+    //! for each element of the array:
+    //! if (L1)
+    //!   value += learning_rate*gradient
+    //!   decrease |value| by learning_rate*weight_decay if it does not make value change sign
+    //! else // L2
+    //!   value += learning_rate*(gradient  - weight_decay*value)
+    //! if (clear) gradient=0
+    void updateWithWeightDecay(real step_size, real weight_decay, bool L1=false, bool clear=true);
+
     //! value += step_size*gradient; gradient.clear();
     inline void updateAndClear();
 

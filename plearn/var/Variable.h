@@ -303,6 +303,14 @@ public:
 */
     bool update(real step_size, bool clear=false);
 
+    //! if (L1)
+    //!   value += learning_rate*gradient
+    //!   decrease |value| by learning_rate*weight_decay if it does not make value change sign
+    //! else // L2
+    //!   value += learning_rate*(gradient  - weight_decay*value)
+    //! if (clear) gradient=0
+    void updateWithWeightDecay(real step_size, real weight_decay, bool L1, bool clear=true);
+
     //!  send message that update may be sometimes needed on only parts of the Variable
     void allowPartialUpdates()
     {
@@ -378,7 +386,21 @@ public:
     void makeSharedRValue(Vec& v, int offset_=0);
 
     // make this var point to the same things as v, using default operator=
-    void makePointTo(Variable* v) { *this = *v; }
+    void makePointTo(Variable* v) { 
+        value = v->value;
+        valuedata = v->valuedata;
+        matValue = v->matValue;
+        gradient = v->gradient;
+        matGradient = v->matGradient;
+        gradientdata = v->gradientdata;
+        rows_to_update = v->rows_to_update;
+        rValue = v->rValue;
+        matRValue = v->matRValue;
+        matDiagHessian = v->matDiagHessian;
+        diaghessian = v->diaghessian;
+        diaghessiandata = v->diaghessiandata;
+        rvaluedata = v->rvaluedata;
+    }
 
     virtual bool isConstant() { return false; }
 
