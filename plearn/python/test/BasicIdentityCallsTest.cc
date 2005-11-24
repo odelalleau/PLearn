@@ -1,8 +1,9 @@
 // -*- C++ -*-
 
-// basic_identity_calls.cc
+// BasicIdentityCallsTest.cc
 //
 // Copyright (C) 2005 Nicolas Chapados 
+// Copyright (C) 2005 Olivier Delalleau 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,26 +33,106 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Nicolas Chapados
+/* *******************************************************      
+   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
+   ******************************************************* */
 
+// Authors: Nicolas Chapados, Olivier Delalleau
 
-/**
- *  @file   basic_identity_calls
- *  @brief  Tests the core of PythonCodeSnippet through identity function
- *          calls in Python
- */
+/*! \file BasicIdentityCallsTest.cc */
 
 
 #include <plearn/python/PythonCodeSnippet.h>
 #include <iostream>
 #include <vector>
 #include <map>
+
+#include "BasicIdentityCallsTest.h"
 #include <plearn/io/openString.h>
 
-using namespace PLearn;
+namespace PLearn {
 using namespace std;
 
-string python_code =
+PLEARN_IMPLEMENT_OBJECT(
+    BasicIdentityCallsTest,
+    "Tests the core of PythonCodeSnippet through identity function calls in Python",
+    ""
+);
+
+////////////////////////////
+// BasicIdentityCallsTest //
+////////////////////////////
+BasicIdentityCallsTest::BasicIdentityCallsTest() 
+    /* ### Initialize all fields to their default value */
+{
+    // ...
+
+    // ### You may (or not) want to call build_() to finish building the object
+    // ### (doing so assumes the parent classes' build_() have been called too
+    // ### in the parent classes' constructors, something that you must ensure)
+}
+
+///////////
+// build //
+///////////
+void BasicIdentityCallsTest::build()
+{
+    inherited::build();
+    build_();
+}
+
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void BasicIdentityCallsTest::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    inherited::makeDeepCopyFromShallowCopy(copies);
+
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
+
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("BasicIdentityCallsTest::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+}
+
+////////////////////
+// declareOptions //
+////////////////////
+void BasicIdentityCallsTest::declareOptions(OptionList& ol)
+{
+    // ### Declare all of this object's options here
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
+
+    // ### ex:
+    // declareOption(ol, "myoption", &BasicIdentityCallsTest::myoption, OptionBase::buildoption,
+    //               "Help text describing this option");
+    // ...
+
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
+}
+
+////////////
+// build_ //
+////////////
+void BasicIdentityCallsTest::build_()
+{
+    // ### This method should do the real building of the object,
+    // ### according to set 'options', in *any* situation. 
+    // ### Typical situations include:
+    // ###  - Initial building of an object from a few user-specified options
+    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
+    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
+    // ### You should assume that the parent class' build_() has already been called.
+}
+
+string BasicIdentityCallsTest::python_code =
 "import sys\n"
 "from numarray import *\n"
 "\n"
@@ -102,14 +183,14 @@ string python_code =
 ;
 
 
-void nullary(const PythonCodeSnippet* python)
+void BasicIdentityCallsTest::nullary(const PythonCodeSnippet* python)
 {
     cout << "isInvokable(nullary)        : " << python->isInvokable("nullary") << endl;
     cout << "Calling nullary             : " << flush;
     python->invoke("nullary");
 }
 
-void unary(const PythonCodeSnippet* python)
+void BasicIdentityCallsTest::unary(const PythonCodeSnippet* python)
 {
     cout << "Calling unary_int(42)       : "
          << python->invoke("unary_int", 42).as<int>() << endl;
@@ -162,30 +243,33 @@ void unary(const PythonCodeSnippet* python)
          << endl;
 }
 
-void binary(const PythonCodeSnippet* python)
+void BasicIdentityCallsTest::binary(const PythonCodeSnippet* python)
 {
     cout << "Calling binary(2,4)         : "
          << tostring( python->invoke("binary",2,4).as< TVec<int> >())
          << endl;
 }
 
-void ternary(const PythonCodeSnippet* python)
+void BasicIdentityCallsTest::ternary(const PythonCodeSnippet* python)
 {
     cout << "Calling ternary(2,4,8)      : "
          << tostring( python->invoke("ternary",2,4,8).as< TVec<int> >())
          << endl;
 }
 
-void quaternary(const PythonCodeSnippet* python)
+void BasicIdentityCallsTest::quaternary(const PythonCodeSnippet* python)
 {
     cout << "Calling quaternary(2,4,8,16): "
          << tostring( python->invoke("quaternary",2,4,8,16).as< TVec<int> >())
          << endl;
 }
 
-
-int main()
+/////////////
+// perform //
+/////////////
+void BasicIdentityCallsTest::perform()
 {
+    // ### The test code should go here.
     cout << "Python code to be executed: " << endl
          << ">>>" << python_code << "<<<" << endl;
     
@@ -197,9 +281,9 @@ int main()
     binary(python);
     ternary(python);
     quaternary(python);
-    
-    return 0;
 }
+
+} // end of namespace PLearn
 
 
 /*
@@ -213,4 +297,3 @@ int main()
   End:
 */
 // vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :
- 

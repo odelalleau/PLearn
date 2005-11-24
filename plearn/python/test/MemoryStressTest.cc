@@ -1,8 +1,9 @@
 // -*- C++ -*-
 
-// basic_identity_calls.cc
+// MemoryStressTest.cc
 //
 // Copyright (C) 2005 Nicolas Chapados 
+// Copyright (C) 2005 Olivier Delalleau 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,27 +33,107 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Nicolas Chapados
+/* *******************************************************      
+   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
+   ******************************************************* */
 
+// Authors: Nicolas Chapados, Olivier Delalleau
 
-/**
- *  @file   memory_stress_tests
- *  @brief  Perform a large number of Python/C++ conversions to detect memory
- *          leaks (best run under valgrind or other leak detector)
- */
+/*! \file MemoryStressTest.cc */
 
 
 #include <plearn/python/PythonCodeSnippet.h>
 #include <iostream>
 #include <vector>
 #include <map>
+
+#include "MemoryStressTest.h"
 #include <plearn/io/openString.h>
 #include <plearn/base/ProgressBar.h>
 
-using namespace PLearn;
+
+namespace PLearn {
 using namespace std;
 
-string python_code =
+PLEARN_IMPLEMENT_OBJECT(
+    MemoryStressTest,
+    "Test memory leaks in Python embedding.",
+    "Perform a large number of Python/C++ conversions to detect memory\n"
+    "leaks (best run under valgrind or other leak detector)\n"
+);
+
+//////////////////
+// MemoryStressTest //
+//////////////////
+MemoryStressTest::MemoryStressTest():
+    N(10000)
+{
+    // ...
+
+    // ### You may (or not) want to call build_() to finish building the object
+    // ### (doing so assumes the parent classes' build_() have been called too
+    // ### in the parent classes' constructors, something that you must ensure)
+}
+
+///////////
+// build //
+///////////
+void MemoryStressTest::build()
+{
+    inherited::build();
+    build_();
+}
+
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void MemoryStressTest::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    inherited::makeDeepCopyFromShallowCopy(copies);
+
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
+
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("MemoryStressTest::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+}
+
+////////////////////
+// declareOptions //
+////////////////////
+void MemoryStressTest::declareOptions(OptionList& ol)
+{
+    // ### Declare all of this object's options here
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
+
+    declareOption(ol, "N", &MemoryStressTest::N, OptionBase::buildoption,
+        "Number of iterations to perform.");
+
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
+}
+
+////////////
+// build_ //
+////////////
+void MemoryStressTest::build_()
+{
+    // ### This method should do the real building of the object,
+    // ### according to set 'options', in *any* situation. 
+    // ### Typical situations include:
+    // ###  - Initial building of an object from a few user-specified options
+    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
+    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
+    // ### You should assume that the parent class' build_() has already been called.
+}
+
+string MemoryStressTest::python_code =
 "import sys\n"
 "from numarray import *\n"
 "\n"
@@ -102,12 +183,12 @@ string python_code =
 ;
 
 
-void nullary(const PythonCodeSnippet* python)
+void MemoryStressTest::nullary(const PythonCodeSnippet* python)
 {
     python->invoke("nullary");
 }
 
-void unary(const PythonCodeSnippet* python)
+void MemoryStressTest::unary(const PythonCodeSnippet* python)
 {
     int i    = python->invoke("unary_int", 42).as<int>();
     long l   = python->invoke("unary_long", 42L).as<long>();
@@ -145,28 +226,29 @@ void unary(const PythonCodeSnippet* python)
     map<string,long> py_mapsd = python->invoke("unary_dict", mapsd).as< map<string,long> >();
 }
 
-void binary(const PythonCodeSnippet* python)
+void MemoryStressTest::binary(const PythonCodeSnippet* python)
 {
     TVec<int> v = python->invoke("binary",2,4).as< TVec<int> >();
 }
 
-void ternary(const PythonCodeSnippet* python)
+void MemoryStressTest::ternary(const PythonCodeSnippet* python)
 {
     TVec<int> v = python->invoke("ternary",2,4,8).as< TVec<int> >();
 }
 
-void quaternary(const PythonCodeSnippet* python)
+void MemoryStressTest::quaternary(const PythonCodeSnippet* python)
 {
     TVec<int> v = python->invoke("quaternary",2,4,8,16).as< TVec<int> >();
 }
 
-
-int main()
+/////////////
+// perform //
+/////////////
+void MemoryStressTest::perform()
 {
     PP<PythonCodeSnippet> python = new PythonCodeSnippet(python_code);
     python->build();
 
-    const int N = 10000;
     ProgressBar pb("Invoking Python Functions", N);
     
     for (int i=0 ; i<N ; ++i) {
@@ -178,9 +260,9 @@ int main()
         ternary(python);
         quaternary(python);
     }
-    
-    return 0;
 }
+
+} // end of namespace PLearn
 
 
 /*
@@ -194,4 +276,3 @@ int main()
   End:
 */
 // vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :
- 

@@ -1,8 +1,9 @@
 // -*- C++ -*-
 
-// basic_identity_calls.cc
+// InterfunctionXchgTest.cc
 //
 // Copyright (C) 2005 Nicolas Chapados 
+// Copyright (C) 2005 Olivier Delalleau 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,23 +33,104 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Nicolas Chapados
+/* *******************************************************      
+   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
+   ******************************************************* */
+
+// Authors: Nicolas Chapados, Olivier Delalleau
+
+/*! \file InterfunctionXchgTest.cc */
 
 
-/**
- *  @file   interfunction_xchg
- *  @brief  Test data exchange within a single snippet and exception mapping
- */
-
-
-#include <boost/regex.hpp>
 #include <plearn/python/PythonCodeSnippet.h>
+#include <boost/regex.hpp>
 #include <iostream>
 
-using namespace PLearn;
+#include "InterfunctionXchgTest.h"
+
+namespace PLearn {
 using namespace std;
 
-string python_code =
+PLEARN_IMPLEMENT_OBJECT(
+    InterfunctionXchgTest,
+    "Test data exchange within a single snippet and exception mapping",
+    ""
+);
+
+//////////////////
+// InterfunctionXchgTest //
+//////////////////
+InterfunctionXchgTest::InterfunctionXchgTest() 
+    /* ### Initialize all fields to their default value */
+{
+    // ...
+
+    // ### You may (or not) want to call build_() to finish building the object
+    // ### (doing so assumes the parent classes' build_() have been called too
+    // ### in the parent classes' constructors, something that you must ensure)
+}
+
+///////////
+// build //
+///////////
+void InterfunctionXchgTest::build()
+{
+    inherited::build();
+    build_();
+}
+
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void InterfunctionXchgTest::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    inherited::makeDeepCopyFromShallowCopy(copies);
+
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
+
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("InterfunctionXchgTest::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+}
+
+////////////////////
+// declareOptions //
+////////////////////
+void InterfunctionXchgTest::declareOptions(OptionList& ol)
+{
+    // ### Declare all of this object's options here
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
+
+    // ### ex:
+    // declareOption(ol, "myoption", &InterfunctionXchgTest::myoption, OptionBase::buildoption,
+    //               "Help text describing this option");
+    // ...
+
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
+}
+
+////////////
+// build_ //
+////////////
+void InterfunctionXchgTest::build_()
+{
+    // ### This method should do the real building of the object,
+    // ### according to set 'options', in *any* situation. 
+    // ### Typical situations include:
+    // ###  - Initial building of an object from a few user-specified options
+    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
+    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
+    // ### You should assume that the parent class' build_() has already been called.
+}
+
+string InterfunctionXchgTest::python_code =
 "import sys\n"
 "\n"
 "def set_value(x):\n"
@@ -64,7 +146,10 @@ string python_code =
 ;
 
 
-int main()
+/////////////
+// perform //
+/////////////
+void InterfunctionXchgTest::perform()
 {
     cout << "Python code to be executed: " << endl
          << ">>>" << python_code << "<<<" << endl;
@@ -122,19 +207,15 @@ int main()
     catch(const PLearnError& e)
     {
         cerr << "FATAL ERROR: " << e.message() << endl;
-        return 1;
     }
     catch (...) 
     {
         cerr << "FATAL ERROR: uncaught unknown exception "
              << "(ex: out-of-memory when allocating a matrix)" << endl;
-        return 2;
     }
-
-    return 0;
-    
-    return 0;
 }
+
+} // end of namespace PLearn
 
 
 /*
@@ -148,4 +229,3 @@ int main()
   End:
 */
 // vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :
- 
