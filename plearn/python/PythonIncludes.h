@@ -56,20 +56,6 @@
 #  define PL_PYTHON_VERSION 230
 #endif
 
-// 'real' must NOT be defined when including Python header, otherwise
-// compilation will fail.
-// TODO Can we do this in a less ugly manner?
-#ifdef real
-#if real==double
-#define PLEARN_REAL_BACKUP double
-#elif real==float
-#define PLEARN_REAL_BACKUP float
-#else
-#error Unknown value for 'real'
-#endif
-#undef real
-#endif
-
 #if PL_PYTHON_VERSION >= 240
 
 #include <python2.4/Python.h>
@@ -88,18 +74,6 @@
 
 #  error "PL_PYTHON_VERSION should be defined to one of: 230, 240"
 
-#endif
-
-// Restore the definition of 'real'.
-#ifdef PLEARN_REAL_BACKUP
-#if PLEARN_REAL_BACKUP==double
-#define real double
-#elif PLEARN_REAL_BACKUP==float
-#define real float
-#else
-#error Unknown value for 'PLEARN_REAL_BACKUP'
-#endif
-#undef PLEARN_REAL_BACKUP
 #endif
 
 
