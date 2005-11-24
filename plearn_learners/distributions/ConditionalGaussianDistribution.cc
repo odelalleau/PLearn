@@ -125,7 +125,7 @@ void ConditionalGaussianDistribution::generate(Vec& x) const
 #endif
 }
 
-void ConditionalGaussianDistribution::setInput(const Vec& input)
+void ConditionalGaussianDistribution::setInput(const Vec& input) const
 {
     mean.resize(input.size());
     mean << input;

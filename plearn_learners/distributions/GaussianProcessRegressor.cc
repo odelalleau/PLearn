@@ -72,11 +72,7 @@ void GaussianProcessRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(meanK, copies);
 }
 
-void GaussianProcessRegressor::setInput(const Vec& input)
-{
-    setInput_const(input);
-}
-void GaussianProcessRegressor::setInput_const(const Vec& input) const
+void GaussianProcessRegressor::setInput(const Vec& input) const
 {
     // compute K(x,x_i)
     for (int i=0;i<Kxxi.length();i++)

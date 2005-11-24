@@ -111,8 +111,7 @@ public:
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     //! Set the input part before using the inherited methods
-    virtual void setInput(const Vec& input);
-    virtual void setInput_const(const Vec& input) const; // same thing, but cheating (make believe it is const)
+    virtual void setInput(const Vec& input) const;
 
     //! return log of probability density log(p(x))
     virtual double log_density(const Vec& x) const;

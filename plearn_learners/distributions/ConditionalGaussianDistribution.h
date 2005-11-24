@@ -97,7 +97,7 @@ public:
     //! return a pseudo-random sample generated from the distribution.
     virtual void generate(Vec& x) const;
 
-    virtual void setInput(const Vec& input);
+    virtual void setInput(const Vec& input) const;
   
 };
 
