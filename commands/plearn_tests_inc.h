@@ -53,6 +53,7 @@
 /*********
  * PTest *
  *********/
+#include <plearn/base/test/ObjectGraphIterator/ObjectGraphIteratorTest.h>
 #include <plearn/io/test/PLLogTest.h>
 #include <plearn/io/test/PPathTest.h>
 #include <plearn/io/test/PStreamBufTest.h>
