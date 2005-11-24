@@ -326,7 +326,7 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
         }
     }
     if (!rescale_target) {
-        desired_target.resize(target_length);
+        desired_target.resize(the_target.length());
         desired_target << the_target;
     } else {
         int n = output.length();
