@@ -56,6 +56,7 @@
 #include <plearn/io/test/PLLogTest.h>
 #include <plearn/io/test/PPathTest.h>
 #include <plearn/io/test/PStreamBufTest.h>
+#include <plearn/math/test/PentadiagonalSolveInPlace/PentaTest.h>
 #include <plearn/math/test/pl_math/PLMathTest.h>
 #include <plearn/math/test/TMat/TMatTest.h>
 #include <plearn/var/test/VarUtilsTest.h>
