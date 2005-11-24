@@ -61,6 +61,10 @@
 #include <plearn/math/test/pl_math/PLMathTest.h>
 #include <plearn/math/test/TMat/TMatTest.h>
 #include <plearn/misc/test/HeapTest.h>
+#include <plearn/python/test/BasicIdentityCallsTest.h>
+#include <plearn/python/test/InjectionTest.h>
+#include <plearn/python/test/InterfunctionXchgTest.h>
+#include <plearn/python/test/MemoryStressTest.h>
 #include <plearn/var/test/VarUtilsTest.h>
 #include <plearn/vmat/test/AutoVMatrixTest.h>
 #include <plearn/vmat/test/RowBufferedVMatrixTest.h>
