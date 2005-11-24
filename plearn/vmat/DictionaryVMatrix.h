@@ -44,7 +44,6 @@
 #ifndef DictionaryVMatrix_INC
 #define DictionaryVMatrix_INC
 
-#include <plearn/python/PythonCodeSnippet.h>
 #include <plearn/vmat/RowBufferedVMatrix.h>
 #include <plearn/base/stringutils.h>
 #include <plearn_learners/language/Dictionary/Dictionary.h>
@@ -55,6 +54,8 @@
 namespace PLearn {
 using namespace std;
 
+// Forward declaration.
+class PythonCodeSnippet;
 
 //! VMat of text files, encoded  with Dictionaries,
 //! The lines of the text files that are empty or commented

@@ -40,6 +40,7 @@
 
 /*! \file DictionaryVMatrix.cc */
 
+#include <plearn/python/PythonCodeSnippet.h>
 
 #include "DictionaryVMatrix.h"
 //#include "DiskVMatrix.h"
