@@ -622,6 +622,7 @@ void Variable::updateWithWeightDecay(real step_size, real weight_decay, bool L1,
                 if (clear)
                     direction[i] = 0;
             }
+        }
         else // L2
             for(int i=0; i<width(); i++)
             {

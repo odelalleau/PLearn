@@ -960,7 +960,7 @@ bool VarArray::update(real step_size, bool clear)
     return hit;
 }
 
-bool VarArray::updateWithWeightDecay(real step_size, real weight_decay, bool clear=true);
+void VarArray::updateWithWeightDecay(real step_size, real weight_decay, bool L1, bool clear)
 {
     iterator array = data();
     for(int i=0; i<size(); i++)
