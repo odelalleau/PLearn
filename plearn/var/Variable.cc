@@ -615,7 +615,7 @@ void Variable::updateWithWeightDecay(real step_size, real weight_decay, bool L1,
                 real* params = matValue[row];
                 if (L1)
                 {
-                    real delta = step_size*weight_decay;
+                    real delta = fabs(step_size)*weight_decay;
                     for(int i=0; i<width(); i++)
                     {
                         real pi = params[i];
@@ -631,7 +631,7 @@ void Variable::updateWithWeightDecay(real step_size, real weight_decay, bool L1,
                 else // L2
                     for(int i=0; i<width(); i++)
                     {
-                        params[i] += step_size*(direction[i] - weight_decay*params[i]);
+                        params[i] += step_size*(direction[i] + weight_decay*params[i]);
                         if (clear)
                             direction[i] = 0;
                     }
@@ -647,7 +647,7 @@ void Variable::updateWithWeightDecay(real step_size, real weight_decay, bool L1,
             real* params = matValue[row];      
             if (L1)
             {
-                real delta = step_size*weight_decay;
+                real delta = fabs(step_size)*weight_decay;
                 for(int i=0; i<width(); i++)
                 {
                     real pi = params[i];
@@ -663,7 +663,7 @@ void Variable::updateWithWeightDecay(real step_size, real weight_decay, bool L1,
             else // L2
                 for(int i=0; i<width(); i++)
                 {
-                    params[i] += step_size*(direction[i] - weight_decay*params[i]);
+                    params[i] += step_size*(direction[i] + weight_decay*params[i]);
                     if (clear)
                         direction[i] = 0;
                 }
