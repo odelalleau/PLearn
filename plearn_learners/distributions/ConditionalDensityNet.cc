@@ -897,7 +897,7 @@ void ConditionalDensityNet::variance(Mat& covar) const
     PLERROR("variance not implemented for ConditionalDensityNet"); 
 }
 
-void ConditionalDensityNet::resetGenerator(long g_seed) const
+void ConditionalDensityNet::resetGenerator(long g_seed)
 { 
     manual_seed(g_seed);
 }

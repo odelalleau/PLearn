@@ -227,7 +227,7 @@ real GaussianDistribution::log_density(const Vec& x) const
 }
 
 
-void GaussianDistribution::resetGenerator(long g_seed) const
+void GaussianDistribution::resetGenerator(long g_seed)
 {
     manual_seed(g_seed);
 }

@@ -154,7 +154,7 @@ void SpiralDistribution::generate(Vec& v) const
 int SpiralDistribution::inputsize() const 
 { return include_t ?3 :2; }
 
-void SpiralDistribution::resetGenerator(long g_seed) const
+void SpiralDistribution::resetGenerator(long g_seed)
 {
     manual_seed(g_seed);  
 }

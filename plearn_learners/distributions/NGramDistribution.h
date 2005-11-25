@@ -166,7 +166,7 @@ public:
     virtual void generate(Vec& y) const;
 
     //! Reset the random number generator used by generate() using the given seed.
-    virtual void resetGenerator(long g_seed) const;
+    virtual void resetGenerator(long g_seed);
 
     //! Set the value for the input part of a conditional probability.
     virtual void setInput(const Vec& input) const;

@@ -140,7 +140,7 @@ public:
     virtual int inputsize() const;
 
     //! Resets the random number generator used by generate using the given seed
-    virtual void resetGenerator(long g_seed) const;
+    virtual void resetGenerator(long g_seed);
 
 };
 

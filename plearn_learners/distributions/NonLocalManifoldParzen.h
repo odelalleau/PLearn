@@ -302,7 +302,7 @@ public:
     virtual void generate(Vec& y) const;
 
     //! Reset the random number generator used by generate() using the given seed.
-    virtual void resetGenerator(long g_seed) const;
+    virtual void resetGenerator(long g_seed);
     */
 
     //! Produce outputs according to what is specified in outputs_def.

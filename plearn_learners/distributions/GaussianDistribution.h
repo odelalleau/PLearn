@@ -85,7 +85,7 @@ public:
     virtual real log_density(const Vec& x) const;
 
     //! Resets the random number generator used by generate using the given seed
-    virtual void resetGenerator(long g_seed) const;
+    virtual void resetGenerator(long g_seed);
 
     //! return a pseudo-random sample generated from the distribution.
     virtual void generate(Vec& x) const;

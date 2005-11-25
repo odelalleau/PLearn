@@ -49,8 +49,8 @@ using namespace std;
 
 //! Note that many methods are declared as 'const' because of the 'const'
 //! plague, but are actually not true 'const' methods.
-//! This is also why almost everything is mutable.
-// TODO See if still the case.
+//! This is also why a lot of stuff is mutable.
+// TODO Would it be possible to remove some 'const' stuff for cleaner code?
 class PDistribution: public PLearner
 {
 
@@ -59,7 +59,6 @@ private:
     typedef PLearner inherited;
 
     //! Global storage to save memory allocations.
-    // TODO See if still used.
     mutable Vec store_expect, store_result;
     mutable Mat store_cov;
 
@@ -68,52 +67,20 @@ protected:
     //! Random number generator.
     PP<PRandom> random;
 
+    //! The step when plotting the curve (upper case outputs_def).
+    real delta_curve;
+
+    mutable Vec input_part;       //!< Used to store the x part in p(y|x).
+    mutable Vec target_part;      //!< Used to store the y part in p(y|x).
+
     // *********************
     // * protected options *
     // *********************
 
     mutable int n_input;
-    // mutable TVec<int> cond_sort;
-    // mutable int n_margin;
     mutable int n_target;
     int n_input_;
     int n_target_;
-    // TODO Document the _ and not _, and make sure options point to the right
-    // ones, and that forget erases the not _.
-
-    // Fields below are not options.
-
-    /*
-    //! A boolean indicating whether the input, target and margin part are
-    //! already sorted nicely, so we actually don't have to swap indices
-    //! when given a new vector.
-    mutable bool already_sorted;
-
-    //! A vector indicating which indices need to be swapped when we have modified
-    //! the conditional flags, in order to still have input, target, margin in this
-    //! order. It is made of pairs (j,k) indicating that the new j-th variable
-    //! must be the old k-th variable.
-    mutable TVec<int> cond_swap;
-    */
-
-    //! The step when plotting the curve (upper case outputs_def).
-    // TODO Is this needed?
-    real delta_curve;
-
-    /*
-    //! A boolean indicating whether the distribution is only a full joint
-    //! distribution (no conditional or marginalized variables). Its value is
-    //! deduced from the conditional flags.
-    mutable bool full_joint_distribution;
-    */
-
-    //! A boolean indicating whether the input part has changed since last time,
-    //! and thus if setInput() needs to be called.
-    mutable bool need_set_input;
-
-    // TODO Do we need to keep target_part?
-    mutable Vec input_part;       //!< Used to store the x part in p(y|x).
-    mutable Vec target_part;      //!< Used to store the y part in p(y|x).
 
 public:
 
@@ -121,9 +88,8 @@ public:
     // * public build options *
     // ************************
 
-    // mutable TVec<int> conditional_flags;
-    real lower_bound, upper_bound;  // TODO Still used?
-    int n_curve_points;  // TODO Still used?
+    real lower_bound, upper_bound;
+    int n_curve_points;
     string outputs_def; // TODO Replace this by a TVec<string>
 
     // ****************
@@ -153,10 +119,10 @@ public:
     // **** Object methods ****
     // ************************
 
-    //! simply calls inherited::build() then build_() 
+    //! Simply calls inherited::build() then build_().
     virtual void build();
 
-    //! Transforms a shallow copy into a deep copy
+    //! Transforms a shallow copy into a deep copy.
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     // Declares other standard object methods
@@ -180,8 +146,8 @@ public:
     //! Produce outputs according to what is specified in outputs_def.
     virtual void computeOutput(const Vec& input, Vec& output) const;
 
-    //! Computes negative log likelihood (NLL) 
-    //! assuming log-likelihood is first output.  
+    //! Computes negative log likelihood (NLL). If the first output is neither
+    //! the log density nor the density, an error will be raised.
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                          const Vec& target, Vec& costs) const;
 
@@ -189,94 +155,56 @@ public:
     // **** PDistribution methods ****
     // *******************************
 
-private:
-
-    /*
-    //! Set the conditional flags, but does not call updateFromConditionalSorting().
-    //! This method is called at build time so that flags information is available
-    //! to subclasses during their build. The updateFromConditionalSorting() method
-    //! should then be called when the subclass' build ends (this will be done in
-    //! finishConditionalBuild()).
-    void setConditionalFlagsWithoutUpdate(const TVec<int>& flags) const;
-    */
-
 protected:
 
     //! Split an input into the part corresponding to the 'real' input (in
     //! 'input_part'), and the target (in 'target_part').
-    //! Note that the 'margin' part is lost, since we don't need it. // TODO Scrap
-    //! Return true iff the input part has changed since last time (this is false
-    //! only it is absent from input, which can be seen from its length).
-    // TODO See if doc is ok.
-    bool splitCond(const Vec& input) const;
-
-    /*
-    //! If the full joint distribution was already the one computed, return
-    //! false and old_flags is of length 0.
-    //! Otherwise, return true, conditional_flags is emptied (in order to compute
-    //! the full joint distribution), with a backup in old_flags.
-    bool ensureFullJointDistribution(TVec<int>& old_flags);
-
-    //! Finish the build of a conditional distribution. This method should be called
-    //! at the end of the build_() method in a subclass.
-    //! It will call updateFromConditionalSorting() and setInput() (if necessary).
-    void finishConditionalBuild();
-
-    //! Resize input_part and target_part according to n_input and n_target.
-    void resizeParts() const;
-
-    //! Sort a vector or a matrix according to the conditional flags currently
-    //! defined. The indices are sorted as follows: input, target, margin.
-    //! The vector (or matrix) is assumed to be sorted according to the
-    //! previously defined flags.
-    void sortFromFlags(Vec& v) const;
-    void sortFromFlags(Mat& m, bool sort_columns = true, bool sort_rows = false) const;
-
-    //! This method updates the internal data given a new sorting of the variables
-    //! defined by the conditional flags. The default version does nothing: it
-    //! should be implemented in each conditional subclass.
-    virtual void updateFromConditionalSorting() const;
-    */
+    //! Also call setInput(..) with the new input part.
+    //! If 'input' turns out to only have a target part (i.e. its length is
+    //! equal to 'n_target'), then no input part will be set (it is assumed
+    //! to stay the same as before).
+    void splitCond(const Vec& input) const;
 
     //! Called in computeOutput when an unknown character is found.
+    // TODO Can we find a better way to perform this?
     virtual void unknownOutput(char def, const Vec& input, Vec& output, int& k) const;
 
 public:
 
-    /*
-    //! Set the conditional flags.
-    void setConditionalFlags(const TVec<int>& flags) const;
-    */
-
-    // TODO Document
+    //! Set the 'input' and 'target' sizes for this distribution.
+    //! 'n_input' is the size of the input, i.e. of x in p(y|x).
+    //! 'n_target' is the size of the target, i.e. of y in p(y|x).
+    //! This is a virtual method: if 'call_parent' is set to true, then the
+    //! inherited::setInputTargetSizes(..) method will also be called, with the
+    //! same arguments: this is useful in the build process, where each class
+    //! can call only its own method by setting 'call_parent' to false.
+    //! Note that semantically, this method should not be 'const': however, one
+    //! may need to call it from other 'const' methods, so that it is 'const'
+    //! for convenience.
     virtual bool setInputTargetSizes(int n_input, int n_target,
                                      bool call_parent = true) const;
 
     //! Set the value for the input part of a conditional probability.
     //! This needs to be implemented in subclasses if there is something
     //! special to do (like precomputing some stuff).
-    // TODO See if doc is ok (in particular we use only the first 'n_input'
-    // elements from 'input').
+    //! The default behavior is just to fill 'input_part' with the first
+    //! 'n_input' elements of 'input'.
+    //! As with 'setInputTargetSizes(..)', the boolean 'call_parent' indicates
+    //! whether or not one should call inherited::setInput(..) with the same
+    //! arguments.
     virtual void setInput(const Vec& input, bool call_parent = true) const;
 
-    //! Overridden so that some stuff is updated according to the conditional
-    //! flags when the training set is set.
-    // TODO Still need to override?
-    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
-
-    //! Return [ "NLL" ].
-    // TODO Is that true?
+    //! Return [ "NLL" ] (the only cost computed by a PDistribution).
     virtual TVec<string> getTestCostNames() const;
 
     //! Return [ ].
-    // TODO Is that true?
     virtual TVec<string> getTrainCostNames() const;
 
     //! Return log of probability density log(p(y | x)).
     virtual real log_density(const Vec& y) const;
 
     //! Return probability density p(y | x) (default version simply returns
-    //! exp(log_density(..))).
+    //! exp(log_density(y))).
     virtual real density(const Vec& y) const;
   
     //! Return survival function: P(Y>y | x).
@@ -292,20 +220,20 @@ public:
     virtual void variance(Mat& cov) const;
 
     //! Reset the random number generator used by generate() using the given seed.
-    //! Default behavior is to call random.manual_seed(g_seed) and to save the
+    //! Default behavior is to call random->manual_seed(g_seed) and to save the
     //! given seed.
     //! This method is called in build().
-    virtual void resetGenerator(long g_seed) const;
+    virtual void resetGenerator(long g_seed);
   
     //! Return a pseudo-random sample generated from the distribution.
     virtual void generate(Vec& y) const;
 
-    //! X must be a N x inputsize() matrix. that will be filled.
+    //! X must be a N x n_target matrix. that will be filled.
     //! This will call generate N times to fill the N rows of the matrix. 
     void generateN(const Mat& Y) const;
 
-    //! TODO Document
-    int get_n_target() { return n_target; }
+    //! 'Get' accessor.
+    int getNTarget() { return n_target; }
 
 };
 

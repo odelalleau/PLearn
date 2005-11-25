@@ -324,7 +324,7 @@ void NGramDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////////
 // resetGenerator //
 ////////////////////
-void NGramDistribution::resetGenerator(long g_seed) const
+void NGramDistribution::resetGenerator(long g_seed)
 {
     manual_seed(g_seed);
 }

@@ -197,7 +197,7 @@ void UniformDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////////
 // resetGenerator //
 ////////////////////
-void UniformDistribution::resetGenerator(long g_seed) const
+void UniformDistribution::resetGenerator(long g_seed)
 {
     manual_seed(g_seed);
     counter = 0;
