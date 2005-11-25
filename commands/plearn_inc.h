@@ -52,12 +52,10 @@
 #define PLEARN_MINOR_VERSION 92
 #define PLEARN_FIXLEVEL 0
 
-/*******************************************************************************
- * Python (experimental) -- python includes must come FIRST, as per Python doc *
- *******************************************************************************/
-// #include <plearn/python/PythonCodeSnippet.h>
-// #include <plearn/python/PythonProcessedVMatrix.h>
-
+/******************************************************
+ * Python includes must come FIRST, as per Python doc *
+ ******************************************************/
+#include <plearn/python/PythonIncludes.h>
 
 /*****************
  * Miscellaneous *
@@ -184,6 +182,12 @@
 #include <plearn_learners/nearest_neighbors/BallTreeNearestNeighbors.h>
 #include <plearn_learners/nearest_neighbors/ExhaustiveNearestNeighbors.h>
 #include <plearn_learners/nearest_neighbors/GenericNearestNeighbors.h>
+
+/**********
+ * Python *
+ **********/
+#include <plearn/python/PythonCodeSnippet.h>
+#include <plearn/python/PythonProcessedVMatrix.h>
 
 /************
  * Splitter *

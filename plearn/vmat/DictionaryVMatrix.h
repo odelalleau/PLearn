@@ -44,8 +44,10 @@
 #ifndef DictionaryVMatrix_INC
 #define DictionaryVMatrix_INC
 
-#include <plearn/vmat/RowBufferedVMatrix.h>
+#include <plearn/python/PythonCodeSnippet.h>
+
 #include <plearn/base/stringutils.h>
+#include <plearn/vmat/RowBufferedVMatrix.h>
 #include <plearn_learners/language/Dictionary/Dictionary.h>
 
 // number of attributes of dictionary specifications
