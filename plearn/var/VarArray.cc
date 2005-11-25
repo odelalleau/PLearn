@@ -965,7 +965,7 @@ void VarArray::updateWithWeightDecay(real step_size, real weight_decay, bool L1,
     iterator array = data();
     for(int i=0; i<size(); i++)
         if (!array[i].isNull())
-            array[i]->updateWithWeightDecay(step_size,weight_decay,clear);
+            array[i]->updateWithWeightDecay(step_size,weight_decay,L1,clear);
     return;
 }
 
