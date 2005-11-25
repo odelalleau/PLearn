@@ -537,8 +537,8 @@ bool Variable::update(real step_size, bool clear)
                             direction[i]=0;
                     }
                 }
-                //rows_to_update.resize(0);
-                //gradient_status=0;
+                rows_to_update.resize(0);
+                gradient_status=0;
             }
         }
         else for (int row=0;row<length();row++)
@@ -582,8 +582,8 @@ bool Variable::update(real step_size, bool clear)
                             direction[i] = 0;
                     }
                 }
-                //rows_to_update.resize(0);
-                //gradient_status=0;
+                rows_to_update.resize(0);
+                gradient_status=0;
             }
         }
         else for (int row=0;row<length();row++)
@@ -604,33 +604,70 @@ bool Variable::update(real step_size, bool clear)
 void Variable::updateWithWeightDecay(real step_size, real weight_decay, bool L1, bool clear)
 {
     // we do unconstrained update only here
-    for (int row=0;row<length();row++)
+    if (allows_partial_update && gradient_status!=2)
     {
-        real* direction = matGradient[row];
-        real* params = matValue[row];      
-        if (L1)
+        if (gradient_status!=0)
         {
-            real delta = step_size*weight_decay;
-            for(int i=0; i<width(); i++)
+            for (int r=0;r<rows_to_update.length();r++)
             {
-                real pi = params[i];
-                params[i] += step_size*direction[i];
-                if (pi>delta)
-                    params[i] -= delta;
-                else if (pi<-delta)
-                    params[i] += delta;
-                if (clear)
-                    direction[i] = 0;
+                int row = rows_to_update[r];
+                real* direction = matGradient[row];
+                real* params = matValue[row];
+                if (L1)
+                {
+                    real delta = step_size*weight_decay;
+                    for(int i=0; i<width(); i++)
+                    {
+                        real pi = params[i];
+                        params[i] += step_size*direction[i];
+                        if (pi>delta)
+                            params[i] -= delta;
+                        else if (pi<-delta)
+                            params[i] += delta;
+                        if (clear)
+                            direction[i] = 0;
+                    }
+                }
+                else // L2
+                    for(int i=0; i<width(); i++)
+                    {
+                        params[i] += step_size*(direction[i] - weight_decay*params[i]);
+                        if (clear)
+                            direction[i] = 0;
+                    }
             }
+            rows_to_update.resize(0);
+            gradient_status=0;
         }
-        else // L2
-            for(int i=0; i<width(); i++)
-            {
-                params[i] += step_size*(direction[i] - weight_decay*params[i]);
-                if (clear)
-                    direction[i] = 0;
-            }
     }
+    else
+        for (int row=0;row<length();row++)
+        {
+            real* direction = matGradient[row];
+            real* params = matValue[row];      
+            if (L1)
+            {
+                real delta = step_size*weight_decay;
+                for(int i=0; i<width(); i++)
+                {
+                    real pi = params[i];
+                    params[i] += step_size*direction[i];
+                    if (pi>delta)
+                        params[i] -= delta;
+                    else if (pi<-delta)
+                        params[i] += delta;
+                    if (clear)
+                        direction[i] = 0;
+                }
+            }
+            else // L2
+                for(int i=0; i<width(); i++)
+                {
+                    params[i] += step_size*(direction[i] - weight_decay*params[i]);
+                    if (clear)
+                        direction[i] = 0;
+                }
+        }
 }
 
 
