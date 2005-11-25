@@ -537,8 +537,10 @@ bool Variable::update(real step_size, bool clear)
                             direction[i]=0;
                     }
                 }
-                rows_to_update.resize(0);
-                gradient_status=0;
+                if (clear) {
+                    rows_to_update.resize(0);
+                    gradient_status=0;
+                }
             }
         }
         else for (int row=0;row<length();row++)
@@ -582,8 +584,10 @@ bool Variable::update(real step_size, bool clear)
                             direction[i] = 0;
                     }
                 }
-                rows_to_update.resize(0);
-                gradient_status=0;
+                if (clear) {
+                    rows_to_update.resize(0);
+                    gradient_status=0;
+                }
             }
         }
         else for (int row=0;row<length();row++)
@@ -636,8 +640,10 @@ void Variable::updateWithWeightDecay(real step_size, real weight_decay, bool L1,
                             direction[i] = 0;
                     }
             }
-            rows_to_update.resize(0);
-            gradient_status=0;
+            if (clear) {
+                rows_to_update.resize(0);
+                gradient_status=0;
+            }
         }
     }
     else
