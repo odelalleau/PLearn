@@ -56,7 +56,7 @@ PLEARN_IMPLEMENT_OBJECT(PotentialsVariable,
                         "NO HELP");
 
 PotentialsVariable::PotentialsVariable(Var the_input, Var the_comp_input, Var the_dp_target, Var the_target_dist_reps, Var the_output, VarArray the_params, VMat the_distr)
-    : inherited(input & the_comp_input & params & the_target_dist_reps, 
+    : inherited(blablablublu & the_comp_input & params & the_target_dist_reps, 
                 2, // Temporary value
                 1 // idem
         ),
@@ -65,7 +65,7 @@ PotentialsVariable::PotentialsVariable(Var the_input, Var the_comp_input, Var th
     comp_input(the_comp_input),
     dp_target(the_dp_target),
     target_dist_reps(the_target_dist_reps),
-    input(the_input),
+    blablablublu(the_input),
     params(the_params)
 {
     build_();
@@ -96,7 +96,7 @@ PotentialsVariable::declareOptions(OptionList &ol)
     declareOption(ol, "comp_input", &PotentialsVariable::comp_input, OptionBase::buildoption, "");
     declareOption(ol, "dp_target", &PotentialsVariable::dp_target, OptionBase::buildoption, "");
     declareOption(ol, "target_dist_reps", &PotentialsVariable::target_dist_reps, OptionBase::buildoption, "");
-    declareOption(ol, "input", &PotentialsVariable::input, OptionBase::buildoption, "");
+    declareOption(ol, "blablablublu", &PotentialsVariable::blablablublu, OptionBase::buildoption, "");
     declareOption(ol, "params", &PotentialsVariable::params, OptionBase::buildoption, "");
     inherited::declareOptions(ol);
 }
@@ -105,7 +105,7 @@ PotentialsVariable::declareOptions(OptionList &ol)
 void PotentialsVariable::recomputeSize(int& l, int& w) const
 {
     if (distr) {
-        l = distr->getValues(input->value,distr->inputsize()).size();
+        l = distr->getValues(blablablublu->value,distr->inputsize()).size();
         w = 1;
     } else
         l = w = 0;
@@ -120,7 +120,7 @@ void PotentialsVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     varDeepCopyField(comp_input, copies);
     varDeepCopyField(dp_target, copies);
     varDeepCopyField(target_dist_reps, copies);
-    varDeepCopyField(input, copies);
+    varDeepCopyField(blablablublu, copies);
 
     deepCopyField(distr, copies);
     deepCopyField(temp_comps, copies);
@@ -133,7 +133,7 @@ void PotentialsVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 void PotentialsVariable::fprop()
 {
     temp_comps.resize(length(),proppath.nelems());
-    values = distr->getValues(input->value,distr->inputsize());
+    values = distr->getValues(blablablublu->value,distr->inputsize());
     
     for(int i=0; i<length(); i++)
     {        
