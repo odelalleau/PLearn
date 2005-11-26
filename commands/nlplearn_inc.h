@@ -161,6 +161,7 @@
 #include <plearn/vmat/PrecomputedVMatrix.h>
 #include <plearn/vmat/ProcessSymbolicSequenceVMatrix.h>
 #include <plearn/vmat/LemmatizeVMatrix.h>
+#include <plearn/vmat/SortRowsVMatrix.h>
 #endif
 
 
