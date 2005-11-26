@@ -2,7 +2,7 @@
 
 // DictionaryVMatrix.h
 //
-// Copyright (C) 2004 Christopher Kermorvant 
+// Copyright (C) 2004 Hugo Larochelle
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -60,8 +60,7 @@ using namespace std;
 class PythonCodeSnippet;
 
 //! VMat of text files, encoded  with Dictionaries,
-//! The lines of the text files that are empty or commented
-//! out using the character # are ommited. If no Dictionary
+//! The lines of the text files that are empty are ommited. If no Dictionary
 //! objects are given by the user, then new Dictionary objects
 //! are created and updated from the text files.
 //! A Python script can be provided to preprocess each

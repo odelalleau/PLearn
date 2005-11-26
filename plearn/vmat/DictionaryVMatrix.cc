@@ -2,7 +2,7 @@
 
 // DictionaryVMatrix.cc
 //
-// Copyright (C) 2004 Christopher Kermorvant 
+// Copyright (C) 2004 Hugo Larochelle
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -60,8 +60,7 @@ DictionaryVMatrix::DictionaryVMatrix()
 
 PLEARN_IMPLEMENT_OBJECT(DictionaryVMatrix,
                         "VMat of text files, encoded  with Dictionaries",
-                        "The lines of the text files that are empty or commented\n"
-                        "out using the character # are ommited. If no Dictionary\n"
+                        "The lines of the text files that are empty are ommited. If no Dictionary\n"
                         "objects are given by the user, then new Dictionary objects\n"
                         "are created and updated from the text files.\n"
                         "A Python script can be provided to preprocess each\n"
@@ -160,6 +159,7 @@ void DictionaryVMatrix::build_()
     vector<string> tokens;
     TVec<string> tokens_vec;
     int it=0; 
+    int nlines = 0;
     
     if (!python && code != "") 
     {
@@ -171,17 +171,31 @@ void DictionaryVMatrix::build_()
     if(data.length()!=0) data.clear();
     
     length_ = 0;
+    
+    // Figure out length of VMatrix
     for(int k=0; k<file_names.length(); k++)
     {
         PPath input_file = file_names[k];
-        int nlines = countNonBlankLinesOfFile(input_file);
-        length_ += nlines;
         PStream input_stream = openFile(input_file, PStream::raw_ascii);
-        if(k>0) data.resize(length_,n_attributes);
         while (!input_stream.eof()){
-            getNextNonBlankLine(input_stream, line);
+            input_stream.getline(line);
+            input_stream.skipBlanks();
+            length_++;
+        }
+    }
+
+
+    for(int k=0; k<file_names.length(); k++)
+    {
+        nlines = length_;
+        PPath input_file = file_names[k];
+        PStream input_stream = openFile(input_file, PStream::raw_ascii);
+        while (!input_stream.eof()){
+            if(it>0) data.resize(length_,n_attributes);
+            input_stream.getline(line);
+            input_stream.skipBlanks();
             tokens = split(line, delimiters);
-            
+
             if(python)
             {
                 tokens_vec.resize(tokens.size());
@@ -220,7 +234,7 @@ void DictionaryVMatrix::build_()
             }
 
             if((int)tokens.size() != n_attributes)
-                PLERROR("In DictionaryVMatrix::build_(): %d th line \"%s\" of file %s doesn't have %d attributes", it+1-length_+nlines, line.c_str(), input_file.c_str(), n_attributes);
+                PLERROR("In DictionaryVMatrix::build_(): line %d (\"%s\") of file %s doesn't have %d attributes", length_-nlines, line.c_str(), input_file.c_str(), n_attributes);
                 
             // Insert symbols in dictionaries (if they can be updated)
             for(int j=0; j<n_attributes; j++)
@@ -262,6 +276,7 @@ void DictionaryVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(file_names, copies);
     deepCopyField(dictionaries, copies);
     deepCopyField(option_fields, copies);
+    deepCopyField(python, copies);
 }
 
 } // end of namespace PLearn
