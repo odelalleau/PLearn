@@ -116,6 +116,8 @@ public:
     //! Function from input and target to output and test_costs
     mutable Func test_costf; 
 
+    Var extra_dist_rep;
+
 public:
 
     // Build options:

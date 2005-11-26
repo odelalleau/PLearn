@@ -315,7 +315,7 @@ void DistRepNNet::build_()
             else
                 target_dict_index = f;
         }
-
+        
         if(dist_rep_dim.length() != dist_reps.length()) 
             PLWARNING("In DistRepNNet::build_(): number of distributed representation sets (%d) and dimensionaly specification (dist_rep_dim.length()=%d) isn't the same", dist_reps.length(), dist_rep_dim.length());
         
