@@ -6,6 +6,7 @@
 #include <string>
 #include <utility>                           //!< for pair
 #include "plerror.h"                         //!< For PLWARNING.
+#include <plearn/io/PPath.h>
 
 //! Macro to define deep copy for types that actually do not require
 //! any deep copy (such as int, real, etc.).
@@ -37,7 +38,9 @@ typedef map<float, string> map_float_string;
 typedef map<string, string> map_string_string;
 typedef map<float, float> map_float_float;
 typedef map<double, double> map_double_double;
-  
+typedef map<string, int> map_string_int;
+typedef map<int, string> map_int_string;
+
 /*! Support for generic deep copying
     
 Deep copying is defined for objects in the following manner:
@@ -60,7 +63,10 @@ NODEEPCOPY(map_double_string)
 NODEEPCOPY(map_string_string)
 NODEEPCOPY(map_float_float)
 NODEEPCOPY(map_double_double)
+NODEEPCOPY(map_string_int)
+NODEEPCOPY(map_int_string)
 NODEEPCOPY(string)
+NODEEPCOPY(PPath)
 NODEEPCOPY(VMField)
 NODEEPCOPY(VMFieldStat)
 NODEEPCOPY(FILE*)   //!< There is currently no proper way to deep copy these.
