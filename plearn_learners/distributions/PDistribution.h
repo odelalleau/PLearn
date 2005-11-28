@@ -77,8 +77,8 @@ protected:
     // * protected options *
     // *********************
 
-    mutable int n_input;
-    mutable int n_target;
+    int n_input;
+    int n_target;
     int n_input_;
     int n_target_;
 
@@ -178,11 +178,10 @@ public:
     //! inherited::setInputTargetSizes(..) method will also be called, with the
     //! same arguments: this is useful in the build process, where each class
     //! can call only its own method by setting 'call_parent' to false.
-    //! Note that semantically, this method should not be 'const': however, one
-    //! may need to call it from other 'const' methods, so that it is 'const'
-    //! for convenience.
+    //! Return 'true' iff the input or target sizes have been modified from
+    //! their previous value.
     virtual bool setInputTargetSizes(int n_input, int n_target,
-                                     bool call_parent = true) const;
+                                     bool call_parent = true);
 
     //! Set the value for the input part of a conditional probability.
     //! This needs to be implemented in subclasses if there is something

@@ -429,7 +429,7 @@ void PDistribution::setInput(const Vec& input, bool call_parent) const {
 // setInputTargetSizes //
 /////////////////////////
 bool PDistribution::setInputTargetSizes(int n_input, int n_target,
-                                        bool call_parent) const
+                                        bool call_parent)
 {
     assert( (n_input  >= 0 || n_input  == -1) &&
             (n_target >= 0 || n_target == -1) );

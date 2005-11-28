@@ -52,88 +52,23 @@ private:
 
     typedef PDistribution inherited;
 
-    // TODO Document
-    Vec sample_row;
-    Vec log_likelihood_post;
-
-    /*
-    //! Storage vectors to save memory allocations.
-    mutable Vec x_minus_mu_x, mu_target, log_likelihood_dens;
-    */
+    //! Temporary storage used when computing posteriors.
+    Vec log_likelihood_post, sample_row;
 
 protected:
 
-    // *********************
-    // * protected options *
-    // *********************
-
-    // TODO Doc: full covariance matrix, used in 'setInput' and computed only
-    // once / stage.
-    mutable TVec<Mat> joint_cov;
-    // TODO Doc + put default = -1.
-    TVec<int> stage_joint_cov_computed;
-
-    Mat center_y_x; // TODO DOcument
-
-    int D;
-    /*mutable*/ Mat diags;
-    Mat eigenvalues;
-    TVec<Mat> eigenvectors;
-    Vec log_coeff;
-    int n_eigen_computed;
-    int nsamples;
-    mutable Vec p_j_x;
-    mutable Vec log_p_j_x;
-    /*
-    mutable real conditional_updating_time;
-    Vec log_p_x_j_alphaj;
-    mutable Mat mu_y_x;
-    TVec<int> n_tries;
-    real training_time;
-    */
-
-    // Fields below are not options.
-
-    // TODO Document.
+    //! Set at build time, this integer value depends uniquely on the 'type'
+    //! option. It is meant to avoid too many useless string comparisons.
     int type_id;
 
-    // TODO Document.
-    mutable Vec y_centered;
+    //! Mean and standard deviation of the training set.
+    // TODO There may be a need to declare them as learnt options if one wants
+    // to continue the training of a saved GaussMix.
+    Vec mean_training, stddev_training;
 
     //! The posterior probabilities P(j | s_i), where j is the index of a
     //! Gaussian and i is the index of a sample.
     Mat posteriors;
-
-    // TODO Check.
-    TVec<Mat> eigenvectors_x;   //!< The eigenvectors of the covariance of X.
-    mutable Mat eigenvalues_x;  //!< The eigenvalues of the covariance of X.
-//    TVec<Mat> full_cov;         //!< The full covariance matrix.
-    TVec<Mat> y_x_mat;          //!< The product K2 * K1^-1 to compute E[Y|x].
-    TVec<Mat> eigenvectors_y_x; //!< The eigenvectors of the covariance of Y|x.
-    Mat eigenvalues_y_x;//!< The eigenvalues of the covariance of Y|x.
-
-    // TODO Document.
-    Vec log_coeff_x;
-    Vec log_coeff_y_x;
-
-    // TODO Doc.
-    mutable bool previous_input_part_had_missing;
-
-    /*
-    TVec<Mat> cov_x;            //!< The covariance of x.
-
-
-
-    */
-
-    //! Mean and standard deviation of the training set.
-    // TODO Check doc + do they need to be learnt options?
-    Vec mean_training, stddev_training;
-
-    //! Storage for the (weighted) covariance matrix of the dataset.
-    //! It is only used with when type == "general".
-    // TODO Check help.
-    Mat covariance;
 
     //! The initial weights of the samples s_i in the training set, copied for
     //! efficiency concerns.
@@ -143,6 +78,52 @@ protected:
     //! for Gaussian j, i.e. the initial weight of s_i multiplied by the
     //! posterior P(j | s_i).
     Mat updated_weights;
+
+    TVec<Mat> eigenvectors_x;   //!< The eigenvectors of the covariance of X.
+    mutable Mat eigenvalues_x;  //!< The eigenvalues of the covariance of X.
+    TVec<Mat> y_x_mat;          //!< The product K2 * K1^-1 to compute E[Y|x].
+    TVec<Mat> eigenvectors_y_x; //!< The eigenvectors of the covariance of Y|x.
+    Mat eigenvalues_y_x;        //!< The eigenvalues of the covariance of Y|x.
+
+    //! Used to store the conditional expectation E[Y | X = x].
+    Mat center_y_x;
+
+    //! The logarithm of the constant part in P(X) and P(Y | X = x), similar to
+    //! what 'log_coeff' is for the joint distribution P(X,Y).
+    Vec log_coeff_x, log_coeff_y_x;
+
+    //! The j-th element is the full covariance matrix for Gaussian j. It is
+    //! needed only with the 'general' type, in presence of missing values.
+    mutable TVec<Mat> joint_cov;
+
+    //! Indicates at which stage the full joint covariance was computed in
+    //! 'joint_cov' (so that we know there is no need to compute it again).
+    TVec<int> stage_joint_cov_computed;
+
+    //! A boolean indicating whether or not the last input part set through
+    //! setInput(..) had a missing value.
+    mutable bool previous_input_part_had_missing;
+
+    //! Storage vector to save some memory allocations.
+    mutable Vec y_centered;
+
+    //! Storage for the (weighted) covariance matrix of the dataset.
+    //! It is only used with when type == "general".
+    Mat covariance;
+
+    // *********************
+    // * protected options *
+    // *********************
+
+    int D;
+    Mat diags;
+    Mat eigenvalues;
+    TVec<Mat> eigenvectors;
+    Vec log_coeff;
+    int n_eigen_computed;
+    int nsamples;
+    mutable Vec p_j_x;
+    mutable Vec log_p_j_x;
 
 public:
 
@@ -155,16 +136,15 @@ public:
     int kmeans_iterations;
     int L;
     int n_eigen;
-    Vec sigma;
     real sigma_min;
     string type;
-    /*
 
-    // Currently learnt options, but may be build options in the future.
-    */
-
+    // The following options are actually learnt options (since they are learnt
+    // during training), but are public so that one may easily define a given
+    // mixture of Gaussians.
     Vec alpha;
-    /*mutable*/ Mat center;
+    Mat center;
+    Vec sigma;
 
     // ****************
     // * Constructors *
@@ -179,28 +159,39 @@ public:
 
 protected:
 
+    // ********************
+    // * GaussMix methods *
+    // ********************
+
     //! Generate a sample 's' from the given Gaussian. If 'given_gaussian' is
     //! equal to -1, then a random Gaussian will be chosen according to the
-    //! weights alpha.
-    // TODO Check doc.
-    /*virtual*/ void generateFromGaussian(Vec& s, int given_gaussian) const;
+    //! prior weights alpha.
+    void generateFromGaussian(Vec& s, int given_gaussian) const;
 
-       // TODO Document
-        virtual bool setInputTargetSizes(int n_input, int n_target,
-                                         bool call_parent = true) const;
+    //! In the 'general' conditional type, will precompute the covariance
+    //! matrix of Y|x.
+    virtual bool setInputTargetSizes(int n_input, int n_target,
+                                     bool call_parent = true);
 
-    //! TODO Document
+    //! Main implementation of 'setInputTargetSizes', that needs to be 'const'
+    //! as it currently needs to be called in setInput(..).
+    void setInputTargetSizes_const(int n_input, int n_target,
+                                   bool call_parent = true) const;
+
+    //! Fill the 'initial_weights' vector with the weights from the given
+    //! VMatrix (which must have a weights column).
     void getInitialWeightsFrom(const VMat& vmat);
 
     //! Given the posteriors, fill the centers and covariance of each Gaussian.
     virtual void computeMeansAndCovariances();
 
     //! Compute posteriors P(j | s_i) for each sample point and each Gaussian.
-    //! Note that actual weights (stored in 'update_weights') will not be
+    //! Note that actual weights (stored in 'updated_weights') will not be
     //! until you explicitely call 'updateSampleWeights'.
     virtual void computePosteriors();
 
-    // TODO Document.
+    //! Fill the 'log_like' vector with the log-likelihood of each Gaussian for
+    //! the given sample.
     void computeAllLogLikelihoods(const Vec& sample, const Vec& log_like);
 
     //! Compute log p(y | x,j), with j < L the index of a mixture's component,
@@ -209,31 +200,40 @@ protected:
     //! that will be returned, i.e. log p(X = y | j).
     real computeLogLikelihood(const Vec& y, int j, bool is_input=false) const;
 
-    //! Precompute stuff specific to each Gaussian, given its current parameters.
-    //! This method is called after each training step.
-    // TODO Better help.
-    void precomputeAllGaussianLogCoefficients();
-
-    // TODO Document.
+    //! Return log( 1 / sqrt( 2 Pi^dimension |C| ) ), i.e. the logarithm of the
+    //! constant coefficient in the Gaussian whose covariance matrix has the
+    //! given eigenvalues 'eigenvals' in dimension 'dimension'. If the length
+    //! of 'eigenvals' is not equal to 'dimension', the missing eigenvalues are 
+    //! assumed to be equal to the last in 'eigenvals' (which must be sorted in
+    //! decreasing order of eigenvalues).
     real precomputeGaussianLogCoefficient(const Vec& eigenvals, int dimension)
                                           const;
+
+    //! When type is 'general', fill the 'log_coeff' vector with the result of
+    //! precomputeGaussianLogCoefficient(..) applied to each component of the
+    //! mixture.
+    void precomputeAllGaussianLogCoefficients();
 
     //! Make sure everything has the right size when training starts.
     void resizeDataBeforeTraining();
 
-    //! TODO Document.
+    //! Make sure everything has the right size when the object is about to be
+    //! used (e.g. after loading a saved GaussMix object).
     void resizeDataBeforeUsing();
 
-    //! Compute the weight of each Gaussian (the coefficient 'alpha').
-    //! If a Gaussian's coefficient is too low, this Gaussian will be removed
-    //! and replaced by a new one, while this method will return 'true'
-    //! (otherwise it will return 'false').
-    /*virtual*/ bool computeMixtureWeights();
+    //! Compute the weight of each Gaussian (the coefficient 'alpha'). If a
+    //! Gaussian's coefficient is too low (i.e. less than 'alpha_min'), this
+    //! Gaussian will be removed and replaced by a new one, while this method
+    //! will return 'true' (otherwise it will return 'false').
+    bool computeMixtureWeights();
 
     //! Replace the j-th Gaussian with another one (probably because that one is
     //! not appropriate). The new one is centered on a random point sampled from
     //! the Gaussian with highest weight alpha, and has the same covariance.
-    /*virtual*/ void replaceGaussian(int j);
+    //! The weight of the Gaussian with highest weight is divided by two, and
+    //! the weight of the new Gaussian is equal to the result of this division
+    //! (so that weights still sum to one).
+    void replaceGaussian(int j);
 
     //! Update the sample weights according to their initial weights and the current
     //! posterior probabilities (see documentation of 'updated_weights' for the
@@ -255,25 +255,22 @@ protected:
                 Mat& clust, int maxit=9999);
 
     /*
-
-
     //! Overridden so as to compute specific GaussMix outputs.
     virtual void unknownOutput(char def, const Vec& input, Vec& output, int& k) const;
     */
 
 public:
 
-    //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
-    //! And sets 'stage' back to 0   (this is the stage of a fresh learner!)
+    //! Reset the learner.
     virtual void forget();
 
-    // simply calls inherited::build() then build_() 
+    // Simply calls inherited::build() then build_().
     virtual void build();
 
-    //! Transforms a shallow copy into a deep copy
+    //! Transform a shallow copy into a deep copy.
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-    //! Declares name and deepCopy methods
+    //! Declares name and deepCopy methods.
     PLEARN_DECLARE_OBJECT(GaussMix);
 
     // ********************
@@ -295,33 +292,26 @@ public:
     //! Set the value for the input part of the conditional probability.
     virtual void setInput(const Vec& input, bool call_parent = true) const;
 
-    /*
-    //! This method updates the internal data given a new sorting of the variables
-    //! defined by the conditional flags.
-    virtual void updateFromConditionalSorting() const;
-    */
-
-    //! return density p(y | x)
+    //! Return density p(y | x).
     virtual real log_density(const Vec& y) const;
 
-    //! return survival fn = P(Y>y | x)
+    //! Return survival fn = P(Y>y | x).
     virtual real survival_fn(const Vec& y) const;
 
-    //! return survival fn = P(Y<y | x)
+    //! Return survival fn = P(Y<y | x).
     virtual real cdf(const Vec& y) const;
 
-    //! Compute E[Y | x] 
+    //! Compute E[Y | x].
     virtual void expectation(Vec& mu) const;
 
-    //! Compute Var[Y | x]
-    // TODO Say that not implemented.
+    //! Compute Var[Y | x] (currently not implemented).
     virtual void variance(Mat& cov) const;
 
-    //! Overridden. TODO Better doc.
+    //! Generate a sample from this distribution.
     virtual void generate(Vec& s) const;
 
-    //! "Get" methods.
     /*
+    //! "Get" methods.
     int getNEigenComputed() const;
     Mat getEigenvectors(int j) const;
     Vec getEigenvals(int j) const;

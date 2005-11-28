@@ -58,12 +58,11 @@ using namespace std;
 // GaussMix //
 //////////////
 GaussMix::GaussMix():
-    PDistribution(),
+    type_id(TYPE_UNKNOWN),
+    previous_input_part_had_missing(false),
     D(-1),
     n_eigen_computed(-1),
     nsamples(-1),
-    type_id(TYPE_UNKNOWN),
-    previous_input_part_had_missing(false),
     alpha_min(1e-6),
     epsilon(1e-6),
     kmeans_iterations(5),
@@ -71,14 +70,10 @@ GaussMix::GaussMix():
     n_eigen(-1),
     sigma_min(1e-6),
     type("spherical")
-    // TODO Re-do correct initialization.
-    /*
-    conditional_updating_time(0),
-    nsamples(0),
-    training_time(0),
-    */
 {
-    // nstages = 10;
+    // Change the default value of 'nstages' to 10 to make the user aware that
+    // in general it should be higher than 1.
+    nstages = 10;
 }
 
 PLEARN_IMPLEMENT_OBJECT(GaussMix, 
@@ -121,6 +116,8 @@ PLEARN_IMPLEMENT_OBJECT(GaussMix,
 ////////////////////
 void GaussMix::declareOptions(OptionList& ol)
 {
+    // TODO Check whether log_coeff, p_j_x and log_p_j_x really need to be
+    // options.
 
     // Build options.
 
@@ -1768,6 +1765,9 @@ void GaussMix::precomputeAllGaussianLogCoefficients()
 real GaussMix::precomputeGaussianLogCoefficient(const Vec& eigenvals,
                                                 int dimension) const
 {
+#ifdef BOUNDCHECK
+    real last_eigenval = INFINITY;
+#endif
     int n_eig = eigenvals.length();
     assert( dimension >= n_eig );
     real log_det = 0;
@@ -1777,13 +1777,17 @@ real GaussMix::precomputeGaussianLogCoefficient(const Vec& eigenvals,
         if (var_min < epsilon && eigenvals[k] < epsilon)
             PLWARNING("In GaussMix::precomputeGaussianLogCoefficient - An "
                       "eigenvalue is near zero");
+        if (eigenvals[k] > last_eigenval)
+            PLERROR("In GaussMix::precomputeGaussianLogCoefficient - The "
+                    "eigenvalues must be sorted in decreasing order");
+        last_eigenval = eigenvals[k];
 #endif
         log_det += pl_log(max(var_min, eigenvals[k]));
     }
     if (dimension > n_eig)
         // Only the first 'n_eig' eigenvalues are given: we assume
         // the other eigenvalues are equal to the last given one.
-        log_det += pl_log(max(var_min, eigenvals[n_eig - 1]))
+        log_det += pl_log(max(var_min, eigenvals.lastElement()))
                  * (dimension - n_eig);
     return -0.5 * (dimension * Log2Pi + log_det);
 }
@@ -1975,8 +1979,11 @@ void GaussMix::setInput(const Vec& input, bool call_parent) const {
             // re-use the quantities computed in setInputTargetSizes(..).
             // TODO Doc the lines below: need to re-set sizes because some
             // important variables (e.g. eigenvectors / values of y|x).
+            // TODO This is a bit hackish... we may want to actually store the
+            // appropriate data elsewhere so that there is no need to recompute
+            // it again.
             if (previous_input_part_had_missing)
-                setInputTargetSizes(n_input, n_target);
+                setInputTargetSizes_const(n_input, n_target);
             previous_input_part_had_missing = false;
             x_minus_mu_x.resize(n_input);
             Vec mu_target;
@@ -2252,7 +2259,8 @@ void GaussMix::setInput(const Vec& input, bool call_parent) const {
 ///////////////////////////
 void GaussMix::getInitialWeightsFrom(const VMat& vmat)
 {
-    static Vec tmp1, tmp2;
+    assert( vmat->weightsize() == 1 );
+    Vec tmp1, tmp2;
     real w;
     assert( vmat );
     ProgressBar* pb = 0;
@@ -2273,22 +2281,31 @@ void GaussMix::getInitialWeightsFrom(const VMat& vmat)
 // setInputTargetSizes //
 /////////////////////////
 bool GaussMix::setInputTargetSizes(int n_i, int n_t,
-                                   bool call_parent) const
+                                   bool call_parent)
+{
+    bool sizes_changed = true;
+    if (call_parent)
+        sizes_changed =
+            inherited::setInputTargetSizes(n_i, n_t, call_parent);
+    setInputTargetSizes_const(n_i, n_t, call_parent);
+    return sizes_changed;
+}
+
+///////////////////////////////
+// setInputTargetSizes_const //
+///////////////////////////////
+void GaussMix::setInputTargetSizes_const(int n_i, int n_t,
+                                         bool call_parent) const
 {
     static Mat inv_cov_x;
     static Mat full_cov;
     static Mat cov_y_x;
     static Mat work_mat1, work_mat2;
     static Mat cross_cov;
-    bool sizes_changed = true;
-
-    if (call_parent)
-        sizes_changed =
-            inherited::setInputTargetSizes(n_i, n_t, call_parent);
 
     if (n_input == -1 || n_target == -1 || D == -1)
         // Sizes are not defined yet, there is nothing we can do.
-        return sizes_changed;
+        return;
 
     if (type_id == TYPE_SPHERICAL || type_id == TYPE_DIAGONAL ) {
         // Nothing to do.
@@ -2398,7 +2415,6 @@ bool GaussMix::setInputTargetSizes(int n_i, int n_t,
                 precomputeGaussianLogCoefficient(eigenvals, n_target);
         }
     }
-    return sizes_changed;
 }
 
 
