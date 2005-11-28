@@ -6,7 +6,6 @@
 #include <string>
 #include <utility>                           //!< for pair
 #include "plerror.h"                         //!< For PLWARNING.
-#include <plearn/io/PPath.h>
 
 //! Macro to define deep copy for types that actually do not require
 //! any deep copy (such as int, real, etc.).
@@ -22,6 +21,7 @@ using std::string;
 using std::map;
 using std::pair;
 
+class PPath;
 class VMField;
 class VMFieldStat;
 template <class T> class Array;
