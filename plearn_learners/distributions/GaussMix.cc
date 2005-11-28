@@ -77,9 +77,7 @@ GaussMix::GaussMix():
 }
 
 PLEARN_IMPLEMENT_OBJECT(GaussMix, 
-    // TODO Review help.
     "Gaussian mixture, either set non-parametrically or trained by EM.", 
-
     "GaussMix implements a mixture of L Gaussians.\n"
     "There are 3 possible parameterization types:\n"
     " - spherical : Gaussians have covariance = diag(sigma^2).\n"
@@ -251,21 +249,6 @@ void GaussMix::build()
 ////////////
 void GaussMix::build_()
 {
-    /*
-    // TODO This code could now be safely removed, I think.
-    // Check 'diags' has correct size: it used to be (D x L) instead of (L x D).
-    if (diags.length() == D && diags.width() == L) {
-        if (L == D)
-            PLWARNING("In GaussMix::build_ - The 'diags' option has recently been "
-                      "modified to be the transpose of its previous value. Since "
-                      "it is square it is not possible to know if it is correct.");
-        else
-            PLERROR("In GaussMix::build_ - 'diags' has not the right size, you "
-                    "are probably trying to load an old GaussMix object created "
-                    "before 'diags' was transposed: please transpose it by hand");
-    }
-    */
-
     // Check type value.
     if (type == "spherical") {
         type_id = TYPE_SPHERICAL;
@@ -875,7 +858,7 @@ void GaussMix::computePosteriors() {
 ///////////////////////////
 // computeMixtureWeights //
 ///////////////////////////
-bool GaussMix::computeMixtureWeights() {
+bool GaussMix::computeMixtureWeights(bool allow_replace) {
     bool replaced_gaussian = false;
     if (L==1)
         alpha[0] = 1;
@@ -886,7 +869,7 @@ bool GaussMix::computeMixtureWeights() {
                 alpha[j] += posteriors(i,j);
         alpha /= real(nsamples);
         for (int j = 0; j < L && !replaced_gaussian; j++)
-            if (alpha[j] < alpha_min) {
+            if (alpha[j] < alpha_min && allow_replace) {
                 // alpha[j] is too small! We need to remove this Gaussian from
                 // the mixture, and find a new (better) one.
                 replaceGaussian(j);
@@ -1327,8 +1310,12 @@ real GaussMix::precomputeGaussianLogCoefficient(const Vec& eigenvals,
 // replaceGaussian //
 /////////////////////
 void GaussMix::replaceGaussian(int j) {
+    // This is supposed to be called only during training, when there is no
+    // target part (we use the full joint distribution).
+    assert( n_target == 0 );
     // Find the Gaussian with highest weight.
     int high = argmax(alpha);
+    assert( high != j );
     // Generate the new center from this Gaussian.
     Vec new_center = center(j);
     generateFromGaussian(new_center, high);
@@ -1342,8 +1329,7 @@ void GaussMix::replaceGaussian(int j) {
         eigenvalues(j) << eigenvalues(high);
         eigenvectors[j] << eigenvectors[high];
         log_coeff[j] = log_coeff[high];
-        // TODO Check nothing more needs being done. In particular, what
-        // happens with conditional distributions / missing values?
+        stage_joint_cov_computed[j] = -1;
     }
     // Arbitrarily takes half of the weight of this Gaussian.
     alpha[high] /= 2.0;
@@ -1847,7 +1833,7 @@ void GaussMix::train()
 
     // Initialization before training.
     if (stage == 0) {
-        // n_tries.resize(0); TODO See
+        // n_tries.resize(0); Old code, may be removed in the future...
         resizeDataBeforeTraining();
 
         // Get sample weights.
@@ -1868,7 +1854,7 @@ void GaussMix::train()
 
         // Initialize everything from the K-Means clustering result.
         updateSampleWeights();
-        computeMixtureWeights();
+        computeMixtureWeights(false);
         computeMeansAndCovariances();
         precomputeAllGaussianLogCoefficients();
     }

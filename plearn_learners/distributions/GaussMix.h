@@ -230,10 +230,11 @@ protected:
     void resizeDataBeforeUsing();
 
     //! Compute the weight of each Gaussian (the coefficient 'alpha'). If a
-    //! Gaussian's coefficient is too low (i.e. less than 'alpha_min'), this
-    //! Gaussian will be removed and replaced by a new one, while this method
-    //! will return 'true' (otherwise it will return 'false').
-    bool computeMixtureWeights();
+    //! Gaussian's coefficient is too low (i.e. less than 'alpha_min') and
+    //! 'allow_replace' is set to true, this Gaussian will be removed and
+    //! replaced by a new one, while this method will return 'true' (otherwise
+    //! it will return 'false').
+    bool computeMixtureWeights(bool allow_replace = true);
 
     //! Replace the j-th Gaussian with another one (probably because that one is
     //! not appropriate). The new one is centered on a random point sampled from
