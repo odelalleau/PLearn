@@ -88,6 +88,18 @@ protected:
     //! Used to store the conditional expectation E[Y | X = x].
     Mat center_y_x;
 
+    //! The logarithm of P(j|x), where x is the input part.
+    mutable Vec log_p_j_x;
+
+    //! The probability P(j|x), where x is the input part (it is computed by
+    //! by exp(log_p_j_x)).
+    mutable Vec p_j_x;
+
+    //! The logarithm of the constant part in the joint Gaussian density:
+    //! log(1/sqrt(2*pi^D * Det(C))).
+    //! This is a vector of length L (one coefficient for each Gaussian).
+    Vec log_coeff;
+
     //! The logarithm of the constant part in P(X) and P(Y | X = x), similar to
     //! what 'log_coeff' is for the joint distribution P(X,Y).
     Vec log_coeff_x, log_coeff_y_x;
@@ -119,11 +131,8 @@ protected:
     Mat diags;
     Mat eigenvalues;
     TVec<Mat> eigenvectors;
-    Vec log_coeff;
     int n_eigen_computed;
     int nsamples;
-    mutable Vec p_j_x;
-    mutable Vec log_p_j_x;
 
 public:
 
@@ -175,8 +184,7 @@ protected:
 
     //! Main implementation of 'setInputTargetSizes', that needs to be 'const'
     //! as it currently needs to be called in setInput(..).
-    void setInputTargetSizes_const(int n_input, int n_target,
-                                   bool call_parent = true) const;
+    void setInputTargetSizes_const(int n_input, int n_target) const;
 
     //! Fill the 'initial_weights' vector with the weights from the given
     //! VMatrix (which must have a weights column).

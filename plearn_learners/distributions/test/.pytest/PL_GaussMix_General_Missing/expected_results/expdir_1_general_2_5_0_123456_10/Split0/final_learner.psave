@@ -1,0 +1,53 @@
+*1 ->GaussMix(
+L = 1 ;
+type = "general" ;
+n_eigen = 2 ;
+kmeans_iterations = 5 ;
+alpha_min = 9.99999999999999955e-07 ;
+sigma_min = 9.99999999999999955e-07 ;
+epsilon = 9.99999999999999955e-07 ;
+alpha = 1 [ 1 ] ;
+center = 1  4  [ 
+0.0329838235294116419 	-0.114487837837837905 	4.87451538461533751 	11.9495842857142769 	
+]
+;
+sigma = TVec(0 0 *0 )
+;
+diags = 0  0  [ 
+]
+;
+eigenvalues = 1  3  [ 
+13661.8910091681955 	748.813441477667993 	0.196232690937477611 	
+]
+;
+eigenvectors = 1 [ 3  4  [ 
+-0.000917468954030360197 	-0.00819885923326056122 	-0.925502436870481393 	-0.378651787668818629 	
+0.0235362784161910234 	-0.00385496629940479786 	-0.378547696357553753 	0.925274458966384383 	
+-0.614641308877687309 	0.788590248988347398 	-0.0120932889669107032 	0.0139725797039276737 	
+]
+] ;
+n_eigen_computed = 3 ;
+D = 4 ;
+outputs_def = "l" ;
+n_input = 0 ;
+n_target = -1 ;
+input_part = TVec(0 0 *0 )
+;
+n_curve_points = -1 ;
+lower_bound = 0 ;
+upper_bound = 0 ;
+n_input_learnt = 0 ;
+n_target_learnt = 4 ;
+expdir = "" ;
+seed = 123456 ;
+stage = 10 ;
+n_examples = 150 ;
+inputsize = 4 ;
+targetsize = 0 ;
+weightsize = 0 ;
+forget_when_training_set_changes = 0 ;
+nstages = 10 ;
+report_progress = 1 ;
+verbosity = 1 ;
+nservers = 0 ;
+save_trainingset_prefix = ""  )

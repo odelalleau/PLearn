@@ -412,8 +412,10 @@ int PDistribution::outputsize() const
 ////////////////////
 void PDistribution::resetGenerator(long g_seed)
 {
-    seed_ = g_seed;
-    random->manual_seed(g_seed);
+    if (g_seed != 0) {
+        seed_ = g_seed;
+        random->manual_seed(g_seed);
+    }
 }
 
 //////////////

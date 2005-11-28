@@ -222,6 +222,7 @@ public:
     //! Default behavior is to call random->manual_seed(g_seed) and to save the
     //! given seed.
     //! This method is called in build().
+    //! Exception: if 'g_seed' is zero, then do nothing.
     virtual void resetGenerator(long g_seed);
   
     //! Return a pseudo-random sample generated from the distribution.
