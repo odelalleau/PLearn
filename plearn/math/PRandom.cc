@@ -88,6 +88,27 @@ PRandom::PRandom(const PRandom& rhs):
             (*uniform_01);
 }
 
+PRandom PRandom::operator=(const PRandom& rhs)
+{
+    rgen =          *(rhs.get_rgen());
+    the_seed =      rhs.get_the_seed();
+    fixed_seed =    rhs.get_fixed_seed();
+    seed_ =         rhs.get_seed();
+
+    if ((exponential_distribution = rhs.get_exponential_distribution()))
+        exponential_distribution = new boost::exponential_distribution<>
+            (*exponential_distribution);
+    if ((normal_distribution      = rhs.get_normal_distribution()))
+        normal_distribution      = new boost::normal_distribution<>
+            (*normal_distribution);
+    if ((uniform_01               = rhs.get_uniform_01()))
+        uniform_01               = new boost::uniform_01<boost::mt19937>
+            (*uniform_01);
+
+    return (*this);
+}
+
+
 PLEARN_IMPLEMENT_OBJECT(PRandom,
                         "Perform a number of random operations, including generating random numbers",
                         ""
@@ -198,6 +219,11 @@ real PRandom::exp_sample() {
 void PRandom::fill_random_normal(const Vec& dest, real mean, real stddev) {
     for (int i = 0; i < dest.length(); i++)
         dest[i] = gaussian_mu_sigma(mean, stddev);
+}
+
+void PRandom::fill_random_normal(const Mat& dest, real mean, real stddev) {
+    for (int i = 0; i < dest.length(); i++)
+        fill_random_normal(dest(i), mean, stddev);
 }
 
 /////////////////////////

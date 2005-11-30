@@ -110,6 +110,10 @@ public:
     //! properly [deep-]copied in this constructor.
     PRandom(const PRandom& rhs);
 
+    //! Operator= .
+    //! Do the same thing as copy constructor.
+    PRandom operator=(const PRandom& rhs);
+
     //! Destructor to free memory.
     virtual ~PRandom();
 
@@ -210,6 +214,10 @@ public:
     //! Fill vector 'dest' with samples generated from a normal distribution
     //! with mean 'mean' and standard deviation 'stddev'.
     void fill_random_normal(const Vec& dest, real mean = 0, real stddev = 1);
+
+    //! Fill matrix 'dest' with samples generated from a normal distribution
+    //! with mean 'mean' and standard deviation 'stddev'.
+    void fill_random_normal(const Mat& dest, real mean = 0, real stddev = 1);
 
     //! Fill vector 'dest' with samples generated from a uniform distribution
     //! between 'minval' and 'maxval'.
