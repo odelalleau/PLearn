@@ -71,6 +71,12 @@ public:
     //! ### declare public option fields (such as build options) here
     //! Start your comments with Doxygen-compatible comments such as //!
 
+    //! input size
+    int input_size;
+
+    //! output size
+    int output_size;
+
 public:
     //#####  Public Member Functions  #########################################
 
@@ -92,6 +98,21 @@ public:
 
     //! this version allows to obtain the input gradient as well
     virtual void bpropUpdate(const Vec input, const Vec output, const Vec output_gradient, Vec& input_gradient) = 0;
+
+    //! Similar to bpropUpdate, but adapt based also on the estimation
+    //! of the diagonal of the Hessian matrix, and propagates this
+    //! back. If these methods are defined, you can use them INSTEAD of
+    //! bpropUpdate(...)
+    virtual void bbpropUpdate(const Vec input, const Vec output,
+                              const Vec output_gradient,
+                              const Vec output_diag_hessian);
+
+    //! this version allows to obtain the input gradient and diag_hessian
+    virtual void bbpropUpdate(const Vec input, const Vec output,
+                              const Vec output_gradient,
+                              Vec& input_gradient,
+                              const Vec output_diag_hessian,
+                              Vec& input_diag_hessian );
 
     //! reset the parameters to the state they would be BEFORE starting training.
     //! Note that this method is necessarily called from build().

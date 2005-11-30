@@ -56,9 +56,36 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
     "    information about how the input should also have changed (i.e. input gradient)\n"
     );
 
-OnlineLearningModule::OnlineLearningModule() 
+OnlineLearningModule::OnlineLearningModule() :
+    input_size(-1),
+    output_size(-1)
 {
 }
+
+//! Default method for bbpropUpdate functions, so that it compiles but crashes
+//! if not implemented but used.
+void OnlineLearningModule::bbpropUpdate(const Vec input, const Vec output,
+                                        const Vec output_gradient,
+                                        const Vec output_diag_hessian)
+{
+    PLERROR("In OnlineLearningModule.cc: method 'bbpropUpdate' not"
+            "implemented.\n"
+            "Please implement it in your derived class, or use"
+            "'bpropUpdate'.\n");
+}
+
+void OnlineLearningModule::bbpropUpdate(const Vec input, const Vec output,
+                                        const Vec output_gradient,
+                                        Vec& input_gradient,
+                                        const Vec output_diag_hessian,
+                                        Vec& input_diag_hessian)
+{
+    PLERROR("In OnlineLearningModule.cc: method 'bbpropUpdate' not"
+            "implemented.\n"
+            "Please implement it in your derived class, or use"
+            "'bpropUpdate'.\n");
+}
+
 
 void OnlineLearningModule::build()
 {
@@ -73,6 +100,14 @@ void OnlineLearningModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void OnlineLearningModule::declareOptions(OptionList& ol)
 {
+    declareOption(ol, "input_size", &OnlineLearningModule::input_size,
+                  OptionBase::buildoption,
+                  "Size of the input Hessian)");
+
+    declareOption(ol, "output_size", &OnlineLearningModule::output_size,
+                  OptionBase::buildoption,
+                  "Size of the output");
+
     inherited::declareOptions(ol);
 }
 
