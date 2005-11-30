@@ -97,7 +97,11 @@ public:
     //! Note that this method is necessarily called from build().
     virtual void forget() = 0;
     
-    
+
+    //! optionally perform some processing after training, or after a series of fprop/bpropUpdate calls
+    //! to prepare the model for truly out-of-sample operation
+    virtual void finalize() {}
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
