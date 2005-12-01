@@ -85,7 +85,7 @@ void NGramDistribution::declareOptions(OptionList& ol)
                   "in the NGramTree."
         );
     declareOption(ol, "n", &NGramDistribution::n, OptionBase::buildoption,
-                  "Length of the n-gram");
+                  "Length of the n-gram (this option overrides inherited::input_part_size, i.e. n = input_part_size+1)");
     declareOption(ol, "additive_constant", &NGramDistribution::additive_constant, OptionBase::buildoption,
                   "Additive constant for add-delta smoothing");
     declareOption(ol, "discount_constant", &NGramDistribution::discount_constant, OptionBase::buildoption,
@@ -112,18 +112,6 @@ void NGramDistribution::declareOptions(OptionList& ol)
 
     // Now call the parent class' declareOptions().
     inherited::declareOptions(ol);
-
-    // Since conditional flags is set automatically according to n, than no need for the 
-    // conditional_flags option
-    redeclareOption(ol, "conditional_flags", &NGramDistribution::conditional_flags, OptionBase::nosave,
-                    "This vector should be set for conditional distributions. It indicates what\n"
-                    "each input variable corresponds to:\n"
-                    " - 0 = it is marginalized (it does not appear in the distribution Y|X)\n"
-                    " - 1 = it is an input (the X in Y|X)\n"
-                    " - 2 = it is a target (the Y in Y|X)\n"
-                    "If this vector is empty, then all variables are considered targets (thus\n"
-                    "it is an unconditional distribution)."
-        );
 }
 
 ///////////
@@ -131,7 +119,7 @@ void NGramDistribution::declareOptions(OptionList& ol)
 ///////////
 void NGramDistribution::build()
 {
-
+    input_part_size = n - 1;
     inherited::build();
     build_();
 }
@@ -149,18 +137,13 @@ void NGramDistribution::build_()
     // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
     // ### You should assume that the parent class' build_() has already been called.
 
-    // Conditional flags are set automatically
-    conditional_flags.resize(n);
-    conditional_flags.fill(1);
-    conditional_flags[n-1] = 2;
-
     if(train_set)
     {
         if(inputsize() != n) PLERROR("In NGramDistribution:build_() : input size should be n=%d", n);
 
         inherited::build();
 
-        voc_size = train_set->getDimension(0,n-1);
+        voc_size = train_set->getValues(0,n-1).length();
         if(voc_size <= 0) PLERROR("In NGramDistribution:build_() : vocabulary size is <= 0");
 
         if(nan_replace) voc_size++;
@@ -171,9 +154,6 @@ void NGramDistribution::build_()
                 PLERROR("In NGramDistribution:build_() : discount constant should be in [0,1]");
         }
     }
-
-    // ### If the distribution is conditional, you should finish build_() by:
-    PDistribution::finishConditionalBuild();
 }
 
 /////////
@@ -441,7 +421,7 @@ void NGramDistribution::train()
         {
             lambdas.resize(n+1); lambdas.fill(1.0/(n+1));
             real diff = EM_PRECISION+1;
-            real l_old = 0, l_new = -1.0/0;
+            real l_old = 0, l_new = -REAL_MAX;
             Vec e(n+1);
             Vec p(n+1);
             TVec<int> ngram(n);
