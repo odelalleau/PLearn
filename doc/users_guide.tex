@@ -8,7 +8,6 @@
 \usepackage{html}               % package for latex2html
 \usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
 \usepackage{ae}                 % use virtual fonts for getting good PDF
-\usepackage{isolatin1}          % support for French accents
 \usepackage{hyperref}
 \usepackage{verbatim}
 
@@ -70,12 +69,13 @@
 
 \maketitle
 
-\vspace*{9cm}
+\vspace*{8cm}
 
 Copyright \copyright\ 1998-2002 Pascal Vincent, Yoshua Bengio \\
 Copyright \copyright\ 2002 Julien Keable \\
 Copyright \copyright\ 2003 R\'ejean Ducharme \\
 Copyright \copyright\ 2004 Martin Monperrus \\
+Copyright \copyright\ 2005 Olivier Delalleau \\
 
 Permission is granted to copy and distribute this document in any medium,
 with or without modification, provided that the following conditions are
@@ -138,7 +138,9 @@ check the working and correct problems on other platforms.
 \subsection{Required tools}
 
 To be able to download, compile and use PLearn, you need the following
-tools to be installed on your system:
+tools to be installed on your system (for detailed instructions for
+installation under Windows,
+you may go directly to section~\ref{sec:windows}).
 \begin{itemize}
 \item {\bf g++} (http://gcc.gnu.org). We recomend using the latest version,
   but it should work with 3.2 and above. It is certainly possible to
@@ -261,7 +263,7 @@ For more details, there is a excellent free subversion book online available at:
 http://svnbook.red-bean.com/en/1.1/index.html
 
 If you don't have the time to at least peruse the whole book, I would still
-strongly recommand that you at least read appendix A: Subversion for CVS
+strongly recommend that you at least read appendix A: Subversion for CVS
 users: http://svnbook.red-bean.com/en/1.1/apa.html
 
 
@@ -299,6 +301,164 @@ If it doesn't work, you may have to adapt the configuration file to your system
 (PLearn/.pymake/config)
 
 If it does work, you can try to \verb!pymake plearn.cc! (which has more dependencies on external libraries).
+
+\section{Installing PLearn under Windows}
+
+This section describes a step-by-step installation under the Microsoft Windows environment.
+
+\subsection{Installation with Cygwin}
+
+Cygwin (\url{http://cygwin.com}) is a Linux-like environment for Windows, and is
+currently the easiest route to using PLearn under Windows.
+
+\subsubsection{Installing Cygwin}
+
+Download from \url{http://cygwin.com/setup.exe} the latest Cygwin setup program,
+then run it.
+Select your installation options (you should keep the recommended Unix / binary default
+text file type).
+Once you reach the ``Select Packages'' step, click the ``View'' button to switch
+to full view and select the following packages to install (the version number in
+parenthesis was the version used when this guide was written, hopefully any further
+version should work too).
+
+\begin{itemize}
+\item \verb!autoconf! (2.59-2)
+\item \verb!gcc-g++! (3.4.4-1)
+\item \verb!lapack! (3.0-3)
+\item \verb!libncurses-devel! (5.4-4)
+\item \verb!make! (3.80-1)
+\item \verb!python! (2.4.1-1)
+\item \verb!subversion! (1.2.3-1)
+\end{itemize}
+
+Optional (but recommended) packages to install:
+\begin{itemize}
+\item \verb!gdb! (20041228-3)
+\item \verb!tcsh! (6.14.00-5)
+\item \verb!vim! (6.4-2)
+\end{itemize}
+
+The default shell installed with Cygwin is bash, but in the following, we will
+be using tcsh (though you may of course adapt the instructions below to get PLearn to
+work with bash). Assuming you have installed the tcsh package and Cygwin is
+installed in \verb!C:\cygwin!, edit \verb!C:\cygwin\cygwin.bat! and replace
+the line \verb!bash --login -i! with \verb!tcsh -l!.
+You may also change the default location of your home directory by adding a
+line like this at the beginning of the file (make sure you do not have blanks
+in the path you provide):
+\begin{verbatim}
+@SET HOME=C:\MyOwnDirectory\MyCygwinHome
+\end{verbatim}
+
+
+\subsubsection{Installing Boost}
+
+The next step is to install the Boost library.
+You could install part of it from the Cygwin setup utility, but you would
+neeed to compile Boost-Python anyway.
+Go to \url{http://sourceforge.net/projects/boost/} then to the ``Files'' section
+to download
+the Boost library. Download the \verb!tar.gz! files:
+you will need the source for both Boost and Boost-Jam (the Boost installer).
+Move these files to your Cygwin home directory.
+The files used when writing this guide were \verb!boost_1_33_1_beta.tar.gz!
+and \verb!boost-jam-3.1.11.tgz!.
+
+You may now run Cygwin and launch the Boost installation:
+\begin{enumerate}
+\item \verb!tar zxvf boost_1_33_1_beta.tar.gz!
+\item \verb!tar zxvf boost-jam-3.1.11.tgz!
+\item \verb!cd boost-jam-3.1.11!
+\item \verb!sh ./build.sh!
+\item \verb!cd ../boost_1_33_1!
+\item \verb!../boost-jam-3.1.11/bin.cygwinx86/bjam.exe -sTOOLS=gcc! \\
+\verb!--prefix=$HOME/local -sPYTHON_ROOT=/usr! \\
+\verb! -sPYTHON_VERSION=2.4 --builddir=/tmp/boost_build install!
+\end{enumerate}
+
+The installation command above will install Boost in the \verb!local! directory
+under your home directory: you may remove the \verb!--prefix! option to perform
+a system-wide installation (however, installing under your home directory is often
+necessary for Linux users without administrator rights).
+Do not worry about some of the Boost libraries not compiling, PLearn does not
+need all of them.
+Let us just create the appropriate links for those needed by PLearn:
+\begin{enumerate}
+\item \verb!cd ~/local/lib!
+\item \verb!ln -s libboost_regex-gcc-mt-1_33_1.dll libboost_regex.dll!
+\item \verb!ln -s libboost_python-gcc-mt-1_33_1.dll libboost_python.dll!
+\item \verb!cd ~/local/include!
+\item \verb!ln -s boost_1_33_1/boost!
+\end{enumerate}
+
+\subsubsection{Installing NumArray}
+
+Download NumArray from: \\
+\url{http://www.stsci.edu/resources/software_hardware/numarray}
+
+\begin{verbatim}
+tar zxvf numarray-1.4.1.tar.gz
+cd numarray-1.4.1
+python setup.py config install --gencode --prefix=$HOME/local
+\end{verbatim}
+
+\subsubsection{Installing NSPR}
+
+Go to \verb!ftp://ftp.mozilla.org/pub/mozilla.org/nspr/releases! to get
+the NSPR release for your operating system (in this guide we used the
+4.6 release for Windows NT 5.0, in optimized mode).
+Extract the zip file to a temporary directory, then move the content of the
+\verb!include! directory (including its sub-directories) to \verb!~/local/include/mozilla/nspr! (that you
+will need to create), and the
+\verb!libnspr4.dll! file (in the \verb!lib! directory) to \verb!~/local/lib!.
+
+\subsubsection{Installing PLearn}
+
+You are now ready (at last!) to install PLearn. First, go to the directory
+where you wish to install PLearn (in this guide we will assume this is your
+home directory), and check out the latest
+version from the CVS repository:\\
+\verb!svn checkout svn://svn.berlios.de/plearn/trunk PLearn!
+
+Edit your \verb!~/.cshrc! and add the following lines:
+\begin{verbatim}
+
+# Environment variables
+setenv PLEARNDIR ${HOME}/PLearn
+setenv PATH /usr/local/bin:/usr/bin:/bin:/usr/lib/lapack:
+            ${PLEARNDIR}/commands:${PLEARNDIR}/scripts
+setenv PYTHONPATH ${PLEARNDIR}/python_modules:
+                  ${HOME}/local/lib/python2.4/site-packages
+setenv CPATH ${HOME}/local/include
+
+# Shortcut for PLearn compilation
+alias pm pymake -symlinkobjs
+
+# Nicer prompt.
+set prompt = "%B%m %~%b > "
+\end{verbatim}
+
+You need to redefine the \verb!PATH! environment variable because the
+original one will usually contain directories with blanks (such as
+\verb!Program Files!), which Cygwin has trouble with.
+The last line is very optional (it just gives you a nicer prompt).
+Now edit \verb!${PLEARNDIR}/pymake.config.model! and look for the
+\verb!python! optional library.
+Just before, add the following lines:
+\begin{verbatim}
+python_version = '2.4'
+compileflags += ' -DPL_PYTHON_VERSION=240'
+python_lib_root = '/usr/lib'
+\end{verbatim}
+
+Do a \verb!source ~/.cshrc! to reload your configuration file, then go
+to \verb!$PLEARNDIR! and run \verb!./setup!. PLearn can now be compiled
+with pymake (note that we use the \verb!pm! alias since the \verb!-symlinkobjs!
+option is required for linking to work under Windows):
+\verb!pm $PLEARNDIR/commands/plearn!
+
+
 
 \chapter{Overview of the directory structure}
 
@@ -635,7 +795,7 @@ matrices, distinguished by their file extension:
 .vmat           & Contains the specification of a C++ VMatrix object \\ 
                 & (in PLearn's ascii serialisation format)           \\ \hline
 .pymat          & Python preprocessing code that generates the       \\ 
-                & specification of a C++ VMatrix object (à la .vmat) \\ \hline
+                & specification of a C++ VMatrix object (a la .vmat) \\ \hline
 \end{tabular}
 \end{center}
 % \end{table}
