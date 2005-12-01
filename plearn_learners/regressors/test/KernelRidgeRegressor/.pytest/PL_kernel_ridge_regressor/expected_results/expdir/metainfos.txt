@@ -1,0 +1,12 @@
+__REVISION__ = AP3242.PL4645
+data                           = data.amat
+expdir_root                    = 
+DATE                           = 
+DATETIME                       = 
+DIRPATH                        = /home/chapados/PLearn/plearn_learners/regressors/test/KernelRidgeRegressor/.pytest/PL_kernel_ridge_regressor/expected_results
+FILEBASE                       = kernel_ridge_regressor
+FILEEXT                        = pyplearn
+FILENAME                       = kernel_ridge_regressor.pyplearn
+FILEPATH                       = /home/chapados/PLearn/plearn_learners/regressors/test/KernelRidgeRegressor/.pytest/PL_kernel_ridge_regressor/expected_results/kernel_ridge_regressor.pyplearn
+HOME                           = /home/chapados
+TIME                           = 

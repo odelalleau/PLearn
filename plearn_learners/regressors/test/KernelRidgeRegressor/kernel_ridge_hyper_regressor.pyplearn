@@ -1,0 +1,100 @@
+### Version of script that automatically finds optimal weight decay and kernel sigma
+
+from plearn.pyplearn import *
+
+
+#####  Arguments  ###########################################################
+
+### Data Options
+class DataOpt( plargs_namespace ):
+    data = "data.amat"
+
+### Hyper Learner options
+class HyperKRR( plargs_namespace ):
+    valid_fraction = 0.25               # Fraction of validation set within train set
+    kfold          = 10                 # If positive, use k-fold cross validation
+    statnames      = ["E[test.E[mse]]",
+                      "E[train.E[mse]]"]  # Statistics to measure
+    which_cost     = 0                    # Cost to optimize, i.e. E[test.E[mse]]
+    lambda_list    = [ 1e-8, 1e-6, 1e-4, 1e-2, 1e0 ] # Weight decays to try
+    sigma_list     = [ 1e-2, 1e-1, 1e0,  1e1,  1e2 ] # Sigmas to try
+    
+
+#####  Inner Learner  #######################################################
+
+inner_learner = pl.KernelRidgeRegressor(
+    kernel       = pl.GaussianKernel(sigma=1.0),
+    weight_decay = 0.0
+    )
+
+
+#####  Hyper Learner  #######################################################
+
+## Cartesian product for top-level variables
+top_level_oracle = pl.CartesianProductOracle(
+    option_names  = [ "weight_decay", "kernel.sigma" ],
+    option_values = [ HyperKRR.lambda_list, HyperKRR.sigma_list ]
+    )
+
+## Define splitters for the strategy: first define a validation one, and
+## another for retraining on the complete dataset.
+if HyperKRR.kfold > 0:
+    train_valid_splitter = pl.KFoldSplitter( K = HyperKRR.kfold )
+else:
+    train_valid_splitter = pl.FractionSplitter(
+        splits = TMat(1,2, [ (0,1-HyperKRR.valid_fraction),
+                             (1-HyperKRR.valid_fraction,1) ]))
+full_train_splitter = pl.FractionSplitter(splits = TMat(1,1,[ (0,1) ]))
+
+## Full-strategy searches for top-level hyperoptions
+full_strategy = [
+    pl.HyperOptimize(which_cost = HyperKRR.which_cost,
+                     oracle     = top_level_oracle,
+                     splitter   = train_valid_splitter),
+    pl.HyperRetrain( splitter   = full_train_splitter )
+    ]
+
+## Tester within the HyperLearner
+inner_tester = pl.PTester(statnames              = HyperKRR.statnames,
+                          provide_learner_expdir = 1)
+
+## Finally the HyperLearner
+hyper_learner = pl.HyperLearner(
+    learner                  = inner_learner,
+    tester                   = inner_tester,
+    option_fields            = [ "weight_decay", "kernel.sigma" ],
+    strategy                 = full_strategy,
+    provide_strategy_expdir  = 1,
+    provide_learner_expdir   = 1,
+    save_final_learner       = 1)
+
+
+#####  Dataset Setup  #######################################################
+
+dataset = pl.AutoVMatrix(
+    specification = DataOpt.data,
+    inputsize  = 1,
+    targetsize = 2,
+    weightsize = 0
+    )
+
+splitter = pl.FractionSplitter(
+    splits = TMat(1,3, [ (0,0.75) , (0.75,1) , (0,1) ])
+    )
+
+tester = pl.PTester(
+    expdir    = plargs.expdir,
+    dataset   = dataset,
+    splitter  = splitter,
+    learner   = hyper_learner,
+    statnames = [ 'E[test1.E[mse]]', 'E[test2.E[mse]]' ],
+    provide_learner_expdir = 1,
+    save_test_costs        = 1,
+    save_test_outputs      = 1
+    )
+
+
+#####  Main  ################################################################
+
+def main():
+    return tester
