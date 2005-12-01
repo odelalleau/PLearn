@@ -80,6 +80,7 @@ class PythonCodeSnippet;
 //!          ret[0] = string_row[0].lower()
 //!          ret[1] = string_row[1] 
 //!          return ret "
+
 class DictionaryVMatrix: public RowBufferedVMatrix
 {
 
