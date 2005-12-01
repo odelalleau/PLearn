@@ -156,6 +156,7 @@
 
 // Regressors
 #include <plearn_learners/regressors/ConstantRegressor.h>
+#include <plearn_learners/regressors/KernelRidgeRegressor.h>
 #include <plearn_learners/regressors/KNNRegressor.h>
 #include <plearn_learners/regressors/LinearRegressor.h>
 #include <plearn_learners/regressors/PLS.h>
