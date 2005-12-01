@@ -64,14 +64,13 @@ protected:
 public:
  
     VMat distr;
+    Var input;
     Var output;
     Var comp_input;
     Var dp_target;
     Var target_dist_reps;
-    Var blablablublu;
     VarArray params;
 
-public:
     //!  protected default constructor for persistence
     PotentialsVariable() {}
     //!  Sum_{inputs \in distr} f(inputs)
