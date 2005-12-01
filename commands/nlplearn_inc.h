@@ -55,7 +55,6 @@
 #include <plearn/python/PythonCodeSnippet.h>
 #include <plearn/python/PythonProcessedVMatrix.h>
 
-
 /*****************
  * Miscellaneous *
  *****************/
@@ -133,6 +132,9 @@
 #include <plearn_learners/unsupervised/PCA.h>
 #include <plearn_learners/unsupervised/SpectralClustering.h>
 #include <plearn_learners/unsupervised/UniformizeLearner.h>
+
+// Distributions
+#include <plearn_learners/distributions/NGramDistribution.h>
 
 /************
  * Splitter *
