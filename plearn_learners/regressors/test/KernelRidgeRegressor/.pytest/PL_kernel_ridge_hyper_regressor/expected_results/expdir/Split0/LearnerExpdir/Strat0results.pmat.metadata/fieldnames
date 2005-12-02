@@ -1,0 +1,6 @@
+_trial_	0
+_objective_	0
+weight_decay	0
+kernel.sigma	0
+E[test.E[mse]]	0
+E[train.E[mse]]	0
