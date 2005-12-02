@@ -270,6 +270,7 @@ bool GaussianKernel::isUnsafe(real sqn_1, real sqn_2) const {
 void GaussianKernel::setDataForKernelMatrix(VMat the_data)
 { 
     inherited::setDataForKernelMatrix(the_data);
+    build_();                                // Update sigma computation cache
     squarednorms.resize(data.length());
     for(int index=0; index<data.length(); index++)
         squarednorms[index] = data->dot(index,index, data_inputsize);
@@ -282,7 +283,7 @@ void GaussianKernel::setParameters(Vec paramvec)
 { 
     PLWARNING("In GaussianKernel: setParameters is deprecated, use setOption instead");
     sigma = paramvec[0]; 
-    minus_one_over_sigmasquare = -1.0/(sigma*sigma);
+    build_();                                // Update sigma computation cache
 }
 
 
