@@ -1,6 +1,7 @@
 from plearn.pyplearn import *
 
-plarg_defaults.data = "data.amat"
+plarg_defaults.data  = "data.amat"
+plarg_defaults.sigma = "1.0"
 
 dataset = pl.AutoVMatrix(
     specification = plargs.data,
@@ -10,7 +11,7 @@ dataset = pl.AutoVMatrix(
     )
 
 learner = pl.KernelRidgeRegressor(
-    kernel       = pl.GaussianKernel(sigma=1.0),
+    kernel       = pl.GaussianKernel(sigma=float(plargs.sigma)),
     weight_decay = 1e-8
     )
 
