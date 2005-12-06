@@ -204,13 +204,13 @@ linkeroptions_tail = ''
 ### be problematic (it should be different depending on the platform) => must
 ### find a better way to know where to find the libraries.
 ### TODO Should find a way to automatically find python version ?
-if domain_name.endswith('iro.umontreal.ca'):
+if domain_name.endswith('umontreal.ca') or True:
     python_version = '2.4'
     compileflags += ' -DPL_PYTHON_VERSION=240'
     python_lib_root = '/usr/lib'
     if platform == 'cygwin':
         numpy_includedirs = [ ]
-        numpy_site_packages = '$HOME/local-cygwin/lib/python2.4/site-packages/numarray'
+        numpy_site_packages = os.path.join(homedir, 'local/lib/python2.4/site-packages/numarray')
     else:
         numpy_includedirs   = [ '/u/lisa/local/' + platform + '/include/' ]
         ### Python needs the 32 bits include directories when compiling in 32 bits
