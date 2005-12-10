@@ -6203,6 +6203,35 @@ void transposedLayerL1BpropUpdate(TVec<T> input_gradient, TMat<T> weights, const
     }
 }
 
+//! set m to the identity matrix, more precisely set m(i,j) = 1_{i==j}
+//! (works also for non-square matrices)
+template<class T>
+void identityMatrix(TMat<T> m)
+{
+    int l=m.length();
+    int w=m.width();
+    for (int i=0;i<l;i=+)
+    {
+        T* mi = m[i];
+        for (int j=0;j<w;j++)
+            if (j==i)
+                mi[j]=1;
+            else
+                mi[j]=0;
+    }
+}
+
+//! Return the identity matrix, more precisely an n x n or n x m matrix with result(i,j) = 1_{i==j}
+template<class T>
+TMat<T> identityMatrix(int n, int m=-1)
+{
+    if (m<0) m=n;
+    TMat<T> result(n,m);
+    identityMatrix(result);
+    return result;
+}
+
+
 } // end of namespace PLearn
  
 
