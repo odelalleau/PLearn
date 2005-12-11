@@ -6210,7 +6210,7 @@ void identityMatrix(TMat<T> m)
 {
     int l=m.length();
     int w=m.width();
-    for (int i=0;i<l;i=+)
+    for (int i=0;i<l;i++)
     {
         T* mi = m[i];
         for (int j=0;j<w;j++)
