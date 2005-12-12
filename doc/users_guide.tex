@@ -142,7 +142,7 @@ tools to be installed on your system (for detailed instructions for
 installation under Windows,
 you may go directly to section~\ref{sec:windows}).
 \begin{itemize}
-\item {\bf g++} (http://gcc.gnu.org). We recomend using the latest version,
+\item {\bf g++} (http://gcc.gnu.org). We recommend using the latest version,
   but it should work with 3.2 and above. It is certainly possible to
   compile PLearn with other compilers (we do this from time to time), but
   it may necessitate some tweaking.
@@ -164,11 +164,11 @@ Note: some local subprojects may still be based on CVS for version control (http
   (http://www.mozilla.org/projects/nspr/). We use NSPR as an OS abstraction
   layer for things such as file and network access, process control, etc...
 So that PLearn may also somewhat work on Windows...
-\item {\bf highly recomeneded:} {\bf blas} and {\bf lapack} libraries provide linear algebra
+\item {\bf highly recommended:} {\bf blas} and {\bf lapack} libraries provide linear algebra
   subroutines that several learning algorithms depend upon. There are standard
   packages (RPMS\ldots) for most Linux distributions.
-\item {\bf recomended:} Some learning algorithms of PLearn depend on parts
-  of the {\bf boost} library (http://www.boost.org), in particlar those
+\item {\bf recommended:} Some learning algorithms of PLearn depend on parts
+  of the {\bf boost} library (http://www.boost.org), in particular those
   requiring graph algorithms.
 \item {\bf optional:} The libraries of {\bf WordNet} for work on language models.
 \end{itemize}
@@ -325,6 +325,7 @@ version should work too).
 \begin{itemize}
 \item \verb!autoconf! (2.59-2)
 \item \verb!gcc-g++! (3.4.4-1)
+\item \verb!gcc-g77! (3.4.4-1)
 \item \verb!lapack! (3.0-3)
 \item \verb!libncurses-devel! (5.4-4)
 \item \verb!make! (3.80-1)
@@ -336,6 +337,7 @@ Optional (but recommended) packages to install:
 \begin{itemize}
 \item \verb!gdb! (20041228-3)
 \item \verb!tcsh! (6.14.00-5)
+\item \verb!unzip! (5.50-5)
 \item \verb!vim! (6.4-2)
 \end{itemize}
 
@@ -344,13 +346,12 @@ be using tcsh (though you may of course adapt the instructions below to get PLea
 work with bash). Assuming you have installed the tcsh package and Cygwin is
 installed in \verb!C:\cygwin!, edit \verb!C:\cygwin\cygwin.bat! and replace
 the line \verb!bash --login -i! with \verb!tcsh -l!.
-You may also change the default location of your home directory by adding a
-line like this at the beginning of the file (make sure you do not have blanks
+You may also change the default location of your home directory by adding the
+following line at the beginning of the file (make sure you do not have blanks
 in the path you provide):
 \begin{verbatim}
 @SET HOME=C:\MyOwnDirectory\MyCygwinHome
 \end{verbatim}
-
 
 \subsubsection{Installing Boost}
 
@@ -362,12 +363,12 @@ to download
 the Boost library. Download the \verb!tar.gz! files:
 you will need the source for both Boost and Boost-Jam (the Boost installer).
 Move these files to your Cygwin home directory.
-The files used when writing this guide were \verb!boost_1_33_1_beta.tar.gz!
+The files used when writing this guide were \verb!boost_1_33_1.tar.gz!
 and \verb!boost-jam-3.1.11.tgz!.
 
 You may now run Cygwin and launch the Boost installation:
 \begin{enumerate}
-\item \verb!tar zxvf boost_1_33_1_beta.tar.gz!
+\item \verb!tar zxvf boost_1_33_1.tar.gz!
 \item \verb!tar zxvf boost-jam-3.1.11.tgz!
 \item \verb!cd boost-jam-3.1.11!
 \item \verb!sh ./build.sh!
@@ -394,13 +395,23 @@ Let us just create the appropriate links for those needed by PLearn:
 
 \subsubsection{Installing NumArray}
 
-Download NumArray from: \\
-\url{http://www.stsci.edu/resources/software_hardware/numarray}
-
+Download NumArray from \\
+\url{http://www.stsci.edu/resources/software_hardware/numarray} \\
+then install it with the following commands:
 \begin{verbatim}
-tar zxvf numarray-1.4.1.tar.gz
-cd numarray-1.4.1
+tar zxvf numarray-1.5.0.tar.gz
+cd numarray-1.5.0
 python setup.py config install --gencode --prefix=$HOME/local
+\end{verbatim}
+
+Note that (at least in version 1.5.0) there is a typo in a NumArray C++ file.
+After you have installed NumArray with the commands above, edit
+\verb!~/local/include/python2.4/numarray/arraybase.h! to manually remove the comma
+at the end of line 117. Additionally, if you want to get rid of a gcc warning
+when compiling PLearn, you can edit \verb!libnumarray.h!
+in the same directory and replace line 51 with
+\begin{verbatim}
+static void **libnumarray_API __attribute__ ((unused)) ;
 \end{verbatim}
 
 \subsubsection{Installing NSPR}
@@ -412,25 +423,37 @@ Extract the zip file to a temporary directory, then move the content of the
 \verb!include! directory (including its sub-directories) to \verb!~/local/include/mozilla/nspr! (that you
 will need to create), and the
 \verb!libnspr4.dll! file (in the \verb!lib! directory) to \verb!~/local/lib!.
+Check the permissions for \verb!libnspr4.dll!: you need the ``execute'' permission
+for PLearn to be able to run. You can set it with:\\
+\verb!chmod u+x ~/local/lib/libnspr4.dll!
 
 \subsubsection{Installing PLearn}
 
 You are now ready (at last!) to install PLearn. First, go to the directory
 where you wish to install PLearn (in this guide we will assume this is your
 home directory), and check out the latest
-version from the CVS repository:\\
+version from the Subversion repository:\\
 \verb!svn checkout svn://svn.berlios.de/plearn/trunk PLearn!
 
-Edit your \verb!~/.cshrc! and add the following lines:
-\begin{verbatim}
+Since \verb!pymake! will create directories named \verb!OBJS! to store
+compiled object files, Subversion should ignore them: edit
+your \verb!~/.subversion/config! and, in the \verb!miscellany! section,
+write the line\\
+\verb!global-ignores = OBJS!
 
+Now, edit your \verb!~/.cshrc! and add the following lines:
+
+\begin{verbatim}
 # Environment variables
 setenv PLEARNDIR ${HOME}/PLearn
 setenv PATH /usr/local/bin:/usr/bin:/bin:/usr/lib/lapack:
-            ${PLEARNDIR}/commands:${PLEARNDIR}/scripts
+            ${PLEARNDIR}/commands:${PLEARNDIR}/scripts:
+            ${HOME}/local/lib
 setenv PYTHONPATH ${PLEARNDIR}/python_modules:
                   ${HOME}/local/lib/python2.4/site-packages
 setenv CPATH ${HOME}/local/include
+setenv LD_LIBRARY_PATH ${HOME}/local/lib
+setenv LIBRARY_PATH ${LD_LIBRARY_PATH}
 
 # Shortcut for PLearn compilation
 alias pm pymake -symlinkobjs
@@ -443,22 +466,31 @@ You need to redefine the \verb!PATH! environment variable because the
 original one will usually contain directories with blanks (such as
 \verb!Program Files!), which Cygwin has trouble with.
 The last line is very optional (it just gives you a nicer prompt).
-Now edit \verb!${PLEARNDIR}/pymake.config.model! and look for the
+Now edit \verb!$PLEARNDIR/pymake.config.model! and look for the
 \verb!python! optional library.
 Just before, add the following lines:
 \begin{verbatim}
 python_version = '2.4'
 compileflags += ' -DPL_PYTHON_VERSION=240'
 python_lib_root = '/usr/lib'
+numpy_site_packages = join(homedir,
+              'local/lib/python2.4/site-packages/numarray')
 \end{verbatim}
 
 Do a \verb!source ~/.cshrc! to reload your configuration file, then go
-to \verb!$PLEARNDIR! and run \verb!./setup!. PLearn can now be compiled
+to your PLearn installation directory (\verb!$PLEARNDIR!) and run \verb!./setup!. PLearn can now be compiled
 with pymake (note that we use the \verb!pm! alias since the \verb!-symlinkobjs!
-option is required for linking to work under Windows):
+option is required for linking to work under Cygwin):\\
 \verb!pm $PLEARNDIR/commands/plearn!
 
+\subsubsection{Testing PLearn}
 
+Once PLearn compiles successfully, it is recommended to run the test-suite
+in order to ensure that the main components of the library work as expected.
+Go to \verb!$PLEARNDIR! and launch \verb!pytest run --all!.
+Note that, typically, the test-suite first compiles \verb!$PLEARNDIR/commands/plearn_tests!,
+and thus may look like it is stalled, while it is actually compiling or linking
+in the background.
 
 \chapter{Overview of the directory structure}
 
