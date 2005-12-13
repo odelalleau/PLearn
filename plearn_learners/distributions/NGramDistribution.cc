@@ -85,7 +85,7 @@ void NGramDistribution::declareOptions(OptionList& ol)
                   "in the NGramTree."
         );
     declareOption(ol, "n", &NGramDistribution::n, OptionBase::buildoption,
-                  "Length of the n-gram (this option overrides inherited::input_part_size, i.e. n = input_part_size+1)");
+                  "Length of the n-gram (this option overrides the inherited options n_input and n_target, i.e. n_input = n-1 and n_target = 1)");
     declareOption(ol, "additive_constant", &NGramDistribution::additive_constant, OptionBase::buildoption,
                   "Additive constant for add-delta smoothing");
     declareOption(ol, "discount_constant", &NGramDistribution::discount_constant, OptionBase::buildoption,
@@ -94,16 +94,16 @@ void NGramDistribution::declareOptions(OptionList& ol)
                   "Proportion of the training set used for validation (EM)"); 
     declareOption(ol, "smoothing", &NGramDistribution::smoothing, OptionBase::buildoption,
                   "Smoothing method. Choose among:\n"
-                  "no_smoothing\n"
-                  "add-delta\n"                
-                  "jelinek-mercer\n"
-                  "witten-bell\n"
-                  "absolute-discounting\n"
+                  "- \"no_smoothing\"\n"
+                  "- \"add-delta\"\n"                
+                  "- \"jelinek-mercer\"\n"
+                  "- \"witten-bell\"\n"
+                  "- \"absolute-discounting\"\n"
         );
     declareOption(ol, "lambda_estimation", &NGramDistribution::lambda_estimation, OptionBase::buildoption,
                   "Lambdas estimation method. Choose among:\n"
-                  "manual (lambdas field should be specified)\n"
-                  "EM\n"
+                  "- \"manual\" (lambdas field should be specified)\n"
+                  "- \"EM\"\n"
         );
     declareOption(ol, "lambdas", &NGramDistribution::lambdas, OptionBase::buildoption,
                   "Lambdas of the interpolated ngram"); 
@@ -112,6 +112,16 @@ void NGramDistribution::declareOptions(OptionList& ol)
 
     // Now call the parent class' declareOptions().
     inherited::declareOptions(ol);
+
+    redeclareOption(ol, "n_input",  &NGramDistribution::n_input_,
+                  OptionBase::nosave,
+                  "The (user-provided) size of the input x in p(y|x). A value of -1\n"
+                  "means the algorithm should find it out by itself.");
+
+    redeclareOption(ol, "n_target",  &NGramDistribution::n_target_,
+                  OptionBase::nosave,
+                  "The (user-provided) size of the target y in p(y|x). A value of -1\n"
+                  "means the algorithm should find it out by itself.");
 }
 
 ///////////
@@ -119,7 +129,8 @@ void NGramDistribution::declareOptions(OptionList& ol)
 ///////////
 void NGramDistribution::build()
 {
-    input_part_size = n - 1;
+    n_input_ = n - 1;
+    n_target_ = 1;
     inherited::build();
     build_();
 }
@@ -140,9 +151,6 @@ void NGramDistribution::build_()
     if(train_set)
     {
         if(inputsize() != n) PLERROR("In NGramDistribution:build_() : input size should be n=%d", n);
-
-        inherited::build();
-
         voc_size = train_set->getValues(0,n-1).length();
         if(voc_size <= 0) PLERROR("In NGramDistribution:build_() : vocabulary size is <= 0");
 
@@ -418,7 +426,7 @@ void NGramDistribution::train()
     {
         //Jelinek-Mercer: EM estimation of lambdas
         if(lambda_estimation == "EM")
-        {
+        {            
             lambdas.resize(n+1); lambdas.fill(1.0/(n+1));
             real diff = EM_PRECISION+1;
             real l_old = 0, l_new = -REAL_MAX;

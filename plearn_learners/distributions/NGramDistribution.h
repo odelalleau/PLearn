@@ -47,7 +47,7 @@
 #define THIS_PRECISION 0.0000001
 #define EM_PRECISION 0.0001
 
-#include <plearn_learners/distributions/PConditionalDistribution.h>
+#include <plearn_learners/distributions/PDistribution.h>
 #include <plearn_learners/distributions/NGramTree.h>
 #include <plearn/base/ms_hash_wrapper.h>
 
@@ -55,7 +55,7 @@ namespace PLearn {
 using namespace std;
 
 //! This class implements an ngram distribution for symbol sequence modeling
-class NGramDistribution: public PConditionalDistribution
+class NGramDistribution: public PDistribution
 {
 
 private:
