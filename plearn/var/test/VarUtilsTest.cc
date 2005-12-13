@@ -43,6 +43,7 @@
 
 #include "VarUtilsTest.h"
 #include <plearn/math/PRandom.h>
+#include <plearn/var/VarArray.h>
 #include <plearn/var/Var_utils.h>
 
 namespace PLearn {
@@ -132,11 +133,76 @@ void VarUtilsTest::perform()
     int var_length = 10;
     int var_width = 5;
     int bound = 10;
-    Var var(var_length, var_width);
-    PRandom::common(false)->fill_random_uniform(var->matValue, -bound, bound);
-    var_results["mean"] = mean(var);
-    var_results["mean"]->fprop();
-    mat_results["mean"] = var_results["mean"]->matValue;
+    Var tmp;
+    VarArray prop_path;
+    Var mat_var(var_length, var_width);
+    Var vec_var(var_length, 1);
+    Var prob_mat_var(var_length, var_width);
+    Var prob_vec_var(var_length, 1);
+    Var scalar_var(1, 1);
+    Var multi_index_var(var_width, 1);
+    multi_index_var->matValue << "[ 1 3 5 2 9 ]";
+    Var single_index_var(1, 1);
+    single_index_var->matValue(0, 0) = 3;
+    PRandom::common(false)->fill_random_uniform(mat_var->matValue, -bound, bound);
+    PRandom::common(false)->fill_random_uniform(vec_var->matValue, -bound, bound);
+    PRandom::common(false)->fill_random_uniform(prob_mat_var->matValue, 0, 1);
+    PRandom::common(false)->fill_random_uniform(prob_vec_var->matValue, 0, 1);
+    PRandom::common(false)->fill_random_uniform(scalar_var->matValue, -bound, bound);
+
+    tmp = mean(mat_var);
+    prop_path = propagationPath(tmp);
+    prop_path.fprop();
+    var_results["mean"] = tmp;
+    mat_results["mean"] = tmp->matValue;
+
+    tmp = neg_log_pi(prob_vec_var, single_index_var);
+    prop_path = propagationPath(tmp);
+    prop_path.fprop();
+    var_results["neg_log_pi_vec"] = tmp;
+    mat_results["neg_log_pi_vec"] = tmp->matValue;
+
+    tmp = neg_log_pi(prob_mat_var, multi_index_var);
+    prop_path = propagationPath(tmp);
+    prop_path.fprop();
+    var_results["neg_log_pi_mat"] = tmp;
+    mat_results["neg_log_pi_mat"] = tmp->matValue;
+
+    tmp = softmax(prob_vec_var, 2);
+    prop_path = propagationPath(tmp);
+    prop_path.fprop();
+    var_results["softmax"] = tmp;
+    mat_results["softmax"] = tmp->matValue;
+
+    tmp = pownorm(vec_var, 1.5);
+    prop_path = propagationPath(tmp);
+    prop_path.fprop();
+    var_results["pownorm"] = tmp;
+    mat_results["pownorm"] = tmp->matValue;
+
+    tmp = norm(vec_var, 1.5);
+    prop_path = propagationPath(tmp);
+    prop_path.fprop();
+    var_results["norm"] = tmp;
+    mat_results["norm"] = tmp->matValue;
+
+    tmp = entropy(vec_var);
+    prop_path = propagationPath(tmp);
+    prop_path.fprop();
+    var_results["entropy"] = tmp;
+    mat_results["entropy"] = tmp->matValue;
+
+    tmp = distance(vec_var, prob_vec_var, 2);
+    prop_path = propagationPath(tmp);
+    prop_path.fprop();
+    var_results["distance"] = tmp;
+    mat_results["distance"] = tmp->matValue;
+
+    tmp = powdistance(vec_var, prob_vec_var, 2);
+    prop_path = propagationPath(tmp);
+    prop_path.fprop();
+    var_results["powdistance"] = tmp;
+    mat_results["powdistance"] = tmp->matValue;
 }
 
 } // end of namespace PLearn
