@@ -122,6 +122,9 @@
 #include <plearn_learners/generic/AddCostToLearner.h>
 #include <plearn_learners/generic/DistRepNNet.h>
 
+// Classifier
+#include <plearn_learners/classifiers/ClassifierFromConditionalPDistribution.h>
+
 // Hyper
 #include <plearn_learners/hyper/HyperLearner.h>
 

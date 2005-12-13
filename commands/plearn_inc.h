@@ -141,6 +141,7 @@
 #include <plearn_learners/classifiers/ClassifierFromDensity.h>
 #include <plearn_learners/classifiers/KNNClassifier.h>
 #include <plearn_learners/classifiers/MultiInstanceNNet.h>
+#include <plearn_learners/classifiers/ClassifierFromConditionalPDistribution.h>
 
 // Generic
 #include <plearn_learners/generic/AddCostToLearner.h>
