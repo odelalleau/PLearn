@@ -263,6 +263,11 @@ public:
     bool isMarked() { return marked; }
 
     void fillGradient(real value) { gradient.fill(value); }
+    void clearRowsToUpdate()
+    {
+        rows_to_update.resize(0);
+        gradient_status=0;
+    }
     void clearGradient() 
     { 
         if(!allows_partial_update) 
@@ -468,7 +473,7 @@ inline void Variable::updateAndClear()
             gradient_status=0;
         }
     }
-    else for (int row=0;row<length();row++)
+    else 
     {
         for(int i=0; i<nelems(); i++)
             valuedata[i] += gradientdata[i];
