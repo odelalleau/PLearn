@@ -99,10 +99,6 @@ void VarUtilsTest::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////////
 void VarUtilsTest::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "var_results", &VarUtilsTest::var_results,
-        OptionBase::buildoption,
-        "Test Var results.");
-
     declareOption(ol, "mat_results", &VarUtilsTest::mat_results,
         OptionBase::buildoption,
         "Test Mat results.");
@@ -153,55 +149,46 @@ void VarUtilsTest::perform()
     tmp = mean(mat_var);
     prop_path = propagationPath(tmp);
     prop_path.fprop();
-    var_results["mean"] = tmp;
     mat_results["mean"] = tmp->matValue;
 
     tmp = neg_log_pi(prob_vec_var, single_index_var);
     prop_path = propagationPath(tmp);
     prop_path.fprop();
-    var_results["neg_log_pi_vec"] = tmp;
     mat_results["neg_log_pi_vec"] = tmp->matValue;
 
     tmp = neg_log_pi(prob_mat_var, multi_index_var);
     prop_path = propagationPath(tmp);
     prop_path.fprop();
-    var_results["neg_log_pi_mat"] = tmp;
     mat_results["neg_log_pi_mat"] = tmp->matValue;
 
     tmp = softmax(prob_vec_var, 2);
     prop_path = propagationPath(tmp);
     prop_path.fprop();
-    var_results["softmax"] = tmp;
     mat_results["softmax"] = tmp->matValue;
 
     tmp = pownorm(vec_var, 1.5);
     prop_path = propagationPath(tmp);
     prop_path.fprop();
-    var_results["pownorm"] = tmp;
     mat_results["pownorm"] = tmp->matValue;
 
     tmp = norm(vec_var, 1.5);
     prop_path = propagationPath(tmp);
     prop_path.fprop();
-    var_results["norm"] = tmp;
     mat_results["norm"] = tmp->matValue;
 
     tmp = entropy(vec_var);
     prop_path = propagationPath(tmp);
     prop_path.fprop();
-    var_results["entropy"] = tmp;
     mat_results["entropy"] = tmp->matValue;
 
     tmp = distance(vec_var, prob_vec_var, 2);
     prop_path = propagationPath(tmp);
     prop_path.fprop();
-    var_results["distance"] = tmp;
     mat_results["distance"] = tmp->matValue;
 
     tmp = powdistance(vec_var, prob_vec_var, 2);
     prop_path = propagationPath(tmp);
     prop_path.fprop();
-    var_results["powdistance"] = tmp;
     mat_results["powdistance"] = tmp->matValue;
 }
 

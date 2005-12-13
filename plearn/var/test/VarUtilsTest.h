@@ -104,7 +104,6 @@ public:
 protected:
     //#####  Protected Options  ###############################################
 
-    map<string, Var> var_results;
     map<string, Mat> mat_results;
     
 protected:
