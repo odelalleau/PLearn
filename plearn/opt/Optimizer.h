@@ -70,6 +70,11 @@ class Optimizer : public Object
 public:
     VarArray params;
     Var cost;
+    //! Vars that are partially updated. 
+    // This lets the optimizer avoid the growth of rows_to_update for
+    // those vars, when bprop is called but not updateAndClear()
+    // (for instance when using the stochastic_hack of GradientOptimizer).
+    VarArray partial_update_vars;
     VarArray proppath; //forward and/or backward
     int nupdates; // deprecated  TODO Remove ?
     int nstages; //!< number of steps to perform when calling optimizeN
@@ -160,6 +165,11 @@ public:
     /* TODO Remove (deprecated)
        virtual void oldread(istream& in);
     */
+
+    virtual void setPartialUpdateVars(VarArray the_partial_update_vars)
+    {
+        partial_update_vars = the_partial_update_vars;
+    }
       
     virtual ~Optimizer();
 

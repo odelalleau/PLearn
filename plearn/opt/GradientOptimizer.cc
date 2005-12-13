@@ -45,6 +45,7 @@
 #include <plearn/math/TMat_maths.h>
 #include <plearn/display/DisplayUtils.h>
 #include <plearn/var/SumOfVariable.h>
+#include <plearn/sys/Profiler.h>
 
 namespace PLearn {
 using namespace std;
@@ -218,6 +219,10 @@ real GradientOptimizer::optimize()
         // set params += -learning_rate * params.gradient
         if(!stochastic_hack)
             params.updateAndClear();
+        else
+            if(partial_update_vars.length() != 0) 
+                for(int i=0; i<partial_update_vars.length(); i++)
+                    partial_update_vars[i]->clearRowsToUpdate();
     }
 
     if(stochastic_hack) // restore the gradients as they previously were...
@@ -232,6 +237,8 @@ real GradientOptimizer::optimize()
 
 bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll) 
 {
+    Profiler::activate();
+    Profiler::start("all");
     // Big hack for the special case of stochastic gradient, to avoid doing an explicit update
     // (temporarily change the gradient fields of the parameters to point to the parameters themselves,
     // so that gradients are "accumulated" directly in the parameters, thus updating them!
@@ -274,8 +281,9 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll)
         static bool display_var_graph_before_fbprop=false;
         if (display_var_graph_before_fbprop)
             displayVarGraph(proppath, true, 333);
-
+        Profiler::start("fbprop");
         proppath.fbprop(); 
+        Profiler::end("fbprop");
 #ifdef BOUNDCHECK
         int np = params.size();
         for(int i=0; i<np; i++)
@@ -293,10 +301,15 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll)
 //         PLERROR("Negative NLL encountered in optimization");
 //       }
 
+        Profiler::start("update");
         // set params += -learning_rate * params.gradient
         if(!stochastic_hack)
             params.updateAndClear();
-
+        else
+            if(partial_update_vars.length() != 0) 
+                for(int i=0; i<partial_update_vars.length(); i++)
+                    partial_update_vars[i]->clearRowsToUpdate();
+        Profiler::end("update");
         stats_coll.update(cost->value);
         ++stage;
     }
@@ -307,7 +320,8 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll)
         for(int i=0; i<n; i++)
             params[i]->defineGradientLocation(oldgradientlocations[i]);
     }
-
+    Profiler::end("all");
+    Profiler::report(cout);
     return false;
 }
 
