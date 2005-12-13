@@ -68,6 +68,7 @@
 #include <plearn/var/test/VarUtilsTest.h>
 #include <plearn/vmat/test/AutoVMatrixTest.h>
 #include <plearn/vmat/test/RowBufferedVMatrixTest.h>
+#include <plearn/../test_suite/PP/PPTest.h>
 
 // Some other minimal includes to be able to run tests.
 
