@@ -48,7 +48,7 @@ using namespace std;
   
 Dictionary::Dictionary()
     :
-    update_mode(UPDATE) 
+    update_mode(UPDATE), refill_possible_values(true)
 {
 }
 
@@ -110,6 +110,7 @@ int Dictionary::getId(string symbol, TVec<string> options)
             index=int(string_to_int.size());
             string_to_int[symbol] = index;
             int_to_string[index] = symbol;
+            refill_possible_values = true;
         }
         return string_to_int[symbol];
     }
@@ -143,11 +144,15 @@ int Dictionary::size(TVec<string> options){
 
 Vec Dictionary::getValues(TVec<string> options)
 { 
-    Vec ret((int) string_to_int.size());
-    int i=0;
-    for(map<string,int>::iterator it = string_to_int.begin(); it != string_to_int.end(); it++)
-        ret[i++] = it->second;
-    return ret;
+    if(refill_possible_values)
+    {
+        possible_values.resize((int) string_to_int.size());
+        int i=0;
+        for(map<string,int>::iterator it = string_to_int.begin(); it != string_to_int.end(); it++)
+            possible_values[i++] = it->second;
+        refill_possible_values = false;
+    }
+    return possible_values;
 }
 
 bool Dictionary::isIn(string symbol, TVec<string> options){

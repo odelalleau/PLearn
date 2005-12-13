@@ -88,8 +88,12 @@ protected:
     map<string,int> string_to_int;
     //! int to string mapping
     map<int,string> int_to_string;
+    //! possible values vector
+    Vec possible_values;
     //! id of OOV_TAG
     int oov_tag_id;
+    //! Indication that the possible_values vector needs to be updated
+    bool refill_possible_values;
 
 public:
 
