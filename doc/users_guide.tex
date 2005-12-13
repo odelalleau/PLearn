@@ -455,9 +455,6 @@ setenv CPATH ${HOME}/local/include
 setenv LD_LIBRARY_PATH ${HOME}/local/lib
 setenv LIBRARY_PATH ${LD_LIBRARY_PATH}
 
-# Shortcut for PLearn compilation
-alias pm pymake -symlinkobjs
-
 # Nicer prompt.
 set prompt = "%B%m %~%b > "
 \end{verbatim}
@@ -479,9 +476,7 @@ numpy_site_packages = join(homedir,
 
 Do a \verb!source ~/.cshrc! to reload your configuration file, then go
 to your PLearn installation directory (\verb!$PLEARNDIR!) and run \verb!./setup!. PLearn can now be compiled
-with pymake (note that we use the \verb!pm! alias since the \verb!-symlinkobjs!
-option is required for linking to work under Cygwin):\\
-\verb!pm $PLEARNDIR/commands/plearn!
+with \verb!pymake $PLEARNDIR/commands/plearn!.
 
 \subsubsection{Testing PLearn}
 
