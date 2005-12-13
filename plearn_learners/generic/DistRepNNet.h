@@ -69,6 +69,8 @@ protected:
     Var output;
     //! Costs of the neural network
     VarArray costs;
+    //! Vars that use partial updates
+    VarArray partial_update_vars;
     //! Penalties on the neural network's weights
     VarArray penalties;
     //! Training cost of the neural network
@@ -165,6 +167,9 @@ public:
     string initialization_method;
     //! Dimensionality (number of components) of distributed representations
     TVec<int> dist_rep_dim;
+    //! Use Energy Based Model (EBM) NNet architecture
+    bool use_ebm_nnet;
+    
 
 private:
     void build_();

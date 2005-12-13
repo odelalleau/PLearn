@@ -107,7 +107,8 @@ output_transfer_func(""),
 hidden_transfer_func("tanh"),
 do_not_change_params(false),
 batch_size(1),
-initialization_method("uniform_linear")
+initialization_method("uniform_linear"),
+use_ebm_nnet(1)
 {}
 
 DistRepNNet::~DistRepNNet()
@@ -218,6 +219,9 @@ void DistRepNNet::declareOptions(OptionList& ol)
                   " - \"uniform_sqrt\"   = a uniform law in [-1/sqrt(n_inputs), 1/sqrt(n_inputs)]\n"
                   " - \"zero\"           = all weights are set to 0\n");
 
+    declareOption(ol, "use_ebm_nnet", &DistRepNNet::use_ebm_nnet, OptionBase::buildoption, 
+                  "Indication that architecture of the neural network should that of an Energy Based Model (EBM)\n");
+
     declareOption(ol, "paramsvalues", &DistRepNNet::paramsvalues, OptionBase::learntoption, 
                   "The learned parameter vector\n");
 
@@ -266,6 +270,7 @@ void DistRepNNet::build_()
         int n_dist_rep_input = 0;
         dist_reps.resize(0);
         dictionaries.resize(0);
+        partial_update_vars.resize(0);
         input_to_dict_index.resize(inputsize_);
         input_to_dict_index.fill(-1);
 
@@ -307,8 +312,9 @@ void DistRepNNet::build_()
             if(f<0)
             {
                 if(dist_rep_dim.length() <= dist_reps.size())
-                    PLERROR("In DistRepNNet::build_(): dist_rep_dim isn't big enough, dimensionality specifications are missing");                    
-                dist_reps.push_back(new SourceVariable(dict->size()+1,dist_rep_dim[dist_reps.size()]));
+                    PLERROR("In DistRepNNet::build_(): dist_rep_dim isn't big enough, dimensionality specifications are missing");
+                if(use_ebm_nnet)
+                    dist_reps.push_back(new SourceVariable(dict->size()+1,dist_rep_dim[dist_reps.size()]));
                 dictionaries.push_back(dict);
                 target_dict_index = dictionaries.size()-1;
             }            
@@ -328,11 +334,17 @@ void DistRepNNet::build_()
             if(input_to_dict_index[i] < 0)
                 non_dist_rep_indexes->value[j++] = i;
             else
+            {
                 // If the input is missing, then map to OOV_TAG dist. rep., otherwise map to corresponding dist. rep.
                 input_components.push_back(dist_reps[input_to_dict_index[i]](isMissing(input[i],true, true, dictionaries[input_to_dict_index[i]]->getId(OOV_TAG) )));
+                partial_update_vars.push_back(input_components.last());                
+            }
         // Add input with no distributed representation
         if(non_dist_rep_indexes.length() != 0)
+        {
             input_components.push_back(new VarRowsVariable(input,non_dist_rep_indexes));
+            partial_update_vars.push_back(input_components.last());
+        }
 
         // Input with distributed representations inserted
         Var dp_input = hconcat(input_components);
@@ -500,96 +512,156 @@ void DistRepNNet::buildFuncs(const Var& the_input, const Var& the_output, const 
 // buildOutputFromInput //
 //////////////////////////
 void DistRepNNet::buildOutputFromInput(const Var& dp_input) {
-    // The idea is to output a "potential" for each
-    // target possibility...
-    // Hence, we need to make a propagation path from
-    // the computations using only the input part
-    // (and hence commun to all targets) and the
-    // target disptributed representation, to the potential output.
-    // In order to know what are the possible targets,
-    // the train_set vmat, which contains the target
-    // Dictionary, will be used.
 
-    // Computations common to all targets
-    if(nhidden>0)
+    if(use_ebm_nnet)
     {
-        w1 = Var(1 + dp_input->size(), nhidden, "w1");
-        params.append(w1);
-        output = affine_transform(dp_input, w1); 
-    }
-    else
-    {
-        wout = Var(1 + dp_input->size(), outputsize(), "wout");        
-        output = affine_transform(dp_input, wout);     
-        if(!fixed_output_weights)
+        // The idea is to output a "potential" for each
+        // target possibility...
+        // Hence, we need to make a propagation path from
+        // the computations using only the input part
+        // (and hence commun to all targets) and the
+        // target disptributed representation, to the potential output.
+        // In order to know what are the possible targets,
+        // the train_set vmat, which contains the target
+        // Dictionary, will be used.
+
+        // Computations common to all targets
+        if(nhidden>0)
         {
-            params.append(wout);
+            w1 = Var(1 + dp_input->size(), nhidden, "w1");
+            params.append(w1);
+            output = affine_transform(dp_input, w1); 
         }
         else
         {
-            outbias = Var(output->size(),"outbias");
-            output = output + outbias;
-            params.append(outbias);
+            wout = Var(1 + dp_input->size(), outputsize(), "wout");        
+            output = affine_transform(dp_input, wout);     
+            if(!fixed_output_weights)
+            {
+                params.append(wout);
+            }
+            else
+            {
+                outbias = Var(output->size(),"outbias");
+                output = output + outbias;
+                params.append(outbias);
+            }
         }
-    }
 
-    Var comp_input = output;
-    Var dp_target = Var(1,dist_rep_dim[target_dict_index]);
+        Var comp_input = output;
+        Var dp_target = Var(1,dist_rep_dim[target_dict_index]);
 
-    VarArray proppath_params;
-    if(nhidden>0)
-    {
-        w1target = Var( dp_target->size(),nhidden, "w1target");      
-        params.append(w1target);
-        proppath_params.append(w1target);
-        output = output + product(dp_target, w1target);
-        output = add_transfer_func(output);
-    }
-    else
-    {
-        wouttarget = Var(dp_target->size(),outputsize(), "wouttarget");
-        if (!fixed_output_weights)        
+        VarArray proppath_params;
+        if(nhidden>0)
         {
-            params.append(wouttarget);        
-            proppath_params.append(wouttarget);        
+            w1target = Var( dp_target->size(),nhidden, "w1target");      
+            params.append(w1target);
+            proppath_params.append(w1target);
+            output = output + product(dp_target, w1target);
+            output = add_transfer_func(output);
         }
-        output = output + product(dp_target,wouttarget);
-        output = add_transfer_func(output);
-    }
+        else
+        {
+            wouttarget = Var(dp_target->size(),outputsize(), "wouttarget");
+            if (!fixed_output_weights)        
+            {
+                params.append(wouttarget);        
+                proppath_params.append(wouttarget);        
+            }
+            output = output + product(dp_target,wouttarget);
+            output = add_transfer_func(output);
+        }
     
-    // second hidden layer
-    if(nhidden2>0)
-    {
-        w2 = Var(1 + output.length(), nhidden2, "w2");
-        params.append(w2);
-        proppath_params.append(w2);
-        output = affine_transform(output,w2);
-        output = add_transfer_func(output);
-    }
-
-    if (nhidden2>0 && nhidden==0)
-        PLERROR("DistRepNNet:: can't have nhidden2 (=%d) > 0 while nhidden=0",nhidden2);
-
-    // output layer before transfer function when there is at least one hidden layer
-    if(nhidden > 0)
-    {
-        wout = Var(1 + output->size(), outputsize(), "wout");
-        output = affine_transform(output, wout);
-        if (!fixed_output_weights)
+        // second hidden layer
+        if(nhidden2>0)
         {
-            params.append(wout);
-            proppath_params.append(wout);
+            w2 = Var(1 + output.length(), nhidden2, "w2");
+            params.append(w2);
+            proppath_params.append(w2);
+            output = affine_transform(output,w2);
+            output = add_transfer_func(output);
+        }
+
+        if (nhidden2>0 && nhidden==0)
+            PLERROR("DistRepNNet:: can't have nhidden2 (=%d) > 0 while nhidden=0",nhidden2);
+
+        // output layer before transfer function when there is at least one hidden layer
+        if(nhidden > 0)
+        {
+            wout = Var(1 + output->size(), outputsize(), "wout");
+            output = affine_transform(output, wout);
+            if (!fixed_output_weights)
+            {
+                params.append(wout);
+                proppath_params.append(wout);
+            }
+            else
+            {
+                outbias = Var(output->size(),"outbias");
+                output = output + outbias;
+                params.append(outbias);
+                proppath_params.append(outbias);
+            }
+        }
+
+        output = potentials(input,comp_input,dp_target,dist_reps[target_dict_index], output, proppath_params, train_set);
+        partial_update_vars.push_back(dist_reps[target_dict_index]);
+    }
+    else
+    {
+        // Computations common to all targets
+        if(nhidden>0)
+        {
+            w1 = Var(1 + dp_input->size(), nhidden, "w1");
+            params.append(w1);
+            output = affine_transform(dp_input, w1); 
         }
         else
         {
-            outbias = Var(output->size(),"outbias");
-            output = output + outbias;
-            params.append(outbias);
-            proppath_params.append(outbias);
+            wout = Var(1 + dp_input->size(), dictionaries[target_dict_index]->size()+1, "wout");        
+            output = affine_transform(dp_input, wout);     
+            if(!fixed_output_weights)
+            {
+                params.append(wout);
+            }
+            else
+            {
+                outbias = Var(output->size(),"outbias");
+                output = output + outbias;
+                params.append(outbias);
+            }
         }
+
+        // second hidden layer
+        if(nhidden2>0)
+        {
+            w2 = Var(1 + output.length(), nhidden2, "w2");
+            params.append(w2);
+            output = affine_transform(output,w2);
+            output = add_transfer_func(output);
+        }
+
+        if (nhidden2>0 && nhidden==0)
+            PLERROR("DistRepNNet:: can't have nhidden2 (=%d) > 0 while nhidden=0",nhidden2);
+
+        // output layer before transfer function when there is at least one hidden layer
+        if(nhidden > 0)
+        {
+            wout = Var(1 + output->size(), dictionaries[target_dict_index]->size()+1, "wout");
+            output = affine_transform(output, wout);
+            if (!fixed_output_weights)
+                params.append(wout);
+            else
+            {
+                outbias = Var(output->size(),"outbias");
+                output = output + outbias;
+                params.append(outbias);
+            }
+        }
+
+        output = transpose(output);
     }
 
-    output = potentials(input,comp_input,dp_target,dist_reps[target_dict_index], output, proppath_params, train_set);
 
     // output_transfer_func
     if(output_transfer_func!="" && output_transfer_func!="none")
@@ -603,10 +675,15 @@ void DistRepNNet::buildPenalties() {
     penalties.resize(0);  // prevents penalties from being added twice by consecutive builds
     if(w1 && ((layer1_weight_decay + weight_decay)!=0 || (layer1_bias_decay + bias_decay)!=0))
         penalties.append(affine_transform_weight_penalty(w1, (layer1_weight_decay + weight_decay), (layer1_bias_decay + bias_decay), penalty_type));
+    if(w1target && ((layer1_weight_decay + weight_decay)!=0 || (layer1_bias_decay + bias_decay)!=0))
+        penalties.append(affine_transform_weight_penalty(w1target, (layer1_weight_decay + weight_decay), (layer1_bias_decay + bias_decay), penalty_type));
     if(w2 && ((layer2_weight_decay + weight_decay)!=0 || (layer2_bias_decay + bias_decay)!=0))
         penalties.append(affine_transform_weight_penalty(w2, (layer2_weight_decay + weight_decay), (layer2_bias_decay + bias_decay), penalty_type));
     if(wout && ((output_layer_weight_decay + weight_decay)!=0 || (output_layer_bias_decay + bias_decay)!=0))
         penalties.append(affine_transform_weight_penalty(wout, (output_layer_weight_decay + weight_decay), 
+                                                         (output_layer_bias_decay + bias_decay), penalty_type));
+    if(wouttarget && ((output_layer_weight_decay + weight_decay)!=0 || (output_layer_bias_decay + bias_decay)!=0))
+        penalties.append(affine_transform_weight_penalty(wouttarget, (output_layer_weight_decay + weight_decay), 
                                                          (output_layer_bias_decay + bias_decay), penalty_type));
 }
 
@@ -749,7 +826,8 @@ void DistRepNNet::initializeParams(bool set_seed)
 
     if(nhidden>0) {
         fillWeights(w1, true);
-        fillWeights(w1target, false);
+        if(w1target)
+            fillWeights(w1target, false);
     }
 
     if(nhidden2>0) {
@@ -766,12 +844,12 @@ void DistRepNNet::initializeParams(bool set_seed)
         }
         fill_random_discrete(wout->value, values);
         wout->matValue(0).clear();
-        if(nhidden <= 0) fill_random_discrete(wouttarget->value, values);
+        if(wouttarget) fill_random_discrete(wouttarget->value, values);
             
     }
     else {
         fillWeights(wout, true);
-        if(nhidden <= 0) fillWeights(wouttarget, false);
+        if(wouttarget) fillWeights(wouttarget, false);
     }
 
     // Initialize distributed representations
@@ -861,6 +939,7 @@ void DistRepNNet::train()
     if(optimizer)
     {
         optimizer->setToOptimize(params, totalcost);  
+        if(partial_update_vars.length() != 0) optimizer->setPartialUpdateVars(partial_update_vars);
         optimizer->build();
     }
     else PLERROR("DistRepNNet::train can't train without setting an optimizer first!");
