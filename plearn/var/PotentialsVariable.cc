@@ -85,6 +85,14 @@ PotentialsVariable::build_()
     {
         if(output->size() != 1) PLERROR("In PotentialsVariable::build_(): to_output function has output size different from 1");
         proppath = propagationPath(comp_input & dp_target & params, output);
+
+        // Initialize temp_comps
+        
+        temp_comps.resize(1);
+        temp_comps[0].resize(proppath.size());
+        for(int i=0; i<proppath.size(); i++)
+            temp_comps[0][i] = Var(proppath[i]->length(), proppath[i]->width());
+        
     }
 }
 
@@ -132,14 +140,40 @@ void PotentialsVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void PotentialsVariable::fprop()
 {
-    temp_comps.resize(length(),proppath.nelems());
+    //temp_comps.resize(length(),proppath.nelems());
     values = distr->getValues(input->value,distr->inputsize());
     
     for(int i=0; i<length(); i++)
     {        
+        
+        // Add some elements in temp_comps if necessary
+        if(temp_comps.length() < length())
+        {
+            int last_size = temp_comps.length();
+            temp_comps.resize(length());
+            for(int j=last_size; j<temp_comps.length(); j++)
+            {
+                temp_comps[j].resize(proppath.size());
+                for(int k=0; k<proppath.size(); k++)
+                    temp_comps[j][k] = Var(proppath[k]->length(), proppath[k]->width());
+            }
+        }
+        
+        // Point to temp_comps for values and gradients of proppath
+        for(int j=0; j<proppath.size(); j++)
+        {
+            proppath[j]->matValue = temp_comps[i][j]->matValue;
+            proppath[j]->value = proppath[j]->matValue.toVec();
+            proppath[j]->valuedata = proppath[j]->value.data();
+
+            proppath[j]->matGradient = temp_comps[i][j]->matGradient;
+            proppath[j]->gradient = proppath[j]->matGradient.toVec();
+            proppath[j]->gradientdata = proppath[j]->gradient.data();
+        }
+        
         dp_target->value << target_dist_reps->matValue((int)values[i]);
         proppath.fprop();
-        proppath >> temp_comps(i);
+        //proppath >> temp_comps(i);
         value[i] = output->value[0];
     }
 }
@@ -149,7 +183,20 @@ void PotentialsVariable::bprop()
 {  
     for(int i=0; i<length(); i++)
     {
-        proppath << temp_comps(i);
+        
+        // Point to temp_comps for values and gradients of proppath
+        for(int j=0; j<proppath.size(); j++)
+        {
+            proppath[j]->matValue = temp_comps[i][j]->matValue;
+            proppath[j]->value = proppath[j]->matValue.toVec();
+            proppath[j]->valuedata = proppath[j]->value.data();
+
+            proppath[j]->matGradient = temp_comps[i][j]->matGradient;
+            proppath[j]->gradient = proppath[j]->matGradient.toVec();
+            proppath[j]->gradientdata = proppath[j]->gradient.data();
+        }
+        
+        //proppath << temp_comps(i);
         dp_target->value << target_dist_reps->matValue((int)values[i]);
         proppath.clearGradient();
         dp_target->clearGradient();

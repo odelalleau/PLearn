@@ -56,7 +56,8 @@ class PotentialsVariable: public NaryVariable
 protected:
 
     //! Temporary computations
-    Mat temp_comps;
+    // Mat temp_comps;
+    TVec< VarArray > temp_comps;
     VarArray proppath;
     // To avoid allocation/deallocations in fprop/bprop
     Vec values;
