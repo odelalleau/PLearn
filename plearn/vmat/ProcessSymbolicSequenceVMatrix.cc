@@ -299,10 +299,10 @@ void ProcessSymbolicSequenceVMatrix::getNewRow(int i, const Vec& v) const
             if(put_only_target_attributes)
             {
                 if(t/n_attributes == target_position)
-                    v[inputsize_ + t%n_attributes - source->inputsize() ] = current_row_i[t];
+                    v[max_context_length*source->inputsize() + t%n_attributes - source->inputsize() ] = current_row_i[t];
             }
             else
-                v[inputsize_ + t/n_attributes * source->targetsize() + t%n_attributes - source->inputsize() ] = current_row_i[t];
+                v[max_context_length*source->inputsize() + t/n_attributes * source->targetsize() + t%n_attributes - source->inputsize() ] = current_row_i[t];
     }
 
     return;
@@ -421,11 +421,9 @@ void ProcessSymbolicSequenceVMatrix::build_()
     length_ = indices.length();
     width_ = n_attributes*(max_context_length);
 
-    inputsize_ = max_context_length * source->inputsize();
-    targetsize_ = max_context_length * source->targetsize();
-    weightsize_ = source->weightsize();
-
-    if(inputsize_+targetsize_ != width_) PLERROR("In ProcessSymbolicSequenceVMatrix:build_() : inputsize_ + targetsize_ != width_");
+    if(inputsize_ < 0) inputsize_ = max_context_length * source->inputsize();
+    if(targetsize_ < 0) targetsize_ = max_context_length * source->targetsize();
+    if(weightsize_ < 0) weightsize_ = source->weightsize();
 
     current_row_i.resize(width_);
     current_target_pos = -1;
@@ -457,9 +455,11 @@ void ProcessSymbolicSequenceVMatrix::build_()
 
     if(put_only_target_attributes)
     {
-        targetsize_ = source->targetsize();
-        width_ = inputsize_ + targetsize();
+        if(targetsize_ < 0) targetsize_ = source->targetsize();
+        width_ = inputsize_ + targetsize() + weightsize();
     }
+    
+    if(inputsize_+targetsize_ != width_) PLERROR("In ProcessSymbolicSequenceVMatrix:build_() : inputsize_ + targetsize_ != width_");
 
 }
 
