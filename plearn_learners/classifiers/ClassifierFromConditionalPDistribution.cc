@@ -1,7 +1,7 @@
 
 // -*- C++ -*-
 
-// ClassifierFromPConditionalDistribution.cc
+// ClassifierFromConditionalPDistribution.cc
 //
 // Copyright (C) 2003-2005  Pascal Vincent & Olivier Delalleau
 // 
@@ -34,42 +34,42 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: ClassifierFromPConditionalDistribution.cc 4412 2005-11-02 19:00:20Z tihocan $ 
+ * $Id: ClassifierFromConditionalPDistribution.cc 4412 2005-11-02 19:00:20Z tihocan $ 
  ******************************************************* */
 
-/*! \file ClassifierFromPConditionalDistribution.cc */
-#include "ClassifierFromPConditionalDistribution.h"
+/*! \file ClassifierFromConditionalPDistribution.cc */
+#include "ClassifierFromConditionalPDistribution.h"
 #include <plearn/io/PPath.h>
 
 namespace PLearn {
 using namespace std;
 
-ClassifierFromPConditionalDistribution::ClassifierFromPConditionalDistribution() 
+ClassifierFromConditionalPDistribution::ClassifierFromConditionalPDistribution() 
     : nclasses(-1),
       output_type("predicted_class")
 {}
 
 PLEARN_IMPLEMENT_OBJECT(
-    ClassifierFromPConditionalDistribution,
-    "Classifier that takes a PConditionalDistribution and classifies with it.", 
-    "ClassifierFromPConditionalDistribution classifies by finding the target\n"
+    ClassifierFromConditionalPDistribution,
+    "Classifier that takes a ConditionalPDistribution and classifies with it.", 
+    "ClassifierFromConditionalPDistribution classifies by finding the target\n"
     "class y that maximizes p(y|x), where x is the input.\n");
 
 ////////////////////
 // declareOptions //
 ////////////////////
-void ClassifierFromPConditionalDistribution::declareOptions(OptionList& ol)
+void ClassifierFromConditionalPDistribution::declareOptions(OptionList& ol)
 {
 
     // Build options.
 
-    declareOption(ol, "nclasses", &ClassifierFromPConditionalDistribution::nclasses, OptionBase::buildoption,
+    declareOption(ol, "nclasses", &ClassifierFromConditionalPDistribution::nclasses, OptionBase::buildoption,
                   "The number of classes");
 
-    declareOption(ol, "conditional_distribution", &ClassifierFromPConditionalDistribution::pcd, OptionBase::buildoption,
-                  "PConditionalDistribution that computes p(y|x) for all possible classes y.");
+    declareOption(ol, "conditional_distribution", &ClassifierFromConditionalPDistribution::pcd, OptionBase::buildoption,
+                  "ConditionalPDistribution that computes p(y|x) for all possible classes y.");
 
-    declareOption(ol, "output_type", &ClassifierFromPConditionalDistribution::output_type, OptionBase::buildoption,
+    declareOption(ol, "output_type", &ClassifierFromConditionalPDistribution::output_type, OptionBase::buildoption,
                   "Output type. Choose among: \n"
                   "- \"predicted_class\"\n"
                   "- \"class_probabilities\"\n"
@@ -83,7 +83,7 @@ void ClassifierFromPConditionalDistribution::declareOptions(OptionList& ol)
 ///////////
 // build //
 ///////////
-void ClassifierFromPConditionalDistribution::build()
+void ClassifierFromConditionalPDistribution::build()
 {
     inherited::build();
     build_();
@@ -92,16 +92,16 @@ void ClassifierFromPConditionalDistribution::build()
 ////////////
 // build_ //
 ////////////
-void ClassifierFromPConditionalDistribution::build_()
+void ClassifierFromConditionalPDistribution::build_()
 {
     if(pcd && train_set)
     {
         PP<Dictionary> target_dict = train_set->getDictionary(inputsize());
-        if(!target_dict && nclasses <= 0) PLERROR("In ClassifierFromPConditionalDistribution::build_(): There is not way to know what are the possible targets (nclasses <= 0 and no Dictionary for target field)");
+        if(!target_dict && nclasses <= 0) PLERROR("In ClassifierFromConditionalPDistribution::build_(): There is not way to know what are the possible targets (nclasses <= 0 and no Dictionary for target field)");
         if(target_dict) nclasses = -1;
         if(output_type == "predicted_class" || output_type == "class_log-probabilities") pcd->outputs_def = "l";
         else if (output_type == "class_probabilities") pcd->outputs_def = "d";
-        else PLERROR("ClassifierFromPConditionalDistribution::build_(): output_type %s is not supported", output_type.c_str());
+        else PLERROR("ClassifierFromConditionalPDistribution::build_(): output_type %s is not supported", output_type.c_str());
 
         pcd_input.resize(train_set->inputsize() + train_set->targetsize());
         pcd_output.resize(1);
@@ -112,7 +112,7 @@ void ClassifierFromPConditionalDistribution::build_()
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void ClassifierFromPConditionalDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+void ClassifierFromConditionalPDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(pcd, copies);
@@ -123,7 +123,7 @@ void ClassifierFromPConditionalDistribution::makeDeepCopyFromShallowCopy(CopiesM
 ////////////////
 // outputsize //
 ////////////////
-int ClassifierFromPConditionalDistribution::outputsize() const
+int ClassifierFromConditionalPDistribution::outputsize() const
 {
     if(nclasses > 0) return nclasses;
     else return train_set->getValues(0,inputsize()).length();
@@ -132,7 +132,7 @@ int ClassifierFromPConditionalDistribution::outputsize() const
 ////////////
 // forget //
 ////////////
-void ClassifierFromPConditionalDistribution::forget()
+void ClassifierFromConditionalPDistribution::forget()
 {
     stage=0;
     pcd->forget();
@@ -141,10 +141,10 @@ void ClassifierFromPConditionalDistribution::forget()
 ///////////
 // train //
 ///////////
-void ClassifierFromPConditionalDistribution::train()
+void ClassifierFromConditionalPDistribution::train()
 {
     if(targetsize()!=1)
-        PLERROR("In ClassifierFromPConditionalDistribution::train - Expecting a targetsize of 1, not %d !!",targetsize());
+        PLERROR("In ClassifierFromConditionalPDistribution::train - Expecting a targetsize of 1, not %d !!",targetsize());
 
     if(nstages<stage) // asking to revert to a previous stage!
         forget();  // reset the learner to stage=0
@@ -159,7 +159,7 @@ void ClassifierFromPConditionalDistribution::train()
         pcd->setTrainStatsCollector(train_stats);
         pcd->nstages = nstages;
         if (verbosity >= 2)
-        pout << ">>> Training PConditionalDistribution" << endl;    
+        pout << ">>> Training ConditionalPDistribution" << endl;    
         pcd->train();
         if (verbosity >= 2)
         pout << ">>> Training is over" << endl;    
@@ -171,7 +171,7 @@ void ClassifierFromPConditionalDistribution::train()
 ///////////////////
 // computeOutput //
 ///////////////////
-void ClassifierFromPConditionalDistribution::computeOutput(const Vec& input, Vec& output) const
+void ClassifierFromConditionalPDistribution::computeOutput(const Vec& input, Vec& output) const
 {    
     pcd_input.subVec(0,inputsize()) << input;
     if(nclasses <= 0)
@@ -209,7 +209,7 @@ void ClassifierFromPConditionalDistribution::computeOutput(const Vec& input, Vec
 /////////////////////////////
 // computeCostsFromOutputs //
 /////////////////////////////
-void ClassifierFromPConditionalDistribution::computeCostsFromOutputs(const Vec& input, const Vec& output, 
+void ClassifierFromConditionalPDistribution::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                                     const Vec& target, Vec& costs) const
 {
     if(output_type == "predicted_class")
@@ -232,7 +232,7 @@ void ClassifierFromPConditionalDistribution::computeCostsFromOutputs(const Vec& 
 //////////////////////
 // getTestCostNames //
 //////////////////////
-TVec<string> ClassifierFromPConditionalDistribution::getTestCostNames() const
+TVec<string> ClassifierFromConditionalPDistribution::getTestCostNames() const
 {
     TVec<string> cnames;    
     if(output_type == "predicted_class")
@@ -252,7 +252,7 @@ TVec<string> ClassifierFromPConditionalDistribution::getTestCostNames() const
 ///////////////////////
 // getTrainCostNames //
 ///////////////////////
-TVec<string> ClassifierFromPConditionalDistribution::getTrainCostNames() const
+TVec<string> ClassifierFromConditionalPDistribution::getTrainCostNames() const
 {
     return TVec<string>();
 }

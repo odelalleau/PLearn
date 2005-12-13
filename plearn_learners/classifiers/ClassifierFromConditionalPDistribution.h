@@ -1,7 +1,7 @@
 
 // -*- C++ -*-
 
-// ClassifierFromPConditionalDistribution.h
+// ClassifierFromConditionalPDistribution.h
 //
 // Copyright (C) 20032-2005  Pascal Vincent & Olivier Delalleau
 // 
@@ -34,22 +34,22 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: ClassifierFromPConditionalDistribution.h 3994 2005-08-25 13:35:03Z chapados $ 
+ * $Id: ClassifierFromConditionalPDistribution.h 3994 2005-08-25 13:35:03Z chapados $ 
  ******************************************************* */
 
-/*! \file ClassifierFromPConditionalDistribution.h */
-#ifndef ClassifierFromPConditionalDistribution_INC
-#define ClassifierFromPConditionalDistribution_INC
+/*! \file ClassifierFromConditionalPDistribution.h */
+#ifndef ClassifierFromConditionalPDistribution_INC
+#define ClassifierFromConditionalPDistribution_INC
 
 #include <plearn_learners/distributions/PDistribution.h>
 #include <plearn_learners/generic/PLearner.h>
 
 namespace PLearn {
 
-//! Classifier that takes a PConditionalDistribution and classifies with it,
+//! Classifier that takes a ConditionalPDistribution and classifies with it,
 //! by finding the target class y that maximizes p(y|x), where x is
 //! the input.
-class ClassifierFromPConditionalDistribution: public PLearner
+class ClassifierFromConditionalPDistribution: public PLearner
 {
 
 private:
@@ -71,7 +71,7 @@ public:
     //! Number of classes (doesn't need to be specified if train_set has
     //! a Dictionary for the target column.
     int nclasses;
-    //! PConditionalDistribution, that will be trained if this learner is trained
+    //! ConditionalPDistribution, that will be trained if this learner is trained
     PP<PDistribution> pcd;
     //! Output type (choose among: "predicted_class", "class_probabilities" or "class_log-probabilities")
     string output_type;
@@ -81,7 +81,7 @@ public:
     // ****************
 
     //! Default constructor.
-    ClassifierFromPConditionalDistribution();
+    ClassifierFromConditionalPDistribution();
 
     // ******************
     // * PLearner methods *
@@ -112,7 +112,7 @@ public:
     // Declares other standard object methods
     //  If your class is not instantiatable (it has pure virtual methods)
     // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
-    PLEARN_DECLARE_OBJECT(ClassifierFromPConditionalDistribution);
+    PLEARN_DECLARE_OBJECT(ClassifierFromConditionalPDistribution);
 
 
     // **************************
@@ -152,7 +152,7 @@ public:
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(ClassifierFromPConditionalDistribution);
+DECLARE_OBJECT_PTR(ClassifierFromConditionalPDistribution);
   
 } // end of namespace PLearn
 
