@@ -46,6 +46,8 @@
 #include "distr_maths.h"
 #include "random.h"
 #include "TMat_maths.h"
+#include "pl_erf.h" 
+#include "plapack.h"
 
 namespace PLearn {
 using namespace std;
@@ -264,6 +266,110 @@ real log_beta_density(real x, real alpha, real beta)
     return (alpha-1)*safelog(x) + (beta-1)*safelog(1-x)  - log_beta(alpha,beta);
 }
 
+// return log of Normal(x;mu, sigma2*I), i.e. density of a spherical Gaussian
+real log_of_normal_density(Vec x, Vec mu, real sigma2)
+{
+    real lp=0;
+    for (int i=0;i<x.length();i++)
+        lp += gauss_log_density_var(x[i],mu[i],sigma2);
+    return lp;
+}
+
+
+// return log of Normal(x;mu, diag(sigma2)), i.e. density of a diagonal Gaussian
+real log_of_normal_density(Vec x, Vec mu, Vec sigma2)
+{
+    real lp=0;
+    for (int i=0;i<x.length();i++)
+        lp += gauss_log_density_var(x[i],mu[i],sigma2[i]);
+    return lp;
+}
+
+// return log of Normal(x;mu, Sigma), i.e. density of a full Gaussian,
+// where the covariance Sigma is
+//    Sigma = remainder_evalue*I + sum_i max(0,evalues[i]-remainder_evalue)*evectors(i)*evectors(i)'
+// The eigenvectors are in the ROWS of matrix evectors (because of easier row-wise access in Mat's).
+real log_of_normal_density(Vec x, Vec mu, Mat evectors, Vec evalues, real remainder_evalue)
+{
+    return logOfCompactGaussian(x,mu,evalues,evectors,remainder_evalue,false);
+/*
+    static Vec centered_x;
+    int d=x.length();
+    centered_x.resize(d);
+    int k=evectors.length();
+    real lp = -0.5 * d * Log2Pi;
+    real irev = 0;
+    substract(x,mu,centered_x);
+    if (remainder_evalue>0)
+    {
+        irev = 1 / remainder_evalue;
+        lp -= 0.5 * ( (d-k)*pl_log(remainder_evalue)  +  pownorm(centered_x) * irev );
+        if (k>=d)
+            PLERROR("log_of_normal_density: when remainder_evalue>0, there should be less e-vectors (%d) than dimensions (%d)",
+                    k,d);
+    }
+    for (int i=0;i<k;i++)
+    {
+        real ev = evalues[i];
+        if (ev<remainder_evalue)
+            lp -= 0.5 * pl_log(ev);
+        else
+        {
+            real iv = 1/ev - irev;
+            lp -= 0.5 * ( pl_log(ev) + iv * square(dot(evectors(i),centered_x)));
+        }
+    }
+    return lp;
+*/
+}
+
+void addEigenMatrices(Mat A_evec, Vec A_eval, Mat B_evec, Vec B_eval, Mat C_evec, Vec C_eval, bool inverses)
+{
+    static Mat C;
+    int d=A_evec.length();
+    C.resize(d,d);
+    C.clear();
+    if (inverses)
+        for (int i=0;i<d;i++)
+        {
+            real ai = A_eval[i], bi = B_eval[i];
+            externalProductScaleAcc(C,A_evec(i),A_evec(i),ai!=0 ?1/ai:0);
+            externalProductScaleAcc(C,B_evec(i),B_evec(i),bi!=0 ?1/bi:0);
+        }
+    else
+        for (int i=0;i<d;i++)
+        {
+            externalProductScaleAcc(C,A_evec(i),A_evec(i),A_eval[i]);
+            externalProductScaleAcc(C,B_evec(i),B_evec(i),B_eval[i]);
+        }
+    eigenVecOfSymmMat(C,d,C_eval,C_evec);
+    if (inverses)
+        for (int i=0;i<d;i++)
+        {
+            real ci = C_eval[i];
+            if (ci!=0) C_eval[i] = 1/ci;
+        }
+}
+
+//! Given weighted statistics of order 0, 1 and 2, compute first and second moments of a Gaussian.
+//! 0-th order statistic: sum_w = sum_i w_i 
+//! 1-st order statistic: sum_wx = sum_i w_i x_i
+//! 2-nd order statistic: sum_wx2 = sum_i w_i x_i x_i'
+//! and put the results in 
+//!   mu = sum_wx / sum_w
+//!   (cov_evectors, cov_evalues) = eigen-decomposition of cov = sum_wx2 / sum_w - mu mu'
+//! with eigenvectors in the ROWS of cov_evectors.
+void sums2Gaussian(real sum_w, Vec sum_wx, Mat sum_wx2, Vec mu, Mat cov_evectors, Vec cov_evalues)
+{
+    real normf=1.0/sum_w;
+    // mu = sum_x / sum_1
+    multiply(sum_wx,normf,mu);
+    // sigma = sum_x2 / sum_1  - mu mu'
+    multiply(sum_wx2,sum_wx2,normf);
+    externalProductScaleAcc(sum_wx2,mu,mu,-1);
+    // perform eigendecoposition of the covariance matrix
+    eigenVecOfSymmMat(sum_wx2,mu.length(),cov_evalues,cov_evectors);
+}
 
 } // end of namespace PLearn
 

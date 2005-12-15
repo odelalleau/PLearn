@@ -48,6 +48,22 @@
 namespace PLearn {
 using namespace std;
 
+// return log of Normal(x;mu, sigma2*I), i.e. density of a spherical Gaussian
+real log_of_normal_density(Vec x, Vec mu, real sigma2);
+inline real normal_density(Vec x, Vec mu, real sigma2) { return safeexp(log_of_normal_density(x,mu,sigma2)); }
+
+// return log of Normal(x;mu, diag(sigma2)), i.e. density of a diagonal Gaussian
+real log_of_normal_density(Vec x, Vec mu, Vec sigma2);
+inline real normal_density(Vec x, Vec mu, Vec sigma2) { return safeexp(log_of_normal_density(x,mu,sigma2)); }
+
+// return log of Normal(x;mu, Sigma), i.e. density of a full Gaussian,
+// where the covariance Sigma is
+//    Sigma = remainder_evalue*I + sum_i max(0,evalues[i]-remainder_evalue)*evectors(i)*evectors(i)'
+// The eigenvectors are in the ROWS of matrix evectors (because of easier row-wise access in Mat's).
+real log_of_normal_density(Vec x, Vec mu, Mat evectors, Vec evalues, real remainder_evalue=0);
+inline real normal_density(Vec x, Vec mu, Mat evectors, Vec evalues, real remainder_evalue=0) 
+{ return safeexp(log_of_normal_density(x,mu,evectors,evalues,remainder_evalue)); }
+
 real logOfNormal(const Vec& x, const Vec& mu, const Mat& C);
 
 //! Fits a gaussian to the points in X (computing its mean and covariance
@@ -74,6 +90,20 @@ real logOfCompactGaussian(const Vec& x, const Vec& mu,
 real beta_density(real x, real alpha, real beta);
 //! Log of the beta_density
 real log_beta_density(real x, real alpha, real beta);
+
+// if (inverses) compute the eigendecomposition of C = inv(inv(A) + inv(B)) from eigendecompositions of A and B 
+// else compute the eigendecomposition of C = A + B from eigendecompositions of A and B
+void addEigenMatrices(Mat A_evec, Vec A_eval, Mat B_evec, Vec B_eval, Mat C_evec, Vec C_eval, bool inverses=false);
+
+//! Given weighted statistics of order 0, 1 and 2, compute first and second moments of a Gaussian.
+//! 0-th order statistic: sum_w = sum_i w_i 
+//! 1-st order statistic: sum_wx = sum_i w_i x_i
+//! 2-nd order statistic: sum_wx2 = sum_i w_i x_i x_i'
+//! and put the results in 
+//!   mu = sum_wx / sum_w
+//!   (cov_evectors, cov_evalues) = eigen-decomposition of cov = sum_wx2 / sum_w - mu mu'
+//! with eigenvectors in the ROWS of cov_evectors.
+void sums2Gaussian(real sum_w, Vec sum_wx, Mat sum_wx2, Vec mu, Mat cov_evectors, Vec cov_evalues);
 
 } // end of namespace PLearn
 
