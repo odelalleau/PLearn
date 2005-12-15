@@ -474,6 +474,116 @@ void affineNormalization(Mat data, Mat W, Vec bias, real regularizer)
     mu *= - real(1.0); // bias = -mu
 }
 
+//! Find weight decay which minimizes the leave-one-out cross-validation
+//! sum of squared error (LOOSSE) of the linear regression with (inputs, targets) pair.
+//! Set the resulting weights matrix accordingly and return this weight decay value lambda,
+//! i.e. weights = argmin_w ||targets - inputs*w'||^2 + lambda*sum_i ||w_i||^2.
+//!   inputs: n_examples x n_inputs (if you want a bias term, include it in the inputs!)
+//!   targets: n_examples x n_outputs
+//!   weights: n_outputs x n_inputs
+//! 
+//! This work is achieved by taking advantage of the following formula:
+//!    LOOSSE =    (sum of squared errors with the chosen weight decay) / (n_inputs - Tr(design_matrix + lambda I))
+//! where the trace of the design matrix is simply the sum of its eigenvalues and the trace of lambda I is d*lambda.
+//! The design matrix is inputs' * inputs. The explored values of lambda are based on an SVD
+//! of the inputs matrix (whose squared singular values are the eigenvalues of the design matrix):
+//! We know that lambda should be between the smallest and the largest eigenvalue. We do a binary search
+//! within the eigenvalue spectrum to select lambda.
+//! If best_predictions is provided then a copy of the predictions obtained with the best weight decay is made. Similarly for best_weights.
+real generalizedCVRidgeRegression(Mat inputs, Mat targets,  real& best_LOOSSE, Mat* best_weights, Mat* best_predictions, bool inputs_are_transposed)
+{
+    static Mat inputs_copy, U, Vt, predictions, RHS_matrix, weights;
+    static Vec singular_values, eigen_values, LOOSSE;
+    int n_examples = inputs_are_transposed?inputs.width():inputs.length();
+    int n_inputs = inputs_are_transposed?inputs.length():inputs.width();
+    int n_outputs = targets.width();
+    if (targets.length()!=n_examples)
+        PLERROR("generalizedCVRidgeRegression(Mat inputs, Mat targets, Mat weights): targets length (%d) incompatible with inputs length (%d)\n",
+                targets.length(),n_examples);
+    if (best_weights && (best_weights->length()!=n_outputs || best_weights->width()!=n_inputs))
+        PLERROR("generalizedCVRidgeRegression(Mat inputs, Mat targets, Mat weights): weights matrix dimensions was (%d,%d), expected (%d,%d)\n",
+                best_weights->length(),best_weights->width(),n_outputs,n_inputs);
+
+    inputs_copy.resize(n_examples,n_inputs);
+    if (inputs_are_transposed)
+        transpose(inputs, inputs_copy);
+    else
+        inputs_copy << inputs;
+    predictions.resize(n_examples,n_outputs);
+    weights.resize(n_outputs,n_inputs);
+    int rank = min(n_examples,n_inputs);
+    U.resize(n_examples,rank);
+    Vt.resize(rank,n_inputs);
+    RHS_matrix.resize(rank,n_outputs);
+    singular_values.resize(rank);
+    eigen_values.resize(rank);
+    LOOSSE.resize(rank);
+    // the computational cost of the SVD is O(rank^3)
+    SVD(inputs_copy,U,singular_values,Vt,'S');
+    
+    real trace_of_design_matrix = 0;
+    for (int i=0;i<rank;i++)
+    {
+        eigen_values[i] = singular_values[i]*singular_values[i];
+        trace_of_design_matrix += eigen_values[i];
+    }
+
+    // search among cut-off eigen-values
+    best_LOOSSE = 1e38;
+    int best_i = -1;
+    for (int i=1;i<rank;i++)
+    {
+        LOOSSE[i] = LOOSSEofRidgeRegression(inputs,targets,weights,eigen_values[i],eigen_values,Vt, 
+                                            predictions,trace_of_design_matrix, RHS_matrix,inputs_are_transposed);
+        if (LOOSSE[i]<best_LOOSSE)
+        {
+            best_LOOSSE=LOOSSE[i];
+            best_i=i;
+            if (best_predictions)
+                *best_predictions << predictions;
+            if (best_weights)
+                *best_weights << weights;
+        }
+    }
+    return eigen_values[best_i];
+}
+
+//! Auxiliary function used by generalizedCFRidgeRegression in order to compute the estimated generalization error
+//! associated with a given choice of weight decay. The eigenvalues and eigenvectors are those of the design matrix.
+//! The eigenvectors are in the ROWS of the matrix.
+//! The RHS_matrix is eigenvectors*inputs'*targets, pre-computed.
+//! The computational cost of this call is O((rank+n_examples)*n_outputs*n_inputs)
+real LOOSSEofRidgeRegression(Mat inputs, Mat targets, Mat weights, real weight_decay, Vec eigenvalues, Mat eigenvectors, Mat predictions, 
+                             real trace, Mat RHS_matrix, bool inputs_are_transposed)
+{
+    int n_inputs = weights.width();
+    int n_outputs = targets.width();
+    int rank = eigenvalues.length();
+    // weights' = eigenvectors' * inv(diag(eigenvalues) + weight_decay*I) * eigenvectors' * inputs' * targets 
+    //          = eigenvectors' * inv(diag(eigenvalues) + weight_decay*I) * RHS_matrix
+    weights.clear();
+    for (int k=0;k<rank;k++)
+    {
+        real* vk = eigenvectors[k];
+        real* RHSk = RHS_matrix[k];
+        real coeff = 1.0/(eigenvalues[k] + weight_decay);
+        for (int i=0;i<n_outputs;i++)
+        {
+            real *wi = weights[i];
+            for (int j=0;j<n_inputs;j++)
+                wi[j] += vk[j] * coeff * RHSk[i];
+        }
+    }
+    
+    if (inputs_are_transposed)
+        transposeTransposeProduct(predictions, inputs, weights);
+    else
+        productTranspose(predictions, inputs, weights);
+    predictions -= targets;
+    real SSE = sum_of_squares(predictions);
+    real LOOMSE = SSE / (n_inputs - trace - weight_decay*n_inputs);
+    return LOOMSE;
+}
 
 } // end of namespace PLearn
 

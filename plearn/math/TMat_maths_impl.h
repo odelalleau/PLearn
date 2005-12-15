@@ -5635,9 +5635,11 @@ void linearRegressionNoBias(TMat<T> inputs, TMat<T> outputs, T weight_decay,
         PLERROR("In linearRegressionNoBias: inputs and outputs should have the same length");
     if(weights.length()!=inputsize || weights.width()!=outputsize)
         PLERROR("In linearRegressionNoBias: weights should be a (inputsize x outputsize) matrix (%d x %d)",inputsize,outputsize);
-    TMat<T> XtX(inputsize,inputsize);
+    static TMat<T> XtX;
+    XtX.resize(inputsize,inputsize);
     transposeProduct(XtX, inputs,inputs);
-    TMat<T> XtY(inputsize,outputsize);
+    static TMat<T> XtY;
+    XtY.resize(inputsize,outputsize);
     transposeProduct(XtY, inputs,outputs);
     for(int i=0; i<inputsize; i++)
         XtX(i,i) += weight_decay;
@@ -5674,8 +5676,10 @@ void linearRegression(TMat<T> inputs, TMat<T> outputs, T weight_decay,
 
     int n=n_inputs+1;
 
-    TMat<T> XtX(n,n);
-    TMat<T> XtY(n,n_outputs);
+    static TMat<T> XtX;
+    XtX.resize(n,n);
+    static TMat<T> XtY;
+    XtY.resize(n,n_outputs);
     // compute X' X and X'Y: 
     // XtX(i,j) = sum_t X[t,i]*X[t,j] (with X[t,0]=1, X[t,i+1]=inputs[t,i])
     // YtY(i,j) = sum_t X[t,i]*Y[t,j]

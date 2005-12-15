@@ -613,6 +613,30 @@ void solveTransposeLinearSystem(const Mat& A, const Mat& Y, Mat& X);
 */
 Vec constrainedLinearRegression(const Mat& Xt, const Vec& Y, real lambda=0.);
 
+//! Find weight decay which minimizes the leave-one-out cross-validation
+//! mean squared error (LOOMSE) of the linear regression with (inputs, targets) pair.
+//! Set the resulting weights matrix accordingly and return this weight decay value lambda,
+//! i.e. weights = argmin_w ||targets - inputs*w'||^2 + lambda*sum_i ||w_i||^2.
+//!   inputs: n_examples x n_inputs (if you want a bias term, include it in the inputs!)
+//!   targets: n_examples x n_outputs
+//!   weights: n_outputs x n_inputs
+//! 
+//! This work is achieved by taking advantage of the following formula:
+//!    LOOMSE =    (sum of squared errors with the chosen weight decay) / (n_inputs - Tr(design_matrix + lambda I))
+//! where the trace of the design matrix is simply the sum of its eigenvalues and the trace of lambda I is d*lambda.
+//! The design matrix is inputs' * inputs. The explored values of lambda are based on an SVD
+//! of the inputs matrix (whose squared singular values are the eigenvalues of the design matrix):
+//! We know that lambda should be between the smallest and the largest eigenvalue. We do a binary search
+//! within the eigenvalue spectrum to select lambda.
+//! If best_predictions is provided then a copy of the predictions obtained with the best weight decay is made. Similarly for best_weights.
+real generalizedCVRidgeRegression(Mat inputs, Mat targets,  real& best_LOOSSE, Mat* best_weights=0, Mat* best_predictions=0, bool inputs_are_transposed=false);
+
+//! Auxiliary function used by generalizedCFRidgeRegression in order to compute the estimated generalization error
+//! associated with a given choice of weight decay. The eigenvalues and eigenvectors are those of the design matrix.
+//! The eigenvectors are in the ROWS of the matrix. The 'trace' is that of the design matrix, i.e. equal to sum(eigenvalues).
+//! The RHS_matrix is eigenvectors*inputs'*targets, pre-computed.
+real LOOSSEofRidgeRegression(Mat inputs, Mat targets, Mat weights, real weight_decay, Vec eigenvalues, Mat eigenvectors, Mat predictions, real trace, Mat RHS_matrix, bool inputs_are_transposed);
+
 // Return the affine transformation that
 // is such that the transformed data has
 // zero mean and identity covariance.
