@@ -892,6 +892,7 @@ void DistRepNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(input_to_dict_index,copies);
     varDeepCopyField(output, copies);
     deepCopyField(costs, copies);
+    deepCopyField(partial_update_vars, copies);
     deepCopyField(penalties, copies);
     varDeepCopyField(training_cost, copies);
     varDeepCopyField(test_costs, copies);

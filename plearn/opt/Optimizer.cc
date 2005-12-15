@@ -197,6 +197,7 @@ void Optimizer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
     varDeepCopyField(cost, copies);
+    deepCopyField(partial_update_vars, copies);
     deepCopyField(params, copies);
     deepCopyField(update_for_measure, copies);
     deepCopyField(temp_grad, copies);
