@@ -57,12 +57,16 @@ public:
     //! Reset the random number generator used by generate() using the given seed.
     virtual void resetGenerator(long g_seed) const;
 
-    //! Set the value for the input part of a conditional probability.
-    virtual void setInput(const Vec& input) const;
+    //! Set the 'predictor' and 'predicted' sizes for this distribution.
+    //### See help in PDistribution.h.
+    virtual bool setPredictorPredictedSizes(int the_predictor_size,
+                                            int the_predicted_size,
+                                            bool call_parent = true);
 
-    //! This method updates the internal data given a new sorting of the variables
-    //! defined by the conditional flags.
-    virtual void updateFromConditionalSorting() const;
+    //! Set the value for the predictor part of a conditional probability.
+    //### See help in PDistribution.h.
+    virtual void setPredictor(const Vec& predictor, bool call_parent = true)
+                              const;
 
     // ### These methods may be overridden for efficiency purpose:
     /*

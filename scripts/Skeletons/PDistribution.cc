@@ -7,7 +7,7 @@ PLEARN_IMPLEMENT_OBJECT(
     DERIVEDCLASS,
     "ONE LINE DESCR",
     "NO HELP"
-    );
+);
 
 //////////////////
 // DERIVEDCLASS //
@@ -65,8 +65,10 @@ void DERIVEDCLASS::build_()
     // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
     // ### You should assume that the parent class' build_() has already been called.
 
-    // ### If the distribution is conditional, you should finish build_() by:
-    // PDistribution::finishConditionalBuild();
+    // ### In general, you will want to call this class' specific methods for
+    // ### conditional distributions.
+    // DERIVEDCLASS::setPredictorPredictedSizes(predictor_size, predicted_size, false);
+    // DERIVEDCLASS::setPredictor(predictor_part, false);
 }
 
 /////////
@@ -146,11 +148,27 @@ void DERIVEDCLASS::resetGenerator(long g_seed) const
     PLERROR("resetGenerator not implemented for DERIVEDCLASS");
 }
 
-//////////////
-// setInput //
-//////////////
-void DERIVEDCLASS::setInput(const Vec& input) const {
-    PLERROR("setInput not implemented for DERIVEDCLASS");
+//////////////////
+// setPredictor //
+//////////////////
+void DERIVEDCLASS::setPredictor(const Vec& predictor, bool call_parent) const
+{
+    if (call_parent)
+        inherited::setPredictor(predictor, true);
+    // ### Add here any specific code required by your subclass.
+}
+
+////////////////////////////////
+// setPredictorPredictedSizes //
+////////////////////////////////
+bool PDistribution::setPredictorPredictedSizes(int the_predictor_size,
+                                               int the_predicted_size,
+                                               bool call_parent)
+{
+    if (call_parent)
+        inherited::setPredictorPredictedSizes(the_predictor_size,
+                                              the_predicted_size, true);
+    // ### Add here any specific code required by your subclass.
 }
 
 /////////////////
@@ -199,16 +217,6 @@ void DERIVEDCLASS::train()
     train_stats->finalize() // finalize statistics for this epoch
     }
     */
-}
-
-//////////////////////////////////
-// updateFromConditionalSorting //
-//////////////////////////////////
-void DERIVEDCLASS::updateFromConditionalSorting() const {
-    // ### Update internal data for new conditional flags.
-    // ### This method would typically call sortFromFlags() to update
-    // ### internal data.
-    PLERROR("updateFromConditionalSorting not implemented for DERIVEDCLASS");
 }
 
 //////////////
