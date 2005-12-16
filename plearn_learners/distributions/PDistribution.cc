@@ -197,8 +197,6 @@ void PDistribution::build()
     build_();
 }
 
-// TODO DO NOT FORGET TO UPDATE THE SKELETONS!
-
 ////////////
 // build_ //
 ////////////
