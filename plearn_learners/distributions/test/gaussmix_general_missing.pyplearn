@@ -17,7 +17,7 @@ def main():
         for type in l_type:
             for n_eigen in l_n_eigen:
                 for kmeans_iterations in l_kmeans_iterations:
-                    for n_input in l_n_input:
+                    for predictor_size in l_n_input:
                         for seed in l_seed:
                             for nstages in l_nstages:
                                 distr.append(
@@ -26,7 +26,7 @@ def main():
                                             type              = type,
                                             n_eigen           = n_eigen,
                                             kmeans_iterations = kmeans_iterations,
-                                            n_input           = n_input,
+                                            predictor_size           = predictor_size,
                                             seed              = seed,
                                             nstages           = nstages
                                             )
@@ -48,7 +48,7 @@ def main():
         ptesters.append(
             pl.PTester(
                 expdir = "expdir_%s_%s_%s_%s_%s_%s_%s" \
-                        % ( gm.L, gm.type, gm.n_eigen, gm.kmeans_iterations, gm.n_input, gm.seed, gm.nstages ),
+                        % ( gm.L, gm.type, gm.n_eigen, gm.kmeans_iterations, gm.predictor_size, gm.seed, gm.nstages ),
                 dataset = dataset,
                 splitter = pl.TrainTestSplitter( test_fraction = 0.25 ),
                 learner = gm,

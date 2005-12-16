@@ -4,7 +4,7 @@
 from numarray        import array
 from plearn.pyplearn import pl
 
-def diagonal(n_input):
+def diagonal(predictor_size):
     return pl.GaussMix(
             L = 4,
             type = "diagonal",
@@ -13,9 +13,9 @@ def diagonal(n_input):
             diags = array([ [ 2, 1, 0.5 ], [ 0.3, 2, 1 ], [ 0.5, 0.3, 2 ], [ 1, 0.5, 0.3 ] ]),
             center = array([ [ 10, 0, 0 ], [ 10, 10, 10 ], [ 0, 10, 0 ], [ 0, 0, 0 ] ]),
             outputs_def = "l",
-            n_input = n_input,
-            n_target = 3 - n_input,
-            input_part = [ 0 ],
+            predictor_size = predictor_size,
+            predicted_size = 3 - predictor_size,
+            predictor_part = [ 0 ],
             seed = 123456,
             stage = 1,
             inputsize = 3,
@@ -25,7 +25,7 @@ def diagonal(n_input):
             verbosity = 1
     )
 
-def general(n_input):
+def general(predictor_size):
     return pl.GaussMix(
             L = 4,
             type = "general",
@@ -41,9 +41,9 @@ def general(n_input):
             center = array([ [ 5, 10, 5 ], [ -10, -10, 10 ], [ 10, 5, -10 ], [ 0, 0, 0 ] ]),
 
             outputs_def = "l",
-            n_input = n_input,
-            n_target = 3 - n_input,
-            input_part = [ 0 ],
+            predictor_size = predictor_size,
+            predicted_size = 3 - predictor_size,
+            predictor_part = [ 0 ],
             seed = 123456,
             stage = 1,
             inputsize = 3,
@@ -53,7 +53,7 @@ def general(n_input):
             verbosity = 1
     )
 
-def spherical(n_input):
+def spherical(predictor_size):
     return pl.GaussMix(
             L = 4,
             type = "spherical",
@@ -62,9 +62,9 @@ def spherical(n_input):
             sigma = [ 0.3, 1, 0.5, 2 ],
             center = array([ [ 10, 0, 0 ], [ 10, 10, 10 ], [ 0, 10, 0 ], [ 0, 0, 0 ] ]),
             outputs_def = "l",
-            n_input = n_input,
-            n_target = 3 - n_input,
-            input_part = [ 0 ],
+            predictor_size = predictor_size,
+            predicted_size = 3 - predictor_size,
+            predictor_part = [ 0 ],
             seed = 123456,
             stage = 1,
             inputsize = 3,

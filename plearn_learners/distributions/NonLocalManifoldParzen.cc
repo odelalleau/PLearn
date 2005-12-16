@@ -325,7 +325,7 @@ void NonLocalManifoldParzen::build_()
             reference_set = train_set; // Maybe things could be changed here to make access faster!
         }
 
-        log_L= log((real) L);
+        log_L= pl_log((real) L);
 
         {
       
@@ -920,9 +920,11 @@ void NonLocalManifoldParzen::initializeParams()
         fill_random_uniform(muV->matValue, -delta, delta);
         //min_sig->value[0] = sigma_init;
         //min_d->value.fill(diff_init);
-        if(variances_transfer_function == "softplus") { init_sig->value[0] = log(exp(sigma_init)-1); }
+        if(variances_transfer_function == "softplus") {
+            init_sig->value[0] = pl_log(exp(sigma_init)-1); }
         else if(variances_transfer_function == "square") { init_sig->value[0] = sqrt(sigma_init);}
-        else if(variances_transfer_function == "exp") { init_sig->value[0] = log(sigma_init); }
+        else if(variances_transfer_function == "exp") {
+            init_sig->value[0] = pl_log(sigma_init); }
     }
     else if (architecture_type=="single_neural_network")
     {
@@ -937,9 +939,11 @@ void NonLocalManifoldParzen::initializeParams()
         b->value.clear();
         //min_sig->value[0] = sigma_init;
         //min_d->value.fill(diff_init);
-        if(variances_transfer_function == "softplus") { init_sig->value[0] = log(exp(sigma_init)-1); }
+        if(variances_transfer_function == "softplus") {
+            init_sig->value[0] = pl_log(exp(sigma_init)-1); }
         else if(variances_transfer_function == "square") { init_sig->value[0] = sqrt(sigma_init);}
-        else if(variances_transfer_function == "exp") { init_sig->value[0] = log(sigma_init);}
+        else if(variances_transfer_function == "exp") {
+            init_sig->value[0] = pl_log(sigma_init);}
     }
     else PLERROR("other types not handled yet!");
   
@@ -1035,7 +1039,7 @@ real NonLocalManifoldParzen::log_density(const Vec& x) const {
             //norm_term = - n/2.0 * Log2Pi - log_L - 0.5*(n-ncomponents)*log(sns[t_nn[neighbor]]);
         
             mahal = -0.5*pownorm(z)/sn_temp[0];      
-            norm_term = - n/2.0 * Log2Pi - log_L - 0.5*(n-ncomponents)*log(sn_temp[0]);
+            norm_term = - n/2.0 * Log2Pi - log_L - 0.5*(n-ncomponents)*pl_log(sn_temp[0]);
         
 
             for(int k=0; k<ncomponents; k++)
@@ -1043,7 +1047,7 @@ real NonLocalManifoldParzen::log_density(const Vec& x) const {
                 //mahal -= square(dot(z,Us[t_nn[neighbor]](k)))*(0.5/(sms(t_nn[neighbor],k)+sns[t_nn[neighbor]]) - 0.5/sns[t_nn[neighbor]]); // Pourrait être accéléré!
                 //norm_term -= 0.5*log(sms(t_nn[neighbor],k)+sns[t_nn[neighbor]]);
                 mahal -= square(dot(z,U_temp(k)))*(0.5/(sm_temp[k]+sn_temp[0]) - 0.5/sn_temp[0]); 
-                norm_term -= 0.5*log(sm_temp[k]+sn_temp[0]);
+                norm_term -= 0.5*pl_log(sm_temp[k]+sn_temp[0]);
             }
       
             log_gauss[neighbor] = mahal + norm_term;
@@ -1084,7 +1088,7 @@ real NonLocalManifoldParzen::log_density(const Vec& x) const {
             //norm_term = - n/2.0 * Log2Pi - log_L - 0.5*(n-ncomponents)*log(sns[t]);
         
             mahal = -0.5*pownorm(z)/sn_temp[0];      
-            norm_term = - n/2.0 * Log2Pi - log_L - 0.5*(n-ncomponents)*log(sn_temp[0]);
+            norm_term = - n/2.0 * Log2Pi - log_L - 0.5*(n-ncomponents)*pl_log(sn_temp[0]);
         
             for(int k=0; k<ncomponents; k++)
             {
@@ -1092,7 +1096,7 @@ real NonLocalManifoldParzen::log_density(const Vec& x) const {
                 //norm_term -= 0.5*log(sms(t,k)+sns[t]);
 
                 mahal -= square(dot(z,U_temp(k)))*(0.5/(sm_temp[k]+sn_temp[0]) - 0.5/sn_temp[0]); 
-                norm_term -= 0.5*log(sm_temp[k]+sn_temp[0]);
+                norm_term -= 0.5*pl_log(sm_temp[k]+sn_temp[0]);
             }
 
             log_gauss[t] = mahal + norm_term;

@@ -59,7 +59,7 @@ using namespace std;
 //////////////
 GaussMix::GaussMix():
     type_id(TYPE_UNKNOWN),
-    previous_input_part_had_missing(false),
+    previous_predictor_part_had_missing(false),
     D(-1),
     n_eigen_computed(-1),
     nsamples(-1),
@@ -201,7 +201,7 @@ void GaussMix::declareOptions(OptionList& ol)
         "Number of dimensions of the joint distribution.");
 
     /*
-    // We should not have to save this (it is computed in setInput).
+    // We should not have to save this (it is computed in setPredictor).
     declareOption(ol, "center_y_x", &GaussMix::center_y_x, OptionBase::nosave,
         "The expectation E[Y | x] for each Gaussian.");
         */
@@ -284,8 +284,8 @@ void GaussMix::build_()
         precomputeAllGaussianLogCoefficients();
 
     // Make GaussMix-specific operations for conditional distributions.
-    GaussMix::setInputTargetSizes(n_input_, n_target_, false);
-    GaussMix::setInput(input_part, false);
+    GaussMix::setPredictorPredictedSizes(predictor_size, predicted_size, false);
+    GaussMix::setPredictor(predictor_part, false);
 }
 
 ////////////////////////////////
@@ -388,10 +388,10 @@ void GaussMix::computeMeansAndCovariances() {
 //////////////////////////
 // computeLogLikelihood //
 //////////////////////////
-real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const
+real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) const
 {
     static int size;    // Size of the vector whose density is computed.
-    // Index where we start (usually 0 when 'is_input', and 'n_input'
+    // Index where we start (usually 0 when 'is_predictor', and 'n_predictor'
     // otherwise).
     static int start;
     // Storage of mean.
@@ -430,16 +430,16 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const
 
     if (type_id == TYPE_SPHERICAL || type_id == TYPE_DIAGONAL) {
         // Easy case: the covariance matrix is diagonal.
-        if (is_input) {
-            size = n_input;
+        if (is_predictor) {
+            size = n_predictor;
             start  = 0;
         } else {
-            size = n_target;
-            start = n_input;
+            size = n_predicted;
+            start = n_predictor;
         }
         mu_y = center(j).subVec(start, size);
         if (type_id == TYPE_DIAGONAL) {
-            assert( diags.length() == L && diags.width() == n_input+n_target );
+            assert( diags.length() == L && diags.width() == n_predictor+n_predicted );
             diag_j = diags(j).subVec(start, size);
         }
         log_likelihood = 0;
@@ -456,12 +456,12 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const
             }
     } else {
         assert( type_id == TYPE_GENERAL );
-        // TODO Put both cases (n_input == 0 and other) in same code (they are
+        // TODO Put both cases (n_predictor == 0 and other) in same code (they are
         // very close one to each other).
-        if (n_input == 0) {
-            // Simple case: there is no input part.
-            assert( !is_input );
-            assert( y.length() == n_target );
+        if (n_predictor == 0) {
+            // Simple case: there is no predictor part.
+            assert( !is_predictor );
+            assert( y.length() == n_predicted );
 
             if (y.hasMissing()) {
                 // We need to recompute almost everything.
@@ -494,10 +494,10 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const
                 }
                 // Then extract what we want.
                 non_missing.resize(0);
-                for (int k = 0; k < n_target; k++)
+                for (int k = 0; k < n_predicted; k++)
                     if (!is_missing(y[k]))
                         non_missing.append(k);
-                mu_y = center(j).subVec(0, n_target);
+                mu_y = center(j).subVec(0, n_predicted);
                 int n_non_missing = non_missing.length();
                 mu_y_missing.resize(n_non_missing);
                 y_missing.resize(n_non_missing);
@@ -553,11 +553,11 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const
             } else {
                 log_likelihood = log_coeff[j];
 
-                mu_y = center(j).subVec(0, n_target);
+                mu_y = center(j).subVec(0, n_predicted);
                 eigenvals = eigenvalues(j);
                 eigenvecs = eigenvectors[j];
 
-                y_centered.resize(n_target);
+                y_centered.resize(n_predicted);
                 y_centered << y;
                 y_centered -= mu_y;
                 real squared_norm_y_centered = pownorm(y_centered);
@@ -583,16 +583,16 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const
         } else {
             if (y.hasMissing()) {
                 // TODO Code duplication is ugly!
-                if (is_input) {
+                if (is_predictor) {
                     non_missing.resize(0);
                     for (int k = 0; k < y.length(); k++)
                         if (!is_missing(y[k]))
                             non_missing.append(k);
                     int n_non_missing = non_missing.length();
-                    int n_target_ext = n_target + (n_input - n_non_missing);
+                    int n_predicted_ext = n_predicted + (n_predictor - n_non_missing);
 
-                    work_mat1.resize(n_target_ext, n_non_missing);
-                    work_mat2.resize(n_target_ext, n_target_ext);
+                    work_mat1.resize(n_predicted_ext, n_non_missing);
+                    work_mat2.resize(n_predicted_ext, n_predicted_ext);
                     Vec eigenvals;
                     real var_min = square(sigma_min);
                     eigenvalues_x_miss.resize(L, n_non_missing);
@@ -607,7 +607,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const
                     // eigenvectors and eigenvalues:
                     // full_cov = sum_k (lambda_k - lambda0) v_k v_k' + lambda0.I
 
-                    assert( n_input + n_target == D );
+                    assert( n_predictor + n_predicted == D );
 
                     Mat& full_cov_j = full_cov;
                     full_cov_j.resize(D, D);
@@ -633,8 +633,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const
                     assert( full_cov_j.isSymmetric(false) );
                     fillItSymmetric(full_cov_j);
 
-                    // Extract the covariance of the input x.
-                    Mat cov_x_j_miss = full_cov.subMat(0, 0, n_input, n_input);
+                    // Extract the covariance of the predictor x.
+                    Mat cov_x_j_miss = full_cov.subMat(0, 0, n_predictor, n_predictor);
                     cov_x_j.resize(n_non_missing, n_non_missing);
                     for (int k = 0; k < n_non_missing; k++)
                         for (int p = k; p < n_non_missing; p++)
@@ -667,21 +667,21 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const
                     // First the full covariance (of y|x).
                     Mat& cov_y = cov_y_x;
                     real var_min = square(sigma_min);
-                    cov_y.resize(n_target, n_target);
+                    cov_y.resize(n_predicted, n_predicted);
                     eigenvals = eigenvalues_y_x(j);
                     real lambda0 = max(var_min, eigenvals.lastElement());
                     cov_y.fill(0);
                     Mat& eigenvectors_j = eigenvectors_y_x[j];
                     int n_eig = eigenvectors_y_x.length();
 
-                    assert( eigenvectors_j.width() == n_target );
+                    assert( eigenvectors_j.width() == n_predicted );
 
                     for (int k = 0; k < n_eig - 1; k++)
                         externalProductScaleAcc(
                                 cov_y, eigenvectors_j(k), eigenvectors_j(k),
                                 max(var_min, eigenvals[k]) - lambda0);
 
-                    for (int i = 0; i < n_target; i++)
+                    for (int i = 0; i < n_predicted; i++)
                         cov_y(i,i) += lambda0;
 
                     // By construction, the resulting matrix is symmetric. However,
@@ -691,7 +691,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const
                     fillItSymmetric(cov_y);
                     // Then extract what we want.
                     non_missing.resize(0);
-                    for (int k = 0; k < n_target; k++)
+                    for (int k = 0; k < n_predicted; k++)
                         if (!is_missing(y[k]))
                             non_missing.append(k);
                     mu_y = center_y_x(j);
@@ -778,18 +778,18 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const
                 }
             } else {
 
-                if (is_input) {
+                if (is_predictor) {
                     log_likelihood = log_coeff_x[j];
-                    mu = center(j).subVec(0, n_input);
+                    mu = center(j).subVec(0, n_predictor);
                     eigenvals = eigenvalues_x(j);
                     eigenvecs = eigenvectors_x[j];
-                    y_centered.resize(n_input);
+                    y_centered.resize(n_predictor);
                 } else {
                     log_likelihood = log_coeff_y_x[j];
                     mu = center_y_x(j);
                     eigenvals = eigenvalues_y_x(j);
                     eigenvecs = eigenvectors_y_x[j];
-                    y_centered.resize(n_target);
+                    y_centered.resize(n_predicted);
                 }
 
                 y_centered << y;
@@ -884,18 +884,18 @@ bool GaussMix::computeMixtureWeights(bool allow_replace) {
 /////////////////
 void GaussMix::expectation(Vec& mu) const
 {
-    mu.resize(n_target);
+    mu.resize(n_predicted);
     if (type_id == TYPE_SPHERICAL || type_id == TYPE_DIAGONAL ||
-       (type_id == TYPE_GENERAL && n_input == 0)) {
+       (type_id == TYPE_GENERAL && n_predictor == 0)) {
         // The expectation is the same in the 'spherical' and 'diagonal' cases.
         mu.fill(0);
-        real* coeff = n_input == 0 ? alpha.data() : p_j_x.data();
+        real* coeff = n_predictor == 0 ? alpha.data() : p_j_x.data();
         for (int j = 0; j < L; j++)
-            mu += center(j).subVec(n_input, n_target) * coeff[j];
+            mu += center(j).subVec(n_predictor, n_predicted) * coeff[j];
     } else {
         assert( type_id == TYPE_GENERAL );
-        // The case 'n_input == 0' is considered above.
-        assert( n_input > 0 );
+        // The case 'n_predictor == 0' is considered above.
+        assert( n_predictor > 0 );
         mu.fill(0);
         for (int j = 0; j < L; j++)
             mu += center_y_x(j) * p_j_x[j];
@@ -934,40 +934,40 @@ void GaussMix::generate(Vec& x) const
 // generateFromGaussian //
 //////////////////////////
 void GaussMix::generateFromGaussian(Vec& sample, int given_gaussian) const {
-    // TODO Why not having p_j_x point to alpha when n_input == 0 ? This may
+    // TODO Why not having p_j_x point to alpha when n_predictor == 0 ? This may
     // make the code cleaner (but check what happens with serialization...).
     int j;    // The index of the Gaussian to use.
 
-    // The assert below may fail if one forgets to provide an input part
-    // through the 'setInput' method.
-    assert( n_input == 0 || p_j_x.length() == L );
+    // The assert below may fail if one forgets to provide a predictor part
+    // through the 'setPredictor' method.
+    assert( n_predictor == 0 || p_j_x.length() == L );
 
     if (given_gaussian < 0)
-        j = random->multinomial_sample(n_input == 0 ? alpha : p_j_x);
+        j = random->multinomial_sample(n_predictor == 0 ? alpha : p_j_x);
     else
         j = given_gaussian % alpha.length();
 
-    sample.resize(n_target);
+    sample.resize(n_predicted);
 
     if (type_id == TYPE_SPHERICAL || type_id == TYPE_DIAGONAL) {
-        Vec mu_y = center(j).subVec(n_input, n_target);
-        for (int k = 0; k < n_target; k++) {
+        Vec mu_y = center(j).subVec(n_predictor, n_predicted);
+        for (int k = 0; k < n_predicted; k++) {
             real stddev = type_id == TYPE_SPHERICAL ? sigma[j]
-                                                    : diags(j, k + n_input);
+                                                    : diags(j, k + n_predictor);
             stddev = max(sigma_min, stddev);
             sample[k] = random->gaussian_mu_sigma(mu_y[k], stddev);
         }
     } else {
         assert( type_id == TYPE_GENERAL );
         static Vec norm_vec;
-        if (n_input == 0) {
+        if (n_predictor == 0) {
             // Simple case.
-            assert( eigenvectors[j].width() == n_target );
-            assert( center(j).length() == n_target );
+            assert( eigenvectors[j].width() == n_predicted );
+            assert( center(j).length() == n_predicted );
 
             Vec eigenvals = eigenvalues(j);
             Mat eigenvecs = eigenvectors[j].subMat(0, 0, n_eigen_computed,
-                                                         n_target);
+                                                         n_predicted);
             int n_eig = n_eigen_computed;
             Vec mu_y = center(j);
 
@@ -980,7 +980,7 @@ void GaussMix::generateFromGaussian(Vec& sample, int given_gaussian) const {
                 // TODO See if can use more optimized function.
                 sample += sqrt(max(var_min, eigenvals[k]) - lambda0)
                           * norm_vec[k] * eigenvecs(k);
-            norm_vec.resize(n_target);
+            norm_vec.resize(n_predicted);
             random->fill_random_normal(norm_vec);
             sample += norm_vec * sqrt(lambda0);
             sample += mu_y;
@@ -990,7 +990,7 @@ void GaussMix::generateFromGaussian(Vec& sample, int given_gaussian) const {
             Vec eigenvals = eigenvalues_y_x(j);
             Mat eigenvecs = eigenvectors_y_x[j];
 
-            int n_eig = n_target;
+            int n_eig = n_predicted;
             Vec mu_y = center_y_x(j);
 
             norm_vec.resize(n_eig - 1);
@@ -1002,7 +1002,7 @@ void GaussMix::generateFromGaussian(Vec& sample, int given_gaussian) const {
                 // TODO See if can use more optimized function.
                 sample += sqrt(max(var_min, eigenvals[k]) - lambda0)
                           * norm_vec[k] * eigenvecs(k);
-            norm_vec.resize(n_target);
+            norm_vec.resize(n_predicted);
             random->fill_random_normal(norm_vec);
             sample += norm_vec * sqrt(lambda0);
             sample += mu_y;
@@ -1196,7 +1196,7 @@ real GaussMix::log_density(const Vec& y) const
     // First we need to compute the likelihood
     //   p(y,j | x) = p(y | x,j) * p(j | x).
     for (int j = 0; j < L; j++) {
-        real logp_j_x = n_input == 0 ? pl_log(alpha[j])
+        real logp_j_x = n_predictor == 0 ? pl_log(alpha[j])
                                      : log_p_j_x[j];
         log_likelihood_dens[j] = computeLogLikelihood(y, j) + logp_j_x;
         assert( !isnan(log_likelihood_dens[j]) );
@@ -1311,8 +1311,8 @@ real GaussMix::precomputeGaussianLogCoefficient(const Vec& eigenvals,
 /////////////////////
 void GaussMix::replaceGaussian(int j) {
     // This is supposed to be called only during training, when there is no
-    // target part (we use the full joint distribution).
-    assert( n_target == 0 );
+    // predicted part (we use the full joint distribution).
+    assert( n_predicted == 0 );
     // Find the Gaussian with highest weight.
     int high = argmax(alpha);
     assert( high != j );
@@ -1370,11 +1370,11 @@ void GaussMix::resizeDataBeforeUsing()
         stage_joint_cov_computed.fill(-1);
         y_x_mat.resize(L);
 
-        if (n_input >= 0)
-            eigenvalues_x.resize(L, n_input);
-        if (n_target >= 0) {
-            center_y_x.resize(L, n_target);
-            eigenvalues_y_x.resize(L, n_target);
+        if (n_predictor >= 0)
+            eigenvalues_x.resize(L, n_predictor);
+        if (n_predicted >= 0) {
+            center_y_x.resize(L, n_predicted);
+            eigenvalues_y_x.resize(L, n_predicted);
         }
         log_coeff.resize(L);
     }
@@ -1426,10 +1426,10 @@ void GaussMix::resizeDataBeforeTraining() {
     }
 }
 
-//////////////
-// setInput //
-//////////////
-void GaussMix::setInput(const Vec& input, bool call_parent) const {
+//////////////////
+// setPredictor //
+//////////////////
+void GaussMix::setPredictor(const Vec& predictor, bool call_parent) const {
     static Vec log_p_x_j_alphaj;
     static Vec x_minus_mu_x; // Used to store 'x - mu_x'.
     static TVec<int> missing, non_missing;
@@ -1444,11 +1444,11 @@ void GaussMix::setInput(const Vec& input, bool call_parent) const {
     static TVec<Mat> y_x_mat_miss;
 
     if (call_parent)
-        inherited::setInput(input);
+        inherited::setPredictor(predictor);
 
-    if (n_input == 0) {
-        // There is no input part anyway: nothing to do.
-        assert( input_part.isEmpty() );
+    if (n_predictor == 0) {
+        // There is no predictor part anyway: nothing to do.
+        assert( predictor_part.isEmpty() );
         return;
     }
     
@@ -1465,49 +1465,49 @@ void GaussMix::setInput(const Vec& input, bool call_parent) const {
 
     if (type_id == TYPE_GENERAL) {
         // We need to compute E[Y|x,j].
-        if (!input_part.hasMissing()) {
-            // Simple case: the input part has no missing value, and we can
-            // re-use the quantities computed in setInputTargetSizes(..).
+        if (!predictor_part.hasMissing()) {
+            // Simple case: the predictor part has no missing value, and we can
+            // re-use the quantities computed in setPredictorPredictedSizes(..).
 
-            // If the previous input part set had missing values, we will need
-            // to recompute some important variables (e.g. eigenvectors /
+            // If the previous predictor part set had missing values, we will
+            // need to recompute some important variables (e.g. eigenvectors /
             // values of y|x). This can be done by re-setting the sizes.
             // TODO This is a bit hackish... we may want to actually store the
             // appropriate data elsewhere so that there is no need to recompute
             // it again.
-            if (previous_input_part_had_missing)
-                setInputTargetSizes_const(n_input, n_target);
+            if (previous_predictor_part_had_missing)
+                setPredictorPredictedSizes_const(n_predictor, n_predicted);
 
-            previous_input_part_had_missing = false;
-            x_minus_mu_x.resize(n_input);
+            previous_predictor_part_had_missing = false;
+            x_minus_mu_x.resize(n_predictor);
             Vec mu_target;
             for (int j = 0; j < L; j++) {
-                x_minus_mu_x << input_part;
-                x_minus_mu_x -= center(j).subVec(0, n_input);
+                x_minus_mu_x << predictor_part;
+                x_minus_mu_x -= center(j).subVec(0, n_predictor);
                 mu_target = center_y_x(j);
-                if (n_input > 0)
+                if (n_predictor > 0)
                     product(mu_target, y_x_mat[j], x_minus_mu_x);
                 else
                     mu_target.fill(0);
-                mu_target += center(j).subVec(n_input, n_target);
+                mu_target += center(j).subVec(n_predictor, n_predicted);
             }
         } else {
-            previous_input_part_had_missing = true;
+            previous_predictor_part_had_missing = true;
             // TODO Code duplication is ugly!
             non_missing.resize(0);
             missing.resize(0);
-            for (int k = 0; k < input_part.length(); k++)
-                if (!is_missing(input_part[k]))
+            for (int k = 0; k < predictor_part.length(); k++)
+                if (!is_missing(predictor_part[k]))
                     non_missing.append(k);
                 else
                     missing.append(k);
             int n_non_missing = non_missing.length();
             int n_missing = missing.length();
-            int n_target_ext = n_target + n_missing;
-            assert( n_missing + n_non_missing == n_input );
+            int n_predicted_ext = n_predicted + n_missing;
+            assert( n_missing + n_non_missing == n_predictor );
 
-            work_mat1.resize(n_target_ext, n_non_missing);
-            work_mat2.resize(n_target_ext, n_target_ext);
+            work_mat1.resize(n_predicted_ext, n_non_missing);
+            work_mat2.resize(n_predicted_ext, n_predicted_ext);
             Vec eigenvals;
             real var_min = square(sigma_min);
             eigenvalues_x_miss.resize(L, n_non_missing);
@@ -1518,7 +1518,7 @@ void GaussMix::setInput(const Vec& input, bool call_parent) const {
                 // full_cov = sum_k (lambda_k - lambda0) v_k v_k' + lambda0.I
                 // TODO Do we really need to compute the full matrix?
 
-                assert( n_input + n_target == D );
+                assert( n_predictor + n_predicted == D );
 
                 Mat& full_cov_j = full_cov;
                 full_cov_j.resize(D, D);
@@ -1544,8 +1544,8 @@ void GaussMix::setInput(const Vec& input, bool call_parent) const {
                 assert( full_cov_j.isSymmetric(false) );
                 fillItSymmetric(full_cov_j);
 
-                // Extract the covariance of the input x.
-                Mat cov_x_j_miss = full_cov.subMat(0, 0, n_input, n_input);
+                // Extract the covariance of the predictor x.
+                Mat cov_x_j_miss = full_cov.subMat(0, 0, n_predictor, n_predictor);
                 cov_x_j.resize(n_non_missing, n_non_missing);
                 for (int k = 0; k < n_non_missing; k++)
                     for (int p = k; p < n_non_missing; p++)
@@ -1581,51 +1581,52 @@ void GaussMix::setInput(const Vec& input, bool call_parent) const {
                 }
 
                 // Compute the covariance of y|x.
-                // It is only needed when there is an input part, since otherwise
-                // we can simply use the full covariance.
+                // It is only needed when there is a predictor part, since
+                // otherwise we can simply use the full covariance.
                 // TODO See if we can use simpler formulas.
                 Mat& cov_y_x_j = cov_y_x; // TODO Can we get rid of cov_y_x_j?
-                cov_y_x_j.resize(n_target_ext, n_target_ext);
-                cov_y_x_j.subMat(0, 0, n_target, n_target) <<
-                    full_cov_j.subMat(n_input, n_input, n_target, n_target);
+                cov_y_x_j.resize(n_predicted_ext, n_predicted_ext);
+                cov_y_x_j.subMat(0, 0, n_predicted, n_predicted) <<
+                    full_cov_j.subMat(n_predictor, n_predictor, n_predicted, n_predicted);
                 for (int k = 0; k < n_missing; k++) {
                     int x_missing = missing[k];
-                    for (int p = 0; p < n_target_ext; p++) {
-                        if (p < n_target)
-                            cov_y_x_j(n_target + k, p) =
-                                cov_y_x_j(p, n_target + k) =
+                    for (int p = 0; p < n_predicted_ext; p++) {
+                        if (p < n_predicted)
+                            cov_y_x_j(n_predicted + k, p) =
+                                cov_y_x_j(p, n_predicted + k) =
                                 full_cov_j(x_missing, p);
                         else
-                            cov_y_x_j(n_target + k, p) =
-                                cov_y_x_j(p, n_target + k) =
-                                full_cov_j(x_missing, missing[p - n_target]);
+                            cov_y_x_j(n_predicted + k, p) =
+                                cov_y_x_j(p, n_predicted + k) =
+                                full_cov_j(x_missing, missing[p - n_predicted]);
                     }
                 }
 
                 y_x_mat_miss.resize(L);
-                y_x_mat_miss[j].resize(n_target, n_non_missing);
+                y_x_mat_miss[j].resize(n_predicted, n_non_missing);
                 if (n_non_missing > 0) {
                     cross_cov =
                         full_cov_j.subMat(n_non_missing, 0,
-                                          n_target_ext, n_non_missing);
+                                          n_predicted_ext, n_non_missing);
                     product(work_mat1, cross_cov, inv_cov_x);
                     productTranspose(work_mat2, work_mat1, cross_cov);
                     cov_y_x_j -= work_mat2;
                     y_x_mat_miss[j] << work_mat1.subMat(0, 0,
-                                                   n_target, n_non_missing);
+                                                   n_predicted, n_non_missing);
                 }
                 // Compute SVD of the covariance of y|x.
-                eigenvectors_y_x[j].resize(n_target, n_target);
+                eigenvectors_y_x[j].resize(n_predicted, n_predicted);
                 eigenvals = eigenvalues_y_x(j);
-                // Extract the covariance of the target part we are really
+                // Extract the covariance of the predicted part we are really
                 // interested in.
-                cov_y_x = cov_y_x_j.subMat(0, 0, n_target, n_target);
+                cov_y_x = cov_y_x_j.subMat(0, 0, n_predicted, n_predicted);
                 // Ensure covariance matrix is perfectly symmetric.
                 assert( cov_y_x.isSymmetric(false, true) );
                 fillItSymmetric(cov_y_x);
-                eigenVecOfSymmMat(cov_y_x, n_target, eigenvals, eigenvectors_y_x[j]);
+                eigenVecOfSymmMat(cov_y_x, n_predicted,
+                                  eigenvals, eigenvectors_y_x[j]);
                 log_coeff_y_x[j] =
-                    precomputeGaussianLogCoefficient(eigenvals, n_target);
+                    precomputeGaussianLogCoefficient(eigenvals, n_predicted);
             }
 
             x_minus_mu_x.resize(n_non_missing);
@@ -1633,13 +1634,13 @@ void GaussMix::setInput(const Vec& input, bool call_parent) const {
             for (int j = 0; j < L; j++) {
                 for (int k = 0; k < n_non_missing; k++)
                     x_minus_mu_x[k] =
-                        input_part[non_missing[k]] - center(j, non_missing[k]);
+                        predictor_part[non_missing[k]] - center(j, non_missing[k]);
                 mu_target = center_y_x(j);
                 if (n_non_missing > 0)
                     product(mu_target, y_x_mat_miss[j], x_minus_mu_x);
                 else
                     mu_target.fill(0);
-                mu_target += center(j).subVec(n_input, n_target);
+                mu_target += center(j).subVec(n_predictor, n_predicted);
             }
 
         }
@@ -1647,7 +1648,7 @@ void GaussMix::setInput(const Vec& input, bool call_parent) const {
 
     log_p_x_j_alphaj.resize(L);
     for (int j = 0; j < L; j++)
-        log_p_x_j_alphaj[j] = computeLogLikelihood(input_part, j, true)
+        log_p_x_j_alphaj[j] = computeLogLikelihood(predictor_part, j, true)
                             + pl_log(alpha[j]);
 
     real log_p_x = logadd(log_p_x_j_alphaj);
@@ -1686,23 +1687,23 @@ void GaussMix::getInitialWeightsFrom(const VMat& vmat)
 }
 
 /////////////////////////
-// setInputTargetSizes //
+// setPredictorPredictedSizes //
 /////////////////////////
-bool GaussMix::setInputTargetSizes(int n_i, int n_t,
+bool GaussMix::setPredictorPredictedSizes(int n_i, int n_t,
                                    bool call_parent)
 {
     bool sizes_changed = true;
     if (call_parent)
         sizes_changed =
-            inherited::setInputTargetSizes(n_i, n_t, call_parent);
-    setInputTargetSizes_const(n_i, n_t);
+            inherited::setPredictorPredictedSizes(n_i, n_t, call_parent);
+    setPredictorPredictedSizes_const(n_i, n_t);
     return sizes_changed;
 }
 
 ///////////////////////////////
-// setInputTargetSizes_const //
+// setPredictorPredictedSizes_const //
 ///////////////////////////////
-void GaussMix::setInputTargetSizes_const(int n_i, int n_t) const
+void GaussMix::setPredictorPredictedSizes_const(int n_i, int n_t) const
 {
     static Mat inv_cov_x;
     static Mat full_cov;
@@ -1710,7 +1711,7 @@ void GaussMix::setInputTargetSizes_const(int n_i, int n_t) const
     static Mat work_mat1, work_mat2;
     static Mat cross_cov;
 
-    if (n_input == -1 || n_target == -1 || D == -1)
+    if (n_predictor == -1 || n_predicted == -1 || D == -1)
         // Sizes are not defined yet, there is nothing we can do.
         return;
 
@@ -1719,8 +1720,8 @@ void GaussMix::setInputTargetSizes_const(int n_i, int n_t) const
     } else {
         assert( type_id == TYPE_GENERAL );
 
-        work_mat1.resize(n_target, n_input);
-        work_mat2.resize(n_target, n_target);
+        work_mat1.resize(n_predicted, n_predictor);
+        work_mat2.resize(n_predicted, n_predicted);
         Vec eigenvals;
         real var_min = square(sigma_min);
         for (int j = 0; j < L; j++) {
@@ -1731,7 +1732,7 @@ void GaussMix::setInputTargetSizes_const(int n_i, int n_t) const
             // eigenvectors and eigenvalues:
             // full_cov = sum_k (lambda_k - lambda0) v_k v_k' + lambda0.I
 
-            assert( n_input + n_target == D );
+            assert( n_predictor + n_predicted == D );
             Mat& full_cov_j = full_cov;
             full_cov_j.resize(D, D);
             eigenvals = eigenvalues(j);
@@ -1754,66 +1755,66 @@ void GaussMix::setInputTargetSizes_const(int n_i, int n_t) const
             assert( full_cov_j.isSymmetric(false) );
             fillItSymmetric(full_cov_j);
 
-            // Extract the covariance of the input x.
-            Mat cov_x_j = full_cov_j.subMat(0, 0, n_input, n_input);
+            // Extract the covariance of the predictor x.
+            Mat cov_x_j = full_cov_j.subMat(0, 0, n_predictor, n_predictor);
 
             // Compute its SVD.
-            eigenvectors_x[j].resize(n_input, n_input);
+            eigenvectors_x[j].resize(n_predictor, n_predictor);
             eigenvals = eigenvalues_x(j);
-            eigenVecOfSymmMat(cov_x_j, n_input, eigenvals, eigenvectors_x[j]);
+            eigenVecOfSymmMat(cov_x_j, n_predictor, eigenvals, eigenvectors_x[j]);
             // Note that the computation above will have destroyed 'cov_x_j',
             // i.e. a part of the full covariance matrix.
             log_coeff_x[j] =
-                precomputeGaussianLogCoefficient(eigenvals, n_input);
+                precomputeGaussianLogCoefficient(eigenvals, n_predictor);
 
 
             // And its inverse (we'll need it for the covariance of y|x).
-            inv_cov_x.resize(n_input, n_input);
+            inv_cov_x.resize(n_predictor, n_predictor);
             inv_cov_x.fill(0);
-            if (n_input > 0) {
+            if (n_predictor > 0) {
                 // I am not sure about this assert, but since we extract the
                 // covariance of x from a matrix whose eigenvalues are all more
                 // than 'var_min', it looks like the eigenvalues of the
                 // covariance of x should also be more than 'var_min'. If I am
                 // wrong, remove the assert and see if it is needed to
                 // potentially set lambda0 to var_min.
-                assert( eigenvals[n_input - 1] >= var_min );
-                lambda0 = eigenvals[n_input - 1];
+                assert( eigenvals[n_predictor - 1] >= var_min );
+                lambda0 = eigenvals[n_predictor - 1];
                 real one_over_lambda0 = 1 / lambda0;
                 Mat& eigenvectors_x_j = eigenvectors_x[j];
-                for (int k = 0; k < n_input - 1; k++)
+                for (int k = 0; k < n_predictor - 1; k++)
                     externalProductScaleAcc(
                         inv_cov_x, eigenvectors_x_j(k), eigenvectors_x_j(k),
                         1 / max(var_min, eigenvals[k]) - one_over_lambda0);
-                for (int i = 0; i < n_input; i++)
+                for (int i = 0; i < n_predictor; i++)
                     inv_cov_x(i,i) += one_over_lambda0;
             }
 
             // Compute the covariance of y|x.
-            // It is only needed when there is an input part, since otherwise
-            // we can simply use the full covariance.
+            // It is only needed when there is a predictor part, since
+            // otherwise we can simply use the full covariance.
             // TODO See if we can use simpler formulas.
             Mat& cov_y_x_j = cov_y_x; // TODO Can we get rid of cov_y_x_j?
-            cov_y_x_j.resize(n_target, n_target);
+            cov_y_x_j.resize(n_predicted, n_predicted);
             cov_y_x_j <<
-                full_cov_j.subMat(n_input, n_input, n_target, n_target);
-            y_x_mat[j].resize(n_target, n_input);
-            if (n_input > 0) {
-                cross_cov = full_cov_j.subMat(n_input,0, n_target, n_input);
+                full_cov_j.subMat(n_predictor, n_predictor, n_predicted, n_predicted);
+            y_x_mat[j].resize(n_predicted, n_predictor);
+            if (n_predictor > 0) {
+                cross_cov = full_cov_j.subMat(n_predictor,0, n_predicted, n_predictor);
                 product(work_mat1, cross_cov, inv_cov_x);
                 productTranspose(work_mat2, work_mat1, cross_cov);
                 cov_y_x_j -= work_mat2;
                 y_x_mat[j] << work_mat1;
             }
             // Compute SVD of the covariance of y|x.
-            eigenvectors_y_x[j].resize(n_target, n_target);
+            eigenvectors_y_x[j].resize(n_predicted, n_predicted);
             eigenvals = eigenvalues_y_x(j);
             // Ensure covariance matrix is perfectly symmetric.
             assert( cov_y_x_j.isSymmetric(false, true) );
             fillItSymmetric(cov_y_x_j);
-            eigenVecOfSymmMat(cov_y_x_j, n_target, eigenvals, eigenvectors_y_x[j]);
+            eigenVecOfSymmMat(cov_y_x_j, n_predicted, eigenvals, eigenvectors_y_x[j]);
             log_coeff_y_x[j] =
-                precomputeGaussianLogCoefficient(eigenvals, n_target);
+                precomputeGaussianLogCoefficient(eigenvals, n_predicted);
         }
     }
 }
@@ -1829,7 +1830,7 @@ void GaussMix::train()
         return;
 
     // When training, we want to learn the full joint distribution.
-    bool need_restore_sizes = setInputTargetSizes(0, -1);
+    bool need_restore_sizes = setPredictorPredictedSizes(0, -1);
 
     // Initialization before training.
     if (stage == 0) {
@@ -1889,9 +1890,9 @@ void GaussMix::train()
     if (pb)
         delete pb;
 
-    // Restore original input and target sizes if necessary.
+    // Restore original predictor and predicted sizes if necessary.
     if (need_restore_sizes)
-        setInputTargetSizes(n_input_, n_target_);
+        setPredictorPredictedSizes(predictor_size, predicted_size);
 
     for (int i = 0; i < save_center.length(); i++) {
         VMat vm(save_center[i]);
@@ -1909,7 +1910,7 @@ void GaussMix::unknownOutput(char def, const Vec& input, Vec& output, int& k) co
     {
         output.resize(k + L);
         // Compute p(y | x).
-        real log_p_y_x = log_density(target_part);
+        real log_p_y_x = log_density(predicted_part);
         // This also fills the vector 'log_likelihood_dens' with likelihoods p(y,j | x),
         // which is exactly what we need in order to compute the posteriors.
         for (int j = 0; j < L; j++)

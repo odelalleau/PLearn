@@ -4,6 +4,7 @@
 // VMatrixFromDistribution.cc
 //
 // Copyright (C) 2003  Pascal Vincent 
+// Copyright (C) 2005  Olivier Delalleau
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -93,7 +94,7 @@ void VMatrixFromDistribution::build_()
         if(mode=="sample")
         {
             length_ = nsamples;
-            width_ = distr->getNTarget();
+            width_ = distr->getNPredicted();
             inputsize_ = width_;
             targetsize_ = 0;
             weightsize_ = 0;

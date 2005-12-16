@@ -2,7 +2,7 @@
 
 // UnconditionalDistribution.h
 //
-// Copyright (C) 2004 Olivier Delalleau 
+// Copyright (C) 2004-2005 Olivier Delalleau 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -110,13 +110,7 @@ public:
     // *******************************
 
     //! Return an error (not used in unconditional distributions).
-    void setInput(const Vec& input) const;
-    void updateFromConditionalSorting() const;
-
-    //! Overridden to use the default PLearner method instead of the conditional
-    //! distribution version.
-    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
-
+    void setPredictor(const Vec& predictor) const;
 };
 
 // Declare a few other classes and functions related to this class.

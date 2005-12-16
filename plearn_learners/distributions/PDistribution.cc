@@ -52,10 +52,10 @@ using namespace std;
 PDistribution::PDistribution():
     random(new PRandom()),
     delta_curve(0.1),
-    n_input(-1),
-    n_target(-1),
-    n_input_(0),
-    n_target_(-1),
+    predictor_size(0),
+    predicted_size(-1),
+    n_predictor(-1),
+    n_predicted(-1),
     lower_bound(0.),
     upper_bound(0.),
     n_curve_points(-1),
@@ -64,24 +64,28 @@ PDistribution::PDistribution():
 
 PLEARN_IMPLEMENT_OBJECT(PDistribution, 
     "Base class for PLearn probability distributions.\n",
-    "PDistributions derive from PLearner (as some of them may be fitted to\n"
+    "PDistributions derive from PLearner, as some of them may be fitted to\n"
     "data by training, but they have additional methods allowing e.g. to\n"
     "compute density or generate data points.\n"
     "\n"
-    "By default, a PDistribution may be conditional to an input part x, in\n"
-    "order to represent the conditional distribution of P(Y | X = x). An\n"
+    "By default, a PDistribution may be conditional to a predictor part x,\n"
+    "in order to represent the conditional distribution of P(Y | X = x). An\n"
     "unconditional distribution should derive from UnconditionalDistribution\n"
     "as it has a simpler interface.\n"
     "Since we want to be able to compute for instance P(Y = y | X = x), both\n"
-    "the input part 'x' and the target part 'y' must be considered as input\n"
-    "from the PLearner framework point of view. Thus one must specify the\n"
-    "size of the input part by the 'n_input' option, and the size of the\n"
-    "target by the 'n_target' option, satisfying the following equality:\n"
-    "   n_input + n_target == inputsize  (1)\n"
-    "Optionally, 'n_input' or 'n_target' (but not both) may be set to -1,\n"
-    "and the PDistribution will automatically guess the other size so that\n"
-    "equation (1) is satisfied. This makes unconditional distributions\n"
-    "feasible by setting 'n_input' to 0 and 'n_target' to -1.\n"
+    "the predictor part 'x' and the predicted part 'y' must be considered as\n"
+    "input from the PLearner framework point of view. Thus one must specify\n"
+    "the size of the predictor part by the 'predictor_size' option, and the\n"
+    "size of the predicted by the 'predicted_size' option, satisfying the\n"
+    "following equality:\n"
+    "   predictor_size + predicted_size == inputsize  (1)\n"
+    "Optionally, 'predictor_size' or 'predicted_size' (but not both) may be\b"
+    "set to -1, and the PDistribution will automatically guess the other\n"
+    "size so that equation (1) is satisfied (actually, in order to preserve\n"
+    "the user-provided values of 'predictor_size' and 'predicted_size', the\n"
+    "guessed values are stored in the learnt options 'n_predictor' and\n"
+    "'n_predicted'). This way, unconditional distributions can be created by\n"
+    "setting 'predictor_size' to 0 and 'predicted_size' to -1.\n"
     "\n"
     "The default implementations of the learner-type methods for computing\n"
     "outputs and costs work as follows:\n"
@@ -91,14 +95,14 @@ PLEARN_IMPLEMENT_OBJECT(PDistribution,
     "    likelihood (NLL), i.e. -log(P(y|x)).\n"
     "\n"
     "For conditional distributions, the input must always be made of both\n"
-    "the 'input' part (x) and the 'target' part (y), even if the output may\n"
-    "not need the target part (e.g. to compute E[Y | X = x]). The exception\n"
-    "is when computeOutput() needs to be called successively with the same\n"
-    "value of 'x': in this case, after a first call with both 'x' and 'y',\n"
-    "one may only provide 'y' as input in later calls, and 'x' will be\n"
-    "assumed to be unchanged. Or, alternatively, the 'input_part' option\n"
-    "can be set first, either through the options system or using the\n"
-    "setInput(..) method.\n"
+    "the 'predictor' part (x) and the 'predicted' part (y), even if the\n"
+    "output may not need the predicted part (e.g. to compute E[Y | X = x]).\n"
+    "The exception is when computeOutput(..) needs to be called successively\n"
+    "with the same value of 'x': in this case, after a first call with both\n"
+    "'x' and 'y', one may only provide 'y' as input in later calls, and 'x'\n"
+    "will be assumed to be unchanged. Or, alternatively, one can set the\n"
+    "'predictor_part' option first, either through the options system or\n"
+    "using the setPredictor(..) method.\n"
 );
 
 ////////////////////
@@ -124,28 +128,28 @@ void PDistribution::declareOptions(OptionList& ol)
         "If these options are specified in lower case they give the value\n"
         "associated with a given observation. In upper case, a curve is\n"
         "evaluated at regular intervals and produced in output (as a\n"
-        "histogram). For 'L', 'D', 'C', 'S', it is the target part that\n"
-        "varies, while for 'E' and 'V' it is the input part (for conditional\n"
-        "distributions).\n"
+        "histogram). For 'L', 'D', 'C', 'S', it is the predicted part that\n"
+        "varies, while for 'E' and 'V' it is the predictor part (for\n"
+        "conditional distributions).\n"
         "The number of curve points is given by the 'n_curve_points' option.\n"
         "Note that the upper case letters only work for scalar variables, in\n"
         "order to produce a one-dimensional curve."
         );
     // TODO Make it TVec<string> for better clarity?
 
-    declareOption(ol, "n_input",  &PDistribution::n_input_,
+    declareOption(ol, "predictor_size",  &PDistribution::predictor_size,
                                   OptionBase::buildoption,
-        "The (user-provided) size of the input x in p(y|x). A value of -1\n"
-        "means the algorithm should find it out by itself.");
+        "The (user-provided) size of the predictor x in p(y|x). A value of\n"
+        "-1 means the algorithm should find it out by itself.");
 
-    declareOption(ol, "n_target",  &PDistribution::n_target_,
-                                   OptionBase::buildoption,
-        "The (user-provided) size of the target y in p(y|x). A value of -1\n"
-        "means the algorithm should find it out by itself.");
+    declareOption(ol, "predicted_size", &PDistribution::predicted_size,
+                                        OptionBase::buildoption,
+        "The (user-provided) size of the predicted y in p(y|x). A value of\n"
+        "-1 means the algorithm should find it out by itself.");
 
-    declareOption(ol, "input_part", &PDistribution::input_part,
-                                    OptionBase::buildoption,
-        "For conditional distributions, the input part (= x in P(Y|X=x)).\n");
+    declareOption(ol, "predictor_part", &PDistribution::predictor_part,
+                                        OptionBase::buildoption,
+        "In conditional distributions, the predictor part (x in P(Y|X=x)).\n");
  
     declareOption(ol, "n_curve_points", &PDistribution::n_curve_points,
                                         OptionBase::buildoption,
@@ -167,17 +171,17 @@ void PDistribution::declareOptions(OptionList& ol)
 
     // Learnt options.
 
-    declareOption(ol, "n_input_learnt",  &PDistribution::n_input,
-                                         OptionBase::learntoption,
-        "The (true) size of the input x in p(y|x). If 'n_input' is\n"
-        "non-negative, it is equal to 'n_input'. Otherwise, it is set to the\n"
-        "data dimension minus 'n_target'.");
+    declareOption(ol, "n_predictor",  &PDistribution::n_predictor,
+                                      OptionBase::learntoption,
+        "The (true) size of the predictor x in p(y|x). If 'predictor_size'\n"
+        "is non-negative, 'n_predictor' is set to 'predictor_size'.\n"
+        "Otherwise, it is set to the data dimension minus 'predicted_size'.");
 
-    declareOption(ol, "n_target_learnt",  &PDistribution::n_target,
-                                          OptionBase::learntoption,
-        "The (true) size of the target y in p(y|x). if 'n_target' is\n"
-        "non-negative, it is equal to 'n_target'. Otherwise, it is set to\n"
-        "the data dimension minus 'n_input'.");
+    declareOption(ol, "n_predicted",  &PDistribution::n_predicted,
+                                      OptionBase::learntoption,
+        "The (true) size of the predicted y in p(y|x). If 'predicted_size'\n"
+        "is non-negative, 'n_predicted' is set to 'predicted_size'.\n"
+        "Otherwise, it is set to the data dimension minus 'predictor_size'.");
       
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -193,6 +197,8 @@ void PDistribution::build()
     build_();
 }
 
+// TODO DO NOT FORGET TO UPDATE THE SKELETONS!
+
 ////////////
 // build_ //
 ////////////
@@ -202,11 +208,13 @@ void PDistribution::build_()
     resetGenerator(seed_);
 
     // Typical code for a PDistribution: the class makes the operations it
-    // needs when the input and target sizes are defined, and when the input is
-    // defined. In the build_() method, it should not call the parent's methods
-    // since they should have already been called during the parent's build.
-    PDistribution::setInputTargetSizes(n_input_, n_target_, false);
-    PDistribution::setInput(input_part, false);
+    // needs when the predictor and predicted sizes are defined, and when the
+    // predictor is defined. In the build_() method, it should not call the
+    // parent's methods since they should have already been called during th
+    // parent's build.
+    PDistribution::setPredictorPredictedSizes(predictor_size, predicted_size,
+                                              false);
+    PDistribution::setPredictor(predictor_part, false);
 
     // Set the step between two points in the output curve.
     if (n_curve_points > 0)
@@ -220,7 +228,7 @@ void PDistribution::computeOutput(const Vec& input, Vec& output) const
 {
     // TODO Add an output to generate samples.
 
-    // Set the true 'input' (x in P(Y = y| X=x)) and 'target' (y) parts.
+    // Set the 'predictor' (x in P(Y = y| X=x)) and 'predicted' (y) parts.
     splitCond(input);
 
     string::size_type l = outputs_def.length();
@@ -230,35 +238,35 @@ void PDistribution::computeOutput(const Vec& input, Vec& output) const
         switch(outputs_def[i])
         {
         case 'l':
-            output[k++] = log_density(target_part);
+            output[k++] = log_density(predicted_part);
             break;
         case 'd':
-            output[k++] = density(target_part);
+            output[k++] = density(predicted_part);
             break;
         case 'c':
-            output[k++] = cdf(target_part);
+            output[k++] = cdf(predicted_part);
             break;
         case 's':
-            output[k++] = survival_fn(target_part);
+            output[k++] = survival_fn(predicted_part);
             break;
         case 'e':
-            store_expect = output.subVec(k, n_target);
+            store_expect = output.subVec(k, n_predicted);
             expectation(store_expect);
-            k += n_target;
+            k += n_predicted;
             break;
         case 'v':
             store_cov =
-                output.subVec(k, square(n_target)).toMat(n_target, n_target);
+                output.subVec(k, square(n_predicted)).toMat(n_predicted,n_predicted);
             variance(store_cov);
-            k += square(n_target);
+            k += square(n_predicted);
             break;
         case 'E':
         case 'V':
-            if (n_target > 1)
+            if (n_predicted > 1)
                 PLERROR("In PDistribution::computeOutput - Can only plot "
                         "histogram of expectation or variance for "
-                        "one-dimensional target");
-            if (n_target == 0)
+                        "one-dimensional expected part");
+            if (n_predicted == 0)
                 PLERROR("In PDistribution::computeOutput - Cannot plot "
                         "histogram of expectation or variance for "
                         "unconditional distributions");
@@ -284,12 +292,12 @@ void PDistribution::computeOutput(const Vec& input, Vec& output) const
                     t = survival_fn(store_result);
                     break;
                 case 'E':
-                    setInput(store_result);
+                    setPredictor(store_result);
                     expectation(store_expect);
                     t = store_expect[0];
                     break;
                 case 'V':
-                    setInput(store_result);
+                    setPredictor(store_result);
                     store_cov = store_expect.toMat(1,1);
                     variance(store_cov);
                     t = store_expect[0];
@@ -316,7 +324,7 @@ void PDistribution::computeOutput(const Vec& input, Vec& output) const
 /////////////////////////////
 // computeCostsFromOutputs //
 /////////////////////////////
-void PDistribution::computeCostsFromOutputs(const Vec& input, const Vec& output, 
+void PDistribution::computeCostsFromOutputs(const Vec& input, const Vec& output,
                                             const Vec& target, Vec& costs) const
 {
     costs.resize(1);
@@ -362,9 +370,9 @@ TVec<string> PDistribution::getTrainCostNames() const
 void PDistribution::generateN(const Mat& Y) const
 {
     Vec v;
-    if (Y.width() != n_target)
+    if (Y.width() != n_predicted)
         PLERROR("In PDistribution::generateN - Matrix width (%d) differs from "
-                "n_target (%d)", Y.width(), n_target);
+                "n_predicted (%d)", Y.width(), n_predicted);
     int N = Y.length();  
     for(int i=0; i<N; i++)
     {
@@ -383,8 +391,8 @@ void PDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(store_result,       copies);
     deepCopyField(store_cov,          copies);
     deepCopyField(random,             copies);
-    deepCopyField(input_part,         copies);
-    deepCopyField(target_part,        copies);
+    deepCopyField(predictor_part,     copies);
+    deepCopyField(predicted_part,     copies);
 }
 
 ////////////////
@@ -398,10 +406,10 @@ int PDistribution::outputsize() const
          || outputs_def[i]=='S' || outputs_def[i]=='E' || outputs_def[i]=='V')
             l+=n_curve_points;
         else if (outputs_def[i]=='e')
-            l += n_target;
+            l += n_predicted;
         else if (outputs_def[i]=='v')
             // Variance is full (n x n) matrix.
-            l += square(n_target);
+            l += square(n_predicted);
         else l++;
     }
     return l;
@@ -418,71 +426,76 @@ void PDistribution::resetGenerator(long g_seed)
     }
 }
 
-//////////////
-// setInput //
-//////////////
-void PDistribution::setInput(const Vec& input, bool call_parent) const {
-    // Default behavior: only fill input_part with first elements of 'input'.
-    assert(input.length() >= n_input);
-    input_part << input.subVec(0, n_input);
+//////////////////
+// setPredictor //
+//////////////////
+void PDistribution::setPredictor(const Vec& predictor, bool call_parent) const
+{
+    // Default behavior: only fill 'predictor_part' with first elements of
+    // 'predictor'.
+    assert( predictor.length()      >= n_predictor );
+    assert( predictor_part.length() == n_predictor );
+    predictor_part << predictor.subVec(0, n_predictor);
 }
 
-/////////////////////////
-// setInputTargetSizes //
-/////////////////////////
-bool PDistribution::setInputTargetSizes(int n_input, int n_target,
-                                        bool call_parent)
+////////////////////////////////
+// setPredictorPredictedSizes //
+////////////////////////////////
+bool PDistribution::setPredictorPredictedSizes(int the_predictor_size,
+                                               int the_predicted_size,
+                                               bool call_parent)
 {
-    assert( (n_input  >= 0 || n_input  == -1) &&
-            (n_target >= 0 || n_target == -1) );
-    int backup_n_input = this->n_input;
-    int backup_n_target = this->n_target;
-    this->n_input = n_input;
-    this->n_target = n_target;
-    if (this->n_input < 0) {
-        if (this->n_target < 0)
-            PLERROR("In PDistribution::setInputTargetSizes - You need to "
-                    "specify at least one non-negative value");
+    assert( (the_predictor_size  >= 0 || the_predictor_size  == -1) &&
+            (the_predicted_size >= 0 || the_predicted_size == -1) );
+    int backup_n_predictor = n_predictor;
+    int backup_n_predicted = n_predicted;
+    n_predictor = the_predictor_size;
+    n_predicted = the_predicted_size;
+    if (n_predictor < 0) {
+        if (n_predicted < 0)
+            PLERROR("In PDistribution::setPredictorPredictedSizes - You need"
+                    "to specify at least one non-negative value");
         if (inputsize_ >= 0) {
-            if (this->n_target > inputsize_)
-                PLERROR("In PDistribution::setInputTargetSizes - 'n_target' "
-                        "(%d) cannot be higher than inputsize (%d)",
-                        this->n_target, inputsize_);
-            this->n_input = inputsize_ - this->n_target;
+            if (n_predicted > inputsize_)
+                PLERROR("In PDistribution::setPredictorPredictedSizes - "
+                        "'n_predicted' (%d) cannot be > inputsize (%d)",
+                        n_predicted, inputsize_);
+            n_predictor = inputsize_ - n_predicted;
         }
-    } else if (this->n_target < 0) {
+    } else if (n_predicted < 0) {
         if (inputsize_ >= 0) {
-            if (this->n_input > inputsize_)
-                PLERROR("In PDistribution::setInputTargetSizes - 'n_input' "
-                        "(%d) cannot be higher than inputsize (%d)",
-                        this->n_input, inputsize_);
-            this->n_target = inputsize_ - this->n_input;
+            if (n_predictor > inputsize_)
+                PLERROR("In PDistribution::setPredictorPredictedSizes - "
+                        "'n_predictor' (%d) cannot be > inputsize (%d)",
+                        n_predictor, inputsize_);
+            n_predicted = inputsize_ - n_predictor;
         }
     }
-    if (inputsize_ >= 0 && this->n_input + this->n_target != inputsize_)
-        PLERROR("In PDistribution::setInputTargetSizes - n_input (%d) + "
-                "n_target (%d) != inputsize (%d)",
-                this->n_input, this->n_target, inputsize_);
-    if (this->n_input >= 0)
-        input_part.resize(this->n_input);
-    if (this->n_target >= 0)
-        target_part.resize(this->n_target);
-    return (this->n_input  != backup_n_input ||
-            this->n_target != backup_n_target);
+    if (inputsize_ >= 0 && n_predictor + n_predicted != inputsize_)
+        PLERROR("In PDistribution::setPredictorPredictedSizes - n_predictor "
+                "(%d) + n_predicted (%d) != inputsize (%d)",
+                n_predictor, n_predicted, inputsize_);
+    if (n_predictor >= 0)
+        predictor_part.resize(n_predictor);
+    if (n_predicted >= 0)
+        predicted_part.resize(n_predicted);
+    return (n_predictor  != backup_n_predictor ||
+            n_predicted != backup_n_predicted);
 }
 
 ///////////////
 // splitCond //
 ///////////////
 void PDistribution::splitCond(const Vec& input) const {
-    if (n_input == 0 || (n_input > 0 && input.length() == n_target)) {
-        // No input part provided: this means this is the same as before (or
-        // that there is none at all).
-        target_part << input;
+    if (n_predictor == 0 || (n_predictor > 0 && input.length() == n_predicted))
+    {
+        // No predictor part provided: this means this is the same as before
+        // (or that there is none at all).
+        predicted_part << input;
     } else {
-        assert( input.length() == n_input + n_target );
-        target_part << input.subVec(n_input, n_target);
-        setInput(input);
+        assert( input.length() == n_predictor + n_predicted );
+        predicted_part << input.subVec(n_predictor, n_predicted);
+        setPredictor(input);
     }
 }
 
@@ -491,8 +504,8 @@ void PDistribution::splitCond(const Vec& input) const {
 ////////////
 void PDistribution::forget() {
     stage = 0;
-    n_input = -1;
-    n_target = -1;
+    n_predictor = -1;
+    n_predicted = -1;
     resetGenerator(seed_);
 }
 

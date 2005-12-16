@@ -168,13 +168,6 @@ public:
     //! Reset the random number generator used by generate() using the given seed.
     virtual void resetGenerator(long g_seed);
 
-    //! Set the value for the input part of a conditional probability.
-    virtual void setInput(const Vec& input) const;
-
-    //! This method updates the internal data given a new sorting of the variables
-    //! defined by the conditional flags.
-    virtual void updateFromConditionalSorting() const;
-
     //! Return probability density p(y | x)
     virtual real density(const Vec& y) const;
 

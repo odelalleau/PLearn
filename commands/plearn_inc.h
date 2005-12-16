@@ -172,7 +172,6 @@
 #include <plearn_learners/unsupervised/UniformizeLearner.h>
 
 // PDistribution
-#include <plearn_learners/distributions/ConditionalDensityNet.h>
 #include <plearn_learners/distributions/GaussianDistribution.h>
 #include <plearn_learners/distributions/GaussMix.h>
 #include <plearn_learners/distributions/ManifoldParzen2.h>

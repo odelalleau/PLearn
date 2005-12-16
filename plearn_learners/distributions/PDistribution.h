@@ -70,17 +70,24 @@ protected:
     //! The step when plotting the curve (upper case outputs_def).
     real delta_curve;
 
-    mutable Vec input_part;       //!< Used to store the x part in p(y|x).
-    mutable Vec target_part;      //!< Used to store the y part in p(y|x).
+    mutable Vec predictor_part;     //!< Used to store the x part in p(y|x).
+    mutable Vec predicted_part;     //!< Used to store the y part in p(y|x).
 
     // *********************
     // * protected options *
     // *********************
 
-    int n_input;
-    int n_target;
-    int n_input_;
-    int n_target_;
+    //! User-provided sizes of the 'predictor' and 'predicted' sizes.
+    //! Since they may be equal to '-1', subclasses should generally only use
+    //! the learnt options 'n_predictor' and 'n_predicted' below.
+    int predictor_size;
+    int predicted_size;
+
+    //! Learnt sizes of the 'predictor' and 'predicted' sizes. These are the
+    //! options to use in PDistribution subclasses code. They always verify:
+    //!     n_predictor + n_predicted == inputsize()
+    int n_predictor;
+    int n_predicted;
 
 public:
 
@@ -157,12 +164,12 @@ public:
 
 protected:
 
-    //! Split an input into the part corresponding to the 'real' input (in
-    //! 'input_part'), and the target (in 'target_part').
-    //! Also call setInput(..) with the new input part.
-    //! If 'input' turns out to only have a target part (i.e. its length is
-    //! equal to 'n_target'), then no input part will be set (it is assumed
-    //! to stay the same as before).
+    //! Split an input into the part corresponding to the predictor (in
+    //! 'predictor_part'), and the predicted (in 'predicted_part').
+    //! Also call setPredictor(..) with the new predictor part.
+    //! If 'input' turns out to only have a predicted part (i.e. its length is
+    //! equal to 'n_predicted'), then no predictor part will be set (it is
+    //! assumed to stay the same as before).
     void splitCond(const Vec& input) const;
 
     //! Called in computeOutput when an unknown character is found.
@@ -171,27 +178,30 @@ protected:
 
 public:
 
-    //! Set the 'input' and 'target' sizes for this distribution.
-    //! 'n_input' is the size of the input, i.e. of x in p(y|x).
-    //! 'n_target' is the size of the target, i.e. of y in p(y|x).
+    //! Set the 'predictor' and 'predicted' sizes for this distribution.
+    //! 'the_predictor_size' is the size of the predictor, i.e. of x in p(y|x).
+    //! 'the_predicted_size' is the size of the predicted, i.e. of y in p(y|x).
     //! This is a virtual method: if 'call_parent' is set to true, then the
-    //! inherited::setInputTargetSizes(..) method will also be called, with the
-    //! same arguments: this is useful in the build process, where each class
-    //! can call only its own method by setting 'call_parent' to false.
-    //! Return 'true' iff the input or target sizes have been modified from
-    //! their previous value.
-    virtual bool setInputTargetSizes(int n_input, int n_target,
-                                     bool call_parent = true);
+    //! inherited::setPredictorPredictedSizes(..) method will also be called,
+    //! with the same arguments: this is useful in the build process, where
+    //! each class is able to call only its own method by setting 'call_parent'
+    //! to false.
+    //! Return 'true' iff the predictor or predicted sizes have been modified
+    //! from their previous value.
+    virtual bool setPredictorPredictedSizes(int the_predictor_size,
+                                            int the_predicted_size,
+                                            bool call_parent = true);
 
-    //! Set the value for the input part of a conditional probability.
+    //! Set the value for the predictor part of a conditional probability.
     //! This needs to be implemented in subclasses if there is something
-    //! special to do (like precomputing some stuff).
-    //! The default behavior is just to fill 'input_part' with the first
-    //! 'n_input' elements of 'input'.
-    //! As with 'setInputTargetSizes(..)', the boolean 'call_parent' indicates
-    //! whether or not one should call inherited::setInput(..) with the same
-    //! arguments.
-    virtual void setInput(const Vec& input, bool call_parent = true) const;
+    //! special to do (like precomputing some data).
+    //! The default behavior is just to fill 'predictor_part' with the first
+    //! 'n_predictor' elements of 'predictor'.
+    //! As with 'setPredictorPredictedSizes(..)', the boolean 'call_parent'
+    //! indicates whether or not one should call inherited::setPredictor(..)
+    //! with the same arguments.
+    virtual void setPredictor(const Vec& predictor, bool call_parent = true)
+                              const;
 
     //! Return [ "NLL" ] (the only cost computed by a PDistribution).
     virtual TVec<string> getTestCostNames() const;
@@ -228,12 +238,12 @@ public:
     //! Return a pseudo-random sample generated from the distribution.
     virtual void generate(Vec& y) const;
 
-    //! X must be a N x n_target matrix. that will be filled.
+    //! X must be a N x n_predicted matrix. that will be filled.
     //! This will call generate N times to fill the N rows of the matrix. 
     void generateN(const Mat& Y) const;
 
-    //! 'Get' accessor.
-    int getNTarget() { return n_target; }
+    //! 'Get' accessor for n_predicted.
+    int getNPredicted() { return n_predicted; }
 
 };
 

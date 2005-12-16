@@ -88,10 +88,10 @@ protected:
     //! Used to store the conditional expectation E[Y | X = x].
     Mat center_y_x;
 
-    //! The logarithm of P(j|x), where x is the input part.
+    //! The logarithm of P(j|x), where x is the predictor part.
     mutable Vec log_p_j_x;
 
-    //! The probability P(j|x), where x is the input part (it is computed by
+    //! The probability P(j|x), where x is the predictor part (it is computed
     //! by exp(log_p_j_x)).
     mutable Vec p_j_x;
 
@@ -112,9 +112,9 @@ protected:
     //! 'joint_cov' (so that we know there is no need to compute it again).
     TVec<int> stage_joint_cov_computed;
 
-    //! A boolean indicating whether or not the last input part set through
-    //! setInput(..) had a missing value.
-    mutable bool previous_input_part_had_missing;
+    //! A boolean indicating whether or not the last predictor part set
+    //! through setPredictor(..) had a missing value.
+    mutable bool previous_predictor_part_had_missing;
 
     //! Storage vector to save some memory allocations.
     mutable Vec y_centered;
@@ -179,12 +179,15 @@ protected:
 
     //! In the 'general' conditional type, will precompute the covariance
     //! matrix of Y|x.
-    virtual bool setInputTargetSizes(int n_input, int n_target,
-                                     bool call_parent = true);
+    virtual bool setPredictorPredictedSizes(int the_predictor_size,
+                                            int the_predicted_size,
+                                            bool call_parent = true);
 
-    //! Main implementation of 'setInputTargetSizes', that needs to be 'const'
-    //! as it currently needs to be called in setInput(..).
-    void setInputTargetSizes_const(int n_input, int n_target) const;
+
+    //! Main implementation of 'setPredictorPredictedSizes', that needs to be
+    //! 'const' as it currently needs to be called in setPredictor(..).
+    void setPredictorPredictedSizes_const(int the_predictor_size,
+                                          int the_predicted_size) const;
 
     //! Fill the 'initial_weights' vector with the weights from the given
     //! VMatrix (which must have a weights column).
@@ -203,10 +206,11 @@ protected:
     void computeAllLogLikelihoods(const Vec& sample, const Vec& log_like);
 
     //! Compute log p(y | x,j), with j < L the index of a mixture's component,
-    //! and 'x' the current input part.
-    //! If 'is_input' is set to true, then it is the likelihood of the input
+    //! and 'x' the current predictor part.
+    //! If 'is_predictor' is set to true, then it is the likelihood of the des
     //! that will be returned, i.e. log p(X = y | j).
-    real computeLogLikelihood(const Vec& y, int j, bool is_input=false) const;
+    real computeLogLikelihood(const Vec& y, int j, bool is_predictor = false)
+                              const;
 
     //! Return log( 1 / sqrt( 2 Pi^dimension |C| ) ), i.e. the logarithm of the
     //! constant coefficient in the Gaussian whose covariance matrix has the
@@ -298,8 +302,9 @@ public:
     // * PDistribution methods *
     // *************************
 
-    //! Set the value for the input part of the conditional probability.
-    virtual void setInput(const Vec& input, bool call_parent = true) const;
+    //! Set the value for the predictor part of the conditional probability.
+    virtual void setPredictor(const Vec& predictor, bool call_parent = true)
+                              const;
 
     //! Return density p(y | x).
     virtual real log_density(const Vec& y) const;

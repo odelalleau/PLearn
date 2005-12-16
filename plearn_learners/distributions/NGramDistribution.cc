@@ -49,14 +49,15 @@
 namespace PLearn {
 using namespace std;
 
-//////////////////
+///////////////////////
 // NGramDistribution //
-//////////////////
+///////////////////////
 NGramDistribution::NGramDistribution() :
     nan_replace(false),n(2),additive_constant(0),discount_constant(0.01), validation_proportion(0.10), smoothing("no_smoothing"),lambda_estimation("manual")
-/* ### Initialize all fields to their default value here */
 {
     forget();
+    // In a N-Gram, the predicted size is always one.
+    predicted_size = 1;
 }
 
 PLEARN_IMPLEMENT_OBJECT(NGramDistribution,
@@ -84,8 +85,12 @@ void NGramDistribution::declareOptions(OptionList& ol)
                   "If this parameter is false, than the shortest ngram is inserted\n"
                   "in the NGramTree."
         );
+
     declareOption(ol, "n", &NGramDistribution::n, OptionBase::buildoption,
-                  "Length of the n-gram (this option overrides the inherited options n_input and n_target, i.e. n_input = n-1 and n_target = 1)");
+        "Length of the n-gram (this option overrides the inherited options\n"
+        "'predictor_size' and 'predicted_size', i.e. predictor_size = n-1\n"
+        "and predicted_size = 1.");
+
     declareOption(ol, "additive_constant", &NGramDistribution::additive_constant, OptionBase::buildoption,
                   "Additive constant for add-delta smoothing");
     declareOption(ol, "discount_constant", &NGramDistribution::discount_constant, OptionBase::buildoption,
@@ -113,15 +118,13 @@ void NGramDistribution::declareOptions(OptionList& ol)
     // Now call the parent class' declareOptions().
     inherited::declareOptions(ol);
 
-    redeclareOption(ol, "n_input",  &NGramDistribution::n_input_,
+    redeclareOption(ol, "predictor_size",  &NGramDistribution::predictor_size,
                   OptionBase::nosave,
-                  "The (user-provided) size of the input x in p(y|x). A value of -1\n"
-                  "means the algorithm should find it out by itself.");
+                  "Defined at build time.");
 
-    redeclareOption(ol, "n_target",  &NGramDistribution::n_target_,
+    redeclareOption(ol, "predicted_size",  &NGramDistribution::predicted_size,
                   OptionBase::nosave,
-                  "The (user-provided) size of the target y in p(y|x). A value of -1\n"
-                  "means the algorithm should find it out by itself.");
+                  "Defined at build time.");
 }
 
 ///////////
@@ -129,8 +132,6 @@ void NGramDistribution::declareOptions(OptionList& ol)
 ///////////
 void NGramDistribution::build()
 {
-    n_input_ = n - 1;
-    n_target_ = 1;
     inherited::build();
     build_();
 }
@@ -140,13 +141,10 @@ void NGramDistribution::build()
 ////////////
 void NGramDistribution::build_()
 {
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation. 
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-    // ### You should assume that the parent class' build_() has already been called.
+    predictor_size = n - 1;
+    // We need to re-build the parent class, so that data related to
+    // 'predictor_size' is correctly defined.
+    inherited::build();
 
     if(train_set)
     {
@@ -217,7 +215,7 @@ real NGramDistribution::density(const Vec& y) const
     Vec row(n);
     row[n-1] = y[0];
     for(int i=0; i<n-1; i++)
-        row[i] = input_part[i];
+        row[i] = predictor_part[i];
 
     getNGrams(row,ngram);
 
@@ -317,26 +315,12 @@ void NGramDistribution::resetGenerator(long g_seed)
     manual_seed(g_seed);
 }
 
-//////////////
-// setInput //
-//////////////
-void NGramDistribution::setInput(const Vec& input) const {
-    input_part << input;
-}
-
 /////////////////
 // survival_fn //
 /////////////////
 real NGramDistribution::survival_fn(const Vec& y) const
 {
     PLERROR("survival_fn not implemented for NGramDistribution"); return 0;
-}
-
-//////////////////////////////////
-// updateFromConditionalSorting //
-//////////////////////////////////
-void NGramDistribution::updateFromConditionalSorting() const {
-    return ;
 }
 
 //////////////

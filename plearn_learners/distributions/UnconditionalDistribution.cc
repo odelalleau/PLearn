@@ -2,7 +2,7 @@
 
 // UnconditionalDistribution.cc
 //
-// Copyright (C) 2004 Olivier Delalleau 
+// Copyright (C) 2004-2005 Olivier Delalleau 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -50,74 +50,54 @@ using namespace std;
 // UnconditionalDistribution //
 ///////////////////////////////
 UnconditionalDistribution::UnconditionalDistribution() 
-/* ### Initialize all fields to their default value here */
 {
-    // ...
-
-    // ### You may or may not want to call build_() to finish building the object
-    // build_();
+    predictor_size = 0;
+    predicted_size = -1;
 }
 
 PLEARN_IMPLEMENT_OBJECT(UnconditionalDistribution,
-                        "This class is a simplified version of PDistribution for unconditional distributions.",
-                        "Its only goal is to hide the conditional side of PDistributions to make it simpler."
-    );
+    "A simplified version of PDistribution for unconditional distributions.",
+
+    "The only goal of this class is to hide the conditional side of\n"
+    "PDistributions to make unconditional distributions simpler."
+);
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void UnconditionalDistribution::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
-
-    // ### ex:
-    // declareOption(ol, "myoption", &UnconditionalDistribution::myoption, OptionBase::buildoption,
-    //               "Help text describing this option");
-    // ...
-
     // First call the parent class' declareOptions().
     inherited::declareOptions(ol);
 
     // And modify some options for unconditional distributions.
 
-    redeclareOption(ol, "outputs_def", &PDistribution::outputs_def, OptionBase::buildoption,
-                    "Defines what will be given in output. This is a string where the characters\n"
-                    "have the following meaning:\n"
-                    "'l'-> log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn,\n"
-                    "'e' -> expectation, 'v' -> variance.\n"
-                    "In lower case they give the value associated with a given observation.\n"
-                    "In upper case, a curve is evaluated at regular intervals and produced in\n"
-                    "output (as a histogram), only for 'L', 'D', 'C' and 'S'.\n"
-                    "The number of curve points is determined by the 'n_curve_points' option.\n"
-                    "Note that the upper case letters only work for SCALAR variables."
-        );
+    redeclareOption(ol, "outputs_def", &UnconditionalDistribution::outputs_def,
+                                       OptionBase::buildoption,
+        "See help for this option in PDistribution. Basically, this is the\n"
+        "same, except that 'E' and 'V' are obviously not allowed.");
+    // TODO Find a cool way to synchronize this help with the PDistribution
+    // help?
 
-    /* TODO See what kind of option we must hide now (e.g. input_part?)
-    redeclareOption(ol, "conditional_flags", &UnconditionalDistribution::conditional_flags, OptionBase::nosave,
-                    "Unused in unconditional distributions.");
+    redeclareOption(ol, "predictor_size",
+                        &UnconditionalDistribution::predictor_size,
+                        OptionBase::nosave,
+        "Unused in unconditional distributions.");
 
-    redeclareOption(ol, "provide_input", &UnconditionalDistribution::provide_input, OptionBase::nosave,
-                    "Unused in unconditional distributions.");
+    redeclareOption(ol, "predicted_size",
+                        &UnconditionalDistribution::predicted_size,
+                        OptionBase::nosave,
+        "Unused in unconditional distributions.");
 
-    redeclareOption(ol, "cond_sort",  &UnconditionalDistribution::cond_sort, OptionBase::nosave,
-                    "Unused in unconditional distributions.");
-                    */
+    redeclareOption(ol, "predictor_part",
+                        &UnconditionalDistribution::predictor_part,
+                        OptionBase::nosave,
+        "Unused in unconditional distributions.");
 
-    redeclareOption(ol, "n_input",  &UnconditionalDistribution::n_input, OptionBase::nosave,
-                    "Unused in unconditional distributions.");
-
-    redeclareOption(ol, "n_target",  &UnconditionalDistribution::n_target, OptionBase::nosave,
-                    "Unused in unconditional distributions.");
-
-    /*
-    redeclareOption(ol, "n_margin",  &UnconditionalDistribution::n_margin, OptionBase::nosave,
-                    "Unused in unconditional distributions.");
-                    */
-
+    redeclareOption(ol, "n_predictor",
+                        &UnconditionalDistribution::n_predictor,
+                        OptionBase::nosave,
+        "Unused in unconditional distributions.");
 }
 
 ///////////
@@ -144,25 +124,11 @@ void UnconditionalDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
-////////////////////
-// setTrainingSet //
-////////////////////
-void UnconditionalDistribution::setTrainingSet(VMat training_set, bool call_forget) {
-    PLearner::setTrainingSet(training_set, call_forget);
-}
-
 //////////////
 // setInput //
 //////////////
-void UnconditionalDistribution::setInput(const Vec& input) const {
-    PLERROR("setInput not implemented for UnconditionalDistribution");
-}
-
-//////////////////////////////////
-// updateFromConditionalSorting //
-//////////////////////////////////
-void UnconditionalDistribution::updateFromConditionalSorting() const {
-    PLERROR("updateFromConditionalSorting not implemented for UnconditionalDistribution");
+void UnconditionalDistribution::setPredictor(const Vec& predictor) const {
+    PLERROR("In UnconditionalDistribution::setPredictor - Not implemented");
 }
 
 } // end of namespace PLearn
