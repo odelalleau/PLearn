@@ -46,7 +46,7 @@
 #include <plearn/math/TMat_maths.h>
 #include <plearn/io/FdPStreamBuf.h>
 
-#if defined(WIN32) && !defined(__CYGWIN__)
+#if defined(WIN32) && !defined(__CYGWIN__) && !defined(_MINGW_)
 #include <io.h>
 // norman: potentially dangerous if there is a function called with the same name in this
 //         file. Beware!
