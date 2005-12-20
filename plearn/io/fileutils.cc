@@ -42,8 +42,9 @@
  ******************************************************* */
 
 // Win32 specific declarations
-#if defined(WIN32) && !defined(__CYGWIN__)
+#if defined(WIN32) && !defined(__CYGWIN__) && !defined(_MINGW_)
 #include <direct.h>
+#error The line below looks weird and dangerous - Check chdir everywhere
 #define chdir _chdir
 #include <Windows.h>
 
