@@ -474,10 +474,10 @@ real ProcessSymbolicSequenceVMatrix::getStringVal(int col, const string & str) c
     if(source)
     {
         int src_col;
-        if(col < inputsize_)
+        if(col < max_context_length * source->inputsize())
             src_col = col%source->inputsize();
         else
-            src_col = source->inputsize() + (col-inputsize_)%source->targetsize();
+            src_col = source->inputsize() + (col-max_context_length * source->inputsize())%source->targetsize();
         return source->getStringVal(src_col,str);
     }
       
@@ -489,10 +489,10 @@ string ProcessSymbolicSequenceVMatrix::getValString(int col, real val) const
     if(source)
     {
         int src_col;
-        if(col < inputsize_)
+        if(col < max_context_length * source->inputsize())
             src_col = col%source->inputsize();
         else
-            src_col = source->inputsize() + (col-inputsize_)%source->targetsize();
+            src_col = source->inputsize() + (col-max_context_length * source->inputsize())%source->targetsize();
         return source->getValString(src_col,val);
     }
       
@@ -502,14 +502,14 @@ string ProcessSymbolicSequenceVMatrix::getValString(int col, real val) const
 Vec ProcessSymbolicSequenceVMatrix::getValues(int row, int col) const
 {
     if(row < 0 || row >= length_) PLERROR("In ProcessSymbolicSequenceVMatrix::getValues() : invalid row %d, length()=%d", row, length_);
-    if(col < 0 || col >= length_) PLERROR("In ProcessSymbolicSequenceVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
+    if(col < 0 || col >= width_) PLERROR("In ProcessSymbolicSequenceVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
     if(source)
     {
         int src_col;
-        if(col < inputsize_)
+        if(col < max_context_length * source->inputsize())
             src_col = col%source->inputsize();
         else
-            src_col = source->inputsize() + (col-inputsize_)%source->targetsize();
+            src_col = source->inputsize() + (col-max_context_length * source->inputsize())%source->targetsize();
         return source->getValues(indices[row],src_col);
     }
     return Vec(0);
@@ -517,14 +517,14 @@ Vec ProcessSymbolicSequenceVMatrix::getValues(int row, int col) const
 
 Vec ProcessSymbolicSequenceVMatrix::getValues(const Vec& input, int col) const
 {
-    if(col < 0 || col >= length_) PLERROR("In ProcessSymbolicSequenceVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
+    if(col < 0 || col >= width_) PLERROR("In ProcessSymbolicSequenceVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
     if(source)
     {
         int src_col;
-        if(col < inputsize_)
+        if(col < max_context_length * source->inputsize())
             src_col = col%source->inputsize();
         else
-            src_col = source->inputsize() + (col-inputsize_)%source->targetsize();
+            src_col = source->inputsize() + (col-max_context_length * source->inputsize())%source->targetsize();
         return source->getValues(input,src_col);
     }
     return Vec(0);
@@ -532,14 +532,14 @@ Vec ProcessSymbolicSequenceVMatrix::getValues(const Vec& input, int col) const
 
 PP<Dictionary> ProcessSymbolicSequenceVMatrix::getDictionary(int col) const
 {
-    if(col < 0 || col >= length_) PLERROR("In ProcessSymbolicSequenceVMatrix::getDictionary() : invalid col %d, width()=%d", col, width_);
+    if(col < 0 || col >= width_) PLERROR("In ProcessSymbolicSequenceVMatrix::getDictionary() : invalid col %d, width()=%d", col, width_);
     if(source)
     {
         int src_col;
-        if(col < inputsize_)
+        if(col < max_context_length * source->inputsize())
             src_col = col%source->inputsize();
         else
-            src_col = source->inputsize() + (col-inputsize_)%source->targetsize();
+            src_col = source->inputsize() + (col-max_context_length * source->inputsize())%source->targetsize();
         return source->getDictionary(src_col);
     }
     return 0;
