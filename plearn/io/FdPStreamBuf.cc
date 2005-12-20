@@ -40,7 +40,7 @@
 
 /*! \file FdPStreamBuf.cc */
 
-#if defined(WIN32) && !defined(__CYGWIN__)
+#if defined(WIN32) && !defined(__CYGWIN__) && !defined(_MINGW_)
 // This file does not compile under windows and should not be used anyways.
 
 #else // POSIX
@@ -86,7 +86,12 @@ void FdPStreamBuf::write_(const char* p, streamsize n)
     streamsize nwritten = ::write(out, p, n);
     if(nwritten!=n)
         PLERROR("In FdPStreamBuf::write_ failed to write the requested number of bytes");
+#ifdef _MINGW_
+    PLERROR("In FdPStreamBuf::write_ - The 'fsync' function is not defined "
+            "under MinGW (see code)");
+#else
     fsync(out);
+#endif
 }
   
 } // end of namespace PLearn

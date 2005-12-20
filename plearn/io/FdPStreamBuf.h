@@ -44,7 +44,7 @@
 #ifndef FdPStreamBuf_INC
 #define FdPStreamBuf_INC
 
-#if defined(WIN32) && !defined(__CYGWIN__)
+#if defined(WIN32) && !defined(__CYGWIN__) && !defined(_MINGW_)
 // This file does not compile under windows and should not be used anyways.
 
 #else // POSIX
