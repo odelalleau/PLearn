@@ -672,7 +672,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     real lambda0 = max(var_min, eigenvals.lastElement());
                     cov_y.fill(0);
                     Mat& eigenvectors_j = eigenvectors_y_x[j];
-                    int n_eig = eigenvectors_y_x.length();
+                    int n_eig = eigenvectors_j.length();
 
                     assert( eigenvectors_j.width() == n_predicted );
 
