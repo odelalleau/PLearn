@@ -177,11 +177,11 @@ inline void UNIT_TEST(const string& argument)
     }
     catch(const PLearnError& e)
     {
-        cerr << "FATAL ERROR: " << e.message() << endl << endl;
+        perr << "FATAL ERROR: " << e.message() << endl << endl;
     }
     catch (...)
     {
-        cerr << "FATAL ERROR: uncaught unknown exception" << endl << endl;
+        perr << "FATAL ERROR: uncaught unknown exception" << endl << endl;
     }
 }
 
@@ -201,11 +201,11 @@ void AutoVMatrixTest::perform()
     }
     catch(const PLearnError& e)
     {
-        cerr << "FATAL ERROR: " << e.message() << endl << endl;
+        perr << "FATAL ERROR: " << e.message() << endl << endl;
     }
     catch (...)
     {
-        cerr << "FATAL ERROR: uncaught unknown exception" << endl << endl;
+        perr << "FATAL ERROR: uncaught unknown exception" << endl << endl;
     }
 
 }

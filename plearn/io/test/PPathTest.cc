@@ -138,11 +138,11 @@ MAND_LOG\
   }\
   catch(const PLearnError& e)\
   {\
-    cerr << "FATAL ERROR: " << e.message() << endl << endl;\
+    perr << "FATAL ERROR: " << e.message() << endl << endl;\
   }\
   catch (...)\
   {\
-    cerr << "FATAL ERROR: uncaught unknown exception" << endl << endl;\
+    perr << "FATAL ERROR: uncaught unknown exception" << endl << endl;\
   }
 
 #define ASSERT(str, __test) \
@@ -157,11 +157,11 @@ MAND_LOG\
   }\
   catch(const PLearnError& e)\
   {\
-    cerr << "FATAL ERROR: " << e.message() << endl << endl;\
+    perr << "FATAL ERROR: " << e.message() << endl << endl;\
   }\
   catch (...)\
   {\
-    cerr << "FATAL ERROR: uncaught unknown exception" << endl << endl;\
+    perr << "FATAL ERROR: uncaught unknown exception" << endl << endl;\
   }
 
 
