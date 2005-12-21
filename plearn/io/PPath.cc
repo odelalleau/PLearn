@@ -193,9 +193,14 @@ PStream& operator>>(PStream& in, PPath& path)
 //////////
 PPath PPath::home()
 {
-    // Supply a default value so PLearn doesn't crash
+    // Supply a default value so PLearn does not crash.
     // when $HOME isn't defined.
-    return PPath::getenv("HOME", PPath("/"));
+#ifdef WIN32
+#define PL_DEFAULT_HOME PPath("C:\\")
+#else
+#define PL_DEFAULT_HOME PPath("/")
+#endif
+    return PPath::getenv("HOME", PL_DEFAULT_HOME);
 }
 
 ////////////
@@ -385,7 +390,7 @@ PPath::PPath(const string& path_)
         the_path = &new_path;
     }
 #endif
-  
+
     // The path_ argument may contain environment variables that must be
     // expanded prior to any other processing.
     string internal =  expandEnvVariables( *the_path );
