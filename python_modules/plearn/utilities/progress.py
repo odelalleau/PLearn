@@ -26,6 +26,7 @@ class StdoutProgressBar(ProgressBar):
         self.n = n
         self.pos = 0
         self.title = title
+        self.closed = False
         titlestr = ' '+title+' ('+str(n)+') '
         npoints = StdoutProgressBar.npoints
         if len(titlestr)>npoints:
@@ -36,15 +37,18 @@ class StdoutProgressBar(ProgressBar):
         StdoutProgressBar.write('[')
             
     def update(self, pos):
-        npoints = StdoutProgressBar.npoints
-        oldcharpos = int(self.pos*npoints/(self.n)) 
-        newcharpos = int(pos*npoints/(self.n))
-        nchars = newcharpos-oldcharpos
-        if nchars>0:
-            StdoutProgressBar.write('.'*nchars)
-        if pos>self.pos and pos==self.n-1:
-            StdoutProgressBar.write(']\n')
-        self.pos = pos
+        if not self.closed:
+            npoints = StdoutProgressBar.npoints
+            oldcharpos = min(npoints, int(self.pos*npoints/(self.n-1)))
+            newcharpos = min(npoints, int(pos*npoints/(self.n-1)))
+            nchars = newcharpos-oldcharpos
+            if nchars>0:
+                StdoutProgressBar.write('.'*nchars)
+            if pos>=self.n-1:
+                StdoutProgressBar.write(']\n')
+                self.closed = True
+            self.pos = pos
+            
 
 PBar = StdoutProgressBar
 
