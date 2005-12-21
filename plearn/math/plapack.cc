@@ -483,11 +483,10 @@ void affineNormalization(Mat data, Mat W, Vec bias, real regularizer)
 //!   weights: n_outputs x n_inputs
 //! 
 //! This work is achieved by taking advantage of the following formula:
-//!    LOOSSE =    (sum of squared errors with the chosen weight decay) / (n_inputs - Tr(design_matrix + lambda I))
-//! where the trace of the design matrix is simply the sum of its eigenvalues and the trace of lambda I is d*lambda.
-//! The design matrix is inputs' * inputs. The explored values of lambda are based on an SVD
-//! of the inputs matrix (whose squared singular values are the eigenvalues of the design matrix):
-//! We know that lambda should be between the smallest and the largest eigenvalue. We do a binary search
+//!    LOOSSE =    (sum of squared errors with the chosen weight decay) / (n_inputs - sum_i e_i/(e_i+lambda))^2
+//! where e_i is an eigenvalue of  matrix inputs' * inputs. The explored values of lambda are based on an SVD
+//! of the inputs matrix (whose squared singular values are the eigenvalues of inputs' * inputs.
+//! We know that lambda should be between the smallest and the largest eigenvalue. We do a search
 //! within the eigenvalue spectrum to select lambda.
 //! If best_predictions is provided then a copy of the predictions obtained with the best weight decay is made. Similarly for best_weights.
 real generalizedCVRidgeRegression(Mat inputs, Mat targets,  real& best_LOOSSE, Mat* best_weights, Mat* best_predictions, bool inputs_are_transposed)
@@ -533,8 +532,9 @@ real generalizedCVRidgeRegression(Mat inputs, Mat targets,  real& best_LOOSSE, M
     int best_i = -1;
     for (int i=1;i<rank;i++)
     {
-        LOOSSE[i] = LOOSSEofRidgeRegression(inputs,targets,weights,eigen_values[i],eigen_values,Vt, 
-                                            predictions,trace_of_design_matrix, RHS_matrix,inputs_are_transposed);
+        real weight_decay = exp(0.5*(pl_log(eigen_values[i-1])+pl_log(eigen_values[i])));
+        LOOSSE[i] = LOOSSEofRidgeRegression(inputs,targets,weights,weight_decay,eigen_values,Vt, 
+                                            predictions, RHS_matrix,inputs_are_transposed);
         if (LOOSSE[i]<best_LOOSSE)
         {
             best_LOOSSE=LOOSSE[i];
@@ -549,12 +549,12 @@ real generalizedCVRidgeRegression(Mat inputs, Mat targets,  real& best_LOOSSE, M
 }
 
 //! Auxiliary function used by generalizedCFRidgeRegression in order to compute the estimated generalization error
-//! associated with a given choice of weight decay. The eigenvalues and eigenvectors are those of the design matrix.
+//! associated with a given choice of weight decay. The eigenvalues and eigenvectors are those of the squared design matrix.
 //! The eigenvectors are in the ROWS of the matrix.
 //! The RHS_matrix is eigenvectors*inputs'*targets, pre-computed.
 //! The computational cost of this call is O((rank+n_examples)*n_outputs*n_inputs)
 real LOOSSEofRidgeRegression(Mat inputs, Mat targets, Mat weights, real weight_decay, Vec eigenvalues, Mat eigenvectors, Mat predictions, 
-                             real trace, Mat RHS_matrix, bool inputs_are_transposed)
+                             Mat RHS_matrix, bool inputs_are_transposed)
 {
     int n_inputs = weights.width();
     int n_outputs = targets.width();
@@ -562,11 +562,13 @@ real LOOSSEofRidgeRegression(Mat inputs, Mat targets, Mat weights, real weight_d
     // weights' = eigenvectors' * inv(diag(eigenvalues) + weight_decay*I) * eigenvectors' * inputs' * targets 
     //          = eigenvectors' * inv(diag(eigenvalues) + weight_decay*I) * RHS_matrix
     weights.clear();
+    real s=0;
     for (int k=0;k<rank;k++)
     {
         real* vk = eigenvectors[k];
         real* RHSk = RHS_matrix[k];
         real coeff = 1.0/(eigenvalues[k] + weight_decay);
+        s += eigenvalues[k]*coeff;
         for (int i=0;i<n_outputs;i++)
         {
             real *wi = weights[i];
@@ -581,7 +583,8 @@ real LOOSSEofRidgeRegression(Mat inputs, Mat targets, Mat weights, real weight_d
         productTranspose(predictions, inputs, weights);
     predictions -= targets;
     real SSE = sum_of_squares(predictions);
-    real LOOMSE = SSE / (n_inputs - trace - weight_decay*n_inputs);
+    real denom = n_inputs - s;
+    real LOOMSE = SSE / (denom*denom);
     return LOOMSE;
 }
 

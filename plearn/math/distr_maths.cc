@@ -206,7 +206,8 @@ real logOfCompactGaussian(const Vec& x, const Vec& mu,
     if(kk<d)
         log_det += pl_log(gamma)*(d-i);
 
-    double logp = -0.5*( d*pl_log(2*M_PI) + log_det + q);
+    static real log_2pi = pl_log(2*M_PI);
+    double logp = -0.5*( d*log_2pi + log_det + q);
     // cerr << "logOfCompactGaussian q=" << q << " log_det=" << log_det << " logp=" << logp << endl;
     // exit(0);
     return real(logp);
@@ -359,7 +360,8 @@ void addEigenMatrices(Mat A_evec, Vec A_eval, Mat B_evec, Vec B_eval, Mat C_evec
 //!   mu = sum_wx / sum_w
 //!   (cov_evectors, cov_evalues) = eigen-decomposition of cov = sum_wx2 / sum_w - mu mu'
 //! with eigenvectors in the ROWS of cov_evectors.
-void sums2Gaussian(real sum_w, Vec sum_wx, Mat sum_wx2, Vec mu, Mat cov_evectors, Vec cov_evalues)
+//! eigenvalues are replaced by max(eigenvalues,min_variance).
+void sums2Gaussian(real sum_w, Vec sum_wx, Mat sum_wx2, Vec mu, Mat cov_evectors, Vec cov_evalues, real min_variance)
 {
     if (sum_w>0)
     {
@@ -377,6 +379,9 @@ void sums2Gaussian(real sum_w, Vec sum_wx, Mat sum_wx2, Vec mu, Mat cov_evectors
         cov_evalues.fill(1.0);
         identityMatrix(cov_evectors);
     }
+    for (int i=0;i<cov_evalues.length();i++)
+        if (cov_evalues[i]<min_variance)
+            cov_evalues[i]=min_variance;
 }
 
 } // end of namespace PLearn

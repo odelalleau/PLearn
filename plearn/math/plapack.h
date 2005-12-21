@@ -622,20 +622,19 @@ Vec constrainedLinearRegression(const Mat& Xt, const Vec& Y, real lambda=0.);
 //!   weights: n_outputs x n_inputs
 //! 
 //! This work is achieved by taking advantage of the following formula:
-//!    LOOMSE =    (sum of squared errors with the chosen weight decay) / (n_inputs - Tr(design_matrix + lambda I))
-//! where the trace of the design matrix is simply the sum of its eigenvalues and the trace of lambda I is d*lambda.
-//! The design matrix is inputs' * inputs. The explored values of lambda are based on an SVD
-//! of the inputs matrix (whose squared singular values are the eigenvalues of the design matrix):
-//! We know that lambda should be between the smallest and the largest eigenvalue. We do a binary search
+//!    LOOSSE =    (sum of squared errors with the chosen weight decay) / (n_inputs - sum_i e_i/(e_i+lambda))^2
+//! where e_i is an eigenvalue of  matrix inputs' * inputs. The explored values of lambda are based on an SVD
+//! of the inputs matrix (whose squared singular values are the eigenvalues of the squared design matrix):
+//! We know that lambda should be between the smallest and the largest eigenvalue. We do a search
 //! within the eigenvalue spectrum to select lambda.
 //! If best_predictions is provided then a copy of the predictions obtained with the best weight decay is made. Similarly for best_weights.
 real generalizedCVRidgeRegression(Mat inputs, Mat targets,  real& best_LOOSSE, Mat* best_weights=0, Mat* best_predictions=0, bool inputs_are_transposed=false);
 
 //! Auxiliary function used by generalizedCFRidgeRegression in order to compute the estimated generalization error
-//! associated with a given choice of weight decay. The eigenvalues and eigenvectors are those of the design matrix.
-//! The eigenvectors are in the ROWS of the matrix. The 'trace' is that of the design matrix, i.e. equal to sum(eigenvalues).
+//! associated with a given choice of weight decay. The eigenvalues and eigenvectors are those of the squared design matrix.
+//! The eigenvectors are in the ROWS of the matrix. 
 //! The RHS_matrix is eigenvectors*inputs'*targets, pre-computed.
-real LOOSSEofRidgeRegression(Mat inputs, Mat targets, Mat weights, real weight_decay, Vec eigenvalues, Mat eigenvectors, Mat predictions, real trace, Mat RHS_matrix, bool inputs_are_transposed);
+real LOOSSEofRidgeRegression(Mat inputs, Mat targets, Mat weights, real weight_decay, Vec eigenvalues, Mat eigenvectors, Mat predictions, Mat RHS_matrix, bool inputs_are_transposed);
 
 // Return the affine transformation that
 // is such that the transformed data has

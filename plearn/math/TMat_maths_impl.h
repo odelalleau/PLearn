@@ -1498,11 +1498,18 @@ TVec<T> square(const TVec<T>& vec)
 {
     int n = vec.length();
     TVec<T> result(n);
+    square(result,vec);
+    return result;
+}
+
+template<class T>
+void square(TVec<T>& result, const TVec<T>& vec)
+{
+    int n = vec.length();
     T* v = vec.data();
     T* r = result.data();
     for(int i=0; i<n; i++)
         r[i] = v[i]*v[i];
-    return result;
 }
 
 template<class T>

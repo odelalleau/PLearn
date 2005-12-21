@@ -103,7 +103,8 @@ void addEigenMatrices(Mat A_evec, Vec A_eval, Mat B_evec, Vec B_eval, Mat C_evec
 //!   mu = sum_wx / sum_w
 //!   (cov_evectors, cov_evalues) = eigen-decomposition of cov = sum_wx2 / sum_w - mu mu'
 //! with eigenvectors in the ROWS of cov_evectors.
-void sums2Gaussian(real sum_w, Vec sum_wx, Mat sum_wx2, Vec mu, Mat cov_evectors, Vec cov_evalues);
+//! eigenvalues are replaced by max(eigenvalues,min_variance).
+void sums2Gaussian(real sum_w, Vec sum_wx, Mat sum_wx2, Vec mu, Mat cov_evectors, Vec cov_evalues, real min_variance);
 
 } // end of namespace PLearn
 
