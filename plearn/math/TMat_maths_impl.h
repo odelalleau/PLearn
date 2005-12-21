@@ -5138,6 +5138,63 @@ void  bpropCholeskyDecomposition(const TMat<T>& A, const TMat<T>& L,
     }
 }
 
+// Given L lower-diagonal, solve L y = b
+template<class T>
+void  choleskyLeftSolve(const TMat<T>& L, TVec<T>& b, TVec<T>& y)
+{
+    int i,k;
+    T sum;
+    int n = L.length();
+#ifdef BOUNDCHECK
+    if (L.width()!=n)
+        PLERROR("choleskySolve: matrix L (%d x %d) is not square!",
+                n, L.width());
+    if (b.length()!=n || y.length()!=n)
+        PLERROR("choleskySolve: RHS vector b(%d) or unknown y(%d) incompatiable with L(%d,%d)",
+                b.length(),y.length(),n,n);
+#endif
+
+    T* bp = b.data();
+    T* yp = y.data();
+
+    // solve L y = b (in variable x if y=0):
+    // for i=0..n-1
+    //   y[i] = (b[i] - sum_{k<i} L[i][k] y[k])/L[i][i]
+    for (i=0;i<n;i++)
+    {
+        const T* Li = L[i];
+        for (sum=bp[i],k=i-1;k>=0;k--) sum -= Li[k] * yp[k];
+        yp[i] = sum / Li[i];
+    }
+}
+
+// Given L lower-diagonal, solve L' x = y
+template<class T>
+void  choleskyRightSolve(const TMat<T>& L, TVec<T>& y, TVec<T>& x)
+{
+    int i,k;
+    T sum;
+    int n = L.length();
+#ifdef BOUNDCHECK
+    if (L.width()!=n)
+        PLERROR("choleskySolve: matrix L (%d x %d) is not square!",
+                n, L.width());
+    if (x.length()!=n || y.length()!=n)
+        PLERROR("choleskySolve: RHS vector y(%d) or unknown x(%d) incompatiable with L(%d,%d)",
+                y.length(),x.length(),n,n);
+#endif
+    T* xp = x.data();
+    T* yp = y.data();
+
+    // for i=n-1..0
+    //   x[i] = (y[i] - sum_{k>i} L[k][i] x[k])/L[i][i]
+    for (i=n-1;i>=0;i--)
+    {
+        for (sum=yp[i],k=i+1;k<n;k++) sum -= L[k][i] * xp[k];
+        xp[i] = sum / L[i][i];
+    }
+}
+
 /*  Solve the linear system A x = L L' x = b using a Cholesky decomposition
     of A into L L' performed with a prior call to choleskyDecomposition(A,L)
     (which on return has the matrix L, that is lower diagonal, and A = L L').
@@ -5160,37 +5217,10 @@ void  bpropCholeskyDecomposition(const TMat<T>& A, const TMat<T>& L,
 template<class T>
 void  choleskySolve(const TMat<T>& L, TVec<T> b, TVec<T> x, TVec<T>& y)
 {
-    int i,k;
-    T sum;
-    int n = L.length();
-    if (L.width()!=n)
-        PLERROR("choleskySolve: matrix L (%d x %d) is not square!",
-                n, L.width());
-    if (b.length()!=n || x.length()!=n)
-        PLERROR("choleskySolve: RHS vector b(%d) or unknown x(%d) incompatiable with L(%d,%d)",
-                b.length(),x.length(),n,n);
-
-    T* bp = b.data();
-    T* xp = x.data();
-    T* yp = y.data();
-
-    // solve L y = b (in variable x if y=0):
-    // for i=0..n-1
-    //   y[i] = (b[i] - sum_{k<i} L[i][k] y[k])/L[i][i]
-    for (i=0;i<n;i++)
-    {
-        const T* Li = L[i];
-        for (sum=bp[i],k=i-1;k>=0;k--) sum -= Li[k] * yp[k];
-        yp[i] = sum / Li[i];
-    }
+    // solve L y = b
+    choleskyLeftSolve(L,b,y);
     // solve L' x = y 
-    // for i=n-1..0
-    //   x[i] = (y[i] - sum_{k>i} L[k][i] x[k])/L[i][i]
-    for (i=n-1;i>=0;i--)
-    {
-        for (sum=yp[i],k=i+1;k<n;k++) sum -= L[k][i] * xp[k];
-        xp[i] = sum / L[i][i];
-    }
+    choleskyRightSolve(L,y,x);
 }
 
 // same as the previous choleskySolve but do it m times on the columns
