@@ -376,17 +376,36 @@ PPath::PPath(const string& path_)
     if ( path_.empty() ) 
         return;
     const string* the_path = &path_;
+#if defined(__CYGWIN__) || defined(_MINGW_)
 #ifdef __CYGWIN__
     static char buf[3000];
+#endif
     string new_path;
     // This is a hack to try to get the right DOS path from Cygwin.
     // Because Cygwin has its own translation rules, not necessarily compatible
     // with the PPath ones, we ask it to translate the path iff it starts with
-    // a UNIX '/' character. TODO We will need a home-made function
+    // a UNIX '/' character. TODO We will need a better home-made function
     // to translate paths safely.
     if (startsWith(*the_path, '/')) {
+#if defined(__CYGWIN__)
         cygwin_conv_to_win32_path(the_path->c_str(), buf);
         new_path = string(buf);
+#elif defined(_MINGW_)
+        // We need to convert the path by ourselves.
+        if (!startsWith(*the_path, "/cygdrive/"))
+            pout << "SHIT: " << *the_path << endl;
+        assert( startsWith(*the_path, "/cygdrive/") );
+        // Remove '/cygdrive'.
+        new_path = the_path->substr(9);
+        // Copy drive letter from second to first position.
+        new_path[0] = new_path[1];
+        // Add ':' after drive letter.
+        new_path[1] = ':';
+        // Replace '/' by '\'.
+        for (string::size_type i = 0; i < new_path.size(); i++)
+            if (new_path[i] == '/')
+                new_path[i] = '\\';
+#endif
         the_path = &new_path;
     }
 #endif
