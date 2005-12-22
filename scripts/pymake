@@ -403,6 +403,12 @@ def printusage():
     print '  -so:  create a shared object (.so) instead of an executable file.'
     print '  -dll: create a dll instead of an executable file.'
     print '        It probably works ONLY on Windows with MinGW installed.'
+    print '  -dllno-cygwin: create a dll instead of an executable file, with no'
+    print '                 dependence to the Cygwin dll. It probably works'
+    print '                 only on Windows with Cygwin installed.'
+    print '                 Note: SAS does not seem to like the -g option in'
+    print '                 g++, thus one should use -opt if the dll is meant'
+    print '                 to be used in SAS.'
     print '  -m32: force compilation in 32bits mode.'
     print '        Works on AMD64 (linux-x86_64) and linux-i386 machines, probably also on ia64.'
     print '        Allows to compile on .pymake/linux-x86_64.hosts,'
@@ -540,10 +546,10 @@ if 'm32' in optionargs:
     elif platform=='linux-i386':
         pass
     else:
-        print 'Warning: you probably shouldn\'t be using "-m32" option'
+        print 'Warning: you probably should not be using the "-m32" option'
     optionargs.remove('m32')
 
-symlinkobjs = 0;
+symlinkobjs = 0
 if 'symlinkobjs' in optionargs:
     symlinkobjs = 1
     optionargs.remove('symlinkobjs')
@@ -595,6 +601,23 @@ create_dll = 0 # do we want to create a dll instead of an executable file
 if 'dll' in optionargs:
     create_dll = 1
     optionargs.remove('dll')
+
+relocatable_dll = 0
+
+if 'dllno-cygwin' in optionargs:
+    create_dll = 1
+    relocatable_dll = 1
+    optionargs.remove('dllno-cygwin')
+    default_wrapper = 'dlltool'
+    dllwrap_basic_options = ''
+    if 'g++no-cygwin' not in optionargs:
+        optionargs.append('g++no-cygwin')
+
+# Set to '1' when using the '-mno-cygwin' option (in order to avoid dependency
+# to the Cygwin DLL).
+no_cygwin = 0
+if 'g++no-cygwin' in optionargs:
+    no_cygwin = 1
 
 static_linking = 0 # do we want to create a statically linked executable
 if 'static' in optionargs:
@@ -1413,26 +1436,78 @@ digraph G
             print "Successfully created " + self.corresponding_output + " and renamed it to " + corresponding_output 
         self.corresponding_output = corresponding_output
         
-    def dll_command(self):
+    def dll_commands(self):
         """returns the command for making dll target from the .o files in objsfilelist and the corresponding .def file"""        
         self.objsfilelist = []
         for ccfile in self.get_ccfiles_to_link():
             self.objsfilelist.append(ccfile.corresponding_ofile)
 
+        opt_linkeroptions = self.get_optional_libraries_linkeroptions()
+
+        # Note: the few lines below are copied from 'link_command', which is a
+        # bit (if not a lot) ugly.
+        for opt in options:
+            optdef = pymake_options_defs[opt]
+            if optdef.linkeroptions:
+                opt_linkeroptions += ' ' + optdef.linkeroptions
+
+        # List of commands to run to generate the dll.
+        list_of_commands = []
+
         dll_wrapper = default_wrapper
-        linkeroptions = ""
-        if self.corresponding_def_file:
-          linkeroptions = '--def='+self.corresponding_def_file
-        linkeroptions = linkeroptions + ' ' + dllwrap_basic_options
 
-        command = dll_wrapper + ' ' + linkeroptions + ' -o ' + self.corresponding_output + ' ' + string.join(self.objsfilelist,' ') + ' ' + self.get_optional_libraries_linkeroptions()
+        if relocatable_dll:
+            # These three steps of relocatable DLL creation were taken from
+            # Colin Peter's tutorial available here:
+            # http://www.emmestech.com/colin_peters_tutorial/dll/make.html
+            out_dir  = os.path.dirname(self.corresponding_output)
+            junk_tmp = os.path.join(out_dir, 'junk.tmp')
+            base_tmp = os.path.join(out_dir, 'base.tmp')
+            temp_exp = os.path.join(out_dir, 'temp.exp')
+            base_command = 'g++ -mdll -o ' + junk_tmp + ' '\
+                    + '-Wl,--base-file,' + base_tmp + ' '  \
+                    + string.join(self.objsfilelist) + ' ' \
+                    + opt_linkeroptions
+            if no_cygwin:
+                base_command += ' -mno-cygwin'
+            list_of_commands.append(base_command)
 
-        return command
+            dll_name = os.path.basename(self.corresponding_output)
+            wrap_command = dll_wrapper + ' ' \
+                    + '--dllname ' + dll_name + ' ' \
+                    + '--base-file ' + base_tmp + ' ' \
+                    + '--output-exp ' + temp_exp + ' ' \
+                    + '--def ' + self.corresponding_def_file
+            list_of_commands.append(wrap_command)
+
+            final_command = 'g++ -mdll -o ' + self.corresponding_output + ' '\
+                    + string.join(self.objsfilelist) + ' ' \
+                    + '-Wl,' + temp_exp + ' ' \
+                    + opt_linkeroptions
+            if no_cygwin:
+                final_command += ' -mno-cygwin'
+            list_of_commands.append(final_command)
+
+            list_of_commands.append('rm -f ' + junk_tmp)
+            list_of_commands.append('rm -f ' + base_tmp)
+            list_of_commands.append('rm -f ' + temp_exp)
+
+        else:
+            linkeroptions = ""
+            if self.corresponding_def_file:
+                linkeroptions = '--def='+self.corresponding_def_file
+                linkeroptions = linkeroptions + ' ' + dllwrap_basic_options
+
+                wrap_command = dll_wrapper + ' ' + linkeroptions + ' -o ' + self.corresponding_output + ' ' + string.join(self.objsfilelist,' ') + ' ' + opt_linkeroptions
+                list_of_commands.append(wrap_command)
+
+        return list_of_commands
 
     def launch_dll_wrapping(self):
-        command = self.dll_command()
-        print command
-        os.system(command)
+        list_of_commands = self.dll_commands()
+        for command in list_of_commands:
+            print command
+            os.system(command)
 
 
 file_info_map = {}
