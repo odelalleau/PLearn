@@ -247,8 +247,9 @@ void PLearner::build_()
     if(expdir!="")
     {
         if(!force_mkdir(expdir))
-            PLERROR("In PLearner Could not create experiment directory %s",expdir.c_str());
-        expdir = expdir.absolute() / "";
+            PLWARNING("In PLearner Could not create experiment directory %s",expdir.c_str());
+        else
+            expdir = expdir.absolute() / "";
     }
 }
 
