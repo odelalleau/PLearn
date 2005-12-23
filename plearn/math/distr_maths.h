@@ -51,6 +51,8 @@ using namespace std;
 // return log of Normal(x;mu, sigma2*I), i.e. density of a spherical Gaussian
 real log_of_normal_density(Vec x, Vec mu, real sigma2);
 inline real normal_density(Vec x, Vec mu, real sigma2) { return safeexp(log_of_normal_density(x,mu,sigma2)); }
+real log_rbf(Vec x, Vec mu, real sigma2);
+inline real rbf(Vec x, Vec mu, real sigma2) { return safeexp(log_rbf(x,mu,sigma2)); }
 
 // return log of Normal(x;mu, diag(sigma2)), i.e. density of a diagonal Gaussian
 real log_of_normal_density(Vec x, Vec mu, Vec sigma2);
@@ -63,6 +65,9 @@ inline real normal_density(Vec x, Vec mu, Vec sigma2) { return safeexp(log_of_no
 real log_of_normal_density(Vec x, Vec mu, Mat evectors, Vec evalues, real remainder_evalue=0);
 inline real normal_density(Vec x, Vec mu, Mat evectors, Vec evalues, real remainder_evalue=0) 
 { return safeexp(log_of_normal_density(x,mu,evectors,evalues,remainder_evalue)); }
+real log_fullGaussianRBF(Vec x, Vec mu, Mat evectors, Vec evalues, real remainder_evalue=0);
+inline real fullGaussianRBF(Vec x, Vec mu, Mat evectors, Vec evalues, real remainder_evalue=0) 
+{ return safeexp(log_fullGaussianRBF(x,mu,evectors,evalues,remainder_evalue)); }
 
 real logOfNormal(const Vec& x, const Vec& mu, const Mat& C);
 

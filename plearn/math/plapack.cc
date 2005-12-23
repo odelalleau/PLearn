@@ -491,7 +491,7 @@ void affineNormalization(Mat data, Mat W, Vec bias, real regularizer)
 //! If best_predictions is provided then a copy of the predictions obtained with the best weight decay is made. Similarly for best_weights.
 real generalizedCVRidgeRegression(Mat inputs, Mat targets,  real& best_LOOSSE, Mat* best_weights, Mat* best_predictions, bool inputs_are_transposed)
 {
-    static Mat inputs_copy, U, Vt, predictions, RHS_matrix, weights;
+    static Mat inputs_copy, U, Vt, predictions, RHS_matrix, weights, XY;
     static Vec singular_values, eigen_values, LOOSSE;
     int n_examples = inputs_are_transposed?inputs.width():inputs.length();
     int n_inputs = inputs_are_transposed?inputs.length():inputs.width();
@@ -504,22 +504,28 @@ real generalizedCVRidgeRegression(Mat inputs, Mat targets,  real& best_LOOSSE, M
                 best_weights->length(),best_weights->width(),n_outputs,n_inputs);
 
     inputs_copy.resize(n_examples,n_inputs);
-    if (inputs_are_transposed)
-        transpose(inputs, inputs_copy);
-    else
-        inputs_copy << inputs;
     predictions.resize(n_examples,n_outputs);
     weights.resize(n_outputs,n_inputs);
     int rank = min(n_examples,n_inputs);
     U.resize(n_examples,rank);
     Vt.resize(rank,n_inputs);
+    XY.resize(n_inputs,n_outputs);
     RHS_matrix.resize(rank,n_outputs);
     singular_values.resize(rank);
     eigen_values.resize(rank);
     LOOSSE.resize(rank);
+    if (inputs_are_transposed)
+        transpose(inputs, inputs_copy);
+    else
+        inputs_copy << inputs;
+
+    transposeProduct(XY,inputs_copy,targets);
+
     // the computational cost of the SVD is O(rank^3)
     SVD(inputs_copy,U,singular_values,Vt,'S');
-    
+
+    product(RHS_matrix,Vt,XY);
+
     real trace_of_design_matrix = 0;
     for (int i=0;i<rank;i++)
     {
@@ -581,8 +587,17 @@ real LOOSSEofRidgeRegression(Mat inputs, Mat targets, Mat weights, real weight_d
         transposeTransposeProduct(predictions, inputs, weights);
     else
         productTranspose(predictions, inputs, weights);
-    predictions -= targets;
-    real SSE = sum_of_squares(predictions);
+    real SSE = 0;
+    for (int i=0;i<targets.length();i++)
+    {
+        real *ti = targets[i];
+        real *pi = predictions[i];
+        for (int j=0;j<targets.width();j++)
+        {
+            real diff = ti[j]-pi[j];
+            SSE += diff*diff;
+        }
+    }
     real denom = n_inputs - s;
     real LOOMSE = SSE / (denom*denom);
     return LOOMSE;

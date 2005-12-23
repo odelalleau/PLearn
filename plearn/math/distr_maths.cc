@@ -276,6 +276,18 @@ real log_of_normal_density(Vec x, Vec mu, real sigma2)
     return lp;
 }
 
+real log_rbf(Vec x, Vec mu, real sigma2)
+{
+    real lp=0;
+    real inv_s=1.0/sigma2;
+    for (int i=0;i<x.length();i++)
+    {
+        real diff = x[i]-mu[i];
+        lp += -0.5*diff*diff*inv_s;
+    }
+    return lp;
+}
+
 
 // return log of Normal(x;mu, diag(sigma2)), i.e. density of a diagonal Gaussian
 real log_of_normal_density(Vec x, Vec mu, Vec sigma2)
@@ -322,6 +334,39 @@ real log_of_normal_density(Vec x, Vec mu, Mat evectors, Vec evalues, real remain
     }
     return lp;
 */
+}
+
+// return log of Normal(x;mu, Sigma), i.e. density of a full Gaussian,
+// where the covariance Sigma is
+//    Sigma = remainder_evalue*I + sum_i max(0,evalues[i]-remainder_evalue)*evectors(i)*evectors(i)'
+// The eigenvectors are in the ROWS of matrix evectors (because of easier row-wise access in Mat's).
+real log_fullGaussianRBF(Vec x, Vec mu, Mat evectors, Vec evalues, real remainder_evalue)
+{
+    static Vec centered_x;
+    int d=x.length();
+    centered_x.resize(d);
+    int k=evectors.length();
+    real lp = 0;
+    real irev = 0;
+    substract(x,mu,centered_x);
+    if (remainder_evalue>0)
+    {
+        irev = 1 / remainder_evalue;
+        lp -= 0.5 * pownorm(centered_x) * irev;
+        if (k>=d)
+            PLERROR("log_of_normal_density: when remainder_evalue>0, there should be less e-vectors (%d) than dimensions (%d)",
+                    k,d);
+    }
+    for (int i=0;i<k;i++)
+    {
+        real ev = evalues[i];
+        if (ev>=remainder_evalue)
+        {
+            real iv = 1/ev - irev;
+            lp -= 0.5 * iv * square(dot(evectors(i),centered_x));
+        }
+    }
+    return lp;
 }
 
 void addEigenMatrices(Mat A_evec, Vec A_eval, Mat B_evec, Vec B_eval, Mat C_evec, Vec C_eval, bool inverses)
