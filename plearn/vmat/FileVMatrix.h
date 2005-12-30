@@ -46,10 +46,14 @@
 
 #include "RowBufferedVMatrix.h"
 
+// While under development, we use this define to control
+// whether to use the NSPR 64 bit file access or the old std C FILE*
+#define USE_NSPR_FILE
+struct PRFileDesc;
+
 namespace PLearn {
 using namespace std;
  
-
 //! A VMatrix that exists in a .pmat file (native PLearn matrix format,
 //! same as for Mat).
 class FileVMatrix: public RowBufferedVMatrix
@@ -62,7 +66,12 @@ private:
 protected:
 
     PPath filename_;
+
+#ifdef USE_NSPR_FILE
+    PRFileDesc* f;
+#else
     FILE* f;
+#endif
     bool file_is_bigendian;
     bool file_is_float;
 
@@ -112,6 +121,8 @@ public:
 private:
 
     void build_();
+    // seek to element i,j in file
+    void moveto(int i, int j=0) const;
 
 };
 

@@ -41,7 +41,7 @@
 
 #include "MatIO.h"
 //#include "stringutils.h"
-//#include "fileutils.h"
+#include "fileutils.h"
 
 namespace PLearn {
 using namespace std;
@@ -415,6 +415,21 @@ void savePMat(const string& filename, const TMat<double>& mat)
     }
     fclose(f);
 }
+
+void savePMatFieldnames(const string& pmatfilename, const TVec<string>& fieldnames)
+{
+    string metadatadir = pmatfilename+".metadata";
+    if(!isdir(metadatadir))
+        force_mkdir(metadatadir);
+    string fname = metadatadir+"/fieldnames";
+    FILE* f = fopen(fname.c_str(),"w");
+    if(!f)
+        PLERROR("Could not open file %s for writing",fname.c_str());
+    for(int i= 0; i < fieldnames.length(); ++i)
+        fprintf(f,"%s\t0\n",fieldnames[i].c_str());
+    fclose(f);
+}
+
 
 void loadPMat(const string& filename, TMat<float>& mat)
 {

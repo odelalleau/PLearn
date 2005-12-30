@@ -286,7 +286,7 @@ bool force_rmdir(const PPath& dirname)
 //////////////
 // filesize //
 //////////////
-long filesize(const PPath& filename)
+PRUint64 filesize64(const PPath& filename)
 {
     PRFileInfo64 inf;
     if (PR_GetFileInfo64_NoWildcards(filename.absolute().c_str(), &inf) != PR_SUCCESS)
@@ -294,6 +294,7 @@ long filesize(const PPath& filename)
                 filename.absolute().c_str(), getPrErrorString().c_str());
     return inf.size;
 }
+
 
 //////////////////////
 // loadFileAsString //

@@ -69,13 +69,15 @@ void loadMat(const string& filename, TMat<double>& mat);
 void loadVec(const string& filename, TVec<float>& vec);
 void loadVec(const string& filename, TVec<double>& vec);
 
-//! Old native PLearn binary format (.pmat)
+//! Native PLearn binary format (.pmat)
 void savePVec(const string& filename, const TVec<float>& vec);
 void savePVec(const string& filename, const TVec<double>& vec);
 void loadPVec(const string& filename, TVec<float>& vec);
 void loadPVec(const string& filename, TVec<double>& vec);
 void savePMat(const string& filename, const TMat<float>& mat);
 void savePMat(const string& filename, const TMat<double>& mat);
+//! Will save the fieldnames in corresponding pmatfilename.metadata/fieldnames (creating the metadata directory if necessary)
+void savePMatFieldnames(const string& pmatfilename, const TVec<string>& fieldnames);
 void loadPMat(const string& filename, TMat<float>& mat);
 void loadPMat(const string& filename, TMat<double>& mat);
 

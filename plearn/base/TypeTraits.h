@@ -49,6 +49,8 @@
 #include <vector>
 #include <list>
 #include <map>
+#include <set>
+#include <mozilla/nspr/prlong.h>
 
 namespace PLearn {
 using std::string;
@@ -145,6 +147,8 @@ DECLARE_TYPE_TRAITS_FOR_BASETYPE(int,            0x07, 0x08);
 DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned int,   0x0B, 0x0C);
 DECLARE_TYPE_TRAITS_FOR_BASETYPE(long,           0x07, 0x08);
 DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned long,  0x0B, 0x0C);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(PRInt64,        0x16, 0x17);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(PRUint64,       0x18, 0x19);
 DECLARE_TYPE_TRAITS_FOR_BASETYPE(float,          0x0E, 0x0F);
 DECLARE_TYPE_TRAITS_FOR_BASETYPE(double,         0x10, 0x11);
 DECLARE_TYPE_TRAITS_FOR_BASETYPE(bool,           0x30, 0x30);
@@ -199,6 +203,20 @@ class TypeTraits< std::map<T,U> >
 public:
     static inline string name()
     { return string("map< ") + TypeTraits<T>::name()+", " + TypeTraits<U>::name()+" >"; }
+
+    static inline unsigned char little_endian_typecode()
+    { return 0xFF; }
+
+    static inline unsigned char big_endian_typecode()
+    { return 0xFF; }
+};
+
+template<class T>
+class TypeTraits< std::set<T> >
+{
+public:
+    static inline string name()
+    { return string("set< ") + TypeTraits<T>::name()+" >"; }
 
     static inline unsigned char little_endian_typecode()
     { return 0xFF; }

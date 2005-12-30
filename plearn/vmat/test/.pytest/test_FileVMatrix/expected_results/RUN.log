@@ -1,0 +1,36 @@
+Testing small FileVMatrix
+TEST m1
+TEST m2
+TEST m3
+TEST m4
+TEST m5
+Fieldnames: aaa bbb ccc  SAME? 1
+toMat(): 
+1	2	3	
+2	3	4	
+11	nan	13	
+11	12	13	
+21	nan	23	
+6	7	8	
+7	8	9	
+8	9	10	
+9	10	11	
+10	11	12	
+11	12	13	
+11	12	13	
+21	nan	23	
+
+TEST m6
+Testing huge FileVMatrix
+199999995: 101 102 103  (should be 101 102 103)
+5: 99 100 101  (should be 99 100 101)
+l=200000000 length=200000001 (should be l+1)
+199999995: 101 102 103  (should be 101 102 103)
+5: 99 100 101  (should be 99 100 101)
+200000000: 999 999 999  (should be 999 999 999)
+Huge file size: 4800000088 sohuld equal 4800000088  ? 1
+TEST m7
+l=200000000 length=200000001 (should be l+1)
+199999995: 101 102 103  (should be 101 102 103)
+5: 99 100 101  (should be 99 100 101)
+200000000: 999 999 999  (should be 999 999 999)

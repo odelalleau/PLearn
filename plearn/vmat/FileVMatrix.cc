@@ -40,6 +40,7 @@
 
 #include "FileVMatrix.h"
 #include <plearn/io/fileutils.h>
+#include <plearn/io/pl_NSPR_io.h>
 
 namespace PLearn {
 using namespace std;
@@ -154,10 +155,14 @@ void FileVMatrix::build_()
 
     if (build_new_file || !isfile(filename_))
     {
-        if (!writable) {
+        if (!writable)
             PLERROR("In FileVMatrix::build_ - You asked to create a new file, but 'writable' is set to 0 !");
-        }
+
+#ifdef USE_NSPR_FILE
+        f = PR_Open(filename_.c_str(), PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE, 0666);        
+#else
         f = fopen(filename_.c_str(),"w+b");
+#endif
         if (!f)
             PLERROR("In FileVMatrix constructor, could not open file %s",filename_.c_str());
 
@@ -178,14 +183,20 @@ void FileVMatrix::build_()
     
         if(length_ > 0 && width_ > 0) 
         {
-            // Ensure we can allocate enough space... if len>0, to ensure
-            // that the header ends with a '\n'.
+            // Ensure we can allocate enough space... if len>0
+#ifdef USE_NSPR_FILE
+            moveto(length_-1,width_-1);
+            char c = '\0';
+            PR_Write(f, &c, 1);
+            PR_Sync(f);
+#else
             if( fseek(f, DATAFILE_HEADERLENGTH+length_*width_*sizeof(real)-1, SEEK_SET) <0 )
             {
                 perror("");
                 PLERROR("In FileVMatrix::build_ - Could not fseek to last byte");
             }
             fputc('\0',f);
+#endif
         }
 
         // Get rid of any pre-existing .metadata :: this ensures that old
@@ -195,14 +206,30 @@ void FileVMatrix::build_()
     else
     {
         if (writable)
+        {
+#ifdef USE_NSPR_FILE
+            f = PR_Open(filename_.c_str(), PR_RDWR | PR_CREATE_FILE, 0666);
+#else
             f = fopen(filename_.c_str(), "r+b");
+#endif
+        }
         else
+        {
+#ifdef USE_NSPR_FILE
+            f = PR_Open(filename_.c_str(), PR_RDONLY, 0666);
+#else
             f = fopen(filename_.c_str(), "rb");
+#endif
+        }
 
         if (! f)
             PLERROR("FileVMatrix::build: could not open file %s", filename_.c_str());
-    
+
+#ifdef USE_NSPR_FILE
+        PR_Read(f,header,DATAFILE_HEADERLENGTH);
+#else    
         fread(header,DATAFILE_HEADERLENGTH,1,f);
+#endif
         if(header[DATAFILE_HEADERLENGTH-1]!='\n')
             PLERROR("In FileVMatrix constructor, wrong header for PLearn binary matrix format. Please use checkheader (in PLearn/Scripts) to check the file.(0)");
         int file_length, file_width;
@@ -277,8 +304,13 @@ void FileVMatrix::build_()
 //////////////////////
 void FileVMatrix::closeCurrentFile()
 {
-    if (f) {
+    if (f) 
+    {
+#ifdef USE_NSPR_FILE
+        PR_Close(f);
+#else
         fclose(f);
+#endif
         f = 0;
     }
 }
@@ -322,21 +354,35 @@ FileVMatrix::~FileVMatrix()
     FileVMatrix::closeCurrentFile();
 }
 
+
 ///////////////
 // getNewRow //
 ///////////////
 void FileVMatrix::getNewRow(int i, const Vec& v) const
 {
+#ifdef BOUNDCHECK
+    if(v.length()!=width_)
+        PLERROR("In FileVMatrix::getNewRow length of v (%d) differs from matrix width (%d)",v.length(),width_);
+#endif
+
+#ifdef USE_NSPR_FILE
+    moveto(i);
+    if(file_is_float)
+        PR_Read_float(f, v.data(), v.length(), file_is_bigendian);
+    else
+        PR_Read_double(f, v.data(), v.length(), file_is_bigendian);
+#else
     if(file_is_float)
     {
-        fseek(f, DATAFILE_HEADERLENGTH+(i*width_)*sizeof(float), SEEK_SET);
+        fseek(f, DATAFILE_HEADERLENGTH+(i*width_)*sizeof(float), SEEK_SET);        
         fread_float(f, v.data(), v.length(), file_is_bigendian);
     }
     else
     {
         fseek(f, DATAFILE_HEADERLENGTH+(i*width_)*sizeof(double), SEEK_SET);
         fread_double(f, v.data(), v.length(), file_is_bigendian);
-    }  
+    }
+#endif  
 }
 
 ///////////////
@@ -344,18 +390,38 @@ void FileVMatrix::getNewRow(int i, const Vec& v) const
 ///////////////
 void FileVMatrix::putSubRow(int i, int j, Vec v)
 {
+    moveto(i,j);
+#ifdef USE_NSPR_FILE
     if(file_is_float)
-    {
-        fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(float), SEEK_SET);
-        fwrite_float(f, v.data(), v.length(), file_is_bigendian);
-    }
+        PR_Write_float(f, v.data(), v.length(), file_is_bigendian);
     else
-    {
-        fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(double), SEEK_SET);
+        PR_Write_double(f, v.data(), v.length(), file_is_bigendian);
+#else
+    if(file_is_float)
+        fwrite_float(f, v.data(), v.length(), file_is_bigendian);
+    else
         fwrite_double(f, v.data(), v.length(), file_is_bigendian);
-    }
+#endif
 
     invalidateBuffer();
+}
+
+void FileVMatrix::moveto(int i, int j) const
+{
+#ifdef USE_NSPR_FILE
+    PRInt64 offset = i;
+    int elemsize = file_is_float ? sizeof(float) : sizeof(double);
+    offset *= width_;
+    offset += j;
+    offset *= elemsize;
+    offset += DATAFILE_HEADERLENGTH;
+    PR_Seek64(f, offset, PR_SEEK_SET);
+#else
+    if(file_is_float)
+        fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(float), SEEK_SET);
+    else
+        fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(double), SEEK_SET);
+#endif
 }
 
 /////////
@@ -363,6 +429,13 @@ void FileVMatrix::putSubRow(int i, int j, Vec v)
 /////////
 void FileVMatrix::put(int i, int j, real value)
 {
+#ifdef USE_NSPR_FILE
+    moveto(i,j);
+    if(file_is_float)
+        PR_Write_float(f,float(value),file_is_bigendian);
+    else
+        PR_Write_double(f,double(value),file_is_bigendian);    
+#else    
     if(file_is_float)
     {
         fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(float), SEEK_SET);
@@ -373,7 +446,7 @@ void FileVMatrix::put(int i, int j, real value)
         fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(double), SEEK_SET);
         fwrite_double(f,double(value),file_is_bigendian);
     }
-
+#endif
     invalidateBuffer();
 }
 
@@ -382,6 +455,13 @@ void FileVMatrix::put(int i, int j, real value)
 ///////////////
 void FileVMatrix::appendRow(Vec v)
 {
+#ifdef USE_NSPR_FILE
+    moveto(length_,0);
+    if(file_is_float)
+        PR_Write_float(f, v.data(), v.length(), file_is_bigendian);
+    else
+        PR_Write_double(f, v.data(), v.length(), file_is_bigendian);
+#else
     if(file_is_float)
     {
         fseek(f,DATAFILE_HEADERLENGTH+length_*width_*sizeof(float), SEEK_SET);
@@ -392,8 +472,9 @@ void FileVMatrix::appendRow(Vec v)
         fseek(f,DATAFILE_HEADERLENGTH+length_*width_*sizeof(double), SEEK_SET);
         fwrite_double(f, v.data(), v.length(), file_is_bigendian);
     }
-    length_++;
+#endif
 
+    length_++;
     updateHeader();
 }
 
@@ -402,7 +483,14 @@ void FileVMatrix::appendRow(Vec v)
 ///////////
 void FileVMatrix::flush()
 {
+    if(f)
+    {
+#ifdef USE_NSPR_FILE
+    PR_Sync(f);
+#else
     fflush(f);
+#endif
+    }
 }
 
 //////////////////
@@ -432,8 +520,14 @@ void FileVMatrix::updateHeader() {
         header[pos] = ' ';
     }
     header[DATAFILE_HEADERLENGTH-1] = '\n';
+
+#ifdef USE_NSPR_FILE
+    PR_Seek64(f, 0, PR_SEEK_SET);
+    PR_Write(f, header, DATAFILE_HEADERLENGTH);
+#else
     fseek(f,0,SEEK_SET);
     fwrite(header,1,DATAFILE_HEADERLENGTH,f);
+#endif
 }
 
 } // end of namespcae PLearn

@@ -40,6 +40,8 @@
 #include <set>
 #include <sstream>
 #include <fstream>
+// we use PRInt64 and PRUint64 for types from NSPR for 64 bit integers
+#include <mozilla/nspr/prlong.h>
 #include <plearn/base/byte_order.h>
 #include <plearn/base/pl_hash_fun.h>
 #include <plearn/base/plerror.h>
@@ -180,6 +182,8 @@ public:
     void writeAsciiNum(unsigned int x);
     void writeAsciiNum(long x);
     void writeAsciiNum(unsigned long x);
+    void writeAsciiNum(PRInt64 x);
+    void writeAsciiNum(PRUint64 x);
     void writeAsciiNum(float x);
     void writeAsciiNum(double x);
 
@@ -192,6 +196,8 @@ public:
     void readAsciiNum(unsigned int &x);
     void readAsciiNum(long &x);
     void readAsciiNum(unsigned long &x);
+    void readAsciiNum(PRInt64 &x);
+    void readAsciiNum(PRUint64 &x);
     void readAsciiNum(float &x);
     void readAsciiNum(double &x);
 
@@ -384,6 +390,8 @@ public:
     PStream& operator>>(unsigned long &x);
     PStream& operator>>(short &x);
     PStream& operator>>(unsigned short &x);
+    PStream& operator>>(PRInt64 &x);
+    PStream& operator>>(PRUint64 &x);
     PStream& operator>>(pl_pstream_manip func) { return (*func)(*this); }
 
     // operator<<'s for base types
@@ -413,6 +421,8 @@ public:
     PStream& operator<<(unsigned int x);
     PStream& operator<<(long x);
     PStream& operator<<(unsigned long x);
+    PStream& operator<<(PRInt64 x);
+    PStream& operator<<(PRUint64 x);
     PStream& operator<<(short x);
     PStream& operator<<(unsigned short x);
     PStream& operator<<(pl_pstream_manip func) { return (*func)(*this); }

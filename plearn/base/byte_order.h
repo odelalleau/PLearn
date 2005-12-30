@@ -41,6 +41,8 @@
 #include <string>
 #endif
 
+#include <stdlib.h>
+
 namespace PLearn {
 using namespace std;
 
@@ -59,6 +61,7 @@ inline char byte_order()
 #endif
 }
 
+
 //! swaps endians for n 2-byte elements (such as short)
 void endianswap2(void* ptr, int n);
 //! swaps endians for n 4-byte elements (such as int or float)
@@ -66,21 +69,48 @@ void endianswap4(void* ptr, int n);
 //! swaps endians for n 8-byte elements (such as double)
 void endianswap8(void* ptr, int n);
 
+//! calls endianswap2,4, or 8 depending on elemsize (an elemsize of 1 is also valid and does nothing)
+inline void endianswap(void* ptr, int nelems, int elemsize)
+{
+    switch(elemsize)
+    {
+    case 1:
+        break;
+    case 2:
+        endianswap2(ptr,nelems);
+        break;
+    case 4:
+        endianswap4(ptr,nelems);
+        break;
+    case 8:
+        endianswap8(ptr,nelems);
+        break;
+    default:
+        abort();
+    }
+}
+
+
+/*
 // Version for char and unsigned char (I know this is useless, but some code relies on it being defined)
 inline void endianswap(char* ptr, int n=1) {}
 inline void endianswap(signed char* ptr, int n=1) {}
 inline void endianswap(unsigned char* ptr, int n=1) {}
 
 // Versions for short, int, long, float and double
-inline void endianswap(short* ptr, int n=1) { endianswap2(ptr,n); }
-inline void endianswap(unsigned short* ptr, int n=1) { endianswap2(ptr,n); }
-inline void endianswap(int* ptr, int n=1) { endianswap4(ptr,n); }
-inline void endianswap(unsigned int* ptr, int n=1) { endianswap4(ptr,n); }
-inline void endianswap(long* ptr, int n=1) { endianswap4(ptr,n); }
-inline void endianswap(unsigned long* ptr, int n=1) { endianswap4(ptr,n); }
-inline void endianswap(float* ptr, int n=1) { endianswap4(ptr,n); }
-inline void endianswap(double* ptr, int n=1) { endianswap8(ptr,n); }
+inline void endianswap(short* ptr, int n=1) { endianswap(ptr,n,sizeof(short)); }
+inline void endianswap(unsigned short* ptr, int n=1) { endianswap(ptr,n,sizeof(unsigned short)); }
+inline void endianswap(int* ptr, int n=1) { endianswap(ptr,n,sizeof(int)); }
+inline void endianswap(unsigned int* ptr, int n=1) { endianswap(ptr,n,sizeof(unsigned int)); }
+inline void endianswap(long* ptr, int n=1) { endianswap(ptr,n,sizeof(long)); }
+inline void endianswap(unsigned long* ptr, int n=1) { endianswap(ptr,n,sizeof(unsigned long)); }
+inline void endianswap(float* ptr, int n=1) { endianswap(ptr,n,sizeof(float)); }
+inline void endianswap(double* ptr, int n=1) { endianswap(ptr,n,sizeof(double)); }
+*/
 
+template<class T>
+inline void endianswap(T* ptr, int n=1)
+{ endianswap(ptr,n,sizeof(T)); }
 
 }
 

@@ -176,6 +176,10 @@ public:
                                      real probability,
                                      TVec< pair<real,real> >& intervals) const;
 
+    //! If there's an output_prg, it returns output_prg_fieldnames 
+    //! If there's no output_prg, the call is forwarded to the inner learner
+    virtual TVec<string> getOutputNames() const;
+
     virtual TVec<std::string> getTestCostNames() const;
 
     //! Forwarded to inner learner

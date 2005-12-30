@@ -91,8 +91,8 @@ void VPLPreprocessedLearner::declareOptions(OptionList& ol)
     declareOption(ol, "input_preproc", &VPLPreprocessedLearner::input_preproc, OptionBase::buildoption,
                   "Program string in VPL language to be applied to a new input.\n"
                   "This must produce exactly the same thing as the preprocessed.\n"
-                  "Note that names must be given to the generated values with :fieldname VPL syntax.\n"
-                  "input part produced by trainset_preproc");
+                  "input part produced by trainset_preproc\n"
+                  "Note that names must be given to the generated values with :fieldname VPL syntax.\n");
   
     declareOption(ol, "output_postproc", &VPLPreprocessedLearner::output_postproc, OptionBase::buildoption,
                   "Program string in VPL language to optain postprocessed output\n"
@@ -431,6 +431,14 @@ bool VPLPreprocessedLearner::computeConfidenceFromOutput(
         }
     }
     return status;
+}
+
+TVec<string> VPLPreprocessedLearner::getOutputNames() const
+{
+    if(output_prg)
+        return output_prg_fieldnames;
+    else
+        return learner_->getOutputNames();
 }
 
 

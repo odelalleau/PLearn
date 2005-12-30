@@ -425,6 +425,39 @@ void PStream::writeAsciiNum(unsigned long x)
     write(tmpbuf, streamsize(strlen(tmpbuf)));
 }
 
+void PStream::writeAsciiNum(PRInt64 x)
+{
+    PRInt64 zero(0);
+    if(x>=zero)
+        writeAsciiNum(PRUint64(x));
+    else
+    {        
+        put('-');
+        writeAsciiNum(PRUint64(-x));
+    }
+}
+
+void PStream::writeAsciiNum(PRUint64 x)
+{
+    PRUint64 zero(0);
+    if(x==zero)
+        put('0');
+    else
+    {
+        char buf[30];
+        char* p = buf+29;
+        int n = 0;
+        while(x>zero)
+        {
+            *p-- = '0'+char(x%10);
+            x /= 10;
+            ++n;
+        }
+        ++p;
+        write(p,n);
+    }
+}
+
 void PStream::writeAsciiNum(float x)
 {
     if(is_missing(x))
@@ -532,6 +565,49 @@ void PStream::readAsciiNum(unsigned long &x)
     while(isdigit(c))
     {
         x = x*10 + c-'0';
+        c = get();
+    }
+    unget();
+}
+
+void PStream::readAsciiNum(PRInt64 &x)
+{
+    skipBlanks();
+    x = 0;
+    char c = get();
+    bool negate = false;
+    if (c == '-')
+    {
+        negate = true;
+        c = get();
+    }
+    else if (c == '+')
+        c = get();
+  
+    if(!isdigit(c))
+        PLERROR("In readAsciiNum: not a valid ascii number, expected a digit, but read %c (ascii code %d)",c,c);
+
+    do
+    {
+        x *= 10;
+        x += c-'0';
+        c = get();
+    } while(isdigit(c));
+
+    unget();
+    if(negate)
+        x = -x;
+}
+
+void PStream::readAsciiNum(PRUint64 &x)
+{
+    skipBlanks();
+    x = 0;
+    char c = get();
+    while(isdigit(c))
+    {
+        x *= 10;
+        x += c-'0';
         c = get();
     }
     unget();
@@ -1032,6 +1108,84 @@ PStream& PStream::operator>>(unsigned long &x)
     }
     return *this;
 }
+
+
+PStream& PStream::operator>>(PRInt64 &x)
+{
+    switch(inmode)
+    {
+    case raw_ascii:
+    case pretty_ascii:
+        skipBlanks();
+        readAsciiNum(x);
+        break;
+    case raw_binary:
+        read(reinterpret_cast<char *>(&x), sizeof(PRInt64));
+        break;
+    case plearn_ascii:
+    case plearn_binary:
+    {
+        skipBlanksAndCommentsAndSeparators();
+        int c = get();
+        if(c==0x16 || c==0x17)  // plearn_binary
+        {
+            read(reinterpret_cast<char*>(&x),sizeof(PRInt64));
+            if( (c==0x16 && byte_order()==BIG_ENDIAN_ORDER) 
+                || (c==0x17 && byte_order()==LITTLE_ENDIAN_ORDER) )
+                endianswap(&x);
+        }
+        else  // plearn_ascii
+        {
+            unget();
+            readAsciiNum(x);
+        }
+        break;
+    }
+    default:
+        PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
+        break;
+    }
+    return *this;
+}
+  
+PStream& PStream::operator>>(PRUint64 &x)
+{
+    switch(inmode)
+    {
+    case raw_ascii:
+    case pretty_ascii:
+        skipBlanks();
+        readAsciiNum(x);
+        break;
+    case raw_binary:
+        read(reinterpret_cast<char *>(&x), sizeof(PRUint64));
+        break;
+    case plearn_ascii:
+    case plearn_binary:
+    {
+        skipBlanksAndCommentsAndSeparators();
+        int c = get();
+        if(c==0x18 || c==0x19)  // plearn_binary
+        {
+            read(reinterpret_cast<char*>(&x),sizeof(PRUint64));
+            if( (c==0x18 && byte_order()==BIG_ENDIAN_ORDER) 
+                || (c==0x19 && byte_order()==LITTLE_ENDIAN_ORDER) )
+                endianswap(&x);
+        }
+        else  // plearn_ascii
+        {
+            unget();
+            readAsciiNum(x);
+        }
+        break;
+    }
+    default:
+        PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
+        break;
+    }
+    return *this;
+}
+
   
 PStream& PStream::operator>>(short &x)
 {
@@ -1514,6 +1668,67 @@ PStream& PStream::operator<<(unsigned long x)
     }
     return *this;
 }
+
+PStream& PStream::operator<<(PRInt64 x) 
+{ 
+    switch(outmode)
+    {
+    case raw_binary:
+        write(reinterpret_cast<char *>(&x), sizeof(PRInt64));
+        break;
+    case raw_ascii:
+    case pretty_ascii:
+        writeAsciiNum(x);
+        break;
+    case plearn_ascii:
+        writeAsciiNum(x);
+        put(' ');
+        break;
+    case plearn_binary:
+#ifdef BIGENDIAN
+        put((char)0x17);
+#else
+        put((char)0x16);
+#endif
+        write((char*)&x,sizeof(PRInt64));
+        break;
+    default:
+        PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
+        break;
+    }
+    return *this;
+}
+
+PStream& PStream::operator<<(PRUint64 x) 
+{ 
+    switch(outmode)
+    {
+    case raw_binary:
+        write(reinterpret_cast<char *>(&x), sizeof(PRUint64));
+        break;
+    case raw_ascii:
+    case pretty_ascii:
+        writeAsciiNum(x);
+        break;
+    case plearn_ascii:
+        writeAsciiNum(x);
+        put(' ');
+        break;
+    case plearn_binary:
+#ifdef BIGENDIAN
+        put((char)0x19);
+#else
+        put((char)0x18);
+#endif
+        write((char*)&x,sizeof(PRUint64));
+        break;
+    default:
+        PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
+        break;
+    }
+    return *this;
+}
+
 
 PStream& PStream::operator<<(short x) 
 { 

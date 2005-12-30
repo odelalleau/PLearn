@@ -103,8 +103,13 @@ void force_mkdir_for_file(const PPath& filepath);
 */
 bool force_rmdir(const PPath& dirname);
 
-//! Returns the length of a file, measured in bytes.
-long filesize(const PPath& filename);
+//! Returns the length of a file, measured in bytes, 
+//! as a 64bit unsigned integer type defined by NSPR
+PRUint64 filesize64(const PPath& filename);
+
+//! Returns the length of a file, measured in bytes, as a long
+inline long filesize(const PPath& filename)
+{ return long(filesize64(filename)); }
 
 //! Calls system with cp -R to recursively copy source to destination.
 void cp(const PPath& srcpath, const PPath& destpath);
