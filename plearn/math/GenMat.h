@@ -960,6 +960,7 @@ int GDFindSmallEigenPairs(MatT& A,Mat X,
 */
 template<class MatT>
 int kernelPCAfromDotProducts(MatT& dot_products,Mat embedding, int max_n_eigen_iter=300)
+{
     int n=square_distances.length();
     long int m=embedding.width();
     if (embedding.length()!=n)
