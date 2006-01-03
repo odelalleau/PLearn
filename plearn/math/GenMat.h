@@ -961,15 +961,20 @@ int GDFindSmallEigenPairs(MatT& A,Mat X,
 template<class MatT>
 int kernelPCAfromDotProducts(MatT& dot_products,Mat embedding, int max_n_eigen_iter=300)
 {
-    int n=square_distances.length();
+    int n=dot_products.length();
     long int m=embedding.width();
     if (embedding.length()!=n)
         PLERROR("kernelPCAfromDotProducts: expected embedding.length()==dot_products.length(), got %d!=%d",
                 embedding.length(),n);
     if (dot_products.width()!=n)
         PLERROR("kernelPCAfromDotProducts: expected dot_products a square matrix, got %d x %d",
-                n,square_distances.width());
+                n,dot_products.width());
 
+    static Vec e_values;
+    e_values.resize(m);
+    static Mat e_vectors;
+    e_vectors.resize(m,n);
+    
     int err=eigenSparseSymmMat(dot_products, e_values, 
                                e_vectors, m, max_n_eigen_iter);
     if (!(err==0 || err==1))
@@ -986,6 +991,7 @@ int kernelPCAfromDotProducts(MatT& dot_products,Mat embedding, int max_n_eigen_i
         feature_j *= scale;
         embedding.column(j) << feature_j;
     }
+    return 0;
 }
 
 /*!   Apply the metric multi-dimensional scaling (MDS) algorithm to a possibly sparse
@@ -1011,7 +1017,8 @@ int metricMultiDimensionalScaling(MatT& square_distances,Mat embedding, int max_
         PLERROR("MetricMultiDimensionalScaling: only works on a full, non-sparse matrix\n");
 
     //!  double-centering of the distances to get dot products
-    Vec avg_across_rows(n);
+    static Vec avg_across_rows;
+    avg_across_rows.resize(n);
     //!  average the non-zero elements across rows and columns
     columnSum(square_distances, avg_across_rows);
     avg_across_rows *= 1.0/n;
@@ -1020,8 +1027,10 @@ int metricMultiDimensionalScaling(MatT& square_distances,Mat embedding, int max_
 
     //!  do a partial SVD (which is the same as an eigen-decomposition since 
     //!  the matrix is symmetric) to find the largest eigen-pairs
-    Vec e_values(m);
-    Mat e_vectors(m,n);
+    static Vec e_values;
+    e_values.resize(m);
+    static Mat e_vectors;
+    e_vectors.resize(m,n);
     int err=eigenSparseSymmMat(square_distances, e_values, 
                                e_vectors, m, max_n_eigen_iter);
     if (!(err==0 || err==1))
