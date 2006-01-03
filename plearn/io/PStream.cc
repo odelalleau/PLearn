@@ -425,21 +425,21 @@ void PStream::writeAsciiNum(unsigned long x)
     write(tmpbuf, streamsize(strlen(tmpbuf)));
 }
 
-void PStream::writeAsciiNum(PRInt64 x)
+void PStream::writeAsciiNum(long long x)
 {
-    PRInt64 zero(0);
+    long long zero(0);
     if(x>=zero)
-        writeAsciiNum(PRUint64(x));
+        writeAsciiNum((unsigned long long)x);
     else
     {        
         put('-');
-        writeAsciiNum(PRUint64(-x));
+        writeAsciiNum((unsigned long long) -x);
     }
 }
 
-void PStream::writeAsciiNum(PRUint64 x)
+void PStream::writeAsciiNum(unsigned long long x)
 {
-    PRUint64 zero(0);
+    unsigned long long zero(0);
     if(x==zero)
         put('0');
     else
@@ -570,7 +570,7 @@ void PStream::readAsciiNum(unsigned long &x)
     unget();
 }
 
-void PStream::readAsciiNum(PRInt64 &x)
+void PStream::readAsciiNum(long long &x)
 {
     skipBlanks();
     x = 0;
@@ -599,7 +599,7 @@ void PStream::readAsciiNum(PRInt64 &x)
         x = -x;
 }
 
-void PStream::readAsciiNum(PRUint64 &x)
+void PStream::readAsciiNum(unsigned long long &x)
 {
     skipBlanks();
     x = 0;
@@ -1110,7 +1110,7 @@ PStream& PStream::operator>>(unsigned long &x)
 }
 
 
-PStream& PStream::operator>>(PRInt64 &x)
+PStream& PStream::operator>>(long long &x)
 {
     switch(inmode)
     {
@@ -1120,7 +1120,7 @@ PStream& PStream::operator>>(PRInt64 &x)
         readAsciiNum(x);
         break;
     case raw_binary:
-        read(reinterpret_cast<char *>(&x), sizeof(PRInt64));
+        read(reinterpret_cast<char *>(&x), sizeof(long long));
         break;
     case plearn_ascii:
     case plearn_binary:
@@ -1129,7 +1129,7 @@ PStream& PStream::operator>>(PRInt64 &x)
         int c = get();
         if(c==0x16 || c==0x17)  // plearn_binary
         {
-            read(reinterpret_cast<char*>(&x),sizeof(PRInt64));
+            read(reinterpret_cast<char*>(&x),sizeof(long long));
             if( (c==0x16 && byte_order()==BIG_ENDIAN_ORDER) 
                 || (c==0x17 && byte_order()==LITTLE_ENDIAN_ORDER) )
                 endianswap(&x);
@@ -1148,7 +1148,7 @@ PStream& PStream::operator>>(PRInt64 &x)
     return *this;
 }
   
-PStream& PStream::operator>>(PRUint64 &x)
+PStream& PStream::operator>>(unsigned long long &x)
 {
     switch(inmode)
     {
@@ -1158,7 +1158,7 @@ PStream& PStream::operator>>(PRUint64 &x)
         readAsciiNum(x);
         break;
     case raw_binary:
-        read(reinterpret_cast<char *>(&x), sizeof(PRUint64));
+        read(reinterpret_cast<char *>(&x), sizeof(unsigned long long));
         break;
     case plearn_ascii:
     case plearn_binary:
@@ -1167,7 +1167,7 @@ PStream& PStream::operator>>(PRUint64 &x)
         int c = get();
         if(c==0x18 || c==0x19)  // plearn_binary
         {
-            read(reinterpret_cast<char*>(&x),sizeof(PRUint64));
+            read(reinterpret_cast<char*>(&x),sizeof(unsigned long long));
             if( (c==0x18 && byte_order()==BIG_ENDIAN_ORDER) 
                 || (c==0x19 && byte_order()==LITTLE_ENDIAN_ORDER) )
                 endianswap(&x);
@@ -1669,12 +1669,12 @@ PStream& PStream::operator<<(unsigned long x)
     return *this;
 }
 
-PStream& PStream::operator<<(PRInt64 x) 
+PStream& PStream::operator<<(long long x) 
 { 
     switch(outmode)
     {
     case raw_binary:
-        write(reinterpret_cast<char *>(&x), sizeof(PRInt64));
+        write(reinterpret_cast<char *>(&x), sizeof(long long));
         break;
     case raw_ascii:
     case pretty_ascii:
@@ -1690,7 +1690,7 @@ PStream& PStream::operator<<(PRInt64 x)
 #else
         put((char)0x16);
 #endif
-        write((char*)&x,sizeof(PRInt64));
+        write((char*)&x,sizeof(long long));
         break;
     default:
         PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
@@ -1699,12 +1699,12 @@ PStream& PStream::operator<<(PRInt64 x)
     return *this;
 }
 
-PStream& PStream::operator<<(PRUint64 x) 
+PStream& PStream::operator<<(unsigned long long x) 
 { 
     switch(outmode)
     {
     case raw_binary:
-        write(reinterpret_cast<char *>(&x), sizeof(PRUint64));
+        write(reinterpret_cast<char *>(&x), sizeof(unsigned long long));
         break;
     case raw_ascii:
     case pretty_ascii:
@@ -1720,7 +1720,7 @@ PStream& PStream::operator<<(PRUint64 x)
 #else
         put((char)0x18);
 #endif
-        write((char*)&x,sizeof(PRUint64));
+        write((char*)&x,sizeof(unsigned long long));
         break;
     default:
         PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
