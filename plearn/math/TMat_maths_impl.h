@@ -327,6 +327,33 @@ T sumabs(const TMat<T>& m)
     }
 }
 
+// res[i,j] = scale*(mat[i,j] - avg[i] - avg[j] + mean(avg))
+template<class T> 
+void doubleCentering(const TMat<T>& mat, TVec<T>& avg, TMat<T>& res, T scale=T(1))
+{
+    T moy = mean(avg);
+    int n=avg.length();
+    T* a = avg.data();
+    if (scale==T(1))
+        for (int i=0;i<n;i++)
+        {
+            T* Mi = mat[i];
+            T* Ri = res[i];
+            T term = moy-a[i];
+            for (int j=0;j<n;j++)
+                Ri[j] = Mi[j] - a[j] + term;
+        }
+    else
+        for (int i=0;i<n;i++)
+        {
+            T* Mi = mat[i];
+            T* Ri = res[i];
+            T term = moy-a[i];
+            for (int j=0;j<n;j++)
+                Ri[j] = scale*(Mi[j] - a[j] + term);
+        }
+}
+
 
 //! destination = source1*source2
 template <class T>
@@ -861,7 +888,7 @@ template<class T>
 inline T norm(const TVec<T>& vec) { return norm(vec,T(2.0)); }
 
 template<class T>
-void normalize(const TVec<T>& vec, double n) 
+void normalize(const TVec<T>& vec, double n=2) 
 { vec /= norm(vec,n); }
 
 //! Compute ||vec1 - vec2||_n^n.

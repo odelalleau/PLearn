@@ -49,6 +49,10 @@
 #ifndef GenMat_INC
 #define GenMat_INC
 
+#include <plearn/math/TMat_maths_impl.h>
+#include <plearn/math/random.h>
+#include <plearn/math/parpack.h>
+
 namespace PLearn {
 using namespace std;
 
@@ -362,8 +366,6 @@ bool SolveLinearSymmSystemByCG(MatT A, Vec x, const Vec& b, int& max_iter, real&
 #if 0
 //!  for debugging
 #define MatT Mat
-#if 0
-#define MatT Mat
 inline real PowerIteration(MatT& A, Vec x0, int& n_iterations, 
                            real RayleighQuotientTolerance, Mat final_vectors, 
                            int& final_offset)
@@ -666,7 +668,7 @@ real findSmallestEigenPairOfSymmMat(MatT& A, Vec x,
     if (max_n_cg_iter==0)
         max_n_cg_iter = 5+int(pow(double(n),0.3));
     if (max_n_power_iter==0)
-        max_n_power_iter = 5+int(log(n));
+        max_n_power_iter = 5+int(pl_log(n));
 
     Mat try_solutions(n_try,n);
     Mat kernel_solutions = x.toMat(1,n);
@@ -716,6 +718,7 @@ real findSmallestEigenPairOfSymmMat(MatT& A, Vec x,
              prev_err/err-1>improvement_tolerance && nrepeat<max_iter);
     if (verbose)
         cout << "return from findSmallestEigenPairOfSymmMat with err=" << err << endl;
+    return err;
 }
 
 
@@ -753,7 +756,7 @@ int SymmMatNullSpaceByInversePowerIteration(MatT &A, Mat solutions,
     if (max_n_cg_iter==0)
         max_n_cg_iter = 5+int(pow(double(n),0.3));
     if (max_n_power_iter==0)
-        max_n_power_iter = 5+int(log(n));
+        max_n_power_iter = 5+int(pl_log(n));
     Vec Ax(n);
 
     MatTPlusSumSquaredVec<MatT> B(A,n_soln);
@@ -869,7 +872,7 @@ int GDFindSmallEigenPairs(MatT& A,Mat X,
         fill_random_uniform(Ax,-1,1);
         Mat large_vectors(3,n);
         int offs;
-        int n_iter = 10+int(sqrt(log(double(n))));
+        int n_iter = 10+int(sqrt(pl_log(double(n))));
         real max_eigen_value = 
             PowerIteration(A, Ax, n_iter,1e-3,large_vectors,offs,verbose);
         learning_rate = 2.0/max_eigen_value;
@@ -949,6 +952,41 @@ int GDFindSmallEigenPairs(MatT& A,Mat X,
     return it;
 }
 
+/*! Perform kernel PCA on a set of objects for which the dot product between
+    each pair of objects is provided. The dot-product matrix can be sparse, for objects
+    which are "far" from each other. An embedding for each object is returned,
+    which attempts to respect these dot products. The dimension of the embedding
+    is specified by the user-set dimensions of the embedding matrix (n_objects x embedding_dimension).
+*/
+template<class MatT>
+int kernelPCAfromDotProducts(MatT& dot_products,Mat embedding, int max_n_eigen_iter=300)
+    int n=square_distances.length();
+    long int m=embedding.width();
+    if (embedding.length()!=n)
+        PLERROR("kernelPCAfromDotProducts: expected embedding.length()==dot_products.length(), got %d!=%d",
+                embedding.length(),n);
+    if (dot_products.width()!=n)
+        PLERROR("kernelPCAfromDotProducts: expected dot_products a square matrix, got %d x %d",
+                n,square_distances.width());
+
+    int err=eigenSparseSymmMat(dot_products, e_values, 
+                               e_vectors, m, max_n_eigen_iter);
+    if (!(err==0 || err==1))
+        return err;
+    //!  extract the embedding:
+    //!    embedding(object i, feature j) = e_vectors(j,i)*sqrt(e_values[j])
+    for (int j=0;j<m;j++)
+    {
+        real eval_j = e_values[j];
+        if (eval_j<0)
+            PLERROR("metricMultiDimensionalScaling::the matrix of dot-products is not positive-definite!, evalue=%g",eval_j);
+        real scale = sqrt(eval_j);
+        Vec feature_j = e_vectors(j);
+        feature_j *= scale;
+        embedding.column(j) << feature_j;
+    }
+}
+
 /*!   Apply the metric multi-dimensional scaling (MDS) algorithm to a possibly sparse
   generalized matrix (nxn) of pairwise SQUARE distances between n objects. This yields
   an embedding of the objects in m-dimensional space, in the nxm embedding matrix.
@@ -969,18 +1007,14 @@ int metricMultiDimensionalScaling(MatT& square_distances,Mat embedding, int max_
         PLERROR("MetricMultiDimensionalScaling: expected square_distances a square matrix, got %d x %d",
                 n,square_distances.width());
     if (square_distances.size()!=n*n)
-        PLWARNING("MetricMultiDimensionalScaling: current implementation does not seem to work well for sparse distance matrices!");  
+        PLERROR("MetricMultiDimensionalScaling: only works on a full, non-sparse matrix\n");
+
     //!  double-centering of the distances to get dot products
-    Vec avg_across_rows(n), avg_across_columns(n);
+    Vec avg_across_rows(n);
     //!  average the non-zero elements across rows and columns
-    averageAcrossRowsAndColumns(square_distances, avg_across_rows, avg_across_columns, true);
-    real overall_avg=mean(avg_across_rows);
-    avg_across_rows *= -1; //!<  this is a row
-    avg_across_columns *= -1; //!<  this is a column
-    addToRows(square_distances, avg_across_rows,true); //!<  only to non-zero elements
-    addToColumns(square_distances, avg_across_rows,true); //!<  only to non-zero elements ******** LOUCHE! (yoshua) *******
-    square_distances.add(overall_avg,true);
-    square_distances*=-0.5;
+    columnSum(square_distances, avg_across_rows);
+    avg_across_rows *= 1.0/n;
+    doubleCentering(square_distances,avg_across_rows,square_distances,-0.5);
     //!  now "square_distances" are actually pseudo dot-products
 
     //!  do a partial SVD (which is the same as an eigen-decomposition since 
@@ -989,7 +1023,7 @@ int metricMultiDimensionalScaling(MatT& square_distances,Mat embedding, int max_
     Mat e_vectors(m,n);
     int err=eigenSparseSymmMat(square_distances, e_values, 
                                e_vectors, m, max_n_eigen_iter);
-    if (err!=0)
+    if (!(err==0 || err==1))
         return err;
     //!  extract the embedding:
     //!    embedding(object i, feature j) = e_vectors(j,i)*sqrt(e_values[j])

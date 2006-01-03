@@ -79,7 +79,7 @@ public:
     RowMapSparseMatrix(int n_rows=0, int n_columns=0, T nullelem=0) 
         : rows(n_rows), _width(n_columns), save_binary(true), null_elem(nullelem) {}
 
-    RowMapSparseMatrix(string filename) { load(filename); }
+//    RowMapSparseMatrix(string filename) { load(filename); }
 
     RowMapSparseMatrix(const Mat& m, bool fill_all=true, T nullelem=0) : rows(m.length()), _width(m.width()), 
                                                                          save_binary(true), null_elem(nullelem)
@@ -213,6 +213,7 @@ T Aij = it->second;
     int length() const { return rows.size(); }
     int width() const { return _width; }
 
+#if 0
     void save(string filename) const { 
         ofstream out(filename.c_str()); write(out); 
     }
@@ -303,7 +304,6 @@ T Aij = it->second;
         }
         writeFooter(out,"RowMapSparseMatrix");
     }
-
 /*!       saves the non-zero elements in an ascii file with the following simple format:
   first line: <length> <width> <numberNonZero>
   subsequent lines: <row> <column> <value>
@@ -322,6 +322,7 @@ T Aij = it->second;
         }
     }
 
+#endif
     //!  multiply a sparse matrix by a full vector and set resulting vector
     //!    y = matrix * x
     void product(const Vec& x, Vec& y) {
@@ -474,7 +475,7 @@ T Aij = it->second;
         PLWARNING("RowMapSparseMatrix is not appropriate to perform dotColumn operations");
         real s=0;
         real* v_=v.data();
-        for (int i=0;i<v.length();v++)
+        for (int i=0;i<v.length();i++)
             s += (*this)(i,j) * v_[i];
         return s;
     }
@@ -517,7 +518,7 @@ T Aij = it->second;
 
     //!  add vector to each row; by default do it only on
     //!  the non-zero elements
-    void add2Rows(Vec row, bool only_on_non_zeros=true)
+    void addToRows(Vec row, bool only_on_non_zeros=true)
     {
 #ifdef BOUNDCHECK
         if (null_elem!=0)
@@ -537,7 +538,7 @@ T Aij = it->second;
     }
     //!  add vector to each column; by default do it only on
     //!  the non-zero elements
-    void add2Columns(Vec col, bool only_on_non_zeros=true)
+    void addToColumns(Vec col, bool only_on_non_zeros=true)
     {
 #ifdef BOUNDCHECK
         if (null_elem!=0)
@@ -571,6 +572,7 @@ T Aij = it->second;
         }
     }
 
+
 /*!       average across rows on one hand, and in parallel average across columns
   (thus getting two averages). The boolean argument specifies whether
   the average is across the explicit elements (the non-zeros) or
@@ -602,10 +604,12 @@ T Aij = it->second;
                 n++;
                 column_counts[j]++;
             }
-            avg_cols_i /= n;
+            if (n>0)
+                avg_cols_i /= n;
         }
         for (int j=0;j<width();j++)
-            avg_across_rows[j] /= column_counts[j];
+            if (column_counts[j]>0)
+                avg_across_rows[j] /= column_counts[j];
     }
 
 /*!       average across rows on one hand, and in parallel average across columns
@@ -856,6 +860,122 @@ T Aij = it->second;
 
 template <class T>
 void product(RowMapSparseMatrix<T>& M, const Vec& x, Vec& y) { M.product(x,y); }
+
+// result[j] = sum_i mat[i,j]
+template <class T>
+void columnSum(RowMapSparseMatrix<T> mat, TVec<T>& result)
+{
+    int n = mat.length();
+    result.resize(n);
+    result.clear();
+    for (int i=0;i<n;i++)
+    {
+        map<int,T>& row_i = mat.rows[i];
+        typename map<int,T>::iterator Rit = row_i.begin();
+        typename map<int,T>::const_iterator Rend = row_i.end();
+        for (;Rit!=Rend;++Rit)
+            result[Rit->first] += Rit->second;
+    }
+}
+
+// res[i,j] = scale*(mat[i,j] - avg[i] - avg[j] + mean(avg))
+template <class T>
+void doubleCentering(RowMapSparseMatrix<T>& mat, TVec<T>& avg, RowMapSparseMatrix<T>& res, T scale=1)
+{
+    T moy = mean(avg);
+    int n=avg.length();
+    T* a = avg.data();
+    if (scale==T(1))
+    {
+        if (&mat != &res)
+            for (int i=0;i<n;i++)
+            {
+                map<int,T>& Mi = mat.rows[i];
+                map<int,T>& Ri = res.rows[i];
+                T term = moy-a[i];
+                typename map<int,T>::iterator Mit = Mi.begin();
+                typename map<int,T>::const_iterator Mend = Mi.end();
+                typename map<int,T>::iterator Rit = Ri.begin();
+                typename map<int,T>::const_iterator Rend = Ri.end();
+                for (;Mit!=Mend && Rit!=Rend;)
+                {
+                    if (Mit->first==Rit->first)
+                        Rit->second = Mit->second - a[Rit->first] + term;
+                    else if (Mit->first<Rit->first)
+                        ++Mit;
+                    else
+                        ++Rit;
+                }
+            }
+        else
+            for (int i=0;i<n;i++)
+            {
+                map<int,T>& Ri = res.rows[i];
+                typename map<int,T>::iterator Rit = Ri.begin();
+                typename map<int,T>::const_iterator Rend = Ri.end();
+                T term = moy-a[i];
+                for (;Rit!=Rend;++Rit)
+                    Rit->second += term - a[Rit->first];
+
+            }
+    }
+    else
+    {
+        if (&mat != &res)
+            for (int i=0;i<n;i++)
+            {
+                map<int,T>& Mi = mat.rows[i];
+                map<int,T>& Ri = res.rows[i];
+                T term = moy-a[i];
+                typename map<int,T>::iterator Mit = Mi.begin();
+                typename map<int,T>::const_iterator Mend = Mi.end();
+                typename map<int,T>::iterator Rit = Ri.begin();
+                typename map<int,T>::const_iterator Rend = Ri.end();
+                for (;Mit!=Mend && Rit!=Rend;)
+                {
+                    if (Mit->first==Rit->first)
+                        Rit->second = scale*(Mit->second - a[Rit->first] + term);
+                    else if (Mit->first<Rit->first)
+                        ++Mit;
+                    else
+                        ++Rit;
+                }
+            }
+        else
+            for (int i=0;i<n;i++)
+            {
+                map<int,T>& Ri = res.rows[i];
+                typename map<int,T>::iterator Rit = Ri.begin();
+                typename map<int,T>::const_iterator Rend = Ri.end();
+                T term = moy-a[i];
+                for (;Rit!=Rend;++Rit)
+                    Rit->second = scale*(Rit->second + term - a[Rit->first]);
+
+            }
+    }
+}
+
+
+
+template <class T>
+void averageAcrossRowsAndColumns(RowMapSparseMatrix<T> mat, 
+                                 Vec avg_across_rows, Vec avg_across_columns, 
+                                 bool only_on_non_zeros=true)
+{
+    mat.averageAcrossRowsAndColumns(avg_across_rows, avg_across_columns, only_on_non_zeros);
+}
+
+template <class T>
+void addToRows(RowMapSparseMatrix<T> mat, Vec row, bool only_on_non_zeros=true)
+{
+    mat.addToRows(row,only_on_non_zeros);
+}
+
+template <class T>
+void addToColumns(RowMapSparseMatrix<T> mat, Vec row, bool only_on_non_zeros=true)
+{
+    mat.addToColumns(row,only_on_non_zeros);
+}
 
 } // end of namespace PLearn
 

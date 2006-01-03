@@ -85,7 +85,7 @@ using namespace std;
 */
 
 template<class MatT>
-int eigenSparseSymmMat(MatT& A, Vec e_values, Mat e_vectors, long int& n_evalues,
+int eigenSparseSymmMat(MatT& A, Vec& e_values, Mat& e_vectors, long int& n_evalues,
 		       int max_n_iter=300, bool compute_vectors=true, bool largest_evalues=true,
 		       bool according_to_magnitude=true, bool both_ends=false)
 {
