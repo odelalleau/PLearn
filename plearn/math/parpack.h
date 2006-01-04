@@ -86,8 +86,8 @@ using namespace std;
 
 template<class MatT>
 int eigenSparseSymmMat(MatT& A, Vec& e_values, Mat& e_vectors, long int& n_evalues,
-		       int max_n_iter=300, bool compute_vectors=true, bool largest_evalues=true,
-		       bool according_to_magnitude=true, bool both_ends=false)
+                       int max_n_iter=300, bool compute_vectors=true, bool largest_evalues=true,
+                       bool according_to_magnitude=true, bool both_ends=false, real ncv2nev_ratio=1.5)
 {
 #ifdef NOARPACK
     PLERROR("eigenSparseSymmMat: ARPACK not available on this system!");
@@ -109,7 +109,7 @@ int eigenSparseSymmMat(MatT& A, Vec& e_values, Mat& e_vectors, long int& n_evalu
         which[1]= according_to_magnitude? 'M' : 'A';
     }
     real tol=0;
-    long int ncv=MIN(3+int(n_evalues*1.5),n-1);
+    long int ncv=MIN(3+int(n_evalues*ncv2nev_ratio),n-1);
     e_vectors.resize(ncv,n); //!<  we need some extra space...
     long int iparam[11];
     iparam[0]=1;

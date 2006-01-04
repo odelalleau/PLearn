@@ -959,7 +959,7 @@ int GDFindSmallEigenPairs(MatT& A,Mat X,
     is specified by the user-set dimensions of the embedding matrix (n_objects x embedding_dimension).
 */
 template<class MatT>
-int kernelPCAfromDotProducts(MatT& dot_products,Mat embedding, int max_n_eigen_iter=300)
+int kernelPCAfromDotProducts(MatT& dot_products,Mat embedding, int max_n_eigen_iter=300, real ncv2nev_ratio=1.5)
 {
     int n=dot_products.length();
     long int m=embedding.width();
@@ -976,7 +976,8 @@ int kernelPCAfromDotProducts(MatT& dot_products,Mat embedding, int max_n_eigen_i
     e_vectors.resize(m,n);
     
     int err=eigenSparseSymmMat(dot_products, e_values, 
-                               e_vectors, m, max_n_eigen_iter);
+                               e_vectors, m, max_n_eigen_iter,
+                               true, true, true, false, ncv2nev_ratio);
     if (!(err==0 || err==1))
         return err;
     //!  extract the embedding:
