@@ -986,7 +986,10 @@ int kernelPCAfromDotProducts(MatT& dot_products,Mat embedding, int max_n_eigen_i
     {
         real eval_j = e_values[j];
         if (eval_j<0)
-            PLERROR("metricMultiDimensionalScaling::the matrix of dot-products is not positive-definite!, evalue=%g",eval_j);
+        {
+            PLWARNING("metricMultiDimensionalScaling::the matrix of dot-products is not positive-definite!, evalue=%g",eval_j);
+            eval_j = -eval_j*0.2; // HEURISTIC TRICK, keep negative e-values, but smaller
+        }
         real scale = sqrt(eval_j);
         Vec feature_j = e_vectors(j);
         feature_j *= scale;
