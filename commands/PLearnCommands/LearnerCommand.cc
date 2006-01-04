@@ -146,7 +146,7 @@ void LearnerCommand::compute_outputs(const string& trained_learner_file, const s
     PLearn::load(trained_learner_file,learner);
     VMat testinputs = getDataSet(test_inputs_spec);
     int l = testinputs.length();
-    VMat testoutputs = new FileVMatrix(outputs_file,l,learner->outputsize());
+    VMat testoutputs = new FileVMatrix(outputs_file,l,learner->getOutputNames());
     learner->use(testinputs,testoutputs);
 }
 
