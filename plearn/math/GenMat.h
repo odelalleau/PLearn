@@ -975,12 +975,12 @@ int kernelPCAfromDotProducts(MatT& dot_products,Mat embedding, int max_n_eigen_i
     static Mat e_vectors;
     e_vectors.resize(m,n);
     
-    int err=eigenSparseSymmMat(dot_products, e_values, 
-                               e_vectors, m, max_n_eigen_iter,
-                               true, true, true, false, ncv2nev_ratio);
     if (evec) *evec = e_vectors;
     if (eval) *eval = e_values;
 
+    int err=eigenSparseSymmMat(dot_products, e_values, 
+                               e_vectors, m, max_n_eigen_iter,
+                               true, true, true, false, ncv2nev_ratio);
     if (!(err==0 || err==1))
         return err;
     //!  extract the embedding:
