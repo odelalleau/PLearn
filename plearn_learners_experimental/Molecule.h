@@ -27,9 +27,10 @@ public:
 //		int nPoints ;  // the number of points on the surface of the molecule
 		PLearn::Mat chem ; // containts the chemical properties for each point on the surface
 		PLearn::Mat geom ;     // contains the x,y,z position for each point on the surface
+        string vrml_file ; 
 
         Molecule(); 
-        Molecule(PLearn::Mat _chem, PLearn::Mat _geom) ; 
+        Molecule(PLearn::Mat _chem, PLearn::Mat _geom, string vrml_file="") ; 
 
 		virtual ~Molecule() {}
 

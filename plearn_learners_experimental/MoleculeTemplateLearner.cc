@@ -243,7 +243,7 @@ namespace PLearn {
                 
                 templates[i]->geom.resize(Molecules[id_templates[i]]->geom.length() , Molecules[id_templates[i]]->geom.width()) ;                 
                 templates[i]->geom << Molecules[id_templates[i]]->geom ;                 
-                
+                templates[i]->vrml_file = Molecules[id_templates[i]]->vrml_file ; 
                 templates[i]->dev.resize (sigma_square[i]->matValue.length() ,  sigma_square[i]->matValue.width() ) ; 
                 templates[i]->dev << sigma_square[i]->matValue ;  // SIGMA_SQUARE has not the right value yet ??????
 

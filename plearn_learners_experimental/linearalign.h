@@ -9,7 +9,8 @@
 #include "geometry.h"
 #include <plearn/misc/qld_interface.h>
 #include <plearn/ker/GaussianKernel.h>
-#include "Molecule.h"
+//#include "Molecule.h"
+#include "Template.h"
 extern "C"{
 #include <glpk.h>
 }

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MeshVertex.h,v 1.3 2004/11/17 01:42:02 lamblinp Exp $ 
+   * $Id: MeshVertex.h,v 1.4 2005/12/14 20:41:11 lamblinp Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Lamblin
@@ -71,6 +71,7 @@ public:
   Vec coord;
   Vec norm;
   real error;
+  Vec features;
 
   // ****************
   // * Constructors *

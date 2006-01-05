@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SurfaceMesh.cc,v 1.12 2005/07/05 17:28:22 lamblinp Exp $ 
+   * $Id: SurfaceMesh.cc,v 1.18 2005/12/29 13:44:35 lamblinp Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Lamblin
@@ -49,7 +49,8 @@ using namespace std;
 
 SurfaceMesh::SurfaceMesh() :
   computed_vtx_norm( false ),
-  mesh_type( "PointSet" )
+  mesh_type( "PointSet" ),
+  verbosity(1)
 {
   p_mesh = new Graph_();
   // because graph_ppt field isn't correctly initialized
@@ -94,6 +95,14 @@ void SurfaceMesh::declareOptions(OptionList& ol)
                 "  - 'FaceSet': Vertices, Faces, and Edges;\n"
                 "  - 'LineSet': Vertices and Edges;\n"
                 "  - 'PointSet' (default): Vertices.\n" );
+
+  declareOption(ol, "verbosity", &SurfaceMesh::verbosity,
+                OptionBase::buildoption,
+                "Level of verbosity. If 0 should not write anything on perr.\n"
+                "If >0 may write some info on the steps performed"
+                " along the way.\n"
+                "The level of details written should depend on this value.\n"
+               );
 
   inherited::declareOptions(ol);
 }
@@ -179,7 +188,6 @@ void SurfaceMesh::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 
   p_mesh = p_mesh2;
 
-
 }
 
 vertex_descriptor SurfaceMesh::addVertex( MVertex mv )
@@ -188,7 +196,7 @@ vertex_descriptor SurfaceMesh::addVertex( MVertex mv )
   return vtx;
 }
 
-vertex_descriptor SurfaceMesh::addVertex( Vec coord )
+vertex_descriptor SurfaceMesh::addVertex( Vec coord, Vec features )
 {
   MVertex mv = new MeshVertex();
 
@@ -196,6 +204,10 @@ vertex_descriptor SurfaceMesh::addVertex( Vec coord )
     PLERROR("Error in addVertex(Vec coord): coord size is supposed to be 3 (or not to be!)");
 
   mv->coord << coord;
+
+  mv->features.resize( features.size() );
+  mv->features << features;
+
   vertex_descriptor vtx = addVertex( mv );
   return vtx;
 }
@@ -244,6 +256,29 @@ Mat SurfaceMesh::getVertexCoords()
   return coords;
 }
 
+Mat SurfaceMesh::getVertexCoordsAndFeatures()
+{
+  int n_pts = num_vertices( *p_mesh );
+  Mat coords_and_features;
+
+  property_map< graph, vertex_ppt_t >::type
+    vertex_ppt_map = get( vertex_ppt, *p_mesh );
+
+  vertex_iterator vi, vi_end;
+  tie( vi, vi_end ) = vertices( *p_mesh );
+
+  int feat_size = vertex_ppt_map[ *vi ]->features.size();
+  coords_and_features.resize( n_pts, 3+feat_size );
+
+  for( int i=0 ; i<n_pts ; i++, vi++ )
+  {
+    MVertex mv = vertex_ppt_map[ *vi ];
+    coords_and_features(i).subVec(0,3) << mv->coord;
+    coords_and_features(i).subVec(3,feat_size) << mv->features;
+  }
+  return coords_and_features;
+}
+
 void SurfaceMesh::setVertexCoords( const Mat& coords )
 {
   int n_pts = num_vertices( *p_mesh );
@@ -262,6 +297,59 @@ void SurfaceMesh::setVertexCoords( const Mat& coords )
     for( int i=0 ; i<n_pts ; i++, vi++ )
     {
       vertex_ppt_map[ *vi ]->coord << coords(i);
+    }
+  }
+}
+
+void SurfaceMesh::setVertexFeatures( const Mat& features )
+{
+  int n_pts = num_vertices( *p_mesh );
+  if( features.length() != n_pts )
+  {
+    PLERROR( "setVertexFeatures: features.length()=%d different from n_pts=%d",
+             features.length(), n_pts );
+  }
+  else
+  {
+    property_map< graph, vertex_ppt_t >::type
+      vertex_ppt_map = get( vertex_ppt, *p_mesh );
+
+    vertex_iterator vi, vi_end;
+    tie( vi, vi_end ) = vertices( *p_mesh );
+    for( int i=0 ; i<n_pts ; i++, vi++ )
+    {
+      vertex_ppt_map[ *vi ]->features << features(i);
+    }
+  }
+}
+
+void SurfaceMesh::setVertexCoordsAndFeatures( const Mat& coords,
+                                              const Mat& features )
+{
+  int n_pts = num_vertices( *p_mesh );
+  if( coords.length() != n_pts )
+  {
+    PLERROR( "setVertexCoordsAndFeatures:"
+             " coords.length()=%d different from n_pts=%d",
+             coords.length(), n_pts );
+  }
+  if( features.length() != n_pts )
+  {
+    PLERROR( "setVertexCoordsAndFeatures:"
+             " features.length()=%d different from n_pts=%d",
+             features.length(), n_pts );
+  }
+  else
+  {
+    property_map< graph, vertex_ppt_t >::type
+      vertex_ppt_map = get( vertex_ppt, *p_mesh );
+
+    vertex_iterator vi, vi_end;
+    tie( vi, vi_end ) = vertices( *p_mesh );
+    for( int i=0 ; i<n_pts ; i++, vi++ )
+    {
+      vertex_ppt_map[ *vi ]->coord << coords(i);
+      vertex_ppt_map[ *vi ]->features << features(i);
     }
   }
 }
@@ -610,7 +698,8 @@ real SurfaceMesh::computeResolution()
 // add them to the mesh, and stores correspondance between indices
 // in the file and vertex descriptors (in "vertices")
 bool SurfaceMesh::readVRMLCoordinate3_( ifstream& in,
-                                        TVec<vertex_descriptor>& vertices )
+                                        TVec<vertex_descriptor>& vertices,
+                                        Mat vtx_features )
 {
   string buf;
 
@@ -635,17 +724,23 @@ bool SurfaceMesh::readVRMLCoordinate3_( ifstream& in,
     getline( all_coords, coords );
     coords = removeblanks( coords );
     remove_comments( coords );
+    int vertex_index = 0;
     if( coords != "" )
     {
       istringstream point_coords( coords );
 
       if ( point_coords >>  coord[0] >> coord[1] >> coord[2] )
       {
-        vertex_descriptor vtx = addVertex( coord );
+        vertex_descriptor vtx;
+        if( vtx_features.size() == 0 )
+          vtx = addVertex( coord );
+        else
+          vtx = addVertex( coord, vtx_features(vertex_index) );
 
         /* store the correspondence between order in VRML file
            and vertex descriptor */
         vertices.append( vtx );
+        vertex_index++;
       }
       else
       {
@@ -914,14 +1009,14 @@ void SurfaceMesh::writeVRMLIndexedLineSet_(
 // reads from a VRML file, getting at least point coordinates,
 // if possible face data (from "IndexedFaceSet" node),
 // else if possible edge date (from "IndexedLineSet" node)
-bool SurfaceMesh::readVRMLFile( string filename )
+bool SurfaceMesh::readVRMLFile( string filename, Mat vtx_features )
 {
   ifstream in( filename.c_str() );
   if( !in )
     PLERROR( "Cannot open file: %s.\n", filename.c_str() );
 
   TVec<vertex_descriptor> vertices;
-  if( !readVRMLCoordinate3_( in, vertices ) )
+  if( !readVRMLCoordinate3_( in, vertices, vtx_features ) )
   {
     PLERROR( "Parse error in %s: expecting a floating-point number.\n",
              filename.c_str() );
@@ -958,9 +1053,10 @@ bool SurfaceMesh::readVRMLFile( string filename )
 
 // reads from a VRML file, getting point coordinates, and
 // face data from "IndexedFaceSet" node
-bool SurfaceMesh::readVRMLIndexedFaceSet( string filename )
+bool SurfaceMesh::readVRMLIndexedFaceSet( string filename, Mat vtx_features )
 {
-  cout << "\nreadVRMLIndexedFaceSet " << filename << endl;
+  if( verbosity >= 1 )
+    pout << "\nreadVRMLIndexedFaceSet " << filename << endl;
 
   ifstream in( filename.c_str() );
   if( !in )
@@ -969,7 +1065,7 @@ bool SurfaceMesh::readVRMLIndexedFaceSet( string filename )
   }
 
   TVec<vertex_descriptor> vertices;
-  if( !readVRMLCoordinate3_( in, vertices ) )
+  if( !readVRMLCoordinate3_( in, vertices, vtx_features ) )
   {
     PLERROR( "Parse error in %s: expecting a floating-point number.\n",
              filename.c_str() );
@@ -987,11 +1083,11 @@ bool SurfaceMesh::readVRMLIndexedFaceSet( string filename )
 
 // reads from a VRML file, getting point coordinates, and
 // edge data from "IndexedLineSet" node
-bool SurfaceMesh::readVRMLIndexedLineSet( string filename )
+bool SurfaceMesh::readVRMLIndexedLineSet( string filename, Mat vtx_features )
 {
   // probably to be rewritten using PPath
-
-  cout << "\nreadVRMLIndexedLineSet " << filename << endl;
+  if( verbosity >= 1 )
+    pout << "\nreadVRMLIndexedLineSet " << filename << endl;
 
   ifstream in( filename.c_str() );
   if( !in )
@@ -1000,7 +1096,7 @@ bool SurfaceMesh::readVRMLIndexedLineSet( string filename )
   }
 
   TVec<vertex_descriptor> vertices;
-  if( !readVRMLCoordinate3_( in, vertices ) )
+  if( !readVRMLCoordinate3_( in, vertices, vtx_features ) )
   {
     PLERROR( "Parse error in %s: expecting a floating-point number.\n",
              filename.c_str() );
@@ -1022,7 +1118,8 @@ bool SurfaceMesh::readVRMLIndexedLineSet( string filename )
 // else an "IndexedLineSet" node if edge data is present.
 void SurfaceMesh::writeVRMLFile( string filename )
 {
-  cout << "\nwriteVRMLFile " << filename << endl;
+  if( verbosity >= 1 )
+    pout << "\nwriteVRMLFile " << filename << endl;
 
   ofstream out( filename.c_str(), ios::trunc );
   if( !out )
@@ -1053,7 +1150,8 @@ void SurfaceMesh::writeVRMLFile( string filename )
 // using an "IndexedFaceSet" to store face information
 void SurfaceMesh::writeVRMLIndexedFaceSet( string filename )
 {
-  cout << "\nwriteVRMLIndexedFaceSet " << filename << endl;
+  if( verbosity >= 1 )
+    pout << "\nwriteVRMLIndexedFaceSet " << filename << endl;
 
   ofstream out( filename.c_str(), ios::trunc );
   if( !out )
@@ -1084,7 +1182,8 @@ void SurfaceMesh::writeVRMLIndexedFaceSet( string filename )
 // not storing face information if any
 void SurfaceMesh::writeVRMLIndexedLineSet( string filename )
 {
-  cout << "\nwriteVRMLIndexedLineSet " << filename << endl;
+  if( verbosity >= 1 )
+    pout << "\nwriteVRMLIndexedLineSet " << filename << endl;
 
   ofstream out( filename.c_str(), ios::trunc );
   if( !out )
@@ -1112,7 +1211,8 @@ void SurfaceMesh::writeVRMLIndexedLineSet( string filename )
 // writes edges having a boundary flag in a VRML file
 void SurfaceMesh::writeVRMLBoundaries( string filename )
 {
-  cout << "\nwriteVRMLBoundaries " << filename << endl;
+  if( verbosity >= 1 )
+    pout << "\nwriteVRMLBoundaries " << filename << endl;
 
   ofstream out( filename.c_str(), ios::trunc );
   if( !out )
@@ -1324,7 +1424,6 @@ Mat SurfaceMesh::boundingBox()
   Vec max(3);
 
   Mat coords = getVertexCoords();
-// cout << "coords = " << endl << coords << endl;
   columnMin( coords, mins );
   columnMax( coords, max );
   box(0) << mins;

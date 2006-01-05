@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MeshVertex.cc,v 1.2 2004/11/11 19:54:14 lamblinp Exp $ 
+   * $Id: MeshVertex.cc,v 1.3 2005/12/14 20:41:11 lamblinp Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Lamblin
@@ -87,6 +87,9 @@ void MeshVertex::declareOptions(OptionList& ol)
   declareOption(ol, "error", &MeshVertex::error, OptionBase::buildoption,
                 "dunno, sure it has something to do with an error measure...");
 
+  declareOption(ol, "features", &MeshVertex::features, OptionBase::buildoption,
+                "Vector containing the (chemical) features of this vertex");
+
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 }
@@ -106,6 +109,7 @@ void MeshVertex::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 
   deepCopyField(coord, copies);
   deepCopyField(norm, copies);
+  deepCopyField(features, copies);
 }
 
 /*

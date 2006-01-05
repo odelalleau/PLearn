@@ -7,12 +7,13 @@ namespace PLearn {
 
                                                                                                                                                   
 Molecule::Molecule(){}
-Molecule::Molecule(Mat _chem, Mat _geom) {
+Molecule::Molecule(Mat _chem, Mat _geom, string vrml_file) {
     chem.resize(_chem.length(), _chem.width() ) ; 
     chem << _chem ; 
      
     geom.resize(_geom.length(), _geom.width() ) ; 
     geom << _geom ; 
+    this->vrml_file = vrml_file ; 
     
 }
 
@@ -51,7 +52,6 @@ void Molecule::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   deepCopyField(geom, copies);
 
 }
-
 
 string Molecule::getVrmlType(const string& name) {
         string name2 = name + ".vrml";
@@ -109,7 +109,7 @@ PMolecule Molecule::readMolecule(const string & file){
 	Molecule::getVrmlVertexCoords(file,geom);
 //        Molecule m(chem,geom) ; 
 
-	PMolecule pm = new Molecule(chem , geom ) ; 
+	PMolecule pm = new Molecule(chem , geom ,file+".vrml" ) ; 
 	return pm ;
 
 }

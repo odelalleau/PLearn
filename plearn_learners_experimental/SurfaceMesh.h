@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SurfaceMesh.h,v 1.10 2005/07/05 17:28:22 lamblinp Exp $ 
+   * $Id: SurfaceMesh.h,v 1.13 2005/12/29 13:44:35 lamblinp Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Lamblin
@@ -81,6 +81,11 @@ public:
   Graph p_mesh;
   string mesh_type;
 
+  //! Level of verbosity. If 0 should not write anything on perr.
+  //! If >0 may write some info on the steps performed along the way.
+  //! The level of details written should depend on this value.
+  int verbosity;
+
   // ****************
   // * Constructors *
   // ****************
@@ -124,7 +129,8 @@ public:
 
 protected:
   virtual bool readVRMLCoordinate3_( ifstream& in,
-                                    TVec<vertex_descriptor>& vertices );
+                                    TVec<vertex_descriptor>& vertices,
+                                    Mat vtx_features = Mat() );
   virtual bool readVRMLIndexedFaceSet_( ifstream& in,
                                         TVec<vertex_descriptor>& vertices );
   virtual bool readVRMLIndexedLineSet_( ifstream& in,
@@ -141,9 +147,11 @@ protected:
     map< vertex_descriptor, int >& pts_indices );
 
 public:
-  virtual bool readVRMLFile( string filename );
-  virtual bool readVRMLIndexedFaceSet( string filename );
-  virtual bool readVRMLIndexedLineSet( string filename );
+  virtual bool readVRMLFile( string filename, Mat vtx_features = Mat() );
+  virtual bool readVRMLIndexedFaceSet( string filename,
+                                       Mat vtx_features = Mat() );
+  virtual bool readVRMLIndexedLineSet( string filename,
+                                       Mat vtx_features = Mat() );
 
   virtual void writeVRMLFile( string filename );
   virtual void writeVRMLIndexedFaceSet( string filename );
@@ -153,7 +161,7 @@ public:
   virtual int createSurfaceMesh(); // to fix
 
   virtual vertex_descriptor addVertex( MVertex mv );
-  virtual vertex_descriptor addVertex( Vec coord );
+  virtual vertex_descriptor addVertex( Vec coord, Vec features = Vec() );
   virtual vertex_descriptor addVertex( real x, real y, real z );
 
   virtual void delVertex( vertex_descriptor vtx );
@@ -161,7 +169,11 @@ public:
   virtual void setVertex( vertex_descriptor vtx, const MVertex& mv );
 
   virtual Mat getVertexCoords();
+  virtual Mat getVertexCoordsAndFeatures();
   virtual void setVertexCoords( const Mat& coords );
+  virtual void setVertexFeatures( const Mat& features );
+  virtual void setVertexCoordsAndFeatures( const Mat& coords,
+                                           const Mat& features );
   virtual int numVertices();
   virtual TVec< vertex_descriptor > getVertexDescriptors();
 

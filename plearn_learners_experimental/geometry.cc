@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: geometry.cc,v 1.14 2005/03/04 21:02:57 lamblinp Exp $ 
+   * $Id: geometry.cc,v 1.15 2005/12/29 11:52:28 lamblinp Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Lamblin
@@ -118,6 +118,7 @@ Mat rotationFromAxisAngle( Vec& K, real th )
 
 Mat boundingBoxToVertices( const Mat& bbox )
 {
+  /*
   Mat vertices( 8, 3 );
 
   ostringstream buf;
@@ -128,9 +129,24 @@ Mat boundingBoxToVertices( const Mat& bbox )
       << bbox(1,0) << " " << bbox(0,1) << " " << bbox(0,2) << " "
       << bbox(1,0) << " " << bbox(0,1) << " " << bbox(1,2) << " "
       << bbox(1,0) << " " << bbox(1,1) << " " << bbox(0,2) << " "
-      << bbox(1,0) << " " << bbox(1,1) << " " << bbox(1,2) << " " ;
+      << bbox(1,0) << " " << bbox(1,1) << " " << bbox(1,2) << " ";
 
   vertices << buf.str();
+   */
+
+  real buf_[24] = {
+    bbox(0,0), bbox(0,1), bbox(0,2),
+    bbox(0,0), bbox(0,1), bbox(1,2),
+    bbox(0,0), bbox(1,1), bbox(0,2),
+    bbox(0,0), bbox(1,1), bbox(1,2),
+    bbox(1,0), bbox(0,1), bbox(0,2),
+    bbox(1,0), bbox(0,1), bbox(1,2),
+    bbox(1,0), bbox(1,1), bbox(0,2),
+    bbox(1,0), bbox(1,1), bbox(1,2)
+  };
+
+  Mat vertices( 8, 3, buf_ );
+
   return vertices;
 }
 
@@ -763,8 +779,9 @@ void getNearestVertex( const Vec& test_pt, const SurfMesh& mesh2,
   Vec outputs;
   btl-> computeOutputAndCosts( test_pt, Vec(), outputs, dists );
 
-  closest_pt << outputs.subVec( 0, 3 );
-  closest_vertex = (int) outputs[3];
+  int dimension = outputs.size()-1;
+  closest_pt << outputs.subVec( 0, dimension );
+  closest_vertex = (int) outputs[dimension];
   closest_dist = dists[0];
 }
 

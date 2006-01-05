@@ -44,7 +44,7 @@
 #include <plearn/var/Var_utils.h>
 #include "Molecule.h"
 #include "linearalign.h"
-
+#include "icpalign.h"
 namespace PLearn {
 	using namespace std;
 
@@ -62,7 +62,6 @@ namespace PLearn {
 		build_();
 		class_label = the_class_label ; 		
 		current_template = the_template ; 
-//		molecule = new Molecule() ; 
 		training_mode = the_training_mode ; 
 	}
 
@@ -97,10 +96,10 @@ namespace PLearn {
 		{		
 			string filename = test_set->getValString(0, input_index()->value[0]) ;  			
 			molecule = Molecule::readMolecule(filename) ; 
+            molecule->vrml_file = filename+".vrml" ; 
 		}
 
-
-		performLP(molecule,current_template, W_lp , false) ; 
+		::align(molecule->vrml_file,molecule->chem,current_template->vrml_file ,  current_template->chem, W_lp) ; 
 		int n = W_lp.width() ; 
 		int m = W_lp.length() ; 
     

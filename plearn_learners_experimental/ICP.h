@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ICP.h,v 1.7 2005/07/04 21:22:14 lamblinp Exp $ 
+   * $Id: ICP.h,v 1.9 2005/12/29 13:44:35 lamblinp Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Lamblin
@@ -130,7 +130,13 @@ public:
   SurfMesh model;
   SurfMesh scene;
   GenericNN btl;
+  Mat model_features;
+  Mat scene_features;
 
+  //! Level of verbosity. If 0 should not write anything on perr.
+  //! If >0 may write some info on the steps performed along the way.
+  //! The level of details written should depend on this value.
+  int verbosity;
 
   // ****************
   // * Constructors *

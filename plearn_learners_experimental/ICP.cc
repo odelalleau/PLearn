@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ICP.cc,v 1.17 2005/07/04 21:49:11 lamblinp Exp $ 
+   * $Id: ICP.cc,v 1.23 2005/12/29 13:44:35 lamblinp Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Lamblin
@@ -65,9 +65,12 @@ ICP::ICP() :
   smart_overlap( false ),
   smart_overlap_t( 0 ),
   n_per( 0 ),
+  fine_matching( false ),
   read_trans_file( false ),
+  write_trans_file( false ),
   write_vtx_match( false ),
-  write_all_vtx_match( false )
+  write_all_vtx_match( false ),
+  verbosity( 1 )
 {}
 
 ICP::ICP( SurfMesh a_model, SurfMesh a_scene,
@@ -90,17 +93,19 @@ ICP::ICP( SurfMesh a_model, SurfMesh a_scene,
   smart_overlap( false ),
   smart_overlap_t( 0 ),
   n_per( 0 ),
-  fine_matching( true ),
+  fine_matching( false ),
   read_trans_file( false ),
+  write_trans_file( false ),
   write_vtx_match( false ),
-  write_all_vtx_match( false )
+  write_all_vtx_match( false ),
+  verbosity( 1 )
 {
   model = a_model;
   scene = a_scene;
 
   if( !btl_init )
   {
-    btl->setTrainingSet( scene->getVertexCoords() );
+    btl->setTrainingSet( scene->getVertexCoordsAndFeatures() );
     btl->setOption( "nstages", "-1" );
 //    btl->rmin = 1;
     btl->build();
@@ -231,6 +236,14 @@ void ICP::declareOptions(OptionList& ol)
                 OptionBase::buildoption,
                 "File containing the final match between model and vertices point indices");
 
+  declareOption(ol, "verbosity", &ICP::verbosity,
+                OptionBase::buildoption,
+                "Level of verbosity. If 0 should not write anything on perr.\n"
+                "If >0 may write some info on the steps performed along"
+                " the way.\n"
+                "The level of details written should depend on this value.\n"
+               );
+
 /*
   declareOption(ol, "tx", &ICP::tx, OptionBase::buildoption,
                 "translation wrt x");
@@ -255,6 +268,16 @@ void ICP::declareOptions(OptionList& ol)
 
   declareOption(ol, "scene", &ICP::scene, OptionBase::buildoption,
                 "the scene we're trying to align the model on");
+
+  declareOption(ol, "model_features", &ICP::model_features,
+                OptionBase::buildoption,
+                "Matrix containing the chemical features of each vertex of"
+                " the model");
+
+  declareOption(ol, "scene_features", &ICP::scene_features,
+                OptionBase::buildoption,
+                "Matrix containing the chemical features of each vertex of"
+                " the scene");
 
   declareOption(ol, "btl", &ICP::btl, OptionBase::buildoption,
                 "BTreeLearner, containing efficiently the scene points");
@@ -499,11 +522,13 @@ bool ICP::iterativeReweight( Mat model_pts, const Mat scene_pts,
 
     transformPoints( delta_rot, delta_trans, model_pts, model_pts );
 
-
-    cout << "  " << n_iter << " * delta trans " << delta_trans 
-      << " * delta rot " << fixedAnglesFromRotation( delta_rot ) << endl
-      << "  max weight " << max_wt << " * min weight " << min_wt
-      << " * max motion " << max_corner_motion << endl;
+    if( verbosity >= 3 )
+    {
+      pout << "  " << n_iter << " * delta trans " << delta_trans 
+        << " * delta rot " << fixedAnglesFromRotation( delta_rot ) << endl
+        << "  max weight " << max_wt << " * min weight " << min_wt
+        << " * max motion " << max_corner_motion << endl;
+    }
   }
 
   return true;
@@ -518,7 +543,8 @@ int ICP::iterate()
 
   int n_iter = 0;
 
-  pout << "Initial transform: " << *match << endl; // 
+  if( verbosity >=2 )
+    pout << "Initial transform: " << *match << endl; // 
 
   Mat total_rot = match->rot;
   Vec total_trans = match->trans;
@@ -555,9 +581,9 @@ int ICP::iterate()
 
     // find scene points closest to model points
 //    Vec model_vtx; vtx_matching[0,]
-    Mat model_coords;
+    Mat model_coords_feats;
 //    Vec scene_vtx; vtx_matching[1,]
-    Mat scene_coords;
+    Mat scene_coords_feats;
 
     real closest_dist;
     real dynamic_thresh = dynamic_dmax0 = 20 * dynamic_d;
@@ -574,6 +600,8 @@ int ICP::iterate()
 
     vertex_iterator vi, vi_end;
     tie(vi, vi_end) = vertices( *model->p_mesh );
+    int feat_size = model->getVertex( *vi )->features.size();
+
     for( int i=0 ; vi != vi_end ; i++, vi++ )
     {
       MVertex mv = model->getVertex( *vi );
@@ -581,10 +609,14 @@ int ICP::iterate()
       product( model_coord, total_rot, mv->coord );
       model_coord += total_trans;
 
+      Vec model_coord_feat(3+feat_size);
+      model_coord_feat.subVec(0,3) << model_coord;
+      model_coord_feat.subVec(3,feat_size) << mv->features;
+
       Vec model_norm(3);
       product( model_norm, total_rot, mv->norm );
 
-      Vec scene_coord(3);
+      Vec scene_coord_feat(3+feat_size);
 
       real init_dist_t = REAL_MAX;
 //      vtx_matching[i] = false;
@@ -593,11 +625,13 @@ int ICP::iterate()
 
       if( fine_matching )
       {
+        Vec scene_coord(3);
         bool is_overlapping = isOverlapping( model_coord, model_norm,
                                              scene, face_cache, btl,
                                              init_dist_t, normal_t,
                                              j, scene_coord,
                                              closest_dist );
+        scene_coord_feat.subVec(0,3) << scene_coord;
 
         if( overlap_filter && !is_overlapping && (n_iter > overlap_delay) )
           continue;
@@ -610,13 +644,9 @@ int ICP::iterate()
       }
       else
       {
-        getNearestVertex( model_coord, scene, btl,
-                          j, scene_coord, closest_dist );
+        getNearestVertex( model_coord_feat, scene, btl,
+                          j, scene_coord_feat, closest_dist );
       }
-/*cout
-  << j << endl
-  << scene_coord << endl
-  ;*/
 
       // skip points beyond threshold
       if( (weight_method == "static") && (closest_dist > static_thresh) )
@@ -625,11 +655,12 @@ int ICP::iterate()
         continue;
 
       // get vertex coordinates if we haven't them
-      if( is_missing( scene_coord[0] ) || is_missing( scene_coord[1] )
-          || is_missing( scene_coord[2] ) )
+      if( is_missing( scene_coord_feat[0] ) ||
+          is_missing( scene_coord_feat[1] ) ||
+          is_missing( scene_coord_feat[2] ) )
       {
-        scene_coord << all_scene_coords(j);
-        closest_dist = dist( scene_coord, model_coord, 2 );
+        scene_coord_feat.subVec(0,3) << all_scene_coords(j);
+        closest_dist = dist( scene_coord_feat.subVec(0,3), model_coord, 2 );
       }
 
 
@@ -638,8 +669,8 @@ int ICP::iterate()
       vtx_matching_pair[0] = i;
       vtx_matching_pair[1] = j;
       vtx_matching.appendRow( vtx_matching_pair );
-      model_coords.appendRow( model_coord );
-      scene_coords.appendRow( scene_coord );
+      model_coords_feats.appendRow( model_coord_feat );
+      scene_coords_feats.appendRow( scene_coord_feat );
 //      vtx_matching[i] = true;
 
     }
@@ -665,6 +696,8 @@ int ICP::iterate()
 
     Vec weights( n_good );
     // iteratively reweight until convergence - updates model pts
+    Mat model_coords = model_coords_feats.subMatColumns(0,3);
+    Mat scene_coords = scene_coords_feats.subMatColumns(0,3);
     if( !iterativeReweight( model_coords, scene_coords,
                             Vec(), weights,
                             cur_corners, n_inner_iter,
@@ -685,7 +718,8 @@ int ICP::iterate()
     total_trans = tmp_vec + delta_trans;
 
     // compute error
-    error = computeWeightedDistance( model_coords, scene_coords, weights );
+    error = computeWeightedDistance( model_coords_feats, scene_coords_feats,
+                                     weights );
 
     if( weight_method == "dynamic" ) // compute dynamic threshold
     {
@@ -702,20 +736,26 @@ int ICP::iterate()
     delta_trans_length = norm( delta_trans, 2 );
     delta_angle_length = norm( fixedAnglesFromRotation( delta_rot ), 2 );
 
-    cout << n_iter << " trans " << total_trans << " * rotate "
-      << fixedAnglesFromRotation( total_rot ) << endl
-      << " Wgt avg Err " << error << " * max motion "
-      << max_corner_motion << " * n_pts " << n_good << " / " << n_verts
-      << " * dist thresh " << dynamic_thresh
-      << endl;
+    if( verbosity >= 3 )
+    {
+      pout << n_iter << " trans " << total_trans << " * rotate "
+        << fixedAnglesFromRotation( total_rot ) << endl
+        << " Wgt avg Err " << error << " * max motion "
+        << max_corner_motion << " * n_pts " << n_good << " / " << n_verts
+        << " * dist thresh " << dynamic_thresh
+        << endl;
+    }
 
     if( smart_overlap && !overlap_filter )
     {
       if( (error < smart_overlap_t) || (n_iter == overlap_delay) )
       {
-        cout << 
-          "\n*********\n---- activating overlap filter now -----\n*********"
-          << endl << endl;
+        if( verbosity >= 2 )
+        {
+          pout << 
+            "\n*********\n---- activating overlap filter now -----\n*********"
+            << endl << endl;
+        }
         overlap_filter = true;
         overlap_delay = n_iter;
       }
@@ -742,8 +782,16 @@ void ICP::buildMeshes()
     model = new SurfaceMesh();
 
     // read in the model mesh
-    if( !(model->readVRMLFile( model_file )) )
-      PLERROR( "Problem reading %s\n", model_file.c_str() );
+    if( model_features.isNull() )
+    {
+      if( !(model->readVRMLFile( model_file )) )
+        PLERROR( "Problem reading %s\n", model_file.c_str() );
+    }
+    else
+    {
+      if( !(model->readVRMLFile( model_file, model_features )) )
+        PLERROR( "Problem reading %s\n", model_file.c_str() );
+    }
   }
 
   if( !scene )
@@ -754,8 +802,16 @@ void ICP::buildMeshes()
     scene = new SurfaceMesh();
 
     // red in the scene mesh
-    if( !(scene->readVRMLFile( scene_file )) )
-      PLERROR( "Problem reading %s\n", scene_file.c_str() );
+    if( scene_features.isNull() )
+    {
+      if( !(scene->readVRMLFile( scene_file )) )
+        PLERROR( "Problem reading %s\n", scene_file.c_str() );
+    }
+    else
+    {
+      if( !(scene->readVRMLFile( scene_file, scene_features )) )
+        PLERROR( "Problem reading %s\n", scene_file.c_str() );
+    }
   }
 
   // check options compatible with information in meshes (mesh_type)
@@ -769,7 +825,7 @@ void ICP::buildMeshes()
 
   // create BinBallTrees for closest point in scene computations
   BallTreeNN btnn = new BallTreeNearestNeighbors();
-  btnn->setTrainingSet( scene->getVertexCoords() );
+  btnn->setTrainingSet( scene->getVertexCoordsAndFeatures() );
   btnn->setOption( "nstages", "-1" );
   btnn->rmin = 1;
   btnn->build();
@@ -818,17 +874,21 @@ void ICP::buildMeshes()
 
 void ICP::run()
 {
-  cout << "Weight method: " << weight_method << endl
-       << "Area weight: " << area_weight << endl
-       << "Overlap filter: " << overlap_filter << endl
-       << "Overlap Threshold: " << smart_overlap_t << endl
-       << endl;
+  if( verbosity >= 1 )
+  {
+    pout << "Weight method: " << weight_method << endl
+      << "Area weight: " << area_weight << endl
+      << "Overlap filter: " << overlap_filter << endl
+      << "Overlap Threshold: " << smart_overlap_t << endl
+      << endl;
+  }
 
   // determine the first best transformation
   int total_iterations = iterate();
   MMatch  m_best = match;
 
-  cout << "Best registration so far\n" << m_best << endl; // ??
+  if( verbosity >= 2 )
+    pout << "Best registration so far\n" << *m_best << endl; // ??
 
   // randomly perturb transformation about minimum to get global minimum
   for( int i=0 ; i<n_per ; i++ )
@@ -849,17 +909,18 @@ void ICP::run()
       m_best = match;
     }
 
-    pout << "Best registration after " << i << " perturbations\n"
-      << *m_best << endl;
+    if( verbosity >=3 )
+    {
+      pout << "Best registration after " << i << " perturbations\n"
+        << *m_best << endl;
+    }
   }
 
-  pout << "Best Registration\n" << *m_best << endl
-       << "Rotation angles: " << m_best->angles[0] << " " << m_best->angles[1]
-       << " " << m_best->angles[2] << endl
-       << "Translation: " << m_best->trans[0] << " " << m_best->trans[1] << " "
-       << m_best->trans[2] << endl;
-
-  cout << "Total iterations: " << total_iterations << endl;
+  if( verbosity >=2 )
+  {
+    pout << "Best Registration\n" << *m_best << endl;
+    pout << "Total iterations: " << total_iterations << endl;
+  }
 
   if( output_file.length()!=0 ) // write out transformed points
   {
@@ -939,6 +1000,9 @@ void ICP::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   // ### shallow-copied.
   // ### ex:
   // deepCopyField(trainvec, copies);
+  deepCopyField( model_features, copies );
+  deepCopyField( scene_features, copies );
+
 
   // ### Remove this line when you have fully implemented this method.
   PLERROR("ICP::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
