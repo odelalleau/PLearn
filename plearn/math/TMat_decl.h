@@ -254,7 +254,7 @@ public:
                         } else // no valid solution to the system of equation, use a heuristic
                         {
                             extracols = int(ceil(sqrt(real(extrabytes))/new_length));
-                            extrarows = int((extrabytes+l1*w1)/(w1+extracols)) - l1;
+                            extrarows = int((extrabytes+l1*w1)/(w1+extracols) - l1);
                         }
                     }
                     storage->resizeMat(new_length,new_width,extrarows,extracols,mod_,length_,width_,offset_);

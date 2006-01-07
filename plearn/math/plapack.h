@@ -664,7 +664,7 @@ real GCVfromSVD(int n, real Y2minusZ2, Vec Z, Vec s);
 //! (geometric average) between consecutive eigenvalues.
 //! Set best_GCV to the GCV of the selected weight decay and return that selected weight decay.
 real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_GCV, bool X_is_transposed=false, 
-                          real initial_weight_decay_guess=-1, int explore_threshold=5);
+                          real initial_weight_decay_guess=-1, int explore_threshold=5, real min_weight_decay=0);
 
 
 // COMMENTED OUT BECAUSE INCORRECT COMPUTATION OF GCV: CORRECT COMPUTATION DONE WITH ABOVE ROUTINES

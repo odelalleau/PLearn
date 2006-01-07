@@ -789,7 +789,8 @@ real GCVfromSVD(int n, real Y2minusZ2, Vec Z, Vec s)
 //! from the best weight decay found up to now. The weight decays tried are intermediate values
 //! (geometric average) between consecutive eigenvalues.
 //! Set best_GCV to the GCV of the selected weight decay and return that selected weight decay.
-real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_gcv, bool X_is_transposed, real initial_weight_decay_guess, int explore_threshold)
+real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_gcv, bool X_is_transposed, 
+                          real initial_weight_decay_guess, int explore_threshold, real min_weight_decay)
 {
     int n = Y.length();
     int m = Y.width();
@@ -844,11 +845,17 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_gcv, bool X_is_transpo
     gcv.resize(rank);
     gcv.fill(-1.);
     best_gcv = 1e38;
-    real best_weight_decay = 0;
+    real best_weight_decay = min_weight_decay;
     if (initial_weight_decay_guess<0) // TRY ALL EIGENVALUES
         for (int i=1;i<rank;i++)
         {
+            bool stop=false;
             real weight_decay = exp(0.5*(pl_log(eigen_values[i-1])+pl_log(eigen_values[i])));
+            if (weight_decay < min_weight_decay)
+            {
+                weight_decay = min_weight_decay;
+                stop = true;
+            }
             for (int j=0;j<rank;j++)
                 s[j] = weight_decay / (weight_decay + eigen_values[j]);
             gcv[i] = 0;
@@ -860,17 +867,31 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_gcv, bool X_is_transpo
                 best_weight_decay = weight_decay;
                 best_s << s;
             }
+            if (stop)
+                break;
         }
     else // BE MORE GREEDY: DO A SEARCH FROM INITIAL GUESS
     {
         // first find eigenvalue closest to initial guess
         Vec weight_decays(rank);
-        weight_decays[0] = eigen_values[0];
+        weight_decays[0] = max(min_weight_decay,eigen_values[0]);
+        int stop = rank;
         for (int i=1;i<rank;i++)
-            weight_decays[i] = exp(0.5*(pl_log(eigen_values[i-1])+pl_log(eigen_values[i])));
+        {
+            if (i<stop)
+            {
+                weight_decays[i] = exp(0.5*(pl_log(eigen_values[i-1])+pl_log(eigen_values[i])));
+                if (weight_decays[i] < min_weight_decay)
+                {
+                    stop = i;
+                    weight_decays[i] = min_weight_decay;
+                }
+            }
+            else weight_decays[i] = min_weight_decay;
+        }
         int closest = 0;
         real eval_dist = fabs(weight_decays[0]-initial_weight_decay_guess);
-        for (int i=1;i<rank;i++)
+        for (int i=1;i<stop;i++)
         {
             real dist = fabs(weight_decays[i]-initial_weight_decay_guess);
             if (dist < eval_dist)
@@ -881,6 +902,7 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_gcv, bool X_is_transpo
         }
         // how well are we doing there?
         best_weight_decay = weight_decays[closest];
+
         int best_i = closest;
         for (int i=0;i<rank;i++)
             s[i] =  best_weight_decay / (best_weight_decay + eigen_values[i]);
@@ -893,11 +915,11 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_gcv, bool X_is_transpo
         // then explore around it, first one way, then the other, until it looks like we can't get better
         int left=closest;
         int right=closest;
-        if (right<rank-1)
+        if (right<stop-1)
             right++;
         else
             left--;
-        while (left>=0 || right<rank)
+        while (left>=0 || right<stop-1)
         {
             bool improved = false;
             if (gcv[left]<0)
@@ -935,7 +957,7 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_gcv, bool X_is_transpo
                     best_i = right;
                     best_s << s;
 
-                    if (right<rank-1)
+                    if (right<stop-1)
                     {
                         right++;
                         improved = true;
@@ -950,7 +972,7 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_gcv, bool X_is_transpo
                     {
                         if (left>0)
                             left--;
-                        else if (right - best_i < explore_threshold && right<rank-1)
+                        else if (right - best_i < explore_threshold && right<stop-1)
                             right++;
                         else break;
                     }
@@ -960,7 +982,7 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_gcv, bool X_is_transpo
                 {
                     if (right - best_i < explore_threshold)
                     {
-                        if (right<rank-1)
+                        if (right<stop-1)
                             right++;
                         else if (best_i - left < explore_threshold && left>0)
                             left--;
