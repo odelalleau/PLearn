@@ -803,11 +803,11 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_GCV, bool X_is_transpo
         p=X.width();
     }
     if (nx!=n)
-        PLERROR("GCV: incompatible arguments X and Y don't have same number of examples: %d and %d\n",nx,n);
+        PLERROR("ridgeRegressionByGCV: incompatible arguments X and Y don't have same number of examples: %d and %d\n",nx,n);
     if (W.length()!=m)
-        PLERROR("GCV: incompatible arguments W and Y don't have compatible dimensions: %d and %d\n",W.length(),m);
+        PLERROR("ridgeRegressionByGCV: incompatible arguments W and Y don't have compatible dimensions: %d and %d\n",W.length(),m);
     if (W.width()!=p)
-        PLERROR("GCV: incompatible arguments W and X don't have compatible dimensions: %d and %d\n",W.width(),p);
+        PLERROR("ridgeRegressionByGCV: incompatible arguments W and X don't have compatible dimensions: %d and %d\n",W.width(),p);
     static Mat Xcopy, U, Vt, Z, squaredZ;
     static Vec singular_values, eigen_values, s, y2, z2, best_s;
     Xcopy.resize(n,p);
