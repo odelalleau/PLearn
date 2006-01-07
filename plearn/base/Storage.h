@@ -313,6 +313,80 @@ public:
         }
     }
 
+
+    inline void resizeMat(int new_length, int new_width, int extrarows, int extracols, int old_mod, int old_length, int old_width, int old_offset)
+    {
+        int s = new_length*new_width;
+        int extrabytes = (new_length+extrarows)*(new_width+extracols) - s;
+        int newsize = s+extrabytes;
+        int new_mod = new_width+extracols;
+#ifdef BOUNDCHECK
+        if(newsize<0)
+            PLERROR("Storage::resize called with a length() <0");
+#endif
+        if (newsize==length())
+            return;
+#if defined(_MINGW_) || defined(WIN32)
+        else if(fd>0 || dont_delete_data) //!<  we are using a memory-mapped file
+#else
+            else if(fd>=0 || dont_delete_data) //!<  we are using a memory-mapped file
+#endif
+                PLERROR("In Storage::resize cannot change size of memory-mapped data or of data allocated elsewhere");
+        else if (newsize==0)
+        {
+            if (data) delete[] data;
+            data = 0;
+            length_ = 0;
+        }
+        else
+        {
+#ifdef DEBUG_PLEARN_STORAGE_RESIZE
+            int mem_before = getProcessDataMemory();
+            int length_before = length();
+#endif
+            try 
+            {
+                T* newdata = new T[newsize];
+                if(!newdata)
+                    PLERROR("OUT OF MEMORY (new returned NULL) in Storage::resize, trying to allocate %d elements",newsize);
+                if(data)
+                {
+                    // perform a 'structured' copy that keeps all the old values
+                    T* oldp = data+old_offset;
+                    T* newp = newdata;
+                    int w = min(old_width,new_width);
+                    int l = min(old_length,new_length);
+                    for (int row=0;row<l;row++, oldp+=old_mod, newp+=new_mod)
+                    {
+                        copy(oldp,oldp+w,newp);
+                        if(new_width>old_width)
+                            clear_n(newp+old_width,new_width+extracols-old_width);
+                    }
+                    if (new_length>old_length)
+                        clear_n(newp,(new_length+extrarows-old_length)*new_mod);
+                    delete[] data;
+                }
+                length_ = newsize;
+                data = newdata;
+            }
+            catch(...)
+            {
+                PLERROR("OUT OF MEMORY in Storage::resize, trying to allocate %d elements",newsize);
+            }
+#ifdef DEBUG_PLEARN_STORAGE_RESIZE
+            int mem_after = getProcessDataMemory();
+            if (mem_after - mem_before > 256*1024)
+                cerr << "Storage::resize: for storage at "
+                     << hex << this << dec
+                     << " fromsize=" << length_before << " tosize=" << newsize
+                     << " : memusage " << (mem_before/1024) << " kB  ==>  "
+                     << (mem_after/1024) << " kB" << endl;
+            if (mem_after - mem_before > 10000*1024)
+                PLWARNING("Storage::resize: memory usage increased by more than 10000 kB");
+#endif
+        }
+    }
+
     //!  Deep copying
     Storage<T>* deepCopy(CopiesMap& copies) const
     {
