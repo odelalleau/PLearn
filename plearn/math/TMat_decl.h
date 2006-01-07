@@ -185,8 +185,10 @@ public:
       is not preserved if you increase the width() beyond mod().
       The underlying storage is never shrunk, and it is grown only if necessary.
       When grown, it is grown with extrabytes to anticipate further resizes.
+      If preserve_content is true then a change of mod_ triggers a COPY
+      of the old entries so that their old value remains accessed at the same indices.
     */
-    void resize(int newlength, int newwidth, int extrabytes=0)
+    void resize(int newlength, int newwidth, int extrabytes=0, bool preserve_content=false)
     {
 #ifdef BOUNDCHECK
         if(newlength<0 || newwidth<0)

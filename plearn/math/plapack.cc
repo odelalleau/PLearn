@@ -678,7 +678,7 @@ real generalizedCVRidgeRegression(Mat inputs, Mat targets,  real& best_LOOMSE, M
 //! (here for m=1):
 //!          n ( ||Y||^2 - ||Z||^2 + sum_{j=1}^p z_j^2 (weight_decay / (d_j^2 + weight_decay))^2 )
 //!    GCV = ------------------------------------------------------------------------------------
-//!                   ( n - p + sum_{j=1}^p (weight_decay  / (d_j^2 + weight_decay)) )
+//!                   ( n - p + sum_{j=1}^p (weight_decay  / (d_j^2 + weight_decay)) )^2
 //! where Z = U' Y, z_j is the j-th element of Z and d_j is the j-th singular value of X.
 //! This formula can be efficiently re-computed for different values of weight decay.
 //! For this purpose, pre-compute the SVD can call GCVfromSVD. Once a weight decay
@@ -734,9 +734,8 @@ real GCV(Mat X, Mat Y, real weight_decay, bool X_is_transposed, Mat* W)
         Mat yj = Y.column(j);
         real y2 = sumsquare(yj);
         transposeProduct(U,yj,Z);
-        multiply(z,z,squaredZ);
-        real z2 = sum(squaredZ);
-        sum_GCV += GCVfromSVD(n, y2-z2, eigen_values, squaredZ, s);
+        real z2 = pownorm(z);
+        sum_GCV += GCVfromSVD(n, y2-z2, z, s);
         if (W)
         {
             for (int i=0;i<rank;i++)
@@ -752,16 +751,17 @@ real GCV(Mat X, Mat Y, real weight_decay, bool X_is_transposed, Mat* W)
 //! for GCV. This function implements the formula:
 //!          n ( ||Y||^2 - ||Z||^2 + sum_{j=1}^p z_j^2 (weight_decay / (d_j^2 + weight_decay))^2 )
 //!    GCV = ------------------------------------------------------------------------------------
-//!                   ( n - p + sum_{j=1}^p (weight_decay  / (d_j^2 + weight_decay)) )
+//!                   ( n - p + sum_{j=1}^p (weight_decay  / (d_j^2 + weight_decay)) )^2
 //! where Z = U' Y, z_j is the j-th element of Z and d_j is the j-th singular value of X, with X = U D V' the SVD.
 //! The vector s with s_i = (weight_decay  / (d_j^2 + weight_decay)) must also be pre-computed.
-real GCVfromSVD(int n, real Y2minusZ2, Vec eigenvalues, Vec squaredZ, Vec s)
+real GCVfromSVD(int n, real Y2minusZ2, Vec Z, Vec s)
 {
-    int p = eigenvalues.length();
+    int p = s.length();
     real numerator=Y2minusZ2, denominator=n-p;
     for (int i=0;i<p;i++)
     {
-        numerator += s[i]*squaredZ[i];
+        real si_zi = s[i]*Z[i];
+        numerator += si_zi*si_zi;
         denominator += s[i];
     }
     real GCV = n*numerator / (denominator*denominator);
@@ -778,7 +778,7 @@ real GCVfromSVD(int n, real Y2minusZ2, Vec eigenvalues, Vec squaredZ, Vec s)
 //! (here for m=1):
 //!          n ( ||Y||^2 - ||Z||^2 + sum_{j=1}^p z_j^2 (weight_decay / (d_j^2 + weight_decay))^2 )
 //!    GCV = ------------------------------------------------------------------------------------
-//!                   ( n - p + sum_{j=1}^p (weight_decay  / (d_j^2 + weight_decay)) )
+//!                   ( n - p + sum_{j=1}^p (weight_decay  / (d_j^2 + weight_decay)) )^2
 //! where Z = U' Y, z_j is the j-th element of Z and d_j is the j-th singular value of X.
 //! This formula can be efficiently re-computed for different values of weight decay.
 //! For this purpose, pre-compute the SVD can call GCVfromSVD. Once a weight decay
@@ -789,7 +789,7 @@ real GCVfromSVD(int n, real Y2minusZ2, Vec eigenvalues, Vec squaredZ, Vec s)
 //! from the best weight decay found up to now. The weight decays tried are intermediate values
 //! (geometric average) between consecutive eigenvalues.
 //! Set best_GCV to the GCV of the selected weight decay and return that selected weight decay.
-real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_GCV, bool X_is_transposed, real initial_weight_decay_guess, int explore_threshold)
+real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_gcv, bool X_is_transposed, real initial_weight_decay_guess, int explore_threshold)
 {
     int n = Y.length();
     int m = Y.width();
@@ -837,15 +837,13 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_GCV, bool X_is_transpo
         Vec Zj = Z(j);
         y2[j] = sumsquare(Yj);
         transposeProduct(Zj.toMat(rank,1),U,Yj);
-        Vec z2j = squaredZ(j);
-        multiply(Zj,Zj,z2j);
-        z2[j] = sum(z2j);
+        z2[j] = pownorm(Zj);
     }
 
     static Vec gcv;
     gcv.resize(rank);
     gcv.fill(-1.);
-    real best_gcv = 1e38;
+    best_gcv = 1e38;
     real best_weight_decay = 0;
     if (initial_weight_decay_guess<0) // TRY ALL EIGENVALUES
         for (int i=1;i<rank;i++)
@@ -855,7 +853,7 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_GCV, bool X_is_transpo
                 s[j] = weight_decay / (weight_decay + eigen_values[j]);
             gcv[i] = 0;
             for (int j=0;j<m;j++)
-                gcv[i] += GCVfromSVD(n,y2[j]-z2[j], eigen_values, squaredZ(j), s);
+                gcv[i] += GCVfromSVD(n,y2[j]-z2[j], Z(j), s);
             if (gcv[i]<best_gcv)
             {
                 best_gcv=gcv[i];
@@ -888,7 +886,7 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_GCV, bool X_is_transpo
             s[i] =  best_weight_decay / (best_weight_decay + eigen_values[i]);
         gcv[closest] = 0;
         for (int j=0;j<m;j++)
-            gcv[closest] += GCVfromSVD(n,y2[j]-z2[j], eigen_values, squaredZ(j), s);
+            gcv[closest] += GCVfromSVD(n,y2[j]-z2[j], Z(j), s);
         best_gcv = gcv[closest];
         best_s << s;
 
@@ -908,7 +906,7 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_GCV, bool X_is_transpo
                     s[i] = weight_decays[left] / (weight_decays[left] + eigen_values[i]);
                 gcv[left] = 0;
                 for (int j=0;j<m;j++)
-                    gcv[left] += GCVfromSVD(n,y2[j]-z2[j], eigen_values, squaredZ(j), s);
+                    gcv[left] += GCVfromSVD(n,y2[j]-z2[j], Z(j), s);
                 if (gcv[left]<best_gcv)
                 {
                     best_gcv=gcv[left];
@@ -929,7 +927,7 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_GCV, bool X_is_transpo
                     s[i] = weight_decays[right] / (weight_decays[right] + eigen_values[i]);
                 gcv[right] = 0;
                 for (int j=0;j<m;j++)
-                    gcv[right] += GCVfromSVD(n,y2[j]-z2[j], eigen_values, squaredZ(j), s);
+                    gcv[right] += GCVfromSVD(n,y2[j]-z2[j], Z(j), s);
                 if (gcv[right]<best_gcv)
                 {
                     best_gcv=gcv[right];
