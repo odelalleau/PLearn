@@ -692,11 +692,11 @@ real GCV(Mat X, Mat Y, real weight_decay, bool X_is_transposed, Mat* W)
     int p, nx;
     if (X_is_transposed)
     { 
-        nx=X.length();
-        p=X.width();
-    } else {
         nx=X.width();
         p=X.length();
+    } else {
+        nx=X.length();
+        p=X.width();
     }
     if (nx!=n)
         PLERROR("GCV: incompatible arguments X and Y don't have same number of examples: %d and %d\n",nx,n);
@@ -796,11 +796,11 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_GCV, bool X_is_transpo
     int p, nx;
     if (X_is_transposed)
     { 
-        nx=X.length();
-        p=X.width();
-    } else {
         nx=X.width();
         p=X.length();
+    } else {
+        nx=X.length();
+        p=X.width();
     }
     if (nx!=n)
         PLERROR("GCV: incompatible arguments X and Y don't have same number of examples: %d and %d\n",nx,n);
@@ -834,12 +834,11 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_GCV, bool X_is_transpo
     for (int j=0;j<m;j++)
     {
         Mat Yj = Y.column(j);
-        Mat Zj = Z.row(j);
+        Vec Zj = Z(j);
         y2[j] = sumsquare(Yj);
-        transposeProduct(U,Yj,Zj);
-        Vec zj=Zj.toVec();
+        transposeProduct(Zj.toMat(rank,1),U,Yj);
         Vec z2j = squaredZ(j);
-        multiply(zj,zj,z2j);
+        multiply(Zj,Zj,z2j);
         z2[j] = sum(z2j);
     }
 
