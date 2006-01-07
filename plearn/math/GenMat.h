@@ -980,11 +980,17 @@ int kernelPCAfromDotProducts(MatT& dot_products,Mat embedding, int max_n_eigen_i
 
     int err=eigenSparseSymmMat(dot_products, e_values, 
                                e_vectors, m, max_n_eigen_iter,
-                               true, true, true, false, ncv2nev_ratio);
+                               true, true, false, false, ncv2nev_ratio);
+    // change the order so that the largest e-value comes first
+    e_values.swap();
+    e_vectors.swapUpsideDown();
+
     if (!(err==0 || err==1))
         return err;
     //!  extract the embedding:
     //!    embedding(object i, feature j) = e_vectors(j,i)*sqrt(e_values[j])
+    static Vec feature;
+    feature.resize(n);
     for (int j=0;j<m;j++)
     {
         real eval_j = e_values[j];
@@ -994,9 +1000,9 @@ int kernelPCAfromDotProducts(MatT& dot_products,Mat embedding, int max_n_eigen_i
             eval_j = -eval_j*0.2; // HEURISTIC TRICK, keep negative e-values, but smaller
         }
         real scale = sqrt(eval_j);
-        Vec feature_j = e_vectors(j);
-        feature_j *= scale;
-        embedding.column(j) << feature_j;
+        feature << e_vectors(j);
+        feature *= scale;
+        embedding.column(j) << feature;
     }
     return 0;
 }

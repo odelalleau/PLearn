@@ -628,13 +628,17 @@ Vec constrainedLinearRegression(const Mat& Xt, const Vec& Y, real lambda=0.);
 //! We know that lambda should be between the smallest and the largest eigenvalue. We do a search
 //! within the eigenvalue spectrum to select lambda.
 //! If best_predictions is provided then a copy of the predictions obtained with the best weight decay is made. Similarly for best_weights.
-real generalizedCVRidgeRegression(Mat inputs, Mat targets,  real& best_LOOSSE, Mat* best_weights=0, Mat* best_predictions=0, bool inputs_are_transposed=false);
+//! If a positve initial_weight_decay_guess is provided, then instead of trying all the eigenvalues
+//! the algorithm searches from this initial guess, never going more than explore_threshold steps
+//! from the best weight decay found up to now. The weight decays tried are intermediate values
+//! (geometric average) between consecutive eigenvalues
+real generalizedCVRidgeRegression(Mat inputs, Mat targets,  real& best_LOOMSE, Mat* best_weights=0, Mat* best_predictions=0, bool inputs_are_transposed=false, real initial_weight_decay_guess=-1., int explore_threshold = 5);
 
 //! Auxiliary function used by generalizedCFRidgeRegression in order to compute the estimated generalization error
 //! associated with a given choice of weight decay. The eigenvalues and eigenvectors are those of the squared design matrix.
 //! The eigenvectors are in the ROWS of the matrix. 
 //! The RHS_matrix is eigenvectors*inputs'*targets, pre-computed.
-real LOOSSEofRidgeRegression(Mat inputs, Mat targets, Mat weights, real weight_decay, Vec eigenvalues, Mat eigenvectors, Mat predictions, Mat RHS_matrix, bool inputs_are_transposed);
+real LOOMSEofRidgeRegression(Mat inputs, Mat targets, Mat weights, real weight_decay, Vec eigenvalues, Mat eigenvectors, Mat predictions, Mat RHS_matrix, bool inputs_are_transposed);
 
 // Return the affine transformation that
 // is such that the transformed data has

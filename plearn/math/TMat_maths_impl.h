@@ -5198,6 +5198,8 @@ void  choleskyLeftSolve(const TMat<T>& L, TVec<T>& b, TVec<T>& y)
     {
         const T* Li = L[i];
         for (sum=bp[i],k=i-1;k>=0;k--) sum -= Li[k] * yp[k];
+        if (Li[i]==0)
+            PLERROR("choleskyLeftSolve: found zero entry in diagonal of L (%d)",i);
         yp[i] = sum / Li[i];
     }
 }

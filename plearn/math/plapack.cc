@@ -475,7 +475,7 @@ void affineNormalization(Mat data, Mat W, Vec bias, real regularizer)
 }
 
 //! Find weight decay which minimizes the leave-one-out cross-validation
-//! sum of squared error (LOOSSE) of the linear regression with (inputs, targets) pair.
+//! mean squared error (LOOMSE) of the linear regression with (inputs, targets) pair.
 //! Set the resulting weights matrix accordingly and return this weight decay value lambda,
 //! i.e. weights = argmin_w ||targets - inputs*w'||^2 + lambda*sum_i ||w_i||^2.
 //!   inputs: n_examples x n_inputs (if you want a bias term, include it in the inputs!)
@@ -483,16 +483,20 @@ void affineNormalization(Mat data, Mat W, Vec bias, real regularizer)
 //!   weights: n_outputs x n_inputs
 //! 
 //! This work is achieved by taking advantage of the following formula:
-//!    LOOSSE =    (sum of squared errors with the chosen weight decay) / (n_inputs - sum_i e_i/(e_i+lambda))^2
+//!    LOOMSE =    (sum of squared errors with the chosen weight decay) / (n_inputs - sum_i e_i/(e_i+lambda))
 //! where e_i is an eigenvalue of  matrix inputs' * inputs. The explored values of lambda are based on an SVD
 //! of the inputs matrix (whose squared singular values are the eigenvalues of inputs' * inputs.
 //! We know that lambda should be between the smallest and the largest eigenvalue. We do a search
 //! within the eigenvalue spectrum to select lambda.
 //! If best_predictions is provided then a copy of the predictions obtained with the best weight decay is made. Similarly for best_weights.
-real generalizedCVRidgeRegression(Mat inputs, Mat targets,  real& best_LOOSSE, Mat* best_weights, Mat* best_predictions, bool inputs_are_transposed)
+//! If a positve initial_weight_decay_guess is provided, then instead of trying all the eigenvalues
+//! the algorithm searches from this initial guess, never going more than explore_threshold steps
+//! from the best weight decay found up to now. The weight decays tried are intermediate values
+//! (geometric average) between consecutive eigenvalues
+real generalizedCVRidgeRegression(Mat inputs, Mat targets,  real& best_LOOMSE, Mat* best_weights, Mat* best_predictions, bool inputs_are_transposed, real initial_weight_decay_guess, int explore_threshold)
 {
     static Mat inputs_copy, U, Vt, predictions, RHS_matrix, weights, XY;
-    static Vec singular_values, eigen_values, LOOSSE;
+    static Vec singular_values, eigen_values, LOOMSE;
     int n_examples = inputs_are_transposed?inputs.width():inputs.length();
     int n_inputs = inputs_are_transposed?inputs.length():inputs.width();
     int n_outputs = targets.width();
@@ -513,7 +517,8 @@ real generalizedCVRidgeRegression(Mat inputs, Mat targets,  real& best_LOOSSE, M
     RHS_matrix.resize(rank,n_outputs);
     singular_values.resize(rank);
     eigen_values.resize(rank);
-    LOOSSE.resize(rank);
+    LOOMSE.resize(rank);
+    LOOMSE.fill(-1.);
     if (inputs_are_transposed)
         transpose(inputs, inputs_copy);
     else
@@ -534,24 +539,131 @@ real generalizedCVRidgeRegression(Mat inputs, Mat targets,  real& best_LOOSSE, M
     }
 
     // search among cut-off eigen-values
-    best_LOOSSE = 1e38;
-    int best_i = -1;
-    for (int i=1;i<rank;i++)
-    {
-        real weight_decay = exp(0.5*(pl_log(eigen_values[i-1])+pl_log(eigen_values[i])));
-        LOOSSE[i] = LOOSSEofRidgeRegression(inputs,targets,weights,weight_decay,eigen_values,Vt, 
-                                            predictions, RHS_matrix,inputs_are_transposed);
-        if (LOOSSE[i]<best_LOOSSE)
+    best_LOOMSE = 1e38;
+    real best_weight_decay = 0;
+    if (initial_weight_decay_guess<0) // TRY ALL EIGENVALUES
+        for (int i=1;i<rank;i++)
         {
-            best_LOOSSE=LOOSSE[i];
-            best_i=i;
-            if (best_predictions)
-                *best_predictions << predictions;
-            if (best_weights)
-                *best_weights << weights;
+            real weight_decay = exp(0.5*(pl_log(eigen_values[i-1])+pl_log(eigen_values[i])));
+            LOOMSE[i] = LOOMSEofRidgeRegression(inputs,targets,weights,weight_decay,eigen_values,Vt, 
+                                                predictions, RHS_matrix,inputs_are_transposed);
+            if (LOOMSE[i]<best_LOOMSE)
+            {
+                best_LOOMSE=LOOMSE[i];
+                best_weight_decay = weight_decay;
+                if (best_predictions)
+                    *best_predictions << predictions;
+                if (best_weights)
+                    *best_weights << weights;
+            }
+        }
+    else // BE MORE GREEDY: DO A SEARCH FROM INITIAL GUESS
+    {
+        // first find eigenvalue closest to initial guess
+        Vec weight_decays(rank);
+        weight_decays[0] = eigen_values[0];
+        for (int i=1;i<rank;i++)
+            weight_decays[i] = exp(0.5*(pl_log(eigen_values[i-1])+pl_log(eigen_values[i])));
+        int closest = 0;
+        real eval_dist = fabs(weight_decays[0]-initial_weight_decay_guess);
+        for (int i=1;i<rank;i++)
+        {
+            real dist = fabs(weight_decays[i]-initial_weight_decay_guess);
+            if (dist < eval_dist)
+            {
+                eval_dist = dist;
+                closest = i;
+            }
+        }
+        // how well are we doing there?
+        best_weight_decay = weight_decays[closest];
+        int best_i = closest;
+        best_LOOMSE = LOOMSE[closest] = LOOMSEofRidgeRegression(inputs,targets,weights,weight_decays[closest],eigen_values,Vt, 
+                                                                predictions, RHS_matrix,inputs_are_transposed);
+        if (best_predictions)
+            *best_predictions << predictions;
+        if (best_weights)
+            *best_weights << weights;
+        // then explore around it, first one way, then the other, until it looks like we can't get better
+        int left=closest;
+        int right=closest;
+        if (right<rank-1)
+            right++;
+        else
+            left--;
+        while (left>=0 || right<rank)
+        {
+            bool improved = false;
+            if (LOOMSE[left]<0)
+            {
+                LOOMSE[left] = LOOMSEofRidgeRegression(inputs,targets,weights,weight_decays[left],eigen_values,Vt, 
+                                                       predictions, RHS_matrix,inputs_are_transposed);
+                if (LOOMSE[left]<best_LOOMSE)
+                {
+                    best_LOOMSE=LOOMSE[left];
+                    best_weight_decay = weight_decays[left];
+                    best_i = left;
+                    if (best_predictions)
+                        *best_predictions << predictions;
+                    if (best_weights)
+                        *best_weights << weights;
+                    if (left>0)
+                    {
+                        left--;
+                        improved = true;
+                    }
+                }
+            }   
+            if (LOOMSE[right]<0)
+            {
+                LOOMSE[right] = LOOMSEofRidgeRegression(inputs,targets,weights,weight_decays[right],eigen_values,Vt, 
+                                                        predictions, RHS_matrix,inputs_are_transposed);
+                if (LOOMSE[right]<best_LOOMSE)
+                {
+                    best_LOOMSE=LOOMSE[right];
+                    best_weight_decay = weight_decays[right];
+                    best_i = right;
+                    if (best_predictions)
+                        *best_predictions << predictions;
+                    if (best_weights)
+                        *best_weights << weights;
+                    if (right<rank-1)
+                    {
+                        right++;
+                        improved = true;
+                    }
+                }
+            }
+            if (!improved)
+            {
+                if (best_i - left < right - best_i)
+                {
+                    if (best_i - left < explore_threshold)
+                    {
+                        if (left>0)
+                            left--;
+                        else if (right - best_i < explore_threshold && right<rank-1)
+                            right++;
+                        else break;
+                    }
+                    else break;
+                }
+                else
+                {
+                    if (right - best_i < explore_threshold)
+                    {
+                        if (right<rank-1)
+                            right++;
+                        else if (best_i - left < explore_threshold && left>0)
+                            left--;
+                        else break;
+                    }
+                    else break;
+                }
+            }
         }
     }
-    return eigen_values[best_i];
+    return best_weight_decay;
 }
 
 //! Auxiliary function used by generalizedCFRidgeRegression in order to compute the estimated generalization error
@@ -559,11 +671,12 @@ real generalizedCVRidgeRegression(Mat inputs, Mat targets,  real& best_LOOSSE, M
 //! The eigenvectors are in the ROWS of the matrix.
 //! The RHS_matrix is eigenvectors*inputs'*targets, pre-computed.
 //! The computational cost of this call is O((rank+n_examples)*n_outputs*n_inputs)
-real LOOSSEofRidgeRegression(Mat inputs, Mat targets, Mat weights, real weight_decay, Vec eigenvalues, Mat eigenvectors, Mat predictions, 
+real LOOMSEofRidgeRegression(Mat inputs, Mat targets, Mat weights, real weight_decay, Vec eigenvalues, Mat eigenvectors, Mat predictions, 
                              Mat RHS_matrix, bool inputs_are_transposed)
 {
     int n_inputs = weights.width();
     int n_outputs = targets.width();
+    int n_examples = targets.length();
     int rank = eigenvalues.length();
     // weights' = eigenvectors' * inv(diag(eigenvalues) + weight_decay*I) * eigenvectors' * inputs' * targets 
     //          = eigenvectors' * inv(diag(eigenvalues) + weight_decay*I) * RHS_matrix
@@ -598,8 +711,11 @@ real LOOSSEofRidgeRegression(Mat inputs, Mat targets, Mat weights, real weight_d
             SSE += diff*diff;
         }
     }
-    real denom = n_inputs - s;
-    real LOOMSE = SSE / (denom*denom);
+    real denom = n_examples - s;
+    if (denom<0)
+        PLERROR("LOOMSEofRidgeRegression: mathematical error: should not get negative trace!");
+    if (denom==0) return 1e34; // some really large error...
+    real LOOMSE = SSE / denom;
     return LOOMSE;
 }
 
