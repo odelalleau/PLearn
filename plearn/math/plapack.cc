@@ -474,6 +474,8 @@ void affineNormalization(Mat data, Mat W, Vec bias, real regularizer)
     mu *= - real(1.0); // bias = -mu
 }
 
+// COMMENTED OUT BECAUSE INCORRECT COMPUTATION OF GCV
+#if 0
 //! Find weight decay which minimizes the leave-one-out cross-validation
 //! mean squared error (LOOMSE) of the linear regression with (inputs, targets) pair.
 //! Set the resulting weights matrix accordingly and return this weight decay value lambda,
@@ -665,7 +667,326 @@ real generalizedCVRidgeRegression(Mat inputs, Mat targets,  real& best_LOOMSE, M
     }
     return best_weight_decay;
 }
+#endif
 
+//! Compute the generalization error estimator called Generalized Cross-Validation (Craven & Wahba 1979),
+//! and the corresponding ridge regression weights in
+//!    min ||Y - X*W'||^2 + weight_decay ||W||^2.
+//! where Y is nxm, X is nxp, W is mxp.
+//! The GCV is obtained by performing and SVD of X = U D V' and using the formula from
+//! (Bates, Lindstrom, Wahba, Yandell 1986) [tech report at http://www.stat.wisc.edu/~wahba/ftp1/oldie/775r.pdf]
+//! (here for m=1):
+//!          n ( ||Y||^2 - ||Z||^2 + sum_{j=1}^p z_j^2 (weight_decay / (d_j^2 + weight_decay))^2 )
+//!    GCV = ------------------------------------------------------------------------------------
+//!                   ( n - p + sum_{j=1}^p (weight_decay  / (d_j^2 + weight_decay)) )
+//! where Z = U' Y, z_j is the j-th element of Z and d_j is the j-th singular value of X.
+//! This formula can be efficiently re-computed for different values of weight decay.
+//! For this purpose, pre-compute the SVD can call GCVfromSVD. Once a weight decay
+//! has been selected, the SVD can also be used (optionally) to obtain the minimizing weights:
+//!    W = V inv(D^2 + weight_decay I) D Z
+//!
+real GCV(Mat X, Mat Y, real weight_decay, bool X_is_transposed, Mat* W)
+{
+    int n = Y.length();
+    int m = Y.width();
+    int p, nx;
+    if (X_is_transposed)
+    { 
+        nx=X.length();
+        p=X.width();
+    } else {
+        nx=X.width();
+        p=X.length();
+    }
+    if (nx!=n)
+        PLERROR("GCV: incompatible arguments X and Y don't have same number of examples: %d and %d\n",nx,n);
+    if (W && W->length()!=m)
+        PLERROR("GCV: incompatible arguments W and Y don't have compatible dimensions: %d and %d\n",W->length(),m);
+    if (W && W->width()!=p)
+        PLERROR("GCV: incompatible arguments W and X don't have compatible dimensions: %d and %d\n",W->width(),p);
+    static Mat Xcopy, U, Vt, Z;
+    static Vec singular_values, eigen_values, squaredZ, s;
+    Xcopy.resize(n,p);
+    if (X_is_transposed)
+        transpose(X, Xcopy);
+    else
+        Xcopy << X;
+    int rank = min(n,p);
+    U.resize(n,rank);
+    Vt.resize(rank,p);
+    singular_values.resize(rank);
+    eigen_values.resize(rank);
+    Z.resize(rank,1);
+    squaredZ.resize(rank);
+    s.resize(rank);
+    Vec z=Z.toVec();
+    
+    SVD(Xcopy, U, singular_values, Vt, 'S');
+    for (int i=0;i<rank;i++)
+    {
+        eigen_values[i] = singular_values[i]*singular_values[i];
+        s[i] = weight_decay / (weight_decay + eigen_values[i]);
+    }
+
+    real sum_GCV=0;
+    for (int j=0;j<m;j++)
+    {
+        Mat yj = Y.column(j);
+        real y2 = sumsquare(yj);
+        transposeProduct(U,yj,Z);
+        multiply(z,z,squaredZ);
+        real z2 = sum(squaredZ);
+        sum_GCV += GCVfromSVD(n, y2-z2, eigen_values, squaredZ, s);
+        if (W)
+        {
+            for (int i=0;i<rank;i++)
+                z[i] *= s[i]*singular_values[i]/weight_decay;
+            transposeProduct((*W)(j),Vt,z);
+        }
+    }
+    return sum_GCV;
+}
+
+//! Estimator of generalization error estimator called Generalized Cross-Validation (Craven & Wahba 1979),
+//! computed from the SVD of the input matrix X in the ridge regression. See the comments
+//! for GCV. This function implements the formula:
+//!          n ( ||Y||^2 - ||Z||^2 + sum_{j=1}^p z_j^2 (weight_decay / (d_j^2 + weight_decay))^2 )
+//!    GCV = ------------------------------------------------------------------------------------
+//!                   ( n - p + sum_{j=1}^p (weight_decay  / (d_j^2 + weight_decay)) )
+//! where Z = U' Y, z_j is the j-th element of Z and d_j is the j-th singular value of X, with X = U D V' the SVD.
+//! The vector s with s_i = (weight_decay  / (d_j^2 + weight_decay)) must also be pre-computed.
+real GCVfromSVD(int n, real Y2minusZ2, Vec eigenvalues, Vec squaredZ, Vec s)
+{
+    int p = eigenvalues.length();
+    real numerator=Y2minusZ2, denominator=n-p;
+    for (int i=0;i<p;i++)
+    {
+        numerator += s[i]*squaredZ[i];
+        denominator += s[i];
+    }
+    real GCV = n*numerator / (denominator*denominator);
+    return GCV;
+}
+
+//! Perform ridge regression WITH model selection (i.e. choosing the weight decay).
+//! The selection of weight decay is done in order to minimize the Generalized Cross Validation
+//! (GCV) criterion(Craven & Wahba 1979). The ridge regression weights minimize
+//!    min ||Y - X*W'||^2 + weight_decay ||W||^2.
+//! where Y is nxm, X is nxp, W is mxp, and this procedure ALSO selects a weight_decay value.
+//! The GCV is obtained by performing and SVD of X = U D V' and using the formula from
+//! (Bates, Lindstrom, Wahba, Yandell 1986) [tech report at http://www.stat.wisc.edu/~wahba/ftp1/oldie/775r.pdf]
+//! (here for m=1):
+//!          n ( ||Y||^2 - ||Z||^2 + sum_{j=1}^p z_j^2 (weight_decay / (d_j^2 + weight_decay))^2 )
+//!    GCV = ------------------------------------------------------------------------------------
+//!                   ( n - p + sum_{j=1}^p (weight_decay  / (d_j^2 + weight_decay)) )
+//! where Z = U' Y, z_j is the j-th element of Z and d_j is the j-th singular value of X.
+//! This formula can be efficiently re-computed for different values of weight decay.
+//! For this purpose, pre-compute the SVD can call GCVfromSVD. Once a weight decay
+//! has been selected, the SVD can also be used (optionally) to obtain the minimizing weights:
+//!    W = V inv(D^2 + weight_decay I) D Z
+//! If a positve initial_weight_decay_guess is provided, then instead of trying all the eigenvalues
+//! the algorithm searches from this initial guess, never going more than explore_threshold steps
+//! from the best weight decay found up to now. The weight decays tried are intermediate values
+//! (geometric average) between consecutive eigenvalues.
+//! Set best_GCV to the GCV of the selected weight decay and return that selected weight decay.
+real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_GCV, bool X_is_transposed, real initial_weight_decay_guess, int explore_threshold)
+{
+    int n = Y.length();
+    int m = Y.width();
+    int p, nx;
+    if (X_is_transposed)
+    { 
+        nx=X.length();
+        p=X.width();
+    } else {
+        nx=X.width();
+        p=X.length();
+    }
+    if (nx!=n)
+        PLERROR("GCV: incompatible arguments X and Y don't have same number of examples: %d and %d\n",nx,n);
+    if (W.length()!=m)
+        PLERROR("GCV: incompatible arguments W and Y don't have compatible dimensions: %d and %d\n",W.length(),m);
+    if (W.width()!=p)
+        PLERROR("GCV: incompatible arguments W and X don't have compatible dimensions: %d and %d\n",W.width(),p);
+    static Mat Xcopy, U, Vt, Z, squaredZ;
+    static Vec singular_values, eigen_values, s, y2, z2, best_s;
+    Xcopy.resize(n,p);
+    if (X_is_transposed)
+        transpose(X, Xcopy);
+    else
+        Xcopy << X;
+    int rank = min(n,p);
+    U.resize(n,rank);
+    Vt.resize(rank,p);
+    singular_values.resize(rank);
+    eigen_values.resize(rank);
+    Z.resize(m,rank);
+    squaredZ.resize(m,rank);
+    s.resize(rank);
+    best_s.resize(rank);
+    y2.resize(m);
+    z2.resize(m);
+    
+    SVD(Xcopy, U, singular_values, Vt, 'S');
+    for (int i=0;i<rank;i++)
+        eigen_values[i] = singular_values[i]*singular_values[i];
+
+    for (int j=0;j<m;j++)
+    {
+        Mat Yj = Y.column(j);
+        Mat Zj = Z.row(j);
+        y2[j] = sumsquare(Yj);
+        transposeProduct(U,Yj,Zj);
+        Vec zj=Zj.toVec();
+        Vec z2j = squaredZ(j);
+        multiply(zj,zj,z2j);
+        z2[j] = sum(z2j);
+    }
+
+    static Vec gcv;
+    gcv.resize(rank);
+    gcv.fill(-1.);
+    real best_gcv = 1e38;
+    real best_weight_decay = 0;
+    if (initial_weight_decay_guess<0) // TRY ALL EIGENVALUES
+        for (int i=1;i<rank;i++)
+        {
+            real weight_decay = exp(0.5*(pl_log(eigen_values[i-1])+pl_log(eigen_values[i])));
+            for (int j=0;j<rank;j++)
+                s[j] = weight_decay / (weight_decay + eigen_values[j]);
+            gcv[i] = 0;
+            for (int j=0;j<m;j++)
+                gcv[i] += GCVfromSVD(n,y2[j]-z2[j], eigen_values, squaredZ(j), s);
+            if (gcv[i]<best_gcv)
+            {
+                best_gcv=gcv[i];
+                best_weight_decay = weight_decay;
+                best_s << s;
+            }
+        }
+    else // BE MORE GREEDY: DO A SEARCH FROM INITIAL GUESS
+    {
+        // first find eigenvalue closest to initial guess
+        Vec weight_decays(rank);
+        weight_decays[0] = eigen_values[0];
+        for (int i=1;i<rank;i++)
+            weight_decays[i] = exp(0.5*(pl_log(eigen_values[i-1])+pl_log(eigen_values[i])));
+        int closest = 0;
+        real eval_dist = fabs(weight_decays[0]-initial_weight_decay_guess);
+        for (int i=1;i<rank;i++)
+        {
+            real dist = fabs(weight_decays[i]-initial_weight_decay_guess);
+            if (dist < eval_dist)
+            {
+                eval_dist = dist;
+                closest = i;
+            }
+        }
+        // how well are we doing there?
+        best_weight_decay = weight_decays[closest];
+        int best_i = closest;
+        for (int i=0;i<rank;i++)
+            s[i] =  best_weight_decay / (best_weight_decay + eigen_values[i]);
+        gcv[closest] = 0;
+        for (int j=0;j<m;j++)
+            gcv[closest] += GCVfromSVD(n,y2[j]-z2[j], eigen_values, squaredZ(j), s);
+        best_gcv = gcv[closest];
+        best_s << s;
+
+        // then explore around it, first one way, then the other, until it looks like we can't get better
+        int left=closest;
+        int right=closest;
+        if (right<rank-1)
+            right++;
+        else
+            left--;
+        while (left>=0 || right<rank)
+        {
+            bool improved = false;
+            if (gcv[left]<0)
+            {
+                for (int i=0;i<rank;i++)
+                    s[i] = weight_decays[left] / (weight_decays[left] + eigen_values[i]);
+                gcv[left] = 0;
+                for (int j=0;j<m;j++)
+                    gcv[left] += GCVfromSVD(n,y2[j]-z2[j], eigen_values, squaredZ(j), s);
+                if (gcv[left]<best_gcv)
+                {
+                    best_gcv=gcv[left];
+                    best_weight_decay = weight_decays[left];
+                    best_i = left;
+                    best_s << s;
+
+                    if (left>0)
+                    {
+                        left--;
+                        improved = true;
+                    }
+                }
+            }   
+            if (gcv[right]<0)
+            {
+                for (int i=0;i<rank;i++)
+                    s[i] = weight_decays[right] / (weight_decays[right] + eigen_values[i]);
+                gcv[right] = 0;
+                for (int j=0;j<m;j++)
+                    gcv[right] += GCVfromSVD(n,y2[j]-z2[j], eigen_values, squaredZ(j), s);
+                if (gcv[right]<best_gcv)
+                {
+                    best_gcv=gcv[right];
+                    best_weight_decay = weight_decays[right];
+                    best_i = right;
+                    best_s << s;
+
+                    if (right<rank-1)
+                    {
+                        right++;
+                        improved = true;
+                    }
+                }
+            }
+            if (!improved)
+            {
+                if (best_i - left < right - best_i)
+                {
+                    if (best_i - left < explore_threshold)
+                    {
+                        if (left>0)
+                            left--;
+                        else if (right - best_i < explore_threshold && right<rank-1)
+                            right++;
+                        else break;
+                    }
+                    else break;
+                }
+                else
+                {
+                    if (right - best_i < explore_threshold)
+                    {
+                        if (right<rank-1)
+                            right++;
+                        else if (best_i - left < explore_threshold && left>0)
+                            left--;
+                        else break;
+                    }
+                    else break;
+                }
+            }
+        }
+    }
+
+    // compute weights for selected weight decay
+    for (int j=0;j<m;j++)
+    {
+        Vec zj = Z(j);
+        for (int i=0;i<rank;i++)
+            zj[i] *= best_s[i]*singular_values[i]/best_weight_decay;
+        transposeProduct(W(j),Vt,zj);
+    }
+    return best_weight_decay;
+}
+
+#if 0
 //! Auxiliary function used by generalizedCFRidgeRegression in order to compute the estimated generalization error
 //! associated with a given choice of weight decay. The eigenvalues and eigenvectors are those of the squared design matrix.
 //! The eigenvectors are in the ROWS of the matrix.
@@ -718,6 +1039,7 @@ real LOOMSEofRidgeRegression(Mat inputs, Mat targets, Mat weights, real weight_d
     real LOOMSE = SSE / denom;
     return LOOMSE;
 }
+#endif
 
 } // end of namespace PLearn
 
