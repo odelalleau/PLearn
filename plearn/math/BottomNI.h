@@ -72,10 +72,13 @@ public:
 
     //!  Default constructor, you must then call init.
     BottomNI()
-    {}
+        : n_zeros(0), N(0), bottomnptr(0), maxpair(0)
+    { }
     
     //!  N is the number of (value,index) pairs to remember.
-    BottomNI(int the_N) { init(the_N); }
+    BottomNI(int the_N)
+        : n_zeros(0), N(0), bottomnptr(0), maxpair(0)
+    { init(the_N); }
 
     //!  N is the number of (value,point) pairs to remember.
     void init(int the_N)
