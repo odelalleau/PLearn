@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
 // PLearn (A C++ Machine Learning Library)
-// Copyright (C) 2003 Olivier Delalleau
+// Copyright (C) 2003,2006 Olivier Delalleau
 // Copyright (c) 1996-2001, Ian T. Nabney for functions minBrack, brentSearch
 
 // Redistribution and use in source and binary forms, with or without
@@ -178,7 +178,7 @@ void ConjGradientOptimizer::declareOptions(OptionList& ol)
                   OptionBase::buildoption, 
                   "The kind of formula used in step 2 of the conjugate gradient\n"
                   "  algorithm to find the new search direction:\n"
-                  "  1. ConjPOMPD: the formula associated with GSearch in the same paper.\n"
+                  "  1. ConjPOMDP: the formula associated with GSearch in the same paper.\n"
                   "     It is almost the same as the Polak-Ribiere formula.\n"
                   "  2. Dai - Yuan\n"
                   "  3. Fletcher - Reeves\n"
@@ -446,6 +446,9 @@ bool ConjGradientOptimizer::findDirection() {
     if (gamma < 0) {
         if (verbosity >= 2)
             cout << "gamma < 0 ! gamma = " << gamma << " ==> Restarting" << endl;
+
+        // TODO Is this really needed / a good idea?
+        // TODO PUT THAT AS AN OPTION!!
         gamma = 0;
     }
     else {
@@ -457,6 +460,7 @@ bool ConjGradientOptimizer::findDirection() {
             gamma = 0;
         }
     }
+    pout << "gamma = " << gamma << endl;
     updateSearchDirection(gamma);
     // If the gradient is very small, we can stop !
 //  isFinished = pownorm(current_opp_gradient) < 0.0000001;
@@ -564,6 +568,183 @@ real ConjGradientOptimizer::fletcherReeves (
     // delta = opposite gradient
     real gamma = pownorm(opt->delta) / pownorm(opt->current_opp_gradient);
     return gamma;
+}
+
+/////////////////////
+// rasmussenSearch //
+/////////////////////
+real ConjGradientOptimizer::rasmussenSearch()
+{
+    bool try_again = true;
+    while (try_again) {
+        try_again = false;
+    // X0 = X; f0 = f1; df0 = df1; % make a copy of current values
+    real ras_f0_ = ras_f1_;
+    // real ras_df0_ = ras_df1_; Should not be needed TODO see
+    // X = X + z1*s;  % begin line search
+    // We don't do that explicitely
+    // [f2 df2] = eval(argstr);
+    // d2 = df2'*s;
+    computeCostAndDerivative(ras_z1_, this, ras_f2_, ras_d2_);
+    // i = i + (length<0);
+    // We count epochs outside of this.
+    // f3 = f1; d3 = d1; z3 = -z1; % initialize point 3 equal to point 1
+    real ras_f3_ = ras_f1_;
+    real ras_d3_ = ras_d1_;
+    real ras_z3_ = - ras_z1_;
+    // if length>0, M = MAX; else M = min(MAX, -length-i); end
+    //if (ras_length_ > 0) {
+        ras_M_ = ras_MAX_;
+    //}
+        /*
+    else {
+        ras_M_ = min(ras_MAX_, -ras_length_ - ras_i_);
+    }
+    */
+    // success = 0; limit = -1;                     % initialize quanteties
+    ras_success_ = 0;
+    ras_limit_ = -1;
+    // while 1
+    while (true) {
+        // while ((f2 > f1+z1*RHO*d1) | (d2 > -SIG*d1)) & (M > 0)
+        while ( (ras_f2_ > ras_f1_ + ras_z1_ * ras_RHO_ * ras_d1_ ||
+                 ras_d2_ > - ras_SIG_ * ras_d1_ ) &&
+                ras_M_ > 0 )
+        {
+            // limit = z1; % tighten the bracket
+            ras_limit_ = ras_z1_;
+            // if f2 > f1
+            // z2 = z3 - (0.5*d3*z3*z3)/(d3*z3+f2-f3);  % quadratic fit
+            if (ras_f2_ > ras_f1_) {
+                ras_z2_ = ras_z3_ -
+                    (0.5*ras_d3_*ras_z3_*ras_z3_) / 
+                    (ras_d3_*ras_z3_+ras_f2_-ras_f3_);
+            } else {
+                // A = 6*(f2-f3)/z3+3*(d2+d3); % cubic fit
+                ras_A_ = 6*(ras_f2_-ras_f3_)/ras_z3_+3*(ras_d2_+ras_d3_);
+                // B = 3*(f3-f2)-z3*(d3+2*d2);
+                ras_B_ = 3*(ras_f3_-ras_f2_)-ras_z3_*(ras_d3_+2*ras_d2_);
+                // z2 = (sqrt(B*B-A*d2*z3*z3)-B)/A;
+                // % numerical error possible - ok!
+                ras_z2_ = (sqrt(ras_B_*ras_B_-ras_A_*ras_d2_*ras_z3_*ras_z3_)-ras_B_)/ras_A_;
+            }
+            if (isnan(ras_z2_) || isinf(ras_z2_))
+                // z2 = z3/2;                  % if we had a numerical problem
+                // then bisect
+                ras_z2_ = ras_z3_/2;
+            // z2 = max(min(z2, INT*z3),(1-INT)*z3);
+            // % don't accept too close to limits
+            ras_z2_ = max(min(ras_z2_, ras_INT_*ras_z3_),(1-ras_INT_)*ras_z3_);
+            // z1 = z1 + z2; % update the step
+            ras_z1_ = ras_z1_ + ras_z2_;
+            //  X = X + z2*s;
+            // [f2 df2] = eval(argstr);
+            // d2 = df2'*s;
+            computeCostAndDerivative(ras_z1_, this, ras_f2_, ras_d2_);
+            // M = M - 1; i = i + (length<0); % count epochs?!
+            ras_M_ = ras_M_ - 1;
+            // ras_i_ = ras_i_ + (ras_length_<0);
+            // z3 = z3-z2; % z3 is now relative to the location of z2
+            ras_z3_ = ras_z3_ - ras_z2_;  
+        }
+        // if f2 > f1+z1*RHO*d1 | d2 > -SIG*d1
+        //  break;  % this is a failure
+        // elseif d2 > SIG*d1
+        //  success = 1; break; % success
+        // elseif M == 0
+        //  break; % failure
+        if (ras_f2_ > ras_f1_+ras_z1_*ras_RHO_*ras_d1_ ||
+            ras_d2_ > -ras_SIG_*ras_d1_)
+            break;
+        else if (ras_d2_ > ras_SIG_ * ras_d1_) {
+            ras_success_ = 1;
+            break;
+        } else if (ras_M_ == 0)
+            break;
+        // A = 6*(f2-f3)/z3+3*(d2+d3); % make cubic extrapolation
+        // B = 3*(f3-f2)-z3*(d3+2*d2);
+        ras_A_ = 6*(ras_f2_-ras_f3_)/ras_z3_+3*(ras_d2_+ras_d3_);
+        ras_B_ = 3*(ras_f3_-ras_f2_)-ras_z3_*(ras_d3_+2*ras_d2_);
+        // z2 = -d2*z3*z3/(B+sqrt(B*B-A*d2*z3*z3));
+        // % num. error possible - ok!
+        ras_z2_ = -ras_d2_*ras_z3_*ras_z3_/
+            (ras_B_+sqrt(ras_B_*ras_B_-ras_A_*ras_d2_*ras_z3_*ras_z3_));
+        // if ~isreal(z2) | isnan(z2) | isinf(z2) | z2 < 0
+        // % num prob or wrong sign?
+        if (isnan(ras_z2_) || isinf(ras_z2_)) {
+            // if limit < -0.5 % if we have no upper limit
+            if (ras_limit_ < -0.5)
+                // z2 = z1 * (EXT-1); % the extrapolate the maximum amount
+                ras_z2_ = ras_z1_ * (ras_EXT_ - 1);
+            else
+                // z2 = (limit-z1)/2; % otherwise bisect
+                ras_z2_ = (ras_limit_ - ras_z1_) / 2;
+        // elseif (limit > -0.5) & (z2+z1 > limit) 
+        //  % extraplation beyond max?
+        } else if (ras_limit_ > -0.5 && (ras_z2_ + ras_z1_ > ras_limit_)) {
+            ras_z2_ = (ras_limit_ - ras_z1_) / 2; // bisect
+        // elseif (limit < -0.5) & (z2+z1 > z1*EXT)
+        // % extrapolation beyond limit
+        } else if (ras_limit_ < -0.5 && ras_z2_+ras_z1_ > ras_z1_ * ras_EXT_) {
+            // z2 = z1*(EXT-1.0); % set to extrapolation limit
+            ras_z2_ = ras_z1_ * (ras_EXT_ - 1);
+        // elseif z2 < -z3*INT
+        } else if (ras_z2_ < - ras_z3_ * ras_INT_) {
+            // z2 = -z3*INT;
+            ras_z2_ = - ras_z3_ * ras_INT_;
+        // elseif (limit > -0.5) & (z2 < (limit-z1)*(1.0-INT))
+        // % too close to limit?
+        } else if (ras_limit_ > -0.5 &&
+                   ras_z2_ < (ras_limit_ - ras_z1_) * (1 - ras_INT_) ) {
+            // z2 = (limit-z1)*(1.0-INT);
+            ras_z2_ = (ras_limit_ - ras_z1_) * (1 - ras_INT_);
+        }
+        // f3 = f2; d3 = d2; z3 = -z2;
+        // % set point 3 equal to point 2
+        ras_f3_ = ras_f2_;
+        ras_d3_ = ras_d2_;
+        ras_z3_ = - ras_z2_;
+        // z1 = z1 + z2; X = X + z2*s;
+        // % update current estimates
+        ras_z1_ += ras_z2_;
+        // [f2 df2] = eval(argstr);
+        // d2 = df2'*s;
+        computeCostAndDerivative(ras_z1_, this, ras_f2_, ras_d2_);
+        // M = M - 1; i = i + (length<0);
+        // % count epochs?!
+        ras_M_ = ras_M_ - 1;
+        // ras_i_ = ras_i_ + (ras_length_<0);
+    }
+    // if success % if line search succeeded
+    if (ras_success_) {
+        ras_f1_ = ras_f2_;
+
+        // ls_failed = 0; % this line search did not fail
+        ras_ls_failed_ = 0;
+    } else {
+        // X = X0; f1 = f0; df1 = df0;
+        // % restore point from before failed line search
+        ras_f1_ = ras_f0_;
+        // if ls_failed | i > abs(length)
+        // % line search failed twice in a row or we ran out of time, so we
+        // give up
+        if (ras_ls_failed_) //  (|| ras_i_ > fabs(ras_length_))
+            return 0;
+        // tmp = df1; df1 = df2; df2 = tmp; % swap derivatives
+        // We do not do that... it looks weird!
+        // s = -df1; % try steepest
+        // We will actually do s = -df0 as this seems more logical.
+        // TODO Ask Rasmussen!
+        // d1 = -s'*s;
+        ras_d1_ = - pownorm(current_opp_gradient);
+        // z1 = 1/(1-d1);
+        ras_z1_ = 1 / (1 - ras_d1_); // TODO What about ras_RED_ or similar?
+        // ls_failed = 1; % this line search failed
+        ras_ls_failed_ = 1;
+        try_again = true;
+    }
+    }
+    return ras_z1_;
 }
 
 ////////////////////
@@ -813,6 +994,9 @@ bool ConjGradientOptimizer::lineSearch() {
         break;
     case 4:
         step = brentSearch();
+        break;
+    case 5:
+        step = rasmussenSearch();
         break;
     default:
         PLERROR("In ConjGradientOptimizer::lineSearch - Invalid conjugate gradient line search algorithm");
@@ -1076,6 +1260,18 @@ bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
         computeOppositeGradient(this, current_opp_gradient);
         search_direction <<  current_opp_gradient;  // first direction = -grad;
         last_cost = cost->value[0];
+        ras_red_ = 1; // TODO Find the best value here!
+        if (line_search_algo == 5) {
+            ras_f1_ = last_cost;
+            ras_d1_ = - pownorm(search_direction);
+            ras_z1_ = ras_red_ / ( 1 - ras_d1_ );
+        }
+        ras_RHO_ = 0.01;
+        ras_SIG_ = 0.5;
+        ras_INT_ = 0.1;
+        ras_EXT_ = 3.0;
+        ras_MAX_ = 20;
+        ras_RATIO_ = 100;
     }
 
     if (early_stop)
@@ -1087,6 +1283,7 @@ bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
         early_stop = lineSearch();
         computeOppositeGradient(this, delta);
         current_cost = cost->value[0];
+        pout << "At stage " << stage << ": " << current_cost << endl;
         if (compute_cost) {
             meancost += cost->value;
         }
@@ -1162,7 +1359,24 @@ void ConjGradientOptimizer::updateSearchDirection(real gamma) {
     else
         for (int i=0; i<search_direction.length(); i++)
             search_direction[i] = delta[i] + gamma * search_direction[i];
+    // Update 'current_opp_gradient' for the new current point.
     current_opp_gradient << delta;
+    if (line_search_algo == 5) {
+        // d2 = df1'*s;
+        // if d2 > 0               % new slope must be negative
+        //   s = -df1;             % otherwise use steepest direction
+        //   d2 = -s'*s;    
+        ras_d2_ = - dot(current_opp_gradient, search_direction);
+        if (ras_d2_ > 0) {
+            search_direction << current_opp_gradient;
+            ras_d2_ = - pownorm(search_direction);
+        }
+        // z1 = z1 * min(RATIO, d1/(d2-realmin));
+        // % slope ratio but max RATIO
+        ras_z1_ = ras_z1_ * min(ras_RATIO_, ras_d1_/(ras_d2_-REAL_EPSILON));
+        // d1 = d2;
+        ras_d1_ = ras_d2_;
+    }
 }
 
 //////////////

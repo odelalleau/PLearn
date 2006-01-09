@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
 // PLearn (A C++ Machine Learning Library)
-// Copyright (C) 2003 Olivier Delalleau
+// Copyright (C) 2003,2006 Olivier Delalleau
 //
 
 // Redistribution and use in source and binary forms, with or without
@@ -50,13 +50,6 @@ namespace PLearn {
 using namespace std;
 
 
-/*
- * CLASS CONJGRADIENTOPTIMIZER
- *
- * An optimizer using the conjugate gradient method.
- * It can be configured to use various algorithms.
- *
- */
 class ConjGradientOptimizer : public Optimizer {
 
     typedef Optimizer inherited;
@@ -75,6 +68,7 @@ public:
     //! 2  : GSearch
     //! 3  : Newton line search
     //! 4  : Brent's line search
+    //! 5  : Rasmussen's line search
     int line_search_algo;
     //! The formula used to find the new search direction
     //! 1  : ConjPOMPD
@@ -107,9 +101,31 @@ public:
     real value_res;    // resolution of the value of the point
     int n_iterations;  // number of line search iterations
 
+    // Rasmussen's algorithm specific options
+    real ras_RHO_;  //!< Constant for the Wolfe-Powell conditions.
+    real ras_SIG_;  //!< Constant for the Wolfe-Powell conditions.
+    real ras_INT_;  //!< don't reevaluate within 0.1 of the limit of the
+                    //!< current bracket (TODO CHANGE COMMENT)
+    // (TODO CHANGE COMMENT)
+    real ras_EXT_;  //!< extrapolate maximum 3 times the current bracket
+    // (TODO CHANGE COMMENT)
+    int ras_MAX_;  //!< max 20 function evaluations per line search
+    // (TODO CHANGE COMMENT)
+    real ras_RATIO_; //!< maximum allowed slope ratio
+
+    real ras_RED_; // TODO Comment (expected reduction at first step)
+
 protected:
   
     Vec meancost;              // used to store the cost, for display purpose
+
+    // RAS stuff.
+    real ras_A_, ras_B_, ras_z2_, ras_f1_, ras_z1_, ras_f2_, ras_d2_, ras_d1_;
+    real ras_limit_, ras_red_;
+    //int ras_i_, ras_length_;
+    int ras_M_;
+    bool ras_ls_failed_, ras_success_;
+    
 
 private:
 
@@ -286,6 +302,9 @@ private:
     // Brent's line search algorithm, implemented in netlab (a matlab library)
     // by Ian T. Nabney
     real brentSearch();
+
+    // TODO Comment Rasmussen's algorithm.
+    real rasmussenSearch();
   
     //--------------------------- UTILITY FUNCTIONS ----------------------------
   
