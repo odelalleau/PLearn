@@ -67,25 +67,31 @@ class AdaptGradientOptimizer : public Optimizer
       
 public:
 
+
+    int adapt_every;    //!< after how many updates we adapt learning rate
+
+    real adapt_coeff1;  //!< a coefficient for learning rate adaptation
+    real adapt_coeff2;  //!< a coefficient for learning rate adaptation
+
+    real decrease_constant;
+
     //!  gradient descent specific parameters
     //!  (directly modifiable by the user)
     real learning_rate; // current learning rate
 
-    // Options (also available through setOption)
-    real start_learning_rate; //!< initial learning rate
-    real min_learning_rate;  //!< min value for learning_rate when adapting
-    real max_learning_rate;  //!< max value for learning_rate when adapting
     //! Learning rate adaptation kind :
     //! 0  : none
     //! 1  : basic
     //! 2  : ALAP1
     //! 3  : variance
     int learning_rate_adaptation;
-    real adapt_coeff1;  //!< a coefficient for learning rate adaptation
-    real adapt_coeff2;  //!< a coefficient for learning rate adaptation
-    real decrease_constant;
+
+    real max_learning_rate;  //!< max value for learning_rate when adapting
+    real min_learning_rate;  //!< min value for learning_rate when adapting
+
     int mini_batch;
-    int adapt_every;    //!< after how many updates we adapt learning rate
+
+    real start_learning_rate; //!< initial learning rate
 
 private:
 
@@ -104,37 +110,7 @@ private:
 
 public: 
 
-    AdaptGradientOptimizer(real the_start_learning_rate=0.01, 
-                           real the_decrease_constant=0,
-                           real the_min_learning_rate=0.001,
-                           real the_max_learning_rate=0.02,
-                           int the_learning_rate_adaptation=0,
-                           real the_adapt_coeff1=0,
-                           real the_adapt_coeff2=0,
-                           int n_updates=1, const string& filename="", 
-                           int every_iterations=1);
-    AdaptGradientOptimizer(VarArray the_params, Var the_cost,
-                           real the_start_learning_rate=0.01, 
-                           real the_decrease_constant=0,
-                           real the_min_learning_rate=0.001,
-                           real the_max_learning_rate=0.02,
-                           int the_learning_rate_adaptation=0,
-                           real the_adapt_coeff1=0,
-                           real the_adapt_coeff2=0,
-                           int n_updates=1, const string& filename="", 
-                           int every_iterations=1);
-    AdaptGradientOptimizer(VarArray the_params, Var the_cost, 
-                           VarArray update_for_measure,
-                           real the_start_learning_rate=0.01, 
-                           real the_decrease_constant=0,
-                           real the_min_learning_rate=0.001,
-                           real the_max_learning_rate=0.02,
-                           int the_learning_rate_adaptation=0,
-                           real the_adapt_coeff1=0,
-                           real the_adapt_coeff2=0,
-                           int n_updates=1, const string& filename="", 
-                           int every_iterations=1);
-
+    AdaptGradientOptimizer();
       
     PLEARN_DECLARE_OBJECT(AdaptGradientOptimizer);
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies) { inherited::makeDeepCopyFromShallowCopy(copies); }

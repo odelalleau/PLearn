@@ -2,7 +2,8 @@
 
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999,2000 Pascal Vincent, Yoshua Bengio and University of Montreal
+// Copyright (C) 1999, 2000 Pascal Vincent and Yoshua Bengio
+// Copyright (C) 2000, 2006 University of Montreal
 //
 
 // Redistribution and use in source and binary forms, with or without
@@ -32,15 +33,12 @@
 // 
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
-
-
  
 
 /* *******************************************************      
  * $Id$
  * This file is part of the PLearn library.
  ******************************************************* */
-
 
 /*! \file PLearnLibrary/PLearnCore/Optimizer.h */
 
@@ -61,13 +59,12 @@ using namespace std;
 #define ALL_SAMPLES (-1)
 #define DEFAULT_SAMPLES (-2)
 
-//typedef void (*OptimizerCallback)(int t);
-
 class Optimizer : public Object
 {
     typedef Object inherited;
       
 public:
+
     VarArray params;
     Var cost;
     //! Vars that are partially updated. 
@@ -76,74 +73,45 @@ public:
     // (for instance when using the stochastic_hack of GradientOptimizer).
     VarArray partial_update_vars;
     VarArray proppath; //forward and/or backward
-    int nupdates; // deprecated  TODO Remove ?
+
+    //! Boolean used in subclasses to notify of early stopping.
+    // TODO Might just be better to move it into subclasses?
+    bool early_stop;
     int nstages; //!< number of steps to perform when calling optimizeN
     int stage;   //!< current number of steps performed
 
-    bool early_stop;
-    int early_stop_i;// number of epoch before early stopping
-
-    VarArray update_for_measure; // not used if length()==0
-    //OptimizerCallback callback; //!<  callback function
-
-    //oassignstream vlog;
-    PStream vlog;
-    // TODO Looks like this PStream is never used!
-      
-private:
-    Vec temp_grad;  //!< used to store temp stuff for gradient stats
-/*      Vec same_sign;  //!< number of consecutive updates in same direction */
-
-protected:
-
-    Array<Measurer*> measurers;
-
-    //!  call measure <every> <nupdates> iterations
-    //!  saving the results in the <filename>.
-    string filename; // JS - that was const...
-      
-public:
-    int every; //!<  if = 0 don't print or measure anything
 
 public:
-    Optimizer(int n_updates=1, const string& file_name="",
-              int every_iterations=1);
-    Optimizer(VarArray the_params, Var the_cost,
-              int n_updates=1, const string& file_name="",
-              int every_iterations=1);
-    Optimizer(VarArray the_params, Var the_cost, 
-              VarArray the_update_for_measure,
-              int n_updates=1, const string& file_name="",
-              int every_iterations=1);
+
+    //! Default constructor.
+    Optimizer();
       
-    virtual void init() { build(); } // DEPRECATED : use build() instead
     virtual void build();
 
 private:
+
     void build_();
 
 public:
 
     virtual void reset(); 
 
-    virtual void setToOptimize(VarArray the_params, Var the_cost);
-      
-    virtual void setVarArrayOption(const string& optionname, VarArray value);
+    virtual void setToOptimize(const VarArray& the_params, Var the_cost);
+
+    /*
+    virtual void setVarArrayOption(const string& optionname,
+                                   const VarArray& value);
     virtual void setVarOption(const string& optionname, Var value);
     virtual void setVMatOption(const string& optionname, VMat value);
+    */
       
     PLEARN_DECLARE_ABSTRACT_OBJECT(Optimizer);
+
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
       
-    void addMeasurer(Measurer& measurer);
-      
-    virtual bool measure(int t, const Vec& costs);
-      
-    //! This method is deprecated.
-    virtual real optimize();
-
-    //!  sub-classes should define this, which is the new main method
-    virtual bool optimizeN(VecStatsCollector& stats_coll) =0;
+    //! Main optimization method, to be defined in subclasses.
+    //! Return true iff no further optimization is possible.
+    virtual bool optimizeN(VecStatsCollector& stats_coll) = 0;
     /* while (stage < stage_init + nstages) {
      *   params.update(..)
      *   stats_coll.update(cost)
@@ -161,19 +129,13 @@ public:
     //!  using step for the finite difference approximation of the gradient
     void verifyGradient(real step);
 
-    virtual void oldwrite(ostream& out) const;
-    /* TODO Remove (deprecated)
-       virtual void oldread(istream& in);
-    */
-
-    virtual void setPartialUpdateVars(VarArray the_partial_update_vars)
+    virtual void setPartialUpdateVars(const VarArray& the_partial_update_vars)
     {
         partial_update_vars = the_partial_update_vars;
     }
       
-    virtual ~Optimizer();
-
 protected:
+
     static void declareOptions(OptionList& ol);
 
 public:
@@ -187,12 +149,12 @@ public:
         Vec res, int& noutliers);
 
     //! Collect various statistics on the gradient.
-    real collectGradientStats(Vec gradient);
+    real collectGradientStats(const Vec& gradient);
 
     //! Given an optimizer, compute the gradient of the cost function and
     //! store it in the "gradient" Vec
     void computeGradient(const Vec& gradient);
-      
+
     //! Given an optimizer, compute the opposite of the gradient of the cost
     //! function and store it in the "gradient" Vec
     void computeOppositeGradient(const Vec& gradient);

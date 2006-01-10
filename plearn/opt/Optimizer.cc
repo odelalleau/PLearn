@@ -2,7 +2,8 @@
 
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999,2000 Pascal Vincent, Yoshua Bengio and University of Montreal
+// Copyright (C) 1999,2000 Pascal Vincent and Yoshua Bengio
+// Copyright (C) 2000, 2006 University of Montreal
 //
 
 // Redistribution and use in source and binary forms, with or without
@@ -32,8 +33,6 @@
 // 
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
-
-
  
 
 /* *******************************************************      
@@ -51,24 +50,18 @@ namespace PLearn {
 using namespace std;
 
 
-Optimizer::Optimizer(int n_updates, const string& file_name, int every_iterations)
-    :nupdates(n_updates), nstages(0), filename(file_name),
-     every(every_iterations)
+Optimizer::Optimizer():
+    early_stop(false),
+    nstages(1),
+    stage(0)
 {}
 
-Optimizer::Optimizer(VarArray the_params, Var the_cost, int n_updates,
-                     const string& file_name, int every_iterations)
-    :params(the_params),cost(the_cost), nupdates(n_updates), 
-     filename(file_name), every(every_iterations)
-{}
-
-Optimizer::Optimizer(VarArray the_params, Var the_cost, VarArray the_update_for_measure,
-                     int n_updates, const string& file_name, 
-                     int every_iterations)
-    :params(the_params), cost(the_cost), nupdates(n_updates),
-     update_for_measure(the_update_for_measure),
-     filename(file_name), every(every_iterations)
-{}
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
+    Optimizer,
+    "Base class for Optimization algorithms.",
+    "In the PLearn context, optimizers operate on graph of Variable objects,\n"
+    "mostly expressed in VarArray form.\n"
+);
 
 void Optimizer::build()
 {
@@ -76,78 +69,39 @@ void Optimizer::build()
     build_();
 }
 
+////////////
+// build_ //
+////////////
 void Optimizer::build_()
 {
-    if (update_for_measure.length()==0) // normal propagation path
-    {
-        // JS - dans la premiere version, ces deux lignes etaient seulement la pour le second constructeur (dans init())
-        early_stop=false;
-        early_stop_i=0;
-        proppath = propagationPath(params, cost);
-    }
-    else
-        proppath = propagationPath(params, update_for_measure & (VarArray) cost);
-    VarArray path_from_all_sources_to_direct_parents = propagationPathToParentsOfPath(params, cost);
-    path_from_all_sources_to_direct_parents.fprop();
-    int n = params.nelems();
-    if (n > 0) {
-        temp_grad.resize(params.nelems());
-/*    same_sign.resize(params.nelems());
-      same_sign.clear();*/
-    }
-    //  stage = 0;  // Pose probleme. Peut-etre faudrait-il une methode reset plutot
+    if (cost)
+        setToOptimize(params, cost);
 }
 
+///////////
+// reset //
+///////////
 void Optimizer::reset()
 {
     stage = 0;
     early_stop = false;
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void Optimizer::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "n_updates", &Optimizer::nupdates, OptionBase::buildoption, 
-                  "Deprecated - maximum number of parameter-updates\n"
-                  "  to be performed by the optimizer\n");
-
-    declareOption(ol, "every_iterations", &Optimizer::every,
-                  OptionBase::buildoption, 
-                  "Deprecated - call measure() method every that many updates \n");
-
-    declareOption(ol, "filename", &Optimizer::filename, OptionBase::buildoption, 
-                  "call measure <every> <nupdates> iterations\n"
-                  "  saving the results in the <filename>. \n");
-
     declareOption(ol, "nstages", &Optimizer::nstages, OptionBase::buildoption, 
-                  "  number of iterations to perform on the next ""optimizeN"" call\n");
-
+        "Number of iterations to perform on the next call to optimizeN(..).");
     inherited::declareOptions(ol);
 }
 
-void Optimizer::oldwrite(ostream& out) const
+///////////////////
+// setToOptimize //
+///////////////////
+void Optimizer::setToOptimize(const VarArray& the_params, Var the_cost)
 {
-    writeHeader(out, "Optimizer", 0);
-    writeField(out, "n_updates", nupdates);
-    writeField(out, "every_iterations", every);
-    writeFooter(out, "Optimizer");
-}
-
-/* TODO Remove (deprecated)
-   void Optimizer::oldread(istream& in)
-   {
-   int ver = readHeader(in, "Optimizer");
-   if(ver!=0)
-   PLERROR("In Optimizer::read version number %d not supported",ver);
-   readField(in, "n_updates", nupdates);
-   readField(in, "every_iterations", every);
-   readFooter(in, "Optimizer");
-   }
-*/
-
-void Optimizer::setToOptimize(VarArray the_params, Var the_cost)
-{
-//  if(the_cost->length()!=1)
-//    PLERROR("IN Optimizer::setToOptimize, cost must be a scalar variable (length 1)");
     params = the_params;//displayVarGraph(params, true, 333, "p1", false);
     cost = the_cost;//displayVarGraph(cost[0], true, 333, "c1", false);
     proppath = propagationPath(params,cost);//displayVarGraph(proppath, true, 333, "x1", false);
@@ -155,6 +109,7 @@ void Optimizer::setToOptimize(VarArray the_params, Var the_cost)
     path_from_all_sources_to_direct_parents.fprop();//displayVarGraph(path_from_all_sources_to_direct_parents, true, 333, "x1", false);
 }
 
+/*
 void Optimizer::setVarArrayOption(const string& optionname, VarArray value)
 {
     if (optionname=="params") setToOptimize(value, cost);
@@ -172,13 +127,8 @@ void Optimizer::setVMatOption(const string& optionname, VMat value)
 {
     PLERROR("In Optimizer::setVMatOption(const string& optionname, VarArray value): option not recognized (%s).",optionname.c_str());
 }
+*/
 
-
-PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
-    Optimizer,
-    "Base class for Optimization algorithms",
-    "In the PLearn context, these optimizers operate on graph of Variable objects,\n"
-    "mostly expressed in VarArray form.");
 
 //! To use varDeepCopyField.
 #ifdef __INTEL_COMPILER
@@ -197,47 +147,11 @@ extern void varDeepCopyField(Var& field, CopiesMap& copies);
 void Optimizer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(params, copies);
     varDeepCopyField(cost, copies);
     deepCopyField(partial_update_vars, copies);
-    deepCopyField(params, copies);
-    deepCopyField(update_for_measure, copies);
-    deepCopyField(temp_grad, copies);
-    // We can't deep copy measurers, because deepCopy is not implemented for
-    // the Measurer class. However, since nobody should be using measurers
-    // anymore, this probably isn't a real issue.
-    // deepCopyField(measurers, copies);
-    if (measurers.size() > 0) {
-        PLWARNING(
-            "In Optimizer::makeDeepCopyFromShallowCopy - The 'measurers' field "
-            "won't be deep copied, since the deepCopy method is not currently "
-            "implemented in the class Measurer."
-            );
-    }
-    build();
+    deepCopyField(proppath, copies);
 }
-
-void Optimizer::addMeasurer(Measurer& measurer)
-{ 
-    measurers.appendIfNotThereAlready(&measurer); 
-}
-
-bool Optimizer::measure(int t, const Vec& costs)
-{
-    bool stop=false;
-    for(int i=0; i<measurers.size(); i++)
-        stop = stop || measurers[i]->measure(t,costs);
-    return stop;
-}
-
-//////////////
-// optimize //
-//////////////
-real Optimizer::optimize()
-{
-    PLERROR("In Optimizer::optimize - This method is deprecated and should "
-            "not be used");
-}
-
 
 void Optimizer::verifyGradient(real minval, real maxval, real step)
 {
@@ -252,9 +166,6 @@ void Optimizer::verifyGradient(real step)
     params >> p;
     f->verifyGradient(p, step);
 }
-
-Optimizer::~Optimizer()
-{}
 
 ////////////////////////
 // computeRepartition //

@@ -48,26 +48,17 @@
 namespace PLearn {
 using namespace std;
 
-AdaptGradientOptimizer::AdaptGradientOptimizer(real the_start_learning_rate, 
-                                               real the_decrease_constant,
-                                               real the_min_learning_rate,
-                                               real the_max_learning_rate,
-                                               int the_learning_rate_adaptation,
-                                               real the_adapt_coeff1,
-                                               real the_adapt_coeff2,
-                                               int n_updates, const string& filename, 
-                                               int every_iterations)
-    :inherited(n_updates, filename, every_iterations),
-     start_learning_rate(the_start_learning_rate),
-     min_learning_rate(the_min_learning_rate),
-     max_learning_rate(the_max_learning_rate),
-     learning_rate_adaptation(the_learning_rate_adaptation),
-     adapt_coeff1(the_adapt_coeff1),
-     adapt_coeff2(the_adapt_coeff2),
-     decrease_constant(the_decrease_constant),
-     adapt_every(0)
+AdaptGradientOptimizer::AdaptGradientOptimizer():
+    adapt_coeff1(0),
+    adapt_coeff2(0),
+    decrease_constant(0),
+    learning_rate_adaptation(0),
+    max_learning_rate(2e-2),
+    min_learning_rate(1e-3),
+    start_learning_rate(1e-2)
 {}
 
+/*
 AdaptGradientOptimizer::AdaptGradientOptimizer(VarArray the_params, Var the_cost,
                                                real the_start_learning_rate, 
                                                real the_decrease_constant,
@@ -107,6 +98,7 @@ AdaptGradientOptimizer::AdaptGradientOptimizer(VarArray the_params, Var the_cost
      adapt_coeff1(the_adapt_coeff1),
      adapt_coeff2(the_adapt_coeff2),
      decrease_constant(the_decrease_constant) {}
+    */
 
 
 void AdaptGradientOptimizer::declareOptions(OptionList& ol)

@@ -2,7 +2,8 @@
 
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
+// Copyright (C) 1999-2002 Pascal Vincent and Yoshua Bengio
+// Copyright (C) 1999-2002, 2006 University of Montreal
 //
 
 // Redistribution and use in source and binary forms, with or without
@@ -34,8 +35,6 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 
- 
-
 /* *******************************************************      
  * $Id$
  * This file is part of the PLearn library.
@@ -57,12 +56,8 @@ class GradientOptimizer : public Optimizer
 {
     typedef Optimizer inherited;
       
-//    protected:
-    //!  Default constructor for persistence
-    //GradientOptimizer () : start_learning_rate(), decrease_constant() {}
-  
-protected:
 public:
+
     //!  gradient descent specific parameters
     //!  (directly modifiable by the user)
     real learning_rate; // current learning rate
@@ -80,10 +75,13 @@ public:
     // is applied (multiplied) to the start_learning_rate to obtain the learning_rate.
     Mat lr_schedule;
     
-    GradientOptimizer(real the_start_learning_rate=0.01, 
-                      real the_decrease_constant=0,
-                      int n_updates=1, const string& filename="", 
-                      int every_iterations=1);
+    GradientOptimizer();
+    /*(
+    real the_start_learning_rate=0.01, 
+                      real the_decrease_constant=0);
+    */
+
+    /*
     GradientOptimizer(VarArray the_params, Var the_cost,
                       real the_start_learning_rate=0.01, 
                       real the_decrease_constant=0,
@@ -95,9 +93,10 @@ public:
                       real the_decrease_constant=0,
                       int n_updates=1, const string& filename="", 
                       int every_iterations=1);
+                      */
 
-      
     PLEARN_DECLARE_OBJECT(GradientOptimizer);
+
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies)
     { inherited::makeDeepCopyFromShallowCopy(copies); }
 
@@ -114,15 +113,18 @@ public:
 
     // virtual void oldwrite(ostream& out) const;
     // virtual void oldread(istream& in);
-    virtual real optimize();
+    //virtual real optimize();
     virtual bool optimizeN(VecStatsCollector& stats_coll);
 
 protected:
+
     static void declareOptions(OptionList& ol);
 };
 
 DECLARE_OBJECT_PTR(GradientOptimizer);
 
+/* Commented out the whole class: if one uses it, better put it in its own
+ * separate file!
 class ScaledGradientOptimizer : public Optimizer
 {
 protected:
@@ -209,6 +211,7 @@ public:
     virtual real optimize();
 };
 
+*/
 
 
 } // end of namespace PLearn

@@ -2,7 +2,8 @@
 
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
+// Copyright (C) 1999-2002 Pascal Vincent and Yoshua Bengio
+// Copyright (C) 1999-2002, 2006 University of Montreal
 //
 
 // Redistribution and use in source and binary forms, with or without
@@ -32,8 +33,6 @@
 // 
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
-
-
  
 
 /* *******************************************************      
@@ -49,17 +48,14 @@
 namespace PLearn {
 using namespace std;
 
-GradientOptimizer::GradientOptimizer(real the_start_learning_rate, 
-                                     real the_decrease_constant,
-                                     int n_updates, const string& filename, 
-                                     int every_iterations)
-    :inherited(n_updates, filename, every_iterations),
-     learning_rate(0.),   
-     start_learning_rate(the_start_learning_rate),
-     decrease_constant(the_decrease_constant),
-     use_stochastic_hack(true)
+GradientOptimizer::GradientOptimizer():
+    learning_rate(0.),   
+    start_learning_rate(1e-2),
+    decrease_constant(0),
+    use_stochastic_hack(true)
 {}
 
+/*
 GradientOptimizer::GradientOptimizer(VarArray the_params, Var the_cost,
                                      real the_start_learning_rate, 
                                      real the_decrease_constant,
@@ -85,6 +81,7 @@ GradientOptimizer::GradientOptimizer(VarArray the_params, Var the_cost,
       decrease_constant(the_decrease_constant),
       use_stochastic_hack(true)
 { }
+*/
 
 
 void GradientOptimizer::declareOptions(OptionList& ol)
@@ -103,12 +100,11 @@ void GradientOptimizer::declareOptions(OptionList& ol)
                   "and learning_rate_factor. As soon as the iteration number goes above the iteration_threshold,\n"
                   "the corresponding learning_rate_factor is applied (multiplied) to the start_learning_rate to\n"
                   "obtain the learning_rate.\n");
+
     declareOption(ol, "use_stochastic_hack", &GradientOptimizer::use_stochastic_hack, OptionBase::buildoption, 
                   "Indication that a stochastic hack to accelerate stochastic gradient descent should be used.\n"
                   );
 
-
-//! 
     //! 
     inherited::declareOptions(ol);
 }
@@ -151,88 +147,9 @@ PLEARN_IMPLEMENT_OBJECT(
     "  - decrease_constant: <real> (0) \n"
     "    the learning rate decrease constant \n"
     "\n"
-    "GradientOptimizer derives form Optimizer. \n");
+);
 
-static bool displayvg=false;
-
-real GradientOptimizer::optimize()
-{
-    ofstream out;
-    if (!filename.empty())
-    {
-        out.open(filename.c_str());
-        out << " Stochastic! " << endl;
-    }
-    Vec meancost(cost->size());
-    TVec<int> costnonmissing(cost->size());
-    Vec lastmeancost(cost->size());
-    early_stop = false;
-
-    // Big hack for the special case of stochastic gradient, to avoid doing an explicit update
-    // (temporarily change the gradient fields of the parameters to point to the parameters themselves,
-    // so that gradients are "accumulated" directly in the parameters, thus updating them!
-    SumOfVariable* sumofvar = dynamic_cast<SumOfVariable*>((Variable*)cost);
-    Array<Mat> oldgradientlocations;
-    // bool stochastic_hack = false;
-    bool stochastic_hack = use_stochastic_hack && sumofvar!=0 && sumofvar->nsamples==1;
-    // stochastic_hack=false;
-    if(stochastic_hack)
-    {
-        int n = params.size();
-        oldgradientlocations.resize(n);
-        for(int i=0; i<n; i++)
-            oldgradientlocations[i] = params[i]->defineGradientLocation(params[i]->matValue);
-    }
-    else
-        params.clearGradient();
-
-    // normally loop over number of epochs x training set size
-    for (int t=0; !early_stop && t<nupdates; t++)
-    {
-        learning_rate = start_learning_rate/(1.0+decrease_constant*t);
-
-        proppath.clearGradient();
-        cost->gradient[0] = -learning_rate;
-
-        proppath.fbprop();
-        if (displayvg || !finite(cost->value[0]))
-            displayVarGraph(proppath, true, 333);
-        addIfNonMissing(cost->value,costnonmissing,meancost);
-        if ((every!=0) && ((t+1)%every==0))
-            // normally this is done every epoch
-        { 
-            //cerr << ">>>>>> nupdates= " << nupdates << "  every=" << every << "  sumofvar->nsamples=" << sumofvar->nsamples << endl;
-            for (int i=0;i<cost->size();i++)
-                meancost[i] /= costnonmissing[i];
-            //if (decrease_constant != 0)
-            //  cout << "at t=" << t << ", learning rate = " << learning_rate << endl;
-            cout << t+1 << ' ' << meancost << ' ' << learning_rate << endl;
-            if (out)
-                out << t+1 << ' ' << meancost << ' ' << learning_rate << endl;
-            early_stop = measure(t+1,meancost);
-            early_stop_i = (t+1)/every;
-            lastmeancost << meancost;
-            meancost.clear();
-            costnonmissing.clear();
-        }
-        // set params += -learning_rate * params.gradient
-        if(!stochastic_hack)
-            params.updateAndClear();
-        else
-            if(partial_update_vars.length() != 0) 
-                for(int i=0; i<partial_update_vars.length(); i++)
-                    partial_update_vars[i]->clearRowsToUpdate();
-    }
-
-    if(stochastic_hack) // restore the gradients as they previously were...
-    {
-        int n = params.size();
-        for(int i=0; i<n; i++)
-            params[i]->defineGradientLocation(oldgradientlocations[i]);
-    }
-
-    return lastmeancost[0];
-}
+// static bool displayvg=false;
 
 bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll) 
 {
@@ -316,6 +233,7 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll)
     return false;
 }
 
+/*
 real ScaledGradientOptimizer::optimize()
 {
     ofstream out;
@@ -438,6 +356,7 @@ real ScaledGradientOptimizer::optimize()
     }
     return meancost[0];
 }
+*/
 
 
 } // end of namespace PLearn
