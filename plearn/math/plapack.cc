@@ -828,7 +828,7 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_gcv, bool X_is_transpo
     y2.resize(m);
     z2.resize(m);
     
-    SVD(Xcopy, U, singular_values, Vt, 'S');
+    SVD(Xcopy, U, singular_values, Vt, 'S', 2);
     for (int i=0;i<rank;i++)
         eigen_values[i] = singular_values[i]*singular_values[i];
 

@@ -319,7 +319,7 @@ void lapackGeneralizedEIGEN(const TMat<num_t>& A, const TMat<num_t>& B, int ITYP
 
 // (will work for float and double)
 template<class num_t>
-void eigenVecOfSymmMat(TMat<num_t>& m, int k, TVec<num_t>& eigen_values, TMat<num_t>& eigen_vectors)
+void eigenVecOfSymmMat(TMat<num_t>& m, int k, TVec<num_t>& eigen_values, TMat<num_t>& eigen_vectors, bool verbose=true)
 {
     if (m.isEmpty()) {
         // Empty matrix: we just need to do some resizing.
@@ -329,9 +329,12 @@ void eigenVecOfSymmMat(TMat<num_t>& m, int k, TVec<num_t>& eigen_values, TMat<nu
     }
     if (!m.isSymmetric()) {
         if (m.isSymmetric(false))
+        {
             // Almost symmetric.
-            PLWARNING("In eigenVecOfSymmMat - The matrix is only 'almost' symmetric, "
-                      "it will be forced to be exactly symmetric");
+            if (verbose)
+                PLWARNING("In eigenVecOfSymmMat - The matrix is only 'almost' symmetric, "
+                          "it will be forced to be exactly symmetric");
+        }
         else
             PLWARNING("In eigenVecOfSymmMat - The matrix is not symmetric, it will "
                       "be forced to be exactly symmetric by copying the top "
