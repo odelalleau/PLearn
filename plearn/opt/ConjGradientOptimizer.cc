@@ -31,7 +31,6 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-
  
 
 /* *******************************************************      
@@ -40,7 +39,7 @@
  ******************************************************* */
 
 #include "ConjGradientOptimizer.h"
-#include <plearn/math/TMat_maths_impl.h>
+//#include <plearn/math/TMat_maths_impl.h>
 
 namespace PLearn {
 using namespace std;
@@ -53,6 +52,7 @@ ConjGradientOptimizer::ConjGradientOptimizer():
     expected_red(1),
     max_eval_per_line_search(20),
     max_extrapolate(3),
+    no_negative_gamma(true),
     rho(1e-2),
     sigma(0.5),
     slope_ratio(100),
@@ -67,9 +67,12 @@ PLEARN_IMPLEMENT_OBJECT(ConjGradientOptimizer,
     "     function value\n"
     "- 2: move to this minimum, update the search direction d and go to\n"
     "     step 1\n"
-    "The algorithm is inspired by Carl Rasmussen's Matlab algorithm from:\n"
+    "The line search algorithm is inspired by Carl Rasmussen's Matlab\n"
+    "algorithm from:\n"
     "http://www.kyb.tuebingen.mpg.de/bs/people/carl/code/minimize/minimize.m\n"
     "\n"
+    "Many options can be set, however the provided default values should\n"
+    "be adequate in most cases.\n"
 );
 
 ////////////////////
@@ -77,37 +80,46 @@ PLEARN_IMPLEMENT_OBJECT(ConjGradientOptimizer,
 ////////////////////
 void ConjGradientOptimizer::declareOptions(OptionList& ol)
 {
+    declareOption(ol, "verbosity", &ConjGradientOptimizer::verbosity,
+                                   OptionBase::buildoption, 
+        "Controls the amount of output.");
+
+    declareOption(ol, "expected_red", &ConjGradientOptimizer::expected_red,
+                                      OptionBase::buildoption, 
+        "Expected function reduction at first step.");
+
+    declareOption(ol, "no_negative_gamma",
+                  &ConjGradientOptimizer::no_negative_gamma,
+                  OptionBase::buildoption,
+        "If true, then a negative value for gamma in the Polak-Ribiere\n"
+        "formula will trigger a restart.");
+
     declareOption(ol, "sigma", &ConjGradientOptimizer::sigma,
-                                  OptionBase::buildoption, 
+                               OptionBase::buildoption, 
         "Constant in the Wolfe-Powell stopping conditions.");
 
      declareOption(ol, "rho", &ConjGradientOptimizer::rho,
-                                  OptionBase::buildoption, 
+                              OptionBase::buildoption, 
         "Constant in the Wolfe-Powell stopping conditions.");
 
-     declareOption(ol, "constrain_limit", &ConjGradientOptimizer::constrain_limit,
-                                  OptionBase::buildoption, 
+     declareOption(ol, "constrain_limit",
+                   &ConjGradientOptimizer::constrain_limit,
+                   OptionBase::buildoption, 
         "Multiplicative coefficient to constrain the evaluation bracket.");
 
-     declareOption(ol, "max_extrapolate", &ConjGradientOptimizer::max_extrapolate,
-                                  OptionBase::buildoption, 
+     declareOption(ol, "max_extrapolate",
+                   &ConjGradientOptimizer::max_extrapolate,
+                   OptionBase::buildoption, 
         "Maximum coefficient for bracket extrapolation.");
 
-     declareOption(ol, "max_eval_per_line_search", &ConjGradientOptimizer::max_eval_per_line_search,
-                                  OptionBase::buildoption, 
+     declareOption(ol, "max_eval_per_line_search",
+                   &ConjGradientOptimizer::max_eval_per_line_search,
+                  OptionBase::buildoption, 
         "Maximum number of function evalutions during line search.");
 
      declareOption(ol, "slope_ratio", &ConjGradientOptimizer::slope_ratio,
                                   OptionBase::buildoption, 
         "Maximum slope ratio.");
-
-     declareOption(ol, "expected_red", &ConjGradientOptimizer::expected_red,
-                                  OptionBase::buildoption, 
-        "Expected function reduction at first step.");
-
-    declareOption(ol, "verbosity", &ConjGradientOptimizer::verbosity,
-                                   OptionBase::buildoption, 
-        "Controls the amount of output.");
 
     inherited::declareOptions(ol);
 }
@@ -131,7 +143,7 @@ void ConjGradientOptimizer::build_() {
 void ConjGradientOptimizer::computeCostAndDerivative(
     real alpha, real& cost, real& derivative) {
     if (fast_exact_is_equal(alpha, 0)) {
-        cost = this->last_cost;
+        cost = this->current_cost;
         derivative = -dot(this->search_direction, this->current_opp_gradient);
     } else {
         this->params.copyTo(this->tmp_storage);
@@ -149,7 +161,7 @@ void ConjGradientOptimizer::computeCostAndDerivative(
 real ConjGradientOptimizer::computeCostValue(real alpha)
 {
     if (fast_exact_is_equal(alpha, 0))
-        return this->last_cost;
+        return this->current_cost;
     this->params.copyTo(this->tmp_storage);
     this->params.update(alpha, this->search_direction);
     this->proppath.fprop();
@@ -175,18 +187,15 @@ real ConjGradientOptimizer::computeDerivative(real alpha)
 ///////////////////
 // findDirection //
 ///////////////////
-bool ConjGradientOptimizer::findDirection() {
+void ConjGradientOptimizer::findDirection() {
     real gamma = polakRibiere();
-    // It is suggested to keep gamma >= 0
-    if (gamma < 0) {
+    if (gamma < 0 && no_negative_gamma) {
         if (verbosity >= 2)
-            pout << "gamma < 0 ! gamma = " << gamma << " ==> Restarting" << endl;
-
-        // TODO Is this really needed / a good idea?
-        // TODO PUT THAT AS AN OPTION!!
+            pout << "gamma = " << gamma << " < 0 ==> Restarting" << endl;
         gamma = 0;
     }
     /*
+    // Old code triggering restart.
     else {
         real dp = dot(delta, current_opp_gradient);
         real delta_n = pownorm(delta);
@@ -198,183 +207,130 @@ bool ConjGradientOptimizer::findDirection() {
     }
     */
     updateSearchDirection(gamma);
-    /*
-    // If the gradient is very small, we can stop !
-//  isFinished = pownorm(current_opp_gradient) < 0.0000001;
-    // TODO This may lead to an erroneous early stop. To investigate ?
-    isFinished = false;
-    if (isFinished && verbosity >= 2)
-        cout << "Gradient is small enough, time to stop" << endl;
-    return isFinished;
-        */
-    // TODO Is it necesary to return a boolean?
-    return false;
 }
 
-/////////////////////
-// rasmussenSearch //
-/////////////////////
-real ConjGradientOptimizer::rasmussenSearch()
+////////////////////////
+// minimizeLineSearch //
+////////////////////////
+real ConjGradientOptimizer::minimizeLineSearch()
 {
+    // We may need to perform two iterations of line search if the first one
+    // fails.
     bool try_again = true;
     while (try_again) {
         try_again = false;
-    // X0 = X; f0 = f1; df0 = df1; % make a copy of current values
-    real fun_val0 = fun_val1;
-    // real ras_df0_ = ras_df1_; Should not be needed TODO see
-    // X = X + z1*s;  % begin line search
-    // We don't do that explicitely
-    // [f2 df2] = eval(argstr);
-    // d2 = df2'*s;
-    computeCostAndDerivative(step1, fun_val2, fun_deriv2);
-    // i = i + (length<0);
-    // We count epochs outside of this.
-    // f3 = f1; d3 = d1; z3 = -z1; % initialize point 3 equal to point 1
-    real fun_val3 = fun_val1;
-    real fun_deriv3 = fun_deriv1;
-    real step3 = - step1;
-    fun_eval_count = max_eval_per_line_search;
-    // success = 0; limit = -1;                     % initialize quanteties
-    line_search_succeeded = false;
-    bracket_limit = -1;
-    // while 1
-    while (true) {
-        // while ((f2 > f1+z1*RHO*d1) | (d2 > -SIG*d1)) & (M > 0)
-        while ( (fun_val2 > fun_val1 + step1 * rho * fun_deriv1 ||
-                 fun_deriv2 > - sigma * fun_deriv1 ) &&
-                fun_eval_count > 0 )
-        {
-            // limit = z1; % tighten the bracket
-            bracket_limit = step1;
-            // if f2 > f1
-            // z2 = z3 - (0.5*d3*z3*z3)/(d3*z3+f2-f3);  % quadratic fit
-            if (fun_val2 > fun_val1) {
-                step2 = step3 -
-                    (0.5*fun_deriv3*step3*step3) / 
-                    (fun_deriv3*step3+fun_val2-fun_val3);
-            } else {
-                // A = 6*(f2-f3)/z3+3*(d2+d3); % cubic fit
-                cubic_a = 6*(fun_val2-fun_val3)/step3+3*(fun_deriv2+fun_deriv3);
-                // B = 3*(f3-f2)-z3*(d3+2*d2);
-                cubic_b = 3*(fun_val3-fun_val2)-step3*(fun_deriv3+2*fun_deriv2);
-                // z2 = (sqrt(B*B-A*d2*z3*z3)-B)/A;
-                // % numerical error possible - ok!
-                step2 = (sqrt(cubic_b*cubic_b-cubic_a*fun_deriv2*step3*step3)-cubic_b)/cubic_a;
-            }
-            if (isnan(step2) || isinf(step2))
-                // z2 = z3/2;                  % if we had a numerical problem
-                // then bisect
-                step2 = step3/2;
-            // z2 = max(min(z2, INT*z3),(1-INT)*z3);
-            // % don't accept too close to limits
-            step2 = max(min(step2, constrain_limit*step3),(1-constrain_limit)*step3);
-            // z1 = z1 + z2; % update the step
-            step1 = step1 + step2;
-            //  X = X + z2*s;
-            // [f2 df2] = eval(argstr);
-            // d2 = df2'*s;
-            computeCostAndDerivative(step1, fun_val2, fun_deriv2);
-            // M = M - 1; i = i + (length<0); % count epochs?!
-            fun_eval_count = fun_eval_count - 1;
-            // z3 = z3-z2; % z3 is now relative to the location of z2
-            step3 = step3 - step2;  
-        }
-        // if f2 > f1+z1*RHO*d1 | d2 > -SIG*d1
-        //  break;  % this is a failure
-        // elseif d2 > SIG*d1
-        //  success = 1; break; % success
-        // elseif M == 0
-        //  break; % failure
-        if (fun_val2 > fun_val1+step1*rho*fun_deriv1 ||
-            fun_deriv2 > -sigma*fun_deriv1)
-            break;
-        else if (fun_deriv2 > sigma * fun_deriv1) {
-            line_search_succeeded = true;
-            break;
-        } else if (fun_eval_count == 0)
-            break;
-        // A = 6*(f2-f3)/z3+3*(d2+d3); % make cubic extrapolation
-        // B = 3*(f3-f2)-z3*(d3+2*d2);
-        cubic_a = 6*(fun_val2-fun_val3)/step3+3*(fun_deriv2+fun_deriv3);
-        cubic_b = 3*(fun_val3-fun_val2)-step3*(fun_deriv3+2*fun_deriv2);
-        // z2 = -d2*z3*z3/(B+sqrt(B*B-A*d2*z3*z3));
-        // % num. error possible - ok!
-        step2 = -fun_deriv2*step3*step3/
-            (cubic_b+sqrt(cubic_b*cubic_b-cubic_a*fun_deriv2*step3*step3));
-        // if ~isreal(z2) | isnan(z2) | isinf(z2) | z2 < 0
-        // % num prob or wrong sign?
-        if (isnan(step2) || isinf(step2)) {
-            // if limit < -0.5 % if we have no upper limit
-            if (bracket_limit < -0.5)
-                // z2 = z1 * (EXT-1); % the extrapolate the maximum amount
-                step2 = step1 * (max_extrapolate - 1);
-            else
-                // z2 = (limit-z1)/2; % otherwise bisect
-                step2 = (bracket_limit - step1) / 2;
-        // elseif (limit > -0.5) & (z2+z1 > limit) 
-        //  % extraplation beyond max?
-        } else if (bracket_limit > -0.5 && (step2 + step1 > bracket_limit)) {
-            step2 = (bracket_limit - step1) / 2; // bisect
-        // elseif (limit < -0.5) & (z2+z1 > z1*EXT)
-        // % extrapolation beyond limit
-        } else if (bracket_limit < -0.5 && step2+step1 > step1 * max_extrapolate) {
-            // z2 = z1*(EXT-1.0); % set to extrapolation limit
-            step2 = step1 * (max_extrapolate - 1);
-        // elseif z2 < -z3*INT
-        } else if (step2 < - step3 * constrain_limit) {
-            // z2 = -z3*INT;
-            step2 = - step3 * constrain_limit;
-        // elseif (limit > -0.5) & (z2 < (limit-z1)*(1.0-INT))
-        // % too close to limit?
-        } else if (bracket_limit > -0.5 &&
-                   step2 < (bracket_limit - step1) * (1 - constrain_limit) ) {
-            // z2 = (limit-z1)*(1.0-INT);
-            step2 = (bracket_limit - step1) * (1 - constrain_limit);
-        }
-        // f3 = f2; d3 = d2; z3 = -z2;
-        // % set point 3 equal to point 2
-        fun_val3 = fun_val2;
-        fun_deriv3 = fun_deriv2;
-        step3 = - step2;
-        // z1 = z1 + z2; X = X + z2*s;
-        // % update current estimates
-        step1 += step2;
-        // [f2 df2] = eval(argstr);
-        // d2 = df2'*s;
+        real fun_val0 = fun_val1;
         computeCostAndDerivative(step1, fun_val2, fun_deriv2);
-        // M = M - 1; i = i + (length<0);
-        // % count epochs?!
-        fun_eval_count--;
-    }
-    // if success % if line search succeeded
-    if (line_search_succeeded) {
-        fun_val1 = fun_val2;
+        real fun_val3 = fun_val1;
+        real fun_deriv3 = fun_deriv1;
+        real step3 = - step1;
+        fun_eval_count = max_eval_per_line_search;
+        line_search_succeeded = false;
+        bracket_limit = -1;
+        while (true) {
+            while ( (fun_val2 > fun_val1 + step1 * rho * fun_deriv1 ||
+                     fun_deriv2 > - sigma * fun_deriv1 ) &&
+                    fun_eval_count > 0 )
+            {
+                // Tighten bracket.
+                bracket_limit = step1;
+                if (fun_val2 > fun_val1) {
+                    // Quadratic fit.
+                    step2 = step3 -
+                        (0.5*fun_deriv3*step3*step3) / 
+                        (fun_deriv3*step3+fun_val2-fun_val3);
+                } else {
+                    // Cubic fit.
+                    cubic_a = 6*(fun_val2-fun_val3)/step3 +
+                              3*(fun_deriv2+fun_deriv3);
+                    cubic_b = 3*(fun_val3-fun_val2) -
+                              step3*(fun_deriv3+2*fun_deriv2);
+                    step2 =
+                        (sqrt(cubic_b*cubic_b-cubic_a*fun_deriv2*step3*step3) -
+                         cubic_b) / cubic_a;
+                }
+                if (isnan(step2) || isinf(step2))
+                    // Shit happens => bisection.
+                    step2 = step3/2;
+                // Constrained range.
+                step2 = max(min(step2, constrain_limit*step3),
+                            (1-constrain_limit)*step3);
+                // Increase step and update function value and derivative.
+                step1 += step2;
+                computeCostAndDerivative(step1, fun_val2, fun_deriv2);
+                // Update point 3.
+                step3 = step3 - step2;  
+                fun_eval_count--;
+            }
+            if (fun_val2 > fun_val1+step1*rho*fun_deriv1 ||
+                fun_deriv2 > -sigma*fun_deriv1)
+                // Failure.
+                break;
+            else if (fun_deriv2 > sigma * fun_deriv1) {
+                // Sucesss.
+                line_search_succeeded = true;
+                break;
+            } else if (fun_eval_count == 0)
+                // Failure.
+                break;
+            // Cubic fit.
+            cubic_a = 6*(fun_val2-fun_val3)/step3+3*(fun_deriv2+fun_deriv3);
+            cubic_b = 3*(fun_val3-fun_val2)-step3*(fun_deriv3+2*fun_deriv2);
+            step2 = -fun_deriv2*step3*step3 /
+                (cubic_b +
+                 sqrt(cubic_b*cubic_b-cubic_a*fun_deriv2*step3*step3));
+            if (isnan(step2) || isinf(step2) || step2 < 0) {
+                // Numerical issue, or wrong sign.
+                if (bracket_limit < -0.5)
+                    // No upper limit.
+                    step2 = step1 * (max_extrapolate - 1);
+                else
+                    step2 = (bracket_limit - step1) / 2;
+            } else if (bracket_limit > -0.5 && (step2 + step1 > bracket_limit))
+                // Extrapolation beyond maximum.
+                step2 = (bracket_limit - step1) / 2;
+            else if (bracket_limit < -0.5 &&
+                     step2+step1 > step1 * max_extrapolate) {
+                // Extrapolation beyond limit.
+                step2 = step1 * (max_extrapolate - 1);
+            } else if (step2 < - step3 * constrain_limit) {
+                step2 = - step3 * constrain_limit;
+                // % too close to limit?
+            } else if (bracket_limit > -0.5 &&
+                       step2 < (bracket_limit - step1) * (1 - constrain_limit))
+                // Too close to limit.
+                step2 = (bracket_limit - step1) * (1 - constrain_limit);
+            // Point 3 = point 2.
+            fun_val3 = fun_val2;
+            fun_deriv3 = fun_deriv2;
+            step3 = - step2;
+            // Update step and function value and derivative.
+            step1 += step2;
+            computeCostAndDerivative(step1, fun_val2, fun_deriv2);
+            fun_eval_count--;
+        }
 
-        // ls_failed = 0; % this line search did not fail
-        line_search_failed = false;
-    } else {
-        // X = X0; f1 = f0; df1 = df0;
-        // % restore point from before failed line search
-        fun_val1 = fun_val0;
-        // if ls_failed | i > abs(length)
-        // % line search failed twice in a row or we ran out of time, so we
-        // give up
-        if (line_search_failed)
-            return 0;
-        // tmp = df1; df1 = df2; df2 = tmp; % swap derivatives
-        // We do not do that... it looks weird!
-        // s = -df1; % try steepest
-        // We will actually do s = -df0 as this seems more logical.
-        // TODO Ask Rasmussen!
-        // TODO So what do we do here?
-        // d1 = -s'*s;
-        fun_deriv1 = - pownorm(current_opp_gradient);
-        // z1 = 1/(1-d1);
-        step1 = 1 / (1 - fun_deriv1); // TODO What about expected_red or similar?
-        // ls_failed = 1; % this line search failed
-        line_search_failed = true;
-        try_again = true;
-    }
+        if (line_search_succeeded) {
+            fun_val1 = fun_val2;
+            line_search_failed = false;
+        } else {
+            // Come back to initial point.
+            fun_val1 = fun_val0;
+            // If it is the second time it fails, then we cannot do better.
+            if (line_search_failed)
+                return 0;
+            // Original code:
+            // tmp = df1; df1 = df2; df2 = tmp; % swap derivatives
+            // s = -df1; % try steepest
+            // d1 = -s'*s;
+            // We do not do that... it looks weird!
+            // We will actually do s = -df0 as this seems more logical.
+            // TODO See Carl Rasmussen's answer to email...
+            fun_deriv1 = - pownorm(current_opp_gradient);
+            step1 = 1 / (1 - fun_deriv1);
+            line_search_failed = true;
+            try_again = true;
+        }
     }
     return step1;
 }
@@ -383,15 +339,17 @@ real ConjGradientOptimizer::rasmussenSearch()
 // lineSearch //
 ////////////////
 bool ConjGradientOptimizer::lineSearch() {
-    real step = rasmussenSearch();
+    real step = minimizeLineSearch();
     if (step < 0)
+        // Hopefully this will not happen.
         PLWARNING("Negative step!");
-    if (!fast_exact_is_equal(step, 0))
-        params.update(step, search_direction);
-    else
+    bool no_improvement_possible = fast_exact_is_equal(step, 0);
+    if (no_improvement_possible) {
         if (verbosity >= 2)
             pout << "No more progress made by the line search, stopping" << endl;
-    return fast_exact_is_equal(step, 0);
+    } else
+        params.update(step, search_direction);
+    return !no_improvement_possible;
 }
 
 /////////////////////////////////
@@ -408,65 +366,48 @@ void ConjGradientOptimizer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 // optimizeN //
 ///////////////
 bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
-    /*
-    real df, current_cost;
-    meancost.clear();
-    */
-    int stage_max = stage + nstages; // the stage to reach
+    int stage_max = stage + nstages; // The stage to reach.
 
-    /*
-#ifdef BOUNDCHECK
-    if (current_step_size <= 0 && line_search_algo <= 2) {
-        PLERROR("In ConjGradientOptimizer::optimizeN - current_step_size <= 0, have you called reset() ?");
-    }
-#endif
-*/
-
-    if (stage==0)
+    if (stage == 0)
     {
         computeOppositeGradient(current_opp_gradient);
-        search_direction <<  current_opp_gradient;  // first direction = -grad;
-        last_cost = cost->value[0];
-        expected_red = 1; // TODO Find the best value here!
-        //if (line_search_algo == 5) {
-            fun_val1 = last_cost;
-            fun_deriv1 = - pownorm(search_direction);
-            step1 = expected_red / ( 1 - fun_deriv1 );
-        //}
-        rho = 0.01;
-        sigma = 0.5;
-        constrain_limit = 0.1;
-        max_extrapolate = 3.0;
-        max_eval_per_line_search = 20;
-        slope_ratio = 100;
+        // First search direction = - gradient.
+        search_direction <<  current_opp_gradient;
+        current_cost = cost->value[0];
+
+        fun_val1 = current_cost;
+        fun_deriv1 = - pownorm(search_direction);
+        step1 = expected_red / ( 1 - fun_deriv1 );
     }
 
-    /*
-    if (early_stop)
+    if (early_stop) {
+        // The 'early_stop' flag is already set: we must still update the stats
+        // collector with the current cost value.
+        this->proppath.fprop();
         stats_coll.update(cost->value);    
-        */
+    }
 
     for (; !early_stop && stage<stage_max; stage++) {
-
         // Make a line search along the current search direction.
-        early_stop = lineSearch();
-        computeOppositeGradient(delta); // TODO Why this?
-        // current_cost = cost->value[0];
+        early_stop = !lineSearch();
+        // Ensure 'delta' contains the opposite gradient at the new point
+        // reached after the line search.
+        // Also update 'current_cost'.
+        computeOppositeGradient(delta);
+        current_cost = cost->value[0];
+        // Display current cost value if required.
         if (verbosity >= 2)
             pout << "ConjGradientOptimizer - stage " << stage << ": "
-                 << cost->value[0] << endl;
+                 << current_cost << endl;
         stats_coll.update(cost->value);
     
-        // Find the new search direction.
-        early_stop = early_stop || findDirection();
-
-   
+        // Find the new search direction if we need to continue.
+        if (!early_stop)
+            findDirection();
     }
 
-
-    // TODO Call the Stats collector
     if (early_stop && verbosity >= 2)
-        pout << "Early Stopping !" << endl;
+        pout << "Early Stopping!" << endl;
 
     return early_stop;
 }
@@ -477,7 +418,7 @@ bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
 real ConjGradientOptimizer::polakRibiere()
 {
     real normg = pownorm(this->current_opp_gradient);
-    // At this point, delta = gradient at new point.
+    // At this point, delta = opposite gradient at new point.
     this->tmp_storage << this->delta;
     this->tmp_storage -= this->current_opp_gradient;
     return dot(this->tmp_storage, this->delta) / normg;
@@ -488,7 +429,6 @@ real ConjGradientOptimizer::polakRibiere()
 ///////////
 void ConjGradientOptimizer::reset() {
     inherited::reset();
-    early_stop = false;
 }
 
 ///////////////////////////
@@ -500,24 +440,16 @@ void ConjGradientOptimizer::updateSearchDirection(real gamma) {
     else
         for (int i=0; i<search_direction.length(); i++)
             search_direction[i] = delta[i] + gamma * search_direction[i];
+
     // Update 'current_opp_gradient' for the new current point.
     current_opp_gradient << delta;
-    // if (line_search_algo == 5) {
-        // d2 = df1'*s;
-        // if d2 > 0               % new slope must be negative
-        //   s = -df1;             % otherwise use steepest direction
-        //   d2 = -s'*s;    
-        fun_deriv2 = - dot(current_opp_gradient, search_direction);
-        if (fun_deriv2 > 0) {
-            search_direction << current_opp_gradient;
-            fun_deriv2 = - pownorm(search_direction);
-        }
-        // z1 = z1 * min(RATIO, d1/(d2-realmin));
-        // % slope ratio but max RATIO
-        step1 = step1 * min(slope_ratio, fun_deriv1/(fun_deriv2-REAL_EPSILON));
-        // d1 = d2;
-        fun_deriv1 = fun_deriv2;
-    //}
+    fun_deriv2 = - dot(current_opp_gradient, search_direction);
+    if (fun_deriv2 > 0) {
+        search_direction << current_opp_gradient;
+        fun_deriv2 = - pownorm(search_direction);
+    }
+    step1 = step1 * min(slope_ratio, fun_deriv1/(fun_deriv2-REAL_EPSILON));
+    fun_deriv1 = fun_deriv2;
 }
 
 } // end of namespace PLearn

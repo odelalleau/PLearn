@@ -60,6 +60,7 @@ public:
     real expected_red;
     int max_eval_per_line_search;
     real max_extrapolate;
+    bool no_negative_gamma;
     real rho;
     real sigma;
     real slope_ratio;
@@ -67,30 +68,35 @@ public:
 
 protected:
   
-    /*
-    Vec meancost;              // used to store the cost, for display purpose
-    */
-
-    // RAS stuff.
-
-    real cubic_a, cubic_b, step2, fun_val1, step1, fun_val2, fun_deriv2, fun_deriv1;
+    //! Bracket limit.
     real bracket_limit;
 
+    //! Cubic interpolation coefficients.
+    real cubic_a, cubic_b;
+
+    //! Current cost (=function) value.
+    real current_cost;
+
+    //! Function derivative (w.r.t. to the step along the search direction).
+    real fun_deriv2, fun_deriv1;
+
+    //! Function values.
+    real fun_val1, fun_val2;
+
+    //! Step values along the search direction, during line search.
+    real step1, step2;
+
+    //! Counter to make sure the number of function evaluations does not exceed
+    //! the 'max_eval_per_line_search' option.
     int fun_eval_count;
+
+    //! Booleans indicating the line search outcome.
     bool line_search_failed, line_search_succeeded;
-    
 
-private:
-
-    // Internal data
-    // TODO See what we can get rid of.
-    Vec current_opp_gradient;  // current opposite gradient value
-    Vec search_direction;      // current search direction for the line search
-    Vec tmp_storage;           // used for temporary storage of data
-    Vec delta;                 // temporary storage of the gradient
-    real last_improvement;     // cost improvement during the last iteration
-    real last_cost;            // last cost computed
-    real current_step_size;    // current step size for line search
+    Vec current_opp_gradient;  //!< Current opposite gradient value.
+    Vec search_direction;      //!< Current search direction for line search.
+    Vec tmp_storage;           //!< Temporary data storage.
+    Vec delta;                 //!< Temporary storage of the gradient.
   
 public:
 
@@ -120,59 +126,56 @@ protected:
 
     static void declareOptions(OptionList& ol);
   
-    //! Find the new search direction for the line search algorithm
-    bool findDirection();
+    //! Find the new search direction for the line search algorithm.
+    void findDirection();
 
-    //! Search the minimum in the current search direction
-    //! Return true iif no improvement was possible (and we can stop here)
+    //! Search the minimum in the current search direction.
+    //! Return false iff no improvement was possible (and we can stop here).
     bool lineSearch();
 
     //! Update the search_direction by
-    //! search_direction = delta + gamma * search_direction
-    //! Delta is supposed to be the current opposite gradient
-    //! Also update current_opp_gradient to be equal to delta
+    //!     search_direction = delta + gamma * search_direction
+    //! 'delta' is supposed to be the opposite gradient at the point we have
+    //! reached during the line search: 'current_opp_gradient' is also updated
+    //! in this function (set equal to 'delta').
     void updateSearchDirection(real gamma);
 
-    //----------------------- CONJUGATE GRADIENT FORMULAS ---------------------
-    //
-    // A Conjugate Gradient formula finds the new search direction, given
-    // the current gradient, the previous one, and the current search direction.
-    // It returns a constant gamma, which will be used in :
-    // h(n) = -g(n) + gamma * h(n-1)
-
-    // The Polak-Ribiere formula used to find the new direction
-    // h(n) = -g(n) + dot(g(n), g(n)-g(n-1)) / norm2(g(n-1)) * h(n-1)
+    //! A Conjugate Gradient formula finds the new search direction, given
+    //! the current gradient, the previous one, and the current search direction.
+    //! It returns a constant gamma, which will be used in :
+    //!   search(t) = -gradient(t) + gamma * search(t-1)
+    //! The Polak-Ribiere formula is:
+    //!   gamma = dot(gradient(t), gradient(t)-gradient(t-1))
+    //!             / ||gradient(t-1)||^2
     real polakRibiere();
 
-    //------------------------- LINE SEARCH ALGORITHMS -------------------------
-    //
-    // A line search algorithm moves "params" to the value minimizing "cost",
-    // when moving in the direction "search_direction".
-    // It must not update "current_opp_gradient" (that is done in the Conjugate
-    // Gradient formulas).
-    // It must return the optimal step found to minimize the gradient.
-
-    // TODO Comment Rasmussen's algorithm.
-    real rasmussenSearch();
-  
-    //--------------------------- UTILITY FUNCTIONS ----------------------------
+    //! A line search algorithm moves 'params' to the value minimizing 'cost',
+    //! when moving in the direction 'search_direction'.
+    //! It must not update 'current_opp_gradient' (this is done later in
+    //! updateSearchDirection(..)).
+    //! It returns the optimal step found to minimize the gradient.
+    //! The following line search algorithm is inspired by Carl Rasmussen's
+    //! 'minimize' Matlab algorithm.
+    real minimizeLineSearch();
   
 protected:
 
-    // Return cost->value() after an update of params with step size alpha
-    // in the current search direction
-    // ie : f(x) = cost(params + x*search_direction) in x = alpha
+    //! Return cost->value() after an update of params with step size alpha
+    //! in the current search direction, i.e:
+    //!     f(x) = cost(params + x*search_direction) in x = alpha.
+    //! The parameters' values are not modified by this function.
     real computeCostValue(real alpha);
 
-    // Return the derivative of the function
-    // f(x) = cost(params + x*search_direction)
-    // in x = alpha
+    //! Return the derivative of the function
+    //!     f(x) = cost(params + x*search_direction)
+    //! in x = alpha.
+    //! The parameters' values are not modified by this function (however, the
+    //! gradients are altered).
     real computeDerivative(real alpha);
 
-    // Same as the two functions above combined.
-    // The result is returned in the cost and derivative parameters.
+    // Same as the two functions above combined. The result is returned through
+    // the 'cost' and 'derivative' parameters.
     void computeCostAndDerivative(real alpha, real& cost, real& derivative);
-
 };
 
 } // end of namespace PLearn
