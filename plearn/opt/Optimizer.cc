@@ -101,6 +101,7 @@ void Optimizer::build_()
 void Optimizer::reset()
 {
     stage = 0;
+    early_stop = false;
 }
 
 void Optimizer::declareOptions(OptionList& ol)
