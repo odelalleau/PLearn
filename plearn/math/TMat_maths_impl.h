@@ -5099,6 +5099,7 @@ void  choleskyDecomposition(const TMat<T>& A, TMat<T>& L)
                         T eps = -1.1*sum;
                         if (fast_exact_is_equal(sum,0.0)) eps=1e-8;
                         PLWARNING("Cholesky decomposition would fail: add %g to diagonal",eps);
+                        saveAscii("A.amat",A);
                         T* Aii=A.data();
                         int addm=A.mod()+1;
                         for (int ii=0;ii<n;ii++,Aii+=addm) *Aii += eps;
@@ -5744,8 +5745,10 @@ void linearRegression(TMat<T> inputs, TMat<T> outputs, T weight_decay,
 
     static TMat<T> XtX;
     XtX.resize(n,n);
+    XtX.clear();
     static TMat<T> XtY;
     XtY.resize(n,n_outputs);
+    XtY.clear();
     // compute X' X and X'Y: 
     // XtX(i,j) = sum_t X[t,i]*X[t,j] (with X[t,0]=1, X[t,i+1]=inputs[t,i])
     // YtY(i,j) = sum_t X[t,i]*Y[t,j]
