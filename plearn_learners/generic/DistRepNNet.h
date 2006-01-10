@@ -101,12 +101,16 @@ public:
     Var w1; 
     //! Weights of first hidden layer
     Var w1target;
+    //! Weights of first hidden layer of theta predictor
+    Var w1theta;    
     //! Bias and weights of second hidden layer
     Var w2; 
     //! bias and weights of output layer
     Var wout;
     //! Bias and weights of output layer, target part, when no hidden layers
     Var wouttarget; 
+    //! Bias and weights of output layer, for theta predictor
+    Var wouttheta; 
     //! Bias used only if fixed_output_weights
     Var outbias; 
     //! Distributed representations 
@@ -128,6 +132,8 @@ public:
     int nhidden;
     //! Number of hidden units in second hidden layer (default:0)
     int nhidden2; 
+    //! Number of hidden units  (default:0)
+    int nhidden_theta_predictor; 
     //! Weight decay (default:0)
     real weight_decay; 
     //! Bias decay (default:0)
@@ -136,6 +142,10 @@ public:
     real layer1_weight_decay; 
     //! Bias decay for weights from input layer to first hidden layer (default:0)
     real layer1_bias_decay;   
+    //! Weight decay for weights from input layer to first hidden layer of the theta-predictor (default:0)
+    real layer1_theta_predictor_weight_decay; 
+    //! Bias decay for weights from input layer to first hidden layer of the theta-predictor (default:0)
+    real layer1_theta_predictor_bias_decay;   
     //! Weight decay for weights from first hidden layer to second hidden layer (default:0)
     real layer2_weight_decay; 
     //! Bias decay for weights from first hidden layer to second hidden layer (default:0)
@@ -144,6 +154,10 @@ public:
     real output_layer_weight_decay; 
     //! Bias decay for weights from last hidden layer to output layer (default:0)
     real output_layer_bias_decay;
+    //! Weight decay for weights from last hidden layer to output layer of the theta-predictor (default:0)
+    real output_layer_theta_predictor_weight_decay; 
+    //! Bias decay for weights from last hidden layer to output layer of the theta-predictor (default:0)
+    real output_layer_theta_predictor_bias_decay;
     //! Margin requirement, used only with the margin_perceptron_cost cost function (default:1)
     real margin; 
     //! If true then the output weights are not learned. They are initialized to +1 or -1 randomly (default:false)
@@ -167,8 +181,8 @@ public:
     string initialization_method;
     //! Dimensionality (number of components) of distributed representations
     TVec<int> dist_rep_dim;
-    //! Use Energy Based Model (EBM) NNet architecture
-    bool use_ebm_nnet;
+    //! Architecture of the neural network
+    string nnet_architecture;
     
 
 private:

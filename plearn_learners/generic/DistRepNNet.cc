@@ -92,14 +92,19 @@ DistRepNNet::DistRepNNet() // DEFAULT VALUES FOR ALL OPTIONS
     :
 nhidden(0),
 nhidden2(0),
+nhidden_theta_predictor(0),
 weight_decay(0),
 bias_decay(0),
 layer1_weight_decay(0),
 layer1_bias_decay(0),
+layer1_theta_predictor_weight_decay(0),
+layer1_theta_predictor_bias_decay(0),
 layer2_weight_decay(0),
 layer2_bias_decay(0),
 output_layer_weight_decay(0),
 output_layer_bias_decay(0),
+output_layer_theta_predictor_weight_decay(0),
+output_layer_theta_predictor_bias_decay(0),
 margin(1),
 fixed_output_weights(0),
 penalty_type("L2_square"),
@@ -108,7 +113,7 @@ hidden_transfer_func("tanh"),
 do_not_change_params(false),
 batch_size(1),
 initialization_method("uniform_linear"),
-use_ebm_nnet(1)
+nnet_architecture("standard")
 {}
 
 DistRepNNet::~DistRepNNet()
@@ -141,11 +146,23 @@ void DistRepNNet::declareOptions(OptionList& ol)
     declareOption(ol, "layer2_bias_decay", &DistRepNNet::layer2_bias_decay, OptionBase::buildoption, 
                   "Additional bias decay for the second hidden layer.  Is added to bias_decay.\n");
 
+    declareOption(ol, "layer1_theta_predictor_weight_decay", &DistRepNNet::layer1_theta_predictor_weight_decay, OptionBase::buildoption, 
+                  "Additional weight decay for the first hidden layer of the theta-predictor.  Is added to weight_decay.\n");
+
+    declareOption(ol, "layer1_theta_predictor_bias_decay", &DistRepNNet::layer1_theta_predictor_bias_decay, OptionBase::buildoption, 
+                  "Additional bias decay for the first hidden layer of the theta-predictor.  Is added to bias_decay.\n");
+
     declareOption(ol, "output_layer_weight_decay", &DistRepNNet::output_layer_weight_decay, OptionBase::buildoption, 
                   "Additional weight decay for the output layer.  Is added to 'weight_decay'.\n");
 
     declareOption(ol, "output_layer_bias_decay", &DistRepNNet::output_layer_bias_decay, OptionBase::buildoption, 
                   "Additional bias decay for the output layer.  Is added to 'bias_decay'.\n");
+
+    declareOption(ol, "output_layer_theta_predictor_weight_decay", &DistRepNNet::output_layer_theta_predictor_weight_decay, OptionBase::buildoption, 
+                  "Additional weight decay for the output layer of the theta-predictor.  Is added to 'weight_decay'.\n");
+
+    declareOption(ol, "output_layer_theta_predictor_bias_decay", &DistRepNNet::output_layer_theta_predictor_bias_decay, OptionBase::buildoption, 
+                  "Additional bias decay for the output layer of the theta-predictor.  Is added to 'bias_decay'.\n");
 
     declareOption(ol, "penalty_type", &DistRepNNet::penalty_type,
                   OptionBase::buildoption,
@@ -219,11 +236,18 @@ void DistRepNNet::declareOptions(OptionList& ol)
                   " - \"uniform_sqrt\"   = a uniform law in [-1/sqrt(n_inputs), 1/sqrt(n_inputs)]\n"
                   " - \"zero\"           = all weights are set to 0\n");
 
-    declareOption(ol, "use_ebm_nnet", &DistRepNNet::use_ebm_nnet, OptionBase::buildoption, 
-                  "Indication that architecture of the neural network should that of an Energy Based Model (EBM)\n");
+    declareOption(ol, "nnet_architecture", &DistRepNNet::nnet_architecture, OptionBase::buildoption, 
+                  "Architecture of the neural network:\n"
+                  " - \"standard\"\n"
+                  " - \"csMTL\" (context-sensitive Multiple Task Learning, at NIPS 2005 Inductive Transfer Workshop)\n"
+                  " - \"theta_predictor\" (standard NNet with output weights being PREDICTED) \n");
 
     declareOption(ol, "paramsvalues", &DistRepNNet::paramsvalues, OptionBase::learntoption, 
                   "The learned parameter vector\n");
+
+    declareOption(ol, "nhidden_theta_predictor", &DistRepNNet::nhidden_theta_predictor, OptionBase::buildoption, 
+                  "Number of hidden units of the neural network predictor for the hidden to output weights.\n");
+
 
     inherited::declareOptions(ol);
 
@@ -255,7 +279,9 @@ void DistRepNNet::build_()
     {
         if(targetsize_ != 1)
             PLERROR("In DistRepNNet::build_(): targetsize_ must be 1, not %d",targetsize_);
-        
+        if(fixed_output_weights && nnet_architecture == "theta_predictor")
+            PLERROR("In DistRepNNet::build_(): output weights cannot be fixed (i.e. fixed_output_weights=1) and predicted (i.e. nnet_architecture == \"theta_predictor\"");            
+
         // Initialize the input.
         // This is where we construct the distributed representation
         // mappings (matrices).
@@ -313,7 +339,7 @@ void DistRepNNet::build_()
             {
                 if(dist_rep_dim.length() <= dist_reps.size())
                     PLERROR("In DistRepNNet::build_(): dist_rep_dim isn't big enough, dimensionality specifications are missing");
-                if(use_ebm_nnet)
+                if(nnet_architecture == "csMTL" || nnet_architecture == "theta_predictor")
                     dist_reps.push_back(new SourceVariable(dict->size()+1,dist_rep_dim[dist_reps.size()]));
                 dictionaries.push_back(dict);
                 target_dict_index = dictionaries.size()-1;
@@ -513,7 +539,7 @@ void DistRepNNet::buildFuncs(const Var& the_input, const Var& the_output, const 
 //////////////////////////
 void DistRepNNet::buildOutputFromInput(const Var& dp_input) {
 
-    if(use_ebm_nnet)
+    if(nnet_architecture == "csMTL")
     {
         // The idea is to output a "potential" for each
         // target possibility...
@@ -569,7 +595,7 @@ void DistRepNNet::buildOutputFromInput(const Var& dp_input) {
                 proppath_params.append(wouttarget);        
             }
             output = output + product(dp_target,wouttarget);
-            output = add_transfer_func(output);
+            //output = add_transfer_func(output);
         }
     
         // second hidden layer
@@ -608,8 +634,34 @@ void DistRepNNet::buildOutputFromInput(const Var& dp_input) {
         partial_update_vars.push_back(dist_reps[target_dict_index]);
     }
     else
-    {
-        // Computations common to all targets
+    {        
+        int before_output_size = dp_input->size();
+        if(nhidden > 0) before_output_size = nhidden;
+        if(nhidden2 > 0) before_output_size = nhidden2;
+
+        if(nnet_architecture == "theta_predictor")
+        {
+            //Var all_targets = get_values(input,train_set,inputsize());
+            //Var dp_all_targets = transpose(new VarRowsVariable(dist_reps[target_dict_index],all_targets));
+            Var dp_all_targets = transpose(dist_reps[target_dict_index]);
+
+            if(nhidden_theta_predictor>0)
+            {
+                w1theta = Var(dp_all_targets->length()+1,nhidden_theta_predictor,"w1theta");
+                params.append(w1theta);
+                wout = new MatrixAffineTransformVariable(dp_all_targets,w1theta);
+                wout = add_transfer_func(wout);
+            }
+            else
+                wout = dp_all_targets;
+
+            wouttheta = Var(wout->length()+1,before_output_size+1, "wouttheta");
+            params.append(wouttheta);
+            wout = new MatrixAffineTransformVariable(wout,wouttheta);
+        }
+        else
+            wout = Var(1 + before_output_size, dictionaries[target_dict_index]->size()+1, "wout");
+
         if(nhidden>0)
         {
             w1 = Var(1 + dp_input->size(), nhidden, "w1");
@@ -618,7 +670,7 @@ void DistRepNNet::buildOutputFromInput(const Var& dp_input) {
         }
         else
         {
-            wout = Var(1 + dp_input->size(), dictionaries[target_dict_index]->size()+1, "wout");        
+            wout = Var(1 + dp_input->size(), dictionaries[target_dict_index]->size()+1, "wout");
             output = affine_transform(dp_input, wout);     
             if(!fixed_output_weights)
             {
@@ -646,12 +698,12 @@ void DistRepNNet::buildOutputFromInput(const Var& dp_input) {
 
         // output layer before transfer function when there is at least one hidden layer
         if(nhidden > 0)
-        {
-            wout = Var(1 + output->size(), dictionaries[target_dict_index]->size()+1, "wout");
+        {            
             output = affine_transform(output, wout);
-            if (!fixed_output_weights)
+            if (!fixed_output_weights && nnet_architecture != "theta_predictor")
                 params.append(wout);
-            else
+            
+            if(fixed_output_weights)
             {
                 outbias = Var(output->size(),"outbias");
                 output = output + outbias;
@@ -675,6 +727,8 @@ void DistRepNNet::buildPenalties() {
     penalties.resize(0);  // prevents penalties from being added twice by consecutive builds
     if(w1 && ((layer1_weight_decay + weight_decay)!=0 || (layer1_bias_decay + bias_decay)!=0))
         penalties.append(affine_transform_weight_penalty(w1, (layer1_weight_decay + weight_decay), (layer1_bias_decay + bias_decay), penalty_type));
+    if(w1theta && ((layer1_theta_predictor_weight_decay + weight_decay)!=0 || (layer1_theta_predictor_bias_decay + bias_decay)!=0))
+        penalties.append(affine_transform_weight_penalty(w1theta, (layer1_theta_predictor_weight_decay + weight_decay), (layer1_theta_predictor_bias_decay + bias_decay), penalty_type));
     if(w1target && ((layer1_weight_decay + weight_decay)!=0 || (layer1_bias_decay + bias_decay)!=0))
         penalties.append(affine_transform_weight_penalty(w1target, (layer1_weight_decay + weight_decay), (layer1_bias_decay + bias_decay), penalty_type));
     if(w2 && ((layer2_weight_decay + weight_decay)!=0 || (layer2_bias_decay + bias_decay)!=0))
@@ -682,6 +736,9 @@ void DistRepNNet::buildPenalties() {
     if(wout && ((output_layer_weight_decay + weight_decay)!=0 || (output_layer_bias_decay + bias_decay)!=0))
         penalties.append(affine_transform_weight_penalty(wout, (output_layer_weight_decay + weight_decay), 
                                                          (output_layer_bias_decay + bias_decay), penalty_type));
+    if(wouttheta && ((output_layer_theta_predictor_weight_decay + weight_decay)!=0 || (output_layer_theta_predictor_bias_decay + bias_decay)!=0))
+        penalties.append(affine_transform_weight_penalty(wouttheta, (output_layer_theta_predictor_weight_decay + weight_decay), 
+                                                         (output_layer_theta_predictor_bias_decay + bias_decay), penalty_type));
     if(wouttarget && ((output_layer_weight_decay + weight_decay)!=0 || (output_layer_bias_decay + bias_decay)!=0))
         penalties.append(affine_transform_weight_penalty(wouttarget, (output_layer_weight_decay + weight_decay), 
                                                          (output_layer_bias_decay + bias_decay), penalty_type));
@@ -834,6 +891,10 @@ void DistRepNNet::initializeParams(bool set_seed)
         fillWeights(w2, true);
     }
 
+    if(nhidden_theta_predictor>0){
+        fillWeights(w1theta,true);
+    }
+
     if (fixed_output_weights) {
         static Vec values;
         if (values.size()==0)
@@ -850,6 +911,7 @@ void DistRepNNet::initializeParams(bool set_seed)
     else {
         fillWeights(wout, true);
         if(wouttarget) fillWeights(wouttarget, false);
+        if(wouttheta) fillWeights(wouttheta,true);
     }
 
     // Initialize distributed representations
