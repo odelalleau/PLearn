@@ -94,42 +94,8 @@ private:
   
 public:
 
-    // Constructors and other usual stuff
     ConjGradientOptimizer();
-    /*
-       (
-        real the_starting_step_size=0.01, 
-        real the_restart_coeff = 0.2,
-        real the_epsilon=0.01,
-        real the_sigma=0.01,
-        real the_rho=0.005,
-        real the_fmax=-1e8,
-        real the_stop_epsilon=0.0001,
-        real the_tau1=9,
-        real the_tau2=0.1,
-        real the_tau3=0.5,
-        int n_updates=1, const string& filename="", 
-        int every_iterations=1);
-        */
   
-    ConjGradientOptimizer(VarArray the_params, Var the_cost);
-
-    /*
-       (
-        real the_starting_step_size=0.01, 
-        real the_restart_coeff = 0.2,
-        real the_epsilon=0.01,
-        real the_sigma=0.01,
-        real the_rho=0.005,
-        real the_fmax=0,
-        real the_stop_epsilon=0.0001,
-        real the_tau1=9,
-        real the_tau2=0.1,
-        real the_tau3=0.5,
-        int n_updates=1, const string& filename="", 
-        int every_iterations=1);
-        */
-
     PLEARN_DECLARE_OBJECT(ConjGradientOptimizer);
 
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
@@ -154,11 +120,6 @@ protected:
 
     static void declareOptions(OptionList& ol);
   
-    /*
-    virtual void printStep(ostream& ostr, int step, real mean_cost, string sep="\t")
-    { ostr << step << sep << meancost << endl; }
-    */
-
     //! Find the new search direction for the line search algorithm
     bool findDirection();
 
@@ -179,39 +140,6 @@ protected:
     // It returns a constant gamma, which will be used in :
     // h(n) = -g(n) + gamma * h(n-1)
 
-    /*
-    // The CONJPOMDP algorithm as described in
-    // "Direct Gradient-Based Reinforcement Learning:
-    // II. Gradient Ascent Algorithms and Experiments"
-    // by J.Baxter, L. Weaver, P. Bartlett.
-    // Actually this is almost the same as the Polak-Ribiere formula
-    static real conjpomdp (
-        // The given grad function needs to compute the gradient
-        // (or the opposite of the gradient if we need the minimum, as the
-        // algorithm tries to find the maximum)
-        void (*grad)(Optimizer*, const Vec& gradient),
-        ConjGradientOptimizer* opt);
-
-    // The Dai-Yuan formula proposed in
-    // "A nonlinear conjugate gradient method with a strong gloval convergence
-    // property" by Dai, Yuan (1999)
-    static real daiYuan (
-        void (*grad)(Optimizer*, const Vec&),
-        ConjGradientOptimizer* opt);
-
-    // The Fletcher-Reeves formula used to find the new direction
-    // h(n) = -g(n) + norm2(g(n)) / norm2(g(n-1)) * h(n-1)
-    static real fletcherReeves (
-        void (*grad)(Optimizer*, const Vec&),
-        ConjGradientOptimizer* opt);
-
-    // The Hestenes-Stiefel formula used to find the new direction
-    // h(n) = -g(n) + dot(g(n), g(n)-g(n-1)) / dot(h(n-1), g(n)-g(n-1)) * h(n-1)
-    static real hestenesStiefel (
-        void (*grad)(Optimizer*, const Vec&),
-        ConjGradientOptimizer* opt);
-        */
-
     // The Polak-Ribiere formula used to find the new direction
     // h(n) = -g(n) + dot(g(n), g(n)-g(n-1)) / norm2(g(n-1)) * h(n-1)
     real polakRibiere();
@@ -223,30 +151,6 @@ protected:
     // It must not update "current_opp_gradient" (that is done in the Conjugate
     // Gradient formulas).
     // It must return the optimal step found to minimize the gradient.
-
-    /*
-    // The GSearch algorithm as described in
-    // "Direct Gradient-Based Reinforcement Learning:
-    // II. Gradient Ascent Algorithms and Experiments"
-    // by J.Baxter, L. Weaver, P. Bartlett.
-    real gSearch(void (*grad)(Optimizer*, const Vec&));
-
-    // The line search algorithm described in
-    // "Practical Methods of Optimization, 2nd Ed", by Fletcher (1987)
-    // (this function actually just calls fletcherSearchMain)
-    real fletcherSearch(real mu = FLT_MAX);
-
-    // To be used in the cost is quadratic in the search direction : the minimum
-    // will then be found much faster (hopefully)
-    real newtonSearch(
-        int max_steps,
-        real initial_step,
-        real low_enough);
-
-    // Brent's line search algorithm, implemented in netlab (a matlab library)
-    // by Ian T. Nabney
-    real brentSearch();
-    */
 
     // TODO Comment Rasmussen's algorithm.
     real rasmussenSearch();
@@ -268,78 +172,6 @@ protected:
     // Same as the two functions above combined.
     // The result is returned in the cost and derivative parameters.
     void computeCostAndDerivative(real alpha, real& cost, real& derivative);
-
-    /*
-    // Put in a, b, c, d the coefficients of the cubic interpolation
-    // given values of f and g=df/dx in 2 points (0 and 1)
-    static void cubicInterpol(
-        real f0, real f1, real g0, real g1,
-        real& a, real& b, real& c, real& d);
-
-
-    // The main function for the Dai-Yuan formula
-    // (see the conjugate gradient formulas)
-    static real daiYuanMain (
-        Vec new_gradient,
-        Vec old_gradient,
-        Vec old_search_direction,
-        Vec tmp_storage);
-
-    // Find the minimum of the cubic interpolation of function f, with g=df/dx,
-    // in the interval [mini, maxi], given values at points p1 and p2
-    static real findMinWithCubicInterpol (
-        real p1,
-        real p2,
-        real mini,
-        real maxi,
-        real f0,
-        real f1,
-        real g0,
-        real g1);
-
-    // Find the minimum of the quadratic interpolation of the function, given the
-    // n first values c[i] and derivatives g[i] at the points x[i]
-    static real findMinWithQuadInterpol(
-        int q, real sum_x, real sum_x_2, real sum_x_3, real sum_x_4,
-        real sum_c_x_2, real sum_g_x, real sum_c_x, real sum_c, real sum_g);
-
-    // The main function for Fletcher's line search algorithm
-    // We keep all the parameters, so that it can be used separately
-    // (without a real ConjGradientOptimizer object)
-    static real fletcherSearchMain (
-        real (*f)(real, ConjGradientOptimizer* opt),
-        real (*g)(real, ConjGradientOptimizer* opt),
-        ConjGradientOptimizer* opt,
-        real sigma,
-        real rho,
-        real fmax,
-        real epsilon,
-        real tau1 = 9,
-        real tau2 = 0.1,
-        real tau3 = 0.5,
-        real alpha1 = FLT_MAX, // if FLT_MAX, then let the algo find a value
-        real mu = FLT_MAX);    // same remark as alpha1
-  
-    // Find the minimum of the cubic a.x^3 + b.x^2 + c.x
-    // in the range [mini, maxi]
-    static real minCubic(
-        real a, real b, real c,
-        real mini = -FLT_MAX, real maxi = FLT_MAX);
-
-    // Find the minimum of the function a.x^2 + b.x
-    // in the range [mini, maxi]
-    static real minQuadratic(
-        real a, real b,
-        real mini = -FLT_MAX, real maxi = FLT_MAX);
-
-    // Put in a, b, c the coefficients of the quadratic interpolation
-    // given values of f in 2 points (0 and 1) and g=df/dx in 0
-    static void quadraticInterpol(
-        real f0, real f1, real g0,
-        real& a, real& b, real& c);
-
-    void minBrack( real& br_min, real& br_max, real& br_mid );
-    */
 
 };
 
