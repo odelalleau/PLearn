@@ -50,9 +50,18 @@ int main()
     Var classerror = classification_loss(output, classnum);
     Var totalcost = meanOf(trainset, Func(input&classnum, hconcat(cost&classerror)), 1);
     
-    GradientOptimizer opt(params, totalcost, 0.01, 0.00, trainset.length()*nepochs, "simplenet.log", trainset.length());
+    // GradientOptimizer opt(params, totalcost, 0.01, 0.00, trainset.length()*nepochs, "simplenet.log", trainset.length());
+    GradientOptimizer opt;
+    opt.params = params;
+    opt.cost = totalcost;
+    opt.start_learning_rate = 1e-2;
+    opt.nstages = trainset.length();
     opt.build();
-    opt.optimize();
+    for (int i = 0; i < nepochs; i++) {
+        VecStatsCollector statscol;
+        opt.optimizeN(statscol);
+        pout << (i + 1) * trainset->length() << " " << statscol.getMean() << endl;
+    }
     
     cout << "FINISHED." << endl;
     return 0;
