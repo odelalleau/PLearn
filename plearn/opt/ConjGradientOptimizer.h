@@ -56,77 +56,14 @@ public:
 
     // Public options.
 
+    real constrain_limit;
+    real expected_red;
+    int max_eval_per_line_search;
+    real max_extrapolate;
+    real rho;
+    real sigma;
+    real slope_ratio;
     int verbosity;
-
-    /*
-    //! If set to 1, will compute and display the mean cost at each epoch
-    int compute_cost;
-    */
-
-    /*
-    //! The line search algorithm used
-    //! 1  : Fletcher line search
-    //! 2  : GSearch
-    //! 3  : Newton line search
-    //! 4  : Brent's line search
-    //! 5  : Rasmussen's line search
-    int line_search_algo;
-    */
-
-    /*
-    //! The formula used to find the new search direction
-    //! 1  : ConjPOMPD
-    //! 2  : Dai - Yuan
-    //! 3  : Fletcher - Reeves
-    //! 4  : Hestenes - Stiefel
-    //! 5  : Polak - Ribiere
-    int find_new_direction_formula;
-    */
-
-    /*
-    real starting_step_size;  // initial step for line search
-    real restart_coeff;       // we restart when : 
-    // abs(g(n).g(n-1)) > restart_coeff*norm(g(n))^2
-    */
-
-    /*
-    // GSearch specific options
-    real epsilon;             // gradient resolution
-    */
-
-    /*
-    // FletcherSearch specific options
-    real sigma; // in the constraint : abs(f'(m)) < -sigma.f'(0)
-    real rho;   // in the constraint : f(m) < f(0) + m.rho.f'(0)
-    real fmax;  // we stop if we reach cost <= fmax (usually fmax = 0)
-    real stop_epsilon; // we stop when (a-alpha).f'(a) < stop_epsilon (Fletcher)
-    real tau1, tau2, tau3; // bracketing parameters
-    */
-
-    /*
-    // NewtonSearch specific options (see the options description)
-    int max_steps;
-    real initial_step;
-    real low_enough;
-
-    // Brent's algorithm specific options
-    real position_res; // resolution of the coordinates of the point
-    real value_res;    // resolution of the value of the point
-    int n_iterations;  // number of line search iterations
-    */
-
-    // Line search options. 
-    
-    // TODO Change comments and put them in options!
-    real ras_RHO_;  //!< Constant for the Wolfe-Powell conditions.
-    real ras_SIG_;  //!< Constant for the Wolfe-Powell conditions.
-    real ras_INT_;  //!< don't reevaluate within 0.1 of the limit of the
-                    //!< current bracket
-    real ras_EXT_;  //!< extrapolate maximum 3 times the current bracket
-    int ras_MAX_;  //!< max 20 function evaluations per line search
-    real ras_RATIO_; //!< maximum allowed slope ratio
-
-    real ras_RED_; // TODO Comment (expected reduction at first step)
 
 protected:
   
@@ -136,11 +73,11 @@ protected:
 
     // RAS stuff.
 
-    real ras_A_, ras_B_, ras_z2_, ras_f1_, ras_z1_, ras_f2_, ras_d2_, ras_d1_;
-    real ras_limit_, ras_red_;
+    real cubic_a, cubic_b, step2, fun_val1, step1, fun_val2, fun_deriv2, fun_deriv1;
+    real bracket_limit;
 
-    int ras_M_;
-    bool ras_ls_failed_, ras_success_;
+    int fun_eval_count;
+    bool line_search_failed, line_search_succeeded;
     
 
 private:

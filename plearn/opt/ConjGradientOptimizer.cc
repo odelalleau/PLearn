@@ -51,69 +51,27 @@ using namespace std;
 // ConjGradientOptimizer //
 ///////////////////////////
 ConjGradientOptimizer::ConjGradientOptimizer():
+    constrain_limit(0.1),
+    expected_red(1),
+    max_eval_per_line_search(20),
+    max_extrapolate(3),
+    rho(1e-2),
+    sigma(0.5),
+    slope_ratio(100),
     verbosity(0)
-        // TODO More default option values.
 {}
-/*
-    real the_starting_step_size, 
-    real the_restart_coeff,
-    real the_epsilon,
-    real the_sigma,
-    real the_rho,
-    real the_fmax,
-    real the_stop_epsilon,
-    real the_tau1,
-    real the_tau2,
-    real the_tau3,
-    int n_updates, const string& filename, 
-    int every_iterations)
-    :inherited(n_updates, filename, every_iterations),
-     verbosity(2),
-     compute_cost(1),
-     line_search_algo(1),
-     find_new_direction_formula(1),
-     starting_step_size(the_starting_step_size), restart_coeff(the_restart_coeff),
-     epsilon(the_epsilon),
-     sigma(the_sigma), rho(the_rho), fmax(the_fmax),
-     stop_epsilon(the_stop_epsilon), tau1(the_tau1), tau2(the_tau2),
-     tau3(the_tau3), max_steps(5), initial_step(0.01), low_enough(1e-6),
-     position_res(1e-4), value_res(1e-4), n_iterations(100)  {}
-     */
 
 ConjGradientOptimizer::ConjGradientOptimizer(VarArray the_params,
                                              Var the_cost):
+    constrain_limit(0.1),
+    expected_red(1),
+    max_eval_per_line_search(20),
+    max_extrapolate(3),
+    rho(1e-2),
+    sigma(0.5),
+    slope_ratio(100),
     verbosity(0)
 {}
-
-
-/*
-ConjGradientOptimizer::ConjGradientOptimizer(
-    VarArray the_params, 
-    Var the_cost, 
-    VarArray the_update_for_measure,
-    real the_starting_step_size, 
-    real the_restart_coeff,
-    real the_epsilon,
-    real the_sigma,
-    real the_rho,
-    real the_fmax,
-    real the_stop_epsilon,
-    real the_tau1,
-    real the_tau2,
-    real the_tau3,
-    int n_updates, const string& filename, 
-    int every_iterations)
-    :inherited(the_params, the_cost, the_update_for_measure,
-               n_updates, filename, every_iterations),
-     verbosity(2),
-     starting_step_size(the_starting_step_size), restart_coeff(the_restart_coeff),
-     epsilon(the_epsilon),
-     sigma(the_sigma), rho(the_rho), fmax(the_fmax),
-     stop_epsilon(the_stop_epsilon), tau1(the_tau1), tau2(the_tau2),
-     tau3(the_tau3) {
-    cout << "Warning: you should use the constructor ConjGradientOptimizer(), or some default options may not be set properly" << endl;
-}
-*/
   
 PLEARN_IMPLEMENT_OBJECT(ConjGradientOptimizer,
     "Optimizer based on the conjugate gradient method.",
@@ -133,6 +91,34 @@ PLEARN_IMPLEMENT_OBJECT(ConjGradientOptimizer,
 ////////////////////
 void ConjGradientOptimizer::declareOptions(OptionList& ol)
 {
+    declareOption(ol, "sigma", &ConjGradientOptimizer::sigma,
+                                  OptionBase::buildoption, 
+        "Constant in the Wolfe-Powell stopping conditions.");
+
+     declareOption(ol, "rho", &ConjGradientOptimizer::rho,
+                                  OptionBase::buildoption, 
+        "Constant in the Wolfe-Powell stopping conditions.");
+
+     declareOption(ol, "constrain_limit", &ConjGradientOptimizer::constrain_limit,
+                                  OptionBase::buildoption, 
+        "Multiplicative coefficient to constrain the evaluation bracket.");
+
+     declareOption(ol, "max_extrapolate", &ConjGradientOptimizer::max_extrapolate,
+                                  OptionBase::buildoption, 
+        "Maximum coefficient for bracket extrapolation.");
+
+     declareOption(ol, "max_eval_per_line_search", &ConjGradientOptimizer::max_eval_per_line_search,
+                                  OptionBase::buildoption, 
+        "Maximum number of function evalutions during line search.");
+
+     declareOption(ol, "slope_ratio", &ConjGradientOptimizer::slope_ratio,
+                                  OptionBase::buildoption, 
+        "Maximum slope ratio.");
+
+     declareOption(ol, "expected_red", &ConjGradientOptimizer::expected_red,
+                                  OptionBase::buildoption, 
+        "Expected function reduction at first step.");
+
     /*
     declareOption(ol, "starting_step_size",
                   &ConjGradientOptimizer::starting_step_size, OptionBase::buildoption, 
@@ -580,73 +566,64 @@ real ConjGradientOptimizer::rasmussenSearch()
     while (try_again) {
         try_again = false;
     // X0 = X; f0 = f1; df0 = df1; % make a copy of current values
-    real ras_f0_ = ras_f1_;
+    real fun_val0 = fun_val1;
     // real ras_df0_ = ras_df1_; Should not be needed TODO see
     // X = X + z1*s;  % begin line search
     // We don't do that explicitely
     // [f2 df2] = eval(argstr);
     // d2 = df2'*s;
-    computeCostAndDerivative(ras_z1_, ras_f2_, ras_d2_);
+    computeCostAndDerivative(step1, fun_val2, fun_deriv2);
     // i = i + (length<0);
     // We count epochs outside of this.
     // f3 = f1; d3 = d1; z3 = -z1; % initialize point 3 equal to point 1
-    real ras_f3_ = ras_f1_;
-    real ras_d3_ = ras_d1_;
-    real ras_z3_ = - ras_z1_;
-    // if length>0, M = MAX; else M = min(MAX, -length-i); end
-    //if (ras_length_ > 0) {
-        ras_M_ = ras_MAX_;
-    //}
-        /*
-    else {
-        ras_M_ = min(ras_MAX_, -ras_length_ - ras_i_);
-    }
-    */
+    real fun_val3 = fun_val1;
+    real fun_deriv3 = fun_deriv1;
+    real step3 = - step1;
+    fun_eval_count = max_eval_per_line_search;
     // success = 0; limit = -1;                     % initialize quanteties
-    ras_success_ = 0;
-    ras_limit_ = -1;
+    line_search_succeeded = false;
+    bracket_limit = -1;
     // while 1
     while (true) {
         // while ((f2 > f1+z1*RHO*d1) | (d2 > -SIG*d1)) & (M > 0)
-        while ( (ras_f2_ > ras_f1_ + ras_z1_ * ras_RHO_ * ras_d1_ ||
-                 ras_d2_ > - ras_SIG_ * ras_d1_ ) &&
-                ras_M_ > 0 )
+        while ( (fun_val2 > fun_val1 + step1 * rho * fun_deriv1 ||
+                 fun_deriv2 > - sigma * fun_deriv1 ) &&
+                fun_eval_count > 0 )
         {
             // limit = z1; % tighten the bracket
-            ras_limit_ = ras_z1_;
+            bracket_limit = step1;
             // if f2 > f1
             // z2 = z3 - (0.5*d3*z3*z3)/(d3*z3+f2-f3);  % quadratic fit
-            if (ras_f2_ > ras_f1_) {
-                ras_z2_ = ras_z3_ -
-                    (0.5*ras_d3_*ras_z3_*ras_z3_) / 
-                    (ras_d3_*ras_z3_+ras_f2_-ras_f3_);
+            if (fun_val2 > fun_val1) {
+                step2 = step3 -
+                    (0.5*fun_deriv3*step3*step3) / 
+                    (fun_deriv3*step3+fun_val2-fun_val3);
             } else {
                 // A = 6*(f2-f3)/z3+3*(d2+d3); % cubic fit
-                ras_A_ = 6*(ras_f2_-ras_f3_)/ras_z3_+3*(ras_d2_+ras_d3_);
+                cubic_a = 6*(fun_val2-fun_val3)/step3+3*(fun_deriv2+fun_deriv3);
                 // B = 3*(f3-f2)-z3*(d3+2*d2);
-                ras_B_ = 3*(ras_f3_-ras_f2_)-ras_z3_*(ras_d3_+2*ras_d2_);
+                cubic_b = 3*(fun_val3-fun_val2)-step3*(fun_deriv3+2*fun_deriv2);
                 // z2 = (sqrt(B*B-A*d2*z3*z3)-B)/A;
                 // % numerical error possible - ok!
-                ras_z2_ = (sqrt(ras_B_*ras_B_-ras_A_*ras_d2_*ras_z3_*ras_z3_)-ras_B_)/ras_A_;
+                step2 = (sqrt(cubic_b*cubic_b-cubic_a*fun_deriv2*step3*step3)-cubic_b)/cubic_a;
             }
-            if (isnan(ras_z2_) || isinf(ras_z2_))
+            if (isnan(step2) || isinf(step2))
                 // z2 = z3/2;                  % if we had a numerical problem
                 // then bisect
-                ras_z2_ = ras_z3_/2;
+                step2 = step3/2;
             // z2 = max(min(z2, INT*z3),(1-INT)*z3);
             // % don't accept too close to limits
-            ras_z2_ = max(min(ras_z2_, ras_INT_*ras_z3_),(1-ras_INT_)*ras_z3_);
+            step2 = max(min(step2, constrain_limit*step3),(1-constrain_limit)*step3);
             // z1 = z1 + z2; % update the step
-            ras_z1_ = ras_z1_ + ras_z2_;
+            step1 = step1 + step2;
             //  X = X + z2*s;
             // [f2 df2] = eval(argstr);
             // d2 = df2'*s;
-            computeCostAndDerivative(ras_z1_, ras_f2_, ras_d2_);
+            computeCostAndDerivative(step1, fun_val2, fun_deriv2);
             // M = M - 1; i = i + (length<0); % count epochs?!
-            ras_M_ = ras_M_ - 1;
-            // ras_i_ = ras_i_ + (ras_length_<0);
+            fun_eval_count = fun_eval_count - 1;
             // z3 = z3-z2; % z3 is now relative to the location of z2
-            ras_z3_ = ras_z3_ - ras_z2_;  
+            step3 = step3 - step2;  
         }
         // if f2 > f1+z1*RHO*d1 | d2 > -SIG*d1
         //  break;  % this is a failure
@@ -654,82 +631,81 @@ real ConjGradientOptimizer::rasmussenSearch()
         //  success = 1; break; % success
         // elseif M == 0
         //  break; % failure
-        if (ras_f2_ > ras_f1_+ras_z1_*ras_RHO_*ras_d1_ ||
-            ras_d2_ > -ras_SIG_*ras_d1_)
+        if (fun_val2 > fun_val1+step1*rho*fun_deriv1 ||
+            fun_deriv2 > -sigma*fun_deriv1)
             break;
-        else if (ras_d2_ > ras_SIG_ * ras_d1_) {
-            ras_success_ = 1;
+        else if (fun_deriv2 > sigma * fun_deriv1) {
+            line_search_succeeded = true;
             break;
-        } else if (ras_M_ == 0)
+        } else if (fun_eval_count == 0)
             break;
         // A = 6*(f2-f3)/z3+3*(d2+d3); % make cubic extrapolation
         // B = 3*(f3-f2)-z3*(d3+2*d2);
-        ras_A_ = 6*(ras_f2_-ras_f3_)/ras_z3_+3*(ras_d2_+ras_d3_);
-        ras_B_ = 3*(ras_f3_-ras_f2_)-ras_z3_*(ras_d3_+2*ras_d2_);
+        cubic_a = 6*(fun_val2-fun_val3)/step3+3*(fun_deriv2+fun_deriv3);
+        cubic_b = 3*(fun_val3-fun_val2)-step3*(fun_deriv3+2*fun_deriv2);
         // z2 = -d2*z3*z3/(B+sqrt(B*B-A*d2*z3*z3));
         // % num. error possible - ok!
-        ras_z2_ = -ras_d2_*ras_z3_*ras_z3_/
-            (ras_B_+sqrt(ras_B_*ras_B_-ras_A_*ras_d2_*ras_z3_*ras_z3_));
+        step2 = -fun_deriv2*step3*step3/
+            (cubic_b+sqrt(cubic_b*cubic_b-cubic_a*fun_deriv2*step3*step3));
         // if ~isreal(z2) | isnan(z2) | isinf(z2) | z2 < 0
         // % num prob or wrong sign?
-        if (isnan(ras_z2_) || isinf(ras_z2_)) {
+        if (isnan(step2) || isinf(step2)) {
             // if limit < -0.5 % if we have no upper limit
-            if (ras_limit_ < -0.5)
+            if (bracket_limit < -0.5)
                 // z2 = z1 * (EXT-1); % the extrapolate the maximum amount
-                ras_z2_ = ras_z1_ * (ras_EXT_ - 1);
+                step2 = step1 * (max_extrapolate - 1);
             else
                 // z2 = (limit-z1)/2; % otherwise bisect
-                ras_z2_ = (ras_limit_ - ras_z1_) / 2;
+                step2 = (bracket_limit - step1) / 2;
         // elseif (limit > -0.5) & (z2+z1 > limit) 
         //  % extraplation beyond max?
-        } else if (ras_limit_ > -0.5 && (ras_z2_ + ras_z1_ > ras_limit_)) {
-            ras_z2_ = (ras_limit_ - ras_z1_) / 2; // bisect
+        } else if (bracket_limit > -0.5 && (step2 + step1 > bracket_limit)) {
+            step2 = (bracket_limit - step1) / 2; // bisect
         // elseif (limit < -0.5) & (z2+z1 > z1*EXT)
         // % extrapolation beyond limit
-        } else if (ras_limit_ < -0.5 && ras_z2_+ras_z1_ > ras_z1_ * ras_EXT_) {
+        } else if (bracket_limit < -0.5 && step2+step1 > step1 * max_extrapolate) {
             // z2 = z1*(EXT-1.0); % set to extrapolation limit
-            ras_z2_ = ras_z1_ * (ras_EXT_ - 1);
+            step2 = step1 * (max_extrapolate - 1);
         // elseif z2 < -z3*INT
-        } else if (ras_z2_ < - ras_z3_ * ras_INT_) {
+        } else if (step2 < - step3 * constrain_limit) {
             // z2 = -z3*INT;
-            ras_z2_ = - ras_z3_ * ras_INT_;
+            step2 = - step3 * constrain_limit;
         // elseif (limit > -0.5) & (z2 < (limit-z1)*(1.0-INT))
         // % too close to limit?
-        } else if (ras_limit_ > -0.5 &&
-                   ras_z2_ < (ras_limit_ - ras_z1_) * (1 - ras_INT_) ) {
+        } else if (bracket_limit > -0.5 &&
+                   step2 < (bracket_limit - step1) * (1 - constrain_limit) ) {
             // z2 = (limit-z1)*(1.0-INT);
-            ras_z2_ = (ras_limit_ - ras_z1_) * (1 - ras_INT_);
+            step2 = (bracket_limit - step1) * (1 - constrain_limit);
         }
         // f3 = f2; d3 = d2; z3 = -z2;
         // % set point 3 equal to point 2
-        ras_f3_ = ras_f2_;
-        ras_d3_ = ras_d2_;
-        ras_z3_ = - ras_z2_;
+        fun_val3 = fun_val2;
+        fun_deriv3 = fun_deriv2;
+        step3 = - step2;
         // z1 = z1 + z2; X = X + z2*s;
         // % update current estimates
-        ras_z1_ += ras_z2_;
+        step1 += step2;
         // [f2 df2] = eval(argstr);
         // d2 = df2'*s;
-        computeCostAndDerivative(ras_z1_, ras_f2_, ras_d2_);
+        computeCostAndDerivative(step1, fun_val2, fun_deriv2);
         // M = M - 1; i = i + (length<0);
         // % count epochs?!
-        ras_M_ = ras_M_ - 1;
-        // ras_i_ = ras_i_ + (ras_length_<0);
+        fun_eval_count--;
     }
     // if success % if line search succeeded
-    if (ras_success_) {
-        ras_f1_ = ras_f2_;
+    if (line_search_succeeded) {
+        fun_val1 = fun_val2;
 
         // ls_failed = 0; % this line search did not fail
-        ras_ls_failed_ = 0;
+        line_search_failed = false;
     } else {
         // X = X0; f1 = f0; df1 = df0;
         // % restore point from before failed line search
-        ras_f1_ = ras_f0_;
+        fun_val1 = fun_val0;
         // if ls_failed | i > abs(length)
         // % line search failed twice in a row or we ran out of time, so we
         // give up
-        if (ras_ls_failed_) //  (|| ras_i_ > fabs(ras_length_))
+        if (line_search_failed)
             return 0;
         // tmp = df1; df1 = df2; df2 = tmp; % swap derivatives
         // We do not do that... it looks weird!
@@ -738,15 +714,15 @@ real ConjGradientOptimizer::rasmussenSearch()
         // TODO Ask Rasmussen!
         // TODO So what do we do here?
         // d1 = -s'*s;
-        ras_d1_ = - pownorm(current_opp_gradient);
+        fun_deriv1 = - pownorm(current_opp_gradient);
         // z1 = 1/(1-d1);
-        ras_z1_ = 1 / (1 - ras_d1_); // TODO What about ras_RED_ or similar?
+        step1 = 1 / (1 - fun_deriv1); // TODO What about expected_red or similar?
         // ls_failed = 1; % this line search failed
-        ras_ls_failed_ = 1;
+        line_search_failed = true;
         try_again = true;
     }
     }
-    return ras_z1_;
+    return step1;
 }
 
 /*
@@ -1283,18 +1259,18 @@ bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
         computeOppositeGradient(current_opp_gradient);
         search_direction <<  current_opp_gradient;  // first direction = -grad;
         last_cost = cost->value[0];
-        ras_red_ = 1; // TODO Find the best value here!
+        expected_red = 1; // TODO Find the best value here!
         //if (line_search_algo == 5) {
-            ras_f1_ = last_cost;
-            ras_d1_ = - pownorm(search_direction);
-            ras_z1_ = ras_red_ / ( 1 - ras_d1_ );
+            fun_val1 = last_cost;
+            fun_deriv1 = - pownorm(search_direction);
+            step1 = expected_red / ( 1 - fun_deriv1 );
         //}
-        ras_RHO_ = 0.01;
-        ras_SIG_ = 0.5;
-        ras_INT_ = 0.1;
-        ras_EXT_ = 3.0;
-        ras_MAX_ = 20;
-        ras_RATIO_ = 100;
+        rho = 0.01;
+        sigma = 0.5;
+        constrain_limit = 0.1;
+        max_extrapolate = 3.0;
+        max_eval_per_line_search = 20;
+        slope_ratio = 100;
     }
 
     /*
@@ -1408,16 +1384,16 @@ void ConjGradientOptimizer::updateSearchDirection(real gamma) {
         // if d2 > 0               % new slope must be negative
         //   s = -df1;             % otherwise use steepest direction
         //   d2 = -s'*s;    
-        ras_d2_ = - dot(current_opp_gradient, search_direction);
-        if (ras_d2_ > 0) {
+        fun_deriv2 = - dot(current_opp_gradient, search_direction);
+        if (fun_deriv2 > 0) {
             search_direction << current_opp_gradient;
-            ras_d2_ = - pownorm(search_direction);
+            fun_deriv2 = - pownorm(search_direction);
         }
         // z1 = z1 * min(RATIO, d1/(d2-realmin));
         // % slope ratio but max RATIO
-        ras_z1_ = ras_z1_ * min(ras_RATIO_, ras_d1_/(ras_d2_-REAL_EPSILON));
+        step1 = step1 * min(slope_ratio, fun_deriv1/(fun_deriv2-REAL_EPSILON));
         // d1 = d2;
-        ras_d1_ = ras_d2_;
+        fun_deriv1 = fun_deriv2;
     //}
 }
 
