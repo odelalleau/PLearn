@@ -213,6 +213,17 @@ T Aij = it->second;
     int length() const { return rows.size(); }
     int width() const { return _width; }
 
+    void copyRowFrom(int i, const map<int,T>& from_row, bool clear_rest=true)
+    {
+        map<int,T>& row = rows[i];
+        if (clear_rest)
+            clearRow(i);
+        typename map<int,T>::const_iterator it = from_row.begin();
+        typename map<int,T>::const_iterator end = from_row.end();
+        for (;it!=end;++it)
+            row[it->first]=it->second;
+    }
+
 #if 0
     void save(string filename) const { 
         ofstream out(filename.c_str()); write(out); 
