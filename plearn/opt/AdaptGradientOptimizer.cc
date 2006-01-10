@@ -191,7 +191,7 @@ void AdaptGradientOptimizer::build_(){
             break;
         case 2:
             // tmp_storage is used to store the initial opposite gradient
-            Optimizer::computeOppositeGradient(this, tmp_storage);
+            computeOppositeGradient(tmp_storage);
             break;
         case 3:
             break;

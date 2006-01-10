@@ -228,6 +228,16 @@ bool Optimizer::measure(int t, const Vec& costs)
     return stop;
 }
 
+//////////////
+// optimize //
+//////////////
+real Optimizer::optimize()
+{
+    PLERROR("In Optimizer::optimize - This method is deprecated and should "
+            "not be used");
+}
+
+
 void Optimizer::verifyGradient(real minval, real maxval, real step)
 {
     Func f(params,cost);
@@ -274,15 +284,13 @@ void Optimizer::computeRepartition(
 /////////////////////
 // computeGradient //
 /////////////////////
-void Optimizer::computeGradient(
-    Optimizer* opt,
-    const Vec& gradient) {
+void Optimizer::computeGradient(const Vec& gradient) {
     // Clear all what's left from previous computations
-    opt->proppath.clearGradient();
-    opt->params.clearGradient();
-    opt->cost->gradient[0] = 1;
-    opt->proppath.fbprop();
-    opt->params.copyGradientTo(gradient);
+    this->proppath.clearGradient();
+    this->params.clearGradient();
+    this->cost->gradient[0] = 1;
+    this->proppath.fbprop();
+    this->params.copyGradientTo(gradient);
 }
 
 #ifdef DEBUGCG
@@ -292,19 +300,17 @@ extern GhostScript* gs;
 /////////////////////////////
 // computeOppositeGradient //
 /////////////////////////////
-void Optimizer::computeOppositeGradient(
-    Optimizer* opt,
-    const Vec& gradient) {
+void Optimizer::computeOppositeGradient(const Vec& gradient) {
     // Clear all what's left from previous computations
-    opt->proppath.clearGradient();
-    opt->params.clearGradient();
+    this->proppath.clearGradient();
+    this->params.clearGradient();
     // We want the opposite of the gradient, thus the -1
-    opt->cost->gradient[0] = -1;
-    opt->proppath.fbprop();
-    opt->params.copyGradientTo(gradient);
+    this->cost->gradient[0] = -1;
+    this->proppath.fbprop();
+    this->params.copyGradientTo(gradient);
 #ifdef DEBUGCG
     gs->setcolor("blue");
-    gs->drawCircle(opt->params[0]->value[0],opt->params[0]->value[1],0.02);
+    gs->drawCircle(this->params[0]->value[0],this->params[0]->value[1],0.02);
 #endif
 
 }

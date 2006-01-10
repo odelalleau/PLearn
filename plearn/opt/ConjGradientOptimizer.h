@@ -33,8 +33,6 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 
- 
-
 /* *******************************************************      
  * $Id$
  * This file is part of the PLearn library.
@@ -56,13 +54,16 @@ class ConjGradientOptimizer : public Optimizer {
 
 public:
 
-    // General options (also available through setOption)
+    // Public options.
 
     int verbosity;
 
+    /*
     //! If set to 1, will compute and display the mean cost at each epoch
     int compute_cost;
+    */
 
+    /*
     //! The line search algorithm used
     //! 1  : Fletcher line search
     //! 2  : GSearch
@@ -70,6 +71,9 @@ public:
     //! 4  : Brent's line search
     //! 5  : Rasmussen's line search
     int line_search_algo;
+    */
+
+    /*
     //! The formula used to find the new search direction
     //! 1  : ConjPOMPD
     //! 2  : Dai - Yuan
@@ -77,20 +81,29 @@ public:
     //! 4  : Hestenes - Stiefel
     //! 5  : Polak - Ribiere
     int find_new_direction_formula;
+    */
+
+    /*
     real starting_step_size;  // initial step for line search
     real restart_coeff;       // we restart when : 
     // abs(g(n).g(n-1)) > restart_coeff*norm(g(n))^2
+    */
 
+    /*
     // GSearch specific options
     real epsilon;             // gradient resolution
+    */
 
+    /*
     // FletcherSearch specific options
     real sigma; // in the constraint : abs(f'(m)) < -sigma.f'(0)
     real rho;   // in the constraint : f(m) < f(0) + m.rho.f'(0)
     real fmax;  // we stop if we reach cost <= fmax (usually fmax = 0)
     real stop_epsilon; // we stop when (a-alpha).f'(a) < stop_epsilon (Fletcher)
     real tau1, tau2, tau3; // bracketing parameters
+    */
 
+    /*
     // NewtonSearch specific options (see the options description)
     int max_steps;
     real initial_step;
@@ -100,29 +113,32 @@ public:
     real position_res; // resolution of the coordinates of the point
     real value_res;    // resolution of the value of the point
     int n_iterations;  // number of line search iterations
+    */
 
-    // Rasmussen's algorithm specific options
+    // Line search options. 
+    
+    // TODO Change comments and put them in options!
     real ras_RHO_;  //!< Constant for the Wolfe-Powell conditions.
     real ras_SIG_;  //!< Constant for the Wolfe-Powell conditions.
     real ras_INT_;  //!< don't reevaluate within 0.1 of the limit of the
-                    //!< current bracket (TODO CHANGE COMMENT)
-    // (TODO CHANGE COMMENT)
+                    //!< current bracket
     real ras_EXT_;  //!< extrapolate maximum 3 times the current bracket
-    // (TODO CHANGE COMMENT)
     int ras_MAX_;  //!< max 20 function evaluations per line search
-    // (TODO CHANGE COMMENT)
     real ras_RATIO_; //!< maximum allowed slope ratio
 
     real ras_RED_; // TODO Comment (expected reduction at first step)
 
 protected:
   
+    /*
     Vec meancost;              // used to store the cost, for display purpose
+    */
 
     // RAS stuff.
+
     real ras_A_, ras_B_, ras_z2_, ras_f1_, ras_z1_, ras_f2_, ras_d2_, ras_d1_;
     real ras_limit_, ras_red_;
-    //int ras_i_, ras_length_;
+
     int ras_M_;
     bool ras_ls_failed_, ras_success_;
     
@@ -130,6 +146,7 @@ protected:
 private:
 
     // Internal data
+    // TODO See what we can get rid of.
     Vec current_opp_gradient;  // current opposite gradient value
     Vec search_direction;      // current search direction for the line search
     Vec tmp_storage;           // used for temporary storage of data
@@ -141,7 +158,9 @@ private:
 public:
 
     // Constructors and other usual stuff
-    ConjGradientOptimizer(
+    ConjGradientOptimizer();
+    /*
+       (
         real the_starting_step_size=0.01, 
         real the_restart_coeff = 0.2,
         real the_epsilon=0.01,
@@ -154,27 +173,12 @@ public:
         real the_tau3=0.5,
         int n_updates=1, const string& filename="", 
         int every_iterations=1);
+        */
   
-    ConjGradientOptimizer(
-        VarArray the_params, 
-        Var the_cost,
-        real the_starting_step_size=0.01, 
-        real the_restart_coeff = 0.2,
-        real the_epsilon=0.01,
-        real the_sigma=0.01,
-        real the_rho=0.005,
-        real the_fmax=0,
-        real the_stop_epsilon=0.0001,
-        real the_tau1=9,
-        real the_tau2=0.1,
-        real the_tau3=0.5,
-        int n_updates=1, const string& filename="", 
-        int every_iterations=1);
+    ConjGradientOptimizer(VarArray the_params, Var the_cost);
 
-    ConjGradientOptimizer(
-        VarArray the_params, 
-        Var the_cost, 
-        VarArray the_update_for_measure,
+    /*
+       (
         real the_starting_step_size=0.01, 
         real the_restart_coeff = 0.2,
         real the_epsilon=0.01,
@@ -187,10 +191,11 @@ public:
         real the_tau3=0.5,
         int n_updates=1, const string& filename="", 
         int every_iterations=1);
+        */
 
     PLEARN_DECLARE_OBJECT(ConjGradientOptimizer);
 
-    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies) { inherited::makeDeepCopyFromShallowCopy(copies); }
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     virtual void build()
     {
@@ -204,17 +209,18 @@ private:
     
 public:
 
-    virtual real optimize(); // Deprecated, use optimizeN.
     virtual bool optimizeN(VecStatsCollector& stat_coll);
 
     virtual void reset();
 
 protected:
+
     static void declareOptions(OptionList& ol);
   
+    /*
     virtual void printStep(ostream& ostr, int step, real mean_cost, string sep="\t")
     { ostr << step << sep << meancost << endl; }
-private:
+    */
 
     //! Find the new search direction for the line search algorithm
     bool findDirection();
@@ -236,6 +242,7 @@ private:
     // It returns a constant gamma, which will be used in :
     // h(n) = -g(n) + gamma * h(n-1)
 
+    /*
     // The CONJPOMDP algorithm as described in
     // "Direct Gradient-Based Reinforcement Learning:
     // II. Gradient Ascent Algorithms and Experiments"
@@ -266,12 +273,11 @@ private:
     static real hestenesStiefel (
         void (*grad)(Optimizer*, const Vec&),
         ConjGradientOptimizer* opt);
+        */
 
     // The Polak-Ribiere formula used to find the new direction
     // h(n) = -g(n) + dot(g(n), g(n)-g(n-1)) / norm2(g(n-1)) * h(n-1)
-    static real polakRibiere (
-        void (*grad)(Optimizer*, const Vec&),
-        ConjGradientOptimizer* opt);
+    real polakRibiere();
 
     //------------------------- LINE SEARCH ALGORITHMS -------------------------
     //
@@ -281,6 +287,7 @@ private:
     // Gradient formulas).
     // It must return the optimal step found to minimize the gradient.
 
+    /*
     // The GSearch algorithm as described in
     // "Direct Gradient-Based Reinforcement Learning:
     // II. Gradient Ascent Algorithms and Experiments"
@@ -302,29 +309,30 @@ private:
     // Brent's line search algorithm, implemented in netlab (a matlab library)
     // by Ian T. Nabney
     real brentSearch();
+    */
 
     // TODO Comment Rasmussen's algorithm.
     real rasmussenSearch();
   
     //--------------------------- UTILITY FUNCTIONS ----------------------------
   
-private:
+protected:
 
     // Return cost->value() after an update of params with step size alpha
     // in the current search direction
     // ie : f(x) = cost(params + x*search_direction) in x = alpha
-    static real computeCostValue(real alpha, ConjGradientOptimizer* opt);
+    real computeCostValue(real alpha);
 
     // Return the derivative of the function
     // f(x) = cost(params + x*search_direction)
     // in x = alpha
-    static real computeDerivative(real alpha, ConjGradientOptimizer* opt);
+    real computeDerivative(real alpha);
 
     // Same as the two functions above combined.
     // The result is returned in the cost and derivative parameters.
-    static void computeCostAndDerivative(
-        real alpha, ConjGradientOptimizer*opt, real& cost, real& derivative);
+    void computeCostAndDerivative(real alpha, real& cost, real& derivative);
 
+    /*
     // Put in a, b, c, d the coefficients of the cubic interpolation
     // given values of f and g=df/dx in 2 points (0 and 1)
     static void cubicInterpol(
@@ -394,6 +402,7 @@ private:
         real& a, real& b, real& c);
 
     void minBrack( real& br_min, real& br_max, real& br_mid );
+    */
 
 };
 

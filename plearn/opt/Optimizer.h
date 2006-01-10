@@ -139,8 +139,8 @@ public:
       
     virtual bool measure(int t, const Vec& costs);
       
-    //!  sub-classes should define this, which is the main method
-    virtual real optimize() = 0;
+    //! This method is deprecated.
+    virtual real optimize();
 
     //!  sub-classes should define this, which is the new main method
     virtual bool optimizeN(VecStatsCollector& stats_coll) =0;
@@ -191,15 +191,11 @@ public:
 
     //! Given an optimizer, compute the gradient of the cost function and
     //! store it in the "gradient" Vec
-    static void computeGradient(
-        Optimizer* opt,
-        const Vec& gradient);
+    void computeGradient(const Vec& gradient);
       
     //! Given an optimizer, compute the opposite of the gradient of the cost
     //! function and store it in the "gradient" Vec
-    static void computeOppositeGradient(
-        Optimizer* opt,
-        const Vec& gradient);
+    void computeOppositeGradient(const Vec& gradient);
 
 };
 

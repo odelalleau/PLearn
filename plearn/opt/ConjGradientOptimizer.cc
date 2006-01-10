@@ -3,6 +3,7 @@
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 2003,2006 Olivier Delalleau
 // Copyright (c) 1996-2001, Ian T. Nabney for functions minBrack, brentSearch
+// TODO Remove copyright just above once functions are removed.
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -46,10 +47,14 @@
 namespace PLearn {
 using namespace std;
 
-//
-// Constructors
-//
-ConjGradientOptimizer::ConjGradientOptimizer(
+///////////////////////////
+// ConjGradientOptimizer //
+///////////////////////////
+ConjGradientOptimizer::ConjGradientOptimizer():
+    verbosity(0)
+        // TODO More default option values.
+{}
+/*
     real the_starting_step_size, 
     real the_restart_coeff,
     real the_epsilon,
@@ -73,32 +78,15 @@ ConjGradientOptimizer::ConjGradientOptimizer(
      stop_epsilon(the_stop_epsilon), tau1(the_tau1), tau2(the_tau2),
      tau3(the_tau3), max_steps(5), initial_step(0.01), low_enough(1e-6),
      position_res(1e-4), value_res(1e-4), n_iterations(100)  {}
+     */
 
-ConjGradientOptimizer::ConjGradientOptimizer(
-    VarArray the_params, 
-    Var the_cost,
-    real the_starting_step_size, 
-    real the_restart_coeff,
-    real the_epsilon,
-    real the_sigma,
-    real the_rho,
-    real the_fmax,
-    real the_stop_epsilon,
-    real the_tau1,
-    real the_tau2,
-    real the_tau3,
-    int n_updates, const string& filename, 
-    int every_iterations)
-    :inherited(the_params, the_cost, n_updates, filename, every_iterations),
-     verbosity(2),
-     starting_step_size(the_starting_step_size), restart_coeff(the_restart_coeff),
-     epsilon(the_epsilon),
-     sigma(the_sigma), rho(the_rho), fmax(the_fmax),
-     stop_epsilon(the_stop_epsilon), tau1(the_tau1), tau2(the_tau2),
-     tau3(the_tau3)  {
-    cout << "Warning: you should use the constructor ConjGradientOptimizer(), or some default options may not be set properly" << endl;
-}
+ConjGradientOptimizer::ConjGradientOptimizer(VarArray the_params,
+                                             Var the_cost):
+    verbosity(0)
+{}
 
+
+/*
 ConjGradientOptimizer::ConjGradientOptimizer(
     VarArray the_params, 
     Var the_cost, 
@@ -125,23 +113,27 @@ ConjGradientOptimizer::ConjGradientOptimizer(
      tau3(the_tau3) {
     cout << "Warning: you should use the constructor ConjGradientOptimizer(), or some default options may not be set properly" << endl;
 }
+*/
   
 PLEARN_IMPLEMENT_OBJECT(ConjGradientOptimizer,
-                        "Optimizer based on the conjugate gradient method.",
-                        "The conjugate gradient algorithm is basically the following :\n"
-                        "- 0: initialize the search direction d = -gradient\n"
-                        "- 1: perform a line search along direction d for the minimum of the\n"
-                        "     gradient\n"
-                        "- 2: move to this minimum, update the search direction d and go to\n"
-                        "     step 1\n"
-                        "There are various methods available through the options for both\n"
-                        "steps 1 and 2.");
+    "Optimizer based on the conjugate gradient method.",
+    "The conjugate gradient algorithm is basically the following :\n"
+    "- 0: initialize the search direction d = -gradient\n"
+    "- 1: perform a line search along direction d for the minimum of the\n"
+    "     function value\n"
+    "- 2: move to this minimum, update the search direction d and go to\n"
+    "     step 1\n"
+    "The algorithm is inspired by Carl Rasmussen's Matlab algorithm from:\n"
+    "http://www.kyb.tuebingen.mpg.de/bs/people/carl/code/minimize/minimize.m\n"
+    "\n"
+);
 
-// 
-// declareOptions
-// 
+////////////////////
+// declareOptions //
+////////////////////
 void ConjGradientOptimizer::declareOptions(OptionList& ol)
 {
+    /*
     declareOption(ol, "starting_step_size",
                   &ConjGradientOptimizer::starting_step_size, OptionBase::buildoption, 
                   "The initial step size for the line search algorithm.\n"
@@ -282,17 +274,14 @@ void ConjGradientOptimizer::declareOptions(OptionList& ol)
                   OptionBase::buildoption, 
                   "If set to 1, will compute and display the mean cost at each epoch.\n");
 
+    */
     declareOption(ol, "verbosity", &ConjGradientOptimizer::verbosity,
-                  OptionBase::buildoption, 
-                  "Controls the amount of output.\n");
+                                   OptionBase::buildoption, 
+        "Controls the amount of output.");
 
     inherited::declareOptions(ol);
 }
 
-
-/******************************
- * MAIN METHODS AND FUNCTIONS *
- ******************************/
 
 ////////////
 // build_ //
@@ -300,72 +289,73 @@ void ConjGradientOptimizer::declareOptions(OptionList& ol)
 void ConjGradientOptimizer::build_() {
     // Make sure the internal data have the right size.
     int n = params.nelems();
-    if (n > 0) {
-        current_opp_gradient.resize(n);
-        search_direction.resize(n);
-        tmp_storage.resize(n);
-        delta.resize(n);
-        if (cost.length() > 0) {
-            meancost.resize(cost->size());
-        }
+    current_opp_gradient.resize(n);
+    search_direction.resize(n);
+    tmp_storage.resize(n);
+    delta.resize(n);
+    /*
+    if (cost.length() > 0) {
+        meancost.resize(cost->size());
     }
+    */
 }
 
 //////////////////////////////
 // computeCostAndDerivative //
 //////////////////////////////
 void ConjGradientOptimizer::computeCostAndDerivative(
-    real alpha, ConjGradientOptimizer* opt, real& cost, real& derivative) {
+    real alpha, real& cost, real& derivative) {
     if (fast_exact_is_equal(alpha, 0)) {
-        cost = opt->last_cost;
-        derivative = -dot(opt->search_direction, opt->current_opp_gradient);
+        cost = this->last_cost;
+        derivative = -dot(this->search_direction, this->current_opp_gradient);
     } else {
         // TODO See why different from computeDerivative.
-        opt->params.copyTo(opt->tmp_storage);
-        opt->params.update(alpha, opt->search_direction);
-        opt->proppath.clearGradient();
-        opt->params.clearGradient();
-        opt->cost->gradient[0] = 1;
-        opt->proppath.fbprop();
-        opt->params.copyGradientTo(opt->delta);
-        cost = opt->cost->value[0];
-        derivative = dot(opt->search_direction, opt->delta);
-        opt->params.copyFrom(opt->tmp_storage);
+        this->params.copyTo(this->tmp_storage);
+        this->params.update(alpha, this->search_direction);
+        computeGradient(this->delta);
+        /*
+        this->proppath.clearGradient();
+        this->params.clearGradient();
+        this->cost->gradient[0] = 1;
+        this->proppath.fbprop();
+        this->params.copyGradientTo(this->delta);
+        */
+        cost = this->cost->value[0];
+        derivative = dot(this->search_direction, this->delta);
+        this->params.copyFrom(this->tmp_storage);
     }
 }
 
 //////////////////////
 // computeCostValue //
 //////////////////////
-real ConjGradientOptimizer::computeCostValue(
-    real alpha,
-    ConjGradientOptimizer* opt) {
-    if (fast_exact_is_equal(alpha, 0)) {
-        return opt->last_cost;
-    }
-    opt->params.copyTo(opt->tmp_storage);
-    opt->params.update(alpha, opt->search_direction);
-    opt->proppath.fprop();
-    real c = opt->cost->value[0];
-    opt->params.copyFrom(opt->tmp_storage);
+real ConjGradientOptimizer::computeCostValue(real alpha)
+{
+    if (fast_exact_is_equal(alpha, 0))
+        return this->last_cost;
+    this->params.copyTo(this->tmp_storage);
+    this->params.update(alpha, this->search_direction);
+    this->proppath.fprop();
+    real c = this->cost->value[0];
+    this->params.copyFrom(this->tmp_storage);
     return c;
 }
 
 ///////////////////////
 // computeDerivative //
 ///////////////////////
-real ConjGradientOptimizer::computeDerivative(
-    real alpha,
-    ConjGradientOptimizer* opt) {
+real ConjGradientOptimizer::computeDerivative(real alpha)
+{
     if (fast_exact_is_equal(alpha, 0))
-        return -dot(opt->search_direction, opt->current_opp_gradient);
-    opt->params.copyTo(opt->tmp_storage);
-    opt->params.update(alpha, opt->search_direction);
-    Optimizer::computeGradient(opt, opt->delta);
-    opt->params.copyFrom(opt->tmp_storage);
-    return dot(opt->search_direction, opt->delta);
+        return -dot(this->search_direction, this->current_opp_gradient);
+    this->params.copyTo(this->tmp_storage);
+    this->params.update(alpha, this->search_direction);
+    computeGradient(this->delta);
+    this->params.copyFrom(this->tmp_storage);
+    return dot(this->search_direction, this->delta);
 }
 
+/*
 ///////////////
 // conjpomdp //
 ///////////////
@@ -415,12 +405,15 @@ real ConjGradientOptimizer::daiYuan (
     real gamma = norm_grad / dot(opt->search_direction, opt->tmp_storage);
     return gamma;
 }
+*/
 
 ///////////////////
 // findDirection //
 ///////////////////
 bool ConjGradientOptimizer::findDirection() {
-    bool isFinished = false;
+    // bool isFinished = false;
+    real gamma = polakRibiere();
+    /*
     real gamma = 0;
     switch (find_new_direction_formula) {
     case 1:
@@ -442,15 +435,17 @@ bool ConjGradientOptimizer::findDirection() {
         PLERROR("In ConjGradientOptimizer::findDirection - Invalid conjugate gradient formula !");
         break;
     }
+    */
     // It is suggested to keep gamma >= 0
     if (gamma < 0) {
         if (verbosity >= 2)
-            cout << "gamma < 0 ! gamma = " << gamma << " ==> Restarting" << endl;
+            pout << "gamma < 0 ! gamma = " << gamma << " ==> Restarting" << endl;
 
         // TODO Is this really needed / a good idea?
         // TODO PUT THAT AS AN OPTION!!
         gamma = 0;
     }
+    /*
     else {
         real dp = dot(delta, current_opp_gradient);
         real delta_n = pownorm(delta);
@@ -460,8 +455,9 @@ bool ConjGradientOptimizer::findDirection() {
             gamma = 0;
         }
     }
-    pout << "gamma = " << gamma << endl;
+    */
     updateSearchDirection(gamma);
+    /*
     // If the gradient is very small, we can stop !
 //  isFinished = pownorm(current_opp_gradient) < 0.0000001;
     // TODO This may lead to an erroneous early stop. To investigate ?
@@ -469,8 +465,12 @@ bool ConjGradientOptimizer::findDirection() {
     if (isFinished && verbosity >= 2)
         cout << "Gradient is small enough, time to stop" << endl;
     return isFinished;
+        */
+    // TODO Is it necesary to return a boolean?
+    return false;
 }
 
+/*
 //////////////////////////////
 // findMinWithCubicInterpol //
 //////////////////////////////
@@ -569,6 +569,7 @@ real ConjGradientOptimizer::fletcherReeves (
     real gamma = pownorm(opt->delta) / pownorm(opt->current_opp_gradient);
     return gamma;
 }
+*/
 
 /////////////////////
 // rasmussenSearch //
@@ -585,7 +586,7 @@ real ConjGradientOptimizer::rasmussenSearch()
     // We don't do that explicitely
     // [f2 df2] = eval(argstr);
     // d2 = df2'*s;
-    computeCostAndDerivative(ras_z1_, this, ras_f2_, ras_d2_);
+    computeCostAndDerivative(ras_z1_, ras_f2_, ras_d2_);
     // i = i + (length<0);
     // We count epochs outside of this.
     // f3 = f1; d3 = d1; z3 = -z1; % initialize point 3 equal to point 1
@@ -640,7 +641,7 @@ real ConjGradientOptimizer::rasmussenSearch()
             //  X = X + z2*s;
             // [f2 df2] = eval(argstr);
             // d2 = df2'*s;
-            computeCostAndDerivative(ras_z1_, this, ras_f2_, ras_d2_);
+            computeCostAndDerivative(ras_z1_, ras_f2_, ras_d2_);
             // M = M - 1; i = i + (length<0); % count epochs?!
             ras_M_ = ras_M_ - 1;
             // ras_i_ = ras_i_ + (ras_length_<0);
@@ -709,7 +710,7 @@ real ConjGradientOptimizer::rasmussenSearch()
         ras_z1_ += ras_z2_;
         // [f2 df2] = eval(argstr);
         // d2 = df2'*s;
-        computeCostAndDerivative(ras_z1_, this, ras_f2_, ras_d2_);
+        computeCostAndDerivative(ras_z1_, ras_f2_, ras_d2_);
         // M = M - 1; i = i + (length<0);
         // % count epochs?!
         ras_M_ = ras_M_ - 1;
@@ -735,6 +736,7 @@ real ConjGradientOptimizer::rasmussenSearch()
         // s = -df1; % try steepest
         // We will actually do s = -df0 as this seems more logical.
         // TODO Ask Rasmussen!
+        // TODO So what do we do here?
         // d1 = -s'*s;
         ras_d1_ = - pownorm(current_opp_gradient);
         // z1 = 1/(1-d1);
@@ -747,6 +749,7 @@ real ConjGradientOptimizer::rasmussenSearch()
     return ras_z1_;
 }
 
+/*
 ////////////////////
 // fletcherSearch //
 ////////////////////
@@ -976,11 +979,14 @@ real ConjGradientOptimizer::hestenesStiefel (
     real gamma = -dot(opt->delta, opt->tmp_storage) / dot(opt->search_direction, opt->tmp_storage);
     return gamma;
 }
+*/
 
 ////////////////
 // lineSearch //
 ////////////////
 bool ConjGradientOptimizer::lineSearch() {
+    real step = rasmussenSearch();
+    /*
     real step;
     switch (line_search_algo) {
     case 1:
@@ -1003,16 +1009,28 @@ bool ConjGradientOptimizer::lineSearch() {
         step = 0;
         break;
     }
+    */
     if (step < 0)
-        if (verbosity >= 1)
-            cout << "Ouch, negative step !" << endl;
-    if (!fast_exact_is_equal(step, 0)) params.update(step, search_direction);
-    if (fast_exact_is_equal(step, 0))
+        PLWARNING("Negative step!");
+    if (!fast_exact_is_equal(step, 0))
+        params.update(step, search_direction);
+    else
         if (verbosity >= 2)
-            cout << "No more progress made by the line search, stopping" << endl;
-    return (fast_exact_is_equal(step, 0));
+            pout << "No more progress made by the line search, stopping" << endl;
+    return fast_exact_is_equal(step, 0);
 }
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void ConjGradientOptimizer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    PLERROR("In ConjGradientOptimizer::makeDeepCopyFromShallowCopy - Not "
+            "implementented");
+}
+
+/*
 //////////////
 // minCubic //
 //////////////
@@ -1239,33 +1257,38 @@ real ConjGradientOptimizer::optimize()
     }
     return lastmeancost[0];
 }
+*/
 
 
 ///////////////
 // optimizeN //
 ///////////////
 bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
+    /*
     real df, current_cost;
     meancost.clear();
+    */
     int stage_max = stage + nstages; // the stage to reach
 
+    /*
 #ifdef BOUNDCHECK
     if (current_step_size <= 0 && line_search_algo <= 2) {
         PLERROR("In ConjGradientOptimizer::optimizeN - current_step_size <= 0, have you called reset() ?");
     }
 #endif
+*/
 
     if (stage==0)
     {
-        computeOppositeGradient(this, current_opp_gradient);
+        computeOppositeGradient(current_opp_gradient);
         search_direction <<  current_opp_gradient;  // first direction = -grad;
         last_cost = cost->value[0];
         ras_red_ = 1; // TODO Find the best value here!
-        if (line_search_algo == 5) {
+        //if (line_search_algo == 5) {
             ras_f1_ = last_cost;
             ras_d1_ = - pownorm(search_direction);
             ras_z1_ = ras_red_ / ( 1 - ras_d1_ );
-        }
+        //}
         ras_RHO_ = 0.01;
         ras_SIG_ = 0.5;
         ras_INT_ = 0.1;
@@ -1274,61 +1297,79 @@ bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
         ras_RATIO_ = 100;
     }
 
+    /*
     if (early_stop)
         stats_coll.update(cost->value);    
+        */
 
     for (; !early_stop && stage<stage_max; stage++) {
 
-        // Make a line search along the current search direction
+        // Make a line search along the current search direction.
         early_stop = lineSearch();
-        computeOppositeGradient(this, delta);
-        current_cost = cost->value[0];
-        pout << "At stage " << stage << ": " << current_cost << endl;
+        computeOppositeGradient(delta); // TODO Why this?
+        // current_cost = cost->value[0];
+        if (verbosity >= 2)
+            pout << "ConjGradientOptimizer - stage " << stage << ": "
+                 << cost->value[0] << endl;
+        /*
         if (compute_cost) {
             meancost += cost->value;
         }
+            */
         stats_coll.update(cost->value);
     
-        // Find the new search direction
+        // Find the new search direction.
         early_stop = early_stop || findDirection();
 
+        /*
         last_improvement = last_cost - current_cost;
         last_cost = current_cost;
+        */
 
+        /*
         // This value of current_step_size is suggested by Fletcher
         df = max (last_improvement, 10*stop_epsilon);
         current_step_size = min(1.0, 2.0*df / dot(search_direction, current_opp_gradient));
+        */
     
     }
 
+    /*
     if (compute_cost) {
         meancost /= real(nstages);
         printStep(cerr, stage, meancost[0]);
         early_stop = early_stop || measure(stage+1,meancost);
     }
+    */
 
     // TODO Call the Stats collector
     if (early_stop && verbosity >= 2)
-        cout << "Early Stopping !" << endl;
+        pout << "Early Stopping !" << endl;
+
     return early_stop;
 }
 
 //////////////////
 // polakRibiere //
 //////////////////
-real ConjGradientOptimizer::polakRibiere (
-    void (*grad)(Optimizer*, const Vec&),
-    ConjGradientOptimizer* opt) {
-    int i;
-    // delta = Gradient
-    real normg = pownorm(opt->current_opp_gradient);
+real ConjGradientOptimizer::polakRibiere()
+{
+    real normg = pownorm(this->current_opp_gradient);
+    // At this point, delta = gradient at new point.
+    this->tmp_storage << this->delta;
+    this->tmp_storage -= this->current_opp_gradient;
+    return dot(this->tmp_storage, this->delta) / normg;
+
+    /*
     for (i=0; i<opt->current_opp_gradient.length(); i++) {
         opt->tmp_storage[i] = opt->delta[i] - opt->current_opp_gradient[i];
     }
     real gamma = dot(opt->tmp_storage,opt->delta) / normg;
     return gamma;
+    */
 }
 
+/*
 ///////////////////////
 // quadraticInterpol //
 ///////////////////////
@@ -1339,6 +1380,7 @@ void ConjGradientOptimizer::quadraticInterpol(
     b = g0;
     a = f1 - f0 - g0;
 }
+*/
 
 ///////////
 // reset //
@@ -1346,8 +1388,8 @@ void ConjGradientOptimizer::quadraticInterpol(
 void ConjGradientOptimizer::reset() {
     inherited::reset();
     early_stop = false;
-    last_improvement = 0.1; // May only influence the speed of first iteration.
-    current_step_size = starting_step_size;
+    // last_improvement = 0.1; // May only influence the speed of first iteration.
+    // current_step_size = starting_step_size;
 }
 
 ///////////////////////////
@@ -1361,7 +1403,7 @@ void ConjGradientOptimizer::updateSearchDirection(real gamma) {
             search_direction[i] = delta[i] + gamma * search_direction[i];
     // Update 'current_opp_gradient' for the new current point.
     current_opp_gradient << delta;
-    if (line_search_algo == 5) {
+    // if (line_search_algo == 5) {
         // d2 = df1'*s;
         // if d2 > 0               % new slope must be negative
         //   s = -df1;             % otherwise use steepest direction
@@ -1376,9 +1418,10 @@ void ConjGradientOptimizer::updateSearchDirection(real gamma) {
         ras_z1_ = ras_z1_ * min(ras_RATIO_, ras_d1_/(ras_d2_-REAL_EPSILON));
         // d1 = d2;
         ras_d1_ = ras_d2_;
-    }
+    //}
 }
 
+/*
 //////////////
 // minBrack //
 //////////////
@@ -1654,6 +1697,7 @@ real ConjGradientOptimizer::brentSearch()
     }
     return x;
 }
+*/
 
 } // end of namespace PLearn
 
