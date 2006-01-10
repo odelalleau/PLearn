@@ -6194,7 +6194,7 @@ void transposedLayerL2BpropUpdate(TVec<T> input_gradient, TMat<T> weights, const
 #ifdef BOUNDCHECK
     if (weights.width() != n_outputs || weights.length() != n_inputs
         || input.length() != n_inputs)
-        PLERROR("layerL1BpropUpdate: arguments have incompatible sizes");
+        PLERROR("layerL2BpropUpdate: arguments have incompatible sizes");
 #endif 
     input_gradient.clear();
     T* in_g = input_gradient.data();
