@@ -388,7 +388,7 @@ void addEigenMatrices(Mat A_evec, Vec A_eval, Mat B_evec, Vec B_eval, Mat C_evec
             externalProductScaleAcc(C,A_evec(i),A_evec(i),A_eval[i]);
             externalProductScaleAcc(C,B_evec(i),B_evec(i),B_eval[i]);
         }
-    eigenVecOfSymmMat(C,d,C_eval,C_evec);
+    eigenVecOfSymmMat(C,d,C_eval,C_evec,false);
     if (inverses)
         for (int i=0;i<d;i++)
         {
