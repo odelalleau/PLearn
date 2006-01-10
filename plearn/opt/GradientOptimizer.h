@@ -74,6 +74,8 @@ public:
     // As soon as the iteration number goes above the iteration_threshold, the corresponding learning_rate_factor
     // is applied (multiplied) to the start_learning_rate to obtain the learning_rate.
     Mat lr_schedule;
+
+    int verbosity;
     
     GradientOptimizer();
     /*(

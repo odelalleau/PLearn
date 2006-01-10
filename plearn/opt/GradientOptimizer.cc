@@ -52,7 +52,8 @@ GradientOptimizer::GradientOptimizer():
     learning_rate(0.),   
     start_learning_rate(1e-2),
     decrease_constant(0),
-    use_stochastic_hack(true)
+    use_stochastic_hack(true),
+    verbosity(0)
 {}
 
 /*
@@ -105,7 +106,10 @@ void GradientOptimizer::declareOptions(OptionList& ol)
                   "Indication that a stochastic hack to accelerate stochastic gradient descent should be used.\n"
                   );
 
-    //! 
+    declareOption(ol, "verbosity", &GradientOptimizer::verbosity,
+                                   OptionBase::buildoption, 
+        "Controls the amount of output.");
+
     inherited::declareOptions(ol);
 }
 
@@ -220,6 +224,9 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll)
             if(partial_update_vars.length() != 0) 
                 for(int i=0; i<partial_update_vars.length(); i++)
                     partial_update_vars[i]->clearRowsToUpdate();
+        if (verbosity >= 1)
+            pout << "GradientOptimizer - stage " << stage << ": "
+                 << cost->value << endl;
         stats_coll.update(cost->value);
         ++stage;
     }
