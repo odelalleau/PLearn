@@ -5099,7 +5099,7 @@ void  choleskyDecomposition(const TMat<T>& A, TMat<T>& L)
                         T eps = -1.1*sum;
                         if (fast_exact_is_equal(sum,0.0)) eps=1e-8;
                         PLWARNING("Cholesky decomposition would fail: add %g to diagonal",eps);
-                        saveAscii("A.amat",A);
+                        // saveAscii("A.amat",A);
                         T* Aii=A.data();
                         int addm=A.mod()+1;
                         for (int ii=0;ii<n;ii++,Aii+=addm) *Aii += eps;
