@@ -1,0 +1,33 @@
+# Conjugate gradient optimization with a neural network.
+
+PTester(
+    dataset = AutoVMatrix(
+        specification = "PLEARNDIR:plearn/vmat/test/data.amat"
+        inputsize = 4
+        targetsize = 2
+        weightsize = 0
+    )
+
+    splitter = TrainTestSplitter(
+        test_fraction = 0.25
+        append_train = 1
+    )
+
+    statnames = [ "E[test1.E[mse]]" "E[test2.E[mse]]" ]
+
+    learner =
+        NNet( 
+            nhidden = 100
+            noutputs = 2
+            cost_funcs = [ "mse" ]
+            optimizer =
+                ConjGradientOptimizer(verbosity = 2)
+            batch_size = 0
+            seed = 123456
+            nstages = 100
+            report_progress = 0
+            verbosity = 0
+        )
+)
+
+

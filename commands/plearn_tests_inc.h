@@ -61,6 +61,7 @@
 #include <plearn/math/test/pl_math/PLMathTest.h>
 #include <plearn/math/test/TMat/TMatTest.h>
 #include <plearn/misc/test/HeapTest.h>
+#include <plearn/opt/test/ConjGradientOptimizerTest.h>
 #include <plearn/python/test/BasicIdentityCallsTest.h>
 #include <plearn/python/test/InjectionTest.h>
 #include <plearn/python/test/InterfunctionXchgTest.h>
@@ -77,6 +78,7 @@
  * Command *
  ***********/
 #include <commands/PLearnCommands/DiffCommand.h>
+#include <commands/PLearnCommands/HelpCommand.h>
 #include <commands/PLearnCommands/ReadAndWriteCommand.h>
 #include <commands/PLearnCommands/RunCommand.h>
 
