@@ -57,7 +57,8 @@ PLEARN_IMPLEMENT_OBJECT(
 //////////////////
 BinaryKernelDiscrimination::BinaryKernelDiscrimination() :
 /* ### Initialize all fields to their default value here */
-    K(1)
+    K(1),
+    ExpOutput(false)
 {
     // ...
 
@@ -79,10 +80,11 @@ void BinaryKernelDiscrimination::declareOptions(OptionList& ol)
 
     // ### ex:
     declareOption(ol, "lambda", &BinaryKernelDiscrimination::lambda, OptionBase::buildoption,
-                   "The base of the kernel");
+                  "The base of the kernel");
     declareOption(ol, "K", &BinaryKernelDiscrimination::K, OptionBase::buildoption,
-                   "a constant");
-    // ...
+                  "a constant");
+    declareOption(ol, "ExpOutput", &BinaryKernelDiscrimination::ExpOutput, OptionBase::buildoption,
+                  "Flag to 1 if you do not want the log of the output. The exponential form will be outputted instead");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -126,7 +128,10 @@ real BinaryKernelDiscrimination::evaluate(const Vec& x1, const Vec& x2) const {
     {
         if (x1[i] != x2[i]){dij++;};
     }
-    return safeflog(pow((pow(lambda,N-dij))*(pow(1-lambda,dij)),K/N));
+    if (ExpOutput)
+        return pow((pow(lambda,N-dij))*(pow(1-lambda,dij)),K/N);
+    else
+        return safeflog(pow((pow(lambda,N-dij))*(pow(1-lambda,dij)),K/N));
 }
 
 /* ### This method will very often be overridden.

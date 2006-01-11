@@ -70,6 +70,8 @@ public:
 
     float K;
     float lambda;
+    bool ExpOutput;
+
 public:
     //#####  Public Member Functions  #########################################
 

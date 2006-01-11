@@ -148,6 +148,8 @@ public:
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
+
+    mutable Vec x,target;
     //#####  Protected Options  ###############################################
 
     // ### Declare protected option fields (such as learned parameters) here

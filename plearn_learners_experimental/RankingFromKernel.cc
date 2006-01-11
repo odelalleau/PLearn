@@ -49,8 +49,8 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     RankingFromKernel,
-    "This learner will compute \frac{\sum_{actives} K(i,j)}{\sum_{inactives} K(i,j)} for a given kernel K.",
-    "A lift_output is available to compute ranking based costs. \nHELP");
+    "This learner will compute \\frac{\\sum_{actives} K(i,j)}{\\sum_{inactives} K(i,j)} for a given kernel K.",
+    "A lift_output is available to compute ranking based costs. The target must be 1 or 0. \n");
 
 RankingFromKernel::RankingFromKernel() 
 /* ### Initialize all fields to their default value here */
@@ -72,7 +72,7 @@ void RankingFromKernel::declareOptions(OptionList& ol)
 
     // ### ex:
     declareOption(ol, "logKernel", &RankingFromKernel::logKernel, OptionBase::buildoption,
-                   "A kernel taking an input and returning the log of it's result.");
+                   "A kernel taking an input and returning the log of its result.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -87,7 +87,6 @@ void RankingFromKernel::build_()
     // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
     // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
     // ### You should assume that the parent class' build_() has already been called.
-    if (targetsize() != 1) PLERROR("This PLearner is not built for multi-target problems");
 }
 
 // ### Nothing to add here, simply calls build_
@@ -164,6 +163,7 @@ void RankingFromKernel::train()
     train_stats->finalize() // finalize statistics for this epoch
     }
     */
+    if (train_set->targetsize() != 1) PLERROR("This PLearner is not built for multi-target problems");
     PLWARNING("Train not implemented");
 }
 
@@ -175,29 +175,29 @@ void RankingFromKernel::computeOutput(const Vec& input, Vec& output) const
     // output.resize(nout);
     // ...
     int i;
-    float log_k,log_result;
-    Vec x,target;
-    double weight;
+    real log_k,log_result, weight;
 
     log_act.resize(0);
     log_inact.resize(0);
-    for (i=1;i <= train_set->length();i++){
+    for (i=0; i < train_set->length();i++){
         train_set->getExample(i,x, target, weight);
         log_k = logKernel->evaluate(input,x);
-        if ( target[0] == 1) {
+        if ( fast_exact_is_equal(target[0],1)) {
             log_act.append(log_k);
         }else{
             log_inact.append(log_k);
         }
     }
     log_result = logadd(log_act) - logadd(log_inact);
+    output.resize(1);
     output[0] = exp(log_result);
-}    
+}
 
 void RankingFromKernel::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                            const Vec& target, Vec& costs) const
 {
-    if(target[0] == 1)
+    costs.resize(nTestCosts());
+    if(fast_exact_is_equal(target[0],1))
         costs[0] = output[0];
     else
         costs[0] = -output[0];
