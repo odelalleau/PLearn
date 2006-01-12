@@ -266,7 +266,7 @@ public:
             {
                 int new_size = offset_+new_length*MAX(mod(),new_width);
                 if(offset_+new_size>storage->length())
-                    storage->resize(offset_+new_size+extrabytes); // offset_ seems to be counted twice!!! overkill?
+                    storage->resize(new_size + extrabytes);
                 if(new_width>mod())
                     mod_ = new_width;
             }
