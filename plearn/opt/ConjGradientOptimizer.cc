@@ -50,6 +50,8 @@ using namespace std;
 ConjGradientOptimizer::ConjGradientOptimizer():
     constrain_limit(0.1),
     expected_red(1),
+    line_search_failed(false),
+    line_search_succeeded(false),
     max_eval_per_line_search(20),
     max_extrapolate(3),
     no_negative_gamma(true),
@@ -429,6 +431,8 @@ real ConjGradientOptimizer::polakRibiere()
 ///////////
 void ConjGradientOptimizer::reset() {
     inherited::reset();
+    line_search_failed = false;
+    line_search_succeeded = false;
 }
 
 ///////////////////////////
