@@ -50,15 +50,15 @@ using namespace std;
 ConjGradientOptimizer::ConjGradientOptimizer():
     constrain_limit(0.1),
     expected_red(1),
-    line_search_failed(false),
-    line_search_succeeded(false),
     max_eval_per_line_search(20),
     max_extrapolate(3),
     no_negative_gamma(true),
     rho(1e-2),
     sigma(0.5),
     slope_ratio(100),
-    verbosity(0)
+    verbosity(0),
+    line_search_failed(false),
+    line_search_succeeded(false)
 {}
 
 PLEARN_IMPLEMENT_OBJECT(ConjGradientOptimizer,
