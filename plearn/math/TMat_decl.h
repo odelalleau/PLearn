@@ -223,7 +223,7 @@ public:
                         // Solve the following equations to apportion the extrabytes 
                         // while keeping the same percentage increase in width and length:
                         //   Solve[{x+w1*l1==w2*l2,(w2/w1 - 1)/(l2/l1 - 1) == (w1/w - 1)/(l1/l - 1)},{w2,l2}]
-                        // This is a quadratic system which has two solution: {w2a,l2a} and {w2b,l2b):
+                        // This is a quadratic system which has two solutions: {w2a,l2a} and {w2b,l2b}:
                         float w2a = 
                             w1*(-1 - l1/(l - l1) + w1/w + (l1*w1)/(l*w - l1*w) + 
                                 (2*l*(-w + w1)*x)/
