@@ -51,9 +51,15 @@ using namespace std;
 
 /** SumAbsVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(SumAbsVariable,
-                        "ONE LINE DESCR",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+    SumAbsVariable,
+    "Sum of the absolute value of the elements of its input",
+    "This Variable always has a size of 1 element:\n"
+    "\n"
+    "   value(0,0) = sum_i abs(input[i])\n"
+    "\n"
+    "where input[i] is the i-th element of its input variable\n"
+    "(dimensionality does not matter; its viewed as a long vector).");
 
 SumAbsVariable::SumAbsVariable(Variable* input)
     : inherited(input, 1, 1) {}
