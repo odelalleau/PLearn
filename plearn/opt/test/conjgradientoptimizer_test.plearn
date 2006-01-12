@@ -24,7 +24,7 @@ PTester(
                 ConjGradientOptimizer(verbosity = 2)
             batch_size = 0
             seed = 123456
-            nstages = 100
+            nstages = 25
             report_progress = 0
             verbosity = 0
         )
