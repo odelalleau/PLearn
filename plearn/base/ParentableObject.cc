@@ -67,8 +67,8 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
     "as options through an ObjectOptionsIterator.)\n"
     );
 
-ParentableObject::ParentableObject() 
-    : m_parent(0)
+ParentableObject::ParentableObject(bool adoptive_parent) 
+    : m_parent(0), m_adoptive_parent(adoptive_parent)
 { }
 
 // ### Nothing to add here, simply calls build_
@@ -87,13 +87,73 @@ void ParentableObject::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void ParentableObject::build_()
 {
-    // Set the backpointers of sub-objects under the current object to this.
-    for (ObjectOptionsIterator it(this), end ; it != end ; ++it) {
-        if (const ParentableObject* po = dynamic_cast<const ParentableObject*>(*it))
-            const_cast<ParentableObject*>(po)->m_parent = this;
+    if (! m_adoptive_parent) {
+        // Set the backpointers of sub-objects under the current object to this.
+        for (ObjectOptionsIterator it(this), end ; it != end ; ++it) {
+            if (const ParentableObject* po = dynamic_cast<const ParentableObject*>(*it))
+                const_cast<ParentableObject*>(po)->setParent(this);
+        }
     }
 }
 
+void ParentableObject::setParent(Object* parent)
+{
+    m_parent = parent;
+}
+
+
+//#####  TransparentParentable  ###############################################
+
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
+    TransparentParentable,
+    "Special type of ParentableObject that cannot act as a visible parent.",
+    "Suppose that you have the following object structure:\n"
+    "\n"
+    "  MasterManager contains a list of ObjectDescriptor\n"
+    "    Each ObjectDescriptor contains a list of ChildrenObject\n"
+    "\n"
+    "The idea here is that ObjectDescriptor is a simple holder class that\n"
+    "provides additional information for how ChildrenObject should be built in\n"
+    "the context of MasterManager.  However, we want to have the situation\n"
+    "wherein the parent() of each ChildrenObject is the MasterManager, and not\n"
+    "the ObjectDescriptors.\n"
+    "\n"
+    "That's the purpose of TransparentParentable: if you make ObjectDescriptor a\n"
+    "derived class of TransparentParentable, they are skipped when going up on\n"
+    "the children-parent paths.\n"
+    );
+
+TransparentParentable::TransparentParentable(bool adoptive_parent)
+    : inherited(adoptive_parent)
+{ }
+
+// ### Nothing to add here, simply calls build_
+void TransparentParentable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void TransparentParentable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    inherited::makeDeepCopyFromShallowCopy(copies);
+}
+
+void TransparentParentable::build_()
+{ }
+
+void TransparentParentable::setParent(Object* parent)
+{
+    // Set it for ourselves
+    inherited::setParent(parent);
+    
+    // Forward the call to sub-objects: set their parent to the one that's
+    // passed here
+    for (ObjectOptionsIterator it(this), end ; it != end ; ++it) {
+        if (const ParentableObject* po = dynamic_cast<const ParentableObject*>(*it))
+            const_cast<ParentableObject*>(po)->setParent(parent);
+    }
+}
 
 } // end of namespace PLearn
 

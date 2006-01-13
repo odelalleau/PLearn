@@ -69,6 +69,15 @@ namespace PLearn {
  *  graph, and provides the mechanism to update the backpointer according to
  *  arbitrary forward pointers (as long as the forward pointers are accessible
  *  as options through an \c ObjectOptionsIterator.)
+ *
+ *  We want some objects to be able to HAVE A PARENT (hence be a
+ *  ParentableObject), but not to act as the parent for somebody else.  They
+ *  are 'adoptive', since they are not the biological parents of their
+ *  children.  An option can be specified upon construction of Parentable
+ *  object that disables the parent-setting aspect, i.e. none of its subobjects
+ *  can have this as their parent.  This is useful if some subobjects are
+ *  pointed to by multiple ParentableObjects, and we want to control who gets
+ *  to be the legitimate parent.
  */
 class ParentableObject : public Object
 {
@@ -78,11 +87,15 @@ public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
-    ParentableObject();
+    ParentableObject(bool adoptive_parent = false);
 
     //! Accessor for parent object
     Object* parent()                       { return m_parent; }
     const Object* parent() const           { return m_parent; }
+
+    //! Setter for the parent object; virtual since "transparent parentables"
+    //! might wish to forward it to children
+    virtual void setParent(Object* parent);
     
     
     //#####  PLearn::Object Protocol  #########################################
@@ -97,7 +110,11 @@ public:
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
-    Object* m_parent;                        //!< Backpointer to parent
+    //! Backpointer to parent
+    Object* m_parent;
+
+    //! If true, don't set the subobjects' parent to this
+    bool m_adoptive_parent;
 
 private: 
     //! Traverse the options of *this, find the ParentableObjects, and update
@@ -127,6 +144,9 @@ class TypedParentableObject : public ParentableObject
     typedef ParentableObject inherited;
 
 public:
+    //! Default constructor
+    TypedParentableObject(bool adoptive_parent = false);
+    
     //! Typed version of parent accessor (hides the inherited one; this is OK)
     ParentT* parent()
     {
@@ -164,6 +184,11 @@ PLEARN_IMPLEMENT_TEMPLATE_OBJECT(
     );
 
 template <class T>
+TypedParentableObject<T>::TypedParentableObject(bool adoptive_parent)
+    : inherited(adoptive_parent)
+{ }
+
+template <class T>
 void TypedParentableObject<T>::build()
 {
     inherited::build();
@@ -181,6 +206,62 @@ void TypedParentableObject<T>::build_()
                     m_parent->classname().c_str());
 }
 
+
+//#####  TransparentParentable  ###############################################
+
+/**
+ *  Special type of ParentableObject that cannot act as a visible parent.
+ *
+ *  Suppose that you have the following object structure:
+ *
+ *    MasterManager contains a list of ObjectDescriptor
+ *      Each ObjectDescriptor contains a list of ChildrenObject
+ *
+ *  The idea here is that ObjectDescriptor is a simple holder class that
+ *  provides additional information for how ChildrenObject should be built in
+ *  the context of MasterManager.  However, we want to have the situation
+ *  wherein the parent() of each ChildrenObject is the MasterManager, and not
+ *  the ObjectDescriptors.
+ *
+ *  That's the purpose of TransparentParentable: if you make ObjectDescriptor a
+ *  derived class of TransparentParentable, they are skipped when going up on
+ *  the children-parent paths.
+ */
+class TransparentParentable : public ParentableObject
+{
+    typedef ParentableObject inherited;
+
+public:
+    //#####  Public Member Functions  #########################################
+
+    //! Default constructor
+    TransparentParentable(bool adoptive_parent = false);
+
+    //! Setter directly calls all of its parentable children; transparent
+    //! of transparent should work fine and skip both of them.
+    virtual void setParent(Object* parent);
+    
+    
+    //#####  PLearn::Object Protocol  #########################################
+
+    // Declares other standard object methods.
+    PLEARN_DECLARE_ABSTRACT_OBJECT(TransparentParentable);
+
+    // Simply calls inherited::build() then build_() 
+    virtual void build();
+
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+
+private: 
+    //! Traverse the options of *this, find the ParentableObjects, and update
+    //! _their_ backpointers to point to *this
+    void build_();
+};
+
+
+// Declares a few other classes and functions related to this class
+DECLARE_OBJECT_PTR(TransparentParentable);
 
 } // end of namespace PLearn
 
