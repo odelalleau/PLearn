@@ -1,14 +1,16 @@
 
 #include "icpalign.h"
 
-int main () {
+int main (int argc, char ** argv) {
 
-    string name1 = "89.vrml" ; 
-    string name2 = "92.vrml" ; 
+    if (argc < 3) {cout<< "error , provide model and scene name" ; return 0 ; }
+    
+    string name1 = string(argv[1]) + ".vrml" ; 
+    string name2 = string(argv[2]) + ".vrml" ;
     
     PMolecule m1 , m2 ;  
-    m1 = Molecule::readMolecule(string("89")) ; 
-    m2 = Molecule::readMolecule(string("92")) ; 
+    m1 = Molecule::readMolecule(string(argv[1])) ; 
+    m2 = Molecule::readMolecule(string(argv[2])) ; 
     
     Mat wm ; 
     ::align(name1,m1->chem ,name2,m2->chem,wm)  ; 

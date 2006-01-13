@@ -30,6 +30,10 @@ void Molecule::declareOptions(OptionList& ol)
   declareOption(ol, "geom", &Molecule::geom,
                 OptionBase::buildoption,
                 "Geom Properties");
+  
+  declareOption(ol, "vrml_file", &Molecule::vrml_file,
+                OptionBase::buildoption,
+                "The vrml filename");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
