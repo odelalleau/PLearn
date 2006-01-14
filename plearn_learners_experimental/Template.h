@@ -21,6 +21,7 @@ private:
         PLearn::Mat dev;
         
         Template(); 
+        /*
         Template(const Template &  t) {
                     
             chem.resize(t.chem.length(), t.chem.width() ) ; 
@@ -32,7 +33,8 @@ private:
             dev.resize(t.dev.length(), t.dev.width() ) ; 
             dev << t.dev ; 
         }
-		virtual ~Template() {}
+        */
+		// virtual ~Template() {}
 
 private: 
   //! This does the actual building. 

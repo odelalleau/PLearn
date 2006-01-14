@@ -32,7 +32,7 @@ public:
         Molecule(); 
         Molecule(PLearn::Mat _chem, PLearn::Mat _geom, string vrml_file="") ; 
 
-		virtual ~Molecule() {}
+		// virtual ~Molecule() {}
 
 private: 
   //! This does the actual building. 
