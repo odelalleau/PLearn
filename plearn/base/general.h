@@ -267,6 +267,14 @@ public:
 // set or get (if argument is "") the program name, as given by argv[0] of main
 string prgname(const string& setname = "");
 
+inline int sizeInBytes(int x) { return sizeof(int); }
+inline int sizeInBytes(float x) { return sizeof(float); }
+inline int sizeInBytes(double x) { return sizeof(double); }
+inline int sizeInBytes(long x) { return sizeof(long); }
+inline int sizeInBytes(char x) { return sizeof(char); }
+inline int sizeInBytes(string x) { return x.length(); }
+inline int sizeInBytes(char* x) { return strlen(x); }
+
 
 } // end of namespace PLearn
 

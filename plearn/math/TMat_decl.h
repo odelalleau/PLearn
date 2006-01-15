@@ -890,6 +890,14 @@ public:
     { return 0xFF; }
 };
 
+template <class T>
+inline int sizeInBytes(TMat<T>& x) { 
+    int n=x.size();
+    int s=sizeof(TMat<T>);
+    if (n>0) s+=n*size(x(0,0)); 
+    return s;
+}
+
 } // end of namespace PLearn
 #endif
 

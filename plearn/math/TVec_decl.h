@@ -791,6 +791,14 @@ public:
 };
 
 
+template <class T>
+inline int sizeInBytes(TVec<T>& x) { 
+    int n=x.length();
+    int s=sizeof(TVec<T>);
+    if (n>0) s+=n*size(x[0]); 
+    return s;
+}
+
 } // end of namespace PLearn
 
 
