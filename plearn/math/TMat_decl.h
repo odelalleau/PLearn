@@ -205,13 +205,15 @@ public:
         }
         else
         {
-            if(storage->usage()>1 && new_width > mod()-offset_%mod())
+            int usage=storage->usage();
+            if(usage>1 && new_width > mod()-offset_%mod())
                 PLERROR("IN TMat::resize(int new_length, int new_width) - For safety "
                         "reasons, increasing the width() beyond mod()-offset_ modulo "
                         "mod() is not allowed when the storage is shared with others");
             if (preserve_content && size()>0)
             {
                 int new_size = new_length*MAX(mod(),new_width);
+                int new_offset = usage>1?offset_:0;
                 if(new_size>storage->length() || new_width>mod())
                 {
                     int extracols=0, extrarows=0;
@@ -257,10 +259,11 @@ public:
                             extrarows = int((extrabytes+l1*w1)/(w1+extracols) - l1);
                         }
                     }
-                    storage->resizeMat(new_length,new_width,extrarows,extracols,mod_,length_,width_,offset_);
+                    storage->resizeMat(new_length,new_width,extrarows,extracols,
+                                       new_offset,mod_,length_,width_,offset_);
                     mod_ = new_width + extracols;
                 }
-                offset_ = 0; // since this Mat is the only one pointing to its storage, there is no point in allocating space for data before the offset
+                offset_ = new_offset;
             }
             else // old code, verbatim
             {

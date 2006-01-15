@@ -314,11 +314,11 @@ public:
     }
 
 
-    inline void resizeMat(int new_length, int new_width, int extrarows, int extracols, int old_mod, int old_length, int old_width, int old_offset)
+    inline void resizeMat(int new_length, int new_width, int extrarows, int extracols, int new_offset, int old_mod, int old_length, int old_width, int old_offset)
     {
         int s = new_length*new_width;
         int extrabytes = (new_length+extrarows)*(new_width+extracols) - s;
-        int newsize = s+extrabytes;
+        int newsize = new_offset+s+extrabytes;
         int new_mod = new_width+extracols;
 #ifdef BOUNDCHECK
         if(newsize<0)
@@ -348,14 +348,20 @@ public:
             {
                 T* newdata = new T[newsize];
                 if(!newdata)
-                    PLERROR("OUT OF MEMORY (new returned NULL) in Storage::resize, trying to allocate %d elements",newsize);
+                    PLERROR("OUT OF MEMORY (new returned NULL) in Storage::resizeMat, trying to allocate %d elements",newsize);
                 if(data)
                 {
                     // perform a 'structured' copy that keeps all the old values
                     T* oldp = data+old_offset;
-                    T* newp = newdata;
+                    T* newp = newdata+new_offset;
                     int w = min(old_width,new_width);
                     int l = min(old_length,new_length);
+                    if (new_offset!=0)
+                    { 
+                        if (new_offset!=old_offset)
+                            PLERROR("Storage::resizeMat: when new_offset!=0 it should equal old_offset");
+                        copy(data,data+new_offset,newdata);
+                    }
                     for (int row=0;row<l;row++, oldp+=old_mod, newp+=new_mod)
                     {
                         copy(oldp,oldp+w,newp);
