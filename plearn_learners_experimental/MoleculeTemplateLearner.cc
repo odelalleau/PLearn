@@ -53,9 +53,13 @@
 #include <plearn/var/MaxVariable.h>
 #include "NoBpropVariable.h"
 
+#include <plearn/var/Var.h>
 #include <plearn/var/Var_all.h>
 #include "plearn/display/DisplayUtils.h"
-#include "linearalign.h"
+//#include "linearalign.h"
+
+namespace PLearn {
+    using namespace std;
 
 void displayVarGr(const Var& v, bool display_values)
 {
@@ -67,9 +71,6 @@ void displayVarFn(const Func& f,bool display_values)
         displayFunction(f,display_values,0);
 }
 
-
-namespace PLearn {
-    using namespace std;
 
     MoleculeTemplateLearner::MoleculeTemplateLearner() : 
         nhidden(10) , 
