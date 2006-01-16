@@ -271,6 +271,14 @@ T* get_pointer(PP<T> const& p)
     return p;
 }
 
+template <class T>
+inline int sizeInBytes(PP<T> x) { 
+    int n = sizeof(T*); 
+    if (x) 
+        n+= sizeInBytes(*x);  
+    return n;
+}
+
 } // end of namespace PLearn
 
 #endif

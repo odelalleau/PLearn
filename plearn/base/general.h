@@ -273,7 +273,15 @@ inline int sizeInBytes(double x) { return sizeof(double); }
 inline int sizeInBytes(long x) { return sizeof(long); }
 inline int sizeInBytes(char x) { return sizeof(char); }
 inline int sizeInBytes(string x) { return x.length(); }
-inline int sizeInBytes(char* x) { return strlen(x); }
+template <class T>
+inline int sizeInBytes(T* x) { 
+    int n = sizeof(T*); 
+    if (x) 
+        n+= sizeInBytes(*x);  
+    return n;
+}
+template <class T1, class T2>
+inline int sizeInBytes(pair<T1,T2> x) { return sizeInBytes(x.first)+sizeInBytes(x.second); }
 
 
 } // end of namespace PLearn
