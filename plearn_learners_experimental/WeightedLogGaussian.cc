@@ -43,7 +43,7 @@
 #include "WeightedLogGaussian.h"
 #include <plearn/var/Var_utils.h>
 #include "Molecule.h"
-#include "linearalign.h"
+//#include "linearalign.h"
 #include "icpalign.h"
 namespace PLearn {
 	using namespace std;
@@ -120,7 +120,7 @@ namespace PLearn {
 
 		for (int i=0 ; i<n ; ++i) {
 			for (int k=0 ; k<p ; ++k) {
-				ret -= log(sigma()->matValue[i][k]) ;
+				ret -= pl_log(sigma()->matValue[i][k]) ;
 //             if (sigma()->matValue[i][k] > 20){
 //                 cout << sigma()->matValue[i][k] ; 
 //                 cout << ret ;                 
