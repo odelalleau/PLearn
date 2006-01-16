@@ -792,10 +792,10 @@ public:
 
 
 template <class T>
-inline int sizeInBytes(TVec<T>& x) { 
+inline int sizeInBytes(const TVec<T>& x) { 
     int n=x.length();
     int s=sizeof(TVec<T>);
-    if (n>0) s+=n*size(x[0]); 
+    if (n>0) s+=n*sizeInBytes(x[0]); 
     return s;
 }
 

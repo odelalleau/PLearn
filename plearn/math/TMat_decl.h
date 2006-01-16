@@ -894,10 +894,10 @@ public:
 };
 
 template <class T>
-inline int sizeInBytes(TMat<T>& x) { 
+inline int sizeInBytes(const TMat<T>& x) { 
     int n=x.size();
     int s=sizeof(TMat<T>);
-    if (n>0) s+=n*size(x(0,0)); 
+    if (n>0) s+=n*sizeInBytes(x(0,0)); 
     return s;
 }
 
