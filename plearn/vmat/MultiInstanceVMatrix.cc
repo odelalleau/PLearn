@@ -128,10 +128,10 @@ void MultiInstanceVMatrix::build_()
     skipBlanksAndComments(inFile);
 
     string lastName = "";
-    string newName;
+    string newName,configNum;
     string aLine;
     string inp_element;
-    int configNum, bagType;
+    int bagType;
     int nComp = 0;
 	
     int i;
@@ -196,7 +196,6 @@ void MultiInstanceVMatrix::build_()
             lastName = newName;
             names_.push_back( make_pair(newName, lineNum) );
             bagType = SumOverBagsVariable::TARGET_COLUMN_FIRST;
-
             if (mat_i != NULL)
             {
                 if (nComp > 1)

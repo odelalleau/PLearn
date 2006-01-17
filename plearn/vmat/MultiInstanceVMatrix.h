@@ -60,7 +60,7 @@ protected:
 
     Mat         data_;
     PPath      filename_;  // The *.mimat file name
-    vector<int> configs_;
+    vector<string> configs_;
     vector< pair<string, int> > names_;
     int source_targetsize; // number of target columns in the mimat file == targetsize()-1
 
