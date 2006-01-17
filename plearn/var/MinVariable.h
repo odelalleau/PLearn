@@ -68,6 +68,9 @@ public:
 
 DECLARE_OBJECT_PTR(MinVariable);
 
+#ifdef min
+#undef min
+#endif
 inline Var min(Var v)
 { return new MinVariable(v); }
 

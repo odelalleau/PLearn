@@ -70,6 +70,9 @@ public:
 
 DECLARE_OBJECT_PTR(MaxVariable);
 
+#ifdef max
+#undef max
+#endif
 inline Var max(Var v)
 { return new MaxVariable(v); }
 

@@ -78,6 +78,9 @@ protected:
 
 DECLARE_OBJECT_PTR(Max2Variable);
 
+#ifdef max
+#undef max
+#endif
 inline Var max(Var v1, Var v2)
 { return new Max2Variable(v1,v2); }
 
