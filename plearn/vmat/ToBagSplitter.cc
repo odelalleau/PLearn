@@ -106,7 +106,7 @@ void ToBagSplitter::build_()
                     PLERROR("ToBagSplitter: found bag size (%d) more than 10 times bigger than expected_size_of_bag (%d)!\n",
                             num_instance,expected_size_of_bag);
                 // Need to resize bags_store.
-                bags_store.resize(bags_store.length(), bags_store.width() * 2);
+                bags_store.resize(bags_store.length(), bags_store.width() * 2, 0, true);
             }
             if (num_instance >= max_ninstances) {
                 max_ninstances = num_instance + 1;
@@ -120,13 +120,14 @@ void ToBagSplitter::build_()
                 num_instance = 0;
                 if (num_bag >= bags_store.length()) {
                     // Need to resize bags_store.
-                    bags_store.resize(bags_store.length() * 2, bags_store.width());
+                    bags_store.resize(bags_store.length() * 2, bags_store.width(), 0, true);
                 }
             }
         }
         // Resize to the minimum size needed.
-        bags_store.resize(num_bag, max_ninstances + 1);
+        bags_store.resize(num_bag, max_ninstances + 1, 0, true);
         bags_index = VMat(bags_store);
+        bags_index->savePMAT("HOME:tmp/bid.pmat");
         // Provide this index to the sub_splitter.
         sub_splitter->setDataSet(bags_index);
     }
