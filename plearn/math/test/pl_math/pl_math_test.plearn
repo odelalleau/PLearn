@@ -1,5 +1,0 @@
-RunObject(
-  objects       = [ PLMathTest() ]
-  save_files    = [ "pl_math_test.psave" ]
-  run_objects   = 1
-)
