@@ -48,7 +48,6 @@
 namespace PLearn {
 using namespace std;
 
-
 /*!   elementwise max over 2 elements:
   max(v1,v2)[i] = max(v1[i],v2[i])
   with same dimensions as the input vectors

@@ -48,7 +48,6 @@
 namespace PLearn {
 using namespace std;
 
-
 ///////////////////////////////////////!<  
 
 class MaxVariable: public UnaryVariable
