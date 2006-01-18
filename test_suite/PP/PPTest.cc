@@ -177,6 +177,7 @@ public:
 
   ChildA(const ChildA& other) : 
 	Parent(other.i_par, other.s_par), 
+        i_child_a(other.i_child_a),
 	parentPP(other.parentPP), childBPP(other.childBPP){}
 
   ChildA* deepCopy(CopiesMap& copies) const

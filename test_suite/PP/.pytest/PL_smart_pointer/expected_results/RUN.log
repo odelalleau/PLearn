@@ -1,0 +1,147 @@
+
+***** STARTING TEST_PP *****
+
+Launching Test_TVec...
+
+Step:	 Empty Constructors
+Doing ...
+
+  - Empty constructor verified for class ChildA 
+  - Empty constructor verified for class ChildB 
+  - Empty constructor verified for class Parent 
+--- Empty constructor verified ---
+
+PASSED
+
+
+
+Step:	 Copie Constructors with Ordinary Pointers
+Doing ...
+
+  - Copie constructor with ordinary pointers verified for class ChildA
+  - Copie constructor with ordinary pointers verified for class ChildB
+  - Copie constructor with ordinary pointers verified for class Parent
+--- Copie constructor with ordinary pointers verified ---
+
+PASSED
+
+
+
+Step:	 Copie Constructors with same PP type pointers
+Doing ...
+
+  - Copie constructor with same type of PP verified for class ChildA 
+  - Copie constructor with same type of PP verified for class ChildB
+  - Copie constructor with same type of  PP verified for class Parent
+--- Copie constructor with other PPs verified ---
+
+PASSED
+
+
+
+Step:	 Copie Constructors with other(child) PP type pointers
+Doing ...
+
+--- Copie constructor with other PP type verified (for class Parent)---
+
+PASSED
+
+
+
+Step:	 Conversion to ordinary pointers
+Doing ...
+
+  - Conversion to ordinary ptr verified for class ChildA
+  - Conversion to ordinary ptr verified for class ChildB
+  - Conversion to ordinary ptr verified for class Parent
+--- Conversion to ordinary ptr verified ---
+
+PASSED
+
+
+
+Step:	 Access pointed objects
+Doing ...
+
+Printing child_a_array:
+child_a_array[1]: * ChildA:	i_child_a= 3			* Parent:	i_par= 500	s_par= five_hundred
+child_a_array[2]: * ChildA:	i_child_a= 2			* Parent:	i_par= 200	s_par= two_hundred
+child_a_array[3]: * ChildA:	i_child_a= 3			* Parent:	i_par= 500	s_par= five_hundred
+child_a_array[4]: * ChildA:	i_child_a= 2			* Parent:	i_par= 200	s_par= two_hundred
+
+Printing child_b_array:
+child_b_array[1]: * ChildB:	s_child_b= three		* Parent:	i_par= 300	s_par= three_hundred
+child_b_array[2]: * ChildB:	s_child_b= 		* Parent:	i_par= 200	s_par= two_hundred
+child_b_array[3]: * ChildB:	s_child_b= three		* Parent:	i_par= 300	s_par= three_hundred
+child_b_array[4]: * ChildB:	s_child_b= 		* Parent:	i_par= 200	s_par= two_hundred
+
+Printing parent_array:
+parent_array[1]: * Parent:	i_par= 100	s_par= one_hundred
+parent_array[2]: * Parent:	i_par= 200	s_par= two_hundred
+parent_array[3]: * Parent:	i_par= 100	s_par= one_hundred
+parent_array[4]: * Parent:	i_par= 200	s_par= two_hundred
+parent_array[5]: * Parent:	i_par= 500	s_par= five_hundred
+parent_array[6]: * Parent:	i_par= 200	s_par= two_hundred
+
+PASSED
+
+
+
+Step:	 Affectation from ordinary pointers
+Doing ...
+
+Printing child_a_array:
+child_a_array[1]: * ChildA:	i_child_a= 3			* Parent:	i_par= 500	s_par= five_hundred
+child_a_array[2]: * ChildA:	i_child_a= 2			* Parent:	i_par= 200	s_par= two_hundred
+child_a_array[3]: * ChildA:	i_child_a= 3			* Parent:	i_par= 500	s_par= five_hundred
+child_a_array[4]: * ChildA:	i_child_a= 4			* Parent:	i_par= 400	s_par= four_hundred
+
+Printing child_b_array:
+child_b_array[1]: * ChildB:	s_child_b= one__		* Parent:	i_par= 100	s_par= one_hundred
+child_b_array[2]: * ChildB:	s_child_b= 		* Parent:	i_par= 200	s_par= two_hundred
+child_b_array[3]: * ChildB:	s_child_b= three		* Parent:	i_par= 300	s_par= three_hundred
+child_b_array[4]: * ChildB:	s_child_b= 		* Parent:	i_par= 200	s_par= two_hundred
+
+Printing parent_array:
+parent_array[1]: * Parent:	i_par= 100	s_par= one_hundred
+parent_array[2]: * Parent:	i_par= 200	s_par= two_hundred
+parent_array[3]: * Parent:	i_par= 300	s_par= three_hundred
+parent_array[4]: * Parent:	i_par= 400	s_par= four_hundred
+parent_array[5]: * Parent:	i_par= 500	s_par= five_hundred
+parent_array[6]: * Parent:	i_par= 200	s_par= two_hundred
+
+PASSED
+
+
+
+Step:	 Affectation between PP pointers
+Doing ...
+
+Printing child_a_array:
+child_a_array[1]: * ChildA:	i_child_a= 3			* Parent:	i_par= 500	s_par= five_hundred
+child_a_array[2]: * ChildA:	i_child_a= 4			* Parent:	i_par= 400	s_par= four_hundred
+child_a_array[3]: * ChildA:	i_child_a= 3			* Parent:	i_par= 500	s_par= five_hundred
+child_a_array[4]: * ChildA:	i_child_a= 4			* Parent:	i_par= 400	s_par= four_hundred
+
+Printing child_b_array:
+child_b_array[1]: * ChildB:	s_child_b= three		* Parent:	i_par= 300	s_par= three_hundred
+child_b_array[2]: * ChildB:	s_child_b= 		* Parent:	i_par= 200	s_par= two_hundred
+child_b_array[3]: * ChildB:	s_child_b= three		* Parent:	i_par= 300	s_par= three_hundred
+child_b_array[4]: * ChildB:	s_child_b= 		* Parent:	i_par= 200	s_par= two_hundred
+
+Printing parent_array:
+parent_array[1]: * Parent:	i_par= 100	s_par= one_hundred
+parent_array[2]: * Parent:	i_par= 100	s_par= one_hundred
+parent_array[3]: * Parent:	i_par= 100	s_par= one_hundred
+parent_array[4]: * Parent:	i_par= 100	s_par= one_hundred
+parent_array[5]: * Parent:	i_par= 500	s_par= five_hundred
+parent_array[6]: * Parent:	i_par= 200	s_par= two_hundred
+parent_array[7]: * Parent:	i_par= 400	s_par= four_hundred
+parent_array[8]: * Parent:	i_par= 400	s_par= four_hundred
+parent_array[9]: * Parent:	i_par= 300	s_par= three_hundred
+parent_array[10]: * Parent:	i_par= 300	s_par= three_hundred
+
+PASSED
+
+
+Quitting Test_TVec...
