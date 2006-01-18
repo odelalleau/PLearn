@@ -206,7 +206,7 @@ Vec HyperOptimize::runTest(int trialnum)
 
     string testerexpdir = "";
     if(expdir!="" && provide_tester_expdir)
-        testerexpdir = expdir / "Trials" / tostring(trialnum) / "";
+        testerexpdir = expdir / ("Trials"+tostring(trialnum)) / "";
     tester->setExperimentDirectory(testerexpdir);
   
     PP<Splitter> default_splitter = tester->splitter;
