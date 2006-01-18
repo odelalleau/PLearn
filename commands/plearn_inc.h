@@ -79,6 +79,7 @@
 #include <commands/PLearnCommands/JulianDateCommand.h>
 #include <commands/PLearnCommands/KolmogorovSmirnovCommand.h>
 #include <commands/PLearnCommands/LearnerCommand.h>
+#include <commands/PLearnCommands/PairwiseDiffsCommand.h>
 #include <commands/PLearnCommands/ReadAndWriteCommand.h>
 #include <commands/PLearnCommands/RunCommand.h>
 #include <commands/PLearnCommands/ServerCommand.h>
