@@ -53,6 +53,8 @@
 namespace PLearn {
 using namespace std;
 
+static bool dbg=false;
+
 /**
  * Class description:
  *
@@ -83,9 +85,13 @@ public:
     inline DoublyLinkedList() : first(0), last(0), n_elements(0) {}
 
     inline DoublyLinkedListElement<T>* pushOnTop(T entry) {
+        if (dbg) 
+            cout << "calling DoublyLinkedList::pushOnTop(" << entry << endl;
         DoublyLinkedListElement<T>* new_element = new DoublyLinkedListElement<T>(entry,first);
-        if (!last) last=new_element;
-        if (first) first->previous=new_element;
+        if (!last) 
+            last=new_element;
+        if (first) 
+            first->previous=new_element;
         first=new_element;
         n_elements++;
         return new_element;
@@ -94,6 +100,8 @@ public:
     inline void moveToFront(DoublyLinkedListElement<T>* element)
     {
 #ifdef BOUNDCHECK
+        if (dbg) 
+            cout << "calling DoublyLinkedList::moveToFront(" << element << endl;
         if (!element) PLERROR("DoublyLinkedList::moveToFront called with NULL element\n");
 #endif
         if (element!=first)
@@ -116,17 +124,21 @@ public:
                 next->previous = previous;
             first->previous = element;
             first = element;
+            if (element==last)
+                last = previous;
         }
         
     }
 
     inline void removeLast() {
+        if (dbg) 
+            cout << "calling DoublyLinkedList::removeLast()" << endl;
         if (last)
         {
             DoublyLinkedListElement<T>* before_last = last->previous;
             if (first == last)
                 first = 0;
-            delete last;
+            last->previous=last->next=0; delete last;
             last = before_last;
             if (last)
                 last->next = 0;
@@ -146,6 +158,8 @@ public:
     }
 };
 
+template <class T>
+inline int sizeInBytes(const DoublyLinkedListElement<T>& element) { return 2*sizeof(DoublyLinkedListElement<T>*)+sizeInBytes(element.entry); }
 
 } // end of namespace PLearn
 

@@ -207,29 +207,29 @@ public:
     /*!     Resizes the TVector to a new length
       The underlying storage is never shrunk and
       it is grown only if it is not already big enough
-      When grown, extrabytes are allocated to anticipate further grows
+      When grown, extra entries are allocated to anticipate further grows
     */
-    inline void resize(int newlength, int extrabytes=0)
+    inline void resize(int newlength, int extra=0)
     {
 #ifdef BOUNDCHECK
-        if (newlength<0 || extrabytes<0)
+        if (newlength<0 || extra<0)
             PLERROR("IN TVec::resize(int newlength)\nInvalid argument (<0)");
 #endif
-        if (newlength == length_ && extrabytes == 0) {
+        if (newlength == length_ && extra == 0) {
             // No need to do anything.
             return;
         }
-        if (storage.isNull() && (newlength>0 || extrabytes>0))
+        if (storage.isNull() && (newlength>0 || extra>0))
         {
             offset_ = 0;
             length_ = newlength;
-            Storage<T>* s = new Storage<T>(newlength + extrabytes);          
+            Storage<T>* s = new Storage<T>(newlength + extra);          
             storage = s;
         }
         else
         {
             if (storage.isNotNull() && (newlength > capacity()))
-                storage->resize (offset_ + newlength + extrabytes);
+                storage->resize (offset_ + newlength + extra);
             length_ = newlength;
         }
     }

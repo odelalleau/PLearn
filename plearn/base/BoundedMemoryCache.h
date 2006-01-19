@@ -58,42 +58,64 @@ using namespace std;
 /**
  * Class description:
  *
- * Similar semantically to a map<KeyType,ElementType>, except that
+ * Similar semantically to a map<KeyType,ValueType>, except that
  * a maximum memory usage can be set, and less frequently and less recently accessed
  * elements that make memory usage go above that limit are dropped.
  *
  */
-template <class KeyType, class ElementType>
+template <class KeyType, class ValueType>
 class BoundedMemoryCache
 {
 protected:
     int      n_elements; /*!<  The actual number of elements stored */
     int      max_memory; /*!< The maximum memory used to store the elements */
     int      current_memory; /*!< The current memory used to store the elements */
-    DoublyLinkedList<KeyType>* doubly_linked_list;
-    
 public:
+    DoublyLinkedList<KeyType>* doubly_linked_list;
+    mutable int      n_successful_hits; /*!< Number of times operator() was called successfully */
+    mutable int      n_failures; /*!< Number of times operator() was called and entry not found */
 
-    map<KeyType, pair<ElementType,DoublyLinkedListElement<KeyType>*> > elements; /*!< the indexed elements. Each entry has (value, pointer into doubly_linked_list) */
+    map<KeyType, pair<ValueType,DoublyLinkedListElement<KeyType>*> > elements; /*!< the indexed elements. Each entry has (value, pointer into doubly_linked_list) */
 
     inline BoundedMemoryCache(int max_memory_=0) 
-        : n_elements(0), max_memory(max_memory_), current_memory(0), doubly_linked_list(new DoublyLinkedList<KeyType>)
+        : n_elements(0), max_memory(max_memory_), current_memory(0), doubly_linked_list(new DoublyLinkedList<KeyType>),
+          n_successful_hits(0), n_failures(0)
     {}
 
     //! Try to get value associataed with key. If not in cache return 0, else return pointer to value.
     //! Recently accessed keys (with set or operator()) are less likely to be removed.
-    inline const ElementType* operator()(KeyType& key) const { 
-        typename map<KeyType,pair<ElementType,DoublyLinkedListElement<KeyType>*> >::const_iterator it = elements.find(key);
+    inline const ValueType* operator()(KeyType& key) const { 
+        typename map<KeyType,pair<ValueType,DoublyLinkedListElement<KeyType>*> >::const_iterator it = elements.find(key);
         if (it==elements.end()) 
+        {
+            n_failures++;
             return 0;
+        }
+        n_successful_hits++;
         doubly_linked_list->moveToFront(it->second.second); 
+#ifdef BOUNDCHECK
+        if (!doubly_linked_list->last || doubly_linked_list->last->next)
+            PLERROR("something wrong with last element of doubly linked list!");
+        if (dbg)
+            verifyInvariants();
+#endif
         return &(it->second.first);
     }
-    inline ElementType* operator()(KeyType& key) { 
-        typename map<KeyType,pair<ElementType,DoublyLinkedListElement<KeyType>*> >::iterator it = elements.find(key);
+    inline ValueType* operator()(KeyType& key) { 
+        typename map<KeyType,pair<ValueType,DoublyLinkedListElement<KeyType>*> >::iterator it = elements.find(key);
         if (it==elements.end()) 
+        {
+            n_failures++;
             return 0;
+        }
+        n_successful_hits++;
         doubly_linked_list->moveToFront(it->second.second); 
+#ifdef BOUNDCHECK
+        if (!doubly_linked_list->last || doubly_linked_list->last->next)
+            PLERROR("something wrong with last element of doubly linked list!");
+        if (dbg)
+            verifyInvariants();
+#endif
         return &(it->second.first);
     }
 
@@ -101,19 +123,36 @@ public:
 
     //! Associate value to key. 
     //! Recently accessed keys (with set or operator()) are less likely to be removed.
-    inline void set(KeyType& key, const ElementType& value) {
-        typename map<KeyType,pair<ElementType,DoublyLinkedListElement<KeyType>*> >::iterator it = elements.find(key);
+    inline void set(KeyType& key, const ValueType& value) {
+        typename map<KeyType,pair<ValueType,DoublyLinkedListElement<KeyType>*> >::iterator it = elements.find(key);
         if (it==elements.end()) { // first time set
-            current_memory += sizeInBytes(value) + sizeof(DoublyLinkedListElement<KeyType>) + sizeof(pointer) + sizeInBytes(key);
             DoublyLinkedListElement<KeyType>* p=doubly_linked_list->pushOnTop(key);
-            elements[key] = pair<ElementType,DoublyLinkedListElement<KeyType>*>(value,p);
+#ifdef BOUNDCHECK
+            if (!doubly_linked_list->last || doubly_linked_list->last->next)
+                PLERROR("something wrong with last element of doubly linked list!");
+#endif
+            pair<ValueType,DoublyLinkedListElement<KeyType>*> el(value,p);
+            elements[key] = el;
+            current_memory += sizeInBytes(el) + sizeof(DoublyLinkedListElement<KeyType>);
             n_elements++;
+#ifdef BOUNDCHECK
+            if (dbg)
+                verifyInvariants();
+#endif
         }
         else { // already there, move it to front of list and update the value
-            ElementType& v = elements[key].first;
+            ValueType& v = elements[key].first;
             current_memory += sizeInBytes(value) - sizeInBytes(v);
             doubly_linked_list->moveToFront(it->second.second);
+#ifdef BOUNDCHECK
+            if (!doubly_linked_list->last || doubly_linked_list->last->next)
+                PLERROR("something wrong with last element of doubly linked list!");
+#endif
             v = value;
+#ifdef BOUNDCHECK
+            if (dbg)
+                verifyInvariants();
+#endif
         }
         removeExcess();
     }
@@ -127,6 +166,31 @@ public:
         removeExcess();
     }
 
+    // check that all pointers to doubly linked list elements are still valid
+    inline void verifyInvariants() {
+        if (!doubly_linked_list->last || doubly_linked_list->last->next)
+            PLERROR("something wrong with last element of doubly linked list!");
+        if (max_memory - current_memory>500) return;
+        typename map<KeyType,pair<ValueType,DoublyLinkedListElement<KeyType>*> >::iterator it = elements.begin();
+        for (;it!=elements.end();++it)
+        {
+            DoublyLinkedListElement<KeyType>* p = it->second.second;
+            if (!p) 
+                PLERROR("BoundedMemoryCache::verifyInvariants(): null linked list pointer!");
+            DoublyLinkedListElement<KeyType>* next = p->next;
+            DoublyLinkedListElement<KeyType>* previous = p->previous;
+            if (previous && previous->next != p)
+                PLERROR("BoundedMemoryCache::verifyInvariants(): element not part of list (previous->next != element)\n");
+            if (next && next->previous != p)
+                PLERROR("BoundedMemoryCache::verifyInvariants(): element not part of list (next->previous != element)\n");
+            typename map<KeyType,pair<ValueType,DoublyLinkedListElement<KeyType>*> >::iterator pi = elements.find(p->entry);
+            if (pi->second.second!=p)
+                PLERROR("BoundedMemoryCache::verifyInvariants(): incoherent pointers between map and list\n");
+            if (pi->first!=p->entry)
+                PLERROR("BoundedMemoryCache::verifyInvariants(): incoherent keys between map and list\n");
+        }
+    }
+
 protected:
     //! remove last element until current_memory <= max_memory;
     inline void removeExcess()
@@ -134,10 +198,16 @@ protected:
         while (current_memory > max_memory)
         {
             KeyType& key = doubly_linked_list->last->entry;
-            current_memory -= sizeInBytes(elements[key].first) + sizeof(DoublyLinkedListElement<KeyType>) + sizeof(pointer) + sizeInBytes(key);
-            elements.erase(key);
+            current_memory -= sizeInBytes(elements[key]) + sizeof(DoublyLinkedListElement<KeyType>);
+            elements[key].second=0; elements.erase(key);
             doubly_linked_list->removeLast();
             n_elements--;
+#ifdef BOUNDCHECK
+            if (!doubly_linked_list->last || doubly_linked_list->last->next)
+                PLERROR("something wrong with last element of doubly linked list!");
+            if (dbg)
+                verifyInvariants();
+#endif
         }
     }
 };

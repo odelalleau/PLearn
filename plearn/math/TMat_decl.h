@@ -184,11 +184,11 @@ public:
       Notice that the previous structure of the data in the matrix
       is not preserved if you increase the width() beyond mod().
       The underlying storage is never shrunk, and it is grown only if necessary.
-      When grown, it is grown with extrabytes to anticipate further resizes.
+      When grown, it is grown with extra entries to anticipate further resizes.
       If preserve_content is true then a change of mod_ triggers a COPY
       of the old entries so that their old value remains accessed at the same indices.
     */
-    void resize(int new_length, int new_width, int extrabytes=0, bool preserve_content=false)
+    void resize(int new_length, int new_width, int extra=0, bool preserve_content=false)
     {
 #ifdef BOUNDCHECK
         if(new_length<0 || new_width<0)
@@ -217,12 +217,12 @@ public:
                 if(new_size>storage->length() || new_width>mod())
                 {
                     int extracols=0, extrarows=0;
-                    if (extrabytes>min(new_width,new_length))
+                    if (extra>min(new_width,new_length))
                     {
                         // if width has increased, bet that it will increase again in the future,
-                        // similarly for length,  so allocate the extrabytes as extra mod
-                        float l=length_, l1=new_length, w=width_, w1=new_width, x=extrabytes;
-                        // Solve the following equations to apportion the extrabytes 
+                        // similarly for length,  so allocate the extra as extra mod
+                        float l=length_, l1=new_length, w=width_, w1=new_width, x=extra;
+                        // Solve the following equations to apportion the extra 
                         // while keeping the same percentage increase in width and length:
                         //   Solve[{x+w1*l1==w2*l2,(w2/w1 - 1)/(l2/l1 - 1) == (w1/w - 1)/(l1/l - 1)},{w2,l2}]
                         // This is a quadratic system which has two solutions: {w2a,l2a} and {w2b,l2b}:
@@ -255,8 +255,8 @@ public:
                             extracols=int(ceil(w2a-w1));
                         } else // no valid solution to the system of equation, use a heuristic
                         {
-                            extracols = int(ceil(sqrt(real(extrabytes))/new_length));
-                            extrarows = int((extrabytes+l1*w1)/(w1+extracols) - l1);
+                            extracols = int(ceil(sqrt(real(extra))/new_length));
+                            extrarows = int((extra+l1*w1)/(w1+extracols) - l1);
                         }
                     }
                     storage->resizeMat(new_length,new_width,extrarows,extracols,
@@ -269,7 +269,7 @@ public:
             {
                 int new_size = offset_+new_length*MAX(mod(),new_width);
                 if(offset_+new_size>storage->length())
-                    storage->resize(new_size + extrabytes);
+                    storage->resize(new_size + extra);
                 if(new_width>mod())
                     mod_ = new_width;
             }
