@@ -166,6 +166,8 @@ public:
         removeExcess();
     }
 
+    inline float successRate() { return float(n_successful_hits)/(n_successful_hits + n_failures); }
+
     // check that all pointers to doubly linked list elements are still valid
     inline void verifyInvariants() {
         if (!doubly_linked_list->last || doubly_linked_list->last->next)
