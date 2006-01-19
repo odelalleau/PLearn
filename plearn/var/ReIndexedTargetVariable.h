@@ -56,7 +56,9 @@ using namespace std;
   (input2), and the columns numbers corresponding to input1's fields. 
   In order to construct row when calling getValues(row,target_col), 
   input2 is used for the input part, and the rest of row is filled
-  with NaN. 
+  with NaN.
+  The user can, alternatively, directly give a Dictionary object
+  that will give the possible values. Then, input2 is ignored.
 */
 class ReIndexedTargetVariable: public BinaryVariable
 {
@@ -66,13 +68,19 @@ protected:
     Vec row;
 
 public:
+    //! VMatrix that gives the possible values for the target columns
     VMat source;
+    //! Target columns
     TVec<int> target_cols;
+    //! Alternatively, the user can give a Dictionary to reindexe
+    //! If source is not null, then this field is ignored
+    PP<Dictionary> dict;
 
 public:
     //!  Default constructor for persistence
     ReIndexedTargetVariable();
     ReIndexedTargetVariable(Variable* input1, Variable* input2, VMat the_source, TVec<int> the_target_cols);
+    ReIndexedTargetVariable(Variable* input1, Variable* input2, PP<Dictionary> the_dict, TVec<int> the_target_cols);
 
     PLEARN_DECLARE_OBJECT(ReIndexedTargetVariable);
     static void declareOptions(OptionList &ol);
@@ -93,6 +101,9 @@ DECLARE_OBJECT_PTR(ReIndexedTargetVariable);
 
 inline Var reindexed_target(Var target, Var input, VMat source, TVec<int> target_cols)
 { return new ReIndexedTargetVariable(target,input,source,target_cols); }
+
+inline Var reindexed_target(Var target, Var input, PP<Dictionary> dict, TVec<int> target_cols)
+{ return new ReIndexedTargetVariable(target,input,dict,target_cols); }
 
 
 } // end of namespace PLearn

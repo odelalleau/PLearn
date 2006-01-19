@@ -63,6 +63,12 @@ ReIndexedTargetVariable::ReIndexedTargetVariable(Variable* input1, Variable* inp
     build_();
 }
 
+ReIndexedTargetVariable::ReIndexedTargetVariable(Variable* input1, Variable* input2, PP<Dictionary> the_dict, TVec<int> the_target_cols)
+    : inherited(input1, input2, input1->length(), input1->width()), dict(the_dict), target_cols(the_target_cols)
+{
+    build_();
+}
+
 void
 ReIndexedTargetVariable::build()
 {
@@ -73,15 +79,19 @@ ReIndexedTargetVariable::build()
 void
 ReIndexedTargetVariable::build_()
 {
-    if (input1 && input2 && source) {
+    if (input1 && input2 && (source || dict)) {
         if(!input1->isVec() || !input2->isVec())
             PLERROR("In ReIndexedTargetVariable: input1 or input2 must be a vector var");
         if(input1->size() != target_cols.length())
             PLERROR("In ReIndexedTargetVariable: input1 should be of size target_cols.length()");        
-        if(input2->size() != source->inputsize())
+        if(source)
+        {
+            if(input2->size() != source->inputsize())
             PLERROR("In ReIndexedTargetVariable: input2 should be of size source->inputsize()");
-        row.resize(source->width());
-        row.subVec(source->inputsize(),source->width()-source->inputsize()).fill(MISSING_VALUE);
+
+            row.resize(source->width());
+            row.subVec(source->inputsize(),source->width()-source->inputsize()).fill(MISSING_VALUE);
+        }
     }
 }
 
@@ -89,6 +99,7 @@ void
 ReIndexedTargetVariable::declareOptions(OptionList &ol)
 {
     declareOption(ol, "source", &ReIndexedTargetVariable::source, OptionBase::buildoption, "");
+    declareOption(ol, "dict", &ReIndexedTargetVariable::dict, OptionBase::buildoption, "");
     declareOption(ol, "target_cols", &ReIndexedTargetVariable::target_cols, OptionBase::buildoption, "");
     inherited::declareOptions(ol);
 }
@@ -99,11 +110,15 @@ void ReIndexedTargetVariable::recomputeSize(int& l, int& w) const
 
 void ReIndexedTargetVariable::fprop()
 {
-    row.subVec(0,source->inputsize()) << input2->value;
+    if(source) row.subVec(0,source->inputsize()) << input2->value;
     
     for (int j=0; j<input1->size(); j++)
     {          
-        valuedata[j] = source->getValues(row,target_cols[j]).find((int)input1->valuedata[j]);
+        if(source)
+            valuedata[j] = source->getValues(row,target_cols[j]).find((int)input1->valuedata[j]);
+        else
+            valuedata[j] = dict->getValues().find((int)input1->valuedata[j]);
+        
         if(valuedata[j] < 0) PLERROR("In ReIndexedTargetVariable::fprop(): target %d is not among possible values",input1->valuedata[j]);
     }
 }
