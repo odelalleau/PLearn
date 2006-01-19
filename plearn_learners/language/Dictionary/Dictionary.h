@@ -94,6 +94,8 @@ protected:
     int oov_tag_id;
     //! Indication that the possible_values vector needs to be updated
     bool refill_possible_values;
+    //! Last value of oov_not_in_possible_values
+    bool last_oov_not_in_possible_values;
 
 public:
 
@@ -102,7 +104,9 @@ public:
     // ************************
     //! update mode update/no update 
     int update_mode;
-  
+    //! Indication that "oov" should not be part of the possible values
+    bool oov_not_in_possible_values;
+
     // ****************
     // * Constructors *
     // ****************

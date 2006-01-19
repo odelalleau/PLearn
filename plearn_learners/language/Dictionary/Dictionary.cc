@@ -48,7 +48,7 @@ using namespace std;
   
 Dictionary::Dictionary()
     :
-    update_mode(UPDATE), refill_possible_values(true)
+    refill_possible_values(true), update_mode(UPDATE), oov_not_in_possible_values(false)
 {
 }
 
@@ -73,6 +73,7 @@ void Dictionary::declareOptions(OptionList& ol)
     declareOption(ol, "string_to_int", &Dictionary::string_to_int, OptionBase::learntoption, "string to int mapping");
     declareOption(ol, "int_to_string", &Dictionary::int_to_string, OptionBase::learntoption, "int to string mapping");
     declareOption(ol, "oov_tag_id", &Dictionary::oov_tag_id, OptionBase::learntoption, "id of the OOV_TAG");
+    declareOption(ol, "oov_not_in_possible_values", &Dictionary::oov_not_in_possible_values, OptionBase::learntoption, "Indication that \"oov\" should not be part of the possible values");
     inherited::declareOptions(ol);
 }
 
@@ -144,12 +145,14 @@ int Dictionary::size(TVec<string> options){
 
 Vec Dictionary::getValues(TVec<string> options)
 { 
-    if(refill_possible_values)
+    if(refill_possible_values || last_oov_not_in_possible_values != oov_not_in_possible_values)
     {
-        possible_values.resize((int) string_to_int.size());
+        last_oov_not_in_possible_values = oov_not_in_possible_values;
+        possible_values.resize((int) string_to_int.size() - (oov_not_in_possible_values ? 1 : 0));
         int i=0;
         for(map<string,int>::iterator it = string_to_int.begin(); it != string_to_int.end(); it++)
-            possible_values[i++] = it->second;
+            if(!oov_not_in_possible_values || oov_tag_id != it->second)
+                possible_values[i++] = it->second;
         refill_possible_values = false;
     }
     return possible_values;
