@@ -61,6 +61,11 @@ using namespace std;
  * Similar semantically to a map<KeyType,ValueType>, except that
  * a maximum memory usage can be set, and less frequently and less recently accessed
  * elements that make memory usage go above that limit are dropped.
+ * The heuristic for giving more priority to more recently accessed stuff is the 'move-to-front' 
+ * heuristic. When an entry is read or set it is  moved to the front of a list. When
+ * the allowed memory has been overrun the last element of the list is
+ * dropped. The list is implemented with the new class plearn/base/DoublyLinkedList,
+ * a doubly-linked list with removeLast() and moveToFront() methods.
  *
  */
 template <class KeyType, class ValueType>
@@ -133,7 +138,7 @@ public:
 #endif
             pair<ValueType,DoublyLinkedListElement<KeyType>*> el(value,p);
             elements[key] = el;
-            current_memory += sizeInBytes(el) + sizeof(DoublyLinkedListElement<KeyType>);
+            current_memory += sizeInBytes(el);
             n_elements++;
 #ifdef BOUNDCHECK
             if (dbg)
@@ -200,7 +205,7 @@ protected:
         while (current_memory > max_memory)
         {
             KeyType& key = doubly_linked_list->last->entry;
-            current_memory -= sizeInBytes(elements[key]) + sizeof(DoublyLinkedListElement<KeyType>);
+            current_memory -= sizeInBytes(elements[key]);
             elements[key].second=0; elements.erase(key);
             doubly_linked_list->removeLast();
             n_elements--;
