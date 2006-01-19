@@ -122,8 +122,6 @@ public:
     //! Function from input and target to output and test_costs
     mutable Func test_costf; 
 
-    Var extra_dist_rep;
-
 public:
 
     // Build options:
@@ -183,7 +181,8 @@ public:
     TVec<int> dist_rep_dim;
     //! Architecture of the neural network
     string nnet_architecture;
-    
+    //! Target dictionary
+    PP<Dictionary> target_dictionary;
 
 private:
     void build_();

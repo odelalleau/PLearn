@@ -242,6 +242,9 @@ void DistRepNNet::declareOptions(OptionList& ol)
                   " - \"csMTL\" (context-sensitive Multiple Task Learning, at NIPS 2005 Inductive Transfer Workshop)\n"
                   " - \"theta_predictor\" (standard NNet with output weights being PREDICTED) \n");
 
+    declareOption(ol, "target_dictionary", &DistRepNNet::target_dictionary, OptionBase::buildoption, 
+                  "User specified Dictionary for the target field. If null, then it is extracted from the training set VMatrix.\n");
+
     declareOption(ol, "paramsvalues", &DistRepNNet::paramsvalues, OptionBase::learntoption, 
                   "The learned parameter vector\n");
 
@@ -329,7 +332,9 @@ void DistRepNNet::build_()
 
         // Add target Dictionary
         {
-            PP<Dictionary> dict = train_set->getDictionary(inputsize_);
+            PP<Dictionary> dict;
+            if(target_dictionary) dict = target_dictionary; 
+            else dict = train_set->getDictionary(inputsize_);
 
             // Check if component has Dictionary
             if(!dict) PLERROR("In DistRepNNet::build_(): target component has no Dictionary");
@@ -340,10 +345,12 @@ void DistRepNNet::build_()
                 if(dist_rep_dim.length() <= dist_reps.size())
                     PLERROR("In DistRepNNet::build_(): dist_rep_dim isn't big enough, dimensionality specifications are missing");
                 if(nnet_architecture == "csMTL" || nnet_architecture == "theta_predictor")
-                    dist_reps.push_back(new SourceVariable(dict->size()+1,dist_rep_dim[dist_reps.size()]));
+                {
+                    dist_reps.push_back(new SourceVariable(dict->size()+(dict->oov_not_in_possible_values ? 0 : 1),dist_rep_dim[dist_reps.size()]));
+                }
                 dictionaries.push_back(dict);
                 target_dict_index = dictionaries.size()-1;
-            }            
+            }
             else
                 target_dict_index = f;
         }
@@ -368,7 +375,7 @@ void DistRepNNet::build_()
         // Add input with no distributed representation
         if(non_dist_rep_indexes.length() != 0)
         {
-            input_components.push_back(new VarRowsVariable(input,non_dist_rep_indexes));
+            input_components.push_back(transpose(new VarRowsVariable(input,non_dist_rep_indexes)));
             partial_update_vars.push_back(input_components.last());
         }
 
@@ -385,7 +392,13 @@ void DistRepNNet::build_()
         TVec<int> target_cols(targetsize_);
         for(int i=0; i<targetsize_; i++)
             target_cols[i] = inputsize_+i;
-        Var reind_target = reindexed_target(target,input,train_set,target_cols);
+
+        Var reind_target;
+        if(target_dictionary)
+            reind_target = reindexed_target(target,input,target_dictionary,target_cols);
+        else
+            reind_target = reindexed_target(target,input,train_set,target_cols);
+
         if(weightsize_>0)
         {
             if (weightsize_!=1)
@@ -560,7 +573,7 @@ void DistRepNNet::buildOutputFromInput(const Var& dp_input) {
         }
         else
         {
-            wout = Var(1 + dp_input->size(), outputsize(), "wout");        
+            wout = Var(1 + dp_input->size(), outputsize(), "wout");
             output = affine_transform(dp_input, wout);     
             if(!fixed_output_weights)
             {
@@ -660,7 +673,7 @@ void DistRepNNet::buildOutputFromInput(const Var& dp_input) {
             wout = new MatrixAffineTransformVariable(wout,wouttheta);
         }
         else
-            wout = Var(1 + before_output_size, dictionaries[target_dict_index]->size()+1, "wout");
+            wout = Var(1 + before_output_size, dictionaries[target_dict_index]->size() + (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1), "wout");
 
         if(nhidden>0)
         {
@@ -670,13 +683,12 @@ void DistRepNNet::buildOutputFromInput(const Var& dp_input) {
         }
         else
         {
-            wout = Var(1 + dp_input->size(), dictionaries[target_dict_index]->size()+1, "wout");
             output = affine_transform(dp_input, wout);     
-            if(!fixed_output_weights)
+            if(!fixed_output_weights && nnet_architecture != "theta_predictor")
             {
                 params.append(wout);
             }
-            else
+            else if(fixed_output_weights)
             {
                 outbias = Var(output->size(),"outbias");
                 output = output + outbias;
@@ -764,7 +776,10 @@ void DistRepNNet::computeOutput(const Vec& inputv, Vec& outputv) const
     row << inputv;
     row.resize(train_set->width());
     row.subVec(inputsize_,train_set->width()-inputsize_).fill(MISSING_VALUE);
-    target_values = train_set->getValues(row,targetsize_);
+    if(target_dictionary)
+        target_values = target_dictionary->getValues();
+    else
+        target_values = train_set->getValues(row,targetsize_);
     outputv[0] = target_values[(int)output_comp[0]];
 }
 
@@ -779,7 +794,10 @@ void DistRepNNet::computeOutputAndCosts(const Vec& inputv, const Vec& targetv,
     row << inputv;
     row.resize(train_set->width());
     row.subVec(inputsize_,train_set->width()-inputsize_).fill(MISSING_VALUE);
-    target_values = train_set->getValues(row,targetsize_);
+    if(target_dictionary)
+        target_values = target_dictionary->getValues();
+    else
+        target_values = train_set->getValues(row,targetsize_);
     outputv[0] = target_values[(int)output_comp[0]];
 }
 
