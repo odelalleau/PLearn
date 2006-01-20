@@ -697,8 +697,9 @@ PPath PPath::absolute(bool add_protocol) const
 
     // Remove useless trailing slash.
     abspath.removeTrailingSlash();
-    // Add / remove protocol if required.
-    if (add_protocol)
+    // Add / remove protocol if required. Note that we cannot add a protocol to
+    // an empty PPath (as an empty PPath is considered relative).
+    if (add_protocol && !abspath.isEmpty())
         abspath = abspath.addProtocol();
     else
         // There can be a protocol in abspath only if there is one in *this.
