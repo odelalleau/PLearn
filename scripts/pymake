@@ -31,10 +31,20 @@
 #  This file is part of the PLearn library. For more information on the PLearn
 #  library, go to the PLearn Web site at www.plearn.org
 
-import os, sys, re, string, glob, socket, time, whrandom, select, shutil, fnmatch,math
+import os, sys, re, string, glob, socket, time, select, shutil, fnmatch, math
 from stat import *
 from types import *
 from popen2 import *
+
+try:
+    from random import shuffle
+except ImportError:
+    import whrandom
+    def shuffle(list):
+        l = len(list)
+        for i in range(0,l-1):
+            j = whrandom.randint(i+1,l-1)
+            list[i], list[j] = list[j], list[i]
 
 print "pymake 2.0 [ (C) 2001, Pascal Vincent. This is free software distributed under a BSD type license. Report problems to vincentp@iro.umontreal.ca ]"
 
@@ -139,7 +149,7 @@ def join(dir,file,file2="",file3=""):
 
 def abspath(mypath):
     """returns the absolute path of the file, with a hack to remove the leading /export/ that causes problems at DIRO"""    
-    p = convertWinToLinux(os.path.abspath(mypath))    # python 5.1 does not have abspath
+    p = convertWinToLinux(os.path.abspath(mypath))    # python 1.5 does not have abspath
     rmprefix = '/export/'
     lenprefix = len(rmprefix)
     if len(p)>lenprefix:
@@ -381,6 +391,99 @@ def locateconfigfile(file,configdir,config_text=''):
        
     return ''
     
+def _process_distcc_hosts(host_list):
+    """Processes a distcc-style string describing hosts used for
+    compilation. Returns a list of hosts that can be used by pymake."""
+    hosts = []
+    
+    # Remove trailing \n
+    if host_list[-1] == '\n':
+        host_list = host_list[:-1]
+
+    # Smallest '/num' found in the distcc file.
+    smallest_num = 10
+
+    # Split into lines, filter comments.
+    for l in host_list.split('\n'):
+        # Filter hash comments
+        i = l.find('#')
+        if i != -1:
+            l = l[:i]
+
+        for token in l.split():
+            # Each token should be of the form @host or @host/num
+            # Example: @odin/2
+            if token[0] != '@':
+                print 'Does not know how to handle distcc host', token
+                print 'Only @host specification (with optional /max at the end) is supported presently.'
+
+            i = token.find('/')
+            if i == -1:
+                num = 1
+                host = host[1:]
+            else:
+                num = int(token[i+1:])
+                host = token[1:i]
+
+            # Add num times the host to the list of hosts for compilation.
+            hosts.extend([host] * num)
+            smallest_num = min(smallest_num, num)
+
+    # For distcc, localhost is usually not added when the list of hosts is
+    # long because locahost is busy doing the preprocessing. This does not
+    # hold for pymake, so add localhost if it is not present.
+    if 'localhost' not in hosts:
+        hosts.extend(['localhost'] * smallest_num)
+
+    return hosts
+
+
+def get_distcc_hosts():
+    """Searches in the locations distcc uses to store list of machines used
+    for parallel compilation. Returns a list of machines usable by pymake,
+    or None if no distcc configuration was found."""
+    
+    # First try $DISTCC_HOSTS environment variable.
+    contents = os.getenv('DISTCC_HOSTS')
+    if contents is not None:
+        return _process_distcc_hosts(contents)
+
+    # Try $DISTCC_DIR/hosts file.
+    distcc_dir = os.getenv('DISTCC_DIR')
+    if distcc_dir is not None:
+        try:
+            f = open(os.path.join(distcc_dir, 'hosts'), 'rt')
+            contents = f.read()
+            f.close()
+        except IOError:
+            # Move on to next file location...
+            pass
+        else:
+            return _process_distcc_hosts(contents)
+
+    # Try ~/.distcc/hosts
+    try:
+        f = open(os.path.join(os.path.expanduser('~'), '.distcc', 'hosts'),
+                 'rt')
+        contents = f.read()
+        f.close()
+    except IOError:
+        # Move on to next file location...
+        pass
+    else:
+        return _process_distcc_hosts(contents)
+
+    # Finally, try /etc/distcc/hosts file.
+    try:
+        f = open('/etc/distcc/hosts', 'rt')
+        contents = f.read()
+        f.close()
+    except IOError, e:
+        # Not found anywhere. Give up.
+        return None
+    else:
+        return _process_distcc_hosts(contents)
+
 def printusage():
     print 'Usage: pymake [options] <list of targets, files or directories>'
     print 'Where targets are .cc file names or base names or directories'
@@ -707,42 +810,45 @@ def getOptions(options_choices,optionargs):
 list_of_hosts = []
 
 if local_compilation:
-    list_of_hosts = ['localhost']
+    list_of_hosts = nprocesses_per_processor * ['localhost']
 else:
+    distcc_list_of_hosts = get_distcc_hosts()
+    
     if SPC:
-        hostspath_list = [ locateconfigfile('SPC.hosts',homedir,'localhost') ]
+        hostspath_list = [locateconfigfile('SPC.hosts', homedir)]
     elif force_32bits:
-        hostspath_list = [
-            locateconfigfile('linux-i386.hosts',homedir,'localhost'),
-            locateconfigfile('linux-x86_64.hosts',homedir,'localhost'),
-            locateconfigfile('linux-ia64.hosts',homedir,'localhost')
-        ]
+        hostspath_list = [locateconfigfile('linux-i386.hosts', homedir),
+                          locateconfigfile('linux-x86_64.hosts', homedir),
+                          locateconfigfile('linux-ia64.hosts', homedir)]
     else:
-        hostspath_list = [ locateconfigfile(platform+'.hosts',os.getcwd(),'localhost') ]
+        hostspath_list = [locateconfigfile(platform+'.hosts',os.getcwd())]
 
-    if hostspath_list:
+    # Check if we have more than empty string 
+    hostspath_list_is_empty = True
+    for h in hostspath_list:
+        if h:
+            hostspath_list_is_empty = False
+            
+    if not hostspath_list_is_empty:
+        if distcc_list_of_hosts is not None:
+            print '*** Overriding distcc settings. (Remove pymake *.hosts file to use distcc settings.)'
         print '*** Parallel compilation using list of hosts from file(s): ' + string.join( hostspath_list, ', ' )
         for hostspath in hostspath_list:
             f = open(hostspath,'r')
             list_of_hosts = list_of_hosts + filter(lambda s: s and s[0]!='#', map(string.strip,f.readlines()))
             f.close()
+        list_of_hosts = nprocesses_per_processor * list_of_hosts
+    elif distcc_list_of_hosts is not None:
+        print '*** Parallel compilation using distcc list of hosts'
+        list_of_hosts = distcc_list_of_hosts
     else:
-        list_of_hosts = ['localhost']
+        list_of_hosts = nprocesses_per_processor * ['localhost']
         print '*** No hosts file found: no parallel compilation, using localhost'
         print '    (create a '+platform + '.hosts file in your .pymake directory to list hosts for parallel compilation.)'
-
-# We could just do random.shuffle(list) but that's not in Python 1.5.2
-def shuffle(list):
-    l = len(list)
-    for i in range(0,l-1):
-        j = whrandom.randint(i+1,l-1)
-        list[i], list[j] = list[j], list[i]
 
 # randomize order of list_of_hosts
 shuffle(list_of_hosts)
 
-# replicate list nprocesses_per_processor times
-list_of_hosts = nprocesses_per_processor * list_of_hosts
 
 # rmccomment_regexp = re.compile(r'([^/])\/\*([^\*]|\*(?!\/))*\*\/',re.M)
 rmcppcomment_regexp = re.compile(r'//[^\n]*\n',re.M)
