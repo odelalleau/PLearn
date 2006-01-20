@@ -123,6 +123,9 @@ public:
     //! to prepare the model for truly out-of-sample operation
     virtual void finalize() {}
 
+    // in case bpropUpdate does not do anything, make it known
+    virtual bool bpropDoesNothing() { return false; }
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
