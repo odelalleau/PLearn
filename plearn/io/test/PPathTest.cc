@@ -274,6 +274,8 @@ void someAsserts()
     
     ASSERT( "PPath('') == ''", PPath("") == "" );
 
+    ASSERT( "PPath('') != 'foo'", PPath("") != "foo" );
+
     ASSERT( "PPath('foo/bar') / '' == 'foo/bar/'",
             PPath("foo/bar") / "" == "foo/bar/" );  
   

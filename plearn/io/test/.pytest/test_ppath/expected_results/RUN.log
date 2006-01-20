@@ -21,6 +21,8 @@ PPath('././foo/bar') / PPath('../bar/../../foo/./bar') == 'foo/bar'
 
 PPath('') == ''                                             True
 
+PPath('') != 'foo'                                          True
+
 PPath('foo/bar') / '' == 'foo/bar/'                         True
 
 PPath('foo/bar') / 'file.cc' == 'foo/bar/file.cc'           True
