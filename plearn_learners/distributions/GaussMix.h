@@ -141,6 +141,7 @@ public:
     // ************************
 
     real alpha_min;
+    bool efficient_missing;
     real epsilon;
     int kmeans_iterations;
     int L;

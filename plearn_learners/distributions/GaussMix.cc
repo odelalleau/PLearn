@@ -39,6 +39,9 @@
 
 /*! \file GaussMix.cc */
 #include "GaussMix.h"
+
+#include <boost/graph/adjacency_list.hpp>
+
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include <plearn/math/pl_erf.h>   //!< For gauss_log_density_stddev().
 #include <plearn/math/plapack.h>
@@ -64,6 +67,7 @@ GaussMix::GaussMix():
     n_eigen_computed(-1),
     nsamples(-1),
     alpha_min(1e-6),
+    efficient_missing(false),
     epsilon(1e-6),
     kmeans_iterations(5),
     L(1),
@@ -130,6 +134,11 @@ void GaussMix::declareOptions(OptionList& ol)
         "eigenvalue equal to the next highest eigenvalue. If set to -1, all\n"
         "eigenvectors will be kept.");
   
+
+    declareOption(ol, "efficient_missing", &GaussMix::efficient_missing,
+                                           OptionBase::buildoption,
+        "If true, computations with missing values will be more efficient.");
+
     declareOption(ol, "kmeans_iterations", &GaussMix::kmeans_iterations,
                                            OptionBase::buildoption,
         "Maximum number of iterations performed in initial K-means.");
@@ -1819,6 +1828,15 @@ void GaussMix::setPredictorPredictedSizes_const(int n_i, int n_t) const
     }
 }
 
+// Boost graph property for edges in a binary tree.
+struct MissingFlag {
+    // Indicates whether a bit is flagged as missing.
+    bool is_missing;
+};
+
+// Empty Boost graph property for nodes in a binary tree.
+struct NoProperty {
+};
 
 ///////////
 // train //
@@ -1834,6 +1852,62 @@ void GaussMix::train()
 
     // Initialization before training.
     if (stage == 0) {
+
+        // Precompute nodes of the missing graph.
+        typedef boost::adjacency_list<boost::listS, boost::vecS,
+                boost::directedS, NoProperty, MissingFlag> BinaryBitsTree;
+        typedef boost::graph_traits<BinaryBitsTree>::vertex_iterator vertex_iter;
+        typedef boost::graph_traits<BinaryBitsTree>::vertex_descriptor vertex_descr;
+        typedef boost::graph_traits<BinaryBitsTree>::out_edge_iterator oedge_iter;
+        typedef boost::graph_traits<BinaryBitsTree>::edge_descriptor edge_descr;
+        typedef std::pair<oedge_iter, oedge_iter> oedge_iter_pair;
+
+        BinaryBitsTree tree(1);
+        const vertex_descr& root_vertex = *(boost::vertices(tree).first);
+        ProgressBar* pb = 0;
+        if (efficient_missing && report_progress)
+            pb = new ProgressBar("Finding unique missing patterns",
+                                 train_set->length());
+        Vec input, target;
+        real weight;
+        int n_unique = 0;
+        for (int i = 0; efficient_missing && i < train_set->length(); i++) {
+            train_set->getExample(i, input, target, weight);
+            vertex_descr current_vertex = root_vertex;
+            for (int k = 0; k < input.length(); k++) {
+                bool bit = is_missing(input[k]);
+
+                const oedge_iter_pair& oeiter_pair =
+                    boost::out_edges(current_vertex, tree);
+                oedge_iter oeiter = oeiter_pair.first;
+                while (oeiter != oeiter_pair.second &&
+                        tree[*oeiter].is_missing != bit) {
+                    oeiter++;
+                }
+                if (oeiter == oeiter_pair.second) {
+                    // Could not find this bit: need to create new vertex and
+                    // edge.
+                    const vertex_descr& new_vertex = boost::add_vertex(tree);
+                    const edge_descr& new_edge =
+                        boost::add_edge(current_vertex, new_vertex,tree).first;
+                    tree[new_edge].is_missing = bit;
+                    current_vertex = new_vertex;
+                    if (k == input.length() - 1)
+                        // This is a leaf.
+                        n_unique++;
+                } else {
+                    // We found an existing edge.
+                    current_vertex = boost::target(*oeiter, tree);
+                }
+            }
+            if (report_progress)
+                pb->update(i + 1);
+        }
+        if (pb)
+            delete pb;
+        if (efficient_missing && verbosity >= 2)
+            pout << "Found " << n_unique << " unique missing patterns" << endl;
+
         // n_tries.resize(0); Old code, may be removed in the future...
         resizeDataBeforeTraining();
 
