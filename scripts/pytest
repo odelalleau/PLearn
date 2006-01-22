@@ -15,7 +15,7 @@ build_list = [
     (   "0.9.1",   4126  ),
 
     # Directory of results have a new structure that will ease
-    # parallelisation
+    # parallelization
     (   "0.9.2",   4550  ) 
     ]
 

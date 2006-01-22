@@ -68,7 +68,7 @@ Section 1: Introductory Examples
                 targetsize = 2,
                 weightsize = 0
                 ),
-            expdir = "expdir_2005_10_03_07:31:19",
+            expdir = "expdir_2006_01_12_15_27_44",
             learner = *2 -> LinearRegressor( ),
             provide_learner_expdir = 1,
             save_test_confidence = 1,
@@ -99,7 +99,7 @@ Section 2: What's Wrong with PLearn Scripts?
     As a matter of fact, nothing's wrong with the PLearn scripts,
     especially in the above example. Hence why not use those directly?
     First, PLearn serialization format while having a syntax close to the
-    Python still have particularities of its own that can easily make edit
+    Python still have particularities of its own that can easily make it
     hard to edit and affect readability. For instance, emacs comes with a
     sympathetic python-mode while the plearn-mode is still to come...
 
@@ -217,7 +217,7 @@ Section 2: What's Wrong with PLearn Scripts?
         #
 
         *59 -> MyWeardTester(
-            expdir = "expdir_2005_10_03_07:31:20",
+            expdir = "expdir_2006_01_12_15_27_45",
             learner = *58 -> CombinerLearner(
                 underlying_learners = [
                     *6 -> SomeLearner(
@@ -343,24 +343,24 @@ Section 2: What's Wrong with PLearn Scripts?
                         )
                     ],
                 weights = [
-                    0.0212686267598,
-                    0.0338842027765,
-                    0.0907093929726,
-                    0.0435869436257,
-                    0.0609181028976,
-                    0.0572259417081,
-                    0.0463130367582,
-                    0.0744705650975,
-                    0.0239017860297,
-                    0.0844796032593,
-                    0.0887779125194,
-                    0.0207178945011,
-                    0.00447208179073,
-                    0.0562313036312,
-                    0.0804618304301,
-                    0.0347107313282,
-                    0.0846586366907,
-                    0.0932114072236
+                    0.105851252189,
+                    0.0322607679357,
+                    0.125108786906,
+                    0.0802142570663,
+                    0.00163215588764,
+                    0.107783064396,
+                    0.039438048979,
+                    0.0685751159145,
+                    0.0152580197713,
+                    0.103744296668,
+                    0.0604637010528,
+                    0.020912563261,
+                    0.0711133493742,
+                    0.0733308978533,
+                    0.0131280705949,
+                    0.0483155184377,
+                    0.00936775827022,
+                    0.0235023754425
                     ]
                 ),
             provide_learner_expdir = 1
@@ -753,7 +753,7 @@ class PyPLearnTutorial( Tutorial ):
     As a matter of fact, nothing's wrong with the PLearn scripts,
     especially in the above example. Hence why not use those directly?
     First, PLearn serialization format while having a syntax close to the
-    Python still have particularities of its own that can easily make edit
+    Python still have particularities of its own that can easily make it
     hard to edit and affect readability. For instance, emacs comes with a
     sympathetic python-mode while the plearn-mode is still to come...
 

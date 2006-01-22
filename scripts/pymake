@@ -229,26 +229,28 @@ optional_libraries_defs = []
 # be concatenated when the library is triggered (which means the function will not be called
 # if the library is not triggered).
 class OptionalLibrary:
-    def __init__(self, name, includedirs, triggers, linkeroptions, compileroptions ):
+    def __init__(self, name, includedirs, triggers, linkeroptions, compileroptions, compile_as_source):
         self.name = name
         self.includedirs = includedirs
         self.triggers = triggers
         self.linkeroptions = linkeroptions
         self.compileroptions = compileroptions
+        self.compile_as_source = compile_as_source
 
     def is_triggered_by(self, include):
         """returns true if this particular include command is supposed to trigger this library"""
         for trigger in self.triggers:
             if fnmatch.fnmatch(include,trigger):
                 # print 'INCLUDE ' + include  + ' TRIGGERED BY TRIGGER ' + trigger
-                return 1
+                return True
         if include[0]!='/': # look for it in includedirs
             for incldir in self.includedirs:
-                if os.path.isfile(join(incldir,include)):
-                    # print 'file exists!: ' + join(incldir,include)
+                fullpath = join(incldir,include)
+                if os.path.isfile(fullpath):
+                    # print 'file exists!: ' + fullpath
                     # print 'INCLUDE ' + include  + ' TRIGGERED BY INCDIR ' + incldir
-                    return 1
-        return 0            
+                    return fullpath
+        return False            
 
     # Replaces lists and potential functions in the compiler and linker options
     # by a single string.
@@ -281,12 +283,12 @@ class OptionalLibrary:
 
 
 # adds a library to the optional_libraries_defs
-def optionalLibrary( name, linkeroptions, includedirs=[], triggers='', compileroptions='' ):
+def optionalLibrary( name, linkeroptions, includedirs=[], triggers='', compileroptions='', compile_as_source=False ):
     if type(includedirs) != ListType:
         includedirs = [ includedirs ]
     if type(triggers) != ListType:
         triggers = [ triggers ]
-    optional_libraries_defs.append( OptionalLibrary(name, includedirs, triggers, linkeroptions, compileroptions) )
+    optional_libraries_defs.append( OptionalLibrary(name, includedirs, triggers, linkeroptions, compileroptions, compile_as_source) )
 
 default_config_text = r"""
 # List of directories in which to look for .h includes and corresponding .cc files to compile and link with your program
@@ -952,14 +954,19 @@ class FileInfo:
         for includefile in FileInfo.include_regexp.findall(text):
             #print 'Considering include ' + includefile
             for optlib in optional_libraries_defs:
-                if optlib.is_triggered_by(includefile) and not optlib in self.triggered_libraries:
+                triggered_by = optlib.is_triggered_by(includefile)
+
+                if triggered_by and not optlib in self.triggered_libraries:
                     # print 'triggered: ' + optlib.name + '(file = ' + self.filepath + ', ' + includefile + ')'
                     optlib.convert_all_options_to_strings()
                     self.triggered_libraries.append(optlib)
                     # print optlib.name + ' TRIGGERED BY INCLUDE ' + includefile + ' IN ' + self.filepath 
 
+                # Some optional libraries may have to be recompiled...
+                if isinstance(triggered_by, type("")) and optlib.compile_as_source:
+                    self.includes_from_sourcedirs.append(abspath(triggered_by))
+
             fullpath = join(self.filedir, includefile)
-            
             if os.path.isfile(fullpath):
                 self.includes_from_sourcedirs.append(abspath(fullpath))
             else:
@@ -1667,6 +1674,7 @@ def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_l
             cctarget = target
         else:
             cctarget = get_ccpath_from_noncc_path(target)            
+
         if not cctarget:
             print "Warning: bad target", target
         else:

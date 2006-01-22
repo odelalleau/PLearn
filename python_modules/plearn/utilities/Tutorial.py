@@ -1,3 +1,4 @@
+"""Contains the tools to create dynamic tutorial."""
 import os
 from plearn.utilities import toolkit
 
@@ -92,9 +93,26 @@ class SubSection( Section ):
     
 
 class Tutorial:
+    """Base class for tutorials evolving with the source code.
+
+    Any subclass of C{Tutorial} is a considered to be a dynamic
+    tutorial. The docstring of the derived class is considered to be the
+    introduction of the tutorial: the one-line comment is used as
+    title. The subclass is expected to defines a classmethod C{sections}
+    which should return a list of the L{Section} objects to be added to the
+    tutorial
+    """
     wstr = toolkit.WString()
-    
+
+    def sections( cls ):
+        raise NotImplementedError
+    sections = classmethod( sections )
+
     def build( cls, tutorial_file ):
+        """Builds the tutorial represented by this class.
+
+        Read the C{Tutorial} class' documentation for details.
+        """
         assert os.path.exists( tutorial_file )
         
         print >>cls.wstr, dedent( cls.__doc__ )
