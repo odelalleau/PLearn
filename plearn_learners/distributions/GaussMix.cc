@@ -67,6 +67,8 @@ GaussMix::GaussMix():
     n_eigen_computed(-1),
     nsamples(-1),
     alpha_min(1e-6),
+    efficient_k_median(10),
+    efficient_k_median_iter(100),
     efficient_missing(false),
     epsilon(1e-6),
     kmeans_iterations(5),
@@ -134,10 +136,18 @@ void GaussMix::declareOptions(OptionList& ol)
         "eigenvalue equal to the next highest eigenvalue. If set to -1, all\n"
         "eigenvectors will be kept.");
   
-
     declareOption(ol, "efficient_missing", &GaussMix::efficient_missing,
                                            OptionBase::buildoption,
         "If true, computations with missing values will be more efficient.");
+
+    declareOption(ol, "efficient_k_median", &GaussMix::efficient_k_median,
+                                            OptionBase::buildoption,
+        "Number of missing patterns stored.");
+
+    declareOption(ol, "efficient_k_median_iter",
+                                            &GaussMix::efficient_k_median_iter,
+                                            OptionBase::buildoption,
+        "Maximum number of iterations in k-median.");
 
     declareOption(ol, "kmeans_iterations", &GaussMix::kmeans_iterations,
                                            OptionBase::buildoption,
@@ -1871,11 +1881,14 @@ void GaussMix::train()
         Vec input, target;
         real weight;
         int n_unique = 0;
+        missing_patterns.resize(0, train_set->inputsize());
+        TVec<bool> pattern(train_set->inputsize());
         for (int i = 0; efficient_missing && i < train_set->length(); i++) {
             train_set->getExample(i, input, target, weight);
             vertex_descr current_vertex = root_vertex;
             for (int k = 0; k < input.length(); k++) {
                 bool bit = is_missing(input[k]);
+                pattern[k] = bit;
 
                 const oedge_iter_pair& oeiter_pair =
                     boost::out_edges(current_vertex, tree);
@@ -1892,9 +1905,11 @@ void GaussMix::train()
                         boost::add_edge(current_vertex, new_vertex,tree).first;
                     tree[new_edge].is_missing = bit;
                     current_vertex = new_vertex;
-                    if (k == input.length() - 1)
+                    if (k == input.length() - 1) {
                         // This is a leaf.
                         n_unique++;
+                        missing_patterns.appendRow(pattern);
+                    }
                 } else {
                     // We found an existing edge.
                     current_vertex = boost::target(*oeiter, tree);
@@ -1905,8 +1920,116 @@ void GaussMix::train()
         }
         if (pb)
             delete pb;
+
         if (efficient_missing && verbosity >= 2)
             pout << "Found " << n_unique << " unique missing patterns" << endl;
+
+        if (efficient_missing) {
+            // Perform some kind of k-median on missing patterns for initial
+            // clustering of missing patterns.
+            random->shuffleRows(missing_patterns);
+            missing_template.resize(
+                    efficient_k_median, missing_patterns.width());
+            TVec<int> missing_assign(missing_patterns.length(), -1);
+            for (int i = 0; i < efficient_k_median; i++) {
+                missing_template(i) << missing_patterns(i);
+            }
+            bool finished = false;
+            TVec<int> n_diffs(efficient_k_median);
+            int count_iter = 0;
+            ProgressBar* pb = 0;
+            if (report_progress)
+                pb = new ProgressBar("Performing k-median on " +
+                        tostring(missing_patterns.length())    +
+                        " missing patterns", efficient_k_median_iter);
+            TMat<int> majority(efficient_k_median, missing_patterns.width());
+            while (!finished && count_iter < efficient_k_median_iter) {
+                finished = true;
+                // Assign each missing pattern to closest template.
+                for (int i = 0; i < missing_patterns.length(); i++) {
+                    n_diffs.fill(0);
+                    for (int j = 0; j < efficient_k_median; j++)
+                        for (int k = 0; k < missing_patterns.width(); k++)
+                            if (missing_patterns(i, k) !=
+                                missing_template(j, k))
+                                n_diffs[j]++;
+                    int new_assign = argmin(n_diffs);
+                    if (new_assign != missing_assign[i])
+                        finished = false;
+                    missing_assign[i] = new_assign;
+                }
+                // Recompute missing templates.
+                majority.fill(0);
+                for (int i = 0; i < missing_patterns.length(); i++) {
+                    int assign = missing_assign[i];
+                    for (int k = 0; k < missing_patterns.width(); k++) {
+                        if (missing_patterns(i, k))
+                            majority(assign, k)++;
+                        else
+                            majority(assign, k)--;
+                    }
+                }
+                for (int j = 0; j < efficient_k_median; j++)
+                    for (int k = 0; k < missing_template.width(); k++)
+                        if (majority(j, k) > 0)
+                            missing_template(j, k) = true;
+                        else if (majority(j, k) < 0)
+                            missing_template(j, k) = false;
+                        else
+                            missing_template(j, k) =
+                                (random->uniform_sample() < 0.5);
+
+                count_iter++;
+                if (report_progress)
+                    pb->update(count_iter);
+            }
+            if (pb)
+                delete pb;
+            if (finished && verbosity >= 2)
+                pout << "K-median stopped after only " << count_iter
+                     << " iterations" << endl;
+            // Compute some statistics on the distances to templates.
+            /*
+            Vec stats_diff(missing_patterns.width());
+            stats_diff.fill(0);
+            for (int i = 0; i < missing_patterns.length(); i++) {
+                int assign = missing_assign[i];
+                int n_diffs = 0;
+                for (int k = 0; k < missing_patterns.width(); k++)
+                    if (missing_patterns(i, k) != missing_template(assign, k))
+                        n_diffs++;
+                stats_diff[n_diffs]++;
+            }
+            Mat tomat = stats_diff.toMat(stats_diff.length(), 1);
+            VMat save_vmat(tomat);
+            save_vmat->saveAMAT("/u/delallea/tmp/save_" +
+                    tostring(efficient_k_median) + ".amat");
+            stats_diff.resize(missing_template.length());
+            stats_diff.fill(0);
+            for (int i = 0; i < missing_patterns.length(); i++) {
+                stats_diff[missing_assign[i]]++;
+            }
+            tomat = stats_diff.toMat(stats_diff.length(), 1);
+            save_vmat = VMat(tomat);
+            save_vmat->saveAMAT("/u/delallea/tmp/clust_" +
+                    tostring(efficient_k_median) + ".amat");
+            Mat dist_mat(missing_template.length(),
+                         missing_template.length());
+            for (int i = 0; i < missing_template.length(); i++) {
+                for (int j = 0; j < missing_template.length(); j++) {
+                    int n_diffs = 0;
+                    for (int k = 0; k < missing_template.width(); k++)
+                        if (missing_template(i, k) != missing_template(j, k))
+                            n_diffs++;
+                    dist_mat(i, j) = n_diffs;
+                }
+            }
+            save_vmat = VMat(dist_mat);
+            save_vmat->saveAMAT("/u/delallea/tmp/dist_" +
+                    tostring(efficient_k_median) + ".amat");
+            */
+        }
+
 
         // n_tries.resize(0); Old code, may be removed in the future...
         resizeDataBeforeTraining();

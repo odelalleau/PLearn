@@ -57,6 +57,13 @@ private:
 
 protected:
 
+    // All missing patterns found in the training set (stored in rows).
+    // A boolean value of 'true' indicates that a feature is missing.
+    TMat<bool> missing_patterns;
+    
+    // Missing patterns used as templates (obtained by k-median).
+    TMat<bool> missing_template;
+
     //! Set at build time, this integer value depends uniquely on the 'type'
     //! option. It is meant to avoid too many useless string comparisons.
     int type_id;
@@ -141,6 +148,8 @@ public:
     // ************************
 
     real alpha_min;
+    int efficient_k_median;
+    int efficient_k_median_iter;
     bool efficient_missing;
     real epsilon;
     int kmeans_iterations;
