@@ -124,6 +124,10 @@ public:
     //! Snippet of python code that processes the text in the input files
     string code;
 
+    //! Minimum frequency for a token to be added in a Dictionary, for the
+    //! different fields
+    TVec<int> minimum_frequencies;
+
     // ****************
     // * Constructors *
     // ****************

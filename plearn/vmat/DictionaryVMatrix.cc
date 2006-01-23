@@ -145,6 +145,8 @@ void DictionaryVMatrix::declareOptions(OptionList& ol)
                   "Delimiters for file fields (or attributs)\n");
     declareOption(ol, "code", &DictionaryVMatrix::code, OptionBase::buildoption,
                   "Snippet of python code that processes the text in the input files\n");
+    declareOption(ol, "minimum_frequencies", &DictionaryVMatrix::minimum_frequencies, OptionBase::buildoption,
+                  "Minimum frequency for a token to be added in a Dictionary, for the different fields\n");
     declareOption(ol, "data", &DictionaryVMatrix::data, OptionBase::buildoption,
                   "Matrix containing the concatenated and encoded text files\n");
   
@@ -158,6 +160,7 @@ void DictionaryVMatrix::build_()
     string line = "";
     vector<string> tokens;
     TVec<string> tokens_vec;
+    TVec< hash_map<string,int> > frequencies;
     int it=0; 
     int nlines = 0;
     
@@ -172,7 +175,7 @@ void DictionaryVMatrix::build_()
     
     length_ = 0;
     
-    // Figure out length of VMatrix
+    // Prepocessing of the data...
     for(int k=0; k<file_names.length(); k++)
     {
         PPath input_file = file_names[k];
@@ -180,18 +183,74 @@ void DictionaryVMatrix::build_()
         while (!input_stream.eof()){
             input_stream.getline(line);
             input_stream.skipBlanks();
+            tokens = split(line, delimiters);
+            if(python)
+            {
+                tokens_vec.resize(tokens.size());
+                for(int i=0; i<tokens_vec.length(); i++)
+                    tokens_vec[i] = tokens[i];
+                tokens_vec = python->invoke("process_string_row",tokens_vec).as<TVec<string> >();
+                tokens.resize(tokens_vec.length());
+                for(int i=0; i<tokens_vec.length(); i++)
+                    tokens[i] = tokens_vec[i];                
+            }
+            
+            // Set n_attributes
+            if(it==0)
+            {
+                it++;
+                n_attributes = int(tokens.size());
+                if(minimum_frequencies.length() != 0 && minimum_frequencies.length() != n_attributes)
+                    PLERROR("In DictionaryVMatrix::build_(): number of attributes (%d) and size of minimum_frequencies (%d) is different", n_attributes, minimum_frequencies.length());
+
+                if(minimum_frequencies.length() == 0)
+                {
+                    minimum_frequencies.resize(n_attributes);
+                    minimum_frequencies.fill(-1);
+                }
+
+                // If no dictionaries are specified, then create some
+                if(dictionaries.length() == 0)
+                {
+                    dictionaries.resize(n_attributes);
+                    for(int i=0; i<n_attributes; i++)
+                    {
+                        dictionaries[i] = new Dictionary();
+                        dictionaries[i]->update_mode = UPDATE;
+                        dictionaries[i]->build();
+                    }
+                    
+                }
+                if(dictionaries.length() != n_attributes)
+                    PLERROR("In DictionaryVMatrix::build_(): number of attributes (%d) and number of dictionaries (%d) is different", n_attributes, dictionaries.length());
+                if(option_fields.length()==0) option_fields.resize(n_attributes);
+                frequencies.resize(n_attributes);
+            }
+            
+            // Count frequencies...
+            for(int j=0; j<n_attributes; j++)
+            {
+                if(tokens[j] != "nan") // Detect missing values
+                {
+                    if(frequencies[j].find(tokens[j]) == frequencies[j].end())
+                        frequencies[j][tokens[j]] = 1;
+                    else
+                        frequencies[j][tokens[j]]++;
+                }
+            }
+            
             length_++;
         }
     }
 
-
+    it = 0;
     for(int k=0; k<file_names.length(); k++)
     {
         nlines = length_;
         PPath input_file = file_names[k];
         PStream input_stream = openFile(input_file, PStream::raw_ascii);
         while (!input_stream.eof()){
-            if(it>0) data.resize(length_,n_attributes);
+            if(it==0) data.resize(length_,n_attributes);
             input_stream.getline(line);
             input_stream.skipBlanks();
             tokens = split(line, delimiters);
@@ -211,28 +270,7 @@ void DictionaryVMatrix::build_()
             for(int i=0; i<to_lower_case.size(); i++)
                 tokens[to_lower_case[i]] = lowerstring(tokens[to_lower_case[i]]);
             */
-            // Set n_attributes
-            if(it==0)
-            {
-                n_attributes = int(tokens.size());
-                data.resize(length_,n_attributes);
-                // If no dictionaries are specified, then create some
-                if(dictionaries.length() == 0)
-                {
-                    dictionaries.resize(n_attributes);
-                    for(int i=0; i<n_attributes; i++)
-                    {
-                        dictionaries[i] = new Dictionary();
-                        dictionaries[i]->update_mode = UPDATE;
-                        dictionaries[i]->build();
-                    }
-                    
-                }
-                if(dictionaries.length() != n_attributes)
-                    PLERROR("In DictionaryVMatrix::build_(): number of attributes (%d) and number of dictionaries (%d) is different", n_attributes, dictionaries.length());
-                if(option_fields.length()==0) option_fields.resize(n_attributes);
-            }
-
+            
             if((int)tokens.size() != n_attributes)
                 PLERROR("In DictionaryVMatrix::build_(): line %d (\"%s\") of file %s doesn't have %d attributes", length_-nlines, line.c_str(), input_file.c_str(), n_attributes);
                 
@@ -243,10 +281,15 @@ void DictionaryVMatrix::build_()
                     data(it,j) = MISSING_VALUE;
                 else
                 {
-                    TVec<string> options(option_fields[j].length());
-                    for(int k_it=0; k_it<options.length(); k_it++)
-                        options[k_it] = tokens[option_fields[j][k_it]];
-                    data(it,j) = dictionaries[j]->getId(tokens[j],options);
+                    if(frequencies[j][tokens[j]] >= minimum_frequencies[j])
+                    {
+                        TVec<string> options(option_fields[j].length());
+                        for(int k_it=0; k_it<options.length(); k_it++)
+                            options[k_it] = tokens[option_fields[j][k_it]];
+                        data(it,j) = dictionaries[j]->getId(tokens[j],options);
+                    }
+                    else
+                        data(it,j) = dictionaries[j]->getId(OOV_TAG);
                 }
             }
             it++;
