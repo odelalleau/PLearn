@@ -279,6 +279,7 @@ Vec HyperOptimize::optimize()
             best_objective = objective;
             best_results = results;
             CopiesMap copies;
+            best_learner = NULL;
             best_learner = hlearner->getLearner()->deepCopy(copies);
         }
         ++trialnum;
