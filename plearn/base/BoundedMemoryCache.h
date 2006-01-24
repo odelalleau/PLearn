@@ -43,7 +43,7 @@
  ******************************************************* */
 
 
-/*! \file plearn/math/BoundedMemoryTVec.h */
+/*! \file plearn/base/BoundedMemoryCache.h */
 
 #ifndef BoundedMemoryTVec_INC
 #define BoundedMemoryTVec_INC
