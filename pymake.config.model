@@ -111,7 +111,7 @@ def PL_default_repository_revision():
 
 from plearn.pytest import _pytest_defines, _pytest_config_path
 optionalLibrary( name = 'pytest_defines',
-                 triggers = 'pytest_defines.h',
+                 triggers = 'pytest/defines.h',
                  includedirs = [ os.path.join(ppath('HOME'), '.plearn') ], #_pytest_config_path() ],
                  compileroptions = [ '-DPYTEST_DEFINES=\\"', _pytest_defines, '\\"' ],
                  linkeroptions   = '', compile_as_source = True )
