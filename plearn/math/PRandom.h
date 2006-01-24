@@ -262,6 +262,16 @@ public:
             v[j] = tmp;
         }
     }
+    
+    //! Randomly shuffle the rows of a matrix.
+    template<class T>
+    void shuffleRows(const TMat<T>& mat) {
+        int n = mat.length();
+        for (int i = 0; i < n; i++) {
+            int j = i + int(uniform_sample() * (n - i));
+            mat.swapRows(i,j);
+        }
+    }
 
     /*** Static methods ***/
 
