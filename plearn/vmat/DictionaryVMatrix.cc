@@ -180,6 +180,7 @@ void DictionaryVMatrix::build_()
     {
         PPath input_file = file_names[k];
         PStream input_stream = openFile(input_file, PStream::raw_ascii);
+        input_stream.skipBlanks();
         while (!input_stream.eof()){
             input_stream.getline(line);
             input_stream.skipBlanks();
@@ -249,6 +250,7 @@ void DictionaryVMatrix::build_()
         nlines = length_;
         PPath input_file = file_names[k];
         PStream input_stream = openFile(input_file, PStream::raw_ascii);
+        input_stream.skipBlanks();
         while (!input_stream.eof()){
             if(it==0) data.resize(length_,n_attributes);
             input_stream.getline(line);
