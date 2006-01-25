@@ -94,7 +94,7 @@ public:
 
     //! Try to get value associataed with key. If not in cache return 0, else return pointer to value.
     //! Recently accessed keys (with set or operator()) are less likely to be removed.
-    inline const ValueType* operator()(KeyType& key) const { 
+    const ValueType* operator()(KeyType& key) const { 
         typename map<KeyType,pair<ValueType,DoublyLinkedListElement<KeyType>*> >::const_iterator it = elements.find(key);
         if (it==elements.end()) 
         {
@@ -111,7 +111,7 @@ public:
 #endif
         return &(it->second.first);
     }
-    inline  ValueType* operator()(KeyType& key) { 
+    ValueType* operator()(KeyType& key) { 
         typename map<KeyType,pair<ValueType,DoublyLinkedListElement<KeyType>*> >::iterator it = elements.find(key);
         if (it==elements.end()) 
         {
@@ -133,7 +133,7 @@ public:
 
     //! Associate value to key. 
     //! Recently accessed keys (with set or operator()) are less likely to be removed.
-    inline  void set(KeyType& key, const ValueType& value) {
+    void set(KeyType& key, const ValueType& value) {
         typename map<KeyType,pair<ValueType,DoublyLinkedListElement<KeyType>*> >::iterator it = elements.find(key);
         if (it==elements.end()) { // first time set
             DoublyLinkedListElement<KeyType>* p=doubly_linked_list->pushOnTop(key);
@@ -181,7 +181,7 @@ public:
     inline virtual ~BoundedMemoryCache() { clear(); }
 
     // check that all pointers to doubly linked list elements are still valid
-    inline  void verifyInvariants() {
+    void verifyInvariants() {
         if (!doubly_linked_list->last || doubly_linked_list->last->next)
             PLERROR("something wrong with last element of doubly linked list!");
         if (max_memory - current_memory>500) return;
