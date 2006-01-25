@@ -89,7 +89,7 @@ public:
 
     inline void clear() { 
         n_elements=0; current_memory=0; elements.clear(); 
-        while (BoundedMemoryCache<KeyType,ValueType>::doubly_linked_list->front) BoundedMemoryCache<KeyType,ValueType>::doubly_linked_list->removeLast();
+        while (BoundedMemoryCache<KeyType,ValueType>::doubly_linked_list->first) BoundedMemoryCache<KeyType,ValueType>::doubly_linked_list->removeLast();
     }
 
     //! Try to get value associataed with key. If not in cache return 0, else return pointer to value.
@@ -178,7 +178,7 @@ public:
 
     inline  float successRate() { return float(n_successful_hits)/(n_successful_hits + n_failures); }
 
-    inline  ~BoundedMemoryCache() { clear(); }
+    inline virtual ~BoundedMemoryCache() { clear(); }
 
     // check that all pointers to doubly linked list elements are still valid
     inline  void verifyInvariants() {
