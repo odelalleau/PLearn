@@ -2,7 +2,7 @@
 
 // GaussMix.h
 // 
-// Copyright (C) 2004-2005 University of Montreal
+// Copyright (C) 2004-2006 University of Montreal
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -115,9 +115,25 @@ protected:
     //! needed only with the 'general' type, in presence of missing values.
     mutable TVec<Mat> joint_cov;
 
+    //! The j-th element is the matrix L in the Cholesky decomposition S = L L'
+    //! of the covariance matrix S of Gaussian j.
+    TVec<Mat> chol_joint_cov;
+
+    //! The (i,j)-th element is the matrix L in the Cholesky decomposition of
+    //! the covariance for the pattern of missing values of the i-th template
+    //! for the j-th Gaussian.
+    TMat<Mat> chol_cov_template;
+
     //! Indicates at which stage the full joint covariance was computed in
     //! 'joint_cov' (so that we know there is no need to compute it again).
     TVec<int> stage_joint_cov_computed;
+
+    //! The i-th element is the index of the missing template of sample i in
+    //! the 'missing_template' matrix.
+    TVec<int> sample_to_template;
+
+    //! Hack to know that we are compute likelihood on a training sample.
+    int current_training_sample;
 
     //! A boolean indicating whether or not the last predictor part set
     //! through setPredictor(..) had a missing value.

@@ -3,7 +3,7 @@
 // GaussMix.cc
 // 
 // Copyright (C) 2003 Julien Keable
-// Copyright (C) 2004-2005 University of Montreal
+// Copyright (C) 2004-2006 University of Montreal
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -43,6 +43,7 @@
 #include <boost/graph/adjacency_list.hpp>
 
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
+#include <plearn/math/Cholesky_utils.h>
 #include <plearn/math/pl_erf.h>   //!< For gauss_log_density_stddev().
 #include <plearn/math/plapack.h>
 //#include <plearn/math/random.h>
@@ -80,6 +81,7 @@ GaussMix::GaussMix():
     // Change the default value of 'nstages' to 10 to make the user aware that
     // in general it should be higher than 1.
     nstages = 10;
+    current_training_sample = -1;
 }
 
 PLEARN_IMPLEMENT_OBJECT(GaussMix, 
@@ -510,32 +512,135 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     // approximations. Thus we ensure it is perfectly symmetric.
                     assert( cov_y.isSymmetric(false) );
                     fillItSymmetric(cov_y);
+
+                    if (efficient_missing) {
+                        // Now compute its Cholesky decomposition.
+                        Mat& chol_cov_y = chol_joint_cov[j];
+                        choleskyDecomposition(cov_y, chol_cov_y);
+
+                        // And do the same for missing templates.
+                        TVec<bool> miss_pattern;
+                        for (int i = 0; i < efficient_k_median; i++) {
+                            miss_pattern = missing_template(i);
+                            int n_non_missing = miss_pattern.length();
+                            non_missing.resize(0);
+                            for (int k = 0; k < miss_pattern.length(); k++)
+                                if (miss_pattern[k])
+                                    n_non_missing--;
+                                else
+                                    non_missing.append(k);
+
+                            cov_y_missing.resize(n_non_missing, n_non_missing);
+                            for (int k = 0; k < n_non_missing; k++)
+                                for (int q = 0; q < n_non_missing; q++)
+                                    cov_y_missing(k,q) =
+                                        cov_y(non_missing[k], non_missing[q]);
+                            Mat& chol_cov_tpl = chol_cov_template(i, j);
+                            choleskyDecomposition(cov_y_missing, chol_cov_tpl);
+                        }
+                    }
                 }
                 // Then extract what we want.
+                int tpl_idx;
+                TVec<bool> missing_tpl;
+                if (efficient_missing) {
+                assert( current_training_sample != -1 );
+                tpl_idx =
+                    sample_to_template[current_training_sample];
+                missing_tpl = missing_template(tpl_idx);
+                }
+                static TVec<int> tpl_non_missing, add_non_missing;
+                tpl_non_missing.resize(0);
+                add_non_missing.resize(0);
+
                 non_missing.resize(0);
-                for (int k = 0; k < n_predicted; k++)
-                    if (!is_missing(y[k]))
+                for (int k = 0; k < n_predicted; k++) {
+                    if (!is_missing(y[k])) {
                         non_missing.append(k);
+                        if (efficient_missing) {
+                        if (missing_tpl[k])
+                            add_non_missing.append(k);
+                        }
+                    }
+                    if (efficient_missing) {
+                    if (!missing_tpl[k]) {
+                        tpl_non_missing.append(k);
+                        if (is_missing(y[k]))
+                            PLERROR("Something is not right");
+                    }
+                    }
+                }
                 mu_y = center(j).subVec(0, n_predicted);
                 int n_non_missing = non_missing.length();
                 mu_y_missing.resize(n_non_missing);
                 y_missing.resize(n_non_missing);
+                // Fill in first the coordinates which are in the template,
+                // then the coordinates specific to this data point.
+                static TVec<int> tot_non_missing;
+                if (efficient_missing) {
+                tot_non_missing.resize(tpl_non_missing.length() +
+                                       add_non_missing.length());
+                tot_non_missing.subVec(0, tpl_non_missing.length())
+                    << tpl_non_missing;
+                tot_non_missing.subVec(tpl_non_missing.length(),
+                                       add_non_missing.length())
+                    << add_non_missing;
+                for (int k = 0; k < tot_non_missing.length(); k++) {
+                    mu_y_missing[k] = mu_y[tot_non_missing[k]];
+                    y_missing[k] = y[tot_non_missing[k]];
+                }
+                }
+                if (!efficient_missing) {
                 cov_y_missing.resize(n_non_missing, n_non_missing);
                 for (int k = 0; k < n_non_missing; k++) {
                     mu_y_missing[k] = mu_y[non_missing[k]];
                     y_missing[k] = y[non_missing[k]];
-                    for (int j = 0; j < n_non_missing; j++) {
-                        cov_y_missing(k,j) =
-                            cov_y(non_missing[k], non_missing[j]);
+                    for (int q = 0; q < n_non_missing; q++) {
+                        cov_y_missing(k,q) =
+                            cov_y(non_missing[k], non_missing[q]);
                     }
+                }
                 }
                 if (n_non_missing == 0) {
                     log_likelihood = 0;
                 } else {
                     // Perform SVD of cov_y_missing.
+                    if (!efficient_missing) {
                     eigenVecOfSymmMat(cov_y_missing, n_non_missing,
                                       eigenvals_missing, eigenvecs_missing);
+                    }
 
+                    real log_det = 0;
+                    Mat L_tpl;
+                    if (efficient_missing)
+                        L_tpl = chol_cov_template(tpl_idx, j);
+
+                    // Now we must perform updates to compute the Cholesky
+                    // decomposition of interest.
+                    int n_tpl = L_tpl.length();
+                    static Mat L_tot;
+                    static Vec new_vec;
+                    int n = -1;
+                    if (efficient_missing) {
+                    L_tot.resize(n_non_missing, n_non_missing);
+                    L_tot.resize(n_tpl, n_tpl);
+                    L_tot << L_tpl;
+                    for (int k = 0; k < add_non_missing.length(); k++) {
+                        new_vec.resize(L_tot.length() + 1);
+                        for (int q = 0; q < new_vec.length(); q++)
+                            new_vec[q] = cov_y(tot_non_missing[q],
+                                               add_non_missing[k]);
+                        choleskyAppendRow(L_tot, new_vec);
+                    }
+
+                    n = L_tot.length();
+                    for (int i = 0; i < n; i++)
+                        log_det += pl_log(L_tot(i, i));
+                    assert( !(isnan(log_det) || isinf(log_det)) );
+                    log_likelihood = -0.5 * (n * Log2Pi) - log_det;
+                    }
+
+                    // Old code.
                     mu_y = mu_y_missing;
                     eigenvals = eigenvals_missing;
                     eigenvecs = eigenvecs_missing;
@@ -543,6 +648,16 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     y_centered.resize(n_non_missing);
                     y_centered << y_missing;
                     y_centered -= mu_y;
+                    
+                    if (efficient_missing) {
+                    // Re-New code.
+                    static Vec tmp_vec;
+                    tmp_vec.resize(n);
+                    choleskyLeftSolve(L_tot, y_centered, tmp_vec);
+                    log_likelihood -= 0.5 * pownorm(tmp_vec);
+                    }
+
+                    if (!efficient_missing) {
                     real squared_norm_y_centered = pownorm(y_centered);
                     int n_eig = n_non_missing;
 
@@ -568,6 +683,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     }
                     // Release pointer to 'eigenvecs_missing'.
                     eigenvecs = dummy_mat;
+                    }
                 }
             } else {
                 log_likelihood = log_coeff[j];
@@ -862,7 +978,9 @@ void GaussMix::computePosteriors() {
     for (int i = 0; i < nsamples; i++) {
         train_set->getSubRow(i, 0, sample_row);
         // First we need to compute the likelihood P(s_i | j).
+        current_training_sample = i;
         computeAllLogLikelihoods(sample_row, log_likelihood_post);
+        current_training_sample = -1;
         assert( !log_likelihood_post.hasMissing() );
         for (int j = 0; j < L; j++)
             log_likelihood_post[j] += pl_log(alpha[j]);
@@ -1363,13 +1481,14 @@ void GaussMix::resizeDataBeforeUsing()
     eigenvectors_x.resize(0);
     eigenvectors_y_x.resize(0);
     joint_cov.resize(0);
+    chol_joint_cov.resize(0);
     log_coeff.resize(0);
     log_coeff_x.resize(0);
     log_coeff_y_x.resize(0);
     stage_joint_cov_computed.resize(0);
     y_x_mat.resize(0);
 
-
+    chol_cov_template.resize(0, 0);
     center_y_x.resize(0, 0);
     eigenvalues_x.resize(0, 0);
     eigenvalues_y_x.resize(0, 0);
@@ -1383,12 +1502,15 @@ void GaussMix::resizeDataBeforeUsing()
         eigenvectors_x.resize(L);
         eigenvectors_y_x.resize(L);
         joint_cov.resize(L);
+        chol_joint_cov.resize(L);
         log_coeff_x.resize(L);
         log_coeff_y_x.resize(L);
         stage_joint_cov_computed.resize(L);
         stage_joint_cov_computed.fill(-1);
         y_x_mat.resize(L);
 
+        if (efficient_missing)
+            chol_cov_template.resize(efficient_k_median, L);
         if (n_predictor >= 0)
             eigenvalues_x.resize(L, n_predictor);
         if (n_predicted >= 0) {
@@ -1705,9 +1827,9 @@ void GaussMix::getInitialWeightsFrom(const VMat& vmat)
         delete pb;
 }
 
-/////////////////////////
+////////////////////////////////
 // setPredictorPredictedSizes //
-/////////////////////////
+////////////////////////////////
 bool GaussMix::setPredictorPredictedSizes(int n_i, int n_t,
                                    bool call_parent)
 {
@@ -1719,9 +1841,9 @@ bool GaussMix::setPredictorPredictedSizes(int n_i, int n_t,
     return sizes_changed;
 }
 
-///////////////////////////////
+//////////////////////////////////////
 // setPredictorPredictedSizes_const //
-///////////////////////////////
+//////////////////////////////////////
 void GaussMix::setPredictorPredictedSizes_const(int n_i, int n_t) const
 {
     static Mat inv_cov_x;
@@ -1844,8 +1966,10 @@ struct MissingFlag {
     bool is_missing;
 };
 
-// Empty Boost graph property for nodes in a binary tree.
+// Boost graph property for nodes in a binary tree.
+// It is only used in leafs, to store the pattern's index.
 struct NoProperty {
+    int index;
 };
 
 ///////////
@@ -1883,6 +2007,7 @@ void GaussMix::train()
         int n_unique = 0;
         missing_patterns.resize(0, train_set->inputsize());
         TVec<bool> pattern(train_set->inputsize());
+        sample_to_template.resize(train_set->length());
         for (int i = 0; efficient_missing && i < train_set->length(); i++) {
             train_set->getExample(i, input, target, weight);
             vertex_descr current_vertex = root_vertex;
@@ -1909,10 +2034,19 @@ void GaussMix::train()
                         // This is a leaf.
                         n_unique++;
                         missing_patterns.appendRow(pattern);
+                        int index = missing_patterns.length() - 1;
+                        tree[current_vertex].index = index;
                     }
                 } else {
                     // We found an existing edge.
                     current_vertex = boost::target(*oeiter, tree);
+                }
+                if (k == input.length() - 1) {
+                    // Leaf node.
+                    // First step: each sample is assigned to its missing
+                    // pattern.
+                    sample_to_template[i] = tree[current_vertex].index;
+                    // pout << sample_to_template[i] << endl;
                 }
             }
             if (report_progress)
@@ -1927,12 +2061,13 @@ void GaussMix::train()
         if (efficient_missing) {
             // Perform some kind of k-median on missing patterns for initial
             // clustering of missing patterns.
-            random->shuffleRows(missing_patterns);
+            TVec<int> indices(0, missing_patterns.length() - 1, 1);
+            random->shuffleElements(indices);
             missing_template.resize(
                     efficient_k_median, missing_patterns.width());
             TVec<int> missing_assign(missing_patterns.length(), -1);
             for (int i = 0; i < efficient_k_median; i++) {
-                missing_template(i) << missing_patterns(i);
+                missing_template(i) << missing_patterns(indices[i]);
             }
             bool finished = false;
             TVec<int> n_diffs(efficient_k_median);
@@ -1988,8 +2123,22 @@ void GaussMix::train()
             if (finished && verbosity >= 2)
                 pout << "K-median stopped after only " << count_iter
                      << " iterations" << endl;
-            // Compute some statistics on the distances to templates.
+
+            // Because right now we only want to perform updates, we need to
+            // make sure there will be no need for downdates.
+            for (int i = 0; i < missing_patterns.length(); i++) {
+                int assign = missing_assign[i];
+                for (int k = 0; k < missing_patterns.width(); k++)
+                    if (missing_patterns(i, k))
+                        missing_template(assign, k) = true;
+            }
+
+            // Second step to fill 'sample_to_template'.
+            for (int i = 0; i < sample_to_template.length(); i++)
+                sample_to_template[i] = missing_assign[sample_to_template[i]];
+            
             /*
+            // Compute some statistics on the distances to templates.
             Vec stats_diff(missing_patterns.width());
             stats_diff.fill(0);
             for (int i = 0; i < missing_patterns.length(); i++) {
@@ -2027,9 +2176,8 @@ void GaussMix::train()
             save_vmat = VMat(dist_mat);
             save_vmat->saveAMAT("/u/delallea/tmp/dist_" +
                     tostring(efficient_k_median) + ".amat");
-            */
+                    */
         }
-
 
         // n_tries.resize(0); Old code, may be removed in the future...
         resizeDataBeforeTraining();
@@ -2074,6 +2222,7 @@ void GaussMix::train()
             computePosteriors();
             updateSampleWeights();
             replaced_gaussian = computeMixtureWeights();
+            // replaced_gaussian = false; // TODO Remove this (hack for speed).
         } while (replaced_gaussian);
         computeMeansAndCovariances();
         precomputeAllGaussianLogCoefficients();
