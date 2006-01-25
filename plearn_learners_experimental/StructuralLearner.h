@@ -51,14 +51,7 @@
 namespace PLearn {
 
 /**
- * The first sentence should be a BRIEF DESCRIPTION of what the class does.
- * Place the rest of the class programmer documentation here.  Doxygen supports
- * Javadoc-style comments.  See http://www.doxygen.org/manual.html
- *
- * @todo Write class to-do's here if there are any.
- *
- * @deprecated Write deprecated stuff here if there is any.  Indicate what else
- * should be used instead.
+   Putain de code fait à la va-vite pour ICML
  */
 class StructuralLearner : public PLearner
 {
@@ -67,17 +60,16 @@ class StructuralLearner : public PLearner
 public:
     //#####  Public Build Options  ############################################
 
-    //! ### declare public option fields (such as build options) here
-    //! Start your comments with Doxygen-compatible comments such as //!
-
     real start_learning_rate, decrease_constant;
+    VMat auxiliary_task_train_set;
+    real lambda;
+    real abstention_threshold;
+    real epsilon;
 
 public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
-    // ### Make sure the implementation in the .cc
-    // ### initializes all fields to reasonable default values.
     StructuralLearner();
 
 
@@ -85,39 +77,36 @@ public:
 
     //! Returns the size of this learner's output, (which typically
     //! may depend on its inputsize(), targetsize() and set options).
-    // (PLEASE IMPLEMENT IN .cc)
     virtual int outputsize() const;
 
     //! (Re-)initializes the PLearner in its fresh state (that state may depend
     //! on the 'seed' option) and sets 'stage' back to 0 (this is the stage of a
     //! fresh learner!).
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void forget();
     
     //! The role of the train method is to bring the learner up to stage==nstages,
     //! updating the train_stats collector with training costs measured on-line
     //! in the process.
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void train();
 
     //! Computes the output from the input.
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void computeOutput(const Vec& input, Vec& output) const;
 
     //! Computes the costs from already computed output. 
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                          const Vec& target, Vec& costs) const;
     
     //! Returns the names of the costs computed by computeCostsFromOutpus (and
     //! thus the test method). 
-    // (PLEASE IMPLEMENT IN .cc)
     virtual TVec<std::string> getTestCostNames() const;
 
     //! Returns the names of the objective costs that the train method computes and 
     //! for which it updates the VecStatsCollector train_stats.
-    // (PLEASE IMPLEMENT IN .cc)
     virtual TVec<std::string> getTrainCostNames() const;
+
+    //! Returns the names of the objective costs that the train method computes and 
+    //! for which it updates the VecStatsCollector train_stats.
+    virtual void computeFeatures(Vec input, Vec target, TVec<Vec>& feats, string option = "") const;
 
 
     // *** SUBCLASS WRITING: ***
@@ -150,19 +139,20 @@ public:
 protected:
     //#####  Protected Options  ###############################################
 
-    // ### Declare protected option fields (such as learned parameters) here
-
-    //TVec<StructuralAuxiliaryLearner> m_tvec_auxiliaryLearners;
-
-    int ninputs_onehot; // onehot encoding
-
-    // We have some labelled and unlabelled data
-    TVec<int> labeled_train_set_indices;
-    VMat labeled_train_set;
+    //int ninputs_onehot; // 
 
     // For the model
-    real lambda;
-    Mat w, v, theta_t;
+    TVec<Mat> ws, vs, thetas;
+
+    // Features for an example
+    TVec< TVec<unsigned int> > feats;
+
+    Mat freq_token_target;
+    Vec freq_token;
+
+    // Bag of words features, over window of chunks, precomputed for
+    // the training set
+    TVec< TVec<unsigned int> > bag_of_words_over_chunks;
 
     // For examples
     Vec input, target, before_softmax, output, costs;

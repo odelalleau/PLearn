@@ -79,22 +79,20 @@ StructuralLearner::StructuralLearner()
 
 void StructuralLearner::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
-
-    declareOption(ol, "w", &StructuralLearner::w, OptionBase::learntoption,
+    declareOption(ol, "ws", &StructuralLearner::ws, OptionBase::learntoption,
                    "Weights of the linear classifier: f(x) = wt x + vt theta x");
-    declareOption(ol, "v", &StructuralLearner::v, OptionBase::learntoption,
+    declareOption(ol, "vs", &StructuralLearner::vs, OptionBase::learntoption,
                    "Weights of the linear classifier: f(x) = wt x + vt theta x");
-    declareOption(ol, "theta_t", &StructuralLearner::theta_t, OptionBase::learntoption,
+    declareOption(ol, "thetas", &StructuralLearner::thetas, OptionBase::learntoption,
                    "structure parameter of the linear classifier: f(x) = wt x + vt theta x");
     declareOption(ol, "start_learning_rate", &StructuralLearner::start_learning_rate, OptionBase::buildoption,
                    "Starting learning rate of the stochastic gradient descent");
     declareOption(ol, "decrease_constant", &StructuralLearner::decrease_constant, OptionBase::buildoption,
                    "Decrease constant of the stochastic learning rate");
+    declareOption(ol, "auxiliary_task_train_set", &StructuralLearner::auxiliary_task_train_set, OptionBase::buildoption,
+                   "Training set for auxiliary task");
+    declareOption(ol, "epsilon", &StructuralLearner::epsilon, OptionBase::buildoption,
+                   "Threshold to determine convergence of stochastic descent");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -133,25 +131,11 @@ void StructuralLearner::build_()
     before_softmax.resize(outputsize());
     output.resize(outputsize());
 
-
-    // ***** If this is the first call -> Build the labeled train set
-    if(labeled_train_set_indices.size()==0) {
-      std::cerr << "building labeled train set...";
-      // *** Select all labelled instances
-      for(int e=0; e<train_set->length(); e++)  {
-    
-        train_set->getExample(e, input, target, weight);
-    
-        // * if the example is labeled - add it
-        if(!is_missing(target[2]))
-          labeled_train_set_indices.push_back(e);
-      }
-
-      labeled_train_set = new SelectRowsVMatrix(train_set, labeled_train_set_indices);
-      std::cerr << "done" << std::endl;
-      std::cout << "StructuralLearner train_set->length() " << train_set->length() << " labeled_train_set->length() " << labeled_train_set->length() << std::endl;
-    }
-  } 
+    // TODO:
+    // - resize and initialize ws, vs and thetas
+    // - fill bag_of_words_over_chunks    
+    // - create auxiliary task (if auxiliary_task_train_set != 0)
+  }
 }
 
 // ### Nothing to add here, simply calls build_
@@ -208,61 +192,30 @@ void StructuralLearner::forget()
     
 void StructuralLearner::train()
 {
-  // This generic PLearner method does a number of standard stuff useful for
-  // (almost) any learner, and return 'false' if no training should take
-  // place. See PLearner.h for more details.
   if (!initTrain())
       return;
 
-  // first call to train -> compute theta
-  if( theta_t.size()==0 )  {
+  // Compute thetas over auxiliary task,
+  // if an auxiliary problem is given
+  if( auxiliary_task_train_set && thetas.size()==0 )  {
+      
+      // Preprocessing of auxiliary task should be done by now!
 
-    /*theta_t.resize(ninputs_onehot, 50);
-    // ***** 1) Optional Auxiliary Label creation - train classifiers using labelled data and a specific feature map
-    // We don't use this yet, we only use the auxiliary problems of type unsupervised-"predict observable substructures"
+      // *** a) Train initial weights ws
+      std::cerr << "StructuralLearner::train() - Perform SVD" << std::endl;    
 
-    // ***** 2) For all auxiliary problems assign auxiliary labels to unlabelled data
-    // For now, we hardcoded our learners to use the input adequately as target
-    
-
-    // ***** 3) Compute theta 
-    std::cerr << "StructuralLearner::train() - Compute theta" << std::endl;
-
-    // We just iterate once for this - it should be enough to capture what we need
-    // -> Pour le VRAI SVD ASO 
-    // utiliser m_tvec_auxiliaryLearners.push_back(*auxiliaryLearner);
-    // setter v et theta dans le learner (retirer le hardcodé)
-
-    // *** a) Train auxiliary learners
-
-    // --- Prédicteur de mot courant
-    PP<StructuralAuxiliaryLearner> wordPredictor = new StructuralAuxiliaryLearner();
-    wordPredictor->setTrainingSet(train_set);
-
-    // - Faire l'entraînement
-    // -> Train it (roughly done)
-
-    // should really improve this hacky init...
-    real best_error=1.1;
-    real current_error=1.0;
-
-    while(current_error < best_error)  {
-      best_error = current_error;
-
-      wordPredictor->nstages++;
-      wordPredictor->train();
-
-      current_error = (wordPredictor->getTrainStatsCollector()->getMean())[0];
-
-std::cerr << "Auxiliary stage " << wordPredictor->nstages << " current_error " << current_error << std::endl;
-    } 
-
-
-    // *** b) Perform SVD
-    std::cerr << "StructuralLearner::train() - Perform SVD" << std::endl;
-
-    // --- Concaténer les vecteurs
-    Mat U = sqrt(lambda) * wordPredictor->u_t;
+      real best_error=1.1;
+      real current_error=1.0;
+      
+      while(current_error < best_error)  {
+          best_error = current_error;
+      } 
+      
+      // *** b) Perform SVD
+      std::cerr << "StructuralLearner::train() - Perform SVD" << std::endl;
+      
+      // --- Concat
+      Mat U = sqrt(lambda) * ;
 
     // --- Try and free some memory (smart pointers)
     wordPredictor=NULL;
