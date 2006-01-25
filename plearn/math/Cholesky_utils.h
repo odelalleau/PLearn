@@ -2,7 +2,9 @@
 
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal, all rights reserved
+// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of
+//                         Montreal, all rights reserved
+// Copyright (C) 2006 Olivier Delalleau
 //
 
 // Redistribution and use in source and binary forms, with or without
@@ -40,6 +42,17 @@
 #include <plearn/math/Mat.h>
 
 namespace PLearn {
+
+//! Update the Cholesky decomposition of A = L L' when a new row is appended
+//! to the matrix A. Since A is symmetric, this of course means that this
+//! 'new_row' vector is also appended as a column in A.
+//! The matrix L is modified as follows:
+//!   - its dimensions are increased by 1
+//!   - its bottom-right element is set to sqrt(new_row.last())
+//!   - its last row (except the bottom-right element) is the vector x such
+//!     that Ly = new_row (obtained by back-substitution)
+//! Computational cost: O(n^2)
+void choleskyAppendRow(Mat& L, const Vec& new_row);
 
 // L (n_active x n_active) is lower-diagonal and is such that A = L L' = lambda I + sum_t phi_t(x_t) phi_t(x_t)'
 // where the sum runs until 'now' and phi_t is the 'current' active basis set. 

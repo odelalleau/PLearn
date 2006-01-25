@@ -2,7 +2,9 @@
 
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
+// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of
+//                         Montreal, all rights reserved
+// Copyright (C) 2006 Olivier Delalleau
 //
 
 // Redistribution and use in source and binary forms, with or without
@@ -48,6 +50,24 @@
 
 namespace PLearn {
 using namespace std;
+
+///////////////////////
+// choleskyAppendRow //
+///////////////////////
+void choleskyAppendRow(Mat& L, const Vec& new_row)
+{
+    static Vec last_row;
+    int n = L.length();
+    assert( L.width() == n);
+    assert( new_row.length() == n + 1 );
+    assert( new_row.last() >= 0 );
+
+    last_row.resize(n);
+    choleskyLeftSolve(L, new_row.subVec(0, n), last_row);
+    last_row.append(sqrt(new_row.last()));
+    L.resize(n + 1, n + 1, 0, true);
+    L(n) << last_row;
+}
 
 // L (n_active x n_active) is lower-diagonal and is such that A = L L' = lambda I + sum_t phi_t(x_t) phi_t(x_t)'
 // where the sum runs until 'now' and phi_t is the 'current' active basis set. 
