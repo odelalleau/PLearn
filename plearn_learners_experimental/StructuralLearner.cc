@@ -389,6 +389,224 @@ TVec<string> StructuralLearner::getTrainCostNames() const
     return ret;
 }
 
+
+
+
+
+
+/** 
+* @brief Takes an example as input and returns the corresponding features. These are onehot encoded
+* and so it is the active indices that are returned. The function returns the features' onehot encoded
+* length.
+* 
+* @param input the example's input
+* @param target the example's target
+* @param BagOfWordsInThreeSyntacticChunkWindow active indices in a bag of words for the words in a 3 syntactic chunk window
+* @param theFeatureGroups the features (the indices that are active) organized by groups - output
+* @param option specifies whether some features are masked (default "" is none)
+* 
+* @returns the features' onehot encoded length
+*
+* @note check with Hugo: fl+=(train_set->getDictionary(0))->size()+2;
+* @todo take option into account
+**/
+int StructuralLearner::computeFeatures(const Vec& input, const Vec& target, const TVec<unsigned int>& BagOfWordsInThreeSyntacticChunkWindow, TVec< TVec<unsigned int> >& theFeatureGroups, string option) const
+{
+
+	unsigned int fl=0;		// length of the onehot encoded features (stands for "features' length")
+	TVec<unsigned int> currentFeatureGroup;
+	
+	// We have 8 feature groups
+	theFeatureGroups.resize(0);
+	theFeatureGroups.resize(8);
+	
+	
+	// *** Wordtag features ***
+	// Wordtags in a 5 word window with a onehot encoding
+	// Derived from the wordtags input[0], input[3], input[6], input[9], input[12]
+        currentFeatureGroup = theFeatureGroups[0];
+	for(int i=0, ii=0; i<5; i++)  {
+		ii=3*i;
+		
+		if( !is_missing(input[ii]) ) {
+			currentFeatureGroup.push_back( (unsigned int)(fl + input[ii]) );
+		}
+		else	{
+			currentFeatureGroup.push_back( fl + (train_set->getDictionary(ii))->size() + 1 );  // explicitly say it's missing
+		}
+		fl += (train_set->getDictionary(ii))->size()+2; // +1 for OOV and +1 for missing
+	}//for wordtags 
+
+
+	// *** POS features ***
+	// POStags in a 5 word window with a onehot encoding
+	// Derived from the postags input[1], input[4], input[7], input[10], input[13]
+        currentFeatureGroup = theFeatureGroups[1];
+	for(int i=0, ii=0; i<5; i++)  {
+		ii=3*i+1;
+		
+		if( !is_missing(input[ii]) ) {
+			currentFeatureGroup.push_back( (unsigned int)(fl + input[ii]) );
+		}
+		else	{
+			currentFeatureGroup.push_back( fl + (train_set->getDictionary(ii))->size() + 1 );  // explicitly say it's missing
+		}
+		fl += (train_set->getDictionary(ii))->size()+2; // +1 for OOV and +1 for missing
+	}//for postags 
+
+/*
+	// *** Char type features ***
+	// Char type features in a 5 word window - 4 features (1 if true, 0 if not):
+	//		-1st letter capitalized
+	//		-All letters capitalized
+	//		-All digits
+	//		-All digits and '.'  ','
+	// Derived from the words (wordtags in input[0], input[3], input[6], input[9], input[12])
+	currentFeatureGroup = theFeatureGroups[2];
+	for(int i=0, ii=0; i<5; i++)  {
+		ii=3*i;
+		
+		// Word is not missing, test for 4 features
+		if( !is_missing(input[ii]) ) {
+			
+			// Get the word
+			(train_set->getDictionary(ii))->getSymbol(input[ii]);
+			
+		}
+
+		fl+=4; 
+	}//for 5 word window
+
+
+	// *** Prefix features ***
+	// Prefix features - 4 initial caracters, onehot-encoded (we only consider letters)
+	// Derived from the words (wordtags in input[0], input[3], input[6], input[9], input[12])
+	for(int i=0, ii=0; i<5; i++)  {
+	{
+		ii=3*i;
+		
+		// Word is not missing, look at 4 1st caracters
+		if( !is_missing(input[ii]) ) {
+			
+			// Get the word
+			(train_set->getDictionary(ii))->getSymbol(input[ii]);
+			
+			// for 4 1st chars, if they exist!
+			// Check that Char - 'a' or 'A' is between 0 and 25
+			// Hugo - what to do if special char or if shorter than 4... have 2 bits for that?
+			
+		}
+
+		fl+=26; 
+	}//for 5 word window
+
+//!!!!!!!!!!!Check with Hugo that push_back works as in stl (=makes a copy?)
+activeIndicesGroups.push_back(currentActiveIndicesGroup);
+currentActiveIndicesGroup.resize(0);
+
+
+	// *** Suffix features ***
+	// Suffix features - 4 last caracters, onehot-encoded (we only consider letters)
+	// Derived from the words (wordtags in input[0], input[3], input[6], input[9], input[12])
+	for(int i=0, ii=0; i<5; i++)  {
+	{
+		ii=3*i;
+		
+		// Word is not missing, look at 4 last caracters
+		if( !is_missing(input[ii]) ) {
+			
+			// Get the word
+			(train_set->getDictionary(ii))->getSymbol(input[ii]);
+			
+			// for 4 last chars, if they exist!
+			// Check that Char - 'a' or 'A' is between 0 and 25
+			// Hugo - what to do if special char or if shorter than 4... have 2 bits for that? if so, change the +26
+			
+		}
+
+		fl+=26; 
+	}//for 5 word window
+
+//!!!!!!!!!!!Check with Hugo that push_back works as in stl (=makes a copy?)
+activeIndicesGroups.push_back(currentActiveIndicesGroup);
+currentActiveIndicesGroup.resize(0);
+
+
+	// *** "Bag of words in a 3 syntactic chunk window" features ***
+	// we have this from preprocessing
+	for(int i=0; i<wordsIn3SyntacticContext.length(); i++)	{
+		currentActiveIndicesGroup.push_back( fl + wordsIn3SyntacticContext[i] );
+	}
+	
+	fl += (train_set->getDictionary(0))->size()+1; // +1 and not 2 because none of these words can be missing
+//!!!!!!!!!!!Check with Hugo that push_back works as in stl (=makes a copy?)
+activeIndicesGroups.push_back(currentActiveIndicesGroup);
+currentActiveIndicesGroup.resize(0);
+
+
+	// *** Label features ***
+	// Labels of the 2 words on the left - should always be in the target (if we are decoding, then the target
+	// should hold what we have predicted
+	if( !is_missing(target[0]) ) {
+		currentActiveIndicesGroup.push_back( fl + target[0] );
+	}
+	fl += (train_set->getDictionary(inputsize_))->size()+1;
+	if( !is_missing(target[1]) ) {
+		currentActiveIndicesGroup.push_back( fl + target[1] );
+	}
+	fl += (train_set->getDictionary(inputsize_))->size()+1;
+//!!!!!!!!!!!Check with Hugo that push_back works as in stl (=makes a copy?)
+activeIndicesGroups.push_back(currentActiveIndicesGroup);
+currentActiveIndicesGroup.resize(0);
+
+
+	// *** Previous occurences features ***
+	// ...
+	
+*/
+	return fl;
+}
+
+/*
+//PA - need to integrate this
+int StructuralLearner::determineWordsIn3SyntacticContext(VMat example_set, TVec< TVec<unsigned int> >& wordsIn3SyntacticContext_set)	{
+	
+	TVec< unsigned int > leftSyntacticChunkBagOfWords;
+	TVec< unsigned int > CurrentSyntacticChunkBagOfWords;
+	TVec< unsigned int > RightSyntacticChunkBagOfWords;
+	
+	TVec< unsigned int > wordsIn3SyntacticContext;
+
+	input[8] is current chunk
+	
+	// set currentSyntacticChunk
+	//compute CurrentSyntacticChunkBagOfWords and RightSyntacticChunkBagOfWords
+	// then cat into wordsIn3SyntacticContext
+	
+	for(int e=0; e<train_set->length(); e++)  {
+		train_set->getExample(e, input, target, weight);
+	
+		// We encounter a new chunk
+		if( input[8] != currentSyntacticChunk )	{		// input[8] is the current syntactic chunk - never a missing value
+			leftSyntacticChunkBagOfWords = CurrentSyntacticChunkBagOfWords;
+			CurrentSyntacticChunkBagOfWords = RightSyntacticChunkBagOfWords;
+			// set currentSyntacticChunk
+			// compute new RightSyntacticChunkBagOfWords
+			// readjust wordsIn3SyntacticContext by cating all 3 (insure unicity? YES!)
+		}
+		
+		wordsIn3SyntacticContext_set.push_back(wordsIn3SyntacticContext);
+		
+	}//for the examples
+		
+		
+	return 0;
+}
+
+*/
+
+
+
 //////////////////////
 // initializeParams //
 //////////////////////
