@@ -104,9 +104,9 @@ public:
     //! for which it updates the VecStatsCollector train_stats.
     virtual TVec<std::string> getTrainCostNames() const;
 
-    //! Returns the names of the objective costs that the train method computes and 
-    //! for which it updates the VecStatsCollector train_stats.
     virtual void computeFeatures(Vec input, Vec target, TVec<Vec>& feats, string option = "") const;
+
+    virtual void updateDynamicFeatures(Mat freq_token_prediction, int token, int prediction, bool increment=true) const;
 
 
     // *** SUBCLASS WRITING: ***
@@ -146,10 +146,13 @@ protected:
 
     // Features for an example
     TVec< TVec<unsigned int> > feats;
+    unsigned int *current_features;
 
-    Mat freq_token_target;
-    Vec freq_token;
+    Mat freq_token_prediction_train;
+    TVec<Mat> freq_token_prediction_test;
 
+    Mat thetas_times_x;
+    
     // Bag of words features, over window of chunks, precomputed for
     // the training set
     TVec< TVec<unsigned int> > bag_of_words_over_chunks;
