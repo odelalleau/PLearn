@@ -104,7 +104,8 @@ public:
     //! for which it updates the VecStatsCollector train_stats.
     virtual TVec<std::string> getTrainCostNames() const;
 
-    virtual void computeFeatures(Vec input, Vec target, TVec<Vec>& feats, string option = "") const;
+    int computeFeatures(const Vec& input, const Vec& target, const TVec<unsigned int>& BagOfWordsInThreeSyntacticChunkWindow, TVec< TVec<unsigned int> >& theFeatureGroups, string option = "") const
+
 
     virtual void updateDynamicFeatures(Mat freq_token_prediction, int token, int prediction, bool increment=true) const;
 
