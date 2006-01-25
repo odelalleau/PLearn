@@ -2062,7 +2062,8 @@ void GaussMix::train()
             // Perform some kind of k-median on missing patterns for initial
             // clustering of missing patterns.
             TVec<int> indices(0, missing_patterns.length() - 1, 1);
-            random->shuffleElements(indices);
+            // TODO Use random (but -> different k-means initialization)
+            PRandom::common(false)->shuffleElements(indices);
             missing_template.resize(
                     efficient_k_median, missing_patterns.width());
             TVec<int> missing_assign(missing_patterns.length(), -1);
@@ -2111,8 +2112,10 @@ void GaussMix::train()
                         else if (majority(j, k) < 0)
                             missing_template(j, k) = false;
                         else
+                            // TODO Use random (but be careful to effects, e.g.
+                            // kmeans initialization).
                             missing_template(j, k) =
-                                (random->uniform_sample() < 0.5);
+                                (PRandom::common(false)->uniform_sample() < 0.5);
 
                 count_iter++;
                 if (report_progress)
