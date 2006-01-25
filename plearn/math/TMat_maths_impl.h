@@ -5175,7 +5175,7 @@ void  bpropCholeskyDecomposition(const TMat<T>& A, const TMat<T>& L,
 
 // Given L lower-diagonal, solve L y = b
 template<class T>
-void  choleskyLeftSolve(const TMat<T>& L, TVec<T>& b, TVec<T>& y)
+void  choleskyLeftSolve(const TMat<T>& L, const TVec<T>& b, const TVec<T>& y)
 {
     int i,k;
     T sum;
