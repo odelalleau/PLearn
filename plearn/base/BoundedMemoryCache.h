@@ -72,7 +72,7 @@ template <class KeyType, class ValueType>
 class BoundedMemoryCache
 {
 protected:
-    int      n_elements; /*!<  The actual number of elements stored */
+    int      n_elements; /*!<  The actual number of elements stored in memory */
     int      max_memory; /*!< The maximum memory used to store the elements */
     int      current_memory; /*!< The current memory used to store the elements */
 public:
@@ -86,6 +86,11 @@ public:
         : n_elements(0), max_memory(max_memory_), current_memory(0), doubly_linked_list(new DoublyLinkedList<KeyType>),
           n_successful_hits(0), n_failures(0)
     {}
+
+    inline void clear() { 
+        n_elements=0; current_memory=0; elements.clear(); 
+        while (BoundedMemoryCache<KeyType,ValueType>::doubly_linked_list->front) BoundedMemoryCache<KeyType,ValueType>::doubly_linked_list->removeLast();
+    }
 
     //! Try to get value associataed with key. If not in cache return 0, else return pointer to value.
     //! Recently accessed keys (with set or operator()) are less likely to be removed.
@@ -106,7 +111,7 @@ public:
 #endif
         return &(it->second.first);
     }
-    inline ValueType* operator()(KeyType& key) { 
+    inline  ValueType* operator()(KeyType& key) { 
         typename map<KeyType,pair<ValueType,DoublyLinkedListElement<KeyType>*> >::iterator it = elements.find(key);
         if (it==elements.end()) 
         {
@@ -128,7 +133,7 @@ public:
 
     //! Associate value to key. 
     //! Recently accessed keys (with set or operator()) are less likely to be removed.
-    inline void set(KeyType& key, const ValueType& value) {
+    inline  void set(KeyType& key, const ValueType& value) {
         typename map<KeyType,pair<ValueType,DoublyLinkedListElement<KeyType>*> >::iterator it = elements.find(key);
         if (it==elements.end()) { // first time set
             DoublyLinkedListElement<KeyType>* p=doubly_linked_list->pushOnTop(key);
@@ -162,19 +167,21 @@ public:
         removeExcess();
     }
     //! Check if this key is in cache. This does not change the access priority of the key.
-    inline bool isCached(KeyType& key) const { return elements.find(key)!=elements.end(); }
-    inline int nElements() const { return n_elements; }
-    inline int currentMemory() const { return current_memory; }
-    inline int maxMemory() const { return max_memory; }
-    inline void setMaxMemory(int new_max_memory) {
+    inline  bool isCached(KeyType& key) const { return elements.find(key)!=elements.end(); }
+    inline  int nElements() const { return n_elements; }
+    inline  int currentMemory() const { return current_memory; }
+    inline  int maxMemory() const { return max_memory; }
+    inline  void setMaxMemory(int new_max_memory) {
         max_memory=new_max_memory;
         removeExcess();
     }
 
-    inline float successRate() { return float(n_successful_hits)/(n_successful_hits + n_failures); }
+    inline  float successRate() { return float(n_successful_hits)/(n_successful_hits + n_failures); }
+
+    inline  ~BoundedMemoryCache() { clear(); }
 
     // check that all pointers to doubly linked list elements are still valid
-    inline void verifyInvariants() {
+    inline  void verifyInvariants() {
         if (!doubly_linked_list->last || doubly_linked_list->last->next)
             PLERROR("something wrong with last element of doubly linked list!");
         if (max_memory - current_memory>500) return;
@@ -200,7 +207,7 @@ public:
 
 protected:
     //! remove last element until current_memory <= max_memory;
-    inline void removeExcess()
+    inline  virtual void removeExcess()
     {
         while (current_memory > max_memory)
         {

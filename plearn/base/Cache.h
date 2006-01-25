@@ -49,7 +49,8 @@
 #define Cache_INC
 
 #include <plearn/base/BoundedMemoryCache.h>
-
+#include <plearn/io/fileutils.h>
+#include <plearn/io/openFile.h>
 namespace PLearn {
 using namespace std;
 
@@ -67,50 +68,106 @@ using namespace std;
  * must be serializable with PLearn's PStream's. If one file per
  * entry is used, the KeyType must be convertible to a string with 'tostring(key)', which
  * will be used as a suffix of the file name (before the .psave suffix). 
+ * ONLY THE FILES ASSOCIATED TO THIS CACHE SHOULD BE STORED IN THE files_directory.
  *
  */
 template <class KeyType, class ValueType>
-class Cache
+class Cache : public BoundedMemoryCache<KeyType,ValueType>
 {
 protected:
-    BoundedMemoryCache<KeyType,ValueType> memory_cache;
     bool single_file; // whether the filed entries are in a single large file or one file per element
-    string file_prefix;
-    int n_elements;
+    string files_directory;
 public:
+    PStream::mode_t file_format; // possible values are: PStream::{raw,plearn}_{ascii,binary}
 
-    inline Cache(string fileprefix = "cache", bool singlefile=false, int max_memory_=0) 
-        : memory_cache(max_memory), single_file(singlefile), file_prefix(fileprefix), n_elements(0)
+    inline Cache(string dir = "cache", bool singlefile=false, int max_memory_=0) 
+        : BoundedMemoryCache<KeyType,ValueType>(max_memory_), single_file(singlefile), files_directory(dir), file_format(PStream::raw_ascii)
     {}
 
     //! Try to get value associataed with key. If not in cache (either memory or disk) return 0, 
     //! else return pointer to value. Recently accessed keys (with set or operator()) are less likely 
     //! to be removed from memory (saved to disk).
     inline const ValueType* operator()(KeyType& key) const { 
-        ValueType* value_p = memory_cache(key);
+        ValueType* value_p = BoundedMemoryCache<KeyType,ValueType>::operator()(key);
         if (value_p) // we have it in memory
             return *value_p;
         // else check if we have it on file
+        value_p = loadValue(key);
+        if (value_p)
+            BoundedMemoryCache<KeyType,ValueType>::set(key,*value_p);
+        return value_p;
     }
     inline ValueType* operator()(KeyType& key) { 
+        ValueType* value_p = BoundedMemoryCache<KeyType,ValueType>::operator()(key);
+        if (value_p) // we have it in memory
+            return *value_p;
+        // else check if we have it on file
+        value_p = loadValue(key);
+        if (value_p)
+            BoundedMemoryCache<KeyType,ValueType>::set(key,*value_p);
+        return value_p;
     }
 
-
-    //! Associate value to key. 
-    //! Recently accessed keys (with set or operator()) are less likely to be removed from memory.
-    inline void set(KeyType& key, const ValueType& value) {
-        if (first time it is set)
-            n_elements++;
-    }
     //! Check if this key is in cache. This does not change the access priority of the key.
-    inline bool isCached(KeyType& key) const { return memory_cache.isCached(key) || isOnFile(key); }
-    inline bool isInMemory(KeyType& key) const { return memory_cache.isCached(key); }
-    inline int nElements() const { return n_elements; }
-    inline int nElementsInMemory() const { return memory_cache.n_elements; }
-    inline int currentMemory() const { return memory_cache.current_memory; }
-    inline int maxMemory() const { return memory_cache.max_memory; }
-    inline void setMaxMemory(int new_max_memory) { memory_cache.setMaxMemory(new_max_memory); }
-    inline float successRate() { return memory_cache.successRate(); }
+    inline bool isCached(KeyType& key) const { return BoundedMemoryCache<KeyType,ValueType>::isCached(key) || isOnFile(key); }
+    inline bool isInMemory(KeyType& key) const { return BoundedMemoryCache<KeyType,ValueType>::isCached(key); }
+    inline string filename(KeyType& key) { return files_directory + "/" + tostring(key) + ".psave"; }
+    inline bool isOnFile(KeyType& key) { return isfile(filename(key)); }
+    inline void clear() {
+        BoundedMemoryCache<KeyType,ValueType>::clear();
+        vector<string> filenames = lsdir(files_directory);
+        for (int i=0;i<filenames.size();i++)
+            rm(files_directory + "/" + filenames[i]);
+    }
+    inline virtual ~Cache() { BoundedMemoryCache<KeyType,ValueType>::clear(); }
+
+protected:
+    inline ValueType* loadValue(KeyType& key) {
+        if (single_file)
+        {
+            PLERROR("Cache: single_file mode not yet implemented");
+        }
+        else
+        {
+            string fname = filename(key);
+            if (!isfile(fname))
+                return 0;
+            PStream filestream = openFile(fname, file_format, "r");
+            ValueType* v = new ValueType;
+            filestream >> *v;
+            return v;
+        }
+    }
+    inline void saveValue(KeyType& key, ValueType& value) {
+        if (single_file)
+        {
+            PLERROR("Cache: single_file mode not yet implemented");
+        }
+        else
+        {
+            PStream filestream = openFile(filename(key), file_format, "w");
+            filestream << value;
+        }
+    }
+
+    //! remove last element until current_memory <= max_memory;
+    inline void removeExcess()
+    {
+        while (BoundedMemoryCache<KeyType,ValueType>::current_memory > BoundedMemoryCache<KeyType,ValueType>::max_memory)
+        {
+            KeyType& key = BoundedMemoryCache<KeyType,ValueType>::doubly_linked_list->last->entry;
+
+            // STORE THE ELEMENT TO BE DELETED ON DISK:
+            pair<ValueType,DoublyLinkedListElement<KeyType>*> v = BoundedMemoryCache<KeyType,ValueType>::elements[key];
+            saveValue(key, v.first);
+
+            BoundedMemoryCache<KeyType,ValueType>::current_memory -= sizeInBytes(BoundedMemoryCache<KeyType,ValueType>::elements[key]);
+            v.second=0;  // this is just to help debugging, really, to help track wrong pointers
+            BoundedMemoryCache<KeyType,ValueType>::elements.erase(key);
+            BoundedMemoryCache<KeyType,ValueType>::doubly_linked_list->removeLast();
+            BoundedMemoryCache<KeyType,ValueType>::n_elements--;
+        }
+    }
 
 protected:
 
