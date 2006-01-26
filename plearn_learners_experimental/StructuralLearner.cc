@@ -462,22 +462,37 @@ int StructuralLearner::computeFeatures(const Vec& input, const Vec& target, cons
 	//		-All digits
 	//		-All digits and '.'  ','
 	// Derived from the words (wordtags in input[0], input[3], input[6], input[9], input[12])
+        std::string symbol;
 	currentFeatureGroup = theFeatureGroups[2];
 	for(int i=0, ii=0; i<5; i++)  {
 		ii=3*i;
 		
 		// Word is not missing, test for 4 features
 		if( !is_missing(input[ii]) ) {
-			
 			// Get the word
-			(train_set->getDictionary(ii))->getSymbol(input[ii]);
-			
-		}
+			symbol = (train_set->getDictionary(ii))->getSymbol(input[ii]);
+		        
+                        // 1st letter capitalized	
+                        if( symbol.length() > 0)    {
+                            if( (symbol[0] >= 'A') && (symbol[0] <= 'Z') )  {
+                        	currentFeatureGroup.push_back( fl );    
+                            }
+                 	}
 
+                        // All letters capitalized	
+                        if( symbol.length() > 0)    {
+                            for( int j=0; j<symbol.length(); j++ ) {
+                                if( (symbol[0] >= 'A') && (symbol[0] <= 'Z') )  {
+                                	currentFeatureGroup.push_back( fl );    
+                                }
+                            }
+                 	}
+
+                }
 		fl+=4; 
 	}//for 5 word window
-
-
+*/
+/*
 	// *** Prefix features ***
 	// Prefix features - 4 initial caracters, onehot-encoded (we only consider letters)
 	// Derived from the words (wordtags in input[0], input[3], input[6], input[9], input[12])
