@@ -65,6 +65,7 @@ public:
     real lambda;
     real abstention_threshold;
     real epsilon;
+    int index_O;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -104,11 +105,13 @@ public:
     //! for which it updates the VecStatsCollector train_stats.
     virtual TVec<std::string> getTrainCostNames() const;
 
-    int computeFeatures(const Vec& input, const Vec& target, const TVec<unsigned int>& BagOfWordsInThreeSyntacticChunkWindow, TVec< TVec<unsigned int> >& theFeatureGroups, string option = "") const;
+    virtual void computeOutputWithFeatures(TVec<TVec<unsigned int> >& feats, Vec& output, bool use_theta);
 
+    int computeFeatures(const Vec& input, const Vec& target, const TVec<unsigned int>& BagOfWordsInThreeSyntacticChunkWindow, TVec< TVec<unsigned int> >& theFeatureGroups, string option = "");
 
-    virtual void updateDynamicFeatures(Mat freq_token_prediction, int token, int prediction, bool increment=true) const;
-
+    virtual void updateDynamicFeatures(Mat freq_token_prediction, int token, int prediction, bool increment=true);
+        
+    virtual void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs=0, VMat testcosts=0) const;
 
     // *** SUBCLASS WRITING: ***
     // While in general not necessary, in case of particular needs 
@@ -116,7 +119,6 @@ public:
     // some of the following methods:
     // virtual void computeOutputAndCosts(const Vec& input, const Vec& target, Vec& output, Vec& costs) const;
     // virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
-    // virtual void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs=0, VMat testcosts=0) const;
     // virtual int nTestCosts() const;
     // virtual int nTrainCosts() const;
     // virtual void resetInternalState();
@@ -149,11 +151,11 @@ protected:
     TVec< TVec<unsigned int> > feats;
     unsigned int *current_features;
 
-    Mat freq_token_prediction_train;
+    hash_map<int,TMat<bool> > freq_token_prediction_train;
     TVec<Mat> freq_token_prediction_test;
 
     Mat thetas_times_x;
-    
+
     // Bag of words features, over window of chunks, precomputed for
     // the training set
     TVec< TVec<unsigned int> > bag_of_words_over_chunks;
@@ -162,6 +164,7 @@ protected:
     Vec input, target, before_softmax, output, costs;
     real weight;
 
+    // Dynamic features
     
 protected:
     //#####  Protected Member Functions  ######################################

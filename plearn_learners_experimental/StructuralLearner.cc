@@ -64,7 +64,7 @@ StructuralLearner::StructuralLearner()
   start_learning_rate=0.0;
   decrease_constant=0.0;
   lambda=0.0001;
-  
+  index_O = 1;
   labeled_train_set_indices.resize(0);
   //m_tvec_auxiliaryLearners.resize(0);
   
@@ -89,6 +89,8 @@ void StructuralLearner::declareOptions(OptionList& ol)
                    "Training set for auxiliary task");
     declareOption(ol, "epsilon", &StructuralLearner::epsilon, OptionBase::buildoption,
                    "Threshold to determine convergence of stochastic descent");
+    declareOption(ol, "index_O", &StructuralLearner::index_O, OptionBase::buildoption,
+                   "Index of the \"O\" (abstention) symbol");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -192,74 +194,39 @@ void StructuralLearner::train()
       // Train initial weights ws
       std::cerr << "StructuralLearner::train() - Perform SVD" << std::endl;    
 
+      // TODO: should I save features once and for all here
+      // think of access to dictionaries...
+
       real best_error=REAL_MAX;
       real current_error=REAL_MAX;
-      
-      while(current_error < best_error)  {
+      it = 0;
+      while(current_error < best_error - epsilon)  {
           best_error = current_error;
-      
-      }
-      
-      // Now, using computed theta to bias training
-
-      // Perform SVD
-      std::cerr << "StructuralLearner::train() - Performing SVD" << std::endl;
-      
-      // --- Concat
-      Mat U = sqrt(lambda) * U;
-      Mat U_t = transpose(U);
-      
-      std::cout << "U_t.length() " << U_t.length() << " U_t.width() " << U_t.width() << std::endl;
-      
-      // --- Faire la SVD
-      Mat V1, V2;
-      Vec D;
-      SVD(U_t, V1, D, V2, 'A');
-      
-      std::cout << "V1.length() " << V1.length() << " V1.width() " << V1.width() << std::endl;
-      
-      theta_t = V1.subMatRows(0, 50);
-      theta_t = transpose(theta_t);
-      
-      U.resize(0, 0);
-      U_t.resize(0, 0);
-      V1.resize(0, 0);
-      V2.resize(0, 0);
-      D.resize(0);  
-
-
-  }
-  else
-  {
-      // Train target classifier
-      std::cerr << "StructuralLearner::train() - Training target classifier" << std::endl;
-      
-      while(stage<nstages)
-      {
-          
-          std::cerr << "StructuralLearner::train() - stage is " << stage << std::endl;
-          
           train_stats->forget();
-          learning_rate = start_learning_rate / (1+decrease_constant*stage);
-          
+          learning_rate = start_learning_rate / (1+decrease_constant*it);          
           for(int i=0; i<train_set->length(); i++)  {
-              
-              train_set->getExample(i, input, target, weight);
+              auxiliary_task_train_set->getExample(i, input, target, weight);
+              // TODO: should indicate that for auxiliary task
+              computeFeatures(input,target,feats);
               // 1) compute the output
-              computeOutput(input, output) ; 
+              // TODO: give which auxiliary problem, so that 
+              // could test converge for all individual problems separately
+              computeOutputWithFeatures(feats,output,false) ; 
               // 2) compute the cost      
               computeCostsFromOutputs(input, output, target, costs);
               train_stats->update(costs);
+              
+              // TODO: update dynamic features
 
               // 3) Update weights
                             
-              // Pour les xj différents de 0 (k is a modified index - 0/1 encoding)
+              // TODO: update for neural network
 
-              for(int i=0; i<outputsize(); i++) 
+              for(int f=0; f<feats.length(); f++)
               {
-                  for(int f=0; f<feats.length(); f++)
-                  {                      
-                      current_features = feats[f].data();
+                  current_features = feats[f].data();
+                  for(int i=0; i<outputsize(); i++) 
+                  {                                        
                       // Update w
                       for(int j=0; j<feats[f].length(); j++)  {
                           if(i!=target[2])  {
@@ -269,98 +236,209 @@ void StructuralLearner::train()
                               ws[f](current_features[j], i) -= learning_rate*(output[i]-1) + (lambda != 0 ? 2*lambda*ws[f](current_features[j], i) : 0);
                           }
                       }                                                             
+                  }
+              }
 
-                      // Update v
-                      real theta_x_j=0.0;
-                      for(int j=0; j<50; j++)  {
-                          for(int k=0, l=0; k<inputsize(); k++)  {
-                              theta_x_j += theta_t(l+(int)input[k], j); //w[i][k+(int)input[j]];
-                              l += (train_set->getDictionary(k))->size()+1;
-                          }
-                      
-                      
-                          if(i!=target[2])  {
-                              v(j, i) -= update1 * theta_x_j;
-                          }
-                          else  {
-                              v(j, i) -= update2 * theta_x_j;
-                          }
+          }
+          it++;
+          train_stats->finalize();
+          current_error = train_stats->getMean()[0];
+          // TODO: reset dynamic features
+      }
+      
+      // Now, using computed theta to bias training
+
+      Mat V;
+      Vec D;          
+      for(int f=0; f<ws.length(); f++)
+      {
+          // Perform SVD
+          std::cerr << "StructuralLearner::train() - Performing " << f << "th SVD" << std::endl;
+          
+          Mat U_t = sqrt(lambda) * ws[f];
+
+          std::cout << "U_t.length() " << U_t.length() << " U_t.width() " << U_t.width() << std::endl;
+          
+          // --- Faire la SVD
+          lapack(U_t, thetas[f], D, V, 'A');
+          
+          std::cout << "thetas[f].length() " << thetas[f].length() << " thetas[f].width() " << thetas[f].width() << std::endl;
+          
+          thetas[f] = thetas[f].subMatRows(0, 50);
+      }
+
+  }
+  else
+  {
+      // Train target classifier
+      std::cerr << "StructuralLearner::train() - Training target classifier" << std::endl;                
+      std::cerr << "StructuralLearner::train() - stage is " << stage << std::endl;
+      
+      train_stats->forget();
+      learning_rate = start_learning_rate / (1+decrease_constant*stage);
+      
+      for(int i=0; i<train_set->length(); i++)  {
+              
+          train_set->getExample(i, input, target, weight);
+          computeFeatures(input,target,feats);
+          // 1) compute the output
+          computeOutput(feats,output) ; 
+          // 2) compute the cost      
+          computeCostsFromOutputs(input, output, target, costs);
+          train_stats->update(costs);
+          // TODO: update dynamic features
+
+          // 3) Update weights
+                            
+          // TODO: update for neural network
+
+          for(int f=0; f<feats.length(); f++)
+          {
+              current_features = feats[f].data();
+              for(int i=0; i<outputsize(); i++) 
+              {                                        
+                  // Update w
+                  for(int j=0; j<feats[f].length(); j++)  {
+                      if(i!=target[2])  {
+                          ws[f](current_features[j], i) -= learning_rate*output[i] + (lambda != 0 ? 2*lambda*ws[f](current_features[j], i) : 0);
+                      }
+                      else  {
+                          ws[f](current_features[j], i) -= learning_rate*(output[i]-1) + (lambda != 0 ? 2*lambda*ws[f](current_features[j], i) : 0);
+                      }
+                  }                                                             
+
+                  // Update v
+                  for(int j=0; j<50; j++)  {
+                      if(i!=target[2])  {
+                          vs[f](j, i) -= learning_rate*output[i]*thetas_times_x(f,j);
+                      }
+                      else  {
+                          vs[f](j, i) -= learning_rate*(output[i]-1)*thetas_times_x(f,j);
                       }
                   }
               }
           }
-          
-          std::cerr << std::endl;
-          
-          ++stage;
-          train_stats->finalize(); // finalize statistics for this epoch        
       }
+      ++stage;
+      train_stats->finalize(); // finalize statistics for this epoch
+      // TODO: reset dynamic features
   }
   
-  
+}
+
+void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats, 
+                    VMat testoutputs, VMat testcosts) const
+{
+    int l = testset.length();
+
+    ProgressBar* pb = NULL;
+    if(report_progress) 
+        pb = new ProgressBar("Testing learner",l);
+
+    if (l == 0) {
+        // Empty test set: we give -1 cost arbitrarily.
+        costs.fill(-1);
+        test_stats->update(costs);
+    }
+
+    for(int i=0; i<l; i++)
+    {
+        testset.getExample(i, input, target, weight);
+      
+        // TODO: why arg BagOfWordsInThreeSyntacticChunkWindow
+        computeFeatures(input,target,feats);
+        computeOutputWithFeatures(feats,output);
+        computeCostsFromOutputs(input,output,target,costs);
+        //computeOutputAndCosts(input,target,output,costs);
+
+        // TODO: update dynamic feature
+        
+        if(testoutputs)
+            testoutputs->putOrAppendRow(i,output);
+
+        if(testcosts)
+            testcosts->putOrAppendRow(i, costs);
+
+        if(test_stats)
+            test_stats->update(costs,weight);
+
+        if(report_progress)
+            pb->update(i);
+    }
+
+    // TODO: reset dynamic features
+
+    if(pb)
+        delete pb;
+}
+
+void StructuralLearner::computeOutputWithFeatures(TVec<TVec<unsigned int> >& feats, Vec& output, bool use_theta)
+{
+    for(int i=0; i<nout; i++) {
+        before_softmax[i] = 0;
+    }
+
+    // TODO: computations with Neural Network
+
+    if(use_theta)
+    {
+        // compute theta * x
+        thetas_times_x.clear();
+        for(int f=0; f<feats.length(); f++)
+        {
+            current_features = feats[f].data();
+            for(int j=0; j<50; j++)
+            {
+                for(int k=0; k<feats[j].length())
+                    thetas_times_x(f,j) += thetas[f](j,current_feautres[k]);
+            }
+        }
+    }
+
+    for(int f=0, f<feats.length(); f++)
+    {
+        current_features = feats[f].data();        
+        for(int i=0; i<nout; i++) {
+            for(int j=0; j<feats[f].length(); j++)  {
+                before_softmax[i] += ws[f](current_features[j], i); //w[i][k+(int)input[j]];
+            }
+            if(use_theta)
+                for(int ii=0; ii<50; ii++) {
+                    before_softmax[i] += vs[f](ii, i);
+                }        
+        }
+    }
+    
+    softmax(before_softmax,output);
 }
 
 
 void StructuralLearner::computeOutput(const Vec& input, Vec& output) const
 {
-  int nout = outputsize(); 
-  int nin = inputsize();
-
-  real v_t_theta_elmt;
-
-  // - Just unigrams for now!
-  for(int i=0; i<nout; i++) {
-      before_softmax[i] = 0;
-  }
-
-  // for all output neurons
-  for(int i=0; i<nout; i++) {
-    // for all inputs (k is a modified index - 0/1 encoding)
-    for(int j=0, k=0; j<nin; j++)  {
-        if(!is_missing(input[j])) {
-            before_softmax[i] += w(k+(int)input[j], i); //w[i][k+(int)input[j]];
-
-            v_t_theta_elmt = 0.0;
-            for(int ii=0; ii<50; ii++) {
-              v_t_theta_elmt+= v(ii, i) * theta_t(k+(int)input[j], ii);
-            } 
-            before_softmax[i] += v_t_theta_elmt;
-    
-            k += (train_set->getDictionary(j))->size()+1;
-      }
-    }
-  }
- 
-  // compute theta * x
-  for(int f=0; f<feats.length(); f++)
-  {
-      unsigned int *current_features = feats[f].data();
-      for(int j=0; j<50; j++)
-      {
-          
-      }
-  }
-
- softmax(before_softmax,output);
-
+    PLERROR("In StructuralLearner::computeOutput(): not implemented");
 }    
 
 void StructuralLearner::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                            const Vec& target, Vec& costs) const
-{
-    // Don't forget about epsilon
-    int index_O = 1;
-
-// Compute the costs from *already* computed output. 
-  int argout = argmax(output);
-  costs[0] = -safeflog( output[(int)target[2]] );
-  costs[1] = argout == target[2] ? 0 : 1; //class_error(output,target);
-  if(argout != index_O) costs[2] = costs[1];
-  else costs[2] = MISSING_VALUE;
-  if(target[2] != index_O) costs[3] = costs[1];
-  else costs[3] = MISSING_VALUE; 
-   
-}                                
+{   
+    // Compute the costs from *already* computed output.    
+    int argout;
+    int output_index_O = output[index_O];
+    if(output_index_O > abstention_threshold)
+        argout = argmax(output);
+    else
+    {
+        output[index_O] = -1;
+        argout = argmax(output);
+        output[index_O] = argout;
+    }
+    costs[0] = -safeflog( output[(int)target[2]] );
+    costs[1] = argout == target[2] ? 0 : 1; //class_error(output,target);
+    if(argout != index_O) costs[2] = costs[1];
+    else costs[2] = MISSING_VALUE;
+    if(target[2] != index_O) costs[3] = costs[1];
+    else costs[3] = MISSING_VALUE;     
+}
 
 TVec<string> StructuralLearner::getTestCostNames() const
 {
@@ -410,7 +488,7 @@ TVec<string> StructuralLearner::getTrainCostNames() const
 * @note check with Hugo: fl+=(train_set->getDictionary(0))->size()+2;
 * @todo take option into account
 **/
-int StructuralLearner::computeFeatures(const Vec& input, const Vec& target, const TVec<unsigned int>& BagOfWordsInThreeSyntacticChunkWindow, TVec< TVec<unsigned int> >& theFeatureGroups, string option) const
+int StructuralLearner::computeFeatures(const Vec& input, const Vec& target, const TVec<unsigned int>& BagOfWordsInThreeSyntacticChunkWindow, TVec< TVec<unsigned int> >& theFeatureGroups, string option) 
 {
 
 	unsigned int fl=0;		// length of the onehot encoded features (stands for "features' length")
