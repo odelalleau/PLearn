@@ -241,7 +241,7 @@ protected:
     //! Fill a matrix of weights according to the 'initialization_method' specified.
     //! The 'clear_first_row' boolean indicates whether we should fill the first
     //! row with zeros.
-    void fillWeights(const Var& weights, bool clear_first_row);
+    void fillWeights(const Var& weights, bool clear_first_row, bool use_width_to_scale=false);
 
     //! Fill the costs penalties.
     virtual void buildPenalties();

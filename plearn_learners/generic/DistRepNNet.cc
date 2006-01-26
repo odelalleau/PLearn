@@ -804,13 +804,17 @@ void DistRepNNet::computeOutputAndCosts(const Vec& inputv, const Vec& targetv,
 /////////////////
 // fillWeights //
 /////////////////
-void DistRepNNet::fillWeights(const Var& weights, bool clear_first_row) {
+void DistRepNNet::fillWeights(const Var& weights, bool clear_first_row, bool use_width_to_scale) {
     if (initialization_method == "zero") {
         weights->value->clear();
         return;
     }
     real delta;
-    int is = weights.length();
+    int is;
+    if(use_width_to_scale)
+        is = weights.width();
+    else
+        is = weights.length();
     if (clear_first_row)
         is--; // -1 to get the same result as before.
     if (initialization_method.find("linear") != string::npos)
@@ -929,7 +933,7 @@ void DistRepNNet::initializeParams(bool set_seed)
     else {
         fillWeights(wout, true);
         if(wouttarget) fillWeights(wouttarget, false);
-        if(wouttheta) fillWeights(wouttheta,true);
+        if(wouttheta) fillWeights(wouttheta,true,true);
     }
 
     // Initialize distributed representations
