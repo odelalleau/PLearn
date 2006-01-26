@@ -58,13 +58,7 @@ not differ by more than whitespace_tolerance characters.
 
 import os, re, sys
 
-def floats_are_equal(a, b, numtol=1e-6):
-    # print "Comparing floats ",a,b,numtol
-    minabs = min(abs(a),abs(b))
-    if minabs<1.0:
-        return abs(a-b) <= numtol
-    return abs(a-b) <= numtol*minabs
-
+from plearn.math import floats_are_equal
 
 def toldiff(filename1, filename2, numtol=1e-6, blanktol=0):
     """Returns an error message or an empty string if the files are tol-identical."""
@@ -124,9 +118,7 @@ def toldiff(filename1, filename2, numtol=1e-6, blanktol=0):
 
 if __name__=='__main__':
 
-    args = sys.argv[:]
-    del args[0] # ignore program name
-
+    args = sys.argv[1:] # ignore program name
     if len(args)<2:
         print __doc__
         sys.exit()

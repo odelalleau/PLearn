@@ -25,7 +25,6 @@ def _checkForNameClashes(key, value):
                       "which clashes with the %s internal method. "
                       "Contact support.")
         
-
 #
 #  Classes
 #
@@ -37,8 +36,16 @@ class PLOption:
     def __init__(self, value, *args, **kwargs):
         self.__class__.__option_id += 1
         self._id = self.__option_id
-        
-        if ( inspect.ismethod(value) or inspect.isfunction(value) 
+        self.setValue(value, *args, **kwargs)
+
+    def setValue(self, value, *args, **kwargs):
+        if isinstance(value, PLOption):
+            assert len(args) == 0 and len(kwargs) == 0
+            self._callable = value._callable
+            self._args     = value._args
+            self._kwargs   = value._kwargs            
+            
+        elif ( inspect.ismethod(value) or inspect.isfunction(value) 
              or inspect.isroutine(value) or inspect.isclass(value) ):                 
             self._callable = value
             self._args     = args
@@ -49,7 +56,7 @@ class PLOption:
             self._callable = copy.deepcopy
             self._args     = [ value ]
             self._kwargs   = kwargs
-            
+
     def __call__(self):
         return self._callable(*self._args, **self._kwargs)
 
@@ -89,20 +96,36 @@ class MetaPLOptionDict( type ):
         
     def __setattr__(self, name, value):
         _checkForNameClashes(name, value)
-        super(MetaPLOptionDict, self).__setattr__(name, value)
-        if not name.startswith('_'):
+
+        # Not an option
+        if name.startswith('_'):
+            # Simply call inherited __setattr__
+            super(MetaPLOptionDict, self).__setattr__(name, value)
+
+        # Option management
+        else:
             options_slot = MetaPLOptionDict.__options_slot%self.__name__
             option_list = self.__dict__[options_slot]
-            if name not in option_list:
+
+            # Known option: simple update
+            if name in option_list:
+                option = type.__getattribute__(self, name)
+                assert isinstance(option, PLOption)
+                option.setValue(value)
+
+            # Unknown option: create a new one
+            else:
+                # Call inherited __setattr__ with value as a PLOption
+                if not isinstance(value, PLOption):
+                    value = PLOption(value)
+                super(MetaPLOptionDict, self).__setattr__(name, value)
                 option_list.append(name)
-            #self.__class_options.append(name)            
 
     def __delattr__(self, name):
         super(MetaPLOptionDict, self).__delattr__(name)
         if not name.startswith('_'):
             options_slot = MetaPLOptionDict.__options_slot%self.__name__
             self.__dict__[options_slot].remove(name)
-            #self.__class_options.remove(name)
 
     def inherited_options(self):
         inhoptions = []

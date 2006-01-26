@@ -560,6 +560,7 @@ class RunTestRoutine( ResultsRelatedRoutine ):
     """
     expected_results = PLOption(None)
     run_results      = PLOption(None)
+    failure_log      = PLOption("FAILURE.log")
 
     def __init__( self, **overrides ):
         ResultsRelatedRoutine.__init__(self, **overrides)
@@ -567,6 +568,10 @@ class RunTestRoutine( ResultsRelatedRoutine ):
         self.run_results      = self.test.resultsDirectory( Test.runResults() )
         if os.path.exists(self.run_results):
             shutil.rmtree(self.run_results)
+
+        self.report_path = os.path.join(self.test.resultsDirectory(), self.failure_log)
+        if os.path.exists(self.report_path):
+            os.remove(self.report_path)
         
         if ( not self.test.disabled and
              not os.path.exists(self.expected_results) ):
@@ -585,7 +590,6 @@ class RunTestRoutine( ResultsRelatedRoutine ):
         if diffs == []:
             self.test.setStatus("PASSED")
         else:
-            report_path = os.path.join(self.test.resultsDirectory(), "FAILURE.log")
-            toolkit.lines_to_file(diffs, report_path)
+            toolkit.lines_to_file(diffs, self.report_path)
             self.test.setStatus("FAILED", log="Should contain diff lines!")
         
