@@ -630,7 +630,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         for (int q = 0; q < new_vec.length(); q++)
                             new_vec[q] = cov_y(tot_non_missing[q],
                                                add_non_missing[k]);
-                        choleskyAppendRow(L_tot, new_vec);
+                        choleskyAppendDimension(L_tot, new_vec);
                     }
 
                     n = L_tot.length();

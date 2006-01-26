@@ -51,10 +51,10 @@
 namespace PLearn {
 using namespace std;
 
-///////////////////////
-// choleskyAppendRow //
-///////////////////////
-void choleskyAppendRow(Mat& L, const Vec& new_row)
+/////////////////////////////
+// choleskyAppendDimension //
+/////////////////////////////
+void choleskyAppendDimension(Mat& L, const Vec& new_row)
 {
     static Vec last_row;
     int n = L.length();
@@ -64,7 +64,8 @@ void choleskyAppendRow(Mat& L, const Vec& new_row)
 
     last_row.resize(n);
     choleskyLeftSolve(L, new_row.subVec(0, n), last_row);
-    last_row.append(sqrt(new_row.last()));
+    last_row.append(sqrt(new_row.last() - pownorm(last_row)));
+    assert( !last_row.hasMissing() );
     L.resize(n + 1, n + 1, 0, true);
     L(n) << last_row;
 }
