@@ -1943,7 +1943,10 @@ int vmatmain(int argc, char** argv)
         {
             vm->getRow(i,tmp);
             for(int j=0; j<tmpstr.length(); j++)
+            {
                 tmpstr[j] = vm->getValString(j,tmp[j]);
+                if(tmpstr[j] == "") tmpstr[j] = tostring(tmp[j]);
+            }
             pout<<tmpstr<<endl;
         }
     }
