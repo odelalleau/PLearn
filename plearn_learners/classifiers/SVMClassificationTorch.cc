@@ -250,7 +250,7 @@ void SVMClassificationTorch::setTrainingSet(VMat training_set, bool call_forget)
         int target_col = training_set->inputsize();
         assert( target_col > 0 );
         string prog = "[%0:%" + tostring(target_col - 1) + "] %" +
-            tostring(target_col) + "1 == 1 -1 ifelse :target";
+            tostring(target_col) + " 1 == 1 -1 ifelse :target";
         if (training_set->weightsize() > 0) {
             int weight_col = training_set->inputsize() +
                              training_set->targetsize();
