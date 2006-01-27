@@ -438,13 +438,13 @@ class update(FamilyConfigMode):
     option_groups = classmethod(option_groups)                                                                
 
     def test_hook(self, test):
-        """Does nothing.
+        """If needed, update the informations related to this test.
 
-        Tests are parsed by L{initialize}, called in the
-        FamilyConfigMode template procedure. The PyTest config file
-        docstring is always updated to the Test class' docstring by
-        any FamilyConfigMode. For the Test class' internal behavior,
-        changes will be made to support
+        Tests are parsed by L{initialize}, called in the FamilyConfigMode
+        template procedure. The PyTest config file docstring is always
+        updated to the Test class' docstring by any FamilyConfigMode.
+        
+        The test_name & new_name options can be used together to rename a test.
         """
         name = self.options.test_name                                                                     
         if name is not None and test.name == name:                                                        

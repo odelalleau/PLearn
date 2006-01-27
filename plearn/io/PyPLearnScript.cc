@@ -156,7 +156,42 @@ process( const string& scriptfile,
     pyplearn_script->build(); 
     return pyplearn_script;  
 }
-  
+
+PStream
+PyPLearnScript::
+openScriptFile(int argc, char** argv, const std::string& drivername)
+{
+    prgname(argv[0]);   // set program name
+    vector<string> command_line = stringvector(argc-1, argv+1);   // neglecting progname
+
+    string scriptfile = command_line[0];
+    if (!isfile(scriptfile))
+        PLERROR("Non-existent script file: %s\n",scriptfile.c_str());
+    const string extension = extract_extension(scriptfile);
+
+    string script;
+    if (extension == ".pyplearn")
+    {
+        // Make a copy of args with the first argument (the name of the script)
+        // removed, leaving the first argument to the script at index 0.
+        vector<string> pyplearn_args(command_line.size()-1);
+        copy(command_line.begin() + 1, command_line.end(), pyplearn_args.begin());
+    
+        PP<PyPLearnScript> pyplearn_script =
+            PyPLearnScript::process(scriptfile, pyplearn_args, drivername);
+        script = pyplearn_script->getScript();
+        
+        // When we call the pyplearn script with either
+        // --help or --dump, everything will already have been done by
+        // the time the PyPLearnScript is built. 
+        if ( script == "" )
+            exit(0);        
+    }
+    else
+        PLERROR("PyPLearnScript::openScript -- Expecting a .pyplearn file.");
+    
+    return openString(script, PStream::plearn_ascii);
+}
   
 PyPLearnScript::PyPLearnScript() :
     plearn_script(""),

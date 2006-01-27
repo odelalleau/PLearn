@@ -239,10 +239,14 @@ class OptionalLibrary:
 
     def is_triggered_by(self, include):
         """returns true if this particular include command is supposed to trigger this library"""
+        known_trigger = False
         for trigger in self.triggers:
             if fnmatch.fnmatch(include,trigger):
                 # print 'INCLUDE ' + include  + ' TRIGGERED BY TRIGGER ' + trigger
-                return True
+                known_trigger = True
+                break
+
+        # Returns the filepath if the file exists.
         if include[0]!='/': # look for it in includedirs
             for incldir in self.includedirs:
                 fullpath = join(incldir,include)
@@ -250,7 +254,8 @@ class OptionalLibrary:
                     # print 'file exists!: ' + fullpath
                     # print 'INCLUDE ' + include  + ' TRIGGERED BY INCDIR ' + incldir
                     return fullpath
-        return False            
+
+        return known_trigger       
 
     # Replaces lists and potential functions in the compiler and linker options
     # by a single string.

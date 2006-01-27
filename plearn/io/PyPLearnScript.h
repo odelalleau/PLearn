@@ -79,6 +79,14 @@ public:
         const std::string& drivername        = PYPLEARN_DRIVER_PATH );
 
     /*!
+      Given a filename, does a job similar to process() but parses \c argc &
+      \c argv as given to a main(). Returns a PStream valid for reading an object.
+    */
+    static PStream openScriptFile(
+        int argc, char** argv,
+        const std::string& drivername = PYPLEARN_DRIVER_PATH );
+
+    /*!
      * This static method forwards its arguments to process() and returns a 
      * pointer on an object of template type Obj by loading the resulting plearn 
      * script. Note that the object IS NOT BUILT since one may want to set other 
