@@ -49,6 +49,8 @@
 #include <plearn_torch/TQCTrainer.h>
 #include <plearn_torch/TTrainer.h>
 
+#include <plearn/vmat/ProcessingVMatrix.h>
+
 namespace PLearn {
 using namespace std;
 
@@ -59,15 +61,18 @@ SVMClassificationTorch::SVMClassificationTorch()
     : C(100),
       cache_size(50),
       iter_msg(1000),
-      output_the_class(true)
+      output_the_class(true),
+      target_01(false)
 {}
 
 PLEARN_IMPLEMENT_OBJECT(SVMClassificationTorch,
-                        "SVM classification using the Torch library",
-                        "Do not do anything that needs this object to be deep-copied, because it\n"
-                        "is not possible yet.\n"
-                        "Only binary classification is currently supported.\n"
-    );
+    "SVM classification using the Torch library",
+    "Do not do anything that needs this object to be deep-copied, because it\n"
+    "is not possible yet.\n"
+    "Only binary classification is currently supported. By default, the\n"
+    "target should be -1 or 1. You can use 0 and 1 by setting the option\n"
+    "'target_01' to 1.\n"
+);
 
 ////////////////////
 // declareOptions //
@@ -89,6 +94,11 @@ void SVMClassificationTorch::declareOptions(OptionList& ol)
 
     declareOption(ol, "output_the_class", &SVMClassificationTorch::output_the_class, OptionBase::buildoption,
                   "If set to 1, the output will be the class, otherwise it will be a real value.");
+
+    declareOption(ol, "target_01", &SVMClassificationTorch::target_01,
+                                   OptionBase::buildoption,
+        "If set to 1, the target in the training set will be assumed to be\n"
+        "either 0 or 1 (instead of the default -1 / 1).");
 
     declareOption(ol, "iter_msg", &SVMClassificationTorch::iter_msg, OptionBase::buildoption,
                   "Number of iterations between each message.");
@@ -153,8 +163,20 @@ void SVMClassificationTorch::computeCostsFromOutputs(const Vec& input, const Vec
                                                      const Vec& target, Vec& costs) const
 {
     // No cost computed.
-    // For safety, we check we are trying to do binary classification with -1 and 1.
-    assert( target.length() == 1 && (target[0] == 1 || target[0] == -1) );
+    // For safety, we check we are trying to do binary classification with -1
+    // and 1, or 0 and 1 when the 'target_01' option is set.
+    assert( target.length() == 1 &&
+            ((target_01  && (target[0] == 1 || target[0] == 0)) ||
+             (!target_01 && (target[0] == 1 || target[0] == -1))) );
+    assert( output.length() == 1 );
+    costs.resize(1);
+    real sig_output = sigmoid(output[0]);
+    if (fast_exact_is_equal(sig_output, 0))
+        sig_output = REAL_EPSILON;
+    if (fast_exact_is_equal(target[0], 1))
+        costs[0] = sig_output;
+    else
+        costs[0] = - sig_output;
 }                                
 
 ///////////////////
@@ -165,7 +187,7 @@ void SVMClassificationTorch::computeOutput(const Vec& input, Vec& output) const
     inherited::computeOutput(input, output);
     if (output_the_class)
         for (int i = 0; i < output.length(); i++)
-            output[i] = output[i] > 0 ? 1 : -1;
+            output[i] = output[i] > 0 ? 1 : target_01 ? 0 : -1;
 }    
 
 #if 0
@@ -190,7 +212,10 @@ void SVMClassificationTorch::forget()
 //////////////////////
 TVec<string> SVMClassificationTorch::getTestCostNames() const
 {
-    return inherited::getTestCostNames();
+    static TVec<string> costs;
+    if (costs.isEmpty())
+        costs.append("lift_output");
+    return costs;
 }
 
 ///////////////////////
@@ -219,8 +244,23 @@ void SVMClassificationTorch::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 // setTrainingSet //
 ////////////////////
 void SVMClassificationTorch::setTrainingSet(VMat training_set, bool call_forget) {
-    kernel->setDataForKernelMatrix(training_set);
-    inherited::setTrainingSet(training_set, call_forget);
+    VMat the_train_set = training_set;
+    if (target_01) {
+        // Create processing program.
+        int target_col = training_set->inputsize();
+        assert( target_col > 0 );
+        string prog = "[%0:%" + tostring(target_col - 1) + "] %" +
+            tostring(target_col) + "1 == 1 -1 ifelse :target";
+        if (training_set->weightsize() > 0) {
+            int weight_col = training_set->inputsize() +
+                             training_set->targetsize();
+            prog += " [%" + tostring(weight_col) + ":%" +
+                tostring(weight_col + training_set->weightsize() - 1) + "]";
+        }
+        the_train_set = new ProcessingVMatrix(the_train_set, prog);
+    }
+    kernel->setDataForKernelMatrix(the_train_set);
+    inherited::setTrainingSet(the_train_set, call_forget);
 }
 
 #if 0

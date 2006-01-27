@@ -72,6 +72,7 @@ public:
     Ker kernel;
     int iter_msg;
     bool output_the_class;
+    bool target_01;
 
     // ****************
     // * Constructors *
