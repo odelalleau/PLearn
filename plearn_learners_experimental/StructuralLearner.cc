@@ -125,6 +125,7 @@ void StructuralLearner::build_()
     // - resize and initialize ws, vs and thetas and thetas_times_x
     // - fill bag_of_words_over_chunks    
     // - create auxiliary task (if auxiliary_task_train_set != 0)
+    // - construct 4 characters mappings...
   }
 }
 
@@ -160,7 +161,7 @@ void StructuralLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 int StructuralLearner::outputsize() const
 {
-    return(train_set->getDictionary(inputsize_)->size()+1);
+    return(train_set->getDictionary(inputsize_)->size() + (train_set->getDictionary(inputsize_)->oov_not_in_possible_values ? 0 : 1));
 }
 
 void StructuralLearner::forget()
@@ -201,13 +202,15 @@ void StructuralLearner::train()
       real current_error=REAL_MAX;
       it = 0;
       while(current_error < best_error - epsilon)  {
+          // TODO: is this a good clear?
+          //token_prediction.clear();
           best_error = current_error;
           train_stats->forget();
           learning_rate = start_learning_rate / (1+decrease_constant*it);          
           for(int i=0; i<train_set->length(); i++)  {
               auxiliary_task_train_set->getExample(i, input, target, weight);
               // TODO: should indicate that for auxiliary task
-              computeFeatures(input,target,feats);
+              computeFeatures(input,target,1,i,feats);
               // 1) compute the output
               // TODO: give which auxiliary problem, so that 
               // could test converge for all individual problems separately
@@ -243,7 +246,6 @@ void StructuralLearner::train()
           it++;
           train_stats->finalize();
           current_error = train_stats->getMean()[0];
-          // TODO: reset dynamic features
       }
       
       // Now, using computed theta to bias training
@@ -276,18 +278,20 @@ void StructuralLearner::train()
       
       train_stats->forget();
       learning_rate = start_learning_rate / (1+decrease_constant*stage);
-      
+
+      // TODO: is this a good clear?
+      //token_prediction.clear();
       for(int i=0; i<train_set->length(); i++)  {
               
           train_set->getExample(i, input, target, weight);
-          computeFeatures(input,target,feats);
+          computeFeatures(input,target,0,i,feats);
           // 1) compute the output
           computeOutput(feats,output) ; 
           // 2) compute the cost      
           computeCostsFromOutputs(input, output, target, costs);
           train_stats->update(costs);
-          // TODO: update dynamic features
-
+          // TODO: verify if OK
+          //updateDynamicFeatures(token_prediction_train,input[3*2],target[2]);
           // 3) Update weights
                             
           // TODO: update for neural network
@@ -321,7 +325,7 @@ void StructuralLearner::train()
       }
       ++stage;
       train_stats->finalize(); // finalize statistics for this epoch
-      // TODO: reset dynamic features
+      
   }
   
 }
@@ -341,18 +345,20 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
         test_stats->update(costs);
     }
 
+    // TODO: is this a good clear?
+    //token_prediction.clear();
     for(int i=0; i<l; i++)
     {
         testset.getExample(i, input, target, weight);
       
-        // TODO: why arg BagOfWordsInThreeSyntacticChunkWindow
-        computeFeatures(input,target,feats);
+        computeFeatures(input,target,-1,i,feats);
         computeOutputWithFeatures(feats,output);
         computeCostsFromOutputs(input,output,target,costs);
         //computeOutputAndCosts(input,target,output,costs);
 
         // TODO: update dynamic feature
-        
+        //updateDynamicFeatures(token_prediction_train,input[3*2],target[2]);
+
         if(testoutputs)
             testoutputs->putOrAppendRow(i,output);
 
@@ -365,8 +371,6 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
         if(report_progress)
             pb->update(i);
     }
-
-    // TODO: reset dynamic features
 
     if(pb)
         delete pb;
@@ -467,11 +471,6 @@ TVec<string> StructuralLearner::getTrainCostNames() const
     return ret;
 }
 
-
-
-
-
-
 /** 
 * @brief Takes an example as input and returns the corresponding features. These are onehot encoded
 * and so it is the active indices that are returned. The function returns the features' onehot encoded
@@ -479,185 +478,277 @@ TVec<string> StructuralLearner::getTrainCostNames() const
 * 
 * @param input the example's input
 * @param target the example's target
-* @param BagOfWordsInThreeSyntacticChunkWindow active indices in a bag of words for the words in a 3 syntactic chunk window
+* @param data_set the index for the data set (-1 is for test set, 0 for training set and 1 for auxiliary task train set)
+* @param index the index of the example for which features are extracted
 * @param theFeatureGroups the features (the indices that are active) organized by groups - output
 * @param option specifies whether some features are masked (default "" is none)
 * 
 * @returns the features' onehot encoded length
 *
-* @note check with Hugo: fl+=(train_set->getDictionary(0))->size()+2;
+* @note check with Hugo: fl+=(train_set->getDictionary(0))->size()+2; HUGO: I don't think we need a feature for missing values...
 * @todo take option into account
 **/
-int StructuralLearner::computeFeatures(const Vec& input, const Vec& target, const TVec<unsigned int>& BagOfWordsInThreeSyntacticChunkWindow, TVec< TVec<unsigned int> >& theFeatureGroups, string option) 
+void StructuralLearner::computeFeatures(const Vec& input, const Vec& target, int data_set, int index, TVec< TVec<unsigned int> >& theFeatureGroups, string option) 
 {
+    
 
-	unsigned int fl=0;		// length of the onehot encoded features (stands for "features' length")
-	TVec<unsigned int> currentFeatureGroup;
-	
-	// We have 8 feature groups
-	theFeatureGroups.resize(0);
-	theFeatureGroups.resize(8);
-	
-	
-	// *** Wordtag features ***
-	// Wordtags in a 5 word window with a onehot encoding
-	// Derived from the wordtags input[0], input[3], input[6], input[9], input[12]
-        currentFeatureGroup = theFeatureGroups[0];
-	for(int i=0, ii=0; i<5; i++)  {
-		ii=3*i;
+    fl=0;		// length of the onehot encoded features (stands for "features' length")
+
+    // We have 8 feature groups
+    // NO! we have 9!
+    theFeatureGroups.resize(9);
+    fls.resize(9);
+
+    // *** Wordtag features ***
+    // Wordtags in a 5 word window with a onehot encoding
+    // Derived from the wordtags input[0], input[3], input[6], input[9], input[12]
+    currentFeatureGroup = theFeatureGroups[0];
+    currentFeatureGroup.resize(5);
+    size = 0;
+    for(int i=0, ii=0; i<5; i++)  {
+        ii=3*i;
 		
-		if( !is_missing(input[ii]) ) {
-			currentFeatureGroup.push_back( (unsigned int)(fl + input[ii]) );
-		}
-		else	{
-			currentFeatureGroup.push_back( fl + (train_set->getDictionary(ii))->size() + 1 );  // explicitly say it's missing
-		}
-		fl += (train_set->getDictionary(ii))->size()+2; // +1 for OOV and +1 for missing
-	}//for wordtags 
+        if( !is_missing(input[ii]) ) {
+            currentFeatureGroup[size] = (unsigned int)(fl + input[ii]);
+            size++;
+        }
+        // I don't think having a feature for missing value will help...
+        /*
+          else	{
+          currentFeatureGroup.push_back( fl + (train_set->getDictionary(ii))->size() + 1 );  // explicitly say it's missing
+          }
+          fl += (train_set->getDictionary(ii))->size()+2; // +1 for OOV and +1 for missing<
+        */
+        fl += (train_set->getDictionary(ii))->size()+1;
+    }//for wordtags 
+    fls[0] = fl;
+    theFeatureGroups[0].resize(size);
 
-
-	// *** POS features ***
-	// POStags in a 5 word window with a onehot encoding
-	// Derived from the postags input[1], input[4], input[7], input[10], input[13]
-        currentFeatureGroup = theFeatureGroups[1];
-	for(int i=0, ii=0; i<5; i++)  {
-		ii=3*i+1;
+    // *** POS features ***
+    // POStags in a 5 word window with a onehot encoding
+    // Derived from the postags input[1], input[4], input[7], input[10], input[13]
+    currentFeatureGroup = theFeatureGroups[1];
+    currentFeatureGroup.resize(5);
+    size = 0;
+    fl=0;
+    for(int i=0, ii=0; i<5; i++)  {
+        ii=3*i+1;
 		
-		if( !is_missing(input[ii]) ) {
-			currentFeatureGroup.push_back( (unsigned int)(fl + input[ii]) );
-		}
-		else	{
-			currentFeatureGroup.push_back( fl + (train_set->getDictionary(ii))->size() + 1 );  // explicitly say it's missing
-		}
-		fl += (train_set->getDictionary(ii))->size()+2; // +1 for OOV and +1 for missing
-	}//for postags 
+        if( !is_missing(input[ii]) ) {
+            currentFeatureGroup[size] = (unsigned int)(fl + input[ii]);
+            size++;
+        }
+        // Idem...
+        /* 
+           else	{
+           currentFeatureGroup.push_back( fl + (train_set->getDictionary(ii))->size() + 1 );  // explicitly say it's missing
+           }
+           fl += (train_set->getDictionary(ii))->size()+2; // +1 for OOV and +1 for missing
+        */
+        fl += (train_set->getDictionary(ii))->size()+1; // +1 for OOV 
+    }//for postags 
+    theFeatureGroups[1].resize(size);
+    fls[1] = fl;
 
-/*
-	// *** Char type features ***
-	// Char type features in a 5 word window - 4 features (1 if true, 0 if not):
-	//		-1st letter capitalized
-	//		-All letters capitalized
-	//		-All digits
-	//		-All digits and '.'  ','
-	// Derived from the words (wordtags in input[0], input[3], input[6], input[9], input[12])
-        std::string symbol;
-	currentFeatureGroup = theFeatureGroups[2];
-	for(int i=0, ii=0; i<5; i++)  {
-		ii=3*i;
+    // *** Char type features ***
+    // Char type features in a 5 word window - 4 features (1 if true, 0 if not):
+    //		-1st letter capitalized
+    //		-All letters capitalized
+    //		-All digits
+    //		-All digits and '.'  ','
+    // Derived from the words (wordtags in input[0], input[3], input[6], input[9], input[12])
+
+    currentFeatureGroup = theFeatureGroups[2];
+    currentFeatureGroup.resize(20);
+    size = 0;
+    fl = 0;
+    for(int i=0, ii=0; i<5; i++)  {
+        ii=3*i;
 		
-		// Word is not missing, test for 4 features
-		if( !is_missing(input[ii]) ) {
-			// Get the word
-			symbol = (train_set->getDictionary(ii))->getSymbol(input[ii]);
-		        
-                        // 1st letter capitalized	
-                        if( symbol.length() > 0)    {
-                            if( (symbol[0] >= 'A') && (symbol[0] <= 'Z') )  {
-                        	currentFeatureGroup.push_back( fl );    
-                            }
-                 	}
-
-                        // All letters capitalized	
-                        if( symbol.length() > 0)    {
-                            for( int j=0; j<symbol.length(); j++ ) {
-                                if( (symbol[0] >= 'A') && (symbol[0] <= 'Z') )  {
-                                	currentFeatureGroup.push_back( fl );    
-                                }
-                            }
-                 	}
-
+        // Word is not missing, test for 4 features
+        if( !is_missing(input[ii]) ) {
+            // Get the word
+            // TODO: should I change Dictionary so that it uses hash_maps?
+            symbol = (train_set->getDictionary(ii))->getSymbol(input[ii]);
+		    
+            // 1st letter capitalized	
+            if( symbol.length() > 0)    {
+                if( (symbol[0] >= 'A') && (symbol[0] <= 'Z') )  {
+                    currentFeatureGroup[size] = fl;
+                    size++;
                 }
-		fl+=4; 
-	}//for 5 word window
-*/
-/*
-	// *** Prefix features ***
-	// Prefix features - 4 initial caracters, onehot-encoded (we only consider letters)
-	// Derived from the words (wordtags in input[0], input[3], input[6], input[9], input[12])
-	for(int i=0, ii=0; i<5; i++)  {
-	{
-		ii=3*i;
+            }
+                    
+            // All letters capitalized	
+            if( symbol.length() > 0)    {
+                tag = true;
+                for( int j=0; j<symbol.length(); j++ ) {
+                    if( !((symbol[j] >= 'A') && (symbol[j] <= 'Z')) )  {
+                        tag = false;
+                        break;
+                    }
+                }
+                if(tag){
+                    currentFeatureGroup[size] = fl+1;
+                    size++; 
+                }
+            }
+
+            // All digits
+            if( symbol.length() > 0)    {
+                tag = true;
+                for( int j=0; j<symbol.length(); j++ ) {
+                    if( !((symbol[j] >= '0') && (symbol[j] <= '9')) )  {
+                        tag = false;
+                        break;
+                    }
+                }
+                if(tag){
+                    currentFeatureGroup[size] = fl+2;
+                    size++; 
+                }
+            }
+
+            // All digits and '.'  ','
+            if( symbol.length() > 0)    {
+                tag = true;
+                for( int j=0; j<symbol.length(); j++ ) {
+                    if( !(((symbol[j] >= '0') && (symbol[j] <= '9')) || symbol[j] == '.' || symbol[j] == ',') )  {
+                        tag = false;
+                        break;
+                    }
+                }
+                if(tag){
+                    currentFeatureGroup[size] = fl+3;
+                    size++; 
+                }
+            }
+
+                    
+        }
+        fl+=4; 
+    }//for 5 word window
+    theFeatureGroups[2].resize(size);
+    fls[2] = fl;
+
+    // TODO: I am doing this OK Peter-Tony
+    // *** Prefix features ***
+    // Prefix features - 4 initial caracters, onehot-encoded (we only consider letters)
+    // Derived from the words (wordtags in input[0], input[3], input[6], input[9], input[12])
+    currentFeatureGroup = theFeatureGroups[3];
+    currentFeatureGroup.resize(5);
+    size = 0;   
+    fl=0;
+    for(int i=0, ii=0; i<5; i++)  {        
+        ii=3*i;
+            
+        // Word is not missing, look at 4 1st caracters
+        if( !is_missing(input[ii]) ) {
+                
+            // Get the word
+            symbol = train_set->getDictionary(ii)->getSymbol(input[ii]);
+            // for 4 1st chars, if they exist!
+            // Check that Char - 'a' or 'A' is between 0 and 25
+            // Hugo - what to do if special char or if shorter than 4... have 2 bits for that?
+            // Hugo says: ignore those, there is a feature for unigrams anyway...
+            if(symbol.length() >= 4){
+                if(4_first_chars.find(symbol.substr(0,4)) != 4_first_chars.end()) {
+                    currentFeatureGroup[size] = fl+4_first_chars[symbol.substr(0,4)];
+                    size++;
+                }
+                    
+            }
+        }
+        fl += 4_first_chars.size();
+    }//for 5 word window
+    theFeatureGroups[3].resize(size);
+    fls[3] = fl;
+
+    // *** Suffix features ***
+    // Suffix features - 4 last caracters, onehot-encoded (we only consider letters)
+    // Derived from the words (wordtags in input[0], input[3], input[6], input[9], input[12])
+    currentFeatureGroup = theFeatureGroups[4];
+    currentFeatureGroup.resize(5);
+    size = 0;   
+    fl=0;
+    for(int i=0, ii=0; i<5; i++)  
+    {
+        ii=3*i;
 		
-		// Word is not missing, look at 4 1st caracters
-		if( !is_missing(input[ii]) ) {
-			
-			// Get the word
-			(train_set->getDictionary(ii))->getSymbol(input[ii]);
-			
-			// for 4 1st chars, if they exist!
-			// Check that Char - 'a' or 'A' is between 0 and 25
-			// Hugo - what to do if special char or if shorter than 4... have 2 bits for that?
-			
-		}
+        // Word is not missing, look at 4 last caracters
+        if( !is_missing(input[ii]) ) {
 
-		fl+=26; 
-	}//for 5 word window
+            // Get the word
+            symbol = train_set->getDictionary(ii)->getSymbol(input[ii]);                
+            if(symbol.length() >= 4){
+                if(4_last_chars.find(symbol.substr(symbol.length()-4,4)) != 4_last_chars.end()) {
+                    currentFeatureGroup[size] = fl+4_last_chars[symbol.substr(symbol.length()-4,4)];
+                    size++;
+                }
+            }                   			
+        }
+        fl += 4_last_chars.size();
+    }//for 5 word window
+    theFeatureGroups[4].resize(size);
+    fls[4] = fl;
 
-//!!!!!!!!!!!Check with Hugo that push_back works as in stl (=makes a copy?)
-activeIndicesGroups.push_back(currentActiveIndicesGroup);
-currentActiveIndicesGroup.resize(0);
+    // *** "Bag of words in a 3 syntactic chunk window" features ***
+    // we have this from preprocessing
 
+    currentFeatureGroup = theFeatureGroups[5];
+    currentFeatureGroup.resize(0);
+    size = 0;   
+    fl=0;
+    /*
+    // TODO: fetch correct wordsIn3SyntacticContext Vec, depending
+    //       on the values of data_set and index
+    for(int i=0; i<wordsIn3SyntacticContext.length(); i++)	{
+    currentFeatureGroup.push_back(wordsIn3SyntacticContext[i]);
+    }
+    */
+    theFeatureGroups[5].resize(size);
+    fls[5] = fl;
 
-	// *** Suffix features ***
-	// Suffix features - 4 last caracters, onehot-encoded (we only consider letters)
-	// Derived from the words (wordtags in input[0], input[3], input[6], input[9], input[12])
-	for(int i=0, ii=0; i<5; i++)  {
-	{
-		ii=3*i;
-		
-		// Word is not missing, look at 4 last caracters
-		if( !is_missing(input[ii]) ) {
-			
-			// Get the word
-			(train_set->getDictionary(ii))->getSymbol(input[ii]);
-			
-			// for 4 last chars, if they exist!
-			// Check that Char - 'a' or 'A' is between 0 and 25
-			// Hugo - what to do if special char or if shorter than 4... have 2 bits for that? if so, change the +26
-			
-		}
+    // *** Label features ***
+    // Labels of the 2 words on the left - should always be in the target (if we are decoding, then the target
+    // should hold what we have predicted
+    currentFeatureGroup = theFeatureGroups[6];
+    currentFeatureGroup.resize(2);
+    size = 0;   
+    fl = 0;
+    if( !is_missing(target[0]) ) {
+        currentFeatureGroup.push_back( fl+target[0] );
+        size++;
+    }
+    fl += (train_set->getDictionary(inputsize_))->size()+1;
+        
+    if( !is_missing(target[1]) ) {
+        currentFeatureGroup.push_back( fl + target[1] );
+        size++;
+    }
+    fl += (train_set->getDictionary(inputsize_))->size()+1;
+    theFeatureGroups[6].resize(size);
+    fls[6] = fl;
 
-		fl+=26; 
-	}//for 5 word window
+    // Bigrams of current token and label on the left
 
-//!!!!!!!!!!!Check with Hugo that push_back works as in stl (=makes a copy?)
-activeIndicesGroups.push_back(currentActiveIndicesGroup);
-currentActiveIndicesGroup.resize(0);
-
-
-	// *** "Bag of words in a 3 syntactic chunk window" features ***
-	// we have this from preprocessing
-	for(int i=0; i<wordsIn3SyntacticContext.length(); i++)	{
-		currentActiveIndicesGroup.push_back( fl + wordsIn3SyntacticContext[i] );
-	}
-	
-	fl += (train_set->getDictionary(0))->size()+1; // +1 and not 2 because none of these words can be missing
-//!!!!!!!!!!!Check with Hugo that push_back works as in stl (=makes a copy?)
-activeIndicesGroups.push_back(currentActiveIndicesGroup);
-currentActiveIndicesGroup.resize(0);
-
-
-	// *** Label features ***
-	// Labels of the 2 words on the left - should always be in the target (if we are decoding, then the target
-	// should hold what we have predicted
-	if( !is_missing(target[0]) ) {
-		currentActiveIndicesGroup.push_back( fl + target[0] );
-	}
-	fl += (train_set->getDictionary(inputsize_))->size()+1;
-	if( !is_missing(target[1]) ) {
-		currentActiveIndicesGroup.push_back( fl + target[1] );
-	}
-	fl += (train_set->getDictionary(inputsize_))->size()+1;
-//!!!!!!!!!!!Check with Hugo that push_back works as in stl (=makes a copy?)
-activeIndicesGroups.push_back(currentActiveIndicesGroup);
-currentActiveIndicesGroup.resize(0);
+    fl = 0;
+    size=0;
+    // Add things here...
+    theFeatureGroups[7].resize(size);
+    fls[7] = fl;
 
 
-	// *** Previous occurences features ***
-	// ...
-	
-*/
-	return fl;
+    // *** Previous occurences features ***
+    // ...
+        
+    fl = 0;
+    size=0;
+    // Add things here...
+    theFeatureGroups[8].resize(size);
+    fls[8] = fl;
+    
+    //return fl;
 }
 
 /*

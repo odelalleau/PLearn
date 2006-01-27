@@ -107,9 +107,9 @@ public:
 
     virtual void computeOutputWithFeatures(TVec<TVec<unsigned int> >& feats, Vec& output, bool use_theta);
 
-    int computeFeatures(const Vec& input, const Vec& target, const TVec<unsigned int>& BagOfWordsInThreeSyntacticChunkWindow, TVec< TVec<unsigned int> >& theFeatureGroups, string option = "");
+    void computeFeatures(const Vec& input, const Vec& target, int data_set, int index, TVec< TVec<unsigned int> >& theFeatureGroups, string option = "");
 
-    virtual void updateDynamicFeatures(Mat freq_token_prediction, int token, int prediction, bool increment=true);
+    virtual void updateDynamicFeatures(hash_map<int, TVec<bool> > token_prediction, int token, int prediction);
         
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs=0, VMat testcosts=0) const;
 
@@ -151,8 +151,8 @@ protected:
     TVec< TVec<unsigned int> > feats;
     unsigned int *current_features;
 
-    hash_map<int,TMat<bool> > freq_token_prediction_train;
-    TVec<Mat> freq_token_prediction_test;
+    hash_map<int,TVec<bool> > token_prediction_train;
+    TVec<hash_map<int,TVec<bool> > token_prediction_test;
 
     Mat thetas_times_x;
 
@@ -163,6 +163,20 @@ protected:
     // For examples
     Vec input, target, before_softmax, output, costs;
     real weight;
+
+    // Temporary files for computeFeatures
+    TVec<unsigned int> currentFeatureGroup;
+    bool tag;
+    int size;
+    unsigned int fl;
+    std::string symbol;
+
+    // Mapping for 4 first and last characters
+    hash_map<string,int> 4_first_chars;
+    hash_map<string,int> 4_last_chars;
+
+    // Feature dimensions
+    TVec<unsigned int> fls;
 
     // Dynamic features
     
