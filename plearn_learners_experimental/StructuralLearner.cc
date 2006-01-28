@@ -505,14 +505,20 @@ TVec<string> StructuralLearner::getTrainCostNames() const
 * @param data_set the index for the data set (-1 is for test set, 0 for training set and 1 for auxiliary task train set)
 * @param index the index of the example for which features are extracted
 * @param theFeatureGroups the features (the indices that are active) organized by groups - output
-* @param option specifies whether some features are masked (default "" is none)
-* 
+* @param featureMask specifies whether the features are masked - lower 5 bits
+* are used to represent the 5-token window. Inactive bit means do not output
+* features for that position.
+*       '00011111' means return all features
+*       '00000100' means return only features for the position we're making the
+*       prediction at
+*
 * @returns the features' onehot encoded length
 *
 * @note check with Hugo: fl+=(train_set->getDictionary(0))->size()+2; HUGO: I don't think we need a feature for missing values...
 * @todo take option into account
 **/
-void StructuralLearner::computeFeatures(const Vec& input, const Vec& target, int data_set, int index, TVec< TVec<unsigned int> >& theFeatureGroups, string option) const 
+void StructuralLearner::computeFeatures(const Vec& input, const Vec& target, int data_set, int index, TVec< TVec<unsigned int> >& theFeatureGroups, char
+featureMask) const 
 {
     
 
@@ -531,49 +537,25 @@ void StructuralLearner::computeFeatures(const Vec& input, const Vec& target, int
     size = 0;
     for(int i=0, ii=0; i<5; i++)  {
         ii=7*i;
-		
-        if( !is_missing(input[ii]) ) {
-            currentFeatureGroup[size] = (unsigned int)(fl + input[ii]);
-            size++;
+	
+        if( featureMask & (1<<i) ) {        // we are doing this test often, but it should be quick enough. If need be we'll optimize the function
+            if( !is_missing(input[ii]) ) {
+                currentFeatureGroup[size] = (unsigned int)(fl + input[ii]);
+                size++;
+            }   
+            // I don't think having a feature for missing value will help...
+            /*
+              else	{
+              currentFeatureGroup.push_back( fl + (train_set->getDictionary(ii))->size() + 1 );  // explicitly say it's missing
+              }
+              fl += (train_set->getDictionary(ii))->size()+2; // +1 for OOV and +1 for missing<
+            */
         }
-        // I don't think having a feature for missing value will help...
-        /*
-          else	{
-          currentFeatureGroup.push_back( fl + (train_set->getDictionary(ii))->size() + 1 );  // explicitly say it's missing
-          }
-          fl += (train_set->getDictionary(ii))->size()+2; // +1 for OOV and +1 for missing<
-        */
+
         fl += (train_set->getDictionary(ii))->size()+1;
-    }//for wordtags 
+    }//for wordtags
     fls[0] = fl;
     theFeatureGroups[0].resize(size);
-
-    // *** POS features ***
-    // POStags in a 5 word window with a onehot encoding
-    // Derived from the postags input[1], input[4], input[7], input[10], input[13]
-/*    currentFeatureGroup = theFeatureGroups[1];
-    currentFeatureGroup.resize(5);
-    size = 0;
-    fl=0;
-    for(int i=0, ii=0; i<5; i++)  {
-        ii=3*i+1;
-		
-        if( !is_missing(input[ii]) ) {
-            currentFeatureGroup[size] = (unsigned int)(fl + input[ii]);
-            size++;
-        }
-        // Idem...
-        
-        //   else	{
-        //   currentFeatureGroup.push_back( fl + (train_set->getDictionary(ii))->size() + 1 );  // explicitly say it's missing
-        //   }
-        //   fl += (train_set->getDictionary(ii))->size()+2; // +1 for OOV and +1 for missing
-        
-        fl += (train_set->getDictionary(ii))->size()+1; // +1 for OOV 
-    }//for postags 
-    theFeatureGroups[1].resize(size);
-    fls[1] = fl;
-*/
 
 
     // *** Prefix features ***
@@ -585,13 +567,14 @@ void StructuralLearner::computeFeatures(const Vec& input, const Vec& target, int
     fl=0;
     for(int i=0, ii=0; i<5; i++)  {        
         ii=7*i+1;
-            
-        // Prefix tag is not missing, look at it
-        if( !is_missing(input[ii]) ) {
-            currentFeatureGroup[size] = (unsigned int)(fl + input[ii]);
-            size++;
-        }
         
+        if( featureMask & (1<<i) ) {        // we are doing this test often, but it should be quick enough. If need be we'll optimize the function
+            // Prefix tag is not missing, look at it
+            if( !is_missing(input[ii]) ) {
+                currentFeatureGroup[size] = (unsigned int)(fl + input[ii]);
+                size++;
+            }
+        }    
         fl += (train_set->getDictionary(ii))->size()+1;
     }//for 5 word window
     theFeatureGroups[1].resize(size);
@@ -609,12 +592,13 @@ void StructuralLearner::computeFeatures(const Vec& input, const Vec& target, int
     {
         ii=7*i+2;
 	     	
-        // Suffix tag is not missing, look at it
-        if( !is_missing(input[ii]) ) {
-            currentFeatureGroup[size] = (unsigned int)(fl + input[ii]);
-            size++;
-        }
-        
+        if( featureMask & (1<<i) ) {        // we are doing this test often, but it should be quick enough. If need be we'll optimize the function
+            // Suffix tag is not missing, look at it
+            if( !is_missing(input[ii]) ) {
+                currentFeatureGroup[size] = (unsigned int)(fl + input[ii]);
+                size++;
+            }
+        }    
         fl += (train_set->getDictionary(ii))->size()+1;
     }//for 5 word window
     theFeatureGroups[2].resize(size);
@@ -636,18 +620,22 @@ void StructuralLearner::computeFeatures(const Vec& input, const Vec& target, int
     for(int i=0, ii=0; i<5; i++)  {
         ii=7*i+3;
 	
-        // for 4 features
-        for(int j=0; j<4; j++)  {
-            // feature not missing
-            if( !is_missing(input[ii]) ) {
-                // feature active
-                if(input[ii]==1)    {
-                    currentFeatureGroup[size] = (unsigned int)(fl);
-                    size++;
-                }
-            }      
-            fl++;
-            ii++;
+        if( featureMask & (1<<i) ) {        // we are doing this test often, but it should be quick enough. If need be we'll optimize the function
+            // for 4 features
+            for(int j=0; j<4; j++)  {
+                // feature not missing
+                if( !is_missing(input[ii]) ) {
+                    // feature active
+                    if(input[ii]==1)    {
+                        currentFeatureGroup[size] = (unsigned int)(fl);
+                        size++;
+                    }
+                }      
+                fl++;
+                ii++;
+            }
+        }   else    {
+            fl = fl+4;
         }
     }//for 5 word window
     theFeatureGroups[3].resize(size);
@@ -676,15 +664,19 @@ void StructuralLearner::computeFeatures(const Vec& input, const Vec& target, int
     currentFeatureGroup.resize(2);
     size = 0;   
     fl = 0;
-    if( !is_missing(target[0]) ) {
-        currentFeatureGroup.push_back( fl+(int)target[0] );
-        size++;
+    if( featureMask & 1 ) {       
+        if( !is_missing(target[0]) ) {
+            currentFeatureGroup.push_back( fl+(int)target[0] );
+            size++;
+        }
     }
     fl += (train_set->getDictionary(inputsize_))->size()+1;
         
-    if( !is_missing(target[1]) ) {
-        currentFeatureGroup.push_back( fl + (int)target[1] );
-        size++;
+    if( featureMask & 2) {       
+        if( !is_missing(target[1]) ) {
+            currentFeatureGroup.push_back( fl + (int)target[1] );
+            size++;
+        }
     }
     fl += (train_set->getDictionary(inputsize_))->size()+1;
     theFeatureGroups[4].resize(size);
@@ -776,10 +768,6 @@ void StructuralLearner::initializeParams(bool set_seed)
         is = vs[i].size();
         delta = 1.0 / sqrt(real(is));
         fill_random_uniform(vs[i], -delta, delta);
-
-        is = thetas[i].size();
-        delta = 1.0 / sqrt(real(is));
-        fill_random_uniform(thetas[i], -delta, delta);
     }
 
   }

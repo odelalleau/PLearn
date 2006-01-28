@@ -105,7 +105,8 @@ public:
 
     virtual void computeOutputWithFeatures(TVec<TVec<unsigned int> >& feats, Vec& output, bool use_theta=true) const;
 
-    void computeFeatures(const Vec& input, const Vec& target, int data_set, int index, TVec< TVec<unsigned int> >& theFeatureGroups, string option = "") const;
+    void computeFeatures(const Vec& input, const Vec& target, int data_set, int
+index, TVec< TVec<unsigned int> >& theFeatureGroups, char featureMask = 0x1F) const;
 
     //virtual void updateDynamicFeatures(hash_map<int, TVec<bool> > token_prediction, int token, int prediction);
         
