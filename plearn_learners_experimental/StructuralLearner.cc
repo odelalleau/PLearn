@@ -65,7 +65,6 @@ StructuralLearner::StructuralLearner()
   decrease_constant=0.0;
   lambda=0.0001;
   index_O = 1;
-  labeled_train_set_indices.resize(0);
   //m_tvec_auxiliaryLearners.resize(0);
   
   // ### You may (or not) want to call build_() to finish building the object
@@ -121,11 +120,34 @@ void StructuralLearner::build_()
     before_softmax.resize(outputsize());
     output.resize(outputsize());
 
-    // TODO:
     // - resize and initialize ws, vs and thetas and thetas_times_x
-    // - fill bag_of_words_over_chunks    
+    
+    // dummy call to computeFeatures in order to set fls
+    computeFeatures(input, target, 0, 0, feats);
+
+    // Do your thing! (Gotta love those comments) (Remember to search for nasty
+    // words in plearn code - has to be some nice things)
+    ws.resize( fls.length() );
+    vs.resize( fls.length() );
+    thetas.resize( fls.length() );
+    
+    for(int i=0; i<fls.length(); i++)  {
+        ws[i].resize( outputsize(), fls[i] );
+        vs[i].resize( outputsize(), 50 );
+        thetas[i].resize( 50, fls[i] );
+    }
+
+    thetas_times_x.resize( 50, fls.length() );  // this is what the name
+                                                // implies, but make sure it's
+                                                // not the transpose we want
+
+    initializeParams();
+
+    // TODO:
     // - create auxiliary task (if auxiliary_task_train_set != 0)
-    // - construct 4 characters mappings...
+
+
+
   }
 }
 
@@ -141,18 +163,20 @@ void StructuralLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(v, copies);
-    deepCopyField(w, copies);
-    deepCopyField(theta_t, copies);
-
+    deepCopyField(thetas, copies);
+    deepCopyField(thetas_times_x, copies);
+    deepCopyField(auxiliary_task_train_set,copies);
+    deepCopyField(ws,copies);
+    deepCopyField(vs,copies);
+    deepCopyField(feats, copies);
     deepCopyField(input, copies);
     deepCopyField(target, copies);
     deepCopyField(before_softmax, copies);
     deepCopyField(output, copies);
     deepCopyField(costs, copies);
 
-    deepCopyField(labeled_train_set_indices, copies);
-    deepCopyField(labeled_train_set, copies);
+    deepCopyField(currentFeatureGroup, copies);
+    deepCopyField(fls, copies);
 
     // ### Remove this line when you have fully implemented this method.
     //PLERROR("StructuralLearner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
@@ -174,7 +198,7 @@ void StructuralLearner::forget()
       - initialize the learner's parameters, using this random generator
       - stage = 0
     */
-  if(w.size()!=0)
+  if(ws.size()!=0)
     initializeParams();
     
   stage = 0;
@@ -200,7 +224,7 @@ void StructuralLearner::train()
 
       real best_error=REAL_MAX;
       real current_error=REAL_MAX;
-      it = 0;
+      int it = 0;
       while(current_error < best_error - epsilon)  {
           // TODO: is this a good clear?
           //token_prediction.clear();
@@ -262,7 +286,7 @@ void StructuralLearner::train()
           std::cout << "U_t.length() " << U_t.length() << " U_t.width() " << U_t.width() << std::endl;
           
           // --- Faire la SVD
-          lapack(U_t, thetas[f], D, V, 'A');
+          lapackSVD(U_t, thetas[f], D, V, 'A');
           
           std::cout << "thetas[f].length() " << thetas[f].length() << " thetas[f].width() " << thetas[f].width() << std::endl;
           
@@ -286,7 +310,7 @@ void StructuralLearner::train()
           train_set->getExample(i, input, target, weight);
           computeFeatures(input,target,0,i,feats);
           // 1) compute the output
-          computeOutput(feats,output) ; 
+          computeOutputWithFeatures(feats,output) ; 
           // 2) compute the cost      
           computeCostsFromOutputs(input, output, target, costs);
           train_stats->update(costs);
@@ -330,7 +354,7 @@ void StructuralLearner::train()
   
 }
 
-void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats, 
+void StructuralLearner::test(VMat testset, PP<VecStatsCollector> test_stats, 
                     VMat testoutputs, VMat testcosts) const
 {
     int l = testset.length();
@@ -376,9 +400,9 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
         delete pb;
 }
 
-void StructuralLearner::computeOutputWithFeatures(TVec<TVec<unsigned int> >& feats, Vec& output, bool use_theta)
+void StructuralLearner::computeOutputWithFeatures(TVec<TVec<unsigned int> >& feats, Vec& output, bool use_theta) const
 {
-    for(int i=0; i<nout; i++) {
+    for(int i=0; i<before_softmax.length(); i++) {
         before_softmax[i] = 0;
     }
 
@@ -393,16 +417,16 @@ void StructuralLearner::computeOutputWithFeatures(TVec<TVec<unsigned int> >& fea
             current_features = feats[f].data();
             for(int j=0; j<50; j++)
             {
-                for(int k=0; k<feats[j].length())
-                    thetas_times_x(f,j) += thetas[f](j,current_feautres[k]);
+                for(int k=0; k<feats[j].length(); k++)
+                    thetas_times_x(f,j) += thetas[f](j,current_features[k]);
             }
         }
     }
 
-    for(int f=0, f<feats.length(); f++)
+    for(int f=0; f<feats.length(); f++)
     {
         current_features = feats[f].data();        
-        for(int i=0; i<nout; i++) {
+        for(int i=0; i<before_softmax.length(); i++) {
             for(int j=0; j<feats[f].length(); j++)  {
                 before_softmax[i] += ws[f](current_features[j], i); //w[i][k+(int)input[j]];
             }
@@ -427,14 +451,14 @@ void StructuralLearner::computeCostsFromOutputs(const Vec& input, const Vec& out
 {   
     // Compute the costs from *already* computed output.    
     int argout;
-    int output_index_O = output[index_O];
-    if(output_index_O > abstention_threshold)
+    real output_index_O = output[index_O];
+    if(index_O < 0 || output_index_O > abstention_threshold)
         argout = argmax(output);
     else
     {
         output[index_O] = -1;
         argout = argmax(output);
-        output[index_O] = argout;
+        output[index_O] = output_index_O;
     }
     costs[0] = -safeflog( output[(int)target[2]] );
     costs[1] = argout == target[2] ? 0 : 1; //class_error(output,target);
@@ -488,25 +512,25 @@ TVec<string> StructuralLearner::getTrainCostNames() const
 * @note check with Hugo: fl+=(train_set->getDictionary(0))->size()+2; HUGO: I don't think we need a feature for missing values...
 * @todo take option into account
 **/
-void StructuralLearner::computeFeatures(const Vec& input, const Vec& target, int data_set, int index, TVec< TVec<unsigned int> >& theFeatureGroups, string option) 
+void StructuralLearner::computeFeatures(const Vec& input, const Vec& target, int data_set, int index, TVec< TVec<unsigned int> >& theFeatureGroups, string option) const 
 {
     
 
     fl=0;		// length of the onehot encoded features (stands for "features' length")
 
-    // We have 8 feature groups
-    // NO! we have 9!
-    theFeatureGroups.resize(9);
-    fls.resize(9);
+    // We have 5 feature groups
+    theFeatureGroups.resize(5);
+    fls.resize(5);
 
     // *** Wordtag features ***
     // Wordtags in a 5 word window with a onehot encoding
-    // Derived from the wordtags input[0], input[3], input[6], input[9], input[12]
+    // Derived from the wordtags input[0], input[7], input[14], input[21],
+    // input[28]
     currentFeatureGroup = theFeatureGroups[0];
     currentFeatureGroup.resize(5);
     size = 0;
     for(int i=0, ii=0; i<5; i++)  {
-        ii=3*i;
+        ii=7*i;
 		
         if( !is_missing(input[ii]) ) {
             currentFeatureGroup[size] = (unsigned int)(fl + input[ii]);
@@ -527,7 +551,7 @@ void StructuralLearner::computeFeatures(const Vec& input, const Vec& target, int
     // *** POS features ***
     // POStags in a 5 word window with a onehot encoding
     // Derived from the postags input[1], input[4], input[7], input[10], input[13]
-    currentFeatureGroup = theFeatureGroups[1];
+/*    currentFeatureGroup = theFeatureGroups[1];
     currentFeatureGroup.resize(5);
     size = 0;
     fl=0;
@@ -539,16 +563,63 @@ void StructuralLearner::computeFeatures(const Vec& input, const Vec& target, int
             size++;
         }
         // Idem...
-        /* 
-           else	{
-           currentFeatureGroup.push_back( fl + (train_set->getDictionary(ii))->size() + 1 );  // explicitly say it's missing
-           }
-           fl += (train_set->getDictionary(ii))->size()+2; // +1 for OOV and +1 for missing
-        */
+        
+        //   else	{
+        //   currentFeatureGroup.push_back( fl + (train_set->getDictionary(ii))->size() + 1 );  // explicitly say it's missing
+        //   }
+        //   fl += (train_set->getDictionary(ii))->size()+2; // +1 for OOV and +1 for missing
+        
         fl += (train_set->getDictionary(ii))->size()+1; // +1 for OOV 
     }//for postags 
     theFeatureGroups[1].resize(size);
     fls[1] = fl;
+*/
+
+
+    // *** Prefix features ***
+    // Prefix features - prefix tag 
+    // Derived from input[1], input[8], input[15], input[23], input[31])
+    currentFeatureGroup = theFeatureGroups[1];
+    currentFeatureGroup.resize(5);
+    size = 0;   
+    fl=0;
+    for(int i=0, ii=0; i<5; i++)  {        
+        ii=7*i+1;
+            
+        // Prefix tag is not missing, look at it
+        if( !is_missing(input[ii]) ) {
+            currentFeatureGroup[size] = (unsigned int)(fl + input[ii]);
+            size++;
+        }
+        
+        fl += (train_set->getDictionary(ii))->size()+1;
+    }//for 5 word window
+    theFeatureGroups[1].resize(size);
+    fls[1] = fl;
+
+
+    // *** Suffix features ***
+    // Suffix features - suffix tags
+    // Derived from input[2], input[9], ... 
+    currentFeatureGroup = theFeatureGroups[2];
+    currentFeatureGroup.resize(5);
+    size = 0;   
+    fl=0;
+    for(int i=0, ii=0; i<5; i++)  
+    {
+        ii=7*i+2;
+	     	
+        // Suffix tag is not missing, look at it
+        if( !is_missing(input[ii]) ) {
+            currentFeatureGroup[size] = (unsigned int)(fl + input[ii]);
+            size++;
+        }
+        
+        fl += (train_set->getDictionary(ii))->size()+1;
+    }//for 5 word window
+    theFeatureGroups[2].resize(size);
+    fls[2] = fl;
+
 
     // *** Char type features ***
     // Char type features in a 5 word window - 4 features (1 if true, 0 if not):
@@ -556,182 +627,71 @@ void StructuralLearner::computeFeatures(const Vec& input, const Vec& target, int
     //		-All letters capitalized
     //		-All digits
     //		-All digits and '.'  ','
-    // Derived from the words (wordtags in input[0], input[3], input[6], input[9], input[12])
+    // Explicit from input[3], input[4], input[5], input[6], input[10], ...
 
-    currentFeatureGroup = theFeatureGroups[2];
+    currentFeatureGroup = theFeatureGroups[3];
     currentFeatureGroup.resize(20);
     size = 0;
     fl = 0;
     for(int i=0, ii=0; i<5; i++)  {
-        ii=3*i;
-		
-        // Word is not missing, test for 4 features
-        if( !is_missing(input[ii]) ) {
-            // Get the word
-            // TODO: should I change Dictionary so that it uses hash_maps?
-            symbol = (train_set->getDictionary(ii))->getSymbol(input[ii]);
-		    
-            // 1st letter capitalized	
-            if( symbol.length() > 0)    {
-                if( (symbol[0] >= 'A') && (symbol[0] <= 'Z') )  {
-                    currentFeatureGroup[size] = fl;
+        ii=7*i+3;
+	
+        // for 4 features
+        for(int j=0; j<4; j++)  {
+            // feature not missing
+            if( !is_missing(input[ii]) ) {
+                // feature active
+                if(input[ii]==1)    {
+                    currentFeatureGroup[size] = (unsigned int)(fl);
                     size++;
                 }
-            }
-                    
-            // All letters capitalized	
-            if( symbol.length() > 0)    {
-                tag = true;
-                for( int j=0; j<symbol.length(); j++ ) {
-                    if( !((symbol[j] >= 'A') && (symbol[j] <= 'Z')) )  {
-                        tag = false;
-                        break;
-                    }
-                }
-                if(tag){
-                    currentFeatureGroup[size] = fl+1;
-                    size++; 
-                }
-            }
-
-            // All digits
-            if( symbol.length() > 0)    {
-                tag = true;
-                for( int j=0; j<symbol.length(); j++ ) {
-                    if( !((symbol[j] >= '0') && (symbol[j] <= '9')) )  {
-                        tag = false;
-                        break;
-                    }
-                }
-                if(tag){
-                    currentFeatureGroup[size] = fl+2;
-                    size++; 
-                }
-            }
-
-            // All digits and '.'  ','
-            if( symbol.length() > 0)    {
-                tag = true;
-                for( int j=0; j<symbol.length(); j++ ) {
-                    if( !(((symbol[j] >= '0') && (symbol[j] <= '9')) || symbol[j] == '.' || symbol[j] == ',') )  {
-                        tag = false;
-                        break;
-                    }
-                }
-                if(tag){
-                    currentFeatureGroup[size] = fl+3;
-                    size++; 
-                }
-            }
-
-                    
+            }      
+            fl++;
+            ii++;
         }
-        fl+=4; 
-    }//for 5 word window
-    theFeatureGroups[2].resize(size);
-    fls[2] = fl;
-
-    // TODO: I am doing this OK Peter-Tony
-    // *** Prefix features ***
-    // Prefix features - 4 initial caracters, onehot-encoded (we only consider letters)
-    // Derived from the words (wordtags in input[0], input[3], input[6], input[9], input[12])
-    currentFeatureGroup = theFeatureGroups[3];
-    currentFeatureGroup.resize(5);
-    size = 0;   
-    fl=0;
-    for(int i=0, ii=0; i<5; i++)  {        
-        ii=3*i;
-            
-        // Word is not missing, look at 4 1st caracters
-        if( !is_missing(input[ii]) ) {
-                
-            // Get the word
-            symbol = train_set->getDictionary(ii)->getSymbol(input[ii]);
-            // for 4 1st chars, if they exist!
-            // Check that Char - 'a' or 'A' is between 0 and 25
-            // Hugo - what to do if special char or if shorter than 4... have 2 bits for that?
-            // Hugo says: ignore those, there is a feature for unigrams anyway...
-            if(symbol.length() >= 4){
-                if(4_first_chars.find(symbol.substr(0,4)) != 4_first_chars.end()) {
-                    currentFeatureGroup[size] = fl+4_first_chars[symbol.substr(0,4)];
-                    size++;
-                }
-                    
-            }
-        }
-        fl += 4_first_chars.size();
     }//for 5 word window
     theFeatureGroups[3].resize(size);
     fls[3] = fl;
 
-    // *** Suffix features ***
-    // Suffix features - 4 last caracters, onehot-encoded (we only consider letters)
-    // Derived from the words (wordtags in input[0], input[3], input[6], input[9], input[12])
-    currentFeatureGroup = theFeatureGroups[4];
-    currentFeatureGroup.resize(5);
-    size = 0;   
-    fl=0;
-    for(int i=0, ii=0; i<5; i++)  
-    {
-        ii=3*i;
-		
-        // Word is not missing, look at 4 last caracters
-        if( !is_missing(input[ii]) ) {
-
-            // Get the word
-            symbol = train_set->getDictionary(ii)->getSymbol(input[ii]);                
-            if(symbol.length() >= 4){
-                if(4_last_chars.find(symbol.substr(symbol.length()-4,4)) != 4_last_chars.end()) {
-                    currentFeatureGroup[size] = fl+4_last_chars[symbol.substr(symbol.length()-4,4)];
-                    size++;
-                }
-            }                   			
-        }
-        fl += 4_last_chars.size();
-    }//for 5 word window
-    theFeatureGroups[4].resize(size);
-    fls[4] = fl;
-
     // *** "Bag of words in a 3 syntactic chunk window" features ***
     // we have this from preprocessing
-
+/*
     currentFeatureGroup = theFeatureGroups[5];
     currentFeatureGroup.resize(0);
     size = 0;   
     fl=0;
-    /*
     // TODO: fetch correct wordsIn3SyntacticContext Vec, depending
     //       on the values of data_set and index
-    for(int i=0; i<wordsIn3SyntacticContext.length(); i++)	{
-    currentFeatureGroup.push_back(wordsIn3SyntacticContext[i]);
-    }
-    */
+    //for(int i=0; i<wordsIn3SyntacticContext.length(); i++)	{
+    //currentFeatureGroup.push_back(wordsIn3SyntacticContext[i]);
+    //}
     theFeatureGroups[5].resize(size);
     fls[5] = fl;
+*/
 
     // *** Label features ***
     // Labels of the 2 words on the left - should always be in the target (if we are decoding, then the target
     // should hold what we have predicted
-    currentFeatureGroup = theFeatureGroups[6];
+    currentFeatureGroup = theFeatureGroups[4];
     currentFeatureGroup.resize(2);
     size = 0;   
     fl = 0;
     if( !is_missing(target[0]) ) {
-        currentFeatureGroup.push_back( fl+target[0] );
+        currentFeatureGroup.push_back( fl+(int)target[0] );
         size++;
     }
     fl += (train_set->getDictionary(inputsize_))->size()+1;
         
     if( !is_missing(target[1]) ) {
-        currentFeatureGroup.push_back( fl + target[1] );
+        currentFeatureGroup.push_back( fl + (int)target[1] );
         size++;
     }
     fl += (train_set->getDictionary(inputsize_))->size()+1;
-    theFeatureGroups[6].resize(size);
-    fls[6] = fl;
+    theFeatureGroups[4].resize(size);
+    fls[4] = fl;
 
     // Bigrams of current token and label on the left
-
+/*
     fl = 0;
     size=0;
     // Add things here...
@@ -747,8 +707,7 @@ void StructuralLearner::computeFeatures(const Vec& input, const Vec& target, int
     // Add things here...
     theFeatureGroups[8].resize(size);
     fls[8] = fl;
-    
-    //return fl;
+  */  
 }
 
 /*
@@ -806,13 +765,23 @@ void StructuralLearner::initializeParams(bool set_seed)
   // initialize weights
   if (train_set) {
     real delta;
-    int is = w.size();
-    delta = 1.0 / sqrt(real(is));
-    fill_random_uniform(w, -delta, delta);
+    int is;
 
-    is = v.size();
-    delta = 1.0 / sqrt(real(is));
-    fill_random_uniform(w, -delta, delta);
+    for(int i=0; i<ws.length(); i++) {
+
+        is = ws[i].size();
+        delta = 1.0 / sqrt(real(is));
+        fill_random_uniform(ws[i], -delta, delta);
+
+        is = vs[i].size();
+        delta = 1.0 / sqrt(real(is));
+        fill_random_uniform(vs[i], -delta, delta);
+
+        is = thetas[i].size();
+        delta = 1.0 / sqrt(real(is));
+        fill_random_uniform(thetas[i], -delta, delta);
+    }
+
   }
 }
 

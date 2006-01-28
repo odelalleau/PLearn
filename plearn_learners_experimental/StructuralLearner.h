@@ -45,8 +45,6 @@
 #define StructuralLearner_INC
 
 #include <plearn_learners/generic/PLearner.h>
-#include <plearn_learners_experimental/StructuralAuxiliaryLearner.h>
-
 
 namespace PLearn {
 
@@ -105,11 +103,11 @@ public:
     //! for which it updates the VecStatsCollector train_stats.
     virtual TVec<std::string> getTrainCostNames() const;
 
-    virtual void computeOutputWithFeatures(TVec<TVec<unsigned int> >& feats, Vec& output, bool use_theta);
+    virtual void computeOutputWithFeatures(TVec<TVec<unsigned int> >& feats, Vec& output, bool use_theta=true) const;
 
-    void computeFeatures(const Vec& input, const Vec& target, int data_set, int index, TVec< TVec<unsigned int> >& theFeatureGroups, string option = "");
+    void computeFeatures(const Vec& input, const Vec& target, int data_set, int index, TVec< TVec<unsigned int> >& theFeatureGroups, string option = "") const;
 
-    virtual void updateDynamicFeatures(hash_map<int, TVec<bool> > token_prediction, int token, int prediction);
+    //virtual void updateDynamicFeatures(hash_map<int, TVec<bool> > token_prediction, int token, int prediction);
         
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs=0, VMat testcosts=0) const;
 
@@ -145,41 +143,36 @@ protected:
     //int ninputs_onehot; // 
 
     // For the model
-    TVec<Mat> ws, vs, thetas;
+    mutable TVec<Mat> ws, vs, thetas;
 
     // Features for an example
-    TVec< TVec<unsigned int> > feats;
-    unsigned int *current_features;
+    mutable TVec< TVec<unsigned int> > feats;
+    mutable unsigned int *current_features;
 
-    hash_map<int,TVec<bool> > token_prediction_train;
-    TVec<hash_map<int,TVec<bool> > token_prediction_test;
+    //hash_map<int,TVec<bool> > token_prediction_train;
+    //TVec<hash_map<int,TVec<bool> > > token_prediction_test;
 
-    Mat thetas_times_x;
+    mutable Mat thetas_times_x;
 
     // Bag of words features, over window of chunks, precomputed for
     // the training set
-    TVec< TVec<unsigned int> > bag_of_words_over_chunks;
+    //TVec< TVec<unsigned int> > bag_of_words_over_chunks;
 
     // For examples
-    Vec input, target, before_softmax, output, costs;
-    real weight;
+    mutable Vec input, target, before_softmax, output, costs;
+    mutable real weight;
+    real learning_rate;
 
     // Temporary files for computeFeatures
-    TVec<unsigned int> currentFeatureGroup;
-    bool tag;
-    int size;
-    unsigned int fl;
-    std::string symbol;
-
-    // Mapping for 4 first and last characters
-    hash_map<string,int> 4_first_chars;
-    hash_map<string,int> 4_last_chars;
+    mutable TVec<unsigned int> currentFeatureGroup;
+    mutable bool tag;
+    mutable int size;
+    mutable unsigned int fl;
+    mutable std::string symbol;
 
     // Feature dimensions
-    TVec<unsigned int> fls;
+    mutable TVec<unsigned int> fls;
 
-    // Dynamic features
-    
 protected:
     //#####  Protected Member Functions  ######################################
     
