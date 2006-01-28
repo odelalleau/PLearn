@@ -64,6 +64,7 @@ public:
     real abstention_threshold;
     real epsilon;
     int index_O;
+    int nhidden;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -145,6 +146,7 @@ protected:
 
     // For the model
     mutable TVec<Mat> ws, vs, thetas;
+    mutable TVec<Mat> whids;
 
     // Features for an example
     mutable TVec< TVec<unsigned int> > feats;
@@ -154,6 +156,7 @@ protected:
     //TVec<hash_map<int,TVec<bool> > > token_prediction_test;
 
     mutable Mat thetas_times_x;
+    mutable Mat activations;
 
     // Bag of words features, over window of chunks, precomputed for
     // the training set
