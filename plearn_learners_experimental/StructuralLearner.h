@@ -65,6 +65,7 @@ public:
     real epsilon;
     int index_O;
     int nhidden;
+    int n_auxiliary_wordproblems;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -177,6 +178,11 @@ protected:
     // Feature dimensions
     mutable TVec<unsigned int> fls;
 
+    // Indices of auxiliary examples effectively used and their target ("most frequent word"-tag encoded, ie between 0 and 999)
+    TMat< unsigned int > auxiliary_indices_current;
+    TMat< unsigned int > auxiliary_indices_left;
+
+
 protected:
     //#####  Protected Member Functions  ######################################
     
@@ -188,6 +194,10 @@ protected:
     //! will not be set in this method (it will be assumed to be already
     //! initialized according to the 'seed' option).
     virtual void initializeParams(bool set_seed = true);
+
+    //! Determines the most frequent words on the auxiliary example set and fills 
+    //! auxiliary_indices_current, auxiliary_indices_left accordingly
+    void initWordProblemsStructures();
 
 private: 
     //#####  Private Member Functions  ########################################

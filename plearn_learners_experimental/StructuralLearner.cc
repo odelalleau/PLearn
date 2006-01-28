@@ -45,6 +45,24 @@
 #include <plearn/math/plapack.h>
 #include <plearn/math/random.h>
 
+#include <map>
+#include <vector>
+#include <algorithm>
+
+// *** Used to determine most frequent words in auxiliary set ***
+class freqCount {
+
+public:
+  freqCount(int wt, unsigned long int c) : wordtag(wt), count(c){};
+  int wordtag;
+  unsigned long int count;
+};
+
+bool freqCountGT(const freqCount &a, const freqCount &b) 
+{
+    return a.count > b.count;
+}
+
 
 namespace PLearn {
 using namespace std;
@@ -97,6 +115,11 @@ void StructuralLearner::declareOptions(OptionList& ol)
                    "Number of hidden neurons in the hidden layers");
     declareOption(ol, "index_O", &StructuralLearner::index_O, OptionBase::buildoption,
                    "Index of the \"O\" (abstention) symbol");
+    declareOption(ol, "n_auxiliary_wordproblems", &StructuralLearner::n_auxiliary_wordproblems, OptionBase::buildoption,
+                   "Number of most frequent words that are to be predicted.");
+
+
+
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -168,10 +191,11 @@ void StructuralLearner::build_()
 
     // TODO:
     // - create auxiliary task (if auxiliary_task_train_set != 0)
+    if( auxiliary_task_train_set && auxiliary_indices_left.size()==0) {
+      initWordProblemsStructures();
+    }
 
-
-
-  }
+  }// if we have a train_set
 }
 
 // ### Nothing to add here, simply calls build_
@@ -877,6 +901,103 @@ featureMask) const
     theFeatureGroups[8].resize(size);
     fls[8] = fl;
   */  
+}
+
+/** 
+* @brief Determines 1000 most frequent words and builds 2 TVecs of indices of examples that have respetively
+* a frequent word at current and left positions.
+* 
+* @param 
+* @returns 
+*
+* @note 
+* @todo 
+**/
+void StructuralLearner::initWordProblemsStructures()
+{
+
+  // *** Determine most frequent words
+  // Just a big fequency array.
+
+  // 1) Create and init the freq table - has for size the size of the vocabulary +1 for OOV
+  unsigned long int* frequency;
+  frequency = new unsigned long int[ (auxiliary_task_train_set->getDictionary(0))->size() + 1];
+  //memset(frequency, 0, ((train_set->getDictionary(6))->size()+1) * sizeof(unsigned long int) ); 
+  for(int i=0; i<((auxiliary_task_train_set->getDictionary(0))->size()+1); i++)  {  
+    frequency[i]=0;
+  }
+
+  // 2) Compute frequencies
+  for(int e=0; e<auxiliary_task_train_set->length(); e++)  {
+    auxiliary_task_train_set->getExample(e, input, target, weight);
+    frequency[(int)input[14]]++;
+  }
+
+  // 3) extract most frequent entries -> build a map
+  // build a stl vector (skip OOV output) and sort it
+  std::vector<freqCount> tmp;
+  for(int i=1; i<((auxiliary_task_train_set->getDictionary(0))->size()+1); i++)  {  
+    tmp.push_back( freqCount(i, frequency[i]) );
+  }
+
+  delete []frequency;
+
+  // Sort the items in descending order
+  std::sort(tmp.begin(), tmp.end(), freqCountGT);
+
+  // Build a map of the most frequent words' wordtags with their "most frequent word's"-tag
+  std::map<int, int> map_mostFrequentWords;  // word tag is key, value is the net's output for it
+  std::vector<freqCount>::iterator itr;
+  int i;
+  for(i=0, itr=tmp.begin(); itr!=tmp.end() && i<=n_auxiliary_wordproblems; itr++, i++) {
+    map_mostFrequentWords[itr->wordtag] = i; 
+    //MostFrequentWordsCount+=itr->count;
+  }
+
+  tmp.clear();
+
+
+  // *** Build the TMats for the auxiliary problems
+  std::map<int, int>::iterator itr_map_mostFrequentWords;
+  int leftWord_Wordtag, currentWord_Wordtag;
+  int left_size=0;
+  int current_size=0;
+
+  auxiliary_indices_left.resize(auxiliary_task_train_set->length(), 2);
+  auxiliary_indices_current.resize(auxiliary_task_train_set->length(), 2);
+
+  for(int e=0; e<auxiliary_task_train_set->length(); e++)  {
+    auxiliary_task_train_set->getExample(e, input, target, weight);
+
+    // * if this example has a most frequent word at left
+    leftWord_Wordtag = (int)input[7];
+
+    itr_map_mostFrequentWords = map_mostFrequentWords.find( leftWord_Wordtag );
+
+    if( itr_map_mostFrequentWords != map_mostFrequentWords.end() )  {
+        auxiliary_indices_left[left_size][0] = e;
+        auxiliary_indices_left[left_size][1] = itr_map_mostFrequentWords->second;
+        left_size++;
+    }
+
+    // * if this example has a most frequent word at current
+    currentWord_Wordtag = (int)input[14];
+
+    itr_map_mostFrequentWords = map_mostFrequentWords.find( currentWord_Wordtag );
+
+    if( itr_map_mostFrequentWords != map_mostFrequentWords.end() )  {
+        auxiliary_indices_current[current_size][0] = e;
+        auxiliary_indices_current[current_size][1] = itr_map_mostFrequentWords->second;
+        current_size++;
+    }
+
+  }// end for auxiliary example
+
+  map_mostFrequentWords.clear();
+
+  auxiliary_indices_left.resize(left_size, 2);
+  auxiliary_indices_current.resize(current_size, 2);
+
 }
 
 /*
