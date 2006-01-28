@@ -525,8 +525,8 @@ featureMask) const
     fl=0;		// length of the onehot encoded features (stands for "features' length")
 
     // We have 5 feature groups
-    theFeatureGroups.resize(5);
-    fls.resize(5);
+    theFeatureGroups.resize(6);
+    fls.resize(6);
 
     // *** Wordtag features ***
     // Wordtags in a 5 word window with a onehot encoding
@@ -682,17 +682,26 @@ featureMask) const
     theFeatureGroups[4].resize(size);
     fls[4] = fl;
 
-    // Bigrams of current token and label on the left
-/*
+    // *** Bigrams of current token and label on the left
+    currentFeatureGroup = theFeatureGroups[5];
+    currentFeatureGroup.resize(1);
     fl = 0;
     size=0;
-    // Add things here...
-    theFeatureGroups[7].resize(size);
-    fls[7] = fl;
+  
+    // if none of the 2 are masked than we'll compute the feature
+    if( (featureMask & 2) && (featureMask & 4) ) {      
+        if( !is_missing(target[1]) && !is_missing(input[14]) ) {
+            currentFeatureGroup.push_back( (int)target[1] * ((train_set->getDictionary(0))->size()+1) + (int)input[14] );
+            size++;
+        }
+    } 
+    fl += ((train_set->getDictionary(inputsize_))->size()+1) * ((train_set->getDictionary(0))->size()+1);
+    theFeatureGroups[5].resize(size);
+    fls[5] = fl;
 
 
     // *** Previous occurences features ***
-    // ...
+  /*  // ...
         
     fl = 0;
     size=0;
