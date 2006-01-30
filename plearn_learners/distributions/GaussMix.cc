@@ -2377,7 +2377,7 @@ void GaussMix::train()
                 // the cluster 'tpl': we replace them by the global sample
                 // index.
                 for (int i = 0; i < span_path.length(); i++)
-                    span_path[i] = cluster_tpl[i];
+                    span_path[i] = cluster_tpl[span_path[i]];
 
                 // Consistency check: compute the average distance from one
                 // node to the next in the path.
