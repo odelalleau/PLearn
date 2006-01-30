@@ -54,6 +54,10 @@ namespace PLearn {
 //! Computational cost: O(n^2)
 void choleskyAppendDimension(Mat& L, const Vec& new_row);
 
+//! Update the Cholesky decomposition of A = L L' when dimension i is removed
+//! (i.e. row and column i are deleted in A).
+void choleskyRemoveDimension(Mat& L, int i);
+
 // L (n_active x n_active) is lower-diagonal and is such that A = L L' = lambda I + sum_t phi_t(x_t) phi_t(x_t)'
 // where the sum runs until 'now' and phi_t is the 'current' active basis set. 
 // In this function we update L so as to incorporate a new basis, i.e. n_active is incremented,
@@ -69,6 +73,12 @@ void choleskyInsertBasis(Mat& L, Mat active_bases_outputs, Vec new_basis_outputs
 // computational cost: O(n^2)
 void choleskyUpgrade(Mat& L, Vec v);
 
+/****** Utility functions ******/
+
+//! From 'Matrix Algorithms, Vol1' by G. W. Stewart, p.272, 273, 335, 338.
+void chol_rotgen(real& a, real& b, real& c, real& s);
+void chol_rotapp(real c, real s, const Vec& x, const Vec& y);
+void chol_dxch(Mat& R, int l, int m);
 
 // debugging / test program for the above functions
 void testCholeskyRoutines();

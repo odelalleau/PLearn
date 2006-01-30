@@ -70,6 +70,23 @@ void choleskyAppendDimension(Mat& L, const Vec& new_row)
     L(n) << last_row;
 }
 
+/////////////////////////////
+// choleskyRemoveDimension //
+/////////////////////////////
+void choleskyRemoveDimension(Mat& L, int i)
+{
+    int p = L.length();
+    // Note that in order to use the exact algorithms from the matrix
+    // algorithms book, we need to transpose L (since R = L' in the QR
+    // decomposition). There may be a more efficient way to do the same
+    // operations.
+    L.transpose();
+    for (int j = i; j < p - 1; j++)
+        chol_dxch(L, j, j + 1);
+    L = L.subMat(0, 0, p - 1, p - 1);
+    L.transpose();
+}
+
 // L (n_active x n_active) is lower-diagonal and is such that A = L L' = lambda I + sum_t phi_t(x_t) phi_t(x_t)'
 // where the sum runs until 'now' and phi_t is the 'current' active basis set. 
 // In this function we update L so as to incorporate a new basis, i.e. n_active is incremented,
@@ -189,6 +206,69 @@ void choleskyUpgrade(Mat& L, Vec v)
             }
         }
     }
+}
+
+///////////////
+// chol_dxch //
+///////////////
+void chol_dxch(Mat& R, int l, int m)
+{
+    if (l == m)
+        return;
+    if (l > m) {
+        int tmp = l;
+        l = m;
+        m = tmp;
+    }
+    //static Vec tmp;
+    int n = R.length();
+    int p = n;
+    //Mat first_m_rows = R.subMatRows(0, m + 1);
+    R.subMatRows(0, m + 1).swapColumns(l, m);
+    real c, s;
+    for (int k = m - 1; k >= l + 1; k--) {
+        chol_rotgen(R(k, l), R(k + 1, l), c, s);
+        chol_rotapp(c, s, R(k).subVec(k, p - k), R(k + 1).subVec(k, p - k));
+    }
+    for (int k = l; k < m; k++) {
+        chol_rotgen(R(k, k), R(k+1, k), c, s);
+        chol_rotapp(c, s, R(k).subVec(k + 1, p - k - 1),
+                          R(k + 1).subVec(k + 1, p - k - 1));
+    }
+}
+
+/////////////////
+// chol_rotapp //
+/////////////////
+void chol_rotapp(real c, real s, const Vec& x, const Vec& y)
+{
+    static Vec t;
+    assert( x.length() == y.length() );
+    t.resize(x.length());
+    t << x;
+    multiplyScaledAdd(y, c, s, t);
+    multiplyScaledAdd(x, c, -s, y);
+    x << t;
+}
+
+/////////////////
+// chol_rotgen //
+/////////////////
+void chol_rotgen(real& a, real& b, real& c, real& s)
+{
+    real t = fabs(a) + fabs(b);
+    if (fast_exact_is_equal(t, 0)) {
+        c = 1;
+        s = 0;
+        return;
+    }
+    real a_over_t = a / t;
+    real b_over_t = b / t;
+    t *= sqrt( a_over_t * a_over_t + b_over_t * b_over_t);
+    c = a / t;
+    s = b / t;
+    a = t;
+    b = 0;
 }
 
 } // end namespace PLearn
