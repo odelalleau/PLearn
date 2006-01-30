@@ -358,6 +358,21 @@ public:
     Vec getLogLikelihoodDens() const { return log_likelihood_dens; }
     */
 
+    /*********** Static members ************/
+
+protected:
+
+    // TODO: More explicit documentation.
+    //! Fill 'path' with the list of nodes to visit.
+    //! Fill 'free_previous' with boolean values indicating when the covariance
+    //! matrix for the previous node may be freed.
+    static void traverse_tree(TVec<int>& path, bool free_previous,
+                              int index_node, int previous_node,
+                              const TVec<int>& parent,
+                              const TVec< TVec<int> >& children,
+                              const TVec<int>& message_up,
+                              const TVec<int>& message_down);
+
 };
 
 // Declares a few other classes and functions related to this class

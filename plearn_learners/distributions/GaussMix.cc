@@ -2228,19 +2228,25 @@ void GaussMix::train()
                 boost::prim_minimum_spanning_tree(dist_graph, &pred[0]);
                 if (verbosity >= 2)
                     pout << "Done" << endl;
+                // Convert 'pred' to a PLearn parent vector.
+                TVec<int> parent(int(pred.size()));
+                for (std::size_t i = 0; i != pred.size(); i++)
+                    parent[int(i)] = int(pred[i]);
+
+                // TODO At this point we may free memory used by the STL data.
 
                 // Compute list of nodes, from top to bottom.
                 n = missing_patterns.length();
                 TVec<int> top_to_bottom;
                 TVec<int> status(n, 0);
+                assert( parent.length() == n );
                 // Status: 0 = still has a parent
                 //         1 = candidate with no parent
                 //         2 = done
                 TVec< TVec<int> > children(n);
-                Predec::const_iterator it = pred.begin();
-                for (std::size_t i = 0; i != pred.size(); i++)
-                    if (pred[i] != i)
-                        children[ int(pred[i]) ].append(i);
+                for (int i = 0; i < parent.length(); i++)
+                    if (parent[i] != i)
+                        children[ parent[i] ].append(i);
                     else
                         status[int(i)] = 1;
                 // Ensure there is only a single one in the resulting tree.
@@ -2304,7 +2310,7 @@ void GaussMix::train()
                 // Downward pass of messages.
                 for (int q = 0; q < n; q++) {
                     int j = top_to_bottom[q];
-                    int i = pred[j];
+                    int i = parent[j];
                     TVec<int> brothers = children[i];
                     int max = -1;
                     bool balanced = false;
@@ -2345,6 +2351,16 @@ void GaussMix::train()
                 int min_cost = min(cost);
                 if (verbosity >= 5)
                     pout << "Minimum cost: " << min_cost << endl;
+
+                // Find the node to start from.
+                int start_node = argmin(cost);
+                assert( cost[start_node] == min_cost );
+
+                // Compute a node ordering giving rise to the mininum cost.
+                TVec<int> path;
+                traverse_tree(path, false, start_node, -1, parent,
+                        children, message_up, message_down);
+                assert( path.length() == n );
             }
            
             /*
@@ -2457,6 +2473,57 @@ void GaussMix::train()
     }
     */
 }
+
+///////////////////
+// traverse_tree //
+///////////////////
+void GaussMix::traverse_tree(TVec<int>& path, bool free_previous,
+                              int index_node, int previous_node,
+                              const TVec<int>& parent,
+                              const TVec< TVec<int> >& children,
+                              const TVec<int>& message_up,
+                              const TVec<int>& message_down)
+{
+    TVec<int> candidates;
+    TVec<int> messages;
+    TVec<int> child = children[index_node];
+    for (int i = 0; i < child.length(); i++)
+        if (child[i] != previous_node)
+            candidates.append(child[i]);
+    for (int i = 0; i < candidates.length(); i++)
+        messages.append(message_up[candidates[i]]);
+    if (parent[index_node] != index_node &&
+        parent[index_node] != previous_node)
+    {
+        candidates.append(parent[index_node]);
+        messages.append(message_down[parent[index_node]]);
+    }
+
+    if (child.length() > 1000)
+        PLWARNING("In GaussMix::traverse_tree - Should implement a faster "
+                  "sorting algorithm");
+
+    path.append(index_node);
+
+    for (int i = 0; i < candidates.length(); i++) {
+        int arg_min = i;
+        for (int j = i + 1; j < candidates.length(); j++)
+            if (messages[j] < messages[arg_min])
+                arg_min = j;
+        int tmp = messages[i];
+        messages[i] = messages[arg_min];
+        messages[arg_min] = tmp;
+        tmp = candidates[i];
+        candidates[i] = candidates[arg_min];
+        candidates[arg_min] = tmp;
+        int node = candidates[i];
+        assert( node != index_node && node != previous_node );
+        bool can_free = (i == candidates.length() - 1);
+        traverse_tree(path, can_free, node, index_node, parent,
+                children, message_up, message_down);
+    }
+}
+
 
 ///////////////////
 // unknownOutput //
