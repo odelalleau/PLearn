@@ -75,32 +75,32 @@ template <class KeyType, class ValueType>
 class Cache : public BoundedMemoryCache<KeyType,ValueType>
 {
 protected:
+public:
     bool single_file; // whether the filed entries are in a single large file or one file per element
     string files_directory;
-public:
     PStream::mode_t file_format; // possible values are: PStream::{raw,plearn}_{ascii,binary}
 
-    inline Cache(string dir = "cache", bool singlefile=false, int max_memory_=0) 
+    inline Cache(string dir = "cache", int max_memory_=0, bool singlefile=false) 
         : BoundedMemoryCache<KeyType,ValueType>(max_memory_), single_file(singlefile), files_directory(dir), file_format(PStream::raw_ascii)
     {}
 
     //! Try to get value associataed with key. If not in cache (either memory or disk) return 0, 
     //! else return pointer to value. Recently accessed keys (with set or operator()) are less likely 
     //! to be removed from memory (saved to disk).
-    inline const ValueType* operator()(KeyType& key) const { 
+    inline const ValueType* operator()(const KeyType& key) const { 
         ValueType* value_p = BoundedMemoryCache<KeyType,ValueType>::operator()(key);
         if (value_p) // we have it in memory
-            return *value_p;
+            return value_p;
         // else check if we have it on file
         value_p = loadValue(key);
         if (value_p)
             BoundedMemoryCache<KeyType,ValueType>::set(key,*value_p);
         return value_p;
     }
-    inline ValueType* operator()(KeyType& key) { 
+    inline ValueType* operator()(const KeyType& key) { 
         ValueType* value_p = BoundedMemoryCache<KeyType,ValueType>::operator()(key);
         if (value_p) // we have it in memory
-            return *value_p;
+            return value_p;
         // else check if we have it on file
         value_p = loadValue(key);
         if (value_p)
@@ -109,20 +109,33 @@ public:
     }
 
     //! Check if this key is in cache. This does not change the access priority of the key.
-    inline bool isCached(KeyType& key) const { return BoundedMemoryCache<KeyType,ValueType>::isCached(key) || isOnFile(key); }
-    inline bool isInMemory(KeyType& key) const { return BoundedMemoryCache<KeyType,ValueType>::isCached(key); }
-    inline string filename(KeyType& key) { return files_directory + "/" + tostring(key) + ".psave"; }
-    inline bool isOnFile(KeyType& key) { return isfile(filename(key)); }
+    inline bool isCached(const KeyType& key) const { return BoundedMemoryCache<KeyType,ValueType>::isCached(key) || isOnFile(key); }
+    inline bool isInMemory(const KeyType& key) const { return BoundedMemoryCache<KeyType,ValueType>::isCached(key); }
+    inline string filename(const KeyType& key) const { return files_directory + "/" + tostring(key) + ".psave"; }
+    inline bool isOnFile(const KeyType& key) const { return isfile(filename(key)); }
+    // note that clear REMOVES EVERYTHING: stuff on disk and stuff in memory
     inline void clear() {
         BoundedMemoryCache<KeyType,ValueType>::clear();
         vector<string> filenames = lsdir(files_directory);
         for (int i=0;i<filenames.size();i++)
             rm(files_directory + "/" + filenames[i]);
     }
-    inline virtual ~Cache() { BoundedMemoryCache<KeyType,ValueType>::clear(); }
+    // whereas destroying the cache or calling BoundedMemoryCache::clear() will 
+    // delete the stuff from memory WHILE SAVING IT TO DISK, EVERYTHING IS PRESERVED ON DISK.
+    inline virtual ~Cache() { 
+        BoundedMemoryCache<KeyType,ValueType>::clear(); 
+    }
+
+    // makes sure everything in memory also resides on disk (brutally copy everything, which is simpler)
+    inline virtual void synchronizeDisk() const {
+        typename map<KeyType,pair<ValueType,DoublyLinkedListElement<KeyType>*> >::const_iterator it = BoundedMemoryCache<KeyType,ValueType>::elements.begin();
+        typename map<KeyType,pair<ValueType,DoublyLinkedListElement<KeyType>*> >::const_iterator end = BoundedMemoryCache<KeyType,ValueType>::elements.end();
+        for (;it!=end;++it)
+            saveValue(it->first,it->second.first);
+    }
 
 protected:
-    inline ValueType* loadValue(KeyType& key) {
+    inline ValueType* loadValue(const KeyType& key) {
         if (single_file)
         {
             PLERROR("Cache: single_file mode not yet implemented");
@@ -137,8 +150,9 @@ protected:
             filestream >> *v;
             return v;
         }
+        return 0;
     }
-    inline void saveValue(KeyType& key, ValueType& value) {
+    inline void saveValue(const KeyType& key, const ValueType& value) const {
         if (single_file)
         {
             PLERROR("Cache: single_file mode not yet implemented");

@@ -962,7 +962,7 @@ template<class MatT>
 int kernelPCAfromDotProducts(MatT& dot_products,Mat embedding, int max_n_eigen_iter=300, real ncv2nev_ratio=1.5, Vec* eval=0, Mat* evec=0)
 {
     int n=dot_products.length();
-    long int m=embedding.width();
+    FORTRAN_Integer m=embedding.width();
     if (embedding.length()!=n)
         PLERROR("kernelPCAfromDotProducts: expected embedding.length()==dot_products.length(), got %d!=%d",
                 embedding.length(),n);
@@ -1019,7 +1019,7 @@ template<class MatT>
 int metricMultiDimensionalScaling(MatT& square_distances,Mat embedding, int max_n_eigen_iter=300)
 {
     int n=square_distances.length();
-    long int m=embedding.width();
+    FORTRAN_Integer m=embedding.width();
     if (embedding.length()!=n)
         PLERROR("MetricMultiDimensionalScaling: expected embedding.length()==square_distances.length(), got %d!=%d",
                 embedding.length(),n);

@@ -67,7 +67,7 @@ using namespace std;
   Mat evectors(nb_principal_components,train_set.length());
   Vec evalues(nb_principal_components);
   int status;
-  long int n_ev=nb_principal_components;
+  FORTRAN_Integer n_ev=nb_principal_components;
 
   status = eigenSparseSymmMat(A, evalues, 
   evectors, n_ev, 300, 
@@ -84,8 +84,9 @@ using namespace std;
 
 */
 
+
 template<class MatT>
-int eigenSparseSymmMat(MatT& A, Vec& e_values, Mat& e_vectors, long int& n_evalues,
+int eigenSparseSymmMat(MatT& A, Vec& e_values, Mat& e_vectors, FORTRAN_Integer& n_evalues,
                        int max_n_iter=300, bool compute_vectors=true, bool largest_evalues=true,
                        bool according_to_magnitude=true, bool both_ends=false, real ncv2nev_ratio=1.5)
 {
@@ -93,11 +94,11 @@ int eigenSparseSymmMat(MatT& A, Vec& e_values, Mat& e_vectors, long int& n_evalu
     PLERROR("eigenSparseSymmMat: ARPACK not available on this system!");
     return 0;
 #else
-    long int ido=0;
+    FORTRAN_Integer ido=0;
     char bmat[1];
     bmat[0] = 'I';
     char which[2];
-    long int n=A.length();
+    FORTRAN_Integer n=A.length();
     if (e_vectors.length()!=n_evalues || e_vectors.width()!=n)
         PLERROR("eigenSparseSymmMat: expected e_vectors.width(%d)=A.length(%d), e_vectors.length(%d)=e_values.length(%d)",
                 e_vectors.width(),n,e_vectors.length(),n_evalues);
@@ -109,18 +110,18 @@ int eigenSparseSymmMat(MatT& A, Vec& e_values, Mat& e_vectors, long int& n_evalu
         which[1]= according_to_magnitude? 'M' : 'A';
     }
     real tol=0;
-    long int ncv=MIN(3+int(n_evalues*ncv2nev_ratio),n-1);
+    FORTRAN_Integer ncv=MIN(3+int(n_evalues*ncv2nev_ratio),n-1);
     e_vectors.resize(ncv,n); //!<  we need some extra space...
-    long int iparam[11];
+    FORTRAN_Integer iparam[11];
     iparam[0]=1;
     iparam[2]=max_n_iter;
     iparam[6]=1;
-    long int ipntr[11];
+    FORTRAN_Integer ipntr[11];
     Vec workd(3*n);
-    long int lworkl = (ncv * ncv) + (ncv * 8);
+    FORTRAN_Integer lworkl = (ncv * ncv) + (ncv * 8);
     Vec workl(lworkl);
     Vec resid(n);
-    long int info=0;
+    FORTRAN_Integer info=0;
     for (;;) {
 #ifdef USEDOUBLE
         dsaupd_(&ido, bmat, &n, which, &n_evalues, &tol, resid.data(), &ncv, e_vectors.data(), &n,
@@ -149,9 +150,9 @@ int eigenSparseSymmMat(MatT& A, Vec& e_values, Mat& e_vectors, long int& n_evalu
     e_vectors.resize(n_evalues,n);
     if (n_evalues>0)
     {
-        long int rvec = compute_vectors;
-        TVec<long int> select(ncv);
-        long int ierr;
+        FORTRAN_Integer rvec = compute_vectors;
+        TVec<FORTRAN_Integer> select(ncv);
+        FORTRAN_Integer ierr;
         real sigma =0;
 #ifdef USEDOUBLE
         dseupd_(&rvec, "All", select.data(), e_values.data(), e_vectors.data(), &n, &sigma, 
@@ -182,7 +183,7 @@ int eigenSparseSymmMat(MatT& A, Vec& e_values, Mat& e_vectors, long int& n_evalu
   and eigen values.
 */
 template<class MatT>
-int eigenSparseNonSymmMat(MatT& A, Vec e_values, Mat e_vectors, long int& n_evalues,
+int eigenSparseNonSymmMat(MatT& A, Vec e_values, Mat e_vectors, FORTRAN_Integer& n_evalues,
                           int max_n_iter=300, bool compute_vectors=true, bool largest_evalues=true,
                           bool according_to_magnitude=true, bool both_ends=false)
 {
@@ -190,11 +191,11 @@ int eigenSparseNonSymmMat(MatT& A, Vec e_values, Mat e_vectors, long int& n_eval
     PLERROR("eigenSparseNonSymmMat: ARPACK not available on this system!");
     return 0;
 #else
-    long int ido=0;
+    FORTRAN_Integer ido=0;
     char bmat[1];
     bmat[0] = 'I';
     char which[2];
-    long int n=A.length();
+    FORTRAN_Integer n=A.length();
     if (e_vectors.length()!=n_evalues || e_vectors.width()!=n)
         PLERROR("eigenSparseNonSymmMat: expected e_vectors.width(%d)=A.length(%d), e_vectors.length(%d)=e_values.length(%d)",
                 e_vectors.width(),n,e_vectors.length(),n_evalues);
@@ -206,18 +207,18 @@ int eigenSparseNonSymmMat(MatT& A, Vec e_values, Mat e_vectors, long int& n_eval
         which[1]= according_to_magnitude? 'M' : 'R';//according to magnitude or according to real part
     }
     real tol=0;
-    long int ncv=MIN(3+int(n_evalues*1.5),n-1);
+    FORTRAN_Integer ncv=MIN(3+int(n_evalues*1.5),n-1);
     e_vectors.resize(ncv,n); //!<  we need some extra space...
-    long int iparam[11];
+    FORTRAN_Integer iparam[11];
     iparam[0]=1;
     iparam[2]=max_n_iter;
     iparam[6]=1;
-    long int ipntr[11];
+    FORTRAN_Integer ipntr[11];
     Vec workd(3*n);
-    long int lworkl = 3*(ncv * ncv) + (ncv * 6);
+    FORTRAN_Integer lworkl = 3*(ncv * ncv) + (ncv * 6);
     Vec workl(lworkl);
     Vec resid(n);
-    long int info=0;
+    FORTRAN_Integer info=0;
     for (;;) {
 #ifdef USEDOUBLE
         dnaupd_(&ido, bmat, &n, which, &n_evalues, &tol, resid.data(), &ncv, e_vectors.data(), &n,
@@ -248,9 +249,9 @@ int eigenSparseNonSymmMat(MatT& A, Vec e_values, Mat e_vectors, long int& n_eval
     e_vectors.resize(n_evalues+1,n);
     if (n_evalues>0)
     {
-        long int rvec = compute_vectors;
-        TVec<long int> select(ncv);
-        long int ierr;
+        FORTRAN_Integer rvec = compute_vectors;
+        TVec<FORTRAN_Integer> select(ncv);
+        FORTRAN_Integer ierr;
         real sigmai =0;
         real sigmar =0;
 #ifdef USEDOUBLE

@@ -873,7 +873,7 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_gcv, bool X_is_transpo
     else // BE MORE GREEDY: DO A SEARCH FROM INITIAL GUESS
     {
         // first find eigenvalue closest to initial guess
-        Vec weight_decays(rank);
+        Vec weight_decays(rank+1);
         weight_decays[0] = max(min_weight_decay,eigen_values[0]);
         int stop = rank;
         for (int i=1;i<rank;i++)

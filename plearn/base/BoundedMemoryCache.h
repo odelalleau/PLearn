@@ -88,13 +88,16 @@ public:
     {}
 
     inline void clear() { 
-        n_elements=0; current_memory=0; elements.clear(); 
-        while (BoundedMemoryCache<KeyType,ValueType>::doubly_linked_list->first) BoundedMemoryCache<KeyType,ValueType>::doubly_linked_list->removeLast();
+        int mm = max_memory;
+        max_memory = 0;
+        removeExcess(); // this is mostly useful when removeExcess is redefined, e.g. in sub-class Cache
+        max_memory = mm;
+        elements.clear();
     }
 
     //! Try to get value associataed with key. If not in cache return 0, else return pointer to value.
     //! Recently accessed keys (with set or operator()) are less likely to be removed.
-    const ValueType* operator()(KeyType& key) const { 
+    const ValueType* operator()(const KeyType& key) const { 
         typename map<KeyType,pair<ValueType,DoublyLinkedListElement<KeyType>*> >::const_iterator it = elements.find(key);
         if (it==elements.end()) 
         {
@@ -111,7 +114,7 @@ public:
 #endif
         return &(it->second.first);
     }
-    ValueType* operator()(KeyType& key) { 
+    ValueType* operator()(const KeyType& key) { 
         typename map<KeyType,pair<ValueType,DoublyLinkedListElement<KeyType>*> >::iterator it = elements.find(key);
         if (it==elements.end()) 
         {
@@ -133,7 +136,7 @@ public:
 
     //! Associate value to key. 
     //! Recently accessed keys (with set or operator()) are less likely to be removed.
-    void set(KeyType& key, const ValueType& value) {
+    void set(const KeyType& key, const ValueType& value) {
         typename map<KeyType,pair<ValueType,DoublyLinkedListElement<KeyType>*> >::iterator it = elements.find(key);
         if (it==elements.end()) { // first time set
             DoublyLinkedListElement<KeyType>* p=doubly_linked_list->pushOnTop(key);
@@ -167,7 +170,7 @@ public:
         removeExcess();
     }
     //! Check if this key is in cache. This does not change the access priority of the key.
-    inline  bool isCached(KeyType& key) const { return elements.find(key)!=elements.end(); }
+    inline  bool isCached(const KeyType& key) const { return elements.find(key)!=elements.end(); }
     inline  int nElements() const { return n_elements; }
     inline  int currentMemory() const { return current_memory; }
     inline  int maxMemory() const { return max_memory; }

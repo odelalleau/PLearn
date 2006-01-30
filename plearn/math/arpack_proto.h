@@ -36,62 +36,64 @@
 #ifndef arpack_proto_INC
 #define arpack_proto_INC
 
+#define FORTRAN_Integer int
+
 namespace PLearn {
 using namespace std;
 
 
 extern "C"
 {  
-    int dnaupd_(long int *, const char *, long int *, const char *, 
-                long int *, double *, double *, long int *, double *, 
-                long int *, long int *, long int *, double *, double *, 
-                long int *, long int *, short, short);
+    int dnaupd_(FORTRAN_Integer *, const char *, FORTRAN_Integer *, const char *, 
+                FORTRAN_Integer *, double *, double *, FORTRAN_Integer *, double *, 
+                FORTRAN_Integer *, FORTRAN_Integer *, FORTRAN_Integer *, double *, double *, 
+                FORTRAN_Integer *, FORTRAN_Integer *, short, short);
   
-    int dneupd_(long int *, const char *, long int *, double *, double *, 
-                double *, long int *, double *, double *, double *, 
-                const char *, long int *, const char *, long int *, double *, 
+    int dneupd_(FORTRAN_Integer *, const char *, FORTRAN_Integer *, double *, double *, 
+                double *, FORTRAN_Integer *, double *, double *, double *, 
+                const char *, FORTRAN_Integer *, const char *, FORTRAN_Integer *, double *, 
                 double *, 
-                long int *, double *, long int *, long int *, long int *, 
-                double *, double *, long int *, long int *, short, short,
+                FORTRAN_Integer *, double *, FORTRAN_Integer *, FORTRAN_Integer *, FORTRAN_Integer *, 
+                double *, double *, FORTRAN_Integer *, FORTRAN_Integer *, short, short,
                 short);
    
-    int snaupd_(long int *, const char *, long int *, const char *, 
-                long int *, float *, float *, long int *, float *, 
-                long int *, long int *, long int *, float *, float *, 
-                long int *, long int *, short, short);
+    int snaupd_(FORTRAN_Integer *, const char *, FORTRAN_Integer *, const char *, 
+                FORTRAN_Integer *, float *, float *, FORTRAN_Integer *, float *, 
+                FORTRAN_Integer *, FORTRAN_Integer *, FORTRAN_Integer *, float *, float *, 
+                FORTRAN_Integer *, FORTRAN_Integer *, short, short);
   
-    int sneupd_(long int *, const char *, long int *, float *, float *, 
-                float *, long int *, float *, float *, float *, 
-                const char *, long int *, const char *, long int *, float *, 
+    int sneupd_(FORTRAN_Integer *, const char *, FORTRAN_Integer *, float *, float *, 
+                float *, FORTRAN_Integer *, float *, float *, float *, 
+                const char *, FORTRAN_Integer *, const char *, FORTRAN_Integer *, float *, 
                 float *, 
-                long int *, float *, long int *, long int *, long int *, 
-                float *, float *, long int *, long int *, short, short,
+                FORTRAN_Integer *, float *, FORTRAN_Integer *, FORTRAN_Integer *, FORTRAN_Integer *, 
+                float *, float *, FORTRAN_Integer *, FORTRAN_Integer *, short, short,
                 short);
 
-    int dsaupd_(long int *, const char *, long int *, const char *, 
-                long int *, double *, double *, long int *, double *, 
-                long int *, long int *, long int *, double *, double *, 
-                long int *, long int *, short, short);
+    int dsaupd_(FORTRAN_Integer *, const char *, FORTRAN_Integer *, const char *, 
+                FORTRAN_Integer *, double *, double *, FORTRAN_Integer *, double *, 
+                FORTRAN_Integer *, FORTRAN_Integer *, FORTRAN_Integer *, double *, double *, 
+                FORTRAN_Integer *, FORTRAN_Integer *, short, short);
   
-    int dseupd_(long int *, const char *, long int *, double *, 
-                double *, long int *, double *, 
-                const char *, long int *, const char *, long int *, double *, 
+    int dseupd_(FORTRAN_Integer *, const char *, FORTRAN_Integer *, double *, 
+                double *, FORTRAN_Integer *, double *, 
+                const char *, FORTRAN_Integer *, const char *, FORTRAN_Integer *, double *, 
                 double *, 
-                long int *, double *, long int *, long int *, long int *, 
-                double *, double *, long int *, long int *, short, short,
+                FORTRAN_Integer *, double *, FORTRAN_Integer *, FORTRAN_Integer *, FORTRAN_Integer *, 
+                double *, double *, FORTRAN_Integer *, FORTRAN_Integer *, short, short,
                 short);
    
-    int ssaupd_(long int *, const char *, long int *, const char *, 
-                long int *, float *, float *, long int *, float *, 
-                long int *, long int *, long int *, float *, float *, 
-                long int *, long int *, short, short);
+    int ssaupd_(FORTRAN_Integer *, const char *, FORTRAN_Integer *, const char *, 
+                FORTRAN_Integer *, float *, float *, FORTRAN_Integer *, float *, 
+                FORTRAN_Integer *, FORTRAN_Integer *, FORTRAN_Integer *, float *, float *, 
+                FORTRAN_Integer *, FORTRAN_Integer *, short, short);
   
-    int sseupd_(long int *, const char *, long int *, float *, 
-                float *, long int *, float *, 
-                const char *, long int *, const char *, long int *, float *, 
+    int sseupd_(FORTRAN_Integer *, const char *, FORTRAN_Integer *, float *, 
+                float *, FORTRAN_Integer *, float *, 
+                const char *, FORTRAN_Integer *, const char *, FORTRAN_Integer *, float *, 
                 float *, 
-                long int *, float *, long int *, long int *, long int *, 
-                float *, float *, long int *, long int *, short, short,
+                FORTRAN_Integer *, float *, FORTRAN_Integer *, FORTRAN_Integer *, FORTRAN_Integer *, 
+                float *, float *, FORTRAN_Integer *, FORTRAN_Integer *, short, short,
                 short);
 }
 
