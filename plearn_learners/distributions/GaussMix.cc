@@ -2216,19 +2216,137 @@ void GaussMix::train()
                 Edge* edges_ptr = edges.data();
                 DistGraph dist_graph(
                         edges_ptr,
-                        edges_ptr + sizeof(edges_ptr) / sizeof(Edge),
+                        edges_ptr + edges.length(),
                         weights.data(), missing_patterns.length());
                 boost::property_map<DistGraph, boost::edge_weight_t>::type
                     weightmap = boost::get(boost::edge_weight, dist_graph);
-                vector < boost::graph_traits < DistGraph >::vertex_descriptor >
-                    pred(boost::num_vertices(dist_graph));
+                typedef vector < boost::graph_traits <
+                                    DistGraph >::vertex_descriptor > Predec;
+                Predec pred(boost::num_vertices(dist_graph));
                 if (verbosity >= 2)
                     pout << "Computing minimum spanning tree... " << flush;
                 boost::prim_minimum_spanning_tree(dist_graph, &pred[0]);
                 if (verbosity >= 2)
                     pout << "Done" << endl;
+
+                // Compute list of nodes, from top to bottom.
+                n = missing_patterns.length();
+                TVec<int> top_to_bottom;
+                TVec<int> status(n, 0);
+                // Status: 0 = still has a parent
+                //         1 = candidate with no parent
+                //         2 = done
+                TVec< TVec<int> > children(n);
+                Predec::const_iterator it = pred.begin();
+                for (std::size_t i = 0; i != pred.size(); i++)
+                    if (pred[i] != i)
+                        children[ int(pred[i]) ].append(i);
+                    else
+                        status[int(i)] = 1;
+                // Ensure there is only a single one in the resulting tree.
+                assert( status.find(1, status.find(1) + 1) == -1 );
+                int count = 0;
+                // Now we're ready to loop over all elements.
+                while (true) {
+                    int last_count = count;
+                    bool loop = false;
+                    // Find the next candidate with no parent.
+                    while (status[count] != 1 &&
+                           (!loop || count != last_count)) {
+                        count++;
+                        if (count >= n) {
+                            count -= n;
+                            loop = true;
+                        }
+                    }
+                    if (count == last_count && loop) {
+                        // We must have gone through all nodes.
+                        assert( status.find(0) == -1 );
+                        break;
+                    }
+                    status[count] = 2;
+                    top_to_bottom.append(count);
+                    TVec<int> child = children[count];
+                    for (int i = 0; i < child.length(); i++) {
+                        int j = child[i];
+                        assert( status[j] == 0 );
+                        status[j] = 1;
+                    }
+                }
+
+                // Initialize messages.
+                TVec<int> message_up(n, 0);
+                TVec<int> message_down(n, 0);
+
+                // Upward pass of messages.
+                for (int i = n - 1; i >= 0; i--) {
+                    int k = top_to_bottom[i];
+                    TVec<int> child = children[k];
+                    if (child.isEmpty())
+                        // Leaf node.
+                        continue;
+                    int max = -1;
+                    bool balanced = false;
+                    for (int j = 0; j < child.length(); j++) {
+                        int msg_up = message_up[child[j]];
+                        if (msg_up > max) {
+                            max = msg_up;
+                            balanced = false;
+                        } else if (msg_up == max)
+                            balanced = true;
+                    }
+                    if (balanced)
+                        max++;
+                    assert( max >= 0 );
+                    message_up[k] = max;
+                }
+
+                // Downward pass of messages.
+                for (int q = 0; q < n; q++) {
+                    int j = top_to_bottom[q];
+                    int i = pred[j];
+                    TVec<int> brothers = children[i];
+                    int max = -1;
+                    bool balanced = false;
+                    for (int k = 0; k < brothers.length(); k++) {
+                        int brother_k = brothers[k];
+                        if (brother_k == j)
+                            // We do not consider this node.
+                            continue;
+                        int msg_up = message_up[brother_k];
+                        if (msg_up > max) {
+                            max = msg_up;
+                            balanced = false;
+                        } else if (msg_up == max)
+                            balanced = true;
+                    }
+                    int msg_down = message_down[i];
+                    if (msg_down > max) {
+                        max = msg_down;
+                        balanced = false;
+                    } else if (msg_down == max)
+                        balanced = true;
+                    if (balanced)
+                        max++;
+                    assert( max > 0 );
+                    message_down[j] = max;
+                }
+
+                // Compute the cost.
+                TVec<int> cost(n, -1);
+                for (int i = 0; i < n; i++) {
+                    int msg_up = message_up[i];
+                    int msg_down = message_down[i];
+                    if (msg_up == msg_down)
+                        cost[i] = msg_up + 1;
+                    else
+                        cost[i] = max(msg_up, msg_down);
+                }
+                int min_cost = min(cost);
+                if (verbosity >= 5)
+                    pout << "Minimum cost: " << min_cost << endl;
             }
-            
+           
             /*
             // Compute some statistics on the distances to templates.
             Vec stats_diff(missing_patterns.width());
