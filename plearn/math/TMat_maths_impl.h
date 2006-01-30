@@ -1647,7 +1647,7 @@ void multiplyAdd(const TVec<T>& source1, const TVec<T>& source2,
 
 // destination[i] = a*destination[i] + b*source[i]
 template<class T>
-void multiplyScaledAdd(const TVec<T>& source, T a, T b, TVec<T>& destination)
+void multiplyScaledAdd(const TVec<T>& source, T a, T b, const TVec<T>& destination)
 {
     int n=source.length();
     if (n!=destination.length())
