@@ -1076,11 +1076,19 @@ featureMask) const
     // if none of the 2 are masked than we'll compute the feature
     if( (featureMask & 2) && (featureMask & 4) ) {      
         if( !is_missing(target[1]) && !is_missing(input[14]) ) {
-            currentFeatureGroup.push_back( (int)target[1] * ((train_set->getDictionary(0))->size()+1) + (int)input[14] );
+          int bigram = (int)target[1] * ((train_set->getDictionary(0))->size()+1) + (int)input[14];
+          std::map<int, int>::iterator itr_plcw_bigram_mapping;
+
+          // is it in our mapping of bigrams seen in train_set?
+          itr_plcw_bigram_mapping = plcw_bigram_mapping.find( bigram );
+
+          if( itr_plcw_bigram_mapping != plcw_bigram_mapping.end() )  {
+            currentFeatureGroup.push_back( itr_plcw_bigram_mapping->second );
             size++;
+          }
         }
     } 
-    fl += ((train_set->getDictionary(inputsize_))->size()+1) * ((train_set->getDictionary(0))->size()+1);
+    fl += plcw_bigram_mapping.size();
     theFeatureGroups[5].resize(size);
     fls[5] = fl;
 
