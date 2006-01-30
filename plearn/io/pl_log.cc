@@ -2,7 +2,7 @@
 
 // pl_log.cc
 //
-// Copyright (C) 2004 Nicolas Chapados 
+// Copyright (C) 2004-2006 Nicolas Chapados 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -42,6 +42,8 @@
 
 #include <map>
 #include <string>
+#include <algorithm>
+#include <iterator>
 #include <plearn/base/stringutils.h>
 #include "pl_log.h"
 
@@ -52,9 +54,14 @@ PL_Log::PL_Log( )
     : runtime_verbosity(VLEVEL_NORMAL),
       output_stream(get_perr()),
       null_stream(get_pnull()),
-      logger_count(0)
-{}
+      logger_count(0),
+      named_logging_kind(AllModules)
+{ }
 
+
+/**
+ *  Return a logger object given verbosity only
+ */
 PStream& PL_Log::logger(int requested_verbosity)
 {
     logger_count++;
@@ -64,17 +71,78 @@ PStream& PL_Log::logger(int requested_verbosity)
         return null_stream;
 }
 
-PL_Log& PL_Log::instance()
+
+/**
+ *  Return a logger if logging is enabled for the specified module name
+ */
+PStream& PL_Log::namedLogger(const string& module_name)
+{
+    logger_count++;
+    if (VLEVEL_NORMAL <= runtime_verbosity &&
+        (named_logging_kind == AllModules ||
+         (named_logging_kind == SomeModules &&
+          enabled_modules.find(module_name) != enabled_modules.end())))
+    {
+        return output_stream;
+    }
+
+    return null_stream;
+}
+
+
+/**
+ *  Enable named logging for the specified modules.  Watch if one of the
+ *  elements is one of the special keywords __ALL__ or __NONE__, and handle
+ *  them accordingly.
+ */
+void PL_Log::enableNamedLogging(const vector<string>& module_names)
+{
+    enabled_modules.clear();
+    named_logging_kind = SomeModules;
+    for (int i=0, n=module_names.size() ; i<n ; ++i) {
+        if (module_names[i] == "__ALL__") {
+            named_logging_kind = AllModules;
+            break;
+        }
+        else if (module_names[i] == "__NONE__") {
+            named_logging_kind = NoModules;
+            break;
+        }
+        else
+            enabled_modules.insert(module_names[i]);
+    }
+}
+
+
+/**
+ *  Return the list of modules for which named logging is enabled
+ */
+vector<string> PL_Log::namedLogging() const
+{
+    vector<string> r;
+    if (named_logging_kind == AllModules)
+        r.push_back("__ALL__");
+    else if (named_logging_kind == NoModules)
+        r.push_back("__NONE__");
+    else
+        copy(enabled_modules.begin(), enabled_modules.end(), back_inserter(r));
+
+    return r;
+}
+            
+
+PL_Log& PL_Log::instance()    
 {
     static PL_Log global_logger;
     return global_logger;
 }
 
+
 /**
  * Parses a string to see whether or not it names a VerbosityLevel. If it
  * doesn't, tries the cast to an int.
  */
-VerbosityLevel PL_Log::vlevel_from_string(const string& v)
+VerbosityLevel PL_Log::vlevelFromString(const string& v)
 {
     static map<string, VerbosityLevel> _vlevels;
     if ( _vlevels.size() == 0 )
@@ -97,6 +165,7 @@ PStream& plsep(PStream& p)
 {
     return p << plhead("");
 }
+
 
 PStream& operator<<(PStream& p, PL_Log::Heading heading)
 {

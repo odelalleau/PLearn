@@ -127,9 +127,25 @@ static string global_options( vector<string>& command_line,
             PLERROR("Option --verbosity must be followed by a VerbosityLevel name "
                     "or by an integer value.");
         verbosity_value =
-            PL_Log::vlevel_from_string( command_line[verbosity_value_pos] );
+            PL_Log::vlevelFromString( command_line[verbosity_value_pos] );
     }
 
+    // Option to enable logging for the specified modules, specified as
+    // --enable-logging module1,module2,module3,... i.e. as a comma-separated
+    // list of modules (without spaces).  Special keywords __ALL__ and __NONE__
+    // can be specified to log for all modules or no modules respectively.
+    int enable_logging_pos  = findpos(command_line, "--enable-logging");
+    int enabled_modules_pos = -1;
+    if (enable_logging_pos != -1)
+    {
+        enabled_modules_pos = enable_logging_pos+1;
+        if (enabled_modules_pos >= argc)
+            PLERROR("Option --enable-logging must be followed by a list of the form\n"
+                    "module1,module2,module3,... (comma-separated list without spaces)");
+        vector<string> modules = split(command_line[enabled_modules_pos], ',');
+        PL_Log::instance().enableNamedLogging(modules);
+    }
+    
     // Option to establish global calendars loaded from a matrix
     int global_calendar_pos = findpos(command_line, "--global-calendars");
     int global_calendar_value_pos = -1;
@@ -167,6 +183,8 @@ static string global_options( vector<string>& command_line,
         if ( c != no_version_pos             &&
              c != verbosity_pos              &&
              c != verbosity_value_pos        &&
+             c != enable_logging_pos         &&
+             c != enabled_modules_pos        &&
              c != global_calendar_pos        &&
              c != global_calendar_value_pos  &&
              c != servers_pos                &&
@@ -187,10 +205,15 @@ static string global_options( vector<string>& command_line,
         }
     command_line.resize( cleaned ); // Truncating the end of the vector.
   
-    if ( no_version_pos == -1 )
-        output_version( major_version, minor_version, fixlevel );
     PL_Log::instance().verbosity( verbosity_value );
+    if (no_version_pos == -1)
+        output_version( major_version, minor_version, fixlevel );
 
+    if (enabled_modules_pos != -1)
+        cerr << "Logging enabled for modules: "
+             << join(PL_Log::instance().namedLogging(), ", ")
+             << endl;
+    
     return the_command;
 }
 

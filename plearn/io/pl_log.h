@@ -2,7 +2,7 @@
 
 // pl_log.h
 //
-// Copyright (C) 2004 Nicolas Chapados 
+// Copyright (C) 2004-2006 Nicolas Chapados 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -38,12 +38,19 @@
 
 // Authors: Nicolas Chapados, Christian Dorion
 
-/*! \file pl_log.h */
+/**
+ *  @file pl_log.h
+ *
+ *  
+ */
 
 
 #ifndef pl_log_INC
 #define pl_log_INC
 
+#include <vector>
+#include <set>
+#include <string>
 #include "PStream.h"
 
 namespace PLearn {
@@ -91,12 +98,36 @@ public:
 
     //! Changes the output_stream outmode
     void outmode(PStream::mode_t outmode_) { output_stream.outmode = outmode_; }
-  
-    //! Underlying logging function.  If "requested_verbosity" is less than
-    //! or equal to verbosity, then output_stream is returned; otherwise
-    //! null_stream is returned.
+
+    /**
+     *  Underlying logging function.  If "requested_verbosity" is less than
+     *  or equal to verbosity, then output_stream is returned; otherwise
+     *  null_stream is returned.
+     */
     PStream& logger(int requested_verbosity);
 
+    /**
+     *  Underlying named logging function.  Use this in conjunction with
+     *  the MODULE_LOG define.  If logging is enabled for the specified module,
+     *  then return output_stream; otherwise return null_stream.  Note that
+     *  named logging operates at the level of "NORMAL" log, so an implicit
+     *  "requested_verbosity" of NORMAL is assumed.  If either the runtime or
+     *  compile-time verbosity is less than "NORMAL", then null_stream is
+     *  returned.
+     */
+    PStream& namedLogger(const string& module_name);
+
+    /**
+     *  Named logging support.  Enable logging for the specified list
+     *  of modules.  If the special "__ALL__" keyword is used, then all
+     *  named logging is enabled.  If the special "__NONE__" keyword is
+     *  used, then no named logging is enabled.  (Default = "__ALL__")
+     */
+    void enableNamedLogging(const vector<string>& module_names);
+
+    //! Return the list of modules for which named logging is enabled
+    vector<string> namedLogging() const;
+    
     //! Return number of times logger() has been called
     long loggerCount() const                   { return logger_count; }
   
@@ -113,24 +144,64 @@ public:
      * Parses a string to see whether or not it names a VerbosityLevel. If it
      * doesn't, tries the cast to an int.
      */
-    static VerbosityLevel vlevel_from_string(const string& v);
+    static VerbosityLevel vlevelFromString(const string& v);
   
 protected:
     int runtime_verbosity;
     PStream output_stream;
     PStream null_stream;
-    long logger_count;            //!< Number of times logger() has been called
+    long logger_count;              //!< Number of times logger() has been called
+    set<string> enabled_modules;    //!< Modules for which logging is enabled.
+
+    enum {
+        AllModules = 0,           //!< Named logging enabled for all modules
+        NoModules = 1,            //!< Named logging enabled for no modules
+        SomeModules = 2           //!< Named logging enabled for some modules
+    } named_logging_kind;
 };
 
-//! MAIN INTERFACE to the logging system
+
+//#####  Main interface to the logging system  ################################
+
 #define PL_LOG(v) if (v <= PL_LOG_VERBOSITY) PL_Log::instance().logger(v)
 #define MAND_LOG      PL_LOG(VLEVEL_MAND)
 #define IMP_LOG       PL_LOG(VLEVEL_IMP) 
 #define NORMAL_LOG    PL_LOG(VLEVEL_NORMAL)
 #define DBG_LOG       PL_LOG(VLEVEL_DBG)   
 #define EXTREME_LOG   PL_LOG(VLEVEL_EXTREME)
-  
-  
+
+/**
+ *  If the "PL_LOG_MODULE_NAME" variable is defined before pl_log.h is
+ *  included, then MODULE_LOG is defined to provide module-specified logging
+ *  for that module.  From an implementation standpoint, we define a static
+ *  string variable that holds the module name, and that variable is used.
+ *
+ *  NOTE: to avoid conflicts and strange behavior, you should only use this
+ *  define within a .cc file (outside of templates).  For templates, you have
+ *  to rely on NAMED_LOG for now.
+ */
+#ifdef PL_LOG_MODULE_NAME
+# ifndef MODULE_LOG
+
+   namespace {
+       string pl_log_module_name_string(PL_LOG_MODULE_NAME);
+   };
+
+#  define MODULE_LOG                                                  \
+      if (VLEVEL_NORMAL <= PL_LOG_VERBOSITY)                          \
+          PL_Log::instance().namedLogger(pl_log_module_name_string)
+
+#endif // MODULE_LOG
+#endif // PL_LOG_MODULE_NAME
+
+
+//! Finally, an explicitly named log.  For use within templates.
+#define NAMED_LOG(name)                         \
+    if (VLEVEL_NORMAL <= PL_LOG_VERBOSITY)      \
+        PL_Log::instance().namedLogger(name)
+
+//#####  Heading Support  #####################################################
+
 //! Manipulator that displays a separator with the Logger count
 PStream& plsep(PStream&);
 
