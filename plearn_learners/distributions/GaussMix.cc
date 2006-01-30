@@ -1414,6 +1414,8 @@ void GaussMix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(alpha,                    copies);
     deepCopyField(center,                   copies);
     deepCopyField(sigma,                    copies);
+
+    // TODO More stuff to add now!
 }
 
 ////////////////
@@ -2357,14 +2359,43 @@ void GaussMix::train()
                 assert( cost[start_node] == min_cost );
 
                 // Compute a node ordering giving rise to the mininum cost.
-                TVec<int> path;
-                traverse_tree(path, false, start_node, -1, parent,
+                spanning_path.resize(0);
+                traverse_tree(spanning_path, false, start_node, -1, parent,
                         children, message_up, message_down);
-                assert( path.length() == n );
+                assert( spanning_path.length() == n );
+
+                // Consistency check: compute the average distance from one
+                // node to the next in the path.
+                int sum = 0;
+                int counter = 0;
+                Vec stats_diff(missing_patterns.width());
+                stats_diff.fill(0);
+                for (int i = 0; i < spanning_path.length() - 1; i++) {
+                    int first = spanning_path[i];
+                    int next = spanning_path[i + 1];
+                    int dist = 0;
+                    for (int k = 0; k < missing_patterns.width(); k++)
+                        if (missing_patterns(first, k) !=
+                            missing_patterns(next, k))
+                            dist++;
+                    sum += dist;
+                    counter ++;
+                    stats_diff[dist]++;
+                }
+                real avg_dist = sum / real(counter);
+                if (verbosity >= 5)
+                    pout << "Average distance to next pattern: " << avg_dist
+                         << endl;
+                /*
+                Mat tomat = stats_diff.toMat(stats_diff.length(), 1);
+                VMat save_vmat(tomat);
+                save_vmat->saveAMAT("/u/delallea/tmp/span_" +
+                        tostring(efficient_k_median) + ".amat", true, true);
+                        */
             }
            
-            /*
             // Compute some statistics on the distances to templates.
+            /*
             Vec stats_diff(missing_patterns.width());
             stats_diff.fill(0);
             for (int i = 0; i < missing_patterns.length(); i++) {
@@ -2378,7 +2409,7 @@ void GaussMix::train()
             Mat tomat = stats_diff.toMat(stats_diff.length(), 1);
             VMat save_vmat(tomat);
             save_vmat->saveAMAT("/u/delallea/tmp/save_" +
-                    tostring(efficient_k_median) + ".amat");
+                    tostring(efficient_k_median) + ".amat", true, true);
             stats_diff.resize(missing_template.length());
             stats_diff.fill(0);
             for (int i = 0; i < missing_patterns.length(); i++) {
@@ -2387,7 +2418,7 @@ void GaussMix::train()
             tomat = stats_diff.toMat(stats_diff.length(), 1);
             save_vmat = VMat(tomat);
             save_vmat->saveAMAT("/u/delallea/tmp/clust_" +
-                    tostring(efficient_k_median) + ".amat");
+                    tostring(efficient_k_median) + ".amat", true, true);
             Mat dist_mat(missing_template.length(),
                          missing_template.length());
             for (int i = 0; i < missing_template.length(); i++) {
@@ -2401,8 +2432,8 @@ void GaussMix::train()
             }
             save_vmat = VMat(dist_mat);
             save_vmat->saveAMAT("/u/delallea/tmp/dist_" +
-                    tostring(efficient_k_median) + ".amat");
-                    */
+                    tostring(efficient_k_median) + ".amat", true, true);
+        */
         }
 
         // n_tries.resize(0); Old code, may be removed in the future...

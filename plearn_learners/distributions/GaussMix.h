@@ -57,12 +57,15 @@ private:
 
 protected:
 
-    // All missing patterns found in the training set (stored in rows).
-    // A boolean value of 'true' indicates that a feature is missing.
+    //! All missing patterns found in the training set (stored in rows).
+    //! A boolean value of 'true' indicates that a feature is missing.
     TMat<bool> missing_patterns;
     
-    // Missing patterns used as templates (obtained by k-median).
+    //! Missing patterns used as templates (obtained by k-median).
     TMat<bool> missing_template;
+
+    //! TODO Document (order of path to traverse spanning tree).
+    TVec<int> spanning_path;
 
     //! Set at build time, this integer value depends uniquely on the 'type'
     //! option. It is meant to avoid too many useless string comparisons.
