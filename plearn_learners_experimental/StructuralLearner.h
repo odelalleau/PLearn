@@ -183,6 +183,8 @@ protected:
     TMat< unsigned int > auxiliary_indices_current;
     TMat< unsigned int > auxiliary_indices_left;
 
+    std::map<int, int> plcw_bigram_mapping;   // maps "previous label - current word" bigrams seen in train_set to an index
+
 
 protected:
     //#####  Protected Member Functions  ######################################
@@ -200,8 +202,12 @@ protected:
     //! auxiliary_indices_current, auxiliary_indices_left accordingly
     void initWordProblemsStructures();
 
+    //! Build a map of "previous label - current word" bigrams seen in train_set to an index
+    void initPreviousLabelCurrentWordBigramMapping();
+
     void buildTasksParameters(int nout, TVec<unsigned int> feat_lengths);
     void buildThetaParameters(TVec<unsigned int> feat_lengths);
+
 
 private: 
     //#####  Private Member Functions  ########################################

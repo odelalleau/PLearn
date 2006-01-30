@@ -1193,6 +1193,48 @@ void StructuralLearner::initWordProblemsStructures()
 
 }
 
+/** 
+* @brief Determines which "previous label - current word" bigrams are in the
+* training set and indexes them is a stl map.
+* OOV's are ignored.
+* @param 
+* @returns 
+*
+* @note 
+* @todo 
+**/
+void StructuralLearner::initPreviousLabelCurrentWordBigramMapping()
+{
+    int bigram;
+    int currentBigramIndex=0;
+
+    std::map<int, int>::iterator itr_plcw_bigram_mapping;
+
+    // Attribute an index to "previous label - current word" bigrams seen in train_set
+    for(int e=0; e<train_set->length(); e++)  {
+        train_set->getExample(e, input, target, weight);
+
+        if( !is_missing(target[1]) && !is_missing(input[14]) ) {
+          // if no OOV
+          if( (!target[1]) && (!input[14]) )  {
+            // The bigram 
+            bigram = (int)target[1] * ((train_set->getDictionary(0))->size()+1) + (int)input[14];
+
+            // if not already there, add it
+            itr_plcw_bigram_mapping = plcw_bigram_mapping.find( bigram );
+
+            if( itr_plcw_bigram_mapping == plcw_bigram_mapping.end() )  {
+                plcw_bigram_mapping[bigram] = currentBigramIndex;
+                currentBigramIndex++;
+            }
+          }
+        }
+    }// end for auxiliary example
+
+}
+
+
+
 /*
 //PA - need to integrate this
 int StructuralLearner::determineWordsIn3SyntacticContext(VMat example_set, TVec< TVec<unsigned int> >& wordsIn3SyntacticContext_set)	{
