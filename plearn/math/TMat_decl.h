@@ -752,7 +752,7 @@ public:
         }
     }
 
-    //!  swap the contents of row i and row j
+    //! Swap the content of row i and row j.
     void swapRows(int i, int j) const
     {
         if(i!=j)
@@ -766,6 +766,24 @@ public:
                 T tmp = Mi[k];
                 Mi[k] = Mj[k];
                 Mj[k] = tmp;
+            }
+        }
+    }
+
+    //! Swap the content of column i and column j.
+    void swapColumns(int i, int j) const
+    {
+        if (i != j)
+        {
+            T* Mi = data() + i;
+            T* Mj = data() + j;
+            int n = length();
+            for (int k = 0; k < n; k++) {
+                T tmp = *Mi;
+                *Mi = *Mj;
+                *Mj = tmp;
+                Mi += mod();
+                Mj += mod();
             }
         }
     }
@@ -837,15 +855,17 @@ public:
 
     void transpose()
     {
+        /*
         if(mod()!=width())
             PLERROR("In transpose() can transpose in place only compact matrices whose mod()==width() (that is often not the case for submatrices");
-        for(int i=0; i<length(); i++)
+        */
+        for (int i = 0; i < length(); i++)
         {
             //T* rowi = rowdata(i);
-            T* rowi = (*this)[i];
-            T* colielem = rowi+i+mod();
-            for(int j=i+1; j<width(); j++, colielem+=mod())
-                swap(rowi[j], *colielem);
+            T* rowi = (*this)[i] + i + 1;
+            T* colielem = rowi - 1 + mod();
+            for(int j = i + 1; j < width(); j++, colielem += mod(), rowi++)
+                pl_swap(*rowi, *colielem);
         }
     }
 
