@@ -2180,28 +2180,37 @@ void GaussMix::train()
             for (int i = 0; i < sample_to_template.length(); i++)
                 sample_to_template[i] = missing_assign[sample_to_template[i]];
 
+            // Fill in list for each cluster.
+            TVec< TVec<int> > clusters(missing_template.length());
+            for (int i = 0; i < missing_patterns.length(); i++)
+                clusters[missing_assign[i]].append(i);
+
             if (efficient_missing) {
-                // Find minimum spanning tree of the missing patterns' graph.
                 typedef boost::adjacency_list < boost::vecS, boost::vecS,
                     boost::undirectedS,
                     boost::property<boost::vertex_distance_t, int>,
                     boost::property<boost::edge_weight_t, int > > DistGraph;
                 typedef std::pair<int, int> Edge;
+
+                spanning_path.resize(missing_template.length());
+                for (int tpl = 0; tpl < missing_template.length(); tpl++) {
+                // Find minimum spanning tree of the missing patterns' graph.
                 TVec<Edge> edges;
                 TVec<int> weights;
                 ProgressBar* pb = 0;
-                int n = missing_patterns.length();
+                TVec<int> cluster_tpl = clusters[tpl];
+                int n = cluster_tpl.length();
                 n = (n * (n - 1)) / 2;
                 if (report_progress && verbosity >= 2)
                     pb = new ProgressBar("Building graph of missing patterns",
                                          n);
                 int progress = 0;
-                for (int i = 0; i < missing_patterns.length(); i++) {
-                    for (int j = i + 1; j < missing_patterns.length(); j++) {
+                for (int i = 0; i < cluster_tpl.length(); i++) {
+                    for (int j = i + 1; j < cluster_tpl.length(); j++) {
                         edges.append( Edge(i, j) );
                         int w = 0;
-                        bool* missing_i = missing_patterns[i];
-                        bool* missing_j = missing_patterns[j];
+                        bool* missing_i = missing_patterns[cluster_tpl[i]];
+                        bool* missing_j = missing_patterns[cluster_tpl[j]];
                         for (int k = 0; k < missing_patterns.width(); k++) {
                             if (*missing_i != *missing_j)
                                 w++;
@@ -2210,7 +2219,7 @@ void GaussMix::train()
                         }
                         weights.append(w);
                     }
-                    progress += missing_patterns.length() - i - 1;
+                    progress += cluster_tpl.length() - i - 1;
                     if (pb)
                         pb->update(progress);
                 }
@@ -2219,7 +2228,7 @@ void GaussMix::train()
                 DistGraph dist_graph(
                         edges_ptr,
                         edges_ptr + edges.length(),
-                        weights.data(), missing_patterns.length());
+                        weights.data(), cluster_tpl.length());
                 boost::property_map<DistGraph, boost::edge_weight_t>::type
                     weightmap = boost::get(boost::edge_weight, dist_graph);
                 typedef vector < boost::graph_traits <
@@ -2238,7 +2247,7 @@ void GaussMix::train()
                 // TODO At this point we may free memory used by the STL data.
 
                 // Compute list of nodes, from top to bottom.
-                n = missing_patterns.length();
+                n = cluster_tpl.length();
                 TVec<int> top_to_bottom;
                 TVec<int> status(n, 0);
                 assert( parent.length() == n );
@@ -2359,10 +2368,16 @@ void GaussMix::train()
                 assert( cost[start_node] == min_cost );
 
                 // Compute a node ordering giving rise to the mininum cost.
-                spanning_path.resize(0);
-                traverse_tree(spanning_path, false, start_node, -1, parent,
+                TVec<int>& span_path = spanning_path[tpl];
+                span_path.resize(0);
+                traverse_tree(span_path, false, start_node, -1, parent,
                         children, message_up, message_down);
-                assert( spanning_path.length() == n );
+                assert( span_path.length() == n );
+                // At this point the index in 'span_path' are the index within
+                // the cluster 'tpl': we replace them by the global sample
+                // index.
+                for (int i = 0; i < span_path.length(); i++)
+                    span_path[i] = cluster_tpl[i];
 
                 // Consistency check: compute the average distance from one
                 // node to the next in the path.
@@ -2370,9 +2385,9 @@ void GaussMix::train()
                 int counter = 0;
                 Vec stats_diff(missing_patterns.width());
                 stats_diff.fill(0);
-                for (int i = 0; i < spanning_path.length() - 1; i++) {
-                    int first = spanning_path[i];
-                    int next = spanning_path[i + 1];
+                for (int i = 0; i < span_path.length() - 1; i++) {
+                    int first = span_path[i];
+                    int next = span_path[i + 1];
                     int dist = 0;
                     for (int k = 0; k < missing_patterns.width(); k++)
                         if (missing_patterns(first, k) !=
@@ -2392,6 +2407,7 @@ void GaussMix::train()
                 save_vmat->saveAMAT("/u/delallea/tmp/span_" +
                         tostring(efficient_k_median) + ".amat", true, true);
                         */
+            }
             }
            
             // Compute some statistics on the distances to templates.

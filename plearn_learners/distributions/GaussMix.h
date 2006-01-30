@@ -65,7 +65,7 @@ protected:
     TMat<bool> missing_template;
 
     //! TODO Document (order of path to traverse spanning tree).
-    TVec<int> spanning_path;
+    TVec< TVec<int> > spanning_path;
 
     //! Set at build time, this integer value depends uniquely on the 'type'
     //! option. It is meant to avoid too many useless string comparisons.
