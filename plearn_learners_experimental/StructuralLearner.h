@@ -111,6 +111,10 @@ public:
     void computeFeatures(const Vec& input, const Vec& target, int data_set, int
 index, TVec< TVec<unsigned int> >& theFeatureGroups, char featureMask = 0x1F) const;
 
+void updateFeatures(const Vec& input, const Vec& target,  TVec< TVec<unsigned int> >& theFeatureGroups, char
+featureMask = 0x1F);
+
+
     //virtual void updateDynamicFeatures(hash_map<int, TVec<bool> > token_prediction, int token, int prediction);
         
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs=0, VMat testcosts=0) const;
@@ -183,7 +187,7 @@ protected:
     TMat< unsigned int > auxiliary_indices_current;
     TMat< unsigned int > auxiliary_indices_left;
 
-    std::map<int, int> plcw_bigram_mapping;   // maps "previous label - current word" bigrams seen in train_set to an index
+    mutable std::map<int, int> plcw_bigram_mapping;   // maps "previous label - current word" bigrams seen in train_set to an index
 
 
 protected:

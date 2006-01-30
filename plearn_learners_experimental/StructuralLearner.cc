@@ -1105,6 +1105,86 @@ featureMask) const
 }
 
 /** 
+* @brief Updates features computed in computeFeatures(). 
+* Actually just recomputes the feature groups based upon the target vector, ie the previous labels and "previous label - current word" bigram.
+*
+* @param input the example's input
+* @param theFeatureGroups the features (the indices that are active) organized by groups - output
+* @param featureMask specifies whether the features are masked - lower 5 bits
+* are used to represent the 5-token window. Inactive bit means do not output
+* features for that position.
+*       '00011111' means return all features
+*       '00000100' means return only features for the position we're making the
+*       prediction at
+*
+* @returns 
+*
+* @note 
+* @todo 
+**/
+void StructuralLearner::updateFeatures(const Vec& input, const Vec& target,  TVec< TVec<unsigned int> >& theFeatureGroups, char
+featureMask)  
+{
+
+    // *** Label features ***
+    // Labels of the 2 words on the left - should always be in the target (if we are decoding, then the target
+    // should hold what we have predicted
+    currentFeatureGroup = theFeatureGroups[4];
+    currentFeatureGroup.resize(2);
+    size = 0;
+    fl = 0;
+
+    // Hugo: we don't use the tag features for auxiliary task???
+    if( featureMask & 1 ) {       
+        if( !is_missing(target[0]) ) {
+            currentFeatureGroup.push_back( fl+(int)target[0] );
+            size++;
+        }
+    }
+    fl += (train_set->getDictionary(inputsize_))->size()+1;
+        
+    // Hugo: idem
+    if( featureMask & 2) {       
+        if( !is_missing(target[1]) ) {
+            currentFeatureGroup.push_back( fl + (int)target[1] );
+            size++;
+        }
+    }
+    fl += (train_set->getDictionary(inputsize_))->size()+1;
+    theFeatureGroups[4].resize(size);
+    fls[4] = fl;
+
+    // *** Bigrams of current token and label on the left
+    currentFeatureGroup = theFeatureGroups[5];
+    currentFeatureGroup.resize(1);
+    fl = 0;
+    size=0;
+  
+    // Hugo: idem!!!
+    // if none of the 2 are masked than we'll compute the feature
+    if( (featureMask & 2) && (featureMask & 4) ) {      
+        if( !is_missing(target[1]) && !is_missing(input[14]) ) {
+
+          int bigram = (int)target[1] * ((train_set->getDictionary(0))->size()+1) + (int)input[14];
+          std::map<int, int>::iterator itr_plcw_bigram_mapping;
+
+          // is it in our mapping of bigrams seen in train_set?
+          itr_plcw_bigram_mapping = plcw_bigram_mapping.find( bigram );
+
+          if( itr_plcw_bigram_mapping != plcw_bigram_mapping.end() )  {
+            currentFeatureGroup.push_back( itr_plcw_bigram_mapping->second );
+            size++;
+          }
+        }
+    } 
+    fl += plcw_bigram_mapping.size();
+    theFeatureGroups[5].resize(size);
+    fls[5] = fl;
+
+
+}
+
+/** 
 * @brief Determines 1000 most frequent words and builds 2 TVecs of indices of examples that have respetively
 * a frequent word at current and left positions.
 * 
