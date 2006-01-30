@@ -66,6 +66,7 @@ public:
     int index_O;
     int nhidden;
     int n_auxiliary_wordproblems;
+    bool separate_features;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -105,7 +106,7 @@ public:
     //! for which it updates the VecStatsCollector train_stats.
     virtual TVec<std::string> getTrainCostNames() const;
 
-    virtual void computeOutputWithFeatures(TVec<TVec<unsigned int> >& feats, Vec& output, bool use_theta=true) const;
+    virtual void computeOutputWithFeatures(TVec<TVec<unsigned int> >& feats, Vec& output, bool use_theta=true, int begin_class = -1, int end_class = -1) const;
 
     void computeFeatures(const Vec& input, const Vec& target, int data_set, int
 index, TVec< TVec<unsigned int> >& theFeatureGroups, char featureMask = 0x1F) const;
@@ -198,6 +199,9 @@ protected:
     //! Determines the most frequent words on the auxiliary example set and fills 
     //! auxiliary_indices_current, auxiliary_indices_left accordingly
     void initWordProblemsStructures();
+
+    void buildTasksParameters(int nout, TVec<unsigned int> feat_lengths);
+    void buildThetaParameters(TVec<unsigned int> feat_lengths);
 
 private: 
     //#####  Private Member Functions  ########################################
