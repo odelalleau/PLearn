@@ -41,6 +41,7 @@
 #include "GaussMix.h"
 
 #include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/prim_minimum_spanning_tree.hpp>
 
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include <plearn/math/Cholesky_utils.h>
@@ -549,25 +550,32 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     sample_to_template[current_training_sample];
                 missing_tpl = missing_template(tpl_idx);
                 }
-                static TVec<int> tpl_non_missing, add_non_missing;
-                tpl_non_missing.resize(0);
+                static TVec<int> com_non_missing, add_non_missing, add_missing;
+                com_non_missing.resize(0);
                 add_non_missing.resize(0);
+                // 'add_missing' will contain those coordinate in the template
+                // covariance matrix that need to be deleted (because they are
+                // missing in the current template).
+                add_missing.resize(0);
 
                 non_missing.resize(0);
+                int count_tpl_dim = 0;
                 for (int k = 0; k < n_predicted; k++) {
                     if (!is_missing(y[k])) {
                         non_missing.append(k);
                         if (efficient_missing) {
                         if (missing_tpl[k])
                             add_non_missing.append(k);
+                        else {
+                            com_non_missing.append(k);
+                            count_tpl_dim++;
                         }
-                    }
-                    if (efficient_missing) {
-                    if (!missing_tpl[k]) {
-                        tpl_non_missing.append(k);
-                        if (is_missing(y[k]))
-                            PLERROR("Something is not right");
-                    }
+                        }
+                    } else if (efficient_missing) {
+                        if (!missing_tpl[k]) {
+                            add_missing.append(count_tpl_dim);
+                            count_tpl_dim++;
+                        }
                     }
                 }
                 mu_y = center(j).subVec(0, n_predicted);
@@ -578,11 +586,11 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                 // then the coordinates specific to this data point.
                 static TVec<int> tot_non_missing;
                 if (efficient_missing) {
-                tot_non_missing.resize(tpl_non_missing.length() +
+                tot_non_missing.resize(com_non_missing.length() +
                                        add_non_missing.length());
-                tot_non_missing.subVec(0, tpl_non_missing.length())
-                    << tpl_non_missing;
-                tot_non_missing.subVec(tpl_non_missing.length(),
+                tot_non_missing.subVec(0, com_non_missing.length())
+                    << com_non_missing;
+                tot_non_missing.subVec(com_non_missing.length(),
                                        add_non_missing.length())
                     << add_non_missing;
                 for (int k = 0; k < tot_non_missing.length(); k++) {
@@ -612,19 +620,47 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
 
                     real log_det = 0;
                     Mat L_tpl;
-                    if (efficient_missing)
+                    static Mat L_tot;
+                    int n_tpl;
+                    if (efficient_missing) {
+                        L_tot.resize(n_non_missing, n_non_missing);
                         L_tpl = chol_cov_template(tpl_idx, j);
+                        n_tpl = L_tpl.length();
+                        L_tot.resize(n_tpl, n_tpl);
+                        L_tot << L_tpl;
+
+                        /*
+                        Mat tmp;
+                        if (add_missing.length() > 0) {
+                            tmp.resize(L_tot.length(), L_tot.width());
+                            productTranspose(tmp, L_tot, L_tot);
+                            VMat tmp_vm(tmp);
+                            tmp_vm->saveAMAT("/u/delallea/tmp/before.amat", false,
+                                    true);
+                        }
+                        */
+
+                        // Remove some rows / columns.
+                        int p = add_missing.length() - 1;
+                        for (int k = p; k >= 0; k--) {
+                            choleskyRemoveDimension(L_tot, add_missing[k]); //(-k+p);
+                            /*
+                            tmp.resize(L_tot.length(), L_tot.width());
+                            productTranspose(tmp, L_tot, L_tot);
+                            VMat tmp_vm(tmp);
+                            tmp_vm->saveAMAT("/u/delallea/tmp/before_" +
+                                    tostring(add_missing[k]) + ".amat", false,
+                                    true);
+                                    */
+                        }
+                    }
 
                     // Now we must perform updates to compute the Cholesky
                     // decomposition of interest.
-                    int n_tpl = L_tpl.length();
-                    static Mat L_tot;
                     static Vec new_vec;
                     int n = -1;
                     if (efficient_missing) {
-                    L_tot.resize(n_non_missing, n_non_missing);
-                    L_tot.resize(n_tpl, n_tpl);
-                    L_tot << L_tpl;
+                    //L_tot.resize(n_non_missing, n_non_missing);
                     for (int k = 0; k < add_non_missing.length(); k++) {
                         new_vec.resize(L_tot.length() + 1);
                         for (int q = 0; q < new_vec.length(); q++)
@@ -2129,16 +2165,69 @@ void GaussMix::train()
 
             // Because right now we only want to perform updates, we need to
             // make sure there will be no need for downdates.
+            /* Actually we can do downdates now!
             for (int i = 0; i < missing_patterns.length(); i++) {
                 int assign = missing_assign[i];
                 for (int k = 0; k < missing_patterns.width(); k++)
                     if (missing_patterns(i, k))
                         missing_template(assign, k) = true;
             }
+            */
 
             // Second step to fill 'sample_to_template'.
             for (int i = 0; i < sample_to_template.length(); i++)
                 sample_to_template[i] = missing_assign[sample_to_template[i]];
+
+            if (efficient_missing) {
+                // Find minimum spanning tree of the missing patterns' graph.
+                typedef boost::adjacency_list < boost::vecS, boost::vecS,
+                    boost::undirectedS,
+                    boost::property<boost::vertex_distance_t, int>,
+                    boost::property<boost::edge_weight_t, int > > DistGraph;
+                typedef std::pair<int, int> Edge;
+                TVec<Edge> edges;
+                TVec<int> weights;
+                ProgressBar* pb = 0;
+                int n = missing_patterns.length();
+                n = (n * (n - 1)) / 2;
+                if (report_progress && verbosity >= 2)
+                    pb = new ProgressBar("Building graph of missing patterns",
+                                         n);
+                int progress = 0;
+                for (int i = 0; i < missing_patterns.length(); i++) {
+                    for (int j = i + 1; j < missing_patterns.length(); j++) {
+                        edges.append( Edge(i, j) );
+                        int w = 0;
+                        bool* missing_i = missing_patterns[i];
+                        bool* missing_j = missing_patterns[j];
+                        for (int k = 0; k < missing_patterns.width(); k++) {
+                            if (*missing_i != *missing_j)
+                                w++;
+                            missing_i++;
+                            missing_j++;
+                        }
+                        weights.append(w);
+                    }
+                    progress += missing_patterns.length() - i - 1;
+                    if (pb)
+                        pb->update(progress);
+                }
+                if (pb) delete pb;
+                Edge* edges_ptr = edges.data();
+                DistGraph dist_graph(
+                        edges_ptr,
+                        edges_ptr + sizeof(edges_ptr) / sizeof(Edge),
+                        weights.data(), missing_patterns.length());
+                boost::property_map<DistGraph, boost::edge_weight_t>::type
+                    weightmap = boost::get(boost::edge_weight, dist_graph);
+                vector < boost::graph_traits < DistGraph >::vertex_descriptor >
+                    pred(boost::num_vertices(dist_graph));
+                if (verbosity >= 2)
+                    pout << "Computing minimum spanning tree... " << flush;
+                boost::prim_minimum_spanning_tree(dist_graph, &pred[0]);
+                if (verbosity >= 2)
+                    pout << "Done" << endl;
+            }
             
             /*
             // Compute some statistics on the distances to templates.
@@ -2243,10 +2332,12 @@ void GaussMix::train()
     if (need_restore_sizes)
         setPredictorPredictedSizes(predictor_size, predicted_size);
 
+    /*
     for (int i = 0; i < save_center.length(); i++) {
         VMat vm(save_center[i]);
         vm->saveAMAT("save_center_" + tostring(i) + ".amat");
     }
+    */
 }
 
 ///////////////////
