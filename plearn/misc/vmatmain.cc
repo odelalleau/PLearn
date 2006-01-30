@@ -77,12 +77,17 @@ using namespace std;
  * the given name.  One can also specify a list of column names or numbers
  * to keep, as well as whether any missing values on a row cause that row
  * to be skipped during export.  In addition, the number of significant
- * digits after the decimal period can be specified
+ * digits after the decimal period can be specified.
+ *
+ * If the 'convert_date' option is true (whose purpose is to convert CYYMMDD
+ * dates into YYYYMMDD dates), then the integer 19000000 is added to the first
+ * element of each row (assumed to contain a date column).
  */
 static void save_vmat_as_csv(VMat source, ostream& destination,
                              bool skip_missings, int precision = 12,
                              string delimiter = ",",
-                             bool verbose = true)
+                             bool verbose = true,
+                             bool convert_date = false)
 {
     char buffer[1000];
   
@@ -109,7 +114,14 @@ static void save_vmat_as_csv(VMat source, ostream& destination,
         Vec currow = source(i);
         if (! skip_missings || ! currow.hasMissing()) {
             for (int j=0, m=currow.size() ; j<m ; ++j) {
-                sprintf(buffer, "%#.*f", precision, currow[j]);
+                if (convert_date && j==0)
+                    // Date conversion: add 19000000 to convert from CYYMMDD to
+                    // YYYYMMDD, and always output without trailing . if not
+                    // necessary
+                    sprintf(buffer, "%8f", currow[j] + 19000000.0);
+                else
+                    // Normal processing
+                    sprintf(buffer, "%#.*f", precision, currow[j]);
 
                 // strip all trailing zeros and final period
                 // there is always a period since sprintf includes # modifier
@@ -1612,6 +1624,7 @@ int vmatmain(int argc, char** argv)
         bool skip_missings = false;
         int precision = 12;
         string delimiter = ",";
+        bool convert_date = false;
         for (int i=4 ; i < argc && argv[i] ; ++i) {
             string curopt = removeblanks(argv[i]);
             if (curopt == "")
@@ -1628,6 +1641,8 @@ int vmatmain(int argc, char** argv)
             else if (curopt.substr(0,12) == "--delimiter=") {
                 delimiter = curopt.substr(12);
             }
+            else if (curopt == "--convert-date")
+                convert_date = true;
             else
                 PLWARNING("VMat convert: unrecognized option '%s'; ignoring it...",
                           curopt.c_str());
@@ -1652,10 +1667,12 @@ int vmatmain(int argc, char** argv)
         else if(ext == ".csv")
         {
             if (destination == "-.csv")
-                save_vmat_as_csv(vm, cout, skip_missings, precision, delimiter, true /*verbose*/);
+                save_vmat_as_csv(vm, cout, skip_missings, precision, delimiter, true /*verbose*/,
+                                 convert_date);
             else {
                 ofstream out(destination.c_str());
-                save_vmat_as_csv(vm, out, skip_missings, precision, delimiter, true /*verbose*/);
+                save_vmat_as_csv(vm, out, skip_missings, precision, delimiter, true /*verbose*/,
+                                 convert_date);
             }
         }
         else

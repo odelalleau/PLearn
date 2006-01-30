@@ -83,6 +83,8 @@ VMatCommand::VMatCommand():
         "                          one or more missing values, it is skipped during export\n"
         "         --precision=N:   a maximum of N digits is printed after the decimal point\n"
         "         --delimiter=C:   use character C as the field delimiter (default = ',')\n"
+        "         --convert-date:  first column is assumed to be in CYYMMDD format; it is\n"
+        "                          exported as YYYYMMDD in the .csv file (19000000 is added)\n"
         "   or: vmat gendef <source> [binnum1 binnum2 ...] \n"
         "       Generate stats for dataset (will put them in its associated metadatadir). \n"
         "   or: vmat genvmat <source_dataset> <dest_vmat> [binned{num} | onehot{num} | normalized]\n"
