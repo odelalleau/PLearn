@@ -514,6 +514,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     assert( cov_y.isSymmetric(false) );
                     fillItSymmetric(cov_y);
 
+                    /*
                     if (efficient_missing) {
                         // Now compute its Cholesky decomposition.
                         Mat& chol_cov_y = chol_joint_cov[j];
@@ -540,6 +541,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                             choleskyDecomposition(cov_y_missing, chol_cov_tpl);
                         }
                     }
+                    */
                 }
                 // Then extract what we want.
                 int tpl_idx;
@@ -577,6 +579,19 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                             count_tpl_dim++;
                         }
                     }
+                }
+                if (efficient_missing && previous_training_sample == -1) {
+                    // No previous training sample: we need to compute from
+                    // scratch the Cholesky decomposition.
+                    int n_non_missing = non_missing.length();
+                    cov_y_missing.resize(n_non_missing, n_non_missing);
+                    for (int k = 0; k < n_non_missing; k++)
+                        for (int q = 0; q < n_non_missing; q++)
+                            cov_y_missing(k,q) =
+                                cov_y(non_missing[k], non_missing[q]);
+                    cholesky_samp.resize(current_training_sample + 1);
+                    Mat& chol = cholesky_samp[current_training_sample];
+                    choleskyDecomposition(cov_y_missing, chol);
                 }
                 mu_y = center(j).subVec(0, n_predicted);
                 int n_non_missing = non_missing.length();
@@ -1011,6 +1026,35 @@ void GaussMix::computeAllLogLikelihoods(const Vec& sample, const Vec& log_like)
 void GaussMix::computePosteriors() {
     sample_row.resize(D);
     log_likelihood_post.resize(L);
+    if (efficient_missing) {
+        // Loop over all clusters.
+        for (int k = 0; k < missing_template.length(); k++) {
+            const TVec<int>& samples_clust = spanning_path[k];
+            int n_samp = samples_clust.length();
+            log_likelihood_post_clust.resize(n_samp, L);
+            for (int j = 0; j < L; j++) {
+                // For each Gaussian, go through all samples in the cluster.
+                previous_training_sample = -1;
+                for (int i = 0; i < samples_clust.length(); i++) {
+                    int s = samples_clust[i];
+                    current_training_sample = s;
+                    train_set->getSubRow(s, 0, sample_row);
+                    log_likelihood_post_clust(i, j) =
+                        computeLogLikelihood(sample_row, j) + pl_log(alpha[j]);
+                    current_training_sample = -1;
+                    previous_training_sample = current_training_sample;
+                }
+            }
+            // Get the posteriors for all samples in the cluster.
+            for (int i = 0; i < samples_clust.length(); i++) {
+                real log_sum_likelihood = logadd(log_likelihood_post_clust(i));
+                int s = samples_clust[i];
+                for (int j = 0; j < L; j++)
+                    posteriors(s,j) = exp(log_likelihood_post_clust(i, j) -
+                                      log_sum_likelihood);
+            }
+        }
+    } else {
     for (int i = 0; i < nsamples; i++) {
         train_set->getSubRow(i, 0, sample_row);
         // First we need to compute the likelihood P(s_i | j).
@@ -1025,6 +1069,7 @@ void GaussMix::computePosteriors() {
             // Compute the posterior
             // P(j | s_i) = P(s_i | j) * alpha_i / (sum_i ")
             posteriors(i,j) = exp(log_likelihood_post[j] - log_sum_likelihood);
+    }
     }
 }
 
@@ -2046,6 +2091,7 @@ void GaussMix::train()
         missing_patterns.resize(0, train_set->inputsize());
         TVec<bool> pattern(train_set->inputsize());
         sample_to_template.resize(train_set->length());
+        TVec< TVec<int> > pattern_to_samples;
         for (int i = 0; efficient_missing && i < train_set->length(); i++) {
             train_set->getExample(i, input, target, weight);
             vertex_descr current_vertex = root_vertex;
@@ -2074,6 +2120,7 @@ void GaussMix::train()
                         missing_patterns.appendRow(pattern);
                         int index = missing_patterns.length() - 1;
                         tree[current_vertex].index = index;
+                        pattern_to_samples.append(TVec<int>());
                     }
                 } else {
                     // We found an existing edge.
@@ -2083,7 +2130,9 @@ void GaussMix::train()
                     // Leaf node.
                     // First step: each sample is assigned to its missing
                     // pattern.
-                    sample_to_template[i] = tree[current_vertex].index;
+                    int pattern_idx = tree[current_vertex].index;
+                    sample_to_template[i] = pattern_idx;
+                    pattern_to_samples[pattern_idx].append(i);
                     // pout << sample_to_template[i] << endl;
                 }
             }
@@ -2184,6 +2233,13 @@ void GaussMix::train()
             TVec< TVec<int> > clusters(missing_template.length());
             for (int i = 0; i < missing_patterns.length(); i++)
                 clusters[missing_assign[i]].append(i);
+
+            // Fill in list for each sample.
+            clusters_samp.resize(missing_template.length());
+            for (int i = 0; i < clusters_samp.length(); i++)
+                clusters_samp[i].resize(0);
+            for (int i = 0; i < train_set->length(); i++)
+                clusters_samp[missing_assign[sample_to_template[i]]].append(i);
 
             if (efficient_missing) {
                 typedef boost::adjacency_list < boost::vecS, boost::vecS,
@@ -2407,6 +2463,24 @@ void GaussMix::train()
                 save_vmat->saveAMAT("/u/delallea/tmp/span_" +
                         tostring(efficient_k_median) + ".amat", true, true);
                         */
+
+                // Transform 'spanning_path' to obtain a path through samples,
+                // instead of a path through missing patterns.
+                // First get the list of samples associated to each missing
+                // pattern.
+                TVec<int> the_path;
+                for (int i = 0; i < spanning_path.length(); i++) {
+                    TVec<int>& span_path = spanning_path[i];
+                    the_path.resize(span_path.length());
+                    the_path << span_path;
+                    span_path.resize(0);
+                    for (int j = 0; j < the_path.length(); j++) {
+                        TVec<int>& samples_list =
+                            pattern_to_samples[the_path[j]];
+                        span_path.append(samples_list);
+                    }
+                }
+
             }
             }
            

@@ -67,6 +67,17 @@ protected:
     //! TODO Document (order of path to traverse spanning tree).
     TVec< TVec<int> > spanning_path;
 
+    //! TODO Document (LL for all samples in a cluster, for all Gaussians)
+    Mat log_likelihood_post_clust;
+
+    //! TODO Document (cluster asssignment for each data point).
+    TVec< TVec<int> > clusters_samp;
+
+    //! TODO Document
+    //! TEMP! (cholesky decomposition of the covariance matrix for EACH
+    //sample)
+    mutable TVec<Mat> cholesky_samp;
+
     //! Set at build time, this integer value depends uniquely on the 'type'
     //! option. It is meant to avoid too many useless string comparisons.
     int type_id;
@@ -137,6 +148,9 @@ protected:
 
     //! Hack to know that we are compute likelihood on a training sample.
     int current_training_sample;
+
+    //! TODO Document (similar hack, but previous sample).
+    int previous_training_sample;
 
     //! A boolean indicating whether or not the last predictor part set
     //! through setPredictor(..) had a missing value.
