@@ -108,6 +108,13 @@ void OnlineLearningModule::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Size of the output");
 
+    declareOption(ol, "expdir", &OnlineLearningModule::expdir, OptionBase::buildoption, 
+                  "Path of the directory associated with this module, in which\n"
+                  "it should save any file it wishes to create. \n"
+                  "The directory will be created if it does not already exist.\n"
+                  "If expdir is the empty string (the default), then the module \n"
+                  "should not create *any* file.\n");
+
     inherited::declareOptions(ol);
 }
 

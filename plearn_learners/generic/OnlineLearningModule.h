@@ -77,6 +77,15 @@ public:
     //! output size
     int output_size;
 
+    //! 
+    /**
+     * Path of the directory associated with this module, in which it should
+     * save any file it wishes to create.  The directory will be created if
+     * it does not already exist.  If expdir is the empty string (the
+     * default), then the module should not create *any* file. 
+     */
+    PPath expdir; 
+
 public:
     //#####  Public Member Functions  #########################################
 
