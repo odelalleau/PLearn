@@ -475,7 +475,8 @@ void lapackSVD(const TMat<num_t>& At, TMat<num_t>& Ut, TVec<num_t>& S, TMat<num_
 
     if(INFO!=0)
     {      
-        cerr << At << endl;
+        // cerr << At << endl;
+        cerr << "In lapackSVD, failed with INFO = " << INFO << endl;
         PLERROR("In lapackSVD, problem when calling sgesdd_ to perform computation, returned INFO = %d",INFO); 
     }
 }
@@ -521,6 +522,8 @@ template<class num_t>
 inline void SVD(const TMat<num_t>& A, TMat<num_t>& U, TVec<num_t>& S, TMat<num_t>& Vt, char JOBZ='A', real safeguard = 1)
 {
     // A = U.S.Vt  -> At = V.S.Ut
+    if (A.hasMissing())
+        cerr << "SVD: A has missing values!" << endl;
     lapackSVD(A,Vt,S,U,JOBZ, safeguard);
 }
 

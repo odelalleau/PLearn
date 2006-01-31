@@ -827,7 +827,11 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_gcv, bool X_is_transpo
     best_s.resize(rank);
     y2.resize(m);
     z2.resize(m);
-    
+    if (Xcopy.hasMissing())
+    {
+        cerr << "ridgeRegressionByGCV: X has missing values!" << endl;
+        PLERROR("ridgeRegressionByGCV: X has missing values!");
+    }
     SVD(Xcopy, U, singular_values, Vt, 'S', 2);
     for (int i=0;i<rank;i++)
         eigen_values[i] = singular_values[i]*singular_values[i];

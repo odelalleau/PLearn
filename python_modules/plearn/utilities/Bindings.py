@@ -7,35 +7,8 @@ def c_iterator( container, itype="iteritems" ):
         return container.iteritems()
     return iter(container)
 
-# Should be CAREFULLY moved to toolkit..        
-def cross_product( *sets ):
-    return [ item for item in iter_cross_product( *sets ) ]
-
-def iter_cross_product( *sets ):
-    cp_iter = lambda struct: \
-        ( isinstance( struct, list ) and iter(struct) ) \
-        or iter([struct])
-    
-    wheels = map( cp_iter, sets ) # wheels like in an odometer
-    digits = [it.next() for it in wheels]
-    while True:
-        yield digits[:]
-        for i in range(len(digits)-1, -1, -1):
-            try:
-                digits[i] = wheels[i].next()
-                break
-            except StopIteration:
-                wheels[i] = cp_iter(sets[i])
-                digits[i] = wheels[i].next()
-        else:
-            break        
-
-
-class Bindings( object ):
+class Bindings:
     """Acts like a Python dictionary but keeps the addition order."""
-
-    class __no_default: pass
-    
     def __init__(self, container=[], value=None):
         self.ordered_keys  = []
         self.internal_dict = {}
@@ -164,13 +137,13 @@ class Bindings( object ):
     def has_key( self, key ):
         return key in self.ordered_keys
 
-    def pop( self, key, x=__no_default() ):
+    def pop( self, key, x=None ):
         if key in self:
             self.ordered_keys.remove(key)
             return self.internal_dict.pop(key)
 
-        if isinstance( x, self.__no_default ):
-            raise KeyError("Binding object does not contain any '%s' key." % key ) 
+        if x is None:
+            raise KeyError("Binding object does not contain any '%s' key.") 
         return x
         
     def popitem( self ):
@@ -194,19 +167,6 @@ class Bindings( object ):
             
         for k, val in iterator:
             self.__setitem__( k, val )
-
-    #
-    #  Added instance method
-    #
-    def explode_values( self ):
-        cls = self.__class__
-
-        exploded = []
-        for value_set in iter_cross_product( *self.values() ):
-            exploded.append( cls( zip(self.ordered_keys, value_set) ) )
-        return exploded
-    
-
 
 if __name__ == "__main__":
     print "\nEmbedded test/tutorial for Bindings.py.\n"
