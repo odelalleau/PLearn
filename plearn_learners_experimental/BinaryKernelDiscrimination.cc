@@ -120,18 +120,19 @@ void BinaryKernelDiscrimination::build_()
 real BinaryKernelDiscrimination::evaluate(const Vec& x1, const Vec& x2) const {
     // ### Evaluate the kernel on a pair of points.
     int i;
+
     if (x1.length() != x2.length()){PLERROR("Vector not of same length");}
     int N= x1.length();
-    
     int dij = 0;
+    
     for (i=0; i < x1.length();i++)
     {
         if (x1[i] != x2[i]){dij++;};
     }
     if (ExpOutput)
-        return pow((pow(lambda,N-dij))*(pow(1-lambda,dij)),K/N);
+        return pow(lambda,(K-((K*dij)/N)))*pow(1-lambda,K*dij/N);
     else
-        return safeflog(pow((pow(lambda,N-dij))*(pow(1-lambda,dij)),K/N));
+        return safeflog(pow(lambda,(K-((K*dij)/N)))*pow(1-lambda,K*dij/N));
 }
 
 /* ### This method will very often be overridden.
