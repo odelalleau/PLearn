@@ -103,15 +103,20 @@ public:
     //! (and output should not have been modified since then).
     //! Since sub-classes are supposed to learn ONLINE, the object
     //! is 'ready-to-be-used' just after any bpropUpdate.
-    virtual void bpropUpdate(const Vec input, const Vec output, const Vec output_gradient) = 0;
+    //! N.B. The DEFAULT IMPLEMENTATION JUST CALLS bpropUpdate(input, output, output_gradient, input_gradient) AND IGNORES INPUT GRADIENT.
+    virtual void bpropUpdate(const Vec input, const Vec output, const Vec output_gradient);
 
     //! this version allows to obtain the input gradient as well
-    virtual void bpropUpdate(const Vec input, const Vec output, const Vec output_gradient, Vec& input_gradient) = 0;
+    //! N.B. THE DEFAULT IMPLEMENTATION JUST RAISES A PLERROR.
+    virtual void bpropUpdate(const Vec input, const Vec output, const Vec output_gradient, Vec& input_gradient);
 
     //! Similar to bpropUpdate, but adapt based also on the estimation
     //! of the diagonal of the Hessian matrix, and propagates this
     //! back. If these methods are defined, you can use them INSTEAD of
     //! bpropUpdate(...)
+    //! THE DEFAULT IMPLEMENTATION PROVIDED HERE JUST CALLS
+    //! bbpropUpdate(input, output, output_gradient, input_gradient, out_hess, in_hess) 
+    //! AND IGNORES INPUT HESSIAN AND INPUT GRADIENT
     virtual void bbpropUpdate(const Vec input, const Vec output,
                               const Vec output_gradient,
                               const Vec output_diag_hessian);

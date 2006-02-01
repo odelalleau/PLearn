@@ -62,16 +62,28 @@ OnlineLearningModule::OnlineLearningModule() :
 {
 }
 
+void OnlineLearningModule::bpropUpdate(const Vec input, const Vec output, const Vec output_gradient, Vec& input_gradient)
+{
+    PLERROR("In OnlineLearningModule.cc: method 'bpropUpdate' not"
+            "implemented.\n"
+            "Please implement it in your derived class or don't call bpropUpdate.\n");
+}
+
+void OnlineLearningModule::bpropUpdate(const Vec input, const Vec output, const Vec output_gradient)
+{
+    Vec input_gradient(input.length());
+    bpropUpdate(input,output,output_gradient,input_gradient);
+}
+
 //! Default method for bbpropUpdate functions, so that it compiles but crashes
 //! if not implemented but used.
 void OnlineLearningModule::bbpropUpdate(const Vec input, const Vec output,
                                         const Vec output_gradient,
                                         const Vec output_diag_hessian)
 {
-    PLERROR("In OnlineLearningModule.cc: method 'bbpropUpdate' not"
-            "implemented.\n"
-            "Please implement it in your derived class, or use"
-            "'bpropUpdate'.\n");
+    Vec input_gradient(input.length());
+    Vec input_diag_hessian(input.length());
+    bbpropUpdate(input,output,output_gradient,input_gradient,output_diag_hessian,input_diag_hessian);
 }
 
 void OnlineLearningModule::bbpropUpdate(const Vec input, const Vec output,
