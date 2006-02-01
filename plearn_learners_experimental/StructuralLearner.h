@@ -67,6 +67,9 @@ public:
     int nhidden;
     int n_auxiliary_wordproblems;
     bool separate_features;
+    int max_stage;
+    bool use_thetas_for_output_weights;
+    bool use_thetas_for_hidden_weights;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -152,7 +155,7 @@ protected:
 
     // For the model
     mutable TVec<Mat> ws, vs, thetas;
-    mutable TVec<Mat> whids;
+    mutable TVec<Mat> whids, vhids, thetahids;
 
     // Features for an example
     mutable TVec< TVec<unsigned int> > feats;
@@ -162,6 +165,7 @@ protected:
     //TVec<hash_map<int,TVec<bool> > > token_prediction_test;
 
     mutable Mat thetas_times_x;
+    mutable Mat thetahids_times_x;
     mutable Mat activations;
 
     // Bag of words features, over window of chunks, precomputed for
@@ -186,9 +190,12 @@ protected:
     // Indices of auxiliary examples effectively used and their target ("most frequent word"-tag encoded, ie between 0 and 999)
     TMat< unsigned int > auxiliary_indices_current;
     TMat< unsigned int > auxiliary_indices_left;
+    
+    // Viterbi table
+    mutable TMat< pair<real,int> > viterbi_table;
+    Vec preds;
 
     mutable std::map<int, int> plcw_bigram_mapping;   // maps "previous label - current word" bigrams seen in train_set to an index
-
 
 protected:
     //#####  Protected Member Functions  ######################################

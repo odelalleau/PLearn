@@ -79,14 +79,18 @@ StructuralLearner::StructuralLearner()
   std::cerr << "StructuralLearner::StructuralLearner()" << std::endl;
 
   // With these values, will not learn
-  start_learning_rate=0.0;
+  start_learning_rate=0.01;
   decrease_constant=0.0;
-  lambda=0.0001;
-  index_O = 1;
+  lambda=1e-5;
+  index_O = 0;
   nhidden = 0;
   separate_features = 1;
-  n_auxiliary_wordproblems = 400;
+  n_auxiliary_wordproblems = 100;
   epsilon = 1e-4;
+  max_stage = INT_MAX;
+  use_thetas_for_output_weights=1;
+  use_thetas_for_hidden_weights=0;
+
   //m_tvec_auxiliaryLearners.resize(0);
   
   // ### You may (or not) want to call build_() to finish building the object
@@ -116,10 +120,18 @@ void StructuralLearner::declareOptions(OptionList& ol)
                    "Weight decay for output weights");
     declareOption(ol, "nhidden", &StructuralLearner::nhidden, OptionBase::buildoption,
                    "Number of hidden neurons in the hidden layers");
+    declareOption(ol, "use_thetas_for_output_weights", &StructuralLearner::use_thetas_for_output_weights, OptionBase::buildoption,
+                   "Indication that structural parameters for the output weights should be used for the neural network");
+     declareOption(ol, "use_thetas_for_hidden_weights", &StructuralLearner::use_thetas_for_hidden_weights, OptionBase::buildoption,
+                   "Indication that structural parameters for the hidden weights should be used for the neural network");
+    declareOption(ol, "max_stage", &StructuralLearner::max_stage, OptionBase::buildoption,
+                   "Maximum number of stages when training the model to find the thetas");
     declareOption(ol, "index_O", &StructuralLearner::index_O, OptionBase::buildoption,
                    "Index of the \"O\" (abstention) symbol");
     declareOption(ol, "separate_features", &StructuralLearner::separate_features, OptionBase::buildoption,
                    "Indication that the features should be separated into groups");
+    declareOption(ol, "abstention_threshold", &StructuralLearner::abstention_threshold, OptionBase::buildoption,
+                   "Threshold on the probability of the index_O symbol below which the predictor should not abstain");
     declareOption(ol, "n_auxiliary_wordproblems", &StructuralLearner::n_auxiliary_wordproblems, OptionBase::buildoption,
                    "Number of most frequent words that are to be predicted.");
 
@@ -133,30 +145,44 @@ void StructuralLearner::declareOptions(OptionList& ol)
 void StructuralLearner::buildTasksParameters(int nout, TVec<unsigned int> feat_lengths)
 {
 
-    // Do your thing! (Gotta love those comments) (Remember to search for nasty
-    // words in plearn code - has to be some nice things)
-
     before_softmax.resize(nout);
     output.resize(nout);
 
     if(!separate_features)
     {
+        if(nhidden <= 0 || use_thetas_for_output_weights)
+            vs.resize( 1 );
+        else
+            vs.resize( 0 );
+
         if(nhidden > 0) 
         {
             ws.resize(1);
             whids.resize( feat_lengths.length() );
+            if(use_thetas_for_hidden_weights)
+                vhids.resize( 1 );
+            else
+                vhids.resize( 0 );
         }
         else
             ws.resize(feat_lengths.length());
-        vs.resize(1);        
     }
     else
     {
         ws.resize( feat_lengths.length() );
-        vs.resize( feat_lengths.length() );
-        if(nhidden > 0) 
+
+        if(nhidden <= 0 || use_thetas_for_output_weights)
+            vs.resize( feat_lengths.length()-3);
+        else
+            vs.resize( 0 );
+
+        if(nhidden > 0)
         {
             whids.resize( feat_lengths.length() );
+            if(use_thetas_for_hidden_weights)
+                vhids.resize( feat_lengths.length()-3);
+            else
+                vhids.resize( 0 );
         }
     }
 
@@ -164,20 +190,21 @@ void StructuralLearner::buildTasksParameters(int nout, TVec<unsigned int> feat_l
         if(nhidden>0)
             ws[i].resize( nout, nhidden +1);  // +1 for the bias
         else
-            ws[i].resize( nout, feat_lengths[i] );
+            ws[i].resize( nout, feat_lengths[i] ); // bias is included in features...
     }
 
     for(int i=0; i<vs.length(); i++)  {
-        if(nhidden>0)
-            vs[i].resize( nout, 50 );
-        else
-            vs[i].resize( nout, 50 );
+        vs[i].resize( nout, 50 );
     }
 
     for(int i=0; i<whids.length(); i++)  {
-            whids[i].resize(nhidden,feat_lengths[i]);
+        whids[i].resize(nhidden,feat_lengths[i]);
     }
 
+    for(int i=0; i<vhids.length(); i++)  {
+        vhids[i].resize(nhidden,50);
+    }
+    
     if(nhidden > 0)
     {
         if(separate_features)
@@ -191,25 +218,49 @@ void StructuralLearner::buildTasksParameters(int nout, TVec<unsigned int> feat_l
 void StructuralLearner::buildThetaParameters(TVec<unsigned int> feat_lengths)
 {
     if(separate_features)
-        thetas.resize( feat_lengths.length()-2 );  // Do not consider features for previous tags!
-    else       
-        thetas.resize(1);
+    {
+        if(nhidden <= 0 || use_thetas_for_output_weights)
+        {
+            thetas.resize( feat_lengths.length()-3 );  // Do not consider features for previous tags, + features for the presence of digits and capital letters (there are too few of them)!
+            thetas_times_x.resize( 50, feat_lengths.length()-3 );
+            for(int i=0; i<thetas.length(); i++)  {
+                if(nhidden>0)
+                    thetas[i].resize( 50, nhidden +1); // +1 for the bias                
+                else
+                    thetas[i].resize( 50, feat_lengths[i] );
+            }
+        }
 
-    if(separate_features)
-        thetas_times_x.resize( 50, feat_lengths.length() );
-    else
-        thetas_times_x.resize(50,1);
-    
-    for(int i=0; i<thetas.length(); i++)  {
-        if(nhidden>0)
+        if(nhidden > 0 && use_thetas_for_hidden_weights)
         {
-            thetas[i].resize( 50, nhidden +1); // +1 for the bias
-        }
-        else
-        {
-            thetas[i].resize( 50, feat_lengths[i] );
-        }
+            thetahids.resize( feat_lengths.length()-3 );  // Do not consider features for previous tags, + features for the presence of digits and capital letters (there are too few of them)!
+            thetahids_times_x.resize( 50, feat_lengths.length()-3 );
+            for(int i=0; i<thetahids.length(); i++)  {
+                thetahids[i].resize( 50, feat_lengths[i] );
+            }
+        }        
     }
+    else
+    {
+        int nfeat = sum(feat_lengths);
+        if(nhidden <= 0 || use_thetas_for_output_weights)
+        {
+            thetas.resize( 1 );  // Do not consider features for previous tags, + features for the presence of digits and capital letters (there are too few of them)!
+            thetas_times_x.resize( 50, 1 );
+            if(nhidden>0)
+                thetas[0].resize( 50, nhidden +1); // +1 for the bias                
+            else
+                thetas[0].resize( 50, nfeat );            
+        }
+
+        if(nhidden > 0 && use_thetas_for_hidden_weights)
+        {
+            thetahids.resize( 1 );  // Do not consider features for previous tags, + features for the presence of digits and capital letters (there are too few of them)!
+            thetahids_times_x.resize( 50, 1 );            
+            thetahids[0].resize( 50, nfeat );            
+        }
+
+    }    
 }
 
 // For now everything is done in the train. For sure, that's not a good, for example if we want to
@@ -233,12 +284,16 @@ void StructuralLearner::build_()
     // ***** Resize vectors
     input.resize(inputsize());
     target.resize(targetsize());
-    costs.resize(getTrainCostNames().length());
+    costs.resize(getTrainCostNames().length());        
     
-    // - resize and initialize ws, vs and thetas and thetas_times_x
+    initPreviousLabelCurrentWordBigramMapping();
     
     // dummy call to computeFeatures in order to set fls
     computeFeatures(input, target, 0, 0, feats);
+
+    // Make sure that all feats have non null storage
+    for(int i=0; i<feats.length(); i++)
+        feats[i].resize(1);
 
     if(auxiliary_task_train_set)
         buildTasksParameters(2*n_auxiliary_wordproblems,fls);
@@ -250,8 +305,6 @@ void StructuralLearner::build_()
 
     initializeParams();
 
-    // TODO:
-    // - create auxiliary task (if auxiliary_task_train_set != 0)
     if( auxiliary_task_train_set && auxiliary_indices_left.size()==0) {
       initWordProblemsStructures();
     }
@@ -273,10 +326,13 @@ void StructuralLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     deepCopyField(thetas, copies);
     deepCopyField(thetas_times_x, copies);
+    deepCopyField(thetahids, copies);
+    deepCopyField(thetahids_times_x, copies);
     deepCopyField(auxiliary_task_train_set,copies);
     deepCopyField(ws,copies);
     deepCopyField(vs,copies);
     deepCopyField(whids,copies);
+    deepCopyField(vhids,copies);
     deepCopyField(feats, copies);
     deepCopyField(input, copies);
     deepCopyField(target, copies);
@@ -286,6 +342,7 @@ void StructuralLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(costs, copies);
     deepCopyField(auxiliary_indices_current, copies);
     deepCopyField(auxiliary_indices_left, copies);
+    deepCopyField(viterbi_table, copies);
 
     deepCopyField(currentFeatureGroup, copies);
     deepCopyField(fls, copies);
@@ -310,11 +367,10 @@ void StructuralLearner::forget()
       - initialize the learner's parameters, using this random generator
       - stage = 0
     */
-  if(ws.size()!=0)
-    initializeParams();
+    if(ws.size()!=0) // This means that build was called...
+        initializeParams();
     
-  stage = 0;
-
+    stage = 0;   
 }
     
 void StructuralLearner::train()
@@ -339,31 +395,32 @@ void StructuralLearner::train()
       real best_error=REAL_MAX;
       real current_error=REAL_MAX/2;
       int it = 0;
-    
-      while(current_error < best_error - epsilon)  {
+      int n_auxiliary_samples = auxiliary_indices_current.length()+auxiliary_indices_left.length();
+
+      while(current_error < best_error - epsilon && it < max_stage)  {
           // TODO: is this a good clear?
           //token_prediction.clear();
           best_error = current_error;
-          train_stats->forget();
-          learning_rate = start_learning_rate / (1+decrease_constant*it);          
-          for(int i=0; i<auxiliary_indices_current.length()+auxiliary_indices_left.length(); i++)  {
-              if(i<auxiliary_indices_current.length())
+          train_stats->forget();          
+          for(int t=0; t<n_auxiliary_samples; t++)  {
+              learning_rate = start_learning_rate / (1+decrease_constant*(it*n_auxiliary_samples+t));          
+              if(t<auxiliary_indices_current.length())
               {
-                  auxiliary_task_train_set->getExample(auxiliary_indices_current(i,0), input, target, weight);
+                  auxiliary_task_train_set->getExample(auxiliary_indices_current(t,0), input, target, weight);
                   target.resize(5);
                   target.fill(MISSING_VALUE);
-                  target[2] = auxiliary_indices_current(i,1);
-                  computeFeatures(input,target,1,i,feats,27);
+                  target[2] = auxiliary_indices_current(t,1);
+                  computeFeatures(input,target,1,t,feats,27);
                   computeOutputWithFeatures(feats,output,false,0,n_auxiliary_wordproblems); 
               }
               else
               {
-                  auxiliary_task_train_set->getExample(auxiliary_indices_left(i-auxiliary_indices_current.length(),0), input, target, weight);
+                  auxiliary_task_train_set->getExample(auxiliary_indices_left(t-auxiliary_indices_current.length(),0), input, target, weight);
                   target.resize(5);
                   target.fill(MISSING_VALUE);
-                  target[2] = n_auxiliary_wordproblems+auxiliary_indices_left(i-auxiliary_indices_current.length(),1);
+                  target[2] = n_auxiliary_wordproblems+auxiliary_indices_left(t-auxiliary_indices_current.length(),1);
 
-                  computeFeatures(input,target,1,i,feats,23);
+                  computeFeatures(input,target,1,t,feats,23);
                   computeOutputWithFeatures(feats,output,false,n_auxiliary_wordproblems,2*n_auxiliary_wordproblems); 
               }
 
@@ -371,12 +428,7 @@ void StructuralLearner::train()
               computeCostsFromOutputs(input, output, target, costs);
               train_stats->update(costs);
               
-              // TODO: update dynamic features
-
               // Update weights
-                            
-              // TODO: update for neural network
-
               if(nhidden>0)
               {
                   // Output weights update
@@ -468,31 +520,61 @@ void StructuralLearner::train()
           std::cout << "U_t.length() " << U_t.length() << " U_t.width() " << U_t.width() << std::endl;
           
           // --- Faire la SVD
-          lapackSVD(U_t, thetas[f], D, V, 'A');
+          lapackSVD(U_t, thetas[f], D, V, 'S');
           
           std::cout << "thetas[f].length() " << thetas[f].length() << " thetas[f].width() " << thetas[f].width() << std::endl;
           
           thetas[f] = thetas[f].subMatRows(0, 50);
       }
 
+      for(int f=0; f<thetahids.length(); f++)
+      {
+          // Perform SVD
+          std::cerr << "StructuralLearner::train() - Performing " << f << "th SVD" << std::endl;
+          Mat U_t;
+          if(separate_features)
+              U_t= sqrt(lambda) * whids[f];
+          else
+          {
+              Array<Mat> to_concat(whids.length());
+              for(int m=0; m<to_concat.length(); m++)
+                  to_concat[m] = whids[m];
+              U_t = hconcat(to_concat);
+          }
+
+          std::cout << "U_t.length() " << U_t.length() << " U_t.width() " << U_t.width() << std::endl;
+          
+          // --- Faire la SVD
+          lapackSVD(U_t, thetahids[f], D, V, 'S');
+          
+          std::cout << "thetahids[f].length() " << thetahids[f].length() << " thetahids[f].width() " << thetahids[f].width() << std::endl;
+          
+          thetahids[f] = thetahids[f].subMatRows(0, 50);
+      }
+
       // Resize and initialize ws, vs, whids, etc.      
       nout = outputsize();
+      // Free parameters space
+      for(int p=0; p<vs.length(); p++)
+          vs[p] = Mat();
+      for(int p=0; p<ws.length(); p++)
+          ws[p] = Mat();
       buildTasksParameters(nout,fls);
       initializeParams();
   }
-  else
+
+  while(stage<nstages)
   {
       // Train target classifier
       std::cerr << "StructuralLearner::train() - Training target classifier" << std::endl;                
       std::cerr << "StructuralLearner::train() - stage is " << stage << std::endl;
       
       train_stats->forget();
-      learning_rate = start_learning_rate / (1+decrease_constant*stage);
-
+      int n_samples = train_set->length();
       // TODO: is this a good clear?
       //token_prediction.clear();
       for(int t=0; t<train_set->length(); t++)  {
-              
+          learning_rate = start_learning_rate / (1+decrease_constant*(stage*n_samples+t));          
           train_set->getExample(t, input, target, weight);
           computeFeatures(input,target,0,t,feats);
           // 1) compute the output
@@ -520,7 +602,7 @@ void StructuralLearner::train()
                               ws[f](i, j) -= learning_rate*(output[i]-1)*activations(j,f) + (lambda != 0 ? 2*lambda*ws[f](i, j) : 0);
                           }
                       } 
-                      if(auxiliary_task_train_set)
+                      if(auxiliary_task_train_set && ((!separate_features && f==0) || (separate_features && f<thetas.length())))
                       {
                           // Update v
                           for(int j=0; j<50; j++)  {
@@ -539,10 +621,10 @@ void StructuralLearner::train()
               for(int f=0; f<feats.length(); f++)
               {
                   current_features = feats[f].data();
-                  for(int j=0; j<nhidden; j++)  {
-                      for(int k=0; k<feats[f].length(); k++)
+                  for(int i=0; i<nout; i++) {
+                      for(int j=0; j<nhidden; j++)  
                       {                          
-                          for(int i=0; i<nout; i++) 
+                          for(int k=0; k<feats[f].length(); k++)
                           {                              
                               if(i!=target[2])  {
                                   if(separate_features) whids[f](j, current_features[k]) -= learning_rate*output[i]*ws[f](i,j)*(1-mypow(activations(j,f),2)) + (lambda != 0 ? 2*lambda*whids[f](j,current_features[k]) : 0);
@@ -551,6 +633,18 @@ void StructuralLearner::train()
                               else  {
                                   if(separate_features) whids[f](j, current_features[k]) -= learning_rate*(output[i]-1)*ws[f](i,j)*(1-mypow(activations(j,f),2)) + (lambda != 0 ? 2*lambda*whids[f](j,current_features[k]) : 0);
                                   else whids[f](j, current_features[k]) -= learning_rate*(output[i]-1)*ws[0](i,j)*(1-mypow(activations(j,0),2)) + (lambda != 0 ? 2*lambda*whids[f](j,current_features[k]) : 0);
+                              }
+                          }
+                          if(auxiliary_task_train_set && ((!separate_features && f==0) || (separate_features && f<thetahids.length())))
+                          {
+                              // Update v
+                              for(int j=0; j<50; j++)  {
+                                  if(i!=target[2])  {
+                                      vhids[f](i, j) -= learning_rate*output[i]*ws[f](i,j)*(1-mypow(activations(j,f),2))*thetahids_times_x(j,f);
+                                  }
+                                  else  {
+                                      vhids[f](i, j) -= learning_rate*(output[i]-1)*ws[f](i,j)*(1-mypow(activations(j,f),2))*thetahids_times_x(j,f);
+                                  }
                               }
                           }
                       }
@@ -576,7 +670,7 @@ void StructuralLearner::train()
                           }
                       }                                                             
 
-                      if(auxiliary_task_train_set && (separate_features || f==0))
+                      if(auxiliary_task_train_set && ((!separate_features && f==0) || (separate_features && f<thetas.length())))
                       {
                           // Update v
                           for(int j=0; j<50; j++)  {
@@ -620,7 +714,7 @@ void StructuralLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
         testset.getExample(i, input, target, weight);
       
         computeFeatures(input,target,-1,i,feats);
-        computeOutputWithFeatures(feats,output);
+        computeOutputWithFeatures(feats,output,auxiliary_task_train_set);
         computeCostsFromOutputs(input,output,target,costs);
         //computeOutputAndCosts(input,target,output,costs);
 
@@ -640,32 +734,63 @@ void StructuralLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
             pb->update(i);
     }
 
-    /*
-      for(int i=0; i<l; i++)
-      {
-       testset.getExample(i, input, target, weight);
-      
-        computeFeatures(input,target,-1,i,feats);
-        computeOutputWithFeatures(feats,output);
-        computeCostsFromOutputs(input,output,target,costs);
-        //computeOutputAndCosts(input,target,output,costs);
+    if(false)
+    {
+        int index;
+        real neg_log_seq_output;
+        int nout = outputsize();
+        viterbi_table.resize(testset.length()+1, 2*nout);
+        preds.fill(MISSING_VALUE);
 
-        // TODO: update dynamic feature
-        //updateDynamicFeatures(token_prediction_train,input[3*2],target[2]);
+        // Initialize table
+        testset.getExample(0, input, target, weight);
+        computeFeatures(input,preds,0,0,feats);
+        for(int j=0; j<viterbi_table.width(); j++)
+        {
+            viterbi_table(0,j).first = -safeflog(output[j/nout]);
+            viterbi_table(0,j).second = -1;
+        }
+        // Compute table
+        for(int i=1; i<l; i++)
+        {
+            testset.getExample(i, input, target, weight);
+            computeFeatures(input,preds,0,0,feats);
+            for(int j=0; j<viterbi_table.width(); j++)
+            {
+                if( j>1) preds[0] = j%nout;
+                else preds[0] = MISSING_VALUE;
+                preds[1] = j/nout;
+                //updateFeatures(input,preds,feats);
+                computeOutputWithFeatures(feats,output);
+                for( int k=0; k<nout; k++)
+                {
+                    index = j/nout + k*nout;
+                    neg_log_seq_output = (-safeflog(output[k]) + viterbi_table(i-1,j).first*i)/(i+1);
+                    if(viterbi_table(i,index).first > neg_log_seq_output)
+                    {
+                        viterbi_table(i,index).first = neg_log_seq_output;
+                        viterbi_table(i,index).second = j;
+                    }
+                }
+            }
+        }
 
-        if(testoutputs)
-            testoutputs->putOrAppendRow(i,output);
+        // Decode from table
+        for(int i=0; i<l; i++)
+        {
+            if(testoutputs)
+                testoutputs->putOrAppendRow(i,output);
 
-        if(testcosts)
-            testcosts->putOrAppendRow(i, costs);
+            if(testcosts)
+                testcosts->putOrAppendRow(i, costs);
 
-        if(test_stats)
-            test_stats->update(costs,weight);
+            if(test_stats)
+                test_stats->update(costs,weight);
 
-        if(report_progress)
-            pb->update(i);
+            if(report_progress)
+                pb->update(i);
+        }
     }
-    */
 
     if(pb)
         delete pb;
@@ -695,6 +820,28 @@ void StructuralLearner::computeOutputWithFeatures(TVec<TVec<unsigned int> >& fea
 
     if(nhidden > 0)
     {
+
+        if(use_theta && use_thetas_for_hidden_weights)
+        {
+            fl = 0;
+            // compute theta * x
+            thetahids_times_x.clear();
+            for(int f=0; f<(separate_features ? thetahids.length() : feats.length()); f++)
+            {
+                current_features = feats[f].data();
+                for(int j=0; j<50; j++)
+                {
+                    for(int k=0; k<feats[f].length(); k++)
+                        if(separate_features)
+                            thetahids_times_x(j,f) += thetahids[f](j,current_features[k]);
+                        else
+                            thetahids_times_x(j,0) += thetahids[0](j,current_features[k]+fl);
+                }
+                fl += whids[f].width();
+            }
+        }
+
+
         activations.clear();
         activations.lastRow().fill(1.0);
         for(int f=0; f<feats.length(); f++)
@@ -707,26 +854,32 @@ void StructuralLearner::computeOutputWithFeatures(TVec<TVec<unsigned int> >& fea
                     else
                         activations(i,0) += whids[f](i, current_features[j]);
                 }
+                if(use_theta && ((!separate_features && f==0) || (separate_features && f<thetahids.length())))
+                    for(int ii=0; ii<50; ii++) {
+                        activations(i,f) += vhids[f](i, ii)*thetahids_times_x(ii,f);
+                    }        
                 if(separate_features)
                     activations(i,f) = tanh(activations(i,f));
             }
         }
+
         if(!separate_features)
             for(int i=0; i<nhidden; i++)
                 activations(i,0) = tanh(activations(i,0));
 
-        if(use_theta)
+        if(use_theta && use_thetas_for_output_weights)
         {
             // compute theta * x
             thetas_times_x.clear();
-            for(int f=0; f<(separate_features ? feats.length() : 1); f++)
+            for(int f=0; f< thetas.length(); f++)
             {
                 for(int j=0; j<50; j++)
                 {
                     for(int k=0; k<nhidden+1; k++)
-                            thetas_times_x(j,f) += thetas[f](j,k)*activations(k,f);
+                        thetas_times_x(j,f) += thetas[f](j,k)*activations(k,f);
                 }
             }
+            
         }
         
         for(int f=0; f<(separate_features ? feats.length() : 1); f++)
@@ -737,7 +890,7 @@ void StructuralLearner::computeOutputWithFeatures(TVec<TVec<unsigned int> >& fea
                     for(int j=0; j<nhidden+1; j++)  {
                         before_softmax[i] += ws[f](i, j) * activations(j,f); 
                     }
-                    if(use_theta)
+                    if(use_theta && ((!separate_features && f==0) || (separate_features && f<thetas.length())))
                         for(int ii=0; ii<50; ii++) {
                             before_softmax[i] += vs[f](i, ii)*thetas_times_x(ii,f);
                         }        
@@ -759,12 +912,12 @@ void StructuralLearner::computeOutputWithFeatures(TVec<TVec<unsigned int> >& fea
     }
     else
     {
-        if(use_theta)
+        if(use_theta && (use_thetas_for_output_weights || use_thetas_for_hidden_weights))
         {
             fl = 0;
             // compute theta * x
             thetas_times_x.clear();
-            for(int f=0; f<feats.length(); f++)
+            for(int f=0; f<(separate_features ? thetas.length() : feats.length() ); f++)
             {
                 current_features = feats[f].data();
                 for(int j=0; j<50; j++)
@@ -788,7 +941,7 @@ void StructuralLearner::computeOutputWithFeatures(TVec<TVec<unsigned int> >& fea
                     for(int j=0; j<feats[f].length(); j++)  {
                         before_softmax[i] += ws[f](i, current_features[j]);
                     }
-                    if(use_theta && (separate_features || f==0))
+                    if(use_theta && ((!separate_features && f==0) || (separate_features && f<thetas.length())))
                         for(int ii=0; ii<50; ii++) {
                             before_softmax[i] += vs[f](i, ii) * thetas_times_x(ii,f) ;
                         }        
@@ -812,9 +965,9 @@ void StructuralLearner::computeOutputWithFeatures(TVec<TVec<unsigned int> >& fea
 
     //if(only_this_class < 0)
     if(begin_class != 0 || end_class != output.length())
-        softmax(before_softmax.subVec(begin_class,end_class),output.subVec(begin_class,end_class));
-    //else
-    //    output[0] = sigmoid(before_softmax[0]);
+        softmax(before_softmax.subVec(begin_class,end_class-begin_class),output.subVec(begin_class,end_class-begin_class));
+    else
+        softmax(before_softmax,output);
 }
 
 
@@ -1074,7 +1227,7 @@ featureMask) const
   
     // Hugo: idem!!!
     // if none of the 2 are masked than we'll compute the feature
-    if( (featureMask & 2) && (featureMask & 4) ) {      
+    if( (featureMask & 2) && (featureMask & 4) ) {
         if( !is_missing(target[1]) && !is_missing(input[14]) ) {
           int bigram = (int)target[1] * ((train_set->getDictionary(0))->size()+1) + (int)input[14];
           std::map<int, int>::iterator itr_plcw_bigram_mapping;
@@ -1230,7 +1383,7 @@ void StructuralLearner::initWordProblemsStructures()
   std::map<int, int> map_mostFrequentWords;  // word tag is key, value is the net's output for it
   std::vector<freqCount>::iterator itr;
   int i;
-  for(i=0, itr=tmp.begin(); itr!=tmp.end() && i<=n_auxiliary_wordproblems; itr++, i++) {
+  for(i=0, itr=tmp.begin(); itr!=tmp.end() && i<n_auxiliary_wordproblems; itr++, i++) {
     map_mostFrequentWords[itr->wordtag] = i; 
     //MostFrequentWordsCount+=itr->count;
   }
@@ -1303,8 +1456,10 @@ void StructuralLearner::initPreviousLabelCurrentWordBigramMapping()
         train_set->getExample(e, input, target, weight);
 
         if( !is_missing(target[1]) && !is_missing(input[14]) ) {
-          // if no OOV
-          if( (!target[1]) && (!input[14]) )  {
+            // if no OOV
+            // Hugo: OOV is not necessarily 0!!!
+            //       anyway, I think we should consider OOV after all
+            //if( (target[1] !=((train_set->getDictionary(inputsize_))->oov_tag_id)) && (input[14] != (train_set->getDictionary(0))->oov_tag_id)) )  {
             // The bigram 
             bigram = (int)target[1] * ((train_set->getDictionary(0))->size()+1) + (int)input[14];
 
@@ -1313,9 +1468,8 @@ void StructuralLearner::initPreviousLabelCurrentWordBigramMapping()
 
             if( itr_plcw_bigram_mapping == plcw_bigram_mapping.end() )  {
                 plcw_bigram_mapping[bigram] = currentBigramIndex;
-                currentBigramIndex++;
+                currentBigramIndex++;                
             }
-          }
         }
     }// end for auxiliary example
 
@@ -1380,28 +1534,48 @@ void StructuralLearner::initializeParams(bool set_seed)
     real delta;
     int is;
 
-    for(int i=0; i<ws.length(); i++) {
-        is = ws[i].size();
-        delta = 1.0 / sqrt(real(is));
-        fill_random_uniform(ws[i], -delta, delta);
+    if(nhidden <= 0)
+    {
+        for(int i=0; i<ws.length(); i++) {
+            ws[i].fill(0.0);
+        }
+    }
+    else
+    {
+        is = 0;
+        for(int i=0; i<ws.length(); i++) {
+            is += ws[i].size();
+        }
+        for(int i=0; i<ws.length(); i++) {
+            delta = 1.0 / sqrt(real(is));
+            fill_random_uniform(ws[i], -delta, delta);
+        }
     }
 
+    is = vs.length() * 50;
     for(int i=0; i<vs.length(); i++) {
-        is = vs[i].size();
         delta = 1.0 / sqrt(real(is));
         fill_random_uniform(vs[i], -delta, delta);
     }
     
+    is = vhids.length() * 50;
+    for(int i=0; i<vhids.length(); i++) {
+        delta = 1.0 / sqrt(real(is));
+        fill_random_uniform(vhids[i], -delta, delta);
+    }
     
     if(nhidden > 0)
+    {        
         for(int i=0; i<whids.length(); i++) 
         {
-            is = whids[i].size();
-            delta = 1.0 / sqrt(real(is));
-            fill_random_uniform(whids[i], -delta, delta);
+            /*
+              is = whids[i].size();
+              delta = 1.0 / sqrt(real(is));
+              fill_random_uniform(whids[i], -delta, delta);
+            */
+            whids[i].fill(0.0);
         }
-    
-
+    }
   }
 }
 
