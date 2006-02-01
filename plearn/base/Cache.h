@@ -117,7 +117,7 @@ public:
     inline void clear() {
         BoundedMemoryCache<KeyType,ValueType>::clear();
         vector<string> filenames = lsdir(files_directory);
-        for (int i=0;i<filenames.size();i++)
+        for (unsigned int i=0;i<filenames.size();i++)
             rm(files_directory + "/" + filenames[i]);
     }
     // whereas destroying the cache or calling BoundedMemoryCache::clear() will 
