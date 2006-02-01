@@ -24,6 +24,8 @@ def _checkForNameClashes(key, value):
         PyPLearnError("It seems you are trying to set an PLOption %s "
                       "which clashes with the %s internal method. "
                       "Contact support.")
+
+DEBUG = False
         
 #
 #  Classes
@@ -36,16 +38,9 @@ class PLOption:
     def __init__(self, value, *args, **kwargs):
         self.__class__.__option_id += 1
         self._id = self.__option_id
-        self.setValue(value, *args, **kwargs)
 
-    def setValue(self, value, *args, **kwargs):
-        if isinstance(value, PLOption):
-            assert len(args) == 0 and len(kwargs) == 0
-            self._callable = value._callable
-            self._args     = value._args
-            self._kwargs   = value._kwargs            
-            
-        elif ( inspect.ismethod(value) or inspect.isfunction(value) 
+        assert not isinstance(value, PLOption)        
+        if ( inspect.ismethod(value) or inspect.isfunction(value) 
              or inspect.isroutine(value) or inspect.isclass(value) ):                 
             self._callable = value
             self._args     = args
@@ -58,11 +53,32 @@ class PLOption:
             self._kwargs   = kwargs
 
     def __call__(self):
+        if DEBUG and self._id == 212:
+            print "######### In PLOption::__call__ -- self #########"
+            print self
+            print
+
+            print "######### In PLOption::__call__ -- returns #########"
+            assert self._callable==copy.deepcopy
+            assert len(self._args) == 1
+            print "ARGS:", type(self._args[0]), self._args[0]
+            print copy.deepcopy(*self._args, **self._kwargs)
+            print            
+
         return self._callable(*self._args, **self._kwargs)
 
     def __cmp__(self, opt2):
         assert isinstance(opt2, PLOption)
         return cmp(self._id, opt2._id)
+
+    def __str__(self):
+        return "PLOption(\n    " +\
+            "\n    ".join([\
+            "_id=%d"%self._id,
+            "_callable=%s"%self._callable,
+            "_args=%s"%str(self._args),
+            "_kwargs=%s"%str(self._kwargs)               
+            ]) + ")" 
 
 class MetaPLOptionDict( type ):
     """Manages the list of option names associated to a class.
@@ -89,7 +105,22 @@ class MetaPLOptionDict( type ):
 
     ## HERE: AND WHAT IF THE OPTION ALREADY EXISTS???
     def __getattribute__(self, name):
-        value = type.__getattribute__(self, name)
+        value = super(MetaPLOptionDict, self).__getattribute__(name)
+
+        if DEBUG and name=="test_performance_plugins":
+            print "######### In __getattribute__ from dict #########"
+            print self.__dict__["test_performance_plugins"]
+            print
+
+            print "######### In __getattribute__ 'value' #########"
+            print value
+            print
+
+            print "######### In __getattribute__ 'value()' #########"
+            print value()
+            print
+            
+
         if isinstance(value, PLOption):
             return value()
         return value
@@ -97,29 +128,34 @@ class MetaPLOptionDict( type ):
     def __setattr__(self, name, value):
         _checkForNameClashes(name, value)
 
-        # Not an option
-        if name.startswith('_'):
-            # Simply call inherited __setattr__
-            super(MetaPLOptionDict, self).__setattr__(name, value)
+        # Is an option: check that it is wrapped and add it to the list if needed
+        if not name.startswith('_'):
+            # Check that it is wrapped... 
+            if not isinstance(value, PLOption):
+                value = PLOption(value)
 
-        # Option management
-        else:
+            # ... and add it to the list if needed
             options_slot = MetaPLOptionDict.__options_slot%self.__name__
             option_list = self.__dict__[options_slot]
-
-            # Known option: simple update
-            if name in option_list:
-                option = type.__getattribute__(self, name)
-                assert isinstance(option, PLOption)
-                option.setValue(value)
-
-            # Unknown option: create a new one
-            else:
-                # Call inherited __setattr__ with value as a PLOption
-                if not isinstance(value, PLOption):
-                    value = PLOption(value)
-                super(MetaPLOptionDict, self).__setattr__(name, value)
+            if name not in option_list:            
                 option_list.append(name)
+
+        if DEBUG and name=="test_performance_plugins":            
+            print "######### In __setattr__ #########"
+            print self.__dict__["test_performance_plugins"]
+            print
+            got = getattr(self, name)
+            raw_input( "BEFORE SETATTR: %d"%len(got) )
+                            
+        # Call inherited __setattr__        
+        super(MetaPLOptionDict, self).__setattr__(name, value)
+        
+        if DEBUG and name=="test_performance_plugins":
+            print "######### In __setattr__ #########"
+            print self.__dict__["test_performance_plugins"]
+            print
+            got = getattr(self, name)
+            raw_input( "AFTER SETATTR: %s"%len(got) )
 
     def __delattr__(self, name):
         super(MetaPLOptionDict, self).__delattr__(name)
@@ -240,10 +276,6 @@ class PLOptionDict( object ):
     def __iter__(self):
         return self.iterkeys()
 
-    def __deepcopy__(self, memo):
-        options = copy.deepcopy(dict([ (optname,getattr(self, optname)) for optname in self.iterkeys() ]), memo)
-        return self.__class__(**options)
-
     def iterkeys(self):
         return iter(self.__instance_option_names)
             
@@ -342,7 +374,19 @@ class PyPLearnObject( PLOptionDict ):
         super(PyPLearnObject, self).__init__(**overrides)
         self.__instances.append( self )
         self.__serial_number = len(self.__instances)
+        
+    def __getstate__(self):
+        """For the deepcopy mechanism."""
+        state = dict(self.__dict__)
+        state.pop('_PyPLearnObject__serial_number')
+        return state
 
+    def __setstate__(self, state):
+        """For the deepcopy mechanism."""
+        self.__dict__.update(state)
+        self.__instances.append( self )
+        self.__serial_number = len(self.__instances)
+    
     def __str__( self ):
         """Calls plearn_repr global function over itself.""" 
         # It is most important no to call this instance's plearn_repr
