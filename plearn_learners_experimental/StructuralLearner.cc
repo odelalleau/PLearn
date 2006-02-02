@@ -387,43 +387,44 @@ void StructuralLearner::train()
       // Preprocessing of auxiliary task should be done by now!
 
       // Train initial weights ws
-      std::cerr << "StructuralLearner::train() - Training learner" << std::endl;    
+      std::cerr << "StructuralLearner::train() - Training learner for SVD" << std::endl;    
 
-      // TODO: should I save features once and for all here
-      // think of access to dictionaries...
-      nout = ws[0].length();
+      nout = 2*n_auxiliary_wordproblems;
       real best_error=REAL_MAX;
       real current_error=REAL_MAX/2;
       int it = 0;
       int n_auxiliary_samples = auxiliary_indices_current.length()+auxiliary_indices_left.length();
+      int begin_class = 0;
+      int end_class = n_auxiliary_wordproblems;
 
       while(current_error < best_error - epsilon && it < max_stage)  {
-          // TODO: is this a good clear?
-          //token_prediction.clear();
           best_error = current_error;
           train_stats->forget();          
           for(int t=0; t<n_auxiliary_samples; t++)  {
               learning_rate = start_learning_rate / (1+decrease_constant*(it*n_auxiliary_samples+t));          
               if(t<auxiliary_indices_current.length())
               {
+                  begin_class = 0;
+                  end_class = n_auxiliary_wordproblems;
                   auxiliary_task_train_set->getExample(auxiliary_indices_current(t,0), input, target, weight);
                   target.resize(5);
                   target.fill(MISSING_VALUE);
                   target[2] = auxiliary_indices_current(t,1);
                   computeFeatures(input,target,1,t,feats,27);
-                  computeOutputWithFeatures(feats,output,false,0,n_auxiliary_wordproblems); 
+                  computeOutputWithFeatures(feats,output,false,begin_class,end_class); 
               }
               else
               {
+                  begin_class = n_auxiliary_wordproblems;
+                  end_class = 2*n_auxiliary_wordproblems;
                   auxiliary_task_train_set->getExample(auxiliary_indices_left(t-auxiliary_indices_current.length(),0), input, target, weight);
                   target.resize(5);
                   target.fill(MISSING_VALUE);
                   target[2] = n_auxiliary_wordproblems+auxiliary_indices_left(t-auxiliary_indices_current.length(),1);
 
                   computeFeatures(input,target,1,t,feats,23);
-                  computeOutputWithFeatures(feats,output,false,n_auxiliary_wordproblems,2*n_auxiliary_wordproblems); 
+                  computeOutputWithFeatures(feats,output,false,begin_class,end_class); 
               }
-
               
               computeCostsFromOutputs(input, output, target, costs);
               train_stats->update(costs);
@@ -432,10 +433,10 @@ void StructuralLearner::train()
               if(nhidden>0)
               {
                   // Output weights update
-                  for(int f=0; f<(separate_features ? feats.length() : 1); f++)
+                  for(int f=0; f<ws.length(); f++)
                   {
-                      for(int i=0; i<nout; i++) 
-                      {                                        
+                      for(int i=begin_class; i<end_class; i++) 
+                      {
                           // Update w
                           for(int j=0; j<nhidden+1; j++)  {
                               if(i!=target[2])  {
@@ -449,14 +450,14 @@ void StructuralLearner::train()
                   }
 
                   // Hidden weights update
-                  for(int f=0; f<feats.length(); f++)
+                  for(int f=0; f<whids.length(); f++)
                   {
                       current_features = feats[f].data();
                       for(int j=0; j<nhidden; j++)  {
                           for(int k=0; k<feats[f].length(); k++)
                           {                          
-                              for(int i=0; i<nout; i++) 
-                              {                              
+                              for(int i=begin_class; i<end_class; i++)
+                              {
                                   if(i!=target[2])  {
                                       if(separate_features) whids[f](j, current_features[k]) -= learning_rate*output[i]*ws[f](i,j)*(1-mypow(activations(j,f),2)) + (lambda != 0 ? 2*lambda*whids[f](j,current_features[k]) : 0);
                                       else whids[f](j, current_features[k]) -= learning_rate*output[i]*ws[0](i,j)*(1-mypow(activations(j,0),2)) + (lambda != 0 ? 2*lambda*whids[f](j,current_features[k]) : 0);
@@ -476,7 +477,7 @@ void StructuralLearner::train()
                   for(int f=0; f<feats.length(); f++)
                   {
                       current_features = feats[f].data();
-                      for(int i=0; i<nout; i++) 
+                      for(int i=begin_class; i<end_class; i++) 
                       {                                        
                           // Update w
                           for(int j=0; j<feats[f].length(); j++)  {
@@ -563,7 +564,7 @@ void StructuralLearner::train()
       initializeParams();
   }
 
-  while(stage<nstages)
+  while(stage<nstages-1)
   {
       // Train target classifier
       std::cerr << "StructuralLearner::train() - Training target classifier" << std::endl;                
