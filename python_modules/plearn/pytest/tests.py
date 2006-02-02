@@ -127,6 +127,9 @@ if __name__ == '__main__':
 class Test(PyTestObject):
     """Test is a class regrouping the elements that define a test for PyTest.
 
+    For each Test instance you declare in a config file, a test will be ran
+    by PyTest.
+
     @ivar name: The name of the Test must uniquely determine the
     test. Among others, it will be used to identify the test's results
     (.PyTest/I{name}/*_results/) and to report test informations.
@@ -157,15 +160,24 @@ class Test(PyTestObject):
     for the test to proceed.
     @type arguments: String
 
-    @ivar resources: A list of resources that are used by your program either
-    in the command line or directly in the code (plearn or pyplearn files, databases, ...).
-    The elements of the list must be string representations of the path, absolute or relative,
-    to the resource.
+    @ivar resources: A list of resources that are used by your program
+    either in the command line or directly in the code (plearn or pyplearn
+    files, databases, ...).  The elements of the list must be string
+    representations of the path, absolute or relative, to the resource.
     @type resources: List of Strings
 
     @ivar precision: The precision (absolute and relative) used when comparing
     floating numbers in the test output (default = 1e-6)
-    @type precision: Float    
+    @type precision: float
+
+    @ivar pfileprg: The program to be used for comparing files of psave &
+    vmat formats. It can be either::
+        - None: such files are not to be compared;
+        - "__program__": maps to this test's program (default); 
+        - A Program instance
+
+    @ivar disabled: If true, the test will not be ran.
+    @type disabled: bool
     """
     # Static methods
     def expectedResults():
@@ -208,6 +220,7 @@ class Test(PyTestObject):
     arguments   = PLOption('')
     resources   = PLOption([])
     precision   = PLOption(1e-6)
+    pfileprg    = PLOption("__program__")
     disabled    = PLOption(False)
     
     def _optionFormat(self, option_pair, indent_level, inner_repr):
@@ -249,6 +262,7 @@ class Test(PyTestObject):
         return self._metaprotocol
 
     def sanity_check(self):
+        # Checks name format
         if self.name == '':
             raise PyTestError(                
                 "Test must be named. Directory %s contains an unnamed test." 
@@ -267,6 +281,10 @@ class Test(PyTestObject):
                 "' ', '/', '<', '>'."
                 % self.get_path()
                 )
+
+        # Interprets pfileprg option's value
+        if self.pfileprg == "__program__":
+            self.pfileprg = self.program
             
     def compilationSucceeded(self):
         """Forwards compilation status request to the program.

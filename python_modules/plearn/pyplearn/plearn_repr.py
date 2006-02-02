@@ -119,7 +119,7 @@ def python_repr( obj, indent_level = 0 ):
 #  Helper functions
 #
 def format_list_elements( the_list, element_format, indent_level ):
-    n_elems = len(the_list)
+    n_elems = len(the_list)       
     if n_elems == 0:
         elems_as_str = " "    
 

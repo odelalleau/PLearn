@@ -302,6 +302,11 @@ class vc_add( PyTestMode ):
 class FamilyConfigMode(PyTestMode):
     def __init__( self, targets, options ):
         super( FamilyConfigMode, self ).__init__( targets, options )
+
+        # Provide subclasses the occasion to process test after loading but
+        # before writing back the config file. Intended for more 'general'
+        # use than test_hook() which applies to a sole given test.
+        self.setup(targets, options)
         
         for (family, tests) in Test._families_map.iteritems():
             config_path  = config_file_path( family )
@@ -318,6 +323,14 @@ class FamilyConfigMode(PyTestMode):
 
             config_file.write(config_text)
             config_file.close()    
+
+    def setup(self, targets, options):
+        """For subclass use.
+
+        Provide subclasses the occasion to process test after loading but
+        before writing back the config file. Intended for more 'general'
+        use than test_hook() which applies to a sole given test."""
+        pass
 
     def test_hook(self, test):
         raise NotImplementedError
@@ -370,7 +383,7 @@ class add(FamilyConfigMode):
     option_groups = classmethod( option_groups )
 
 
-    def __init__(self, targets, options):
+    def setup(self, targets, options):
         test_name = options.test_name
         if test_name == '':
             test_name = 'MANDATORY_TEST_NAME' 
@@ -387,7 +400,6 @@ class add(FamilyConfigMode):
         Test( name=test_name, program=program,
               arguments=options.arguments,
               resources=resources )              
-        super(add, self).__init__(targets, options)
                 
     def test_hook(self, test):
         pass

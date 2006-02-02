@@ -124,6 +124,13 @@ class IntelligentDiff:
         self.differences = []
         self.test        = test
 
+    def pfilecmd(self):
+        self.test.pfileprg.compile()
+        if self.test.compilationSucceeded():
+            return "%s --no-version"%self.test.pfileprg.name
+
+        return "echo COMPILATION ERROR: %s"%self.test.pfileprg.name
+
     def are_directories(self, bench, other):
         bench_is = os.path.isdir(bench)
         other_is = os.path.isdir(other)
@@ -223,12 +230,12 @@ class IntelligentDiff:
             return
 
         if toolkit.isvmat( bench ):
-            diff_template = 'plearn_tests --no-version vmat diff %s %s ' \
-                            + str(self.test.precision)
+            diff_template =\
+                self.pfilecmd() + ' vmat diff %s %s ' + str(self.test.precision)
 
         if bench.endswith('_rw'):
-            diff_template = 'plearn_tests --no-version diff %s %s ' \
-                            + str(self.test.precision)
+            diff_template =\
+                self.pfilecmd() + ' diff %s %s ' + str(self.test.precision)
         
         bench_dir = os.path.dirname(bench)
         other_dir = os.path.dirname(other)
