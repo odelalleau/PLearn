@@ -32,10 +32,6 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
-   * $Id: .pyskeleton_header,v 1.1 2003/09/01 00:05:31 plearner Exp $ 
-   ******************************************************* */
-
 // Authors: %(author)s
 
 /*! \file %(filename)s */

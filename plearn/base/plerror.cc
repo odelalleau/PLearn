@@ -33,19 +33,14 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id$
- * AUTHORS: Pascal Vincent & Yoshua Bengio
- * This file is part of the PLearn library.
- ******************************************************* */
+// Authors: Pascal Vincent & Yoshua Bengio
 
 #include <cstdarg>
 //#include <cstdlib>
 #include <iostream>
 
 #include "plerror.h"
-//#include <plearn/io/pl_log.h>
-// #include "general.h"
+#include <plearn/io/pl_log.h>
 
 #if USING_MPI
 #include <plearn/sys/PLMPI.h>
@@ -107,7 +102,8 @@ void  warningmsg(const char* msg, ...)
 
     va_end(args);
 
-    *error_stream <<" WARNING: "<<message<<endl;
+    // *error_stream <<" WARNING: "<<message<<endl;
+    NORMAL_LOG << " WARNING: " << message << endl;
 }
 
 void  deprecationmsg(const char* msg, ...)
@@ -124,7 +120,8 @@ void  deprecationmsg(const char* msg, ...)
 
     va_end(args);
 
-    *error_stream <<" DEPRECATION_WARNING: "<<message<<endl;
+    // *error_stream <<" DEPRECATION_WARNING: "<<message<<endl;
+    NORMAL_LOG << " DEPRECATION_WARNING: " << message << endl;
 }
 
 void exitmsg(const char* msg, ...)

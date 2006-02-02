@@ -127,7 +127,7 @@ class IntelligentDiff:
     def pfilecmd(self):
         self.test.pfileprg.compile()
         if self.test.compilationSucceeded():
-            return "%s --no-version"%self.test.pfileprg.name
+            return "%s --no-version --verbosity VLEVEL_IMP"%self.test.pfileprg.name
 
         return "echo COMPILATION ERROR: %s"%self.test.pfileprg.name
 
