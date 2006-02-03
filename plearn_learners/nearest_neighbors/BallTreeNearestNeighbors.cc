@@ -503,6 +503,11 @@ BinBallTree BallTreeNearestNeighbors::treeFromLeaves( const TVec<BinBallTree>& l
             }
         }
 
+#ifdef DEBUG_CHECK_NAN
+        if (min_center.hasMissing())
+            PLERROR("In BallTreeNearestNeighbors::treeFromLeaves: min_center is NaN");
+#endif
+        
         // Group these two nodes into a parent_node.
         // TODO: something more sensible for the radius and center...
         BinBallTree parent_node = new BinaryBallTree();
@@ -687,6 +692,11 @@ void BallTreeNearestNeighbors::smallestContainer(
         real t_radius = real(0.5) * ( center_dist + radius1 + radius2 ) ;
         t_powrad = t_radius * t_radius;
     }
+
+#ifdef DEBUG_CHECK_NAN
+    if (t_center.hasMissing())
+        PLERROR("In BallTreeNearestNeighbors::smallestContainer: t_center is NaN.");
+#endif
 }
 
 
@@ -698,6 +708,10 @@ TVec<int> BallTreeNearestNeighbors::BallKNN(
     TVec<int> ps_out;
 
     d_minp = max( powdistance(t, node->pivot, 2) - node->radius, d_minp);
+#ifdef DEBUG_CHECK_NAN
+    if (isnan(d_minp))
+        PLERROR("BallTreeNearestNeighbors::BallKNN: d_minp is NaN");
+#endif
 
     if (d_minp > d_sofar) {
         // no chance of finding anything closer around this node
