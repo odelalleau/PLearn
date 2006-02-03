@@ -47,6 +47,7 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(BootstrapVMatrix,
                         "A VMatrix that sees a bootstrap subset of its parent VMatrix.",
+                        "It means that a random sample of the source will be taken.\n"
                         "Note that this is not a real bootstrap since a sample can only appear once."
     );
 
