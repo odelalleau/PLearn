@@ -33,11 +33,31 @@
 # Author: Nicolas Chapados
 
 import sys
-import numarray.ieeespecial      as  ieee
-from   numarray    import zeros
-from   numarray    import array  as  normal_array
+import numarray.ieeespecial        as  ieee
+from   numarray    import array    as  normal_array
+from   numarray    import sometrue as  normal_sometrue
+from   numarray    import zeros, matrixmultiply, transpose
 from   numarray.ma import *                         # masked array
 from   fpconst     import NegInf, PosInf
+
+
+def _printMatrix(m, rownames, colnames, os):
+    """Nicely print a matrix given rownames and column names.
+    """
+    (length, width) = shape(m)
+    assert length == len(rownames)
+    assert width  == len(colnames)
+    leftlen  = max([len(x) for x in rownames])
+    colwidth = max( [16] + [len(x) for x in colnames] )
+
+    print >>os, ' | '.join( [' '*leftlen] + [ f.rjust(colwidth) for f in colnames ])
+    print >>os, '-+-'.join( ['-'*leftlen] + [ '-'*colwidth ] * width )
+
+    for k in xrange(length):
+        currow = m[k]
+        elems = [ ('%.10g' % float(s)) for s in currow ]
+        print >>os, ' | '.join( [ rownames[k].rjust(leftlen) ] +
+                                [ e.rjust(colwidth) for e in elems ] )
 
 
 class StatsCollector:
@@ -55,15 +75,18 @@ class StatsCollector:
         """
         width = len(fieldnames)
         self.fieldnames = fieldnames
-        self.n          = zeros(width)
-        self.nnonnan    = zeros(width)
-        self.nnan       = zeros(width)
-        self.sum        = zeros(width)
-        self.sum_sq     = zeros(width)
-        self.min        = zeros(width) + PosInf
-        self.argmin     = zeros(width) + -1
-        self.max        = zeros(width) + NegInf
-        self.argmax     = zeros(width) + -1
+        self.n          = zeros(width)                # Sum of nnonnan and nnan
+        self.nnonnan    = zeros(width)                # Nb of non-missing elements
+        self.nnan       = zeros(width)                # Nb of missing elements
+        self.nxxt       = 0                           # Nb of elements in sum_xxt
+        self.sum        = zeros(width)                # Sum of elements
+        self.sum_ssq    = zeros(width)                # Sum of square of elements
+        self.sum_xxt    = zeros((width, width))       # Accumulator of outer products
+        self.sum_nomi   = zeros(width)                # Sum of elements (no missings)
+        self.min        = zeros(width) + PosInf       # Minimum element
+        self.argmin     = zeros(width) + -1           # Position of minimum
+        self.max        = zeros(width) + NegInf       # Maximum element
+        self.argmax     = zeros(width) + -1           # Position of maximum
 
 
     def width(self):
@@ -90,10 +113,15 @@ class StatsCollector:
         self.nnan    += nnan
         self.nnonnan += n - nnan
 
-        ## Create masked version of arr and update sums
-        ma = masked_array(arr, mask=missings)
-        self.sum     = self.sum + sum(ma)          # += does not work...
-        self.sum_sq  = self.sum_sq + sum(ma*ma)    # += does not work...
+        ## Create masked version of arr and update accumulators
+        ma = masked_array(arr, mask=missings)        # Here, mask missings only
+        arr_nomissings = arr[~normal_sometrue(missings,1)]  # Here, strip missing rows
+        self.sum     = self.sum + sum(ma)            # += does not work...
+        self.sum_ssq = self.sum_ssq + sum(ma*ma)     # += does not work...
+        self.sum_xxt = self.sum_xxt + matrixmultiply(transpose(arr_nomissings),
+                                                     arr_nomissings)
+        self.sum_nomi= self.sum_nomi + sum(arr_nomissings)
+        self.nxxt   += shape(arr_nomissings)[0]
 
         ## Update (arg)min / make sure old argmin is kept if not updated
         ma_argmin  = argmin(ma,0)
@@ -113,10 +141,16 @@ class StatsCollector:
     def getStats(self):
         """Return a map of computed statistics.
         """
-        nn  = normal_array(self.nnonnan).astype('Float64')
-        s   = normal_array(self.sum)
-        ssq = normal_array(self.sum_sq)
+        nn    = normal_array(self.nnonnan).astype('Float64')
+        nx    = self.nxxt
+        s     = normal_array(self.sum)
+        snomi = normal_array(self.sum_nomi)
+        ssq   = normal_array(self.sum_ssq)
+        xxt   = normal_array(self.sum_xxt)
+
         var = (ssq/nn - (s/nn)*(s/nn)) * (nn / (nn-1))
+        cov = (xxt/nx - outerproduct(snomi/nx,snomi/nx)) * (float(nx) / (nx-1))
+        dia = diagonal(cov)
         
         return {
             "N"           : normal_array(self.n),
@@ -124,6 +158,8 @@ class StatsCollector:
             "NNONMISSING" : nn,
             "E"           : s / nn,
             "V"           : var,
+            "COV"         : cov,
+            "CORR"        : normal_array(cov / outerproduct(sqrt(dia),sqrt(dia))),
             "STDDEV"      : sqrt(var),
             "STDERR"      : sqrt(var/nn),
             "SUM"         : s,
@@ -137,20 +173,22 @@ class StatsCollector:
 
     def printStats(self, os = sys.stdout):
         """Print a nice report with the statistics."""
+        if len(nonzero(self.nnonnan)) != len(self.nnonnan):
+            print >>os, "One or more columns in StatsCollector does not contain any data"
+            return                      # Nothing accumulated yet
+        
         stats = self.getStats()
         sk = ["N"      , "NMISSING" , "NNONMISSING" , "E"   ,
               "V"      , "STDDEV"   , "STDERR"      , "SUM" ,
               "SUMSQ"  , "MIN"      , "ARGMIN"      , "MAX" ,  "ARGMAX" ]
-        leftlen = max([len(x) for x in sk])
-        colwidth = max( [15] + [len(x) for x in self.fieldnames] )
 
-        print >>os, ' | '.join([' '*leftlen] + [ f.rjust(colwidth) for f in self.fieldnames ])
-        print >>os, '-+-'.join([ '-'*leftlen ] + [ '-'*colwidth ] * self.width())
-
-        for k in sk:
-            stat = stats[k]
-            elems = [ ('%.10g' % float(s)) for s in stat ]
-            print >>os, ' | '.join( [k.rjust(leftlen)] + [ e.rjust(colwidth) for e in elems ] )
+        m = array([[stats[k][i] for i in range(self.width())] for k in sk])
+        _printMatrix(m, sk, self.fieldnames, os)
+        
+        print "\nCovariance Matrix:"
+        _printMatrix(stats["COV"], self.fieldnames, self.fieldnames, os)
+        print "\nCorrelation Matrix:"
+        _printMatrix(stats["CORR"], self.fieldnames, self.fieldnames, os)
 
 
 if __name__ == "__main__":
@@ -159,9 +197,9 @@ if __name__ == "__main__":
     sc = StatsCollector(fieldnames)
     sc.update(ut)
     sc.printStats()
-    print ""
+    print "\nAfter accumulating some more:"
     sc.update(ut)
     sc.printStats()
+    print "\nAfter forgetting:"
     sc.forget(fieldnames)
     sc.printStats()
-    
