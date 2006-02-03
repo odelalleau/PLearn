@@ -1,0 +1,50 @@
+            |               E |     SHARPERATIO |             KSP
+------------+-----------------+-----------------+----------------
+          N |             100 |             100 |             100
+   NMISSING |               1 |               1 |               2
+NNONMISSING |              99 |              99 |              98
+          E |    0.0567365941 |     0.527777977 |     67.83767789
+          V | 1.748975654e-08 | 4.454740384e-05 | 0.0006440256685
+     STDDEV | 0.0001322488432 |  0.006674384154 |   0.02537766082
+     STDERR | 1.329150885e-05 | 0.0006708008469 |  0.002563530865
+        SUM |     5.616922816 |     52.25001972 |     6648.092434
+      SUMSQ |    0.3186867839 |     27.58077535 |     450991.2156
+        MIN |   0.05639769656 |    0.5179993447 |     67.81067956
+     ARGMIN |              81 |              77 |              98
+        MAX |   0.05702333475 |     0.541879744 |     67.92651311
+     ARGMAX |              38 |              86 |               0
+
+            |               E |     SHARPERATIO |             KSP
+------------+-----------------+-----------------+----------------
+          N |             200 |             200 |             200
+   NMISSING |               2 |               2 |               4
+NNONMISSING |             198 |             198 |             196
+          E |    0.0567365941 |     0.527777977 |     67.83767789
+          V | 1.740097605e-08 | 4.432127489e-05 | 0.0006407229728
+     STDDEV | 0.0001319127592 |  0.006657422541 |   0.02531250625
+     STDERR | 9.374631588e-06 | 0.0004731224183 |  0.001808036161
+        SUM |     11.23384563 |     104.5000394 |     13296.18487
+      SUMSQ |    0.6373735678 |      55.1615507 |     901982.4312
+        MIN |   0.05639769656 |    0.5179993447 |     67.81067956
+     ARGMIN |              81 |              77 |              98
+        MAX |   0.05702333475 |     0.541879744 |     67.92651311
+     ARGMAX |              38 |              86 |               0
+Warning: Encountered invalid numeric result(s)  in divide
+Warning: Encountered invalid numeric result(s)  in divide
+Warning: Encountered invalid numeric result(s)  in divide
+Warning: Encountered invalid numeric result(s)  in divide
+            |               E |     SHARPERATIO |             KSP
+------------+-----------------+-----------------+----------------
+          N |               0 |               0 |               0
+   NMISSING |               0 |               0 |               0
+NNONMISSING |               0 |               0 |               0
+          E |             nan |             nan |             nan
+          V |             nan |             nan |             nan
+     STDDEV |             nan |             nan |             nan
+     STDERR |             nan |             nan |             nan
+        SUM |               0 |               0 |               0
+      SUMSQ |               0 |               0 |               0
+        MIN |             inf |             inf |             inf
+     ARGMIN |              -1 |              -1 |              -1
+        MAX |            -inf |            -inf |            -inf
+     ARGMAX |              -1 |              -1 |              -1
