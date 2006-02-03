@@ -55,7 +55,7 @@ PL_Log::PL_Log( )
       output_stream(get_perr()),
       null_stream(get_pnull()),
       logger_count(0),
-      named_logging_kind(AllModules)
+      named_logging_kind(NoModules)
 { }
 
 
@@ -83,7 +83,7 @@ PStream& PL_Log::namedLogger(const string& module_name)
          (named_logging_kind == SomeModules &&
           enabled_modules.find(module_name) != enabled_modules.end())))
     {
-        return output_stream;
+        return output_stream << '[' << module_name << "] ";
     }
 
     return null_stream;

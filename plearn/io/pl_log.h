@@ -121,7 +121,7 @@ public:
      *  Named logging support.  Enable logging for the specified list
      *  of modules.  If the special "__ALL__" keyword is used, then all
      *  named logging is enabled.  If the special "__NONE__" keyword is
-     *  used, then no named logging is enabled.  (Default = "__ALL__")
+     *  used, then no named logging is enabled.  (Default = "__NONE__")
      */
     void enableNamedLogging(const vector<string>& module_names);
 
