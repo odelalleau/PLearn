@@ -334,7 +334,7 @@ linkeroptions_tail += ' -L' + libdir + ' -lm'
 # First option that appears in each group is the default, and is assumed if you don't specify any option from that group
 options_choices = [
   [ 'g++', 'g++3', 'icc', 'icc8', 'icc9', 'mpi', 'purify', 'quantify' ],
-  [ 'dbg', 'opt', 'pintel', 'gprof', 'safegprof', 'safeopt', 'checkopt' ],
+  [ 'dbg', 'opt', 'pintel', 'gprof', 'safegprof', 'safeopt', 'safeoptdbg', 'checkopt' ],
   [ 'double', 'float' ],
   [ 'throwerrors', 'exiterrors' ], 
   [ 'blas', 'p3blas','p4blas','athlonblas','pentiumblas', 'mammouthblas', 'noblas', 'veclib', 'scs'],
@@ -430,6 +430,11 @@ pymakeOption( name = 'pintel',
 pymakeOption( name = 'safeopt',
               description = 'safe optimized mode (includes bound checking)',
               compileroptions = '-Wall -O3 -DBOUNDCHECK' )
+
+### Debug version of safeopt, to help detect compiler bugs in some circumstances
+pymakeOption( name='safeoptdbg',
+              description = 'safe optimized mode (includes bound checking), w/ debug info',
+              compileroptions = '-Wall -O3 -DBOUNDCHECK -g' )
 
 pymakeOption( name = 'checkopt',
               description = 'some variation on optimized mode',
