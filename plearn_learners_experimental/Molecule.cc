@@ -100,14 +100,14 @@ void Molecule::getVrmlVertexCoords(const string& name,Mat& xmat){
 PMolecule Molecule::readMolecule(const string & file){
 
 
-	Vec column_indices(3) ; 
-	for(int i=0 ; i<3 ; ++i) column_indices[i] = i ; 
+	Vec column_indices(5) ; 
+	for(int i=0 ; i<5 ; ++i) column_indices[i] = i ; 
 
 
 	Mat chem, geom ; 
 	VMat t = getDataSet(file + ".amat") ; 
 	Mat full_chem = t.toMat() ; 
-	chem.resize(full_chem.length() ,3 ) ; 
+	chem.resize(full_chem.length() ,5 ) ; 
 	selectColumns(full_chem , column_indices , chem) ; 
 	normalize(chem) ;         
 	Molecule::getVrmlVertexCoords(file,geom);
