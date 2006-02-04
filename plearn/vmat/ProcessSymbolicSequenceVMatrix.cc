@@ -422,8 +422,10 @@ void ProcessSymbolicSequenceVMatrix::build_()
     width_ = n_attributes*(max_context_length);
 
     if(inputsize_ < 0) inputsize_ = max_context_length * source->inputsize();
-    if(targetsize_ < 0) targetsize_ = max_context_length * source->targetsize();
+    if(targetsize_ < 0 && put_only_target_attributes) targetsize_ = source->targetsize();
+    if(targetsize_ < 0 && !put_only_target_attributes) targetsize_ = max_context_length * source->targetsize();
     if(weightsize_ < 0) weightsize_ = source->weightsize();
+    if(weightsize_ > 0) PLERROR("In ProcessSymbolicSequenceVMatrix:build_() : does not support weightsize > 0");
 
     current_row_i.resize(width_);
     current_target_pos = -1;
@@ -455,8 +457,7 @@ void ProcessSymbolicSequenceVMatrix::build_()
 
     if(put_only_target_attributes)
     {
-        if(targetsize_ < 0) targetsize_ = source->targetsize();
-        width_ = inputsize_ + targetsize() + weightsize();
+        width_ = source->inputsize()*max_context_length + source->targetsize();
     }
     
     if(inputsize_+targetsize_ != width_) PLERROR("In ProcessSymbolicSequenceVMatrix:build_() : inputsize_ + targetsize_ != width_");
