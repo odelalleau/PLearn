@@ -91,20 +91,23 @@ void GetInputVMatrix::build()
 ////////////
 void GetInputVMatrix::build_()
 {
-    targetsize_ = 0;
     weightsize_ = 0;
     if (source) {
-        inputsize_ = source->inputsize();
+        if(targetsize_ < 0) targetsize_ = 0;
+        if(inputsize_ < 0) inputsize_ = source->inputsize();
+        
         if (inputsize_ < 0) {
             PLERROR("In GetInputVMatrix::build_ - The source VMatrix doesn't have an inputsize defined");
         }
-        indices.resize(inputsize_);
-        for (int i = 0; i < inputsize_; i++) {
+        indices.resize(source->inputsize());
+        for (int i = 0; i < source->inputsize(); i++) {
             indices[i] = i;
         }
+
+        // We need to rebuild the SelectColumnsVMatrix.
+        inherited::build();
+        if(inputsize_+targetsize_ != width_) PLERROR("In GetInputVMatrix:build_() : inputsize_ + targetsize_ != width_");
     }
-    // We need to rebuild the SelectColumnsVMatrix.
-    inherited::build();
 }
 
 /////////////////////////////////
