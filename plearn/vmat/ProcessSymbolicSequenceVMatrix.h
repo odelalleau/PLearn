@@ -53,11 +53,26 @@
 namespace PLearn {
 using namespace std;
 
-//! This class creates context rows from a sequence of elements (a symbol and its attributes) in a VMat
-//! Note that, in the commentaries, we use the word 'target' for two things. There is the 'target element'
-//! of a context, which is the word around which we collect context words, and there is the PLearn
-//! relatd use of 'target', which corresponds to fields in a VMatrix that are to be learned by a PLearner.
-//! We tried to make those two usage of 'target' as less ambigous as possible...
+//! This VMatrix takes a VMat of a sequence of symbolic elements (corresponding to a set of symbolic attributes) and constructs context rows.,
+//! An example of a sequence of elements would be a sequence of words, with their lemma form and POS tag
+//! This sequence is encoded using integers, and is represented by the source VMatrix such as each
+//! row is an element, and each column is a certain type of attribute (e.g. lemma, POS tag, etc.)."
+//! The source VMat string mapping (functions getStringVal(...) and getValString(...)) contains.
+//! the integer/string encoding of the symbolic data."
+//! The context rows can be of fixed length, or constrained by delimiter symbols.                        
+//! Certain rows can be selected/excluded, and certain elements can be excluded of
+//! a context according to some conditions on its attributes.
+//! The conditions are expressed as disjunctions of conjunctions. For example: 
+//! 
+//! [ [ 0 : \"person\", 1 : \"NN\" ] , [ 0 : \"kind\", 2 : \"plural\" ] ] 
+//! 
+//! is equivalent in C++ logic form to : 
+//! 
+//! (fields[0]==\"person\" && fields[1]==\"NN\") || (fields[0]==\"kind\" && fields[2]==\"plural\").
+//! 
+//! Conditions can be expressed in string or int format. The integer/string mapping is used to make the correspondance.
+//! We call the 'target element' of a context the element around which other elements are collected to construct the context.
+
 class ProcessSymbolicSequenceVMatrix: public RowBufferedVMatrix
 {
 
