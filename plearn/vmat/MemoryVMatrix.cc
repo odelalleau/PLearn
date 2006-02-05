@@ -265,7 +265,11 @@ Mat MemoryVMatrix::toMat() const
 // subMat //
 ////////////
 VMat MemoryVMatrix::subMat(int i, int j, int l, int w)
-{ return new MemoryVMatrix(memory_data.subMat(i,j,l,w)); }
+{
+    VMat result = new MemoryVMatrix(memory_data.subMat(i,j,l,w));
+    result->setMetaInfoFrom(this);
+    return result;
+}
 
 /////////
 // dot //
