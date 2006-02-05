@@ -40,7 +40,6 @@
 
 /*! \file BallTreeNearestNeighbors.cc */
 
-
 #include "BallTreeNearestNeighbors.h"
 #include <plearn/base/lexical_cast.h>
 
@@ -533,7 +532,38 @@ BinBallTree BallTreeNearestNeighbors::getBallTree()
     return ball_tree;
 }
 
-void BallTreeNearestNeighbors::computeOutput( const Vec& input, Vec& output ) const
+
+void BallTreeNearestNeighbors::computeOutputAndCosts(
+    const Vec& input, const Vec& target, Vec& output, Vec& costs ) const
+{
+    int nout = outputsize();
+    output.resize( nout );
+    costs.resize( num_neighbors );
+
+    // we launch a k-nearest-neighbors query on the root node (ball_tree)
+    priority_queue< pair<real,int> > q;
+    FindBallKNN( q, input, num_neighbors );
+
+    // dequeue the found nearest neighbors, beginning by the farthest away
+    int n_found = q.size();
+    TVec<int> neighbors( n_found );
+    for( int i=n_found-1 ; i>=0 ; i-- )
+    {
+        const pair<real,int>& cur_top = q.top();
+        costs[i] = cur_top.first;
+        neighbors[i] = cur_top.second;
+        q.pop();
+    }
+
+    // fill costs with missing values
+    for( int i= n_found ; i<num_neighbors ; i++ )
+        costs[i] = MISSING_VALUE;
+
+    constructOutputVector( neighbors, output );
+}
+
+void BallTreeNearestNeighbors::computeOutput(
+    const Vec& input, Vec& output ) const
 {
     // Compute the output from the input.
     // int nout = outputsize();
@@ -541,40 +571,22 @@ void BallTreeNearestNeighbors::computeOutput( const Vec& input, Vec& output ) co
 
     int nout = outputsize();
     output.resize( nout );
-    TVec<int> neighbors( num_neighbors );
 
     // we launch a k-nearest-neighbors query on the root node (ball_tree)
-    neighbors << FindBallKNN( input, num_neighbors );
+    priority_queue< pair<real,int> > q;
+    FindBallKNN( q, input, num_neighbors );
+
+    // dequeue the found nearest neighbors, beginning by the farthest away
+    int n_found = q.size();
+    TVec<int> neighbors( n_found );
+    for( int i=n_found-1 ; i>=0 ; i-- )
+    {
+        const pair<real,int>& cur_top = q.top();
+        neighbors[i] = cur_top.second;
+        q.pop();
+    }
 
     constructOutputVector( neighbors, output );
-
-    /*
-      int current = 0;
-      for( int i=0 ; i<num_neighbors ; i++ )
-      {
-      if( copy_input )
-      {
-      // copy the input vector
-      output.subVec( current, train_set->inputsize() ) << input;
-      current += inputsize();
-      }
-      if( copy_target )
-      {
-      // copy coordinates of the current neighbor
-      output.subVec( current, inputsize() ) << train_set( neighbors[i] );
-      current += inputsize();
-      }
-      if( copy_weight )
-      {
-      output[current] = 1.0;
-      current++;
-      }
-      if( copy_index )
-      {
-      output[current] = neighbors[i];
-      current++;
-      }
-      }*/
 
 }
 
@@ -701,79 +713,77 @@ void BallTreeNearestNeighbors::smallestContainer(
 
 
 
-TVec<int> BallTreeNearestNeighbors::BallKNN(
-    TVec<int> ps_in, BinBallTree node, const Vec& t, real d_sofar, real d_minp,
-    const int k ) const
+void BallTreeNearestNeighbors::BallKNN(
+     priority_queue< pair<real,int> >& q, BinBallTree node,
+     const Vec& t, real& d2_sofar, real d2_pivot, const int k ) const
 {
-    TVec<int> ps_out;
-
-    d_minp = max( powdistance(t, node->pivot, 2) - node->radius, d_minp);
+    real d_minp = max( sqrt(d2_pivot) - node->radius, 0.0 );
 #ifdef DEBUG_CHECK_NAN
     if (isnan(d_minp))
         PLERROR("BallTreeNearestNeighbors::BallKNN: d_minp is NaN");
 #endif
 
-    if (d_minp > d_sofar) {
+    if (d_minp*d_minp > d2_sofar)
+    {
         // no chance of finding anything closer around this node
-        return ps_in;
+        return;
     }
-    else if (node->point_set.size()!=0) { // node is leaf
-        ps_out = ps_in;
-
-        for (int i=0;i<node->point_set.size();++i) {
-            Vec x = train_set(node->point_set[i]);
-
-            if (powdistance(x,t,2)<d_sofar) { // if point closer than the max distance so far
-                // add point to ps_out
-                ps_out.append(node->point_set[i]);
-
-                if (ps_out.size()==k+1) {
-                    // remove the furthest neighbor from ps_out
-                    real max1=0,max2=0;
-                    int i1=0;
-                    for(int j=0;j<ps_out.size();++j) {
-                        real d;
-                        Vec tmp = train_set(ps_out[j]);
-                        if ( (d=powdistance(tmp,t,2)) > max1 ) {
-                            max2 = max1;
-                            max1 = d;
-                            i1 = j;
-                        }
-                    }
-                    ps_out.remove(i1);
-
-                    if (max2>0) {
-                        d_sofar = max2;
-                    }
+    else if (node->point_set.size()!=0) // node is leaf
+    {
+        int n_points = node->point_set.size();
+        for( int i=0 ; i<n_points ; i++ )
+        {
+            int j = node->point_set[i];
+            real dist;
+            // last point is pivot, and we already now the distance
+            if( i==n_points-1 )
+            {
+                dist = d2_pivot;
+            }
+            else
+            {
+                Vec x = train_set(j);
+                dist = powdistance(x, t, 2);
+            }
+            if( dist < d2_sofar )
+            {
+                q.push( make_pair(dist, j) );
+                if( q.size() > k )
+                {
+                    q.pop();
                 }
+                d2_sofar = q.top().first;
             }
         }
-
-    } else if (!node->isEmpty()) { // node is not leaf
+    }
+    else if (!node->isEmpty()) // node is not leaf
+    {
         BinBallTree node1 = node->getFirstChild();
         BinBallTree node2 = node->getSecondChild();
 
-        if (powdistance(t, node1->pivot, 2) > powdistance(t, node2->pivot, 2)) {
-            pl_swap(node1,node2);
-            // node1 is closest to t
+        real d2_pivot1 = powdistance(t, node1->pivot, 2);
+        real d2_pivot2 = powdistance(t, node2->pivot, 2);
+
+        if( d2_pivot1 > d2_pivot2 ) // node1 is closer to t
+        {
+            pl_swap(node1, node2);
+            pl_swap(d2_pivot1, d2_pivot2);
         }
 
-        TVec<int> ps_temp;
-        ps_temp = BallKNN(ps_in,node1,t,d_sofar,d_minp,k);
-        ps_out = BallKNN(ps_temp,node2,t,d_sofar,d_minp,k); 
+        BallKNN(q, node1, t, d2_sofar, d2_pivot1, k);
+        BallKNN(q, node2, t, d2_sofar, d2_pivot2, k); 
     }
-
-    return ps_out;
 }
 
 
-TVec<int> BallTreeNearestNeighbors::FindBallKNN(
-    const Vec& point, const int k ) const
+void BallTreeNearestNeighbors::FindBallKNN(
+    priority_queue< pair<real,int> >& q, const Vec& point, const int k ) const
 {
-    TVec<int> ps_in;
-    real d_sofar;
-    pl_isnumber("+inf",&d_sofar);
-    return BallKNN(ps_in,ball_tree,point,d_sofar,0, k);
+    real d2_sofar;
+    pl_isnumber("+inf", &d2_sofar);
+    real d2_pivot = powdistance(point, ball_tree->pivot, 2);
+//    real d_minp = 0;
+    BallKNN(q, ball_tree, point, d2_sofar, d2_pivot, k);
 }
 
 } // end of namespace PLearn

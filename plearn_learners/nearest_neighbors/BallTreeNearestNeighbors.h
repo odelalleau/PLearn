@@ -44,6 +44,8 @@
 #ifndef BallTreeNearestNeighbors_INC
 #define BallTreeNearestNeighbors_INC
 
+#include <queue>
+
 #include <plearn_learners/generic/PLearner.h>
 #include <plearn_learners/nearest_neighbors/GenericNearestNeighbors.h>
 #include <plearn/vmat/SelectRowsVMatrix.h>
@@ -135,10 +137,12 @@ public:
                                    const Vec& center2, const real& radius2,
                                    Vec& t_center, real& t_radius);
 
-    TVec<int> BallKNN( TVec<int> ps_in, BinBallTree node, const Vec& t,
-                       real d_sofar, real d_minp, const int k ) const;
+    virtual void BallKNN( priority_queue< pair<real,int> >& q,
+                          BinBallTree node, const Vec& t,
+                          real& d_sofar, real d_minp, const int k ) const;
 
-    TVec<int> FindBallKNN(const Vec& point, int k) const;
+    virtual void FindBallKNN( priority_queue< pair<real,int> >& q,
+                              const Vec& point, int k ) const;
 
 
     // ************************
@@ -179,6 +183,10 @@ public:
 
     BinBallTree getBallTree();
 
+
+    //! Computes the output and costs from the input (more effectively)
+    virtual void computeOutputAndCosts( const Vec& input, const Vec& target,
+                                        Vec& output, Vec& costs ) const;
     //! Computes the output from the input.
     virtual void computeOutput(const Vec& input, Vec& output) const;
 
