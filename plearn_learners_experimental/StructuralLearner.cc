@@ -44,7 +44,7 @@
 #include "StructuralLearner.h"
 #include <plearn/math/plapack.h>
 #include <plearn/math/random.h>
-
+//#include <plearn/sys/Profiler.h>
 #include <map>
 #include <vector>
 #include <algorithm>
@@ -147,7 +147,9 @@ void StructuralLearner::buildTasksParameters(int nout, TVec<unsigned int> feat_l
 
     before_softmax.resize(nout);
     output.resize(nout);
-
+    good_class_softmax_gradient.resize(nout);
+    bad_class_softmax_gradient.resize(nout);    
+   
     if(!separate_features)
     {
         if(nhidden <= 0 || use_thetas_for_output_weights)
@@ -163,6 +165,7 @@ void StructuralLearner::buildTasksParameters(int nout, TVec<unsigned int> feat_l
                 vhids.resize( 1 );
             else
                 vhids.resize( 0 );
+            vs_times_thetas.resize(1);
         }
         else
             ws.resize(feat_lengths.length());
@@ -183,6 +186,7 @@ void StructuralLearner::buildTasksParameters(int nout, TVec<unsigned int> feat_l
                 vhids.resize( feat_lengths.length()-3);
             else
                 vhids.resize( 0 );
+            vs_times_thetas.resize(feat_lengths.length()-3);
         }
     }
 
@@ -205,14 +209,23 @@ void StructuralLearner::buildTasksParameters(int nout, TVec<unsigned int> feat_l
         vhids[i].resize(nhidden,50);
     }
     
+
+    for(int i=0; i<vs_times_thetas.length(); i++)
+        vs_times_thetas[i].resize(nout,nhidden);
+
     if(nhidden > 0)
     {
         if(separate_features)
+        {
             activations.resize(nhidden+1,feat_lengths.length()); // +1 for the bias
+            activations_gradient.resize(nhidden+1,feat_lengths.length()); // +1 for the bias
+        }
         else
+        {
             activations.resize(nhidden+1,1); // idem
+            activations_gradient.resize(nhidden+1,1); // idem
+        }
     }
-
 }
 
 void StructuralLearner::buildThetaParameters(TVec<unsigned int> feat_lengths)
@@ -378,10 +391,16 @@ void StructuralLearner::train()
   if (!initTrain())
       return;
 
-  int nout = outputsize();
+  //Profiler p;
+  //p.activate();
 
+  int nout = outputsize();
+  real lambda_times_2 = lambda*2;
+  real log_softmax_gradient = 0;
+  real v_times_theta = 0;
   // Compute thetas over auxiliary task,
   // if an auxiliary problem is given
+  //p.start("All train");
   if( auxiliary_task_train_set && stage == 0)  {
       
       // Preprocessing of auxiliary task should be done by now!
@@ -411,7 +430,9 @@ void StructuralLearner::train()
                   target.fill(MISSING_VALUE);
                   target[2] = auxiliary_indices_current(t,1);
                   computeFeatures(input,target,1,t,feats,27);
+                  //p.start("Auxiliary computeOutputWithFeatures");
                   computeOutputWithFeatures(feats,output,false,begin_class,end_class); 
+                  //p.end("Auxiliary computeOutputWithFeatures");
               }
               else
               {
@@ -423,49 +444,82 @@ void StructuralLearner::train()
                   target[2] = n_auxiliary_wordproblems+auxiliary_indices_left(t-auxiliary_indices_current.length(),1);
 
                   computeFeatures(input,target,1,t,feats,23);
+                  //p.start("Auxiliary computeOutputWithFeatures");
                   computeOutputWithFeatures(feats,output,false,begin_class,end_class); 
+                  //p.end("Auxiliary computeOutputWithFeatures");
               }
               
               computeCostsFromOutputs(input, output, target, costs);
               train_stats->update(costs);
-              
+
+              //p.start("Auxiliary update");
+              for(int i=begin_class; i<end_class; i++)
+              {
+                  good_class_softmax_gradient[i] = learning_rate*(output[i]-1);
+                  bad_class_softmax_gradient[i] = learning_rate*output[i];                  
+              }
+
               // Update weights
               if(nhidden>0)
               {
+                  for(int i=0; i<activations.length(); i++)
+                      for(int j=0; j<activations.width(); j++)
+                      {
+                          activations_gradient(i,j) = 1-activations(i,j)*activations(i,j);
+                      }
+
                   // Output weights update
                   for(int f=0; f<ws.length(); f++)
                   {
-                      for(int i=begin_class; i<end_class; i++) 
+                      for(int i=begin_class; i<end_class; i++)
                       {
                           // Update w
                           for(int j=0; j<nhidden+1; j++)  {
                               if(i!=target[2])  {
-                                  ws[f](i, j) -= learning_rate*output[i]*activations(j,f) + (lambda != 0 ? 2*lambda*ws[f](i,j) : 0);
+                                  ws[f](i, j) -= bad_class_softmax_gradient[i]*activations(j,f) + (lambda != 0 ? lambda_times_2*ws[f](i,j) : 0);
                               }
                               else  {
-                                  ws[f](i, j) -= learning_rate*(output[i]-1)*activations(j,f) + (lambda != 0 ? 2*lambda*ws[f](i, j) : 0);
+                                  ws[f](i, j) -= good_class_softmax_gradient[i]*activations(j,f) + (lambda != 0 ? lambda_times_2*ws[f](i, j) : 0);
                               }
-                          }                                                             
+                          }
                       }
                   }
 
                   // Hidden weights update
-                  for(int f=0; f<whids.length(); f++)
+                  
+                  for(int f=0; f<ws.length(); f++)
                   {
-                      current_features = feats[f].data();
+                      
                       for(int j=0; j<nhidden; j++)  {
-                          for(int k=0; k<feats[f].length(); k++)
-                          {                          
-                              for(int i=begin_class; i<end_class; i++)
+                          log_softmax_gradient = 0;
+                          for(int i=begin_class; i<end_class; i++)
+                          {
+                              if(i!=target[2])  {
+                                  log_softmax_gradient += bad_class_softmax_gradient[i]*ws[f](i,j);
+                              }
+                              else {
+                                  log_softmax_gradient += good_class_softmax_gradient[i]*ws[f](i,j);
+                              }
+                          }
+
+                          log_softmax_gradient *= activations_gradient(j,f);
+                          
+                          if(!separate_features)
+                              for(int f2=0; f<whids.length(); f++)
                               {
-                                  if(i!=target[2])  {
-                                      if(separate_features) whids[f](j, current_features[k]) -= learning_rate*output[i]*ws[f](i,j)*(1-mypow(activations(j,f),2)) + (lambda != 0 ? 2*lambda*whids[f](j,current_features[k]) : 0);
-                                      else whids[f](j, current_features[k]) -= learning_rate*output[i]*ws[0](i,j)*(1-mypow(activations(j,0),2)) + (lambda != 0 ? 2*lambda*whids[f](j,current_features[k]) : 0);
-                                  }
-                                  else  {
-                                      if(separate_features) whids[f](j, current_features[k]) -= learning_rate*(output[i]-1)*ws[f](i,j)*(1-mypow(activations(j,f),2)) + (lambda != 0 ? 2*lambda*whids[f](j,current_features[k]) : 0);
-                                      else whids[f](j, current_features[k]) -= learning_rate*(output[i]-1)*ws[0](i,j)*(1-mypow(activations(j,0),2)) + (lambda != 0 ? 2*lambda*whids[f](j,current_features[k]) : 0);
-                                  }
+                                  current_features = feats[f2].data();
+                                  for(int k=0; k<feats[f2].length(); k++)
+                                  { 
+                                      whids[f2](j, current_features[k]) -= log_softmax_gradient + (lambda != 0 ? lambda_times_2*whids[f2](j,current_features[k]) : 0);                                  
+                                  }                                  
+                              }
+                          else
+                          {
+                              current_features = feats[f].data();
+                              for(int k=0; k<feats[f].length(); k++)
+                              { 
+                                  
+                                  whids[f](j, current_features[k]) -= log_softmax_gradient + (lambda != 0 ? lambda_times_2*whids[f](j,current_features[k]) : 0);                          
                               }
                           }
                       }
@@ -482,15 +536,16 @@ void StructuralLearner::train()
                           // Update w
                           for(int j=0; j<feats[f].length(); j++)  {
                               if(i!=target[2])  {
-                                  ws[f](i, current_features[j]) -= learning_rate*output[i] + (lambda != 0 ? 2*lambda*ws[f](i, current_features[j]) : 0);
+                                  ws[f](i, current_features[j]) -= bad_class_softmax_gradient[i] + (lambda != 0 ? lambda_times_2*ws[f](i, current_features[j]) : 0);
                               }
                               else  {
-                                  ws[f](i, current_features[j]) -= learning_rate*(output[i]-1) + (lambda != 0 ? 2*lambda*ws[f](i, current_features[j]) : 0);
+                                  ws[f](i, current_features[j]) -= good_class_softmax_gradient[i] + (lambda != 0 ? lambda_times_2*ws[f](i, current_features[j]) : 0);
                               }
                           }                                                             
                       }
                   }
               }
+              //p.end("Auxiliary update");
           }
           it++;
           train_stats->finalize();
@@ -564,7 +619,7 @@ void StructuralLearner::train()
       initializeParams();
   }
 
-  while(stage<nstages-1)
+  while(stage<nstages)
   {
       // Train target classifier
       std::cerr << "StructuralLearner::train() - Training target classifier" << std::endl;                
@@ -579,39 +634,56 @@ void StructuralLearner::train()
           train_set->getExample(t, input, target, weight);
           computeFeatures(input,target,0,t,feats);
           // 1) compute the output
+          //p.start("Main computeOutputWithFeatures");
           computeOutputWithFeatures(feats,output,auxiliary_task_train_set) ; 
+          //p.end("Main computeOutputWithFeatures");
           // 2) compute the cost      
           computeCostsFromOutputs(input, output, target, costs);
           train_stats->update(costs);
           // TODO: verify if OK
           //updateDynamicFeatures(token_prediction_train,input[3*2],target[2]);
           // 3) Update weights                           
+          //p.start("Main update");
 
+          
+          for(int i=0; i<nout; i++)
+          {
+              good_class_softmax_gradient[i] = learning_rate*(output[i]-1);
+              bad_class_softmax_gradient[i] = learning_rate*output[i];                  
+          }
+
+          // Update weights
           if(nhidden>0)
           {
+              for(int i=0; i<activations.length(); i++)
+                  for(int j=0; j<activations.width(); j++)
+                  {
+                      activations_gradient(i,j) = 1-activations(i,j)*activations(i,j);
+                  }
+
               // Output weights update
-              for(int f=0; f<(separate_features ? feats.length() : 1); f++)
+              for(int f=0; f<ws.length(); f++)
               {
-                  for(int i=0; i<nout; i++) 
-                  {                                        
+                  for(int i=0; i<nout; i++)
+                  {
                       // Update w
                       for(int j=0; j<nhidden+1; j++)  {
                           if(i!=target[2])  {
-                              ws[f](i, j) -= learning_rate*output[i]*activations(j,f) + (lambda != 0 ? 2*lambda*ws[f](i,j) : 0);
+                              ws[f](i, j) -= bad_class_softmax_gradient[i]*activations(j,f) + (lambda != 0 ? lambda_times_2*ws[f](i,j) : 0);
                           }
                           else  {
-                              ws[f](i, j) -= learning_rate*(output[i]-1)*activations(j,f) + (lambda != 0 ? 2*lambda*ws[f](i, j) : 0);
+                              ws[f](i, j) -= good_class_softmax_gradient[i]*activations(j,f) + (lambda != 0 ? lambda_times_2*ws[f](i, j) : 0);
                           }
-                      } 
-                      if(auxiliary_task_train_set && ((!separate_features && f==0) || (separate_features && f<thetas.length())))
+                      }
+                      if(auxiliary_task_train_set && use_thetas_for_output_weights && ((!separate_features && f==0) || (separate_features && f<thetas.length())))
                       {
                           // Update v
                           for(int j=0; j<50; j++)  {
                               if(i!=target[2])  {
-                                  vs[f](i, j) -= learning_rate*output[i]*thetas_times_x(j,f);
+                                  vs[f](i, j) -= bad_class_softmax_gradient[i]*thetas_times_x(j,f);
                               }
                               else  {
-                                  vs[f](i, j) -= learning_rate*(output[i]-1)*thetas_times_x(j,f);
+                                  vs[f](i, j) -= good_class_softmax_gradient[i]*thetas_times_x(j,f);
                               }
                           }
                       }
@@ -619,33 +691,72 @@ void StructuralLearner::train()
               }
 
               // Hidden weights update
-              for(int f=0; f<feats.length(); f++)
+                  
+              for(int f=0; f<ws.length(); f++)
               {
-                  current_features = feats[f].data();
-                  for(int i=0; i<nout; i++) {
-                      for(int j=0; j<nhidden; j++)  
-                      {                          
-                          for(int k=0; k<feats[f].length(); k++)
-                          {                              
-                              if(i!=target[2])  {
-                                  if(separate_features) whids[f](j, current_features[k]) -= learning_rate*output[i]*ws[f](i,j)*(1-mypow(activations(j,f),2)) + (lambda != 0 ? 2*lambda*whids[f](j,current_features[k]) : 0);
-                                  else whids[f](j, current_features[k]) -= learning_rate*output[i]*ws[0](i,j)*(1-mypow(activations(j,0),2)) + (lambda != 0 ? 2*lambda*whids[f](j,current_features[k]) : 0);
+                      
+                  for(int j=0; j<nhidden; j++)  {
+                      log_softmax_gradient = 0;
+                      for(int i=0; i<nout; i++)
+                      {
+                          if(i!=target[2])  {
+                              log_softmax_gradient += bad_class_softmax_gradient[i]*ws[f](i,j);
+                          }
+                          else {
+                              log_softmax_gradient += good_class_softmax_gradient[i]*ws[f](i,j);
+                          }
+                          if(auxiliary_task_train_set && use_thetas_for_output_weights && f<vs.length())
+                          {
+                              v_times_theta = 0;
+                              for(int l=0; l<50; l++)
+                              {
+                                  v_times_theta += vs[f](i,l) * thetas[f](l,j);
                               }
-                              else  {
-                                  if(separate_features) whids[f](j, current_features[k]) -= learning_rate*(output[i]-1)*ws[f](i,j)*(1-mypow(activations(j,f),2)) + (lambda != 0 ? 2*lambda*whids[f](j,current_features[k]) : 0);
-                                  else whids[f](j, current_features[k]) -= learning_rate*(output[i]-1)*ws[0](i,j)*(1-mypow(activations(j,0),2)) + (lambda != 0 ? 2*lambda*whids[f](j,current_features[k]) : 0);
+                                  
+                              if(i!=target[2])  {
+                                  log_softmax_gradient += bad_class_softmax_gradient[i]*v_times_theta;
+                              }
+                              else {
+                                  log_softmax_gradient += good_class_softmax_gradient[i]*v_times_theta;
+                              }
+                                  
+                          }
+                      }
+
+                      log_softmax_gradient *= activations_gradient(j,f);
+                          
+                      if(!separate_features)
+                      {
+                          for(int f2=0; f<whids.length(); f++)
+                          {
+                              current_features = feats[f2].data();
+                              for(int k=0; k<feats[f2].length(); k++)
+                              { 
+                                  whids[f2](j, current_features[k]) -= log_softmax_gradient + (lambda != 0 ? lambda_times_2*whids[f2](j,current_features[k]) : 0);
                               }
                           }
-                          if(auxiliary_task_train_set && ((!separate_features && f==0) || (separate_features && f<thetahids.length())))
+                          if(auxiliary_task_train_set && use_thetas_for_hidden_weights && f<vhids.length())
                           {
                               // Update v
-                              for(int j=0; j<50; j++)  {
-                                  if(i!=target[2])  {
-                                      vhids[f](i, j) -= learning_rate*output[i]*ws[f](i,j)*(1-mypow(activations(j,f),2))*thetahids_times_x(j,f);
-                                  }
-                                  else  {
-                                      vhids[f](i, j) -= learning_rate*(output[i]-1)*ws[f](i,j)*(1-mypow(activations(j,f),2))*thetahids_times_x(j,f);
-                                  }
+                              for(int l=0; l<50; l++)  {
+                                  vhids[f](j, l) -= log_softmax_gradient*thetahids_times_x(l,0);
+                              }
+                          }
+
+                      }
+                      else
+                      {
+                          current_features = feats[f].data();
+                          for(int k=0; k<feats[f].length(); k++)
+                          { 
+                                  
+                              whids[f](j, current_features[k]) -= log_softmax_gradient + (lambda != 0 ? lambda_times_2*whids[f](j,current_features[k]) : 0);                          
+                          }
+                          if(auxiliary_task_train_set && use_thetas_for_hidden_weights && f<vhids.length())
+                          {
+                              // Update v
+                              for(int l=0; l<50; l++)  {
+                                  vhids[f](j, l) -= log_softmax_gradient*thetahids_times_x(l,f);
                               }
                           }
                       }
@@ -655,7 +766,6 @@ void StructuralLearner::train()
           }
           else
           {
-
               for(int f=0; f<feats.length(); f++)
               {
                   current_features = feats[f].data();
@@ -664,34 +774,140 @@ void StructuralLearner::train()
                       // Update w
                       for(int j=0; j<feats[f].length(); j++)  {
                           if(i!=target[2])  {
-                              ws[f](i, current_features[j]) -= learning_rate*output[i] + (lambda != 0 ? 2*lambda*ws[f](i, current_features[j]) : 0);
+                              ws[f](i, current_features[j]) -= bad_class_softmax_gradient[i] + (lambda != 0 ? lambda_times_2*ws[f](i, current_features[j]) : 0);
                           }
                           else  {
-                              ws[f](i, current_features[j]) -= learning_rate*(output[i]-1) + (lambda != 0 ? 2*lambda*ws[f](i, current_features[j]) : 0);
+                              ws[f](i, current_features[j]) -= good_class_softmax_gradient[i] + (lambda != 0 ? lambda_times_2*ws[f](i, current_features[j]) : 0);
                           }
-                      }                                                             
-
-                      if(auxiliary_task_train_set && ((!separate_features && f==0) || (separate_features && f<thetas.length())))
+                      }                                          
+                      if(auxiliary_task_train_set && use_thetas_for_output_weights && ((!separate_features && f==0) || (separate_features && f<thetas.length())))
                       {
                           // Update v
                           for(int j=0; j<50; j++)  {
                               if(i!=target[2])  {
-                                  vs[f](i, j) -= learning_rate*output[i]*thetas_times_x(j,f);
+                                  vs[f](i, j) -=  bad_class_softmax_gradient[i]*thetas_times_x(j,f);
                               }
                               else  {
-                                  vs[f](i, j) -= learning_rate*(output[i]-1)*thetas_times_x(j,f);
+                                  vs[f](i, j) -= good_class_softmax_gradient[i]*thetas_times_x(j,f);
                               }
                           }
                       }
+                          
                   }
               }
           }
+          //p.end("Main update");
       }
+      
+      /*
+        if(nhidden>0)
+        {
+        // Output weights update
+        for(int f=0; f<(separate_features ? feats.length() : 1); f++)
+        {
+        for(int i=0; i<nout; i++) 
+        {                                        
+        // Update w
+        for(int j=0; j<nhidden+1; j++)  {
+        if(i!=target[2])  {
+        ws[f](i, j) -= learning_rate*output[i]*activations(j,f) + (lambda != 0 ? 2*lambda*ws[f](i,j) : 0);
+        }
+        else  {
+        ws[f](i, j) -= learning_rate*(output[i]-1)*activations(j,f) + (lambda != 0 ? 2*lambda*ws[f](i, j) : 0);
+        }
+        } 
+        if(auxiliary_task_train_set && ((!separate_features && f==0) || (separate_features && f<thetas.length())))
+        {
+        // Update v
+        for(int j=0; j<50; j++)  {
+        if(i!=target[2])  {
+        vs[f](i, j) -= learning_rate*output[i]*thetas_times_x(j,f);
+        }
+        else  {
+        vs[f](i, j) -= learning_rate*(output[i]-1)*thetas_times_x(j,f);
+        }
+        }
+        }
+        }
+        }
+
+        // Hidden weights update
+        for(int f=0; f<feats.length(); f++)
+        {
+        current_features = feats[f].data();
+        for(int i=0; i<nout; i++) {
+        for(int j=0; j<nhidden; j++)  
+        {                          
+        for(int k=0; k<feats[f].length(); k++)
+        {                              
+        if(i!=target[2])  {
+        if(separate_features) whids[f](j, current_features[k]) -= learning_rate*output[i]*ws[f](i,j)*(1-mypow(activations(j,f),2)) + (lambda != 0 ? 2*lambda*whids[f](j,current_features[k]) : 0);
+        else whids[f](j, current_features[k]) -= learning_rate*output[i]*ws[0](i,j)*(1-mypow(activations(j,0),2)) + (lambda != 0 ? 2*lambda*whids[f](j,current_features[k]) : 0);
+        }
+        else  {
+        if(separate_features) whids[f](j, current_features[k]) -= learning_rate*(output[i]-1)*ws[f](i,j)*(1-mypow(activations(j,f),2)) + (lambda != 0 ? 2*lambda*whids[f](j,current_features[k]) : 0);
+        else whids[f](j, current_features[k]) -= learning_rate*(output[i]-1)*ws[0](i,j)*(1-mypow(activations(j,0),2)) + (lambda != 0 ? 2*lambda*whids[f](j,current_features[k]) : 0);
+        }
+        }
+        if(auxiliary_task_train_set && ((!separate_features && f==0) || (separate_features && f<thetahids.length())))
+        {
+        // Update v
+        for(int j=0; j<50; j++)  {
+        if(i!=target[2])  {
+        vhids[f](i, j) -= learning_rate*output[i]*ws[f](i,j)*(1-mypow(activations(j,f),2))*thetahids_times_x(j,f);
+        }
+        else  {
+        vhids[f](i, j) -= learning_rate*(output[i]-1)*ws[f](i,j)*(1-mypow(activations(j,f),2))*thetahids_times_x(j,f);
+        }
+        }
+        }
+        }
+        }
+        }
+                  
+        }
+        else
+        {
+
+        for(int f=0; f<feats.length(); f++)
+        {
+        current_features = feats[f].data();
+        for(int i=0; i<nout; i++) 
+        {                                        
+        // Update w
+        for(int j=0; j<feats[f].length(); j++)  {
+        if(i!=target[2])  {
+        ws[f](i, current_features[j]) -= learning_rate*output[i] + (lambda != 0 ? 2*lambda*ws[f](i, current_features[j]) : 0);
+        }
+        else  {
+        ws[f](i, current_features[j]) -= learning_rate*(output[i]-1) + (lambda != 0 ? 2*lambda*ws[f](i, current_features[j]) : 0);
+        }
+        }                                                             
+
+        if(auxiliary_task_train_set && ((!separate_features && f==0) || (separate_features && f<thetas.length())))
+        {
+        // Update v
+        for(int j=0; j<50; j++)  {
+        if(i!=target[2])  {
+        vs[f](i, j) -= learning_rate*output[i]*thetas_times_x(j,f);
+        }
+        else  {
+        vs[f](i, j) -= learning_rate*(output[i]-1)*thetas_times_x(j,f);
+        }
+        }
+        }
+        }
+        }
+        }
+        }
+      */
       ++stage;
       train_stats->finalize(); // finalize statistics for this epoch
       
   }
-  
+  //p.end("All train");
+
+  //p.report(cout);
 }
 
 void StructuralLearner::test(VMat testset, PP<VecStatsCollector> test_stats, 
@@ -855,7 +1071,7 @@ void StructuralLearner::computeOutputWithFeatures(TVec<TVec<unsigned int> >& fea
                     else
                         activations(i,0) += whids[f](i, current_features[j]);
                 }
-                if(use_theta && ((!separate_features && f==0) || (separate_features && f<thetahids.length())))
+                if(use_theta && use_thetas_for_hidden_weights && ((!separate_features && f==0) || (separate_features && f<thetahids.length())))
                     for(int ii=0; ii<50; ii++) {
                         activations(i,f) += vhids[f](i, ii)*thetahids_times_x(ii,f);
                     }        
@@ -891,7 +1107,7 @@ void StructuralLearner::computeOutputWithFeatures(TVec<TVec<unsigned int> >& fea
                     for(int j=0; j<nhidden+1; j++)  {
                         before_softmax[i] += ws[f](i, j) * activations(j,f); 
                     }
-                    if(use_theta && ((!separate_features && f==0) || (separate_features && f<thetas.length())))
+                    if(use_theta && use_thetas_for_output_weights && ((!separate_features && f==0) || (separate_features && f<thetas.length())))
                         for(int ii=0; ii<50; ii++) {
                             before_softmax[i] += vs[f](i, ii)*thetas_times_x(ii,f);
                         }        
@@ -942,7 +1158,7 @@ void StructuralLearner::computeOutputWithFeatures(TVec<TVec<unsigned int> >& fea
                     for(int j=0; j<feats[f].length(); j++)  {
                         before_softmax[i] += ws[f](i, current_features[j]);
                     }
-                    if(use_theta && ((!separate_features && f==0) || (separate_features && f<thetas.length())))
+                    if(use_theta && use_thetas_for_output_weights && ((!separate_features && f==0) || (separate_features && f<thetas.length())))
                         for(int ii=0; ii<50; ii++) {
                             before_softmax[i] += vs[f](i, ii) * thetas_times_x(ii,f) ;
                         }        

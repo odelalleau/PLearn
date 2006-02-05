@@ -151,6 +151,11 @@ featureMask = 0x1F);
 protected:
     //#####  Protected Options  ###############################################
 
+    mutable Mat activations_gradient;
+    mutable Vec good_class_softmax_gradient;
+    mutable Vec bad_class_softmax_gradient;
+    mutable TVec<Mat> vs_times_thetas;
+
     //int ninputs_onehot; // 
 
     // For the model
