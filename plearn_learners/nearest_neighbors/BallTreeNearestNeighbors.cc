@@ -222,8 +222,7 @@ void BallTreeNearestNeighbors::anchorTrain()
         // So, we build a single anchor
         pivot_indices.resize( 1 );
         pivot_indices[ 0 ] = 0;
-        Vec pivot = Vec( inputsize() );
-        train_set->getRow( 0, pivot );
+        Vec pivot = train_set.getSubRow( 0, inputsize() );
 
         distance_kernel->setDataForKernelMatrix( train_set );
         distance_kernel->build();
@@ -368,8 +367,7 @@ void BallTreeNearestNeighbors::createAnchors( int nb_anchors )
         // assign the point to its new anchor
         new_anchor( 0, 0 ) = new_pivot_index;
         new_anchor( 0, 1 ) = 0;
-        Vec new_pivot = Vec( inputsize() );
-        train_set->getRow( new_pivot_index, new_pivot );
+        Vec new_pivot = train_set.getSubRow( new_pivot_index, inputsize() );
 
         int largest_anchor_length = p_largest_anchor->length();
 
@@ -389,8 +387,7 @@ void BallTreeNearestNeighbors::createAnchors( int nb_anchors )
             Mat* p_anchor = &anchor_set[ j ];
             int nb_points = p_anchor->length();
             int pivot_index = pivot_indices[ j ];
-            Vec pivot = Vec( inputsize() );
-            train_set->getRow( pivot_index, pivot );
+            Vec pivot = train_set.getSubRow( pivot_index, inputsize() );
             real pivot_pow_dist = powdistance( new_pivot, pivot, 2 );
 
             // loop on the anchor's points
@@ -407,8 +404,7 @@ void BallTreeNearestNeighbors::createAnchors( int nb_anchors )
                     break;
                 }
 
-                Vec point = Vec( inputsize() );
-                train_set->getRow( point_index, point );
+                Vec point = train_set.getSubRow( point_index, inputsize() );
                 real new_pow_dist = powdistance( new_pivot, point, 2 );
 
                 // if the point is closer to the new pivot, then steal it
@@ -441,9 +437,8 @@ BinBallTree BallTreeNearestNeighbors::leafFromAnchor( int anchor_index )
 {
     BinBallTree leaf = new BinaryBallTree();
 
-    leaf->pivot.resize( inputsize() );
     int pivot_index = pivot_indices[ anchor_index ];
-    train_set->getRow( pivot_index, leaf->pivot );
+    leaf->pivot = train_set.getSubRow( pivot_index, inputsize() );
 
     leaf->radius = anchor_set[ anchor_index ]( 0, 1 );
 
@@ -742,7 +737,7 @@ void BallTreeNearestNeighbors::BallKNN(
             }
             else
             {
-                Vec x = train_set(j);
+                Vec x = train_set.getSubRow(j, inputsize());
                 dist = powdistance(x, t, 2);
             }
             if( dist < d2_sofar )
@@ -751,8 +746,8 @@ void BallTreeNearestNeighbors::BallKNN(
                 if( q.size() > k )
                 {
                     q.pop();
+                    d2_sofar = q.top().first;
                 }
-                d2_sofar = q.top().first;
             }
         }
     }
