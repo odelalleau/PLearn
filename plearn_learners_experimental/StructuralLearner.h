@@ -202,6 +202,8 @@ protected:
 
     mutable std::map<int, int> plcw_bigram_mapping;   // maps "previous label - current word" bigrams seen in train_set to an index
 
+    real best_error,current_error;
+
 protected:
     //#####  Protected Member Functions  ######################################
     

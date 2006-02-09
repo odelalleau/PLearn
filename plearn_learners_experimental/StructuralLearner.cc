@@ -106,12 +106,20 @@ void StructuralLearner::declareOptions(OptionList& ol)
                    "Weights of the linear classifier: f(x) = wt x + vt theta x");
     declareOption(ol, "whids", &StructuralLearner::whids, OptionBase::learntoption,
                    "Weights from input to hidden layers (one for each feature group)");
+    declareOption(ol, "vhids", &StructuralLearner::whids, OptionBase::learntoption,
+                   "Weights for the thetahids projections, for the layers (one for each feature group)");
     declareOption(ol, "thetas", &StructuralLearner::thetas, OptionBase::learntoption,
+                   "structure parameter of the linear classifier: f(x) = wt x + vt theta x");
+    declareOption(ol, "thetahids", &StructuralLearner::thetas, OptionBase::learntoption,
                    "structure parameter of the linear classifier: f(x) = wt x + vt theta x");
     declareOption(ol, "start_learning_rate", &StructuralLearner::start_learning_rate, OptionBase::buildoption,
                    "Starting learning rate of the stochastic gradient descent");
     declareOption(ol, "decrease_constant", &StructuralLearner::decrease_constant, OptionBase::buildoption,
                    "Decrease constant of the stochastic learning rate");
+    declareOption(ol, "best_error", &StructuralLearner::best_error, OptionBase::learntoption,
+                   "Best training error, when training model before SVD");
+    declareOption(ol, "current_error", &StructuralLearner::current_error, OptionBase::learntoption,
+                   "Current training error, when training model before SVD");
     declareOption(ol, "auxiliary_task_train_set", &StructuralLearner::auxiliary_task_train_set, OptionBase::buildoption,
                    "Training set for auxiliary task");
     declareOption(ol, "epsilon", &StructuralLearner::epsilon, OptionBase::buildoption,
@@ -134,9 +142,6 @@ void StructuralLearner::declareOptions(OptionList& ol)
                    "Threshold on the probability of the index_O symbol below which the predictor should not abstain");
     declareOption(ol, "n_auxiliary_wordproblems", &StructuralLearner::n_auxiliary_wordproblems, OptionBase::buildoption,
                    "Number of most frequent words that are to be predicted.");
-
-
-
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -308,20 +313,20 @@ void StructuralLearner::build_()
     for(int i=0; i<feats.length(); i++)
         feats[i].resize(1);
 
-    if(auxiliary_task_train_set)
+    if(auxiliary_task_train_set && stage == 0)
         buildTasksParameters(2*n_auxiliary_wordproblems,fls);
     else
         buildTasksParameters(outputsize(),fls);
-
+    
     if(auxiliary_task_train_set)
         buildThetaParameters(fls);
-
-    initializeParams();
-
-    if( auxiliary_task_train_set && auxiliary_indices_left.size()==0) {
-      initWordProblemsStructures();
+    
+    if(stage==0)
+        initializeParams();
+    
+    if( auxiliary_task_train_set && stage==0 && auxiliary_indices_left.size()==0) {
+        initWordProblemsStructures();
     }
-
   }// if we have a train_set
 }
 
@@ -409,8 +414,8 @@ void StructuralLearner::train()
       std::cerr << "StructuralLearner::train() - Training learner for SVD" << std::endl;    
 
       nout = 2*n_auxiliary_wordproblems;
-      real best_error=REAL_MAX;
-      real current_error=REAL_MAX/2;
+      best_error=REAL_MAX;
+      current_error=REAL_MAX/2;
       int it = 0;
       int n_auxiliary_samples = auxiliary_indices_current.length()+auxiliary_indices_left.length();
       int begin_class = 0;
@@ -554,8 +559,6 @@ void StructuralLearner::train()
       }
       
       // Now, using computed theta to bias training
-      // TODO: consider separate_features variable...
-      // TODO: do this for neural network!
       Mat V;
       Vec D;          
       for(int f=0; f<thetas.length(); f++)
@@ -615,8 +618,13 @@ void StructuralLearner::train()
           vs[p] = Mat();
       for(int p=0; p<ws.length(); p++)
           ws[p] = Mat();
+      for(int p=0; p<vhids.length(); p++)
+          vhids[p] = Mat();
+      for(int p=0; p<whids.length(); p++)
+          whids[p] = Mat();
       buildTasksParameters(nout,fls);
       initializeParams();
+      stage++;
   }
 
   while(stage<nstages)
