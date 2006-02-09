@@ -34,6 +34,7 @@
 
 import sys
 import numarray.ieeespecial        as  ieee
+from   plearn.math import isNaN
 from   numarray    import array    as  normal_array
 from   numarray    import sometrue as  normal_sometrue
 from   numarray    import zeros, matrixmultiply, transpose
@@ -107,7 +108,7 @@ class StatsCollector:
         (length,width)= shape(arr)
         initial_n     = self.n[:]          # Keep old n for argmin/argmax
         n             = zeros(width) + length
-        missings      = ieee.isnan(arr)
+        missings      = isNaN(arr)
         nnan          = sum(missings)
         self.n       += n
         self.nnan    += nnan
