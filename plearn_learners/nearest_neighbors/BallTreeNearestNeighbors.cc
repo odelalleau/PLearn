@@ -743,7 +743,7 @@ void BallTreeNearestNeighbors::BallKNN(
             if( dist < d2_sofar )
             {
                 q.push( make_pair(dist, j) );
-                if( q.size() > k )
+                if( int(q.size()) > k )
                 {
                     q.pop();
                     d2_sofar = q.top().first;
