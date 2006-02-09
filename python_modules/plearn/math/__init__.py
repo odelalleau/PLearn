@@ -18,5 +18,15 @@ def floats_are_equal(a, b, numtol=1e-6):
         return abs(a-b) <= numtol
     return abs(a-b) <= numtol*minabs
 
+def isNaN(f):
+    """Return True is f is or contains NaN values"""
+    from numarray import ieeespecial
+    return ieeespecial.mask(f, ieeespecial.NAN)
+
 if __name__ == '__main__':
     print fast_softmax([ 0, 0, 100 ])
+    print
+    print isNaN(float('NaN'))
+    print isNaN(2.0)
+    print isNaN([1.0, float('NaN'), 3.0])
+    print isNaN([1.0, 2.0, 3.0])
