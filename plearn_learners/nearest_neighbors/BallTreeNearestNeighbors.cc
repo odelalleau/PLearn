@@ -743,11 +743,11 @@ void BallTreeNearestNeighbors::BallKNN(
             if( dist < d2_sofar )
             {
                 q.push( make_pair(dist, j) );
-                if( int(q.size()) > k )
-                {
+                int n_found = q.size();
+                if( n_found > k )
                     q.pop();
+                if( n_found >= k )
                     d2_sofar = q.top().first;
-                }
             }
         }
     }
