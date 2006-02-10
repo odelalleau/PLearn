@@ -115,7 +115,7 @@ public:
 index, TVec< TVec<unsigned int> >& theFeatureGroups, char featureMask = 0x1F) const;
 
 void updateFeatures(const Vec& input, const Vec& target,  TVec< TVec<unsigned int> >& theFeatureGroups, char
-featureMask = 0x1F);
+featureMask = 0x1F) const;
 
 
     //virtual void updateDynamicFeatures(hash_map<int, TVec<bool> > token_prediction, int token, int prediction);

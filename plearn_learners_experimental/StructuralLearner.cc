@@ -49,6 +49,17 @@
 #include <vector>
 #include <algorithm>
 
+// PA - used for debugging
+#define USE_PA_DEBUG
+
+#ifdef USE_PA_DEBUG
+#define PA_DEBUG(x) x
+#else
+#define PA_DEBUG(x)
+#endif
+
+
+
 // *** Used to determine most frequent words in auxiliary set ***
 class freqCount {
 
@@ -959,22 +970,200 @@ void StructuralLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
             pb->update(i);
     }
 
+    // *** Test procedure using Viterbi decoding
+    // A row's cell encodes for each current tag and previous tag the best score to get there.
+    // a row index is computed as (tag-0) * nout + (tag-1)
+    // Not yet functional
+    // todo consider sentences independently (or watchout for underflow)
+    // being at j means predicting class "j/nout" when the previous prediction is "j%nout"
+    // we must look at all the possibilities for prediction predAtMinus2 and find the best
+
     if(false)
     {
-        int index;
-        real neg_log_seq_output;
+        // *** Table width is nout^2 - index is computed as (tag-0) * nout + (tag-1)
         int nout = outputsize();
-        viterbi_table.resize(testset.length()+1, 2*nout);
-        preds.fill(MISSING_VALUE);
+        viterbi_table.resize(100, nout*nout); // HACK - assuming a sentence is not over 100 words
 
-        // Initialize table
+        real neg_log_seq_output;
+        int index;
+
+        // ** Go through all examples
+        int i=0;    // index on the test examples
+        int ii=0;   // index on the current sentence's test examples
+        int iim1;   // ii minus 1
+
+        while (i<l) // ie while we still have examples decode a sentence
+        {
+
+          // * A) Start of a sentence -> predictions independent of 2 previous tags
+
+          testset.getExample(i, input, target, weight);
+          preds.fill(MISSING_VALUE);
+          computeFeatures(input,preds,0,0,feats);
+          computeOutputWithFeatures(feats,output);
+          ii=0;   // reposition current sentence index
+
+          // - Sanity check - really BOS?
+          // HACK input[0] and input[7] are the left context wordtags 
+          PA_DEBUG( if( !( is_missing(input[0]) && is_missing(input[7]) ) ) cerr << __FILE__ << __LINE__ << "error - not a BOS!" <<endl;)
+
+          // first row
+          for(int j=0; j<viterbi_table.width(); j++)
+          {
+              viterbi_table(ii,j).first = -safeflog( output[j/nout] );
+              viterbi_table(ii,j).second = -1;
+          }
+
+          // * B) while next word is not BOS
+          // Could also use "." if(viterbi_table(i-1,j).second/nout == index_dot)
+
+          while( !( is_missing(input[0]) && is_missing(input[7]) ) )  {
+
+            i++;
+            ii++;
+            iim1=ii-1;
+
+            testset.getExample(i, input, target, weight);
+            preds.fill(MISSING_VALUE);
+            computeFeatures(input,preds,0,0,feats);
+
+            // use previous row entries to compute the current one's
+            // TODO save a couple ops by segmenting this in two loops
+            for(int j=0; j<viterbi_table.width(); j++)
+            {
+              // Set previous predictions
+              if( i>1 )  {
+                preds[0] = j%nout;
+              } else  {
+                preds[0] = MISSING_VALUE;
+              }
+              preds[1] = j/nout;
+
+              updateFeatures(input,preds,feats);
+              computeOutputWithFeatures(feats,output);
+
+              // this left prediction context has nout possible current predictions
+              for( int k=0; k<nout; k++)
+              {
+                  index = j/nout + k*nout;  // current row index predicting k with p-1 = j/nout
+
+                  neg_log_seq_output = (-safeflog(output[k]) + viterbi_table(iim1,j).first*iim1)/(ii); // score of predicting k with p-2 = j%nout and p-1 = j/nout
+
+                  if(viterbi_table(ii,index).first > neg_log_seq_output)
+                  {
+                      viterbi_table(i,index).first = neg_log_seq_output;
+                      viterbi_table(i,index).second = j;
+                  }
+              }
+            } // for the previous row's elements
+          } //while haven't reached a new sentence
+
+          // * C) Decode from table
+          // 1) search last row for best score
+          real best_score = viterbi_table(ii,0).first;
+          int best_index = 0;
+
+          for(int j=1; j<viterbi_table.width(); j++)
+          {
+            if( viterbi_table(ii,j).first < best_score )  {
+              best_score = viterbi_table(ii,j).first;
+              best_index = j;
+            }
+          }
+
+          // 2) Retrace best tags - will be in reversed order
+          vector<int> v_predictions_r;
+
+          for(int iii ; iii >=0; iii--)  {
+            v_predictions.push_back( best_index/nout );
+            best_index = viterbi_table(iii,best_index).second;
+          }
+
+          vector<int> v_predictions;
+
+          vector<int>::reverse_iterator ritr = l_predictions_r.begin();
+          while( ritr != l_predictions_r.end() )  {
+            v_predictions.push_back( *ritr );
+            ritr++;
+          }
+
+          // 3) Compute cost - TODO needs some nicer coding
+          for(int j=i-ii; j<i; j++)
+          {
+            testset.getExample(j, input, target, weight);
+
+            int jj=j-(i-ii);
+/*
+            // Set previous predictions
+            if( jj>1 )  {
+              preds[0] = %nout;
+            } else  {
+              preds[0] = MISSING_VALUE;
+            }
+            if 
+            preds[1] = j/nout;
+
+
+              computeFeatures(input,target,-1,i,feats);
+              computeOutputWithFeatures(feats,output,auxiliary_task_train_set);
+              computeCostsFromOutputs(input,output,target,costs);
+              //computeOutputAndCosts(input,target,output,costs);
+        
+              // TODO: update dynamic feature
+              //updateDynamicFeatures(token_prediction_train,input[3*2],target[2]);
+        
+              if(testoutputs)
+                  testoutputs->putOrAppendRow(i,output);
+        
+              if(testcosts)
+                  testcosts->putOrAppendRow(i, costs);
+        
+              if(test_stats)
+                  test_stats->update(costs,weight);
+        
+              if(report_progress)
+                  pb->update(i);*/
+          }
+
+
+          // Go to next sentence
+          v_predictions.clear();
+          v_predictions_r.clear();
+          i++;
+
+
+          // Decode from table
+  /*      for(int i=0; i<l; i++)
+        {
+            if(testoutputs)
+                testoutputs->putOrAppendRow(i,output);
+
+            if(testcosts)
+                testcosts->putOrAppendRow(i, costs);
+
+            if(test_stats)
+                test_stats->update(costs,weight);
+
+            if(report_progress)
+                pb->update(i);
+        }
+*/
+
+
+/*        // *** Fill first row
+
         testset.getExample(0, input, target, weight);
+        preds.fill(MISSING_VALUE);
         computeFeatures(input,preds,0,0,feats);
+        computeOutputWithFeatures(feats,output);
+
         for(int j=0; j<viterbi_table.width(); j++)
         {
             viterbi_table(0,j).first = -safeflog(output[j/nout]);
             viterbi_table(0,j).second = -1;
         }
+
+
         // Compute table
         for(int i=1; i<l; i++)
         {
@@ -982,10 +1171,12 @@ void StructuralLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
             computeFeatures(input,preds,0,0,feats);
             for(int j=0; j<viterbi_table.width(); j++)
             {
-                if( j>1) preds[0] = j%nout;
+                if( i>1) preds[0] = j%nout;
                 else preds[0] = MISSING_VALUE;
-                preds[1] = j/nout;
-                //updateFeatures(input,preds,feats);
+                preds[1] = j/nout;                                          //!!!!!!!!!!
+                // Take into account "."
+                // if(viterbi_table(i-1,j).second/nout == index_dot)
+                updateFeatures(input,preds,feats);
                 computeOutputWithFeatures(feats,output);
                 for( int k=0; k<nout; k++)
                 {
@@ -1014,11 +1205,13 @@ void StructuralLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
 
             if(report_progress)
                 pb->update(i);
-        }
-    }
+        }*/
+    } // while still examples
+  } // if viterbi decoding
 
-    if(pb)
-        delete pb;
+  if(pb)
+    delete pb;
+
 }
 
 void StructuralLearner::computeOutputWithFeatures(TVec<TVec<unsigned int> >& feats, Vec& output, bool use_theta, int begin_class, int end_class) const
@@ -1501,7 +1694,7 @@ featureMask) const
 * @todo 
 **/
 void StructuralLearner::updateFeatures(const Vec& input, const Vec& target,  TVec< TVec<unsigned int> >& theFeatureGroups, char
-featureMask)  
+featureMask) const
 {
 
     // *** Label features ***
