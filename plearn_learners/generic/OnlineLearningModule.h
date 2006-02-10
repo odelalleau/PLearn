@@ -55,7 +55,8 @@ namespace PLearn {
  *    * map an input to an output
  *    * modify itself when told in what direction the output should have 
  *      changed (i.e. output gradient),  while optionally giving back the 
- *      information about how the input should also have changed (i.e. input gradient)
+ *      information about how the input should also have changed 
+ *      (i.e. input gradient)
  *
  * @todo write all Object methods, compile, and test somehow
  *
@@ -76,6 +77,11 @@ public:
 
     //! output size
     int output_size;
+
+    //! compute simpler estimation of diagonal of the input Hessian matrix,
+    //! using only the first (positive) part in:
+    //! d²C/dx² ~= d²C/dy² (dy/dx)² [+ dC/dy d²y/dx²]
+    bool estimate_simpler_diag_hessian;
 
     //! 
     /**

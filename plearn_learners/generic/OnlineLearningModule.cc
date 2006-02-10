@@ -58,7 +58,8 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
 
 OnlineLearningModule::OnlineLearningModule() :
     input_size(-1),
-    output_size(-1)
+    output_size(-1),
+    estimate_simpler_diag_hessian( false )
 {
 }
 
@@ -119,6 +120,15 @@ void OnlineLearningModule::declareOptions(OptionList& ol)
     declareOption(ol, "output_size", &OnlineLearningModule::output_size,
                   OptionBase::buildoption,
                   "Size of the output");
+
+    declareOption(ol, "estimate_simpler_diag_hessian",
+                  &OnlineLearningModule::estimate_simpler_diag_hessian,
+                  OptionBase::buildoption,
+                  "Should we compute a simpler estimation of diagonal of the"
+                  " input Hessian matrix,\n"
+                  "using only the first (positive) term in:\n"
+                  "  d²C/dx² ~= d²C/dy² (dy/dx)² [+ dC/dy d²y/dx²]\n");
+
 
     declareOption(ol, "expdir", &OnlineLearningModule::expdir, OptionBase::buildoption, 
                   "Path of the directory associated with this module, in which\n"
