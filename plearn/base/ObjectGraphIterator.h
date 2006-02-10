@@ -495,6 +495,24 @@ void memfun_broadcast_optname(Object* o, U (T::*func)(V,W,X),
 }
 
 
+/**
+ *  @function setoption_broadcast
+ *  @brief    Broadcast a call to setOption only for specific classes
+ *
+ *  This function recursively calls Object::setOption (with a constant
+ *  option-name and option-value), but only for those objects (in the graph
+ *  induced by ObjectGraphIterator) of a class derived from that specified.
+ *
+ *  @param o             Root of the graph
+ *  @param class-name    String representation of the class to filter on
+ *  @param option-name   Name of the option to set
+ *  @param option-value  Value of the option to set
+ */
+void setoption_broadcast(const Object* o, const string& class_name,
+                         const string& option_name, const string& option_value,
+                         ObjectGraphIterator::TraversalType tt =
+                         ObjectGraphIterator::DepthPreOrder);
+
 } // end of namespace PLearn
 
 #endif

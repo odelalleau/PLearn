@@ -255,6 +255,18 @@ void ObjectGraphIterator::buildTraversalGraph(const Object* root,
     }
 }    
 
+
+//#####  setoption_broadcast  #################################################
+
+void setoption_broadcast(const Object* o, const string& class_name,
+                         const string& option_name, const string& option_value,
+                         ObjectGraphIterator::TraversalType tt)
+{
+    ObjectGraphIterator grit(o, tt, false, class_name), grend;
+    for ( ; grit != grend ; ++grit)
+        const_cast<Object*>(*grit)->setOption(option_name, option_value);
+}
+
 } // end of namespace PLearn
 
 
