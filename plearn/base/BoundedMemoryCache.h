@@ -88,11 +88,16 @@ public:
     {}
 
     inline void clear() { 
+/*
         int mm = max_memory;
         max_memory = 0;
         removeExcess(); // this is mostly useful when removeExcess is redefined, e.g. in sub-class Cache
         max_memory = mm;
         elements.clear();
+*/
+        removeAll(); // this is mostly useful when removeAll is redefined, e.g. in sub-class Cache
+        if (elements.size() != 0)
+            PLERROR("Weird");
     }
 
     //! Try to get value associataed with key. If not in cache return 0, else return pointer to value.
@@ -227,6 +232,27 @@ protected:
 #endif
         }
     }
+
+    //! remove all elements
+    inline virtual void removeAll()
+    {
+        while (n_elements)
+        {
+            KeyType& key = doubly_linked_list->last->entry;
+//            current_memory -= sizeInBytes(elements[key]);
+            elements[key].second=0; elements.erase(key);
+            doubly_linked_list->removeLast();
+            n_elements--;
+#ifdef BOUNDCHECK
+            if (!doubly_linked_list->last || doubly_linked_list->last->next)
+                PLERROR("something wrong with last element of doubly linked list!");
+            if (dbg)
+                verifyInvariants();
+#endif            
+        }
+        current_memory = 0;
+    }
+
 };
 
 } // end of namespace PLearn

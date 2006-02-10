@@ -81,7 +81,7 @@ public:
     PStream::mode_t file_format; // possible values are: PStream::{raw,plearn}_{ascii,binary}
 
     inline Cache(string dir = "cache", int max_memory_=0, bool singlefile=false) 
-        : BoundedMemoryCache<KeyType,ValueType>(max_memory_), single_file(singlefile), files_directory(dir), file_format(PStream::raw_ascii)
+        : BoundedMemoryCache<KeyType,ValueType>(max_memory_), single_file(singlefile), files_directory(dir), file_format(PStream::plearn_ascii)
     {}
 
     //! Try to get value associataed with key. If not in cache (either memory or disk) return 0, 
@@ -181,6 +181,30 @@ protected:
             BoundedMemoryCache<KeyType,ValueType>::doubly_linked_list->removeLast();
             BoundedMemoryCache<KeyType,ValueType>::n_elements--;
         }
+
+        int left_elements = BoundedMemoryCache<KeyType,ValueType>::n_elements;
+    }
+
+    //! remove all elements
+    inline void removeAll()
+    {
+        while (BoundedMemoryCache<KeyType,ValueType>::n_elements)
+        {
+            KeyType& key = BoundedMemoryCache<KeyType,ValueType>::doubly_linked_list->last->entry;
+
+            // STORE THE ELEMENT TO BE DELETED ON DISK:
+            pair<ValueType,DoublyLinkedListElement<KeyType>*> v = BoundedMemoryCache<KeyType,ValueType>::elements[key];
+            saveValue(key, v.first);
+
+//            BoundedMemoryCache<KeyType,ValueType>::current_memory -= sizeInBytes(BoundedMemoryCache<KeyType,ValueType>::elements[key]);
+            v.second=0;  // this is just to help debugging, really, to help track wrong pointers
+            BoundedMemoryCache<KeyType,ValueType>::elements.erase(key);
+            BoundedMemoryCache<KeyType,ValueType>::doubly_linked_list->removeLast();
+            BoundedMemoryCache<KeyType,ValueType>::n_elements--;
+        }
+
+        BoundedMemoryCache<KeyType,ValueType>::current_memory = 0;
+        int left_elements = BoundedMemoryCache<KeyType,ValueType>::n_elements;
     }
 
 protected:
