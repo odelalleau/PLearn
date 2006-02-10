@@ -1,0 +1,31 @@
+#  pytest add -n PYTEST_INTERNAL --program-type GlobalProgram --program-name python --arguments INTERNAL_SCRIPT.py --resources INTERNAL_SCRIPT.py
+
+
+#  pytest results
+
+
+#  pytest run
+
+
+#  pytest vc_add
+
+
+#  svn commit -m "PYTEST INTERNAL TEST"
+
+
+#
+#  shutil.rmtree
+#
+#  svn up
+
+
+#  pytest run
+
+
+#  svn remove --force .pytest pytest.config
+
+
+#  svn commit -m "PYTEST INTERNAL TEST"
+
+
+['.svn']

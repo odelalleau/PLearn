@@ -17,6 +17,9 @@ build_list = [
     # Directory of results have a new structure that will ease
     # parallelization
     (   "0.9.2",   4550  ) 
+
+    # New 'category' option in test instances.
+    (   "0.9.3",   4959  ) 
     ]
 
 def pytest_version( ):

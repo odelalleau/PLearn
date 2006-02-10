@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-# toldiff
-# Copyright (C) 2005 Pascal Vincent
+# pldiff
+# Copyright (C) 2006 Christian Dorion
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are met:
@@ -30,56 +30,45 @@
 #
 #  This file is part of the PLearn library. For more information on the PLearn
 #  library, go to the PLearn Web site at www.plearn.org
+"""PLDiff is a script meant to compare PLearn-stuffed directories recursively.
 
+Usage: pldiff <former> <later> [--option_i=option_value_i]*
+
+Both <former> and <later> must be files or valid directories which would be be
+compared recursively. Recursively-empty directories and links will be
+neglected.
+
+Type 'pldiff -h' for help on options.
 """
-Usage: toldiff <file1> <file2> [<numeric_tolerance>] [<whitespace_tolerance>]
-
-toldiff compares two files while being tolerant to small relative
-differences between ascii numbers.
-
-If the two files are considered the same, the script outputs nothing.
-If there are noticeable differences, the script will output the
-character positions before which they appear to differ.
-
-numeric_tolerance (tol) is 1e-6 by default.
-
-If min(|a|,|b|)<1 we use the absolute difference,
-i.e. a and b are considered to differ if |a-b| > tol.
-
-Otherwise, we use relative difference, i.e. a and b are
-considered to differ if |a-b|/min(|a|,|b|) > tol.
-
-whitespace_tolerance is 0 by default
-
-If whitespace_tolerance is >0 then sequences of blanks (i.e. space, tab,
-newline, carriage return) are considered equivalent if their lengths do
-not differ by more than whitespace_tolerance characters.
-"""
-
 import sys
+from optparse import OptionParser
+from plearn.utilities import pldiff
 
-from plearn.utilities.pldiff import toldiff
+parser = OptionParser( usage = __doc__ )
 
-args = sys.argv[1:] # ignore program name
-if len(args)<2:
+parser.add_option( '-p', '--precision',
+                   default = "1e-06",                   
+                   help = "Tolerance for float numbers' comparison" )
+
+parser.add_option( '--plearn-exec',
+                   default = "plearn_tests",                   
+                   help = "By default, PLearn's vmats and serialization files are compared using "
+                   "'plearn_tests'. If provided, the --plearn-exec option value will be understood "
+                   "to be the plearn-compliant executable to use in place of 'plearn_tests'. Make "
+                   "sure your program is compiled and accepts --no-version and --verbosity arguments"
+                   "(they will if built over plearn_main.cc)" )
+
+options, targets = parser.parse_args()
+
+if len(targets) != 2:
     print __doc__
     sys.exit()
+    
+pldiff.set_plearn_exec(options.plearn_exec)
+diff_result = pldiff.pldiff(targets[0], targets[1], float(options.precision))
 
-filename1 = args[0]
-filename2 = args[1]
-try:
-    numtol = float(args[2])
-except IndexError:
-    numtol = 1e-6
-try:
-    blanktol = int(args[3])
-except IndexError:
-    blanktol = 0
-
-err = toldiff(filename1, filename2, numtol, blanktol)
-if err:
-    print err
-    # Uncomment these lines if you want a more helpful output when toldiff fails.
-    # print 'Output of a standard diff command is:'
-    # os.system('diff -u %s %s' % (filename1, filename2))
-        
+if diff_result:
+    print
+    for d in diff_result:
+        print d
+    

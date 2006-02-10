@@ -1,10 +1,13 @@
-__version_id__ = "$Id: IntelligentDiff.py 4080 2005-09-13 13:49:47Z tihocan $"
+"""PLEASE DO NOT EDIT, THIS MODULE WILL SOON BE DEPRECATED!!!
 
+Contact dorionc@apstat.com for details.
+"""
 import copy, os, shutil, string, sys
 
 from   programs                      import PyTestError
 
 import plearn.utilities.ppath        as     ppath
+import plearn.utilities.moresh       as     moresh
 import plearn.utilities.toolkit      as     toolkit
 from   plearn.utilities.verbosity    import vprint
 
@@ -145,7 +148,7 @@ class IntelligentDiff:
                 )
             
         elif other_is:
-            if toolkit.is_recursively_empty(other):
+            if moresh.is_recursively_empty(other):
                 vprint("Empty directory %s was skipped." % other, 2)
             else:
                 self.differences.append(

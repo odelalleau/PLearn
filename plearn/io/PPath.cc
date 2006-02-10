@@ -371,6 +371,7 @@ extern "C" void cygwin_conv_to_win32_path(const char *path,
 // however keep the '\' version. Under Unix, the following simply copy the
 // path value in the current instance.
 PPath::PPath(const string& path_)
+    : _protocol("")
 {
     // Empty path.
     if ( path_.empty() ) 
@@ -829,7 +830,7 @@ PPath PPath::addProtocol()  const
 ////////////////////
 PPath PPath::removeProtocol()  const
 {
-    if ( _protocol.empty() )
+    if ( _protocol.length()==0 )
         return PPath(*this);
     PPath no_protocol;
     // Avoid a call to the PPath constructor from a string.

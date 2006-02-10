@@ -161,7 +161,7 @@ class Compilable(PyTestObject):
     
     def compile(self):
         if Compilable._compilation_status.has_key(self._path):
-            return
+            return Compilable._compilation_status[self._path]
         
         directory_when_called = os.getcwd()
         os.chdir( self._processing_directory )

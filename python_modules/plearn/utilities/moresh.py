@@ -1,5 +1,6 @@
 import os
 from plearn.utilities import ppath
+from plearn.utilities.toolkit import exempt_list_of, re_filter_list
 
 DIR_STACK = []
 
@@ -11,6 +12,84 @@ def cd( path = None ):
     if path is None:
         path = ppath.ppath('HOME')
     os.chdir( path )
+
+def compare_trees(former, later, ignoredirs_re=["\.svn", ".\.metadata"]):
+    """Compare the directory tree starting at \I{former} to the one starting at I{later}.
+    
+    Returns tree lists containing 
+
+        1) (former_file, later_file) pairs of paths of common files
+        2) paths of directories or files unique to former
+        3) paths of directories or files unique to later
+
+    Paths in the lists will be relative or absolute following the form in
+    which I{former} and I{later} are.
+    """
+    assert os.path.isdir(former)
+    assert os.path.isdir(later)
+
+    common_files = []
+    unique_to_former = []
+    unique_to_later = []
+    for former_dirpath, former_subdirs, former_files in os.walk(former):
+        later_dirpath = former_dirpath.replace(former, later, 1)
+        later_subdirs, later_files = split_listdir(later_dirpath)
+        
+        # Filters the subdirs given the 'ignoredirs' argument
+        re_filter_list(former_subdirs, ignoredirs_re)
+        re_filter_list(later_subdirs, ignoredirs_re)
+
+        ######  Directories  #########################################################
+
+        uniquedirs = []
+        for subdir in former_subdirs:
+            if subdir in later_subdirs:                
+                # can be modified without effects, unlike former_subdirs
+                later_subdirs.remove(subdir)
+            else:
+                uniquedirs.append(subdir)
+                unique_to_former.append(os.path.join(former_dirpath, subdir))
+
+        # Avoiding recursion in 'uniquedirs'
+        exempt_list_of(former_subdirs, uniquedirs)
+        
+        # later_subdirs should now contain only dirs that were not in former_subdirs
+        for subdir in later_subdirs:
+            unique_to_later.append(os.path.join(later_dirpath, subdir))
+
+        ######  Files  ###############################################################
+
+        for fname in former_files:
+            if fname in later_files:
+                later_files.remove(fname)
+                common_files.append(( os.path.join(former_dirpath,fname),
+                                      os.path.join(later_dirpath,fname) ))
+
+            else: # if not os.path.islink(fname):
+                unique_to_former.append(os.path.join(former_dirpath, fname))
+
+        # later_files should now contain only files that were not in former_files
+        for fname in later_files:
+            unique_to_later.append(os.path.join(later_dirpath, fname))
+
+    return common_files, unique_to_former, unique_to_later
+
+def is_recursively_empty(directory):
+    """Checks if the I{directory} is a the root of an empty hierarchy.
+
+    @param directory: A valid directory path
+    @type  directory: StringType
+
+    @return: True if the I{directory} is a the root of an empty
+    hierarchy. The function returns False if there exists any file or
+    link that are within a subdirectory of I{directory}.
+    """
+    for path in os.listdir(directory):
+        relative_path = os.path.join(directory, path)
+        if ( not os.path.isdir(relative_path) or 
+             not is_recursively_empty(relative_path) ):
+            return False
+    return True
     
 def ls( path = None ):
     """Emulate shell's ls --- forwards the call to os.listdir().
@@ -95,4 +174,40 @@ def softlink( src, dest ):
             os.symlink( src, dest )
         return True
     return False
+
+def split_listdir(path):
+    """Splits the content of os.listdir() in dirs and nondirs lists."""
+    dirs = []
+    nondirs = []
+    for name in os.listdir(path):
+        if os.path.isdir(os.path.join(path,name)):
+            dirs.append(name)
+        else:
+            nondirs.append(name)
+    return dirs, nondirs
+
+
+if __name__ == "__main__":
+    from plearn.utilities.ppath import home
+    testdir = os.path.join(home,"PLearn/plearn_learners/distributions/test/.pytest/PL_GaussMix_Spherical")
+    os.chdir(testdir)
+    current = os.getcwd()
+    print current
+
+    print "#####  split_listdir  #######################################################"
+    print split_listdir(current)
+    assert os.getcwd()==current
+    print "#####  end split_listdir  ###################################################"
+
+    print "#####  compare_trees  #######################################################"
+    for res in compare_trees("expected_results", "run_results"):
+        print res
+    assert os.getcwd()==current
+
+    cd()
+    print
+    # Absolute version
+    for res in compare_trees(os.path.join(testdir, "expected_results"), os.path.join(testdir, "run_results")):
+        print res    
+    print "#####  end compare_trees  ###################################################"
 

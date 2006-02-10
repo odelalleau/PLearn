@@ -5,8 +5,7 @@ submodule. If a considerable number of functions contained in this
 module seems to manage similar tasks, it is probably time to create a
 I{similar_tasks.py} L{utilities} submodule to move those functions to.
 """
-__version_id__ = "$Id$"
-import inspect, os, popen2, random, string, sys, time, types
+import inspect, os, popen2, string, sys, time, types
 
 def boxed_lines(s, box_width, indent=''):
     if len(s) <= box_width:
@@ -132,6 +131,7 @@ def date_time_string(date_separator = '_', time_separator = ':', \
 
 def date_time_random_string(date_separator = '_', time_separator = ':', \
                             date_time_separator = '_'):
+    import random
     s = date_time_string(date_separator, time_separator, date_time_separator)
     s += "_%d" % random.randint(1e03, 1e09)    
     return s
@@ -251,23 +251,6 @@ def isvmat( file_path ):
     (base,ext) = os.path.splitext(file_path)
     return ext in [ '.amat', '.dmat', '.pmat','.vmat' ]
 
-def is_recursively_empty(directory):
-    """Checks if the I{directory} is a the root of an empty hierarchy.
-
-    @param directory: A valid directory path
-    @type  directory: StringType
-
-    @return: True if the I{directory} is a the root of an empty
-    hierarchy. The function returns False if there exists any file or
-    link that are within a subdirectory of I{directory}.
-    """
-    for path in os.listdir(directory):
-        relative_path = os.path.join(directory, path)
-        if ( not os.path.isdir(relative_path) or 
-             not is_recursively_empty(relative_path) ):
-            return False
-    return True
-
 def keep_a_timed_version( path ):
     backup = "%s.%s" % ( path, date_time_string() )
     os.system( 'mv %s %s' % ( path, backup ) ) 
@@ -346,6 +329,28 @@ def quote_if(s):
     if isinstance(s, types.StringType):
         return quote(s)
     return s
+
+def re_filter_list(strlist, undesired_regexp):
+    """Remove all elements in the I{strlist} matching any I{undesired_regexp}.
+
+    @param strlist: The list to clean.
+    @type  strlist: list of strings
+
+    @param undesired_regexp: re pattern(s)
+    @type  undesired_values: list of strings
+    """
+    import re
+    if not isinstance(undesired_regexp, types.ListType):
+        undesired_regexp = [undesired_regexp]
+
+    patterns = [ re.compile(u) for u in undesired_regexp ]
+
+    check = strlist[:]
+    for elem in check:
+        for p in patterns:
+            if p.search(elem):
+                strlist.remove(elem)
+                continue
 
 def short_doc(obj):
     return doc(obj, True)

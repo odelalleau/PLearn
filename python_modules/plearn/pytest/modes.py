@@ -56,22 +56,17 @@ class PyTestMode(Mode):
         target_options = OptionGroup(parser, "Target Options", "")
 
         target_options.add_option( "--all",
-                                    action="store_true", default=False,
-                                    help= "Run all tests found in subdirectories of directories in"
-                                    "plbranches. If some targets are provided, these will be ignored."
-                                    )
+                                   action="store_true", default=False,
+                                   help= "Run all tests found in subdirectories of directories in"
+                                   "plbranches. If some targets are provided, these will be ignored."
+                                   )
 
         target_options.add_option( "-R", "--recursive",
-                                    action="store_true", default=False,
-                                    help = 'Process all targets recursively. If some target is '
-                                    'the subdirectory to another target, it will be ignored, i.e. '
-                                    'the whole hierarchy will be tested only once.'
-                                    ) 
-
-        target_options.add_option( '-n', '--test-name',
-                                    help='Restricts the current mode to the named test.',
-                                    default='' )
-
+                                   action="store_true", default=False,
+                                   help = 'Process all targets recursively. If some target is '
+                                   'the subdirectory to another target, it will be ignored, i.e. '
+                                   'the whole hierarchy will be tested only once.'
+                                   ) 
         return target_options
     target_options = classmethod(target_options)
 
@@ -90,15 +85,31 @@ class PyTestMode(Mode):
         return testing_options
     testing_options = classmethod( testing_options )
 
-    def option_groups(cls, parser):        
-        return [ cls.target_options(parser) ]
-    option_groups = classmethod(option_groups)
+    def restriction_options(cls, parser):
+        restriction_options = OptionGroup(parser, "Restriction Options", "")
+
+        restriction_options.add_option( '-n', '--test-name',
+                                   help='Restricts the current mode to the named test.',
+                                   default='' )
+        
+        restriction_options.add_option( '--category',
+                                   help='Restricts the current mode to the named category of tests. '
+                                   'Note that the value of this option is neglected if --test-name '
+                                   'is provided.',
+                                   default='General' )
+
+        return restriction_options
+    restriction_options = classmethod(restriction_options)
+
 
     #
     #  Instance methods
     #
     def __init__(self, targets, options):
         Mode.__init__(self, targets, options)
+
+        # Managing the test-name and category restrictions
+        self.restrictions( )
 
         # --all: Run all tests found in subdirectories of directories in
         # plbranches. If some targets are provided, these will be ignored.
@@ -132,8 +143,13 @@ class PyTestMode(Mode):
                 ignored.extend( [ '    '+ign for ign in ignored_directories ] )
                 vprint.highlight( ignored, highlighter='x' ) 
 
+    def restrictions(self):
+        """Default --test-name and --category management."""
         if hasattr(self.options, 'test_name') and self.options.test_name:
             Test.restrictTo(self.options.test_name)
+
+        elif hasattr(self.options, 'category'):
+            Test.restrictToCategory(self.options.category)
 
 class ignore(PyTestMode):
     """Causes the target hierarchy to be ignored by PyTest.
@@ -151,10 +167,6 @@ class ignore(PyTestMode):
             return True
         return False
     is_ignored = staticmethod(is_ignored)
-
-    def option_groups(cls, parser):        
-        return []
-    option_groups = classmethod(option_groups)
 
     def requires_config_parsing(cls):
         return False
@@ -184,7 +196,9 @@ class list(PyTestMode):
                                  help= "The list provided will contain only enabled tests." 
                                  )
         
-        return [ list_options ] + PyTestMode.option_groups(parser)
+        return [ list_options,
+                 cls.target_options(parser),
+                 cls.restriction_options(parser) ]
     option_groups = classmethod( option_groups )
 
     #
@@ -233,12 +247,16 @@ class locate(list):
 
 class prune( PyTestMode ):
     """Removes all pytest directories within given test directories."""    
+    def option_groups(cls, parser):
+        return [ cls.target_options(parser) ]
+    option_groups = classmethod(option_groups)
+
     def __init__( self, targets, options ):
         super( prune, self ).__init__( targets, options )
         
         answer = ""
         while not answer in ['yes', 'no']:
-            answer = raw_input( "This mode removes all pytest directories within "
+            answer = raw_input( "This mode removes all .pytest directories within "
                                 "given test directories. Are you sure you want to "
                                 "continue (yes or no): " )
 
@@ -248,14 +266,19 @@ class prune( PyTestMode ):
 
         
         for ( family, tests ) in Test._families_map.iteritems():
-            fam_pytest_dir = os.path.join( family, "pytest" )
+            fam_pytest_dir = os.path.join( family, ".pytest" )
             
             if os.path.exists( fam_pytest_dir ):
                 os.chdir( family )
-                shutil.rmtree( "pytest" )
+                shutil.rmtree( ".pytest" )
 
 #TO_BE_ADDED: class report(PyTestMode):
 #TO_BE_ADDED:     """Test diagnosis."""
+#TO_BE_ADDED:     def option_groups(cls, parser):
+#TO_BE_ADDED:         return [ cls.target_options(parser),
+#TO_BE_ADDED:                  cls.restriction_options(parser) ]
+#TO_BE_ADDED:     option_groups = classmethod(option_groups)
+#TO_BE_ADDED:     
 #TO_BE_ADDED:     def __init__(self, targets, options):
 #TO_BE_ADDED:         super(report, self).__init__(targets, options)
 #TO_BE_ADDED: 
@@ -278,6 +301,11 @@ class prune( PyTestMode ):
 
 class vc_add( PyTestMode ):
     """Add PyTest's config file and results to version control."""
+    def option_groups(cls, parser):
+        return [ cls.target_options(parser),
+                 cls.restriction_options(parser) ]
+    option_groups = classmethod(option_groups)
+
     def __init__( self, targets, options ):
         super(vc_add, self).__init__(targets, options)
         
@@ -300,13 +328,24 @@ class vc_add( PyTestMode ):
                     )
 
 class FamilyConfigMode(PyTestMode):
+    def option_groups(cls, parser):
+        restriction_options = OptionGroup(parser, "Restriction Options", "")
+
+        restriction_options.add_option( '-n', '--test-name',
+                                   help='Restricts the current mode to the named test.',
+                                   default='' )
+        
+        return [ cls.target_options(parser),
+                 restriction_options ]
+    option_groups = classmethod(option_groups)
+    
     def __init__( self, targets, options ):
         super( FamilyConfigMode, self ).__init__( targets, options )
 
         # Provide subclasses the occasion to process test after loading but
         # before writing back the config file. Intended for more 'general'
         # use than test_hook() which applies to a sole given test.
-        self.setup(targets, options)
+        self.setup()
         
         for (family, tests) in Test._families_map.iteritems():
             config_path  = config_file_path( family )
@@ -318,25 +357,26 @@ class FamilyConfigMode(PyTestMode):
             config_text  = ( '"""Pytest config file.\n\n%s\n"""'% toolkit.doc(Test) )
 
             for test in tests:
-                self.test_hook( test ) 
+                self.test_hook( test )
                 config_text += "\n%s\n" % str( test )
 
             config_file.write(config_text)
             config_file.close()    
 
-    def setup(self, targets, options):
+    def setup(self):
         """For subclass use.
 
         Provide subclasses the occasion to process test after loading but
         before writing back the config file. Intended for more 'general'
-        use than test_hook() which applies to a sole given test."""
+        use than test_hook() which applies to a sole given test.
+        """
         pass
 
     def test_hook(self, test):
         raise NotImplementedError
 
-    def restrictTo(self, test_name):
-        self.test_name = test_name
+    def restrictions(self):
+        pass
     
 class add(FamilyConfigMode):
     """Adds a test in a given directory.
@@ -379,11 +419,13 @@ class add(FamilyConfigMode):
                                  help="Comma separated list of resources to be used by the test." 
                                  )
 
-        return [ add_options ] + PyTestMode.option_groups(parser)
+        return [ add_options,
+                 cls.target_options(parser),
+                 cls.restriction_options(parser) ]
     option_groups = classmethod( option_groups )
 
 
-    def setup(self, targets, options):
+    def __init__(self, targets, options):
         test_name = options.test_name
         if test_name == '':
             test_name = 'MANDATORY_TEST_NAME' 
@@ -396,11 +438,16 @@ class add(FamilyConfigMode):
         if options.resources != "":                 
             resources = options.resources.split(',')
         
-        # Caught by Test's instances management         
-        Test( name=test_name, program=program,
-              arguments=options.arguments,
-              resources=resources )              
-                
+        # Caught by Test's instances management        
+        self._added_test = \
+            Test( name=test_name, category=options.category,
+                  program=program, arguments=options.arguments,
+                  resources=resources )              
+        super(add, self).__init__(targets, options)
+
+    def setup(self):
+        pass
+    
     def test_hook(self, test):
         pass
     
@@ -410,15 +457,17 @@ class disable(FamilyConfigMode):
     The disabled tests can be restored (L{enable mode<enable>}) afterwards.
     """
     def test_hook(self, test):
-        if self.test_name=="" or self.test_name==test.name:
+        test_name = self.options.test_name
+        if test_name=="" or test_name==test.name:
             test.disabled = True
 
 class enable(FamilyConfigMode):
     """Enables disabled (L{disable mode<disable>}) tests."""
     def test_hook(self, test):
-        if self.test_name=="" or self.test_name==test.name:
+        test_name = self.options.test_name
+        if test_name=="" or test_name==test.name:
             test.disabled = False
-
+            
 class update(FamilyConfigMode):
     """Updates the PyTest config file to the current format.
 
@@ -487,7 +536,8 @@ class RoutineBasedMode(PyTestMode):
 
     def option_groups( cls, parser ):
         return [ cls.target_options(parser),
-                 cls.testing_options(parser) ]
+                 cls.testing_options(parser),
+                 cls.restriction_options(parser) ]
     option_groups = classmethod( option_groups )
     
     #
@@ -515,6 +565,7 @@ class RoutineBasedMode(PyTestMode):
                     if self.options.traceback:
                         raise
                     else:
+                        vprint(e, 2)
                         test.setStatus("SKIPPED", e.pretty_str())
 
 class compile(RoutineBasedMode):
@@ -576,14 +627,14 @@ if __name__ == '__main__':
         
     ## shutil.rmtree
     print >>sys.stderr, '#\n#  shutil.rmtree\n#'
-    shutil.rmtree("pytest")
+    shutil.rmtree(ppath.pytest_dir)
     
     ## svn up && run
     vsystem('svn up')
     vsystem('pytest run')
     
     ## svn remove -f
-    vsystem('svn remove --force pytest pytest.config')
+    vsystem('svn remove --force .pytest pytest.config')
     vsystem('svn commit -m "PYTEST INTERNAL TEST"')
     os.remove('INTERNAL_SCRIPT.py')
 

@@ -1,4 +1,35 @@
-__version_id__ = "$Id:$"
+#!/usr/bin/env python
+
+# tests.py
+# Copyright (C) 2004-2006 Christian Dorion
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#
+#   1. Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#
+#   2. Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#
+#   3. The name of the authors may not be used to endorse or promote
+#      products derived from this software without specific prior written
+#      permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+#  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+#  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+#  NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+#  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#  This file is part of the PLearn library. For more information on the PLearn
+#  library, go to the PLearn Web site at www.plearn.org
 
 import os, shutil 
 import plearn.utilities.toolkit as toolkit
@@ -14,9 +45,7 @@ import plearn.utilities.version_control as version_control
 from plearn.utilities.version_control import is_under_version_control
 from plearn.utilities.Bindings import Bindings
 
-vprint('NotImplementedError("This should be done within the ppath module.")', 0)
-ppath.pytest_dir = ".pytest"
-
+from plearn.utilities import pldiff
 
 def config_file_path( directory = None ):
     """The path to a pytest configuration file.
@@ -141,6 +170,15 @@ class Test(PyTestObject):
     descriptions.
     @type description: String
 
+    @ivar category: The category to which this test belongs. By default, a
+    test is considered a 'General' test.
+
+    It is not desirable to let an extensive and lengthy test as 'General',
+    while one shall refrain abusive use of categories since it is likely
+    that only 'General' tests will be ran before most commits...
+
+    @type category: string
+    
     @ivar program: The program to be run by the Test. The L{Program}
     class currently has four subclasses: L{LocalProgram},
     L{GlobalProgram}, L{LocalCompilableProgram} and
@@ -172,8 +210,8 @@ class Test(PyTestObject):
 
     @ivar pfileprg: The program to be used for comparing files of psave &
     vmat formats. It can be either::
-        - None: such files are not to be compared;
-        - "__program__": maps to this test's program (default); 
+        - "__program__": maps to this test's program if its compilable;
+                         maps to 'plearn_tests' otherwise (default); 
         - A Program instance
 
     @ivar disabled: If true, the test will not be ran.
@@ -193,21 +231,39 @@ class Test(PyTestObject):
     _log_count     = 0
     _logged_header = False
 
-    _instances_map    = Bindings()
-    _families_map     = Bindings()
+    _instances_map  = Bindings()
+    _families_map   = Bindings()
+    _categories_map = Bindings()
 
-    def restrictTo(cls, test_name):
-        test = cls._instances_map[test_name]
+    _restrict_to = None
+    _restrict_to_category = None
 
-        # Resets the instance map
-        cls._instances_map = { test_name : test }
+    # def restrictTo(cls, test_name):
+    #     test = cls._instances_map[test_name]
+    # 
+    #     # Resets the instance map
+    #     cls._instances_map = { test_name : test }
+    # 
+    #     # Resets the families map
+    #     cls._families_map = { test.directory() : [test] }
+    # 
+    #     # Resets the instance counter
+    #     cls._test_count = 1        
+    # restrictTo = classmethod(restrictTo)
 
-        # Resets the families map
-        cls._families_map = { test.directory() : [test] }
-
-        # Resets the instance counter
-        cls._test_count = 1        
+    def restrictTo(cls, test_name):        
+        assert cls._restrict_to is None
+        assert cls._restrict_to_category is None        
+        vprint("\nRestriction to name %s"%test_name, 2)
+        cls._restrict_to = test_name
     restrictTo = classmethod(restrictTo)
+    
+    def restrictToCategory(cls, category):
+        assert cls._restrict_to is None
+        assert cls._restrict_to_category is None
+        vprint("\nRestriction to category %s"%category, 2)
+        cls._restrict_to_category = category
+    restrictToCategory = classmethod(restrictToCategory)
 
     # Names of test for which the results were removed from version control
     # by ensure_results_directory
@@ -216,6 +272,7 @@ class Test(PyTestObject):
     # Options
     name        = PLOption(None)
     description = PLOption('')
+    category    = PLOption('General')
     program     = PLOption(None)
     arguments   = PLOption('')
     resources   = PLOption([])
@@ -241,17 +298,28 @@ class Test(PyTestObject):
 
         if Test._instances_map.has_key( self.name ):
             raise DuplicateName( Test._instances_map[self.name], self )
+
+        if self.toBeNeglected():
+            return
+        
+        # Instances
+        Test._instances_map[self.name] = self
+
+        # Families
+        if Test._families_map.has_key( self.directory() ):
+            Test._families_map[self.directory()].append(self)
         else:
-            Test._instances_map[self.name] = self
-            if Test._families_map.has_key( self.directory() ):
-                Test._families_map[self.directory()].append(self)
-            else:
-                Test._families_map[self.directory()] = [self]
+            Test._families_map[self.directory()] = [self]
+
+        # Categories
+        if Test._categories_map.has_key( self.category ):
+            Test._categories_map[self.category].append(self)
+        else:
+            Test._categories_map[self.category] = [self]
 
         # Associate a status to that test and count it
         self.__class__._test_count += 1
         self._status = TestStatus(self)
-
 
     ## Accessor
     def directory( self ):
@@ -284,7 +352,11 @@ class Test(PyTestObject):
 
         # Interprets pfileprg option's value
         if self.pfileprg == "__program__":
-            self.pfileprg = self.program
+            if isinstance(self.program, Compilable):
+                self.pfileprg = self.program
+            else:
+                self.pfileprg = GlobalCompilableProgram(name='plearn_tests')
+        assert isinstance(self.pfileprg, Compilable)
             
     def compilationSucceeded(self):
         """Forwards compilation status request to the program.
@@ -352,6 +424,10 @@ class Test(PyTestObject):
     def is_disabled(self):
         return self.disabled
     
+    def resultsDirectory(self, path=''):
+        assert path in ['', Test.expectedResults(), Test.runResults()], path
+        return os.path.join(self._results_directory, path)
+
     def setStatus(self, status, log=''):
         self._status.setStatus(status, log)
 
@@ -375,9 +451,21 @@ class Test(PyTestObject):
             vpformat(str(self._log_count), self.getName(),
                      str(self._status), TestStatus.summary())
 
-    def resultsDirectory(self, path=''):
-        assert path in ['', Test.expectedResults(), Test.runResults()], path
-        return os.path.join(self._results_directory, path)
+    def toBeNeglected(self):
+        neglect = False
+        if self._restrict_to is not None:            
+            neglect = (self._restrict_to != self.name)
+            if neglect:
+                vprint("\nNeglecting %s due to name restriction: %s"
+                       %(self.name,self._restrict_to), 2)
+
+        elif self._restrict_to_category is not None:
+            neglect = self._restrict_to_category != self.category
+            if neglect:
+                vprint("\nNeglecting %s due to category restriction: %s"
+                       %(self.name,self._restrict_to_category), 2)
+
+        return neglect
         
     def linkResources(self, results_path):
         """Sets up all appropriate links and environment variables required by a test.
@@ -605,6 +693,23 @@ class RunTestRoutine( ResultsRelatedRoutine ):
     def status_hook(self):
         idiff = IntelligentDiff( self.test )
         diffs = idiff.diff(self.expected_results, self.run_results)
+
+        # Developping for pldiff -- Issues:
+        #   1) Managing Resources
+        #
+        # pushd(self.test.resultsDirectory())
+        # vprint("pldiff in %s"%os.getcwd(), 2)
+        # 
+        # program_name = self.test.pfileprg.name
+        # compile_errors = not self.test.pfileprg.compile()
+        # if compile_errors:
+        #     diffs = [ "COMPILATION ERROR on test's pfileprg: %s\n"%program_name ]
+        # else:
+        #     diffs = pldiff.pldiff(self.expected_results, self.run_results,
+        #                           self.test.precision, program_name)
+        # popd()
+            
+        vprint("diffs: %s"%str(diffs), 2)
         if diffs == []:
             self.test.setStatus("PASSED")
         else:
