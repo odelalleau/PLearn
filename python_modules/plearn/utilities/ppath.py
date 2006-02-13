@@ -290,7 +290,7 @@ def write_bindings( writer = None ):
             
         if metapath != "":
             binding = '%s "%s"\n' % ( string.ljust(metaprotocol, 49),
-                                  metapath
+                                  metapath.replace('\\', '\\\\')
                                   )
             writer(binding)
 
