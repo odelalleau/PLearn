@@ -119,10 +119,17 @@ void SortRowsVMatrix::build_()
             to_sort.column(0) << source.subMatColumns(sort_columns[0], 1);
             // Fill 2nd column with indices.
             to_sort.column(1) << Vec(0, to_sort.length() - 1, 1);
-            // Perform the sort.
-            PLearn::sortRows(to_sort, 0, increasing_order);
-            // Get the indices.
-            indices << to_sort.column(1);
+
+            if (to_sort.column(0).hasMissing()) {
+                // We have missing values, so we use the unefficient method
+                sortRows(source, indices, sort_columns, 0, source->length()-1,
+                         0, increasing_order);
+            } else {
+                // Perform the sort.
+                PLearn::sortRows(to_sort, 0, increasing_order);
+                // Get the indices.
+                indices << to_sort.column(1);
+            }
         }
         inherited::build(); // Since we have just changed the indices.
     }
