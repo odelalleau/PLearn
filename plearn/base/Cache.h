@@ -116,9 +116,12 @@ public:
     // note that clear REMOVES EVERYTHING: stuff on disk and stuff in memory
     inline void clear() {
         BoundedMemoryCache<KeyType,ValueType>::clear();
-        vector<string> filenames = lsdir(files_directory);
-        for (unsigned int i=0;i<filenames.size();i++)
-            rm(files_directory + "/" + filenames[i]);
+        if (files_directory!="")
+        {
+            vector<string> filenames = lsdir(files_directory);
+            for (unsigned int i=0;i<filenames.size();i++)
+                rm(files_directory + "/" + filenames[i]);
+        }
     }
     // whereas destroying the cache or calling BoundedMemoryCache::clear() will 
     // delete the stuff from memory WHILE SAVING IT TO DISK, EVERYTHING IS PRESERVED ON DISK.
@@ -182,7 +185,7 @@ protected:
             BoundedMemoryCache<KeyType,ValueType>::n_elements--;
         }
 
-        int left_elements = BoundedMemoryCache<KeyType,ValueType>::n_elements;
+        //int left_elements = BoundedMemoryCache<KeyType,ValueType>::n_elements;
     }
 
     //! remove all elements
@@ -204,7 +207,7 @@ protected:
         }
 
         BoundedMemoryCache<KeyType,ValueType>::current_memory = 0;
-        int left_elements = BoundedMemoryCache<KeyType,ValueType>::n_elements;
+        //int left_elements = BoundedMemoryCache<KeyType,ValueType>::n_elements;
     }
 
 protected:
