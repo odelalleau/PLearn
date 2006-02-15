@@ -53,7 +53,8 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
     "  * map an input to an output\n"
     "  * modify itself when told in what direction the output should have \n"
     "    changed (i.e. output gradient),  while optionally giving back the \n"
-    "    information about how the input should also have changed (i.e. input gradient)\n"
+    "    information about how the input should also have changed \n"
+    "    (i.e. input gradient)\n"
     );
 
 OnlineLearningModule::OnlineLearningModule() :
@@ -63,35 +64,40 @@ OnlineLearningModule::OnlineLearningModule() :
 {
 }
 
-void OnlineLearningModule::bpropUpdate(const Vec input, const Vec output, const Vec output_gradient, Vec& input_gradient)
+void OnlineLearningModule::bpropUpdate(const Vec& input, const Vec& output,
+                                       Vec& input_gradient,
+                                       const Vec& output_gradient)
 {
     PLERROR("In OnlineLearningModule.cc: method 'bpropUpdate' not"
-            "implemented.\n"
-            "Please implement it in your derived class or don't call bpropUpdate.\n");
+            " implemented.\n"
+            "Please implement it in your derived class or don't call"
+            " bpropUpdate.\n");
 }
 
-void OnlineLearningModule::bpropUpdate(const Vec input, const Vec output, const Vec output_gradient)
+void OnlineLearningModule::bpropUpdate(const Vec& input, const Vec& output,
+                                       const Vec& output_gradient)
 {
     Vec input_gradient(input.length());
-    bpropUpdate(input,output,output_gradient,input_gradient);
+    bpropUpdate(input, output, input_gradient, output_gradient);
 }
 
 //! Default method for bbpropUpdate functions, so that it compiles but crashes
 //! if not implemented but used.
-void OnlineLearningModule::bbpropUpdate(const Vec input, const Vec output,
-                                        const Vec output_gradient,
-                                        const Vec output_diag_hessian)
+void OnlineLearningModule::bbpropUpdate(const Vec& input, const Vec& output,
+                                        const Vec& output_gradient,
+                                        const Vec& output_diag_hessian)
 {
     Vec input_gradient(input.length());
     Vec input_diag_hessian(input.length());
-    bbpropUpdate(input,output,output_gradient,input_gradient,output_diag_hessian,input_diag_hessian);
+    bbpropUpdate(input, output, input_gradient, output_gradient,
+                 input_diag_hessian, output_diag_hessian);
 }
 
-void OnlineLearningModule::bbpropUpdate(const Vec input, const Vec output,
-                                        const Vec output_gradient,
+void OnlineLearningModule::bbpropUpdate(const Vec& input, const Vec& output,
                                         Vec& input_gradient,
-                                        const Vec output_diag_hessian,
-                                        Vec& input_diag_hessian)
+                                        const Vec& output_gradient,
+                                        Vec& input_diag_hessian,
+                                        const Vec& output_diag_hessian)
 {
     PLERROR("In OnlineLearningModule.cc: method 'bbpropUpdate' not"
             "implemented.\n"
@@ -130,12 +136,14 @@ void OnlineLearningModule::declareOptions(OptionList& ol)
                   "  d²C/dx² ~= d²C/dy² (dy/dx)² [+ dC/dy d²y/dx²]\n");
 
 
-    declareOption(ol, "expdir", &OnlineLearningModule::expdir, OptionBase::buildoption, 
-                  "Path of the directory associated with this module, in which\n"
-                  "it should save any file it wishes to create. \n"
-                  "The directory will be created if it does not already exist.\n"
-                  "If expdir is the empty string (the default), then the module \n"
-                  "should not create *any* file.\n");
+    declareOption(ol, "expdir", &OnlineLearningModule::expdir,
+                  OptionBase::buildoption, 
+                  "Path of the directory associated with this module,\n"
+                  "in which it should save any file it wishes to create. \n"
+                  "The directory will be created if it does not already"
+                  " exist.\n"
+                  "If expdir is the empty string (the default),\n"
+                  "then the module should not create *any* file.\n");
 
     inherited::declareOptions(ol);
 }

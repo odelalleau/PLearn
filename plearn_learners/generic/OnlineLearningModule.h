@@ -83,7 +83,6 @@ public:
     //! d²C/dx² ~= d²C/dy² (dy/dx)² [+ dC/dy d²y/dx²]
     bool estimate_simpler_diag_hessian;
 
-    //! 
     /**
      * Path of the directory associated with this module, in which it should
      * save any file it wishes to create.  The directory will be created if
@@ -101,7 +100,7 @@ public:
     // Your other public member functions go here
 
     //! given the input, compute the output (possibly resize it  appropriately)
-    virtual void fprop(const Vec input, Vec& output) const = 0;
+    virtual void fprop(const Vec& input, Vec& output) const = 0;
 
     //! Adapt based on the output gradient: this method should only
     //! be called just after a corresponding fprop; it should be
@@ -109,38 +108,46 @@ public:
     //! (and output should not have been modified since then).
     //! Since sub-classes are supposed to learn ONLINE, the object
     //! is 'ready-to-be-used' just after any bpropUpdate.
-    //! N.B. The DEFAULT IMPLEMENTATION JUST CALLS bpropUpdate(input, output, output_gradient, input_gradient) AND IGNORES INPUT GRADIENT.
-    virtual void bpropUpdate(const Vec input, const Vec output, const Vec output_gradient);
+    //! N.B. The DEFAULT IMPLEMENTATION JUST CALLS
+    //!   bpropUpdate(input, output, input_gradient, output_gradient)
+    //! AND IGNORES INPUT GRADIENT.
+    virtual void bpropUpdate(const Vec& input, const Vec& output,
+                             const Vec& output_gradient);
 
     //! this version allows to obtain the input gradient as well
     //! N.B. THE DEFAULT IMPLEMENTATION JUST RAISES A PLERROR.
-    virtual void bpropUpdate(const Vec input, const Vec output, const Vec output_gradient, Vec& input_gradient);
+    virtual void bpropUpdate(const Vec& input, const Vec& output,
+                             Vec& input_gradient, const Vec& output_gradient);
 
     //! Similar to bpropUpdate, but adapt based also on the estimation
     //! of the diagonal of the Hessian matrix, and propagates this
     //! back. If these methods are defined, you can use them INSTEAD of
     //! bpropUpdate(...)
     //! THE DEFAULT IMPLEMENTATION PROVIDED HERE JUST CALLS
-    //! bbpropUpdate(input, output, output_gradient, input_gradient, out_hess, in_hess) 
+    //!   bbpropUpdate(input, output,
+    //!                input_gradient, output_gradient,
+    //!                in_hess, out_hess) 
     //! AND IGNORES INPUT HESSIAN AND INPUT GRADIENT
-    virtual void bbpropUpdate(const Vec input, const Vec output,
-                              const Vec output_gradient,
-                              const Vec output_diag_hessian);
+    virtual void bbpropUpdate(const Vec& input, const Vec& output,
+                              const Vec& output_gradient,
+                              const Vec& output_diag_hessian);
 
     //! this version allows to obtain the input gradient and diag_hessian
-    virtual void bbpropUpdate(const Vec input, const Vec output,
-                              const Vec output_gradient,
+    virtual void bbpropUpdate(const Vec& input, const Vec& output,
                               Vec& input_gradient,
-                              const Vec output_diag_hessian,
-                              Vec& input_diag_hessian );
+                              const Vec& output_gradient,
+                              Vec& input_diag_hessian,
+                              const Vec& output_diag_hessian);
 
-    //! reset the parameters to the state they would be BEFORE starting training.
-    //! Note that this method is necessarily called from build().
+    //! reset the parameters to the state they would be BEFORE starting
+    //! training.  Note that this method is necessarily called from
+    //! build().
     virtual void forget() = 0;
-    
 
-    //! optionally perform some processing after training, or after a series of fprop/bpropUpdate calls
-    //! to prepare the model for truly out-of-sample operation
+
+    //! optionally perform some processing after training, or after a
+    //! series of fprop/bpropUpdate calls to prepare the model for truly
+    //! out-of-sample operation
     virtual void finalize() {}
 
     // in case bpropUpdate does not do anything, make it known
@@ -159,10 +166,10 @@ public:
     //! Transforms a shallow copy into a deep copy
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-    
+
 protected:
     //#####  Protected Member Functions  ######################################
-    
+
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
 
@@ -180,7 +187,7 @@ private:
 
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(OnlineLearningModule);
-  
+
 } // end of namespace PLearn
 
 #endif
