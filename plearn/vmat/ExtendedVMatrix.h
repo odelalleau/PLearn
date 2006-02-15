@@ -44,7 +44,7 @@
 #ifndef ExtendedVMatrix_INC
 #define ExtendedVMatrix_INC
 
-#include "RowBufferedVMatrix.h"
+#include "SourceVMatrix.h"
 #include "VMat.h"
 
 namespace PLearn {
@@ -57,12 +57,12 @@ using namespace std;
   This can be used for instance to easily implement the usual trick 
   to include the bias in the weights vectors, by appending a 1 to the inputs.
 */
-class ExtendedVMatrix: public RowBufferedVMatrix
+class ExtendedVMatrix: public SourceVMatrix
 {
-    typedef RowBufferedVMatrix inherited;
+    typedef SourceVMatrix inherited;
 
 public:
-    VMat distr;
+//    VMat distr; // Deprecated
     int top_extent;
     int bottom_extent;
     int left_extent;
@@ -72,32 +72,38 @@ public:
     /*!
       The fieldnames to use for the added fields. Length must be equal to
       left_extent+right_extent.
-    
+
       Default: [], i.e all are set to "extended".
     */
     TVec<string> extfieldnames;
-  
+
     // ******************
     // *  Constructors  *
     // ******************
-    ExtendedVMatrix(); //!<  default constructor (for automatic deserialization)
+
+    //! default constructor (for automatic deserialization)
+    ExtendedVMatrix(bool call_build_ = false);
 
     //!  Warning: VMFields are NOT YET handled by this constructor
-    ExtendedVMatrix(VMat the_distr, 
-                    int the_top_extent, int the_bottom_extent, 
-                    int the_left_extent, int the_right_extent, 
-                    real the_fill_value);
+    ExtendedVMatrix(VMat the_source,
+                    int the_top_extent, int the_bottom_extent,
+                    int the_left_extent, int the_right_extent,
+                    real the_fill_value, bool call_build_ = false);
 
     PLEARN_DECLARE_OBJECT(ExtendedVMatrix);
     static void declareOptions(OptionList &ol);
 
     virtual void build();
 
-    virtual void reset_dimensions() 
-    { 
-        distr->reset_dimensions(); 
-        width_=distr->width()+left_extent+right_extent; 
-        length_=distr->length()+top_extent+bottom_extent;
+    //! Transforms a shallow copy into a deep copy
+    // (PLEASE IMPLEMENT IN .cc)
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+
+    virtual void reset_dimensions()
+    {
+        source->reset_dimensions();
+        width_=source->width()+left_extent+right_extent;
+        length_=source->length()+top_extent+bottom_extent;
     }
 
 protected:

@@ -53,30 +53,41 @@ PLEARN_IMPLEMENT_OBJECT(
     "its top and bottom and columns at its left and right.\n"
     "The appended rows/columns are filled with the given fill_value\n"
     "This can be used for instance to easily implement the usual trick \n"
-    "to include the bias in the weights vectors, by appending a 1 to the inputs.\n");
+    "to include the bias in the weights vectors, by appending a 1 to\n"
+    "the inputs.\n");
 
 
-ExtendedVMatrix::ExtendedVMatrix()
-    : top_extent(0), bottom_extent(0), left_extent(0), right_extent(0), fill_value(0)
+ExtendedVMatrix::ExtendedVMatrix(bool call_build_)
+    : inherited(call_build_),
+      top_extent(0), bottom_extent(0), left_extent(0), right_extent(0),
+      fill_value(0)
 {
+    if( call_build_ )
+        build_();
 }
 
-ExtendedVMatrix::ExtendedVMatrix(VMat the_distr, int the_top_extent, int the_bottom_extent, 
+ExtendedVMatrix::ExtendedVMatrix(VMat the_source,
+                                 int the_top_extent, int the_bottom_extent,
                                  int the_left_extent, int the_right_extent,
-                                 real the_fill_value)
-    : inherited(the_distr->length()+the_top_extent+the_bottom_extent,
-                the_distr->width()+the_left_extent+the_right_extent),
-      distr(the_distr), top_extent(the_top_extent), bottom_extent(the_bottom_extent), 
-      left_extent(the_left_extent), right_extent(the_right_extent), fill_value(the_fill_value)
+                                 real the_fill_value, bool call_build_)
+    : inherited(the_source,
+                the_source->length()+the_top_extent+the_bottom_extent,
+                the_source->width()+the_left_extent+the_right_extent,
+                call_build_),
+      top_extent(the_top_extent), bottom_extent(the_bottom_extent),
+      left_extent(the_left_extent), right_extent(the_right_extent),
+      fill_value(the_fill_value)
 {
+    if( call_build_ )
+        build_();
 }
 
 void
 ExtendedVMatrix::declareOptions(OptionList &ol)
 {
-    declareOption(ol, "distr", &ExtendedVMatrix::distr,
-                  OptionBase::buildoption,
-                  "The underlying VMatrix to extend.");
+    declareOption(ol, "distr", &ExtendedVMatrix::source,
+                  (OptionBase::buildoption | OptionBase::nosave),
+                  "DEPRECATED - Use 'source' instead.");
     declareOption(ol, "top_extent", &ExtendedVMatrix::top_extent,
                   OptionBase::buildoption,
                   "Number of rows to add at the top");
@@ -114,13 +125,13 @@ ExtendedVMatrix::build()
 void
 ExtendedVMatrix::build_()
 {
-    this->length_ = distr->length() + top_extent  + bottom_extent;
-    this->width_  = distr->width()  + left_extent + right_extent;
+    this->length_ = source->length() + top_extent  + bottom_extent;
+    this->width_  = source->width()  + left_extent + right_extent;
 
     if ( ! extfieldnames.isEmpty() )
         assert( extfieldnames.length() == left_extent + right_extent );
 
-    TVec<string> fieldnames = distr->fieldNames( );
+    TVec<string> fieldnames = source->fieldNames( );
     TVec<string> extended_fieldnames( width() );
     for ( int fno = 0, extno=0; fno < width(); fno++ )
         if ( fno < left_extent )
@@ -138,9 +149,11 @@ ExtendedVMatrix::build_()
                 extended_fieldnames[fno] = extfieldnames[extno++];
         }
         else
-            extended_fieldnames[fno]   = fieldnames[fno-extno];
+            extended_fieldnames[fno]   = fieldnames[fno-left_extent];
 
     declareFieldNames( extended_fieldnames );
+
+    setMetaInfoFromSource();
 }
 
 void ExtendedVMatrix::getNewRow(int i, const Vec& v) const
@@ -156,14 +169,32 @@ void ExtendedVMatrix::getNewRow(int i, const Vec& v) const
         v.fill(fill_value);
     else
     {
-        Vec subv = v.subVec(left_extent,distr->width());
-        distr->getRow(i-top_extent,subv);
+        Vec subv = v.subVec(left_extent, source->width());
+        source->getRow(i-top_extent,subv);
         if(left_extent>0)
             v.subVec(0,left_extent).fill(fill_value);
         if(right_extent>0)
             v.subVec(width()-right_extent,right_extent).fill(fill_value);
     }
 }
+
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void ExtendedVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    inherited::makeDeepCopyFromShallowCopy(copies);
+
+    // ### Call deepCopyField on all "pointer-like" fields.
+    // ### that you wish to be deepCopied rather than.
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
+
+    deepCopyField(extfieldnames, copies);
+
+}
+
 
 } // end of namespcae PLearn
 

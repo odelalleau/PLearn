@@ -93,10 +93,10 @@ public:
 
     // Default constructor, make sure the implementation in the .cc
     // initializes all fields to reasonable default values.
-    SourceVMatrix();  
-  
-    SourceVMatrix(VMat the_source)
-        :source(the_source) {}
+    SourceVMatrix(bool call_build_ = false);
+
+    SourceVMatrix(VMat the_source, int the_length, int the_width,
+                  bool call_build_ = false);
 
     // ******************
     // * Object methods *

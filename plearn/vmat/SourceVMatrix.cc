@@ -49,14 +49,20 @@ namespace PLearn {
 using namespace std;
 
 
-SourceVMatrix::SourceVMatrix()
-    :inherited()
-    /* ### Initialise all fields to their default value */
+SourceVMatrix::SourceVMatrix(bool call_build_)
+    : inherited(call_build_)
 {
-    // ...
+    if( call_build_ )
+        build_();
+}
 
-    // ### You may or may not want to call build_() to finish building the object
-    // build_();
+SourceVMatrix::SourceVMatrix(VMat the_source, int the_length, int the_width,
+                             bool call_build_)
+    : inherited(the_length, the_width, call_build_),
+      source(the_source)
+{
+    if( call_build_ )
+        build_();
 }
 
 PLEARN_IMPLEMENT_OBJECT(SourceVMatrix,
