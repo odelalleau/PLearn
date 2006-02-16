@@ -64,19 +64,54 @@ protected:
     //! Missing patterns used as templates (obtained by k-median).
     TMat<bool> missing_template;
 
-    //! TODO Document (order of path to traverse spanning tree).
+    //! Index of the current cluster whose spanning path is being walked on
+    //! during training.
+    int current_cluster;
+
+    //! The i-th element is the index of the i-th training sample in the
+    //! spanning path that contains it (i.e. if sample_to_path_index[i] = k,
+    //! then the i-th training sample is in k-th position in the spanning path
+    //! that contains it).
+    TVec<int> sample_to_path_index;
+
+    //! The k-th element is the list of ordered samples in the spanning path
+    //! for the k-th cluster.
     TVec< TVec<int> > spanning_path;
 
-    //! TODO Document (LL for all samples in a cluster, for all Gaussians)
+    //! The k-th element is a vector that indicates whether at each step in the
+    //! spanning path of the k-th cluster, a sample should use the previous
+    //! covariance matrix computed in the path (true), or the one stored
+    //! one step before it (false). Intuitively, a value of false means we are
+    //! switching to another branch in the spanning tree.
+    TVec< TVec<bool> > spanning_use_previous;
+
+    //! The k-th element is a vector that indicates whether at each step in the
+    //! spanning path of the k-th cluster, we should free the memory used by
+    //! the previous covariance matrix (true), or we should instead keep this
+    //! matrix for further use (false). Here, the 'previous' covariance matrix
+    //! will be either the one just before (if the boolean given by
+    //! 'spanning_use_previous' is also true), or the one before it (if it is
+    //! false).
+    TVec< TVec<bool> > spanning_can_free;
+
+    //! Used to store the likelihood given by all Gaussians for each sample in
+    //! the current cluster.
     Mat log_likelihood_post_clust;
 
-    //! TODO Document (cluster asssignment for each data point).
+    //! The k-th element is the list of samples in the k-th cluster.
     TVec< TVec<int> > clusters_samp;
 
-    //! TODO Document
-    //! TEMP! (cholesky decomposition of the covariance matrix for EACH
-    //sample)
-    mutable TVec<Mat> cholesky_samp;
+    //! The list of all cholesky decompositions (of covariance matrices) that
+    //! need to be kept in memory during training.
+    mutable TVec<Mat> cholesky_queue;
+
+    //! The list of all lists of dimension indices (of covariance matrices)
+    //! that need to be kept in memory during training.
+    //! More precisely, the i-th element is a vector that lists the indices
+    //! of the dimensions in cholesky_queue[i] (since each Choleksy matrix is
+    //! taken from a subset of all original dimensions - the ones for which
+    //! the sample value is not missing).
+    mutable TVec< TVec<int> > indices_queue;
 
     //! Set at build time, this integer value depends uniquely on the 'type'
     //! option. It is meant to avoid too many useless string comparisons.
@@ -86,6 +121,7 @@ protected:
     // TODO There may be a need to declare them as learnt options if one wants
     // to continue the training of a saved GaussMix.
     Vec mean_training, stddev_training;
+
 
     //! The posterior probabilities P(j | s_i), where j is the index of a
     //! Gaussian and i is the index of a sample.
@@ -149,7 +185,8 @@ protected:
     //! Hack to know that we are compute likelihood on a training sample.
     int current_training_sample;
 
-    //! TODO Document (similar hack, but previous sample).
+    //! Index of the previous training sample whose likelihood (and associated
+    //! covariance matrix) has been computed.
     int previous_training_sample;
 
     //! A boolean indicating whether or not the last predictor part set
@@ -310,6 +347,21 @@ protected:
     void kmeans(const VMat& samples, int nclust, TVec<int>& clust_idx,
                 Mat& clust, int maxit=9999);
 
+    //! Fill 'chol_updated' with the Cholesky decomposition of the submatrix of
+    //! 'full_matrix' corresponding to the selection of dimensions given by
+    //! 'indices_updated'.
+    //! This Cholesky decomposition is obtained from an existing previous
+    //! Cholesky decomposition, given by 'chol_previous', and corresponding to
+    //! another subset of dimensions of the full matrix, given by
+    //! 'indices_previous'.
+    //! Note that 'indices_updated' will be modified so that all dimensions
+    //! common with 'indices_previous' will come first.
+    void updateCholeskyFromPrevious(
+        const Mat& chol_previous, Mat& chol_updated,
+        const Mat& full_matrix,
+        const TVec<int>& indices_previous, const TVec<int>& indices_updated)
+        const;
+
     /*
     //! Overridden so as to compute specific GaussMix outputs.
     virtual void unknownOutput(char def, const Vec& input, Vec& output, int& k) const;
@@ -379,11 +431,16 @@ public:
 
 protected:
 
-    // TODO: More explicit documentation.
-    //! Fill 'path' with the list of nodes to visit.
-    //! Fill 'free_previous' with boolean values indicating when the covariance
-    //! matrix for the previous node may be freed.
-    static void traverse_tree(TVec<int>& path, bool free_previous,
+    //! Recursive function to compute a spanning path from previously computed
+    //! cost values (given by 'message_up' and 'message_down').
+    //! This function fills 'path' with the list of nodes to visit; it also
+    //! fills 'span_can_free' and 'span_use_previous' with information about
+    //! when to free memory and when to switch to another branch in the tree.
+    static void traverse_tree(TVec<int>& path,
+                              TVec<bool>& span_can_free,
+                              TVec<bool>& span_use_previous,
+                              bool free_previous,
+                              bool use_previous,
                               int index_node, int previous_node,
                               const TVec<int>& parent,
                               const TVec< TVec<int> >& children,

@@ -145,7 +145,7 @@ void GaussMix::declareOptions(OptionList& ol)
 
     declareOption(ol, "efficient_k_median", &GaussMix::efficient_k_median,
                                             OptionBase::buildoption,
-        "Number of missing patterns stored.");
+        "Number of missing templates stored.");
 
     declareOption(ol, "efficient_k_median_iter",
                                             &GaussMix::efficient_k_median_iter,
@@ -407,6 +407,67 @@ void GaussMix::computeMeansAndCovariances() {
     }
 }
 
+////////////////////////////////
+// updateCholeskyFromPrevious //
+////////////////////////////////
+void GaussMix::updateCholeskyFromPrevious(
+        const Mat& chol_previous, Mat& chol_updated,
+        const Mat& full_matrix,
+        const TVec<int>& indices_previous, const TVec<int>& indices_updated)
+        const
+{
+    static TVec<bool> is_previous;
+    static TVec<bool> is_updated;
+    static TVec<int> indices_new;
+    static Vec new_row;
+    assert( chol_previous.length() == indices_previous.length() );
+    // Initialization.
+    int n = chol_previous.length();
+    int max_indice = -1;
+    if (!indices_previous.isEmpty())
+        max_indice = max(max_indice, max(indices_previous));
+    if (!indices_updated.isEmpty())
+        max_indice = max(max_indice, max(indices_updated));
+    assert( max_indice >= 0 );
+    is_updated.resize(max_indice + 1);
+    is_previous.resize(max_indice + 1);
+    is_updated.fill(false);
+    is_previous.fill(false);
+    indices_new.resize(0);
+    // Find which indices need to be kept or appended.
+    int p = indices_updated.length();
+    for (int i = 0; i < p; i++)
+        is_updated[indices_updated[i]] = true;
+    for (int i = 0; i < n; i++)
+        is_previous[indices_previous[i]] = true;
+    // Delete unused dimensions from the Cholesky decomposition.
+    chol_updated.resize(n, n);
+    chol_updated << chol_previous;
+    for (int i = n - 1; i >= 0; i--) {
+        int dim_to_del = indices_previous[i];
+        if (is_updated[dim_to_del])
+            indices_new.append(dim_to_del);
+        else
+            choleskyRemoveDimension(chol_updated, i);
+    }
+    // Need to swap 'indices_new' since these indices have been added in the
+    // opposite order.
+    indices_new.swap();
+    // Now add dimensions that were not here previously.
+    for (int i = 0; i < p; i++)
+        if (!is_previous[indices_updated[i]]) {
+            int dim_to_add = indices_updated[i];
+            indices_new.append(dim_to_add);
+            int q = indices_new.length();
+            new_row.resize(q);
+            for (int j = 0; j < q; j++)
+                new_row[j] = full_matrix(dim_to_add, indices_new[j]);
+            choleskyAppendDimension(chol_updated, new_row);
+        }
+    // Finally update the 'indices_updated' list.
+    indices_updated << indices_new;
+}
+
 //////////////////////////
 // computeLogLikelihood //
 //////////////////////////
@@ -589,9 +650,14 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         for (int q = 0; q < n_non_missing; q++)
                             cov_y_missing(k,q) =
                                 cov_y(non_missing[k], non_missing[q]);
-                    cholesky_samp.resize(current_training_sample + 1);
-                    Mat& chol = cholesky_samp[current_training_sample];
+                    cholesky_queue.resize(1);
+                    // pout << "length = " << cholesky_queue.length() << endl;
+                    Mat& chol = cholesky_queue[0];
                     choleskyDecomposition(cov_y_missing, chol);
+                    indices_queue.resize(1);
+                    TVec<int>& ind = indices_queue[0];
+                    ind.resize(n_non_missing);
+                    ind << non_missing;
                 }
                 mu_y = center(j).subVec(0, n_predicted);
                 int n_non_missing = non_missing.length();
@@ -635,14 +701,33 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
 
                     real log_det = 0;
                     Mat L_tpl;
+                    TVec<int> ind_tpl;
                     static Mat L_tot;
+                    static TVec<int> ind_tot;
                     int n_tpl;
+                    int queue_index = -1;
+                    int path_index = -1;
                     if (efficient_missing) {
+                        path_index =
+                            sample_to_path_index[current_training_sample];
+                        // pout << "path index = " << path_index << endl;
                         L_tot.resize(n_non_missing, n_non_missing);
-                        L_tpl = chol_cov_template(tpl_idx, j);
+                        // L_tpl = chol_cov_template(tpl_idx, j);
+                        // Note that the first sample in the path will always
+                        // use the previous covariance matrix.
+                        if (spanning_use_previous[current_cluster][path_index] ||
+                            path_index == 0)
+                            queue_index = cholesky_queue.length() - 1;
+                        else
+                            queue_index = cholesky_queue.length() - 2;
+                        L_tpl = cholesky_queue[queue_index];
+                        ind_tpl = indices_queue[queue_index];
+
                         n_tpl = L_tpl.length();
                         L_tot.resize(n_tpl, n_tpl);
-                        L_tot << L_tpl;
+                        L_tot << L_tpl; // TODO Probably useless
+                        ind_tot.resize(n_non_missing);
+                        ind_tot << non_missing;
 
                         /*
                         Mat tmp;
@@ -656,9 +741,11 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         */
 
                         // Remove some rows / columns.
+                        /*
                         int p = add_missing.length() - 1;
                         for (int k = p; k >= 0; k--) {
                             choleskyRemoveDimension(L_tot, add_missing[k]); //(-k+p);
+                            */
                             /*
                             tmp.resize(L_tot.length(), L_tot.width());
                             productTranspose(tmp, L_tot, L_tot);
@@ -667,7 +754,9 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                                     tostring(add_missing[k]) + ".amat", false,
                                     true);
                                     */
+                        /*
                         }
+                        */
                     }
 
                     // Now we must perform updates to compute the Cholesky
@@ -676,6 +765,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     int n = -1;
                     if (efficient_missing) {
                     //L_tot.resize(n_non_missing, n_non_missing);
+                        /*
                     for (int k = 0; k < add_non_missing.length(); k++) {
                         new_vec.resize(L_tot.length() + 1);
                         for (int q = 0; q < new_vec.length(); q++)
@@ -683,6 +773,22 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                                                add_non_missing[k]);
                         choleskyAppendDimension(L_tot, new_vec);
                     }
+                        */
+                    updateCholeskyFromPrevious(L_tpl, L_tot, joint_cov[j],
+                            ind_tpl, ind_tot);
+                    // Note to myself: indices in ind_tot will be changed.
+
+                    // Debug check.
+                    /*
+                    static Mat tmp_mat;
+                    tmp_mat.resize(L_tot.length(), L_tot.length());
+                    productTranspose(tmp_mat, L_tot, L_tot);
+                    // pout << "max = " << max(tmp_mat) << endl;
+                    // pout << "min = " << min(tmp_mat) << endl;
+                    */
+
+                    // Free a reference to element in cholesky_queue.
+                    L_tpl = dummy_mat;
 
                     n = L_tot.length();
                     for (int i = 0; i < n; i++)
@@ -701,11 +807,31 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     y_centered -= mu_y;
                     
                     if (efficient_missing) {
+                        // TODO Get rid of code above in this case, as it adds
+                        // useless computations.
+                        for (int k = 0; k < n_non_missing; k++)
+                            y_centered[k] =
+                                y[ind_tot[k]] - center(j, ind_tot[k]);
                     // Re-New code.
                     static Vec tmp_vec;
                     tmp_vec.resize(n);
                     choleskyLeftSolve(L_tot, y_centered, tmp_vec);
                     log_likelihood -= 0.5 * pownorm(tmp_vec);
+                    // Now remember L_tot for the generations to come.
+                    // TODO This could probably be optimized to avoid useless
+                    // copies of the covariance matrix.
+                    if (!spanning_can_free[current_cluster][path_index]) {
+                        queue_index++;
+                        cholesky_queue.resize(queue_index + 1);
+                        indices_queue.resize(queue_index + 1);
+                        // pout << "length = " << cholesky_queue.length() << endl;
+                    }
+                    Mat& chol = cholesky_queue[queue_index];
+                    chol.resize(L_tot.length(), L_tot.width());
+                    chol << L_tot;
+                    TVec<int>& ind = indices_queue[queue_index];
+                    ind.resize(ind_tot.length());
+                    ind << ind_tot;
                     }
 
                     if (!efficient_missing) {
@@ -1032,6 +1158,7 @@ void GaussMix::computePosteriors() {
             const TVec<int>& samples_clust = spanning_path[k];
             int n_samp = samples_clust.length();
             log_likelihood_post_clust.resize(n_samp, L);
+            current_cluster = k;
             for (int j = 0; j < L; j++) {
                 // For each Gaussian, go through all samples in the cluster.
                 previous_training_sample = -1;
@@ -1041,8 +1168,8 @@ void GaussMix::computePosteriors() {
                     train_set->getSubRow(s, 0, sample_row);
                     log_likelihood_post_clust(i, j) =
                         computeLogLikelihood(sample_row, j) + pl_log(alpha[j]);
-                    current_training_sample = -1;
                     previous_training_sample = current_training_sample;
+                    current_training_sample = -1;
                 }
             }
             // Get the posteriors for all samples in the cluster.
@@ -1050,8 +1177,8 @@ void GaussMix::computePosteriors() {
                 real log_sum_likelihood = logadd(log_likelihood_post_clust(i));
                 int s = samples_clust[i];
                 for (int j = 0; j < L; j++)
-                    posteriors(s,j) = exp(log_likelihood_post_clust(i, j) -
-                                      log_sum_likelihood);
+                    posteriors(s, j) = exp(log_likelihood_post_clust(i, j) -
+                                       log_sum_likelihood);
             }
         }
     } else {
@@ -1431,6 +1558,16 @@ void GaussMix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     deepCopyField(log_likelihood_post,      copies);
     deepCopyField(sample_row,               copies);
+    deepCopyField(missing_patterns,         copies);
+    deepCopyField(missing_template,         copies);
+    deepCopyField(sample_to_path_index,     copies);
+    deepCopyField(spanning_path,            copies);
+    deepCopyField(spanning_use_previous,    copies);
+    deepCopyField(spanning_can_free,        copies);
+    deepCopyField(log_likelihood_post_clust,copies);
+    deepCopyField(clusters_samp,            copies);
+    deepCopyField(cholesky_queue,           copies);
+    deepCopyField(indices_queue,            copies);
     deepCopyField(mean_training,            copies);
     deepCopyField(stddev_training,          copies);
     deepCopyField(posteriors,               copies);
@@ -1448,7 +1585,10 @@ void GaussMix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(log_coeff_x,              copies);
     deepCopyField(log_coeff_y_x,            copies);
     deepCopyField(joint_cov,                copies);
+    deepCopyField(chol_joint_cov,           copies);
+    deepCopyField(chol_cov_template,        copies);
     deepCopyField(stage_joint_cov_computed, copies);
+    deepCopyField(sample_to_template,       copies);
     deepCopyField(y_centered,               copies);
     deepCopyField(covariance,               copies);
     
@@ -1459,8 +1599,6 @@ void GaussMix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(alpha,                    copies);
     deepCopyField(center,                   copies);
     deepCopyField(sigma,                    copies);
-
-    // TODO More stuff to add now!
 }
 
 ////////////////
@@ -1531,8 +1669,8 @@ real GaussMix::precomputeGaussianLogCoefficient(const Vec& eigenvals,
 /////////////////////
 void GaussMix::replaceGaussian(int j) {
     // This is supposed to be called only during training, when there is no
-    // predicted part (we use the full joint distribution).
-    assert( n_predicted == 0 );
+    // predictor part (we use the full joint distribution).
+    assert( n_predictor == 0 );
     // Find the Gaussian with highest weight.
     int high = argmax(alpha);
     assert( high != j );
@@ -2239,7 +2377,8 @@ void GaussMix::train()
             for (int i = 0; i < clusters_samp.length(); i++)
                 clusters_samp[i].resize(0);
             for (int i = 0; i < train_set->length(); i++)
-                clusters_samp[missing_assign[sample_to_template[i]]].append(i);
+                // clusters_samp[missing_assign[sample_to_template[i]]].append(i);
+                clusters_samp[sample_to_template[i]].append(i);
 
             if (efficient_missing) {
                 typedef boost::adjacency_list < boost::vecS, boost::vecS,
@@ -2249,6 +2388,8 @@ void GaussMix::train()
                 typedef std::pair<int, int> Edge;
 
                 spanning_path.resize(missing_template.length());
+                spanning_use_previous.resize(missing_template.length());
+                spanning_can_free.resize(missing_template.length());
                 for (int tpl = 0; tpl < missing_template.length(); tpl++) {
                 // Find minimum spanning tree of the missing patterns' graph.
                 TVec<Edge> edges;
@@ -2280,6 +2421,11 @@ void GaussMix::train()
                         pb->update(progress);
                 }
                 if (pb) delete pb;
+                TVec<int> parent;
+                if (edges.isEmpty()) {
+                    parent.resize(1);
+                    parent[0] = 0;
+                } else {
                 Edge* edges_ptr = edges.data();
                 DistGraph dist_graph(
                         edges_ptr,
@@ -2296,11 +2442,10 @@ void GaussMix::train()
                 if (verbosity >= 2)
                     pout << "Done" << endl;
                 // Convert 'pred' to a PLearn parent vector.
-                TVec<int> parent(int(pred.size()));
+                parent.resize(int(pred.size()));
                 for (std::size_t i = 0; i != pred.size(); i++)
                     parent[int(i)] = int(pred[i]);
-
-                // TODO At this point we may free memory used by the STL data.
+                }
 
                 // Compute list of nodes, from top to bottom.
                 n = cluster_tpl.length();
@@ -2401,7 +2546,9 @@ void GaussMix::train()
                         balanced = true;
                     if (balanced)
                         max++;
-                    assert( max > 0 );
+                    // Note that 'max' can be zero when we have only one single
+                    // point.
+                    assert( max > 0 || n == 1);
                     message_down[j] = max;
                 }
 
@@ -2425,10 +2572,17 @@ void GaussMix::train()
 
                 // Compute a node ordering giving rise to the mininum cost.
                 TVec<int>& span_path = spanning_path[tpl];
+                TVec<bool>& span_use_previous = spanning_use_previous[tpl];
+                TVec<bool>& span_can_free = spanning_can_free[tpl];
                 span_path.resize(0);
-                traverse_tree(span_path, false, start_node, -1, parent,
-                        children, message_up, message_down);
-                assert( span_path.length() == n );
+                span_use_previous.resize(0);
+                span_can_free.resize(0);
+                traverse_tree(span_path, span_can_free, span_use_previous,
+                              false, false, start_node, -1, parent,
+                              children, message_up, message_down);
+                assert( span_path.length()          == n );
+                assert( span_can_free.length()      == n );
+                assert( span_use_previous.length()  == n );
                 // At this point the index in 'span_path' are the index within
                 // the cluster 'tpl': we replace them by the global sample
                 // index.
@@ -2464,26 +2618,62 @@ void GaussMix::train()
                         tostring(efficient_k_median) + ".amat", true, true);
                         */
 
+              }
                 // Transform 'spanning_path' to obtain a path through samples,
                 // instead of a path through missing patterns.
                 // First get the list of samples associated to each missing
                 // pattern.
                 TVec<int> the_path;
+                TVec<bool> the_can_free;
+                TVec<bool> the_use_prev;
+                sample_to_path_index.resize(train_set->length());
+                sample_to_path_index.fill(-1);
                 for (int i = 0; i < spanning_path.length(); i++) {
                     TVec<int>& span_path = spanning_path[i];
+                    TVec<bool>& span_can_free = spanning_can_free[i];
+                    TVec<bool>& span_use_prev = spanning_use_previous[i];
+
                     the_path.resize(span_path.length());
-                    the_path << span_path;
+                    the_can_free.resize(span_can_free.length());
+                    the_use_prev.resize(span_use_prev.length());
+                    the_path     << span_path;
+                    the_can_free << span_can_free;
+                    the_use_prev << span_use_prev;
                     span_path.resize(0);
+                    span_can_free.resize(0);
+                    span_use_prev.resize(0);
+                    int count = 0;
                     for (int j = 0; j < the_path.length(); j++) {
-                        TVec<int>& samples_list =
+                        const TVec<int>& samples_list =
                             pattern_to_samples[the_path[j]];
                         span_path.append(samples_list);
+                        span_can_free.append(the_can_free[j]);
+                        span_use_prev.append(the_use_prev[j]);
+                        for (int k = 0; k < samples_list.length(); k++) {
+                            assert(sample_to_path_index[samples_list[k]]==-1);
+                            sample_to_path_index[samples_list[k]] = count;
+                            count++;
+                            // Other samples with same pattern will reuse the
+                            // same covariance matrix. However, right now, it
+                            // is not completely efficient since the matrix
+                            // will still be copied.
+                            if (k > 0) {
+                                span_can_free.append(true);
+                                span_use_prev.append(true);
+                            }
+                        }
                     }
+#ifdef BOUNDCHECK
+                    int n_samples_in_cluster = clusters_samp[i].length();
+                    assert( span_path.length()      == n_samples_in_cluster );
+                    assert( span_can_free.length()  == n_samples_in_cluster );
+                    assert( span_use_prev.length()  == n_samples_in_cluster );
+#endif
                 }
+                // Make sure all samples belong to a path.
+                assert( sample_to_path_index.find(-1) == -1 );
+            }
 
-            }
-            }
-           
             // Compute some statistics on the distances to templates.
             /*
             Vec stats_diff(missing_patterns.width());
@@ -2569,7 +2759,7 @@ void GaussMix::train()
             computePosteriors();
             updateSampleWeights();
             replaced_gaussian = computeMixtureWeights();
-            // replaced_gaussian = false; // TODO Remove this (hack for speed).
+            // replaced_gaussian = false; // Hack for speed.
         } while (replaced_gaussian);
         computeMeansAndCovariances();
         precomputeAllGaussianLogCoefficients();
@@ -2598,12 +2788,16 @@ void GaussMix::train()
 ///////////////////
 // traverse_tree //
 ///////////////////
-void GaussMix::traverse_tree(TVec<int>& path, bool free_previous,
-                              int index_node, int previous_node,
-                              const TVec<int>& parent,
-                              const TVec< TVec<int> >& children,
-                              const TVec<int>& message_up,
-                              const TVec<int>& message_down)
+void GaussMix::traverse_tree(TVec<int>& path,
+                             TVec<bool>& span_can_free,
+                             TVec<bool>& span_use_previous,
+                             bool free_previous,
+                             bool use_previous,
+                             int index_node, int previous_node,
+                             const TVec<int>& parent,
+                             const TVec< TVec<int> >& children,
+                             const TVec<int>& message_up,
+                             const TVec<int>& message_down)
 {
     TVec<int> candidates;
     TVec<int> messages;
@@ -2625,6 +2819,8 @@ void GaussMix::traverse_tree(TVec<int>& path, bool free_previous,
                   "sorting algorithm");
 
     path.append(index_node);
+    span_can_free.append(free_previous);
+    span_use_previous.append(use_previous);
 
     for (int i = 0; i < candidates.length(); i++) {
         int arg_min = i;
@@ -2640,7 +2836,9 @@ void GaussMix::traverse_tree(TVec<int>& path, bool free_previous,
         int node = candidates[i];
         assert( node != index_node && node != previous_node );
         bool can_free = (i == candidates.length() - 1);
-        traverse_tree(path, can_free, node, index_node, parent,
+        bool can_use_previous = (i == 0);
+        traverse_tree(path, span_can_free, span_use_previous, can_free,
+                can_use_previous, node, index_node, parent,
                 children, message_up, message_down);
     }
 }
