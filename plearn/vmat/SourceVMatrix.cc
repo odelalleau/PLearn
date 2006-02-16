@@ -56,6 +56,14 @@ SourceVMatrix::SourceVMatrix(bool call_build_)
         build_();
 }
 
+SourceVMatrix::SourceVMatrix(VMat the_source, bool call_build_)
+    : inherited(call_build_),
+      source(the_source)
+{
+    if( call_build_ )
+        build_();
+}
+
 SourceVMatrix::SourceVMatrix(VMat the_source, int the_length, int the_width,
                              bool call_build_)
     : inherited(the_length, the_width, call_build_),

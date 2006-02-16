@@ -95,6 +95,8 @@ public:
     // initializes all fields to reasonable default values.
     SourceVMatrix(bool call_build_ = false);
 
+    SourceVMatrix(VMat the_source, bool call_build_ = false);
+
     SourceVMatrix(VMat the_source, int the_length, int the_width,
                   bool call_build_ = false);
 
