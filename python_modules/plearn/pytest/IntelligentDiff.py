@@ -223,7 +223,7 @@ class IntelligentDiff:
             of = os.path.join(other, of_name)
             self.diff(bf, of)
 
-    def diff_files(self, bench, other, diff_template = 'toldiff %s %s'): #'diff -u %s %s'):
+    def diff_files(self, bench, other, diff_template = 'toldiff %s %s %s'):
         if bench.endswith( 'metainfos.txt' ):
             vprint('Skipping metainfos.txt comparison', 2)
             return
@@ -234,17 +234,17 @@ class IntelligentDiff:
 
         if toolkit.isvmat( bench ):
             diff_template =\
-                self.pfilecmd() + ' vmat diff %s %s ' + str(self.test.precision)
+                self.pfilecmd() + ' vmat diff %s %s %s'
 
         if bench.endswith('_rw'):
             diff_template =\
-                self.pfilecmd() + ' diff %s %s ' + str(self.test.precision)
+                self.pfilecmd() + ' diff %s %s %s'
         
         bench_dir = os.path.dirname(bench)
         other_dir = os.path.dirname(other)
         
         ## self.preprocess(other, bench_dir, other_dir)
-        some_diff = toolkit.command_output(diff_template % (bench, other))
+        some_diff = toolkit.command_output(diff_template % (bench, other, self.test.precision))
         if some_diff:
             self.differences.append("%s and %s differ:\n" % (bench,other) )
             self.differences.extend( some_diff )
