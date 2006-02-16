@@ -62,6 +62,14 @@ void choleskyAppendDimension(Mat& L, const Vec& new_row)
     assert( new_row.length() == n + 1 );
     assert( new_row.last() >= 0 );
 
+    if (n == 0) {
+        // Simpler version for this specific case.
+        L.resize(1, 1);
+        L(0, 0) = sqrt(new_row[0]);
+        assert( !L.hasMissing() );
+        return;
+    }
+
     last_row.resize(n);
     choleskyLeftSolve(L, new_row.subVec(0, n), last_row);
     last_row.append(sqrt(new_row.last() - pownorm(last_row)));
