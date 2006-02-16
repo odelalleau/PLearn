@@ -652,6 +652,7 @@ public:
     //!  swaps first and last element, second and second last, etc... (mirror symmetry). 
     inline void swap()
     {
+        if (isEmpty()) return;
         int half = length()/2;
         T* ptr = data();
         for(int i=0; i<half; i++)
