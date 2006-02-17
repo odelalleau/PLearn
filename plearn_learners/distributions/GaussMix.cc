@@ -713,10 +713,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         // pout << "path index = " << path_index << endl;
                         L_tot.resize(n_non_missing, n_non_missing);
                         // L_tpl = chol_cov_template(tpl_idx, j);
-                        // Note that the first sample in the path will always
-                        // use the previous covariance matrix.
-                        if (spanning_use_previous[current_cluster][path_index] ||
-                            path_index == 0)
+                        if (spanning_use_previous[current_cluster][path_index])
                             queue_index = cholesky_queue.length() - 1;
                         else
                             queue_index = cholesky_queue.length() - 2;
@@ -820,18 +817,18 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     // Now remember L_tot for the generations to come.
                     // TODO This could probably be optimized to avoid useless
                     // copies of the covariance matrix.
-                    if (!spanning_can_free[current_cluster][path_index]) {
+                    if (!spanning_can_free[current_cluster][path_index])
                         queue_index++;
-                        cholesky_queue.resize(queue_index + 1);
-                        indices_queue.resize(queue_index + 1);
-                        // pout << "length = " << cholesky_queue.length() << endl;
-                    }
+                    cholesky_queue.resize(queue_index + 1);
+                    indices_queue.resize(queue_index + 1);
+                    // pout << "length = " << cholesky_queue.length() << endl;
                     Mat& chol = cholesky_queue[queue_index];
                     chol.resize(L_tot.length(), L_tot.width());
                     chol << L_tot;
                     TVec<int>& ind = indices_queue[queue_index];
                     ind.resize(ind_tot.length());
                     ind << ind_tot;
+                    pout << "queue_index = " << queue_index << endl;
                     }
 
                     if (!efficient_missing) {
@@ -2578,7 +2575,7 @@ void GaussMix::train()
                 span_use_previous.resize(0);
                 span_can_free.resize(0);
                 traverse_tree(span_path, span_can_free, span_use_previous,
-                              false, false, start_node, -1, parent,
+                              true, true, start_node, -1, parent,
                               children, message_up, message_down);
                 assert( span_path.length()          == n );
                 assert( span_can_free.length()      == n );
