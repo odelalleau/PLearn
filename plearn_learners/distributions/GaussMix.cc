@@ -828,7 +828,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     TVec<int>& ind = indices_queue[queue_index];
                     ind.resize(ind_tot.length());
                     ind << ind_tot;
-                    pout << "queue_index = " << queue_index << endl;
+                    // pout << "queue_index = " << queue_index << endl;
                     }
 
                     if (!efficient_missing) {
@@ -2399,6 +2399,10 @@ void GaussMix::train()
                     pb = new ProgressBar("Building graph of missing patterns",
                                          n);
                 int progress = 0;
+                /*
+                PStream out = openFile("/u/delallea/tmp/edges.amat",
+                        PStream::raw_ascii, "w");
+                        */
                 for (int i = 0; i < cluster_tpl.length(); i++) {
                     for (int j = i + 1; j < cluster_tpl.length(); j++) {
                         edges.append( Edge(i, j) );
@@ -2412,11 +2416,16 @@ void GaussMix::train()
                             missing_j++;
                         }
                         weights.append(w);
+                        /*
+                        out << "E(" << i << ", " << j << "), ";
+                        out << w << ", ";
+                        */
                     }
                     progress += cluster_tpl.length() - i - 1;
                     if (pb)
                         pb->update(progress);
                 }
+                // out.flush();
                 if (pb) delete pb;
                 TVec<int> parent;
                 if (edges.isEmpty()) {
@@ -2442,6 +2451,34 @@ void GaussMix::train()
                 parent.resize(int(pred.size()));
                 for (std::size_t i = 0; i != pred.size(); i++)
                     parent[int(i)] = int(pred[i]);
+
+                /*
+                // Code to save the graph to display it in Matlab.
+                out = openFile("/u/delallea/tmp/tree.amat",
+                        PStream::raw_ascii, "w");
+                for (int i = 0; i < parent.length(); i++)
+                    if (parent[i] != i)
+                        out << parent[i] + 1 << " ";
+                    else
+                        out << 0 << " ";
+
+                out = openFile("/u/delallea/tmp/weight.amat",
+                        PStream::raw_ascii, "w");
+                for (int i = 0; i < parent.length(); i++) {
+                    int j = parent[i];
+                    // Looking for weight between nodes i and j.
+                    int w = 0;
+                    bool* missing_i = missing_patterns[cluster_tpl[i]];
+                    bool* missing_j = missing_patterns[cluster_tpl[j]];
+                    for (int k = 0; k < missing_patterns.width(); k++) {
+                        if (*missing_i != *missing_j)
+                            w++;
+                        missing_i++;
+                        missing_j++;
+                    }
+                    out << w << " ";
+                }
+                */
                 }
 
                 // Compute list of nodes, from top to bottom.
@@ -2574,8 +2611,11 @@ void GaussMix::train()
                 span_path.resize(0);
                 span_use_previous.resize(0);
                 span_can_free.resize(0);
+                // Note: 'free_previous' is set to 'false', meaning we might be
+                // using one more matrix than necessary. TODO Investigate
+                // exactly how this should be done.
                 traverse_tree(span_path, span_can_free, span_use_previous,
-                              true, true, start_node, -1, parent,
+                              false, true, start_node, -1, parent,
                               children, message_up, message_down);
                 assert( span_path.length()          == n );
                 assert( span_can_free.length()      == n );
@@ -2605,6 +2645,9 @@ void GaussMix::train()
                     stats_diff[dist]++;
                 }
                 real avg_dist = sum / real(counter);
+                // TODO Note that the quantity below is not exactly what we're
+                // interested in: it does not take into account the fact that
+                // we come back in the tree (branch switching).
                 if (verbosity >= 5)
                     pout << "Average distance to next pattern: " << avg_dist
                          << endl;
