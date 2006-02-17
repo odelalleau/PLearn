@@ -1,0 +1,102 @@
+from plearn.pyplearn import *
+
+#####  Calendar Regressors  #################################################
+
+def calendar_regressors_at_output( base_plearner,
+                                   inputsize,  targetsize,
+                                   outputsize, weightsize,
+                                   include_day_of_week   = True,
+                                   include_month         = True,
+                                   include_ends_of_month = True ) :
+    """Modify a base learner (PLearner) to include calendar regressors at
+    OUTPUTS.  The inputs to the base learner are passed through unmodified,
+    except for the first column (assumed to be the date in CYYMMDD format)
+    which is stripped from the underlying learner's view.  The first input
+    is assumed to be the date in CYYMMDD format.  At output, the calendar
+    regressors are added following the regular outputs coming from the
+    underlying learner.  The typical use for this is to perform a step of
+    preprocessing (PCA) in the base learner.  The whole thing should then
+    be sandwiched with a real learner using e.g. a StackedLearner."""
+
+    day_of_week = \
+    """
+    ## day-of-week
+    0 memget dayofweek 4 /                                 :weekday
+    0 memget dayofweek 5 onehot pop                        :weekday:0:3
+
+    ## are we on a 'odd' week
+    0 memget 900101 daydiff 7 / floor 2 mod                :oddweek 
+    """
+
+    monthly = \
+    """
+    0 memget month 1 - 11 /                                :month
+    0 memget month 1 - 12 onehot pop                       :month:1:11
+    """
+
+    month_ends = \
+    """
+    ## Find the last day of the month: PUT IN MEMORY LOCATION 10
+    0 memget month 12 mod 1 +
+    dup
+    1 == 0 memget year +
+    exch
+    1 todate date2julian 1 - julian2date day               10 memput
+
+    ## Relative position within month
+    0 memget day 10 memget /                               :monthfrac
+
+    ## Are we close end-of-month or beginning-of-month
+    10 memget 0 memget day      - 4 / 2 ^ neg exp          :endofmonth
+              0 memget day 1 -    4 / 2 ^ neg exp          :begofmonth
+    """
+
+    ##  When passing inputs to underlying model, start at 1 to skip date
+    ##  in column 0
+    train_preproc = "[%%1:%%%d]\n" % (inputsize+targetsize+weightsize-1)
+    input_preproc = "[%%1:%%%d]\n" % (inputsize - 1)
+
+    output_postproc = "[%%0:%%%d]\n" % (outputsize - 1)
+    if include_day_of_week  :  output_postproc += day_of_week; outputsize += 6
+    if include_month        :  output_postproc += monthly    ; outputsize += 12
+    if include_ends_of_month:  output_postproc += month_ends ; outputsize += 3
+
+    learner = pl.VPLPreprocessedLearner(newtargetsize    = targetsize,
+                                        newweightsize    = weightsize,
+                                        trainset_preproc = train_preproc,
+                                        input_preproc    = input_preproc,
+                                        output_postproc  = output_postproc,
+                                        costs_postproc   = "",
+                                        learner          = base_plearner)
+
+    return learner, outputsize
+
+
+#####  PCA  #################################################################
+
+def PCA(ncomps):
+    return pl.PCA(algo='classical', ncomponents = ncomps,
+                  normalize=1, normalize_warning=0, report_progress=0)
+
+
+#####  Main  ################################################################
+
+def main():
+    raw_data = TMat([ [ 1040901, 1, 2 ],
+                      [ 1040902, 2, 4 ],
+                      [ 1040930, 3, 6 ],
+                      [ 1041001, 4, 9 ] ] )
+    vmat_data = pl.MemoryVMatrix(data       = raw_data,
+                                 inputsize  = 3, targetsize = 0, weightsize = 0)
+    base_learner = PCA(2)
+    calendar_learner, outputsize = calendar_regressors_at_output( base_learner,
+                                                      3, 0, 2, 0,
+                                                      include_day_of_week   = True,
+                                                      include_month         = True,
+                                                      include_ends_of_month = True )
+    vmat = pl.PLearnerOutputVMatrix(data           = vmat_data,
+                                    learners       = [ calendar_learner ],
+                                    put_raw_input  = 1,
+                                    put_non_input  = 1,
+                                    train_learners = 1)
+    return vmat
