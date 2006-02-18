@@ -152,6 +152,7 @@
 #include <plearn_learners/generic/SelectInputSubsetLearner.h>
 #include <plearn_learners/generic/StackedLearner.h>
 #include <plearn_learners/generic/TestingLearner.h>
+#include <plearn_learners/generic/VPLPreprocessedLearner.h>
 
 // Hyper
 #include <plearn_learners/hyper/HyperLearner.h>
