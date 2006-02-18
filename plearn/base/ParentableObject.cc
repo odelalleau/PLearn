@@ -2,7 +2,7 @@
 
 // ParentableObject.cc
 //
-// Copyright (C) 2005 Nicolas Chapados 
+// Copyright (C) 2005-2006 Nicolas Chapados 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -87,11 +87,20 @@ void ParentableObject::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void ParentableObject::build_()
 {
+    updateChildrensParent(this);
+}
+
+void ParentableObject::updateChildrensParent(Object* parent)
+{
     if (! m_adoptive_parent) {
         // Set the backpointers of sub-objects under the current object to this.
         for (ObjectOptionsIterator it(this), end ; it != end ; ++it) {
-            if (const ParentableObject* po = dynamic_cast<const ParentableObject*>(*it))
-                const_cast<ParentableObject*>(po)->setParent(this);
+            if (const ParentableObject* cpo = dynamic_cast<const ParentableObject*>(*it)) {
+                ParentableObject* po = const_cast<ParentableObject*>(cpo);
+                po->setParent(parent);
+                if (parent)
+                    po->checkParent();
+            }
         }
     }
 }
@@ -99,6 +108,11 @@ void ParentableObject::build_()
 void ParentableObject::setParent(Object* parent)
 {
     m_parent = parent;
+}
+
+void ParentableObject::checkParent() const
+{
+    assert( m_parent );
 }
 
 
@@ -142,6 +156,15 @@ void TransparentParentable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 void TransparentParentable::build_()
 { }
 
+void TransparentParentable::updateChildrensParent(Object* the_parent)
+{
+    if (the_parent == this)
+        // parent() may be null -- this is fine
+        inherited::updateChildrensParent(parent());
+    else
+        inherited::updateChildrensParent(the_parent);
+}
+
 void TransparentParentable::setParent(Object* parent)
 {
     // Set it for ourselves
@@ -154,6 +177,16 @@ void TransparentParentable::setParent(Object* parent)
             const_cast<ParentableObject*>(po)->setParent(parent);
     }
 }
+
+void TransparentParentable::checkParent() const
+{
+    // Forward the call to sub-objects
+    for (ObjectOptionsIterator it(this), end ; it != end ; ++it) {
+        if (const ParentableObject* po = dynamic_cast<const ParentableObject*>(*it))
+            const_cast<ParentableObject*>(po)->checkParent();
+    }
+}
+
 
 } // end of namespace PLearn
 

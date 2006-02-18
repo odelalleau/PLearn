@@ -2,7 +2,7 @@
 
 // ParentableObject.h
 //
-// Copyright (C) 2005 Nicolas Chapados 
+// Copyright (C) 2005-2006 Nicolas Chapados 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -93,9 +93,19 @@ public:
     Object* parent()                       { return m_parent; }
     const Object* parent() const           { return m_parent; }
 
+    //! Function that actually does the heavy work of traversing the
+    //! descendants and setting _their_ backpointers to point to the
+    //! specified parent
+    virtual void updateChildrensParent(Object* parent);
+    
     //! Setter for the parent object; virtual since "transparent parentables"
     //! might wish to forward it to children
     virtual void setParent(Object* parent);
+
+    //! After the m_parent field of a child has been set, this function is
+    //! called so that the child has a chance to check the parent (e.g. dynamic
+    //! type checking).  By default it just asserts that there is a parent.
+    virtual void checkParent() const;
     
     
     //#####  PLearn::Object Protocol  #########################################
@@ -117,8 +127,7 @@ protected:
     bool m_adoptive_parent;
 
 private: 
-    //! Traverse the options of *this, find the ParentableObjects, and update
-    //! _their_ backpointers to point to *this
+    //! Simply call updateChildrensParent with this
     void build_();
 };
 
@@ -158,6 +167,9 @@ public:
         return static_cast<const ParentT*>(m_parent);
     }
 
+    //! Override to ensure that the assumed parent type is satisfied
+    virtual void checkParent() const;
+    
     
     //#####  PLearn::Object Protocol  #########################################
 
@@ -200,10 +212,18 @@ void TypedParentableObject<T>::build_()
 {
     // We simply dynamically check that the parent, if any, makes sense
     if (m_parent)
-        if (! dynamic_cast<T*>(m_parent))
-            PLERROR("TypedParentableObject::build_: Expected a parent of type %s "
-                    "but got one of type %s", T::_classname_().c_str(),
-                    m_parent->classname().c_str());
+        checkParent();
+}
+
+template <class T>
+void TypedParentableObject<T>::checkParent() const
+{
+    // We simply dynamically check that the parent, makes sense
+    assert( m_parent );
+    if (! dynamic_cast<T*>(m_parent))
+        PLERROR("TypedParentableObject::checkParent: Expected a parent of type %s "
+                "but got one of type %s", T::_classname_().c_str(),
+                m_parent->classname().c_str());
 }
 
 
@@ -237,9 +257,16 @@ public:
     //! Default constructor
     TransparentParentable(bool adoptive_parent = false);
 
+    //! Overridden to ensure that if "the_parent == this", we actually set the
+    //! children's parent to parent().
+    virtual void updateChildrensParent(Object* the_parent);
+    
     //! Setter directly calls all of its parentable children; transparent
     //! of transparent should work fine and skip both of them.
     virtual void setParent(Object* parent);
+
+    //! Just forward the call to its subobjects
+    virtual void checkParent() const;
     
     
     //#####  PLearn::Object Protocol  #########################################
