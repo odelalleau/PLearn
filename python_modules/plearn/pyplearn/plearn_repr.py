@@ -1,12 +1,12 @@
-import numarray, warnings                
+import warnings                
 from plearn.utilities          import toolkit
 from plearn.utilities.metaprog import public_attributes
 from plearn.utilities.Bindings import Bindings
 
-## __unreferenced_types = [ int ,   float , str ,
-##                          tuple , list ,  dict,
-##                          numarray.numarraycore.NumArray
-##                          ]
+try:
+    import numarray
+except ImportError:
+    numarray = None
 
 #
 #  Deprecated functions
@@ -175,7 +175,7 @@ def __plearn_repr( obj, indent_level, inner_repr = plearn_repr ):
         return inner_repr( obj[0], indent_level+1 ) + ':' + inner_repr( obj[1], indent_level+1 )
 
     # Stands for TMat<real>
-    elif isinstance( obj, numarray.numarraycore.NumArray ):
+    elif numarray is not None and isinstance( obj, numarray.numarraycore.NumArray ):
         shape = obj.getshape()
         if len(shape) == 1:
             listrepr = [ elem for elem in obj ]

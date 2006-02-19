@@ -88,7 +88,7 @@ def main( pytest_version ):
     ## Program name and copyrights with version number
     newline = '\n  '
     vprint(newline.join([ "%sPyTest %s"%(newline,pytest_version()),
-                          "(c) 2004, 2005, Christian Dorion",
+                          "(c) 2004-2006, Christian Dorion",
                           "This is free software distributed under a BSD type license.",
                           "Report problems to dorionc@apstat.com\n" ]), 1)
 

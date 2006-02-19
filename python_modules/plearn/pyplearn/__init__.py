@@ -1,7 +1,7 @@
 """The PyPLearn Mecanism."""
 __version_id__ = "$Id$"
 
-import new, string, numarray
+import new, string
 from pyplearn                  import *
 from PyPLearnObject            import *
 from plearn.utilities.metaprog import public_attribute_predicate
@@ -121,6 +121,8 @@ def TMat( *args ):
     @returns: PyPLearn's TMat representation
     @rtype: A numarray or L{ __TMat} wrapper
     """
+    import numarray
+    
     nargs   = len(args)
     is_real = lambda r: isinstance( r, int   ) or isinstance( r, float )
     

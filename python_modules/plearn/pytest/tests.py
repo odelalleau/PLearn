@@ -141,7 +141,7 @@ class TestStatus(PyPLearnObject):
             else:
                 return "*C FAILED C*"            
         return self.status
-        
+
 if __name__ == '__main__':
     class T:
         def directory(self):
@@ -152,6 +152,7 @@ if __name__ == '__main__':
     print s
     print repr(s)
     s.setStatus('SKIPPED')
+    print repr(s)
 
 class Test(PyTestObject):
     """Test is a class regrouping the elements that define a test for PyTest.
