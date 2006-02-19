@@ -36,7 +36,7 @@ public:
     // Your other public member functions go here
 
     //! given the input, compute the output (possibly resize it  appropriately)
-    virtual void fprop(const Vec input, Vec& output) const;
+    virtual void fprop(const Vec& input, Vec& output) const;
 
     //! Adapt based on the output gradient: this method should only
     //! be called just after a corresponding fprop; it should be
@@ -45,40 +45,50 @@ public:
     //! Since sub-classes are supposed to learn ONLINE, the object
     //! is 'ready-to-be-used' just after any bpropUpdate.
     //! N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS, WHICH
-    //! JUST CALLS bpropUpdate(input, output, output_gradient, input_gradient) AND IGNORES INPUT GRADIENT.
-    // virtual void bpropUpdate(const Vec input, const Vec output, const Vec output_gradient);
+    //! JUST CALLS
+    //!     bpropUpdate(input, output, input_gradient, output_gradient)
+    //! AND IGNORES INPUT GRADIENT.
+    // virtual void bpropUpdate(const Vec& input, const Vec& output,
+    //                          const Vec& output_gradient);
 
     //! this version allows to obtain the input gradient as well
     //! N.B. THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
-    //virtual void bpropUpdate(const Vec input, const Vec output, const Vec output_gradient, Vec& input_gradient);
+    // virtual void bpropUpdate(const Vec& input, const Vec& output,
+    //                          Vec& input_gradient,
+    //                          const Vec& output_gradient);
 
     //! Similar to bpropUpdate, but adapt based also on the estimation
     //! of the diagonal of the Hessian matrix, and propagates this
     //! back. If these methods are defined, you can use them INSTEAD of
     //! bpropUpdate(...)
-    //! N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS, WHICH JUST CALLS
-    //! bbpropUpdate(input, output, output_gradient, input_gradient, out_hess, in_hess) AND IGNORES INPUT HESSIAN AND INPUT GRADIENT.
-    //virtual void bbpropUpdate(const Vec input, const Vec output,
-    //                          const Vec output_gradient,
-    //                          const Vec output_diag_hessian);
+    //! N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS,
+    //! WHICH JUST CALLS
+    //!     bbpropUpdate(input, output, input_gradient, output_gradient,
+    //!                  out_hess, in_hess)
+    //! AND IGNORES INPUT HESSIAN AND INPUT GRADIENT.
+    // virtual void bbpropUpdate(const Vec& input, const Vec& output,
+    //                           const Vec& output_gradient,
+    //                           const Vec& output_diag_hessian);
 
     //! this version allows to obtain the input gradient and diag_hessian
-    //! N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS, WHICH 
+    //! N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS, WHICH
     //! RAISES A PLERROR.
-    //virtual void bbpropUpdate(const Vec input, const Vec output,
-    //                          const Vec output_gradient,
-    //                          Vec& input_gradient,
-    //                          const Vec output_diag_hessian,
-    //                          Vec& input_diag_hessian );
+    // virtual void bbpropUpdate(const Vec& input, const Vec& output,
+    //                           Vec& input_gradient,
+    //                           const Vec& output_gradient,
+    //                           Vec& input_diag_hessian,
+    //                           const Vec& output_diag_hessian);
 
-    //! reset the parameters to the state they would be BEFORE starting training.
-    //! Note that this method is necessarily called from build().
+    //! reset the parameters to the state they would be BEFORE starting
+    //! training.  Note that this method is necessarily called from
+    //! build().
     virtual void forget();
-    
 
-    //! optionally perform some processing after training, or after a series of fprop/bpropUpdate calls
-    //! to prepare the model for truly out-of-sample operation
-    //! THE DEFAULT IMPLEMENTATION PROVIDED IN THE SUPER-CLASS DOES NOT DO ANYTHING.
+
+    //! optionally perform some processing after training, or after a
+    //! series of fprop/bpropUpdate calls to prepare the model for truly
+    //! out-of-sample operation.  THE DEFAULT IMPLEMENTATION PROVIDED IN
+    //! THE SUPER-CLASS DOES NOT DO ANYTHING.
     // virtual void finalize();
 
     //! in case bpropUpdate does not do anything, make it known
@@ -98,17 +108,17 @@ public:
     //! Transforms a shallow copy into a deep copy
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-    
+
 protected:
     //#####  Protected Member Functions  ######################################
-    
+
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
 
-private: 
+private:
     //#####  Private Member Functions  ########################################
 
-    //! This does the actual building. 
+    //! This does the actual building.
     void build_();
 
 private:
@@ -119,7 +129,7 @@ private:
 
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(DERIVEDCLASS);
-  
+
 } // end of namespace PLearn
 
 #endif
