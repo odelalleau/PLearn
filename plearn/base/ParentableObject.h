@@ -174,7 +174,7 @@ public:
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.    
-    PLEARN_DECLARE_TEMPLATE_OBJECT(TypedParentableObject);
+    PLEARN_DECLARE_TEMPLATE_OBJECT(TypedParentableObject)
 
     // Simply calls inherited::build() then build_() 
     virtual void build();
@@ -193,7 +193,7 @@ PLEARN_IMPLEMENT_TEMPLATE_OBJECT(
     "This is a simple subclass of ParentableObject that injects type information\n"
     "about the parent.  Its build function also dynamically ensures that the\n"
     "parent is of the right type."
-    );
+    )
 
 template <class T>
 TypedParentableObject<T>::TypedParentableObject(bool adoptive_parent)

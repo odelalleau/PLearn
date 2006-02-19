@@ -192,7 +192,7 @@ protected:
 
    namespace {
        string pl_log_module_name_string(PL_LOG_MODULE_NAME);
-   };
+   }
 
 #  define MODULE_LOG                                                  \
       if (VLEVEL_NORMAL <= PL_LOG_VERBOSITY)                          \
