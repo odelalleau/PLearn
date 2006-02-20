@@ -438,7 +438,7 @@ TVec<string> PLearner::getOutputNames() const
     for(int k=0; k<n; k++)
     {
         snprintf(tmp,20,"out%d",k);
-        outnames[n] = tmp;
+        outnames[k] = tmp;
     }
     return outnames;
 }
