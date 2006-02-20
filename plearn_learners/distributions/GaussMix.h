@@ -187,6 +187,10 @@ protected:
 
     //! Index of the previous training sample whose likelihood (and associated
     //! covariance matrix) has been computed.
+    //! If set to -1, there was no previous training sample (first sample in a
+    //! cluster).
+    //! If set to -2, we do not want to use the efficient missing algorithm at
+    //! all.
     int previous_training_sample;
 
     //! A boolean indicating whether or not the last predictor part set

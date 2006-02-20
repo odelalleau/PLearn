@@ -83,6 +83,7 @@ GaussMix::GaussMix():
     // in general it should be higher than 1.
     nstages = 10;
     current_training_sample = -1;
+    previous_training_sample = -2; // Only use efficient_missing in training.
 }
 
 PLEARN_IMPLEMENT_OBJECT(GaussMix, 
@@ -652,7 +653,9 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     }*/
                 }
                 int n_non_missing = non_missing.length();
-                if (efficient_missing && previous_training_sample == -1) {
+                bool eff_missing = efficient_missing &&
+                                    (previous_training_sample != -2);
+                if (eff_missing && previous_training_sample == -1) {
                     // No previous training sample: we need to compute from
                     // scratch the Cholesky decomposition.
                     cov_y_missing.resize(n_non_missing, n_non_missing);
@@ -690,7 +693,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                 }
                 }
                 */
-                if (!efficient_missing) {
+                if (!eff_missing) {
                 cov_y_missing.resize(n_non_missing, n_non_missing);
                 for (int k = 0; k < n_non_missing; k++) {
                     mu_y_missing[k] = mu_y[non_missing[k]];
@@ -705,7 +708,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     log_likelihood = 0;
                 } else {
                     // Perform SVD of cov_y_missing.
-                    if (!efficient_missing) {
+                    if (!eff_missing) {
                     eigenVecOfSymmMat(cov_y_missing, n_non_missing,
                                       eigenvals_missing, eigenvecs_missing);
                     }
@@ -718,7 +721,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     int n_tpl;
                     int queue_index = -1;
                     int path_index = -1;
-                    if (efficient_missing) {
+                    if (eff_missing) {
                         path_index =
                             sample_to_path_index[current_training_sample];
                         // pout << "path index = " << path_index << endl;
@@ -773,7 +776,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     // decomposition of interest.
                     static Vec new_vec;
                     int n = -1;
-                    if (efficient_missing) {
+                    if (eff_missing) {
                     //L_tot.resize(n_non_missing, n_non_missing);
                         /*
                     for (int k = 0; k < add_non_missing.length(); k++) {
@@ -808,7 +811,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     }
 
                     y_centered.resize(n_non_missing);
-                    if (!efficient_missing) {
+                    if (!eff_missing) {
                     mu_y = mu_y_missing;
                     eigenvals = eigenvals_missing;
                     eigenvecs = eigenvecs_missing;
@@ -817,7 +820,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     y_centered -= mu_y;
                     }
                     
-                    if (efficient_missing) {
+                    if (eff_missing) {
                         real* center_j = center[j];
                         for (int k = 0; k < n_non_missing; k++) {
                             int ind_tot_k = ind_tot[k];
@@ -845,7 +848,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     // pout << "queue_index = " << queue_index << endl;
                     }
 
-                    if (!efficient_missing) {
+                    if (!eff_missing) {
                     real squared_norm_y_centered = pownorm(y_centered);
                     int n_eig = n_non_missing;
 
@@ -1183,6 +1186,7 @@ void GaussMix::computePosteriors() {
                     current_training_sample = -1;
                 }
             }
+            previous_training_sample = -2;
             // Get the posteriors for all samples in the cluster.
             for (int i = 0; i < samples_clust.length(); i++) {
                 real log_sum_likelihood = logadd(log_likelihood_post_clust(i));
