@@ -546,7 +546,11 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
             assert( !is_predictor );
             assert( y.length() == n_predicted );
 
-            if (y.hasMissing()) {
+            if (y.hasMissing() || efficient_missing) {
+                // TODO This will probably make the 'efficient_missing' method
+                // perform slower on data with no missing value. This should be
+                // optimized.
+
                 // We need to recompute almost everything.
                 // First the full covariance.
                 Mat& cov_y = joint_cov[j];
@@ -604,6 +608,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     }
                     */
                 }
+                /*
                 // Then extract what we want.
                 int tpl_idx;
                 TVec<bool> missing_tpl;
@@ -613,6 +618,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     sample_to_template[current_training_sample];
                 missing_tpl = missing_template(tpl_idx);
                 }
+                */
+                /*
                 static TVec<int> com_non_missing, add_non_missing, add_missing;
                 com_non_missing.resize(0);
                 add_non_missing.resize(0);
@@ -620,12 +627,14 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                 // covariance matrix that need to be deleted (because they are
                 // missing in the current template).
                 add_missing.resize(0);
+                */
 
                 non_missing.resize(0);
-                int count_tpl_dim = 0;
+                // int count_tpl_dim = 0;
                 for (int k = 0; k < n_predicted; k++) {
                     if (!is_missing(y[k])) {
                         non_missing.append(k);
+                        /*
                         if (efficient_missing) {
                         if (missing_tpl[k])
                             add_non_missing.append(k);
@@ -634,17 +643,18 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                             count_tpl_dim++;
                         }
                         }
-                    } else if (efficient_missing) {
+                        */
+                    } /*else if (efficient_missing) {
                         if (!missing_tpl[k]) {
                             add_missing.append(count_tpl_dim);
                             count_tpl_dim++;
                         }
-                    }
+                    }*/
                 }
+                int n_non_missing = non_missing.length();
                 if (efficient_missing && previous_training_sample == -1) {
                     // No previous training sample: we need to compute from
                     // scratch the Cholesky decomposition.
-                    int n_non_missing = non_missing.length();
                     cov_y_missing.resize(n_non_missing, n_non_missing);
                     for (int k = 0; k < n_non_missing; k++)
                         for (int q = 0; q < n_non_missing; q++)
@@ -660,11 +670,11 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     ind << non_missing;
                 }
                 mu_y = center(j).subVec(0, n_predicted);
-                int n_non_missing = non_missing.length();
                 mu_y_missing.resize(n_non_missing);
                 y_missing.resize(n_non_missing);
                 // Fill in first the coordinates which are in the template,
                 // then the coordinates specific to this data point.
+                /*
                 static TVec<int> tot_non_missing;
                 if (efficient_missing) {
                 tot_non_missing.resize(com_non_missing.length() +
@@ -679,6 +689,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     y_missing[k] = y[tot_non_missing[k]];
                 }
                 }
+                */
                 if (!efficient_missing) {
                 cov_y_missing.resize(n_non_missing, n_non_missing);
                 for (int k = 0; k < n_non_missing; k++) {
@@ -700,8 +711,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     }
 
                     real log_det = 0;
-                    Mat L_tpl;
-                    TVec<int> ind_tpl;
+                    static Mat L_tpl;
+                    static TVec<int> ind_tpl;
                     static Mat L_tot;
                     static TVec<int> ind_tot;
                     int n_tpl;
@@ -712,7 +723,6 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                             sample_to_path_index[current_training_sample];
                         // pout << "path index = " << path_index << endl;
                         L_tot.resize(n_non_missing, n_non_missing);
-                        // L_tpl = chol_cov_template(tpl_idx, j);
                         if (spanning_use_previous[current_cluster][path_index])
                             queue_index = cholesky_queue.length() - 1;
                         else
@@ -722,9 +732,12 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
 
                         n_tpl = L_tpl.length();
                         L_tot.resize(n_tpl, n_tpl);
-                        L_tot << L_tpl; // TODO Probably useless
+                        // L_tot << L_tpl; // TODO Probably useless
+                        /*
                         ind_tot.resize(n_non_missing);
                         ind_tot << non_missing;
+                        */
+                        ind_tot = non_missing;
 
                         /*
                         Mat tmp;
@@ -794,22 +807,23 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     log_likelihood = -0.5 * (n * Log2Pi) - log_det;
                     }
 
-                    // Old code.
+                    y_centered.resize(n_non_missing);
+                    if (!efficient_missing) {
                     mu_y = mu_y_missing;
                     eigenvals = eigenvals_missing;
                     eigenvecs = eigenvecs_missing;
 
-                    y_centered.resize(n_non_missing);
                     y_centered << y_missing;
                     y_centered -= mu_y;
+                    }
                     
                     if (efficient_missing) {
-                        // TODO Get rid of code above in this case, as it adds
-                        // useless computations.
-                        for (int k = 0; k < n_non_missing; k++)
+                        real* center_j = center[j];
+                        for (int k = 0; k < n_non_missing; k++) {
+                            int ind_tot_k = ind_tot[k];
                             y_centered[k] =
-                                y[ind_tot[k]] - center(j, ind_tot[k]);
-                    // Re-New code.
+                                y[ind_tot_k] - center_j[ind_tot_k];
+                        }
                     static Vec tmp_vec;
                     tmp_vec.resize(n);
                     choleskyLeftSolve(L_tot, y_centered, tmp_vec);
