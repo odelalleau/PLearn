@@ -726,7 +726,7 @@ string PPath::canonical() const
     // "FOO:bar" (we may want to change this behavior in the future).
 
     string canonic_path = *this;
-    DBG_LOG << plhead("canonic_path: "+canonic_path) << endl;
+    EXTREME_LOG << plhead("canonic_path: "+canonic_path) << endl;
 
     map<string, PPath>::const_iterator it  = metaprotocolToMetapath().begin();
     map<string, PPath>::const_iterator end = metaprotocolToMetapath().end();
@@ -739,15 +739,15 @@ string PPath::canonical() const
         if ( candidate.length() < metapath.length() )
         {
             // The candidate is shorter, we are not interested.
-            DBG_LOG << "Shorter:\n\t"
-                    << it->first << " -> " << candidate.c_str() << endl;
+            EXTREME_LOG << "Shorter:\n\t"
+                        << it->first << " -> " << candidate.c_str() << endl;
             ++it;
             continue;
         }
         if ( !startsWith(canonic_path, candidate) ) {
             // No match.
-            DBG_LOG << "No match:\n\t"
-                    << it->first << " -> " << candidate.c_str() << endl;
+            EXTREME_LOG << "No match:\n\t"
+                        << it->first << " -> " << candidate.c_str() << endl;
             ++it;
             continue;
         }
@@ -765,8 +765,8 @@ string PPath::canonical() const
              canonic_path[endpath] != _slash_char() &&
              !endsWith(candidate, _slash_char()) )
         {
-            DBG_LOG << "Substring:\n\t" 
-                    << it->first << " -> " << it->second.c_str() << endl;
+            EXTREME_LOG << "Substring:\n\t" 
+                        << it->first << " -> " << it->second.c_str() << endl;
             ++it;
             continue;
         }
@@ -774,8 +774,8 @@ string PPath::canonical() const
         // The current candidate is indeed a subpath of canonic_path.
         metaprotocol = it->first;
         metapath     = candidate;
-        DBG_LOG << "Kept:\n\t" 
-                << it->first << " -> " << candidate.c_str() << endl;
+        EXTREME_LOG << "Kept:\n\t" 
+                    << it->first << " -> " << candidate.c_str() << endl;
         ++it; // We iterate to find the longest matching candidate.
     }
 
