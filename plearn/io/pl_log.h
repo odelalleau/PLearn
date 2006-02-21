@@ -125,12 +125,9 @@ public:
      */
     void enableNamedLogging(const vector<string>& module_names);
 
-    //! Shortcut when only one module must be enabled; convenient for __ALL__
-    //! or __NONE__.
-    void enableNamedLogging(const string& module_name)
-    {
-        enableNamedLogging(vector<string>(1, module_name));
-    }
+    //! Shortcut for enableNamedLogging: first split the module names by comma
+    //! and call enableNamedLogging -- convenient for in-code logging enabling
+    void enableNamedLogging(const string& comma_separated_module_names);
 
     //! Return the list of modules for which named logging is enabled
     vector<string> namedLogging() const;

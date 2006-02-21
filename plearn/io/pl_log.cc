@@ -40,10 +40,13 @@
 
 /*! \file pl_log.cc */
 
+// From C++ stdlib
 #include <map>
 #include <string>
 #include <algorithm>
 #include <iterator>
+
+// From FinLearn
 #include <plearn/base/stringutils.h>
 #include "pl_log.h"
 
@@ -114,6 +117,18 @@ void PL_Log::enableNamedLogging(const vector<string>& module_names)
 }
 
 
+/**
+ *  Shortcut for enableNamedLogging: first split the module names by comma
+ *  and call enableNamedLogging -- convenient for in-code logging enabling
+ */
+void PL_Log::enableNamedLogging(const string& comma_separated_module_names)
+{
+    vector<string> module_names = split(comma_separated_module_names,
+                                        ", \t\n\r");
+    enableNamedLogging(module_names);
+}
+
+    
 /**
  *  Return the list of modules for which named logging is enabled
  */
