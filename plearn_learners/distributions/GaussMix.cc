@@ -919,7 +919,6 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
 
                     work_mat1.resize(n_predicted_ext, n_non_missing);
                     work_mat2.resize(n_predicted_ext, n_predicted_ext);
-                    Vec eigenvals;
                     real var_min = square(sigma_min);
                     eigenvalues_x_miss.resize(L, n_non_missing);
                     eigenvectors_x_miss.resize(L);
