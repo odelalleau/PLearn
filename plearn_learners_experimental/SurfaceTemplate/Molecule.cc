@@ -38,6 +38,12 @@
 
 
 #include "Molecule.h"
+#include <plearn/io/fileutils.h>
+#include <plearn/io/openFile.h>
+#include <plearn/db/getDataSet.h>
+#include <plearn/vmat/VMat.h>
+#include <plearn/vmat/AutoVMatrix.h>
+#include <plearn/vmat/MemoryVMatrix.h>
 
 namespace PLearn {
 using namespace std;
@@ -48,17 +54,156 @@ PLEARN_IMPLEMENT_OBJECT(
     "MULTI LINE\nHELP FOR USERS"
     );
 
-Molecule::Molecule() 
-    /* ### Initialize all fields to their default value */
+Molecule::Molecule()
 {
-    // ...
-
-    // ### You may (or not) want to call build_() to finish building the object
-    // ### (doing so assumes the parent classes' build_() have been called too
-    // ### in the parent classes' constructors, something that you must ensure)
 }
 
-// ### Nothing to add here, simply calls build_
+Molecule::Molecule( const PPath& filename )
+{
+    readFromFile( filename );
+    build();
+}
+
+void Molecule::readFromFile( const PPath& filename )
+{
+    // Read the geometrical informations, contained in a VRML file
+    string vrml = loadFileAsString( filename + ".vrml" );
+
+    // Read the coordinates, and store them in coordinates
+    size_t begin;
+    size_t end;
+    begin = vrml.find( "Coordinate3" );
+    if( begin != string::npos )
+    {
+        begin = vrml.find( "[", begin );
+        end = vrml.find( "]", begin );
+
+        string coordinate3 = vrml.substr( begin, end - begin + 1 );
+        PStream coords = openString( coordinate3, PStream::plearn_ascii );
+        Vec coordinates_;
+        coords >> coordinates_;
+        coordinates = coordinates_->toMat( coordinates_->length() / 3, 3 );
+    }
+    else
+        PLERROR("Molecule::readFromFile - File %s.vrml should contain a"
+                " 'Coordinate3' block.\n");
+
+    // Read the other geometrical informations (edges or faces)
+    // Search for edges informations
+    begin = vrml.find( "IndexedFaceSet" );
+    if( begin != string::npos )
+    {
+        begin = vrml.find( "[", begin );
+        end = vrml.find( "]", begin );
+
+        // store them in vrml_face_set
+        string indexedfaceset = vrml.substr( begin, end - begin + 1 );
+        PStream face_indices = openString( indexedfaceset,
+                                           PStream::plearn_ascii );
+        face_indices >> vrml_face_set;
+    }
+
+    // Search for edges informations
+    begin = vrml.find( "IndexedLineSet" );
+    if( begin != string::npos )
+    {
+        begin = vrml.find( "[", begin );
+        end = vrml.find( "]", begin );
+
+        // store them in vrml_line_set
+        string indexedlineset = vrml.substr( begin, end - begin + 1 );
+        PStream line_indices = openString( indexedlineset,
+                                           PStream::plearn_ascii );
+        line_indices >> vrml_line_set;
+    }
+
+    // Read the chemical informations, contained in an AMAT file
+    VMat features_ = getDataSet( filename + ".amat" );
+    features = features_->toMat();
+    feature_names = features_->fieldNames();
+}
+
+void Molecule::writeToFile( const PPath& filename )
+{
+    PStream vrml = openFile( filename + ".vrml", PStream::raw_ascii, "w" );
+
+    // writes VRML header and beginning of file
+    vrml<< "#VRML V1.0 ascii" << endl
+        << endl
+        << "Separator {" << endl
+        << "    Material {" << endl
+        << "        diffuseColor [ 1 1 1 ]" << endl
+        << "    }" << endl
+        << endl;
+
+    // writes coordinates
+    vrml<< "    Coordinate3 {" << endl
+        << "        point [" << endl;
+
+    for( int i=0 ; i<coordinates.length() ; i++ )
+    {
+        vrml<< "            ";
+        for( int j=0 ; j<3 ; j++ )
+            vrml<< coordinates(i,j) << " ";
+
+        vrml<< "," << endl;
+    }
+
+    vrml<< "        ]" << endl
+        << "    }" << endl
+        << endl;
+
+    // writes FaceSet (if any)
+    int faceset_size = vrml_face_set.size();
+    if( faceset_size > 0 )
+    {
+        vrml<< "    IndexedFaceSet {" << endl
+            << "        coordIndex [" << endl
+            << "            " ;
+        for( int i=0 ; i<faceset_size ; i++ )
+        {
+            int index = vrml_face_set[i];
+            if( index < 0 )
+                vrml<< "-1," << endl
+                    << "            ";
+            else
+                vrml<< index << ", ";
+        }
+        vrml<< "]" << endl
+            << "    }" << endl
+            << endl;
+    }
+
+    // writes LineSet (if any)
+    int lineset_size = vrml_line_set.size();
+    if( lineset_size > 0 )
+    {
+        vrml<< "    IndexedLineSet {" << endl
+            << "        coordIndex [" << endl
+            << "            " ;
+        for( int i=0 ; i<lineset_size ; i++ )
+        {
+            int index = vrml_line_set[i];
+            if( index < 0 )
+                vrml<< "-1," << endl
+                    << "            ";
+            else
+                vrml<< index << ", ";
+        }
+        vrml<< "]" << endl
+            << "    }" << endl
+            << endl;
+    }
+
+    // end of the file
+    vrml<< "}" << endl;
+
+    VMat features_ = new MemoryVMatrix( features );
+    features_->declareFieldNames( feature_names );
+    features_->saveAMAT( filename + ".amat", false );
+}
+
+
 void Molecule::build()
 {
     inherited::build();
@@ -69,48 +214,43 @@ void Molecule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
-    // ### shallow-copied.
-    // ### ex:
     // deepCopyField(trainvec, copies);
 
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("Molecule::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    deepCopyField( coordinates, copies );
+    deepCopyField( features, copies );
+    deepCopyField( feature_names, copies );
+    deepCopyField( vrml_face_set, copies );
+    deepCopyField( vrml_line_set, copies );
 }
 
 void Molecule::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
-
     // ### ex:
-    // declareOption(ol, "myoption", &Molecule::myoption, OptionBase::buildoption,
+    // declareOption(ol, "myoption", &Molecule::myoption,
+    //               OptionBase::buildoption,
     //               "Help text describing this option");
     // ...
 
     declareOption(ol, "coordinates", &Molecule::coordinates,
                   OptionBase::buildoption,
-                  "");
+                  "Mat containing the 3D coordinates of the surface points.");
 
     declareOption(ol, "features", &Molecule::features,
                   OptionBase::buildoption,
-                  "");
+                  "Mat containing the values of the chemical features at"
+                  " each point.");
 
     declareOption(ol, "feature_names", &Molecule::feature_names,
                   OptionBase::buildoption,
-                  "");
+                  "Name of the chemical features stored in 'features'.");
 
-    declareOption(ol, "vrml_face_infos", &Molecule::vrml_face_infos,
-                  OptionBase::buildoption,
-                  "");
+    declareOption(ol, "vrml_face_set", &Molecule::vrml_face_set,
+                  OptionBase::learntoption,
+                  "List of point indices, used to define faces in VRML.");
 
-    declareOption(ol, "vrml_line_infos", &Molecule::vrml_line_infos,
-                  OptionBase::buildoption,
-                  "");
+    declareOption(ol, "vrml_line_set", &Molecule::vrml_line_set,
+                  OptionBase::learntoption,
+                  "List of point indices, used to define lines in VRML.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -122,9 +262,23 @@ void Molecule::build_()
     // ### according to set 'options', in *any* situation. 
     // ### Typical situations include:
     // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-    // ### You should assume that the parent class' build_() has already been called.
+    // ###  - Building of a "reloaded" object: i.e. from the complete set of
+    // ###    all serialised options.
+    // ###  - Updating or "re-building" of an object after a few "tuning"
+    // ###    options have been modified.
+    // ### You should assume that the parent class' build_() has already been
+    // ### called.
+
+    // check consistency of the sizes.
+    int n_points = coordinates.length();
+    int feat_size = features.width();
+    int n_features = features.length();
+
+    if( feat_size > 0 && n_features != n_points )
+        PLERROR("In Molecule::build_ - coordinates.length() should be equal\n"
+                "to features.length(), unless features is empty (%d != %d).\n",
+                n_points, n_features );
+
 }
 
 

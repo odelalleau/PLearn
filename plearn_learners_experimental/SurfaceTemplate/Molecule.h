@@ -49,14 +49,13 @@ class Molecule;
 typedef PP<Molecule> Mol;
 
 /**
- * The first sentence should be a BRIEF DESCRIPTION of what the class does.
- * Place the rest of the class programmer documentation here.  Doxygen supports
- * Javadoc-style comments.  See http://www.doxygen.org/manual.html
+ * A molecular surface, represented by a list of points and features on them.
+ * The 3D coordinates and values of some chemical features are stored, as well
+ * as the name of these features, and informations that allow to save it as a
+ * VRML file.
+ * This class is usually built from a pair of (.vrml, .amat) files, or by
+ * deepCopy of an existing object.
  *
- * @todo Write class to-do's here if there are any.
- *
- * @deprecated Write deprecated stuff here if there is any.  Indicate what else
- * should be used instead.
  */
 class Molecule : public Object
 {
@@ -68,63 +67,66 @@ public:
     //! ### declare public option fields (such as build options) here
     //! Start your comments with Doxygen-compatible comments such as //!
 
+    //! Mat containing the 3D coordinates of the surface points.
     Mat coordinates;
+
+    //! Mat containing the values of the chemical features at each point.
     Mat features;
+
+    //! Name of the chemical features stored in 'features'.
     TVec<string> feature_names;
 
-//    PPath filename;
-    TVec<int> vrml_face_infos;
-    TVec<int> vrml_line_infos;
+    //! List of point indices, used to define faces in VRML.
+    TVec<int> vrml_face_set;
+
+    //! List of point indices, used to define lines in VRML.
+    TVec<int> vrml_line_set;
 
 public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
-    // ### Make sure the implementation in the .cc
-    // ### initializes all fields to reasonable default values.
     Molecule();
 
-    // Your other public member functions go here
-    
-    
+    //! Constructor from files (call readFromFile). Usually used.
+    Molecule( const PPath& filename );
+
+    //! reads geometry from filename.vrml and features from filename.amat
+    void readFromFile( const PPath& filename );
+
+    //! writes geometry in filename.vrml and features in filename.amat
+    void writeToFile( const PPath& filename );
+
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
-    // ### If your class is not instantiatable (it has pure virtual methods)
-    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT 
     PLEARN_DECLARE_OBJECT(Molecule);
 
     // Simply calls inherited::build() then build_() 
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
     //#####  Protected Options  ###############################################
 
-    // ### Declare protected option fields (such as learned parameters) here
-    // ...
-    
 protected:
     //#####  Protected Member Functions  ######################################
-    
+
     //! Declares the class options.
-    // (PLEASE IMPLEMENT IN .cc)
     static void declareOptions(OptionList& ol);
 
 private: 
     //#####  Private Member Functions  ########################################
 
     //! This does the actual building. 
-    // (PLEASE IMPLEMENT IN .cc)
     void build_();
 
 private:
     //#####  Private Data Members  ############################################
 
-    // The rest of the private stuff goes here
 };
 
 // Declares a few other classes and functions related to this class
