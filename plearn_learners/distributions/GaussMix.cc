@@ -721,6 +721,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     int n_tpl;
                     int queue_index = -1;
                     int path_index = -1;
+                    bool same_covariance = false;
                     if (eff_missing) {
                         path_index =
                             sample_to_path_index[current_training_sample];
@@ -735,12 +736,23 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
 
                         n_tpl = L_tpl.length();
                         L_tot.resize(n_tpl, n_tpl);
-                        // L_tot << L_tpl; // TODO Probably useless
                         /*
                         ind_tot.resize(n_non_missing);
                         ind_tot << non_missing;
                         */
                         ind_tot = non_missing;
+
+                        // Optimization: detect when the same covariance matrix
+                        // can be re-used.
+                        same_covariance =
+                            ind_tpl.length() == ind_tot.length() &&
+                            previous_training_sample >= 0;
+                        if (same_covariance)
+                            for (int i = 0; i < ind_tpl.length(); i++)
+                                if (ind_tpl[i] != ind_tot[i]) {
+                                    same_covariance = false;
+                                    break;
+                                }
 
                         /*
                         Mat tmp;
@@ -776,6 +788,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     // decomposition of interest.
                     static Vec new_vec;
                     int n = -1;
+                    Mat* the_L = 0;
                     if (eff_missing) {
                     //L_tot.resize(n_non_missing, n_non_missing);
                         /*
@@ -787,8 +800,10 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         choleskyAppendDimension(L_tot, new_vec);
                     }
                         */
+                    if (!same_covariance) {
                     updateCholeskyFromPrevious(L_tpl, L_tot, joint_cov[j],
                             ind_tpl, ind_tot);
+                    }
                     // Note to myself: indices in ind_tot will be changed.
 
                     // Debug check.
@@ -799,13 +814,12 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     // pout << "max = " << max(tmp_mat) << endl;
                     // pout << "min = " << min(tmp_mat) << endl;
                     */
+                    the_L = same_covariance ? &L_tpl : &L_tot;
 
-                    // Free a reference to element in cholesky_queue.
-                    L_tpl = dummy_mat;
 
-                    n = L_tot.length();
+                    n = the_L->length();
                     for (int i = 0; i < n; i++)
-                        log_det += pl_log(L_tot(i, i));
+                        log_det += pl_log((*the_L)(i, i));
                     assert( !(isnan(log_det) || isinf(log_det)) );
                     log_likelihood = -0.5 * (n * Log2Pi) - log_det;
                     }
@@ -829,23 +843,36 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         }
                     static Vec tmp_vec;
                     tmp_vec.resize(n);
-                    choleskyLeftSolve(L_tot, y_centered, tmp_vec);
+                    choleskyLeftSolve(*the_L, y_centered, tmp_vec);
                     log_likelihood -= 0.5 * pownorm(tmp_vec);
                     // Now remember L_tot for the generations to come.
                     // TODO This could probably be optimized to avoid useless
                     // copies of the covariance matrix.
-                    if (!spanning_can_free[current_cluster][path_index])
+                    bool cannot_free =
+                        !spanning_can_free[current_cluster][path_index];
+                    if (cannot_free)
                         queue_index++;
                     cholesky_queue.resize(queue_index + 1);
                     indices_queue.resize(queue_index + 1);
                     // pout << "length = " << cholesky_queue.length() << endl;
+
+                    if (!cannot_free)
+                        // Free a reference to element in cholesky_queue. This
+                        // is needed beccause this matrix is going to be
+                        // resized.
+                        L_tpl = dummy_mat;
+
+                    if (!same_covariance || cannot_free) {
                     Mat& chol = cholesky_queue[queue_index];
                     chol.resize(L_tot.length(), L_tot.width());
                     chol << L_tot;
                     TVec<int>& ind = indices_queue[queue_index];
                     ind.resize(ind_tot.length());
                     ind << ind_tot;
+                    }
+
                     // pout << "queue_index = " << queue_index << endl;
+
                     }
 
                     if (!eff_missing) {
