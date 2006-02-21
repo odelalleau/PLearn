@@ -38,6 +38,7 @@
 
 
 #include "MoleculeTemplate.h"
+#include <plearn/math/TMat.h>
 
 namespace PLearn {
 using namespace std;
@@ -48,17 +49,24 @@ PLEARN_IMPLEMENT_OBJECT(
     "MULTI LINE\nHELP FOR USERS"
     );
 
-MoleculeTemplate::MoleculeTemplate() 
+MoleculeTemplate::MoleculeTemplate()
+   : class_label( -1 )
     /* ### Initialize all fields to their default value */
 {
     // ...
-
-    // ### You may (or not) want to call build_() to finish building the object
-    // ### (doing so assumes the parent classes' build_() have been called too
-    // ### in the parent classes' constructors, something that you must ensure)
 }
 
-// ### Nothing to add here, simply calls build_
+MoleculeTemplate::MoleculeTemplate( const Molecule& molecule,
+                                    const Vec& the_geom_dev,
+                                    const Mat& the_feat_dev,
+                                    int the_class_label )
+    : inherited( molecule ),
+      geom_dev( the_geom_dev ),
+      feat_dev( the_feat_dev ),
+      class_label( the_class_label )
+{
+}
+
 void MoleculeTemplate::build()
 {
     inherited::build();
@@ -69,40 +77,29 @@ void MoleculeTemplate::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
-    // ### shallow-copied.
-    // ### ex:
     // deepCopyField(trainvec, copies);
 
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("MoleculeTemplate::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    deepCopyField(geom_dev, copies);
+    deepCopyField(feat_dev, copies);
 }
 
 void MoleculeTemplate::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
-
-    // ### ex:
     // declareOption(ol, "myoption", &MoleculeTemplate::myoption, OptionBase::buildoption,
     //               "Help text describing this option");
-    // ...
 
     declareOption(ol, "geom_dev", &MoleculeTemplate::geom_dev,
                   OptionBase::buildoption,
-                  "");
+                  "Standard deviations of the geometrical distance");
 
     declareOption(ol, "feat_dev", &MoleculeTemplate::feat_dev,
                   OptionBase::buildoption,
-                  "");
+                  "Standard deviations of each chemical property");
 
     declareOption(ol, "class_label", &MoleculeTemplate::class_label,
                   OptionBase::buildoption,
-                  "");
+                  "Class label (0 for inactive, 1 for active, -1 for"
+                  " uninitialized");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -110,13 +107,44 @@ void MoleculeTemplate::declareOptions(OptionList& ol)
 
 void MoleculeTemplate::build_()
 {
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation. 
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-    // ### You should assume that the parent class' build_() has already been called.
+    // Size check
+    int n_points = coordinates.length();
+    int geom_dev_length = geom_dev.length();
+    int feat_size = features.width();
+    int feat_dev_length = feat_dev.length();
+    int feat_dev_width = feat_dev.width();
+
+    // TODO: resize if empty?
+    if( geom_dev_length == 0 )
+    {
+        PLWARNING( "MoleculeTemplate::build_ - geom_dev.length() == 0,\n"
+                   "resizing to coordinates.length() (%d), and filling with"
+                   " 1's.\n", n_points );
+        geom_dev = Vec( n_points, 1 );
+    }
+    else if( geom_dev_length != n_points )
+        PLERROR( "MoleculeTemplate::build_ - geom_dev.length() should be equal"
+                 " to\n"
+                 "coordinates.length() (%d != %d).\n",
+                 geom_dev_length, n_points );
+
+    if( feat_dev_length == 0 && feat_dev_width == 0 )
+    {
+        PLWARNING( "MoleculeTemplate::build_ - feat_dev.length() == 0 and\n"
+                   "feat_dev.width() == 0. Resizing to coordinates sizes\n"
+                   "(%d × %d), and filling with 1's.\n", n_points, feat_size );
+        geom_dev = Mat( n_points, feat_size, 1 );
+    }
+    else if( feat_dev_length != n_points )
+        PLERROR( "MoleculeTemplate::build_ - feat_dev.length() should be equal"
+                 " to\n"
+                 "coordinates.length() (%d != %d).\n",
+                 feat_dev_length, n_points );
+    else if( feat_dev_width != feat_size )
+        PLERROR( "MoleculeTemplate::build_ - feat_dev.width() should be equal"
+                 " to\n"
+                 "features.width() (%d != %d).\n", feat_dev_width, feat_size );
+
 }
 
 

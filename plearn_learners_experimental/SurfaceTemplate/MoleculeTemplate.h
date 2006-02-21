@@ -49,28 +49,29 @@ class MoleculeTemplate;
 typedef PP<MoleculeTemplate> MolTemplate;
 
 /**
- * The first sentence should be a BRIEF DESCRIPTION of what the class does.
- * Place the rest of the class programmer documentation here.  Doxygen supports
- * Javadoc-style comments.  See http://www.doxygen.org/manual.html
+ * Subclass of Molecule, plus standard devs of points' positions and features.
+ * Initialization is usually be done from a deepCopy of an existing Molecule
+ * object.
  *
- * @todo Write class to-do's here if there are any.
- *
- * @deprecated Write deprecated stuff here if there is any.  Indicate what else
- * should be used instead.
  */
 class MoleculeTemplate : public Molecule
 {
-    typedef Object Molecule;
+    typedef Molecule inherited;
 
 public:
     //#####  Public Build Options  ############################################
 
     //! ### declare public option fields (such as build options) here
-    //! Start your comments with Doxygen-compatible comments such as //!
 
+    //! standard deviations of the geometrical distance
     Vec geom_dev;
+
+    //! standard deviations of each chemical property
     Mat feat_dev;
+
+    //! class label, 0 for inactive, 1 for active, -1 for uninitialized
     int class_label;
+
 
 public:
     //#####  Public Member Functions  #########################################
@@ -80,9 +81,15 @@ public:
     // ### initializes all fields to reasonable default values.
     MoleculeTemplate();
 
+    //! Constructor from parent
+    MoleculeTemplate( const Molecule& molecule,
+                      const Vec& the_geom_dev = Vec(),
+                      const Mat& the_feat_dev = Mat(),
+                      int the_class_label = -1 );
+
     // Your other public member functions go here
-    
-    
+
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
@@ -102,7 +109,7 @@ protected:
 
     // ### Declare protected option fields (such as learned parameters) here
     // ...
-    
+
 protected:
     //#####  Protected Member Functions  ######################################
     
