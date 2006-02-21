@@ -172,7 +172,8 @@ protected:
     //! The (i,j)-th element is the matrix L in the Cholesky decomposition of
     //! the covariance for the pattern of missing values of the i-th template
     //! for the j-th Gaussian.
-    TMat<Mat> chol_cov_template;
+    // TMat<Mat> chol_cov_template;
+    // TODO Remove: not needed anymore.
 
     //! Indicates at which stage the full joint covariance was computed in
     //! 'joint_cov' (so that we know there is no need to compute it again).

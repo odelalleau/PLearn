@@ -1601,7 +1601,7 @@ void GaussMix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(log_coeff_y_x,            copies);
     deepCopyField(joint_cov,                copies);
     deepCopyField(chol_joint_cov,           copies);
-    deepCopyField(chol_cov_template,        copies);
+    // deepCopyField(chol_cov_template,        copies);
     deepCopyField(stage_joint_cov_computed, copies);
     deepCopyField(sample_to_template,       copies);
     deepCopyField(y_centered,               copies);
@@ -1724,7 +1724,7 @@ void GaussMix::resizeDataBeforeUsing()
     stage_joint_cov_computed.resize(0);
     y_x_mat.resize(0);
 
-    chol_cov_template.resize(0, 0);
+    // chol_cov_template.resize(0, 0);
     center_y_x.resize(0, 0);
     eigenvalues_x.resize(0, 0);
     eigenvalues_y_x.resize(0, 0);
@@ -1745,8 +1745,8 @@ void GaussMix::resizeDataBeforeUsing()
         stage_joint_cov_computed.fill(-1);
         y_x_mat.resize(L);
 
-        if (efficient_missing)
-            chol_cov_template.resize(efficient_k_median, L);
+        // if (efficient_missing)
+            // chol_cov_template.resize(efficient_k_median, L);
         if (n_predictor >= 0)
             eigenvalues_x.resize(L, n_predictor);
         if (n_predicted >= 0) {
@@ -2304,27 +2304,29 @@ void GaussMix::train()
             TVec<int> indices(0, missing_patterns.length() - 1, 1);
             // TODO Use random (but -> different k-means initialization)
             PRandom::common(false)->shuffleElements(indices);
+            int n_clusters = min(efficient_k_median,
+                                 missing_patterns.length());
             missing_template.resize(
-                    efficient_k_median, missing_patterns.width());
+                    n_clusters, missing_patterns.width());
             TVec<int> missing_assign(missing_patterns.length(), -1);
-            for (int i = 0; i < efficient_k_median; i++) {
+            for (int i = 0; i < n_clusters; i++) {
                 missing_template(i) << missing_patterns(indices[i]);
             }
             bool finished = false;
-            TVec<int> n_diffs(efficient_k_median);
+            TVec<int> n_diffs(n_clusters);
             int count_iter = 0;
             ProgressBar* pb = 0;
             if (report_progress)
                 pb = new ProgressBar("Performing k-median on " +
                         tostring(missing_patterns.length())    +
                         " missing patterns", efficient_k_median_iter);
-            TMat<int> majority(efficient_k_median, missing_patterns.width());
+            TMat<int> majority(n_clusters, missing_patterns.width());
             while (!finished && count_iter < efficient_k_median_iter) {
                 finished = true;
                 // Assign each missing pattern to closest template.
                 for (int i = 0; i < missing_patterns.length(); i++) {
                     n_diffs.fill(0);
-                    for (int j = 0; j < efficient_k_median; j++)
+                    for (int j = 0; j < n_clusters; j++)
                         for (int k = 0; k < missing_patterns.width(); k++)
                             if (missing_patterns(i, k) !=
                                 missing_template(j, k))
@@ -2345,7 +2347,7 @@ void GaussMix::train()
                             majority(assign, k)--;
                     }
                 }
-                for (int j = 0; j < efficient_k_median; j++)
+                for (int j = 0; j < n_clusters; j++)
                     for (int k = 0; k < missing_template.width(); k++)
                         if (majority(j, k) > 0)
                             missing_template(j, k) = true;
