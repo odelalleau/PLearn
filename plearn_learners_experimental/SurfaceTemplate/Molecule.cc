@@ -66,8 +66,40 @@ Molecule::Molecule( const PPath& filename )
 
 void Molecule::readFromFile( const PPath& filename )
 {
+    readFromVRMLFile( filename + ".vrml" );
+    readFromAMATFile( filename + ".amat" );
+}
+
+void Molecule::writeToFile( const PPath& filename )
+{
+    writeToVRMLFile( filename + ".vrml" );
+    writeToAMATFile( filename + ".amat" );
+}
+
+
+void Molecule::build()
+{
+    inherited::build();
+    build_();
+}
+
+void Molecule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    inherited::makeDeepCopyFromShallowCopy(copies);
+
+    // deepCopyField(trainvec, copies);
+
+    deepCopyField( coordinates, copies );
+    deepCopyField( features, copies );
+    deepCopyField( feature_names, copies );
+    deepCopyField( vrml_face_set, copies );
+    deepCopyField( vrml_line_set, copies );
+}
+
+void Molecule::readFromVRMLFile( const PPath& filename )
+{
     // Read the geometrical informations, contained in a VRML file
-    string vrml = loadFileAsString( filename + ".vrml" );
+    string vrml = loadFileAsString( filename );
 
     // Read the coordinates, and store them in coordinates
     size_t begin;
@@ -116,45 +148,19 @@ void Molecule::readFromFile( const PPath& filename )
                                            PStream::plearn_ascii );
         line_indices >> vrml_line_set;
     }
+}
 
+void Molecule::readFromAMATFile( const PPath& filename )
+{
     // Read the chemical informations, contained in an AMAT file
-    VMat features_ = getDataSet( filename + ".amat" );
+    VMat features_ = getDataSet( filename );
     features = features_->toMat();
     feature_names = features_->fieldNames();
 }
 
-void Molecule::writeToFile( const PPath& filename )
+void Molecule::writeToVRMLFile( const PPath& filename )
 {
-    writeVRMLToFile( filename );
-
-    VMat features_ = new MemoryVMatrix( features );
-    features_->declareFieldNames( feature_names );
-    features_->saveAMAT( filename + ".amat", false );
-}
-
-
-void Molecule::build()
-{
-    inherited::build();
-    build_();
-}
-
-void Molecule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
-{
-    inherited::makeDeepCopyFromShallowCopy(copies);
-
-    // deepCopyField(trainvec, copies);
-
-    deepCopyField( coordinates, copies );
-    deepCopyField( features, copies );
-    deepCopyField( feature_names, copies );
-    deepCopyField( vrml_face_set, copies );
-    deepCopyField( vrml_line_set, copies );
-}
-
-void Molecule::writeVRMLToFile( const PPath& filename )
-{
-    PStream vrml = openFile( filename + ".vrml", PStream::raw_ascii, "w" );
+    PStream vrml = openFile( filename, PStream::raw_ascii, "w" );
 
     // writes VRML header and beginning of file
     vrml<< "#VRML V1.0 ascii" << endl
@@ -228,6 +234,13 @@ void Molecule::writeVRMLToFile( const PPath& filename )
     vrml<< "}" << endl;
 }
 
+void Molecule::writeToAMATFile( const PPath& filename )
+{
+    VMat features_ = new MemoryVMatrix( features );
+    features_->declareFieldNames( feature_names );
+    features_->saveAMAT( filename, false );
+}
+
 void Molecule::declareOptions(OptionList& ol)
 {
     // ### ex:
@@ -274,15 +287,13 @@ void Molecule::build_()
     // ### You should assume that the parent class' build_() has already been
     // ### called.
 
-    // check consistency of the sizes.
-    int n_points = coordinates.length();
-    int feat_size = features.width();
-    int n_features = features.length();
+    // check consistency of the sizes
+    int features_length = features.length();
 
-    if( feat_size > 0 && n_features != n_points )
-        PLERROR("In Molecule::build_ - coordinates.length() should be equal\n"
-                "to features.length(), unless features is empty (%d != %d).\n",
-                n_points, n_features );
+    if( n_features() > 0 && features_length != n_points() )
+        PLERROR("In Molecule::build_ - features.length() should be equal to\n"
+                "coordinates.length(), unless features is empty (%d != %d).\n",
+                features_length, n_points() );
 
 }
 

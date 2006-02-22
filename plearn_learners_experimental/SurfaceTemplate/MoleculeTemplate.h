@@ -81,18 +81,16 @@ public:
     //! Default constructor
     // ### Make sure the implementation in the .cc
     // ### initializes all fields to reasonable default values.
-    MoleculeTemplate();
+    MoleculeTemplate( int the_class_label = -1 );
+
+    //! Constructor from files
+    MoleculeTemplate( const PPath& filename, int the_class_label = -1 );
 
     //! Constructor from parent
     MoleculeTemplate( const Molecule& molecule,
                       const Vec& the_geom_dev = Vec(),
                       const Mat& the_feat_dev = Mat(),
                       int the_class_label = -1 );
-
-    // Your other public member functions go here
-    //! Override parent's one, so we also save standard deviations
-    virtual void writeToFile( const PPath& filename );
-
 
     //#####  PLearn::Object Protocol  #########################################
 
@@ -116,7 +114,12 @@ protected:
 
 protected:
     //#####  Protected Member Functions  ######################################
-    
+    //! Override inherited function to read also deviation info, if able
+    virtual void readFromAMATFile( const PPath& filename );
+
+    //! Override inherited function to write also deviation info
+    virtual void writeToAMATFile( const PPath& filename );
+
     //! Declares the class options.
     // (PLEASE IMPLEMENT IN .cc)
     static void declareOptions(OptionList& ol);

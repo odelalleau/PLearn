@@ -97,6 +97,12 @@ public:
     //! writes geometry in filename.vrml and features in filename.amat
     virtual void writeToFile( const PPath& filename );
 
+    //! returns the number of points on the surface
+    inline int n_points() { return coordinates.length(); }
+
+    //! returns the dimension of the features vector
+    virtual int n_features() { return features.width(); }
+
 
     //#####  PLearn::Object Protocol  #########################################
 
@@ -115,8 +121,17 @@ protected:
 protected:
     //#####  Protected Member Functions  ######################################
 
-    //! Saves the geometric informations in a VRML file
-    virtual void writeVRMLToFile( const PPath& filename );
+    //! Reads geometric informations from file
+    virtual void readFromVRMLFile( const PPath& filename );
+
+    //! Reads features informations from file
+    virtual void readFromAMATFile( const PPath& filename );
+
+    //! Saves the geometric informations in file
+    virtual void writeToVRMLFile( const PPath& filename );
+
+    //! Saves the features informations in file
+    virtual void writeToAMATFile( const PPath& filename );
 
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
