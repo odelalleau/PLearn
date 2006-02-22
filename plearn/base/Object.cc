@@ -174,7 +174,7 @@ void Object::readOptionVal(PStream &in, const string &optionname)
                         else if (dot_pos == string::npos)
                             (*it)->readIntoIndex(this, in, index);
                         else
-                            PLERROR("Object::readOptionVal() - unknown option format '%s'",
+                            PLERROR("Object::readOptionVal() - unknown option format \"%s\"",
                                     optionname.c_str());
                         return;
                     }
@@ -199,12 +199,13 @@ void Object::readOptionVal(PStream &in, const string &optionname)
     }
     catch(const PLearnError& e)
     { 
-        PLERROR("Problem while attempting to read value of option %s of a %s:\n %s", 
+        PLERROR("Problem while attempting to read value of option \"%s\" of a \"%s\":\n %s", 
                 optionname.c_str(), classname().c_str(), e.message().c_str()); 
     }
 
     // There are bigger problems in the world but still it isn't always funny
-    PLERROR("There is no option named %s in a %s", optionname.c_str(),classname().c_str());
+    PLERROR("There is no option named \"%s\" in a \"%s\"",
+            optionname.c_str(),classname().c_str());
 }
 
 
@@ -245,7 +246,7 @@ void Object::writeOptionVal(PStream &out, const string &optionname) const
                     else if (dot_pos == string::npos)
                         (*it)->writeAtIndex(this, out, index);
                     else
-                        PLERROR("Object::writeOptionVal() - unknown option format '%s'",
+                        PLERROR("Object::writeOptionVal() - unknown option format \"%s\"",
                                 optionname.c_str());
                     return;
                 }
@@ -578,6 +579,8 @@ Object* readObject(PStream &in, unsigned int id)
         if (!o)
             PLERROR("readObject() - Type \"%s\" not declared in TypeFactory map (did you do a proper DECLARE_NAME_AND_DEEPCOPY?)", cl.c_str());
         in.unread(cl+'(');
+
+        // Finally read the guts of the object
         o->newread(in);
     }
 
