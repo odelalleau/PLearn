@@ -39,6 +39,8 @@
 
 #include "MoleculeTemplate.h"
 #include <plearn/math/TMat.h>
+#include <plearn/vmat/MemoryVMatrix.h>
+#include <plearn/vmat/ConcatColumnsVMatrix.h>
 
 namespace PLearn {
 using namespace std;
@@ -65,6 +67,29 @@ MoleculeTemplate::MoleculeTemplate( const Molecule& molecule,
       feat_dev( the_feat_dev ),
       class_label( the_class_label )
 {
+}
+
+void MoleculeTemplate::writeToFile( const PPath& filename )
+{
+    writeVRMLToFile( filename );
+
+    VMat features_ = new MemoryVMatrix( features );
+    features_->declareFieldNames( feature_names );
+
+    VMat geom_dev_ = new MemoryVMatrix( geom_dev.toMat(geom_dev.length(), 1) );
+    TVec<string> geom_dev_names( 1, "geom_dev" );
+    geom_dev_->declareFieldNames( geom_dev_names );
+
+    VMat feat_dev_ = new MemoryVMatrix( feat_dev );
+    TVec<string> feat_dev_names = feature_names.copy();
+    int n_features = feature_names.length();
+    for( int i=0 ; i<n_features ; i++ )
+        feat_dev_names[i] += "_dev";
+    feat_dev_->declareFieldNames( feat_dev_names );
+
+    VMat all = hconcat( features_, hconcat( geom_dev_, feat_dev_ ) );
+    all->defineSizes( all->width(), 0, 0 );
+    all->saveAMAT( filename + ".amat", false );
 }
 
 void MoleculeTemplate::build()
@@ -133,7 +158,7 @@ void MoleculeTemplate::build_()
         PLWARNING( "MoleculeTemplate::build_ - feat_dev.length() == 0 and\n"
                    "feat_dev.width() == 0. Resizing to coordinates sizes\n"
                    "(%d × %d), and filling with 1's.\n", n_points, feat_size );
-        geom_dev = Mat( n_points, feat_size, 1 );
+        feat_dev = Mat( n_points, feat_size, 1 );
     }
     else if( feat_dev_length != n_points )
         PLERROR( "MoleculeTemplate::build_ - feat_dev.length() should be equal"

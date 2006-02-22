@@ -50,8 +50,10 @@ typedef PP<MoleculeTemplate> MolTemplate;
 
 /**
  * Subclass of Molecule, plus standard devs of points' positions and features.
- * Initialization is usually be done from a deepCopy of an existing Molecule
- * object.
+ * There is only one geometric standard deviation per point (since space
+ * dimenstions are equivalent), there is one chemical standard deviation per
+ * chemical feature on every point (stored in the same order as the
+ * corresponding feature value).
  *
  */
 class MoleculeTemplate : public Molecule
@@ -88,6 +90,8 @@ public:
                       int the_class_label = -1 );
 
     // Your other public member functions go here
+    //! Override parent's one, so we also save standard deviations
+    virtual void writeToFile( const PPath& filename );
 
 
     //#####  PLearn::Object Protocol  #########################################

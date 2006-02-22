@@ -92,10 +92,10 @@ public:
     Molecule( const PPath& filename );
 
     //! reads geometry from filename.vrml and features from filename.amat
-    void readFromFile( const PPath& filename );
+    virtual void readFromFile( const PPath& filename );
 
     //! writes geometry in filename.vrml and features in filename.amat
-    void writeToFile( const PPath& filename );
+    virtual void writeToFile( const PPath& filename );
 
 
     //#####  PLearn::Object Protocol  #########################################
@@ -114,6 +114,9 @@ protected:
 
 protected:
     //#####  Protected Member Functions  ######################################
+
+    //! Saves the geometric informations in a VRML file
+    virtual void writeVRMLToFile( const PPath& filename );
 
     //! Declares the class options.
     static void declareOptions(OptionList& ol);

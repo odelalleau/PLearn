@@ -125,6 +125,35 @@ void Molecule::readFromFile( const PPath& filename )
 
 void Molecule::writeToFile( const PPath& filename )
 {
+    writeVRMLToFile( filename );
+
+    VMat features_ = new MemoryVMatrix( features );
+    features_->declareFieldNames( feature_names );
+    features_->saveAMAT( filename + ".amat", false );
+}
+
+
+void Molecule::build()
+{
+    inherited::build();
+    build_();
+}
+
+void Molecule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    inherited::makeDeepCopyFromShallowCopy(copies);
+
+    // deepCopyField(trainvec, copies);
+
+    deepCopyField( coordinates, copies );
+    deepCopyField( features, copies );
+    deepCopyField( feature_names, copies );
+    deepCopyField( vrml_face_set, copies );
+    deepCopyField( vrml_line_set, copies );
+}
+
+void Molecule::writeVRMLToFile( const PPath& filename )
+{
     PStream vrml = openFile( filename + ".vrml", PStream::raw_ascii, "w" );
 
     // writes VRML header and beginning of file
@@ -197,30 +226,6 @@ void Molecule::writeToFile( const PPath& filename )
 
     // end of the file
     vrml<< "}" << endl;
-
-    VMat features_ = new MemoryVMatrix( features );
-    features_->declareFieldNames( feature_names );
-    features_->saveAMAT( filename + ".amat", false );
-}
-
-
-void Molecule::build()
-{
-    inherited::build();
-    build_();
-}
-
-void Molecule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
-{
-    inherited::makeDeepCopyFromShallowCopy(copies);
-
-    // deepCopyField(trainvec, copies);
-
-    deepCopyField( coordinates, copies );
-    deepCopyField( features, copies );
-    deepCopyField( feature_names, copies );
-    deepCopyField( vrml_face_set, copies );
-    deepCopyField( vrml_line_set, copies );
 }
 
 void Molecule::declareOptions(OptionList& ol)
