@@ -78,16 +78,35 @@ namespace PLearn {
  *  can have this as their parent.  This is useful if some subobjects are
  *  pointed to by multiple ParentableObjects, and we want to control who gets
  *  to be the legitimate parent.
+ *
+ *  Each ParentableObject can be marked with the kind of parent it wants.  The
+ *  following kinds are supported:
+ *
+ *  - AnyParent    : anybody that calls setParent gets to be the parent.
+ *
+ *  - WeakParent   : the first caller to setParent gets to be the parent, the
+ *                   other ones are ignored (default).
+ *
+ *  - UniqueParent : the first caller to setParent gets to be the parent, the
+ *                   other ones yield PLERRORs.
  */
 class ParentableObject : public Object
 {
     typedef Object inherited;
 
 public:
+    //! Kind of parenting relationship; see class help for details.
+    enum ParentKind {
+        AnyParent,
+        WeakParent,
+        UniqueParent
+    };
+    
+public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
-    ParentableObject(bool adoptive_parent = false);
+    ParentableObject(bool adoptive_parent = false, ParentKind = WeakParent);
 
     //! Accessor for parent object
     Object* parent()                       { return m_parent; }
@@ -126,6 +145,9 @@ protected:
     //! If true, don't set the subobjects' parent to this
     bool m_adoptive_parent;
 
+    //! The kind of parent
+    ParentKind m_parent_kind;
+
 private: 
     //! Simply call updateChildrensParent with this
     void build_();
@@ -154,7 +176,7 @@ class TypedParentableObject : public ParentableObject
 
 public:
     //! Default constructor
-    TypedParentableObject(bool adoptive_parent = false);
+    TypedParentableObject(bool adoptive_parent = false, ParentKind = WeakParent);
     
     //! Typed version of parent accessor (hides the inherited one; this is OK)
     ParentT* parent()
@@ -196,8 +218,8 @@ PLEARN_IMPLEMENT_TEMPLATE_OBJECT(
     )
 
 template <class T>
-TypedParentableObject<T>::TypedParentableObject(bool adoptive_parent)
-    : inherited(adoptive_parent)
+TypedParentableObject<T>::TypedParentableObject(bool adoptive_parent, ParentKind pk)
+    : inherited(adoptive_parent, pk)
 { }
 
 template <class T>
@@ -221,7 +243,7 @@ void TypedParentableObject<T>::checkParent() const
     // We simply dynamically check that the parent, makes sense
     assert( m_parent );
     if (! dynamic_cast<T*>(m_parent))
-        PLERROR("TypedParentableObject::checkParent: Expected a parent of type %s "
+        PLERROR("TypedParentableObject::checkParent: Expected a parent of type %s\n"
                 "but got one of type %s", T::_classname_().c_str(),
                 m_parent->classname().c_str());
 }
@@ -255,7 +277,7 @@ public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
-    TransparentParentable(bool adoptive_parent = false);
+    TransparentParentable(bool adoptive_parent = false, ParentKind = WeakParent);
 
     //! Overridden to ensure that if "the_parent == this", we actually set the
     //! children's parent to parent().

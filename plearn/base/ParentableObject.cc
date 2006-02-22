@@ -40,8 +40,12 @@
 
 /*! \file ParentableObject.cc */
 
+#define PL_LOG_MODULE_NAME "ParentableObject"
+
 #include "ParentableObject.h"
 #include <plearn/base/ObjectGraphIterator.h>
+#include <plearn/base/stringutils.h>
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;
@@ -65,10 +69,21 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
     "graph, and provides the mechanism to update the backpointer according to\n"
     "arbitrary forward pointers (as long as the forward pointers are accessible\n"
     "as options through an ObjectOptionsIterator.)\n"
+    "\n"
+    "Each ParentableObject can be marked with the kind of parent it wants.  The\n"
+    "following kinds are supported:\n"
+    "\n"
+    "- AnyParent    : anybody that calls setParent gets to be the parent.\n"
+    "\n"
+    "- WeakParent   : the first caller to setParent gets to be the parent, the\n"
+    "                 other ones are ignored (default).\n"
+    "\n"
+    "- UniqueParent : the first caller to setParent gets to be the parent, the\n"
+    "                 other ones yield PLERRORs.\n"
     );
 
-ParentableObject::ParentableObject(bool adoptive_parent) 
-    : m_parent(0), m_adoptive_parent(adoptive_parent)
+ParentableObject::ParentableObject(bool adoptive_parent, ParentKind pk) 
+    : m_parent(0), m_adoptive_parent(adoptive_parent), m_parent_kind(pk)
 { }
 
 // ### Nothing to add here, simply calls build_
@@ -93,8 +108,13 @@ void ParentableObject::build_()
 void ParentableObject::updateChildrensParent(Object* parent)
 {
     if (! m_adoptive_parent) {
-        // Set the backpointers of sub-objects under the current object to this.
-        for (ObjectOptionsIterator it(this), end ; it != end ; ++it) {
+        // Set the backpointers of sub-objects under the current object to
+        // this.  Skip nonparentable options.
+        for (ObjectOptionsIterator it(this), end ; it != end  ; ++it)
+        {
+            if (it.getCurrentOptionFlags() & OptionBase::nonparentable)
+                continue;
+            
             if (const ParentableObject* cpo = dynamic_cast<const ParentableObject*>(*it)) {
                 ParentableObject* po = const_cast<ParentableObject*>(cpo);
                 po->setParent(parent);
@@ -107,6 +127,54 @@ void ParentableObject::updateChildrensParent(Object* parent)
 
 void ParentableObject::setParent(Object* parent)
 {
+    if (m_parent == parent)
+        return;
+
+    // Behave appropriately according to the type of parent we want
+    switch (m_parent_kind) {
+    case AnyParent:
+        break;
+        
+    case WeakParent:
+        if (m_parent) {
+            MODULE_LOG << "Object at " << ((void*)this)
+                       << " (" << left(classname(),30) << ") "
+                       << " ignoring candidate weak parent " << ((void*)parent)
+                       << " (" << (parent? parent->classname() : string("NULL")) << ") "
+                       << endl;
+            return;
+        }
+        break;
+        
+    case UniqueParent:
+        if (m_parent)         // Because of test above, m_parent != parent
+            PLERROR("ParentableObject::setParent: for object at 0x%x (%s),\n"
+                    "trying to override existing parent at 0x%x (%s) with\n"
+                    "new parent at 0x%x (%s) -- parenting mode set to UniqueParent.",
+                    this, classname().c_str(),
+                    m_parent, m_parent->classname().c_str(),
+                    parent, (parent? parent->classname().c_str() : "NULL"));
+        break;
+    }
+
+    // Do some logging
+    if (m_parent) {
+        MODULE_LOG << "Object at " << ((void*)this)
+                   << " (" << left(classname(),30) << ") "
+                   << " getting parent " << ((void*)parent)
+                   << " (" << (parent? parent->classname() : string("NULL")) << ") "
+                   << " overriding previous " << ((void*)m_parent)
+                   << " (" << m_parent->classname() << ") "
+                   << endl;
+    }
+    else {
+        MODULE_LOG << "Object at " << ((void*)this)
+                   << " (" << left(classname(),30) << ") "
+                   << " getting parent " << ((void*)parent)
+                   << " (" << (parent? parent->classname() : string("NULL")) << ") "
+                   << endl;
+    }
+    
     m_parent = parent;
 }
 
@@ -137,8 +205,8 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
     "the children-parent paths.\n"
     );
 
-TransparentParentable::TransparentParentable(bool adoptive_parent)
-    : inherited(adoptive_parent)
+TransparentParentable::TransparentParentable(bool adoptive_parent, ParentKind pk)
+    : inherited(adoptive_parent, pk)
 { }
 
 // ### Nothing to add here, simply calls build_
@@ -167,21 +235,19 @@ void TransparentParentable::updateChildrensParent(Object* the_parent)
 
 void TransparentParentable::setParent(Object* parent)
 {
-    // Set it for ourselves
+    // Set it for ourselves and our children
     inherited::setParent(parent);
-    
-    // Forward the call to sub-objects: set their parent to the one that's
-    // passed here
-    for (ObjectOptionsIterator it(this), end ; it != end ; ++it) {
-        if (const ParentableObject* po = dynamic_cast<const ParentableObject*>(*it))
-            const_cast<ParentableObject*>(po)->setParent(parent);
-    }
+    updateChildrensParent(parent);
 }
 
 void TransparentParentable::checkParent() const
 {
     // Forward the call to sub-objects
-    for (ObjectOptionsIterator it(this), end ; it != end ; ++it) {
+    for (ObjectOptionsIterator it(this), end ; it != end ; ++it)
+    {
+        if (it.getCurrentOptionFlags() & OptionBase::nonparentable)
+            continue;
+        
         if (const ParentableObject* po = dynamic_cast<const ParentableObject*>(*it))
             const_cast<ParentableObject*>(po)->checkParent();
     }
