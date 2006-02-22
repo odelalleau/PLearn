@@ -114,6 +114,12 @@ public:
      *  @endcode
      */
     string getCurrentOptionName() const;
+
+    /**
+     *  Return the flags associated with the current option (e.g.
+     *  OptionBase::buildoption, etc.)
+     */
+    OptionBase::flag_t getCurrentOptionFlags() const;
     
     // Go to next object or "invalid" state if end of iteration
     const ObjectOptionsIterator& operator++();
@@ -168,11 +174,22 @@ protected:
 class ObjectGraphIterator
 {
 public:
-    //! Specify the kinds of supported traversals
+    /**
+     *  Specify the kinds of supported traversals.  If you use the "Reversed"
+     *  versions, you obtain the elements in reverse order than what you would
+     *  normally obtain.
+     */
     enum TraversalType {
-        BreadthOrder  = 1,
-        DepthPreOrder = 2
+        BreadthOrder          = 1,
+        DepthPreOrder         = 2,
+        ReversedBreadthOrder  = 64 | 1,
+        ReversedDepthPreOrder = 64 | 2
     };
+
+    //! For convenience, you can bitwise-or this value with normal traversal
+    //! types to get the reversed ones
+    static const int Reversed = 64;
+
 
 public:
     //! Default constructor makes an "invalid" iterator

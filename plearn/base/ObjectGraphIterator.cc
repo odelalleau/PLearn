@@ -116,6 +116,13 @@ string ObjectOptionsIterator::getCurrentOptionName() const
 }
 
 
+OptionBase::flag_t ObjectOptionsIterator::getCurrentOptionFlags() const
+{
+    assert( !m_invalid && m_object && m_options );
+    return (*m_options)[m_cur_option]->flags();
+}
+
+
 const ObjectOptionsIterator& ObjectOptionsIterator::operator++()
 {
     assert( !m_invalid && m_object && m_options );
@@ -166,9 +173,12 @@ ObjectGraphIterator::ObjectGraphIterator(
     bool compute_optnames, const string& base_class_filter)
     : m_isa_tester()
 {
+    // Build the traversal graph
     buildTraversalGraph(root, tt, compute_optnames);
     m_it  = m_object_list.begin();
     m_end = m_object_list.end();
+
+    // Filter by base-class if required
     if (base_class_filter != "") {
         const TypeMapEntry& tme =
             TypeFactory::instance().getTypeMapEntry(base_class_filter);
@@ -220,9 +230,11 @@ void ObjectGraphIterator::buildTraversalGraph(const Object* root,
     const SeenSet::iterator not_seen = seen.end();
     QAppender appender;
     
-    switch(tt) {
+    switch (tt & ~Reversed) {
     case BreadthOrder  : appender = &Q::push_front; break;
     case DepthPreOrder : appender = &Q::push_back;  break;
+    default:
+        PLERROR("ObjectGraphIterator::buildTraversalGraph: unknown traversal type (%d)",tt);
     }
 
     // Start out by appending the root
@@ -253,7 +265,11 @@ void ObjectGraphIterator::buildTraversalGraph(const Object* root,
             }
         }
     }
-}    
+
+    // Finally reverse the elements if required
+    if (tt & Reversed)
+        std::reverse(m_object_list.begin(), m_object_list.end());
+}
 
 
 //#####  setoption_broadcast  #################################################
