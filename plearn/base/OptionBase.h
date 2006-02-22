@@ -77,7 +77,12 @@ public:
     static const flag_t tuningoption;
 
     //! Do not include this option in the objet's serialisation (write method skips it)
-    static const flag_t nosave; 
+    static const flag_t nosave;
+
+    //! This option does not lead to a parenting relationship in the
+    //! "ParentableObject" sense.  In other words, the object pointed to by
+    //! this option does not get its parent() backpointer set to this.
+    static const flag_t nonparentable;
 
 protected:
     string optionname_;  //!< the name of the option

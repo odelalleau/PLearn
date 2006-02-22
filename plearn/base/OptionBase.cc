@@ -46,11 +46,11 @@
 namespace PLearn {
 using namespace std;
 
-const OptionBase::flag_t OptionBase::buildoption = 1;       
-const OptionBase::flag_t OptionBase::learntoption = 1<<1;
-const OptionBase::flag_t OptionBase::tuningoption = 1<<2;
-const OptionBase::flag_t OptionBase::nosave = 1<<4; 
-
+const OptionBase::flag_t OptionBase::buildoption   = 1;       
+const OptionBase::flag_t OptionBase::learntoption  = 1 << 1;
+const OptionBase::flag_t OptionBase::tuningoption  = 1 << 2;
+const OptionBase::flag_t OptionBase::nosave        = 1 << 4; 
+const OptionBase::flag_t OptionBase::nonparentable = 1 << 8;
 
 OptionBase::OptionBase(const string& optionname, flag_t flags,
                        const string& optiontype, const string& defaultval, 
