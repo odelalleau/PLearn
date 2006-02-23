@@ -22,7 +22,7 @@ DERIVEDCLASS::DERIVEDCLASS()
 // constructors from input variables.
 // NaryVariable constructor (inherited) takes a VarArray as argument.
 // You can either construct from a VarArray (if the number of parent Var is not
-// fixed, for instance), or construct a VarArray from Variables by operator &:
+// fixed, for instance), or construct a VarArray from Var by operator &:
 // input1 & input2 & input3. You can also do both, uncomment what you prefer.
 
 // DERIVEDCLASS::DERIVEDCLASS(const VarArray& vararray)
@@ -35,8 +35,8 @@ DERIVEDCLASS::DERIVEDCLASS()
 //     // ### object
 // }
 
-// DERIVEDCLASS::DERIVEDCLASS(Variable* input1, Variable* input2,
-//                            Variable* input3, ...)
+// DERIVEDCLASS::DERIVEDCLASS(Var input1, Var input2,
+//                            Var input3, ...)
 // ### replace with actual parameters
 //  : inherited(input1 & input2 & input3 & ...,
 //              this_variable_length, this_variable_width),
@@ -60,8 +60,8 @@ DERIVEDCLASS::DERIVEDCLASS()
 // }
 
 // constructor from input variable and parameters
-// DERIVEDCLASS::DERIVEDCLASS(Variable* input1, Variable* input2,
-//                            Variable* input3, ...,
+// DERIVEDCLASS::DERIVEDCLASS(Var input1, Var input2,
+//                            Var input3, ...,
 //                            param_type the_parameter, ...)
 // ### replace with actual parameters
 //  : inherited(input1 & input2 & input3 & ...,
