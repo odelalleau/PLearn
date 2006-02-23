@@ -51,6 +51,12 @@
 namespace PLearn {
 using namespace std;
 
+const string PythonCodeSnippet::InjectSetupSnippet =\
+"__injected__ = {}\n"                          // The dictionary in which to inject
+"from plearn.utilities import inject_import\n" // Redefines import statement behavior
+"del inject_import\n\n";                       // Ensures global namespace is
+                                               // not polluted by 'inject_import'
+
 
 //#####  PythonCodeSnippet  ###################################################
 
@@ -123,7 +129,7 @@ void PythonCodeSnippet::build_()
 
     // Compile code into global environment
     if (m_code != "")
-        m_compiled_code = compileGlobalCode(m_code);
+        m_compiled_code = compileGlobalCode(InjectSetupSnippet+m_code);
 
     // Forget about injected functions
     m_injected_functions.purge_memory();
@@ -302,6 +308,11 @@ void PythonCodeSnippet::injectInternal(const char* python_name,
         // PythonObjectWrapper is constructed from a PyObject, it steals the
         // refcount, so we don't need to perform a Py_XDECREF on py_funcobj.
         this->setGlobalObject(python_name, py_funcobj);
+
+        // Publish the injection in the '__injected__' dictionary for imported modules
+        PythonObjectWrapper inj_dict = this->getGlobalObject("__injected__");
+        PyDict_SetItemString(inj_dict.getPyObject(), python_name, py_funcobj);
+        
         Py_XDECREF(self);
     }
     else

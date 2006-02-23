@@ -99,6 +99,9 @@ public:
      */
     typedef boost::function<PythonObjectWrapper (
         const TVec<PythonObjectWrapper>& args)> StandaloneFunction;
+
+    // The snippet prepended to 'code' option for the injections to behave properly.
+    static const string InjectSetupSnippet;
     
 public:
     /**
