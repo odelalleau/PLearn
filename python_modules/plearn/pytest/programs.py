@@ -7,6 +7,15 @@ import plearn.utilities.toolkit        as     toolkit
 from PyTestCore                 import *
 from plearn.utilities.verbosity import vprint
 
+#
+# Logging settings: to be moved in a config file
+#
+import logging
+# In Python2.4
+# logging.basicConfig(level=logging.DEBUG)
+# logging.root.setLevel(logging.DEBUG)
+
+
 ########################################
 ##  Helper Functions  ##################
 ########################################
@@ -161,6 +170,7 @@ class Compilable(PyTestObject):
     
     def compile(self):
         if Compilable._compilation_status.has_key(self._path):
+            logging.info("Already comiled %s"%self._path)
             return Compilable._compilation_status[self._path]
         
         directory_when_called = os.getcwd()
@@ -179,13 +189,14 @@ class Compilable(PyTestObject):
                               self._path,     log_file_name         )
                           )
         
+        logging.info(compile_cmd)
         vprint(compile_cmd, 2)
         os.system(compile_cmd)
         
         os.chdir( directory_when_called )
 
         ## This initializes the compilation status
-        self.compilationSucceeded()
+        return self.compilationSucceeded()
 
     def path_to_target(self):
         raise NotImplementedError
