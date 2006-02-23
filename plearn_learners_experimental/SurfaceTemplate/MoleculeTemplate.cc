@@ -48,8 +48,12 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     MoleculeTemplate,
-    "ONE LINE USER DESCRIPTION",
-    "MULTI LINE\nHELP FOR USERS"
+    "Subclass of Molecule, plus standard devs of points' positions and"
+    " features.",
+    "There is only one geometric standard deviation per point (since space\n"
+    "dimenstions are equivalent), there is one chemical standard deviation\n"
+    "per chemical feature on every point (stored in the same order as the\n"
+    "corresponding feature value).\n"
     );
 
 MoleculeTemplate::MoleculeTemplate( int the_class_label )

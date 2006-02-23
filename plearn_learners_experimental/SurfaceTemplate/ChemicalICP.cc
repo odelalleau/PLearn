@@ -74,9 +74,14 @@ void ChemicalICP::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     // ### shallow-copied.
     // ### ex:
     // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("ChemicalICP::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    deepCopyField(mol_template, copies);
+    deepCopyField(molecule, copies);
+    deepCopyField(features_names, copies);
+    deepCopyField(weighting_params, copies);
+    deepCopyField(initial_angles_list, copies);
+    deepCopyField(rotation, copies);
+    deepCopyField(translation, copies);
+    deepCopyField(matching, copies);
 }
 
 void ChemicalICP::declareOptions(OptionList& ol)
@@ -97,6 +102,10 @@ void ChemicalICP::declareOptions(OptionList& ol)
                   "");
 
     declareOption(ol, "molecule", &ChemicalICP::molecule,
+                  OptionBase::buildoption,
+                  "");
+
+    declareOption(ol, "feature_names", &ChemicalICP::feature_names,
                   OptionBase::buildoption,
                   "");
 

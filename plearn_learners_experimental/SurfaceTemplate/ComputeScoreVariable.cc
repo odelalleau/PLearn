@@ -60,17 +60,17 @@ ComputeScoreVariable::ComputeScoreVariable()
 // fixed, for instance), or construct a VarArray from Variables by operator &:
 // input1 & input2 & input3. You can also do both, uncomment what you prefer.
 
-ComputeScoreVariable::ComputeScoreVariable(Variable* input_index,
-                                           Variable* geom_mean,
-                                           Variable* geom_dev,
-                                           Variable* feat_mean,
-                                           Variable* feat_dev,
-                                           Variable* weighting_params,
+ComputeScoreVariable::ComputeScoreVariable(Var input_index,
+                                           Var geom_mean,
+                                           Var geom_dev,
+                                           Var feat_mean,
+                                           Var feat_dev,
+                                           Var weighting_params,
                                            string the_weighting_method,
-                                           const PP<ICP>& the_icp_aligner,
+                                           const ChemICP& the_icp_aligner,
                                            const TVec<Molecule>& the_molecules
                                           )
-    : inherited(input_index & geom_mean & geom_sigma & feat_mean & feat_dev &
+    : inherited(input_index & geom_mean & geom_dev & feat_mean & feat_dev &
                 weighting_params, 1, 1),
       weighting_method(the_weighting_method),
       icp_aligner(the_icp_aligner),
@@ -78,7 +78,7 @@ ComputeScoreVariable::ComputeScoreVariable(Variable* input_index,
 {
     // ### You may (or not) want to call build_() to finish building the
     // ### object
-    build_()
+    build_();
 }
 
 void ComputeScoreVariable::recomputeSizes(int& l, int& w) const
@@ -98,14 +98,14 @@ void ComputeScoreVariable::recomputeSizes(int& l, int& w) const
 void ComputeScoreVariable::fprop()
 {
     // ### remove this line when implemented
-    PLERROR("In ComputeScoreVariable - fprop() must be implemented.")
+    PLERROR("In ComputeScoreVariable - fprop() must be implemented.");
 }
 
 // ### computes varray gradients from gradient
 void ComputeScoreVariable::bprop()
 {
     // ### remove this line when implemented
-    PLERROR("In ComputeScoreVariable - bprop() must be implemented.")
+    PLERROR("In ComputeScoreVariable - bprop() must be implemented.");
 }
 
 // ### You can implement these methods:

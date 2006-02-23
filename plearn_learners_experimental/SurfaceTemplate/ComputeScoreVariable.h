@@ -76,7 +76,7 @@ public:
 
     // pointer to the 'molecules' field of parent learner
     // to access element i, use (*p_molecule)[i]
-    TVec< Molecule >*  p_molecules;
+    const TVec< Molecule >*  p_molecules;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -87,10 +87,10 @@ public:
     //! Constructor initializing from input variables
     // ### Make sure the implementation in the .cc calls inherited constructor
     // ### and initializes all fields with reasonable default values.
-    ComputeScoreVariable(Variable* input_index,
-                         Variable* geom_mean, Variable* geom_dev,
-                         Variable* feat_mean, Variable* feat_dev,
-                         Variable* weighting_params,
+    ComputeScoreVariable(Var input_index,
+                         Var geom_mean, Var geom_dev,
+                         Var feat_mean, Var feat_dev,
+                         Var weighting_params,
                          string the_weighting_method = "none",
                          const ChemICP& the_icp_aligner = new ChemicalICP(),
                          const TVec<Molecule>& the_molecules = TVec<Molecule>()
@@ -172,9 +172,10 @@ inline Var computeScore(Var input_index, Var geom_mean, Var geom_dev,
                         string the_weighting_method = "none",
                         const ChemICP& the_icp_aligner = new ChemicalICP(),
                         const TVec<Molecule>& the_molecules = TVec<Molecule>())
-{ return new computeScore(input_index, geom_mean, geom_dev, feat_mean,
-                          feat_dev, weighting_params, the_weighting_method,
-                          the_icp_aligner, the_molecules); }
+{ return new ComputeScoreVariable(input_index,
+                                  geom_mean, geom_dev, feat_mean, feat_dev,
+                                  weighting_params, the_weighting_method,
+                                  the_icp_aligner, the_molecules); }
 
 } // end of namespace PLearn
 
