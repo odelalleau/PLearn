@@ -56,14 +56,14 @@ void DERIVEDCLASS::recomputeSizes(int& l, int& w) const
 void DERIVEDCLASS::fprop()
 {
     // ### remove this line when implemented
-    PLERROR("In DERIVEDCLASS - fprop() must be implemented.")
+    PLERROR("In DERIVEDCLASS - fprop() must be implemented.");
 }
 
 // ### computes input's gradient from gradient
 void DERIVEDCLASS::bprop()
 {
     // ### remove this line when implemented
-    PLERROR("In DERIVEDCLASS - bprop() must be implemented.")
+    PLERROR("In DERIVEDCLASS - bprop() must be implemented.");
 }
 
 // ### You can implement these methods:
