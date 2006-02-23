@@ -55,6 +55,9 @@ PLEARN_IMPLEMENT_OBJECT(
 GradNNetLayerModule::GradNNetLayerModule():
     start_learning_rate( .001 ),
     decrease_constant( 0 ),
+    init_weights_random_scale( 1. ),
+    L1_penalty_factor( 0. ),
+    L2_penalty_factor( 0. ),
     step_number( 0 )
     /* ### Initialize all fields to their default value */
 {
@@ -80,8 +83,6 @@ void GradNNetLayerModule::fprop(const Vec& input, Vec& output) const
 
 }
 
-// Computes pseudo-target and update inverse_correlation_mat and weights
-// according to it.
 void GradNNetLayerModule::bpropUpdate(const Vec& input, const Vec& output,
                                       const Vec& output_gradient)
 {
@@ -115,7 +116,34 @@ void GradNNetLayerModule::bpropUpdate(const Vec& input, const Vec& output,
     Vec bias_input( 1+input_size );
     bias_input[0] = 1;
     bias_input.subVec( 1,input_size ) << input;
+
     externalProductAcc( weights, -learning_rate*output_gradient, bias_input );
+
+    if (L1_penalty_factor!=0)
+    {
+        real delta = learning_rate * L1_penalty_factor;
+        for (int i=0;i<output_size;i++)
+        {
+            real* Wi = weights[i]+1; // don't apply penalty on bias
+            for (int j=0;j<input_size;j++)
+            {
+                real Wij =  Wi[j];
+                if (Wij>delta)
+                    Wi[j] -=delta;
+                else if (Wij<-delta)
+                    Wi[j] +=delta;
+                else 
+                    Wi[j]=0;
+            }
+        }
+    }
+    if (L2_penalty_factor!=0)
+    {
+        real delta = learning_rate*L2_penalty_factor;
+        if (delta>1)
+            PLWARNING("GradNNetLayerModule::bpropUpdate: learning rate = %f is too large!",learning_rate);
+        weights *= 1 - delta;
+    }
 
     step_number++;
 
@@ -178,6 +206,12 @@ void GradNNetLayerModule::forget()
     {
         setWeights( init_weights );
     }
+    else if (init_weights_random_scale!=0)
+    {
+        real r = init_weights_random_scale / input_size;
+        random_generator->fill_random_uniform(weights,-r,r);
+    }
+        
 
     learning_rate = start_learning_rate;
     step_number = 0;
@@ -292,8 +326,27 @@ void GradNNetLayerModule::declareOptions(OptionList& ol)
 
     declareOption(ol, "init_weights", &GradNNetLayerModule::init_weights,
                   OptionBase::buildoption,
-                  "Initial weights of the neurons (bias on first column,"
-                  " one row per neuron");
+                  "Optional initial weights of the neurons (bias on first column,\n"
+                  "one row per neuron. If not provided then weights are initialized\n"
+                  "according to a uniform distribution (see init_weights_random_scale).");
+
+    
+    declareOption(ol, "init_weights_random_scale", &GradNNetLayerModule::init_weights_random_scale,
+                  OptionBase::buildoption,
+                  "If init_weights is not provided, the weights are initialized randomly by\n"
+                  "from a uniform in [-r,r], with r = init_weights_random_scale/input_size.\n"
+                  "To clear the weights initially, just set this option to 0.");
+
+    declareOption(ol, "L1_penalty_factor", &GradNNetLayerModule::L1_penalty_factor,
+                  OptionBase::buildoption,
+                  "Optional (default=0) factor of L1 regularization term, i.e.\n"
+                  "minimize L1_penalty_factor * sum_{ij} |weights(i,j)| during training.\n");
+    
+    declareOption(ol, "L2_penalty_factor", &GradNNetLayerModule::L2_penalty_factor,
+                  OptionBase::buildoption,
+                  "Optional (default=0) factor of L2 regularization term, i.e.\n"
+                  "minimize 0.5 * L2_penalty_factor * sum_{ij} weights(i,j)^2 during training.\n");
+    
 
     declareOption(ol, "weights", &GradNNetLayerModule::weights,
                   OptionBase::learntoption,
@@ -324,12 +377,8 @@ void GradNNetLayerModule::build_()
         resetWeights();
     }
 
-    /*
-    if( init_weights.size() !=0 )
-    {
-        setWeights( init_weights );
-    }
-    */
+    if (init_weights.size()==0 && init_weights_random_scale!=0 && !random_generator)
+        random_generator = new PRandom();
 }
 
 

@@ -70,6 +70,9 @@ public:
 
     Mat init_weights;
 
+    real init_weights_random_scale; 
+
+    real L1_penalty_factor, L2_penalty_factor; //! weight decays
 
 public:
     //#####  Public Member Functions  #########################################

@@ -45,6 +45,7 @@
 #define OnlineLearningModule_INC
 
 #include <plearn/base/Object.h>
+#include <plearn/math/PRandom.h>
 
 namespace PLearn {
 
@@ -91,6 +92,9 @@ public:
      */
     PPath expdir; 
 
+    //! optional random generator, possibly shared among several modules
+    PP<PRandom> random_generator;
+    
 public:
     //#####  Public Member Functions  #########################################
 
