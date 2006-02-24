@@ -161,7 +161,7 @@ class Compilable(PyTestObject):
     
     def compile(self):
         if Compilable._compilation_status.has_key(self._path):
-            logging.info("Already comiled %s"%self._path)
+            logging.debug("Already comiled %s"%self._path)
             return Compilable._compilation_status[self._path]
         
         directory_when_called = os.getcwd()
