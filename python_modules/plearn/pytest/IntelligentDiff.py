@@ -2,14 +2,13 @@
 
 Contact dorionc@apstat.com for details.
 """
-import copy, os, shutil, string, sys
+import copy, logging, os, shutil, string, sys
 
 from   programs                      import PyTestError
 
 import plearn.utilities.ppath        as     ppath
 import plearn.utilities.moresh       as     moresh
 import plearn.utilities.toolkit      as     toolkit
-from   plearn.utilities.verbosity    import vprint
 
 class Resources:
     md5_mappings    = {}
@@ -27,15 +26,14 @@ class Resources:
         def system_symlink( resource, target ):
             if (sys.platform == "cygwin"):
                 if (os.path.isdir(resource)):
-                    vprint( "Recursively copying resource: %s <- %s." \
-                           % ( target, resource ), 3 )
+                    logging.debug(
+                        "Recursively copying resource: %s <- %s."%(target, resource))
                     shutil.copytree( resource, target, symlinks = False )
                 else:
-                    vprint( "Copying resource: %s <- %s." \
-                           % ( target, resource ), 3 )
+                    logging.debug("Copying resource: %s <- %s."%(target, resource))
                     shutil.copy( resource, target )
             else:
-                vprint( "Linking resource: %s -> %s." % ( target, resource ), 3 )
+                logging.debug("Linking resource: %s -> %s."%(target,resource))
                 os.symlink( resource, target )
 
         ## Paths to the resource and target files
@@ -109,13 +107,13 @@ class Resources:
             res = os.path.basename(resource)
             path = os.path.join(target_dir, res)
             if os.path.islink( path ):
-                vprint( "Removing link: %s." % path, 3 ) 
+                logging.debug("Removing link: %s."%path)
                 os.remove( path )
             elif os.path.isfile( path ):
-                vprint( "Removing file: %s." % path, 3 )
+                logging.debug("Removing file: %s."%path)
                 os.remove( path )
             elif os.path.isdir( path ):
-                vprint( "Removing directory: %s." % path, 3 )
+                logging.debug("Removing directory: %s." % path)
                 shutil.rmtree( path )
 
     unlink_resources = classmethod(unlink_resources)
@@ -149,7 +147,7 @@ class IntelligentDiff:
             
         elif other_is:
             if moresh.is_recursively_empty(other):
-                vprint("Empty directory %s was skipped." % other, 2)
+                logging.debug("Empty directory %s was skipped."%other)
             else:
                 self.differences.append(
                     "%s is a directory while %s is not.\n" % (other, bench) )
@@ -161,7 +159,7 @@ class IntelligentDiff:
 
     def are_links(self, bench, other):
         if os.path.islink(other):
-            vprint("%s is link: diff will be skipped."%other, 2)
+            logging.debug("%s is link: diff will be skipped."%other)
         elif os.path.islink(bench):
             self.differences.append(
                 "%s is a link while %s is not.\n" % (bench, other) )
@@ -192,7 +190,7 @@ class IntelligentDiff:
     
     def diff(self, bench, other):
         if self.are_links(bench, other):
-            vprint("%s is a link: diff will be skipped."%other, 3)
+            logging.debug("%s is a link: diff will be skipped."%other)
         elif self.are_directories(bench, other):
             self.diff_directories(bench, other)
         elif self.are_files(bench, other):
@@ -202,7 +200,7 @@ class IntelligentDiff:
                 "%s and %s are not links, nor directories, nor files." % (bench, other)
                 )
 
-        vprint( ''.join(self.differences), priority=3 )
+        logging.debug(''.join(self.differences))
         return self.differences
 
     def diff_directories(self, bench, other):
@@ -225,7 +223,7 @@ class IntelligentDiff:
 
     def diff_files(self, bench, other, diff_template = 'toldiff %s %s %s'):
         if bench.endswith( 'metainfos.txt' ):
-            vprint('Skipping metainfos.txt comparison', 2)
+            logging.debug('Skipping metainfos.txt comparison')
             return
             
         if bench.endswith('.psave'):
@@ -292,5 +290,3 @@ class IntelligentDiff:
         ## Move back to original directory.
         os.chdir( directory_when_called )
         
-##         else:
-##             vprint("Serialization file %s will be skipped."%bench, 3)

@@ -1,14 +1,14 @@
 _cvs_id__ = "$Id: modes.py 3647 2005-06-23 15:49:51Z dorionc $"
 
-import copy, shutil
+import copy, logging, shutil
 import plearn.utilities.version_control as version_control
 import plearn.utilities.ppath           as ppath
 import plearn.utilities.toolkit         as toolkit
 
-from tests                                import *
+import tests
+from tests import *
 from programs                             import *
 from plearn.utilities.toolkit             import *
-from plearn.utilities.verbosity           import *
 from plearn.utilities.ModeAndOptionParser import *
 
 current_mode    = None
@@ -38,11 +38,11 @@ class PyTestMode(Mode):
             if config in dirlist:
                 execfile(config)
         except Exception, e:
-            vprint( "+++ In %s" % os.path.join(directory, config) )
+            logging.critical("+++ In %s" % os.path.join(directory, config))
             if options.traceback:
                 raise
             else:
-                vprint( "%s: %s" % (e.__class__.__name__,e) )
+                logging.critical("%s: %s" % (e.__class__.__name__,e))
     build_tests = staticmethod(build_tests)
 
     #
@@ -141,7 +141,7 @@ class PyTestMode(Mode):
             if len(ignored_directories) > 0:
                 ignored = [ "The following directories (and their subdirectories) were ignored", "" ]
                 ignored.extend( [ '    '+ign for ign in ignored_directories ] )
-                vprint.highlight( ignored, highlighter='x' ) 
+                logging.warning('\n'.join(['---']+ignored+['---']))
 
     def restrictions(self):
         """Default --test-name and --category management."""
@@ -223,9 +223,8 @@ class list(PyTestMode):
                     )
 
             if formatted_strings:
-                vprint( "In %s\n    %s\n"
-                        % ( family, string.join(formatted_strings, '\n    ') )
-                        )            
+                logging.warning(
+                    "In %s\n    %s\n"%(family, '\n    '.join(formatted_strings)) )
 
 class locate(list):
     """Locates the named test.
@@ -235,7 +234,7 @@ class locate(list):
     """
     def __init__(self, targets, options):
         if len(targets) != 1:
-            vprint("Usage: pytest locate <test_name>")
+            logging.critical("Usage: pytest locate <test_name>")
 
         else:
             options.all = True
@@ -243,7 +242,7 @@ class locate(list):
             try:
                 super(locate, self).__init__(targets, options)
             except KeyError:
-                vprint("No test named %s found."%options.test_name)
+                logging.critical("No test named %s found."%options.test_name)
 
 class prune( PyTestMode ):
     """Removes all pytest directories within given test directories."""    
@@ -290,14 +289,6 @@ class prune( PyTestMode ):
 #TO_BE_ADDED:                     continue
 #TO_BE_ADDED:                 if self.options.enabled  and test.disabled:
 #TO_BE_ADDED:                     continue
-#TO_BE_ADDED:                 formatted_strings.append(
-#TO_BE_ADDED:                     formatted_string(test.name, test.disabled)
-#TO_BE_ADDED:                     )
-#TO_BE_ADDED: 
-#TO_BE_ADDED:             if formatted_strings:
-#TO_BE_ADDED:                 vprint( "In %s\n    %s\n"
-#TO_BE_ADDED:                         % ( family, string.join(formatted_strings, '\n    ') )
-#TO_BE_ADDED:                         )            
 
 class vc_add( PyTestMode ):
     """Add PyTest's config file and results to version control."""
@@ -319,8 +310,8 @@ class vc_add( PyTestMode ):
                 version_control.ignore( ppath.pytest_dir, [ '*.compilation_log' ] )
                 for test in tests:
                     version_control.add( test.resultsDirectory() )
-                    version_control.recursive_add( test.resultsDirectory(Test.expectedResults()) )
-                    version_control.ignore( test.resultsDirectory(), [ '.plearn', Test.runResults() ] )
+                    version_control.recursive_add( test.resultsDirectory(tests.EXPECTED_RESULTS) )
+                    version_control.ignore( test.resultsDirectory(), [ '.plearn', tests.RUN_RESULTS ] )
             except version_control.VersionControlError:
                 raise PyTestError(
                     "The directory in which lies a config file must be added to version control by user.\n"
@@ -551,7 +542,7 @@ class RoutineBasedMode(PyTestMode):
     def dispatch_tests(self, test_instances):
         for (test_name, test) in test_instances:            
             if test.is_disabled():
-                vprint("Test %s is disabled." % test.name, 2)
+                logging.debug("Test %s is disabled." % test.name)
                 test.setStatus("DISABLED")
             else:
                 try:
@@ -565,7 +556,7 @@ class RoutineBasedMode(PyTestMode):
                     if self.options.traceback:
                         raise
                     else:
-                        vprint(e, 2)
+                        logging.debug(e)
                         test.setStatus("SKIPPED", e.pretty_str())
 
 class compile(RoutineBasedMode):

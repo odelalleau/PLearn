@@ -39,13 +39,17 @@ from programs                   import *
 from PyTestCore                 import *
 from IntelligentDiff            import *          
 from plearn.utilities.moresh    import *
-from plearn.utilities.verbosity import *
 
 import plearn.utilities.version_control as version_control
 from plearn.utilities.version_control import is_under_version_control
 from plearn.utilities.Bindings import Bindings
 
 from plearn.utilities import pldiff
+
+# Eventually remove Test's static methods
+EXPECTED_RESULTS = "expected_results"
+RUN_RESULTS      = "run_results"
+SVN_RESULTS      = "expected_results.svn"
 
 def config_file_path( directory = None ):
     """The path to a pytest configuration file.
@@ -226,6 +230,11 @@ class Test(PyTestObject):
     def runResults():
         return "run_results"
     runResults = staticmethod(runResults) 
+
+    def svnResults():
+        return "expected_results.svn"
+    svnResults = staticmethod(svnResults) 
+
     
     # Class variables
     _test_count    = 0
@@ -255,14 +264,14 @@ class Test(PyTestObject):
     def restrictTo(cls, test_name):        
         assert cls._restrict_to is None
         assert cls._restrict_to_category is None        
-        vprint("\nRestriction to name %s"%test_name, 2)
+        logging.debug("\nRestriction to name %s"%test_name)
         cls._restrict_to = test_name
     restrictTo = classmethod(restrictTo)
     
     def restrictToCategory(cls, category):
         assert cls._restrict_to is None
         assert cls._restrict_to_category is None
-        vprint("\nRestriction to category %s"%category, 2)
+        logging.debug("\nRestriction to category %s"%category)
         cls._restrict_to_category = category
     restrictToCategory = classmethod(restrictToCategory)
 
@@ -404,6 +413,9 @@ class Test(PyTestObject):
                 version_control.update(ppath.pytest_dir)
                 self._results_vc_removed.append(self.getName())
 
+                #UNIT_COMMIT: logging.info("os.rename(results_path, self.resultsDirectory(SVN_RESULTS))")
+                #UNIT_COMMIT: os.rename(results_path, self.resultsDirectory(SVN_RESULTS))
+
             ## Will have been removed under svn
             if ( os.path.exists(results_path) ):
                 shutil.rmtree(results_path)
@@ -432,7 +444,7 @@ class Test(PyTestObject):
         return self.disabled
     
     def resultsDirectory(self, path=''):
-        assert path in ['', Test.expectedResults(), Test.runResults()], path
+        assert path in ['', EXPECTED_RESULTS, RUN_RESULTS, SVN_RESULTS], path
         return os.path.join(self._results_directory, path)
 
     def setStatus(self, status, log=''):
@@ -441,18 +453,17 @@ class Test(PyTestObject):
         statsHeader = TestStatus.summaryHeader()
 
         C = 6; N = 60; S = 12; H = len(statsHeader)*3
-        vpformat = lambda c,n,s, h: vprint(
-            c.ljust(C) + n.ljust(N) + s.center(S) + h.center(H),
-            1 )        
+        vpformat = lambda c,n,s, h: logging.info(
+            c.ljust(C) + n.ljust(N) + s.center(S) + h.center(H))        
         
         if self._status.isCompleted():
             if not self._logged_header:
-                vprint(TestStatus.headerLegend(C+N+S+H)+'\n', 1)
+                logging.info(TestStatus.headerLegend(C+N+S+H)+'\n')
                 vpformat("N/%d"%self._test_count, "Test Name", "Status", statsHeader)
                 self.__class__._logged_header = True
 
             if self._log_count%5 == 0:
-                vprint("-"*(C+N+S+H), 1)
+                logging.info("-"*(C+N+S+H))
                 
             self.__class__._log_count += 1
             vpformat(str(self._log_count), self.getName(),
@@ -463,21 +474,25 @@ class Test(PyTestObject):
         if self._restrict_to is not None:            
             neglect = (self._restrict_to != self.name)
             if neglect:
-                vprint("\nNeglecting %s due to name restriction: %s"
-                       %(self.name,self._restrict_to), 2)
+                logging.debug(
+                    "\nNeglecting %s due to name restriction: %s"
+                    %(self.name,self._restrict_to)
+                    )
 
         elif self._restrict_to_category is not None:
             neglect = self._restrict_to_category != self.category
             if neglect:
-                vprint("\nNeglecting %s due to category restriction: %s"
-                       %(self.name,self._restrict_to_category), 2)
+                logging.debug(
+                    "\nNeglecting %s due to category restriction: %s"
+                    %(self.name,self._restrict_to_category)
+                    )
 
         return neglect
         
     def linkResources(self, results_path):
         """Sets up all appropriate links and environment variables required by a test.
 
-        @param results: Either Test.expectedResults() or Test.runResults().
+        @param results: Either EXPECTED_RESULTS or RUN_RESULTS
 
         @returns: Returns the test's results directory path.
         @rtype: StringType.
@@ -527,7 +542,7 @@ class Test(PyTestObject):
         os.environ[ 'PLEARN_DATE_TIME' ] = 'NO'
 
         ## Returns the test's results directory path
-        vprint("Resources linked in %s."%test_results, 2)
+        logging.debug("Resources linked in %s."%test_results)
         return test_results
 
     def unlinkResources(self, test_results):
@@ -538,7 +553,7 @@ class Test(PyTestObject):
         Resources.unlink_resources( self.resources, test_results )
         ppath.remove_binding(self.metaprotocol())
         os.environ[ 'PLEARN_DATE_TIME' ] = 'YES'
-        vprint("Resources unlinked.", 2)
+        logging.debug("Resources unlinked.")
         
 class Routine( PyTestObject ):
     test = PLOption(None)
@@ -551,15 +566,15 @@ class Routine( PyTestObject ):
         if not isinstance(self.test.program, Compilable):
             return True
 
-        vprint("\nCompilation:", 2)
-        vprint("------------", 2)
+        logging.debug("\nCompilation:")
+        logging.debug("------------")
         
         self.test.compile()
         if not self.test.compilationSucceeded():
-            vprint("Compilation failed.", 2)
+            logging.debug("Compilation failed.")
             self.test.setStatus("FAILED", "Compilation failed.")
             return False
-        vprint("Compilation succeedded.", 2)
+        logging.debug("Compilation succeedded.")
         return True
 
     def start(self):
@@ -594,7 +609,7 @@ class ResultsRelatedRoutine(Routine):
         if not self.__class__.no_compile_option:
             compilation_succeeded = self.compile_program()
             if not compilation_succeeded:
-                vprint("%s bails out." % self.classname(), 2)
+                logging.debug("%s bails out." % self.classname())
                 return False
         return True
 
@@ -602,8 +617,8 @@ class ResultsRelatedRoutine(Routine):
         if not self.compiled():
             return
 
-        vprint("\nRunning program:", 2)
-        vprint("----------------", 2)
+        logging.debug("\nRunning program:")
+        logging.debug("----------------")
 
         test_results  = self.test.linkResources(results)
 
@@ -620,7 +635,7 @@ class ResultsRelatedRoutine(Routine):
         ## Run the test from inside the test_results directory and return
         ## to the cwd
         pushd(test_results)
-        vprint("In %s: %s"%(os.getcwd(), run_command), 2)
+        logging.debug("In %s: %s"%(os.getcwd(), run_command))
         os.system(run_command)
         self.clean_cwd()
         popd()
@@ -649,12 +664,13 @@ class ResultsCreationRoutine(ResultsRelatedRoutine):
     B{Do not modify} the results directory manually.
     """
     def start(self):
-        self.run_test(Test.expectedResults())
+        self.run_test(EXPECTED_RESULTS)
         if Test._results_vc_removed:
-            vprint("\n*** Results were changed for the following test%s: %s. "
-                   "Once you've checked the results validity, DO NOT FORGET to do a 'pytest vc_add'."
-                   % (toolkit.plural(len(Test._results_vc_removed)), ', '.join(Test._results_vc_removed)),
-                   priority=0)
+            logging.critical(
+                "\n*** Results were changed for the following test%s: %s. "
+                "Once you've checked the results validity, DO NOT FORGET to do a 'pytest vc_add'."
+                % (toolkit.plural(len(Test._results_vc_removed)), ', '.join(Test._results_vc_removed)),
+                )
 
     def status_hook(self):
         self.test.setStatus("PASSED")
@@ -677,8 +693,8 @@ class RunTestRoutine( ResultsRelatedRoutine ):
 
     def __init__( self, **overrides ):
         ResultsRelatedRoutine.__init__(self, **overrides)
-        self.expected_results = self.test.resultsDirectory( Test.expectedResults() )
-        self.run_results      = self.test.resultsDirectory( Test.runResults() )
+        self.expected_results = self.test.resultsDirectory( EXPECTED_RESULTS )
+        self.run_results      = self.test.resultsDirectory( RUN_RESULTS )
         if os.path.exists(self.run_results):
             shutil.rmtree(self.run_results)
 
@@ -695,7 +711,7 @@ class RunTestRoutine( ResultsRelatedRoutine ):
                 )
 
     def start(self):        
-        self.run_test(Test.runResults())
+        self.run_test(RUN_RESULTS)
     
     def status_hook(self):
         idiff = IntelligentDiff( self.test )
@@ -705,7 +721,7 @@ class RunTestRoutine( ResultsRelatedRoutine ):
         #   1) Managing Resources
         #
         # pushd(self.test.resultsDirectory())
-        # vprint("pldiff in %s"%os.getcwd(), 2)
+        # logging.debug("pldiff in %s"%os.getcwd())
         # 
         # program_name = self.test.pfileprg.name
         # compile_errors = not self.test.pfileprg.compile()
@@ -716,7 +732,7 @@ class RunTestRoutine( ResultsRelatedRoutine ):
         #                           self.test.precision, program_name)
         # popd()
             
-        vprint("diffs: %s"%str(diffs), 2)
+        logging.debug("diffs: %s"%str(diffs))
         if diffs == []:
             self.test.setStatus("PASSED")
         else:

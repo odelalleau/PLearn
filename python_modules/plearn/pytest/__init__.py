@@ -5,7 +5,6 @@ import modes
 
 from PyTestCore                           import *
 from plearn.utilities                     import toolkit
-from plearn.utilities.verbosity           import *
 from plearn.utilities.ModeAndOptionParser import Mode, ModeAndOptionParser, OptionGroup
 
 __all__ = [ "main"
@@ -46,12 +45,16 @@ def main( pytest_version ):
     parser = ModeAndOptionParser( usage = "%prog mode [options] target*",
                                   version = "%prog " + pytest_version()   )
     
+    import logging
+    verb_levels = [ level
+                    for level in logging._levelNames
+                    if isinstance(level, type('')) ]
+
     parser.add_option( '-v', "--verbosity",
-                       choices=["0", "1", "2", "3"], default="1",
-                       help="Selects the level of verbosity among [0, 1, 2, 3], "
-                       "1 being the default value. Level 0 is very quiet, while level 3 "
-                       "is mainly intended for debug."
+                       choices=verb_levels, default="INFO",
+                       help=""
                        )
+
     
     parser.add_option("--mail", default=None,
                       help='Not supported yet.')
@@ -70,14 +73,14 @@ def main( pytest_version ):
     ################## Some preprocessing ######################
     
     ## Managing the verbosity option.
-    if hasattr( options, 'verbosity' ):        
-        set_vprint( VerbosityPrint( verbosity        = options.verbosity,
-                                    default_priority = 0
-                                    ) )
+    # In Python2.4: logging.basicConfig(level=logging.DEBUG, ...)
+    hdlr = logging.StreamHandler()
+    hdlr.setFormatter( logging.Formatter("%(message)s") )
+    logging.root.addHandler(hdlr)
+    logging.root.setLevel(logging._levelNames[options.verbosity])
     
     if ( hasattr( options, 'mail' )
          and options.mail is not None ):
-        ## vprint.keep_output()
         raise NotImplementedError
     
     
@@ -87,30 +90,25 @@ def main( pytest_version ):
     
     ## Program name and copyrights with version number
     newline = '\n  '
-    vprint(newline.join([ "%sPyTest %s"%(newline,pytest_version()),
-                          "(c) 2004-2006, Christian Dorion",
-                          "This is free software distributed under a BSD type license.",
-                          "Report problems to dorionc@apstat.com\n" ]), 1)
-
+    logging.info( newline.join(
+        [ "%sPyTest %s"%(newline,pytest_version()),
+          "(c) 2004-2006, Christian Dorion",
+          "This is free software distributed under a BSD type license.",
+          "Report problems to dorionc@apstat.com\n" ]) )
+    
     try:
         modes.current_mode( targets, options )    
     except PyTestError, e: 
         if options.traceback:
             raise
         else:
-            vprint( "%s: %s." % (e.__class__.__name__,e) )
+            logging.critical( "%s: %s." % (e.__class__.__name__,e) )
     except KeyboardInterrupt, kex:
         if options.traceback:
             raise
         else:
             "Interupted by user."
             sys.exit()
-    
-    vprint("\nQuitting PyTest.\n", 1)
-    
-    ## kept = vprint.close()    
-    ## if kept is not None:
-    ##     for k in kept:
-    ##         print k
-    ##     raise NotImplementedError('mail not implemented yet')
-   
+
+    logging.debug("\nQuitting PyTest.")
+    logging.info('')

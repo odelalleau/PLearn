@@ -2,7 +2,6 @@ from sys import exc_info
 from traceback import format_tb
 
 from plearn.utilities               import toolkit
-from plearn.utilities.verbosity     import vprint
 from plearn.pyplearn.PyPLearnObject import PLOption, PyPLearnObject
 
 
@@ -23,7 +22,7 @@ class PyTestError(Exception):
     def print_error(self):
         cname  = self.__class__.__name__+':'
         msg    = toolkit.boxed_lines( self.msg, 70 )
-        vprint.highlight( ["", cname, ""] + msg + [""], '!' )
+        logging.critical('\n'.join(["", cname, ""] + msg + [""]))
 
 if __name__ == '__main__':
     import os, sys

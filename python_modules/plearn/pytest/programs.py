@@ -1,19 +1,10 @@
 __version_id__ = "$Id: programs.py 3647 2005-06-23 15:49:51Z dorionc $"
 
-import os, string, types
+import logging, os, string, types
 import plearn.utilities.ppath          as     ppath
 import plearn.utilities.toolkit        as     toolkit
 
 from PyTestCore                 import *
-from plearn.utilities.verbosity import vprint
-
-#
-# Logging settings: to be moved in a config file
-#
-import logging
-# In Python2.4
-# logging.basicConfig(level=logging.DEBUG)
-# logging.root.setLevel(logging.DEBUG)
 
 
 ########################################
@@ -189,8 +180,7 @@ class Compilable(PyTestObject):
                               self._path,     log_file_name         )
                           )
         
-        logging.info(compile_cmd)
-        vprint(compile_cmd, 2)
+        logging.debug(compile_cmd)
         os.system(compile_cmd)
         
         os.chdir( directory_when_called )
