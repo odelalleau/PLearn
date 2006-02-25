@@ -41,6 +41,8 @@
 #define ChemicalICP_INC
 
 #include <plearn/base/Object.h>
+#include <plearn/var/Var.h>
+#include <plearn/var/VarArray.h>
 #include "Molecule.h"
 #include "MoleculeTemplate.h"
 
@@ -72,21 +74,64 @@ public:
 
     MolTemplate mol_template;
     Mol molecule;
-    TVec<string> features_names;
+
+    //! empty TVec means "use all available features"
+    //! use "none" if you don't want to use any feature.
+    TVec<string> feature_names;
     string weighting_method;
-    Vec weighting_params;
+    Var weighting_params;
+
+    // "exhaustive"
+    string matching_method;
 
     real initial_angles_step;
     Mat initial_angles_list;
+
+    // stopping conditions
+    int max_iter;
+    real error_t;
+    real angle_t;
+    real trans_t;
+
+    // not options
+    VarArray used_properties;
+    VarArray other_base_properties;
+
+    // Learned options
+    Mat rotation;
+    Vec translation;
+    TVec<int> matching;
+    Vec weights;
+    real error;
 
 protected:
     //#####  Protected Options  ###############################################
 
     // ### Declare protected option fields (such as learned parameters) here
+    TVec<string> used_feat_names;
 
-    Mat rotation;
-    Vec translation;
-    Mat matching;
+    // for caching
+    Mat feat_distances2;
+
+    /* Var ? */
+    Vec mol_feat_indices;
+    Vec template_feat_indices;
+
+    // variables that will be used in SurfaceTemplateLearner,
+    // they form used_properties
+    Var mol_coordinates;
+    Var used_mol_features;
+    Var template_coordinates;
+    Var template_geom_dev;
+    Var used_template_features;
+    Var used_template_feat_dev;
+
+    // variables that need to be added to the global parameter array
+    // they form other_base_properties
+    Var all_mol_features;
+    Var all_template_features;
+    Var all_template_feat_dev;
+
 
 public:
     //#####  Public Member Functions  #########################################
@@ -96,8 +141,20 @@ public:
     // ### initializes all fields to reasonable default values.
     ChemicalICP();
 
+    ChemicalICP( const MolTemplate& the_template,
+                 const Mol& the_molecule,
+                 const TVec<string>& the_feature_names = TVec<string>(),
+                 string the_weighting_method = "sigmoid",
+                 const Var& the_weighting_params = Var( Vec(2,1) ) );
+
     // Your other public member functions go here
 
+    //! Use this function to set the molecule and update every parameter that
+    //! depends on it without having to call build().
+    virtual void setMolecule( const Mol& the_molecule );
+
+    //! Performs the alignment
+    virtual void run();
 
     //#####  PLearn::Object Protocol  #########################################
 
@@ -113,6 +170,30 @@ public:
 
 protected:
     //#####  Protected Member Functions  ######################################
+
+    //! computes the intersection of feature_names, molecule->feature_names and
+    //! mol_template->feature_names, stores it in used_feat_names, and computes
+    //! correspondance index for mol and mol_template
+    virtual void computeUsedFeatures();
+
+    //! updates the 'used_...' variables' fields
+    virtual void computeVariables();
+
+    virtual void cacheFeatureDistances();
+
+    virtual void matchNearestNeighbors( const Mat& tr_template_coords,
+                                        const Mat& matched_mol_coords );
+
+    virtual void minimizeWeightedDistance( const Mat& tr_template_coords,
+                                           const Mat& matched_mol_coords,
+                                           real& delta_rot_length,
+                                           real& delta_trans_length );
+
+    virtual real computeWeightedDistance( const Mat& tr_template_coords,
+                                          const Mat& matched_mol_coords );
+
+    virtual void computeWeights( const Mat& tr_template_coords,
+                                 const Mat& matched_mol_coords );
 
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
