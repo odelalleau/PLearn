@@ -105,6 +105,10 @@ protected:
     //! need to be kept in memory during training.
     mutable TVec<Mat> cholesky_queue;
 
+    // TODO Document
+    // List of cholesky dec of inverse matrices (H_3^-1).
+    mutable TVec<Mat> cholesky_inv_queue;
+
     //! The list of all lists of dimension indices (of covariance matrices)
     //! that need to be kept in memory during training.
     //! More precisely, the i-th element is a vector that lists the indices
@@ -112,6 +116,10 @@ protected:
     //! taken from a subset of all original dimensions - the ones for which
     //! the sample value is not missing).
     mutable TVec< TVec<int> > indices_queue;
+
+    // TODO Document
+    // Same but for inverse matrices (H_3^-1).
+    mutable TVec< TVec<int> > indices_inv_queue;
 
     //! Set at build time, this integer value depends uniquely on the 'type'
     //! option. It is meant to avoid too many useless string comparisons.
@@ -164,6 +172,9 @@ protected:
     //! The j-th element is the full covariance matrix for Gaussian j. It is
     //! needed only with the 'general' type, in presence of missing values.
     mutable TVec<Mat> joint_cov;
+
+    // TODO Document (inverse covariance of joint).
+    mutable TVec<Mat> joint_inv_cov;
 
     //! The j-th element is the matrix L in the Cholesky decomposition S = L L'
     //! of the covariance matrix S of Gaussian j.
@@ -227,6 +238,7 @@ public:
     int efficient_k_median_iter;
     bool efficient_missing;
     real epsilon;
+    bool impute_missing;
     int kmeans_iterations;
     int L;
     int n_eigen;

@@ -73,6 +73,7 @@ GaussMix::GaussMix():
     efficient_k_median_iter(100),
     efficient_missing(false),
     epsilon(1e-6),
+    impute_missing(false),
     kmeans_iterations(5),
     L(1),
     n_eigen(-1),
@@ -152,6 +153,11 @@ void GaussMix::declareOptions(OptionList& ol)
                                             &GaussMix::efficient_k_median_iter,
                                             OptionBase::buildoption,
         "Maximum number of iterations in k-median.");
+
+    declareOption(ol, "impute_missing", &GaussMix::impute_missing,
+                                        OptionBase::buildoption,
+        "If true, missing values will be imputed their conditional mean when\n"
+        "computing the covariance matrix (requires 'efficient_missing').");
 
     declareOption(ol, "kmeans_iterations", &GaussMix::kmeans_iterations,
                                            OptionBase::buildoption,
@@ -309,6 +315,12 @@ void GaussMix::build_()
     // Make GaussMix-specific operations for conditional distributions.
     GaussMix::setPredictorPredictedSizes(predictor_size, predicted_size, false);
     GaussMix::setPredictor(predictor_part, false);
+
+    // Safety check: the 'impute_missing' method is only available in
+    // conjunction with the 'efficient_missing' method.
+    if (impute_missing) {
+        assert( efficient_missing );
+    }
 }
 
 ////////////////////////////////
@@ -492,10 +504,12 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
     // computations (with the current rather dumb implementation).
     static Vec mu_y_missing;
     static Mat cov_y_missing;
+    static Mat inv_cov_y_missing;
     static Vec y_missing;
     static Vec eigenvals_missing;
     static Mat eigenvecs_missing;
     static TVec<int> non_missing;
+    static TVec<int> f_missing;
     static Mat work_mat1, work_mat2;
     static Mat eigenvalues_x_miss;
     static TVec<Mat> eigenvectors_x_miss;
@@ -555,6 +569,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                 // We need to recompute almost everything.
                 // First the full covariance.
                 Mat& cov_y = joint_cov[j];
+                Mat* inv_cov_y = impute_missing ? &joint_inv_cov[j] : 0;
                 real var_min = square(sigma_min);
                 if (stage_joint_cov_computed[j] != this->stage) {
                     stage_joint_cov_computed[j] = this->stage;
@@ -579,6 +594,24 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     // approximations. Thus we ensure it is perfectly symmetric.
                     assert( cov_y.isSymmetric(false) );
                     fillItSymmetric(cov_y);
+
+                    if (impute_missing) {
+                        // We also need to compute the inverse covariance
+                        // matrix.
+                        inv_cov_y->resize(D, D);
+                        inv_cov_y->fill(0);
+                        real l0 = 1 / lambda0;
+                        for (int k = 0; k < n_eigen_computed - 1; k++)
+                            externalProductScaleAcc(
+                                    *inv_cov_y, eigenvectors_j(k),
+                                    eigenvectors_j(k),
+                                    1 / max(var_min, eigenvals[k]) - l0);
+                        for (int i = 0; i < D; i++)
+                            (*inv_cov_y)(i, i) += l0;
+                        // For the same reason as above.
+                        assert( inv_cov_y->isSymmetric(false) );
+                        fillItSymmetric(*inv_cov_y);
+                    }
 
                     /*
                     if (efficient_missing) {
@@ -631,27 +664,14 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                 */
 
                 non_missing.resize(0);
+                f_missing.resize(0);
                 // int count_tpl_dim = 0;
-                for (int k = 0; k < n_predicted; k++) {
-                    if (!is_missing(y[k])) {
+                for (int k = 0; k < n_predicted; k++)
+                    if (!is_missing(y[k]))
                         non_missing.append(k);
-                        /*
-                        if (efficient_missing) {
-                        if (missing_tpl[k])
-                            add_non_missing.append(k);
-                        else {
-                            com_non_missing.append(k);
-                            count_tpl_dim++;
-                        }
-                        }
-                        */
-                    } /*else if (efficient_missing) {
-                        if (!missing_tpl[k]) {
-                            add_missing.append(count_tpl_dim);
-                            count_tpl_dim++;
-                        }
-                    }*/
-                }
+                    else if (impute_missing)
+                        f_missing.append(k);
+
                 int n_non_missing = non_missing.length();
                 bool eff_missing = efficient_missing &&
                                     (previous_training_sample != -2);
@@ -671,6 +691,22 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     TVec<int>& ind = indices_queue[0];
                     ind.resize(n_non_missing);
                     ind << non_missing;
+
+                    if (impute_missing) {
+                        int n_missing = f_missing.length();
+                        inv_cov_y_missing.resize(n_missing, n_missing);
+                        for (int k = 0; k < n_missing; k++)
+                            for (int q = 0; q < n_missing; q++)
+                                inv_cov_y_missing(k,q) =
+                                    (*inv_cov_y)(f_missing[k], f_missing[q]);
+                        cholesky_inv_queue.resize(1);
+                        Mat& chol_inv = cholesky_inv_queue[0];
+                        choleskyDecomposition(inv_cov_y_missing, chol_inv);
+                        indices_inv_queue.resize(1);
+                        TVec<int>& ind = indices_inv_queue[0];
+                        ind.resize(n_missing);
+                        ind << f_missing;
+                    }
                 }
                 mu_y = center(j).subVec(0, n_predicted);
                 mu_y_missing.resize(n_non_missing);
@@ -715,10 +751,15 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
 
                     real log_det = 0;
                     static Mat L_tpl;
+                    static Mat L_inv_tpl;
                     static TVec<int> ind_tpl;
+                    static TVec<int> ind_inv_tpl;
                     static Mat L_tot;
                     static TVec<int> ind_tot;
-                    int n_tpl;
+                    static Mat L_inv_tot;
+                    static TVec<int> ind_inv_tot;
+                    int n_tpl = -1;
+                    int n_inv_tpl = -1;
                     int queue_index = -1;
                     int path_index = -1;
                     bool same_covariance = false;
@@ -741,6 +782,14 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         ind_tot << non_missing;
                         */
                         ind_tot = non_missing;
+
+                        if (impute_missing) {
+                            L_inv_tpl = cholesky_inv_queue[queue_index];
+                            ind_inv_tpl = indices_inv_queue[queue_index];
+                            n_inv_tpl = L_inv_tpl.length();
+                            L_inv_tot.resize(n_inv_tpl, n_inv_tpl);
+                            ind_inv_tot = f_missing;
+                        }
 
                         // Optimization: detect when the same covariance matrix
                         // can be re-used.
@@ -789,6 +838,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     static Vec new_vec;
                     int n = -1;
                     Mat* the_L = 0;
+                    Mat* the_inv_L = 0;
                     if (eff_missing) {
                     //L_tot.resize(n_non_missing, n_non_missing);
                         /*
@@ -803,6 +853,9 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     if (!same_covariance) {
                     updateCholeskyFromPrevious(L_tpl, L_tot, joint_cov[j],
                             ind_tpl, ind_tot);
+                    if (impute_missing)
+                        updateCholeskyFromPrevious(L_inv_tpl, L_inv_tot,
+                                joint_inv_cov[j], ind_inv_tpl, ind_inv_tot);
                     }
                     // Note to myself: indices in ind_tot will be changed.
 
@@ -815,6 +868,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     // pout << "min = " << min(tmp_mat) << endl;
                     */
                     the_L = same_covariance ? &L_tpl : &L_tot;
+                    the_inv_L = same_covariance ? &L_inv_tpl : &L_inv_tot;
 
 
                     n = the_L->length();
@@ -1640,6 +1694,8 @@ void GaussMix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(alpha,                    copies);
     deepCopyField(center,                   copies);
     deepCopyField(sigma,                    copies);
+
+    // TODO Update!
 }
 
 ////////////////
@@ -1743,6 +1799,7 @@ void GaussMix::resizeDataBeforeUsing()
     eigenvectors_x.resize(0);
     eigenvectors_y_x.resize(0);
     joint_cov.resize(0);
+    joint_inv_cov.resize(0);
     chol_joint_cov.resize(0);
     log_coeff.resize(0);
     log_coeff_x.resize(0);
@@ -1764,6 +1821,7 @@ void GaussMix::resizeDataBeforeUsing()
         eigenvectors_x.resize(L);
         eigenvectors_y_x.resize(L);
         joint_cov.resize(L);
+        joint_inv_cov.resize(L);
         chol_joint_cov.resize(L);
         log_coeff_x.resize(L);
         log_coeff_y_x.resize(L);
