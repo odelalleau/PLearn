@@ -2,19 +2,21 @@
                       Contrastive divergence multi-layer RBMs
 
 Energy functions:
-
+(Note that w_{ij} = w_{ji})
 
  * energy term for binomial unit i with value v_i and inputs u_j, parameters (b_i, w_{i.}): 
      
     b_i v_i + sum_j w_{ij} v_i u_j
+   
+       ==> P(v_i=1 | u) = exp(- b_i - sum_j w_{ij} u_j) / (1 + exp(- b_i - sum_j w_{ij} u_j)) = sigmoid(-b_i - sum_j w_{ij} u_j)
+       NOTE THE MINUS
 
- * energy term for fixed-variance Gaussian unit i with value v_i and inputs u_j, parameters (b_i, w_{i,.}, s_i):
+ * energy term for fixed-variance Gaussian unit i with value v_i and inputs u_j, parameters (a_i,b_i, w_{i,.}):
 
-    0.5 (v_i - (b_i + sum_j w_{ij} u_j)^2 / s_i^2 
-
- * energy term for fixed-variance Gaussian unit i with value v_i and inputs u_j, parameters (b_i, w_{i,.}, s_i):
-
-    0.5 (v_i - (b_i + sum_j w_{ij} u_j)^2 / (s_i + sum_j a_{ij} u_j)^2
+    b_i v_i + a_i^2 v_i^2 + sum_j w_{ij} v_i u_j
+       ==> P(v_i | u) = (1/Z) exp(-(b_i v_i + a_i^2 v_i^2 + sum_j w_{ij} v_i u_j)) = (1/Z)(-0.5(v_i - mu)/sigma^2)
+       ==> P(v_i | u) = N(v_i; mu, sigma^2) with sigma^2 = 0.5/a_i^2, mu = -0.5(b_i + sum_j w_{ij} u_j)/a_i^2
+       NOTE HOW THESE BLOW UP WHEN a_i IS TOO SMALL. MAY WANT TO USE (a_i + epsilon)^2 INSTEAD, with epsilon fixed.
 
 
 Basic operations in each RBM layer:
@@ -74,17 +76,6 @@ Combined operations, in an RBM network:
         layer->bpropUpdate(layer->input_variables,layer->output, din, dout)
 
   
-Conditional probabilities used in sampling, expectation, fprop:
-
-* conditional probabilities for binomial unit i with value v_i and binomial inputs u_j, parameters (b_i, w_{i.}): 
-       
-      P(v_i=1 | u) = exp(- b_i - sum_j w_{ij} u_j) / (1 + exp(- b_i - sum_j w_{ij} u_j)) = sigmoid(-b_i - sum_j w_{ij} u_j)
-      NOTE THE MINUS
-
-* conditional probabilities for fixed-variance Gaussian unit i with value v_i and inputs u_j, parameters (b_i, w_{i,.}, s_i):
-      P(v_i | u) = (1/Z) exp(- 0.5 (v_i - (b_i + sum_j w_{ij} u_j)^2 / s_i^2  ) )
-                 = N(b_i + sum_j w_{ij} u_j, s_i)
-
 
 
 
