@@ -1,0 +1,93 @@
+
+                      Contrastive divergence multi-layer RBMs
+
+Energy functions:
+
+
+ * energy term for binomial unit i with value v_i and inputs u_j, parameters (b_i, w_{i.}): 
+     
+    b_i v_i + sum_j w_{ij} v_i u_j
+
+ * energy term for fixed-variance Gaussian unit i with value v_i and inputs u_j, parameters (b_i, w_{i,.}, s_i):
+
+    0.5 (v_i - (b_i + sum_j w_{ij} u_j)^2 / s_i^2 
+
+ * energy term for fixed-variance Gaussian unit i with value v_i and inputs u_j, parameters (b_i, w_{i,.}, s_i):
+
+    0.5 (v_i - (b_i + sum_j w_{ij} u_j)^2 / (s_i + sum_j a_{ij} u_j)^2
+
+
+Basic operations in each RBM layer:
+
+ * layer::upActivation: compute parameters of p(output_variables | input_variables)
+ * layer::fprop(input,E[output|input]): find E(output_variables | input_variables). This ALWAYS calls upActivation.
+ * layer::upSample(): sample output_variables from p(output_variables | input_variables). upActivation MUST have been called before.
+ * layer::downActivation(): compute parameters of p(input_variables | output_variables)
+ * layer::downExpectation(): find E(input_variables | output_variables). This ALWAYS calls downActivation.
+ * layer::downSample(): sample input_variables from p(input_variables | output_variables). downActivation MUST have been called before.
+ * layer::accumulateStats(in,out,1): accumulate positive phase statistics
+ * layer::accumulateStats(in,out,-1): accumulate negative phase statistics
+ * layer::layerCDupdate(): update parameters using positive and negative phase statistics
+ 
+Combined operations, in an RBM network:
+
+ * network::computeRepresentation(input_variables):
+     v <- input_variables
+     for each layer except the last:
+        layer->input_variables <- v.copy()
+        v.resize(output_variables.size())
+        layer->fprop(layer->input_variables,v)
+     return v
+
+ * network::unsupervised_learning_from_example(input_variables):
+     v <- input_variables
+     for each layer except the last:
+        layer->input_variables <- v.copy()
+        v.resize(output_variables.size())
+        layer->fprop(layer->input_variables,v)
+        layer->upSample() 
+        layer->accumulateStats(v,output_variable)
+        layer->downSample()
+        layer->upSample()
+        layer->accumulateStats(input_variable,output_variable)
+        layer->CDupdate()
+
+ * network::semisupervised_learning_from_example(input_variables, output_variables):
+     v <- input_variables
+     for each layer except the last:
+        layer->input_variables <- v.copy()
+        layer->fprop(layer->input_variables,layer->output)
+        v <- layer->output
+        layer->upSample() 
+        layer->accumulateStats(v,output_variable)
+        layer->downSample()
+        layer->upSample()
+        layer->accumulateStats(input_variable,output_variable)
+        layer->CDupdate()
+     last_layer->input_variables <- v.copy()
+     last_layer->fprop(last_layer->input_variables,last_layer->output)
+     cost_layer->fprop((output_variables,last_layer->output),cost)
+     cost_layer->bpropUpdate((output_variables,last_layer->output),cost,(tmp, dout), 1)
+     last_layer->bpropUpdate(v,out,dv,dout)
+     for each layer except the last, going backwards:
+        din <- dout.copy()
+        layer->bpropUpdate(layer->input_variables,layer->output, din, dout)
+
+  
+Conditional probabilities used in sampling, expectation, fprop:
+
+* conditional probabilities for binomial unit i with value v_i and binomial inputs u_j, parameters (b_i, w_{i.}): 
+       
+      P(v_i=1 | u) = exp(- b_i - sum_j w_{ij} u_j) / (1 + exp(- b_i - sum_j w_{ij} u_j)) = sigmoid(-b_i - sum_j w_{ij} u_j)
+      NOTE THE MINUS
+
+* conditional probabilities for fixed-variance Gaussian unit i with value v_i and inputs u_j, parameters (b_i, w_{i,.}, s_i):
+      P(v_i | u) = (1/Z) exp(- 0.5 (v_i - (b_i + sum_j w_{ij} u_j)^2 / s_i^2  ) )
+                 = N(b_i + sum_j w_{ij} u_j, s_i)
+
+
+
+
+     
+
+
