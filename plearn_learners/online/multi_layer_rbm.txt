@@ -30,8 +30,11 @@ Basic operations in each RBM layer:
  * layer::accumulateStats(in,out,1): accumulate positive phase statistics
  * layer::accumulateStats(in,out,-1): accumulate negative phase statistics
  * layer::layerCDupdate(): update parameters using positive and negative phase statistics
+ * layer::outputMarginalSample(): sample from the marginal distribution of the output units, in output_variables
  
-Combined operations, in an RBM network:
+Combined operations, in a supervised RBM network:
+ A supervised RBM network has a sequence of layers. The last_layer one is fully supervised. The 2nd to last is the last_hidden_layer.
+ There is also a cost_layer that follows the last_layer, which computes the supervised cost to minimize.
 
  * network::computeRepresentation(input_variables):
      v <- input_variables
@@ -77,6 +80,17 @@ Combined operations, in an RBM network:
 
   
 
+ * network::unconditionalGenerate(): sample an input, unconditionally
+     last_layer->outputMarginalSample()
+     network->conditionalGenerate(last_layer->output_variables)
+
+ * network::conditionalGenerate(output): sample an input, conditional on the given output value
+     last_layer->downActivation() // compute part of the activation of last hidden units due to output units
+     last_hidden_layer->output_activation_external_contribution <- last_layer->input_activation.copy()
+     repeat n_MCMC_iterations
+       last_hidden_layer->downSample()
+       last_hidden_layer->upSample()
+    ...?
 
 
      
