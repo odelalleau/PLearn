@@ -142,6 +142,10 @@ inline void productScaleAcc(const TMat<double>& C, const TMat<double>& A, bool t
     int lda = A.mod();
     int ldb = B.mod();
     int ldc = C.mod();
+
+    if (A.isNull() || B.isNull() || C.isNull()) // Size zero ; don't bother
+        return;                                 // with actual calculation
+    
     dgemm_(&transb, &transa, &w2, &l1, &w1, &alpha, B.data(), &ldb, A.data(), &lda, &beta, C.data(), &ldc);
 }
 
@@ -166,6 +170,10 @@ inline void productScaleAcc(const TVec<double>& y, const TMat<double>& A, bool t
     int lda = A.mod();
     int m = A.width();
     int n = A.length();
+
+    if (A.isNull() || x.isNull() || y.isNull()) // Size zero ; don't bother
+        return;                                 // with actual calculation
+    
     dgemv_(&trans, &m, &n, &alpha, A.data(), &lda, x.data(), &one, &beta, y.data(), &one);
 }
 
@@ -180,6 +188,10 @@ inline void externalProductScaleAcc(const TMat<double>& A, const TVec<double>& x
     int lda = A.mod();
     int m = A.width();
     int n = A.length();
+
+    if (A.isNull() || x.isNull() || y.isNull()) // Size zero ; don't bother
+        return;                                 // with actual calculation
+    
     dger_(&m, &n, &alpha, y.data(), &one, x.data(), &one, A.data(), &lda);
 }
 
@@ -276,6 +288,10 @@ inline void productScaleAcc(const TMat<float>& C, const TMat<float>& A, bool tra
     int lda = A.mod();
     int ldb = B.mod();
     int ldc = C.mod();
+
+    if (A.isNull() || B.isNull() || C.isNull()) // Size zero ; don't bother
+        return;                                 // with actual calculation
+    
     sgemm_(&transb, &transa, &w2, &l1, &w1, &alpha, B.data(), &ldb, A.data(), &lda, &beta, C.data(), &ldc);
 }
 
@@ -328,6 +344,10 @@ inline void externalProductScaleAcc(const TMat<float>& A, const TVec<float>& x, 
     int lda = A.mod();
     int m = A.width();
     int n = A.length();
+
+    if (A.isNull() || x.isNull() || y.isNull()) // Size zero ; don't bother
+        return;                                 // with actual calculation
+    
     sger_(&m, &n, &alpha, y.data(), &one, x.data(), &one, A.data(), &lda);
 }
 
