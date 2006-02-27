@@ -272,7 +272,7 @@ class OptionalLibrary:
                 return str_or_func()
             else:
                 print 'In pymake - A compiler option must be either a string or a function'
-                sys.exit()
+                sys.exit(100)
 
         # Function that takes either a list of options (strings and / or functions)
         # or a single string, and return a single string.
@@ -566,7 +566,7 @@ a corresponding .<target>.override_compile_options file:
 
 if len(args)==0:
     printusage()
-    sys.exit()
+    sys.exit(100)
 
     
 #######################################################
@@ -628,20 +628,22 @@ else:
 if 'clean' in optionargs:
     if len(optionargs)!=1 or len(otherargs)==0:
         print 'BAD ARGUMENTS: with -clean, specify one or more directories to clean, but no other -option'
+        sys.exit(100)
     else:
         print '>> Removing the following OBJS directories: '
         for dirname in otherargs:
             os.path.walk(dirname,rmOBJS,'')
-    sys.exit()
+        sys.exit()
 
 if 'checkobj' in optionargs: # report .cc files without any corresponding .o file in OBJS
     if len(optionargs)!=1 or len(otherargs)==0:
         print 'BAD ARGUMENTS: with -checkobj, specify one or more directories to check, but no other -option'
+        sys.exit(100)
     else:
         print '>> The following files do not have *any* corresponding .o in OBJS:'
         for dirname in otherargs:
             os.path.walk(abspath(dirname),reportMissingObj, '')
-    sys.exit()
+        sys.exit()
 
 force_recompilation = 0  # force recompilation of everything?
 if 'force' in optionargs:
@@ -685,7 +687,7 @@ if 'spc' in optionargs :
     plearndir = ppath('PLEARNDIR')
     if not plearndir:
         print 'Error: PLEARNDIR is necessary in order to get the pyfreemachines script'
-        sys.exit();
+        sys.exit(100);
     else:
         try: os.makedirs(join(homedir,'.pymake'))
         except: pass
@@ -736,11 +738,11 @@ if 'static' in optionargs:
 
 if create_so and create_dll:
     print 'Error: cannot create a DLL and a Shared Object at the same time.  Remove "-dll" or "-so" option.'
-    sys.exit()
+    sys.exit(100)
 
 if static_linking and (create_so or create_dll):
     print 'Incompatible command line options specified: you may specify only one of -static, -so, -dll'
-    sys.exit()
+    sys.exit(100)
 
 if 'ssh' in optionargs:
     # Re-define 'rshcommand' in order to use ssh instead.
@@ -810,7 +812,7 @@ def getOptions(options_choices,optionargs):
     if optionargs: # there are remaining optionargs
         print 'Invalid options: ' + string.join(map(lambda s: '-'+s, optionargs))
         printusage()
-        sys.exit()
+        sys.exit(100)
 
     return options
 
@@ -992,13 +994,13 @@ class FileInfo:
         then moc 'filename'.h (generates) moc_'filename'.cc"""
     
         if qtdir == '':
-            print """\nError : The qtdir variable is unset but the file """+self.filepath+""" seems to use QT (a Q_OBJECT declaration was found). In your .pymake/config file, assign the qtdir variable to the path to Trolltech's QT installation. Example : qtdir = '/usr/lib/qt3/'"""
-            sys.exit()
+            print "\nError : The qtdir variable is unset but the file " + self.filepath + " seems to use QT (a Q_OBJECT declaration was found). In your .pymake/config file, assign the qtdir variable to the path to Trolltech's QT installation. Example : qtdir = '/usr/lib/qt3/'"
+            sys.exit(100)
 
         if (os.path.isfile(self.mocfilename)) and self.get_depmtime() <= os.path.getmtime(self.mocfilename):
             return 0
                   
-        os.system(qtdir+"bin/moc "+self.filepath+" -o "+self.mocfilename)
+        return os.system(qtdir+"bin/moc "+self.filepath+" -o "+self.mocfilename)
 
     def analyseFile(self):
         global useqt
@@ -1535,24 +1537,33 @@ digraph G
     def launch_linking(self):
         corresponding_output = self.corresponding_output
         self.corresponding_output = self.corresponding_output+".new"
-        try: os.remove(self.corresponding_output)
-        except: pass
+        try:
+            os.remove(self.corresponding_output)
+        except OSError:
+            pass
         command = self.link_command()
         if verbose>=3:
 	        print command
-        os.system(command)
+
+        link_exit_code = os.system(command)
+
         if symlinkobjs:
             for objfile in self.objsfilelist:
                 os.remove(objfile)
+
         if not os.path.exists(self.corresponding_output):
-          print "Link command failed to create file " + self.corresponding_output
+            print "Link command failed to create file " + self.corresponding_output
         else:
-          try: os.remove(corresponding_output)
-          except: pass
-          os.rename(self.corresponding_output, corresponding_output)
-          if verbose>=2:
-            print "Successfully created " + self.corresponding_output + " and renamed it to " + corresponding_output 
+            try:
+                os.remove(corresponding_output)
+            except OSError:
+                pass
+            os.rename(self.corresponding_output, corresponding_output)
+            if verbose>=2:
+                print "Successfully created " + self.corresponding_output + " and renamed it to " + corresponding_output 
+
         self.corresponding_output = corresponding_output
+        return link_exit_code
         
     def dll_commands(self):
         """returns the command for making dll target from the .o files in objsfilelist and the corresponding .def file"""        
@@ -1622,10 +1633,16 @@ digraph G
         return list_of_commands
 
     def launch_dll_wrapping(self):
+        last_failed_exit_code = 0
         list_of_commands = self.dll_commands()
+        
         for command in list_of_commands:
             print command
-            os.system(command)
+            e = os.system(command)
+            if e != 0:
+                last_failed_exit_code = e
+
+        return last_failed_exit_code
 
 
 file_info_map = {}
@@ -1763,7 +1780,6 @@ def win32_parallel_compile(files_to_compile):
         ccfile.launch_compilation('localhost')
         ccfile.finished_compilation() # print error messages, warnings, and get failure/success status
 
-# well this one is not 'parallel' right now...
 def sequential_link(executables_to_link, linkname):
     """executables_to_link is a list of FileInfo of .cc files that contain a main()
     and whose corresponding executable should be made"""
@@ -1773,14 +1789,16 @@ def sequential_link(executables_to_link, linkname):
             print '[ Executable target',ccfile.filebase,'not remade because of previous compilation errors. ]'
             print '   Errors were while compiling files:'
             print '   '+string.join(failures,'\n   ')
+            return 1
         else:
             print 'Waiting for NFS to catch up...'
             ccfile.nfs_wait_for_all_linkable_ofiles()            
             if verbose>=2:
                 print '[ LINKING',ccfile.filebase,']'
-            ccfile.launch_linking()
+            link_exit_code = ccfile.launch_linking()
             if platform!='win32' and not create_so:
-                ccfile.make_symbolic_link(linkname)            
+                ccfile.make_symbolic_link(linkname)
+            return link_exit_code
 
 def sequential_dll(target_file_info):
     """target_file_info is a FileInfo of .cc file whose corresponding dll should be made"""
@@ -1816,7 +1834,7 @@ def distribute_source(target, cfiles_to_compile, executables_to_link, linkname):
     dist_dir = os.path.basename(target) + ".dist";
     if os.path.isdir(dist_dir):  # make sure the OBJS dir exists, otherwise the command will fail
         print "Directory " + dist_dir + " already exists"
-        sys.exit(1)
+        sys.exit(100)
     os.makedirs(dist_dir)
     os.makedirs(os.path.join(dist_dir,"OBJS"))
     makefile = open(os.path.join(dist_dir,"Makefile"),"w")
@@ -1947,11 +1965,15 @@ try:
 
                 if force_link or (executables_to_link.keys() and not create_dll):
                     print '++++ Linking', string.join(map(lambda x: x.filebase, executables_to_link.keys()))
-                    sequential_link(executables_to_link.keys(),linkname)
+                    ret = sequential_link(executables_to_link.keys(),linkname)
+                    if ret != 0:
+                        sys.exit(ret)
 
                 if create_dll:
                     print '++++ Creating DLL of', target
-                    sequential_dll(file_info(target))
+                    ret = sequential_dll(file_info(target))
+                    if ret != 0:
+                        sys.exit(ret)
 
                 if temp_objs:
                     os.system('chmod 777 --silent '+objsdir+'/*')
