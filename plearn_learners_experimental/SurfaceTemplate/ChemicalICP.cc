@@ -465,7 +465,7 @@ real ChemicalICP::computeWeightedDistance( const Mat& tr_template_coords,
     {
         for( int i=0 ; i<n_points ; i++ )
         {
-            real diff2 =
+            real diff2 = feat_distances2( i, matching[i] ) +
                 powdistance( tr_template_coords(i), matched_mol_coords(i), 2 );
             err += weights[i] * sqrt( diff2 );
 /*pout << "i = " << i << endl
