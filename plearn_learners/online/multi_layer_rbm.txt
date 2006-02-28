@@ -18,6 +18,12 @@ Energy functions:
        ==> P(v_i | u) = N(v_i; mu, sigma^2) with sigma^2 = 0.5/a_i^2, mu = -0.5(b_i + sum_j w_{ij} u_j)/a_i^2
        NOTE HOW THESE BLOW UP WHEN a_i IS TOO SMALL. MAY WANT TO USE (a_i + epsilon)^2 INSTEAD, with epsilon fixed.
 
+ * energy term for softmax units i with value v_i and inputs u_j, parameters (b_i, w_{i.}): 
+     
+    b_i v_i + sum_j w_{ij} v_i u_j
+   
+       ==> P(v_i=1 | u) = exp(- b_i - sum_j w_{ij} u_j) / sum_i " = softmax(- b_i - sum_j w_{ij} u_j)
+       NOTE THE MINUS
 
 Basic operations in each RBM layer:
 
@@ -57,7 +63,7 @@ Combined operations, in a supervised RBM network:
         layer->accumulateStats(input_variable,output_variable)
         layer->CDupdate()
 
- * network::semisupervised_learning_from_example(input_variables, output_variables):
+ * network::supervised_learning_from_example(input_variables, output_variables):
      v <- input_variables
      for each layer except the last:
         layer->input_variables <- v.copy()
@@ -81,16 +87,45 @@ Combined operations, in a supervised RBM network:
   
 
  * network::unconditionalGenerate(): sample an input, unconditionally
-     last_layer->outputMarginalSample()
-     network->conditionalGenerate(last_layer->output_variables)
+     last_layer->clearActivations() // so that the first upSample() only samples from the biases
+     repeat n_MCMC_sampling_iterations
+       last_layer->upSample()
+       last_layer->downActivation()
+       last_hidden_layer->output_activation_external_contribution <- last_layer->input_activation.copy()
+       last_hidden_layer->upActivation() // adds activation from inputs with external contribution from last_layer
+       last_hidden_layer->upSample()
+       last_hidden_layer->downActivation()
+       last_hidden_layer->downSample()
+       last_layer->input_variables <- last_hidden_layer->output_variables.copy()
+       last_layer->upActivation()
+     v <- last_hidden_layer->output_variables
+     for each layer except the last, going backwards:
+       layer->output_variables <- v.copy()
+       layer->downActivation()
+       layer->downSample()
+       v <- layer->input_variables
+     return v
+
 
  * network::conditionalGenerate(output): sample an input, conditional on the given output value
+     last_layer->output_variables <- output.copy()
      last_layer->downActivation() // compute part of the activation of last hidden units due to output units
      last_hidden_layer->output_activation_external_contribution <- last_layer->input_activation.copy()
-     repeat n_MCMC_iterations
+     repeat n_MCMC_sampling_iterations
+       last_hidden_layer->downActivation()
        last_hidden_layer->downSample()
+       last_hidden_layer->upActivation()
        last_hidden_layer->upSample()
-    ...?
+     v <- last_hidden_layer->output_variables
+     for each layer except the last, going backwards:
+       layer->output_variables <- v.copy()
+       layer->downActivation()
+       layer->downSample()
+       v <- layer->input_variables
+     last_hidden_layer->output_activation_external_contribution.clear()
+     return v
+
+        
 
 
      
