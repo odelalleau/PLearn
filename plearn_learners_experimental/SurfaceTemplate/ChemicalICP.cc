@@ -36,7 +36,6 @@
 
 /*! \file ChemicalICP.cc */
 
-
 #include "ChemicalICP.h"
 #include <plearn/base/stringutils.h>
 #include <plearn/var/VarColumnsVariable.h>
@@ -52,31 +51,75 @@ PLEARN_IMPLEMENT_OBJECT(
     );
 
 ChemicalICP::ChemicalICP() 
-    : weighting_method( "sigmoid" ),
+    : weighting_method( "features_sigmoid" ),
       weighting_params( Vec(2,1) ),
+      matching_method( "exhaustive" ),
+      initial_angles_step( 0 ),
+      max_iter( 50 ),
+      error_t( 0 ),
+      angle_t( 0.5 ),
+      trans_t( 0 ),
       rotation( 3, 3 ),
-      translation( 3 )
+      translation( 3 ),
+      mol_feat_indices( 0 ), // calls SourceVariable()
+      template_feat_indices( 0 ),
+      all_mol_features( 0 ),
+      all_template_features( 0 ),
+      all_template_feat_dev( 0 ),
+      mol_coordinates( 0 ),
+      used_mol_features( new VarColumnsVariable( all_mol_features,
+                                                 mol_feat_indices ) ),
+      template_coordinates( 0 ),
+      template_geom_dev( 0 ),
+      used_template_features( new VarColumnsVariable(all_template_features,
+                                                     template_feat_indices) ),
+      used_template_feat_dev( new VarColumnsVariable(all_template_feat_dev,
+                                                     template_feat_indices) )
 {
     // ...
 
     // ### You may (or not) want to call build_() to finish building the object
     // ### (doing so assumes the parent classes' build_() have been called too
     // ### in the parent classes' constructors, something that you must ensure)
+
+    pout << "Default constructor called" << endl;
 }
 
 ChemicalICP::ChemicalICP( const MolTemplate& the_template,
                           const Mol& the_molecule,
                           const TVec<string>& the_feature_names,
                           string the_weighting_method,
-                          const Var& the_weighting_params )
+                          const Var& the_weighting_params,
+                          string the_matching_method )
     : mol_template(the_template),
       molecule(the_molecule),
       feature_names(the_feature_names),
       weighting_method(the_weighting_method),
       weighting_params(the_weighting_params),
+      matching_method( the_matching_method ),
+      initial_angles_step( 0 ),
+      max_iter( 50 ),
+      error_t( 0 ),
+      angle_t( 0.5 ),
+      trans_t( 0 ),
       rotation( 3, 3 ),
-      translation( 3 )
+      translation( 3 ),
+      mol_feat_indices( 0 ), // calls SourceVariable()
+      template_feat_indices( 0 ),
+      all_mol_features( 0 ),
+      all_template_features( 0 ),
+      all_template_feat_dev( 0 ),
+      mol_coordinates( 0 ),
+      used_mol_features( new VarColumnsVariable( all_mol_features,
+                                                 mol_feat_indices ) ),
+      template_coordinates( 0 ),
+      template_geom_dev( 0 ),
+      used_template_features( new VarColumnsVariable(all_template_features,
+                                                     template_feat_indices) ),
+      used_template_feat_dev( new VarColumnsVariable(all_template_feat_dev,
+                                                     template_feat_indices) )
 {
+    pout << "Big constructor called" << endl;
     build();
 }
 
@@ -106,8 +149,8 @@ void ChemicalICP::computeUsedFeatures()
     else if( feature_names[0] == "none" )
     {
         used_feat_names.resize( 0 );
-        mol_feat_indices.resize( 0 );
-        template_feat_indices.resize( 0 );
+        mol_feat_indices->resize( 0, 0 );
+        template_feat_indices->resize( 0, 0 );
         return;
     }
     else
@@ -130,8 +173,10 @@ void ChemicalICP::computeUsedFeatures()
     // then compute intersection with molecule->feature_names
     TVec<string> mol_names = molecule->feature_names;
     used_feat_names.resize(0, common_names.length());
-    template_feat_indices.resize(0, common_names.length());
-    mol_feat_indices.resize(0, common_names.length());
+
+    // storage for indices
+    Vec template_feat_indices_;
+    Vec mol_feat_indices_;
 
     TVec<int> indices = mol_names.find( common_names );
     for( int i=0 ; i<indices.length() ; i++ )
@@ -140,45 +185,36 @@ void ChemicalICP::computeUsedFeatures()
         {
             // common_names[i] is present in mol_names at position indices[i]
             used_feat_names.append( common_names[i] );
-            template_feat_indices.append( common_indices[i] );
-            mol_feat_indices.append( indices[i] );
+            template_feat_indices_.append( common_indices[i] );
+            mol_feat_indices_.append( indices[i] );
         }
     }
+
+    // update Var's value
+    template_feat_indices->defineValueLocation(
+        template_feat_indices_.toMat( template_feat_indices_.size(), 1 ) );
+
+    mol_feat_indices->defineValueLocation(
+        mol_feat_indices_.toMat( mol_feat_indices_.size(), 1 ) );
 }
 
 void ChemicalICP::computeVariables()
 {
     // make mol_coordinates point to the new molecule's coordinates
-    Var new_mol_coordinates( molecule->coordinates );
-    mol_coordinates->makePointTo( new_mol_coordinates );
+    mol_coordinates->defineValueLocation( molecule->coordinates );
 
     // make mol_features point to the new molecule's features
-    Var new_mol_features( molecule->features );
-    all_mol_features->makePointTo( new_mol_features );
+    all_mol_features->defineValueLocation( molecule->features );
 
-    // select the columns to keep in all_mol_features
-    Var mol_feat_indices_var( mol_feat_indices );
-    Var new_used_mol_features =
-        new VarColumnsVariable( all_mol_features, mol_feat_indices_var );
-    used_mol_features->makePointTo( new_used_mol_features );
-
-    // select the columns to keep in all_template_features
-    Var template_feat_indices_var( template_feat_indices );
-    Var new_used_template_features =
-        new VarColumnsVariable( all_template_features,
-                                template_feat_indices_var );
-    used_template_features->makePointTo( new_used_template_features );
-
-    // select the columns to keep in all_template_feat_dev
-    Var new_used_template_feat_dev =
-        new VarColumnsVariable( all_template_feat_dev,
-                                template_feat_indices_var );
-    used_template_feat_dev->makePointTo( new_used_template_feat_dev );
-
+    // update used_... Var's so they have the right size
+    used_mol_features->sizeprop();
+    used_template_features->sizefprop();
+    used_template_feat_dev->sizefprop();
 }
 
 void ChemicalICP::cacheFeatureDistances()
 {
+//pout << "cacheFeatureDistances()" << endl;
     Mat t_features = used_template_features->matValue;
     Mat t_feat_dev = used_template_feat_dev->matValue;
     Mat m_features = used_mol_features->matValue;
@@ -202,11 +238,14 @@ void ChemicalICP::cacheFeatureDistances()
             }
         }
     }
+/*pout << "t_features(0) = " << t_features(0) << endl;
+pout << "t_feat_dev(0) = " << t_feat_dev(0) << endl;
+pout << "feat_distances2(0) = " << feat_distances2(0) << endl;*/
 }
 
 void ChemicalICP::run()
 {
-
+//pout << "begin run()" << endl;
     if( initial_angles_list.length() > 0 )
     {
         if( initial_angles_step > 0 )
@@ -253,8 +292,10 @@ void ChemicalICP::run()
     Mat matched_mol_coords( n_points, 3 );
 
     int n_initial_angles = initial_angles_list.length();
+//pout << n_initial_angles << " initial angles to try" << endl;
     for( int i=0 ; i<n_initial_angles ; i++ )
     {
+//pout << "global iteration number " << i << endl;
         // initialization
         rotation = rotationMatrixFromAngles( initial_angles_list(i) );
         translation.fill(0);
@@ -268,19 +309,39 @@ void ChemicalICP::run()
         applyGeomTransformation( rotation, translation,
                                  template_coordinates->matValue,
                                  tr_template_coords );
-
+/*pout << "beginning:" << endl
+    << "rotation = " << endl << rotation << endl
+    << "translation = " << translation << endl
+    << "template_coordinates->matValue = " << endl
+    << template_coordinates->matValue << endl
+    << "tr_template_coords = " << endl << tr_template_coords << endl
+    << endl;
+*/
         // main loop
         do
         {
+//pout << "    beginning of main loop" << endl;
+//pout << "    matchNearestNeighbors()" << endl;
             matchNearestNeighbors( tr_template_coords, matched_mol_coords );
+//pout << "    minimizeWeightedDistance()" << endl;
             minimizeWeightedDistance( tr_template_coords, matched_mol_coords,
                                       delta_rot_length, delta_trans_length );
+//pout << "    applyGeomTransformation()" << endl;
             applyGeomTransformation( rotation, translation,
                                      template_coordinates->matValue,
                                      tr_template_coords );
+//pout << "tr_template_coords = " << endl << tr_template_coords << endl;
             error = computeWeightedDistance( tr_template_coords,
                                              matched_mol_coords );
             n_iter++;
+/*pout << "end of main loop" << endl;
+pout << "    iteration = " << n_iter << " / " << max_iter << endl
+     << "    error = " << error << " / " << error_t << endl
+     << "    delta_rot_length = " << delta_rot_length << " / "
+         << angle_t << endl
+     << "    delta_trans_length = " << delta_trans_length << " / "
+         << trans_t << endl
+     << endl;*/
         }
         while( n_iter < max_iter &&
                error > error_t &&
@@ -295,6 +356,7 @@ void ChemicalICP::run()
             best_translation << translation;
             best_matching << matching;
         }
+//pout << "end global iteration number " << i << endl << endl;
     }
 
     // get best parameters
@@ -311,6 +373,7 @@ void ChemicalICP::run()
 void ChemicalICP::matchNearestNeighbors( const Mat& tr_template_coords,
                                          const Mat& matched_mol_coords )
 {
+//pout << "matchNearestNeighbors()" << endl;
     Mat mol_coords = mol_coordinates->matValue;
     int n_template_points = tr_template_coords.length();
     int n_mol_points = mol_coords.length();
@@ -321,8 +384,10 @@ void ChemicalICP::matchNearestNeighbors( const Mat& tr_template_coords,
         for( int i=0 ; i<n_template_points ; i++ )
         {
             Vec t_point = tr_template_coords( i );
+//pout << "tr_template_coords(" << i  << ") = " << t_point << endl;
             Vec dists( n_template_points );
             real closest_dist2 = REAL_MAX;
+//pout << "closest_dist2 = " << closest_dist2 << endl;
 
             for( int j=0 ; j<n_mol_points ; j++ )
             {
@@ -330,10 +395,18 @@ void ChemicalICP::matchNearestNeighbors( const Mat& tr_template_coords,
                 Vec m_point = mol_coords( j );
                 real dist2 = powdistance( t_point, m_point, 2 )
                                 + feat_distances2(i, j);
+/*pout << "m_point = " << m_point << endl;
+pout << "powdistance( t_point, m_point, 2 ) = "
+    << powdistance( t_point, m_point, 2 ) << endl;
+pout << "feat_distances2(" << i << "," << j << ") = " <<
+    feat_distances2(i, j) << endl;
+pout << "dist2 = " << dist2 << endl;*/
 
                 // keep the smallest
                 if( dist2 < closest_dist2 )
                 {
+//pout << "beep " << endl;
+//pout << " matching[" << i << "] = " << j << endl;
                     closest_dist2 = dist2;
                     matching[i] = j;
                 }
@@ -352,12 +425,21 @@ void ChemicalICP::minimizeWeightedDistance( const Mat& tr_template_coords,
     Vec delta_trans( 3 );
     real err = REAL_MAX;
 
+//pout << "before computeWeights()" << endl
+//    << tr_template_coords(0) << endl;
     computeWeights( tr_template_coords, matched_mol_coords );
+//pout << "after computeWeights() / before transformationFromWeightedMatchedPoints" << endl
+//    << tr_template_coords(0) << endl;
     transformationFromWeightedMatchedPoints( tr_template_coords,
                                              matched_mol_coords,
                                              weights,
                                              delta_rot, delta_trans,
                                              err );
+/*pout << "after transformationFromWeightedMatchedPoints" << endl
+    << tr_template_coords(0) << endl;
+pout << "weights = " << weights << endl
+     << "delta_rot = " << endl << delta_rot << endl
+     << "delta_trans = " << delta_trans << endl;*/
 
     delta_rot_length = norm( anglesFromRotationMatrix( delta_rot ), 2 );
     delta_trans_length = norm( delta_trans );
@@ -369,11 +451,14 @@ void ChemicalICP::minimizeWeightedDistance( const Mat& tr_template_coords,
     // translation = delta_trans + delta_rot * translation
     productAcc( delta_trans, delta_rot, translation );
     translation << delta_trans;
+//pout << "rotation = " << endl << rotation << endl
+//     << "translation = " << translation << endl;
 }
 
 real ChemicalICP::computeWeightedDistance( const Mat& tr_template_coords,
                                            const Mat& matched_mol_coords )
 {
+//pout << "computeWeightedDistance()" << endl;
     real err = 0;
     int n_points = tr_template_coords.length();
     if( matching_method == "exhaustive" )
@@ -383,6 +468,12 @@ real ChemicalICP::computeWeightedDistance( const Mat& tr_template_coords,
             real diff2 =
                 powdistance( tr_template_coords(i), matched_mol_coords(i), 2 );
             err += weights[i] * sqrt( diff2 );
+/*pout << "i = " << i << endl
+    << "tr_template_coords = " << tr_template_coords(i) << endl
+    << "matched_mol_coords = " << matched_mol_coords(i) << endl
+    << "weights = " <<  weights[i] << endl
+    << "delta_err = " << weights[i] * sqrt( diff2 ) << endl
+    << endl;*/
         }
     }
     return err;
@@ -391,12 +482,20 @@ real ChemicalICP::computeWeightedDistance( const Mat& tr_template_coords,
 void ChemicalICP::computeWeights( const Mat& tr_template_coords,
                                   const Mat& matched_mol_coords )
 {
+//pout << "computeWeights()" << endl;
     int n_points = tr_template_coords.length();
+//pout << "n_points = " << n_points << endl;
 
     if( weighting_method == "none" )
+    {
+//pout << "pouet!" << endl;
         weights.fill( 1. / real( n_points ) );
+//pout << "1. / real( n_points ) = " << 1. / real( n_points ) << endl;
+//pout << "weights[0] = " << weights[0] << endl;
+    }
     else if( weighting_method == "features_sigmoid" )
     {
+//pout << "plouf!" << endl;
         real total_weight = 0;
         real mid = weighting_params->value[0];
         real slope = weighting_params->value[1];
@@ -408,8 +507,15 @@ void ChemicalICP::computeWeights( const Mat& tr_template_coords,
                 real diff2 = feat_distances2( i, matching[i] );
                 weights[i] = sigmoid( slope * (mid - sqrt(diff2)) );
                 total_weight += weights[i];
+/*pout << "i = " << i << endl
+    << "diff2 = " << diff2 << endl
+    << "slope = " << slope << endl
+    << "mid = " << mid << endl
+    << "weights = " <<  weights[i] << endl
+    << endl;*/
             }
             weights /= total_weight;
+//pout << "total_weight = " << total_weight << endl;
         }
     }
 }
@@ -515,6 +621,7 @@ void ChemicalICP::build_()
     // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
     // ### You should assume that the parent class' build_() has already been called.
 
+//pout << "begin build_()" << endl;
     if( feature_names.size() > 0 &&
         lowerstring( feature_names[0] ) == "none" )
     {
@@ -553,17 +660,11 @@ void ChemicalICP::build_()
     if( mol_template )
     {
         // make the Var's relative to the template have the right storage
-        Var new_template_coordinates( mol_template->coordinates );
-        template_coordinates->makePointTo( new_template_coordinates );
-
-        Var new_template_geom_dev( mol_template->geom_dev );
-        template_geom_dev->makePointTo( new_template_geom_dev );
-
-        Var new_template_features( mol_template->features );
-        all_template_features->makePointTo( new_template_features );
-
-        Var new_template_feat_dev( mol_template->feat_dev );
-        all_template_feat_dev->makePointTo( new_template_feat_dev );
+        template_coordinates->defineValueLocation( mol_template->coordinates );
+        template_geom_dev->defineValueLocation(
+            mol_template->geom_dev.toMat( mol_template->n_points(), 1 ) );
+        all_template_features->defineValueLocation( mol_template->features );
+        all_template_feat_dev->defineValueLocation( mol_template->feat_dev );
 
         if( molecule )
         {
@@ -583,6 +684,7 @@ void ChemicalICP::build_()
 
     other_base_properties = all_mol_features
         & all_template_features & all_template_feat_dev;
+//pout << "end build_()" << endl;
 
 }
 

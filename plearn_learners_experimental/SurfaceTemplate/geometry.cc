@@ -40,6 +40,7 @@
 
 #include "geometry.h"
 #include <plearn/math/TMat_maths.h>
+#include <plearn/math/plapack.h>
 
 namespace PLearn {
 using namespace std;
@@ -49,21 +50,21 @@ using namespace std;
 Vec anglesFromRotationMatrix( const Mat& rot )
 {
     Vec angle( 3 );
-    angle[1] = atan2( -m(2, 0), sqrt( m(0, 0)*m(0, 0) + m(1, 0)*m(1, 0) ) );
-    angle[2] = atan2( m(1, 0) / cos( angle[1] ), m(0, 0) / cos( angle[1] ) );
-    angle[0] = atan2( m(2, 1) / cos( angle[1] ), m(2, 2) / cos( angle[1] ) );
+    angle[1] = atan2( -rot(2,0), sqrt( rot(0,0)*rot(0,0)+rot(1,0)*rot(1,0) ) );
+    angle[2] = atan2( rot(1,0) / cos( angle[1] ), rot(0,0) / cos( angle[1] ) );
+    angle[0] = atan2( rot(2,1) / cos( angle[1] ), rot(2,2) / cos( angle[1] ) );
 
     if( angle[1] * 180 / Pi > 89.9 )
     {
         angle[1] = Pi / 2;
         angle[2] = 0;
-        angle[0] = atan2( m(0, 1), m(1, 1) );
+        angle[0] = atan2( rot(0,1), rot(1,1) );
     }
     else if( angle[1] * 180.0 / Pi < -89.9 )
     {
         angle[1] = -Pi / 2;
         angle[2] = 0;
-        angle[0] = -atan2( m(0, 1), m(1, 1) );
+        angle[0] = -atan2( rot(0,1), rot(1,1) );
     }
 
     return( angle * ( 180.0 / Pi ) );
@@ -138,8 +139,6 @@ void transformationFromWeightedMatchedPoints( const Mat& template_points,
     Vec t_centroid = weightedCentroid( template_points, weights );
     Vec m_centroid = weightedCentroid( mol_points, weights );
 
-    int n = mol_points.length();
-
     Mat origin_tp = template_points - t_centroid;
     Mat origin_mp = mol_points - m_centroid;
 
@@ -200,7 +199,7 @@ Mat rotationFromWeightedMatchedPoints( const Mat& template_points,
 
     if( theta !=0 )
     {
-        Vec axis( 3 ) = e.subMat( 3, 0, 1, 3 ).toVecCopy();
+        Vec axis = eigen_vecs.subMat( 3, 0, 1, 3 ).toVecCopy();
         axis /= sin( theta/2.0 );
         rot << rotationFromAxisAngle( axis, theta );
     }

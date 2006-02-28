@@ -41,6 +41,8 @@
 #define geometry_INC
 
 // Put includes here
+#include <plearn/math/TVec_decl.h>
+#include <plearn/math/TMat_decl.h>
 
 namespace PLearn {
 

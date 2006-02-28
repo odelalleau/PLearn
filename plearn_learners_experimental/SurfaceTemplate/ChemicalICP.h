@@ -113,9 +113,15 @@ protected:
     // for caching
     Mat feat_distances2;
 
-    /* Var ? */
-    Vec mol_feat_indices;
-    Vec template_feat_indices;
+    /* Var ? Var !*/
+    Var mol_feat_indices;
+    Var template_feat_indices;
+public: // for debug
+    // variables that need to be added to the global parameter array
+    // they form other_base_properties
+    Var all_mol_features;
+    Var all_template_features;
+    Var all_template_feat_dev;
 
     // variables that will be used in SurfaceTemplateLearner,
     // they form used_properties
@@ -126,11 +132,6 @@ protected:
     Var used_template_features;
     Var used_template_feat_dev;
 
-    // variables that need to be added to the global parameter array
-    // they form other_base_properties
-    Var all_mol_features;
-    Var all_template_features;
-    Var all_template_feat_dev;
 
 
 public:
@@ -144,8 +145,9 @@ public:
     ChemicalICP( const MolTemplate& the_template,
                  const Mol& the_molecule,
                  const TVec<string>& the_feature_names = TVec<string>(),
-                 string the_weighting_method = "sigmoid",
-                 const Var& the_weighting_params = Var( Vec(2,1) ) );
+                 string the_weighting_method = "features_sigmoid",
+                 const Var& the_weighting_params = Var( Vec(2,1) ),
+                 string the_matching_method = "exhaustive" );
 
     // Your other public member functions go here
 

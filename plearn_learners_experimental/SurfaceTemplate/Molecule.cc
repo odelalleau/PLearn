@@ -155,6 +155,8 @@ void Molecule::readFromAMATFile( const PPath& filename )
     // Read the chemical informations, contained in an AMAT file
     VMat features_ = getDataSet( filename );
     features = features_->toMat();
+    features.compact(); // for use as Var storage
+
     feature_names = features_->fieldNames();
 }
 

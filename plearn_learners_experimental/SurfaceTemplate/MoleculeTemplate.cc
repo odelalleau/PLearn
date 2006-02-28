@@ -108,6 +108,8 @@ void MoleculeTemplate::readFromAMATFile( const PPath& filename )
     if( geom_dev_positions.size() == 0 )
     {
         features = all_mat;
+        features.compact();
+
         feature_names = all_names;
     }
     else if( geom_dev_positions.size() == 1 )
@@ -118,9 +120,14 @@ void MoleculeTemplate::readFromAMATFile( const PPath& filename )
                      " number %d,\n"
                      "there are %d following fields (expecting 0 or %d).\n",
                      gd_pos, all_width-gd_pos-1, gd_pos );
+
         features = all_mat.subMatColumns(0, gd_pos);
+        features.compact();
+
         geom_dev = all_mat.column( gd_pos ).toVecCopy();
         feat_dev = all_mat.subMatColumns(all_width - gd_pos, gd_pos );
+        feat_dev.compact();
+
         feature_names = all_names.subVec(0, gd_pos );
     }
     else
