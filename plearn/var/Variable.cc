@@ -182,8 +182,14 @@ Variable::Variable(int thelength, int thewidth)
 {
     value = matValue.toVec();
     gradient = matGradient.toVec();
-    valuedata = value.data();
-    gradientdata = gradient.data();
+    if(value.getStorage())
+        valuedata = value.data();
+    else
+        valuedata = 0;
+    if (gradient.getStorage())
+        gradientdata = gradient.data();
+    else
+        gradientdata = 0;
 }
 
 Variable::Variable(const Mat& m)
@@ -197,8 +203,14 @@ Variable::Variable(const Mat& m)
         PLERROR("To be able to construct a Var that views the same data as a Mat m, the Mat must be compact (width()==mod()). Maybe you can use m.copy() instead of m?");
     value = matValue.toVec();
     gradient = matGradient.toVec();
-    valuedata = value.data();
-    gradientdata = gradient.data();
+    if(value.getStorage())
+        valuedata = value.data();
+    else
+        valuedata = 0;
+    if (gradient.getStorage())
+        gradientdata = gradient.data();
+    else
+        gradientdata = 0;
 }
 
 // shallow copy (same as default copy constructor, except varnum is set to ++nvars.
@@ -253,12 +265,18 @@ void Variable::resize(int l, int w)
     value = Vec(); 
     matValue.resize(l,w);
     value = matValue.toVec();
-    valuedata = value.data();
+    if(value.getStorage())
+        valuedata = value.data();
+    else
+        valuedata = 0;
 
     gradient = Vec();
     matGradient.resize(l,w);
     gradient = matGradient.toVec();
-    gradientdata = gradient.data();
+    if (gradient.getStorage())
+        gradientdata = gradient.data();
+    else
+        gradientdata = 0;
 }
   
 void Variable::sizeprop()
@@ -271,14 +289,33 @@ void Variable::sizeprop()
 void Variable::setParents(const VarArray& parents)
 { PLERROR("In Variable::setParents  setParents() function not implemented for %s", classname().c_str()); }
 
+Mat Variable::defineValueLocation(const Mat& m)
+{
+    if(!m.isCompact())
+        PLERROR("In Variable::defineValueLocation, Variables require compact"
+                " matrices");
+    Mat oldm = matValue;
+    matValue = m;
+    value = m.toVec();
+    if(value.getStorage())
+        valuedata = value.data();
+    else
+        valuedata = 0;
+    return oldm;
+}
+
 Mat Variable::defineGradientLocation(const Mat& m)
 {
     if(!m.isCompact())
-        PLERROR("In Variable::setGradientMatrix, Variables require compact matrices");
+        PLERROR("In Variable::defineGradientLocation, Variables require"
+                " compact matrices");
     Mat oldm = matGradient;
     matGradient = m;
     gradient  = m.toVec();
-    gradientdata = gradient.data();
+    if (gradient.getStorage())
+        gradientdata = gradient.data();
+    else
+        gradientdata = 0;
     return oldm;
 }
 

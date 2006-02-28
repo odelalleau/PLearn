@@ -72,7 +72,7 @@ public:
     Var(int the_length, int the_width, const string &name);
     Var(int the_length, const char* name);
     Var(int the_length, const string &name);
-    explicit Var(const Vec& vec, bool vertival=true);
+    explicit Var(const Vec& vec, bool vertical=true);
     explicit Var(const Mat& mat);
 
     int length() const;
@@ -239,8 +239,13 @@ public:
     void setName(const string& the_name); 
     bool nameIsSet() { return varname.size()>0; }
 
+    //! Defines a new Mat to use as this Var's matValue field,
+    //! modifies value and valuedata to keep consistent, and 
+    //! returns the previous matValue
+    Mat defineValueLocation(const Mat& m);
+
     //! Defines a new Mat to use as this Var's matGradient field,
-    //! modifies gradient and graidentdata to keep consistent, and 
+    //! modifies gradient and gradientdata to keep consistent, and 
     //! returns the previous matGradient
     Mat defineGradientLocation(const Mat& m);
 
