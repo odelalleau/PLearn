@@ -165,11 +165,11 @@ string LemmatizeVMatrix::getLemma(int row) const
 void LemmatizeVMatrix::declareOptions(OptionList& ol)
 {
     declareOption(ol, "lemma_dict", &LemmatizeVMatrix::lemma_dict, OptionBase::learntoption,
-                  "Dictionary for the lemma field.");
+                  "Dictionary for the lemma field\n");
     declareOption(ol, "word_field", &LemmatizeVMatrix::word_field, OptionBase::buildoption,
-                  "Index (position) of word field.");
+                  "Index (position) of word field\n");
     declareOption(ol, "pos_field", &LemmatizeVMatrix::pos_field, OptionBase::buildoption,
-                  "Index (position) of POS field.");
+                  "Index (position) of POS field\n");
     declareOption(ol, "word_pos_to_lemma_table", &LemmatizeVMatrix::word_pos_to_lemma_table, OptionBase::buildoption,
                   "Customized table that uses the word and POS tag to obtain a lemma\n"
                   "It must have exactly three columns [word POS lemma]. It has the first priority.\n");
