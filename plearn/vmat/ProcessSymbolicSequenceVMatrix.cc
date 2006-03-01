@@ -368,14 +368,17 @@ void ProcessSymbolicSequenceVMatrix::build_()
     // conditions
     from_string_to_int_format(string_conditions, conditions);
     string_conditions.clear();
+    string_conditions.resize(0);
 
     // delimiters
     from_string_to_int_format(string_delimiters, delimiters);
     string_delimiters.clear();
+    string_delimiters.resize(0);
 
     // ignored_context
     from_string_to_int_format(string_ignored_context, ignored_context);
     string_ignored_context.clear();
+    string_ignored_context.resize(0);
 
     // gathering information from source VMat
 
