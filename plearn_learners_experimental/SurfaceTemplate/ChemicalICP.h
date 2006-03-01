@@ -56,11 +56,6 @@ typedef PP<ChemicalICP> ChemICP;
  * The first sentence should be a BRIEF DESCRIPTION of what the class does.
  * Place the rest of the class programmer documentation here.  Doxygen supports
  * Javadoc-style comments.  See http://www.doxygen.org/manual.html
- *
- * @todo Write class to-do's here if there are any.
- *
- * @deprecated Write deprecated stuff here if there is any.  Indicate what else
- * should be used instead.
  */
 class ChemicalICP : public Object
 {
@@ -72,45 +67,70 @@ public:
     //! ### declare public option fields (such as build options) here
     //! Start your comments with Doxygen-compatible comments such as //!
 
+    //! The template we try to align on the molecule
     MolTemplate mol_template;
+
+    //! The molecule
     Mol molecule;
 
-    //! empty TVec means "use all available features"
-    //! use "none" if you don't want to use any feature.
+    //! Names of features to use during alignment. Empty TVec means "use all
+    //! available features" use "none" if you don't want to use any feature.
     TVec<string> feature_names;
+
+    //! Method used to compute the weight of a pair of point. One of:
+    //!   - "features_sigmoid": sigmoid of feature distance,
+    //!   - "none": same weight for each pair.
     string weighting_method;
+
+    //! Parameters used during weighting. Meaning depends on "weighting_method"
     Var weighting_params;
 
-    // "exhaustive"
+    //! Method used to find the nearest neighbors. For the moment, only one:
+    //!   - "exhaustive": exhaustive search (caching feature distances).
     string matching_method;
 
+    //! Tries initial rotations every "initial_angles_step" degrees
     real initial_angles_step;
+
+    //! Explicit list of initial rotations angles
     Mat initial_angles_list;
 
-    // stopping conditions
-    int max_iter;
-    real error_t;
-    real angle_t;
-    real trans_t;
+    // Stopping conditions
+    int max_iter; //!< Maximum number of iterations to perform during alignment
+    real error_t; //!< Stop alignment if error falls below this threshold
+    real angle_t; //!< Stop alignment if angles falls below this threshold
+    real trans_t; //!< Stop alignment if translation falls below this threshold
+
+    // Learned options
+    Mat rotation; //!< Learned rotation matrix
+    Vec translation; //!< Learned translation vector
+
+    //! matching[i] is the index of the molecule point being
+    //! the nearest neighbor of template point i
+    TVec<int> matching;
+
+    //! Weight of the pair of points (i, matching[i])
+    Vec weights;
+
+    //! Weigted error of the alignment (equal to the 'distance' part of
+    //! 'score', as computed in ComputeScoreVariable)
+    real error;
 
     // not options
     VarArray used_properties;
     VarArray other_base_properties;
 
-    // Learned options
-    Mat rotation;
-    Vec translation;
-    TVec<int> matching;
-    Vec weights;
-    real error;
-
 protected:
     //#####  Protected Options  ###############################################
 
     // ### Declare protected option fields (such as learned parameters) here
+
+    //! feature names really used during alignment: intersection between
+    //molecule->feature_names, mol_template->feature_names and feature_names
     TVec<string> used_feat_names;
 
-    // for caching
+    //! Cache of feature distances : feat_distances2(i,j) is feature distance
+    //! between point i of the template and point j of the molecule
     Mat feat_distances2;
 
     /* Var ? Var !*/
@@ -133,13 +153,10 @@ public: // for debug
     Var used_template_feat_dev;
 
 
-
 public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
-    // ### Make sure the implementation in the .cc
-    // ### initializes all fields to reasonable default values.
     ChemicalICP();
 
     ChemicalICP( const MolTemplate& the_template,
@@ -149,14 +166,17 @@ public:
                  const Var& the_weighting_params = Var( Vec(2,1) ),
                  string the_matching_method = "exhaustive" );
 
-    // Your other public member functions go here
-
     //! Use this function to set the molecule and update every parameter that
     //! depends on it without having to call build().
     virtual void setMolecule( const Mol& the_molecule );
 
     //! Performs the alignment
     virtual void run();
+
+    //! Saves the alignment parameters: rotation, translation, matching...
+    //! in a file (in plearn format)
+    virtual void saveMatch( const PPath& filename );
+
 
     //#####  PLearn::Object Protocol  #########################################
 
@@ -181,19 +201,26 @@ protected:
     //! updates the 'used_...' variables' fields
     virtual void computeVariables();
 
+    //! fills feat_distances2 matrix
     virtual void cacheFeatureDistances();
 
+    //! fills matching, and compute matched_mol_coords as the list of
+    //! coordinates of transformed template's nearest neighbors
     virtual void matchNearestNeighbors( const Mat& tr_template_coords,
                                         const Mat& matched_mol_coords );
 
+    //! finds transformation minimizing weighted distance between matched points
     virtual void minimizeWeightedDistance( const Mat& tr_template_coords,
                                            const Mat& matched_mol_coords,
                                            real& delta_rot_length,
                                            real& delta_trans_length );
 
+    //! computes the alignment error: sum over every matched pairs of
+    //! (weighted geometrical distance) + feature distance
     virtual real computeWeightedDistance( const Mat& tr_template_coords,
                                           const Mat& matched_mol_coords );
 
+    //! computes weights for every pair of matched points (fills weights)
     virtual void computeWeights( const Mat& tr_template_coords,
                                  const Mat& matched_mol_coords );
 

@@ -38,6 +38,7 @@
 
 #include "ChemicalICP.h"
 #include <plearn/base/stringutils.h>
+#include <plearn/io/openFile.h>
 #include <plearn/var/VarColumnsVariable.h>
 #include "geometry.h"
 
@@ -82,7 +83,7 @@ ChemicalICP::ChemicalICP()
     // ### (doing so assumes the parent classes' build_() have been called too
     // ### in the parent classes' constructors, something that you must ensure)
 
-    pout << "Default constructor called" << endl;
+//pout << "Default constructor called" << endl;
 }
 
 ChemicalICP::ChemicalICP( const MolTemplate& the_template,
@@ -119,7 +120,7 @@ ChemicalICP::ChemicalICP( const MolTemplate& the_template,
       used_template_feat_dev( new VarColumnsVariable(all_template_feat_dev,
                                                      template_feat_indices) )
 {
-    pout << "Big constructor called" << endl;
+//pout << "Big constructor called" << endl;
     build();
 }
 
@@ -520,6 +521,18 @@ void ChemicalICP::computeWeights( const Mat& tr_template_coords,
     }
 }
 
+void ChemicalICP::saveMatch( const PPath& filename )
+{
+    PStream file = openFile( filename, PStream::plearn_ascii, "w" );
+    file<< "rotation =" << endl
+        << rotation << endl
+        << "translation =" << endl
+        << translation << endl
+        << "matching =" << endl
+        << matching << endl
+        << "error = " << error << endl;
+}
+
 // ### Nothing to add here, simply calls build_
 void ChemicalICP::build()
 {
@@ -539,21 +552,26 @@ void ChemicalICP::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(mol_template, copies);
     deepCopyField(molecule, copies);
     deepCopyField(feature_names, copies);
-    deepCopyField(weighting_params, copies);
+    varDeepCopyField(weighting_params, copies);
     deepCopyField(initial_angles_list, copies);
     deepCopyField(rotation, copies);
     deepCopyField(translation, copies);
     deepCopyField(matching, copies);
+    deepCopyField(weights, copies);
+    deepCopyField(used_feat_names, copies);
+    deepCopyField(feat_distances2, copies);
 
+    varDeepCopyField(mol_feat_indices, copies);
+    varDeepCopyField(template_feat_indices, copies);
+    varDeepCopyField(all_mol_features, copies);
+    varDeepCopyField(all_template_features, copies);
+    varDeepCopyField(all_template_feat_dev, copies);
     varDeepCopyField(mol_coordinates, copies);
     varDeepCopyField(used_mol_features, copies);
     varDeepCopyField(template_coordinates, copies);
     varDeepCopyField(template_geom_dev, copies);
     varDeepCopyField(used_template_features, copies);
     varDeepCopyField(used_template_feat_dev, copies);
-    varDeepCopyField(all_mol_features, copies);
-    varDeepCopyField(all_template_features, copies);
-    varDeepCopyField(all_template_feat_dev, copies);
 
 }
 
@@ -565,47 +583,86 @@ void ChemicalICP::declareOptions(OptionList& ol)
 
     declareOption(ol, "mol_template", &ChemicalICP::mol_template,
                   OptionBase::buildoption,
-                  "");
+                  "The template we try to align on the molecule");
 
     declareOption(ol, "molecule", &ChemicalICP::molecule,
                   OptionBase::buildoption,
-                  "");
+                  "The molecule");
 
     declareOption(ol, "feature_names", &ChemicalICP::feature_names,
                   OptionBase::buildoption,
-                  "");
+                  "Names of features to use during alignment.\n"
+                  "Empty TVec means 'use all available features.\n"
+                  "Use '[ \"none\" ]' if you don't want to use any feature.\n"
+                  );
 
     declareOption(ol, "weighting_method", &ChemicalICP::weighting_method,
                   OptionBase::buildoption,
-                  "");
+                  "Method used to compute the weight of a pair of point."
+                  " One of:\n"
+                  "    - \"features_sigmoid\": sigmoid of feature distance,\n"
+                  "    - \"none\": same weight for each pair.\n"
+                  );
 
     declareOption(ol, "weighting_params", &ChemicalICP::weighting_params,
                   OptionBase::buildoption,
-                  "");
+                  "Var containing parameters used during weighting.\n"
+                  "Size and meaning depends on value of 'weighting_method'.\n"
+                  );
+
+    declareOption(ol, "matching_method", &ChemicalICP::matching_method,
+                  OptionBase::buildoption,
+                  "Method used to find the nearest neighbors. For the moment,"
+                  " only one:\n"
+                  "    - \"exhaustive\": exhaustive search (caching feature"
+                  " distances).\n"
+                  );
 
     declareOption(ol, "initial_angles_step", &ChemicalICP::initial_angles_step,
                   OptionBase::buildoption,
-                  "");
+                  "Tries initial rotations every \"initial_angles_step\""
+                  " degrees");
 
     declareOption(ol, "initial_angles_list", &ChemicalICP::initial_angles_list,
                   OptionBase::buildoption,
-                  "");
+                  "Explicit list of initial rotations angles");
+
+    declareOption(ol, "max_iter", &ChemicalICP::max_iter,
+                  OptionBase::buildoption,
+                  "Maximum number of iterations to perform during alignment");
+
+    declareOption(ol, "error_t", &ChemicalICP::error_t,
+                  OptionBase::buildoption,
+                  "Stop alignment if error falls below this threshold");
+
+    declareOption(ol, "angle_t", &ChemicalICP::angle_t,
+                  OptionBase::buildoption,
+                  "Stop alignment if angles falls below this threshold");
+
+    declareOption(ol, "trans_t", &ChemicalICP::trans_t,
+                  OptionBase::buildoption,
+                  "Stop alignment if translation falls below this threshold");
 
     declareOption(ol, "rotation", &ChemicalICP::rotation,
                   OptionBase::learntoption,
-                  "");
+                  "Learned rotation matrix");
 
     declareOption(ol, "translation", &ChemicalICP::translation,
                   OptionBase::learntoption,
-                  "");
+                  "Learned translation vector");
 
     declareOption(ol, "matching", &ChemicalICP::matching,
                   OptionBase::learntoption,
-                  "");
+                  "matching[i] is the index of the molecule point being\n"
+                  "the nearest neighbor of template point i.\n");
+
+    declareOption(ol, "weights", &ChemicalICP::weights,
+                  OptionBase::learntoption,
+                  "Weight of the pair of points (i, matching[i])");
 
     declareOption(ol, "error", &ChemicalICP::error,
                   OptionBase::learntoption,
-                  "");
+                  "Weigted error of the alignment");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -613,14 +670,6 @@ void ChemicalICP::declareOptions(OptionList& ol)
 
 void ChemicalICP::build_()
 {
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation. 
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-    // ### You should assume that the parent class' build_() has already been called.
-
 //pout << "begin build_()" << endl;
     if( feature_names.size() > 0 &&
         lowerstring( feature_names[0] ) == "none" )
