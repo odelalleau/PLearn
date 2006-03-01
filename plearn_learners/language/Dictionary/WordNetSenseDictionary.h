@@ -57,17 +57,19 @@ using namespace std;
 char* cstr(string& str);
 //! Returns a synset key from a SynsetPtr
 string getSynsetKey(SynsetPtr ssp);
+//! Returns a SynsetPtr from a synset key
+SynsetPtr getSynsetPtr(string synset_key);
 //! Extract senses for a word and a certain POS tag, as a certain
-//! symbol type
-TVec<string> extractSenses(string word, int wn_pos, string symbol_type);
+//! symbol type. Appends the extracted senses to the TVec senses
+void extractSenses(string word, int wn_pos, string symbol_type, TVec<string>& senses);
 //! Stems a word
 string stemWord(string word);
 //! Stems a word, according to a POS
 string stemWord(string word, int wn_pos);
 //! Lists the possible stemmed variation of a word
-TVec<string> stemsOfWord(string word, int wn_pos);
+void stemsOfWord(string word, int wn_pos, TVec<string>& stems);
 //! Lists the possible stemmed variation of a word using its POS
-TVec<string> stemsOfWord(string word);
+void stemsOfWord(string word, TVec<string>& stems);
 
 /*! This class implements a Dictionary for WordNet senses.
   The symbols in the instantiated dictionary are senses (not words!).
@@ -97,6 +99,14 @@ public:
     //! Type of representation (symbol) of the senses
     string symbol_type;
 
+protected:
+
+    //! Stems of words (temporary computation field)
+    TVec<string> stems;
+    
+    //! Senses of words (temporary computation field)
+    TVec<string> senses;
+
     // ****************
     // * Constructors *
     // ****************
@@ -116,7 +126,7 @@ protected:
     //! Declares this class' options.
     static void declareOptions(OptionList& ol);
 
-    TVec<string> getSensesFromWordNet(TVec<string> options);
+    void getSensesFromWordNet(TVec<string> options);
 
 public:
     // Declares other standard object methods.
