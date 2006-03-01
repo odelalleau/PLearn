@@ -84,6 +84,7 @@ PTester::PTester()
        save_stat_collectors(true),
        save_test_costs(false),
        save_test_outputs(false),
+       call_forget_in_run(true),
        save_test_confidence(false),
        train(true)
 {}
@@ -181,6 +182,10 @@ void PTester::declareOptions(OptionList& ol)
     declareOption(
         ol, "save_test_outputs", &PTester::save_test_outputs, OptionBase::buildoption,
         "If true, the outputs of the test for split #k will be saved in Split#k/test#i_outputs.pmat");
+  
+    declareOption(
+        ol, "call_forget_in_run", &PTester::call_forget_in_run, OptionBase::buildoption,
+        "Indication that run() should make perform() call forget() on the learner to train (won't work for more than 1 split).\n");
   
     declareOption(
         ol, "save_test_costs", &PTester::save_test_costs, OptionBase::buildoption,
@@ -345,7 +350,7 @@ void PTester::build()
 /////////
 void PTester::run()
 {
-    perform(true);
+    perform(call_forget_in_run);
 }
 
 ////////////////////////////

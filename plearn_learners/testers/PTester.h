@@ -89,6 +89,7 @@ public:
     bool save_stat_collectors;
     bool save_test_costs;
     bool save_test_outputs;
+    bool call_forget_in_run;
     PP<Splitter> splitter;
     TVec<TVec<string> > statmask;
     PP<VecStatsCollector> template_stats_collector;
