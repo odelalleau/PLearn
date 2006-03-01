@@ -56,6 +56,7 @@
 #include <plearn/var/MarginPerceptronCostVariable.h>
 #include <plearn/var/MulticlassLossVariable.h>
 #include <plearn/var/NegCrossEntropySigmoidVariable.h>
+#include <plearn/var/InsertZerosVariable.h>
 #include <plearn/var/OneHotSquaredLoss.h>
 #include <plearn/var/SigmoidVariable.h>
 #include <plearn/var/SoftmaxVariable.h>
@@ -93,6 +94,7 @@ DistRepNNet::DistRepNNet() // DEFAULT VALUES FOR ALL OPTIONS
 nhidden(0),
 nhidden2(0),
 nhidden_theta_predictor(0),
+nhidden_dist_rep_predictor(0),
 weight_decay(0),
 bias_decay(0),
 layer1_weight_decay(0),
@@ -113,7 +115,9 @@ hidden_transfer_func("tanh"),
 do_not_change_params(false),
 batch_size(1),
 initialization_method("uniform_linear"),
-nnet_architecture("standard")
+nnet_architecture("standard"),
+ntokens(-1),
+nfeatures_per_token(-1)
 {}
 
 DistRepNNet::~DistRepNNet()
@@ -163,6 +167,18 @@ void DistRepNNet::declareOptions(OptionList& ol)
 
     declareOption(ol, "output_layer_theta_predictor_bias_decay", &DistRepNNet::output_layer_theta_predictor_bias_decay, OptionBase::buildoption, 
                   "Additional bias decay for the output layer of the theta-predictor.  Is added to 'bias_decay'.\n");
+
+    declareOption(ol, "output_dist_rep_predictor_weight_decay", &DistRepNNet::output_dist_rep_predictor_weight_decay, OptionBase::buildoption, 
+                  "Additional weight decay for the weights going from the hidden layer of the distributed representation predictor.  Is added to 'weight_decay'.\n");
+
+    declareOption(ol, "output_dist_rep_predictor_bias_decay", &DistRepNNet::output_dist_rep_predictor_bias_decay, OptionBase::buildoption, 
+                  "Additional bias decay for the weights going from the hidden layer of the distributed representation predictor.  Is added to 'bias_decay'.\n");
+
+    declareOption(ol, "input_dist_rep_predictor_weight_decay", &DistRepNNet::input_dist_rep_predictor_weight_decay, OptionBase::buildoption, 
+                  "Additional weight decay for the weights going from the input layer of the distributed representation predictor.  Is added to 'weight_decay'.\n");
+
+    declareOption(ol, "input_dist_rep_predictor_bias_decay", &DistRepNNet::input_dist_rep_predictor_bias_decay, OptionBase::buildoption, 
+                  "Additional bias decay for the weights going from the input layer of the distributed representation predictor.  Is added to 'bias_decay'.\n");
 
     declareOption(ol, "penalty_type", &DistRepNNet::penalty_type,
                   OptionBase::buildoption,
@@ -226,7 +242,9 @@ void DistRepNNet::declareOptions(OptionList& ol)
 
     declareOption(ol, "dist_rep_dim", &DistRepNNet::dist_rep_dim, OptionBase::buildoption, 
                   " Dimensionality (number of components) of distributed representations.\n"
-                  "Those values are taken one by one, as the Dictionary objects are extracted.\n");
+                  "Those values are taken one by one, as the Dictionary objects are extracted.\n"
+                  "When nnet_architecture == \"dist_rep_predictor\", the first element of dist_rep_dim\n"
+                  "indicates the dimensionality to the predicted distributed representation.\n");
 
     declareOption(ol, "initialization_method", &DistRepNNet::initialization_method, OptionBase::buildoption, 
                   "The method used to initialize the weights:\n"
@@ -240,10 +258,25 @@ void DistRepNNet::declareOptions(OptionList& ol)
                   "Architecture of the neural network:\n"
                   " - \"standard\"\n"
                   " - \"csMTL\" (context-sensitive Multiple Task Learning, at NIPS 2005 Inductive Transfer Workshop)\n"
-                  " - \"theta_predictor\" (standard NNet with output weights being PREDICTED) \n");
+                  " - \"theta_predictor\" (standard NNet with output weights being PREDICTED) \n"
+                  " - \"dist_rep_predictor\" (standard NNet with distributed representation being PREDICTED) \n"
+                  " - \"linear\" (linear classifier that doesn't learn distributed representations) \n"
+        );
+
+    declareOption(ol, "ntokens", &DistRepNNet::ntokens, OptionBase::buildoption, 
+                  "Number of tokens, for which to predict a distributed.\n");    
+
+    declareOption(ol, "nfeatures_per_token", &DistRepNNet::nfeatures_per_token, OptionBase::buildoption, 
+                  "Number of features per token.\n");    
+
+    declareOption(ol, "nhidden_dist_rep_predictor", &DistRepNNet::nhidden_dist_rep_predictor, OptionBase::buildoption, 
+                  "Number of hidden units of the neural network predictor for the distributed representation.\n");
 
     declareOption(ol, "target_dictionary", &DistRepNNet::target_dictionary, OptionBase::buildoption, 
                   "User specified Dictionary for the target field. If null, then it is extracted from the training set VMatrix.\n");
+
+    declareOption(ol, "target_dist_rep", &DistRepNNet::target_dist_rep, OptionBase::buildoption, 
+                  "User specified distributed representation for the target field. If null, then it is learned from the training set VMatrix.\n");
 
     declareOption(ol, "paramsvalues", &DistRepNNet::paramsvalues, OptionBase::learntoption, 
                   "The learned parameter vector\n");
@@ -283,7 +316,7 @@ void DistRepNNet::build_()
         if(targetsize_ != 1)
             PLERROR("In DistRepNNet::build_(): targetsize_ must be 1, not %d",targetsize_);
         if(fixed_output_weights && nnet_architecture == "theta_predictor")
-            PLERROR("In DistRepNNet::build_(): output weights cannot be fixed (i.e. fixed_output_weights=1) and predicted (i.e. nnet_architecture == \"theta_predictor\"");            
+            PLERROR("In DistRepNNet::build_(): output weights cannot be fixed (i.e. fixed_output_weights=1) and predicted (i.e. nnet_architecture == \"theta_predictor\""); 
 
         // Initialize the input.
         // This is where we construct the distributed representation
@@ -316,19 +349,22 @@ void DistRepNNet::build_()
                 int f = dictionaries.find(dict);               
                 if(f<0)
                 {
-                    if(dist_rep_dim.length() <= dist_reps.size())
-                        PLERROR("In DistRepNNet::build_(): dist_rep_dim isn't big enough, dimensionality specifications are missing");
-                    // Add dictionary. Note that, were are also learning a dist rep 
-                    // for OOV_TAG, which is not counted as an element of a 
-                    // Dictionary object, we need to add one row to the dist rep matrix 
-                    dist_reps.push_back(new SourceVariable(dict->size()+1,dist_rep_dim[dist_reps.size()]));
+                    if(nnet_architecture != "dist_rep_predictor"  && nnet_architecture != "linear")
+                    {
+                        if(dist_rep_dim.length() <= dist_reps.size())
+                            PLERROR("In DistRepNNet::build_(): dist_rep_dim isn't big enough, dimensionality specifications are missing");
+                        // Add dictionary. Note that, were are also learning a dist rep 
+                        // for OOV_TAG, which is not counted as an element of a 
+                        // Dictionary object, we need to add one row to the dist rep matrix 
+                        dist_reps.push_back(new SourceVariable(dict->size()+1,dist_rep_dim[dist_reps.size()]));
+                    }
                     dictionaries.push_back(dict);
                     input_to_dict_index[i] = dictionaries.size()-1;
                 }
                 else input_to_dict_index[i] = f;
                 n_dist_rep_input++;
             }
-        }   
+        }
 
         // Add target Dictionary
         {
@@ -342,11 +378,17 @@ void DistRepNNet::build_()
             int f = dictionaries.find(dict);               
             if(f<0)
             {
-                if(dist_rep_dim.length() <= dist_reps.size())
-                    PLERROR("In DistRepNNet::build_(): dist_rep_dim isn't big enough, dimensionality specifications are missing");
-                if(nnet_architecture == "csMTL" || nnet_architecture == "theta_predictor")
+                if(nnet_architecture != "dist_rep_predictor" && nnet_architecture != "linear")
                 {
-                    dist_reps.push_back(new SourceVariable(dict->size()+(dict->oov_not_in_possible_values ? 0 : 1),dist_rep_dim[dist_reps.size()]));
+                    if(nnet_architecture == "csMTL" || nnet_architecture == "theta_predictor")
+                    {
+                        if(target_dist_rep.size() == 0 && dist_rep_dim.length() <= dist_reps.size())
+                            PLERROR("In DistRepNNet::build_(): dist_rep_dim isn't big enough, dimensionality specifications are missing");
+                        if(target_dist_rep.size() != 0)
+                            dist_reps.push_back(new SourceVariable(target_dist_rep));                            
+                        else
+                            dist_reps.push_back(new SourceVariable(dict->size()+(dict->oov_not_in_possible_values ? 0 : 1),dist_rep_dim[dist_reps.size()]));
+                    }
                 }
                 dictionaries.push_back(dict);
                 target_dict_index = dictionaries.size()-1;
@@ -359,31 +401,108 @@ void DistRepNNet::build_()
             PLWARNING("In DistRepNNet::build_(): number of distributed representation sets (%d) and dimensionaly specification (dist_rep_dim.length()=%d) isn't the same", dist_reps.length(), dist_rep_dim.length());
         
         input = Var(inputsize_, "input");
-        VarArray input_components;
-        Var non_dist_rep_indexes = Var(inputsize_-n_dist_rep_input);
-        // Separate input components that have distributed representation 
-        // from those that don't
-        for(int i=0, j=0; i<inputsize_; i++)
-            if(input_to_dict_index[i] < 0)
-                non_dist_rep_indexes->value[j++] = i;
-            else
-            {
-                // If the input is missing, then map to OOV_TAG dist. rep., otherwise map to corresponding dist. rep.
-                input_components.push_back(dist_reps[input_to_dict_index[i]](isMissing(input[i],true, true, dictionaries[input_to_dict_index[i]]->getId(OOV_TAG) )));
-                partial_update_vars.push_back(input_components.last());                
-            }
-        // Add input with no distributed representation
-        if(non_dist_rep_indexes.length() != 0)
-        {
-            input_components.push_back(transpose(new VarRowsVariable(input,non_dist_rep_indexes)));
-            partial_update_vars.push_back(input_components.last());
-        }
-
-        // Input with distributed representations inserted
-        Var dp_input = hconcat(input_components);
-
+        Var dp_input;
         params.resize(0);
-        params.append(dist_reps);
+        if(nnet_architecture == "dist_rep_predictor" || nnet_architecture == "linear")
+        {
+            int dim = dist_rep_dim[0];
+            if(nnet_architecture == "linear")
+            {
+                ntokens = 1;
+                nfeatures_per_token = inputsize();
+                nhidden_dist_rep_predictor = -1;
+                dim = dictionaries[target_dict_index]->size() + (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1);
+            }
+            if(ntokens <= 0) PLERROR("In DistRepNNet::build_(): ntokens should be > 1");
+            if(nfeatures_per_token <= 0) PLERROR("In DistRepNNet::build_(): nfeatures_per_token should be > 1");
+            if(ntokens * nfeatures_per_token != inputsize()) PLERROR("In DistRepNNet::build_(): ntokens * nfeatures_per_token != inputsize()");
+            
+            winputdistrep.resize(nfeatures_per_token+1);
+            activated_weights.resize(ntokens*nfeatures_per_token);
+            VarArray dist_reps(0);
+            VarArray dist_rep_hids(ntokens);
+            // Building var graph from input to distributed representations
+            for(int i=0; i<ntokens; i++)
+            {
+                if(i==0) 
+                    if(nhidden_dist_rep_predictor > 0) winputdistrep[nfeatures_per_token] = Var(1,nhidden_dist_rep_predictor);
+                    else winputdistrep[nfeatures_per_token] = Var(1,dim);
+                if(nhidden_dist_rep_predictor > 0) dist_rep_hids[i] = winputdistrep[nfeatures_per_token];
+                else dist_reps.append(winputdistrep[nfeatures_per_token]);
+                for(int j=0; j<nfeatures_per_token; j++)
+                {
+                    if(i==0) 
+                    {
+                        if(input_to_dict_index[j] < 0)
+                            if(nhidden_dist_rep_predictor > 0) winputdistrep[j] = Var(nhidden_dist_rep_predictor);
+                            else winputdistrep[j] = Var(dim);
+                        else                            
+                            if(nhidden_dist_rep_predictor > 0) winputdistrep[j] = Var(dictionaries[input_to_dict_index[j]]->size()+1,nhidden_dist_rep_predictor);
+                            else winputdistrep[j] = Var(dictionaries[input_to_dict_index[j]]->size()+1,dim);
+                        
+                    }
+
+                    if(input_to_dict_index[j] < 0)
+                        if(nhidden_dist_rep_predictor > 0) dist_rep_hids[i] = dist_rep_hids[i] + winputdistrep[j] * input[nfeatures_per_token*i+j];
+                        else dist_reps[i] = dist_reps[i] + winputdistrep[j] * input[nfeatures_per_token*i+j];
+                    else
+                    {
+                        activated_weights[i*nfeatures_per_token+j] =  winputdistrep[j](isMissing(input[nfeatures_per_token*i+j],true, true, dictionaries[input_to_dict_index[i]]->getId(OOV_TAG) ));
+                        if(nhidden_dist_rep_predictor > 0) dist_rep_hids[i] = dist_rep_hids[i] +  activated_weights[i*nfeatures_per_token+j];
+                        else dist_reps[i] = dist_reps[i] +  activated_weights[i*nfeatures_per_token+j];
+                    }
+                }
+                 
+                /*
+                if(nhidden_dist_rep_predictor > 0) dist_rep_hids[i] = transpose(dist_rep_hids[i]);
+                else dist_reps[i] = transpose(dist_reps[i]);
+                */
+
+                if(nhidden_dist_rep_predictor > 0) 
+                {
+                    dist_rep_hids[i] = add_transfer_func(dist_rep_hids[i]);
+                    if(i==0) woutdistrep = Var(nhidden_dist_rep_predictor+1,dim);
+                    dist_reps.append(affine_transform(dist_rep_hids[i],woutdistrep));
+                }
+            }
+
+            params.append(winputdistrep);
+            if(nhidden_dist_rep_predictor > 0) params.append(woutdistrep);
+            dp_input = hconcat(dist_reps);
+            
+            // TODO (eventually)
+            // - figure out a weight decay for winputdistrep that is not too costy...
+        }
+        else
+        {
+            VarArray input_components;
+            Var non_dist_rep_indexes = Var(inputsize_-n_dist_rep_input);
+            // Separate input components that have distributed representation 
+            // from those that don't
+            for(int i=0, j=0; i<inputsize_; i++)
+                if(input_to_dict_index[i] < 0)
+                    non_dist_rep_indexes->value[j++] = i;
+                else
+                {
+                    // If the input is missing, then map to OOV_TAG dist. rep., otherwise map to corresponding dist. rep.
+                    input_components.push_back(dist_reps[input_to_dict_index[i]](isMissing(input[i],true, true, dictionaries[input_to_dict_index[i]]->getId(OOV_TAG) )));
+                    partial_update_vars.push_back(input_components.last());                
+                }
+            // Add input with no distributed representation
+            if(non_dist_rep_indexes.length() != 0)
+            {
+                input_components.push_back(transpose(new VarRowsVariable(input,non_dist_rep_indexes)));
+                partial_update_vars.push_back(input_components.last());
+            }
+
+            // Input with distributed representations inserted
+
+            dp_input = hconcat(input_components);
+            if(target_dist_rep.size() != 0)
+                params.append(dist_reps.subArray(0,dist_reps.size()-1));
+            else
+                params.append(dist_reps);
+        }
 
         // Build main network graph.
         buildOutputFromInput(dp_input);
@@ -421,7 +540,10 @@ void DistRepNNet::build_()
         else
             PLERROR("penalty_type \"%s\" not supported", penalty_type.c_str());
 
-        buildCosts(output, reind_target);
+        if(train_output)
+            buildCosts(train_output, reind_target);
+        else
+            buildCosts(output, reind_target);
 
         // Shared values hack...
         if (!do_not_change_params) {
@@ -646,6 +768,10 @@ void DistRepNNet::buildOutputFromInput(const Var& dp_input) {
         output = potentials(input,comp_input,dp_target,dist_reps[target_dict_index], output, proppath_params, train_set);
         partial_update_vars.push_back(dist_reps[target_dict_index]);
     }
+    else if(nnet_architecture == "linear")
+    {
+        output = transpose(dp_input);
+    }
     else
     {        
         int before_output_size = dp_input->size();
@@ -680,6 +806,7 @@ void DistRepNNet::buildOutputFromInput(const Var& dp_input) {
             w1 = Var(1 + dp_input->size(), nhidden, "w1");
             params.append(w1);
             output = affine_transform(dp_input, w1); 
+            output = add_transfer_func(output);
         }
         else
         {
@@ -726,10 +853,32 @@ void DistRepNNet::buildOutputFromInput(const Var& dp_input) {
         output = transpose(output);
     }
 
+    TVec<bool> class_tag(dictionaries[target_dict_index]->size() + (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1));
+    Vec row(train_set.width());
+    int target;
+    class_tag.fill(0);
+    for(int i=0; i<train_set.length(); i++)
+    {
+        train_set->getRow(i,row);
+        target = (int) row[train_set->inputsize()];
+        class_tag[target] = 1;
+    }
+
+    Vec seen_target(0);
+    TVec<int> unseen_target(0);
+    for(int i=0; i<class_tag.length(); i++)
+        if(class_tag[i]) seen_target.push_back(i);
+        else unseen_target.push_back(i);
+
+    if(seen_target.length() != class_tag.length())
+        train_output = new VarRowsVariable(output,new SourceVariable(seen_target));
 
     // output_transfer_func
     if(output_transfer_func!="" && output_transfer_func!="none")
         output = add_transfer_func(output, output_transfer_func);
+    
+    if(train_output && output_transfer_func!="" && output_transfer_func!="none")
+        train_output = insert_zeros(add_transfer_func(train_output, output_transfer_func),unseen_target);
 }
 
 ////////////////////
@@ -754,6 +903,33 @@ void DistRepNNet::buildPenalties() {
     if(wouttarget && ((output_layer_weight_decay + weight_decay)!=0 || (output_layer_bias_decay + bias_decay)!=0))
         penalties.append(affine_transform_weight_penalty(wouttarget, (output_layer_weight_decay + weight_decay), 
                                                          (output_layer_bias_decay + bias_decay), penalty_type));
+    if(woutdistrep && ((output_dist_rep_predictor_weight_decay + weight_decay)!=0 || (output_dist_rep_predictor_bias_decay + bias_decay)!=0))
+        penalties.append(affine_transform_weight_penalty(woutdistrep, (output_dist_rep_predictor_weight_decay + weight_decay), 
+                                                         (output_dist_rep_predictor_bias_decay + bias_decay), penalty_type));
+
+    // Here, affine_transform_weight_penalty is not used differently, since the weight variables don't correspond
+    // to an affine_transform (i.e. doesn't contain biases AND a weights)
+    if(activated_weights.length() != 0 && (input_dist_rep_predictor_weight_decay + weight_decay))
+    {
+        for(int i=0; i<activated_weights.length(); i++)
+        {
+            if(input_to_dict_index[i%nfeatures_per_token] < 0)
+            {
+                // Add those weights in the penalties only once
+                if(i<nfeatures_per_token)
+                    penalties.append(affine_transform_weight_penalty(winputdistrep[i], (input_dist_rep_predictor_weight_decay + weight_decay), 
+                                                                     (input_dist_rep_predictor_weight_decay + weight_decay), penalty_type));
+            }
+            else
+                // Approximate version of the weight decay on the input weights, which is more computationally efficient
+                penalties.append(affine_transform_weight_penalty(activated_weights[i], (input_dist_rep_predictor_weight_decay + weight_decay), 
+                                                                 (input_dist_rep_predictor_weight_decay + weight_decay), penalty_type));                   
+        }
+    }
+    if(winputdistrep.length() != 0 && (input_dist_rep_predictor_bias_decay + bias_decay))
+        penalties.append(affine_transform_weight_penalty(winputdistrep[nfeatures_per_token], (input_dist_rep_predictor_bias_decay + bias_decay), 
+                                                         (input_dist_rep_predictor_bias_decay + bias_decay), penalty_type));
+
 }
 
 /////////////////////////////
@@ -804,15 +980,15 @@ void DistRepNNet::computeOutputAndCosts(const Vec& inputv, const Vec& targetv,
 /////////////////
 // fillWeights //
 /////////////////
-void DistRepNNet::fillWeights(const Var& weights, bool clear_first_row, bool use_width_to_scale) {
+void DistRepNNet::fillWeights(const Var& weights, bool clear_first_row, int use_this_to_scale) {
     if (initialization_method == "zero") {
         weights->value->clear();
         return;
     }
     real delta;
     int is;
-    if(use_width_to_scale)
-        is = weights.width();
+    if(use_this_to_scale > 0)
+        is = use_this_to_scale;
     else
         is = weights.length();
     if (clear_first_row)
@@ -913,33 +1089,44 @@ void DistRepNNet::initializeParams(bool set_seed)
         fillWeights(w2, true);
     }
 
-    if(nhidden_theta_predictor>0){
+    if(nnet_architecture == "theta_predictor" && nhidden_theta_predictor>0){
         fillWeights(w1theta,true);
     }
 
-    if (fixed_output_weights) {
-        static Vec values;
-        if (values.size()==0)
-        {
-            values.resize(2);
-            values[0]=-1;
-            values[1]=1;
-        }
-        fill_random_discrete(wout->value, values);
-        wout->matValue(0).clear();
-        if(wouttarget) fill_random_discrete(wouttarget->value, values);
+    if(nnet_architecture != "linear")
+        if (fixed_output_weights) {
+            static Vec values;
+            if (values.size()==0)
+            {
+                values.resize(2);
+                values[0]=-1;
+                values[1]=1;
+            }
+            fill_random_discrete(wout->value, values);
+            wout->matValue(0).clear();
+            if(wouttarget) fill_random_discrete(wouttarget->value, values);
             
-    }
-    else {
-        fillWeights(wout, true);
-        if(wouttarget) fillWeights(wouttarget, false);
-        if(wouttheta) fillWeights(wouttheta,true,true);
-    }
+        }
+        else {
+            fillWeights(wout, true);
+            if(wouttarget) fillWeights(wouttarget, false);
+            if(wouttheta) fillWeights(wouttheta,true,wouttheta->width());
+        }
 
-    // Initialize distributed representations
-    for(int i=0; i<dist_reps.length(); i++)
+    if(nnet_architecture != "dist_rep_predictor" && nnet_architecture != "linear")
     {
-        fillWeights(dist_reps[i],false);
+        // Initialize distributed representations
+        for(int i=0; i<dist_reps.length(); i++)
+        {
+            fillWeights(dist_reps[i],false);
+        }
+    }
+    else
+    {
+        if(nhidden_dist_rep_predictor>0) fillWeights(woutdistrep,true);
+        for(int i=0; i<nfeatures_per_token; i++)
+            fillWeights(winputdistrep[i],false,inputsize());
+        winputdistrep[nfeatures_per_token]->value.fill(0.0);
     }
 
 }
@@ -962,14 +1149,18 @@ void DistRepNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(target_values,copies);
     deepCopyField(output_comp,copies);
+    deepCopyField(row,copies);
     varDeepCopyField(input, copies);
     varDeepCopyField(target, copies);
     varDeepCopyField(sampleweight, copies);
     varDeepCopyField(w1, copies);
     varDeepCopyField(w1target, copies);
+    varDeepCopyField(w1theta, copies);
     varDeepCopyField(w2, copies);
     varDeepCopyField(wout, copies);
     varDeepCopyField(wouttarget, copies);
+    varDeepCopyField(wouttheta, copies);
+    varDeepCopyField(woutdistrep, copies);
     varDeepCopyField(outbias, copies);
     deepCopyField(dist_reps, copies);
     deepCopyField(dictionaries,copies);
@@ -980,14 +1171,18 @@ void DistRepNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(penalties, copies);
     varDeepCopyField(training_cost, copies);
     varDeepCopyField(test_costs, copies);
+    deepCopyField(winputdistrep, copies);
     deepCopyField(invars, copies);
     deepCopyField(params, copies);
+    deepCopyField(activated_weights, copies);
     deepCopyField(paramsvalues, copies);
     deepCopyField(f, copies);
     deepCopyField(test_costf, copies);
     deepCopyField(optimizer, copies);
     deepCopyField(cost_funcs, copies);
     deepCopyField(dist_rep_dim, copies);
+    deepCopyField(target_dictionary,copies);
+    deepCopyField(target_dist_rep,copies);
 }
 
 ////////////////

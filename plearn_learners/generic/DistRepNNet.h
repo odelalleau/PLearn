@@ -67,6 +67,8 @@ protected:
 
     //! Output of the neural network
     Var output;
+    //! Train output
+    Var train_output;
     //! Costs of the neural network
     VarArray costs;
     //! Vars that use partial updates
@@ -82,6 +84,9 @@ protected:
     VarArray invars;
     //! Parameters of the neural network
     VarArray params; 
+    //! Weights of the activated features, in the 
+    //! distributed representation predictor
+    VarArray activated_weights;
     //! Mapping between input and dictionaries
     TVec<int> input_to_dict_index;
     //! Target Dictionary index
@@ -102,7 +107,11 @@ public:
     //! Weights of first hidden layer
     Var w1target;
     //! Weights of first hidden layer of theta predictor
-    Var w1theta;    
+    Var w1theta;  
+    //! Weights applied to the input of distributed representation predictor
+    VarArray winputdistrep;
+    //!  Bias and weights going to the output layer of distributed representation predictor
+    Var woutdistrep;
     //! Bias and weights of second hidden layer
     Var w2; 
     //! bias and weights of output layer
@@ -130,12 +139,22 @@ public:
     int nhidden;
     //! Number of hidden units in second hidden layer (default:0)
     int nhidden2; 
-    //! Number of hidden units  (default:0)
+    //! Number of hidden units of the neural network predictor for the hidden to output weights
     int nhidden_theta_predictor; 
+    //! Number of hidden units of the neural network predictor for the distributed representation 
+    int nhidden_dist_rep_predictor; 
     //! Weight decay (default:0)
     real weight_decay; 
     //! Bias decay (default:0)
     real bias_decay; 
+    //! Weight decay for weights going from input layer
+    real input_dist_rep_predictor_bias_decay;
+    //! Weight decay for weights going from hidden layer
+    real output_dist_rep_predictor_bias_decay;
+    //! Weight decay for weights going from input layer
+    real input_dist_rep_predictor_weight_decay;
+    //! Weight decay for weights going from hidden layer
+    real output_dist_rep_predictor_weight_decay;
     //! Weight decay for weights from input layer to first hidden layer (default:0)
     real layer1_weight_decay; 
     //! Bias decay for weights from input layer to first hidden layer (default:0)
@@ -181,8 +200,14 @@ public:
     TVec<int> dist_rep_dim;
     //! Architecture of the neural network
     string nnet_architecture;
+    //! Number of tokens, for which to predict a distributed 
+    int ntokens;
+    //! Number of features per token
+    int nfeatures_per_token;
     //! Target dictionary
     PP<Dictionary> target_dictionary;
+    //! Target distributed representations    
+    Mat target_dist_rep;
 
 private:
     void build_();
@@ -241,7 +266,7 @@ protected:
     //! Fill a matrix of weights according to the 'initialization_method' specified.
     //! The 'clear_first_row' boolean indicates whether we should fill the first
     //! row with zeros.
-    void fillWeights(const Var& weights, bool clear_first_row, bool use_width_to_scale=false);
+    void fillWeights(const Var& weights, bool clear_first_row, int use_this_to_scale=-1);
 
     //! Fill the costs penalties.
     virtual void buildPenalties();
