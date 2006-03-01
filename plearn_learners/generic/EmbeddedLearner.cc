@@ -96,7 +96,7 @@ void EmbeddedLearner::build_()
     if (!learner_)
         PLERROR("EmbeddedLearner::_build() - learner_ attribute is NULL");
 
-    learner_->build();
+    //learner_->build();
 }
 
 void EmbeddedLearner::build()
