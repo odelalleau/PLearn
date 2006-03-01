@@ -74,7 +74,6 @@ public:
 
     //!  protected default constructor for persistence
     PotentialsVariable() {}
-    //!  Sum_{inputs \in distr} f(inputs)
     PotentialsVariable(Var the_input, Var the_comp_input, Var the_dp_target, Var the_target_dist_rep, Var output, VarArray params, VMat the_distr);
     
     PLEARN_DECLARE_OBJECT(PotentialsVariable);
