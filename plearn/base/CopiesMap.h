@@ -55,6 +55,7 @@ Take a close look at the Object class in Object.h to see how this is done.
 NODEEPCOPY(double)
 NODEEPCOPY(float)
 NODEEPCOPY(int)
+NODEEPCOPY(unsigned int)
 NODEEPCOPY(bool)
 NODEEPCOPY(map_string_float)
 NODEEPCOPY(map_string_double)
