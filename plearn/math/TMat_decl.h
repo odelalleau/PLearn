@@ -290,6 +290,23 @@ public:
     inline int mod() const
     { return mod_; }
 
+    //! Set a new value for 'mod'. The content of the matrix will be destroyed
+    //! (i.e. moved around).
+    inline void setMod(int new_mod)
+    {
+        if (storage.isNull()) {
+            mod_ = new_mod;
+            return;
+        }
+        if (storage->usage() > 1)
+            PLERROR("In setMod - You cannot change the 'mod' of a matrix "
+                    "whose storage is shared");
+        if (new_mod > mod())
+            resize(length(), new_mod);
+        else
+            mod_ = new_mod;
+    }
+
     inline PP< Storage<T> > getStorage() const 
     { return storage; }
 
