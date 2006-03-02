@@ -279,11 +279,12 @@ int matInvert(Mat& in, Mat& inverse)
     delete[] IPIV;
     delete[] WORK;
 
-    real* p_inverse = inverse.data();
     real* p_A = A;
-    for (int i=0; i<N; i++)
+    for (int i=0; i<N; i++) {
+        real* p_inverse = inverse[i];
         for (int j=0; j<M; j++, p_inverse++, p_A++)
             *p_inverse = *p_A;
+    }
 
     return INFO;
 #endif
