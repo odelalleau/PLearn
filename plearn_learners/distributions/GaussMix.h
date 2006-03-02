@@ -105,9 +105,12 @@ protected:
     //! need to be kept in memory during training.
     mutable TVec<Mat> cholesky_queue;
 
+    //! TODO Document
+    TVec<bool> no_missing_change;
+
     // TODO Document
-    // List of cholesky dec of inverse matrices (H_3^-1).
-    mutable TVec<Mat> cholesky_inv_queue;
+    // List of inverse matrices (H_3^-1).
+    mutable TVec<Mat> cond_var_inv_queue;
 
     //! The list of all lists of dimension indices (of covariance matrices)
     //! that need to be kept in memory during training.
@@ -130,6 +133,9 @@ protected:
     // to continue the training of a saved GaussMix.
     Vec mean_training, stddev_training;
 
+    // TODO Document (to store the covariance of the error, that we need to add
+    // when imputing missing values).
+    Mat error_covariance;
 
     //! The posterior probabilities P(j | s_i), where j is the index of a
     //! Gaussian and i is the index of a sample.
@@ -378,6 +384,9 @@ protected:
         const Mat& full_matrix,
         const TVec<int>& indices_previous, const TVec<int>& indices_updated)
         const;
+
+    // TODO DOCUMENT!!!
+    void addToCovariance(const Vec& y, int j, const Mat& cov, real post);
 
     /*
     //! Overridden so as to compute specific GaussMix outputs.

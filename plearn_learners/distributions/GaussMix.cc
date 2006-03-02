@@ -481,6 +481,222 @@ void GaussMix::updateCholeskyFromPrevious(
     indices_updated << indices_new;
 }
 
+/////////////////////
+// addToCovariance //
+/////////////////////
+// TODO Declare and comment in header.
+void GaussMix::addToCovariance(const Vec& y, int j,
+                               const Mat& cov, real post)
+{
+    assert( y.length() == cov.length() && y.length() == cov.width() );
+    assert( n_predictor == 0 );
+    assert( impute_missing );
+    static TVec<int> coord_missing;
+    static Mat inv_cov_y_missing;
+    static Mat H_inv_tpl;
+    static TVec<int> ind_inv_tpl;
+    static Mat H_inv_tot;
+    static TVec<int> ind_inv_tot;
+
+    coord_missing.resize(0);
+    for (int k = 0; k < y.length(); k++)
+        if (is_missing(y[k]))
+            coord_missing.append(k);
+
+    Mat& inv_cov_y = joint_inv_cov[j];
+    if (previous_training_sample == -1) {
+        int n_missing = coord_missing.length();
+        inv_cov_y_missing.setMod(n_missing);
+        inv_cov_y_missing.resize(n_missing, n_missing);
+        for (int k = 0; k < n_missing; k++)
+            for (int q = 0; q < n_missing; q++)
+                inv_cov_y_missing(k,q) =
+                    inv_cov_y(coord_missing[k], coord_missing[q]);
+        cond_var_inv_queue.resize(1);
+        Mat& cond_inv = cond_var_inv_queue[0];
+        cond_inv.resize(inv_cov_y_missing.length(), inv_cov_y_missing.width());
+        matInvert(inv_cov_y_missing, cond_inv);
+        indices_inv_queue.resize(1);
+        TVec<int>& ind = indices_inv_queue[0];
+        ind.resize(n_missing);
+        ind << coord_missing;
+    }
+
+    int path_index =
+        sample_to_path_index[current_training_sample];
+    int queue_index;
+    if (spanning_use_previous[current_cluster][path_index])
+        queue_index = cond_var_inv_queue.length() - 1;
+    else
+        queue_index = cond_var_inv_queue.length() - 2;
+
+    H_inv_tpl = cond_var_inv_queue[queue_index];
+    ind_inv_tpl = indices_inv_queue[queue_index];
+    int n_inv_tpl = H_inv_tpl.length();
+    H_inv_tot.resize(n_inv_tpl, n_inv_tpl);
+    ind_inv_tot = coord_missing;
+
+    bool same_covariance = no_missing_change[current_training_sample];
+
+    if (!same_covariance) {
+        /*
+        updateCholeskyFromPrevious(H_inv_tpl, H_inv_tot,
+                joint_inv_cov[j], ind_inv_tpl, ind_inv_tot);
+        */
+        // Some renaming so that this code can be moved later to its own
+        // mathematical function.
+        Mat& src = H_inv_tpl;
+        Mat& dst = H_inv_tot;
+        Mat& full = joint_inv_cov[j];
+        TVec<int>& ind_src = ind_inv_tpl;
+        TVec<int>& ind_dst = ind_inv_tot;
+
+        assert( src.length() == ind_src.length() );
+        int n = ind_src.length();
+        int p = ind_dst.length();
+        int m = full.length();
+        dst.resize(p, p);
+        // Analyze the indices vectors.
+        int max_indice = -1;
+        if (!ind_src.isEmpty())
+            max_indice = max(max_indice, max(ind_src));
+        if (!ind_dst.isEmpty())
+            max_indice = max(max_indice, max(ind_dst));
+        assert( max_indice >= 0 );
+        static TVec<int> is_dst;
+        static TVec<int> is_src;
+        is_dst.resize(max_indice + 1);
+        is_src.resize(max_indice + 1);
+        is_dst.fill(false);
+        is_src.fill(false);
+        for (int i = 0; i < p; i++)
+            is_dst[ind_dst[i]] = true;
+        for (int i = 0; i < n; i++)
+            is_src[ind_src[i]] = true;
+        // Build the source inverse covariance matrix where dimensions are
+        // reordered so that the first dimensions are those in common between
+        // source and destination.
+        static TVec<int> dim_common;
+        static TVec<int> dim_src_only;
+        static TVec<int> dim_reordered;
+        dim_common.resize(0);
+        dim_src_only.resize(0);
+        dim_reordered.resize(n);
+        for (int i = 0; i < n; i++) {
+            int k = ind_src[i];
+            if (is_dst[k])
+                dim_common.append(k);
+            else
+                dim_src_only.append(k);
+        }
+        dim_reordered.subVec(0, dim_common.length()) << dim_common;
+        dim_reordered.subVec(dim_common.length(), dim_src_only.length())
+            << dim_src_only;
+        static Mat inv_src;
+        static Mat tmp;
+        tmp.resize(m, n);
+        // TODO Not efficient! Optimize!
+        selectColumns(full, dim_reordered, tmp);
+        inv_src.resize(n, n);
+        selectRows(tmp, dim_reordered, inv_src);
+        // Remove the dimensions that are not present in the destination
+        // matrix.
+        int n_common = dim_common.length();
+        static Mat dst_only_removed;
+        dst_only_removed.resize(n_common, n_common);
+        int n_src_only = dim_src_only.length();
+        static Mat tmp2;
+        if (n_src_only == 0) {
+            // Nothing to remove.
+            dst_only_removed << src;
+        } else {
+        Mat B1 = inv_src.subMat(0, 0, n_common, n_common);
+        Mat B2 = inv_src.subMat(0, n_common, n_common, n_src_only);
+        static Mat B3;
+        B3.setMod(n_src_only);
+        B3.resize(n_src_only, n_src_only);
+        B3 << inv_src.subMat(n_common, n_common, n_src_only, n_src_only);
+        dst_only_removed << B1;
+        tmp.resize(B3.length(), B3.width());
+        matInvert(B3, tmp);
+        tmp2.resize(tmp.length(), B2.length());
+        productTranspose(tmp2, tmp, B2);
+        tmp.resize(B2.length(), tmp2.width());
+        product(tmp, B2, tmp2);
+        dst_only_removed -= tmp;
+        }
+        // At this point, the dimensions that are not present in the
+        // destination matrix have been removed. Now, we need to add the
+        // dimensions that need to be added (those that are present in the
+        // destination but not in the source).
+        static TVec<int> dim_dst_only;
+        dim_dst_only.resize(0);
+        for (int i = 0; i < p; i++)
+            if (!is_src[ind_dst[i]])
+                dim_dst_only.append(ind_dst[i]);
+        int n_dst_only = dim_dst_only.length();
+        if (n_dst_only == 0) {
+            // No dimension to add.
+            dst << dst_only_removed;
+        } else {
+        // TODO Not efficient! Optimize!
+        tmp.resize(full.length(), dim_dst_only.length());
+        selectColumns(full, dim_dst_only, tmp);
+        static Mat W;
+        static Mat P;
+        static Mat B;
+        W.resize(dim_common.length(), tmp.width());
+        selectRows(tmp, dim_common, W);
+        P.resize(dim_dst_only.length(), tmp.width());
+        selectRows(tmp, dim_dst_only, P);
+        B.resize(W.width(), dst_only_removed.width());
+        transposeProduct(B, W, dst_only_removed);
+        tmp.setMod(W.width());
+        tmp.resize(B.length(), W.width());
+        product(tmp, B, W);
+        negateElements(tmp);
+        tmp += P;
+        // TODO Note: it may not be a good idea to use setMod this way, as the
+        // size of the storage may differ from mod() * width(), which could be
+        // an issue.
+        tmp2.resize(tmp.length(), tmp.width());
+        matInvert(tmp, tmp2);
+        dst.subMat(n_common, n_common, n_dst_only, n_dst_only) << tmp2;
+        tmp.resize(B.width(), tmp2.width());
+        transposeProduct(tmp, B, tmp2);
+        tmp2.resize(tmp.length(), B.width());
+        product(tmp2, tmp, B);
+        negateElements(tmp);
+        dst.subMat(0, n_common, n_common, n_dst_only) << tmp;
+        Mat dst_top_left = dst.subMat(0, 0, n_common, n_common);
+        dst_top_left << tmp2;
+        dst_top_left += dst_only_removed;
+        }
+    }
+
+    Mat* the_H_inv = same_covariance ? &H_inv_tpl : &H_inv_tot;
+
+    bool cannot_free =
+        !spanning_can_free[current_cluster][path_index];
+    if (cannot_free)
+        queue_index++;
+    cond_var_inv_queue.resize(queue_index + 1);
+    indices_inv_queue.resize(queue_index + 1);
+
+    static Mat dummy_mat;
+    H_inv_tpl = dummy_mat;
+
+    if (!same_covariance || cannot_free) {
+        Mat& M = cond_var_inv_queue[queue_index];
+        M.resize(H_inv_tot.length(), H_inv_tot.width());
+        M << H_inv_tot;
+        TVec<int>& ind = indices_inv_queue[queue_index];
+        ind.resize(ind_inv_tot.length());
+        ind << ind_inv_tot;
+    }
+
+}
+
 //////////////////////////
 // computeLogLikelihood //
 //////////////////////////
@@ -504,12 +720,10 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
     // computations (with the current rather dumb implementation).
     static Vec mu_y_missing;
     static Mat cov_y_missing;
-    static Mat inv_cov_y_missing;
     static Vec y_missing;
     static Vec eigenvals_missing;
     static Mat eigenvecs_missing;
     static TVec<int> non_missing;
-    static TVec<int> f_missing;
     static Mat work_mat1, work_mat2;
     static Mat eigenvalues_x_miss;
     static TVec<Mat> eigenvectors_x_miss;
@@ -664,13 +878,10 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                 */
 
                 non_missing.resize(0);
-                f_missing.resize(0);
                 // int count_tpl_dim = 0;
                 for (int k = 0; k < n_predicted; k++)
                     if (!is_missing(y[k]))
                         non_missing.append(k);
-                    else if (impute_missing)
-                        f_missing.append(k);
 
                 int n_non_missing = non_missing.length();
                 bool eff_missing = efficient_missing &&
@@ -692,21 +903,6 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     ind.resize(n_non_missing);
                     ind << non_missing;
 
-                    if (impute_missing) {
-                        int n_missing = f_missing.length();
-                        inv_cov_y_missing.resize(n_missing, n_missing);
-                        for (int k = 0; k < n_missing; k++)
-                            for (int q = 0; q < n_missing; q++)
-                                inv_cov_y_missing(k,q) =
-                                    (*inv_cov_y)(f_missing[k], f_missing[q]);
-                        cholesky_inv_queue.resize(1);
-                        Mat& chol_inv = cholesky_inv_queue[0];
-                        choleskyDecomposition(inv_cov_y_missing, chol_inv);
-                        indices_inv_queue.resize(1);
-                        TVec<int>& ind = indices_inv_queue[0];
-                        ind.resize(n_missing);
-                        ind << f_missing;
-                    }
                 }
                 mu_y = center(j).subVec(0, n_predicted);
                 mu_y_missing.resize(n_non_missing);
@@ -751,15 +947,10 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
 
                     real log_det = 0;
                     static Mat L_tpl;
-                    static Mat L_inv_tpl;
                     static TVec<int> ind_tpl;
-                    static TVec<int> ind_inv_tpl;
                     static Mat L_tot;
                     static TVec<int> ind_tot;
-                    static Mat L_inv_tot;
-                    static TVec<int> ind_inv_tot;
                     int n_tpl = -1;
-                    int n_inv_tpl = -1;
                     int queue_index = -1;
                     int path_index = -1;
                     bool same_covariance = false;
@@ -782,14 +973,6 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         ind_tot << non_missing;
                         */
                         ind_tot = non_missing;
-
-                        if (impute_missing) {
-                            L_inv_tpl = cholesky_inv_queue[queue_index];
-                            ind_inv_tpl = indices_inv_queue[queue_index];
-                            n_inv_tpl = L_inv_tpl.length();
-                            L_inv_tot.resize(n_inv_tpl, n_inv_tpl);
-                            ind_inv_tot = f_missing;
-                        }
 
                         // Optimization: detect when the same covariance matrix
                         // can be re-used.
@@ -832,13 +1015,15 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         }
                         */
                     }
+                    if (efficient_missing && current_training_sample >= 0)
+                        no_missing_change[current_training_sample] =
+                            same_covariance;
 
                     // Now we must perform updates to compute the Cholesky
                     // decomposition of interest.
                     static Vec new_vec;
                     int n = -1;
                     Mat* the_L = 0;
-                    Mat* the_inv_L = 0;
                     if (eff_missing) {
                     //L_tot.resize(n_non_missing, n_non_missing);
                         /*
@@ -853,9 +1038,6 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     if (!same_covariance) {
                     updateCholeskyFromPrevious(L_tpl, L_tot, joint_cov[j],
                             ind_tpl, ind_tot);
-                    if (impute_missing)
-                        updateCholeskyFromPrevious(L_inv_tpl, L_inv_tot,
-                                joint_inv_cov[j], ind_inv_tpl, ind_inv_tot);
                     }
                     // Note to myself: indices in ind_tot will be changed.
 
@@ -868,8 +1050,6 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     // pout << "min = " << min(tmp_mat) << endl;
                     */
                     the_L = same_covariance ? &L_tpl : &L_tot;
-                    the_inv_L = same_covariance ? &L_inv_tpl : &L_inv_tot;
-
 
                     n = the_L->length();
                     for (int i = 0; i < n; i++)
@@ -910,11 +1090,10 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     indices_queue.resize(queue_index + 1);
                     // pout << "length = " << cholesky_queue.length() << endl;
 
-                    if (!cannot_free)
-                        // Free a reference to element in cholesky_queue. This
-                        // is needed beccause this matrix is going to be
-                        // resized.
-                        L_tpl = dummy_mat;
+                    // Free a reference to element in cholesky_queue. This
+                    // is needed beccause this matrix is going to be
+                    // resized.
+                    L_tpl = dummy_mat;
 
                     if (!same_covariance || cannot_free) {
                     Mat& chol = cholesky_queue[queue_index];
@@ -1275,6 +1454,24 @@ void GaussMix::computePosteriors() {
                     posteriors(s, j) = exp(log_likelihood_post_clust(i, j) -
                                        log_sum_likelihood);
             }
+            if (!impute_missing)
+                continue;
+            // If the 'impute_missing' method is used, we now need to compute
+            // the extra contribution to the covariance matrix.
+            for (int j = 0; j < L; j++) {
+                // For each Gaussian, go through all samples in the cluster.
+                previous_training_sample = -1;
+                for (int i = 0; i < samples_clust.length(); i++) {
+                    int s = samples_clust[i];
+                    current_training_sample = s;
+                    train_set->getSubRow(s, 0, sample_row);
+                    addToCovariance(sample_row, j, error_covariance,
+                            posteriors(s, j));
+                    previous_training_sample = current_training_sample;
+                    current_training_sample = -1;
+                }
+            }
+            previous_training_sample = -2;
         }
     } else {
     for (int i = 0; i < nsamples; i++) {
@@ -1855,13 +2052,16 @@ void GaussMix::resizeDataBeforeTraining() {
     alpha.resize(L);
     eigenvectors.resize(0);
     mean_training.resize(0);
+    no_missing_change.resize(0);
     sigma.resize(0);
     stddev_training.resize(0);
+
 
     center.resize(L, D);
     covariance.resize(0, 0);
     diags.resize(0, 0);
     eigenvalues.resize(0, 0);
+    error_covariance.resize(0, 0);
     initial_weights.resize(nsamples);
     posteriors.resize(nsamples, L);
     updated_weights.resize(L, nsamples);
@@ -1884,6 +2084,10 @@ void GaussMix::resizeDataBeforeTraining() {
         eigenvalues.resize(L, n_eigen_computed);
         for (int i = 0; i < eigenvectors.length(); i++)
             eigenvectors[i].resize(n_eigen_computed, D);
+        if (impute_missing)
+            error_covariance.resize(D, D);
+        if (efficient_missing)
+            no_missing_change.resize(nsamples);
     }
 }
 
