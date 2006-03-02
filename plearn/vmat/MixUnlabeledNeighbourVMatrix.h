@@ -97,6 +97,13 @@ protected:
 
     // ### Declare protected option fields (such as learned parameters) here
     PP<PRandom> random_generator;
+
+    //! Used to store temporary data.
+    mutable Vec row_buffer;
+
+    //! The weights for each neighbor (set equal to the weight of the original
+    //! sample).
+    Vec neighbor_weights;
     
 protected:
     //#####  Protected Member Functions  ######################################

@@ -115,9 +115,6 @@ void MixUnlabeledNeighbourVMatrix::build_()
     if (!source)
         return;
     
-    if (source->weightsize() != 0)
-        PLERROR("In MixUnlabeledNeighbourVMatrix::build_ : Current code does not implements weights");
-
     if (source_select && source && source_select->inputsize() != source->inputsize())
         PLERROR("In MixUnlabeledNeighbourVMatrix::build_ - VMats 'source_select'"
                 "and 'source' should have the same inputsize().");
@@ -127,24 +124,30 @@ void MixUnlabeledNeighbourVMatrix::build_()
     
     indices.resize(0); // This get rid of the user's build option value.
     TVec<int> bag_indices;
-    bag_indices.resize(0);
 
     Vec input,target,targetSel;
     real weight;
+    neighbor_weights.resize(0);
 
     for(int row=0; row < source->length(); row++)
     {
         source->getExample(row,input,target,weight);
+        bag_indices.resize(0);
         
         if(source_select) { // If it was given, find the related example
             for(int rowSel=0; rowSel < source_select->length(); row++) {
                 source_select->getExample(rowSel,input,targetSel,weight);
-                if (targetSel[source_select->targetsize() - 1] == target[source->targetsize() - 1]){
+                if (targetSel.lastElement() == target.lastElement()) {
                     bag_indices.push_back(rowSel);
                 }
             }
             random_generator->shuffleElements(bag_indices);
-            for(int i=0; i < frac*bag_indices.length(); i++) {
+            int n_kept = int(round(frac*bag_indices.length()));
+            for(int i=0; i < n_kept; i++) {
+                if (source->weightsize() > 0) {
+                    assert( source->weightsize() == 1 );
+                    neighbor_weights.append(weight);
+                }
                 indices.push_back(bag_indices[i]);
             }
         }
@@ -161,7 +164,6 @@ void MixUnlabeledNeighbourVMatrix::build_()
         length_ = source->length();
     }
         
-
     // ### In a SourceVMatrix, you will typically end build_() with:
     setMetaInfoFromSource();
 }
@@ -171,16 +173,22 @@ void MixUnlabeledNeighbourVMatrix::build_()
 ///////////////
 void MixUnlabeledNeighbourVMatrix::getNewRow(int i, const Vec& v) const
 {
-    if (i < source->length()){
-        Vec vv(source->width());
-        source->getRow(i, vv);
-        int ll = vv.size()-inputsize_ - targetsize_;
-        v.subVec(0,inputsize_ + targetsize_ -1) << vv.subVec(0,inputsize_ + targetsize_ -1);
-        v.subVec(inputsize_ + targetsize_ -1,ll) << vv.subVec(inputsize_ + targetsize_,ll);
-    }else{
+    if (i < source->length()) {
+        row_buffer.resize(source->width());
+        source->getRow(i, row_buffer);
+        int rest_size = width() - inputsize() - targetsize();
+        int input_target_size = inputsize() + targetsize();
+        v.subVec(0, input_target_size)
+            << row_buffer.subVec(0, input_target_size);
+        v.subVec(input_target_size, rest_size)
+            << row_buffer.subVec(input_target_size + 1, rest_size);
+    } else {
         source_select->getSubRow(indices[i - source->length()],0,
-                                 v.subVec(0,inputsize_));
-        for (int j=inputsize_; j < v.length(); j++) v[j]=MISSING_VALUE;
+                                 v.subVec(0,inputsize()));
+        for (int j=inputsize(); j < inputsize() + targetsize(); j++)
+            v[j]=MISSING_VALUE;
+        if (!neighbor_weights.isEmpty())
+            v[v.length() - 1] = neighbor_weights[i - source->length()];
     }
 }
 
@@ -191,10 +199,11 @@ void MixUnlabeledNeighbourVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-
     deepCopyField(indices, copies);
     deepCopyField(source_select, copies);
     deepCopyField(random_generator, copies);
+    deepCopyField(row_buffer, copies);
+    deepCopyField(neighbor_weights, copies);
 }
 
 } // end of namespace PLearn
