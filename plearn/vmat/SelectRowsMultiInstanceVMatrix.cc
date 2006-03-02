@@ -62,10 +62,10 @@ PLEARN_IMPLEMENT_OBJECT(
 // SelectRowsMultiInstanceVMatrix //
 ////////////////////////////////////
 SelectRowsMultiInstanceVMatrix::SelectRowsMultiInstanceVMatrix() :
+/* ### Initialize all fields to their default value */
     seed(-1),
     frac(0.5),
     random_generator(new PRandom())
-/* ### Initialize all fields to their default value */
 {
     // ...
     // ### You may (or not) want to call build_() to finish building the object
@@ -194,7 +194,7 @@ void SelectRowsMultiInstanceVMatrix::build_()
         };
     }
 
-// ?? Modify the width, length, (tagetsize, inputsize and weight) size attribute.
+// ?? Modify the width, length, (targetsize, inputsize and weight) size attribute.
    // We suppose that the source and source_select have the same targetsize and weightsize
     length_ = indices.length();
     if(!source_select) {

@@ -101,11 +101,11 @@ public:
 
 protected:
 //! Random number generator
-    PP<PRandom> random_generator;
+    
     //#####  Protected Options  ###############################################
 
     // ### Declare protected option fields (such as learned parameters) here
-    // ...
+    PP<PRandom> random_generator;
     
 protected:
     //#####  Protected Member Functions  ######################################
