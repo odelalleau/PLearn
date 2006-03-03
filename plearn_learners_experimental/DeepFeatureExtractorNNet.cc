@@ -78,8 +78,9 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     DeepFeatureExtractorNNet,
-    "ONE LINE DESCRIPTION",
-    "MULTI-LINE \nHELP");
+    "Deep Neural Network that extracts features in an unsupervised way",
+    "After the unsupervised phase, this learner can optionally be trained using"
+    "a supervised learning criteria (i.e. MSE, class NLL, margin-perceptron cost, etc.).");
 
 DeepFeatureExtractorNNet::DeepFeatureExtractorNNet() 
     : batch_size(1), 
