@@ -76,7 +76,7 @@ def recursive_add( path ):
 
     return path_added
 
-def recursive_remove( path ):
+def recursive_remove(path, , options=""):
     rm_cmd = "cvs remove -Rf " + path
     vprint("Removing: " + rm_cmd, 2)
     os.system( rm_cmd )

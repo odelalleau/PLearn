@@ -23,8 +23,8 @@ def commit( path, msg ):
 def recursive_add( path ):
     get_vc_module().recursive_add( path )
 
-def recursive_remove( path ):
-    get_vc_module().recursive_remove( path )
+def recursive_remove(path, options=""):
+    get_vc_module().recursive_remove(path, options)
     
 def is_under_version_control( path ):
     return ( os.path.isdir( os.path.join(path, cvs_directory) ) or
