@@ -1,0 +1,144 @@
+// -*- C++ -*-
+
+// ClassLeaveOneOutSplitter.h
+//
+// Copyright (C) 2006 Hugo Larochelle 
+// 
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+// 
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+// 
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//     documentation and/or other materials provided with the distribution.
+// 
+//  3. The name of the authors may not be used to endorse or promote
+//     products derived from this software without specific prior written
+//     permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+// NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// 
+// This file is part of the PLearn library. For more information on the PLearn
+// library, go to the PLearn Web site at www.plearn.org
+
+/* *******************************************************      
+   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
+   ******************************************************* */
+
+// Authors: Hugo Larochelle
+
+/*! \file ClassLeaveOneOutSplitter.h */
+
+
+#ifndef ClassLeaveOneOutSplitter_INC
+#define ClassLeaveOneOutSplitter_INC
+
+#include <plearn/vmat/Splitter.h>
+
+namespace PLearn {
+
+/**
+ * Splitter that separates examples of one class (test) from the examples of other classes (train).
+ * This splitter is intended to measure inductive transfer performance from some tasks to another task.
+ */
+class ClassLeaveOneOutSplitter : public Splitter
+{
+    typedef Splitter inherited;
+
+public:
+    //#####  Public Build Options  ############################################
+
+    //! Classes to isolate from the others.
+    TVec<int> classes;
+    
+    //! Number of classes. Ignored if classes if defined.
+    int nclasses;
+    
+    //! Indication that the training set should be appended
+    //! to the split sets lists
+    bool append_train;
+
+public:
+    //#####  Public Member Functions  #########################################
+
+    //! Default constructor
+    // ### Make sure the implementation in the .cc
+    // ### initializes all fields to reasonable default values.
+    ClassLeaveOneOutSplitter();
+
+
+    //#####  Splitter Member Functions  #######################################
+
+    //! Returns the number of available different "splits"
+    virtual int nsplits() const;
+
+    //! Returns the number of sets per split
+    virtual int nSetsPerSplit() const;
+
+    //! Returns split number i
+    virtual TVec<VMat> getSplit(int i=0);
+
+    
+    //#####  PLearn::Object Protocol  #########################################
+
+    // Declares other standard object methods.
+    // ### If your class is not instantiatable (it has pure virtual methods)
+    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
+    PLEARN_DECLARE_OBJECT(ClassLeaveOneOutSplitter);
+
+    // Simply calls inherited::build() then build_() 
+    virtual void build();
+
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+
+protected:
+    //#####  Protected Options  ###############################################
+
+protected:
+    //#####  Protected Member Functions  ######################################
+    
+    //! Declares the class options.
+    static void declareOptions(OptionList& ol);
+
+private: 
+    //#####  Private Member Functions  ########################################
+
+    //! This does the actual building. 
+    void build_();
+
+private:
+    //#####  Private Data Members  ############################################
+
+};
+
+// Declares a few other classes and functions related to this class
+DECLARE_OBJECT_PTR(ClassLeaveOneOutSplitter);
+  
+} // end of namespace PLearn
+
+#endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :
