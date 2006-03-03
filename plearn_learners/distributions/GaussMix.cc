@@ -1186,10 +1186,9 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         full_vec.resize(D);
                         full_vec << y;
                         for (int i = 0; i < coord_missing.length(); i++)
-                            full_vec[coord_missing[i]] = 
+                            full_vec[coord_missing[i]] =
                                 cond_mean[i] + center_j[coord_missing[i]];
-                        imputed_missing[j]->putRow(current_training_sample,
-                                                   full_vec);
+                        clust_imputed_missing[j](path_index) << full_vec;
                     }
 
                     static Vec tmp_vec;
@@ -1554,6 +1553,9 @@ void GaussMix::computePosteriors() {
             int n_samp = samples_clust.length();
             log_likelihood_post_clust.resize(n_samp, L);
             current_cluster = k;
+            if (impute_missing)
+                for (int j = 0; j < L; j++)
+                    clust_imputed_missing[j].resize(n_samp, D);
             for (int j = 0; j < L; j++) {
                 // For each Gaussian, go through all samples in the cluster.
                 previous_training_sample = -1;
@@ -1578,6 +1580,19 @@ void GaussMix::computePosteriors() {
             }
             if (!impute_missing)
                 continue;
+            // We should now be ready to impute missing values.
+            static Vec imputed_vec;
+            imputed_vec.resize(D);
+            for (int i = 0; i < samples_clust.length(); i++) {
+                int s = samples_clust[i];
+                imputed_vec.fill(0);
+                for (int j = 0; j < L; j++)
+                    // TODO The line below is probably not very efficient.
+                    imputed_vec += posteriors(s, j) *
+                        clust_imputed_missing[j](i);
+                imputed_missing->putRow(s, imputed_vec);
+            }
+
             // If the 'impute_missing' method is used, we now need to compute
             // the extra contribution to the covariance matrix.
             for (int j = 0; j < L; j++) {
@@ -2172,8 +2187,8 @@ void GaussMix::resizeDataBeforeTraining() {
     D = train_set->inputsize();
 
     alpha.resize(L);
+    clust_imputed_missing.resize(0);
     eigenvectors.resize(0);
-    imputed_missing.resize(0);
     mean_training.resize(0);
     no_missing_change.resize(0);
     sigma.resize(0);
@@ -2209,16 +2224,14 @@ void GaussMix::resizeDataBeforeTraining() {
             eigenvectors[i].resize(n_eigen_computed, D);
         if (impute_missing) {
             error_covariance.resize(D, D);
-            imputed_missing.resize(L);
-            for (int j = 0; j < L; j++) {
-                // imputed_missing[j] = new MemoryVMatrix(nsamples, D);
-                PPath fname = "/u/delallea/tmp/imputed_missing_" + tostring(j)
-                    + ".pmat";
-                imputed_missing[j] = new FileVMatrix(fname, nsamples, D);
-                // TODO Need to switch back to MemoryVMatrix.
-                // TODO May be useful to handle other types of VMats for large
-                // datasets.
-            }
+            // imputed_missing = new MemoryVMatrix(nsamples, D);
+            PPath fname = "/u/delallea/tmp/imputed_missing.pmat";
+            imputed_missing = new FileVMatrix(fname, nsamples, D);
+            // TODO Need to switch back to MemoryVMatrix.
+            // TODO May be useful to handle other types of VMats for large
+            // datasets.
+            // TODO Move outside of this method.
+            clust_imputed_missing.resize(L);
         }
         if (efficient_missing)
             no_missing_change.resize(nsamples);

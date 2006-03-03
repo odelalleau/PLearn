@@ -105,8 +105,12 @@ protected:
     //! need to be kept in memory during training.
     mutable TVec<Mat> cholesky_queue;
 
-    //! TODO Document (the VMats with the imputed missing values).
-    TVec<VMat> imputed_missing;
+    //! TODO Document (the VMat with the imputed missing values).
+    VMat imputed_missing;
+
+    //! TODO Document (the mats with the imputed missing values by each
+    //gaussian)
+    TVec<Mat> clust_imputed_missing;
 
     //! TODO Document
     TVec<bool> no_missing_change;
