@@ -40,7 +40,10 @@
 #ifndef MixUnlabeledNeighbourVMatrix_INC
 #define MixUnlabeledNeighbourVMatrix_INC
 
+#include <plearn/vmat/SortRowsVMatrix.h>
 #include <plearn/vmat/SourceVMatrix.h>
+#include <plearn/math/PRandom.h>
+
 
 namespace PLearn {
 
@@ -96,8 +99,11 @@ protected:
     //#####  Protected Options  ###############################################
 
     // ### Declare protected option fields (such as learned parameters) here
+    //! Used to shuffle the related unlabeled examples
     PP<PRandom> random_generator;
 
+    //! The sorted source_select
+    PP<SortRowsVMatrix> sorted_source_select;
     //! Used to store temporary data.
     mutable Vec row_buffer;
 

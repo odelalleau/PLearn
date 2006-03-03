@@ -36,9 +36,8 @@
 
 /*! \file MixUnlabeledNeighbourVMatrix.cc */
 
-#include <plearn/math/PRandom.h>
-#include <plearn_learners/generic/PLearner.h>
 #include "MixUnlabeledNeighbourVMatrix.h"
+#include <plearn_learners/generic/PLearner.h>
 
 namespace PLearn {
 using namespace std;
@@ -46,11 +45,13 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(
     MixUnlabeledNeighbourVMatrix,
     "For a given labeled dataset, find related examples in a second dataset.",
-    "The last column of the two dataset contains the relational key. The \n"
-    " output will be a concatenated VMat with the labeled example on top \n"
+    "The last target column of the two dataset contains the relational key. \n",
+    " The output will be a merged VMat with the labeled example on top \n"
     " and a selection of unlabeled related example at the bottom. The \n"
-    " relational key column will be discarded. We put MISSING_VALUE for \n"
-    " the unlabeled target. \n"
+    " relational key column must be a string AND will be discarded. We force \n"
+    " MISSING_VALUE for the target of unlabeled example. We put the 'weight' \n"
+    " of the first occuring labeled example inside the realted unlabeled examples.\n"
+    "WARNING: We sort the unlabeled dataset according to the key.\n"
     );
 
 //////////////////
@@ -115,40 +116,78 @@ void MixUnlabeledNeighbourVMatrix::build_()
     if (!source)
         return;
     
+    if (source_select->targetsize() < 1 || source->targetsize() < 1)
+        PLERROR("In MixUnlabeledNeighbourVMatrix::build_ - We need a key column");
     if (source_select && source && source_select->inputsize() != source->inputsize())
         PLERROR("In MixUnlabeledNeighbourVMatrix::build_ - VMats 'source_select'"
                 "and 'source' should have the same inputsize().");
     
-    // Generating 'indices' inside source_select
-//    int relational_key_column = source->targetsize() - 1;
+    sorted_source_select = new SortRowsVMatrix();
+    sorted_source_select->source = source_select;
+    sorted_source_select->sort_columns = TVec<int>(1,source_select->inputsize() 
+                                                   + source_select->targetsize() - 1);
+    sorted_source_select->build();
     
     indices.resize(0); // This get rid of the user's build option value.
     TVec<int> bag_indices;
 
     Vec input,target,targetSel;
+    string lastKey;
     real weight;
+    bool sourceFound;
+    int rowSel,row;
+    int keyCol = source->inputsize() + source->targetsize()-1;
+    int keyCol_select = source_select->inputsize() + source_select->targetsize()-1;
     neighbor_weights.resize(0);
 
-    for(int row=0; row < source->length(); row++)
-    {
-        source->getExample(row,input,target,weight);
+    if(sorted_source_select) { // If it was given, find the related example
+        source_select->getExample(0,input,targetSel,weight);
+        lastKey = source_select->getValString(keyCol_select,targetSel.lastElement());
+        rowSel = 0;
         bag_indices.resize(0);
-        
-        if(source_select) { // If it was given, find the related example
-            for(int rowSel=0; rowSel < source_select->length(); row++) {
-                source_select->getExample(rowSel,input,targetSel,weight);
-                if (targetSel.lastElement() == target.lastElement()) {
-                    bag_indices.push_back(rowSel);
+        while(rowSel < source_select->length()){
+            source_select->getExample(rowSel,input,targetSel,weight);
+            if (lastKey == source_select->getValString(keyCol_select,targetSel.lastElement())){
+                bag_indices.push_back(rowSel);
+            }else{
+                sourceFound = false;
+                for(row=0; row < source->length() && !sourceFound; row++){
+                    source->getExample(row,input,target,weight);
+                    if(lastKey == source->getValString(keyCol,target.lastElement())) sourceFound=true;
                 }
+                if (sourceFound){
+                    random_generator->shuffleElements(bag_indices);
+                    int n_kept = int(round(frac*bag_indices.length()));
+                    for(int i=0; i < n_kept; i++) {
+                        if (source->weightsize() > 0) {
+                            assert( source->weightsize() == 1 );
+                            neighbor_weights.append(weight); // normally still pointing to the correct weight
+                        }
+                        indices.push_back(bag_indices[i]);
+                    }
+                }
+                bag_indices.resize(0);
+                lastKey = source_select->getValString(keyCol_select,targetSel.lastElement());
+                bag_indices.push_back(rowSel);
             }
-            random_generator->shuffleElements(bag_indices);
-            int n_kept = int(round(frac*bag_indices.length()));
-            for(int i=0; i < n_kept; i++) {
-                if (source->weightsize() > 0) {
-                    assert( source->weightsize() == 1 );
-                    neighbor_weights.append(weight);
+            rowSel++;
+            if (rowSel == source_select->length()){
+                sourceFound = false;
+                for(row=0; row < source->length() && !sourceFound; row++){
+                    source->getExample(row,input,target,weight);
+                    if(lastKey == source->getValString(keyCol,target.lastElement())) sourceFound=true;
                 }
-                indices.push_back(bag_indices[i]);
+                if (sourceFound){
+                    random_generator->shuffleElements(bag_indices);
+                    int n_kept = int(round(frac*bag_indices.length()));
+                    for(int i=0; i < n_kept; i++) {
+                        if (source->weightsize() > 0) {
+                            assert( source->weightsize() == 1 );
+                            neighbor_weights.append(weight); // normally still pointing to the correct weight
+                        }
+                        indices.push_back(bag_indices[i]);
+                    }
+                }
             }
         }
     }
@@ -164,6 +203,9 @@ void MixUnlabeledNeighbourVMatrix::build_()
         length_ = source->length();
     }
         
+    TVec<string>tempofn = source->fieldNames();
+    tempofn.remove(inputsize()+targetsize());
+    declareFieldNames(tempofn);
     // ### In a SourceVMatrix, you will typically end build_() with:
     setMetaInfoFromSource();
 }
@@ -183,7 +225,7 @@ void MixUnlabeledNeighbourVMatrix::getNewRow(int i, const Vec& v) const
         v.subVec(input_target_size, rest_size)
             << row_buffer.subVec(input_target_size + 1, rest_size);
     } else {
-        source_select->getSubRow(indices[i - source->length()],0,
+        sorted_source_select->getSubRow(indices[i - source->length()],0,
                                  v.subVec(0,inputsize()));
         for (int j=inputsize(); j < inputsize() + targetsize(); j++)
             v[j]=MISSING_VALUE;
@@ -201,6 +243,7 @@ void MixUnlabeledNeighbourVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies
 
     deepCopyField(indices, copies);
     deepCopyField(source_select, copies);
+    deepCopyField(sorted_source_select, copies);
     deepCopyField(random_generator, copies);
     deepCopyField(row_buffer, copies);
     deepCopyField(neighbor_weights, copies);
