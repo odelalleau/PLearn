@@ -49,8 +49,8 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     ClassLeaveOneOutSplitter,
-    "ONE LINE DESCR",
-    "NO HELP"
+    "Splitter that separates examples of one class (test) from the examples of other classes (train)",
+    "This splitter is intended to measure inductive transfer performance from some tasks to another task"
     );
 
 ClassLeaveOneOutSplitter::ClassLeaveOneOutSplitter() 
