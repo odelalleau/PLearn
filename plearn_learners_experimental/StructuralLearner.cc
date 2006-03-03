@@ -121,7 +121,7 @@ void StructuralLearner::declareOptions(OptionList& ol)
                    "Weights for the thetahids projections, for the layers (one for each feature group)");
     declareOption(ol, "thetas", &StructuralLearner::thetas, OptionBase::learntoption,
                    "structure parameter of the linear classifier: f(x) = wt x + vt theta x");
-    declareOption(ol, "thetahids", &StructuralLearner::thetas, OptionBase::learntoption,
+    declareOption(ol, "thetahids", &StructuralLearner::thetahids, OptionBase::learntoption,
                    "structure parameter of the linear classifier: f(x) = wt x + vt theta x");
     declareOption(ol, "start_learning_rate", &StructuralLearner::start_learning_rate, OptionBase::buildoption,
                    "Starting learning rate of the stochastic gradient descent");
@@ -259,6 +259,11 @@ void StructuralLearner::buildThetaParameters(TVec<unsigned int> feat_lengths)
                     thetas[i].resize( 50, feat_lengths[i] );
             }
         }
+        else
+        {
+            thetas.resize(0);
+            thetas_times_x.resize(0,0);
+        }
 
         if(nhidden > 0 && use_thetas_for_hidden_weights)
         {
@@ -267,7 +272,13 @@ void StructuralLearner::buildThetaParameters(TVec<unsigned int> feat_lengths)
             for(int i=0; i<thetahids.length(); i++)  {
                 thetahids[i].resize( 50, feat_lengths[i] );
             }
-        }        
+        }
+        else
+        {
+            thetahids.resize(0);
+            thetahids_times_x.resize(0,0);
+        }
+
     }
     else
     {
@@ -281,12 +292,22 @@ void StructuralLearner::buildThetaParameters(TVec<unsigned int> feat_lengths)
             else
                 thetas[0].resize( 50, nfeat );            
         }
+        else
+        {
+            thetas.resize(0);
+            thetas_times_x.resize(0,0);
+        }
 
         if(nhidden > 0 && use_thetas_for_hidden_weights)
         {
             thetahids.resize( 1 );  // Do not consider features for previous tags, + features for the presence of digits and capital letters (there are too few of them)!
             thetahids_times_x.resize( 50, 1 );            
             thetahids[0].resize( 50, nfeat );            
+        }
+        else
+        {
+            thetahids.resize(0);
+            thetahids_times_x.resize(0,0);
         }
 
     }    
@@ -332,7 +353,7 @@ void StructuralLearner::build_()
     if(auxiliary_task_train_set)
         buildThetaParameters(fls);
     
-    if(stage==0)
+    if(stage==0 || stage ==1)
         initializeParams();
     
     if( auxiliary_task_train_set && stage==0 && auxiliary_indices_left.size()==0) {
