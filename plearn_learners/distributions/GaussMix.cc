@@ -48,6 +48,7 @@
 #include <plearn/math/pl_erf.h>   //!< For gauss_log_density_stddev().
 #include <plearn/math/plapack.h>
 //#include <plearn/math/random.h>
+#include <plearn/vmat/MemoryVMatrix.h>
 #include <plearn/vmat/SubVMatrix.h>
 #include <plearn/vmat/VMat_basic_stats.h>
 
@@ -394,6 +395,11 @@ void GaussMix::computeMeansAndCovariances() {
                             covariance(k,i) = 0;
                         }
 #ifdef BOUNDCHECK
+            if (impute_missing) {
+                // Add the covariance matrix of imputation errors.
+                // TODO FILL IN HERE.
+            }
+            
             // At this point there should be no more missing values.
             if (covariance.hasMissing() || center.hasMissing())
                 PLERROR("In GaussMix::computeMeansAndCovariances - Found "
@@ -489,7 +495,6 @@ void GaussMix::updateCholeskyFromPrevious(
 /////////////////////
 // addToCovariance //
 /////////////////////
-// TODO Declare and comment in header.
 void GaussMix::addToCovariance(const Vec& y, int j,
                                const Mat& cov, real post)
 {
@@ -563,7 +568,7 @@ void GaussMix::addToCovariance(const Vec& y, int j,
         assert( src.length() == ind_src.length() );
         int n = ind_src.length();
         int p = ind_dst.length();
-        int m = full.length();
+        // int m = full.length();
         dst.resize(p, p);
         // Analyze the indices vectors.
         int max_indice = -1;
@@ -738,6 +743,15 @@ void GaussMix::addToCovariance(const Vec& y, int j,
     }
 
     Mat* the_H_inv = same_covariance ? &H_inv_tpl : &H_inv_tot;
+
+    // Add this matrix (weighted by the coefficient 'post') to the given 'cov'
+    // full matrix.
+    // TODO This is wrong: we must most likely divide by the sum of weights.
+    for (int i = 0; i < ind_inv_tot.length(); i++) {
+        int ind_inv_tot_i = ind_inv_tot[i];
+        for (int j = 0; j < ind_inv_tot.length(); j++)
+            cov(ind_inv_tot_i, ind_inv_tot[j]) += post * (*the_H_inv)(i, j);
+    }
 
     bool cannot_free =
         !spanning_can_free[current_cluster][path_index];
@@ -941,10 +955,14 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                 */
 
                 non_missing.resize(0);
+                static TVec<int> coord_missing;
+                coord_missing.resize(0);
                 // int count_tpl_dim = 0;
                 for (int k = 0; k < n_predicted; k++)
                     if (!is_missing(y[k]))
                         non_missing.append(k);
+                    else
+                        coord_missing.append(k);
 
                 int n_non_missing = non_missing.length();
                 bool eff_missing = efficient_missing &&
@@ -1139,6 +1157,35 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                             y_centered[k] =
                                 y[ind_tot_k] - center_j[ind_tot_k];
                         }
+
+                    if (impute_missing && current_training_sample >= 0) {
+                        // We need to store the conditional expectation of the
+                        // sample missing values.
+                        static Vec tmp_vec1, tmp_vec2;
+                        choleskySolve(*the_L, y_centered, tmp_vec1, tmp_vec2);
+                        static Mat K2;
+                        int ind_tot_length = ind_tot.length();
+                        K2.resize(cov_y.length() - ind_tot_length,
+                                  ind_tot.length());
+                        for (int i = 0; i < K2.length(); i++)
+                            for (int k = 0; k < K2.width(); k++)
+                                K2(i,k) = cov_y(coord_missing[i],
+                                                non_missing[k]);
+                        static Vec cond_mean;
+                        cond_mean.resize(coord_missing.length());
+                        product(cond_mean, K2, tmp_vec1);
+                        static Vec full_vec;
+                        // TODO Right now, we store the full data vector. It
+                        // may be more efficient to only store the missing
+                        // values.
+                        full_vec.resize(D);
+                        full_vec << y;
+                        for (int i = 0; i < coord_missing.length(); i++)
+                            full_vec[coord_missing[i]] = cond_mean[i];
+                        imputed_missing[j]->putRow(current_training_sample,
+                                                   full_vec);
+                    }
+
                     static Vec tmp_vec;
                     tmp_vec.resize(n);
                     if (n > 0) {
@@ -1492,6 +1539,9 @@ void GaussMix::computePosteriors() {
     sample_row.resize(D);
     log_likelihood_post.resize(L);
     if (efficient_missing) {
+        if (impute_missing)
+            // Clear the additional 'error_covariance' matrix.
+            error_covariance.fill(0);
         // Loop over all clusters.
         for (int k = 0; k < missing_template.length(); k++) {
             const TVec<int>& samples_clust = spanning_path[k];
@@ -2117,6 +2167,7 @@ void GaussMix::resizeDataBeforeTraining() {
 
     alpha.resize(L);
     eigenvectors.resize(0);
+    imputed_missing.resize(0);
     mean_training.resize(0);
     no_missing_change.resize(0);
     sigma.resize(0);
@@ -2150,8 +2201,15 @@ void GaussMix::resizeDataBeforeTraining() {
         eigenvalues.resize(L, n_eigen_computed);
         for (int i = 0; i < eigenvectors.length(); i++)
             eigenvectors[i].resize(n_eigen_computed, D);
-        if (impute_missing)
+        if (impute_missing) {
             error_covariance.resize(D, D);
+            imputed_missing.resize(L);
+            for (int j = 0; j < L; j++) {
+                imputed_missing[j] = new MemoryVMatrix(nsamples, D);
+                // TODO Will need to handle other types of VMats for large
+                // datasets.
+            }
+        }
         if (efficient_missing)
             no_missing_change.resize(nsamples);
     }
