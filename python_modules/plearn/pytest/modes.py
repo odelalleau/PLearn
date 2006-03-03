@@ -1,15 +1,16 @@
-_cvs_id__ = "$Id: modes.py 3647 2005-06-23 15:49:51Z dorionc $"
-
 import copy, logging, shutil
-import plearn.utilities.version_control as version_control
-import plearn.utilities.ppath           as ppath
-import plearn.utilities.toolkit         as toolkit
 
 import tests
 from tests import *
-from programs                             import *
-from plearn.utilities.toolkit             import *
+from programs import *
+
+from plearn.utilities import ppath
+from plearn.utilities import moresh
+from plearn.utilities import toolkit
+from plearn.utilities import version_control
+
 from plearn.utilities.ModeAndOptionParser import *
+
 
 current_mode    = None
 
@@ -210,10 +211,10 @@ class list(PyTestMode):
         formatted_string = lambda n,d: ( "%s Disabled: %s"
                                          % (string.ljust(n, 25), string.ljust(str(d), 15))
                                          )
-        for (family, tests) in Test._families_map.iteritems():
+        for (family, test_list) in Test._families_map.iteritems():
             formatted_strings = []
 
-            for test in tests:
+            for test in test_list:
                 if self.options.disabled and not test.disabled:
                     continue
                 if self.options.enabled  and test.disabled:
@@ -264,7 +265,7 @@ class prune( PyTestMode ):
             return
 
         
-        for ( family, tests ) in Test._families_map.iteritems():
+        for ( family, test_list ) in Test._families_map.iteritems():
             fam_pytest_dir = os.path.join( family, ".pytest" )
             
             if os.path.exists( fam_pytest_dir ):
@@ -281,26 +282,26 @@ class prune( PyTestMode ):
 #TO_BE_ADDED:     def __init__(self, targets, options):
 #TO_BE_ADDED:         super(report, self).__init__(targets, options)
 #TO_BE_ADDED: 
-#TO_BE_ADDED:         for (family, tests) in Test._families_map.iteritems():
+#TO_BE_ADDED:         for (family, test_list) in Test._families_map.iteritems():
 #TO_BE_ADDED:             formatted_strings = []
 #TO_BE_ADDED: 
-#TO_BE_ADDED:             for test in tests:
+#TO_BE_ADDED:             for test in test_list:
 #TO_BE_ADDED:                 if self.options.disabled and not test.disabled:
 #TO_BE_ADDED:                     continue
 #TO_BE_ADDED:                 if self.options.enabled  and test.disabled:
 #TO_BE_ADDED:                     continue
 
-class vc_add( PyTestMode ):
-    """Add PyTest's config file and results to version control."""
+class confirm( PyTestMode ):
+    """Confirm the results obtained using PyTest's 'results' mode."""
     def option_groups(cls, parser):
         return [ cls.target_options(parser),
                  cls.restriction_options(parser) ]
     option_groups = classmethod(option_groups)
 
     def __init__( self, targets, options ):
-        super(vc_add, self).__init__(targets, options)
+        super(confirm, self).__init__(targets, options)
         
-        for (family, tests) in Test._families_map.iteritems():
+        for (family, test_list) in Test._families_map.iteritems():
             os.chdir( family )
 
             config_path = config_file_path()
@@ -308,15 +309,57 @@ class vc_add( PyTestMode ):
                 version_control.add( config_path )
                 version_control.add( ppath.pytest_dir )
                 version_control.ignore( ppath.pytest_dir, [ '*.compilation_log' ] )
-                for test in tests:
-                    version_control.add( test.resultsDirectory() )
-                    version_control.recursive_add( test.resultsDirectory(tests.EXPECTED_RESULTS) )
-                    version_control.ignore( test.resultsDirectory(), [ '.plearn', tests.RUN_RESULTS ] )
+                for test in test_list:
+                    svn_results = test.resultsDirectory(tests.SVN_RESULTS)
+
+                    if os.path.exists(svn_results):
+                        expected_results = test.resultsDirectory(tests.EXPECTED_RESULTS)
+                        confirmed_results = expected_results+'.confirmed'
+                        os.rename(expected_results, confirmed_results)
+                        os.rename(svn_results, expected_results)
+                        self.compare_results_trees(expected_results, confirmed_results)
+                        shutil.rmtree(confirmed_results)
+                    else:
+                        version_control.add( test.resultsDirectory() )
+                        version_control.recursive_add( test.resultsDirectory(tests.EXPECTED_RESULTS) )
+                        version_control.ignore( test.resultsDirectory(), [ '.plearn', tests.RUN_RESULTS ] )
+
             except version_control.VersionControlError:
                 raise PyTestError(
                     "The directory in which lies a config file must be added to version control by user.\n"
                     "%s was not." % family
                     )
+
+    def compare_results_trees(self, expected_results, confirmed_results):
+        cwd = os.getcwd()
+        expected_results = moresh.relative_path(expected_results, cwd)
+        confirmed_results = moresh.relative_path(confirmed_results, cwd)
+        
+        # Files are listed in 'topdown' order.
+        common_files, unique_to_expected, unique_to_confirmed =\
+            moresh.compare_trees(expected_results, confirmed_results, ["\.svn"])
+
+        # Overwritten results
+        for expected_filepath, confirmed_filepath in common_files:
+            mv_cmd = 'mv -f %s %s'%(confirmed_filepath, expected_filepath)
+            logging.debug(mv_cmd)
+            os.system(mv_cmd)
+        
+        # Old expected results to be removed
+        for expected_filepath in unique_to_expected:
+            version_control.recursive_remove(expected_filepath, '--force')
+
+        # New expected results to be added
+        for confirmed_filepath in unique_to_confirmed:
+            expected_filepath = expected_filepath.replace('.confirmed', '')
+            assert not os.path.exists(expected_filepath)
+            
+            rename_cmd = 'os.rename(%s, %s)'%(confirmed_filepath, expected_filepath)
+            logging.debug(rename_cmd)
+            eval(rename_cmd)
+
+            version_control.recursive_add(filepath)
+            
 
 class FamilyConfigMode(PyTestMode):
     def option_groups(cls, parser):
@@ -338,7 +381,7 @@ class FamilyConfigMode(PyTestMode):
         # use than test_hook() which applies to a sole given test.
         self.setup()
         
-        for (family, tests) in Test._families_map.iteritems():
+        for (family, test_list) in Test._families_map.iteritems():
             config_path  = config_file_path( family )
             if os.path.exists( config_path ):
                 toolkit.keep_a_timed_version( config_path )
@@ -347,7 +390,7 @@ class FamilyConfigMode(PyTestMode):
 
             config_text  = ( '"""Pytest config file.\n\n%s\n"""'% toolkit.doc(Test) )
 
-            for test in tests:
+            for test in test_list:
                 self.test_hook( test )
                 config_text += "\n%s\n" % str( test )
 

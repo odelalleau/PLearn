@@ -1,13 +1,12 @@
-import os, tempfile
+import logging, os, tempfile
 from ppath import ppath
-from verbosity import vprint
 
 def __report_status( cmd ):
     return os.WEXITSTATUS( os.system( cmd ) ) == 0
     
 def add(path):
     add_cmd = "svn add -N %s" % path
-    vprint("Adding: %s" % add_cmd, 2)    
+    logging.debug("Adding: %s" % add_cmd)    
 
     return __report_status( add_cmd )
 
@@ -20,7 +19,7 @@ def commit(files, msg):
     
     commit_cmd = "svn commit -m '" + msg + "' " + " ".join(files)
 
-    vprint("\n+++ Commiting (from "+ os.getcwd() +"):\n" + commit_cmd, 1)
+    logging.info("\n+++ Commiting (from "+ os.getcwd() +"):\n" + commit_cmd)
     os.system(commit_cmd) 
 
 def ignore( path, list_of_paths ):
@@ -71,13 +70,13 @@ def query(option, fname, lookingFor, delim = "\n"):
 
 def recursive_add( path ):
     add_cmd = "svn add %s" % path
-    vprint("Adding: %s" % add_cmd, 2)    
+    logging.debug("Adding: %s" % add_cmd)
 
     return __report_status( add_cmd )
 
-def recursive_remove( path ):
-    rm_cmd = "svn remove %s" % path
-    vprint("Removing: %s" % rm_cmd, 2)
+def recursive_remove(path, options=""):
+    rm_cmd = "svn remove %s %s"%(path, options)
+    logging.debug("Removing: %s" % rm_cmd)
 
     return __report_status( rm_cmd )
 
@@ -104,8 +103,7 @@ def repository_revision( path ):
 
 def update( path ):
     up_cmd = "svn update %s" % path
-    vprint("Updating: %s" % up_cmd, 2)    
-
+    logging.debug("Updating: %s" % up_cmd)
     return __report_status( up_cmd )
 
 

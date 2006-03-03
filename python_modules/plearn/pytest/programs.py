@@ -4,8 +4,7 @@ import logging, os, string, types
 import plearn.utilities.ppath          as     ppath
 import plearn.utilities.toolkit        as     toolkit
 
-from PyTestCore                 import *
-
+from core import *
 
 ########################################
 ##  Helper Functions  ##################

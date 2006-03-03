@@ -23,7 +23,7 @@ def compare_trees(former, later, ignoredirs_re=["\.svn", ".\.metadata"]):
         3) paths of directories or files unique to later
 
     Paths in the lists will be relative or absolute following the form in
-    which I{former} and I{later} are.
+    which I{former} and I{later} are. Files are listed in 'topdown' order.
     """
     assert os.path.isdir(former)
     assert os.path.isdir(later)

@@ -1,9 +1,17 @@
 from sys import exc_info
 from traceback import format_tb
 
-from plearn.utilities               import toolkit
+from plearn.utilities import toolkit
 from plearn.pyplearn.PyPLearnObject import PLOption, PyPLearnObject
 
+__exit_code = 0
+def getExitCode():
+    return __exit_code
+
+def updateExitCode(exit_code):
+    global __exit_code
+    if exit_code > __exit_code:
+        __exit_code = exit_code
 
 class PyTestObject(PyPLearnObject):
     def _unreferenced(self):

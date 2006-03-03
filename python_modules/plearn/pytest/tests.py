@@ -35,16 +35,19 @@ import os, shutil
 import plearn.utilities.toolkit as toolkit
 from plearn.pyplearn.plearn_repr import python_repr
 
-from programs                   import *
-from PyTestCore                 import *
-from IntelligentDiff            import *          
-from plearn.utilities.moresh    import *
-
-import plearn.utilities.version_control as version_control
-from plearn.utilities.version_control import is_under_version_control
-from plearn.utilities.Bindings import Bindings
+from core import *
+from programs import *
+from IntelligentDiff import *          
 
 from plearn.utilities import pldiff
+from plearn.utilities.moresh import *
+from plearn.utilities.Bindings import Bindings
+
+# Version control
+from plearn.utilities import version_control
+from plearn.utilities.version_control import is_under_version_control
+
+
 
 # Eventually remove Test's static methods
 EXPECTED_RESULTS = "expected_results"
@@ -81,7 +84,7 @@ class StatsBook(dict):
         return '-'.join([ str(self[k]) for k in self._keys ])
 
     def inc(self, key):
-        self[key] += 1 
+        self[key] += 1
         
 class TestStatus(PyPLearnObject):
     _logfile_basename = 'STATUS.log'
@@ -91,7 +94,7 @@ class TestStatus(PyPLearnObject):
 
     def headerLegend(cls, rjust=0):
         return ('   '.join([ "%s: %s"%(s[0],s) for s in cls._completion_types ]).rjust(rjust)
-                + '\n' + '(SKIPPED implies a PyTest internal error!)'.rjust(rjust) )
+                + '\n' + '(SKIPPED implies a PyTest usage error)'.rjust(rjust) )
     headerLegend = classmethod(headerLegend)
 
     def summary(cls):
@@ -129,6 +132,15 @@ class TestStatus(PyPLearnObject):
 
         self.status = status
         if self.isCompleted():
+            # Exit code management
+            if status == "FAILED":
+                if self.test.compilationSucceeded():
+                    updateExitCode(1)
+                else:
+                    updateExitCode(2)
+            elif status == "SKIPPED":
+                updateExitCode(3)
+                
             self.log = log
             self._stats_book.inc(status)
             # logfile = open(self._logfname, 'w')
@@ -222,20 +234,6 @@ class Test(PyTestObject):
     @ivar disabled: If true, the test will not be ran.
     @type disabled: bool
     """
-    # Static methods
-    def expectedResults():
-        return "expected_results"
-    expectedResults = staticmethod(expectedResults) 
-    
-    def runResults():
-        return "run_results"
-    runResults = staticmethod(runResults) 
-
-    def svnResults():
-        return "expected_results.svn"
-    svnResults = staticmethod(svnResults) 
-
-    
     # Class variables
     _test_count    = 0
     _log_count     = 0
@@ -247,19 +245,6 @@ class Test(PyTestObject):
 
     _restrict_to = None
     _restrict_to_category = None
-
-    # def restrictTo(cls, test_name):
-    #     test = cls._instances_map[test_name]
-    # 
-    #     # Resets the instance map
-    #     cls._instances_map = { test_name : test }
-    # 
-    #     # Resets the families map
-    #     cls._families_map = { test.directory() : [test] }
-    # 
-    #     # Resets the instance counter
-    #     cls._test_count = 1        
-    # restrictTo = classmethod(restrictTo)
 
     def restrictTo(cls, test_name):        
         assert cls._restrict_to is None
@@ -406,15 +391,18 @@ class Test(PyTestObject):
                     raise PyTestError("Results creation interrupted by user")
 
                 ## YES
-                version_control.recursive_remove(results_path)
-                version_control.commit(ppath.pytest_dir, 'Removal of %s for new results creation.'%results_path)
-                ## Need to update the directory that was just committed: this is
-                ## important e.g. with SubVersion to ensure it is up-to-date.
-                version_control.update(ppath.pytest_dir)
-                self._results_vc_removed.append(self.getName())
+                #BEFORE_UNIT_COMMIT: version_control.recursive_remove(results_path)
+                #BEFORE_UNIT_COMMIT: version_control.commit(ppath.pytest_dir, 'Removal of %s for new results creation.'%results_path)
+                #BEFORE_UNIT_COMMIT: ## Need to update the directory that was just committed: this is
+                #BEFORE_UNIT_COMMIT: ## important e.g. with SubVersion to ensure it is up-to-date.
+                #BEFORE_UNIT_COMMIT: version_control.update(ppath.pytest_dir)
+                #BEFORE_UNIT_COMMIT: self._results_vc_removed.append(self.getName())
 
-                #UNIT_COMMIT: logging.info("os.rename(results_path, self.resultsDirectory(SVN_RESULTS))")
-                #UNIT_COMMIT: os.rename(results_path, self.resultsDirectory(SVN_RESULTS))
+                svn_results = self.resultsDirectory(SVN_RESULTS)
+                assert not os.path.exists(svn_results)
+                logging.debug("os.rename(results_path, self.resultsDirectory(SVN_RESULTS))")
+                os.rename(results_path, svn_results)
+                logging.warning("Be sure to 'confirm' your results afterwards...")
 
             ## Will have been removed under svn
             if ( os.path.exists(results_path) ):

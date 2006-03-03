@@ -1,14 +1,14 @@
 __version_id__ = "$Id: __init__.py 3647 2005-06-23 15:49:51Z dorionc $"
                             
 import os, sys, time
-import modes
 
-from PyTestCore                           import *
-from plearn.utilities                     import toolkit
+from plearn.utilities import toolkit
 from plearn.utilities.ModeAndOptionParser import Mode, ModeAndOptionParser, OptionGroup
 
-__all__ = [ "main"
-            ]
+# PyTest Modules
+import core, modes 
+
+__all__ = [ "main" ]
     
 ########################################################################
 ## Functions are listed by alphabetical order
@@ -98,17 +98,19 @@ def main( pytest_version ):
     
     try:
         modes.current_mode( targets, options )    
-    except PyTestError, e: 
+    except core.PyTestError, e: 
         if options.traceback:
             raise
         else:
             logging.critical( "%s: %s." % (e.__class__.__name__,e) )
+            core.updateExitCode(10)
     except KeyboardInterrupt, kex:
         if options.traceback:
             raise
-        else:
-            "Interupted by user."
-            sys.exit()
+        else:            
+            logging.info("Interupted by user.")
+            core.updateExitCode(-1)
 
     logging.debug("\nQuitting PyTest.")
     logging.info('')
+    sys.exit( core.getExitCode() )
