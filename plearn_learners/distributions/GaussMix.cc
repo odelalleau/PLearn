@@ -434,6 +434,11 @@ void GaussMix::updateCholeskyFromPrevious(
     static TVec<int> indices_new;
     static Vec new_row;
     assert( chol_previous.length() == indices_previous.length() );
+    if (indices_updated.isEmpty()) {
+        // All values are missing: the returned matrix should be empty.
+        chol_updated.resize(0, 0);
+        return;
+    }
     // Initialization.
     int n = chol_previous.length();
     int max_indice = -1;
@@ -516,6 +521,10 @@ void GaussMix::addToCovariance(const Vec& y, int j,
         Mat& cond_inv = cond_var_inv_queue[0];
         cond_inv.resize(inv_cov_y_missing.length(), inv_cov_y_missing.width());
         matInvert(inv_cov_y_missing, cond_inv);
+        // Take care of numerical imprecisions that may cause the inverse not
+        // to be exactly symmetric.
+        assert( cond_inv.isSymmetric(false) );
+        fillItSymmetric(cond_inv);
         indices_inv_queue.resize(1);
         TVec<int>& ind = indices_inv_queue[0];
         ind.resize(n_missing);
@@ -583,20 +592,19 @@ void GaussMix::addToCovariance(const Vec& y, int j,
         dim_src_only.resize(0);
         dim_reordered.resize(n);
         for (int i = 0; i < n; i++) {
-            int k = ind_src[i];
-            if (is_dst[k])
-                dim_common.append(k);
+            if (is_dst[ind_src[i]])
+                dim_common.append(i);
             else
-                dim_src_only.append(k);
+                dim_src_only.append(i);
         }
         dim_reordered.subVec(0, dim_common.length()) << dim_common;
         dim_reordered.subVec(dim_common.length(), dim_src_only.length())
             << dim_src_only;
         static Mat inv_src;
         static Mat tmp;
-        tmp.resize(m, n);
+        tmp.resize(src.length(), dim_reordered.length());
         // TODO Not efficient! Optimize!
-        selectColumns(full, dim_reordered, tmp);
+        selectColumns(src, dim_reordered, tmp);
         inv_src.resize(n, n);
         selectRows(tmp, dim_reordered, inv_src);
         // Remove the dimensions that are not present in the destination
@@ -608,23 +616,50 @@ void GaussMix::addToCovariance(const Vec& y, int j,
         static Mat tmp2;
         if (n_src_only == 0) {
             // Nothing to remove.
-            dst_only_removed << src;
+            dst_only_removed << inv_src;
         } else {
+        assert( inv_src.isSymmetric() );
+        // VMat vm_inv_src(inv_src);
+        // vm_inv_src->saveAMAT("/u/delallea/tmp/inv_src.amat", false, true);
         Mat B1 = inv_src.subMat(0, 0, n_common, n_common);
         Mat B2 = inv_src.subMat(0, n_common, n_common, n_src_only);
         static Mat B3;
         B3.setMod(n_src_only);
         B3.resize(n_src_only, n_src_only);
         B3 << inv_src.subMat(n_common, n_common, n_src_only, n_src_only);
+        assert( B3.isSymmetric() );
         dst_only_removed << B1;
         tmp.resize(B3.length(), B3.width());
         matInvert(B3, tmp);
+        // Mat tmp3(B3.length(), B3.width());
+        // matInvert(B3, tmp3);
         tmp2.resize(tmp.length(), B2.length());
         productTranspose(tmp2, tmp, B2);
         tmp.resize(B2.length(), tmp2.width());
         product(tmp, B2, tmp2);
         dst_only_removed -= tmp;
+        assert( dst_only_removed.isSymmetric(false) );
         }
+#if 0
+        // Verify that the inverse was correctly computed.
+        TVec<int> new_dim_common(dim_common.length());
+        for (int i = 0; i < dim_common.length(); i++)
+            new_dim_common[i] = ind_src[dim_common[i]];
+        Mat to_inv_part(new_dim_common.length(), new_dim_common.length());
+        for (int k = 0; k < new_dim_common.length(); k++)
+            for (int j = 0; j < new_dim_common.length(); j++)
+                to_inv_part(k,j) = full(new_dim_common[k], new_dim_common[j]);
+        assert( to_inv_part.isSymmetric() );
+        VMat to_inv_part_vm(to_inv_part);
+        to_inv_part_vm->saveAMAT("/u/delallea/tmp/to_inv_part.amat", false,
+                true);
+        Mat inverse_part(to_inv_part.length(), to_inv_part.width());
+        matInvert(to_inv_part, inverse_part);
+        for (int i = 0; i < inverse_part.length(); i++)
+            for (int j = 0; j < inverse_part.width(); j++) {
+                assert( is_equal(inverse_part(i,j), dst_only_removed(i,j)) );
+            }
+#endif
         // At this point, the dimensions that are not present in the
         // destination matrix have been removed. Now, we need to add the
         // dimensions that need to be added (those that are present in the
@@ -635,6 +670,9 @@ void GaussMix::addToCovariance(const Vec& y, int j,
             if (!is_src[ind_dst[i]])
                 dim_dst_only.append(ind_dst[i]);
         int n_dst_only = dim_dst_only.length();
+        // Replace dimensions in 'src' by dimensions in the full matrix.
+        for (int i = 0; i < dim_common.length(); i++)
+            dim_common[i] = ind_src[dim_common[i]];
         if (n_dst_only == 0) {
             // No dimension to add.
             dst << dst_only_removed;
@@ -672,6 +710,31 @@ void GaussMix::addToCovariance(const Vec& y, int j,
         dst_top_left << tmp2;
         dst_top_left += dst_only_removed;
         }
+        // Ensure 'dst' is symmetric, since we only filled the top-right part.
+        fillItSymmetric(dst);
+#if 0
+        // Verify that the inverse was correctly computed.
+        
+        ind_inv_tot.subVec(0, n_common) << dim_common;
+        ind_inv_tot.subVec(n_common, n_dst_only) << dim_dst_only;
+        
+        Mat to_inverse(ind_inv_tot.length(), ind_inv_tot.length());
+        for (int k = 0; k < ind_inv_tot.length(); k++)
+            for (int j = 0; j < ind_inv_tot.length(); j++)
+                to_inverse(k,j) = full(ind_inv_tot[k], ind_inv_tot[j]);
+        assert( to_inverse.isSymmetric() );
+        VMat to_inverse_vm(to_inverse);
+        string name = "/u/delallea/tmp/to_inverse_" +
+            tostring(current_training_sample) + ".amat";
+        to_inverse_vm->saveAMAT(name, false, true);
+        Mat inverse(to_inverse.length(), to_inverse.width());
+        matInvert(to_inverse, inverse);
+        for (int i = 0; i < inverse.length(); i++)
+            for (int j = 0; j < inverse.width(); j++) {
+                if (!is_equal(inverse(i,j), dst(i,j)))
+                    PLERROR("Crap");
+            }
+#endif
     }
 
     Mat* the_H_inv = same_covariance ? &H_inv_tpl : &H_inv_tot;
@@ -936,9 +999,10 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     }
                 }
                 }
+                /*
                 if (n_non_missing == 0) {
                     log_likelihood = 0;
-                } else {
+                } else {*/
                     // Perform SVD of cov_y_missing.
                     if (!eff_missing) {
                     eigenVecOfSymmMat(cov_y_missing, n_non_missing,
@@ -1077,8 +1141,10 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         }
                     static Vec tmp_vec;
                     tmp_vec.resize(n);
-                    choleskyLeftSolve(*the_L, y_centered, tmp_vec);
-                    log_likelihood -= 0.5 * pownorm(tmp_vec);
+                    if (n > 0) {
+                        choleskyLeftSolve(*the_L, y_centered, tmp_vec);
+                        log_likelihood -= 0.5 * pownorm(tmp_vec);
+                    }
                     // Now remember L_tot for the generations to come.
                     // TODO This could probably be optimized to avoid useless
                     // copies of the covariance matrix.
@@ -1135,7 +1201,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     // Release pointer to 'eigenvecs_missing'.
                     eigenvecs = dummy_mat;
                     }
-                }
+            //}
             } else {
                 log_likelihood = log_coeff[j];
 
@@ -2678,6 +2744,8 @@ void GaussMix::train()
                 clusters[missing_assign[i]].append(i);
 
             // Fill in list for each sample.
+            // TODO Note: cluster_samp and sample_to_template may not really be
+            // useful.
             clusters_samp.resize(missing_template.length());
             for (int i = 0; i < clusters_samp.length(); i++)
                 clusters_samp[i].resize(0);
@@ -2952,7 +3020,9 @@ void GaussMix::train()
                     counter ++;
                     stats_diff[dist]++;
                 }
-                real avg_dist = sum / real(counter);
+                real avg_dist = 0;
+                if (counter > 0)
+                    avg_dist = sum / real(counter);
                 // TODO Note that the quantity below is not exactly what we're
                 // interested in: it does not take into account the fact that
                 // we come back in the tree (branch switching).
