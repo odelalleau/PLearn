@@ -112,6 +112,9 @@ protected:
     //gaussian)
     TVec<Mat> clust_imputed_missing;
 
+    //! TODO Document (sum of all posteriors in computePosteriors()).
+    Vec sum_of_posteriors;
+
     //! TODO Document
     TVec<bool> no_missing_change;
 
@@ -142,7 +145,7 @@ protected:
 
     // TODO Document (to store the covariance of the error, that we need to add
     // when imputing missing values).
-    Mat error_covariance;
+    TVec<Mat> error_covariance;
 
     //! The posterior probabilities P(j | s_i), where j is the index of a
     //! Gaussian and i is the index of a sample.

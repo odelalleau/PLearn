@@ -339,8 +339,11 @@ void GaussMix::computeMeansAndCovariances() {
             PLWARNING("In GaussMix::computeMeansAndCovariances - A posterior "
                       "is almost zero");
         VMat weights(columnmatrix(updated_weights(j)));
+        bool use_impute_missing = impute_missing && stage > 0;
+        VMat input_data = use_impute_missing ? imputed_missing
+                                             : train_set;
         weighted_train_set = new ConcatColumnsVMatrix(
-            new SubVMatrix(train_set, 0, 0, nsamples, D), weights);
+            new SubVMatrix(input_data, 0, 0, nsamples, D), weights);
         weighted_train_set->defineSizes(D, 0, 1);
         Vec center_j = center(j);
         if (type_id == TYPE_SPHERICAL) {
@@ -361,6 +364,13 @@ void GaussMix::computeMeansAndCovariances() {
         } else {
             assert( type_id == TYPE_GENERAL );
             computeInputMeanAndCovar(weighted_train_set, center_j, covariance);
+            if (use_impute_missing) {
+                // Need to add the extra contributions.
+                if (sum_of_posteriors[j] > 0) {
+                    error_covariance[j] /= sum_of_posteriors[j];
+                    covariance += error_covariance[j];
+                }
+            }
             if (center_j.hasMissing()) {
                 // There are features missing in all points assigned to this
                 // Gaussian. We sample a new random value for these features.
@@ -646,7 +656,7 @@ void GaussMix::addToCovariance(const Vec& y, int j,
         tmp.resize(B2.length(), tmp2.width());
         product(tmp, B2, tmp2);
         dst_only_removed -= tmp;
-        assert( dst_only_removed.isSymmetric(false) );
+        assert( dst_only_removed.isSymmetric(false, true) );
         }
 #if 0
         // Verify that the inverse was correctly computed.
@@ -1542,11 +1552,16 @@ void GaussMix::computeAllLogLikelihoods(const Vec& sample, const Vec& log_like)
 ///////////////////////
 void GaussMix::computePosteriors() {
     sample_row.resize(D);
+    if (impute_missing) {
+        sum_of_posteriors.resize(L); // TODO Do that in resize method.
+        sum_of_posteriors.fill(0);
+    }
     log_likelihood_post.resize(L);
     if (efficient_missing) {
         if (impute_missing)
             // Clear the additional 'error_covariance' matrix.
-            error_covariance.fill(0);
+            for (int j = 0; j < L; j++)
+                error_covariance[j].fill(0);
         // Loop over all clusters.
         for (int k = 0; k < missing_template.length(); k++) {
             const TVec<int>& samples_clust = spanning_path[k];
@@ -1574,9 +1589,13 @@ void GaussMix::computePosteriors() {
             for (int i = 0; i < samples_clust.length(); i++) {
                 real log_sum_likelihood = logadd(log_likelihood_post_clust(i));
                 int s = samples_clust[i];
-                for (int j = 0; j < L; j++)
-                    posteriors(s, j) = exp(log_likelihood_post_clust(i, j) -
-                                       log_sum_likelihood);
+                for (int j = 0; j < L; j++) {
+                    real post = exp(log_likelihood_post_clust(i, j) -
+                                    log_sum_likelihood);
+                    posteriors(s, j) = post;
+                    if (impute_missing)
+                        sum_of_posteriors[j] += post;
+                }
             }
             if (!impute_missing)
                 continue;
@@ -1602,7 +1621,7 @@ void GaussMix::computePosteriors() {
                     int s = samples_clust[i];
                     current_training_sample = s;
                     train_set->getSubRow(s, 0, sample_row);
-                    addToCovariance(sample_row, j, error_covariance,
+                    addToCovariance(sample_row, j, error_covariance[j],
                             posteriors(s, j));
                     previous_training_sample = current_training_sample;
                     current_training_sample = -1;
@@ -2199,7 +2218,7 @@ void GaussMix::resizeDataBeforeTraining() {
     covariance.resize(0, 0);
     diags.resize(0, 0);
     eigenvalues.resize(0, 0);
-    error_covariance.resize(0, 0);
+    error_covariance.resize(0);
     initial_weights.resize(nsamples);
     posteriors.resize(nsamples, L);
     updated_weights.resize(L, nsamples);
@@ -2223,11 +2242,14 @@ void GaussMix::resizeDataBeforeTraining() {
         for (int i = 0; i < eigenvectors.length(); i++)
             eigenvectors[i].resize(n_eigen_computed, D);
         if (impute_missing) {
-            error_covariance.resize(D, D);
-            // imputed_missing = new MemoryVMatrix(nsamples, D);
+            error_covariance.resize(L);
+            for (int j = 0; j < L; j++)
+                error_covariance[j].resize(D, D);
+            imputed_missing = new MemoryVMatrix(nsamples, D);
+            /*
             PPath fname = "/u/delallea/tmp/imputed_missing.pmat";
             imputed_missing = new FileVMatrix(fname, nsamples, D);
-            // TODO Need to switch back to MemoryVMatrix.
+            */
             // TODO May be useful to handle other types of VMats for large
             // datasets.
             // TODO Move outside of this method.
