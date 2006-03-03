@@ -48,6 +48,7 @@
 #include <plearn/math/pl_erf.h>   //!< For gauss_log_density_stddev().
 #include <plearn/math/plapack.h>
 //#include <plearn/math/random.h>
+#include <plearn/vmat/FileVMatrix.h>
 #include <plearn/vmat/MemoryVMatrix.h>
 #include <plearn/vmat/SubVMatrix.h>
 #include <plearn/vmat/VMat_basic_stats.h>
@@ -528,7 +529,7 @@ void GaussMix::addToCovariance(const Vec& y, int j,
         matInvert(inv_cov_y_missing, cond_inv);
         // Take care of numerical imprecisions that may cause the inverse not
         // to be exactly symmetric.
-        assert( cond_inv.isSymmetric(false) );
+        assert( cond_inv.isSymmetric(false, true) );
         fillItSymmetric(cond_inv);
         indices_inv_queue.resize(1);
         TVec<int>& ind = indices_inv_queue[0];
@@ -576,7 +577,9 @@ void GaussMix::addToCovariance(const Vec& y, int j,
             max_indice = max(max_indice, max(ind_src));
         if (!ind_dst.isEmpty())
             max_indice = max(max_indice, max(ind_dst));
-        assert( max_indice >= 0 );
+        // Note that 'max_indice' can be -1. This can currently happen if
+        // the first sample in a cluster has no missing value.
+        // In this case there is nothing to do: 'dst' will be empty.
         static TVec<int> is_dst;
         static TVec<int> is_src;
         is_dst.resize(max_indice + 1);
@@ -746,7 +749,7 @@ void GaussMix::addToCovariance(const Vec& y, int j,
 
     // Add this matrix (weighted by the coefficient 'post') to the given 'cov'
     // full matrix.
-    // TODO This is wrong: we must most likely divide by the sum of weights.
+    // TODO This may be wrong (to check).
     for (int i = 0; i < ind_inv_tot.length(); i++) {
         int ind_inv_tot_i = ind_inv_tot[i];
         for (int j = 0; j < ind_inv_tot.length(); j++)
@@ -1150,8 +1153,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     y_centered -= mu_y;
                     }
                     
+                    real* center_j = center[j];
                     if (eff_missing) {
-                        real* center_j = center[j];
                         for (int k = 0; k < n_non_missing; k++) {
                             int ind_tot_k = ind_tot[k];
                             y_centered[k] =
@@ -1162,6 +1165,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         // We need to store the conditional expectation of the
                         // sample missing values.
                         static Vec tmp_vec1, tmp_vec2;
+                        tmp_vec1.resize(the_L->length());
+                        tmp_vec2.resize(the_L->length());
                         choleskySolve(*the_L, y_centered, tmp_vec1, tmp_vec2);
                         static Mat K2;
                         int ind_tot_length = ind_tot.length();
@@ -1181,7 +1186,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         full_vec.resize(D);
                         full_vec << y;
                         for (int i = 0; i < coord_missing.length(); i++)
-                            full_vec[coord_missing[i]] = cond_mean[i];
+                            full_vec[coord_missing[i]] = 
+                                cond_mean[i] + center_j[coord_missing[i]];
                         imputed_missing[j]->putRow(current_training_sample,
                                                    full_vec);
                     }
@@ -2205,8 +2211,12 @@ void GaussMix::resizeDataBeforeTraining() {
             error_covariance.resize(D, D);
             imputed_missing.resize(L);
             for (int j = 0; j < L; j++) {
-                imputed_missing[j] = new MemoryVMatrix(nsamples, D);
-                // TODO Will need to handle other types of VMats for large
+                // imputed_missing[j] = new MemoryVMatrix(nsamples, D);
+                PPath fname = "/u/delallea/tmp/imputed_missing_" + tostring(j)
+                    + ".pmat";
+                imputed_missing[j] = new FileVMatrix(fname, nsamples, D);
+                // TODO Need to switch back to MemoryVMatrix.
+                // TODO May be useful to handle other types of VMats for large
                 // datasets.
             }
         }
