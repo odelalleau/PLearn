@@ -62,12 +62,15 @@ def main( pytest_version ):
     parser.add_option( '--traceback',
                        action="store_true",
                        help="This flag triggers routines to report the traceback of "
-                       "PyTestError or KeyboardInterrupt. By default, "
+                       "PyTestUsageError or KeyboardInterrupt. By default, "
                        "only the test's name and message are reported.",
                        default = False )
-    
-    options, targets   = parser.parse_args()
-    modes.current_mode = parser.selected_mode
+
+    try:
+        options, targets   = parser.parse_args()
+        modes.current_mode = parser.selected_mode
+    except SystemExit, e:
+        core.exitPyTest("USAGE ERROR")
     
     ############################################################
     ################## Some preprocessing ######################
@@ -98,19 +101,24 @@ def main( pytest_version ):
     
     try:
         modes.current_mode( targets, options )    
-    except core.PyTestError, e: 
-        if options.traceback:
-            raise
-        else:
-            logging.critical( "%s: %s." % (e.__class__.__name__,e) )
-            core.updateExitCode(10)
+
     except KeyboardInterrupt, kex:
         if options.traceback:
-            raise
+            print core.traceback(kex)
         else:            
             logging.info("Interupted by user.")
-            core.updateExitCode(-1)
+
+    except core.PyTestUsageError, e: 
+        core.updateExitCode("USAGE ERROR")
+        if options.traceback:
+            print core.traceback(e)
+        else:
+            logging.critical( "%s: %s." % (e.__class__.__name__,e) )
+
+    except Exception, unexpected: 
+        core.updateExitCode("INTERNAL ERROR")
+        print core.traceback(unexpected)
 
     logging.debug("\nQuitting PyTest.")
     logging.info('')
-    sys.exit( core.getExitCode() )
+    core.exitPyTest()

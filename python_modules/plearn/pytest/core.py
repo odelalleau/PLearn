@@ -1,39 +1,55 @@
-from sys import exc_info
-from traceback import format_tb
-
+import sets, sys
 from plearn.utilities import toolkit
 from plearn.pyplearn.PyPLearnObject import PLOption, PyPLearnObject
 
-__exit_code = 0
-def getExitCode():
-    return __exit_code
-
-def updateExitCode(exit_code):
-    global __exit_code
-    if exit_code > __exit_code:
-        __exit_code = exit_code
+#######  PyTestObject  ########################################################
 
 class PyTestObject(PyPLearnObject):
     def _unreferenced(self):
         return True
 
-class PyTestError(Exception): 
-    def __init__(self, msg):
-        self.msg = msg
+#######  Exceptions  ##########################################################
 
-    def __str__(self):
-        return self.msg
+def traceback(exception):
+    import traceback
+    return "Traceback (most recent call last):\n" + \
+           ''.join(traceback.format_tb(sys.exc_info()[2])) + \
+           "%s: %s"%(exception.__class__.__name__, exception)
 
-    def pretty_str(self):
-        return "%s\n%s"%(self,format_tb(exc_info()[2]))
-        
-    def print_error(self):
-        cname  = self.__class__.__name__+':'
-        msg    = toolkit.boxed_lines( self.msg, 70 )
-        logging.critical('\n'.join(["", cname, ""] + msg + [""]))
+class PyTestUsageError(Exception):
+    pass
+
+#######  Exit Code  ###########################################################
+
+#   0 : Tests were ran and all enabled tests passed (no skipped test)
+#   1 : At least one test was skipped
+#   2 : At least one test failed
+#   4 : At least one program did not compile 
+#  32 : PyTest usage error (wrong command line arguments, ...)
+#  64 : PyTest internal error
+__code_mappings = {
+    ""                   : 0, # For convenience
+    "PASSED"             : 0,
+    "DISABLED"           : 0,
+    "SKIPPED"            : 1,
+    "FAILED"             : 2,
+    "COMPILATION FAILED" : 4,
+    "USAGE ERROR"        : 32,
+    "INTERNAL ERROR"     : 64
+    }
+
+__exit_flags = sets.Set()
+def exitPyTest(flag=""):
+    updateExitCode(flag)
+    sys.exit( sum(__exit_flags) )
+
+def updateExitCode(flag):
+    __exit_flags.add(__code_mappings[flag])
+
+#######  Module's Test  #######################################################
 
 if __name__ == '__main__':
-    import os, sys
+    import os
     import modes
     from plearn.utilities.ModeAndOptionParser import Mode
 

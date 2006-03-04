@@ -1,6 +1,7 @@
 import copy, logging, shutil
 
-import tests
+# PyTest Modules
+import core, tests
 from tests import *
 from programs import *
 
@@ -325,7 +326,7 @@ class confirm( PyTestMode ):
                         version_control.ignore( test.resultsDirectory(), [ '.plearn', tests.RUN_RESULTS ] )
 
             except version_control.VersionControlError:
-                raise PyTestError(
+                raise core.PyTestUsageError(
                     "The directory in which lies a config file must be added to version control by user.\n"
                     "%s was not." % family
                     )
@@ -592,15 +593,15 @@ class RoutineBasedMode(PyTestMode):
                     RoutineType = self.routine_type( self.options )            
                     routine     = RoutineType(test=test)
                     routine.start()
-                except PyTestError, e:
+                except core.PyTestUsageError, e:
                     # --traceback: This flag triggers routines to report
-                    # the traceback of PyTestError. By default, only the
+                    # the traceback of PyTestUsageError. By default, only the
                     # class's name and meesage are reported.
                     if self.options.traceback:
-                        raise
+                        logging.critical( core.traceback() )
                     else:
                         logging.debug(e)
-                        test.setStatus("SKIPPED", e.pretty_str())
+                        test.setStatus("SKIPPED", core.traceback())
 
 class compile(RoutineBasedMode):
     def routine_type(cls, options=None): return CompilationRoutine

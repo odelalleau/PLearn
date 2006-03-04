@@ -4,11 +4,12 @@ Contact dorionc@apstat.com for details.
 """
 import copy, logging, os, shutil, string, sys
 
-from   programs                      import PyTestError
+# PyTest Modules
+import core
 
-import plearn.utilities.ppath        as     ppath
-import plearn.utilities.moresh       as     moresh
-import plearn.utilities.toolkit      as     toolkit
+from plearn.utilities import ppath 
+from plearn.utilities import moresh 
+from plearn.utilities import toolkit
 
 class Resources:
     md5_mappings    = {}
@@ -56,7 +57,7 @@ class Resources:
             linked = True
 
         elif must_exist:
-            raise PyTestError(
+            raise core.PyTestUsageError(
                 "In %s: %s used as a resource but path does not exist."
                 % ( os.getcwd(), resource )
                 )

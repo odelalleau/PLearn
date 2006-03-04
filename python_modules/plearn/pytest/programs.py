@@ -89,7 +89,7 @@ class GlobalProgram(Program):
                 if self.name == 'source':
                     command_path = self.name
                 else:
-                    raise PyTestError("In %s: which %s resulted in those %d lines \n%s"
+                    raise PyTestUsageError("In %s: which %s resulted in those %d lines \n%s"
                                       %(self.classname(), self.name, len(wlines), ''.join(wlines)))
             else:
                 path = wlines[0]
@@ -98,7 +98,7 @@ class GlobalProgram(Program):
                     command_path = os.path.abspath(path)
         
         if command_path is None:
-            raise PyTestError(
+            raise PyTestUsageError(
                 "The only GlobalProgram and GlobalCompilableProgram currently "
                 "supported must be found in <plearn_branch>/commands/. Program "
                 "%s was not." % self.name
