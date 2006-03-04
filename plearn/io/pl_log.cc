@@ -78,10 +78,10 @@ PStream& PL_Log::logger(int requested_verbosity)
 /**
  *  Return a logger if logging is enabled for the specified module name
  */
-PStream& PL_Log::namedLogger(const string& module_name)
+PStream& PL_Log::namedLogger(const string& module_name, int requested_verbosity)
 {
     logger_count++;
-    if (VLEVEL_NORMAL <= runtime_verbosity &&
+    if (requested_verbosity <= runtime_verbosity &&
         (named_logging_kind == AllModules ||
          (named_logging_kind == SomeModules &&
           enabled_modules.find(module_name) != enabled_modules.end())))

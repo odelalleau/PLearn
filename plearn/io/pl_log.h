@@ -107,15 +107,12 @@ public:
     PStream& logger(int requested_verbosity);
 
     /**
-     *  Underlying named logging function.  Use this in conjunction with
-     *  the MODULE_LOG define.  If logging is enabled for the specified module,
-     *  then return output_stream; otherwise return null_stream.  Note that
-     *  named logging operates at the level of "NORMAL" log, so an implicit
-     *  "requested_verbosity" of NORMAL is assumed.  If either the runtime or
-     *  compile-time verbosity is less than "NORMAL", then null_stream is
-     *  returned.
+     *  Underlying named logging function.  Use this in conjunction with the
+     *  MODULE_LOG define.  If logging is enabled for the specified module,
+     *  then return output_stream; otherwise return null_stream.
      */
-    PStream& namedLogger(const string& module_name);
+    PStream& namedLogger(const string& module_name,
+                         int requested_verbosity);
 
     /**
      *  Named logging support.  Enable logging for the specified list
@@ -174,11 +171,29 @@ protected:
 #define DBG_LOG       PL_LOG(VLEVEL_DBG)   
 #define EXTREME_LOG   PL_LOG(VLEVEL_EXTREME)
 
+
+//! An explicitly named log with a given level.  For use within templates.
+#define PL_LEVEL_NAMED_LOG(name,level)                  \
+    if (level <= PL_LOG_VERBOSITY)                      \
+        PL_Log::instance().namedLogger(name, level)
+
+//! Define various leveled named logs
+#define MAND_NAMED_LOG(name)      PL_LEVEL_NAMED_LOG(name, VLEVEL_MAND)
+#define IMP_NAMED_LOG(name)       PL_LEVEL_NAMED_LOG(name, VLEVEL_IMP) 
+#define NAMED_LOG(name)           PL_LEVEL_NAMED_LOG(name, VLEVEL_NORMAL)
+#define DBG_NAMED_LOG(name)       PL_LEVEL_NAMED_LOG(name, VLEVEL_DBG)   
+#define EXTREME_NAMED_LOG(name)   PL_LEVEL_NAMED_LOG(name, VLEVEL_EXTREME)
+
+
 /**
  *  If the "PL_LOG_MODULE_NAME" variable is defined before pl_log.h is
- *  included, then MODULE_LOG is defined to provide module-specified logging
+ *  included, then *_MODULE_LOG are defined to provide module-specified logging
  *  for that module.  From an implementation standpoint, we define a static
  *  string variable that holds the module name, and that variable is used.
+ *
+ *  The equivalent of MAND_, IMP_, NORMAL_, DBG_, AND EXTREME_ are defined for
+ *  module logs as well, although NORMAL_MODULE_LOG is simply abbreviated
+ *  MODULE_LOG.
  *
  *  NOTE: to avoid conflicts and strange behavior, you should only use this
  *  define within a .cc file (outside of templates).  For templates, you have
@@ -191,18 +206,15 @@ protected:
        string pl_log_module_name_string(PL_LOG_MODULE_NAME);
    }
 
-#  define MODULE_LOG                                                  \
-      if (VLEVEL_NORMAL <= PL_LOG_VERBOSITY)                          \
-          PL_Log::instance().namedLogger(pl_log_module_name_string)
+#  define MAND_MODULE_LOG    PL_LEVEL_NAMED_LOG(pl_log_module_name_string, VLEVEL_MAND)
+#  define IMP_MODULE_LOG     PL_LEVEL_NAMED_LOG(pl_log_module_name_string, VLEVEL_IMP)
+#  define MODULE_LOG         PL_LEVEL_NAMED_LOG(pl_log_module_name_string, VLEVEL_NORMAL)
+#  define DBG_MODULE_LOG     PL_LEVEL_NAMED_LOG(pl_log_module_name_string, VLEVEL_DBG)
+#  define EXTREME_MODULE_LOG PL_LEVEL_NAMED_LOG(pl_log_module_name_string, VLEVEL_EXTREME)
 
 #endif // MODULE_LOG
 #endif // PL_LOG_MODULE_NAME
 
-
-//! Finally, an explicitly named log.  For use within templates.
-#define NAMED_LOG(name)                         \
-    if (VLEVEL_NORMAL <= PL_LOG_VERBOSITY)      \
-        PL_Log::instance().namedLogger(name)
 
 //#####  Heading Support  #####################################################
 
