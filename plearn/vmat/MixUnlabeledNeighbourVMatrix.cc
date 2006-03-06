@@ -45,7 +45,7 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(
     MixUnlabeledNeighbourVMatrix,
     "For a given labeled dataset, find related examples in a second dataset.",
-    "The last target column of the two dataset contains the relational key. \n",
+    "The last target column of the two dataset contains the relational key. \n"
     " The output will be a merged VMat with the labeled example on top \n"
     " and a selection of unlabeled related example at the bottom. The \n"
     " relational key column must be a string AND will be discarded. We force \n"
@@ -116,7 +116,7 @@ void MixUnlabeledNeighbourVMatrix::build_()
     if (!source)
         return;
     
-    if (source_select->targetsize() < 1 || source->targetsize() < 1)
+    if (source_select && source && (source_select->targetsize() < 1 || source->targetsize() < 1))
         PLERROR("In MixUnlabeledNeighbourVMatrix::build_ - We need a key column");
     if (source_select && source && source_select->inputsize() != source->inputsize())
         PLERROR("In MixUnlabeledNeighbourVMatrix::build_ - VMats 'source_select'"
