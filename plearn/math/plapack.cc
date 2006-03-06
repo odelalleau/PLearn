@@ -216,8 +216,17 @@ int eigen_SymmMat_decreasing(Mat& in, Vec& e_value, Mat& e_vector, int& n_evalue
     return res;
 }
 
+///////////////
+// matInvert //
+///////////////
 int matInvert(Mat& in, Mat& inverse)
 {
+    // If the matrix is empty, just do nothing instead of crashing.
+    if (in.isEmpty()) {
+        assert( inverse.isEmpty() );
+        return 0;
+    }
+
 #ifndef USE_BLAS_SPECIALISATIONS
     PLERROR("eigen_SymmMat: LAPACK not available on this system!");
     return 0;
