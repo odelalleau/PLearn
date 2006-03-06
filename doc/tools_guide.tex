@@ -124,6 +124,254 @@ cross-distribution and even cross-platform package installation system.
 
 \chapter{The PLearn test-suite }
 
+{\em This article is a stub. You can help PLearn by expanding it.}
+(\copyright Wikipedia)
+
+PLearn test-suite is still in development by its author Christian
+Dorion, but it is already usable and should probably be used by anyone
+who wants to ensure his code does not get broken accidentally.
+
+Each {\em test} is a program or a PLearn script, which process some
+files (such as datasets), and outputs something to the standard output
+and error, and possibly to other files. The goal of the test-suite is to
+compare these results, run with a recently-compiled copy of PLearn, to
+the reference results created by the first run of the test.
+
+The following instructions are a step-by-step example, for a test named
+{\tt PL\_Var\_utils}, testing the {\tt Var} class. It is not officially
+supported by Christian, and may not work anymore on a later version of
+the test-suite.
+
+In addition, those who already know of the test-suite may find the
+PLearn object class {\tt PTest} useful to write C++ tests that do not
+make the test-suite explode both in size and execution time (in addition
+to provide understandable floating numbers diff through the {\tt PLearn
+diff} command applied on objects).
+
+
+\begin{enumerate}
+  \item If it does not already exist, create the appropriate {\tt test}
+  directory, add this directory to the Subversion repository, and move
+  into it:
+\begin{verbatim}
+$ mkdir ${PLEARNDIR}/plearn/var/test
+$ svn add ${PLEARNDIR}/plearn/var/test
+$ cd ${PLEARNDIR}/plearn/var/test
+\end{verbatim}
+
+  \item {\em [Optional]} If your test relies on more than a couple
+  of custom files (data files, scripts, ...), better create its own
+  directory:
+\begin{verbatim}
+$ mkdir Var_utils
+$ svn add Var_utils
+$ cd Var_utils
+\end{verbatim}
+
+  \item If it does not already exist, create a template {\tt
+  pytest.config} file:
+\begin{verbatim}
+$ pytest add
+\end{verbatim}
+
+  \item There are mainly two kinds of tests. If a simple {\tt .plearn}
+  or {\tt .pyplearn} script is enough to run the test (e.g., if you plan
+  to test a new PLearner class), go to step \ref{small_test}. If you need to create
+  C++ code to test some specific functions, go on to step \ref{big_test}.
+
+  \item \label{big_test} Create a PTest subclass template:
+\begin{verbatim}
+$ pyskeleton PTest VarUtilsTest
+\end{verbatim}
+
+  \item Edit the resulting files (e.g., {\tt VarUtilsTest.h} and {\tt
+VarUtilsTest.cc}):
+  \begin{itemize}
+    \item fill the {\tt PLEARN\_IMPLEMENT\_OBJECT} macro help:
+\begin{verbatim}
+PLEARN_IMPLEMENT_OBJECT(
+    arUtilsTest,
+    "Test various functions in Var_utils",
+    ""
+);
+\end{verbatim}
+
+    \item write your actual test code in the {\tt perform()} method
+    \item store the test results, you can either:
+    \begin{enumerate}
+      \item display them (using the {\tt pout} or {\tt perr} PStreams,
+      or the PLearn logging system):
+\begin{verbatim}
+// In VarUtilsTest::perform
+pout << my_function(x) << endl;
+MAND_LOG << my_function(x) << endl;
+\end{verbatim}
+
+      \item store them in your {\tt PTest} object options (this requires
+      a little more work, but is actually easier to understand when the
+      test fails):
+\begin{verbatim}
+// In VarUtilsTest.h
+map<string, Vec> vec_results;
+// In VarUtilsTest::declareOptions
+declareOption(ol, "vec_results",
+              &VarUtilsTest::vec_results,
+              OptionBase::learntoption,
+              "Test Vec results.");
+// In VarUtilsTest::perform
+vec_results["my_function"] = my_function(x);
+\end{verbatim}
+
+      \item also remember that the text (and PLearn binary-formatted)
+      files that might be output by the program are also compared (no
+      need to output them to {\tt cout}).
+    \end{enumerate}
+  \end{itemize}
+
+  \item Once your code compiles and is ready to be tested, add your new
+  PTest in {\tt PLearn/commands/plearn\_tests\_inc.h}:
+\begin{verbatim}
+#include <plearn/var/test/VarUtilsTest.h>
+\end{verbatim}
+
+  \item \label{small_test}
+  Edit your {\tt pytest.config} file to specify how your test is
+  supposed to be run. The name of your test should begin by ``PL\_'' if
+  it is a normal PLearn test.
+
+    Typically you will run {\tt plearn\_tests}, on a {\tt .plearn}
+    or {\tt .pyplearn} script (this script will describe one or more
+    objects of your PTest subclass, with its specific options):
+\begin{verbatim}
+Test(
+    name = "PL_Var_util",
+    description = "Test various functions in Var_utils",
+    program = GlobalCompilableProgram(
+        name = "plearn_tests",
+        compiler = "pymake",
+        compile_options = ""
+    ),
+    arguments = "varutils_test.plearn",
+    resources = [ "varutils_test.plearn" ],
+    precision = 1e-06,
+    disabled = False
+)
+\end{verbatim}
+
+    But if your {\tt PTest} object does not need extra options,
+    you can save the use of a script:
+\begin{verbatim}
+Test(
+    name = "PL_Var_util",
+    description = "Test various functions in Var_utils",
+    program = GlobalCompilableProgram(
+        name = "plearn",
+        compiler = "pymake",
+        compile_options = ""
+    ),
+    arguments = "PLEARNDIR:scripts/command_line_object.plearn " \
+        "'object=VarUtilsTest()'",
+    resources = [ ],
+    precision = 1e-06,
+    disabled = False
+)
+\end{verbatim}
+
+  \item \label{debug} {\em [Optional]} For debug purpose, you may temporarily use a
+  copy (say {\tt plearn\_mytests}) of {\tt plearn\_tests} in {\tt
+  pytest.config}, and also comment out all tests but your own test in
+  {\tt plearn\_mytests\_inc.h}. This will make compilation faster when
+  debugging your test. Setting {\tt compile\_options} to {\tt -opt} will
+  also probably speed up the link time.
+
+  \item Run your test to generate results. Check everything is fine in
+  the generated {\tt pytest/expected\_results} directory. If it is not,
+  fix your code. Do this until you are happy with the results.
+\begin{verbatim}
+$ pytest results -n PL_Var_util
+\end{verbatim}
+
+  \item If you had made any of the actions described in optional step
+  \ref{debug}, revert back to the standard test configuration.
+
+  \item Add your specific files to version control:
+\begin{verbatim}
+$ svn add VarUtilsTest.h VarUtilsTest.cc
+\end{verbatim}
+
+  \item Go to step \ref{run}.
+
+  \item Write your {\tt .plearn} or {\tt .pyplearn} script, and make
+  sure it runs smoothly.
+
+  \item Once you are confident it works fine, remove all the data that
+  was generated while running it (the script must generate data files
+  or output to {\tt cout} or {\tt cerr}, otherwise it is useless).
+
+  \item Edit your {pytest.config} file to specify how your test is to be
+  run:
+\begin{verbatim}
+Test(
+    name = "PL_Var_util",
+    description = "Test various functions in Var_utils",
+    program = GlobalCompilableProgram(
+        name = "plearn",
+        compiler = "pymake",
+        compile_options = ""
+    ),
+    arguments = "varutils_test.plearn",
+    resources = [ "varutils_test.plearn" ],
+    precision = 1e-06,
+    disabled = False
+)
+\end{verbatim}
+
+  \item Run your test to generate results. Check everything
+  is fine in the generated {\tt pytest/expected\_results} directory. If
+  it is not, fix your script. Do this until you are happy with the
+  results.
+\begin{verbatim}
+$ pytest results -n PL_Var_util
+\end{verbatim}
+
+  \item Add your specific files to version control: NO
+\begin{verbatim}
+$ svn add varutils_test.plearn
+\end{verbatim}
+
+  \item \label{run} Check that your test works fine:
+\begin{verbatim}
+$ pytest run
+\end{verbatim}
+
+  \item \label{confirm} Confirm that the results obtained are correct
+  for the current test. This will {\tt svn add} the result files, and
+  put the {\tt svn:ignore} property on some files, but nothing will be
+  committed yet.
+\begin{verbatim}
+$ pytest confirm
+\end{verbatim}
+
+  \item Do a {\tt svn status} to check what files have been generated
+  but should be ignored by version control, and ignore them:
+\begin{verbatim}
+$ svn propedit svn:ignore pytest
+\end{verbatim}
+  And in the editor it opens, type:
+\begin{verbatim}
+*.compilation_log
+run_results
+\end{verbatim}
+
+  \item Assuming your test passes correctly, it is ready for commit:
+\begin{verbatim}
+$ cd ${PLEARNDIR}
+$ svn status          <-- to check which files you need to commit
+$ svn commit commands/plearn_tests_inc.h plearn/var/test \
+    -m "New test: VarUtilsTest"
+\end{verbatim}
+\end{enumerate}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \chapter{The speed benchmark suite}
