@@ -28,16 +28,31 @@ Energy functions:
 Basic operations in each RBM layer:
 
  * layer::upActivation: compute parameters of p(output_variables | input_variables)
+             i.e. compute activation (weighted sum) in the case of binomial units, and (mu,sigma) in the case of Gaussian units
  * layer::fprop(input,E[output|input]): find E(output_variables | input_variables). This ALWAYS calls upActivation.
+             call upActivation and then compute & return corresponding expectation (p for binomial = sigmoid(activation), mu for Gaussian)
  * layer::upSample(): sample output_variables from p(output_variables | input_variables). upActivation MUST have been called before.
+             sample from binomial or from Gaussian
  * layer::downActivation(): compute parameters of p(input_variables | output_variables)
+             similar to upActivation, but downward, i.e. on input variables
  * layer::downExpectation(): find E(input_variables | output_variables). This ALWAYS calls downActivation.
+             similar to upExpectation but downward, i.e. on input variables
  * layer::downSample(): sample input_variables from p(input_variables | output_variables). downActivation MUST have been called before.
- * layer::accumulateStats(in,out,1): accumulate positive phase statistics
- * layer::accumulateStats(in,out,-1): accumulate negative phase statistics
+             similar to upSample but on input variables
+ * layer::accumulatePosStats(in,out): accumulate positive phase statistics
+             for binomial units: accumulate input_variable[i]*output_variable[j] in pos_corr[i][j], possibly using expectation instead of sample for variable values
+             for Gaussian units: ????COMPUTATION TO BE DONE
+             for all: increment pos_count[i][j]
+ * layer::accumulateNegStats(in,out): accumulate negative phase statistics
+             for binomial units: accumulate input_variable[i]*output_variable[j] in neg_corr[i][j], possibly using expectation instead of sample for variable values
+             for Gaussian units: ????COMPUTATION TO BE DONE
+             for all: increment neg_count[i][j]
  * layer::layerCDupdate(): update parameters using positive and negative phase statistics
- * layer::outputMarginalSample(): sample from the marginal distribution of the output units, in output_variables
- 
+             for binomial units: update w_[ij] with accumulated statistics i.e. 
+                                    pos_corr[i][j]/pos_count[i][j] - neg_corr[i][j]/neg_count[i][j]
+             for Gaussian units: ???? COMPUTATION TO BE DONE
+             for all: clear pos_corr,pos_count,neg_corr,neg_count
+
 Combined operations, in a supervised RBM network:
  A supervised RBM network has a sequence of layers. The last_layer one is fully supervised. The 2nd to last is the last_hidden_layer.
  There is also a cost_layer that follows the last_layer, which computes the supervised cost to minimize.
