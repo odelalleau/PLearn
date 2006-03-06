@@ -222,7 +222,7 @@ declareOption(ol, "vec_results",
 vec_results["my_function"] = my_function(x);
 \end{verbatim}
 
-      \item also remember that the text (and PLearn binary-formatted)
+      \item remember that the text (and PLearn binary-formatted)
       files that might be output by the program are also compared (no
       need to output them to {\tt cout}).
     \end{enumerate}
@@ -234,7 +234,7 @@ vec_results["my_function"] = my_function(x);
 #include <plearn/var/test/VarUtilsTest.h>
 \end{verbatim}
 
-  \item \label{small_test}
+  \item
   Edit your {\tt pytest.config} file to specify how your test is
   supposed to be run. The name of your test should begin by ``PL\_'' if
   it is a normal PLearn test.
@@ -285,8 +285,8 @@ Test(
   also probably speed up the link time.
 
   \item Run your test to generate results. Check everything is fine in
-  the generated {\tt pytest/expected\_results} directory. If it is not,
-  fix your code. Do this until you are happy with the results.
+  the generated {\tt .pytest/expected\_results} hidden directory. If it
+  is not, fix your code. Do this until you are happy with the results.
 \begin{verbatim}
 $ pytest results -n PL_Var_util
 \end{verbatim}
@@ -301,11 +301,11 @@ $ svn add VarUtilsTest.h VarUtilsTest.cc
 
   \item Go to step \ref{run}.
 
-  \item Write your {\tt .plearn} or {\tt .pyplearn} script, and make
-  sure it runs smoothly.
+  \item \label{small_test} Write your {\tt .plearn} or {\tt .pyplearn}
+  script, and make sure it runs smoothly.
 
   \item Once you are confident it works fine, remove all the data that
-  was generated while running it (the script must generate data files
+  was generated while running it (the script must generate data files,
   or output to {\tt cout} or {\tt cerr}, otherwise it is useless).
 
   \item Edit your {pytest.config} file to specify how your test is to be
@@ -326,15 +326,14 @@ Test(
 )
 \end{verbatim}
 
-  \item Run your test to generate results. Check everything
-  is fine in the generated {\tt pytest/expected\_results} directory. If
-  it is not, fix your script. Do this until you are happy with the
-  results.
+  \item Run your test to generate results. Check everything is fine in
+  the generated {\tt .pytest/expected\_results} hidden directory. If it
+  is not, fix your script. Do this until you are happy with the results.
 \begin{verbatim}
 $ pytest results -n PL_Var_util
 \end{verbatim}
 
-  \item Add your specific files to version control: NO
+  \item Add your specific files to version control:
 \begin{verbatim}
 $ svn add varutils_test.plearn
 \end{verbatim}
@@ -355,7 +354,7 @@ $ pytest confirm
   \item Do a {\tt svn status} to check what files have been generated
   but should be ignored by version control, and ignore them:
 \begin{verbatim}
-$ svn propedit svn:ignore pytest
+$ svn propedit svn:ignore .pytest
 \end{verbatim}
   And in the editor it opens, type:
 \begin{verbatim}
