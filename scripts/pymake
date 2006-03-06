@@ -550,7 +550,11 @@ that list machines (one per line) for launching parallel
 compilations. Those files are to be called <platform>.hosts, where
 <platform> indicates the architecture and system of the machines it
 lists. A good place for this file is in the .pymake of your home directory,
-as these are likely to be comon to all projects.
+as these are likely to be comon to all projects. As an alternative, if no
+*.hosts file are present, pymake can also understand the syntax for host
+lists used by distcc, and will search for it the same way distcc does
+(in $DISTCC_HOSTS, or $DISTCC_DIR/hosts, or ~/.distcc/hosts, or
+/etc/distcc/hosts).
 
 Note that you can easily override the compileroptions (defined in your
 config file) for a particular <target>.cc file.  Just create a
