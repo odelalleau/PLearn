@@ -1,0 +1,24 @@
+PLS training started
+ WARNING: ShiftAndRescale: data column number 43 is constant
+ WARNING: ShiftAndRescale: data column number 55 is constant
+ WARNING: ShiftAndRescale: data column number 144 is constant
+ WARNING: ShiftAndRescale: data column number 168 is constant
+ WARNING: ShiftAndRescale: data column number 183 is constant
+ WARNING: ShiftAndRescale: data column number 184 is constant
+ WARNING: ShiftAndRescale: data column number 220 is constant
+ WARNING: ShiftAndRescale: data column number 245 is constant
+ WARNING: ShiftAndRescale: data column number 253 is constant
+ WARNING: ShiftAndRescale: data column number 276 is constant
+ WARNING: ShiftAndRescale: data column number 431 is constant
+ WARNING: ShiftAndRescale: data column number 437 is constant
+ WARNING: ShiftAndRescale: data column number 444 is constant
+ WARNING: ShiftAndRescale: data column number 465 is constant
+[---------------------------------- Computing the components (10) -----------------------------------]
+[....................................................................................................]
+PLS training ended
+[-------------------------------------- Testing learner (809) ---------------------------------------]
+[....................................................................................................]
+[-------------------------------------- Testing learner (542) ---------------------------------------]
+[....................................................................................................]
+[-------------------------------------- Testing learner (1100) --------------------------------------]
+[....................................................................................................]

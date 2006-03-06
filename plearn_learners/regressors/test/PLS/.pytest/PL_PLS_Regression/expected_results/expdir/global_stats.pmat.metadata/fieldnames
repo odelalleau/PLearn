@@ -1,0 +1,12 @@
+E[test1.E[cross_entropy]]	0
+E[test1.LIFT]	0
+E[test1.LIFT_MAX]	0
+STDERROR[test1.LIFT]	0
+E[test2.E[cross_entropy]]	0
+E[test2.LIFT]	0
+E[test2.LIFT_MAX]	0
+STDERROR[test2.LIFT]	0
+E[test3.E[cross_entropy]]	0
+E[test3.LIFT]	0
+E[test3.LIFT_MAX]	0
+STDERROR[test3.LIFT]	0

@@ -1,0 +1,77 @@
+PTester(
+    expdir = "expdir";
+    template_stats_collector =
+
+        LiftStatsCollector (
+            output_column = "lift_output" ;
+            opposite_lift = 1 ; 
+            sign_trick = 1 ;
+            lift_fraction = 0.3
+            verbosity = 0
+            roc_file = ""
+            lift_file = ""
+            roc_fractions = [  ]
+        )
+
+        dataset = AutoVMatrix( specification = "data.amat" )
+
+        splitter =
+            RepeatSplitter(
+                do_not_shuffle_first = 0  ;
+                n = 1  ;
+                seed = 456393422  ;
+                shuffle = 1  ;
+                to_repeat =
+                    FractionSplitter(
+                        splits = 1 4 [
+                            0:0.4489
+                            0.67:1
+                            0.4489:0.67
+                            0:0.4489
+                        ]
+                    )
+            );
+
+        statnames = [
+            "E[test1.E[cross_entropy]]" "E[test1.LIFT]" "E[test1.LIFT_MAX]" "STDERROR[test1.LIFT]"  
+            "E[test2.E[cross_entropy]]" "E[test2.LIFT]" "E[test2.LIFT_MAX]" "STDERROR[test2.LIFT]"  
+            "E[test3.E[cross_entropy]]" "E[test3.LIFT]" "E[test3.LIFT_MAX]" "STDERROR[test3.LIFT]"  
+        ]
+
+        provide_learner_expdir = 1;
+
+        learner =
+            AddCostToLearner (
+                verbosity = 1
+                report_progress = 1
+                costs = [
+                    "lift_output"
+                    "cross_entropy"
+                ]
+                learner =
+                    PLS(
+                        k = 10  ;
+                        output_the_score = 0  ;
+                        output_the_target = 1  ;
+                        precision = 1e-6  ;
+                        verbosity = 1
+                        report_progress = 1
+                    ) 
+                check_output_consistency = 1
+                rescale_output = 1
+                from_min = -1
+                from_max = 1
+                to_min   =  0.1
+                to_max   = +0.9
+            )
+
+        save_test_outputs = 1;
+        save_data_sets =0;
+        save_initial_tester = 0;
+        save_stat_collectors = 0;
+        save_learners = 0
+
+); 
+
+
+
