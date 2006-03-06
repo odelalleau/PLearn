@@ -1000,7 +1000,7 @@ class FileInfo:
         if (os.path.isfile(self.mocfilename)) and self.get_depmtime() <= os.path.getmtime(self.mocfilename):
             return 0
                   
-        return os.system(qtdir+"bin/moc "+self.filepath+" -o "+self.mocfilename)
+        return os.WEXITSTATUS(os.system(qtdir+"bin/moc "+self.filepath+" -o "+self.mocfilename))
 
     def analyseFile(self):
         global useqt
@@ -1545,7 +1545,7 @@ digraph G
         if verbose>=3:
 	        print command
 
-        link_exit_code = os.system(command)
+        link_exit_code = os.WEXITSTATUS(os.system(command))
 
         if symlinkobjs:
             for objfile in self.objsfilelist:
@@ -1638,7 +1638,7 @@ digraph G
         
         for command in list_of_commands:
             print command
-            e = os.system(command)
+            e = os.WEXITSTATUS(os.system(command))
             if e != 0:
                 last_failed_exit_code = e
 
