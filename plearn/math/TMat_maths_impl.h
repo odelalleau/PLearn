@@ -5189,6 +5189,10 @@ void  choleskyLeftSolve(const TMat<T>& L, const TVec<T>& b, const TVec<T>& y)
                 b.length(),y.length(),n,n);
 #endif
 
+    if (n == 0)
+        // Empty matrix, there is nothing that needs being solved.
+        return;
+
     T* bp = b.data();
     T* yp = y.data();
 
@@ -5220,6 +5224,11 @@ void  choleskyRightSolve(const TMat<T>& L, TVec<T>& y, TVec<T>& x)
         PLERROR("choleskySolve: RHS vector y(%d) or unknown x(%d) incompatiable with L(%d,%d)",
                 y.length(),x.length(),n,n);
 #endif
+
+    if (n == 0)
+        // Empty matrix, there is nothing that needs being solved.
+        return;
+
     T* xp = x.data();
     T* yp = y.data();
 
