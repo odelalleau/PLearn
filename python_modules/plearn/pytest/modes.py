@@ -638,7 +638,7 @@ if __name__ == '__main__':
     import os, sys
     def vsystem(cmd):        
         print >>sys.stderr, '#  %s\n' % cmd
-        os.system( '%s > /dev/null'%cmd )
+        os.system( '%s >& /dev/null'%cmd )
         print >>sys.stderr, ''
 
     ## Since run results are not under version control...
@@ -657,8 +657,8 @@ if __name__ == '__main__':
     vsystem("pytest results")
     vsystem("pytest run")
     
-    ## vc_add && commit
-    vsystem('pytest vc_add')
+    ## confirm && commit
+    vsystem('pytest confirm')
     vsystem('svn commit -m "PYTEST INTERNAL TEST"')
         
     ## shutil.rmtree

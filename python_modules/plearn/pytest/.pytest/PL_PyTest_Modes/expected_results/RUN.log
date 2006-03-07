@@ -7,7 +7,7 @@
 #  pytest run
 
 
-#  pytest vc_add
+#  pytest confirm
 
 
 #  svn commit -m "PYTEST INTERNAL TEST"

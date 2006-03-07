@@ -658,7 +658,7 @@ class ResultsCreationRoutine(ResultsRelatedRoutine):
         if Test._results_vc_removed:
             logging.critical(
                 "\n*** Results were changed for the following test%s: %s. "
-                "Once you've checked the results validity, DO NOT FORGET to do a 'pytest vc_add'."
+                "Once you've checked the results validity, DO NOT FORGET to do a 'pytest confirm'."
                 % (toolkit.plural(len(Test._results_vc_removed)), ', '.join(Test._results_vc_removed)),
                 )
 
