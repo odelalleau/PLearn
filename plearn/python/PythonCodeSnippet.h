@@ -87,6 +87,20 @@ public:
  *
  *  Note that global variables can be used, in the Python code, to keep a
  *  "living state", used to carry information across calls to Python functions.
+ *
+ *  A note on exception behavior within the PythonCodeSnippet:
+ *
+ *  - Exceptions that are raised within executed Python code are handled
+ *    according to the 'remap_python_exceptions' option.  Basically, client
+ *    code to the PythonCodeSnippet has the choice of either generating a
+ *    PLERROR from the Python Exception, or of remapping this exception into
+ *    a C++ exception (of class PythonException, subclass of PLearnError).
+ *
+ *  - C++ exceptions that are thrown from inside injected code functions
+ *    are remapped into Python exceptions by the trampoline handler.  These
+ *    Python exceptions are then handled according to the behavior in the
+ *    previous point.  Note that, for now, all C++ exceptions are turned into
+ *    a generic Python 'Exception' (base class for all exceptions).
  */
 class PythonCodeSnippet : public Object
 {

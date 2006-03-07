@@ -70,6 +70,20 @@ PLEARN_IMPLEMENT_OBJECT(
     "\n"
     "Note that global variables can be used, in the Python code, to keep a\n"
     "\"living state\", used to carry information across calls to Python functions.\n"
+    "\n"
+    "A note on exception behavior within the PythonCodeSnippet:\n"
+    "\n"
+    "- Exceptions that are raised within executed Python code are handled\n"
+    "  according to the 'remap_python_exceptions' option.  Basically, client\n"
+    "  code to the PythonCodeSnippet has the choice of either generating a\n"
+    "  PLERROR from the Python Exception, or of remapping this exception into\n"
+    "  a C++ exception (of class PythonException, subclass of PLearnError).\n"
+    "\n"
+    "- C++ exceptions that are thrown from inside injected code functions\n"
+    "  are remapped into Python exceptions by the trampoline handler.  These\n"
+    "  Python exceptions are then handled according to the behavior in the\n"
+    "  previous point.  Note that, for now, all C++ exceptions are turned into\n"
+    "  a generic Python 'Exception' (base class for all exceptions).\n"
     );
   
 
@@ -259,29 +273,50 @@ PythonCodeSnippet::invoke(const char* function_name,
 
 //#####  Function Injection Interface  ########################################
 
-// This is the function actually called by Python
+// This is the function actually called by Python.  Be careful to remap
+// exceptions thrown by C++ into Python exceptions.
 PyObject* PythonCodeSnippet::pythonTrampoline(PyObject* self, PyObject* args)
 {
-    // Transform the args tuple into a TVec of not-owned PythonObjectWrapper
-    if (! PyTuple_Check(args))
-        PLERROR("PythonCodeSnippet.cc:python_trampoline: the Python interpreter "
-                "did not pass a Tuple as the arguments object.");
+    try {
+        // Transform the args tuple into a TVec of not-owned PythonObjectWrapper
+        if (! PyTuple_Check(args))
+            PLERROR("PythonCodeSnippet.cc:python_trampoline: the Python interpreter "
+                    "did not pass a Tuple as the arguments object.");
 
-    int size = PyTuple_GET_SIZE(args);
-    TVec<PythonObjectWrapper> args_tvec(size);
-    for (int i=0 ; i<size ; ++i) {
-        args_tvec[i] = PythonObjectWrapper(PyTuple_GET_ITEM(args,i),
-                                           PythonObjectWrapper::transfer_ownership);
+        int size = PyTuple_GET_SIZE(args);
+        TVec<PythonObjectWrapper> args_tvec(size);
+        for (int i=0 ; i<size ; ++i) {
+            args_tvec[i] = PythonObjectWrapper(PyTuple_GET_ITEM(args,i),
+                                               PythonObjectWrapper::transfer_ownership);
+        }
+        
+        // Now get the void* stored within the PyCObject of self
+        StandaloneFunction* func =
+            static_cast<StandaloneFunction*>(PyCObject_AsVoidPtr(self));
+        PythonObjectWrapper returned_value = (*func)(args_tvec);
+        PyObject* to_return = returned_value.getPyObject();
+        Py_XINCREF(to_return);
+
+        return to_return;
     }
 
-    // Now get the void* stored within the PyCObject of self
-    StandaloneFunction* func =
-        static_cast<StandaloneFunction*>(PyCObject_AsVoidPtr(self));
-    PythonObjectWrapper returned_value = (*func)(args_tvec);
-    PyObject* to_return = returned_value.getPyObject();
-    Py_XINCREF(to_return);
-
-    return to_return;
+    // Catch PLERROR and such
+    catch (const PLearnError& e) {
+        PyErr_SetString(PyExc_Exception, e.message().c_str());
+        return NULL;
+    }
+    // Catch C++ stdlib exceptions
+    catch (const std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    }
+    // Catch any other unexpected exceptions
+    catch (...) {
+        PyErr_SetString(PyExc_Exception,
+                        "Caught unknown C++ exception while executing injected function "
+                        "inside a PythonCodeSnippet");
+        return NULL;
+    }
 }
 
 
