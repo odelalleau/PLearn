@@ -602,7 +602,7 @@ class RoutineBasedMode(PyTestMode):
                         logging.critical( core.traceback() )
                     else:
                         logging.debug(e)
-                        test.setStatus("SKIPPED", core.traceback())
+                        test.setStatus("SKIPPED", core.traceback(e))
 
 class compile(RoutineBasedMode):
     def routine_type(cls, options=None): return CompilationRoutine
