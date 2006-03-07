@@ -187,7 +187,7 @@ class ModeAndOptionParser( OptionParser ):
             if default_mode_name is None:
                 self.print_usage()
                 print("Type '%s --help' for a list of the supported modes." % self.get_prog_name())
-                sys.exit()
+                sys.exit(32)
             else:
                 mode_name = default_mode_name
 
@@ -204,11 +204,9 @@ class ModeAndOptionParser( OptionParser ):
 
         # Sanity check
         if not mode_name in self.supported_modes:
-            print ( "Mode %s not supported. Type '%s --help' "
-                    "for a list of the supported modes."
-                    % (mode_name, self.get_prog_name())
-                    )
-            sys.exit()
+            print "Error: mode '%s' not supported." % mode_name
+            self.short_help()
+            sys.exit(32)
 
         self.selected_mode = self.supported_modes[mode_name]                
         for group in self.selected_mode.option_groups(self):

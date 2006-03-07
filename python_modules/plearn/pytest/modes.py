@@ -479,6 +479,7 @@ class add(FamilyConfigMode):
                   program=program, arguments=options.arguments,
                   resources=resources )              
         super(add, self).__init__(targets, options)
+        print 'Successfully added skeleton for test. Please edit pytest.config file.'
 
     def setup(self):
         pass
