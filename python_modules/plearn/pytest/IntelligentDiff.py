@@ -279,8 +279,8 @@ class IntelligentDiff:
         other_rw   = basename+".run_rw"
 
         cmd = "%s --no-version read_and_write %s %s"
-        os.system( cmd%(compare_program, bench_path, bench_rw) )
-        os.system( cmd%(compare_program, other_path, other_rw) )
+        os.system( cmd % (compare_program, bench_path, bench_rw) )
+        os.system( cmd % (compare_program, other_path, other_rw) )
 
         ## Actual comparison
         self.diff_files(bench_rw, other_rw)

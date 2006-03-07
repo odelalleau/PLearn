@@ -226,6 +226,8 @@ class Test(PyTestObject):
     vmat formats. It can be either::
         - "__program__": maps to this test's program if its compilable;
                          maps to 'plearn_tests' otherwise (default); 
+        - "__plearn__": always maps to 'plearn_tests' (for when the program
+                        under test is not a version of PLearn);
         - A Program (see 'program' option) instance
 
     @ivar disabled: If true, the test will not be ran.
@@ -348,6 +350,9 @@ class Test(PyTestObject):
                 self.pfileprg = self.program
             else:
                 self.pfileprg = GlobalCompilableProgram(name='plearn_tests')
+        elif self.pfileprg == "__plearn__":
+            self.pfileprg = GlobalCompilableProgram(name='plearn_tests')
+            
         assert isinstance(self.pfileprg, Compilable), """
         Option 'pfileprg': The program to be used for comparing files of psave &
         vmat formats. It can be either::
