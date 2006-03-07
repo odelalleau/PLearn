@@ -599,7 +599,7 @@ class RoutineBasedMode(PyTestMode):
                     # the traceback of PyTestUsageError. By default, only the
                     # class's name and meesage are reported.
                     if self.options.traceback:
-                        logging.critical( core.traceback() )
+                        logging.critical( core.traceback(e) )
                     else:
                         logging.debug(e)
                         test.setStatus("SKIPPED", core.traceback(e))
