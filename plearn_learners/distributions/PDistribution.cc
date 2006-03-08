@@ -208,7 +208,7 @@ void PDistribution::build_()
     // Typical code for a PDistribution: the class makes the operations it
     // needs when the predictor and predicted sizes are defined, and when the
     // predictor is defined. In the build_() method, it should not call the
-    // parent's methods since they should have already been called during th
+    // parent's methods since they should have already been called during the
     // parent's build.
     PDistribution::setPredictorPredictedSizes(predictor_size, predicted_size,
                                               false);
