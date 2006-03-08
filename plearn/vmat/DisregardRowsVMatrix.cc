@@ -46,17 +46,6 @@
 namespace PLearn {
 using namespace std;
 
-//////////////////
-// DisregardRowsVMatrix //
-//////////////////
-DisregardRowsVMatrix::
-DisregardRowsVMatrix():
-    inherited(),
-    _disregard_missings(true),
-    _maximum_length(-1)
-{
-}
-
 PLEARN_IMPLEMENT_OBJECT(
     DisregardRowsVMatrix,
     "A vmat that disregard rows containing any specified values.\n",
@@ -68,7 +57,27 @@ PLEARN_IMPLEMENT_OBJECT(
     "The default behavior of the class is to inspect all columns of the\n"
     "underlying vmat, but one may specify a subset of the source's fieldnames\n"
     "to restrict the inspection." );
-  
+
+
+//#####  Constructors  ########################################################
+
+DisregardRowsVMatrix::DisregardRowsVMatrix()
+    : inherited(),
+      _disregard_missings(true),
+      _maximum_length(-1)
+{ }
+
+DisregardRowsVMatrix::DisregardRowsVMatrix(VMat the_source)
+    : inherited(),
+      _disregard_missings(true),
+      _maximum_length(-1)
+{
+    assert( the_source );
+    source = the_source;
+    build();
+}
+
+
 ////////////////////
 // declareOptions //
 ////////////////////

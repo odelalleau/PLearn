@@ -127,6 +127,10 @@ public:
     //! Default constructor.
     DisregardRowsVMatrix();
 
+    //! Alternative constructor that takes a VMat and immediately finds
+    //! missing values
+    DisregardRowsVMatrix(VMat source);
+    
     // Simply calls inherited::build() then build_().
     virtual void build();
 
