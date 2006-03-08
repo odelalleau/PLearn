@@ -66,9 +66,6 @@ protected:
   
     // Fields below are not options.
 
-    //! The dimension of points generated.
-    int n_dim;
-    
 public:
 
     // ************************
@@ -78,6 +75,7 @@ public:
     Vec max;
     Vec min;
     int mesh_size;
+    int n_dim;
 
     // ****************
     // * Constructors *
@@ -118,9 +116,6 @@ public:
     // *******************************
     // **** PDistribution methods ****
     // *******************************
-
-    //! Overridden so that it does not need a training set.
-    virtual int inputsize() const;
 
     //! Return log of probability density log(p(x)).
     virtual real log_density(const Vec& x) const;

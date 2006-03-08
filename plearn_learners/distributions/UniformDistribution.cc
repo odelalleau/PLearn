@@ -49,9 +49,10 @@ using namespace std;
 /////////////////////////
 // UniformDistribution //
 /////////////////////////
-UniformDistribution::UniformDistribution() 
-    : counter(0),
-      mesh_size(-1)
+UniformDistribution::UniformDistribution():
+    counter(0),
+    mesh_size(-1),
+    n_dim(-1)
 {
     // Default = generate points uniformly in [0,1].
     min.resize(1);
@@ -74,14 +75,20 @@ PLEARN_IMPLEMENT_OBJECT(UniformDistribution,
 void UniformDistribution::declareOptions(OptionList& ol)
 {
     declareOption(ol, "min", &UniformDistribution::min, OptionBase::buildoption,
-                  "The inferior bound for all intervals.");
+        "The inferior bound for all intervals.");
 
     declareOption(ol, "max", &UniformDistribution::max, OptionBase::buildoption,
-                  "The superior bound for all intervals.");
+        "The superior bound for all intervals.");
 
     declareOption(ol, "mesh_size", &UniformDistribution::mesh_size, OptionBase::buildoption,
-                  "If set to a value > 0, this distribution will generate points deterministically\n"
-                  "so as to form a mesh of 'mesh_size'^d points equally spaced.");
+        "If set to a value > 0, this distribution will generate points deterministically\n"
+        "so as to form a mesh of 'mesh_size'^d points equally spaced.");
+
+    declareOption(ol, "n_dim", &UniformDistribution::n_dim,
+                               OptionBase::buildoption,
+        "Optionally, the number of dimensions. Provide this option only if\n"
+        "you want to generate 'n_dim' dimensions all in [min,max] (in which\n"
+        "case the length of 'min' and 'max' should be 1.");
 
     declareOption(ol, "counter", &UniformDistribution::counter, OptionBase::learntoption,
                   "Counts the number of points generated (necessary when 'mesh_size' is used).");
@@ -116,12 +123,32 @@ void UniformDistribution::build_()
     if (min.length() != max.length()) {
         PLERROR("In UniformDistribution::build_ - 'min' and 'max' should have the same size");
     }
-    n_dim = min.length();
+
+    if (n_dim == -1)
+        n_dim = min.length();
+
+    if (n_dim != min.length()) {
+        if (min.length() == 1) {
+            real min_val = min[0];
+            real max_val = max[0];
+            for (int i = 0; i < n_dim - 1; i++) {
+                min.append(min_val);
+                max.append(max_val);
+            }
+        } else
+            PLERROR("In UniformDistribution::build_ - The value of 'n_dim' "
+                    "does not match the length of the 'min' vector");
+    }
+    assert( n_dim == min.length() );
     for (int i = 0; i < n_dim; i++) {
         if (min[i] > max[i]) {
             PLERROR("In UniformDistribution::build_ - 'min' should be always <= 'max'");
         }
     }
+    inputsize_ = n_dim;
+    // We need to re-build the parent classes, because the inputsize has
+    // changed.
+    inherited::build();
 }
 
 /////////
@@ -160,13 +187,6 @@ void UniformDistribution::generate(Vec& x) const
             x[i] = bounded_uniform(min[i], max[i]);
         }
     }
-}
-
-///////////////
-// inputsize //
-///////////////
-int UniformDistribution::inputsize() const {
-    return min.length();
 }
 
 /////////////////
