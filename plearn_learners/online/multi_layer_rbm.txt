@@ -25,6 +25,48 @@ Energy functions:
        ==> P(v_i=1 | u) = exp(- b_i - sum_j w_{ij} u_j) / sum_i " = softmax(- b_i - sum_j w_{ij} u_j)
        NOTE THE MINUS
 
+Likelihood gradient for a RBM with observed inputs x, hidden outputs y:
+
+ use Z = sum_{x,y} exp(-energy(x,y))
+    P(x,y) = exp(-energy(x,y))/Z
+    P(y|x) = exp(-energy(x,y)) / sum_y exp(-energy(x,y))
+
+ For ANY energy-based (Boltzmann) distribution:
+  d/dtheta (- log P(x)) = d/dtheta (- log sum_y P(x,y)) = d/dtheta (- log sum_y exp(-energy(x,y))/Z)
+                        = (Z/(sum_y exp(-energy(x,y)))) sum_y exp(-energy(x,y))/Z (d_energy(x,y)/dtheta + (1/Z) dZ/dtheta)
+                        = sum_y P(y|x) d_energy(x,y)/dtheta - (1/Z) sum_{x,y} exp(-energy(x,y)) d_energy(x,y)/dtheta
+                        = sum_y P(y|x) d_energy(x,y)/dtheta - sum_{x,y} P(x,y) d_energy(x,y)/dtheta
+                        = E[d_energy(x,y)/dtheta | x] - E[d_energy(x,y)/dtheta]
+                          where E is over the model's distribution
+                        = "positive phase contribution" - "negative phase contribution"
+ The positive phase tries to lower the energy of observed x while the negative phase tries to increase the energy of all x ~ P.
+
+ For a RBM, P(y|x) factorizes into P(y_i|x) and energy is a sum over energy_i(x,y_i), and theta={theta_i} so that 
+  sum_y P(y|x) d_energy(x,y)/dtheta_i = sum_{y_i} P(y_i|x) d_energy_i(x,y_i)/dtheta_i
+ with theta_i the parameters associated with y_i.
+  
+ With Contrastive Divergence we replace the expectation over (x,y) by a sample taken after 1 (or more) Gibbs sampling steps
+    observed x = x0 -- (P(y|x0)) --> y0 -- (P(x|y0)) --> x1 -- (P(y|x1)) --> y1
+ and the pair (x1,y1) serves as that sample in the case of 1 step (= "CD1").
+
+  * output binomial unit i <-> input binomial unit j
+      weight w_{ij}:
+       positive phase contribution: P(y_{0i}=1|x_0) 1*x_{0j} + (1 - P(y_{0i}=1|x_0)) 0*x_{0j} = P(y_{0i}=1|x_0) x_{0j}
+       negative phase contribution: P(y_{1i}=1|x_1) 1*x_{1j} + (1 - P(y_{1i}=1|x_1)) 0*x_{1j} = P(y_{1i}=1|x_1) x_{1j}
+      bias b_i:
+       positive phase contribution: P(y_{0i}=1|x_0) 
+       negative phase contribution: P(y_{1i}=1|x_1) 
+
+  * output binomial unit i <-> input Gaussian unit j
+      bias b_i and weight w_{ij} as above
+      parameter a_j:
+       positive phase contribution: 2 a_j x_{0j}^2
+       negative phase contribution: 2 a_j x_{1j}^2
+      
+  * output softmax unit i <-> input binomial unit j
+      same formulas as for binomial units, except that P(y_i=1|x) is computed differently (with softmax instead of sigmoid)
+
+
 Basic operations in each RBM layer:
 
  * layer::upActivation: compute parameters of p(output_variables | input_variables)
