@@ -81,19 +81,24 @@ Basic operations in each RBM layer:
              similar to upExpectation but downward, i.e. on input variables
  * layer::downSample(): sample input_variables from p(input_variables | output_variables). downActivation MUST have been called before.
              similar to upSample but on input variables
- * layer::accumulatePosStats(in,out): accumulate positive phase statistics
-             for binomial units: accumulate input_variable[i]*output_variable[j] in pos_corr[i][j], possibly using expectation instead of sample for variable values
-             for Gaussian units: ????COMPUTATION TO BE DONE
-             for all: increment pos_count[i][j]
- * layer::accumulateNegStats(in,out): accumulate negative phase statistics
-             for binomial units: accumulate input_variable[i]*output_variable[j] in neg_corr[i][j], possibly using expectation instead of sample for variable values
-             for Gaussian units: ????COMPUTATION TO BE DONE
-             for all: increment neg_count[i][j]
+ * layer::accumulatePosStats(): accumulate positive phase statistics
+             for binomial and softmax output units: accumulate input_variable[i]*output_prob[j] in pos_corr[i][j]
+                                                    accumulate output_prob[j] in pos_mean[j]
+             for Gaussian input units: accumulate 2 a[i] input_variable[i]^2 in pos_square[i]
+             for all: increment pos_count
+ * layer::accumulateNegStats(): accumulate negative phase statistics
+             for binomial output units: accumulate input_variable[i]*output_prob[j] in neg_corr[i][j]
+             for Gaussian input units: accumulate 2 a[i] input_variable[i]^2 in neg_square[i]
+             for all: increment neg_count
  * layer::layerCDupdate(): update parameters using positive and negative phase statistics
-             for binomial units: update w_[ij] with accumulated statistics i.e. 
-                                    pos_corr[i][j]/pos_count[i][j] - neg_corr[i][j]/neg_count[i][j]
-             for Gaussian units: ???? COMPUTATION TO BE DONE
-             for all: clear pos_corr,pos_count,neg_corr,neg_count
+             for binomial and softmax output units: 
+                  gradient estimator for b_j = pos_mean[j]/pos_count - neg_corr[i][j]/neg_count
+                  gradient estimator for w_ij = pos_corr[i][j]/pos_count - neg_corr[i][j]/neg_count
+                  clear pos_corr, neg_corr
+             for Gaussian input units:
+                  gradient estimator for a_i = pos_square[i]/pos_count - neg_square[i]/neg_count
+                  clear pos_square
+             clear pos_count,neg_count
 
 Combined operations, in a supervised RBM network:
  A supervised RBM network has a sequence of layers. The last_layer one is fully supervised. The 2nd to last is the last_hidden_layer.
@@ -114,10 +119,10 @@ Combined operations, in a supervised RBM network:
         v.resize(output_variables.size())
         layer->fprop(layer->input_variables,v)
         layer->upSample() 
-        layer->accumulateStats(v,output_variable)
+        layer->accumulatePosStats()
         layer->downSample()
         layer->upSample()
-        layer->accumulateStats(input_variable,output_variable)
+        layer->accumulateNegStats()
         layer->CDupdate()
 
  * network::supervised_learning_from_example(input_variables, output_variables):
@@ -127,10 +132,10 @@ Combined operations, in a supervised RBM network:
         layer->fprop(layer->input_variables,layer->output)
         v <- layer->output
         layer->upSample() 
-        layer->accumulateStats(v,output_variable)
+        layer->accumulatePosStats()
         layer->downSample()
         layer->upSample()
-        layer->accumulateStats(input_variable,output_variable)
+        layer->accumulateNegStats()
         layer->CDupdate()
      last_layer->input_variables <- v.copy()
      last_layer->fprop(last_layer->input_variables,last_layer->output)
