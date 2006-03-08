@@ -56,6 +56,7 @@ public:
 
     PP<PDistribution> mean_distribution;
     PP<PDistribution> variance_distribution;
+    PP<PDistribution> weight_distribution;
 
 public:
     //#####  Public Member Functions  #########################################

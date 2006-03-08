@@ -48,7 +48,8 @@ PLEARN_IMPLEMENT_OBJECT(
     "The means' distribution is provided by the user. The principal\n"
     "directions are obtained from Gram-Schmidt orthogonalization of a random\n"
     "matrix. The variances in the principal directions are obtained from\n"
-    "a user-provided distribution.\n"
+    "a user-provided distribution. The weights of the Gaussians are also\n"
+    "taken from another user-provided distribution.\n"
     "Note that for the sake of simplicity, this is an unconditional\n"
     "distribution.\n"
 );
@@ -85,6 +86,13 @@ void RandomGaussMix::declareOptions(OptionList& ol)
         "The distribution from which variances are sampled. A sample from\n"
         "this distribution should be a D-dimensional vector, representing\n"
         "the variance in each of the D principal directions of the Gaussian.");
+
+    declareOption(ol, "weight_distribution",
+                      &RandomGaussMix::weight_distribution,
+                      OptionBase::buildoption,
+        "The distribution from which the weight of each Gaussian is sampled.\n"
+        "It should output a single non-negative scalar (the weights will be\n"
+        "normalized afterwards so that they sum to 1).");
 
     // Now call the parent class' declareOptions().
     inherited::declareOptions(ol);
@@ -191,7 +199,7 @@ void RandomGaussMix::build()
 ////////////
 void RandomGaussMix::build_()
 {
-    if (!variance_distribution || !mean_distribution)
+    if (!variance_distribution || !mean_distribution || !weight_distribution)
         return;
 
     D = mean_distribution->getNPredicted();
@@ -199,9 +207,11 @@ void RandomGaussMix::build_()
     // Generate random Gaussian parameters.
     eigenvalues.resize(L, D);
     center.resize(L, D);
+    alpha.resize(L);
+    eigenvectors.resize(L);
     for (int j = 0; j < L; j++) {
         // Generate random matrix and perform Gram-Schmidt orthonormalization.
-        Mat& eigenvecs = eigenvectors_x[j];
+        Mat& eigenvecs = eigenvectors[j];
         eigenvecs.resize(D, D);
         int n_basis = -1;
         // It might happen that the rows of the random matrix are not
@@ -214,11 +224,36 @@ void RandomGaussMix::build_()
         Vec eigenvals = eigenvalues(j);
         variance_distribution->generate(eigenvals);
         assert( eigenvals.length() == D );
+        // Note that eigenvalues must be sorted in decreasing order.
+        sortElements(eigenvals);
+        eigenvals.swap();
         // Generate random mean.
         Vec mean_j = center(j);
         mean_distribution->generate(mean_j);
         assert( mean_j.length() == D );
+        // Generate random weight.
+        Vec alpha_j = alpha.subVec(j, 1);
+        weight_distribution->generate(alpha_j);
+        assert( alpha_j.length() == 1 );
     }
+    // Normalize 'alpha' so that it sums to 1.
+    real sum = 0;
+    for (int j = 0; j < L; j++) {
+        real alpha_j = alpha[j];
+        if (alpha_j < 0)
+            PLERROR("In RandomGaussMix::build_ - The weight of a Gaussian "
+                    "cannot be negative");
+        sum += alpha_j;
+    }
+    assert( sum > 0 );
+    alpha /= sum;
+    // Set a few parameters that are needed.
+    alpha_min = min(alpha);
+    sigma_min = 1e-10;
+    inputsize_ = D;
+    n_eigen_computed = D;
+    // Rebuild the mixture.
+    inherited::build();
 }
 
 /////////////////////////////////
