@@ -1,4 +1,4 @@
-import os
+import logging, os
 from plearn.utilities import ppath
 from plearn.utilities.toolkit import exempt_list_of, re_filter_list
 
@@ -169,6 +169,10 @@ def relative_path( path, basepath ):
     return path
         
 def softlink( src, dest ):
+    """Create a link only if I{src} exists and I{dest} does not.
+
+    @return: True if a link was created, False otherwise.
+    """
     if os.path.exists( src ):
         if not os.path.exists( dest ):
             os.symlink( src, dest )
@@ -176,7 +180,7 @@ def softlink( src, dest ):
     return False
 
 def split_listdir(path):
-    """Splits the content of os.listdir() in dirs and nondirs lists."""
+    """Split the content of os.listdir() in dirs and nondirs lists."""
     dirs = []
     nondirs = []
     for name in os.listdir(path):
@@ -185,6 +189,24 @@ def split_listdir(path):
         else:
             nondirs.append(name)
     return dirs, nondirs
+
+def system_symlink(source, target):
+    """Create a link if the system correctly support it; copy otherwise.
+    
+    Under Cygwin, links are not appropriate as they are ".lnk" files,
+    not properly opened by PLearn. Thus we need to copy the files.
+    """
+    import shutil, sys
+    if (sys.platform == "cygwin"):
+        if (os.path.isdir(source)):
+            logging.debug("Recursively copying source: %s <- %s."%(target, source))
+            shutil.copytree(source, target, symlinks=False)
+        else:
+            logging.debug("Copying source: %s <- %s."%(target, source))
+            shutil.copy(source, target)
+    else:
+        logging.debug("Linking source: %s -> %s."%(target,source))
+        os.symlink(source, target)
 
 
 if __name__ == "__main__":

@@ -11,34 +11,20 @@ from plearn.utilities import ppath
 from plearn.utilities import moresh 
 from plearn.utilities import toolkit
 
-class Resources:
-    md5_mappings    = {}
-    name_resolution = {}
+from plearn.pyplearn.PyPLearnObject import PLOption
 
-    def memorize(cls, abspath, fname):
-        if not cls.name_resolution.has_key(abspath):
-            cls.name_resolution[abspath] = fname        
-    memorize = classmethod(memorize)                                
+class Resources(core.PyTestObject):
+    md5_mappings    = PLOption({})
+    name_resolution = PLOption({})
+    
+    # def memorize(self, abspath, fname):
+    #     if not self.name_resolution.has_key(abspath):
+    #         self.name_resolution[abspath] = fname        
 
     ## Create a link from target to resource.
-    def single_link(cls, path_to, resource, target_dir, must_exist=True):
-        ## Under Cygwin, links are not appropriate as they are ".lnk" files,
-        ## not properly opened by PLearn. Thus we need to copy the files.
-        def system_symlink( resource, target ):
-            if (sys.platform == "cygwin"):
-                if (os.path.isdir(resource)):
-                    logging.debug(
-                        "Recursively copying resource: %s <- %s."%(target, resource))
-                    shutil.copytree( resource, target, symlinks = False )
-                else:
-                    logging.debug("Copying resource: %s <- %s."%(target, resource))
-                    shutil.copy( resource, target )
-            else:
-                logging.debug("Linking resource: %s -> %s."%(target,resource))
-                os.symlink( resource, target )
-
+    def single_link(self, path_to, resource, target_dir, must_exist=True):
         ## Paths to the resource and target files
-        resource_path = resource
+        resource_path = ppath.ppath(resource)
         target_path   = target_dir
 
         ## Absolute versions
@@ -53,7 +39,7 @@ class Resources:
         ## Linking
         linked = False
         if os.path.exists( resource_path ):
-            system_symlink( resource_path, target_path )
+            moresh.system_symlink(resource_path, target_path)
             linked = True
 
         elif must_exist:
@@ -63,26 +49,24 @@ class Resources:
                 )
 
         ## Mapping both to the same variable
-        cls.memorize( resource_path, resource )                
-        cls.memorize( target_path, resource )                
+        # self.memorize( resource_path, resource )                
+        # self.memorize( target_path, resource )                
 
         if linked:
             return (resource_path, target_path)
         else:
             return ()
 
-    single_link = classmethod(single_link)
-    
     ## Class methods
-    def link_resources(cls, path_to, resources, target_dir): 
+    def link_resources(self, path_to, resources, target_dir): 
         resources_to_append = []
         for resource in resources:
-            cls.single_link( path_to, resource, target_dir )
+            self.single_link( path_to, resource, target_dir )
                         
             if toolkit.isvmat( resource ):
                 metadatadir = resource + '.metadata'
                 if metadatadir not in resources:
-                    link_result = cls.single_link( path_to, metadatadir,
+                    link_result = self.single_link( path_to, metadatadir,
                                                    target_dir,  False )
                     if link_result:
                         ## Link has been successfully performed: we must add the
@@ -91,9 +75,7 @@ class Resources:
                         resources_to_append.append(metadatadir)
         resources.extend(resources_to_append)
 
-    link_resources = classmethod(link_resources)
-
-    def md5sum(cls, path_to_ressource):
+    def md5sum(self, path_to_ressource):
         if md5_mappings.has_keys(path_to_ressource):
             return md5_mappings[path_to_ressource]
         
@@ -101,9 +83,8 @@ class Resources:
                                       % path_to_ressource)
         md5_mappings[path_to_ressource] = md5
         return md5
-    md5sum = classmethod(md5sum)
 
-    def unlink_resources(cls, resources, target_dir):
+    def unlink_resources(self, resources, target_dir):
         for resource in resources:
             res = os.path.basename(resource)
             path = os.path.join(target_dir, res)
@@ -117,8 +98,6 @@ class Resources:
                 logging.debug("Removing directory: %s." % path)
                 shutil.rmtree( path )
 
-    unlink_resources = classmethod(unlink_resources)
-        
 
 class IntelligentDiff:    
     

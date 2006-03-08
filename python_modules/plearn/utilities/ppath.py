@@ -30,7 +30,8 @@ applications.
 __version_id__ = "$Id$"
 
 import copy, os, string
-from   plearn.utilities.Bindings import *
+
+from plearn.utilities.Bindings import *
 
 __all__ = [
     ## Module Variables
@@ -233,9 +234,28 @@ bindings = PPathBindings.load()
 def add_binding(mprotocol, mpath):
     bindings[mprotocol] = mpath
 
-def ppath(metaprotocol):
+def ppath(path):
+    # It may be that many protocols follow each other: use rfind
+    end_of_metaprotocol = path.rfind(':')
+
+    if end_of_metaprotocol == -1:
+        candidate_ppath = path
+        basepath        = ""
+    else:
+        candidate_ppath = path[:end_of_metaprotocol]
+        basepath        = path[end_of_metaprotocol+1:]
+        
+    try:            
+        path = os.path.join(__ppath(candidate_ppath), basepath)
+    except KeyError:
+        pass
+
+    return path
+    
+def __ppath(metaprotocol):
     metapath = None    
     try:
+        #print("*** Looking for ppath %s"%metaprotocol)
         metapath = bindings[metaprotocol]
     except KeyError:
         raise KeyError("The %s metaprotocol does not exists. "

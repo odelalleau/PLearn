@@ -501,7 +501,8 @@ class Test(PyTestObject):
         self.ensureResultsDirectory(test_results)
 
         ## Link 'physical' resources
-        Resources.link_resources(self.directory(), self.resources, test_results)
+        self._resources_obj = Resources()
+        self._resources_obj.link_resources(self.directory(), self.resources, test_results)
 
         ## What remains of this method is used to make the following
         ## binding visible to the test program. It must be removed after
@@ -533,6 +534,7 @@ class Test(PyTestObject):
 
         ## Returns the test's results directory path
         logging.debug("Resources linked in %s."%test_results)
+        logging.debug(self._resources_obj)
         return test_results
 
     def unlinkResources(self, test_results):
@@ -540,7 +542,9 @@ class Test(PyTestObject):
 
         @param test_results: B{Must} be the value returned by I{linkResources}.
         """
-        Resources.unlink_resources( self.resources, test_results )
+        self._resources_obj.unlink_resources( self.resources, test_results )
+        del self._resources_obj
+        
         ppath.remove_binding(self.metaprotocol())
         os.environ[ 'PLEARN_DATE_TIME' ] = 'YES'
         logging.debug("Resources unlinked.")

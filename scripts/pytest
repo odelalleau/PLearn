@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os
-from plearn           import pytest
+from plearn import pytest
 from plearn.utilities import svn
 
 # Builds are tuples of the form (major, minor, plearn_revision) where
