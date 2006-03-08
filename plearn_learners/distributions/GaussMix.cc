@@ -1801,6 +1801,7 @@ void GaussMix::generateFromGaussian(Vec& sample, int given_gaussian) const {
             sample += mu_y;
         }
     }
+    assert( !sample.hasMissing() );
 }
 
 /*
