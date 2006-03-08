@@ -116,38 +116,39 @@ void MixUnlabeledNeighbourVMatrix::build_()
     if (!source)
         return;
     
-    if (source_select && source && (source_select->targetsize() < 1 || source->targetsize() < 1))
-        PLERROR("In MixUnlabeledNeighbourVMatrix::build_ - We need a key column");
+    if (source && ( source->targetsize() < 1))
+        PLERROR("In MixUnlabeledNeighbourVMatrix::build_ - We need a key column for 'source'");
+    if (source_select && (source_select->targetsize() < 1))
+        PLERROR("In MixUnlabeledNeighbourVMatrix::build_ - We need a key column for 'source_select'");
     if (source_select && source && source_select->inputsize() != source->inputsize())
         PLERROR("In MixUnlabeledNeighbourVMatrix::build_ - VMats 'source_select'"
                 "and 'source' should have the same inputsize().");
     
-    sorted_source_select = new SortRowsVMatrix();
-    sorted_source_select->source = source_select;
-    sorted_source_select->sort_columns = TVec<int>(1,source_select->inputsize() 
-                                                   + source_select->targetsize() - 1);
-    sorted_source_select->build();
-    
     indices.resize(0); // This get rid of the user's build option value.
     TVec<int> bag_indices;
-
     Vec input,target,targetSel;
     string lastKey;
     real weight;
     bool sourceFound;
-    int rowSel,row;
+    int rowSel,row;    
     int keyCol = source->inputsize() + source->targetsize()-1;
-    int keyCol_select = source_select->inputsize() + source_select->targetsize()-1;
     neighbor_weights.resize(0);
 
-    if(sorted_source_select) { // If it was given, find the related example
+    if (source_select){ // If it was given, find the related example
+        int keyCol_select = source_select->inputsize() + source_select->targetsize()-1;
+        sorted_source_select = new SortRowsVMatrix();
+        sorted_source_select->source = source_select;
+        sorted_source_select->sort_columns = TVec<int>(1,source_select->inputsize() 
+                                                       + source_select->targetsize() - 1);
+        sorted_source_select->build();
         source_select->getExample(0,input,targetSel,weight);
         lastKey = source_select->getValString(keyCol_select,targetSel.lastElement());
         rowSel = 0;
         bag_indices.resize(0);
         while(rowSel < source_select->length()){
             source_select->getExample(rowSel,input,targetSel,weight);
-            if (lastKey == source_select->getValString(keyCol_select,targetSel.lastElement())){
+            if (lastKey == source_select->getValString(keyCol_select,
+                                                       targetSel.lastElement())){
                 bag_indices.push_back(rowSel);
             }else{
                 sourceFound = false;
