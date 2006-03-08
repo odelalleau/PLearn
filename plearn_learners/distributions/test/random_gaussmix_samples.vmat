@@ -1,0 +1,6 @@
+VMatrixFromDistribution( 
+    # PP< PDistribution >: The distribution this matrix will be generated from
+    distr = $INCLUDE{PLEARNDIR:plearn_learners/distributions/test/random_gaussmix.plearn}
+    generator_seed = ${seed}
+    nsamples = ${nsamples}
+)

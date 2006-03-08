@@ -1,0 +1,80 @@
+RandomGaussMix( 
+
+    # PP< PDistribution >: The distribution from which means are sampled. A sample from this
+    # distribution should be a D-dimensional vector, representing the mean
+    # of a Gaussian in the input space.
+    mean_distribution =
+        UniformDistribution( 
+            min = [ ${min_mean} ]
+            max = [ ${max_mean} ]
+            n_dim = ${D}
+            seed = ${seed}
+        )
+
+    # PP< PDistribution >: The distribution from which variances are sampled. A sample from
+    # this distribution should be a D-dimensional vector, representing
+    # the variance in each of the D principal directions of the Gaussian.
+    variance_distribution =
+        UniformDistribution( 
+            min = [ ${min_var} ]
+            max = [ ${max_var} ]
+            n_dim = ${D}
+            seed = ${seed}
+        )
+
+    # PP< PDistribution >: The distribution from which the weight of each Gaussian is sampled.
+    # It should output a single non-negative scalar (the weights will be
+    # normalized afterwards so that they sum to 1).
+    weight_distribution =
+        UniformDistribution( 
+            min = [ 0 ]
+            max = [ 1 ]
+            seed = ${seed}
+        )
+
+    # int: Number of Gaussians in the mixture.
+    L = ${L}
+    # string: Defines what will be given in output. This is a string where the
+    # characters have the following meaning:
+    # - 'l' : log_density
+    # - 'd' : density
+    # - 'c' : cdf
+    # - 's' : survival_fn
+    # - 'e' : expectation
+    # - 'v' : variance.
+    # 
+    # If these options are specified in lower case they give the value
+    # associated with a given observation. In upper case, a curve is
+    # evaluated at regular intervals and produced in output (as a
+    # histogram). For 'L', 'D', 'C', 'S', it is the predicted part that
+    # varies, while for 'E' and 'V' it is the predictor part (for
+    # conditional distributions).
+    # The number of curve points is given by the 'n_curve_points' option.
+    # Note that the upper case letters only work for scalar variables, in
+    # order to produce a one-dimensional curve.
+    outputs_def = "l"  ;
+    # int: The number of points for which the output is evaluated when
+    # outputs_defs is upper case (produces a histogram).
+    # The lower_bound and upper_bound options specify where the curve
+    # begins and ends. Note that these options (upper case letters) only
+    # work for scalar variables.
+    n_curve_points = -1  ;
+    # double: The lower bound of scalar Y values to compute a histogram of the
+    # distribution when upper case outputs_def are specified.
+    lower_bound = 0  ;
+    # double: The upper bound of scalar Y values to compute a histogram of the
+    # distribution when upper case outputs_def are specified.
+    upper_bound = 0  ;
+    # long: The initial seed for the random number generator used to initialize this learner's parameters
+    # as typically done in the forget() method... 
+    # If -1 is provided, then a 'random' seed is chosen based on time of day, insuring that
+    # different experiments may yield different results.
+    # With a given seed, forget() should always initialize the parameters to the same values.
+    seed = ${seed}
+    # bool: should progress in learning and testing be reported in a ProgressBar.
+    report_progress = 1  ;
+    # int: Level of verbosity. If 0 should not write anything on perr. 
+    # If >0 may write some info on the steps performed along the way.
+    # The level of details written should depend on this value.
+    verbosity = 1  ;
+);

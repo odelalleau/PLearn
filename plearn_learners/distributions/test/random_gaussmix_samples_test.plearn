@@ -1,0 +1,18 @@
+RunObject(
+    objects = [
+        PrecomputedVMatrix( 
+            # string: The type of VMatrix to be used for the cached precomputed version
+            # of the source. Currently supported are 'dmat' and 'pmat'.
+            precomp_type = "pmat"  ;
+            # VMat: The source VMatrix
+            source = $INCLUDE{PLEARNDIR:plearn_learners/distributions/test/random_gaussmix_samples.vmat::min_mean=0::max_mean=5::D=3::seed=123456::min_var=1e-3::max_var=0.5::L=3::nsamples=100}
+            # PPath: A directory in which to store meta-information for this matrix 
+            # You don't always have to give this explicitly. For ex. if your 
+            # VMat is the outer VMatrix in a .vmat file, the metadatadir will 
+            # automatically be set to name_of_vmat_file.metadata/ 
+            # And if it is the source inside another VMatrix that sets its 
+            # metadatadir, it will often be set from that surrounding vmat's metadata.
+            metadatadir = "random_gaussmix_samples_test_metadata"
+        )
+    ]
+)
