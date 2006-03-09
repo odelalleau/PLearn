@@ -65,6 +65,7 @@ using namespace std;
 // GaussMix //
 //////////////
 GaussMix::GaussMix():
+    ptimer(new PTimer()),
     type_id(TYPE_UNKNOWN),
     previous_predictor_part_had_missing(false),
     D(-1),
@@ -87,6 +88,7 @@ GaussMix::GaussMix():
     nstages = 10;
     current_training_sample = -1;
     previous_training_sample = -2; // Only use efficient_missing in training.
+    ptimer->newTimer("training_time");
 }
 
 PLEARN_IMPLEMENT_OBJECT(GaussMix, 
@@ -1706,6 +1708,7 @@ void GaussMix::forget()
     p_j_x.resize(0);
     D = -1;
     n_eigen_computed = -1;
+    ptimer->resetAllTimers();
     /*
        if (training_time >= 0)
        training_time = 0;
@@ -2521,6 +2524,17 @@ void GaussMix::getInitialWeightsFrom(const VMat& vmat)
         delete pb;
 }
 
+///////////////////////
+// getTrainCostNames //
+///////////////////////
+TVec<string> GaussMix::getTrainCostNames() const
+{
+    static TVec<string> costs;
+    if (costs.isEmpty())
+        costs.append("training_time");
+    return costs;
+}
+
 ////////////////////////////////
 // setPredictorPredictedSizes //
 ////////////////////////////////
@@ -2671,6 +2685,7 @@ struct NoProperty {
 ///////////
 void GaussMix::train()
 {
+    ptimer->startTimer("training_time");
     // Standard PLearner checks.
     if (!initTrain())
         return;
@@ -3305,6 +3320,11 @@ void GaussMix::train()
         vm->saveAMAT("save_center_" + tostring(i) + ".amat");
     }
     */
+    ptimer->stopTimer("training_time");
+    static Vec train_stats_update;
+    train_stats_update.resize(1);
+    train_stats_update[0] = ptimer->getTimer("training_time");
+    train_stats->update(train_stats_update);
 }
 
 ///////////////////

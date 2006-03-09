@@ -41,6 +41,7 @@
 #define GaussMix_INC
 
 #include "PDistribution.h"
+#include <plearn/misc/PTimer.h>
 
 namespace PLearn {
 using namespace std;
@@ -56,6 +57,9 @@ private:
     Vec log_likelihood_post, sample_row;
 
 protected:
+
+    //! Used to measure the total training time.
+    PP<PTimer> ptimer;
 
     //! All missing patterns found in the training set (stored in rows).
     //! A boolean value of 'true' indicates that a feature is missing.
@@ -428,6 +432,9 @@ public:
     //! Overridden to take into account new outputs computed.
     virtual int outputsize() const;
     */
+
+    //! Overridden to compute the training time.
+    virtual TVec<string> getTrainCostNames() const;
 
     // *************************
     // * PDistribution methods *
