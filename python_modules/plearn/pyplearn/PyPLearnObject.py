@@ -1,198 +1,25 @@
 #!/usr/bin/env python
-import copy, inspect, operator
+import copy, operator
 from plearn.pyplearn.plearn_repr import plearn_repr, python_repr, format_list_elements
-deprecated_methods = [ 'allow_unexpected_options', ### No more a classmethod
-                       'get_members',
-                       "option_names", 
-                       'option_pairs',
-                       'to_list' ### In PyPLearnList
-                       ]
-
-# Since those methods were added to PyPLearnObject (or its subclass) using
-# the lower_case_with_underscores convention, these are prone to clashing
-# with plearn options. An explicit check is made to avoid this
-# eventuality. This should be fixed whenever possible.
-_clash_prone_methods = [ 'inherited_options',
-                         'class_options',
-                         'allow_unexpected_options',
-                         'instances',
-                         'classname',
-                         'plearn_repr' ]
-
-def _checkForNameClashes(key, value):
-    if key in _clash_prone_methods and not callable(value):
-        PyPLearnError("It seems you are trying to set an PLOption %s "
-                      "which clashes with the %s internal method. "
-                      "Contact support.")
 
 DEBUG = False
-        
+
 #
 #  Classes
 #
 class PLOptionWarning( Warning ): pass
 class PLOptionError( AttributeError ): pass
 
-class PLOption:
-    __option_id = 0
-    def __init__(self, value, *args, **kwargs):
-        self.__class__.__option_id += 1
-        self._id = self.__option_id
-
-        assert not isinstance(value, PLOption)        
-        if ( inspect.ismethod(value) or inspect.isfunction(value) 
-             or inspect.isroutine(value) or inspect.isclass(value) ):                 
-            self._callable = value
-            self._args     = args
-            self._kwargs   = kwargs
-
-        else:
-            assert len(args) == 0 and len(kwargs) == 0
-            self._callable = copy.deepcopy
-            self._args     = [ value ]
-            self._kwargs   = kwargs
-
-    def __call__(self):
-        if DEBUG and self._id == 212:
-            print "######### In PLOption::__call__ -- self #########"
-            print self
-            print
-
-            print "######### In PLOption::__call__ -- returns #########"
-            assert self._callable==copy.deepcopy
-            assert len(self._args) == 1
-            print "ARGS:", type(self._args[0]), self._args[0]
-            print copy.deepcopy(*self._args, **self._kwargs)
-            print            
-
-        return self._callable(*self._args, **self._kwargs)
-
-    def __cmp__(self, opt2):
-        assert isinstance(opt2, PLOption)
-        return cmp(self._id, opt2._id)
-
-    def __str__(self):
-        return "PLOption(\n    " +\
-            "\n    ".join([\
-            "_id=%d"%self._id,
-            "_callable=%s"%self._callable,
-            "_args=%s"%str(self._args),
-            "_kwargs=%s"%str(self._kwargs)               
-            ]) + ")" 
-
-class MetaPLOptionDict( type ):
-    """Manages the list of option names associated to a class.
-
-    Note that this metaclass provides classes using it with the class
-    method class_options.
-    """
-    __options_slot = '_%s__class_options'
-    def __new__( metacls, clsname, bases, dic ):
-        newcls = type.__new__( metacls, clsname, bases, dic )
-
-        inherited = newcls.inherited_options()
-        options_slot = metacls.__options_slot%clsname
-        if options_slot not in dic:
-            reversed_option_pairs = [
-                (optval,optname)
-                for optname,optval in dic.iteritems() 
-                if isinstance(optval, PLOption) and optname not in inherited
-                ]
-            reversed_option_pairs.sort()
-            setattr(newcls, options_slot, [ optname for optval,optname in reversed_option_pairs ])
-
-        return newcls
-
-    ## HERE: AND WHAT IF THE OPTION ALREADY EXISTS???
-    def __getattribute__(self, name):
-        value = super(MetaPLOptionDict, self).__getattribute__(name)
-
-        if DEBUG and name=="test_performance_plugins":
-            print "######### In __getattribute__ from dict #########"
-            print self.__dict__["test_performance_plugins"]
-            print
-
-            print "######### In __getattribute__ 'value' #########"
-            print value
-            print
-
-            print "######### In __getattribute__ 'value()' #########"
-            print value()
-            print
-            
-
-        if isinstance(value, PLOption):
-            return value()
-        return value
-        
-    def __setattr__(self, name, value):
-        _checkForNameClashes(name, value)
-
-        # Is an option: check that it is wrapped and add it to the list if needed
-        if not name.startswith('_'):
-            # Check that it is wrapped... 
-            if not isinstance(value, PLOption):
-                value = PLOption(value)
-
-            # ... and add it to the list if needed
-            options_slot = MetaPLOptionDict.__options_slot%self.__name__
-            option_list = self.__dict__[options_slot]
-            if name not in option_list:            
-                option_list.append(name)
-
-        if DEBUG and name=="test_performance_plugins":            
-            print "######### In __setattr__ #########"
-            print self.__dict__["test_performance_plugins"]
-            print
-            got = getattr(self, name)
-            raw_input( "BEFORE SETATTR: %d"%len(got) )
-                            
-        # Call inherited __setattr__        
-        super(MetaPLOptionDict, self).__setattr__(name, value)
-        
-        if DEBUG and name=="test_performance_plugins":
-            print "######### In __setattr__ #########"
-            print self.__dict__["test_performance_plugins"]
-            print
-            got = getattr(self, name)
-            raw_input( "AFTER SETATTR: %s"%len(got) )
-
-    def __delattr__(self, name):
-        super(MetaPLOptionDict, self).__delattr__(name)
-        if not name.startswith('_'):
-            options_slot = MetaPLOptionDict.__options_slot%self.__name__
-            self.__dict__[options_slot].remove(name)
-
-    def inherited_options(self):
-        inhoptions = []
-        for cls in self.__mro__[1:]:
-            if cls is object:
-                continue
-            
-            options_slot = MetaPLOptionDict.__options_slot%cls.__name__
-            try:
-                inhoptions.extend( cls.__dict__[options_slot] )
-            except KeyError, kerr:
-                indent = " "*8
-                raise RuntimeError( "In MetaPLOptionDict: %s<-%s \n (mro = %s) \n %s"
-                                    % (cls.__name__, self.__class__.__name__,
-                                       ("\n"+indent).join([ KLS.__name__ for KLS in self.__mro__]),
-                                       str(kerr)))
-                                    
-        return inhoptions
-
-    def class_options(self):
-        options_slot = MetaPLOptionDict.__options_slot%self.__name__
-        class_options = copy.deepcopy(self.__dict__[options_slot])       
-        return class_options+self.inherited_options()
+from OptionBase import *
+class PLOption(OptionBase): pass
 
 class PLOptionDict( object ):
-    __metaclass__ = MetaPLOptionDict
+    __metaclass__ = OptionDictMetaClass(PLOption)
     
     def class_options(cls):
         """Forwarding call so that class_options() can be called on an instance."""
-        return MetaPLOptionDict.class_options(cls)
-    class_options = classmethod( class_options )
+        return class_options(cls, PLOption)
+    class_options = classmethod(class_options)
 
     def __init__(self, **overrides):
         self.__instance_option_names = self.class_options()
@@ -222,7 +49,7 @@ class PLOptionDict( object ):
             raise PLOptionError("Disallowed attribute %s"%key)
             
     def __setattr__(self, key, value):
-        _checkForNameClashes(key, value)
+        checkForNameClashes(key, value)
         self.__addoption__(key)
         super(PLOptionDict, self).__setattr__(key, value)
 
@@ -341,7 +168,7 @@ class PyPLearnObject( PLOptionDict ):
     #  PyPLearnObject's metaclass
     #
     _subclass_filter = classmethod( lambda cls: not cls.__name__.startswith('_') )
-    class __metaclass__( MetaPLOptionDict ):
+    class __metaclass__(PLOptionDict.__metaclass__):
         """Implements some support mecanisms.
 
         This metaclass defaults right operators to their left counterpart

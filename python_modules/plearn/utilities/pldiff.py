@@ -31,7 +31,7 @@
 #  This file is part of the PLearn library. For more information on the PLearn
 #  library, go to the PLearn Web site at www.plearn.org
 
-import os
+import logging, os
 import plearn.utilities.moresh  as moresh
 import plearn.utilities.toolkit as toolkit
 
@@ -109,8 +109,9 @@ def pldiff(former, later, precision=1e-06, plearn_exec=None):
             diff_report = vmatdiff(former_file, later_file, precision)
             
         else:
-            diff_report = toldiff(former_file, later_file, precision)
-            diff_report = [ diff_report ]
+            diff = toldiff(former_file, later_file, precision)
+            if diff:
+                diff_report = ["--- %s and %s\n    %s"%(former_file, later_file, diff)]
 
         if diff_report and \
            not (len(diff_report)==1 and diff_report[0]==''):
@@ -137,6 +138,7 @@ def psavediff(former_file, later_file, precision=1e-06):
     if not os.path.exists(tmpdir):
         os.makedirs(tmpdir)
     moresh.pushd( tmpdir )
+    logging.debug("--- pushd to %s"%os.getcwd())
 
     # Names for the files resulting from read_and_write
     former_rw = "rw_former_%s"%os.path.basename(former_file)
@@ -147,19 +149,29 @@ def psavediff(former_file, later_file, precision=1e-06):
     # self.test.linkResources( tmp_dir )    
     os.system( rw_cmd%(former_abspath, former_rw) )
     assert os.path.exists(former_rw), "Error generating %s"%former_rw
+    logging.debug(rw_cmd%(former_abspath, former_rw)+' succeeded.')
 
     os.system( rw_cmd%(later_abspath, later_rw) )
     assert os.path.exists(later_rw), "Error generating %s"%later_rw
+    logging.debug(rw_cmd%(later_abspath, later_rw)+' succeeded.')
 
     ## Actual comparison
-    report = toldiff(former_rw, later_rw, precision)
+    report = []
+    diff = toldiff(former_rw, later_rw, precision)
+    if diff:
+        report = [ "--- %s and %s\n  Processed through read_and_write (%s)\n     %s"
+                   % (former_file, later_file, tmp_dir, diff) ]
+    logging.debug('Report: %s'%report)
 
     ## Clean linked resources and move back to original directory.
     # self.test.unlinkResources( tmp_dir )
-    moresh.popd( )        
+    moresh.popd( )
+    logging.debug("--- popd to %s\n"%os.getcwd())
+    return report
 
 def toldiff(filename1, filename2, precision=1e-6, blanktol=0):
     """Returns an error message or an empty string if the files are tol-identical."""
+    logging.debug("--- toldiff %s %s %g %d"%(filename1, filename2, precision, blanktol))
     f1 = open(filename1,'rb')
     f2 = open(filename2,'rb')
 
@@ -170,7 +182,7 @@ def toldiff(filename1, filename2, precision=1e-6, blanktol=0):
     c1 = f1.read(1) 
     c2 = f2.read(1)
 
-    errmsg = lambda : 'Files differ before positions: %d %d'%(f1.tell(),f2.tell())
+    errmsg = lambda : 'Files differ before positions: %d %d\n'%(f1.tell(),f2.tell())
     while c1 or c2:            
         if c1 and c1 in numerical:
             num1 = ''
@@ -208,11 +220,14 @@ def toldiff(filename1, filename2, precision=1e-6, blanktol=0):
             c2 = f2.read(1)
 
     # No errors encountered: empty error message.
+    logging.debug("--- toldiff-equal %s %s\n"%(filename1, filename2))
     return ''
 
 def vmatdiff(former_file, later_file, precision):
-    diffcmd = plearn_cmd('vmat diff %s %s')%(former_file, later_file)
+    logging.debug("--- vmatdiff %s %s %g"%(former_file, later_file, precision))
+    diffcmd = plearn_cmd('vmat diff %s %s %g')%(former_file, later_file, precision)
     diffoutput = toolkit.command_output(diffcmd)
+
     if diffoutput:
         return [ diffcmd ] + [ (' '*4)+line for line in diffoutput ]
     return []
