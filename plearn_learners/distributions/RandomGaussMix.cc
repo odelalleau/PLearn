@@ -38,6 +38,7 @@
 
 
 #include "RandomGaussMix.h"
+#include <plearn/io/load_and_save.h>
 
 namespace PLearn {
 using namespace std;
@@ -201,6 +202,12 @@ void RandomGaussMix::build_()
 {
     if (!variance_distribution || !mean_distribution || !weight_distribution)
         return;
+
+    // Need to reset the underlying distributions' seeds so that the generated
+    // values are always the same at each build.
+    mean_distribution->resetGenerator(mean_distribution->seed_);
+    variance_distribution->resetGenerator(variance_distribution->seed_);
+    weight_distribution->resetGenerator(weight_distribution->seed_);
 
     D = mean_distribution->getNPredicted();
 
