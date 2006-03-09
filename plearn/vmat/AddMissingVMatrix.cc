@@ -52,6 +52,7 @@ using namespace std;
 AddMissingVMatrix::AddMissingVMatrix():
   missing_prop(0),
   only_on_first(-1),
+  random_gen(new PRandom()),
   seed(-1)
 {}
 
@@ -103,7 +104,7 @@ void AddMissingVMatrix::build_()
   // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
   // ### You should assume that the parent class' build_() has already been called.
 
-  random_gen.manual_seed(seed);
+  random_gen->manual_seed(seed);
   setMetaInfoFromSource();
 }
 
@@ -117,7 +118,7 @@ void AddMissingVMatrix::getNewRow(int i, const Vec& v) const
     return;
   int n = v.length();
   for (int j = 0; j < n; j++)
-    if (random_gen.uniform_sample() < missing_prop)
+    if (random_gen->uniform_sample() < missing_prop)
       v[j] = MISSING_VALUE;
 }
 
@@ -127,15 +128,7 @@ void AddMissingVMatrix::getNewRow(int i, const Vec& v) const
 void AddMissingVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
-
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("AddMissingVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  deepCopyField(random_gen, copies);
 }
 
 } // end of namespace PLearn

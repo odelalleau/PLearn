@@ -58,7 +58,7 @@ private:
 
 protected:
 
-  mutable PRandom random_gen;
+  PP<PRandom> random_gen;
 
   // *********************
   // * protected options *
