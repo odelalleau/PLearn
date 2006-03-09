@@ -196,7 +196,7 @@ void AutoVMatrixTest::perform()
         PL_Log::instance().outmode(PStream::plearn_ascii);
 
         UNIT_TEST("PLEARNDIR:examples/data/test_suite/linear_4x_2y.amat");
-        UNIT_TEST("PLEARNDIR:examples/data/test_suitelinear_4x_2y.pmat");
+        UNIT_TEST("PLEARNDIR:examples/data/test_suite/linear_4x_2y.pmat");
         UNIT_TEST("PLEARNDIR:examples/data/test_suite/eslt_mixture/data_train.amat");
     }
     catch(const PLearnError& e)
