@@ -5,7 +5,7 @@ from plearn.utilities.ppath import ppath
 
 plearndir = ppath('PLEARNDIR')
 
-plarg_defaults.data = os.path.join(plearndir, 'test_suite', 'data', 
+plarg_defaults.data = os.path.join(plearndir, 'examples', 'data', 'test_suite',
                                    'eslt_mixture', 'data_train.amat')
 plarg_defaults.kernel = "GaussianKernel"
 plarg_defaults.sigma  = "1"
