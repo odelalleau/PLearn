@@ -46,9 +46,9 @@
 #define plearn_tests_inc_INC
 
 // Convenient vim macro to comment all tests (useful to debug a given test):
-//      %s/\(\#include\(.\)\+Test.h>\)/\/\/\1/
+//      %s,^#include.\+Test.h>,//&,
 // And another vim macro to restore all tests:
-//      %s/\/\/\#include/#include/
+//      %s,^//#include,#include,
 
 /*********
  * PTest *
@@ -69,6 +69,7 @@
 #include <plearn/vmat/test/AutoVMatrixTest.h>
 #include <plearn/vmat/test/FileVMatrixTest.h>
 #include <plearn/vmat/test/RowBufferedVMatrixTest.h>
+#include <plearn/vmat/test/IndexedVMatrixTest.h>
 #include <plearn/../test_suite/PP/PPTest.h>
 
 // Some other minimal includes to be able to run tests.
