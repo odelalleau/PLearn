@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+
+import random
+
+length = 30
+width  = 10
+
+random.seed()
+
+
+print "#size: %s %s" % (length, width)
+
+mu    = [ ]
+sigma = [ ]
+
+print '#:',
+for j in range(width):
+    mu_j    = random.randrange(-100, 100) 
+    sigma_j = random.randrange(-10, 10)
+    print "mu=%d_sigma=%d" % ( mu_j, sigma_j ),
+    mu.append( mu_j ); sigma.append( sigma_j )
+print    
+
+for i in range(length):
+    line = [ str( random.gauss( mu[j], sigma[j] ) )
+             for j in range(width)
+             ]
+    print ' '.join(line)
+
