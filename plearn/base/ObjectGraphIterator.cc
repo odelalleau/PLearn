@@ -40,6 +40,7 @@
 
 /*! \file ObjectGraphIterator.cc */
 
+#include <algorithm>
 #include <assert.h>
 #include <deque>
 #include <set>
