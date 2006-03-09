@@ -1,0 +1,36 @@
+source_matrix = /u/lamblinp/code/PLearn/examples/data/test_suite/data_with_strings.amat
+Column 2 (value) of indexed_vmat as strings:
+0
+1
+1
+nan
+nan
+nan
+a
+18
+b
+e
+c
+b
+d
+f
+56
+c
+
+Underlying (real) values:
+0
+1
+1
+nan
+nan
+nan
+1001
+18
+1002
+1005
+1003
+1002
+1004
+1006
+56
+1003

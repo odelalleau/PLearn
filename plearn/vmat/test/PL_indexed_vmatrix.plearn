@@ -1,0 +1,5 @@
+IndexedVMatrixTest(
+    source_matrix = "PLEARNDIR:examples/data/test_suite/data_with_strings.amat"
+    # If set to 1, this object will be saved to 'save_path.
+    save = 0
+)
