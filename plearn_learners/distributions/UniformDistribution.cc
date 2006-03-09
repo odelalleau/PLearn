@@ -40,7 +40,6 @@
 
 /*! \file UniformDistribution.cc */
 
-#include <plearn/math/random.h>
 #include "UniformDistribution.h"
 
 namespace PLearn {
@@ -184,7 +183,7 @@ void UniformDistribution::generate(Vec& x) const
         counter++;
     } else {
         for (int i = 0; i < n_dim; i++) {
-            x[i] = bounded_uniform(min[i], max[i]);
+            x[i] = random->bounded_uniform(min[i], max[i]);
         }
     }
 }
@@ -219,7 +218,7 @@ void UniformDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////////
 void UniformDistribution::resetGenerator(long g_seed)
 {
-    manual_seed(g_seed);
+    inherited::resetGenerator(g_seed);
     counter = 0;
 }
 
