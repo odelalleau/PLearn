@@ -223,7 +223,7 @@ void PLS::computeCostsFromOutputs(const Vec& input, const Vec& output,
                                   const Vec& target, Vec& costs) const
 {
     // No cost computed.
-}                                
+}
 
 ///////////////////
 // computeOutput //
@@ -257,7 +257,7 @@ void PLS::computeOutput(const Vec& input, Vec& output) const
             PLWARNING("In PLS::computeOutput - You ask to output the target but the target size is <= 0");
         }
     }
-}    
+}
 
 ////////////
 // forget //
@@ -330,7 +330,7 @@ void PLS::NIPALSEigenvector(const Mat& m, Vec& v, real precision) {
         }
     }
 }
-    
+
 ////////////////
 // outputsize //
 ////////////////
@@ -369,22 +369,26 @@ void PLS::train()
     if (verbosity >= 2) {
         cout << " Normalization of the data" << endl;
     }
-    VMat input_part = new SubVMatrix(
-        train_set, 0, 0, train_set->length(), train_set->inputsize());
-    VMat target_part = new SubVMatrix(
-        train_set, 0, train_set->inputsize(), train_set->length(), train_set->targetsize());
-    PP<ShiftAndRescaleVMatrix> X_vmat = new ShiftAndRescaleVMatrix();
+    VMat input_part = new SubVMatrix(train_set,
+                                     0, 0,
+                                     train_set->length(),
+                                     train_set->inputsize());
+    VMat target_part = new SubVMatrix( train_set,
+                                       0, train_set->inputsize(),
+                                       train_set->length(),
+                                       train_set->targetsize());
+
+    PP<ShiftAndRescaleVMatrix> X_vmat =
+        new ShiftAndRescaleVMatrix(input_part, true);
     X_vmat->verbosity = this->verbosity;
-    X_vmat->vm = input_part;
-    X_vmat->build();
     mean_input << X_vmat->shift;
     stddev_input << X_vmat->scale;
     negateElements(mean_input);
     invertElements(stddev_input);
-    PP<ShiftAndRescaleVMatrix> Y_vmat = new ShiftAndRescaleVMatrix();
+
+    PP<ShiftAndRescaleVMatrix> Y_vmat =
+        new ShiftAndRescaleVMatrix(target_part, target_part->width(), true);
     Y_vmat->verbosity = this->verbosity;
-    Y_vmat->vm = target_part;
-    Y_vmat->build();
     mean_target << Y_vmat->shift;
     stddev_target << Y_vmat->scale;
     negateElements(mean_target);
