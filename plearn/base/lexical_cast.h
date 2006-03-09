@@ -58,6 +58,9 @@ bool pl_isnumber(const string& s,double* dbl=NULL);
 bool pl_isnumber(const string& s,float* dbl);
 #endif // WIN32
 
+// Return true if the number can be converted to a long
+bool pl_islong(const string& s);
+
 //!  conversions from string to numerical types
 long     tolong    (const string& s, int base=10);  
 double   todouble  (const string& s);

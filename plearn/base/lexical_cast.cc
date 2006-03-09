@@ -76,7 +76,19 @@ bool pl_isnumber(const string& str, float* dbl) {
     return ((unsigned char)(l-s.c_str())==s.length());
 }
 #endif // WIN32
-  
+
+// Return true if conversion to a long is possible
+bool pl_islong(const string& s)
+{
+    // c_str() might yield very short-lived temporaries, don't assume those
+    // pointers live beyond the syntactic expression.
+    const char *nptr;
+    char *endptr;
+    strtol((nptr=s.c_str()), &endptr, 10);
+    return endptr && (endptr - nptr == int(s.size()));
+}
+
+
 long tolong(const string& s, int base)
 {
     const char* nptr = s.c_str();
