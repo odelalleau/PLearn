@@ -1,7 +1,7 @@
 *5 -> PTester(
     dataset = *1 -> AutoVMatrix(
         inputsize = 0,
-        specification = "data.amat",
+        specification = "PLEARNDIR:examples/data/test_suite/gauss_1D_100pt.amat",
         targetsize = 1,
         weightsize = 0
         ),

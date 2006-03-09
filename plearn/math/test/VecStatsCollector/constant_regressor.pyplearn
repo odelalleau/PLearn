@@ -1,7 +1,7 @@
 import os.path
 from plearn.pyplearn import *
 
-plarg_defaults.data    = "data.amat"
+plarg_defaults.data = "PLEARNDIR:examples/data/test_suite/gauss_1D_100pt.amat"
 
 dataset = pl.AutoVMatrix(
     specification = plargs.data,
