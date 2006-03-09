@@ -1,7 +1,7 @@
 import os.path
 from plearn.pyplearn import *
 
-plarg_defaults.data    = "data.amat"
+plarg_defaults.data    = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.amat"
 
 dataset = pl.AutoVMatrix(
     specification = plargs.data,

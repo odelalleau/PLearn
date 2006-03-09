@@ -1,7 +1,7 @@
 *4 -> PTester(
     dataset = *1 -> AutoVMatrix(
         inputsize = 2,
-        specification = "data.amat",
+        specification = "PLEARNDIR:examples/data/test_suite/linear_2x_2y.amat",
         targetsize = 2,
         weightsize = 0
         ),

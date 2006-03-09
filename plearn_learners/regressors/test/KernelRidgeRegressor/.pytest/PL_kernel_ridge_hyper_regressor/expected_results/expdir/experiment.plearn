@@ -1,7 +1,7 @@
 *12 -> PTester(
     dataset = *1 -> AutoVMatrix(
         inputsize = 1,
-        specification = "data.amat",
+        specification = "PLEARNDIR:examples/data/test_suite/sin_signcos_1x_2y.amat",
         targetsize = 2,
         weightsize = 0
         ),

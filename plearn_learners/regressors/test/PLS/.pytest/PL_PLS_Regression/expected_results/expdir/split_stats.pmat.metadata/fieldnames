@@ -1,13 +1,4 @@
 splitnum	0
-test1.E[cross_entropy]	0
-test1.LIFT.0	0
-test1.LIFT_MAX	0
-test1.LIFT.1	0
-test2.E[cross_entropy]	0
-test2.LIFT.0	0
-test2.LIFT_MAX	0
-test2.LIFT.1	0
-test3.E[cross_entropy]	0
-test3.LIFT.0	0
-test3.LIFT_MAX	0
-test3.LIFT.1	0
+test1.E[mse]	0
+test2.E[mse]	0
+test3.E[mse]	0

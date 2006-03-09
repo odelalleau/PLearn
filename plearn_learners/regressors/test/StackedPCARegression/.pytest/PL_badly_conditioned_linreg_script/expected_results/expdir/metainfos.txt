@@ -1,12 +1,12 @@
-__REVISION__ = AP3195.PL4546
-data                           = data.amat
+__REVISION__ = PL5109
+data                           = PLEARNDIR:examples/data/test_suite/linear_4x_2y.amat
 expdir_root                    = 
 DATE                           = 
 DATETIME                       = 
-DIRPATH                        = /home/dorionc/PLearn/plearn_learners/regressors/test/StackedPCARegression/.pytest/PL_badly_conditioned_linreg_script/expected_results
+DIRPATH                        = /u/lamblinp/code/PLearn/plearn_learners/regressors/test/StackedPCARegression/.pytest/PL_badly_conditioned_linreg_script/expected_results
 FILEBASE                       = linear_regressor
 FILEEXT                        = pyplearn
 FILENAME                       = linear_regressor.pyplearn
-FILEPATH                       = /home/dorionc/PLearn/plearn_learners/regressors/test/StackedPCARegression/.pytest/PL_badly_conditioned_linreg_script/expected_results/linear_regressor.pyplearn
-HOME                           = /home/dorionc
+FILEPATH                       = /u/lamblinp/code/PLearn/plearn_learners/regressors/test/StackedPCARegression/.pytest/PL_badly_conditioned_linreg_script/expected_results/linear_regressor.pyplearn
+HOME                           = /u/lamblinp
 TIME                           = 

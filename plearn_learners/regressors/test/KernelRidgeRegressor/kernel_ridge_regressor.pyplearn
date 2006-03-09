@@ -1,6 +1,6 @@
 from plearn.pyplearn import *
 
-plarg_defaults.data  = "data.amat"
+plarg_defaults.data  = "PLEARNDIR:examples/data/test_suite/sin_signcos_1x_2y.amat"
 plarg_defaults.sigma = "1.0"
 
 dataset = pl.AutoVMatrix(

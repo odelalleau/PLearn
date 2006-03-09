@@ -7,7 +7,7 @@ from plearn.pyplearn import *
 
 ### Data Options
 class DataOpt( plargs_namespace ):
-    data = "data.amat"
+    data = "PLEARNDIR:examples/data/test_suite/sin_signcos_1x_2y.amat"
 
 ### Hyper Learner options
 class HyperKRR( plargs_namespace ):

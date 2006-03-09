@@ -1,2 +1,1 @@
-lift_output
-cross_entropy
+mse

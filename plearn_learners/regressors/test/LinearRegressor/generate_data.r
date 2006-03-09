@@ -1,5 +1,0 @@
-x <- matrix(rnorm(400),ncol=2)
-y1 <-  5 + x %*% c(10,100) +  5*rnorm(200)
-y2 <- 10 + x %*% c(20,50)  + 20*rnorm(200)
-z <- data.frame(x,y1,y2)
-write.table(z, "data.txt", row.names=FALSE, col.names=FALSE)

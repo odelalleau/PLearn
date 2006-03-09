@@ -1,7 +1,7 @@
 PTester(
 expdir = "PYTEST__PL_badly_conditioned_linreg_script__RESULTS:expdir/" ;
 dataset = *1 ->AutoVMatrix(
-specification = "data.amat" ;
+specification = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.amat" ;
 load_in_memory = 0 ;
 writable = 0 ;
 length = 200 ;
@@ -9,7 +9,7 @@ width = 6 ;
 inputsize = 4 ;
 targetsize = 2 ;
 weightsize = 0 ;
-metadatadir = "PYTEST__PL_badly_conditioned_linreg_script__RESULTS:data.amat.metadata/"  )
+metadatadir = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.amat.metadata/"  )
 ;
 splitter = *2 ->FractionSplitter(
 round_to_closest = 0 ;
@@ -53,6 +53,7 @@ save_learners = 1 ;
 save_initial_learners = 0 ;
 save_data_sets = 0 ;
 save_test_outputs = 1 ;
+call_forget_in_run = 1 ;
 save_test_costs = 1 ;
 provide_learner_expdir = 1 ;
 train = 1 ;
