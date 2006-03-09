@@ -46,7 +46,7 @@ def main():
             pl.PTester(
                 expdir = "expdir_%s_%s_%s_%s_%s_%s_%s" \
                         % ( gm.L, gm.type, gm.n_eigen, gm.kmeans_iterations, concat_flags, gm.seed, gm.nstages ),
-                dataset = pl.AutoVMatrix(specification = "PLEARNDIR:plearn_learners/regressors/test/LinearRegressor/data.amat"),
+                        dataset = pl.AutoVMatrix(specification = "PLEARNDIR:examples/data/test_suite/linear_2x_2y.amat"),
                 splitter = pl.TrainTestSplitter( test_fraction = 0.25, append_train = True ),
                 statnames = [ "E[test1.E[NLL]]", "E[test2.E[NLL]]" ],
                 learner = gm,

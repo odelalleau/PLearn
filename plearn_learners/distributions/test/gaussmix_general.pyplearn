@@ -35,7 +35,7 @@ def main():
     ptesters = []
     for gm in distr:
         # Create a PTester object for each mixture to train.
-        dataset = pl.AutoVMatrix(specification = "PLEARNDIR:plearn_learners/regressors/test/LinearRegressor/data.amat")
+        dataset = pl.AutoVMatrix(specification = "PLEARNDIR:examples/data/test_suite/linear_2x_2y.amat")
         ptesters.append(
             pl.PTester(
                 expdir = "expdir_%s_%s_%s_%s_%s_%s_%s" \

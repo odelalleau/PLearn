@@ -28,7 +28,7 @@ def main():
                 expdir = "expdir_%s_%s_%s" \
                         % ( distr.k, distr.use_last_eig, distr.seed ),
                 dataset = \
-                    pl.AutoVMatrix( specification = "PLEARNDIR:plearn_learners/regressors/test/LinearRegressor/data.amat" ),
+                    pl.AutoVMatrix( specification = "PLEARNDIR:examples/data/test_suite/linear_2x_2y.amat" ),
                 splitter = pl.TrainTestSplitter( test_fraction = 0.25, append_train = True ),
                 statnames = [ "E[test1.E[NLL]]", "E[test2.E[NLL]]" ],
                 learner = distr,

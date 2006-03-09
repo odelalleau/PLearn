@@ -44,7 +44,7 @@ def main():
                 source = pl.AddMissingVMatrix(
                     missing_prop = 0.5,
                     seed = 123456,
-                    source = pl.AutoVMatrix(specification = "PLEARNDIR:plearn_learners/regressors/test/LinearRegressor/data.amat")
+                    source = pl.AutoVMatrix(specification = "PLEARNDIR:examples/data/test_suite/linear_2x_2y.amat")
                 )
         )
 
