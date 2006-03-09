@@ -41,6 +41,8 @@ from   numarray    import zeros, matrixmultiply, transpose
 from   numarray.ma import *                         # masked array
 from   fpconst     import NegInf, PosInf
 
+from   plearn.utilities import ppath
+
 
 def _printMatrix(m, rownames, colnames, os):
     """Nicely print a matrix given rownames and column names.
@@ -194,7 +196,13 @@ class StatsCollector:
 
 if __name__ == "__main__":
     from plearn.vmat.readAMat import readAMat
-    ut,fieldnames = readAMat("top_100_test.amat")
+    ut,fieldnames = readAMat(
+            os.path.join(
+                ppath.ppath('PLEARNDIR'),
+                'examples', 'data', 'test_suite',
+                'top_100_test.amat'
+                )
+            )
     sc = StatsCollector(fieldnames)
     sc.update(ut)
     sc.printStats()
