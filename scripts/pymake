@@ -491,7 +491,7 @@ def get_distcc_hosts():
     else:
         return _process_distcc_hosts(contents)
 
-def printusage():
+def printusag():
     print 'Usage: pymake [options] <list of targets, files or directories>'
     print 'Where targets are .cc file names or base names or directories'
     print 'And options are a combination of the following: '
@@ -852,7 +852,7 @@ else:
             f.close()
         list_of_hosts = nprocesses_per_processor * list_of_hosts
     elif distcc_list_of_hosts is not None:
-        print '*** Parallel compilation using distcc list of hosts'
+        print '*** Parallel compilation using distcc list of hosts (%d)' % len(distcc_list_of_hosts)
         list_of_hosts = distcc_list_of_hosts
     else:
         list_of_hosts = nprocesses_per_processor * ['localhost']
@@ -1256,21 +1256,27 @@ class FileInfo:
 
     
         
-    def make_symbolic_link(self, linkname):
-        """ recreates the symbolic link in filedir pointing to the executable in subdirectory objsdir """
+    def make_symbolic_link(self, linkname, symlink_source_basename = None):
+        """Recreates the symbolic link in filedir pointing to the
+        executable in subdirectory objsdir.
 
-#If the second argument, which is the user defined path and name for the symbolic link,
-#is specified then the symbolic link will have this path and name, and the object files will be
-#placed in the OBJS subdirectory of the directory where the source file is.
+        If the second argument, which is the user defined path and name for
+        the symbolic link, is specified then the symbolic link will have
+        this path and name, and the object files will be placed in the OBJS
+        subdirectory of the directory where the source file is."""
 
         if linkname == '':
             symlinktarget = join(self.filedir,self.filebase)
         else:
             symlinktarget = linkname
+            
         if os.path.islink(symlinktarget) or os.path.exists(symlinktarget):
             os.remove(symlinktarget)
+            
         if linkname == '':
             os.symlink(join(objsdir,self.filebase),symlinktarget)
+        elif symlink_source_basename is not None:
+            os.symlink(join(self.filedir+"/"+objsdir, symlink_source_basename),symlinktarget)
         else:
             os.symlink(join(self.filedir+"/"+objsdir,self.filebase),symlinktarget)
 
@@ -1800,8 +1806,12 @@ def sequential_link(executables_to_link, linkname):
             if verbose>=2:
                 print '[ LINKING',ccfile.filebase,']'
             link_exit_code = ccfile.launch_linking()
-            if platform!='win32' and not create_so:
-                ccfile.make_symbolic_link(linkname)
+            if platform!='win32':
+                if create_so:
+                    so_filename = os.path.basename(ccfile.corresponding_output)
+                    ccfile.make_symbolic_link(so_filename, so_filename)
+                else:
+                    ccfile.make_symbolic_link(linkname)
             return link_exit_code
 
 def sequential_dll(target_file_info):
