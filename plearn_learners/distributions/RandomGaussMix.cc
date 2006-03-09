@@ -259,6 +259,7 @@ void RandomGaussMix::build_()
     sigma_min = 1e-10;
     inputsize_ = D;
     n_eigen_computed = D;
+    stage = 1;
     // Rebuild the mixture.
     inherited::build();
 }
