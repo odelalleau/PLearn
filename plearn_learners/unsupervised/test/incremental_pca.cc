@@ -55,7 +55,7 @@ int main(int argc, char** argv)
         incremental.normalize_warning = 0;
         incremental.build();
 
-        VMat data = new AutoVMatrix( "gaussian_data.amat" );
+        VMat data = new AutoVMatrix( "PLEARNDIR:examples/data/test_suite/multi_gaussian_data.amat" );
         compare( classical, incremental, data,  0, 10 );
         compare( classical, incremental, data, 10, 20 );
 
