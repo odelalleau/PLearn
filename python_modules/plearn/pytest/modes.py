@@ -352,14 +352,14 @@ class confirm( PyTestMode ):
 
         # New expected results to be added
         for confirmed_filepath in unique_to_confirmed:
-            expected_filepath = expected_filepath.replace('.confirmed', '')
+            expected_filepath = confirmed_filepath.replace('.confirmed', '')
             assert not os.path.exists(expected_filepath)
             
-            rename_cmd = 'os.rename(%s, %s)'%(confirmed_filepath, expected_filepath)
+            rename_cmd = 'os.rename("%s", "%s")'%(confirmed_filepath, expected_filepath)
             logging.debug(rename_cmd)
             eval(rename_cmd)
 
-            version_control.recursive_add(filepath)
+            version_control.recursive_add(expected_filepath)
             
 
 class FamilyConfigMode(PyTestMode):
