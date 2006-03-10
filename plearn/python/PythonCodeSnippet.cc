@@ -380,7 +380,7 @@ PythonObjectWrapper PythonCodeSnippet::compileGlobalCode(const string& code) con
             Py_XDECREF(globals);
             PyErr_Print();
             PLERROR("PythonCodeSnippet::resetInternalState: error compiling Python code\n"
-                    "contained in the 'init_code' option.");
+                    "contained in the 'code' option.");
         }
     }
     return PythonObjectWrapper(globals);
