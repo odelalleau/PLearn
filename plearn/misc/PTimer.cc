@@ -45,6 +45,12 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(
     PTimer,
     "Allows measurement of time elapsed between two events.",
+    "A single PTimer object can contain many timers, each being identified\n"
+    "by a unique name.\n"
+    "The time is measured in seconds. For short durations (less than 30\n"
+    "minutes), it is measured precisely, while for longer durations it is\n"
+    "approximated to an integer number.\n"
+    "\n"
     "Note that for advanced profiling, one should probably use the\n"
     "Profiler class instead.\n"
     );
