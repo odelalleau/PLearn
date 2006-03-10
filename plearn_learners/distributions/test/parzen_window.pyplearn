@@ -22,6 +22,7 @@ def main():
                 splitter = pl.TrainTestSplitter( test_fraction = 0.25, append_train = True ),
                 statnames = [ "E[test1.E[NLL]]", "E[test2.E[NLL]]" ],
                 learner = distr,
+                report_stats = 0,
                 save_initial_tester = 0,
                 save_stat_collectors = 0,
                 save_test_outputs = 0,
