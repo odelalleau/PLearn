@@ -2797,6 +2797,9 @@ void GaussMix::train()
             while (!finished && count_iter < efficient_k_median_iter) {
                 finished = true;
                 // Assign each missing pattern to closest template.
+                static TVec<bool> has_assigned;
+                has_assigned.resize(n_clusters);
+                has_assigned.fill(false);
                 for (int i = 0; i < missing_patterns.length(); i++) {
                     n_diffs.fill(0);
                     for (int j = 0; j < n_clusters; j++)
@@ -2808,6 +2811,7 @@ void GaussMix::train()
                     if (new_assign != missing_assign[i])
                         finished = false;
                     missing_assign[i] = new_assign;
+                    has_assigned[new_assign] = true;
                 }
                 // Recompute missing templates.
                 majority.fill(0);
@@ -2821,6 +2825,7 @@ void GaussMix::train()
                     }
                 }
                 for (int j = 0; j < n_clusters; j++)
+                    if (has_assigned[j]) {
                     for (int k = 0; k < missing_template.width(); k++)
                         if (majority(j, k) > 0)
                             missing_template(j, k) = true;
@@ -2831,6 +2836,17 @@ void GaussMix::train()
                             // kmeans initialization).
                             missing_template(j, k) =
                                 (PRandom::common(false)->uniform_sample() < 0.5);
+                    } else {
+                        // This cluster has no point assigned to it. We set it
+                        // to a new pattern chosen randomly in the patterns
+                        // set, that is assigned to this cluster.
+                        int random_pattern =
+                            PRandom::common(false)->uniform_multinomial_sample(
+                                    missing_patterns.length());
+                        missing_template(j) <<
+                            missing_patterns(random_pattern);
+                        missing_assign[random_pattern] = j;
+                    }
 
                 count_iter++;
                 if (report_progress)
