@@ -1,5 +1,9 @@
-
 from math import *
+from numarray import asarray, zeros, shape, ufunc
+
+def sign(m):
+   m = asarray(m)
+   return zeros(shape(m))-ufunc.less(m,0)+ufunc.greater(m,0)
 
 def fast_softmax( x ):
     s = 0
