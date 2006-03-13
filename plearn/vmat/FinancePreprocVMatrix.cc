@@ -45,22 +45,31 @@
 namespace PLearn {
 using namespace std;
 
-PLEARN_IMPLEMENT_OBJECT(FinancePreprocVMatrix, "ONE LINE DESCR",
-                        "FinancePreprocVMatrix implements a VMatrix with extra preprocessing columns.");
+PLEARN_IMPLEMENT_OBJECT(FinancePreprocVMatrix,
+                        "VMatrix with extra preprocessing columns",
+                        "FinancePreprocVMatrix implements a VMatrix with\n"
+                        "extra preprocessing columns.\n");
 
 FinancePreprocVMatrix::FinancePreprocVMatrix()
     :inherited(), add_tradable(false), add_last_day_of_month(false),
      add_moving_average(false), add_rollover_info(false)
 {}
 
-FinancePreprocVMatrix::FinancePreprocVMatrix(VMat vm, TVec<string> the_asset_names,
-                                             bool add_tradable_info, bool add_last_day, bool add_moving_average_stats,
-                                             bool add_roll_over_info, int threshold, TVec<string> the_price_tags,
-                                             TVec<int> moving_average_window_length,
-                                             string the_volume_tag, string the_date_tag, string the_expiration_tag,
-                                             int the_last_day_cutoff, bool last_date_is_a_last_day)
-    :inherited(vm->length(), vm->width()+(add_tradable_info?the_asset_names.size():0) + (add_last_day?1:0) + (add_moving_average_stats?the_asset_names.size()*the_price_tags.size()*moving_average_window_length.size():0)+(add_roll_over_info?the_asset_names.size():0)),
-     underlying(vm), asset_name(the_asset_names),
+FinancePreprocVMatrix::FinancePreprocVMatrix(
+    VMat the_source, TVec<string> the_asset_names,
+    bool add_tradable_info, bool add_last_day, bool add_moving_average_stats,
+    bool add_roll_over_info, int threshold, TVec<string> the_price_tags,
+    TVec<int> moving_average_window_length,
+    string the_volume_tag, string the_date_tag, string the_expiration_tag,
+    int the_last_day_cutoff, bool last_date_is_a_last_day)
+    :inherited(the_source,
+               the_source->length(),
+               the_source->width()
+                + (add_tradable_info?the_asset_names.size():0)
+                + (add_last_day?1:0)
+                + (add_moving_average_stats?the_asset_names.size()*the_price_tags.size()*moving_average_window_length.size():0)
+                + (add_roll_over_info?the_asset_names.size():0)),
+     asset_name(the_asset_names),
      add_tradable(add_tradable_info), add_last_day_of_month(add_last_day),
      add_moving_average(add_moving_average_stats),
      add_rollover_info(add_roll_over_info),
@@ -69,17 +78,17 @@ FinancePreprocVMatrix::FinancePreprocVMatrix(VMat vm, TVec<string> the_asset_nam
      volume_tag(the_volume_tag), date_tag(the_date_tag),
      expiration_tag(the_expiration_tag), last_day_cutoff(the_last_day_cutoff),
      last_date_is_last_day(last_date_is_a_last_day),
-     rollover_date(asset_name.size()), row_buffer(vm->width())
+     rollover_date(asset_name.size()), row_buffer(the_source->width())
 {
     build();
 }
 
 void FinancePreprocVMatrix::getNewRow(int i, const Vec& v) const
 {
-    Vec row_buffer = v.subVec(0, underlying.width());
-    underlying->getRow(i, row_buffer);
+    Vec row_buffer = v.subVec(0, source.width());
+    source->getRow(i, row_buffer);
 
-    int pos = underlying.width();
+    int pos = source.width();
     if (add_tradable)
     {
         for (int k=0; k<asset_name.size(); ++k, ++pos)
@@ -107,7 +116,7 @@ void FinancePreprocVMatrix::getNewRow(int i, const Vec& v) const
                 int prices_start = i+1 - prices_length;
                 Vec prices(prices_length);
                 for (int l=0; l<prices_length; l++)
-                    prices[l] = underlying->get(l+prices_start,index);
+                    prices[l] = source->get(l+prices_start,index);
 
                 for (int l=0; l<moving_average_window.size(); l++)
                 {
@@ -130,40 +139,62 @@ void FinancePreprocVMatrix::getNewRow(int i, const Vec& v) const
 
 void FinancePreprocVMatrix::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "vmat", &FinancePreprocVMatrix::underlying, OptionBase::buildoption,
-                  "The underlying VMat.");
+    declareOption(ol, "vmat", &FinancePreprocVMatrix::source,
+                  (OptionBase::learntoption | OptionBase::nosave),
+                  "DEPRECATED - use 'source' instead.");
 
-    declareOption(ol, "add_tradable", &FinancePreprocVMatrix::add_tradable, OptionBase::buildoption,
-                  "Do we include the information telling if this day is tradable or not.");
+    declareOption(ol, "add_tradable", &FinancePreprocVMatrix::add_tradable,
+                  OptionBase::buildoption,
+                  "Do we include the information telling if this day is"
+                  " tradable or not.");
 
-    declareOption(ol, "add_last_day_of_month", &FinancePreprocVMatrix::add_last_day_of_month, OptionBase::buildoption,
-                  "Do we include the information about the last tradable day of the month or not.");
+    declareOption(ol, "add_last_day_of_month",
+                  &FinancePreprocVMatrix::add_last_day_of_month,
+                  OptionBase::buildoption,
+                  "Do we include the information about the last tradable day"
+                  " of the month or not.");
 
-    declareOption(ol, "add_moving_average", &FinancePreprocVMatrix::add_moving_average, OptionBase::buildoption,
-                  "Do we include the moving average statistics on the price_tag indexes.");
+    declareOption(ol, "add_moving_average",
+                  &FinancePreprocVMatrix::add_moving_average,
+                  OptionBase::buildoption,
+                  "Do we include the moving average statistics on the"
+                  " price_tag indexes.");
 
-    declareOption(ol, "add_rollover_info", &FinancePreprocVMatrix::add_rollover_info, OptionBase::buildoption,
-                  "Do we include the boolean information on whether or not this is a new time series (new expiration date).");
+    declareOption(ol, "add_rollover_info",
+                  &FinancePreprocVMatrix::add_rollover_info,
+                  OptionBase::buildoption,
+                  "Do we include the boolean information on whether or not\n"
+                  "this is a new time series (new expiration date).\n");
 
-    declareOption(ol, "min_volume_threshold", &FinancePreprocVMatrix::min_volume_threshold, OptionBase::buildoption,
+    declareOption(ol, "min_volume_threshold",
+                  &FinancePreprocVMatrix::min_volume_threshold,
+                  OptionBase::buildoption,
                   "The threshold saying if the asset is tradable or not.");
 
-    declareOption(ol, "moving_average_window", &FinancePreprocVMatrix::moving_average_window, OptionBase::buildoption,
+    declareOption(ol, "moving_average_window",
+                  &FinancePreprocVMatrix::moving_average_window,
+                  OptionBase::buildoption,
                   "The window size of the moving average.");
 
-    declareOption(ol, "prices_tag", &FinancePreprocVMatrix::prices_tag, OptionBase::buildoption,
+    declareOption(ol, "prices_tag", &FinancePreprocVMatrix::prices_tag,
+                  OptionBase::buildoption,
                   "The fieldInfo name for the prices columns.");
 
-    declareOption(ol, "volume_tag", &FinancePreprocVMatrix::volume_tag, OptionBase::buildoption,
+    declareOption(ol, "volume_tag", &FinancePreprocVMatrix::volume_tag,
+                  OptionBase::buildoption,
                   "The fieldInfo name for the volume column.");
 
-    declareOption(ol, "date_tag", &FinancePreprocVMatrix::date_tag, OptionBase::buildoption,
+    declareOption(ol, "date_tag", &FinancePreprocVMatrix::date_tag,
+                  OptionBase::buildoption,
                   "The fieldInfo name of the date column.");
 
-    declareOption(ol, "expiration_tag", &FinancePreprocVMatrix::expiration_tag, OptionBase::buildoption,
+    declareOption(ol, "expiration_tag", &FinancePreprocVMatrix::expiration_tag,
+                  OptionBase::buildoption,
                   "The fieldInfo name of the expiration-date column.");
 
-    declareOption(ol, "last_day_cutoff", &FinancePreprocVMatrix::last_day_cutoff, OptionBase::buildoption,
+    declareOption(ol, "last_day_cutoff",
+                  &FinancePreprocVMatrix::last_day_cutoff,
+                  OptionBase::buildoption,
                   "Cutoff for the add_last_day_of_month flag (default=0).");
 
     // Now call the parent class' declareOptions
@@ -172,12 +203,12 @@ void FinancePreprocVMatrix::declareOptions(OptionList& ol)
 
 void FinancePreprocVMatrix::setVMFields()
 {
-    Array<VMField>& orig_fields = underlying->getFieldInfos();
+    Array<VMField>& orig_fields = source->getFieldInfos();
 
     for (int i=0; i<orig_fields.size(); i++)
         declareField(i, orig_fields[i].name, orig_fields[i].fieldtype);
 
-    int pos = underlying.width();
+    int pos = source.width();
     if (add_tradable)
     {
         for (int i=0; i<asset_name.size(); ++i)
@@ -219,8 +250,8 @@ void FinancePreprocVMatrix::build_()
 {
     if(length_ == -1 || width_ == -1)
     {
-        length_ = underlying->length(); 
-        width_  = ( underlying->width() +
+        length_ = source->length(); 
+        width_  = ( source->width() +
                     (add_tradable?asset_name.size():0) + 
                     (add_last_day_of_month?1:0) + 
                     (add_moving_average?asset_name.size()*prices_tag.size()*moving_average_window.size():0) + 
@@ -235,19 +266,19 @@ void FinancePreprocVMatrix::build_()
         for (int i=0; i<nb_assets; i++)
         {
             string volume_name_col = asset_name[i]+":"+volume_tag;
-            volume_index[i] = underlying->fieldIndex(volume_name_col);
+            volume_index[i] = source->fieldIndex(volume_name_col);
         }
     }
 
     if (add_last_day_of_month)
     {
-        int date_col = underlying->fieldIndex(date_tag);
-        int julian_day = int(underlying->get(0,date_col));
+        int date_col = source->fieldIndex(date_tag);
+        int julian_day = int(source->get(0,date_col));
         PDate first_date(julian_day-last_day_cutoff);
         int previous_month = first_date.month;
-        for (int i=1; i<underlying.length(); i++)
+        for (int i=1; i<source.length(); i++)
         {
-            julian_day = int(underlying->get(i,date_col));
+            julian_day = int(source->get(i,date_col));
             PDate today(julian_day-last_day_cutoff);
             int this_month = today.month;
             if (this_month != previous_month) last_day_of_month_index.append(i-1);
@@ -255,7 +286,7 @@ void FinancePreprocVMatrix::build_()
         }
         // if needed, we set the last day as a last tradable day of month
         if (last_date_is_last_day)
-            last_day_of_month_index.append(underlying.length()-1);
+            last_day_of_month_index.append(source.length()-1);
     }
 
     if (add_moving_average)
@@ -270,7 +301,7 @@ void FinancePreprocVMatrix::build_()
             for (int j=0; j<prices_tag.size(); j++)
             {
                 string moving_average_name_col = asset_name[i]+":"+prices_tag[j];
-                price_index[k++] = underlying->fieldIndex(moving_average_name_col);
+                price_index[k++] = source->fieldIndex(moving_average_name_col);
             }
         }
     }
@@ -281,13 +312,13 @@ void FinancePreprocVMatrix::build_()
         for (int i=0; i<nb_assets; i++)
         {
             string expiration_name_col = asset_name[i]+":"+expiration_tag;
-            expiration_index[i] = underlying->fieldIndex(expiration_name_col);
+            expiration_index[i] = source->fieldIndex(expiration_name_col);
 
             rollover_date[i].resize(0);
-            real last_expiration_date = underlying->get(0,expiration_index[i]);
-            for (int j=1; j<underlying.length(); j++)
+            real last_expiration_date = source->get(0,expiration_index[i]);
+            for (int j=1; j<source.length(); j++)
             {
-                real expiration_date = underlying->get(j,expiration_index[i]);
+                real expiration_date = source->get(j,expiration_index[i]);
                 if (!is_missing(expiration_date) &&
                     !is_equal(expiration_date, last_expiration_date))
                 {
@@ -301,6 +332,7 @@ void FinancePreprocVMatrix::build_()
   
     setVMFields();
     saveFieldInfos();
+    setMetaInfoFromSource();
 }
 
 // ### Nothing to add here, simply calls build_

@@ -44,46 +44,53 @@
 #ifndef OneHotVMatrix_INC
 #define OneHotVMatrix_INC
 
-#include "RowBufferedVMatrix.h"
+#include "SourceVMatrix.h"
 #include "VMat.h"
 
 namespace PLearn {
 using namespace std;
  
 
-/*!   This VMat is built from another VMat
-  Sampling from this VMat will return the corresponding
-  sample from the underlying VMat with last element ('target_classnum') replaced
-  by a vector of target_values of size nclasses in which only target_values[target_classnum] 
-  is set to  hot_value , and all the others are set to cold_value
-  In the special case where the VMat is built with nclasses==1, then it is assumed 
-  that we have a 2 class classification problem but we are using a single valued target. 
-  For this special case only the_cold_value is used as target for classnum 0 
-  and the_hot_value is used for classnum 1
+/*!
+  Sampling from this VMat will return the corresponding sample
+  from the source VMat with last element ('target_classnum')
+  replaced by a vector of target_values of size nclasses in which only
+  target_values[target_classnum] is set to hot_value, and all the
+  others are set to cold_value.
+  In the special case where the VMat is built with nclasses==1, then
+  it is assumed that we have a 2 class classification problem but
+  we are using a single valued target.  For this special case only
+  the_cold_value is used as target for classnum 0 and the_hot_value is
+  used for classnum 1.
 */
-class OneHotVMatrix: public RowBufferedVMatrix
+
+class OneHotVMatrix: public SourceVMatrix
 {
-    typedef RowBufferedVMatrix inherited;
+    typedef SourceVMatrix inherited;
 
 protected:
-    VMat underlying_distr;
+//    VMat underlying_distr; // DEPRECATED - use 'source' instead
     int nclasses;
     real cold_value;
     real hot_value;
+    int index;
 
 public:
     // ******************
     // *  Constructors  *
     // ******************
-    OneHotVMatrix(); //!<  default constructor (for automatic deserialization)
+
+    //!  default constructor (for automatic deserialization)
+    OneHotVMatrix(bool call_build_ = false);
 
     //!  (see special case when nclasses==1 desribed above)
-    //!  Warning: VMFields are NOT YET handled by this constructor
-    OneHotVMatrix(VMat the_underlying_distr, int the_nclasses, real the_cold_value=0.0, real the_host_value=1.0);
+    OneHotVMatrix(VMat the_source, int the_nclasses,
+                  real the_cold_value=0.0, real the_host_value=1.0,
+                  int the_index=-1, bool call_build_ = false);
 
     PLEARN_DECLARE_OBJECT(OneHotVMatrix);
 
-protected: 
+protected:
 
     virtual void getNewRow(int i, const Vec& samplevec) const;
     static void declareOptions(OptionList &ol);
@@ -92,11 +99,11 @@ public:
 
     virtual void build();
 
-    virtual void reset_dimensions() 
-    { 
-        underlying_distr->reset_dimensions(); 
-        width_=underlying_distr->width(); 
-        length_=underlying_distr->length(); 
+    virtual void reset_dimensions()
+    {
+        source->reset_dimensions();
+        width_ = source->width() + nclasses - 1;
+        length_ = source->length();
     }
     virtual real dot(int i1, int i2, int inputsize) const;
     virtual real dot(int i, const Vec& v) const;
@@ -104,8 +111,11 @@ private:
     void build_();
 };
 
-inline VMat onehot(VMat d, int nclasses, real cold_value=0.0, real hot_value=1.0)
-{ return new OneHotVMatrix(d, nclasses, cold_value, hot_value); }
+inline VMat onehot(VMat the_source, int nclasses,
+                   real cold_value=0.0, real hot_value=1.0, int index=-1,
+                   bool call_build_=false)
+{ return new OneHotVMatrix(the_source, nclasses, cold_value, hot_value, index,
+                           call_build_); }
 
 DECLARE_OBJECT_PTR(OneHotVMatrix);
 

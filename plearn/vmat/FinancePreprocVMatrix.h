@@ -41,40 +41,75 @@
 #ifndef FinancePreprocVMatrix_INC
 #define FinancePreprocVMatrix_INC
 
-#include "RowBufferedVMatrix.h"
+#include "SourceVMatrix.h"
 #include "VMat.h"
 
 namespace PLearn {
 using namespace std;
 
-class FinancePreprocVMatrix: public RowBufferedVMatrix
+class FinancePreprocVMatrix: public SourceVMatrix
 {
-    typedef RowBufferedVMatrix inherited;
+    typedef SourceVMatrix inherited;
 
 public:
 
-    VMat underlying; //! the underlying vmat
     TVec<string> asset_name; //! all the asset names
-    bool add_tradable; //! do we include the information telling if this day is tradable or not
-    bool add_last_day_of_month; //! do we include the information about the last tradable day of the month
-    bool add_moving_average; //! do we include the moving average statistics on the price_tag indexes
-    bool add_rollover_info; //! add a column with '1' when the rollover occur (new expiration date)
-    int min_volume_threshold; //! tradable = 1 if volume>min_volume_threshold
-    TVec<string> prices_tag; //! all the price tags on which we want to compute the moving average (e.g. close:level)
-    TVec<int> moving_average_window; //! the window size of the moving average
+
+    //! do we include the information telling if this day is tradable or not
+    bool add_tradable;
+
+    //! do we include the information about the last tradable day of the month
+    bool add_last_day_of_month;
+
+    //! do we include the moving average statistics on the price_tag indexes
+    bool add_moving_average;
+
+    //! add a column with '1' when the rollover occur (new expiration date)
+    bool add_rollover_info;
+
+    //! tradable = 1 if volume>min_volume_threshold
+    int min_volume_threshold;
+
+    //! all the price tags on which we want to compute the moving average
+    //! (e.g. close:level)
+    TVec<string> prices_tag;
+
+    //! the window size of the moving average
+    TVec<int> moving_average_window;
+
     string volume_tag; //! "volume" by default
-    string date_tag; //! "Date" by default.  Only used if add_last_day_of_month==true
-    string expiration_tag; //! "expiration-date" by default.  Only used if add_rollover_info==true
-    int last_day_cutoff; //! 0 by default (last day of month).  Set last_day=15 to simulate last_day_of_month as the 15 of each month
-    bool last_date_is_last_day; //! is the last day a last day of month? (default=false)
+
+    //! "Date" by default.  Only used if add_last_day_of_month==true
+    string date_tag;
+
+    //! "expiration-date" by default.  Only used if add_rollover_info==true
+    string expiration_tag;
+
+    //! 0 by default (last day of month).
+    //! Set last_day=15 to simulate last_day_of_month as the 15 of each month
+    int last_day_cutoff;
+
+    //! is the last day a last day of month? (default=false)
+    bool last_date_is_last_day;
 
 protected:
 
-    TVec<int> volume_index; //! the indexes (in the vmat) of all the volume columns
-    TVec<int> price_index; //! the indexes of all the prices on which we want to compute some stats
-    TVec<int> expiration_index; //! the index of the expiration-date (related to the expiration_tag)
-    Vec last_day_of_month_index; //! the index of all the last tradable day of the month, base on the date column of the underlying matrix
-    int max_moving_average_window; //! the maximum value of moving_average_window
+    //! the indexes (in the vmat) of all the volume columns
+    TVec<int> volume_index;
+
+    //! the indexes of all the prices on which we want to compute some stats
+    TVec<int> price_index;
+
+    //! the index of the expiration-date (related to the expiration_tag)
+    TVec<int> expiration_index;
+
+    //! the index of all the last tradable day of the month,
+    //! base on the date column of the source matrix
+    Vec last_day_of_month_index;
+
+    //! the maximum value of moving_average_window
+    int max_moving_average_window;
+
     TVec< TVec<int> > rollover_date; //! the position (date) of all rollover
     Vec row_buffer; //! a row buffer for the getRow method
 
@@ -88,15 +123,19 @@ public:
     // initializes all fields to reasonable default values.
     FinancePreprocVMatrix();
 
-    //! Simple constructor: takes as input only the underlying matrix,
+    //! Simple constructor: takes as input only the source matrix,
     //! the number of assets and the threshold on the volume.
-    FinancePreprocVMatrix(VMat vm, TVec<string> the_asset_names,
+    FinancePreprocVMatrix(VMat the_source, TVec<string> the_asset_names,
                           bool add_tradable_info=true, bool add_last_day=false,
-                          bool add_moving_average_stats=false, bool add_roll_over_info=false,
-                          int threshold=20, TVec<string> the_price_tags=TVec<string>(),
+                          bool add_moving_average_stats=false,
+                          bool add_roll_over_info=false,
+                          int threshold=20,
+                          TVec<string> the_price_tags=TVec<string>(),
                           TVec<int> moving_average_window_length=TVec<int>(),
-                          string the_volume_tag="volume:level", string the_date_tag="Date",
-                          string the_expiration_tag="expiration-date", int the_last_day_cutoff=0,
+                          string the_volume_tag="volume:level",
+                          string the_date_tag="Date",
+                          string the_expiration_tag="expiration-date",
+                          int the_last_day_cutoff=0,
                           bool last_date_is_a_last_day=false);
 
     // ******************

@@ -46,7 +46,9 @@ namespace PLearn {
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT(JulianizeVMatrix, "ONE LINE DESCR",
+PLEARN_IMPLEMENT_OBJECT(JulianizeVMatrix,
+                        "Converts dates in a several field format to a single"
+                        " number format",
                         "JulianizeVMatrix provides a conversion from a VMat containing dates\n"
                         "in an explicit 3-column (YYYY,MM,DD) or 6-column (YYYY,MM,DD,HH,MM,SS)\n"
                         "format to a Julian day number format (including fractional part to\n"
@@ -55,35 +57,42 @@ PLEARN_IMPLEMENT_OBJECT(JulianizeVMatrix, "ONE LINE DESCR",
                         "converted.\n");
 
 
-JulianizeVMatrix::JulianizeVMatrix()
-    : inherited()
+JulianizeVMatrix::JulianizeVMatrix(bool call_build_)
+    : inherited(call_build_)
     /* all other compiler-supplied defaults are reasonable */
-{ }
-
-JulianizeVMatrix::JulianizeVMatrix(VMat underlying,
-                                   DateCode date_code,
-                                   int starting_column)
-    : inherited(underlying->length(), newWidth(underlying, date_code)),
-      underlying_(underlying),
-      cols_codes_(1), und_row_(underlying.width())
 {
-    cols_codes_[0] = make_pair(starting_column, date_code);
+    if( call_build_ )
+        build_();
+}
+
+JulianizeVMatrix::JulianizeVMatrix(VMat the_source,
+                                   DateCode date_code,
+                                   int starting_column,
+                                   bool call_build_)
+    : inherited(the_source,
+                the_source->length(),
+                newWidth(the_source, date_code),
+                call_build_),
+      cols_codes(1),
+      source_row(the_source.width())
+{
+    cols_codes[0] = make_pair(starting_column, date_code);
     setVMFields();
 }
 
 
 void JulianizeVMatrix::getNewRow(int i, const Vec& v) const
 {
-    underlying_->getRow(i, und_row_);
+    source->getRow(i, source_row);
 
     Vec::iterator
-        src_beg = und_row_.begin(),
-        src_it  = und_row_.begin(),
-        src_end = und_row_.end(),
+        src_beg = source_row.begin(),
+        src_it  = source_row.begin(),
+        src_end = source_row.end(),
         dst_it  = v.begin();
     vector< pair<int,DateCode> >::const_iterator
-        codes_it  = cols_codes_.begin(),
-        codes_end = cols_codes_.end();
+        codes_it  = cols_codes.begin(),
+        codes_end = cols_codes.end();
 
     for ( ; codes_it < codes_end ; ++codes_it ) {
         // Copy what comes before the current date
@@ -134,6 +143,7 @@ void JulianizeVMatrix::declareOptions(OptionList& ol)
 void JulianizeVMatrix::build_()
 {
     // No options to build at this point
+    setMetaInfoFromSource();
 }
 
 // ### Nothing to add here, simply calls build_
@@ -146,18 +156,17 @@ void JulianizeVMatrix::build()
 void JulianizeVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-    deepCopyField(underlying_, copies);
-    deepCopyField(und_row_, copies);
-    // cols_codes_ already deep-copied since it is an STL vector
+    deepCopyField(source_row, copies);
+    // cols_codes already deep-copied since it is an STL vector
 }
 
 void JulianizeVMatrix::setVMFields()
 {
-    Array<VMField>& orig_fields = underlying_->getFieldInfos();
+    Array<VMField>& orig_fields = source->getFieldInfos();
     int new_field = 0;
     int cur_field = 0, end_field = orig_fields.size();
-    vector< pair<int,DateCode> >::iterator it = cols_codes_.begin(),
-        end = cols_codes_.end();
+    vector< pair<int,DateCode> >::iterator it = cols_codes.begin(),
+        end = cols_codes.end();
 
     for ( ; cur_field < end_field ; ++cur_field, ++new_field) {
         // We've got a date field

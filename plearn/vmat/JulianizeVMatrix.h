@@ -45,7 +45,7 @@
 #include <vector>
 #include <algorithm>
 
-#include "RowBufferedVMatrix.h"
+#include "SourceVMatrix.h"
 #include "VMat.h"
 
 namespace PLearn {
@@ -53,24 +53,24 @@ using namespace std;
 
 /*! JulianizeVMatrix
  *
- * The purpose of a JulianizeVMatrix is to convert some columns of an
- * underlying VMatrix into a JulianDayNumber (represented as a double).
+ * The purpose of a JulianizeVMatrix is to convert some columns of a
+ * source VMatrix into a JulianDayNumber (represented as a double).
  * This VMatrix can convert any triplet of (YYYY,MM,DD) or sextuplet
  * (YYY,MM,DD,HH,MM,SS) into a single double, whose integer part is the JDN
  * and the fractional part codes the HH:MM:SS as a day fraction.  Columns
  * anywhere in the VMat can thereby be sepcified.
  *
- * A class invariant here is that the member variable cols_codes_ (which
+ * A class invariant here is that the member variable cols_codes (which
  * stores pairs of the starting columns for dates to convert along with the
  * date code for carrying out the conversion) is kept SORTED in order of
  * increasing column.
  */
-class JulianizeVMatrix : public RowBufferedVMatrix
+class JulianizeVMatrix : public SourceVMatrix
 {
-    typedef RowBufferedVMatrix inherited;
+    typedef SourceVMatrix inherited;
 
 public:
-    //! This specifies the how the dates are coded in the underlying VMatrix;
+    //! This specifies the how the dates are coded in the source VMatrix;
     //! for now only two formats are allowed.
     enum DateCode {
         Date = 0,                                //!< (YYYY, MM, DD)
@@ -88,9 +88,9 @@ public:
     }
   
 protected:
-    VMat underlying_;                          //!< underlying vmat
-    vector< pair<int,DateCode> > cols_codes_;  //!< all columns/date codes
-    mutable Vec und_row_;                      //!< buffer for underlying row
+// DEPRECATED - use "source"    VMat underlying_;         //!< underlying vmat
+    vector< pair<int,DateCode> > cols_codes;  //!< all columns/date codes
+    mutable Vec source_row;                   //!< buffer for source row
 
 public:
 
@@ -108,13 +108,14 @@ public:
 
     //! Default constructor, the implementation in the .cc
     //! initializes all fields to reasonable default values.
-    JulianizeVMatrix();
+    JulianizeVMatrix(bool call_build_ = false);
 
     //! Simple constructor: takes as input only the date code and the starting
     //! column for a single date.  Starting columns are zero-based.
-    JulianizeVMatrix(VMat underlying,
+    JulianizeVMatrix(VMat the_source,
                      DateCode date_code = Date,
-                     int starting_column = 0);
+                     int starting_column = 0,
+                     bool call_build_ = false);
 
     // ******************
     // * Object methods *
@@ -144,11 +145,11 @@ public:
 
 protected:
     // Return the new number of columns
-    static int newWidth(VMat und, DateCode dc) {
-        return und->width() - dateCodeWidth(dc) + 1;
+    static int newWidth(VMat the_source, DateCode dc) {
+        return the_source->width() - dateCodeWidth(dc) + 1;
     }
 
-    // Set the VMFields in this VMatrix from the underlying field names.  All
+    // Set the VMFields in this VMatrix from the source field names.  All
     // "date" fields are named "Date", and "date-time" are named "DateTime".
     void setVMFields();
 };

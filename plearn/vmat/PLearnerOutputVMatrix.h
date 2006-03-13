@@ -44,16 +44,16 @@
 #ifndef PLearnerOutputVMatrix_INC
 #define PLearnerOutputVMatrix_INC
 
-#include "RowBufferedVMatrix.h"
+#include "SourceVMatrix.h"
 #include "VMat.h"
 #include <plearn_learners/generic/PLearner.h>
 
 namespace PLearn {
 using namespace std;
 
-class PLearnerOutputVMatrix: public RowBufferedVMatrix
+class PLearnerOutputVMatrix: public SourceVMatrix
 {
-    typedef RowBufferedVMatrix inherited;
+    typedef SourceVMatrix inherited;
 
 protected:
     // *********************
@@ -64,11 +64,12 @@ protected:
 
     mutable Vec row;
     mutable Vec learner_input;
-    mutable TVec< Vec > learners_output;       //!< Instead of Mat to allow
-    //!< learners of various outputsizes
+    //! Instead of Mat to allow learners of various outputsizes
+    mutable TVec< Vec > learners_output;
     mutable Vec learner_target;
-    mutable Vec non_input_part_of_data_row;
-    mutable bool learners_need_train;  //!< Used to keep track of whether learners need training or not.
+    mutable Vec non_input_part_of_source_row;
+    //! Used to keep track of whether learners need training or not.
+    mutable bool learners_need_train;
     mutable TVec<Mat> complete_learners_output;
 
 public:
@@ -78,10 +79,17 @@ public:
     // ************************
 
     VMat fieldinfos_source;
-    VMat data; // whose input field will be applied to learner in order to obtain new input part of this VMatrix
+
+    // DEPRECATED - we now use 'source' instead.
+    //VMat data; // whose input field will be applied to learner in order to obtain new input part of this VMatrix
     VMat data_train;
-    TVec<PP<PLearner> > learners; // the outputs of the learners will be concatenated
-    bool put_raw_input; // if true not only the learner output but also the raw data input are in the input part of the VMatrix
+
+    // the outputs of the learners will be concatenated
+    TVec< PP<PLearner> > learners;
+
+    // if true not only the learner output but also the raw source input
+    // are in the input part of the VMatrix
+    bool put_raw_input;
     bool put_non_input;
     bool train_learners;
     bool compute_output_once;
@@ -92,8 +100,14 @@ public:
 
     // Default constructor, make sure the implementation in the .cc
     // initializes all fields to reasonable default values.
-    PLearnerOutputVMatrix();
-    PLearnerOutputVMatrix(VMat data_,TVec<PP<PLearner> > learners_, bool put_raw_input_=false, bool train_learners_ = false, bool compute_output_once_ = false, bool put_non_input_ = true);
+    PLearnerOutputVMatrix(bool call_build_ = false);
+    PLearnerOutputVMatrix(VMat source_,
+                          TVec< PP<PLearner> > learners_,
+                          bool put_raw_input_=false,
+                          bool train_learners_ = false,
+                          bool compute_output_once_ = false,
+                          bool put_non_input_ = true,
+                          bool call_build_ = true);
 
     // ******************
     // * Object methods *

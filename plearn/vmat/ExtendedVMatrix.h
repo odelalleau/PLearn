@@ -96,7 +96,6 @@ public:
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     virtual void reset_dimensions()

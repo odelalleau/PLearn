@@ -41,21 +41,54 @@
 namespace PLearn {
 using namespace std;
 
-PLEARN_IMPLEMENT_OBJECT(IndexedVMatrix, "ONE LINE DESCR", 
-                        "    VMat class that sees a matrix as a collection of triplets (row, column, value)\n"
-                        "Thus it is a N x 3 matrix, with N = the number of elements in the original matrix.\n");
+PLEARN_IMPLEMENT_OBJECT(IndexedVMatrix, "ONE LINE DESCR",
+                        "VMat class that sees its source as a collection of\n"
+                        "triplets (row, column, value). Thus it is a N x 3"
+                        " matrix,\n"
+                        "with N = the number of elements in source.\n");
+
+
+IndexedVMatrix::IndexedVMatrix(bool call_build_)
+    : inherited(call_build_),
+      need_fix_mappings(false)
+{
+    if( call_build_ )
+        build_();
+}
+
+IndexedVMatrix::IndexedVMatrix(VMat the_source, bool the_fully_check_mappings,
+                               bool call_build_)
+    : inherited(the_source, call_build_),
+      need_fix_mappings(false),
+      fully_check_mappings(the_fully_check_mappings)
+{
+    if( call_build_ )
+        build_();
+}
+
 
 void IndexedVMatrix::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "m", &IndexedVMatrix::m, OptionBase::buildoption,
-                  "    The matrix viewed by the IndexedVMatrix\n");
+    declareOption(ol, "m", &IndexedVMatrix::source,
+                  (OptionBase::learntoption | OptionBase::nosave),
+                  "DEPRECATED - use 'source' instead.");
+
+    declareOption(ol, "fully_check_mappings",
+                  &IndexedVMatrix::fully_check_mappings,
+                  OptionBase::buildoption,
+                  "If set to 1, then columns for which there is a"
+                  " string <-> real mapping\n"
+                  "will be examined, to ensure that no numerical data in a\n"
+                  "column conflicts with a mapping in another column.\n");
+
     inherited::declareOptions(ol);
 }
 
 void IndexedVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-    deepCopyField(m, copies);
+
+    deepCopyField(fixed_mappings, copies);
 }
 
 void IndexedVMatrix::build()
@@ -69,18 +102,66 @@ void IndexedVMatrix::build()
 ////////////
 void IndexedVMatrix::build_()
 {
-    if (m) {
-        width_ = 3;
-        length_ = m->length() * m->width();
-        // TODO Get Field Infos ?
-    }
+    width_ = 3;
+    length_ = source->length() * source->width();
+
+    ensureMappingsConsistency();
+
+    if( fully_check_mappings )
+        fullyCheckMappings();
+
+    if( need_fix_mappings && !fully_check_mappings )
+        PLWARNING( "In IndexedVMatrix::build_ - Mappings need to be fixed,\n"
+                   "but you did not set 'fully_check_mappings' to true,\n"
+                   "this might be dangerous.\n" );
+
+    TVec<string> fieldnames(3);
+    fieldnames[0] = "row";
+    fieldnames[1] = "column";
+    fieldnames[2] = "value";
+    declareFieldNames( fieldnames );
+
+    setMetaInfoFromSource();
 }
 
+///////////////
+// getNewRow //
+///////////////
+void IndexedVMatrix::getNewRow(int i, const Vec& v) const
+{
+#ifdef BOUNDCHECK
+    if(i<0 || i>=length())
+        PLERROR("In IndexedVMatrix::getNewRow OUT OF BOUNDS");
+    if(v.length() != width())
+        PLERROR("In IndexedVMatrix::getNewRow v.length() must be equal to 3");
+#endif
+
+    int w = source->width();
+    int i_ = i / w; // the value of the first column at row i
+    int j_ = i % w; // the value of the second column at row i
+    real val = source->get(i_,j_);
+
+    if( need_fix_mappings && fixed_mappings[j_].size()>0 && !is_missing(val) )
+    {
+        map<real, real>::iterator it = fixed_mappings[j_].find(val);
+        if( it != fixed_mappings[j_].end() )
+        {
+            // We need to modify this value.
+            val = it->second;
+        }
+    }
+
+    v[0] = i_;
+    v[1] = j_;
+    v[2] = val;
+}
+
+/* implemented in RowBufferedVMatrix
 /////////
 // get //
 /////////
 real IndexedVMatrix::get(int i, int j) const {
-    int w = m->width();
+    int w = source->width();
     int i_ = i / w; // the value of the first column at row i
     int j_ = i % w; // the value of the second column at row i
     switch (j) {
@@ -89,12 +170,13 @@ real IndexedVMatrix::get(int i, int j) const {
     case 1:
         return j_;
     case 2:
-        return m->get(i_, j_);
+        return source->get(i_, j_);
     default:
-        PLERROR("In IndexedVMatrix::get An IndexedVMatrix has only 3 columns\n");
+        PLERROR("In IndexedVMatrix::get IndexedVMatrix has only 3 columns\n");
         return 0;
     }
 }
+*/
 
 /////////
 // put //
@@ -103,10 +185,124 @@ void IndexedVMatrix::put(int i, int j, real value) {
     if (j != 2) {
         PLERROR("In IndexedVMatrix::put You can only modify the third column\n");
     }
-    int w = m->width();
+    int w = source->width();
     int i_ = i / w; // the value of the first column at row i
     int j_ = i % w; // the value of the second column at row i
-    m->put(i_, j_, value);
+    source->put(i_, j_, value);
+}
+
+///////////////////////////////
+// ensureMappingsConsistency //
+///////////////////////////////
+void IndexedVMatrix::ensureMappingsConsistency()
+{
+    // Make sure the string mappings are consistent.
+    // For this, we start from the mapping of the first column, and add
+    // missing mappings obtained from the other columns. If another
+    // column has a different mapping for the same string, we remember
+    // it in order to fix the output when a getxxxx() method is called.
+    need_fix_mappings = false;
+    setStringMapping(2, source->getStringToRealMapping(0));
+    map<string, real>* first_map = &map_sr[2];
+    map<string, real> other_map;
+    map<string, real>::iterator it, find_map;
+
+    // Find the maximum mapping value for first column.
+    real max = -REAL_MAX;
+    for( it = first_map->begin() ; it != first_map->end() ; it++ )
+        if( it->second > max )
+            max = it->second;
+
+    for( int i = 1 ; i < source->width() ; i++ )
+    {
+        other_map = source->getStringToRealMapping(i);
+        for( it = other_map.begin() ; it != other_map.end() ; it++ )
+        {
+            find_map = first_map->find( it->first );
+            if( find_map != first_map->end() )
+            {
+                // The string mapped in column 'i' is also mapped in our first
+                // mapping.
+                if( !fast_exact_is_equal(find_map->second, it->second) )
+                {
+                    // But the same string is not mapped to the same value.
+                    // This needs to be fixed.
+                    need_fix_mappings = true;
+                    fixed_mappings.resize( source->width() );
+                    fixed_mappings[i][it->second] = find_map->second;
+                }
+            }
+            else
+            {
+                // The string mapped in VMat 'i' is not mapped in our
+                // current mapping. We need to add this mapping.
+                // But we must make sure there is no existing mapping to
+                // the same real number.
+                real new_map_val = it->second;
+                if( getValString(2, it->second) != "" )
+                {
+                    // There is already a mapping to this real number.
+                    need_fix_mappings = true;
+                    fixed_mappings.resize( source->width() );
+                    // We pick for the number the maximum of the current mapped
+                    // numbers, +1.
+                    max++;
+                    fixed_mappings[i][it->second] = max;
+                    new_map_val = max;
+                }
+                else
+                {
+                    // There is no mapping to this real number, it is thus ok
+                    // to add it.
+                    if( new_map_val > max )
+                        max = new_map_val;
+                }
+                addStringMapping(2, it->first, new_map_val);
+            }
+        }
+    }
+}
+
+////////////////////////
+// fullyCheckMappings //
+////////////////////////
+void IndexedVMatrix::fullyCheckMappings()
+{
+    if( map_sr[2].size() == 0 )
+        return;
+
+    Vec row( source->width() );
+    for( int i = 0 ; i < source->length() ; i++ )
+    {
+        source->getRow(i, row);
+        for( int j = 0 ; j < source->width() ; j++ )
+        {
+            if( !is_missing(row[j]) )
+            {
+                // Note that if the value is missing, we should not
+                // look for a mapping from this value, because it would
+                // find it even if it does not exist (see the STL map
+                // documentation to understand why this happens).
+                if( source->getValString(j, row[j]) == "" )
+                {
+                    // It is a numerical value for the source's j-th column
+                    if( map_rs[2].find(row[j]) != map_rs[2].end() )
+                    {
+                        // And, unfortunately, we have used this
+                        // numerical value in the column (2) string
+                        // mapping. It could be fixed, but this would be
+                        // pretty annoying, thus we just raise an error.
+                        PLERROR("In IndexedVMatrix::fullyCheckMappings - In"
+                                " column %d (%s) of source, the row %d\n"
+                                "contains a numerical value (%f) that is used"
+                                " in a string mapping (mapped to %s).\n",
+                                j, source->fieldName(j).c_str(), i,
+                                row[j], map_rs[2][ row[j] ].c_str() );
+                    }
+                }
+            }
+        }
+    }
 }
 
 

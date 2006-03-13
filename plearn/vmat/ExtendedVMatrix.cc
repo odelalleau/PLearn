@@ -82,11 +82,10 @@ ExtendedVMatrix::ExtendedVMatrix(VMat the_source,
         build_();
 }
 
-void
-ExtendedVMatrix::declareOptions(OptionList &ol)
+void ExtendedVMatrix::declareOptions(OptionList &ol)
 {
     declareOption(ol, "distr", &ExtendedVMatrix::source,
-                  (OptionBase::buildoption | OptionBase::nosave),
+                  (OptionBase::learntoption | OptionBase::nosave),
                   "DEPRECATED - Use 'source' instead.");
     declareOption(ol, "top_extent", &ExtendedVMatrix::top_extent,
                   OptionBase::buildoption,
@@ -111,19 +110,17 @@ ExtendedVMatrix::declareOptions(OptionList &ol)
         "left_extent+right_extent.\n"
         "\n"
         "Default: [], i.e all are set to \"extended\"." );
-    
+
     inherited::declareOptions(ol);
 }
 
-void
-ExtendedVMatrix::build()
+void ExtendedVMatrix::build()
 {
     inherited::build();
     build_();
 }
 
-void
-ExtendedVMatrix::build_()
+void ExtendedVMatrix::build_()
 {
     this->length_ = source->length() + top_extent  + bottom_extent;
     this->width_  = source->width()  + left_extent + right_extent;
