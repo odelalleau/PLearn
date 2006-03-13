@@ -67,14 +67,17 @@ public:
     // * public build options *
     // ************************
 
-    PPath specification; // the specification of the vmat (typically a file or directory path)
-    bool load_data_in_memory; // convert VMat in a MemoryVMatrix (default=false);
+    //! the filename where the data is (typically a file or directory path)
+    PPath filename;
+
+    //! convert VMat in a MemoryVMatrix (default=false);
+    bool load_data_in_memory;
 
     // ****************
     // * Constructors *
     // ****************
 
-    AutoVMatrix(const PPath& the_specification="", bool load_in_memory=false);
+    AutoVMatrix(const PPath& the_filename="", bool load_in_memory=false);
 
 private: 
 

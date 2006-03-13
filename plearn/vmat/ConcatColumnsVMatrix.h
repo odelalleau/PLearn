@@ -49,22 +49,23 @@
 
 namespace PLearn {
 using namespace std;
- 
+
 
 class ConcatColumnsVMatrix: public RowBufferedVMatrix
 {
     typedef RowBufferedVMatrix inherited;
 
 protected:
-    Array<VMat> array;
-  
+    // Array<VMat> array;
+    TVec<VMat> sources;
+
 public:
 
     bool no_duplicate_fieldnames;
 
     //! The lists of VMFields are appended upon construction.  The case where
     //! some VMat may have some fields and others not is handled properly.
-    ConcatColumnsVMatrix(Array<VMat> the_array=Array<VMat>());
+    ConcatColumnsVMatrix(TVec<VMat> the_sources = TVec<VMat>());
     ConcatColumnsVMatrix(VMat d1, VMat d2);
 
 protected:
@@ -79,12 +80,18 @@ public:
     const map<string,real>& getStringMapping(int col) const;
     virtual string getValString(int col, real val) const;
     virtual string getString(int row,int col) const;
-    virtual void reset_dimensions() { PLERROR("ConcatColumnsVMatrix::reset_dimensions() not implemented"); }
+    virtual void reset_dimensions()
+    { PLERROR("ConcatColumnsVMatrix::reset_dimensions() not implemented"); }
+
     virtual real dot(int i1, int i2, int inputsize) const;
     virtual real dot(int i, const Vec& v) const;
 
     PLEARN_DECLARE_OBJECT(ConcatColumnsVMatrix);
     virtual void build();
+
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+
 private:
     void build_();
 
@@ -105,7 +112,7 @@ DECLARE_OBJECT_PTR(ConcatColumnsVMatrix);
 inline VMat hconcat(VMat d1, VMat d2)
 { return new ConcatColumnsVMatrix(d1,d2); }
 
-inline VMat hconcat(Array<VMat> ds)
+inline VMat hconcat(TVec<VMat> ds)
 { return new ConcatColumnsVMatrix(ds); }
 
 

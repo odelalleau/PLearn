@@ -58,24 +58,25 @@ PLEARN_IMPLEMENT_OBJECT(ConcatRowsVMatrix,
 ///////////////////////
 // ConcatRowsVMatrix //
 ///////////////////////
-ConcatRowsVMatrix::ConcatRowsVMatrix(TVec<VMat> the_array)
-    : array(the_array),
+ConcatRowsVMatrix::ConcatRowsVMatrix(TVec<VMat> the_sources)
+    : sources(the_sources),
       fill_missing(false),
       fully_check_mappings(false),
       only_common_fields(false)
 {
-    if (array.size() > 0)
+    if (sources.size() > 0)
         build_();
 }
 
-ConcatRowsVMatrix::ConcatRowsVMatrix(VMat d1, VMat d2, bool the_fully_check_mapping)
-    : fill_missing(false),
+ConcatRowsVMatrix::ConcatRowsVMatrix(VMat d1, VMat d2,
+                                     bool the_fully_check_mapping)
+    : sources(2),
+      fill_missing(false),
       fully_check_mappings(the_fully_check_mapping),
       only_common_fields(false)
 {
-    array.resize(2);
-    array[0] = d1;
-    array[1] = d2;
+    sources[0] = d1;
+    sources[1] = d2;
     build_();
 }
 
@@ -84,20 +85,35 @@ ConcatRowsVMatrix::ConcatRowsVMatrix(VMat d1, VMat d2, bool the_fully_check_mapp
 ////////////////////
 void ConcatRowsVMatrix::declareOptions(OptionList &ol)
 {
-    declareOption(ol, "array", &ConcatRowsVMatrix::array, OptionBase::buildoption,
-                  "The VMat to concatenate.");
+    declareOption(ol, "array", &ConcatRowsVMatrix::sources,
+                  (OptionBase::learntoption | OptionBase::nosave),
+                  "DEPRECATED - Use 'sources' instead.");
 
-    declareOption(ol, "fill_missing", &ConcatRowsVMatrix::fill_missing, OptionBase::buildoption,
-                  "If set to 1, then all fields will be kept, and in each VMat missing fields will be\n"
-                  "filled with missing values.");
+    declareOption(ol, "sources", &ConcatRowsVMatrix::sources,
+                  OptionBase::buildoption,
+                  "The VMat to concatenate (horizontally).");
 
-    declareOption(ol, "fully_check_mappings", &ConcatRowsVMatrix::fully_check_mappings, OptionBase::buildoption,
-                  "If set to 1, then columns for which there is a string <-> real mapping will be examined\n"
-                  "to ensure that no numerical data in a VMat conflicts with a mapping in another VMat.");
+    declareOption(ol, "fill_missing", &ConcatRowsVMatrix::fill_missing,
+                  OptionBase::buildoption,
+                  "If set to 1, then all fields will be kept, and in each VMat"
+                  " missing fields\n"
+                  "will be filled with missing values.\n");
 
-    declareOption(ol, "only_common_fields", &ConcatRowsVMatrix::only_common_fields, OptionBase::buildoption,
-                  "If set to 1, then only the fields whose names are common to all VMat\n"
-                  "in 'array' will be kept (and reordered if needed).");
+    declareOption(ol, "fully_check_mappings",
+                  &ConcatRowsVMatrix::fully_check_mappings,
+                  OptionBase::buildoption,
+                  "If set to 1, then columns for which there is a string <->"
+                  " real mapping\n"
+                  "will be examined to ensure that no numerical data in a VMat"
+                  " conflicts with\n"
+                  "a mapping in another VMat.\n");
+
+    declareOption(ol, "only_common_fields",
+                  &ConcatRowsVMatrix::only_common_fields,
+                  OptionBase::buildoption,
+                  "If set to 1, then only the fields whose names are common to"
+                  " all VMat\n"
+                  "in 'sources' will be kept (and reordered if needed).\n");
 
     inherited::declareOptions(ol);
 }
@@ -116,22 +132,22 @@ void ConcatRowsVMatrix::build()
 ////////////
 void ConcatRowsVMatrix::build_()
 {
-    int n = array.size();
+    int n = sources.size();
     if (n < 1)
-        // No array provided yet: nothing to do.
+        // No sources provided yet: nothing to do.
         return;
 
     if (only_common_fields && fill_missing)
         PLERROR("In ConcatRowsVMatrix::build_ - You can't set both 'only_common_fields' and 'fill_missing'");
 
     // Get the fields info.
-    fieldinfos = array[0]->getFieldInfos();
+    fieldinfos = sources[0]->getFieldInfos();
     if (only_common_fields) {
         findCommonFields();
     } else if (fill_missing) {
         findAllFields();
     } else {
-        to_concat = array;
+        to_concat = sources;
     }
 
     // Set length_ and width_.
@@ -257,13 +273,13 @@ void ConcatRowsVMatrix::findAllFields() {
     int count;
     if (report_progress) {
         count = 0;
-        for (int i = 1; i < array.length(); i++)
-            count += array[i]->getFieldInfos().length();
+        for (int i = 1; i < sources.length(); i++)
+            count += sources[i]->getFieldInfos().length();
         pb = new ProgressBar("Computing the whole set of fields", count);
     }
     count = 0;
-    for (int i = 1; i < array.length(); i++) {
-        other_fields = array[i]->getFieldInfos();
+    for (int i = 1; i < sources.length(); i++) {
+        other_fields = sources[i]->getFieldInfos();
         for (int j = 0; j < other_fields.length(); j++) {
             bool present_already = false;
             for (int k = 0; !present_already && k < fieldinfos.length(); k++)
@@ -284,9 +300,9 @@ void ConcatRowsVMatrix::findAllFields() {
     for (int i = 0; i < fieldinfos.length(); i++)
         fnames[i] = fieldinfos[i].name;
     // Now fill 'to_concat' with the corresponding VMats.
-    to_concat.resize(array.length());
-    for (int i = 0; i < array.length(); i++) {
-        to_concat[i] = new SelectColumnsVMatrix(array[i], fnames, true);
+    to_concat.resize(sources.length());
+    for (int i = 0; i < sources.length(); i++) {
+        to_concat[i] = new SelectColumnsVMatrix(sources[i], fnames, true);
     }
 }
 
@@ -299,9 +315,9 @@ void ConcatRowsVMatrix::findCommonFields() {
     final_fields << fieldinfos;
     TVec<VMField> other_fields;
     TVec<VMField> tmp(final_fields.length());
-    for (int i = 1; i < array.length(); i++) {
+    for (int i = 1; i < sources.length(); i++) {
         map<string, bool> can_be_kept;
-        other_fields = array[i]->getFieldInfos();
+        other_fields = sources[i]->getFieldInfos();
         for (int j = 0; j < other_fields.length(); j++) {
             can_be_kept[other_fields[j].name] = true;
         }
@@ -318,10 +334,10 @@ void ConcatRowsVMatrix::findCommonFields() {
     TVec<string> final_fieldnames(final_fields.length());
     for (int i = 0; i < final_fields.length(); i++)
         final_fieldnames[i] = final_fields[i].name;
-    // Now fill 'to_concat' with the selected columns of each VMat in 'array'.
-    to_concat.resize(array.length());
-    for (int i = 0; i < array.length(); i++)
-        to_concat[i] = new SelectColumnsVMatrix(array[i], final_fieldnames);
+    // Now fill 'to_concat' with the selected columns of each VMat in 'sources'
+    to_concat.resize(sources.length());
+    for (int i = 0; i < sources.length(); i++)
+        to_concat[i] = new SelectColumnsVMatrix(sources[i], final_fieldnames);
 }
 
 ////////////////////////
@@ -434,7 +450,7 @@ void ConcatRowsVMatrix::getSubRow(int i, int j, Vec v) const
 /////////////////////////////////
 void ConcatRowsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies) {
     inherited::makeDeepCopyFromShallowCopy(copies);
-    deepCopyField(array, copies);
+    deepCopyField(sources, copies);
     deepCopyField(to_concat, copies);
     deepCopyField(fixed_mappings, copies);
 }
@@ -458,7 +474,8 @@ void ConcatRowsVMatrix::recomputeDimensions() {
     length_ = 0;
     for (int i=0; i<to_concat.length(); i++) {
         if (to_concat[i]->width() != width_)
-            PLERROR("ConcatRowsVMatrix: underlying-VMat %d has %d width, while 0-th has %d",i,array[i]->width(),width_);
+            PLERROR("ConcatRowsVMatrix: underlying-VMat %d has %d width, while"
+                    " 0-th has %d", i, sources[i]->width(), width_);
         length_ += to_concat[i]->length();
     }
 }

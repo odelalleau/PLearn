@@ -56,12 +56,12 @@ class MemoryVMatrix: public VMatrix
 protected:
 
     //! The matrix storing the data in memory. It can either point to 'data'
-    //! or be filled with the content of 'data_vm', depending on which of these
+    //! or be filled with the content of 'source', depending on which of these
     //! two options is used.
     Mat memory_data;
 
     //! Set to true if data is given through the 'data' option instead of the
-    //! 'data_vm' option. It requires memory_data and data to systematically
+    //! 'source' option. It requires memory_data and data to systematically
     //! be the same.
     bool synch_data;
 
@@ -73,7 +73,7 @@ protected:
 public:
 
     Mat data;
-    VMat data_vm;
+    VMat source;
 
 private:
 
@@ -89,7 +89,7 @@ public:
     MemoryVMatrix();
     MemoryVMatrix(const Mat& the_data);
     MemoryVMatrix(int l, int w);
-    MemoryVMatrix(VMat the_data_vm);
+    MemoryVMatrix(VMat the_source);
     virtual real get(int i, int j) const;
     virtual void getSubRow(int i, int j, Vec v) const;
     virtual void getRow(int i, Vec v) const;

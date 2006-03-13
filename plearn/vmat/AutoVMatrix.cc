@@ -50,22 +50,36 @@ namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(AutoVMatrix,
-                        "Automatically builds an appropriate VMat given its specification.",
-                        "AutoVMatrix tries to interpret the given 'specification' (it will call getDataSet) and\n"
-                        "will be a wrapper around the appropriate VMatrix type, simply forwarding calls to it.\n"
-                        "AutoVMatrix can be used to access the UCI databases.\n");
+                        "Automatically builds an appropriate VMat given a"
+                        "filename.",
+                        "AutoVMatrix tries to load the given 'filename'"
+                        " (it will call getDataSet) and\n"
+                        "will be a wrapper around the appropriate VMatrix"
+                        " type, simply forwarding\n"
+                        "calls to it.\n"
+                        "Note that AutoVMatrix can NOT be used to access the"
+                        " UCI databases anymore.\n"
+                        "Consider using UCIDataVMatrix for that purpose.\n");
 
-AutoVMatrix::AutoVMatrix(const PPath& the_specification, bool load_in_memory)
-    :specification(the_specification), load_data_in_memory(load_in_memory)
+AutoVMatrix::AutoVMatrix(const PPath& the_filename, bool load_in_memory)
+    :filename(the_filename), load_data_in_memory(load_in_memory)
 { build_(); }
 
 void AutoVMatrix::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "specification", &AutoVMatrix::specification, OptionBase::buildoption,
-                  "This is any string understood by getDataSet. Typically a file or directory path.\n"
-                  + loadUCIDatasetsHelp());
-    declareOption(ol, "load_in_memory", &AutoVMatrix::load_data_in_memory, OptionBase::buildoption,
-                  "Boolean value to specify if we want to store data in memory (in a MemoryVMatrix)."
+    declareOption(ol, "specification", &AutoVMatrix::filename,
+                  (OptionBase::learntoption | OptionBase::nosave),
+                  "DEPRECATED - Use 'filename' instead.");
+
+    declareOption(ol, "filename", &AutoVMatrix::filename,
+                  OptionBase::buildoption,
+                  "This is a file or directory path understood by getDataSet.\n"
+                  + getDataSetHelp());
+
+    declareOption(ol, "load_in_memory", &AutoVMatrix::load_data_in_memory,
+                  OptionBase::buildoption,
+                  "Specify if we want to store data in memory"
+                  " (in a MemoryVMatrix).\n"
                   "Default=false.\n");
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -76,16 +90,16 @@ void AutoVMatrix::declareOptions(OptionList& ol)
 
 void AutoVMatrix::build_()
 {
-    if(specification=="")
+    if(filename=="")
         setVMat(VMat());
     else if (load_data_in_memory)
     {
-        VMat data = getDataSet(specification);
+        VMat data = getDataSet(filename);
         VMat memdata = new MemoryVMatrix(data);
         setVMat(memdata);
     }
     else
-        setVMat(getDataSet(specification));
+        setVMat(getDataSet(filename));
 }
 
 void AutoVMatrix::build()

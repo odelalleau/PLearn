@@ -61,7 +61,7 @@ MemoryVMatrix::MemoryVMatrix()
 }
 
 MemoryVMatrix::MemoryVMatrix(int l, int w)
-    : VMatrix(l, w),
+    : inherited(l, w),
       synch_data(false)
 {
     data.resize(l,w);
@@ -70,7 +70,7 @@ MemoryVMatrix::MemoryVMatrix(int l, int w)
 }
 
 MemoryVMatrix::MemoryVMatrix(const Mat& the_data)
-    : VMatrix(the_data.length(), the_data.width()),
+    : inherited(the_data.length(), the_data.width()),
       synch_data(true),
       data(the_data)
 {
@@ -78,13 +78,13 @@ MemoryVMatrix::MemoryVMatrix(const Mat& the_data)
     defineSizes(the_data.width(), 0, 0);
 }
 
-MemoryVMatrix::MemoryVMatrix(VMat the_data_vm)
-    : VMatrix(the_data_vm->length(), the_data_vm->width()),
-      memory_data(the_data_vm->toMat()),
+MemoryVMatrix::MemoryVMatrix(VMat the_source)
+    : inherited(the_source->length(), the_source->width()),
+      memory_data(the_source->toMat()),
       synch_data(false)
 {
-    copySizesFrom(the_data_vm);
-    setMetaInfoFrom(the_data_vm);
+    copySizesFrom(the_source);
+    setMetaInfoFrom(the_source);
 }
 
 ////////////////////
@@ -95,14 +95,20 @@ void MemoryVMatrix::declareOptions(OptionList& ol)
     declareOption(ol, "data", &MemoryVMatrix::data, OptionBase::buildoption,
                   "The underlying Mat.");
 
-    declareOption(ol, "data_vm", &MemoryVMatrix::data_vm, OptionBase::buildoption,
-                  "The underlying VMatrix. Will overwrite 'data' if provided.");
+    declareOption(ol, "data_vm", &MemoryVMatrix::source,
+                  (OptionBase::learntoption | OptionBase::nosave),
+                  "DEPRECATED - Use 'source' instead.");
 
-    declareOption(
-        ol, "fieldnames", &MemoryVMatrix::fieldnames,
-        OptionBase::buildoption,
-        "If provided, will be used to set this VMatrix's fieldnames." );
- 
+    declareOption(ol, "source", &MemoryVMatrix::source,
+                  OptionBase::buildoption,
+                  "The (optional) source VMatrix. Will overwrite 'data'"
+                  " if provided.");
+
+    declareOption( ol, "fieldnames", &MemoryVMatrix::fieldnames,
+                   OptionBase::buildoption,
+                   "If provided, will be used to set this VMatrix's"
+                   " fieldnames." );
+
     inherited::declareOptions(ol);
 }
 
@@ -115,7 +121,7 @@ void MemoryVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(memory_data,  copies);
     deepCopyField(fieldnames,   copies);
     deepCopyField(data,         copies);
-    deepCopyField(data_vm,      copies);
+    deepCopyField(source,       copies);
 }
 
 ////////////
@@ -123,11 +129,11 @@ void MemoryVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////
 void MemoryVMatrix::build_()
 {
-    if (data_vm) {
-        // Precompute data from data_vm;
-        memory_data = data_vm->toMat();
-        copySizesFrom(data_vm);
-        setMetaInfoFrom(data_vm);
+    if (source) {
+        // Precompute data from source
+        memory_data = source->toMat();
+        copySizesFrom(source);
+        setMetaInfoFrom(source);
         synch_data = false;
     } else {
         synch_data = true;

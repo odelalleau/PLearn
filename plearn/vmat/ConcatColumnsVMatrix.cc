@@ -48,22 +48,41 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(ConcatColumnsVMatrix, "ONE LINE DESCR", "NO HELP");
 
-ConcatColumnsVMatrix::ConcatColumnsVMatrix(Array<VMat> the_array)
-    : array(the_array),
+ConcatColumnsVMatrix::ConcatColumnsVMatrix(TVec<VMat> the_sources)
+    : sources(the_sources),
       no_duplicate_fieldnames(false)
-{ if (array.size()) build_(); }
+{
+    if (sources.size())
+        build_();
+}
 
 ConcatColumnsVMatrix::ConcatColumnsVMatrix(VMat d1, VMat d2)
-    : array(d1, d2),
+    : sources(2),
       no_duplicate_fieldnames(false)
-{ build_(); }
+{
+    sources[0] = d1;
+    sources[1] = d2;
+    build_();
+}
 
 
 void ConcatColumnsVMatrix::declareOptions(OptionList &ol)
 {
-    declareOption(ol, "array", &ConcatColumnsVMatrix::array, OptionBase::buildoption, "Array of VMatrices");
-    declareOption(ol, "no_duplicate_fieldnames", &ConcatColumnsVMatrix::no_duplicate_fieldnames, OptionBase::buildoption,
-                  "If set to 1, will ensure no fieldnames are duplicated by adding numerical values '.1', '.2', ...");
+    declareOption(ol, "array", &ConcatColumnsVMatrix::sources,
+                  (OptionBase::learntoption | OptionBase::nosave),
+                  "DEPRECATED - Use 'sources' instead.");
+
+    declareOption(ol, "sources", &ConcatColumnsVMatrix::sources,
+                  OptionBase::buildoption,
+                  "The VMat to concatenate (horizontally).");
+
+    declareOption(ol, "no_duplicate_fieldnames",
+                  &ConcatColumnsVMatrix::no_duplicate_fieldnames,
+                  OptionBase::buildoption,
+                  "If set to 1, will ensure no fieldnames are duplicated by"
+                  " adding\n"
+                  "numerical values '.1', '.2', ...\n");
+
     inherited::declareOptions(ol);
 }
 
@@ -76,18 +95,20 @@ void ConcatColumnsVMatrix::build()
 void ConcatColumnsVMatrix::build_()
 {
     length_ = width_ = 0;
-    if(array.size())
-        length_ = array[0]->length();
+    if(sources.size())
+        length_ = sources[0]->length();
 //   else
-//     PLERROR("ConcatColumnsVMatrix expects >= 1 underlying-array, got 0");
+//     PLERROR("ConcatColumnsVMatrix expects >= 1 underlying-sources, got 0");
 
-    for(int i=0; i<array.size(); i++)
+    for(int i=0; i<sources.size(); i++)
     {
-        if(array[i]->length()!=length_)
-            PLERROR("ConcatColumnsVMatrix: Problem concatenating to VMatrices with different lengths");
-        if(array[i]->width() == -1)
-            PLERROR("In ConcatColumnsVMatrix constructor. Non-fixed width distribution not supported");
-        width_ += array[i]->width();
+        if(sources[i]->length()!=length_)
+            PLERROR("ConcatColumnsVMatrix: Problem concatenating two VMat with"
+                    " different lengths");
+        if(sources[i]->width() == -1)
+            PLERROR("In ConcatColumnsVMatrix constructor. Non-fixed width"
+                    " distribution not supported");
+        width_ += sources[i]->width();
     }
 
     // Copy the original fieldinfos.  Be careful if only some of the
@@ -96,23 +117,23 @@ void ConcatColumnsVMatrix::build_()
     TVec<string> names;
     int fieldindex = 0;
     init_map_sr();
-    for (int i=0; i<array.size(); ++i) 
+    for (int i=0; i<sources.size(); ++i) 
     {
-        int len = array[i]->getFieldInfos().size();
+        int len = sources[i]->getFieldInfos().size();
         if (len > 0) // infos exist for this VMat
         {
             for (int j=0; j<len; ++j) {
-                map<string,real> map = array[i]->getStringToRealMapping(j);
+                map<string,real> map = sources[i]->getStringToRealMapping(j);
                 if (!map.empty())
                     setStringMapping(fieldindex, map);
-                fieldinfos[fieldindex++] = array[i]->getFieldInfos()[j];
+                fieldinfos[fieldindex++] = sources[i]->getFieldInfos()[j];
             }
         }
         else // infos don't exist for this VMat, use the index as the name for those fields.
         {
-            len = array[i]->width();
+            len = sources[i]->width();
             for(int j=0; j<len; ++j) {
-                map<string,real> map = array[i]->getStringToRealMapping(j);
+                map<string,real> map = sources[i]->getStringToRealMapping(j);
                 if (!map.empty())
                     setStringMapping(fieldindex, map);
                 fieldinfos[fieldindex] = VMField(tostring(fieldindex));
@@ -130,11 +151,11 @@ void ConcatColumnsVMatrix::getNewRow(int i, const Vec& samplevec) const
     if (length_==-1)
         PLERROR("In ConcatColumnsVMatrix::getNewRow(int i, Vec samplevec) not supported for distributions with different (or infinite) lengths\nCall sample without index instead");
     int pos = 0;
-    for(int n=0; n<array.size(); n++)
+    for(int n=0; n<sources.size(); n++)
     {
-        int nvars = array[n]->width();
+        int nvars = sources[n]->width();
         Vec samplesubvec = samplevec.subVec(pos, nvars);
-        array[n]->getRow(i,samplesubvec);
+        sources[n]->getRow(i,samplesubvec);
         pos += nvars;
     }
 }
@@ -144,13 +165,13 @@ real ConcatColumnsVMatrix::getStringVal(int col, const string & str) const
     if(col>=width_)
         PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
     int pos=0,k=0;
-    while(col>=pos+array[k]->width())
+    while(col>=pos+sources[k]->width())
     {
-        pos += array[k]->width();
+        pos += sources[k]->width();
         k++;
     }
-//  return array[k]->getStringVal(pos+col,str);
-    return array[k]->getStringVal(col-pos,str);
+//  return sources[k]->getStringVal(pos+col,str);
+    return sources[k]->getStringVal(col-pos,str);
 }
 
 string ConcatColumnsVMatrix::getValString(int col, real val) const
@@ -158,13 +179,13 @@ string ConcatColumnsVMatrix::getValString(int col, real val) const
     if(col>=width_)
         PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
     int pos=0,k=0;
-    while(col>=pos+array[k]->width())
+    while(col>=pos+sources[k]->width())
     {
-        pos += array[k]->width();
+        pos += sources[k]->width();
         k++;
     }
-//  return array[k]->getValString(pos+col,val);
-    return array[k]->getValString(col-pos,val);
+//  return sources[k]->getValString(pos+col,val);
+    return sources[k]->getValString(col-pos,val);
 }
 
 const map<string,real>& ConcatColumnsVMatrix::getStringMapping(int col) const
@@ -172,13 +193,13 @@ const map<string,real>& ConcatColumnsVMatrix::getStringMapping(int col) const
     if(col>=width_)
         PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
     int pos=0,k=0;
-    while(col>=pos+array[k]->width())
+    while(col>=pos+sources[k]->width())
     {
-        pos += array[k]->width();
+        pos += sources[k]->width();
         k++;
     }
-//  return array[k]->getStringToRealMapping(pos+col);
-    return array[k]->getStringToRealMapping(col-pos);
+//  return sources[k]->getStringToRealMapping(pos+col);
+    return sources[k]->getStringToRealMapping(col-pos);
 }
 
 string ConcatColumnsVMatrix::getString(int row, int col) const
@@ -186,13 +207,13 @@ string ConcatColumnsVMatrix::getString(int row, int col) const
     if(col>=width_)
         PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
     int pos=0,k=0;
-    while(col>=pos+array[k]->width())
+    while(col>=pos+sources[k]->width())
     {
-        pos += array[k]->width();
+        pos += sources[k]->width();
         k++;
     }
-//  return array[k]->getString(row,pos+col);
-    return array[k]->getString(row,col-pos);
+//  return sources[k]->getString(row,pos+col);
+    return sources[k]->getString(row,col-pos);
 }
 
 
@@ -202,7 +223,7 @@ real ConcatColumnsVMatrix::dot(int i1, int i2, int inputsize) const
     real res = 0.;
     for(int k=0; ;k++)
     {
-        const VMat& vm = array[k];
+        const VMat& vm = sources[k];
         int vmwidth = vm.width();
         if(inputsize<=vmwidth)
         {
@@ -225,13 +246,13 @@ real ConcatColumnsVMatrix::dot(int i, const Vec& v) const
 
     real res = 0.;
     int pos = 0;
-    for(int n=0; n<array.size(); n++)
+    for(int n=0; n<sources.size(); n++)
     {
-        int nvars = std::min(array[n]->width(),v.length()-pos);
+        int nvars = std::min(sources[n]->width(),v.length()-pos);
         if(nvars<=0)
             break;
         Vec subv = v.subVec(pos, nvars);
-        res += array[n]->dot(i,subv);
+        res += sources[n]->dot(i,subv);
         pos += nvars;
     }
     return res;
@@ -242,12 +263,12 @@ PP<Dictionary> ConcatColumnsVMatrix::getDictionary(int col) const
     if(col>=width_)
         PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
     int pos=0,k=0;
-    while(col>=pos+array[k]->width())
+    while(col>=pos+sources[k]->width())
     {
-        pos += array[k]->width();
+        pos += sources[k]->width();
         k++;
     }
-    return array[k]->getDictionary(col-pos);
+    return sources[k]->getDictionary(col-pos);
 }
 
 
@@ -256,12 +277,12 @@ Vec ConcatColumnsVMatrix::getValues(int row, int col) const
     if(col>=width_)
         PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
     int pos=0,k=0;
-    while(col>=pos+array[k]->width())
+    while(col>=pos+sources[k]->width())
     {
-        pos += array[k]->width();
+        pos += sources[k]->width();
         k++;
     }
-    return array[k]->getValues(row,col-pos);
+    return sources[k]->getValues(row,col-pos);
 }
 
 Vec ConcatColumnsVMatrix::getValues(const Vec& input, int col) const
@@ -269,13 +290,19 @@ Vec ConcatColumnsVMatrix::getValues(const Vec& input, int col) const
     if(col>=width_)
         PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
     int pos=0,k=0;
-    while(col>=pos+array[k]->width())
+    while(col>=pos+sources[k]->width())
     {
-        pos += array[k]->width();
+        pos += sources[k]->width();
         k++;
     }
-    return array[k]->getValues(input, col-pos);
+    return sources[k]->getValues(input, col-pos);
 
+}
+
+void ConcatColumnsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(sources, copies);
 }
 
 } // end of namespcae PLearn

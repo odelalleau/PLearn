@@ -58,10 +58,10 @@ private:
 
 protected:
 
-    TVec<VMat> array;
+    TVec<VMat> sources;
 
     //! A vector containing the final VMats to concatenate.
-    //! These are either the same as the ones in 'array', or a selection
+    //! These are either the same as the ones in 'sources', or a selection
     //! of their fields when the 'only_common_fields' option is true.
     TVec<VMat> to_concat;
 
@@ -70,10 +70,11 @@ protected:
     //! be checked to ensure consistency.
     bool need_fix_mappings;
 
-    //! This is a matrix of size (number of matrices to concatenate, number of columns).
-    //! The element (i, j) is a mapping that says which value needs to be replaced with
-    //! what in the j-th column of the i-th matrix. This is to fix the mappings when
-    //! 'need_fix_mappings' is true.
+    //! This is a matrix of size (number of matrices to concatenate, number of
+    //! columns). The element (i, j) is a mapping that says which value needs
+    //! to be replaced with  what in the j-th column of the i-th matrix. This
+    //! is to fix the mappings when 'need_fix_mappings' is true.
+
     TMat< map<real, real> > fixed_mappings;
 
 public:
@@ -82,9 +83,9 @@ public:
     bool fully_check_mappings;
     bool only_common_fields;
 
-    //! The fields names are copied from the FIRST VMat, unless the 'only_common_fields'
-    //! option is set to 'true'.
-    ConcatRowsVMatrix(TVec<VMat> the_array = TVec<VMat>());
+    //! The fields names are copied from the FIRST VMat, unless the
+    //! 'only_common_fields' option is set to 'true'.
+    ConcatRowsVMatrix(TVec<VMat> the_sources = TVec<VMat>());
     ConcatRowsVMatrix(VMat d1, VMat d2, bool fully_check_mappings = false);
 
     virtual real get(int i, int j) const;
@@ -104,7 +105,7 @@ public:
 
 protected:
 
-    //!  Returns the index of the correct VMat in the array and the row
+    //!  Returns the index of the correct VMat in the sources and the row
     //!  number in this VMat that correspond to row i in the ConcatRowsVMat.
     void getpositions(int i, int& whichvm, int& rowofvm) const; 
 
@@ -141,7 +142,7 @@ DECLARE_OBJECT_PTR(ConcatRowsVMatrix);
 inline VMat vconcat(VMat d1, VMat d2)
 { return new ConcatRowsVMatrix(d1,d2); }
 
-inline VMat vconcat(Array<VMat> ds) {
+inline VMat vconcat(TVec<VMat> ds) {
     if (ds.size() == 1) {
         // Only one matrix: no need to use a ConcatRowsVMatrix.
         return ds[0];
