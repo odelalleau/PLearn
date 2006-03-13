@@ -37,7 +37,7 @@
 #ifndef ThresholdVMatrix_INC
 #define ThresholdVMatrix_INC
 
-#include "RowBufferedVMatrix.h"
+#include "SourceVMatrix.h"
 #include "VMat.h"
 
 namespace PLearn {
@@ -51,12 +51,14 @@ using namespace std;
  * to true so that we get hot_value when 
  * val > threshold, or false for val >= threshold.
  */
-class ThresholdVMatrix: public RowBufferedVMatrix
+class ThresholdVMatrix: public SourceVMatrix
 {
-    typedef RowBufferedVMatrix inherited;
+    typedef SourceVMatrix inherited;
 
 protected:
-    VMat underlying_distr;
+
+    // DEPRECATED - Use inherited::source instead
+    // VMat underlying_distr;
     real threshold;
     real cold_value;
     real hot_value;
@@ -66,22 +68,29 @@ public:
     // ******************
     // *  Constructors  *
     // ******************
-    ThresholdVMatrix(); //!<  default constructor (for automatic deserialization)
 
-    ThresholdVMatrix(VMat the_underlying_distr, real threshold_, real the_cold_value=0.0, real the_hot_value=1.0,
-                     bool gt_threshold_= true);
+    //!  default constructor (for automatic deserialization)
+    ThresholdVMatrix(bool call_build_ = false);
+
+    ThresholdVMatrix(VMat the_source,
+                     real threshold_,
+                     real the_cold_value=0.0, real the_hot_value=1.0,
+                     bool gt_threshold_ = true, bool call_build_ = false);
+
     virtual void getNewRow(int i, const Vec& v) const;
-    virtual void reset_dimensions() 
-    { 
-        underlying_distr->reset_dimensions(); 
-        width_=underlying_distr->width(); 
-        length_=underlying_distr->length(); 
+    virtual void reset_dimensions()
+    {
+        source->reset_dimensions();
+        width_=source->width();
+        length_=source->length();
     }
 };
 
-inline VMat thresholdVMat(VMat d, real threshold, real cold_value=0.0, real hot_value=1.0,
-                          bool gt_threshold= true)
-{ return new ThresholdVMatrix(d, threshold, cold_value, hot_value, gt_threshold); }
+inline VMat thresholdVMat(VMat source, real threshold,
+                          real cold_value=0.0, real hot_value=1.0,
+                          bool gt_threshold = true, bool call_build_ = false)
+{ return new ThresholdVMatrix(source, threshold, cold_value, hot_value,
+                              gt_threshold, call_build_); }
 
 } // end of namespcae PLearn
 #endif

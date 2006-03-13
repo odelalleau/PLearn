@@ -44,7 +44,7 @@
 #ifndef UniformizeVMatrix_INC
 #define UniformizeVMatrix_INC
 
-#include "RowBufferedVMatrix.h"
+#include "SourceVMatrix.h"
 #include "VMat.h"
 
 namespace PLearn {
@@ -53,18 +53,20 @@ using namespace std;
 
 /*!   VMatrix that can be used to uniformize (between a and b)
   each feature in index of the underlying distribution such that:
-  P(x') = .5   if  a < x'< b
-  =  0   otherwise
-  
+      P(x') = .5   if  a < x'< b
+            =  0   otherwise
+
   We suppose that the original distribution of x, P(x), could be anything,
   and we map "a" with bins[0] and "b" with bins[N-1].
 */
-class UniformizeVMatrix: public RowBufferedVMatrix
+class UniformizeVMatrix: public SourceVMatrix
 {
-    typedef RowBufferedVMatrix inherited;
+    typedef SourceVMatrix inherited;
 
 protected:
-    VMat distr;
+
+    // DEPRECATED - Use inherited::source instead
+    // VMat distr;
     Mat bins;
     Vec index;
     real a;
@@ -74,11 +76,13 @@ public:
     // ******************
     // *  Constructors  *
     // ******************
-    UniformizeVMatrix(); //!<  default constructor (for automatic deserialization)
+
+    //!  default constructor (for automatic deserialization)
+    UniformizeVMatrix(bool call_build_=false);
 
     //! The original VMFields are copied upon construction
-    UniformizeVMatrix(VMat the_distr, Mat the_bins, Vec the_index,
-                      real the_a=0.0, real the_b=1.0);
+    UniformizeVMatrix(VMat the_source, Mat the_bins, Vec the_index,
+                      real the_a=0.0, real the_b=1.0, bool call_build_=true);
 
     PLEARN_DECLARE_OBJECT(UniformizeVMatrix);
 
@@ -92,7 +96,12 @@ public:
     virtual void build();
 
     virtual void reset_dimensions()
-    { distr->reset_dimensions(); width_=distr->width(); length_=distr->length(); }
+    {
+       source->reset_dimensions();
+       width_=source->width();
+       length_=source->length();
+    }
+
 private:
     void build_();
 };

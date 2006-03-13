@@ -44,34 +44,37 @@
 #ifndef VecExtendedVMatrix_INC
 #define VecExtendedVMatrix_INC
 
-#include "RowBufferedVMatrix.h"
+#include "SourceVMatrix.h"
 #include "VMat.h"
 
 namespace PLearn {
 using namespace std;
- 
+
 
 /*!  A VecExtendedVMatrix is similar to an ExtendedVMatrix: it extends the
-  underlying VMat by appending COLUMNS to its right.  The appended columns
+  source VMat by appending COLUMNS to its right.  The appended columns
   are filled with a constant vector passed upon construction.  For example,
   if the vector [1,2,3] is passed at construction, then every row of the
-  underlying VMat will be extended by 3 columns, containing [1,2,3]
+  source VMat will be extended by 3 columns, containing [1,2,3]
   (constant).
 */
 
-class VecExtendedVMatrix : public RowBufferedVMatrix
+class VecExtendedVMatrix : public SourceVMatrix
 {
-    typedef RowBufferedVMatrix inherited;
+    typedef SourceVMatrix inherited;
 
 public:
     // ******************
     // *  Constructors  *
     // ******************
-    VecExtendedVMatrix(); //!<  default constructor (for automatic deserialization)
 
-    //! The fieldinfos of the underlying are copied, the extension fieldinfos
+    //!  default constructor (for automatic deserialization)
+    VecExtendedVMatrix(bool call_build_=false);
+
+    //! The fieldinfos of the source are copied, the extension fieldinfos
     //! are left empty (fill them yourself)
-    VecExtendedVMatrix(VMat underlying, Vec extend_data);
+    VecExtendedVMatrix(VMat the_source, Vec extend_data,
+                       bool call_build_=true);
 
     PLEARN_DECLARE_OBJECT(VecExtendedVMatrix);
 
@@ -85,14 +88,17 @@ public:
     virtual void build();
 
     virtual void reset_dimensions() {
-        underlying_->reset_dimensions();
-        width_ = underlying_.width() + extend_data_.length();
-        length_ = underlying_.length();
+        source->reset_dimensions();
+        width_ = source.width() + extend_data_.length();
+        length_ = source.length();
     }
 
 protected:
-    VMat underlying_;
+
+    // DEPRECATED - Use inherited::source instead
+    // VMat underlying_;
     Vec extend_data_;
+
 private:
     void build_();
 };

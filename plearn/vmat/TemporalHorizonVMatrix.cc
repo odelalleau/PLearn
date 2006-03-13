@@ -46,32 +46,54 @@ using namespace std;
 
 /** TemporalHorizonVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT(TemporalHorizonVMatrix, "ONE LINE DESCR",
-                        "    VMat class that delay the last entries of an underlying VMat by a certain horizon.\n");
+PLEARN_IMPLEMENT_OBJECT(TemporalHorizonVMatrix,
+                        "Delay the last targetsize entries of a source VMat",
+                        "VMat class that delay the last entries of a source"
+                        " VMat by a certain horizon.\n");
 
-TemporalHorizonVMatrix::TemporalHorizonVMatrix(VMat the_distr, int the_horizon, int target_size)
-    : inherited(the_distr.length()-the_horizon, the_distr->width()),
-      distr(the_distr), horizon(the_horizon), targetsize(target_size)
+TemporalHorizonVMatrix::TemporalHorizonVMatrix(bool call_build_)
+    : inherited(call_build_)
 {
-    fieldinfos = distr->fieldinfos;
+    // don't call build_() because it would do nothing
+    /* if( call_build_ )
+        build_(); */
+}
+
+TemporalHorizonVMatrix::TemporalHorizonVMatrix(VMat the_source,
+                                               int the_horizon,
+                                               int target_size,
+                                               bool call_build_)
+    : inherited(the_source,
+                the_source.length()-the_horizon, the_source->width(),
+                call_build_),
+      horizon(the_horizon),
+      targetsize(target_size)
+{
+    fieldinfos = source->fieldinfos;
     row_delay.resize(width());
     for (int i=0; i<width(); i++)
         row_delay[i] = i<width()-targetsize ? 0 : horizon;
 
-    defineSizes(distr->inputsize(), distr->targetsize(), distr->weightsize());
+    defineSizes(source->inputsize(),
+                source->targetsize(),
+                source->weightsize());
+
+    // don't call build_() because it would do nothing
+    /* if( call_build_ )
+        build_(); */
 }
 
 real TemporalHorizonVMatrix::get(int i, int j) const
-{ return distr->get(i+row_delay[j], j); }
+{ return source->get(i+row_delay[j], j); }
 
 void TemporalHorizonVMatrix::put(int i, int j, real value)
-{ distr->put(i+row_delay[j], j, value); }
+{ source->put(i+row_delay[j], j, value); }
 
 real TemporalHorizonVMatrix::dot(int i1, int i2, int inputsize) const
 {
     real res = 0.;
     for(int k=0; k<inputsize; k++)
-        res += distr->get(i1+row_delay[k],k)*distr->get(i2+row_delay[k],k);
+        res += source->get(i1+row_delay[k],k)*source->get(i2+row_delay[k],k);
     return res;
 }
 
@@ -79,40 +101,45 @@ real TemporalHorizonVMatrix::dot(int i, const Vec& v) const
 {
     real res = 0.;
     for(int k=0; k<v.length(); k++)
-        res += distr->get(i+row_delay[k],k)*v[k];
+        res += source->get(i+row_delay[k],k)*v[k];
     return res;
 }
 
 real TemporalHorizonVMatrix::getStringVal(int col, const string & str) const
-{ return distr->getStringVal(col, str); }
+{ return source->getStringVal(col, str); }
 
 string TemporalHorizonVMatrix::getValString(int col, real val) const
-{ return distr->getValString(col,val); }
+{ return source->getValString(col,val); }
 
 string TemporalHorizonVMatrix::getString(int row, int col) const
-{ return distr->getString(row+row_delay[col],col); }
+{ return source->getString(row+row_delay[col],col); }
 
 const map<string,real>& TemporalHorizonVMatrix::getStringToRealMapping(int col) const
-{ return distr->getStringToRealMapping(col);}
+{ return source->getStringToRealMapping(col);}
 
 const map<real,string>& TemporalHorizonVMatrix::getRealToStringMapping(int col) const
-{ return distr->getRealToStringMapping(col);}
+{ return source->getRealToStringMapping(col);}
 
 void TemporalHorizonVMatrix::declareOptions(OptionList &ol)
 {
-    declareOption(ol, "distr", &TemporalHorizonVMatrix::distr, OptionBase::buildoption,
-                  "    The matrix viewed by the TemporalHorizonVMatrix");
-    declareOption(ol, "horizon", &TemporalHorizonVMatrix::horizon, OptionBase::buildoption, 
-                  "    The temporal value by which to delay the VMat");
-    declareOption(ol, "targetsize", &TemporalHorizonVMatrix::targetsize, OptionBase::buildoption, 
-                  "    The number of last entries to delay");
+    declareOption(ol, "distr", &TemporalHorizonVMatrix::source,
+                  (OptionBase::learntoption | OptionBase::nosave),
+                  "DEPRECATED - Use 'source' instead.");
+
+    declareOption(ol, "horizon", &TemporalHorizonVMatrix::horizon,
+                  OptionBase::buildoption,
+                  "The temporal value by which to delay the source VMat");
+
+    declareOption(ol, "targetsize", &TemporalHorizonVMatrix::targetsize,
+                  OptionBase::buildoption,
+                  "The number of last entries to delay");
+
     inherited::declareOptions(ol);
 }
 
 void TemporalHorizonVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-    deepCopyField(distr, copies);
 }
 
 ///////////
@@ -129,16 +156,18 @@ void TemporalHorizonVMatrix::build()
 ////////////
 void TemporalHorizonVMatrix::build_()
 {
-    if (distr) {
-        length_ = distr->length()-horizon;
-        width_ = distr->width();
-        fieldinfos = distr->fieldinfos;
+    if (source) {
+        length_ = source->length()-horizon;
+        width_ = source->width();
+        fieldinfos = source->fieldinfos;
 
         row_delay.resize(width());
         for (int i=0; i<width(); i++)
             row_delay[i] = i<width()-targetsize ? 0 : horizon;
 
-        defineSizes(distr->inputsize(), distr->targetsize(), distr->weightsize());
+        defineSizes(source->inputsize(),
+                    source->targetsize(),
+                    source->weightsize());
     }
 }
 

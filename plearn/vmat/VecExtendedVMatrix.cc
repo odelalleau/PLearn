@@ -47,39 +47,60 @@ using namespace std;
 
 /** VecExtendedVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT(VecExtendedVMatrix, "ONE LINE DESC", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(VecExtendedVMatrix,
+                        "Extends the source by appending columns to its right",
+                        "A VecExtendedVMatrix is similar to an"
+                        " ExtendedVMatrix: it extends the\n"
+                        "source VMat by appending COLUMNS to its right.  The"
+                        " appended columns\n"
+                        "are filled with a constant vector passed upon"
+                        " construction.  For example,\n"
+                        "if the vector [1,2,3] is passed at construction, then"
+                        " every row of the\n"
+                        "source VMat will be extended by 3 columns, containing"
+                        " [1,2,3]\n"
+                        "(constant)\n"
+                        );
 
-VecExtendedVMatrix::VecExtendedVMatrix()
+VecExtendedVMatrix::VecExtendedVMatrix(bool call_build_)
+    : inherited(call_build_)
 {
+    // build_() won't do anything
 }
 
-VecExtendedVMatrix::VecExtendedVMatrix(VMat underlying, Vec extend_data)
-    : inherited(underlying.length(), underlying.width() +
-                extend_data.length()),
-      underlying_(underlying), extend_data_(extend_data)
+VecExtendedVMatrix::VecExtendedVMatrix(VMat the_source, Vec extend_data,
+                                       bool call_build_)
+    : inherited(the_source,
+                the_source->length(),
+                the_source->width() + extend_data.length(),
+                call_build_),
+      extend_data_(extend_data)
 {
-    build();
+    if( call_build_ )
+        build_();
 }
 
-void
-VecExtendedVMatrix::build()
+void VecExtendedVMatrix::build()
 {
     inherited::build();
     build_();
 }
 
-void
-VecExtendedVMatrix::build_()
+void VecExtendedVMatrix::build_()
 {
-    if (underlying_)
-        fieldinfos = underlying_->getFieldInfos();
+    if (source)
+        fieldinfos = source->getFieldInfos();
 }
 
-void
-VecExtendedVMatrix::declareOptions(OptionList &ol)
+void VecExtendedVMatrix::declareOptions(OptionList &ol)
 {
-    declareOption(ol, "underlying_", &VecExtendedVMatrix::underlying_, OptionBase::buildoption, "");
-    declareOption(ol, "extend_data_", &VecExtendedVMatrix::extend_data_, OptionBase::buildoption, "");
+    declareOption(ol, "underlying_", &VecExtendedVMatrix::source,
+                  (OptionBase::learntoption | OptionBase::nosave),
+                  "DEPRECATED - Use 'source' instead.");
+
+    declareOption(ol, "extend_data_", &VecExtendedVMatrix::extend_data_,
+                  OptionBase::buildoption, "");
+
     inherited::declareOptions(ol);
 }
 
@@ -92,10 +113,10 @@ void VecExtendedVMatrix::getNewRow(int i, const Vec& v) const
         PLERROR("In VecExtendedVMatrix::getNewRow v.length() must be equal to the VMat's width");
 #endif
 
-    Vec subv = v.subVec(0,underlying_->width());
-    underlying_->getRow(i,subv);
+    Vec subv = v.subVec(0, source->width());
+    source->getRow(i,subv);
     copy(extend_data_.begin(), extend_data_.end(),
-         v.begin() + underlying_->width());
+         v.begin() + source->width());
 }
 
 } // end of namespace PLearn

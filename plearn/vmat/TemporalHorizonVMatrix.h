@@ -45,18 +45,20 @@
 #define TEMPORAL_HORIZON_VMATRIX
 
 #include "VMat.h"
+#include "SourceVMatrix.h"
 
 namespace PLearn {
 using namespace std;
  
-//!  This VMat delay the last targetsize entries of an underlying VMat
+//!  This VMat delay the last targetsize entries of a source VMat
 //!  by a certain horizon
-class TemporalHorizonVMatrix: public VMatrix
+class TemporalHorizonVMatrix: public SourceVMatrix
 {
-    typedef VMatrix inherited;
+    typedef SourceVMatrix inherited;
 
 protected:
-    VMat distr;  // the underlying VMat
+    // DEPRECATED - Use inherited::source instead
+    // VMat distr;  // the underlying VMat
     int horizon;  // the temporal value by which to delay the VMat
     int targetsize;  // the number of last entries to delay
     TVec<int> row_delay;  // delay for the row index
@@ -64,9 +66,11 @@ protected:
 public:
 
     //! Also copies the original fieldinfos upon construction
-    TemporalHorizonVMatrix() {};
+    TemporalHorizonVMatrix(bool call_build_ = false);
 
-    TemporalHorizonVMatrix(VMat the_distr, int the_horizon, int target_size);
+    TemporalHorizonVMatrix(VMat the_source,
+                           int the_horizon, int target_size,
+                           bool call_build_ = false);
 
     PLEARN_DECLARE_OBJECT(TemporalHorizonVMatrix);
 
@@ -84,7 +88,12 @@ public:
     virtual const map<string,real>& getStringToRealMapping(int col) const;
     virtual const map<real,string>& getRealToStringMapping(int col) const;
 
-    virtual void reset_dimensions() { distr->reset_dimensions(); width_=distr->width(); }
+    virtual void reset_dimensions()
+    {
+        source->reset_dimensions();
+        width_=source->width();
+    }
+
     virtual real dot(int i1, int i2, int inputsize) const;
     virtual real dot(int i, const Vec& v) const;
 

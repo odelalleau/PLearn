@@ -45,28 +45,30 @@
 #define ConcatRowsSubVMatrix_INC
 
 #include "VMat.h"
+#include "SourceVMatrix.h"
 
 namespace PLearn {
 using namespace std;
  
 
 /*!   This class concatenates several (virtual) subVMatrices of the same
-  underlying VMatrix. For each sub-vmatrix block, the user
+  source VMatrix. For each sub-vmatrix block, the user
   specifies the starting row and the number of rows in the
-  underlying VMatrix.
+  source VMatrix.
   The resulting vmatrix sees first all the rows of the
   first sub-vmatrix, then all the rows of the 2nd, etc...
 */
-class ConcatRowsSubVMatrix: public VMatrix
+class ConcatRowsSubVMatrix: public SourceVMatrix
 {
-    typedef VMatrix inherited;
+    typedef SourceVMatrix inherited;
 
 protected:
-    VMat distr;
+    // DEPRECATED - Use inherited::source instead
+    // VMat distr;
     TVec<int> start;
     TVec<int> len;
 
-    void check(); //!<  check ranges are compatible
+    //void check(); //!<  check ranges are compatible
 
     //!  returns the index of the correct sub-VMat in the array and the the row
     //!  number in this VMat that correspond to row i in the ConcatRowsVMat
@@ -76,11 +78,19 @@ public:
     // ******************
     // *  Constructors  *
     // ******************
-    ConcatRowsSubVMatrix(); //!<  default constructor (for automatic deserialization)
+
+    //!  default constructor (for automatic deserialization)
+    ConcatRowsSubVMatrix(bool call_build_ = false);
 
     //!  The field names of the parent VMat are copied upon construction
-    ConcatRowsSubVMatrix(VMat the_distr, TVec<int>& the_start, TVec<int>& the_len);
-    ConcatRowsSubVMatrix(VMat the_distr, int start1, int len1, int start2, int len2);
+    ConcatRowsSubVMatrix(VMat the_source,
+                         TVec<int>& the_start, TVec<int>& the_len,
+                         bool call_build_ = true);
+
+    ConcatRowsSubVMatrix(VMat the_source,
+                         int start1, int len1,
+                         int start2, int len2,
+                         bool call_build_ = true);
 
     PLEARN_DECLARE_OBJECT(ConcatRowsSubVMatrix);
     static void declareOptions(OptionList &ol);
@@ -89,12 +99,12 @@ public:
 
     virtual real get(int i, int j) const;
     virtual void getSubRow(int i, int j, Vec v) const;
-    virtual void reset_dimensions() 
-    { 
-        distr->reset_dimensions();
-        width_=distr->width();
+    virtual void reset_dimensions()
+    {
+        source->reset_dimensions();
+        width_=source->width();
         length_=0;
-        for (int i=0;i<len.length();i++) 
+        for (int i=0;i<len.length();i++)
             length_ += len[i];
     }
     virtual real dot(int i1, int i2, int inputsize) const;

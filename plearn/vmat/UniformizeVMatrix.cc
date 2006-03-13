@@ -46,50 +46,78 @@ using namespace std;
 
 /** UniformizeVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT(UniformizeVMatrix, "ONE LINE DESC", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(UniformizeVMatrix,
+                        "Uniformize (between a and b) each feature in index of"
+                        " source",
+                        "VMatrix that can be used to uniformize (between a and"
+                        " b)\n"
+                        "each feature in index of the underlying distribution"
+                        " such that:\n"
+                        "    P(x') = .5   if  a < x'< b\n"
+                        "          =  0   otherwise\n"
+                        "\n"
+                        "We suppose that the original distribution of x, P(x),"
+                        " could be anything,\n"
+                        "and we map 'a' with bins[0] and 'b' with bins[N-1].\n"
+                       );
 
-UniformizeVMatrix::UniformizeVMatrix()
-    : a(0), b(1)
+UniformizeVMatrix::UniformizeVMatrix(bool call_build_)
+    : inherited(call_build_), a(0), b(1)
 {
+    // build_() won't do anything
+    /* if( call_build_)
+        build_(); */
 }
 
-UniformizeVMatrix::UniformizeVMatrix(VMat the_distr, Mat the_bins, Vec the_index, real the_a,
-                                     real the_b)
-    : inherited(the_distr->length(), the_distr->width()),
-      distr(the_distr), bins(the_bins), index(the_index), a(the_a), b(the_b)
+UniformizeVMatrix::UniformizeVMatrix(VMat the_source,
+                                     Mat the_bins, Vec the_index,
+                                     real the_a, real the_b,
+                                     bool call_build_)
+    : inherited(the_source,
+                the_source->length(), the_source->width(),
+                call_build_),
+      bins(the_bins), index(the_index), a(the_a), b(the_b)
 {
-    build();
+    if( call_build_ )
+        build_();
 }
 
-void
-UniformizeVMatrix::build()
+void UniformizeVMatrix::build()
 {
     inherited::build();
     build_();
 }
 
-void
-UniformizeVMatrix::build_()
+void UniformizeVMatrix::build_()
 {
-    if (distr) {
-        fieldinfos = distr->getFieldInfos();
-  
+    if (source) {
+        fieldinfos = source->getFieldInfos();
+
         if (a >= b)
             PLERROR("In UniformizeVMatrix: a (%f) must be strictly smaller than b (%f)", a, b);
         if (index.length() != bins.length())
             PLERROR("In UniformizeVMatrix: the number of elements in index (%d) must equal the number of rows in bins (%d)", index.length(), bins.length());
-        if (min(index)<0 || max(index)>distr->length()-1)
+        if (min(index)<0 || max(index)>source->length()-1)
             PLERROR("In UniformizeVMatrix: all values of index must be in range [0,%d]",
-                    distr->length()-1);
+                    source->length()-1);
     }
 }
 
 void
 UniformizeVMatrix::declareOptions(OptionList &ol)
 {
-    declareOption(ol, "distr", &UniformizeVMatrix::distr, OptionBase::buildoption, "");
-    declareOption(ol, "bins", &UniformizeVMatrix::bins, OptionBase::buildoption, "");
-    declareOption(ol, "index", &UniformizeVMatrix::index, OptionBase::buildoption, "");
+    declareOption(ol, "distr", &UniformizeVMatrix::source,
+                  OptionBase::buildoption,
+                  "DEPRECATED - Use 'source' instead.");
+
+    declareOption(ol, "bins", &UniformizeVMatrix::bins,
+                  OptionBase::buildoption,
+                  "");
+
+    declareOption(ol, "index", &UniformizeVMatrix::index,
+                  OptionBase::buildoption,
+                  "");
+
     declareOption(ol, "a", &UniformizeVMatrix::a, OptionBase::buildoption, "");
     declareOption(ol, "b", &UniformizeVMatrix::b, OptionBase::buildoption, "");
     inherited::declareOptions(ol);
@@ -104,7 +132,7 @@ void UniformizeVMatrix::getNewRow(int i, const Vec& v) const
         PLERROR("In UniformizeVMatrix::getNewRow v.length() must be equal to the VMat's width");
 #endif
 
-    distr->getRow(i, v);
+    source->getRow(i, v);
     for(int j=0; j<v.length(); j++) {
         if (vec_find(index, (real)j) != -1) {
             Vec x_bin = bins(j);

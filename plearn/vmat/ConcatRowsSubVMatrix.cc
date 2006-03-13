@@ -46,36 +46,62 @@ using namespace std;
 
 /** ConcatRowsSubVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT(ConcatRowsSubVMatrix, "ONE LINE DESC", "ONE LINE HELP");
+PLEARN_IMPLEMENT_OBJECT(ConcatRowsSubVMatrix,
+                        "Concatenates subVMatrices of a source VMatrix",
+                        "This class concatenates several (virtual)"
+                        " subVMatrices of the same\n"
+                        "source VMatrix. For each sub-vmatrix block, the"
+                        " user\n"
+                        "specifies the starting row and the number of rows in"
+                        " the\n"
+                        "source VMatrix.\n"
+                        "The resulting vmatrix sees first all the rows of"
+                        " the\n"
+                        "first sub-vmatrix, then all the rows of the 2nd,"
+                        " etc.\n"
+                        );
 
-ConcatRowsSubVMatrix::ConcatRowsSubVMatrix()
+ConcatRowsSubVMatrix::ConcatRowsSubVMatrix(bool call_build_)
+    : inherited(call_build_)
 {
+    if( call_build_ )
+        build_();
 }
 
-ConcatRowsSubVMatrix::ConcatRowsSubVMatrix(VMat the_distr, TVec<int>& the_start, TVec<int>& the_len)
-    : inherited(-1,the_distr->width()), distr(the_distr), start(the_start), len(the_len)
+ConcatRowsSubVMatrix::ConcatRowsSubVMatrix(VMat the_source,
+                                           TVec<int>& the_start,
+                                           TVec<int>& the_len,
+                                           bool call_build_)
+    : inherited(the_source, -1, the_source->width(), call_build_),
+      start(the_start),
+      len(the_len)
 {
     //! Copy parent field names
 /*
-  fieldinfos = the_distr->getFieldInfos();
-  
+  fieldinfos = the_source->getFieldInfos();
   check();
 */
-    build();
+    if( call_build_ )
+        build_();
 }
 
-ConcatRowsSubVMatrix::ConcatRowsSubVMatrix(VMat the_distr, int start1, int len1, int start2, int len2)
-    : inherited(-1,the_distr->width()), distr(the_distr), start(2), len(2)
+ConcatRowsSubVMatrix::ConcatRowsSubVMatrix(VMat the_source,
+                                           int start1, int len1,
+                                           int start2, int len2,
+                                           bool call_build_)
+    : inherited(the_source, -1, the_source->width(), call_build_),
+      start(2), len(2)
 {
     //! Copy parent field names
-    //fieldinfos = the_distr->getFieldInfos();
-  
+    //fieldinfos = the_source->getFieldInfos();
+
     start[0]=start1;
     start[1]=start2;
     len[0]=len1;
     len[1]=len2;
     //check();
-    build();
+    if( call_build_ )
+        build_();
 }
 /*
   void ConcatRowsSubVMatrix::check()
@@ -83,9 +109,9 @@ ConcatRowsSubVMatrix::ConcatRowsSubVMatrix(VMat the_distr, int start1, int len1,
   length_=0;
   for (int i=0;i<start.length();i++)
   {
-  if (start[i]<0 || start[i]+len[i]>distr->length())
-  PLERROR("ConcatRowsSubVMatrix: out-of-range specs for sub-distr %d, "
-  "start=%d, len=%d, underlying distr length=%d",i,start[i],len[i],
+  if (start[i]<0 || start[i]+len[i]>source->length())
+  PLERROR("ConcatRowsSubVMatrix: out-of-range specs for submat %d, "
+  "start=%d, len=%d, source length=%d",i,start[i],len[i],
   distr->length());
   length_ += len[i];
   }
@@ -115,14 +141,14 @@ real ConcatRowsSubVMatrix::get(int i, int j) const
 {
     int whichvm, rowofvm;
     getpositions(i,whichvm,rowofvm);
-    return distr->get(start[whichvm]+rowofvm,j);
+    return source->get(start[whichvm]+rowofvm,j);
 }
 
 void ConcatRowsSubVMatrix::getSubRow(int i, int j, Vec v) const
 {
     int whichvm, rowofvm;
     getpositions(i,whichvm,rowofvm);
-    distr->getSubRow(start[whichvm]+rowofvm, j, v);
+    source->getSubRow(start[whichvm]+rowofvm, j, v);
 }
 
 real ConcatRowsSubVMatrix::dot(int i1, int i2, int inputsize) const
@@ -131,43 +157,50 @@ real ConcatRowsSubVMatrix::dot(int i1, int i2, int inputsize) const
     getpositions(i1,whichvm1,rowofvm1);
     int whichvm2, rowofvm2;
     getpositions(i2,whichvm2,rowofvm2);
-    return distr->dot(start[whichvm1]+rowofvm1, start[whichvm2]+rowofvm2, inputsize);
+    return source->dot(start[whichvm1]+rowofvm1, start[whichvm2]+rowofvm2, inputsize);
 }
 
 real ConcatRowsSubVMatrix::dot(int i, const Vec& v) const
 {
     int whichvm, rowofvm;
     getpositions(i,whichvm,rowofvm);
-    return distr->dot(start[whichvm]+rowofvm,v);
+    return source->dot(start[whichvm]+rowofvm,v);
 }
 
-void
-ConcatRowsSubVMatrix::declareOptions(OptionList &ol)
+void ConcatRowsSubVMatrix::declareOptions(OptionList &ol)
 {
-    declareOption(ol, "distr", &ConcatRowsSubVMatrix::distr, OptionBase::buildoption, "");
-    declareOption(ol, "start", &ConcatRowsSubVMatrix::start, OptionBase::buildoption, "");
-    declareOption(ol, "len", &ConcatRowsSubVMatrix::len, OptionBase::buildoption, "");
+    declareOption(ol, "distr", &ConcatRowsSubVMatrix::source,
+                  (OptionBase::learntoption | OptionBase::nosave),
+                  "DEPRECATED - Use 'source' instead");
+
+    declareOption(ol, "start", &ConcatRowsSubVMatrix::start,
+                  OptionBase::buildoption,
+                  "");
+
+    declareOption(ol, "len", &ConcatRowsSubVMatrix::len,
+                  OptionBase::buildoption,
+                  "");
+
     inherited::declareOptions(ol);
 }
 
-void
-ConcatRowsSubVMatrix::build()
+void ConcatRowsSubVMatrix::build()
 {
     inherited::build();
     build_();
 }
 
-void
-ConcatRowsSubVMatrix::build_()
+void ConcatRowsSubVMatrix::build_()
 {
-    if (distr) {
-        fieldinfos = distr->getFieldInfos();
+    if (source) {
+        fieldinfos = source->getFieldInfos();
         length_=0;
         for (int i = 0; i < start.length(); i++) {
-            if (start[i]<0 || start[i]+len[i]>distr->length())
-                PLERROR("ConcatRowsSubVMatrix: out-of-range specs for sub-distr %d, "
-                        "start=%d, len=%d, underlying distr length=%d",i,start[i],len[i],
-                        distr->length());
+            if (start[i]<0 || start[i]+len[i]>source->length())
+                PLERROR("ConcatRowsSubVMatrix: out-of-range specs for submat"
+                        " %d,\n"
+                        "start=%d, len=%d, underlying distr length=%d\n",
+                        i, start[i], len[i], source->length());
             length_ += len[i];
         }
     }
