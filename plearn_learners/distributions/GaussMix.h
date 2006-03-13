@@ -283,6 +283,9 @@ public:
     // * Object methods *
     // ******************
 
+    //! Overridden in order to detect changes that require a call to forget().
+    virtual void changeOptions(const map<string,string>& name_value);
+
 protected:
 
     // ********************

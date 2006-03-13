@@ -327,6 +327,19 @@ void GaussMix::build_()
     }
 }
 
+///////////////////
+// changeOptions //
+///////////////////
+void GaussMix::changeOptions(const map<string,string>& name_value)
+{
+    // When 'n_eigen' is changed for a learner that is already trained, we need
+    // to call forget(), otherwise some asserts may fail during a subsequent
+    // build.
+    if (stage > 0 && name_value.find("n_eigen") != name_value.end())
+        forget();
+    inherited::changeOptions(name_value);
+}
+
 ////////////////////////////////
 // computeMeansAndCovariances //
 ////////////////////////////////
