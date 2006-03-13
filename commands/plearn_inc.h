@@ -228,7 +228,6 @@
 #include <plearn/vmat/AddMissingVMatrix.h>
 #include <plearn/vmat/AsciiVMatrix.h>
 #include <plearn/vmat/AutoVMatrix.h>
-#include <plearn/vmat/BatchVMatrix.h>
 #include <plearn/vmat/BootstrapVMatrix.h>
 #include <plearn/vmat/CenteredVMatrix.h>
 #include <plearn/vmat/CompactVMatrix.h>
