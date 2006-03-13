@@ -311,7 +311,7 @@ real MemoryVMatrix::dot(int i, const Vec& v) const
     return 0.0;                                // in the case of a null vector
 }
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

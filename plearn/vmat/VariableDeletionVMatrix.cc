@@ -296,7 +296,7 @@ void VariableDeletionVMatrix::buildIndices()
     source->defineSizes(new_width - target_and_weight, complete_dataset_targetsize, complete_dataset_weightsize);
 }
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

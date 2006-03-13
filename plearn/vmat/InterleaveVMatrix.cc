@@ -129,7 +129,7 @@ void InterleaveVMatrix::getSubRow(int i, int j, Vec v) const
     sources[m]->getSubRow(pos, j, v);
 }
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

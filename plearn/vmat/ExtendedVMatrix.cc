@@ -193,7 +193,7 @@ void ExtendedVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 }
 
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

@@ -79,7 +79,7 @@ void ThresholdVMatrix::getNewRow(int i, const Vec& v) const
         v[p]= hot_value;
 }
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

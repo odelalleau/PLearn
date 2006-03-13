@@ -85,7 +85,7 @@ private:
 
 DECLARE_OBJECT_PTR(BatchVMatrix);
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 #endif
 
 

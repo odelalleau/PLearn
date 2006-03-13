@@ -206,7 +206,7 @@ void ConcatRowsSubVMatrix::build_()
     }
 }
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

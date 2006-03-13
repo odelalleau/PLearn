@@ -93,7 +93,7 @@ void PairsVMatrix::getNewRow(int ij, const Vec& samplevec) const
 }
 
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

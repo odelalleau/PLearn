@@ -35,7 +35,7 @@
 
 
 /* *******************************************************
-   * $Id: MatlabInterface.cc,v 1.5 2004/07/21 16:30:51 chrish42 Exp $
+   * $Id$
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */

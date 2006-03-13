@@ -134,7 +134,7 @@ real CrossReferenceVMatrix::get(int i, int j) const
     }
 }
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

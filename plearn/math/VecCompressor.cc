@@ -473,7 +473,7 @@ void VecCompressor::readCompressedVec(istream& in, const Vec& v)
 
 
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

@@ -130,7 +130,7 @@ CompressedVMatrix::~CompressedVMatrix()
         delete[] rowstarts;
 }
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

@@ -306,7 +306,7 @@ void IndexedVMatrix::fullyCheckMappings()
 }
 
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

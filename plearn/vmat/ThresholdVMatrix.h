@@ -92,7 +92,7 @@ inline VMat thresholdVMat(VMat source, real threshold,
 { return new ThresholdVMatrix(source, threshold, cold_value, hot_value,
                               gt_threshold, call_build_); }
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 #endif
 
 

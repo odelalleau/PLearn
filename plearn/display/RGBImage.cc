@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: RGBImage.cc,v 1.5 2004/07/21 16:30:51 chrish42 Exp $
+   * $Id$
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */

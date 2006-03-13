@@ -83,7 +83,7 @@ inline VMat vrange(real start, real end, real step=1.0)
 
 DECLARE_OBJECT_PTR(RangeVMatrix);
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 #endif
 
 

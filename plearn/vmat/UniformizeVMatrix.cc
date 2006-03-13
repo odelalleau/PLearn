@@ -142,7 +142,7 @@ void UniformizeVMatrix::getNewRow(int i, const Vec& v) const
     }
 }
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

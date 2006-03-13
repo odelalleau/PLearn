@@ -273,7 +273,7 @@ void MeanImputationVMatrix::computeMeanVector()
     }
 }
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

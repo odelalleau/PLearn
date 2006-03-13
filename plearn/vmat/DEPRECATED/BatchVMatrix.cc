@@ -126,7 +126,7 @@ void BatchVMatrix::put(int i, int j, real value) {
     m->put(i_, j, value);
 }
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

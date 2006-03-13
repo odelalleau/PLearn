@@ -118,7 +118,7 @@ private:
 
 DECLARE_OBJECT_PTR(SparseVMatrix);
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 #endif
 
 

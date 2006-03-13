@@ -91,7 +91,7 @@ private:
 
 DECLARE_OBJECT_PTR(PairsVMatrix);
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 #endif
 
 

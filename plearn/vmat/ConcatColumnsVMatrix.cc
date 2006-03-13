@@ -305,7 +305,7 @@ void ConcatColumnsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(sources, copies);
 }
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

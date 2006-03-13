@@ -92,7 +92,7 @@ void UniformVMatrix::getSubRow(int i, int j, Vec v) const
 }
 
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

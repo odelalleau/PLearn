@@ -132,7 +132,7 @@ private:
 
 DECLARE_OBJECT_PTR(SelectColumnsVMatrix);
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 #endif
 
 

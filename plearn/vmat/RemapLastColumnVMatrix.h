@@ -123,7 +123,7 @@ inline VMat remapLastColumn(VMat s, real if_equals_value,
 
 DECLARE_OBJECT_PTR(RemapLastColumnVMatrix);
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 #endif
 
 

@@ -79,7 +79,7 @@ private:
 
 DECLARE_OBJECT_PTR(UniformVMatrix);
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 #endif
 
 

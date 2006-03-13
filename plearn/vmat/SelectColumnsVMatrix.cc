@@ -331,7 +331,7 @@ Vec SelectColumnsVMatrix::getValues(const Vec& input, int col) const
     return source->getValues(input, the_col);
 }
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

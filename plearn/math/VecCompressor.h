@@ -96,7 +96,7 @@ public:
     { return 2+4*n+n/128; }
 };
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 #endif
 
 

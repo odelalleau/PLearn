@@ -378,7 +378,7 @@ DiskVMatrix::~DiskVMatrix()
 #undef unlink
 #endif
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

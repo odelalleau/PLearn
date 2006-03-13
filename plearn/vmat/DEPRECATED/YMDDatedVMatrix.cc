@@ -346,7 +346,7 @@ void YMDDatedVMatrix::copyDateOfRow(int row, int &year, int &month, int &day)
     day = (int)days(row,0);
 }
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

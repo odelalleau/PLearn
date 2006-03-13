@@ -124,7 +124,7 @@ private:
 
 DECLARE_OBJECT_PTR(SubVMatrix);
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 #endif
 
 

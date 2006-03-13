@@ -352,7 +352,7 @@ Vec SubVMatrix::getValues(const Vec& input, int col) const
                              col+jstart);
 }
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

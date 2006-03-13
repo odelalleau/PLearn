@@ -125,7 +125,7 @@ public:
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(ShiftAndRescaleVMatrix);
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 #endif
 
 

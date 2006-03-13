@@ -154,7 +154,7 @@ void BootstrapVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(rgen, copies);
 }
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

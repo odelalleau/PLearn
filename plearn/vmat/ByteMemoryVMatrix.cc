@@ -93,7 +93,7 @@ void ByteMemoryVMatrix::getSubRow(int i, int j, Vec samplevec) const
         v[jj] = s[j+jj] * (p[j+jj] + o[j+jj]);
 }
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

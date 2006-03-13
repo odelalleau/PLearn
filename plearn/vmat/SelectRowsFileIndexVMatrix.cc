@@ -113,7 +113,7 @@ string SelectRowsFileIndexVMatrix::getString(int row, int col) const
 const map<string,real>& SelectRowsFileIndexVMatrix::getStringToRealMapping(int col) const
 { return distr->getStringToRealMapping(col);}
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

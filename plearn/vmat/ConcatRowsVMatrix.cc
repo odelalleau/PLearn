@@ -490,7 +490,7 @@ void ConcatRowsVMatrix::reset_dimensions() {
 }
 
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

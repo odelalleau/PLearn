@@ -120,7 +120,7 @@ private:
 
 DECLARE_OBJECT_PTR(SelectRowsVMatrix);
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 #endif
 
 

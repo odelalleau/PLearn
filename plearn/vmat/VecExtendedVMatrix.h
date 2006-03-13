@@ -105,7 +105,7 @@ private:
 
 DECLARE_OBJECT_PTR(VecExtendedVMatrix);
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 #endif
 
 

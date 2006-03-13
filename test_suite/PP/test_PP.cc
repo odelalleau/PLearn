@@ -1,6 +1,6 @@
 
 /* *******************************************************      
-   * $Id: test_PP.cc,v 1.5 2004/10/25 15:06:24 dorionc Exp $
+   * $Id$
    * AUTHORS: Kim Levy & Christian Dorion
    * This file is part of the PLearn library.
    ******************************************************* */

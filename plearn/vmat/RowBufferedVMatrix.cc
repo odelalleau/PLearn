@@ -211,7 +211,7 @@ void RowBufferedVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies) {
     deepCopyField(other_row, copies);
 }
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

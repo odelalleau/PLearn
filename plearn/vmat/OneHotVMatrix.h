@@ -119,7 +119,7 @@ inline VMat onehot(VMat the_source, int nclasses,
 
 DECLARE_OBJECT_PTR(OneHotVMatrix);
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 #endif
 
 

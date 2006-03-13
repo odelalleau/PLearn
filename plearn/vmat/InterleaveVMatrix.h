@@ -110,7 +110,7 @@ private:
 
 DECLARE_OBJECT_PTR(InterleaveVMatrix);
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 #endif
 
 

@@ -102,7 +102,7 @@ real RemoveRowsVMatrix::dot(int i, const Vec& v) const
 { return distr->dot(getrownum(i),v); }
 
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

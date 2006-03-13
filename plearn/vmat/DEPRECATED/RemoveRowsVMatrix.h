@@ -107,7 +107,7 @@ inline VMat removeRow(VMat d, int rownum)
 
 DECLARE_OBJECT_PTR(RemoveRowsVMatrix);
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 #endif
 
 

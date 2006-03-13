@@ -227,7 +227,7 @@ void RemapLastColumnVMatrix::getNewRow(int i, const Vec& samplevec) const
     }
 }
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

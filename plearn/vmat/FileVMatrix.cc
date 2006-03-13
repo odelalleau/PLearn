@@ -530,7 +530,7 @@ void FileVMatrix::updateHeader() {
 #endif
 }
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 
 
 /*

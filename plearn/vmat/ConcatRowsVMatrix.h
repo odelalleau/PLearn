@@ -151,7 +151,7 @@ inline VMat vconcat(TVec<VMat> ds) {
     }
 }
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 #endif
 
 

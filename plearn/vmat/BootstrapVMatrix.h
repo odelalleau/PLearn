@@ -94,7 +94,7 @@ private:
 
 DECLARE_OBJECT_PTR(BootstrapVMatrix);
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 #endif
 
 

@@ -107,7 +107,7 @@ private:
 
 DECLARE_OBJECT_PTR(IndexedVMatrix);
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 #endif
 
 

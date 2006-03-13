@@ -94,7 +94,7 @@ private:
 
 DECLARE_OBJECT_PTR(SelectRowsFileIndexVMatrix);
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 #endif
 
 

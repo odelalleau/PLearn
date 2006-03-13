@@ -116,7 +116,7 @@ inline VMat hconcat(TVec<VMat> ds)
 { return new ConcatColumnsVMatrix(ds); }
 
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 #endif
 
 
