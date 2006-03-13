@@ -45,32 +45,44 @@
 #define SubVMatrix_INC
 
 #include "VMat.h"
+#include "SourceVMatrix.h"
 
 namespace PLearn {
 using namespace std;
- 
-class SubVMatrix: public VMatrix
+
+class SubVMatrix: public SourceVMatrix
 {
 
 private:
 
-    typedef VMatrix inherited;
+    typedef SourceVMatrix inherited;
 
 public:
-  
+
     //! Build options.
-    VMat parent;
+
+    // DEPRECATED - Use inherited::source instead.
+    // VMat parent;
     int istart;
     int jstart;
     real fistart;
     real flength;
-  
+
     //! The appropriate VMFields of the parent VMat are copied upon
     //! construction
-    SubVMatrix();
-    SubVMatrix(VMat the_parent, int the_istart, int the_jstart, int the_length, int the_width);
-    SubVMatrix(VMat the_parent, real the_fistart, int the_jstart, real the_flength, int the_width);
+    SubVMatrix(bool call_build_ = false);
 
+    SubVMatrix(VMat the_source,
+               int the_istart, int the_jstart,
+               int the_length, int the_width,
+               bool call_build_ = true);
+
+    SubVMatrix(VMat the_source,
+               real the_fistart, int the_jstart,
+               real the_flength, int the_width,
+               bool call_build_ = true);
+
+    virtual void getNewRow(int i, const Vec& v) const;
     virtual real get(int i, int j) const;
     virtual void getSubRow(int i, int j, Vec v) const;
     virtual void getMat(int i, int j, Mat m) const;

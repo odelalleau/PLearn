@@ -45,26 +45,34 @@
 #define ShiftAndRescaleVMatrix_INC
 
 #include "VMat.h"
+#include "SourceVMatrix.h"
 
 namespace PLearn {
 using namespace std;
  
 /*!   VMatrix that can be used to rescale and shift each feature of the
-  underlying distribution: x'_i = a_i*(x_i+b_i)
+  source: x'_i = a_i*(x_i+b_i)
   This can be used to normalize the inputs of a distribution 
   (see the NormalizeInputDistr function in PLearn.h)
 */
-class ShiftAndRescaleVMatrix: public VMatrix
+class ShiftAndRescaleVMatrix: public SourceVMatrix
 {
-    typedef VMatrix inherited;
+    typedef SourceVMatrix inherited;
 
 public:
     //!  x'_i = (x_i+shift_i)*scale_i
-    VMat vm;
-    Vec shift; 
-    Vec scale; 
-    bool automatic; // find shift and scale automatically?
-    int n_train; // when automatic, use the n_train first examples to estimate shift and scale
+
+    // DEPRECATED - use inherited::source instead
+    // VMat vm;
+    Vec shift;
+    Vec scale;
+
+    //! find shift and scale automatically?
+    bool automatic;
+
+    //! when automatic, use the n_train first examples to estimate shift and
+    //! scale
+    int n_train;
     int n_inputs; // when automatic, 
     bool negate_shift;
     bool no_scale;
@@ -72,26 +80,39 @@ public:
     int verbosity;
 
     //! For all constructors, the original VMFields are copied upon construction
-    ShiftAndRescaleVMatrix();
-    ShiftAndRescaleVMatrix(VMat underlying_distr, Vec the_shift, Vec the_scale);
-    ShiftAndRescaleVMatrix(VMat underlying_distr, int n_inputs);
-    ShiftAndRescaleVMatrix(VMat underlying_distr, int n_inputs, int n_train, bool the_ignore_missing = false, bool the_verbosity = 1);
+    ShiftAndRescaleVMatrix(bool call_build_=false);
+
+    ShiftAndRescaleVMatrix(VMat the_source, bool call_build_=true);
+
+    ShiftAndRescaleVMatrix(VMat the_source, Vec the_shift, Vec the_scale,
+                           bool call_build_=true);
+
+    ShiftAndRescaleVMatrix(VMat the_source, int the_n_inputs,
+                           bool call_build_=true);
+
+    ShiftAndRescaleVMatrix(VMat the_source,
+                           int the_n_inputs,
+                           int the_n_train,
+                           bool the_ignore_missing = false,
+                           bool the_verbosity = 1,
+                           bool call_build_=true);
 
     PLEARN_DECLARE_OBJECT(ShiftAndRescaleVMatrix);
 
-    virtual real get(int i, int j) const;
-    virtual void getSubRow(int i, int j, Vec v) const;
-    virtual void reset_dimensions() 
-    { 
-        if (width_>0 && width_!=vm->width())
+    virtual void getNewRow(int i, const Vec& v) const;
+
+    virtual void reset_dimensions()
+    {
+        if (width_>0 && width_!=source->width())
             PLERROR("ShiftAndRescaleVMatrix: can't change width"); 
         inherited::reset_dimensions();
     }
-private: 
+
+private:
     //! This does the actual building. 
     void build_();
 
-protected: 
+protected:
     //! Declares this class' options
     static void declareOptions(OptionList& ol);
 

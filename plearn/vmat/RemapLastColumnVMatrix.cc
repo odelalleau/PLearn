@@ -48,44 +48,140 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(RemapLastColumnVMatrix, "ONE LINE DESC", "NO HELP");
 
-RemapLastColumnVMatrix::RemapLastColumnVMatrix()
-    : if_equals_val(0), then_val(0), else_val(0)
+RemapLastColumnVMatrix::RemapLastColumnVMatrix(bool call_build_)
+    : inherited(call_build_), if_equals_val(0), then_val(0), else_val(0)
 {
+    if( call_build_ )
+        build_();
 }
 
-RemapLastColumnVMatrix::RemapLastColumnVMatrix(VMat the_underlying_distr, Mat the_mapping)
-    : inherited (the_underlying_distr->length(), the_underlying_distr->width()+the_mapping.width()-2),
-      underlying_distr(the_underlying_distr), mapping(the_mapping)
+RemapLastColumnVMatrix::RemapLastColumnVMatrix(VMat the_source,
+                                               Mat the_mapping,
+                                               bool call_build_)
+    : inherited (the_source,
+                 the_source->length(),
+                 the_source->width()+the_mapping.width()-2,
+                 call_build_),
+      mapping(the_mapping)
 {
+    if( call_build_ )
+        build_();
 }
 
-RemapLastColumnVMatrix::RemapLastColumnVMatrix(VMat the_underlying_distr, real if_equals_value, real then_value, real else_value)
-    : inherited(the_underlying_distr->length(), the_underlying_distr->width()),
-      underlying_distr(the_underlying_distr), if_equals_val(if_equals_value),
-      then_val(then_value), else_val(else_value)
+RemapLastColumnVMatrix::RemapLastColumnVMatrix(VMat the_source,
+                                               real if_equals_value,
+                                               real then_value,
+                                               real else_value,
+                                               bool call_build_)
+    : inherited(the_source,
+                the_source->length(),
+                the_source->width(),
+                call_build_),
+      if_equals_val(if_equals_value),
+      then_val(then_value),
+      else_val(else_value)
 {
+    if( call_build_ )
+        build_();
 }
 
-void
-RemapLastColumnVMatrix::build()
+void RemapLastColumnVMatrix::build()
 {
     inherited::build();
     build_();
 }
 
-void
-RemapLastColumnVMatrix::build_()
+void RemapLastColumnVMatrix::build_()
 {
+    int n_extra = mapping.width() - 2;
+    if( mapping.isEmpty() )
+        width_=source->width();
+    else
+        width_=source->width() + n_extra;
+
+    if( !mapping.isEmpty() && n_extra > 0 )
+    {
+        // width() is different from source->width(),
+        int n_last = source->width()-1;
+
+        // determine sizes
+        int source_is = source->inputsize();
+        int source_ts = source->targetsize();
+        int source_ws = source->weightsize();
+
+        bool specified_sizes_are_inconsistent =
+            inputsize_ < 0 || targetsize_ < 0 || weightsize_ <0 ||
+            inputsize_ + targetsize_ + weightsize_ != width();
+
+        if( specified_sizes_are_inconsistent )
+        {
+            if( source_is < 0 || source_ts < 0 || source_ws < 0 ||
+                source_is + source_ts + source_ws != source->width() )
+            {
+                //source sizes are inconsistent, everything is input (default)
+                inputsize_ = width();
+                targetsize_ = 0;
+                weightsize_ = 0;
+            }
+            else if( n_last < source_is )
+            {
+                // last column is input, remapped columns are considered input
+                // other sizes are 0
+                inputsize_ = source_is + n_extra;
+                targetsize_ = 0;
+                weightsize_ = 0;
+            }
+            else if( n_last < source_is + source_ts )
+            {
+                // last column is target, remapped columns are
+                // considered target other sizes are set from source
+                inputsize_ = source_is;
+                targetsize_ = source_ts + n_extra;
+                weightsize_ = 0;
+            }
+            else
+            {
+                inputsize_ = source_is;
+                targetsize_ = source_ts;
+                weightsize_ = source_ws + n_extra;
+            }
+        }
+        // else don't modify specified sizes
+
+        // set fieldname for added columns
+        TVec<string> source_fieldnames = source->fieldNames();
+        string last_fieldname = source_fieldnames[n_last];
+        TVec<string> fieldnames( source_fieldnames.copy() );
+        fieldnames.resize( width() );
+        for( int i=0 ; i<=n_extra ; i++ )
+        {
+            fieldnames[n_last+i] = last_fieldname + "_" + tostring(i);
+        }
+        declareFieldNames( fieldnames );
+
+    }
+    setMetaInfoFromSource();
 }
 
-void
-RemapLastColumnVMatrix::declareOptions(OptionList &ol)
+void RemapLastColumnVMatrix::declareOptions(OptionList &ol)
 {
-    declareOption(ol, "underlying_distr", &RemapLastColumnVMatrix::underlying_distr, OptionBase::buildoption, "");
-    declareOption(ol, "mapping", &RemapLastColumnVMatrix::mapping, OptionBase::buildoption, "");
-    declareOption(ol, "if_equals_val", &RemapLastColumnVMatrix::if_equals_val, OptionBase::buildoption, "");
-    declareOption(ol, "then_val", &RemapLastColumnVMatrix::then_val, OptionBase::buildoption, "");
-    declareOption(ol, "else_val", &RemapLastColumnVMatrix::else_val, OptionBase::buildoption, "");
+    declareOption(ol, "underlying_distr",
+                  &RemapLastColumnVMatrix::source,
+                  OptionBase::buildoption,
+                  "DEPRECATED - Use 'source' instead.");
+
+    declareOption(ol, "mapping", &RemapLastColumnVMatrix::mapping,
+                  OptionBase::buildoption, "");
+
+    declareOption(ol, "if_equals_val", &RemapLastColumnVMatrix::if_equals_val,
+                  OptionBase::buildoption, "");
+
+    declareOption(ol, "then_val", &RemapLastColumnVMatrix::then_val,
+                  OptionBase::buildoption, "");
+
+    declareOption(ol, "else_val", &RemapLastColumnVMatrix::else_val,
+                  OptionBase::buildoption, "");
+
     inherited::declareOptions(ol);
 }
 
@@ -95,11 +191,13 @@ void RemapLastColumnVMatrix::getNewRow(int i, const Vec& samplevec) const
     if(i<0 || i>=length())
         PLERROR("In RemapLastColumnVMatrix::getNewRow OUT OF BOUNDS");
     if(samplevec.length()!=width())
-        PLERROR("In RemapLastColumnVMatrix::getNewRow samplevec.length() must be equal to the VMat's width");
+        PLERROR("In RemapLastColumnVMatrix::getNewRow samplevec.length()\n"
+                "must be equal to the VMat's width (%d != %d).\n",
+                samplevec.length(), width());
 #endif
     if(mapping.isEmpty()) // use if-then-else mapping
     {
-        underlying_distr->getRow(i,samplevec);
+        source->getRow(i,samplevec);
         real& lastelem = samplevec.lastElement();
         if(fast_exact_is_equal(lastelem, if_equals_val))
             lastelem = then_val;
@@ -108,21 +206,24 @@ void RemapLastColumnVMatrix::getNewRow(int i, const Vec& samplevec) const
     }
     else // use mapping matrix
     {
-        int underlying_width = underlying_distr->width();
+        int source_width = source->width();
         int replacement_width = mapping.width()-1;
-        underlying_distr->getRow(i,samplevec.subVec(0,underlying_width));
-        real val = samplevec[underlying_width-1];
+        source->getRow(i,samplevec.subVec(0,source_width));
+        real val = samplevec[source_width-1];
         int k;
         for(k=0; k<mapping.length(); k++)
         {
             if(fast_exact_is_equal(mapping(k,0), val))
             {
-                samplevec.subVec(underlying_width-1,replacement_width) << mapping(k).subVec(1,replacement_width);
+                samplevec.subVec(source_width-1,replacement_width)
+                    << mapping(k).subVec(1,replacement_width);
                 break;
             }
         }
         if(k>=mapping.length())
-            PLERROR("In RemapLastColumnVMatrix::getRow there is a value in the last column that does not have any defined mapping");
+            PLERROR("In RemapLastColumnVMatrix::getNewRow - there is a value"
+                    " in the\n"
+                    "last column that does not have any defined mapping.\n");
     }
 }
 

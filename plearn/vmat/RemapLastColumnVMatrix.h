@@ -44,18 +44,19 @@
 #ifndef RemapLastColumnVMatrix_INC
 #define RemapLastColumnVMatrix_INC
 
-#include "RowBufferedVMatrix.h"
+#include "SourceVMatrix.h"
 #include "VMat.h"
 
 namespace PLearn {
 using namespace std;
 
-class RemapLastColumnVMatrix: public RowBufferedVMatrix
+class RemapLastColumnVMatrix: public SourceVMatrix
 {
-    typedef RowBufferedVMatrix inherited;
+    typedef SourceVMatrix inherited;
 
 protected:
-    VMat underlying_distr;
+    // DEPRECATED - use 'source' instead
+    // VMat underlying_distr;
 
     //!  If this is not empty, then it represents the mapping to apply
     Mat mapping;
@@ -73,15 +74,22 @@ public:
     // ******************
     // *  Constructors  *
     // ******************
-    RemapLastColumnVMatrix(); //!<  default constructor (for automatic deserialization)
+
+    //!  default constructor (for automatic deserialization)
+    RemapLastColumnVMatrix(bool call_build_=false);
 
     //!  full explicit mapping.
     //!  Warning: VMFields are NOT YET handled by this constructor
-    RemapLastColumnVMatrix(VMat the_underlying_distr, Mat the_mapping);
+    RemapLastColumnVMatrix(VMat the_source, Mat the_mapping,
+                           bool call_build_=false);
 
     //!  if-then-else mapping.
     //!  Warning: VMFields are NOT YET handled by this constructor
-    RemapLastColumnVMatrix(VMat the_underlying_distr, real if_equals_value, real then_value=+1, real else_value=-1);    
+    RemapLastColumnVMatrix(VMat the_source,
+                           real if_equals_value,
+                           real then_value=+1,
+                           real else_value=-1,
+                           bool call_build_=false);
 
     PLEARN_DECLARE_OBJECT(RemapLastColumnVMatrix);
     static void declareOptions(OptionList &ol);
@@ -89,21 +97,29 @@ public:
     virtual void build();
 
     virtual void getNewRow(int i, const Vec& samplevec) const;
-    virtual void reset_dimensions() 
-    { 
-        underlying_distr->reset_dimensions(); 
-        width_=underlying_distr->width(); 
-        length_=underlying_distr->length(); 
+    virtual void reset_dimensions()
+    {
+        source->reset_dimensions();
+
+        if( mapping.isEmpty() )
+            width_=source->width();
+        else
+            width_=source->width()+mapping.width()-2;
+
+        length_=source->length();
     }
 private:
     void build_();
 };
 
-inline VMat remapLastColumn(VMat d, Mat mapping)
-{ return new RemapLastColumnVMatrix(d, mapping); }
+inline VMat remapLastColumn(VMat s, Mat mapping, bool call_build_=false)
+{ return new RemapLastColumnVMatrix(s, mapping, call_build_); }
 
-inline VMat remapLastColumn(VMat d, real if_equals_value, real then_value=1.0, real else_value=-1.0)
-{ return new RemapLastColumnVMatrix(d, if_equals_value, then_value, else_value); }
+inline VMat remapLastColumn(VMat s, real if_equals_value,
+                            real then_value=1.0, real else_value=-1.0,
+                            bool call_build_=false)
+{ return new RemapLastColumnVMatrix(s, if_equals_value,
+                                    then_value, else_value, call_build_); }
 
 DECLARE_OBJECT_PTR(RemapLastColumnVMatrix);
 

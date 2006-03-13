@@ -165,8 +165,8 @@ void KNNVMatrix::build_() {
                         // Maybe it's a SubVMatrix of the matrix whose nearest neighbours have been computed.
                         PP<SubVMatrix> smat_sub = dynamic_cast<SubVMatrix*>((VMatrix*) source);
                         if (    !smat_sub.isNull()
-                                &&  smat_sub->parent->length() == k_nn_mat->length()
-                                &&  smat_sub->width() == smat_sub->parent->width()) {
+                                &&  smat_sub->source->length() == k_nn_mat->length()
+                                &&  smat_sub->width() == smat_sub->source->width()) {
                             // Bingo !
                             // Safety warning just in case it is not what we want.
                             PLWARNING("In KNNVMatrix::build_ - Will consider the given k_nn_mat has been computed on source's parent VMat");
@@ -182,7 +182,8 @@ void KNNVMatrix::build_() {
                                     while (!ok && k < store_nn.length()) {
                                         int q = int(store_nn[k]) - smat_sub->istart;
                                         if (q >= 0 && q < smat_sub->length()) {
-                                            // The k-th nearest neighbour in smat_sub->parent is in smat_sub.
+                                            // The k-th nearest neighbour in
+                                            // smat_sub->source is in smat_sub.
                                             ok = true;
                                             nn(i,j) = q - smat_sub->istart;
                                         }
