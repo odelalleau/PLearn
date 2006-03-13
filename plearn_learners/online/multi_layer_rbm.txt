@@ -100,8 +100,10 @@ Basic operations in each RBM layer:
                   clear pos_square
              clear pos_count,neg_count
 
+
 Combined operations, in a supervised RBM network:
- A supervised RBM network has a sequence of layers. The last_layer one is fully supervised. The 2nd to last is the last_hidden_layer.
+ A supervised RBM network is an OnlineLearningModule that has a sequence of layers. 
+ The last_layer is fully supervised. The 2nd to last is the last_hidden_layer.
  There is also a cost_layer that follows the last_layer, which computes the supervised cost to minimize.
 
  * network::computeRepresentation(input_variables):
@@ -112,20 +114,15 @@ Combined operations, in a supervised RBM network:
         layer->fprop(layer->input_variables,v)
      return v
 
- * network::unsupervised_learning_from_example(input_variables):
-     v <- input_variables
-     for each layer except the last:
-        layer->input_variables <- v.copy()
-        v.resize(output_variables.size())
-        layer->fprop(layer->input_variables,v)
-        layer->upSample() 
-        layer->accumulatePosStats()
-        layer->downSample()
-        layer->upSample()
-        layer->accumulateNegStats()
-        layer->CDupdate()
+ * network::fprop(input_variables)
+     computeRepresentation(input_variables)
+     if last_layer_takes_activations: (e.g. for undirected softmax last_layer)
+       last_layer->fprop(last_hidden_layer->output_activation,last_layer->output)
+     else
+       last_layer->fprop(last_hidden_layer->output,last_layer->output)
+     return last_layer->output
 
- * network::supervised_learning_from_example(input_variables, output_variables):
+ * network::unsupervised_learning_from_example(input_variables):
      v <- input_variables
      for each layer except the last:
         layer->input_variables <- v.copy()
@@ -137,16 +134,20 @@ Combined operations, in a supervised RBM network:
         layer->upSample()
         layer->accumulateNegStats()
         layer->CDupdate()
-     last_layer->input_variables <- v.copy()
-     last_layer->fprop(last_layer->input_variables,last_layer->output)
-     cost_layer->fprop((output_variables,last_layer->output),cost)
-     cost_layer->bpropUpdate((output_variables,last_layer->output),cost,(tmp, dout), 1)
-     last_layer->bpropUpdate(v,out,dv,dout)
+
+ * network::supervised_learning_from_example(input_variables, output_variables):
+     unsupervised_learning_from_example(input_variables)
+     if last_layer_takes_activations: (e.g. for undirected softmax last_layer)
+       last_layer->fprop(v=last_hidden_layer->output_activation,last_layer->output)
+     else
+       last_layer->fprop(v=last_hidden_layer->output,last_layer->output)
+     cost_layer->fprop((last_layer->output,output_variables),cost)
+     cost_layer->bpropUpdate((last_layer->output,output_variables),cost,(dout,tmp), 1)
+     last_layer->bpropUpdate(v,out,din,dout)
      for each layer except the last, going backwards:
-        din <- dout.copy()
+        dout <- din.copy()
         layer->bpropUpdate(layer->input_variables,layer->output, din, dout)
 
-  
 
  * network::unconditionalGenerate(): sample an input, unconditionally
      last_layer->clearActivations() // so that the first upSample() only samples from the biases
