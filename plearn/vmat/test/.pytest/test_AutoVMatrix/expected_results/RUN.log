@@ -2,7 +2,7 @@
 "#####  PLEARNDIR:examples/data/test_suite/linear_4x_2y.amat  ##############" 
 
 AutoVMatrix(
-specification = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.amat" ;
+filename = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.amat" ;
 load_in_memory = 0 ;
 writable = 0 ;
 length = 200 ;
@@ -226,7 +226,7 @@ metadatadir = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.amat.metadata/"  
 "#####  PLEARNDIR:examples/data/test_suite/linear_4x_2y.pmat  ##############" 
 
 AutoVMatrix(
-specification = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.pmat" ;
+filename = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.pmat" ;
 load_in_memory = 0 ;
 writable = 0 ;
 length = 200 ;
@@ -450,7 +450,7 @@ metadatadir = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.pmat.metadata/"  
 "#####  PLEARNDIR:examples/data/test_suite/eslt_mixture/data_train.amat  #####" 
 
 AutoVMatrix(
-specification = "PLEARNDIR:examples/data/test_suite/eslt_mixture/data_train.amat" ;
+filename = "PLEARNDIR:examples/data/test_suite/eslt_mixture/data_train.amat" ;
 load_in_memory = 0 ;
 writable = 0 ;
 length = 200 ;
