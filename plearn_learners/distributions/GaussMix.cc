@@ -2011,6 +2011,7 @@ void GaussMix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     deepCopyField(log_likelihood_post,      copies);
     deepCopyField(sample_row,               copies);
+    deepCopyField(ptimer,                   copies);
     deepCopyField(missing_patterns,         copies);
     deepCopyField(missing_template,         copies);
     deepCopyField(sample_to_path_index,     copies);
@@ -2020,9 +2021,16 @@ void GaussMix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(log_likelihood_post_clust,copies);
     deepCopyField(clusters_samp,            copies);
     deepCopyField(cholesky_queue,           copies);
+    deepCopyField(imputed_missing,          copies);
+    deepCopyField(clust_imputed_missing,    copies);
+    deepCopyField(sum_of_posteriors,        copies);
+    deepCopyField(no_missing_change,        copies);
+    deepCopyField(cond_var_inv_queue,       copies);
     deepCopyField(indices_queue,            copies);
+    deepCopyField(indices_inv_queue,        copies);
     deepCopyField(mean_training,            copies);
     deepCopyField(stddev_training,          copies);
+    deepCopyField(error_covariance,         copies);
     deepCopyField(posteriors,               copies);
     deepCopyField(initial_weights,          copies);
     deepCopyField(updated_weights,          copies);
@@ -2038,6 +2046,7 @@ void GaussMix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(log_coeff_x,              copies);
     deepCopyField(log_coeff_y_x,            copies);
     deepCopyField(joint_cov,                copies);
+    deepCopyField(joint_inv_cov,            copies);
     deepCopyField(chol_joint_cov,           copies);
     // deepCopyField(chol_cov_template,        copies);
     deepCopyField(stage_joint_cov_computed, copies);
@@ -3364,6 +3373,7 @@ void GaussMix::train()
     static Vec train_stats_update;
     train_stats_update.resize(1);
     train_stats_update[0] = ptimer->getTimer("training_time");
+    train_stats->forget(); // Forget potential old total training time.
     train_stats->update(train_stats_update);
 }
 
