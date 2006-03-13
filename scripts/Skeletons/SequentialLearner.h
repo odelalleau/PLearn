@@ -11,7 +11,7 @@ class DERIVEDCLASS: public SequentialLearner
 private:
 
     typedef SequentialLearner inherited;
-  
+
 private:
     //! This does the actual building
     void build_();
@@ -30,7 +30,7 @@ public:
 
     //! *** SUBCLASS WRITING: ***
     virtual void train();
- 
+
     //! *** SUBCLASS WRITING: ***
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
                       VMat testoutputs=0, VMat testcosts=0) const;

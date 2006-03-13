@@ -10,8 +10,8 @@ PLEARN_IMPLEMENT_OBJECT(
     "NO HELP"
     );
 
-DERIVEDCLASS::DERIVEDCLASS() 
-    :Smoother() 
+DERIVEDCLASS::DERIVEDCLASS()
+    :Smoother()
 /* ### Initialize all fields to their default value */
 {
     // ...
@@ -25,8 +25,8 @@ DERIVEDCLASS::DERIVEDCLASS()
 void DERIVEDCLASS::declareOptions(OptionList& ol)
 {
     // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### For the "flags" of each option, you should typically specify
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or
     // ### OptionBase::tuningoption. Another possible flag to be combined with
     // ### is OptionBase::nosave
 
@@ -42,7 +42,7 @@ void DERIVEDCLASS::declareOptions(OptionList& ol)
 void DERIVEDCLASS::build_()
 {
     // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation. 
+    // ### according to set 'options', in *any* situation.
     // ### Typical situations include:
     // ###  - Initial building of an object from a few user-specified options
     // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
@@ -62,8 +62,8 @@ void DERIVEDCLASS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     Object::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
+    // ### Call deepCopyField on all "pointer-like" fields
+    // ### that you wish to be deepCopied rather than
     // ### shallow-copied.
     // ### ex:
     // deepCopyField(trainvec, copies);
@@ -73,7 +73,7 @@ void DERIVEDCLASS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 }
 
 
-real DERIVEDCLASS::smooth(const Vec& source_function, Vec smoothed_function, 
+real DERIVEDCLASS::smooth(const Vec& source_function, Vec smoothed_function,
                           Vec bin_positions = Vec(), Vec dest_bin_positions = Vec()) const
 {
     PLERROR("smooth not implemented for DERIVEDCLASS.");

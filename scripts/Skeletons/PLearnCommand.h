@@ -19,16 +19,16 @@ namespace PLearn {
 class DERIVEDCLASS : public PLearnCommand
 {
     typedef PLearnCommand inherited;
-    
+
 public:
-    DERIVEDCLASS();                    
+    DERIVEDCLASS();
     virtual void run(const std::vector<std::string>& args);
 
 protected:
     static PLearnCommandRegistry reg_;
 };
 
-  
+
 } // end of namespace PLearn
 
 #endif

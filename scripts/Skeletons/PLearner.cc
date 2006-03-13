@@ -8,7 +8,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "ONE LINE DESCRIPTION",
     "MULTI-LINE \nHELP");
 
-DERIVEDCLASS::DERIVEDCLASS() 
+DERIVEDCLASS::DERIVEDCLASS()
 /* ### Initialize all fields to their default value here */
 {
     // ...
@@ -21,8 +21,8 @@ DERIVEDCLASS::DERIVEDCLASS()
 void DERIVEDCLASS::declareOptions(OptionList& ol)
 {
     // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### For the "flags" of each option, you should typically specify
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or
     // ### OptionBase::tuningoption. Another possible flag to be combined with
     // ### is OptionBase::nosave
 
@@ -38,7 +38,7 @@ void DERIVEDCLASS::declareOptions(OptionList& ol)
 void DERIVEDCLASS::build_()
 {
     // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation. 
+    // ### according to set 'options', in *any* situation.
     // ### Typical situations include:
     // ###  - Initial building of an object from a few user-specified options
     // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
@@ -58,8 +58,8 @@ void DERIVEDCLASS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
+    // ### Call deepCopyField on all "pointer-like" fields
+    // ### that you wish to be deepCopied rather than
     // ### shallow-copied.
     // ### ex:
     // deepCopyField(trainvec, copies);
@@ -86,7 +86,7 @@ void DERIVEDCLASS::forget()
       - stage = 0
     */
 }
-    
+
 void DERIVEDCLASS::train()
 {
     // The role of the train method is to bring the learner up to stage==nstages,
@@ -109,12 +109,12 @@ void DERIVEDCLASS::train()
     while(stage<nstages)
     {
     // clear statistics of previous epoch
-    train_stats->forget() 
-          
+    train_stats->forget()
+
     //... train for 1 stage, and update train_stats,
     // using train_set->getSample(input, target, weight)
     // and train_stats->update(train_costs)
-          
+
     ++stage
     train_stats->finalize() // finalize statistics for this epoch
     }
@@ -128,14 +128,14 @@ void DERIVEDCLASS::computeOutput(const Vec& input, Vec& output) const
     // int nout = outputsize();
     // output.resize(nout);
     // ...
-}    
+}
 
-void DERIVEDCLASS::computeCostsFromOutputs(const Vec& input, const Vec& output, 
+void DERIVEDCLASS::computeCostsFromOutputs(const Vec& input, const Vec& output,
                                            const Vec& target, Vec& costs) const
 {
-// Compute the costs from *already* computed output. 
+// Compute the costs from *already* computed output.
 // ...
-}                                
+}
 
 TVec<string> DERIVEDCLASS::getTestCostNames() const
 {
@@ -146,7 +146,7 @@ TVec<string> DERIVEDCLASS::getTestCostNames() const
 
 TVec<string> DERIVEDCLASS::getTrainCostNames() const
 {
-    // Return the names of the objective costs that the train method computes and 
+    // Return the names of the objective costs that the train method computes and
     // for which it updates the VecStatsCollector train_stats
     // (these may or may not be exactly the same as what's returned by getTestCostNames).
     // ...

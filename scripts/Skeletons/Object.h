@@ -34,16 +34,16 @@ public:
     DERIVEDCLASS();
 
     // Your other public member functions go here
-    
-    
+
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
     // ### If your class is not instantiatable (it has pure virtual methods)
-    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT 
+    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT
     PLEARN_DECLARE_OBJECT(DERIVEDCLASS);
 
-    // Simply calls inherited::build() then build_() 
+    // Simply calls inherited::build() then build_()
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
@@ -55,18 +55,18 @@ protected:
 
     // ### Declare protected option fields (such as learned parameters) here
     // ...
-    
+
 protected:
     //#####  Protected Member Functions  ######################################
-    
+
     //! Declares the class options.
     // (PLEASE IMPLEMENT IN .cc)
     static void declareOptions(OptionList& ol);
 
-private: 
+private:
     //#####  Private Member Functions  ########################################
 
-    //! This does the actual building. 
+    //! This does the actual building.
     // (PLEASE IMPLEMENT IN .cc)
     void build_();
 
@@ -78,7 +78,7 @@ private:
 
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(DERIVEDCLASS);
-  
+
 } // end of namespace PLearn
 
 #endif

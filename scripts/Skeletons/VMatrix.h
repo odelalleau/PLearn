@@ -62,7 +62,7 @@ public:
 
     // ** for writable VMatrices
 
-    //! Set element (i,j) to given value 
+    //! Set element (i,j) to given value
     // virtual void put(int i, int j, real value);
 
     //! (default version repeatedly calls put(i,j,value) which may have a
@@ -87,16 +87,16 @@ public:
 
     //! will call putRow if i<length()
     //! if i>= length(), it will call appendRow with 0 filled rows as many
-    //! times as necessary before it can append row i 
+    //! times as necessary before it can append row i
     // void forcePutRow(int i, Vec v);
 
-    // ** Some other VMatrix methods, that can be redefined if a more 
-    // ** efficient implementation is possible with 
+    // ** Some other VMatrix methods, that can be redefined if a more
+    // ** efficient implementation is possible with
     // ** this particular subclass.
     //
 
     //! default version returns a SubVMatrix referencing the current VMatrix
-    //! however this can be overridden to provide more efficient shortcuts 
+    //! however this can be overridden to provide more efficient shortcuts
     //! (see MemoryVMatrix::subMat and SubVMatrix::subMat for examples)
     // virtual VMat subMat(int i, int j, int l, int w);
 
@@ -140,16 +140,16 @@ public:
     //! Returns the result of the dot product between row i and the given vec
     //! (only v.length() first elements of row i are considered).
     // virtual real dot(int i, const Vec& v) const;
-    
-    
+
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
     // ### If your class is not instantiatable (it has pure virtual methods)
-    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
+    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS
     PLEARN_DECLARE_OBJECT(DERIVEDCLASS);
 
-    // Simply calls inherited::build() then build_() 
+    // Simply calls inherited::build() then build_()
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
@@ -161,18 +161,18 @@ protected:
 
     // ### Declare protected option fields (such as learned parameters) here
     // ...
-    
+
 protected:
     //#####  Protected Member Functions  ######################################
-    
+
     //! Declares the class options.
     // (PLEASE IMPLEMENT IN .cc)
     static void declareOptions(OptionList& ol);
 
-private: 
+private:
     //#####  Private Member Functions  ########################################
 
-    //! This does the actual building. 
+    //! This does the actual building.
     // (PLEASE IMPLEMENT IN .cc)
     void build_();
 
@@ -184,7 +184,7 @@ private:
 
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(DERIVEDCLASS);
-  
+
 } // end of namespace PLearn
 
 #endif

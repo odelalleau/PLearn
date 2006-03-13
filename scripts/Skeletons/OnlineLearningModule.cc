@@ -22,8 +22,8 @@ DERIVEDCLASS::DERIVEDCLASS() :
 void DERIVEDCLASS::declareOptions(OptionList& ol)
 {
     // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### For the "flags" of each option, you should typically specify
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or
     // ### OptionBase::tuningoption. Another possible flag to be combined with
     // ### is OptionBase::nosave
 
@@ -40,7 +40,7 @@ void DERIVEDCLASS::declareOptions(OptionList& ol)
 void DERIVEDCLASS::build_()
 {
     // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation. 
+    // ### according to set 'options', in *any* situation.
     // ### Typical situations include:
     // ###  - Initial building of an object from a few user-specified options
     // ###  - Building of a "reloaded" object:
@@ -63,8 +63,8 @@ void DERIVEDCLASS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
+    // ### Call deepCopyField on all "pointer-like" fields
+    // ### that you wish to be deepCopied rather than
     // ### shallow-copied.
     // ### ex:
     // deepCopyField(trainvec, copies);
@@ -102,7 +102,7 @@ virtual void bpropUpdate(const Vec& input, const Vec& output,
 
 //! reset the parameters to the state they would be BEFORE starting training.
 //! Note that this method is necessarily called from build().
-void DERIVEDCLASS::forget() 
+void DERIVEDCLASS::forget()
 {
 }
 

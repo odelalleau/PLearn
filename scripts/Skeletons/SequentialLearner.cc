@@ -43,7 +43,7 @@ void DERIVEDCLASS::declareOptions(OptionList& ol)
 void DERIVEDCLASS::train()
 {
 }
- 
+
 void DERIVEDCLASS::test(VMat testset, PP<VecStatsCollector> test_stats,
                         VMat testoutputs=0, VMat testcosts=0) const
 {
@@ -70,7 +70,7 @@ void DERIVEDCLASS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     // ### Remove this line when you have fully implemented this method.
     PLERROR("DERIVEDCLASS::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
-} 
+}
 
 TVec<string> DERIVEDCLASS::getTrainCostNames() const
 {

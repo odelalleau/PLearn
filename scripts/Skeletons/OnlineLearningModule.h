@@ -99,10 +99,10 @@ public:
 
     // Declares other standard object methods.
     // ### If your class is not instantiatable (it has pure virtual methods)
-    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT 
+    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT
     PLEARN_DECLARE_OBJECT(DERIVEDCLASS);
 
-    // Simply calls inherited::build() then build_() 
+    // Simply calls inherited::build() then build_()
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy

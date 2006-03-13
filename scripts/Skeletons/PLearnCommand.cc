@@ -12,10 +12,10 @@ DERIVEDCLASS::DERIVEDCLASS()
         ">>>> INSERT A SHORT ONE LINE DESCRIPTION HERE",
         ">>>> INSERT SYNTAX AND \n"
         "FULL DETAILED HELP HERE \n"
-        ) 
+        )
 {}
 
-//! The actual implementation of the 'DERIVEDCLASS' command 
+//! The actual implementation of the 'DERIVEDCLASS' command
 void DERIVEDCLASS::run(const vector<string>& args)
 {
     // *** PLEASE COMPLETE HERE ****
