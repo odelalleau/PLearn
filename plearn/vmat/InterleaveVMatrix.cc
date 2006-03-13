@@ -52,42 +52,43 @@ InterleaveVMatrix::InterleaveVMatrix()
 {
 }
 
-InterleaveVMatrix::InterleaveVMatrix(Array<VMat> the_vm)
-    : vm(the_vm)
+InterleaveVMatrix::InterleaveVMatrix(TVec<VMat> the_sources)
+    : sources(the_sources)
 {
     build();
 }
 
-InterleaveVMatrix::InterleaveVMatrix(VMat d1, VMat d2)
-    : vm(d1,d2)
+InterleaveVMatrix::InterleaveVMatrix(VMat source1, VMat source2)
+    : sources(2)
 {
+    sources[0] = source1;
+    sources[1] = source2;
     build();
 }
 
-void
-InterleaveVMatrix::build()
+void InterleaveVMatrix::build()
 {
     inherited::build();
     build_();
 }
 
-void
-InterleaveVMatrix::build_()
+void InterleaveVMatrix::build_()
 {
-    if (vm) {
-        int n = vm.size();
+    if (sources) {
+        int n = sources.size();
         if (n<1) 
-            PLERROR("InterleaveVMatrix expects >= 1 underlying-distribution, got %d",n);
+            PLERROR("InterleaveVMatrix expects >= 1 sources, got %d",n);
 
         // Copy the parent fields
-        fieldinfos = vm[0]->getFieldInfos();
-  
-        width_ = vm[0]->width();
+        fieldinfos = sources[0]->getFieldInfos();
+
+        width_ = sources[0]->width();
         int maxl = 0;
         for (int i = 0; i < n; i++) {
-            if (vm[i]->width() != width_)
-                PLERROR("InterleaveVMatrix: underlying-distr %d has %d width, while 0-th has %d",i,vm[i]->width(),width_);
-            int l = vm[i]->length();
+            if (sources[i]->width() != width_)
+                PLERROR("InterleaveVMatrix: source %d has %d width, while 0-th has %d",
+                        i, sources[i]->width(), width_);
+            int l = sources[i]->length();
             if (l > maxl)
                 maxl=l;
         }
@@ -98,7 +99,9 @@ InterleaveVMatrix::build_()
 void
 InterleaveVMatrix::declareOptions(OptionList &ol)
 {
-    declareOption(ol, "vm", &InterleaveVMatrix::vm, OptionBase::buildoption, "");
+    declareOption(ol, "sources", &InterleaveVMatrix::sources,
+                  OptionBase::buildoption, "");
+
     inherited::declareOptions(ol);
 }
 
@@ -108,10 +111,10 @@ real InterleaveVMatrix::get(int i, int j) const
     if(i<0 || i>=length() || j<0 || j>=width())
         PLERROR("In InterleaveVMatrix::get OUT OF BOUNDS");
 #endif
-    int n=vm.size();
-    int m = i%n; // which VM 
-    int pos = int(i/n) % vm[m].length(); // position within vm[m]
-    return vm[m]->get(pos,j);
+    int n = sources.size();
+    int m = i%n; // which source
+    int pos = int(i/n) % sources[m].length(); // position within sources[m]
+    return sources[m]->get(pos,j);
 }
 
 void InterleaveVMatrix::getSubRow(int i, int j, Vec v) const
@@ -120,10 +123,10 @@ void InterleaveVMatrix::getSubRow(int i, int j, Vec v) const
     if(i<0 || i>=length() || j<0 || j+v.length()>width())
         PLERROR("In InterleaveVMatrix::getRow OUT OF BOUNDS");
 #endif
-    int n=vm.size();
-    int m = i%n; // which VM 
-    int pos = int(i/n) % vm[m].length(); // position within vm[m]
-    vm[m]->getSubRow(pos, j, v);
+    int n = sources.size();
+    int m = i%n; // which source
+    int pos = int(i/n) % sources[m].length(); // position within sources[m]
+    sources[m]->getSubRow(pos, j, v);
 }
 
 } // end of namespcae PLearn

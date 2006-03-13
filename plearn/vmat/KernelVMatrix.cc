@@ -64,10 +64,10 @@ KernelVMatrix::KernelVMatrix()
 {
 }
 
-KernelVMatrix::KernelVMatrix(VMat data1, VMat data2, Ker the_ker)
-    : VMatrix(data1->length(), data2->length()), 
-      d1(data1), d2(data2), ker(the_ker), 
-      input1(data1->width()), input2(data2->width())
+KernelVMatrix::KernelVMatrix(VMat the_source1, VMat the_source2, Ker the_ker)
+    : VMatrix(the_source1->length(), the_source2->length()), 
+      source1(the_source1), source2(the_source2), ker(the_ker), 
+      input1(the_source1->width()), input2(the_source2->width())
 {}
 
 void
@@ -80,18 +80,24 @@ KernelVMatrix::build()
 void
 KernelVMatrix::build_()
 {
-    if (d1)
-        input1.resize(d1->width());
-    if (d2)
-        input2.resize(d2->width());
+    if (source1)
+        input1.resize(source1->width());
+    if (source2)
+        input2.resize(source2->width());
 }
 
 void
 KernelVMatrix::declareOptions(OptionList &ol)
 {
-    declareOption(ol, "d1", &KernelVMatrix::d1, OptionBase::buildoption, "");
-    declareOption(ol, "d2", &KernelVMatrix::d2, OptionBase::buildoption, "");
-    declareOption(ol, "ker", &KernelVMatrix::ker, OptionBase::buildoption, "");
+    declareOption(ol, "source1", &KernelVMatrix::source1,
+                  OptionBase::buildoption, "");
+
+    declareOption(ol, "source2", &KernelVMatrix::source2,
+                  OptionBase::buildoption, "");
+
+    declareOption(ol, "ker", &KernelVMatrix::ker,
+                  OptionBase::buildoption, "");
+
     inherited::declareOptions(ol);
 }
 
@@ -100,8 +106,8 @@ KernelVMatrix::declareOptions(OptionList &ol)
   void KernelVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   {
   Kernel::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(d1, copies);
-  deepCopyField(d2, copies);
+  deepCopyField(source1, copies);
+  deepCopyField(source2, copies);
   deepCopyField(ker, copies);
   deepCopyField(input1, copies);
   deepCopyField(input2, copies);
@@ -115,8 +121,8 @@ real KernelVMatrix::get(int i, int j) const
         PLERROR("In KernelVMatrix::get OUT OF BOUNDS");
 #endif
 
-    d1->getRow(i,input1);
-    d2->getRow(j,input2);
+    source1->getRow(i,input1);
+    source2->getRow(j,input2);
     return ker(input1,input2);
 }
 
@@ -128,10 +134,10 @@ void KernelVMatrix::getSubRow(int i, int j, Vec v) const
         PLERROR("In KernelVMatrix::getRow OUT OF BOUNDS");
 #endif
 
-    d1->getRow(i,input1);
+    source1->getRow(i,input1);
     for(int jj=0; jj<v.length(); jj++)
     {
-        d2->getRow(j+jj,input2);
+        source2->getRow(j+jj,input2);
         v[jj] = ker(input1,input2);
     }
 }

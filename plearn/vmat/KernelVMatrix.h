@@ -64,10 +64,10 @@ class KernelVMatrix: public VMatrix
 {
     typedef VMatrix inherited;
     //protected:
-    //!   KernelVMatrix() : d1(), d2(), ker(), input1(), input2() {}
+    //!   KernelVMatrix() : source1(), source2(), ker(), input1(), input2() {}
 protected:
-    VMat d1;
-    VMat d2;
+    VMat source1;
+    VMat source2;
     Ker ker;
 
     Vec input1;
@@ -75,7 +75,7 @@ protected:
 
 public:
     KernelVMatrix();
-    KernelVMatrix(VMat data1, VMat data2, Ker the_ker);
+    KernelVMatrix(VMat the_source1, VMat the_source2, Ker the_ker);
 
     PLEARN_DECLARE_OBJECT(KernelVMatrix);
     static void declareOptions(OptionList &ol);

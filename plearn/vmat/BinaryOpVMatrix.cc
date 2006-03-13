@@ -53,31 +53,33 @@ BinaryOpVMatrix::BinaryOpVMatrix()
 
 PLEARN_IMPLEMENT_OBJECT(BinaryOpVMatrix,
                         "This VMat allows simple binary operations on two VMatrix.",
-                        "It is assumed that the two matrices are the same size"
+                        "It is assumed that the two source matrices are the same size"
     );
 
 void BinaryOpVMatrix::getNewRow(int i, const Vec& v) const
 {
-    assert( vm1 && vm2 );
-    row1.resize(vm1.width());
-    row2.resize(vm2.width());
+    assert( source1 && source2 );
+    row1.resize(source1.width());
+    row2.resize(source2.width());
     assert( row1.size() == row2.size() );
     assert( v.size()    == row1.size() );
 
-    vm1->getRow(i, row1);
-    vm2->getRow(i, row2);
-  
+    source1->getRow(i, row1);
+    source2->getRow(i, row2);
+
     for (int i=0, n=row1.size() ; i<n ; ++i)
         v[i] = selected_op(row1[i], row2[i]);
 }
 
 void BinaryOpVMatrix::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "vm1", &BinaryOpVMatrix::vm1, OptionBase::buildoption,
-                  "First VMatrix to operate on");
-  
-    declareOption(ol, "vm2", &BinaryOpVMatrix::vm2, OptionBase::buildoption,
-                  "Second VMatrix to operate on");
+    declareOption(ol, "source1", &BinaryOpVMatrix::source1,
+                  OptionBase::buildoption,
+                  "First source VMatrix to operate on");
+
+    declareOption(ol, "source2", &BinaryOpVMatrix::source2,
+                  OptionBase::buildoption,
+                  "Second source VMatrix to operate on");
 
     declareOption(ol, "op", &BinaryOpVMatrix::op, OptionBase::buildoption,
                   "Operation to perform; may be \"add\", \"sub\", \"mult\", \"div\"");
@@ -88,16 +90,19 @@ void BinaryOpVMatrix::declareOptions(OptionList& ol)
 
 void BinaryOpVMatrix::build_()
 {
-    if (! vm1)
-        PLERROR("BinaryOpVMatrix::build_: vm1 not defined");
-    if (! vm2)
-        PLERROR("BinaryOpVMatrix::build_: vm2 not defined");
-    if (vm1.length() != vm2.length())
-        PLERROR("BinaryOpVMatrix::build_: vm1 has %d rows but vm2 has %d rows; both must "
-                "have the same number of rows.", vm1.length(), vm2.length());
-    if (vm1.width() != vm2.width())
-        PLERROR("BinaryOpVMatrix::build_: vm1 has %d columns but vm2 has %d columns; both must "
-                "have the same number of columns.", vm1.width(), vm2.width());
+    if (! source1)
+        PLERROR("BinaryOpVMatrix::build_: source1 not defined");
+    if (! source2)
+        PLERROR("BinaryOpVMatrix::build_: source2 not defined");
+    if (source1.length() != source2.length())
+        PLERROR("BinaryOpVMatrix::build_: source1 has %d rows but\n"
+                "source2 has %d rows; both must have the same number of"
+                " rows.\n", source1.length(), source2.length());
+
+    if (source1.width() != source2.width())
+        PLERROR("BinaryOpVMatrix::build_: source1 has %d columns but\n"
+                "source2 has %d columns; both must have the same number of"
+                " columns.", source1.width(), source2.width());
 
     if (op == "add")
         selected_op = op_add;
@@ -112,7 +117,7 @@ void BinaryOpVMatrix::build_()
                 "are \"add\", \"sub\", \"mult\", \"div\"", op.c_str());
 
     // Copy the metainformation from first VMat
-    setMetaInfoFrom(vm1);
+    setMetaInfoFrom(source1);
 }
 
 // ### Nothing to add here, simply calls build_
@@ -127,8 +132,8 @@ void BinaryOpVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(row1, copies);
     deepCopyField(row2, copies);
-    deepCopyField(vm1, copies);
-    deepCopyField(vm2, copies);
+    deepCopyField(source1, copies);
+    deepCopyField(source2, copies);
 }
 
 } // end of namespace PLearn

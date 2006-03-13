@@ -50,31 +50,34 @@ namespace PLearn {
 using namespace std;
  
 
-/*!   This VMat is a concatenation of 2 VMat.  The row of vm2, corresponding
-  to the index set by col1 of vm1, is merged with vm1.
-  
-  for i=1,vm1.length()
-  vm.row(i) <- vm1.row(i) + vm2.row(vm1(i,col1))
-  
+/*!   This VMat is a concatenation of 2 VMat, a 'master' and a 'slave'.
+  The row of the 'slave' corresponding to the index set by 'index' of
+  'master', is merged with 'master'.
+
+  for i=1,master.length()
+  this->row(i) <- [ master.row(i), slave.row(slave(i,index)) ]
 */
+
 class CrossReferenceVMatrix: public VMatrix
 {
     typedef VMatrix inherited;
 
 protected:
-    VMat vm1;
-    int col1;
-    VMat vm2;
+    VMat master;
+    int index;
+    VMat slave;
 
 public:
     // ******************
     // *  Constructors  *
     // ******************
-    CrossReferenceVMatrix(); //!<  default constructor (for automatic deserialization)
+
+    //!  default constructor (for automatic deserialization)
+    CrossReferenceVMatrix();
 
     //! The column headings are simply the concatenation of the headings in
     //! the two vmatrices.
-    CrossReferenceVMatrix(VMat v1, int c1, VMat v2);
+    CrossReferenceVMatrix(VMat the_master, int the_index, VMat the_slave);
 
     PLEARN_DECLARE_OBJECT(CrossReferenceVMatrix);
     static void declareOptions(OptionList &ol);
@@ -84,6 +87,7 @@ public:
     virtual void getRow(int i, Vec samplevec) const;
     virtual real get(int i, int j) const;
     virtual void reset_dimensions() { PLERROR("CrossReferenceVMatrix::reset_dimensions() not implemented"); }
+
 private:
     void build_();
 };

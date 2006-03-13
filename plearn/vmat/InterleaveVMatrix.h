@@ -51,22 +51,22 @@ using namespace std;
  
 
 /*!   This class interleaves several VMats (with consecutive rows
-  always coming from a different underlying VMat) thus possibly
+  always coming from a different source VMat) thus possibly
   including more than once the rows of the small VMats.
-  For example, if VM1.length()==10 and VM2.length()==30 then
+  For example, if source1.length()==10 and source2.length()==30 then
   the resulting VM will have 60 rows, and 3 repetitions
-  of each row of VM1, with rows taken as follows: 
-  VM1.row(0), VM2.row(0), VM1.row(1), VM2.row(1), ..., 
-  VM1.row(9), VM2.row(9), VM1.row(0), VM2.row(10), ...
-  Note that if VM2.length() is not a multiple of VM1.length()
-  some records from VM1 will be repeated once more than others.
+  of each row of source1, with rows taken as follows: 
+  source1.row(0), source2.row(0), source1.row(1), source2.row(1), ..., 
+  source1.row(9), source2.row(9), source1.row(0), cource2.row(10), ...
+  Note that if source2.length() is not a multiple of source1.length()
+  some records from source1 will be repeated once more than others.
 */
 class InterleaveVMatrix: public VMatrix
 {
     typedef VMatrix inherited;
 
 protected:
-    Array<VMat> vm;
+    TVec<VMat> sources;
 
 public:
     // ******************
@@ -75,11 +75,11 @@ public:
     InterleaveVMatrix(); //!<  default constructor (for automatic deserialization)
 
     //! The field names are copied from the first VMat in the array
-    InterleaveVMatrix(Array<VMat> distributions);
+    InterleaveVMatrix(TVec<VMat> the_sources);
 
-    //! The field names are copied from the first VMat d1
-    InterleaveVMatrix(VMat d1, VMat d2);
-  
+    //! The field names are copied from the first VMat source1
+    InterleaveVMatrix(VMat source1, VMat source2);
+
     PLEARN_DECLARE_OBJECT(InterleaveVMatrix);
     static void declareOptions(OptionList &ol);
 
@@ -87,18 +87,18 @@ public:
 
     virtual real get(int i, int j) const;
     virtual void getSubRow(int i, int j, Vec v) const;
-    virtual void reset_dimensions() 
-    { 
-        for (int i=0;i<vm.size();i++) vm[i]->reset_dimensions(); 
-        width_=vm[0]->width();
+    virtual void reset_dimensions()
+    {
+        for (int i=0;i<sources.size();i++) sources[i]->reset_dimensions();
+        width_=sources[0]->width();
         int maxl = 0;
-        int n=vm.size();
-        for (int i=0;i<n;i++) 
+        int n=sources.size();
+        for (int i=0;i<n;i++)
         {
-            if (vm[i]->width()!=width_) 
-                PLERROR("InterleaveVMatrix: underlying-distr %d has %d width, while 0-th has %d",
-                        i,vm[i]->width(),width_);
-            int l= vm[i]->length();
+            if (sources[i]->width()!=width_)
+                PLERROR("InterleaveVMatrix: source %d has %d width, while 0-th has %d",
+                        i, sources[i]->width(), width_);
+            int l= sources[i]->length();
             if (l>maxl) maxl=l;
         }
         length_=n*maxl;

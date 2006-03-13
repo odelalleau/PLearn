@@ -66,18 +66,18 @@ private:
 
     //! Implementation buffers
     mutable Vec row1, row2;
-  
+
 public:
 
     //! First VMatrix to operate on
-    VMat vm1;
+    VMat source1;
 
     //! Second VMatrix to operate on
-    VMat vm2;
+    VMat source2;
 
     //! Operation to perform; may be "add", "sub", "mult", "div"
     string op;
-  
+
 
     //! Default constructor.
     BinaryOpVMatrix();
@@ -86,13 +86,13 @@ public:
     // * Object methods *
     // ******************
 
-private: 
+private:
 
-    //! This does the actual building. 
+    //! This does the actual building.
     // (Please implement in .cc)
     void build_();
 
-protected: 
+protected:
 
     //! Declares this class' options
     // (Please implement in .cc)
