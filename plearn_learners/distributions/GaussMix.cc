@@ -867,7 +867,10 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
             assert( !is_predictor );
             assert( y.length() == n_predicted );
 
-            if (y.hasMissing() || efficient_missing) {
+            bool eff_missing = efficient_missing &&
+                               (previous_training_sample != -2);
+
+            if (y.hasMissing() || eff_missing) {
                 // TODO This will probably make the 'efficient_missing' method
                 // perform slower on data with no missing value. This should be
                 // optimized.
@@ -980,8 +983,6 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         coord_missing.append(k);
 
                 int n_non_missing = non_missing.length();
-                bool eff_missing = efficient_missing &&
-                                    (previous_training_sample != -2);
                 if (eff_missing && previous_training_sample == -1) {
                     // No previous training sample: we need to compute from
                     // scratch the Cholesky decomposition.
@@ -3293,6 +3294,26 @@ void GaussMix::train()
         computeMixtureWeights(false);
         computeMeansAndCovariances();
         precomputeAllGaussianLogCoefficients();
+        /*
+        Mat alpha_m(alpha.toMat(1, alpha.length()));
+        VMat alpha_vm(alpha_m);
+        alpha_vm->saveAMAT("/u/delallea/tmp/alpha.amat", false, true);
+        VMat center_vm(center);
+        center_vm->saveAMAT("/u/delallea/tmp/center.amat", false, true);
+        assert(eigenvalues.width() == D);
+        for (int j = 0; j < L; j++) {
+            Vec eigenvals = eigenvalues(j);
+            Mat& eigenvecs = eigenvectors[j];
+            Mat covar(D, D);
+            covar.fill(0);
+            for (int k = 0; k < D; k++)
+                externalProductScaleAcc(covar, eigenvecs(k), eigenvecs(k),
+                        eigenvals[k]);
+            VMat covar_vm(covar);
+            string filename = "/u/delallea/tmp/covar_" + tostring(j) + ".amat";
+            covar_vm->saveAMAT(filename, false, true);
+        }
+        */
     }
 
     ProgressBar* pb = 0;
@@ -3300,10 +3321,12 @@ void GaussMix::train()
     if (report_progress)
         pb = new ProgressBar("Training GaussMix", n_steps);
 
+    /*
     TVec<Mat> save_center;
-    // save_center.resize(L);
+    save_center.resize(L);
     for (int i = 0; i < save_center.length(); i++)
         save_center[i].resize(n_steps, D);
+    */
     int count_step = 0;
 
     bool replaced_gaussian = false;
@@ -3311,13 +3334,14 @@ void GaussMix::train()
         do {
             computePosteriors();
             updateSampleWeights();
-            replaced_gaussian = computeMixtureWeights();
-            // replaced_gaussian = false; // Hack for speed.
+            replaced_gaussian = computeMixtureWeights(true);
+            // Note: for debugging purpose, 'true' may be replaced by 'false'
+            // to ensure no Gaussian is removed.
         } while (replaced_gaussian);
         computeMeansAndCovariances();
         precomputeAllGaussianLogCoefficients();
-        for (int i = 0; i < save_center.length(); i++)
-            save_center[i](count_step) << center(i);
+        // for (int i = 0; i < save_center.length(); i++)
+        //    save_center[i](count_step) << center(i);
         count_step++;
         stage++;
         if (report_progress)
