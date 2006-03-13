@@ -84,12 +84,12 @@ void GramVMatrix::declareOptions(OptionList& ol)
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 
-    // Hide the 'data' and 'data_vm' options of a MemoryVMatrix, that are
+    // Hide the 'data' and 'source' options of a MemoryVMatrix, that are
     // not used in this subclass.
     redeclareOption(ol, "data", &GramVMatrix::data, OptionBase::nosave,
                     "Not needed here.");
 
-    redeclareOption(ol, "data_vm", &GramVMatrix::data_vm, OptionBase::nosave,
+    redeclareOption(ol, "source", &GramVMatrix::source, OptionBase::nosave,
                     "Not needed here.");
 
 }
