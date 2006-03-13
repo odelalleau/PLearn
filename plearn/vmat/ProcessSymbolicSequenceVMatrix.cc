@@ -48,50 +48,75 @@ namespace PLearn {
 using namespace std;
 
 
-ProcessSymbolicSequenceVMatrix::ProcessSymbolicSequenceVMatrix()
-    :inherited(), n_left_context(2), n_right_context(2), conditions_offset(0), conditions_for_exclusion(1), full_context(true),
-     put_only_target_attributes(false), use_last_context(true)
+ProcessSymbolicSequenceVMatrix::ProcessSymbolicSequenceVMatrix(bool call_build_)
+    : inherited(call_build_),
+      n_left_context(2), n_right_context(2),
+      conditions_offset(0), conditions_for_exclusion(1), full_context(true),
+      put_only_target_attributes(false), use_last_context(true)
     /* ### Initialise all fields to their default value */
 {
+    if( call_build_ )
+        build_();
 }
 
-ProcessSymbolicSequenceVMatrix::ProcessSymbolicSequenceVMatrix(VMat s, int l_context,int r_context)
-    :inherited(),conditions_offset(0), conditions_for_exclusion(1), full_context(true),
-     use_last_context(true)
+ProcessSymbolicSequenceVMatrix::ProcessSymbolicSequenceVMatrix(VMat s,
+                                                               int l_context,
+                                                               int r_context,
+                                                               bool call_build_)
+    : inherited(s, call_build_),
+      conditions_offset(0), conditions_for_exclusion(1), full_context(true),
+      use_last_context(true)
     /* ### Initialise all fields to their default value */
 {
-    source = s;
     n_left_context= l_context;
     n_right_context = r_context;
-    build();
+    if( call_build_ )
+        build_();
 }
   
 PLEARN_IMPLEMENT_OBJECT(ProcessSymbolicSequenceVMatrix,
-                        "This VMatrix takes a VMat of a sequence of symbolic elements (corresponding to a set of symbolic attributes) and constructs context rows.",
-                        "An example of a sequence of elements would be a sequence of words, with their lemma form and POS tag\n"
-                        "This sequence is encoded using integers, and is represented by the source VMatrix such as each\n"
-                        "row is an element, and each column is a certain type of attribute (e.g. lemma, POS tag, etc.)."
-                        "The source VMat string mapping (functions getStringVal(...) and getValString(...)) contains.\n"
-                        "the integer/string encoding of the symbolic data."
-                        "The context rows can be of fixed length, or constrained by delimiter symbols.\n"                        
-                        "Certain rows can be selected/excluded, and certain elements can be excluded of\n"
-                        "a context according to some conditions on its attributes.\n"
-                        "The conditions are expressed as disjunctions of conjunctions. For example: \n\n"
-                        "[ [ 0 : \"person\", 1 : \"NN\" ] , [ 0 : \"kind\", 2 : \"plural\" ] ] \n\n"
-                        "is equivalent in C++ logic form to : \n\n"
-                        "(fields[0]==\"person\" && fields[1]==\"NN\") || (fields[0]==\"kind\" && fields[2]==\"plural\").\n\n"
-                        "Conditions can be expressed in string or int format. The integer/string mapping is used to make the correspondance.\n"
-                        "We call the 'target element' of a context the element around which other elements are collected to construct the context.\n"
-    );
-  
+"Takes a VMat of a sequence of symbolic elements and constructs context rows.",
+"This VMatrix takes a VMat of a sequence of symbolic elements (corresponding\n"
+"to a set of symbolic attributes) and constructs context rows.\n"
+"An example of a sequence of elements would be a sequence of words, with\n"
+"their lemma form and POS tag\n"
+"This sequence is encoded using integers, and is represented by the source\n"
+"VMatrix such as each row is an element, and each column is a certain type\n"
+"of attribute (e.g. lemma, POS tag, etc.).\n"
+"The source VMat string mapping (functions getStringVal(...) and\n"
+"getValString(...)) contains the integer/string encoding of the symbolic\n"
+"data.\n"
+"The context rows can be of fixed length, or constrained by delimiter\n"
+"symbols.\n"
+"Certain rows can be selected/excluded, and certain elements can be excluded\n"
+"of a context according to some conditions on its attributes.\n"
+"The conditions are expressed as disjunctions of conjunctions. For example:\n"
+"\n"
+"[ [ 0 : \"person\", 1 : \"NN\" ] , [ 0 : \"kind\", 2 : \"plural\" ] ]\n"
+"\n"
+"is equivalent in C++ logic form to:\n"
+"\n"
+"(fields[0]==\"person\" && fields[1]==\"NN\") ||\n"
+"    (fields[0]==\"kind\" && fields[2]==\"plural\").\n"
+"\n"
+"Conditions can be expressed in string or int format. The integer/string\n"
+"mapping is used to make the correspondance.\n"
+"We call the 'target element' of a context the element around which other\n"
+"elements are collected to construct the context.\n"
+);
+
 void ProcessSymbolicSequenceVMatrix::getNewRow(int i, const Vec& v) const
 {
-    if(i<0 || i>=length_) PLERROR("In SelectAttributeSequenceVMatrix::getNewRow() : invalid row acces i=%d for VMatrix(%d,%d)",i,length_,width_);
-  
+    if(i<0 || i>=length_)
+        PLERROR("In SelectAttributeSequenceVMatrix::getNewRow() :\n"
+                " invalid row acces i=%d for VMatrix(%d,%d)\n",
+                i,length_,width_);
+
     int target = indices[i];
 
-  
-    // If the target element is a delimiter, do nothing: Hugo: may not be a good thing!
+
+    // If the target element is a delimiter, do nothing:
+    // Hugo: may not be a good thing!
     source->getRow(target,target_element);
     /*
       if(is_true(delimiters,target_element))
@@ -316,35 +341,90 @@ void ProcessSymbolicSequenceVMatrix::declareOptions(OptionList& ol)
     // ### OptionBase::tuningoption. Another possible flag to be combined with
     // ### is OptionBase::nosave
 
-    declareOption(ol, "n_left_context", &ProcessSymbolicSequenceVMatrix::n_left_context, OptionBase::buildoption,
-                  "Number of elements at the left of (or. before) the target element (if < 0, all elements to the left are included until a delimiter is met)\n");
-    declareOption(ol, "n_right_context", &ProcessSymbolicSequenceVMatrix::n_right_context, OptionBase::buildoption,
-                  "Number of elements at the right of (or after) the target element (if < 0, all elements to the right are included until a delimiter is met)\n");
-    declareOption(ol, "conditions_offset", &ProcessSymbolicSequenceVMatrix::conditions_offset, OptionBase::buildoption,
-                  "Offset for the position of the element on which conditions are tested (default = 0)\n");
-    declareOption(ol, "conditions_for_exclusion", &ProcessSymbolicSequenceVMatrix::conditions_for_exclusion, OptionBase::buildoption,
-                  "Indication that the specified conditions are for the exclusion (true) or inclusion (false) of elements in the VMatrix\n");
-    declareOption(ol, "full_context", &ProcessSymbolicSequenceVMatrix::full_context, OptionBase::buildoption,
-                  "Indication that ignored elements of context should be replaced by the next nearest valid element\n");
-    declareOption(ol, "put_only_target_attributes", &ProcessSymbolicSequenceVMatrix::put_only_target_attributes, OptionBase::buildoption,
-                  "Indication that the only target fields of the VMatrix rows should be the (target) attributes of the context's target element\n");
-    declareOption(ol, "use_last_context", &ProcessSymbolicSequenceVMatrix::use_last_context, OptionBase::buildoption,
-                  "Indication that the last accessed context should be put in a buffer.\n");
-    declareOption(ol, "conditions", &ProcessSymbolicSequenceVMatrix::conditions, OptionBase::buildoption,
-                  "Conditions to be satisfied for the exclusion or inclusion (see conditions_for_exclusion) of elements in the VMatrix\n");
-    declareOption(ol, "string_conditions", &ProcessSymbolicSequenceVMatrix::string_conditions, OptionBase::buildoption,
-                  "Conditions, in string format, to be satisfied for the exclusion or inclusion (see conditions_for_exclusion) of elements in the VMatrix\n");
-    declareOption(ol, "delimiters", &ProcessSymbolicSequenceVMatrix::delimiters, OptionBase::buildoption,
+    declareOption(ol, "n_left_context",
+                  &ProcessSymbolicSequenceVMatrix::n_left_context,
+                  OptionBase::buildoption,
+                  "Number of elements at the left of (or before) the target"
+                  " element.\n"
+                  "(if < 0, all elements to the left are included until a"
+                  " delimiter is met)\n");
+
+    declareOption(ol, "n_right_context",
+                  &ProcessSymbolicSequenceVMatrix::n_right_context,
+                  OptionBase::buildoption,
+                  "Number of elements at the right of (or after) the target"
+                  " element.\n"
+                  "(if < 0, all elements to the right are included until a"
+                  " delimiter is met)\n");
+
+    declareOption(ol, "conditions_offset",
+                  &ProcessSymbolicSequenceVMatrix::conditions_offset,
+                  OptionBase::buildoption,
+                  "Offset for the position of the element on which conditions"
+                  " are tested\n"
+                  "(default = 0)\n");
+
+    declareOption(ol, "conditions_for_exclusion",
+                  &ProcessSymbolicSequenceVMatrix::conditions_for_exclusion,
+                  OptionBase::buildoption,
+                  "Indication that the specified conditions are for the"
+                  " exclusion (true)\n"
+                  "or inclusion (false) of elements in the VMatrix\n");
+
+    declareOption(ol, "full_context",
+                  &ProcessSymbolicSequenceVMatrix::full_context,
+                  OptionBase::buildoption,
+                  "Indication that ignored elements of context should be"
+                  " replaced by the\n"
+                  "next nearest valid element\n");
+
+    declareOption(ol, "put_only_target_attributes",
+                  &ProcessSymbolicSequenceVMatrix::put_only_target_attributes,
+                  OptionBase::buildoption,
+                  "Indication that the only target fields of the VMatrix rows"
+                  " should be\n"
+                  "the (target) attributes of the context's target element\n");
+
+    declareOption(ol, "use_last_context",
+                  &ProcessSymbolicSequenceVMatrix::use_last_context,
+                  OptionBase::buildoption,
+                  "Indication that the last accessed context should be put in"
+                  " a buffer.\n");
+
+    declareOption(ol, "conditions",
+                  &ProcessSymbolicSequenceVMatrix::conditions,
+                  OptionBase::buildoption,
+                  "Conditions to be satisfied for the exclusion or inclusion"
+                  " (see\n"
+                  "conditions_for_exclusion) of elements in the VMatrix\n");
+
+    declareOption(ol, "string_conditions",
+                  &ProcessSymbolicSequenceVMatrix::string_conditions,
+                  OptionBase::buildoption,
+                  "Conditions, in string format, to be satisfied for the"
+                  " exclusion or\n"
+                  "inclusion (see conditions_for_exclusion) of elements in the"
+                  " VMatrix\n");
+
+    declareOption(ol, "delimiters",
+                  &ProcessSymbolicSequenceVMatrix::delimiters,
+                  OptionBase::buildoption,
                   "Delimiters of context\n");
-    declareOption(ol, "string_delimiters", &ProcessSymbolicSequenceVMatrix::string_delimiters, OptionBase::buildoption,
+
+    declareOption(ol, "string_delimiters",
+                  &ProcessSymbolicSequenceVMatrix::string_delimiters,
+                  OptionBase::buildoption,
                   "Delimiters, in string format, of context\n");
-    declareOption(ol, "ignored_context", &ProcessSymbolicSequenceVMatrix::ignored_context, OptionBase::buildoption,
+
+    declareOption(ol, "ignored_context",
+                  &ProcessSymbolicSequenceVMatrix::ignored_context,
+                  OptionBase::buildoption,
                   "Elements to be ignored in context\n");
-    declareOption(ol, "string_ignored_context", &ProcessSymbolicSequenceVMatrix::string_ignored_context, OptionBase::buildoption,
+
+    declareOption(ol, "string_ignored_context",
+                  &ProcessSymbolicSequenceVMatrix::string_ignored_context,
+                  OptionBase::buildoption,
                   "Elements, in string format, to be ignored in context\n");
-    declareOption(ol, "source", &ProcessSymbolicSequenceVMatrix::source, OptionBase::buildoption,
-                  "Source VMat, from which contexts are extracted\n");
-  
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -352,9 +432,11 @@ void ProcessSymbolicSequenceVMatrix::declareOptions(OptionList& ol)
 
 void ProcessSymbolicSequenceVMatrix::build_()
 {
-  
-    if(!source) PLERROR("In SelectAttributeSequenceVMatrix::build_() : no source defined");
-  
+
+    if(!source)
+        PLERROR("In SelectAttributeSequenceVMatrix::build_() : no source"
+                " defined");
+
     //  defineSizes(source->inputsize(),source->targetsize(),source->weightsize()); pas bon car ecrase declare options
     n_attributes = source->width();
     row.resize(n_attributes);
@@ -446,7 +528,7 @@ void ProcessSymbolicSequenceVMatrix::build_()
         left_context.resize(n_attributes*n_left_context);
         left_positions.resize(n_left_context);
     }
-   
+
     if(n_right_context < 0) 
     {
         right_context.resize(width_);
@@ -462,8 +544,11 @@ void ProcessSymbolicSequenceVMatrix::build_()
     {
         width_ = source->inputsize()*max_context_length + source->targetsize();
     }
-    
+
     if(inputsize_+targetsize_ != width_) PLERROR("In ProcessSymbolicSequenceVMatrix:build_() : inputsize_ + targetsize_ != width_");
+
+    // Should we call:
+    // setMetaInfoFromSource(); // ?
 
 }
 
@@ -484,7 +569,7 @@ real ProcessSymbolicSequenceVMatrix::getStringVal(int col, const string & str) c
             src_col = source->inputsize() + (col-max_context_length * source->inputsize())%source->targetsize();
         return source->getStringVal(src_col,str);
     }
-      
+
     return MISSING_VALUE;
 }
 
@@ -499,7 +584,7 @@ string ProcessSymbolicSequenceVMatrix::getValString(int col, real val) const
             src_col = source->inputsize() + (col-max_context_length * source->inputsize())%source->targetsize();
         return source->getValString(src_col,val);
     }
-      
+
     return "";
 }
 
