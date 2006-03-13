@@ -377,7 +377,7 @@ void ReconstructionWeightsKernel::reconstruct(const Vec& x, const TVec<int>& nei
         centered_neighborhood->no_scale = true;
         centered_neighborhood->negate_shift = true;
         centered_neighborhood->automatic = false;
-        centered_neighborhood->vm = (SelectRowsVMatrix*) sub_data;
+        centered_neighborhood->source = (SelectRowsVMatrix*) sub_data;
         new_data = false;
     }
     // Center data on x.
