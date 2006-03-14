@@ -355,7 +355,7 @@ void GaussMix::computeMeansAndCovariances() {
                       "is almost zero");
         VMat weights(columnmatrix(updated_weights(j)));
         bool use_impute_missing = impute_missing && stage > 0;
-        VMat input_data = use_impute_missing ? imputed_missing
+        VMat input_data = use_impute_missing ? imputed_missing[j]
                                              : train_set;
         weighted_train_set = new ConcatColumnsVMatrix(
             new SubVMatrix(input_data, 0, 0, nsamples, D), weights);
@@ -421,10 +421,6 @@ void GaussMix::computeMeansAndCovariances() {
                             covariance(k,i) = 0;
                         }
 #ifdef BOUNDCHECK
-            if (impute_missing) {
-                // Add the covariance matrix of imputation errors.
-                // TODO FILL IN HERE.
-            }
             
             // At this point there should be no more missing values.
             if (covariance.hasMissing() || center.hasMissing())
@@ -1622,10 +1618,8 @@ void GaussMix::computePosteriors() {
                 int s = samples_clust[i];
                 imputed_vec.fill(0);
                 for (int j = 0; j < L; j++)
-                    // TODO The line below is probably not very efficient.
-                    imputed_vec += posteriors(s, j) *
-                        clust_imputed_missing[j](i);
-                imputed_missing->putRow(s, imputed_vec);
+                    // TODO We are most likely wasting memory here.
+                    imputed_missing[j]->putRow(s, clust_imputed_missing[j](i));
             }
 
             // If the 'impute_missing' method is used, we now need to compute
@@ -2235,6 +2229,7 @@ void GaussMix::resizeDataBeforeTraining() {
     alpha.resize(L);
     clust_imputed_missing.resize(0);
     eigenvectors.resize(0);
+    imputed_missing.resize(0);
     mean_training.resize(0);
     no_missing_change.resize(0);
     sigma.resize(0);
@@ -2270,9 +2265,11 @@ void GaussMix::resizeDataBeforeTraining() {
             eigenvectors[i].resize(n_eigen_computed, D);
         if (impute_missing) {
             error_covariance.resize(L);
-            for (int j = 0; j < L; j++)
+            imputed_missing.resize(L);
+            for (int j = 0; j < L; j++) {
                 error_covariance[j].resize(D, D);
-            imputed_missing = new MemoryVMatrix(nsamples, D);
+                imputed_missing[j] = new MemoryVMatrix(nsamples, D);
+            }
             /*
             PPath fname = "/u/delallea/tmp/imputed_missing.pmat";
             imputed_missing = new FileVMatrix(fname, nsamples, D);
