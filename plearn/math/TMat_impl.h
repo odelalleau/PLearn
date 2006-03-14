@@ -440,6 +440,13 @@ void selectRows(const TMat<T>& source, const TVec<I>& row_indices, TMat<T>& dest
     if (ni!=destination.length())
         PLERROR("selectRows(Mat,Vec,Mat): last 2 arguments have lengths %d != %d",
                 ni,destination.length());
+
+    if (row_indices.isEmpty())
+        // Nothing to select. In addition, 'destination' is empty too since it
+        // has zero length, according to the test above. Thus there is nothing
+        // to do.
+        return;
+
     I* indx = row_indices.data();
 #ifdef BOUNDCHECK
     int n=source.length();
@@ -467,6 +474,13 @@ void selectColumns(const TMat<T>& source, const TVec<I>& column_indices, TMat<T>
     if (ni!=destination.width())
         PLERROR("selectColums(Mat,Vec,Mat): last 2 arguments have dimensions %d != %d",
                 ni,destination.width());
+
+    if (column_indices.isEmpty())
+        // Nothing to select. In addition, 'destination' is empty too since it
+        // has zero width, according to the test above. Thus there is nothing
+        // to do.
+        return;
+
     I* indx = column_indices.data();
 #ifdef BOUNDCHECK
     int n=source.width();
