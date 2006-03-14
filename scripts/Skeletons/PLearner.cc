@@ -20,14 +20,17 @@ DERIVEDCLASS::DERIVEDCLASS()
 
 void DERIVEDCLASS::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here
+    // ### Declare all of this object's options here.
     // ### For the "flags" of each option, you should typically specify
     // ### one of OptionBase::buildoption, OptionBase::learntoption or
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
+    // ### OptionBase::tuningoption. If you don't provide one of these three,
+    // ### this option will be ignored when loading values from a script.
+    // ### You can also combine flags, for example with OptionBase::nosave:
+    // ### (OptionBase::buildoption | OptionBase::nosave)
 
     // ### ex:
-    // declareOption(ol, "myoption", &DERIVEDCLASS::myoption, OptionBase::buildoption,
+    // declareOption(ol, "myoption", &DERIVEDCLASS::myoption,
+    //               OptionBase::buildoption,
     //               "Help text describing this option");
     // ...
 
@@ -41,9 +44,12 @@ void DERIVEDCLASS::build_()
     // ### according to set 'options', in *any* situation.
     // ### Typical situations include:
     // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-    // ### You should assume that the parent class' build_() has already been called.
+    // ###  - Building of a "reloaded" object: i.e. from the complete set of
+    // ###    all serialised options.
+    // ###  - Updating or "re-building" of an object after a few "tuning"
+    // ###    options have been modified.
+    // ### You should assume that the parent class' build_() has already been
+    // ### called.
 }
 
 // ### Nothing to add here, simply calls build_
@@ -77,8 +83,9 @@ int DERIVEDCLASS::outputsize() const
 
 void DERIVEDCLASS::forget()
 {
-    //! (Re-)initialize the PLearner in its fresh state (that state may depend on the 'seed' option)
-    //! And sets 'stage' back to 0   (this is the stage of a fresh learner!)
+    //! (Re-)initialize the PLearner in its fresh state (that state may depend
+    //! on the 'seed' option) and sets 'stage' back to 0 (this is the stage of
+    //! a fresh learner!)
     /*!
       A typical forget() method should do the following:
       - initialize a random number generator with the seed option
@@ -89,16 +96,17 @@ void DERIVEDCLASS::forget()
 
 void DERIVEDCLASS::train()
 {
-    // The role of the train method is to bring the learner up to stage==nstages,
-    // updating train_stats with training costs measured on-line in the process.
+    // The role of the train method is to bring the learner up to
+    // stage==nstages, updating train_stats with training costs measured
+    // on-line in the process.
 
     /* TYPICAL CODE:
 
-    static Vec input  // static so we don't reallocate/deallocate memory each time...
-    static Vec target // (but be careful that static means shared!)
-    input.resize(inputsize())    // the train_set's inputsize()
-    target.resize(targetsize())  // the train_set's targetsize()
-    real weight
+    static Vec input;  // static so we don't reallocate memory each time...
+    static Vec target; // (but be careful that static means shared!)
+    input.resize(inputsize());    // the train_set's inputsize()
+    target.resize(targetsize());  // the train_set's targetsize()
+    real weight;
 
     // This generic PLearner method does a number of standard stuff useful for
     // (almost) any learner, and return 'false' if no training should take
@@ -108,15 +116,15 @@ void DERIVEDCLASS::train()
 
     while(stage<nstages)
     {
-    // clear statistics of previous epoch
-    train_stats->forget()
+        // clear statistics of previous epoch
+        train_stats->forget();
 
-    //... train for 1 stage, and update train_stats,
-    // using train_set->getSample(input, target, weight)
-    // and train_stats->update(train_costs)
+        //... train for 1 stage, and update train_stats,
+        // using train_set->getExample(input, target, weight)
+        // and train_stats->update(train_costs)
 
-    ++stage
-    train_stats->finalize() // finalize statistics for this epoch
+        ++stage;
+        train_stats->finalize(); // finalize statistics for this epoch
     }
     */
 }
@@ -139,16 +147,18 @@ void DERIVEDCLASS::computeCostsFromOutputs(const Vec& input, const Vec& output,
 
 TVec<string> DERIVEDCLASS::getTestCostNames() const
 {
-    // Return the names of the costs computed by computeCostsFromOutpus
-    // (these may or may not be exactly the same as what's returned by getTrainCostNames).
+    // Return the names of the costs computed by computeCostsFromOutputs
+    // (these may or may not be exactly the same as what's returned by
+    // getTrainCostNames).
     // ...
 }
 
 TVec<string> DERIVEDCLASS::getTrainCostNames() const
 {
-    // Return the names of the objective costs that the train method computes and
-    // for which it updates the VecStatsCollector train_stats
-    // (these may or may not be exactly the same as what's returned by getTestCostNames).
+    // Return the names of the objective costs that the train method computes
+    // and for which it updates the VecStatsCollector train_stats
+    // (these may or may not be exactly the same as what's returned by
+    // getTestCostNames).
     // ...
 }
 

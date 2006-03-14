@@ -54,7 +54,8 @@ public:
     //! Return a pseudo-random sample generated from the distribution.
     virtual void generate(Vec& y) const;
 
-    //! Reset the random number generator used by generate() using the given seed.
+    //! Reset the random number generator used by generate() using the
+    //! given seed.
     virtual void resetGenerator(long g_seed) const;
 
     //! Set the 'predictor' and 'predicted' sizes for this distribution.
@@ -86,13 +87,16 @@ public:
      * (Re-)initializes the PDistribution in its fresh state (that state may
      * depend on the 'seed' option).  And sets 'stage' back to 0 (this is the
      * stage of a fresh learner!).
-     * ### You may remove this method if your distribution does not implement it.
+     * ### You may remove this method if your distribution does not
+     * ### implement it.
      */
     virtual void forget();
 
-    //! The role of the train method is to bring the learner up to stage == nstages,
-    //! updating the train_stats collector with training costs measured on-line in the process.
-    // ### You may remove this method if your distribution does not implement it.
+    //! The role of the train method is to bring the learner up to
+    //! stage == nstages, updating the train_stats collector with training
+    //! costs measured on-line in the process.
+    // ### You may remove this method if your distribution does not
+    // ### implement it.
     virtual void train();
 
 

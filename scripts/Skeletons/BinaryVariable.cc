@@ -99,11 +99,13 @@ void DERIVEDCLASS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void DERIVEDCLASS::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here
+    // ### Declare all of this object's options here.
     // ### For the "flags" of each option, you should typically specify
     // ### one of OptionBase::buildoption, OptionBase::learntoption or
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
+    // ### OptionBase::tuningoption. If you don't provide one of these three,
+    // ### this option will be ignored when loading values from a script.
+    // ### You can also combine flags, for example with OptionBase::nosave:
+    // ### (OptionBase::buildoption | OptionBase::nosave)
 
     // ### ex:
     // declareOption(ol, "myoption", &DERIVEDCLASS::myoption,

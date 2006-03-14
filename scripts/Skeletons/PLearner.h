@@ -42,14 +42,14 @@ public:
     virtual int outputsize() const;
 
     //! (Re-)initializes the PLearner in its fresh state (that state may depend
-    //! on the 'seed' option) and sets 'stage' back to 0 (this is the stage of a
-    //! fresh learner!).
+    //! on the 'seed' option) and sets 'stage' back to 0 (this is the stage of
+    //! a fresh learner!).
     // (PLEASE IMPLEMENT IN .cc)
     virtual void forget();
 
-    //! The role of the train method is to bring the learner up to stage==nstages,
-    //! updating the train_stats collector with training costs measured on-line
-    //! in the process.
+    //! The role of the train method is to bring the learner up to
+    //! stage==nstages, updating the train_stats collector with training costs
+    //! measured on-line in the process.
     // (PLEASE IMPLEMENT IN .cc)
     virtual void train();
 
@@ -67,8 +67,8 @@ public:
     // (PLEASE IMPLEMENT IN .cc)
     virtual TVec<std::string> getTestCostNames() const;
 
-    //! Returns the names of the objective costs that the train method computes and
-    //! for which it updates the VecStatsCollector train_stats.
+    //! Returns the names of the objective costs that the train method computes
+    //! and  for which it updates the VecStatsCollector train_stats.
     // (PLEASE IMPLEMENT IN .cc)
     virtual TVec<std::string> getTrainCostNames() const;
 
@@ -77,9 +77,12 @@ public:
     // While in general not necessary, in case of particular needs
     // (efficiency concerns for ex) you may also want to overload
     // some of the following methods:
-    // virtual void computeOutputAndCosts(const Vec& input, const Vec& target, Vec& output, Vec& costs) const;
-    // virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
-    // virtual void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs=0, VMat testcosts=0) const;
+    // virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
+    //                                    Vec& output, Vec& costs) const;
+    // virtual void computeCostsOnly(const Vec& input, const Vec& target,
+    //                               Vec& costs) const;
+    // virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
+    //                   VMat testoutputs=0, VMat testcosts=0) const;
     // virtual int nTestCosts() const;
     // virtual int nTrainCosts() const;
     // virtual void resetInternalState();

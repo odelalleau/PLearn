@@ -49,7 +49,8 @@ public:
      *  integral(smoothed_function).
      */
     virtual real smooth(const Vec& source_function, Vec smoothed_function,
-                        Vec bin_positions = Vec(), Vec dest_bin_positions = Vec()) const;
+                        Vec bin_positions = Vec(),
+                        Vec dest_bin_positions = Vec()) const;
 
     //   real smooth(const HistogramCDF& source_cdf, HistogramCDF& dest_cdf);
 
