@@ -69,7 +69,14 @@ met:
 
 \chapter{ Overview of PLearn}
 \section{ Introduction}
- Machine Learning algorithms are usually described in scientific papers in a standard mathematical formulation, often framed as an optimization of a given cost function. PLearn is a C++ library that uses the object-oriented and operator overloading capabilities of the C++ language to allow, among other things, to express cost functions and their optimization as a standard C++ program, in a declarative manner that is as close as possible to their mathematical formalization. 
+
+Machine Learning algorithms are usually described in scientific
+papers in a standard mathematical formulation, often framed as an
+optimization of a given cost function. PLearn is a C++ library that uses
+the object-oriented and operator overloading capabilities of the C++
+language to allow, among other things, to express cost functions and
+their optimization as a standard C++ program, in a declarative manner
+that is as close as possible to their mathematical formalization.
 
  Most neural-network and general machine-learning simulation
 environments define their own scripting language. While it is very
@@ -93,19 +100,39 @@ advantage of being developed and well-supported by worldwide teams
 of dedicated and competent people...
 
 
- When providing the correct type abstractions, C++ can be an expressive-enough language to directly serve as a highly customizable, extensible and efficient ``scripting language'' for designing and running even the most demanding experiments in machine-learning research and development. So this is what this library is all about: providing the right type abstractions. What originally got me started on this project was the desire to be able to optimize a complex cost function by just expressing it in a declarative way as close as possible to the mathematical formulation. This lead to the original implementation of the Var class. Since then PLearn has grown to include many other useful types and abstractions. 
+When providing the correct type abstractions, C++ can be an
+expressive-enough language to directly serve as a highly customizable,
+extensible and efficient ``scripting language'' for designing and
+running even the most demanding experiments in machine-learning research
+and development. So this is what this library is all about: providing
+the right type abstractions. What originally got me started on this
+project was the desire to be able to optimize a complex cost function
+by just expressing it in a declarative way as close as possible to the
+mathematical formulation. This lead to the original implementation of
+the Var class. Since then PLearn has grown to include many other useful
+types and abstractions.
 
 
- While PLearn has been successfully used by several people for over a year, it is still very much work in progress. As its primary use is for our own research, we did not want to carve it in stone: thus future versions may look quite different from this one, as we are still reworking the class hierarchy. But it is nevertheless already very usable, so feel free to play around and experiment with it! 
+While PLearn has been successfully used by several people for over
+a year, it is still very much work in progress. As its primary use
+is for our own research, we did not want to carve it in stone: thus
+future versions may look quite different from this one, as we are still
+reworking the class hierarchy. But it is nevertheless already very
+usable, so feel free to play around and experiment with it!
 
 
- Probably the biggest problem, like with many projects of this kind, is the cruel lack of documentation. This manual will attempt to give you a high-level understanding of the basic concepts, but to work out the details, you'll have to look at the actual code. Also, to fully use the potential of this library, you are expected to be somewhat comfortable with the C++ language. 
+Probably the biggest problem, like with many projects of this kind, is
+the cruel lack of documentation. This manual will attempt to give you
+a high-level understanding of the basic concepts, but to work out the
+details, you'll have to look at the actual code. Also, to fully use the
+potential of this library, you are expected to be somewhat comfortable
+with the C++ language.
 
 
- Have fun! 
+Have fun!
 
 
- Pascal 
+Pascal
 
 
 \section{Developer CVS access}
@@ -153,41 +180,41 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-  // Example use of a `real' variable
-  // a compilation option makes it either a double or a float
-  // Please don't use double nor float
+    // Example use of a `real' variable
+    // a compilation option makes it either a double or a float
+    // Please don't use double nor float
 
-  real a=15;
-  cout<<a<<endl;
+    real a=15;
+    cout<<a<<endl;
 
-  // Vector creation: method 1
-  Vec b(3);
-  b[0] = 2;
-  b[1] = 42;
-  b[2] = 21;
-  cout<<b<<endl;
+    // Vector creation: method 1
+    Vec b(3);
+    b[0] = 2;
+    b[1] = 42;
+    b[2] = 21;
+    cout<<b<<endl;
 
-  // Vector creation: method 2
-  Vec b2(3);
-  b2<<"5 4.2 -2";
-  cout<<b2<<endl;
+    // Vector creation: method 2
+    Vec b2(3);
+    b2<<"5 4.2 -2";
+    cout<<b2<<endl;
 
-  // Matrix creation : method 1
-  Mat c(3,2);
-  c(1,1)=1.1;
-  c(1,0)=4;
-  c(2,0)=5;
-  c(0,1)=-73.2;
-  c(0,0)=78;
-  c(2,1)=5.32e-2;
-  cout<<c<<endl;
+    // Matrix creation : method 1
+    Mat c(3,2);
+    c(1,1)=1.1;
+    c(1,0)=4;
+    c(2,0)=5;
+    c(0,1)=-73.2;
+    c(0,0)=78;
+    c(2,1)=5.32e-2;
+    cout<<c<<endl;
 
-  // Matrix creation : method 2
-  Mat c2(3,2);
-  c2<<"2 4 2.5e-1 6 1e3 3.1"; // read matrix row by matrix row 
-  cout<<c2<<endl;
+    // Matrix creation : method 2
+    Mat c2(3,2);
+    c2<<"2 4 2.5e-1 6 1e3 3.1"; // read matrix row by matrix row 
+    cout<<c2<<endl;
 
-  return 0;
+    return 0;
 }
 \end{verbatim}
 
@@ -202,28 +229,27 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
+    // vector creation
+    Vec b(3);
+    b[0] = 2;
+    b[1] = 42;
+    b[2] = 21;
+    cout<<b<<endl;
 
-  // vector creation
-  Vec b(3);
-  b[0] = 2;
-  b[1] = 42;
-  b[2] = 21;
-  cout<<b<<endl;
-
-  // matrix creation
-  Mat c(3,2);
-  c(1,1)=1.0;
-  c(1,0)=4.0;
-  c(2,0)=5.0;
-  c(0,1)=73.0;
-  c(0,0)=78.0;
-  c(2,1)=5.0;
+    // matrix creation
+    Mat c(3,2);
+    c(1,1)=1.0;
+    c(1,0)=4.0;
+    c(2,0)=5.0;
+    c(0,1)=73.0;
+    c(0,0)=78.0;
+    c(2,1)=5.0;
 
 
-  Vec d(2);
-  transposeProductAcc(d,c,b);
-  cout<<d<<endl;
-  return 0;
+    Vec d(2);
+    transposeProductAcc(d,c,b);
+    cout<<d<<endl;
+    return 0;
 }
 \end{verbatim}
 
@@ -241,28 +267,28 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-  Mat c(3,2);
-  c(1,1)=1.0;
-  c(1,0)=4.0;
-  c(2,0)=5.0;
-  c(0,1)=73.0;
-  c(0,0)=78.0;
-  c(2,1)=5.0;
+    Mat c(3,2);
+    c(1,1)=1.0;
+    c(1,0)=4.0;
+    c(2,0)=5.0;
+    c(0,1)=73.0;
+    c(0,0)=78.0;
+    c(2,1)=5.0;
 
-  // save into a pmat file
-  c.save("save.pmat");
+    // save into a pmat file
+    c.save("save.pmat");
 
-  // save into an amat file
-  VMat vm(c);
-  vm->saveAMAT("save.amat");
+    // save into an amat file
+    VMat vm(c);
+    vm->saveAMAT("save.amat");
 
-  // load from a file
-  VMat vm2 = getDataSet("save.pmat");
-    // it could have been "save.amat"
-  Mat m = vm2.toMat();
-  cout<<m;
+    // load from a file
+    VMat vm2 = getDataSet("save.pmat");
+        // it could have been "save.amat"
+    Mat m = vm2.toMat();
+    cout<<m;
 
-  return 0;
+    return 0;
 }
 
 \end{verbatim}
@@ -271,7 +297,9 @@ int main(int argc, char** argv)
 
 \section{How to create a PLearner?}
 
-PLearner is the super class for learner. Here we describe how to create a PLearner. PLearner is a subclass of Object so if you want to know more about what you are doing, go to section \ref{Object}.
+PLearner is the super class for learner. Here we describe how to create
+a PLearner. PLearner is a subclass of Object so if you want to know more
+about what you are doing, go to section \ref{Object}.
 
 \subsection{First steps}
 \begin{enumerate}
@@ -347,38 +375,41 @@ C and C++ programming. PLearn makes it easier through the use of
 \item  on the stack:
 \begin{verbatim}
 void f()
-{ // Beginning of scope
-  MyClass myinstance; 
-    // memory is allocated on the stack,
-    // and constructor is called
+{   // Beginning of scope
+    MyClass myinstance; 
+        // memory is allocated on the stack,
+        // and constructor is called
 
-  myinstance.dosomething();
-    // methods and members are called using a dot
+    myinstance.dosomething();
+        // methods and members are called using a dot
 
-} // when exiting the scope, destructor of object is
-  // called automatically and stack memory is freed
+}   // when exiting the scope, destructor of object is
+    // called automatically and stack memory is freed
 \end{verbatim}
 
 \item  by calling new:
 \begin{verbatim}
 void f()
-{ // Beginning of scope
+{   // Beginning of scope
 
-  MyClass* ptr = new MyClass(); 
-    // memory is allocated on the heap by the "new"
-    // opearator, which returns a pointer
+    MyClass* ptr = new MyClass(); 
+        // memory is allocated on the heap by the "new"
+        // opearator, which returns a pointer
 
-  ptr->dosomething(); 
-    // methods and members are called using "->"
+    ptr->dosomething(); 
+        // methods and members are called using "->"
 
-  delete ptr;
-    // we have to call "delete" explicitly,
-    // because object is NOT automatically destroyed
-}   // when leaving the scope
+    delete ptr;
+        // we have to call "delete" explicitly,
+        // because object is NOT automatically destroyed
+}       // when leaving the scope
 \end{verbatim}
 
 \end{itemize}
- In more complex cases, where several ojects may contain pointers to other objects, keeping track of when to delete an object quickly becomes a complex and error-prone bookkeeping task. 
+
+In more complex cases, where several ojects may contain pointers to
+other objects, keeping track of when to delete an object quickly becomes
+a complex and error-prone bookkeeping task.
 
 
  PLearn uses reference-counted smart pointers to automate this, so
@@ -394,33 +425,41 @@ to it)
 class MyClass: public SmartPointable;
 
 void f()
-{ // Beginning of first scope
-  PP<MyClass> ptr = new MyClass();
-    // memory is allocated on the heap
-    // (reference count for object is 1)
+{   // Beginning of first scope
+    PP<MyClass> ptr = new MyClass();
+        // memory is allocated on the heap
+        // (reference count for object is 1)
 
-  { // Beginning of second scope
-    PP<MyClass> ptr2 = ptr;
-      // ptr2 and ptr point to the same object
-      // (reference count becomes 2)
+    { // Beginning of second scope
+        PP<MyClass> ptr2 = ptr;
+            // ptr2 and ptr point to the same object
+            // (reference count becomes 2)
 
-  } // Object is not destroyed upon exiting the second scope 
-    // (reference count becomes 1)
+    } // Object is not destroyed upon exiting the second scope 
+      // (reference count becomes 1)
 
-  ptr->dosomething();
-    // methods and members are called using "->"
+    ptr->dosomething();
+        // methods and members are called using "->"
 
 } // Object is automatically destroyed here 
   // when reference count becomes 0
 \end{verbatim}
 
- It is possible to mix traditional pointers to an object with smart pointers, and there are automatic conversions between the two. However, in general we discourage doing this, although it might prove useful in some situations (such as to keep a pointer to the actual specific type of the object rather than its base-class). If you do mix them, just remember that the object will get deleted as soon as the last smart pointer pointing to it is gone (when it gets out of scope for instance), regardless whether there are still traditional pointers pointing to it (the automatic reference count can only counts smart pointers!). 
+It is possible to mix traditional pointers to an object with smart
+pointers, and there are automatic conversions between the two. However,
+in general we discourage doing this, although it might prove useful in
+some situations (such as to keep a pointer to the actual specific type
+of the object rather than its base-class). If you do mix them, just
+remember that the object will get deleted as soon as the last smart
+pointer pointing to it is gone (when it gets out of scope for instance),
+regardless whether there are still traditional pointers pointing to it
+(the automatic reference count can only counts smart pointers!).
 
 
  Many base classes in PLearn have an associated smart pointer type
 with a similar (and usually shorter) name, as shown in the following
 table. Sometimes this corresponding smart pointer type is a simple
-typedef to the type PP<\emph{baseclass}>. 
+typedef to the type PP<\emph{baseclass}>.
 
 But we also often specialised them (by deriving PP<\emph{baseclass}>)
 to add operators and methods for user convenience. So that, for
@@ -428,36 +467,49 @@ instance, element at row i and column j of a VMat m can be accessed
 as m(i,j) as an alternative to the more verbose m->get(i,j).
 
 \begin{tabular}{|c|c|}
-\hline 
+\hline
 base class &smart pointer \\
- \hline 
+ \hline
 VMatrix &VMat \\
- \hline 
+ \hline
 Variable &Var \\
- \hline 
+ \hline
 RandomVariable &RandomVar \\
- \hline 
+ \hline
 Kernel &Ker \\
- \hline 
+ \hline
 CostFunction &CostFunc \\
- \hline 
+ \hline
 StatsIterator &StatsIt \\
- \hline 
+ \hline
 
 \end{tabular}
 
 
 
 
- Several concepts in PLearn can be seen as having two levels of implementation: 
+Several concepts in PLearn can be seen as having two levels of
+implementation:
+
  \begin{enumerate}
-\item  A base class and its derived classes form the basic internal working mechanism for the concept which can be extended by deriving new classes. We call this the \emph{designer level}
-.
-\item  A correponding smart pointer type for the base class, and a number of utility functions give a more user-friendly syntax to use the concept. They are mostly wrapping and syntactic sugar around the \emph{designer level}
- classes. We call this the \emph{user level}
+
+\item A base class and its derived classes form the basic internal
+working mechanism for the concept which can be extended by deriving new
+classes. We call this the \emph{designer level}.
+
+\item A correponding smart pointer type for the base class, and a
+number of utility functions give a more user-friendly syntax to use
+the concept. They are mostly wrapping and syntactic sugar around the
+\emph{designer level} classes. We call this the \emph{user level}.
+
 \end{enumerate}
- 
- The person who only wishes to use the library typically doesn't need to understand all the details of the designer level hierarchy. Some concepts (such as Var) can be manipulated almost entirely through the smart pointer type and user-level functions, although knowing the most useful methods of the uinderlying base class, and the role of each subclass certainly doesn't harm. 
+
+The person who only wishes to use the library typically doesn't need
+to understand all the details of the designer level hierarchy. Some
+concepts (such as Var) can be manipulated almost entirely through the
+smart pointer type and user-level functions, although knowing the most
+useful methods of the uinderlying base class, and the role of each
+subclass certainly doesn't harm.
 
 \section{How to subclass a PLearn \Object}
 \label{Object}
@@ -486,7 +538,8 @@ includes the Learner base class.
 
 \subsection{Creating a basic class deriving from Object}
 
-First, you can use \texttt{pyskeleton}, a python script which creates automatically the .h and .cc files.
+First, you can use \texttt{pyskeleton}, a python script which creates
+automatically the .h and .cc files.
 
 \texttt{pyskeleton Object Person} creates a class called Person derived from Object.
 
@@ -498,22 +551,21 @@ Example:
 ...
 
 private:
-  
-  typedef Object inherited;
+    typedef Object inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // ### declare protected option fields 
-  // ###  (such as learnt parameters) here
-  // ...
-    
+    // ### declare protected option fields 
+    // ###  (such as learnt parameters) here
+    // ...
+
 public:
-  // here we had the good things
-  string firstname;
-  int age;
+    // here we had the good things
+    string firstname;
+    int age;
 
 \end{verbatim}
 
@@ -522,21 +574,22 @@ Then you just have to fill the \texttt{declareOptions} method in the .cc .
 \begin{verbatim}
 void Person::declareOptions(OptionList& ol) 
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically
-  // ### specify one of OptionBase::buildoption, 
-  // ### OptionBase::learntoption or OptionBase::tuningoption.
-  // ### Another possible flag to be combined with is 
-  // ### OptionBase::nosave
+    // ### Declare all of this object's options here.
+    // ### For the "flags" of each option, you should typically specify
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or
+    // ### OptionBase::tuningoption. If you don't provide one of these three,
+    // ### this option will be ignored when loading values from a script.
+    // ### You can also combine flags, for example with OptionBase::nosave:
+    // ### (OptionBase::buildoption | OptionBase::nosave)
 
-  // ### ex:
-  declareOption(ol, "firstname", &Person::firstname, 
-                 OptionBase::buildoption,
-                 "Help text describing this option");
+    // ### ex:
+    declareOption(ol, "firstname", &Person::firstname,
+                  OptionBase::buildoption,
+                  "Help text describing this option");
 
-  declareOption(ol, "age", &Person::age, 
-                 OptionBase::buildoption,
-                 "Help text describing this option");
+    declareOption(ol, "age", &Person::age,
+                  OptionBase::buildoption,
+                  "Help text describing this option");
 // ...
 
   // Now call the parent class' declareOptions
@@ -564,14 +617,14 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-  Person me; // default constructor can set default values 
-             // for the option-fields
-             // for ex: suppose default profession is "student"
-  me.firstname = "Pascal";
-  me.age = 29;
-  me.build(); // finalize the building process
+    Person me; // default constructor can set default values 
+               // for the option-fields
+               // for ex: suppose default profession is "student"
+    me.firstname = "Pascal";
+    me.age = 29;
+    me.build(); // finalize the building process
 
-  cout<<me.firstname; 
+    cout<<me.firstname; 
 }
 \end{verbatim}
 
@@ -595,14 +648,14 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-  Object *o = new Person(); // o is a smart pointer to an 
-                            // object whose true type is Person
-  o->setOption("firstname","Pascal");
-  o->setOption("age","29");
+    Object *o = new Person(); // o is a smart pointer to an
+                              // object whose true type is Person
+    o->setOption("firstname","Pascal");
+    o->setOption("age","29");
 
-  Person *p = dynamic_cast<Person*>(o);
+    Person *p = dynamic_cast<Person*>(o);
 
-  cout<<p->firstname;
+    cout<<p->firstname;
 }
 \end{verbatim}
 
@@ -641,12 +694,12 @@ using namespace PLearn;
 int main(int argc, char** argv)
 {
 
-  Object* o = loadObject("me.psave"); 
-  Person *p = dynamic_cast<Person*>(o);
+    Object* o = loadObject("me.psave"); 
+    Person *p = dynamic_cast<Person*>(o);
 
-  cout<<p->firstname;
+    cout<<p->firstname;
 
-  return 0;
+    return 0;
 }
 \end{verbatim}
 
@@ -658,37 +711,37 @@ string filename = "me.psave";
 
 // 1) The loadObject function
 {
-  Object *me;
-  me = loadObject(filename);
+    Object *me;
+    me = loadObject(filename);
 }
 
 // 2) What loadObject actually does
 {
-  ifstream in(filename.c_str());
-  Object *me = readObject(in);
+    ifstream in(filename.c_str());
+    Object *me = readObject(in);
 }
 
 // 3) An alternative (loadObject actually calls Object::read)
 {
-  Person me; 
-  ifstream in(filename.c_str());
-  me.read(in);
+    Person me; 
+    ifstream in(filename.c_str());
+    me.read(in);
 }
 
 // 4) An alternative using the global generic 
 //    plearn::read function
 {
-  Object *me;
-  ifstream in(filename.c_str());
-  ::read(in, me);
+    Object *me;
+    ifstream in(filename.c_str());
+    ::read(in, me);
 }
 
 // 5) What if we have the string representation at hand?
 {
-  // get the content of the file as a string
-  // (function in fileutils.h)
-  string description = loadFileAsString(filename);
-  Object *me = newObject(description);
+    // get the content of the file as a string
+    // (function in fileutils.h)
+    string description = loadFileAsString(filename);
+    Object *me = newObject(description);
 }
 \end{verbatim}
 
@@ -702,14 +755,14 @@ themselves be compex objects or arrays of things. For example:
 
 \begin{verbatim}
 Drawing(
-  color = "blue";
+    color = "blue";
 
-  # path is an array of objects
-  path = [ Line(x0=0, y0=0, x1=10, y1=20); 
-           Line(x0=0, y0=0, x1=10, y1=20, width=2);
-           Circle(x=20; y=30; radius=5.3, fill=true);
-         ];
-  );
+    # path is an array of objects
+    path = [ Line(x0=0, y0=0, x1=10, y1=20); 
+             Line(x0=0, y0=0, x1=10, y1=20, width=2);
+             Circle(x=20; y=30; radius=5.3, fill=true);
+           ];
+    );
 \end{verbatim}
 
 Finally, you should use a SmartPointable for Person, as seen before in \ref{PP}.
@@ -722,35 +775,61 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-   Object* o = loadObject("me.psave"); 
-   PP<Person> p = dynamic_cast<Person*>(o);
+    Object* o = loadObject("me.psave"); 
+    PP<Person> p = dynamic_cast<Person*>(o);
 
-  cout<<p->firstname;
+    cout<<p->firstname;
 
-  return 0;
+    return 0;
 }
 \end{verbatim}
 
 
-\subsection{Human description versus saved object} 
+\subsection{Human description versus saved object}
 
 The {\tt me.psave} file in the previous section may have been produced
-either manually by a human being, or automatically by calling 
+either manually by a human being, or automatically by calling
 \begin{verbatim}
 plearn::save("me.psave",me);
 \end{verbatim}
 on a previously constructed {\tt Person me} object.
 
-The mechanism for building an object is the same in both cases: it automatically calls a series of {\tt readOptionVal} followed by {\tt build()}. However the options specified in both cases are not always the same:
+The mechanism for building an object is the same in both cases: it
+automatically calls a series of {\tt readOptionVal} followed by {\tt
+build()}. However the options specified in both cases are not always the
+same:
 
 \begin{itemize}
-\item A hand-written description file will typically be used to give a small number of options for the {\em initial building} of an object (with the other options taking their default value).
-\item A file resulting from a saved object, will typically include {\em everything} that is necessary to reconstruct a new instance in the full and exact same state as the instance that was saved. This may include options, such as the learnt synaptic weights of a neural network, that are not given at the time of {\em initial building}, but only when {\em reloading} a serialised object.
+
+\item A hand-written description file will typically be used to give
+a small number of options for the {\em initial building} of an object
+(with the other options taking their default value).
+
+\item A file resulting from a saved object, will typically include {\em
+everything} that is necessary to reconstruct a new instance in the full
+and exact same state as the instance that was saved. This may include
+options, such as the learnt synaptic weights of a neural network, that
+are not given at the time of {\em initial building}, but only when {\em
+reloading} a serialised object.
+
 \end{itemize}
 
-We call the options typically used for initial building {\em \bf build options}, and the second type {\em \bf learnt options}. Note that the behaviour of the {\tt build} method may have to be quite different when we are {\em reloading} a saved object (and providing it with {\em learnt options}) from when we are only doing an {\em initial building} (and providing it only with {\em build options}). It is natural that our "one and only" constructor may have to behave differently depending on the parameters it is given, but it is important to keep in mind the distinction between {\em build options} on one hand, and {\em learnt options} that are only present whe reloading, on the other hand.
+We call the options typically used for initial building {\em \bf build
+options}, and the second type {\em \bf learnt options}. Note that the
+behaviour of the {\tt build} method may have to be quite different when
+we are {\em reloading} a saved object (and providing it with {\em learnt
+options}) from when we are only doing an {\em initial building} (and
+providing it only with {\em build options}). It is natural that our
+"one and only" constructor may have to behave differently depending on
+the parameters it is given, but it is important to keep in mind the
+distinction between {\em build options} on one hand, and {\em learnt
+options} that are only present whe reloading, on the other hand.
 
-There is a third conceptual category of options, that we call {\em \bf tuning options}, which are used mostly to {\em tune} the object {\em after} an intial building. They often overlap with {\em build options}, but not necessarily, the distinction is nevertheless more conceptual than real. 
+There is a third conceptual category of options, that we call {\em \bf
+tuning options}, which are used mostly to {\em tune} the object {\em
+after} an intial building. They often overlap with {\em build options},
+but not necessarily, the distinction is nevertheless more conceptual
+than real.
 
 
 
@@ -763,11 +842,17 @@ There is a third conceptual category of options, that we call {\em \bf tuning op
 
 \subsection{Introduction to Var}
 
- The class Var is at the heart of PLearn and aims at providing matrix-variables in the mathematical sense. It is built on top of the Mat class, that provides matrix-variables in the more traditional sense of sequential computer languages.
- 
- Var should be used for Matrix-Vectors operations when you need gradients on operations. Otherwise, use Mat and Vec classes.
- 
- NO NUMERICAL COMPUTATION IS DONE AT THIS LEVEL. The purpose of the Var definitions is only to build the symbolic relationship between mathematical variables. 
+The class Var is at the heart of PLearn and aims at providing
+matrix-variables in the mathematical sense. It is built on top of the
+Mat class, that provides matrix-variables in the more traditional sense
+of sequential computer languages.
+
+Var should be used for Matrix-Vectors operations when you need gradients
+on operations. Otherwise, use Mat and Vec classes.
+
+NO NUMERICAL COMPUTATION IS DONE AT THIS LEVEL. The purpose of the
+Var definitions is only to build the symbolic relationship between
+mathematical variables.
 
  One can write arbitarily complex expressions using many implicit or
 explicit intermediary variables, and predefined functions such as
@@ -775,16 +860,22 @@ in: $w=exp(-(abs(sqrt(lambda)*v)/3.0))$.  This will construct an
 internal representation, only with a larger number of intermediate
 nodes to represent intermediate states (variables) of the calculations.
 
- Each Var contains two Vec fields. 
- 
- One is called value and holds the current value assigned to that variable, and the other is called gradient and is used to backpropagate gradients with respect to another variable.
- 
- Every Var has an fprop() method that updates its value field according to the value field of its direct parents.
- 
- Every Var also has a bprop() method that updates the gradient field of its direct parents according to its own gradient field (backpropagation algorithm). Note that it \emph{accumulates} gradients into its parents gradient field. 
+ Each Var contains two Vec fields.
 
- Example: 
- 
+One is called value and holds the current value assigned to that
+variable, and the other is called gradient and is used to backpropagate
+gradients with respect to another variable.
+
+Every Var has an fprop() method that updates its value field according
+to the value field of its direct parents.
+
+Every Var also has a bprop() method that updates the gradient field of
+its direct parents according to its own gradient field (backpropagation
+algorithm). Note that it \emph{accumulates} gradients into its parents
+gradient field.
+
+ Example:
+
 \begin{verbatim}
 #include <plearn/var/Var_all.h>
 #include <plearn/math/TMat_maths.h>
@@ -793,33 +884,38 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-  Var v(3,2); // declares a Variable of size 3x2
-  Var lambda(1,1); // declares a scalar Variable
+    Var v(3,2); // declares a Variable of size 3x2
+    Var lambda(1,1); // declares a scalar Variable
 
-  v->matValue(1,0)=4.0;
-  v->matValue(2,0)=5.0;
-  v->matValue(0,1)=73.0;
-  v->matValue(0,0)=78.0;
-  v->matValue(2,1)=5.0;
+    v->matValue(1,0)=4.0;
+    v->matValue(2,0)=5.0;
+    v->matValue(0,1)=73.0;
+    v->matValue(0,0)=78.0;
+    v->matValue(2,1)=5.0;
 
-  cout << v->matValue << endl;
+    cout << v->matValue << endl;
 
-  lambda->value = 2.0;
+    lambda->value = 2.0;
 
-  Var w = lambda*v;
+    Var w = lambda*v;
 
-  w->fprop();
+    w->fprop();
 
-  cout << w->matValue << endl;
-  return 0;
+    cout << w->matValue << endl;
+    return 0;
 }
 \end{verbatim}
 
 
- If the expression to be calculated involves intermediate variables, fprop must be called in a correct order on all those intermediate variables before it can be called on the result variable we are interested in. For example, suppose we have $z=dot(x,tanh(y))$ where $x,u \in R^3$.
+If the expression to be calculated involves intermediate variables,
+fprop must be called in a correct order on all those intermediate
+variables before it can be called on the result variable we are
+interested in. For example, suppose we have $z=dot(x,tanh(y))$ where
+$x,u \in R^3$.
 
- 
- A Var builds a directed acyclic graph whose nodes are Var's, with the following structure: 
+
+ A Var builds a directed acyclic graph whose nodes are Var's, with the
+following structure:
 \nopagebreak
 \begin{verbatim}
 
@@ -834,7 +930,9 @@ int main(int argc, char** argv)
 
 \end{verbatim}
 
- To obtain the correct value of z as a function of x and u, after setting x->value and u->value, we need to perform fprop on all the intermediate nodes as well as z. 
+To obtain the correct value of z as a function of x and u, after setting
+x->value and u->value, we need to perform fprop on all the intermediate
+nodes as well as z.
 
 \begin{verbatim}
 #include <plearn/var/Var_all.h>
@@ -844,33 +942,33 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-  Var x(3,1);
-  Var u(3,1);
+    Var x(3,1);
+    Var u(3,1);
 
-  x->matValue(0,0)=1;
-  x->matValue(1,0)=2;
-  x->matValue(2,0)=3;
-  u->matValue(0,0)=4;
-  u->matValue(1,0)=5;
-  u->matValue(2,0)=6;
+    x->matValue(0,0)=1;
+    x->matValue(1,0)=2;
+    x->matValue(2,0)=3;
+    u->matValue(0,0)=4;
+    u->matValue(1,0)=5;
+    u->matValue(2,0)=6;
 
-  cout<<x->matValue<<endl;
-  cout<<u->matValue<<endl;
+    cout<<x->matValue<<endl;
+    cout<<u->matValue<<endl;
 
-  Var y = x + u;
-    // y is also a 3x1 matrix
-  Var w = tanh(y);
-  Var z = dot(x,w);
-    // z is a scalar variable result of the dot product 
-    // of x and tanh(y)
+    Var y = x + u;
+        // y is also a 3x1 matrix
+    Var w = tanh(y);
+    Var z = dot(x,w);
+        // z is a scalar variable result of the dot product 
+        // of x and tanh(y)
 
-  cout<<z->matValue<<endl;
-  y->fprop();
-  w->fprop();
-  z->fprop();
-  cout<<z->matValue<<endl;
+    cout<<z->matValue<<endl;
+    y->fprop();
+    w->fprop();
+    z->fprop();
+    cout<<z->matValue<<endl;
 
-  return 0;
+    return 0;
 }
 \end{verbatim}
 
@@ -894,37 +992,38 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-  Var x(3,1);
-  Var u(3,1);
+    Var x(3,1);
+    Var u(3,1);
 
-  x->matValue(0,0)=1;
-  x->matValue(1,0)=2;
-  x->matValue(2,0)=3;
-  u->matValue(0,0)=4;
-  u->matValue(1,0)=5;
-  u->matValue(2,0)=6;
+    x->matValue(0,0)=1;
+    x->matValue(1,0)=2;
+    x->matValue(2,0)=3;
+    u->matValue(0,0)=4;
+    u->matValue(1,0)=5;
+    u->matValue(2,0)=6;
 
-  cout<<x->matValue<<endl;
-  cout<<u->matValue<<endl;
+    cout<<x->matValue<<endl;
+    cout<<u->matValue<<endl;
 
-  Var y = x + u;
-    // y is also a 3x1 matrix
-  Var w = tanh(y);
-  Var z = dot(x,w);
-    // z is a scalar variable result of the dot product
-    // of x and tanh(y)
+    Var y = x + u;
+        // y is also a 3x1 matrix
+    Var w = tanh(y);
+    Var z = dot(x,w);
+        // z is a scalar variable result of the dot product
+        // of x and tanh(y)
 
-  cout<<z->matValue<<endl;
+    cout<<z->matValue<<endl;
 
-  VarArray path = propagationPath(x & u, z);
-  path.fprop();
+    VarArray path = propagationPath(x & u, z);
+    path.fprop();
 
-  cout<<z->matValue<<endl;
-  return 0;
+    cout<<z->matValue<<endl;
+    return 0;
 }
 \end{verbatim}
 
- In the previous, the \texttt{VarArray} is useful but not essential. Let consider the following example:
+In the previous, the \texttt{VarArray} is useful but not essential. Let
+consider the following example:
 
 \begin{verbatim}
 #include <plearn/var/Var_all.h>
@@ -934,38 +1033,45 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-  Var x(3,1);
-  Var u(3,1);
+    Var x(3,1);
+    Var u(3,1);
 
-  x->matValue(0,0)=1;
-  x->matValue(1,0)=2;
-  x->matValue(2,0)=3;
-  u->matValue(0,0)=4;
-  u->matValue(1,0)=5;
-  u->matValue(2,0)=6;
+    x->matValue(0,0)=1;
+    x->matValue(1,0)=2;
+    x->matValue(2,0)=3;
+    u->matValue(0,0)=4;
+    u->matValue(1,0)=5;
+    u->matValue(2,0)=6;
 
-  cout<<x->matValue<<endl;
-  cout<<u->matValue<<endl;
+    cout<<x->matValue<<endl;
+    cout<<u->matValue<<endl;
 
-  Var z = dot(x,tanh(x+u));
-    // z is a scalar variable result of the dot product
-    // of x and tanh(y)
+    Var z = dot(x,tanh(x+u));
+        // z is a scalar variable result of the dot product
+        // of x and tanh(y)
 
-  cout<<z->matValue<<endl;
+    cout<<z->matValue<<endl;
 
-  VarArray path = propagationPath(x & u, z);
-  path.fprop();
+    VarArray path = propagationPath(x & u, z);
+    path.fprop();
 
-  cout<<z->matValue<<endl;
-  return 0;
+    cout<<z->matValue<<endl;
+    return 0;
 }
 \end{verbatim}
 
- This example performs exactly the same thing as the previous one. But in this case, we don't have any reference to the previous \texttt{Var y,w} to do \texttt{fprop()}. That's why a \texttt{VarArray} could be essential.
- 
- You can also use  \texttt{y->fprop\_from\_all\_sources()} instead of a \texttt{VarArray} but this reconstruct the path each time and so don't store it. It's not efficient for a multi fprop and it's not possible to back-propagated gradients.
+This example performs exactly the same thing as the previous one. But
+in this case, we don't have any reference to the previous \texttt{Var
+y,w} to do \texttt{fprop()}. That's why a \texttt{VarArray} could be
+essential.
 
- Once we have this path, we can also back-propagated gradients. For example, if we set the gradient of z to 1,
+You can also use \texttt{y->fprop\_from\_all\_sources()} instead of a
+\texttt{VarArray} but this reconstruct the path each time and so don't
+store it. It's not efficient for a multi fprop and it's not possible to
+back-propagated gradients.
+
+Once we have this path, we can also back-propagated gradients. For
+example, if we set the gradient of z to 1,
 
 \begin{verbatim}
 #include <plearn/var/Var_all.h>
@@ -975,39 +1081,39 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-  Var x(3,1);
-  Var u(3,1);
+    Var x(3,1);
+    Var u(3,1);
 
-  x->matValue(0,0)=1;
-  x->matValue(1,0)=2;
-  x->matValue(2,0)=3;
-  u->matValue(0,0)=4;
-  u->matValue(1,0)=5;
-  u->matValue(2,0)=6;
+    x->matValue(0,0)=1;
+    x->matValue(1,0)=2;
+    x->matValue(2,0)=3;
+    u->matValue(0,0)=4;
+    u->matValue(1,0)=5;
+    u->matValue(2,0)=6;
 
-  cout<<x->matValue<<endl;
-  cout<<u->matValue<<endl;
+    cout<<x->matValue<<endl;
+    cout<<u->matValue<<endl;
 
-  Var y = x + u;
-    // y is also a 3x1 matrix
-  Var w = tanh(y);
-  Var z = dot(x,w);
-    // z is a scalar variable result of the dot product
-    // of x and tanh(y)
+    Var y = x + u;
+        // y is also a 3x1 matrix
+    Var w = tanh(y);
+    Var z = dot(x,w);
+        // z is a scalar variable result of the dot product
+        // of x and tanh(y)
 
-  cout<<z->matValue<<endl;
+    cout<<z->matValue<<endl;
 
-  VarArray path = propagationPath(x & u, z);
-  path.fprop();
+    VarArray path = propagationPath(x & u, z);
+    path.fprop();
 
-  cout<<z->matValue<<endl;
+    cout<<z->matValue<<endl;
 
-  z->gradient = 1.0;
-  path.bprop();
-  cout << "dz/dx = " << x->gradient << endl;
-  cout << "dz/du = " << u->gradient << endl;
+    z->gradient = 1.0;
+    path.bprop();
+    cout << "dz/dx = " << x->gradient << endl;
+    cout << "dz/du = " << u->gradient << endl;
 
-  return 0;
+    return 0;
 }
 \end{verbatim}
 
@@ -1020,9 +1126,9 @@ int main(int argc, char** argv)
 You can create Var with several methods.
 The main are:
 \begin{verbatim}
-  Var(int the_length, int width_=1);
-  Var(int the_length, int the_width, const char* name);
-  Var(const Mat& mat);
+    Var(int the_length, int width_=1);
+    Var(int the_length, int the_width, const char* name);
+    Var(const Mat& mat);
 \end{verbatim}
 
 The last one id used as in the following example:
@@ -1033,13 +1139,13 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-  Mat mx(3,1);
-  mx(0,0) = 1;
-  mx(1,0)=2;
-  mx(2,0)=3;
-  Var x(mx);
-  cout<<x->matValue<<endl;
-  return 0;
+    Mat mx(3,1);
+    mx(0,0) = 1;
+    mx(1,0)=2;
+    mx(2,0)=3;
+    Var x(mx);
+    cout<<x->matValue<<endl;
+    return 0;
 }
 \end{verbatim}
 
@@ -1049,13 +1155,15 @@ In the introduction to Var, you saw how to manipulate them.
 
 Don't forget that all is symbolic (it will tricks you).
 
-You can find numerous var in \texttt{PLearn\/plearn\/var}, some are shortcuted by overloaded operators (such as +).
+You can find numerous var in \texttt{PLearn\/plearn\/var}, some are
+shortcuted by overloaded operators (such as +).
 
 \subsection{Loading and saving}
 
 \subsubsection{Only the value}
 
-With the following method, you can load and save THE VALUE of a var (not the symbolic path). 
+With the following method, you can load and save THE VALUE of a var (not
+the symbolic path).
 \begin{verbatim}
 #include <plearn/vmat/VMat.h>
 #include <plearn/db/getDataSet.h>
@@ -1066,26 +1174,26 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-  Var y(3,1);
-  y->matValue(0,0)=1;
-  y->matValue(1,0)=2;
-  y->matValue(2,0)=3;
-  cout<<y->matValue;
+    Var y(3,1);
+    y->matValue(0,0)=1;
+    y->matValue(1,0)=2;
+    y->matValue(2,0)=3;
+    cout<<y->matValue;
 
-  // save into a pmat file
-  y->matValue.save("save.pmat");
+    // save into a pmat file
+    y->matValue.save("save.pmat");
 
-  // save into an amat file
-  VMat vm(y->matValue);
-  vm->saveAMAT("save.amat");
+    // save into an amat file
+    VMat vm(y->matValue);
+    vm->saveAMAT("save.amat");
 
 
-  // load from a file
-  VMat vm2 = getDataSet("save.pmat");
-    // it could have been "save.amat"
-  Var x(vm2.toMat());
-  cout<<x->matValue;
-  return 0;
+    // load from a file
+    VMat vm2 = getDataSet("save.pmat");
+        // it could have been "save.amat"
+    Var x(vm2.toMat());
+    cout<<x->matValue;
+    return 0;
 }
 \end{verbatim}
 
@@ -1103,48 +1211,52 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-  Var x(3,1);
-  Var u(3,1);
+    Var x(3,1);
+    Var u(3,1);
 
-  x->matValue(0,0)=1;
-  x->matValue(1,0)=2;
-  x->matValue(2,0)=3;
-  u->matValue(0,0)=4;
-  u->matValue(1,0)=5;
-  u->matValue(2,0)=6;
+    x->matValue(0,0)=1;
+    x->matValue(1,0)=2;
+    x->matValue(2,0)=3;
+    u->matValue(0,0)=4;
+    u->matValue(1,0)=5;
+    u->matValue(2,0)=6;
 
-  cout<<x->matValue<<endl;
-  cout<<u->matValue<<endl;
+    cout<<x->matValue<<endl;
+    cout<<u->matValue<<endl;
 
-  Var z = dot(x,tanh(x+u));
-    // z is a scalar variable result of the dot product
-    // of x and tanh(y)
+    Var z = dot(x,tanh(x+u));
+        // z is a scalar variable result of the dot product
+        // of x and tanh(y)
 
-  cout<<z->matValue<<endl;
+    cout<<z->matValue<<endl;
 
-  VarArray path = propagationPath(x & u, z);
-  path.fprop();
+    VarArray path = propagationPath(x & u, z);
+    path.fprop();
 
-  cout<<z->matValue<<endl;
+    cout<<z->matValue<<endl;
 
-  save("z.psave",z);
+    save("z.psave",z);
 
-  Object* o = loadObject("z.psave");
+    Object* o = loadObject("z.psave");
 
-  // There is no PP<> nor * here,
-  // because Var is already a PP<Variable>
-  Var p = dynamic_cast<Variable*>(o);
+    // There is no PP<> nor * here,
+    // because Var is already a PP<Variable>
+    Var p = dynamic_cast<Variable*>(o);
 
-  cout<<p->matValue<<endl;
+    cout<<p->matValue<<endl;
 
-  return 0;
+    return 0;
 }
 \end{verbatim}
 
 
 \subsection{Func}
 
-In order to make the usage of Var more friendly, you can use Func. The Func class is mode for those who want to make fprop on different values of Var in an elegant way. The two following examples illustrate this: they do exactly the same thing, but the first one without Func and the second one with.
+In order to make the usage of Var more friendly, you can use Func. The
+Func class is mode for those who want to make fprop on different values
+of Var in an elegant way. The two following examples illustrate this:
+they do exactly the same thing, but the first one without Func and the
+second one with.
 
 \begin{verbatim}
 #include <plearn/var/Var_all.h>
@@ -1154,39 +1266,39 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-  Vec a(3),c(1);
-  Vec da(3),dc(1);
+    Vec a(3),c(1);
+    Vec da(3),dc(1);
 
-  // Without Func
-  Var x(3,1);
-  Var y = dot(x,tanh(x));
-    // y is a scalar variable result of the dot product
-    // of x and tanh(x)
-  VarArray path = propagationPath(x,y);
+    // Without Func
+    Var x(3,1);
+    Var y = dot(x,tanh(x));
+        // y is a scalar variable result of the dot product
+        // of x and tanh(x)
+    VarArray path = propagationPath(x,y);
 
-  a<<"1 2.3 4";
+    a<<"1 2.3 4";
 
-  x->value<<a;
-  path.fprop();
-  c=y->value;
-  cout<<a<<endl;
-  cout<<c<<endl;
+    x->value<<a;
+    path.fprop();
+    c=y->value;
+    cout<<a<<endl;
+    cout<<c<<endl;
 
-  a<<"4 8.3 -12";
-  x->value<<a;
-  path.fprop();
-  c=y->value;
-  cout<<a<<endl;
-  cout<<c<<endl;
+    a<<"4 8.3 -12";
+    x->value<<a;
+    path.fprop();
+    c=y->value;
+    cout<<a<<endl;
+    cout<<c<<endl;
 
-  dc<<2.3;
-  y->gradient<<dc;
-  path.bprop();
-  da<<x->gradient;
-  cout<<dc<<endl;
-  cout<<da<<endl;
+    dc<<2.3;
+    y->gradient<<dc;
+    path.bprop();
+    da<<x->gradient;
+    cout<<dc<<endl;
+    cout<<da<<endl;
 
-  return 0;
+    return 0;
 }
 \end{verbatim}
 
@@ -1200,32 +1312,32 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-  Vec a(3),c(1);
-  Vec da(3),dc(1);
+    Vec a(3),c(1);
+    Vec da(3),dc(1);
 
-  // With Func
-  Var x(3,1);
-  Var result(1,1);
-  Func f(x, result ,dot(x,tanh(x)));
-    // z is a scalar variable result of the dot product
-    // of x and tanh(y)
+    // With Func
+    Var x(3,1);
+    Var result(1,1);
+    Func f(x, result ,dot(x,tanh(x)));
+        // z is a scalar variable result of the dot product
+        // of x and tanh(y)
 
-  a<<"1 2.3 4";
-  f->fprop(a,c);
-  cout<<a<<endl;
-  cout<<c<<endl;
+    a<<"1 2.3 4";
+    f->fprop(a,c);
+    cout<<a<<endl;
+    cout<<c<<endl;
 
-  a<<"4 8.3 -12";
-  f->fprop(a,c);
-  cout<<a<<endl;
-  cout<<c<<endl;
+    a<<"4 8.3 -12";
+    f->fprop(a,c);
+    cout<<a<<endl;
+    cout<<c<<endl;
 
-  dc<<2.3;
-  f->fbprop(a,c,da,dc);
-  cout<<dc<<endl;
-  cout<<da<<endl;
+    dc<<2.3;
+    f->fbprop(a,c,da,dc);
+    cout<<dc<<endl;
+    cout<<da<<endl;
 
-  return 0;
+    return 0;
 }
 \end{verbatim}
 
@@ -1549,12 +1661,26 @@ have the privilege to dig into it).
 \subsection*{Remarks:}
 
 \begin{itemize}
-\item  A classname should always start with an uppercase.
-\item  Methods, functions, and variable names should always start with a lowercase.
-\item  Underscores(\_) should never be used in class names or method names.
-\item  Typical methods that return a bool status should begin with is or has. Ex: {\tt isEmpty()} {\tt isNull()} {\tt hasChildren()}.
-\item  In case you want to provide a read-only accessor method to a protected or private member variable, use {\tt varname\_} for the member variable and {\tt varname()} for the accessor method.
-\item  The arguments of a constructor often carry initial values for member variables. We usually name the argument in the constructor `the\_varname' so that it doesn't clash with the targetted member variable (which is just `varname')
+
+\item A classname should always start with an uppercase.
+
+\item Methods, functions, and variable names should always start with a
+lowercase.
+
+\item Underscores(\_) should never be used in class names or method
+names.
+
+\item Typical methods that return a bool status should begin with is or
+has. Ex: {\tt isEmpty()} {\tt isNull()} {\tt hasChildren()}.
+
+\item In case you want to provide a read-only accessor method to a
+protected or private member variable, use {\tt varname\_} for the member
+variable and {\tt varname()} for the accessor method.
+
+\item The arguments of a constructor often carry initial values for
+member variables. We usually name the argument in the constructor
+`the\_varname' so that it doesn't clash with the targetted member
+variable (which is just `varname')
 
 \end{itemize}
 
@@ -1622,7 +1748,7 @@ somebody stumbled upon the same problem.
 
 \begin{itemize}
 
-\item {\bf typical error msg } \\ 
+\item {\bf typical error msg } \\
 explanation and fix.
 
 \end{itemize}
@@ -1663,27 +1789,41 @@ PLearnException, which got caught in the very external try/catch of your
 main program, which printed it out (you main program {\em does} catch
 PLearn exceptions and report them, doesn't it???).
 
-Tracing the problem is easy: 
+Tracing the problem is easy:
 \begin{itemize}
-\item Launch your favorite debugger ({\tt gdb}) from within your favorite 
-development environment ({\tt emacs}). 
+
+\item Launch your favorite debugger ({\tt gdb}) from within your
+favorite development environment ({\tt emacs}).
+
 \item Put a breakpoint in the {\tt errormsg} function by typing: \\
-\verb!br 'PLearn::errormsg(!{\it TAB} \\ 
-Pressing the {\it TAB} key will complete the
-signature of the function for you. Note that the single quote at the beginning is important for this to work.
+\verb!br 'PLearn::errormsg(!{\it TAB} \\
+Pressing the {\it TAB} key will complete the signature of the function
+for you. Note that the single quote at the beginning is important for
+this to work.
+
 \item {\tt run} your program until it reaches the breakpoint.
-\item trace {\tt up} the call stack and figure out what and why it happens.
+
+\item trace {\tt up} the call stack and figure out what and why it
+happens.
+
 \end{itemize}
 
 {\bf Hints for using gdb:} \\
-{\tt gdb} is always at quite a lag behind, playing catch-up with the latest compiler. Sot it {\em has} problems.
-Here are a few hints for working with it, or in spite of it\ldots
+{\tt gdb} is always at quite a lag behind, playing catch-up with the
+latest compiler. Sot it {\em has} problems.  Here are a few hints for
+working with it, or in spite of it\ldots
 \begin{itemize}
-\item printing a {\tt std::string} doesn't work. Cast it to a {\tt char*} first, as in \verb!p (char *) my_string!
-\item {\tt gdb} often seems lost when you attempt to examine the insides of a complex
-  object, replying that it can't find info on that class.  In this case,
-  unfortunately, you'll have to insert instructions in the code to print the desired debug info
-  (with \verb!cerr << ...!), recompile and rerun gdb.
+
+\item printing a {\tt std::string} doesn't work. Cast it to a {\tt
+  char*} first, as in \verb!p (char *) my_string!, or call
+  \verb!p my_string.c_str()!
+
+\item {\tt gdb} often seems lost when you attempt to examine the insides
+  of a complex object, replying that it can't find info on that class.  In
+  this case, unfortunately, you'll have to insert instructions in the code
+  to print the desired debug info (with \verb!cerr << ...!), recompile and
+  rerun gdb.
+
 \item If you want to see an object on which you have a {\tt PP} smart
   pointer (or similar type), you can access the raw pointer inside (it's
   called {\tt ptr}!), for ex: \verb!p my_var.ptr->value.length_!
