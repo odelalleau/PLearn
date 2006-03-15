@@ -59,7 +59,7 @@
 
 namespace PLearn {
 using namespace std;
-  
+
 class ProgressBar;
 
 //! Base class for pb plugins
@@ -122,10 +122,10 @@ public:
     ProgressBar(string _title, unsigned long the_maxpos);
     ProgressBar(ostream& _out,string _title, unsigned long the_maxpos);
     ProgressBar(PStream& _out,string _title, unsigned long the_maxpos);
-  
+
     // moves the progressbar up to position newpos
     void operator()(unsigned long newpos){plugin->update(this,newpos);}
- 
+
     void update(unsigned long newpos){plugin->update(this,newpos);}
 
     // this function assumes plugin is always a valid object (it is created statically in the .cc)
@@ -134,7 +134,7 @@ public:
 
     // Completes and removes the progressBar 
     void close();
-  
+
     // calls close() if not already done
     ~ProgressBar();
 private:

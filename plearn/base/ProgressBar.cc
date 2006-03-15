@@ -45,6 +45,7 @@
 //#include <iomanip>
 #include "ProgressBar.h"
 #include "stringutils.h"
+#include <math.h>
 
 #if USING_MPI
 #include <plearn/sys/PLMPI.h>
@@ -57,10 +58,10 @@ using namespace std;
 PP<ProgressBarPlugin> ProgressBar::plugin; // = new TextProgressBarPlugin(cerr);
 
 PP<ProgressBarPlugin> ProgressBar::getCurrentPlugin() 
-{ 
+{
     if (plugin == NULL)
         plugin = new TextProgressBarPlugin(cerr);
-    return plugin; 
+    return plugin;
 }
 
 ProgressBar::ProgressBar(string _title, unsigned long the_maxpos)
@@ -68,7 +69,7 @@ ProgressBar::ProgressBar(string _title, unsigned long the_maxpos)
 {
     if (plugin == NULL)
         plugin = new TextProgressBarPlugin(cerr);
-    
+
     plugin->addProgressBar(this);
 }
 
@@ -89,20 +90,20 @@ ProgressBar::ProgressBar(PStream& _out, string _title, unsigned long the_maxpos)
     plugin->addProgressBar(this);
 }
 
-ProgressBar::~ProgressBar() 
+ProgressBar::~ProgressBar()
 {
     close();
 }
 
 void ProgressBar::close()
-{ 
+{
     if(closed)
         return;
     closed=true;
     if(currentpos<maxpos)
-        operator()(maxpos); 
+        operator()(maxpos);
     plugin->killProgressBar(this);
-}              
+}
 
 
 int TextProgressBarPlugin::width = 100;
@@ -150,8 +151,8 @@ void TextProgressBarPlugin::update(ProgressBar * pb,unsigned long newpos)
 
         if(!pb->maxpos || newpos>pb->maxpos)
             return;
-        int ndots = int(newpos / (double(pb->maxpos) / width)) -
-            int(pb->currentpos / (double(pb->maxpos) / width));
+        int ndots = int(round( newpos / (double(pb->maxpos) / width) )) -
+            int(round( pb->currentpos / (double(pb->maxpos) / width) ));
         if (ndots < 0)
             PLERROR("In TextProgressBarPlugin::update - Trying to plot an infinite number of dots");
         while(ndots--)
