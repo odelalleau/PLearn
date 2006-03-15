@@ -58,6 +58,9 @@ private:
 
 protected:
 
+    // TODO Document (H3^-1 as in my tex file, for each Gaussian)
+    TVec<Mat> H3_inverse;
+
     //! Used to measure the total training time.
     PP<PTimer> ptimer;
 

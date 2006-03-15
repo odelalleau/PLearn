@@ -161,7 +161,9 @@ void GaussMix::declareOptions(OptionList& ol)
     declareOption(ol, "impute_missing", &GaussMix::impute_missing,
                                         OptionBase::buildoption,
         "If true, missing values will be imputed their conditional mean when\n"
-        "computing the covariance matrix (requires 'efficient_missing').");
+        "computing the covariance matrix. Note that even if the current\n"
+        "default value of this option is false, the 'true' EM algorithm\n"
+        "requires it to be set to true.");
 
     declareOption(ol, "kmeans_iterations", &GaussMix::kmeans_iterations,
                                            OptionBase::buildoption,
@@ -319,12 +321,6 @@ void GaussMix::build_()
     // Make GaussMix-specific operations for conditional distributions.
     GaussMix::setPredictorPredictedSizes(predictor_size, predicted_size, false);
     GaussMix::setPredictor(predictor_part, false);
-
-    // Safety check: the 'impute_missing' method is only available in
-    // conjunction with the 'efficient_missing' method.
-    if (impute_missing) {
-        assert( efficient_missing );
-    }
 }
 
 ///////////////////
@@ -357,6 +353,7 @@ void GaussMix::computeMeansAndCovariances() {
         bool use_impute_missing = impute_missing && stage > 0;
         VMat input_data = use_impute_missing ? imputed_missing[j]
                                              : train_set;
+
         weighted_train_set = new ConcatColumnsVMatrix(
             new SubVMatrix(input_data, 0, 0, nsamples, D), weights);
         weighted_train_set->defineSizes(D, 0, 1);
@@ -383,7 +380,10 @@ void GaussMix::computeMeansAndCovariances() {
                 // Need to add the extra contributions.
                 if (sum_of_posteriors[j] > 0) {
                     error_covariance[j] /= sum_of_posteriors[j];
+                    assert( covariance.isSymmetric() );
+                    assert( error_covariance[j].isSymmetric() );
                     covariance += error_covariance[j];
+                    assert( covariance.isSymmetric() );
                 }
             }
             if (center_j.hasMissing()) {
@@ -616,26 +616,26 @@ void GaussMix::addToCovariance(const Vec& y, int j,
         // source and destination.
         static TVec<int> dim_common;
         static TVec<int> dim_src_only;
-        static TVec<int> dim_reordered;
+        static TVec<int> dim_reordered_src;
         dim_common.resize(0);
         dim_src_only.resize(0);
-        dim_reordered.resize(n);
+        dim_reordered_src.resize(n);
         for (int i = 0; i < n; i++) {
             if (is_dst[ind_src[i]])
                 dim_common.append(i);
             else
                 dim_src_only.append(i);
         }
-        dim_reordered.subVec(0, dim_common.length()) << dim_common;
-        dim_reordered.subVec(dim_common.length(), dim_src_only.length())
+        dim_reordered_src.subVec(0, dim_common.length()) << dim_common;
+        dim_reordered_src.subVec(dim_common.length(), dim_src_only.length())
             << dim_src_only;
         static Mat inv_src;
         static Mat tmp;
-        tmp.resize(src.length(), dim_reordered.length());
+        tmp.resize(src.length(), dim_reordered_src.length());
         // TODO Not efficient! Optimize!
-        selectColumns(src, dim_reordered, tmp);
+        selectColumns(src, dim_reordered_src, tmp);
         inv_src.resize(n, n);
-        selectRows(tmp, dim_reordered, inv_src);
+        selectRows(tmp, dim_reordered_src, inv_src);
         // Remove the dimensions that are not present in the destination
         // matrix.
         int n_common = dim_common.length();
@@ -699,6 +699,11 @@ void GaussMix::addToCovariance(const Vec& y, int j,
             if (!is_src[ind_dst[i]])
                 dim_dst_only.append(ind_dst[i]);
         int n_dst_only = dim_dst_only.length();
+        // Reorder properly the indices in 'ind_dst'.
+        for (int i = 0; i < n_common; i++)
+            ind_dst[i] = ind_src[dim_common[i]];
+        for (int i = 0; i < n_dst_only; i++)
+            ind_dst[i + n_common] = dim_dst_only[i];
         // Replace dimensions in 'src' by dimensions in the full matrix.
         for (int i = 0; i < dim_common.length(); i++)
             dim_common[i] = ind_src[dim_common[i]];
@@ -741,7 +746,8 @@ void GaussMix::addToCovariance(const Vec& y, int j,
         }
         // Ensure 'dst' is symmetric, since we only filled the top-right part.
         fillItSymmetric(dst);
-#if 0
+#if 0   
+        // DO NOT UNCOMMENT THIS CODE, AS IT MODIFIES ind_inv_tot.
         // Verify that the inverse was correctly computed.
         
         ind_inv_tot.subVec(0, n_common) << dim_common;
@@ -751,11 +757,11 @@ void GaussMix::addToCovariance(const Vec& y, int j,
         for (int k = 0; k < ind_inv_tot.length(); k++)
             for (int j = 0; j < ind_inv_tot.length(); j++)
                 to_inverse(k,j) = full(ind_inv_tot[k], ind_inv_tot[j]);
-        assert( to_inverse.isSymmetric() );
-        VMat to_inverse_vm(to_inverse);
+        assert( to_inverse.isSymmetric(true, true) );
+        // VMat to_inverse_vm(to_inverse);
         string name = "/u/delallea/tmp/to_inverse_" +
             tostring(current_training_sample) + ".amat";
-        to_inverse_vm->saveAMAT(name, false, true);
+        // to_inverse_vm->saveAMAT(name, false, true);
         Mat inverse(to_inverse.length(), to_inverse.width());
         matInvert(to_inverse, inverse);
         for (int i = 0; i < inverse.length(); i++)
@@ -767,14 +773,14 @@ void GaussMix::addToCovariance(const Vec& y, int j,
     }
 
     Mat* the_H_inv = same_covariance ? &H_inv_tpl : &H_inv_tot;
+    TVec<int>* the_ind_inv = same_covariance? &ind_inv_tpl : &ind_inv_tot;
 
     // Add this matrix (weighted by the coefficient 'post') to the given 'cov'
     // full matrix.
-    // TODO This may be wrong (to check).
-    for (int i = 0; i < ind_inv_tot.length(); i++) {
-        int ind_inv_tot_i = ind_inv_tot[i];
-        for (int j = 0; j < ind_inv_tot.length(); j++)
-            cov(ind_inv_tot_i, ind_inv_tot[j]) += post * (*the_H_inv)(i, j);
+    for (int i = 0; i < the_ind_inv->length(); i++) {
+        int the_ind_inv_i = (*the_ind_inv)[i];
+        for (int j = 0; j < the_ind_inv->length(); j++)
+            cov(the_ind_inv_i, (*the_ind_inv)[j]) += post * (*the_H_inv)(i, j);
     }
 
     bool cannot_free =
@@ -792,8 +798,8 @@ void GaussMix::addToCovariance(const Vec& y, int j,
         M.resize(H_inv_tot.length(), H_inv_tot.width());
         M << H_inv_tot;
         TVec<int>& ind = indices_inv_queue[queue_index];
-        ind.resize(ind_inv_tot.length());
-        ind << ind_inv_tot;
+        ind.resize(the_ind_inv->length());
+        ind << *the_ind_inv;
     }
 
 }
@@ -876,10 +882,17 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
             assert( !is_predictor );
             assert( y.length() == n_predicted );
 
+            // When not in training mode, 'previous_training_sample' is set to
+            // -2, and 'current_training_sample' is set to -1.
+            // In such a case, it is not necessary to do all computations.
+            // TODO It would be good to have one single flag for both lines
+            // below. Maybe current_training_sample != -1 would be enough?
             bool eff_missing = efficient_missing &&
                                (previous_training_sample != -2);
+            bool imp_missing = impute_missing &&
+                               (current_training_sample != -1);
 
-            if (y.hasMissing() || eff_missing) {
+            if (y.hasMissing() || eff_missing || imp_missing) {
                 // TODO This will probably make the 'efficient_missing' method
                 // perform slower on data with no missing value. This should be
                 // optimized.
@@ -1274,6 +1287,52 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     }
                     // Release pointer to 'eigenvecs_missing'.
                     eigenvecs = dummy_mat;
+
+                    if (impute_missing && current_training_sample >= 0) {
+                        // We need to store the conditional expectation of the
+                        // sample missing values.
+                        // For this we compute H3^-1, since this expectation is
+                        // equal to mu_y - H3^-1 H2 (x - mu_x).
+                        static Mat H3;
+                        static Mat H2;
+                        Mat& H3_inv = H3_inverse[j];
+                        int n_missing = coord_missing.length();
+                        H3.setMod(n_missing);
+                        H3.resize(n_missing, n_missing);
+                        H3_inv.resize(n_missing, n_missing);
+                        for (int i = 0; i < n_missing; i++)
+                            for (int k = 0; k < n_missing; k++)
+                                H3(i,k) = (*inv_cov_y)(coord_missing[i],
+                                        coord_missing[k]);
+                        assert( H3.isSymmetric(true, true) );
+                        matInvert(H3, H3_inv);
+                        assert( H3_inv.isSymmetric(false, true) );
+                        fillItSymmetric(H3_inv);
+
+                        H2.resize(n_missing, n_non_missing);
+                        for (int i = 0; i < n_missing; i++)
+                            for (int k = 0; k < n_non_missing; k++)
+                                H2(i,k) = (*inv_cov_y)(coord_missing[i],
+                                                       non_missing[k]);
+                        static Vec H2_y_centered;
+                        H2_y_centered.resize(n_missing);
+                        product(H2_y_centered, H2, y_centered);
+                        static Vec cond_mean;
+                        cond_mean.resize(n_missing);
+                        product(cond_mean, H3_inv, H2_y_centered);
+                        static Vec full_vec;
+                        // TODO Right now, we store the full data vector. It
+                        // may be more efficient to only store the missing
+                        // values.
+                        full_vec.resize(D);
+                        full_vec << y;
+                        for (int i = 0; i < n_missing; i++)
+                            full_vec[coord_missing[i]] =
+                                center_j[coord_missing[i]] - cond_mean[i];
+                        imputed_missing[j]->putRow(current_training_sample,
+                                                   full_vec);
+                    }
+                    
                     }
             //}
             } else {
@@ -1569,11 +1628,11 @@ void GaussMix::computePosteriors() {
         sum_of_posteriors.fill(0);
     }
     log_likelihood_post.resize(L);
+    if (impute_missing)
+        // Clear the additional 'error_covariance' matrix.
+        for (int j = 0; j < L; j++)
+            error_covariance[j].fill(0);
     if (efficient_missing) {
-        if (impute_missing)
-            // Clear the additional 'error_covariance' matrix.
-            for (int j = 0; j < L; j++)
-                error_covariance[j].fill(0);
         // Loop over all clusters.
         for (int k = 0; k < missing_template.length(); k++) {
             const TVec<int>& samples_clust = spanning_path[k];
@@ -1612,11 +1671,8 @@ void GaussMix::computePosteriors() {
             if (!impute_missing)
                 continue;
             // We should now be ready to impute missing values.
-            static Vec imputed_vec;
-            imputed_vec.resize(D);
             for (int i = 0; i < samples_clust.length(); i++) {
                 int s = samples_clust[i];
-                imputed_vec.fill(0);
                 for (int j = 0; j < L; j++)
                     // TODO We are most likely wasting memory here.
                     imputed_missing[j]->putRow(s, clust_imputed_missing[j](i));
@@ -1650,10 +1706,34 @@ void GaussMix::computePosteriors() {
         for (int j = 0; j < L; j++)
             log_likelihood_post[j] += pl_log(alpha[j]);
         real log_sum_likelihood = logadd(log_likelihood_post);
-        for (int j = 0; j < L; j++)
+        for (int j = 0; j < L; j++) {
             // Compute the posterior
             // P(j | s_i) = P(s_i | j) * alpha_i / (sum_i ")
-            posteriors(i,j) = exp(log_likelihood_post[j] - log_sum_likelihood);
+            real post = exp(log_likelihood_post[j] - log_sum_likelihood);
+            posteriors(i,j) = post;
+            if (impute_missing)
+                sum_of_posteriors[j] += post;
+        }
+        // Add contribution to the covariance matrix if needed.
+        if (impute_missing) {
+            for (int j = 0; j < L; j++) {
+                real post = posteriors(i,j);
+                int k_count = 0;
+                for (int k = 0; k < sample_row.length(); k++)
+                    if (is_missing(sample_row[k])) {
+                        int l_count = 0;
+                        for (int l = 0; l < sample_row.length(); l++)
+                            if (is_missing(sample_row[l])) {
+                                error_covariance[j](k, l) +=
+                                    post * H3_inverse[j](k_count, l_count);
+                                l_count++;
+                            }
+                        k_count++;
+                    }
+            }
+            int dummy_test = 0;
+            dummy_test++;
+        }
     }
     }
 }
@@ -2018,6 +2098,7 @@ void GaussMix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     deepCopyField(log_likelihood_post,      copies);
     deepCopyField(sample_row,               copies);
+    deepCopyField(H3_inverse,               copies);
     deepCopyField(ptimer,                   copies);
     deepCopyField(missing_patterns,         copies);
     deepCopyField(missing_template,         copies);
@@ -2229,12 +2310,12 @@ void GaussMix::resizeDataBeforeTraining() {
     alpha.resize(L);
     clust_imputed_missing.resize(0);
     eigenvectors.resize(0);
+    H3_inverse.resize(0);
     imputed_missing.resize(0);
     mean_training.resize(0);
     no_missing_change.resize(0);
     sigma.resize(0);
     stddev_training.resize(0);
-
 
     center.resize(L, D);
     covariance.resize(0, 0);
@@ -2264,6 +2345,7 @@ void GaussMix::resizeDataBeforeTraining() {
         for (int i = 0; i < eigenvectors.length(); i++)
             eigenvectors[i].resize(n_eigen_computed, D);
         if (impute_missing) {
+            H3_inverse.resize(L);
             error_covariance.resize(L);
             imputed_missing.resize(L);
             for (int j = 0; j < L; j++) {
@@ -2277,7 +2359,8 @@ void GaussMix::resizeDataBeforeTraining() {
             // TODO May be useful to handle other types of VMats for large
             // datasets.
             // TODO Move outside of this method.
-            clust_imputed_missing.resize(L);
+            if (efficient_missing)
+                clust_imputed_missing.resize(L);
         }
         if (efficient_missing)
             no_missing_change.resize(nsamples);
