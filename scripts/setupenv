@@ -9,7 +9,7 @@ if [ ! -f plearn/base/PP.h ]; then
 fi
 
 PLEARN_DIR="`pwd`"
-PATH="$PLEARN_DIR/scripts:$PATH"
+PATH="$PLEARN_DIR/scripts:$PLEARN_DIR/commands:$PATH"
 PYTHONPATH="$PLEARN_DIR/python_modules"
 
 export PATH
