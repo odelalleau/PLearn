@@ -1,7 +1,58 @@
 
                       Contrastive divergence multi-layer RBMs
 
-Energy functions:
+
+Boltzmann machines:
+
+X (may be) observed, H is (always) hidden r.v.
+Their joint is given by the Boltzmann distribution
+associated with an energy function energy(x,h):
+  P(X=x,H=h) = exp(-energy(x,h)) / Z
+where Z is the appropriate normalization constant:
+  Z = sum_{x,h} exp(-energy(x,h)).
+
+In ordinary Boltzmann machines, the energy function is a 
+quadratic polynomial. Let z=(x,h), then
+  energy(z) = sum_i b_i z_i    +    sum_{ij} w_{ij} z_i z_j
+where z_i \in {0,1}. There is no need for a constant term 
+since it would cancel out in Z.
+
+If X=x is observed while H remains hidden, the likelihood
+involves a sum over all configurations of H:
+
+  P(X=x) = sum_h P(X=x,H=h) = sum_h exp(-energy(x,h)) / Z
+
+Unfortunately, the exact gradient of log P(x) wrt b or w
+is intractable since it involves two intractable sums
+(the one over h for the numerator of the above, and the
+one over h and x, for Z, the denominator).
+
+The gradient can be written as a sum of the corresponding two terms:
+
+  d(-log P(x))/dtheta =
+  sum_h      P(H=h|X=x) d_energy(h,x)/dtheta          [this is the POSITIVE phase contribution]
+- sum_{h,x}  P(H=h,X=x) d_energy(h,x)/dtheta          [this is the NEGATIVE phase contribution]
+
+The derivation of this result is easy (we do a similar derivation
+for the restricted Boltzmann machine below).
+
+For a reason that I do not remember exactly, the w matrix
+is normally constrained to be symmetric. I believe it has
+to do with the MCMC scheme normally used for sampling
+from P(X) or from P(H|X). However, we will not be using
+that scheme, so I do not think that this restriction
+is important (to be verified somehow).
+
+Restricted Boltzmann machines:
+
+If we set the weight between h_i and h_j to 0 
+and the weight between x_i and x_j to 0, we obtain a RBM.
+The advantage of an RBM is that all the H_i's become independent
+when conditioning on X, and (symmetrically) all the X_i become independent
+when conditioning on H.
+
+
+Energy functions for Restricted Boltzmann Machines:
 (Note that w_{ij} = w_{ji})
 
  * energy term for binomial unit i with value v_i and inputs u_j, parameters (b_i, w_{i.}): 
