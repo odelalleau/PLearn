@@ -3004,11 +3004,12 @@ void GaussMix::train()
                 for (int tpl = 0; tpl < missing_template.length(); tpl++) {
                 // Find minimum spanning tree of the missing patterns' graph.
                 TVec<Edge> edges;
-                TVec<int> weights;
                 ProgressBar* pb = 0;
                 TVec<int> cluster_tpl = clusters[tpl];
                 int n = cluster_tpl.length();
                 n = (n * (n - 1)) / 2;
+                TVec<int> weights(n);
+                weights.resize(0);
                 if (report_progress && verbosity >= 2)
                     pb = new ProgressBar("Building graph of missing patterns",
                                          n);
@@ -3051,8 +3052,8 @@ void GaussMix::train()
                         edges_ptr,
                         edges_ptr + edges.length(),
                         weights.data(), cluster_tpl.length());
-                boost::property_map<DistGraph, boost::edge_weight_t>::type
-                    weightmap = boost::get(boost::edge_weight, dist_graph);
+                // boost::property_map<DistGraph, boost::edge_weight_t>::type
+                //    weightmap = boost::get(boost::edge_weight, dist_graph);
                 typedef vector < boost::graph_traits <
                                     DistGraph >::vertex_descriptor > Predec;
                 Predec pred(boost::num_vertices(dist_graph));
