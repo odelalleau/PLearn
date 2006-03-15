@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Sets up a PLearn build environment, then runs the command supplied on the
+# command-line inside that environment.
+
+if [ ! -f plearn/base/PP.h ]; then
+    echo "The directory '`pwd`' does not look like a Plearn checkout home dir. Bailing out."
+    exit 150
+fi
+
+PLEARN_DIR="`pwd`"
+PATH="$PLEARN_DIR/scripts:$PATH"
+PYTHONPATH="$PLEARN_DIR/python_modules"
+
+export PATH
+export PYTHONPATH
+
+exec "$@"
