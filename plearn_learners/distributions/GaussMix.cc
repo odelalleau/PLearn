@@ -88,6 +88,7 @@ GaussMix::GaussMix():
     nstages = 10;
     current_training_sample = -1;
     previous_training_sample = -2; // Only use efficient_missing in training.
+    ptimer->newTimer("init_time");
     ptimer->newTimer("training_time");
 }
 
@@ -2633,8 +2634,10 @@ void GaussMix::getInitialWeightsFrom(const VMat& vmat)
 TVec<string> GaussMix::getTrainCostNames() const
 {
     static TVec<string> costs;
-    if (costs.isEmpty())
+    if (costs.isEmpty()) {
+        costs.append("init_time");
         costs.append("training_time");
+    }
     return costs;
 }
 
@@ -2798,6 +2801,7 @@ void GaussMix::train()
 
     // Initialization before training.
     if (stage == 0) {
+        ptimer->startTimer("init_time");
 
         // Precompute nodes of the missing graph.
         typedef boost::adjacency_list<boost::listS, boost::vecS,
@@ -3422,6 +3426,7 @@ void GaussMix::train()
             covar_vm->saveAMAT(filename, false, true);
         }
         */
+        ptimer->stopTimer("init_time");
     }
 
     ProgressBar* pb = 0;
@@ -3470,8 +3475,9 @@ void GaussMix::train()
     */
     ptimer->stopTimer("training_time");
     static Vec train_stats_update;
-    train_stats_update.resize(1);
-    train_stats_update[0] = ptimer->getTimer("training_time");
+    train_stats_update.resize(2);
+    train_stats_update[0] = ptimer->getTimer("init_time");
+    train_stats_update[1] = ptimer->getTimer("training_time");
     train_stats->forget(); // Forget potential old total training time.
     train_stats->update(train_stats_update);
 }
