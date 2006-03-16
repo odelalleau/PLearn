@@ -8,10 +8,11 @@ if [ ! -f plearn/base/PP.h ]; then
     exit 150
 fi
 
-PLEARN_DIR="`pwd`"
-PATH="$PLEARN_DIR/scripts:$PLEARN_DIR/commands:$PATH"
-PYTHONPATH="$PLEARN_DIR/python_modules"
+PLEARNDIR="`pwd`"
+PATH="$PLEARNDIR/scripts:$PLEARN_DIR/commands:$PATH"
+PYTHONPATH="$PLEARNDIR/python_modules"
 
+export PLEARNDIR
 export PATH
 export PYTHONPATH
 
