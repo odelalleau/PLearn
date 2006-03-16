@@ -36,18 +36,22 @@
  * $Id$
  ******************************************************* */
 
+// From C++ stdlib
+#include <exception>
+
+// From PLearn
 #include "plearn_main.h"
 #include "PLearnCommandRegistry.h"
+#include <plearn/base/ProgressBar.h>
 #include <plearn/base/pl_repository_revision.h>
 #include <plearn/base/stringutils.h>
-#include <plearn/math/random.h>
-#include <plearn/sys/PLMPI.h>
-#include <plearn/io/pl_log.h>
-#include <plearn/misc/Calendar.h>
 #include <plearn/db/getDataSet.h>
+#include <plearn/io/pl_log.h>
+#include <plearn/math/random.h>
+#include <plearn/misc/Calendar.h>
 #include <plearn/misc/PLearnService.h>
+#include <plearn/sys/PLMPI.h>
 #include <plearn/vmat/VMat.h>
-#include <exception>
 
 namespace PLearn {
 using namespace std;
@@ -111,7 +115,10 @@ static string global_options( vector<string>& command_line,
 
     // Note that the findpos function (stringutils.h) returns -1 if the
     // option is not found.
-    int no_version_pos       = findpos( command_line, "--no-version" );  
+    int no_version_pos       = findpos( command_line, "--no-version" );
+
+    // If we don't want no progress bars
+    int no_progress_bars     = findpos( command_line, "--no-progress" );
 
     // Note that the verbosity_value_pos IS NOT EQUAL TO verbosity_pos+1 if
     // (verbosity_pos == -1)!!!
@@ -181,6 +188,7 @@ static string global_options( vector<string>& command_line,
     for ( int c=0; c < argc; c++ )
         // Neglecting to copy options
         if ( c != no_version_pos             &&
+             c != no_progress_bars           &&
              c != verbosity_pos              &&
              c != verbosity_value_pos        &&
              c != enable_logging_pos         &&
@@ -208,6 +216,9 @@ static string global_options( vector<string>& command_line,
     PL_Log::instance().verbosity( verbosity_value );
     if (no_version_pos == -1)
         output_version( major_version, minor_version, fixlevel );
+
+    if (no_progress_bars != -1)
+        ProgressBar::setPlugin(new NullProgressBarPlugin);
 
     if (enabled_modules_pos != -1)
         cerr << "Logging enabled for modules: "
