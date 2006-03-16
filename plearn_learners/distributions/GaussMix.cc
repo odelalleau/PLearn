@@ -3003,13 +3003,14 @@ void GaussMix::train()
                 spanning_can_free.resize(missing_template.length());
                 for (int tpl = 0; tpl < missing_template.length(); tpl++) {
                 // Find minimum spanning tree of the missing patterns' graph.
-                TVec<Edge> edges;
                 ProgressBar* pb = 0;
                 TVec<int> cluster_tpl = clusters[tpl];
                 int n = cluster_tpl.length();
                 n = (n * (n - 1)) / 2;
                 TVec<int> weights(n);
+                TVec<Edge> edges(n);
                 weights.resize(0);
+                edges.resize(0);
                 if (report_progress && verbosity >= 2)
                     pb = new ProgressBar("Building graph of missing patterns",
                                          n);
@@ -3094,6 +3095,10 @@ void GaussMix::train()
                     out << w << " ";
                 }
                 */
+                // Free memory used by weights and edges.
+                weights = TVec<int>();
+                edges = TVec<Edge>();
+
                 }
 
                 // Compute list of nodes, from top to bottom.
