@@ -109,7 +109,7 @@ def PL_default_repository_revision():
                                            os.path.join( plearndir, "plearn", "base",
                                                   "pl_repository_revision.cc" ))
 
-from plearn.pytest.configs import pytest_defines
+from plearn.pytest.core import pytest_defines
 optionalLibrary( name = 'pytest_defines',
                  triggers = 'pytest/defines.h',
                  includedirs = [ os.path.join(ppath('HOME'), '.plearn') ], 

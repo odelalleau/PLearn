@@ -40,6 +40,8 @@
 
 /*! \file PPath.cc */
 
+// #define PL_LOG_MODULE_NAME "PPath"
+
 #include <ctype.h>
 #include <mozilla/nspr/prenv.h>
 
@@ -366,6 +368,13 @@ extern "C" void cygwin_conv_to_win32_path(const char *path,
 //////////////////////////////////////////////  
 // PPath methods
 
+PPath::PPath(const char* path)
+    : _protocol("")
+{
+    // MODULE_LOG << "PPath(const char* path = " << path << ")" << endl;
+    operator=( PPath(string(path)) );
+}
+
 // The canonical path always contains '/' delimiters to seperate
 // subdirectories. Under windows, the internal representation will
 // however keep the '\' version. Under Unix, the following simply copy the
@@ -373,6 +382,8 @@ extern "C" void cygwin_conv_to_win32_path(const char *path,
 PPath::PPath(const string& path_)
     : _protocol("")
 {
+    // MODULE_LOG << "PPath(const string& path_ = " << path_ << ")" << endl;
+    
     // Empty path.
     if ( path_.empty() ) 
         return;
@@ -471,10 +482,17 @@ void PPath::expandMetaprotocols()
     {
         string meta = substr(0, endmeta);
         map<string, PPath>::const_iterator it = metaprotocolToMetapath().find(meta);
+
+        PPath metapath;
         if ( it != metaprotocolToMetapath().end() )
+            metapath = it->second;
+        else
+            metapath = getenv(meta);            
+        
+        if ( metapath != "" )
         {      
             string after_colon = endmeta == length()-1 ? "" : substr(endmeta+1);
-            *this = it->second / after_colon;
+            *this = metapath / after_colon;
         }
     }
 }
@@ -851,6 +869,8 @@ PPath PPath::operator/(const PPath& other) const
 ////////////////
 PPath& PPath::operator/=(const PPath& other)
 {
+    // MODULE_LOG << this->c_str() << " /= " << other << endl;
+    
     if (other.isAbsPath())
         PLERROR("In PPath::operator/= - The concatenated path (%s) cannot be absolute",
                 other.c_str());
@@ -871,13 +891,18 @@ PPath& PPath::operator/=(const PPath& other)
 ////////////////
 bool PPath::operator== (const string& other) const
 {
+    // MODULE_LOG << this->c_str() << " == " << other << " (string)"<< endl;    
     if ( other.empty() )
         return isEmpty();
+    if ( isEmpty() )
+        return false; // since 'other' is not
     return operator==( PPath(other) );
 }
 
 bool PPath::operator==(const PPath& other) const
 {
+    // MODULE_LOG << this->c_str() << " == " << other << " (PPath)"<< endl;
+    
     // If they are stricly equal there is no need to go further.
     // Otherwise they must point to the same absolute file or directory.
     // Note that the absolute() method already removes the trailing slash.

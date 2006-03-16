@@ -68,15 +68,16 @@ def report_unique_paths(unique_paths, alterpath, prefix=''):
 
     return report
 
-def pldiff(former, later, precision=1e-06, plearn_exec=None):
+__DUMMY__VALUE__ = "## __DUMMY__VALUE__ ##"
+def pldiff(former, later, precision=1e-06, plearn_exec=__DUMMY__VALUE__):
     """Compare to PLearn-compliant files or directory.
 
     TODO:
         1) .dmat directory should be managed intelligently
     """
     default_plearn_exec = _plearn_exec
-    if plearn_exec is not None:
-        set_plearn_exec(plearn_exec)    
+    if plearn_exec != __DUMMY__VALUE__:
+        set_plearn_exec(plearn_exec)
     
     report = []
     common_files = []
@@ -103,10 +104,16 @@ def pldiff(former, later, precision=1e-06, plearn_exec=None):
             continue # Skipping metainfos files
 
         elif former_file.endswith('.psave'):
-            diff_report = psavediff(former_file, later_file, precision)
+            if plearn_exec is None:
+                diff_report.append("Warning: %s encountered while plearn-exec is None\n"%former_file)
+            else:
+                diff_report.extend(psavediff(former_file, later_file, precision))
 
         elif toolkit.isvmat(former_file):
-            diff_report = vmatdiff(former_file, later_file, precision)
+            if plearn_exec is None:
+                diff_report.append("Warning: %s encountered while plearn-exec is None\n"%former_file)
+            else:
+                diff_report = vmatdiff(former_file, later_file, precision)
             
         else:
             diff = toldiff(former_file, later_file, precision)

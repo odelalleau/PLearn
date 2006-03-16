@@ -601,24 +601,25 @@ def reportMissingObj(arg, dirpath, names):
 
 optionargs = []  # will contain all the -... options, with the leading '-' removed
 otherargs = [] # will contain all other arguments to pymake (should be file or directory names)
-#JF
-#for arg in args:
-#    if arg[0]=='-':
-#        optionargs.append(arg[1:])
-#    else:
-#        otherargs.append(arg)
+
 i=0
 linkname = ''
+link_target_override = None
 while i < len(args):
     if args[i] == '-o':
         linkname = args[i+1]
         i = i + 1
+
+    elif args[i] == '-link-target':
+        link_target_override = args[i+1]
+        i = i + 1
+
     elif args[i][0]=='-':
         optionargs.append(args[i][1:])
+
     else:
         otherargs.append(args[i])
     i = i + 1
-#/JF
 
 print '*** Current platform is: ' + platform
 print
@@ -1037,14 +1038,19 @@ class FileInfo:
             elif objspolicy == 2:
               self.corresponding_ofile = join(objsdir, self.filebase+'.o')
             #print self.corresponding_ofile
-              
-            if self.hasmain:
-                self.corresponding_output = join(self.filedir, objsdir, self.filebase)
-            if create_dll:
+
+            if link_target_override:
+                self.corresponding_output = link_target_override
+
+            elif create_dll:
                 self.corresponding_output = join(self.filedir, self.filebase+'.dll')
                 self.corresponding_def_file = join(self.filedir, self.filebase+'.def')
-            if create_so:
+
+            elif create_so:
                 self.corresponding_output = join(self.filedir, objsdir, 'lib'+self.filebase+'.so')
+
+            elif self.hasmain:
+                self.corresponding_output = join(self.filedir, objsdir, self.filebase)                
 
         else:
             raise 'Attempting to build a FileInfo from a file that is not a .cc or .h or similar file ('+self.filepath+')'

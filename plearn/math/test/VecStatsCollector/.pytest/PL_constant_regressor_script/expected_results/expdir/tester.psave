@@ -1,7 +1,7 @@
 PTester(
 expdir = "PYTEST__PL_constant_regressor_script__RESULTS:expdir/" ;
 dataset = *1 ->AutoVMatrix(
-specification = "PLEARNDIR:examples/data/test_suite/gauss_1D_100pt.amat" ;
+filename = "PLEARNDIR:examples/data/test_suite/gauss_1D_100pt.amat" ;
 load_in_memory = 0 ;
 writable = 0 ;
 length = 100 ;

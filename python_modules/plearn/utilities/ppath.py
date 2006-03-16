@@ -248,7 +248,9 @@ def ppath(path):
     try:            
         path = os.path.join(__ppath(candidate_ppath), basepath)
     except KeyError:
-        pass
+        fallback = os.environ.get(candidate_ppath, "")
+        if fallback:
+            path = os.path.join(fallback, basepath)
 
     return path
     

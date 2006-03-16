@@ -1,7 +1,7 @@
 PTester(
 expdir = "PYTEST__PL_linear_regressor_script__RESULTS:expdir/" ;
 dataset = *1 ->AutoVMatrix(
-specification = "PLEARNDIR:examples/data/test_suite/linear_2x_2y.amat" ;
+filename = "PLEARNDIR:examples/data/test_suite/linear_2x_2y.amat" ;
 load_in_memory = 0 ;
 writable = 0 ;
 length = 200 ;

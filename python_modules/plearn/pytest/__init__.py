@@ -66,9 +66,15 @@ def main( pytest_version ):
                        "only the test's name and message are reported.",
                        default = False )
 
+    parser.add_option( '--debug',
+                       default=False, action="store_true", 
+                       help="--debug is equivalent to --traceback --verbosity DEBUG.")
+
     try:
         options, targets   = parser.parse_args()
-        modes.current_mode = parser.selected_mode
+        if options.debug:
+            options.traceback = True
+            options.verbosity = "DEBUG"
     except SystemExit, e:
         core.exitPyTest("USAGE ERROR")
     
@@ -100,7 +106,7 @@ def main( pytest_version ):
           "Report problems to dorionc@apstat.com\n" ]) )
     
     try:
-        modes.current_mode( targets, options )    
+        parser.selected_mode( targets, options )    
 
     except KeyboardInterrupt, kex:
         if options.traceback:

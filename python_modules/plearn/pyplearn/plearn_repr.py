@@ -119,26 +119,49 @@ def python_repr( obj, indent_level = 0 ):
 #  Helper functions
 #
 def format_list_elements( the_list, element_format, indent_level ):
-    n_elems = len(the_list)       
+    formatted_list = []
+    for elem in the_list:        
+        formatted = element_format(elem)
+        if len(formatted):
+            formatted_list.append(formatted)
+    
+    n_elems = len(formatted_list)
     if n_elems == 0:
-        elems_as_str = " "    
+        elems_as_str = " "
 
-    elif n_elems == 1:
-        elemstr = element_format( the_list[0] )
-        if elemstr.find('\n') == -1:
-            token = ' '
-        else:
-            token  = "\n%s" % (" " * 4*indent_level )
-
-        elems_as_str = "%s%s%s" % (token, elemstr, token)
+    elif n_elems == 1 and formatted_list[0].find("\n") == -1:
+        elems_as_str = " %s " % formatted_list[0]
         
     else:
-        token  = ",\n%s" % (" " * 4*indent_level )
+        token  = ",\n%s" % (" " * 4*indent_level)
         elems_as_str  = token[1:]
-        elems_as_str += token.join([ element_format(elem) for elem in the_list ])
+        elems_as_str += token.join(formatted_list)
         elems_as_str += token[1:]
 
     return elems_as_str
+
+# def format_list_elements( the_list, element_format, indent_level ):
+#     n_elems = len(the_list)       
+#     if n_elems == 0:
+#         elems_as_str = " "    
+# 
+#     elif n_elems == 1:
+#         elemstr = element_format( the_list[0] )
+#         if elemstr.find('\n') == -1:
+#             token = ' '
+#         else:
+#             token  = "\n%s" % (" " * 4*indent_level )
+# 
+#         elems_as_str = "%s%s%s" % (token, elemstr, token)
+#         
+#     else:
+#         token  = ",\n%s" % (" " * 4*indent_level )
+#         elems_as_str  = token[1:]
+#         elems_as_str += token.join([ element_format(elem) for elem in the_list ])
+#         elems_as_str += token[1:]
+# 
+#     return elems_as_str
+# 
 
 def __plearn_repr( obj, indent_level, inner_repr = plearn_repr ):
     """Returns a string that is the PLearn representation of obj."""

@@ -32,21 +32,24 @@
 #  library, go to the PLearn Web site at www.plearn.org
 
 import os, shutil 
-import plearn.utilities.toolkit as toolkit
+
+from plearn.utilities import ppath 
+from plearn.utilities import pldiff
+from plearn.utilities import moresh 
+from plearn.utilities import toolkit
+from plearn.utilities.Bindings import Bindings
 from plearn.pyplearn.plearn_repr import python_repr
 
-from core import *
-from programs import *
-from IntelligentDiff import *          
-
-from plearn.utilities import pldiff
+# To be removed
 from plearn.utilities.moresh import *
-from plearn.utilities.Bindings import Bindings
 
 # Version control
 from plearn.utilities import version_control
 from plearn.utilities.version_control import is_under_version_control
 
+# PyTest Modules
+from core import *
+from programs import *
 
 
 # Eventually remove Test's static methods
@@ -71,7 +74,7 @@ class DuplicateName( PyTestUsageError ):
     def __init__(self, test1, test2):
         PyTestUsageError.__init__(
             self, "Two tests have the same name: %s and %s."
-            % ( test1.get_path(), test2.get_path() )
+            % ( test1.getPath(), test2.getPath() )
             )        
 
 class StatsBook(dict):
@@ -90,12 +93,16 @@ class TestStatus(PyPLearnObject):
     _logfile_basename = 'STATUS.log'
     _completion_types = [ "PASSED", "DISABLED", "FAILED", "SKIPPED" ]
     _status_types     = [ "NEW", "STARTED" ] + _completion_types
-    _stats_book       = StatsBook(_completion_types)    
+    _stats_book       = StatsBook(_completion_types)
 
     def headerLegend(cls, rjust=0):
         return ('   '.join([ "%s: %s"%(s[0],s) for s in cls._completion_types ]).rjust(rjust)
                 + '\n' + '(SKIPPED implies a PyTest internal error)'.rjust(rjust) )
     headerLegend = classmethod(headerLegend)
+
+    def nPassed(cls):
+        return cls._stats_book["PASSED"]
+    nPassed = classmethod(nPassed)
 
     def summary(cls):
         return str(cls._stats_book)
@@ -167,6 +174,91 @@ if __name__ == '__main__':
     s.setStatus('SKIPPED')
     print repr(s)
 
+class Resources(core.PyTestObject):
+    md5_mappings    = PLOption({})
+    name_resolution = PLOption({})
+    
+    # def memorize(self, abspath, fname):
+    #     if not self.name_resolution.has_key(abspath):
+    #         self.name_resolution[abspath] = fname        
+
+    ## Create a link from target to resource.
+    def single_link(self, path_to, resource, target_dir, must_exist=True):
+        ## Paths to the resource and target files
+        resource_path = ppath.ppath(resource)
+        target_path   = target_dir
+
+        ## Absolute versions
+        if not os.path.isabs( resource_path ):
+            resource_path = os.path.join( path_to, resource )
+            target_path = os.path.join( path_to, target_dir, resource )
+        else:
+            target_path = os.path.join(target_dir, os.path.basename(resource))
+            assert not os.path.exists( target_path ), target_path
+
+        
+        ## Linking
+        linked = False
+        if os.path.exists( resource_path ):
+            moresh.system_symlink(resource_path, target_path)
+            linked = True
+
+        elif must_exist:
+            raise core.PyTestUsageError(
+                "In %s: %s used as a resource but path does not exist."
+                % ( os.getcwd(), resource )
+                )
+
+        ## Mapping both to the same variable
+        # self.memorize( resource_path, resource )                
+        # self.memorize( target_path, resource )                
+
+        if linked:
+            return (resource_path, target_path)
+        else:
+            return ()
+
+    ## Class methods
+    def link_resources(self, path_to, resources, target_dir): 
+        resources_to_append = []
+        for resource in resources:
+            self.single_link( path_to, resource, target_dir )
+                        
+            if toolkit.isvmat( resource ):
+                metadatadir = resource + '.metadata'
+                if metadatadir not in resources:
+                    link_result = self.single_link( path_to, metadatadir,
+                                                   target_dir,  False )
+                    if link_result:
+                        ## Link has been successfully performed: we must add the
+                        ## metadata directory to the list of resources, so that it
+                        ## is correctly unlinked at a later time.
+                        resources_to_append.append(metadatadir)
+        resources.extend(resources_to_append)
+
+    def md5sum(self, path_to_ressource):
+        if md5_mappings.has_keys(path_to_ressource):
+            return md5_mappings[path_to_ressource]
+        
+        md5 = toolkit.command_output( 'md5sum %s'
+                                      % path_to_ressource)
+        md5_mappings[path_to_ressource] = md5
+        return md5
+
+    def unlink_resources(self, resources, target_dir):
+        for resource in resources:
+            res = os.path.basename(resource)
+            path = os.path.join(target_dir, res)
+            if os.path.islink( path ):
+                logging.debug("Removing link: %s."%path)
+                os.remove( path )
+            elif os.path.isfile( path ):
+                logging.debug("Removing file: %s."%path)
+                os.remove( path )
+            elif os.path.isdir( path ):
+                logging.debug("Removing directory: %s." % path)
+                shutil.rmtree( path )
+
 class Test(PyTestObject):
     """Test is a class regrouping the elements that define a test for PyTest.
 
@@ -193,19 +285,18 @@ class Test(PyTestObject):
 
     @type category: string
     
-    @ivar program: The program to be run by the Test. The L{Program}
-    class currently has four subclasses: L{LocalProgram},
-    L{GlobalProgram}, L{LocalCompilableProgram} and
-    L{GlobalCompilableProgram}. The I{Local} prefix specifies that the
-    program executable should be found in the same directory than the
-    I{pytest.config} file, while I{Global} means that the program is a
-    global command. Currently, this mechanism only support commands that
-    are in one of the <plearn_branch>/commands/ directory.
+    @ivar program: The program to be run by the Test. The program's name
+    PRGNAME is used to lookup for the program in the following manner::
 
-    The I{Compilable} tag specifies that the program must be compiled.
-    The default compiler is L{pymake}, but this behaviour can be changed
-    and/or compile options may be specified.
+      1) Look for a local program named PRGNAME
+      2) Look for a plearn-like command (plearn, plearn_tests, ...) named PRGNAME
+      3) Call 'which PRGNAME'
+      4) Fail
 
+    Compilable program should provided the keyword argument 'compiler'
+    mapping to a string interpreted as the compiler name (e.g.
+    "compiler = 'pymake'"). Arguments to be forwarded to the compiler can be
+    provided as a string through the 'compile_options' keyword argument.
     @type program: L{Program}
 
     @ivar arguments: The command line arguments to be passed to the program
@@ -229,11 +320,27 @@ class Test(PyTestObject):
         - "__plearn__": always maps to 'plearn_tests' (for when the program
                         under test is not a version of PLearn);
         - A Program (see 'program' option) instance
+        - None: if you are sure no files are to be compared.
 
     @ivar disabled: If true, the test will not be ran.
     @type disabled: bool
     """
-    # Class variables
+    #######  Options  #############################################################
+
+    name        = PLOption(None)
+    description = PLOption('')
+    category    = PLOption('General')
+    program     = PLOption(None)
+    arguments   = PLOption('')
+    resources   = PLOption([])
+    precision   = PLOption(1e-6)
+    pfileprg    = PLOption("__program__")
+    disabled    = PLOption(False)
+    
+
+    #######  Class Variables and Methods  #########################################
+    # NB: Class variables could now all be 'public', laziness is why it isn't so...
+    
     _test_count    = 0
     _log_count     = 0
     _logged_header = False
@@ -241,6 +348,10 @@ class Test(PyTestObject):
     _instances_map  = Bindings()
     _families_map   = Bindings()
     _categories_map = Bindings()
+
+    # Do not prompt user for results creation even if results already are
+    # under version control
+    force_results_creation = False
 
     _restrict_to = None
     _restrict_to_category = None
@@ -259,24 +370,13 @@ class Test(PyTestObject):
         cls._restrict_to_category = category
     restrictToCategory = classmethod(restrictToCategory)
 
-    # Names of test for which the results were removed from version control
-    # by ensure_results_directory
-    _results_vc_removed = []
+    #######  Instances' Methods  ##################################################
 
-    # Options
-    name        = PLOption(None)
-    description = PLOption('')
-    category    = PLOption('General')
-    program     = PLOption(None)
-    arguments   = PLOption('')
-    resources   = PLOption([])
-    precision   = PLOption(1e-6)
-    pfileprg    = PLOption("__program__")
-    disabled    = PLOption(False)
-    
     def _optionFormat(self, option_pair, indent_level, inner_repr):
         optname, val = option_pair
-        if optname == "description" and self.description.find('\n')!=-1:
+        if val is None:
+            return "%s = None"%optname        
+        elif optname == "description" and self.description.find('\n')!=-1:
             return 'description = \"\"\"%s\"\"\"'%self.description
         return super(Test, self)._optionFormat(option_pair, indent_level, inner_repr)
         
@@ -286,10 +386,7 @@ class Test(PyTestObject):
         self._directory = os.getcwd()
         self._results_directory = os.path.join(self._directory, ppath.pytest_dir, self.name)
         
-        self._metaprotocol = string.replace( "PYTEST__%s__RESULTS" %
-                                             self.name, ':', '_'
-                                             )
-
+        self._metaprotocol = ("PYTEST__%s__RESULTS"%self.name).replace(':', '_')
         if Test._instances_map.has_key( self.name ):
             raise DuplicateName( Test._instances_map[self.name], self )
 
@@ -331,35 +428,42 @@ class Test(PyTestObject):
                 % self.directory()
                 )
         
-        check = ( string.find(self.name, ' ') +
-                  string.find(self.name, '/') +
-                  string.find(self.name, '<') +
-                  string.find(self.name, '>') 
-                  )
+        check = ( self.name.find(' ') + self.name.find('/') +
+                  self.name.find('<') + self.name.find('>') )
 
         if check != -4:
             raise PyTestUsageError(
                 "%s\n Test.name should contain none of the following chars: "
                 "' ', '/', '<', '>'."
-                % self.get_path()
+                % self.getPath()
                 )
 
         # Interprets pfileprg option's value
         if self.pfileprg == "__program__":
-            if isinstance(self.program, Compilable):
+            if self.program.isCompilable():
                 self.pfileprg = self.program
             else:
-                self.pfileprg = GlobalCompilableProgram(name='plearn_tests')
+                self.pfileprg = Program(name='plearn_tests', compiler="pymake")
         elif self.pfileprg == "__plearn__":
-            self.pfileprg = GlobalCompilableProgram(name='plearn_tests')
-            
-        assert isinstance(self.pfileprg, Compilable), """
+            self.pfileprg = Program(name='plearn_tests', compiler="pymake")
+
+        try:
+            if self.pfileprg is not None:
+                assert self.pfileprg.isCompilable()
+        except AssertionError, err:
+            raise core.PyTestUsageError("""In test %s:
         Option 'pfileprg': The program to be used for comparing files of psave &
         vmat formats. It can be either::
         - "__program__": maps to this test's program if its compilable;
-                         maps to 'plearn_tests' otherwise (default); 
+                         maps to 'plearn_tests' otherwise (default);
+        - "__plearn__": always maps to 'plearn_tests' (for when the program
+                        under test is not a version of PLearn);
         - A Program (see 'program' option) instance
-        """
+        - None: if you are sure no files are to be compared.
+
+        Received %s
+        """%(self.name, self.pfileprg)
+            )
             
     def compilationSucceeded(self):
         """Forwards compilation status request to the program.
@@ -385,6 +489,10 @@ class Test(PyTestObject):
         if os.path.exists( results_path ):
             if is_under_version_control( results_path ):
                 answer = None
+                if Test.force_results_creation:
+                    # Do not ask user
+                    answer = 'yes'
+                    
                 while not answer in ['yes', 'no']:
                     answer = raw_input( "Results %s already are under version control! Are you sure "
                                         "you want to generate new results (yes or no)? " % results_path )
@@ -392,19 +500,11 @@ class Test(PyTestObject):
                 if answer == 'no':
                     raise PyTestUsageError("Results creation interrupted by user")
 
-                ## YES
-                #BEFORE_UNIT_COMMIT: version_control.recursive_remove(results_path)
-                #BEFORE_UNIT_COMMIT: version_control.commit(ppath.pytest_dir, 'Removal of %s for new results creation.'%results_path)
-                #BEFORE_UNIT_COMMIT: ## Need to update the directory that was just committed: this is
-                #BEFORE_UNIT_COMMIT: ## important e.g. with SubVersion to ensure it is up-to-date.
-                #BEFORE_UNIT_COMMIT: version_control.update(ppath.pytest_dir)
-                #BEFORE_UNIT_COMMIT: self._results_vc_removed.append(self.getName())
-
+                # User answered yes
                 svn_results = self.resultsDirectory(SVN_RESULTS)
                 assert not os.path.exists(svn_results)
                 logging.debug("os.rename(results_path, self.resultsDirectory(SVN_RESULTS))")
                 os.rename(results_path, svn_results)
-                logging.warning("Be sure to 'confirm' your results afterwards...")
 
             ## Will have been removed under svn
             if ( os.path.exists(results_path) ):
@@ -416,15 +516,15 @@ class Test(PyTestObject):
     def formatted_description(self):
         fdesc = [ "In %s"%self.directory(), "" ]
         
-        if string.lstrip(self.description, ' \n') != "":
+        if self.description.lstrip(' \n') != "":
             fdesc.extend( toolkit.boxed_lines(self.description, 50, indent='    ')+[""] )
 
-        return string.join(["    "+line for line in fdesc], '\n')
+        return '\n'.join(["    "+line for line in fdesc])
         
     def getName(self):
         return self.name
     
-    def get_path(self):
+    def getPath(self):
         return os.path.join(
             self.directory(),
             self.name
@@ -442,9 +542,15 @@ class Test(PyTestObject):
 
         statsHeader = TestStatus.summaryHeader()
 
-        C = 6; N = 60; S = 12; H = len(statsHeader)*3
-        vpformat = lambda c,n,s, h: logging.info(
-            c.ljust(C) + n.ljust(N) + s.center(S) + h.center(H))        
+        # Hackish hardcoded display summing to 80...
+        C = 6; S = len("** FAILED **")+2; H = len(statsHeader)+2
+        N = 80 - (C+S+H); 
+        def vpformat(c,n,s, h):
+            if len(n) < N:
+                logging.info( c.ljust(C)+n.ljust(N)+s.center(S)+h.center(H) )
+            else:
+                logging.info( c.ljust(C)+n.ljust(N) )
+                logging.info( ((C+N)*" ")+s.center(S)+h.center(H) )
         
         if self._status.isCompleted():
             if not self._logged_header:
@@ -494,8 +600,7 @@ class Test(PyTestObject):
             # path.
             test_results = self.resultsDirectory(results_path)
         except AssertionError:
-            # linkResources may be used from outside the test's standard
-            # structure (see IntelligentDiff for an example)
+            # linkResources may be used from outside the test's standard structure
             test_results = results_path
             
         self.ensureResultsDirectory(test_results)
@@ -529,8 +634,7 @@ class Test(PyTestObject):
         ppath.write_bindings( internal_config_file.write )
 
         ## This process now consider the internal_plearn_configs
-        os.environ[ 'PLEARN_CONFIGS'   ] =  internal_plearn_configs
-        os.environ[ 'PLEARN_DATE_TIME' ] = 'NO'
+        os.environ['PLEARN_CONFIGS'] = internal_plearn_configs
 
         ## Returns the test's results directory path
         logging.debug("Resources linked in %s."%test_results)
@@ -546,7 +650,11 @@ class Test(PyTestObject):
         del self._resources_obj
         
         ppath.remove_binding(self.metaprotocol())
-        os.environ[ 'PLEARN_DATE_TIME' ] = 'YES'
+
+        logging.debug("Reassinging PLEARN_CONFIGS to %s"%ppath.plearn_configs)
+        os.environ['PLEARN_CONFIGS'] = ppath.plearn_configs
+        del self._overriden_plearn_configs
+        
         logging.debug("Resources unlinked.")
         
 class Routine( PyTestObject ):
@@ -557,7 +665,7 @@ class Routine( PyTestObject ):
         os.chdir( self.test.directory() )
         
     def compile_program(self):
-        if not isinstance(self.test.program, Compilable):
+        if not self.test.program.isCompilable():
             return True
 
         logging.debug("\nCompilation:")
@@ -589,48 +697,30 @@ class ResultsRelatedRoutine(Routine):
 
         def start(self):
             self.run_test( APPROPRIATE_DIRECTORY )
-    """    
-    no_compile_option = PLOption(False)
+    """
+    # Options
     run_log = PLOption('RUN.log')
-
+    
     def clean_cwd( self ):
         dirlist = os.listdir( os.getcwd() )
         for fname in dirlist:
             if fname.endswith( '.pyc' ):
                 os.remove( fname )
 
-    def compiled(self):    
-        if not self.__class__.no_compile_option:
-            compilation_succeeded = self.compile_program()
-            if not compilation_succeeded:
-                logging.debug("%s bails out." % self.classname())
-                return False
-        return True
-
     def run_test(self, results):
-        if not self.compiled():
-            return
+        if not self.compile_program():
+            logging.debug("%s bails out." % self.classname())
+            return 
 
         logging.debug("\nRunning program:")
         logging.debug("----------------")
 
         test_results  = self.test.linkResources(results)
 
-        #run_command   = ( "./%s %s >& %s"
-        #                  % ( self.test.program.getName(), self.test.arguments, self.run_log )
-        #                  )        
-        run_command   = ( "%s %s >& %s" \
-                         % ( os.path.join(os.path.dirname(self.test.program.get_path()),
-                                          self.test.program.getName()),
-                             self.test.arguments, self.run_log )
-                        )
-
-
         ## Run the test from inside the test_results directory and return
         ## to the cwd
         pushd(test_results)
-        logging.debug("In %s: %s"%(os.getcwd(), run_command))
-        os.system(run_command)
+        self.test.program.invoke(self.test.arguments, self.run_log)
         self.clean_cwd()
         popd()
 
@@ -659,12 +749,6 @@ class ResultsCreationRoutine(ResultsRelatedRoutine):
     """
     def start(self):
         self.run_test(EXPECTED_RESULTS)
-        if Test._results_vc_removed:
-            logging.critical(
-                "\n*** Results were changed for the following test%s: %s. "
-                "Once you've checked the results validity, DO NOT FORGET to do a 'pytest confirm'."
-                % (toolkit.plural(len(Test._results_vc_removed)), ', '.join(Test._results_vc_removed)),
-                )
 
     def status_hook(self):
         self.test.setStatus("PASSED")
@@ -701,31 +785,31 @@ class RunTestRoutine( ResultsRelatedRoutine ):
             raise PyTestUsageError(
                 "%s\n Expected results must be generated by the 'results' mode "
                 "prior to any use of the 'run' mode."
-                % self.test.get_path()
+                % self.test.getPath()
                 )
 
     def start(self):        
         self.run_test(RUN_RESULTS)
     
     def status_hook(self):
-        idiff = IntelligentDiff( self.test )
-        diffs = idiff.diff(self.expected_results, self.run_results)
+        # Comparing results with pldiff
+        pushd(self.test.resultsDirectory())
+        logging.debug("pldiff in %s"%os.getcwd())
 
-        # Developping for pldiff -- Issues:
-        #   1) Managing Resources
-        #
-        # pushd(self.test.resultsDirectory())
-        # logging.debug("pldiff in %s"%os.getcwd())
-        # 
-        # program_name = self.test.pfileprg.name
-        # compile_errors = not self.test.pfileprg.compile()
-        # if compile_errors:
-        #     diffs = [ "COMPILATION ERROR on test's pfileprg: %s\n"%program_name ]
-        # else:
-        #     diffs = pldiff.pldiff(self.expected_results, self.run_results,
-        #                           self.test.precision, program_name)
-        # popd()
-            
+        diffs = []
+        plearn_exec = None
+        if self.test.pfileprg is not None:
+            if self.test.pfileprg.compile():
+                plearn_exec = self.test.pfileprg.getInternalExecPath()
+            else:
+                diffs = [ "COMPILATION ERROR on test's pfileprg: %s\n"%self.test.pfileprg.name ]                
+                        
+        diffs.extend(
+            pldiff.pldiff(self.expected_results, self.run_results,
+                          self.test.precision, plearn_exec) )
+        popd()
+
+        # Set status
         logging.debug("diffs: %s"%str(diffs))
         if diffs == []:
             self.test.setStatus("PASSED")

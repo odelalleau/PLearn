@@ -1,1 +1,2 @@
+init_time
 training_time

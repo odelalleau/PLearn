@@ -53,6 +53,10 @@
 #include <plearn/sys/PLMPI.h>
 #include <plearn/vmat/VMat.h>
 
+#ifdef PL_PROFILE    
+#include <plearn/sys/Profiler.h>
+#endif
+
 namespace PLearn {
 using namespace std;
 
@@ -239,8 +243,13 @@ void plearn_terminate_handler()
 int plearn_main( int argc, char** argv,
                  int major_version, int minor_version, int fixlevel )
 {
-    set_terminate(plearn_terminate_handler);
+#ifdef PL_PROFILE    
+    Profiler::activate();
+#endif
 
+    set_terminate(plearn_terminate_handler);
+    
+    int EXIT_CODE = 0;
     try {
 
         PLMPI::init(&argc, &argv);
@@ -267,16 +276,20 @@ int plearn_main( int argc, char** argv,
     catch(const PLearnError& e)
     {
         cerr << "FATAL ERROR: " << e.message() << endl;
-        return 1;
+        EXIT_CODE = 1;
     }
     catch (...) 
     {
         cerr << "FATAL ERROR: uncaught unknown exception "
              << "(ex: out-of-memory when allocating a matrix)" << endl;
-        return 2;
+        EXIT_CODE = 2;
     }
-
-    return 0;
+ 
+#ifdef PL_PROFILE    
+    Profiler::disactivate();
+    Profiler::report(cerr);
+#endif
+    return EXIT_CODE;
 }
 
 } // end of namespace PLearn

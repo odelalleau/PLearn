@@ -602,32 +602,17 @@ void addFileAndDateVariables(const PPath& filepath, map<string, string>& variabl
     variables["FILEBASE"]    = basename.no_extension();
     variables["FILEEXT"]     = fpath.extension();
   
-    // dorionc: This should soon be deprecated...
-    // PyPLearn should provide date(), time() and date_time() functions so
-    // that these could be removed
-    char* date_time_env = getenv("PLEARN_DATE_TIME");
-
-    if ( date_time_env 
-         && string(date_time_env) == "NO" )
-    {
-        variables["DATETIME"]  = "";
-        variables["DATE"]      = "";
-        variables["TIME"]      = "";    
-    }
-    else
-    {
-        // Compute DATE, TIME, and DATETIME variables
-        time_t curtime = time(NULL);
-        struct tm *broken_down_time = localtime(&curtime);
-        const int SIZE = 100;
-        char time_buffer[SIZE];
-        strftime(time_buffer,SIZE,"%Y%m%d:%H%M%S",broken_down_time);
-        variables["DATETIME"] = time_buffer;
-        strftime(time_buffer,SIZE,"%Y%m%d",broken_down_time);
-        variables["DATE"] = time_buffer;
-        strftime(time_buffer,SIZE,"%H%M%S",broken_down_time);
-        variables["TIME"] = time_buffer;
-    }
+    // Compute DATE, TIME, and DATETIME variables
+    time_t curtime = time(NULL);
+    struct tm *broken_down_time = localtime(&curtime);
+    const int SIZE = 100;
+    char time_buffer[SIZE];
+    strftime(time_buffer,SIZE,"%Y%m%d:%H%M%S",broken_down_time);
+    variables["DATETIME"] = time_buffer;
+    strftime(time_buffer,SIZE,"%Y%m%d",broken_down_time);
+    variables["DATE"] = time_buffer;
+    strftime(time_buffer,SIZE,"%H%M%S",broken_down_time);
+    variables["TIME"] = time_buffer;
 }
 
 /////////////////////////////

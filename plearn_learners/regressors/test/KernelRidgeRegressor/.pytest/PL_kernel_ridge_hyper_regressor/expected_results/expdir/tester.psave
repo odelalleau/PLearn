@@ -1,7 +1,7 @@
 PTester(
 expdir = "PYTEST__PL_kernel_ridge_hyper_regressor__RESULTS:expdir/" ;
 dataset = *1 ->AutoVMatrix(
-specification = "PLEARNDIR:examples/data/test_suite/sin_signcos_1x_2y.amat" ;
+filename = "PLEARNDIR:examples/data/test_suite/sin_signcos_1x_2y.amat" ;
 load_in_memory = 0 ;
 writable = 0 ;
 length = 300 ;

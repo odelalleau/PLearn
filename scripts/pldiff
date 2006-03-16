@@ -58,6 +58,10 @@ parser.add_option( '--plearn-exec',
                    "sure your program is compiled and accepts --no-version and --verbosity arguments"
                    "(they will if built over plearn_main.cc)" )
 
+parser.add_option( '--psave-resources',
+                   default = "",                   
+                   help = "CSV list of the local results that may be used by any psaved experiment." )
+
 options, targets = parser.parse_args()
 
 if len(targets) != 2:

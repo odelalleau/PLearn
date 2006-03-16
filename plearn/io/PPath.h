@@ -284,7 +284,7 @@ PPath::home, PPath::getenv (with a default value!) and PPath::getcwd.
                  PPath(const string &path_="");
 
                  // Shorthand.
-                 PPath(const char* path) { operator=( PPath(string(path)) ); }
+                 PPath(const char* path);
 
                  //! Returns an absolute path in the form appropriate for the OS.
                  //! The returned path never ends with a slash unless it is a root directory.

@@ -13,13 +13,6 @@ from plearn.utilities import version_control
 from plearn.utilities.ModeAndOptionParser import *
 
 
-current_mode    = None
-
-__all__ = [
-    ## Variables
-    'current_mode'
-    ]
-
 class PyTestMode(Mode):
     #
     #  Static method
@@ -59,7 +52,7 @@ class PyTestMode(Mode):
 
         target_options.add_option( "--all",
                                    action="store_true", default=False,
-                                   help= "Run all tests found in subdirectories of directories in"
+                                   help= "Run all tests found in subdirectories of directories in" 
                                    "plbranches. If some targets are provided, these will be ignored."
                                    )
 
@@ -83,6 +76,15 @@ class PyTestMode(Mode):
         testing_options.add_option( '--hosts', 
                                     help='The maximum nuber of hosts to use simultaneously.',
                                     default=10 )
+
+        testing_options.add_option( '--pymake-compile',
+                                    default="dbg",
+                                    choices=Program.pymake_opt_options,
+                                    help="Changes the *default* compilation flag used by pymake (dbg) "
+                                    "for the one provided. DO NOT preceed the option name by a dash, "
+                                    "i.e. use '--pymake-compile opt' and not '--pymake-compile -opt'. "
+                                    "Note that if the tests is already specified with one of the "
+                                    "above compile options, that compile option will remain unchanged." )
         
         return testing_options
     testing_options = classmethod( testing_options )
@@ -115,7 +117,7 @@ class PyTestMode(Mode):
 
         # --all: Run all tests found in subdirectories of directories in
         # plbranches. If some targets are provided, these will be ignored.
-        if hasattr( options, 'all' ) and options.all:
+        if hasattr(options, 'all') and options.all:
             targets           = plbranches
             options.recursive = True
 
@@ -144,6 +146,9 @@ class PyTestMode(Mode):
                 ignored = [ "The following directories (and their subdirectories) were ignored", "" ]
                 ignored.extend( [ '    '+ign for ign in ignored_directories ] )
                 logging.warning('\n'.join(['---']+ignored+['---']))
+
+            if hasattr(options, 'all') and options.all:
+                core.updateCachedTestList(Test._instances_map)
 
     def restrictions(self):
         """Default --test-name and --category management."""
@@ -179,7 +184,7 @@ class ignore(PyTestMode):
 
         for target in targets:
             os.system("touch %s" % os.path.join( target, ignore.ignore_file ) )
-            
+    
 class list(PyTestMode):
     """Lists all tests within target directories."""
     def option_groups(cls, parser):
@@ -209,9 +214,9 @@ class list(PyTestMode):
     def __init__(self, targets, options):
         super(list, self).__init__(targets, options)
 
-        formatted_string = lambda n,d: ( "%s Disabled: %s"
-                                         % (string.ljust(n, 25), string.ljust(str(d), 15))
-                                         )
+        formatted_string = lambda n,d: \
+            "%s Disabled: %s" % (n.ljust(25), str(d).ljust(15))
+
         for (family, test_list) in Test._families_map.iteritems():
             formatted_strings = []
 
@@ -235,9 +240,14 @@ class locate(list):
     (Equivalent to 'pytest list --all -n <test_name>')
     """
     def __init__(self, targets, options):
+        cached_test_list = core.getCachedTestList()
         if len(targets) != 1:
             logging.critical("Usage: pytest locate <test_name>")
 
+        elif targets[0] in cached_test_list:
+            test_dir = cached_test_list[targets[0]]
+            logging.warning("In %s\n    %s"%(test_dir, targets[0]))
+            
         else:
             options.all = True
             options.test_name = targets[0]        
@@ -311,6 +321,8 @@ class confirm( PyTestMode ):
                 version_control.add( ppath.pytest_dir )
                 version_control.ignore( ppath.pytest_dir, [ '*.compilation_log' ] )
                 for test in test_list:
+                    if test.disabled:
+                        continue
                     svn_results = test.resultsDirectory(tests.SVN_RESULTS)
 
                     if os.path.exists(svn_results):
@@ -318,7 +330,7 @@ class confirm( PyTestMode ):
                         confirmed_results = expected_results+'.confirmed'
                         os.rename(expected_results, confirmed_results)
                         os.rename(svn_results, expected_results)
-                        self.compare_results_trees(expected_results, confirmed_results)
+                        self.migrate_results_trees(expected_results, confirmed_results)
                         shutil.rmtree(confirmed_results)
                     else:
                         version_control.add( test.resultsDirectory() )
@@ -331,7 +343,7 @@ class confirm( PyTestMode ):
                     "%s was not." % family
                     )
 
-    def compare_results_trees(self, expected_results, confirmed_results):
+    def migrate_results_trees(self, expected_results, confirmed_results):
         cwd = os.getcwd()
         expected_results = moresh.relative_path(expected_results, cwd)
         confirmed_results = moresh.relative_path(confirmed_results, cwd)
@@ -354,6 +366,10 @@ class confirm( PyTestMode ):
         for confirmed_filepath in unique_to_confirmed:
             expected_filepath = confirmed_filepath.replace('.confirmed', '')
             assert not os.path.exists(expected_filepath)
+
+            if os.path.isdir(confirmed_filepath) \
+               and moresh.is_recursively_empty(confirmed_filepath):
+                continue # Do not add empty directory to version control.
             
             rename_cmd = 'os.rename("%s", "%s")'%(confirmed_filepath, expected_filepath)
             logging.debug(rename_cmd)
@@ -364,16 +380,9 @@ class confirm( PyTestMode ):
 
 class FamilyConfigMode(PyTestMode):
     def option_groups(cls, parser):
-        restriction_options = OptionGroup(parser, "Restriction Options", "")
-
-        restriction_options.add_option( '-n', '--test-name',
-                                   help='Restricts the current mode to the named test.',
-                                   default='' )
-        
-        return [ cls.target_options(parser),
-                 restriction_options ]
+        return [ cls.target_options(parser) ]
     option_groups = classmethod(option_groups)
-    
+
     def __init__( self, targets, options ):
         super( FamilyConfigMode, self ).__init__( targets, options )
 
@@ -432,13 +441,14 @@ class add(FamilyConfigMode):
         add_options = OptionGroup( parser, "Mode Specific Options --- %s" % cls.__name__,
                                    "Available under %s mode only." % cls.__name__ )
 
-        add_options.add_option( "--program-type",
-                                choices=["LocalProgram", "LocalCompilableProgram",
-                                         "GlobalProgram", "GlobalCompilableProgram"], 
-                                default="GlobalCompilableProgram",
-                                help="The added test uses the program-type for its program attribute." 
-                                )
+        add_options.add_option( '-n', '--test-name',
+                                help='The name of the test to add.',
+                                default='' )
 
+        add_options.add_option( '--category',
+                                help='The category to assign to the new test.',
+                                default='General' )        
+        
         add_options.add_option( "--program-name",
                                  default="plearn_tests",
                                  help="The added test uses program-name as name for its program attribute." 
@@ -454,9 +464,7 @@ class add(FamilyConfigMode):
                                  help="Comma separated list of resources to be used by the test." 
                                  )
 
-        return [ add_options,
-                 cls.target_options(parser),
-                 cls.restriction_options(parser) ]
+        return [ add_options ]+super(add, cls).option_groups(parser)
     option_groups = classmethod( option_groups )
 
 
@@ -464,9 +472,6 @@ class add(FamilyConfigMode):
         test_name = options.test_name
         if test_name == '':
             test_name = 'MANDATORY_TEST_NAME' 
-
-        ProgClass = globals()[options.program_type]
-        program = ProgClass(name=options.program_name)
 
         # Avoiding [""] in place of the empty list
         resources = []                               
@@ -476,8 +481,8 @@ class add(FamilyConfigMode):
         # Caught by Test's instances management        
         self._added_test = \
             Test( name=test_name, category=options.category,
-                  program=program, arguments=options.arguments,
-                  resources=resources )              
+                  program=Program(name=options.program_name),
+                  arguments=options.arguments, resources=resources, pfileprg=None )
         super(add, self).__init__(targets, options)
         print 'Successfully added skeleton for test. Please edit pytest.config file.'
 
@@ -492,6 +497,17 @@ class disable(FamilyConfigMode):
 
     The disabled tests can be restored (L{enable mode<enable>}) afterwards.
     """
+    def option_groups(cls, parser):
+        disable_options = OptionGroup( parser, "Mode Specific Options --- %s" % cls.__name__,
+                                   "Available under %s mode only." % cls.__name__ )
+
+        disable_options.add_option( '-n', '--test-name',
+                                help='The name of the test to disable.',
+                                default='' )
+        
+        return [ disable_options ]+super(disable, cls).option_groups(parser)
+    option_groups = classmethod( option_groups )
+
     def test_hook(self, test):
         test_name = self.options.test_name
         if test_name=="" or test_name==test.name:
@@ -499,6 +515,17 @@ class disable(FamilyConfigMode):
 
 class enable(FamilyConfigMode):
     """Enables disabled (L{disable mode<disable>}) tests."""
+    def option_groups(cls, parser):
+        enable_options = OptionGroup( parser, "Mode Specific Options --- %s" % cls.__name__,
+                                   "Available under %s mode only." % cls.__name__ )
+
+        enable_options.add_option( '-n', '--test-name',
+                                help='The name of the test to enable.',
+                                default='' )
+        
+        return [ enable_options ]+super(enable, cls).option_groups(parser)
+    option_groups = classmethod( option_groups )
+
     def test_hook(self, test):
         test_name = self.options.test_name
         if test_name=="" or test_name==test.name:
@@ -522,8 +549,8 @@ class update(FamilyConfigMode):
                                                                                                               
         update_options.add_option( '--test-name',                                                                 
                                    default=None,                                                              
-                                   help='The test to be renamed.',                                            
-                                   )                                                                          
+                                   help='The test to be renamed.',
+                                   )                                            
                                                                                                               
         update_options.add_option( "--new-name",                                                              
                                    default=None,                                                              
@@ -531,7 +558,7 @@ class update(FamilyConfigMode):
                                    "'test_name' will be renamed to 'new_name'."                               
                                    )                                                                          
                                                                                                               
-        return [ update_options ]                                                                             
+        return [ update_options ]+super(update, cls).option_groups(parser)
     option_groups = classmethod(option_groups)                                                                
 
     def test_hook(self, test):
@@ -559,17 +586,13 @@ class RoutineBasedMode(PyTestMode):
     #  Class methods
     #
     def description( cls ):
-        return toolkit.doc( cls.routine_type() )
+        return toolkit.doc( cls.RoutineType )
     description = classmethod( description )
     
     def help( cls ):
-        return toolkit.short_doc( cls.routine_type() )
+        return toolkit.short_doc( cls.RoutineType )
     help = classmethod( help )
     
-    def routine_type( cls, options=None ):
-        raise NotImplementedError
-    routine_type = classmethod( routine_type )
-
     def option_groups( cls, parser ):
         return [ cls.target_options(parser),
                  cls.testing_options(parser),
@@ -581,6 +604,10 @@ class RoutineBasedMode(PyTestMode):
     #    
     def __init__( self, targets, options ):
         super(RoutineBasedMode, self).__init__(targets, options)
+
+        logging.debug("--pymake-compile (=%s) option forwarded to Program."%options.pymake_compile)
+        Program.pymake_opt_override = options.pymake_compile
+        
         test_instances = Test._instances_map.items()        
         self.dispatch_tests(test_instances)
 
@@ -591,8 +618,7 @@ class RoutineBasedMode(PyTestMode):
                 test.setStatus("DISABLED")
             else:
                 try:
-                    RoutineType = self.routine_type( self.options )            
-                    routine     = RoutineType(test=test)
+                    routine = self.RoutineType(test=test)
                     routine.start()
                 except core.PyTestUsageError, e:
                     # --traceback: This flag triggers routines to report
@@ -605,8 +631,7 @@ class RoutineBasedMode(PyTestMode):
                         test.setStatus("SKIPPED", core.traceback(e))
 
 class compile(RoutineBasedMode):
-    def routine_type(cls, options=None): return CompilationRoutine
-    routine_type = classmethod(routine_type)
+    RoutineType = CompilationRoutine
 
 class ResultsBasedMode(RoutineBasedMode):
     def option_groups(cls, parser):
@@ -618,20 +643,37 @@ class ResultsBasedMode(RoutineBasedMode):
 
         return ogroups        
     option_groups = classmethod(option_groups)
+
+    def __init__(self, targets, options):
+        logging.debug("--no-compile (=%s) option forwarded to Program."%options.no_compile)
+        Program.compilation_disabled = options.no_compile        
+        super(ResultsBasedMode, self).__init__(targets, options)
     
 class results(ResultsBasedMode):
-    def routine_type(cls, options=None):
-        if options:
-            ResultsCreationRoutine.no_compile_option = options.no_compile
-        return ResultsCreationRoutine
-    routine_type = classmethod(routine_type)
+    RoutineType = ResultsCreationRoutine
+
+    def option_groups(cls, parser):
+        ogroups = super(results, cls).option_groups(parser)
+
+        ogroups[1].add_option(
+            '--force', default=False,
+            action="store_true",
+            help="If True, new results will be generated without prompting, even "
+            "if results already are under version control." )
+
+        return ogroups
+    option_groups = classmethod(option_groups)
+
+    def __init__(self, targets, options):
+        logging.debug("--force (=%s) option forwarded to Test."%options.force)
+        Test.force_results_creation = options.force        
+        super(results, self).__init__(targets, options)
+        if TestStatus.nPassed() > 0:
+            logging.warning("\nNew results were generated. Verify their validity and "
+                            "be sure to 'confirm' those afterwards...")
 
 class run(ResultsBasedMode):    
-    def routine_type(cls, options=None):
-        if options:
-            RunTestRoutine.no_compile_option = options.no_compile
-        return RunTestRoutine
-    routine_type = classmethod(routine_type)
+    RoutineType = RunTestRoutine
 
     
 if __name__ == '__main__':
@@ -639,6 +681,7 @@ if __name__ == '__main__':
     def vsystem(cmd):        
         print >>sys.stderr, '#  %s\n' % cmd
         os.system( '%s >& /dev/null'%cmd )
+        # os.system( cmd )
         print >>sys.stderr, ''
 
     ## Since run results are not under version control...
@@ -650,7 +693,7 @@ if __name__ == '__main__':
     f.close()
     
     ## Add it
-    vsystem("pytest add -n PYTEST_INTERNAL --program-type GlobalProgram --program-name python "
+    vsystem("pytest add -n PYTEST_INTERNAL --program-name python "
               "--arguments INTERNAL_SCRIPT.py --resources INTERNAL_SCRIPT.py")
     
     ## Generate results & run the test

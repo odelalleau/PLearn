@@ -1,7 +1,7 @@
 PTester(
 expdir = "PYTEST__PL_badly_conditioned_linreg_script__RESULTS:expdir/" ;
 dataset = *1 ->AutoVMatrix(
-specification = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.amat" ;
+filename = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.amat" ;
 load_in_memory = 0 ;
 writable = 0 ;
 length = 200 ;

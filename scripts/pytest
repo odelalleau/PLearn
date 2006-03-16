@@ -22,7 +22,18 @@ build_list = [
     ( "0.9.3",   4960  ),
 
     # Exit codes & Unit Commit
-    ( "0.9.4",   5068  )    
+    ( "0.9.4",   5068  ),
+
+    #
+    # - Deprecated IntelligentDiff (-> pldiff)
+    # - Added option --pymake-compile
+    # - Re-engineeniring of Program class (depraction of subclasses)
+    #    - Programs now compiled in a centralized internal directory    
+    #    - Almost ready to start with all compilations
+    # - Output fit in 80 chars
+    # - Invoke plearn-like commands with --no-progress
+    #    - Regeneration of many tests' results
+    ( "0.9.5",   5207  )    
     ]
 
 def pytest_version( ):
