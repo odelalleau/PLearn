@@ -36,6 +36,10 @@ The gradient can be written as a sum of the corresponding two terms:
 The derivation of this result is easy (we do a similar derivation
 for the restricted Boltzmann machine below).
 
+The standard way to estimate the gradient, to avoid these sums, is
+to perform an MCMC scheme to obtain one or more samples from P(h|x)
+with x ~ training set and from P(x,h).
+
 For a reason that I do not remember exactly, the w matrix
 is normally constrained to be symmetric. I believe it has
 to do with the MCMC scheme normally used for sampling
