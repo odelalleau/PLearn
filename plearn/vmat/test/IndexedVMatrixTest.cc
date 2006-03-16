@@ -114,7 +114,7 @@ void IndexedVMatrixTest::perform()
 
     int n = indexed_vmat->length();
 
-    MAND_LOG << "source_matrix = " << source_matrix << endl;
+    MAND_LOG << "source_matrix = " << source_matrix.canonical() << endl;
     MAND_LOG << "Column 2 (value) of indexed_vmat as strings:" << endl;
     for( int i=0 ; i<n ; i++ )
     {

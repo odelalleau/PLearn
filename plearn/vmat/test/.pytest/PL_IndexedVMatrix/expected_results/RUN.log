@@ -1,4 +1,4 @@
-source_matrix = /u/lamblinp/code/PLearn/examples/data/test_suite/data_with_strings.amat
+source_matrix = PLEARNDIR:examples/data/test_suite/data_with_strings.amat
 Column 2 (value) of indexed_vmat as strings:
 0
 1
