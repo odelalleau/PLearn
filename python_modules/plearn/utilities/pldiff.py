@@ -153,7 +153,6 @@ def psavediff(former_file, later_file, precision=1e-06):
 
     # Creating the canonized files
     rw_cmd = plearn_cmd("read_and_write %s %s")
-    # self.test.linkResources( tmp_dir )    
     os.system( rw_cmd%(former_abspath, former_rw) )
     assert os.path.exists(former_rw), "Error generating %s"%former_rw
     logging.debug(rw_cmd%(former_abspath, former_rw)+' succeeded.')
@@ -167,11 +166,10 @@ def psavediff(former_file, later_file, precision=1e-06):
     diff = toldiff(former_rw, later_rw, precision)
     if diff:
         report = [ "--- %s and %s\n  Processed through read_and_write (%s)\n     %s"
-                   % (former_file, later_file, tmp_dir, diff) ]
+                   % (former_file, later_file, tmpdir, diff) ]
     logging.debug('Report: %s'%report)
 
-    ## Clean linked resources and move back to original directory.
-    # self.test.unlinkResources( tmp_dir )
+    ## Move back to original directory.
     moresh.popd( )
     logging.debug("--- popd to %s\n"%os.getcwd())
     return report
