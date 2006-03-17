@@ -154,12 +154,14 @@ class Program(core.PyTestObject):
 
         self.__is_compilable = False
         internal_exec_path = self.getInternalExecPath(overrides.pop('_signature'))
+        logging.debug("Internal Exec Path: %s"%internal_exec_path)
         if self.compiler:
             self.__is_compilable = True
             self.__attempted_to_compile = False
             self.__log_file_path = internal_exec_path+'.log'
             if not self.compilation_disabled and os.path.exists(internal_exec_path):
                 os.remove(internal_exec_path)
+                logging.debug("*** REMOVED %s"%internal_exec_path)
         logging.debug(internal_exec_path)
 
     def _optionFormat(self, option_pair, indent_level, inner_repr):
@@ -171,7 +173,10 @@ class Program(core.PyTestObject):
     def compilationSucceeded(self):
         return os.path.exists(self.getInternalExecPath())
 
-    def compile(self):        
+    def compile(self):
+
+        #######  Ensure compilation is needed  #################################
+        
         if self.compilationSucceeded():
             logging.debug("Already successfully compiled %s"%self.getInternalExecPath())
             return True
@@ -180,6 +185,12 @@ class Program(core.PyTestObject):
             logging.debug("Already attempted to compile %s"%self.getInternalExecPath())
             return False
 
+        elif self.compilation_disabled:
+            ### NOTE: This could be changed by a 'cp getProgramPath() getInternalExecPath()'
+            raise core.PyTestUsageError(
+                "Called PyTest with --no-compile option but %s was not previously compiled."
+                % self.getInternalExecPath() )
+        
         #######  First compilation attempt  ####################################
         
         targetdir, exec_name = os.path.split(self.getInternalExecPath())
