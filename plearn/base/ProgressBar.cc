@@ -55,7 +55,7 @@ namespace PLearn {
 using namespace std;
 
 
-PP<ProgressBarPlugin> ProgressBar::plugin; // = new TextProgressBarPlugin(cerr);
+PP<ProgressBarPlugin> ProgressBar::plugin;
 
 PP<ProgressBarPlugin> ProgressBar::getCurrentPlugin() 
 {
