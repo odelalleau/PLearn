@@ -62,7 +62,11 @@ private:
     mutable Vec output_comp;
     //! Row vector
     mutable Vec row;
-
+    //! Token features vector
+    mutable Vec tf;
+    //! Cost vector when using paramf
+    mutable Vec cost_paramf;
+    
 protected:
 
     //! Output of the neural network
@@ -121,15 +125,27 @@ public:
     //! Bias and weights of output layer, for theta predictor
     Var wouttheta; 
     //! Bias used only if fixed_output_weights
-    Var outbias; 
+    Var outbias;
+    //! Features of the token
+    Var token_features;
+    //! Distributed representation
+    Var dist_rep;
     //! Distributed representations 
     VarArray dist_reps;    
     //! Dictionaries for the symbolic data
     TVec< PP<Dictionary> > dictionaries;
+    //! Seen classes in training set
+    TVec<int> seen_target;
+    //! Unseen classes in training set
+    TVec<int> unseen_target;
     //! Function from input to output 
     mutable Func f;
     //! Function from input and target to output and test_costs
     mutable Func test_costf; 
+    //! Function from token features to distributed representation
+    mutable Func token_to_dist_rep;
+    //! Function for training
+    mutable Func paramf;
 
 public:
 
@@ -208,6 +224,8 @@ public:
     PP<Dictionary> target_dictionary;
     //! Target distributed representations    
     Mat target_dist_rep;
+    //! Indication that the test classes may be unseen in the training set
+    bool consider_unseen_classes;
 
 private:
     void build_();
@@ -236,6 +254,8 @@ public:
                                          const Vec& target, Vec& costs) const;
 
     virtual void makeDeepCopyFromShallowCopy(CopiesMap &copies);
+
+    void getTokenDistRep(TVec<string>& token_features, Vec& dist_rep);
 
     //! Methods to get the network's (learned) parameters.
     //virtual Mat getW1() {return w1->matValue;}

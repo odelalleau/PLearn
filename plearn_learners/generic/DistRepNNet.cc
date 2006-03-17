@@ -80,6 +80,8 @@
 #include <plearn/math/random.h>
 #include <plearn/vmat/SubVMatrix.h>
 
+#include <plearn/display/DisplayUtils.h>
+
 namespace PLearn {
 using namespace std;
 
@@ -117,7 +119,8 @@ batch_size(1),
 initialization_method("uniform_linear"),
 nnet_architecture("standard"),
 ntokens(-1),
-nfeatures_per_token(-1)
+nfeatures_per_token(-1),
+consider_unseen_classes(0)
 {}
 
 DistRepNNet::~DistRepNNet()
@@ -284,6 +287,12 @@ void DistRepNNet::declareOptions(OptionList& ol)
     declareOption(ol, "nhidden_theta_predictor", &DistRepNNet::nhidden_theta_predictor, OptionBase::buildoption, 
                   "Number of hidden units of the neural network predictor for the hidden to output weights.\n");
 
+    declareOption(ol, "consider_unseen_classes", &DistRepNNet::consider_unseen_classes, OptionBase::buildoption, 
+                  "Indication that the test classes may be unseen in the training set.\n");
+
+    declareOption(ol, "train_set", &DistRepNNet::train_set, OptionBase::learntoption, 
+                  "VMatrix used for training, that also provides information about the data (e.g. Dictionary objects for the different fields).\n");
+
 
     inherited::declareOptions(ol);
 
@@ -448,6 +457,7 @@ void DistRepNNet::build_()
                     else
                     {
                         activated_weights[i*nfeatures_per_token+j] =  winputdistrep[j](isMissing(input[nfeatures_per_token*i+j],true, true, dictionaries[input_to_dict_index[i]]->getId(OOV_TAG) ));
+                        //activated_weights[i*nfeatures_per_token+j] =  winputdistrep[j](isMissing(input[nfeatures_per_token*i+j],true, true, dictionaries[input_to_dict_index[nfeatures_per_token*i+j]]->getId(OOV_TAG) ));
                         if(nhidden_dist_rep_predictor > 0) dist_rep_hids[i] = dist_rep_hids[i] +  activated_weights[i*nfeatures_per_token+j];
                         else dist_reps[i] = dist_reps[i] +  activated_weights[i*nfeatures_per_token+j];
                     }
@@ -464,6 +474,31 @@ void DistRepNNet::build_()
                     if(i==0) woutdistrep = Var(nhidden_dist_rep_predictor+1,dim);
                     dist_reps.append(affine_transform(dist_rep_hids[i],woutdistrep));
                 }
+            }
+
+
+            // To construct the Func...
+            token_features = Var(7);
+            Var dist_rep_hid;
+            if(nhidden_dist_rep_predictor > 0) dist_rep_hid = winputdistrep[nfeatures_per_token];
+            else dist_rep = winputdistrep[nfeatures_per_token];
+            for(int j=0; j<nfeatures_per_token; j++)
+            {
+                if(input_to_dict_index[j] < 0)
+                    if(nhidden_dist_rep_predictor > 0) dist_rep_hid = dist_rep_hid + winputdistrep[j] * token_features[j];
+                    else dist_rep = dist_rep + winputdistrep[j] * token_features[j];
+                else
+                {
+                    
+                    if(nhidden_dist_rep_predictor > 0) dist_rep_hid = dist_rep_hid +  winputdistrep[j](isMissing(token_features[j],true, true, dictionaries[input_to_dict_index[j]]->getId(OOV_TAG) ));
+                    else dist_rep = dist_rep + winputdistrep[j](isMissing(token_features[j],true, true, dictionaries[input_to_dict_index[j]]->getId(OOV_TAG) ));
+                }
+            }
+
+            if(nhidden_dist_rep_predictor > 0) 
+            {
+                dist_rep_hid = add_transfer_func(dist_rep_hid);
+                dist_rep = affine_transform(dist_rep_hid,woutdistrep);
             }
 
             params.append(winputdistrep);
@@ -562,6 +597,8 @@ void DistRepNNet::build_()
         // Build functions.
         buildFuncs(input, output, target, sampleweight);
         output_comp.resize(1);
+
+        if(consider_unseen_classes) cost_paramf.resize(getTrainCostNames().length());
     }
 }
 
@@ -667,6 +704,9 @@ void DistRepNNet::buildFuncs(const Var& the_input, const Var& the_output, const 
     f = Func(the_input, argmax(the_output));
     test_costf = Func(testinvars, argmax(the_output)&test_costs);
     test_costf->recomputeParents();
+    if(dist_rep)
+        token_to_dist_rep = Func(token_features,dist_rep);
+    paramf = Func(invars, training_cost); 
 }
 
 //////////////////////////
@@ -864,21 +904,39 @@ void DistRepNNet::buildOutputFromInput(const Var& dp_input) {
         class_tag[target] = 1;
     }
 
-    Vec seen_target(0);
-    TVec<int> unseen_target(0);
+    Vec seen_target_vec(0);
+    seen_target.resize(0);
+    unseen_target.resize(0);
     for(int i=0; i<class_tag.length(); i++)
-        if(class_tag[i]) seen_target.push_back(i);
+        if(class_tag[i])
+        {
+            seen_target_vec.push_back(i);
+            seen_target.push_back(i);
+        }
         else unseen_target.push_back(i);
 
-    if(seen_target.length() != class_tag.length())
-        train_output = new VarRowsVariable(output,new SourceVariable(seen_target));
+    if(seen_target_vec.length() != class_tag.length())
+        train_output = new VarRowsVariable(output,new SourceVariable(seen_target_vec));
 
     // output_transfer_func
     if(output_transfer_func!="" && output_transfer_func!="none")
-        output = add_transfer_func(output, output_transfer_func);
+    {
+        if(consider_unseen_classes)
+            output = insert_zeros(add_transfer_func(output, output_transfer_func),seen_target);
+        else
+            output = add_transfer_func(output, output_transfer_func);
+    }
+    else
+    {
+        if(consider_unseen_classes)
+            output = insert_zeros(output,seen_target);
+    }
     
-    if(train_output && output_transfer_func!="" && output_transfer_func!="none")
-        train_output = insert_zeros(add_transfer_func(train_output, output_transfer_func),unseen_target);
+    if(train_output)
+        if(output_transfer_func!="" && output_transfer_func!="none")
+            train_output = insert_zeros(add_transfer_func(train_output, output_transfer_func),unseen_target);
+        else
+            train_output = insert_zeros(train_output,unseen_target);
 }
 
 ////////////////////
@@ -965,16 +1023,50 @@ void DistRepNNet::computeOutput(const Vec& inputv, Vec& outputv) const
 void DistRepNNet::computeOutputAndCosts(const Vec& inputv, const Vec& targetv, 
                                  Vec& outputv, Vec& costsv) const
 {
-    test_costf->sizefprop(inputv&targetv, output_comp&costsv);
-    row.resize(inputsize_);
-    row << inputv;
-    row.resize(train_set->width());
-    row.subVec(inputsize_,train_set->width()-inputsize_).fill(MISSING_VALUE);
-    if(target_dictionary)
-        target_values = target_dictionary->getValues();
+    if(!consider_unseen_classes)
+    {
+        test_costf->sizefprop(inputv&targetv, output_comp&costsv);
+        row.resize(inputsize_);
+        row << inputv;
+        row.resize(train_set->width());
+        row.subVec(inputsize_,train_set->width()-inputsize_).fill(MISSING_VALUE);
+        if(target_dictionary)
+            target_values = target_dictionary->getValues();
+        else
+            target_values = train_set->getValues(row,targetsize_);
+        outputv[0] = target_values[(int)output_comp[0]];
+    }
     else
-        target_values = train_set->getValues(row,targetsize_);
-    outputv[0] = target_values[(int)output_comp[0]];
+    {
+        if(seen_target.find((int)targetv[0])<0)
+        {
+            test_costf->sizefprop(inputv&targetv, output_comp&costsv);
+            row.resize(inputsize_);
+            row << inputv;
+            row.resize(train_set->width());
+            row.subVec(inputsize_,train_set->width()-inputsize_).fill(MISSING_VALUE);
+            if(target_dictionary)
+                target_values = target_dictionary->getValues();
+            else
+                target_values = train_set->getValues(row,targetsize_);
+            outputv[0] = target_values[(int)output_comp[0]];
+        }
+        else
+        {
+            paramf->sizefprop(inputv&targetv, output_comp&cost_paramf);
+            row.resize(inputsize_);
+            row << inputv;
+            row.resize(train_set->width());
+            row.subVec(inputsize_,train_set->width()-inputsize_).fill(MISSING_VALUE);
+            if(target_dictionary)
+                target_values = target_dictionary->getValues();
+            else
+                target_values = train_set->getValues(row,targetsize_);
+            outputv[0] = target_values[(int)output_comp[0]];
+            costsv << cost_paramf.subVec(1,cost_funcs.length());
+        }
+
+    }
 }
 
 /////////////////
@@ -1162,6 +1254,8 @@ void DistRepNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     varDeepCopyField(wouttheta, copies);
     varDeepCopyField(woutdistrep, copies);
     varDeepCopyField(outbias, copies);
+    varDeepCopyField(token_features, copies);
+    varDeepCopyField(dist_rep, copies);
     deepCopyField(dist_reps, copies);
     deepCopyField(dictionaries,copies);
     deepCopyField(input_to_dict_index,copies);
@@ -1178,6 +1272,9 @@ void DistRepNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(paramsvalues, copies);
     deepCopyField(f, copies);
     deepCopyField(test_costf, copies);
+    deepCopyField(token_to_dist_rep, copies);
+    deepCopyField(paramf, copies);
+    deepCopyField(cost_paramf, copies);
     deepCopyField(optimizer, copies);
     deepCopyField(cost_funcs, copies);
     deepCopyField(dist_rep_dim, copies);
@@ -1190,6 +1287,19 @@ void DistRepNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////
 int DistRepNNet::outputsize() const {
     return targetsize_;
+}
+
+void DistRepNNet::getTokenDistRep(TVec<string>& token_features, Vec& dist_rep)
+{
+    tf.resize(token_features.length());
+    for(int i=0; i<tf.length(); i++)
+    {
+        if(input_to_dict_index[i] < 0)
+            tf[i] = toreal(token_features[i]);
+        else
+            tf[i] = dictionaries[input_to_dict_index[i]]->getId(token_features[i]);
+    }
+    token_to_dist_rep->fprop(tf,dist_rep);
 }
 
 ///////////
@@ -1214,7 +1324,7 @@ void DistRepNNet::train()
 
     // number of samples seen by optimizer before each optimizer update
     int nsamples = batch_size>0 ? batch_size : l;
-    Func paramf = Func(invars, training_cost); // parameterized function to optimize
+    paramf = Func(invars, training_cost); // parameterized function to optimize
     Var totalcost = meanOf(train_set, paramf, nsamples, true);
     if(optimizer)
     {
