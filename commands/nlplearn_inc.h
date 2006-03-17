@@ -153,6 +153,7 @@
 #include <plearn/vmat/StackedSplitter.h>
 #include <plearn/vmat/TrainTestSplitter.h>
 #include <plearn/vmat/TrainValidTestSplitter.h>
+#include <plearn/vmat/ClassSeparationSplitter.h>
 
 /***********
  * VMatrix *
