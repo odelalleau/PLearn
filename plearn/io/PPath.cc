@@ -489,7 +489,7 @@ void PPath::expandMetaprotocols()
         else
             metapath = getenv(meta);            
         
-        if ( metapath != "" )
+        if ( !metapath.isEmpty() )
         {      
             string after_colon = endmeta == length()-1 ? "" : substr(endmeta+1);
             *this = metapath / after_colon;
