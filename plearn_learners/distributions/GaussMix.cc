@@ -495,6 +495,7 @@ void GaussMix::updateCholeskyFromPrevious(
     for (int i = 0; i < n; i++)
         is_previous[indices_previous[i]] = true;
     // Delete unused dimensions from the Cholesky decomposition.
+    //Profiler::start("updateCholeskyFromPrevious - Removing dimensions");
     chol_updated.resize(n, n);
     chol_updated << chol_previous;
     for (int i = n - 1; i >= 0; i--) {
@@ -504,10 +505,12 @@ void GaussMix::updateCholeskyFromPrevious(
         else
             choleskyRemoveDimension(chol_updated, i);
     }
+    //Profiler::end("updateCholeskyFromPrevious - Removing dimensions");
     // Need to swap 'indices_new' since these indices have been added in the
     // opposite order.
     indices_new.swap();
     // Now add dimensions that were not here previously.
+    //Profiler::start("updateCholeskyFromPrevious - Adding dimensions");
     for (int i = 0; i < p; i++)
         if (!is_previous[indices_updated[i]]) {
             int dim_to_add = indices_updated[i];
@@ -518,6 +521,7 @@ void GaussMix::updateCholeskyFromPrevious(
                 new_row[j] = full_matrix(dim_to_add, indices_new[j]);
             choleskyAppendDimension(chol_updated, new_row);
         }
+    //Profiler::end("updateCholeskyFromPrevious - Adding dimensions");
     // Finally update the 'indices_updated' list.
     indices_updated << indices_new;
     //Profiler::end("updateCholeskyFromPrevious");
@@ -1617,8 +1621,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
         }
     }
     assert( !isnan(log_likelihood) );
-    return log_likelihood;
     //Profiler::end("computeLogLikelihood");
+    return log_likelihood;
 }
 
 //////////////////////////////
