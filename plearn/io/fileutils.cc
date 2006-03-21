@@ -503,10 +503,10 @@ int countNonBlankLinesOfFile(const PPath& filename)
 PPath newFilename(const PPath& directory, const string& prefix, bool is_directory)
 {
 #if defined(_MINGW_) || (defined(WIN32) && !defined(__CYGWIN__))
-    PLERROR("This call is not yet implemented for this platform");
-    return "";
+    //PLERROR("This call is not yet implemented for this platform");
+    char* tmpfilename = tempnam(directory.absolute().c_str(), prefix.c_str());
 #else
-    // TODO Better implementation with PPath.
+    // TODO Could probably make a better implementation.
     const string tmpdirname = remove_trailing_slash(directory.absolute());
     const int length = int(tmpdirname.length() + 1 + prefix.length() + 6 + 1);
     char* tmpfilename = new char[length];
@@ -519,15 +519,16 @@ PPath newFilename(const PPath& directory, const string& prefix, bool is_director
         PLERROR("In newFilename - Could not create temporary file");
     // Close the file descriptor, since we are not using it.
     close(fd);
+#endif
+    if(!tmpfilename)
+        PLERROR("In newFilename - Could not obtain temporary file name");
     if (is_directory) {
-        // Defeats the purpose of mktemp, but who cares?
-        std::remove(tmpfilename);
+        // Defeats the purpose of creating a temporary file, but who cares?
+        PLearn::rm(tmpfilename);
         PR_MkDir(tmpfilename, 0777);
     }
-    if(!tmpfilename)
-        PLERROR("In newFilename : could not make a new temporary filename");
     return tmpfilename;
-#endif
+}
 }
 
 ///////////////////////
