@@ -114,8 +114,15 @@ TVec<VMat> TrainTestSplitter::getSplit(int k)
     int test_length = calc_with_pct ? int(test_fraction*l) : test_fraction_abs;
     int train_length = l - test_length;
 
-    split_[0] = dataset.subMatRows(0, train_length);
-    split_[1] = dataset.subMatRows(train_length, test_length);
+    if(train_length == l)
+        split_[0] = dataset;//to get the right metadatadir when its the same matrix
+    else
+        split_[0] = dataset.subMatRows(0, train_length);
+    if(test_length == l)
+        split_[1] = dataset;//to get the right metadatadir when its the same matrix
+    else
+        split_[1] = dataset.subMatRows(train_length, test_length);
+
     if (append_train) {
         split_.resize(3);
         split_[2] = split_[0];

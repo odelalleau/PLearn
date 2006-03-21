@@ -156,7 +156,7 @@ void FileVMatrix::build_()
     if (build_new_file || !isfile(filename_))
     {
         if (!writable)
-            PLERROR("In FileVMatrix::build_ - You asked to create a new file, but 'writable' is set to 0 !");
+            PLERROR("In FileVMatrix::build_ - You asked to create a new file (%s), but 'writable' is set to 0 !", filename_.c_str());
 
 #ifdef USE_NSPR_FILE
         f = PR_Open(filename_.c_str(), PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE, 0666);        

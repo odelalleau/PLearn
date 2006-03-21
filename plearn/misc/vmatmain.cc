@@ -69,6 +69,7 @@
 #include <pdcurses/curses.h>
 #endif
 
+
 // Some of the above 'curses.h' includes may define those annoying macros,
 // which would conflict with the code that follows.
 #ifdef min

@@ -530,6 +530,7 @@ PPath newFilename(const PPath& directory, const string& prefix, bool is_director
     return tmpfilename;
 }
 
+
 ///////////////////////
 // makeFileNameValid //
 ///////////////////////

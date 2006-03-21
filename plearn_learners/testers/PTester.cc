@@ -509,7 +509,7 @@ Vec PTester::perform(bool call_forget)
             {
                 if(is_splitdir && save_initial_learners)
                     PLearn::save(splitdir/"initial_learner.psave",learner);
-      
+
                 train_stats->forget();
                 learner->train();
                 train_stats->finalize();

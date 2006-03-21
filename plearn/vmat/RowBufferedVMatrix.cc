@@ -85,7 +85,7 @@ real RowBufferedVMatrix::get(int i, int j) const
         if (i < 0 || i >= length())
             PLERROR("In RowBufferedVMatrix::get: row index (%d) outside valid range [%d,%d]", i, 0, length_-1);
         if (j < 0 || j >= width())
-            PLERROR("In RowBufferedVMatrix::get: column index (%d) outside valid range [%d,%d]", i, 0, width_-1);        
+            PLERROR("In RowBufferedVMatrix::get: column index (%d) outside valid range [%d,%d]", j, 0, width_-1);        
 #endif
         current_row.resize(width_);
         getNewRow(i, current_row);
