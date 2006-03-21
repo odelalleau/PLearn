@@ -146,8 +146,14 @@ public:
         assert( oto );
         return indexableObjectSize(oto->*ptr);
     }
-    
+
+    //! Accessor to the member pointer wrapped by the option
+    OptionType ObjectType::* getPtr() const
+    {
+        return ptr;
+    }
 };
+
 
 //#####  TVec-Specific Option  ################################################
 
