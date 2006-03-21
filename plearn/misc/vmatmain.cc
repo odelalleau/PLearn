@@ -59,14 +59,26 @@
 #include <plearn/io/load_and_save.h>
 
 // norman: added check
-#ifdef WIN32
+#if defined(WIN32) && !defined(_MINGW_) && !defined(__CYGWIN__)
 #include "curses.h"
-#undef min
-#undef max
-#undef clear // I want to use a clear and it is already defined in curses.h
-
+#elif !defined(_MINGW_)
+#include <ncurses/curses.h>
 #else
-#include <curses.h>
+// There does not seem to be a Windows implementation of 'ncurses', thus we use
+// 'pdcurses' instead.
+#include <pdcurses/curses.h>
+#endif
+
+// Some of the above 'curses.h' includes may define those annoying macros,
+// which would conflict with the code that follows.
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
+#ifdef clear
+#undef clear
 #endif
 
 namespace PLearn {
