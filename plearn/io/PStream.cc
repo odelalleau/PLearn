@@ -462,6 +462,12 @@ void PStream::writeAsciiNum(float x)
 {
     if(is_missing(x))
         write("nan");
+    else if (isinf(x)) {
+        if (x < 0)
+            write("-inf");
+        else
+            write("inf");
+    }
     else
     {
         snprintf(tmpbuf, sizeof(tmpbuf), "%.8g", x);
@@ -473,6 +479,12 @@ void PStream::writeAsciiNum(double x)
 {
     if(is_missing(x))
         write("nan");
+    else if (isinf(x)) {
+        if (x < 0)
+            write("-inf");
+        else
+            write("inf");
+    }
     else
     {
         snprintf(tmpbuf, sizeof(tmpbuf), "%.18g", x);
