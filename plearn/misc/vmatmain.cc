@@ -62,7 +62,7 @@
 #if defined(WIN32) && !defined(_MINGW_) && !defined(__CYGWIN__)
 #include "curses.h"
 #elif !defined(_MINGW_)
-#include <ncurses/curses.h>
+#include "curses.h"
 #else
 // There does not seem to be a Windows implementation of 'ncurses', thus we use
 // 'pdcurses' instead.
