@@ -271,6 +271,96 @@ void Object::writeOptionVal(PStream &out, const string &optionname) const
 }
 
 
+//#####  Object::parseOptionName  #############################################
+
+bool Object::parseOptionName(const string& optionname,
+                             Object*& final_object,
+                             OptionList::iterator& option_iter,
+                             string& option_index)
+{
+    OptionList &options = getOptionList();
+    for (OptionList::iterator it = options.begin(); it != options.end(); ++it)
+        if ((*it)->optionname() == optionname) {
+            final_object = this;
+            option_iter  = it;
+            option_index = "";
+            return true;
+        }
+
+    // Found no options matching 'optionname'. First look for brackets. If there
+    // are brackets, they must be located before any dot.
+    size_t lb_pos = optionname.find('[');
+    size_t rb_pos = optionname.find(']');
+    size_t dot_pos = optionname.find('.');
+    if (rb_pos != string::npos) {
+        if (lb_pos == string::npos)
+            PLERROR("Object::parseOptionName() - Unmatched brackets when parsing option \"%s\"",
+                    optionname.c_str());
+        string optname = optionname.substr(0, lb_pos);
+
+        // Found no dot, or a right bracket before a dot
+        if (dot_pos == string::npos || rb_pos < dot_pos) {
+            string index = optionname.substr(lb_pos + 1, rb_pos - lb_pos - 1);
+            for (OptionList::iterator it = options.begin(); it != options.end(); ++it)
+                if ((*it)->optionname() == optname) {
+                    // There are two cases here: either there is a dot located
+                    // immediately after the right bracket, or there is no dot.  If
+                    // there is a dot, the option HAS to be an Object
+                    if (dot_pos != string::npos && dot_pos == rb_pos+1) {
+                        int i = toint(index);
+                        return (*it)->getIndexedObject(this, i)->
+                            parseOptionName(optionname.substr(dot_pos + 1),
+                                            final_object, option_iter, option_index);
+                    }
+                    else if (dot_pos == string::npos) {
+                        final_object = this;
+                        option_iter  = it;
+                        option_index = index;
+                        return true;
+                    }
+                    else {
+                        PLERROR("Object::writeOptionVal() - unknown option format \"%s\"",
+                                optionname.c_str());
+                        return false;        //!< Shut up compiler
+                    }
+                }
+        }
+    }
+    else if (lb_pos != string::npos)
+        PLERROR("Object::writeOptionVal() - Unmatched brackets when parsing option \"%s\"",
+                optionname.c_str());
+
+    // No brackets, look for a dot
+    if (dot_pos != string::npos) {
+        // Found a dot, assume it's a field with an Object * field
+        string optname = optionname.substr(0, dot_pos);
+        string optoptname = optionname.substr(dot_pos + 1);
+        for (OptionList::iterator it = options.begin(); it != options.end(); ++it)
+            if ((*it)->optionname() == optname) {
+                return (*it)->getAsObject(this)->
+                    parseOptionName(optoptname, final_object, option_iter, option_index);
+            }
+    }
+
+    // Set reasonable defaults for an error condition
+    final_object = 0;
+    option_iter  = OptionList::iterator();
+    option_index = "";
+    return false;
+}
+
+
+bool Object::parseOptionName(const string& optionname,
+                             const Object*& final_object,
+                             OptionList::iterator& option_iter,
+                             string& option_index) const
+{
+    return const_cast<Object*>(this)->parseOptionName(
+        optionname, const_cast<Object*&>(final_object),
+        option_iter, option_index);
+}
+    
+
 //#####  Object::getOptionsToSave  ############################################
 
 string Object::getOptionsToSave() const

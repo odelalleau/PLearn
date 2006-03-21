@@ -528,9 +528,13 @@ public:
      */
     virtual string info() const; 
 
+
+    //#####  Options-Related Functions  #######################################
+    
     /**
      *  Reads and sets the value for the specified option from the specified
-     *  stream.
+     *  stream.  Fully-qualified options syntax of the form
+     *  "option[i].suboption.etc" is supported.
      *
      *  @param in          PStream from which to read the new option value
      *  @param optionname  Name of the option to read from the stream
@@ -539,11 +543,51 @@ public:
     
     /**
      *  Writes the value of the specified option to the specified stream.
+     *  Fully-qualified options syntax of the form "option[i].suboption.etc" is
+     *  supported.
      *
      *  @param out         PStream into which write the option value
      *  @param optionname  Name of the option to write out to the stream
      */
     void writeOptionVal(PStream &out, const string &optionname) const;
+
+    /**
+     *  Parses a fully qualified option name into the following parts:
+     *
+     *  - The actual object it refers to (may not be \c this)
+     *  - The iterator corresponding to the option within the object's
+     *    OptionList.
+     *  - The index number (or string) in the case of an indexed option,
+     *    or "" if the option is not indexed.
+     *
+     *  @param[in]  optionname    Name of the option to parse
+     *  @param[out] final_object  Pointer to the ultimate object within which
+     *                            the option is contained
+     *  @param[out] option_iter   Iterator within the \c final_object
+     *                            OptionList pointing to the Option object
+     *  @param[out] option_index  If we are accessing an indexed option, this
+     *                            is the index (which is a string, to allow
+     *                            eventual indexing of maps); otherwise ""
+     *  @return                   If \c true, the option was found; if \c false
+     *                            the option was not found; all output parameters
+     *                            contain undefined values.
+     *
+     *  Note: this function implements the basic mechanism of readOptionVal and
+     *  writeOptionVal; the latter functions should be re-implemented in terms
+     *  of the present function.
+     */
+    bool parseOptionName(const string& optionname,
+                         Object*& final_object,
+                         OptionList::iterator& option_iter,
+                         string& option_index);
+
+    /**
+     *  Const overload of parseOptionName.
+     */
+    bool parseOptionName(const string& optionname,
+                         const Object*& final_object,
+                         OptionList::iterator& option_iter,
+                         string& option_index) const;
 
     /**
      *  Rreturns a string of the names of all options to save.
@@ -554,31 +598,6 @@ public:
      *          separated by spaces.
      */
     virtual string getOptionsToSave() const;
-
-    /**
-     *  The default implementation serializes the object in the new format:
-     *
-     *  @code
-     *  Classname(optionname=optionval; optionname=optionval; ...)
-     *  @endcode
-     *
-     *  Subclasses may override this method to provide different outputs
-     *  depending on \c out's mode (\c plearn_ascii, \c raw_ascii, ...).
-     *
-     *  @param in  Stream onto which serialize the object
-     */
-    virtual void newwrite(PStream& out) const;
-
-    /**
-     *  The default implementation reads and builds an object in the new format:
-     *
-     *  @code
-     *  Classname(optionname=optionval; optionname=optionval; ...)
-     *  @endcode
-     *
-     *  @param in  Stream from which read the object
-     */
-    void newread(PStream& in);
 
     /**
      *  Set an option (a data field) into an object.  This is a generic method
@@ -631,36 +650,36 @@ public:
     //! Non-virtual method calls virtual \c changeOptions()
     void changeOption(const string& optionname, const string& value);
 
-    /**
-     *  Write the object to a C++ \c ostream.
-     *
-     *  The write method should write a complete description of the object to
-     *  the given stream, that should be enough to later reconstruct it.  (a
-     *  somewhat human-readable ascii format is usually preferred).  The new
-     *  default version simply calls newwrite(...) which simply writes all the
-     *  "options" declared in declareOptions, so there is no need to overload
-     *  write in subclasses.  Old classes that still override write should
-     *  progressively be moved to the new declareOptions/build mechanism.
-     *
-     *  @deprecated  Use the declareOption / build mechanism instead, that provides
-     *               automatic serialization
-     */
-    virtual void write(ostream& out) const;
+
+    //#####  Input/Output-Related Functions  ##################################
 
     /**
-     *  Read the object from a C++ \c istream.
+     *  The default implementation serializes the object in the new format:
      *
-     *  The read method is the counterpart of the write method. It should be
-     *  able to reconstruct an object that has been previously written with the
-     *  write method. The current implementation automatically decides whether
-     *  to call newread() (which is based on the new declareOptions/build
-     *  mechanism) or oldread() for backward compatibility (if the header is of
-     *  the form <ClassName>).
+     *  @code
+     *  Classname(optionname=optionval; optionname=optionval; ...)
+     *  @endcode
      *
-     *  @deprecated  Use the declareOption / build mechanism instead, that
-     *               provides automatic serialization
+     *  Subclasses may override this method to provide different outputs
+     *  depending on \c out's mode (\c plearn_ascii, \c raw_ascii, ...).
+     *
+     *  @param in  Stream onto which serialize the object
      */
-    virtual void read(istream& in);
+    virtual void newwrite(PStream& out) const;
+
+    /**
+     *  The default implementation reads and builds an object in the new format:
+     *
+     *  @code
+     *  Classname(optionname=optionval; optionname=optionval; ...)
+     *  @endcode
+     *
+     *  @param in  Stream from which read the object
+     */
+    void newread(PStream& in);
+
+
+    //#####  Remote Method Invokation  ########################################
 
     /**
      *  The call method is the standard way to allow for remote method
@@ -708,6 +727,40 @@ public:
      */
     virtual void run();
 
+
+    //#####  Deprecated Interfaces  ###########################################
+
+    /**
+     *  Write the object to a C++ \c ostream.
+     *
+     *  The write method should write a complete description of the object to
+     *  the given stream, that should be enough to later reconstruct it.  (a
+     *  somewhat human-readable ascii format is usually preferred).  The new
+     *  default version simply calls newwrite(...) which simply writes all the
+     *  "options" declared in declareOptions, so there is no need to overload
+     *  write in subclasses.  Old classes that still override write should
+     *  progressively be moved to the new declareOptions/build mechanism.
+     *
+     *  @deprecated  Use the declareOption / build mechanism instead, that provides
+     *               automatic serialization
+     */
+    virtual void write(ostream& out) const;
+
+    /**
+     *  Read the object from a C++ \c istream.
+     *
+     *  The read method is the counterpart of the write method. It should be
+     *  able to reconstruct an object that has been previously written with the
+     *  write method. The current implementation automatically decides whether
+     *  to call newread() (which is based on the new declareOptions/build
+     *  mechanism) or oldread() for backward compatibility (if the header is of
+     *  the form <ClassName>).
+     *
+     *  @deprecated  Use the declareOption / build mechanism instead, that
+     *               provides automatic serialization
+     */
+    virtual void read(istream& in);
+
     //! @deprecated  For backward compatibility with old saved object
     virtual void oldread(istream& in);
 
@@ -725,8 +778,9 @@ public:
      */
     virtual void load(const PPath& filename);
 
+
 protected:
-    //#####  Protected Member Functions  ##########################################
+    //#####  Protected Member Functions  ######################################
 
     /**
      *  Declare options (data fields) for the class.  Redefine this in
@@ -754,7 +808,7 @@ protected:
     static void declareOptions(OptionList& ol) { }
 
 private:
-    //#####  Private Member Functions  ############################################
+    //#####  Private Member Functions  ########################################
 
     /**
      *  Object-specific post-constructor.  This method should be redefined in
@@ -769,6 +823,8 @@ private:
     void build_();
 };
 
+
+//#####  Inline Implementations  ##############################################
 
 /**
  *  This function builds an object from its representation in the stream.
