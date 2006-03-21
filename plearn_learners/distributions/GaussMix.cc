@@ -47,6 +47,7 @@
 #include <plearn/math/Cholesky_utils.h>
 #include <plearn/math/pl_erf.h>   //!< For gauss_log_density_stddev().
 #include <plearn/math/plapack.h>
+//#include <plearn/sys/Profiler.h>
 //#include <plearn/math/random.h>
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/vmat/MemoryVMatrix.h>
@@ -341,6 +342,7 @@ void GaussMix::changeOptions(const map<string,string>& name_value)
 // computeMeansAndCovariances //
 ////////////////////////////////
 void GaussMix::computeMeansAndCovariances() {
+    //Profiler::start("computeMeansAndCovariances");
     VMat weighted_train_set;
     Vec sum_columns(L);
     Vec storage_D(D);
@@ -376,7 +378,9 @@ void GaussMix::computeMeansAndCovariances() {
                         "standard deviation is 'nan'");
         } else {
             assert( type_id == TYPE_GENERAL );
+            //Profiler::start("computeInputMeanAndCovar");
             computeInputMeanAndCovar(weighted_train_set, center_j, covariance);
+            //Profiler::end("computeInputMeanAndCovar");
             if (use_impute_missing) {
                 // Need to add the extra contributions.
                 if (sum_of_posteriors[j] > 0) {
@@ -447,6 +451,7 @@ void GaussMix::computeMeansAndCovariances() {
                 }
         }
     }
+    //Profiler::end("computeMeansAndCovariances");
 }
 
 ////////////////////////////////
@@ -458,6 +463,7 @@ void GaussMix::updateCholeskyFromPrevious(
         const TVec<int>& indices_previous, const TVec<int>& indices_updated)
         const
 {
+    //Profiler::start("updateCholeskyFromPrevious");
     static TVec<bool> is_previous;
     static TVec<bool> is_updated;
     static TVec<int> indices_new;
@@ -466,6 +472,7 @@ void GaussMix::updateCholeskyFromPrevious(
     if (indices_updated.isEmpty()) {
         // All values are missing: the returned matrix should be empty.
         chol_updated.resize(0, 0);
+        //Profiler::end("updateCholeskyFromPrevious");
         return;
     }
     // Initialization.
@@ -513,6 +520,7 @@ void GaussMix::updateCholeskyFromPrevious(
         }
     // Finally update the 'indices_updated' list.
     indices_updated << indices_new;
+    //Profiler::end("updateCholeskyFromPrevious");
 }
 
 /////////////////////
@@ -521,6 +529,7 @@ void GaussMix::updateCholeskyFromPrevious(
 void GaussMix::addToCovariance(const Vec& y, int j,
                                const Mat& cov, real post)
 {
+    //Profiler::start("addToCovariance");
     assert( y.length() == cov.length() && y.length() == cov.width() );
     assert( n_predictor == 0 );
     assert( impute_missing );
@@ -803,6 +812,7 @@ void GaussMix::addToCovariance(const Vec& y, int j,
         ind << *the_ind_inv;
     }
 
+    //Profiler::end("addToCovariance");
 }
 
 //////////////////////////
@@ -810,6 +820,7 @@ void GaussMix::addToCovariance(const Vec& y, int j,
 //////////////////////////
 real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) const
 {
+    //Profiler::start("computeLogLikelihood");
     static int size;    // Size of the vector whose density is computed.
     // Index where we start (usually 0 when 'is_predictor', and 'n_predictor'
     // otherwise).
@@ -1533,6 +1544,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         eigenvecs = dummy_mat;
                     }
 
+                    //Profiler::end("computeLogLikelihood");
                     return log_likelihood;
                 }
 
@@ -1606,6 +1618,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
     }
     assert( !isnan(log_likelihood) );
     return log_likelihood;
+    //Profiler::end("computeLogLikelihood");
 }
 
 //////////////////////////////
@@ -1623,6 +1636,7 @@ void GaussMix::computeAllLogLikelihoods(const Vec& sample, const Vec& log_like)
 // computePosteriors //
 ///////////////////////
 void GaussMix::computePosteriors() {
+    //Profiler::start("computePosteriors");
     sample_row.resize(D);
     if (impute_missing) {
         sum_of_posteriors.resize(L); // TODO Do that in resize method.
@@ -1737,6 +1751,7 @@ void GaussMix::computePosteriors() {
         }
     }
     }
+    //Profiler::end("computePosteriors");
 }
 
 ///////////////////////////
