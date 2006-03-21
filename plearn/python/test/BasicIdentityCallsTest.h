@@ -48,6 +48,9 @@
 
 namespace PLearn {
 
+// Forward declaration.
+class PythonCodeSnippet;
+
 /**
  * The first sentence should be a BRIEF DESCRIPTION of what the class does.
  * Place the rest of the class programmer documentation here.  Doxygen supports
