@@ -141,7 +141,7 @@ process( const string& scriptfile,
         }
     }
 #ifdef WIN32
-    Popen popen("python2.4.exe", final_args);
+    Popen popen("python.exe", final_args);
 #else
     Popen popen(drivername, final_args);
 #endif
