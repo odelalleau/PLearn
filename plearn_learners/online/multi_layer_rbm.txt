@@ -260,17 +260,26 @@ RBMLayer stores:
   - some flags to know what is up-to-date
 
 RBMParameters stores (and has to update):
-  - weights between up and down layers
+  - weights: weights between up and down layers
   - bias (and parameters like the quadratic term, in gaussian units) for both
     up and down layer
-  - a pointer to its current input vector (sample or expectation),
+  - input_vec: a pointer to its current input vector (sample or expectation),
     and a flag to know if it is up or down
+  - up_pos_stats: statistics of the positive phase for up layer
+  - down_pos_stats: statistics of the positive phase for down layer
+  - up_neg_stats: statistics of the negative phase for up layer
+  - down_neg_stats: statistics of the negative phase for down layer
   - a learning rate
 
 The methods are:
   * RBMParameters::setAsUpInput( Vec ) : set the input vector, and flag to 'up'
   * RBMParameters::setAsDownInput( Vec ) : same, but 'down'
-  * accumulate statistics (how? a start and stop method?)
+  * RBMParameters::setAsPosStats( Vec down_stats, Vec up_stats ) :
+      down_pos_stats << down_stats;
+      up_pos_stats << up_stats;
+  * RBMParameters::setAsNegStats( Vec down_stats, Vec up_stats ) :
+      down_neg_stats << down_stats;
+      up_neg_stats << up_stats;
   * RBMParameters::update() (from statistics accumulated)
   * implement fprop(), bpropUpdate() ?
   * RBMParameters::computeUnitParams( int i, const Vec& params ) : put in
@@ -310,10 +319,27 @@ been:
     output.computeExpectation();
     out_exp << output.expectation;
 
+The learning of one example (input_vec) by contrastive divergence:
+
+    // positive phase
+    input.sample << input_vec;
+    rbmp.setAsDownInput( input.sample );
+    output.getUnitParams( rbmp );
+    output.computeSample();
+    rbmp.setAsPosStats( input.sample, output.sample );
+
+    // negative phase
+    rbmp.setAsUpInput( output.sample );
+    input.getUnitParams( rbmp );
+    input.computeSample();
+    rbmp.setAsDownInput( input.sample );
+    output.getUnitParams( rbmp );
+    output.computeSample();
+    rbmp.setAsNegStats( input.sample, output.sample );
+
+    // update
+    rbmp.update();
 
 
-
-
-     
 
 
