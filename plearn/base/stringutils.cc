@@ -189,6 +189,18 @@ string removenewline(const string& s)
     return s.substr(0,pos);
 }
 
+//! Utility function to strip a string of leading and trailing quotes
+string removequotes(const string& s)
+{
+    const int n = s.size();
+    if (n >= 2) {
+        if ((s[0] == '"'  && s[n-1] == '"') ||
+            (s[0] == '\'' && s[n-1] == '\''))
+            return s.substr(1,n-2);
+    }
+    return s;
+}
+    
 string remove_trailing_slash(const string& s)
 {
     string::size_type pos = s.length();

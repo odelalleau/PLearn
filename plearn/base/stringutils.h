@@ -85,6 +85,10 @@ string removeallblanks(const string& s);
 //!  removes any trailing '\n' and/or '\r'
 string removenewline(const string& s);
 
+//!  remove exactly one pair of matching leading and trailing '\'' and '"';
+//!  if there is none, return the string unmodified
+string removequotes(const string& s);
+
 //!  convert a string to all lowercase
 string lowerstring(const string& s);
   
