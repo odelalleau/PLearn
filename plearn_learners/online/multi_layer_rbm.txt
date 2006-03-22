@@ -243,7 +243,75 @@ Combined operations, in a supervised RBM network:
      last_hidden_layer->output_activation_external_contribution.clear()
      return v
 
-        
+-------------------------------------------------------------------------------
+Other architecture and pseudo-code proposed
+-------------------------------------------------------------------------------
+
+The units themselves, stored in layers (class RBMLayer), are separated
+from the weighted links between layers (class RBMParameters, inheriting
+from OnlineLearningModule). The top-level architecture of the network (say,
+DeepBeliefNetwork) is a PLearner (maybe a PDistribution) with functions for
+sampling.
+
+RBMLayer stores:
+  - layer_params: parameters describing the distribution
+  - expectations: expectation of each unit
+  - sample: sample from the distribution
+  - some flags to know what is up-to-date
+
+RBMParameters stores (and has to update):
+  - weights between up and down layers
+  - bias (and parameters like the quadratic term, in gaussian units) for both
+    up and down layer
+  - a pointer to its current input vector (sample or expectation),
+    and a flag to know if it is up or down
+  - a learning rate
+
+The methods are:
+  * RBMParameters::setAsUpInput( Vec ) : set the input vector, and flag to 'up'
+  * RBMParameters::setAsDownInput( Vec ) : same, but 'down'
+  * accumulate statistics (how? a start and stop method?)
+  * RBMParameters::update() (from statistics accumulated)
+  * implement fprop(), bpropUpdate() ?
+  * RBMParameters::computeUnitParams( int i, const Vec& params ) : put in
+    params the parameters describing the distribution of unit i (i is an index
+    in the up layer if input vector is 'down', and vice-versa), and
+    invalidates 'sample' and 'expectation'
+  * RBMParameters:: computeUnitParams( const Vec& all_params ) : same thing,
+    for every unit in the appropriate layer
+
+  * RBMLayer::getUnitParams( int i, RBMParams rbmp ) :
+      calls rbmp->computeUnitParams( i, layer_params.subvec(...) )
+  * RBMLayer::getUnitParams( RBMParams rbmp ) :
+      calls rbmp->computeUnitParams( layer_params ) by default, or
+      rbmp->computeUnitParams( i, layer_params ) for i in a subset of the
+    units, for "sparse" layers
+  * RBMLayer::computeSample()
+      get 'sample' from 'layer_params'
+  * RBMLayer::computeExpectation()
+      get 'expectation' from 'layer_params'
+
+If a DeepBeliefNetwork has two RBMLayer's (input and output) and one
+RBMParameters (rbmp) linking both of them, a simple up propagation of
+input_vec to a sample (out_sample) would typically call:
+
+    input.sample << input_vec;
+    rbmp.setAsDownInput( input.sample );
+    output.getUnitParams( rbmp );
+    output.computeSample();
+    out_sample << output.sample;
+
+If we wanted the expectation (out_exp) instead of a sample, it would have
+been:
+
+    input.sample << input_vec;
+    rbmp.setAsDownInput( input.sample );
+    output.getUnitParams( rbmp );
+    output.computeExpectation();
+    out_exp << output.expectation;
+
+
+
 
 
      
