@@ -365,7 +365,12 @@ def locateconfigfile(file,configdir,config_text=''):
             if os.path.isfile(fpath):
                 print '* FOUND A MORE RECENT MODEL FILE: ' + modelpath + ' ***'
                 print '* SAVING PREVIOUS CONFIG FILE AS: ' + fpath+'.bak '
-                os.rename(fpath, fpath+'.bak')
+                # Remove existing backup file if necessary: this is needed
+                # under Windows, where an exception is raised otherwise.
+                backup_file = fpath + '.bak'
+                if os.path.isfile(backup_file):
+                    os.remove(backup_file)
+                os.rename(fpath, backup_file)
             print '* COPYING MODEL FILE ' + modelpath + ' TO ' + fpath
             print '* PLEASE ADAPT THE CONFIGURATION TO YOUR NEEDS'
             print '*****************************************************'
