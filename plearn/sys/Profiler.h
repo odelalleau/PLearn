@@ -42,15 +42,12 @@
 #ifndef PROFILER_INC
 #define PROFILER_INC
 
-#define PROFILE
 
-#ifdef WIN32
-// For the moment I put a compiler error
-// but I could throw a PERROR..
-#error Profiler is not working on WIN32
+#ifndef WIN32
+#define PROFILE
+#include <sys/times.h>
 #endif
 
-#include <sys/times.h>
 #include <plearn/base/general.h>
 #include <plearn/base/plerror.h>
 #include <plearn/base/stringutils.h>
@@ -127,7 +124,14 @@ public:
 public:
 
     //! Enable profiling
-    static void activate() { active=true; }
+    static void activate()
+    {
+#ifdef WIN32
+        PLERROR("In Profiler::activate - Profiling is not currently supported "
+                "under Windows");
+#endif
+        active=true;
+    }
 
     //! Disable profiling
     static void disactivate() { active=false; }

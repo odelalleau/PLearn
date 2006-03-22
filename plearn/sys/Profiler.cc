@@ -44,7 +44,9 @@ using namespace std;
 
 // initialize static variables
 map<string,Profiler::Stats> Profiler::codes_statistics;
+#ifdef PROFILE
 struct tms Profiler::t;
+#endif
 bool Profiler::active  = false;
 
 #ifdef PROFILE
