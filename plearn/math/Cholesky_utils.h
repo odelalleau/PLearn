@@ -76,9 +76,17 @@ void choleskyUpgrade(Mat& L, Vec v);
 /****** Utility functions ******/
 
 //! From 'Matrix Algorithms, Vol1' by G. W. Stewart, p.272, 273, 335, 338.
-void chol_rotgen(real& a, real& b, real& c, real& s);
-void chol_rotapp(real c, real s, const Vec& x, const Vec& y);
 void chol_dxch(Mat& R, int l, int m);
+void chol_rotapp(real c, real s, const Vec& x, const Vec& y);
+void chol_rotgen(real& a, real& b, real& c, real& s);
+
+//! These two functions are variants of the above functions, where the R matrix
+//! is given as its transpose (which is the case in the Cholesky
+//! decomposition). This allows a more efficient implementation of
+//! choleskyRemoveDimension(..).
+void chol_dxch_tr(Mat& R_t, int l, int m);
+void chol_rotapp_tr(real c, real s, const Mat& x, const Mat& y);
+
 
 // debugging / test program for the above functions
 void testCholeskyRoutines();

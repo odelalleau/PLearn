@@ -84,6 +84,8 @@ void choleskyAppendDimension(Mat& L, const Vec& new_row)
 void choleskyRemoveDimension(Mat& L, int i)
 {
     int p = L.length();
+    /* Old version, will be removed when the fast version below is tested
+
     // Note that in order to use the exact algorithms from the matrix
     // algorithms book, we need to transpose L (since R = L' in the QR
     // decomposition). There may be a more efficient way to do the same
@@ -93,6 +95,10 @@ void choleskyRemoveDimension(Mat& L, int i)
         chol_dxch(L, j, j + 1);
     L = L.subMat(0, 0, p - 1, p - 1);
     L.transpose();
+    */
+    for (int j = i; j < p - 1; j++)
+        chol_dxch_tr(L, j, j + 1);
+    L = L.subMat(0, 0, p - 1, p - 1);
 }
 
 // L (n_active x n_active) is lower-diagonal and is such that A = L L' = lambda I + sum_t phi_t(x_t) phi_t(x_t)'
@@ -245,6 +251,34 @@ void chol_dxch(Mat& R, int l, int m)
     }
 }
 
+//////////////////
+// chol_dxch_tr //
+//////////////////
+void chol_dxch_tr(Mat& R, int l, int m)
+{
+    if (l == m)
+        return;
+    if (l > m) {
+        int tmp = l;
+        l = m;
+        m = tmp;
+    }
+    int n = R.width();
+    int p = n;
+    R.subMatColumns(0, m + 1).swapRows(l, m);
+    real c, s;
+    for (int k = m - 1; k >= l + 1; k--) {
+        chol_rotgen(R(l, k), R(l, k + 1), c, s);
+        chol_rotapp_tr(c, s, R.subMat(k, k, p - k, 1),
+                             R.subMat(k, k + 1, p - k, 1));
+    }
+    for (int k = l; k < m; k++) {
+        chol_rotgen(R(k, k), R(k, k + 1), c, s);
+        chol_rotapp_tr(c, s, R.subMat(k + 1, k, p - k - 1, 1),
+                             R.subMat(k + 1, k + 1, p - k - 1, 1));
+    }
+}
+
 /////////////////
 // chol_rotapp //
 /////////////////
@@ -257,6 +291,38 @@ void chol_rotapp(real c, real s, const Vec& x, const Vec& y)
     multiplyScaledAdd(y, c, s, t);
     multiplyScaledAdd(x, c, -s, y);
     x << t;
+}
+
+////////////////////
+// chol_rotapp_tr //
+////////////////////
+void chol_rotapp_tr(real c, real s, const Mat& x, const Mat& y)
+{
+    static Vec t;
+    assert( x.length() == y.length() );
+    int n = x.length();
+    int x_mod = x.mod();
+    int y_mod = y.mod();
+    t.resize(n);
+    // multiplyScaledAdd(y, c, s, t);
+    real* y_ = y.data();
+    real* t_ = t.data();
+    real* x_ = x.data();
+    for (int i = 0; i < n; i++) {
+        *t = *x_; // Backup of old value of x.
+        *x_ = c * (*x_) + s * (*y_);
+        t_++;
+        x_ += x_mod;
+        y_ += y_mod;
+    }
+    // multiplyScaledAdd(x, c, -s, y);
+    y_ = y.data();
+    t_ = t.data();
+    for (int i = 0; i < n; i++) {
+        *y_ = c * (*y_) - s * (*t_);
+        y_ += y_mod;
+        t_++;
+    }
 }
 
 /////////////////
