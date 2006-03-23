@@ -32,6 +32,7 @@
 #  library, go to the PLearn Web site at www.plearn.org
 
 import os, sys, re, string, glob, socket, time, select, shutil, fnmatch, math
+import plearn.utilities.toolkit as toolkit
 from stat import *
 from types import *
 from popen2 import *
@@ -496,7 +497,7 @@ def get_distcc_hosts():
     else:
         return _process_distcc_hosts(contents)
 
-def printusag():
+def printusage():
     print 'Usage: pymake [options] <list of targets, files or directories>'
     print 'Where targets are .cc file names or base names or directories'
     print 'And options are a combination of the following: '
@@ -952,6 +953,11 @@ class FileInfo:
             raise "Couldn't find file " + filepath
         if platform == 'win32':
             self.filepath = filepath
+            if self.filepath[1] == ":":
+                # We must ensure that the drive letter is always uppercase,
+                # otherwise there may be duplicates in the object files list,
+                # leading to link errors.
+                self.filepath = self.filepath.capitalize()
         else:
             # Remove potential links in the path.
             self.filepath = os.path.realpath(filepath)
@@ -1264,8 +1270,6 @@ class FileInfo:
         odir = join(self.filedir, objsdir)
         if not os.path.isdir(odir):  # make sure the OBJS dir exists, otherwise the command will fail
             os.makedirs(odir)
-
-    
         
     def make_symbolic_link(self, linkname, symlink_source_basename = None):
         """Recreates the symbolic link in filedir pointing to the
@@ -1276,20 +1280,27 @@ class FileInfo:
         this path and name, and the object files will be placed in the OBJS
         subdirectory of the directory where the source file is."""
 
-        if linkname == '':
-            symlinktarget = join(self.filedir,self.filebase)
+        # In the following, we create the link 'symlink_from' -> 'symlink_to'.
+
+        # User-provided base name for the file we point to?
+        if symlink_source_basename is not None:
+            symlink_to_base = symlink_source_basename
         else:
-            symlinktarget = linkname
-            
-        if os.path.islink(symlinktarget) or os.path.exists(symlinktarget):
-            os.remove(symlinktarget)
-            
+            symlink_to_base = self.filebase
+
+        symlink_to = join(objsdir, symlink_to_base)
+        if linkname != '':
+            symlink_to = join(self.filedir, symlink_to)
+
+        # User-provided path for the link itself?
         if linkname == '':
-            os.symlink(join(objsdir,self.filebase),symlinktarget)
-        elif symlink_source_basename is not None:
-            os.symlink(join(self.filedir+"/"+objsdir, symlink_source_basename),symlinktarget)
+            symlink_from = join(self.filedir, self.filebase)
         else:
-            os.symlink(join(self.filedir+"/"+objsdir,self.filebase),symlinktarget)
+            symlink_from = linkname
+
+             
+        # Create symbolic link.
+        toolkit.symlink(symlink_to, symlink_from, True, True)
 
     def compile_command(self):
         """returns the command line necessary to compile this .cc file"""
@@ -1327,7 +1338,12 @@ class FileInfo:
 
         includedirs = [] + sourcedirs + mandatory_includedirs + self.get_optional_libraries_includedirs()
         if includedirs:
-            command = command + ' -I' + string.join(includedirs,' -I')
+            joined_includedirs = string.join(includedirs,' -I')
+            # Make sure we have no '\' character, which Cygwin / Windows does
+            # not always handle properly in paths.
+            joined_includedirs = joined_includedirs.replace("\\", "/")
+            command = command + ' -I' + joined_includedirs
+
         command = command + ' -o ' + self.corresponding_ofile + ' -c ' + self.filepath
 
         return command
@@ -1525,7 +1541,11 @@ digraph G
                 if os.access(dummy_obj_file, os.F_OK):
                     # First remove an old object file.
                     os.remove(dummy_obj_file)
-                os.symlink(ccfile.corresponding_ofile, dummy_obj_file)
+                # Note: os.symlink is not implemented on all platforms.
+                # TODO Use toolkit.symlink instead.
+                symlink_command = 'ln -s %s %s' % (ccfile.corresponding_ofile,
+                                                   dummy_obj_file)
+                os.system(symlink_command)
                 objs_count += 1
                 self.objsfilelist.append(dummy_obj_file)
             else:
@@ -1555,6 +1575,19 @@ digraph G
 
         return command
 
+    def clean_objlinks(self, linkslist):
+        """Remove links created when the symlinkobjs option is used"""
+        # Note that under Windows, these links' true filenames may end with
+        # the '.lnk' extension.
+        if symlinkobjs:
+            for objfile in linkslist:
+                objfile_lnk = objfile + '.lnk'
+                if os.access(objfile, os.F_OK):
+                    os.remove(objfile)
+                if os.access(objfile_lnk, os.F_OK):
+                    remove_cmd = 'rm %s' % (objfile_lnk)
+                    os.system(remove_cmd)
+
     def launch_linking(self):
         corresponding_output = self.corresponding_output
         self.corresponding_output = self.corresponding_output+".new"
@@ -1566,11 +1599,16 @@ digraph G
         if verbose>=3:
 	        print command
 
-        link_exit_code = os.WEXITSTATUS(os.system(command))
+        # The 'WEXITSTATUS' function is only available under Unix.
+        # Under Windows, the value returned by 'os.system' is meaningless,
+        # according to the Python documentation, but it is all we have
+        # access to, apparently.
+        if platform != 'win32':
+            link_exit_code = os.WEXITSTATUS(os.system(command))
+        else:
+            link_exit_code = os.system(command)
 
-        if symlinkobjs:
-            for objfile in self.objsfilelist:
-                os.remove(objfile)
+        self.clean_objlinks(self.objsfilelist)
 
         if not os.path.exists(self.corresponding_output):
             print "Link command failed to create file " + self.corresponding_output
@@ -1663,6 +1701,8 @@ digraph G
             if e != 0:
                 last_failed_exit_code = e
 
+        # Clean potential links to object files.
+        self.clean_objlinks(self.objsfilelist)
         return last_failed_exit_code
 
 
