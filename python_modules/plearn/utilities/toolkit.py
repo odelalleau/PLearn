@@ -5,7 +5,7 @@ submodule. If a considerable number of functions contained in this
 module seems to manage similar tasks, it is probably time to create a
 I{similar_tasks.py} L{utilities} submodule to move those functions to.
 """
-import inspect, os, popen2, string, sys, time, types
+import inspect, os, popen2, shutil, string, sys, time, types
 
 def boxed_lines(s, box_width, indent=''):
     if len(s) <= box_width:
@@ -56,7 +56,7 @@ def command_output(command):
     U{commands<http://docs.python.org/lib/module-commands.html>} module
     relies on U{popen<http://docs.python.org/lib/module-popen2.html>}
     objects, it is more efficient to use directly
-    U{popen<http://docs.python.org/lib/module-popen2.html>} here that
+    U{popen<http://docs.python.org/lib/module-popen2.html>} here than
     splitting the results of the commands.getoutput() in lines.
 
     @param command: The shell command to execute.
@@ -65,15 +65,44 @@ def command_output(command):
     @return: Output lines.
     @rtype:  Array of strings.
     """
-    breakpoint(command, False and command.startswith('diff'))
-    process = popen2.Popen4(command)
-
-    return process.fromchild.readlines()
+    # breakpoint(command, False and command.startswith('diff'))
+    if sys.platform == "win32":
+        # NB: This code may also work properly under Linux. But the Linux code
+        # below certainly does not work under Windows, as the Popen4 class does
+        # not exist.
+        (stdout_and_stderr, stdin) = popen2.popen4(command)
+        return stdout_and_stderr.readlines()
+    else:
+        process = popen2.Popen4(command)
+        return process.fromchild.readlines()
 
 def breakpoint( msg, cond=True ):
     if cond:
         raw_input( msg )
     
+def copytree( src, dst, symlinks = True, ignore = [] ):
+    """Recursively copy a directory. This function behaves similarly to
+    shutil.copytree, except when 'ignore' is provided: in this case, any file
+    or directory that matches (exactly) an element of 'ignore' will be skipped.
+    """
+    if ignore == []:
+        shutil.copytree(src, dst, symlinks)
+    else:
+        if os.path.islink(src):
+            if symlinks:
+                raise "Not implemented"
+            else:
+                raise "Not implemented"
+        elif os.path.isfile(src):
+            shutil.copy2(src, dst)
+        elif os.path.isdir(src):
+            os.mkdir(dst)
+            list_in_dir = os.listdir(src)
+            for item in list_in_dir:
+                if item not in ignore:
+                    copytree( os.path.join(src, item), \
+                              os.path.join(dst, item), symlinks, ignore )
+
 def cross_product( list1,  list2,
                    joinfct = lambda i,j: (i, j) ):
     """Returns the cross product of I{list1} and I{list2}.
@@ -355,6 +384,74 @@ def re_filter_list(strlist, undesired_regexp):
 def short_doc(obj):
     return doc(obj, True)
 
+def symlink( to_path, from_path, force = False, is_exe = False ):
+    """Symbolic link to a disk resource.
+    This function creates a symbolic link 'from_path' to 'to_path'.
+    Under Linux, a regular symbolic link is created, using os.symlink.
+    Under Windows, it is actually a copy of the resource that is performed, if
+    there is no existing copy already in place that looks like an exact copy of
+    the target 'to_path' (by exact copy, we mean same size and timestamp).
+    If 'force' is set to True, an existing file, directory or link with name
+    'from_path' will be erased, otherwise the function will raise an error if
+    such a file, directory or link already exists.
+    If 'is_exe' is set to true, then the '.exe' extension will be appended to
+    the copy, unless it already exists (only under Windows).
+
+    @param  to_path: The target of the link
+    @type   to_path: String
+
+    @param  from_path: The path of the link
+    @type   from_path: String
+
+    @param  force: Whether or not we delete an existing file
+    @type   force: Boolean
+
+    @param  is_exe: Whether or not the file is executable
+    @type   is_exe: Boolean
+
+    @returns: True for success, False for failure.
+    @rtype: Boolean
+    """
+    if sys.platform == "win32":
+        import shutil
+        if os.path.isdir(to_path):
+            # TODO Implement for directories.
+            raise "Not implemented yet for directories"
+        if is_exe and not from_path.endswith(".exe"):
+            from_path += ".exe"
+        if os.path.isfile(from_path) or os.path.isdir(from_path):
+            if os.path.getmtime(from_path) == os.path.getmtime(to_path) and \
+               os.path.getsize(from_path)  == os.path.getsize(to_path):
+                # There is an existing resource with same size and timestamp:
+                # we can reuse it!
+                return True
+            if force:
+                if os.path.isdir(from_path):
+                    os.rmdir(from_path)
+                else:
+                    os.remove(from_path)
+            else:
+                raise "File exists: " + from_path
+        shutil.copy(to_path, from_path)
+        # Set the timestamp of the copied file to the one of the original file,
+        # so that it can recognize later it is the same (and thus avoid a
+        # useless and costly copy).
+        os.utime(from_path,
+                 (os.path.getatime(to_path), os.path.getmtime(to_path)))
+        return os.path.isfile(from_path)
+    else:
+        if os.path.islink(from_path) or os.path.isfile(from_path) \
+                                     or os.path.isdir(from_path):
+            if force:
+                if os.path.isdir(from_path):
+                    os.rmdir(from_path)
+                else:
+                    os.remove(from_path)
+            else:
+                raise "File exists: " + from_path
+        os.symlink(to_path, from_path)
+        return os.path.islink(from_path)
+ 
 def version( project_path, build_list ):
     """Automatic version control.
     
