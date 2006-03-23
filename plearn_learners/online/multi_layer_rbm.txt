@@ -254,47 +254,95 @@ DeepBeliefNetwork) is a PLearner (maybe a PDistribution) with functions for
 sampling.
 
 RBMLayer stores:
-  - layer_params: parameters describing the distribution
+  - activations: values allowing to know the distribution (the activation
+    value (before sigmoid) for a binomial input, the couple (mu,sigma) for a
+    gaussian).
   - expectations: expectation of each unit
   - sample: sample from the distribution
   - some flags to know what is up-to-date
 
 RBMParameters stores (and has to update):
+  - a string describing the type of upper units, "l" if the energy function is
+    linear (binomial or part of multinomial), "q" if quadratic (gaussian)
+  - the same thing for the lower units
   - weights: weights between up and down layers
-  - bias (and parameters like the quadratic term, in gaussian units) for both
-    up and down layer
+  - TVec<Vec> up_unit_params: the Vec up_unit_params[i] contains the
+    bias (and parameters like the quadratic term, in gaussian units) for
+    unit i in up layer
+  - TVec<Vec> down_unit_params: the same for down error
   - input_vec: a pointer to its current input vector (sample or expectation),
     and a flag to know if it is up or down
-  - up_pos_stats: statistics of the positive phase for up layer
-  - down_pos_stats: statistics of the positive phase for down layer
-  - up_neg_stats: statistics of the negative phase for up layer
-  - down_neg_stats: statistics of the negative phase for down layer
-  - a learning rate
+
+  - weights_pos_stats, weight_neg_stats: statistics accumulated during
+    positive (respectively negative) phase
+  - up_unit_params_pos_stats, up_unit_params_neg_stats
+  - down_unit_params_pos_stats, down_unit_params_neg_stats
+  - pos_count and neg_count: two counters of the numbers of statistics
+    accumulated
+  - a learning rate (possibly a second one specially for error gradient)
 
 The methods are:
   * RBMParameters::setAsUpInput( Vec ) : set the input vector, and flag to 'up'
   * RBMParameters::setAsDownInput( Vec ) : same, but 'down'
-  * RBMParameters::setAsPosStats( Vec down_stats, Vec up_stats ) :
-      down_pos_stats << down_stats;
-      up_pos_stats << up_stats;
-  * RBMParameters::setAsNegStats( Vec down_stats, Vec up_stats ) :
-      down_neg_stats << down_stats;
-      up_neg_stats << up_stats;
-  * RBMParameters::update() (from statistics accumulated)
-  * implement fprop(), bpropUpdate() ?
-  * RBMParameters::computeUnitParams( int i, const Vec& params ) : put in
-    params the parameters describing the distribution of unit i (i is an index
-    in the up layer if input vector is 'down', and vice-versa), and
-    invalidates 'sample' and 'expectation'
-  * RBMParameters:: computeUnitParams( const Vec& all_params ) : same thing,
-    for every unit in the appropriate layer
+  * RBMParameters::accumulatePosStats( Vec down_values, Vec up_values ) :
+      weights_pos_stats += up_values * down_values';
+      for i in up units:
+        up_unit_params_pos_stats[i][0] += up_values[i]
+      for i in "g" up units:
+        up_unit_params_pos_stats[i][1] += 2 * up_unit_params[i][1] * up_values[i]^2
+      for i in down units:
+        down_unit_params_pos_stats[i][0] += down_values[i]
+      for i in "g" down units:
+        down_unit_params_pos_stats[i][1] += 2 * down_unit_params[i][1] * down_values[i]^2
+      pos_count++;
 
-  * RBMLayer::getUnitParams( int i, RBMParams rbmp ) :
-      calls rbmp->computeUnitParams( i, layer_params.subvec(...) )
-  * RBMLayer::getUnitParams( RBMParams rbmp ) :
-      calls rbmp->computeUnitParams( layer_params ) by default, or
-      rbmp->computeUnitParams( i, layer_params ) for i in a subset of the
-    units, for "sparse" layers
+  * RBMParameters::accumulateNegStats( Vec down_values, Vec up_values ) :
+      weights_neg_stats += up_values * down_values';
+      for i in up units:
+        up_unit_params_neg_stats[i][0] += up_values[i]
+      for i in "g" up units:
+        up_unit_params_neg_stats[i][1] += 2 * up_unit_params[i][1] * up_values[i]^2
+      for i in down units:
+        down_unit_params_neg_stats[i][0] += down_values[i]
+      for i in "g" down units:
+        down_unit_params_neg_stats[i][1] += 2 * down_unit_params[i][1] * down_values[i]^2
+      neg_count++;
+
+  * RBMParameters::update() (from statistics accumulated)
+      # are the signs OK?
+      weights -= learning_rate * (weights_pos_stats/pos_count - weight_neg_stats/neg_count);
+      up_unit_params -= learning_rate * (up_unit_params_pos_stats/pos_count - up_unit_params_neg_stats/neg_count);
+      down_unit_params -= learning_rate * (down_unit_params_pos_stats/pos_count - down_unit_params_neg_stats/neg_count);
+      # reset
+      weights_pos_stats.clear();
+      weights_neg_stats.clear();
+      up_unit_params_pos_stats.clear();
+      up_unit_params_neg_stats.clear();
+      down_unit_params_pos_stats.clear();
+      down_unit_params_neg_stats.clear();
+      pos_count = 0;
+      neg_count = 0;
+
+  * implement fprop(), bpropUpdate() (how?)
+
+  * RBMParameters::computeUnitActivations( int i, const Vec& activations ) :
+    put in activations the parameters describing the distribution of
+    unit i (i is an index in the up layer if input vector is 'down', and
+    vice-versa), and invalidates 'sample' and 'expectation'
+
+  * RBMParameters::computeUnitActivations( const Vec& all_activations ) :
+    same thing, for every unit in the appropriate layer
+
+  * RBMParameters::computeUnitActivations( TVec<int> indices, const Vec& activations)
+
+For class RBMLayer:
+
+  * RBMLayer::getUnitActivations( int i, RBMParams rbmp ) :
+      calls rbmp->computeUnitActivations( i, layer_params.subvec(...) )
+  * RBMLayer::getUnitActivations( RBMParams rbmp ) :
+      calls rbmp->computeUnitActivations( layer_params ) by default, or
+      rbmp->computeUnitActivations( indices, layer_params ),
+        indices being a subset of units, for "sparse" layers
   * RBMLayer::computeSample()
       get 'sample' from 'layer_params'
   * RBMLayer::computeExpectation()
@@ -306,7 +354,7 @@ input_vec to a sample (out_sample) would typically call:
 
     input.sample << input_vec;
     rbmp.setAsDownInput( input.sample );
-    output.getUnitParams( rbmp );
+    output.getUnitActivations( rbmp );
     output.computeSample();
     out_sample << output.sample;
 
@@ -315,7 +363,7 @@ been:
 
     input.sample << input_vec;
     rbmp.setAsDownInput( input.sample );
-    output.getUnitParams( rbmp );
+    output.getUnitActivations( rbmp );
     output.computeExpectation();
     out_exp << output.expectation;
 
@@ -324,18 +372,18 @@ The learning of one example (input_vec) by contrastive divergence:
     // positive phase
     input.sample << input_vec;
     rbmp.setAsDownInput( input.sample );
-    output.getUnitParams( rbmp );
+    output.getUnitActivations( rbmp );
     output.computeSample();
-    rbmp.setAsPosStats( input.sample, output.sample );
+    rbmp.accumulatePosStats( input.sample, output.sample );
 
     // negative phase
     rbmp.setAsUpInput( output.sample );
-    input.getUnitParams( rbmp );
+    input.getUnitActivations( rbmp );
     input.computeSample();
     rbmp.setAsDownInput( input.sample );
-    output.getUnitParams( rbmp );
+    output.getUnitActivations( rbmp );
     output.computeSample();
-    rbmp.setAsNegStats( input.sample, output.sample );
+    rbmp.accumulateNegStats( input.sample, output.sample );
 
     // update
     rbmp.update();
@@ -349,23 +397,23 @@ the learning of one example (input_vec) will look like:
     // propagation to hidden
     input.sample << input_vec;
     rbmp_ih.setAsDownInput( input.sample );
-    hidden.getUnitParams( rbmp_ih );
+    hidden.getUnitActivations( rbmp_ih );
     hidden.computeExpectation(); // not computeSample()
 
     // positive phase
     rbmp_ho.setAsDownInput( hidden.expectation );
-    output.getUnitParams( rbmp_ho );
+    output.getUnitActivations( rbmp_ho );
     output.computeSample();
-    rbmp_ho.setAsPosStats( hidden.expectation, output.sample );
+    rbmp_ho.accumulatePosStats( hidden.expectation, output.sample );
 
     // negative phase
     rbmp_ho.setAsUpInput( output.sample );
-    hidden.getUnitParams( rbmp_ho );
+    hidden.getUnitActivations( rbmp_ho );
     hidden.getExpectation();
     rbmp_ho.setAsDownInput( hidden.expectation );
-    output.getUnitParams( rbmp_ho );
+    output.getUnitActivations( rbmp_ho );
     output.computeSample();
-    rbmp_ho.setAsNegStats( hidden.expectation, output.sample );
+    rbmp_ho.accumulateNegStats( hidden.expectation, output.sample );
 
     // update
     rbmp_ho.update();
