@@ -1,3 +1,23 @@
+"""Very core classes of the pyplearn mechanism.
+
+To be done:
+
+  - PLOptionDict should be generalized to OptionDict. This OptionDict class
+    should understand inner classes derived from OptionBase, e.g.
+
+    class OptionDict(dict): # Not sure for dict yet...
+        pass
+
+    class PyPLearnObject(OptionDict)
+        OptionType = PLOption
+
+    class Other(PyPLearnObject):
+        class KWArg(OptionBase): pass
+        
+    and the MetaOptionDict mechanism should be able to find and SEQUENTIALLY
+    (the mechanism is actually recursive) that Other manages PLOption and KWArg
+    instances.    
+"""
 import copy, inspect, re
 
 deprecated_methods = [ 'allow_unexpected_options', ### No more a classmethod
@@ -56,8 +76,21 @@ def non_option_class_variable(clsinstance, variable_name):
                 return False
     return True    
 
+def init_options(instance, OptionType, **overrides):        
+    for optname in class_options(instance.__class__, OptionType):
+        # There is no need to manage options that are overriden, hence,
+        # for sake of efficiency, we don't
+        if not optname in overrides:
+            optval = getattr(instance,optname)
+
+            # Even if the list contains only option names, if the
+            # option was inherited it will already have been expended
+            if isinstance(optval, OptionType):
+                setattr(instance, optname, optval())
+    
+
 class OptionBase:
-    __option_id = 0
+    __option_id = 0    
     def __init__(self, value, *args, **kwargs):
         assert not isinstance(value, OptionBase)
         self.__class__.__option_id += 1

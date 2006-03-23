@@ -12,7 +12,7 @@ class PLOptionError( AttributeError ): pass
 
 from OptionBase import *
 class PLOption(OptionBase): pass
-
+    
 class PLOptionDict( object ):
     __metaclass__ = OptionDictMetaClass(PLOption)
     
@@ -22,17 +22,8 @@ class PLOptionDict( object ):
     class_options = classmethod(class_options)
 
     def __init__(self, **overrides):
+        init_options(self, PLOption, **overrides)
         self.__instance_option_names = self.class_options()
-        for optname in self.__instance_option_names:
-            # There is no need to manage options that are overriden, hence,
-            # for sake of efficiency, we don't
-            if not optname in overrides:
-                optval = getattr(self,optname)
-
-                # Even if the list contains only option names, if the
-                # option was inherited it will already have been expended
-                if isinstance(optval, PLOption):
-                    setattr(self, optname, optval())
 
         keys = overrides.keys()
         keys.sort()
