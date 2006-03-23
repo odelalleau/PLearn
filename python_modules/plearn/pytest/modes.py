@@ -464,6 +464,12 @@ class add(FamilyConfigMode):
                                  help="Comma separated list of resources to be used by the test." 
                                  )
 
+        add_options.add_option( "--no-pfileprg",
+                                action = "store_true",
+                                default=False,
+                                help="Test's pfileprg will be None." 
+                                )
+
         return [ add_options ]+super(add, cls).option_groups(parser)
     option_groups = classmethod( option_groups )
 
@@ -477,12 +483,17 @@ class add(FamilyConfigMode):
         resources = []                               
         if options.resources != "":                 
             resources = options.resources.split(',')
-        
-        # Caught by Test's instances management        
+
+        # Option --no-pfileprg
+        overrides = {}
+        if options.no_pfileprg:
+            overrides['pfileprg'] = None
+
+        # Caught by Test's instances management
         self._added_test = \
             Test( name=test_name, category=options.category,
                   program=Program(name=options.program_name),
-                  arguments=options.arguments, resources=resources, pfileprg=None )
+                  arguments=options.arguments, resources=resources, **overrides )
         super(add, self).__init__(targets, options)
         print 'Successfully added skeleton for test. Please edit pytest.config file.'
 
@@ -694,7 +705,7 @@ if __name__ == '__main__':
     
     ## Add it
     vsystem("pytest add -n PYTEST_INTERNAL --program-name python "
-              "--arguments INTERNAL_SCRIPT.py --resources INTERNAL_SCRIPT.py")
+              "--arguments INTERNAL_SCRIPT.py --resources INTERNAL_SCRIPT.py --no-pfileprg")
     
     ## Generate results & run the test
     vsystem("pytest results")

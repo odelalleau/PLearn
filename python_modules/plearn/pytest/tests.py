@@ -293,11 +293,13 @@ class Test(PyTestObject):
       3) Call 'which PRGNAME'
       4) Fail
 
-    Compilable program should provided the keyword argument 'compiler'
+    Compilable program should provide the keyword argument 'compiler'
     mapping to a string interpreted as the compiler name (e.g.
-    "compiler = 'pymake'"). Arguments to be forwarded to the compiler can be
-    provided as a string through the 'compile_options' keyword argument.
-    @type program: L{Program}
+    "compiler = 'pymake'"). If no compiler is provided while the program is
+    believed to be compilable, 'pymake' will be assigned by
+    default. Arguments to be forwarded to the compiler can be provided as a
+    string through the 'compile_options' keyword argument.  @type program:
+    L{Program}
 
     @ivar arguments: The command line arguments to be passed to the program
     for the test to proceed.
@@ -494,8 +496,9 @@ class Test(PyTestObject):
         B{Note} that the call will raise an exception if the program
         is not compilable.
         """
-        self.sanity_check()        
-        self.program.compile()
+        self.sanity_check()
+        assert os.path.exists(self.resultsDirectory())
+        self.program.compile(self.resultsDirectory())
 
     def ensureResultsDirectory(self, results_path):
         if os.path.exists( results_path ):

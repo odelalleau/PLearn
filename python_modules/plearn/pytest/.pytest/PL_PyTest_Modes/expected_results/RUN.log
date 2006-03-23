@@ -1,4 +1,4 @@
-#  pytest add -n PYTEST_INTERNAL --program-name python --arguments INTERNAL_SCRIPT.py --resources INTERNAL_SCRIPT.py
+#  pytest add -n PYTEST_INTERNAL --program-name python --arguments INTERNAL_SCRIPT.py --resources INTERNAL_SCRIPT.py --no-pfileprg
 
 
 #  pytest results

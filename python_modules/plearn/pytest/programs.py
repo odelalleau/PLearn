@@ -21,20 +21,6 @@ for mpath in ["PLEARNDIR", "APSTATSOFTDIR", "LISAPLEARNDIR"]:
     except:
         pass
 
-#######  TMP  #################################################################
-#######  TMP  #################################################################
-#######  TMP  #################################################################
-## def LocalProgram(**overrides):
-##     return Program(**overrides)
-## def LocalCompilableProgram(**overrides):
-##     return Program(**overrides)
-## def GlobalProgram(**overrides):
-##     return Program(**overrides)
-## def GlobalCompilableProgram(**overrides):
-##     return Program(**overrides)
-#######  TMP  #################################################################
-#######  TMP  #################################################################
-
 #######  Helper Functions  ####################################################
 
 def find_global_program(name):
@@ -124,6 +110,10 @@ class Program(core.PyTestObject):
 
     #######  Class Variables  #####################################################
 
+    # Default compiler: for programs assumed to be compilable but for which
+    # no compiler were provided
+    default_compiler = "pymake"
+
     # Cache to remember which executable already exist
     compiled_programs = {}
 
@@ -139,12 +129,6 @@ class Program(core.PyTestObject):
     #######  Instance Methods  ####################################################
 
     def __init__(self, **overrides):
-        ## ##### TMP
-        ## overrides.pop('log_file_path', None)                    
-        ## ##### TMP
-        ## if 'compile_options' in overrides and overrides['compile_options'] == "":
-        ##     overrides['compile_options'] = None
-            
         core.PyTestObject.__init__(self, **overrides)
         assert self.name is not None
         assert self.compiler is not None or self.compile_options is None
@@ -152,17 +136,16 @@ class Program(core.PyTestObject):
         # Methods are called even if messages are not logged
         logging.debug( self.getProgramPath() )
 
-        self.__is_compilable = False
         internal_exec_path = self.getInternalExecPath(overrides.pop('_signature'))
         logging.debug("Internal Exec Path: %s"%internal_exec_path)
-        if self.compiler:
-            self.__is_compilable = True
+        if self.isCompilable():
+            if self.compiler is None:
+                self.compiler = Program.default_compiler
             self.__attempted_to_compile = False
             self.__log_file_path = internal_exec_path+'.log'
             if not self.compilation_disabled and os.path.exists(internal_exec_path):
                 os.remove(internal_exec_path)
                 logging.debug("*** REMOVED %s"%internal_exec_path)
-        logging.debug(internal_exec_path)
 
     def _optionFormat(self, option_pair, indent_level, inner_repr):
         optname, val = option_pair
@@ -173,24 +156,42 @@ class Program(core.PyTestObject):
     def compilationSucceeded(self):
         return os.path.exists(self.getInternalExecPath())
 
-    def compile(self):
+    def compile(self, publish_dirpath=""):
+        # Remove old compile log if any
+        publish_target = os.path.join(publish_dirpath, os.path.basename(self.__log_file_path))
+        if os.path.exists(publish_target):
+            os.remove(publish_target)
 
-        #######  Ensure compilation is needed  #################################
-        
+        # Ensure compilation is needed
         if self.compilationSucceeded():
             logging.debug("Already successfully compiled %s"%self.getInternalExecPath())
-            return True
+            succeeded = True
 
         elif self.__attempted_to_compile:
             logging.debug("Already attempted to compile %s"%self.getInternalExecPath())
-            return False
+            succeeded = False
 
+        # Compilation is disabled but no prior compilation were made
         elif self.compilation_disabled:
             ### NOTE: This could be changed by a 'cp getProgramPath() getInternalExecPath()'
             raise core.PyTestUsageError(
                 "Called PyTest with --no-compile option but %s was not previously compiled."
                 % self.getInternalExecPath() )
+
+        # First compilation attempt
+        else:
+            succeeded = self.__first_compilation_attempt()       
+
+        # Publish the compile log
+        if succeeded and publish_dirpath:
+            # print self.__log_file_path
+            # print publish_target
+            moresh.system_symlink(self.__log_file_path,
+                                  moresh.relative_path(publish_target))
+        return succeeded
         
+    def __first_compilation_attempt(self):
+
         #######  First compilation attempt  ####################################
         
         targetdir, exec_name = os.path.split(self.getInternalExecPath())
@@ -281,7 +282,28 @@ class Program(core.PyTestObject):
         return os.system(command)
 
     def isCompilable(self):
-        return self.__is_compilable
+        try:
+            return self.__is_compilable
+        except AttributeError:
+            # Compiler must be provided only for compilable program            
+            if self.compiler:
+                self.__is_compilable = True
+
+            # Programs which doesn't exist yet are assumed to be created
+            # through compilation
+            elif not os.path.exists(self.getProgramPath()):
+                self.__is_compilable = True
+
+            # PyMake-style
+            elif os.path.islink(self.getProgramPath()):
+                self.__is_compilable = os.path.exists(self.getProgramPath()+".cc")
+
+            # Otherwise assumed to be non-compilable
+            else:
+                self.__is_compilable = False
+
+            # It is now cached... 
+            return self.__is_compilable
         
     def isGlobal(self):
         return self.__is_global
