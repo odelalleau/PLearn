@@ -73,6 +73,12 @@ elif platform=='irix6-n32' :
     compileflags = '-DSGI -DBIGENDIAN'
 elif platform=='win32' :
     compileflags = '-DWIN32 -D_MINGW_ -DLITTLEENDIAN'
+    # When using the standard Win32 Python (instead of the built-in Cygwin
+    # Python), the platform is 'win32' instead of 'cygwin', even if we are
+    # using it from Cygwin.
+    # However, just like for the 'cygwin' platform below, the -symlinkobjs
+    # pymake option is required.
+    symlinkobjs = 1
 elif platform=='darwin' :
     compileflags = '-DDARWIN -DBIGENDIAN -fno-coalesce'
 elif platform=='cygwin' :
@@ -184,10 +190,15 @@ optionalLibrary( name = 'opengl',
 #                 linkeroptions = '-lg2c'
 #                 )
 
+# Note: under Unix-like systems, one will probably use 'ncurses'.
+# However, 'ncurses' is not implemented under Windows, and one can instead use
+# 'pdcurses'. Currently, you need to edit this file by hand to replace 'ncurses'
+# with 'pdcurses', as it will not be detected automatically.
 optionalLibrary( name = 'ncurses',
                  triggers = 'curses.h',
                  linkeroptions = '-lncurses'
-                 )
+               )
+
 if( (platform=='linux-x86_64') & (not force_32bits) ):
     wn_includedirs = '/u/lisa/WordNet/LINUX_64/v2.0/include'
     wn_linkeroptions = '-L /u/lisa/WordNet/LINUX_64/v2.0/lib -lwn'
@@ -221,6 +232,12 @@ if domain_name.endswith('iro.umontreal.ca'):
     if platform == 'cygwin':
         numpy_includedirs = [ ]
         numpy_site_packages = '$HOME/local-cygwin/lib/python2.4/site-packages/numarray'
+    elif platform == 'win32':
+        python_version = '24'
+        python_lib_root = ''
+        linkeroptions_tail += '-L/cygdrive/r/python2.4_mingw'
+        numpy_site_packages = join(homedir, \
+              'local/lib/python2.4/site-packages/numarray')
     else:
         numpy_includedirs   = [ '/u/lisa/local/' + platform + '/include/' ]
         ### Python needs the 32 bits include directories when compiling in 32 bits
@@ -247,6 +264,7 @@ else:
     numpy_site_packages = '/usr/lib/python2.3/site-packages/numarray' 
     python_version = '2.3'
     python_lib_root = '/usr/lib'
+
 
 optionalLibrary( name = 'python',
                  triggers = '[Pp]ython*',
@@ -331,9 +349,10 @@ optionalLibrary( name = 'NSPR',
 linkeroptions_tail += ' -L' + libdir + ' -lm'
 
 # List of lists of mutually exclusive pymake options.
-# First option that appears in each group is the default, and is assumed if you don't specify any option from that group
+# First option that appears in each group is the default, and is assumed if you
+# do not specify any option from that group.
 options_choices = [
-  [ 'g++', 'g++3', 'icc', 'icc8', 'icc9', 'mpi', 'purify', 'quantify' ],
+  [ 'g++', 'g++3', 'g++no-cygwin', 'icc', 'icc8', 'icc9', 'mpi', 'purify', 'quantify' ],
   [ 'dbg', 'opt', 'pintel', 'gprof', 'safegprof', 'safeopt', 'safeoptdbg', 'checkopt' ],
   [ 'double', 'float' ],
   [ 'throwerrors', 'exiterrors' ], 
@@ -354,6 +373,15 @@ pymakeOption( name = 'g++3',
               compiler = 'g++3',
               compileroptions = '-Wno-deprecated -pedantic -DUSING_MPI=0  -ftemplate-depth-100',
               linker = 'g++3' )
+
+pymakeOption( name = 'g++no-cygwin',
+              description = 'compiling with g++, with no MPI support, ' \
+                          + 'without the need of the Cygwin DLL',
+              compiler = 'g++',
+              compileroptions = '-Wno-deprecated -pedantic -DUSING_MPI=0 ' \
+                              + '-Wno-long-long -ftemplate-depth-100 '\
+                              + '-mno-cygwin -D_MINGW_',
+              linker = 'g++ -mno-cygwin' )
 
 pymakeOption( name = 'icc',   # For C++, it is actually icpc
               description = '(DEPRECATED, use icc8 or icc9 instead) compiling with Intel Compiler (version 8.x), with no MPI support',
@@ -470,7 +498,7 @@ pymakeOption( name = 'noblas',
 pymakeOption( name = 'blas',
               description = 'compilation and linking basic BLAS',
               compileroptions = '-D USE_BLAS_SPECIALISATIONS',
-              linkeroptions = blas_linkeroptions + ' ' + lapack_linkeroptions
+              linkeroptions = lapack_linkeroptions + ' ' + blas_linkeroptions
               )
 
 pymakeOption( name = 'pentiumblas',
