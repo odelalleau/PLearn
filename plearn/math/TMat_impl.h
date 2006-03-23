@@ -421,6 +421,22 @@ bool TMat<T>::operator==(const TMat<T>& other) const
     return true;
 }
 
+template<class T>
+bool TMat<T>::isEqual(const TMat<T>& other) const
+{
+    if ( length() != other.length() || width() != other.width() )
+        return false;
+  
+    iterator it       = begin();
+    iterator end_     = end();
+    iterator other_it = other.begin();
+
+    for(; it != end_; ++it, ++other_it)
+        if( !fast_is_equal(*it,*other_it) )
+            return false;
+  
+    return true;
+}
 
 
 

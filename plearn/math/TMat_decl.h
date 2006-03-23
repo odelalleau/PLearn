@@ -614,7 +614,8 @@ public:
     }
 
     inline bool operator==(const TMat<T>& other) const;
-  
+    inline bool isEqual(const TMat<T>& other) const;
+    
     template<class I>
     inline TMat<T> operator()(const TVec<I>& rows, const TVec<I>& columns) const
     {
