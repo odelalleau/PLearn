@@ -7,8 +7,17 @@
 \documentclass[11pt]{book}
 \usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
 \usepackage{ae}                 % use virtual fonts for getting good PDF
-\usepackage{isolatin1}          % support for French accents
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}    % support for utf-8
+%\usepackage{isolatin1}          % support for French accents
 \usepackage{url}                % support URLs properly
+
+\addtolength{\textheight}{3.5cm}
+\addtolength{\topmargin}{-1.8cm}
+\addtolength{\textwidth}{2.5cm}
+\addtolength{\oddsidemargin}{-1cm}
+\addtolength{\evensidemargin}{-1.5cm}
+
 
 %%%%%%%%% Definitions %%%%%%%%%%%%
 \newcommand{\PLearn}{{\bf \it PLearn}}
@@ -301,39 +310,640 @@ PLearner is the super class for learner. Here we describe how to create
 a PLearner. PLearner is a subclass of Object so if you want to know more
 about what you are doing, go to section \ref{Object}.
 
-\subsection{First steps}
+\subsection{What?}
+
+A {\tt PLearner} is an object intended to {\em learn} some structure in
+the data that is provided to it during a {\em training phase}, and use
+this knowledge to do some inference on (usually new) data during a {\em
+testing phase}.
+
+A typical training phase includes:
+\begin{itemize}
+  \item setting some options to control the behaviour during learning;
+
+  \item providing the data the algorithm will learn from. This data
+  might include {\em targets} if the goal is to perform classification
+  or regression for example (but not for density estimation), and can
+  include per-sample {\em weights};
+
+  \item calling the method {\tt train()}, that performs the actual learning.
+\end{itemize}
+
+At this point, the PLearner is ready to be used on {\em test} data. You can:
+\begin{itemize}
+
+  \item compute an output value from a given test input (a trained
+  PLearner can be used to process data);
+
+  \item compute an output value and a cost from a given test input and
+  expected target. This can be useful to test the error of the algorithm
+  on new data, but a cost can as well be a measure of uncertainty or a
+  reconstruction error;
+
+  \item perform this last operation on a whole dataset and accumulate
+  statistics.
+
+\end{itemize}
+
+\subsection{Where?}
+
+If your learner is experimental, and at least until it compiles and
+work perfectly under every situation, you should not commit it in {\tt
+\$PLEARNDIR/plearn\_learners} with the other ones, but it is still a
+good idea to put it in the version tracking system, and to commit often.
+When your learner works robustly, you can move it into the corresponding
+subdirectory of {\tt plearn\_learners}.
+
+If you have an account on LisaPLearn, the best is to use
+{\tt \$LISAPLEARNDIR/UserExp/your\_login/any\_path},
+if you don't you can create a subdirectory in {\tt
+\$PLEARNDIR/plearn\_learners\_experimental} and use it as a working
+directory.
+
+\subsection{How?}
+
+Here is a step-by-step example of how to implement {\tt MyLearner}:
+
+\begin{enumerate}
+\item Once you are in your working directory, type:
+\begin{verbatim}
+$ pyskeleton PLearner MyLearner
+\end{verbatim}
+where {\tt MyLearner} is the name of the PLearner you want to create.
+
+This will create two files, {\tt MyLearner.h} and {\tt MyLearner.cc},
+from a template. These files contain the prototypes of the methods you
+need to implement in order to follow the PLearner interface, and some
+comments to help you filling them.
+
+\item Edit {\tt MyLearner.h}, and add (possibly short) Doxygen
+documentation about what your learner is supposed to do. Something like:
+\begin{verbatim}
+namespace PLearn {
+
+/**
+ * Learns the meaning of life.
+ * This class learns how to find the meaning of life through the application
+ * of stochastic methods. Tests can be performed on several 42-dimensions
+ * vectors.
+ *
+ * @todo Make God fit into this framework.
+ *
+ */
+class MyLearner : public PLearner
+\end{verbatim}
+
+\item Declare your public options. These will typically be the
+hyperparameters of your algorithm, and the options allowing to switch
+between different methods. These are the options the user will need
+to provide for your algorithm to know what to do, but they can change
+during the learning phase. Don't forget to put comments:
+\begin{verbatim}
+class MyLearner : public PLearner
+{
+    typedef PLearner inherited;
+
+public:
+    //#####  Public Build Options  ############################################
+
+    //! ### declare public option fields (such as build options) here
+    //! Start your comments with Doxygen-compatible comments such as //!
+
+    //! Initial parameters, specified by the user
+    Vec init_params;
+
+    /**
+     * Method to use for performing learning.
+     * One of:
+     *   - "none": use raw data
+     *   - "first": first method
+     *   - "second": second method
+     */
+    string learning_method;
+\end{verbatim}
+You can skip the ``public methods'' section for the moment.
+
+\item Declare your protected options. These will typically be parameters
+learned from your data, or from the public options (cached to avoid
+always accessing them).
+\begin{verbatim}
+protected:
+    //#####  Protected Options  ###############################################
+
+    // ### Declare protected option fields (such as learned parameters) here
+
+    //! Number of initial parameters
+    int nparams;
+
+    //! 'learning_method' as number: 0 for none, 1 for first, 2 for second
+    int method;
+
+    //! Learned parameters: a matrix of size (nparams × inputsize())
+    // (inputsize() is a method of PLearner)
+    Mat learned_params;
+\end{verbatim}
+
+\item Declare other variables you will need during learning or
+computations, and you don't want to reallocate each time. This members
+can be protected or private, depending if your subclasses are likely to
+use them.
+\begin{verbatim}
+    //####  Not Options  ######################################################
+    //! Stores intermediate results
+    Vec tmp;
+\end{verbatim}
+
+\item Edit {\tt MyLearner.cc}. First, fill the PLearn documentation of
+the class. This is usually the same as the doxygen one.
+\begin{verbatim}
+namespace PLearn {
+using namespace std;
+
+PLEARN_IMPLEMENT_OBJECT(
+    MyLearner,
+    "Learns the meaning of life.",
+    "This class learns how to find the meaning of life through the"
+    " application\n"
+    "of stochastic methods. Tests can be performed on several 42-dimensions\n"
+    "vectors.\n");
+\end{verbatim}
+
+\item Write the default constructor. First, initialize all fields which
+need it (such as int, bool, real...), and the ones you want to, to a
+default value. You can skip some (like the Vec and Mat, that have a
+reasonable default constructor), but you have to initialize the fields
+in the same order you declared them.
+\begin{verbatim}
+MyLearner::MyLearner()
+    : learning_method("none"),
+      nparams(-1),
+      method(0),
+      tmp(42)
+{
+}
+\end{verbatim}
+
+The comment says you may want to call {\tt build\_()} to finish the
+construction of the object. For this default constructor, you probably
+don't want to do it, because {\tt build\_()} will be called anyway after
+setting the actual option values.
+
+\item {\em [Optional]} Write other constructors. You can write
+new constructors, that would take (for example) as arguments all
+the parameters needed to build the learner completely. In such a
+constructor, you may want to call {\tt build\_()} (so you are sure
+everything is usable right after construction) or build everything
+\begin{verbatim}
+// In MyLearner.h
+MyLearner( Vec the_init_params, string the_learning_method = "none" );
+
+// In MyLearner.cc
+// If everything is in the constructor:
+MyLearner::MyLearner( Vec the_init_params, string the_learning_method );
+    : init_params(the_init_params),
+      learning_method(the_learning_method),
+      nparams(the_init_params.length()),
+      method(-1),
+      learned_params(nparams, max(0,inputsize())),
+      tmp(42)
+{
+    learning_method = lowerstring(learning_method);
+    if( learning_method == "none" )
+        method = 0;
+    else if( learning_method == "first" )
+        method = 1;
+    else if( learning_method == "second" )
+        method = 2;
+    else
+        PLERROR("MyLearner - learning_method '%s' is unknown.",
+                learning_method.c_str());
+}
+
+// If we prefer to call build():
+MyLearner::MyLearner( Vec the_init_params, string the_learning_method );
+    : init_params(the_init_params),
+      learning_method(the_learning_method),
+      nparams(-1), method(-1)
+{
+    // We are not sure inherited::build() has been called, so:
+    build();
+}
+\end{verbatim}
+
+\item Now, declare (in the sense of PLearn) the options of the learner,
+as you do for any Object. The options we had in section ``Public Build
+Option'' will be labeled {\tt buildoption}, the ones in ``Protected
+Option'' will be labeled {\tt learntoption}, and the ones in ``Not
+Options'' will {\em not} be declared.
+\begin{verbatim}
+void MyLearner::declareOptions(OptionList& ol)
+{
+    // ### Declare all of this object's options here.
+    // ### For the "flags" of each option, you should typically specify
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or
+    // ### OptionBase::tuningoption. If you don't provide one of these three,
+    // ### this option will be ignored when loading values from a script.
+    // ### You can also combine flags, for example with OptionBase::nosave:
+    // ### (OptionBase::buildoption | OptionBase::nosave)
+
+    // First, the public build options
+    declareOption(ol, "init_params", &MyLearner::init_params,
+                  OptionBase::buildoption,
+                  "Initial parameters");
+
+    declareOption(ol, "learning_method", &MyLearner::learning_method,
+                  OptionBase::buildoption,
+                  "Method to use for performing learning.\n"
+                  "One of:\n"
+                  "  - "none": use raw data\n"
+                  "  - "first": first method\n"
+                  "  - "second": second method\n");
+
+    // Then, the learned options
+    declareOption(ol, "nparams", &MyLearner::nparams,
+                  OptionBase::learntoption,
+                  "Number of initial parameters");
+
+    declareOption(ol, "method", &MyLearner::method,
+                  OptionBase::learntoption,
+                  "'learning_method' as a number:\n"
+                  "0 for none, 1 for first, 2 for second.\n");
+
+    declareOption(ol, "learned_params", &MyLearner::learned_params,
+                  OptionBase::learntoption,
+                  "Learned parameters: a matrix of size (nparams ×"
+                  " inputsize())");
+
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
+}
+\end{verbatim}
+
+\item Now, if you include your header in {\tt plearn\_inc.h}:
+\begin{verbatim}
+#include <plearn_learners_experimental/some_path/MyLearner.h>
+\end{verbatim}
+you should be able to compile {\tt plearn}, and to have help of all the
+“buildoption” options when typing:
+\begin{verbatim}
+$ plearn help MyLearner
+\end{verbatim}
+Options that are not labeled “buildoption”, such as the
+“learntoption” options defined above, do not appear: it is not
+necessary to provide them (it could even confuse your learner if their
+values are inconsistent).
+
+\item Now, let's implement a basic version of the {\tt build\_()}
+method. It is intended to let you test (and debug) your class in a few
+easy situations, but you will have to rewrite a more complete version
+later (see section \ref{plearner_build_}), so that it works correctly in
+every case.
+
+The goal of {\tt build()} is to ensure that the object is in a
+consistent state, and ready to be used. This method calls {\tt
+inherited::build()} (in our case, {\tt PLearner::build()}), and then
+{\tt build\_()}, which we have to implement. It is called in various
+situations, so a correct version of {\tt build\_()} should check
+everything. Now, we will only focus one simple scenario, where the
+sequence of methods called is:
+\begin{itemize}
+  \item {\tt MyLearner()},
+  \item {\tt build()},
+  \item {\tt setOption(...)} possibly on every build option,
+  \item {\tt build()},
+  \item {\tt setTrainingSet( some\_trainset )},
+  \item {\tt build()}.
+\end{itemize}
+
+The first call to {\tt build\_()} can be used to do some initializations
+that do not fit in the default constructor, or thar use the default
+values of parent object (PLearner), for example. The first and second
+calls set the values of the parameters learned from build options. Here,
+we resize {\tt learned\_params} only if the parameter {\tt inputsize\_}
+is positive (meaning the input size of the learner have been set).
+
+\begin{verbatim}
+//! @todo rewrite this method to work in every case
+void MyLearner::build_()
+{
+    // ### This method should do the real building of the object,
+    // ### according to set 'options', in *any* situation.
+    // ### Typical situations include:
+    // ###  - Initial building of an object from a few user-specified options
+    // ###  - Building of a "reloaded" object: i.e. from the complete set of
+    // ###    all serialised options.
+    // ###  - Updating or "re-building" of an object after a few "tuning"
+    // ###    options have been modified.
+    // ### You should assume that the parent class' build_() has already been
+    // ### called.
+
+    nparams = init_params.length();
+
+    if( inputsize_ > 0 )
+        learned_params.resize(nparams, inputsize());
+
+    learning_method = lowerstring(learning_method);
+    if( learning_method == "none" )
+        method = 0;
+    else if( learning_method == "first" )
+        method = 1;
+    else if( learning_method == "second" )
+        method = 2;
+    else
+        PLERROR("MyLearner - learning_method '%s' is unknown.",
+                learning_method.c_str());
+}
+\end{verbatim}
+
+The member {\tt PLearner::inputsize\_} is equal to the size of the
+elements the learner takes as input, or $-1$ if they are not
+set (or variable). There are two possibilities to have it set:
+calling {\tt setTrainingSet(...)} on some {\tt VMat} (see section
+\ref{plearner_vmat}), in that case it will be set to the inputsize of
+that {\tt VMat}, or having it set as an option (or read from a script).
+
+In the function above, if {\tt inputsize\_} is set, no matter how, it
+will resize {\tt learned\_params}, and that is what we want: always use
+all the informations available.
+
+\item Since PLearn uses smart pointers (see section \ref{PP}), when
+we make a copy of an Object, it is by default a “shallow” copy,
+meaning that the pointers are copied, but still point to the same actual
+data. Each Object (hence each PLearner) class has to implement a method
+called {\tt makeDeepCopyFromShallowCopy} that creates a real, “deep”
+copy of every field we have a pointer to (and recursively).
+
+In this step, we ensure that every member of our PLearner that
+is (or contain) a smart pointer (a {\tt PP<something>}) will be
+“deepCopied”. Usually, it concerns the members of type {\tt
+TVec<something>}, {\tt Vec}, {\tt TMat<something>}, {\tt Mat} and of
+course {\tt PP<something>}. If you use classes defined elsewhere,
+be careful that a class name could be a {\tt typedef} to {\tt
+PP<something>}: for instance a {\tt VMat} is a {PP<VMatrix>}, so you
+would have to call {\tt deepCopy} on it.
+
+\begin{verbatim}
+void MyLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    inherited::makeDeepCopyFromShallowCopy(copies);
+
+    // ### Call deepCopyField on all "pointer-like" fields
+    // ### that you wish to be deepCopied rather than
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
+
+    deepCopyField(init_params, copies);
+    deepCopyField(learned_params, copies);
+    deepCopyField(tmp, copies);
+}
+\end{verbatim}
+Don't forget to remove these lines when finished:
+\begin{verbatim}
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("StackedModulesLearner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+\end{verbatim}
+
+\item We will now implement the methods that are specific to
+PLearner. Let's begin with {\tt outputsize()}. Whereas the value
+of {\tt inputsize()}, {\tt targetsize()} and {\tt weightsize()}
+will be automatically set from the training set's sizes (see
+\ref{plearner_vmat}), you have to define the output size of your
+learner. It can depend on {\tt inputsize()} and other parameters, but
+you should not change it during the learning or testing phase.
+\begin{verbatim}
+int MyLearner::outputsize() const
+{
+    // Compute and return the size of this learner's output (which typically
+    // may depend on its inputsize(), targetsize() and set options).
+    if( method == 0 )
+        return 42;
+    else if( method == 1 )
+        return inputsize()+1;
+    else if( method == 2 )
+        return inputsize()*2;
+    else
+    {
+        PLERROR("MyLearner::outputsize() - method '%i' is unknown.\n"
+                "Did you call 'build()'?\n", method);
+        return 0; // to avoid warning, we must return in every case
+    }
+}
+\end{verbatim}
+
+\item The method {\tt forget()} is used to forget everything the
+PLearner learned during the training phase. It can be called when
+changing the training set (for the first training set, or if what
+it learned with one data set is not usable with another one), or if
+we want to try to learn with different parameters, for example. The
+“learntoption” parameters we have set during {\tt build\_()} are not
+affected.
+\begin{verbatim}
+void MyLearner::forget()
+{
+    //! (Re-)initialize the PLearner in its fresh state (that state may depend
+    //! on the 'seed' option) and sets 'stage' back to 0 (this is the stage of
+    //! a fresh learner!)
+    /*!
+      A typical forget() method should do the following:
+      - initialize a random number generator with the seed option
+      - initialize the learner's parameters, using this random generator
+      - stage = 0
+    */
+    learned_params.clear();
+    stage = 0;
+}
+\end{verbatim}
+
+\item The method {\tt computeOutput(input, output)} computes an {\em
+output} vector from the {\em input} part of a data point. It is
+routinely called when the PLearner is trained (because it is what you
+train it for!), but can also be used during training. The implementation
+really depends on what you want your learner to do.
+
+\begin{verbatim}
+void MyLearner::computeOutput(const Vec& input, Vec& output) const
+{
+    // Compute the output from the input.
+    int nout = outputsize();
+    output.resize(nout);
+
+    if( method == 0 )
+    {
+        tmp += sum(input);
+        output << tmp;
+    }
+    else if( method == 1 )
+    {
+        output.subVec(0,input.length()) << input;
+        output[ inputsize() ] = sum(tmp);
+    }
+    else if( method == 2 )
+    {
+        if( inputsize() != 42 )
+            PLERROR("MyLearner::computeOutput: inputsize() is '%d', but\n"
+                    "Learning method 'second' only works when inputsize() =="
+                    " 42.\n", inputsize());
+        output.subVec(0,42) << input;
+        output.subVec(42,42) << tmp;
+    }
+}
+\end{verbatim}
+
+\item The method {\tt computeCostsFromOutput(...)} is usually called
+after {\tt computeOutput}, because it computes the costs from {\em
+already} computed outputs, knowing the actual target (if any). Note that
+you can have several costs, each of one being a scalar. Typical costs
+are squared distances between output and target, NLL, hinge loss...
+It mainly depends on how you measure the performance of your learning
+algorithm.
+
+Do not forget the “const” at the end of the declaration line.
+\begin{verbatim}
+void MyLearner::computeCostsFromOutputs(const Vec& input, const Vec& output,
+                                        const Vec& target, Vec& costs) const
+{
+    // Compute the costs from *already* computed output.
+    costs.resize(1);
+    costs[0] = powdistance(output, target, 2); // squared error
+}
+\end{verbatim}
+
+\item {\em [Optional]} The method {\tt computeOutputAndCosts(...)},
+as it names tells, computes both the output vector and the costs,
+from an input vector and the corresponding target. There is a default
+implementation in the parent {\tt PLearner} class, that calls {\tt
+computeOutput} and then {\tt computeCostsFromOutput}, but you may want
+to reimplement it to improve efficiency.
+
+It would be the case if computing the output gives you the costs as
+well (if you don't need the target). Then, you may want to implement
+{\tt computeOutputAndCosts}, and make {\tt computeOutput} and {\tt
+computeCostsFromOutput} call it.
+
+You may also want to reimplement the method {\tt computeCostsOnly}.
+
+\item The method {\tt train()} performs the actual training. Its
+implementation will mostly depend on your algorithm. The pseudo-code
+included in {\tt MyLearner.cc} will give you an idea of the general
+structure of a {\tt train()} method, but it is possible that your
+learner doesn't really fit in this.
+
+Vague advice: don't hesitate to add helper functions or routines
+to prevent {\tt train()} from being too big an monolithic;
+keeping statistics during training can be useful; you can use
+{\tt computeOutput}, {\tt computeOutputAndCosts} and {\tt
+computeCostsFromOutput} from inside {\tt train()} to
+avoid code duplication (but it might be impossible for some learners).
+
+\begin{verbatim}
+void MyLearner::train()
+{
+    // The role of the train method is to bring the learner up to
+    // stage==nstages, updating train_stats with training costs measured
+    // on-line in the process.
+
+    static Vec input;  // static so we don't reallocate memory each time...
+    static Vec target; // (but be careful that static means shared!)
+    static Vec train_costs;
+
+    input.resize(inputsize());    // the train_set's inputsize()
+    target.resize(targetsize());  // the train_set's targetsize()
+    real weight;
+
+    // This generic PLearner method does a number of standard stuff useful for
+    // (almost) any learner, and return 'false' if no training should take
+    // place. See PLearner.h for more details.
+    if (!initTrain())
+        return;
+
+    // learn until we arrive at desired stage
+    for( ; stage < nstages ; stage ++ )
+    {
+        // clear stats of previous epoch
+        train_stats->forget();
+
+        // loop over all examples in train set
+        for( int sample=0 ; sample<nsamples ; sample++ )
+        {
+            train_set->getExample(sample, input, target, weight);
+            computeOutputAndCosts(input, target, output, train_costs);
+            // keep statistics of costs
+            train_stats->update(train_costs);
+
+            // minimize the cost on current sample, modifying learned_params
+            // this function is defined elsewhere in this file...
+            minimizeByVariationalMethods(input, target, output, train_costs);
+        }
+        train_stats->finalize(); // finalize statistics for this epoch
+    }
+}
+\end{verbatim}
+
+\item {\tt getTestCostNames()} and {\tt getTrainCostNames()} return, as
+a vector of strings, the names of the costs computed during testing and
+during training (respectively). These values are used to interpret the
+accumulated statistics.
+
+{\tt getTrainCostNames.length()} should be equal to the {\tt
+train\_costs} vector used to update the training statistics, and {\tt
+getTestCostNames.length()} should be equal to the length of the {\tt
+costs} vectors computed in {\tt computeCostsFromOutput}. However, the
+train and test costs are not necessarily the same, and do not have
+necessarily the same length.
+\begin{verbatim}
+TVec<string> MyLearner::getTestCostNames() const
+{
+    return TVec<string>(1, "squared_distance");
+}
+
+TVec<string> MyLearner::getTrainCostNames() const
+{
+    return getTestCostNames();
+}
+\end{verbatim}
+
+\end{enumerate}
+
+\subsection{And now?}
+Now, you can compile {\tt plearn}, and try your learner in different
+situations, from a program as well as from a script, with different
+training sets, debug it, and see if the results seem normal. It is
+usually a good thing to try it with a simple “toy” dataset, for
+which you can do the computation by hand, in order to be sure everything
+works as intended.
+
+\subsection{\label{plearner_build_}A build\_() that works in every situation}
+
 \begin{enumerate}
 
-\item Type \texttt{pyskeleton PLearner MyLearner}
+\item split the building of the different parts of your PLearner into
+different functions,
 
-\item Edit the file MyLearner.h to add the correct field (int, Mat,
-      etc.). Normally you don't have to add any methods.
+\item call one of these functions as soon as you have all the elements needed,
 
-\item Edit the file MyLearner.cc
-  \begin{enumerate}
-    \item  Add short and complete description in
-    \texttt{PLEARN\_IMPLEMENT\_OBJECT}
+\item it is better to compute twice the same thing at build time and
+lose a bit of efficiency, than to think that everything has already been
+set to the right values when one parameter has changed.
 
-    \item  Add the \texttt{declareOption} corresponding
-    to the field you create in the \texttt{void
-    MyLearner::declareOptions(OptionList\& ol)} method (don't forget
-    to fill the help option). This will be used for saving and loading
-    the PLearner.
+\end{enumerate}
 
-    \item  If some fields derive from basic ones, don't add a
-    \texttt{declareOption}, you have to implemement their building
-    in the \texttt{MyLearner::build\_()} method.
+\subsection{Useful members and methods defined in PLearner class}
 
-    \item  If some fields are filled after training, add a
-    \texttt{declareOption} with a OptionBase::learntoption option.
+\begin{enumerate}
+\item {\tt inputsize()}
+\item {\tt setTrainingSet()}
+\item {\tt train\_set}
+\item {\tt train\_stats}
+\item {\tt stage}
+\item {\tt nstages}
+\end{enumerate}
 
-    \item  Edit the remaining methods, \texttt{pyskeleton} has included
-    comments to help you.
-  \end{enumerate}
+\subsection{\label{plearner_vmat}Datasets}
 
-\item Pray while launching a \texttt{pymake MyLearner.cc}.
-\end{enumerate} 
 
+\subsection{Testing phase}
+TODO
 
 \subsection{How to get the dataset?}
 TODO
@@ -1068,9 +1678,9 @@ essential.
 You can also use \texttt{y->fprop\_from\_all\_sources()} instead of a
 \texttt{VarArray} but this reconstruct the path each time and so don't
 store it. It's not efficient for a multi fprop and it's not possible to
-back-propagated gradients.
+back-propagate gradients.
 
-Once we have this path, we can also back-propagated gradients. For
+Once we have this path, we can also back-propagate gradients. For
 example, if we set the gradient of z to 1,
 
 \begin{verbatim}
@@ -1353,13 +1963,13 @@ int main(int argc, char** argv)
 \section{Optimizers}
 \label{Optimizer}
 
-%% plus a jour au niveau des repertoires 
+%% plus a jour au niveau des repertoires
 % \section{Learning algorithms}
-% 
+%
 %  While all the previously mentionned classes are to be found in the
 %  PLearnLibrary/PLearnCore directory, the higher level learning algortihms
 %  are to be found in PLearnLibrary/PLearnAlgo
-% 
+%
 \section{ Miscalleanous utilities}
 
  The PLearnLibrary/PLearnUtils directory contains classes and
@@ -1868,36 +2478,30 @@ The PLearn software library and tools described in this document are
 distributed under the following BSD-type license:
 
 \begin{verbatim}
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-Redistribution and use in source and binary forms, with
-or without modification, are permitted provided that the
-following conditions are met:
+1. Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
 
-  1. Redistributions of source code must retain the above
-     copyright notice, this list of conditions and the
-     following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
 
-  2. Redistributions in binary form must reproduce the above
-     copyright notice, this list of conditions and the
-     following disclaimer in the documentation and/or other
-     materials provided with the distribution.
+3. The name of the authors may not be used to endorse or promote
+products derived from this software without specific prior written
+permission.
 
-  3. The name of the authors may not be used to endorse or
-     promote products derived from this software without
-     specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY
-EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
-THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 \end{verbatim}
 
 
