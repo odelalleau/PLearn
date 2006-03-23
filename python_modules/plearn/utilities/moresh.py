@@ -39,6 +39,10 @@ def compare_trees(former, later, ignored_files_re=["\.svn", ".\.metadata"]):
         re_filter_list(former_subdirs, ignored_files_re)
         re_filter_list(later_subdirs, ignored_files_re)
 
+        # Filters the files given the 'ignored_files_re' argument
+        re_filter_list(former_files, ignored_files_re)
+        re_filter_list(later_files, ignored_files_re)
+
         ######  Directories  #########################################################
 
         uniquedirs = []

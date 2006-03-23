@@ -350,7 +350,7 @@ def re_filter_list(strlist, undesired_regexp):
         for p in patterns:
             if p.search(elem):
                 strlist.remove(elem)
-                continue
+                break
 
 def short_doc(obj):
     return doc(obj, True)
