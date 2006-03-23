@@ -340,6 +340,34 @@ The learning of one example (input_vec) by contrastive divergence:
     // update
     rbmp.update();
 
+If we have three sequential layers (input, hidden, output) and two
+RBMParameters:
+  - rbmp_ih between input and hidden, frozen (because learned previously);
+  - rbmp_ho between hidden and output, which we train;
+the learning of one example (input_vec) will look like:
 
+    // propagation to hidden
+    input.sample << input_vec;
+    rbmp_ih.setAsDownInput( input.sample );
+    hidden.getUnitParams( rbmp_ih );
+    hidden.computeExpectation(); // not computeSample()
+
+    // positive phase
+    rbmp_ho.setAsDownInput( hidden.expectation );
+    output.getUnitParams( rbmp_ho );
+    output.computeSample();
+    rbmp_ho.setAsPosStats( hidden.expectation, output.sample );
+
+    // negative phase
+    rbmp_ho.setAsUpInput( output.sample );
+    hidden.getUnitParams( rbmp_ho );
+    hidden.getExpectation();
+    rbmp_ho.setAsDownInput( hidden.expectation );
+    output.getUnitParams( rbmp_ho );
+    output.computeSample();
+    rbmp_ho.setAsNegStats( hidden.expectation, output.sample );
+
+    // update
+    rbmp_ho.update();
 
 
