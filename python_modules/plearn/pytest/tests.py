@@ -322,20 +322,26 @@ class Test(PyTestObject):
         - A Program (see 'program' option) instance
         - None: if you are sure no files are to be compared.
 
+    @ivar ignored_files_re: Default behaviour of a test is to compare all
+    files created by running the test. In some case, one may prefer some of
+    these files to be ignored.
+    @type ignored_files_re: list of regular expressions
+
     @ivar disabled: If true, the test will not be ran.
     @type disabled: bool
     """
     #######  Options  #############################################################
 
-    name        = PLOption(None)
-    description = PLOption('')
-    category    = PLOption('General')
-    program     = PLOption(None)
-    arguments   = PLOption('')
-    resources   = PLOption([])
-    precision   = PLOption(1e-6)
-    pfileprg    = PLOption("__program__")
-    disabled    = PLOption(False)
+    name             = PLOption(None)
+    description      = PLOption('')
+    category         = PLOption('General')
+    program          = PLOption(None)
+    arguments        = PLOption('')
+    resources        = PLOption([])
+    precision        = PLOption(1e-6)
+    pfileprg         = PLOption("__program__")
+    ignored_files_re = PLOption([])
+    disabled         = PLOption(False)
     
 
     #######  Class Variables and Methods  #########################################
@@ -375,10 +381,16 @@ class Test(PyTestObject):
     def _optionFormat(self, option_pair, indent_level, inner_repr):
         optname, val = option_pair
         if val is None:
-            return "%s = None"%optname        
+            return "%s = None"%optname
+        
         elif optname == "description" and self.description.find('\n')!=-1:
             return 'description = \"\"\"%s\"\"\"'%self.description
-        return super(Test, self)._optionFormat(option_pair, indent_level, inner_repr)
+
+        elif optname == "ignored_files_re" and len(self.ignored_files_re)==0:
+            return ""
+
+        else:
+            return super(Test, self)._optionFormat(option_pair, indent_level, inner_repr)
         
     def __init__(self, **overrides):
         PyTestObject.__init__(self, **overrides)        
@@ -806,7 +818,7 @@ class RunTestRoutine( ResultsRelatedRoutine ):
                         
         diffs.extend(
             pldiff.pldiff(self.expected_results, self.run_results,
-                          self.test.precision, plearn_exec) )
+                          self.test.precision, plearn_exec, self.test.ignored_files_re))
         popd()
 
         # Set status

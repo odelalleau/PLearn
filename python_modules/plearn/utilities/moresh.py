@@ -13,7 +13,7 @@ def cd( path = None ):
         path = ppath.ppath('HOME')
     os.chdir( path )
 
-def compare_trees(former, later, ignoredirs_re=["\.svn", ".\.metadata"]):
+def compare_trees(former, later, ignored_files_re=["\.svn", ".\.metadata"]):
     """Compare the directory tree starting at \I{former} to the one starting at I{later}.
     
     Returns tree lists containing 
@@ -35,9 +35,9 @@ def compare_trees(former, later, ignoredirs_re=["\.svn", ".\.metadata"]):
         later_dirpath = former_dirpath.replace(former, later, 1)
         later_subdirs, later_files = split_listdir(later_dirpath)
         
-        # Filters the subdirs given the 'ignoredirs' argument
-        re_filter_list(former_subdirs, ignoredirs_re)
-        re_filter_list(later_subdirs, ignoredirs_re)
+        # Filters the subdirs given the 'ignored_files_re' argument
+        re_filter_list(former_subdirs, ignored_files_re)
+        re_filter_list(later_subdirs, ignored_files_re)
 
         ######  Directories  #########################################################
 

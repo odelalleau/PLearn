@@ -69,7 +69,8 @@ def report_unique_paths(unique_paths, alterpath, prefix=''):
     return report
 
 __DUMMY__VALUE__ = "## __DUMMY__VALUE__ ##"
-def pldiff(former, later, precision=1e-06, plearn_exec=__DUMMY__VALUE__):
+def pldiff(former, later, precision=1e-06,
+           plearn_exec=__DUMMY__VALUE__, ignored_files_re=[]):
     """Compare to PLearn-compliant files or directory.
 
     TODO:
@@ -86,7 +87,8 @@ def pldiff(former, later, precision=1e-06, plearn_exec=__DUMMY__VALUE__):
     if os.path.isdir(former):
         assert os.path.isdir(later)        
         common_files, unique_to_former, unique_to_later =\
-            moresh.compare_trees(former, later)
+            moresh.compare_trees(former, later,
+                ignored_files_re=ignored_files_re+["\.svn", ".\.metadata"])
     
         report.extend(report_unique_paths(unique_to_former, later, '--- '))
         report.extend(report_unique_paths(unique_to_later, former, '+++ '))
