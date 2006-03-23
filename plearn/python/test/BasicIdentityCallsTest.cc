@@ -215,8 +215,14 @@ void BasicIdentityCallsTest::unary(const PythonCodeSnippet* python)
          << tostring( python->invoke("unary_vec", v).as<Vec>() )
          << endl;
 
+    // Test full matrix (mod == width)
     cout << "Calling unary_mat(m)        : " << endl;
     cout << tostring( python->invoke("unary_mat", m).as<Mat>() )
+         << endl;
+
+    // Test sliced matrix (mod > width)
+    cout << "Calling unary_mat(m)        : " << endl;
+    cout << tostring( python->invoke("unary_mat", m.subMatColumns(1,2)).as<Mat>() )
          << endl;
 
     TVec<string> tvs;

@@ -228,14 +228,35 @@ PyObject* PythonObjectWrapper::newPyObject(const Mat& data)
         pyarr = NA_NewArray(NULL, tFloat64, 2, data.length(), data.width());
     else if (data.mod() == data.width())
         pyarr = NA_NewArray(data.data(), tFloat64, 2, data.length(), data.width());
-    else
-        PLERROR("PythonObjectWrapper::newPyObject: matrices with mod != width are not "
-                "currently supported; we have width=%d / mod=%d", data.width(), data.mod());
+    else {
+        // static PyObject* NA_NewAll( int ndim, maybelong *shape, NumarrayType
+        // type, void *buffer, maybelong byteoffset, maybelong bytestride, int
+        // byteorder, int aligned, int writable)
+        //
+        // numarray from C data buffer. The new array has type type, ndim
+        // dimensions, and the length of each dimensions must be given in
+        // shape[ndim]. byteoffset, bytestride specify the data-positions in
+        // the C array to use. byteorder and aligned specify the corresponding
+        // parameters. byteorder takes one of the values NUM_BIG_ENDIAN or
+        // NUM_LITTLE_ENDIAN. writable defines whether the buffer object
+        // associated with the resuling array is readonly or writable. Data is
+        // copied from buffer into the memory object of the new array.
+
+        // maybelong shape[2];
+        // shape[0] = data.length();
+        // shape[1] = data.width();
+        // pyarr = NA_NewAll(2, shape, tFloat64, data.data(), 0, data.mod()*sizeof(double),
+        //                   NA_ByteOrder(), 1, 1);
+
+        // NOTE (NC) -- I could not get the above function to work; for now,
+        // simply copy the matrix to new storage before converting to Python.
+        Mat new_data = data.copy();
+        pyarr = NA_NewArray(new_data.data(), tFloat64, 2,
+                            new_data.length(), new_data.width());
+    }
 
     return (PyObject*)pyarr;
 }
-
-
 
 } // end of namespace PLearn
 
