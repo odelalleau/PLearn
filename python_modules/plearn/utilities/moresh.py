@@ -162,7 +162,10 @@ def relative_link( src, dest ):
     popd()
     popd()
 
-def relative_path( path, basepath ):
+def relative_path( path, basepath=None ):
+    if basepath is None:
+        basepath = os.getcwd()
+        
     path = path.replace( basepath, '' )
     if path.startswith('/'):
         return path[1:]
@@ -206,7 +209,9 @@ def system_symlink(source, target):
             shutil.copy(source, target)
     else:
         logging.debug("Linking source: %s -> %s."%(target,source))
-        os.symlink(source, target)
+        # print "ln -s %s %s"%(source, target)
+        rcode = os.system("ln -s '%s' '%s'"%(source, target))
+        # print rcode
 
 
 if __name__ == "__main__":
