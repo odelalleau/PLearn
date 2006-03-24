@@ -333,8 +333,6 @@ The methods are:
   * RBMParameters::computeUnitActivations( const Vec& all_activations ) :
     same thing, for every unit in the appropriate layer
 
-  * RBMParameters::computeUnitActivations( TVec<int> indices, const Vec& activations)
-
 For class RBMLayer:
 
   * RBMLayer::getUnitActivations( int i, RBMParams rbmp ) :
@@ -347,6 +345,10 @@ For class RBMLayer:
       get 'sample' from 'layer_params'
   * RBMLayer::computeExpectation()
       get 'expectation' from 'layer_params'
+
+  * string RBMLayer::getUnitsTypes()
+      returns a string with each character encoding the type of corresponding
+      unit, 'l' for linear and 'g' for gaussian
 
 If a DeepBeliefNetwork has two RBMLayer's (input and output) and one
 RBMParameters (rbmp) linking both of them, a simple up propagation of
