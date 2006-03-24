@@ -2359,8 +2359,13 @@ void GaussMix::resizeDataBeforeTraining() {
         if (n_eigen == -1 || n_eigen == D)
             // We need to compute all eigenvectors.
             n_eigen_computed = D;
-        else
+        else {
+            if (n_eigen > D || n_eigen < 1)
+                PLERROR("In GaussMix::resizeDataBeforeTraining - Invalid value"
+                        " for 'n_eigen' (%d), should be between 1 and %d",
+                        n_eigen, D);
             n_eigen_computed = n_eigen + 1;
+        }
         eigenvalues.resize(L, n_eigen_computed);
         for (int i = 0; i < eigenvectors.length(); i++)
             eigenvectors[i].resize(n_eigen_computed, D);
