@@ -143,9 +143,6 @@ class Program(core.PyTestObject):
                 self.compiler = Program.default_compiler
             self.__attempted_to_compile = False
             self.__log_file_path = internal_exec_path+'.log'
-            if not self.compilation_disabled and os.path.exists(internal_exec_path):
-                os.remove(internal_exec_path)
-                logging.debug("*** REMOVED %s"%internal_exec_path)
 
     def _optionFormat(self, option_pair, indent_level, inner_repr):
         optname, val = option_pair
@@ -154,7 +151,15 @@ class Program(core.PyTestObject):
         return super(Program, self)._optionFormat(option_pair, indent_level, inner_repr)
 
     def compilationSucceeded(self):
-        return os.path.exists(self.getInternalExecPath())
+        exec_exists = os.path.exists(self.getInternalExecPath())
+        no_need_to_compile = self.compilation_disabled or not self.isCompilable()
+        if no_need_to_compile and not exec_exists:
+            ### NOTE: This could be changed by a 'cp getProgramPath() getInternalExecPath()'
+            raise core.PyTestUsageError(
+                "Called PyTest with --no-compile option but %s "
+                "was not previously compiled." % self.getInternalExecPath())
+            
+        return no_need_to_compile or (self.__attempted_to_compile and exec_exists)
 
     def compile(self, publish_dirpath=""):
         # Remove old compile log if any
@@ -171,21 +176,12 @@ class Program(core.PyTestObject):
             logging.debug("Already attempted to compile %s"%self.getInternalExecPath())
             succeeded = False
 
-        # Compilation is disabled but no prior compilation were made
-        elif self.compilation_disabled:
-            ### NOTE: This could be changed by a 'cp getProgramPath() getInternalExecPath()'
-            raise core.PyTestUsageError(
-                "Called PyTest with --no-compile option but %s was not previously compiled."
-                % self.getInternalExecPath() )
-
         # First compilation attempt
         else:
             succeeded = self.__first_compilation_attempt()       
 
         # Publish the compile log
         if succeeded and publish_dirpath:
-            # print self.__log_file_path
-            # print publish_target
             moresh.system_symlink(self.__log_file_path,
                                   moresh.relative_path(publish_target))
         return succeeded
@@ -208,19 +204,22 @@ class Program(core.PyTestObject):
 
         # Actual compilation
         moresh.pushd(targetdir)
-        logging.debug("In %s"%os.getcwd())
+        logging.debug("\nIn %s:"%os.getcwd())
         
         compile_cmd = "%s %s %s -link-target %s >& %s" \
             % (self.compiler, self.compile_options,
                self.getProgramPath(), self.getInternalExecPath(), log_fname)
         
         logging.debug(compile_cmd)
-        os.system(compile_cmd)
+        compile_exit_code = os.WEXITSTATUS( os.system(compile_cmd) )
+        logging.debug("compile_exit_code <- %d\n"%compile_exit_code)
         moresh.popd()
 
         # Report success of fail and remember that compilation was attempted
         self.__attempted_to_compile = True
-        return os.path.exists(self.getInternalExecPath())
+        if compile_exit_code!=0 and os.path.exists(self.getInternalExecPath()):
+            os.remove(self.getInternalExecPath())
+        return compile_exit_code==0
 
     def getName(self):
         return self.name
