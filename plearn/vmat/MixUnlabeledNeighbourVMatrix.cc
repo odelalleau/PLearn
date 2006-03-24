@@ -138,20 +138,20 @@ void MixUnlabeledNeighbourVMatrix::build_()
         int keyCol_select = source_select->inputsize() + source_select->targetsize()-1;
         sorted_source_select = new SortRowsVMatrix();
         sorted_source_select->source = source_select;
-        sorted_source_select->sort_columns = TVec<int>(1,source_select->inputsize() 
-                                                       + source_select->targetsize() - 1);
+        sorted_source_select->sort_columns = TVec<int>(1,keyCol_select);
         sorted_source_select->build();
-        source_select->getExample(0,input,targetSel,weight);
-        lastKey = source_select->getValString(keyCol_select,targetSel.lastElement());
+        sorted_source_select->getExample(0,input,targetSel,weight);
+        lastKey = sorted_source_select->getValString(keyCol_select,targetSel.lastElement());
         rowSel = 0;
         bag_indices.resize(0);
-        while(rowSel < source_select->length()){
-            source_select->getExample(rowSel,input,targetSel,weight);
-            if (lastKey == source_select->getValString(keyCol_select,
+        while(rowSel < sorted_source_select->length()){
+            sorted_source_select->getExample(rowSel,input,targetSel,weight);
+            if (lastKey == sorted_source_select->getValString(keyCol_select,
                                                        targetSel.lastElement())){
                 bag_indices.push_back(rowSel);
             }else{
                 sourceFound = false;
+                if (lastKey == "all") sourceFound=true;
                 for(row=0; row < source->length() && !sourceFound; row++){
                     source->getExample(row,input,target,weight);
                     if(lastKey == source->getValString(keyCol,target.lastElement())) sourceFound=true;
@@ -168,12 +168,13 @@ void MixUnlabeledNeighbourVMatrix::build_()
                     }
                 }
                 bag_indices.resize(0);
-                lastKey = source_select->getValString(keyCol_select,targetSel.lastElement());
+                lastKey = sorted_source_select->getValString(keyCol_select,targetSel.lastElement());
                 bag_indices.push_back(rowSel);
             }
             rowSel++;
-            if (rowSel == source_select->length()){
+            if (rowSel == sorted_source_select->length()){
                 sourceFound = false;
+                if (lastKey == "all") sourceFound=true;
                 for(row=0; row < source->length() && !sourceFound; row++){
                     source->getExample(row,input,target,weight);
                     if(lastKey == source->getValString(keyCol,target.lastElement())) sourceFound=true;
