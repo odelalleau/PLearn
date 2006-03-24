@@ -497,7 +497,8 @@ class Test(PyTestObject):
         is not compilable.
         """
         self.sanity_check()
-        assert os.path.exists(self.resultsDirectory())
+        if not os.path.exists(self.resultsDirectory()):
+            os.makedirs( moresh.relative_path(self.resultsDirectory()) )
         self.program.compile(self.resultsDirectory())
 
     def ensureResultsDirectory(self, results_path):
