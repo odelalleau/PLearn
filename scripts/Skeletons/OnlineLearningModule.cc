@@ -76,7 +76,7 @@ void DERIVEDCLASS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 }
 
 //! given the input, compute the output (possibly resize it  appropriately)
-virtual void DERIVEDCLASS::fprop(const Vec& input, Vec& output) const
+void DERIVEDCLASS::fprop(const Vec& input, Vec& output) const
 {
 }
 
@@ -91,15 +91,20 @@ virtual void DERIVEDCLASS::fprop(const Vec& input, Vec& output) const
 //! JUST CALLS
 //!     bpropUpdate(input, output, input_gradient, output_gradient)
 //! AND IGNORES INPUT GRADIENT.
-virtual void bpropUpdate(const Vec& input, const Vec& output,
-                         const Vec& output_gradient);
+void DERIVEDCLASS::bpropUpdate(const Vec& input, const Vec& output,
+                               const Vec& output_gradient)
+{
+}
 */
 
 /* THIS METHOD IS OPTIONAL
 //! this version allows to obtain the input gradient as well
 //! N.B. THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
-virtual void bpropUpdate(const Vec& input, const Vec& output,
-                         Vec& input_gradient, const Vec& output_gradient);
+void DERIVEDCLASS::bpropUpdate(const Vec& input, const Vec& output,
+                               Vec& input_gradient,
+                               const Vec& output_gradient)
+{
+}
 */
 
 //! reset the parameters to the state they would be BEFORE starting training.
