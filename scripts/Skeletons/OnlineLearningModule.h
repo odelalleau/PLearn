@@ -1,7 +1,7 @@
 #ifndef DERIVEDCLASS_INC
 #define DERIVEDCLASS_INC
 
-#include <plearn_learners/generic/OnlineLearningModule.h>
+#include <plearn_learners/online/OnlineLearningModule.h>
 
 namespace PLearn {
 
