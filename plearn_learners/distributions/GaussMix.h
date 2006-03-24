@@ -239,6 +239,9 @@ protected:
     //! It is only used with when type == "general".
     Mat covariance;
 
+    //! Temporary storage vector.
+    mutable Vec log_likelihood_dens;
+
     // *********************
     // * protected options *
     // *********************
@@ -408,10 +411,8 @@ protected:
     // TODO DOCUMENT!!!
     void addToCovariance(const Vec& y, int j, const Mat& cov, real post);
 
-    /*
     //! Overridden so as to compute specific GaussMix outputs.
     virtual void unknownOutput(char def, const Vec& input, Vec& output, int& k) const;
-    */
 
 public:
 

@@ -3466,7 +3466,7 @@ void GaussMix::train()
         do {
             computePosteriors();
             updateSampleWeights();
-            replaced_gaussian = computeMixtureWeights(true);
+            replaced_gaussian = computeMixtureWeights(false);
             // Note: for debugging purpose, 'true' may be replaced by 'false'
             // to ensure no Gaussian is removed.
         } while (replaced_gaussian);
@@ -3559,11 +3559,9 @@ void GaussMix::traverse_tree(TVec<int>& path,
     }
 }
 
-
 ///////////////////
 // unknownOutput //
 ///////////////////
-    /*
 void GaussMix::unknownOutput(char def, const Vec& input, Vec& output, int& k) const {
     switch(def) {
     case 'p': // Log posteriors P(j | y).
@@ -3573,6 +3571,7 @@ void GaussMix::unknownOutput(char def, const Vec& input, Vec& output, int& k) co
         real log_p_y_x = log_density(predicted_part);
         // This also fills the vector 'log_likelihood_dens' with likelihoods p(y,j | x),
         // which is exactly what we need in order to compute the posteriors.
+        log_likelihood_dens.resize(L);
         for (int j = 0; j < L; j++)
             output[j + k] = log_likelihood_dens[j] - log_p_y_x;
         k += L;
@@ -3583,7 +3582,6 @@ void GaussMix::unknownOutput(char def, const Vec& input, Vec& output, int& k) co
         break;
     }
 }
-    */
 
 /////////////////////////
 // updateSampleWeights //
