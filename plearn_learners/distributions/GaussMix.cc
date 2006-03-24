@@ -3466,7 +3466,7 @@ void GaussMix::train()
         do {
             computePosteriors();
             updateSampleWeights();
-            replaced_gaussian = computeMixtureWeights(false);
+            replaced_gaussian = computeMixtureWeights(true);
             // Note: for debugging purpose, 'true' may be replaced by 'false'
             // to ensure no Gaussian is removed.
         } while (replaced_gaussian);
