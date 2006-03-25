@@ -333,12 +333,12 @@ void GradNNetLayerModule::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Optional initial weights of the neurons (bias on first column,\n"
                   "one row per neuron. If not provided then weights are initialized\n"
-                  "according to a uniform distribution (see init_weights_random_scale)"
-                  "and biases are initialized to 0\n");
-    
+                  "according to a uniform distribution (see init_weights_random_scale)\n"
+                  "and biases are initialized to 0.\n");
+
     declareOption(ol, "init_weights_random_scale", &GradNNetLayerModule::init_weights_random_scale,
                   OptionBase::buildoption,
-                  "If init_weights is not provided, the weights are initialized randomly by\n"
+                  "If init_weights is not provided, the weights are initialized randomly\n"
                   "from a uniform in [-r,r], with r = init_weights_random_scale/input_size.\n"
                   "To clear the weights initially, just set this option to 0.");
 

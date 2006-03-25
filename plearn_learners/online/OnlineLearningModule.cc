@@ -121,7 +121,7 @@ void OnlineLearningModule::declareOptions(OptionList& ol)
 {
     declareOption(ol, "input_size", &OnlineLearningModule::input_size,
                   OptionBase::buildoption,
-                  "Size of the input Hessian)");
+                  "Size of the input");
 
     declareOption(ol, "output_size", &OnlineLearningModule::output_size,
                   OptionBase::buildoption,
@@ -130,9 +130,9 @@ void OnlineLearningModule::declareOptions(OptionList& ol)
     declareOption(ol, "estimate_simpler_diag_hessian",
                   &OnlineLearningModule::estimate_simpler_diag_hessian,
                   OptionBase::buildoption,
-                  "Should we compute a simpler estimation of diagonal of the"
-                  " input Hessian matrix,\n"
-                  "using only the first (positive) term in:\n"
+                  "Should we compute a simpler diagonal estimation of the"
+                  " input Hessian\n"
+                  "matrix, using only the first (positive) term in:\n"
                   "  d²C/dx² ~= d²C/dy² (dy/dx)² [+ dC/dy d²y/dx²]\n");
 
 
@@ -145,10 +145,13 @@ void OnlineLearningModule::declareOptions(OptionList& ol)
                   "If expdir is the empty string (the default),\n"
                   "then the module should not create *any* file.\n");
 
-    declareOption(ol, "random_generator", &OnlineLearningModule::random_generator,
+    declareOption(ol, "random_generator",
+                  &OnlineLearningModule::random_generator,
                   OptionBase::buildoption, 
-                  "Pointer to an optional random number generator, e.g. for initializing\n"
-                  "parameters or any non-deterministic operation required by the module.\n");
+                  "Pointer to an optional random number generator,\n"
+                  "e.g. for initializing parameters or any non-deterministic"
+                  " operation\n"
+                  "required by the module.\n");
 
     inherited::declareOptions(ol);
 }
