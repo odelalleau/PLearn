@@ -150,8 +150,7 @@ void MixUnlabeledNeighbourVMatrix::build_()
                                                        targetSel.lastElement())){
                 bag_indices.push_back(rowSel);
             }else{
-                sourceFound = false;
-                if (lastKey == "all") sourceFound=true;
+                sourceFound = (lastKey == "all");
                 for(row=0; row < source->length() && !sourceFound; row++){
                     source->getExample(row,input,target,weight);
                     if(lastKey == source->getValString(keyCol,target.lastElement())) sourceFound=true;
@@ -173,8 +172,7 @@ void MixUnlabeledNeighbourVMatrix::build_()
             }
             rowSel++;
             if (rowSel == sorted_source_select->length()){
-                sourceFound = false;
-                if (lastKey == "all") sourceFound=true;
+                sourceFound = (lastKey == "all");
                 for(row=0; row < source->length() && !sourceFound; row++){
                     source->getExample(row,input,target,weight);
                     if(lastKey == source->getValString(keyCol,target.lastElement())) sourceFound=true;
