@@ -53,6 +53,8 @@
 #include <plearn/sys/PLMPI.h>
 #include <plearn/vmat/VMat.h>
 
+//#define PL_PROFILE
+
 #ifdef PL_PROFILE    
 #include <plearn/sys/Profiler.h>
 #endif
@@ -66,7 +68,7 @@ namespace
     int plearn_major_version;
     int plearn_minor_version;
     int plearn_fixlevel;
-};
+}
 
 static bool is_command( string& possible_command )
 {
