@@ -309,7 +309,7 @@ void chol_rotapp_tr(real c, real s, const Mat& x, const Mat& y)
     real* t_ = t.data();
     real* x_ = x.data();
     for (int i = 0; i < n; i++) {
-        *t = *x_; // Backup of old value of x.
+        *t_ = *x_; // Backup of old value of x.
         *x_ = c * (*x_) + s * (*y_);
         t_++;
         x_ += x_mod;
