@@ -120,6 +120,11 @@ public:
     //! Directory where the .html files should be generated
     string output_dir;
 
+    //! Filename containing the main index file (index.html).  If missing,
+    //! a default index is generated.  Note that the prolog and epilog are
+    //! always generated for this file.
+    string html_index_document;
+    
     //! Filename containing the "top" of the HTML document (including an
     //! opening <body> tag)
     string html_prolog_document;

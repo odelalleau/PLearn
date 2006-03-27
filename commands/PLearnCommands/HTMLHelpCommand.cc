@@ -70,6 +70,12 @@ void HTMLHelpConfig::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Directory where the .html files should be generated");
 
+    declareOption(ol, "html_index_document", &HTMLHelpConfig::html_index_document,
+                  OptionBase::buildoption,
+                  "Filename containing the main index file (index.html).  If missing,\n"
+                  "a default index is generated.  Note that the prolog and epilog are\n"
+                  "always generated for this file.");
+    
     declareOption(ol, "html_prolog_document", &HTMLHelpConfig::html_prolog_document,
                   OptionBase::buildoption,
                   "Filename containing the \"top\" of the HTML document (including an\n"
@@ -141,14 +147,18 @@ void HTMLHelpCommand::helpIndex()
     ofstream os((config->output_dir + "/" + "index.html").c_str());
     copySnippet(os, config->html_prolog_document);
 
-    os << "<div class=\"cmdname\">" << endl
-       << "Welcome to PLearn User-Level Class and Commands Help" << endl
-       << "</div>"
-       << "<div class=\"cmdhelp\">" << endl
-       << "<ul>" << endl
-       << "  <li> <a href=\"class_index.html\">Class Index</a>" << endl
-       << "  <li> <a href=\"command_index.html\">Command Index</a>" << endl
-       << "</ul></div>" << endl;
+    if (config->html_index_document.empty()) {
+        os << "<div class=\"cmdname\">" << endl
+           << "Welcome to PLearn User-Level Class and Commands Help" << endl
+           << "</div>"
+           << "<div class=\"cmdhelp\">" << endl
+           << "<ul>" << endl
+           << "  <li> <a href=\"class_index.html\">Class Index</a>" << endl
+           << "  <li> <a href=\"command_index.html\">Command Index</a>" << endl
+           << "</ul></div>" << endl;
+    }
+    else
+        copySnippet(os, config->html_index_document);
 
     os << generated_by() << endl;
 
