@@ -249,7 +249,7 @@ int VMatrix::fieldIndex(const string& fieldname) const
 int VMatrix::getFieldIndex(const string& fieldname_or_num) const
 {
     int i = fieldIndex(fieldname_or_num);
-    if(i==-1) {
+    if(i==-1 && pl_islong(fieldname_or_num)) {
         i = toint(fieldname_or_num);
 
         // Now ensure that THE WHOLE FIELD has been converted, because we want

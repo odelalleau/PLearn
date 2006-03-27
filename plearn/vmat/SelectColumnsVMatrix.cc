@@ -188,13 +188,15 @@ void SelectColumnsVMatrix::build_()
                             }
                         }
                         // OR it may be a number by itself only
-                        else if ((the_index = source->getFieldIndex(the_field)) != -1) {
+                        else if (pl_islong(the_field) &&
+                                 (the_index = source->getFieldIndex(the_field)) != -1)
+                        {
                             ok = true;
                             indices.append(the_index);
                         }
                         if (!ok)
-                            PLERROR("In SelectColumnsVMatrix::build_ - Unknown field (%s) in source VMat "
-                                    "(you may want to use the 'extend_with_missing' option)", the_field.c_str());
+                            PLERROR("In SelectColumnsVMatrix::build_ - Unknown field \"%s\" in source VMat;\n"
+                                    "    (you may want to use the 'extend_with_missing' option)", the_field.c_str());
                     } else
                         indices.append(the_index);
                 }
