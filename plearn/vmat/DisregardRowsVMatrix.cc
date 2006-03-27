@@ -40,7 +40,9 @@
 
 /*! \file DisregardRowsVMatrix.cc */
 
+#define PL_LOG_MODULE_NAME "DisregardRowsVMatrix"
 
+#include <plearn/io/pl_log.h>
 #include "DisregardRowsVMatrix.h"
 
 namespace PLearn {
@@ -163,6 +165,11 @@ build_()
     }
 
     inferIndices();
+
+    DBG_MODULE_LOG
+        << "Out of " << source.length() << " rows, "
+        << "kept " << indices.length() << " rows"
+        << endl;
   
     // Calls back the inherited build now that the row indices are known
     inherited::build();
