@@ -133,6 +133,7 @@ PLEARN_IMPLEMENT_OBJECT(VMatLanguage,
                         " _ ceil           : a     -->  ceil(a)\n"
                         " _ log            : a     -->  log(a)    ; natural log\n"
                         " _ exp            : a     -->  exp(a)    ; e^a\n"
+                        " - sigmoid        : a     -->  sigmoid(a); sigmoid\n"
                         " _ rowindex       : pushes the row number in the VMat on the stack\n"
                         " _ isnan          : true if missing value\n"
                         " _ missing        : pushes a missing value\n"
@@ -690,6 +691,7 @@ void VMatLanguage::build_opcodes_map()
         opcodes["nextincal"] = 59;  // cal# JDate -> next jdate on or after given jdate in global calendar cal#
         opcodes["previncal"] = 60;  // cal# JDate -> previous jdate on or before given jdate in global calendar cal#
         opcodes["gausshot"]  = 61;  // index nclasses sigma --> smooth one-hot
+        opcodes["sigmoid"]  = 62;   // a -> sigmoid(a)
     }
 }
 
@@ -1066,6 +1068,11 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
                 real value = exp(- diff_index*diff_index / sigma);
                 pstack.push(value);
             }
+            break;
+        }
+        case 62: // sigmoid
+        {
+            pstack.push(sigmoid(pstack.pop()));
             break;
         }
         default:
