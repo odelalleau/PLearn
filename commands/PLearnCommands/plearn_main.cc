@@ -60,6 +60,14 @@
 namespace PLearn {
 using namespace std;
 
+// Anonymous namespace to house version information
+namespace
+{
+    int plearn_major_version;
+    int plearn_minor_version;
+    int plearn_fixlevel;
+};
+
 static bool is_command( string& possible_command )
 {
     if(PLearnCommandRegistry::is_registered(possible_command))
@@ -76,20 +84,26 @@ static bool is_command( string& possible_command )
     return false;
 }
 
-static void output_version(int major_version, int minor_version, int fixlevel )
+static void output_version()
 {
-    if(major_version == -1)
-        return;
-    cerr << prgname()
-         << " "      << major_version;
-    if (minor_version >= 0) {
-        cerr << "."      << minor_version;
-        if (fixlevel >= 0)
-            cerr << "."      << fixlevel;
+    cerr << version_string();
+}
+
+string version_string()
+{
+    string s;
+    if(plearn_major_version == -1)
+        return string();
+    s = prgname() + ' ' + tostring(plearn_major_version);
+    if (plearn_minor_version >= 0) {
+        s += '.' + tostring(plearn_minor_version);
+        if (plearn_fixlevel >= 0)
+            s += '.' + tostring(plearn_fixlevel);
     }
-    cerr << "  svn_revision:" << pl_repository_revision();
-    cerr << "  ("    << pl_repository_compile_date() << " "
-         << pl_repository_compile_time() << ")"      << endl;
+    s += "  svn_revision:" + pl_repository_revision();
+    s += "  (" + pl_repository_compile_date() + ' ' +
+        pl_repository_compile_time() + ")\n";
+    return s;
 }
 
 static void set_global_calendars(string command_line_option)
@@ -112,8 +126,7 @@ static void set_global_calendars(string command_line_option)
     }
 }
 
-static string global_options( vector<string>& command_line,
-                              int major_version, int minor_version, int fixlevel )
+static string global_options( vector<string>& command_line)
 {
     int argc                 = int(command_line.size());
 
@@ -219,7 +232,7 @@ static string global_options( vector<string>& command_line,
   
     PL_Log::instance().verbosity( verbosity_value );
     if (no_version_pos == -1)
-        output_version( major_version, minor_version, fixlevel );
+        output_version( );
 
     if (no_progress_bars != -1)
         ProgressBar::setPlugin(new NullProgressBarPlugin);
@@ -247,6 +260,14 @@ int plearn_main( int argc, char** argv,
     Profiler::activate();
 #endif
 
+    // Copy the version variables to private namespace (i.e. static variables)
+    // to make them available to other callers.
+    plearn_major_version = major_version;
+    plearn_minor_version = minor_version;
+    plearn_fixlevel      = fixlevel;
+
+    // Establish the terminate handler that's called in situations of
+    // double-fault.
     set_terminate(plearn_terminate_handler);
     
     int EXIT_CODE = 0;
@@ -259,9 +280,8 @@ int plearn_main( int argc, char** argv,
         // set program name
         prgname(argv[0]);
 
-  
         vector<string> command_line = stringvector(argc-1, argv+1);
-        string command = global_options( command_line, major_version, minor_version, fixlevel );
+        string command = global_options(command_line);
 
         if ( command == "" )
         {

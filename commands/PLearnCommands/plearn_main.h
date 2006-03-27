@@ -36,7 +36,7 @@
  * $Id$
  ******************************************************* */
 
-//#include <string>
+#include <string>
 
 #ifndef plearn_main_INC
 #define plearn_main_INC
@@ -45,6 +45,10 @@ namespace PLearn {
 
 int plearn_main( int argc, char** argv, 
                  int major_version = -1, int minor_version = -1, int fixlevel = -1);
+
+// Return the version string associated with the current executable
+std::string version_string();
+
 
 } // end of namespace PLearn
 

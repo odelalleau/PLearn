@@ -50,6 +50,7 @@
 #include <plearn/base/Object.h>
 #include <plearn/base/stringutils.h>
 #include "PLearnCommandRegistry.h"
+#include "plearn_main.h"                     // For version_string
 #include "HTMLHelpCommand.h"
 
 namespace PLearn {
@@ -542,8 +543,8 @@ string HTMLHelpCommand::generated_by() const
     char time_buffer[SIZE];
     strftime(time_buffer,SIZE,"%Y/%m/%d %H:%M:%S",broken_down_time);
 
-    return string("<p>&nbsp;</p>"
-                  "<address>Generated on " ) + time_buffer + " by $Id$</address>";
+    return string("<p>&nbsp;</p><address>Generated on " ) +
+        time_buffer + " by " + version_string() + "</address>";
 }
 
 
