@@ -140,17 +140,16 @@ class PPathBindings( Bindings ):
         bindings = PPathBindings()
         if os.path.exists(config_file_path):
             for line in file(config_file_path, "r"):
-                if line[-1] == "\n":
-                    line = line[:-1]
-                    
-                endpr     = string.find(line, ' ')
-                mprotocol = line[:endpr]
+                line = line.strip()
+                if len(line) == 0:
+                    continue
 
-                begmpath  = string.find(line, '"')+1
-                endmpath  = string.rfind(line, '"')
-                mpath     = line[ begmpath : endmpath]
-                
+                mprotocol, mpath = line.split(None, 1)
+                # Remove matched double quotes if present
+                if mpath[0] == '"' and mpath[-1] == '"':
+                    mpath = mpath[1:-1]
                 bindings[mprotocol] = mpath
+
         return bindings        
     load = classmethod(load)
 
@@ -257,7 +256,7 @@ def ppath(path):
 def __ppath(metaprotocol):
     metapath = None    
     try:
-        #print("*** Looking for ppath %s"%metaprotocol)
+        #print("*** Looking for ppath %s" % metaprotocol)
         metapath = bindings[metaprotocol]
     except KeyError:
         raise KeyError("The %s metaprotocol does not exists. "
@@ -265,7 +264,7 @@ def __ppath(metaprotocol):
                        % ( metaprotocol, string.join(bindings.keys(), ", ") )
                        )
 
-    endpr    = protocol_end( metapath )
+    endpr = protocol_end( metapath )
     while endpr != -1:
         mprotocol = metapath[:endpr]
 
@@ -278,6 +277,8 @@ def __ppath(metaprotocol):
             ## Replacing the MPROTOCOL:after_colon by MPath/after_colon
             metapath = os.path.join( bindings[mprotocol], after_colon )
             endpr    = protocol_end( metapath )
+        else:
+            raise KeyError('Could not resolve %s', mprotocol)
 
     return metapath
 
