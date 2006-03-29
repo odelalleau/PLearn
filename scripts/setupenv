@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Sets up a PLearn build environment, then runs the command supplied on the
+# Sets up a PLearn build/test environment, then runs the command supplied on the
 # command-line inside that environment.
 
 if [ ! -f plearn/base/PP.h ]; then
@@ -8,15 +8,12 @@ if [ ! -f plearn/base/PP.h ]; then
     exit 150
 fi
 
-PLEARNDIR="`pwd`"
-PLEARN_LIBDIR="$PLEARNDIR/external_libs"
+# Set up ppaths needed by compilation and tests.
+export PLEARNDIR="`pwd`"
+export PLEARN_LIBDIR="$PLEARNDIR/external_libs"
 
-PATH="$PLEARNDIR/scripts:$PLEARNDIR/commands:$PATH"
-PYTHONPATH="$PLEARNDIR/python_modules"
-
-export PLEARNDIR
-export PLEARN_LIBDIR
-export PATH
-export PYTHONPATH
+# Set up path for shell and python
+export PATH="$PLEARNDIR/scripts:$PLEARNDIR/commands:$PATH"
+export PYTHONPATH="$PLEARNDIR/python_modules"
 
 exec "$@"
