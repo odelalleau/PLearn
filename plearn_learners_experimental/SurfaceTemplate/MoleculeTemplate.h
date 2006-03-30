@@ -79,8 +79,6 @@ public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
-    // ### Make sure the implementation in the .cc
-    // ### initializes all fields to reasonable default values.
     MoleculeTemplate( int the_class_label = -1 );
 
     //! Constructor from files
