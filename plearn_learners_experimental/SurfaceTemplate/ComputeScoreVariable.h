@@ -42,6 +42,7 @@
 
 #include <plearn/var/NaryVariable.h>
 #include "ChemicalICP.h"
+#include "GlobalTemplateParameters.h"
 #include "Molecule.h"
 
 namespace PLearn {
@@ -95,6 +96,11 @@ public:
                          const ChemICP& the_icp_aligner = new ChemicalICP(),
                          const TVec<Molecule>& the_molecules = TVec<Molecule>()
                          );
+
+    ComputeScoreVariable(PP<GlobalTemplateParameters> global_params,
+                         PP<Molecule> template_mol,
+                         PP<Molecule> aligned_mol = 0);
+
 
     // ### If your parent variables are a meaning and you want to be able to
     // ### access them easily, you can add functions like:
