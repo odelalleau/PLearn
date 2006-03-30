@@ -40,7 +40,7 @@
 #ifndef SurfaceTemplateLearner_INC
 #define SurfaceTemplateLearner_INC
 
-#include <plearn_learners/generic/PLearner.h>
+#include <plearn_learners/generic/NNet.h>
 #include "MoleculeTemplate.h"
 #include "ComputeScoreVariable.h"
 
@@ -56,9 +56,9 @@ namespace PLearn {
  * @deprecated Write deprecated stuff here if there is any.  Indicate what else
  * should be used instead.
  */
-class SurfaceTemplateLearner : public PLearner
+class SurfaceTemplateLearner : public NNet
 {
-    typedef PLearner inherited;
+    typedef NNet inherited;
 
 public:
     //#####  Public Build Options  ############################################
@@ -66,22 +66,19 @@ public:
     //! ### declare public option fields (such as build options) here
     //! Start your comments with Doxygen-compatible comments such as //!
 
-    // NNet parameters
-    int nhidden;
-    real weight_decay;
-    bool direct_in_to_out;
-    real direct_in_to_out_weight_decay;
+    // Templates parameters.
 
-    PP<Optimizer> optimizer;
+    // real template_learning_rate;
 
-    // templates parameters
-    real template_learning_rate;
-    int n_active_templates;
-    int n_inactive_templates;
-    TVec<string> initial_active_templates;
-    TVec<string> initial_inactive_templates;
-    string sigma_transformation; // "softplus", "square", "exp", "none"...
-    TVec<string> feature_names;
+    // TODO Put in sub-var.
+    // int n_active_templates;
+    // int n_inactive_templates;
+    // string sigma_transformation; // "softplus", "square", "exp", "none"...
+
+    // TVec<string> initial_active_templates;
+    // TVec<string> initial_inactive_templates;
+
+    // TVec<string> feature_names;
 
 protected:
     //#####  Protected Options  ###############################################
@@ -89,61 +86,42 @@ protected:
     // ### Declare protected option fields (such as learned parameters) here
     // ...
 
-    // NNet parameters
-    Mat hidden_weights;
-    Vec out_weights; // or Mat ?
-    Vec direct_in_to_out_weights; // or Mat ?
-
     // Templates parameters
-    TVec< MolTemplate > templates;
+    // TODO Put in sub-var.
+    // TVec< MolTemplate > templates;
 
 public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
-    // ### Make sure the implementation in the .cc
-    // ### initializes all fields to reasonable default values.
     SurfaceTemplateLearner();
 
-
     //#####  PLearner Member Functions  #######################################
-
-    //! Returns the size of this learner's output, (which typically
-    //! may depend on its inputsize(), targetsize() and set options).
-    // (PLEASE IMPLEMENT IN .cc)
-    virtual int outputsize() const;
 
     //! (Re-)initializes the PLearner in its fresh state (that state may depend
     //! on the 'seed' option) and sets 'stage' back to 0 (this is the stage of a
     //! fresh learner!).
-    // (PLEASE IMPLEMENT IN .cc)
-    virtual void forget();
+    // virtual void forget();
     
     //! The role of the train method is to bring the learner up to stage==nstages,
     //! updating the train_stats collector with training costs measured on-line
     //! in the process.
-    // (PLEASE IMPLEMENT IN .cc)
-    virtual void train();
+    // virtual void train();
 
     //! Computes the output from the input.
-    // (PLEASE IMPLEMENT IN .cc)
-    virtual void computeOutput(const Vec& input, Vec& output) const;
+    // virtual void computeOutput(const Vec& input, Vec& output) const;
 
     //! Computes the costs from already computed output. 
-    // (PLEASE IMPLEMENT IN .cc)
+    /*
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                          const Vec& target, Vec& costs) const;
+                                         */
     
-    //! Returns the names of the costs computed by computeCostsFromOutpus (and
-    //! thus the test method). 
-    // (PLEASE IMPLEMENT IN .cc)
-    virtual TVec<std::string> getTestCostNames() const;
-
-    //! Returns the names of the objective costs that the train method computes and 
-    //! for which it updates the VecStatsCollector train_stats.
-    // (PLEASE IMPLEMENT IN .cc)
-    virtual TVec<std::string> getTrainCostNames() const;
-
+    //! Overridden in order to properly obtain the fieldnames.
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+    
+    //! Overridden in order to properly obtain the fieldnames.
+    virtual void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs=0, VMat testcosts=0) const;
 
     // *** SUBCLASS WRITING: ***
     // While in general not necessary, in case of particular needs 
@@ -151,39 +129,32 @@ public:
     // some of the following methods:
     // virtual void computeOutputAndCosts(const Vec& input, const Vec& target, Vec& output, Vec& costs) const;
     // virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
-    // virtual void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs=0, VMat testcosts=0) const;
     // virtual int nTestCosts() const;
     // virtual int nTrainCosts() const;
     // virtual void resetInternalState();
     // virtual bool isStatefulLearner() const;
 
-    
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
-    // ### If your class is not instantiatable (it has pure virtual methods)
-    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
     PLEARN_DECLARE_OBJECT(SurfaceTemplateLearner);
 
     // Simply calls inherited::build() then build_() 
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
     //#####  Protected Member Functions  ######################################
     
     //! Declares the class options.
-    // (PLEASE IMPLEMENT IN .cc)
     static void declareOptions(OptionList& ol);
 
 private: 
     //#####  Private Member Functions  ########################################
 
     //! This does the actual building. 
-    // (PLEASE IMPLEMENT IN .cc)
     void build_();
 
 private:

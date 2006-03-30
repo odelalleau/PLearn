@@ -44,9 +44,13 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     SurfaceTemplateLearner,
-    "ONE LINE DESCRIPTION",
-    "MULTI-LINE \nHELP");
+    "Neural-network to learn from molecular alignment.",
+    ""
+);
 
+////////////////////////////
+// SurfaceTemplateLearner //
+////////////////////////////
 SurfaceTemplateLearner::SurfaceTemplateLearner() 
 /* ### Initialize all fields to their default value here */
 {
@@ -57,23 +61,20 @@ SurfaceTemplateLearner::SurfaceTemplateLearner()
     // ### in the parent classes' constructors, something that you must ensure)
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void SurfaceTemplateLearner::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
-
-    // ### ex:
-    // declareOption(ol, "myoption", &SurfaceTemplateLearner::myoption, OptionBase::buildoption,
-    //               "Help text describing this option");
-    // ...
+    //declareOption(ol, "fixed_output_weights", SurfaceTemplateLearner::fixed_output_weights, OptionBase::buildoption,
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void SurfaceTemplateLearner::build_()
 {
     // ### This method should do the real building of the object,
@@ -85,14 +86,18 @@ void SurfaceTemplateLearner::build_()
     // ### You should assume that the parent class' build_() has already been called.
 }
 
-// ### Nothing to add here, simply calls build_
+///////////
+// build //
+///////////
 void SurfaceTemplateLearner::build()
 {
     inherited::build();
     build_();
 }
 
-
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void SurfaceTemplateLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
@@ -107,57 +112,35 @@ void SurfaceTemplateLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     PLERROR("SurfaceTemplateLearner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
-
-int SurfaceTemplateLearner::outputsize() const
+////////////////////
+// setTrainingSet //
+////////////////////
+void SurfaceTemplateLearner::setTrainingSet(VMat training_set,
+                                            bool call_forget)
 {
-    // Compute and return the size of this learner's output (which typically
-    // may depend on its inputsize(), targetsize() and set options).
+    PLERROR("Need to implement");
 }
 
+//////////
+// test //
+//////////
+void SurfaceTemplateLearner::test(VMat testset,
+                                  PP<VecStatsCollector> test_stats,
+                                  VMat testoutputs, VMat testcosts) const
+{
+    PLERROR("Need to implement");
+}
+
+/*
 void SurfaceTemplateLearner::forget()
 {
-    //! (Re-)initialize the PLearner in its fresh state (that state may depend on the 'seed' option)
-    //! And sets 'stage' back to 0   (this is the stage of a fresh learner!)
-    /*!
-      A typical forget() method should do the following:
-      - initialize a random number generator with the seed option
-      - initialize the learner's parameters, using this random generator
-      - stage = 0
-    */
+    inherited::forget();
 }
+*/
     
+/*
 void SurfaceTemplateLearner::train()
 {
-    // The role of the train method is to bring the learner up to stage==nstages,
-    // updating train_stats with training costs measured on-line in the process.
-
-    /* TYPICAL CODE:
-
-    static Vec input  // static so we don't reallocate/deallocate memory each time...
-    static Vec target // (but be careful that static means shared!)
-    input.resize(inputsize())    // the train_set's inputsize()
-    target.resize(targetsize())  // the train_set's targetsize()
-    real weight
-
-    // This generic PLearner method does a number of standard stuff useful for
-    // (almost) any learner, and return 'false' if no training should take
-    // place. See PLearner.h for more details.
-    if (!initTrain())
-        return;
-
-    while(stage<nstages)
-    {
-    // clear statistics of previous epoch
-    train_stats->forget() 
-          
-    //... train for 1 stage, and update train_stats,
-    // using train_set->getSample(input, target, weight)
-    // and train_stats->update(train_costs)
-          
-    ++stage
-    train_stats->finalize() // finalize statistics for this epoch
-    }
-    */
 }
 
 
@@ -175,22 +158,7 @@ void SurfaceTemplateLearner::computeCostsFromOutputs(const Vec& input, const Vec
 // Compute the costs from *already* computed output. 
 // ...
 }                                
-
-TVec<string> SurfaceTemplateLearner::getTestCostNames() const
-{
-    // Return the names of the costs computed by computeCostsFromOutpus
-    // (these may or may not be exactly the same as what's returned by getTrainCostNames).
-    // ...
-}
-
-TVec<string> SurfaceTemplateLearner::getTrainCostNames() const
-{
-    // Return the names of the objective costs that the train method computes and 
-    // for which it updates the VecStatsCollector train_stats
-    // (these may or may not be exactly the same as what's returned by getTestCostNames).
-    // ...
-}
-
+*/
 
 } // end of namespace PLearn
 
