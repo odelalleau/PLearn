@@ -47,7 +47,10 @@ using namespace std;
 
 /** NaryVariable **/
 
-PLEARN_IMPLEMENT_ABSTRACT_OBJECT(NaryVariable, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(NaryVariable,
+    "A Variable that may take more than two other Variables as input.",
+    ""
+);
 
 NaryVariable::NaryVariable(const VarArray& the_varray, int thelength, int thewidth)
     :Variable(thelength,thewidth), varray(the_varray) {}
