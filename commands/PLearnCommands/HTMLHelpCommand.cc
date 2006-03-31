@@ -40,6 +40,8 @@
 
 /*! \file HTMLHelpCommand.cc */
 
+#define PL_LOG_MODULE_NAME "HTMLHelpCommand"
+
 #include <time.h>
 #include <fstream>
 #include <set>
@@ -49,6 +51,7 @@
 #include <plearn/base/TypeFactory.h>
 #include <plearn/base/Object.h>
 #include <plearn/base/stringutils.h>
+#include <plearn/io/pl_log.h>
 #include "PLearnCommandRegistry.h"
 #include "plearn_main.h"                     // For version_string
 #include "HTMLHelpCommand.h"
@@ -335,17 +338,7 @@ void HTMLHelpCommand::helpOnClass(const string& classname)
         string defaultval = "?";
 
         // Determine the flag rendering
-        vector<string> flag_strings;
-        OptionBase::flag_t flags = (*olIt)->flags();
-        if (flags & OptionBase::buildoption)
-            flag_strings.push_back("buildoption");
-        if (flags & OptionBase::learntoption)
-            flag_strings.push_back("learntoption");
-        if (flags & OptionBase::tuningoption)
-            flag_strings.push_back("tuningoption");
-        if (flags & OptionBase::nosave)
-            flag_strings.push_back("nosave");
-        string flag_string = join(flag_strings," | ");
+        string flag_string = join((*olIt)->flagStrings(), " | ");
     
         if(obj) // it's an instantiable class
         {
@@ -435,6 +428,15 @@ TVec<string> HTMLHelpCommand::parent_classes(string classname) const
         if (it == type_map.end()) {
             PLWARNING("HTMLHelpCommand::parent_classes: cannot find class '%s'",
                       classname.c_str());
+
+            static bool printed_parents = false;
+            if (! printed_parents) {
+                MODULE_LOG << "Registered classes are:" << endl;
+                for (TypeMap::const_iterator types_it = type_map.begin(),
+                         types_end = type_map.end() ; types_it != types_end ; ++types_it)
+                    MODULE_LOG << types_it->first << endl;
+                printed_parents = true;
+            }
             break;
         }
         parents.insert(0,classname);
