@@ -2,7 +2,7 @@
 
 // ComputeScoreVariable.h
 //
-// Copyright (C) 2006 Pascal Lamblin 
+// Copyright (C) 2006 Pascal Lamblin and Olivier Delalleau
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Pascal Lamblin
+// Authors: Pascal Lamblin and Olivier Delalleau
 
 /*! \file ComputeScoreVariable.h */
 
@@ -65,19 +65,29 @@ class ComputeScoreVariable : public NaryVariable
     typedef NaryVariable inherited;
 
 public:
+    
+    //! The molecule that is being aligned.
+    PP<Molecule> aligned_molecule;
+    
+    //! The reference template.
+    PP<Molecule> template_molecule;
+    
     //#####  Public Build Options  ############################################
 
     //! ### declare public option fields (such as build options) here
     //! Start your comments with Doxygen-compatible comments such as //!
 
-    string weighting_method; // "sigmoid" or "none"
+    // string weighting_method;
 
-    ChemICP icp_aligner; /* its parameters should point to the matValue()'s of
+    
+    /* its parameters should point to the matValue()'s of
                             parent variables from this */
 
+    /*
     // pointer to the 'molecules' field of parent learner
     // to access element i, use (*p_molecule)[i]
     const TVec< Molecule >*  p_molecules;
+    */
 
 public:
     //#####  Public Member Functions  #########################################
@@ -85,6 +95,7 @@ public:
     //! Default constructor, usually does nothing
     ComputeScoreVariable();
 
+    /*
     //! Constructor initializing from input variables
     // ### Make sure the implementation in the .cc calls inherited constructor
     // ### and initializes all fields with reasonable default values.
@@ -96,11 +107,13 @@ public:
                          const ChemICP& the_icp_aligner = new ChemicalICP(),
                          const TVec<Molecule>& the_molecules = TVec<Molecule>()
                          );
+                         */
 
     ComputeScoreVariable(PP<GlobalTemplateParameters> global_params,
                          PP<Molecule> template_mol,
+                         // string weighting_method = "none",
+                         PP<ChemicalICP> aligner_template = 0,
                          PP<Molecule> aligned_mol = 0);
-
 
     // ### If your parent variables are a meaning and you want to be able to
     // ### access them easily, you can add functions like:
@@ -108,17 +121,21 @@ public:
     // Var& Second() { return varray[1]; }
     // ...
 
+    /*
     Var& input_index() { return varray[0]; }
     Var& geom_mean() { return varray[1]; }
     Var& feat_mean() { return varray[2]; }
     Var& geom_sigma() { return varray[3]; }
     Var& feat_sigma() { return varray[4]; }
     Var& weighting_params() { return varray[5]; }
+    */
 
     // Your other public member functions go here
 
+    //! Set the current aligned molecule.
+    void setAlignedMolecule(PP<Molecule> mol);
+
     //#####  PLearn::Variable methods #########################################
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void recomputeSizes(int& l, int& w) const;
     virtual void fprop();
     virtual void bprop();
@@ -143,23 +160,33 @@ public:
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
+
+    //! The ICP aligner used to compute the alignment score.
+    PP<ChemicalICP> icp_aligner;
+
     //#####  Protected Options  ###############################################
 
     // ### Declare protected option fields (such as learned parameters) here
     // ...
 
 protected:
+
+    //! Contains the final score, computed in a variable.
+    Var final_score;
+
+    //! A (n x 3) Variable containing the aligned template coordinates after
+    //! a chemical ICP run.
+    Var aligned_template_coordinates;
+    
     //#####  Protected Member Functions  ######################################
 
     //! Declares the class options.
-    // (PLEASE IMPLEMENT IN .cc)
     static void declareOptions(OptionList& ol);
 
 private: 
     //#####  Private Member Functions  ########################################
 
     //! This does the actual building. 
-    // (PLEASE IMPLEMENT IN .cc)
     void build_();
 
 private:
@@ -171,6 +198,7 @@ private:
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(ComputeScoreVariable);
 
+/*
 // ### Put here a convenient method for building your variable from other
 // ### existing ones, or a VarArray.
 inline Var computeScore(Var input_index, Var geom_mean, Var geom_dev,
@@ -182,6 +210,7 @@ inline Var computeScore(Var input_index, Var geom_mean, Var geom_dev,
                                   geom_mean, geom_dev, feat_mean, feat_dev,
                                   weighting_params, the_weighting_method,
                                   the_icp_aligner, the_molecules); }
+                                  */
 
 } // end of namespace PLearn
 

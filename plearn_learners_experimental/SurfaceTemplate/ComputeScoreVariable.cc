@@ -42,24 +42,41 @@
 namespace PLearn {
 using namespace std;
 
-/** ComputeScoreVariable **/
-
 PLEARN_IMPLEMENT_OBJECT(
     ComputeScoreVariable,
-    "ONE LINE USER DESCRIPTION",
-    "MULTI LINE\nHELP FOR USERS"
-    );
+    "Compute an ICP alignment score.",
+    ""
+);
 
+//////////////////////////
+// ComputeScoreVariable //
+//////////////////////////
 ComputeScoreVariable::ComputeScoreVariable() 
 {
+    PLERROR("Not implemented");
 }
 
-// constructors from input variables.
-// NaryVariable constructor (inherited) takes a VarArray as argument.
-// You can either construct from a VarArray (if the number of parent Var is not
-// fixed, for instance), or construct a VarArray from Variables by operator &:
-// input1 & input2 & input3. You can also do both, uncomment what you prefer.
+ComputeScoreVariable::ComputeScoreVariable(
+    PP<GlobalTemplateParameters> global_params, PP<Molecule> template_mol,
+    string the_weighting_method, PP<ChemicalICP> aligner_template = 0,
+    PP<Molecule> aligned_mol = 0):
 
+    // inherited(global_params->getAllVarParamters(), 1, 1),
+    // TODO Properly set varray.
+    template_molecule(template_mol),
+    weighting_method(the_weighting_method),
+    aligned_molecule(aligned_mol),
+    params(global_params)
+{
+    if (icp_aligner)
+        icp_aligner = aligner_template->deep_copy();
+    else
+        icp_aligner = new ChemicalICP();
+    aligned_template_coordinates = new Var(template_molecule->n_points(), 3);
+    build_();
+}
+
+/*
 ComputeScoreVariable::ComputeScoreVariable(Var input_index,
                                            Var geom_mean,
                                            Var geom_dev,
@@ -80,32 +97,38 @@ ComputeScoreVariable::ComputeScoreVariable(Var input_index,
     // ### object
     build_();
 }
+*/
 
+////////////////////
+// recomputeSizes //
+////////////////////
 void ComputeScoreVariable::recomputeSizes(int& l, int& w) const
 {
-    // ### usual code to put here is:
-    /*
-        if (varray.size() > 0) {
-            l = ... ; // the computed length of this Var
-            w = ... ; // the computed width
-        } else
-            l = w = 0;
-    */
     l = w = 1;
 }
 
-// ### computes value from varray values
+///////////
+// fprop //
+///////////
 void ComputeScoreVariable::fprop()
 {
-    // ### remove this line when implemented
-    PLERROR("In ComputeScoreVariable - fprop() must be implemented.");
+    /*
+    // Run the alignment process.
+    icp_aligner->run();
+
+    // Compute the new coordinates of the aligned template.
+    productTranspose(aligned_template_coordinates->matValue,
+                     molecule_template->coordinates, icp_aligner->rotation);
+                     */
+    this->value << final_score->value;
 }
 
-// ### computes varray gradients from gradient
+///////////
+// bprop //
+///////////
 void ComputeScoreVariable::bprop()
 {
-    // ### remove this line when implemented
-    PLERROR("In ComputeScoreVariable - bprop() must be implemented.");
+    final_score->gradient << this->gradient;
 }
 
 // ### You can implement these methods:
@@ -152,14 +175,23 @@ void ComputeScoreVariable::declareOptions(OptionList& ol)
     //               "Help text describing this option");
     // ...
 
+    /* Probably useless since set in ICP aligner.
     declareOption(ol, "weighting_method",
                   &ComputeScoreVariable::weighting_method,
                   OptionBase::buildoption,
-                  "");
+        "The method used to weigh the geometric distances:\n"
+        " - none   : no additional weight\n"
+        " - sigmoid: the weight is set to sigmoid(w_b * (w_a - dist_feat))\n"
+        "            where 'dist_feat' is the feature distance, and the\n"
+        "            weights (w_a, w_b) are given in the underlying ICP\n"
+        "            'weighting_params' option.");
+        */
 
+    /*
     declareOption(ol, "icp_aligner", &ComputeScoreVariable::icp_aligner,
                   OptionBase::buildoption,
                   "");
+                  */
 
     // p_molecules is not an option, it has to be set in the constructor
 
@@ -167,6 +199,9 @@ void ComputeScoreVariable::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void ComputeScoreVariable::build_()
 {
     // ### This method should do the real building of the object,
@@ -180,10 +215,26 @@ void ComputeScoreVariable::build_()
     // ### You should assume that the parent class' build_() has already been
     // ### called.
 
-    icp_aligner->weighting_method = weighting_method;
+    // icp_aligner->weighting_method = weighting_method;
     // set icp_aligner's Mats' and Vecs' data to the values of the vars
+    setAlignedMolecule(aligned_molecule);
+
+    // Build the graph of Vars.
+    // TODO Assume we are given set_molecule_var.
+    Var icp_var = new RunICPVariable(icp_aligner, set_molecule_var);
+    Var molecule_coord = new VarRowsVariable(total_coords, derniere colonne de
+            l'icp_var);
 }
 
+////////////////////////
+// setAlignedMolecule //
+////////////////////////
+void ComputeScoreVariable::setAlignedMolecule(PP<Molecule> mol)
+{
+    aligned_molecule = mol;
+    if (aligned_molecule)
+        icp_aligner->setMolecule(aligned_molecule);
+}
 
 } // end of namespace PLearn
 
