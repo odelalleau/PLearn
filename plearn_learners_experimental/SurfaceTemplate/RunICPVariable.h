@@ -41,10 +41,14 @@
 #define RunICPVariable_INC
 
 #include <plearn/var/UnaryVariable.h>
+#include "ChemicalICP.h"
 #include "Molecule.h"
 
 namespace PLearn {
 using namespace std;
+
+// Forward declaration.
+class ScoreLayerVariable;
 
 /*! * RunICPVariable * */
 
@@ -71,12 +75,10 @@ public:
 public:
     //#####  Public Member Functions  #########################################
 
-    //! Default constructor, usually does nothing
+    //! Default constructor.
     RunICPVariable();
 
-    //! Constructor initializing from input variable
-    // ### Make sure the implementation in the .cc calls inherited constructor
-    // ### and initializes all fields with reasonable default values.
+    //! Constructor initializing from input variable.
     RunICPVariable(Variable* input);
 
     // ### If your class has parameters, you probably want a constructor that
@@ -90,7 +92,8 @@ public:
     //! The 'mol_coordinates' argument is a pointer to the variable that will
     //! be used to store the coordinates of the nearest points in the molecule,
     //! after ICP has been run.
-    void addTemplate(PP<Molecule> mol_template, Var mol_coordinates);
+    void addTemplate(PP<ChemicalICP> icp_aligner, PP<Molecule> mol_template,
+                     Var mol_coordinates);
 
     //#####  PLearn::Variable methods #########################################
     // (PLEASE IMPLEMENT IN .cc)
@@ -118,12 +121,29 @@ public:
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
+
+    //! The ICP aligners.
+    TVec< PP<ChemicalICP> > icp_aligners;
+    
+    //! The molecule templates.
+    TVec< PP<Molecule> > templates;
+
+    //! The i-th element is the variable that must contain the coordinates of
+    //! the nearest points of the aligned molecule, after the alignement.
+    //! This variable is updated during fprop().
+    VarArray molecule_coordinates;
+    
     //#####  Protected Options  ###############################################
 
     // ### Declare protected option fields (such as learned parameters) here
     // ...
 
 protected:
+
+    //! A ScoreLayerVariable that can give us a Molecule from an input id.
+    //! This is a raw C++ pointer to avoid PP cycles.
+    ScoreLayerVariable* score_layer;
+    
     //#####  Protected Member Functions  ######################################
 
     //! Declares the class options.

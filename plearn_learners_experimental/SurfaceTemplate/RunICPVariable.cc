@@ -38,6 +38,7 @@
 
 
 #include "RunICPVariable.h"
+#include "ScoreLayerVariable.h"
 
 namespace PLearn {
 using namespace std;
@@ -46,26 +47,32 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     RunICPVariable,
-    "ONE LINE USER DESCRIPTION",
-    "MULTI LINE\nHELP FOR USERS"
-    );
+    "Runs multiple ICPs and outputs the transformed template coordinates.",
+    ""
+);
 
+////////////////////
+// RunICPVariable //
+////////////////////
 RunICPVariable::RunICPVariable()
-    /* ### Initialize all fields to their default value */
 {
-    // ### You may (or not) want to call build_() to finish building the object
-    // ### (doing so assumes the parent classes' build_() have been called too
-    // ### in the parent classes' constructors, something that you must ensure)
 }
 
-// constructor from input variable.
-RunICPVariable::RunICPVariable(Variable* input)
-// ### replace with actual parameters
-//  : inherited(input, this_variable_length, this_variable_width),
-//    parameter(default_value),
-//    ...
+RunICPVariable::RunICPVariable(Variable* input):
+    inherited(input, 0, 3)
+{}
+
+/////////////////
+// addTemplate //
+/////////////////
+void RunICPVariable::addTemplate(PP<ChemicalICP> icp_aligner,
+                                 PP<Molecule> mol_template,
+                                 Var mol_coordinates)
 {
-    // ### You may (or not) want to call build_() to finish building the object
+    icp_aligners.append(icp_aligner);
+    templates.append(mol_template);
+    molecule_coordinates.append(mol_coordinates);
+    this->sizeprop(); // Resize this variable.
 }
 
 // constructor from input variable and parameters
@@ -79,30 +86,57 @@ RunICPVariable::RunICPVariable(Variable* input)
 //    // ### object
 //}
 
+////////////////////
+// recomputeSizes //
+////////////////////
 void RunICPVariable::recomputeSizes(int& l, int& w) const
 {
-    // ### usual code to put here is:
-    /*
-        if (input) {
-            l = ... ; // the computed length of this Var
-            w = ... ; // the computed width
-        } else
-            l = w = 0;
-    */
+    l = 0;
+    for (int i = 0; i < templates.length(); i++)
+        l += templates[i]->n_points();
+    w = 3;
 }
 
-// ### computes value from input's value
+///////////
+// fprop //
+///////////
 void RunICPVariable::fprop()
 {
-    // ### remove this line when implemented
-    PLERROR("In RunICPVariable - fprop() must be implemented.");
+    // We obtain the molecule from the input variable.
+    PP<Molecule> molecule = score_layer->getMolecule(input->value[0]);
+    // Launch all ICPs.
+    int index_coord = 0;
+    for (int i = 0; i < icp_aligners.length(); i++) {
+        // Run ICP.
+        PP<ChemicalICP> icp = icp_aligners[i];
+        PP<Molecule> template_mol = templates[i];
+        icp->setMolecule(molecule);
+        icp->run();
+        // Compute the aligned coordinates of the template and store them in
+        // this variable.
+        Mat template_coords =
+            this->matValue.subMat(index_coord, 0, template_mol->n_points(), 3);
+        index_coord += template_mol->n_points();
+        productTranspose(template_coords, template_mol->coordinates,
+                         icp->rotation);
+        template_coords += icp->translation;
+        // Obtain the coordinates of the nearest neighbors in the aligned
+        // molecule.
+        Mat molecule_coords = molecule_coordinates[i]->matValue;
+        assert( molecule_coords.length() == template_mol->n_points() );
+        for (int k = 0; k < template_mol->n_points(); k++) {
+            int neighbor = icp->matching[k];
+            molecule_coords(k) << molecule->coordinates(neighbor);
+        }
+    }
 }
 
-// ### computes input's gradient from gradient
+///////////
+// bprop //
+///////////
 void RunICPVariable::bprop()
 {
-    // ### remove this line when implemented
-    PLERROR("In RunICPVariable - bprop() must be implemented.");
+    // We do not backprop anything in this Variable.
 }
 
 // ### You can implement these methods:
@@ -111,7 +145,9 @@ void RunICPVariable::bprop()
 // void RunICPVariable::rfprop() {}
 
 
-// ### Nothing to add here, simply calls build_
+///////////
+// build //
+///////////
 void RunICPVariable::build()
 {
     inherited::build();
