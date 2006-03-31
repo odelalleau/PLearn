@@ -62,6 +62,13 @@ class ChemicalICP : public Object
     typedef Object inherited;
 
 public:
+
+    //! Indices of the used features, for the molecule and the template.
+    //! They are UnaryVariable, so that their parent may be set to a Var that
+    //! runs an ICP (in order to make sure they are not used before the ICP is
+    //! run).
+    Var mol_feat_indices, template_feat_indices;
+
     //#####  Public Build Options  ############################################
 
     //! ### declare public option fields (such as build options) here
@@ -133,12 +140,6 @@ protected:
     //! between point i of the template and point j of the molecule
     Mat feat_distances2;
 
-    //! Indices of the used features, for the molecule and the template.
-    //! They are UnaryVariable, so that their parent may be set to a Var that
-    //! runs an ICP (in order to make sure they are not used before the ICP is
-    //! run).
-    Var mol_feat_indices;
-    Var template_feat_indices;
 
 public: // for debug
     // variables that need to be added to the global parameter array

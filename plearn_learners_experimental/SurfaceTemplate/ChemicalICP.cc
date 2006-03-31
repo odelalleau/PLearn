@@ -39,6 +39,7 @@
 #include "ChemicalICP.h"
 #include <plearn/base/stringutils.h>
 #include <plearn/io/openFile.h>
+#include <plearn/var/UnaryVariable.h>
 #include <plearn/var/VarColumnsVariable.h>
 #include "geometry.h"
 
