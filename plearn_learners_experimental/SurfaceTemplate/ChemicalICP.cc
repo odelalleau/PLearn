@@ -62,8 +62,8 @@ ChemicalICP::ChemicalICP()
       trans_t( 0 ),
       rotation( 3, 3 ),
       translation( 3 ),
-      mol_feat_indices( 0 ), // calls SourceVariable()
-      template_feat_indices( 0 ),
+      mol_feat_indices( new UnaryVariable() ),
+      template_feat_indices( new UnaryVariable() ),
       all_mol_features( 0 ),
       all_template_features( 0 ),
       all_template_feat_dev( 0 ),
@@ -105,9 +105,9 @@ ChemicalICP::ChemicalICP( const MolTemplate& the_template,
       trans_t( 0 ),
       rotation( 3, 3 ),
       translation( 3 ),
-      mol_feat_indices( 0 ), // calls SourceVariable()
-      template_feat_indices( 0 ),
-      all_mol_features( 0 ),
+      mol_feat_indices( new UnaryVariable() ),
+      template_feat_indices( new UnaryVariable() ),
+      all_mol_features( 0 ), // calls SourceVariable()
       all_template_features( 0 ),
       all_template_feat_dev( 0 ),
       mol_coordinates( 0 ),
