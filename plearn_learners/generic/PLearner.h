@@ -49,9 +49,10 @@
 #define PLearner_INC
 
 #include <plearn/base/Object.h>
-#include <plearn/vmat/VMat.h>
-#include <plearn/math/VecStatsCollector.h>
 #include <plearn/io/PPath.h>
+#include <plearn/math/PRandom.h>
+#include <plearn/math/VecStatsCollector.h>
+#include <plearn/vmat/VMat.h>
 
 namespace PLearn {
 using namespace std;
@@ -160,10 +161,16 @@ protected:
     //! setTrainingSet:
     bool forget_when_training_set_changes;
 
+    //! The random generator used by this PLearner. A subclass of PLearner that
+    //! wants to use it must create it in its own constructor, as by default it
+    //! is not created in the PLearner class itself.
+    //! The random generator, if present, will be automatically initialized
+    //! from the 'seed' option in build() and forget().
+    PP<PRandom> random_gen;
+
 public:
 
     PLearner();
-    virtual ~PLearner();
 
     //! Declares the train_set
     //! Then calls build() and forget() if necessary
@@ -266,7 +273,8 @@ public:
     //! And sets 'stage' back to 0   (this is the stage of a fresh learner!)
     /*!       *** SUBCLASS WRITING: ***
       A typical forget() method should do the following:
-      - initialize a random number generator with the seed option
+      - call inherited::forget() to initialize the random number generator with
+        the 'seed' option
       - initialize the learner's parameters, using this random generator
       - stage = 0;
       This method is typically called by the build_() method, after 
@@ -277,8 +285,7 @@ public:
       forget is also called by the setTrainingSet method, after calling build(),
       so it will generally be called TWICE during setTrainingSet!
     */
-    virtual void forget() =0;
-
+    virtual void forget();
 
     //! The role of the train method is to bring the learner up to stage==nstages,
     //! updating the stats with training costs measured on-line in the process.

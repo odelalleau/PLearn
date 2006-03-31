@@ -16,6 +16,10 @@ DERIVEDCLASS::DERIVEDCLASS()
     // ### You may (or not) want to call build_() to finish building the object
     // ### (doing so assumes the parent classes' build_() have been called too
     // ### in the parent classes' constructors, something that you must ensure)
+
+    // ### If this learner needs to generate random numbers, uncomment the
+    // ### line below to enable the use of the inherited PRandom object.
+    // random_gen = new PRandom();
 }
 
 void DERIVEDCLASS::declareOptions(OptionList& ol)
@@ -88,10 +92,12 @@ void DERIVEDCLASS::forget()
     //! a fresh learner!)
     /*!
       A typical forget() method should do the following:
-      - initialize a random number generator with the seed option
+      - call inherited::forget() to initialize its random number generator
+        with the 'seed' option
       - initialize the learner's parameters, using this random generator
       - stage = 0
     */
+    inherited::forget();
 }
 
 void DERIVEDCLASS::train()

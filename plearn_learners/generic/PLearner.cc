@@ -83,6 +83,7 @@ void PLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(train_set, copies);
     deepCopyField(validation_set, copies);
     deepCopyField(train_stats, copies);
+    deepCopyField(random_gen, copies);
 }
 
 void PLearner::declareOptions(OptionList& ol)
@@ -97,11 +98,14 @@ void PLearner::declareOptions(OptionList& ol)
                   "at the learner's. \n");
 
     declareOption(ol, "seed", &PLearner::seed_, OptionBase::buildoption, 
-                  "The initial seed for the random number generator used to initialize this learner's parameters\n"
-                  "as typically done in the forget() method... \n"
-                  "If -1 is provided, then a 'random' seed is chosen based on time of day, insuring that\n"
-                  "different experiments may yield different results.\n"
-                  "With a given seed, forget() should always initialize the parameters to the same values.");
+        "The initial seed for the random number generator used in this\n"
+        "learner, for instance for parameter initialization.\n"
+        "If -1 is provided, then a 'random' seed is chosen based on time\n"
+        "of day, ensuring that different experiments run differently.\n"
+        "If 0 is provided, no (re)initialization of the random number\n"
+        "generator is performed.\n"
+        "With a given positive seed, build() and forget() should always\n"
+        "initialize the parameters to the same values.");
 
     declareOption(ol, "stage", &PLearner::stage, OptionBase::learntoption, 
                   "The current training stage, since last fresh initialization (forget()): \n"
@@ -242,6 +246,9 @@ int PLearner::weightsize() const
     return weightsize_; 
 }
 
+////////////
+// build_ //
+////////////
 void PLearner::build_()
 {
     if(expdir!="")
@@ -251,16 +258,26 @@ void PLearner::build_()
         else
             expdir = expdir.absolute() / "";
     }
+    if (random_gen && seed_ != 0)
+        random_gen->manual_seed(seed_);
 }
 
+///////////
+// build //
+///////////
 void PLearner::build()
 {
     inherited::build();
     build_();
 }
 
-PLearner::~PLearner()
+////////////
+// forget //
+////////////
+void PLearner::forget()
 {
+    if (random_gen && seed_ != 0)
+        random_gen->manual_seed(seed_);
 }
 
 int PLearner::nTestCosts() const 
