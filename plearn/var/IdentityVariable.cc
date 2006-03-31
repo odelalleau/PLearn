@@ -41,7 +41,7 @@ using namespace std;
 /** IdentityVariable **/
 
 PLEARN_IMPLEMENT_OBJECT(IdentityVariable,
-                        "Variable taht computes f(x)=x and f'(x)=1.0",
+                        "Variable that computes f(x)=x and f'(x)=1.0",
                         "NO HELP");
 
 IdentityVariable::IdentityVariable(Variable* input) 
