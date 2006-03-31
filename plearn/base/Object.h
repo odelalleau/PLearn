@@ -449,20 +449,56 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
 //#####  PLearn::Object  ######################################################
 
 /**
- * @class Object
- * @brief Object is the base class of all high level PLearn objects.
+ *  @class Object
+ *  @brief Object is the base class of all high level PLearn objects.
  *
- * @par It exposes simple mechanisms for:
+ *  @par It exposes simple mechanisms for:
  *
- * @li automatic memory management (through reference counting and smart pointers)
- * @li serialization (read, write, save, load)
- * @li runtime type information (classname)
- * @li displaying (info, print)
- * @li deep copying (deepCopy)
- * @li a generic way of setting options (setOption) when not knowing the
- *     exact type of the Object and a generic build() method (the combination
- *     of the two allows to change the object structure and rebuild it at
- *     runtime)
+ *  @li automatic memory management (through reference counting and smart pointers)
+ *  @li serialization (read, write, save, load)
+ *  @li runtime type information (classname)
+ *  @li displaying (info, print)
+ *  @li deep copying (deepCopy)
+ *  @li a generic way of setting options (setOption) when not knowing the
+ *      exact type of the Object and a generic build() method (the combination
+ *      of the two allows to change the object structure and rebuild it at
+ *      runtime)
+ *
+ *  NOTES ON THE PLEARN OBJECT MODEL.  All "significant" PLearn classes inherit
+ *  from this class, PLearn::Object, as their ultimate base.  Each PLearn class
+ *  defines a number of "options", which are data fields that are reflected in
+ *  the serialized representation of the object.  Hence, the set of options
+ *  describes the capabilities of an object from the viewpoint of the script
+ *  writer.  The meaning of each option is documented within each class.
+ *
+ *  Moreover, all options are given a set of flags.  The meaning of each flag
+ *  is as follows:
+ *
+ *  @li \c buildoption : an option typically specified before calling the
+ *  initial build (semantically similar to a constructor parameter), for
+ *  instance the number of hidden units in a neural net.
+ *
+ *  @li \c learntoption : n option whose proper value is computed by the class
+ *  after construction (not to be set by the user before build) and potentially
+ *  complex operations such as learning over a training set.  Example: the
+ *  (trained) weights of a neural net.
+ *
+ *  @li \c tuningoption : an option typically set after the initial build, to tune
+ *  the object
+ *
+ *  @li \c nosave : when set, this flag requests the option not to be saved in
+ *  the object serialisation; mostly used when we must have several options
+ *  that map to the same physical data field, for script backward
+ *  compatibility.
+ *
+ *  @li \c nonparentable : when this flag is set, the option does not lead to a
+ *  parenting relationship in the "ParentableObject" sense.  In other words,
+ *  the object pointed to by this option does not get its parent() backpointer
+ *  set to this. (See the ParentableObject class for details).
+ *
+ *  @li \c nontraversable : when this flag is set, the option is not traversed
+ *  by the ObjectGraphIterator class (and ipso facto by related functions, such
+ *  as memfun_broadcast. (See the ObjectGraphIterator class for details).
  */
 class Object: public PPointable
 {
