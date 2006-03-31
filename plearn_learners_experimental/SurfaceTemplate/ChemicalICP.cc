@@ -52,8 +52,10 @@ PLEARN_IMPLEMENT_OBJECT(
     "MULTI LINE\nHELP FOR USERS"
     );
 
-ChemicalICP::ChemicalICP() 
-    : weighting_method( "features_sigmoid" ),
+ChemicalICP::ChemicalICP():
+      mol_feat_indices( new UnaryVariable() ),
+      template_feat_indices( new UnaryVariable() ),
+      weighting_method( "features_sigmoid" ),
       weighting_params( Vec(2,1) ),
       matching_method( "exhaustive" ),
       initial_angles_step( 0 ),
@@ -63,8 +65,6 @@ ChemicalICP::ChemicalICP()
       trans_t( 0 ),
       rotation( 3, 3 ),
       translation( 3 ),
-      mol_feat_indices( new UnaryVariable() ),
-      template_feat_indices( new UnaryVariable() ),
       all_mol_features( 0 ),
       all_template_features( 0 ),
       all_template_feat_dev( 0 ),
@@ -92,8 +92,10 @@ ChemicalICP::ChemicalICP( const MolTemplate& the_template,
                           const TVec<string>& the_feature_names,
                           string the_weighting_method,
                           const Var& the_weighting_params,
-                          string the_matching_method )
-    : mol_template(the_template),
+                          string the_matching_method ):
+      mol_feat_indices( new UnaryVariable() ),
+      template_feat_indices( new UnaryVariable() ),
+      mol_template(the_template),
       molecule(the_molecule),
       feature_names(the_feature_names),
       weighting_method(the_weighting_method),
@@ -106,8 +108,6 @@ ChemicalICP::ChemicalICP( const MolTemplate& the_template,
       trans_t( 0 ),
       rotation( 3, 3 ),
       translation( 3 ),
-      mol_feat_indices( new UnaryVariable() ),
-      template_feat_indices( new UnaryVariable() ),
       all_mol_features( 0 ), // calls SourceVariable()
       all_template_features( 0 ),
       all_template_feat_dev( 0 ),
