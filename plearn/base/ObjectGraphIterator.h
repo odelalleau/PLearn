@@ -72,6 +72,8 @@ class Object;
  *
  *  The iterator is a model of the STL ForwardIterator.  Default-constructing
  *  this object makes an "invalid" iterator which is always considered the end.
+ *
+ *  This class skips options that are marked with the "nontraversable" flag.
  */
 class ObjectOptionsIterator
 {

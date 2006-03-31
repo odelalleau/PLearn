@@ -137,11 +137,14 @@ const ObjectOptionsIterator& ObjectOptionsIterator::operator++()
                 return *this;
         }
 
-        // Otherwise find next option accessible as object.  Go to invalid state if
+        // Otherwise find next option accessible as object, and that is not
+        // marked with the 'nontraversable' flag.  Go to invalid state if
         // cannot find any
         const int n = m_options->size();
         for ( ++m_cur_option ; m_cur_option < n ; ++m_cur_option ) {
-            if ((*m_options)[m_cur_option]->isAccessibleAsObject()) {
+            if (    (*m_options)[m_cur_option]->isAccessibleAsObject() &&
+                 ! ((*m_options)[m_cur_option]->flags() & OptionBase::nontraversable) )
+            {
                 m_cur_index = 0;
                 m_max_index = (*m_options)[m_cur_option]->indexableSize(m_object);
                 break;

@@ -63,26 +63,61 @@ class PLearnDiff;
 class OptionBase: public PPointable
 {
 public:
-    typedef unsigned int flag_t; // bit field
+    //#####  Option Flags  ####################################################
 
-    //! 'buildoption' an option typically specified before calling the initial build 
-    //! (semantically similat to a constructor parameter) ex: the number of hidden units in a neural net
+    // === IMPORTANT NOTICE ===
+    // If you add new option flags to the following list, don't forget to add
+    // a human-readable interpretation within the flagStrings() function.
+    // ========================
+
+    //! The flags in the following list are bitwise-ORed to obtain the option
+    //! flags
+    typedef unsigned int flag_t;
+
+    /**
+     *  'buildoption': an option typically specified before calling the initial
+     *  build (semantically similar to a constructor parameter), for instance
+     *  the number of hidden units in a neural net.
+     */
     static const flag_t buildoption;       
 
-    //! 'learntoption' a field whose proper value is computed by the class after construction
-    //! (not to be set by the user before build) ex: the weights of a neural net
+    /**
+     *  'learntoption': an option whose proper value is computed by the class
+     *  after construction (not to be set by the user before build) and
+     *  potentially complex operations such as learning over a training set.
+     *  Example: the (trained) weights of a neural net.
+     */
     static const flag_t learntoption;
 
-    //! 'tuningoption' an option typically set after the initial build, to tune the object
+    /**
+     *  'tuningoption': an option typically set after the initial build, to tune
+     *  the object
+     */
     static const flag_t tuningoption;
 
-    //! Do not include this option in the objet's serialisation (write method skips it)
+    /**
+     *  'nosave': when set, this flag requests the option not to be saved in
+     *  the object serialisation; mostly used when we must have several options
+     *  that map to the same physical data field, for script backward
+     *  compatibility.
+     */
     static const flag_t nosave;
 
-    //! This option does not lead to a parenting relationship in the
-    //! "ParentableObject" sense.  In other words, the object pointed to by
-    //! this option does not get its parent() backpointer set to this.
+    /**
+     *  When this flag is set, the option does not lead to a parenting
+     *  relationship in the "ParentableObject" sense.  In other words, the
+     *  object pointed to by this option does not get its parent() backpointer
+     *  set to this.
+     */
     static const flag_t nonparentable;
+
+    /**
+     *  When this flag is set, the option is not traversed by the
+     *  ObjectGraphIterator class (and ipso facto by related functions, such as
+     *  memfun_broadcast.
+     */
+    static const flag_t nontraversable;
+
 
 protected:
     string optionname_;  //!< the name of the option
@@ -180,6 +215,9 @@ public:
     //! Flags accessor
     inline flag_t flags() const { return flags_; }
 
+    //! Human-readable accessor of flags
+    vector<string> flagStrings() const;
+    
     //! Return true if the option can be obtained as an \c Object*
     //! (i.e. \c getAsObject() succeeds) or can be indexed as an \c Object*
     //! (i.e. \c getIndexedObject() succeeds)

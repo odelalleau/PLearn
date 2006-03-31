@@ -46,11 +46,13 @@
 namespace PLearn {
 using namespace std;
 
-const OptionBase::flag_t OptionBase::buildoption   = 1;       
-const OptionBase::flag_t OptionBase::learntoption  = 1 << 1;
-const OptionBase::flag_t OptionBase::tuningoption  = 1 << 2;
-const OptionBase::flag_t OptionBase::nosave        = 1 << 4; 
-const OptionBase::flag_t OptionBase::nonparentable = 1 << 8;
+const OptionBase::flag_t OptionBase::buildoption      = 1;       
+const OptionBase::flag_t OptionBase::learntoption     = 1 << 1;
+const OptionBase::flag_t OptionBase::tuningoption     = 1 << 2;
+const OptionBase::flag_t OptionBase::nosave           = 1 << 3; 
+const OptionBase::flag_t OptionBase::nonparentable    = 1 << 4;
+const OptionBase::flag_t OptionBase::nontraversable   = 1 << 5;
+
 
 OptionBase::OptionBase(const string& optionname, flag_t flags,
                        const string& optiontype, const string& defaultval, 
@@ -64,10 +66,12 @@ OptionBase::OptionBase(const string& optionname, flag_t flags,
                 optionname.c_str());
 }
 
+
 bool OptionBase::shouldBeSkipped() const
 {
     return (flags() & (buildoption | learntoption | tuningoption)) == 0;
 }
+
 
 string OptionBase::writeIntoString(const Object* o) const
 {
@@ -78,11 +82,13 @@ string OptionBase::writeIntoString(const Object* o) const
     return s;
 }
 
+
 void OptionBase::readIntoIndex(Object*, PStream&, const string&)
 {
     PLERROR("OptionBase::readIntoIndex: indexed reads are not supported for option '%s' "
             "of type '%s'", optionname().c_str(), optiontype().c_str());
 }
+
 
 void OptionBase::writeAtIndex(const Object*, PStream&, const string&) const
 {
@@ -90,6 +96,44 @@ void OptionBase::writeAtIndex(const Object*, PStream&, const string&) const
             "of type '%s'", optionname().c_str(), optiontype().c_str());
 }
 
+
+vector<string> OptionBase::flagStrings() const
+{
+    flag_t curflags = flags();
+    vector<string> fs;
+
+    static bool initialized = false;
+    static map<flag_t, string> flag_map;
+    if (! initialized) {
+        flag_map[buildoption   ] = "buildoption";
+        flag_map[learntoption  ] = "learntoption";
+        flag_map[tuningoption  ] = "tuningoption";
+        flag_map[nosave        ] = "nosave";
+        flag_map[nonparentable ] = "nonparentable";
+        flag_map[nontraversable] = "nontraversable";
+        initialized = true;
+    }
+
+    for (map<flag_t, string>::const_iterator it = flag_map.begin(),
+             end = flag_map.end() ; it != end ; ++it)
+    {
+        // As we process each option, turn it off in temporary copy of flags to
+        // detect unprocessed flags
+        if (curflags & it->first) {
+            fs.push_back(it->second);
+            curflags &= ~it->first;
+        }
+    }
+
+    if (curflags)
+        PLERROR("OptionBase::flagStrings: unprocessed flags in option '%s' (%s);\n"
+                "cannot interpret remaining bits %d", optionname().c_str(),
+                optiontype().c_str(), curflags);
+    
+    return fs;
+}
+
+    
 } // end of namespace PLearn
 
 
