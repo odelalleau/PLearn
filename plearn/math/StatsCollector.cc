@@ -400,8 +400,13 @@ void StatsCollector::remove_observation(real val, real weight)
             sumsquare_ = 0.0;
         if (-SQRT2_ABSOLUTE_TOLERANCE < sumfourth_ && sumfourth_ < 0.0)
             sumfourth_ = 0.0;
-        assert( sumsquare_ >= 0.0 && sumfourth_ >= 0.0 );
-    
+        if ( sumsquare_ < 0.0 || sumfourth_ < 0.0 )
+        {
+            perr << "this = " << endl << *this << endl << endl;
+            PLERROR("Improper call to remove_observation "
+                    "sumsquare_ = %g < 0.0 || sumfourth_ = %g < 0.0", sumsquare_, sumfourth_);
+        }
+        
         if(storeCounts())
             PLERROR("The remove observation mechanism is incompatible with "
                     "maxnvalues.");

@@ -60,6 +60,7 @@
 #include <plearn/math/test/PentadiagonalSolveInPlace/PentaTest.h>
 #include <plearn/math/test/pl_math/PLMathTest.h>
 #include <plearn/math/test/TMat/TMatTest.h>
+#include <plearn/math/test/VecStatsCollector/RemoveObservation.h>
 #include <plearn/misc/test/HeapTest.h>
 #include <plearn/python/test/BasicIdentityCallsTest.h>
 #include <plearn/python/test/InjectionTest.h>

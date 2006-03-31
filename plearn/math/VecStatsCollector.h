@@ -52,17 +52,7 @@ using namespace std;
 
 class VecStatsCollector: public Object
 {    
-private:
     typedef Object inherited;
-
-protected:
-    //! Map from fieldnames to fieldnumbers, to really speed up getFieldNum
-    //! which can be a speed bottleneck in some experiments
-    map<string,int> fieldnames_num;
-  
-    //! Names of the fields of the update vector;
-    //! now protected: use setFieldNames to set them!
-    TVec<string> fieldnames;
 
 public:
     // ************************
@@ -70,6 +60,21 @@ public:
     // ************************
 
     int maxnvalues; 
+
+    //! Should we compute and keep X'.X ?  (default false)
+    bool compute_covariance;
+
+    //! See .cc for help.
+    double epsilon;
+
+    /**
+     * If positive, the window restricts the stats computed by this
+     * FinVecStatsCollector to the last 'window' observations. This uses the
+     * VecStatsCollector::remove_observation mechanism.
+     *
+     * Default: -1 (all observations are considered).
+     */
+    int m_window;
 
     /**
      * If the remove_observation mecanism is used and the removed
@@ -83,12 +88,7 @@ public:
      */
     bool no_removal_warnings;
 
-    //! Should we compute and keep X'.X ?  (default false)
-    bool compute_covariance;
-
-    //! See .cc for help.
-    double epsilon;
-
+    
     // ******************
     // * learnt options *
     // ******************
@@ -105,28 +105,14 @@ public:
     real sum_non_missing_weights;
     real sum_non_missing_square_weights;
   
+public:
+
     // ****************
     // * Constructors *
     // ****************
 
     VecStatsCollector();
-
-  
-    // ******************
-    // * Object methods *
-    // ******************
-
-private: 
-    //! This does the actual building. 
-    // (Please implement in .cc)
-    void build_();
-
-protected: 
-    //! Declares this class' options
-    static void declareOptions(OptionList& ol);
-
-public:
-  
+      
     int length() const { return stats.length(); }
     int size() const { return length(); }
 
@@ -239,12 +225,37 @@ public:
     //! a block-diagonal covariance matrix is computed.
     void append(const VecStatsCollector& vsc, const string fieldname_prefix="",
                 const TVec<string>& new_fieldnames = TVec<string>() );
-  
+
+    const Mat& getObservations() { return m_observations; }
+    
     //! Transforms a shallow copy into a deep copy
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     //! Declares name and deepCopy methods
     PLEARN_DECLARE_OBJECT(VecStatsCollector);
+
+protected:
+    //! Map from fieldnames to fieldnumbers, to really speed up getFieldNum
+    //! which can be a speed bottleneck in some experiments
+    map<string,int> fieldnames_num;
+  
+    //! Names of the fields of the update vector;
+    //! now protected: use setFieldNames to set them!
+    TVec<string> fieldnames;
+
+    //! Window mechanism
+    int m_nobs;
+    int m_cursor;
+    Mat m_observations;
+    
+protected: 
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
+    
+private: 
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();    
 };
 
 // Declares a few other classes and functions related to this class

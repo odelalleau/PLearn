@@ -422,7 +422,7 @@ bool TMat<T>::operator==(const TMat<T>& other) const
 }
 
 template<class T>
-bool TMat<T>::isEqual(const TMat<T>& other) const
+bool TMat<T>::isEqual(const TMat<T>& other, real precision) const
 {
     if ( length() != other.length() || width() != other.width() )
         return false;
@@ -432,7 +432,7 @@ bool TMat<T>::isEqual(const TMat<T>& other) const
     iterator other_it = other.begin();
 
     for(; it != end_; ++it, ++other_it)
-        if( !fast_is_equal(*it,*other_it) )
+        if( !is_equal(*it,*other_it, 10.0, precision, precision) )
             return false;
   
     return true;

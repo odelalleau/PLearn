@@ -219,6 +219,8 @@ metadatadir = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.amat.metadata/"  
 
 "Save and load suceeded on " "linear_4x_2y_amat__to__linear_4x_2y.pmat" 
 
+"Save and load suceeded on " "linear_4x_2y_amat__to__linear_4x_2y.dmat" 
+
 
 
 "#####  PLEARNDIR:examples/data/test_suite/linear_4x_2y.pmat  ##############" 
@@ -441,6 +443,8 @@ metadatadir = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.pmat.metadata/"  
 
 "Save and load suceeded on " "linear_4x_2y_pmat__to__linear_4x_2y.pmat" 
 
+"Save and load suceeded on " "linear_4x_2y_pmat__to__linear_4x_2y.dmat" 
+
 
 
 "#####  PLEARNDIR:examples/data/test_suite/eslt_mixture/data_train.amat  #####" 
@@ -662,5 +666,7 @@ metadatadir = "PLEARNDIR:examples/data/test_suite/eslt_mixture/data_train.amat.m
 "Save and load suceeded on " "data_train_amat__to__data_train.amat" 
 
 "Save and load suceeded on " "data_train_amat__to__data_train.pmat" 
+
+"Save and load suceeded on " "data_train_amat__to__data_train.dmat" 
 
 

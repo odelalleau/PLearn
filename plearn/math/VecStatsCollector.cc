@@ -47,9 +47,12 @@ namespace PLearn {
 using namespace std;
 
 VecStatsCollector::VecStatsCollector():
-    maxnvalues(0), no_removal_warnings(false), compute_covariance(false), epsilon(0.0),
+    maxnvalues(0), compute_covariance(false), epsilon(0.0),
+    m_window(-1), no_removal_warnings(false), // Window mechanism
     sum_non_missing_weights(0),
-    sum_non_missing_square_weights(0)
+    sum_non_missing_square_weights(0),
+    // Window mechanism    
+    m_nobs(0), m_cursor(0)
 {}
 
 PLEARN_IMPLEMENT_OBJECT(VecStatsCollector,
@@ -68,17 +71,6 @@ void VecStatsCollector::declareOptions(OptionList& ol)
         "If -1, we will keep track of all different values.\n"
         "If 0, we will only keep track of global statistics.\n");
 
-    declareOption( ol, "no_removal_warnings", &VecStatsCollector::no_removal_warnings,
-                   OptionBase::buildoption,
-                   "If the remove_observation mecanism is used and the removed\n"
-                   "value is equal to one of last_, min_ or max_, the default\n"
-                   "behavior is to warn the user.\n"
-                   "\n"
-                   "If one want to disable this feature, he may set\n"
-                   "no_removal_warnings to true.\n"
-                   "\n"
-                   "Default: false (0)." );
-
     declareOption(ol, "fieldnames", &VecStatsCollector::fieldnames, OptionBase::buildoption,
                   "Names of the fields of the vector");
 
@@ -88,6 +80,27 @@ void VecStatsCollector::declareOptions(OptionList& ol)
     declareOption(ol, "epsilon", &VecStatsCollector::epsilon, OptionBase::buildoption,
                   "Optional regularization to *add* to the variance vector "
                   "(used *only* in getVariance, getCovariance and getStdDev).");
+
+    declareOption(
+        ol, "window", &VecStatsCollector::m_window,
+        OptionBase::buildoption,
+        "If positive, the window restricts the stats computed by this"
+        "FinVecStatsCollector to the last 'window' observations. This uses the\n"
+        "VecStatsCollector::remove_observation mechanism.\n"
+        "\n"
+        "Default: -1 (all observations are considered)." );
+
+    declareOption(
+        ol, "no_removal_warnings", &VecStatsCollector::no_removal_warnings,
+        OptionBase::buildoption,
+        "If the remove_observation mecanism is used and the removed\n"
+        "value is equal to one of last_, min_ or max_, the default\n"
+        "behavior is to warn the user.\n"
+        "\n"
+        "If one want to disable this feature, he may set\n"
+        "no_removal_warnings to true.\n"
+        "\n"
+        "Default: false (0)." );
   
     declareOption(ol, "stats", &VecStatsCollector::stats, OptionBase::learntoption,
                   "the stats for each element");
@@ -111,7 +124,7 @@ void VecStatsCollector::declareOptions(OptionList& ol)
 
     declareOption(ol, "sum_non_missing_square_weights", &VecStatsCollector::sum_non_missing_square_weights, OptionBase::learntoption,
                   "Sum of square weights for vectors with no missing value.");
-
+    
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -227,6 +240,25 @@ void VecStatsCollector::update(const Vec& x, real weight)
                 sum_cross(i)                 += weight * x[i];
         }
     }
+
+
+    // Window mechanism
+    if (m_window > 0)
+    {
+        m_nobs++;        
+        m_observations.resize(MIN(m_nobs,m_window), n);
+        if (m_nobs > m_window)
+        {
+            Vec outdated = m_observations(m_cursor % m_window);
+            this->remove_observation(outdated);
+            m_nobs--;
+        }
+
+        m_observations(m_cursor % m_window) << x;
+        m_cursor++;        
+        
+        assert( m_nobs <= m_window );
+    }    
 }
 
 ////////////////////////
@@ -307,7 +339,13 @@ void VecStatsCollector::update(const Mat& m, const Vec& weights)
 }
 
 void VecStatsCollector::build_()
-{}
+{
+    if (m_window > 0)
+    {
+        m_observations.resize(m_window, 0);
+        m_observations.resize(0, 0);
+    }
+}
 
 void VecStatsCollector::build()
 {
@@ -324,6 +362,11 @@ void VecStatsCollector::forget()
     sum_cross_square_weights.resize(0,0);
     sum_non_missing_weights = 0;
     sum_non_missing_square_weights = 0;
+
+    // Window mechanism
+    m_nobs = 0;
+    m_cursor = 0;    
+    m_observations.resize(0, 0);
 }
 
 void VecStatsCollector::finalize()
@@ -565,6 +608,7 @@ void VecStatsCollector::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(sum_cross,                copies);
     deepCopyField(sum_cross_weights,        copies);
     deepCopyField(sum_cross_square_weights, copies);
+    deepCopyField(m_observations,           copies);
 }
 
 } // end of namespace PLearn
