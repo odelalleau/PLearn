@@ -133,6 +133,7 @@ public:
     bool do_not_change_params;
 
     Var first_hidden_layer;
+    bool transpose_first_hidden_layer;
 
     //! Cost functions.
     TVec<string> cost_funcs;  
@@ -152,7 +153,6 @@ private:
 public:
 
     NNet();
-    virtual ~NNet();
     PLEARN_DECLARE_OBJECT(NNet);
 
     virtual void build();

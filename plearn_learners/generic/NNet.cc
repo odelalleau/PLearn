@@ -75,7 +75,7 @@
 //#include "DisplayUtils.h"
 //#include "GradientOptimizer.h"
 #include "NNet.h"
-#include <plearn/math/random.h>
+// #include <plearn/math/random.h>
 #include <plearn/vmat/SubVMatrix.h>
 
 namespace PLearn {
@@ -84,7 +84,10 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(NNet, "Ordinary Feedforward Neural Network with 1 or 2 hidden layers", 
                         "Neural network with many bells and whistles...");
 
-NNet::NNet() // DEFAULT VALUES FOR ALL OPTIONS
+//////////
+// NNet //
+//////////
+NNet::NNet()
     :
 nhidden(0),
 nhidden2(0),
@@ -111,12 +114,12 @@ output_transfer_func(""),
 hidden_transfer_func("tanh"),
 interval_minval(0), interval_maxval(1),
 do_not_change_params(false),
+transpose_first_hidden_layer(false),
 batch_size(1),
 initialization_method("uniform_linear")
-{}
-
-NNet::~NNet()
 {
+    // Use the generic PLearner random number generator.
+    random_gen = new PRandom();
 }
 
 void NNet::declareOptions(OptionList& ol)
@@ -250,7 +253,13 @@ void NNet::declareOptions(OptionList& ol)
                   "A user-specified NAry Var that computes the output of the first hidden layer\n"
                   "from the network input vector and a set of parameters. Its first argument should\n"
                   "be the network input and the remaining arguments the tunable parameters.\n");
-  
+
+    declareOption(ol, "transpose_first_hidden_layer",
+                      &NNet::transpose_first_hidden_layer,
+                      OptionBase::buildoption, 
+        "If true and the 'first_hidden_layer' option is set, this layer will\n"
+        "be transposed, and the input variable given to this layer will also\n"
+        "be transposed.");
 
     declareOption(ol, "margin", &NNet::margin, OptionBase::buildoption, 
                   "Margin requirement, used only with the margin_perceptron_cost cost function.\n"
@@ -511,7 +520,9 @@ void NNet::buildFuncs(const Var& the_input, const Var& the_output, const Var& th
 //////////////////////////
 void NNet::buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& before_transfer_func) {
     output = the_input;
-    // first hidden layer
+
+    // First hidden layer.
+
     if (first_hidden_layer)
     {
         NaryVariable* layer_var = dynamic_cast<NaryVariable*>((Variable*)first_hidden_layer);
@@ -520,13 +531,16 @@ void NNet::buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& be
                     "from a subclass of NaryVariable");
         if (layer_var->varray.size() < 1)
             layer_var->varray.resize(1);
-        layer_var->varray[0] = transpose(output); //here output refers to the neural network input...
+        layer_var->varray[0] =
+            transpose_first_hidden_layer ? transpose(output)
+                                         : output; // Here output = NNet input.
         layer_var->build(); // make sure everything is consistent and finish the build
         if (layer_var->varray.size()<2)
             PLERROR("In NNet::buildOutputFromInput - 'first_hidden_layer' should have parameters");
         for (int i=1;i<layer_var->varray.size();i++)
             params.append(layer_var->varray[i]);
-        hidden_layer = transpose(layer_var);
+        hidden_layer = transpose_first_hidden_layer ? transpose(layer_var)
+                                                    : layer_var;
         output = hidden_layer;
     }
     else if(nhidden>0)
@@ -724,9 +738,9 @@ void NNet::fillWeights(const Var& weights, bool clear_first_row) {
     else
         delta = 1.0 / sqrt(real(is));
     if (initialization_method.find("normal") != string::npos)
-        fill_random_normal(weights->value, 0, delta);
+        random_gen->fill_random_normal(weights->value, 0, delta);
     else
-        fill_random_uniform(weights->value, -delta, delta);
+        random_gen->fill_random_uniform(weights->value, -delta, delta);
     if (clear_first_row)
         weights->matValue(0).clear();
 }
@@ -736,6 +750,7 @@ void NNet::fillWeights(const Var& weights, bool clear_first_row) {
 ////////////
 void NNet::forget()
 {
+    inherited::forget();
     if (train_set) initializeParams();
     if(optimizer)
         optimizer->reset();
@@ -799,18 +814,14 @@ Var NNet::hiddenLayer(const Var& input, const Var& weights, string transfer_func
 //////////////////////
 void NNet::initializeParams(bool set_seed)
 {
-    if (set_seed) {
-        if (seed_>=0)
-            manual_seed(seed_);
-        else
-            PLearn::seed();
-    }
+    if (set_seed && seed_ != 0)
+        random_gen->manual_seed(seed_);
 
-    if(nhidden>0 && !first_hidden_layer) {
-        fillWeights(w1, true);
-        if(direct_in_to_out) {
+    if (nhidden>0) {
+        if (!first_hidden_layer)
+            fillWeights(w1, true);
+        if (direct_in_to_out)
             fillWeights(wdirect, false);
-        }
     }
 
     if(nhidden2>0) {
@@ -825,7 +836,7 @@ void NNet::initializeParams(bool set_seed)
             values[0]=-1;
             values[1]=1;
         }
-        fill_random_discrete(wout->value, values);
+        random_gen->fill_random_discrete(wout->value, values);
         wout->matValue(0).clear();
     }
     else {
