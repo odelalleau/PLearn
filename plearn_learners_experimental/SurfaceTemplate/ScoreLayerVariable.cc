@@ -41,8 +41,14 @@
 #include "ComputeScoreVariable.h"
 #include "GlobalTemplateParameters.h"
 #include "MoleculeTemplate.h"
+#include "RunICPVariable.h"
+#include <plearn/var/ColumnSumVariable.h>
 #include <plearn/var/ConcatRowsVariable.h>
+#include <plearn/var/RowSumSquareVariable.h>
+#include <plearn/var/SigmoidVariable.h>
+#include <plearn/var/SquareRootVariable.h>
 #include <plearn/var/SubMatVariable.h>
+#include <plearn/var/Var_operators.h>
 
 namespace PLearn {
 using namespace std;
@@ -62,6 +68,7 @@ PLEARN_IMPLEMENT_OBJECT(
 ////////////////////////
 ScoreLayerVariable::ScoreLayerVariable():
     random_gen(new PRandom())
+    // weighting_method("none")
 {
 }
 
@@ -70,28 +77,40 @@ ScoreLayerVariable::ScoreLayerVariable():
 ////////////////////
 void ScoreLayerVariable::declareOptions(OptionList& ol)
 {
+    declareOption(ol, "icp_aligner_template",
+                  &ScoreLayerVariable::icp_aligner_template,
+                  OptionBase::buildoption,
+        "The model of ICP aligner we want to use (will be replicated for\n"
+        "each underlying score variable.");
     
     declareOption(ol, "n_active_templates",
-                      &ScoreLayerVariable::n_active_templates,
-                      OptionBase::buildoption,
+                  &ScoreLayerVariable::n_active_templates,
+                  OptionBase::buildoption,
         "Number of templates of active molecules.");
 
     declareOption(ol, "n_inactive_templates",
-                      &ScoreLayerVariable::n_inactive_templates,
-                      OptionBase::buildoption,
+                  &ScoreLayerVariable::n_inactive_templates,
+                  OptionBase::buildoption,
         "Number of templates of inactive molecules.");
 
     declareOption(ol, "seed", &ScoreLayerVariable::seed_,
-                              OptionBase::buildoption,
+                  OptionBase::buildoption,
         "Seed of the random number generator (similar to a PLearner's seed).");
 
     declareOption(ol, "templates_source",
-                      &ScoreLayerVariable::templates_source,
-                      OptionBase::buildoption,
+                  &ScoreLayerVariable::templates_source,
+                  OptionBase::buildoption,
         "The VMat templates are obtained from. This VMat's first column must\n"
         "be the name of a molecule, there may be other input features, and\n"
         "there must be a binary target indicating whether a molecule is\n"
         "active or inactive.");
+
+    /*
+    declareOption(ol, "weighting_method",
+                  &ScoreLayerVariable::weighting_method,
+                  OptionBase::buildoption,
+        "See help of ComputeScoreVariable for this option.");
+        */
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -163,11 +182,21 @@ void ScoreLayerVariable::build_()
     list_of_inactive.resize(n_inactive_templates);
     TVec<int>& templates = list_of_active; // Renaming to avoid confusion.
     templates.append(list_of_inactive);
+    /* TODO Remove?
     // Initialize the global parameters object.
     // TODO This has to be done.
     PP<GlobalTemplateParameters> params = new GlobalTemplateParameters();
+    */
+
+    // Create the Var that will run all ICPs.
+    PP<RunICPVariable> run_icp_var = new RunICPVariable();
+
+    // This VarArray will list additional parameters that must be optimized.
+    VarArray optimized_params;
+    
     // Create the corresponding score variables.
     outputs.resize(0);
+    int index_in_run_icp_var = 0; // Current index.
     for (int i = 0; i < templates.length(); i++) {
         templates_source->getExample(templates[i], input, target, weight);
         PPath molecule_path = mappings_source->getValString(0, input[0]);
@@ -182,9 +211,69 @@ void ScoreLayerVariable::build_()
             molecules[canonic_path] = new_molecule;
         }
         assert( molecules.find(canonic_path) != molecules.end() );
+        // Create storage variable for the coordinates of the nearest neighbors in
+        // the molecule.
+        PP<Molecule> mol_template = molecules[canonic_path];
+        Var molecule_coordinates(mol_template->n_points(), 3);
+        // Declare this new template (with associated molecule coordinates) to
+        // the RunICPVariable.
+        run_icp_var->addTemplate(mol_template, molecule_coordinates);
+        // Create the ICP aligner that will be used for this template.
+        CopiesMap copies;
+        PP<ChemicalICP> icp_aligner = icp_aligner_template->deepCopy(copies);
+        // Build graph of Variables.
+        // (1) Compute the distance in chemical features.
+        Var template_features = icp_aligner->used_template_features;
+        optimized_params.append(icp_aligner->all_template_features);
+        Var molecule_features = icp_aligner->used_mol_features;
+        Var diff_features = template_features - molecule_features;
+        Var template_features_stddev = icp_aligner->used_template_feat_dev;
+        optimized_params.append(icp_aligner->all_template_feat_dev);
+        Var feature_distance_at_each_point =
+            rowSumSquare(diff_features / template_features_stddev);
+        Var total_feature_distance = columnSum(feature_distance_at_each_point);
+        // (2) Compute the associated weights for the geometric distance.
+        string wm = icp_aligner->weighting_method;
+        Var weights;
+        if (wm == "none") {
+            weights = Var(mol_template->n_points(), 1);
+            weights->value.fill(1);
+        } else if (wm == "features_sigmoid") {
+            Var shift = icp_aligner->weighting_params[0];
+            Var slope = icp_aligner->weighting_params[1];
+            weights = sigmoid(
+                slope * (shift - squareroot(feature_distance_at_each_point)));
+            optimized_params.append(shift);
+            optimized_params.append(slope);
+        } else {
+            PLERROR("In ScoreLayerVariable::build_ - Unsupported value for "
+                    "'weighting_method'");
+        }
+        // (3) Compute the distance in geometric coordinates.
+        Var template_coordinates =
+            PLearn::subMat((RunICPVariable*) run_icp_var,
+                           index_in_run_icp_var, 0,
+                           mol_template->n_points(), 3);
+        index_in_run_icp_var += mol_template->n_points();
+        Var diff_coordinates = template_coordinates - molecule_coordinates;
+        Var template_coordinates_stddev = icp_aligner->template_geom_dev;
+        optimized_params.append(template_coordinates_stddev);
+        Var distance_at_each_point =
+            rowSumSquare(diff_coordinates / template_coordinates_stddev);
+        Var weighted_total_geometric_distance =
+            columnSum(distance_at_each_point * weights);
+        // (4) Sum to obtain the final score.
+        Var total_cost =
+            total_feature_distance + weighted_total_geometric_distance;
+        // TODO Add the regularization terms...
+
+        /*
         Var score_var =
-            new ComputeScoreVariable(params, molecules[canonic_path]);
-        outputs.append(score_var);
+            new ComputeScoreVariable(params, molecules[canonic_path],
+                                     //weighting_method,
+                                     icp_aligner_template);
+                                     */
+        outputs.append(total_cost);
     }
     // Append the additional input features if they are present.
     if (templates_source->inputsize() > 1) {
@@ -197,16 +286,15 @@ void ScoreLayerVariable::build_()
     final_output = vconcat(outputs);
     // The final 'varray' will contain, in this order:
     // - the input variable to this layer (already here)
-    // - the parameters (means and standard deviations)
+    // - the parameters (means, standard deviations, ...)
     // - the final output
     // The final output is not a parameter that will be updated during
     // initialization, but it needs to be in this Variable's parents so that
     // back-propagation is correctly performed.
-    varray.append(params->mean_geom);
-    varray.append(params->mean_feat);
-    varray.append(params->stddev_geom);
-    varray.append(params->stddev_feat);
+    varray.append(optimized_params);
     varray.append(final_output);
+    // We have changed a parent's option, we should re-build.
+    inherited::build();
 }
 
 ///////////

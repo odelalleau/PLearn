@@ -40,9 +40,10 @@
 #ifndef ScoreLayerVariable_INC
 #define ScoreLayerVariable_INC
 
+#include "ChemicalICP.h"
+#include "Molecule.h"
 #include <plearn/math/PRandom.h>
 #include <plearn/var/NaryVariable.h>
-#include <plearn_learners_experimental/SurfaceTemplate/Molecule.h>
 
 namespace PLearn {
 using namespace std;
@@ -69,10 +70,12 @@ public:
     //! ### declare public option fields (such as build options) here
     //! Start your comments with Doxygen-compatible comments such as //!
 
+    PP<ChemicalICP> icp_aligner_template;
     int n_active_templates;
     int n_inactive_templates;
     long seed_;
     VMat templates_source;
+    // string weighting_method;
 
 public:
     //#####  Public Member Functions  #########################################
