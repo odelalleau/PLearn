@@ -109,7 +109,7 @@ public:
     // Your other public member functions go here
 
     //! Return the molecule associated to the given (real number) molecule id.
-    PP<Molecule> getMolecule(real molecule_id);
+    PP<Molecule> getMolecule(real molecule_id, real activity = -1);
 
     //! Obtain the mappings of the input variable from a VMatrix.
     void setMappingsSource(const VMat& source_vmat);

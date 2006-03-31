@@ -38,8 +38,6 @@
 
 
 #include "ScoreLayerVariable.h"
-#include "ComputeScoreVariable.h"
-#include "GlobalTemplateParameters.h"
 #include "MoleculeTemplate.h"
 #include "RunICPVariable.h"
 #include <plearn/var/ColumnSumVariable.h>
@@ -199,7 +197,7 @@ void ScoreLayerVariable::build_()
     int index_in_run_icp_var = 0; // Current index.
     for (int i = 0; i < templates.length(); i++) {
         templates_source->getExample(templates[i], input, target, weight);
-        PP<Molecule> mol_template = getMolecule(input[0]);
+        PP<Molecule> mol_template = getMolecule(input[0], target[0]);
         /*
         PPath molecule_path = mappings_source->getValString(0, input[0]);
         if (molecule_path.isEmpty())
@@ -218,16 +216,20 @@ void ScoreLayerVariable::build_()
         PP<Molecule> mol_template = molecules[canonic_path];
         */
         Var molecule_coordinates(mol_template->n_points(), 3);
-        // Declare this new template (with associated molecule coordinates) to
-        // the RunICPVariable.
-        run_icp_var->addTemplate(mol_template, molecule_coordinates);
         // Create the ICP aligner that will be used for this template.
         CopiesMap copies;
         PP<ChemicalICP> icp_aligner = icp_aligner_template->deepCopy(copies);
+        // Declare this new template (with associated molecule coordinates) to
+        // the RunICPVariable.
+        run_icp_var->addTemplate(icp_aligner, mol_template, molecule_coordinates);
         // Declare the RunICPVariable as parent of the feature indices, in
         // order to ensure these variables are used after ICP has been run.
-        icp_aligner->mol_feat_indices->setInput(run_icp_var);
-        icp_aligner->template_feat_indices->setInput(run_icp_var);
+        PP<UnaryVariable> mol_feat_indices =
+            (UnaryVariable*) ((Variable*) icp_aligner->mol_feat_indices);
+        mol_feat_indices->setInput((RunICPVariable*) run_icp_var);
+        PP<UnaryVariable> template_feat_indices =
+            (UnaryVariable*) ((Variable*) icp_aligner->template_feat_indices);
+        template_feat_indices->setInput((RunICPVariable*) run_icp_var);
         // Build graph of Variables.
         // (1) Compute the distance in chemical features.
         Var template_features = icp_aligner->used_template_features;
@@ -321,8 +323,11 @@ void ScoreLayerVariable::fprop()
 /////////////////
 // getMolecule //
 /////////////////
-PP<Molecule> coreLayerVariable::getMolecule(real molecule_id)
+PP<Molecule> ScoreLayerVariable::getMolecule(real molecule_id, real activity)
 {
+    assert( fast_exact_is_equal(activity, 0) ||
+            fast_exact_is_equal(activity, 1) ||
+            fast_exact_is_equal(activity, -1) );
     PPath molecule_path = mappings_source->getValString(0, molecule_id);
     if (molecule_path.isEmpty())
         PLERROR("In ScoreLayerVariable::getMolecule - Could not find "
@@ -332,8 +337,8 @@ PP<Molecule> coreLayerVariable::getMolecule(real molecule_id)
     Molecule* molecule = 0;
     if (molecules.find(canonic_path) == molecules.end()) {
         molecule =
-            new MoleculeTemplate(molecule_path, int(target[0]));
-        molecules[canonic_path] = new_molecule;
+            new MoleculeTemplate(molecule_path, int(activity));
+        molecules[canonic_path] = molecule;
     } else
         molecule = molecules[canonic_path];
     assert( molecule );
