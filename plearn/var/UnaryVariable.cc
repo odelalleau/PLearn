@@ -53,7 +53,11 @@ UnaryVariable::UnaryVariable(Variable* v, int thelength, int thewidth)
 {}
 
 
-PLEARN_IMPLEMENT_ABSTRACT_OBJECT(UnaryVariable, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+    UnaryVariable,
+    "Variable that has a single parent.",
+    ""
+);
 
 void UnaryVariable::declareOptions(OptionList& ol)
 {
@@ -77,7 +81,6 @@ void UnaryVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     //deepCopyField(input, copies);
     varDeepCopyField(input, copies); // a cause d'une bug du compilateur
 }
-
 
 bool UnaryVariable::markPath()
 {
@@ -151,7 +154,14 @@ void UnaryVariable::resizeRValue()
     if (!input->rvaluedata) input->resizeRValue();
 }
 
-
+//////////////
+// setInput //
+//////////////
+void UnaryVariable::setInput(Var the_input)
+{
+    this->input = the_input;
+    build();
+}
 
 } // end of namespace PLearn
 

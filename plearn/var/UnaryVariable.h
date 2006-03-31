@@ -54,9 +54,12 @@ class UnaryVariable: public Variable
 public:
     typedef Variable inherited;
 
-protected:
+public:
+
     //!  Default constructor for persistence
     UnaryVariable() {}
+
+protected:
     static void declareOptions(OptionList & ol);
 
 protected:
@@ -65,8 +68,11 @@ protected:
 public:
     UnaryVariable(Variable* v, int thelength, int thewidth);
 
-    PLEARN_DECLARE_ABSTRACT_OBJECT(UnaryVariable);
+    PLEARN_DECLARE_OBJECT(UnaryVariable);
   
+    //! Set this Variable's input (simply call build after setting the new
+    //! input).
+    void setInput(Var the_input);
   
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
     virtual bool markPath();
@@ -75,6 +81,10 @@ public:
     virtual VarArray random_sources();
     virtual VarArray ancestors();
     virtual void unmarkAncestors();
+    virtual void fprop()
+        { PLERROR("In UnaryVariable::fprop - Not implemented"); }
+    virtual void bprop()
+        { PLERROR("In UnaryVariable::bprop - Not implemented"); }
     virtual VarArray parents();
     void printInfo(bool print_gradient) 
     { 
@@ -87,6 +97,8 @@ public:
     virtual void resizeRValue();
 };
 
+// Declares a few other classes and functions related to this class.
+DECLARE_OBJECT_PTR(UnaryVariable);
 
 } // end of namespace PLearn
 
