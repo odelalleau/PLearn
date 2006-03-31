@@ -213,6 +213,19 @@ real PRandom::exp_sample() {
     return real((*exponential_distribution)(*uniform_01));
 }
 
+//////////////////////////
+// fill_random_discrete //
+//////////////////////////
+void PRandom::fill_random_discrete(const Vec& dest, const Vec& set)
+{
+    assert( dest.isEmpty() || !set.isEmpty() );
+    Vec::iterator it = dest.begin();
+    Vec::iterator itend = dest.end();
+    int n = set.length();
+    for(; it != itend; ++it)
+        *it = set[this->uniform_multinomial_sample(n)];
+}
+
 ////////////////////////
 // fill_random_normal //
 ////////////////////////
