@@ -328,6 +328,7 @@ PP<Molecule> ScoreLayerVariable::getMolecule(real molecule_id, real activity)
     assert( fast_exact_is_equal(activity, 0) ||
             fast_exact_is_equal(activity, 1) ||
             fast_exact_is_equal(activity, -1) );
+    assert( mappings_source );
     PPath molecule_path = mappings_source->getValString(0, molecule_id);
     if (molecule_path.isEmpty())
         PLERROR("In ScoreLayerVariable::getMolecule - Could not find "

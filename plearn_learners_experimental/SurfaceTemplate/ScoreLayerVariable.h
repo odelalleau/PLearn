@@ -112,7 +112,10 @@ public:
     PP<Molecule> getMolecule(real molecule_id, real activity = -1);
 
     //! Obtain the mappings of the input variable from a VMatrix.
-    void setMappingsSource(const VMat& source_vmat);
+    void setMappingsSource(const VMat& source_vmat)
+    {
+        mappings_source = source_vmat;
+    }
 
     //#####  PLearn::Variable methods #########################################
     virtual void recomputeSizes(int& l, int& w) const;
