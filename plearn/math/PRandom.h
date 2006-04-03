@@ -255,6 +255,8 @@ public:
     //! Randomly shuffle the entries of a vector.
     template<class T>
     void shuffleElements(const TVec<T>& vec) {
+        if (vec.isEmpty())
+            return;
         T* v = vec.data();
         T tmp;
         int n = vec.length();
