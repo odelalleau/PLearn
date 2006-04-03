@@ -115,6 +115,7 @@ hidden_transfer_func("tanh"),
 interval_minval(0), interval_maxval(1),
 do_not_change_params(false),
 transpose_first_hidden_layer(false),
+n_non_params_in_first_hidden_layer(0),
 batch_size(1),
 initialization_method("uniform_linear")
 {
@@ -253,6 +254,13 @@ void NNet::declareOptions(OptionList& ol)
                   "A user-specified NAry Var that computes the output of the first hidden layer\n"
                   "from the network input vector and a set of parameters. Its first argument should\n"
                   "be the network input and the remaining arguments the tunable parameters.\n");
+
+    declareOption(ol, "n_non_params_in_first_hidden_layer",
+                  &NNet::n_non_params_in_first_hidden_layer,
+                  OptionBase::buildoption, 
+        "Number of elements in the 'varray' option of 'first_hidden_layer'\n"
+        "that are not updated parameters (assumed to be the last elements in\n"
+        "'varray').");
 
     declareOption(ol, "transpose_first_hidden_layer",
                       &NNet::transpose_first_hidden_layer,
@@ -512,6 +520,14 @@ void NNet::buildFuncs(const Var& the_input, const Var& the_output, const Var& th
     test_costf = Func(testinvars, the_output&test_costs);
     test_costf->recomputeParents();
     output_and_target_to_cost = Func(outvars, test_costs); 
+    // Since there will be a fprop() in the netwowk, we need to make sure the
+    // input is valid.
+    if (train_set && train_set->length() >= 1) {
+        Vec input, target;
+        real weight;
+        train_set->getExample(0, input, target, weight);
+        the_input->matValue << input;
+    }
     output_and_target_to_cost->recomputeParents();
 }
 
@@ -537,7 +553,9 @@ void NNet::buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& be
         layer_var->build(); // make sure everything is consistent and finish the build
         if (layer_var->varray.size()<2)
             PLERROR("In NNet::buildOutputFromInput - 'first_hidden_layer' should have parameters");
-        for (int i=1;i<layer_var->varray.size();i++)
+        int index_max_param =
+            layer_var->varray.length() - n_non_params_in_first_hidden_layer;
+        for (int i = 1; i < index_max_param; i++)
             params.append(layer_var->varray[i]);
         hidden_layer = transpose_first_hidden_layer ? transpose(layer_var)
                                                     : layer_var;

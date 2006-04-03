@@ -134,6 +134,7 @@ public:
 
     Var first_hidden_layer;
     bool transpose_first_hidden_layer;
+    int n_non_params_in_first_hidden_layer;
 
     //! Cost functions.
     TVec<string> cost_funcs;  
