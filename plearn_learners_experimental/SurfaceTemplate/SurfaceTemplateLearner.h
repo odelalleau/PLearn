@@ -42,7 +42,6 @@
 
 #include <plearn_learners/generic/NNet.h>
 #include "MoleculeTemplate.h"
-#include "ComputeScoreVariable.h"
 
 namespace PLearn {
 
@@ -103,10 +102,9 @@ public:
     //! fresh learner!).
     // virtual void forget();
     
-    //! The role of the train method is to bring the learner up to stage==nstages,
-    //! updating the train_stats collector with training costs measured on-line
-    //! in the process.
-    // virtual void train();
+    //! Overridden to ensure the mappings source in the score layer is properly
+    //! set.
+    virtual void train();
 
     //! Computes the output from the input.
     // virtual void computeOutput(const Vec& input, Vec& output) const;

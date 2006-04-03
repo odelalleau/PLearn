@@ -38,6 +38,7 @@
 
 
 #include "SurfaceTemplateLearner.h"
+#include "ScoreLayerVariable.h"
 
 namespace PLearn {
 using namespace std;
@@ -118,7 +119,14 @@ void SurfaceTemplateLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 void SurfaceTemplateLearner::setTrainingSet(VMat training_set,
                                             bool call_forget)
 {
-    PLERROR("Need to implement");
+    // Rebuild the internal score layer.
+    PP<ScoreLayerVariable> score_layer =
+        (ScoreLayerVariable*) ((Variable*) first_hidden_layer);
+    score_layer->templates_source = training_set;
+    score_layer->setMappingsSource(training_set);
+    score_layer->build();
+
+    inherited::setTrainingSet(training_set, call_forget);
 }
 
 //////////
@@ -128,7 +136,10 @@ void SurfaceTemplateLearner::test(VMat testset,
                                   PP<VecStatsCollector> test_stats,
                                   VMat testoutputs, VMat testcosts) const
 {
-    PLERROR("Need to implement");
+    PP<ScoreLayerVariable> score_layer =
+        (ScoreLayerVariable*) ((Variable*) first_hidden_layer);
+    score_layer->setMappingsSource(testset);
+    inherited::test(testset, test_stats, testoutputs, testcosts);
 }
 
 /*
@@ -138,12 +149,18 @@ void SurfaceTemplateLearner::forget()
 }
 */
     
-/*
+///////////
+// train //
+///////////
 void SurfaceTemplateLearner::train()
 {
+    PP<ScoreLayerVariable> score_layer =
+        (ScoreLayerVariable*) ((Variable*) first_hidden_layer);
+    score_layer->setMappingsSource(train_set);
+    inherited::train();
 }
 
-
+/*
 void SurfaceTemplateLearner::computeOutput(const Vec& input, Vec& output) const
 {
     // Compute the output from the input.
