@@ -53,13 +53,14 @@ PLEARN_IMPLEMENT_OBJECT(
 // SurfaceTemplateLearner //
 ////////////////////////////
 SurfaceTemplateLearner::SurfaceTemplateLearner() 
-/* ### Initialize all fields to their default value here */
 {
-    // ...
-
-    // ### You may (or not) want to call build_() to finish building the object
-    // ### (doing so assumes the parent classes' build_() have been called too
-    // ### in the parent classes' constructors, something that you must ensure)
+    // Set some NNet options whose value is fixed in this learner.
+    nhidden = 0;
+    noutputs = 1;
+    output_transfer_func = "sigmoid";
+    cost_funcs = TVec<string>(1, "stable_cross_entropy");
+    transpose_first_hidden_layer = false;
+    batch_size = 1;
 }
 
 ////////////////////
@@ -67,10 +68,153 @@ SurfaceTemplateLearner::SurfaceTemplateLearner()
 ////////////////////
 void SurfaceTemplateLearner::declareOptions(OptionList& ol)
 {
-    //declareOption(ol, "fixed_output_weights", SurfaceTemplateLearner::fixed_output_weights, OptionBase::buildoption,
+    // We rename 'first_hidden_layer' into 'score_layer' to avoid potential
+    // confusion.
+    declareOption(ol, "score_layer",
+                  &SurfaceTemplateLearner::first_hidden_layer,
+                  OptionBase::buildoption,
+        "The layer of scores (should be a ScoreLayerVariable).");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
+
+    // Redeclare parent's option to make this learner more user-friendly.
+
+    // 'nhidden' now modifies the 'nhidden2' parameter in NNet, since a
+    // SurfaceTemplateLearner has always a first hidden layer that is a
+    // ScoreLayerVariable.
+    redeclareOption(ol, "nhidden", &SurfaceTemplateLearner::nhidden2,
+                                   OptionBase::buildoption,
+        "Number of hidden units.");
+
+    redeclareOption(ol, "nhidden2", &SurfaceTemplateLearner::nhidden2,
+                                    OptionBase::nosave,
+        "Not used (see nhidden).");
+
+    redeclareOption(ol, "noutputs", &SurfaceTemplateLearner::noutputs,
+                                    OptionBase::nosave,
+        "Not used (= 1).");
+
+    redeclareOption(ol, "bias_decay", &SurfaceTemplateLearner::bias_decay,
+                                      OptionBase::nosave,
+        "Not used (simplification).");
+
+    redeclareOption(ol, "layer1_weight_decay",
+                    &SurfaceTemplateLearner::layer1_weight_decay,
+                    OptionBase::nosave,
+        "Not used (simplification).");
+
+    redeclareOption(ol, "layer1_bias_decay",
+                    &SurfaceTemplateLearner::layer1_bias_decay,
+                    OptionBase::nosave,
+        "Not used (simplification).");
+
+    redeclareOption(ol, "layer2_weight_decay",
+                    &SurfaceTemplateLearner::layer2_weight_decay,
+                    OptionBase::nosave,
+        "Not used (simplification).");
+
+    redeclareOption(ol, "layer2_bias_decay",
+                    &SurfaceTemplateLearner::layer2_bias_decay,
+                    OptionBase::nosave,
+        "Not used (simplification).");
+
+    redeclareOption(ol, "output_layer_weight_decay",
+                    &SurfaceTemplateLearner::output_layer_weight_decay,
+                    OptionBase::nosave,
+        "Not used (simplification).");
+
+    redeclareOption(ol, "output_layer_bias_decay",
+                    &SurfaceTemplateLearner::output_layer_bias_decay,
+                    OptionBase::nosave,
+        "Not used (simplification).");
+
+    redeclareOption(ol, "direct_in_to_out_weight_decay",
+                    &SurfaceTemplateLearner::direct_in_to_out_weight_decay,
+                    OptionBase::nosave,
+        "Not used (simplification).");
+
+    redeclareOption(ol, "L1_penalty", &SurfaceTemplateLearner::L1_penalty,
+                                      OptionBase::nosave,
+        "Not used (deprecated).");
+
+    redeclareOption(ol, "fixed_output_weights",
+                    &SurfaceTemplateLearner::fixed_output_weights,
+                    OptionBase::nosave,
+        "Not used (simplification).");
+
+    redeclareOption(ol, "input_reconstruction_penalty",
+                    &SurfaceTemplateLearner::input_reconstruction_penalty,
+                    OptionBase::nosave,
+        "Not used (simplification).");
+
+    redeclareOption(ol, "direct_in_to_out",
+                    &SurfaceTemplateLearner::direct_in_to_out,
+                    OptionBase::nosave,
+        "Not used (simplification).");
+
+    redeclareOption(ol, "rbf_layer_size",
+                    &SurfaceTemplateLearner::rbf_layer_size,
+                    OptionBase::nosave,
+        "Not used (simplification).");
+
+    redeclareOption(ol, "first_class_is_junk",
+                    &SurfaceTemplateLearner::first_class_is_junk,
+                    OptionBase::nosave,
+        "Not used (simplification).");
+
+    redeclareOption(ol, "output_transfer_func",
+                    &SurfaceTemplateLearner::output_transfer_func,
+                    OptionBase::nosave,
+        "Not used (= sigmoid).");
+
+    redeclareOption(ol, "hidden_transfer_func",
+                    &SurfaceTemplateLearner::hidden_transfer_func,
+                    OptionBase::nosave,
+        "Not used (simplification).");
+
+    redeclareOption(ol, "first_hidden_layer",
+                    &SurfaceTemplateLearner::first_hidden_layer,
+                    OptionBase::nosave,
+        "Not used (renamed to 'score_layer').");
+
+    redeclareOption(ol, "transpose_first_hidden_layer",
+                    &SurfaceTemplateLearner::transpose_first_hidden_layer,
+                    OptionBase::nosave,
+        "Not used (= false).");
+
+    redeclareOption(ol, "margin", &SurfaceTemplateLearner::margin,
+                                  OptionBase::nosave,
+        "Not used (simplification).");
+
+    redeclareOption(ol, "do_not_change_params",
+                    &SurfaceTemplateLearner::do_not_change_params,
+                    OptionBase::nosave,
+        "Not used (simplification).");
+
+    redeclareOption(ol, "batch_size", &SurfaceTemplateLearner::batch_size,
+                                      OptionBase::nosave,
+        "Not used (= 1).");
+
+    redeclareOption(ol, "initialization_method",
+                    &SurfaceTemplateLearner::initialization_method,
+                    OptionBase::nosave,
+        "Not used (simplification).");
+
+    redeclareOption(ol, "forget_when_training_set_changes",
+                    &SurfaceTemplateLearner::forget_when_training_set_changes,
+                    OptionBase::nosave,
+        "Not used (simplification).");
+
+    redeclareOption(ol, "nservers", &SurfaceTemplateLearner::nservers,
+                                    OptionBase::nosave,
+        "Not used (simplification).");
+
+    redeclareOption(ol, "save_trainingset_prefix",
+                    &SurfaceTemplateLearner::save_trainingset_prefix,
+                    OptionBase::nosave,
+        "Not used (simplification).");
+
 }
 
 ////////////
@@ -78,13 +222,15 @@ void SurfaceTemplateLearner::declareOptions(OptionList& ol)
 ////////////
 void SurfaceTemplateLearner::build_()
 {
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation. 
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-    // ### You should assume that the parent class' build_() has already been called.
+    // Ensure the first hidden layer is a subclass of ScoreLayerVariable.
+    if (first_hidden_layer) {
+        PP<ScoreLayerVariable> score_layer =
+            (ScoreLayerVariable*) ((Variable*) first_hidden_layer);
+        if (!score_layer)
+            PLERROR("In SurfaceTemplateLearner::build_ - The first hidden "
+                    "layer, as given by the 'score_layer' option, must be a "
+                    "subclass of ScoreLayerVariable");
+    }
 }
 
 ///////////
