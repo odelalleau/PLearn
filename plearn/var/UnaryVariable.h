@@ -81,10 +81,8 @@ public:
     virtual VarArray random_sources();
     virtual VarArray ancestors();
     virtual void unmarkAncestors();
-    virtual void fprop()
-        { PLERROR("In UnaryVariable::fprop - Not implemented"); }
-    virtual void bprop()
-        { PLERROR("In UnaryVariable::bprop - Not implemented"); }
+    virtual void fprop() {} //!< Nothing to do by default.
+    virtual void bprop() {} //!< Nothing to do by default.
     virtual VarArray parents();
     void printInfo(bool print_gradient) 
     { 
