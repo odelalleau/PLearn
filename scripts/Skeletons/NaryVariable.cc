@@ -73,7 +73,7 @@ DERIVEDCLASS::DERIVEDCLASS()
 //     // ### object
 // }
 
-void DERIVEDCLASS::recomputeSizes(int& l, int& w) const
+void DERIVEDCLASS::recomputeSize(int& l, int& w) const
 {
     // ### usual code to put here is:
     /*

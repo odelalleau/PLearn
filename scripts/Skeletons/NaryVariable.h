@@ -61,7 +61,7 @@ public:
 
     //#####  PLearn::Variable methods #########################################
     // (PLEASE IMPLEMENT IN .cc)
-    virtual void recomputeSizes(int& l, int& w) const;
+    virtual void recomputeSize(int& l, int& w) const;
     virtual void fprop();
     virtual void bprop();
 

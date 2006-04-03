@@ -41,7 +41,7 @@ DERIVEDCLASS::DERIVEDCLASS(Variable* input1, Variable* input2)
 //    // ### object
 //}
 
-void DERIVEDCLASS::recomputeSizes(int& l, int& w) const
+void DERIVEDCLASS::recomputeSize(int& l, int& w) const
 {
     // ### usual code to put here is:
     /*
