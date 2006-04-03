@@ -51,9 +51,11 @@ using namespace std;
 /** LogVariable **/
 
 
-PLEARN_IMPLEMENT_OBJECT(LogVariable,
-                        "ONE LINE DESCR",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+    LogVariable,
+    "Takes the natural logarithm of its input variable.",
+    ""
+);
 
 LogVariable::LogVariable(Variable* input)
     : inherited(input, input->length(), input->width())
