@@ -54,12 +54,14 @@ PLEARN_IMPLEMENT_OBJECT(
 ////////////////////
 // RunICPVariable //
 ////////////////////
-RunICPVariable::RunICPVariable()
+RunICPVariable::RunICPVariable():
+    score_layer(0)
 {
 }
 
 RunICPVariable::RunICPVariable(Variable* input):
-    inherited(input, 0, 3)
+    inherited(input, 0, 3),
+    score_layer(0)
 {}
 
 /////////////////
@@ -86,10 +88,10 @@ void RunICPVariable::addTemplate(PP<ChemicalICP> icp_aligner,
 //    // ### object
 //}
 
-////////////////////
-// recomputeSizes //
-////////////////////
-void RunICPVariable::recomputeSizes(int& l, int& w) const
+///////////////////
+// recomputeSize //
+///////////////////
+void RunICPVariable::recomputeSize(int& l, int& w) const
 {
     l = 0;
     for (int i = 0; i < templates.length(); i++)
@@ -102,6 +104,7 @@ void RunICPVariable::recomputeSizes(int& l, int& w) const
 ///////////
 void RunICPVariable::fprop()
 {
+    assert( score_layer );
     // We obtain the molecule from the input variable.
     PP<Molecule> molecule = score_layer->getMolecule(input->value[0]);
     // Launch all ICPs.
@@ -205,6 +208,13 @@ void RunICPVariable::build_()
     // ### called.
 }
 
+///////////////////
+// setScoreLayer //
+///////////////////
+void RunICPVariable::setScoreLayer(ScoreLayerVariable* the_score_layer)
+{
+    score_layer = the_score_layer;
+}
 
 } // end of namespace PLearn
 

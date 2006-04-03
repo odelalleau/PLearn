@@ -87,6 +87,9 @@ public:
 
     // Your other public member functions go here
 
+    //! Set this variable's score layer.
+    void setScoreLayer(ScoreLayerVariable* the_score_layer);
+
     //! Declare a new template.
     //! The 'mol_template' argument is a pointer to the template.
     //! The 'mol_coordinates' argument is a pointer to the variable that will
@@ -97,7 +100,7 @@ public:
 
     //#####  PLearn::Variable methods #########################################
     // (PLEASE IMPLEMENT IN .cc)
-    virtual void recomputeSizes(int& l, int& w) const;
+    virtual void recomputeSize(int& l, int& w) const;
     virtual void fprop();
     virtual void bprop();
 
