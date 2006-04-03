@@ -67,6 +67,9 @@ PLEARN_IMPLEMENT_OBJECT(
 // ScoreLayerVariable //
 ////////////////////////
 ScoreLayerVariable::ScoreLayerVariable():
+    n_active_templates(1),
+    n_inactive_templates(0),
+    seed_(-1),
     random_gen(new PRandom())
     // weighting_method("none")
 {
@@ -81,7 +84,7 @@ void ScoreLayerVariable::declareOptions(OptionList& ol)
                   &ScoreLayerVariable::icp_aligner_template,
                   OptionBase::buildoption,
         "The model of ICP aligner we want to use (will be replicated for\n"
-        "each underlying score variable.");
+        "each underlying score variable).");
     
     declareOption(ol, "n_active_templates",
                   &ScoreLayerVariable::n_active_templates,
@@ -103,7 +106,8 @@ void ScoreLayerVariable::declareOptions(OptionList& ol)
         "The VMat templates are obtained from. This VMat's first column must\n"
         "be the name of a molecule, there may be other input features, and\n"
         "there must be a binary target indicating whether a molecule is\n"
-        "active or inactive.");
+        "active or inactive. This VMat is also used to initialize standard\n"
+        "deviations of chemical features.");
 
     /*
     declareOption(ol, "weighting_method",
@@ -166,7 +170,8 @@ void ScoreLayerVariable::build_()
 
     // Verify that we have been given the input variable, and resize the input
     // array that is going to be constructed.
-    assert( varray.length() >= 1 );
+    if (varray.length() < 1)
+        return;
     varray.resize(1);
 
     // Randomly select active and inactive templates.
@@ -174,6 +179,7 @@ void ScoreLayerVariable::build_()
     int n = templates_source->length();
     Vec input, target;
     real weight;
+    map<string, StatsCollector> chemical_stats;
     for (int i = 0; i < n; i++) {
         templates_source->getExample(i, input, target, weight);
         assert( fast_exact_is_equal(target[0], 0) ||
@@ -182,6 +188,15 @@ void ScoreLayerVariable::build_()
             list_of_inactive.append(i);
         else
             list_of_active.append(i);
+        // Compute statistics on chemical features.
+        PP<Molecule> mol_template = getMolecule(input[0], target[0]);
+        Mat& features = mol_template->features;
+        for (int j = 0; j < mol_template->feature_names.length(); j++) {
+            string feature_name = mol_template->feature_names[j];
+            StatsCollector& stats_col = chemical_stats[feature_name];
+            for (int k = 0; k < features.length(); k++)
+                stats_col.update(features(k, j));
+        }
     }
     random_gen->shuffleElements(list_of_active);
     random_gen->shuffleElements(list_of_inactive);
@@ -194,6 +209,7 @@ void ScoreLayerVariable::build_()
 
     // Create the Var that will run all ICPs.
     PP<RunICPVariable> run_icp_var = new RunICPVariable(varray[0]);
+    run_icp_var->setScoreLayer(this);
 
     // This VarArray will list additional parameters that must be optimized.
     VarArray optimized_params;
@@ -225,6 +241,16 @@ void ScoreLayerVariable::build_()
         // Create the ICP aligner that will be used for this template.
         CopiesMap copies;
         PP<ChemicalICP> icp_aligner = icp_aligner_template->deepCopy(copies);
+        icp_aligner->mol_template =
+            (MoleculeTemplate*) ((Molecule*) mol_template);
+        icp_aligner->build();
+        // Initialize standard deviations of chemical features from the global
+        // standard deviations.
+        for (int j = 0; j < mol_template->feature_names.length(); j++) {
+            string feature_name = mol_template->feature_names[j];
+            icp_aligner->all_template_feat_dev->matValue.column(j).fill(
+                    chemical_stats[feature_name].stddev());
+        }
         // Declare this new template (with associated molecule coordinates) to
         // the RunICPVariable.
         run_icp_var->addTemplate(icp_aligner, mol_template, molecule_coordinates);
@@ -376,15 +402,26 @@ void ScoreLayerVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     PLERROR("ScoreLayerVariable::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
-////////////////////
-// recomputeSizes //
-////////////////////
-void ScoreLayerVariable::recomputeSizes(int& l, int& w) const
+///////////////////
+// recomputeSize //
+///////////////////
+void ScoreLayerVariable::recomputeSize(int& l, int& w) const
 {
-    l = final_output.length();
-    w = final_output.width();
+    if (final_output) {
+        l = final_output->length();
+        w = final_output->width();
+    } else {
+        l = w = 0;
+    }
 }
 
+///////////////////////
+// setMappingsSource //
+///////////////////////
+void ScoreLayerVariable::setMappingsSource(const VMat& source_vmat)
+{
+    mappings_source = source_vmat;
+}
 
 } // end of namespace PLearn
 
