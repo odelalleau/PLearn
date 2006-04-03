@@ -1791,7 +1791,7 @@ def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_l
 
 
 
-def parallel_compile(files_to_compile):
+def parallel_compile(files_to_compile, num_retries=3):
     """files_to_compile is a list of FileInfo of .cc files"""
 
     hostnum = 0
@@ -1842,6 +1842,17 @@ def parallel_compile(files_to_compile):
         del errs[info.launched.childerr]
         del outs[info.launched.fromchild]
         info.finished_compilation() # print error messages, warnings, and get failure/success status
+
+    # Check if we should retry some compilations...
+    ccfiles_to_retry = [c for c in files_to_compile if c.retry_compilation]
+    if len(ccfiles_to_retry) != 0:
+        if num_retries > 0:
+            if verbose >= 2:
+                print '[ RETRYING COMPILATION FOR %d FILES ]' % len(ccfiles_to_retry)
+            parallel_compile(ccfiles_to_retry, num_retries-1)
+        else:
+            if verbose >= 2:
+                print '[ %d FILES TO RETRY, BUT NO MORE TRIES AVAILABLE ]' % len(ccfiles_to_retry)
 
 def win32_parallel_compile(files_to_compile):
     """files_to_compile is a list of FileInfo of .cc files"""
