@@ -60,7 +60,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "First layer (alignment scores) of a SurfaceTemplateLearner.",
     "In addition to the alignment scores, this variable also replicates\n"
     "additional input features, if provided in the source input variable\n"
-    "(as indicated by the 'templates_source' VMat option).\n"
+    "(as indicated by the 'templates_source' VMat learnt option).\n"
 );
 
 ////////////////////////
@@ -99,7 +99,7 @@ void ScoreLayerVariable::declareOptions(OptionList& ol)
 
     declareOption(ol, "templates_source",
                   &ScoreLayerVariable::templates_source,
-                  OptionBase::buildoption,
+                  OptionBase::learntoption, // To simplify help.
         "The VMat templates are obtained from. This VMat's first column must\n"
         "be the name of a molecule, there may be other input features, and\n"
         "there must be a binary target indicating whether a molecule is\n"
@@ -114,6 +114,15 @@ void ScoreLayerVariable::declareOptions(OptionList& ol)
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
+
+    // Redeclare some options as learnt options to make help simpler.
+    redeclareOption(ol, "varray", &ScoreLayerVariable::varray,
+                                  OptionBase::learntoption,
+        "Now a learnt option to simplify help.");
+
+    redeclareOption(ol, "varname", &ScoreLayerVariable::varname,
+                                   OptionBase::learntoption,
+        "Now a learnt option to simplify help.");
 }
 
 ///////////
@@ -182,11 +191,6 @@ void ScoreLayerVariable::build_()
     list_of_inactive.resize(n_inactive_templates);
     TVec<int>& templates = list_of_active; // Renaming to avoid confusion.
     templates.append(list_of_inactive);
-    /* TODO Remove?
-    // Initialize the global parameters object.
-    // TODO This has to be done.
-    PP<GlobalTemplateParameters> params = new GlobalTemplateParameters();
-    */
 
     // Create the Var that will run all ICPs.
     PP<RunICPVariable> run_icp_var = new RunICPVariable(varray[0]);
