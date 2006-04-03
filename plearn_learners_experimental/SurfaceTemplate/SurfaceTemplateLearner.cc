@@ -54,6 +54,7 @@ PLEARN_IMPLEMENT_OBJECT(
 ////////////////////////////
 SurfaceTemplateLearner::SurfaceTemplateLearner() 
 {
+    nhidden2 = 10;
     // Set some NNet options whose value is fixed in this learner.
     nhidden = 0;
     noutputs = 1;
@@ -61,6 +62,7 @@ SurfaceTemplateLearner::SurfaceTemplateLearner()
     cost_funcs = TVec<string>(1, "stable_cross_entropy");
     transpose_first_hidden_layer = false;
     batch_size = 1;
+    n_non_params_in_first_hidden_layer = 1;
 }
 
 ////////////////////
@@ -182,6 +184,12 @@ void SurfaceTemplateLearner::declareOptions(OptionList& ol)
                     &SurfaceTemplateLearner::transpose_first_hidden_layer,
                     OptionBase::nosave,
         "Not used (= false).");
+
+    redeclareOption(ol, "n_non_params_in_first_hidden_layer",
+                   &SurfaceTemplateLearner::n_non_params_in_first_hidden_layer,
+                   OptionBase::nosave,
+        "Not used (= 1 because of the 'final_output' variable in the\n"
+        "ScoreLayerVariable).");
 
     redeclareOption(ol, "margin", &SurfaceTemplateLearner::margin,
                                   OptionBase::nosave,
