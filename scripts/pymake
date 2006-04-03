@@ -940,6 +940,7 @@ class FileInfo:
     - launched: a Popen3 object for the launched process
     - errormsgs: a list of error messages taken from the launched process' stdout
     - warningmsgs: a list of warning messages taken from the launched process' stderr
+    - retry_compilation: whether to retry the compilation because the current failure was caused by an out of memory error, etc.
     """
 
     # static patterns useful for parsing the file
@@ -1425,6 +1426,15 @@ class FileInfo:
             del errormsgs[-1]
         
         msg = warningmsgs + errormsgs
+
+        # Dumb heuristic to figure out if compilation failed because of an
+        # out of memory error: for out of memory error, exit code will be
+        # non-zero, but output on stdout/stderr will be only a line or so
+        # ("cc1plus: out of memory allocating...")
+        if self.compilation_status != 0 and 1 <= len(errormsgs + warningmsgs) <= 2:
+            self.retry_compilation = True
+        else:
+            self.retry_compilation = False
         
         if msg:
             print self.filebase+self.fileext,':', string.join(msg,'')
