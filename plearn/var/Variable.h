@@ -241,12 +241,16 @@ public:
 
     //! Defines a new Mat to use as this Var's matValue field,
     //! modifies value and valuedata to keep consistent, and 
-    //! returns the previous matValue
+    //! returns the previous matValue.
+    //! Also resizes the gradient in order to ensure it has same size as the
+    //! new value.
     Mat defineValueLocation(const Mat& m);
 
     //! Defines a new Mat to use as this Var's matGradient field,
     //! modifies gradient and gradientdata to keep consistent, and 
-    //! returns the previous matGradient
+    //! returns the previous matGradient.
+    //! Also resizes the value in order to ensure it has same size as the
+    //! new gradient.
     Mat defineGradientLocation(const Mat& m);
 
     virtual void printInfo(bool print_gradient=false) = 0;

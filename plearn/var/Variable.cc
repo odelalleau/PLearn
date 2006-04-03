@@ -289,6 +289,9 @@ void Variable::sizeprop()
 void Variable::setParents(const VarArray& parents)
 { PLERROR("In Variable::setParents  setParents() function not implemented for %s", classname().c_str()); }
 
+/////////////////////////
+// defineValueLocation //
+/////////////////////////
 Mat Variable::defineValueLocation(const Mat& m)
 {
     if(!m.isCompact())
@@ -301,9 +304,15 @@ Mat Variable::defineValueLocation(const Mat& m)
         valuedata = value.data();
     else
         valuedata = 0;
+    gradient = Vec(); // Temporarily frees a reference to gradient's storage.
+    matGradient.resize(matValue.length(), matValue.width());
+    gradient = matGradient.toVec();
     return oldm;
 }
 
+////////////////////////////
+// defineGradientLocation //
+////////////////////////////
 Mat Variable::defineGradientLocation(const Mat& m)
 {
     if(!m.isCompact())
@@ -316,6 +325,9 @@ Mat Variable::defineGradientLocation(const Mat& m)
         gradientdata = gradient.data();
     else
         gradientdata = 0;
+    value = Vec(); // Temporarily frees a reference to value's storage.
+    matValue.resize(matGradient.length(), matGradient.width());
+    value = matValue.toVec();
     return oldm;
 }
 
