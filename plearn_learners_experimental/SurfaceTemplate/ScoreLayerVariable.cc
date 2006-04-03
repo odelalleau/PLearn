@@ -42,10 +42,12 @@
 #include "RunICPVariable.h"
 #include <plearn/var/ColumnSumVariable.h>
 #include <plearn/var/ConcatRowsVariable.h>
+#include <plearn/var/LogVariable.h>
 #include <plearn/var/RowSumSquareVariable.h>
 #include <plearn/var/SigmoidVariable.h>
 #include <plearn/var/SquareRootVariable.h>
 #include <plearn/var/SubMatVariable.h>
+#include <plearn/var/SumVariable.h>
 #include <plearn/var/Var_operators.h>
 
 namespace PLearn {
@@ -273,8 +275,12 @@ void ScoreLayerVariable::build_()
             columnSum(distance_at_each_point * weights);
         // (4) Sum to obtain the final score.
         Var total_cost =
-            total_feature_distance + weighted_total_geometric_distance;
-        // TODO Add the regularization terms...
+            -0.5 * (total_feature_distance +
+                    weighted_total_geometric_distance)
+            - sum(log(template_coordinates_stddev))
+            - sum(log(template_features_stddev));
+        // TODO Question: do we take all features stddev, or only the used
+        // ones? (current code = only the used ones)
 
         /*
         Var score_var =
