@@ -61,6 +61,9 @@ LogVariable::LogVariable(Variable* input)
     : inherited(input, input->length(), input->width())
 {}
 
+///////////////////
+// recomputeSize //
+///////////////////
 void LogVariable::recomputeSize(int& l, int& w) const
 {
     if (input) {
@@ -70,8 +73,12 @@ void LogVariable::recomputeSize(int& l, int& w) const
         l = w = 0;
 }
 
+///////////
+// fprop //
+///////////
 void LogVariable::fprop()
 {
+    assert( input && nelems() == input->nelems() );
     for(int i=0; i<nelems(); i++)
     {
         valuedata[i] = safeflog(input->valuedata[i]);
@@ -88,7 +95,9 @@ void LogVariable::fprop()
     }
 }
 
-
+///////////
+// bprop //
+///////////
 void LogVariable::bprop()
 {
     for(int i=0; i<nelems(); i++)
