@@ -601,15 +601,26 @@ void Function::verifyGradient(const Vec& input, real step)
     cerr << "Estimated gradient:   " << finitediffgradient;
     cerr << "-------------------" << endl;
   
-    cerr << "relative difference: " <<
-        apply(gradient - finitediffgradient,FABS)/
-        (real(0.5)*apply(gradient + finitediffgradient,FABS));
+    cerr << "relative difference: ";
+    // 'Safe' relative difference, that does not display a 'nan' when both
+    // computed and estimated gradients are zero.
+    Vec num = apply(gradient - finitediffgradient,FABS);
+    Vec denom = real(0.5)*apply(gradient + finitediffgradient,FABS);
+    for (int i = 0; i < num.length(); i++)
+        if (!fast_exact_is_equal(num[i], 0))
+            num[i] /= denom[i];
+    cerr << num << endl;
     //    apply(gradient - finitediffgradient,(tRealFunc)fabs)/(0.5*apply(gradient + finitediffgradient,(tRealFunc)fabs));
     cerr << "-------------------" << endl;
-    cerr << "max relative difference: " <<
-        max(apply(gradient - finitediffgradient,(tRealFunc)FABS)/
-            (real(0.5)*apply(gradient + finitediffgradient,(tRealFunc)FABS)))
-         << endl;
+    cerr << "max relative difference: ";
+    // As above, this is a 'safe' relative difference.
+    // TODO Question: are we re-doing the same computations as above?
+    num = apply(gradient - finitediffgradient,(tRealFunc)FABS);
+    denom = real(0.5)*apply(gradient + finitediffgradient,(tRealFunc)FABS);
+    for (int i = 0; i < num.length(); i++)
+        if (!fast_exact_is_equal(num[i], 0))
+            num[i] /= denom[i];
+    cerr << max(num) << endl;
     real cos_angle = dot(gradient,finitediffgradient)/(norm(gradient)*norm(finitediffgradient));
     if (cos_angle > 1)
         cos_angle = 1;      // Numerical imprecisions can lead to such situation.
