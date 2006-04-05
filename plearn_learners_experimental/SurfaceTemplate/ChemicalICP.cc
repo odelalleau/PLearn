@@ -550,6 +550,8 @@ void ChemicalICP::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     // ### shallow-copied.
     // ### ex:
     // deepCopyField(trainvec, copies);
+    varDeepCopyField(mol_feat_indices, copies);
+    varDeepCopyField(template_feat_indices, copies);
     deepCopyField(mol_template, copies);
     deepCopyField(molecule, copies);
     deepCopyField(feature_names, copies);
@@ -559,11 +561,11 @@ void ChemicalICP::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(translation, copies);
     deepCopyField(matching, copies);
     deepCopyField(weights, copies);
+    deepCopyField(used_properties, copies);
+    deepCopyField(other_base_properties, copies);
     deepCopyField(used_feat_names, copies);
     deepCopyField(feat_distances2, copies);
 
-    varDeepCopyField(mol_feat_indices, copies);
-    varDeepCopyField(template_feat_indices, copies);
     varDeepCopyField(all_mol_features, copies);
     varDeepCopyField(all_template_features, copies);
     varDeepCopyField(all_template_feat_dev, copies);
@@ -573,7 +575,6 @@ void ChemicalICP::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     varDeepCopyField(template_geom_dev, copies);
     varDeepCopyField(used_template_features, copies);
     varDeepCopyField(used_template_feat_dev, copies);
-
 }
 
 void ChemicalICP::declareOptions(OptionList& ol)
