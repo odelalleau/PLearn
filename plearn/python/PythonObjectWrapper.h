@@ -329,6 +329,18 @@ public:
     template <class T, class U>
     static PyObject* newPyObject(const std::map<T,U>&);
 
+    //! Pointer to vector<>: simply dereference pointer, or None if NULL
+    //!
+    //! (NOTE: we don't have conversion from general pointer type since it's
+    //! not clear that we always want to convert by dereferencing; for some
+    //! object types, it's possible that we want to preserve object identities).
+    template <class T>
+    static PyObject* newPyObject(const std::vector<T>*);
+
+    //! Pointer to map<>: simply dereference pointer, or None if NULL
+    template <class T, class U>
+    static PyObject* newPyObject(const std::map<T,U>*);
+
     //! For a general PythonObjectWrapper: we simply increment the refcount
     //! to the underlying Python object, no matter whether we own it or not.
     static PyObject* newPyObject(const PythonObjectWrapper& pow)
@@ -443,7 +455,7 @@ PyObject* PythonObjectWrapper::newPyObject(const std::vector<T>& data)
     }
     return newlist;
 }
-
+    
 template <class T, class U>
 PyObject* PythonObjectWrapper::newPyObject(const std::map<T,U>& data)
 {
@@ -470,7 +482,25 @@ PyObject* PythonObjectWrapper::newPyObject(const std::map<T,U>& data)
     return newdict;
 }
 
-                    
+template <class T>
+PyObject* PythonObjectWrapper::newPyObject(const std::vector<T>* data)
+{
+    if (data)
+        return newPyObject(*data);
+    else
+        return newPyObject();
+}
+
+template <class T, class U>
+PyObject* PythonObjectWrapper::newPyObject(const std::map<T,U>* data)
+{
+    if (data)
+        return newPyObject(*data);
+    else
+        return newPyObject();
+}
+
+
 } // end of namespace PLearn
 
 #endif
