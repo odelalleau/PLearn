@@ -2,7 +2,7 @@
 
 // SurfaceTemplateLearner.h
 //
-// Copyright (C) 2006 Pascal Lamblin 
+// Copyright (C) 2006 Pascal Lamblin and Olivier Delalleau
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Pascal Lamblin
+// Authors: Pascal Lamblin and Olivier Delalleau
 
 /*! \file SurfaceTemplateLearner.h */
 
@@ -61,6 +61,8 @@ class SurfaceTemplateLearner : public NNet
 
 public:
     //#####  Public Build Options  ############################################
+
+    VMat templates_source;
 
     //! ### declare public option fields (such as build options) here
     //! Start your comments with Doxygen-compatible comments such as //!

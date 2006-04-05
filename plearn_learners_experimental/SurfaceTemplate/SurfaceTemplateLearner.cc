@@ -2,7 +2,7 @@
 
 // SurfaceTemplateLearner.cc
 //
-// Copyright (C) 2006 Pascal Lamblin 
+// Copyright (C) 2006 Pascal Lamblin and Olivier Delalleau
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Pascal Lamblin
+// Authors: Pascal Lamblin and Olivier Delalleau
 
 /*! \file SurfaceTemplateLearner.cc */
 
@@ -77,6 +77,12 @@ void SurfaceTemplateLearner::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
         "The layer of scores (should be a ScoreLayerVariable).");
 
+    declareOption(ol, "templates_source",
+                  &SurfaceTemplateLearner::templates_source,
+                  OptionBase::buildoption,
+        "The dataset where templates are taken from. If not provided, the\n"
+        "training set will be used instead.");
+ 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 
@@ -276,8 +282,9 @@ void SurfaceTemplateLearner::setTrainingSet(VMat training_set,
     // Rebuild the internal score layer.
     PP<ScoreLayerVariable> score_layer =
         (ScoreLayerVariable*) ((Variable*) first_hidden_layer);
-    score_layer->templates_source = training_set;
-    score_layer->setMappingsSource(training_set);
+    score_layer->templates_source =
+        this->templates_source ? this->templates_source : training_set;
+    score_layer->setMappingsSource(score_layer->templates_source);
     score_layer->build();
 
     inherited::setTrainingSet(training_set, call_forget);
