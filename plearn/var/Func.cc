@@ -620,7 +620,10 @@ void Function::verifyGradient(const Vec& input, real step)
     for (int i = 0; i < num.length(); i++)
         if (!fast_exact_is_equal(num[i], 0))
             num[i] /= denom[i];
-    cerr << max(num) << endl;
+    int pos = argmax(num);
+    cerr << max(num) << " (at position " << pos << "/" << num.length()
+         << ", computed = " << gradient[pos] << " and estimated = "
+         << finitediffgradient[pos] << ")" << endl;
     real cos_angle = dot(gradient,finitediffgradient)/(norm(gradient)*norm(finitediffgradient));
     if (cos_angle > 1)
         cos_angle = 1;      // Numerical imprecisions can lead to such situation.
