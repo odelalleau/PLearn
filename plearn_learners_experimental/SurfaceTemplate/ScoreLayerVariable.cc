@@ -265,14 +265,19 @@ void ScoreLayerVariable::build_()
         // Build graph of Variables.
         // (1) Compute the distance in chemical features.
         Var template_features = icp_aligner->used_template_features;
+        icp_aligner->all_template_features->setName(
+                "all_template_features_" + tostring(i));
         optimized_params.append(icp_aligner->all_template_features);
         Var molecule_features = icp_aligner->used_mol_features;
         Var diff_features = template_features - molecule_features;
         Var template_features_stddev = icp_aligner->used_template_feat_dev;
+        icp_aligner->all_template_feat_dev->setName(
+                "all_template_feat_dev_" + tostring(i));
         optimized_params.append(icp_aligner->all_template_feat_dev);
         Var feature_distance_at_each_point =
             rowSumSquare(diff_features / template_features_stddev);
         Var total_feature_distance = columnSum(feature_distance_at_each_point);
+        total_feature_distance->setName("total_feature_distance_"+tostring(i));
         // (2) Compute the associated weights for the geometric distance.
         string wm = icp_aligner->weighting_method;
         Var weights;
@@ -284,6 +289,8 @@ void ScoreLayerVariable::build_()
             Var slope = icp_aligner->weighting_params[1];
             weights = sigmoid(
                 slope * (shift - squareroot(feature_distance_at_each_point)));
+            shift->setName("shift_" + tostring(i));
+            slope->setName("slope_" + tostring(i));
             optimized_params.append(shift);
             optimized_params.append(slope);
         } else {
@@ -298,20 +305,32 @@ void ScoreLayerVariable::build_()
         index_in_run_icp_var += mol_template->n_points();
         Var diff_coordinates = template_coordinates - molecule_coordinates;
         Var template_coordinates_stddev = icp_aligner->template_geom_dev;
+        template_coordinates_stddev->setName(
+                "template_coordinates_stddev" + tostring(i));
         optimized_params.append(template_coordinates_stddev);
         Var distance_at_each_point =
             rowSumSquare(diff_coordinates / template_coordinates_stddev);
         Var weighted_total_geometric_distance =
             columnSum(distance_at_each_point * weights);
+        weighted_total_geometric_distance->setName(
+                "weighted_total_geometric_distance_" + tostring(i));
         // (4) Sum to obtain the final score.
         Var total_cost =
             -0.5 * (total_feature_distance +
                     weighted_total_geometric_distance)
             - sum(log(template_coordinates_stddev))
             - sum(log(template_features_stddev));
+        total_cost = real(1.0 / mol_template->n_points()) * total_cost;
         // TODO Question: do we take all features stddev, or only the used
         // ones? (current code = only the used ones)
 
+        // (5) Compute path on which sizes will have to be updated after ICP.
+        VarArray path_inputs = icp_aligner->used_template_features &
+                               icp_aligner->used_mol_features      &
+                               icp_aligner->used_template_feat_dev;
+        VarArray path_outputs = total_cost;
+        VarArray& path_to_resize = run_icp_var->getPathsToResize(i);
+        path_to_resize = propagationPath(path_inputs, path_outputs);
         /*
         Var score_var =
             new ComputeScoreVariable(params, molecules[canonic_path],
