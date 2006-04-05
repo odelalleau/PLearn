@@ -961,7 +961,7 @@ void NNet::train()
         train_stats->forget();
         optimizer->early_stop = false;
         optimizer->optimizeN(*train_stats);
-        // optimizer->verifyGradient(1e-4); // Uncomment if you want to check your new Var.
+        // optimizer->verifyGradient(1e-6); // Uncomment if you want to check your new Var.
         train_stats->finalize();
         if(verbosity>2)
             cout << "Epoch " << stage << " train objective: " << train_stats->getMean() << endl;
