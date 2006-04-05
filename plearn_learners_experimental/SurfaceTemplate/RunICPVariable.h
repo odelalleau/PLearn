@@ -98,6 +98,9 @@ public:
     void addTemplate(PP<ChemicalICP> icp_aligner, PP<Molecule> mol_template,
                      Var mol_coordinates);
 
+    //! Accessor to 'paths_to_resize[i]'.
+    VarArray& getPathsToResize(int i);
+
     //#####  PLearn::Variable methods #########################################
     // (PLEASE IMPLEMENT IN .cc)
     virtual void recomputeSize(int& l, int& w) const;
@@ -132,9 +135,16 @@ protected:
     TVec< PP<Molecule> > templates;
 
     //! The i-th element is the variable that must contain the coordinates of
-    //! the nearest points of the aligned molecule, after the alignement.
+    //! the nearest points of the aligned molecule, after the i-th ICP
+    //! alignement.
     //! This variable is updated during fprop().
     VarArray molecule_coordinates;
+
+    //! The i-th element is the propagation path from ICP variables to the
+    //! score output for the i-th ICP.
+    //! All variables in this propagation path are resized after the ICP has
+    //! been run, in order to ensure the correctness of all sizes.
+    TVec<VarArray> paths_to_resize;
     
     //#####  Protected Options  ###############################################
 

@@ -115,6 +115,8 @@ void RunICPVariable::fprop()
         PP<Molecule> template_mol = templates[i];
         icp->setMolecule(molecule);
         icp->run();
+        // Some variables will need to be resized after ICP has been run.
+        paths_to_resize[i].sizeprop();
         // Compute the aligned coordinates of the template and store them in
         // this variable.
         Mat template_coords =
@@ -206,6 +208,16 @@ void RunICPVariable::build_()
     // ###    options have been modified.
     // ### You should assume that the parent class' build_() has already been
     // ### called.
+}
+
+//////////////////////
+// getPathsToResize //
+//////////////////////
+VarArray& RunICPVariable::getPathsToResize(int i)
+{
+    if (i >= paths_to_resize.length())
+        paths_to_resize.resize(i + 1);
+    return paths_to_resize[i];
 }
 
 ///////////////////
