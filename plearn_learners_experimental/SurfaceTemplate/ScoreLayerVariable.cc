@@ -306,7 +306,7 @@ void ScoreLayerVariable::build_()
         Var diff_coordinates = template_coordinates - molecule_coordinates;
         Var template_coordinates_stddev = icp_aligner->template_geom_dev;
         template_coordinates_stddev->setName(
-                "template_coordinates_stddev" + tostring(i));
+                "template_coordinates_stddev_" + tostring(i));
         optimized_params.append(template_coordinates_stddev);
         Var distance_at_each_point =
             rowSumSquare(diff_coordinates / template_coordinates_stddev);
