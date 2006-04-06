@@ -49,6 +49,7 @@
 #include <plearn/var/SubMatVariable.h>
 #include <plearn/var/SumVariable.h>
 #include <plearn/var/Var_operators.h>
+#include <plearn/var/VarRowsVariable.h>
 
 namespace PLearn {
 using namespace std;
@@ -256,19 +257,27 @@ void ScoreLayerVariable::build_()
         run_icp_var->addTemplate(icp_aligner, mol_template, molecule_coordinates);
         // Declare the RunICPVariable as parent of the feature indices, in
         // order to ensure these variables are used after ICP has been run.
+        // Similarly, the variable containing the indices of the matching
+        // neighbors has to have the RunICPVariable as parent.
         PP<UnaryVariable> mol_feat_indices =
             (UnaryVariable*) ((Variable*) icp_aligner->mol_feat_indices);
         mol_feat_indices->setInput((RunICPVariable*) run_icp_var);
         PP<UnaryVariable> template_feat_indices =
             (UnaryVariable*) ((Variable*) icp_aligner->template_feat_indices);
         template_feat_indices->setInput((RunICPVariable*) run_icp_var);
+        PP<UnaryVariable> matching_neighbors =
+            (UnaryVariable*) ((Variable*) icp_aligner->matching_neighbors);
+        matching_neighbors->setInput((RunICPVariable*) run_icp_var);
         // Build graph of Variables.
         // (1) Compute the distance in chemical features.
         Var template_features = icp_aligner->used_template_features;
         icp_aligner->all_template_features->setName(
                 "all_template_features_" + tostring(i));
         optimized_params.append(icp_aligner->all_template_features);
-        Var molecule_features = icp_aligner->used_mol_features;
+        Var molecule_features_all_points = icp_aligner->used_mol_features;
+        Var molecule_features =
+            new VarRowsVariable(molecule_features_all_points,
+                                matching_neighbors);
         Var diff_features = template_features - molecule_features;
         Var template_features_stddev = icp_aligner->used_template_feat_dev;
         icp_aligner->all_template_feat_dev->setName(
