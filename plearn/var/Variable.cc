@@ -305,6 +305,7 @@ Mat Variable::defineValueLocation(const Mat& m)
     else
         valuedata = 0;
     gradient = Vec(); // Temporarily frees a reference to gradient's storage.
+    matGradient.setMod(matValue.width());
     matGradient.resize(matValue.length(), matValue.width());
     gradient = matGradient.toVec();
     return oldm;
@@ -326,6 +327,7 @@ Mat Variable::defineGradientLocation(const Mat& m)
     else
         gradientdata = 0;
     value = Vec(); // Temporarily frees a reference to value's storage.
+    matValue.setMod(matGradient.width());
     matValue.resize(matGradient.length(), matGradient.width());
     value = matValue.toVec();
     return oldm;
