@@ -87,6 +87,8 @@ void MinusVariable::recomputeSize(int& l, int& w) const
 
 void MinusVariable::fprop()
 {
+    assert( input1 && input2 );
+    assert( nelems() == input2->nelems() && nelems() == input2->nelems() );
     for(int k=0; k<nelems(); k++)
         valuedata[k] = input1->valuedata[k]-input2->valuedata[k];
 }
