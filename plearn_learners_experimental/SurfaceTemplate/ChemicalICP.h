@@ -69,6 +69,10 @@ public:
     //! run).
     Var mol_feat_indices, template_feat_indices;
 
+    //! Variable that has the same content as the 'matching' vector after an
+    //! ICP run.
+    Var matching_neighbors;
+
     //#####  Public Build Options  ############################################
 
     //! ### declare public option fields (such as build options) here

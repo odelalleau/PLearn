@@ -55,6 +55,7 @@ PLEARN_IMPLEMENT_OBJECT(
 ChemicalICP::ChemicalICP():
       mol_feat_indices( new UnaryVariable() ),
       template_feat_indices( new UnaryVariable() ),
+      matching_neighbors( new UnaryVariable() ),
       weighting_method( "features_sigmoid" ),
       weighting_params( Vec(2,1) ),
       matching_method( "exhaustive" ),
@@ -95,6 +96,7 @@ ChemicalICP::ChemicalICP( const MolTemplate& the_template,
                           string the_matching_method ):
       mol_feat_indices( new UnaryVariable() ),
       template_feat_indices( new UnaryVariable() ),
+      matching_neighbors( new UnaryVariable() ),
       mol_template(the_template),
       molecule(the_molecule),
       feature_names(the_feature_names),
@@ -367,6 +369,11 @@ pout << "    iteration = " << n_iter << " / " << max_iter << endl
     translation = best_translation;
     matching = best_matching;
 
+    // Update the 'matching_neighbors' variable.
+    matching_neighbors->resize(matching.length(), 1);
+    for (int i = 0; i < matching.length(); i++)
+        matching_neighbors->value[i] = matching[i];
+
     if( !fast_is_equal( initial_angles_step, 0. ) )
         initial_angles_list.resize( 0, 3 );
 
@@ -552,6 +559,7 @@ void ChemicalICP::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     // deepCopyField(trainvec, copies);
     varDeepCopyField(mol_feat_indices, copies);
     varDeepCopyField(template_feat_indices, copies);
+    varDeepCopyField(matching_neighbors, copies);
     deepCopyField(mol_template, copies);
     deepCopyField(molecule, copies);
     deepCopyField(feature_names, copies);
@@ -672,7 +680,14 @@ void ChemicalICP::declareOptions(OptionList& ol)
 
 void ChemicalICP::build_()
 {
-//pout << "begin build_()" << endl;
+
+#ifdef BOUNDCHECK
+    // Variable names for debugging.
+    used_mol_features->setName("used_mol_features");
+    used_template_features->setName("used_template_features");
+    used_template_feat_dev->setName("used_template_feat_dev");
+#endif
+    
     if( feature_names.size() > 0 &&
         lowerstring( feature_names[0] ) == "none" )
     {
