@@ -294,6 +294,9 @@ public:
     //! (i.e. moved around).
     inline void setMod(int new_mod)
     {
+        if (new_mod == mod_)
+            // Nothing to do (the new mod is equal to the old one).
+            return;
         if (storage.isNull()) {
             mod_ = new_mod;
             return;
