@@ -52,7 +52,7 @@ GradientOptimizer::GradientOptimizer():
     learning_rate(0.),   
     start_learning_rate(1e-2),
     decrease_constant(0),
-    use_stochastic_hack(true),
+    use_stochastic_hack(false),
     verbosity(0)
 {}
 
@@ -104,6 +104,7 @@ void GradientOptimizer::declareOptions(OptionList& ol)
 
     declareOption(ol, "use_stochastic_hack", &GradientOptimizer::use_stochastic_hack, OptionBase::buildoption, 
                   "Indication that a stochastic hack to accelerate stochastic gradient descent should be used.\n"
+                  "Be aware that it will not take into account minimum and maximum values in variables.\n"
                   );
 
     declareOption(ol, "verbosity", &GradientOptimizer::verbosity,
