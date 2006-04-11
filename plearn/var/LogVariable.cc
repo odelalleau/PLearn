@@ -100,20 +100,26 @@ void LogVariable::fprop()
 ///////////
 void LogVariable::bprop()
 {
+    assert( input && input->gradientdata == input->gradient.data() );
     for(int i=0; i<nelems(); i++)
         if (input->valuedata[i]>0)
             input->gradientdata[i] += gradientdata[i]/input->valuedata[i];
 }
 
-
+///////////////////
+// symbolicBprop //
+///////////////////
 void LogVariable::symbolicBprop()
 {
     input->accg(g / input);
 }
 
 
-// R{log(x)} = 1/x R(x)
+////////////
+// rfprop //
+////////////
 void LogVariable::rfprop()
+// R{log(x)} = 1/x R(x)
 {
     if (rValue.length()==0) resizeRValue();
     for(int i=0; i<nelems(); i++)
