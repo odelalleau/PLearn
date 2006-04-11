@@ -39,7 +39,6 @@
 
 #include "ScoreLayerVariable.h"
 #include "MoleculeTemplate.h"
-#include "RunICPVariable.h"
 #include <plearn/var/ColumnSumVariable.h>
 #include <plearn/var/ConcatRowsVariable.h>
 #include <plearn/var/LogVariable.h>
@@ -209,7 +208,7 @@ void ScoreLayerVariable::build_()
     templates.append(list_of_inactive);
 
     // Create the Var that will run all ICPs.
-    PP<RunICPVariable> run_icp_var = new RunICPVariable(varray[0]);
+    run_icp_var = new RunICPVariable(varray[0]);
     run_icp_var->setScoreLayer(this);
 
     // This VarArray will list additional parameters that must be optimized.

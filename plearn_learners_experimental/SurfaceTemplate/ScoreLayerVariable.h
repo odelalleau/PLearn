@@ -42,6 +42,7 @@
 
 #include "ChemicalICP.h"
 #include "Molecule.h"
+#include "RunICPVariable.h"
 #include <plearn/math/PRandom.h>
 #include <plearn/var/NaryVariable.h>
 
@@ -65,6 +66,10 @@ class ScoreLayerVariable : public NaryVariable
     typedef NaryVariable inherited;
 
 public:
+    
+    //! The variable that will run the ICP alignments.
+    PP<RunICPVariable> run_icp_var;
+    
     //#####  Public Build Options  ############################################
 
     //! ### declare public option fields (such as build options) here
