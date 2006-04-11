@@ -171,6 +171,7 @@ void Dictionary::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(string_to_int, copies);
     deepCopyField(int_to_string, copies);
+    deepCopyField(possible_values, copies);
 }
 
 } // end of namespace PLearn
