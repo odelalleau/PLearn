@@ -465,6 +465,7 @@ void ProcessSymbolicSequenceVMatrix::build_()
     // gathering information from source VMat
 
     indices.clear();
+    indices.resize(0);
     int current_context_length = 0;
     ProgressBar *pb = new ProgressBar("Gathering information from source VMat of length " + tostring(source->length()), source->length());
     for(int i=0; i<source->length(); i++)
