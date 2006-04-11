@@ -51,7 +51,7 @@ using namespace std;
 
 
 DictionaryVMatrix::DictionaryVMatrix()
-    :python(), delimiters(" \t"), code("")
+    :python(), delimiters(" \t"), code(""), remove_rows_with_oov(false)
     /* ### Initialise all fields to their default value */
 {
     data=0;
@@ -147,7 +147,13 @@ void DictionaryVMatrix::declareOptions(OptionList& ol)
                   "Snippet of python code that processes the text in the input files\n");
     declareOption(ol, "minimum_frequencies", &DictionaryVMatrix::minimum_frequencies, OptionBase::buildoption,
                   "Minimum frequency for a token to be added in a Dictionary, for the different fields\n");
-    declareOption(ol, "data", &DictionaryVMatrix::data, OptionBase::buildoption,
+    declareOption(ol, "symbols_to_ignore", &DictionaryVMatrix::symbols_to_ignore, OptionBase::buildoption,
+                  "Symbols that are ignored, i.e. considered as \"<oov>\" a priori when reading\n"
+                  "the text files. In NLP, this is usually called a stop word list.\n");
+    declareOption(ol, "remove_rows_with_oov", &DictionaryVMatrix::remove_rows_with_oov, OptionBase::buildoption,
+                  "Indication that a row that has a OOV_TAG field should be ignored, i.e. removed\n"
+                  "of the VMatrix.\n");
+    declareOption(ol, "data", &DictionaryVMatrix::data, OptionBase::learntoption,
                   "Matrix containing the concatenated and encoded text files\n");
   
   
@@ -163,7 +169,8 @@ void DictionaryVMatrix::build_()
     TVec< hash_map<string,int> > frequencies;
     int it=0; 
     int nlines = 0;
-    
+    bool row_has_oov = false;
+   
     if (!python && code != "") 
     {
         python = new PythonCodeSnippet(code);
@@ -195,7 +202,17 @@ void DictionaryVMatrix::build_()
                 for(int i=0; i<tokens_vec.length(); i++)
                     tokens[i] = tokens_vec[i];                
             }
+
+            if(symbols_to_ignore.length() != 0)
+                for(int i=0; i<tokens.size(); i++)
+                    if(symbols_to_ignore[i].find(tokens[i]) >= 0)
+                        tokens[i] = OOV_TAG;
             
+            row_has_oov = false;
+            for(int i=0; i<tokens.size(); i++)
+                if(tokens[i] == OOV_TAG)
+                    row_has_oov = true;
+
             // Set n_attributes
             if(it==0)
             {
@@ -240,14 +257,14 @@ void DictionaryVMatrix::build_()
                 }
             }
             
-            length_++;
+            if(!remove_rows_with_oov || !row_has_oov) length_++;
         }
     }
 
     it = 0;
     for(int k=0; k<file_names.length(); k++)
     {
-        nlines = length_;
+        nlines = it;
         PPath input_file = file_names[k];
         PStream input_stream = openFile(input_file, PStream::raw_ascii);
         input_stream.skipBlanks();
@@ -267,14 +284,19 @@ void DictionaryVMatrix::build_()
                 for(int i=0; i<tokens_vec.length(); i++)
                     tokens[i] = tokens_vec[i];                
             }
-            
+
+            if(symbols_to_ignore.length() != 0)
+                for(int i=0; i<tokens.size(); i++)
+                    if(symbols_to_ignore[i].find(tokens[i]) >= 0)
+                        tokens[i] = OOV_TAG;
+   
             /*
             for(int i=0; i<to_lower_case.size(); i++)
                 tokens[to_lower_case[i]] = lowerstring(tokens[to_lower_case[i]]);
             */
             
             if((int)tokens.size() != n_attributes)
-                PLERROR("In DictionaryVMatrix::build_(): line %d (\"%s\") of file %s doesn't have %d attributes", length_-nlines, line.c_str(), input_file.c_str(), n_attributes);
+                PLERROR("In DictionaryVMatrix::build_(): line %d (\"%s\") of file %s doesn't have %d attributes", it-nlines+1, line.c_str(), input_file.c_str(), n_attributes);
                 
             // Insert symbols in dictionaries (if they can be updated)
             for(int j=0; j<n_attributes; j++)
@@ -294,10 +316,17 @@ void DictionaryVMatrix::build_()
                         data(it,j) = dictionaries[j]->getId(OOV_TAG);
                 }
             }
-            it++;
+            row_has_oov = false;
+            for(int j=0; j<n_attributes; j++)
+                if(data(it,j) == dictionaries[j]->getId(OOV_TAG))
+                    row_has_oov = true;
+
+            if(!remove_rows_with_oov || !row_has_oov) it++;
         }       
     }
     width_ = n_attributes;
+    data.resize(it,n_attributes);
+    length_ = it;
 
     // Making sure that the dictionaries cannot be
     // updated anymore, since they should contain
@@ -321,6 +350,8 @@ void DictionaryVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(file_names, copies);
     deepCopyField(dictionaries, copies);
     deepCopyField(option_fields, copies);
+    deepCopyField(minimum_frequencies, copies);
+    deepCopyField(symbols_to_ignore, copies);
     deepCopyField(python, copies);
 }
 

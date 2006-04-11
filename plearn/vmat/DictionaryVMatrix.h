@@ -128,6 +128,13 @@ public:
     //! different fields
     TVec<int> minimum_frequencies;
 
+    //! Stop word list, mapped to OOV_TAG
+    TVec< TVec<string> >symbols_to_ignore;
+
+    //! Indication that a row that has a OOV_TAG field
+    //! should be ignored, i.e. removed of the VMatrix
+    bool remove_rows_with_oov;
+
     // ****************
     // * Constructors *
     // ****************
