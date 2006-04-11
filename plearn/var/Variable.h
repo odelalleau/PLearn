@@ -308,8 +308,9 @@ public:
 */
     bool update(Vec step_sizes, Vec direction_vec, real coeff = 1.0, real b = 0.0);
 
-    //! Does value += gradient; gradient.clear();
-    inline void updateAndClear();
+    //! Set value += gradient (respecting potential box constraints), and clear
+    //! the gradient.
+    void updateAndClear();
 
 /*!     set value = value + step_size * gradient
   with step_size possibly scaled down s.t. box constraints are satisfied
@@ -458,38 +459,6 @@ public:
 DECLARE_OBJECT_PTR(Variable);
 DECLARE_OBJECT_PP(Var, Variable);
 
-// set value += gradient and clears the gradient
-inline void Variable::updateAndClear()
-{
-    /*
-    */
-    if (allows_partial_update && gradient_status!=2)
-    {
-        if (gradient_status!=0)
-        {
-            for (int r=0;r<rows_to_update.length();r++)
-            {
-                int row = rows_to_update[r];
-                real* direction = matGradient[row];
-                real* params = matValue[row];
-                for(int i=0; i<width(); i++)
-                {
-                    params[i] += direction[i];
-                    direction[i] = 0;
-                }              
-            }
-            rows_to_update.resize(0);
-            gradient_status=0;
-        }
-    }
-    else 
-    {
-        for(int i=0; i<nelems(); i++)
-            valuedata[i] += gradientdata[i];
-        gradient.clear();
-    }
-
-}
 
 void varDeepCopyField(Var& field, CopiesMap& copies);
 

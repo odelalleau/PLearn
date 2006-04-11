@@ -257,12 +257,20 @@ void Variable::build()
 }
 
 
+///////////////////
+// recomputeSize //
+///////////////////
 void Variable::recomputeSize(int& l, int& w) const
 { l = length(); w = width(); }
 
+////////////
+// resize //
+////////////
 void Variable::resize(int l, int w)
 {
     value = Vec(); 
+    // Force mod == width so that the call to 'toVec()' below does not crash.
+    matValue.setMod(w);
     matValue.resize(l,w);
     value = matValue.toVec();
     if(value.getStorage())
@@ -271,6 +279,8 @@ void Variable::resize(int l, int w)
         valuedata = 0;
 
     gradient = Vec();
+    // Same as above.
+    matGradient.setMod(w);
     matGradient.resize(l,w);
     gradient = matGradient.toVec();
     if (gradient.getStorage())
@@ -279,6 +289,9 @@ void Variable::resize(int l, int w)
         gradientdata = 0;
 }
   
+//////////////
+// sizeprop //
+//////////////
 void Variable::sizeprop()
 {
     int l,w;
@@ -286,6 +299,9 @@ void Variable::sizeprop()
     resize(l,w);
 }
 
+////////////////
+// setParents //
+////////////////
 void Variable::setParents(const VarArray& parents)
 { PLERROR("In Variable::setParents  setParents() function not implemented for %s", classname().c_str()); }
 
@@ -299,7 +315,7 @@ Mat Variable::defineValueLocation(const Mat& m)
                 " matrices");
     Mat oldm = matValue;
     matValue = m;
-    value = m.toVec();
+    value = matValue.toVec();
     if(value.getStorage())
         valuedata = value.data();
     else
@@ -308,6 +324,10 @@ Mat Variable::defineValueLocation(const Mat& m)
     matGradient.setMod(matValue.width());
     matGradient.resize(matValue.length(), matValue.width());
     gradient = matGradient.toVec();
+    if (gradient.getStorage())
+        gradientdata = gradient.data();
+    else
+        gradientdata = 0;
     return oldm;
 }
 
@@ -321,7 +341,7 @@ Mat Variable::defineGradientLocation(const Mat& m)
                 " compact matrices");
     Mat oldm = matGradient;
     matGradient = m;
-    gradient  = m.toVec();
+    gradient  = matGradient.toVec();
     if (gradient.getStorage())
         gradientdata = gradient.data();
     else
@@ -330,6 +350,10 @@ Mat Variable::defineGradientLocation(const Mat& m)
     matValue.setMod(matGradient.width());
     matValue.resize(matGradient.length(), matGradient.width());
     value = matValue.toVec();
+    if(value.getStorage())
+        valuedata = value.data();
+    else
+        valuedata = 0;
     return oldm;
 }
 
@@ -656,6 +680,9 @@ bool Variable::update(real step_size, bool clear)
     return hit;
 }
 
+///////////////////////////
+// updateWithWeightDecay //
+///////////////////////////
 void Variable::updateWithWeightDecay(real step_size, real weight_decay, bool L1, bool clear)
 {
     // we do unconstrained update only here
@@ -727,6 +754,49 @@ void Variable::updateWithWeightDecay(real step_size, real weight_decay, bool L1,
         }
 }
 
+
+////////////////////
+// updateAndClear //
+////////////////////
+void Variable::updateAndClear()
+{
+    if (allows_partial_update && gradient_status!=2)
+    {
+        if (gradient_status!=0)
+        {
+            for (int r=0;r<rows_to_update.length();r++)
+            {
+                int row = rows_to_update[r];
+                real* direction = matGradient[row];
+                real* params = matValue[row];
+                for(int i=0; i<width(); i++)
+                {
+                    real& param_i = params[i];
+                    param_i += direction[i];
+                    if (param_i < min_value)
+                        param_i = min_value;
+                    else if (param_i > max_value)
+                        param_i = max_value;
+                    direction[i] = 0;
+                }              
+            }
+            rows_to_update.resize(0);
+            gradient_status=0;
+        }
+    }
+    else 
+    {
+        for(int i=0; i<nelems(); i++) {
+            real& value = valuedata[i];
+            value += gradientdata[i];
+            if (value < min_value)
+                value = min_value;
+            else if (value > max_value)
+                value = max_value;
+        }
+        gradient.clear();
+    }
+}
 
 // set value = value + step_size * gradient
 // with step_size possibly scaled down s.t. box constraints are satisfied
