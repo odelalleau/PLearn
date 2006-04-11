@@ -47,9 +47,11 @@ using namespace std;
 
 /** SourceVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(SourceVariable,
-                        "ONE LINE DESCR",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+    SourceVariable,
+    "Simple variable that views a source Mat data.",
+    ""
+);
 
 SourceVariable::SourceVariable(int thelength, int thewidth)
     : inherited(thelength,thewidth)
