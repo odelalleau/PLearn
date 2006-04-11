@@ -67,6 +67,10 @@ class RunICPVariable : public UnaryVariable
     typedef UnaryVariable inherited;
 
 public:
+
+    //! The ICP aligners.
+    TVec< PP<ChemicalICP> > icp_aligners;
+    
     //#####  Public Build Options  ############################################
 
     //! ### declare public option fields (such as build options) here
@@ -128,9 +132,6 @@ public:
 
 protected:
 
-    //! The ICP aligners.
-    TVec< PP<ChemicalICP> > icp_aligners;
-    
     //! The molecule templates.
     TVec< PP<Molecule> > templates;
 
