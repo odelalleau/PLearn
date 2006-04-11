@@ -112,11 +112,351 @@ void ProcessSymbolicSequenceVMatrix::getNewRow(int i, const Vec& v) const
                 " invalid row acces i=%d for VMatrix(%d,%d)\n",
                 i,length_,width_);
 
+    current_row_i.resize(n_attributes*(max_context_length));
+    int cp,target_position;
+    fill_current_row(i,cp,target_position);
+
+    if(current_row_i.length()-cp*n_attributes > 0)
+        current_row_i.subVec(cp*n_attributes,current_row_i.length()-cp*n_attributes).fill(MISSING_VALUE);
+
+    // Seperating input and output fields
+
+    for(int t=0; t<current_row_i.length(); t++)
+    {
+        if(t%n_attributes < source->inputsize())
+            v[t/n_attributes * source->inputsize() + t%n_attributes] = current_row_i[t];
+        else
+            if(put_only_target_attributes)
+            {
+                if(t/n_attributes == target_position)
+                    v[max_context_length*source->inputsize() + t%n_attributes - source->inputsize() ] = current_row_i[t];
+            }
+            else
+                v[max_context_length*source->inputsize() + t/n_attributes * source->targetsize() + t%n_attributes - source->inputsize() ] = current_row_i[t];
+    }
+
+    return;
+}
+
+void ProcessSymbolicSequenceVMatrix::declareOptions(OptionList& ol)
+{
+    // ### Declare all of this object's options here
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
+
+    declareOption(ol, "n_left_context",
+                  &ProcessSymbolicSequenceVMatrix::n_left_context,
+                  OptionBase::buildoption,
+                  "Number of elements at the left of (or before) the target"
+                  " element.\n"
+                  "(if < 0, all elements to the left are included until a"
+                  " delimiter is met)\n");
+
+    declareOption(ol, "n_right_context",
+                  &ProcessSymbolicSequenceVMatrix::n_right_context,
+                  OptionBase::buildoption,
+                  "Number of elements at the right of (or after) the target"
+                  " element.\n"
+                  "(if < 0, all elements to the right are included until a"
+                  " delimiter is met)\n");
+
+    declareOption(ol, "conditions_offset",
+                  &ProcessSymbolicSequenceVMatrix::conditions_offset,
+                  OptionBase::buildoption,
+                  "Offset for the position of the element on which conditions"
+                  " are tested\n"
+                  "(default = 0)\n");
+
+    declareOption(ol, "conditions_for_exclusion",
+                  &ProcessSymbolicSequenceVMatrix::conditions_for_exclusion,
+                  OptionBase::buildoption,
+                  "Indication that the specified conditions are for the"
+                  " exclusion (true)\n"
+                  "or inclusion (false) of elements in the VMatrix\n");
+
+    declareOption(ol, "full_context",
+                  &ProcessSymbolicSequenceVMatrix::full_context,
+                  OptionBase::buildoption,
+                  "Indication that ignored elements of context should be"
+                  " replaced by the\n"
+                  "next nearest valid element\n");
+
+    declareOption(ol, "put_only_target_attributes",
+                  &ProcessSymbolicSequenceVMatrix::put_only_target_attributes,
+                  OptionBase::buildoption,
+                  "Indication that the only target fields of the VMatrix rows"
+                  " should be\n"
+                  "the (target) attributes of the context's target element\n");
+
+    declareOption(ol, "use_last_context",
+                  &ProcessSymbolicSequenceVMatrix::use_last_context,
+                  OptionBase::buildoption,
+                  "Indication that the last accessed context should be put in"
+                  " a buffer.\n");
+
+    declareOption(ol, "conditions",
+                  &ProcessSymbolicSequenceVMatrix::conditions,
+                  OptionBase::buildoption,
+                  "Conditions to be satisfied for the exclusion or inclusion"
+                  " (see\n"
+                  "conditions_for_exclusion) of elements in the VMatrix\n");
+
+    declareOption(ol, "string_conditions",
+                  &ProcessSymbolicSequenceVMatrix::string_conditions,
+                  OptionBase::buildoption,
+                  "Conditions, in string format, to be satisfied for the"
+                  " exclusion or\n"
+                  "inclusion (see conditions_for_exclusion) of elements in the"
+                  " VMatrix\n");
+
+    declareOption(ol, "delimiters",
+                  &ProcessSymbolicSequenceVMatrix::delimiters,
+                  OptionBase::buildoption,
+                  "Delimiters of context\n");
+
+    declareOption(ol, "string_delimiters",
+                  &ProcessSymbolicSequenceVMatrix::string_delimiters,
+                  OptionBase::buildoption,
+                  "Delimiters, in string format, of context\n");
+
+    declareOption(ol, "ignored_context",
+                  &ProcessSymbolicSequenceVMatrix::ignored_context,
+                  OptionBase::buildoption,
+                  "Elements to be ignored in context\n");
+
+    declareOption(ol, "string_ignored_context",
+                  &ProcessSymbolicSequenceVMatrix::string_ignored_context,
+                  OptionBase::buildoption,
+                  "Elements, in string format, to be ignored in context\n");
+
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
+}
+
+void ProcessSymbolicSequenceVMatrix::build_()
+{
+
+    if(!source)
+        PLERROR("In SelectAttributeSequenceVMatrix::build_() : no source"
+                " defined");
+
+    //  defineSizes(source->inputsize(),source->targetsize(),source->weightsize()); pas bon car ecrase declare options
+    n_attributes = source->width();
+    row.resize(n_attributes);
+    element.resize(n_attributes);
+    target_element.resize(n_attributes);
+    max_context_length = 0;
+
+    fixed_context = n_left_context >=0 && n_right_context >= 0;
+
+    // from string to int format on ...
+
+    // conditions
+    from_string_to_int_format(string_conditions, conditions);
+    string_conditions.clear();
+    string_conditions.resize(0);
+
+    // delimiters
+    from_string_to_int_format(string_delimiters, delimiters);
+    string_delimiters.clear();
+    string_delimiters.resize(0);
+
+    // ignored_context
+    from_string_to_int_format(string_ignored_context, ignored_context);
+    string_ignored_context.clear();
+    string_ignored_context.resize(0);
+
+    // gathering information from source VMat
+
+    indices.clear();
+    indices.resize(0);
+    int current_context_length = 0;
+    ProgressBar *pb = new ProgressBar("Gathering information from source VMat of length " + tostring(source->length()), source->length());
+    for(int i=0; i<source->length(); i++)
+    {
+        source->getRow(i,row);
+
+        if(is_true(delimiters,row))
+        {
+            max_context_length = max_context_length < current_context_length ? current_context_length : max_context_length;
+            current_context_length = 0;
+        }
+        else
+        {
+            if(!full_context || !is_true(ignored_context,row)) current_context_length++;
+        }
+
+        // Testing conditions for inclusion/exclusion
+
+        if(i + conditions_offset >= 0 && i + conditions_offset < source->length())
+        {
+            source->getRow(i+conditions_offset,row);
+            if(is_true(conditions,row))
+            {
+                if(!conditions_for_exclusion) indices.append(i);
+            }
+            else
+            {
+                if(conditions_for_exclusion) indices.append(i);
+            }
+        }
+        pb->update(i+1);
+    }
+
+    max_context_length = max_context_length < current_context_length ? current_context_length : max_context_length;
+
+    if(n_left_context >= 0 && n_right_context >= 0)
+        max_context_length = 1 + n_left_context + n_right_context;
+
+    length_ = indices.length();
+    width_ = n_attributes*(max_context_length);
+
+    if(inputsize_ < 0) inputsize_ = max_context_length * source->inputsize();
+    if(targetsize_ < 0 && put_only_target_attributes) targetsize_ = source->targetsize();
+    if(targetsize_ < 0 && !put_only_target_attributes) targetsize_ = max_context_length * source->targetsize();
+    if(weightsize_ < 0) weightsize_ = source->weightsize();
+    if(weightsize_ > 0) PLERROR("In ProcessSymbolicSequenceVMatrix:build_() : does not support weightsize > 0");
+
+    current_row_i.resize(n_attributes*(max_context_length));
+    current_target_pos = -1;
+    current_context_pos.clear();
+    lower_bound = 1;
+    upper_bound = -1;
+
+    if(n_left_context < 0) 
+    {
+        left_context.resize(width_);
+        left_positions.resize(max_context_length);
+    }
+    else 
+    {
+        left_context.resize(n_attributes*n_left_context);
+        left_positions.resize(n_left_context);
+    }
+
+    if(n_right_context < 0) 
+    {
+        right_context.resize(width_);
+        right_positions.resize(max_context_length);
+    }
+    else 
+    {
+        right_context.resize(n_attributes*n_right_context);
+        right_positions.resize(n_right_context);
+    }
+
+    if(put_only_target_attributes)
+    {
+        width_ = source->inputsize()*max_context_length + source->targetsize();
+    }
+
+    if(inputsize_+targetsize_ != width_) PLERROR("In ProcessSymbolicSequenceVMatrix:build_() : inputsize_ + targetsize_ != width_");
+
+    // Should we call:
+    // setMetaInfoFromSource(); // ?
+
+}
+
+void ProcessSymbolicSequenceVMatrix::build()
+{
+    inherited::build();
+    build_();
+}
+
+real ProcessSymbolicSequenceVMatrix::getStringVal(int col, const string & str) const
+{
+    if(source)
+    {
+        int src_col;
+        if(col < max_context_length * source->inputsize())
+            src_col = col%source->inputsize();
+        else
+            src_col = source->inputsize() + (col-max_context_length * source->inputsize())%source->targetsize();
+        return source->getStringVal(src_col,str);
+    }
+
+    return MISSING_VALUE;
+}
+
+string ProcessSymbolicSequenceVMatrix::getValString(int col, real val) const
+{
+    if(source)
+    {
+        int src_col;
+        if(col < max_context_length * source->inputsize())
+            src_col = col%source->inputsize();
+        else
+            src_col = source->inputsize() + (col-max_context_length * source->inputsize())%source->targetsize();
+        return source->getValString(src_col,val);
+    }
+
+    return "";
+}
+
+Vec ProcessSymbolicSequenceVMatrix::getValues(int row, int col) const
+{
+    if(row < 0 || row >= length_) PLERROR("In ProcessSymbolicSequenceVMatrix::getValues() : invalid row %d, length()=%d", row, length_);
+    if(col < 0 || col >= width_) PLERROR("In ProcessSymbolicSequenceVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
+    if(source)
+    {
+        int src_col;
+        if(col < max_context_length * source->inputsize())
+            src_col = col%source->inputsize();
+        else
+            src_col = source->inputsize() + (col-max_context_length * source->inputsize())%source->targetsize();
+        return source->getValues(indices[row],src_col);
+    }
+    return Vec(0);
+}
+
+Vec ProcessSymbolicSequenceVMatrix::getValues(const Vec& input, int col) const
+{
+    if(col < 0 || col >= width_) PLERROR("In ProcessSymbolicSequenceVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
+    if(source)
+    {
+        int src_col;
+        if(col < max_context_length * source->inputsize())
+            src_col = col%source->inputsize();
+        else
+            src_col = source->inputsize() + (col-max_context_length * source->inputsize())%source->targetsize();
+        return source->getValues(input,src_col);
+    }
+    return Vec(0);
+}
+
+PP<Dictionary> ProcessSymbolicSequenceVMatrix::getDictionary(int col) const
+{
+    if(col < 0 || col >= width_) PLERROR("In ProcessSymbolicSequenceVMatrix::getDictionary() : invalid col %d, width()=%d", col, width_);
+    if(source)
+    {
+        int src_col;
+        if(col < max_context_length * source->inputsize())
+            src_col = col%source->inputsize();
+        else
+            src_col = source->inputsize() + (col-max_context_length * source->inputsize())%source->targetsize();
+        return source->getDictionary(src_col);
+    }
+    return 0;
+}
+
+void ProcessSymbolicSequenceVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    inherited::makeDeepCopyFromShallowCopy(copies);
+
+    deepCopyField(conditions, copies);
+    deepCopyField(delimiters, copies);
+    deepCopyField(ignored_context, copies);
+    deepCopyField(source, copies);
+}
+
+void ProcessSymbolicSequenceVMatrix::fill_current_row(int i, int& cp, int& target_position) const
+{
+  
     int target = indices[i];
-
-
-    // If the target element is a delimiter, do nothing:
-    // Hugo: may not be a good thing!
+  
+    // If the target element is a delimiter, do nothing: Hugo: may not be a good thing!
     source->getRow(target,target_element);
     /*
       if(is_true(delimiters,target_element))
@@ -269,7 +609,7 @@ void ProcessSymbolicSequenceVMatrix::getNewRow(int i, const Vec& v) const
 
     // Constructing complete row
 
-    int cp = 0;
+    cp = 0;
 
     if(fixed_context)  // Adding missing value, for the case where the context is of fixed length
         if(n_left_context-left_added_elements>0)
@@ -291,7 +631,7 @@ void ProcessSymbolicSequenceVMatrix::getNewRow(int i, const Vec& v) const
     }
 
     // adding target element
-    int target_position = cp;
+    target_position = cp;
     current_row_i.subVec(cp*n_attributes,n_attributes) << target_element;
     if(use_last_context) 
     {
@@ -311,338 +651,40 @@ void ProcessSymbolicSequenceVMatrix::getNewRow(int i, const Vec& v) const
         cp++;
     }
 
-    if(current_row_i.length()-cp*n_attributes > 0)
+    if(fixed_context && current_row_i.length()-cp*n_attributes > 0)
+    {
         current_row_i.subVec(cp*n_attributes,current_row_i.length()-cp*n_attributes).fill(MISSING_VALUE);
+        cp = current_row_i.length();
+    }
+}
+
+
+void ProcessSymbolicSequenceVMatrix::getExample(int i, Vec& input, Vec& target, real& weight)
+{
+    if(i<0 || i>=length_) PLERROR("In SelectAttributeSequenceVMatrix::getExample() : invalid row acces i=%d for VMatrix(%d,%d)",i,length_,width_);
+    
+    int target_position,cp;
+    fill_current_row(i,cp,target_position);
 
     // Seperating input and output fields
-
-    for(int t=0; t<current_row_i.length(); t++)
+    input.resize(cp*source->inputsize());
+    target.resize(put_only_target_attributes ? source->targetsize() : cp*source->targetsize());
+    weight = 0;
+    for(int t=0; t<cp*n_attributes; t++)
     {
         if(t%n_attributes < source->inputsize())
-            v[t/n_attributes * source->inputsize() + t%n_attributes] = current_row_i[t];
+            input[t/n_attributes * source->inputsize() + t%n_attributes] = current_row_i[t];
         else
             if(put_only_target_attributes)
             {
                 if(t/n_attributes == target_position)
-                    v[max_context_length*source->inputsize() + t%n_attributes - source->inputsize() ] = current_row_i[t];
+                    target[t%n_attributes - source->inputsize() ] = current_row_i[t];
             }
             else
-                v[max_context_length*source->inputsize() + t/n_attributes * source->targetsize() + t%n_attributes - source->inputsize() ] = current_row_i[t];
+                target[t/n_attributes * source->targetsize() + t%n_attributes - source->inputsize() ] = current_row_i[t];
     }
 
     return;
-}
-
-void ProcessSymbolicSequenceVMatrix::declareOptions(OptionList& ol)
-{
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
-
-    declareOption(ol, "n_left_context",
-                  &ProcessSymbolicSequenceVMatrix::n_left_context,
-                  OptionBase::buildoption,
-                  "Number of elements at the left of (or before) the target"
-                  " element.\n"
-                  "(if < 0, all elements to the left are included until a"
-                  " delimiter is met)\n");
-
-    declareOption(ol, "n_right_context",
-                  &ProcessSymbolicSequenceVMatrix::n_right_context,
-                  OptionBase::buildoption,
-                  "Number of elements at the right of (or after) the target"
-                  " element.\n"
-                  "(if < 0, all elements to the right are included until a"
-                  " delimiter is met)\n");
-
-    declareOption(ol, "conditions_offset",
-                  &ProcessSymbolicSequenceVMatrix::conditions_offset,
-                  OptionBase::buildoption,
-                  "Offset for the position of the element on which conditions"
-                  " are tested\n"
-                  "(default = 0)\n");
-
-    declareOption(ol, "conditions_for_exclusion",
-                  &ProcessSymbolicSequenceVMatrix::conditions_for_exclusion,
-                  OptionBase::buildoption,
-                  "Indication that the specified conditions are for the"
-                  " exclusion (true)\n"
-                  "or inclusion (false) of elements in the VMatrix\n");
-
-    declareOption(ol, "full_context",
-                  &ProcessSymbolicSequenceVMatrix::full_context,
-                  OptionBase::buildoption,
-                  "Indication that ignored elements of context should be"
-                  " replaced by the\n"
-                  "next nearest valid element\n");
-
-    declareOption(ol, "put_only_target_attributes",
-                  &ProcessSymbolicSequenceVMatrix::put_only_target_attributes,
-                  OptionBase::buildoption,
-                  "Indication that the only target fields of the VMatrix rows"
-                  " should be\n"
-                  "the (target) attributes of the context's target element\n");
-
-    declareOption(ol, "use_last_context",
-                  &ProcessSymbolicSequenceVMatrix::use_last_context,
-                  OptionBase::buildoption,
-                  "Indication that the last accessed context should be put in"
-                  " a buffer.\n");
-
-    declareOption(ol, "conditions",
-                  &ProcessSymbolicSequenceVMatrix::conditions,
-                  OptionBase::buildoption,
-                  "Conditions to be satisfied for the exclusion or inclusion"
-                  " (see\n"
-                  "conditions_for_exclusion) of elements in the VMatrix\n");
-
-    declareOption(ol, "string_conditions",
-                  &ProcessSymbolicSequenceVMatrix::string_conditions,
-                  OptionBase::buildoption,
-                  "Conditions, in string format, to be satisfied for the"
-                  " exclusion or\n"
-                  "inclusion (see conditions_for_exclusion) of elements in the"
-                  " VMatrix\n");
-
-    declareOption(ol, "delimiters",
-                  &ProcessSymbolicSequenceVMatrix::delimiters,
-                  OptionBase::buildoption,
-                  "Delimiters of context\n");
-
-    declareOption(ol, "string_delimiters",
-                  &ProcessSymbolicSequenceVMatrix::string_delimiters,
-                  OptionBase::buildoption,
-                  "Delimiters, in string format, of context\n");
-
-    declareOption(ol, "ignored_context",
-                  &ProcessSymbolicSequenceVMatrix::ignored_context,
-                  OptionBase::buildoption,
-                  "Elements to be ignored in context\n");
-
-    declareOption(ol, "string_ignored_context",
-                  &ProcessSymbolicSequenceVMatrix::string_ignored_context,
-                  OptionBase::buildoption,
-                  "Elements, in string format, to be ignored in context\n");
-
-    // Now call the parent class' declareOptions
-    inherited::declareOptions(ol);
-}
-
-void ProcessSymbolicSequenceVMatrix::build_()
-{
-
-    if(!source)
-        PLERROR("In SelectAttributeSequenceVMatrix::build_() : no source"
-                " defined");
-
-    //  defineSizes(source->inputsize(),source->targetsize(),source->weightsize()); pas bon car ecrase declare options
-    n_attributes = source->width();
-    row.resize(n_attributes);
-    element.resize(n_attributes);
-    target_element.resize(n_attributes);
-
-    fixed_context = n_left_context >=0 && n_right_context >= 0;
-
-    // from string to int format on ...
-
-    // conditions
-    from_string_to_int_format(string_conditions, conditions);
-    string_conditions.clear();
-    string_conditions.resize(0);
-
-    // delimiters
-    from_string_to_int_format(string_delimiters, delimiters);
-    string_delimiters.clear();
-    string_delimiters.resize(0);
-
-    // ignored_context
-    from_string_to_int_format(string_ignored_context, ignored_context);
-    string_ignored_context.clear();
-    string_ignored_context.resize(0);
-
-    // gathering information from source VMat
-
-    indices.clear();
-    indices.resize(0);
-    int current_context_length = 0;
-    ProgressBar *pb = new ProgressBar("Gathering information from source VMat of length " + tostring(source->length()), source->length());
-    for(int i=0; i<source->length(); i++)
-    {
-        source->getRow(i,row);
-
-        if(is_true(delimiters,row))
-        {
-            max_context_length = max_context_length < current_context_length ? current_context_length : max_context_length;
-            current_context_length = 0;
-        }
-        else
-        {
-            if(!full_context || !is_true(ignored_context,row)) current_context_length++;
-        }
-
-        // Testing conditions for inclusion/exclusion
-
-        if(i + conditions_offset >= 0 && i + conditions_offset < source->length())
-        {
-            source->getRow(i+conditions_offset,row);
-            if(is_true(conditions,row))
-            {
-                if(!conditions_for_exclusion) indices.append(i);
-            }
-            else
-            {
-                if(conditions_for_exclusion) indices.append(i);
-            }
-        }
-        pb->update(i+1);
-    }
-
-    max_context_length = max_context_length < current_context_length ? current_context_length : max_context_length;
-
-    if(n_left_context >= 0 && n_right_context >= 0)
-        max_context_length = 1 + n_left_context + n_right_context;
-
-    length_ = indices.length();
-    width_ = n_attributes*(max_context_length);
-
-    if(inputsize_ < 0) inputsize_ = max_context_length * source->inputsize();
-    if(targetsize_ < 0 && put_only_target_attributes) targetsize_ = source->targetsize();
-    if(targetsize_ < 0 && !put_only_target_attributes) targetsize_ = max_context_length * source->targetsize();
-    if(weightsize_ < 0) weightsize_ = source->weightsize();
-    if(weightsize_ > 0) PLERROR("In ProcessSymbolicSequenceVMatrix:build_() : does not support weightsize > 0");
-
-    current_row_i.resize(width_);
-    current_target_pos = -1;
-    current_context_pos.clear();
-    lower_bound = 1;
-    upper_bound = -1;
-
-    if(n_left_context < 0) 
-    {
-        left_context.resize(width_);
-        left_positions.resize(max_context_length);
-    }
-    else 
-    {
-        left_context.resize(n_attributes*n_left_context);
-        left_positions.resize(n_left_context);
-    }
-
-    if(n_right_context < 0) 
-    {
-        right_context.resize(width_);
-        right_positions.resize(max_context_length);
-    }
-    else 
-    {
-        right_context.resize(n_attributes*n_right_context);
-        right_positions.resize(n_right_context);
-    }
-
-    if(put_only_target_attributes)
-    {
-        width_ = source->inputsize()*max_context_length + source->targetsize();
-    }
-
-    if(inputsize_+targetsize_ != width_) PLERROR("In ProcessSymbolicSequenceVMatrix:build_() : inputsize_ + targetsize_ != width_");
-
-    // Should we call:
-    // setMetaInfoFromSource(); // ?
-
-}
-
-void ProcessSymbolicSequenceVMatrix::build()
-{
-    inherited::build();
-    build_();
-}
-
-real ProcessSymbolicSequenceVMatrix::getStringVal(int col, const string & str) const
-{
-    if(source)
-    {
-        int src_col;
-        if(col < max_context_length * source->inputsize())
-            src_col = col%source->inputsize();
-        else
-            src_col = source->inputsize() + (col-max_context_length * source->inputsize())%source->targetsize();
-        return source->getStringVal(src_col,str);
-    }
-
-    return MISSING_VALUE;
-}
-
-string ProcessSymbolicSequenceVMatrix::getValString(int col, real val) const
-{
-    if(source)
-    {
-        int src_col;
-        if(col < max_context_length * source->inputsize())
-            src_col = col%source->inputsize();
-        else
-            src_col = source->inputsize() + (col-max_context_length * source->inputsize())%source->targetsize();
-        return source->getValString(src_col,val);
-    }
-
-    return "";
-}
-
-Vec ProcessSymbolicSequenceVMatrix::getValues(int row, int col) const
-{
-    if(row < 0 || row >= length_) PLERROR("In ProcessSymbolicSequenceVMatrix::getValues() : invalid row %d, length()=%d", row, length_);
-    if(col < 0 || col >= width_) PLERROR("In ProcessSymbolicSequenceVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
-    if(source)
-    {
-        int src_col;
-        if(col < max_context_length * source->inputsize())
-            src_col = col%source->inputsize();
-        else
-            src_col = source->inputsize() + (col-max_context_length * source->inputsize())%source->targetsize();
-        return source->getValues(indices[row],src_col);
-    }
-    return Vec(0);
-}
-
-Vec ProcessSymbolicSequenceVMatrix::getValues(const Vec& input, int col) const
-{
-    if(col < 0 || col >= width_) PLERROR("In ProcessSymbolicSequenceVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
-    if(source)
-    {
-        int src_col;
-        if(col < max_context_length * source->inputsize())
-            src_col = col%source->inputsize();
-        else
-            src_col = source->inputsize() + (col-max_context_length * source->inputsize())%source->targetsize();
-        return source->getValues(input,src_col);
-    }
-    return Vec(0);
-}
-
-PP<Dictionary> ProcessSymbolicSequenceVMatrix::getDictionary(int col) const
-{
-    if(col < 0 || col >= width_) PLERROR("In ProcessSymbolicSequenceVMatrix::getDictionary() : invalid col %d, width()=%d", col, width_);
-    if(source)
-    {
-        int src_col;
-        if(col < max_context_length * source->inputsize())
-            src_col = col%source->inputsize();
-        else
-            src_col = source->inputsize() + (col-max_context_length * source->inputsize())%source->targetsize();
-        return source->getDictionary(src_col);
-    }
-    return 0;
-}
-
-void ProcessSymbolicSequenceVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
-{
-    inherited::makeDeepCopyFromShallowCopy(copies);
-
-    deepCopyField(conditions, copies);
-    deepCopyField(delimiters, copies);
-    deepCopyField(ignored_context, copies);
-    deepCopyField(source, copies);
 }
 
 } // end of namespace PLearn

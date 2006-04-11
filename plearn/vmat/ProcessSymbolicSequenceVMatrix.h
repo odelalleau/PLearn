@@ -260,8 +260,12 @@ private:
 
         return false;
     }
+    
+    //! Fills the current_row_i field, and returns the number of non missing values
+    //! for the ith context
+    void fill_current_row(int i, int& cp, int& target_position) const;
 
-protected:
+protected: 
 
     //! Declares this class' options
     // (Please implement in .cc)
@@ -290,6 +294,8 @@ public:
     virtual Vec getValues(int row, int col) const;
 
     virtual Vec getValues(const Vec& input, int col) const;
+
+    virtual void getExample(int i, Vec& input, Vec& target, real& weight);
 
     //! Return the Dictionary object for a certain field, or a null pointer
     //! if there isn't one
