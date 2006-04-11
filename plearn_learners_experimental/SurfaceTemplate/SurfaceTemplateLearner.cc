@@ -52,7 +52,9 @@ PLEARN_IMPLEMENT_OBJECT(
 ////////////////////////////
 // SurfaceTemplateLearner //
 ////////////////////////////
-SurfaceTemplateLearner::SurfaceTemplateLearner() 
+SurfaceTemplateLearner::SurfaceTemplateLearner():
+    min_feature_dev(1e-3),
+    min_geom_dev(1e-3)
 {
     nhidden2 = 10;
     // Set some NNet options whose value is fixed in this learner.
@@ -70,6 +72,16 @@ SurfaceTemplateLearner::SurfaceTemplateLearner()
 ////////////////////
 void SurfaceTemplateLearner::declareOptions(OptionList& ol)
 {
+    declareOption(ol, "min_feature_dev",
+                  &SurfaceTemplateLearner::min_feature_dev,
+                  OptionBase::buildoption,
+        "Minimum feature standard deviations allowed.");
+
+    declareOption(ol, "min_geom_dev",
+                  &SurfaceTemplateLearner::min_geom_dev,
+                  OptionBase::buildoption,
+        "Minimum geometric standard deviations allowed.");
+
     // We rename 'first_hidden_layer' into 'score_layer' to avoid potential
     // confusion.
     declareOption(ol, "score_layer",
@@ -244,6 +256,16 @@ void SurfaceTemplateLearner::build_()
             PLERROR("In SurfaceTemplateLearner::build_ - The first hidden "
                     "layer, as given by the 'score_layer' option, must be a "
                     "subclass of ScoreLayerVariable");
+        // Set the minimum value for template standard deviations.
+        if (score_layer->run_icp_var) {
+            TVec< PP<ChemicalICP> > icp_aligners =
+                score_layer->run_icp_var->icp_aligners;
+            for (int i = 0; i < icp_aligners.length(); i++) {
+                icp_aligners[i]->all_template_feat_dev->
+                    setMinValue(min_feature_dev);
+                icp_aligners[i]->template_geom_dev->setMinValue(min_geom_dev);
+            }
+        }
     }
 }
 

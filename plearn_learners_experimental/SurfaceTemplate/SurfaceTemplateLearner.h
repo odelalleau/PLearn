@@ -62,6 +62,9 @@ class SurfaceTemplateLearner : public NNet
 public:
     //#####  Public Build Options  ############################################
 
+    real min_feature_dev;
+    real min_geom_dev;
+
     VMat templates_source;
 
     //! ### declare public option fields (such as build options) here
