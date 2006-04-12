@@ -41,7 +41,7 @@
  ******************************************************* */
 
 #include "GaussianKernel.h"
-#include <plearn/math/TMat_maths_impl.h>
+#include <plearn/math/TMat_maths.h>
 
 //#define GK_DEBUG
 

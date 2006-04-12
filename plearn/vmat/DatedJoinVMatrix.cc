@@ -43,7 +43,7 @@
 
 #include "DatedJoinVMatrix.h"
 #include <plearn/base/PDate.h>
-#include <plearn/math/TMat_maths_impl.h>
+#include <plearn/math/TMat_maths.h>
 
 namespace PLearn {
 using namespace std;

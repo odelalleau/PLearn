@@ -49,7 +49,7 @@
 #ifndef GenMat_INC
 #define GenMat_INC
 
-#include <plearn/math/TMat_maths_impl.h>
+#include <plearn/math/TMat_maths.h>
 #include <plearn/math/random.h>
 #include <plearn/math/parpack.h>
 

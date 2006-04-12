@@ -41,7 +41,7 @@
  ******************************************************* */
 
 #include "SumOverBagsVariable.h"
-#include <plearn/math/TMat_maths_impl.h>
+#include <plearn/math/TMat_maths.h>
 //#include "PLMPI.h"
 //#include "DisplayUtils.h"
 

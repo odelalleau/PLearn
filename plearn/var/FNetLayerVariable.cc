@@ -43,7 +43,7 @@
 //#include "TransposeProductVariable.h"
 #include "FNetLayerVariable.h"
 #include <plearn/math/random.h>
-#include <plearn/math/TMat_maths_impl.h>
+#include <plearn/math/TMat_maths.h>
 #include <plearn/math/TMat_maths_specialisation.h>
 
 namespace PLearn {

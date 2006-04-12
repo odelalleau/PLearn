@@ -43,7 +43,7 @@
 
 #include "RandomNeighborsDifferencesVMatrix.h"
 #include "VMat_computeNearestNeighbors.h"
-#include <plearn/math/TMat_maths_impl.h>
+#include <plearn/math/TMat_maths.h>
 #include <plearn/math/random.h>
 
 namespace PLearn {

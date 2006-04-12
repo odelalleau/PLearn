@@ -45,7 +45,7 @@
 /*! \file Cholesky_utils.cc */
 
 #include <plearn/math/Cholesky_utils.h>
-#include <plearn/math/TMat_maths_impl.h>
+#include <plearn/math/TMat_maths.h>
 
 
 namespace PLearn {

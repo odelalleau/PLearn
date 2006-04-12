@@ -42,7 +42,7 @@
 #include <plearn/ker/GaussianKernel.h>
 #include <plearn/math/random.h>
 #include <plearn/math/BottomNI.h>
-#include <plearn/math/TMat_maths_impl.h>
+#include <plearn/math/TMat_maths.h>
 #include <plearn/math/TMat_maths_specialisation.h>
 
 // #define UGLY_HACK

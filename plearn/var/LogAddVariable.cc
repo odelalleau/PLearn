@@ -43,7 +43,7 @@
 #include "ExpVariable.h"
 #include "LogAddVariable.h"
 #include <plearn/math/pl_math.h>   //!< For logadd()
-#include <plearn/math/TMat_maths_impl.h>  //!< For apply()
+#include <plearn/math/TMat_maths.h>  //!< For apply()
 #include "Var_operators.h"
 //#include "Var_utils.h"
 

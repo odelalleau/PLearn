@@ -46,7 +46,7 @@
 //#include "VMat.h"
 #include "MemoryVMatrix.h"
 #include "ShiftAndRescaleVMatrix.h"
-//#include <plearn/math/TMat_maths_impl.h>
+//#include <plearn/math/TMat_maths.h>
 #include <plearn/math/stats_utils.h>
 #include <plearn/math/VecStatsCollector.h>
 //#include <plearn/sys/PLMPI.h>

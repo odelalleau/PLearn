@@ -36,7 +36,7 @@
 
 
 #include "MovingAverage.h"
-//#include "TMat_maths_impl.h"
+//#include "TMat_maths.h"
 //#include "TMat.h"
 
 namespace PLearn {

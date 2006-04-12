@@ -42,7 +42,7 @@
  * This file is part of the PLearn library.
  ******************************************************* */
 
-/*! \file PLearnLibrary/PLearnCore/TMat_maths_impl.h */
+/*! \file PLearnLibrary/PLearnCore/TMat_maths.h */
 
 #ifndef TMat_sort_INC
 #define TMat_sort_INC

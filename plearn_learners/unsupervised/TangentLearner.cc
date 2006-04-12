@@ -56,7 +56,7 @@
 #include <plearn/var/DiagonalizedFactorsProductVariable.h>
 #include <plearn/math/random.h>
 #include <plearn/math/plapack.h>
-//#include "TMat_maths_impl.h"
+//#include "TMat_maths.h"
 //#include "TVec_decl.h"
 
 namespace PLearn {

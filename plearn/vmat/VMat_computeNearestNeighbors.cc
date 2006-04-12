@@ -44,7 +44,7 @@
 #include "VMat_computeNearestNeighbors.h"
 #include <plearn/vmat/VMat.h>
 #include <plearn/math/BottomNI.h>
-#include <plearn/math/TMat_maths_impl.h>
+#include <plearn/math/TMat_maths.h>
 
 namespace PLearn {
 using namespace std;

@@ -43,7 +43,7 @@
 
 #include "CenteredVMatrix.h"
 #include "VMat_basic_stats.h"       //!< For computeMean.
-#include <plearn/math/TMat_maths_impl.h>
+#include <plearn/math/TMat_maths.h>
 
 namespace PLearn {
 using namespace std;

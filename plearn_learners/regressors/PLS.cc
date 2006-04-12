@@ -44,7 +44,7 @@
 #include "PLS.h"
 #include <plearn/vmat/ShiftAndRescaleVMatrix.h>
 #include <plearn/vmat/SubVMatrix.h>
-#include <plearn/math/TMat_maths_impl.h>    //!< For dist.
+#include <plearn/math/TMat_maths.h>    //!< For dist.
 #include <plearn/vmat/VMat_linalg.h>
 
 namespace PLearn {

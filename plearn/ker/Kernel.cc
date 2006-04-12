@@ -42,7 +42,7 @@
 
 #include "Kernel.h"
 #include <plearn/base/ProgressBar.h>
-#include <plearn/math/TMat_maths_impl.h>
+#include <plearn/math/TMat_maths.h>
 
 namespace PLearn {
 using namespace std;

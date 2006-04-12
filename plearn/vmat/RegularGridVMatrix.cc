@@ -39,7 +39,7 @@
 
 /*! \file RegularGridVMatrix.cc */
 #include "RegularGridVMatrix.h"
-#include <plearn/math/TMat_maths_impl.h>
+#include <plearn/math/TMat_maths.h>
 
 namespace PLearn {
 using namespace std;
