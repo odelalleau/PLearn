@@ -93,6 +93,52 @@ inline double* copy(double* first, double* last, double* dest)
   { multiplyAcc(vec,x,1.); }
 */
 
+#ifdef USEDOUBLE
+#define BLAS_SCALE dscal_
+#else
+#define BLAS_SCALE sscal_
+#endif
+
+////////////////
+// operator*= //
+////////////////
+inline void operator*=(const Vec& vec, real factor)
+{
+    int mod = 1;
+    int n = vec.length();
+    BLAS_SCALE(&n, &factor, vec.data(), &mod);
+}
+
+inline void operator*=(const Mat& mat, real factor)
+{
+    if (mat.isEmpty())
+        return;
+    int mod;    // Increment to go to next element in BLAS vector scaling.
+    int next;   // Increment to go to next vector to be scaled.
+    int n;      // Number of iterations to perform.
+    int size;   // Size of the scaled vector given to the BLAS function.
+    // We call the BLAS function repetitively on either rows or columns
+    // (whichever is larger).
+    if (mat.width() >= mat.length()) {
+        // Calling on rows.
+        mod = 1;
+        next = mat.mod();
+        n = mat.length();
+        size = mat.width();
+    } else {
+        // Calling on columns.
+        mod = mat.mod();
+        next = 1;
+        n = mat.width();
+        size = mat.length();
+    }
+    real* data = mat.data();
+    for (int i = 0; i < n; i++) {
+        BLAS_SCALE(&size, &factor, data, &mod);
+        data += next;
+    }
+}
+
 //  C = alpha A.B + beta C
 // ( Will use the transpose of A and/or B instead, if you set the correpsonding flags to true)
 inline void productScaleAcc(const TMat<double>& C, const TMat<double>& A, bool transposeA, const TMat<double>& B, bool transposeB, double alpha, double beta)
