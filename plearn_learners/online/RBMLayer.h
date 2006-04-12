@@ -80,13 +80,13 @@ public:
     //! the couple (mu, sigma) for a gaussian unit.
     Vec activations;
 
-    //! Contains the current sample in this layer:
+    //! Contains a sample of the random variable in this layer:
     Vec sample;
 
-    //! Contains the current sample in this layer:
+    //! Contains the expected value of the random variable in this layer:
     Vec expectation;
 
-    //! flag
+    //! flags that expectation was computed based on most recently computed value of activation
     bool expectation_is_up_to_date;
 
 
@@ -104,7 +104,7 @@ public:
     //! gets the activation of all the units from the current layer
     virtual void getUnitActivations( PP<RBMParameters> rbmp ) = 0 ;
 
-    //! compute a sample, and update the sample field
+    //! generate a sample, and update the sample field
     virtual void computeSample() = 0 ;
 
     //! compute the expectation

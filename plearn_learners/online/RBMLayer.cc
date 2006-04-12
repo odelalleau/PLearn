@@ -68,10 +68,6 @@ void RBMLayer::declareOptions(OptionList& ol)
     // ### You can also combine flags, for example with OptionBase::nosave:
     // ### (OptionBase::buildoption | OptionBase::nosave)
 
-    declareOption(ol, "size", &RBMLayer::size,
-                  OptionBase::buildoption,
-                  "Number of units.");
-
     declareOption(ol, "units_types", &RBMLayer::units_types,
                   OptionBase::learntoption,
                   "Each character of this string describes the type of an"
