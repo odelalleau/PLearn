@@ -301,10 +301,17 @@ void chol_rotapp_tr(real c, real s, const Mat& x, const Mat& y)
     static Vec t;
     assert( x.length() == y.length() );
     int n = x.length();
-    int x_mod = x.mod();
-    int y_mod = y.mod();
+    //int x_mod = x.mod();
+    //int y_mod = y.mod();
     t.resize(n);
+    t << x;
+    x *= c;
+    multiplyAcc(x, y, s);
+    y *= c;
+    multiplyAcc(y, t, -s);
+
     // multiplyScaledAdd(y, c, s, t);
+    /*
     real* y_ = y.data();
     real* t_ = t.data();
     real* x_ = x.data();
@@ -323,6 +330,7 @@ void chol_rotapp_tr(real c, real s, const Mat& x, const Mat& y)
         y_ += y_mod;
         t_++;
     }
+    */
 }
 
 /////////////////
