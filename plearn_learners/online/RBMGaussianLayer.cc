@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// RBMLayer.cc
+// RBMGaussianLayer.cc
 //
 // Copyright (C) 2006 Pascal Lamblin & Dan Popovici
 //
@@ -38,86 +38,98 @@
 
 
 
-#include "RBMLayer.h"
+#include "RBMGaussianLayer.h"
 #include <plearn/math/TMat_maths.h>
-#include <plearn/math/PRandom.h>
 #include "RBMParameters.h"
 
 namespace PLearn {
 using namespace std;
 
-PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
-    RBMLayer,
-    "Virtual class for a layer of an RBM",
+PLEARN_IMPLEMENT_OBJECT(
+    RBMGaussianLayer,
+    "Layer in an RBM, consisting in Gaussian units",
     "");
 
-RBMLayer::RBMLayer() :
-    size(-1),
-    expectation_is_up_to_date(false)
+RBMGaussianLayer::RBMGaussianLayer()
 {
 }
 
-
-void RBMLayer::declareOptions(OptionList& ol)
+RBMGaussianLayer::RBMGaussianLayer( int the_size )
 {
-    // ### Declare all of this object's options here.
-    // ### For the "flags" of each option, you should typically specify
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or
-    // ### OptionBase::tuningoption. If you don't provide one of these three,
-    // ### this option will be ignored when loading values from a script.
-    // ### You can also combine flags, for example with OptionBase::nosave:
-    // ### (OptionBase::buildoption | OptionBase::nosave)
+    size = the_size;
+    units_types = string( the_size, 'q' );
+    activations.resize( 2*the_size );
+    sample.resize( the_size );
+    expectation.resize( the_size );
+    expectation_is_up_to_date = false;
+}
 
-    declareOption(ol, "size", &RBMLayer::size,
+void RBMGaussianLayer::getUnitActivations( int i, PP<RBMParameters> rbmp )
+{
+    Vec activation = activations.subVec( 2*i, 2 );
+    rbmp->computeUnitActivations( i, activation );
+    expectation_is_up_to_date = false;
+}
+
+void RBMGaussianLayer::getUnitActivations( PP<RBMParameters> rbmp )
+{
+    rbmp->computeUnitActivations( activations );
+    expectation_is_up_to_date = false;
+}
+
+void RBMGaussianLayer::computeSample()
+{
+    for( int i=0 ; i<size ; i++ )
+        sample[i] = random_gen->gaussian_mu_sigma( activations[2*i],
+                                                   activations[2*i + 1] );
+}
+
+void RBMGaussianLayer::computeExpectation()
+{
+    if( expectation_is_up_to_date )
+        return;
+
+    for( int i=0 ; i<size ; i++ )
+        expectation[i] = activations[2*i];
+
+    expectation_is_up_to_date = true;
+}
+
+
+void RBMGaussianLayer::declareOptions(OptionList& ol)
+{
+/*
+    declareOption(ol, "size", &RBMGaussianLayer::size,
                   OptionBase::buildoption,
                   "Number of units.");
-
-    declareOption(ol, "units_types", &RBMLayer::units_types,
-                  OptionBase::learntoption,
-                  "Each character of this string describes the type of an"
-                  " up unit:\n"
-                  "  - 'l' if the energy function of this unit is linear\n"
-                  "    (binomial or multinomial unit),\n"
-                  "  - 'q' if it is quadratic (for a gaussian unit).\n");
-
-    declareOption(ol, "random_gen", &RBMLayer::random_gen,
-                  OptionBase::buildoption,
-                  "Random generator.");
-
-    declareOption(ol, "size", &RBMLayer::size,
-                  OptionBase::buildoption,
-                  "Numer of units.");
-
-
+*/
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
 
-void RBMLayer::build_()
+void RBMGaussianLayer::build_()
 {
-    if( size <= 0 )
-        return;
+    if( size < 0 )
+        size = units_types.size();
+    if( size != (int) units_types.size() )
+        units_types = string( size, 'q' );
 
-    if( !random_gen )
-        random_gen = new PRandom();
-    random_gen->build();
+    activations.resize( 2*size );
+    sample.resize( size );
+    expectation.resize( size );
+    expectation_is_up_to_date = false;
 }
 
-void RBMLayer::build()
+void RBMGaussianLayer::build()
 {
     inherited::build();
     build_();
 }
 
 
-void RBMLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+void RBMGaussianLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-
-    deepCopyField(random_gen, copies);
-    deepCopyField(activations, copies);
-    deepCopyField(sample, copies);
-    deepCopyField(expectation, copies);
 }
 
 

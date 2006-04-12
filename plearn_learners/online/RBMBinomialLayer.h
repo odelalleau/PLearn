@@ -1,8 +1,8 @@
 // -*- C++ -*-
 
-// RBMLayer.h
+// RBMBinomialLayer.h
 //
-// Copyright (C) 2006 Dan Popovici
+// Copyright (C) 2006 Dan Popovici & Pascal Lamblin
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,95 +32,62 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Dan Popovici
+// Authors: Dan Popovici & Pascal Lamblin
 
-/*! \file RBMLayer.h */
+/*! \file RBMBinomialLayer.h */
 
 
-#ifndef RBMLayer_INC
-#define RBMLayer_INC
+#ifndef RBMBinomialLayer_INC
+#define RBMBinomialLayer_INC
 
-#include <plearn/base/Object.h>
+#include "RBMLayer.h"
 
 namespace PLearn {
 using namespace std;
 
-// forward declarations
-class RBMParameters;
-class PRandom;
-
 /**
- * Virtual class for a layer in an RBM.
+ * Layer in an RBM formed with binomial units
  *
  * @todo: yes
  */
-class RBMLayer: public Object
+class RBMBinomialLayer: public RBMLayer
 {
-    typedef Object inherited;
+    typedef RBMLayer inherited;
 
 public:
     //#####  Public Build Options  ############################################
 
-    //! Number of units
-    int size;
-
-    //! Each character of this string describes the type of an up unit:
-    //!   - 'l' if the energy function of this unit is linear (binomial or
-    //!     multinomial unit),
-    //!   - 'q' if it is quadratic (for a gaussian unit)
-    string units_types;
-
-    //! Random number generator
-    PP<PRandom> random_gen;
-
-    //#####  Not Options  #####################################################
-
-    //! values allowing to know the distribution :
-    //! the activation value (before sigmoid) for a binomial input,
-    //! the couple (mu, sigma) for a gaussian unit.
-    Vec activations;
-
-    //! Contains the current sample in this layer:
-    Vec sample;
-
-    //! Contains the current sample in this layer:
-    Vec expectation;
-
-    //! flag
-    bool expectation_is_up_to_date;
 
 
 public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
-    RBMLayer();
+    RBMBinomialLayer();
+
+    //! Constructor from the number of units
+    RBMBinomialLayer( int the_size );
+
 
     // Your other public member functions go here
 
     //! gets the activation of the ith unit
-    virtual void getUnitActivations( int i, PP<RBMParameters> rbmp ) = 0;
+    virtual void getUnitActivations( int i, PP<RBMParameters> rbmp );
 
     //! gets the activation of all the units from the current layer
-    virtual void getUnitActivations( PP<RBMParameters> rbmp ) = 0 ;
+    virtual void getUnitActivations( PP<RBMParameters> rbmp ) ;
 
     //! compute a sample, and update the sample field
-    virtual void computeSample() = 0 ;
+    virtual void computeSample() ;
 
     //! compute the expectation
-    virtual void computeExpectation() = 0 ;
-
-    //! return units_types
-    inline string getUnitsTypes()
-    {
-        return units_types;
-    }
+    virtual void computeExpectation() ;
 
 
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
-    PLEARN_DECLARE_ABSTRACT_OBJECT(RBMLayer);
+    PLEARN_DECLARE_OBJECT(RBMBinomialLayer);
 
     // Simply calls inherited::build() then build_()
     virtual void build();
@@ -130,7 +97,6 @@ public:
 
 protected:
     //#####  Not Options  #####################################################
-
 
 protected:
     //#####  Protected Member Functions  ######################################
@@ -151,7 +117,7 @@ private:
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(RBMLayer);
+DECLARE_OBJECT_PTR(RBMBinomialLayer);
 
 } // end of namespace PLearn
 

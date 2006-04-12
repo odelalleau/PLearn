@@ -342,9 +342,9 @@ For class RBMLayer:
       rbmp->computeUnitActivations( indices, layer_params ),
         indices being a subset of units, for "sparse" layers
   * RBMLayer::computeSample()
-      get 'sample' from 'layer_params'
+      get 'sample' from 'activations'
   * RBMLayer::computeExpectation()
-      get 'expectation' from 'layer_params'
+      get 'expectation' from 'activations'
 
   * string RBMLayer::getUnitsTypes()
       returns a string with each character encoding the type of corresponding
