@@ -329,6 +329,21 @@ int PRandom::multinomial_sample(const Vec& distribution) {
     return i;
 }
 
+/////////////////////
+// binomial_sample //
+/////////////////////
+int PRandom::binomial_sample(real pp) {
+    if( pp < 0 || pp > 1 )
+        PLERROR("In PRandom::binomial_sample, pp should be between 0 and 1,\n"
+                "but is %d.\n", pp);
+
+    real  u  = this->uniform_sample();
+    if( pp < u )
+        return 0;
+    else
+        return 1;
+}
+
 ////////////////
 // time_seed_ //
 ////////////////

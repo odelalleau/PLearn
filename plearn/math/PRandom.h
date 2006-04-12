@@ -252,6 +252,9 @@ public:
     inline int uniform_multinomial_sample(int n)
     { return int(n * this->uniform_sample()); }
 
+    //! Return a sample from a binomial, given the expectation 'pp'
+    int binomial_sample(real pp);
+
     //! Randomly shuffle the entries of a vector.
     template<class T>
     void shuffleElements(const TVec<T>& vec) {
@@ -267,7 +270,7 @@ public:
             v[j] = tmp;
         }
     }
-    
+
     //! Randomly shuffle the rows of a matrix.
     template<class T>
     void shuffleRows(const TMat<T>& mat) {

@@ -568,7 +568,7 @@ public:
     //! stack interface compatibility
     inline void push(const T& newval)
     { append(newval); }
-    
+
     inline T pop()
     { T res = lastElement(); pop_back(); return res; }
 
@@ -798,6 +798,21 @@ inline int sizeInBytes(const TVec<T>& x) {
     int s=sizeof(TVec<T>);
     if (n>0) s+=n*sizeInBytes(x[0]); 
     return s;
+}
+
+//! returns a TVec from which v1 and v2 are subVec.
+template <class T>
+inline TVec<T> merge(TVec<T>& v1, TVec<T>& v2)
+{
+    int size1 = v1.size();
+    int size2 = v2.size();
+
+    TVec<T> result = v1;
+    result.resize( size1 + size2 );
+    result.subVec( size1, size2 ) << v2;
+    v2 = result.subVec( size1, size2 );
+
+    return result;
 }
 
 } // end of namespace PLearn
