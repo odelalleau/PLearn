@@ -300,37 +300,13 @@ void chol_rotapp_tr(real c, real s, const Mat& x, const Mat& y)
 {
     static Mat t;
     assert( x.length() == y.length() );
-    // int n = x.length();
-    //int x_mod = x.mod();
-    //int y_mod = y.mod();
+    assert( x.width() == 1 );
     t.resize(x.length(), x.width());
     t << x;
     x *= c;
     multiplyAcc(x, y, s);
     y *= c;
     multiplyAcc(y, t, -s);
-
-    // multiplyScaledAdd(y, c, s, t);
-    /*
-    real* y_ = y.data();
-    real* t_ = t.data();
-    real* x_ = x.data();
-    for (int i = 0; i < n; i++) {
-        *t_ = *x_; // Backup of old value of x.
-        *x_ = c * (*x_) + s * (*y_);
-        t_++;
-        x_ += x_mod;
-        y_ += y_mod;
-    }
-    // multiplyScaledAdd(x, c, -s, y);
-    y_ = y.data();
-    t_ = t.data();
-    for (int i = 0; i < n; i++) {
-        *y_ = c * (*y_) - s * (*t_);
-        y_ += y_mod;
-        t_++;
-    }
-    */
 }
 
 /////////////////
