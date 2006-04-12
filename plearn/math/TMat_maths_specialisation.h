@@ -77,18 +77,57 @@ inline double* copy(double* first, double* last, double* dest)
 }
 */
 
-/*
-  inline void multiplyAcc(const TVec<double>& vec, const TVec<double>& x, double scale)
-  {
-  int n = vec.length();
-  #ifdef BOUNDCHECK
-  if(vec.length()!=x.length())
-  PLERROR("In multiplyAcc this has length_=%d and x has length_=%d", vec.length(),n);
-  #endif
-  int one = 1;
-  daxpy_( &n, &scale, x.data(), &one, vec.data(), &one);
-  }
+#ifdef USEDOUBLE
+#define BLAS_MULT_ACC daxpy_
+#else
+#define BLAS_MULT_ACC saxpy_
+#endif
 
+/////////////////
+// multiplyAcc //
+/////////////////
+// vec += x * scale
+inline void multiplyAcc(const Vec& vec, const Vec& x, real scale)
+{
+    int n = vec.length();
+    assert( vec.length() == x.length() );
+    int one = 1;
+    BLAS_MULT_ACC(&n, &scale, x.data(), &one, vec.data(), &one);
+}
+
+inline void multiplyAcc(const Mat& mat, const Mat& x, real scale)
+{
+    // The idea is similar to the one in 'operator*=', see comments there.
+    assert( mat.length() == x.length() && mat.width() == x.width() );
+    int mod_mat, mod_x;
+    int next_mat, next_x;
+    int n;
+    int size;
+    if (mat.width() >= mat.length()) {
+        // Calling on rows.
+        mod_mat = mod_x = 1;
+        next_mat = mat.mod();
+        next_x = x.mod();
+        n = mat.length();
+        size = mat.width();
+    } else {
+        // Calling on columns.
+        mod_mat = mat.mod();
+        mod_x = x.mod();
+        next_mat = next_x = 1;
+        n = mat.width();
+        size = mat.length();
+    }
+    real* data_mat = mat.data();
+    real* data_x = x.data();
+    for (int i = 0; i < n; i++) {
+        BLAS_MULT_ACC(&size, &scale, data_mat, &mod_mat, data_x, &mod_x);
+        data_mat += next_mat;
+        data_x += next_x;
+    }
+}
+
+/*
   inline void operator+=(const TVec<double>& vec, const TVec<double>& x)
   { multiplyAcc(vec,x,1.); }
 */
