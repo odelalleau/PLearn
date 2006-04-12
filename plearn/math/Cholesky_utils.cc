@@ -298,12 +298,12 @@ void chol_rotapp(real c, real s, const Vec& x, const Vec& y)
 ////////////////////
 void chol_rotapp_tr(real c, real s, const Mat& x, const Mat& y)
 {
-    static Vec t;
+    static Mat t;
     assert( x.length() == y.length() );
-    int n = x.length();
+    // int n = x.length();
     //int x_mod = x.mod();
     //int y_mod = y.mod();
-    t.resize(n);
+    t.resize(x.length(), x.width());
     t << x;
     x *= c;
     multiplyAcc(x, y, s);
