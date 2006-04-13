@@ -55,7 +55,6 @@
 #include <plearn/var/Var_operators.h>
 //#include <plearn/var/DiagonalGaussianVariable.h>
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
-#include <plearn/math/random.h>
 #include <plearn/var/SumOfVariable.h>
 #include <plearn/var/RowOfVariable.h>
 //#include <plearn/var/RowPowNormVariable.h>
@@ -63,7 +62,6 @@
 #include <plearn/var/TanhVariable.h>
 #include <plearn/var/NllGeneralGaussianVariable.h>
 #include <plearn/var/DiagonalizedFactorsProductVariable.h>
-#include <plearn/math/random.h>
 #include <plearn/math/plapack.h>
 #include <plearn/var/ColumnSumVariable.h>
 #include <plearn/vmat/VMat_basic_stats.h>
@@ -903,21 +901,18 @@ void NonLocalManifoldParzen::train()
 //////////////////////
 void NonLocalManifoldParzen::initializeParams()
 {
-    if (seed_>=0)
-        manual_seed(seed_);
-    else
-        PLearn::seed();
+    resetGenerator(seed_);
 
     if (architecture_type=="embedding_neural_network")
     {
         real delta = 1.0 / sqrt(real(inputsize()));
-        fill_random_uniform(V->value, -delta, delta);
+        random_gen->fill_random_uniform(V->value, -delta, delta);
         delta = 1.0 / real(n_hidden_units);
-        fill_random_uniform(W->matValue, -delta, delta);
+        random_gen->fill_random_uniform(W->matValue, -delta, delta);
         c->value.clear();
         snb->value.clear();
-        fill_random_uniform(snV->matValue, -delta, delta);
-        fill_random_uniform(muV->matValue, -delta, delta);
+        random_gen->fill_random_uniform(snV->matValue, -delta, delta);
+        random_gen->fill_random_uniform(muV->matValue, -delta, delta);
         //min_sig->value[0] = sigma_init;
         //min_d->value.fill(diff_init);
         if(variances_transfer_function == "softplus") {
@@ -929,13 +924,14 @@ void NonLocalManifoldParzen::initializeParams()
     else if (architecture_type=="single_neural_network")
     {
         real delta = 1.0 / sqrt(real(inputsize()));
-        if (!hidden_layer) fill_random_uniform(V->value, -delta, delta);
+        if (!hidden_layer)
+           random_gen->fill_random_uniform(V->value, -delta, delta);
         delta = 1.0 / real(n_hidden_units);
-        fill_random_uniform(W->matValue, -delta, delta);
+        random_gen->fill_random_uniform(W->matValue, -delta, delta);
         if (!hidden_layer) c->value.clear();
         snb->value.clear();
-        fill_random_uniform(snV->matValue, -delta, delta);
-        fill_random_uniform(muV->matValue, -delta, delta);
+        random_gen->fill_random_uniform(snV->matValue, -delta, delta);
+        random_gen->fill_random_uniform(muV->matValue, -delta, delta);
         b->value.clear();
         //min_sig->value[0] = sigma_init;
         //min_d->value.fill(diff_init);

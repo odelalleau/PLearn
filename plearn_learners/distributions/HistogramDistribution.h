@@ -53,7 +53,7 @@ protected:
     // *********************
     // * protected options *
     // *********************
-    
+
 public:
     //! there is one more bin position than number of bins, all the bins are supposed adjacent
     Vec bin_positions;
@@ -99,18 +99,18 @@ public:
     // * Object methods *
     // ******************
 
-private: 
-    //! This does the actual building. 
+private:
+    //! This does the actual building.
     // (Please implement in .cc)
     void build_();
 
-protected: 
+protected:
     //! Declares this class' options
     // (Please implement in .cc)
     static void declareOptions(OptionList& ol);
 
 public:
-    // simply calls inherited::build() then build_() 
+    // simply calls inherited::build() then build_()
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
@@ -139,14 +139,14 @@ public:
     //! return probability density p(x)
     //! [ default version returns exp(log_density(x)) ]
     virtual double density(const Vec& x) const;
-  
+
     //! return survival fn = P(X>x)
     virtual double survival_fn(const Vec& x) const;
 
     //! return survival fn = P(X<x)
     virtual double cdf(const Vec& x) const;
 
-    //! return E[X] 
+    //! return E[X]
     virtual void expectation(Vec& mu) const;
 
     //! return Var[X]
@@ -161,7 +161,7 @@ public:
     //! Find the bin where x belongs; -1 if x is out of range.
     int find_bin(real x) const;
 
-    //! calculate bin_density from survival_values  
+    //! calculate bin_density from survival_values
     void calc_density_from_survival();
     //! calculate survival_values from bin_density
     void calc_survival_from_density();
@@ -172,12 +172,12 @@ public:
     //! calculate survival from density - static, on 2 Vecs
     static void calc_survival_from_density(const Vec& density_, Vec& survival, const Vec& positions);
 
-  
+
 };
 
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(HistogramDistribution);
-  
+
 } // end of namespace PLearn
 
 #endif

@@ -224,7 +224,7 @@ void RandomGaussMix::build_()
         // It might happen that the rows of the random matrix are not
         // sufficiently independent, in which case we just try again.
         while (n_basis != D) {
-            random->fill_random_uniform(eigenvecs, -1, 1);
+            random_gen->fill_random_uniform(eigenvecs, -1, 1);
             n_basis = GramSchmidtOrthogonalization(eigenvecs);
         }
         // Generate random eigenvalues.

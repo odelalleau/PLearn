@@ -60,7 +60,7 @@ class NGramDistribution: public PDistribution
 
 private:
 
-    typedef PDistribution inherited;  
+    typedef PDistribution inherited;
 
 protected:
 
@@ -69,14 +69,14 @@ protected:
     // *********************
 
     int voc_size;
-    
+
 public:
 
     // ************************
     // * public build options *
     // ************************
 
-    //! Replace nan values with -1 
+    //! Replace nan values with -1
     bool nan_replace;
 
     //! N in NGram
@@ -87,7 +87,7 @@ public:
 
     //! Discount constant for absolute discounting smoothing
     real discount_constant;
-  
+
     //! Proportion of the training set used for validation
     real validation_proportion;
 
@@ -98,11 +98,11 @@ public:
     string lambda_estimation;
 
     //! Lambdas for Jelinek-Mercer smoothing
-    Vec lambdas;  
+    Vec lambdas;
 
     //! NGram tree
     PP<NGramTree> tree;
-  
+
 
     // ****************
     // * Constructors *
@@ -115,15 +115,15 @@ public:
     // * PDistribution methods *
     // *************************
 
-private: 
+private:
 
-    //! This does the actual building. 
+    //! This does the actual building.
     void build_();
 
     //! Takes a row of a VMat and gives the ngram associated
     void getNGrams(Vec row, TVec<int>& ngram) const;
 
-protected: 
+protected:
 
     //! Declare this class' options.
     static void declareOptions(OptionList& ol);
@@ -165,9 +165,6 @@ public:
     //! Return a pseudo-random sample generated from the distribution.
     virtual void generate(Vec& y) const;
 
-    //! Reset the random number generator used by generate() using the given seed.
-    virtual void resetGenerator(long g_seed);
-
     //! Return probability density p(y | x)
     virtual real density(const Vec& y) const;
 
@@ -186,7 +183,7 @@ public:
 
 // Declare a few other classes and functions related to this class.
 DECLARE_OBJECT_PTR(NGramDistribution);
-  
+
 } // end of namespace PLearn
 
 #endif

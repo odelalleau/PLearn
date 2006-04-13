@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 
- 
+
 
 /* *******************************************************      
  * $Id$
@@ -51,7 +51,7 @@ namespace PLearn {
 using namespace std;
 
 // This is a density estimation learner.
-// It uses a compact representation of a Gaussian, by keeping only the k 
+// It uses a compact representation of a Gaussian, by keeping only the k
 // top eigenvalues and associated eigenvectors of the covariance matrix.
 // All other eigenvalues are kept at the level of the k+1 th eigenvalue
 // Optionally, a constant sigma is first added to the diagonal of the covariance matrix.
@@ -60,20 +60,20 @@ class GaussianDistribution: public PDistribution
 {
     typedef PDistribution inherited;
 
-public:    
+public:
 
     // Possibly "Learned" parameters
     Vec mu;
-    Vec eigenvalues; 
-    Mat eigenvectors; 
+    Vec eigenvalues;
+    Mat eigenvectors;
 
     // Build options
     int k; // maximum number of eigenvectors to keep
-    real gamma; 
+    real gamma;
     real min_eig;
     bool use_last_eig;
     float ignore_weights_below; //!< When doing a weighted fitting (weightsize==1), points with a weight below this value will be ignored
-    
+
 public:
     GaussianDistribution();
 
@@ -83,9 +83,6 @@ public:
     virtual void forget();
     virtual void train();
     virtual real log_density(const Vec& x) const;
-
-    //! Resets the random number generator used by generate using the given seed
-    virtual void resetGenerator(long g_seed);
 
     //! return a pseudo-random sample generated from the distribution.
     virtual void generate(Vec& x) const;

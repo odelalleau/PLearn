@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 
- 
+
 
 /* *******************************************************      
  * $Id$
@@ -43,11 +43,9 @@
 /*! \file PLearnLibrary/PLearnAlgo/GaussianDistribution.cc */
 
 #include "GaussianDistribution.h"
-//#include "fileutils.h"
 #include <plearn/vmat/VMat_basic_stats.h>
 #include <plearn/math/plapack.h>
 #include <plearn/math/distr_maths.h>
-#include <plearn/math/random.h>
 
 namespace PLearn {
 using namespace std;
@@ -176,7 +174,7 @@ void GaussianDistribution::train()
         computeInputMeanAndCovar(training_set, mu, covarmat);
     else
         PLERROR("In GaussianDistribution, weightsize can only be 0 or 1");
-      
+
     // cerr << "maxneigval: " << maxneigval << " ";
     // cerr << eigenvalues.length() << endl;
     // cerr << "eig V: \n" << V << endl;
@@ -192,7 +190,7 @@ void GaussianDistribution::train()
         eigenvalues.resize(neig);
         eigenvectors.resize(neig,mu.length());
     }
-    else 
+    else
     {
         eigenvalues.resize(0);
         eigenvectors.resize(0, mu.length());
@@ -206,7 +204,7 @@ void GaussianDistribution::train()
 }
 
 real GaussianDistribution::log_density(const Vec& x) const 
-{ 
+{
     static Vec actual_eigenvalues;
 
     if(min_eig<=0 && !use_last_eig)
@@ -226,26 +224,20 @@ real GaussianDistribution::log_density(const Vec& x) const
     }
 }
 
-
-void GaussianDistribution::resetGenerator(long g_seed)
-{
-    manual_seed(g_seed);
-}
-
 void GaussianDistribution::generate(Vec& x) const
 {
     static Vec r;
     int neig = eigenvalues.length();
     int m = mu.length();
     r.resize(neig);
-  
+
     real remaining_eig = 0;
     if(use_last_eig)
         remaining_eig = max(eigenvalues[neig-1]+gamma, min_eig);
     else
         remaining_eig = max(gamma, min_eig);
 
-    fill_random_normal(r);
+    random_gen->fill_random_normal(r);
     for(int i=0; i<neig; i++)
     {
         real neweig = max(eigenvalues[i]+gamma, min_eig)-remaining_eig;
@@ -256,7 +248,7 @@ void GaussianDistribution::generate(Vec& x) const
     if(remaining_eig>0.)
     {
         r.resize(m);
-        fill_random_normal(r,0,sqrt(remaining_eig));
+        random_gen->fill_random_normal(r,0,sqrt(remaining_eig));
         x += r;
     }
     x += mu;

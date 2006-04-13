@@ -42,7 +42,6 @@
 #define PDistribution_INC
 
 #include <plearn_learners/generic/PLearner.h>
-#include <plearn/math/PRandom.h>
 
 namespace PLearn {
 using namespace std;
@@ -63,9 +62,6 @@ private:
     mutable Mat store_cov;
 
 protected:
-
-    //! Random number generator.
-    PP<PRandom> random;
 
     //! The step when plotting the curve (upper case outputs_def).
     real delta_curve;
@@ -110,12 +106,12 @@ public:
     // * PLearner methods *
     // ********************
 
-private: 
+private:
 
-    //! This does the actual building. 
+    //! This does the actual building.
     void build_();
 
-protected: 
+protected:
 
     //! Declares this class' options.
     static void declareOptions(OptionList& ol);
@@ -142,12 +138,15 @@ public:
     //! Returned value depends on outputs_def.
     virtual int outputsize() const;
 
-    //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
+    //! (Re-)initializes the PLearner in its fresh state (that state may depend
+    //! on the 'seed' option)
     //! And sets 'stage' back to 0   (this is the stage of a fresh learner!)
     virtual void forget();
 
-    //! The role of the train method is to bring the learner up to stage==nstages,
-    //! updating the train_stats collector with training costs measured on-line in the process.
+    //! The role of the train method is to bring the learner up to
+    //! stage==nstages,
+    //! updating the train_stats collector with training costs measured on-line
+    //! in the process.
     virtual void train();
 
     //! Produce outputs according to what is specified in outputs_def.
@@ -155,7 +154,7 @@ public:
 
     //! Computes negative log likelihood (NLL). If the first output is neither
     //! the log density nor the density, an error will be raised.
-    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
                                          const Vec& target, Vec& costs) const;
 
     // *******************************
@@ -215,7 +214,7 @@ public:
     //! Return probability density p(y | x) (default version simply returns
     //! exp(log_density(y))).
     virtual real density(const Vec& y) const;
-  
+
     //! Return survival function: P(Y>y | x).
     virtual real survival_fn(const Vec& y) const;
 
@@ -228,19 +227,51 @@ public:
     //! Return Var[Y | x].
     virtual void variance(Mat& cov) const;
 
-    //! Reset the random number generator used by generate() using the given seed.
-    //! Default behavior is to call random->manual_seed(g_seed) and to save the
-    //! given seed.
+    //! Reset the random number generator used by generate() using the given
+    //! seed.
+    //! Default behavior is to call random_gen->manual_seed(g_seed) and to save
+    //! the given seed.
     //! This method is called in build().
     //! Exception: if 'g_seed' is zero, then do nothing.
     virtual void resetGenerator(long g_seed);
-  
-    //! Return a pseudo-random sample generated from the distribution.
+
+    //! Return a pseudo-random sample generated from the conditional
+    //! distribution, of density p(y | x)
     virtual void generate(Vec& y) const;
 
     //! X must be a N x n_predicted matrix. that will be filled.
-    //! This will call generate N times to fill the N rows of the matrix. 
+    //! This will call generate N times to fill the N rows of the matrix.
     void generateN(const Mat& Y) const;
+
+    //! Generates a pseudo-random sample (x,y) from the JOINT distribution,
+    //! of density p(x, y)
+    //! i.e., generates a predictor and a predicted part, regardless of any
+    //! previously set predictor.
+    virtual void generateJoint(Vec& xy);
+
+    //! Generates a pseudo-random sample (x,y) from the JOINT distribution,
+    //! of density p(x, y), split in two vectors
+    //! i.e., generates a predictor and a predicted part, regardless of any
+    //! previously set predictor.
+    void generateJoint(Vec& x, Vec& y);
+
+    //! Generates a pseudo-random sample x from the marginal distribution of
+    //! predictors, of density p(x),
+    //! i.e., generates a predictor part, regardless of any previously set
+    //! predictor.
+    virtual void generatePredictor(Vec& x);
+
+    //! Generates a pseudo-random sample y from the marginal distribution of
+    //! predicted parts, of density p(y) (and NOT p(y | x)).
+    //! i.e., generates a predicted part, regardless of any previously set
+    //! predictor.
+    virtual void generatePredicted(Vec& y);
+
+    //! Generates a pseudo-random sample x from the reversed conditional
+    //! distribution, of density p(x | y) (and NOT p(y | x)).
+    //! i.e., generates a "predictor" part given a "predicted" part, regardless
+    //! of any previously set predictor.
+    virtual void generatePredictorGivenPredicted(Vec& x, const Vec& y);
 
     //! 'Get' accessor for n_predicted.
     int getNPredicted() { return n_predicted; }
@@ -249,7 +280,7 @@ public:
 
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(PDistribution);
-  
+
 } // end of namespace PLearn
 
 #endif

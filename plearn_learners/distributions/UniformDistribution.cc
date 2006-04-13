@@ -183,7 +183,7 @@ void UniformDistribution::generate(Vec& x) const
         counter++;
     } else {
         for (int i = 0; i < n_dim; i++) {
-            x[i] = random->bounded_uniform(min[i], max[i]);
+            x[i] = random_gen->bounded_uniform(min[i], max[i]);
         }
     }
 }

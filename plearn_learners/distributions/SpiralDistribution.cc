@@ -39,7 +39,6 @@
 
 /*! \file SpiralDistribution.cc */
 #include "SpiralDistribution.h"
-#include <plearn/math/random.h>
 
 namespace PLearn {
 using namespace std;
@@ -134,12 +133,12 @@ void SpiralDistribution::generate(Vec& v) const
     v.resize(inputsize());
   
     real x, y;
-    real u =  bounded_uniform(0,1);
+    real u =  random_gen->bounded_uniform(0,1);
     real t = (fast_is_equal(uniformity, 1))?u:pow(u,uniformity);
     t = tmin+(tmax-tmin)*t;
     curve(t,x,y);
-    x += gaussian_mu_sigma(0, sigma);
-    y += gaussian_mu_sigma(0, sigma);
+    x += random_gen->gaussian_mu_sigma(0, sigma);
+    y += random_gen->gaussian_mu_sigma(0, sigma);
 
     v[0] = x;
     v[1] = y;
@@ -153,12 +152,6 @@ void SpiralDistribution::generate(Vec& v) const
 // it properly in the .cc
 int SpiralDistribution::inputsize() const 
 { return include_t ?3 :2; }
-
-void SpiralDistribution::resetGenerator(long g_seed)
-{
-    manual_seed(g_seed);  
-}
-
 
 } // end of namespace PLearn
 

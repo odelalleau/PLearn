@@ -61,7 +61,7 @@ class NonLocalManifoldParzen: public UnconditionalDistribution
 private:
 
     typedef UnconditionalDistribution inherited;
-  
+
 protected:
 
     // *********************
@@ -155,7 +155,7 @@ public:
     //! objects (eventually, should use the "friend class"
     //! principal instead)
     VarArray parameters;
-    
+
 
     // Embedding penalty weight
     //real weight_embedding;
@@ -250,7 +250,7 @@ private:
     void knn(const VMat& vm, const Vec& x, const int& k, TVec<int>& neighbors, bool sortk) const; 
 
 protected: 
-  
+
     //! Declares this class' options.
     static void declareOptions(OptionList& ol);
 
@@ -264,7 +264,7 @@ public:
 
     //! Simply calls inherited::build() then build_().
     virtual void build();
-    
+
     //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
     //! And sets 'stage' back to 0 (this is the stage of a fresh learner!).
     virtual void forget();
@@ -335,7 +335,7 @@ public:
 
 // Declares a few other classes and functions related to this class.
 DECLARE_OBJECT_PTR(NonLocalManifoldParzen);
-  
+
 } // end of namespace PLearn
 
 #endif

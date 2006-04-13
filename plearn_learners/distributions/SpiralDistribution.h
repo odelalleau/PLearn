@@ -139,9 +139,6 @@ public:
     //! inputsize is 2 (or 3 if include_t is set to true)
     virtual int inputsize() const;
 
-    //! Resets the random number generator used by generate using the given seed
-    virtual void resetGenerator(long g_seed);
-
 };
 
 // Declares a few other classes and functions related to this class

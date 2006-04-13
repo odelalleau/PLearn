@@ -181,12 +181,12 @@ real LocallyMagnifiedDistribution::log_density(const Vec& y) const
             weight *= trainsample[w];
         weights[i] = weight;
         weightsum += weight;
-    }  
-  
+    }
+
     VMat weight_column(columnmatrix(weights));
 
     VMat weighted_trainset;
-    if(ws==0) // append weight column    
+    if(ws==0) // append weight column
         weighted_trainset = hconcat(train_set, weight_column);
     else // replace last column by weight column
         weighted_trainset = hconcat(train_set.subMatColumns(0,inputsize()), weight_column);
@@ -200,7 +200,7 @@ real LocallyMagnifiedDistribution::log_density(const Vec& y) const
 
     switch(mode)
     {
-    case 0: 
+    case 0:
         return log_p;
     case 1:
         return log_local_p;
@@ -246,7 +246,7 @@ void LocallyMagnifiedDistribution::train()
 }
 
 
-void LocallyMagnifiedDistribution::forget() 
+void LocallyMagnifiedDistribution::forget()
 {
 }
 

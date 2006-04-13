@@ -42,6 +42,7 @@
 #include "PDistribution.h"
 #include <plearn/base/tostring.h>
 #include <plearn/math/TMat_maths.h>
+#include <plearn/math/PRandom.h>
 
 namespace PLearn {
 using namespace std;
@@ -50,7 +51,6 @@ using namespace std;
 // PDistribution //
 ///////////////////
 PDistribution::PDistribution():
-    random(new PRandom()),
     delta_curve(0.1),
     predictor_size(0),
     predicted_size(-1),
@@ -60,7 +60,9 @@ PDistribution::PDistribution():
     upper_bound(0.),
     n_curve_points(-1),
     outputs_def("l")
-{}
+{
+    random_gen = new PRandom();
+}
 
 PLEARN_IMPLEMENT_OBJECT(PDistribution, 
     "Base class for PLearn probability distributions.\n",
@@ -182,7 +184,7 @@ void PDistribution::declareOptions(OptionList& ol)
         "The (true) size of the predicted y in p(y|x). If 'predicted_size'\n"
         "is non-negative, 'n_predicted' is set to 'predicted_size'.\n"
         "Otherwise, it is set to the data dimension minus 'predictor_size'.");
-      
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 
@@ -339,7 +341,7 @@ void PDistribution::computeCostsFromOutputs(const Vec& input, const Vec& output,
         PLERROR("In PDistribution::computeCostsFromOutputs currently can only "
                 "compute' NLL cost from log likelihood or density returned as "
                 "first output");
-}                                
+}
 
 //////////////////////
 // getTestCostNames //
@@ -388,7 +390,6 @@ void PDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(store_expect,       copies);
     deepCopyField(store_result,       copies);
     deepCopyField(store_cov,          copies);
-    deepCopyField(random,             copies);
     deepCopyField(predictor_part,     copies);
     deepCopyField(predicted_part,     copies);
 }
@@ -420,7 +421,7 @@ void PDistribution::resetGenerator(long g_seed)
 {
     if (g_seed != 0) {
         seed_ = g_seed;
-        random->manual_seed(g_seed);
+        random_gen->manual_seed(g_seed);
     }
 }
 
@@ -531,6 +532,44 @@ void PDistribution::variance(Mat& covar) const
 
 void PDistribution::generate(Vec& y) const
 { PLERROR("generate not implemented for this PDistribution"); }
+
+void PDistribution::generateJoint(Vec& xy)
+{
+    // get old sizes
+    int old_n_predictor = n_predictor;
+    int old_n_predicted = n_predicted;
+
+    // set all inputs as predicted to generate a joint sample
+    setPredictorPredictedSizes(0, -1);
+    generate( xy );
+
+    // restore old sizes
+    setPredictorPredictedSizes(old_n_predictor, old_n_predicted);
+}
+
+void PDistribution::generateJoint(Vec& x, Vec& y)
+{
+    Vec joint_sample;
+    generateJoint( joint_sample );
+    x = joint_sample.subVec(0, n_predictor);
+    y = joint_sample.subVec(n_predictor, n_predicted);
+}
+
+void PDistribution::generatePredictor(Vec& x)
+{
+    Vec y;
+    generateJoint(x, y);
+}
+
+void PDistribution::generatePredicted(Vec& y)
+{
+    Vec x;
+    generateJoint(x, y);
+}
+
+void PDistribution::generatePredictorGivenPredicted(Vec& x, const Vec& y)
+{ PLERROR("generatePredictorGivenPredicted not implemented for this\n"
+          "PDistribution\n"); }
 
 void PDistribution::train()
 { PLERROR("The train() method is not implemented for this PDistribution"); }

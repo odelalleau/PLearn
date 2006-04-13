@@ -88,10 +88,10 @@ void ManifoldParzen2::declareOptions(OptionList& ol)
 {
     declareOption(ol,"nneighbors", &ManifoldParzen2::nneighbors, OptionBase::buildoption,
                   "Number of neighbors for covariance matrix estimation.");
-  
+
     declareOption(ol,"ncomponents", &ManifoldParzen2::ncomponents, OptionBase::buildoption,
                   "Number of components to store from the PCA.");
-  
+
     declareOption(ol,"use_last_eigenval", &ManifoldParzen2::use_last_eigenval, OptionBase::buildoption,
                   "Indication that the last eigenvalue should be used for the remaining directions' variance.");
 
@@ -101,7 +101,7 @@ void ManifoldParzen2::declareOptions(OptionList& ol)
 
     declareOption(ol,"global_lambda0", &ManifoldParzen2::global_lambda0, OptionBase::buildoption,
                   "If use_last_eigenvalue is false, used value for the minimum variance in all directions");
-  
+
     declareOption(ol,"scale_factor", &ManifoldParzen2::scale_factor, OptionBase::buildoption,
                   "Scale factor");
 
@@ -173,7 +173,7 @@ void computePrincipalComponents(Mat dataset, Vec& eig_values, Mat& eig_vectors, 
 {
 #ifdef BOUNDCHECK
     if(eig_vectors.width()!=dataset.width())
-        PLERROR("In computePrincipalComponents eig_vectors and dataset must have same width");    
+        PLERROR("In computePrincipalComponents eig_vectors and dataset must have same width");
     if(eig_values.length() != eig_vectors.length())
         PLERROR("In computePrincipalComponents eig_values vec and eig_vectors mat must have same length");
 #endif
@@ -229,10 +229,10 @@ void ManifoldParzen2::train()
     {
         if(i%100==0)
             cerr << "[SEQUENTIAL TRAIN: processing pattern #" << i << "/" << l << "]\n";
-      
+
         // center is sample
         center(i) << trainset(i);
-    
+
         Vec center_(center.width());
         center_ << trainset(i);
         if(use_last_eigenval)
@@ -245,7 +245,7 @@ void ManifoldParzen2::train()
         eigvals *= scale_factor;
 
 //    cout<<delta_neighbors<<endl;
-    
+
         real d=0;
         for(int k=0;k<delta_neighbors.length();k++)
             d+=dist(delta_neighbors(k),Vec(D,0.0),2);
@@ -273,7 +273,7 @@ void ManifoldParzen2::train()
         //GaussMix::build();
         //resizeStuffBeforeTraining();
         if(learn_mu)
-            center(i) << center_;   // Hugo: the mean should be current point... 
+            center(i) << center_;   // Hugo: the mean should be current point...
         eigenvalues(i) << eigvals;
         // eigenvalues(i, n_eigen_computed - 1) = lambda0; TODO Put back!
         eigenvectors[i] << components_eigenvecs;
@@ -305,8 +305,8 @@ int ManifoldParzen2::find_nearest_neighbor(VMat data, Vec x) const
 real ManifoldParzen2::evaluate(Vec x1,Vec x2,real scale)
 {
     real ret;
-    int i = find_nearest_neighbor(train_set,x2);  
-  
+    int i = find_nearest_neighbor(train_set,x2);
+
     if(fast_exact_is_equal(scale, 1))
         ret = computeLogLikelihood(x1,i);
     else
@@ -321,7 +321,7 @@ real ManifoldParzen2::evaluate(Vec x1,Vec x2,real scale)
         eigenvalues(i) << eigenval_copy;
     }
     return exp(ret);
-  
+
     /*
       row = x1 - mu(i);
       ret = 0.5 * scale * pownorm(row)/eigenvalues(i,n_eigen_computed - 1);
@@ -335,7 +335,7 @@ real ManifoldParzen2::evaluate(Vec x1,Vec x2,real scale)
 real ManifoldParzen2::evaluate_i_j(int i,int j,real scale)
 {
     real ret;
-  
+
     if(fast_exact_is_equal(scale, 1))
         ret = computeLogLikelihood(center(i),j);
     else
@@ -350,7 +350,7 @@ real ManifoldParzen2::evaluate_i_j(int i,int j,real scale)
         eigenvalues(j) << eigenval_copy;
     }
     return exp(ret);
-  
+
     /*
       row = mu(i) - mu(j);
       ret = scale * pownorm(row)/eigenvalues(j,n_eigen_computed - 1);
@@ -388,7 +388,7 @@ void ManifoldParzen2::computeOutput(const Vec& input, Vec& output) const
         for(int s=0; s<nstep;s++)
         {
             i = find_nearest_neighbor(new MemoryVMatrix(mu_temp),t_row);  
-  
+
             if(s % save_every == 0)
             {
                 fsave = "mp_walk_" + tostring(s) + ".amat";

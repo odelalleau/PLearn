@@ -55,7 +55,7 @@ class LocallyMagnifiedDistribution: public PDistribution
 
 private:
 
-    typedef PDistribution inherited;  
+    typedef PDistribution inherited;
 
     //! Global storage to save memory allocations.
     mutable Vec trainsample, weights;
@@ -71,7 +71,7 @@ protected:
     mutable Vec NN_outputs;
     mutable Vec NN_costs;
 
-    
+
 public:
 
     // ************************
@@ -82,7 +82,7 @@ public:
     Ker weighting_kernel;
 
     //! The distribution that will be trained with local weights
-    PP<PDistribution> localdistr; 
+    PP<PDistribution> localdistr;
 
     int mode;
 
@@ -101,13 +101,13 @@ public:
     // * PDistribution methods *
     // *************************
 
-private: 
+private:
 
-    //! This does the actual building. 
+    //! This does the actual building.
     // ### Please implement in .cc.
     void build_();
 
-protected: 
+protected:
 
     //! Declare this class' options.
     // ### Please implement in .cc.
@@ -152,7 +152,7 @@ public:
 
 // Declare a few other classes and functions related to this class.
 DECLARE_OBJECT_PTR(LocallyMagnifiedDistribution);
-  
+
 } // end of namespace PLearn
 
 #endif

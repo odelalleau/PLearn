@@ -48,7 +48,6 @@
 #include <plearn/math/pl_erf.h>   //!< For gauss_log_density_stddev().
 #include <plearn/math/plapack.h>
 //#include <plearn/sys/Profiler.h>
-//#include <plearn/math/random.h>
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/vmat/MemoryVMatrix.h>
 #include <plearn/vmat/SubVMatrix.h>
@@ -397,8 +396,8 @@ void GaussMix::computeMeansAndCovariances() {
                 for (int i = 0; i < D; i++)
                     if (is_missing(center_j[i])) {
                         center_j[i] =
-                            random->gaussian_mu_sigma(mean_training  [i],
-                                                      stddev_training[i]);
+                            random_gen->gaussian_mu_sigma(mean_training  [i],
+                                                          stddev_training[i]);
 #ifdef BOUNDCHECK
                         // Sanity check: the corresponding row and column in
                         // the covariance matrix should be missing.
@@ -1847,7 +1846,7 @@ void GaussMix::generateFromGaussian(Vec& sample, int given_gaussian) const {
     assert( n_predictor == 0 || p_j_x.length() == L );
 
     if (given_gaussian < 0)
-        j = random->multinomial_sample(n_predictor == 0 ? alpha : p_j_x);
+        j = random_gen->multinomial_sample(n_predictor == 0 ? alpha : p_j_x);
     else
         j = given_gaussian % alpha.length();
 
@@ -1859,7 +1858,7 @@ void GaussMix::generateFromGaussian(Vec& sample, int given_gaussian) const {
             real stddev = type_id == TYPE_SPHERICAL ? sigma[j]
                                                     : diags(j, k + n_predictor);
             stddev = max(sigma_min, stddev);
-            sample[k] = random->gaussian_mu_sigma(mu_y[k], stddev);
+            sample[k] = random_gen->gaussian_mu_sigma(mu_y[k], stddev);
         }
     } else {
         assert( type_id == TYPE_GENERAL );
@@ -1876,7 +1875,7 @@ void GaussMix::generateFromGaussian(Vec& sample, int given_gaussian) const {
             Vec mu_y = center(j);
 
             norm_vec.resize(n_eig - 1);
-            random->fill_random_normal(norm_vec);
+            random_gen->fill_random_normal(norm_vec);
             real var_min = square(sigma_min);
             real lambda0 = max(var_min, eigenvals[n_eig - 1]);
             sample.fill(0);
@@ -1885,7 +1884,7 @@ void GaussMix::generateFromGaussian(Vec& sample, int given_gaussian) const {
                 sample += sqrt(max(var_min, eigenvals[k]) - lambda0)
                           * norm_vec[k] * eigenvecs(k);
             norm_vec.resize(n_predicted);
-            random->fill_random_normal(norm_vec);
+            random_gen->fill_random_normal(norm_vec);
             sample += norm_vec * sqrt(lambda0);
             sample += mu_y;
         } else {
@@ -1898,7 +1897,7 @@ void GaussMix::generateFromGaussian(Vec& sample, int given_gaussian) const {
             Vec mu_y = center_y_x(j);
 
             norm_vec.resize(n_eig - 1);
-            random->fill_random_normal(norm_vec);
+            random_gen->fill_random_normal(norm_vec);
             real var_min = square(sigma_min);
             real lambda0 = max(var_min, eigenvals[n_eig - 1]);
             sample.fill(0);
@@ -1907,7 +1906,7 @@ void GaussMix::generateFromGaussian(Vec& sample, int given_gaussian) const {
                 sample += sqrt(max(var_min, eigenvals[k]) - lambda0)
                           * norm_vec[k] * eigenvecs(k);
             norm_vec.resize(n_predicted);
-            random->fill_random_normal(norm_vec);
+            random_gen->fill_random_normal(norm_vec);
             sample += norm_vec * sqrt(lambda0);
             sample += mu_y;
         }
@@ -1986,7 +1985,7 @@ void GaussMix::kmeans(const VMat& samples, int nclust, TVec<int>& clust_idx,
     // Store the distance from each point to the 'nclust' cluster centers.
     Mat distances(vmat_length, nclust);
     Vec min_distances(vmat_length);
-    int farthest_sample = random->uniform_multinomial_sample(vmat_length);
+    int farthest_sample = random_gen->uniform_multinomial_sample(vmat_length);
     Vec input_k;
     for (int i=0; i<nclust; i++)
     {
@@ -1999,8 +1998,9 @@ void GaussMix::kmeans(const VMat& samples, int nclust, TVec<int>& clust_idx,
         Vec cl_center = clust(i);
         for (int k = 0; k < cl_center.length(); k++)
             if (is_missing(cl_center[k]))
-                cl_center[k] = random->gaussian_mu_sigma(mean_training[k],
-                                                         stddev_training[k]);
+                cl_center[k] =
+                    random_gen->gaussian_mu_sigma(mean_training[k],
+                                                  stddev_training[k]);
         if (i < nclust - 1) {
             // Find next cluster center.
             for (int k = 0; k < vmat_length; k++) {
@@ -2061,15 +2061,17 @@ void GaussMix::kmeans(const VMat& samples, int nclust, TVec<int>& clust_idx,
                 clust_stat[i].getMean(clust_i);
             else {
                 // Re-initialize randomly the cluster center.
-                int new_center = random->uniform_multinomial_sample(vmat_length);
+                int new_center =
+                    random_gen->uniform_multinomial_sample(vmat_length);
                 samples->getExample(new_center, input, target, weight);
                 clust_i << input;
             }
             // Replace missing values by randomly generated values.
             for (int k = 0; k < clust_i.length(); k++)
                 if (is_missing(clust_i[k]))
-                    clust_i[k] = random->gaussian_mu_sigma(mean_training  [k],
-                                                           stddev_training[k]);
+                    clust_i[k] =
+                        random_gen->gaussian_mu_sigma(mean_training  [k],
+                                                      stddev_training[k]);
         }
 
         ok=true;
@@ -2906,7 +2908,7 @@ void GaussMix::train()
             // Perform some kind of k-median on missing patterns for initial
             // clustering of missing patterns.
             TVec<int> indices(0, missing_patterns.length() - 1, 1);
-            // TODO Use random (but -> different k-means initialization)
+            // TODO Use random_gen (but -> different k-means initialization)
             PRandom::common(false)->shuffleElements(indices);
             int n_clusters = min(efficient_k_median,
                                  missing_patterns.length());
@@ -2963,8 +2965,8 @@ void GaussMix::train()
                         else if (majority(j, k) < 0)
                             missing_template(j, k) = false;
                         else
-                            // TODO Use random (but be careful to effects, e.g.
-                            // kmeans initialization).
+                            // TODO Use random_gen (but be careful to effects,
+                            // e.g. kmeans initialization).
                             missing_template(j, k) =
                                 (PRandom::common(false)->uniform_sample() < 0.5);
                     } else {

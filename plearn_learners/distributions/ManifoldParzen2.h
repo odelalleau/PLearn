@@ -47,7 +47,7 @@ class ManifoldParzen2 : public GaussMix
 private:
 
     typedef GaussMix inherited;
- 
+
     Vec eigenval_copy;
     mutable Vec row;
     mutable Vec t_row;
@@ -69,7 +69,7 @@ public:
     //!  If you change one of these, you must retrain
     int nneighbors; //!<  how many neighbors should we consider
     int ncomponents; //!<  how many components do we want to remember from the PCA
-  
+
     bool use_last_eigenval;
     real scale_factor;
     real global_lambda0;
@@ -100,14 +100,14 @@ protected:
 
     //! Declares this class' options
     static void declareOptions(OptionList& ol);
-  
-private: 
-    //! This does the actual building. 
+
+private:
+    //! This does the actual building.
     // (Please implement in .cc)
     void build_();
 
 public:
-    // simply calls inherited::build() then build_() 
+    // simply calls inherited::build() then build_()
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
@@ -122,7 +122,7 @@ public:
 
     //! trains the model
     // NOTE : the function assumes that the training_set has only input columns ! (width = dimension of feature space)
-    virtual void train(); 
+    virtual void train();
 
     //! Produce outputs according to what is specified in outputs_def.
     virtual void computeOutput(const Vec& input, Vec& output) const;
@@ -131,13 +131,13 @@ public:
     virtual int outputsize() const;
 
     real evaluate(const Vec x1,const Vec x2,real scale=1);
-  
+
     real evaluate_i_j(int i, int j,real scale=1);
 };
 
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(ManifoldParzen2);
-  
+
 } // end of namespace PLearn
 
 #endif

@@ -44,7 +44,6 @@
 #include "NGramDistribution.h"
 #include <plearn/vmat/FractionSplitter.h>
 #include <plearn/vmat/RepeatSplitter.h>
-#include <plearn/math/random.h>
 
 namespace PLearn {
 using namespace std;
@@ -100,7 +99,7 @@ void NGramDistribution::declareOptions(OptionList& ol)
     declareOption(ol, "smoothing", &NGramDistribution::smoothing, OptionBase::buildoption,
                   "Smoothing method. Choose among:\n"
                   "- \"no_smoothing\"\n"
-                  "- \"add-delta\"\n"                
+                  "- \"add-delta\"\n"
                   "- \"jelinek-mercer\"\n"
                   "- \"witten-bell\"\n"
                   "- \"absolute-discounting\"\n"
@@ -111,9 +110,9 @@ void NGramDistribution::declareOptions(OptionList& ol)
                   "- \"EM\"\n"
         );
     declareOption(ol, "lambdas", &NGramDistribution::lambdas, OptionBase::buildoption,
-                  "Lambdas of the interpolated ngram"); 
+                  "Lambdas of the interpolated ngram");
     declareOption(ol, "tree", &NGramDistribution::tree, OptionBase::buildoption,
-                  "NGramTree of the frequencies"); 
+                  "NGramTree of the frequencies");
 
     // Now call the parent class' declareOptions().
     inherited::declareOptions(ol);
@@ -264,7 +263,7 @@ real NGramDistribution::density(const Vec& y) const
         real ret = 0;
         real factor = 1;
         for(int j=ngram_length-1; j>=0; j--)
-        { 
+        {
             if(normalization[j] != 0)
             {
                 ret += factor * ((real)(freq[j] > discount_constant ? freq[j] - discount_constant : 0))/ normalization[j];
@@ -272,7 +271,7 @@ real NGramDistribution::density(const Vec& y) const
             }
         }
         ret += factor *1.0/voc_size;
-    
+
         return ret;
     }
     else if(smoothing == "witten-bell")
@@ -282,11 +281,11 @@ real NGramDistribution::density(const Vec& y) const
         TVec<int> n_freq = tree->n_freq(ngram);
         real ret = 1.0/voc_size;
         for(int j=0; j<ngram_length; j++)
-        { 
+        {
             if(normalization[j] != 0)
                 ret = (freq[j]+n_freq[j]*ret)/(normalization[j]+n_freq[j]);
         }
-    
+
         return ret;
     }
     else PLERROR("In NGramDistribution:density() : smoothing technique not valid");
@@ -305,14 +304,6 @@ void NGramDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     // ### Remove this line when you have fully implemented this method.
     //PLERROR("NGramDistribution::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
-}
-
-////////////////////
-// resetGenerator //
-////////////////////
-void NGramDistribution::resetGenerator(long g_seed)
-{
-    manual_seed(g_seed);
 }
 
 /////////////////
@@ -343,7 +334,7 @@ void NGramDistribution::getNGrams(Vec row, TVec<int>& ngram) const
                 insert_from = j+1;
 
     ngram.resize(n-insert_from);
-  
+
     //Making ngram
     for(int j=insert_from; j<row.length(); j++)
     {
@@ -371,7 +362,7 @@ void NGramDistribution::train()
         splits(0,1).first = 1-validation_proportion; splits(0,1).second = 1;
         fsplit->splits = splits;
         fsplit->build();
-      
+
         // Making RepeatSplitter
         PP<RepeatSplitter> rsplit = new RepeatSplitter();
         rsplit->n = 1;
@@ -404,13 +395,13 @@ void NGramDistribution::train()
     }
 
     delete(pb);
- 
+
     // Smoothing techniques parameter estimation
     if(smoothing == "jelinek-mercer")
     {
         //Jelinek-Mercer: EM estimation of lambdas
         if(lambda_estimation == "EM")
-        {            
+        {
             lambdas.resize(n+1); lambdas.fill(1.0/(n+1));
             real diff = EM_PRECISION+1;
             real l_old = 0, l_new = -REAL_MAX;
@@ -425,7 +416,7 @@ void NGramDistribution::train()
                     cout << "EM diff: " << diff << endl;
                 n_ngram = 0;
                 l_old = l_new; l_new = 0;
-          
+
                 // E step
 
                 e.fill(0);
@@ -434,7 +425,7 @@ void NGramDistribution::train()
                     p_sum = 0;
 
                     // get w_{t-n+1}^t
-            
+
                     contexts_validation->getRow(t,row);
                     getNGrams(row,ngram);
 
@@ -451,7 +442,7 @@ void NGramDistribution::train()
                             p[j+1] = lambdas[j+1]*(((real)freq[j])/normalization[j]);
                             p_sum += p[j+1];
                         }
-          
+
                         for(int j=0; j<e.length(); j++)
                             e[j] += p[j]/p_sum;
                         l_new += safeflog(p_sum);

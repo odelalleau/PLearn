@@ -67,7 +67,7 @@ protected:
     //! All missing patterns found in the training set (stored in rows).
     //! A boolean value of 'true' indicates that a feature is missing.
     TMat<bool> missing_patterns;
-    
+
     //! Missing patterns used as templates (obtained by k-median).
     TMat<bool> missing_template;
 
