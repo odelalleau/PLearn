@@ -127,7 +127,8 @@ void UnconditionalDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 //////////////////
 // setPredictor //
 //////////////////
-void setPredictor(const Vec& predictor, bool call_parent) const
+void UnconditionalDistribution::setPredictor(const Vec& predictor,
+                                             bool call_parent) const
 {
     PLERROR("In UnconditionalDistribution::setPredictor - Not implemented for "
             "unconditional distributions");
