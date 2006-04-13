@@ -2,7 +2,7 @@
 
 // UnconditionalDistribution.h
 //
-// Copyright (C) 2004-2005 Olivier Delalleau 
+// Copyright (C) 2004-2006 Olivier Delalleau 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -110,7 +110,8 @@ public:
     // *******************************
 
     //! Return an error (not used in unconditional distributions).
-    void setPredictor(const Vec& predictor) const;
+    void setPredictor(const Vec& predictor, bool call_parent = true) const;
+
 };
 
 // Declare a few other classes and functions related to this class.

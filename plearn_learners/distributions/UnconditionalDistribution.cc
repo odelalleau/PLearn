@@ -2,7 +2,7 @@
 
 // UnconditionalDistribution.cc
 //
-// Copyright (C) 2004-2005 Olivier Delalleau 
+// Copyright (C) 2004-2006 Olivier Delalleau 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -124,11 +124,13 @@ void UnconditionalDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
-//////////////
-// setInput //
-//////////////
-void UnconditionalDistribution::setPredictor(const Vec& predictor) const {
-    PLERROR("In UnconditionalDistribution::setPredictor - Not implemented");
+//////////////////
+// setPredictor //
+//////////////////
+void setPredictor(const Vec& predictor, bool call_parent) const
+{
+    PLERROR("In UnconditionalDistribution::setPredictor - Not implemented for "
+            "unconditional distributions");
 }
 
 } // end of namespace PLearn
