@@ -67,8 +67,8 @@ PLEARN_IMPLEMENT_OBJECT(
 // ScoreLayerVariable //
 ////////////////////////
 ScoreLayerVariable::ScoreLayerVariable():
-    n_active_templates(1),
-    n_inactive_templates(0),
+    n_active_templates(-1),
+    n_inactive_templates(-1),
     seed_(-1),
     random_gen(new PRandom())
     // weighting_method("none")
@@ -89,12 +89,12 @@ void ScoreLayerVariable::declareOptions(OptionList& ol)
     declareOption(ol, "n_active_templates",
                   &ScoreLayerVariable::n_active_templates,
                   OptionBase::buildoption,
-        "Number of templates of active molecules.");
+        "Number of templates of active molecules (-1 means all of them).");
 
     declareOption(ol, "n_inactive_templates",
                   &ScoreLayerVariable::n_inactive_templates,
                   OptionBase::buildoption,
-        "Number of templates of inactive molecules.");
+        "Number of templates of inactive molecules (-1 means all of them).");
 
     declareOption(ol, "seed", &ScoreLayerVariable::seed_,
                   OptionBase::buildoption,
@@ -136,7 +136,7 @@ void ScoreLayerVariable::bprop()
 {
     // The gradient is back-propagated only on the score variables, since the
     // other variables are inputs that do not need be updated.
-    int n = n_active_templates + n_inactive_templates;
+    int n = getNActiveTemplates() + getNInactiveTemplates();
     assert( n <= length() );
     real* copy_grad_ptr = final_output->gradientdata;
     real* grad_ptr = gradientdata;
@@ -198,12 +198,14 @@ void ScoreLayerVariable::build_()
                 stats_col.update(features(k, j));
         }
     }
+    n_active_in_source = list_of_active.length();
+    n_inactive_in_source = list_of_inactive.length();
     random_gen->shuffleElements(list_of_active);
     random_gen->shuffleElements(list_of_inactive);
-    assert( list_of_active.length() >= n_active_templates );
-    assert( list_of_inactive.length() >= n_inactive_templates );
-    list_of_active.resize(n_active_templates);
-    list_of_inactive.resize(n_inactive_templates);
+    assert( list_of_active.length() >= getNActiveTemplates() );
+    assert( list_of_inactive.length() >= getNInactiveTemplates() );
+    list_of_active.resize(getNActiveTemplates());
+    list_of_inactive.resize(getNInactiveTemplates());
     TVec<int>& templates = list_of_active; // Renaming to avoid confusion.
     templates.append(list_of_inactive);
 
@@ -407,6 +409,29 @@ PP<Molecule> ScoreLayerVariable::getMolecule(real molecule_id, real activity)
         molecule = molecules[canonic_path];
     assert( molecule );
     return molecule;
+}
+
+
+/////////////////////////
+// getNActiveTemplates //
+/////////////////////////
+int ScoreLayerVariable::getNActiveTemplates()
+{
+    if (n_active_templates >= 0)
+        return n_active_templates;
+    else
+        return n_active_in_source;
+}
+
+///////////////////////////
+// getNInactiveTemplates //
+///////////////////////////
+int ScoreLayerVariable::getNInactiveTemplates()
+{
+    if (n_inactive_templates >= 0)
+        return n_inactive_templates;
+    else
+        return n_inactive_in_source;
 }
 
 /////////////////////////////////

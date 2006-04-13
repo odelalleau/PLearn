@@ -162,11 +162,27 @@ protected:
 
     //! All molecules currently loaded, identified by their id string.
     hash_map< string, PP<Molecule> > molecules;
+
+    //! Number of active molecules in the templates source.
+    int n_active_in_source;
+
+    //! Number of inactive molecules in the templates source.
+    int n_inactive_in_source;
     
     //#####  Protected Options  ###############################################
 
 protected:
     //#####  Protected Member Functions  ######################################
+
+    //! Return the actual number of active templates, i.e. n_active_templates
+    //! if it is non-negative, and the total number of active molecules in the
+    //! templates source otherwise.
+    int getNActiveTemplates();
+
+    //! Return the actual number of inactive templates, i.e. n_active_templates
+    //! if it is non-negative, and the total number of inactive molecules in the
+    //! templates source otherwise.
+    int getNInactiveTemplates();
 
     //! Declares the class options.
     // (PLEASE IMPLEMENT IN .cc)
