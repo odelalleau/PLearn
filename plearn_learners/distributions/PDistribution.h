@@ -236,7 +236,7 @@ public:
     virtual void resetGenerator(long g_seed);
 
     //! Return a pseudo-random sample generated from the conditional
-    //! distribution, of density p(y | x)
+    //! distribution, of density p(y | x).
     virtual void generate(Vec& y) const;
 
     //! X must be a N x n_predicted matrix. that will be filled.

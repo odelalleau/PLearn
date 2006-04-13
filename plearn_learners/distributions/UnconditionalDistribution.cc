@@ -130,9 +130,52 @@ void UnconditionalDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 void UnconditionalDistribution::setPredictor(const Vec& predictor,
                                              bool call_parent) const
 {
-    PLERROR("In UnconditionalDistribution::setPredictor - Not implemented for "
-            "unconditional distributions");
+    PLERROR("In UnconditionalDistribution::setPredictor -\n"
+            "Not implemented for unconditional distributions.\n");
 }
+
+///////////////////////
+// generatePredictor //
+///////////////////////
+void UnconditionalDistribution::generatePredictor(Vec& x)
+{
+    PLERROR("In UnconditionalDistribution::generatePredictor -\n"
+            "Not implemented for unconditional distributions.\n");
+}
+
+/////////////////////////////////////
+// generatePredictorGivenPredicted //
+/////////////////////////////////////
+void UnconditionalDistribution::generatePredictorGivenPredicted(Vec& x,
+                                                                const Vec& y)
+{
+    PLERROR("In UnconditionalDistribution::generatePredictorGivenPredicted -\n"
+            "Not implemented for unconditional distributions.\n");
+}
+
+///////////////////
+// generateJoint //
+///////////////////
+void UnconditionalDistribution::generateJoint(Vec& xy)
+{
+    PLWARNING("In UnconditionalDistribution::generateJoint -\n"
+              "Not implemented for unconditional distributions.\n"
+              "Calling \"generate\" instead.\n");
+    generate(xy);
+}
+
+///////////////////////
+// generatePredicted //
+///////////////////////
+void UnconditionalDistribution::generatePredicted(Vec& y)
+{
+    PLERROR("In UnconditionalDistribution::generatePredicted -\n"
+            "Not implemented for unconditional distributions.\n"
+            "Calling \"generate\" instead.\n");
+    generate(y);
+}
+
+
 
 } // end of namespace PLearn
 

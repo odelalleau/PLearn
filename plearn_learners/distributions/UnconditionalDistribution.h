@@ -112,6 +112,18 @@ public:
     //! Return an error (not used in unconditional distributions).
     void setPredictor(const Vec& predictor, bool call_parent = true) const;
 
+    //! Return an error (not used in unconditional distributions).
+    void generatePredictor(Vec& x);
+
+    //! Return an error (not used in unconditional distributions).
+    void generatePredictorGivenPredicted(Vec& x, const Vec& y);
+
+    //! Warns and calls generate(xy).
+    void generateJoint(Vec& xy);
+
+    //! Warns and calls generate(y).
+    void generatePredicted(Vec& y);
+
 };
 
 // Declare a few other classes and functions related to this class.
