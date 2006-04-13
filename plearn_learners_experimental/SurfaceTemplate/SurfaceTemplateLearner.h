@@ -67,32 +67,8 @@ public:
 
     VMat templates_source;
 
-    //! ### declare public option fields (such as build options) here
-    //! Start your comments with Doxygen-compatible comments such as //!
-
-    // Templates parameters.
-
-    // real template_learning_rate;
-
-    // TODO Put in sub-var.
-    // int n_active_templates;
-    // int n_inactive_templates;
-    // string sigma_transformation; // "softplus", "square", "exp", "none"...
-
-    // TVec<string> initial_active_templates;
-    // TVec<string> initial_inactive_templates;
-
-    // TVec<string> feature_names;
-
 protected:
     //#####  Protected Options  ###############################################
-
-    // ### Declare protected option fields (such as learned parameters) here
-    // ...
-
-    // Templates parameters
-    // TODO Put in sub-var.
-    // TVec< MolTemplate > templates;
 
 public:
     //#####  Public Member Functions  #########################################
