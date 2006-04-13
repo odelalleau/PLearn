@@ -334,10 +334,10 @@ int PRandom::multinomial_sample(const Vec& distribution) {
 /////////////////////
 int PRandom::binomial_sample(real pp) {
     if( pp < 0 || pp > 1 )
-        PLERROR("In PRandom::binomial_sample, pp should be between 0 and 1,\n"
-                "but is %d.\n", pp);
+        PLERROR("In PRandom::binomial_sample, pp should be between 0 and 1, "
+                "but is %f.", pp);
 
-    real  u  = this->uniform_sample();
+    real u = this->uniform_sample();
     if( pp < u )
         return 0;
     else
