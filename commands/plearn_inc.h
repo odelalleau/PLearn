@@ -275,6 +275,7 @@
 #include <plearn/vmat/ProcessDatasetVMatrix.h>
 #include <plearn/vmat/ProcessingVMatrix.h>
 #include <plearn/vmat/ProcessSymbolicSequenceVMatrix.h>
+#include <plearn/vmat/RandomSamplesVMatrix.h>
 #include <plearn/vmat/RankedVMatrix.h>
 #include <plearn/vmat/RegularGridVMatrix.h>
 #include <plearn/vmat/RemoveDuplicateVMatrix.h>
