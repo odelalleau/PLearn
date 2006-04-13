@@ -24,13 +24,22 @@ products instead of n matrix-vector products.
 * How to combine error gradient and likelihood gradient?
 
 * Implement global wake-sleep (on every layer at one time) learning of the
-  weights
+  weights ==> this would seem necessary in order to have simultaneous
+  unsupervised adaptation in all the RBM layers in a DeepBeliefNet.
 
 * See if we share biases (and quadratic term) of one layer between the "upper"
   and "lower" RBMParameters modules
 
 * Is there a way to compute analytically the "undirected softmax" if the
   output layer has Gaussian units?
+
+* introducing temporal structure into the model:
+   - time delays in the connections
+   - recurrent connections (e.g. from layer i at t to layer i at t+1)
+   - supervised targets (and corresponding gradients) from the task of
+     predicting layer i at t+1 from layer j at t
+
+
 
 
 
