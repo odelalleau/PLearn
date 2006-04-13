@@ -37,7 +37,7 @@ public:
     //#####  PDistribution Member Functions  ##################################
 
     //! Return log of probability density log(p(y | x)).
-    virtual real log_density(const Vec& x) const;
+    virtual real log_density(const Vec& y) const;
 
     //! Return survival function: P(Y>y | x).
     virtual real survival_fn(const Vec& y) const;
@@ -51,12 +51,23 @@ public:
     //! Return Var[Y | x].
     virtual void variance(Mat& cov) const;
 
-    //! Return a pseudo-random sample generated from the distribution.
+    //! Return a pseudo-random sample generated from the conditional
+    //! distribution, of density p(y | x).
     virtual void generate(Vec& y) const;
 
+    //### Override this method if you need it (and if your distribution can
+    //### handle it. Default version calls PLERROR.
+    //! Generates a pseudo-random sample x from the reversed conditional
+    //! distribution, of density p(x | y) (and NOT p(y | x)).
+    //! i.e., generates a "predictor" part given a "predicted" part, regardless
+    //! of any previously set predictor.
+    // virtual void generatePredictorGivenPredicted(Vec& x, const Vec& y);
+
+    //### Override this method if you need it. Default version calls
+    //### random_gen->manual_seed(g_seed) if g_seed !=0
     //! Reset the random number generator used by generate() using the
     //! given seed.
-    virtual void resetGenerator(long g_seed) const;
+    // virtual void resetGenerator(long g_seed) const;
 
     //! Set the 'predictor' and 'predicted' sizes for this distribution.
     //### See help in PDistribution.h.
@@ -71,8 +82,30 @@ public:
 
     // ### These methods may be overridden for efficiency purpose:
     /*
+    //### Default version calls exp(log_density(y))
     //! Return probability density p(y | x)
     virtual real density(const Vec& y) const;
+
+    //### Default version calls setPredictorPredictedSises(0,-1) and generate
+    //! Generates a pseudo-random sample (x,y) from the JOINT distribution,
+    //! of density p(x, y)
+    //! i.e., generates a predictor and a predicted part, regardless of any
+    //! previously set predictor.
+    virtual void generateJoint(Vec& xy);
+
+    //### Default version calls generateJoint and discards y
+    //! Generates a pseudo-random sample x from the marginal distribution of
+    //! predictors, of density p(x),
+    //! i.e., generates a predictor part, regardless of any previously set
+    //! predictor.
+    virtual void generatePredictor(Vec& x);
+
+    //### Default version calls generateJoint and discards x
+    //! Generates a pseudo-random sample y from the marginal distribution of
+    //! predicted parts, of density p(y) (and NOT p(y | x)).
+    //! i.e., generates a predicted part, regardless of any previously set
+    //! predictor.
+    virtual void generatePredicted(Vec& y);
     */
 
 
