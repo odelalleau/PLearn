@@ -1,24 +1,24 @@
 // -*- C++ -*-
 
 // GaussMix.cc
-// 
+//
 // Copyright (C) 2003 Julien Keable
 // Copyright (C) 2004-2006 University of Montreal
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -29,12 +29,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id$ 
+/* *******************************************************
+ * $Id$
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -92,8 +92,8 @@ GaussMix::GaussMix():
     ptimer->newTimer("training_time");
 }
 
-PLEARN_IMPLEMENT_OBJECT(GaussMix, 
-    "Gaussian mixture, either set non-parametrically or trained by EM.", 
+PLEARN_IMPLEMENT_OBJECT(GaussMix,
+    "Gaussian mixture, either set non-parametrically or trained by EM.",
     "GaussMix implements a mixture of L Gaussians.\n"
     "There are 3 possible parameterization types:\n"
     " - spherical : Gaussians have covariance = diag(sigma^2).\n"
@@ -131,7 +131,7 @@ void GaussMix::declareOptions(OptionList& ol)
 
     declareOption(ol, "L", &GaussMix::L, OptionBase::buildoption,
         "Number of Gaussians in the mixture.");
-  
+
     declareOption(ol, "type", &GaussMix::type, OptionBase::buildoption,
         "This is the type of covariance matrix for each Gaussian:\n"
         "   - spherical : spherical covariance matrix sigma^2 * I\n"
@@ -145,7 +145,7 @@ void GaussMix::declareOptions(OptionList& ol)
         "the covariance matrix. The remaining eigenvectors will be given an\n"
         "eigenvalue equal to the next highest eigenvalue. If set to -1, all\n"
         "eigenvectors will be kept.");
-  
+
     declareOption(ol, "efficient_missing", &GaussMix::efficient_missing,
                                            OptionBase::buildoption,
         "If true, computations with missing values will be more efficient.");
@@ -174,17 +174,17 @@ void GaussMix::declareOptions(OptionList& ol)
                                    OptionBase::buildoption,
         "The minimum weight for each Gaussian. Whenever a Gaussian falls\n"
         "below 'alpha_min', it is replaced by a new Gaussian.");
-  
+
     declareOption(ol,"sigma_min", &GaussMix::sigma_min,
                                   OptionBase::buildoption,
         "The minimum standard deviation allowed. In all computations, any\n"
         "standard deviation below 'sigma_min' (or variance below its square)\n"
         "will be replaced by 'sigma_min' (or its square). This regularizes\n"
         "the Gaussians (and should not be too high nor too small).");
-  
+
     declareOption(ol, "epsilon", &GaussMix::epsilon, OptionBase::buildoption,
         "A small number to check for near-zero probabilities.");
-  
+
     // Learnt options.
 
     declareOption(ol, "alpha", &GaussMix::alpha, OptionBase::learntoption,
@@ -241,7 +241,7 @@ void GaussMix::declareOptions(OptionList& ol)
     declareOption(ol, "center_y_x", &GaussMix::center_y_x, OptionBase::nosave,
         "The expectation E[Y | x] for each Gaussian.");
         */
- 
+
     /*
     declareOption(ol, "log_p_x_j_alphaj", &GaussMix::log_p_x_j_alphaj,
                                           OptionBase::learntoption,
@@ -425,7 +425,7 @@ void GaussMix::computeMeansAndCovariances() {
                             covariance(k,i) = 0;
                         }
 #ifdef BOUNDCHECK
-            
+
             // At this point there should be no more missing values.
             if (covariance.hasMissing() || center.hasMissing())
                 PLERROR("In GaussMix::computeMeansAndCovariances - Found "
@@ -759,13 +759,13 @@ void GaussMix::addToCovariance(const Vec& y, int j,
         }
         // Ensure 'dst' is symmetric, since we only filled the top-right part.
         fillItSymmetric(dst);
-#if 0   
+#if 0
         // DO NOT UNCOMMENT THIS CODE, AS IT MODIFIES ind_inv_tot.
         // Verify that the inverse was correctly computed.
-        
+
         ind_inv_tot.subVec(0, n_common) << dim_common;
         ind_inv_tot.subVec(n_common, n_dst_only) << dim_dst_only;
-        
+
         Mat to_inverse(ind_inv_tot.length(), ind_inv_tot.length());
         for (int k = 0; k < ind_inv_tot.length(); k++)
             for (int j = 0; j < ind_inv_tot.length(); j++)
@@ -1202,7 +1202,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     y_centered << y_missing;
                     y_centered -= mu_y;
                     }
-                    
+
                     real* center_j = center[j];
                     if (eff_missing) {
                         for (int k = 0; k < n_non_missing; k++) {
@@ -1347,7 +1347,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         imputed_missing[j]->putRow(current_training_sample,
                                                    full_vec);
                     }
-                    
+
                     }
             //}
             } else {
@@ -1802,7 +1802,7 @@ void GaussMix::expectation(Vec& mu) const
         for (int j = 0; j < L; j++)
             mu += center_y_x(j) * p_j_x[j];
     }
- 
+
 }
 
 ////////////
@@ -1951,7 +1951,7 @@ void GaussMix::kmeans(const VMat& samples, int nclust, TVec<int>& clust_idx,
     Vec input(samples->inputsize());
     Vec target(samples->targetsize());
     real weight;
-    
+
     TVec<int> old_clust_idx(vmat_length);
     bool ok=false;
 
@@ -1990,7 +1990,7 @@ void GaussMix::kmeans(const VMat& samples, int nclust, TVec<int>& clust_idx,
     for (int i=0; i<nclust; i++)
     {
         start_idx[i] = farthest_sample;
-        samples->getExample(farthest_sample,input,target,weight);    
+        samples->getExample(farthest_sample,input,target,weight);
         clust(i) << input;
         // Ensure there are no missing values in the initial centers.
         // To do so we generate random values based on 'mean' and 'stddev' if
@@ -2097,7 +2097,7 @@ void GaussMix::kmeans(const VMat& samples, int nclust, TVec<int>& clust_idx,
 // log_density //
 /////////////////
 real GaussMix::log_density(const Vec& y) const
-{ 
+{
     static Vec log_likelihood_dens;
     log_likelihood_dens.resize(L);
     // First we need to compute the likelihood
@@ -2163,7 +2163,7 @@ void GaussMix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(sample_to_template,       copies);
     deepCopyField(y_centered,               copies);
     deepCopyField(covariance,               copies);
-    
+
     deepCopyField(diags,                    copies);
     deepCopyField(eigenvalues,              copies);
     deepCopyField(eigenvectors,             copies);
@@ -2256,7 +2256,7 @@ void GaussMix::replaceGaussian(int j) {
         sigma[j] = sigma[high];
     } else if (type_id == TYPE_DIAGONAL) {
         diags(j) << diags(high);
-    } else { 
+    } else {
         assert( type_id == TYPE_GENERAL );
         eigenvalues(j) << eigenvalues(high);
         eigenvectors[j] << eigenvectors[high];
@@ -2419,7 +2419,7 @@ void GaussMix::setPredictor(const Vec& predictor, bool call_parent) const {
         assert( predictor_part.isEmpty() );
         return;
     }
-    
+
     if (stage == 0)
         // The Gaussian mixture is not ready yet (it has not yet been
         // trained): there is nothing more we can do.
@@ -3604,8 +3604,8 @@ void GaussMix::updateSampleWeights() {
 // survival_fn //
 /////////////////
 real GaussMix::survival_fn(const Vec& x) const
-{ 
-    //PLERROR("survival_fn not implemented for GaussMix"); return 0.0; 
+{
+    //PLERROR("survival_fn not implemented for GaussMix"); return 0.0;
     return MISSING_VALUE;
 }
 
@@ -3613,8 +3613,8 @@ real GaussMix::survival_fn(const Vec& x) const
 // cdf //
 /////////
 real GaussMix::cdf(const Vec& x) const
-{ 
-    //PLERROR("cdf not implemented for GaussMix"); return 0.0; 
+{
+    //PLERROR("cdf not implemented for GaussMix"); return 0.0;
     return MISSING_VALUE;
 }
 
@@ -3622,7 +3622,7 @@ real GaussMix::cdf(const Vec& x) const
 // variance //
 //////////////
 void GaussMix::variance(Mat& cov) const
-{ 
+{
     // TODO Variance could be at least implemented for L == 1.
     PLERROR("variance not implemented for GaussMix");
 }

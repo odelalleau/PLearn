@@ -1,23 +1,23 @@
 // -*- C++ -*-
 
 // HistogramDistribution.cc
-// 
+//
 // Copyright (C) 2002 Yoshua Bengio, Pascal Vincent, Xavier Saint-Mleux
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,12 +28,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id$ 
+/* *******************************************************
+ * $Id$
  ******************************************************* */
 
 /*! \file HistogramDistribution.cc */
@@ -46,7 +46,7 @@ using namespace std;
 
 HistogramDistribution::HistogramDistribution() {}
 
-HistogramDistribution::HistogramDistribution(VMat data, PP<Binner> binner_, 
+HistogramDistribution::HistogramDistribution(VMat data, PP<Binner> binner_,
                                              PP<Smoother> smoother_)
     :bin_positions(data.length()+1), bin_density(data.length()), survival_values(data.length()),
      binner(binner_), smoother(smoother_)
@@ -55,7 +55,7 @@ HistogramDistribution::HistogramDistribution(VMat data, PP<Binner> binner_,
     train();
 }
 
-PLEARN_IMPLEMENT_OBJECT(HistogramDistribution, 
+PLEARN_IMPLEMENT_OBJECT(HistogramDistribution,
                         "Represents and possibly learns (using a smoother) a univariate distribution as a histogram.",
                         "This class represents a univariate distribution with a set of bins and their densities\n"
                         "The bins can be fixed or learned by a Binner object, and the densities\n"
@@ -86,7 +86,7 @@ void HistogramDistribution::declareOptions(OptionList& ol)
                   "Used to smooth learned density (or survival) at train time, after the empirical\n"
                   "frequencies of each bin have been collected\n");
 
-    declareOption(ol, "smooth_density_instead_of_survival_fn", 
+    declareOption(ol, "smooth_density_instead_of_survival_fn",
                   &HistogramDistribution::smooth_density_instead_of_survival_fn, OptionBase::buildoption,
                   "whether to smooth the density or the survival function, with the smoother\n");
 
@@ -106,20 +106,20 @@ void HistogramDistribution::build()
 }
 
 void HistogramDistribution::train()
-{ 
+{
 
     /*
       - prend la distri empirique
       | trie les points
       | merge les bins (possiblement sous contraintes)
       |     - points de coupure predefinis (option include_cutpoints) ManualBinner
-      |     - largeur des bins > a une valeur minimale 
+      |     - largeur des bins > a une valeur minimale
       |     - bins contenir un minimum de points
       Binner
-      
+
       Smoother
       (recalcule la densite)
-      
+
       calculer survival_values
     */
 
@@ -197,13 +197,13 @@ void HistogramDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 }
 
 double HistogramDistribution::log_density(const Vec& x) const
-{ 
+{
     return pl_log(density(x));
 }
 
 
 double HistogramDistribution::density(const Vec& x) const
-{  
+{
     if(x.size() != 1)
         PLERROR("HistogramDistribution::density implemented only for univariate data (vec size == 1).");
     return bin_density[find_bin(x[0])];
@@ -211,7 +211,7 @@ double HistogramDistribution::density(const Vec& x) const
 
 
 double HistogramDistribution::survival_fn(const Vec& x) const
-{ 
+{
     if(x.size() != 1)
         PLERROR("HistogramDistribution::survival_fn implemented only for univariate data (vec size == 1).");
     int bin= find_bin(x[0]);
@@ -220,32 +220,32 @@ double HistogramDistribution::survival_fn(const Vec& x) const
             return 1.0;
         else
             return 0.0;
-  
+
     if(x[0] < bin_positions[bin] && bin >= 1)
-        return survival_values[bin-1] + (x[0] - bin_positions[bin-1]) * 
+        return survival_values[bin-1] + (x[0] - bin_positions[bin-1]) *
             (survival_values[bin] - survival_values[bin-1]) / (bin_positions[bin] - bin_positions[bin-1]);
-  
+
     return survival_values[bin];
 }
 
 double HistogramDistribution::cdf(const Vec& x) const
-{ 
+{
     return 1.0-survival_fn(x);
 }
 
 void HistogramDistribution::expectation(Vec& mu) const
-{ 
+{
     if(mu.size() != 1)
         PLERROR("HistogramDistribution::expectation implemented only for univariate data (vec size == 1).");
     real sum= 0.0;
     for(int i= 0; i < bin_density.size(); ++i)
         sum+= bin_density[i] * (bin_positions[i+1]-bin_positions[i]) * (bin_positions[i]+bin_positions[i+1])/2;
     //    sum+= bin_density[i] * bin_positions[i+1];
-    mu[0]=sum; 
+    mu[0]=sum;
 }
 
 void HistogramDistribution::variance(Mat& cov) const
-{ 
+{
     if(cov.size() != 1)
         PLERROR("HistogramDistribution::variance implemented only for univariate data");
     real sumsq= 0.0, sum= 0.0, s;

@@ -2,23 +2,23 @@
 
 // PDistribution.cc
 //
-// Copyright (C) 2003 Pascal Vincent 
+// Copyright (C) 2003 Pascal Vincent
 // Copyright (C) 2004-2005 University of Montreal
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -29,12 +29,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id$ 
+/* *******************************************************
+ * $Id$
  ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -64,7 +64,7 @@ PDistribution::PDistribution():
     random_gen = new PRandom();
 }
 
-PLEARN_IMPLEMENT_OBJECT(PDistribution, 
+PLEARN_IMPLEMENT_OBJECT(PDistribution,
     "Base class for PLearn probability distributions.\n",
     "PDistributions derive from PLearner, as some of them may be fitted to\n"
     "data by training, but they have additional methods allowing e.g. to\n"
@@ -152,7 +152,7 @@ void PDistribution::declareOptions(OptionList& ol)
     declareOption(ol, "predictor_part", &PDistribution::predictor_part,
                                         OptionBase::buildoption,
         "In conditional distributions, the predictor part (x in P(Y|X=x)).\n");
- 
+
     declareOption(ol, "n_curve_points", &PDistribution::n_curve_points,
                                         OptionBase::buildoption,
         "The number of points for which the output is evaluated when\n"
@@ -373,7 +373,7 @@ void PDistribution::generateN(const Mat& Y) const
     if (Y.width() != n_predicted)
         PLERROR("In PDistribution::generateN - Matrix width (%d) differs from "
                 "n_predicted (%d)", Y.width(), n_predicted);
-    int N = Y.length();  
+    int N = Y.length();
     for(int i=0; i<N; i++)
     {
         v = Y(i);

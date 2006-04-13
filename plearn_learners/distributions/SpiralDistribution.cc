@@ -3,22 +3,22 @@
 
 // SpiralDistribution.cc
 //
-// Copyright (C) 2003  Pascal Vincent 
-// 
+// Copyright (C) 2003  Pascal Vincent
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -29,12 +29,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id$ 
+/* *******************************************************
+ * $Id$
  ******************************************************* */
 
 /*! \file SpiralDistribution.cc */
@@ -43,7 +43,7 @@
 namespace PLearn {
 using namespace std;
 
-SpiralDistribution::SpiralDistribution() 
+SpiralDistribution::SpiralDistribution()
     : lambda(0.04),
       alpha(1),
       tmin(3),
@@ -55,7 +55,7 @@ SpiralDistribution::SpiralDistribution()
     // build_();
 }
 
-PLEARN_IMPLEMENT_OBJECT(SpiralDistribution, "Generates samples drawn from a 2D spiral", 
+PLEARN_IMPLEMENT_OBJECT(SpiralDistribution, "Generates samples drawn from a 2D spiral",
                         "SpiralDistribution is a generative model that generates 2D (x,y) samples in the following manner:\n"
                         " t ~ uniform([tmin, tmax])^uniformity \n"
                         " x = lambda*t*sin(alpha*t) + N(0,sigma) \n"
@@ -71,14 +71,14 @@ void SpiralDistribution::declareOptions(OptionList& ol)
     declareOption(ol, "uniformity", &SpiralDistribution::uniformity, OptionBase::buildoption,"");
     declareOption(ol, "include_t", &SpiralDistribution::include_t, OptionBase::buildoption,
                   "If true, then t will be appended to the generated sample, along with x and y.");
-  
+
     inherited::declareOptions(ol);
 }
 
 void SpiralDistribution::build_()
 {
     // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation. 
+    // ### according to set 'options', in *any* situation.
     // ### Typical situations include:
     // ###  - Initial building of an object from a few user-specified options
     // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
@@ -97,8 +97,8 @@ void SpiralDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
+    // ### Call deepCopyField on all "pointer-like" fields
+    // ### that you wish to be deepCopied rather than
     // ### shallow-copied.
     // ### ex:
     // deepCopyField(trainvec, copies);
@@ -129,9 +129,9 @@ void SpiralDistribution::curve(real t, real& x, real& y) const
 }
 
 void SpiralDistribution::generate(Vec& v) const
-{ 
+{
     v.resize(inputsize());
-  
+
     real x, y;
     real u =  random_gen->bounded_uniform(0,1);
     real t = (fast_is_equal(uniformity, 1))?u:pow(u,uniformity);
@@ -150,7 +150,7 @@ void SpiralDistribution::generate(Vec& v) const
 // Default version of inputsize returns learner->inputsize()
 // If this is not appropriate, you should uncomment this and define
 // it properly in the .cc
-int SpiralDistribution::inputsize() const 
+int SpiralDistribution::inputsize() const
 { return include_t ?3 :2; }
 
 } // end of namespace PLearn

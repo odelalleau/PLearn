@@ -3,21 +3,21 @@
 // NonLocalManifoldParzen.h
 //
 // Copyright (C) 2004 Yoshua Bengio & Hugo Larochelle
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,11 +28,11 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
+/* *******************************************************
  * $Id$
  ******************************************************* */
 
@@ -77,18 +77,18 @@ protected:
     //! Cost of one example
     Func cost_of_one_example;
     //! Input vector
-    Var x; 
+    Var x;
     //! Parameters of the neural network
-    Var b, W, c, V, muV, snV, snb; 
+    Var b, W, c, V, muV, snV, snb;
     //! Tangent vector targets
-    Var tangent_targets; 
+    Var tangent_targets;
     //! Tangent vectors spanning the tangent plane, given by
     //! the neural network
     Var tangent_plane;
     //! Mean of the gaussian
     Var mu;
     //! Sigma^2_noise of the gaussian
-    Var sn; 
+    Var sn;
     //Var mu_noisy, noise_var;
     //PP<PDistribution> dist;
     //! Sum of NLL cost
@@ -97,7 +97,7 @@ protected:
     Var min_sig;
     //! Initial (approximate) value of sigma^2_noise
     Var init_sig;
-    //! Embedding computed by the (embedding) neural network 
+    //! Embedding computed by the (embedding) neural network
     Var embedding;
     //! Function to output the embedding
     Func output_embedding;
@@ -132,7 +132,7 @@ protected:
     //! Predictions for F
     TVec<Mat> Fs;
 
-    //! Position of the current example in 
+    //! Position of the current example in
     //! the training set
     int curpos;
 
@@ -186,21 +186,21 @@ public:
     //! Logarithm of number of gaussians
     real log_L;
     //! Number of neighbors used for gradient descent
-    int nneighbors; 
+    int nneighbors;
     //! Number of neighbors for the p(x) density estimation
-    int nneighbors_density; 
+    int nneighbors_density;
     //! Number of neighbors to learn the mus
-    int mu_nneighbors; 
+    int mu_nneighbors;
     //! Number of reduced dimensions (number of tangent vectors to compute)
-    int ncomponents; 
+    int ncomponents;
     //! Threshold applied on the update rule for sigma^2_noise
     real sigma_threshold_factor;
     //! Variance transfer function ("square", "exp" or "softplus")
-    string variances_transfer_function; 
+    string variances_transfer_function;
     //! Optimizer of the neural network
-    PP<Optimizer> optimizer; 
+    PP<Optimizer> optimizer;
     //! Architecture type of the neural network ("single_neural_network" or "embedding_neural_nework")
-    string architecture_type; 
+    string architecture_type;
     //! Number of hidden units
     int n_hidden_units;
     //! Batch size of the gradient-based optimization
@@ -240,16 +240,16 @@ public:
     // * PLearner methods *
     // ********************
 
-private: 
+private:
 
-    //! This does the actual building. 
+    //! This does the actual building.
     void build_();
 
     //void update_reference_set_parameters();
 
-    void knn(const VMat& vm, const Vec& x, const int& k, TVec<int>& neighbors, bool sortk) const; 
+    void knn(const VMat& vm, const Vec& x, const int& k, TVec<int>& neighbors, bool sortk) const;
 
-protected: 
+protected:
 
     //! Declares this class' options.
     static void declareOptions(OptionList& ol);
@@ -319,7 +319,7 @@ public:
 
 
     // *** SUBCLASS WRITING: ***
-    // While in general not necessary, in case of particular needs 
+    // While in general not necessary, in case of particular needs
     // (efficiency concerns for ex) you may also want to overload
     // some of the following methods:
     // virtual void computeOutputAndCosts(const Vec& input, const Vec& target, Vec& output, Vec& costs) const;

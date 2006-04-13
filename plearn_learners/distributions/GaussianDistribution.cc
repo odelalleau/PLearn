@@ -5,18 +5,18 @@
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -27,14 +27,14 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
 
 
 
-/* *******************************************************      
+/* *******************************************************
  * $Id$
  * This file is part of the PLearn library.
  ******************************************************* */
@@ -52,8 +52,8 @@ using namespace std;
 
 #define ZEROGAMMA
 
-PLEARN_IMPLEMENT_OBJECT(GaussianDistribution, 
-                        "A Gaussian distribution represented compactly by the k leading eigenvalues and eigenvectors of its covariance matrix.", 
+PLEARN_IMPLEMENT_OBJECT(GaussianDistribution,
+                        "A Gaussian distribution represented compactly by the k leading eigenvalues and eigenvectors of its covariance matrix.",
                         "This class can be used either to fit a Gaussian to data \n"
                         "or to explicitly represent a Gaussian with a covariance matrix \n"
                         "of the form C = VDV' (possibly regularized by adding gamma.I).\n"
@@ -86,8 +86,8 @@ void GaussianDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 
 GaussianDistribution::GaussianDistribution()
-    :k(1000), 
-     gamma(0), 
+    :k(1000),
+     gamma(0),
      min_eig(0),
      use_last_eig(false),
      ignore_weights_below(0)
@@ -98,22 +98,22 @@ GaussianDistribution::GaussianDistribution()
 void GaussianDistribution::declareOptions(OptionList& ol)
 {
     // Build options
-    declareOption(ol, "k", &GaussianDistribution::k, OptionBase::buildoption, 
+    declareOption(ol, "k", &GaussianDistribution::k, OptionBase::buildoption,
                   "number of eigenvectors to keep when training");
 
-    declareOption(ol, "gamma", &GaussianDistribution::gamma, OptionBase::buildoption, 
+    declareOption(ol, "gamma", &GaussianDistribution::gamma, OptionBase::buildoption,
                   "Value to add to the empirical eigenvalues to obtain actual variance.\n");
-    declareOption(ol, "min_eig", &GaussianDistribution::min_eig, OptionBase::buildoption, 
+    declareOption(ol, "min_eig", &GaussianDistribution::min_eig, OptionBase::buildoption,
                   "Imposes a minimum over the actual variances to be used.\n"
                   "Actual variance used in the principal directions is max(min_eig, eigenvalue_i+gamma)\n");
-    declareOption(ol, "use_last_eig", &GaussianDistribution::use_last_eig, OptionBase::buildoption, 
+    declareOption(ol, "use_last_eig", &GaussianDistribution::use_last_eig, OptionBase::buildoption,
                   "If true, the actual variance used for directions in the nullspace of VDV' \n"
                   "(i.e. orthogonal to the kept eigenvectors) will be the same as the\n"
                   "actual variance used for the last principal direction. \n"
                   "If false, the actual variance used for directions in the nullspace \n"
                   "will be max(min_eig, gamma)\n");
 
-    declareOption(ol, "ignore_weights_below", &GaussianDistribution::ignore_weights_below, OptionBase::buildoption | OptionBase::nosave, 
+    declareOption(ol, "ignore_weights_below", &GaussianDistribution::ignore_weights_below, OptionBase::buildoption | OptionBase::nosave,
                   "DEPRECATED: When doing a weighted fitting (weightsize==1), points with a weight below this value will be ignored");
 
     // Learnt options
@@ -203,7 +203,7 @@ void GaussianDistribution::train()
     }
 }
 
-real GaussianDistribution::log_density(const Vec& x) const 
+real GaussianDistribution::log_density(const Vec& x) const
 {
     static Vec actual_eigenvalues;
 
@@ -212,7 +212,7 @@ real GaussianDistribution::log_density(const Vec& x) const
     else
     {
         int neig = eigenvalues.length();
-        real remaining_eig = 0; // variance for directions in null space 
+        real remaining_eig = 0; // variance for directions in null space
         actual_eigenvalues.resize(neig);
         for(int j=0; j<neig; j++)
             actual_eigenvalues[j] = max(eigenvalues[j]+gamma, min_eig);
