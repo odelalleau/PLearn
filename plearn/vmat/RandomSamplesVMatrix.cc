@@ -94,7 +94,11 @@ void RandomSamplesVMatrix::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
         "If given a non-negative value, it indicates the total number of\n"
         "non-preserved examples that are added to this VMat, and overrides\n"
-        "the 'length' option.");
+        "the 'length' option. Two special negative values can be used:\n"
+        " -1: this option is ignored, and 'length' is used instead (or the\n"
+        "     source's length if 'length' is not set)\n"
+        " -2: the number of non-preserved examples is set exactly to match\n"
+        "     the number of preserved examples.");
 
     declareOption(ol, "seed", &RandomSamplesVMatrix::seed,
                               OptionBase::buildoption,
@@ -145,8 +149,12 @@ void RandomSamplesVMatrix::build_()
     }
 
     // Find out length of this VMat if the 'n_non_preserved' option is set.
+    assert( n_non_preserved >= 0 || n_non_preserved == -1 ||
+            n_non_preserved == -2 );
     if (n_non_preserved >= 0)
         length_ = indices.length() + n_non_preserved;
+    else if (n_non_preserved == -2)
+        length_ = indices.length() * 2;
 
     // Fill in 'indices' with as many -1 as necessary.
     if (indices.length() > length_)
