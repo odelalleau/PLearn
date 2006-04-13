@@ -308,6 +308,66 @@ void RBMGenericParameters::clearStats()
     neg_count = 0;
 }
 
+void RBMGenericParameters::computeLinearUnitActivations
+    ( int i, const Vec& activations ) const
+{
+    assert( activations.length() == 1 );
+
+    if( going_up )
+    {
+        assert( up_units_types[i] == 'l' );
+
+        // activations[0] = sum_j weights(i,j) input_vec[j] + b[i]
+        product( activations, weights.subMatRows(i,1), input_vec );
+        activations[0] += up_units_params[i][0];
+    }
+    else
+    {
+        assert( down_units_types[i] == 'l' );
+
+        // activations[0] = sum_j weights(j,i) input_vec[j] + b[i]
+        transposeProduct( activations, weights.subMatColumns(i,1), input_vec );
+        activations[0] += down_units_params[i][0];
+    }
+}
+
+void RBMGenericParameters::computeQuadraticUnitActivations
+    ( int i, const Vec& activations ) const
+{
+    assert( activations.length() == 2 );
+
+    if( going_up )
+    {
+        assert( up_units_types[i] == 'q' );
+
+        // activations[0] = (sum_j weights(i,j) input_vec[j] + b[i])
+        //                    / (2 * up_units_params[i][1]^2)
+        product( activations, weights.subMatRows(i,1), input_vec );
+        real a_i = up_units_params[i][1];
+        activations[0] = (activations[0] + up_units_params[i][0])
+                           / (2 * a_i * a_i);
+
+        // activations[1] = 1 / (2 * up_units_params[i][1]^2)
+        activations[1] = 1. / (2. * a_i * a_i);
+    }
+    else
+    {
+        assert( down_units_types[i] == 'q' );
+
+        // activations[0] = (sum_j weights(j,i) input_vec[j] + b[i])
+        //                    / (2 * down_units_params[i][1]^2)
+        transposeProduct( activations, weights.subMatColumns(i,1), input_vec );
+        real a_i = down_units_params[i][1];
+        activations[0] = (activations[0] + down_units_params[i][0])
+                           / (2 * a_i * a_i);
+
+        // activations[1] = 1 / (2 * down_units_params[i][1]^2)
+        activations[1] = 1. / (2. * a_i * a_i);
+    }
+}
+
+
+/*
 void RBMGenericParameters::computeUnitActivations
     ( int i, const Vec& activations ) const
 {
@@ -366,7 +426,9 @@ void RBMGenericParameters::computeUnitActivations
                      "Supported values are 'l' and 'q'.\n", dut_i, i );
     }
 }
+*/
 
+/*
 void RBMGenericParameters::computeUnitActivations
     ( const Vec& all_activations ) const
 {
@@ -399,6 +461,40 @@ void RBMGenericParameters::computeUnitActivations
 
         computeUnitActivations( i, all_activations.subVec(cur_pos, length) );
         cur_pos += length;
+    }
+}
+*/
+
+void RBMGenericParameters::computeUnitActivations
+    ( int start, int length, const Vec& activations ) const
+{
+    string units_types;
+    if( going_up )
+        units_types = up_units_types;
+    else
+        units_types = down_units_types;
+
+    assert( start+length <= (int) units_types.length() );
+    int cur_pos; // position index inside activations
+
+    for( int i=start ; i<start+length ; i++ )
+    {
+        char ut_i = units_types[i];
+        if( ut_i == 'l' )
+        {
+            computeLinearUnitActivations( i, activations.subVec(cur_pos, 2) );
+            cur_pos++;
+        }
+        else if( ut_i == 'q' )
+        {
+            computeQuadraticUnitActivations( i,
+                                             activations.subVec(cur_pos, 2) );
+            cur_pos += 2;
+        }
+        else
+            PLERROR( "RBMGenericParameters::computeUnitActivations():\n"
+                     "value '%c' for units_types[%d] is unknown.\n"
+                     "Supported values are 'l' and 'q'.\n", ut_i, i );
     }
 }
 

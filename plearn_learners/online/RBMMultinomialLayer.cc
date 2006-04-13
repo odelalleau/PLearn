@@ -64,20 +64,24 @@ RBMMultinomialLayer::RBMMultinomialLayer( int the_size )
     expectation_is_up_to_date = false;
 }
 
-void RBMMultinomialLayer::getUnitActivations( int i, PP<RBMParameters> rbmp )
+//! Uses "rbmp" to obtain the activations of unit "i" of this layer.
+//! This activation vector is computed by the "i+offset"-th unit of "rbmp"
+void RBMMultinomialLayer::getUnitActivations( int i, PP<RBMParameters> rbmp,
+                                              int offset )
 {
     Vec activation = activations.subVec( i, 1 );
-    rbmp->computeUnitActivations( i, activation );
+    rbmp->computeUnitActivations( i+offset, 1, activation );
     expectation_is_up_to_date = false;
 }
 
-void RBMMultinomialLayer::getUnitActivations( PP<RBMParameters> rbmp )
+void RBMMultinomialLayer::getAllActivations( PP<RBMParameters> rbmp,
+                                             int offset )
 {
-    rbmp->computeUnitActivations( activations );
+    rbmp->computeUnitActivations( offset, size, activations );
     expectation_is_up_to_date = false;
 }
 
-void RBMMultinomialLayer::computeSample()
+void RBMMultinomialLayer::generateSample()
 {
     computeExpectation();
 

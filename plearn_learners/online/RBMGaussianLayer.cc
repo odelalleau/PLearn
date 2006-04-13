@@ -64,20 +64,25 @@ RBMGaussianLayer::RBMGaussianLayer( int the_size )
     expectation_is_up_to_date = false;
 }
 
-void RBMGaussianLayer::getUnitActivations( int i, PP<RBMParameters> rbmp )
+//! Uses "rbmp" to obtain the activations of unit "i" of this layer.
+//! This activation vector is computed by the "i+offset"-th unit of "rbmp"
+void RBMGaussianLayer::getUnitActivations( int i, PP<RBMParameters> rbmp,
+                                           int offset )
 {
     Vec activation = activations.subVec( 2*i, 2 );
-    rbmp->computeUnitActivations( i, activation );
+    rbmp->computeUnitActivations( i+offset, 1, activation );
     expectation_is_up_to_date = false;
 }
 
-void RBMGaussianLayer::getUnitActivations( PP<RBMParameters> rbmp )
+//! Uses "rbmp" to obtain the activations of all units in this layer.
+//! Unit 0 of this layer corresponds to unit "offset" of "rbmp".
+void RBMGaussianLayer::getAllActivations( PP<RBMParameters> rbmp, int offset )
 {
-    rbmp->computeUnitActivations( activations );
+    rbmp->computeUnitActivations( offset, size, activations );
     expectation_is_up_to_date = false;
 }
 
-void RBMGaussianLayer::computeSample()
+void RBMGaussianLayer::generateSample()
 {
     for( int i=0 ; i<size ; i++ )
         sample[i] = random_gen->gaussian_mu_sigma( activations[2*i],

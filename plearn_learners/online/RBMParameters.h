@@ -121,13 +121,11 @@ public:
     //! Clear all information accumulated during stats
     virtual void clearStats() = 0;
 
-    //! Computes the activation vector of unit "i"
-    //! (i indexes an up unit if "going_up", else a down unit)
-    virtual void computeUnitActivations( int i,
+    //! Computes the vectors of activation of "length" units,
+    //! starting from "start", and concatenates them into "activations".
+    //! "start" indexes an up unit if "going_up", else a down unit.
+    virtual void computeUnitActivations( int start, int length,
                                          const Vec& activations ) const = 0;
-
-    //! Computes the activation vector of all units
-    virtual void computeUnitActivations( const Vec& all_activations ) const=0;
 
     //! given the input, compute the output (possibly resize it  appropriately)
     virtual void fprop(const Vec& input, Vec& output) const;

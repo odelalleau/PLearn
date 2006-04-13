@@ -54,60 +54,36 @@ RBMMixedLayer::RBMMixedLayer()
 {
 }
 
-void RBMMixedLayer::getUnitActivations( int i, PP<RBMParameters> rbmp )
+//! Uses "rbmp" to obtain the activations of unit "i" of this layer.
+//! This activation vector is computed by the "i+offset"-th unit of "rbmp"
+void RBMMixedLayer::getUnitActivations( int i, PP<RBMParameters> rbmp,
+                                        int offset )
 {
-    int cur_pos = 0;
-    Vec activation;
-    for( int j=0 ; j<i ; j++ )
+    int j = layer_of_unit[i];
+    PP<RBMLayer> layer = sub_layers[i];
+    int sub_index = i - init_positions[j];
+    int total_offset = offset + init_positions[j];
+
+    layer->getUnitActivations( sub_index, rbmp, total_offset );
+    expectation_is_up_to_date = false;
+}
+
+//! Uses "rbmp" to obtain the activations of all units in this layer.
+//! Unit 0 of this layer corresponds to unit "offset" of "rbmp".
+void RBMMixedLayer::getAllActivations( PP<RBMParameters> rbmp, int offset )
+{
+    for( int i=0 ; i<n_layers ; i++ )
     {
-        char ut_j = units_types[j];
-        if( ut_j == 'l' )
-            cur_pos++;
-        else if( ut_j == 'q' )
-            cur_pos += 2;
-        else
-            PLERROR( "RBMMixedLayer::getUnitActivations - value '%c' for\n"
-                     "units_types[%d] is unknown. Supported values are 'l'"
-                     " and'q'.\n",
-                     ut_j, i );
-    }
-
-    char ut = units_types[cur_pos];
-    if( ut == 'l' )
-        activation = activations.subVec( cur_pos, 1 );
-    else if( ut == 'q' )
-        activation = activations.subVec( cur_pos, 2 );
-    else
-        PLERROR( "RBMMixedLayer::getUnitActivations - value '%c' for\n"
-                 "units_types[%d] is unknown. Supported values are 'l'"
-                 " and'q'.\n",
-                 ut, i );
-
-    rbmp->computeUnitActivations( i, activation );
-
-    for( int j=n_layers-1 ; j>=0 ; j-- )
-    {
-        if( init_positions[j] <= i )
-        {
-            sub_layers[j]->expectation_is_up_to_date = false;
-            break;
-        }
+        int total_offset = offset + init_positions[i];
+        sub_layers[i]->getAllActivations( rbmp, total_offset );
     }
     expectation_is_up_to_date = false;
 }
 
-void RBMMixedLayer::getUnitActivations( PP<RBMParameters> rbmp )
-{
-    rbmp->computeUnitActivations( activations );
-    for( int i=0 ; i<n_layers ; i++ )
-        sub_layers[i]->expectation_is_up_to_date = false;
-    expectation_is_up_to_date = false;
-}
-
-void RBMMixedLayer::computeSample()
+void RBMMixedLayer::generateSample()
 {
     for( int i=0 ; i<n_layers ; i++ )
-        sub_layers[i]->computeSample();
+        sub_layers[i]->generateSample();
 }
 
 void RBMMixedLayer::computeExpectation()
@@ -132,6 +108,11 @@ void RBMMixedLayer::declareOptions(OptionList& ol)
                   OptionBase::learntoption,
                   " Initial index of the sub_layers.");
 
+    declareOption(ol, "layer_of_unit", &RBMMixedLayer::layer_of_unit,
+                  OptionBase::learntoption,
+                  "layer_of_unit[i] is the index of sub_layer containing unit"
+                  " i.");
+
     declareOption(ol, "n_layers", &RBMMixedLayer::n_layers,
                   OptionBase::learntoption,
                   "Number of sub-layers.");
@@ -148,6 +129,8 @@ void RBMMixedLayer::build_()
     sample.resize( 0 );
     expectation.resize( 0 );
     expectation_is_up_to_date = false;
+    layer_of_unit.resize( 0 );
+
     n_layers = sub_layers.size();
     init_positions.resize( n_layers );
 
@@ -162,6 +145,7 @@ void RBMMixedLayer::build_()
         activations = merge( activations, cur_layer->activations );
         sample = merge( sample, cur_layer->sample );
         expectation = merge( expectation, cur_layer->expectation );
+        layer_of_unit.append( TVec<int>( cur_layer->size, i ) );
     }
 }
 
@@ -178,6 +162,7 @@ void RBMMixedLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     deepCopyField(sub_layers, copies);
     deepCopyField(init_positions, copies);
+    deepCopyField(layer_of_unit, copies);
 }
 
 

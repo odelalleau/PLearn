@@ -71,14 +71,17 @@ public:
 
     // Your other public member functions go here
 
-    //! gets the activation of the ith unit
-    virtual void getUnitActivations( int i, PP<RBMParameters> rbmp );
+    //! Uses "rbmp" to obtain the activations of unit "i" of this layer.
+    //! This activation vector is computed by the "i+offset"-th unit of "rbmp"
+    virtual void getUnitActivations( int i, PP<RBMParameters> rbmp,
+                                     int offset=0 );
 
-    //! gets the activation of all the units from the current layer
-    virtual void getUnitActivations( PP<RBMParameters> rbmp ) ;
+    //! Uses "rbmp" to obtain the activations of all units in this layer.
+    //! Unit 0 of this layer corresponds to unit "offset" of "rbmp".
+    virtual void getAllActivations( PP<RBMParameters> rbmp, int offset=0 ) ;
 
     //! compute a sample, and update the sample field
-    virtual void computeSample() ;
+    virtual void generateSample() ;
 
     //! compute the expectation
     virtual void computeExpectation() ;
@@ -102,6 +105,9 @@ protected:
 
     //! Initial index of the sub_layers.
     TVec<int> init_positions;
+
+    //! layer_of_unit[i] is the index of sub_layer containing unit i
+    TVec<int> layer_of_unit;
 
     //! Number of sub-layers.
     int n_layers;

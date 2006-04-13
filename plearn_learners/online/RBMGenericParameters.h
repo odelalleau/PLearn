@@ -99,12 +99,11 @@ public:
     //! Clear all information accumulated during stats
     virtual void clearStats();
 
-    //! Computes the activation vector of unit "i"
-    //! (i indexes an up unit if "going_up", else a down unit)
-    virtual void computeUnitActivations( int i, const Vec& activations ) const;
-
-    //! Computes the activation vector of all units
-    virtual void computeUnitActivations( const Vec& all_activations ) const;
+    //! Computes the vectors of activation of "length" units,
+    //! starting from "start", and concatenates them into "activations".
+    //! "start" indexes an up unit if "going_up", else a down unit.
+    virtual void computeUnitActivations( int start, int length,
+                                         const Vec& activations ) const;
 
     //! Adapt based on the output gradient: this method should only
     //! be called just after a corresponding fprop; it should be
@@ -178,6 +177,16 @@ protected:
 
 protected:
     //#####  Protected Member Functions  ######################################
+    //! Computes the activations vector of unit "i", assuming it is linear
+    //! "i" indexes an up unit if "going_up", else a down unit.
+    virtual void computeLinearUnitActivations( int i, const Vec& activations )
+        const;
+
+    //! Computes the activations vector of unit "i", assuming it is quadratic
+    //! "i" indexes an up unit if "going_up", else a down unit.
+    void computeQuadraticUnitActivations( int i, const Vec& activations )
+        const;
+
 
     //! Declares the class options.
     static void declareOptions(OptionList& ol);

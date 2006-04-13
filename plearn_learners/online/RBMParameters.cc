@@ -150,18 +150,10 @@ void RBMParameters::setAsDownInput( const Vec& input ) const
 //! given the input, compute the output (possibly resize it  appropriately)
 void RBMParameters::fprop(const Vec& input, Vec& output) const
 {
-    // save initial value of input_vec and going_up
-    Vec init_input_vec = input_vec;
-    bool init_going_up = going_up;
-
     // propagates the activations.
     setAsDownInput( input );
     output.resize( output_size );
-    computeUnitActivations( output );
-
-    // restores input_vec
-    input_vec = init_input_vec;
-    going_up = init_going_up;
+    computeUnitActivations( 0, output_size, output );
 }
 
 } // end of namespace PLearn

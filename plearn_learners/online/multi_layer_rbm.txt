@@ -341,7 +341,7 @@ For class RBMLayer:
       calls rbmp->computeUnitActivations( layer_params ) by default, or
       rbmp->computeUnitActivations( indices, layer_params ),
         indices being a subset of units, for "sparse" layers
-  * RBMLayer::computeSample()
+  * RBMLayer::generateSample()
       get 'sample' from 'activations'
   * RBMLayer::computeExpectation()
       get 'expectation' from 'activations'
@@ -357,7 +357,7 @@ input_vec to a sample (out_sample) would typically call:
     input.sample << input_vec;
     rbmp.setAsDownInput( input.sample );
     output.getUnitActivations( rbmp );
-    output.computeSample();
+    output.generateSample();
     out_sample << output.sample;
 
 If we wanted the expectation (out_exp) instead of a sample, it would have
@@ -375,16 +375,16 @@ The learning of one example (input_vec) by contrastive divergence:
     input.sample << input_vec;
     rbmp.setAsDownInput( input.sample );
     output.getUnitActivations( rbmp );
-    output.computeSample();
+    output.generateSample();
     rbmp.accumulatePosStats( input.sample, output.sample );
 
     // negative phase
     rbmp.setAsUpInput( output.sample );
     input.getUnitActivations( rbmp );
-    input.computeSample();
+    input.generateSample();
     rbmp.setAsDownInput( input.sample );
     output.getUnitActivations( rbmp );
-    output.computeSample();
+    output.generateSample();
     rbmp.accumulateNegStats( input.sample, output.sample );
 
     // update
@@ -400,12 +400,12 @@ the learning of one example (input_vec) will look like:
     input.sample << input_vec;
     rbmp_ih.setAsDownInput( input.sample );
     hidden.getUnitActivations( rbmp_ih );
-    hidden.computeExpectation(); // not computeSample()
+    hidden.computeExpectation(); // not generateSample()
 
     // positive phase
     rbmp_ho.setAsDownInput( hidden.expectation );
     output.getUnitActivations( rbmp_ho );
-    output.computeSample();
+    output.generateSample();
     rbmp_ho.accumulatePosStats( hidden.expectation, output.sample );
 
     // negative phase
@@ -414,7 +414,7 @@ the learning of one example (input_vec) will look like:
     hidden.getExpectation();
     rbmp_ho.setAsDownInput( hidden.expectation );
     output.getUnitActivations( rbmp_ho );
-    output.computeSample();
+    output.generateSample();
     rbmp_ho.accumulateNegStats( hidden.expectation, output.sample );
 
     // update
