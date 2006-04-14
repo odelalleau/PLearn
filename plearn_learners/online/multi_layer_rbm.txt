@@ -244,6 +244,90 @@ Combined operations, in a supervised RBM network:
      return v
 
 -------------------------------------------------------------------------------
+Using and training the last layers
+-------------------------------------------------------------------------------
+
+Using
+-----
+If we train the network in a supervised fashion, we introduce a layer
+containing the outputs (or targets), Y.
+Let's call the last layer L and the previous layer P, and define:
+
+ R.V. (=sample) of the last layer = L_i
+ R.V. (=sample) of the previous (next-to-last) layer = P_j
+ R.V. of the supervised layer = Y_k
+ energy parameters between P_j and L_i = V,C: energies V_ij L_i P_j + C_i L_i
+ energy parameters between L_i and Y_k = W,B: energies W_ki Y_k L_i + B_k Y_k
+ "output" (expectation) of next-to-last layer = p(P) (given the inputs of the
+network)
+
+ * The activation of Y is computed from p(P), not p(L):
+
+    actY_k = -B_k + sum_i softplus(-(W_ki + C_i + sum_j V_ij p(P_j)))
+    with softplus: x -> log(1 + exp(x))
+    (see below for explanation)
+
+ * The expectations of Y, from the activations (Y is a multinomial units set)
+       P(Y|inputs) = softmax(actY)
+
+ * fprop = expectations ( activations )
+
+Training
+--------
+There are two ways of learning the parameters V, C, W and B
+
+ * By simple gradient descent:
+We compute the cost = - log P(Y=onehot(k)|inputs), where k is the
+observed target, and we backprop all the way.
+
+ * By using contrastive divergence:
+    - we consider [ Y, P ] = X a big layer, beyond L
+    - we put [onehot(k), p(P)] = x in X, as input of L
+    - we compute the expectations of L given x:
+        p(L_i) = sigmoid(C_i + W_ki + sum_j V_ij p(P_j))
+    - accumulatePosStats(x, p(L))
+    - sample L according to p(L)
+    - compute p(P) given L
+    - sample P according to p(P)
+    - compute p(L) again, using P as input (and NOT p(P))
+    - accumulateNegStats([onehot(k), P], p(L))
+    - update
+
+Or a combination of the two above. See rbm_todo_and_ideas.txt for variants.
+
+Why?
+----
+The output probabilities are computed as follows:
+    P(Y=onehot(k)|inputs) = exp(-B_k + sum_i softplus(-(W_ki + C_i + sum_j V_ij p(P_j))) / Z
+
+This formula can be derived by considering that P, L, and Y are binary
+random variables following the Boltzmann distribution with energy:
+    E(L,Y,P) = B'Y + Y'WL + C'L + P'V'L
+
+During training, both P and Y are observed, so that E is linear in L,
+i.e. P(L|P,Y) is a product of P(L_i|P,Y):
+the L_i are conditionally independant given P and Y.
+
+This corresponds to an undirected graphical model with full connectivity
+between each L_i and each Y_k (and similarly between L_i and each P_j),
+but no connection among the L_i or among the Y_k's. Because of this
+factorization we obtain that
+    P(Y|P) = sum_L exp(-E(L,Y,P)) / Z
+and
+   sum_L exp(-E(L,Y,P)) = exp(-B'Y) prod_i(exp(-E_i(1,Y,P)) + exp(-E_i(0,Y,P)))
+
+where E_i(l,Y,P) = the term in L_i=l in the energy
+                 = l (sum_k Y_k W_ki + C_i + sum_j V_ij P_j).
+
+Since E_i(0,Y,P) = 0, we obtain that
+    sum_L exp(-E(L,Y,P)) = exp(-B'Y) exp(sum_i log(1 + exp(-E_i(1,Y,P))))
+                         = exp(-B'Y + sum_i softplus(-sum_k Y_k W_ki + C_i + sum_j V_ij P_j))
+
+which gives the above formula for P(Y=onehot(k)|inputs), if we replace P by
+its expectation p(P).
+
+
+-------------------------------------------------------------------------------
 Other architecture and pseudo-code proposed
 -------------------------------------------------------------------------------
 

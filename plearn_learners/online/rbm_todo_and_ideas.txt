@@ -3,9 +3,11 @@ To do
 
 * Comments!
 
-* Subclass UnconditionalDistribution into JointDistribution
+* Add a subclass of RBMParameters to put between the last layers (the layer
+  containing the targets or outputs, the layer containing the input
+  representation, and the layer containing the joint representation)
 
-* implement DeepBeliefNet as a JointDistribution, trained the way Hinton
+* Implement DeepBeliefNet as a PDistribution, trained the way Hinton
   trains its network
 
 * Make an OnlineLearningModule stacking RBMLayers and RBMParameters doing the
