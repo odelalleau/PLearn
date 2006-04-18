@@ -2,7 +2,7 @@
 
 // PythonObjectWrapper.cc
 //
-// Copyright (C) 2005 Nicolas Chapados 
+// Copyright (C) 2005-2006 Nicolas Chapados 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -169,6 +169,7 @@ Mat ConvertFromPyObject<Mat>::convert(PyObject* pyobj)
 //#####  Constructors+Destructors  ############################################
 
 // Copy constructor: increment refcount if controlling ownership.
+// No need to manage GIL.
 PythonObjectWrapper::PythonObjectWrapper(const PythonObjectWrapper& other)
     : m_ownership(other.m_ownership),
       m_object(other.m_object)
@@ -177,11 +178,14 @@ PythonObjectWrapper::PythonObjectWrapper(const PythonObjectWrapper& other)
         Py_XINCREF(m_object);
 }
 
-// Destructor decrements refcount if controlling ownership
+// Destructor decrements refcount if controlling ownership.
+// Always acquire the Python Global Interpreter Lock before decrementing.
 PythonObjectWrapper::~PythonObjectWrapper()
 {
-    if (m_ownership == control_ownership)
+    if (m_ownership == control_ownership) {
+        PythonGlobalInterpreterLock gil;
         Py_XDECREF(m_object);
+    }
 }
 
 // Assignment: let copy ctor and dtor take care of ownership

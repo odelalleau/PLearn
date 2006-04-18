@@ -2,7 +2,7 @@
 
 // PythonObjectWrapper.h
 //
-// Copyright (C) 2005 Nicolas Chapados 
+// Copyright (C) 2005-2006 Nicolas Chapados 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -67,16 +67,68 @@ class PythonObjectWrapper;                   // Forward-declare
 void PLPythonConversionError(const char* function_name, PyObject* pyobj);
 
 
+//#####  PythonGlobalInterpreterLock  #########################################
+
+/**
+ *  @class  PythonGlobalInterpreterLock
+ *  @brief  Ensure thread safety by managing the Python Global Interpreter Lock
+ *
+ *  The Python interpreter is not fully reentrant and must be handled carefully
+ *  in the presence of multi-threading.  While this does not affect
+ *  multi-threaded pure Python code (for which reentrancy is properly managed),
+ *  it does affect extensions that are written in other languages.  To this
+ *  end, Python provides a Global Interpreter Lock (GIL) which must be acquired
+ *  before calling any of its API within extension code and released
+ *  afterwards.
+ *
+ *  This class provides a simple Resource-Acquisition-is-Initialization (RAII)
+ *  idiom to manage the GIL.  The idea is to construct a local variable of this
+ *  class at the beginning of a scope which uses Python.  The constructor
+ *  acquires the lock, and the destructor automatically releases it.  For
+ *  example:
+ *
+ *  @code
+ *  void foo()
+ *  {
+ *      // Acquire the Python lock.  This blocks if another thread
+ *      // already has the lock.
+ *      PythonGlobalInterpreterLock gil;
+ *
+ *      // Code which uses the Python C API comes here
+ *      // ...
+ *  }   // Destructor releases the lock, so nothing to do.
+ *  @endcode
+ */
+class PythonGlobalInterpreterLock
+{
+public:
+    PythonGlobalInterpreterLock()
+        : m_gilstate(PyGILState_Ensure())
+    { }
+       
+    ~PythonGlobalInterpreterLock()
+    {
+        PyGILState_Release(m_gilstate);
+    }
+
+    PyGILState_STATE m_gilstate;
+};
+
 
 //#####  ConvertFromPyObject  #################################################
 
 /**
- * @class  ConvertFromPyObject
- * @brief  Set of conversion functions from Python to C++.
+ *  @class  ConvertFromPyObject
+ *  @brief  Set of conversion functions from Python to C++.
  *
- * This cannot be function templates since we cannot partial specialize them.
- * Note that new C++ objects are created and the original PyObject is not
- * touched.  In particular, we never manipulate the PyObject reference count.
+ *  This cannot be function templates since we cannot partial specialize them.
+ *  Note that new C++ objects are created and the original PyObject is not
+ *  touched.  In particular, we never manipulate the PyObject reference count.
+ *
+ *  @note  For performance reasons, these functions DON'T acquire the Python
+ *  Global Interpreter Lock (since it is assumed that there is no memory
+ *  management involved in simply reading a Python object).  This may be
+ *  changed in the future.
  */
 template <class T>
 class ConvertFromPyObject
@@ -154,17 +206,23 @@ struct ConvertFromPyObject< std::map<T,U> >
 //#####  PythonObjectWrapper  #################################################
 
 /**
- * @class  PythonObjectWrapper
- * @brief  Very lightweight wrapper over a Python Object that allows conversion
- *         to/from C++ types (including those of PLearn)
+ *  @class  PythonObjectWrapper
+ *  @brief  Very lightweight wrapper over a Python Object that allows conversion
+ *          to/from C++ types (including those of PLearn)
  *
- * A PythonObjectWrapper provides the ability to manage a Python Object in a
- * fairly lightweight manner.  It supports construction from a number of C++
- * types, which in turn create new Python objects.  It also supports the
- * conversion of the Python object back to C++ types.  The PythonObjectWrapper
- * can either own or not the Python Object.  For owned objects, the Python
- * reference count is increased with each copy or assignment, and decremented
- * with each desctruction.
+ *  A PythonObjectWrapper provides the ability to manage a Python Object in a
+ *  fairly lightweight manner.  It supports construction from a number of C++
+ *  types, which in turn create new Python objects.  It also supports the
+ *  conversion of the Python object back to C++ types.  The PythonObjectWrapper
+ *  can either own or not the Python Object.  For owned objects, the Python
+ *  reference count is increased with each copy or assignment, and decremented
+ *  with each desctruction.
+ *
+ *  For safety reasons, the Python Global Interpreter Lock is acquired by
+ *  default before constructing the Python object.  However, this can be
+ *  controlled by a constructor option (useful when you have already acquired
+ *  the lock in a bigger context and you have to construct a large number of
+ *  PythonObjectWrappers).
  */
 class PythonObjectWrapper
 {
@@ -188,7 +246,8 @@ public:
 
     //! Construct 'None'.  This object is a singleton in Python, but it must be
     //! reference-counted just like any other object.
-    PythonObjectWrapper(OwnershipMode o = control_ownership)
+    PythonObjectWrapper(OwnershipMode o = control_ownership,
+                        bool acquire_gil = true /* unused in this overload */)
         : m_ownership(o),
           m_object(Py_None)
     {
@@ -197,22 +256,31 @@ public:
     }
     
     //! Constructor for pre-existing PyObject
-    PythonObjectWrapper(PyObject* pyobj, OwnershipMode o = control_ownership)
+    PythonObjectWrapper(PyObject* pyobj, OwnershipMode o = control_ownership,
+                        bool acquire_gil = true /* unused in this overload */)
         : m_ownership(o),
           m_object(pyobj)
     { }
     
     //! Constructor for general type (forwarded to newPyObject)
     template <class T>
-    PythonObjectWrapper(const T& x, OwnershipMode o = control_ownership)
-        : m_ownership(o),
-          m_object(newPyObject(x))
-    { }
+    PythonObjectWrapper(const T& x, OwnershipMode o = control_ownership,
+                        bool acquire_gil = true)
+        : m_ownership(o)
+    {
+        if (acquire_gil) {
+            PythonGlobalInterpreterLock gil;
+            m_object = newPyObject(x);
+        }
+        else
+            m_object = newPyObject(x);
+    }
 
     //! Copy constructor: increment refcount if controlling ownership.
     PythonObjectWrapper(const PythonObjectWrapper& other);
     
-    //! Destructor: decrement refcount if controlling ownership
+    //! Destructor: decrement refcount if controlling ownership.
+    //! Always acquire the Python Global Interpreter Lock before decrementing.
     ~PythonObjectWrapper();
 
     //! Assignment operator: manage refcount if necessary

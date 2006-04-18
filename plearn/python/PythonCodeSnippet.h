@@ -101,6 +101,10 @@ public:
  *    Python exceptions are then handled according to the behavior in the
  *    previous point.  Note that, for now, all C++ exceptions are turned into
  *    a generic Python 'Exception' (base class for all exceptions).
+ *
+ *  The current implementation of the PythonCodeSnippet is designed to be
+ *  thread-safe, i.e. the Python Global Interpreter Lock is always acquired
+ *  before sensitive operations are carried out.
  */
 class PythonCodeSnippet : public Object
 {
@@ -308,6 +312,7 @@ PythonObjectWrapper
 PythonCodeSnippet::invoke(const char* function_name,
                           const T& arg1) const
 {
+    PythonGlobalInterpreterLock gil;         // For thread-safety
     PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
                                            function_name);
     // pFunc: Borrowed reference
@@ -331,9 +336,10 @@ PythonCodeSnippet::invoke(const char* function_name,
         if (! return_value)
             handlePythonErrors();
     }
-    else
+    else {
         PLERROR("PythonCodeSnippet::invoke: cannot call function '%s'",
                 function_name);
+    }
 
     return PythonObjectWrapper(return_value);
 }
@@ -345,6 +351,7 @@ PythonCodeSnippet::invoke(const char* function_name,
                           const T& arg1,
                           const U& arg2) const
 {
+    PythonGlobalInterpreterLock gil;         // For thread-safety
     PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
                                            function_name);
     // pFunc: Borrowed reference
@@ -386,6 +393,7 @@ PythonCodeSnippet::invoke(const char* function_name,
                           const U& arg2,
                           const V& arg3) const
 {
+    PythonGlobalInterpreterLock gil;         // For thread-safety
     PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
                                            function_name);
     // pFunc: Borrowed reference
@@ -431,6 +439,7 @@ PythonCodeSnippet::invoke(const char* function_name,
                           const V& arg3,
                           const W& arg4) const
 {
+    PythonGlobalInterpreterLock gil;         // For thread-safety
     PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
                                            function_name);
     // pFunc: Borrowed reference

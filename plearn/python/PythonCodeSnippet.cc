@@ -84,6 +84,10 @@ PLEARN_IMPLEMENT_OBJECT(
     "  Python exceptions are then handled according to the behavior in the\n"
     "  previous point.  Note that, for now, all C++ exceptions are turned into\n"
     "  a generic Python 'Exception' (base class for all exceptions).\n"
+    "\n"
+    "The current implementation of the PythonCodeSnippet is designed to be\n"
+    "thread-safe, i.e. the Python Global Interpreter Lock is always acquired\n"
+    "before sensitive operations are carried out.\n"
     );
   
 
@@ -176,6 +180,7 @@ void PythonCodeSnippet::makeDeepCopyFromShallowCopy(
 PythonObjectWrapper
 PythonCodeSnippet::getGlobalObject(const string& object_name) const
 {
+    PythonGlobalInterpreterLock gil;         // For thread-safety
     PyObject* pyobj = PyDict_GetItemString(m_compiled_code.getPyObject(),
                                            object_name.c_str());
     if (pyobj) {
@@ -190,6 +195,8 @@ PythonCodeSnippet::getGlobalObject(const string& object_name) const
 void PythonCodeSnippet::setGlobalObject(const string& object_name,
                                         const PythonObjectWrapper& pow)
 {
+    PythonGlobalInterpreterLock gil;         // For thread-safety
+
     // Note that PyDict_SetItemString increments the reference count for us
     int non_success = 0;
     if (! pow.isNull())
@@ -211,6 +218,7 @@ void PythonCodeSnippet::setGlobalObject(const string& object_name,
 
 bool PythonCodeSnippet::isInvokable(const char* function_name) const
 {
+    PythonGlobalInterpreterLock gil;         // For thread-safety
     PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
                                            function_name);
     // pFunc: Borrowed reference
@@ -223,6 +231,7 @@ bool PythonCodeSnippet::isInvokable(const char* function_name) const
 PythonObjectWrapper
 PythonCodeSnippet::invoke(const char* function_name) const
 {
+    PythonGlobalInterpreterLock gil;         // For thread-safety
     PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
                                            function_name);
     // pFunc: Borrowed reference
@@ -246,6 +255,7 @@ PythonObjectWrapper
 PythonCodeSnippet::invoke(const char* function_name,
                           const TVec<PythonObjectWrapper>& args) const
 {
+    PythonGlobalInterpreterLock gil;         // For thread-safety
     PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
                                            function_name);
     // pFunc: Borrowed reference
@@ -277,6 +287,7 @@ PythonCodeSnippet::invoke(const char* function_name,
 // exceptions thrown by C++ into Python exceptions.
 PyObject* PythonCodeSnippet::pythonTrampoline(PyObject* self, PyObject* args)
 {
+    PythonGlobalInterpreterLock gil;         // For thread-safety
     try {
         // Transform the args tuple into a TVec of not-owned PythonObjectWrapper
         if (! PyTuple_Check(args))
@@ -324,6 +335,8 @@ PyObject* PythonCodeSnippet::pythonTrampoline(PyObject* self, PyObject* args)
 void PythonCodeSnippet::injectInternal(const char* python_name,
                                        StandaloneFunction* function_ptr)
 {
+    PythonGlobalInterpreterLock gil;         // For thread-safety
+
     // Wrap the function_ptr into a PyCObject
     PyObject* self = PyCObject_FromVoidPtr(function_ptr, NULL);
     
@@ -370,6 +383,8 @@ void PythonCodeSnippet::inject(const char* python_name,
 
 PythonObjectWrapper PythonCodeSnippet::compileGlobalCode(const string& code) const
 {
+    PythonGlobalInterpreterLock gil;         // For thread-safety
+
     PyObject* globals = PyDict_New();
     PyDict_SetItemString(globals, "__builtins__", PyEval_GetBuiltins());
 
@@ -389,6 +404,7 @@ PythonObjectWrapper PythonCodeSnippet::compileGlobalCode(const string& code) con
 
 void PythonCodeSnippet::handlePythonErrors() const
 {
+    PythonGlobalInterpreterLock gil;         // For thread-safety
     if (PyErr_Occurred()) {
         if (m_remap_python_exceptions) {
             PyObject *ptype = 0, *pvalue = 0, *ptraceback = 0;
