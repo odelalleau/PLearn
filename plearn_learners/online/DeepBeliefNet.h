@@ -238,8 +238,11 @@ protected:
 protected:
     //#####  Protected Member Functions  ######################################
 
+    virtual void greedyStep( const Vec& input, int params_index );
+    virtual void jointGreedyStep( const Vec& input, const Vec& target );
+    virtual void fineTune( const Vec& input, const Vec& target );
+
     //! Declares the class options.
-    // (PLEASE IMPLEMENT IN .cc)
     static void declareOptions(OptionList& ol);
 
 private:

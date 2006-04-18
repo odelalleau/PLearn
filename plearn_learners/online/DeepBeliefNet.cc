@@ -78,8 +78,8 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
 
     declareOption(ol, "training_schedule", &DeepBeliefNet::training_schedule,
                   OptionBase::buildoption,
-                  "Number of epochs for training each RBMParameters during\n"
-                  "greedy learning phase.\n");
+                  "Number of epochs for training RBMParameters during each\n"
+                  "learning phase.\n");
 
     declareOption(ol, "fine_tuning_method", &DeepBeliefNet::fine_tuning_method,
                   OptionBase::buildoption,
@@ -152,9 +152,6 @@ void DeepBeliefNet::build_()
     if( n_layers <= 1 )
         return;
 
-    if( training_schedule.length() != n_layers )
-        training_schedule = TVec<int>( n_layers, 30 );
-
     // check value of fine_tuning_method
     string ftm = lowerstring( fine_tuning_method );
     if( ftm == "" | ftm == "none" )
@@ -169,12 +166,20 @@ void DeepBeliefNet::build_()
         PLERROR( "DeepBeliefNet::build_ - fine_tuning_method \"%s\"\n"
                  "is unknown.\n", fine_tuning_method.c_str() );
 
+    if( training_schedule.length() != n_layers )
+        training_schedule = TVec<int>( n_layers, 30 );
+
     build_layers();
     build_params();
 }
 
 void DeepBeliefNet::build_layers()
 {
+    if( inputsize_ >= 0 && layers[0]->size != inputsize() )
+        PLERROR( "DeepBeliefNet::build_layers() - layers[0]->size\n"
+                 "should be equal to inputsize() (%d != %d).\n",
+                 layers[0]->size, inputsize() );
+
     for( int i=0 ; i<n_layers ; i++ )
         layers[i]->random_gen = random_gen;
     target_layer->random_gen = random_gen;
@@ -370,9 +375,141 @@ void DeepBeliefNet::train()
     }
     */
 
-    Vec input;
-    Vec target;
+    Vec input( inputsize() );
+    Vec target( targetsize() );
+    real weight; // unused
 
+    if( !initTrain() )
+        return;
+
+    int nsamples = train_set->length();
+
+    // Let's define stage and nstages:
+    //   - 0: fresh state, nothing is done
+    //   - 1..n_layers-2: params[stage-1] is trained
+    //   - n_layers-1: joint_params is trained (including params[n_layers-2])
+    //   - n_layers: after the fine tuning
+
+    for( ; stage < nstages ; stage++ )
+    {
+        // clear stats of previous epoch
+        train_stats->forget();
+
+        // loop training_schedule[stage] times over all examples in train set
+        // TODO: modify the training set used?
+        int layer = stage-1;
+        int n_substages = training_schedule[stage];
+
+        if( stage < n_layers-1 )
+        {
+            for( int substage=0 ; substage < n_substages ; substage++ )
+            {
+                for( int sample=0 ; sample<nsamples ; sample++ )
+                {
+                    train_set->getExample(sample, input, target, weight);
+                    greedyStep( input, layer );
+                }
+            }
+        }
+        else if( stage == n_layers-1 )
+        {
+            for( int substage=0 ; substage < n_substages ; substage++ )
+            {
+                for( int sample=0 ; sample<nsamples ; sample++ )
+                {
+                    train_set->getExample(sample, input, target, weight);
+                    jointGreedyStep( input, target );
+                }
+            }
+        }
+        else if( stage == n_layers )
+        {
+            for( int substage=0 ; substage < n_substages ; substage++ )
+            {
+                for( int sample=0 ; sample<nsamples ; sample++ )
+                {
+                    train_set->getExample(sample, input, target, weight);
+                    fineTune( input, target );
+                }
+            }
+        }
+        train_stats->finalize(); // finalize statistics for this epoch
+    }
+}
+
+void DeepBeliefNet::greedyStep( const Vec& input, int index )
+{
+    // deterministic propagation until we reach index
+    layers[0]->expectation << input;
+    for( int i=0 ; i<index ; i++ )
+    {
+        params[i]->setAsDownInput( layers[i]->expectation );
+        layers[i+1]->getAllActivations( (RBMGenericParameters*) params[i] );
+        layers[i+1]->computeExpectation();
+    }
+
+    // positive phase
+    params[index]->setAsDownInput( layers[index]->expectation );
+    layers[index+1]->getAllActivations((RBMGenericParameters*) params[index]);
+    layers[index+1]->computeExpectation();
+    params[index]->accumulatePosStats(layers[index]->expectation,
+                                      layers[index+1]->expectation );
+
+    // down propagation
+    layers[index+1]->generateSample();
+    params[index]->setAsUpInput( layers[index+1]->sample );
+    layers[index]->getAllActivations( (RBMGenericParameters*) params[index] );
+
+    // negative phase
+    layers[index]->generateSample();
+    params[index]->setAsDownInput( layers[index]->sample );
+    layers[index+1]->getAllActivations((RBMGenericParameters*) params[index]);
+    layers[index+1]->computeExpectation();
+    params[index]->accumulateNegStats( layers[index]->sample,
+                                       layers[index+1]->expectation );
+
+}
+
+void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
+{
+    // deterministic propagation until we reach n_layers-2, setting the input
+    // of the "input" part of joint_layer
+    layers[0]->expectation << input;
+    for( int i=0 ; i<n_layers-2 ; i++ )
+    {
+        params[i]->setAsDownInput( layers[i]->expectation );
+        layers[i+1]->getAllActivations( (RBMGenericParameters*) params[i] );
+        layers[i+1]->computeExpectation();
+    }
+
+    // now fill the "target" part of joint_layer
+    fill_one_hot( target_layer->expectation, (int) target[0], 0., 1. );
+
+    // positive phase
+    joint_params->setAsDownInput( joint_layer->expectation );
+    last_layer->getAllActivations( (RBMGenericParameters*) joint_params );
+    last_layer->computeExpectation();
+    joint_params->accumulatePosStats(joint_layer->expectation,
+                                     last_layer->expectation );
+
+    // down propagation
+    last_layer->generateSample();
+    joint_params->setAsUpInput( last_layer->sample );
+    joint_layer->getAllActivations( (RBMGenericParameters*) joint_params );
+
+    // negative phase
+    joint_layer->generateSample();
+    joint_params->setAsDownInput( joint_layer->sample );
+    last_layer->getAllActivations( (RBMGenericParameters*) joint_params );
+    last_layer->computeExpectation();
+    joint_params->accumulateNegStats( joint_layer->sample,
+                                      last_layer->expectation );
+
+}
+
+void DeepBeliefNet::fineTune( const Vec& input, const Vec& target )
+{
+    PLERROR("fine tuning not implemented yet");
 }
 
 //////////////

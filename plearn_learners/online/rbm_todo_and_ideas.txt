@@ -3,16 +3,31 @@ To do
 
 * Comments!
 
-* Add a subclass of RBMParameters to put between the last layers (the layer
-  containing the targets or outputs, the layer containing the input
-  representation, and the layer containing the joint representation)
-
 * Implement DeepBeliefNet as a PDistribution, trained the way Hinton
   trains its network
 
 * Make an OnlineLearningModule stacking RBMLayers and RBMParameters doing the
   same thing? Encapsulating DeepBeliefNet? Make DeepBeliefNet encapsulate the
   module?
+
+Questions
+=========
+
+* How do we initialize the weights? Is the sampling process enough to break
+  the symmetry if all weights are initialized to 0? Should we initialize them
+  randomly ?
+
+* When do we update the weights? After each sampe? At the end of a batch?
+
+* How to learn the weights V between Last layer and Previous layer, and W
+  between Last layer and output/target layer (Y) if trained in a supervised
+  way?
+  - Learn the V unsupervisedly first, then learn W (and update the other ones?)
+    by gradient descent on the cost
+  - Learn [W,V] all at once by contrastive divergence, trying to model the
+    distributions of [Y,P] (or [Y, expectation(P)])
+  - Learn V by contrastive divergence, but clamping Y to the true target
+    during both positive and negative phases
 
 
 Ideas
@@ -34,16 +49,7 @@ products instead of n matrix-vector products.
 
 * Is there a way to compute analytically the "undirected softmax" if the
   output layer has Gaussian units?
-
-* How to learn the weights V between Last layer and Previous layer, and W
-  between Last layer and output/target layer (Y) if trained in a supervised
-  way?
-  - Learn the V unsupervisedly first, then learn W (and update the other ones?)
-    by gradient descent on the cost
-  - Learn [W,V] all at once by contrastive divergence, trying to model the
-    distributions of [Y,P] (or [Y, expectation(P)])
-  - Learn V by contrastive divergence, but clamping Y to the true target
-    during both positive and negative phases
+  -> maybe if only one Gaussian, probably not otherwise
 
 * See when we should sample from a layer, and when we should compute the
   expectation. Is it a problem if some statistics during the positive phase
