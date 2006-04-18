@@ -93,7 +93,7 @@ public:
     PPath expdir; 
 
     //! optional random generator, possibly shared among several modules
-    PP<PRandom> random_generator;
+    PP<PRandom> random_gen;
     
 public:
     //#####  Public Member Functions  #########################################

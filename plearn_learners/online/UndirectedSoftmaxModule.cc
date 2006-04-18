@@ -233,7 +233,7 @@ void UndirectedSoftmaxModule::forget()
     else if (init_weights_random_scale!=0)
     {
         real r = init_weights_random_scale / input_size;
-        random_generator->fill_random_uniform(weights,-r,r);
+        random_gen->fill_random_uniform(weights,-r,r);
     }
     if( init_biases.size() !=0 )
         biases << init_biases;
@@ -344,8 +344,8 @@ void UndirectedSoftmaxModule::build_()
         resetWeights();
     }
 
-    if (init_weights.size()==0 && init_weights_random_scale!=0 && !random_generator)
-        random_generator = new PRandom();
+    if (init_weights.size()==0 && init_weights_random_scale!=0 && !random_gen)
+        random_gen = new PRandom();
 }
 
 

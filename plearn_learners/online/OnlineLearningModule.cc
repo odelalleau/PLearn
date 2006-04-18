@@ -145,8 +145,8 @@ void OnlineLearningModule::declareOptions(OptionList& ol)
                   "If expdir is the empty string (the default),\n"
                   "then the module should not create *any* file.\n");
 
-    declareOption(ol, "random_generator",
-                  &OnlineLearningModule::random_generator,
+    declareOption(ol, "random_gen",
+                  &OnlineLearningModule::random_gen,
                   OptionBase::buildoption, 
                   "Pointer to an optional random number generator,\n"
                   "e.g. for initializing parameters or any non-deterministic"
