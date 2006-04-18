@@ -190,15 +190,10 @@ void RandomSamplesVMatrix::getNewRow(int i, const Vec& v) const
 void RandomSamplesVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(random_gen, copies);
+    deepCopyField(non_preserved, copies);
+    deepCopyField(indices, copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields
-    // ### that you wish to be deepCopied rather than
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("RandomSamplesVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 } // end of namespace PLearn
