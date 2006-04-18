@@ -173,10 +173,15 @@ bool DERIVEDCLASS::setPredictorPredictedSizes(int the_predictor_size,
                                                int the_predicted_size,
                                                bool call_parent)
 {
+    bool sizes_have_changed = false;
     if (call_parent)
-        inherited::setPredictorPredictedSizes(the_predictor_size,
-                                              the_predicted_size, true);
+        sizes_have_changed = inherited::setPredictorPredictedSizes(
+                the_predictor_size, the_predicted_size, true);
+
     // ### Add here any specific code required by your subclass.
+
+    // Returned value.
+    return sizes_have_changed;
 }
 
 /////////////////
