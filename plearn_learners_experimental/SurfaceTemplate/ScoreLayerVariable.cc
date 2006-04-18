@@ -164,7 +164,9 @@ void ScoreLayerVariable::build_()
     if (!templates_source)
         return;
 
-    // Obtain mappings from the templates VMat.
+    // Obtain mappings from the templates VMat in order to be able to load the
+    // molecule templates.
+    VMat mappings_source_backup = mappings_source;
     setMappingsSource(templates_source);
     assert( templates_source->targetsize() == 1 );
 
@@ -369,6 +371,10 @@ void ScoreLayerVariable::build_()
     varray.append(final_output);
     // We have changed a parent's option, we should re-build.
     inherited::build();
+
+    // Restore the mappings source that was given prior to calling build().
+    if (mappings_source_backup)
+        setMappingsSource(mappings_source_backup);
 }
 
 ///////////

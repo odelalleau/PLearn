@@ -306,14 +306,10 @@ void SurfaceTemplateLearner::setTrainingSet(VMat training_set,
         (ScoreLayerVariable*) ((Variable*) first_hidden_layer);
     score_layer->templates_source =
         this->templates_source ? this->templates_source : training_set;
-    score_layer->setMappingsSource(score_layer->templates_source);
+    score_layer->setMappingsSource(training_set);
     score_layer->build();
 
     inherited::setTrainingSet(training_set, call_forget);
-
-    // Now that everything is ready for training, the score layer should
-    // take the mappings from the training set.
-    score_layer->setMappingsSource(training_set);
 }
 
 //////////
