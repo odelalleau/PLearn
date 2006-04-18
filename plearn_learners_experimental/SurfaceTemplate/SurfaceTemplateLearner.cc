@@ -310,6 +310,10 @@ void SurfaceTemplateLearner::setTrainingSet(VMat training_set,
     score_layer->build();
 
     inherited::setTrainingSet(training_set, call_forget);
+
+    // Now that everything is ready for training, the score layer should
+    // take the mappings from the training set.
+    score_layer->setMappingsSource(training_set);
 }
 
 //////////
