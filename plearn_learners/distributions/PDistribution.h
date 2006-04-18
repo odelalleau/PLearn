@@ -185,8 +185,9 @@ public:
     //! with the same arguments: this is useful in the build process, where
     //! each class is able to call only its own method by setting 'call_parent'
     //! to false.
-    //! Return 'true' iff the predictor or predicted sizes have been modified
-    //! from their previous value.
+    //! If 'call_parent' is true, returns 'true' iff the predictor or predicted
+    //! sizes have been modified from their previous value.
+    //! If 'call_parent' is false, returns 'false'.
     virtual bool setPredictorPredictedSizes(int the_predictor_size,
                                             int the_predicted_size,
                                             bool call_parent = true);

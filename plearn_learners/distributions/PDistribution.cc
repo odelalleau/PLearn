@@ -478,8 +478,11 @@ bool PDistribution::setPredictorPredictedSizes(int the_predictor_size,
         predictor_part.resize(n_predictor);
     if (n_predicted >= 0)
         predicted_part.resize(n_predicted);
-    return (n_predictor  != backup_n_predictor ||
-            n_predicted != backup_n_predicted);
+    if (!call_parent)
+        return false;
+    else
+        return (n_predictor != backup_n_predictor ||
+                n_predicted != backup_n_predicted);
 }
 
 ///////////////
