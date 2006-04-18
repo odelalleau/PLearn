@@ -169,7 +169,7 @@ void DERIVEDCLASS::setPredictor(const Vec& predictor, bool call_parent) const
 ////////////////////////////////
 // setPredictorPredictedSizes //
 ////////////////////////////////
-bool PDistribution::setPredictorPredictedSizes(int the_predictor_size,
+bool DERIVEDCLASS::setPredictorPredictedSizes(int the_predictor_size,
                                                int the_predicted_size,
                                                bool call_parent)
 {
