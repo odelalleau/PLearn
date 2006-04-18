@@ -2,22 +2,22 @@
 
 // OnlineLearningModule.h
 //
-// Copyright (C) 2005 Yoshua Bengio 
-// 
+// Copyright (C) 2005 Yoshua Bengio
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,12 +28,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
-   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
+/* *******************************************************
+   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -54,14 +54,14 @@ namespace PLearn {
  *
  *  This pure virtual class (i.e. an interface) can basically do two things:
  *    * map an input to an output
- *    * modify itself when told in what direction the output should have 
- *      changed (i.e. output gradient),  while optionally giving back the 
- *      information about how the input should also have changed 
+ *    * modify itself when told in what direction the output should have
+ *      changed (i.e. output gradient),  while optionally giving back the
+ *      information about how the input should also have changed
  *      (i.e. input gradient)
  *
  * @todo write all Object methods, compile, and test somehow
  *
- * @deprecated 
+ * @deprecated
  */
 class OnlineLearningModule : public Object
 {
@@ -88,13 +88,13 @@ public:
      * Path of the directory associated with this module, in which it should
      * save any file it wishes to create.  The directory will be created if
      * it does not already exist.  If expdir is the empty string (the
-     * default), then the module should not create *any* file. 
+     * default), then the module should not create *any* file.
      */
-    PPath expdir; 
+    PPath expdir;
 
     //! optional random generator, possibly shared among several modules
     PP<PRandom> random_gen;
-    
+
 public:
     //#####  Public Member Functions  #########################################
 
@@ -130,7 +130,7 @@ public:
     //! THE DEFAULT IMPLEMENTATION PROVIDED HERE JUST CALLS
     //!   bbpropUpdate(input, output,
     //!                input_gradient, output_gradient,
-    //!                in_hess, out_hess) 
+    //!                in_hess, out_hess)
     //! AND IGNORES INPUT HESSIAN AND INPUT GRADIENT
     virtual void bbpropUpdate(const Vec& input, const Vec& output,
                               const Vec& output_gradient,
@@ -161,10 +161,10 @@ public:
 
     // Declares other standard object methods.
     // ### If your class is not instantiatable (it has pure virtual methods)
-    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
+    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS
     PLEARN_DECLARE_ABSTRACT_OBJECT(OnlineLearningModule);
 
-    // Simply calls inherited::build() then build_() 
+    // Simply calls inherited::build() then build_()
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
@@ -177,10 +177,10 @@ protected:
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
 
-private: 
+private:
     //#####  Private Member Functions  ########################################
 
-    //! This does the actual building. 
+    //! This does the actual building.
     void build_();
 
 private:
