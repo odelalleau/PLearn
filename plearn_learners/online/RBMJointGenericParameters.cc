@@ -108,7 +108,7 @@ void RBMJointGenericParameters::build_units_types()
     up_units_types = cond_params->up_units_types;
 
     down_units_types = target_params->down_units_types;
-    target_size = down_units_types.size();
+
     for( int i=0 ; i<target_size ; i++ )
         if( down_units_types[i] != 'l' )
             PLERROR( "RBMJointGenericParameters::build_units_types - \n"
@@ -116,6 +116,9 @@ void RBMJointGenericParameters::build_units_types()
                      " %c.\n", i, down_units_types[i] );
 
     down_units_types += cond_params->down_units_types;
+
+    target_size = target_params->down_layer_size;
+    cond_size = cond_params->down_layer_size;
 }
 
 void RBMJointGenericParameters::build_()

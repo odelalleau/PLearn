@@ -38,27 +38,29 @@
 
 
 #include "DeepBeliefNet.h"
+#include "RBMLayer.h"
+#include "RBMMixedLayer.h"
+#include "RBMMultinomialLayer.h"
+#include "RBMParameters.h"
+#include "RBMGenericParameters.h"
+#include "RBMJointGenericParameters.h"
 
 namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     DeepBeliefNet,
-    "ONE LINE DESCR",
-    "NO HELP"
+    "Does the same thing as Hinton's deep belief nets",
+    ""
 );
 
 //////////////////
 // DeepBeliefNet //
 //////////////////
-DeepBeliefNet::DeepBeliefNet()
-/* ### Initialize all fields to their default value here */
+DeepBeliefNet::DeepBeliefNet() :
+    learning_rate(0.),
+    weight_decay(0.)
 {
-    // ...
-
-    // ### You may (or not) want to call build_() to finish building the object
-    // ### (doing so assumes the parent classes' build_() have been called too
-    // ### in the parent classes' constructors, something that you must ensure)
 }
 
 ////////////////////
@@ -66,19 +68,66 @@ DeepBeliefNet::DeepBeliefNet()
 ////////////////////
 void DeepBeliefNet::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here.
-    // ### For the "flags" of each option, you should typically specify
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or
-    // ### OptionBase::tuningoption. If you don't provide one of these three,
-    // ### this option will be ignored when loading values from a script.
-    // ### You can also combine flags, for example with OptionBase::nosave:
-    // ### (OptionBase::buildoption | OptionBase::nosave)
+    declareOption(ol, "learning_rate", &DeepBeliefNet::learning_rate,
+                  OptionBase::buildoption,
+                  "Learning rate");
 
-    // ### ex:
-    // declareOption(ol, "myoption", &DeepBeliefNet::myoption,
-    //               OptionBase::buildoption,
-    //               "Help text describing this option");
-    // ...
+    declareOption(ol, "weight_decay", &DeepBeliefNet::weight_decay,
+                  OptionBase::buildoption,
+                  "Weight decay");
+
+    declareOption(ol, "training_schedule", &DeepBeliefNet::training_schedule,
+                  OptionBase::buildoption,
+                  "Number of epochs for training each RBMParameters during\n"
+                  "greedy learning phase.\n");
+
+    declareOption(ol, "fine_tuning_method", &DeepBeliefNet::fine_tuning_method,
+                  OptionBase::buildoption,
+                  "Method for fine-tuning the whole network after greedy"
+                  " learning.\n"
+                  "One of:\n"
+                  "  - \"none\"\n"
+                  "  - \"CD\" or \"contrastive_divergence\"\n"
+                  "  - \"EGD\" or \"error_gradient_descent\"\n"
+                  "  - \"WS\" or \"wake_sleep\".\n");
+
+    declareOption(ol, "layers", &DeepBeliefNet::layers,
+                  OptionBase::buildoption,
+                  "Layers that learn representations of the input,"
+                  " unsupervisedly.\n"
+                  "layers[0] is input layer.\n");
+
+    declareOption(ol, "target_layer", &DeepBeliefNet::target_layer,
+                  OptionBase::buildoption,
+                  "Target (or label) layer");
+
+    declareOption(ol, "params", &DeepBeliefNet::params,
+                  OptionBase::buildoption,
+                  "RBMParameters linking the unsupervised layers.\n"
+                  "params[i] links layers[i] and layers[i+1], except for"
+                  "params[n_layers-1],\n"
+                  "that links layers[n_layers-1] and last_layer.\n");
+
+    declareOption(ol, "target_params", &DeepBeliefNet::target_params,
+                  OptionBase::buildoption,
+                  "Parameters linking target_layer and last_layer");
+
+    declareOption(ol, "n_layers", &DeepBeliefNet::n_layers,
+                  OptionBase::learntoption,
+                  "Number of unsupervised layers, including input layer");
+
+    declareOption(ol, "last_layer", &DeepBeliefNet::last_layer,
+                  OptionBase::learntoption,
+                  "Last layer, learning joint representations of input and"
+                  " target");
+
+    declareOption(ol, "joint_layer", &DeepBeliefNet::joint_layer,
+                  OptionBase::learntoption,
+                  "Concatenation of target_layer and layers[n_layers-1]");
+
+    declareOption(ol, "joint_params", &DeepBeliefNet::joint_params,
+                  OptionBase::learntoption,
+                  "Parameters linking joint_layer and last_layer");
 
     // Now call the parent class' declareOptions().
     inherited::declareOptions(ol);
@@ -99,23 +148,81 @@ void DeepBeliefNet::build()
 ////////////
 void DeepBeliefNet::build_()
 {
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation.
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of
-    // ###    all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning"
-    // ###    options have been modified.
-    // ### You should assume that the parent class' build_() has already been
-    // ### called.
+    n_layers = layers.length();
+    if( n_layers <= 1 )
+        return;
 
-    // ### In general, you will want to call this class' specific methods for
-    // ### conditional distributions.
-    // DeepBeliefNet::setPredictorPredictedSizes(predictor_size,
-    //                                          predicted_size,
-    //                                          false);
-    // DeepBeliefNet::setPredictor(predictor_part, false);
+    if( training_schedule.length() != n_layers )
+        training_schedule = TVec<int>( n_layers, 30 );
+
+    // check value of fine_tuning_method
+    string ftm = lowerstring( fine_tuning_method );
+    if( ftm == "" | ftm == "none" )
+        fine_tuning_method = "";
+    else if( ftm == "cd" | ftm == "contrastive_divergence" )
+        fine_tuning_method = "CD";
+    else if( ftm == "egd" | ftm == "error_gradient_descent" )
+        fine_tuning_method = "EGD";
+    else if( ftm == "ws" | ftm == "wake_sleep" )
+        fine_tuning_method = "WS";
+    else
+        PLERROR( "DeepBeliefNet::build_ - fine_tuning_method \"%s\"\n"
+                 "is unknown.\n", fine_tuning_method.c_str() );
+
+    build_layers();
+    build_params();
+}
+
+void DeepBeliefNet::build_layers()
+{
+    for( int i=0 ; i<n_layers ; i++ )
+        layers[i]->random_gen = random_gen;
+    target_layer->random_gen = random_gen;
+
+    last_layer = layers[n_layers-1];
+
+    // concatenate target_layer and layers[n_layers-2] into joint_layer
+    TVec< PP<RBMLayer> > the_sub_layers( 2 );
+    the_sub_layers[0] = target_layer;
+    the_sub_layers[1] = layers[n_layers-2];
+    joint_layer = new RBMMixedLayer( the_sub_layers );
+    joint_layer->random_gen = random_gen;
+}
+
+void DeepBeliefNet::build_params()
+{
+    if( params.length() == 0 )
+    {
+        params.resize( n_layers-1 );
+        for( int i=0 ; i<n_layers-1 ; i++ )
+            params[i] = new RBMGenericParameters();
+    }
+    else if( params.length() != n_layers-1 )
+        PLERROR( "DeepBeliefNet::build_params - params.length() should be"
+                 " equal to\n"
+                 "layers.length()-1 (%d != %d).\n",
+                 params.length(), n_layers-1 );
+
+    for( int i=0 ; i<n_layers-1 ; i++ )
+    {
+        params[i]->down_units_types = layers[i]->units_types;
+        params[i]->up_units_types = layers[i+1]->units_types;
+        params[i]->learning_rate = learning_rate;
+        params[i]->build();
+    }
+
+    if( target_layer && !target_params )
+    {
+        target_params = new RBMGenericParameters();
+        target_params->down_units_types = target_layer->units_types;
+        target_params->up_units_types = last_layer->units_types;
+        target_params->learning_rate = learning_rate;
+        target_params->build();
+    }
+
+    // build joint_params from params[n_layers-1] and target_params
+    joint_params = new RBMJointGenericParameters( target_params,
+                                                  params[n_layers-2] );
 }
 
 /////////
@@ -183,16 +290,14 @@ void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     // ### ex:
     // deepCopyField(trainvec, copies);
 
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("DeepBeliefNet::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
-}
-
-////////////////////
-// resetGenerator //
-////////////////////
-void DeepBeliefNet::resetGenerator(long g_seed) const
-{
-    PLERROR("resetGenerator not implemented for DeepBeliefNet");
+    deepCopyField(layers, copies);
+    deepCopyField(last_layer, copies);
+    deepCopyField(target_layer, copies);
+    deepCopyField(joint_layer, copies);
+    deepCopyField(params, copies);
+    deepCopyField(joint_params, copies);
+    deepCopyField(target_params, copies);
+    deepCopyField(training_schedule, copies);
 }
 
 //////////////////
@@ -208,7 +313,7 @@ void DeepBeliefNet::setPredictor(const Vec& predictor, bool call_parent) const
 ////////////////////////////////
 // setPredictorPredictedSizes //
 ////////////////////////////////
-bool PDistribution::setPredictorPredictedSizes(int the_predictor_size,
+bool DeepBeliefNet::setPredictorPredictedSizes(int the_predictor_size,
                                                int the_predicted_size,
                                                bool call_parent)
 {
@@ -216,6 +321,7 @@ bool PDistribution::setPredictorPredictedSizes(int the_predictor_size,
         inherited::setPredictorPredictedSizes(the_predictor_size,
                                               the_predicted_size, true);
     // ### Add here any specific code required by your subclass.
+    return false;
 }
 
 /////////////////
@@ -232,7 +338,6 @@ real DeepBeliefNet::survival_fn(const Vec& y) const
 ///////////
 void DeepBeliefNet::train()
 {
-    PLERROR("train method not implemented for DeepBeliefNet");
     // The role of the train method is to bring the learner up to
     // stage==nstages, updating train_stats with training costs measured
     // on-line in the process.
@@ -264,6 +369,9 @@ void DeepBeliefNet::train()
         train_stats->finalize(); // finalize statistics for this epoch
     }
     */
+
+    Vec input;
+    Vec target;
 
 }
 

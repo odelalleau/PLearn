@@ -44,15 +44,18 @@
 
 namespace PLearn {
 
+class RBMLayer;
+class RBMMixedLayer;
+class RBMMultinomialLayer;
+class RBMParameters;
+class RBMGenericParameters;
+class RBMJointGenericParameters;
+
 /**
- * The first sentence should be a BRIEF DESCRIPTION of what the class does.
- * Place the rest of the class programmer documentation here.  Doxygen supports
- * Javadoc-style comments.  See http://www.doxygen.org/manual.html
+ * Does the same thing as Hinton's deep belief nets
  *
- * @todo Write class to-do's here if there are any.
+ * @todo Yes
  *
- * @deprecated Write deprecated stuff here if there is any.  Indicate what else
- * should be used instead.
  */
 class DeepBeliefNet : public PDistribution
 {
@@ -63,6 +66,52 @@ public:
 
     //! ### declare public option fields (such as build options) here
     //! Start your comments with Doxygen-compatible comments such as //!
+
+    //! The learning rate
+    real learning_rate;
+
+    //! The weight decay
+    real weight_decay;
+
+    //! Number of layers, including input layer and last layer, but not target
+    //! layer
+    int n_layers;
+
+    //! Layers that learn representations of the input,
+    //! layers[0] is input layer, layers[n_layers-1] is last layer
+    TVec< PP<RBMLayer> > layers;
+
+    //! Last layer, learning joint representations of input and target
+    PP<RBMLayer> last_layer;
+
+    //! Target (or label) layer
+    PP<RBMMultinomialLayer> target_layer;
+
+    //! Concatenation of target_layer and layers[n_layers-2]
+    PP<RBMMixedLayer> joint_layer;
+
+    //! RBMParameters linking the unsupervised layers.
+    //! params[i] links layers[i] and layers[i+1]
+    TVec< PP<RBMGenericParameters> > params;
+
+    //! Parameters linking target_layer and last_layer
+    PP<RBMGenericParameters> target_params;
+
+    //! Parameters linking joint_layer and last_layer.
+    //! Contains params[n_layers-2] and target_params.
+    PP<RBMJointGenericParameters> joint_params;
+
+    //! Number of epochs for training each RBMParameters during greedy learning
+    //! phase
+    TVec<int> training_schedule;
+
+    //! Method for fine-tuning the whole network after greedy learning.
+    //! One of:
+    //!   - "none"
+    //!   - "CD" or "contrastive_divergence"
+    //!   - "EGD" or "error_gradient_descent"
+    //!   - "WS" or "wake_sleep"
+    string fine_tuning_method;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -101,12 +150,6 @@ public:
     //! i.e., generates a "predictor" part given a "predicted" part, regardless
     //! of any previously set predictor.
     // virtual void generatePredictorGivenPredicted(Vec& x, const Vec& y);
-
-    //### Override this method if you need it. Default version calls
-    //### random_gen->manual_seed(g_seed) if g_seed !=0
-    //! Reset the random number generator used by generate() using the
-    //! given seed.
-    // virtual void resetGenerator(long g_seed) const;
 
     //! Set the 'predictor' and 'predicted' sizes for this distribution.
     //### See help in PDistribution.h.
@@ -203,8 +246,13 @@ private:
     //#####  Private Member Functions  ########################################
 
     //! This does the actual building.
-    // (PLEASE IMPLEMENT IN .cc)
     void build_();
+
+    //! Build the layers
+    void build_layers();
+
+    //! Build the parameters if needed
+    void build_params();
 
 private:
     //#####  Private Data Members  ############################################

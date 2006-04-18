@@ -54,6 +54,12 @@ RBMMixedLayer::RBMMixedLayer()
 {
 }
 
+RBMMixedLayer::RBMMixedLayer( TVec< PP<RBMLayer> > the_sub_layers ) :
+    sub_layers( the_sub_layers )
+{
+    build();
+}
+
 //! Uses "rbmp" to obtain the activations of unit "i" of this layer.
 //! This activation vector is computed by the "i+offset"-th unit of "rbmp"
 void RBMMixedLayer::getUnitActivations( int i, PP<RBMParameters> rbmp,

@@ -57,6 +57,8 @@ class RBMMixedLayer: public RBMLayer
 public:
     //#####  Public Build Options  ############################################
 
+    //! The concatenated RBMLayers composing this layer.
+    TVec< PP<RBMLayer> > sub_layers;
 
 
 public:
@@ -65,8 +67,8 @@ public:
     //! Default constructor
     RBMMixedLayer();
 
-    //! Constructor from the number of units in the multinomial
-//    RBMMixedLayer( int the_size );
+    //! Constructor from the sub_layers
+    RBMMixedLayer( TVec< PP<RBMLayer> > the_sub_layers );
 
 
     // Your other public member functions go here
@@ -99,9 +101,6 @@ public:
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
-
-    //! The concatenated RBMLayers composing this layer.
-    TVec< PP<RBMLayer> > sub_layers;
 
     //! Initial index of the sub_layers.
     TVec<int> init_positions;
