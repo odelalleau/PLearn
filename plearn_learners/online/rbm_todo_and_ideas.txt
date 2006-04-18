@@ -29,6 +29,9 @@ Questions
   - Learn V by contrastive divergence, but clamping Y to the true target
     during both positive and negative phases
 
+* Can we compute the predicted probability (or density?) of an input? Of the
+  label given the input? The input given the label?
+
 
 Ideas
 =====

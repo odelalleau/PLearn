@@ -175,10 +175,12 @@ void DeepBeliefNet::build_()
 
 void DeepBeliefNet::build_layers()
 {
-    if( inputsize_ >= 0 && layers[0]->size != inputsize() )
-        PLERROR( "DeepBeliefNet::build_layers() - layers[0]->size\n"
-                 "should be equal to inputsize() (%d != %d).\n",
-                 layers[0]->size, inputsize() );
+    if( inputsize_ >= 0 )
+    {
+        assert( layers[0]->size + target_layer->size == inputsize() );
+        setPredictorPredictedSizes( layers[0]->size,
+                                    target_layer->size, false );
+    }
 
     for( int i=0 ; i<n_layers ; i++ )
         layers[i]->random_gen = random_gen;
@@ -269,11 +271,6 @@ void DeepBeliefNet::generate(Vec& y) const
     PLERROR("generate not implemented for DeepBeliefNet");
 }
 
-// ### Default version of inputsize returns learner->inputsize()
-// ### If this is not appropriate, you should uncomment this and define
-// ### it properly here:
-// int DeepBeliefNet::inputsize() const {}
-
 /////////////////
 // log_density //
 /////////////////
@@ -322,11 +319,24 @@ bool DeepBeliefNet::setPredictorPredictedSizes(int the_predictor_size,
                                                int the_predicted_size,
                                                bool call_parent)
 {
+    bool sizes_have_changed = false;
     if (call_parent)
-        inherited::setPredictorPredictedSizes(the_predictor_size,
-                                              the_predicted_size, true);
+        sizes_have_changed = inherited::setPredictorPredictedSizes(
+            the_predictor_size, the_predicted_size, true);
+
     // ### Add here any specific code required by your subclass.
-    return false;
+    if( the_predictor_size >= 0 && the_predictor_size != layers[0]->size ||
+        the_predicted_size >= 0 && the_predicted_size != target_layer->size )
+        PLERROR( "DeepBeliefNet::setPredictorPredictedSizes - \n"
+                 "n_predictor should be equal to layer[0]->size (%d)\n"
+                 "n_predicted should be equal to target_layer->size (%d).\n",
+                 layers[0]->size, target_layer->size );
+
+    n_predictor = layers[0]->size;
+    n_predicted = target_layer->size;
+
+    // Returned value.
+    return sizes_have_changed;
 }
 
 /////////////////
@@ -376,7 +386,7 @@ void DeepBeliefNet::train()
     */
 
     Vec input( inputsize() );
-    Vec target( targetsize() );
+    Vec target( targetsize() ); // unused
     real weight; // unused
 
     if( !initTrain() )
@@ -407,7 +417,7 @@ void DeepBeliefNet::train()
                 for( int sample=0 ; sample<nsamples ; sample++ )
                 {
                     train_set->getExample(sample, input, target, weight);
-                    greedyStep( input, layer );
+                    greedyStep( input.subVec(0, n_predicted), layer );
                 }
             }
         }
@@ -418,7 +428,7 @@ void DeepBeliefNet::train()
                 for( int sample=0 ; sample<nsamples ; sample++ )
                 {
                     train_set->getExample(sample, input, target, weight);
-                    jointGreedyStep( input, target );
+                    jointGreedyStep( input );
                 }
             }
         }
@@ -429,7 +439,7 @@ void DeepBeliefNet::train()
                 for( int sample=0 ; sample<nsamples ; sample++ )
                 {
                     train_set->getExample(sample, input, target, weight);
-                    fineTune( input, target );
+                    fineTune( input );
                 }
             }
         }
@@ -437,10 +447,10 @@ void DeepBeliefNet::train()
     }
 }
 
-void DeepBeliefNet::greedyStep( const Vec& input, int index )
+void DeepBeliefNet::greedyStep( const Vec& predictor, int index )
 {
     // deterministic propagation until we reach index
-    layers[0]->expectation << input;
+    layers[0]->expectation << predictor;
     for( int i=0 ; i<index ; i++ )
     {
         params[i]->setAsDownInput( layers[i]->expectation );
@@ -470,11 +480,11 @@ void DeepBeliefNet::greedyStep( const Vec& input, int index )
 
 }
 
-void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
+void DeepBeliefNet::jointGreedyStep( const Vec& input )
 {
     // deterministic propagation until we reach n_layers-2, setting the input
     // of the "input" part of joint_layer
-    layers[0]->expectation << input;
+    layers[0]->expectation << input.subVec( 0, n_predictor );
     for( int i=0 ; i<n_layers-2 ; i++ )
     {
         params[i]->setAsDownInput( layers[i]->expectation );
@@ -483,14 +493,14 @@ void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
     }
 
     // now fill the "target" part of joint_layer
-    fill_one_hot( target_layer->expectation, (int) target[0], 0., 1. );
+    target_layer->expectation << input.subVec( n_predictor, n_predicted );
 
     // positive phase
     joint_params->setAsDownInput( joint_layer->expectation );
     last_layer->getAllActivations( (RBMGenericParameters*) joint_params );
     last_layer->computeExpectation();
-    joint_params->accumulatePosStats(joint_layer->expectation,
-                                     last_layer->expectation );
+    joint_params->accumulatePosStats( joint_layer->expectation,
+                                      last_layer->expectation );
 
     // down propagation
     last_layer->generateSample();
@@ -507,7 +517,7 @@ void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
 
 }
 
-void DeepBeliefNet::fineTune( const Vec& input, const Vec& target )
+void DeepBeliefNet::fineTune( const Vec& input )
 {
     PLERROR("fine tuning not implemented yet");
 }
