@@ -260,7 +260,11 @@ void DeepBeliefNet::forget()
       - initialize the learner's parameters, using this random generator
       - stage = 0
     */
-    PLERROR("forget method not implemented for DeepBeliefNet");
+    resetGenerator(seed_);
+    for( int i=0 ; i<n_layers-1 ; i++ )
+        params[i]->forget();
+
+    stage = 0;
 }
 
 //////////////

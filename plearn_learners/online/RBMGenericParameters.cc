@@ -413,7 +413,23 @@ void RBMGenericParameters::bpropUpdate(const Vec& input, const Vec& output,
 //! Note that this method is necessarily called from build().
 void RBMGenericParameters::forget()
 {
-    //TODO reinitialize random_generator, and weights
+    if( initialization_method == "zero" )
+        weights.clear();
+    else
+    {
+        real d = max( down_layer_size, up_layer_size );
+        if( initialization_method == "uniform_sqrt" )
+            d = sqrt( d );
+
+        random_gen->fill_random_uniform( weights, -d, d );
+    }
+
+    for( int i=0 ; i<down_layer_size ; i++ )
+        down_units_params[i].clear();
+
+    for( int i=0 ; i<up_layer_size ; i++ )
+        up_units_params[i].clear();
+
     clearStats();
 }
 

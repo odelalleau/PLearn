@@ -70,10 +70,18 @@ public:
     //! Same meaning as "up_units_types", but with down units
     string down_units_types;
 
+    //! The method used to initialize the weights:
+    //!   - "uniform_linear" = a uniform law in [-1/d, 1/d]
+    //!   - "uniform_sqrt"   = a uniform law in [-1/sqrt(d), 1/sqrt(d)]
+    //!   - "zero"           = all weights are set to 0
+    //! Where d = max( up_layer_size, down_layer_size )
+    string initialization_method;
+
+    //#####  Not Options  #####################################################
+
     //! Number of units on up layer
     int up_layer_size;
 
-    //#####  Not Options  #####################################################
     //! Number of units on down layer
     int down_layer_size;
 

@@ -40,6 +40,7 @@
 
 #include "RBMParameters.h"
 #include <plearn/math/TMat_maths.h>
+#include <plearn/base/stringutils.h>
 //#include "RBMLayer.h"
 
 namespace PLearn {
@@ -50,19 +51,19 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
     "Virtual class for the parameters between two layers of an RBM",
     "");
 
-RBMParameters::RBMParameters()
-    : going_up(true),
-      pos_count(0),
-      neg_count(0)
+RBMParameters::RBMParameters() :
+    going_up(true),
+    pos_count(0),
+    neg_count(0)
 {
 }
 
-RBMParameters::RBMParameters( string down_types, string up_types )
-    : up_units_types(up_types),
-      down_units_types(down_types),
-      going_up(true),
-      pos_count(0),
-      neg_count(0)
+RBMParameters::RBMParameters( string down_types, string up_types ) :
+    up_units_types(up_types),
+    down_units_types(down_types),
+    going_up(true),
+    pos_count(0),
+    neg_count(0)
 {
     // We're not sure inherited::build() has been called
     build();
@@ -100,6 +101,17 @@ void RBMParameters::build_()
     down_layer_size = down_units_types.size();
     if( up_layer_size == 0 || down_layer_size == 0 )
         return;
+
+    string im = lowerstring( initialization_method );
+    if( im == "" || im == "uniform_sqrt" )
+        initialization_method = "uniform_sqrt";
+    else if( im == "uniform_linear" )
+        initialization_method = im;
+    else if( im == "zero" )
+        initialization_method = im;
+    else
+        PLERROR( "RBMParameters::build_ - initialization_method\n"
+                 "\"%s\" unknown.\n", initialization_method.c_str() );
 
     input_size = down_layer_size;
     output_size = up_layer_size;
