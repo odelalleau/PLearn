@@ -164,17 +164,17 @@ void ScoreLayerVariable::build_()
     if (!templates_source)
         return;
 
-    // Obtain mappings from the templates VMat in order to be able to load the
-    // molecule templates.
-    VMat mappings_source_backup = mappings_source;
-    setMappingsSource(templates_source);
-    assert( templates_source->targetsize() == 1 );
-
     // Verify that we have been given the input variable, and resize the input
     // array that is going to be constructed.
     if (varray.length() < 1)
         return;
     varray.resize(1);
+
+    // Obtain mappings from the templates VMat in order to be able to load the
+    // molecule templates.
+    VMat mappings_source_backup = mappings_source;
+    setMappingsSource(templates_source);
+    assert( templates_source->targetsize() == 1 );
 
     // Randomly select active and inactive templates.
     TVec<int> list_of_active, list_of_inactive;
