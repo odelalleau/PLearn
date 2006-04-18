@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// RBMGenericParameters.h
+// RBMJointGenericParameters.h
 //
 // Copyright (C) 2006 Pascal Lamblin
 //
@@ -34,13 +34,13 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file RBMGenericParameters.h */
+/*! \file RBMJointGenericParameters.h */
 
 
-#ifndef RBMGenericParameters_INC
-#define RBMGenericParameters_INC
+#ifndef RBMJointGenericParameters_INC
+#define RBMJointGenericParameters_INC
 
-#include "RBMParameters.h"
+#include "RBMGenericParameters.h"
 
 namespace PLearn {
 using namespace std;
@@ -52,81 +52,50 @@ using namespace std;
  *
  * @todo: yes
  */
-class RBMGenericParameters: public RBMParameters
+class RBMJointGenericParameters: public RBMGenericParameters
 {
-    typedef RBMParameters inherited;
+    typedef RBMGenericParameters inherited;
 
 public:
     //#####  Public Build Options  ############################################
 
-    //! Learning rate
-    real learning_rate;
+    //! RBMParameters between the target and the upper layer
+    PP<RBMGenericParameters> target_params;
 
-    //#####  Learned Options  #################################################
+    //! RBMParameters between the conditioning input and the upper layer
+    PP<RBMGenericParameters> cond_params;
 
-    //! Matrix containing unit-to-unit weights (output_size × input_size)
-    Mat weights;
-
-    //! Element i contains inner parameters (like the bias) of up unit i
-    TVec<Vec> up_units_params;
-
-    //! Element i contains inner parameters (like the bias) of down unit i
-    TVec<Vec> down_units_params;
-
-    //#####  Not Options  #####################################################
-
-    //! Accumulates positive contribution to the weights' gradient
-    Mat weights_pos_stats;
-
-    //! Accumulates negative contribution to the weights' gradient
-    Mat weights_neg_stats;
-
-    //! Accumulates positive contribution to the gradient of up_units_params
-    TVec<Vec> up_units_params_pos_stats;
-    //! Accumulates negative contribution to the gradient of up_units_params
-    TVec<Vec> up_units_params_neg_stats;
-    //! Accumulates positive contribution to the gradient of down_units_params
-    TVec<Vec> down_units_params_pos_stats;
-    //! Accumulates negative contribution to the gradient of down_units_params
-    TVec<Vec> down_units_params_neg_stats;
 
 public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
-    RBMGenericParameters( real the_learning_rate=0 );
+    RBMJointGenericParameters( real the_learning_rate=0 );
 
     //! Constructor from two string prototymes
-    RBMGenericParameters( string down_types, string up_types,
-                          real the_learning_rate=0 );
-
-/*
-    //! Constructor from two existing RBMLayers
-    RBMGenericParameters( PP<RBMLayer> down, PP<RBMLayer> up,
-                          real the_learning_rate=0 );
-// */
+    RBMJointGenericParameters( PP<RBMGenericParameters>& the_target_params,
+                               PP<RBMGenericParameters>& the_cond_params,
+                               real the_learning_rate=0 );
 
     // Your other public member functions go here
 
-    //! Accumulates positive phase statistics to *_pos_stats
-    virtual void accumulatePosStats( const Vec& down_values,
-                                     const Vec& up_values );
+    //! Sets input_vec to input, target_given_cond and going_up to false
+    virtual void setAsUpInput( const Vec& input ) const;
 
-    //! Accumulates negative phase statistics to *_neg_stats
-    virtual void accumulateNegStats( const Vec& down_values,
-                                     const Vec& up_values );
+    //! Sets input_vec to input, target_given_cond to false, going_up to true
+    virtual void setAsDownInput( const Vec& input ) const;
 
-    //! Updates parameters according to contrastive divergence gradient
-    virtual void update();
-
-    //! Clear all information accumulated during stats
-    virtual void clearStats();
+    //! Sets input_vec to input, and target_given_cond to true
+    virtual void setAsCondInput( const Vec& input ) const;
 
     //! Computes the vectors of activation of "length" units,
     //! starting from "start", and concatenates them into "activations".
     //! "start" indexes an up unit if "going_up", else a down unit.
     virtual void computeUnitActivations( int start, int length,
                                          const Vec& activations ) const;
+
+    //! given the input, compute the output (possibly resize it  appropriately)
+    virtual void fprop(const Vec& input, Vec& output) const;
 
     //! Adapt based on the output gradient: this method should only
     //! be called just after a corresponding fprop; it should be
@@ -147,11 +116,6 @@ public:
                              Vec& input_gradient,
                              const Vec& output_gradient);
 
-    //! reset the parameters to the state they would be BEFORE starting
-    //! training.  Note that this method is necessarily called from
-    //! build().
-    virtual void forget();
-
     //! optionally perform some processing after training, or after a
     //! series of fprop/bpropUpdate calls to prepare the model for truly
     //! out-of-sample operation.  THE DEFAULT IMPLEMENTATION PROVIDED IN
@@ -161,7 +125,7 @@ public:
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
-    PLEARN_DECLARE_OBJECT(RBMGenericParameters);
+    PLEARN_DECLARE_OBJECT(RBMJointGenericParameters);
 
     // Simply calls inherited::build() then build_()
     virtual void build();
@@ -170,26 +134,47 @@ public:
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
+    //#####  Learned Options  #################################################
+
+    //#####  Not Options  #####################################################
+
+    //! If true, we do not compute the up activations from a down example
+    //! nor down activations from up example, but we compute the value of the
+    //! "target" part of the down layer from the "conditioning" part,
+    //! by summing over all the possible values of the up layer.
+    mutable bool target_given_cond;
+
+    //! size of the target part of down layer
+    int target_size;
+
+    //! size of the conditioning part of down layer
+    int cond_size;
+
 
 protected:
     //#####  Protected Member Functions  ######################################
     //! Computes the activations vector of unit "i", assuming it is linear
-    //! "i" indexes an up unit if "going_up", else a down unit.
+    //! "i" indexes a unit in "target" if "target_given_cond", else
+    //! an up unit if "going_up", else a down unit.
     virtual void computeLinearUnitActivations( int i, const Vec& activations )
         const;
 
     //! Computes the activations vector of unit "i", assuming it is quadratic
-    //! "i" indexes an up unit if "going_up", else a down unit.
+    //! "i" indexes a unit in "target" if "target_given_cond", else
+    //! an up unit if "going_up", else a down unit.
     virtual void computeQuadraticUnitActivations( int i,
                                                   const Vec& activations )
         const;
-
 
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
 
 private:
     //#####  Private Member Functions  ########################################
+
+    //! Builds up_units_types and down_units_types from the embedded
+    //! RBMParameters
+    void build_units_types();
 
     //! This does the actual building.
     void build_();
@@ -201,7 +186,7 @@ private:
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(RBMGenericParameters);
+DECLARE_OBJECT_PTR(RBMJointGenericParameters);
 
 } // end of namespace PLearn
 

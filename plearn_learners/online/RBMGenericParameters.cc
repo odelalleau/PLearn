@@ -113,19 +113,19 @@ void RBMGenericParameters::declareOptions(OptionList& ol)
 
 void RBMGenericParameters::build_()
 {
-    if( upLayerSize() == 0 || downLayerSize() == 0 )
+    if( up_layer_size == 0 || down_layer_size == 0 )
         return;
 
     output_size = 0;
 
-    weights.resize( upLayerSize(), downLayerSize() );
-    weights_pos_stats.resize( upLayerSize(), downLayerSize() );
-    weights_neg_stats.resize( upLayerSize(), downLayerSize() );
+    weights.resize( up_layer_size, down_layer_size );
+    weights_pos_stats.resize( up_layer_size, down_layer_size );
+    weights_neg_stats.resize( up_layer_size, down_layer_size );
 
-    down_units_params.resize( downLayerSize() );
-    down_units_params_pos_stats.resize( downLayerSize() );
-    down_units_params_neg_stats.resize( downLayerSize() );
-    for( int i=0 ; i<downLayerSize() ; i++ )
+    down_units_params.resize( down_layer_size );
+    down_units_params_pos_stats.resize( down_layer_size );
+    down_units_params_neg_stats.resize( down_layer_size );
+    for( int i=0 ; i<down_layer_size ; i++ )
     {
         char dut_i = down_units_types[i];
         if( dut_i == 'l' ) // linear activation unit
@@ -147,10 +147,10 @@ void RBMGenericParameters::build_()
                      dut_i, i );
     }
 
-    up_units_params.resize( upLayerSize() );
-    up_units_params_pos_stats.resize( upLayerSize() );
-    up_units_params_neg_stats.resize( upLayerSize() );
-    for( int i=0 ; i<upLayerSize() ; i++ )
+    up_units_params.resize( up_layer_size );
+    up_units_params_pos_stats.resize( up_layer_size );
+    up_units_params_neg_stats.resize( up_layer_size );
+    for( int i=0 ; i<up_layer_size ; i++ )
     {
         char uut_i = up_units_types[i];
         if( uut_i == 'l' ) // linear activation unit
@@ -209,7 +209,7 @@ void RBMGenericParameters::accumulatePosStats( const Vec& down_values,
     // weights_pos_stats += up_values * down_values'
     externalProductAcc( weights_pos_stats, up_values, down_values );
 
-    for( int i=0 ; i<downLayerSize() ; i++ )
+    for( int i=0 ; i<down_layer_size ; i++ )
     {
         // the bias is updated the same way for 'l' and 'g' units
         down_units_params_pos_stats[i][0] += down_values[i];
@@ -220,7 +220,7 @@ void RBMGenericParameters::accumulatePosStats( const Vec& down_values,
                 2 * down_units_params[i][1] * down_values[i] * down_values[i];
     }
 
-    for( int i=0 ; i<upLayerSize() ; i++ )
+    for( int i=0 ; i<up_layer_size ; i++ )
     {
         // the bias is updated the same way for 'l' and 'g' units
         up_units_params_pos_stats[i][0] += up_values[i];
@@ -240,7 +240,7 @@ void RBMGenericParameters::accumulateNegStats( const Vec& down_values,
     // weights_neg_stats += up_values * down_values'
     externalProductAcc( weights_neg_stats, up_values, down_values );
 
-    for( int i=0 ; i<downLayerSize() ; i++ )
+    for( int i=0 ; i<down_layer_size ; i++ )
     {
         // the bias is updated the same way for 'l' and 'g' units
         down_units_params_neg_stats[i][0] += down_values[i];
@@ -251,7 +251,7 @@ void RBMGenericParameters::accumulateNegStats( const Vec& down_values,
                 2 * down_units_params[i][1] * down_values[i] * down_values[i];
     }
 
-    for( int i=0 ; i<upLayerSize() ; i++ )
+    for( int i=0 ; i<up_layer_size ; i++ )
     {
         // the bias is updated the same way for 'l' and 'g' units
         up_units_params_neg_stats[i][0] += up_values[i];
@@ -273,14 +273,14 @@ void RBMGenericParameters::update()
     weights -= real(learning_rate) * (weights_pos_stats/p_count
                                  - weights_neg_stats/n_count);
 
-    for( int i=0 ; i<upLayerSize() ; i++ )
+    for( int i=0 ; i<up_layer_size ; i++ )
     {
         up_units_params[i] -=
             learning_rate * (up_units_params_pos_stats[i]/p_count
                              - up_units_params_neg_stats[i]/n_count);
     }
 
-    for( int i=0 ; i<downLayerSize() ; i++ )
+    for( int i=0 ; i<down_layer_size ; i++ )
     {
         down_units_params[i] -=
             learning_rate * (down_units_params_pos_stats[i]/p_count
@@ -294,12 +294,12 @@ void RBMGenericParameters::clearStats()
 {
     weights_pos_stats.clear();
     weights_neg_stats.clear();
-    for( int i=0 ; i<downLayerSize() ; i++ )
+    for( int i=0 ; i<down_layer_size ; i++ )
     {
         down_units_params_pos_stats[i].clear();
         down_units_params_neg_stats[i].clear();
     }
-    for( int i=0 ; i<upLayerSize() ; i++ )
+    for( int i=0 ; i<up_layer_size ; i++ )
     {
         up_units_params_pos_stats[i].clear();
         up_units_params_neg_stats[i].clear();
@@ -340,11 +340,11 @@ void RBMGenericParameters::computeQuadraticUnitActivations
     {
         assert( up_units_types[i] == 'q' );
 
-        // activations[0] = (sum_j weights(i,j) input_vec[j] + b[i])
+        // activations[0] = -(sum_j weights(i,j) input_vec[j] + b[i])
         //                    / (2 * up_units_params[i][1]^2)
         product( activations, weights.subMatRows(i,1), input_vec );
         real a_i = up_units_params[i][1];
-        activations[0] = (activations[0] + up_units_params[i][0])
+        activations[0] = -(activations[0] + up_units_params[i][0])
                            / (2 * a_i * a_i);
 
         // activations[1] = 1 / (2 * up_units_params[i][1]^2)
@@ -354,11 +354,11 @@ void RBMGenericParameters::computeQuadraticUnitActivations
     {
         assert( down_units_types[i] == 'q' );
 
-        // activations[0] = (sum_j weights(j,i) input_vec[j] + b[i])
+        // activations[0] = -(sum_j weights(j,i) input_vec[j] + b[i])
         //                    / (2 * down_units_params[i][1]^2)
         transposeProduct( activations, weights.subMatColumns(i,1), input_vec );
         real a_i = down_units_params[i][1];
-        activations[0] = (activations[0] + down_units_params[i][0])
+        activations[0] = -(activations[0] + down_units_params[i][0])
                            / (2 * a_i * a_i);
 
         // activations[1] = 1 / (2 * down_units_params[i][1]^2)

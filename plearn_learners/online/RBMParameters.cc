@@ -68,19 +68,6 @@ RBMParameters::RBMParameters( string down_types, string up_types )
     build();
 }
 
-/*
-RBMParameters::RBMParameters( PP<RBMLayer> down, PP<RBMLayer> up )
-    : up_units_types( up->getUnitsTypes() ),
-      down_units_types( down->getUnitsTypes() ),
-      going_up(true),
-      pos_count(0),
-      neg_count(0)
-{
-    // We're not sure inherited::build() has been called
-    build();
-}
-// */
-
 void RBMParameters::declareOptions(OptionList& ol)
 {
     // ### Declare all of this object's options here.
@@ -111,10 +98,11 @@ void RBMParameters::build_()
 {
     up_layer_size = up_units_types.size();
     down_layer_size = down_units_types.size();
-    if( upLayerSize() == 0 || downLayerSize() == 0 )
+    if( up_layer_size == 0 || down_layer_size == 0 )
         return;
 
-    input_size = downLayerSize();
+    input_size = down_layer_size;
+    output_size = up_layer_size;
 }
 
 void RBMParameters::build()
@@ -137,12 +125,14 @@ void RBMParameters::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void RBMParameters::setAsUpInput( const Vec& input ) const
 {
+    assert( input.size() == up_layer_size );
     input_vec = input;
     going_up = false;
 }
 
 void RBMParameters::setAsDownInput( const Vec& input ) const
 {
+    assert( input.size() == down_layer_size );
     input_vec = input;
     going_up = true;
 }

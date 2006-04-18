@@ -96,7 +96,7 @@ void RBMBinomialLayer::computeExpectation()
         return;
 
     for( int i=0 ; i<size ; i++ )
-        expectation[i] = sigmoid( activations[i] );
+        expectation[i] = sigmoid( -activations[i] );
 
     expectation_is_up_to_date = true;
 }

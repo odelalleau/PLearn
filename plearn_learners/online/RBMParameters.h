@@ -46,9 +46,6 @@
 namespace PLearn {
 using namespace std;
 
-class RBMParameters;
-typedef PP<RBMParameters> RBMParams;
-
 // forward declaration
 class RBMLayer;
 
@@ -73,6 +70,13 @@ public:
     //! Same meaning as "up_units_types", but with down units
     string down_units_types;
 
+    //! Number of units on up layer
+    int up_layer_size;
+
+    //#####  Not Options  #####################################################
+    //! Number of units on down layer
+    int down_layer_size;
+
 public:
     //#####  Public Member Functions  #########################################
 
@@ -82,11 +86,6 @@ public:
     //! Constructor from two string prototypes
     RBMParameters( string down_types, string up_types );
 
-/*
-    //! Constructor from two existing RBMLayers
-    RBMParameters( PP<RBMLayer> down, PP<RBMLayer> up );
-// */
-
     // Your other public member functions go here
 
     //! Sets input_vec to input, and going_up to false
@@ -94,18 +93,6 @@ public:
 
     //! Sets input_vec to input, and going_up to true
     virtual void setAsDownInput( const Vec& input ) const;
-
-    //! Gets size of up layer
-    inline int upLayerSize() const
-    {
-        return up_layer_size;
-    }
-
-    //! Gets size of down layer
-    inline int downLayerSize() const
-    {
-        return down_layer_size;
-    }
 
     //! Accumulates positive phase statistics to *_pos_stats
     virtual void accumulatePosStats( const Vec& down_values,
@@ -154,13 +141,6 @@ protected:
     int pos_count;
     //! Number of examples accumulated in *_neg_stats
     int neg_count;
-
-    //! Number of units on up layer
-    int up_layer_size;
-
-    //! Number of units on down layer
-    int down_layer_size;
-
 
 protected:
     //#####  Protected Member Functions  ######################################
