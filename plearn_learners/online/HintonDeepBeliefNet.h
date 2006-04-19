@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// DeepBeliefNet.h
+// HintonDeepBeliefNet.h
 //
 // Copyright (C) 2006 Pascal Lamblin
 //
@@ -34,11 +34,11 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file DeepBeliefNet.h */
+/*! \file HintonDeepBeliefNet.h */
 
 
-#ifndef DeepBeliefNet_INC
-#define DeepBeliefNet_INC
+#ifndef HintonDeepBeliefNet_INC
+#define HintonDeepBeliefNet_INC
 
 #include <plearn_learners/distributions/PDistribution.h>
 
@@ -57,7 +57,7 @@ class RBMJointGenericParameters;
  * @todo Yes
  *
  */
-class DeepBeliefNet : public PDistribution
+class HintonDeepBeliefNet : public PDistribution
 {
     typedef PDistribution inherited;
 
@@ -119,7 +119,7 @@ public:
     //! Default constructor
     // ### Make sure the implementation in the .cc
     // ### initializes all fields to reasonable default values.
-    DeepBeliefNet();
+    HintonDeepBeliefNet();
 
 
     //#####  PDistribution Member Functions  ##################################
@@ -220,7 +220,7 @@ public:
     // Declares other standard object methods.
     // ### If your class is not instantiatable (it has pure virtual methods)
     // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS
-    PLEARN_DECLARE_OBJECT(DeepBeliefNet);
+    PLEARN_DECLARE_OBJECT(HintonDeepBeliefNet);
 
     // Simply calls inherited::build() then build_()
     virtual void build();
@@ -264,7 +264,7 @@ private:
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(DeepBeliefNet);
+DECLARE_OBJECT_PTR(HintonDeepBeliefNet);
 
 } // end of namespace PLearn
 

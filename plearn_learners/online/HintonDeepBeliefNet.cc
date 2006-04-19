@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// DeepBeliefNet.cc
+// HintonDeepBeliefNet.cc
 //
 // Copyright (C) 2006 Pascal Lamblin
 //
@@ -34,10 +34,10 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file DeepBeliefNet.cc */
+/*! \file HintonDeepBeliefNet.cc */
 
 
-#include "DeepBeliefNet.h"
+#include "HintonDeepBeliefNet.h"
 #include "RBMLayer.h"
 #include "RBMMixedLayer.h"
 #include "RBMMultinomialLayer.h"
@@ -49,15 +49,15 @@ namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
-    DeepBeliefNet,
+    HintonDeepBeliefNet,
     "Does the same thing as Hinton's deep belief nets",
     ""
 );
 
 //////////////////
-// DeepBeliefNet //
+// HintonDeepBeliefNet //
 //////////////////
-DeepBeliefNet::DeepBeliefNet() :
+HintonDeepBeliefNet::HintonDeepBeliefNet() :
     learning_rate(0.),
     weight_decay(0.)
 {
@@ -66,22 +66,22 @@ DeepBeliefNet::DeepBeliefNet() :
 ////////////////////
 // declareOptions //
 ////////////////////
-void DeepBeliefNet::declareOptions(OptionList& ol)
+void HintonDeepBeliefNet::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "learning_rate", &DeepBeliefNet::learning_rate,
+    declareOption(ol, "learning_rate", &HintonDeepBeliefNet::learning_rate,
                   OptionBase::buildoption,
                   "Learning rate");
 
-    declareOption(ol, "weight_decay", &DeepBeliefNet::weight_decay,
+    declareOption(ol, "weight_decay", &HintonDeepBeliefNet::weight_decay,
                   OptionBase::buildoption,
                   "Weight decay");
 
-    declareOption(ol, "training_schedule", &DeepBeliefNet::training_schedule,
+    declareOption(ol, "training_schedule", &HintonDeepBeliefNet::training_schedule,
                   OptionBase::buildoption,
                   "Number of epochs for training RBMParameters during each\n"
                   "learning phase.\n");
 
-    declareOption(ol, "fine_tuning_method", &DeepBeliefNet::fine_tuning_method,
+    declareOption(ol, "fine_tuning_method", &HintonDeepBeliefNet::fine_tuning_method,
                   OptionBase::buildoption,
                   "Method for fine-tuning the whole network after greedy"
                   " learning.\n"
@@ -91,41 +91,41 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   "  - \"EGD\" or \"error_gradient_descent\"\n"
                   "  - \"WS\" or \"wake_sleep\".\n");
 
-    declareOption(ol, "layers", &DeepBeliefNet::layers,
+    declareOption(ol, "layers", &HintonDeepBeliefNet::layers,
                   OptionBase::buildoption,
                   "Layers that learn representations of the input,"
                   " unsupervisedly.\n"
                   "layers[0] is input layer.\n");
 
-    declareOption(ol, "target_layer", &DeepBeliefNet::target_layer,
+    declareOption(ol, "target_layer", &HintonDeepBeliefNet::target_layer,
                   OptionBase::buildoption,
                   "Target (or label) layer");
 
-    declareOption(ol, "params", &DeepBeliefNet::params,
+    declareOption(ol, "params", &HintonDeepBeliefNet::params,
                   OptionBase::buildoption,
                   "RBMParameters linking the unsupervised layers.\n"
                   "params[i] links layers[i] and layers[i+1], except for"
                   "params[n_layers-1],\n"
                   "that links layers[n_layers-1] and last_layer.\n");
 
-    declareOption(ol, "target_params", &DeepBeliefNet::target_params,
+    declareOption(ol, "target_params", &HintonDeepBeliefNet::target_params,
                   OptionBase::buildoption,
                   "Parameters linking target_layer and last_layer");
 
-    declareOption(ol, "n_layers", &DeepBeliefNet::n_layers,
+    declareOption(ol, "n_layers", &HintonDeepBeliefNet::n_layers,
                   OptionBase::learntoption,
                   "Number of unsupervised layers, including input layer");
 
-    declareOption(ol, "last_layer", &DeepBeliefNet::last_layer,
+    declareOption(ol, "last_layer", &HintonDeepBeliefNet::last_layer,
                   OptionBase::learntoption,
                   "Last layer, learning joint representations of input and"
                   " target");
 
-    declareOption(ol, "joint_layer", &DeepBeliefNet::joint_layer,
+    declareOption(ol, "joint_layer", &HintonDeepBeliefNet::joint_layer,
                   OptionBase::learntoption,
                   "Concatenation of target_layer and layers[n_layers-1]");
 
-    declareOption(ol, "joint_params", &DeepBeliefNet::joint_params,
+    declareOption(ol, "joint_params", &HintonDeepBeliefNet::joint_params,
                   OptionBase::learntoption,
                   "Parameters linking joint_layer and last_layer");
 
@@ -136,7 +136,7 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
 ///////////
 // build //
 ///////////
-void DeepBeliefNet::build()
+void HintonDeepBeliefNet::build()
 {
     // ### Nothing to add here, simply calls build_().
     inherited::build();
@@ -146,7 +146,7 @@ void DeepBeliefNet::build()
 ////////////
 // build_ //
 ////////////
-void DeepBeliefNet::build_()
+void HintonDeepBeliefNet::build_()
 {
     n_layers = layers.length();
     if( n_layers <= 1 )
@@ -163,7 +163,7 @@ void DeepBeliefNet::build_()
     else if( ftm == "ws" | ftm == "wake_sleep" )
         fine_tuning_method = "WS";
     else
-        PLERROR( "DeepBeliefNet::build_ - fine_tuning_method \"%s\"\n"
+        PLERROR( "HintonDeepBeliefNet::build_ - fine_tuning_method \"%s\"\n"
                  "is unknown.\n", fine_tuning_method.c_str() );
 
     if( training_schedule.length() != n_layers )
@@ -173,7 +173,7 @@ void DeepBeliefNet::build_()
     build_params();
 }
 
-void DeepBeliefNet::build_layers()
+void HintonDeepBeliefNet::build_layers()
 {
     if( inputsize_ >= 0 )
     {
@@ -196,7 +196,7 @@ void DeepBeliefNet::build_layers()
     joint_layer->random_gen = random_gen;
 }
 
-void DeepBeliefNet::build_params()
+void HintonDeepBeliefNet::build_params()
 {
     if( params.length() == 0 )
     {
@@ -205,7 +205,7 @@ void DeepBeliefNet::build_params()
             params[i] = new RBMGenericParameters();
     }
     else if( params.length() != n_layers-1 )
-        PLERROR( "DeepBeliefNet::build_params - params.length() should be"
+        PLERROR( "HintonDeepBeliefNet::build_params - params.length() should be"
                  " equal to\n"
                  "layers.length()-1 (%d != %d).\n",
                  params.length(), n_layers-1 );
@@ -235,24 +235,24 @@ void DeepBeliefNet::build_params()
 /////////
 // cdf //
 /////////
-real DeepBeliefNet::cdf(const Vec& y) const
+real HintonDeepBeliefNet::cdf(const Vec& y) const
 {
-    PLERROR("cdf not implemented for DeepBeliefNet"); return 0;
+    PLERROR("cdf not implemented for HintonDeepBeliefNet"); return 0;
 }
 
 /////////////////
 // expectation //
 /////////////////
-void DeepBeliefNet::expectation(Vec& mu) const
+void HintonDeepBeliefNet::expectation(Vec& mu) const
 {
-    PLERROR("expectation not implemented for DeepBeliefNet");
+    PLERROR("expectation not implemented for HintonDeepBeliefNet");
 }
 
 // ### Remove this method if your distribution does not implement it.
 ////////////
 // forget //
 ////////////
-void DeepBeliefNet::forget()
+void HintonDeepBeliefNet::forget()
 {
     /*!
       A typical forget() method should do the following:
@@ -270,23 +270,23 @@ void DeepBeliefNet::forget()
 //////////////
 // generate //
 //////////////
-void DeepBeliefNet::generate(Vec& y) const
+void HintonDeepBeliefNet::generate(Vec& y) const
 {
-    PLERROR("generate not implemented for DeepBeliefNet");
+    PLERROR("generate not implemented for HintonDeepBeliefNet");
 }
 
 /////////////////
 // log_density //
 /////////////////
-real DeepBeliefNet::log_density(const Vec& y) const
+real HintonDeepBeliefNet::log_density(const Vec& y) const
 {
-    PLERROR("density not implemented for DeepBeliefNet"); return 0;
+    PLERROR("density not implemented for HintonDeepBeliefNet"); return 0;
 }
 
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+void HintonDeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
@@ -309,7 +309,7 @@ void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 //////////////////
 // setPredictor //
 //////////////////
-void DeepBeliefNet::setPredictor(const Vec& predictor, bool call_parent) const
+void HintonDeepBeliefNet::setPredictor(const Vec& predictor, bool call_parent) const
 {
     if (call_parent)
         inherited::setPredictor(predictor, true);
@@ -319,7 +319,7 @@ void DeepBeliefNet::setPredictor(const Vec& predictor, bool call_parent) const
 ////////////////////////////////
 // setPredictorPredictedSizes //
 ////////////////////////////////
-bool DeepBeliefNet::setPredictorPredictedSizes(int the_predictor_size,
+bool HintonDeepBeliefNet::setPredictorPredictedSizes(int the_predictor_size,
                                                int the_predicted_size,
                                                bool call_parent)
 {
@@ -331,7 +331,7 @@ bool DeepBeliefNet::setPredictorPredictedSizes(int the_predictor_size,
     // ### Add here any specific code required by your subclass.
     if( the_predictor_size >= 0 && the_predictor_size != layers[0]->size ||
         the_predicted_size >= 0 && the_predicted_size != target_layer->size )
-        PLERROR( "DeepBeliefNet::setPredictorPredictedSizes - \n"
+        PLERROR( "HintonDeepBeliefNet::setPredictorPredictedSizes - \n"
                  "n_predictor should be equal to layer[0]->size (%d)\n"
                  "n_predicted should be equal to target_layer->size (%d).\n",
                  layers[0]->size, target_layer->size );
@@ -346,16 +346,16 @@ bool DeepBeliefNet::setPredictorPredictedSizes(int the_predictor_size,
 /////////////////
 // survival_fn //
 /////////////////
-real DeepBeliefNet::survival_fn(const Vec& y) const
+real HintonDeepBeliefNet::survival_fn(const Vec& y) const
 {
-    PLERROR("survival_fn not implemented for DeepBeliefNet"); return 0;
+    PLERROR("survival_fn not implemented for HintonDeepBeliefNet"); return 0;
 }
 
 // ### Remove this method, if your distribution does not implement it.
 ///////////
 // train //
 ///////////
-void DeepBeliefNet::train()
+void HintonDeepBeliefNet::train()
 {
     // The role of the train method is to bring the learner up to
     // stage==nstages, updating train_stats with training costs measured
@@ -451,7 +451,7 @@ void DeepBeliefNet::train()
     }
 }
 
-void DeepBeliefNet::greedyStep( const Vec& predictor, int index )
+void HintonDeepBeliefNet::greedyStep( const Vec& predictor, int index )
 {
     // deterministic propagation until we reach index
     layers[0]->expectation << predictor;
@@ -484,7 +484,7 @@ void DeepBeliefNet::greedyStep( const Vec& predictor, int index )
 
 }
 
-void DeepBeliefNet::jointGreedyStep( const Vec& input )
+void HintonDeepBeliefNet::jointGreedyStep( const Vec& input )
 {
     // deterministic propagation until we reach n_layers-2, setting the input
     // of the "input" part of joint_layer
@@ -521,7 +521,7 @@ void DeepBeliefNet::jointGreedyStep( const Vec& input )
 
 }
 
-void DeepBeliefNet::fineTune( const Vec& input )
+void HintonDeepBeliefNet::fineTune( const Vec& input )
 {
     PLERROR("fine tuning not implemented yet");
 }
@@ -529,9 +529,9 @@ void DeepBeliefNet::fineTune( const Vec& input )
 //////////////
 // variance //
 //////////////
-void DeepBeliefNet::variance(Mat& covar) const
+void HintonDeepBeliefNet::variance(Mat& covar) const
 {
-    PLERROR("variance not implemented for DeepBeliefNet");
+    PLERROR("variance not implemented for HintonDeepBeliefNet");
 }
 
 } // end of namespace PLearn
