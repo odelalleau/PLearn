@@ -92,6 +92,15 @@ public:
     Vec paramsvalues; 
     //! Number of outputs for the neural network
     int noutputs;
+    //! Use the same weights for the input and output weights for the autoassociators
+    bool use_same_input_and_output_weights;
+    //! Always use the reconstruction cost of the input, not of 
+    //! the last layer. This option should be used if
+    //! use_same_input_and_output_weights is true.
+    bool always_reconstruct_input;
+    //! Use the cubed value of the input of the activation functions
+    bool use_activations_with_cubed_input;
+
 public:
     //#####  Public Member Functions  #########################################
 
@@ -168,6 +177,8 @@ protected:
     VarArray weights;
     //! Reconstruction weights
     VarArray reconstruction_weights;
+    //! Biases
+    VarArray biases;
     //! Input variables
     VarArray invars;
     //! Input variable
@@ -208,7 +219,7 @@ protected:
     //! Return a variable that is the hidden layer corresponding to given
     //! input and weights. If the 'default' transfer_func is used, we use the
     //! hidden_transfer_func option.
-    Var hiddenLayer(const Var& input, const Var& weights, string transfer_func, Var& before_transfer_function);
+    Var hiddenLayer(const Var& input, const Var& weights, string transfer_func, Var& before_transfer_function, bool use_cubed_value=false);
 
     //! Build the output of the neural network, from the given input.
     //! The hidden layer is also made available in the 'hidden_layer' parameter.

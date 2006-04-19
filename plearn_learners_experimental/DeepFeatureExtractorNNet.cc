@@ -48,6 +48,7 @@
 #include <plearn/var/BinaryClassificationLossVariable.h>
 #include <plearn/var/ClassificationLossVariable.h>
 #include <plearn/var/ConcatColumnsVariable.h>
+#include <plearn/var/ConcatRowsVariable.h>
 #include <plearn/var/CrossEntropyVariable.h>
 #include <plearn/var/ExpVariable.h>
 #include <plearn/var/LiftOutputVariable.h>
@@ -56,6 +57,7 @@
 #include <plearn/var/MulticlassLossVariable.h>
 #include <plearn/var/NegCrossEntropySigmoidVariable.h>
 #include <plearn/var/OneHotSquaredLoss.h>
+#include <plearn/var/PowVariable.h>
 #include <plearn/var/SigmoidVariable.h>
 #include <plearn/var/SoftmaxVariable.h>
 #include <plearn/var/SoftplusVariable.h>
@@ -69,6 +71,7 @@
 #include <plearn/var/UnaryHardSlopeVariable.h>
 #include <plearn/var/Var_operators.h>
 #include <plearn/var/Var_utils.h>
+#include <plearn/display/DisplayUtils.h>
 
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include <plearn/math/random.h>
@@ -95,8 +98,13 @@ DeepFeatureExtractorNNet::DeepFeatureExtractorNNet()
       margin(1),
       initialization_method("uniform_linear"), 
       noutputs(0),
+      use_same_input_and_output_weights(false),
+      always_reconstruct_input(false),
+      use_activations_with_cubed_input(false),
       nhidden_schedule_current_position(-1)
-{}
+{
+    random_gen = new PRandom();
+}
 
 void DeepFeatureExtractorNNet::declareOptions(OptionList& ol)
 {
@@ -191,6 +199,21 @@ declareOption(ol, "cost_funcs", &DeepFeatureExtractorNNet::cost_funcs, OptionBas
                   "vector, one per class)\n"
                   "If the network only extracts features in an unsupervised manner,\n"
                   "then let noutputs be 0.");    
+    declareOption(ol, "use_same_input_and_output_weights", 
+                  &DeepFeatureExtractorNNet::use_same_input_and_output_weights, 
+                  OptionBase::buildoption, 
+                  "Use the same weights for the input and output weights for\n"
+                  "the autoassociators.");  
+    declareOption(ol, "always_reconstruct_input", 
+                  &DeepFeatureExtractorNNet::always_reconstruct_input, 
+                  OptionBase::buildoption, 
+                  "Always use the reconstruction cost of the input, not of\n"
+                  "the last layer. This option should be used if\n"
+                  "use_same_input_and_output_weights is true.");  
+    declareOption(ol, "use_activations_with_cubed_input", 
+                  &DeepFeatureExtractorNNet::use_activations_with_cubed_input, 
+                  OptionBase::buildoption, 
+                  "Use the cubed value of the input of the activation functions.");
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -214,30 +237,70 @@ void DeepFeatureExtractorNNet::build_()
         {
             input = Var(inputsize(), "input");
             output = input;
+            weights.resize(0);
+            reconstruction_weights.resize(0);
+            params.resize(0);
+            biases.resize(0);
+            if(use_same_input_and_output_weights)
+            {
+                Var b = new SourceVariable(1,inputsize());
+                b->value.fill(0);
+                biases.push_back(b);
+            }
+            if (seed_ != 0) random_gen->manual_seed(seed_);
         }
+        else            
+            output = hidden_representation;
 
         Var before_transfer_function;
         params_to_train.resize(0);
 
-        if(nhidden_schedule_current_position == -1)
+        if(nhidden_schedule_current_position == -1 || always_reconstruct_input)
             unsupervised_target = input;
         else 
             unsupervised_target = hidden_representation;
                 
         int n_added_layers = 0;
+        if(nhidden_schedule_position < nhidden_schedule.length() && use_same_input_and_output_weights)
+        {
+            params_to_train.push_back(biases.last());
+        }
         while(nhidden_schedule_current_position < nhidden_schedule_position && nhidden_schedule_current_position+1 < nhidden_schedule.length())
         {
             nhidden_schedule_current_position++;
             n_added_layers++;
-            Var w = new SourceVariable(output->size()+1,nhidden_schedule[nhidden_schedule_current_position]);
-            weights.push_back(w);
-            // Initialize weights. If weights applied to a hidden layer, use -0.5 as bias
-            // HUGO: Is this a good idea?
-            //fillWeights(w,true,nhidden_schedule_current_position == 0 ? 0 : -0.5);
-            fillWeights(w,true,0);
-            params.push_back(w);
-            params_to_train.push_back(w);
-            output = hiddenLayer(output,w,"sigmoid",before_transfer_function);
+            Var w;
+            if(use_same_input_and_output_weights)
+            {
+                Var w_weights = new SourceVariable(output->size(),nhidden_schedule[nhidden_schedule_current_position]);
+                weights.push_back(w_weights);
+                fillWeights(w_weights,false);
+                params.push_back(w_weights);
+                params_to_train.push_back(w_weights);
+
+                Var w_biases = new SourceVariable(1,nhidden_schedule[nhidden_schedule_current_position]);
+                biases.push_back(w_biases);
+                w_biases->value.fill(0);
+                params.push_back(w_biases);
+                params_to_train.push_back(w_biases);
+
+                // Initialize weights. If weights applied to a hidden layer, use -0.5 as bias
+                // HUGO: Is this a good idea?
+                //fillWeights(w,true,nhidden_schedule_current_position == 0 ? 0 : -0.5);
+                w = vconcat(w_biases & w_weights);
+            }
+            else
+            {
+                w = new SourceVariable(output->size()+1,nhidden_schedule[nhidden_schedule_current_position]);
+                weights.push_back(w);
+                // Initialize weights. If weights applied to a hidden layer, use -0.5 as bias
+                // HUGO: Is this a good idea?
+                //fillWeights(w,true,nhidden_schedule_current_position == 0 ? 0 : -0.5);
+                fillWeights(w,true,0);            
+                params.push_back(w);
+                params_to_train.push_back(w);
+            }
+            output = hiddenLayer(output,w,"sigmoid",before_transfer_function,use_activations_with_cubed_input);            
             hidden_representation = output;
         }
 
@@ -254,7 +317,6 @@ void DeepFeatureExtractorNNet::build_()
             params.push_back(w);
             output = hiddenLayer(output,w,output_transfer_func,before_transfer_function);
             
-            params_to_train.clear();
             params_to_train.resize(params.length());
             for(int i=0; i<params.length(); i++)
                 params_to_train[i] = params[i];
@@ -262,22 +324,29 @@ void DeepFeatureExtractorNNet::build_()
         else
         {
             int it = 0;
-            while(n_added_layers > 0)
+            while((!always_reconstruct_input && n_added_layers > 0) || (always_reconstruct_input && it<weights.size()))
             {
                 n_added_layers--;
-                it++;
+                it++;                
                 Var rw;
-                if(nhidden_schedule_current_position-it == -1)
-                    rw  = new SourceVariable(output->size()+1,inputsize());
+                if(use_same_input_and_output_weights)
+                {
+                    rw = vconcat(biases[biases.size()-it-1] & transpose(weights[weights.size()-it]));
+                }
                 else
-                    rw  = new SourceVariable(output->size()+1,nhidden_schedule[nhidden_schedule_current_position-it]);
-                reconstruction_weights.push_back(rw);
-                //fillWeights(rw,true,nhidden_schedule_current_position == 0 ? 0 : -0.5);
-                fillWeights(rw,true,0);
-                params.push_back(rw);
-                params_to_train.push_back(rw);
-                output = hiddenLayer(output,rw,"sigmoid",before_transfer_function);
-            }            
+                {
+                    if(nhidden_schedule_current_position-it == -1)
+                        rw  = new SourceVariable(output->size()+1,inputsize());
+                    else
+                        rw  = new SourceVariable(output->size()+1,nhidden_schedule[nhidden_schedule_current_position-it]);
+                    reconstruction_weights.push_back(rw);
+                    //fillWeights(rw,true,nhidden_schedule_current_position == 0 ? 0 : -0.5);
+                    fillWeights(rw,true,0);
+                    params.push_back(rw);
+                    params_to_train.push_back(rw);
+                }
+                output = hiddenLayer(output,rw,"sigmoid",before_transfer_function,use_activations_with_cubed_input);
+            }         
         }
 
         // Build target and weight variables.
@@ -345,6 +414,7 @@ void DeepFeatureExtractorNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(params_to_train, copies);
     deepCopyField(weights, copies);
     deepCopyField(reconstruction_weights, copies);
+    deepCopyField(biases, copies);
     deepCopyField(invars, copies);
     deepCopyField(costs, copies);
     deepCopyField(penalties, copies);
@@ -380,9 +450,9 @@ void DeepFeatureExtractorNNet::forget()
         optimizer->reset();
     stage = 0;
     
-    params.clear();
+    //params.clear();
     params.resize(0);
-    weights.clear();
+    //weights.clear();
     weights.resize(0);
     nhidden_schedule_current_position = -1;
     nhidden_schedule_position = 0;
@@ -426,6 +496,7 @@ void DeepFeatureExtractorNNet::train()
 
     int initial_stage = stage;
     bool early_stop=false;
+    displayFunction(paramf, true, false, 250);
     while(stage<nstages && !early_stop)
     {
         optimizer->nstages = optstage_per_lstage;
@@ -504,7 +575,7 @@ void DeepFeatureExtractorNNet::buildTargetAndWeight() {
 }
 
 void DeepFeatureExtractorNNet::buildCosts(const Var& the_output, const Var& the_target, const Var& the_unsupervised_target, const Var& before_transfer_func) {
-    costs.clear();
+    //costs.clear();
     costs.resize(0);
     if(nhidden_schedule_current_position >= nhidden_schedule.length())
     {
@@ -642,8 +713,10 @@ void DeepFeatureExtractorNNet::buildCosts(const Var& the_output, const Var& the_
 }
 
 
-Var DeepFeatureExtractorNNet::hiddenLayer(const Var& input, const Var& weights, string transfer_func, Var& before_transfer_function) {
+Var DeepFeatureExtractorNNet::hiddenLayer(const Var& input, const Var& weights, string transfer_func, Var& before_transfer_function, bool use_cubed_value) {
     Var hidden = affine_transform(input, weights); 
+    if(use_cubed_value)
+        hidden = pow(hidden,3);    
     before_transfer_function = hidden;
     Var result;
     if(transfer_func=="linear")
@@ -665,7 +738,7 @@ Var DeepFeatureExtractorNNet::hiddenLayer(const Var& input, const Var& weights, 
     else if(transfer_func=="symm_hard_slope")
         result = unary_hard_slope(hidden,-1,1);
     else
-        PLERROR("In NNet::hiddenLayer - Unknown value for transfer_func: %s",transfer_func.c_str());
+        PLERROR("In DeepFeatureExtractorNNet::hiddenLayer - Unknown value for transfer_func: %s",transfer_func.c_str());
     return result;
 }
 
@@ -699,9 +772,9 @@ void DeepFeatureExtractorNNet::fillWeights(const Var& weights, bool fill_first_r
     else
         delta = 1.0 / sqrt(real(is));
     if (initialization_method.find("normal") != string::npos)
-        fill_random_normal(weights->value, 0, delta);
+        random_gen->fill_random_normal(weights->value, 0, delta);
     else
-        fill_random_uniform(weights->value, -delta, delta);
+        random_gen->fill_random_uniform(weights->value, -delta, delta);
     if (fill_first_row)
         weights->matValue(0).fill(fill_with_this);
 }
