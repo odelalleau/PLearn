@@ -114,6 +114,9 @@ public:
     //! compute the expectation
     virtual void computeExpectation() = 0 ;
 
+    //! resets activations, sample and expectation fields
+    virtual void reset();
+
     //! return units_types
     inline string getUnitsTypes()
     {

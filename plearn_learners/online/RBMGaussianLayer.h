@@ -57,6 +57,7 @@ class RBMGaussianLayer: public RBMLayer
 public:
     //#####  Public Build Options  ############################################
 
+    real min_quadratic_term;
 
 
 public:

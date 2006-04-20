@@ -57,17 +57,16 @@ RBMLayer::RBMLayer() :
 {
 }
 
+void RBMLayer::reset()
+{
+    activations.clear();
+    sample.clear();
+    expectation.clear();
+    expectation_is_up_to_date = false;
+}
 
 void RBMLayer::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here.
-    // ### For the "flags" of each option, you should typically specify
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or
-    // ### OptionBase::tuningoption. If you don't provide one of these three,
-    // ### this option will be ignored when loading values from a script.
-    // ### You can also combine flags, for example with OptionBase::nosave:
-    // ### (OptionBase::buildoption | OptionBase::nosave)
-
     declareOption(ol, "units_types", &RBMLayer::units_types,
                   OptionBase::learntoption,
                   "Each character of this string describes the type of an"

@@ -61,6 +61,7 @@ HintonDeepBeliefNet::HintonDeepBeliefNet() :
     learning_rate(0.),
     weight_decay(0.)
 {
+    random_gen = new PRandom();
 }
 
 ////////////////////
@@ -76,12 +77,14 @@ void HintonDeepBeliefNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Weight decay");
 
-    declareOption(ol, "training_schedule", &HintonDeepBeliefNet::training_schedule,
+    declareOption(ol, "training_schedule",
+                  &HintonDeepBeliefNet::training_schedule,
                   OptionBase::buildoption,
                   "Number of epochs for training RBMParameters during each\n"
                   "learning phase.\n");
 
-    declareOption(ol, "fine_tuning_method", &HintonDeepBeliefNet::fine_tuning_method,
+    declareOption(ol, "fine_tuning_method",
+                  &HintonDeepBeliefNet::fine_tuning_method,
                   OptionBase::buildoption,
                   "Method for fine-tuning the whole network after greedy"
                   " learning.\n"
@@ -152,6 +155,18 @@ void HintonDeepBeliefNet::build_()
     if( n_layers <= 1 )
         return;
 
+    // check value of initialization_method
+    string im = lowerstring( initialization_method );
+    if( im == "" || im == "uniform_sqrt" )
+        initialization_method = "uniform_sqrt";
+    else if( im == "uniform_linear" )
+        initialization_method = im;
+    else if( im == "zero" )
+        initialization_method = im;
+    else
+        PLERROR( "RBMParameters::build_ - initialization_method\n"
+                 "\"%s\" unknown.\n", initialization_method.c_str() );
+
     // check value of fine_tuning_method
     string ftm = lowerstring( fine_tuning_method );
     if( ftm == "" | ftm == "none" )
@@ -205,9 +220,8 @@ void HintonDeepBeliefNet::build_params()
             params[i] = new RBMGenericParameters();
     }
     else if( params.length() != n_layers-1 )
-        PLERROR( "HintonDeepBeliefNet::build_params - params.length() should be"
-                 " equal to\n"
-                 "layers.length()-1 (%d != %d).\n",
+        PLERROR( "HintonDeepBeliefNet::build_params - params.length() should\n"
+                 "be equal to layers.length()-1 (%d != %d).\n",
                  params.length(), n_layers-1 );
 
     for( int i=0 ; i<n_layers-1 ; i++ )
@@ -215,6 +229,8 @@ void HintonDeepBeliefNet::build_params()
         params[i]->down_units_types = layers[i]->units_types;
         params[i]->up_units_types = layers[i+1]->units_types;
         params[i]->learning_rate = learning_rate;
+        params[i]->initialization_method = initialization_method;
+        params[i]->random_gen = random_gen;
         params[i]->build();
     }
 
@@ -264,6 +280,9 @@ void HintonDeepBeliefNet::forget()
     for( int i=0 ; i<n_layers-1 ; i++ )
         params[i]->forget();
 
+    for( int i=0 ; i<n_layers ; i++ )
+        layers[i]->reset();
+
     stage = 0;
 }
 
@@ -309,7 +328,8 @@ void HintonDeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 //////////////////
 // setPredictor //
 //////////////////
-void HintonDeepBeliefNet::setPredictor(const Vec& predictor, bool call_parent) const
+void HintonDeepBeliefNet::setPredictor(const Vec& predictor, bool call_parent)
+    const
 {
     if (call_parent)
         inherited::setPredictor(predictor, true);
@@ -320,8 +340,8 @@ void HintonDeepBeliefNet::setPredictor(const Vec& predictor, bool call_parent) c
 // setPredictorPredictedSizes //
 ////////////////////////////////
 bool HintonDeepBeliefNet::setPredictorPredictedSizes(int the_predictor_size,
-                                               int the_predicted_size,
-                                               bool call_parent)
+                                                     int the_predicted_size,
+                                                     bool call_parent)
 {
     bool sizes_have_changed = false;
     if (call_parent)

@@ -117,8 +117,15 @@ void RBMGenericParameters::build_()
         return;
 
     output_size = 0;
+    bool needs_forget = false; // do we need to reinitialize the parameters?
 
-    weights.resize( up_layer_size, down_layer_size );
+    if( weights.length() != up_layer_size ||
+        weights.width() != down_layer_size )
+    {
+        weights.resize( up_layer_size, down_layer_size );
+        needs_forget = true;
+    }
+
     weights_pos_stats.resize( up_layer_size, down_layer_size );
     weights_neg_stats.resize( up_layer_size, down_layer_size );
 
@@ -173,6 +180,9 @@ void RBMGenericParameters::build_()
                      "is unknown. Supported values are 'l' and 'q'.\n",
                      uut_i, i );
     }
+
+    if( needs_forget )
+        forget();
 
     clearStats();
 }
@@ -417,7 +427,10 @@ void RBMGenericParameters::forget()
         weights.clear();
     else
     {
-        real d = max( down_layer_size, up_layer_size );
+        if( !random_gen )
+            random_gen = new PRandom();
+
+        real d = 1. / max( down_layer_size, up_layer_size );
         if( initialization_method == "uniform_sqrt" )
             d = sqrt( d );
 
