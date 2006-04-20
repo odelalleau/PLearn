@@ -190,10 +190,10 @@ void RandomSamplesVMatrix::getNewRow(int i, const Vec& v) const
 void RandomSamplesVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-    deepCopyField(random_gen, copies);
-    deepCopyField(non_preserved, copies);
-    deepCopyField(indices, copies);
 
+    deepCopyField(random_gen,       copies);
+    deepCopyField(non_preserved,    copies);
+    deepCopyField(indices,          copies);
 }
 
 } // end of namespace PLearn
