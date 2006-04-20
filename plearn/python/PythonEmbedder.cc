@@ -40,9 +40,11 @@
 
 /*! \file PythonEmbedder.cc */
 
+#define PL_LOG_MODULE_NAME "PythonEmbedder"
 
 #include "PythonEmbedder.h"
 #include "PythonIncludes.h"
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;
@@ -52,6 +54,7 @@ static int num_python_instances = 0;
 PythonEmbedder::PythonEmbedder()
 {
     if (num_python_instances == 0) {
+        MODULE_LOG << "Py_Initialize() called" << endl;
         Py_Initialize();
     }
 
@@ -63,6 +66,7 @@ PythonEmbedder::~PythonEmbedder()
     if (num_python_instances > 0) {
         --num_python_instances;
         if (num_python_instances == 0)
+            MODULE_LOG << "Py_Finalize() called" << endl;
             Py_Finalize();
     }
 }

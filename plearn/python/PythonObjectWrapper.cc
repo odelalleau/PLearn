@@ -183,8 +183,18 @@ PythonObjectWrapper::PythonObjectWrapper(const PythonObjectWrapper& other)
 PythonObjectWrapper::~PythonObjectWrapper()
 {
     if (m_ownership == control_ownership) {
-        PythonGlobalInterpreterLock gil;
-        Py_XDECREF(m_object);
+        // Hack: don't acquire the GIL if we are dealing with Py_None, since
+        // this object never moves in memory (no deallocation) and decrementing
+        // its refcount should be thread-safe.  It is possible that some empty
+        // PythonObjectWrappers exist without build() having been called on
+        // them (e.g. type registration for plearn help), i.e. Py_Initialize()
+        // has not been called and acquiring the GIL in those cases is iffy.
+        if (m_object == Py_None)
+            Py_XDECREF(m_object);
+        else {
+            PythonGlobalInterpreterLock gil;
+            Py_XDECREF(m_object);
+        }
     }
 }
 
