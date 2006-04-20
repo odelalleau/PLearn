@@ -107,10 +107,8 @@ protected:
     
     //#####  Protected Options  ###############################################
 
-    // ### Declare protected option fields (such as learned parameters) here
-    // ...
-
 protected:
+
     //#####  Protected Member Functions  ######################################
 
     //! Declares the class options.
