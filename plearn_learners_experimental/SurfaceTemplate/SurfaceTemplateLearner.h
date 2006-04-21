@@ -3,21 +3,21 @@
 // SurfaceTemplateLearner.h
 //
 // Copyright (C) 2006 Pascal Lamblin and Olivier Delalleau
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,7 +28,7 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
@@ -82,7 +82,7 @@ public:
     //! on the 'seed' option) and sets 'stage' back to 0 (this is the stage of a
     //! fresh learner!).
     // virtual void forget();
-    
+
     //! Overridden to ensure the mappings source in the score layer is properly
     //! set.
     virtual void train();
@@ -90,20 +90,20 @@ public:
     //! Computes the output from the input.
     // virtual void computeOutput(const Vec& input, Vec& output) const;
 
-    //! Computes the costs from already computed output. 
+    //! Computes the costs from already computed output.
     /*
-    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
                                          const Vec& target, Vec& costs) const;
                                          */
-    
+
     //! Overridden in order to properly obtain the fieldnames.
     virtual void setTrainingSet(VMat training_set, bool call_forget=true);
-    
+
     //! Overridden in order to properly obtain the fieldnames.
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs=0, VMat testcosts=0) const;
 
     // *** SUBCLASS WRITING: ***
-    // While in general not necessary, in case of particular needs 
+    // While in general not necessary, in case of particular needs
     // (efficiency concerns for ex) you may also want to overload
     // some of the following methods:
     // virtual void computeOutputAndCosts(const Vec& input, const Vec& target, Vec& output, Vec& costs) const;
@@ -118,7 +118,7 @@ public:
     // Declares other standard object methods.
     PLEARN_DECLARE_OBJECT(SurfaceTemplateLearner);
 
-    // Simply calls inherited::build() then build_() 
+    // Simply calls inherited::build() then build_()
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
@@ -126,14 +126,14 @@ public:
 
 protected:
     //#####  Protected Member Functions  ######################################
-    
+
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
 
-private: 
+private:
     //#####  Private Member Functions  ########################################
 
-    //! This does the actual building. 
+    //! This does the actual building.
     void build_();
 
 private:
@@ -144,7 +144,7 @@ private:
 
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(SurfaceTemplateLearner);
-  
+
 } // end of namespace PLearn
 
 #endif

@@ -66,10 +66,10 @@ class ScoreLayerVariable : public NaryVariable
     typedef NaryVariable inherited;
 
 public:
-    
+
     //! The variable that will run the ICP alignments.
     PP<RunICPVariable> run_icp_var;
-    
+
     //#####  Public Build Options  ############################################
 
     //! ### declare public option fields (such as build options) here
@@ -144,7 +144,7 @@ public:
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
-    
+
     //! The VMatrix containing information about the input mappings.
     VMat mappings_source;
 
@@ -168,7 +168,7 @@ protected:
 
     //! Number of inactive molecules in the templates source.
     int n_inactive_in_source;
-    
+
     //#####  Protected Options  ###############################################
 
 protected:

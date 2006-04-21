@@ -85,7 +85,7 @@ void ScoreLayerVariable::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
         "The model of ICP aligner we want to use (will be replicated for\n"
         "each underlying score variable).");
-    
+
     declareOption(ol, "n_active_templates",
                   &ScoreLayerVariable::n_active_templates,
                   OptionBase::buildoption,
@@ -217,7 +217,7 @@ void ScoreLayerVariable::build_()
 
     // This VarArray will list additional parameters that must be optimized.
     VarArray optimized_params;
-    
+
     // Create the corresponding score variables.
     outputs.resize(0);
     int index_in_run_icp_var = 0; // Current index.

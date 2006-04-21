@@ -70,7 +70,7 @@ public:
 
     //! The ICP aligners.
     TVec< PP<ChemicalICP> > icp_aligners;
-    
+
     //#####  Public Build Options  ############################################
 
     //! ### declare public option fields (such as build options) here
@@ -146,7 +146,7 @@ protected:
     //! All variables in this propagation path are resized after the ICP has
     //! been run, in order to ensure the correctness of all sizes.
     TVec<VarArray> paths_to_resize;
-    
+
     //#####  Protected Options  ###############################################
 
     // ### Declare protected option fields (such as learned parameters) here
@@ -157,7 +157,7 @@ protected:
     //! A ScoreLayerVariable that can give us a Molecule from an input id.
     //! This is a raw C++ pointer to avoid PP cycles.
     ScoreLayerVariable* score_layer;
-    
+
     //#####  Protected Member Functions  ######################################
 
     //! Declares the class options.
