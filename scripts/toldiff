@@ -80,6 +80,7 @@ err = toldiff(filename1, filename2, numtol, blanktol)
 if err:
     print err
     # Uncomment these lines if you want a more helpful output when toldiff fails.
+    # import os
     # print 'Output of a standard diff command is:'
     # os.system('diff -u %s %s' % (filename1, filename2))
         
