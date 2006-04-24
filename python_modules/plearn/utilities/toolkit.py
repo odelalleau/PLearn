@@ -165,14 +165,34 @@ def date_time_random_string(date_separator = '_', time_separator = ':', \
     s += "_%d" % random.randint(1e03, 1e09)    
     return s
 
-def doc(obj, short=False):
+def doc(obj, docform = 2, join_token = '\n    '):
+    """Return documentation associated with an object.
+
+    If the object does not have any documentation, return the empty string.
+    Otherwise return the object documentation, in a form that depends on
+    doc form.  If docform==0, the first line (short-form) of the
+    documentation is returned.  If docform==1, the body of the
+    documentation is returned, without the short-form.  If docform==2, the
+    whole documentation is returned (both short-form and body).
+    """
     docstr = obj.__doc__    
     if docstr is None:
         return ''
 
-    lines        = string.split(docstr, '\n')
-    if short:
+    lines = string.split(docstr, '\n')
+    if docform==0:
         lines = [ lines[0] ]
+    elif docform==1:
+        ## Determine a logical starting point that skips blank lines after
+        ## the first line of documentation
+        for i in range(1,len(lines)):
+            if lines[i].strip() != "":
+                break
+        lines = lines[i:]
+    elif docform==2:
+        pass
+    else:
+        raise ValueError,"Argument to 'docform' must be either 0, 1, or 2"
     
     parsed_lines = []
     for line in lines:
@@ -196,7 +216,7 @@ def doc(obj, short=False):
         
         parsed_lines.append( parsed )
 
-    as_string = string.join( parsed_lines, '\n    ' )
+    as_string = string.join( parsed_lines, join_token )
     return as_string
 
 def exempt_list_of(list, undesired_values):
@@ -382,7 +402,7 @@ def re_filter_list(strlist, undesired_regexp):
                 break
 
 def short_doc(obj):
-    return doc(obj, True)
+    return doc(obj, 0)
 
 def symlink( to_path, from_path, force = False, is_exe = False ):
     """Symbolic link to a disk resource.

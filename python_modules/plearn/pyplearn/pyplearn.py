@@ -10,6 +10,7 @@ __all__ = [ 'plvar',
             'plargs', 'generate_expdir', 'plarg_defaults',
             'bind_plargs', 'plargs_binder', 'plargs_namespace',
             'include',
+            'pyplearn_intelligent_cast',
 
             ## Exceptions
             'PyPLearnError',
@@ -19,18 +20,25 @@ __all__ = [ 'plvar',
 #
 #  Helper functions
 #
-def __intelligent_cast( default_value, provided_value ):
+def pyplearn_intelligent_cast( default_value, provided_value ):
     if default_value is None:
         cast = lambda val: val
 
     else:
         cast = type(default_value)
+
+        ## Special treatment for lists: recursively apply the intelligent
+        ## cast up to one level (nested lists not supported)
         if cast is list:
             elem_cast = str
             if default_value:
                 elem_cast = type(default_value[0])
+                if elem_cast == list:
+                    raise ValueError, "Nested lists are not supported by pyplearn_intelligent_cast"
 
             def list_cast( s ):
+                ## Potentially strip left-hand [ and right-hand ]
+                s = s.lstrip(' [').rstrip(' ]')
                 if s:
                     return [ elem_cast(e) for e in s.split(",") ]
                 return []
@@ -126,7 +134,7 @@ def bind_plargs(obj, field_names = None, plarg_names = None):
         ## plarg. If it was not provided by the user, the value will
         ## be set exactly to what it was when this funtion was
         ## entered. Otherwise, it will be set to the user provided value
-        provided_value = __intelligent_cast( default_value, getattr(plargs, arg_name) )
+        provided_value = pyplearn_intelligent_cast( default_value, getattr(plargs, arg_name) )
         setattr( obj, field, provided_value )
 
 def generate_expdir( ):
@@ -486,7 +494,7 @@ class plargs_namespace( object ):
 
             for attr_name, value in overrides.iteritems():
                 default        = dic[attr_name]
-                dic[attr_name] = globals()['__intelligent_cast']( default, value )
+                dic[attr_name] = globals()['pyplearn_intelligent_cast']( default, value )
             
             dic['__accessed'] = False
             return type.__new__( metacls, clsname, bases, dic )

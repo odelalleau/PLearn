@@ -29,18 +29,18 @@
 #  This file is part of the PLearn library. For more information on the PLearn
 #  library, go to the PLearn Web site at www.plearn.org
 
-#"""This module contains utility functions to be used with pygtk
-#
-#It contains facilities for loading Glade files, as well as running the GTK
-#main loop as a background thread.
-#"""
+"""This module contains utility functions to be used with pygtk
+
+It contains facilities for loading Glade files, as well as running the GTK
+main loop as a background thread.
+"""
 
 import pygtk
 pygtk.require("2.0")
 import gtk
 import gtk.glade
 
-import re
+import re, sys, threading
 
 
 #####  Load Glade Files  ####################################################
@@ -88,7 +88,7 @@ def glade_load_and_autoconnect(myobj, glade_file, widget_name=''):
 
 gtk.threads_init()
 
-class GtkMainLoop(threading.Thread):
+class GtkMainLoop( threading.Thread ):
     """Encapsulates the GTK Event Loop as a separate thread.
 
     Call the class method startGTK() in order to start the start the event
@@ -100,6 +100,7 @@ class GtkMainLoop(threading.Thread):
     
     def run(self):
         gtk.threads_enter()
+        # print >>sys.stderr, "Starting GtkMainLoop background thread"
         gtk.main()
         gtk.threads_leave()
 
@@ -114,34 +115,106 @@ class GtkMainLoop(threading.Thread):
 
 #####  Glade/Pygtk Wrapper  #################################################
 
-class PyGTKWidget(object):
-    """Instantiate a Glade XML file for widget and connects the methods."""
+class GladeWidget(object):
+    """Instantiate a Glade XML file for widget and connects the methods.
 
-    def __init__(self, gladefile, widgetname=""):
-        if widgetname == "":
-            widgetname = self.__class__.__name__
-        gladexml = gtk.glade.XML(gladefile, root=widgetname)
+    This class loads a GLADE XML file and performs two things:
+    
+    1. It connects all signals in the Glade file to the methods of the
+       same name in the class.
+
+    2. It provides direct access to all widgets under the root widget as
+       attributes of the class itself, but addingthe prefix 'w_'. For
+       example, if Glade defines a widget 'help_text', the attribute name
+       will be 'w_help_text'.  In addition, the root widget is available as
+       'w_root'.
+    """
+
+    def __init__(self, gladefile, root_widgetname=""):
+        if root_widgetname == "":
+            root_widgetname = self.__class__.__name__
+        gladexml = gtk.glade.XML(gladefile, root=root_widgetname)
         gladexml.signal_autoconnect(self)
-        self.widgetname = widgetname
-        self.gladefile  = gladefile
-        self.widget     = gladexml.get_widget(widgetname)
+        
+        self.__gladefile__  = gladefile
+        self.w_root         = gladexml.get_widget(root_widgetname)
+
+        ## Make subwidgets available
+        for widget in gladexml.get_widget_prefix(''):
+            name = "w_" + widget.get_name()
+            if hasattr(self, name):
+                print "Duplicate attribute",name,"with value",getattr(self,name)
+                raise RuntimeError, ("Attempting to add widget '%s' as attribute, but "   +\
+                      "it already exists in object '%s' instantiated from gladefile '%s'") \
+                      % (name, self.__class__.__name__, gladefile)
+            setattr(self, name, widget)
 
 
-class PyGTKAppWindow(PyGTKWidget):
+class GladeAppWindow(GladeWidget):
     """Instantiate the Glade window and starts the threaded GtkMainLoop."""
 
     def run(self):
-        self.widget.show_all()
+        self.close_event = threading.Event()
+        self.w_root.show_all()
         GtkMainLoop.startGTK()
+        # gtk.main()
 
     def quit(self, *args):
+        self.close_event.set()
         gtk.main_quit()
 
 
-class PyGTKDialog(PyGTKWidget):
+class GladeDialog(GladeWidget):
     """Instantiate the Glade window and starts the dialog box."""
 
     def run(self):
-      result = self.widget.run()
-      self.widget.hide()
-      return result
+        result = self.w_root.run()
+        self.w_root.hide()
+        return result
+
+    def destroy(self):
+        self.w_root.destroy()
+
+
+#####  MessageBox (a la Windows)  ###########################################
+
+def MessageBox(primary_text   = "",   secondary_text   = "",
+               primary_markup = "",   secondary_markup = "",
+               title=None, type=gtk.MESSAGE_INFO,
+               buttons=gtk.BUTTONS_OK,
+               custom_buttons = None,
+               flags = gtk.DIALOG_MODAL):
+    """A MessageBox a la Windows.
+
+    The arguments are passed to GTK MessageDialog.  If custom_buttons is
+    specified, it must be a callback function which is called with the
+    dialog widget as its sole argument.  This function must perform
+    add_buttons as appropriate.
+    """
+    if not primary_text and not primary_markup:
+        raise ValueError, "Either 'primary_text' or 'primary_markup' must be specified"
+
+    if custom_buttons is not None:
+        buttons = gtk.BUTTONS_NONE
+        
+    dialog = gtk.MessageDialog(flags=flags, type=type, buttons=buttons,
+                               message_format=primary_text)
+
+    if custom_buttons:
+        custom_buttons(dialog)
+        
+    if title:
+        dialog.set_title(title)
+
+    if primary_markup:
+        dialog.set_markup(primary_markup)
+
+    if secondary_text:
+        dialog.format_secondary_text(secondary_text)
+
+    if secondary_markup:
+        dialog.format_secondary_markup(secondary_markup)
+
+    result = dialog.run()
+    dialog.hide()
+    return result
