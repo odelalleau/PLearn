@@ -202,6 +202,12 @@ struct ConvertFromPyObject< std::map<T,U> >
     static std::map<T,U> convert(PyObject*);
 };
 
+template <class T, class U>
+struct ConvertFromPyObject< std::pair<T,U> >
+{
+    static std::pair<T,U> convert(PyObject*);
+};
+
 
 //#####  PythonObjectWrapper  #################################################
 
@@ -397,6 +403,10 @@ public:
     template <class T, class U>
     static PyObject* newPyObject(const std::map<T,U>&);
 
+    //! C++ stdlib pair<>: create a Python tuple with two elements
+    template <class T, class U>
+    static PyObject* newPyObject(const std::pair<T,U>&);
+    
     //! Pointer to vector<>: simply dereference pointer, or None if NULL
     //!
     //! (NOTE: we don't have conversion from general pointer type since it's
@@ -495,6 +505,25 @@ std::map<T,U> ConvertFromPyObject< std::map<T,U> >::convert(PyObject* pyobj)
     return result;
 }
 
+template <class T, class U>
+std::pair<T,U> ConvertFromPyObject< std::pair<T,U> >::convert(PyObject* pyobj)
+{
+    assert( pyobj );
+    // Here, we support both Python Tuples and Lists
+    if (! PyTuple_Check(pyobj) && PyTuple_GET_SIZE(pyobj) != 2)
+        PLPythonConversionError("ConvertFromPyObject< std::pair<T,U> >", pyobj);
+
+    std::pair<T,U> p;
+
+    PyObject* first = PyTuple_GET_ITEM(pyobj, 0);
+    p.first = ConvertFromPyObject<T>::convert(first);
+
+    PyObject* second = PyTuple_GET_ITEM(pyobj, 1);
+    p.second = ConvertFromPyObject<T>::convert(second);
+
+    return p;
+}
+
 
 //#####  newPyObject Implementations  #########################################
 
@@ -548,6 +577,17 @@ PyObject* PythonObjectWrapper::newPyObject(const std::map<T,U>& data)
     }
 
     return newdict;
+}
+
+template <class T, class U>
+PyObject* PythonObjectWrapper::newPyObject(const std::pair<T,U>& data)
+{
+    // According to Python Doc, since PyTuple_SET_ITEM steals the reference to
+    // the item being set, one does not need to Py_XDECREF the inserted object.
+    PyObject* newtuple = PyTuple_New(2);
+    PyTuple_SET_ITEM(newtuple, 0, newPyObject(data.first));
+    PyTuple_SET_ITEM(newtuple, 1, newPyObject(data.second));
+    return newtuple;
 }
 
 template <class T>
