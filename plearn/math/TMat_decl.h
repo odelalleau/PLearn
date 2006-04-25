@@ -863,26 +863,27 @@ public:
         return true;
     }
 
-    //!  Makes sure the allocated memory for this matrix is exactly length()*width()
+    //! Ensure the allocated memory for this matrix is exactly length * width.
     void compact()
     {
         if(storage->length() != length()*width())
         {
             if(storage->usage()>1)
-                PLERROR("IN Mat::compact() compact operation not allowed when matrix storage is shared (for obvious reasons)");
+                PLERROR("In TMat<T>::compact() - Compact operation not allowed"
+                        " when matrix storage is shared, for obvious reasons");
             operator=(copy());
         }
     }
 
+    //! Swap element (i,j) with element (j,i).
+    //! Currently only implemented for square matrices.
     void transpose()
     {
-        /*
-        if(mod()!=width())
-            PLERROR("In transpose() can transpose in place only compact matrices whose mod()==width() (that is often not the case for submatrices");
-        */
+        if (length() != width())
+            PLERROR("In TMat<T>::tranpose() - Only implemented for square "
+                    "matrices");
         for (int i = 0; i < length(); i++)
         {
-            //T* rowi = rowdata(i);
             T* rowi = (*this)[i] + i + 1;
             T* colielem = rowi - 1 + mod();
             for(int j = i + 1; j < width(); j++, colielem += mod(), rowi++)
