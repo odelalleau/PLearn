@@ -43,8 +43,10 @@
 // Python includes must come first
 #include <plearn/python/PythonCodeSnippet.h>
 
+// From PLearn
 #include <commands/PLearnCommands/PLearnCommand.h>
 #include <commands/PLearnCommands/PLearnCommandRegistry.h>
+#include <commands/PLearnCommands/HTMLHelpCommand.h>
 
 namespace PLearn {
 
@@ -68,6 +70,37 @@ public:
     //! PLearn version string
     PythonObjectWrapper versionString(const TVec<PythonObjectWrapper>& args) const;
 
+    //! List of classes registered for serialization (does not return abstract
+    //! classes since the user may not instantiate them)
+    PythonObjectWrapper getAllClassnames(const TVec<PythonObjectWrapper>& args) const;
+
+    /**
+     *  Establish the directory in which elements for HTML help generation
+     *  should be found.  This comes from Python since it's relative to the
+     *  location of the Plide Python code.
+     */
+    PythonObjectWrapper helpResourcesPath(const TVec<PythonObjectWrapper>& args);
+
+    //! Return the help index as a string
+    PythonObjectWrapper helpIndex(const TVec<PythonObjectWrapper>& args) const;
+    
+    //! Generate list of registered commands
+    PythonObjectWrapper helpCommands(const TVec<PythonObjectWrapper>& args) const;
+    
+    //! Generate list of registered classes
+    PythonObjectWrapper helpClasses(const TVec<PythonObjectWrapper>& args) const;
+
+    //! Generate documentation for a given command
+    PythonObjectWrapper helpOnCommand(const TVec<PythonObjectWrapper>& args) const;
+    
+    //! Generate documentation for a given class
+    PythonObjectWrapper helpOnClass(const TVec<PythonObjectWrapper>& args) const;
+
+    //! Generate the short (one-line) documentation for a given class, as well
+    //! as the list of all BUILD options it supports.  This is returned as a pair
+    //! (doc, options_list).  Return None if no such class exists.
+    PythonObjectWrapper precisOnClass(const TVec<PythonObjectWrapper>& args) const;
+    
 
     //#####  Work Executors  ##################################################
 
@@ -79,6 +112,13 @@ public:
     //! Make available the puthon snippet to supporting classes (e.g. progress
     //! bars that display in the GUI environment)
     PP<PythonCodeSnippet> m_python;
+
+    //! HTML generator for the Help system
+    //! (points to the systemwide command instance)
+    HTMLHelpCommand* m_help_command;
+    
+    //! Configuration object for the HTML Help system
+    PP<HTMLHelpConfig> m_help_config;
 
 protected:
     static PLearnCommandRegistry reg_;

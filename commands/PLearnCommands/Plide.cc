@@ -43,6 +43,7 @@
 
 // From C++ stdlib
 #include <map>
+#include <sstream>
 
 // From boost
 #include <boost/smart_ptr.hpp>
@@ -50,6 +51,8 @@
 // From PLearn
 #include "Plide.h"
 #include "plearn_main.h"
+#include "PLearnCommandRegistry.h"
+#include <plearn/base/TypeFactory.h>
 #include <plearn/base/ProgressBar.h>
 #include <plearn/io/fileutils.h>             // chdir
 #include <plearn/io/openString.h>
@@ -238,7 +241,15 @@ void Plide::run(const vector<string>& args)
     m_python->build();
 
     // A bunch of injections
-    m_python->inject("versionString",   this, &Plide::versionString);
+    m_python->inject("versionString",     this, &Plide::versionString);
+    m_python->inject("getAllClassnames",  this, &Plide::getAllClassnames);
+    m_python->inject("helpResourcesPath", this, &Plide::helpResourcesPath);
+    m_python->inject("helpIndex",         this, &Plide::helpIndex);
+    m_python->inject("helpCommands",      this, &Plide::helpCommands);
+    m_python->inject("helpClasses",       this, &Plide::helpClasses);
+    m_python->inject("helpOnCommand",     this, &Plide::helpOnCommand);
+    m_python->inject("helpOnClass",       this, &Plide::helpOnClass);
+    m_python->inject("precisOnClass",     this, &Plide::precisOnClass);
 
     // Start the thing!
     m_python->invoke("StartPlide", args);
@@ -267,7 +278,7 @@ void Plide::run(const vector<string>& args)
         const string& script_kind = work[3];
         MODULE_LOG << "Got work request " << request_id
                    << " in directory "    << root_dir
-                   << " with script (subset) " << endl
+                   << " with script (subset):\n"
                    << script_code.substr(0,100)
                    << endl;
 
@@ -315,7 +326,127 @@ void Plide::run(const vector<string>& args)
 
 PythonObjectWrapper Plide::versionString(const TVec<PythonObjectWrapper>& args) const
 {
+    if (args.size() != 0)
+        PLERROR("%sExpecting 0 argument; got %d", __FUNCTION__, args.size());
     return version_string();
+}
+
+PythonObjectWrapper Plide::getAllClassnames(const TVec<PythonObjectWrapper>& args) const
+{
+    if (args.size() != 0)
+        PLERROR("%sExpecting 0 argument; got %d", __FUNCTION__, args.size());
+
+    const TypeMap& tm = TypeFactory::instance().getTypeMap();
+    TVec<string> all_classes;
+    all_classes.resize(0, tm.size());
+    for (TypeMap::const_iterator it = tm.begin(), end = tm.end()
+             ; it != end ; ++it)
+    {
+        // Skip abstract classes
+        if (it->second.constructor)
+            all_classes.push_back(it->second.type_name);
+    }
+    return all_classes;
+}
+
+PythonObjectWrapper Plide::helpResourcesPath(const TVec<PythonObjectWrapper>& args)
+{
+    if (args.size() != 1)
+        PLERROR("%sExpecting 1 argument; got %d", __FUNCTION__, args.size());
+
+    PPath base_path = args[0].as<string>();
+    m_help_config   = new HTMLHelpConfig;
+    m_help_config->html_index_document  = "";
+    m_help_config->html_prolog_document = base_path / "help_prolog.html";
+    m_help_config->html_epilog_document = base_path / "help_epilog.html";
+    
+    m_help_command = dynamic_cast<HTMLHelpCommand*>(
+        PLearnCommandRegistry::commands()["htmlhelp"]);
+    if (! m_help_command)
+        PLERROR("%sThe PLearn command 'HTMLHelpCommand' must be linked into "
+                "the executable in order to use the Plide help system.", __FUNCTION__);
+    return PythonObjectWrapper();
+}
+
+PythonObjectWrapper Plide::helpIndex(const TVec<PythonObjectWrapper>& args) const
+{
+    if (args.size() != 0)
+        PLERROR("%sExpecting 0 argument; got %d", __FUNCTION__, args.size());
+
+    assert( m_help_config && m_help_command );
+    ostringstream os;
+    m_help_command->helpIndex(os, m_help_config);
+    return os.str();
+}
+
+PythonObjectWrapper Plide::helpCommands(const TVec<PythonObjectWrapper>& args) const
+{
+    if (args.size() != 0)
+        PLERROR("%sExpecting 0 argument; got %d", __FUNCTION__, args.size());
+
+    assert( m_help_config && m_help_command );
+    ostringstream os;
+    m_help_command->helpCommands(os, m_help_config);
+    return os.str();
+}
+
+PythonObjectWrapper Plide::helpClasses(const TVec<PythonObjectWrapper>& args) const
+{
+    if (args.size() != 0)
+        PLERROR("%sExpecting 0 argument; got %d", __FUNCTION__, args.size());
+
+    assert( m_help_config && m_help_command );
+    ostringstream os;
+    m_help_command->helpClasses(os, m_help_config);
+    return os.str();
+}
+
+PythonObjectWrapper Plide::helpOnCommand(const TVec<PythonObjectWrapper>& args) const
+{
+    if (args.size() != 1)
+        PLERROR("%sExpecting 1 argument; got %d", __FUNCTION__, args.size());
+
+    assert( m_help_config && m_help_command );
+    ostringstream os;
+    m_help_command->helpOnCommand(args[0].as<string>(), os, m_help_config);
+    return os.str();
+}
+
+PythonObjectWrapper Plide::helpOnClass(const TVec<PythonObjectWrapper>& args) const
+{
+    if (args.size() != 1)
+        PLERROR("%sExpecting 1 argument; got %d", __FUNCTION__, args.size());
+
+    assert( m_help_config && m_help_command );
+    ostringstream os;
+    m_help_command->helpOnClass(args[0].as<string>(), os, m_help_config);
+    return os.str();
+}
+
+PythonObjectWrapper Plide::precisOnClass(const TVec<PythonObjectWrapper>& args) const
+{
+    if (args.size() != 1)
+        PLERROR("%sExpecting 1 argument; got %d", __FUNCTION__, args.size());
+
+    string classname = args[0].as<string>();
+    if (TypeFactory::instance().isRegistered(classname)) {
+        const TypeMapEntry& tme = TypeFactory::instance().getTypeMapEntry(classname);
+        OptionList& options = (*tme.getoptionlist_method)();
+        TVec<string> build_options;
+        build_options.resize(0, options.size());
+
+        // Determine buildoptions
+        for (OptionList::iterator it=options.begin(), end=options.end()
+                 ; it != end ; ++it)
+        {
+            int flags = (*it)->flags();
+            if (flags & OptionBase::buildoption)
+                build_options.push_back((*it)->optionname());
+        }
+        return make_pair(tme.one_line_descr, build_options);
+    }
+    else
+        return PythonObjectWrapper();        // None
 }
 
 
