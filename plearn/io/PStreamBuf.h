@@ -165,7 +165,7 @@ public:
     //! so that they're the next thing read.
     void unread(const char* p, streamsize n);
 
-    void flush();
+    virtual void flush();
 
     void put(char c)
     {
