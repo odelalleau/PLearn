@@ -153,7 +153,7 @@ public:
     PyPLearnScript();
 
     //! Returns the internal script representation
-    string getScript() { return plearn_script; }
+    const string& getScript() { return plearn_script; }
 
     //! Saving metainfos to the expdir
     void close();
