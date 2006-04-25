@@ -259,7 +259,8 @@ void Plide::run(const vector<string>& args)
     PP<ProgressBarPlugin> pp_ppp = new PlideProgressPlugin(m_python);
     ProgressBar::setPlugin(pp_ppp);
 
-    // Link logging stuff to GUI elements
+    // Link logging stuff to GUI elements; change stream mode to pretty ascii
+    PL_Log::instance().outmode(PStream::pretty_ascii);
     PP<PL_LogPlugin> previous_log_plugin = PL_Log::instance().getCurrentPlugin();
     PP<PL_LogPlugin> log_plugin = new PlideLogPlugin(m_python);
     PL_Log::instance().setPlugin(log_plugin);
