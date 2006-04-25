@@ -121,7 +121,7 @@ inline void multiplyAcc(const Mat& mat, const Mat& x, real scale)
     real* data_mat = mat.data();
     real* data_x = x.data();
     for (int i = 0; i < n; i++) {
-        BLAS_MULT_ACC(&size, &scale, data_mat, &mod_mat, data_x, &mod_x);
+        BLAS_MULT_ACC(&size, &scale, data_x, &mod_x, data_mat, &mod_mat);
         data_mat += next_mat;
         data_x += next_x;
     }
