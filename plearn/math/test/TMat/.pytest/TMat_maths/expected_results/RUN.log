@@ -1,10 +1,10 @@
-Starting TMatTest with vector of length 1... DONE!
-Starting TMatTest with vector of length 21... DONE!
-Starting TMatTest with vector of length 41... DONE!
-Starting TMatTest with vector of length 61... DONE!
-Starting TMatTest with vector of length 81... DONE!
-Starting TMatTest with vector of length 101... DONE!
-Starting TMatTest with vector of length 121... DONE!
-Starting TMatTest with vector of length 141... DONE!
-Starting TMatTest with vector of length 161... DONE!
-Starting TMatTest with vector of length 181... DONE!
+Starting TMatTest with vector of length 1 and matrix of size (1 x 1)... DONE!
+Starting TMatTest with vector of length 21 and matrix of size (4 x 9)... DONE!
+Starting TMatTest with vector of length 41 and matrix of size (7 x 8)... DONE!
+Starting TMatTest with vector of length 61 and matrix of size (1 x 7)... DONE!
+Starting TMatTest with vector of length 81 and matrix of size (4 x 6)... DONE!
+Starting TMatTest with vector of length 101 and matrix of size (7 x 5)... DONE!
+Starting TMatTest with vector of length 121 and matrix of size (1 x 4)... DONE!
+Starting TMatTest with vector of length 141 and matrix of size (4 x 3)... DONE!
+Starting TMatTest with vector of length 161 and matrix of size (7 x 2)... DONE!
+Starting TMatTest with vector of length 181 and matrix of size (1 x 1)... DONE!

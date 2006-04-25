@@ -9,11 +9,15 @@ def main():
 
     for i in range(loops):
         vec_length = i * 20 + 1
+        mat_length = (i * 123456) % 9 + 1
+        mat_width = (i * 574550) % 9 + 1
         tmat_tests.append(
-            pl.TMatTest( vec_length = vec_length,
+            pl.TMatTest( mat_length = mat_length,
+                         mat_width  = mat_width,
+                         vec_length = vec_length,
                          bound      = bound,
-                         save_path  = "tmat_test_vec_length=%s_bound=%s.psave" \
-                                      % ( vec_length, bound)
+                         save_path  = "tmat_test_mat_length=%s_mat_width=%s_vec_length=%s_bound=%s.psave" \
+                                      % ( mat_length, mat_width, vec_length, bound)
                        )
         )
 

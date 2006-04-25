@@ -2,7 +2,7 @@
 
 // TMatTest.cc
 //
-// Copyright (C) 2005 Olivier Delalleau 
+// Copyright (C) 2005-2006 Olivier Delalleau 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -59,6 +59,8 @@ PLEARN_IMPLEMENT_OBJECT(
 //////////////
 TMatTest::TMatTest():
     bound(10),
+    mat_length(2),
+    mat_width(3),
     vec_length(10)
 {}
 
@@ -97,10 +99,22 @@ void TMatTest::declareOptions(OptionList& ol)
         OptionBase::buildoption,
         "Length of the vector on which the TMat functions are to be applied.");
 
+    declareOption(ol, "mat_length", &TMatTest::mat_length,
+        OptionBase::buildoption,
+        "Length of the matrix on which the TMat functions are to be applied.");
+
+    declareOption(ol, "mat_width", &TMatTest::mat_width,
+        OptionBase::buildoption,
+        "Width of the matrix on which the TMat functions are to be applied.");
+
     declareOption(ol, "bound", &TMatTest::bound,
         OptionBase::buildoption,
         "Bound for the (real) values sampled in the vector.");
 
+    declareOption(ol, "mat_options",  &TMatTest::mat_options,
+        OptionBase::learntoption,
+        "Matrices.");
+        
     declareOption(ol, "real_options", &TMatTest::real_options,
         OptionBase::learntoption,
         "Real numbers");
@@ -136,8 +150,12 @@ void TMatTest::perform()
     assert( bound > 0 );
     Vec vec( vec_length );
     PRandom::common(false)->fill_random_uniform(vec, -bound, bound);
+    Mat mat(mat_length, mat_width);
+    PRandom::common(false)->fill_random_uniform(mat, -bound, bound);
 
-    pout << "Starting TMatTest with vector of length " << vec_length << flush;
+    pout << "Starting TMatTest with vector of length " << vec_length
+         << " and matrix of size (" << mat_length << " x " << mat_width
+         << ")" << flush;
 
     this->vec_options["vector"]                 = vec;
     
@@ -179,6 +197,22 @@ void TMatTest::perform()
     this->vec_options ["nonZeroIndices"]        = nonZeroIndices( vec );
     this->real_options["logadd"]                = logadd        ( vec );
     this->real_options["median"]                = median        ( vec );
+
+    Vec scaled_vec = vec.copy();
+    scaled_vec *= scaled_vec[0];
+    this->vec_options["operator*=_vec"]         = scaled_vec;
+
+    Vec multiply_acc_vec = vec.copy();
+    multiplyAcc(multiply_acc_vec, vec, -scaled_vec[0]);
+    this->vec_options["multiplyAcc_vec"]        = multiply_acc_vec;
+
+    Mat scaled_mat = mat.copy();
+    scaled_mat *= scaled_mat(0, 0);
+    this->mat_options["operator*=_mat"]         = scaled_mat;
+
+    Mat multiply_acc_mat = mat.copy();
+    multiplyAcc(multiply_acc_mat, mat, -scaled_mat(0, 0));
+    this->mat_options["multiplyAcc_mat"]        = multiply_acc_mat;
 
     pout << "... DONE!" << endl;
 }

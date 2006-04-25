@@ -2,7 +2,7 @@
 
 // TMatTest.h
 //
-// Copyright (C) 2005 Olivier Delalleau 
+// Copyright (C) 2005-2006 Olivier Delalleau 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -70,6 +70,8 @@ public:
     // ### Typically, a PTest options are used to store the test results.
 
     real bound;
+    int mat_length;
+    int mat_width;
     int vec_length;
 
 public:
@@ -109,6 +111,7 @@ protected:
     // ### Declare protected option fields (such as learned parameters) here
     // ...
 
+    map<string, Mat>  mat_options;
     map<string, real> real_options;
     map<string, Vec>  vec_options;
     
