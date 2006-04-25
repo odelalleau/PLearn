@@ -75,7 +75,7 @@ PL_Log::PL_Log(PP<PL_LogPlugin> plugin)
     : runtime_verbosity(VLEVEL_NORMAL),
       m_plugin(plugin),
       null_stream(get_pnull()),
-      m_outmode(PStream::pretty_ascii),
+      m_outmode(PStream::raw_ascii),
       logger_count(0),
       named_logging_kind(NoModules)
 { }
