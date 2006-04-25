@@ -30,11 +30,14 @@
 #  library, go to the PLearn Web site at www.plearn.org
 
 import os.path
+import re
+import string
 import sys
 
 import pygtk
 pygtk.require('2.0')
 import gtk
+import gobject
 import scintilla
 
 from plearn.pl_pygtk  import MessageBox
@@ -60,13 +63,17 @@ class PlideTab( object ):
         self.notebook       = notebook
         self.options_holder = None
         self.page_number    = None
+        self.help_candidate = None      # Potential HTML point for context-sensitive help
 
-    def set_options_holder(self, options_holder):
+    def get_help_candidate( self ):
+        return self.help_candidate
+
+    def set_options_holder( self, options_holder ):
         """Provide the tab with an options_holder object.
         """
         self.options_holder = options_holder
 
-    def get_options_holder(self):
+    def get_options_holder( self ):
         """Return the options_holder object for the tab.
         """
         return self.options_holder
@@ -113,10 +120,11 @@ class PlideTab( object ):
             page_widget, self.get_tab_title_widget(title_str, tab_type))
         self.notebook.set_current_page(self.page_number)
 
-    def close_tab( self, button ):
+    def close_tab( self, button=None ):
         """GTK callback that's called when the user wished to close the
         tab.  Should be overridden in derived classes if there must be some
         checking regarding document-modified versus should-save setting.
+        Return True if the tab has been closed, and False if not.
         """
         ## Renumber all tabs that come after the current one (their page
         ## number change)
@@ -127,7 +135,15 @@ class PlideTab( object ):
         
         self.notebook.remove_page(self.page_number)
         self.notebook.set_current_page(self.page_number)
+        return True
         
+    def define_injected( inj ):
+        """Simply transmits the 'injected' pseudo-module to this module.
+        """
+        global injected
+        injected = inj
+    define_injected = staticmethod(define_injected)
+
 
 ######  Scintilla Editor Wrapper  ############################################
 
@@ -159,7 +175,7 @@ class PlideTabScintilla( PlideTab ):
     def on_paste_activate( self ):
         self.textview.Paste()
 
-    def scintilla_widget( contents, read_only ):
+    def scintilla_widget( contents, read_only, auto_indent = True ):
         """Static method that creates a new scintilla widget and sets up
         basic options.  DOES not show the widget, which must be done by the
         caller.
@@ -183,6 +199,22 @@ class PlideTabScintilla( PlideTab ):
         req_width = scin.TextWidth(scintilla.STYLE_LINENUMBER, "_99999")
         scin.SetMarginTypeN(1, scintilla.SC_MARGIN_NUMBER)
         scin.SetMarginWidthN(1, req_width)
+
+        ## Define an on-key callback to maintain indentation when '\n' is
+        ## pressed.  This is activated only when the member
+        ## maintain_indentation (added to the widget) is true
+        scin.plide_maintain_indentation = auto_indent
+        def char_added_callback(scin, char):
+            if scin.plide_maintain_indentation and char == ord('\n'):
+                lastline = scin.LineFromPosition(scin.GetCurrentPos()) - 1
+                if lastline >= 0:
+                    indent = scin.GetLineIndentation(lastline)
+                    # print >>sys.stderr, "Autoindenting to", indent
+                    scin.SetLineIndentation(lastline+1, indent)
+                    scin.LineEnd()
+            return False                # Keep processing
+        scin.connect("CharAdded", char_added_callback)
+
         return scin
     
     scintilla_widget = staticmethod(scintilla_widget)
@@ -272,7 +304,7 @@ class PlideTabFile( PlideTabScintilla ):
         chooser.destroy()
         return response
 
-    def close_tab( self, button ):
+    def close_tab( self, button=None ):
         """Override base-class version to prompt the user to save his
         changes if the buffer has been modified.
         """
@@ -296,26 +328,129 @@ class PlideTabFile( PlideTabScintilla ):
                 response = self.on_save_activate()
 
             if response == gtk.RESPONSE_CANCEL:
-                return                  # Don't call inherited close
+                return False            # Don't call inherited close
 
         ## Call inherited version to physically close the tab
-        PlideTabScintilla.close_tab(self, button)
+        return PlideTabScintilla.close_tab(self, button)
         
                 
 #####  Python Editor  #######################################################
 
 class PlideTabPython( PlideTabFile ):
     """Plide tab for editing Python files (sets up folding and styling on
-    Scintilla widget)
+    Scintilla widget). For the purposes of editing Python code within
+    Plide, we will add autocompletion and calltips just as for .pyplearns.
+    (Since most code will be .py modules included by .pyplearn scripts).
     """
-    def __init__(self, notebook, filename, is_new = False):
+    def __init__(self, notebook, filename, is_new = False,
+                 autocompletion_list = []):
         PlideTabFile.__init__(self, notebook, filename, is_new)
 
         ## Update the scintilla widget to reflect Python formatting
         self.set_scintilla_style_for_python(self.textview)
         self.textview.show()
 
-    def set_scintilla_style_for_python(scin):
+        ## Valid pl. identifier that can trigger an autocompletion.
+        ## Note the negative lookbehind assertion at the beginning
+        self.pl_autocomplete  = re.compile("(?<![A-z0-9_])pl\.[A-z0-9_]*$")
+        self.pl_calltip       = re.compile("(?<![A-z0-9_])pl\.[A-z0-9_]+\($")
+        self.cur_timer_source = None
+        self.calltip_insert   = ""
+
+        ## Add a callback that watches if the user is entering a word after
+        ## a "pl." prefix, and either add autocompletion or a call tip
+        ## depending on context.  Since these can be a bit inconvenient
+        ## when the user is actively typing, wait for 0.5 seconds before
+        ## displaying anything.  This is achieved by starting a timer that
+        ## calls the same callback with the 'char' argument set to None.
+        def char_added_callback(widget, char):
+            ## Determine if we should schedule another call for later;
+            ## remove any pending calls
+            if char:
+                if self.cur_timer_source:
+                    gobject.source_remove(self.cur_timer_source)
+                self.cur_timer_source = gobject.timeout_add(self.timeout_delay,
+                                                            char_added_callback,
+                                                            None, None)
+            else:
+                (pos,line) = self.textview.GetCurLine()
+                subline = line[0:pos]
+                found_pl = subline.rfind("pl.")
+                if found_pl >= 0:
+                    if self.pl_calltip.search(subline[max(0,found_pl-1):]):
+                        ## Try to find a call tip, but it may not exist
+                        plearn_name = subline[(found_pl+3):-1]
+                        calltip_raw = injected.precisOnClass(plearn_name)
+                        # print >>sys.stderr, "Fetched calltip for",plearn_name,\
+                        #       " got:", calltip_raw
+                        if calltip_raw:
+                            grouped_options = partition(calltip_raw[1],3)
+                            options = ',\n\t'.join([', '.join(o) for o in grouped_options])
+                            start_newline = ""
+                            if len(grouped_options) > 0:
+                                start_newline = "\n"
+                            calltip = "%s\n\n%s(%s\t%s)" \
+                                      % (markup_escape_text(calltip_raw[0]),
+                                         markup_escape_text(plearn_name),
+                                         start_newline,
+                                         options)
+                            self.textview.CallTipShow(
+                                self.textview.GetCurrentPos(), calltip)
+                            spacer = ' ' * pos
+                            self.calltip_insert = (",\n"+spacer).join(calltip_raw[1])+')'
+                            self.help_candidate = "class_%s.html" % plearn_name
+                            return False
+
+                    elif self.pl_autocomplete.search(subline[max(0,found_pl-1):]):
+                        if self.autoc_str != "":
+                            plearn_name = subline[(found_pl+3):]
+                            self.textview.AutoCShow(len(plearn_name),self.autoc_str)
+                        return False
+
+                ## Default case: close calltips and autocompletion
+                self.cancel_all_popups()
+            return False
+
+        ## Add a callback that inserts the contents of "calltip_insert"
+        ## when the calltip is clicked
+        def calltip_clicked_callback(widget, position):
+            if self.calltip_insert != "":
+                old_indent = self.textview.plide_maintain_indentation
+                self.textview.plide_maintain_indentation = False
+                self.textview.AddText(len(self.calltip_insert), self.calltip_insert)
+                self.textview.plide_maintain_indentation = True
+                self.cancel_all_popups()
+
+        ## Autocompletion style
+        self.autocompletion = autocompletion_list
+        self.autoc_str = ','.join(self.autocompletion)
+        self.textview.AutoCSetSeparator(ord(','))
+        self.textview.AutoCSetMaxHeight(10)
+        self.textview.AutoCSetChooseSingle(True)
+        self.textview.AutoCSetFillUps(" ([{")
+
+        ## Calltips style
+        self.textview.CallTipUseStyle(10)
+        self.textview.StyleSetFont(scintilla.STYLE_CALLTIP, "!Helvetica bold")
+        self.textview.StyleSetSize(scintilla.STYLE_CALLTIP, 11)
+        self.textview.StyleSetBack(scintilla.STYLE_CALLTIP, 0x80ffff)
+        self.textview.StyleSetFore(scintilla.STYLE_CALLTIP, 0x800000)
+        self.textview.StyleSetBold(scintilla.STYLE_CALLTIP, True)
+
+        ## Activate callback
+        self.timeout_delay = 500         # milliseconds
+        self.textview.connect("CharAdded", char_added_callback)
+        self.textview.connect("CallTipClick", calltip_clicked_callback)
+
+
+    def cancel_all_popups( self ):
+        self.textview.CallTipCancel()
+        self.textview.AutoCCancel()
+        self.calltip_insert = ""
+        # self.help_candidate = None
+
+
+    def set_scintilla_style_for_python( scin ):
         """Update an existing scintilla widget for Python formatting.
         """
         ## Folding configuration
@@ -379,51 +514,36 @@ class PlideTabPython( PlideTabFile ):
                           "except exec finally for from global if import in is " +\
                           "lambda not or pass print raise return try while yield"
         scin.SetKeyWords(0, python_keywords)
-        scin.SetIndentationGuides(True)
+        # scin.SetIndentationGuides(True)
+        scin.SetTabIndents(True)
+        scin.SetBackSpaceUnIndents(True)
 
         ## Python colors for each syntactic element
-	scin.StyleSetFore(scintilla.SCE_P_DEFAULT, 0x000000);
-	scin.StyleSetBack(scintilla.SCE_P_DEFAULT, 0xffffff);
-
-	scin.StyleSetFore(scintilla.SCE_P_COMMENTLINE, 0x808080);
-	scin.StyleSetBack(scintilla.SCE_P_COMMENTLINE, 0xffffff);
-
-	scin.StyleSetFore(scintilla.SCE_P_NUMBER, 0x800040);
-	scin.StyleSetBack(scintilla.SCE_P_NUMBER, 0xffffff);
-
-	scin.StyleSetFore(scintilla.SCE_P_STRING, 0x008000);
-	scin.StyleSetBack(scintilla.SCE_P_STRING, 0xffffff);
-
-	scin.StyleSetFore(scintilla.SCE_P_CHARACTER, 0x008000);
-	scin.StyleSetBack(scintilla.SCE_P_CHARACTER, 0xffffff);
-
-	scin.StyleSetFore(scintilla.SCE_P_WORD, 0x800060);
-	scin.StyleSetBack(scintilla.SCE_P_WORD, 0xffffff);
-
-	scin.StyleSetFore(scintilla.SCE_P_TRIPLE, 0x008000);
-	scin.StyleSetBack(scintilla.SCE_P_TRIPLE, 0xffffff);
-
-	scin.StyleSetFore(scintilla.SCE_P_TRIPLEDOUBLE, 0x008000);
-	scin.StyleSetBack(scintilla.SCE_P_TRIPLEDOUBLE, 0xffffff);
-
-	scin.StyleSetFore(scintilla.SCE_P_CLASSNAME, 0x303000);
-	scin.StyleSetBack(scintilla.SCE_P_CLASSNAME, 0xffffff);
-
-	scin.StyleSetFore(scintilla.SCE_P_DEFNAME, 0x800000);
-	scin.StyleSetBack(scintilla.SCE_P_DEFNAME, 0xffffff);
-
-	scin.StyleSetFore(scintilla.SCE_P_OPERATOR, 0x800030);
-	scin.StyleSetBack(scintilla.SCE_P_OPERATOR, 0xffffff);
-
-	scin.StyleSetFore(scintilla.SCE_P_IDENTIFIER, 0x000000);
-	scin.StyleSetBack(scintilla.SCE_P_IDENTIFIER, 0xffffff);
-
-	scin.StyleSetFore(scintilla.SCE_P_COMMENTBLOCK, 0x808080);
-	scin.StyleSetBack(scintilla.SCE_P_COMMENTBLOCK, 0xffffff);
-
-	scin.StyleSetFore(scintilla.SCE_P_STRINGEOL, 0x000000);
-	scin.StyleSetBack(scintilla.SCE_P_STRINGEOL, 0xffffff);
-
+        ## (careful: colors are in the order 0xBBGGRR)
+	scin.StyleSetFore(scintilla.SCE_P_DEFAULT,      0x000000)
+	scin.StyleSetFore(scintilla.SCE_P_COMMENTLINE,  0x007f00)
+	scin.StyleSetFore(scintilla.SCE_P_NUMBER,       0x7F7F00)
+	scin.StyleSetFore(scintilla.SCE_P_STRING,       0x7F007F)
+	scin.StyleSetFore(scintilla.SCE_P_CHARACTER,    0x7F007F)
+	scin.StyleSetFore(scintilla.SCE_P_WORD,         0x7F0000)
+        scin.StyleSetBold(scintilla.SCE_P_WORD,         True    )
+	scin.StyleSetFore(scintilla.SCE_P_TRIPLE,       0x00007F)
+	scin.StyleSetFore(scintilla.SCE_P_TRIPLEDOUBLE, 0x00007F)
+	scin.StyleSetFore(scintilla.SCE_P_CLASSNAME,    0xFF0000)
+        scin.StyleSetBold(scintilla.SCE_P_CLASSNAME,    True    )
+	scin.StyleSetFore(scintilla.SCE_P_DEFNAME,      0x7F7F00)
+        scin.StyleSetBold(scintilla.SCE_P_DEFNAME,      True    )
+	scin.StyleSetBold(scintilla.SCE_P_OPERATOR,     True    )
+	scin.StyleSetFore(scintilla.SCE_P_IDENTIFIER,   0x000000)
+	scin.StyleSetFore(scintilla.SCE_P_COMMENTBLOCK, 0x7F7F7F)
+	scin.StyleSetFore(scintilla.SCE_P_STRINGEOL,    0x000000)
+	scin.StyleSetBack(scintilla.SCE_P_STRINGEOL,    0xE0C0E0)
+	scin.StyleSetFore(14,                           0x907040) # Highlighted identifiers
+	scin.StyleSetFore(15,                           0x005080) # Decorators
+	scin.StyleSetFore(34,                           0xFF0000) # Matched Operators
+	scin.StyleSetBold(34,                           True    )
+	scin.StyleSetFore(35,                           0x0000FF) 
+	scin.StyleSetBold(35,                           True    )
         scin.Colourise(0,-1)
         
     set_scintilla_style_for_python = staticmethod(set_scintilla_style_for_python)
@@ -434,8 +554,10 @@ class PlideTabPython( PlideTabFile ):
 class PlideTabPyPLearn( PlideTabPython ):
     """Plide tab for PyPLearn scripts.
     """
-    def __init__(self, notebook, filename, is_new = False):
-        PlideTabPython.__init__(self, notebook, filename, is_new)
+    def __init__(self, notebook, filename, is_new = False,
+                 plearn_autocompletion_list = []):
+        PlideTabPython.__init__(self, notebook, filename, is_new,
+                                plearn_autocompletion_list)
 
 
 #####  PMat Viewer  #########################################################

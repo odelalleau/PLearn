@@ -38,3 +38,18 @@ def container_remove_children( container ):
     children = container.get_children()
     for c in children:
         container.remove(c)
+
+def markup_escape_text( s ):
+    """Escape all characters that could cause problems for Pango.
+    """
+    return s.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
+
+def partition( l, n ):
+    """Partition the list l into sub-lists of size n; the last element may
+    not have exactly n elements.
+    """
+    x = []
+    nn = len(l)
+    for i in range(0,nn,n):
+        x.append(l[i:min(i+n,nn)])
+    return x

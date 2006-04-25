@@ -35,6 +35,7 @@
 import fcntl
 import os, os.path
 import Queue
+import re
 import select, sys
 import threading, time, traceback
 
@@ -58,6 +59,7 @@ from plearn.utilities.toolkit  import doc as toolkit_doc
 
 #####  Plide  ###############################################################
 
+from plide_help  import PlideHelp
 from plide_tabs  import *
 from plide_utils import *
 
@@ -81,7 +83,12 @@ __all__ = [
 def gladeFile():
     import plearn.plide.plide
     return os.path.join(os.path.dirname(plearn.plide.plide.__file__),
-                        "plide.glade")
+                        "resources", "plide.glade")
+
+def helpResourcesPath():
+    import plearn.plide.plide
+    return os.path.join(os.path.dirname(plearn.plide.plide.__file__),
+                        "resources")
 
 
 #####  Main Window  #########################################################
@@ -93,24 +100,44 @@ class PlideMain( GladeAppWindow ):
     def __init__( self, *args, **kwargs ):
         GladeAppWindow.__init__(self, gladeFile())
 
+        ## Forward injected to imported Plide modules
+        PlideHelp.define_injected(injected)
+        PlideTab. define_injected(injected)
+
         ## Initialize Members
         self.untitled_counter  = 1
         self.work_requests = {}         # Request ids to expdir mapping
+        self.all_plearn_classes = injected.getAllClassnames()
 
         ## Initialize Display
         self.setup_statusbar()
+        self.log_filters = [ re.compile("WARNING.*Scintilla.*PosChanged.*deprecated") ]
+        self.log_clear()
+        self.log_hide()
         welcome_text = kwargs.get("welcome_text",
                                   "<b>Welcome to Plide %s!</b>" % self.PlideVersion)
-        self.log_display(welcome_text, has_markup=True, log_clear=True)
-        self.help_close()
+        self.status_display(welcome_text, has_markup=True)
         self.setup_stdouterr_redirect()
         
+        ## Set up help system
+        injected.helpResourcesPath(helpResourcesPath())
+        self.help_viewer = PlideHelp(self)
+        self.help_viewer.display_page("index.html")
+        self.help_close()
+
         ## Prepare the work queue
         self.work_queue = PLearnWorkQueue()
 
     def quit( self ):
-        ## Minor hack: the main-thread loop is terminated by receiving
-        ## a 'script' whose contents is Quit()
+        ## Minor hack: the main-thread loop is terminated by receiving a
+        ## 'script' whose contents is Quit().  First close all tabs and
+        ## ensure that we stop the process if some tabs won't be closed.
+        n = self.w_plide_notebook.get_n_pages()
+        for i in range(n-1,-1,-1):
+            tab = self.get_nth_tab(i)
+            if not tab.close_tab():
+                return True        # Stop close process if cannot close tab
+        
         print >>raw_stderr, "Quit message received"
         raw_stderr.flush()
         self.work_queue.post_work_request("Quit()","","")
@@ -119,10 +146,22 @@ class PlideMain( GladeAppWindow ):
     def help_close( self ):
         """Close the help pane.
         """
-        # self.w_help_pane.set_position(10000)
-        self.w_help_vbox.hide_all()
-        self.w_help_vbox.set_no_show_all(True)
+        self.w_help_frame.hide()
+        self.w_help_frame.set_no_show_all(True)
 
+    def help_show( self ):
+        """Open the help pane.  Bring up context-sensitive help if there is
+        a valid context in the current tab.
+        """
+        self.w_help_frame.set_no_show_all(False)
+        self.w_help_frame.show()
+
+        curtab = self.get_current_tab()
+        if curtab:
+            help_context = curtab.get_help_candidate()
+            if help_context:
+                self.help_viewer.display_page(help_context)
+            
     def setup_stdouterr_redirect( self ):
         """Redirect standard output and error to be sent to the log pane
         instead of the console.
@@ -157,6 +196,7 @@ class PlideMain( GladeAppWindow ):
             #       "with condition", cb_condition
             raw_stderr.flush()
             data = os.read(fd,65536)
+
             kind = { self.stdout_read:'stdout', self.stderr_read:'stderr' }.get(fd,'')
             self.log_display(data, kind)
             return True                 # Ensure it's called again!
@@ -245,6 +285,14 @@ class PlideMain( GladeAppWindow ):
 
         ## Reset the next log entry
         self.log_next_number = 1
+
+    def log_hide( self ):
+        self.w_plearn_log_scroller.hide()
+        self.w_plearn_log_scroller.set_no_show_all(True)
+
+    def log_show( self ):
+        self.w_plearn_log_scroller.set_no_show_all(False)
+        self.w_plearn_log_scroller.show()
         
     def log_display( self, message, kind = "", has_markup = False, log_clear = False ):
         """Append the given message to the log area of the main window.
@@ -253,7 +301,15 @@ class PlideMain( GladeAppWindow ):
         if log_clear:
             self.log_clear()
 
+        ## If 'data' matches any regular expression in log_filter, skip
+        ## this message.  This is mostly a hack to get around displaying
+        ## known warnings from the Scintilla editor
+        for regex in self.log_filters:
+            if regex.search(message):
+                return
+
         row = [ self.log_next_number, kind.rstrip(), message.rstrip(), has_markup ]
+        self.log_show()
         self.log_liststore.append(row)
         self.log_next_number += 1
 
@@ -289,6 +345,16 @@ class PlideMain( GladeAppWindow ):
         self.w_root.window.set_cursor(None)  # Set back to parent window cursor
         if sensitize:
             self.w_root.set_sensitive(True)
+
+    def get_nth_tab( self, n ):
+        """Return the PlideTab object corresponding to the n-th tab.
+        Return None if there is no such PlideTab.
+        """
+        notebook_page = self.w_plide_notebook.get_nth_page(n)
+        if notebook_page:
+            return notebook_page.plide_tab_object
+        else:
+            return None
 
     def get_current_tab( self ):
         """Return the PlideTab object that's currently selected in the
@@ -340,7 +406,7 @@ class PlideMain( GladeAppWindow ):
 
     ## General
     def on_plide_top_delete_event(self, widget, event):
-        self.quit()
+        return self.quit()
 
     def on_quit_activate(self, widget):
         self.quit()
@@ -352,6 +418,9 @@ class PlideMain( GladeAppWindow ):
     def on_new_pyplearn_script_activate(self, widget):
         self.add_untitled_tab(".pyplearn")
 
+    def on_new_py_script_activate(self, widget):
+        self.add_untitled_tab(".py")
+
     def on_new_plearn_script_activate(self, widget):
         self.add_untitled_tab(".plearn")
 
@@ -362,13 +431,16 @@ class PlideMain( GladeAppWindow ):
         self.open_file()
 
     def on_save_activate(self, widget):
-        self.get_current_tab().on_save_activate()
+        if self.get_current_tab():
+            self.get_current_tab().on_save_activate()
 
     def on_save_as_activate(self, widget):
-        self.get_current_tab().save_as_file()
+        if self.get_current_tab():
+            self.get_current_tab().save_as_file()
 
     def on_close_activate(self, widget):
-        self.get_current_tab().close_tab(widget)
+        if self.get_current_tab():
+            self.get_current_tab().close_tab(widget)
 
     def on_browse_expdir_activate(self, widget):
         self.open_file(action=gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER)
@@ -447,6 +519,9 @@ class PlideMain( GladeAppWindow ):
 
 
     ### Help-related
+    def on_help_activate(self, widget):
+        self.help_show()
+        
     def on_help_close_clicked(self, widget):
         self.help_close()
         
@@ -465,11 +540,9 @@ class PlideMain( GladeAppWindow ):
         filename = filename.rstrip(os.path.sep)
         extension = os.path.splitext(filename)[1]
         new_tab   = None
-        if extension == ".pyplearn":
-            new_tab = PlideTabPyPLearn(self.w_plide_notebook, filename, is_new)
-
-        elif extension == ".py":
-            new_tab = PlideTabPython(self.w_plide_notebook, filename, is_new)
+        if extension == ".pyplearn" or extension == ".py":
+            new_tab = PlideTabPyPLearn(self.w_plide_notebook, filename, is_new,
+                                       self.all_plearn_classes)
 
         elif extension == ".pmat":
             new_tab = PlideTabPMat(self.w_plide_notebook, filename)
