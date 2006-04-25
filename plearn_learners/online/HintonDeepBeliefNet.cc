@@ -36,6 +36,8 @@
 
 /*! \file HintonDeepBeliefNet.cc */
 
+#define PL_LOG_MODULE_NAME "HintonDeepBeliefNet"
+#include <plearn/io/pl_log.h>
 
 #include "HintonDeepBeliefNet.h"
 #include "RBMLayer.h"
@@ -54,9 +56,9 @@ PLEARN_IMPLEMENT_OBJECT(
     ""
 );
 
-//////////////////
+/////////////////////////
 // HintonDeepBeliefNet //
-//////////////////
+/////////////////////////
 HintonDeepBeliefNet::HintonDeepBeliefNet() :
     learning_rate(0.),
     weight_decay(0.)
@@ -151,6 +153,7 @@ void HintonDeepBeliefNet::build()
 ////////////
 void HintonDeepBeliefNet::build_()
 {
+    MODULE_LOG << "build_() called" << endl;
     n_layers = layers.length();
     if( n_layers <= 1 )
         return;
@@ -166,6 +169,8 @@ void HintonDeepBeliefNet::build_()
     else
         PLERROR( "RBMParameters::build_ - initialization_method\n"
                  "\"%s\" unknown.\n", initialization_method.c_str() );
+    MODULE_LOG << "  initialization_method = \"" << initialization_method
+        << "\"" << endl;
 
     // check value of fine_tuning_method
     string ftm = lowerstring( fine_tuning_method );
@@ -180,9 +185,13 @@ void HintonDeepBeliefNet::build_()
     else
         PLERROR( "HintonDeepBeliefNet::build_ - fine_tuning_method \"%s\"\n"
                  "is unknown.\n", fine_tuning_method.c_str() );
+    MODULE_LOG << "  fine_tuning_method = \"" << fine_tuning_method << "\""
+        <<  endl;
 
     if( training_schedule.length() != n_layers )
         training_schedule = TVec<int>( n_layers, 30 );
+    MODULE_LOG << "  training_schedule = " << training_schedule << endl;
+    MODULE_LOG << endl;
 
     build_layers();
     build_params();
@@ -190,11 +199,14 @@ void HintonDeepBeliefNet::build_()
 
 void HintonDeepBeliefNet::build_layers()
 {
+    MODULE_LOG << "build_layers() called" << endl;
     if( inputsize_ >= 0 )
     {
         assert( layers[0]->size + target_layer->size == inputsize() );
         setPredictorPredictedSizes( layers[0]->size,
                                     target_layer->size, false );
+        MODULE_LOG << "  n_predictor = " << n_predictor << endl;
+        MODULE_LOG << "  n_predicted = " << n_predicted << endl;
     }
 
     for( int i=0 ; i<n_layers ; i++ )
@@ -213,6 +225,7 @@ void HintonDeepBeliefNet::build_layers()
 
 void HintonDeepBeliefNet::build_params()
 {
+    MODULE_LOG << "build_params() called" << endl;
     if( params.length() == 0 )
     {
         params.resize( n_layers-1 );
@@ -248,28 +261,13 @@ void HintonDeepBeliefNet::build_params()
                                                   params[n_layers-2] );
 }
 
-/////////
-// cdf //
-/////////
-real HintonDeepBeliefNet::cdf(const Vec& y) const
-{
-    PLERROR("cdf not implemented for HintonDeepBeliefNet"); return 0;
-}
-
-/////////////////
-// expectation //
-/////////////////
-void HintonDeepBeliefNet::expectation(Vec& mu) const
-{
-    PLERROR("expectation not implemented for HintonDeepBeliefNet");
-}
-
 // ### Remove this method if your distribution does not implement it.
 ////////////
 // forget //
 ////////////
 void HintonDeepBeliefNet::forget()
 {
+    MODULE_LOG << "forget() called" << endl;
     /*!
       A typical forget() method should do the following:
       - initialize a random number generator with the seed option
@@ -283,6 +281,9 @@ void HintonDeepBeliefNet::forget()
     for( int i=0 ; i<n_layers ; i++ )
         layers[i]->reset();
 
+    target_params->forget();
+    target_layer->reset();
+
     stage = 0;
 }
 
@@ -294,12 +295,86 @@ void HintonDeepBeliefNet::generate(Vec& y) const
     PLERROR("generate not implemented for HintonDeepBeliefNet");
 }
 
+/////////
+// cdf //
+/////////
+real HintonDeepBeliefNet::cdf(const Vec& y) const
+{
+    PLERROR("cdf not implemented for HintonDeepBeliefNet"); return 0;
+}
+
+/////////////////
+// expectation //
+/////////////////
+void HintonDeepBeliefNet::expectation(Vec& mu) const
+{
+    mu.resize( predicted_size );
+
+    // Propagate input (predictor_part) until penultimate layer
+    layers[0]->expectation << predictor_part;
+    for( int i=0 ; i<n_layers-2 ; i++ )
+    {
+        params[i]->setAsDownInput( layers[i]->expectation );
+        layers[i+1]->getAllActivations( (RBMGenericParameters*) params[i] );
+        layers[i+1]->computeExpectation();
+    }
+
+    // Set layers[n_layers-2]->expectation (penultimate) as conditionning input
+    // of joint_params
+    joint_params->setAsCondInput( layers[n_layers-2]->expectation );
+
+    // Get all activations on target_layer from target_params
+    target_layer->getAllActivations( (RBMGenericParameters*) joint_params );
+    target_layer->computeExpectation();
+
+    mu << target_layer->expectation;
+}
+
+/////////////
+// density //
+/////////////
+real HintonDeepBeliefNet::density(const Vec& y) const
+{
+    assert( y.size() == n_predicted );
+
+    int index = argmax( y );
+
+    // If y != onehot( index ), then density is 0
+    if( !is_equal( y[index], 1. ) )
+        return 0;
+    for( int i=0 ; i<n_predicted ; i++ )
+        if( !is_equal( y[i], 0 ) && i != index )
+            return 0;
+
+    Vec expect;
+    expectation( expect );
+
+    return expect[index];
+}
+
+
 /////////////////
 // log_density //
 /////////////////
 real HintonDeepBeliefNet::log_density(const Vec& y) const
 {
-    PLERROR("density not implemented for HintonDeepBeliefNet"); return 0;
+    return pl_log( density(y) );
+}
+
+/////////////////
+// survival_fn //
+/////////////////
+real HintonDeepBeliefNet::survival_fn(const Vec& y) const
+{
+    PLERROR("survival_fn not implemented for HintonDeepBeliefNet"); return 0;
+}
+
+//////////////
+// variance //
+//////////////
+void HintonDeepBeliefNet::variance(Mat& cov) const
+{
+    PLERROR("variance not implemented for HintonDeepBeliefNet");
 }
 
 /////////////////////////////////
@@ -363,13 +438,6 @@ bool HintonDeepBeliefNet::setPredictorPredictedSizes(int the_predictor_size,
     return sizes_have_changed;
 }
 
-/////////////////
-// survival_fn //
-/////////////////
-real HintonDeepBeliefNet::survival_fn(const Vec& y) const
-{
-    PLERROR("survival_fn not implemented for HintonDeepBeliefNet"); return 0;
-}
 
 // ### Remove this method, if your distribution does not implement it.
 ///////////
@@ -377,6 +445,7 @@ real HintonDeepBeliefNet::survival_fn(const Vec& y) const
 ///////////
 void HintonDeepBeliefNet::train()
 {
+    MODULE_LOG << "train() called" << endl;
     // The role of the train method is to bring the learner up to
     // stage==nstages, updating train_stats with training costs measured
     // on-line in the process.
@@ -414,9 +483,13 @@ void HintonDeepBeliefNet::train()
     real weight; // unused
 
     if( !initTrain() )
+    {
+        MODULE_LOG << "train() aborted" << endl;
         return;
+    }
 
     int nsamples = train_set->length();
+    MODULE_LOG << "  nsamples = " << nsamples << endl;
 
     // Let's define stage and nstages:
     //   - 0: fresh state, nothing is done
@@ -424,6 +497,8 @@ void HintonDeepBeliefNet::train()
     //   - n_layers-1: joint_params is trained (including params[n_layers-2])
     //   - n_layers: after the fine tuning
 
+    MODULE_LOG << "initial stage = " << stage << endl;
+    MODULE_LOG << "objective: nstages = " << nstages << endl;
     for( ; stage < nstages ; stage++ )
     {
         // clear stats of previous epoch
@@ -431,22 +506,42 @@ void HintonDeepBeliefNet::train()
 
         // loop training_schedule[stage] times over all examples in train set
         // TODO: modify the training set used?
-        int layer = stage-1;
+        int layer = stage;
         int n_substages = training_schedule[stage];
+        ProgressBar* pb = 0;
 
-        if( stage < n_layers-1 )
+        if( stage < n_layers-2 )
         {
+            MODULE_LOG << "Training parameters between layers " << stage
+                << " and " << stage+1 << endl;
+            if( report_progress )
+                pb = new ProgressBar( "Training " + classname() + " - stage "
+                                      + tostring(stage) + " - substage 0 to "
+                                      + tostring(n_substages),
+                                      n_substages );
+
             for( int substage=0 ; substage < n_substages ; substage++ )
             {
                 for( int sample=0 ; sample<nsamples ; sample++ )
                 {
                     train_set->getExample(sample, input, target, weight);
-                    greedyStep( input.subVec(0, n_predicted), layer );
+                    greedyStep( input.subVec(0, n_predictor), layer );
                 }
+                if( pb )
+                    pb->update( substage+1 );
             }
         }
-        else if( stage == n_layers-1 )
+        else if( stage == n_layers-2 )
         {
+            MODULE_LOG << "Training joint parameters, between target,"
+                << " penultimate (" << n_layers-2 << ")," << endl
+                << "and last (" << n_layers-1 << ") layers." << endl;
+            if( report_progress )
+                pb = new ProgressBar( "Training " + classname() + " - stage "
+                                      + tostring(stage) + " - substage 0 to "
+                                      + tostring(n_substages),
+                                      n_substages );
+
             for( int substage=0 ; substage < n_substages ; substage++ )
             {
                 for( int sample=0 ; sample<nsamples ; sample++ )
@@ -454,10 +549,20 @@ void HintonDeepBeliefNet::train()
                     train_set->getExample(sample, input, target, weight);
                     jointGreedyStep( input );
                 }
+                if( pb )
+                    pb->update( substage+1 );
             }
         }
-        else if( stage == n_layers )
+        else if( stage == n_layers-1 )
         {
+            MODULE_LOG << "Fine-tuning all parameters, using method "
+                << fine_tuning_method << endl;
+            if( report_progress )
+                pb = new ProgressBar( "Training " + classname() + " - stage "
+                                      + tostring(stage) + " - substage 0 to "
+                                      + tostring(n_substages),
+                                      n_substages );
+
             for( int substage=0 ; substage < n_substages ; substage++ )
             {
                 for( int sample=0 ; sample<nsamples ; sample++ )
@@ -465,10 +570,13 @@ void HintonDeepBeliefNet::train()
                     train_set->getExample(sample, input, target, weight);
                     fineTune( input );
                 }
+                if( pb )
+                    pb->update( substage+1 );
             }
         }
         train_stats->finalize(); // finalize statistics for this epoch
     }
+    MODULE_LOG << endl;
 }
 
 void HintonDeepBeliefNet::greedyStep( const Vec& predictor, int index )
@@ -543,15 +651,54 @@ void HintonDeepBeliefNet::jointGreedyStep( const Vec& input )
 
 void HintonDeepBeliefNet::fineTune( const Vec& input )
 {
+    if( fine_tuning_method == "" )
+        return;
     PLERROR("fine tuning not implemented yet");
 }
 
-//////////////
-// variance //
-//////////////
-void HintonDeepBeliefNet::variance(Mat& covar) const
+void HintonDeepBeliefNet::computeCostsFromOutputs(const Vec& input,
+                                                  const Vec& output,
+                                                  const Vec& target,
+                                                  Vec& costs) const
 {
-    PLERROR("variance not implemented for HintonDeepBeliefNet");
+    char c = outputs_def[0];
+    if( c == 'l' || c == 'd' )
+        inherited::computeCostsFromOutputs(input, output, target, costs);
+    else if( c == 'e' )
+    {
+        costs.resize( 2 );
+        splitCond(input);
+
+        // actual_index is the actual 'target'
+        int actual_index = argmax(predicted_part);
+#ifdef BOUNDCHECK
+        for( int i=0 ; i<n_predicted ; i++ )
+            assert( is_equal( predicted_part[i], 0. ) ||
+                    i == actual_index && is_equal( predicted_part[i], 1. ) );
+#endif
+        costs[0] = -pl_log( output[actual_index] );
+
+        // predicted_index is the most probable predicted class
+        int predicted_index = argmax(output);
+        if( predicted_index == actual_index )
+            costs[1] = 0;
+        else
+            costs[1] = 1;
+    }
+}
+
+TVec<string> HintonDeepBeliefNet::getTestCostNames() const
+{
+    char c = outputs_def[0];
+    TVec<string> result;
+    if( c == 'l' || c == 'd' )
+        result.append( "NLL" );
+    else if( c == 'e' )
+    {
+        result.append( "NLL" );
+        result.append( "class_error" );
+    }
+    return result;
 }
 
 } // end of namespace PLearn

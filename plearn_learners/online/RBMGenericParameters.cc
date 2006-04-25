@@ -387,14 +387,14 @@ void RBMGenericParameters::computeUnitActivations
         units_types = down_units_types;
 
     assert( start+length <= (int) units_types.length() );
-    int cur_pos; // position index inside activations
+    int cur_pos = 0; // position index inside activations
 
     for( int i=start ; i<start+length ; i++ )
     {
         char ut_i = units_types[i];
         if( ut_i == 'l' )
         {
-            computeLinearUnitActivations( i, activations.subVec(cur_pos, 2) );
+            computeLinearUnitActivations( i, activations.subVec(cur_pos, 1) );
             cur_pos++;
         }
         else if( ut_i == 'q' )

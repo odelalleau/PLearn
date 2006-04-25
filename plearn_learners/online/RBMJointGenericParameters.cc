@@ -207,7 +207,7 @@ void RBMJointGenericParameters::setAsDownInput( const Vec& input ) const
 
 void RBMJointGenericParameters::setAsCondInput( const Vec& input ) const
 {
-    assert( input.size() == target_size );
+    assert( input.size() == cond_size );
     input_vec = input;
     target_given_cond = true;
     going_up = false;
@@ -224,10 +224,12 @@ void RBMJointGenericParameters::computeLinearUnitActivations
         activations[0] = down_units_params[i][0];
         for( int j=target_size ; j<cond_size ; j++ )
         {
-            activations[0] -= softplus( -(weights(i,j)
-                                          + down_units_params[j][0]
-                                          + matRowDotVec(weights, j, input_vec)
-                                         ) );
+            activations[0] -=
+                softplus( -(weights(i,j) + down_units_params[j][0]
+                            + matRowDotVec(
+                                weights.subMatColumns(target_size, cond_size),
+                                j, input_vec )
+                           ) );
         }
     }
     else
@@ -269,20 +271,20 @@ void RBMJointGenericParameters::computeUnitActivations
         units_types = down_units_types;
 
     assert( start+length <= (int) units_types.length() );
-    int cur_pos; // position index inside activations
+    int cur_pos = 0; // position index inside activations
 
     for( int i=start ; i<start+length ; i++ )
     {
         char ut_i = units_types[i];
         if( ut_i == 'l' )
         {
-            computeLinearUnitActivations( i, activations.subVec(cur_pos, 2) );
+            computeLinearUnitActivations( i, activations.subVec(cur_pos, 1) );
             cur_pos++;
         }
         else if( ut_i == 'q' )
         {
-            computeQuadraticUnitActivations( i,
-                                             activations.subVec(cur_pos, 2) );
+            computeQuadraticUnitActivations
+                ( i, activations.subVec(cur_pos, 2) );
             cur_pos += 2;
         }
         else

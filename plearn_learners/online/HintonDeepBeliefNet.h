@@ -131,6 +131,9 @@ public:
 
     //#####  PDistribution Member Functions  ##################################
 
+    //! Return probability density p(y | x)
+    virtual real density(const Vec& y) const;
+
     //! Return log of probability density log(p(y | x)).
     virtual real log_density(const Vec& y) const;
 
@@ -171,10 +174,6 @@ public:
 
     // ### These methods may be overridden for efficiency purpose:
     /*
-    //### Default version calls exp(log_density(y))
-    //! Return probability density p(y | x)
-    virtual real density(const Vec& y) const;
-
     //### Default version calls setPredictorPredictedSises(0,-1) and generate
     //! Generates a pseudo-random sample (x,y) from the JOINT distribution,
     //! of density p(x, y)
@@ -217,10 +216,15 @@ public:
     //! The role of the train method is to bring the learner up to
     //! stage == nstages, updating the train_stats collector with training
     //! costs measured on-line in the process.
-    // ### You may remove this method if your distribution does not
-    // ### implement it.
     virtual void train();
 
+    //! Compute a cost, depending on the type of the first output :
+    //! if it is the density or the log-density: NLL
+    //! if it is the expectation: NLL and class error
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
+                                         const Vec& target, Vec& costs) const;
+
+    virtual TVec<string> getTestCostNames() const;
 
     //#####  PLearn::Object Protocol  #########################################
 
