@@ -59,9 +59,6 @@ class PLearnCommandRegistry
 protected:
     typedef map<string, PLearnCommand*> command_map;
 
-    //! Returns a reference to the unique command map
-    static command_map& commands();
-
     //! Issues a "bad command" message
     static void badcommand(const string& commandname);
 
@@ -87,6 +84,8 @@ public:
     inline PLearnCommandRegistry(PLearnCommand* plcommand)
     { do_register(plcommand); }
   
+    //! Returns a reference to the unique command map
+    static command_map& commands();
 };
   
 
