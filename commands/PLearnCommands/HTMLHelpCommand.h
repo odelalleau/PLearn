@@ -2,7 +2,7 @@
 
 // HTMLHelpCommand.h
 //
-// Copyright (C) 2004 Nicolas Chapados 
+// Copyright (C) 2004-2006 Nicolas Chapados 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -105,6 +105,23 @@ public:
 
     //! Sole argument should be a filename containing an HTMLHelpConfig object
     virtual void run(const vector<string>& args);
+
+    //! Generate a top-level index.html in the output stream given the config
+    virtual void helpIndex(ostream& os, const HTMLHelpConfig* config);
+
+    //! Generate list of registered commands
+    virtual void helpCommands(ostream& os, const HTMLHelpConfig* config);
+
+    //! Generate list of registered classes
+    virtual void helpClasses(ostream& os, const HTMLHelpConfig* config);
+
+    //! Generate documentation for a given command; called by helpCommands
+    virtual void helpOnCommand(const string& theCommand, ostream& os,
+                               const HTMLHelpConfig* config);
+  
+    //! Generate documentation for a given class; called by helpClasses
+    virtual void helpOnClass(const string& theClass, ostream& os,
+                             const HTMLHelpConfig* config);
 
 protected:
     static PLearnCommandRegistry reg_;

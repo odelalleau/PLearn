@@ -2,7 +2,7 @@
 
 // HTMLHelpCommand.cc
 //
-// Copyright (C) 2004 Nicolas Chapados 
+// Copyright (C) 2004-2006 Nicolas Chapados 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -148,6 +148,11 @@ void HTMLHelpCommand::helpIndex()
 {
     assert( config );
     ofstream os((config->output_dir + "/" + "index.html").c_str());
+    helpIndex(os, config);
+}
+
+void HTMLHelpCommand::helpIndex(ostream& os, const HTMLHelpConfig* config)
+{
     copySnippet(os, config->html_prolog_document);
 
     if (config->html_index_document.empty()) {
@@ -175,6 +180,20 @@ void HTMLHelpCommand::helpCommands()
 {
     assert( config );
     ofstream os((config->output_dir + "/" + "command_index.html").c_str());
+    helpCommands(os, config);
+    
+    for(PLearnCommandRegistry::command_map::iterator
+            it  = PLearnCommandRegistry::commands().begin(),
+            end = PLearnCommandRegistry::commands().end()
+            ; it != end ; ++it)
+    {
+        // Generate help for this command
+        helpOnCommand(it->first);
+    }
+}
+
+void HTMLHelpCommand::helpCommands(ostream& os, const HTMLHelpConfig* config)
+{
     copySnippet(os, config->html_prolog_document);
   
     os << "<div class=\"generaltable\">" << endl
@@ -186,15 +205,13 @@ void HTMLHelpCommand::helpCommands()
     for(PLearnCommandRegistry::command_map::iterator
             it  = PLearnCommandRegistry::commands().begin(),
             end = PLearnCommandRegistry::commands().end()
-            ; it != end ; ++it, ++i) {
+            ; it != end ; ++it, ++i)
+    {
         string helpurl = string("command_") + it->first + ".html";
         string helphtml = "<a href=\"" + helpurl + "\">" + it->first + "</a>";
         os << string("  <tr class=\"") + (i%2 == 0? "even" : "odd") + "\">" << endl
            << "    <td>" + helphtml + "</td>"
            << "<td>" + it->second->description + "</td></tr>" << endl;
-
-        // Generate help for this command
-        helpOnCommand(it->first);
     }
     os << "</table>" << endl
        << "</div>" << endl;
@@ -211,6 +228,12 @@ void HTMLHelpCommand::helpOnCommand(const string& theCommand)
 {
     assert( config );
     ofstream os((config->output_dir + "/" + "command_"+theCommand+".html").c_str());
+    helpOnCommand(theCommand, os, config);
+}
+
+void HTMLHelpCommand::helpOnCommand(const string& theCommand, ostream& os,
+                                    const HTMLHelpConfig* config)
+{
     copySnippet(os, config->html_prolog_document);
   
     PLearnCommandRegistry::command_map::iterator
@@ -239,6 +262,20 @@ void HTMLHelpCommand::helpClasses()
 {
     assert( config );
     ofstream os((config->output_dir + "/" + "class_index.html").c_str());
+    helpClasses(os, config);
+    
+    for(TypeMap::const_iterator
+            it  = TypeFactory::instance().getTypeMap().begin(),
+            end = TypeFactory::instance().getTypeMap().end()
+            ; it != end ; ++it)
+    {
+        // Generate help for this class
+        helpOnClass(it->first);
+    }
+}
+
+void HTMLHelpCommand::helpClasses(ostream& os, const HTMLHelpConfig* config)
+{
     copySnippet(os, config->html_prolog_document);
   
     os << "<div class=\"generaltable\">" << endl
@@ -250,15 +287,13 @@ void HTMLHelpCommand::helpClasses()
     for(TypeMap::const_iterator
             it  = TypeFactory::instance().getTypeMap().begin(),
             end = TypeFactory::instance().getTypeMap().end()
-            ; it != end ; ++it) {
+            ; it != end ; ++it)
+    {
         string helpurl = string("class_") + it->first + ".html";
         string helphtml = "<a href=\"" + helpurl + "\">" + it->first + "</a>";
         os << string("  <tr class=\"") + (i++%2 == 0? "even" : "odd") + "\">" << endl
            << "    <td>" + helphtml + "</td>" << endl
            << "    <td>" + it->second.one_line_descr + "</td></tr>" << endl;
-
-        // Generate help for this class
-        helpOnClass(it->first);
     }
     os << "</table>" << endl
        << "</div>" << endl;
@@ -274,6 +309,12 @@ void HTMLHelpCommand::helpOnClass(const string& classname)
 {
     assert( config );
     ofstream out((config->output_dir + "/class_" + classname + ".html").c_str());
+    helpOnClass(classname, out, config);
+}
+
+void HTMLHelpCommand::helpOnClass(const string& classname, ostream& out,
+                                  const HTMLHelpConfig* config)
+{
     copySnippet(out, config->html_prolog_document);
 
     const TypeMap& type_map = TypeFactory::instance().getTypeMap();
@@ -410,6 +451,7 @@ void HTMLHelpCommand::helpOnClass(const string& classname)
     copySnippet(out, config->html_epilog_document);
 }
 
+
 string HTMLHelpCommand::quote(string s) const
 {
     search_replace(s, "&", "&amp;");
@@ -418,6 +460,7 @@ string HTMLHelpCommand::quote(string s) const
     search_replace(s, "\"", "&quot;");
     return s;
 }
+
 
 TVec<string> HTMLHelpCommand::parent_classes(string classname) const
 {
@@ -447,6 +490,7 @@ TVec<string> HTMLHelpCommand::parent_classes(string classname) const
     return parents;
 }
 
+
 string HTMLHelpCommand::highlight_known_classes(string typestr) const
 {
     vector<string> tokens = split(typestr, " \t\n\r<>,.';:\"");
@@ -467,6 +511,7 @@ string HTMLHelpCommand::highlight_known_classes(string typestr) const
     return typestr;
 }
 
+
 string HTMLHelpCommand::format_free_text(string text) const
 {
     // sort of DWIM HTML formatting for free-text; cannot use split since it
@@ -474,6 +519,7 @@ string HTMLHelpCommand::format_free_text(string text) const
     text = removeblanks(text);
     size_t curpos = 0, curnl = text.find('\n');
     bool ul_active = false;
+    bool start_paragraph = false;
     string finallines;
     for ( ; curpos != string::npos ;
           curpos = curnl+(curnl!=string::npos), curnl = text.find('\n', curpos) ) {
@@ -482,12 +528,14 @@ string HTMLHelpCommand::format_free_text(string text) const
         // step 1: check if the line starts with a '-': if so, start a new <UL>
         // if not in one, or extend one if so
         if (removeblanks(curline).substr(0,1) == "-" ||
-            removeblanks(curline).substr(0,1) == "*" ) {
+            removeblanks(curline).substr(0,1) == "*" )
+        {
             curline = removeblanks(curline).substr(1);
             if (! ul_active)
                 curline = "<ul><li>" + curline;
             else
                 curline = "<li>" + curline;
+            start_paragraph = false;
             ul_active = true;
         }
 
@@ -502,10 +550,16 @@ string HTMLHelpCommand::format_free_text(string text) const
         // otherwise, normal processing
         else {
             // any line that is empty or starts with some whitespace gets its own <br>
-            if (removeblanks(curline) == "")
-                curline = "<p>" + curline;
-            else if (curline[0] == ' ' || curline[0] == '\t')
+            if (removeblanks(curline) == "") {
+                // Don't start new paragraph right away; wait until we
+                // encounter some text that's neither a <ul> or a <pre>
+                start_paragraph = true;
+                curline = "";
+            }
+            else if (curline[0] == ' ' || curline[0] == '\t') {
+                start_paragraph = false;
                 curline = "<pre>" + curline + "</pre>";
+            }
 
             // if we were processing a list, close it first
             if (ul_active) {
@@ -514,6 +568,11 @@ string HTMLHelpCommand::format_free_text(string text) const
             }
         }
 
+        if (!curline.empty() && start_paragraph) {
+            finallines += "<p>";
+            start_paragraph = false;
+        }
+        
         finallines += curline + "\n";
     }
 
@@ -524,6 +583,7 @@ string HTMLHelpCommand::format_free_text(string text) const
     // Finally join the lines
     return make_http_hyperlinks(finallines);
 }
+
 
 string HTMLHelpCommand::make_http_hyperlinks(string text) const
 {
@@ -546,6 +606,7 @@ string HTMLHelpCommand::make_http_hyperlinks(string text) const
     text = regex_replace(text, e, repl_str, boost::match_default | boost::format_default);
     return text;
 }
+
 
 string HTMLHelpCommand::generated_by() const
 {
