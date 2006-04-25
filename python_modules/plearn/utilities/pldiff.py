@@ -165,7 +165,11 @@ def psavediff(former_file, later_file, precision=1e-06):
 
     ## Actual comparison
     report = []
-    diff = toldiff(former_rw, later_rw, precision)
+    diff = toolkit.command_output(plearn_cmd("diff %s %s %s") \
+                          % (former_rw, later_rw, precision))
+    diff = "".join(diff)
+    # diff = toldiff(former_rw, later_rw, precision)
+
     if diff:
         report = [ "--- %s and %s\n  Processed through read_and_write (%s)\n     %s"
                    % (former_file, later_file, tmpdir, diff) ]
