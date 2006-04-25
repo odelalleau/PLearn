@@ -74,13 +74,55 @@ enum VerbosityLevel {
     VLEVEL_DBG      = 10,   // Debug Info
     VLEVEL_EXTREME  = 500   // Extreme Verbosity
 }; 
-  
+
+
+//#####  LogPlugin  ###########################################################
+
+/**
+ *  Provides several back-ends for displaying the log messages
+ *
+ *  Similarly to ProgressBarPlugin, this class allows several types of
+ *  back-ends to render log messages.  The purpose of this plugin is to return
+ *  a reference to a PStream that's ready for carrying out logging operations
+ *  on the specified "name" and given verbosity.
+ */
+class PL_LogPlugin : public PPointable
+{
+public:
+    virtual ~PL_LogPlugin();
+
+    virtual PStream& getStream(PStream::mode_t outmode, const string& module_name,
+                               int requested_verbosity) = 0;
+};
+
+
+/**
+ *  Default implementation of PL_LogPlugin :: outputs to specified PStream
+ *  (perr by default)
+ */
+class PL_LogPluginPStream : public PL_LogPlugin
+{
+public:
+    PL_LogPluginPStream(PStream pstream)
+        : m_pstream(pstream)
+    { }
+    
+    virtual PStream& getStream(PStream::mode_t outmode, const string& module_name,
+                               int requested_verbosity);
+
+protected:
+    PStream m_pstream;                       //!< Actual stream to use
+};
+
+
+//#####  Logging Class Per Se  ################################################
+
 class PL_Log
 {
 public:
     //! Constructor
     //! (Use default destructor, copy constructor, etc.)
-    PL_Log();
+    PL_Log(PP<PL_LogPlugin> plugin);
   
     //! Set the actual runtime verbosity.  This is a verbosity threshold;
     //! any "requested_verbosity" less than or equal to this verbosity is
@@ -90,14 +132,8 @@ public:
     //! Return the current runtime verbosity
     int verbosity() const                     { return runtime_verbosity; }
 
-    //! Bind the actual output PStream; default is stream constructed from cout
-    void outputStream(PStream stream)         { output_stream = stream; }
-
-    //! Return the actual output PStream
-    PStream outputStream() const              { return output_stream; }
-
     //! Changes the output_stream outmode
-    void outmode(PStream::mode_t outmode_) { output_stream.outmode = outmode_; }
+    void outmode(PStream::mode_t outmode)     { m_outmode = outmode; }
 
     /**
      *  Underlying logging function.  If "requested_verbosity" is less than
@@ -132,6 +168,18 @@ public:
     //! Return number of times logger() has been called
     long loggerCount() const                   { return logger_count; }
   
+    //! Return the current plugin
+    PP<PL_LogPlugin> getCurrentPlugin()
+    {
+        return m_plugin;
+    }
+
+    //! Set a new plugin
+    void setPlugin(PP<PL_LogPlugin> plugin)
+    {
+        m_plugin = plugin;
+    }
+    
     //! Return system-wide PL_Log
     static PL_Log& instance();
 
@@ -149,8 +197,9 @@ public:
   
 protected:
     int runtime_verbosity;
-    PStream output_stream;
-    PStream null_stream;
+    PP<PL_LogPlugin> m_plugin;      //!< Used to obtain the actual logging stream
+    PStream null_stream;            //!< Used when there is nothing to output
+    PStream::mode_t m_outmode;      //!< Formatting instructions for logging
     long logger_count;              //!< Number of times logger() has been called
     set<string> enabled_modules;    //!< Modules for which logging is enabled.
 

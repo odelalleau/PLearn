@@ -53,10 +53,29 @@
 namespace PLearn {
 using namespace std;
 
-PL_Log::PL_Log( )
+
+//#####  Default Plugin Implementation  #######################################
+
+PL_LogPlugin::~PL_LogPlugin()
+{ }
+
+PStream& PL_LogPluginPStream::getStream(
+    PStream::mode_t outmode, const string& module_name, int requested_verbosity)
+{
+    m_pstream.setOutMode(outmode);
+    if (! module_name.empty())
+        m_pstream << '[' << module_name << "] ";
+    return m_pstream;
+}
+
+
+//#####  PL_Log Implementation  ###############################################
+
+PL_Log::PL_Log(PP<PL_LogPlugin> plugin)
     : runtime_verbosity(VLEVEL_NORMAL),
-      output_stream(get_perr()),
+      m_plugin(plugin),
       null_stream(get_pnull()),
+      m_outmode(PStream::pretty_ascii),
       logger_count(0),
       named_logging_kind(NoModules)
 { }
@@ -67,9 +86,11 @@ PL_Log::PL_Log( )
  */
 PStream& PL_Log::logger(int requested_verbosity)
 {
+    static const string module_name;         // Empty string
+    assert( m_plugin );
     logger_count++;
     if (requested_verbosity <= runtime_verbosity)
-        return output_stream;
+        return m_plugin->getStream(m_outmode, module_name, requested_verbosity);
     else
         return null_stream;
 }
@@ -86,7 +107,7 @@ PStream& PL_Log::namedLogger(const string& module_name, int requested_verbosity)
          (named_logging_kind == SomeModules &&
           enabled_modules.find(module_name) != enabled_modules.end())))
     {
-        return output_stream << '[' << module_name << "] ";
+        return m_plugin->getStream(m_outmode, module_name, requested_verbosity);
     }
 
     return null_stream;
@@ -148,7 +169,8 @@ vector<string> PL_Log::namedLogging() const
 
 PL_Log& PL_Log::instance()    
 {
-    static PL_Log global_logger;
+    static PP<PL_LogPlugin> global_plugin = new PL_LogPluginPStream(get_perr());
+    static PL_Log global_logger(global_plugin);
     return global_logger;
 }
 
