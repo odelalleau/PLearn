@@ -245,7 +245,7 @@ void chol_dxch(Mat& R, int l, int m)
         chol_rotapp(c, s, R(k).subVec(k, p - k), R(k + 1).subVec(k, p - k));
     }
     for (int k = l; k < m; k++) {
-        chol_rotgen(R(k, k), R(k+1, k), c, s);
+        chol_rotgen(R(k, k), R(k + 1, k), c, s);
         chol_rotapp(c, s, R(k).subVec(k + 1, p - k - 1),
                           R(k + 1).subVec(k + 1, p - k - 1));
     }
