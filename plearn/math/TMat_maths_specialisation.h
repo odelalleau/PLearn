@@ -50,42 +50,36 @@
 namespace PLearn {
 using namespace std;
 
-
 //#define USE_BLAS_SPECIALISATIONS
 
 #ifdef USE_BLAS_SPECIALISATIONS
 #include "blas_proto.h"
 
-
-/*
-// These seem to generate a "Illegal instruction core dump" !
-// So I'll stick with the memcpy versions in general.h
-inline float* copy(float* first, float* last, float* dest)
-{ 
-int n = last-first; 
-int one = 1;
-scopy_(&n, first, &one, dest, &one); 
-return dest+n; 
-}
-
-inline double* copy(double* first, double* last, double* dest)
-{ 
-    int n = last-first; 
-    int one = 1;
-    dcopy_(&n, first, &one, dest, &one); 
-    return dest+n; 
-}
-*/
-
 #ifdef USEDOUBLE
+#define BLAS_COPY dcopy_
 #define BLAS_MULT_ACC daxpy_
 #define BLAS_SCALE dscal_
 #define BLAS_SWAP dswap_
 #else
+#define BLAS_COPY scopy_
 #define BLAS_MULT_ACC saxpy_
 #define BLAS_SCALE sscal_
 #define BLAS_SWAP sswap_
 #endif
+
+/* Commented out. It is not clear exactly (1) if it works, (2) where it would
+ * be called, and (3) if it is more efficient.
+//////////
+// copy //
+//////////
+inline real* copy(real* first, real* last, real* dest)
+{ 
+    int n = last - first; 
+    int one = 1;
+    BLAS_COPY(&n, first, &one, dest, &one);
+    return dest + n; 
+}
+*/
 
 /////////////////
 // multiplyAcc //
