@@ -87,6 +87,10 @@ void chol_rotgen(real& a, real& b, real& c, real& s);
 void chol_dxch_tr(Mat& R_t, int l, int m);
 void chol_rotapp_tr(real c, real s, const Mat& x, const Mat& y);
 
+//! Optimized version of 'chol_rotapp_tr' that directly call BLAS functions.
+//! Same as chol_rotapp_tr(c, s, R.subMat(i, j, m, 1), R.subMat(i, k, m, 1)).
+void chol_rotapp_tr_opt(real c, real s, const Mat& R,
+                        int i, int j, int k, int m);
 
 // debugging / test program for the above functions
 void testCholeskyRoutines();

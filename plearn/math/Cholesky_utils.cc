@@ -269,13 +269,19 @@ void chol_dxch_tr(Mat& R, int l, int m)
     real c, s;
     for (int k = m - 1; k >= l + 1; k--) {
         chol_rotgen(R(l, k), R(l, k + 1), c, s);
+        chol_rotapp_tr_opt(c, s, R, k, k, k + 1, p - k);
+        /*
         chol_rotapp_tr(c, s, R.subMat(k, k, p - k, 1),
                              R.subMat(k, k + 1, p - k, 1));
+        */
     }
     for (int k = l; k < m; k++) {
         chol_rotgen(R(k, k), R(k, k + 1), c, s);
+        chol_rotapp_tr_opt(c, s, R, k + 1, k, k + 1, p - k - 1);
+        /*
         chol_rotapp_tr(c, s, R.subMat(k + 1, k, p - k - 1, 1),
                              R.subMat(k + 1, k + 1, p - k - 1, 1));
+        */
     }
 }
 
@@ -307,6 +313,32 @@ void chol_rotapp_tr(real c, real s, const Mat& x, const Mat& y)
     multiplyAcc(x, y, s);
     y *= c;
     multiplyAcc(y, t, -s);
+}
+
+////////////////////////
+// chol_rotapp_tr_opt //
+////////////////////////
+void chol_rotapp_tr_opt(real c, real s, const Mat& R,
+                        int i, int j, int k, int m)
+{
+#ifdef USE_BLAS_SPECIALISATIONS
+    static Mat t;
+    t.resize(m, 1);
+    real* t_data = t.data();
+    real* R_i = R[i];
+    real* x_data = R_i + j;
+    real* y_data = R_i + k;
+    int one = 1;
+    int mod = R.mod();
+    BLAS_COPY(&m, x_data, &mod, t_data, &one);
+    BLAS_SCALE(&m, &c, x_data, &mod);
+    BLAS_MULT_ACC(&m, &s, y_data, &mod, x_data, &mod);
+    BLAS_SCALE(&m, &c, y_data, &mod);
+    real minus_s = -s;
+    BLAS_MULT_ACC(&m, &minus_s, t_data, &one, y_data, &mod);
+#else
+    chol_rotapp_tr(c, s, R.subMat(i, j, m, 1), R.subMat(i, k, m, 1));
+#endif
 }
 
 /////////////////
