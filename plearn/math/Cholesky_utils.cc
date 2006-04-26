@@ -265,7 +265,7 @@ void chol_dxch_tr(Mat& R, int l, int m)
     }
     int n = R.width();
     int p = n;
-    R.subMatColumns(0, m + 1).swapRows(l, m);
+    swapRows(R.subMatColumns(0, m + 1), l, m);
     real c, s;
     for (int k = m - 1; k >= l + 1; k--) {
         chol_rotgen(R(l, k), R(l, k + 1), c, s);

@@ -3794,8 +3794,23 @@ void diffSquareMultiplyAcc(const TMat<T>& mat, const TMat<T>& x, const TMat<T>& 
     }
 }
 
+//////////////
+// swapRows //
+//////////////
+//! Swap rows i and j in matrix 'mat'.
+//! It is specialized for real numbers in TMat_maths_specialisation.h, in order
+//! to use the corresponding BLAS function.
+template<class T>
+void swapRows(const TMat<T>& mat, int i, int j)
+{
+    if (i == j)
+        return;
+    mat.swapRows(i, j);
+}
 
-
+////////////////////
+// selectAndOrder //
+////////////////////
 template<class T>
 TVec<T> selectAndOrder(const TMat<T>& mat, int pos, int colnum=0)
 {

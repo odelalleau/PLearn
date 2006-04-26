@@ -79,8 +79,12 @@ inline double* copy(double* first, double* last, double* dest)
 
 #ifdef USEDOUBLE
 #define BLAS_MULT_ACC daxpy_
+#define BLAS_SCALE dscal_
+#define BLAS_SWAP dswap_
 #else
 #define BLAS_MULT_ACC saxpy_
+#define BLAS_SCALE sscal_
+#define BLAS_SWAP sswap_
 #endif
 
 /////////////////
@@ -132,12 +136,6 @@ inline void multiplyAcc(const Mat& mat, const Mat& x, real scale)
   { multiplyAcc(vec,x,1.); }
 */
 
-#ifdef USEDOUBLE
-#define BLAS_SCALE dscal_
-#else
-#define BLAS_SCALE sscal_
-#endif
-
 ////////////////
 // operator*= //
 ////////////////
@@ -178,6 +176,23 @@ inline void operator*=(const Mat& mat, real factor)
     }
 }
 
+//////////////
+// swapRows //
+//////////////
+inline void swapRows(const Mat& mat, int i, int j)
+{
+    if (i == j)
+        return;
+    real* mat_row_i = mat[i];
+    real* mat_row_j = mat[j];
+    int one = 1;
+    int n = mat.width();
+    BLAS_SWAP(&n, mat_row_i, &one, mat_row_j, &one);
+}
+
+/////////////////////
+// productScaleAcc //
+/////////////////////
 //  C = alpha A.B + beta C
 // ( Will use the transpose of A and/or B instead, if you set the correpsonding flags to true)
 inline void productScaleAcc(const TMat<double>& C, const TMat<double>& A, bool transposeA, const TMat<double>& B, bool transposeB, double alpha, double beta)

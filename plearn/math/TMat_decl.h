@@ -774,6 +774,8 @@ public:
     }
 
     //! Swap the content of row i and row j.
+    //! Note: a potentially more efficient version can be found in
+    //! TMat_maths_impl.h.
     void swapRows(int i, int j) const
     {
         if(i!=j)
