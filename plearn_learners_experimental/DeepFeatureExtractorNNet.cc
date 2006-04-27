@@ -71,7 +71,7 @@
 #include <plearn/var/UnaryHardSlopeVariable.h>
 #include <plearn/var/Var_operators.h>
 #include <plearn/var/Var_utils.h>
-#include <plearn/display/DisplayUtils.h>
+//#include <plearn/display/DisplayUtils.h>
 
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include <plearn/math/random.h>
@@ -101,6 +101,9 @@ DeepFeatureExtractorNNet::DeepFeatureExtractorNNet()
       use_same_input_and_output_weights(false),
       always_reconstruct_input(false),
       use_activations_with_cubed_input(false),
+      use_n_first_as_supervised(-1),
+      use_only_supervised_part(false),
+      always_use_supervised_target(false),
       nhidden_schedule_current_position(-1)
 {
     random_gen = new PRandom();
@@ -214,6 +217,20 @@ declareOption(ol, "cost_funcs", &DeepFeatureExtractorNNet::cost_funcs, OptionBas
                   &DeepFeatureExtractorNNet::use_activations_with_cubed_input, 
                   OptionBase::buildoption, 
                   "Use the cubed value of the input of the activation functions.");
+    declareOption(ol, "use_n_first_as_supervised", 
+                  &DeepFeatureExtractorNNet::use_n_first_as_supervised, 
+                  OptionBase::buildoption, 
+                  "To simulate semi-supervised learning.");
+    declareOption(ol, "use_only_supervised_part", 
+                  &DeepFeatureExtractorNNet::use_only_supervised_part, 
+                  OptionBase::buildoption, 
+                  "Indication that only the supervised part should be\n"
+                  "used, throughout the whole training, when simulating\n"
+                  "semi-supervised learning.");
+    declareOption(ol, "always_use_supervised_target", 
+                  &DeepFeatureExtractorNNet::always_use_supervised_target, 
+                  OptionBase::buildoption, 
+                  "Always use supervised target.");
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -231,6 +248,11 @@ void DeepFeatureExtractorNNet::build_()
        && nhidden_schedule_current_position < nhidden_schedule.length() 
        && nhidden_schedule_current_position < nhidden_schedule_position)
     {
+
+        if(use_n_first_as_supervised > 0)
+        {
+            sup_train_set = train_set.subMatRows(0,use_n_first_as_supervised);
+        }
 
         // Initialize the input.
         if(nhidden_schedule_current_position < 0)
@@ -261,7 +283,7 @@ void DeepFeatureExtractorNNet::build_()
             unsupervised_target = hidden_representation;
                 
         int n_added_layers = 0;
-        if(nhidden_schedule_position < nhidden_schedule.length() && use_same_input_and_output_weights)
+        if((nhidden_schedule_position < nhidden_schedule.length() || always_use_supervised_target) && use_same_input_and_output_weights)
         {
             params_to_train.push_back(biases.last());
         }
@@ -305,21 +327,27 @@ void DeepFeatureExtractorNNet::build_()
         }
 
         reconstruction_weights.resize(0);
-        if(nhidden_schedule_position >= nhidden_schedule.length())
+        if(always_use_supervised_target || nhidden_schedule_position >= nhidden_schedule.length())
         {
             if(noutputs<=0) PLERROR("In DeepFeatureExtractorNNet::build_(): building the output layer but noutputs<=0");
-            nhidden_schedule_current_position++;
+            if(!always_use_supervised_target || nhidden_schedule_position >= nhidden_schedule.length())
+                nhidden_schedule_current_position++;
             n_added_layers++;
             Var w = new SourceVariable(output->size()+1,noutputs);
             weights.push_back(w);
             //fillWeights(w,true,nhidden_schedule_current_position == 0 ? 0 : -0.5);
             fillWeights(w,true,0);
-            params.push_back(w);
-            output = hiddenLayer(output,w,output_transfer_func,before_transfer_function);
-            
+
             params_to_train.resize(params.length());
             for(int i=0; i<params.length(); i++)
                 params_to_train[i] = params[i];
+
+            if(!always_use_supervised_target || nhidden_schedule_position >= nhidden_schedule.length())
+                params.push_back(w);
+
+            params_to_train.push_back(w);
+            output = hiddenLayer(output,w,output_transfer_func,before_transfer_function);
+            
         }
         else
         {
@@ -418,6 +446,7 @@ void DeepFeatureExtractorNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(invars, copies);
     deepCopyField(costs, copies);
     deepCopyField(penalties, copies);
+    deepCopyField(sup_train_set, copies);
 
     deepCopyField(f, copies);
     deepCopyField(test_costf, copies);
@@ -455,7 +484,7 @@ void DeepFeatureExtractorNNet::forget()
     //weights.clear();
     weights.resize(0);
     nhidden_schedule_current_position = -1;
-    nhidden_schedule_position = 0;
+    //nhidden_schedule_position = 0;
     build();
 }
     
@@ -467,7 +496,13 @@ void DeepFeatureExtractorNNet::train()
     if(!train_stats)
         PLERROR("In DeepFeatureExtractor::train, you did not setTrainStatsCollector");
 
-    int l = train_set->length();  
+    int l;
+    if(sup_train_set && (use_only_supervised_part || nhidden_schedule_current_position >= nhidden_schedule.length()))
+        l = sup_train_set->length();  
+    else
+        l = train_set->length();  
+
+
 
     if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
         build();
@@ -479,7 +514,12 @@ void DeepFeatureExtractorNNet::train()
     // number of samples seen by optimizer before each optimizer update
     int nsamples = batch_size>0 ? batch_size : l;
     Func paramf = Func(invars, training_cost); // parameterized function to optimize
-    Var totalcost = meanOf(train_set, paramf, nsamples);
+    Var totalcost;
+    if(sup_train_set && (use_only_supervised_part || nhidden_schedule_current_position >= nhidden_schedule.length()))
+        totalcost = meanOf(sup_train_set,paramf,nsamples);
+    else
+        totalcost = meanOf(train_set, paramf, nsamples);
+
     if(optimizer)
     {
         optimizer->setToOptimize(params_to_train, totalcost);  
@@ -496,7 +536,7 @@ void DeepFeatureExtractorNNet::train()
 
     int initial_stage = stage;
     bool early_stop=false;
-    displayFunction(paramf, true, false, 250);
+    //displayFunction(paramf, true, false, 250);
     while(stage<nstages && !early_stop)
     {
         optimizer->nstages = optstage_per_lstage;
@@ -577,7 +617,7 @@ void DeepFeatureExtractorNNet::buildTargetAndWeight() {
 void DeepFeatureExtractorNNet::buildCosts(const Var& the_output, const Var& the_target, const Var& the_unsupervised_target, const Var& before_transfer_func) {
     //costs.clear();
     costs.resize(0);
-    if(nhidden_schedule_current_position >= nhidden_schedule.length())
+    if(always_use_supervised_target || nhidden_schedule_current_position >= nhidden_schedule.length())
     {
         int ncosts = cost_funcs.size();  
         costs.resize(ncosts);
@@ -695,12 +735,12 @@ void DeepFeatureExtractorNNet::buildCosts(const Var& the_output, const Var& the_
     else {
         if(weightsize_>0) {
             // only multiply by sampleweight if there are weights
-            if(nhidden_schedule_current_position < nhidden_schedule.length())
+            if(nhidden_schedule_current_position < nhidden_schedule.length() && !always_use_supervised_target)
                 training_cost = hconcat(costs[costs.length()-2]*sampleweight & test_costs*sampleweight);
             else
                 training_cost = hconcat(costs[0]*sampleweight & test_costs*sampleweight);
         } else {
-            if(nhidden_schedule_current_position < nhidden_schedule.length())                
+            if(nhidden_schedule_current_position < nhidden_schedule.length() && !always_use_supervised_target)                
                 training_cost = hconcat(costs[costs.length()-2] & test_costs);
             else
                 training_cost = hconcat(costs[0] & test_costs);

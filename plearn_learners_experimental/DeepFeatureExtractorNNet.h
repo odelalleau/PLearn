@@ -100,6 +100,12 @@ public:
     bool always_reconstruct_input;
     //! Use the cubed value of the input of the activation functions
     bool use_activations_with_cubed_input;
+    //! To simulate semi-supervised learning
+    int use_n_first_as_supervised;
+    //! Use only supervised part
+    bool use_only_supervised_part;
+    //! Always use supervised target
+    bool always_use_supervised_target;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -201,6 +207,8 @@ protected:
     Var training_cost; 
     //! Test costs variable
     Var test_costs;
+    //! Fake supervised data;
+    VMat sup_train_set;
 
     //! Function: input -> output
     mutable Func f; 
