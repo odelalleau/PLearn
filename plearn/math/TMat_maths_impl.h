@@ -194,6 +194,26 @@ void softmax(const TVec<T>& x, const TVec<T>& y)
     }
 }
 
+//! y = softmax(-x)
+template <class T> 
+void softmax_minus(const TVec<T>& x, const TVec<T>& y)
+{  
+    int n = x.length();
+    if (n>0)
+    {
+        T* yp = y.data();
+        T* xp = x.data();
+        T minx = min(x);
+        real s = 0;
+        for (int i=0;i<n;i++)
+            s += (yp[i] = safeexp(-xp[i]+minx));
+        if (s == 0) PLERROR("trying to divide by 0 in softmax");
+        s = 1.0 / s;
+        for (int i=0;i<n;i++)
+            yp[i] *= s;
+    }
+}
+
 // returns y = log(sofmax(x))
 template <class T>
 void log_softmax(const TVec<T> &x, TVec<T> &y)
