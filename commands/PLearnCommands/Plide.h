@@ -100,6 +100,11 @@ public:
     //! as the list of all BUILD options it supports.  This is returned as a pair
     //! (doc, options_list).  Return None if no such class exists.
     PythonObjectWrapper precisOnClass(const TVec<PythonObjectWrapper>& args) const;
+
+    //! Logging control.  This function should be called with two arguments:
+    //! 1) Desired verbosity level (integer)
+    //! 2) List of module names to activate in named logging (list of strings)
+    PythonObjectWrapper loggingControl(const TVec<PythonObjectWrapper>& args) const;
     
 
     //#####  Work Executors  ##################################################

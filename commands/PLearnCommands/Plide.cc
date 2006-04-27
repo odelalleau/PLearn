@@ -250,6 +250,7 @@ void Plide::run(const vector<string>& args)
     m_python->inject("helpOnCommand",     this, &Plide::helpOnCommand);
     m_python->inject("helpOnClass",       this, &Plide::helpOnClass);
     m_python->inject("precisOnClass",     this, &Plide::precisOnClass);
+    m_python->inject("loggingControl",    this, &Plide::loggingControl);
 
     // Start the thing!
     m_python->invoke("StartPlide", args);
@@ -448,6 +449,19 @@ PythonObjectWrapper Plide::precisOnClass(const TVec<PythonObjectWrapper>& args) 
     }
     else
         return PythonObjectWrapper();        // None
+}
+
+
+PythonObjectWrapper Plide::loggingControl(const TVec<PythonObjectWrapper>& args) const
+{
+    if (args.size() != 2)
+        PLERROR("%sExpecting 2 arguments; got %d", __FUNCTION__, args.size());
+
+    int desired_verbosity = args[0].as<int>();
+    vector<string> module_names = args[1].as< vector<string> >();
+    PL_Log::instance().verbosity(desired_verbosity);
+    PL_Log::instance().enableNamedLogging(module_names);
+    return PythonObjectWrapper();
 }
 
 
