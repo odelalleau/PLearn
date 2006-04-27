@@ -37,6 +37,8 @@ from plearn.utilities.toolkit  import doc as toolkit_doc
 
 from plearn.pl_pygtk import GladeAppWindow, GladeDialog, MessageBox
 
+from plide_utils import *
+
 
 #####  PyPLearnOptionsGroup  ################################################
 
@@ -184,10 +186,10 @@ class PyPLearnOptionsDialog( GladeDialog ):
 
             ## Insert documentation in frame, if any
             if group.doc:
-                label = gtk.Label(str=group.doc.replace("\n", ' '))
+                label = gtk.Label(str=group.doc.replace("\n", ' ')+'\n')
                 label.set_line_wrap(True)
                 label.set_alignment(0,0)
-                label.set_padding(0,4)
+                label.set_padding(0,2)
                 vbox.pack_start(label, expand=False, fill=False)
 
             ## Insert a table with all the options in the group

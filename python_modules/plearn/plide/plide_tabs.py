@@ -214,7 +214,8 @@ class PlideTabScintilla( PlideTab ):
                     indent = scin.GetLineIndentation(lastline)
                     # print >>sys.stderr, "Autoindenting to", indent
                     scin.SetLineIndentation(lastline+1, indent)
-                    scin.LineEnd()
+                    for i in xrange(indent):
+                        scin.CharRight()
             return False                # Keep processing
         scin.connect("CharAdded", char_added_callback)
 
@@ -633,7 +634,7 @@ class PlideTabExpdir( PlideTab ):
                 contents = f.read()
                 f.close()
                 viewer = PlideTabScintilla.scintilla_widget(contents, True)
-                if ext == ".py" or ext == ".pymat" or ext == ".pyplearn" or ext == ".plearn":
+                if ext in [ ".py", ".pymat", ".pyplearn", ".plearn", ".psave" ]:
                     PlideTabPython.set_scintilla_style_for_python(viewer)
 
             if viewer:
