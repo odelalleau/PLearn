@@ -66,6 +66,9 @@ class PlideTab( object ):
         self.help_candidate = None      # Potential HTML point for context-sensitive help
 
     def get_help_candidate( self ):
+        """Return the current context-sensitive help candidate for the tab
+        (an URI that is understood by the help system).
+        """
         return self.help_candidate
 
     def set_options_holder( self, options_holder ):
@@ -227,10 +230,10 @@ class PlideTabFile( PlideTabScintilla ):
     flags).
     """
     def __init__(self, notebook, filename, is_new = False):
-        self.filename = filename
+        self.filename = os.path.abspath(filename)
         self.is_new   = is_new
-        self.basename = os.path.basename(filename)
-        self.dirname  = os.path.dirname(filename)
+        self.basename = os.path.basename(self.filename)
+        self.dirname  = os.path.dirname(self.filename)
 
         try:
             f = open(filename)
@@ -447,8 +450,23 @@ class PlideTabPython( PlideTabFile ):
         self.textview.CallTipCancel()
         self.textview.AutoCCancel()
         self.calltip_insert = ""
-        # self.help_candidate = None
 
+    def get_help_candidate( self ):
+        """In Python-editing mode, the help candidate is either provided by
+        the last calltip or the word under the caret.  Start by isolating
+        the word under the caret, and if we recognize it, return this as
+        the help context.  Otherwise, return whatever is in
+        'help_candidate'.
+        """
+        curpos     = self.textview.GetCurrentPos()
+        wordleft   = self.textview.WordStartPosition(curpos,True)
+        wordright  = self.textview.WordEndPosition(curpos,True)
+        (pos,line) = self.textview.GetCurLine()
+        curword    = line[(pos-(curpos-wordleft)):(pos+(wordright-curpos))]
+        if curword in self.autocompletion:
+            return "class_%s.html" % curword
+        else:
+            return self.help_candidate
 
     def set_scintilla_style_for_python( scin ):
         """Update an existing scintilla widget for Python formatting.

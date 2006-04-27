@@ -59,9 +59,10 @@ from plearn.utilities.toolkit  import doc as toolkit_doc
 
 #####  Plide  ###############################################################
 
-from plide_help  import PlideHelp
-from plide_tabs  import *
-from plide_utils import *
+from plide_help    import PlideHelp
+from plide_options import *
+from plide_tabs    import *
+from plide_utils   import *
 
 
 #####  Exports  #############################################################
@@ -103,6 +104,7 @@ class PlideMain( GladeAppWindow ):
         ## Forward injected to imported Plide modules
         PlideHelp.define_injected(injected)
         PlideTab. define_injected(injected)
+        PyPLearnOptionsDialog.define_injected(injected, gladeFile)
 
         ## Initialize Members
         self.untitled_counter  = 1
@@ -287,10 +289,12 @@ class PlideMain( GladeAppWindow ):
         self.log_next_number = 1
 
     def log_hide( self ):
+        self.w_log_messages_menuitem.set_active(False)
         self.w_plearn_log_scroller.hide()
         self.w_plearn_log_scroller.set_no_show_all(True)
 
     def log_show( self ):
+        self.w_log_messages_menuitem.set_active(True)
         self.w_plearn_log_scroller.set_no_show_all(False)
         self.w_plearn_log_scroller.show()
         
@@ -461,6 +465,13 @@ class PlideMain( GladeAppWindow ):
     def on_paste_activate(self, widget):
         self.get_current_tab().on_paste_activate()
 
+    ## View menu
+    def on_log_messages_toggled(self, menuitem):
+        if menuitem.get_active():
+            self.log_show()
+        else:
+            self.log_hide()
+
     ## Help menu
     def on_about_activate(self, widget):
         version = injected.versionString().replace("(","\n(")
@@ -481,27 +492,29 @@ class PlideMain( GladeAppWindow ):
         """
         tab = self.get_current_tab()
         if tab is not None:
-            script = tab.get_text()
-            name   = tab.get_basename()
+            script      = tab.get_text()
+            name        = tab.get_basename()
+            script_dir  = tab.get_script_directory()
 
-            options_holder = tab.get_options_holder()
-            print >>sys.stderr, "Existing options_holder:", options_holder
-            if not options_holder:
-                ## When executing for the first time, run the script
-                if self.pyplearn_parse( name, script ) is None:
-                    return              # Syntax errors in script
-                options_holder = PyPLearnOptionsHolder(name, script)
-                tab.set_options_holder(options_holder)
+            while True:                 # Loop to handle script reload
+                options_holder = tab.get_options_holder()
+                if not options_holder:
+                    ## When executing for the first time, run the script
+                    if self.pyplearn_parse( name, script ) is None:
+                        return              # Syntax errors in script
+                    options_holder = PyPLearnOptionsHolder(name, script, script_dir)
+                    tab.set_options_holder(options_holder)
 
-            # print >>sys.stderr, "Initial option_holder values:", options_holder.option_groups
+                options_dialog = PyPLearnOptionsDialog(options_holder)
+                result = options_dialog.run()
+                if result == gtk.RESPONSE_OK:
+                    options_dialog.update_options_holder()
+                options_dialog.destroy()
 
-            options_dialog = PyPLearnOptionsDialog(options_holder)
-            result = options_dialog.run()
-            if result == gtk.RESPONSE_OK:
-                options_dialog.update_options_holder()
-
-            # print "New option_holder values:", options_holder.option_groups
-            # options_dialog.destroy()
+                if result == gtk.RESPONSE_REJECT:
+                    tab.set_options_holder(None)
+                else:
+                    break
 
     def on_toolbutton_execute_clicked(self, widget):
         """Launch the execution of the pyplearn script, only if it's indeed
@@ -510,11 +523,13 @@ class PlideMain( GladeAppWindow ):
         tab = self.get_current_tab()
         if tab is not None:
             if type(tab) == PlideTabPyPLearn:
-                script_name = tab.get_basename()
-                script_code = tab.get_text()
-                script_dir  = tab.get_script_directory()
+                script_name    = tab.get_basename()
+                script_code    = tab.get_text()
+                launch_dir     = tab.get_script_directory()
                 options_holder = tab.get_options_holder()
-                self.pyplearn_executor(script_name, script_code, script_dir,
+                if options_holder is not None:
+                    launch_dir = options_holder.launch_directory
+                self.pyplearn_executor(script_name, script_code, launch_dir,
                                        options_holder)
 
 
@@ -584,7 +599,7 @@ class PlideMain( GladeAppWindow ):
 
     #####  PLearn execution  ############################################
 
-    def pyplearn_executor( self, script_name, script_code, script_directory,
+    def pyplearn_executor( self, script_name, script_code, launch_directory,
                            options_holder ):
         """Execute a pyplearn script within an options context.
         
@@ -604,21 +619,27 @@ class PlideMain( GladeAppWindow ):
         if script_env is not None:
             if options_holder:
                 options_holder.pyplearn_actualize()
+            else:
+                ## FIXME: Generate a brand-new expdir (minor hack)
+                plargs._parse_(["expdir="+generate_expdir()])
+                
             expdir = plargs.expdir
-            print >>sys.stderr, 'Expdir is:', expdir
             plearn_script = eval('str(PyPLearnScript( main() ))', script_env)
-            print >>sys.stderr, 'PLearn is:'
-            print >>sys.stderr, plearn_script[0:100],"..."
+
             message = 'Launching script <b>%s</b> in directory <b>%s</b>' % \
-                      (script_name, script_directory)
+                      (script_name, launch_directory)
             self.status_display(message, has_markup=True)
             self.log_display   (message, has_markup=True, log_clear=True)
+            if self.w_dump_plearn_to_log.get_active():
+                self.log_display("Expdir is: %s\n.plearn is:\n%s" %
+                                 (expdir, plearn_script))
+            
             request_id = self.work_queue.post_work_request(
-                plearn_script, script_directory, "pyplearn")
+                plearn_script, launch_directory, "pyplearn")
             
             print >>sys.stderr, "Caller executing request_id", request_id
             sys.stderr.flush()
-            self.work_requests[request_id] = os.path.join(script_directory,expdir)
+            self.work_requests[request_id] = os.path.join(launch_directory,expdir)
             self.add_plearn_results_monitor( script_name, request_id )
 
     def add_plearn_results_monitor( self, script_name, request_id, interval = 100 ):
@@ -674,231 +695,46 @@ class PlideMain( GladeAppWindow ):
         this case.  Return the script execution environment if no error is
         encountered.
         """
-        script_env = { }
+
+        ## Implementation note: start by compiling the code to catch syntax
+        ## errors in the script.  Then execute with an 'exec' statement and
+        ## separately catch execution errors.
+        compiled_code = None
         try:
-            self.cursor_hourglass()
-            exec script_code in script_env
-        except:
+            compiled_code = compile(script_code+'\n', script_name, 'exec')
+        except ValueError:
+            pass
+        except SyntaxError, e:
             (exc_type, exc_value, tb) = sys.exc_info()
-            tb_string = ''.join(traceback.format_tb(tb))
-            self.log_display(tb_string)
-            self.cursor_normal()
-            self.status_display("Exception while parsing script <b>%s</b>."
-                                % script_name, True)
-            MessageBox('Script "%s" raised exception "%s: %s".' \
-                       % (script_name, str(exc_type), str(exc_value)),
-                       "See the log area for the detailed traceback.",
+            self.status_display("Syntax error in script <b>%s</b>" % script_name,
+                                True)
+            self.log_display(''.join(traceback.format_exception_only(exc_type, exc_value)))
+            MessageBox('Syntax error in script "%s".' % script_name,
+                       "Python message: %s\nSee the log area for the detailed traceback." % \
+                       str(exc_value),
                        title = "PyPLearn Script Error",
                        type=gtk.MESSAGE_ERROR)
             return None
-        else:
-            self.cursor_normal()
-            self.status_display("Script <b>%s</b> parsed successfully."
-                                % script_name, True)
-            return script_env
 
-
-#####  PyPLearnOptionsGroup  ################################################
-
-class PyPLearnOptionsGroup( dict ):
-    """Store a group of options (maps either a plargs_namespace or
-    plargs_binder).  Provide support for naming the thing, group
-    documentation, etc.
-
-    The argument 'group_members' is a dict containing the actual members of
-    the group, in the form name:value, where value can be a simple type or
-    a fancier documenting property object.
-
-    The argument 'group_object' is any object that should be updated when
-    the options are changed by the GUI before executing the script. This is
-    typically mapped to the classes inheriting from plargs_namespace in the
-    pyplearn script.
-
-    Note that the whole object behaves like a built-in dict, but with
-    additional attributes
-    """
-    def __init__(self, groupname, group_members, group_object,
-                 group_description = None, doc = None):
-        self.groupname         = groupname
-        self.group_description = group_description
-        self.group_object      = group_object
-        self.doc               = doc
-        self.update(group_members)
-
-
-#####  PyPLearnOptionsHolder  ###############################################
-
-class PyPLearnOptionsHolder( object ):
-    """Class which is initialized with a PyPLearnScript code (string) and
-    manages to get its hands on the options supported by the script.  Used
-    to initialize the PyPLearnOptionsDialog, which provides the view and
-    controller for this object.
-    """
-    def __init__( self, script_name, script_code ):
-        self.script_name      = script_name
-        self.script_code      = script_code
-        self.option_groups    = [ ]
-        self.option_overrides = [ ]
-
-        ## Assume that the script has already been executed and is
-        ## syntactically valid.  (More formal execution context passing for
-        ## subclasses of plargs_namespace will come later)
-
-        ## Look at global options
-        self.option_groups.append(PyPLearnOptionsGroup(
-            'GlobalOptions', public_members(plarg_defaults),
-            plarg_defaults, 'Global Configuration Options'))
-
-        ## Look at all options in plargs_namespace
-        for clsname,cls in plargs_namespace._subclasses.iteritems():
-            short_doc = toolkit_doc(cls, 0).rstrip('.')
-            full_doc  = toolkit_doc(cls, 1, "\n")
-            
-            group = PyPLearnOptionsGroup(clsname, public_members(cls),
-                                         cls, short_doc, full_doc)
-            self.option_groups.append(group)
-
-    def pyplearn_actualize( self ):
-        """Copy back the current values held by the group members to their
-        holding class in the .pyplearn
-        """
-        for group in self.option_groups:
-            obj = group.group_object
-            for k,v in group.iteritems():
-                setattr(obj, k, v)
-
-        ## Apply the manual overrides
-        if self.option_overrides:
-            plargs._parse_(self.option_overrides)
-
-
-#####  PyPLearnOptionsDialog  ###############################################
-
-class PyPLearnOptionsDialog( GladeDialog ):
-    """Class which is inialized with a PyPLearnScript code (string) and
-    creates a dialog box to query the script options.
-    """
-    def __init__( self, options_holder ):
-        GladeDialog.__init__(self, gladeFile())
-        self.options_holder = options_holder
-
-        ## Ensure that we never put an horizontal scrollbar, and put an
-        ## automatic vertical one.
-        self.w_options_scrolledwindow.set_policy(gtk.POLICY_NEVER,
-                                                 gtk.POLICY_AUTOMATIC)
-
-        ## This holds a map from an data-entry widget to the associated
-        ## group/field of the OptionsHolder.  Used to update the
-        ## OptionsHolder when the user clicks OK on the dialog box.
-        self.widget_map = {}
-
-        for group in options_holder.option_groups:
-
-            ## Handle frame creation
-            label_text = "<b>%s</b>" % group.groupname
-            if group.group_description:
-                label_text += " (<i>%s</i>)" % group.group_description
-            
-            new_frame = gtk.Frame(label = label_text)
-            new_frame.get_label_widget().set_use_markup(True)
-            new_frame.set_shadow_type(gtk.SHADOW_ETCHED_IN)
-
-            align = gtk.Alignment(xalign=0.0, yalign=0.0, xscale=1.0, yscale=1.0)
-            align.set_padding(padding_top=4, padding_bottom=8,
-                              padding_left=8, padding_right=8)
-            vbox = gtk.VBox(spacing=4)
-            align.add(vbox)
-            align.show()
-
-            ## Insert documentation in frame if there is any
-            if group.doc:
-                label = gtk.Label(str=group.doc.replace("\n", ' '))
-                label.set_line_wrap(True)
-                label.set_alignment(0,0)
-                label.set_padding(0,4)
-                label.show()
-                vbox.pack_start(label)
-
-            ## Insert a table with all the options in the group
-            option_names = group.keys()
-            option_names.sort()
-            table = gtk.Table(rows=len(option_names), columns=3, homogeneous=False)
-            for i in xrange(len(option_names)):
-                ## Option name
-                option_label = gtk.Label(option_names[i])
-                option_label.set_alignment(1.0, 0.5)   # Right align and middle-align
-                option_label.show()
-                table.attach(option_label, left_attach=0, right_attach=1,
-                             top_attach=i, bottom_attach=i+1,
-                             xoptions=gtk.EXPAND | gtk.FILL, yoptions=gtk.EXPAND | gtk.FILL,
-                             xpadding=4, ypadding=0)
-
-                ## Input field for option; 3 types are supported:
-                ## - Integers: create a SpinButton with an increment of 1
-                ## - Floats  : create a SpinButton with an increment of 0.1
-                ## - Other   : create a text entry field
-                option_value = group[option_names[i]]
-                if type(option_value) == int:
-                    option_input = gtk.SpinButton(digits=0)
-                    option_input.set_increments(1,10)
-                    option_input.set_numeric(True)
-                    option_input.set_range(-1e6, 1e6)
-                    option_input.set_value(option_value)
-                elif type(option_value) == float:
-                    option_input = gtk.SpinButton(digits=3)
-                    option_input.set_increments(0.1, 1.0)
-                    option_input.set_numeric(True)
-                    option_input.set_range(-1e6, 1e6)
-                    option_input.set_value(option_value)
-                else:
-                    if type(option_value) == list:
-                        text_value = ','.join([str(v) for v in option_value])
-                    else:
-                        text_value = str(option_value)
-                    option_input = gtk.Entry(max=0)
-                    option_input.set_text(text_value)
-                option_input.show()
-                table.attach(option_input, left_attach=1, right_attach=2,
-                             top_attach=i, bottom_attach=i+1,
-                             xoptions=gtk.EXPAND | gtk.FILL, yoptions=gtk.EXPAND | gtk.FILL,
-                             xpadding=4, ypadding=0)
-
-                ## Remember what the new input widget maps to
-                self.widget_map[option_input] = (group, option_names[i])
-
-                ## Documentation for option
-                option_doc = gtk.Label()
-                option_doc.set_markup("<i>Some documentation would come here</i>")
-                option_doc.show()
-                table.attach(option_doc, left_attach=2, right_attach=3,
-                             top_attach=i, bottom_attach=i+1,
-                             xoptions=gtk.EXPAND | gtk.FILL, yoptions=gtk.EXPAND | gtk.FILL,
-                             xpadding=4, ypadding=0)
-
-            table.set_row_spacings(8)
-            table.show()
-            vbox.pack_start(table)
-            vbox.show()
-
-            new_frame.add(align)
-            new_frame.show()
-
-            self.w_options_vbox.pack_start(new_frame)
-
-
-    def update_options_holder( self ):
-        """This function updates the attached options_holder object with
-        the latest contents of the dialog box entry widgets.  This is called
-        when the user clicks OK or Apply
-        """
-        for (widget, (group,option_name)) in self.widget_map.iteritems():
-            group[option_name] = pyplearn_intelligent_cast(group[option_name],
-                                                           widget.get_text())
-
-        ## Update the manual overrides that come from a fixed widget
-        overrides_str  = self.w_manual_script_options.get_text()
-        overrides_list = overrides_str.split()
-        self.options_holder.option_overrides = overrides_list
+        if compiled_code:
+            script_env  = { }
+            try:
+                exec compiled_code in script_env
+            except:
+                (exc_type, exc_value, tb) = sys.exc_info()
+                self.log_display(''.join(traceback.format_tb(tb)))
+                self.status_display("Exception during execution of script <b>%s</b>."
+                                    % script_name, True)
+                MessageBox('Script "%s" raised exception "%s: %s".' \
+                           % (script_name, str(exc_type), str(exc_value)),
+                       "See the log area for the detailed traceback.",
+                       title = "PyPLearn Script Error",
+                       type=gtk.MESSAGE_ERROR)
+                return None
+            else:
+                self.status_display("Script <b>%s</b> parsed successfully."
+                                    % script_name, True)
+                return script_env
 
 
 #####  Utility Classes  #####################################################

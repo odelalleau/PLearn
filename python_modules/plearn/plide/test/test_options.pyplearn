@@ -1,0 +1,42 @@
+from plearn.pyplearn import *
+
+#
+# Options for single-model
+#
+class ModelOptions( plargs_namespace ):
+    """Options related to single-model creation.
+
+    In addition to the basic models suggested below, more complex ones may
+    be derived from the following prefixes: 'short_', 'filtershort_',
+    'filterlong_', 'notrade_', 'blacklitt_'.
+    """
+    model_name = plopt('ewma_mlm', "Model kind to use",
+                       free_choices = [ 'mlm_base', 'ewma_mlm', 'rsi_ewma_mlm',
+                                        'monthly_mlm_12mo', 'averaged_mlm_flavours',
+                                        'Voting3mo12mo', 'cash_trader' ] )
+
+    lower_bound = plopt(35, min=30, doc="Option with a minimum value and no maximum")
+    upper_bound = plopt(0,  max=50, doc="Option with a maximum value and no minimum")
+    lower_upper = plopt(0,  min=-10, max=10, doc="Option with two bound constraints")
+    string_opt  = "Normal string option"
+    int_opt     = 10
+    float_opt   = 42.0
+    list_opt    = plopt([1,22,252], "Option containing a list of integers")
+    ma_depth    = plopt(1, "Moving-average depth", choices = [1, 22, 126, 252])
+    fancy_plot  = plopt(False, "Whether a fancy plot should be created and " + \
+                               "otherwise integrated within an overtly consistent " +\
+                               "framework for the management of user-intelligible " +\
+                               "documentation")
+
+dataset = pl.MemoryVMatrix(data = TMat(3, 2, [ 1, 2, 2, 4, 3, 7 ]),
+                           fieldnames = [ 'input', 'output' ],
+                           inputsize = 1,
+                           targetsize = 1,
+                           weightsize = 0)
+
+def main():
+    return pl.PTester(expdir=plargs.expdir,
+                      splitter=pl.FractionSplitter(splits=TMat(1,2,[(0,1),(0,1)])),
+                      dataset=dataset,
+                      learner=pl.LinearRegressor(weight_decay=0))
+                      
