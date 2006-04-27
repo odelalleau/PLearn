@@ -211,7 +211,7 @@ void ChemicalICP::computeVariables()
     all_mol_features->defineValueLocation( molecule->features );
 
     // update used_... Var's so they have the right size
-    used_mol_features->sizeprop();
+    used_mol_features->sizefprop();
     used_template_features->sizefprop();
     used_template_feat_dev->sizefprop();
 }
