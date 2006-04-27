@@ -1,7 +1,7 @@
 """The PyPLearn Mecanism."""
 __version_id__ = "$Id$"
 
-import new, string
+import new, string, sys
 from pyplearn                  import *
 from PyPLearnObject            import *
 from plearn.utilities.metaprog import public_attribute_predicate

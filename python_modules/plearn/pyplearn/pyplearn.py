@@ -1,12 +1,12 @@
 """PyPLearn's core"""
 __cvs_id__ = "$Id$"
 
-import os, string, types
+import os, string, sys, types
 from plearn.utilities import metaprog, toolkit
 from plearn.pyplearn import config
 from plearn.pyplearn.plearn_repr import plearn_repr
 
-__all__ = [ 'plvar',
+__all__ = [ 'plopt', 'plvar',
             'plargs', 'generate_expdir', 'plarg_defaults',
             'bind_plargs', 'plargs_binder', 'plargs_namespace',
             'include',
@@ -37,15 +37,90 @@ def pyplearn_intelligent_cast( default_value, provided_value ):
                     raise ValueError, "Nested lists are not supported by pyplearn_intelligent_cast"
 
             def list_cast( s ):
-                ## Potentially strip left-hand [ and right-hand ]
-                s = s.lstrip(' [').rstrip(' ]')
-                if s:
+                ## Potentially strip left-hand [ and right-hand ] if it's a string
+                if isinstance(s,str):
+                    s = s.lstrip(' [').rstrip(' ]')
                     return [ elem_cast(e) for e in s.split(",") ]
-                return []
+                elif isinstance(s,list):
+                    return [ elem_cast(e) for e in s ]
+                else:
+                    raise ValueError, "Cannot cast '%s' into a list", str(s)
+
             cast = list_cast
 
     return cast(provided_value)
     
+
+class plopt( object ):
+    """Typed command-line options with constraints for PLearn.
+    
+    This class provides support for default values, strong type checking,
+    conversion from a string representation, documentation, and constraints
+    on the possible values that the option can take.  The syntax to follow
+    is along the lines of:
+    
+    class MyOptions( plargs_namespace ):
+        plot_stuff = plopt(True, doc='Whether a cute graph should be plotted')
+        K          = plopt(10, min=5, max=25, doc='Number of neighbors to consider')
+        method     = plopt('classical', choices=['new-kind','classical','crazy'])
+        lags       = plopt([1,22,252], doc='Lags to incorporate as inputs, in days')
+
+    The difference between 'choices' and 'free_choices' is that the first
+    one is constrained: you are constrained to assign a value from the
+    list.  The second one merely contains a list of suggestions as to what
+    the field should contain.  (This can be used by a GUI to propose a list
+    of choices without constraining the final answer.)
+    """
+
+    def __init__(self, default, doc="", choices=None, free_choices=None,
+                 min=None, max=None):
+        self.value        = default
+        self.default      = default          # Keep it just for remembering typing
+        self.choices      = choices
+        self.free_choices = free_choices
+        self.min          = min
+        self.max          = max
+        self.__doc__      = doc
+
+    def get(self):
+        if (isinstance(self.value,bool)):
+            return int(self.value)      # Temporary hack since .plearn must have 0 or 1
+        else:
+            return self.value
+
+    def set(self, value):
+        
+        candidate = pyplearn_intelligent_cast(self.default, value)
+
+        ## Ensure that all constraints are satisfied
+        if self.choices is not None and candidate not in self.choices:
+            raise ValueError, \
+                  "Provided value '%s' not in %s" % \
+                  (str(candidate), str(self.choices))
+
+        if self.min is not None and candidate < self.min:
+            raise ValueError, \
+                  "Provided value '%s' is smaller than allowed minimum of %s" % \
+                  (str(candidate), str(self.min))
+
+        if self.max is not None and candidate > self.max:
+            raise ValueError, \
+                  "Provided value '%s' is greater than allowed maximum of %s" % \
+                  (str(candidate), str(self.max))
+
+        self.value = candidate
+
+    def get_type(self):
+        return type(self.default)
+
+    def get_bounds(self):
+        return (self.min, self.max)
+
+    def get_choices(self):
+        return self.choices
+
+    def get_free_choices(self):
+        return self.free_choices
 
 def bind_plargs(obj, field_names = None, plarg_names = None):
     """Binds some command line arguments to the fields of an object.
@@ -499,9 +574,52 @@ class plargs_namespace( object ):
             dic['__accessed'] = False
             return type.__new__( metacls, clsname, bases, dic )
 
-        def __getattribute__( cls, attr ):            
+        def __getattribute__( cls, attr ):
             a = type.__getattribute__( cls, attr )
+
+            ## Hook for reading plopts
+            if isinstance(a,plopt):
+                # print >>sys.stderr, "plopt get override"
+                return a.get()
+            
             if metaprog.public_attribute_predicate( attr, a ):
                 setattr( cls, '__accessed', True )
             return a
         
+        def __setattr__( cls, attr, value ):
+            a = type.__getattribute__( cls, attr )
+
+            ## Hook for setting plopts
+            if isinstance(a,plopt):
+                # print >>sys.stderr, "plopt set override"
+                a.set(value)
+            else:
+                type.__setattr__(cls,attr,value)
+        
+        def get_plopts( cls ):
+            """Return a dict of all plopt_name:plopt_object in the class.
+            """
+            return dict([(k,v) for (k,v) in cls.__dict__.iteritems() if isinstance(v,plopt)])
+
+        def is_plopt( cls, member_name ):
+            """Tests whether a class member is a plopt.
+            """
+            return isinstance(cls.__dict__[member_name], plopt)
+
+        def get_plopt( cls, plopt_name ):
+            """Return the plopt object given the plopt_name.
+            """
+            v = cls.__dict__[plopt_name]
+            if isinstance(v,plopt):
+                return v
+            else:
+                raise AttributeError, "Attribute '%s' is not a plopt" % plopt_name
+                
+
+if __name__ == "__main__":
+    class X(plargs_namespace):
+         x = plopt(12, "Petit test")
+         y = plopt(42, min=40, max=50, doc="Autre test")
+         z = plopt("blah", choices=["foo","bar","baz","blah"])
+         a = 50
+         b = "bigoudi"
