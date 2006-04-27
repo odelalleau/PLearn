@@ -274,6 +274,14 @@ void SurfaceTemplateLearner::build_()
 ///////////
 void SurfaceTemplateLearner::build()
 {
+    // Very ugly hack: because NNet::build_() will perform a fprop(), we need a
+    // sensible input value for this fprop, which means we need a training set.
+    // A simple way to fix this would be to remove the
+    // output_and_target_to_cost->recomputeParents() in the NNet build, but one
+    // should make sure it does not break anything first.
+    if (!train_set && templates_source)
+        this->train_set = templates_source;
+
     inherited::build();
     build_();
 }
