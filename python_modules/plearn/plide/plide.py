@@ -811,12 +811,13 @@ plide_main_window = None
 def StartPlide(argv = []):
     global plide_main_window
     plide_main_window = PlideMain()
-    plide_main_window.run()       # Show and start event loop in other thread
 
     ## Consider each file passed as command-line argument and create a tab
     ## to view it.
     for arg in argv:
         plide_main_window.add_intelligent_tab(arg, not os.path.exists(arg))
+
+    plide_main_window.run()       # Show and start event loop in other thread
 
 def QuitPlide():
     if not plide_main_window.close_event.isSet():
