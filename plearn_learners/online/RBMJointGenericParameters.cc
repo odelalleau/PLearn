@@ -221,16 +221,19 @@ void RBMJointGenericParameters::computeLinearUnitActivations
         assert( activations.length() == 1 );
 
         // actY_i = B_i - sum_j softplus(-(W_ij + C_j + sum_k V_jk p(P_k)))
-        activations[0] = down_units_params[i][0];
-        for( int j=target_size ; j<cond_size ; j++ )
+        real somme = down_units_params[i][0];
+        Mat V = weights.subMatColumns(target_size, cond_size);
+        real* w = &weights[0][i];
+        int m = weights.mod(); // step from one row to the next in weights matrix
+        for( int j=0; j< weights.length() ; j++, w+=m )
         {
-            activations[0] -=
-                softplus( -(weights(i,j) + down_units_params[j][0]
-                            + matRowDotVec(
-                                weights.subMatColumns(target_size, cond_size),
-                                j, input_vec )
-                           ) );
+            // *w = weights(j,i)
+            somme -=
+                softplus( -(*w + up_units_params[j][0]
+                            + matRowDotVec(V, j, input_vec)                         
+                              ) );
         }
+        activations[0] = somme;
     }
     else
         inherited::computeLinearUnitActivations(i, activations);
