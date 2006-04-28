@@ -618,7 +618,7 @@ void HintonDeepBeliefNet::greedyStep( const Vec& predictor, int index )
     layers[index+1]->getAllActivations((RBMGenericParameters*) params[index]);
     layers[index+1]->computeExpectation();
     layers[index+1]->generateSample();
-    if (use_sample_rather_than_expectation_in_positive_phase_statistics;
+    if (use_sample_rather_than_expectation_in_positive_phase_statistics)
         params[index]->accumulatePosStats(layers[index]->expectation,
                                           layers[index+1]->sample );
     else
@@ -661,8 +661,13 @@ void HintonDeepBeliefNet::jointGreedyStep( const Vec& input )
     joint_params->setAsDownInput( joint_layer->expectation );
     last_layer->getAllActivations( (RBMGenericParameters*) joint_params );
     last_layer->computeExpectation();
-    joint_params->accumulatePosStats( joint_layer->expectation,
-                                      last_layer->expectation );
+    if (use_sample_rather_than_expectation_in_positive_phase_statistics)
+        joint_params->accumulatePosStats( joint_layer->expectation,
+                                          last_layer->sample );
+    else
+        joint_params->accumulatePosStats( joint_layer->expectation,
+                                          last_layer->expectation );
+
 
     // down propagation
     last_layer->generateSample();
