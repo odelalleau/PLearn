@@ -338,7 +338,7 @@ real HintonDeepBeliefNet::density(const Vec& y) const
 {
     assert( y.size() == n_predicted );
 
-    int index = argmax( y );
+    int index = argmax( y ); // TODO: 'y'[0] devrait plutot etre l'entier "index" lui-meme!
 
     // If y != onehot( index ), then density is 0
     if( !is_equal( y[index], 1. ) )
@@ -347,7 +347,7 @@ real HintonDeepBeliefNet::density(const Vec& y) const
         if( !is_equal( y[i], 0 ) && i != index )
             return 0;
 
-    Vec expect;
+    Vec expect; // TODO: mettre ca dans un champs, pour eviter l'allocation de memoire repetee inutilement
     expectation( expect );
 
     return expect[index];
@@ -534,7 +534,7 @@ void HintonDeepBeliefNet::train()
             for( ; sample < end_sample ; sample++ )
             {
                 // sample is the index in the training set
-                int i = sample % nsamples;
+                int i = sample % train_set->length();
                 train_set->getExample(i, input, target, weight);
                 greedyStep( input.subVec(0, n_predictor), layer );
 
@@ -560,7 +560,7 @@ void HintonDeepBeliefNet::train()
             for( ; sample < end_sample ; sample++ )
             {
                 // sample is the index in the training set
-                int i = sample % nsamples;
+                int i = sample % train_set->length();
                 train_set->getExample(i, input, target, weight);
                 jointGreedyStep( input );
 
@@ -582,7 +582,7 @@ void HintonDeepBeliefNet::train()
             for( ; sample < end_sample ; sample++ )
             {
                 // sample is the index in the training set
-                int i = sample % nsamples;
+                int i = sample % train_set->length();
                 train_set->getExample(i, input, target, weight);
                 fineTune( input );
 
