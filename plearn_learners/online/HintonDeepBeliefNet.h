@@ -120,6 +120,8 @@ public:
     //!   - "WS" or "wake_sleep"
     string fine_tuning_method;
 
+    bool use_sample_rather_than_expectation_in_positive_phase_statistics;
+
 public:
     //#####  Public Member Functions  #########################################
 

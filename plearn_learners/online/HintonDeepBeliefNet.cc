@@ -61,7 +61,8 @@ PLEARN_IMPLEMENT_OBJECT(
 /////////////////////////
 HintonDeepBeliefNet::HintonDeepBeliefNet() :
     learning_rate(0.),
-    weight_decay(0.)
+    weight_decay(0.),
+    use_sample_rather_than_expectation_in_positive_phase_statistics(false)
 {
     random_gen = new PRandom();
 }
@@ -117,6 +118,11 @@ void HintonDeepBeliefNet::declareOptions(OptionList& ol)
     declareOption(ol, "target_params", &HintonDeepBeliefNet::target_params,
                   OptionBase::buildoption,
                   "Parameters linking target_layer and last_layer");
+
+    declareOption(ol, "use_sample_rather_than_expectation_in_positive_phase_statistics", 
+                  &HintonDeepBeliefNet::use_sample_rather_than_expectation_in_positive_phase_statistics,
+                  OptionBase::buildoption,
+                  "In positive phase statistics use output->sample * input rather than output->expectation * input.");
 
     declareOption(ol, "n_layers", &HintonDeepBeliefNet::n_layers,
                   OptionBase::learntoption,
@@ -611,11 +617,15 @@ void HintonDeepBeliefNet::greedyStep( const Vec& predictor, int index )
     params[index]->setAsDownInput( layers[index]->expectation );
     layers[index+1]->getAllActivations((RBMGenericParameters*) params[index]);
     layers[index+1]->computeExpectation();
-    params[index]->accumulatePosStats(layers[index]->expectation,
-                                      layers[index+1]->expectation );
+    layers[index+1]->generateSample();
+    if (use_sample_rather_than_expectation_in_positive_phase_statistics;
+        params[index]->accumulatePosStats(layers[index]->expectation,
+                                          layers[index+1]->sample );
+    else
+        params[index]->accumulatePosStats(layers[index]->expectation,
+                                          layers[index+1]->expectation );
 
     // down propagation
-    layers[index+1]->generateSample();
     params[index]->setAsUpInput( layers[index+1]->sample );
     layers[index]->getAllActivations( (RBMGenericParameters*) params[index] );
 
