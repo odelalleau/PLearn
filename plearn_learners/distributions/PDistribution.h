@@ -57,6 +57,7 @@ private:
 
     typedef PLearner inherited;
 
+protected:
     //! Global storage to save memory allocations.
     mutable Vec store_expect, store_result;
     mutable Mat store_cov;

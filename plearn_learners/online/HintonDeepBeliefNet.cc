@@ -196,7 +196,7 @@ void HintonDeepBeliefNet::build_()
         <<  endl;
 
     if( training_schedule.length() != n_layers )
-        training_schedule = TVec<int>( n_layers, 1e6 );
+        training_schedule = TVec<int>( n_layers, 1000000 );
     MODULE_LOG << "  training_schedule = " << training_schedule << endl;
     MODULE_LOG << endl;
 
@@ -353,10 +353,10 @@ real HintonDeepBeliefNet::density(const Vec& y) const
         if( !is_equal( y[i], 0 ) && i != index )
             return 0;
 
-    Vec expect; // TODO: mettre ca dans un champs, pour eviter l'allocation de memoire repetee inutilement
-    expectation( expect );
+//    Vec expect; // TODO: mettre ca dans un champs, pour eviter l'allocation de memoire repetee inutilement
+    expectation( store_expect );
 
-    return expect[index];
+    return store_expect[index];
 }
 
 
