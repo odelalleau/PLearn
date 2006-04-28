@@ -108,8 +108,8 @@ public:
     //! Contains params[n_layers-2] and target_params.
     PP<RBMJointGenericParameters> joint_params;
 
-    //! Number of epochs for training each RBMParameters during greedy learning
-    //! phase
+    //! Number of examples to use during each of the different greedy
+    //! steps of the training phase.
     TVec<int> training_schedule;
 
     //! Method for fine-tuning the whole network after greedy learning.

@@ -95,7 +95,7 @@ void RBMMultinomialLayer::computeExpectation()
         return;
 
     // expectation = softmax(-activations)
-    softmax_minus(activations, expectation);
+    softmaxMinus(activations, expectation);
     expectation_is_up_to_date = true;
 }
 

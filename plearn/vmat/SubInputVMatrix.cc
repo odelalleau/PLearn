@@ -58,7 +58,8 @@ SubInputVMatrix::SubInputVMatrix()
 PLEARN_IMPLEMENT_OBJECT(SubInputVMatrix, 
                         "A VMat that only takes part of the input of its source VMat.", 
                         "This can be useful for instance to only take the first k components\n"
-                        "after applying some dimensionality reduction method."
+                        "after applying some dimensionality reduction method.\n"
+                        "The other columns (target and weight) are copied from the source.\n"
     );
 
 ////////////////////

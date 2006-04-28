@@ -45,10 +45,6 @@
 #include "stringutils.h"
 #include "general.h"
 
-#if USING_MPI
-#include <plearn/sys/PLMPI.h>
-#endif //USING_MPI
-
 namespace PLearn {
 using namespace std;
 

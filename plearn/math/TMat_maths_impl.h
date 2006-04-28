@@ -175,9 +175,9 @@ T max(const TVec<T>& vec)
 }
 
 //! y = softmax(x)
-template <class T> 
+template <class T>
 void softmax(const TVec<T>& x, const TVec<T>& y)
-{  
+{
     int n = x.length();
     if (n>0)
     {
@@ -195,9 +195,9 @@ void softmax(const TVec<T>& x, const TVec<T>& y)
 }
 
 //! y = softmax(-x)
-template <class T> 
-void softmax_minus(const TVec<T>& x, const TVec<T>& y)
-{  
+template <class T>
+void softmaxMinus(const TVec<T>& x, const TVec<T>& y)
+{
     int n = x.length();
     if (n>0)
     {

@@ -198,6 +198,8 @@
 #include <plearn_learners/online/RBMMultinomialLayer.h>
 #include <plearn_learners/online/RBMGaussianLayer.h>
 #include <plearn_learners/online/RBMMixedLayer.h>
+#include <plearn_learners/online/RBMJointGenericParameters.h>
+#include <plearn_learners/online/HintonDeepBeliefNet.h>
 
 #include <plearn_learners/online/SquaredErrModule.h>
 #include <plearn_learners/online/TanhModule.h>

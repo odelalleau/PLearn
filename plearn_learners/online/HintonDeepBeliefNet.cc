@@ -82,8 +82,9 @@ void HintonDeepBeliefNet::declareOptions(OptionList& ol)
     declareOption(ol, "training_schedule",
                   &HintonDeepBeliefNet::training_schedule,
                   OptionBase::buildoption,
-                  "Number of epochs for training RBMParameters during each\n"
-                  "learning phase.\n");
+                  "Number of examples to use during each of the different"
+                  " greedy\n"
+                  "steps of the training phase.\n");
 
     declareOption(ol, "fine_tuning_method",
                   &HintonDeepBeliefNet::fine_tuning_method,
@@ -189,7 +190,7 @@ void HintonDeepBeliefNet::build_()
         <<  endl;
 
     if( training_schedule.length() != n_layers )
-        training_schedule = TVec<int>( n_layers, 30 );
+        training_schedule = TVec<int>( n_layers, 1e6 );
     MODULE_LOG << "  training_schedule = " << training_schedule << endl;
     MODULE_LOG << endl;
 
@@ -489,6 +490,7 @@ void HintonDeepBeliefNet::train()
     }
 
     int nsamples = train_set->length();
+    int sample = 0;
     MODULE_LOG << "  nsamples = " << nsamples << endl;
 
     // Let's define stage and nstages:
@@ -499,37 +501,47 @@ void HintonDeepBeliefNet::train()
 
     MODULE_LOG << "initial stage = " << stage << endl;
     MODULE_LOG << "objective: nstages = " << nstages << endl;
+
     for( ; stage < nstages ; stage++ )
     {
         // clear stats of previous epoch
         train_stats->forget();
 
-        // loop training_schedule[stage] times over all examples in train set
+        // loops over the training set, until training_schedule[stage] examples
+        // have been seen.
         // TODO: modify the training set used?
         int layer = stage;
-        int n_substages = training_schedule[stage];
+        int n_samples_to_see = training_schedule[stage];
+
+        // this progress bar shows the number of loops through the whole
+        // training set
         ProgressBar* pb = 0;
 
         if( stage < n_layers-2 )
         {
             MODULE_LOG << "Training parameters between layers " << stage
                 << " and " << stage+1 << endl;
-            if( report_progress )
-                pb = new ProgressBar( "Training " + classname() + " - stage "
-                                      + tostring(stage) + " - substage 0 to "
-                                      + tostring(n_substages),
-                                      n_substages );
 
-            for( int substage=0 ; substage < n_substages ; substage++ )
+            if( report_progress )
+                pb = new ProgressBar( "Training " + classname()
+                                      + " parameters between layers "
+                                      + tostring(stage) + " and "
+                                      + tostring(stage+1),
+                                      n_samples_to_see );
+
+            int begin_sample = sample;
+            int end_sample = begin_sample + n_samples_to_see;
+            for( ; sample < end_sample ; sample++ )
             {
-                for( int sample=0 ; sample<nsamples ; sample++ )
-                {
-                    train_set->getExample(sample, input, target, weight);
-                    greedyStep( input.subVec(0, n_predictor), layer );
-                }
+                // sample is the index in the training set
+                int i = sample % nsamples;
+                train_set->getExample(i, input, target, weight);
+                greedyStep( input.subVec(0, n_predictor), layer );
+
                 if( pb )
-                    pb->update( substage+1 );
+                    pb->update( sample - begin_sample + 1 );
             }
+
         }
         else if( stage == n_layers-2 )
         {
@@ -537,20 +549,23 @@ void HintonDeepBeliefNet::train()
                 << " penultimate (" << n_layers-2 << ")," << endl
                 << "and last (" << n_layers-1 << ") layers." << endl;
             if( report_progress )
-                pb = new ProgressBar( "Training " + classname() + " - stage "
-                                      + tostring(stage) + " - substage 0 to "
-                                      + tostring(n_substages),
-                                      n_substages );
+                pb = new ProgressBar( "Training " + classname()
+                                      + " parameters between target, "
+                                      + tostring(stage) + " and "
+                                      + tostring(stage+1) + " layers",
+                                      n_samples_to_see );
 
-            for( int substage=0 ; substage < n_substages ; substage++ )
+            int begin_sample = sample;
+            int end_sample = begin_sample + n_samples_to_see;
+            for( ; sample < end_sample ; sample++ )
             {
-                for( int sample=0 ; sample<nsamples ; sample++ )
-                {
-                    train_set->getExample(sample, input, target, weight);
-                    jointGreedyStep( input );
-                }
+                // sample is the index in the training set
+                int i = sample % nsamples;
+                train_set->getExample(i, input, target, weight);
+                jointGreedyStep( input );
+
                 if( pb )
-                    pb->update( substage+1 );
+                    pb->update( sample - begin_sample + 1 );
             }
         }
         else if( stage == n_layers-1 )
@@ -558,21 +573,23 @@ void HintonDeepBeliefNet::train()
             MODULE_LOG << "Fine-tuning all parameters, using method "
                 << fine_tuning_method << endl;
             if( report_progress )
-                pb = new ProgressBar( "Training " + classname() + " - stage "
-                                      + tostring(stage) + " - substage 0 to "
-                                      + tostring(n_substages),
-                                      n_substages );
+                pb = new ProgressBar( "Training all " + classname()
+                                      + " parameters by fine tuning",
+                                      n_samples_to_see );
 
-            for( int substage=0 ; substage < n_substages ; substage++ )
+            int begin_sample = sample;
+            int end_sample = begin_sample + n_samples_to_see;
+            for( ; sample < end_sample ; sample++ )
             {
-                for( int sample=0 ; sample<nsamples ; sample++ )
-                {
-                    train_set->getExample(sample, input, target, weight);
-                    fineTune( input );
-                }
+                // sample is the index in the training set
+                int i = sample % nsamples;
+                train_set->getExample(i, input, target, weight);
+                fineTune( input );
+
                 if( pb )
-                    pb->update( substage+1 );
+                    pb->update( sample - begin_sample + 1 );
             }
+
         }
         train_stats->finalize(); // finalize statistics for this epoch
     }
@@ -609,6 +626,9 @@ void HintonDeepBeliefNet::greedyStep( const Vec& predictor, int index )
     layers[index+1]->computeExpectation();
     params[index]->accumulateNegStats( layers[index]->sample,
                                        layers[index+1]->expectation );
+
+    // update
+    params[index]->update();
 
 }
 
@@ -647,6 +667,8 @@ void HintonDeepBeliefNet::jointGreedyStep( const Vec& input )
     joint_params->accumulateNegStats( joint_layer->sample,
                                       last_layer->expectation );
 
+    // update
+    joint_params->update();
 }
 
 void HintonDeepBeliefNet::fineTune( const Vec& input )
