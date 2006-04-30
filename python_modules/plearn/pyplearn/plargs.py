@@ -5,6 +5,82 @@ if "plargs" in globals():
     del plargs
     del plarg_defaults
 
+def list_cast(slist, elem_cast):
+    ## Potentially strip left-hand [ and right-hand ] if it's a string
+    if isinstance(slist,str):
+        slist = slist.lstrip(' [').rstrip(' ]')
+        return [ elem_cast(e) for e in slist.split(",") ]
+    elif isinstance(s,list):
+        return [ elem_cast(e) for e in slist ]
+    else:
+        raise ValueError, "Cannot cast '%s' into a list", str(slist)
+
+class plopt(object):
+    def __init__(value, **kwargs):
+        self._value = value
+        self._name  = kwargs.pop("name")
+        self._doc   = kwargs.pop("doc", self._name)
+
+        assert not ("type" in kwargs and value is not None)
+        if value is None:
+            self._type = kwargs.pop("type", lambda val: val)
+        else:
+            self._type = type(value)
+
+        self._kwargs = kwargs
+
+        # Sanity checks
+        self.checks(value)
+
+    def cast(self, value):
+        casted = None
+        
+        # Special string to bool treatment
+        if isinstance(self._value,bool) and isinstance(value, str):
+            if value == "True":
+                casted = True
+            elif value == "False":
+                casted = False
+            else:
+                raise ValueError("Trying to set value %s to bool-typed option %s"
+                                 %(value, self._name))
+
+        # Special treatment for list option
+        elif isinstance(self._value,list):
+            elem_type = self._kwargs.pop("elem_type", None) 
+            if elem_type is None and len(self._value) > 0:
+                elem_type = type(self._value[0])
+            casted = list_cast(value, elem_type)
+
+        # Simple type cast
+        else:
+            casted = self._type(value)
+
+        # Sanity checks
+        self.checks(casted)
+        return casted
+    
+    def checks(self, value):
+        self.checkBounds(value)
+        self.checkChoices(value)
+
+    def checkBounds(self, value):
+        minimum = self._kwargs.get("min", None)
+        if minimum is not None and value < minimum:
+            raise ValueError("Option %s (=%s) should greater then %s"
+                             %(self._name, repr(value), repr(minimum)))
+
+        maximum = self._kwargs.get("min", None)
+        if maximum is not None and value > maximum:
+            raise ValueError("Option %s (=%s) should lower then %s"
+                             %(self._name, repr(value), repr(minimum)))
+
+    def checkChoices(self, value):
+        choices = self._kwargs.get("choices", None)
+        if choices is not None and value in choices:
+            raise ValueError(
+                "Option %s should be in choices=%s"%(self._name, choices))
+
 class plnamespace: 
     class __metaclass__(type):
         def __init__(cls, clsname, bases, dic):            
