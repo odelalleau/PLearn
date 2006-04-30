@@ -67,12 +67,12 @@ class plopt(object):
     def checkBounds(self, value):
         minimum = self._kwargs.get("min", None)
         if minimum is not None and value < minimum:
-            raise ValueError("Option %s (=%s) should greater then %s"
+            raise ValueError("Option %s (=%s) should greater than %s"
                              %(self._name, repr(value), repr(minimum)))
 
         maximum = self._kwargs.get("min", None)
         if maximum is not None and value > maximum:
-            raise ValueError("Option %s (=%s) should lower then %s"
+            raise ValueError("Option %s (=%s) should lower than %s"
                              %(self._name, repr(value), repr(minimum)))
 
     def checkChoices(self, value):
