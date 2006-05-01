@@ -113,8 +113,16 @@ public:
 
     // Your other public member functions go here
 
+    //! Return the molecule template associated with the given (real number)
+    //! molecule id and activity.
+    PP<MoleculeTemplate> getMoleculeTemplate(real molecule_id,
+                                             real activity = -1);
+
     //! Return the molecule associated to the given (real number) molecule id.
-    PP<Molecule> getMolecule(real molecule_id, real activity = -1);
+    //! Note that this method is not called from this class: it may not be the
+    //! cleanest way to do it, but we need to cache the molecules somewhere to
+    //! ensure they do not need to be systematically reloaded.
+    PP<Molecule> getMolecule(real molecule_id);
 
     //! Obtain the mappings of the input variable from a VMatrix.
     void setMappingsSource(const VMat& source_vmat);
@@ -159,6 +167,9 @@ protected:
     //! The concatenation of the variables in 'outputs': this is what will be
     //! actually the value of this variable.
     Var final_output;
+
+    //! All molecule templates currently loaded, identified by their id string.
+    hash_map< string, PP<MoleculeTemplate> > molecule_templates;
 
     //! All molecules currently loaded, identified by their id string.
     hash_map< string, PP<Molecule> > molecules;

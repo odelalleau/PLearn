@@ -191,7 +191,8 @@ void ScoreLayerVariable::build_()
         else
             list_of_active.append(i);
         // Compute statistics on chemical features.
-        PP<Molecule> mol_template = getMolecule(input[0], target[0]);
+        PP<MoleculeTemplate> mol_template =
+            getMoleculeTemplate(input[0], target[0]);
         Mat& features = mol_template->features;
         for (int j = 0; j < mol_template->feature_names.length(); j++) {
             string feature_name = mol_template->feature_names[j];
@@ -223,7 +224,8 @@ void ScoreLayerVariable::build_()
     int index_in_run_icp_var = 0; // Current index.
     for (int i = 0; i < templates.length(); i++) {
         templates_source->getExample(templates[i], input, target, weight);
-        PP<Molecule> mol_template = getMolecule(input[0], target[0]);
+        PP<MoleculeTemplate> mol_template =
+            getMoleculeTemplate(input[0], target[0]);
         /*
         PPath molecule_path = mappings_source->getValString(0, input[0]);
         if (molecule_path.isEmpty())
@@ -245,8 +247,7 @@ void ScoreLayerVariable::build_()
         // Create the ICP aligner that will be used for this template.
         CopiesMap copies;
         PP<ChemicalICP> icp_aligner = icp_aligner_template->deepCopy(copies);
-        icp_aligner->mol_template =
-            (MoleculeTemplate*) ((Molecule*) mol_template);
+        icp_aligner->mol_template = mol_template;
         icp_aligner->build();
         // Initialize standard deviations of chemical features from the global
         // standard deviations.
@@ -257,7 +258,8 @@ void ScoreLayerVariable::build_()
         }
         // Declare this new template (with associated molecule coordinates) to
         // the RunICPVariable.
-        run_icp_var->addTemplate(icp_aligner, mol_template, molecule_coordinates);
+        run_icp_var->addTemplate(icp_aligner, (MoleculeTemplate*) mol_template,
+                                 molecule_coordinates);
         // Declare the RunICPVariable as parent of the feature indices, in
         // order to ensure these variables are used after ICP has been run.
         // Similarly, the variable containing the indices of the matching
@@ -394,7 +396,31 @@ void ScoreLayerVariable::fprop()
 /////////////////
 // getMolecule //
 /////////////////
-PP<Molecule> ScoreLayerVariable::getMolecule(real molecule_id, real activity)
+PP<Molecule> ScoreLayerVariable::getMolecule(real molecule_id)
+{
+    assert( mappings_source );
+    PPath molecule_path = mappings_source->getValString(0, molecule_id);
+    if (molecule_path.isEmpty())
+        PLERROR("In ScoreLayerVariable::getMolecule - Could not find "
+                "associated mapping");
+    string canonic_path = molecule_path.canonical();
+    // Load the molecule if necessary.
+    Molecule* molecule = 0;
+    if (molecules.find(canonic_path) == molecules.end()) {
+        molecule =
+            new Molecule(molecule_path);
+        molecules[canonic_path] = molecule;
+    } else
+        molecule = molecules[canonic_path];
+    assert( molecule );
+    return molecule;
+}
+
+/////////////////////////
+// getMoleculeTemplate //
+/////////////////////////
+PP<MoleculeTemplate> ScoreLayerVariable::getMoleculeTemplate(real molecule_id,
+                                                             real activity)
 {
     assert( fast_exact_is_equal(activity, 0) ||
             fast_exact_is_equal(activity, 1) ||
@@ -406,17 +432,16 @@ PP<Molecule> ScoreLayerVariable::getMolecule(real molecule_id, real activity)
                 "associated mapping");
     string canonic_path = molecule_path.canonical();
     // Load the molecule if necessary.
-    Molecule* molecule = 0;
-    if (molecules.find(canonic_path) == molecules.end()) {
+    MoleculeTemplate* molecule = 0;
+    if (molecule_templates.find(canonic_path) == molecule_templates.end()) {
         molecule =
             new MoleculeTemplate(molecule_path, int(activity));
-        molecules[canonic_path] = molecule;
+        molecule_templates[canonic_path] = molecule;
     } else
-        molecule = molecules[canonic_path];
+        molecule = molecule_templates[canonic_path];
     assert( molecule );
     return molecule;
 }
-
 
 /////////////////////////
 // getNActiveTemplates //
