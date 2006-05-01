@@ -520,7 +520,7 @@ void NNet::buildFuncs(const Var& the_input, const Var& the_output, const Var& th
     test_costf = Func(testinvars, the_output&test_costs);
     test_costf->recomputeParents();
     output_and_target_to_cost = Func(outvars, test_costs); 
-    // Since there will be a fprop() in the netwowk, we need to make sure the
+    // Since there will be a fprop() in the network, we need to make sure the
     // input is valid.
     if (train_set && train_set->length() >= 1) {
         Vec input, target;
