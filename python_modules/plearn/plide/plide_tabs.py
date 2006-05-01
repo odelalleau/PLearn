@@ -65,6 +65,9 @@ class PlideTab( object ):
         self.page_number    = None
         self.help_candidate = None      # Potential HTML point for context-sensitive help
 
+    def get_directory( self ):
+        return None
+
     def get_help_candidate( self ):
         """Return the current context-sensitive help candidate for the tab
         (an URI that is understood by the help system).
@@ -246,7 +249,7 @@ class PlideTabFile( PlideTabScintilla ):
         PlideTabScintilla.__init__(self, notebook, contents, read_only=False)
         self.textview.SetSavePoint()
 
-    def get_script_directory( self ):
+    def get_directory( self ):
         return self.dirname
 
     def get_basename( self ):
@@ -620,6 +623,9 @@ class PlideTabExpdir( PlideTab ):
         self.w_pane.show_all()
         self.append_to_notebook(self.w_pane, os.path.basename(self.expdir),
                                 PlideTab.TAB_TYPE_DIRECTORY)
+
+    def get_directory( self ):
+        return self.expdir
 
     def double_click_callback( self, browser, pathname, isdir ):
         if not isdir:

@@ -370,6 +370,16 @@ class PlideMain( GladeAppWindow ):
         else:
             return None
 
+    def get_current_tab_directory( self ):
+        """Return the directory associated with the current PlideTab, or
+        '.' if there is no current tab.
+        """
+        cur_tab = self.get_current_tab()
+        dir = None
+        if cur_tab is not None:
+            dir = cur_tab.get_directory()
+        return dir or '.'
+
 
     #####  Progress Bar Handling  ###########################################
 
@@ -494,7 +504,7 @@ class PlideMain( GladeAppWindow ):
         if tab is not None:
             script      = tab.get_text()
             name        = tab.get_basename()
-            script_dir  = tab.get_script_directory()
+            script_dir  = tab.get_directory()
 
             while True:                 # Loop to handle script reload
                 options_holder = tab.get_options_holder()
@@ -525,7 +535,7 @@ class PlideMain( GladeAppWindow ):
             if type(tab) == PlideTabPyPLearn:
                 script_name    = tab.get_basename()
                 script_code    = tab.get_text()
-                launch_dir     = tab.get_script_directory()
+                launch_dir     = tab.get_directory()
                 options_holder = tab.get_options_holder()
                 if options_holder is not None:
                     launch_dir = options_holder.launch_directory
@@ -586,6 +596,7 @@ class PlideMain( GladeAppWindow ):
             buttons= (gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,
                       gtk.STOCK_OPEN,  gtk.RESPONSE_OK))
         chooser.set_default_response(gtk.RESPONSE_OK)
+        chooser.set_current_folder(self.get_current_tab_directory())
         response = chooser.run()
 
         ## Add all files selected by the user
