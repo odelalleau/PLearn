@@ -91,6 +91,16 @@ void RBMParameters::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Same meaning as 'up_units_types', but with down units");
 
+    declareOption(ol, "initialization_method",
+                  &RBMParameters::initialization_method,
+                  OptionBase::buildoption,
+                  "The method used to initialize the weights:\n"
+                  "  - \"uniform_linear\" = a uniform law in [-1/d, 1/d]\n"
+                  "  - \"uniform_sqrt\"   = a uniform law in [-1/sqrt(d),"
+                  " 1/sqrt(d)]\n"
+                  "  - \"zero\"           = all weights are set to 0,\n"
+                  "where d = max( up_layer_size, down_layer_size ).\n");
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }

@@ -65,17 +65,6 @@ RBMGenericParameters::RBMGenericParameters( string down_types, string up_types,
     build();
 }
 
-/*
-RBMGenericParameters::RBMGenericParameters( PP<RBMLayer> down, PP<RBMLayer> up,
-                                            real the_learning_rate )
-    : inherited( down, up ),
-      learning_rate( the_learning_rate )
-{
-    // We're not sure inherited::build() has been called
-    build();
-}
-// */
-
 void RBMGenericParameters::declareOptions(OptionList& ol)
 {
     // ### Declare all of this object's options here.
@@ -198,10 +187,6 @@ void RBMGenericParameters::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields
-    // ### that you wish to be deepCopied rather than
-    // ### shallow-copied.
-
     deepCopyField(weights, copies);
     deepCopyField(up_units_params, copies);
     deepCopyField(down_units_params, copies);
@@ -277,24 +262,27 @@ void RBMGenericParameters::accumulateNegStats( const Vec& down_values,
 
 void RBMGenericParameters::update()
 {
-    real p_count = pos_count;
-    real n_count = neg_count;
     // updates parameters
-    weights -= real(learning_rate) * (weights_pos_stats/p_count
-                                 - weights_neg_stats/n_count);
+    //weights -= learning_rate * (weights_pos_stats/pos_count
+    //                              - weights_neg_stats/neg_count)
+    weights_pos_stats /= pos_count;
+    weights_neg_stats /= neg_count;
+    weights_pos_stats -= weights_neg_stats;
+    weights_pos_stats *= learning_rate;
+    weights -= weights_pos_stats;
 
     for( int i=0 ; i<up_layer_size ; i++ )
     {
         up_units_params[i] -=
-            learning_rate * (up_units_params_pos_stats[i]/p_count
-                             - up_units_params_neg_stats[i]/n_count);
+            learning_rate * (up_units_params_pos_stats[i]/pos_count
+                             - up_units_params_neg_stats[i]/neg_count);
     }
 
     for( int i=0 ; i<down_layer_size ; i++ )
     {
         down_units_params[i] -=
-            learning_rate * (down_units_params_pos_stats[i]/p_count
-                             - down_units_params_neg_stats[i]/n_count);
+            learning_rate * (down_units_params_pos_stats[i]/pos_count
+                             - down_units_params_neg_stats[i]/neg_count);
     }
 
     clearStats();

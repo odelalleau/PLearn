@@ -115,9 +115,12 @@ void RBMJointGenericParameters::build_units_types()
         if( down_units_types[i] != 'l' )
             PLERROR( "RBMJointGenericParameters::build_units_types - \n"
                      "target_params->down_units_types[%d] should be 'l', is"
-                     " %c.\n", i, down_units_types[i] );
+                     " '%c'.\n", i, down_units_types[i] );
 
     down_units_types += cond_params->down_units_types;
+
+    // to avoid "forget()" being called in RBMParameters::build_()
+    weights.resize( up_units_types.length(), down_units_types.length() );
 }
 
 void RBMJointGenericParameters::build_()
@@ -224,14 +227,14 @@ void RBMJointGenericParameters::computeLinearUnitActivations
         real somme = down_units_params[i][0];
         Mat V = weights.subMatColumns(target_size, cond_size);
         real* w = &weights[0][i];
-        int m = weights.mod(); // step from one row to the next in weights matrix
+        // step from one row to the next in weights matrix
+        int m = weights.mod();
+
         for( int j=0; j< weights.length() ; j++, w+=m )
         {
             // *w = weights(j,i)
-            somme -=
-                softplus( -(*w + up_units_params[j][0]
-                            + matRowDotVec(V, j, input_vec)                         
-                              ) );
+            somme -= softplus( -(*w + up_units_params[j][0]
+                                 + matRowDotVec(V, j, input_vec)) );
         }
         activations[0] = somme;
     }
@@ -304,6 +307,19 @@ void RBMJointGenericParameters::bpropUpdate(const Vec& input, const Vec& output,
                                        const Vec& output_gradient)
 {
     PLERROR( "not implemented yet" );
+}
+
+//! reset the parameters to the state they would be BEFORE starting training.
+//! Note that this method is necessarily called from build().
+void RBMJointGenericParameters::forget()
+{
+    if( target_params )
+        target_params->forget();
+
+    if( cond_params )
+        cond_params->forget();
+
+    clearStats();
 }
 
 /* THIS METHOD IS OPTIONAL

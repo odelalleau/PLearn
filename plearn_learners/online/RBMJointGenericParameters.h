@@ -116,6 +116,11 @@ public:
                              Vec& input_gradient,
                              const Vec& output_gradient);
 
+    //! reset the parameters to the state they would be BEFORE starting
+    //! training.  Note that this method is necessarily called from
+    //! build().
+    virtual void forget();
+
     //! optionally perform some processing after training, or after a
     //! series of fprop/bpropUpdate calls to prepare the model for truly
     //! out-of-sample operation.  THE DEFAULT IMPLEMENTATION PROVIDED IN

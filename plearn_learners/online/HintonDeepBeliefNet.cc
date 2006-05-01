@@ -80,6 +80,17 @@ void HintonDeepBeliefNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Weight decay");
 
+    declareOption(ol, "initialization_method",
+                  &HintonDeepBeliefNet::initialization_method,
+                  OptionBase::buildoption,
+                  "The method used to initialize the weights:\n"
+                  "  - \"uniform_linear\" = a uniform law in [-1/d, 1/d]\n"
+                  "  - \"uniform_sqrt\"   = a uniform law in [-1/sqrt(d),"
+                  " 1/sqrt(d)]\n"
+                  "  - \"zero\"           = all weights are set to 0,\n"
+                  "where d = max( up_layer_size, down_layer_size ).\n");
+
+
     declareOption(ol, "training_schedule",
                   &HintonDeepBeliefNet::training_schedule,
                   OptionBase::buildoption,
@@ -119,10 +130,11 @@ void HintonDeepBeliefNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Parameters linking target_layer and last_layer");
 
-    declareOption(ol, "use_sample_rather_than_expectation_in_positive_phase_statistics", 
+    declareOption(ol, "use_sample_rather_than_expectation_in_positive_phase_statistics",
                   &HintonDeepBeliefNet::use_sample_rather_than_expectation_in_positive_phase_statistics,
                   OptionBase::buildoption,
-                  "In positive phase statistics use output->sample * input rather than output->expectation * input.");
+                  "In positive phase statistics use output->sample * input\n"
+                  "rather than output->expectation * input.\n");
 
     declareOption(ol, "n_layers", &HintonDeepBeliefNet::n_layers,
                   OptionBase::learntoption,
@@ -246,6 +258,7 @@ void HintonDeepBeliefNet::build_params()
 
     for( int i=0 ; i<n_layers-1 ; i++ )
     {
+        //TODO: call changeOptions instead
         params[i]->down_units_types = layers[i]->units_types;
         params[i]->up_units_types = layers[i+1]->units_types;
         params[i]->learning_rate = learning_rate;
@@ -255,20 +268,23 @@ void HintonDeepBeliefNet::build_params()
     }
 
     if( target_layer && !target_params )
-    {
         target_params = new RBMGenericParameters();
-        target_params->down_units_types = target_layer->units_types;
-        target_params->up_units_types = last_layer->units_types;
-        target_params->learning_rate = learning_rate;
-        target_params->build();
-    }
 
+    //TODO: call changeOptions instead
+    target_params->down_units_types = target_layer->units_types;
+    target_params->up_units_types = last_layer->units_types;
+    target_params->learning_rate = learning_rate;
+    target_params->initialization_method = initialization_method;
+    target_params->random_gen = random_gen;
+    target_params->build();
+ 
     // build joint_params from params[n_layers-1] and target_params
     joint_params = new RBMJointGenericParameters( target_params,
                                                   params[n_layers-2] );
+    joint_params->learning_rate = learning_rate;
+    joint_params->random_gen = random_gen;
 }
 
-// ### Remove this method if your distribution does not implement it.
 ////////////
 // forget //
 ////////////
@@ -344,7 +360,8 @@ real HintonDeepBeliefNet::density(const Vec& y) const
 {
     assert( y.size() == n_predicted );
 
-    int index = argmax( y ); // TODO: 'y'[0] devrait plutot etre l'entier "index" lui-meme!
+    // TODO: 'y'[0] devrait plutot etre l'entier "index" lui-meme!
+    int index = argmax( y );
 
     // If y != onehot( index ), then density is 0
     if( !is_equal( y[index], 1. ) )
@@ -353,9 +370,7 @@ real HintonDeepBeliefNet::density(const Vec& y) const
         if( !is_equal( y[i], 0 ) && i != index )
             return 0;
 
-//    Vec expect; // TODO: mettre ca dans un champs, pour eviter l'allocation de memoire repetee inutilement
     expectation( store_expect );
-
     return store_expect[index];
 }
 
@@ -390,12 +405,6 @@ void HintonDeepBeliefNet::variance(Mat& cov) const
 void HintonDeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-
-    // ### Call deepCopyField on all "pointer-like" fields
-    // ### that you wish to be deepCopied rather than
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
 
     deepCopyField(layers, copies);
     deepCopyField(last_layer, copies);
@@ -446,7 +455,6 @@ bool HintonDeepBeliefNet::setPredictorPredictedSizes(int the_predictor_size,
 }
 
 
-// ### Remove this method, if your distribution does not implement it.
 ///////////
 // train //
 ///////////
@@ -563,6 +571,7 @@ void HintonDeepBeliefNet::train()
 
             int begin_sample = sample;
             int end_sample = begin_sample + n_samples_to_see;
+
             for( ; sample < end_sample ; sample++ )
             {
                 // sample is the index in the training set
@@ -667,7 +676,6 @@ void HintonDeepBeliefNet::jointGreedyStep( const Vec& input )
     else
         joint_params->accumulatePosStats( joint_layer->expectation,
                                           last_layer->expectation );
-
 
     // down propagation
     last_layer->generateSample();
