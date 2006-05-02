@@ -605,6 +605,14 @@ void HintonDeepBeliefNet::train()
                                           + " parameters by fine tuning",
                                           n_samples_to_see );
 
+/*
+pout << "==================" << endl
+    << "Before update:" << endl
+    << "up:      " << joint_params->up_units_params << endl
+    << "weights: " << endl << joint_params->weights << endl
+    << "down:    " << joint_params->down_units_params << endl
+    << endl;
+// */
                 int begin_sample = sample;
                 int end_sample = begin_sample + n_samples_to_see;
                 for( ; sample < end_sample ; sample++ )
@@ -617,6 +625,14 @@ void HintonDeepBeliefNet::train()
                     if( pb )
                         pb->update( sample - begin_sample + 1 );
                 }
+/*
+pout << "-------" << endl
+    << "After update:" << endl
+    << "up:      " << joint_params->up_units_params << endl
+    << "weights: " << endl << joint_params->weights << endl
+    << "down:    " << joint_params->down_units_params << endl
+    << endl;
+// */
             }
             else
                 PLERROR( "Fine-tuning methods other than \"EGD\" are not"
@@ -713,33 +729,20 @@ void HintonDeepBeliefNet::jointGreedyStep( const Vec& input )
 
 void HintonDeepBeliefNet::fineTuneByGradientDescent( const Vec& input )
 {
+    // split input in predictor_part and predicted_part
+    splitCond(input);
+
     // compute predicted_part expectation, conditioned on predictor_part
     // (forward pass)
     expectation( output_gradient );
 
-    splitCond(input);
     int actual_index = argmax(predicted_part);
-
     output_gradient[actual_index] -= 1.;
-    output_gradient *= -1.;
 
-pout << "==================" << endl
-    << "Before update:" << endl
-    << "up:      " << joint_params->up_units_params << endl
-    << "weights: " << endl << joint_params->weights << endl
-    << "down:    " << joint_params->down_units_params << endl
-    << endl;
-
-    joint_params->bpropUpdate( predictor_part, target_layer->expectation,
+    joint_params->bpropUpdate( layers[n_layers-2]->expectation,
+                               target_layer->expectation,
                                expectation_gradients[n_layers-2],
                                output_gradient );
-
-pout << "-------" << endl
-    << "After update:" << endl
-    << "up:      " << joint_params->up_units_params << endl
-    << "weights: " << endl << joint_params->weights << endl
-    << "down:    " << joint_params->down_units_params << endl
-    << endl;
 
     for( int i=n_layers-2 ; i>0 ; i-- )
     {
