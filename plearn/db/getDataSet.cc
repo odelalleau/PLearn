@@ -94,10 +94,11 @@ VMat getDataSet(const PPath& dataset_path)
             vm = VMat(tempMat);
         } else if (ext == "pmat") {
             vm = new FileVMatrix(dataset);
-        } else if (ext == "txtmat") {
-            PLERROR("In getDataSet - The old .txtmat files are deprecated, please "
-                    "use a standard .vmat or .pymat script");
-        } else if (ext == "vmat") {
+        } 
+        // else if (ext == "txtmat") {
+        //    PLERROR("In getDataSet - The old .txtmat files are deprecated, please "
+        //            "use a standard .vmat or .pymat script"); } 
+        else if (ext == "vmat" || ext == "txtmat") {
             use_params = true;
             const string code = readFileAndMacroProcess(dataset, params);
             if (removeblanks(code)[0] == '<') {
@@ -149,11 +150,11 @@ VMat getDataSet(const PPath& dataset_path)
     vm->loadAllStringMappings();
     vm->unduplicateFieldNames();
 
-    if (vm->inputsize() < 0 && vm->targetsize() < 0 && vm->weightsize() < 0) {
+    if (vm->inputsize() < 0 && vm->targetsize() < 0 && vm->weightsize() < 0 && vm->extrasize()<=0) {
         DBG_LOG << "In getDataSet - The loaded VMat has no inputsize, targetsize "
-                << "or weightsize specified, setting them to (" << vm->width() << ",0,0)"
+                << "or weightsize specified, setting them to (" << vm->width() << ",0,0,0)"
                 << endl;
-        vm->defineSizes(vm->width(), 0, 0);
+        vm->defineSizes(vm->width(), 0, 0, 0);
     }
 
     // Ensure sizes do not conflict with width.

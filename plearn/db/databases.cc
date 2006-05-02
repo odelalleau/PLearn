@@ -811,9 +811,9 @@ void loadClassificationDataset(const string& datasetname, int& inputsize, int& n
         testset = remapLastColumn(testset,classnum,1,0);
         nclasses = 2;
     }
-    else if(dbname.length()==5 && dbname.substr(0,4)=="mnist" && dbname[4]>='0' && dbname[4]<='9')
+    else if(dbname.length()==6 && dbname.substr(0,5)=="mnist" && dbname[5]>='0' && dbname[5]<='9')
     {
-        int classnum = dbname[4]-'0';
+        int classnum = dbname[5]-'0';
         loadMNIST(trainset,testset);
         inputsize = trainset.width()-1;
         trainset = remapLastColumn(trainset,classnum,1.,0.);
