@@ -120,6 +120,8 @@ public:
     Var w2; 
     //! bias and weights of output layer
     Var wout;
+    //! Direct input to output weights
+    Var direct_wout;
     //! Bias and weights of output layer, target part, when no hidden layers
     Var wouttarget; 
     //! Bias and weights of output layer, for theta predictor
@@ -195,6 +197,8 @@ public:
     real margin; 
     //! If true then the output weights are not learned. They are initialized to +1 or -1 randomly (default:false)
     bool fixed_output_weights;
+    //! If true then direct input to output weights will be added (if nhidden > 0)
+    bool direct_in_to_out;
     //! Penalty to use on the weights (for weight and bias decay) (default:"L2_square")
     string penalty_type; 
     //! Transfer function to use for ouput layer (default:"")

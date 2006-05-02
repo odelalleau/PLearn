@@ -74,13 +74,12 @@
 #include <plearn/var/Var_operators.h>
 #include <plearn/var/Var_utils.h>
 #include <plearn/var/FNetLayerVariable.h>
+//#include <plearn/display/DisplayUtils.h>
 
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include "DistRepNNet.h"
 #include <plearn/math/random.h>
 #include <plearn/vmat/SubVMatrix.h>
-
-#include <plearn/display/DisplayUtils.h>
 
 namespace PLearn {
 using namespace std;
@@ -111,6 +110,7 @@ output_layer_theta_predictor_weight_decay(0),
 output_layer_theta_predictor_bias_decay(0),
 margin(1),
 fixed_output_weights(0),
+direct_in_to_out(0),
 penalty_type("L2_square"),
 output_transfer_func(""),
 hidden_transfer_func("tanh"),
@@ -193,6 +193,9 @@ void DistRepNNet::declareOptions(OptionList& ol)
 
     declareOption(ol, "fixed_output_weights", &DistRepNNet::fixed_output_weights, OptionBase::buildoption, 
                   "If true then the output weights are not learned. They are initialized to +1 or -1 randomly.\n");
+
+    declareOption(ol, "direct_in_to_out", &DistRepNNet::direct_in_to_out, OptionBase::buildoption, 
+                  "If true then direct input to output weights will be added (if nhidden > 0).\n");
 
     declareOption(ol, "output_transfer_func", &DistRepNNet::output_transfer_func, OptionBase::buildoption, 
                   "what transfer function to use for ouput layer? One of: \n"
@@ -344,6 +347,11 @@ void DistRepNNet::build_()
         partial_update_vars.resize(0);
         input_to_dict_index.resize(inputsize_);
         input_to_dict_index.fill(-1);
+
+        if(direct_in_to_out && nnet_architecture == "theta_predictor")
+            PLERROR("In DistRepNNet::build_(): direct_in_to_out cannot be used with \"theta_predictor\" architecture");
+        if(direct_in_to_out && nnet_architecture == "csMTL")
+            PLERROR("In DistRepNNet::build_(): direct_in_to_out cannot be used with \"csMTL\" architecture");
 
         // Associate input components with their corresponding
         // Dictionary and distributed representation
@@ -736,7 +744,7 @@ void DistRepNNet::buildOutputFromInput(const Var& dp_input) {
         else
         {
             wout = Var(1 + dp_input->size(), outputsize(), "wout");
-            output = affine_transform(dp_input, wout);     
+            output = affine_transform(dp_input, wout);
             if(!fixed_output_weights)
             {
                 params.append(wout);
@@ -791,6 +799,7 @@ void DistRepNNet::buildOutputFromInput(const Var& dp_input) {
         {
             wout = Var(1 + output->size(), outputsize(), "wout");
             output = affine_transform(output, wout);
+
             if (!fixed_output_weights)
             {
                 params.append(wout);
@@ -847,6 +856,12 @@ void DistRepNNet::buildOutputFromInput(const Var& dp_input) {
             params.append(w1);
             output = affine_transform(dp_input, w1); 
             output = add_transfer_func(output);
+            if(direct_in_to_out)
+            {
+                direct_wout = Var(1 + dp_input->size(), dictionaries[target_dict_index]->size() + (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1),"direct_wout");
+                params.append(direct_wout);
+            }
+                           
         }
         else
         {
@@ -878,7 +893,10 @@ void DistRepNNet::buildOutputFromInput(const Var& dp_input) {
         // output layer before transfer function when there is at least one hidden layer
         if(nhidden > 0)
         {            
-            output = affine_transform(output, wout);
+            if(direct_in_to_out)
+                output = affine_transform(output, wout) + affine_transform(dp_input,direct_wout);
+            else
+                output = affine_transform(output, wout);
             if (!fixed_output_weights && nnet_architecture != "theta_predictor")
                 params.append(wout);
             
@@ -1250,6 +1268,7 @@ void DistRepNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     varDeepCopyField(w1theta, copies);
     varDeepCopyField(w2, copies);
     varDeepCopyField(wout, copies);
+    varDeepCopyField(direct_wout, copies);
     varDeepCopyField(wouttarget, copies);
     varDeepCopyField(wouttheta, copies);
     varDeepCopyField(woutdistrep, copies);
@@ -1343,6 +1362,8 @@ void DistRepNNet::train()
 
     int initial_stage = stage;
     bool early_stop=false;
+    //displayFunction(paramf, true, false, 250);
+    //cout << params.size() << " params to train" << endl;
     while(stage<nstages && !early_stop)
     {
         optimizer->nstages = optstage_per_lstage;
