@@ -43,6 +43,7 @@
 
 #include "openFile.h"
 #include <mozilla/nspr/prio.h>
+#include <plearn/io/fileutils.h>
 #include <plearn/io/PrPStreamBuf.h>
 
 namespace PLearn {
@@ -72,6 +73,10 @@ PStream openFile(const PPath& filepath_, PStream::mode_t io_formatting,
     
     PStream st;
     PRFileDesc* fd;
+    if ((openmode == "r" || openmode == "a") && isdir(filepath))
+        PLERROR("In openFile(..) - Cannot open this directory for reading or "
+                "append (%s), it should be a file!", filepath.c_str());
+
     if (openmode == "r")
     {
         fd = PR_Open(filepath.c_str(), PR_RDONLY, 0666);
