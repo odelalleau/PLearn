@@ -150,7 +150,9 @@ VMat getDataSet(const PPath& dataset_path)
     vm->loadAllStringMappings();
     vm->unduplicateFieldNames();
 
-    if (vm->inputsize() < 0 && vm->targetsize() < 0 && vm->weightsize() < 0 && vm->extrasize()<=0) {
+    // if (vm->inputsize() < 0 && vm->targetsize() < 0 && vm->weightsize() < 0 && vm->extrasize()<=0) 
+    if (vm->inputsize() < 0 && vm->targetsize() < 0 && vm->weightsize() < 0) 
+    {
         DBG_LOG << "In getDataSet - The loaded VMat has no inputsize, targetsize "
                 << "or weightsize specified, setting them to (" << vm->width() << ",0,0,0)"
                 << endl;
