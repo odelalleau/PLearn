@@ -721,6 +721,7 @@ void HintonDeepBeliefNet::fineTuneByGradientDescent( const Vec& input )
     int actual_index = argmax(predicted_part);
 
     output_gradient[actual_index] -= 1.;
+    output_gradient *= -1.;
 
 pout << "==================" << endl
     << "Before update:" << endl

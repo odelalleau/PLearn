@@ -326,7 +326,7 @@ void RBMJointGenericParameters::bpropUpdate(const Vec& input,
         for( int k=0 ; k<target_size ; k++ )
         {
             // dC/d(weights(i,k)+out_act[i])
-            real d_z = output_gradient[k] * (sigmoid(w[k]+out_act[i])-1);
+            real d_z = output_gradient[k] * (-sigmoid(-w[k]-out_act[i]));
             w[k] -= learning_rate * d_z;
 
             d_out_act += d_z;
