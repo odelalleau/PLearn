@@ -104,7 +104,7 @@ sub process_list(@)
                 
                 @flist = grep { -d $_ or /Makefile|makefile|
                                     \.c$|\.cc$|\.cpp$|\.CC$|\.h$|\.hpp$
-                                   |\.plearn$|\.pyplearn$|\.py$|\.pymat$
+                                   |\.plearn$|\.pyplearn$|\.vmat$|\.py$|\.pymat$
                                    |\.txt$|^readme|^Readme|^README/x } @flist;
                 process_list(@flist); 
             }
@@ -125,13 +125,13 @@ if($nargs<2)
 {
 print 
 "
-usage: pgrep regexp <list of files and directories>
+usage: perlgrep regexp <list of files and directories>
 
 Will perform the specified grep operation on every file in the
 list and recursively in directories.  (only certain kinds of files are
-considered when recursing in directories, .c .cc .h .txt Makefile makefile)
+considered when recursing in directories, .c .cc .h .txt .plearn .pyplearn .py .vmat .pymat Makefile makefile)
 
-Ex: pgrep '\\bVMatrix\\b' .
+Ex: perlgrep '\\bVMatrix\\b' .
 ";
 
 exit;
