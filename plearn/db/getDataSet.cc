@@ -156,7 +156,7 @@ VMat getDataSet(const PPath& dataset_path)
         DBG_LOG << "In getDataSet - The loaded VMat has no inputsize, targetsize "
                 << "or weightsize specified, setting them to (" << vm->width() << ",0,0,0)"
                 << endl;
-        vm->defineSizes(vm->width(), 0, 0, 0);
+        vm->defineSizes(vm->width(), 0, 0);
     }
 
     // Ensure sizes do not conflict with width.
