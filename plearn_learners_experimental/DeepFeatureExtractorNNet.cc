@@ -283,7 +283,7 @@ void DeepFeatureExtractorNNet::build_()
             unsupervised_target = hidden_representation;
                 
         int n_added_layers = 0;
-        if((nhidden_schedule_position < nhidden_schedule.length() || always_use_supervised_target) && use_same_input_and_output_weights)
+        if((nhidden_schedule_position < nhidden_schedule.length() && !always_use_supervised_target) && use_same_input_and_output_weights)
         {
             params_to_train.push_back(biases.last());
         }
@@ -322,7 +322,7 @@ void DeepFeatureExtractorNNet::build_()
                 params.push_back(w);
                 params_to_train.push_back(w);
             }
-            output = hiddenLayer(output,w,"sigmoid",before_transfer_function,use_activations_with_cubed_input);            
+            output = hiddenLayer(output,w,"sigmoid",before_transfer_function,use_activations_with_cubed_input);
             hidden_representation = output;
         }
 
@@ -338,12 +338,15 @@ void DeepFeatureExtractorNNet::build_()
             //fillWeights(w,true,nhidden_schedule_current_position == 0 ? 0 : -0.5);
             fillWeights(w,true,0);
 
-            params_to_train.resize(params.length());
-            for(int i=0; i<params.length(); i++)
-                params_to_train[i] = params[i];
-
             if(!always_use_supervised_target || nhidden_schedule_position >= nhidden_schedule.length())
+            {
+                params_to_train.resize(0);
+                for(int i=0; i<params.length(); i++)
+                {
+                    params_to_train.push_back(params[i]);
+                }            
                 params.push_back(w);
+            }
 
             params_to_train.push_back(w);
             output = hiddenLayer(output,w,output_transfer_func,before_transfer_function);
@@ -370,7 +373,7 @@ void DeepFeatureExtractorNNet::build_()
                     reconstruction_weights.push_back(rw);
                     //fillWeights(rw,true,nhidden_schedule_current_position == 0 ? 0 : -0.5);
                     fillWeights(rw,true,0);
-                    params.push_back(rw);
+                    //params.push_back(rw);
                     params_to_train.push_back(rw);
                 }
                 output = hiddenLayer(output,rw,"sigmoid",before_transfer_function,use_activations_with_cubed_input);
@@ -537,6 +540,7 @@ void DeepFeatureExtractorNNet::train()
     int initial_stage = stage;
     bool early_stop=false;
     //displayFunction(paramf, true, false, 250);
+    //cout << params_to_train.size() << " params to train" << endl;
     while(stage<nstages && !early_stop)
     {
         optimizer->nstages = optstage_per_lstage;
