@@ -60,6 +60,7 @@ using namespace std;
 #define TYPE_SPHERICAL  1
 #define TYPE_DIAGONAL   2
 #define TYPE_GENERAL    3
+//#define DIRECTED_HACK
 
 //////////////
 // GaussMix //
@@ -2812,6 +2813,26 @@ struct NoProperty {
     int index;
 };
 
+/////////////////
+// create_list //
+/////////////////
+void create_list(const TVec<int>& parent_, const TVec< TVec<int> >& children_,
+                 TVec<int>& nodes_, TVec<bool>& use_previous_,
+                 TVec<bool>& can_free_, int current_, bool cur_use_prev,
+                 bool cur_can_free)
+{
+    // Create list of nodes in the tree.
+    nodes_.append(current_);
+    use_previous_.append(cur_use_prev);
+    can_free_.append(cur_can_free);
+    for (int i = 0; i < children_[current_].length(); i++) {
+        cur_use_prev = (i == 0);
+        cur_can_free = (i == children_[current_].length() - 1);
+        create_list(parent_, children_, nodes_, use_previous_, can_free_,
+                    children_[current_][i], cur_use_prev, cur_can_free);
+    }
+}
+
 ///////////
 // train //
 ///////////
@@ -3022,10 +3043,22 @@ void GaussMix::train()
                 clusters_samp[sample_to_template[i]].append(i);
 
             if (efficient_missing) {
+#ifdef DIRECTED_HACK
+                typedef boost::adjacency_list < boost::vecS, boost::vecS,
+                    boost::directedS,
+                    boost::property<boost::vertex_distance_t, int>,
+                    boost::property<boost::edge_weight_t, int > > DistGraph;
+#else
                 typedef boost::adjacency_list < boost::vecS, boost::vecS,
                     boost::undirectedS,
                     boost::property<boost::vertex_distance_t, int>,
                     boost::property<boost::edge_weight_t, int > > DistGraph;
+#endif
+                // TODO According to
+                // http://boost-consulting.com/boost/libs/graph/doc/adjacency_matrix.html
+                // we should be using adjacency_matrix instead!
+                // TODO Do I really need all these properties? (in particular
+                // the vertex property?)
                 typedef std::pair<int, int> Edge;
 
                 spanning_path.resize(missing_template.length());
@@ -3037,13 +3070,16 @@ void GaussMix::train()
                 TVec<int> cluster_tpl = clusters[tpl];
                 int n = cluster_tpl.length();
                 n = (n * (n - 1)) / 2;
+                if (report_progress && verbosity >= 2)
+                    pb = new ProgressBar("Building graph of missing patterns",
+                                         n);
+#ifdef DIRECTED_HACK
+                n *= 2;
+#endif
                 TVec<int> weights(n);
                 TVec<Edge> edges(n);
                 weights.resize(0);
                 edges.resize(0);
-                if (report_progress && verbosity >= 2)
-                    pb = new ProgressBar("Building graph of missing patterns",
-                                         n);
                 int progress = 0;
                 /*
                 PStream out = openFile("/u/delallea/tmp/edges.amat",
@@ -3052,16 +3088,34 @@ void GaussMix::train()
                 for (int i = 0; i < cluster_tpl.length(); i++) {
                     for (int j = i + 1; j < cluster_tpl.length(); j++) {
                         edges.append( Edge(i, j) );
+#ifdef DIRECTED_HACK
+                        edges.append( Edge(j, i) );
+#endif
                         int w = 0;
+#ifdef DIRECTED_HACK
+                        int w_minus = 0;
+#endif
                         bool* missing_i = missing_patterns[cluster_tpl[i]];
                         bool* missing_j = missing_patterns[cluster_tpl[j]];
                         for (int k = 0; k < missing_patterns.width(); k++) {
                             if (*missing_i != *missing_j)
+#ifdef DIRECTED_HACK
+                                if (*missing_j)
+                                    w++;
+                                else
+                                    w_minus++;
+#else
                                 w++;
+#endif
                             missing_i++;
                             missing_j++;
                         }
+#ifdef DIRECTED_HACK
+                        weights.append(10 * w + w_minus);
+                        weights.append(w + 10 * w_minus);
+#else
                         weights.append(w);
+#endif
                         /*
                         out << "E(" << i << ", " << j << "), ";
                         out << w << ", ";
@@ -3131,8 +3185,10 @@ void GaussMix::train()
 
                 }
 
-                // Compute list of nodes, from top to bottom.
                 n = cluster_tpl.length();
+#ifdef DIRECTED_HACK
+#else
+                // Compute list of nodes, from top to bottom.
                 TVec<int> top_to_bottom;
                 TVec<int> status(n, 0);
                 assert( parent.length() == n );
@@ -3253,6 +3309,7 @@ void GaussMix::train()
                 // Find the node to start from.
                 int start_node = argmin(cost);
                 assert( cost[start_node] == min_cost );
+#endif // DIRECTED_HACK
 
                 // Compute a node ordering giving rise to the mininum cost.
                 TVec<int>& span_path = spanning_path[tpl];
@@ -3264,9 +3321,27 @@ void GaussMix::train()
                 // Note: 'free_previous' is set to 'false', meaning we might be
                 // using one more matrix than necessary. TODO Investigate
                 // exactly how this should be done.
+#ifdef DIRECTED_HACK
+                // Compute list of nodes, in the order they will be visited in
+                // the optimization process. Note that this may not be optimal
+                // memory-wise.
+                TVec< TVec<int> > children(n);
+                // First find the root and fill the children lists.
+                int root = -1;
+                for (int i = 0; i < parent.length(); i++)
+                    if (parent[i] == i)
+                        root = i;
+                    else
+                        children[ parent[i] ].append(i);
+                assert( root >= 0 );
+                // Then deduce the ordered list of nodes.
+                create_list(parent, children, span_path, span_use_previous,
+                            span_can_free, root, true, false);
+#else
                 traverse_tree(span_path, span_can_free, span_use_previous,
                               false, true, start_node, -1, parent,
                               children, message_up, message_down);
+#endif
                 assert( span_path.length()          == n );
                 assert( span_can_free.length()      == n );
                 assert( span_use_previous.length()  == n );
