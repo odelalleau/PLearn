@@ -3,8 +3,12 @@ all: guides.all api.html
 # publish it all on the sourceforge web
 #publish:
 #	rsync -v -rlt -e ssh --cvs-exclude --delete --delete-excluded --modify-window=10 * plearner@plearn.sourceforge.net:/home/groups/p/pl/plearn/htdocs
+
+#publish:
+#	scp -r * plearner@shell.berlios.de:/home/groups/plearn/htdocs/
+
 publish: 
-	scp -r * plearner@shell.berlios.de:/home/groups/plearn/htdocs/
+	scp -r *.html *_guide *.ps *.pdf *.txt *.jpg html_autodoc python_modules_html plearner@shell.berlios.de:/home/groups/plearn/htdocs/
 
 guides.all: guides.ps guides.html guides.pdf
 
