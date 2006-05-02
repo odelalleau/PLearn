@@ -99,6 +99,13 @@ void RBMMultinomialLayer::computeExpectation()
     expectation_is_up_to_date = true;
 }
 
+void RBMMultinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
+                                      Vec& input_gradient,
+                                      const Vec& output_gradient)
+{
+    PLERROR( "RBMMultinomialLayer::bpropUpdate not implemented yet." );
+}
+
 
 void RBMMultinomialLayer::declareOptions(OptionList& ol)
 {

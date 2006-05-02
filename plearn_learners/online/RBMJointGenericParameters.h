@@ -155,6 +155,8 @@ protected:
     //! size of the conditioning part of down layer
     int cond_size;
 
+    //! stores output activations
+    mutable Vec out_act;
 
 protected:
     //#####  Protected Member Functions  ######################################

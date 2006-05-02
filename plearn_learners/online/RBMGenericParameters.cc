@@ -399,12 +399,26 @@ void RBMGenericParameters::computeUnitActivations
 }
 
 //! this version allows to obtain the input gradient as well
-//! N.B. THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
 void RBMGenericParameters::bpropUpdate(const Vec& input, const Vec& output,
                                        Vec& input_gradient,
                                        const Vec& output_gradient)
 {
-    PLERROR( "not implemented yet" );
+    assert( input.size() == down_layer_size );
+    assert( output.size() == up_layer_size );
+    assert( output_gradient.size() == up_layer_size );
+    input_gradient.resize( up_layer_size );
+
+    // weights -= learning_rate * output_gradient * input'
+    externalProductAcc( weights, (-learning_rate)*output_gradient, input );
+
+    // (up) bias -= learning_rate * output_gradient
+    for( int i=0 ; i<up_layer_size ; i++ )
+        up_units_params[i][0] -= learning_rate * output_gradient[i];
+
+    // no update of quadratic parameter, because the gradient wrt it is 0
+
+    // input_gradient = weights' * output_gradient
+    transposeProduct( input_gradient, weights, output_gradient );
 }
 
 //! reset the parameters to the state they would be BEFORE starting training.
@@ -433,6 +447,7 @@ void RBMGenericParameters::forget()
 
     clearStats();
 }
+
 
 /* THIS METHOD IS OPTIONAL
 //! reset the parameters to the state they would be BEFORE starting training.

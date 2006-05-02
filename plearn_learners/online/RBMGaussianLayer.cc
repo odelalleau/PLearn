@@ -100,6 +100,13 @@ void RBMGaussianLayer::computeExpectation()
     expectation_is_up_to_date = true;
 }
 
+void RBMGaussianLayer::bpropUpdate(const Vec& input, const Vec& output,
+                                   Vec& input_gradient,
+                                   const Vec& output_gradient)
+{
+    PLERROR( "RBMGaussianLayer::bpropUpdate not implemented yet." );
+}
+
 
 void RBMGaussianLayer::declareOptions(OptionList& ol)
 {

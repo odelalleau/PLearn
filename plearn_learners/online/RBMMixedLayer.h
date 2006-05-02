@@ -88,6 +88,9 @@ public:
     //! compute the expectation
     virtual void computeExpectation() ;
 
+    //! back-propagates the output gradient to the input
+    virtual void bpropUpdate(const Vec& input, const Vec& output,
+                             Vec& input_gradient, const Vec& output_gradient);
 
     //#####  PLearn::Object Protocol  #########################################
 

@@ -206,6 +206,7 @@ void HintonDeepBeliefNet::build_()
                  "is unknown.\n", fine_tuning_method.c_str() );
     MODULE_LOG << "  fine_tuning_method = \"" << fine_tuning_method << "\""
         <<  endl;
+    //TODO: build structure to store gradients during gradient descent
 
     if( training_schedule.length() != n_layers )
         training_schedule = TVec<int>( n_layers, 1000000 );
@@ -256,6 +257,10 @@ void HintonDeepBeliefNet::build_params()
                  "be equal to layers.length()-1 (%d != %d).\n",
                  params.length(), n_layers-1 );
 
+    activation_gradients.resize( n_layers-1 );
+    expectation_gradients.resize( n_layers-1 );
+    output_gradient.resize( n_predicted );
+
     for( int i=0 ; i<n_layers-1 ; i++ )
     {
         //TODO: call changeOptions instead
@@ -265,6 +270,9 @@ void HintonDeepBeliefNet::build_params()
         params[i]->initialization_method = initialization_method;
         params[i]->random_gen = random_gen;
         params[i]->build();
+
+        activation_gradients[i].resize( params[i]->down_layer_size );
+        expectation_gradients[i].resize( params[i]->down_layer_size );
     }
 
     if( target_layer && !target_params )
@@ -277,7 +285,7 @@ void HintonDeepBeliefNet::build_params()
     target_params->initialization_method = initialization_method;
     target_params->random_gen = random_gen;
     target_params->build();
- 
+
     // build joint_params from params[n_layers-1] and target_params
     joint_params = new RBMJointGenericParameters( target_params,
                                                   params[n_layers-2] );
@@ -587,23 +595,32 @@ void HintonDeepBeliefNet::train()
         {
             MODULE_LOG << "Fine-tuning all parameters, using method "
                 << fine_tuning_method << endl;
-            if( report_progress )
-                pb = new ProgressBar( "Training all " + classname()
-                                      + " parameters by fine tuning",
-                                      n_samples_to_see );
 
-            int begin_sample = sample;
-            int end_sample = begin_sample + n_samples_to_see;
-            for( ; sample < end_sample ; sample++ )
+            if( fine_tuning_method == "" ) // do nothing
+                sample += n_samples_to_see;
+            else if( fine_tuning_method == "EGD" )
             {
-                // sample is the index in the training set
-                int i = sample % train_set->length();
-                train_set->getExample(i, input, target, weight);
-                fineTune( input );
+                if( report_progress )
+                    pb = new ProgressBar( "Training all " + classname()
+                                          + " parameters by fine tuning",
+                                          n_samples_to_see );
 
-                if( pb )
-                    pb->update( sample - begin_sample + 1 );
+                int begin_sample = sample;
+                int end_sample = begin_sample + n_samples_to_see;
+                for( ; sample < end_sample ; sample++ )
+                {
+                    // sample is the index in the training set
+                    int i = sample % train_set->length();
+                    train_set->getExample(i, input, target, weight);
+                    fineTuneByGradientDescent( input );
+
+                    if( pb )
+                        pb->update( sample - begin_sample + 1 );
+                }
             }
+            else
+                PLERROR( "Fine-tuning methods other than \"EGD\" are not"
+                         " implemented yet." );
 
         }
         train_stats->finalize(); // finalize statistics for this epoch
@@ -694,11 +711,46 @@ void HintonDeepBeliefNet::jointGreedyStep( const Vec& input )
     joint_params->update();
 }
 
-void HintonDeepBeliefNet::fineTune( const Vec& input )
+void HintonDeepBeliefNet::fineTuneByGradientDescent( const Vec& input )
 {
-    if( fine_tuning_method == "" )
-        return;
-    PLERROR("fine tuning not implemented yet");
+    // compute predicted_part expectation, conditioned on predictor_part
+    // (forward pass)
+    expectation( output_gradient );
+
+    splitCond(input);
+    int actual_index = argmax(predicted_part);
+
+    output_gradient[actual_index] -= 1.;
+
+pout << "==================" << endl
+    << "Before update:" << endl
+    << "up:      " << joint_params->up_units_params << endl
+    << "weights: " << endl << joint_params->weights << endl
+    << "down:    " << joint_params->down_units_params << endl
+    << endl;
+
+    joint_params->bpropUpdate( predictor_part, target_layer->expectation,
+                               expectation_gradients[n_layers-2],
+                               output_gradient );
+
+pout << "-------" << endl
+    << "After update:" << endl
+    << "up:      " << joint_params->up_units_params << endl
+    << "weights: " << endl << joint_params->weights << endl
+    << "down:    " << joint_params->down_units_params << endl
+    << endl;
+
+    for( int i=n_layers-2 ; i>0 ; i-- )
+    {
+        layers[i]->bpropUpdate( layers[i]->activations,
+                                layers[i]->expectation,
+                                activation_gradients[i],
+                                expectation_gradients[i] );
+        params[i]->bpropUpdate( layers[i-1]->expectation,
+                                layers[i]->activations,
+                                expectation_gradients[i-1],
+                                activation_gradients[i] );
+    }
 }
 
 void HintonDeepBeliefNet::computeCostsFromOutputs(const Vec& input,

@@ -103,6 +103,12 @@ void RBMMixedLayer::computeExpectation()
     expectation_is_up_to_date = true;
 }
 
+void RBMMixedLayer::bpropUpdate(const Vec& input, const Vec& output,
+                                   Vec& input_gradient,
+                                   const Vec& output_gradient)
+{
+    PLERROR( "RBMMixedLayer::bpropUpdate not implemented yet." );
+}
 
 void RBMMixedLayer::declareOptions(OptionList& ol)
 {

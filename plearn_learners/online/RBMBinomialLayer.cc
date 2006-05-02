@@ -101,6 +101,21 @@ void RBMBinomialLayer::computeExpectation()
     expectation_is_up_to_date = true;
 }
 
+void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
+                                   Vec& input_gradient,
+                                   const Vec& output_gradient)
+{
+    assert( input.size() == size );
+    assert( output.size() == size );
+    assert( output_gradient.size() == size );
+    input_gradient.resize( size );
+
+    for( int i=0 ; i<size ; i++ )
+    {
+        real output_i = output[i];
+        input_gradient[i] = output_i * (1-output_i) * output_gradient[i];
+    }
+}
 
 
 

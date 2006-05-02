@@ -248,12 +248,22 @@ protected:
     // ### Declare protected option fields (such as learned parameters) here
     // ...
 
+    //! gradients of cost wrt the activations (output of params)
+    mutable TVec< Vec > activation_gradients;
+
+    //! gradients of cost wrt the expectations (output of layers)
+    mutable TVec< Vec > expectation_gradients;
+
+    //! gradient wrt output activations
+    mutable Vec output_gradient;
+
+
 protected:
     //#####  Protected Member Functions  ######################################
 
     virtual void greedyStep( const Vec& predictor, int params_index );
     virtual void jointGreedyStep( const Vec& input );
-    virtual void fineTune( const Vec& input );
+    virtual void fineTuneByGradientDescent( const Vec& input );
 
     //! Declares the class options.
     static void declareOptions(OptionList& ol);

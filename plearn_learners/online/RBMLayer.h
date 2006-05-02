@@ -114,6 +114,11 @@ public:
     //! compute the expectation
     virtual void computeExpectation() = 0 ;
 
+    //! back-propagates the output gradient to the input
+    virtual void bpropUpdate(const Vec& input, const Vec& output,
+                             Vec& input_gradient,
+                             const Vec& output_gradient) = 0 ;
+
     //! resets activations, sample and expectation fields
     virtual void reset();
 

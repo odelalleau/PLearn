@@ -121,6 +121,7 @@ void RBMJointGenericParameters::build_units_types()
 
     // to avoid "forget()" being called in RBMParameters::build_()
     weights.resize( up_units_types.length(), down_units_types.length() );
+    out_act.resize( up_units_types.length() );
 }
 
 void RBMJointGenericParameters::build_()
@@ -222,10 +223,14 @@ void RBMJointGenericParameters::computeLinearUnitActivations
     if( target_given_cond )
     {
         assert( activations.length() == 1 );
+        Mat V = weights.subMatColumns(target_size, cond_size);
+        if (i==0)
+            for (int j=0;j<weights.length(); j++)
+                out_act[j] =
+                    up_units_params[j][0] + matRowDotVec(V, j, input_vec);
 
         // actY_i = B_i - sum_j softplus(-(W_ij + C_j + sum_k V_jk p(P_k)))
         real somme = down_units_params[i][0];
-        Mat V = weights.subMatColumns(target_size, cond_size);
         real* w = &weights[0][i];
         // step from one row to the next in weights matrix
         int m = weights.mod();
@@ -233,8 +238,7 @@ void RBMJointGenericParameters::computeLinearUnitActivations
         for( int j=0; j< weights.length() ; j++, w+=m )
         {
             // *w = weights(j,i)
-            somme -= softplus( -(*w + up_units_params[j][0]
-                                 + matRowDotVec(V, j, input_vec)) );
+            somme -= softplus( -(*w + out_act[j]));
         }
         activations[0] = somme;
     }
@@ -301,12 +305,42 @@ void RBMJointGenericParameters::computeUnitActivations
 }
 
 //! this version allows to obtain the input gradient as well
-//! N.B. THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
-void RBMJointGenericParameters::bpropUpdate(const Vec& input, const Vec& output,
-                                       Vec& input_gradient,
-                                       const Vec& output_gradient)
+void RBMJointGenericParameters::bpropUpdate(const Vec& input,
+                                            const Vec& output,
+                                            Vec& input_gradient,
+                                            const Vec& output_gradient)
 {
-    PLERROR( "not implemented yet" );
+    assert( input.size() == cond_size );
+    assert( output.size() == target_size );
+    assert( output_gradient.size() == target_size );
+    input_gradient.resize( cond_size );
+    input_gradient.clear();
+
+    for( int k=0 ; k<target_size ; k++ )
+        down_units_params[k][0] -= learning_rate * output_gradient[k];
+
+    for( int i=0 ; i<up_layer_size ; i++ )
+    {
+        real* w = weights[i];
+        real d_out_act = 0;
+        for( int k=0 ; k<target_size ; k++ )
+        {
+            // dC/d(weights(i,k)+out_act[i])
+            real d_z = output_gradient[k] * (sigmoid(w[k]+out_act[i])-1);
+            w[k] -= learning_rate * d_z;
+
+            d_out_act += d_z;
+        }
+        up_units_params[i][0] -= learning_rate * d_out_act;
+
+        for( int j=0 ; j<cond_size ; j++ )
+        {
+            real& w_ij = w[j+target_size];
+            input_gradient[j] += d_out_act * w_ij;
+            w_ij -= learning_rate * d_out_act * input[j];
+        }
+    }
+
 }
 
 //! reset the parameters to the state they would be BEFORE starting training.
