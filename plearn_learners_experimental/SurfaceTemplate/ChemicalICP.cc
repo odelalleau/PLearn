@@ -741,6 +741,10 @@ void ChemicalICP::build_()
             if( matching_method == "exhaustive" )
                 cacheFeatureDistances();
         }
+
+        // Resize 'matching_neighbors' so that it has the correct size (i.e.
+        // the number of points in the template).
+        matching_neighbors->resize(mol_template->n_points(), 1);
     }
 
     // build VarArray
