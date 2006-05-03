@@ -403,22 +403,9 @@ void RBMGenericParameters::bpropUpdate(const Vec& input, const Vec& output,
                                        Vec& input_gradient,
                                        const Vec& output_gradient)
 {
-    assert( input.size() == down_layer_size );
-    assert( output.size() == up_layer_size );
-    assert( output_gradient.size() == up_layer_size );
-    input_gradient.resize( down_layer_size );
-
-    // weights -= learning_rate * output_gradient * input'
-    externalProductAcc( weights, (-learning_rate)*output_gradient, input );
-
-    // (up) bias -= learning_rate * output_gradient
-    for( int i=0 ; i<up_layer_size ; i++ )
-        up_units_params[i][0] -= learning_rate * output_gradient[i];
-
-    // no update of quadratic parameter, because the gradient wrt it is 0
-
-    // input_gradient = weights' * output_gradient
-    transposeProduct( input_gradient, weights, output_gradient );
+    PLERROR( "RBMGenericParameters::bpropUpdate() not implemented yet.\n"
+             "If you only have linear units on up and down layer, you should\n"
+             "consider using RBMLLParameters instead.\n" );
 }
 
 //! reset the parameters to the state they would be BEFORE starting training.

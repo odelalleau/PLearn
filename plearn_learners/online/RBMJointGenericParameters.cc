@@ -310,37 +310,9 @@ void RBMJointGenericParameters::bpropUpdate(const Vec& input,
                                             Vec& input_gradient,
                                             const Vec& output_gradient)
 {
-    assert( input.size() == cond_size );
-    assert( output.size() == target_size );
-    assert( output_gradient.size() == target_size );
-    input_gradient.resize( cond_size );
-    input_gradient.clear();
-
-    for( int k=0 ; k<target_size ; k++ )
-        down_units_params[k][0] -= learning_rate * output_gradient[k];
-
-    for( int i=0 ; i<up_layer_size ; i++ )
-    {
-        real* w = weights[i];
-        real d_out_act = 0;
-        for( int k=0 ; k<target_size ; k++ )
-        {
-            // dC/d(weights(i,k)+out_act[i])
-            real d_z = output_gradient[k] * (-sigmoid(-w[k]-out_act[i]));
-            w[k] -= learning_rate * d_z;
-
-            d_out_act += d_z;
-        }
-        up_units_params[i][0] -= learning_rate * d_out_act;
-
-        for( int j=0 ; j<cond_size ; j++ )
-        {
-            real& w_ij = w[j+target_size];
-            input_gradient[j] += d_out_act * w_ij;
-            w_ij -= learning_rate * d_out_act * input[j];
-        }
-    }
-
+    PLERROR( "RBMJointGenericParameters::bpropUpdate() not implemented yet.\n"
+             "If you only have linear units on up and down layer, you should\n"
+             "consider using RBMJointLLParameters instead.\n" );
 }
 
 //! reset the parameters to the state they would be BEFORE starting training.
