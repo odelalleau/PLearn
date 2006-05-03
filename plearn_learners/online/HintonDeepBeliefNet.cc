@@ -750,10 +750,10 @@ void HintonDeepBeliefNet::fineTuneByGradientDescent( const Vec& input )
                                 layers[i]->expectation,
                                 activation_gradients[i],
                                 expectation_gradients[i] );
-        params[i]->bpropUpdate( layers[i-1]->expectation,
-                                layers[i]->activations,
-                                expectation_gradients[i-1],
-                                activation_gradients[i] );
+        params[i-1]->bpropUpdate( layers[i-1]->expectation,
+                                  layers[i]->activations,
+                                  expectation_gradients[i-1],
+                                  activation_gradients[i] );
     }
 }
 

@@ -406,7 +406,7 @@ void RBMGenericParameters::bpropUpdate(const Vec& input, const Vec& output,
     assert( input.size() == down_layer_size );
     assert( output.size() == up_layer_size );
     assert( output_gradient.size() == up_layer_size );
-    input_gradient.resize( up_layer_size );
+    input_gradient.resize( down_layer_size );
 
     // weights -= learning_rate * output_gradient * input'
     externalProductAcc( weights, (-learning_rate)*output_gradient, input );
