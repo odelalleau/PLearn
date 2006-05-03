@@ -44,8 +44,8 @@
 #include "RBMMixedLayer.h"
 #include "RBMMultinomialLayer.h"
 #include "RBMParameters.h"
-#include "RBMGenericParameters.h"
-#include "RBMJointGenericParameters.h"
+#include "RBMLLParameters.h"
+#include "RBMJointLLParameters.h"
 
 namespace PLearn {
 using namespace std;
@@ -250,7 +250,7 @@ void HintonDeepBeliefNet::build_params()
     {
         params.resize( n_layers-1 );
         for( int i=0 ; i<n_layers-1 ; i++ )
-            params[i] = new RBMGenericParameters();
+            params[i] = new RBMLLParameters();
     }
     else if( params.length() != n_layers-1 )
         PLERROR( "HintonDeepBeliefNet::build_params - params.length() should\n"
@@ -276,7 +276,7 @@ void HintonDeepBeliefNet::build_params()
     }
 
     if( target_layer && !target_params )
-        target_params = new RBMGenericParameters();
+        target_params = new RBMLLParameters();
 
     //TODO: call changeOptions instead
     target_params->down_units_types = target_layer->units_types;
@@ -287,8 +287,8 @@ void HintonDeepBeliefNet::build_params()
     target_params->build();
 
     // build joint_params from params[n_layers-1] and target_params
-    joint_params = new RBMJointGenericParameters( target_params,
-                                                  params[n_layers-2] );
+    joint_params = new RBMJointLLParameters( target_params,
+                                             params[n_layers-2] );
     joint_params->learning_rate = learning_rate;
     joint_params->random_gen = random_gen;
 }
@@ -346,7 +346,7 @@ void HintonDeepBeliefNet::expectation(Vec& mu) const
     for( int i=0 ; i<n_layers-2 ; i++ )
     {
         params[i]->setAsDownInput( layers[i]->expectation );
-        layers[i+1]->getAllActivations( (RBMGenericParameters*) params[i] );
+        layers[i+1]->getAllActivations( (RBMLLParameters*) params[i] );
         layers[i+1]->computeExpectation();
     }
 
@@ -355,7 +355,7 @@ void HintonDeepBeliefNet::expectation(Vec& mu) const
     joint_params->setAsCondInput( layers[n_layers-2]->expectation );
 
     // Get all activations on target_layer from target_params
-    target_layer->getAllActivations( (RBMGenericParameters*) joint_params );
+    target_layer->getAllActivations( (RBMLLParameters*) joint_params );
     target_layer->computeExpectation();
 
     mu << target_layer->expectation;
@@ -651,13 +651,13 @@ void HintonDeepBeliefNet::greedyStep( const Vec& predictor, int index )
     for( int i=0 ; i<index ; i++ )
     {
         params[i]->setAsDownInput( layers[i]->expectation );
-        layers[i+1]->getAllActivations( (RBMGenericParameters*) params[i] );
+        layers[i+1]->getAllActivations( (RBMLLParameters*) params[i] );
         layers[i+1]->computeExpectation();
     }
 
     // positive phase
     params[index]->setAsDownInput( layers[index]->expectation );
-    layers[index+1]->getAllActivations((RBMGenericParameters*) params[index]);
+    layers[index+1]->getAllActivations((RBMLLParameters*) params[index]);
     layers[index+1]->computeExpectation();
     layers[index+1]->generateSample();
     if (use_sample_rather_than_expectation_in_positive_phase_statistics)
@@ -669,12 +669,12 @@ void HintonDeepBeliefNet::greedyStep( const Vec& predictor, int index )
 
     // down propagation
     params[index]->setAsUpInput( layers[index+1]->sample );
-    layers[index]->getAllActivations( (RBMGenericParameters*) params[index] );
+    layers[index]->getAllActivations( (RBMLLParameters*) params[index] );
 
     // negative phase
     layers[index]->generateSample();
     params[index]->setAsDownInput( layers[index]->sample );
-    layers[index+1]->getAllActivations((RBMGenericParameters*) params[index]);
+    layers[index+1]->getAllActivations((RBMLLParameters*) params[index]);
     layers[index+1]->computeExpectation();
     params[index]->accumulateNegStats( layers[index]->sample,
                                        layers[index+1]->expectation );
@@ -692,7 +692,7 @@ void HintonDeepBeliefNet::jointGreedyStep( const Vec& input )
     for( int i=0 ; i<n_layers-2 ; i++ )
     {
         params[i]->setAsDownInput( layers[i]->expectation );
-        layers[i+1]->getAllActivations( (RBMGenericParameters*) params[i] );
+        layers[i+1]->getAllActivations( (RBMLLParameters*) params[i] );
         layers[i+1]->computeExpectation();
     }
 
@@ -701,7 +701,7 @@ void HintonDeepBeliefNet::jointGreedyStep( const Vec& input )
 
     // positive phase
     joint_params->setAsDownInput( joint_layer->expectation );
-    last_layer->getAllActivations( (RBMGenericParameters*) joint_params );
+    last_layer->getAllActivations( (RBMLLParameters*) joint_params );
     last_layer->computeExpectation();
     last_layer->generateSample();
     if (use_sample_rather_than_expectation_in_positive_phase_statistics)
@@ -713,12 +713,12 @@ void HintonDeepBeliefNet::jointGreedyStep( const Vec& input )
 
     // down propagation
     joint_params->setAsUpInput( last_layer->sample );
-    joint_layer->getAllActivations( (RBMGenericParameters*) joint_params );
+    joint_layer->getAllActivations( (RBMLLParameters*) joint_params );
 
     // negative phase
     joint_layer->generateSample();
     joint_params->setAsDownInput( joint_layer->sample );
-    last_layer->getAllActivations( (RBMGenericParameters*) joint_params );
+    last_layer->getAllActivations( (RBMLLParameters*) joint_params );
     last_layer->computeExpectation();
     joint_params->accumulateNegStats( joint_layer->sample,
                                       last_layer->expectation );

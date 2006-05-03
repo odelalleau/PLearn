@@ -48,8 +48,8 @@ class RBMLayer;
 class RBMMixedLayer;
 class RBMMultinomialLayer;
 class RBMParameters;
-class RBMGenericParameters;
-class RBMJointGenericParameters;
+class RBMLLParameters;
+class RBMJointLLParameters;
 
 /**
  * Does the same thing as Hinton's deep belief nets
@@ -99,14 +99,14 @@ public:
 
     //! RBMParameters linking the unsupervised layers.
     //! params[i] links layers[i] and layers[i+1]
-    TVec< PP<RBMGenericParameters> > params;
+    TVec< PP<RBMLLParameters> > params;
 
     //! Parameters linking target_layer and last_layer
-    PP<RBMGenericParameters> target_params;
+    PP<RBMLLParameters> target_params;
 
     //! Parameters linking joint_layer and last_layer.
     //! Contains params[n_layers-2] and target_params.
-    PP<RBMJointGenericParameters> joint_params;
+    PP<RBMJointLLParameters> joint_params;
 
     //! Number of examples to use during each of the different greedy
     //! steps of the training phase.
