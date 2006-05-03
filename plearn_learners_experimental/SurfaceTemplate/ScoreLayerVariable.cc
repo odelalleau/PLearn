@@ -42,6 +42,7 @@
 #include <plearn/var/ColumnSumVariable.h>
 #include <plearn/var/ConcatRowsVariable.h>
 #include <plearn/var/LogVariable.h>
+#include <plearn/var/MinusScalarVariable.h>
 #include <plearn/var/RowSumSquareVariable.h>
 #include <plearn/var/SigmoidVariable.h>
 #include <plearn/var/SquareRootVariable.h>
@@ -249,6 +250,9 @@ void ScoreLayerVariable::build_()
         PP<ChemicalICP> icp_aligner = icp_aligner_template->deepCopy(copies);
         icp_aligner->mol_template = mol_template;
         icp_aligner->build();
+        // Set the current molecule of the ICP aligner to be the same template:
+        // this will properly resize some important Vars.
+        icp_aligner->setMolecule((MoleculeTemplate*) mol_template);
         // Initialize standard deviations of chemical features from the global
         // standard deviations.
         for (int j = 0; j < mol_template->feature_names.length(); j++) {
@@ -301,8 +305,10 @@ void ScoreLayerVariable::build_()
         } else if (wm == "features_sigmoid") {
             Var shift = icp_aligner->weighting_params[0];
             Var slope = icp_aligner->weighting_params[1];
-            weights = sigmoid(
-                slope * (shift - squareroot(feature_distance_at_each_point)));
+            weights = - sigmoid(slope *
+                    new MinusScalarVariable(
+                        squareroot(feature_distance_at_each_point),
+                        shift));
             shift->setName("shift_" + tostring(i));
             slope->setName("slope_" + tostring(i));
             optimized_params.append(shift);
