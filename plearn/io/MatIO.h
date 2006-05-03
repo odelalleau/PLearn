@@ -96,7 +96,8 @@ void parseSizeFromRemainingLines(const PPath& filename, PStream& in, bool& could
 //template<class T> void saveAscii(const string& filename, const TMat<T>& mat, 
 //                                const TVec<string>& fieldnames = TVec<string>() );
 template<class T> void saveAscii(const string& filename, const TMat<T>& mat, 
-                                 const TVec<string>& fieldnames);
+                                 const TVec<string>& fieldnames, 
+                                 int inputsize=-1, int targetsize=-1, int weightsize=-1, int extrasize=0);
 template<class T> void saveAscii(const string& filename, const TMat<T>& mat);
 
 //! first number in file is length
@@ -197,14 +198,21 @@ void loadJPEGrgb(const string& jpeg_filename, Mat& rgbmat, int& row_size, int sc
 template<class T>
 void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, TVec<map<string,real> >* map_sr)
 { 
-    int inputsize=-1, targetsize=-1, weightsize=-1;
-    loadAscii(filename, mat, fieldnames, inputsize, targetsize, weightsize, map_sr);
+    int inputsize=-1, targetsize=-1, weightsize=-1, extrasize=-1;
+    loadAscii(filename, mat, fieldnames, inputsize, targetsize, weightsize, extrasize, map_sr);
+}
+
+template<class T>
+void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, int& inputsize, int& targetsize, int& weightsize, TVec<map<string,real> >* map_sr)
+{
+    int extrasize = -1;
+    loadAscii(filename, mat, fieldnames, inputsize, targetsize, weightsize, extrasize, map_sr);
 }
 
 // Intelligent function that will load a file in almost all ascii formats that ever existed in this lab.
 // Additionally, if 'map_sr' is provided, it will fill it with the string -> real mappings encountered.
 template<class T>
-void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, int& inputsize, int& targetsize, int& weightsize, TVec<map<string,real> >* map_sr)
+void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, int& inputsize, int& targetsize, int& weightsize, int& extrasize, TVec<map<string,real> >* map_sr)
 {
     PStream in = openFile(filename, PStream::raw_ascii, "r");
   
@@ -239,10 +247,15 @@ void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, in
             {
                 string siz=removeblanks((line.substr(pos)).substr(1));
                 vector<string> dim = split(siz," ");
-                if(dim.size()!=3)  PLERROR("I need exactly 3 numbers after #sizes: inputsize targetsize weightsize");
+                if(dim.size()!=3 && dim.size()!=4)  
+                    PLERROR("I need 3 or 4 numbers after #sizes: inputsize targetsize weightsize extrasize");
                 inputsize = toint(dim[0]);
                 targetsize = toint(dim[1]);
                 weightsize = toint(dim[2]);
+                if(dim.size()==4)
+                    extrasize = toint(dim[3]);
+                else
+                    extrasize = 0;
             }
             else if(sub=="#") // we've found the fieldnames specification line
             {
@@ -282,21 +295,25 @@ void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, in
     TVec<T> current_max(width); // The max of the numerical values in each column.
     current_max.clear();
     // Initialize the mappings to empty mappings.
-    if (map_sr) {
+    if (map_sr) 
         map_sr->resize(width);
-    }
+
     string inp_element;
     for(int i=0; i<length; i++)
     {
         T* mat_i = mat[i];
         skipBlanksAndComments(loadmat);
-        for(int j=0; j<width; j++) {
+        for(int j=0; j<width; j++) 
+        {
             // C99 strtod handles NAN's and INF's.
-            if (loadmat) {
+            if (loadmat) 
+            {
                 loadmat >> inp_element;
-                if (pl_isnumber(inp_element)) {
+                if (pl_isnumber(inp_element)) 
+                {
                     mat_i[j] = strtod(inp_element.c_str(), 0);
-                    if (map_sr) {
+                    if (map_sr) 
+                    {
                         T val = mat_i[j];
                         // We need to make sure that this number does not conflict
                         // with a string mapping.
@@ -305,46 +322,57 @@ void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, in
                         if (current_max[j] >= current_map[j])
                             current_map[j] = int(current_max[j] + 1);
                         map<string,real>& m = (*map_sr)[j];
-                        for (map<string,real>::iterator it = m.begin(); it != m.end(); it++) {
-                            if (fast_exact_is_equal(it->second, val)) {
+                        for (map<string,real>::iterator it = m.begin(); it != m.end(); it++) 
+                        {
+                            if (fast_exact_is_equal(it->second, val)) 
+                            {
                                 // We're screwed, there is currently a mapping between a string
                                 // and this numeric value. We have to change it.
                                 // We pick either the next string mapping value, or the current
                                 // max in the column (+ 1) if it is larger.
                                 int cur_max_plus_one = int(real(current_max[j]) + 1);
-                                if (cur_max_plus_one > current_map[j]) {
+                                if (cur_max_plus_one > current_map[j]) 
+                                {
                                     it->second = cur_max_plus_one;
                                     current_map[j] = cur_max_plus_one;
-                                } else
+                                } 
+                                else
                                     it->second = current_map[j];
                                 current_map[j]++;
                                 // In addition, we have to modify all previous data, which sucks.
-                                for (int k = 0; k < i; k++) {
+                                for (int k = 0; k < i; k++) 
+                                {
                                     if (fast_exact_is_equal(mat(k, j), val))
                                         mat(k, j) = it->second;
                                 }
                             }
                         }
                     }
-                } else {
+                } 
+                else 
+                {
                     // This is a string!
-                    if (map_sr) {
-                        // Already encountered ?
+                    if (map_sr) // Already encountered ?
+                    {                        
                         map<string,real>& m = (*map_sr)[j];
                         map<string,real>::iterator it = m.find(inp_element);
-                        if(it != m.end()) {
-                            // It already exists in the map.
+                        if(it != m.end()) // It already exists in the map.
+                        {
                             mat_i[j] = it->second;
-                        } else {
-                            // We need to add it.
+                        } 
+                        else           // We need to add it.
+                        {                            
                             (*map_sr)[j][inp_element] = current_map[j];
                             mat_i[j] = current_map[j];
                             current_map[j]++;
                         }
-                    } else
+                    } 
+                    else
                         PLERROR("In loadAscii - You need to provide 'map_sr' if you want to load an ASCII file with strings");
                 }
-            } else {
+            } 
+            else 
+            {
                 PLERROR("In loadAscii - Missing values are not supported anymore (for the moment)");
                 /* Old code, not PStream-compatible.
                    if (!loadmat) {
@@ -458,7 +486,8 @@ void saveAscii(const string& filename, const TMat<T>& mat)
 }
 
 template<class T> 
-void saveAscii(const string& filename, const TMat<T>& mat, const TVec<string>& fieldnames)
+void saveAscii(const string& filename, const TMat<T>& mat, const TVec<string>& fieldnames,
+               int inputsize, int targetsize, int weightsize, int extrasize)
 {
     ofstream out(filename.c_str());
     if (!out)
@@ -474,6 +503,8 @@ void saveAscii(const string& filename, const TMat<T>& mat, const TVec<string>& f
             out << space_to_underscore(fieldnames[k]) << ' ';
         out << endl;
     }
+    if(inputsize>=0)
+        out << "#sizes: " << inputsize << ' ' << targetsize << ' ' << weightsize << ' ' << extrasize << endl;
 
     for(int i=0; i<mat.length(); i++) 
     {

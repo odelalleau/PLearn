@@ -1702,6 +1702,7 @@ int vmatmain(int argc, char** argv)
         pout << "inputsize: " << vm->inputsize() << endl;
         pout << "targetsize: " << vm->targetsize() << endl;
         pout << "weightsize: " << vm->weightsize() << endl;
+        pout << "extrasize: " << vm->extrasize() << endl;
         VVMatrix * vvm = dynamic_cast<VVMatrix*>((VMatrix*)vm);
         if(vvm!=NULL)
         {

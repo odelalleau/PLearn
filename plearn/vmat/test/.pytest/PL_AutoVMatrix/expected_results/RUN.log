@@ -10,6 +10,7 @@ width = 6 ;
 inputsize = 6 ;
 targetsize = 0 ;
 weightsize = 0 ;
+extrasize = 0 ;
 metadatadir = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.amat.metadata/"  )
 
 200  6  [ 
@@ -234,6 +235,7 @@ width = 6 ;
 inputsize = 6 ;
 targetsize = 0 ;
 weightsize = 0 ;
+extrasize = 0 ;
 metadatadir = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.pmat.metadata/"  )
 
 200  6  [ 
@@ -458,6 +460,7 @@ width = 3 ;
 inputsize = 3 ;
 targetsize = 0 ;
 weightsize = 0 ;
+extrasize = 0 ;
 metadatadir = "PLEARNDIR:examples/data/test_suite/eslt_mixture/data_train.amat.metadata/"  )
 
 200  3  [ 

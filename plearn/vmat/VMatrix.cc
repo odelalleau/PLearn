@@ -80,6 +80,7 @@ VMatrix::VMatrix(bool call_build_):
     inputsize_  (-1),
     targetsize_ (-1),
     weightsize_ (-1),
+    extrasize_  (0),
     writable    (false)
 {
     lockf_ = PStream();
@@ -95,6 +96,7 @@ VMatrix::VMatrix(int the_length, int the_width, bool call_build_):
     inputsize_                      (-1),
     targetsize_                     (-1),
     weightsize_                     (-1),
+    extrasize_                      (0),
     writable                        (false),
     map_sr(TVec<map<string,real> >  (the_width)),
     map_rs(TVec<map<real,string> >  (the_width)),
@@ -120,7 +122,9 @@ void VMatrix::declareOptions(OptionList & ol)
     declareOption(ol, "targetsize", &VMatrix::targetsize_, OptionBase::buildoption, 
                   "Size of target part (-1 if variable or unspecified, 0 if no target)");
     declareOption(ol, "weightsize", &VMatrix::weightsize_, OptionBase::buildoption, 
-                  "Size of weights (-1 if unspecified, 0 if no weight, 1 for sample weight, >1 currently not supported (include it is recommended to include additional info in target. weight is really reserved for a per sample weight)).");
+                  "Size of weights (-1 if unspecified, 0 if no weight, 1 for sample weight, >1 currently not supported).");
+    declareOption(ol, "extrasize", &VMatrix::extrasize_, OptionBase::buildoption, 
+                  "Size of extra fields (additional info). Defaults to 0");
     declareOption(ol, "metadatadir", &VMatrix::metadatadir, OptionBase::buildoption, 
                   "A directory in which to store meta-information for this matrix \n"
                   "You don't always have to give this explicitly. For ex. if your \n"
@@ -376,7 +380,7 @@ void VMatrix::getExample(int i, Vec& input, Vec& target, real& weight)
 {
     if(inputsize_<0)
         PLERROR("In VMatrix::getExample, inputsize_ not defined for this vmat");
-    input.resize(inputsize_);             
+    input.resize(inputsize_);
     getSubRow(i,0,input);
     if(targetsize_<0)
         PLERROR("In VMatrix::getExample, targetsize_ not defined for this vmat");
@@ -394,6 +398,17 @@ void VMatrix::getExample(int i, Vec& input, Vec& target, real& weight)
     else
         weight = get(i,inputsize_+targetsize_);
 }
+
+void VMatrix::getExtra(int i, Vec& extra)
+{
+    if(inputsize_<0 || targetsize_<0 || weightsize_<0 || extrasize_<0)
+        PLERROR("In VMatrix::getExtra, sizes not properly defined for this vmat");
+
+    extra.resize(extrasize_);
+    if(extrasize_>0)
+        getSubRow(i,inputsize_+targetsize_+weightsize_, extra);
+}
+
 
 //////////////////
 // computeStats //
@@ -482,10 +497,10 @@ void VMatrix::saveFieldInfos() const
     }
 
     // check if we need to save the sizes
-    int inp, targ, weight;
-    bool sizes_exist = getSavedSizes(inp, targ, weight);
+    int inp, targ, weight, extr;
+    bool sizes_exist = getSavedSizes(inp, targ, weight, extr);
     if ((! sizes_exist && inputsize_ != -1 && targetsize_ != -1 && weightsize_ != -1) ||
-        (inp != inputsize_ || targ != targetsize_ || weight != weightsize_))
+        (inp != inputsize_ || targ != targetsize_ || weight != weightsize_ || extr!=extrasize_))
     {
         // Slightly hackish phenomenon :: if the sizes file doesn't previously
         // exist and we cannot write them, THIS IS NOT AN ERROR.  In this case,
@@ -498,7 +513,7 @@ void VMatrix::saveFieldInfos() const
             
             PPath filename = getMetaDataDir() / "sizes";
             PStream out = openFile(filename, PStream::plearn_ascii, "w");
-            out << inputsize_ << targetsize_ << weightsize_ << endl;
+            out << inputsize_ << targetsize_ << weightsize_ << extrasize_ << endl;
         }
         catch (const PLearnError&) {
             if (sizes_exist)
@@ -517,13 +532,14 @@ void VMatrix::loadFieldInfos() const
 
     // Update only if they can successfully be read from the saved metadata
     // and they don't already exist in the VMatrix
-    int inp, tar, weight;
-    if (getSavedSizes(inp,tar,weight) &&
+    int inp, tar, weight, extr;
+    if (getSavedSizes(inp,tar,weight,extr) &&
         inputsize_ == -1 && targetsize_ == -1 && weightsize_ == -1)
     {
         inputsize_  = inp;
         targetsize_ = tar;
         weightsize_ = weight;
+        extrasize_  = extr;
     }
 }
 
@@ -558,15 +574,19 @@ Array<VMField> VMatrix::getSavedFieldInfos() const
 ///////////////////
 // getSavedSizes //
 ///////////////////
-bool VMatrix::getSavedSizes(int& inputsize, int& targetsize, int& weightsize) const
+bool VMatrix::getSavedSizes(int& inputsize, int& targetsize, int& weightsize, int& extrasize) const
 {
     PPath filename = getMetaDataDir() / "sizes";
-    inputsize = targetsize = weightsize = -1;
+    inputsize = targetsize = weightsize = extrasize = -1;
     if (isfile(filename)) 
     {
         PStream in = openFile(filename, PStream::plearn_ascii, "r");
         // perr << "In loadFieldInfos() loading sizes from " << filename << endl;
         in >> inputsize >> targetsize >> weightsize;
+        in.skipBlanks();
+        extrasize = 0;
+        if(in.peek()!=EOF)
+            in >> extrasize;
         return true;                         // Successfully loaded
     }
     return false;
@@ -894,7 +914,7 @@ PP<Dictionary> VMatrix::getDictionary(int col) const
 // copySizesFrom //
 ///////////////////
 void VMatrix::copySizesFrom(const VMat& m) {
-    defineSizes(m->inputsize(), m->targetsize(), m->weightsize());
+    defineSizes(m->inputsize(), m->targetsize(), m->weightsize(), m->extrasize());
 }
 
 /////////////////////
@@ -925,6 +945,11 @@ void VMatrix::setMetaInfoFrom(const VMatrix* vm)
         int ws = vm->weightsize();
         if (ws + (inputsize_ > 0 ? inputsize_ : 0) + (targetsize_ > 0 ? targetsize_ : 0) <= width_)
             weightsize_ = ws;
+    }
+    if(extrasize_<=0) {
+        int es = vm->extrasize();
+        if (es + (inputsize_ > 0 ? inputsize_ : 0) + (targetsize_ > 0 ? targetsize_ : 0) + (weightsize_ > 0 ? weightsize_ : 0) <= width_)
+            extrasize_ = es;
     }
 
     // Copy fieldnames from vm if not set and they look good.
@@ -958,7 +983,8 @@ bool VMatrix::looksTheSameAs(const VMat& m) {
         || this->length()     != m->length()
         || this->inputsize()  != m->inputsize()
         || this->weightsize() != m->weightsize()
-        || this->targetsize() != m->targetsize() );
+        || this->targetsize() != m->targetsize() 
+        || this->extrasize()  != m->extrasize() );
 }
 
 /////////////
@@ -1511,7 +1537,7 @@ void VMatrix::saveAMAT(const PPath& amatfile, bool verbose, bool no_header, bool
         out << "\n";
     }
     if(!no_header)
-        out << "#sizes: " << inputsize() << ' ' << targetsize() << ' ' << weightsize() << endl;
+        out << "#sizes: " << inputsize() << ' ' << targetsize() << ' ' << weightsize() << ' ' << extrasize() << endl;
 
     ProgressBar* pb = 0;
     if (verbose)

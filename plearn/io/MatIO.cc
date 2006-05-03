@@ -752,7 +752,6 @@ void matlabSave( const PPath& dir, const string& plot_title,
                  const Vec& xValues,
                  const Mat& yValues, const Vec& add_col, const Vec& bounds, TVec<string> legend, bool save_plot)
 {
-    // TODO Use PStream.
     force_mkdir(dir);  
     PPath directory = dir.absolute();
     force_mkdir(directory / "Images" / "");
@@ -1590,28 +1589,25 @@ void parseSizeFromRemainingLines(const PPath& filename, PStream& in, bool& could
     if(!could_be_old_amat || nfields1!=2) 
         return;  // could not be an old .amat with first 2 numbers being length width
 
-    PLERROR("In parseSizeFromRemainingLines - This part of the code is not PStream compatible yet");
-
-    /* TODO The following code does not work yet with PStream. Fix it!
+    // OK we now suppose that we may have an old-format vmatrix
+    // PLERROR("In parseSizeFromRemainingLines - This part of the code is not PStream compatible yet");
+    
     // Get to the beginning of the file
-    in.seekg(0);
-    in.clear();
+    PStream rein = openFile(filename, PStream::raw_ascii, "r");
 
-    // Reread the first line as to real numbers
+    // Reread the first line as two real numbers
     real a = -1.0, b = -1.0;
-    in >> a >> b;
-
+    rein >> a >> b;
 
     if(guesslength == int(a)+1                   // +1 since the size line was counted in guesslength but should not
-    && real(int(a))==a && real(int(b))==b     //  Sizes must be integers and
-    && a>0 && b>0                             //   positive
-    && int(b)==nfields2 )                     // The first row of values has the expected width
+       && real(int(a))==a && real(int(b))==b     //  Sizes must be integers and
+       && a>0 && b>0                             //   positive
+       && int(b)==nfields2 )                     // The first row of values has the expected width
     {
-    // We assume we have an old style .amat
-    length = int(a);
-    width = int(b);
+        // We assume we have an old style .amat
+        length = int(a);
+        width = int(b);
     }
-    */
 }
 
 } // end of namespace PLearn

@@ -84,12 +84,13 @@ protected:
     int width_;     //!< Width of the VMatrix.
     time_t mtime_;  //!< Time of "last modification" of files containing the data.
 
-    //! For training/testing data sets we assume each row is composed of 3 parts:
+    //! For training/testing data sets we assume each row is composed of 4 parts:
     //! an input part, a target part, and a weight part.
     //! These fields give those parts' lengths.
     mutable int inputsize_;
     mutable int targetsize_;
     mutable int weightsize_;
+    mutable int extrasize_;
 
     //! Are write operations tolerated?
     bool writable;
@@ -136,14 +137,14 @@ public:
     // Sample parts sizes
 
     //! Define the input, target and weight sizes.
-    inline void defineSizes(int inputsize, int targetsize, int weightsize=0)
-    { inputsize_ = inputsize, targetsize_ = targetsize, weightsize_ = weightsize; }
+    inline void defineSizes(int inputsize, int targetsize, int weightsize=0, int extrasize=0)
+    { inputsize_ = inputsize, targetsize_ = targetsize, weightsize_ = weightsize; extrasize_ = extrasize; }
 
     //! Copy the values of inputsize, targetsize and weightsize from the source
     //! matrix m.
     void copySizesFrom(const VMat& m);
 
-    //! Sets all meta info (length_, width_, inputsize_, targetsize_, weightsize_,
+    //! Sets all meta info (length_, width_, inputsize_, targetsize_, weightsize_, extrasize_,
     //! fieldnames, ...) that is not already set, by copying it from the source's
     //! Vmat vm. Modification time is also set to the latest of the current mtime
     //! of this vmat and of the mtime of the source.
@@ -156,12 +157,18 @@ public:
     inline int inputsize() const { return inputsize_; }
     inline int targetsize() const { return targetsize_; }
     inline int weightsize() const { return weightsize_; }
+    inline int extrasize() const { return extrasize_; }
     inline bool hasWeights() const { return weightsize_>0; }
 
-    //! Default version calls getSubRow based on inputsize_ targetsize_ and weightsize_
+    //! Default version calls getSubRow based on inputsize_ targetsize_ weightsize_ 
     //! But exotic subclasses may construct, input, target and weight however they please.
     //! If not a weighted matrix, weight should be set to default value 1.
     virtual void getExample(int i, Vec& input, Vec& target, real& weight);
+
+    //! Complements the getExample method, fetching the the extrasize_ "extra" fields
+    //! expected to appear after the input, target and weight fields
+    //! Default version calls getSubRow based on inputsize_ targetsize_ weightsize_ and extrasize_
+    virtual void getExtra(int i, Vec& extra);
 
     /*! NOTE: How to handle exotic cases of data-sets whose input or target are not standard Vecs:
       The idea is to still have the getExample build and return Vecs, but the representation of these Vecs 
@@ -196,7 +203,7 @@ public:
      *  PLerror.  If everything looks clean, the 3 arguments are set to the
      *  sizes and return true.
      */
-    bool getSavedSizes(int& inputsize, int& targetsize, int& weightsize) const;
+    bool getSavedSizes(int& inputsize, int& targetsize, int& weightsize, int& extrasize) const;
     
     VMField& getFieldInfos(int fieldindex) const { return getFieldInfos()[fieldindex]; }
     void declareField(int fieldindex, const string& fieldname, VMField::FieldType fieldtype=VMField::UnknownType);

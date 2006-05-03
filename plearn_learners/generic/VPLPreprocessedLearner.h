@@ -91,6 +91,7 @@ public:
     string trainset_preproc; // program string in VPL language to be applied to each row of the training set
     int newtargetsize;
     int newweightsize;
+    int newextrasize;
 
     string input_preproc; // program string in VPL language to be applied to an input 
     string output_postproc;
