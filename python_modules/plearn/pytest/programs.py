@@ -1,4 +1,4 @@
-import logging, os
+import logging, os, sys
 from plearn.utilities import ppath
 from plearn.utilities import moresh
 from plearn.utilities import toolkit
@@ -104,7 +104,7 @@ class Program(core.PyTestObject):
             if options['compile_options'] == "":                
                 options['compile_options'] = None
             signature =\
-                "%(name)s__compiler=%(compiler)s__options=%(compile_options)s"%options
+                "%(name)s__compiler_%(compiler)s__options_%(compile_options)s"%options
         return signature.replace(' ', '_')
     _signature = classmethod(_signature)
 
@@ -182,8 +182,9 @@ class Program(core.PyTestObject):
 
         # Publish the compile log
         if succeeded and publish_dirpath:
-            moresh.system_symlink(self.__log_file_path,
-                                  moresh.relative_path(publish_target))
+            logging.debug("Publishing the compile log %s"%self.__log_file_path)
+            toolkit.symlink(self.__log_file_path,
+                            moresh.relative_path(publish_target))
         return succeeded
         
     def __first_compilation_attempt(self):
@@ -193,6 +194,11 @@ class Program(core.PyTestObject):
         targetdir, exec_name = os.path.split(self.getInternalExecPath())
         sanity_check, log_fname = os.path.split(self.__log_file_path)
         assert sanity_check == targetdir
+
+        if sys.platform == 'win32':
+            # When there are characters like '=' in a filenme, Windows can get
+            # confused if the filename is not quoted.
+            log_fname = '"%s"' % log_fname
                                  
         # Remove outdated log file
         assert not os.path.exists(exec_name)
@@ -206,12 +212,34 @@ class Program(core.PyTestObject):
         moresh.pushd(targetdir)
         logging.debug("\nIn %s:"%os.getcwd())
         
-        compile_cmd = "%s %s %s -link-target %s >& %s" \
-            % (self.compiler, self.compile_options,
-               self.getProgramPath(), self.getInternalExecPath(), log_fname)
+#       compile_cmd = "%s %s %s -link-target %s > %s" \
+#           % (self.compiler, self.compile_options,
+#              self.getProgramPath(), self.getInternalExecPath(), log_fname)
+ 
+        if sys.platform == 'win32':
+            # We assume the compiler is pymake.
+            if self.compiler != "pymake":
+                raise Not_Implemented
+            the_compiler = "python " + \
+                os.path.join(ppath.ppath('PLEARNDIR'), 'scripts', 'pymake')
+            redirection = ">"
+        else:
+            the_compiler = self.compiler
+            redirection = ">&"
+
+        compile_cmd   = "%s %s %s -link-target %s %s %s" \
+                          % ( the_compiler, self.compile_options,
+                              self.getProgramPath(),
+                              self.getInternalExecPath(),
+                              redirection, log_fname )
+
         
         logging.debug(compile_cmd)
-        compile_exit_code = os.WEXITSTATUS( os.system(compile_cmd) )
+        if sys.platform == 'win32':
+            compile_exit_code = 0;
+            os.system(compile_cmd)
+        else:
+            compile_exit_code = os.WEXITSTATUS( os.system(compile_cmd) )
         logging.debug("compile_exit_code <- %d\n"%compile_exit_code)
         moresh.popd()
 
@@ -232,8 +260,15 @@ class Program(core.PyTestObject):
         if candidate == self.name:            
             self._internal_exec_path = self.getProgramPath()
         else:
-            self._internal_exec_path =\
+            self._internal_exec_path = \
                 os.path.join(core.pytest_config_path(), "compiled_programs", candidate)
+        if sys.platform == 'win32':
+            # Cygwin has trouble with the \ characters.
+            self._internal_exec_path = \
+                self._internal_exec_path.replace('\\', '/')
+            # In addition, we need to add the '.exe' extension as otherwise it
+            # may not be able to run it.
+            self._internal_exec_path += '.exe'
         return self._internal_exec_path
 
     def getProgramPath(self):
@@ -276,9 +311,19 @@ class Program(core.PyTestObject):
         if self.isPLearnCommand():            
             # arguments = "--no-version %s"%arguments
             arguments = "--no-version --no-progress %s"%arguments
-        command = "%s %s >& %s"%(self.getInternalExecPath(), arguments, logfname)
+        #command = '%s %s >& %s'%(self.getInternalExecPath(), arguments, logfname)
+        command = '%s %s' % (self.getInternalExecPath(), arguments)
+        # Run the test.
         logging.debug("In %s: %s"%(os.getcwd(), command))
-        return os.system(command)
+        test_output = toolkit.command_output(command)
+        # Save test output into log file.
+        logfile = open(logfname, 'w')
+        logfile.writelines(test_output)
+        logfile.close()
+        if sys.platform == "win32":
+            # Need to convert Windows line feeds to Unix ones, otherwise the
+            # diff will fail when comparing expected and actual run logs.
+            toolkit.command_output("dos2unix %s" % logfname)
 
     def isCompilable(self):
         try:
