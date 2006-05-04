@@ -1,4 +1,4 @@
-import logging, os
+import logging, os, sys
 from plearn.utilities import ppath
 from plearn.utilities.toolkit import exempt_list_of, re_filter_list
 
@@ -171,6 +171,9 @@ def relative_path( path, basepath=None ):
         basepath = os.getcwd()
         
     path = path.replace( basepath, '' )
+    if sys.platform == 'win32':
+        # Replace '\' with '/'
+        path = path.replace('\\', '/')
     if path.startswith('/'):
         return path[1:]
     return path
@@ -196,26 +199,6 @@ def split_listdir(path):
         else:
             nondirs.append(name)
     return dirs, nondirs
-
-def system_symlink(source, target):
-    """Create a link if the system correctly support it; copy otherwise.
-    
-    Under Cygwin, links are not appropriate as they are ".lnk" files,
-    not properly opened by PLearn. Thus we need to copy the files.
-    """
-    import shutil, sys
-    if (sys.platform == "cygwin"):
-        if (os.path.isdir(source)):
-            logging.debug("Recursively copying source: %s <- %s."%(target, source))
-            shutil.copytree(source, target, symlinks=False)
-        else:
-            logging.debug("Copying source: %s <- %s."%(target, source))
-            shutil.copy(source, target)
-    else:
-        logging.debug("Linking source: %s -> %s."%(target,source))
-        # print "ln -s %s %s"%(source, target)
-        rcode = os.system("ln -s '%s' '%s'"%(source, target))
-        # print rcode
 
 
 if __name__ == "__main__":
