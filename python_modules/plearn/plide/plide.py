@@ -595,6 +595,25 @@ class PlideMain( GladeAppWindow ):
             action=action,
             buttons= (gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,
                       gtk.STOCK_OPEN,  gtk.RESPONSE_OK))
+
+        # Add file filters
+        filter = gtk.FileFilter()
+        filter.set_name("All files")
+        filter.add_pattern("*")
+        chooser.add_filter(filter)
+        
+        filter = gtk.FileFilter()
+        filter.set_name("Experiment scripts")
+        filter.add_pattern("*.plearn")
+        filter.add_pattern("*.pyplearn")
+        chooser.add_filter(filter)
+
+        filter = gtk.FileFilter()
+        filter.set_name("Data")
+        filter.add_pattern("*.pmat")
+        filter.add_pattern(".amat")
+        chooser.add_filter(filter)
+
         chooser.set_default_response(gtk.RESPONSE_OK)
         chooser.set_current_folder(self.get_current_tab_directory())
         response = chooser.run()
