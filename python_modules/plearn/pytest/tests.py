@@ -200,7 +200,7 @@ class Resources(core.PyTestObject):
         ## Linking
         linked = False
         if os.path.exists( resource_path ):
-            moresh.system_symlink(resource_path, target_path)
+            toolkit.symlink(resource_path, target_path)
             linked = True
 
         elif must_exist:
