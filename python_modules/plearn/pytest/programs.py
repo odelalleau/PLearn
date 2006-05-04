@@ -236,8 +236,7 @@ class Program(core.PyTestObject):
         
         logging.debug(compile_cmd)
         if sys.platform == 'win32':
-            compile_exit_code = 0;
-            os.system(compile_cmd)
+            compile_exit_code = os.system(compile_cmd)
         else:
             compile_exit_code = os.WEXITSTATUS( os.system(compile_cmd) )
         logging.debug("compile_exit_code <- %d\n"%compile_exit_code)
