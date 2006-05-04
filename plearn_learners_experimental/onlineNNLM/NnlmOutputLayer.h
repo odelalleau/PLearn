@@ -45,14 +45,15 @@
 namespace PLearn {
 
 /**
- * The first sentence should be a BRIEF DESCRIPTION of what the class does.
- * Place the rest of the class programmer documentation here.  Doxygen supports
- * Javadoc-style comments.  See http://www.doxygen.org/manual.html
+ * Implements the output layer for the Neural Network Language Model. 
  *
- * @todo Write class to-do's here if there are any.
+ * We use a 'cost' variable to define behavior (not the greatest solution).
+ * Depending on it, fprop and bprop behavior is according to a
+ * non-discriminant, evaluated discriminant, or discriminant cost.
  *
- * @deprecated Write deprecated stuff here if there is any.  Indicate what else
- * should be used instead.
+ * @todo 
+ * @deprecated 
+ * 
  */
 class NnlmOutputLayer : public OnlineLearningModule
 {
@@ -61,8 +62,19 @@ class NnlmOutputLayer : public OnlineLearningModule
 public:
     //#####  Public Build Options  ############################################
 
-    //! ### declare public option fields (such as build options) here
-    //! Start your comments with Doxygen-compatible comments such as //!
+    // NNLM related
+    int vocabulary_size;
+    int word_representation_size;
+    int context_size;
+
+    //! defines cost used
+    int cost;
+
+    //! discounts the gaussians' old parameters in the computation of the new
+    //! ones
+    real start_discount_rate;
+    real discount_decrease_constant;
+
 
 public:
     //#####  Public Member Functions  #########################################
@@ -73,6 +85,8 @@ public:
     NnlmOutputLayer();
 
     // Your other public member functions go here
+    void setCurrentWord(int the_current_word);
+    void setContext(const Vec& the_current_context);
 
     //! given the input, compute the output (possibly resize it  appropriately)
     virtual void fprop(const Vec& input, Vec& output) const;
@@ -92,9 +106,9 @@ public:
 
     //! this version allows to obtain the input gradient as well
     //! N.B. THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
-    // virtual void bpropUpdate(const Vec& input, const Vec& output,
-    //                          Vec& input_gradient,
-    //                          const Vec& output_gradient);
+     virtual void bpropUpdate(const Vec& input, const Vec& output,
+                              Vec& input_gradient,
+                              const Vec& output_gradient);
 
     //! Similar to bpropUpdate, but adapt based also on the estimation
     //! of the diagonal of the Hessian matrix, and propagates this
@@ -159,11 +173,37 @@ private:
 
     //! This does the actual building.
     void build_();
+    void resetParameters();
 
 private:
     //#####  Private Data Members  ############################################
 
+    real discount_rate;
+
     // The rest of the private stuff goes here
+    Mat mu;       // mu(i) -> moyenne empirique des x quand y=i
+    Mat sigma2;   // sigma2(i) -> variance empirique des x quand y=i
+    Vec pi;       // pi[i] -> moyenne empirique de y==i
+
+    Mat sumX;     // sumX(i) -> sum_t x_t 1_{y==i}
+    Mat sumX2;    // sumX2(i) -> sum_t x_t^2 1_{y==i}
+
+    TVec<int> sumI;     // sumI(i) -> sum_t 1_{y==i}
+    int s_sumI;  // sum_t 1
+
+
+    //! the current word -> we use its parameters to compute output
+    int current_word;
+    Vec context;
+
+    // temporary variables
+    mutable real r1;
+    mutable real r2;
+    mutable Vec vec1;
+    mutable Vec vec2;
+
+    int step_number;
+
 };
 
 // Declares a few other classes and functions related to this class

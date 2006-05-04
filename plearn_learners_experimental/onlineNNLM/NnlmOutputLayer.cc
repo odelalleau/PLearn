@@ -45,34 +45,80 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     NnlmOutputLayer,
-    "ONE LINE DESCRIPTION",
+    "Implements the output layer for the NNLM.",
     "MULTI-LINE \nHELP");
 
 NnlmOutputLayer::NnlmOutputLayer() :
-/* ### Initialize all fields to their default value here */
+    OnlineLearningModule(),
+    vocabulary_size( -1 ),
+    word_representation_size( -1 ),
+    context_size( -1 ),
+    cost( 0 ),
+    start_discount_rate( 0.5 ),
+    discount_decrease_constant( 0 ),
+    discount_rate( 0.5 ), 
 {
-    // ...
-
-    // ### You may (or not) want to call build_() to finish building the object
     // ### (doing so assumes the parent classes' build_() have been called too
     // ### in the parent classes' constructors, something that you must ensure)
 }
 
 void NnlmOutputLayer::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here.
-    // ### For the "flags" of each option, you should typically specify
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or
-    // ### OptionBase::tuningoption. If you don't provide one of these three,
-    // ### this option will be ignored when loading values from a script.
-    // ### You can also combine flags, for example with OptionBase::nosave:
-    // ### (OptionBase::buildoption | OptionBase::nosave)
 
-    // ### ex:
-    // declareOption(ol, "myoption", &NnlmOutputLayer::myoption,
-    //               OptionBase::buildoption,
-    //               "Help text describing this option");
-    // ...
+    declareOption(ol, "vocabulary_size",
+                  &NnlmOutputLayer::vocabulary_size,
+                  OptionBase::buildoption,
+                  "size of vocabulary used");
+
+    declareOption(ol, "word_representation_size",
+                  &NnlmOutputLayer::word_representation_size,
+                  OptionBase::buildoption,
+                  "size of the real distributed word representation");
+
+    declareOption(ol, "context_size",
+                  &NnlmOutputLayer::context_size,
+                  OptionBase::buildoption,
+                  "size of word context");
+
+    declareOption(ol, "start_discount_rate",
+                  &NnlmOutputLayer::start_discount_rate,
+                  OptionBase::buildoption,
+                  "Discount-rate of stochastic old gaussian values when computing the new values");
+
+    declareOption(ol, "discount_decrease_constant",
+                  &NnlmOutputLayer::discount_decrease_constant,
+                  OptionBase::buildoption,
+                  "Decrease constant of gaussian parameters discount rate");
+
+    // * Learnt
+
+    declareOption(ol, "step_number", &NnlmOutputLayer::step_number,
+                  OptionBase::learntoption,
+                  "The step number, incremented after each update.");
+
+    declareOption(ol, "mu", &NnlmOutputLayer::mu,
+                  OptionBase::learntoption,
+                  "mu(i) -> moyenne empirique des x quand y=i" );
+    declareOption(ol, "sigma2", &NnlmOutputLayer::sigma2,
+                  OptionBase::learntoption,
+                  "sigma2(i) -> variance empirique des x quand y=i" );
+    declareOption(ol, "pi", &NnlmOutputLayer::pi,
+                  OptionBase::learntoption,
+                  "pi[i] -> moyenne empirique de y==i" );
+
+    declareOption(ol, "sumX", &NnlmOutputLayer::sumX,
+                  OptionBase::learntoption,
+                  "sumX(i) -> sum_t x_t 1_{y==i}" );
+    declareOption(ol, "sumX2", &NnlmOutputLayer::sumX2,
+                  OptionBase::learntoption,
+                  "sumX2(i) -> sum_t x_t^2 1_{y==i}" );
+    declareOption(ol, "sumI", &NnlmOutputLayer::sumI,
+                  OptionBase::learntoption,
+                  "sumI(i) -> sum_t 1_{y==i}" );
+    declareOption(ol, "s_sumI", &NnlmOutputLayer::s_sumI,
+                  OptionBase::learntoption,
+                  "sum_t 1" );
+
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -80,16 +126,30 @@ void NnlmOutputLayer::declareOptions(OptionList& ol)
 
 void NnlmOutputLayer::build_()
 {
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation.
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of
-    // ###    all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning"
-    // ###    options have been modified.
-    // ### You should assume that the parent class' build_() has already been
-    // ### called.
+
+    // *** Sanity checks
+    if( input_size <= 0 ) // has not been initialized
+    {
+        PLERROR("NBnnlmNonDiscriminativeOutputLayer::build_: 'input_size' <= 0 (%i).\n"
+                "You should set it to a positive integer.\n", input_size);
+    }
+    else if( output_size != 1 )
+    {
+        PLERROR("NBnnlmNonDiscriminativeOutputLayer::build_: 'output_size'(=%i) != 1\n"
+                  , output_size);
+    }
+    else if( vocabulary_size <= 0 )
+    {
+        PLERROR("NBnnlmNonDiscriminativeOutputLayer::build_: 'vocabulary_size' <= 0 (%i).\n"
+                  , vocabulary_size);
+    }
+
+
+    // *** Parameters not initialized
+    if( mu.size() == 0 )   {
+        resetParameters();
+    }
+
 }
 
 // ### Nothing to add here, simply calls build_
@@ -100,23 +160,133 @@ void NnlmOutputLayer::build()
 }
 
 
+void NnlmOutputLayer::resetParameters()
+{
+    mu.resize( vocabulary_size, input_size);
+    mu.fill( 0 );
+    sigma2.resize( vocabulary_size, input_size);
+    sigma2.fill( 0 );
+    pi.resize( vocabulary_size );
+    pi.fill( 0 );
+
+    sumX.resize( vocabulary_size, input_size);
+    sumX.fill( 0 );
+    sumX2.resize( vocabulary_size, input_size);
+    sumX2.fill( 0 );
+
+    sumI.resize( vocabulary_size );
+
+    // HACK
+    // we're cheating on the counts - hopefully this doesn't matter a whole lot
+    // in the long run
+    // so we don't get /0 in the 1st iteration
+//    sumI.fill( 1 );
+//    s_sumI = 1;
+    sumI.fill( 0 );
+    s_sumI = 0;
+
+    vec1.resize(input_size);
+    vec2.resize(input_size);
+    context.resize(context_size);
+
+    step_number = 0;
+
+}
+
+void NnlmOutputLayer::setCurrentWord(int the_current_word) 
+{
+    if( the_current_word >= vocabulary_size )
+    {
+        PLERROR("NBnnlmNonDiscriminativeOutputLayer::setCurrentWord:'the_current_word'(=%i) >= \n"
+                  "'vocabulary_size'(=%i)\n"
+                  , the_current_word, vocabulary_size);
+    }
+
+    current_word = the_current_word;
+}
+
+
+void NnlmOutputLayer::setContext(const Vec& the_current_context) 
+{
+    context << the_current_context;
+
+}
+
 void NnlmOutputLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields
-    // ### that you wish to be deepCopied rather than
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
+    deepCopyField(mu, copies);
+    deepCopyField(sigma2, copies);
+    deepCopyField(pi, copies);
+
+    deepCopyField(sumX, copies);
+    deepCopyField(sumX2, copies);
+    deepCopyField(sumI, copies);
+
+    deepCopyField(vec1, copies);
+    deepCopyField(vec2, copies);
+
+    deepCopyField(context, copies);
 
     // ### Remove this line when you have fully implemented this method.
-    PLERROR("NnlmOutputLayer::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    //PLERROR("NnlmOutputLayer::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 //! given the input, compute the output (possibly resize it  appropriately)
+//---------------------------------------------------------------------------------
+// PA - Should we not initialize with appropriate values for pi_y
+// Would this help to get a better start?
 void NnlmOutputLayer::fprop(const Vec& input, Vec& output) const
 {
+
+    // *** 
+    // so we don't do a /0 with /sigma2(current_word, i)
+    if( sumI[ current_word ] < 2 )  {
+      output.fill(0.0);
+      return;
+    }
+
+    // *** 
+
+    int in_size = input.size();
+    if( in_size != input_size )
+    {
+        PLERROR("NBnnlmNonDiscriminativeOutputLayer::fprop: 'input.size()' should be equal\n"
+                " to 'input_size' (%i != %i)\n", in_size, input_size);
+    }
+
+    // * Compute gaussian's exponent
+    r1 = 0.0;
+    r2 = 1.0;
+
+    for(int i=0; i<input_size; i++) {
+      vec1[i] = input[i] - mu(current_word, i);
+      vec2[i] = 1.0 / sigma2(current_word, i);
+
+      vec2[i] = vec2[i] * vec1[i];
+
+      r1 += vec1[i] * vec2[i];
+
+      // determinant of variance matrix
+      r2 *= sigma2(current_word, i);
+    }
+
+    r1 *= -0.5;
+
+
+    // * Compute normalizing factor
+    //r2 = det
+
+    //r2 = 1.0 / sqrt( ipow(2.0 * Pi, input_size) * r2);
+    //r2 = 1.0 / ( mypow(2.0 * Pi, input_size / 2.0) * sqrt( r2 ) ) ;
+
+    real log_r2 = 0.5 * ( (input_size) * safelog(2.0 * Pi) + safelog(r2) );
+    real log_p_i = safelog(pi[current_word]) + r1 - log_r2;
+
+    // * Compute output
+    output[0] = -( log_p_i );
+
 }
 
 /* THIS METHOD IS OPTIONAL
@@ -136,20 +306,112 @@ void NnlmOutputLayer::bpropUpdate(const Vec& input, const Vec& output,
 }
 */
 
-/* THIS METHOD IS OPTIONAL
 //! this version allows to obtain the input gradient as well
 //! N.B. THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
 void NnlmOutputLayer::bpropUpdate(const Vec& input, const Vec& output,
                                Vec& input_gradient,
                                const Vec& output_gradient)
 {
-}
+
+    int in_size = input.size();
+    int out_size = output.size();
+    int og_size = output_gradient.size();
+
+    // size check
+    if( in_size != input_size )
+    {
+        PLERROR("NBnnlmNonDiscriminativeOutputLayer::bpropUpdate:'input.size()' should be equal\n"
+                " to 'input_size' (%i != %i)\n", in_size, input_size);
+    }
+    if( out_size != output_size )
+    {
+        PLERROR("NBnnlmNonDiscriminativeOutputLayer::bpropUpdate:'output.size()' should be"
+                " equal\n"
+                " to 'output_size' (%i != %i)\n", out_size, output_size);
+    }
+    if( og_size != output_size )
+    {
+        PLERROR("NBnnlmNonDiscriminativeOutputLayer::bpropUpdate:'output_gradient.size()'"
+                " should\n"
+                " be equal to 'output_size' (%i != %i)\n",
+                og_size, output_size);
+    }
+
+
+    // * Compute gradient with respect to input
+    // inv(Sigma) (x-mu(i))
+
+    // so we don't do a /0 with  /sigma2(current_word, i)
+    if( sumI[ current_word ] < 2 )  {
+      input_gradient.fill(0.0);
+    } else  {
+
+      // SHOULDN T R2 BE HERE??????????????????????? NO
+        for(int i=0; i<input_size; i++) {
+            input_gradient[i] = ( input[i] - mu(current_word, i) ) /
+sigma2(current_word, i);
+        }
+    }
+
+
+      // * Update parameters - using discount
+      // discount * ancien + (1-discount) * nouveau
+    if( sumI[ current_word ] >= 1 ) {
+      for(int i=0; i<input_size; i++) {
+
+        mu( current_word, i ) = discount * sumX( current_word, i ) / (real)
+sumI[ current_word ] + (1.0 - discount) * input[i];
+
+        sigma2( current_word, i ) = discount * 
+            (  mu(current_word, i) * mu(current_word, i) + (
+sumX2(current_word, i) -2.0 * mu(current_word, i) * sumX(current_word, i)
+) / sumI[ current_word ] )
+            + (1.0-discount) * input[i]*input[i];
+
+      }
+    }
+
+
+
+    // * Update counts
+    for(int i=0; i<input_size; i++) {
+      sumX( current_word, i ) += input[i];
+      sumX2( current_word, i ) += input[i]*input[i];
+    }
+
+    // No point - done once and for all in NBNNLMLearner
+    // WRONG! we want to normalize properly
+    // beware however... not to overflow
+    sumI[ current_word ] += 1;
+    s_sumI += 1;
+
+
+    if( sumI[ current_word ] >= 1 ) {
+      // * Update parameters
+/*      for(int i=0; i<input_size; i++) {
+
+        mu( current_word, i ) = sumX( current_word, i ) / (real) sumI[
+current_word ];
+        sigma2( current_word, i ) = mu(current_word, i) * mu(current_word, i) + 
+          ( sumX2(current_word, i) -2.0 * mu(current_word, i) *
+sumX(current_word, i) ) / sumI[ current_word ];
+
+      }
 */
+      
+      pi[current_word] = (real)sumI[ current_word ] / (real)s_sumI;
+
+    }
+
+
+}
 
 //! reset the parameters to the state they would be BEFORE starting training.
 //! Note that this method is necessarily called from build().
 void NnlmOutputLayer::forget()
 {
+    resetParameters();
+
 }
 
 /* THIS METHOD IS OPTIONAL
