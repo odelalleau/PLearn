@@ -40,6 +40,8 @@
 #ifndef NnlmWordRepresentationLayer_INC
 #define NnlmWordRepresentationLayer_INC
 
+#include <plearn/base/Object.h>
+#include <plearn/math/TMat_maths.h>
 #include <plearn_learners/online/OnlineLearningModule.h>
 
 namespace PLearn {

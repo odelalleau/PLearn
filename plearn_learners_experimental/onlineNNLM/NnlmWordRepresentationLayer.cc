@@ -142,7 +142,7 @@ void NnlmWordRepresentationLayer::build_()
 
         // TODO add an option for the seed
         if( !random_gen )   {
-            random_generator = new PRandom( 1 );
+            random_gen = new PRandom( 1 );
         }
 
         real r = 1.0 / sqrt(input_size);
@@ -171,11 +171,45 @@ void NnlmWordRepresentationLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 }
 
 //! given the input, compute the output (possibly resize it  appropriately)
+//! In our case, we just do a lookup in the weights matrix, for each word in
+//! the context.
 void NnlmWordRepresentationLayer::fprop(const Vec& input, Vec& output) const
 {
+
+    // TODO only do these in debug
+    // *** Sanity checks 
+
+    // check the input holds input_size hot indexes
+    int in_size = input.size();
+    if( in_size != input_size )
+    {
+        PLERROR("NnlmWordRepresentationLayer::fprop: 'input.size()' should be equal\n"
+                " to 'input_size' (%i != %i)\n", in_size, input_size);
+    }
+    //
+    int out_size = output.size();
+    if( out_size != output_size )
+    {
+        PLERROR("NnlmWordRepresentationLayer::fprop: 'output.size()' should be equal\n"
+                " to 'output_size' (%i != %i)\n", out_size, output_size);
+    }
+
+
+    // magnitude of index check
+    for( int i=0; i<input_size; i++)  {
+      if( input[i] >= vocabulary_size || input[i] < 0 )
+      {
+          PLERROR("NnlmWordRepresentationLayer::fprop: 'input[%i]' should be smaller\n"
+                  " than 'vocabulary_size' (%i !< %i)\n",
+          i, input[i], vocabulary_size);
+      }
+
+      output.subVec( i*word_representation_size, word_representation_size ) << weights( (int) input[i] );
+    }
+
+
 }
 
-/* THIS METHOD IS OPTIONAL
 //! Adapt based on the output gradient: this method should only
 //! be called just after a corresponding fprop; it should be
 //! called with the same arguments as fprop for the first two arguments
@@ -189,8 +223,54 @@ void NnlmWordRepresentationLayer::fprop(const Vec& input, Vec& output) const
 void NnlmWordRepresentationLayer::bpropUpdate(const Vec& input, const Vec& output,
                                const Vec& output_gradient)
 {
+
+    int in_size = input.size();
+    int out_size = output.size();
+    int og_size = output_gradient.size();
+
+    // size check
+    if( in_size != input_size )
+    {
+        PLERROR("NnlmWordRepresentationLayer::bpropUpdate: 'input.size()' should be equal\n"
+                " to 'input_size' (%i != %i)\n", in_size, input_size);
+    }
+    if( out_size != output_size )
+    {
+        PLERROR("NnlmWordRepresentationLayer::bpropUpdate: 'output.size()' should be"
+                " equal\n"
+                " to 'output_size' (%i != %i)\n", out_size, output_size);
+    }
+    if( og_size != output_size )
+    {
+        PLERROR("NnlmWordRepresentationLayer::bpropUpdate: 'output_gradient.size()'"
+                " should\n"
+                " be equal to 'output_size' (%i != %i)\n",
+                og_size, output_size);
+    }
+
+
+    learning_rate = start_learning_rate / ( 1.0 + decrease_constant * step_number);
+
+
+    // magnitude of index check and update
+    for( int i=0; i<input_size; i++)  {
+      if( input[i] >= vocabulary_size  || input[i] < 0 )
+      {
+          PLERROR("NnlmWordRepresentationLayer::bpropUpdate: 'input[%i]' should be smaller\n"
+                  " than 'vocabulary_size' (%i !< %i)\n",
+          i, input[i], vocabulary_size);
+      }
+
+      for(int j=0; j < output_size; j++)  {
+          weights( (int) input[i], j%word_representation_size) -= learning_rate * output_gradient[j];
+      }
+
+    }
+
+    step_number++;
+
 }
-*/
+
 
 /* THIS METHOD IS OPTIONAL
 //! this version allows to obtain the input gradient as well
@@ -206,6 +286,23 @@ void NnlmWordRepresentationLayer::bpropUpdate(const Vec& input, const Vec& outpu
 //! Note that this method is necessarily called from build().
 void NnlmWordRepresentationLayer::forget()
 {
+
+    // *** Weights
+
+    resetWeights();
+
+   // TODO add an option for the seed
+    if( !random_gen )   {
+        random_gen = new PRandom( 1 );
+    }
+
+    real r = 1.0 / sqrt(input_size);
+    random_gen->fill_random_uniform(weights,-r,r);
+
+    // *** 
+    step_number = 0;
+
+
 }
 
 /* THIS METHOD IS OPTIONAL
@@ -258,6 +355,12 @@ void NnlmWordRepresentationLayer::bbpropUpdate(const Vec& input, const Vec& outp
 {
 }
 */
+
+void NnlmWordRepresentationLayer::resetWeights()
+{
+    weights.resize( vocabulary_size, word_representation_size );
+    weights.fill( 0 );
+}
 
 
 } // end of namespace PLearn
