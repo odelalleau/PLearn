@@ -60,6 +60,10 @@ public:
 
     int verbosity;
 
+    //#####  Public Learnt Options  ###########################################
+
+    TVec<bool> missing_pattern_change;
+
 public:
     //#####  Public Member Functions  #########################################
 

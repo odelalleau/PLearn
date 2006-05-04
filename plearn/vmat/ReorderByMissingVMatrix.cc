@@ -71,8 +71,21 @@ ReorderByMissingVMatrix::ReorderByMissingVMatrix():
 ////////////////////
 void ReorderByMissingVMatrix::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "verbosity", &ReorderByMissingVMatrix::verbosity, OptionBase::buildoption,
-            "Control the amount of output.");
+
+    // Build options.
+
+    declareOption(ol, "verbosity", &ReorderByMissingVMatrix::verbosity,
+                                   OptionBase::buildoption,
+        "Control the amount of output.");
+
+    // Learnt options.
+
+    declareOption(ol, "missing_pattern_change",
+                  &ReorderByMissingVMatrix::missing_pattern_change,
+                  OptionBase::learntoption,
+        "A vector whose i-th element is a boolean indicating whether the\n"
+        "missing pattern has changed going from the (i-1)-th sample to the\n"
+        "i-th sample (note: the first element is always true).");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -154,11 +167,17 @@ void ReorderByMissingVMatrix::build_()
         vector<IndexAndMissingFlags>::const_iterator it = vec.begin();
         previous_flags = "";
         n_flag_changes = 0;
+        int index = 0;
+        missing_pattern_change.resize(int(vec.size()));
         for (; it != vec.end(); it++) {
             indices.append(it->index);
             const string& missing_flags = it->missing_flags;
-            if (!previous_flags.empty() && missing_flags != previous_flags)
-                n_flag_changes++;
+            if (missing_flags != previous_flags) {
+                if (!previous_flags.empty())
+                    n_flag_changes++;
+                missing_pattern_change[index++] = true;
+            } else
+                missing_pattern_change[index++] = false;
             previous_flags = missing_flags;
         }
         if (verbosity >= 1)
@@ -175,15 +194,7 @@ void ReorderByMissingVMatrix::build_()
 void ReorderByMissingVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("ReorderByMissingVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    deepCopyField(missing_pattern_change,  copies);
 }
 
 } // end of namespace PLearn
