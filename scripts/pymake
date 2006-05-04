@@ -1289,9 +1289,7 @@ class FileInfo:
         else:
             symlink_to_base = self.filebase
 
-        symlink_to = join(objsdir, symlink_to_base)
-        if linkname != '':
-            symlink_to = join(self.filedir, symlink_to)
+        symlink_to = join(self.filedir, objsdir, symlink_to_base)
 
         # User-provided path for the link itself?
         if linkname == '':
@@ -1299,7 +1297,6 @@ class FileInfo:
         else:
             symlink_from = linkname
 
-             
         # Create symbolic link.
         toolkit.symlink(symlink_to, symlink_from, True, True)
 
