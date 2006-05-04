@@ -242,6 +242,14 @@ protected:
     //! Temporary storage vector.
     mutable Vec log_likelihood_dens;
 
+    // TODO Document (i-th element = if missing pattern has changed).
+    // (note: only used when efficient_missing == 2)
+    TVec<bool> need_recompute;
+
+    // TODO Document (maps a sample in the original training set to its index
+    // in the reordered train set).
+    TVec<int> original_to_reordered;
+
     // *********************
     // * protected options *
     // *********************
@@ -262,7 +270,7 @@ public:
     real alpha_min;
     int efficient_k_median;
     int efficient_k_median_iter;
-    bool efficient_missing;
+    int efficient_missing;
     real epsilon;
     bool impute_missing;
     int kmeans_iterations;
@@ -442,6 +450,9 @@ public:
 
     //! Overridden to compute the training time.
     virtual TVec<string> getTrainCostNames() const;
+
+    //! Overridden to reorder the dataset when efficient_missing == 2.
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
     // *************************
     // * PDistribution methods *

@@ -43,13 +43,15 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/prim_minimum_spanning_tree.hpp>
 
-#include <plearn/vmat/ConcatColumnsVMatrix.h>
+#include <plearn/io/load_and_save.h>
 #include <plearn/math/Cholesky_utils.h>
 #include <plearn/math/pl_erf.h>   //!< For gauss_log_density_stddev().
 #include <plearn/math/plapack.h>
+#include <plearn/vmat/ConcatColumnsVMatrix.h>
 //#include <plearn/sys/Profiler.h>
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/vmat/MemoryVMatrix.h>
+#include <plearn/vmat/ReorderByMissingVMatrix.h>
 #include <plearn/vmat/SubVMatrix.h>
 #include <plearn/vmat/VMat_basic_stats.h>
 
@@ -75,7 +77,7 @@ GaussMix::GaussMix():
     alpha_min(1e-6),
     efficient_k_median(10),
     efficient_k_median_iter(100),
-    efficient_missing(false),
+    efficient_missing(0),
     epsilon(1e-6),
     impute_missing(false),
     kmeans_iterations(5),
@@ -149,7 +151,10 @@ void GaussMix::declareOptions(OptionList& ol)
 
     declareOption(ol, "efficient_missing", &GaussMix::efficient_missing,
                                            OptionBase::buildoption,
-        "If true, computations with missing values will be more efficient.");
+        "If not 0, computations with missing values will be more efficient:\n"
+        "- 1: most efficient method\n"
+        "- 2: less naive method than 0, where we compute the matrices\n"
+        "     only once per missing pattern (not as good as 1)");
 
     declareOption(ol, "efficient_k_median", &GaussMix::efficient_k_median,
                                             OptionBase::buildoption,
@@ -843,9 +848,12 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
     // computations (with the current rather dumb implementation).
     static Vec mu_y_missing;
     static Mat cov_y_missing;
+    static TVec<Mat> covs_y_missing;
     static Vec y_missing;
     static Vec eigenvals_missing;
+    static TVec<Vec> eigenvals_allj_missing;
     static Mat eigenvecs_missing;
+    static TVec<Mat> eigenvecs_allj_missing;
     static TVec<int> non_missing;
     static Mat work_mat1, work_mat2;
     static Mat eigenvalues_x_miss;
@@ -903,10 +911,12 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
             // In such a case, it is not necessary to do all computations.
             // TODO It would be good to have one single flag for both lines
             // below. Maybe current_training_sample != -1 would be enough?
-            bool eff_missing = efficient_missing &&
+            bool eff_missing = efficient_missing == 1 &&
                                (previous_training_sample != -2);
             bool imp_missing = impute_missing &&
                                (current_training_sample != -1);
+            bool eff_naive_missing = efficient_missing == 2 &&
+                                     previous_training_sample >= 0;
 
             if (y.hasMissing() || eff_missing || imp_missing) {
                 // TODO This will probably make the 'efficient_missing' method
@@ -1061,7 +1071,17 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                 }
                 */
                 if (!eff_missing) {
+                if (!eff_naive_missing) {
                 cov_y_missing.resize(n_non_missing, n_non_missing);
+                } else {
+                    assert( efficient_missing == 2 );
+                    covs_y_missing.resize(L);
+                    Mat& cov_y_missing_j = covs_y_missing[j];
+                    cov_y_missing_j.resize(n_non_missing, n_non_missing);
+                    cov_y_missing = cov_y_missing_j;
+                }
+                if (!eff_naive_missing ||
+                    need_recompute[current_training_sample]) {
                 for (int k = 0; k < n_non_missing; k++) {
                     mu_y_missing[k] = mu_y[non_missing[k]];
                     y_missing[k] = y[non_missing[k]];
@@ -1071,14 +1091,23 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     }
                 }
                 }
+                }
                 /*
                 if (n_non_missing == 0) {
                     log_likelihood = 0;
                 } else {*/
                     // Perform SVD of cov_y_missing.
                     if (!eff_missing) {
+                    if (!eff_naive_missing ||
+                                    need_recompute[current_training_sample]) {
+                    eigenvals_allj_missing.resize(L);
+                    eigenvecs_allj_missing.resize(L);
                     eigenVecOfSymmMat(cov_y_missing, n_non_missing,
-                                      eigenvals_missing, eigenvecs_missing);
+                                      eigenvals_allj_missing[j],
+                                      eigenvecs_allj_missing[j]);
+                    }
+                    eigenvals_missing = eigenvals_allj_missing[j];
+                    eigenvecs_missing = eigenvecs_allj_missing[j];
                     }
 
                     real log_det = 0;
@@ -1151,7 +1180,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         }
                         */
                     }
-                    if (efficient_missing && current_training_sample >= 0)
+                    if (efficient_missing == 1 && current_training_sample >= 0)
                         no_missing_change[current_training_sample] =
                             same_covariance;
 
@@ -1313,6 +1342,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         static Mat H2;
                         Mat& H3_inv = H3_inverse[j];
                         int n_missing = coord_missing.length();
+                        if (!eff_naive_missing ||
+                                need_recompute[current_training_sample]) {
                         H3.setMod(n_missing);
                         H3.resize(n_missing, n_missing);
                         H3_inv.resize(n_missing, n_missing);
@@ -1324,6 +1355,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         matInvert(H3, H3_inv);
                         assert( H3_inv.isSymmetric(false, true) );
                         fillItSymmetric(H3_inv);
+                        }
 
                         H2.resize(n_missing, n_non_missing);
                         for (int i = 0; i < n_missing; i++)
@@ -1651,7 +1683,7 @@ void GaussMix::computePosteriors() {
         // Clear the additional 'error_covariance' matrix.
         for (int j = 0; j < L; j++)
             error_covariance[j].fill(0);
-    if (efficient_missing) {
+    if (efficient_missing == 1) {
         // Loop over all clusters.
         for (int k = 0; k < missing_template.length(); k++) {
             const TVec<int>& samples_clust = spanning_path[k];
@@ -1987,6 +2019,8 @@ void GaussMix::kmeans(const VMat& samples, int nclust, TVec<int>& clust_idx,
     Mat distances(vmat_length, nclust);
     Vec min_distances(vmat_length);
     int farthest_sample = random_gen->uniform_multinomial_sample(vmat_length);
+    if (!original_to_reordered.isEmpty())
+        farthest_sample = original_to_reordered[farthest_sample];
     Vec input_k;
     for (int i=0; i<nclust; i++)
     {
@@ -2064,6 +2098,8 @@ void GaussMix::kmeans(const VMat& samples, int nclust, TVec<int>& clust_idx,
                 // Re-initialize randomly the cluster center.
                 int new_center =
                     random_gen->uniform_multinomial_sample(vmat_length);
+                if (!original_to_reordered.isEmpty())
+                    new_center = original_to_reordered[new_center];
                 samples->getExample(new_center, input, target, weight);
                 clust_i << input;
             }
@@ -2164,6 +2200,9 @@ void GaussMix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(sample_to_template,       copies);
     deepCopyField(y_centered,               copies);
     deepCopyField(covariance,               copies);
+    deepCopyField(log_likelihood_dens,      copies);
+    deepCopyField(need_recompute,           copies);
+    deepCopyField(original_to_reordered,    copies);
 
     deepCopyField(diags,                    copies);
     deepCopyField(eigenvalues,              copies);
@@ -2387,10 +2426,10 @@ void GaussMix::resizeDataBeforeTraining() {
             // TODO May be useful to handle other types of VMats for large
             // datasets.
             // TODO Move outside of this method.
-            if (efficient_missing)
+            if (efficient_missing == 1)
                 clust_imputed_missing.resize(L);
         }
-        if (efficient_missing)
+        if (efficient_missing == 1)
             no_missing_change.resize(nsamples);
     }
 }
@@ -2801,6 +2840,32 @@ void GaussMix::setPredictorPredictedSizes_const(int n_i, int n_t) const
     }
 }
 
+////////////////////
+// setTrainingSet //
+////////////////////
+void GaussMix::setTrainingSet(VMat training_set, bool call_forget)
+{
+    if (efficient_missing != 2) {
+        inherited::setTrainingSet(training_set, call_forget);
+        return;
+    }
+
+    PP<ReorderByMissingVMatrix> reordered_training_set =
+        new ReorderByMissingVMatrix();
+    reordered_training_set->source = training_set;
+    reordered_training_set->build();
+    inherited::setTrainingSet((ReorderByMissingVMatrix*)reordered_training_set,
+                              call_forget);
+    // Now fill in the vector that indicates when the matrices need to be
+    // recomputed.
+    need_recompute.resize(training_set->length());
+    need_recompute << reordered_training_set->missing_pattern_change;
+
+    original_to_reordered.resize(training_set->length());
+    for (int i = 0; i < training_set->length(); i++)
+        original_to_reordered[reordered_training_set->indices[i]] = i;
+}
+
 // Boost graph property for edges in a binary tree.
 struct MissingFlag {
     // Indicates whether a bit is flagged as missing.
@@ -2862,7 +2927,7 @@ void GaussMix::train()
         BinaryBitsTree tree(1);
         const vertex_descr& root_vertex = *(boost::vertices(tree).first);
         ProgressBar* pb = 0;
-        if (efficient_missing && report_progress)
+        if (efficient_missing == 1 && report_progress)
             pb = new ProgressBar("Finding unique missing patterns",
                                  train_set->length());
         Vec input, target;
@@ -2872,7 +2937,7 @@ void GaussMix::train()
         TVec<bool> pattern(train_set->inputsize());
         sample_to_template.resize(train_set->length());
         TVec< TVec<int> > pattern_to_samples;
-        for (int i = 0; efficient_missing && i < train_set->length(); i++) {
+        for (int i = 0; efficient_missing == 1 && i < train_set->length(); i++) {
             train_set->getExample(i, input, target, weight);
             vertex_descr current_vertex = root_vertex;
             for (int k = 0; k < input.length(); k++) {
@@ -2922,10 +2987,10 @@ void GaussMix::train()
         if (pb)
             delete pb;
 
-        if (efficient_missing && verbosity >= 2)
+        if (efficient_missing == 1 && verbosity >= 2)
             pout << "Found " << n_unique << " unique missing patterns" << endl;
 
-        if (efficient_missing) {
+        if (efficient_missing == 1) {
             // Perform some kind of k-median on missing patterns for initial
             // clustering of missing patterns.
             TVec<int> indices(0, missing_patterns.length() - 1, 1);
@@ -3042,7 +3107,7 @@ void GaussMix::train()
                 // clusters_samp[missing_assign[sample_to_template[i]]].append(i);
                 clusters_samp[sample_to_template[i]].append(i);
 
-            if (efficient_missing) {
+            if (efficient_missing == 1) {
 #ifdef DIRECTED_HACK
                 typedef boost::adjacency_list < boost::vecS, boost::vecS,
                     boost::directedS,
