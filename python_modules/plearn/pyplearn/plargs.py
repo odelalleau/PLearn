@@ -76,8 +76,19 @@ class plopt(object):
         self._kwargs = kwargs
 
         # Actually sets the value of the plopt instance
-        self.set(value)
+        # self.set(value)
+
+        # Sanity checks
+        self.checkBounds(value)
+        self.checkChoices(value)
         self.__default_value = value
+
+    def __str__(self):
+        value = self.get()
+        value_str = repr(value)
+        if value != self.__default_value:
+            value_str += " [default: %s]"%repr(self.__default_value)
+        return "plopt(value = %s)"%value_str
 
     def cast(self, value):
         casted = None
@@ -95,8 +106,8 @@ class plopt(object):
         # Special treatment for list option
         elif self._type is list :
             elem_type = self._kwargs.pop("elem_type", None) 
-            if elem_type is None and len(self._value) > 0:
-                elem_type = type(self._value[0])
+            if elem_type is None and len(self.get()) > 0:
+                elem_type = type(self.get()[0])
             else:
                 elem_type = str
             casted = list_cast(value, elem_type)
@@ -127,7 +138,10 @@ class plopt(object):
                 "Option %s should be in choices=%s"%(self._name, choices))
 
     def get(self):
-        return self._value
+        plopt_overrides = actualContext().plopt_overrides
+        if self in plopt_overrides:
+            return plopt_overrides[self]
+        return self.__default_value
 
     def getBounds(self):
         minimum = self._kwargs.get("min", None)
@@ -148,15 +162,15 @@ class plopt(object):
         return self._type
 
     def reset(self):
-        self.set(self.__default_value)
-
+        actualContext().plopt_overrides.pop(self, None)
+        
     def set(self, value):
         # Sanity checks
         self.checkBounds(value)
         self.checkChoices(value)
-
+    
         # The previous didn't raise exeption, the value is coherent
-        self._value = value
+        actualContext().plopt_overrides[self] = value
 
     #######  Static methods  ######################################################
 
@@ -181,7 +195,6 @@ class plopt(object):
     def override(holder, option, value):
         plopt_instance = type.__getattribute__(holder, option)
         plopt_instance.set(value)
-        actualContext().plopt_overrides['.'.join([holder.__name__, option])] = value
     override = staticmethod(override)    
 
 class plargs(object):
@@ -297,9 +310,9 @@ class plargs(object):
                 return plopt_instance.get()
 
             # Unknown option
-            except AttributeError:
+            except AttributeError, err:
                 raise AttributeError(
-                    "Unknown option '%s' in '%s'"%(key, cls.__name__))
+                    "Unknown option '%s' in '%s' (%s)"%(key, cls.__name__, err))
 
 # For backward compatibility
 class plarg_defaults(plargs):
@@ -434,9 +447,20 @@ if __name__ == "__main__":
 
     print "+++ Context 2"        
     second_context = createNewContext()
+
+    print "-- Before creation of the new 'n' plnamespace:"
+    print n.namespaced
     printContext()
-    print "!!! But ", n.namespaced
     print
+    
+    class n(plnamespace):
+        namespaced = "NEW NAMESPACED ATTR"
+
+    print "-- After creation of the new 'n' plnamespace:"
+    print n.namespaced
+    printContext()
+    print
+
 
     print "+++ Back to Context 1"
     setCurrentContext(first_context)

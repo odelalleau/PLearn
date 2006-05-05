@@ -1,20 +1,4 @@
 
-class __ListMap(dict):
-    def __getitem__(self, key):
-        if not key in self:
-            self.__setitem__(key, [])
-        return super(__ListMap, self).__getitem__(key)
-
-class __Context(object):
-    def __init__(self):
-        self.binders = {}
-        self.namespaces = {}
-        self.plopt_holders = {}
-        self.plopt_overrides = {}
-
-__contexts = [ __Context() ]
-__current_context = 0
-
 def actualContext():
     """Function returning the actual context object.
 
@@ -39,3 +23,14 @@ def setCurrentContext(handle):
     global __current_context
     __current_context = handle
 
+#######  Classes and Module Variables  ########################################
+
+class __Context(object):
+    def __init__(self):
+        self.binders = {}
+        self.namespaces = {}
+        self.plopt_holders = {}
+        self.plopt_overrides = {}
+
+__contexts = [ __Context() ]
+__current_context = 0
