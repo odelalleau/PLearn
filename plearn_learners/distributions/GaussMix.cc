@@ -75,7 +75,7 @@ GaussMix::GaussMix():
     n_eigen_computed(-1),
     nsamples(-1),
     alpha_min(1e-6),
-    efficient_k_median(10),
+    efficient_k_median(1),
     efficient_k_median_iter(100),
     efficient_missing(0),
     epsilon(1e-6),
@@ -83,6 +83,7 @@ GaussMix::GaussMix():
     kmeans_iterations(5),
     L(1),
     max_samples_in_cluster(-1),
+    min_samples_in_cluster(1),
     n_eigen(-1),
     sigma_min(1e-6),
     type("spherical")
@@ -159,13 +160,20 @@ void GaussMix::declareOptions(OptionList& ol)
 
     declareOption(ol, "efficient_k_median", &GaussMix::efficient_k_median,
                                             OptionBase::buildoption,
-        "Minimum number of clusters used.");
+        "Starting number of clusters used.");
 
     declareOption(ol, "max_samples_in_cluster",
                   &GaussMix::max_samples_in_cluster,
                   OptionBase::buildoption,
         "Maximum number of samples allowed in each cluster (ignored if -1).\n"
         "More than 'efficient_k_median' clusters may be used in order to\n"
+        "comply with this constraint.");
+
+    declareOption(ol, "min_samples_in_cluster",
+                  &GaussMix::min_samples_in_cluster,
+                  OptionBase::buildoption,
+        "Minimum number of samples allowed in each cluster.\n"
+        "Less than 'efficient_k_median' clusters may be used in order to\n"
         "comply with this constraint.");
 
     declareOption(ol, "efficient_k_median_iter",
@@ -3051,10 +3059,18 @@ void GaussMix::train()
                             majority(assign, k)--;
                     }
                 }
-                for (int j = 0; j < n_clusters; j++)
-                    if (n_assigned[j] > 0) {
-                    if (max_samples_in_cluster == -1 ||
-                        n_assigned[j] <= max_samples_in_cluster) {
+                for (int j = 0; j < n_clusters; j++) {
+                    bool not_too_many_samples =
+                        max_samples_in_cluster == -1 ||
+                        n_assigned[j] <= max_samples_in_cluster;
+                    bool not_too_few_samples =
+                        n_assigned[j] >= min_samples_in_cluster ||
+                        (n_clusters == 1)                       ||
+                        n_assigned[j] == -1; // Newly created cluster.
+                    bool is_valid_cluster = not_too_many_samples    &&
+                                            not_too_few_samples     &&
+                                            n_assigned[j] != -1;
+                    if (is_valid_cluster) {
                     for (int k = 0; k < missing_template.width(); k++)
                         if (majority(j, k) > 0)
                             missing_template(j, k) = true;
@@ -3065,7 +3081,7 @@ void GaussMix::train()
                             // e.g. kmeans initialization).
                             missing_template(j, k) =
                                 (PRandom::common(false)->uniform_sample() < 0.5);
-                    } else {
+                    } else if (!not_too_many_samples) {
                         // This cluster has too many points assigned to it
                         // (more than 'max_samples_in_cluster'). We split it in
                         // two, by picking two new centers, randomly chosen in
@@ -3106,23 +3122,66 @@ void GaussMix::train()
                                 n_assigned[j] << " > " <<
                                 max_samples_in_cluster << "), there are now "
                                 << n_clusters << " clusters." << endl;
-                    }
-                    } else if (n_assigned[j] == 0) {
-                        // This cluster has no point assigned to it. We set it
-                        // to a new pattern chosen randomly in the patterns
-                        // set, that is assigned to this cluster.
-                        int random_pattern =
+                    } else if (!not_too_few_samples) {
+                        // This cluster has no point assigned to it.
+                        // If we can merge it with an existing cluster, we do
+                        // so, otherwise we assign its center to a new pattern
+                        // chosen randomly in the patterns set.
+                        int candidate = 0;
+                        while (candidate < n_clusters) {
+                            if (n_assigned[candidate] > 0 && candidate != j &&
+                                    (max_samples_in_cluster == -1 ||
+                                    n_assigned[candidate] + n_assigned[j] <=
+                                        max_samples_in_cluster)) {
+                                // This candidate cluster can be added the
+                                // points in the j-th cluster without violating
+                                // the maximum number of samples constraint.
+                                break;
+                            }
+                            candidate++;
+                        }
+                        if (candidate < n_clusters) {
+                            // We have found a valid candidate: we can delete
+                            // this cluster.
+                            // Note that actually, we have no reason to believe
+                            // that the samples in this cluster are going to be
+                            // assigned to our candidate template.
+                            n_assigned[candidate] += n_assigned[j];
+                            n_clusters--;
+                            for (int k = j; k < n_clusters; k++) {
+                                n_assigned[k] = n_assigned[k + 1];
+                                missing_template(k) << missing_template(k + 1);
+                            }
+                            n_assigned.resize(n_clusters);
+                            missing_template.resize(n_clusters,
+                                    missing_template.width());
+                            n_diffs.resize(n_clusters);
+                            majority.resize(n_clusters, majority.width());
+                            if (verbosity >= 10)
+                                pout << "Cluster " << j << " deleted (" <<
+                                    n_assigned[j] << " < " <<
+                                    min_samples_in_cluster << "), there are now "
+                                    << n_clusters << " clusters." << endl;
+                        } else {
+                            // No valid candidate: we reset this cluster
+                            // randomly.
+                            int random_pattern =
                             PRandom::common(false)->uniform_multinomial_sample(
                                     missing_patterns.length());
                         missing_template(j) <<
                             missing_patterns(random_pattern);
                         missing_assign[random_pattern] = j;
+                            if (verbosity >= 10)
+                                pout << "Cluster " << j << " has been reset to"
+                                     << " a random new center" << endl;
+                        }
                         finished = false;
-                    } else {
+                    } else if (n_assigned[j] == -1) {
                         // Note: this case happens only for a newly created
                         // center (when we split a cluster in two).
                         finished = false;
                     }
+                }
 
                 count_iter++;
                 if (report_progress)

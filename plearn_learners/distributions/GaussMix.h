@@ -276,6 +276,7 @@ public:
     int kmeans_iterations;
     int L;
     int max_samples_in_cluster;
+    int min_samples_in_cluster;
     int n_eigen;
     real sigma_min;
     string type;
