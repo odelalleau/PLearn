@@ -3083,11 +3083,11 @@ void GaussMix::train()
                         while (!found_valid_center_2) {
                             center_2 =
                                 PRandom::common(false)->uniform_multinomial_sample(cluster_samples.length());
-                            found_valid_center_2 = true;
+                            found_valid_center_2 = false;
                             for (int k = 0; k < missing_template.width(); k++)
                                 if (missing_template(j, k) !=
                                         missing_patterns(center_2, k)) {
-                                    found_valid_center_2 = false;
+                                    found_valid_center_2 = true;
                                     break;
                                 }
                         }
@@ -3101,6 +3101,11 @@ void GaussMix::train()
                         missing_template(n_clusters - 1) <<
                             missing_patterns(center_2);
                         finished = false;
+                        if (verbosity >= 10)
+                            pout << "Cluster " << j << " split in two (" <<
+                                n_assigned[j] << " > " <<
+                                max_samples_in_cluster << "), there are now "
+                                << n_clusters << " clusters." << endl;
                     }
                     } else if (n_assigned[j] == 0) {
                         // This cluster has no point assigned to it. We set it
