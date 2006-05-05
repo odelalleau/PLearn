@@ -8,12 +8,20 @@ def actualContext():
     """
     return __contexts[__current_context]
 
+__all_context_binders = []
+def allContextsBinder(binder):
+    assert not binder in __all_context_binders
+    __all_context_binders.append(binder)
+
 def createNewContext():
     global __contexts, __current_context
-    plargs = actualContext().binders['plargs']
+
     __current_context = len(__contexts)
     __contexts.append( __Context() )
-    actualContext().binders['plargs'] = plargs
+
+    for binder in __all_context_binders:
+         actualContext().binders[binder.__name__] = binder
+
     return __current_context
 
 def getCurrentContext():

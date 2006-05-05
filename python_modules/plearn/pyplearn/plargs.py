@@ -7,12 +7,28 @@ if "plargs" in globals():
     del plarg_defaults
 
 def list_cast(slist, elem_cast):
-    ## Potentially strip left-hand [ and right-hand ] if it's a string
+    """Intelligently casts I{slist} string to a list.
+
+    The I{slist} argument can have the following forms::
+
+        - CSV::
+            slist = "1,2,3" => casted = [1, 2, 3]
+        - CSV with brackets::
+            slist = "[hello,world]" => casted = ["hello", "world"]
+        - List of strings::
+            slist = [ "100.0", "102.5" ] => casted = [ 100.0, 102.5 ]
+
+    The element cast is made using the I{elem_cast} argument.
+    """
+    # CSV (with or without brackets)
     if isinstance(slist,str):
         slist = slist.lstrip(' [').rstrip(' ]')
         return [ elem_cast(e) for e in slist.split(",") ]
-    elif isinstance(s,list):
+
+    # List of strings
+    elif isinstance(slist, list):
         return [ elem_cast(e) for e in slist ]
+
     else:
         raise ValueError, "Cannot cast '%s' into a list", str(slist)
 
@@ -31,7 +47,7 @@ class plopt(object):
         lags        = plopt([1,22,252], doc='Lags to incorporate as inputs, in days')
         weight_cols = plopt([], elem_type=int)
 
-    The supported keywords are:
+    The supported keywords are::
 
         - B{doc}: The help string for that option.
 
@@ -56,13 +72,17 @@ class plopt(object):
           list which defaults as empty. If the list defaults as empty
           I{and} 'elem_type' keyword is not provided, then the elements' type is
           assumed to be 'str'.
+
+    A plopt I{holder} refers to either a plargs binder or a plnamespace.
     """
     unnamed = "### UNNAMED ###"
 
     def __init__(self, value, **kwargs):
         self._name  = kwargs.pop("name", self.unnamed)
         self._doc   = kwargs.pop("doc", '')
-
+        
+        # type: This keyword can and must only be used when the default
+        # value is None. Otherwise, it is infered using 'type(value)'.
         assert not ("type" in kwargs and value is not None)
         if value is None:
             if "type" not in kwargs:
@@ -73,17 +93,24 @@ class plopt(object):
         else:
             self._type = type(value)
 
+        # Keep the remaining kwargs for further use.
         self._kwargs = kwargs
-
-        # Actually sets the value of the plopt instance
-        # self.set(value)
 
         # Sanity checks
         self.checkBounds(value)
         self.checkChoices(value)
-        self.__default_value = value
+        self.__default_value = value # The check did not raise: 'value' is valid
 
     def __str__(self):
+        """Short string representation of a plopt instance.
+
+        Either
+            plopt(value = DEFAULT_VALUE)
+        or
+            plopt(value = VALUE [default: DEFAULT_VALUE])
+
+        where the second occurs if the current value is not equal to the default value.
+        """
         value = self.get()
         value_str = repr(value)
         if value != self.__default_value:
@@ -121,6 +148,7 @@ class plopt(object):
         return casted
     
     def checkBounds(self, value):
+        """Checks that value lies between 'min' and 'max' bounds parsed from self.kwargs."""
         minimum = self._kwargs.get("min", None)
         if minimum is not None and value < minimum:
             raise ValueError("Option %s (=%s) should greater than %s"
@@ -132,12 +160,14 @@ class plopt(object):
                              %(self._name, repr(value), repr(minimum)))
 
     def checkChoices(self, value):
+        """Checks that 'value' is one of the 'choices' parsed from self.kwargs."""
         choices = self._kwargs.get("choices", None)
         if choices is not None and value in choices:
             raise ValueError(
                 "Option %s should be in choices=%s"%(self._name, choices))
 
     def get(self):
+        """Returns the current context override, if any, o/w returns the default value."""
         plopt_overrides = actualContext().plopt_overrides
         if self in plopt_overrides:
             return plopt_overrides[self]
@@ -162,37 +192,44 @@ class plopt(object):
         return self._type
 
     def reset(self):
+        """Simply deletes any override for this plopt in the current context."""
         actualContext().plopt_overrides.pop(self, None)
         
     def set(self, value):
+        """Sets an override for this plopt in the current context"""
         # Sanity checks
         self.checkBounds(value)
         self.checkChoices(value)
     
-        # The previous didn't raise exeption, the value is coherent
+        # The previous didn't raise exeption, the 'value' is valid
         actualContext().plopt_overrides[self] = value
 
     #######  Static methods  ######################################################
 
     def define(holder, option, value):
+        """Typical pattern to set a plopt instance member in 'holder' for the first time."""
         # Enforce all 'holder' members to be (named) plopt instances
         if isinstance(value, plopt):
-            raise
             value._name = option
         else:
-            type.__setattr__(holder, option, plopt(value, name=option))
+            value = plopt(value, name=option)
 
-        # Keep a pointer to the subclass defining the option
+        # Acutally sets the plopt in the holder
+        type.__setattr__(holder, option, value)
+
+        # Keep a pointer to the holder in which the option is defined
         actualContext().plopt_holders[option] = holder
     define = staticmethod(define)
 
     def iterator(holder):
+        """Returns an iterator over the plopt instances contained in the I{holder}"""
         return iter([ value
                       for option, value in holder.__dict__.iteritems()
                       if isinstance(value, plopt) ])
     iterator = staticmethod(iterator)
 
     def override(holder, option, value):
+        """Typical pattern to override the value of an existing plopt instance."""
         plopt_instance = type.__getattribute__(holder, option)
         plopt_instance.set(value)
     override = staticmethod(override)    
@@ -201,6 +238,7 @@ class plargs(object):
     _extensible_ = False
 
     def getBinders():
+        """Returns a list of all binders in the current context."""
         context = actualContext()
         binder_names = context.binders.keys()
         binder_names.sort()
@@ -213,10 +251,18 @@ class plargs(object):
     getBinders = staticmethod(getBinders)
 
     def getNamespaces():
-        return actualContext().namespaces.values()
+        """Returns a list of all namespaces in the current context."""
+        context = actualContext()
+        nsp_names = context.namespaces.keys()
+        nsp_names.sort()        
+        return [ context.namespaces[nsp] for nsp in nsp_names ]
     getNamespaces = staticmethod(getNamespaces)
     
     def parse(*args):
+        """Parses a list of argument strings.
+
+        ...
+        """
         if len(args) == 1 and isinstance(args[0], list):
             args = args[0]
 
@@ -242,6 +288,7 @@ class plargs(object):
     parse = staticmethod(parse)
     
     class __metaclass__(type):
+        """Overrides the attribute management behavior."""
         def __new__(metacls, clsname, bases, dic):
             cls = type.__new__(metacls, clsname, bases, dic)
 
@@ -313,10 +360,12 @@ class plargs(object):
             except AttributeError, err:
                 raise AttributeError(
                     "Unknown option '%s' in '%s' (%s)"%(key, cls.__name__, err))
+allContextsBinder(plargs)
 
 # For backward compatibility
 class plarg_defaults(plargs):
     _extensible_ = True
+allContextsBinder(plarg_defaults)
 
 class plnamespace: 
     class __metaclass__(type):
