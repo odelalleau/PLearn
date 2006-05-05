@@ -71,7 +71,7 @@ NnlmOnlineLearner::NnlmOnlineLearner()
 
     // ### If this learner needs to generate random numbers, uncomment the
     // ### line below to enable the use of the inherited PRandom object.
-    // random_gen = new PRandom();
+    random_gen = new PRandom();
 }
 
 void NnlmOnlineLearner::declareOptions(OptionList& ol)
@@ -129,6 +129,8 @@ void NnlmOnlineLearner::buildLayers()
     p_wrl->word_representation_size = word_representation_size;
     p_wrl->context_size = context_size;
 
+    p_wrl->random_gen = random_gen;
+
     modules[0] = p_wrl;
 
 
@@ -138,8 +140,11 @@ void NnlmOnlineLearner::buildLayers()
   
     p_nnl->input_size = context_size * word_representation_size;
     // HARDCODED FOR NOW
-    p_nnl->output_size = 500;
+    p_nnl->output_size = 200;
     p_nnl->start_learning_rate = 0.01;
+    p_nnl->init_weights_random_scale=1;
+
+    p_nnl->random_gen = random_gen;
 
     modules[1] = p_nnl;
 
@@ -149,10 +154,10 @@ void NnlmOnlineLearner::buildLayers()
     PP< TanhModule > p_thm = new TanhModule();
   
     // HARDCODED FOR NOW
-    p_thm->input_size = 500;
-    p_thm->output_size = 500;
+    p_thm->input_size = 200;
+    p_thm->output_size = 200;
 
-    modules[2] = p_nnl;
+    modules[2] = p_thm;
 
 
 ////////////////////////////////////////////////////////////
@@ -202,7 +207,11 @@ void NnlmOnlineLearner::buildLayers()
     output_module->vocabulary_size= vocabulary_size;
     output_module->word_representation_size = word_representation_size;
     output_module->context_size = context_size;
-    
+  
+    // HARDCODED FOR NOW 
+    output_module->input_size = 200;
+    output_module->output_size = 1;
+ 
     output_module->build();
 
 
