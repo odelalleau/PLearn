@@ -163,6 +163,7 @@ inline real negative(real a) { if (a<0) return a; return 0; }
 #  define RAD2DEG 57.29578
 #endif
 
+/*
 #if defined(_MSC_VER) || defined(_MINGW_)
 //!  drand48 does not exist in NT... because ANSI
 //!  declared it obsolete in 1990 or so
@@ -173,6 +174,7 @@ inline real negative(real a) { if (a<0) return a; return 0; }
 #define isnan(x) _isnan(x)
 #define finite(x) _finite(x)
 #endif
+*/
 
 #if defined(DARWIN)
 #define isnan(x) __isnan(x)
