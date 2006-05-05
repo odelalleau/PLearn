@@ -1,36 +1,6 @@
 import logging, re
 from plearn.pyplearn.context import *
-
-if "plargs" in globals():
-    logging.info("Using new style plargs")
-    del plargs
-    del plarg_defaults
-
-def list_cast(slist, elem_cast):
-    """Intelligently casts I{slist} string to a list.
-
-    The I{slist} argument can have the following forms::
-
-        - CSV::
-            slist = "1,2,3" => casted = [1, 2, 3]
-        - CSV with brackets::
-            slist = "[hello,world]" => casted = ["hello", "world"]
-        - List of strings::
-            slist = [ "100.0", "102.5" ] => casted = [ 100.0, 102.5 ]
-
-    The element cast is made using the I{elem_cast} argument.
-    """
-    # CSV (with or without brackets)
-    if isinstance(slist,str):
-        slist = slist.lstrip(' [').rstrip(' ]')
-        return [ elem_cast(e) for e in slist.split(",") ]
-
-    # List of strings
-    elif isinstance(slist, list):
-        return [ elem_cast(e) for e in slist ]
-
-    else:
-        raise ValueError, "Cannot cast '%s' into a list", str(slist)
+from plearn.pyplearn.pyplearn import list_cast
 
 class plopt(object):
     """Typed command-line options with constraints for PLearn.
@@ -232,7 +202,7 @@ class plopt(object):
         """Typical pattern to override the value of an existing plopt instance."""
         plopt_instance = type.__getattribute__(holder, option)
         plopt_instance.set(value)
-    override = staticmethod(override)    
+    override = staticmethod(override)
 
 class plargs(object):
     _extensible_ = False
@@ -271,6 +241,14 @@ class plargs(object):
             option, value = statement.split('=', 1)
             option = option.strip()
             value  = value.strip()
+
+            if option=="expdir":
+                context._expdir_ = value
+                continue
+
+            if option=="expdir_root":
+                context._expdir_root_ = value
+                continue            
             
             try:
                 holder_name, option = option.split('.')
@@ -317,6 +295,9 @@ class plargs(object):
             return cls
 
         def __setattr__(cls, option, value):
+            if option == "expdir":
+                raise AttributeError("Cannot modify the value of 'expdir'.")
+
             context = actualContext()
             plargs  = context.binders["plargs"]
             if cls is plargs:
@@ -339,12 +320,16 @@ class plargs(object):
             if key.startswith('_'):
                 return type.__getattribute__(cls, key)
 
+            if key == "expdir":
+                return actualContext().getExpdir()
+
             holder = cls
             plargs = actualContext().binders["plargs"]
             if cls is plargs:
                 try:
                     holder = actualContext().plopt_holders[key]
                 except KeyError:
+                    # Otherwise
                     try:
                         return type.__getattribute__(cls, key)
                     except:
@@ -435,7 +420,7 @@ if __name__ == "__main__":
     plargs.parse("binder.e = ** E **")
     bCheck('e')
 
-    print "#######  Namespaces  ##########################################################"
+    print "#######  Namespaces  ##########################################################\n"
     class n(plnamespace):    
         namespaced = "within namespace n"
 
@@ -474,10 +459,13 @@ if __name__ == "__main__":
     
     print "\n*** Namespace 'n'"
     printMap(n.__dict__)
+    print
 
-    print "#######  Contexts Management  #################################################"
+    print "#######  Contexts Management  #################################################\n"
 
     def printContext():
+        print "Expdir:", plargs.expdir
+        
         for binder in plargs.getBinders():
             print "Binder:", binder.__name__
             for opt in plopt.iterator(binder):

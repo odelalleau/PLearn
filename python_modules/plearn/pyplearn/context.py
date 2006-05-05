@@ -1,3 +1,6 @@
+import os
+from plearn.pyplearn import config
+from plearn.pyplearn.pyplearn import generate_expdir
 
 def actualContext():
     """Function returning the actual context object.
@@ -34,11 +37,24 @@ def setCurrentContext(handle):
 #######  Classes and Module Variables  ########################################
 
 class __Context(object):
+    __expdirs = []
+    
     def __init__(self):
         self.binders = {}
         self.namespaces = {}
         self.plopt_holders = {}
         self.plopt_overrides = {}
+
+    def getExpdir(self):        
+        if not hasattr(self, '_expdir_'):
+            expdir = generate_expdir()
+            while expdir in self.__expdirs:
+                expdir = generate_expdir()
+            self._expdir_ = expdir
+            self.__expdirs.append(expdir)
+        if not hasattr(self, '_expdir_root_'):
+            self._expdir_root_ = config.get_option('EXPERIMENTS', 'expdir_root')
+        return os.path.join(self._expdir_root_, self._expdir_)
 
 __contexts = [ __Context() ]
 __current_context = 0
