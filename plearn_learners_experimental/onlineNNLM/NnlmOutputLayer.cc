@@ -56,7 +56,7 @@ NnlmOutputLayer::NnlmOutputLayer() :
     cost( 0 ),
     start_discount_rate( 0.5 ),
     discount_decrease_constant( 0 ),
-    discount_rate( 0.5 ), 
+    discount_rate( 0.5 ) 
 {
     // ### (doing so assumes the parent classes' build_() have been called too
     // ### in the parent classes' constructors, something that you must ensure)
@@ -354,19 +354,23 @@ sigma2(current_word, i);
     }
 
 
+        // TODO is this any good? If so, at least change variable names
+        discount_rate = start_discount_rate + step_number *
+discount_decrease_constant;        
+
       // * Update parameters - using discount
       // discount * ancien + (1-discount) * nouveau
     if( sumI[ current_word ] >= 1 ) {
       for(int i=0; i<input_size; i++) {
 
-        mu( current_word, i ) = discount * sumX( current_word, i ) / (real)
-sumI[ current_word ] + (1.0 - discount) * input[i];
+        mu( current_word, i ) = discount_rate * sumX( current_word, i ) / (real)
+sumI[ current_word ] + (1.0 - discount_rate) * input[i];
 
-        sigma2( current_word, i ) = discount * 
+        sigma2( current_word, i ) = discount_rate * 
             (  mu(current_word, i) * mu(current_word, i) + (
 sumX2(current_word, i) -2.0 * mu(current_word, i) * sumX(current_word, i)
 ) / sumI[ current_word ] )
-            + (1.0-discount) * input[i]*input[i];
+            + (1.0-discount_rate) * input[i]*input[i];
 
       }
     }

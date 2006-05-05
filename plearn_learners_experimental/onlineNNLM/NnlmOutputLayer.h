@@ -40,6 +40,8 @@
 #ifndef NnlmOutputLayer_INC
 #define NnlmOutputLayer_INC
 
+#include <plearn/base/Object.h>
+#include <plearn/math/TMat_maths.h>
 #include <plearn_learners/online/OnlineLearningModule.h>
 
 namespace PLearn {
