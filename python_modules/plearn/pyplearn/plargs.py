@@ -402,7 +402,7 @@ if __name__ == "__main__":
         assert plargs_attr==binder_attr
 
         # binder_plopt = binder.getPlopt(attr)
-        print "Access to plopt:", "TO BE DONE" # binder_plopt
+        # print "Access to plopt:", "TO BE DONE" # binder_plopt
         print 
         
 
@@ -429,7 +429,7 @@ if __name__ == "__main__":
         print "Direct access:", n.namespaced
 
         # n_plopt = n.getPlopt('namespaced')
-        print "Access to plopt:", "TO BE DONE" # n_plopt
+        # print "Access to plopt:", "TO BE DONE" # n_plopt
         print 
 
     ### Untouched
