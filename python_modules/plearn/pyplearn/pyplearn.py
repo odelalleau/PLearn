@@ -6,7 +6,7 @@ from plearn.utilities import metaprog, toolkit
 from plearn.pyplearn import config
 from plearn.pyplearn.plearn_repr import plearn_repr
 
-__all__ = [ 'plopt', 'plvar', 'list_cast'
+__all__ = [ 'plopt', 'plvar', 'list_cast',
             'plargs', 'generate_expdir', 'plarg_defaults',
             'bind_plargs', 'plargs_binder', 'plargs_namespace',
             'include',
