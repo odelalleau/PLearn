@@ -130,17 +130,17 @@ void NnlmOutputLayer::build_()
     // *** Sanity checks
     if( input_size <= 0 ) // has not been initialized
     {
-        PLERROR("NBnnlmNonDiscriminativeOutputLayer::build_: 'input_size' <= 0 (%i).\n"
+        PLERROR("NnlmOutputLayer::build_: 'input_size' <= 0 (%i).\n"
                 "You should set it to a positive integer.\n", input_size);
     }
     else if( output_size != 1 )
     {
-        PLERROR("NBnnlmNonDiscriminativeOutputLayer::build_: 'output_size'(=%i) != 1\n"
+        PLERROR("NnlmOutputLayer::build_: 'output_size'(=%i) != 1\n"
                   , output_size);
     }
     else if( vocabulary_size <= 0 )
     {
-        PLERROR("NBnnlmNonDiscriminativeOutputLayer::build_: 'vocabulary_size' <= 0 (%i).\n"
+        PLERROR("NnlmOutputLayer::build_: 'vocabulary_size' <= 0 (%i).\n"
                   , vocabulary_size);
     }
 
@@ -197,7 +197,7 @@ void NnlmOutputLayer::setCurrentWord(int the_current_word)
 {
     if( the_current_word >= vocabulary_size )
     {
-        PLERROR("NBnnlmNonDiscriminativeOutputLayer::setCurrentWord:'the_current_word'(=%i) >= \n"
+        PLERROR("NnlmOutputLayer::setCurrentWord:'the_current_word'(=%i) >= \n"
                   "'vocabulary_size'(=%i)\n"
                   , the_current_word, vocabulary_size);
     }
@@ -252,7 +252,7 @@ void NnlmOutputLayer::fprop(const Vec& input, Vec& output) const
     int in_size = input.size();
     if( in_size != input_size )
     {
-        PLERROR("NBnnlmNonDiscriminativeOutputLayer::fprop: 'input.size()' should be equal\n"
+        PLERROR("NnlmOutputLayer::fprop: 'input.size()' should be equal\n"
                 " to 'input_size' (%i != %i)\n", in_size, input_size);
     }
 
@@ -320,18 +320,18 @@ void NnlmOutputLayer::bpropUpdate(const Vec& input, const Vec& output,
     // size check
     if( in_size != input_size )
     {
-        PLERROR("NBnnlmNonDiscriminativeOutputLayer::bpropUpdate:'input.size()' should be equal\n"
+        PLERROR("NnlmOutputLayer::bpropUpdate:'input.size()' should be equal\n"
                 " to 'input_size' (%i != %i)\n", in_size, input_size);
     }
     if( out_size != output_size )
     {
-        PLERROR("NBnnlmNonDiscriminativeOutputLayer::bpropUpdate:'output.size()' should be"
+        PLERROR("NnlmOutputLayer::bpropUpdate:'output.size()' should be"
                 " equal\n"
                 " to 'output_size' (%i != %i)\n", out_size, output_size);
     }
     if( og_size != output_size )
     {
-        PLERROR("NBnnlmNonDiscriminativeOutputLayer::bpropUpdate:'output_gradient.size()'"
+        PLERROR("NnlmOutputLayer::bpropUpdate:'output_gradient.size()'"
                 " should\n"
                 " be equal to 'output_size' (%i != %i)\n",
                 og_size, output_size);
