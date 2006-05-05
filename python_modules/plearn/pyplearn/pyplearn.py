@@ -6,7 +6,7 @@ from plearn.utilities import metaprog, toolkit
 from plearn.pyplearn import config
 from plearn.pyplearn.plearn_repr import plearn_repr
 
-__all__ = [ 'plopt', 'plvar',
+__all__ = [ 'plopt', 'plvar', 'list_cast'
             'plargs', 'generate_expdir', 'plarg_defaults',
             'bind_plargs', 'plargs_binder', 'plargs_namespace',
             'include',
@@ -20,6 +20,32 @@ __all__ = [ 'plopt', 'plvar',
 #
 #  Helper functions
 #
+def list_cast(slist, elem_cast):
+    """Intelligently casts I{slist} string to a list.
+
+    The I{slist} argument can have the following forms::
+
+        - CSV::
+            slist = "1,2,3" => casted = [1, 2, 3]
+        - CSV with brackets::
+            slist = "[hello,world]" => casted = ["hello", "world"]
+        - List of strings::
+            slist = [ "100.0", "102.5" ] => casted = [ 100.0, 102.5 ]
+
+    The element cast is made using the I{elem_cast} argument.
+    """
+    # CSV (with or without brackets)
+    if isinstance(slist,str):
+        slist = slist.lstrip(' [').rstrip(' ]')
+        return [ elem_cast(e) for e in slist.split(",") ]
+
+    # List of strings
+    elif isinstance(slist, list):
+        return [ elem_cast(e) for e in slist ]
+
+    else:
+        raise ValueError, "Cannot cast '%s' into a list", str(slist)
+
 def pyplearn_intelligent_cast( default_value, provided_value ):
     if default_value is None:
         cast = lambda val: val
@@ -35,17 +61,6 @@ def pyplearn_intelligent_cast( default_value, provided_value ):
                 elem_cast = type(default_value[0])
                 if elem_cast == list:
                     raise ValueError, "Nested lists are not supported by pyplearn_intelligent_cast"
-
-            def list_cast( s ):
-                ## Potentially strip left-hand [ and right-hand ] if it's a string
-                if isinstance(s,str):
-                    s = s.lstrip(' [').rstrip(' ]')
-                    return [ elem_cast(e) for e in s.split(",") ]
-                elif isinstance(s,list):
-                    return [ elem_cast(e) for e in s ]
-                else:
-                    raise ValueError, "Cannot cast '%s' into a list", str(s)
-
             cast = list_cast
 
     return cast(provided_value)
