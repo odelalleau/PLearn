@@ -44,6 +44,9 @@
 
 namespace PLearn {
 
+class OnlineLearningModule;
+class NnlmOutputLayer;
+
 /**
  * Learns a Neural Network Language Model (NNLM).
  *
@@ -60,6 +63,13 @@ class NnlmOnlineLearner : public PLearner
 public:
     //#####  Public Build Options  ############################################
 
+    // NNLM related
+    int vocabulary_size;
+    int word_representation_size;
+    int context_size;
+
+    TVec<string> cost_funcs;
+
     //! Layers of the learner - the output layer is separate
     TVec< PP<OnlineLearningModule> > modules;
     PP<NnlmOutputLayer> output_module;
@@ -73,6 +83,8 @@ public:
 
 
     //#####  PLearner Member Functions  #######################################
+
+    void buildLayers();
 
     //! Returns the size of this learner's output, (which typically
     //! may depend on its inputsize(), targetsize() and set options).
@@ -174,6 +186,8 @@ private:
     //#####  Private Data Members  ############################################
 
     // The rest of the private stuff goes here
+    int nmodules;
+
 };
 
 // Declares a few other classes and functions related to this class
