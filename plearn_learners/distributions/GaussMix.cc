@@ -82,6 +82,7 @@ GaussMix::GaussMix():
     impute_missing(false),
     kmeans_iterations(5),
     L(1),
+    max_samples_in_cluster(-1),
     n_eigen(-1),
     sigma_min(1e-6),
     type("spherical")
@@ -158,7 +159,14 @@ void GaussMix::declareOptions(OptionList& ol)
 
     declareOption(ol, "efficient_k_median", &GaussMix::efficient_k_median,
                                             OptionBase::buildoption,
-        "Number of missing templates stored.");
+        "Minimum number of clusters used.");
+
+    declareOption(ol, "max_samples_in_cluster",
+                  &GaussMix::max_samples_in_cluster,
+                  OptionBase::buildoption,
+        "Maximum number of samples allowed in each cluster (ignored if -1).\n"
+        "More than 'efficient_k_median' clusters may be used in order to\n"
+        "comply with this constraint.");
 
     declareOption(ol, "efficient_k_median_iter",
                                             &GaussMix::efficient_k_median_iter,
@@ -3013,12 +3021,12 @@ void GaussMix::train()
                         tostring(missing_patterns.length())    +
                         " missing patterns", efficient_k_median_iter);
             TMat<int> majority(n_clusters, missing_patterns.width());
+            static TVec<int> n_assigned;
             while (!finished && count_iter < efficient_k_median_iter) {
                 finished = true;
                 // Assign each missing pattern to closest template.
-                static TVec<bool> has_assigned;
-                has_assigned.resize(n_clusters);
-                has_assigned.fill(false);
+                n_assigned.resize(n_clusters);
+                n_assigned.fill(0);
                 for (int i = 0; i < missing_patterns.length(); i++) {
                     n_diffs.fill(0);
                     for (int j = 0; j < n_clusters; j++)
@@ -3030,7 +3038,7 @@ void GaussMix::train()
                     if (new_assign != missing_assign[i])
                         finished = false;
                     missing_assign[i] = new_assign;
-                    has_assigned[new_assign] = true;
+                    n_assigned[new_assign]++;
                 }
                 // Recompute missing templates.
                 majority.fill(0);
@@ -3044,7 +3052,9 @@ void GaussMix::train()
                     }
                 }
                 for (int j = 0; j < n_clusters; j++)
-                    if (has_assigned[j]) {
+                    if (n_assigned[j] > 0) {
+                    if (max_samples_in_cluster == -1 ||
+                        n_assigned[j] <= max_samples_in_cluster) {
                     for (int k = 0; k < missing_template.width(); k++)
                         if (majority(j, k) > 0)
                             missing_template(j, k) = true;
@@ -3056,6 +3066,43 @@ void GaussMix::train()
                             missing_template(j, k) =
                                 (PRandom::common(false)->uniform_sample() < 0.5);
                     } else {
+                        // This cluster has too many points assigned to it
+                        // (more than 'max_samples_in_cluster'). We split it in
+                        // two, by picking two new centers, randomly chosen in
+                        // this cluster.
+                        static TVec<int> cluster_samples;
+                        cluster_samples.resize(0);
+                        for (int i = 0; i < missing_assign.length(); i++)
+                            if (missing_assign[i] == j)
+                                cluster_samples.append(i);
+                        int center_1 =
+                            PRandom::common(false)->uniform_multinomial_sample(cluster_samples.length());
+                        missing_template(j) << missing_patterns(center_1);
+                        bool found_valid_center_2 = false;
+                        int center_2 = -1;
+                        while (!found_valid_center_2) {
+                            center_2 =
+                                PRandom::common(false)->uniform_multinomial_sample(cluster_samples.length());
+                            found_valid_center_2 = true;
+                            for (int k = 0; k < missing_template.width(); k++)
+                                if (missing_template(j, k) !=
+                                        missing_patterns(center_2, k)) {
+                                    found_valid_center_2 = false;
+                                    break;
+                                }
+                        }
+                        n_clusters++;
+                        majority.resize(n_clusters, majority.width());
+                        n_diffs.resize(n_clusters);
+                        n_assigned.resize(n_clusters);
+                        n_assigned.last() = -1;
+                        missing_template.resize(n_clusters,
+                                                missing_template.width());
+                        missing_template(n_clusters - 1) <<
+                            missing_patterns(center_2);
+                        finished = false;
+                    }
+                    } else if (n_assigned[j] == 0) {
                         // This cluster has no point assigned to it. We set it
                         // to a new pattern chosen randomly in the patterns
                         // set, that is assigned to this cluster.
@@ -3065,6 +3112,11 @@ void GaussMix::train()
                         missing_template(j) <<
                             missing_patterns(random_pattern);
                         missing_assign[random_pattern] = j;
+                        finished = false;
+                    } else {
+                        // Note: this case happens only for a newly created
+                        // center (when we split a cluster in two).
+                        finished = false;
                     }
 
                 count_iter++;
@@ -3076,6 +3128,10 @@ void GaussMix::train()
             if (finished && verbosity >= 2)
                 pout << "K-median stopped after only " << count_iter
                      << " iterations" << endl;
+
+            if (finished && verbosity >= 5)
+                pout << "Number of points in each cluster: " << n_assigned
+                     << endl;
 
             // Because right now we only want to perform updates, we need to
             // make sure there will be no need for downdates.

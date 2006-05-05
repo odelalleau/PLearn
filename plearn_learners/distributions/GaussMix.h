@@ -275,6 +275,7 @@ public:
     bool impute_missing;
     int kmeans_iterations;
     int L;
+    int max_samples_in_cluster;
     int n_eigen;
     real sigma_min;
     string type;
