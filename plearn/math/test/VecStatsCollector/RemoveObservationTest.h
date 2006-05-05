@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// RemoveObservation.h
+// RemoveObservationTest.h
 //
 // Copyright (C) 2006 Christian Dorion
 //
@@ -34,11 +34,11 @@
 
 // Authors: Christian Dorion
 
-/*! \file RemoveObservation.h */
+/*! \file RemoveObservationTest.h */
 
 
-#ifndef RemoveObservation_INC
-#define RemoveObservation_INC
+#ifndef RemoveObservationTest_INC
+#define RemoveObservationTest_INC
 
 #include <plearn/misc/PTest.h>
 #include <plearn/math/VecStatsCollector.h>
@@ -55,19 +55,19 @@ namespace PLearn {
  * @deprecated Write deprecated stuff here if there is any.  Indicate what else
  * should be used instead.
  */
-class RemoveObservation : public PTest
+class RemoveObservationTest : public PTest
 {
     typedef PTest inherited;
 
 public:
     //#####  Public Member Functions  #########################################
 
-    RemoveObservation();
+    RemoveObservationTest();
 
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
-    PLEARN_DECLARE_OBJECT(RemoveObservation);
+    PLEARN_DECLARE_OBJECT(RemoveObservationTest);
 
     // Simply calls inherited::build() then build_()
     virtual void build();
@@ -97,7 +97,7 @@ private:
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(RemoveObservation);
+DECLARE_OBJECT_PTR(RemoveObservationTest);
 
 } // end of namespace PLearn
 

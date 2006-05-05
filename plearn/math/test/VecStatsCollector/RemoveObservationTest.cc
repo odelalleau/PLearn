@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// RemoveObservation.cc
+// RemoveObservationTest.cc
 //
 // Copyright (C) 2006 Christian Dorion
 //
@@ -34,31 +34,31 @@
 
 // Authors: Christian Dorion
 
-/*! \file RemoveObservation.cc */
+/*! \file RemoveObservationTest.cc */
 
 
-#include "RemoveObservation.h"
+#include "RemoveObservationTest.h"
 #include <plearn/math/VecStatsCollector.h>
 
 namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
-    RemoveObservation,
-    "ONE LINE USER DESCRIPTION",
-    "MULTI LINE\nHELP FOR USERS"
+    RemoveObservationTest,
+    "Test for the remove observation mechanism.",
+    ""
 );
 
 //////////////////
-// RemoveObservation //
+// RemoveObservationTest //
 //////////////////
-RemoveObservation::RemoveObservation()
+RemoveObservationTest::RemoveObservationTest()
 {}
 
 ///////////
 // build //
 ///////////
-void RemoveObservation::build()
+void RemoveObservationTest::build()
 {
     inherited::build();
     build_();
@@ -67,7 +67,7 @@ void RemoveObservation::build()
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void RemoveObservation::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+void RemoveObservationTest::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     deepCopyField(m_windowed_vsc, copies);
     inherited::makeDeepCopyFromShallowCopy(copies);
@@ -76,7 +76,7 @@ void RemoveObservation::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////////
 // declareOptions //
 ////////////////////
-void RemoveObservation::declareOptions(OptionList& ol)
+void RemoveObservationTest::declareOptions(OptionList& ol)
 {
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -85,14 +85,14 @@ void RemoveObservation::declareOptions(OptionList& ol)
 ////////////
 // build_ //
 ////////////
-void RemoveObservation::build_()
+void RemoveObservationTest::build_()
 {
 }
 
-/////////////
-// perform //
-/////////////
-bool RemoveObservation::
+//////////////////
+// compareStats //
+//////////////////
+bool RemoveObservationTest::
 compareStats(int t, const VecStatsCollector& batch, const VecStatsCollector& online, const string& stat)
 {
     int len = batch.length();
@@ -111,7 +111,10 @@ compareStats(int t, const VecStatsCollector& batch, const VecStatsCollector& onl
     return false;
 }
 
-void RemoveObservation::perform()
+/////////////
+// perform //
+/////////////
+void RemoveObservationTest::perform()
 {
     int N = 8;
     int T = 2500;
