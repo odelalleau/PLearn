@@ -65,7 +65,7 @@ html>#wrapper	   { width: 800px }
 .classdescr  { font-style: italic; padding: 5px 15px; border-bottom: 1px dashed #809FFF; display: block }
 .classhelp   { padding: 5px 15px; display: block }
 
-.cmdname   { color: FF9900; font-weight: bold; font-size: x-large; background-color: #005676; padding: 15px;
+.cmdname   { color: #FF9900; font-weight: bold; font-size: x-large; background-color: #005676; padding: 15px;
                border-top: 0px solid #809FFF; border-bottom: 1px solid #809FFF; display: block }
 .cmddescr  { font-style: italic; padding: 5px 15px; border-bottom: 1px dashed #809FFF; display: block }
 .cmdhelp   { padding: 5px 15px; display: block }
@@ -87,6 +87,28 @@ h4  { margin: 0; padding-left: 1em; padding-top: 1em; }
 .opttype  { color:#007AA8; font-family:monospace }
 .optname  { font-weight: bold; font-size: 115%; font-style: italic }
 .optvalue { color:#007AA8; font-family:monospace }
+
+.rmitable                 { margin: 3ex 0px 0px; padding: 0px 0px 0px 10px}
+.rmitable table           { width:100%; border-left: 1px dashed #809FFF;
+                            border-bottom: 1px dashed #809FFF }
+.rmitable tr              { margin: 0; padding: 1em; border: none; vertical-align: baseline }
+.rmitable td              { margin: 0; padding: 1ex 1ex 1ex 0.5ex;
+                            border: 0px }
+.rmitable tr.first        { border-top: 3px solid #005676;
+                            border-left:0px solid #007AA8; border-right:0px solid #007AA8;
+                            background-color: #007AA8; color: #CDC5FF; margin-top:2px }
+.rmitable tr.others       { border-top: 3px solid #005676;
+                            border-left:0px solid #007AA8; border-right:0px solid #007AA8;
+                            background-color: #007AA8; color: #CDC5FF; margin-top:4px }
+
+.rmititle                 { font-weight: bold; }
+.rmiprototype             { font-weight: bold; font-size: 110%; }
+.rmifuncname              { color:#e7e7e7 }
+
+.rmitable td.argnameeven  { color:#007AA8; font-family:monospace }
+.rmitable td.argdoceven   { }
+.rmitable td.argnameodd   { background-color: #b6c5f2; color:#007AA8; font-family:monospace }
+.rmitable td.argdocodd    { background-color: #b6c5f2; }
 
 .fromclass { font-style: italic ; float:right }
 address { padding-left: 15px ; padding-right: 15px ; border-top: 1px solid #809fff ; font-size:80%; }
