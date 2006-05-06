@@ -362,6 +362,7 @@ void HTMLHelpCommand::helpOnClass(const string& classname, ostream& out,
             << " so you'll only see question marks here.)</div>\n"
             << endl;
 
+    // Output list of options
     out << "<div class=\"generaltable\">" << endl
         << "<h2>List of All Options</h2>" << endl
         << "<table cellspacing=\"0\" cellpadding=\"0\">" << endl;
@@ -418,6 +419,7 @@ void HTMLHelpCommand::helpOnClass(const string& classname, ostream& out,
     if(obj)
         delete obj;
 
+    // Output instantiable derived classes
     out << "<div class=\"generaltable\">" << endl
         << "<h2>List of Instantiable Derived Classes</h2>" << endl
         << "<table cellspacing=\"0\" cellpadding=\"0\">" << endl;
@@ -447,6 +449,91 @@ void HTMLHelpCommand::helpOnClass(const string& classname, ostream& out,
 
     out << "</table></div>" << endl;
 
+    // Output remote-callable methods
+    const RemoteMethodMap* rmm = &(*entry.get_remote_methods)();
+    out << "<div class=\"rmitable\">" << endl
+        << "<h2>List of Remote-Callable Methods</h2>" << endl
+        << "<table cellspacing=\"0\" cellpadding=\"0\">" << endl;
+    i = 0;
+    while (rmm) {
+        RemoteMethodMap::MethodMap::const_iterator
+            it = rmm->begin(), end = rmm->end();
+        for ( ; it != end ; ++it ) {
+            const string& method_name = it->first.first;
+            const RemoteTrampoline* t = it->second;
+            assert( t );
+            const RemoteMethodDoc& doc = t->documentation();
+
+            // Generate the method signature and argument-list table in HTML form
+            string return_type = highlight_known_classes(quote(doc.returnType()));
+            string args = "";
+            string arg_table = "";
+            list<ArgDoc>::const_iterator
+                adit = doc.argListDoc().begin(), adend = doc.argListDoc().end();
+            list<string>::const_iterator
+                tyit = doc.argListType().begin(), tyend = doc.argListType().end();
+
+            int j=0;
+            for ( ; tyit != tyend ; ++tyit) {
+                string arg_type = highlight_known_classes(quote(*tyit));
+                string arg_name = "";
+                string arg_doc  = "(no documentation)";
+                if (adit != adend) {
+                    arg_name = quote(adit->m_argument_name);
+                    arg_doc  = highlight_known_classes(format_free_text(adit->m_doc));
+                    ++adit;
+                }
+                if (! args.empty())
+                    args += ", ";
+                args += arg_type + ' ' + arg_name;
+
+                if (! arg_table.empty())
+                    arg_table += "</tr><tr><td></td>";
+
+                string td1_class = (++j % 2 == 0? "argnameeven" : "argnameodd");
+                string td2_class = (  j % 2 == 0? "argdoceven"  : "argdocodd");
+                
+                arg_table +=
+                      "  <td class=\"" + td1_class + "\">" + arg_type + ' ' + arg_name + "</td>"
+                    + "  <td class=\"" + td2_class + "\">" + arg_doc  + "</td>";
+            }
+
+            string tr_class = (i++ == 0? "first" : "others");
+            out << "<tr class=\"" << tr_class << +  + "\">" << endl
+                << "<td colspan=\"3\"><div class=\"rmiprototype\">"
+                << return_type
+                << " <span class=\"rmifuncname\">" << method_name << "</span>"
+                << '(' << args << ')' << "</div>" << endl
+                << "</tr><tr><td></td><td colspan=\"2\">" << doc.bodyDoc()
+                << "</td></tr>" << endl;
+
+            if (! arg_table.empty())
+                out << "<tr>" << endl
+                    << "<td class=\"rmititle\">Arguments</td>" << endl
+                    << arg_table << "</tr>" << endl;
+
+            string td1_class = (++j % 2 == 0? "argnameeven" : "argnameodd");
+            string td2_class = (  j % 2 == 0? "argdoceven"  : "argdocodd");
+            
+            if (! doc.returnType().empty() || ! doc.returnDoc().empty())
+                out << "<tr>" << endl
+                    << "<td class=\"rmititle\">Returns</td>" << endl
+                    << "<td class=\"" + td1_class + "\">" << return_type << "</td>"
+                    << "<td class=\"" + td2_class + "\">" << doc.returnDoc()  << "</td>" << endl
+                    << "</tr>"
+                    << endl;
+        }
+
+        // Inspect base classes
+        rmm = rmm->inheritedMethods();
+    }
+    if (i == 0)
+        out << "<tr><td>This class does not define any remote-callable methods.</td></tr>"
+            << endl;
+
+    out << "</table></div>" << endl;
+
+    
     out << generated_by() << endl;
     copySnippet(out, config->html_epilog_document);
 }
