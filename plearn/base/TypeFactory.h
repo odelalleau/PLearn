@@ -40,6 +40,7 @@
 #include <string>
 #include <map>
 #include "OptionBase.h"
+#include "RemoteMethodMap.h"
 
 namespace PLearn {
 using std::string;
@@ -51,6 +52,7 @@ class Object;
 //!  default-initialized Object
 typedef Object* (*NEW_OBJECT)();
 typedef OptionList& (*GETOPTIONLIST_METHOD)();
+typedef RemoteMethodMap& (*GET_REMOTE_METHODS)();
 typedef bool (*ISA_METHOD)(const Object* o);
 
 
@@ -77,6 +79,10 @@ public:
     //! the list of options supported by the class
     GETOPTIONLIST_METHOD getoptionlist_method;
 
+    //! Function pointer which, when called, returns a list of
+    //! remote methods supported by the class
+    GET_REMOTE_METHODS get_remote_methods;
+    
     //! Function pointer which, when called with a pointer to an
     //! object, tests whether the object is dynamic-castable to the
     //! type (class).
@@ -91,7 +97,8 @@ public:
     TypeMapEntry(const string& the_type_name, 
                  const string& the_parent_class="", 
                  NEW_OBJECT the_constructor=0, 
-                 GETOPTIONLIST_METHOD the_getoptionlist_method=0,
+                 GETOPTIONLIST_METHOD the_getoptionlist_method = 0,
+                 GET_REMOTE_METHODS the_get_remote_methods = 0,
                  ISA_METHOD the_isa_method=0,
                  const string& the_one_line_descr = "",
                  const string& the_multi_line_help = "")
@@ -99,6 +106,7 @@ public:
           parent_class(the_parent_class),
           constructor(the_constructor), 
           getoptionlist_method(the_getoptionlist_method),
+          get_remote_methods(the_get_remote_methods),
           isa_method(the_isa_method),
           one_line_descr(the_one_line_descr),
           multi_line_help(the_multi_line_help)
@@ -136,6 +144,7 @@ public:
                               const string& parent_class, 
                               NEW_OBJECT constructor, 
                               GETOPTIONLIST_METHOD getoptionlist_method,
+                              GET_REMOTE_METHODS get_remote_methods,
                               ISA_METHOD isa_method,
                               const string& one_line_descr,
                               const string& multi_line_help);  

@@ -52,6 +52,7 @@
 #include "StaticInitializer.h"
 #include "TypeFactory.h"
 #include "Option.h"
+#include "RemoteDeclareMethod.h"
 #include <plearn/io/PPath.h>
 #include <plearn/io/openString.h>
 
@@ -76,15 +77,17 @@ using namespace std;
 
 #define PLEARN_DECLARE_OBJECT(CLASSTYPE)                        \
         public:                                                 \
-        static string _classname_();                            \
+        static  string _classname_();                           \
         virtual string classname() const;                       \
-        static OptionList& _getOptionList_();                   \
+        static  OptionList& _getOptionList_();                  \
         virtual OptionList& getOptionList() const;              \
-        static Object* _new_instance_for_typemap_();            \
-        static bool _isa_(const Object* o);                     \
+        static  RemoteMethodMap& _getRemoteMethodMap_();        \
+        virtual RemoteMethodMap& getRemoteMethodMap() const;    \
+        static  Object* _new_instance_for_typemap_();           \
+        static  bool _isa_(const Object* o);                    \
         virtual CLASSTYPE* deepCopy(CopiesMap &copies) const;   \
-        static void _static_initialize_();                      \
-        static StaticInitializer _static_initializer_
+        static  void _static_initialize_();                     \
+        static  StaticInitializer _static_initializer_
 
 #define PLEARN_IMPLEMENT_OBJECT(CLASSTYPE, ONELINEDESCR, MULTILINEHELP)                         \
         string CLASSTYPE::_classname_()                                                         \
@@ -108,6 +111,22 @@ using namespace std;
         OptionList& CLASSTYPE::getOptionList() const                                            \
         {                                                                                       \
             return _getOptionList_();                                                           \
+        }                                                                                       \
+                                                                                                \
+        RemoteMethodMap& CLASSTYPE::_getRemoteMethodMap_()                                      \
+        {                                                                                       \
+            static bool initialized = false;                                                    \
+            static RemoteMethodMap rmm;                                                         \
+            if (! initialized) {                                                                \
+                declareMethods(rmm);                                                            \
+                initialized = true;                                                             \
+            }                                                                                   \
+            return rmm;                                                                         \
+        }                                                                                       \
+                                                                                                \
+        RemoteMethodMap& CLASSTYPE::getRemoteMethodMap() const                                  \
+        {                                                                                       \
+            return _getRemoteMethodMap_();                                                      \
         }                                                                                       \
                                                                                                 \
         Object* CLASSTYPE::_new_instance_for_typemap_()                                         \
@@ -138,6 +157,7 @@ using namespace std;
                                        inherited::_classname_(),                                \
                                        &CLASSTYPE::_new_instance_for_typemap_,                  \
                                        &CLASSTYPE::_getOptionList_,                             \
+                                       &CLASSTYPE::_getRemoteMethodMap_,                        \
                                        &CLASSTYPE::_isa_,                                       \
                                        ONELINEDESCR,                                            \
                                        MULTILINEHELP);                                          \
@@ -149,6 +169,7 @@ using namespace std;
         public:                                                 \
         static string _classname_();                            \
         static OptionList& _getOptionList_();                   \
+        static RemoteMethodMap& _getRemoteMethodMap_();         \
         static bool _isa_(const Object* o);                     \
         virtual CLASSTYPE* deepCopy(CopiesMap &copies) const;   \
         static void _static_initialize_();                      \
@@ -166,6 +187,17 @@ using namespace std;
             if(ol.empty())                                                                      \
                 declareOptions(ol);                                                             \
             return ol;                                                                          \
+        }                                                                                       \
+                                                                                                \
+        RemoteMethodMap& CLASSTYPE::_getRemoteMethodMap_()                                      \
+        {                                                                                       \
+            static bool initialized = false;                                                    \
+            static RemoteMethodMap rmm;                                                         \
+            if (! initialized) {                                                                \
+                declareMethods(rmm);                                                            \
+                initialized = true;                                                             \
+            }                                                                                   \
+            return rmm;                                                                         \
         }                                                                                       \
                                                                                                 \
         bool CLASSTYPE::_isa_(const Object* o)                                                  \
@@ -186,6 +218,7 @@ using namespace std;
                                        inherited::_classname_(),                                \
                                        0,                                                       \
                                        &CLASSTYPE::_getOptionList_,                             \
+                                       &CLASSTYPE::_getRemoteMethodMap_,                        \
                                        &CLASSTYPE::_isa_,                                       \
                                        ONELINEDESCR,                                            \
                                        MULTILINEHELP  );                                        \
@@ -221,15 +254,17 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
 
 #define PLEARN_DECLARE_TEMPLATE_OBJECT(CLASSTYPE)                                               \
         public:                                                                                 \
-        static string _classname_();                                                            \
+        static  string _classname_();                                                           \
         virtual string classname() const;                                                       \
-        static OptionList& _getOptionList_();                                                   \
+        static  OptionList& _getOptionList_();                                                  \
         virtual OptionList& getOptionList() const;                                              \
-        static Object* _new_instance_for_typemap_();                                            \
-        static bool _isa_(const Object* o);                                                     \
+        static  RemoteMethodMap& _getRemoteMethodMap_();                                        \
+        virtual RemoteMethodMap& getRemoteMethodMap() const;                                    \
+        static  Object* _new_instance_for_typemap_();                                           \
+        static  bool _isa_(const Object* o);                                                    \
         virtual CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >* deepCopy(CopiesMap &copies) const;    \
-        static void _static_initialize_();                                                      \
-        static StaticInitializer _static_initializer_;
+        static  void _static_initialize_();                                                     \
+        static  StaticInitializer _static_initializer_;
 
 #define PLEARN_IMPLEMENT_TEMPLATE_OBJECT(CLASSTYPE, ONELINEDESCR, MULTILINEHELP)                \
         template < TEMPLATE_DEF_ ## CLASSTYPE >                                                 \
@@ -257,6 +292,24 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
         OptionList& CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::getOptionList() const             \
         {                                                                                       \
             return _getOptionList_();                                                           \
+        }                                                                                       \
+                                                                                                \
+        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                 \
+        RemoteMethodMap& CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_getRemoteMethodMap_()       \
+        {                                                                                       \
+            static bool initialized = false;                                                    \
+            static RemoteMethodMap rmm;                                                         \
+            if (! initialized) {                                                                \
+                declareMethods(rmm);                                                            \
+                initialized = true;                                                             \
+            }                                                                                   \
+            return rmm;                                                                         \
+        }                                                                                       \
+                                                                                                \
+        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                 \
+        RemoteMethodMap& CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::getRemoteMethodMap() const   \
+        {                                                                                       \
+            return _getRemoteMethodMap_();                                                      \
         }                                                                                       \
                                                                                                 \
         template < TEMPLATE_DEF_ ## CLASSTYPE >                                                 \
@@ -292,6 +345,7 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
                 CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::inherited::_classname_(),             \
                 &CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_new_instance_for_typemap_,          \
                 &CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_getOptionList_,                     \
+                &CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_getRemoteMethodMap_,                \
                 &CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_isa_,                               \
                 ONELINEDESCR,                                                                   \
                 MULTILINEHELP);                                                                 \
@@ -317,11 +371,12 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
                 }                                                                               \
         };
  
-/*! The following macro should be called just *after* the declaration of
-  an object subclass. It declares and defines a few inline functions needed for
-  the serialization of pointers to the newly declared object type and the
-  comparison (diff) with other objects.
-*/
+/**
+ *  The following macro should be called just *after* the declaration of an
+ *  object subclass. It declares and defines a few inline functions needed for
+ *  the serialization of pointers to the newly declared object type and the
+ *  comparison (diff) with other objects.
+ */
 
 #define DECLARE_OBJECT_PTR(CLASSTYPE)                                                   \
         inline Object *toObjectPtr(const CLASSTYPE &o)                                  \
@@ -431,9 +486,11 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
 
 
 
-/*! The following macro should be called after the declaration of a 
-  new SmartPointer derived class. It will declare a number of inline 
-  functions used to serialize the new smart pointer type */
+/**
+ *  The following macro should be called after the declaration of a new
+ *  SmartPointer derived class. It will declare a number of inline functions
+ *  used to serialize the new smart pointer type
+ */
 
 #define DECLARE_OBJECT_PP(PPCLASSTYPE, CLASSTYPE)                       \
         inline PStream &operator>>(PStream &in, PPCLASSTYPE &o)         \
@@ -459,6 +516,7 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
  *  @li runtime type information (classname)
  *  @li displaying (info, print)
  *  @li deep copying (deepCopy)
+ *  @li remote method calling mechanism (call(), declareMethods())
  *  @li a generic way of setting options (setOption) when not knowing the
  *      exact type of the Object and a generic build() method (the combination
  *      of the two allows to change the object structure and rebuild it at
@@ -715,7 +773,7 @@ public:
     void newread(PStream& in);
 
 
-    //#####  Remote Method Invokation  ########################################
+    //#####  Remote Method Invocation  ########################################
 
     /**
      *  The call method is the standard way to allow for remote method
@@ -725,8 +783,17 @@ public:
      *  associated with an actual methods of your class, but it will usually
      *  differ in its "calling" conventions: its "name", number or input
      *  arguments, and number and nature of output results may differ.
+     *
+     *  EASIEST WAY TO IMPLEMENT REMOTE CALLING: override the declareMethods()
+     *  function (see below) in your derived class, and for each method that
+     *  you wish to be remote-callable, call a declareMethod() function to
+     *  declare its existence and attach some documentation.  This is very
+     *  similar in flavor to declareOptions()/declareOption().
      * 
-     *  Here is what such a method should do:
+     *  OLD-FASHIONED IMPLEMENTATION.  Here is the "traditional version" of
+     *  what this function should do in a derived class.  For most derived
+     *  classes that use the declareMethod mechanism, it is no longer necessary
+     *  to override this method.
      *  <ol>
      *  <li> Determine from the methodname what actual method to call.
      *       If the given methodname is none of those supported by your call method,
@@ -752,7 +819,7 @@ public:
      */
     virtual void call(const string& methodname, int nargs, PStream& io);
 
-    //! Must be called by the call method prior to sending results. 
+    //! Must be called by the call method prior to sending results.
     static void prepareToSendResults(PStream& out, int nres);
 
     /**
@@ -826,7 +893,7 @@ protected:
      *  most recently defined to least recently defined).
      *
      *  @code
-     *  static void declareOptions(OptionList& ol)
+     *  static void MyDerivedClass::declareOptions(OptionList& ol)
      *  {
      *      declareOption(ol, "inputsize", &MyObject::inputsize_,
      *                    OptionBase::buildoption,
@@ -843,6 +910,36 @@ protected:
      */
     static void declareOptions(OptionList& ol) { }
 
+    /**
+     *  Declare methods that are intended to be remote-callable.  If you use
+     *  this mechanism, you don't usually need to override the call method in
+     *  derived classes.  The typical form of this method is as follows:
+     *
+     *  @code
+     *  static void MyDerivedClass::declareMethods(RemoteMethodMap& rmm)
+     *  {
+     *      // Insert a backpointer to remote methods; note that this
+     *      // different than for declareOptions()
+     *      rmm.inherited(inherited::_getRemoteMethodMap_());
+     *
+     *      // Mind the extra pair of parenthesis around the docstrings.
+     *      // They are necessary for proper construction of documentation.
+     *      declareMethod(rmm, "method1", &MyDerivedClass::method1,
+     *                    (BodyDoc("Main documentation for the method"),
+     *                     ArgDoc ("arg1_name", "Documentation for argument1"),
+     *                     ArgDoc ("arg2_name", "Documentation for argument2"),
+     *                     // ... other ArgDoc here ...
+     *                     RetDoc ("Documentation for the return value")));
+     *
+     *      // Other calls to declareMethod() as appropriate to expose the
+     *      // public remote-callable interface
+     *  }
+     *  @endcode
+     *
+     *  @param ol  RemoteMethodMap to be constructed for the current class.
+     */
+    static void declareMethods(RemoteMethodMap& rmm);
+
 private:
     //#####  Private Member Functions  ########################################
 
@@ -857,6 +954,10 @@ private:
      *  build_() has already been called.
      */
     void build_();
+
+    //! Version of save that's called by Remote Method Invocation. Our
+    //! convention is to have such functions end with the _remote suffix.
+    void save_remote(const string& filepath, const string& io_formatting) const;
 };
 
 

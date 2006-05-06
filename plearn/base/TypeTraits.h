@@ -107,51 +107,52 @@ public:
     { return 0xFF; }
 };
 
-#define DECLARE_TYPE_TRAITS_FOR_BASETYPE(T,LITTLE_ENDIAN_TYPECODE,BIG_ENDIAN_TYPECODE) \
-template<>                                       \
-class TypeTraits<T>                              \
-{                                                \
-public:                                          \
-  static inline string name()                    \
-  { return #T; }                                 \
-                                                 \
-  static inline unsigned char little_endian_typecode()  \
-  { return LITTLE_ENDIAN_TYPECODE; }             \
-                                                 \
-  static inline unsigned char big_endian_typecode()     \
-  { return BIG_ENDIAN_TYPECODE; }                \
+#define DECLARE_TYPE_TRAITS_FOR_BASETYPE(T,LITTLE_ENDIAN_TYPECODE,BIG_ENDIAN_TYPECODE)  \
+template<>                                                                              \
+class TypeTraits<T>                                                                     \
+{                                                                                       \
+public:                                                                                 \
+  static inline string name()                                                           \
+  { return #T; }                                                                        \
+                                                                                        \
+  static inline unsigned char little_endian_typecode()                                  \
+  { return LITTLE_ENDIAN_TYPECODE; }                                                    \
+                                                                                        \
+  static inline unsigned char big_endian_typecode()                                     \
+  { return BIG_ENDIAN_TYPECODE; }                                                       \
 }
 
-#define DECLARE_TYPE_TRAITS(T)                   \
-template<>                                       \
-class TypeTraits<T>                              \
-{                                                \
-public:                                          \
-  static inline string name()                    \
-  { return #T; }                                 \
-                                                 \
+#define DECLARE_TYPE_TRAITS(T)                          \
+template<>                                              \
+class TypeTraits<T>                                     \
+{                                                       \
+public:                                                 \
+  static inline string name()                           \
+  { return #T; }                                        \
+                                                        \
   static inline unsigned char little_endian_typecode()  \
-  { return 0xFF; }                               \
-                                                 \
+  { return 0xFF; }                                      \
+                                                        \
   static inline unsigned char big_endian_typecode()     \
-  { return 0xFF; }                               \
+  { return 0xFF; }                                      \
 }
 
 // DECLARE_TYPE_TRAITS_FOR_BASETYPE(bool, ??, ??);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(char,           0x01, 0x01);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(signed char,    0x01, 0x01);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned char,  0x02, 0x02);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(short,          0x03, 0x04);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned short, 0x05, 0x06);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(int,            0x07, 0x08);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned int,   0x0B, 0x0C);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(long,           0x07, 0x08);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned long,  0x0B, 0x0C);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(long long,      0x16, 0x17);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(void,               0xFF, 0xFF);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(char,               0x01, 0x01);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(signed char,        0x01, 0x01);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned char,      0x02, 0x02);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(short,              0x03, 0x04);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned short,     0x05, 0x06);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(int,                0x07, 0x08);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned int,       0x0B, 0x0C);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(long,               0x07, 0x08);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned long,      0x0B, 0x0C);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(long long,          0x16, 0x17);
 DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned long long, 0x18, 0x19);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(float,          0x0E, 0x0F);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(double,         0x10, 0x11);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(bool,           0x30, 0x30);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(float,              0x0E, 0x0F);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(double,             0x10, 0x11);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(bool,               0x30, 0x30);
 
 DECLARE_TYPE_TRAITS(string);
 

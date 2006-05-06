@@ -64,6 +64,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "- runtime type information (classname)\n"
     "- displaying (info, print)\n"
     "- deep copying (deepCopy)\n"
+    "- remote method calling mechanism (call(), declareMethods())\n"
     "- a generic way of setting options (setOption) when not knowing the\n"
     "  exact type of the Object and a generic build() method (the combination\n"
     "  of the two allows to change the object structure and rebuild it at\n"
@@ -117,19 +118,22 @@ Object::Object(bool call_build_)
 }
 
 Object::~Object()
-{}
+{ }
 
 // by default, do nothing...
 void Object::makeDeepCopyFromShallowCopy(CopiesMap& copies)
-{}
+{ }
 
 void Object::build_()
-{}
+{ }
 
 void Object::build()
-{}
+{ }
 
-string Object::info() const { return classname(); }
+string Object::info() const
+{
+    return classname();
+}
 
 
 //#####  Option-Manipulation Functions  #######################################
@@ -560,77 +564,112 @@ void Object::prepareToSendResults(PStream& out, int nres)
 
 void Object::call(const string& methodname, int nargs, PStream& io)
 {
-    if(methodname=="changeOptions")
-    {
-        if(nargs!=1) PLERROR("Object remote method changeOptions takes 1 argument");
-        map<string,string> name_value;
-        io >> name_value;
-        changeOptions(name_value);
-        prepareToSendResults(io, 0);
-        io.flush();
-    }
-    else if(methodname=="getOption") // gets option in serialised form
-    {
-        if(nargs!=1) PLERROR("Object remote method getOption takes 1 argument");
-        string optionname;
-        io >> optionname;
-        prepareToSendResults(io, 1);
-        writeOptionVal(io, optionname);
-        io.flush();      
-    }
-    else if(methodname=="getOptionAsString") // gets option as a serialised string containing the serialised option
-    {
-        if(nargs!=1) PLERROR("Object remote method getOptionasString takes 1 argument");
-        string optionname;
-        io >> optionname;
-        string optionval = getOption(optionname);
-        prepareToSendResults(io, 1);
-        io << optionval;
-        io.flush();      
-    }
-    else if(methodname=="getObject")
-    {
-        if(nargs!=0) PLERROR("Object remote method getObject takes 0 arguments");
-        prepareToSendResults(io, 1);
-        io << *this;
-        io.flush();      
-    }
-    else if(methodname=="save")
-    {
-        if(nargs!=2)
-            PLERROR("Object remote method save takes 2 arguments: filepath, io_formatting");
-        string filepath, io_formatting;
-        io >> filepath >> io_formatting;
-        if(io_formatting=="plearn_ascii")
-            PLearn::save(filepath, *this, PStream::plearn_ascii);
-        else if(io_formatting=="plearn_binary")
-            PLearn::save(filepath, *this, PStream::plearn_binary);
-        else
-            PLERROR("In Object remote method save: invalid io_formatting %s",
-                    io_formatting.c_str());
-        prepareToSendResults(io, 0);
-        io.flush();
-    }
-    else if(methodname=="run")
-    {
-        if(nargs!=0) PLERROR("Object remote method run takes 0 arguments");
-        run();
-        prepareToSendResults(io, 0);
-        io.flush();
-    }
+    // Look up methodname in the RemoteMethodMap
+    RemoteMethodMap& rmm = getRemoteMethodMap();
+    if (const RemoteTrampoline* trampoline = rmm.lookup(methodname,nargs))
+        trampoline->call(this, nargs, io);
     else
-        PLERROR("In Object::call no method named %s supported by this object's call method.",
-                methodname.c_str());
+        PLERROR("No method named '%s' taking %d arguments supported by objects of class '%s'.",
+                methodname.c_str(), nargs, classname().c_str());
+}
+
+void Object::declareMethods(RemoteMethodMap& rmm)
+{
+    declareMethod(rmm, "changeOptions", &Object::changeOptions,
+                  (BodyDoc("Change a set of options within the object"),
+                   ArgDoc ("option_map",
+                           "Set of option-name:option-value pairs to "
+                           "modify within the object.")));
+
+    declareMethod(rmm, "getOptionAsString", &Object::getOption,
+                  (BodyDoc("Return a given object option in PLearn serialized representation."),
+                   ArgDoc ("option_name", "Name of the option to get"),
+                   RetDoc ("Object option in string form, or exception if "
+                           "the option does not exist.")));
+
+    declareMethod(rmm, "run", &Object::run,
+                  (BodyDoc("Run the given object, if it is runnable; "
+                           "raise an exception if it is not.")));
+
+    declareMethod(rmm, "save", &Object::save_remote,
+                  (BodyDoc("Save the given object to disk under the designated filename\n"),
+                   ArgDoc ("filepath", "Pathname where the object should be saved"),
+                   ArgDoc ("io_formatting",
+                           "Format in which the object should be saved.  Can be one of:\n"
+                           "- \"plearn_ascii\": use the PLearn ASCII (text) serialisation format\n"
+                           "- \"plearn_binary\": use the PLearn binary format, which can be\n"
+                           "  more efficient for large objects\n")));
+
+    // The following are custom trampolines for the very special case where
+    // no C++ function can be mapped to these remote functions, since their
+    // return type is polymorphic.
+    struct ObjectTrampolineGetOption : public RemoteTrampoline
+    {
+        ObjectTrampolineGetOption(const string& methodname, const RemoteMethodDoc& doc)
+            : RemoteTrampoline(methodname, doc)
+        { }
+
+        virtual void call(Object* instance, int nargs, PStream& io) const
+        {
+            checkNargs(nargs, 1);
+            string optionname;
+            io >> optionname;
+            prepareToSendResults(io, 1);
+            instance->writeOptionVal(io, optionname);
+            io.flush();
+        }
+    };
+
+    rmm.insert(
+        "getOption", 1,
+        new ObjectTrampolineGetOption(
+            "getOption",
+            (BodyDoc("Return the option value given its name.  Note that the returned value\n"
+                     "is POLYMORPHIC: its type varies according to the actual type of the\n"
+                     "option."),
+             ArgDoc ("optionname", "Name of the option to get"),
+             RetDoc ("Value contained in the option"),
+             ArgTypeDoc("string"),
+             RetTypeDoc("(polymorphic)"))));
+
+    struct ObjectTrampolineGetObject : public RemoteTrampoline
+    {
+        ObjectTrampolineGetObject(const string& methodname, const RemoteMethodDoc& doc)
+            : RemoteTrampoline(methodname, doc)
+        { }
+
+        virtual void call(Object* instance, int nargs, PStream& io) const
+        {
+            checkNargs(nargs, 0);
+            prepareToSendResults(io, 1);
+            io << *instance;
+            io.flush();
+        }
+    };
+
+    rmm.insert(
+        "getObject", 0,
+        new ObjectTrampolineGetObject(
+            "getObject",
+            (BodyDoc("Return the object itself by value.  Note that the returned value\n"
+                     "is POLYMORPHIC: its type varies according to the actual type of the\n"
+                     "object."),
+             RetDoc ("Object value"),
+             RetTypeDoc("(polymorphic)"))));
 }
 
 
 //#####  Serialization and Miscellaneous  #####################################
 
 void Object::run()
-{ PLERROR("Not a runnable Object"); }
+{
+    PLERROR("Not a runnable Object");
+}
 
 void Object::oldread(istream& in)
-{ PLERROR("oldread method not implemented for this object"); }
+{
+    PLERROR("oldread method not implemented for this object");
+}
 
 void Object::save(const PPath& filename) const
 {
@@ -779,7 +818,16 @@ PStream& operator>>(PStream& in, Object*& x)
     return in;
 }
 
-
+void Object::save_remote(const string& filepath, const string& io_formatting) const
+{
+    if(io_formatting=="plearn_ascii")
+        PLearn::save(filepath, *this, PStream::plearn_ascii);
+    else if(io_formatting=="plearn_binary")
+        PLearn::save(filepath, *this, PStream::plearn_binary);
+    else
+        PLERROR("In Object remote method save: invalid io_formatting %s",
+                io_formatting.c_str());
+}
 
 /*
   PStream& operator>>(PStream &in, Object * &o)
