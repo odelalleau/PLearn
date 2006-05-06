@@ -731,10 +731,12 @@ class PlideMain( GladeAppWindow ):
         ## separately catch execution errors.
         compiled_code = None
         try:
+            self.cursor_hourglass()
             compiled_code = compile(script_code+'\n', script_name, 'exec')
         except ValueError:
             pass
         except SyntaxError, e:
+            self.cursor_normal()
             (exc_type, exc_value, tb) = sys.exc_info()
             self.status_display("Syntax error in script <b>%s</b>" % script_name,
                                 True)
@@ -751,6 +753,7 @@ class PlideMain( GladeAppWindow ):
             try:
                 exec compiled_code in script_env
             except:
+                self.cursor_normal()
                 (exc_type, exc_value, tb) = sys.exc_info()
                 self.log_display(''.join(traceback.format_tb(tb)))
                 self.status_display("Exception during execution of script <b>%s</b>."
@@ -762,9 +765,12 @@ class PlideMain( GladeAppWindow ):
                        type=gtk.MESSAGE_ERROR)
                 return None
             else:
+                self.cursor_normal()
                 self.status_display("Script <b>%s</b> parsed successfully."
                                     % script_name, True)
                 return script_env
+
+        self.cursor_normal()
 
 
 #####  Utility Classes  #####################################################
