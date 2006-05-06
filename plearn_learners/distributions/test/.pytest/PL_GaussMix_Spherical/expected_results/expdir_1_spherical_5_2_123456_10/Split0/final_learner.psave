@@ -3,7 +3,9 @@ L = 1 ;
 type = "spherical" ;
 n_eigen = -1 ;
 efficient_missing = 0 ;
-efficient_k_median = 10 ;
+efficient_k_median = 1 ;
+max_samples_in_cluster = -1 ;
+min_samples_in_cluster = 1 ;
 efficient_k_median_iter = 100 ;
 impute_missing = 0 ;
 kmeans_iterations = 5 ;
@@ -12,7 +14,7 @@ sigma_min = 9.99999999999999955e-07 ;
 epsilon = 9.99999999999999955e-07 ;
 alpha = 1 [ 1 ] ;
 center = 1  4  [ 
--0.0868066666666664488 	-0.0626033333333333025 	-1.50779199999991498 	5.35029800000000844 	
+-0.0868066666666664766 	-0.062603333333333358 	-1.50779199999992364 	5.35029800000000844 	
 ]
 ;
 sigma = 1 [ 57.2840504059394462 ] ;

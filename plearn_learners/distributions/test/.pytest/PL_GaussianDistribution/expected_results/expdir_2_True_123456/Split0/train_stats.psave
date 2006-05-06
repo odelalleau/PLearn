@@ -1,9 +1,10 @@
 *1 ->VecStatsCollector(
 maxnvalues = 0 ;
-no_removal_warnings = 0 ;
 fieldnames = 0 [ ] ;
 compute_covariance = 0 ;
 epsilon = 0 ;
+window = -1 ;
+no_removal_warnings = 0 ;
 stats = TVec(0 0 *0 )
 ;
 cov = 0  0  [ 
