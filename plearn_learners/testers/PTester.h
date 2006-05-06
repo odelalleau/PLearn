@@ -121,8 +121,10 @@ private:
 
 protected: 
     //! Declares this class' options
-    // (Please implement in .cc)
     static void declareOptions(OptionList& ol);
+
+    //! Declare the methods that are remote-callable
+    static void declareMethods(RemoteMethodMap& rmm);
 
     //! Utility function to compute confidence intervals over a test set
     //! and save results in VMat
@@ -135,10 +137,11 @@ public:
     //! Declares name and deepCopy methods
     PLEARN_DECLARE_OBJECT(PTester);
 
-    //! The experiment directory is the directory in which files 
-    //! related to this model are to be saved.     
-    //! If it is an empty string, it is understood to mean that the 
-    //! user doesn't want any file created by this learner.
+    /**
+     *  The experiment directory is the directory in which files related to
+     *  this model are to be saved.  If it is an empty string, it is understood
+     *  to mean that the user doesn't want any file created by this learner.
+     */
     void setExperimentDirectory(const PPath& the_expdir);
   
     //! This returns the currently set expdir (see setExperimentDirectory)
@@ -151,24 +154,23 @@ public:
     //! runs the tester
     virtual void run();
 
-    //! performs the test, and returns the global stats specified in statnames
-    //! If call_forget is set to false then the call to setTrainingSet() 
-    //! won't call forget and build.
-    //! This is useful for continuation of an incremental  training
-    //! (such as after increasing the number of epochs (nstages) ),
-    //! or generally when trying different option values that don't require
-    //! the learning to be restarted from scratch.
-    //! However call_forget will be forced to true (even if passed as false)
-    //! if the splitter returns more than one split.
-    //! Returns a vector of test statistics corresponding to the requested statnames
+    /**
+     *  Performs the test, and returns the global stats specified in statnames.
+     *  If 'call_forget' is set to false then the call to setTrainingSet()
+     *  won't call forget and build.  This is useful for continuation of an
+     *  incremental training (such as after increasing the number of epochs
+     *  (nstages) ), or generally when trying different option values that
+     *  don't require the learning to be restarted from scratch.  However
+     *  call_forget will be forced to true (even if passed as false) if the
+     *  splitter returns more than one split.
+     *
+     *  Returns a vector of test statistics corresponding to the requested
+     *  statnames
+     */
     Vec perform(bool call_forget=true);
 
     //! Transforms a shallow copy into a deep copy
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-
-    //! Support for remote method invocation
-    virtual void call(const string& methodname, int nargs, PStream& io);
-
 };
 
 DECLARE_OBJECT_PTR(PTester);

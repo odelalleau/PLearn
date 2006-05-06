@@ -224,46 +224,89 @@ void PTester::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
-void PTester::call(const string& methodname, int nargs, PStream& io)
+void PTester::declareMethods(RemoteMethodMap& rmm)
 {
-    if(methodname=="perform")
-    {
-        if(nargs!=1) PLERROR("PTester remote method perform takes 1 argument");
-        bool call_forget;
-        io >> call_forget;
-        Vec result = perform(call_forget);
-        prepareToSendResults(io, 1);
-        io << result;
-        io.flush();
-    }
-    else if(methodname=="getStatNames") 
-    {
-        if(nargs!=0) PLERROR("PTester remote method getStatNames takes 0 argument");
-        TVec<string> result = getStatNames();
-        prepareToSendResults(io, 1);
-        io << result;
-        io.flush();
-    }
-    else if(methodname=="setExperimentDirectory")
-    {
-        if(nargs!=1) PLERROR("PTester remote method setExperimentDirectory takes 1 argument");
-        PPath the_expdir;
-        io >> the_expdir;
-        setExperimentDirectory(the_expdir);
-        prepareToSendResults(io, 0);
-        io.flush();      
-    }
-    else if(methodname=="getExperimentDirectory")
-    {
-        if(nargs!=0) PLERROR("PTester remote method getExperimentDirectory takes 0 arguments");
-        PPath result = getExperimentDirectory();
-        prepareToSendResults(io, 1);
-        io << result;
-        io.flush();      
-    }
-    else
-        inherited::call(methodname, nargs, io);
-}
+    // Insert a backpointer to remote methods; note that this
+    // different than for declareOptions()
+    rmm.inherited(inherited::_getRemoteMethodMap_());
+
+    declareMethod(
+        rmm, "perform", &PTester::perform,
+        (BodyDoc("Performs the test, and returns the global stats specified in statnames.\n"
+                 "If 'call_forget' is set to false then the call to setTrainingSet()\n"
+                 "won't call forget and build.  This is useful for continuation of an\n"
+                 "incremental training (such as after increasing the number of epochs\n"
+                 "(nstages) ), or generally when trying different option values that\n"
+                 "don't require the learning to be restarted from scratch.  However\n"
+                 "call_forget will be forced to true (even if passed as false) if the\n"
+                 "splitter returns more than one split.\n"),
+         ArgDoc ("call_forget", "Whether forget() should be called in setTrainingSet()."),
+         RetDoc ("Vector of test statistics corresponding to the requested statnames")));
+
+    declareMethod(
+        rmm, "getStatNames", &PTester::getStatNames,
+        (BodyDoc("Return the statnames (potentially modified by statmask, if provided);\n"
+                 "see the 'statnames' and 'statmask' options."),
+         RetDoc ("Name of computed statistics.")));
+
+    declareMethod(
+        rmm, "setExperimentDirectory", &PTester::setExperimentDirectory,
+        (BodyDoc("The experiment directory is the directory in which files related to\n"
+                 "this model are to be saved.  If it is an empty string, it is understood\n"
+                 "to mean that the user doesn't want any file created by this learner.\n"),
+         ArgDoc ("expdir", "Directory name where experimental results should be saved")));
+
+    declareMethod(
+        rmm, "getExperimentDirectory", &PTester::getExperimentDirectory,
+        (BodyDoc("Return the currently-set experiment directory (see setExperimentDirectory)."),
+         RetDoc ("Current expdir.")));
+}    
+
+// The following is no longer necessary with the declareMethod mechanism
+// (to be deleted)
+
+/**
+ * void PTester::call(const string& methodname, int nargs, PStream& io)
+ * {
+ *     if(methodname=="perform")
+ *     {
+ *         if(nargs!=1) PLERROR("PTester remote method perform takes 1 argument");
+ *         bool call_forget;
+ *         io >> call_forget;
+ *         Vec result = perform(call_forget);
+ *         prepareToSendResults(io, 1);
+ *         io << result;
+ *         io.flush();
+ *     }
+ *     else if(methodname=="getStatNames") 
+ *     {
+ *         if(nargs!=0) PLERROR("PTester remote method getStatNames takes 0 argument");
+ *         TVec<string> result = getStatNames();
+ *         prepareToSendResults(io, 1);
+ *         io << result;
+ *         io.flush();
+ *     }
+ *     else if(methodname=="setExperimentDirectory")
+ *     {
+ *         if(nargs!=1) PLERROR("PTester remote method setExperimentDirectory takes 1 argument");
+ *         PPath the_expdir;
+ *         io >> the_expdir;
+ *         setExperimentDirectory(the_expdir);
+ *         prepareToSendResults(io, 0);
+ *         io.flush();      
+ *     }
+ *     else if(methodname=="getExperimentDirectory")
+ *     {
+ *         if(nargs!=0) PLERROR("PTester remote method getExperimentDirectory takes 0 arguments");
+ *         PPath result = getExperimentDirectory();
+ *         prepareToSendResults(io, 1);
+ *         io << result;
+ *         io.flush();      
+ *     }
+ *     else
+ *         inherited::call(methodname, nargs, io);
+ * }
+ */
 
 void PTester::build_()
 {
