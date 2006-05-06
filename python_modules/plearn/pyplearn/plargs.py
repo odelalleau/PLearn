@@ -215,8 +215,7 @@ class plargs(object):
 
         binders = []
         for bname in binder_names:
-            if bname != "plargs":
-                binders.append(context.binders[bname])        
+            binders.append(context.binders[bname])        
         return binders
     getBinders = staticmethod(getBinders)
 
@@ -273,10 +272,13 @@ class plargs(object):
             context = actualContext()
     
             # Keep track of binder subclass
-            context.binders[clsname] = cls
+            if clsname == "plargs":
+                actualContext().setPlargs(cls)
+            else:
+                context.binders[clsname] = cls
 
             # Introspection of the subclasses
-            plargs = context.binders["plargs"]
+            plargs = context.getPlargs()
             if cls is not plargs:
                 for option, value in dic.iteritems():
                     if option.startswith('_'):
@@ -299,7 +301,7 @@ class plargs(object):
                 raise AttributeError("Cannot modify the value of 'expdir'.")
 
             context = actualContext()
-            plargs  = context.binders["plargs"]
+            plargs  = context.getPlargs()
             if cls is plargs:
                 raise AttributeError(
                     "Can't set option '%s' directly on plargs. "
@@ -324,7 +326,7 @@ class plargs(object):
                 return actualContext().getExpdir()
 
             holder = cls
-            plargs = actualContext().binders["plargs"]
+            plargs = actualContext().getPlargs()
             if cls is plargs:
                 try:
                     holder = actualContext().plopt_holders[key]
@@ -345,13 +347,24 @@ class plargs(object):
             except AttributeError, err:
                 raise AttributeError(
                     "Unknown option '%s' in '%s' (%s)"%(key, cls.__name__, err))
-allContextsBinder(plargs)
 
 # For backward compatibility
-class plarg_defaults(plargs):
-    _extensible_ = True
-allContextsBinder(plarg_defaults)
+class _plarg_defaults:
+    def getBinder(self):
+        binders = actualContext().binders
+        if 'plarg_defaults' not in binders:
+            class plarg_defaults(plargs):
+                _extensible_ = True
+            binders['plarg_defaults'] = plarg_defaults
+        return binders['plarg_defaults']
 
+    def __getattribute__(self, option):
+        return getattr(self.getBinder(), option)
+
+    def __setattr__(self, option, value):
+        setattr(self.getBinder(), option, value)
+plarg_defaults = _plarg_defaults()
+        
 class plnamespace: 
     class __metaclass__(type):
         def __new__(metacls, clsname, bases, dic):
@@ -484,6 +497,7 @@ if __name__ == "__main__":
 
     print "+++ Context 2"        
     second_context = createNewContext()
+    plarg_defaults.algo = "classical"
 
     print "-- Before creation of the new 'n' plnamespace:"
     print n.namespaced
