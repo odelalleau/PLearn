@@ -61,7 +61,7 @@ def pyplearn_intelligent_cast( default_value, provided_value ):
                 elem_cast = type(default_value[0])
                 if elem_cast == list:
                     raise ValueError, "Nested lists are not supported by pyplearn_intelligent_cast"
-            cast = list_cast
+            cast = lambda slist: list_cast(slist, elem_cast)
 
     return cast(provided_value)
     
