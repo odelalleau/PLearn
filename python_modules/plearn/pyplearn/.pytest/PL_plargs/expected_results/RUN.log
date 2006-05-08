@@ -1,0 +1,68 @@
+#######  Binders  #############################################################
+
++++ Untouched plarg
+
+Access through plargs: c
+Direct access: c
+
++++ Standard assignment through binder
+
+Access through plargs: Youppi
+Direct access: Youppi
+
++++ Setting binded option using 'dotted' key
+
+Access through plargs: ** E **
+Direct access: ** E **
+
+#######  Namespaces  ##########################################################
+
+Direct access: within namespace n
+
++++ Standard assignment through namespace
+
+Direct access: WITHIN NAMESPACE n
+
+Direct access: FROM_SETATTR
+
+#######  Contexts Management  #################################################
+
++++ Context 1
+Expdir: expdir
+Binder: binder
+    e: plopt(value = '** E **' [default: 'e'])
+    d: plopt(value = 'Youppi' [default: 'd'])
+    f: plopt(value = 'f')
+    c: plopt(value = 'c')
+
+Namespace: n
+    namespaced: plopt(value = 'FROM_SETATTR' [default: 'within namespace n'])
+
++++ Context 2
+-- Before creation of the new 'n' plnamespace:
+within namespace n
+Expdir: expdir2
+Binder: plarg_defaults
+    algo: plopt(value = 'classical')
+
+
+-- After creation of the new 'n' plnamespace:
+NEW NAMESPACED ATTR
+Expdir: expdir2
+Binder: plarg_defaults
+    algo: plopt(value = 'classical')
+
+Namespace: n
+    namespaced: plopt(value = 'NEW NAMESPACED ATTR')
+
++++ Back to Context 1
+Expdir: expdir
+Binder: binder
+    e: plopt(value = '** E **' [default: 'e'])
+    d: plopt(value = 'Youppi' [default: 'd'])
+    f: plopt(value = 'f')
+    c: plopt(value = 'c')
+
+Namespace: n
+    namespaced: plopt(value = 'FROM_SETATTR' [default: 'within namespace n'])
+

@@ -1,25 +1,25 @@
-import os, time
+import inspect, os, time
 from plearn.pyplearn import config
 from plearn.pyplearn.pyplearn import generate_expdir
 
-def actualContext():
+def actualContext(cls):
     """Function returning the actual context object.
 
     All other functions in this module manipulate context through
     handles. This function allows one to actually modify the current
     context: B{advised users only}.
     """
-    return __contexts[__current_context]
+    context = __contexts[__current_context]
+    context.buildClassContext(cls)
+    return context
 
 def createNewContext():
     global __contexts, __current_context
 
-    plargs = actualContext().getPlargs()
-    
-    __current_context = len(__contexts)
-    __contexts.append( __Context() )
+    contextual_classes = __contexts[__current_context].built_class_contexts
 
-    actualContext().setPlargs(plargs)
+    __current_context = len(__contexts)
+    __contexts.append( __Context(contextual_classes) )
 
     return __current_context
 
@@ -35,25 +35,29 @@ def setCurrentContext(handle):
 class __Context(object):
     __expdirs = []
     
-    def __init__(self):
-        self.binders = {}
-        self.namespaces = {}
-        self.plopt_holders = {}
-        self.plopt_overrides = {}
-
-    def getPlargs(self):
-        return self._plargs
-
-    def setPlargs(self, plargs):
-        assert not hasattr(self, '_plargs')
-        self._plargs = plargs
-
+    def __init__(self, contextual_classes=[]):
+        self.built_class_contexts = []
+        for cls in contextual_classes:
+            self.buildClassContext(cls)
+        
+    def buildClassContext(self, cls):
+        assert inspect.isclass(cls)
+        if cls not in self.built_class_contexts \
+               and hasattr(cls, "buildClassContext"):
+            cls.buildClassContext(self)            
+            self.built_class_contexts.append(cls)
+            
     def getExpdir(self):        
         if not hasattr(self, '_expdir_'):
-            expdir = generate_expdir()
+            expdir = generate_expdir()            
+            attempt = 1
             while expdir in self.__expdirs:
                 time.sleep(1)
                 expdir = generate_expdir()
+                attempt += 1
+                if expdir == "expdir":
+                    expdir = "expdir%d"%attempt
+                
             self._expdir_ = expdir
             self.__expdirs.append(expdir)
 

@@ -1,4 +1,4 @@
-import logging, re
+import inspect, logging, re
 from plearn.pyplearn.context import *
 from plearn.pyplearn.pyplearn import list_cast
 
@@ -138,7 +138,7 @@ class plopt(object):
 
     def get(self):
         """Returns the current context override, if any, o/w returns the default value."""
-        plopt_overrides = actualContext().plopt_overrides
+        plopt_overrides = actualContext(self.__class__).plopt_overrides
         if self in plopt_overrides:
             return plopt_overrides[self]
         return self.__default_value
@@ -163,7 +163,7 @@ class plopt(object):
 
     def reset(self):
         """Simply deletes any override for this plopt in the current context."""
-        actualContext().plopt_overrides.pop(self, None)
+        actualContext(self.__class__).plopt_overrides.pop(self, None)
         
     def set(self, value):
         """Sets an override for this plopt in the current context"""
@@ -172,12 +172,29 @@ class plopt(object):
         self.checkChoices(value)
     
         # The previous didn't raise exeption, the 'value' is valid
-        actualContext().plopt_overrides[self] = value
+        actualContext(self.__class__).plopt_overrides[self] = value
 
     #######  Static methods  ######################################################
 
+    def buildClassContext(context):
+        assert not hasattr(context, 'plopt_holders')
+        context.plopt_holders = {}
+
+        assert not hasattr(context, 'plopt_overrides')
+        context.plopt_overrides = {}
+    buildClassContext = staticmethod(buildClassContext)
+
     def define(holder, option, value):
         """Typical pattern to set a plopt instance member in 'holder' for the first time."""
+        context = actualContext(plopt)
+        
+        # A script should not contain two options of the same name
+        if option in context.plopt_holders:
+            raise KeyError(
+                "A script should not contain two options of the same name. "
+                "Clashing definition of plarg '%s' in '%s' and '%s'"%
+                (option,holder.__class__.__name__,context.plopt_holders[option]) )
+
         # Enforce all 'holder' members to be (named) plopt instances
         if isinstance(value, plopt):
             value._name = option
@@ -188,7 +205,7 @@ class plopt(object):
         type.__setattr__(holder, option, value)
 
         # Keep a pointer to the holder in which the option is defined
-        actualContext().plopt_holders[option] = holder
+        context.plopt_holders[option] = holder
     define = staticmethod(define)
 
     def iterator(holder):
@@ -207,9 +224,16 @@ class plopt(object):
 class plargs(object):
     _extensible_ = False
 
+    #######  Static methods  ######################################################
+
+    def buildClassContext(context):
+        assert not hasattr(context, 'binders')
+        context.binders = {}
+    buildClassContext = staticmethod(buildClassContext)
+
     def getBinders():
         """Returns a list of all binders in the current context."""
-        context = actualContext()
+        context = actualContext(plargs)
         binder_names = context.binders.keys()
         binder_names.sort()
 
@@ -221,11 +245,19 @@ class plargs(object):
 
     def getNamespaces():
         """Returns a list of all namespaces in the current context."""
-        context = actualContext()
+        context = actualContext(plargs)
         nsp_names = context.namespaces.keys()
         nsp_names.sort()        
         return [ context.namespaces[nsp] for nsp in nsp_names ]
     getNamespaces = staticmethod(getNamespaces)
+
+    def getHolder(holder_name):
+        holder = plnamespace.getHolder(holder_name)
+        if holder is None:
+            holder = actualContext(plargs).binders.get(holder_name)
+        return holder
+    getHolder = staticmethod(getHolder)
+
     
     def parse(*args):
         """Parses a list of argument strings.
@@ -235,7 +267,7 @@ class plargs(object):
         if len(args) == 1 and isinstance(args[0], list):
             args = args[0]
 
-        context = actualContext()
+        context = actualContext(plargs)
         for statement in args:
             option, value = statement.split('=', 1)
             option = option.strip()
@@ -251,9 +283,7 @@ class plargs(object):
             
             try:
                 holder_name, option = option.split('.')
-                holder = context.namespaces.get(holder_name, None)
-                if holder is None:
-                    holder = context.binders.get(holder_name, None)
+                holder = plargs.getHolder(holder_name)
             except TypeError:
                 holder = context.plopt_holders.get(option, None)
 
@@ -263,33 +293,28 @@ class plargs(object):
                     
             setattr(holder, option, value)
     parse = staticmethod(parse)
+
+    #######  Metaclass  ###########################################################
     
     class __metaclass__(type):
         """Overrides the attribute management behavior."""
         def __new__(metacls, clsname, bases, dic):
             cls = type.__new__(metacls, clsname, bases, dic)
+            plargs = cls
+            if clsname != "plargs":
+                plargs = globals()['plargs']
 
-            context = actualContext()
+            context = actualContext(plargs)
     
             # Keep track of binder subclass
-            if clsname == "plargs":
-                actualContext().setPlargs(cls)
-            else:
+            if clsname != "plargs":
                 context.binders[clsname] = cls
 
             # Introspection of the subclasses
-            plargs = context.getPlargs()
             if cls is not plargs:
                 for option, value in dic.iteritems():
                     if option.startswith('_'):
                         continue
-
-                    # A script should not contain two options of the same name
-                    if option in context.plopt_holders:
-                        raise KeyError(
-                            "A script should not contain two options of the same name. "
-                            "Clashing definition of plarg '%s' in '%s' and '%s'"%
-                            (option,clsname,context.plopt_holders[option]) )
 
                     # Define the plopt instance
                     plopt.define(cls, option, value)
@@ -300,8 +325,11 @@ class plargs(object):
             if option == "expdir":
                 raise AttributeError("Cannot modify the value of 'expdir'.")
 
-            context = actualContext()
-            plargs  = context.getPlargs()
+            plargs = cls
+            if cls.__name__ != "plargs":
+                plargs = globals()['plargs']
+
+            context = actualContext(plargs)
             if cls is plargs:
                 raise AttributeError(
                     "Can't set option '%s' directly on plargs. "
@@ -322,15 +350,18 @@ class plargs(object):
             if key.startswith('_'):
                 return type.__getattribute__(cls, key)
 
+            plargs = cls
+            if cls.__name__ != "plargs":
+                plargs = globals()['plargs']
+
             if key == "expdir":
-                return actualContext().getExpdir()
+                return actualContext(plargs).getExpdir()
 
             holder = cls
-            plargs = actualContext().getPlargs()
             if cls is plargs:
                 try:
-                    holder = actualContext().plopt_holders[key]
-                except KeyError:
+                    holder = actualContext(plargs).plopt_holders[key]
+                except (AttributeError, KeyError):
                     # Otherwise
                     try:
                         return type.__getattribute__(cls, key)
@@ -351,7 +382,7 @@ class plargs(object):
 # For backward compatibility
 class _plarg_defaults:
     def getBinder(self):
-        binders = actualContext().binders
+        binders = actualContext(plargs).binders
         if 'plarg_defaults' not in binders:
             class plarg_defaults(plargs):
                 _extensible_ = True
@@ -365,12 +396,22 @@ class _plarg_defaults:
         setattr(self.getBinder(), option, value)
 plarg_defaults = _plarg_defaults()
         
-class plnamespace: 
+class plnamespace:
+
+    def buildClassContext(context):
+        assert not hasattr(context, 'namespaces')
+        context.namespaces = {}
+    buildClassContext = staticmethod(buildClassContext)
+
+    def getHolder(holder_name):
+        return actualContext(plnamespace).namespaces.get(holder_name)
+    getHolder = staticmethod(getHolder)
+    
     class __metaclass__(type):
         def __new__(metacls, clsname, bases, dic):
             cls = type.__new__(metacls, clsname, bases, dic)
             if clsname != "plnamespace":
-                context = actualContext()
+                context = actualContext(globals()["plnamespace"])
                 context.namespaces[clsname] = cls
 
                 for option, value in dic.iteritems():
@@ -384,9 +425,14 @@ class plnamespace:
             if key.startswith('_'):
                 return type.__getattribute__(cls, key)
 
-            plopt_instance = type.__getattribute__(cls, key)
-            assert isinstance(plopt_instance, plopt)
-            return plopt_instance.get()
+            attr = type.__getattribute__(cls, key)
+            try:
+                plopt_instance = attr
+                assert isinstance(plopt_instance, plopt)
+                return plopt_instance.get()
+            except AssertionError:
+                assert inspect.ismethod(attr) or inspect.isfunction(attr)
+                return attr
 
         def __setattr__(cls, key, value):
             try:
@@ -456,23 +502,6 @@ if __name__ == "__main__":
     ### Subclass propagation
     plargs.parse("n.namespaced=FROM_SETATTR")
     nCheck()    
-
-    print "#######  Internal  ############################################################"        
-    def printMap(map):
-        keys = map.keys()
-        keys.sort()
-        for k in keys:
-            print '   ',k,':',repr(map[k])
-    
-    print "\n*** PLArgs"    
-    printMap(plargs.__dict__)
-        
-    print "\n*** Binder 'b'"
-    printMap(binder.__dict__)
-    
-    print "\n*** Namespace 'n'"
-    printMap(n.__dict__)
-    print
 
     print "#######  Contexts Management  #################################################\n"
 

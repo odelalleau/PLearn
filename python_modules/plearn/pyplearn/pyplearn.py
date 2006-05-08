@@ -231,7 +231,7 @@ def generate_expdir( ):
     """Generates a standard experiment directory name."""
     from plearn.utilities.toolkit import date_time_string    
 
-    expdir = "expdir"        
+    expdir = "expdir"
     if (os.environ.get('PYTEST_STATE', '') != 'Active'):
         expdir = '%s_%s' % ( expdir, date_time_string('_','_') )
 
