@@ -32,12 +32,13 @@
 
 # Author: Pascal Vincent
 
-import sys, string, struct
+import sys, string
 import numarray
+import plearn.utilities.pl_struct as struct
 from plearn.pyplearn.plearn_repr import plearn_repr, clear_ref_map
 
 sign_and_digits = string.digits + "+-"
-float_chars = string.digits+"+-.eE"
+float_chars = string.digits+"+-.eE" + "naif"   # "nan" and "inf"
 blank_chars = " \t\n\r"
 blank_and_separator_chars = blank_chars+",;"
 wordseparators = " \t\n\r()[]{};,:|#"
@@ -201,6 +202,7 @@ class PLearnIO:
             s += c
             c = self.get()
         self.unread(c)
+        print >>sys.stderr, "read_float:", s
         return float(s)
 
             
