@@ -1763,12 +1763,12 @@ void GaussMix::computePosteriors() {
             previous_training_sample = -2;
         }
     } else {
+        previous_training_sample = -1;
     for (int i = 0; i < nsamples; i++) {
         train_set->getSubRow(i, 0, sample_row);
         // First we need to compute the likelihood P(s_i | j).
         current_training_sample = i;
         computeAllLogLikelihoods(sample_row, log_likelihood_post);
-        current_training_sample = -1;
         assert( !log_likelihood_post.hasMissing() );
         for (int j = 0; j < L; j++)
             log_likelihood_post[j] += pl_log(alpha[j]);
@@ -1801,7 +1801,10 @@ void GaussMix::computePosteriors() {
             int dummy_test = 0;
             dummy_test++;
         }
+        previous_training_sample = current_training_sample;
+        current_training_sample = -1;
     }
+    previous_training_sample = -2;
     }
     //Profiler::end("computePosteriors");
 }
