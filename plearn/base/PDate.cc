@@ -156,7 +156,7 @@ PDate::PDate(string date)
     else
         PLERROR("PDate::PDate: the passed date string is not in a known format: %s", date.c_str());
 
-    if(year<1970 || year>3000 || month<1 || month>12 || day<1 || day>31)
+    if(year<1900 || year>3000 || month<1 || month>12 || day<1 || day>31)
         PLERROR("Invalid date string: %s",date.c_str());
 }
 
