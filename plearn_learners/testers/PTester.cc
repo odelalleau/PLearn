@@ -576,9 +576,11 @@ Vec PTester::perform(bool call_forget)
                 if (is_splitdir)
                     force_mkdir(splitdir); // TODO Why is this done so late?
                 if(is_splitdir && save_test_outputs)
-                    test_outputs = new FileVMatrix(splitdir/(setname+"_outputs.pmat"),0,outputsize);
+                    test_outputs = new FileVMatrix(splitdir/(setname+"_outputs.pmat"),0,learner->getOutputNames());
+                    //test_outputs = new FileVMatrix(splitdir/(setname+"_outputs.pmat"),0,outputsize);
                 if(is_splitdir && save_test_costs)
-                    test_costs = new FileVMatrix(splitdir/(setname+"_costs.pmat"),0,testcostsize);
+                    test_costs = new FileVMatrix(splitdir/(setname+"_costs.pmat"),0,learner->getTestCostNames());
+                //test_costs = new FileVMatrix(splitdir/(setname+"_costs.pmat"),0,testcostsize);
                 if(is_splitdir && save_test_confidence)
                     test_confidence = new FileVMatrix(splitdir/(setname+"_confidence.pmat"),
                                                       0,2*outputsize);

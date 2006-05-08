@@ -84,7 +84,7 @@ void BufferedIntVecFile::put(int i, int value)
 BufferedIntVecFile::~BufferedIntVecFile()
 {
     close();
-    if(buf) delete buf;
+    if(buf) delete[] buf;
 }
 
 void BufferedIntVecFile::getBuf(int bufstart_)

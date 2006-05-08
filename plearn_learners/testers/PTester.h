@@ -44,6 +44,7 @@
 #include <plearn/vmat/Splitter.h>
 #include <plearn/vmat/VMat.h>
 #include <plearn_learners/generic/PLearner.h>
+#include <plearn_learners/testers/PerformanceEvaluator.h>
 
 namespace PLearn {
 using namespace std;
@@ -93,6 +94,7 @@ public:
     PP<Splitter> splitter;
     TVec<TVec<string> > statmask;
     PP<VecStatsCollector> template_stats_collector;
+    TVec<PP<PerformanceEvaluator> > perf_evaluators;
 
     //! Whether to save 95% confidence intervals for the test outputs;
     //! make sense mostly if 'save_test_outputs' is also true.  The
