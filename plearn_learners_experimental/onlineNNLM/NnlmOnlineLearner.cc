@@ -113,22 +113,19 @@ void NnlmOnlineLearner::buildLayers()
 
     // NnlmWordRep + GradNNet + Tanh
     nmodules = 3;
-
     modules.resize( nmodules );
 
     // *** Word representation layer
-
     PP< NnlmWordRepresentationLayer > p_wrl = new NnlmWordRepresentationLayer();
-  
-// This is done in the NnlmWordRepresentationLayer  
-// BUT in the build... so we need to do it here, because size compality check
-// is performed before the build
+
+    // This is done in the NnlmWordRepresentationLayer  
+    // BUT in the build... so we need to do it here, because size compality check
+    // is performed before the build
     p_wrl->input_size = inputsize();
     p_wrl->output_size = context_size * word_representation_size;
     p_wrl->vocabulary_size = vocabulary_size;
     p_wrl->word_representation_size = word_representation_size;
     p_wrl->context_size = context_size;
-
     p_wrl->random_gen = random_gen;
 
     modules[0] = p_wrl;
@@ -137,13 +134,12 @@ void NnlmOnlineLearner::buildLayers()
     // *** GradNNetLayer
 
     PP< GradNNetLayerModule > p_nnl = new GradNNetLayerModule();
-  
+
     p_nnl->input_size = context_size * word_representation_size;
     // HARDCODED FOR NOW
     p_nnl->output_size = 200;
     p_nnl->start_learning_rate = 0.01;
     p_nnl->init_weights_random_scale=1;
-
     p_nnl->random_gen = random_gen;
 
     modules[1] = p_nnl;
@@ -152,7 +148,6 @@ void NnlmOnlineLearner::buildLayers()
     // *** Tanh layer
 
     PP< TanhModule > p_thm = new TanhModule();
-  
     // HARDCODED FOR NOW
     p_thm->input_size = 200;
     p_thm->output_size = 200;
@@ -160,21 +155,16 @@ void NnlmOnlineLearner::buildLayers()
     modules[2] = p_thm;
 
 
-////////////////////////////////////////////////////////////
-
     // ***  Check on layer size compatibilities and resize values and gradients
     // variables
-
 
     values.resize( nmodules+1 );
     gradients.resize( nmodules+1 );
 
     // first values will be "input" values
     int size = inputsize();
-
     values[0].resize( size );
     gradients[0].resize( size );
-
 
     for( int i=0 ; i<nmodules ; i++ )
     {
@@ -200,71 +190,57 @@ void NnlmOnlineLearner::buildLayers()
     }
 
 
-
     // ***  Cost module
     output_module = new NnlmOutputLayer();
-    
+
     output_module->vocabulary_size= vocabulary_size;
     output_module->word_representation_size = word_representation_size;
     output_module->context_size = context_size;
-  
     // HARDCODED FOR NOW 
     output_module->input_size = 200;
     output_module->output_size = 1;
- 
-    output_module->build();
 
+    output_module->build();
 
 }
 
 void NnlmOnlineLearner::build_()
 {
 
-    // if train_set is not set, we don't know inputsize or targetsize
     if( train_set )
     {
 
-/*        // * PRETREAT TRAIN_SET
-        int ds = (train_set->getDictionary(0))->size();
+        // *** Pretreat train_set
+        // Non functional code - problem is with setting a value
+        // Does ProcessSymbolicVMatrix have a proper put function
+/*        int dict_size = (train_set->getDictionary(0))->size();
 
         for( int i = 0; i < train_set->length(); i++ )  {
-          for( int j = 0; j < inputsize(); j++ )  {
-            // replace nan input by missing input tag
-            if( is_missing( train_set(i,j) ) )  {
-              train_set(i,j) = ( ds + 1.0 );
-            }
-          }
-          // replace nan target by OOV
-          if( is_missing( train_set(i, inputsize()) ) ) {
-            train_set( i, inputsize() ) = 0.0;
-          }
 
-        }
- */
-/*
-            train_set->getExample( sample, input, target, weight );
-            //DO THIS IN PRETREATMENT!!!!!!!!!!
-            //DO THIS IN PRETREATMENT!!!!!!!!!!
-            //replace nan by '(train_set->getDictionary(0))->size()+1' the
-            //missing value tag
-            for( int i=0 ; i < inputsize() ; i++ ) {
-              if( is_missing(input[i]) )  {
-                input[i] = (train_set->getDictionary(0))->size()+1;
+            // * Replace nan input by missing input tag
+            for( int j = 0; j < inputsize(); j++ )  {
+              if( is_missing( train_set(i,j) ) )  {
+                // DOES NOT COMPILE !!!
+                //train_set(i,j) = dict_size + 1;
+                // PUT OVERLOADED???
+                //train_set->put(i,j, dict_size + 1 );
               }
             }
 
-            // Replace a 'nan' in the target by OOV
+            // * Replace nan target by OOV
             // this nan should not be missing data (seeing the train_set is a
             // ProcessSymbolicSequenceVMatrix)
             // but the word "nan", ie "Mrs Nan said she would blabla"
             // *** Problem however - current vocabulary is full for train_set,
             // ie we train OOV on nan-word instances.
-            // *** Problem however - current vocabulary is full for train_set,
             // ie we train OOV on nan-word instances.
             // DO a pretreatment to replace Nan by *Nan* or something like it
-              if( is_missing(target[0]) ) {
-                  target[0] = 0;
-              }
+            if( is_missing( train_set(i, inputsize()) ) ) {
+              //SAME!!!
+              train_set( i, inputsize() ) = 0;
+            }
+
+        }
 */
 
         // *** Sanity Checks
@@ -273,24 +249,26 @@ void NnlmOnlineLearner::build_()
 
         // *** Set some variables
 
-        // vocabulary size (voc +1 for OOV +1 for missing)
+        // vocabulary size (voc +1 for OOV ( 0 tag ) +1 for missing ( dict_size+1 tag) )
         vocabulary_size = (train_set->getDictionary(0))->size()+2;
 
         context_size = inputsize();
-
 
         // *** Build modules and output_module
         buildLayers();
 
 
+        // *** Train ngram
+        // Should load it instead
+        cout << "training ngram" << endl;
+
+
     }
-
-
 
 
 }
 
-// ### Nothing to add here, simply calls build_
+
 void NnlmOnlineLearner::build()
 {
     inherited::build();
@@ -346,19 +324,29 @@ void NnlmOnlineLearner::forget()
 
 }
 
+// Had trouble interfacing with ProcessSymbolicSequenceVMatrix's getExample.
+// In particular, a source matrix of inputsize 1, targetsize 0, weightsize 0
+// used in a ProcessSymb of leftcontext 3 would return an input of 4 and a
+// target of size 0, even though its inputsize was set to 3 and targetsize to 1
+//
+void NnlmOnlineLearner::myGetExample(VMat& example_set, int& sample, Vec& input, Vec& target,
+real& weight) const
+{
+    static Vec row;
+    row.resize( inputsize() + targetsize() + weightsize() );
+
+    example_set->getRow( sample, row);
+
+    input << row.subVec( 0, inputsize() );
+    target << row.subVec( inputsize(), targetsize() );
+    if( weightsize() )  {
+        weight = row[ inputsize() + targetsize() ];
+    }
+
+}
+
 void NnlmOnlineLearner::train()
 {
-    // The role of the train method is to bring the learner up to
-    // stage==nstages, updating train_stats with training costs measured
-    // on-line in the process.
-
-    /* TYPICAL CODE:
-
-    static Vec input;  // static so we don't reallocate memory each time...
-    static Vec target; // (but be careful that static means shared!)
-    input.resize(inputsize());    // the train_set's inputsize()
-    target.resize(targetsize());  // the train_set's targetsize()
-    real weight;
 
     // This generic PLearner method does a number of standard stuff useful for
     // (almost) any learner, and return 'false' if no training should take
@@ -366,19 +354,6 @@ void NnlmOnlineLearner::train()
     if (!initTrain())
         return;
 
-    while(stage<nstages)
-    {
-        // clear statistics of previous epoch
-        train_stats->forget();
-
-        //... train for 1 stage, and update train_stats,
-        // using train_set->getExample(input, target, weight)
-        // and train_stats->update(train_costs)
-
-        ++stage;
-        train_stats->finalize(); // finalize statistics for this epoch
-    }
-    */
 
     Vec input( inputsize() );
     Vec target( targetsize() );
@@ -388,8 +363,11 @@ void NnlmOnlineLearner::train()
 
     int nsamples = train_set->length();
 
-    if( !initTrain() )
-        return;
+    ProgressBar* pb = NULL;
+    if(report_progress) 
+        pb = new ProgressBar("Training", nsamples);
+    
+
 
     // *** For stages
     for( ; stage < nstages ; stage++ )
@@ -400,39 +378,38 @@ void NnlmOnlineLearner::train()
 
         // * for examples
         for( int sample=0 ; sample < nsamples ; sample++ )
-        //int sample=0 ;
-        //for( int s=0 ; s < nsamples ; s++ )
         {
 
             if(sample%10000 == 0)
               cout << "stage " << stage << " sample " << sample << endl;
 
-            train_set->getExample( sample, input, target, weight );
+            if(report_progress)
+                pb->update(sample);
 
 
-            //DO THIS IN PRETREATMENT!!!!!!!!!!
-            //DO THIS IN PRETREATMENT!!!!!!!!!!
-            //replace nan by '(train_set->getDictionary(0))->size()+1' the
-            //missing value tag
+            myGetExample(train_set, sample, input, target, weight );
+
+
+            // *** DO THIS IN PRETREATMENT!!!
+            // * Replace nan in input by '(train_set->getDictionary(0))->size()+1', 
+            // the missing value tag
             for( int i=0 ; i < inputsize() ; i++ ) {
               if( is_missing(input[i]) )  {
                 input[i] = (train_set->getDictionary(0))->size()+1;
               }
             }
 
-            // Replace a 'nan' in the target by OOV
+            // * Replace a 'nan' in the target by OOV
             // this nan should not be missing data (seeing the train_set is a
             // ProcessSymbolicSequenceVMatrix)
             // but the word "nan", ie "Mrs Nan said she would blabla"
             // *** Problem however - current vocabulary is full for train_set,
             // ie we train OOV on nan-word instances.
-            // *** Problem however - current vocabulary is full for train_set,
-            // ie we train OOV on nan-word instances.
             // DO a pretreatment to replace Nan by *Nan* or something like it
-              if( is_missing(target[0]) ) {
-                  target[0] = 0;
-              }
-
+            if( is_missing(target[0]) ) {
+                target[0] = 0;
+            }
+            // *** DO THIS IN PRETREATMENT!!!
 
             // - fprop
             computeOutput(input, output);
@@ -486,11 +463,61 @@ void NnlmOnlineLearner::train()
     }
 
 
+    if(pb)
+        delete pb;
+
 
 }
 
-/*
-void NBnnlmLearner::test(VMat testset) {
+//void NBnnlmLearner::test(VMat&? testset) {
+void NnlmOnlineLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
+                    VMat testoutputs, VMat testcosts) const
+{
+/*    int l = testset.length();
+    Vec input;
+    Vec target;
+    real weight;
+
+    Vec output(outputsize());
+
+    Vec costs(nTestCosts());
+
+    // testset->defineSizes(inputsize(),targetsize(),weightsize());
+
+    ProgressBar* pb = NULL;
+    if(report_progress)
+        pb = new ProgressBar("Testing learner",l);
+
+    if (l == 0) {
+        // Empty test set: we give -1 cost arbitrarily.
+        costs.fill(-1);
+        test_stats->update(costs);
+    }
+
+    for(int i=0; i<l; i++)
+    {
+        testset.getExample(i, input, target, weight);
+
+        // Always call computeOutputAndCosts, since this is better
+        // behaved with stateful learners
+        computeOutputAndCosts(input,target,output,costs);
+
+        if(testoutputs)
+            testoutputs->putOrAppendRow(i,output);
+
+        if(testcosts)
+            testcosts->putOrAppendRow(i, costs);
+
+        if(test_stats)
+            test_stats->update(costs,weight);
+
+        if(report_progress)
+            pb->update(i);
+    }
+
+    if(pb)
+        delete pb;
+*/
 
     Vec input( inputsize() );
     Vec target( targetsize() );
@@ -505,6 +532,8 @@ void NBnnlmLearner::test(VMat testset) {
     real entropy = 0.0;
     real perplexity = 0.0;
 
+        cout << "test -> context not set" << endl;
+    
     //cout << "testing 30 first samples" << endl;
     for( int sample=0 ; sample < nsamples ; sample++ )
     //for( int sample=0 ; sample < 30 ; sample++ )
@@ -513,7 +542,7 @@ void NBnnlmLearner::test(VMat testset) {
         if(sample%10000 == 0)
           cout << "*";
 
-        testset->getExample( sample, input, target, weight );
+        myGetExample(testset, sample, input, target, weight );
 
 
         //DO THIS IN PRETREATMENT!!!!!!!!!!
@@ -543,10 +572,12 @@ void NBnnlmLearner::test(VMat testset) {
         // - fprop
         computeOutput(input, output);
 
-        test_output_module->setCurrentWord( (int) target[0]);
-        test_output_module->setPreviousWord( (int) input[inputsize()-1]);
+        output_module->setCurrentWord( (int) target[0]);
+        // MUST SET CONTEXT
 
-        test_output_module->fprop( output, test_costs);
+        //output_module->setPreviousWord( (int) input[inputsize()-1]);
+
+        output_module->fprop( output, test_costs);
 
         if(sample<15)
           cout << "test cost for sample " << sample << " " << test_costs[0] <<
@@ -565,7 +596,7 @@ endl;
 
 
 }
-*/
+
 
 
 void NnlmOnlineLearner::computeOutput(const Vec& input, Vec& output) const

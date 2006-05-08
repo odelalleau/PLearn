@@ -85,6 +85,8 @@ public:
     //#####  PLearner Member Functions  #######################################
 
     void buildLayers();
+    void myGetExample(VMat& example_set, int& sample, Vec& input, Vec& target,
+real& weight) const;
 
     //! Returns the size of this learner's output, (which typically
     //! may depend on its inputsize(), targetsize() and set options).
@@ -102,6 +104,8 @@ public:
     //! measured on-line in the process.
     // (PLEASE IMPLEMENT IN .cc)
     virtual void train();
+
+    void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs, VMat testcosts) const;
 
     //! Computes the output from the input.
     // (PLEASE IMPLEMENT IN .cc)
