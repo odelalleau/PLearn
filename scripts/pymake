@@ -1293,8 +1293,6 @@ class FileInfo:
         if linkname != '':
             symlink_to = join(self.filedir, symlink_to)
 
-        symlink_to = join(self.filedir, objsdir, symlink_to_base)
-
         # User-provided path for the link itself?
         if linkname == '':
             symlink_from = join(self.filedir, self.filebase)
