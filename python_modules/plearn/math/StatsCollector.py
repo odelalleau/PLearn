@@ -32,7 +32,7 @@
 
 # Author: Nicolas Chapados
 
-import sys
+import os, sys
 import numarray.ieeespecial        as  ieee
 from   plearn.math import isNaN
 from   numarray    import array    as  normal_array
@@ -44,8 +44,10 @@ from   fpconst     import NegInf, PosInf
 from   plearn.utilities import ppath
 
 
-def _printMatrix(m, rownames, colnames, os):
+def _printMatrix(m, rownames, colnames, os, pretty = True):
     """Nicely print a matrix given rownames and column names.
+    If 'pretty' is set to False, the output will not be so nice, but at least
+    will not cause test failures due to a zero test blank tolerance.
     """
     (length, width) = shape(m)
     assert length == len(rownames)
@@ -53,14 +55,22 @@ def _printMatrix(m, rownames, colnames, os):
     leftlen  = max([len(x) for x in rownames])
     colwidth = max( [16] + [len(x) for x in colnames] )
 
-    print >>os, ' | '.join( [' '*leftlen] + [ f.rjust(colwidth) for f in colnames ])
-    print >>os, '-+-'.join( ['-'*leftlen] + [ '-'*colwidth ] * width )
+    if pretty:
+        print >>os, ' | '.join( [' '*leftlen] + \
+                                [ f.ljust(colwidth) for f in colnames ])
+        print >>os, '-+-'.join( ['-'*leftlen] + [ '-'*colwidth ] * width )
+    else:
+        print >>os, ' | '.join( [' ' + f for f in colnames ] )
+        print >>os, '-+-'.join( ['-'] + [ '-' ] * width )
 
     for k in xrange(length):
         currow = m[k]
         elems = [ ('%.10g' % float(s)) for s in currow ]
-        print >>os, ' | '.join( [ rownames[k].rjust(leftlen) ] +
-                                [ e.rjust(colwidth) for e in elems ] )
+        if pretty:
+            print >>os, ' | '.join( [ rownames[k].rjust(leftlen) ] +
+                                [ e.ljust(colwidth) for e in elems ] )
+        else:
+            print >>os, ' | '.join( [ rownames[k] ] + [ e for e in elems ] )
 
 
 class StatsCollector:
@@ -174,8 +184,11 @@ class StatsCollector:
             }
             
 
-    def printStats(self, os = sys.stdout):
-        """Print a nice report with the statistics."""
+    def printStats(self, os = sys.stdout, pretty = True):
+        """Print a nice report with the statistics.
+        If 'pretty' is set to False, the output will not be so nice, but at least
+        will not cause test failures due to a zero test blank tolerance.
+        """
         if len(nonzero(self.nnonnan)) != len(self.nnonnan):
             print >>os, "One or more columns in StatsCollector does not contain any data"
             return                      # Nothing accumulated yet
@@ -186,12 +199,12 @@ class StatsCollector:
               "SUMSQ"  , "MIN"      , "ARGMIN"      , "MAX" ,  "ARGMAX" ]
 
         m = array([[stats[k][i] for i in range(self.width())] for k in sk])
-        _printMatrix(m, sk, self.fieldnames, os)
+        _printMatrix(m, sk, self.fieldnames, os, pretty)
         
         print "\nCovariance Matrix:"
-        _printMatrix(stats["COV"], self.fieldnames, self.fieldnames, os)
+        _printMatrix(stats["COV"], self.fieldnames, self.fieldnames, os, pretty)
         print "\nCorrelation Matrix:"
-        _printMatrix(stats["CORR"], self.fieldnames, self.fieldnames, os)
+        _printMatrix(stats["CORR"], self.fieldnames, self.fieldnames, os, pretty)
 
 
 if __name__ == "__main__":
@@ -205,10 +218,10 @@ if __name__ == "__main__":
             )
     sc = StatsCollector(fieldnames)
     sc.update(ut)
-    sc.printStats()
+    sc.printStats(sys.stdout, False)
     print "\nAfter accumulating some more:"
     sc.update(ut)
-    sc.printStats()
+    sc.printStats(sys.stdout, False)
     print "\nAfter forgetting:"
     sc.forget(fieldnames)
-    sc.printStats()
+    sc.printStats(sys.stdout, False)
