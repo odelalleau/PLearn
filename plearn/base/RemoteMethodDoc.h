@@ -56,7 +56,7 @@ using std::list;
  */
 struct BodyDoc
 {
-    BodyDoc(const string& s)
+    BodyDoc(const char* s)
         : m_doc(s)
     { }
 
@@ -82,7 +82,7 @@ struct ArgDoc
  */
 struct RetDoc
 {
-    RetDoc(const string& s)
+    RetDoc(const char* s)
         : m_doc(s)
     { }
 
