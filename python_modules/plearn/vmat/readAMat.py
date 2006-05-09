@@ -33,6 +33,17 @@
 # Author: Nicolas Chapados
 
 from numarray import array
+import fpconst
+
+def safefloat(str):
+    """Convert the given string to its float value. It is 'safe' in the sense
+    that missing values ('nan') will be properly converted to the corresponding
+    float value under all platforms, contrarily to 'float(str)'.
+    """
+    if str.lower() == 'nan':
+        return fpconst.NaN
+    else:
+        return float(str)
 
 def readAMat(amatname):
     """Read a PLearn .amat file and return it as a numarray Array.
@@ -53,7 +64,7 @@ def readAMat(amatname):
             pass
 
         else:
-            row = [ float(x) for x in line.strip().split(" ") ]
+            row = [ safefloat(x) for x in line.strip().split(" ") ]
             a.append(row)
 
     f.close()
