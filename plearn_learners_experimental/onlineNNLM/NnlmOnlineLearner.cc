@@ -596,17 +596,41 @@ void NnlmOnlineLearner::computeOutput(const Vec& input, Vec& output) const
 
 }
 
+//! Computes the test costs, ie the full disriminant cost (NLL).
+//! See about how to include/print the perplexity.
+// Compute the costs from *already* computed output.
 void NnlmOnlineLearner::computeCostsFromOutputs(const Vec& input, const Vec& output,
                                            const Vec& target, Vec& costs) const
 {
-// Compute the costs from *already* computed output.
-// ...
 
+    Vec nl_p_i;
+    Vec nl_p_j;
+    real nl_sum;
+
+    nl_p_i.resize( getTestCostNames().length() );
+    nl_p_j.resize( getTestCostNames().length() );
+
+
+    // * Compute numerator
     output_module->setCurrentWord( (int)target[0] );
-    output_module->fprop( output, costs);
+    output_module->fprop( output, nl_p_i);
 
+    // * Compute denominator
+    // Normalize over whole vocabulary
 
-    // compute cost using all vocabulary
+    nl_sum = 0.0;
+
+    for(int w=0; w<vocabulary_size; w++)  {
+
+        output_module->setCurrentWord( w );
+        output_module->fprop( output, nl_p_j);
+
+        nl_sum = logadd(nl_sum, nl_p_j[0]);
+    }
+
+    costs[0] = nl_p_i[0] - nl_sum;
+
+    
 
 }
 
