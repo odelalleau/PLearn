@@ -37,16 +37,22 @@ def find_global_program(name):
 
         path = wlines[0]
         path = path.rstrip(' \n')
-        if os.path.exists(path):
+        if sys.platform == 'win32':
+            # Need to convert the Cygwin path to the Windows path, otherwise
+            # os.path.exists(path) will return False.
+            path = toolkit.command_output( "cygpath -w %s" % path )
+            path = path[0].rstrip('\n')
+        if toolkit.exec_path_exists(path):
             program_path = os.path.abspath(path)
 
-    assert program_path is not None
+    assert program_path is not None, 'Could not find global program %s' % name
     return program_path
 
 def find_local_program(name):
     if os.path.exists( name ) or \
            os.path.exists( name+'.cc' ):
         return os.path.abspath(name)
+    logging.debug("Could not find local program %s" % name)
     raise core.PyTestUsageError(
         "The '%s' program was not found in %s."%(name, os.getcwd()))
 
@@ -334,7 +340,7 @@ class Program(core.PyTestObject):
 
             # Programs which doesn't exist yet are assumed to be created
             # through compilation
-            elif not os.path.exists(self.getProgramPath()):
+            elif not toolkit.exec_path_exists(self.getProgramPath()):
                 self.__is_compilable = True
 
             # PyMake-style
