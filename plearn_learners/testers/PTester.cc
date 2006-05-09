@@ -498,7 +498,7 @@ Vec PTester::perform(bool call_forget)
                 PLERROR("In PTester::perform - You can't have stats with and without 'ACC' for set %d", statspecs[k].setnum);
   
         // int traincostsize = traincostnames.size();
-        int testcostsize = testcostnames.size();
+        // int testcostsize = testcostnames.size();
 
         VMat global_stats_vm;    // the vmat in which to save global result stats specified in statnames
         VMat split_stats_vm;   // the vmat in which to save per split result stats
@@ -748,6 +748,7 @@ void StatSpec::parseStatname(const string& statname)
 /////////////////////////////////
 void PTester::makeDeepCopyFromShallowCopy(CopiesMap& copies) {
     inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(statnames, copies);
     deepCopyField(statnames_processed, copies);
     deepCopyField(dataset, copies);
     deepCopyField(final_commands, copies);
@@ -756,7 +757,7 @@ void PTester::makeDeepCopyFromShallowCopy(CopiesMap& copies) {
     deepCopyField(splitter, copies);
     deepCopyField(statmask, copies);
     deepCopyField(template_stats_collector, copies);
-    deepCopyField(statnames, copies);
+    deepCopyField(perf_evaluators, copies);
 
 
 }
