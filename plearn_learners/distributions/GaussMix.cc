@@ -864,6 +864,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
     // computations (with the current rather dumb implementation).
     static Vec mu_y_missing;
     static Mat cov_y_missing;
+    static Mat dummy_storage;
     static TVec<Mat> covs_y_missing;
     static Vec y_missing;
     static Vec eigenvals_missing;
@@ -931,8 +932,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                                (previous_training_sample != -2);
             bool imp_missing = impute_missing &&
                                (current_training_sample != -1);
-            bool eff_naive_missing = efficient_missing == 2 &&
-                                     previous_training_sample >= 0;
+            bool eff_naive_missing = (efficient_missing == 2) &&
+                                     (current_training_sample != -1);
 
             if (y.hasMissing() || eff_missing || imp_missing) {
                 // TODO This will probably make the 'efficient_missing' method
@@ -1088,7 +1089,10 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                 */
                 if (!eff_missing) {
                 if (!eff_naive_missing) {
-                cov_y_missing.resize(n_non_missing, n_non_missing);
+                    cov_y_missing = dummy_mat;
+                    dummy_storage.setMod(n_non_missing);
+                    dummy_storage.resize(n_non_missing, n_non_missing);
+                    cov_y_missing = dummy_storage;
                 } else {
                     assert( efficient_missing == 2 );
                     covs_y_missing.resize(L);
