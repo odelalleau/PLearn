@@ -103,14 +103,14 @@ public:
     //! JUST CALLS
     //!     bpropUpdate(input, output, input_gradient, output_gradient)
     //! AND IGNORES INPUT GRADIENT.
-    // virtual void bpropUpdate(const Vec& input, const Vec& output,
-    //                          const Vec& output_gradient);
+    virtual void bpropUpdate(const Vec& input, const Vec& output,
+                             const Vec& output_gradient);
 
     //! this version allows to obtain the input gradient as well
     //! N.B. THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
-     virtual void bpropUpdate(const Vec& input, const Vec& output,
-                              Vec& input_gradient,
-                              const Vec& output_gradient);
+    // virtual void bpropUpdate(const Vec& input, const Vec& output,
+    //                          Vec& input_gradient,
+    //                          const Vec& output_gradient);
 
     //! Similar to bpropUpdate, but adapt based also on the estimation
     //! of the diagonal of the Hessian matrix, and propagates this
@@ -179,7 +179,7 @@ private:
 
 private:
     //#####  Private Data Members  ############################################
-
+public:
     real discount_rate;
 
     // The rest of the private stuff goes here

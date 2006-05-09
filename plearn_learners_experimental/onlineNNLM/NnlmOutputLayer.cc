@@ -289,7 +289,7 @@ void NnlmOutputLayer::fprop(const Vec& input, Vec& output) const
 
 }
 
-/* THIS METHOD IS OPTIONAL
+
 //! Adapt based on the output gradient: this method should only
 //! be called just after a corresponding fprop; it should be
 //! called with the same arguments as fprop for the first two arguments
@@ -303,16 +303,6 @@ void NnlmOutputLayer::fprop(const Vec& input, Vec& output) const
 void NnlmOutputLayer::bpropUpdate(const Vec& input, const Vec& output,
                                const Vec& output_gradient)
 {
-}
-*/
-
-//! this version allows to obtain the input gradient as well
-//! N.B. THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
-void NnlmOutputLayer::bpropUpdate(const Vec& input, const Vec& output,
-                               Vec& input_gradient,
-                               const Vec& output_gradient)
-{
-
     int in_size = input.size();
     int out_size = output.size();
     int og_size = output_gradient.size();
@@ -338,7 +328,7 @@ void NnlmOutputLayer::bpropUpdate(const Vec& input, const Vec& output,
     }
 
 
-    // * Compute gradient with respect to input
+/*    // * Compute gradient with respect to input
     // inv(Sigma) (x-mu(i))
 
     // so we don't do a /0 with  /sigma2(current_word, i)
@@ -353,10 +343,9 @@ sigma2(current_word, i);
         }
     }
 
-
+*/
         // TODO is this any good? If so, at least change variable names
-        discount_rate = start_discount_rate + step_number *
-discount_decrease_constant;        
+        discount_rate = start_discount_rate + step_number * discount_decrease_constant;
 
       // * Update parameters - using discount
       // discount * ancien + (1-discount) * nouveau
@@ -409,6 +398,17 @@ sumX(current_word, i) ) / sumI[ current_word ];
 
 
 }
+
+/*
+//! this version allows to obtain the input gradient as well
+//! N.B. THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
+void NnlmOutputLayer::bpropUpdate(const Vec& input, const Vec& output,
+                               Vec& input_gradient,
+                               const Vec& output_gradient)
+{
+}
+*/
+
 
 //! reset the parameters to the state they would be BEFORE starting training.
 //! Note that this method is necessarily called from build().
