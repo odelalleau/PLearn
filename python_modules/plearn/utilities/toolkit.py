@@ -219,6 +219,18 @@ def doc(obj, docform = 2, join_token = '\n    '):
     as_string = string.join( parsed_lines, join_token )
     return as_string
 
+def exec_path_exists(path):
+    """Return True iff the given path is an existing file.
+    Under Windows, also returns True when the given path does not actually exist
+    but 'path.exe' does.
+    """
+    if os.path.exists(path):
+        return True
+    elif sys.platform == 'win32' and os.path.exists(path + '.exe'):
+        return True
+    else:
+        return False
+
 def exempt_list_of(list, undesired_values):
     """Remove all undesired values present in the I{list}.
 
