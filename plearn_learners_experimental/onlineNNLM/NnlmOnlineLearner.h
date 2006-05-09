@@ -46,6 +46,7 @@ namespace PLearn {
 
 class OnlineLearningModule;
 class NnlmOutputLayer;
+class NGramDistribution;
 
 /**
  * Learns a Neural Network Language Model (NNLM).
@@ -68,9 +69,13 @@ public:
     int word_representation_size;
     int context_size;
 
+    int context_layer_size;
+
     //! Layers of the learner - the output layer is separate
     TVec< PP<OnlineLearningModule> > modules;
     PP<NnlmOutputLayer> output_module;
+
+    PP<NGramDistribution> theNGram;
 
 
 public:

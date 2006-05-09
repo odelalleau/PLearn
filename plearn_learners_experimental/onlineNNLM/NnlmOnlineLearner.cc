@@ -50,6 +50,7 @@
 #include <plearn_learners/online/TanhModule.h>
 #include <plearn_learners_experimental/onlineNNLM/NnlmOutputLayer.h>
 
+#include <plearn_learners/distributions/NGramDistribution.h>
 
 namespace PLearn {
 using namespace std;
@@ -63,7 +64,8 @@ NnlmOnlineLearner::NnlmOnlineLearner()
     :   PLearner(),
         vocabulary_size( -1 ),
         word_representation_size( -1 ),
-        context_size( -1 )
+        context_size( -1 ),
+        context_layer_size( 200 )
 {
     // ### You may (or not) want to call build_() to finish building the object
     // ### (doing so assumes the parent classes' build_() have been called too
@@ -137,7 +139,7 @@ void NnlmOnlineLearner::buildLayers()
 
     p_nnl->input_size = context_size * word_representation_size;
     // HARDCODED FOR NOW
-    p_nnl->output_size = 200;
+    p_nnl->output_size = context_layer_size;
     p_nnl->start_learning_rate = 0.01;
     p_nnl->init_weights_random_scale=1;
     p_nnl->random_gen = random_gen;
@@ -149,8 +151,8 @@ void NnlmOnlineLearner::buildLayers()
 
     PP< TanhModule > p_thm = new TanhModule();
     // HARDCODED FOR NOW
-    p_thm->input_size = 200;
-    p_thm->output_size = 200;
+    p_thm->input_size = context_layer_size;
+    p_thm->output_size = context_layer_size;
 
     modules[2] = p_thm;
 
@@ -197,7 +199,7 @@ void NnlmOnlineLearner::buildLayers()
     output_module->word_representation_size = word_representation_size;
     output_module->context_size = context_size;
     // HARDCODED FOR NOW 
-    output_module->input_size = 200;
+    output_module->input_size = context_layer_size;
     output_module->output_size = 1;
 
     output_module->build();
@@ -261,7 +263,14 @@ void NnlmOnlineLearner::build_()
 
         // *** Train ngram
         // Should load it instead
-        cout << "training ngram" << endl;
+        /*cout << "training ngram" << endl;
+
+        theNGram = new NGramDistribution();
+
+        theNGram->n = 2;
+        theNGram->smoothing = "jelinek-mercer";
+        */
+
 
 
     }
@@ -347,6 +356,7 @@ real& weight) const
 
 }
 
+// TODO I've misunderstood how the costs work (don't update for each example! Compute a cost for the stage!). Fix this.
 void NnlmOnlineLearner::train()
 {
 
@@ -356,28 +366,36 @@ void NnlmOnlineLearner::train()
     if (!initTrain())
         return;
 
-
     Vec input( inputsize() );
     Vec target( targetsize() );
     Vec output( outputsize() );
     real weight;
-    Vec train_costs( 1 );
+    Vec train_costs( getTrainCostNames().length() );
 
     int nsamples = train_set->length();
 
     ProgressBar* pb = NULL;
     if(report_progress) 
         pb = new ProgressBar("Training", nsamples);
-    
+
+
+    Vec neglogprob_tr(1);   // -log p(word=t(arget), representation=r)
+    Vec neglogprob_cr(1);   // p(word=c, representation=r)
+    real log_sumprob = 0.0;  // log \sum_{c} prob_cr
+
+    Vec gradient_tmp( context_layer_size ); // used in the computation of the approx. discriminant gradient
+    Vec non_discr_gradient( context_layer_size ); // 
+    Vec approx_discr_gradient( context_layer_size ); // 
 
 
     // *** For stages
     for( ; stage < nstages ; stage++ )
     {
         if(report_progress)
-            cout << "stage " << stage << endl;
+            cout << endl << "stage " << stage << endl;
 
         // * clear stats of previous epoch
+        train_costs.fill(0);
         train_stats->forget();
 
         // * for examples
@@ -391,7 +409,7 @@ void NnlmOnlineLearner::train()
             myGetExample(train_set, sample, input, target, weight );
 
 
-            // *** DO THIS IN PRETREATMENT!!!
+            // *** SHOULD BE DONE IN PRETREATMENT!!!
             // * Replace nan in input by '(train_set->getDictionary(0))->size()+1', 
             // the missing value tag
             for( int i=0 ; i < inputsize() ; i++ ) {
@@ -399,7 +417,6 @@ void NnlmOnlineLearner::train()
                 input[i] = (train_set->getDictionary(0))->size()+1;
               }
             }
-
             // * Replace a 'nan' in the target by OOV
             // this nan should not be missing data (seeing the train_set is a
             // ProcessSymbolicSequenceVMatrix)
@@ -410,58 +427,82 @@ void NnlmOnlineLearner::train()
             if( is_missing(target[0]) ) {
                 target[0] = 0;
             }
-            // *** DO THIS IN PRETREATMENT!!!
+            // *** SHOULD BE DONE IN PRETREATMENT!!!
 
-            // - fprop
+
+            // *** Compute training costs
+            // TODO -> IN LOG???
+
+            // * fprop
             computeOutput(input, output);
 
+            // * Non-discriminant cost -> train_costs[0]
             output_module->setCurrentWord( (int) target[0]);
-            output_module->fprop( output, train_costs);
+            output_module->fprop( output, neglogprob_tr);
+
+            train_costs[0] += neglogprob_tr[0];
+
+            // * Approximated discriminant cost -> using candidate words
+
+            log_sumprob = 0.0;
+            gradient_tmp.fill(0);
+
+            /*for the word candidates c
+            {
+                output_module->setCurrentWord( c );
+                output_module->fprop( output, neglogprob_cr );
+
+                log_sumprob = logadd(log_sumprob, -neglogprob_cr[0]);
+
+                for(int i=0; i<context_layer_size; i++) {
+                    gradient_tmp[i] = logadd( gradient_tmp[i], 
+                        -neglogprob_cr[0] + safelog( ( output[i] - output_module->mu( c, i) ) / output_module->sigma2( c, i) ) );
+                }
+            }
+
+            train_costs[1] = neglogprob_tr[0] + log_sumprob;*/
+            train_stats->update( train_costs );
+
+            // *** Compute gradients
 
             // bprop
             Vec out_gradient(1,1); // the gradient wrt the cost is '1'
 
-            // bpropUpdate
+            for(int i=0; i<context_layer_size; i++) {
+                // LOG???
+                non_discr_gradient[i] = ( output[i] - output_module->mu( (int) target[0], i) ) 
+                                  / output_module->sigma2( (int) target[0], i);
+                //approx_discr_gradient[i] = non_discr_gradient[i] - safeexp( gradient_tmp[i] - log_sumprob);
+            }
+
+            // select which gradient
+            gradients[ nmodules ] << non_discr_gradient;
+
+            // *** Perform update -> bpropUpdate
+
+            // * output_module->bpropUpdate() does not compute input gradient
+            // It should only update itself, and the input gradient computation will be done here
             output_module->bpropUpdate( output,
                                           train_costs.subVec(0,1),
-                                          gradients[ nmodules ],
                                           out_gradient );
 
             for( int i=nmodules-1 ; i>0 ; i-- )
                 modules[i]->bpropUpdate( values[i], values[i+1],
                                          gradients[i], gradients[i+1] );
 
-            //
             modules[0]->bpropUpdate( values[0], values[1], gradients[1] );
 
-            train_stats->update( train_costs );
 
-
-            // output result
+            // *** Output some results
             if( sample < 15)  {
               pout << "*train cost " << train_costs << endl;
-/*              cout << "----- VALUE -----" << endl;
-              for( int i=0 ; i<=nmodules ; i++ ) {
-                  pout << "*�age " << i << endl;
-                  pout << values[i] << endl;
-              }
-              pout << "*train cost " << train_costs << endl;
-
-              cout << endl;
-
-              cout << "----- GRADIENTS -----" << endl;
-              for( int i=0 ; i<=nmodules ; i++ ) {
-                  pout << "*�age " << i << endl;
-                  pout << gradients[i] << endl;
-              }
-
-              pout << endl << endl << endl << endl;*/
             }
 
-        }
+        }// * for examples - END
 
         train_stats->finalize(); // finalize statistics for this epoch
-    }
+
+    }// *** For stages - END
 
 
     if(pb)
@@ -605,7 +646,7 @@ void NnlmOnlineLearner::computeCostsFromOutputs(const Vec& input, const Vec& out
 
     Vec nl_p_i;
     Vec nl_p_j;
-    real nl_sum;
+    real l_sum;
 
     nl_p_i.resize( getTestCostNames().length() );
     nl_p_j.resize( getTestCostNames().length() );
@@ -618,17 +659,22 @@ void NnlmOnlineLearner::computeCostsFromOutputs(const Vec& input, const Vec& out
     // * Compute denominator
     // Normalize over whole vocabulary
 
-    nl_sum = 0.0;
+    l_sum = 0.0;
 
     for(int w=0; w<vocabulary_size; w++)  {
 
         output_module->setCurrentWord( w );
         output_module->fprop( output, nl_p_j);
 
-        nl_sum = logadd(nl_sum, nl_p_j[0]);
+        // !!!!!!!!!!!!!!!!!!!!!!!1111
+        // we are adding neg logs... any difference?
+        //nl_sum = logadd(nl_sum, nl_p_j[0]);
+        // Let's try this...
+        l_sum = logadd(l_sum, -nl_p_j[0]);
+
     }
 
-    costs[0] = nl_p_i[0] - nl_sum;
+    costs[0] = nl_p_i[0] + l_sum;
 
     
 
