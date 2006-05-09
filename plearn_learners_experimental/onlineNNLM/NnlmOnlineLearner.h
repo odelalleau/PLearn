@@ -68,8 +68,6 @@ public:
     int word_representation_size;
     int context_size;
 
-    TVec<string> cost_funcs;
-
     //! Layers of the learner - the output layer is separate
     TVec< PP<OnlineLearningModule> > modules;
     PP<NnlmOutputLayer> output_module;

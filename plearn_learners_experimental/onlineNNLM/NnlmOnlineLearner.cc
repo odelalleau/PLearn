@@ -233,7 +233,6 @@ void NnlmOnlineLearner::build_()
             // but the word "nan", ie "Mrs Nan said she would blabla"
             // *** Problem however - current vocabulary is full for train_set,
             // ie we train OOV on nan-word instances.
-            // ie we train OOV on nan-word instances.
             // DO a pretreatment to replace Nan by *Nan* or something like it
             if( is_missing( train_set(i, inputsize()) ) ) {
               //SAME!!!
@@ -251,6 +250,8 @@ void NnlmOnlineLearner::build_()
 
         // vocabulary size (voc +1 for OOV ( 0 tag ) +1 for missing ( dict_size+1 tag) )
         vocabulary_size = (train_set->getDictionary(0))->size()+2;
+
+        cout << "vocabulary_size = " << vocabulary_size << endl;
 
         context_size = inputsize();
 
@@ -339,6 +340,7 @@ real& weight) const
 
     input << row.subVec( 0, inputsize() );
     target << row.subVec( inputsize(), targetsize() );
+    weight = 1.0;
     if( weightsize() )  {
         weight = row[ inputsize() + targetsize() ];
     }
@@ -372,6 +374,8 @@ void NnlmOnlineLearner::train()
     // *** For stages
     for( ; stage < nstages ; stage++ )
     {
+        if(report_progress)
+            cout << "stage " << stage << endl;
 
         // * clear stats of previous epoch
         train_stats->forget();
@@ -379,9 +383,6 @@ void NnlmOnlineLearner::train()
         // * for examples
         for( int sample=0 ; sample < nsamples ; sample++ )
         {
-
-            if(sample%10000 == 0)
-              cout << "stage " << stage << " sample " << sample << endl;
 
             if(report_progress)
                 pb->update(sample);
@@ -469,93 +470,44 @@ void NnlmOnlineLearner::train()
 
 }
 
-//void NBnnlmLearner::test(VMat&? testset) {
 void NnlmOnlineLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
                     VMat testoutputs, VMat testcosts) const
 {
-/*    int l = testset.length();
-    Vec input;
-    Vec target;
-    real weight;
-
-    Vec output(outputsize());
-
-    Vec costs(nTestCosts());
-
-    // testset->defineSizes(inputsize(),targetsize(),weightsize());
-
-    ProgressBar* pb = NULL;
-    if(report_progress)
-        pb = new ProgressBar("Testing learner",l);
-
-    if (l == 0) {
-        // Empty test set: we give -1 cost arbitrarily.
-        costs.fill(-1);
-        test_stats->update(costs);
-    }
-
-    for(int i=0; i<l; i++)
-    {
-        testset.getExample(i, input, target, weight);
-
-        // Always call computeOutputAndCosts, since this is better
-        // behaved with stateful learners
-        computeOutputAndCosts(input,target,output,costs);
-
-        if(testoutputs)
-            testoutputs->putOrAppendRow(i,output);
-
-        if(testcosts)
-            testcosts->putOrAppendRow(i, costs);
-
-        if(test_stats)
-            test_stats->update(costs,weight);
-
-        if(report_progress)
-            pb->update(i);
-    }
-
-    if(pb)
-        delete pb;
-*/
 
     Vec input( inputsize() );
-    Vec target( targetsize() );
     Vec output( outputsize() );
+    Vec target( targetsize() );
     real weight;
-    Vec test_costs( 1 );
 
+    Vec test_costs( getTestCostNames().length() );
     int nsamples = testset->length();
-
-    // * for examples
-
     real entropy = 0.0;
     real perplexity = 0.0;
 
-        cout << "test -> context not set" << endl;
-    
-    //cout << "testing 30 first samples" << endl;
+    ProgressBar* pb = NULL;
+    if(report_progress)
+        pb = new ProgressBar("Testing learner",nsamples);
+
+    // * Empty test set: we give -1 cost arbitrarily.
+    if (nsamples == 0) {
+        test_costs.fill(-1);
+        test_stats->update(test_costs);
+    }
+
     for( int sample=0 ; sample < nsamples ; sample++ )
-    //for( int sample=0 ; sample < 30 ; sample++ )
     {
-
-        if(sample%10000 == 0)
-          cout << "*";
-
         myGetExample(testset, sample, input, target, weight );
 
 
-        //DO THIS IN PRETREATMENT!!!!!!!!!!
-        //DO THIS IN PRETREATMENT!!!!!!!!!!
-        //replace nan by '(train_set->getDictionary(0))->size()+1' the missing
-        //value tag
+        // *** SHOULD DO THIS IN PRETREATMENT!!!
+        // * Replace nan in input by '(train_set->getDictionary(0))->size()+1' 
+        // the missing value tag
         for( int i=0 ; i < inputsize() ; i++ ) {
           if( is_missing(input[i]) )  {
             input[i] = (train_set->getDictionary(0))->size()+1;
           }
         }
-
-        // Replace a 'nan' in the target by OOV
+        // * Replace a 'nan' in the target by OOV
         // this nan should not be missing data (seeing the train_set is a
         // ProcessSymbolicSequenceVMatrix)
         // but the word "nan", ie "Mrs Nan said she would blabla"
@@ -567,21 +519,40 @@ void NnlmOnlineLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
         if( is_missing(target[0]) ) {
             target[0] = 0;
         }
+        // *** SHOULD DO THIS IN PRETREATMENT!!! - END
 
-
-        // - fprop
+  /*      // * fprop
         computeOutput(input, output);
 
-        output_module->setCurrentWord( (int) target[0]);
-        // MUST SET CONTEXT
+        // * Set the output_module's "state"
+        // Cost is dependent on the word we want to predict
+        // If we want an evaluated cost, we probably have to set the context also
+        //output_module->setCurrentWord( (int) target[0] );
+        //output_module->setContext
 
-        //output_module->setPreviousWord( (int) input[inputsize()-1]);
-
-        output_module->fprop( output, test_costs);
+        // * Compute cost
+        output_module->computeDiscriminantCost(input, output, target, test_costs );
 
         if(sample<15)
-          cout << "test cost for sample " << sample << " " << test_costs[0] <<
-endl;
+          cout << "test cost for sample " << sample << " " << test_costs[0] << endl;
+*/
+
+        // Always call computeOutputAndCosts, since this is better
+        // behaved with stateful learners
+        computeOutputAndCosts(input,target,output,test_costs);
+
+
+        if(testoutputs)
+            testoutputs->putOrAppendRow(sample,output);
+
+        if(testcosts)
+            testcosts->putOrAppendRow(sample, test_costs);
+
+        if(test_stats)
+            test_stats->update(test_costs,weight);
+
+        if(report_progress)
+            pb->update(sample);
 
         entropy += test_costs[0];
 
@@ -593,7 +564,11 @@ endl;
 
     cout << "entropy: " << entropy << " perplexity " << perplexity << endl;
 
+    if(pb)
+        delete pb;
 
+
+    cout << "test -> context not set" << endl;
 
 }
 
@@ -626,8 +601,12 @@ void NnlmOnlineLearner::computeCostsFromOutputs(const Vec& input, const Vec& out
 {
 // Compute the costs from *already* computed output.
 // ...
+
     output_module->setCurrentWord( (int)target[0] );
     output_module->fprop( output, costs);
+
+
+    // compute cost using all vocabulary
 
 }
 
@@ -637,7 +616,12 @@ TVec<string> NnlmOnlineLearner::getTestCostNames() const
     // (these may or may not be exactly the same as what's returned by
     // getTrainCostNames).
     // ...
-return cost_funcs;
+
+    TVec<string> ret;
+    ret.resize(1);
+    ret[0] = "NLL";
+    return ret;
+
 }
 
 TVec<string> NnlmOnlineLearner::getTrainCostNames() const
@@ -646,8 +630,13 @@ TVec<string> NnlmOnlineLearner::getTrainCostNames() const
     // and for which it updates the VecStatsCollector train_stats
     // (these may or may not be exactly the same as what's returned by
     // getTestCostNames).
-    // ...
-return cost_funcs;
+
+    TVec<string> ret;
+    ret.resize(2);
+    ret[0] = "nonDisc";
+    ret[1] = "NLLeval";
+    return ret;
+
 }
 
 
