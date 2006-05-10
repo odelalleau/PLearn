@@ -156,7 +156,9 @@ void GaussMix::declareOptions(OptionList& ol)
         "If not 0, computations with missing values will be more efficient:\n"
         "- 1: most efficient method\n"
         "- 2: less naive method than 0, where we compute the matrices\n"
-        "     only once per missing pattern (not as good as 1)");
+        "     only once per missing pattern (not as good as 1)\n"
+        "- 3: same as 1, but using inverse variance lemma instead of\n"
+        "     Cholesky (could be more efficient after all)");
 
     declareOption(ol, "efficient_k_median", &GaussMix::efficient_k_median,
                                             OptionBase::buildoption,
@@ -682,27 +684,27 @@ void GaussMix::addToCovariance(const Vec& y, int j,
             // Nothing to remove.
             dst_only_removed << inv_src;
         } else {
-        assert( inv_src.isSymmetric() );
-        // VMat vm_inv_src(inv_src);
-        // vm_inv_src->saveAMAT("/u/delallea/tmp/inv_src.amat", false, true);
-        Mat B1 = inv_src.subMat(0, 0, n_common, n_common);
-        Mat B2 = inv_src.subMat(0, n_common, n_common, n_src_only);
-        static Mat B3;
-        B3.setMod(n_src_only);
-        B3.resize(n_src_only, n_src_only);
-        B3 << inv_src.subMat(n_common, n_common, n_src_only, n_src_only);
-        assert( B3.isSymmetric() );
-        dst_only_removed << B1;
-        tmp.resize(B3.length(), B3.width());
-        matInvert(B3, tmp);
-        // Mat tmp3(B3.length(), B3.width());
-        // matInvert(B3, tmp3);
-        tmp2.resize(tmp.length(), B2.length());
-        productTranspose(tmp2, tmp, B2);
-        tmp.resize(B2.length(), tmp2.width());
-        product(tmp, B2, tmp2);
-        dst_only_removed -= tmp;
-        assert( dst_only_removed.isSymmetric(false, true) );
+            assert( inv_src.isSymmetric() );
+            // VMat vm_inv_src(inv_src);
+            // vm_inv_src->saveAMAT("/u/delallea/tmp/inv_src.amat", false, true);
+            Mat B1 = inv_src.subMat(0, 0, n_common, n_common);
+            Mat B2 = inv_src.subMat(0, n_common, n_common, n_src_only);
+            static Mat B3;
+            B3.setMod(n_src_only);
+            B3.resize(n_src_only, n_src_only);
+            B3 << inv_src.subMat(n_common, n_common, n_src_only, n_src_only);
+            assert( B3.isSymmetric() );
+            dst_only_removed << B1;
+            tmp.resize(B3.length(), B3.width());
+            matInvert(B3, tmp);
+            // Mat tmp3(B3.length(), B3.width());
+            // matInvert(B3, tmp3);
+            tmp2.resize(tmp.length(), B2.length());
+            productTranspose(tmp2, tmp, B2);
+            tmp.resize(B2.length(), tmp2.width());
+            product(tmp, B2, tmp2);
+            dst_only_removed -= tmp;
+            assert( dst_only_removed.isSymmetric(false, true) );
         }
 #if 0
         // Verify that the inverse was correctly computed.
@@ -746,38 +748,38 @@ void GaussMix::addToCovariance(const Vec& y, int j,
             // No dimension to add.
             dst << dst_only_removed;
         } else {
-        // TODO Not efficient! Optimize!
-        tmp.resize(full.length(), dim_dst_only.length());
-        selectColumns(full, dim_dst_only, tmp);
-        static Mat W;
-        static Mat P;
-        static Mat B;
-        W.resize(dim_common.length(), tmp.width());
-        selectRows(tmp, dim_common, W);
-        P.resize(dim_dst_only.length(), tmp.width());
-        selectRows(tmp, dim_dst_only, P);
-        B.resize(W.width(), dst_only_removed.width());
-        transposeProduct(B, W, dst_only_removed);
-        tmp.setMod(W.width());
-        tmp.resize(B.length(), W.width());
-        product(tmp, B, W);
-        negateElements(tmp);
-        tmp += P;
-        // TODO Note: it may not be a good idea to use setMod this way, as the
-        // size of the storage may differ from mod() * width(), which could be
-        // an issue.
-        tmp2.resize(tmp.length(), tmp.width());
-        matInvert(tmp, tmp2);
-        dst.subMat(n_common, n_common, n_dst_only, n_dst_only) << tmp2;
-        tmp.resize(B.width(), tmp2.width());
-        transposeProduct(tmp, B, tmp2);
-        tmp2.resize(tmp.length(), B.width());
-        product(tmp2, tmp, B);
-        negateElements(tmp);
-        dst.subMat(0, n_common, n_common, n_dst_only) << tmp;
-        Mat dst_top_left = dst.subMat(0, 0, n_common, n_common);
-        dst_top_left << tmp2;
-        dst_top_left += dst_only_removed;
+            // TODO Not efficient! Optimize!
+            tmp.resize(full.length(), dim_dst_only.length());
+            selectColumns(full, dim_dst_only, tmp);
+            static Mat W;
+            static Mat P;
+            static Mat B;
+            W.resize(dim_common.length(), tmp.width());
+            selectRows(tmp, dim_common, W);
+            P.resize(dim_dst_only.length(), tmp.width());
+            selectRows(tmp, dim_dst_only, P);
+            B.resize(W.width(), dst_only_removed.width());
+            transposeProduct(B, W, dst_only_removed);
+            tmp.setMod(W.width());
+            tmp.resize(B.length(), W.width());
+            product(tmp, B, W);
+            negateElements(tmp);
+            tmp += P;
+            // TODO Note: it may not be a good idea to use setMod this way, as the
+            // size of the storage may differ from mod() * width(), which could be
+            // an issue.
+            tmp2.resize(tmp.length(), tmp.width());
+            matInvert(tmp, tmp2);
+            dst.subMat(n_common, n_common, n_dst_only, n_dst_only) << tmp2;
+            tmp.resize(B.width(), tmp2.width());
+            transposeProduct(tmp, B, tmp2);
+            tmp2.resize(tmp.length(), B.width());
+            product(tmp2, tmp, B);
+            negateElements(tmp);
+            dst.subMat(0, n_common, n_common, n_dst_only) << tmp;
+            Mat dst_top_left = dst.subMat(0, 0, n_common, n_common);
+            dst_top_left << tmp2;
+            dst_top_left += dst_only_removed;
         }
         // Ensure 'dst' is symmetric, since we only filled the top-right part.
         fillItSymmetric(dst);
