@@ -47,7 +47,7 @@ def centered_square(s, width, ldelim='[', rdelim=']'):
     width -= 4
     return ldelim+" " + string.center(s, width) + " "+rdelim 
 
-def command_output(command):
+def command_output(command, stderr = True, stdout = True):
     """Returns the output lines of a shell command.    
     
     The U{commands<http://docs.python.org/lib/module-commands.html>} module
@@ -62,19 +62,26 @@ def command_output(command):
     @param command: The shell command to execute.
     @type command: String
 
+    @param stderr: Whether or not to include the standard error.
+    @type command: Boolean
+
+    @param stdout: Whether or not to include the standard output.
+    @type command: Boolean
+
     @return: Output lines.
     @rtype:  Array of strings.
     """
-    # breakpoint(command, False and command.startswith('diff'))
-    if sys.platform == "win32":
-        # NB: This code may also work properly under Linux. But the Linux code
-        # below certainly does not work under Windows, as the Popen4 class does
-        # not exist.
+    if stderr and stdout:
         (stdout_and_stderr, stdin) = popen2.popen4(command)
         return stdout_and_stderr.readlines()
     else:
-        process = popen2.Popen4(command)
-        return process.fromchild.readlines()
+        (stdout_only, stdin, stderr_only) = popen2.popen3(command)
+        if stderr:
+            return stderr_only.readlines()
+        elif stdout:
+            return stdout_only.readlines()
+        else:
+            return ''
 
 def breakpoint( msg, cond=True ):
     if cond:
