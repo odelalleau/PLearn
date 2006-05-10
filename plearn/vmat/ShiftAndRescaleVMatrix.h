@@ -7,18 +7,18 @@
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -29,12 +29,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
 
-/* *******************************************************      
+/* *******************************************************
  * $Id$
  ******************************************************* */
 
@@ -49,10 +49,10 @@
 
 namespace PLearn {
 using namespace std;
- 
+
 /*!   VMatrix that can be used to rescale and shift each feature of the
   source: x'_i = a_i*(x_i+b_i)
-  This can be used to normalize the inputs of a distribution 
+  This can be used to normalize the inputs of a distribution
   (see the NormalizeInputDistr function in PLearn.h)
 */
 class ShiftAndRescaleVMatrix: public SourceVMatrix
@@ -73,7 +73,7 @@ public:
     //! when automatic, use the n_train first examples to estimate shift and
     //! scale
     int n_train;
-    int n_inputs; // when automatic, 
+    int n_inputs; // when automatic,
     bool negate_shift;
     bool no_scale;
     bool ignore_missing;
@@ -104,12 +104,12 @@ public:
     virtual void reset_dimensions()
     {
         if (width_>0 && width_!=source->width())
-            PLERROR("ShiftAndRescaleVMatrix: can't change width"); 
+            PLERROR("ShiftAndRescaleVMatrix: can't change width");
         inherited::reset_dimensions();
     }
 
 private:
-    //! This does the actual building. 
+    //! This does the actual building.
     void build_();
 
 protected:
@@ -117,7 +117,7 @@ protected:
     static void declareOptions(OptionList& ol);
 
 public:
-    // simply calls inherited::build() then build_() 
+    // simply calls inherited::build() then build_()
     virtual void build();
 
 };

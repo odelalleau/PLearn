@@ -2,22 +2,22 @@
 
 // LemmatizeVMatrix.cc
 //
-// Copyright (C) 2005 Hugo Larochelle 
-// 
+// Copyright (C) 2005 Hugo Larochelle
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,12 +28,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
-   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
+/* *******************************************************
+   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -73,12 +73,12 @@ LemmatizeVMatrix::LemmatizeVMatrix()
 
 string LemmatizeVMatrix::getLemma(int row) const
 {
-    string pos;       
+    string pos;
     string word;
 
     word = lowerstring(source->getString(row,word_field));
     pos = source->getString(row,pos_field);
-    
+
     // Verify if POS tag is compatible for word, using WordNet
     // wninit() most be called for that...
    /*
@@ -154,7 +154,7 @@ string LemmatizeVMatrix::getLemma(int row) const
     if(strstr(pos.c_str(),"NN")) return stemWord(word,NOUN);
     else if(strstr(pos.c_str(),"VB")) return stemWord(word,VERB);
     else if(strstr(pos.c_str(),"JJ")) return stemWord(word,ADJ);
-    else if(strstr(pos.c_str(),"RB")) return stemWord(word,ADV);    
+    else if(strstr(pos.c_str(),"RB")) return stemWord(word,ADV);
 
     return word;
 }
@@ -179,7 +179,7 @@ void LemmatizeVMatrix::declareOptions(OptionList& ol)
     declareOption(ol, "pos_to_lemma_table", &LemmatizeVMatrix::pos_to_lemma_table, OptionBase::buildoption,
                   "Customized table that uses the POS tag to obtain a lemma\n"
                   "It must have exactly two columns [POS lemma] . It has the third priority.\n");
-    
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -188,7 +188,7 @@ void LemmatizeVMatrix::declareOptions(OptionList& ol)
 // build //
 ///////////
 void LemmatizeVMatrix::build()
-{    
+{
     inherited::build();
     build_();
 }
@@ -211,11 +211,11 @@ void LemmatizeVMatrix::build_()
         length_ = source->length();
 
         if(word_pos_to_lemma_table.length() != 0 && word_pos_to_lemma_table.width() != 3)
-           PLERROR("In LemmatizeVMatrix::build_(): word_pos_to_lemma_table doesn't have three columns"); 
+           PLERROR("In LemmatizeVMatrix::build_(): word_pos_to_lemma_table doesn't have three columns");
         if(word_to_lemma_table.length() != 0 && word_to_lemma_table.width() != 2)
-           PLERROR("In LemmatizeVMatrix::build_(): word_to_lemma_table doesn't have two columns"); 
+           PLERROR("In LemmatizeVMatrix::build_(): word_to_lemma_table doesn't have two columns");
         if(pos_to_lemma_table.length() != 0 && pos_to_lemma_table.width() != 2)
-           PLERROR("In LemmatizeVMatrix::build_(): pos_to_lemma_table doesn't have two columns"); 
+           PLERROR("In LemmatizeVMatrix::build_(): pos_to_lemma_table doesn't have two columns");
 
         string lemma;
         for(int i=0; i<length_;i++)
@@ -239,7 +239,7 @@ void LemmatizeVMatrix::getNewRow(int i, const Vec& v) const
     v.subVec(inputsize_,targetsize_+weightsize_) << src_row.subVec(inputsize_-1,targetsize_+weightsize_);
 }
 
-//! returns value associated with a string (or MISSING_VALUE if there's no association for this string)                                         
+//! returns value associated with a string (or MISSING_VALUE if there's no association for this string)
 real LemmatizeVMatrix::getStringVal(int col, const string & str) const
 {
     int ret;

@@ -7,18 +7,18 @@
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -29,14 +29,14 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
 
- 
 
-/* *******************************************************      
+
+/* *******************************************************
  * $Id$
  * This file is part of the PLearn library.
  ******************************************************* */
@@ -56,7 +56,7 @@ using namespace std;
 /*!   Like MemoryVMatrix this class holds the data in memory,
   but it tries to hold it compactly by using single bits
   for binary variables, single bytes for discrete variables
-  whose number of possible values is less than 256, and 
+  whose number of possible values is less than 256, and
   unsigned shorts for the others, using a fixed point
   representation.
 */
@@ -66,7 +66,7 @@ class CompactVMatrix : public RowBufferedVMatrix
     class SDBVMatrix;
 
 protected:
-    
+
     //!  Each row of the matrix holds in order: bits, 1-byte symbols, fixed point numbers
     Storage<unsigned char> data;
     int row_n_bytes; //!<  # of bytes per row
@@ -109,12 +109,12 @@ public:
 
 /*!       Convert a VMat into a CompactVMatrix: this will use the stats
   computed in the fieldstats of the VMatrix (they will be computed if not
-  already) to figure out which variables are binary, discrete 
+  already) to figure out which variables are binary, discrete
   (and how many symbols), and the ranges of numeric variables.
   THE VMAT DISCRETE VARIABLES MUST NOT BE ALREADY ONE-HOT ENCODED.
   The variables will be permuted according to the permutation vector
   which can be retrieved from the variables_permutation_vector() method.
-  By default the last column of the VMat will stay last, thus being coded as 
+  By default the last column of the VMat will stay last, thus being coded as
   fixedpoint (so the permutation information may not be necessary if the
   last column represents a target and all the previous ones some inputs.
   keep_last_variables_last is the number of "last columns" to keep in place.
@@ -128,7 +128,7 @@ public:
 /*!       Create a CompactVMatrix with the same structure as cvcm but
   containing the data in m. Both must obviously have the same width.
   If rescale is true, then the min/max values for fixed-point encoding
-  are recomputed. If check==true than this is verified and an error message 
+  are recomputed. If check==true than this is verified and an error message
   is thrown if the floating point data are not in the expected ranges (of cvm).
 */
     CompactVMatrix(CompactVMatrix* cvm, VMat m, bool rescale=false, bool check=true);
@@ -137,7 +137,7 @@ public:
     void append(CompactVMatrix* vm);
 
 /*!       create in the elements of row (except the n_last ones) a perturbed
-  version of the i-th row of the database. This 
+  version of the i-th row of the database. This
   random perturbation is based on the unconditional
   statistics which should be present in the fieldstats; the
   noise level can be modulated with the noise_level argument
@@ -154,7 +154,7 @@ public:
   to order them into (bits, bytes, fixedpoint)
 */
     TVec<int>& permutation_vector() { return variables_permutation; }
-    
+
 protected:
 
     //!  decoding (v may be one-hot depending on one_hot_encoding flag)
@@ -194,7 +194,7 @@ public:
     virtual void build() {}  //!<  nothing to do...
 
 protected:
-    //!  auxiliary 
+    //!  auxiliary
     int symbols_offset; //!<  where in each row the symbols start
     int fixedpoint_offset; //!<  where in each row the fixed point numbers start
     Vec row_norms; //!<  to cache the norms of the rows for squareDifference method

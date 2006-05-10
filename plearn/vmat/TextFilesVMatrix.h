@@ -4,21 +4,21 @@
 // TextFilesVMatrix.h
 //
 // Copyright (C) 2003-2004 ApSTAT Technologies Inc.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -29,12 +29,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id$ 
+/* *******************************************************
+ * $Id$
  ******************************************************* */
 
 // Author: Pascal Vincent
@@ -51,7 +51,7 @@ using namespace std;
 
 /*! FORMAT DESCRIPTION
 
-This type of vmatrix is described in a basename.txtmat file 
+This type of vmatrix is described in a basename.txtmat file
 and has an associated metadata/ directory
 
 The metadata directory will contain the following files:
@@ -74,7 +74,7 @@ protected:
 
     static char buf[];
 
-    FILE* idxfile; 
+    FILE* idxfile;
     TVec<FILE*> txtfiles;
 
     //! list of startpos : width that associate a column range in the resulting VMat to each initial field of the fieldspecs
@@ -90,7 +90,7 @@ public:
     // * public build options *
     // ************************
 
-    PPath metadatapath; //!< the path to the .metadata directory 
+    PPath metadatapath; //!< the path to the .metadata directory
 
     //! A list of paths to raw text files containing the records
     TVec<string> txtfilenames;
@@ -100,12 +100,12 @@ public:
     //! - ','  : used for CSV files
     //! - ';'  : used for a variant of CSV files
     string delimiter;
-  
+
     //! An (optional) list of integers, one for each of the txtfilenames
     //! indicating the number of header lines at the top of the file to be skipped.
     TVec<int> skipheader;
 
-    //! Specification of field names and types 
+    //! Specification of field names and types
     TVec< pair<string, string> > fieldspec;
 
     //! If true, all mappings will be automatically computed at build time if
@@ -118,7 +118,7 @@ public:
 
     //! If true, standard vmatrix stringmap will be built from the txtmat
     //! specific stringmap
-    bool build_vmatrix_stringmap; 
+    bool build_vmatrix_stringmap;
 
     // ****************
     // * Constructors *
@@ -133,8 +133,8 @@ public:
     // * Object methods *
     // ******************
 
-private: 
-    //! This does the actual building. 
+private:
+    //! This does the actual building.
     // (Please implement in .cc)
     void build_();
     void setColumnNamesAndWidth();
@@ -143,7 +143,7 @@ private:
     static void readAndCheckOptionName(PStream& in, const string& optionname);
 
 
-protected: 
+protected:
     //! Declares this class' options
     // (Please implement in .cc)
     static void declareOptions(OptionList& ol);
@@ -174,7 +174,7 @@ public:
 
     //! returns the mapped value for field fieldnum corresponding to strval
     //! If there was no such mapping present, and auto_extend_map is true,
-    //! then a new mapping is appended for that field (with value -1000-size_of_map). 
+    //! then a new mapping is appended for that field (with value -1000-size_of_map).
     //! If not a PLERROR is thrown.
     real getMapping(int fieldnum, const string& strval) const;
 
@@ -193,7 +193,7 @@ public:
 
     //! Split the passed string into fields given the delimiter
     TVec<string> splitIntoFields(const string& raw_row) const;
-  
+
     //! Returns the split raw text rows
     TVec<string> getTextFields(int i) const;
 
@@ -201,17 +201,17 @@ public:
     //! (this is the position of that named field in fieldspec )
     int getIndexOfTextField(const string& fieldname) const;
 
-    //! Transform field-k value strval according to its fieldtype into one ore more reals 
+    //! Transform field-k value strval according to its fieldtype into one ore more reals
     //! and write those into dest (which should be of appropriate size: colrange[k].second)
     virtual void transformStringToValue(int k, string strval, Vec dest) const;
 
     virtual void getNewRow(int i, const Vec& v) const;
 
-    // simply calls inherited::build() then build_() 
+    // simply calls inherited::build() then build_()
     virtual void build();
 
     //! Builds standard VMatrix string mapping from this txtmat's specific mapping
-    //! saveAllStringMappings() can then be called to save them 
+    //! saveAllStringMappings() can then be called to save them
     //! (for later reference from another VMatrix for ex.)
     void buildVMatrixStringMapping();
 

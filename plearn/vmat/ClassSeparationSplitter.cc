@@ -2,22 +2,22 @@
 
 // ClassSeparationSplitter.cc
 //
-// Copyright (C) 2006 Hugo Larochelle 
-// 
+// Copyright (C) 2006 Hugo Larochelle
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,12 +28,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
-   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
+/* *******************************************************
+   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -54,7 +54,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "This splitter is intended to measure inductive transfer performance from some tasks to another task"
     );
 
-ClassSeparationSplitter::ClassSeparationSplitter() 
+ClassSeparationSplitter::ClassSeparationSplitter()
     :Splitter(), numsplits(-1), nclasses(-1), nclasses_test_set(1), select_classes_randomly(1), append_train(0)
 {
 }
@@ -64,7 +64,7 @@ void ClassSeparationSplitter::declareOptions(OptionList& ol)
     declareOption(ol, "numsplits", &ClassSeparationSplitter::numsplits, OptionBase::buildoption,
                   "Number of splits. If <= 0, then it is set to nclasses.");
     declareOption(ol, "nclasses", &ClassSeparationSplitter::nclasses, OptionBase::buildoption,
-                  "Number of classes."); 
+                  "Number of classes.");
     declareOption(ol, "nclasses_test_set", &ClassSeparationSplitter::nclasses_test_set, OptionBase::buildoption,
                   "Number of classes in the test sets.");
     declareOption(ol, "classes", &ClassSeparationSplitter::classes, OptionBase::buildoption,
@@ -94,7 +94,7 @@ void ClassSeparationSplitter::build_()
         for(int i=0; i<numsplits; i++)
         {
             classes[i].resize(nclasses_test_set);
-            
+
             if(select_classes_randomly)
             {
                 random_subset_indices(classes[i],nclasses);
@@ -102,7 +102,7 @@ void ClassSeparationSplitter::build_()
             else
             {
                 for(int j=0; j<nclasses_test_set; j++)
-                {       
+                {
                     classes[i][j] = it%nclasses;
                     it++;
                 }
@@ -139,11 +139,11 @@ int ClassSeparationSplitter::nSetsPerSplit() const
 
 TVec<VMat> ClassSeparationSplitter::getSplit(int k)
 {
-    
+
     if (k >= nsplits())
         PLERROR("ClassSeparationSplitter::getSplit() - k (%d) cannot be greater than "
                 " the number of splits (%d)", k, nsplits());
- 
+
     TVec<int> classes_k = classes[k];
     Vec row(dataset->width());
     TVec<int> indices(0);
@@ -157,7 +157,7 @@ TVec<VMat> ClassSeparationSplitter::getSplit(int k)
             indices_real.push_back(i);
         }
     }
-    
+
     TVec<VMat> split(2);
     split[0] = new RemoveRowsVMatrix(dataset,indices_real);
     // RemoveRowsVMatrix does not set the different sizes

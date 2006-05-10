@@ -3,21 +3,21 @@
 // VVMatrix.cc
 // Copyright (C) 2002 Pascal Vincent and Julien Keable
 // Copyright (C) 2003 Olivier Delalleau
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,11 +28,11 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
- 
-/* *******************************************************      
+
+/* *******************************************************
  * $Id$
  * This file is part of the PLearn library.
  ******************************************************* */
@@ -55,7 +55,7 @@
 #include <unistd.h>
 #endif
 
-#define NEW_SYNTAX_CHAR '@' 
+#define NEW_SYNTAX_CHAR '@'
 
 namespace PLearn {
 using namespace std;
@@ -76,7 +76,7 @@ void VVMatrix::declareOptions(OptionList &ol)
 
 
 // vmat genfilterindex source.pmat toto.pvm toto.indexes
- 
+
 void VVMatrix::generateFilterIndexFile(VMat source, const string & code, const string& ivfname)
 {
     rm(ivfname);
@@ -100,11 +100,11 @@ void VVMatrix::generateFilterIndexFile(VMat source, const string & code, const s
 }
 
 VMat VVMatrix::buildFilteredVMatFromVPL(VMat source, const string & code, const string& ivfname, time_t date_of_code)
-{  
+{
     if(getNonBlankLines(code).empty())
         return source;
     if(!isfile(ivfname) || mtime(ivfname) < date_of_code)
-        generateFilterIndexFile(source, code, ivfname);  
+        generateFilterIndexFile(source, code, ivfname);
     IntVecFile ivf(ivfname,true);
     return new SelectRowsFileIndexVMatrix(source, ivfname);
 }
@@ -131,7 +131,7 @@ vector<vector<string> > VVMatrix::extractSourceMatrix(const string & str,const s
                 string potential_dir = extract_directory(filename);
                 size_t p = srcstr.find(":");
                 string potential_path = potential_dir + srcstr.substr(0,p);
-                if(pathexists(potential_path))              
+                if(pathexists(potential_path))
                     srcstr=potential_dir+srcstr;
             }
             mstr[i][j] = srcstr;
@@ -194,9 +194,9 @@ void VVMatrix::processJoinSection(const vector<string> & code, VMat & tmpsource)
             midx[j]=tmpsource->fieldIndex(mfields[j]);
         for(unsigned int j=0;j<sfields.size();j++)
             sidx[j]=slave->fieldIndex(sfields[j]);
-              
+
         JoinVMatrix * jvm= new JoinVMatrix(tmpsource,slave,midx,sidx);
-              
+
         // browse field declarations of the <JOIN> section to declare new fields in the resulting JoinVMatrix
 
         while(i<code.size() && code[i].find(":")!=string::npos)
@@ -212,12 +212,12 @@ void VVMatrix::processJoinSection(const vector<string> & code, VMat & tmpsource)
         tmpsource=jvm;
     }
 }
- 
-// generate a file (ivfname) containing indexes of rows of 'source' that remain after filtering with 
+
+// generate a file (ivfname) containing indexes of rows of 'source' that remain after filtering with
 // the *every* possible step that changes the index of rows (i.e : prefilter, shuffle.. postfiltering)
 // -- Not optimal, since it will first *precompute* if any postfilter is required
 void VVMatrix::generateVMatIndex(VMat source, const string& meta_data_dir,
-                                 const string & filename, time_t date_of_code,const string & in, 
+                                 const string & filename, time_t date_of_code,const string & in,
                                  size_t idx_prefilter, size_t cidx_prefilter,
                                  size_t idx_postfilter, size_t cidx_postfilter,
                                  size_t idx_process, size_t cidx_process,
@@ -225,7 +225,7 @@ void VVMatrix::generateVMatIndex(VMat source, const string& meta_data_dir,
                                  size_t idx_join, size_t cidx_join)
 {
     VMat tmpsource = source;
-    rm(meta_data_dir+slash+"source.indexes");     
+    rm(meta_data_dir+slash+"source.indexes");
 
     if(idx_prefilter!=string::npos)
     {
@@ -246,14 +246,14 @@ void VVMatrix::generateVMatIndex(VMat source, const string& meta_data_dir,
         vector<string> code=split(in.substr(idx_join+6,cidx_join-idx_join-6),"\n");
         processJoinSection(code,tmpsource);
     }
-  
+
     if(idx_process!=string::npos)
     {
         cidx_process=in.find("</PROCESSING>");
         if(cidx_process==string::npos)
             PLERROR("Cannot find closing tag </PROCESSING>. File is %s",filename.c_str());
         string code=in.substr(idx_process+12,cidx_process-idx_process-12);
-        tmpsource = new PreprocessingVMatrix(tmpsource,code); 
+        tmpsource = new PreprocessingVMatrix(tmpsource,code);
     }
 
     if(idx_postfilter!=string::npos)
@@ -271,7 +271,7 @@ void VVMatrix::generateVMatIndex(VMat source, const string& meta_data_dir,
     if(isfile(meta_data_dir+slash+"incomplete.source.prefilter.indexes"))
         if(isfile(meta_data_dir+slash+"incomplete.source.postfilter.indexes"))
         {
-            IntVecFile ivf(meta_data_dir+slash+"source.indexes",true);        
+            IntVecFile ivf(meta_data_dir+slash+"source.indexes",true);
             IntVecFile preivf(meta_data_dir+slash+"incomplete.source.prefilter.indexes");
             IntVecFile postivf(meta_data_dir+slash+"incomplete.source.postfilter.indexes");
             for(int i=0;i<postivf.length();i++)
@@ -280,12 +280,12 @@ void VVMatrix::generateVMatIndex(VMat source, const string& meta_data_dir,
         else
             mv(meta_data_dir+slash+"incomplete.source.prefilter.indexes",
                meta_data_dir+slash+"source.indexes");
-      
+
     else
         if(isfile(meta_data_dir+slash+"incomplete.source.postfilter.indexes"))
             mv(meta_data_dir+slash+"incomplete.source.postfilter.indexes",
                meta_data_dir+slash+"source.indexes");
-  
+
     if(idx_shuffle!=string::npos)
     {
         idx_shuffle+=9;
@@ -293,7 +293,7 @@ void VVMatrix::generateVMatIndex(VMat source, const string& meta_data_dir,
         if(cidx_shuffle==string::npos)
             PLERROR("Cannot find closing tag </SHUFFLE>. File is %s",filename.c_str());
         string seedstr=removeblanks(in.substr(idx_shuffle,cidx_shuffle-idx_shuffle));
-        if(seedstr=="")  
+        if(seedstr=="")
             manual_seed(clock());
         else
         {
@@ -312,7 +312,7 @@ void VVMatrix::generateVMatIndex(VMat source, const string& meta_data_dir,
         rm(meta_data_dir+slash+"source.indexes");
         IntVecFile newivf(meta_data_dir+slash+"source.indexes",true);
         newivf.append(idx);
-    } 
+    }
     // remove intermediate files
     rm(meta_data_dir+slash+"incomplete.source.prefilter.indexes");
     rm(meta_data_dir+slash+"incomplete.source.postfilter.indexes");
@@ -321,10 +321,10 @@ void VVMatrix::generateVMatIndex(VMat source, const string& meta_data_dir,
 bool VVMatrix::isPrecomputedAndUpToDate()
 {
     string meta_data_dir=remove_trailing_slash(the_filename)+".metadata";
-    if(isfile(meta_data_dir+slash+"precomputed.pmat") && 
+    if(isfile(meta_data_dir+slash+"precomputed.pmat") &&
        mtime(meta_data_dir+slash+"precomputed.pmat") > getMtime())
         return true;
-    if(pathexists(meta_data_dir+slash+"precomputed.dmat"+slash) && 
+    if(pathexists(meta_data_dir+slash+"precomputed.dmat"+slash) &&
        mtime(meta_data_dir+slash+"precomputed.dmat"+slash+"indexfile") > getMtime())
         return true;
     return false;
@@ -420,12 +420,12 @@ VMat VVMatrix::createPreproVMat(const string & filename)
             return source;
         }
     }
-  
+
     // if index_section is true, then this dataset needs a file containing the index of the rows to keep
     bool index_section = idx_prefilter!=string::npos || idx_postfilter!=string::npos || idx_shuffle!=string::npos ;
 
     // if true, index file lacks or is out of date
-    bool must_regen_index = index_section &&  
+    bool must_regen_index = index_section &&
         (!isfile(meta_data_dir/"source.indexes") || date_of_code > mtime(meta_data_dir/"source.indexes"));
 
     // erase obsolete source.index if necessary
@@ -451,7 +451,7 @@ VMat VVMatrix::createPreproVMat(const string & filename)
             }
         } else {
 
-            vector<vector<string> > mstr = extractSourceMatrix(sec,filename);      
+            vector<vector<string> > mstr = extractSourceMatrix(sec,filename);
             Array<VMat> vmrows(int(mstr.size()));
             // we need to build a VMat that is the concatenation of the datasets contained in 'mstr'
 
@@ -462,17 +462,17 @@ VMat VVMatrix::createPreproVMat(const string & filename)
                 {
                     vector<string> vecstr;
                     vecstr=split(mstr[i][j],":");
-                    ar[j]=getDataSet(vecstr[0]);              
+                    ar[j]=getDataSet(vecstr[0]);
 
                     // handle different cases of dataset specification
-                    // legal formats are: 
+                    // legal formats are:
                     // 1- simple dataset filename
                     // 2- intVecFile specification : filename:intVecFile_Filename
                     // 3- range specifiaction : filename:start:length
                     // 4- range specifiaction + intVecFile: filename:intVecFile_Filename:start:length
                     switch(vecstr.size())
                     {
-                    case 1: // only dataset name so we do nothing 
+                    case 1: // only dataset name so we do nothing
                         break;
                     case 2: // we have an intVecFile specification
                         // prefix with the path to the current vmat
@@ -480,7 +480,7 @@ VMat VVMatrix::createPreproVMat(const string & filename)
                             vecstr[1]=extract_directory(filename)+vecstr[1];
                         ar[j]=new SelectRowsFileIndexVMatrix(ar[j],vecstr[1]);
                         break;
-                    case 3: // submatRows range specification 
+                    case 3: // submatRows range specification
                         ar[j]=ar[j].subMatRows(toint(vecstr[1]),toint(vecstr[2]));
                         break;
                     case 4: // intVecFile + submatRows
@@ -536,7 +536,7 @@ VMat VVMatrix::createPreproVMat(const string & filename)
 
     // next lines handle precomputation of matrix
     if(idx_precompute!=string::npos)
-    { 
+    {
         idx_precompute+=12;
         cidx_precompute=in.find("</PRECOMPUTE>");
         if(cidx_precompute==string::npos)
@@ -577,7 +577,7 @@ VMat VVMatrix::createPreproVMat(const string & filename)
             if(pathexists(meta_data_dir/"incomplete.precomputed.pmat.metadata"))
                 mvforce(meta_data_dir/"incomplete.precomputed.pmat.metadata",
                         meta_data_dir/"precomputed.pmat.metadata");
-          
+
             // Save the string mappings.
             source->setMetaDataDir(meta_data_dir);
             source->saveAllStringMappings();
@@ -613,7 +613,7 @@ void VVMatrix::build_()
         force_mkdir( getMetaDataDir() );
 
         code = readFileAndMacroProcess(the_filename);
-        if(removeblanks(code)[0]=='<') // old xml-like format 
+        if(removeblanks(code)[0]=='<') // old xml-like format
             the_mat = createPreproVMat(the_filename);
         else  // New standard PLearn object description format
         {
@@ -661,7 +661,7 @@ void VVMatrix::build_()
 // {
 //   return the_mat->getStringToRealMapping(col);
 // }
-  
+
 
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //

@@ -7,18 +7,18 @@
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -29,12 +29,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
 
-/* *******************************************************      
+/* *******************************************************
  * $Id$
  ******************************************************* */
 
@@ -49,7 +49,7 @@
 
 namespace PLearn {
 using namespace std;
- 
+
 
 /*!   Like MemoryVMatrix this class holds the data in memory.
   But it is designed to keep a compact representation of sparse matrices,
@@ -60,7 +60,7 @@ using namespace std;
 class SparseVMatrixRow
 {
 public:
-    int nelements; //!<  number of non zero elements in row 
+    int nelements; //!<  number of non zero elements in row
     int row_startpos; //!<  index of first element of this row in both the positions and the values arrays
     SparseVMatrixRow(): nelements(0), row_startpos(0) {}
 };
@@ -70,10 +70,10 @@ class SparseVMatrix : public RowBufferedVMatrix
     typedef RowBufferedVMatrix inherited;
 
 protected:
-    int nelements; //!<  total number of non-zero elements in the VMatrix  
+    int nelements; //!<  total number of non-zero elements in the VMatrix
     unsigned short* positions;
     float* values;
-  
+
     SparseVMatrixRow* rows;
 
 public:
@@ -88,7 +88,7 @@ public:
     //!  This builds a sparse representation in memory of the VMat m passed
     //!  as argument.  The original fieldinfos are copied as-is.
     SparseVMatrix(VMat m);
-    
+
     //!  This reloads a previously saved sparse VMatrix
     SparseVMatrix(const string& filename);
 

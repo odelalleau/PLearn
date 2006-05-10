@@ -7,18 +7,18 @@
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -29,12 +29,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
 
-/* *******************************************************      
+/* *******************************************************
  * $Id$
  ******************************************************* */
 
@@ -45,7 +45,7 @@
 namespace PLearn {
 using namespace std;
 
-union short_and_twobytes 
+union short_and_twobytes
 {
     unsigned short us;
     unsigned char twobytes[2];
@@ -82,14 +82,14 @@ CompactVMatrix::CompactVMatrix()
 {
 }
 
-CompactVMatrix::CompactVMatrix(int the_length, int nvariables, int n_binary, 
+CompactVMatrix::CompactVMatrix(int the_length, int nvariables, int n_binary,
                                int n_nonbinary_discrete,
-                               int n_fixed_point, TVec<int>& n_symbolvalues, 
-                               Vec& fixed_point_min, Vec& fixed_point_max, 
+                               int n_fixed_point, TVec<int>& n_symbolvalues,
+                               Vec& fixed_point_min, Vec& fixed_point_max,
                                bool onehot_encoding)
-    : inherited(the_length,nvariables), n_bits(n_binary), 
+    : inherited(the_length,nvariables), n_bits(n_binary),
       n_symbols(n_nonbinary_discrete), n_fixedpoint(n_fixed_point),
-      n_variables(nvariables), one_hot_encoding(onehot_encoding), 
+      n_variables(nvariables), one_hot_encoding(onehot_encoding),
       n_symbol_values(n_symbolvalues),
       fixedpoint_min(fixed_point_min), fixedpoint_max(fixed_point_max),
       delta(n_fixed_point), variables_permutation(n_variables)
@@ -112,7 +112,7 @@ CompactVMatrix::CompactVMatrix(VMat m, int keep_last_variables_last, bool onehot
     : inherited(m->length(),m->width()), one_hot_encoding(onehot_encoding),
       n_symbol_values(m->width()), variables_permutation(m->width())
 {
-    if (!m->hasStats()) 
+    if (!m->hasStats())
     {
         cout << "CompactVMatrix(VMat, int): VMat did not have stats. Computing them." << endl;
         m->computeStats();
@@ -137,7 +137,7 @@ CompactVMatrix::CompactVMatrix(VMat m, int keep_last_variables_last, bool onehot
             delta[n_fixedpoint]=(stat.max()-stat.min())/USHRT_MAX;
             fp_position[n_fixedpoint++]=i;
         }
-        else 
+        else
         {
             if (!fast_exact_is_equal(stat.min(), 0) ||
                 !fast_exact_is_equal((stat.max()-stat.min()+1),
@@ -187,7 +187,7 @@ CompactVMatrix::CompactVMatrix(VMat m, int keep_last_variables_last, bool onehot
     {
         fieldinfos.resize(width_);
         fieldstats.resize(width_);
-        for (int i=0;i<width_;i++) 
+        for (int i=0;i<width_;i++)
         {
             fieldinfos[i]=m->getFieldInfos()[variables_permutation[i]];
             fieldstats[i]=m->fieldstats[variables_permutation[i]];
@@ -210,10 +210,10 @@ CompactVMatrix::CompactVMatrix(VMat m, int keep_last_variables_last, bool onehot
 }
 
 
-CompactVMatrix::CompactVMatrix(const string& filename, int nlast) : RowBufferedVMatrix(0,0) 
-{ 
-    load(filename); 
-    n_last=nlast; 
+CompactVMatrix::CompactVMatrix(const string& filename, int nlast) : RowBufferedVMatrix(0,0)
+{
+    load(filename);
+    n_last=nlast;
     set_n_bits_in_byte();
 }
 
@@ -330,7 +330,7 @@ void CompactVMatrix::getNewRow(int i, const Vec& v) const
         real decoded = u.us*delta[j]+fixedpoint_min[j];
         // correct rounding errors for integers, due to fixed-point low precision
         real rounded_decoded = rint(decoded);
-        if (fabs(rounded_decoded-decoded)<1e-4) 
+        if (fabs(rounded_decoded-decoded)<1e-4)
             decoded = rounded_decoded;
         vp[c]=decoded;
     }
@@ -357,7 +357,7 @@ real CompactVMatrix::dot(int i, int j, int inputsize) const
         real check=dot_product;
 #endif
         // Here we want to count the number of ON bits in the byte_and
-        // instead of looping through the bits, we look-up in a 
+        // instead of looping through the bits, we look-up in a
         // pre-computed table (n_bits_in_byte), which has been set-up by set_n_bits_in_byte().
         dot_product += n_bits_in_byte[byte_and];
 #ifdef SANITYCHECK_CompactVMatrix
@@ -448,7 +448,7 @@ real CompactVMatrix::dot(int i, const Vec& v) const
             dot_product += vp[c+byte];
             c += n;
         }
-        else 
+        else
             dot_product += vp[c++]*byte;
     }
     // WARNING: COULD THIS CAUSE PROBLEMS IF fixedpoint_offset IS NOT A MULTIPLE OF 4
@@ -463,7 +463,7 @@ real CompactVMatrix::dot(int i, const Vec& v) const
         real decoded = u.us*delta[j]+fixedpoint_min[j];
         // correct rounding errors for integers, due to fixed-point low precision
         real rounded_decoded = rint(decoded);
-        if (fabs(rounded_decoded-decoded)<1e-4) 
+        if (fabs(rounded_decoded-decoded)<1e-4)
             decoded = rounded_decoded;
         dot_product += vp[c] * decoded;
     }
@@ -570,7 +570,7 @@ void CompactVMatrix::putSubRow(int i, int j, Vec v)
                         !fast_exact_is_equal(vk, 1))
                         PLERROR("CompactVMatrix::putRow(%d,v): v[%d]=%g!=0 or 1 (not one-hot-code)",
                                 i,c,vk);
-                    if (fast_exact_is_equal(vk, 1)) 
+                    if (fast_exact_is_equal(vk, 1))
                     {
                         if (pos<0) pos=k;
                         else PLERROR("CompactVMatrix::putRow(%d,v): %d-th symbol not one-hot-encoded",
@@ -580,7 +580,7 @@ void CompactVMatrix::putSubRow(int i, int j, Vec v)
                 if (pos<0)
                     PLERROR("CompactVMatrix::putRow(%d,v): %d-th symbol not one-hot-encoded",
                             i,b);
-                encoded_row[symbols_offset+b] = pos; 
+                encoded_row[symbols_offset+b] = pos;
             }
         }
     else
@@ -669,7 +669,7 @@ void CompactVMatrix::perturb(int i, Vec v, real noise_level, int n_last)
         real decoded = u.us*delta[j]+fixedpoint_min[j];
         // correct rounding errors for integers, due to fixed-point low precision
         real rounded_decoded = rint(decoded);
-        if (fabs(rounded_decoded-decoded)<1e-4) 
+        if (fabs(rounded_decoded-decoded)<1e-4)
             decoded = rounded_decoded;
         if (var<n_variables-n_last)
         {
@@ -785,7 +785,7 @@ void CompactVMatrix::append(CompactVMatrix* vm)
                 change[j]=true;
                 new_min[j]=vm->fixedpoint_min[j];
             }
-            if (fixedpoint_max[j]<vm->fixedpoint_max[j]) 
+            if (fixedpoint_max[j]<vm->fixedpoint_max[j])
             {
                 change[j]=true;
                 new_max[j]=vm->fixedpoint_max[j];
@@ -808,7 +808,7 @@ void CompactVMatrix::append(CompactVMatrix* vm)
                     real decoded = u.us*delta[j]+fixedpoint_min[j];
                     // correct rounding errors for integers, due to fixed-point low precision
                     real rounded_decoded = rint(decoded);
-                    if (fabs(rounded_decoded-decoded)<1e-4) 
+                    if (fabs(rounded_decoded-decoded)<1e-4)
                         decoded = rounded_decoded;
                     // ENCODE using new min/max
                     fixed_point_numbers[j]=(unsigned char)((decoded-new_min[j])/new_delta[j]);

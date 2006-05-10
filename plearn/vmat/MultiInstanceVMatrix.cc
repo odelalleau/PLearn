@@ -2,22 +2,22 @@
 
 // MultiInstanceVMatrix.cc
 //
-// Copyright (C) 2004 Norman Casagrande 
-// 
+// Copyright (C) 2004 Norman Casagrande
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,12 +28,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id$ 
+/* *******************************************************
+ * $Id$
  ******************************************************* */
 
 // Authors: Norman Casagrande
@@ -60,14 +60,14 @@ MultiInstanceVMatrix::MultiInstanceVMatrix()
     //build_();
 }
 
-//MultiInstanceVMatrix::MultiInstanceVMatrix(const string& filename) 
+//MultiInstanceVMatrix::MultiInstanceVMatrix(const string& filename)
 //  :inherited(), filename_(abspath(filename))
 //{
 //  //build();
 //}
 
 
-PLEARN_IMPLEMENT_OBJECT(MultiInstanceVMatrix, "Virtual Matrix for a multi instance dataset", 
+PLEARN_IMPLEMENT_OBJECT(MultiInstanceVMatrix, "Virtual Matrix for a multi instance dataset",
                         "In a multi-instance dataset examples come in 'bags' with only one target label\n"
                         "for each bag. This class is built upon a source text file that describes such\n"
                         "a dataset (see the help on the 'filename' option for format details).\n"
@@ -116,7 +116,7 @@ void MultiInstanceVMatrix::declareOptions(OptionList& ol)
 
 void MultiInstanceVMatrix::build_()
 {
-    //this->setMetaDataDir(filename_ + ".metadata"); 
+    //this->setMetaDataDir(filename_ + ".metadata");
 
     // To be used in the end.. it is about 5 secs slower in debug
     //int nRows = countNonBlankLinesOfFile(filename_);
@@ -138,7 +138,7 @@ void MultiInstanceVMatrix::build_()
 
     real* mat_i = NULL;
 
-    // one more column for the bag signal 
+    // one more column for the bag signal
     targetsize_ = source_targetsize + 1;
 
     // Check the number of columns
@@ -153,12 +153,12 @@ void MultiInstanceVMatrix::build_()
         if ( (nFields-2) != inputsize_ + source_targetsize) // 2 for the object name and the instance number
         {
             PLERROR("Either inputsize or source_targetsize are inconsistent with the specified file!\n"
-                    " Got %d+%d (inputsize+source_targetsize) = %d, and found %d! If unsure about inputsize, don't specify it or set to -1.", 
+                    " Got %d+%d (inputsize+source_targetsize) = %d, and found %d! If unsure about inputsize, don't specify it or set to -1.",
                     inputsize_, source_targetsize, inputsize_+source_targetsize, nFields - 2);
         }
     } else inputsize_ = nFields-2-source_targetsize;
 
-    int lastColumn = inputsize_ + source_targetsize; 
+    int lastColumn = inputsize_ + source_targetsize;
 
     inFile = openFile(filename_, PStream::raw_ascii, "r");
     // inFile.seekg(0); // TODO See if it still works without this.
@@ -215,7 +215,7 @@ void MultiInstanceVMatrix::build_()
         inFile >> configNum;
 
         configs_.push_back(configNum);
-    
+
         // get the actual data columns + the target
         mat_i = data_[lineNum];
         for(int k = 0; k < inputsize_ + source_targetsize; k++)
@@ -235,7 +235,7 @@ void MultiInstanceVMatrix::build_()
         else
             mat_i[lastColumn] = bagType;
     }
-  
+
 
     //ofstream test("g:/test.txt");
     //test << data_;
@@ -255,8 +255,8 @@ void MultiInstanceVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
+    // ### Call deepCopyField on all "pointer-like" fields
+    // ### that you wish to be deepCopied rather than
     // ### shallow-copied.
     // ### ex:
 

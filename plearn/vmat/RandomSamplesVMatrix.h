@@ -104,7 +104,7 @@ protected:
     //! If it is -1, this means it is a non-preserved sample, and thus should
     //! be randomly sampled from the 'non_preserved' list.
     TVec<int> indices;
-    
+
     //#####  Protected Options  ###############################################
 
 protected:

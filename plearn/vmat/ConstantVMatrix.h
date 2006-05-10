@@ -2,22 +2,22 @@
 
 // ConstantVMatrix.h
 //
-// Copyright (C) 2005 Nicolas Chapados 
-// 
+// Copyright (C) 2005 Nicolas Chapados
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,12 +28,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
+/* *******************************************************
+ * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $
  ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -58,13 +58,13 @@ class ConstantVMatrix: public VMatrix
 
 public:
     //#####  Public Options  ##################################################
-  
+
     //! The constant output to return
     real constant_output;
 
 
     //#####  Object Methods  ##################################################
-  
+
     //! Default constructor (default return value is missing value)
     ConstantVMatrix();
 
@@ -72,12 +72,12 @@ public:
     ConstantVMatrix(int the_length, int the_width,
                     real constant_output = MISSING_VALUE);
 
-private: 
+private:
 
-    //! This does the actual building. 
+    //! This does the actual building.
     void build_();
 
-protected: 
+protected:
 
     //! Declares this class' options.
     static void declareOptions(OptionList& ol);
@@ -92,7 +92,7 @@ public:
 
     // Declares other standard object methods
     //  If your class is not instantiatable (it has pure virtual methods)
-    // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
+    // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS
     PLEARN_DECLARE_OBJECT(ConstantVMatrix);
 
 
@@ -112,7 +112,7 @@ public:
 
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(ConstantVMatrix);
-  
+
 } // end of namespace PLearn
 
 #endif

@@ -7,18 +7,18 @@
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -29,12 +29,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
 
-/* *******************************************************      
+/* *******************************************************
  * $Id$
  ******************************************************* */
 
@@ -60,7 +60,7 @@ public:
     // underlying virtual matrix. A VVec simply references a subRow of a VMatrix
     PP<VMatrix> data;
     int row_index;
-    int col_index; 
+    int col_index;
     int length_;
 
     VVec()
@@ -82,34 +82,34 @@ public:
 
     // to keep compatibility with most current code,
     // VVec's can be converted to Vec's
-    inline void toVec(const Vec& v) const 
-    { 
+    inline void toVec(const Vec& v) const
+    {
 #ifdef BOUNDCHECK
         if(v.length()!=length_)
             PLERROR("In VVec::toVec length of Vec and VVec differ!");
 #endif
-        data->getSubRow(row_index,col_index,v); 
+        data->getSubRow(row_index,col_index,v);
     }
 
-    //! copies v into into this VVec 
-    inline void copyFrom(const Vec& v) const 
-    { 
+    //! copies v into into this VVec
+    inline void copyFrom(const Vec& v) const
+    {
 #ifdef BOUNDCHECK
         if(v.length()!=length_)
             PLERROR("In VVec::copyFrom length of Vec and VVec differ!");
 #endif
-        data->putSubRow(row_index,col_index,v); 
+        data->putSubRow(row_index,col_index,v);
     }
 
 
     inline VVec subVec(int j, int len)
     { return VVec(data, row_index, col_index+j, len); }
 
-    //! conversion to Vec 
+    //! conversion to Vec
     operator Vec() const
     {
         Vec v(length_);
-        data->getSubRow(row_index,col_index,v); 
+        data->getSubRow(row_index,col_index,v);
         return v;
     }
 
@@ -120,7 +120,7 @@ public:
         case PStream::raw_ascii:
         case PStream::pretty_ascii:
         {
-            out << ((Vec)*this) << flush; 
+            out << ((Vec)*this) << flush;
             break;
         }
         default:

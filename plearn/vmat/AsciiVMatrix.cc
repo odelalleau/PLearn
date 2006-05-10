@@ -1,23 +1,23 @@
 // -*- C++ -*-
 
 // AsciiVMatrix.cc
-// 
+//
 // Copyright (C) 2003 Rejean Ducharme, Pascal Vincent
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,12 +28,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id$ 
+/* *******************************************************
+ * $Id$
  ******************************************************* */
 
 /*! \file AsciiVMatrix.cc */
@@ -64,10 +64,10 @@ AsciiVMatrix::AsciiVMatrix(const string& fname, bool readwrite)
     build();
 }
 
-AsciiVMatrix::AsciiVMatrix(const string& fname, int the_width, 
-                           const TVec<string>& the_fieldnames, 
+AsciiVMatrix::AsciiVMatrix(const string& fname, int the_width,
+                           const TVec<string>& the_fieldnames,
                            const string& comment)
-    :inherited(0,the_width), filename(fname), 
+    :inherited(0,the_width), filename(fname),
      readwritemode(true), newfile(true), rewrite_length(true)
 {
     inherited::build();
@@ -77,14 +77,14 @@ AsciiVMatrix::AsciiVMatrix(const string& fname, int the_width,
     file = openFile(filename, PStream::raw_ascii, "w");
     // TODO Is this really the same as old code ?
     // file->open(filename.c_str(), fstream::in | fstream::out | fstream::trunc);
-  
+
     file << "#size: ";
     PLERROR("In AsciiVMatrix::AsciiVMatrix - Code is not yet PStram compatible");
     // vmatlength_pos = file.tellp(); // TODO See how to do this with PStreams.
     length_max = 9999999;  // = 10 000 000 - 1
     file << "0 " << width() << "      " << endl;
 
-  
+
     if(the_fieldnames.length()>0)
     {
         if(the_fieldnames.length()!=the_width)
@@ -135,13 +135,13 @@ void AsciiVMatrix::build_()
         bool could_be_old_amat = true;
         // file->seekg(0,fstream::beg); // TODO Will it work without this ?
         file >> ws;
-        string line;  
+        string line;
         while (file.peek()=='#')
         {
             PLERROR("In AsciiVMatrix::build_ - Code is not PStream-compatible yet");
             // streampos old_pos = file.tellg(); // TODO See how to do this with PStreams.
             file.getline(line);
-            could_be_old_amat = false;  
+            could_be_old_amat = false;
             size_t pos=line.find(":");
             if (pos!=string::npos)
             {
@@ -231,7 +231,7 @@ void AsciiVMatrix::build_()
                     PLERROR("In AsciiVMatrix: trying to load but couldn't determine file format automatically for %s",filename.c_str());
             }
         }
- 
+
         length_ = length;
         width_ = width;
 

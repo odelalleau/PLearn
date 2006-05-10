@@ -7,18 +7,18 @@
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -29,12 +29,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
 
-/* *******************************************************      
+/* *******************************************************
  * $Id$
  ******************************************************* */
 
@@ -49,7 +49,7 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(SparseVMatrix, "ONE LINE DESC", "NO HELP");
 
 SparseVMatrix::SparseVMatrix(const string& filename)
-    : nelements(0), positions(0), values(0), rows(0)  
+    : nelements(0), positions(0), values(0), rows(0)
 {
     load(filename);
 }
@@ -58,7 +58,7 @@ SparseVMatrix::SparseVMatrix(VMat m)
     : inherited(m.length(),m.width()), nelements(0), positions(0), values(0), rows(0)
 {
     fieldinfos = m->getFieldInfos();                // Copy the field infos
-  
+
     if(m.width()>USHRT_MAX)
         PLERROR("In SparseVMatrix constructor: m.width()=%d can't be greater than USHRT_MAX=%d",m.width(),USHRT_MAX);
     Vec v(m.width());
@@ -84,7 +84,7 @@ SparseVMatrix::SparseVMatrix(VMat m)
                     nelements++;
         }
     }
-  
+
     // Now allocate space for those elements
     if(nelements>0)
     {
@@ -92,14 +92,14 @@ SparseVMatrix::SparseVMatrix(VMat m)
         values = new float[nelements];
         int l=length();
         rows = new SparseVMatrixRow[l];
-      
+
         int pos = 0;
         // Fill the representation
         for(int i=0; i<m.length(); i++)
         {
             m->getRow(i,v);
             SparseVMatrixRow& r = rows[i];
-            r.row_startpos = pos; 
+            r.row_startpos = pos;
             int nelem = 0;
             for(int j=0; j<v.length(); j++)
                 if(!fast_exact_is_equal(vptr[j], 0.))
@@ -145,14 +145,14 @@ void SparseVMatrix::getNewRow(int i, const Vec& v) const
     if(nelements==0)
         v.clear();
     else
-    {      
+    {
         SparseVMatrixRow row_i = rows[i];
         float* valueptr =  values + row_i.row_startpos;
         unsigned short* positionptr = positions + row_i.row_startpos;
         int n = row_i.nelements;
-  
+
         real* vdata = v.data();
-      
+
         int j = 0;
         while(n--)
         {
@@ -176,7 +176,7 @@ real SparseVMatrix::dot(int i1, int i2, int inputsize) const
 
     if(nelements==0)
         return 0.;
-  
+
     SparseVMatrixRow row_1 = rows[i1];
     float* valueptr_1 =  values + row_1.row_startpos;
     unsigned short* positionptr_1 = positions + row_1.row_startpos;
@@ -209,7 +209,7 @@ real SparseVMatrix::dot(int i1, int i2, int inputsize) const
             valueptr_1++;
             n_1--;
         }
-        else 
+        else
         {
             positionptr_2++;
             valueptr_2++;
@@ -234,7 +234,7 @@ real SparseVMatrix::dot(int i, const Vec& v) const
     float* valueptr =  values + row_i.row_startpos;
     unsigned short* positionptr = positions + row_i.row_startpos;
     int n = row_i.nelements;
-  
+
     real* vdata = v.data();
     real res = 0.;
 
@@ -275,7 +275,7 @@ real SparseVMatrix::dot(int i, const Vec& v) const
   readField(in,"fieldinfos",fieldinfos);
   fieldinfos.resize(0); // to fix current bug in setting fieldinfos
   readField(in,"fieldstats",fieldstats);
-  
+
   if(nelements>0)
   {
   delete[] positions;
@@ -286,7 +286,7 @@ real SparseVMatrix::dot(int i, const Vec& v) const
   positions = new unsigned short[nelements];
   values = new float[nelements];
   rows = new SparseVMatrixRow[length()];
-  
+
   read_ushort(in,positions,nelements,false);
   read_float(in,values,nelements,false);
   for(int i=0; i<length(); i++)

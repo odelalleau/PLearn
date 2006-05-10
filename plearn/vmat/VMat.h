@@ -7,18 +7,18 @@
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -29,14 +29,14 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
 
- 
 
-/* *******************************************************      
+
+/* *******************************************************
  * $Id$
  * This file is part of the PLearn library.
  ******************************************************* */
@@ -68,8 +68,8 @@ public:
     int length() const { return ptr->length(); }
     int width() const { return ptr->width(); }
 
-    string fieldName(int fieldindex) const 
-    { return ptr->fieldName(fieldindex); } 
+    string fieldName(int fieldindex) const
+    { return ptr->fieldName(fieldindex); }
 
     int getFieldIndex(const string& fieldname_or_num) const
     { return ptr->getFieldIndex(fieldname_or_num); }
@@ -94,7 +94,7 @@ public:
     VMat column(int j) const { return subMatColumns(j,1); }
     VMat firstColumn() const { return column(0); }
     VMat lastColumn() const { return column(width()-1); }
-    Mat toMat() const { return ptr->toMat();}  
+    Mat toMat() const { return ptr->toMat();}
 
     //!  Returns a VMatrix made of only the specified rows
     VMat rows(TVec<int> rows_indices) const;
@@ -117,10 +117,10 @@ public:
     //!  Note that some info will be lost (like fields infos): check the .cc
     //!  to understand why.
     void precompute();
-  
+
 /*!     will copy a precomputed version of the whole VMat to the given file
   and replace the current pointer to point to the corresponding FileVMatrix
-  For fast access, make sure the file is on a local Disk rather than on 
+  For fast access, make sure the file is on a local Disk rather than on
   a Network Mounted File System.
   If use_existing_file is true, it will use the existing file (from a
   previous precomputation for instance) rather than overwriting it (make

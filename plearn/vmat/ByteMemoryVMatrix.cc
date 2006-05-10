@@ -7,18 +7,18 @@
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -29,12 +29,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
 
-/* *******************************************************      
+/* *******************************************************
  * $Id$
  ******************************************************* */
 
@@ -61,9 +61,9 @@ ByteMemoryVMatrix::ByteMemoryVMatrix(unsigned char* the_data,int the_length,int 
 }
 
 ByteMemoryVMatrix::
-ByteMemoryVMatrix(unsigned char* the_data,int the_length,int the_width, 
+ByteMemoryVMatrix(unsigned char* the_data,int the_length,int the_width,
                   Vec the_scale, Vec the_offset)
-    :VMatrix(the_length, the_width), data(the_data), 
+    :VMatrix(the_length, the_width), data(the_data),
      scale(the_scale), offset_(the_offset)
 {
     if (the_scale.length() != width_ || the_offset.length()!=width_)
@@ -73,7 +73,7 @@ ByteMemoryVMatrix(unsigned char* the_data,int the_length,int the_width,
 
 ByteMemoryVMatrix::ByteMemoryVMatrix(unsigned char* the_data,int the_length,int the_width,
                                      double the_scaling_factor,double the_offset)
-    : VMatrix(the_length, the_width), data(the_data), 
+    : VMatrix(the_length, the_width), data(the_data),
       scale(the_width, the_scaling_factor), offset_(the_width, the_offset)
 {
 }

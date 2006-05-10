@@ -2,22 +2,22 @@
 
 // VMat_linalg.cc
 //
-// Copyright (C) 2004 Pascal Vincent 
-// 
+// Copyright (C) 2004 Pascal Vincent
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,12 +28,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id$ 
+/* *******************************************************
+ * $Id$
  ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -53,7 +53,7 @@ using namespace std;
 Mat transposeProduct(VMat m)
 {
     Mat result(m.width(),m.width());
-  
+
     Vec v(m.width());
     Mat vrowmat = rowmatrix(v);
 
@@ -69,9 +69,9 @@ Mat transposeProduct(VMat m1, VMat m2)
 {
     if(m1.length()!=m2.length())
         PLERROR("in Mat transposeProduct(VMat m1, VMat m2) arguments have incompatible dimensions");
-  
+
     Mat result(m1.width(),m2.width());
-  
+
     Vec v1(m1.width());
     Vec v2(m2.width());
     Mat v1rowmat = rowmatrix(v1);
@@ -90,10 +90,10 @@ Vec transposeProduct(VMat m1, Vec v2)
 {
     if(m1.length()!=v2.length())
         PLERROR("in Mat transposeProduct(VMat m1, Vec v2) arguments have incompatible dimensions");
-  
+
     Vec result(m1.width(),1);
     result.clear();
-  
+
     Vec v1(m1.width());
     for(int i=0; i<m1.length(); i++)
     {
@@ -110,9 +110,9 @@ Mat productTranspose(VMat m1, VMat m2)
 
     int m1l = (m1.length());
     int m2l = (m2.length());
-    int w = (m1.width());  
+    int w = (m1.width());
     Mat result(m1l,m2l);
-  
+
     Vec v1(w);
     Vec v2(w);
 
@@ -132,10 +132,10 @@ Mat product(Mat m1, VMat m2)
 {
     if(m1.width()!=m2.length())
         PLERROR("in Mat product(VMat m1, VMat m2) arguments have incompatible dimensions");
-  
+
     Mat result(m1.length(),m2.width());
     result.clear();
-  
+
     Vec v2(m2.width());
     Mat v2rowmat = rowmatrix(v2);
 
@@ -153,7 +153,7 @@ VMat transpose(VMat m1)
 }
 
 real linearRegression(
-    VMat inputs, VMat outputs, real weight_decay, Mat theta_t, 
+    VMat inputs, VMat outputs, real weight_decay, Mat theta_t,
     bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY,
     real& sum_squared_Y, Vec& outputwise_sum_squared_Y,
     bool return_squared_loss, int verbose_every, bool cholesky,
@@ -181,7 +181,7 @@ real linearRegression(
         VMat Y = outputs;
         outputwise_sum_squared_Y.resize(targetsize);
         outputwise_sum_squared_Y.fill(0.0);
-      
+
         // *************
         // Do efficiently the following:
         // XtX << transposeProduct(X); // '<<' to copy elements (as transposeProduct returns a new matrix)
@@ -211,7 +211,7 @@ real linearRegression(
 
     // VMat(XtX)->savePMAT("plXtX.pmat");
     // VMat(XtY)->savePMAT("plXtY.pmat");
-  
+
     if (cholesky) {
         // now solve by Cholesky decomposition
         solveLinearSystemByCholesky(XtX,XtY,theta_t);
@@ -225,7 +225,7 @@ real linearRegression(
         // squared loss = sum_{ij} theta_{ij} (X'W X theta')_{ij} + sum_{t,i} Y_{ti}^2 - 2 sum_{ij} theta_{ij} (X'W Y)_{ij}
         Mat M(inputsize,targetsize);
         product(M,XtX,theta_t);
-        squared_loss += dot(M,theta_t); // 
+        squared_loss += dot(M,theta_t); //
         squared_loss += sum_squared_Y;
         squared_loss -= 2*dot(XtY,theta_t);
     }
@@ -250,7 +250,7 @@ Mat linearRegression(VMat inputs, VMat outputs, real weight_decay, bool include_
 
 
 real weightedLinearRegression(
-    VMat inputs, VMat outputs, VMat gammas, real weight_decay, Mat theta_t, 
+    VMat inputs, VMat outputs, VMat gammas, real weight_decay, Mat theta_t,
     bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY,
     real& sum_squared_Y, Vec& outputwise_sum_squared_Y,
     real& sum_gammas, bool return_squared_loss, int verbose_every,
@@ -281,7 +281,7 @@ real weightedLinearRegression(
         VMat Y = outputs;
         outputwise_sum_squared_Y.resize(targetsize);
         outputwise_sum_squared_Y.fill(0.0);
-    
+
         // Prepare to comnpute weighted XtX and XtY
         Vec x(X.width());
         Vec y(Y.width());
@@ -317,7 +317,7 @@ real weightedLinearRegression(
         // squared loss = sum_{ij} theta_{ij} (X'W X theta')_{ij} + sum_{t,i} gamma_t*Y_{ti}^2 - 2 sum_{ij} theta_{ij} (X'W Y)_{ij}
         Mat M(inputsize,targetsize);
         product(M,XtX,theta_t);
-        squared_loss += dot(M,theta_t); // 
+        squared_loss += dot(M,theta_t); //
         squared_loss += sum_squared_Y;
         squared_loss -= 2*dot(XtY,theta_t);
     }

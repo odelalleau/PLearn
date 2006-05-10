@@ -2,22 +2,22 @@
 
 // PLearn ("A C++ Machine Learning Library")
 // Copyright (C) 2002 Julien Keable and Pascal Vincent
-// 
+//
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,11 +28,11 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
- 
-/* *******************************************************      
+
+/* *******************************************************
  * $Id$
  * This file is part of the PLearn library.
  ******************************************************* */
@@ -72,7 +72,7 @@ JoinVMatrix::build_()
 
         temp.resize(slave.width());
         tempkey.resize(master_idx.size());
-  
+
         for(int i=0;i<slave.length();i++) {
             slave->getRow(i,temp);
             for(int j=0;j<slave_idx.size();j++)
@@ -99,7 +99,7 @@ void JoinVMatrix::addStatField(const string & statis,const string & namefrom,con
     if(from==-1)
         PLERROR("Unknown field in JOIN operation : %s",namefrom.c_str());
     declareField(to, nameto, VMField::UnknownType);
-  
+
     if(statis=="COUNT")
         fld.push_back(JoinFieldStat(from,to,JoinFieldStat::COUNT));
     else if(statis=="NMISSING")
@@ -129,24 +129,24 @@ void JoinVMatrix::getNewRow(int idx, const Vec& v) const
 {
     real nonmiss;
     master->getRow(idx,v.subVec(0,master.width()));
-  
+
     // build a key used to search in the slave matrix
     for(int j=0;j<master_idx.size();j++)
         tempkey[j]=v[master_idx[j]];
-    Maptype::const_iterator it,low,upp; 
+    Maptype::const_iterator it,low,upp;
     pair<Maptype::const_iterator,Maptype::const_iterator> tit=mp.equal_range(tempkey);
     low=tit.first;
     upp=tit.second;
-  
+
     Vec popo(v.subVec(master.width(),width()-master.width()));
 
     int sz=(int)fld.size();
     Vec count(sz,0.0),nmissing(sz,0.0),sum(sz,0.0),sumsquare(sz,0.0),min(sz,FLT_MAX),max(sz,-FLT_MAX);
-    real val;  
+    real val;
     if(low!=mp.end())
     {
         for(it=low;it!=upp;++it)
-        {  
+        {
             slave->getRow(it->second,temp);
             for(int i=0;i<sz;i++)
             {
@@ -187,7 +187,7 @@ void JoinVMatrix::getNewRow(int idx, const Vec& v) const
             popo[i]=sum[i]/count[i];
             break;
         case JoinFieldStat::VARIANCE:
-            popo[i]=(sumsquare[i] - sum[i]*sum[i]/nonmiss)/(nonmiss-1); 
+            popo[i]=(sumsquare[i] - sum[i]*sum[i]/nonmiss)/(nonmiss-1);
             break;
         case JoinFieldStat::STDDEV:
             popo[i]=sqrt((sumsquare[i] - sum[i]*sum[i]/nonmiss)/(nonmiss-1));
@@ -210,7 +210,7 @@ string JoinVMatrix::getValString(int col, real val) const
 {
     if(col<master.width())
         return master->getValString(col,val);
-    else 
+    else
         return slave->getValString(col,val);
 }
 
@@ -218,7 +218,7 @@ real JoinVMatrix::getStringVal(int col, const string & str) const
 {
     if(col<master.width())
         return master->getStringVal(col,str);
-    else 
+    else
         return slave->getStringVal(col,str);
 }
 
@@ -226,7 +226,7 @@ const map<string,real>& JoinVMatrix::getStringToRealMapping(int col) const
 {
     if(col<master.width())
         return master->getStringToRealMapping(col);
-    else 
+    else
         return slave->getStringToRealMapping(col);
 
 }
@@ -235,7 +235,7 @@ const map<real,string>& JoinVMatrix::getRealToStringMapping(int col) const
 {
     if(col<master.width())
         return master->getRealToStringMapping(col);
-    else 
+    else
         return slave->getRealToStringMapping(col);
 }
 
@@ -244,7 +244,7 @@ string JoinVMatrix::getString(int row,int col) const
 {
     if(col<master.width())
         return master->getString(row,col);
-    else 
+    else
         return slave->getString(row,col);
 }
 

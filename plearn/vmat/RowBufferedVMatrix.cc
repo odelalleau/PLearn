@@ -7,18 +7,18 @@
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -29,12 +29,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
 
-/* *******************************************************      
+/* *******************************************************
  * $Id$
  ******************************************************* */
 
@@ -56,9 +56,9 @@ RowBufferedVMatrix::RowBufferedVMatrix(int the_length, int the_width,
                                        bool call_build_):
     inherited           (the_length, the_width, call_build_),
     current_row_index   (-1),
-    current_row         (the_width), 
+    current_row         (the_width),
     other_row_index     (-1),
-    other_row           (the_width) 
+    other_row           (the_width)
 {
     // Never calling build_() since it is not overridden for this class.
 }
@@ -85,7 +85,7 @@ real RowBufferedVMatrix::get(int i, int j) const
         if (i < 0 || i >= length())
             PLERROR("In RowBufferedVMatrix::get: row index (%d) outside valid range [%d,%d]", i, 0, length_-1);
         if (j < 0 || j >= width())
-            PLERROR("In RowBufferedVMatrix::get: column index (%d) outside valid range [%d,%d]", j, 0, width_-1);        
+            PLERROR("In RowBufferedVMatrix::get: column index (%d) outside valid range [%d,%d]", j, 0, width_-1);
 #endif
         current_row.resize(width_);
         getNewRow(i, current_row);
@@ -118,7 +118,7 @@ void RowBufferedVMatrix::getSubRow(int i, int j, Vec v) const
         if (i < 0 || i >= length())
             PLERROR("In RowBufferedVMatrix::getSubRow: row index (%d) outside valid range [%d,%d]", i, 0, length_-1);
         if (j < 0 || j >= width())
-            PLERROR("In RowBufferedVMatrix::getSubRow: column index (%d) outside valid range [%d,%d]", i, 0, width_-1);        
+            PLERROR("In RowBufferedVMatrix::getSubRow: column index (%d) outside valid range [%d,%d]", i, 0, width_-1);
 #endif
         current_row.resize(width_);
         getNewRow(i,current_row);
@@ -183,7 +183,7 @@ real RowBufferedVMatrix::dot(int i1, int i2, int inputsize) const
     }
     return PLearn::dot(current_row.subVec(0,inputsize), other_row.subVec(0,inputsize));
 }
- 
+
 /////////
 // dot //
 /////////

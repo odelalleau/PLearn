@@ -2,22 +2,22 @@
 
 // VMat_operations.h
 //
-// Copyright (C) 2004 Pascal Vincent 
-// 
+// Copyright (C) 2004 Pascal Vincent
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,12 +28,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id$ 
+/* *******************************************************
+ * $Id$
  ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -53,12 +53,12 @@ using namespace std;
 
 class VMat;
 
-/*!   If exclude==false (the default) 
+/*!   If exclude==false (the default)
   returns a VMat containing only the rows
-  whose column col has a value that belongs 
+  whose column col has a value that belongs
   to the given set of authorized values
   If exclude==true
-  returns a VMat with all the other rows 
+  returns a VMat with all the other rows
   (corresponds to grep -v)
   [MISSING_VALUE is a possible value and is handled correctly]
 */
@@ -92,13 +92,13 @@ VMat shuffle(VMat d);
 //! done by shuffling and taking the first 2/3 of the rows, so the length() will be always the
 //! same).  Note that the default values are fine for "on-line"
 //! learning algorithms but does not correspond to the usual "bootstrap".
-//! 
+//!
 VMat bootstrap(VMat d, bool reorder=true, bool norepeat=true);
 
 /*!   Rebalance the input VMatrix so that each class has a probability 1/nclasses.
   Also, the return VMat class alternates between all classes cyclicly.
   The resulting VMat is a SelectRowsFileIndexVMatrix which has its IntVecFile
-  load if filename already exist, or computed if not. 
+  load if filename already exist, or computed if not.
 */
 VMat rebalanceNClasses(VMat inputs, int nclasses, const string& filename);
 

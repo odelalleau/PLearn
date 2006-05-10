@@ -7,18 +7,18 @@
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -29,12 +29,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
 
-/* *******************************************************      
+/* *******************************************************
  * $Id$
  ******************************************************* */
 
@@ -48,15 +48,15 @@
 
 namespace PLearn {
 using namespace std;
- 
+
 
 /*!   This class interleaves several VMats (with consecutive rows
   always coming from a different source VMat) thus possibly
   including more than once the rows of the small VMats.
   For example, if source1.length()==10 and source2.length()==30 then
   the resulting VM will have 60 rows, and 3 repetitions
-  of each row of source1, with rows taken as follows: 
-  source1.row(0), source2.row(0), source1.row(1), source2.row(1), ..., 
+  of each row of source1, with rows taken as follows:
+  source1.row(0), source2.row(0), source1.row(1), source2.row(1), ...,
   source1.row(9), source2.row(9), source1.row(0), cource2.row(10), ...
   Note that if source2.length() is not a multiple of source1.length()
   some records from source1 will be repeated once more than others.
@@ -105,7 +105,7 @@ public:
     }
 private:
     void build_();
-    
+
 };
 
 DECLARE_OBJECT_PTR(InterleaveVMatrix);

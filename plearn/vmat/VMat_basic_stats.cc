@@ -2,23 +2,23 @@
 
 // VMat_basic_stats.cc
 //
-// Copyright (C) 2004 Pascal Vincent 
+// Copyright (C) 2004 Pascal Vincent
 // Copyright (C) 2005 University of Montreal
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -29,12 +29,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id$ 
+/* *******************************************************
+ * $Id$
  ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -153,7 +153,7 @@ Mat computeBasicStats(const VMat& m)
                 if(val>max_row[j])
                     max_row[j] = val;
 
-                if(fast_exact_is_equal(val, 0.)) 
+                if(fast_exact_is_equal(val, 0.))
                     nzero_row[j]++;
                 else if(val>0.)
                 {
@@ -168,9 +168,9 @@ Mat computeBasicStats(const VMat& m)
                     nnegative_row[j]++;
                     mean_row[j] += val;
                     stddev_row[j] += val*val;
-                }        
+                }
             }
-        }     
+        }
     }
     for(int j=0; j<stats.width(); j++)
     {
@@ -190,7 +190,7 @@ Mat computeBasicStats(const VMat& m)
 // variance = (sumsquare-square(sum)/n)/(n-1)
 // stddev_of_mean = sqrt(variance/n);
 // mse = sumsquare/n - square(sum/n)
-// stddev_of_mse = variance*sqrt(2./n); 
+// stddev_of_mse = variance*sqrt(2./n);
 TVec<Mat> computeConditionalMeans(const VMat& trainset, int targetsize, Mat& basic_stats)
 {
     if(!basic_stats)
@@ -219,7 +219,7 @@ TVec<Mat> computeConditionalMeans(const VMat& trainset, int targetsize, Mat& bas
         for(int j=0; j<inputsize; j++)
         {
             Mat& m = a[j];
-            if(m.isNotEmpty()) 
+            if(m.isNotEmpty())
             {
                 int k = int(input[j]-basic_stats(MIN_ROW,j));
                 Vec m_k = m(k);
@@ -399,19 +399,19 @@ void computeMeanAndCovar(const VMat& d, Vec& meanvec, Mat& covarmat)
        covarmat.resize(w,w);
 
        MemoryVMatrix* memvm = dynamic_cast<MemoryVMatrix*>((VMatrix*)m);
-       if(memvm)    
+       if(memvm)
        computeMeanAndCovar(m->toMat(), meanvec, covarmat);
        else
        {
        meanvec.clear();
        covarmat.clear();
-       Vec v(w);  
+       Vec v(w);
 
        ProgressBar progbar("Computing covariance",l);
 
        if(USING_MPI && PLMPI::synchronized && PLMPI::size>1)
-       { //!<  Parallel implementation 
-       #if USING_MPI 
+       { //!<  Parallel implementation
+       #if USING_MPI
        PLMPI::synchronized = false;
 
        if(!covarmat.isCompact())
@@ -427,15 +427,15 @@ void computeMeanAndCovar(const VMat& d, Vec& meanvec, Mat& covarmat)
        meanvec_b += v;
        externalProductAcc(covarmat_b, v, v);
        progbar(i);
-       } 
+       }
 
-       MPI_Reduce(meanvec_b.data(), meanvec.data(), meanvec.length(), PLMPI_REAL, MPI_SUM, 0, MPI_COMM_WORLD); 
+       MPI_Reduce(meanvec_b.data(), meanvec.data(), meanvec.length(), PLMPI_REAL, MPI_SUM, 0, MPI_COMM_WORLD);
        MPI_Bcast(meanvec.data(), meanvec.length(), PLMPI_REAL, 0, MPI_COMM_WORLD);
-       MPI_Reduce(covarmat_b.data(), covarmat.data(), covarmat.size(), PLMPI_REAL, MPI_SUM, 0, MPI_COMM_WORLD); 
+       MPI_Reduce(covarmat_b.data(), covarmat.data(), covarmat.size(), PLMPI_REAL, MPI_SUM, 0, MPI_COMM_WORLD);
        MPI_Bcast(covarmat.data(), covarmat.size(), PLMPI_REAL, 0, MPI_COMM_WORLD);
 
        PLMPI::synchronized = true;
-       #endif 
+       #endif
        }
        else //!<  default sequential implementation
        {
@@ -443,7 +443,7 @@ void computeMeanAndCovar(const VMat& d, Vec& meanvec, Mat& covarmat)
        {
        m->getRow(i,v);
        meanvec += v;
-       externalProductAcc(covarmat, v, v);      
+       externalProductAcc(covarmat, v, v);
        progbar(i);
        }
        }
@@ -498,42 +498,42 @@ void autocorrelation_function(const VMat& data, Mat& acf)
     acf.resize(T-2, N);
 
     for(int delta=0; delta < T-2; delta++)
-    {    
+    {
         Vec sumT(N);
-        Vec sumD(N);   
+        Vec sumD(N);
         TVec<Vec> products(N);
-    
+
         // t = delta
         for(int k=0; k < N; k++)
         {
             real ts = data(delta, k);
             real ds = data(0, k);
-      
+
             sumT[k] = ts;
             sumD[k] = ds;
-            
+
             products[k].resize(3);
             products[k][0] = ts*ts;
             products[k][1] = ds*ds;
             products[k][2] = ts*ds;
         }
- 
+
         for(int t=delta+1; t < T; t++)
         {
             for(int k=0; k < N; k++)
             {
                 real ts = data(t, k);
                 real ds = data(t-delta, k);
-        
+
                 sumT[k] += ts;
                 sumD[k] += ds;
-        
+
                 products[k][0] += ts*ts;
                 products[k][1] += ds*ds;
                 products[k][2] += ts*ds;
             }
         }
-    
+
         // Actual computation of the correlation
         for(int k=0; k < N; k++)
         {
@@ -543,7 +543,7 @@ void autocorrelation_function(const VMat& data, Mat& acf)
             acf(delta, k) = (products[k][2] - sumT[k]*sumD[k]/count) / sqrt(multiplied_var_t * multiplied_var_d);
         }
     }
-} 
+}
 
 
 ///////////////
@@ -560,7 +560,7 @@ VMat normalize(const VMat& d, const Vec& meanvec, const Vec& stddevvec)
     Vec scalevec(d.width(), 1.0);
     scalevec.subVec(0,inputsize) << stddevvec;
     invertElements(scalevec);
-  
+
     return new ShiftAndRescaleVMatrix(d, shiftvec, scalevec);
 }
 
@@ -578,7 +578,7 @@ VMat normalize(const VMat& d, int inputsize, int ntrain)
 ///////////////
 // normalize //
 ///////////////
-VMat normalize(VMat d, int inputsize) 
+VMat normalize(VMat d, int inputsize)
 {
     return normalize(d, inputsize, d.length());
 }
@@ -668,7 +668,7 @@ void correlations(const VMat& x, const VMat& y, Mat& r, Mat& pvalues, bool ignor
             }
             if (nv>0) // don't bother if variance is 0
                 if (ignore_missing)
-                    r(i,j) = (n_nonmissing(i,j)*sxy(i,j)-sx_m(i,j)*sy_m(i,j)) / 
+                    r(i,j) = (n_nonmissing(i,j)*sxy(i,j)-sx_m(i,j)*sy_m(i,j)) /
                         sqrt( (n_nonmissing(i,j)*sx2_m(i,j)-sx_m(i,j)*sx_m(i,j)) *
                               (n_nonmissing(i,j)*sy2_m(i,j)-sy_m(i,j)*sy_m(i,j)));
                 else

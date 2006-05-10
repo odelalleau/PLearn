@@ -2,22 +2,22 @@
 
 // SourceVMatrix.h
 //
-// Copyright (C) 2003 Pascal Vincent 
-// 
+// Copyright (C) 2003 Pascal Vincent
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,12 +28,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id$ 
+/* *******************************************************
+ * $Id$
  ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -41,7 +41,7 @@
 /*! \file SourceVMatrix.h */
 
 /*
-  SourceVmatrix is a base class for vmatrices that are defined as a function of 
+  SourceVmatrix is a base class for vmatrices that are defined as a function of
   another vmatrix (the "source").
 
   It has a source buildoption to specify said source.
@@ -104,12 +104,12 @@ public:
     // * Object methods *
     // ******************
 
-private: 
-    //! This does the actual building. 
+private:
+    //! This does the actual building.
     // (Please implement in .cc)
     void build_();
 
-protected: 
+protected:
     //! Declares this class' options
     // (Please implement in .cc)
     static void declareOptions(OptionList& ol);
@@ -131,7 +131,7 @@ public:
       the source will be set also for this vmatrix. */
     virtual void setMetaDataDir(const PPath& the_metadatadir);
 
-    // simply calls inherited::build() then build_() 
+    // simply calls inherited::build() then build_()
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
@@ -139,7 +139,7 @@ public:
 
     //! Declares name and deepCopy methods
     PLEARN_DECLARE_OBJECT(SourceVMatrix);
-  
+
     //! Return the Dictionary object for a certain field, or a null pointer
     //! if there isn't one
     virtual PP<Dictionary> getDictionary(int col) const;
@@ -147,7 +147,7 @@ public:
     //! Returns the possible values for a certain field in the VMatrix
     virtual Vec getValues(int row, int col) const;
 
-    //! Returns the possible values of a certain field (column) given the input 
+    //! Returns the possible values of a certain field (column) given the input
     virtual Vec getValues(const Vec& input, int col) const;
 
 };

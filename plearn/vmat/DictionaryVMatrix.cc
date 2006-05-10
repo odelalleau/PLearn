@@ -3,21 +3,21 @@
 // DictionaryVMatrix.cc
 //
 // Copyright (C) 2004 Hugo Larochelle
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,12 +28,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id$ 
+/* *******************************************************
+ * $Id$
  ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -86,7 +86,7 @@ void DictionaryVMatrix::getNewRow(int i, const Vec& v) const
 {
     v << data(i);
 }
-//! returns value associated with a string (or MISSING_VALUE if there's no association for this string)                                         
+//! returns value associated with a string (or MISSING_VALUE if there's no association for this string)
 real DictionaryVMatrix::getStringVal(int col, const string & str) const
 {
     int ret = dictionaries[col]->getId(str);
@@ -155,8 +155,8 @@ void DictionaryVMatrix::declareOptions(OptionList& ol)
                   "of the VMatrix.\n");
     declareOption(ol, "data", &DictionaryVMatrix::data, OptionBase::learntoption,
                   "Matrix containing the concatenated and encoded text files\n");
-  
-  
+
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -167,21 +167,21 @@ void DictionaryVMatrix::build_()
     vector<string> tokens;
     TVec<string> tokens_vec;
     TVec< hash_map<string,int> > frequencies;
-    int it=0; 
+    int it=0;
     int nlines = 0;
     bool row_has_oov = false;
-   
-    if (!python && code != "") 
+
+    if (!python && code != "")
     {
         python = new PythonCodeSnippet(code);
         assert( python );
         python->build();
     }
-    
+
     if(data.length()!=0) data.clear();
-    
+
     length_ = 0;
-    
+
     // Prepocessing of the data...
     for(int k=0; k<file_names.length(); k++)
     {
@@ -200,14 +200,14 @@ void DictionaryVMatrix::build_()
                 tokens_vec = python->invoke("process_string_row",tokens_vec).as<TVec<string> >();
                 tokens.resize(tokens_vec.length());
                 for(int i=0; i<tokens_vec.length(); i++)
-                    tokens[i] = tokens_vec[i];                
+                    tokens[i] = tokens_vec[i];
             }
 
             if(symbols_to_ignore.length() != 0)
                 for(int i=0; i<tokens.size(); i++)
                     if(symbols_to_ignore[i].find(tokens[i]) >= 0)
                         tokens[i] = OOV_TAG;
-            
+
             row_has_oov = false;
             for(int i=0; i<tokens.size(); i++)
                 if(tokens[i] == OOV_TAG)
@@ -237,14 +237,14 @@ void DictionaryVMatrix::build_()
                         dictionaries[i]->update_mode = UPDATE;
                         dictionaries[i]->build();
                     }
-                    
+
                 }
                 if(dictionaries.length() != n_attributes)
                     PLERROR("In DictionaryVMatrix::build_(): number of attributes (%d) and number of dictionaries (%d) is different", n_attributes, dictionaries.length());
                 if(option_fields.length()==0) option_fields.resize(n_attributes);
                 frequencies.resize(n_attributes);
             }
-            
+
             // Count frequencies...
             for(int j=0; j<n_attributes; j++)
             {
@@ -256,7 +256,7 @@ void DictionaryVMatrix::build_()
                         frequencies[j][tokens[j]]++;
                 }
             }
-            
+
             if(!remove_rows_with_oov || !row_has_oov) length_++;
         }
     }
@@ -282,22 +282,22 @@ void DictionaryVMatrix::build_()
                 tokens_vec = python->invoke("process_string_row",tokens_vec).as<TVec<string> >();
                 tokens.resize(tokens_vec.length());
                 for(int i=0; i<tokens_vec.length(); i++)
-                    tokens[i] = tokens_vec[i];                
+                    tokens[i] = tokens_vec[i];
             }
 
             if(symbols_to_ignore.length() != 0)
                 for(int i=0; i<tokens.size(); i++)
                     if(symbols_to_ignore[i].find(tokens[i]) >= 0)
                         tokens[i] = OOV_TAG;
-   
+
             /*
             for(int i=0; i<to_lower_case.size(); i++)
                 tokens[to_lower_case[i]] = lowerstring(tokens[to_lower_case[i]]);
             */
-            
+
             if((int)tokens.size() != n_attributes)
                 PLERROR("In DictionaryVMatrix::build_(): line %d (\"%s\") of file %s doesn't have %d attributes", it-nlines+1, line.c_str(), input_file.c_str(), n_attributes);
-                
+
             // Insert symbols in dictionaries (if they can be updated)
             for(int j=0; j<n_attributes; j++)
             {
@@ -322,7 +322,7 @@ void DictionaryVMatrix::build_()
                     row_has_oov = true;
 
             if(!remove_rows_with_oov || !row_has_oov) it++;
-        }       
+        }
     }
     width_ = n_attributes;
     data.resize(it,n_attributes);
@@ -345,7 +345,7 @@ void DictionaryVMatrix::build()
 void DictionaryVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
- 
+
     deepCopyField(data, copies);
     deepCopyField(file_names, copies);
     deepCopyField(dictionaries, copies);

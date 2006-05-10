@@ -2,22 +2,22 @@
 
 // RandomNeighborsDifferencesVMatrix.cc
 //
-// Copyright (C) 2004 Martin Monperrus 
-// 
+// Copyright (C) 2004 Martin Monperrus
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,12 +28,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id$ 
+/* *******************************************************
+ * $Id$
  ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -56,8 +56,8 @@ RandomNeighborsDifferencesVMatrix::RandomNeighborsDifferencesVMatrix()
 {
 }
 
-PLEARN_IMPLEMENT_OBJECT(RandomNeighborsDifferencesVMatrix, 
-                        "Computes the difference between each input row and n_neighbors random points in the source data set.", 
+PLEARN_IMPLEMENT_OBJECT(RandomNeighborsDifferencesVMatrix,
+                        "Computes the difference between each input row and n_neighbors random points in the source data set.",
                         "For each row x of the source VMatrix, the resulting row will be the\n"
                         "concatenation of n_neighbors vectors, each of which is the difference\n"
                         "between one of the random neighbors of x in the source and x itself.\n"
@@ -67,7 +67,7 @@ void RandomNeighborsDifferencesVMatrix::getNewRow(int i, const Vec& v) const
 {
     if (width_<0)
         PLERROR("RandomNeighborsDifferencesVMatrix::getNewRow called but build was not done yet");
-    
+
     // vue en matrice du vecteur de sortie, ca pointe sur les memes donnees.
     Mat differences = v.toMat(n_neighbors,source->width());
     neighbor_row.resize(source->width());
@@ -86,7 +86,7 @@ void RandomNeighborsDifferencesVMatrix::getNewRow(int i, const Vec& v) const
         // now it's done in ProjectionErrorVariable diff_k /= norm(diff_k);
         if(append_random_neighbors_indexes)
             v[n_neighbors*source->width()+(append_current_point_indexe?1:0)+k] = rand_index;
-    } 
+    }
 }
 
 void RandomNeighborsDifferencesVMatrix::declareOptions(OptionList& ol)

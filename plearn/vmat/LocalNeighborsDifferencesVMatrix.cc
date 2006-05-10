@@ -2,22 +2,22 @@
 
 // LocalNeighborsDifferencesVMatrix.cc
 //
-// Copyright (C) 2004 Martin Monperrus 
-// 
+// Copyright (C) 2004 Martin Monperrus
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,12 +28,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id$ 
+/* *******************************************************
+ * $Id$
  ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -55,8 +55,8 @@ LocalNeighborsDifferencesVMatrix::LocalNeighborsDifferencesVMatrix()
 {
 }
 
-PLEARN_IMPLEMENT_OBJECT(LocalNeighborsDifferencesVMatrix, 
-                        "Computes the difference between each input row and its nearest neighbors.", 
+PLEARN_IMPLEMENT_OBJECT(LocalNeighborsDifferencesVMatrix,
+                        "Computes the difference between each input row and its nearest neighbors.",
                         "For each row x of the source VMatrix, the resulting row will be the\n"
                         "concatenation of n_neighbors vectors, each of which is the difference\n"
                         "between one of the nearest neighbors of x in the source and x itself.\n"
@@ -76,14 +76,14 @@ void LocalNeighborsDifferencesVMatrix::getNewRow(int i, const Vec& v) const
         // recuperation de ce qu'il faut
         source->getRow(i,ith_row);
         source->getRow(neighbors(i,n_neighbors-1),neighbor_row);
-        
+
         // on renvoie la valeur
         substract(neighbor_row,ith_row, diff_k);
 
         if(append_indexes)
         {
             v[source->width()] = i;
-            v[source->width()+1] = neighbors(i,n_neighbors-1); 
+            v[source->width()+1] = neighbors(i,n_neighbors-1);
         }
         if(append_neighbors)
         {
@@ -105,19 +105,19 @@ void LocalNeighborsDifferencesVMatrix::getNewRow(int i, const Vec& v) const
             substract(neighbor_row,ith_row, diff_k);
             // normalize result
             // now it's done in ProjectionErrorVariable diff_k /= norm(diff_k);
-            
+
             if(append_neighbors)
             {
                 v.subVec(n_neighbors*source->width()+(append_indexes?n_neighbors+1:0)+k*source->width(),source->width()) << neighbor_row;
             }
-            
+
         }
-        
+
         if(append_indexes)
         {
             v[n_neighbors*source->width()] = i;
             for(int k=0; k<n_neighbors; k++)
-                v[n_neighbors*source->width()+k+1] = neighbors(i,k); 
+                v[n_neighbors*source->width()+k+1] = neighbors(i,k);
         }
     }
 
@@ -132,10 +132,10 @@ void LocalNeighborsDifferencesVMatrix::declareOptions(OptionList& ol)
                   "If false, returns the concatenation of nearest neighbors(x) -x  from 1 to n_neighbors , else, returns the n_neighbor nearest neighbor(x) - x\n"
                   "(I know, it doesn't make sense. This should be corrected...)");
     declareOption(ol, "append_indexes", &LocalNeighborsDifferencesVMatrix::append_indexes, OptionBase::buildoption,
-                  "Indication that the indexes of the current data point and of the k nearest neighbors\n" 
+                  "Indication that the indexes of the current data point and of the k nearest neighbors\n"
                   "should be appended to the row of the VMatrix.\n");
     declareOption(ol, "append_neighbors", &LocalNeighborsDifferencesVMatrix::append_indexes, OptionBase::buildoption,
-                  "Indication that the neighbor vectors of the k nearest neighbors\n" 
+                  "Indication that the neighbor vectors of the k nearest neighbors\n"
                   "should be appended to the row of the VMatrix.\n");
 
     // Now call the parent class' declareOptions
@@ -150,7 +150,7 @@ void LocalNeighborsDifferencesVMatrix::build_()
     {
         if (concat_neighbors)
         {
-            width_ = source->width();      
+            width_ = source->width();
             if(append_indexes) width_ += 2;
             if(append_neighbors) width_ += source->width();
         }

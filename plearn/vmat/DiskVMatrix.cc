@@ -7,18 +7,18 @@
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -29,12 +29,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
 
-/* *******************************************************      
+/* *******************************************************
  * $Id$
  ******************************************************* */
 
@@ -56,8 +56,8 @@ using namespace std;
 /** DiskVMatrix **/
 /* Format description
 
-The directory in variable dirname, which should end in .dmat, 
-contains a file named 'indexfile' and data files of up to roughly 
+The directory in variable dirname, which should end in .dmat,
+contains a file named 'indexfile' and data files of up to roughly
 500Meg each named 0.data, 1.data, ...
 
 The indexfile has a 4 byte header, of which currently only the first byte is checked.
@@ -68,20 +68,20 @@ An ascii code of 16 means old little-endian format
 In the new formats, the last 3 bytes of the 4 byte header are ' '
 
 All other raw-binary data (whether in the indexfile or the data files)
-is written in the specified endianness (and swapping will be performed if 
+is written in the specified endianness (and swapping will be performed if
 reading it on a machine with a different endianness).
 
 Following the 4-byte header are two 4-byte ints: length and width of the matrix
 
 Following are 5 bytes for each row of the matrix.
-The first of those 5 bytes is an unsigned byte indicating the number (0-255) of 
+The first of those 5 bytes is an unsigned byte indicating the number (0-255) of
 the data file in which to find the row.
 The remaining 4 bytes are an unsigned int indicating the start position of the row in
 that data file (as passed to fseek).
 
-The row is encoded in the thus indicated data file at the indicated position, 
-using the new vector compression format (see new_read_compressed) 
-[ the old compression format pf binread_compressed is supported 
+The row is encoded in the thus indicated data file at the indicated position,
+using the new vector compression format (see new_read_compressed)
+[ the old compression format pf binread_compressed is supported
 for backward compatibility only. ]
 
 */
@@ -119,7 +119,7 @@ DiskVMatrix::DiskVMatrix(const PPath& the_dirname, bool readwrite):
 DiskVMatrix::DiskVMatrix(const PPath& the_dirname, int the_width,
                          bool write_double_as_float):
     inherited   (0, the_width, true),
-    indexf      (0), 
+    indexf      (0),
     freshnewfile(true),
     old_format  (false),
     swap_endians(false),
@@ -144,7 +144,7 @@ void DiskVMatrix::build_()
     {
         if(!isdir(dirname))
             PLERROR("In DiskVMatrix constructor, directory %s could not be found",dirname.c_str());
-        setMetaDataDir(dirname + ".metadata"); 
+        setMetaDataDir(dirname + ".metadata");
         setMtime( mtime( dirname/"indexfile" ) );
         string omode;
         if(writable)
@@ -156,7 +156,7 @@ void DiskVMatrix::build_()
         indexf = fopen(indexfname.c_str(), omode.c_str());
         if(!indexf)
             PLERROR("In DiskVMatrix constructor, could not open file %s in specified mode", indexfname.c_str());
-  
+
         unsigned char header[4];
         fread(header,1,4,indexf);
         if(header[0]=='L' || header[0]=='B')
@@ -164,7 +164,7 @@ void DiskVMatrix::build_()
             old_format = false;
             swap_endians = (header[0]!=byte_order());
         }
-        else if(header[0]==16)  
+        else if(header[0]==16)
         { // Old format
             old_format = true;
             if(byte_order()!='L')
@@ -172,7 +172,7 @@ void DiskVMatrix::build_()
                         "Convert it to a new format on a little-endian machine prior to attempt\n"
                         "using it from a big endian machine.\n");
             swap_endians = false;
-        } 
+        }
         else
         {
             PLERROR("Wrong header byte in index file %s: ascii code %d\n"
@@ -219,7 +219,7 @@ void DiskVMatrix::build_()
 
         if(isfile(dirname)) // patch for running mkstemp (TmpFilenames)
             unlink(dirname.c_str());
-        if(!force_mkdir(dirname)) // force directory creation 
+        if(!force_mkdir(dirname)) // force directory creation
             PLERROR("In DiskVMatrix constructor (with specified width), could not create directory %s  Error was: %s",dirname.c_str(), strerror(errno));
 
         string indexfname = dirname/"indexfile";
@@ -233,7 +233,7 @@ void DiskVMatrix::build_()
         fwrite(header,1,4,indexf);
         fwrite((char*)&length_,sizeof(int),1,indexf);
         fwrite((char*)&width_,sizeof(int),1,indexf);
-  
+
         string fname = dirname/"0.data";
         FILE* f = fopen(fname.c_str(), "w+b");
         dataf.append(f);
@@ -270,7 +270,7 @@ void DiskVMatrix::closeCurrentFiles()
 // getNewRow //
 ///////////////
 void DiskVMatrix::getNewRow(int i, const Vec& v) const
-{ 
+{
 #ifdef BOUNDCHECK
     if(i<0 || i>length())
         PLERROR("In DiskVMatrix::getNewRow, bad row number %d",i);
@@ -291,11 +291,11 @@ void DiskVMatrix::getNewRow(int i, const Vec& v) const
     if(old_format)
         binread_compressed(f,v.data(),v.length());
     else
-        new_read_compressed(f, v.data(), v.length(), swap_endians);      
+        new_read_compressed(f, v.data(), v.length(), swap_endians);
 }
 
 void DiskVMatrix::putRow(int i, Vec v)
-{ 
+{
     PLERROR("putRow cannot in general be correctly and efficiently implemented for a DiskVMatrix.\n"
             "Use appendRow if you wish to write more rows.");
 }

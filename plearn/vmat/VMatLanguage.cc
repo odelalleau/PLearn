@@ -6,18 +6,18 @@
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,14 +28,14 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
 
- 
 
-/* *******************************************************      
+
+/* *******************************************************
  * $Id$
  * This file is part of the PLearn library.
  ******************************************************* */
@@ -50,12 +50,12 @@
 
 namespace PLearn {
 using namespace std;
-  
+
 bool VMatLanguage::output_preproc=false;
 
 
-PLEARN_IMPLEMENT_OBJECT(VMatLanguage, 
-                        "This class implements the VPL mini-language.", 
+PLEARN_IMPLEMENT_OBJECT(VMatLanguage,
+                        "This class implements the VPL mini-language.",
                         "VPL (VMat Processing Language) is a home brewed mini-language in postfix\n"
                         "notation. As of today, it is used is the {PRE,POST}FILTERING and\n"
                         "PROCESSING sections of a .vmat file. It supports INCLUDEs instructions\n"
@@ -193,11 +193,11 @@ VMatLanguage::VMatLanguage(VMat vmsrc)
 time_t getDateOfCode(const string& codefile)
 {
     time_t latest = mtime(codefile);
-    string token;  
+    string token;
     ifstream in(codefile.c_str());
     if(in.bad())
         PLERROR("Cannot open file : %s",codefile.c_str());
-  
+
     in >> token;
     while(!in.eof())
     {
@@ -233,13 +233,13 @@ VMatLanguage::declareOptions(OptionList &ol)
 {
     declareOption(ol, "sourcecode", &VMatLanguage::sourcecode, OptionBase::buildoption,
                   "The VPL sourcecode of the program.");
-    declareOption(ol, "srcfieldnames", &VMatLanguage::srcfieldnames, OptionBase::buildoption, 
+    declareOption(ol, "srcfieldnames", &VMatLanguage::srcfieldnames, OptionBase::buildoption,
                   "The fieldnames that were set by setSourceFieldNames");
-    declareOption(ol, "outputfieldnames", &VMatLanguage::outputfieldnames, OptionBase::learntoption, 
+    declareOption(ol, "outputfieldnames", &VMatLanguage::outputfieldnames, OptionBase::learntoption,
                   "The output fieldnames produced by the program");
-    declareOption(ol, "vmsource", &VMatLanguage::vmsource, OptionBase::learntoption, 
+    declareOption(ol, "vmsource", &VMatLanguage::vmsource, OptionBase::learntoption,
                   "The VMat that was set by setSource");
-    declareOption(ol, "srcfieldnames", &VMatLanguage::srcfieldnames, OptionBase::learntoption, 
+    declareOption(ol, "srcfieldnames", &VMatLanguage::srcfieldnames, OptionBase::learntoption,
                   "The fieldnames that were set by setSourceFieldNames");
     declareOption(ol, "program", &VMatLanguage::program, OptionBase::learntoption,
                   "The opcodes of the compiled program");
@@ -249,8 +249,8 @@ VMatLanguage::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-void VMatLanguage::setSource(VMat the_source) 
-{ 
+void VMatLanguage::setSource(VMat the_source)
+{
     vmsource = the_source;
     // Set field names from the source VMat if it has field names, otherwise
     // set each field name to "".
@@ -260,7 +260,7 @@ void VMatLanguage::setSource(VMat the_source)
     setSourceFieldNames(fnames);
     program.resize(0);
 }
-  
+
 void VMatLanguage::setSourceFieldNames(TVec<string> the_srcfieldnames)
 { srcfieldnames = the_srcfieldnames; }
 
@@ -315,14 +315,14 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
                 int b=0;
                 // let the chance for the second interval boundary to be a "DEFINE"
                 // this is used with onehot and @myfield.ranges10.nbins
-                // ie: @myfield.onehot10 :myfieldonehot:0:@myfield.ranges10.nbins 
+                // ie: @myfield.onehot10 :myfieldonehot:0:@myfield.ranges10.nbins
                 if(pl_isnumber(parts[2]))
                     b=toint(parts[2]);
-                else 
+                else
                 {
                     if(defines.find(parts[2])!=defines.end())
                         b=toint(defines[parts[2]]);
-                    else 
+                    else
                         PLERROR("found a undefined non-numeric boundary in multifield declaration : '%s'",parts[2].c_str());
                 }
 
@@ -357,7 +357,7 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
                     performed_code = parts[2];
 
                 int a=-1,b=-1;
-                
+
                 if(parts[0][0]=='@')
                 {
                     for(int i=0;i<srcfieldnames.length();i++)
@@ -369,7 +369,7 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
                     // Keyword indicating we go till the end.
                     a = srcfieldnames.length() - 1;
                 else PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
-                
+
                 if(parts[1][0]=='@')
                 {
                     for(int i=0;i<srcfieldnames.length();i++)
@@ -381,7 +381,7 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
                     // Keyword indicating we go till the end.
                     b = srcfieldnames.length() - 1;
                 else PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
-                
+
                 if(a>b)
                     PLERROR("In copyfield macro, you have specified a start field that is after the end field. Eg : [%10:%5]");
                 if(a==-1)
@@ -430,9 +430,9 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
 
         // include declaration
         else if(token=="INCLUDE")
-        { 
+        {
             in >> token;
-            // Try to be intelligent and find out if the file belongs directly to another .?mat (the case of a 
+            // Try to be intelligent and find out if the file belongs directly to another .?mat (the case of a
             // stats file for example) and warn if the file is out of date
 
             // Mhhh.. is this still pertinent? This "stats" and "bins" thing is semi-standard I think
@@ -445,12 +445,12 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
                 if(getDataSetDate(file) > mtime(token))
                     PLWARNING("File %s seems out of date with parent matrix %s",token.c_str(),file.c_str());
             }
-            
+
             PStream incfile = openFile(token, PStream::raw_ascii, "r");
             // process recursively this included file
             // **POSSIBLE DRAWBACK : defines done in this file will be used in the next recursion level
             preprocess(incfile,defines, processed_sourcecode,fieldnames);
-	    
+	
         }
         // define declaration
         else if(token=="DEFINE")
@@ -481,14 +481,14 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
         // In VPL, you can push on the stack the value of a string according to the string map of a particular column
         // e.g. : to push value of string "WBush" from field MostSuspectAmericanPresidents, write @MostSuspectsAmericanPresidents."WBush"
         else if ((token[0]=='@' || token[0]=='%') && token[token.length()-1]=='"' && (spos=token.find(".\""))!=string::npos)
-          
+
         {
             string colname=token.substr(1,spos-1);
             string str=token.substr(spos+2,token.length()-spos-3);
             // do we have a named field reference?
             if(token[0]=='@')
             {
-                pos=defines.find(string("@")+colname);                
+                pos=defines.find(string("@")+colname);
                 if(pos==defines.end())
                     PLERROR("unknown field : %s",colname.c_str());
                 colname=pos->second.substr(1);
@@ -519,7 +519,7 @@ void VMatLanguage::generateCode(PStream& processed_sourcecode)
             program.append(opcodes["__applymapping"]);
             program.append(mapnum);
         }
-        else 
+        else
         {
             processed_sourcecode>>token;
             if( pl_isnumber(token))
@@ -595,13 +595,13 @@ void VMatLanguage::compileStream(PStream & in, vector<string>& fieldnames)
 
     program.resize(0);
     mappings.resize(0);
-    
+
     // first, warn user if a fieldname appears twice or more in the source matrix
     string fname;
     for(int i=0;i<srcfieldnames.length();i++)
     {
         fname = srcfieldnames[i];
-        if (!fname.empty()) 
+        if (!fname.empty())
         {
             fname = string("@") + fname;
             if(defines.find(fname) != defines.end())
@@ -622,7 +622,7 @@ void VMatLanguage::compileStream(PStream & in, vector<string>& fieldnames)
         perr<<"Preprocessed code:"<<endl<<processed_sourcecode<<endl;
         perr<<"FieldNames : "<<endl<<fieldnames<<endl;
     }
-    generateCode(processed_sourcecode);    
+    generateCode(processed_sourcecode);
 }
 
 //! builds the map if it does not already exist
@@ -630,8 +630,8 @@ void VMatLanguage::build_opcodes_map()
 {
     if(opcodes.empty())
     {
-        opcodes["__insertconstant"] = 0; // followed by a floating point number (4 bytes, just like int) 
-        opcodes["__getfieldval"] = 1; // followed by field# 
+        opcodes["__insertconstant"] = 0; // followed by a floating point number (4 bytes, just like int)
+        opcodes["__getfieldval"] = 1; // followed by field#
         opcodes["__applymapping"] = 2; // followed by mapping#
         opcodes["pop"] = 3;
         opcodes["dup"] = 4;
@@ -658,27 +658,27 @@ void VMatLanguage::build_opcodes_map()
         opcodes["log"] = 25;
         opcodes["exp"] = 26;
         opcodes["rowindex"] = 27; // pushes the rownum on the stack
-        opcodes["isnan"] = 28; 
+        opcodes["isnan"] = 28;
         opcodes["year"] = 29; // from format CYYMMDD -> YYYY
         opcodes["month"] = 30; // CYYMMDD -> MM
         opcodes["day"] = 31;  // CYYMMDD -> DD
-        opcodes["daydiff"] = 32; // nb. days 
+        opcodes["daydiff"] = 32; // nb. days
         opcodes["monthdiff"] = 33; // continuous: nb. days / (365.25/12)
         opcodes["yeardiff"] = 34; // continuous: nb. days / 365.25
-        opcodes["year_month_day"] = 35; // CYYMMDD -> YYYY MM DD 
-        opcodes["todate"] = 36; // YYYY MM DD -> CYYMMDD  
+        opcodes["year_month_day"] = 35; // CYYMMDD -> YYYY MM DD
+        opcodes["todate"] = 36; // YYYY MM DD -> CYYMMDD
         opcodes["dayofweek"] = 37; // from CYYMMDD -> [0..6] (0=monday; 6=sunday)
         opcodes["today"] = 38; // today's date CYYMMDD
         opcodes["date2julian"] = 39; // CYYMMDD -> nb. days
-        opcodes["julian2date"] = 40; // nb. days -> CYYMMDD  
+        opcodes["julian2date"] = 40; // nb. days -> CYYMMDD
         opcodes["min"] = 41; // a b -> (a<b? a : b)
         opcodes["max"] = 42; // a b -> (a<b? b : a)
-        opcodes["sqrt"] = 43; 
-        opcodes["^"] = 44; 
+        opcodes["sqrt"] = 43;
+        opcodes["^"] = 44;
         opcodes["mod"] = 45;
         opcodes["vecscalmul"] = 46; // x1 ... xn n alpha --> (x1*alpha) ... (xn*alpha)
         opcodes["__getfieldsrange"] = 47; // %N:%M pushes field %N up to %M. M must be >= N.
-        opcodes["select"] = 48; // v0 v1 v2 v3 ... vn-1 n i --> vi  
+        opcodes["select"] = 48; // v0 v1 v2 v3 ... vn-1 n i --> vi
         opcodes["length"] = 49; // the length of the currently processed column.
         opcodes["sign"]   = 50; // a --> sign(a)  (0 -1 or +1)
         opcodes["get"]    = 51; // pos --> value_of_stack_at_pos (if pos is negative then it's relative to stacke end ex: -1 get will get the previous element of stack)
@@ -687,8 +687,8 @@ void VMatLanguage::build_opcodes_map()
         opcodes["neg"]    = 54; // a --> -a
         opcodes["missing"] = 55;  // a missing value
         opcodes["sumabs"] = 56;  // v0 v1 v2 ... vn --> sum_i |vi| (no pop, and starts from the beginning of the stack)
-        opcodes["weeknumber"] = 57;  // CYYMMDD -> week number in the year between 0 and 52 incl. (ISO 8601 minus 1) 
-        opcodes["dayofyear"] = 58;  // CYYMMDD ->  number of days since january 1 of year CYY 
+        opcodes["weeknumber"] = 57;  // CYYMMDD -> week number in the year between 0 and 52 incl. (ISO 8601 minus 1)
+        opcodes["dayofyear"] = 58;  // CYYMMDD ->  number of days since january 1 of year CYY
         opcodes["nextincal"] = 59;  // cal# JDate -> next jdate on or after given jdate in global calendar cal#
         opcodes["previncal"] = 60;  // cal# JDate -> previous jdate on or before given jdate in global calendar cal#
         opcodes["gausshot"]  = 61;  // index nclasses sigma --> smooth one-hot
@@ -740,7 +740,7 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
         case 6: // onehot
         {
             int nclasses = int(pstack.pop());
-            int index = int(pstack.pop()); 
+            int index = int(pstack.pop());
             for(int i=0; i<nclasses; i++)
                 pstack.push(i==index ?1 :0);
         }
@@ -932,13 +932,13 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
         }
         case 47: // __getfieldsrange         %M:%N       pushes fields %N to %M inclusively on the stack
         {
-            int M = *pptr++; 
-            int N = *pptr++; 
+            int M = *pptr++;
+            int N = *pptr++;
             for (int i=M;i<=N;i++)
                 pstack.push(pfieldvalues[i]);
             break;
         }
-        case 48: // select:    v0 v1 v2 v3 ... vn-1 n i --> vi  
+        case 48: // select:    v0 v1 v2 v3 ... vn-1 n i --> vi
         {
             int i = (int)pstack.pop();
             int n = (int)pstack.pop();
@@ -987,7 +987,7 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
                 a = pstack.pop();
                 if(mem.size()<i+1)
                     mem.resize(i+1);
-                mem[i] = a;                    
+                mem[i] = a;
             }
             break;
         }
@@ -1063,7 +1063,7 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
         {
             real sigma = pstack.pop();
             int nclasses = int(pstack.pop());
-            int index = int(pstack.pop()); 
+            int index = int(pstack.pop());
             for(int i=0; i<nclasses; i++) {
                 real diff_index = i-index;
                 real value = exp(- diff_index*diff_index / sigma);
@@ -1110,27 +1110,27 @@ void VMatLanguage::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
+    // ### Call deepCopyField on all "pointer-like" fields
+    // ### that you wish to be deepCopied rather than
     // ### shallow-copied.
 
     deepCopyField(vmsource, copies);
     deepCopyField(srcfieldnames, copies);
     deepCopyField(outputfieldnames, copies);
-    deepCopyField(program, copies); 
+    deepCopyField(program, copies);
     deepCopyField(mappings, copies);
     deepCopyField(pstack, copies);
     deepCopyField(myvec, copies);
     deepCopyField(mem, copies);
 }
-  
+
 void  PreprocessingVMatrix::getNewRow(int i, const Vec& v) const
 {
     program.run(i,v);
 }
 
 PLEARN_IMPLEMENT_OBJECT(PreprocessingVMatrix, "DEPRECATED: use ProcessingVMatrix instead", "NO HELP");
-    
+
 
 PreprocessingVMatrix::PreprocessingVMatrix(VMat the_source, const string& program_string)
     : source(the_source), program(the_source)

@@ -4,18 +4,18 @@
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -26,14 +26,14 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
 
- 
 
-/* *******************************************************      
+
+/* *******************************************************
  * $Id$
  * This file is part of the PLearn library.
  ******************************************************* */
@@ -69,10 +69,10 @@ public:
     //! This allows to set the underlying vmat
     void setVMat(VMat the_vm);
 
-    //! returns the string associated with value val 
+    //! returns the string associated with value val
     //! for field# col. Or returns "" if no string is associated.
     virtual string getValString(int col, real val) const;
-  
+
     //! return value associated with a string. Default returns NaN
     virtual real getStringVal(int col, const string & str) const;
 
@@ -86,7 +86,7 @@ public:
     virtual const map<string,real>& getStringToRealMapping(int col) const;
     virtual const map<real,string>& getRealToStringMapping(int col) const;
 
-    virtual void computeStats(); 
+    virtual void computeStats();
 
     // default version calls savePMAT
     virtual void save(const PPath& filename) const;
@@ -111,7 +111,7 @@ public:
   (default version repeatedly calls put(i,j,value) which may have a significant overhead)
 */
     virtual void putSubRow(int i, int j, Vec v);
-    
+
     //!  This method must be implemented for matrices that are allowed to grow
     virtual void appendRow(Vec v);
 
@@ -128,11 +128,11 @@ public:
 
 /*!     returns a Mat with the same data as this VMat
   The default version of this method copies the data in a fresh Mat created in memory
-  However this method will typically be overrided by subclasses (such as MemoryVMatrix) 
-  whose internal representation is already a Mat in order to return this Mat directly to avoid 
-  a new memory allocation and copy of elements. In this case, and in this case only, modifying 
-  the elements of the returned Mat will logically result in modified elements in the original 
-  VMatrix view of it. 
+  However this method will typically be overrided by subclasses (such as MemoryVMatrix)
+  whose internal representation is already a Mat in order to return this Mat directly to avoid
+  a new memory allocation and copy of elements. In this case, and in this case only, modifying
+  the elements of the returned Mat will logically result in modified elements in the original
+  VMatrix view of it.
 */
     virtual Mat toMat() const;
 
@@ -144,7 +144,7 @@ public:
     virtual void reset_dimensions();
 
 /*!     default version returns a SubVMatrix referencing the current VMatrix
-  however this can be overridden to provide more efficient shortcuts 
+  however this can be overridden to provide more efficient shortcuts
   (see MemoryVMatrix::subMat and SubVMatrix::subMat for examples)
 */
     virtual VMat subMat(int i, int j, int l, int w);
@@ -152,7 +152,7 @@ public:
 /*!     returns the dot product between row i1 and row i2 (considering only the inputsize first elements).
   The default version in VMatrix is somewhat inefficient, as it repeatedly calls get(i,j)
   The default version in RowBufferedVMatrix is a little better as it buffers the 2 Vecs between calls in case one of them is needed again.
-  But the real strength of this method is for specialised and efficient versions in subbclasses. 
+  But the real strength of this method is for specialised and efficient versions in subbclasses.
   This method is typically used by SmartKernels so that they can compute kernel values between input samples efficiently.
 */
     virtual real dot(int i1, int i2, int inputsize) const;
@@ -167,7 +167,7 @@ public:
   Where X = this->subMatColumns(X_startcol,X_ncols)
   and   Y =  this->subMatColumns(Y_startcol,Y_ncols);
 */
-    virtual void accumulateXtY(int X_startcol, int X_ncols, int Y_startcol, int Y_ncols, 
+    virtual void accumulateXtY(int X_startcol, int X_ncols, int Y_startcol, int Y_ncols,
                                Mat& result, int startrow=0, int nrows=-1, int ignore_this_row=-1) const;
 
 
@@ -175,7 +175,7 @@ public:
   result += transpose(X).X
   Where X = this->subMatColumns(X_startcol,X_ncols)
 */
-    virtual void accumulateXtX(int X_startcol, int X_ncols, 
+    virtual void accumulateXtX(int X_startcol, int X_ncols,
                                Mat& result, int startrow=0, int nrows=-1, int ignore_this_row=-1) const;
 
 

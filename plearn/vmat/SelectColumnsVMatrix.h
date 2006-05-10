@@ -8,18 +8,18 @@
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -30,12 +30,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
 
-/* *******************************************************      
+/* *******************************************************
  * $Id$
  ******************************************************* */
 
@@ -49,17 +49,17 @@
 
 namespace PLearn {
 using namespace std;
- 
+
 //!  selects variables (columns) from a source matrix
 //!  according to given vector of indices.  NC: removed the unused field
 //!  raw_sample.
 class SelectColumnsVMatrix: public SourceVMatrix
 {
-  
+
 private:
-    
+
     typedef SourceVMatrix inherited;
-  
+
 public:
 
     // Public build options.
@@ -73,7 +73,7 @@ public:
 
     //! Default constructor.
     SelectColumnsVMatrix();
-  
+
     //! The appropriate fieldinfos are copied upon construction.
     //! Here the indices will be shared for efficiency. But you should not modify them afterwards!
     SelectColumnsVMatrix(VMat the_source, TVec<string> the_fields, bool the_extend_with_missing = false);
@@ -99,9 +99,9 @@ public:
 
     virtual real get(int i, int j) const;
     virtual void getSubRow(int i, int j, Vec v) const;
-    virtual void reset_dimensions() 
-    { 
-        source->reset_dimensions(); length_=source->length(); 
+    virtual void reset_dimensions()
+    {
+        source->reset_dimensions(); length_=source->length();
         for (int i=0;indices.length();i++)
             if (indices[i]>=source->width())
                 PLERROR("SelectColumnsVMatrix::reset_dimensions, underlying source not wide enough (%d>=%d)",
@@ -113,7 +113,7 @@ public:
 
     virtual real getStringVal(int col, const string & str) const;
     virtual string getValString(int col, real val) const;
-    
+
     //! Return the Dictionary object for a certain field, or a null pointer
     //! if there isn't one
     virtual PP<Dictionary> getDictionary(int col) const;
@@ -121,7 +121,7 @@ public:
     //! Returns the possible values for a certain field in the VMatrix
     virtual Vec getValues(int row, int col) const;
 
-    //! Returns the possible values of a certain field (column) given the input 
+    //! Returns the possible values of a certain field (column) given the input
     virtual Vec getValues(const Vec& input, int col) const;
 
 

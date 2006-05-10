@@ -7,18 +7,18 @@
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -29,12 +29,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
 
-/* *******************************************************      
+/* *******************************************************
  * $Id$
  ******************************************************* */
 
@@ -49,7 +49,7 @@
 
 namespace PLearn {
 using namespace std;
- 
+
 /*!   Like MemoryVMatrix this class holds the data in memory.
   But it is designed to keep a compact representation.
   Each row is compressed/decompressed through the methods of VecCompressor
@@ -70,10 +70,10 @@ protected:
     signed char* data;
     signed char** rowstarts;
     signed char* dataend; //!<  data+memory_alloc
-    
-    //!  next writing position in data chunk    
-    signed char* curpos; 
-    
+
+    //!  next writing position in data chunk
+    signed char* curpos;
+
 /*!       This initializes the matrix with a length of 0 (but up to the_max_length rows can be appended)
   A memory_alloc of length*(2 + 4*width + width/128) should be enough in every case
   (and much less is needed for matrices containing a lot of 0 or small integers)
@@ -85,15 +85,15 @@ public:
     // *  Constructors  *
     // ******************
     CompressedVMatrix(); //!<  default constructor (for automatic deserialization)
-    
+
 /*!       This initializes the matrix with a length of 0 (but up to the_max_length rows can be appended)
-  If no memory_alloc value is given, a sufficient default value will be used initially. 
+  If no memory_alloc value is given, a sufficient default value will be used initially.
   You can always call reallocateCompactMemory() later to use the minimum memory
 */
     CompressedVMatrix(int the_max_length, int the_width, size_t memory_alloc=0);
-    
-/*!       This initializes a matrix from the data of another. 
-  If no memory_alloc value is given, a sufficient default value will be used initially. 
+
+/*!       This initializes a matrix from the data of another.
+  If no memory_alloc value is given, a sufficient default value will be used initially.
   You can always call reallocateCompactMemory() later to use the minimum memory
 */
     CompressedVMatrix(VMat v, size_t memory_alloc=0);
@@ -101,7 +101,7 @@ public:
     PLEARN_DECLARE_OBJECT(CompressedVMatrix);
 
 protected:
-    
+
     virtual void getNewRow(int i, const Vec& v) const;
 
 public :
@@ -109,11 +109,11 @@ public :
     virtual ~CompressedVMatrix();
     virtual void appendRow(Vec v);
 
-    //!  returns the number of bytes allocated for the data 
+    //!  returns the number of bytes allocated for the data
     size_t memoryAllocated() { return dataend-data; }
 
     //!  returns the memory actually used for the data
-    size_t memoryUsed() { return curpos-data; }    
+    size_t memoryUsed() { return curpos-data; }
 
     //!  This will reallocate the data chunk to be exactly of the needed size, so that no memory will be wasted.
     virtual void compacify();

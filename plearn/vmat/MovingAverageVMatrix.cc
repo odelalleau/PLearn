@@ -2,22 +2,22 @@
 
 // MovingAverageVMatrix.cc
 //
-// Copyright (C) 2004 Yoshua Bengio 
-// 
+// Copyright (C) 2004 Yoshua Bengio
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,11 +28,11 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
+/* *******************************************************
  * $Id$
  ******************************************************* */
 
@@ -58,7 +58,7 @@ MovingAverageVMatrix::MovingAverageVMatrix()
     // build_();
 }
 
-PLEARN_IMPLEMENT_OBJECT(MovingAverageVMatrix, "Perform moving average of given columns", 
+PLEARN_IMPLEMENT_OBJECT(MovingAverageVMatrix, "Perform moving average of given columns",
                         "The user specifies one or more columns and for each such <column-name>\n"
                         "a moving average window size: a ma<windowsize>-<column-name> column is\n"
                         "created which will contain at row t the moving average from row t-<windowsize>+1\n"
@@ -130,8 +130,8 @@ void MovingAverageVMatrix::getNewRow(int i, Vec& v) const
 void MovingAverageVMatrix::declareOptions(OptionList& ol)
 {
     // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### For the "flags" of each option, you should typically specify
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or
     // ### OptionBase::tuningoption. Another possible flag to be combined with
     // ### is OptionBase::nosave
 

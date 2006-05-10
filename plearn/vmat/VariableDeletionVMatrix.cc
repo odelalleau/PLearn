@@ -8,18 +8,18 @@
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -30,7 +30,7 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
@@ -57,7 +57,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "The targetsize and weightsize of the underlying matrix are kept.\n"
     );
 
-VariableDeletionVMatrix::VariableDeletionVMatrix() 
+VariableDeletionVMatrix::VariableDeletionVMatrix()
     : obtained_inputsize_from_source(false),
       obtained_targetsize_from_source(false),
       obtained_weightsize_from_source(false),
@@ -82,27 +82,27 @@ VariableDeletionVMatrix::VariableDeletionVMatrix(VMat the_complete_dataset, real
 void VariableDeletionVMatrix::declareOptions(OptionList &ol)
 {
 
-    declareOption(ol, "complete_dataset", &VariableDeletionVMatrix::complete_dataset, OptionBase::buildoption, 
+    declareOption(ol, "complete_dataset", &VariableDeletionVMatrix::complete_dataset, OptionBase::buildoption,
                   "The data set with all variables to select the columns from.");
 
-    declareOption(ol, "deletion_threshold", &VariableDeletionVMatrix::deletion_threshold, OptionBase::buildoption, 
+    declareOption(ol, "deletion_threshold", &VariableDeletionVMatrix::deletion_threshold, OptionBase::buildoption,
                   "The percentage of non-missing values for a variable above which, the variable will be selected.");
 
     declareOption(ol, "remove_columns_with_constant_value", &VariableDeletionVMatrix::remove_columns_with_constant_value, OptionBase::buildoption,
                   "If set to 1, the columns with constant non-missing values will be removed.");
-      
-    declareOption(ol, "number_of_train_samples", &VariableDeletionVMatrix::number_of_train_samples, OptionBase::buildoption, 
+
+    declareOption(ol, "number_of_train_samples", &VariableDeletionVMatrix::number_of_train_samples, OptionBase::buildoption,
                   "If equal to zero, all the underlying dataset samples are used to calculated the percentages and constant values.\n"
                   "If it is a fraction between 0 and 1, this proportion of the samples will be used.\n"
                   "If greater or equal to 1, the integer portion will be interpreted as the number of samples to use.");
 
-    declareOption(ol, "obtained_inputsize_from_source", &VariableDeletionVMatrix::obtained_inputsize_from_source, OptionBase::learntoption, 
+    declareOption(ol, "obtained_inputsize_from_source", &VariableDeletionVMatrix::obtained_inputsize_from_source, OptionBase::learntoption,
                   "Set to 1 when the inputsize was obtained from the source matrix.");
 
-    declareOption(ol, "obtained_targetsize_from_source", &VariableDeletionVMatrix::obtained_targetsize_from_source, OptionBase::learntoption, 
+    declareOption(ol, "obtained_targetsize_from_source", &VariableDeletionVMatrix::obtained_targetsize_from_source, OptionBase::learntoption,
                   "Set to 1 when the targetsize was obtained from the source matrix.");
 
-    declareOption(ol, "obtained_weightsize_from_source", &VariableDeletionVMatrix::obtained_weightsize_from_source, OptionBase::learntoption, 
+    declareOption(ol, "obtained_weightsize_from_source", &VariableDeletionVMatrix::obtained_weightsize_from_source, OptionBase::learntoption,
                   "Set to 1 when the weightsize was obtained from the source matrix.");
 
     inherited::declareOptions(ol);
@@ -132,7 +132,7 @@ void VariableDeletionVMatrix::getExample(int i, Vec& input, Vec& target, real& w
 }
 
 real VariableDeletionVMatrix::get(int i, int j) const
-{ 
+{
     return source->get(i, j);
 }
 
@@ -142,7 +142,7 @@ void VariableDeletionVMatrix::put(int i, int j, real value)
 }
 
 void VariableDeletionVMatrix::getSubRow(int i, int j, Vec v) const
-{  
+{
     source-> getSubRow(i, j, v);
 }
 
@@ -162,7 +162,7 @@ void VariableDeletionVMatrix::insertRow(int i, Vec v)
 }
 
 void VariableDeletionVMatrix::getRow(int i, Vec v) const
-{  
+{
     source-> getRow(i, v);
 }
 
@@ -172,7 +172,7 @@ void VariableDeletionVMatrix::putRow(int i, Vec v)
 }
 
 void VariableDeletionVMatrix::getColumn(int i, Vec v) const
-{  
+{
     source-> getColumn(i, v);
 }
 
@@ -257,7 +257,7 @@ void VariableDeletionVMatrix::buildIndices()
             if (!is_missing(variable_value))
             {
                 if (variable_present_count[col] > 0)
-                {  
+                {
                     if (variable_value != variable_last_value[col]) variable_constant[col] = false;
                 }
                 variable_present_count[col] += 1;
@@ -274,7 +274,7 @@ void VariableDeletionVMatrix::buildIndices()
     {
         if ((real) variable_present_count[col] > adjusted_threshold && (!remove_columns_with_constant_value || !variable_constant[col])) new_width += 1;
     }
-    selected_columns_indices.resize(new_width);  
+    selected_columns_indices.resize(new_width);
     int selected_col = 0;
     for (col = 0; col < complete_dataset_width - target_and_weight; col++)
     {

@@ -2,22 +2,22 @@
 
 // DisregardRowsVMatrix.cc
 //
-// Copyright (C) 2005 Christian Dorion 
-// 
+// Copyright (C) 2005 Christian Dorion
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,12 +28,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id$ 
+/* *******************************************************
+ * $Id$
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -102,16 +102,16 @@ declareOptions(OptionList& ol)
         OptionBase::buildoption,
         "Should missing values cause a row to be neglected.\n"
         "\n"
-        "Default: 1 (True)" );  
-  
+        "Default: 1 (True)" );
+
     declareOption(
         ol, "disregard_values", &DisregardRowsVMatrix::_disregard_values,
         OptionBase::buildoption,
         "If any of these values is encountered in any column designated in\n"
         "inspected_fieldnames, the whole row is disregarded.\n"
         "\n"
-        "Default: [ ]" );  
-  
+        "Default: [ ]" );
+
     declareOption(
         ol, "maximum_length", &DisregardRowsVMatrix::_maximum_length,
         OptionBase::buildoption,
@@ -119,7 +119,7 @@ declareOptions(OptionList& ol)
         "vmat will be considered, all other rows being disregarded.\n"
         "\n"
         "Default: -1. " );
-  
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -146,13 +146,13 @@ build_()
         return;
 
     /* Option: inspected_fieldnames */
-  
+
     // Default: All fields are inspected.
     if ( _inspected_fieldnames.isEmpty() )
     {
         _inspected_columns.resize( width() );
         for ( int c=0; c < width(); c++ )
-            _inspected_columns[c] = c;   
+            _inspected_columns[c] = c;
     }
 
     // Get the column indices of the fields to inspect.
@@ -160,7 +160,7 @@ build_()
     {
         _inspected_columns.resize( _inspected_fieldnames.length() );
         for ( int f=0; f < _inspected_fieldnames.length(); f++ )
-            _inspected_columns[f] = 
+            _inspected_columns[f] =
                 source->fieldIndex( _inspected_fieldnames[f] );
     }
 
@@ -170,7 +170,7 @@ build_()
         << "Out of " << source.length() << " rows, "
         << "kept " << indices.length() << " rows"
         << endl;
-  
+
     // Calls back the inherited build now that the row indices are known
     inherited::build();
 }
@@ -181,7 +181,7 @@ inferIndices( )
 {
     if ( !source )
         return;
-  
+
     indices.resize( 0, source.length() );
     for ( int r=0; r < source.length(); r++ )
     {
@@ -190,7 +190,7 @@ inferIndices( )
               inspected < _inspected_columns.length() && !disregard_row;
               ++inspected )
         {
-            int c = _inspected_columns[ inspected ];      
+            int c = _inspected_columns[ inspected ];
             if( (_disregard_missings && is_missing( source(r,c) ))
                 || _disregard_values.contains( source(r,c) ) )
                 disregard_row = true;
@@ -214,7 +214,7 @@ makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField( _inspected_columns,    copies );
-                 
+
     deepCopyField( _inspected_fieldnames, copies );
     deepCopyField( _disregard_values,    copies );
 }

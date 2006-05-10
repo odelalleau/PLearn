@@ -2,22 +2,22 @@
 
 // MixUnlabeledNeighbourVMatrix.cc
 //
-// Copyright (C) 2006 Pierre-Jean L Heureux 
-// 
+// Copyright (C) 2006 Pierre-Jean L Heureux
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,7 +28,7 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
@@ -75,8 +75,8 @@ MixUnlabeledNeighbourVMatrix::MixUnlabeledNeighbourVMatrix() :
 void MixUnlabeledNeighbourVMatrix::declareOptions(OptionList& ol)
 {
     // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### For the "flags" of each option, you should typically specify
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or
     // ### OptionBase::tuningoption. Another possible flag to be combined with
     // ### is OptionBase::nosave
 
@@ -104,7 +104,7 @@ void MixUnlabeledNeighbourVMatrix::build()
 void MixUnlabeledNeighbourVMatrix::build_()
 {
     // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation. 
+    // ### according to set 'options', in *any* situation.
     // ### Typical situations include:
     // ###  - Initial building of an object from a few user-specified options
     // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
@@ -112,10 +112,10 @@ void MixUnlabeledNeighbourVMatrix::build_()
     // ### You should assume that the parent class' build_() has already been called.
 
     random_generator->manual_seed(seed);
- 
+
     if (!source)
         return;
-    
+
     if (source && ( source->targetsize() < 1))
         PLERROR("In MixUnlabeledNeighbourVMatrix::build_ - We need a key column for 'source'");
     if (source_select && (source_select->targetsize() < 1))
@@ -123,14 +123,14 @@ void MixUnlabeledNeighbourVMatrix::build_()
     if (source_select && source && source_select->inputsize() != source->inputsize())
         PLERROR("In MixUnlabeledNeighbourVMatrix::build_ - VMats 'source_select'"
                 "and 'source' should have the same inputsize().");
-    
+
     indices.resize(0); // This get rid of the user's build option value.
     TVec<int> bag_indices;
     Vec input,target,targetSel;
     string lastKey;
     real weight;
     bool sourceFound;
-    int rowSel,row;    
+    int rowSel,row;
     int keyCol = source->inputsize() + source->targetsize()-1;
     neighbor_weights.resize(0);
 
@@ -196,13 +196,13 @@ void MixUnlabeledNeighbourVMatrix::build_()
     targetsize_ = source->targetsize()-1;
     weightsize_ = source->weightsize();
     width_ = source->width()-1;
-    
+
     if(source_select) {
         length_ = source->length() + indices.length();
     }else{
         length_ = source->length();
     }
-        
+
     TVec<string>tempofn = source->fieldNames();
     tempofn.remove(inputsize()+targetsize());
     declareFieldNames(tempofn);

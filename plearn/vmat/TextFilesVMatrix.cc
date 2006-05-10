@@ -4,21 +4,21 @@
 // TextFilesVMatrix.h
 //
 // Copyright (C) 2003-2004 ApSTAT Technologies Inc.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -30,8 +30,8 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-/* *******************************************************      
- * $Id$ 
+/* *******************************************************
+ * $Id$
  ******************************************************* */
 
 // Author: Pascal Vincent
@@ -94,7 +94,7 @@ int TextFilesVMatrix::getIndexOfTextField(const string& fieldname) const
     for(int i=0; i<n; i++)
         if(fieldspec[i].first==fieldname)
             return i;
-    PLERROR("In TextFilesVMatrix::getIndexOfTextField unknown field %s",fieldname.c_str()); 
+    PLERROR("In TextFilesVMatrix::getIndexOfTextField unknown field %s",fieldname.c_str());
     return -1; // to make the compiler happy
 }
 
@@ -117,7 +117,7 @@ void TextFilesVMatrix::buildIdx()
 
     // write endianness
     fputc(byte_order(), idxfile);
-    // We don't know length yet, 
+    // We don't know length yet,
     length_ = 0;
     fwrite(&length_, 4, 1, idxfile);
 
@@ -160,7 +160,7 @@ void TextFilesVMatrix::buildIdx()
                     length_++;
                 }
             }
-        } // end of loop over lines of file      
+        } // end of loop over lines of file
     } // end of loop over files
 
     // Write true length and width
@@ -192,14 +192,14 @@ void TextFilesVMatrix::setColumnNamesAndWidth()
         string ftype = fieldspec[k].second;
         if(isValidNonSkipFieldType(ftype))
         {
-            // declare the column name 
+            // declare the column name
             fnames.push_back(fname);
             colrange.push_back( pair<int,int>(width_,1) );
             ++width_;
         }
         else if(ftype=="skip")
         {
-            colrange.push_back( pair<int,int>(width_,0) );          
+            colrange.push_back( pair<int,int>(width_,0) );
         }
         else
             PLERROR("In TextFilesVMatrix::setColumnNamesAndWidth, Invalid field type specification for field %s: %s",fname.c_str(), ftype.c_str());
@@ -356,7 +356,7 @@ void TextFilesVMatrix::generateMapCounts()
         if(!mapping[k].empty())
         {
             hash_map<string, real>& mapping_k = mapping[k];
-            hash_map<string, int>& counts_k = counts[k];          
+            hash_map<string, int>& counts_k = counts[k];
             hash_map<string, real>::const_iterator it = mapping_k.begin();
             hash_map<string, real>::const_iterator itend = mapping_k.end();
             while(it!=itend)
@@ -379,14 +379,14 @@ void TextFilesVMatrix::generateMapCounts()
         }
         pg(i);
     }
-  
+
     // Save the counts
     for(int k=0; k<n; k++)
     {
         if(!counts[k].empty())
             PLearn::save( getMetaDataDir() / "counts" / fieldspec[k].first+".count", counts[k] );
     }
-  
+
 }
 
 void TextFilesVMatrix::buildVMatrixStringMapping()
@@ -402,7 +402,7 @@ void TextFilesVMatrix::buildVMatrixStringMapping()
             hash_map<string,real>::const_iterator it = mapping[k].begin();
             hash_map<string,real>::const_iterator itend = mapping[k].end();
             while(it!=itend)
-            {              
+            {
                 for(int j=colstart; j<colstart+ncols; j++)
                     addStringMapping(j, it->first, it->second);
                 ++it;
@@ -434,7 +434,7 @@ real TextFilesVMatrix::getMapping(int fieldnum, const string& strval) const
         if(!mapfiles[fieldnum])
             PLERROR("Could not open map file %s\n for appending\n",fname.c_str());
     }
-    
+
     fprintf(mapfiles[fieldnum],"\n\"%s\" %f", strval.c_str(), val);
     return val;
 }
@@ -446,7 +446,7 @@ TVec<string> TextFilesVMatrix::splitIntoFields(const string& raw_row) const
 
 TVec<string> TextFilesVMatrix::getTextFields(int i) const
 {
-    string rowi = getTextRow(i);  
+    string rowi = getTextRow(i);
     TVec<string> fields =  splitIntoFields(rowi);
     if(fields.size() != fieldspec.size())
         PLERROR("In getting fields of row %d, wrong number of fields: %d (should be %d):\n%s\n",i,fields.size(),fieldspec.size(),rowi.c_str());
@@ -459,7 +459,7 @@ real TextFilesVMatrix::getPostalEncoding(const string& strval, bool display_warn
 {
     if(strval=="")
         return MISSING_VALUE;
-  
+
     char first_char = strval[0];
     int second_digit = strval[1];
     real val = 0;
@@ -594,7 +594,7 @@ void TextFilesVMatrix::transformStringToValue(int k, string strval, Vec dest) co
             for(unsigned int pos=1; pos<strval.size(); pos++)
                 if(!isspace(strval[pos]))
                     s += strval[pos];
-              
+
             if(pl_isnumber(s,&val))
                 dest[0] = real(val);
             else
@@ -655,7 +655,7 @@ void TextFilesVMatrix::getNewRow(int i, const Vec& v) const
         string strval = fields[k];
         Vec dest = v.subVec(colrange[k].first, colrange[k].second);
 
-        try 
+        try
         { transformStringToValue(k, strval, dest); }
         catch(const PLearnError& e)
         {
@@ -678,7 +678,7 @@ void TextFilesVMatrix::declareOptions(OptionList& ol)
                   "- \"\\t\" : used for SAS files (the default)\n"
                   "- \",\"  : used for CSV files\n"
                   "- \";\"  : used for a variant of CSV files");
-  
+
     declareOption(ol, "skipheader", &TextFilesVMatrix::skipheader, OptionBase::buildoption,
                   "An (optional) list of integers, one for each of the txtfilenames,\n"
                   "indicating the number of header lines at the top of the file to be skipped.");
@@ -708,7 +708,7 @@ void TextFilesVMatrix::declareOptions(OptionList& ol)
     declareOption(ol, "build_vmatrix_stringmap", &TextFilesVMatrix::build_vmatrix_stringmap,
                   OptionBase::buildoption,
                   "If true, standard vmatrix stringmap will be built from the txtmat specific stringmap");
-   
+
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -722,9 +722,9 @@ void TextFilesVMatrix::readAndCheckOptionName(PStream& in, const string& optionn
     in.skipBlanksAndComments();
     char eq = in.get();
     if(option!=optionname || eq!='=')
-        PLERROR("Bad syntax in .txtmat file.\n" 
+        PLERROR("Bad syntax in .txtmat file.\n"
                 "Expected option %s = ...\n"
-                "Read %s %c\n", optionname.c_str(), option.c_str(), eq); 
+                "Read %s %c\n", optionname.c_str(), option.c_str(), eq);
 }
 
 

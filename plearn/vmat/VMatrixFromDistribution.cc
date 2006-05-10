@@ -3,23 +3,23 @@
 
 // VMatrixFromDistribution.cc
 //
-// Copyright (C) 2003  Pascal Vincent 
+// Copyright (C) 2003  Pascal Vincent
 // Copyright (C) 2005  Olivier Delalleau
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -30,12 +30,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id$ 
+/* *******************************************************
+ * $Id$
  ******************************************************* */
 
 /*! \file VMatrixFromDistribution.cc */
@@ -44,14 +44,14 @@
 namespace PLearn {
 using namespace std;
 
-VMatrixFromDistribution::VMatrixFromDistribution() 
+VMatrixFromDistribution::VMatrixFromDistribution()
     :mode("sample"), generator_seed(0), nsamples(0)
     /* ### Initialize all fields to their default value */
 {
     samples_per_dim = 10;
 }
 
-PLEARN_IMPLEMENT_OBJECT(VMatrixFromDistribution, "A VMatrix built from sampling a distribution", 
+PLEARN_IMPLEMENT_OBJECT(VMatrixFromDistribution, "A VMatrix built from sampling a distribution",
                         "VMatrixFromDistribution implements a VMatrix whose data rows are drawn from a distribution\n"
                         "or that contains the density or log density sampled on a grid (depending on \"mode\").\n"
                         "The matrix is computed in memory at build time\n");
@@ -109,7 +109,7 @@ void VMatrixFromDistribution::build_()
             inputsize_ = distr->inputsize();
             targetsize_ = 0;
             weightsize_ = 1;
-        
+
             data.resize(length_, width_);
             Vec v(data.width());
             int k=0;
@@ -141,7 +141,7 @@ void VMatrixFromDistribution::build_()
                     }
                 }
                 break;
-            default: 
+            default:
                 PLERROR("density and log_density modes only supported for distribution of dimension 1 or 2");break;
             }
         }

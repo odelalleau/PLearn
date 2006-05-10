@@ -2,22 +2,22 @@
 
 // ProcessSymbolicSequenceVMatrix.cc
 //
-// Copyright (C) 2004 Hugo Larochelle 
-// 
+// Copyright (C) 2004 Hugo Larochelle
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,12 +28,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id$ 
+/* *******************************************************
+ * $Id$
  ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -73,7 +73,7 @@ ProcessSymbolicSequenceVMatrix::ProcessSymbolicSequenceVMatrix(VMat s,
     if( call_build_ )
         build_();
 }
-  
+
 PLEARN_IMPLEMENT_OBJECT(ProcessSymbolicSequenceVMatrix,
 "Takes a VMat of a sequence of symbolic elements and constructs context rows.",
 "This VMatrix takes a VMat of a sequence of symbolic elements (corresponding\n"
@@ -141,8 +141,8 @@ void ProcessSymbolicSequenceVMatrix::getNewRow(int i, const Vec& v) const
 void ProcessSymbolicSequenceVMatrix::declareOptions(OptionList& ol)
 {
     // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### For the "flags" of each option, you should typically specify
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or
     // ### OptionBase::tuningoption. Another possible flag to be combined with
     // ### is OptionBase::nosave
 
@@ -325,23 +325,23 @@ void ProcessSymbolicSequenceVMatrix::build_()
     lower_bound = 1;
     upper_bound = -1;
 
-    if(n_left_context < 0) 
+    if(n_left_context < 0)
     {
         left_context.resize(width_);
         left_positions.resize(max_context_length);
     }
-    else 
+    else
     {
         left_context.resize(n_attributes*n_left_context);
         left_positions.resize(n_left_context);
     }
 
-    if(n_right_context < 0) 
+    if(n_right_context < 0)
     {
         right_context.resize(width_);
         right_positions.resize(max_context_length);
     }
-    else 
+    else
     {
         right_context.resize(n_attributes*n_right_context);
         right_positions.resize(n_right_context);
@@ -453,9 +453,9 @@ void ProcessSymbolicSequenceVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copi
 
 void ProcessSymbolicSequenceVMatrix::fill_current_row(int i, int& cp, int& target_position) const
 {
-  
+
     int target = indices[i];
-  
+
     // If the target element is a delimiter, do nothing: Hugo: may not be a good thing!
     source->getRow(target,target_element);
     /*
@@ -485,13 +485,13 @@ void ProcessSymbolicSequenceVMatrix::fill_current_row(int i, int& cp, int& targe
 
     int this_lower_bound = target;
     int this_upper_bound = target;
-  
+
     // Left context construction
 
     while(n_left_context < 0 || left_added_elements < n_left_context)
     {
         to_add = false;
-    
+
 
         p = target-left_pos;
 
@@ -520,9 +520,9 @@ void ProcessSymbolicSequenceVMatrix::fill_current_row(int i, int& cp, int& targe
         {
             source->getRow(p,element);
             if(!is_true(ignored_context,element))
-                to_add = true;  
+                to_add = true;
         }
-    
+
         if(is_true(delimiters,element)) break;
 
         if(to_add)
@@ -540,7 +540,7 @@ void ProcessSymbolicSequenceVMatrix::fill_current_row(int i, int& cp, int& targe
                 this_lower_bound = p;
                 left_added_elements++;
             }
-    
+
         left_pos++;
     }
 
@@ -577,9 +577,9 @@ void ProcessSymbolicSequenceVMatrix::fill_current_row(int i, int& cp, int& targe
         {
             source->getRow(p,element);
             if(!is_true(ignored_context,element))
-                to_add = true;  
+                to_add = true;
         }
-    
+
         if(is_true(delimiters,element)) break;
 
         if(to_add)
@@ -597,7 +597,7 @@ void ProcessSymbolicSequenceVMatrix::fill_current_row(int i, int& cp, int& targe
                 this_upper_bound = p;
                 right_added_elements++;
             }
-    
+
         right_pos++;
     }
 
@@ -633,7 +633,7 @@ void ProcessSymbolicSequenceVMatrix::fill_current_row(int i, int& cp, int& targe
     // adding target element
     target_position = cp;
     current_row_i.subVec(cp*n_attributes,n_attributes) << target_element;
-    if(use_last_context) 
+    if(use_last_context)
     {
         current_context_pos[target] = cp;
         current_target_pos = cp;
@@ -662,7 +662,7 @@ void ProcessSymbolicSequenceVMatrix::fill_current_row(int i, int& cp, int& targe
 void ProcessSymbolicSequenceVMatrix::getExample(int i, Vec& input, Vec& target, real& weight)
 {
     if(i<0 || i>=length_) PLERROR("In SelectAttributeSequenceVMatrix::getExample() : invalid row acces i=%d for VMatrix(%d,%d)",i,length_,width_);
-    
+
     int target_position,cp;
     fill_current_row(i,cp,target_position);
 

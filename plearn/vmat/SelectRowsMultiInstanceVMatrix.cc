@@ -2,22 +2,22 @@
 
 // SelectRowsMultiInstanceVMatrix.cc
 //
-// Copyright (C) 2005 Benoit Cromp 
-// 
+// Copyright (C) 2005 Benoit Cromp
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,12 +28,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
-   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
+/* *******************************************************
+   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $
    ******************************************************* */
 
 // Authors: Benoit Cromp
@@ -79,8 +79,8 @@ SelectRowsMultiInstanceVMatrix::SelectRowsMultiInstanceVMatrix() :
 void SelectRowsMultiInstanceVMatrix::declareOptions(OptionList& ol)
 {
     // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### For the "flags" of each option, you should typically specify
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or
     // ### OptionBase::tuningoption. Another possible flag to be combined with
     // ### is OptionBase::nosave
 
@@ -90,7 +90,7 @@ void SelectRowsMultiInstanceVMatrix::declareOptions(OptionList& ol)
     declareOption(ol, "frac", &SelectRowsMultiInstanceVMatrix::frac, OptionBase::buildoption, "Fraction of the bag to be randomly chosen (Note: this is the fraction of the bag to be randomly chosen in addition of the best instance, which is always added");
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
-   
+
 }
 
 ///////////
@@ -109,7 +109,7 @@ void SelectRowsMultiInstanceVMatrix::build()
 void SelectRowsMultiInstanceVMatrix::build_()
 {
     // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation. 
+    // ### according to set 'options', in *any* situation.
     // ### Typical situations include:
     // ###  - Initial building of an object from a few user-specified options
     // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
@@ -120,7 +120,7 @@ void SelectRowsMultiInstanceVMatrix::build_()
 
     if (!source)
         return;
- 
+
 //    VMat source_of_indices = source_select ? source_select : source;
 
 //     if (!source_of_indices)
@@ -131,7 +131,7 @@ void SelectRowsMultiInstanceVMatrix::build_()
                 "should be completely present inside 'source'. Width does not work.");
 
 // Generating 'indices' and 'mi_info' vector.
-    
+
     int bag_signal_column = source->targetsize() - 1;
     int first_row = 0;
     int x_max;
@@ -198,14 +198,14 @@ void SelectRowsMultiInstanceVMatrix::build_()
    // We suppose that the source and source_select have the same targetsize and weightsize
     length_ = indices.length();
     if(!source_select) {
-        inputsize_ = source->inputsize();    
+        inputsize_ = source->inputsize();
     } else {
         inputsize_ = source->width() - source_select->inputsize()- (2 * source_select->targetsize()) - (2 * source_select->weightsize());
     }
     targetsize_ = source->targetsize();
-    weightsize_ = source->weightsize(); 
+    weightsize_ = source->weightsize();
     width_ = inputsize() + targetsize() + weightsize();
- 
+
     // ### In a SourceVMatrix, you will typically end build_() with:
     setMetaInfoFromSource();
 }

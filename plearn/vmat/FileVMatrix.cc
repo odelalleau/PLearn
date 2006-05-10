@@ -7,18 +7,18 @@
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -29,12 +29,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
 
-/* *******************************************************      
+/* *******************************************************
  * $Id$
  ******************************************************* */
 
@@ -104,7 +104,7 @@ FileVMatrix::FileVMatrix(const PPath& filename, int the_length,
 
 static int strlen(char* s) {
     int n=0;
-    while (s[n]!=0) 
+    while (s[n]!=0)
         n++;
     return n;
 }
@@ -124,14 +124,14 @@ void FileVMatrix::build()
 void FileVMatrix::build_()
 {
     // Check for deprecated options.
-    if (remove_when_done != -1) { 
+    if (remove_when_done != -1) {
         PLDEPRECATED("In FileVMatrix::build_ - The option 'remove_when_done' "
                      "is now deprecated, please use the "
                      "TemporaryFileVMatrix class instead: this data file "
                      "may thus not be properly deleted");
         assert( remove_when_done == 0 || remove_when_done == 1 );
     }
-    if (track_ref != -1) { 
+    if (track_ref != -1) {
         PLDEPRECATED("In FileVMatrix::build_ - The option 'track_ref' "
                      "is now deprecated, please use the "
                      "TemporaryFileVMatrix class instead: this data file "
@@ -159,7 +159,7 @@ void FileVMatrix::build_()
             PLERROR("In FileVMatrix::build_ - You asked to create a new file (%s), but 'writable' is set to 0 !", filename_.c_str());
 
 #ifdef USE_NSPR_FILE
-        f = PR_Open(filename_.c_str(), PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE, 0666);        
+        f = PR_Open(filename_.c_str(), PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE, 0666);
 #else
         f = fopen(filename_.c_str(),"w+b");
 #endif
@@ -171,17 +171,17 @@ void FileVMatrix::build_()
 #endif
 #ifdef USEDOUBLE
         file_is_float = false;
-#endif 
+#endif
 #ifdef LITTLEENDIAN
-        file_is_bigendian = false; 
+        file_is_bigendian = false;
 #endif
 #ifdef BIGENDIAN
-        file_is_bigendian = true; 
+        file_is_bigendian = true;
 #endif
 
         updateHeader();
-    
-        if(length_ > 0 && width_ > 0) 
+
+        if(length_ > 0 && width_ > 0)
         {
             // Ensure we can allocate enough space... if len>0
 #ifdef USE_NSPR_FILE
@@ -227,7 +227,7 @@ void FileVMatrix::build_()
 
 #ifdef USE_NSPR_FILE
         PR_Read(f,header,DATAFILE_HEADERLENGTH);
-#else    
+#else
         fread(header,DATAFILE_HEADERLENGTH,1,f);
 #endif
         if(header[DATAFILE_HEADERLENGTH-1]!='\n')
@@ -289,7 +289,7 @@ void FileVMatrix::build_()
         }
     }
 
-    setMetaDataDir(filename_ + ".metadata"); 
+    setMetaDataDir(filename_ + ".metadata");
     setMtime(mtime(filename_));
 
     if (width_ >= 0)
@@ -304,7 +304,7 @@ void FileVMatrix::build_()
 //////////////////////
 void FileVMatrix::closeCurrentFile()
 {
-    if (f) 
+    if (f)
     {
 #ifdef USE_NSPR_FILE
         PR_Close(f);
@@ -348,7 +348,7 @@ void FileVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 // ~FileVMatrix //
 //////////////////
 FileVMatrix::~FileVMatrix()
-{ 
+{
     if (hasMetaDataDir())
         saveFieldInfos();
     FileVMatrix::closeCurrentFile();
@@ -374,7 +374,7 @@ void FileVMatrix::getNewRow(int i, const Vec& v) const
 #else
     if(file_is_float)
     {
-        fseek(f, DATAFILE_HEADERLENGTH+(i*width_)*sizeof(float), SEEK_SET);        
+        fseek(f, DATAFILE_HEADERLENGTH+(i*width_)*sizeof(float), SEEK_SET);
         fread_float(f, v.data(), v.length(), file_is_bigendian);
     }
     else
@@ -382,7 +382,7 @@ void FileVMatrix::getNewRow(int i, const Vec& v) const
         fseek(f, DATAFILE_HEADERLENGTH+(i*width_)*sizeof(double), SEEK_SET);
         fread_double(f, v.data(), v.length(), file_is_bigendian);
     }
-#endif  
+#endif
 }
 
 ///////////////
@@ -434,8 +434,8 @@ void FileVMatrix::put(int i, int j, real value)
     if(file_is_float)
         PR_Write_float(f,float(value),file_is_bigendian);
     else
-        PR_Write_double(f,double(value),file_is_bigendian);    
-#else    
+        PR_Write_double(f,double(value),file_is_bigendian);
+#else
     if(file_is_float)
     {
         fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(float), SEEK_SET);
@@ -497,7 +497,7 @@ void FileVMatrix::flush()
 // updateHeader //
 //////////////////
 void FileVMatrix::updateHeader() {
-    char header[DATAFILE_HEADERLENGTH]; 
+    char header[DATAFILE_HEADERLENGTH];
 #ifdef USEFLOAT
 #ifdef LITTLEENDIAN
     sprintf(header,"MATRIX %d %d FLOAT LITTLE_ENDIAN", length_, width_);
