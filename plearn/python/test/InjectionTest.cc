@@ -2,7 +2,7 @@
 
 // InjectionTest.cc
 //
-// Copyright (C) 2005 Olivier Delalleau 
+// Copyright (C) 2005-2006 Olivier Delalleau 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -134,12 +134,14 @@ string InjectionTest::python_code =
 "def trampoline_function_call(x):\n"
 "    y = injected_c_function(x)\n"
 "    print >>sys.stderr, 'The C function returned the charming value',y\n"
+"    sys.stderr.flush()\n"
 "\n"
 "def trampoline_method_call(x):\n"
 "    y = injected_c_method1(x)\n"
 "    z = injected_c_method2(x)\n"
 "    print >>sys.stderr, 'The C method 1 returned the charming value',y\n"
 "    print >>sys.stderr, 'The C method 2 returned the charming value',z\n"
+"    sys.stderr.flush()\n"
 ;
 
 PythonObjectWrapper InjectionTest_basic_function(const TVec<PythonObjectWrapper>& args)
