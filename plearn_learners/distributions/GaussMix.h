@@ -445,10 +445,8 @@ public:
     //! Trains the model.
     virtual void train();
 
-    /*
     //! Overridden to take into account new outputs computed.
     virtual int outputsize() const;
-    */
 
     //! Overridden to compute the training time.
     virtual TVec<string> getTrainCostNames() const;

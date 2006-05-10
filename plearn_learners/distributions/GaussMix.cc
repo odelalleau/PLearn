@@ -2158,7 +2158,6 @@ void GaussMix::kmeans(const VMat& samples, int nclust, TVec<int>& clust_idx,
 /////////////////
 real GaussMix::log_density(const Vec& y) const
 {
-    static Vec log_likelihood_dens;
     log_likelihood_dens.resize(L);
     // First we need to compute the likelihood
     //   p(y,j | x) = p(y | x,j) * p(j | x).
@@ -2241,7 +2240,6 @@ void GaussMix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////
 // outputsize //
 ////////////////
-    /*
 int GaussMix::outputsize() const {
     int os = inherited::outputsize();
     for (size_t i = 0; i < outputs_def.length(); i++)
@@ -2251,7 +2249,6 @@ int GaussMix::outputsize() const {
             os += L - 1;
     return os;
 }
-    */
 
 //////////////////////////////////////////
 // precomputeAllGaussianLogCoefficients //
@@ -3845,7 +3842,6 @@ void GaussMix::unknownOutput(char def, const Vec& input, Vec& output, int& k) co
         real log_p_y_x = log_density(predicted_part);
         // This also fills the vector 'log_likelihood_dens' with likelihoods p(y,j | x),
         // which is exactly what we need in order to compute the posteriors.
-        log_likelihood_dens.resize(L);
         for (int j = 0; j < L; j++)
             output[j + k] = log_likelihood_dens[j] - log_p_y_x;
         k += L;
