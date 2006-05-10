@@ -122,17 +122,32 @@ def updateExitCode(flag):
 
 if __name__ == '__main__':
     import os
-    import modes
+    from plearn.pytest import modes
     from plearn.utilities.ModeAndOptionParser import Mode
 
-    def vsystem(cmd):        
-        print >>sys.stderr, '#\n#  %s\n#' % cmd
-        os.system( cmd + ' > /dev/null' )
+    def vsystem(cmd, display_cmd = ''):        
+        if display_cmd == '':
+            display_cmd = cmd
+        print >>sys.stderr, '#\n#  %s\n#' % display_cmd
+        sys.stderr.flush()
+        stderr_output = toolkit.command_output(cmd, True, False)
+        if stderr_output:
+            print >>sys.stderr, stderr_output[0].rstrip('\n')
         print >>sys.stderr, ''
+        sys.stderr.flush()
         
-    vsystem('pytest')
-    vsystem('pytest -h')
+    if sys.platform == 'win32':
+        which_pytest = toolkit.command_output('which pytest')[0].rstrip('\n')
+        pytest_cmd = \
+            toolkit.command_output('cygpath -w %s'%which_pytest)[0].rstrip('\n')
+        pytest_cmd = 'python ' + pytest_cmd
+    else:
+        pytest_cmd = 'pytest'
+
+    vsystem(pytest_cmd, 'pytest')
+    vsystem('%s -h' % pytest_cmd, 'pytest -h')
 
     for mode in Mode.mode_list():
         mode_name = mode.__name__
-        vsystem('pytest %s -h' % mode_name)
+        vsystem('%s %s -h' % (pytest_cmd, mode_name),'pytest %s -h' % mode_name)
+
