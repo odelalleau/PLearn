@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import copy, operator
+from plearn.pyplearn.context import actualContext
 from plearn.pyplearn.plearn_repr import plearn_repr, python_repr, format_list_elements
 
 DEBUG = False
@@ -125,7 +126,13 @@ class PyPLearnObject( PLOptionDict ):
 
     Protected and private attributes are not affected by the option mecanisms.
     """
-    __instances = []
+
+    # Static buildClassContext method
+
+    def buildClassContext(context):
+        assert not hasattr(context, 'pyplearn_object_instances')        
+        context.pyplearn_object_instances = []
+    buildClassContext = staticmethod(buildClassContext)
 
     #
     #  Classmethods:
@@ -149,7 +156,7 @@ class PyPLearnObject( PLOptionDict ):
         will be returned too.
         """
         ilist = []
-        for instance in cls.__instances:
+        for instance in actualContext(PyPLearnObject).pyplearn_object_instances:
             if isinstance( instance, cls ):
                 ilist.append(instance)
         return ilist
@@ -190,8 +197,9 @@ class PyPLearnObject( PLOptionDict ):
 
     def __init__(self, **overrides):
         super(PyPLearnObject, self).__init__(**overrides)
-        self.__instances.append( self )
-        self.__serial_number = len(self.__instances)
+        instances = actualContext(PyPLearnObject).pyplearn_object_instances 
+        instances.append( self )
+        self.__serial_number = len(instances)
         
     def __getstate__(self):
         """For the deepcopy mechanism."""
@@ -202,8 +210,9 @@ class PyPLearnObject( PLOptionDict ):
     def __setstate__(self, state):
         """For the deepcopy mechanism."""
         self.__dict__.update(state)
-        self.__instances.append( self )
-        self.__serial_number = len(self.__instances)
+        instances = actualContext(PyPLearnObject).pyplearn_object_instances 
+        instances.append( self )
+        self.__serial_number = len(instances)
     
     def __str__( self ):
         """Calls plearn_repr global function over itself.""" 
