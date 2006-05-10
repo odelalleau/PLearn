@@ -131,6 +131,7 @@ void NGramDistribution::declareOptions(OptionList& ol)
 ///////////
 void NGramDistribution::build()
 {
+    predictor_size = n - 1;
     inherited::build();
     build_();
 }
@@ -140,7 +141,7 @@ void NGramDistribution::build()
 ////////////
 void NGramDistribution::build_()
 {
-    predictor_size = n - 1;
+    //predictor_size = n - 1;
     // We need to re-build the parent class, so that data related to
     // 'predictor_size' is correctly defined.
     inherited::build();
