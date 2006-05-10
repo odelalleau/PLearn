@@ -11,7 +11,7 @@ DEBUG = False
 class PLOptionWarning( Warning ): pass
 class PLOptionError( AttributeError ): pass
 
-from OptionBase import *
+from plearn.pyplearn.OptionBase import *
 class PLOption(OptionBase): pass
     
 class PLOptionDict( object ):
