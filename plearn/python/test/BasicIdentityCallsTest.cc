@@ -3,7 +3,7 @@
 // BasicIdentityCallsTest.cc
 //
 // Copyright (C) 2005 Nicolas Chapados 
-// Copyright (C) 2005 Olivier Delalleau 
+// Copyright (C) 2005-2006 Olivier Delalleau 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -138,6 +138,7 @@ string BasicIdentityCallsTest::python_code =
 "\n"
 "def nullary():\n"
 "    print >>sys.stderr, 'Called nullary()'\n"
+"    sys.stderr.flush()\n"
 "\n"
 "def unary_int(x):\n"
 "    assert isinstance(x,int)\n"
@@ -161,6 +162,7 @@ string BasicIdentityCallsTest::python_code =
 "\n"
 "def unary_mat(x):\n"
 "    print >>sys.stderr, 'Called unary_mat with:\\n',x\n"
+"    sys.stderr.flush()\n"
 "    assert isinstance(x,numarraycore.NumArray) and len(x.shape) == 2\n"
 "    return x\n"
 "\n"

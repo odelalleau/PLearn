@@ -4,6 +4,7 @@ from numarray import *
 
 def nullary():
     print >>sys.stderr, 'Called nullary()'
+    sys.stderr.flush()
 
 def unary_int(x):
     assert isinstance(x,int)
@@ -27,6 +28,7 @@ def unary_vec(x):
 
 def unary_mat(x):
     print >>sys.stderr, 'Called unary_mat with:\n',x
+    sys.stderr.flush()
     assert isinstance(x,numarraycore.NumArray) and len(x.shape) == 2
     return x
 
