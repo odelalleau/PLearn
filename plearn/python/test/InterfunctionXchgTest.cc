@@ -3,7 +3,7 @@
 // InterfunctionXchgTest.cc
 //
 // Copyright (C) 2005 Nicolas Chapados 
-// Copyright (C) 2005 Olivier Delalleau 
+// Copyright (C) 2005-2006 Olivier Delalleau 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -143,6 +143,7 @@ string InterfunctionXchgTest::python_code =
 "\n"
 "def print_global_map():\n"
 "    print 'Printing some_global_map within Python:', some_global_map\n"
+"    sys.stdout.flush()\n"
 ;
 
 

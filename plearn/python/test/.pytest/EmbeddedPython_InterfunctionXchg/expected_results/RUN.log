@@ -11,6 +11,7 @@ def get_value():
 
 def print_global_map():
     print 'Printing some_global_map within Python:', some_global_map
+    sys.stdout.flush()
 <<<
 Setting the string:   'This string should survive within the Python environment'
 Read back the string: 'This string should survive within the Python environment'
