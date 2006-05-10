@@ -83,7 +83,7 @@ PLEARN_IMPLEMENT_OBJECT(VMatLanguage,
                         "by the fieldname, or % followed by the field number.\n"
                         "\n"
                         "To batch-copy fields, use the following syntax: [field1:fieldn] (fields\n"
-                        "can be in @ or \% notation, with the keyword 'END' denoting the last field).\n"
+                        "can be in @ or % notation, with the keyword 'END' denoting the last field).\n"
                         "The fields can also be transformed with a VPL program using the syntax:\n"
                         "[field1:fieldn:vpl_code], where vpl_code can be any VPL code, for example\n"
                         "for a 0.5 thresholding: 0.5 < 0 1 ifelse.\n"
