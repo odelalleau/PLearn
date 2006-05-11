@@ -3,6 +3,7 @@
 // lexical_cast.cc
 //
 // Copyright (C) 2005 Christian Dorion 
+// Copyright (C) 2006 University of Montreal
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -51,6 +52,94 @@
 namespace PLearn {
 using namespace std;
 
+///////////////
+// pl_strtod //
+///////////////
+double pl_strtod(const char* nptr, char** endptr)
+{
+#ifdef WIN32
+    int i = 0;
+    char c;
+    while (isspace(c = nptr[i++])) {}
+    const char* end_parsing;
+    bool success = false;
+    bool minus = false;
+    bool infinity = false;
+    bool missing = false;
+    if (c != 0) {
+        if (c == '+')
+            c = nptr[i++];
+        else if (c == '-') {
+            c = nptr[i++];
+            minus = true;
+        }
+        if (c == 'i' || c == 'I') {
+            // Try to read an 'inf'.
+            c = nptr[i++];
+            if (c == 'n' || c == 'N') {
+                c = nptr[i++];
+                if (c == 'f' || c == 'F') {
+                    success = true;
+                    infinity = true;
+                    end_parsing = nptr + i;
+                }
+            }
+        } else if (c == 'n' || c == 'N') {
+            // Try to read a 'nan'.
+            c = nptr[i++];
+            if (c == 'a' || c == 'A') {
+                c = nptr[i++];
+                if (c == 'n' || c == 'N') {
+                    success = true;
+                    missing = true;
+                    end_parsing = nptr + i;
+                }
+            }
+        } else {
+            // Try to read a 'normal' number. In such a case the standard
+            // 'strtod' function should work properly.
+            return strtod(nptr, endptr);
+        }
+    }
+    if (success) {
+        // Ensure there are no weird trailing characters.
+        while (isspace(c = nptr[i++])) {}
+        if (c != 0)
+            success = false;
+    }
+    if (!success) {
+        // Could not perform the conversion.
+        if (endptr)
+            *endptr = (char*) nptr;
+        return 0;
+    }
+    if (endptr)
+        *endptr = (char*) end_parsing;
+    if (missing)
+        return MISSING_VALUE;
+    if (infinity)
+        return minus ? - INFINITY : INFINITY;
+    assert( false );
+    return 0;
+#else
+    // Under other operating systems, there shoud be no problems with NaN and
+    // Infinity.
+    return strtod(nptr, endptr);
+#endif
+}
+
+///////////////
+// pl_strtof //
+///////////////
+float pl_strtof(const char* nptr, char** endptr)
+{
+#ifdef WIN32
+    return float(pl_strtod(nptr, endptr));
+#else
+    return strtof(nptr, endptr);
+#endif
+}
+
 // this function handle numbers with exponents (such as 10.2E09)
 // as well as Nans. String can have trailing whitespaces on both sides
 bool pl_isnumber(const string& str, double* dbl)
@@ -58,24 +147,21 @@ bool pl_isnumber(const string& str, double* dbl)
     double d;
     string s=removeblanks(str);
     char* l;
-    d = strtod(s.c_str(),&l);
+    d = pl_strtod(s.c_str(),&l);
     if(s=="")d=MISSING_VALUE;
     if(dbl!=NULL)*dbl=d;
     return ((unsigned char)(l-s.c_str())==s.length());
 }
 
-// norman: there is no strtof in .NET
-#ifndef WIN32
 bool pl_isnumber(const string& str, float* dbl) {
     float d;
     string s=removeblanks(str);
     char* l;
-    d = strtof(s.c_str(),&l);
+    d = pl_strtof(s.c_str(),&l);
     if(s=="")d=MISSING_VALUE;
     if(dbl!=NULL)*dbl=d;
     return ((unsigned char)(l-s.c_str())==s.length());
 }
-#endif // WIN32
 
 // Return true if conversion to a long is possible
 bool pl_islong(const string& s)
@@ -105,7 +191,7 @@ double todouble(const string& s)
 {
     const char* nptr = s.c_str();
     char* endptr;
-    double result = strtod(nptr,&endptr);
+    double result = pl_strtod(nptr,&endptr);
     if(endptr==nptr) // no character to be read
         result = MISSING_VALUE;
     return result;

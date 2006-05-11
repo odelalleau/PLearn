@@ -3,6 +3,7 @@
 // lexical_cast.h
 //
 // Copyright (C) 2005 Christian Dorion 
+// Copyright (C) 2006 University of Montreal
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -50,13 +51,18 @@
 namespace PLearn {
 using namespace std;
 
+//! Conversion from string to double or float.
+//! Under Windows, these functions mimic the behavior of the Linux stdlib
+//! corresponding functions (that correctly handle NaN and Infinity, contrary
+//! to their Windows counterpart).
+//! Under other operating systems, the stdlib functions are called directly.
+double pl_strtod(const char* nptr, char** endptr);
+float  pl_strtof(const char* nptr, char** endptr);
+
 // this function handle numbers with exponents (such as 10.2E09)
 // as well as Nans. String can have trailing whitespaces on both sides
 bool pl_isnumber(const string& s,double* dbl=NULL);
-// norman: there is no strtof in .NET
-#ifndef WIN32
 bool pl_isnumber(const string& s,float* dbl);
-#endif // WIN32
 
 // Return true if the number can be converted to a long
 bool pl_islong(const string& s);
