@@ -45,9 +45,9 @@
 #define MatIO_INC
 
 #include <plearn/math/TMat.h>
-#include "fileutils.h"          //!< For getNextNonBlankLine.
-#include <stdlib.h>             //!< For strtod.
-#include <plearn/base/stringutils.h>        //!< For toint.
+#include "fileutils.h"                  //!< For getNextNonBlankLine.
+#include <plearn/base/stringutils.h>    //!< For toint.
+#include <plearn/base/lexical_cast.h>   //!< For pl_strtod.
 #include <plearn/io/openFile.h>
 
 namespace PLearn {
@@ -305,13 +305,12 @@ void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, in
         skipBlanksAndComments(loadmat);
         for(int j=0; j<width; j++) 
         {
-            // C99 strtod handles NAN's and INF's.
             if (loadmat) 
             {
                 loadmat >> inp_element;
                 if (pl_isnumber(inp_element)) 
                 {
-                    mat_i[j] = strtod(inp_element.c_str(), 0);
+                    mat_i[j] = pl_strtod(inp_element.c_str(), 0);
                     if (map_sr) 
                     {
                         T val = mat_i[j];
@@ -441,8 +440,7 @@ void loadAsciiSingleBinaryDescriptor(const PPath& filename, TMat<T>& mat)
             PLERROR("In loadAsciiSingleBinaryDescriptor, a descriptor isn't the right size");
         }
         for(int j=0; j<width; j++) {
-            // C99 strtod handles NAN's and INF's.
-            mat_i[j] = strtod(inp_element.substr(j,1).c_str(), 0);
+            mat_i[j] = pl_strtod(inp_element.substr(j,1).c_str(), 0);
         }
     }
 }
@@ -466,10 +464,9 @@ void loadAscii(const PPath& filename, TVec<T>& vec)
     // bad state
     string inp_element;
     for(; it!=itend; ++it) {
-        // C99 strtod handles NAN's and INF's.
         if (in) {
             in >> inp_element;
-            *it = strtod(inp_element.c_str(), 0);
+            *it = pl_strtod(inp_element.c_str(), 0);
         }
         if (!in) {
             in.clear();

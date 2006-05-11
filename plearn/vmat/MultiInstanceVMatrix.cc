@@ -221,7 +221,7 @@ void MultiInstanceVMatrix::build_()
         for(int k = 0; k < inputsize_ + source_targetsize; k++)
         {
             inFile >> inp_element;
-            mat_i[k] = strtod(inp_element.c_str(), 0);
+            mat_i[k] = pl_strtod(inp_element.c_str(), 0);
         }
 
         // close the last bag if necessary
