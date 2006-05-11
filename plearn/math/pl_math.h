@@ -50,6 +50,10 @@
 #include <climits>
 #include <plearn/base/plerror.h>
 
+#ifdef WIN32
+#include <limits>   //!< For numeric_limits<real>::infinity().
+#endif
+
 namespace PLearn {
 using namespace std;
 
@@ -82,10 +86,13 @@ extern _plearn_nan_type plearn_nan;
 #define MISSING_VALUE (plearn_nan.d)
 #endif
 
-//! INFINITY is not defined under Windows
-// TODO Use std::numeric_limits for better cross-platform compatibility.
-#if defined(MSC_VER) || defined(__CYGWIN__)
-#define INFINITY HUGE_VAL
+//! INFINITY is not defined under Windows, or its definition may produce a
+//! compilation warning when used. We instead use the STL numeric limits.
+#ifdef WIN32
+#ifdef INFINITY
+#undef INFINITY
+#endif
+#define INFINITY numeric_limits<real>::infinity()
 #endif
 
 //! Under Cygwin with GCC, log(x) with x < 0 returns -Inf instead of NaN.
