@@ -42,6 +42,7 @@
 
 
 #include "tostring.h"
+#include <plearn/io/openString.h>
 #include <plearn/math/pl_math.h>    //!< For 'fast_exact_is_equal'.
 
 namespace PLearn {
@@ -49,28 +50,24 @@ using namespace std;
 
 string tostring(const double& x)
 {
-    ostringstream out;
-    int ix = (int)x;
+    static string result;
+    PStream out = openString(result, PStream::raw_ascii, "w");
+    int ix = int(x);
     if (fast_exact_is_equal(ix, x))
         out << ix;
-    else {
-        out.precision(12);
+    else
         out << x;
-    }
-    return out.str();
+    out.flush();
+    return result;
 }
 
 string tostring(const float& x)
 {
-    ostringstream out;
-    int ix = (int)x;
-    if (fast_exact_is_equal(ix, x))
-        out << ix;
-    else {
-        out.precision(8);
-        out << x;
-    }
-    return out.str();
+    // Old code used to set a different precision for float numbers, but the
+    // PStream class has no option for precision, thus we now use the same code
+    // as for double.
+    double copy = x;
+    return tostring(copy);
 }
 
 } // end of namespace PLearn
