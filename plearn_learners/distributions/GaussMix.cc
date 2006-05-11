@@ -550,6 +550,185 @@ void GaussMix::updateCholeskyFromPrevious(
     //Profiler::end("updateCholeskyFromPrevious");
 }
 
+///////////////////////////////////////
+// updateInverseVarianceFromPrevious //
+///////////////////////////////////////
+// TODO Document
+void GaussMix::updateInverseVarianceFromPrevious(
+        const Mat& src, Mat& dst, const Mat& full,
+        const TVec<int>& ind_src, const TVec<int>& ind_dst)
+{
+    // The i-th element of 'is_src' ('is_dst') indicates whether the i-th
+    // dimension is in the 'ind_src'('ind_dst') vector.
+    static TVec<bool> is_src;
+    static TVec<bool> is_dst;
+
+    static TVec<int> dim_common;    // List of common dimensions.
+    static TVec<int> dim_src_only;  // List of dimensions only in 'src'.
+    static TVec<int> dim_dst_only;  // List of dimensions only in 'dst'.
+    // List of dimensions in 'src' after it has been reordered so that the
+    // common dimensions are first.
+    static TVec<int> dim_reordered_src;
+
+    // A copy of the 'src' matrix, but whose dimensions have been swapped to
+    // match the order in 'dim_reordered_src'.
+    static Mat src_reordered;
+    
+    // Temporary storage matrices.
+    static Mat tmp;
+    static Mat tmp2; 
+
+    // This matrix will contain the inverse covariance corresponding to the
+    // removal of dimensions who do not appear in 'ind_dst' (thus, it is the
+    // final result if no dimension has to be added, otherwise it is just an
+    // intermediate result).
+    static Mat dst_only_removed;
+
+    // Matrix storing the bottom-right part of the reordered source matrix
+    // (corresponding to dimensions that need to be removed).
+    static Mat B3;
+
+    // Work matrices.
+    static Mat W;
+    static Mat P;
+    static Mat B;
+
+    assert( src.length() == ind_src.length() );
+    int n = ind_src.length();
+    int p = ind_dst.length();
+    // int m = full.length();
+    dst.resize(p, p);
+    // Analyze the indices vectors.
+    int max_indice = -1;
+    if (!ind_src.isEmpty())
+        max_indice = max(max_indice, max(ind_src));
+    if (!ind_dst.isEmpty())
+        max_indice = max(max_indice, max(ind_dst));
+    // Note that 'max_indice' can be -1. This can currently happen if
+    // the first sample in a cluster has no missing value.
+    // In this case there is nothing to do: 'dst' will be empty.
+    is_dst.resize(max_indice + 1);
+    is_src.resize(max_indice + 1);
+    is_dst.fill(false);
+    is_src.fill(false);
+    for (int i = 0; i < p; i++)
+        is_dst[ind_dst[i]] = true;
+    for (int i = 0; i < n; i++)
+        is_src[ind_src[i]] = true;
+    // Build the source inverse covariance matrix where dimensions are
+    // reordered so that the first dimensions are those in common between
+    // source and destination.
+    dim_common.resize(0);
+    dim_src_only.resize(0);
+    dim_reordered_src.resize(n);
+    for (int i = 0; i < n; i++) {
+        if (is_dst[ind_src[i]])
+            dim_common.append(i);
+        else
+            dim_src_only.append(i);
+    }
+    dim_reordered_src.subVec(0, dim_common.length()) << dim_common;
+    dim_reordered_src.subVec(dim_common.length(), dim_src_only.length())
+        << dim_src_only;
+    for (int i = 0; i < dim_reordered_src.length(); i++) {
+        int dim_reordered_src_i = dim_reordered_src[i];
+        src_reordered(i, i) = src(dim_reordered_src_i, dim_reordered_src_i);
+        for (int j = i + 1; j < dim_reordered_src.length(); j++) {
+            real elem_i_j = src(dim_reordered_src_i, dim_reordered_src[j]);
+            src_reordered(i, j) = elem_i_j;
+            src_reordered(j, i) = elem_i_j;
+        }
+    }
+        /* Old code doing the same thing.
+    tmp.resize(src.length(), dim_reordered_src.length());
+    // TODO Not efficient! Optimize!
+    selectColumns(src, dim_reordered_src, tmp);
+    src_reordered.resize(n, n);
+    selectRows(tmp, dim_reordered_src, src_reordered);
+    */
+
+    // Remove the dimensions that are not present in the destination
+    // matrix.
+    int n_common = dim_common.length();
+    dst_only_removed.resize(n_common, n_common);
+    int n_src_only = dim_src_only.length();
+    if (n_src_only == 0) {
+        // Nothing to remove.
+        dst_only_removed << src_reordered;
+    } else {
+        // Compute the matrix corresponding to the removal of the dimensions
+        // that appear only in the source matrix.
+        assert( src_reordered.isSymmetric() );
+        Mat B1 = src_reordered.subMat(0, 0, n_common, n_common);
+        Mat B2 = src_reordered.subMat(0, n_common, n_common, n_src_only);
+        B3.setMod(n_src_only);
+        B3.resize(n_src_only, n_src_only);
+        B3 << src_reordered.subMat(n_common, n_common, n_src_only, n_src_only);
+        assert( B3.isSymmetric() );
+        dst_only_removed << B1;
+        tmp.resize(B3.length(), B3.width());
+        matInvert(B3, tmp);
+        tmp2.resize(tmp.length(), B2.length());
+        productTranspose(tmp2, tmp, B2);
+        tmp.resize(B2.length(), tmp2.width());
+        product(tmp, B2, tmp2);
+        dst_only_removed -= tmp;
+        assert( dst_only_removed.isSymmetric(false, true) );
+    }
+
+    // At this point, the dimensions that are not present in the
+    // destination matrix have been removed. Now, we need to add the
+    // dimensions that need to be added (those that are present in the
+    // destination but not in the source).
+    dim_dst_only.resize(0);
+    for (int i = 0; i < p; i++)
+        if (!is_src[ind_dst[i]])
+            dim_dst_only.append(ind_dst[i]);
+    int n_dst_only = dim_dst_only.length();
+    // Reorder properly the indices in 'ind_dst': first the common indices,
+    // then those only in 'dst'.
+    for (int i = 0; i < n_common; i++)
+        ind_dst[i] = ind_src[dim_common[i]];
+    for (int i = 0; i < n_dst_only; i++)
+        ind_dst[i + n_common] = dim_dst_only[i];
+    // Replace dimensions in 'src' by dimensions in the full matrix.
+    for (int i = 0; i < dim_common.length(); i++)
+        dim_common[i] = ind_src[dim_common[i]];
+    if (n_dst_only == 0) {
+        // No dimension to add.
+        dst << dst_only_removed;
+    } else {
+        // TODO This is probably not very efficient, and could be optimized.
+        tmp.resize(full.length(), dim_dst_only.length());
+        selectColumns(full, dim_dst_only, tmp);
+        W.resize(dim_common.length(), tmp.width());
+        selectRows(tmp, dim_common, W);
+        P.resize(dim_dst_only.length(), tmp.width());
+        selectRows(tmp, dim_dst_only, P);
+        B.resize(W.width(), dst_only_removed.width());
+        transposeProduct(B, W, dst_only_removed);
+        tmp.setMod(W.width());
+        tmp.resize(B.length(), W.width());
+        product(tmp, B, W);
+        negateElements(tmp);
+        tmp += P;
+        tmp2.resize(tmp.length(), tmp.width());
+        matInvert(tmp, tmp2);
+        dst.subMat(n_common, n_common, n_dst_only, n_dst_only) << tmp2;
+        tmp.resize(B.width(), tmp2.width());
+        transposeProduct(tmp, B, tmp2);
+        tmp2.resize(tmp.length(), B.width());
+        product(tmp2, tmp, B);
+        negateElements(tmp);
+        dst.subMat(0, n_common, n_common, n_dst_only) << tmp;
+        Mat dst_top_left = dst.subMat(0, 0, n_common, n_common);
+        dst_top_left << tmp2;
+        dst_top_left += dst_only_removed;
+    }
+    // Ensure 'dst' is symmetric, since we did not fill the bottom-right block.
+    fillItSymmetric(dst);
+}
+
 /////////////////////
 // addToCovariance //
 /////////////////////
@@ -611,203 +790,9 @@ void GaussMix::addToCovariance(const Vec& y, int j,
 
     bool same_covariance = no_missing_change[current_training_sample];
 
-    if (!same_covariance) {
-        /*
-        updateCholeskyFromPrevious(H_inv_tpl, H_inv_tot,
+    if (!same_covariance)
+        updateInverseVarianceFromPrevious(H_inv_tpl, H_inv_tot,
                 joint_inv_cov[j], ind_inv_tpl, ind_inv_tot);
-        */
-        // Some renaming so that this code can be moved later to its own
-        // mathematical function.
-        Mat& src = H_inv_tpl;
-        Mat& dst = H_inv_tot;
-        Mat& full = joint_inv_cov[j];
-        TVec<int>& ind_src = ind_inv_tpl;
-        TVec<int>& ind_dst = ind_inv_tot;
-
-        assert( src.length() == ind_src.length() );
-        int n = ind_src.length();
-        int p = ind_dst.length();
-        // int m = full.length();
-        dst.resize(p, p);
-        // Analyze the indices vectors.
-        int max_indice = -1;
-        if (!ind_src.isEmpty())
-            max_indice = max(max_indice, max(ind_src));
-        if (!ind_dst.isEmpty())
-            max_indice = max(max_indice, max(ind_dst));
-        // Note that 'max_indice' can be -1. This can currently happen if
-        // the first sample in a cluster has no missing value.
-        // In this case there is nothing to do: 'dst' will be empty.
-        static TVec<int> is_dst;
-        static TVec<int> is_src;
-        is_dst.resize(max_indice + 1);
-        is_src.resize(max_indice + 1);
-        is_dst.fill(false);
-        is_src.fill(false);
-        for (int i = 0; i < p; i++)
-            is_dst[ind_dst[i]] = true;
-        for (int i = 0; i < n; i++)
-            is_src[ind_src[i]] = true;
-        // Build the source inverse covariance matrix where dimensions are
-        // reordered so that the first dimensions are those in common between
-        // source and destination.
-        static TVec<int> dim_common;
-        static TVec<int> dim_src_only;
-        static TVec<int> dim_reordered_src;
-        dim_common.resize(0);
-        dim_src_only.resize(0);
-        dim_reordered_src.resize(n);
-        for (int i = 0; i < n; i++) {
-            if (is_dst[ind_src[i]])
-                dim_common.append(i);
-            else
-                dim_src_only.append(i);
-        }
-        dim_reordered_src.subVec(0, dim_common.length()) << dim_common;
-        dim_reordered_src.subVec(dim_common.length(), dim_src_only.length())
-            << dim_src_only;
-        static Mat inv_src;
-        static Mat tmp;
-        tmp.resize(src.length(), dim_reordered_src.length());
-        // TODO Not efficient! Optimize!
-        selectColumns(src, dim_reordered_src, tmp);
-        inv_src.resize(n, n);
-        selectRows(tmp, dim_reordered_src, inv_src);
-        // Remove the dimensions that are not present in the destination
-        // matrix.
-        int n_common = dim_common.length();
-        static Mat dst_only_removed;
-        dst_only_removed.resize(n_common, n_common);
-        int n_src_only = dim_src_only.length();
-        static Mat tmp2;
-        if (n_src_only == 0) {
-            // Nothing to remove.
-            dst_only_removed << inv_src;
-        } else {
-            assert( inv_src.isSymmetric() );
-            // VMat vm_inv_src(inv_src);
-            // vm_inv_src->saveAMAT("/u/delallea/tmp/inv_src.amat", false, true);
-            Mat B1 = inv_src.subMat(0, 0, n_common, n_common);
-            Mat B2 = inv_src.subMat(0, n_common, n_common, n_src_only);
-            static Mat B3;
-            B3.setMod(n_src_only);
-            B3.resize(n_src_only, n_src_only);
-            B3 << inv_src.subMat(n_common, n_common, n_src_only, n_src_only);
-            assert( B3.isSymmetric() );
-            dst_only_removed << B1;
-            tmp.resize(B3.length(), B3.width());
-            matInvert(B3, tmp);
-            // Mat tmp3(B3.length(), B3.width());
-            // matInvert(B3, tmp3);
-            tmp2.resize(tmp.length(), B2.length());
-            productTranspose(tmp2, tmp, B2);
-            tmp.resize(B2.length(), tmp2.width());
-            product(tmp, B2, tmp2);
-            dst_only_removed -= tmp;
-            assert( dst_only_removed.isSymmetric(false, true) );
-        }
-#if 0
-        // Verify that the inverse was correctly computed.
-        TVec<int> new_dim_common(dim_common.length());
-        for (int i = 0; i < dim_common.length(); i++)
-            new_dim_common[i] = ind_src[dim_common[i]];
-        Mat to_inv_part(new_dim_common.length(), new_dim_common.length());
-        for (int k = 0; k < new_dim_common.length(); k++)
-            for (int j = 0; j < new_dim_common.length(); j++)
-                to_inv_part(k,j) = full(new_dim_common[k], new_dim_common[j]);
-        assert( to_inv_part.isSymmetric() );
-        VMat to_inv_part_vm(to_inv_part);
-        to_inv_part_vm->saveAMAT("/u/delallea/tmp/to_inv_part.amat", false,
-                true);
-        Mat inverse_part(to_inv_part.length(), to_inv_part.width());
-        matInvert(to_inv_part, inverse_part);
-        for (int i = 0; i < inverse_part.length(); i++)
-            for (int j = 0; j < inverse_part.width(); j++) {
-                assert( is_equal(inverse_part(i,j), dst_only_removed(i,j)) );
-            }
-#endif
-        // At this point, the dimensions that are not present in the
-        // destination matrix have been removed. Now, we need to add the
-        // dimensions that need to be added (those that are present in the
-        // destination but not in the source).
-        static TVec<int> dim_dst_only;
-        dim_dst_only.resize(0);
-        for (int i = 0; i < p; i++)
-            if (!is_src[ind_dst[i]])
-                dim_dst_only.append(ind_dst[i]);
-        int n_dst_only = dim_dst_only.length();
-        // Reorder properly the indices in 'ind_dst'.
-        for (int i = 0; i < n_common; i++)
-            ind_dst[i] = ind_src[dim_common[i]];
-        for (int i = 0; i < n_dst_only; i++)
-            ind_dst[i + n_common] = dim_dst_only[i];
-        // Replace dimensions in 'src' by dimensions in the full matrix.
-        for (int i = 0; i < dim_common.length(); i++)
-            dim_common[i] = ind_src[dim_common[i]];
-        if (n_dst_only == 0) {
-            // No dimension to add.
-            dst << dst_only_removed;
-        } else {
-            // TODO Not efficient! Optimize!
-            tmp.resize(full.length(), dim_dst_only.length());
-            selectColumns(full, dim_dst_only, tmp);
-            static Mat W;
-            static Mat P;
-            static Mat B;
-            W.resize(dim_common.length(), tmp.width());
-            selectRows(tmp, dim_common, W);
-            P.resize(dim_dst_only.length(), tmp.width());
-            selectRows(tmp, dim_dst_only, P);
-            B.resize(W.width(), dst_only_removed.width());
-            transposeProduct(B, W, dst_only_removed);
-            tmp.setMod(W.width());
-            tmp.resize(B.length(), W.width());
-            product(tmp, B, W);
-            negateElements(tmp);
-            tmp += P;
-            // TODO Note: it may not be a good idea to use setMod this way, as the
-            // size of the storage may differ from mod() * width(), which could be
-            // an issue.
-            tmp2.resize(tmp.length(), tmp.width());
-            matInvert(tmp, tmp2);
-            dst.subMat(n_common, n_common, n_dst_only, n_dst_only) << tmp2;
-            tmp.resize(B.width(), tmp2.width());
-            transposeProduct(tmp, B, tmp2);
-            tmp2.resize(tmp.length(), B.width());
-            product(tmp2, tmp, B);
-            negateElements(tmp);
-            dst.subMat(0, n_common, n_common, n_dst_only) << tmp;
-            Mat dst_top_left = dst.subMat(0, 0, n_common, n_common);
-            dst_top_left << tmp2;
-            dst_top_left += dst_only_removed;
-        }
-        // Ensure 'dst' is symmetric, since we only filled the top-right part.
-        fillItSymmetric(dst);
-#if 0
-        // DO NOT UNCOMMENT THIS CODE, AS IT MODIFIES ind_inv_tot.
-        // Verify that the inverse was correctly computed.
-
-        ind_inv_tot.subVec(0, n_common) << dim_common;
-        ind_inv_tot.subVec(n_common, n_dst_only) << dim_dst_only;
-
-        Mat to_inverse(ind_inv_tot.length(), ind_inv_tot.length());
-        for (int k = 0; k < ind_inv_tot.length(); k++)
-            for (int j = 0; j < ind_inv_tot.length(); j++)
-                to_inverse(k,j) = full(ind_inv_tot[k], ind_inv_tot[j]);
-        assert( to_inverse.isSymmetric(true, true) );
-        // VMat to_inverse_vm(to_inverse);
-        string name = "/u/delallea/tmp/to_inverse_" +
-            tostring(current_training_sample) + ".amat";
-        // to_inverse_vm->saveAMAT(name, false, true);
-        Mat inverse(to_inverse.length(), to_inverse.width());
-        matInvert(to_inverse, inverse);
-        for (int i = 0; i < inverse.length(); i++)
-            for (int j = 0; j < inverse.width(); j++) {
-                if (!is_equal(inverse(i,j), dst(i,j)))
-                    PLERROR("Crap");
-            }
-#endif
-    }
 
     Mat* the_H_inv = same_covariance ? &H_inv_tpl : &H_inv_tot;
     TVec<int>* the_ind_inv = same_covariance? &ind_inv_tpl : &ind_inv_tot;
@@ -930,7 +915,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
             // In such a case, it is not necessary to do all computations.
             // TODO It would be good to have one single flag for both lines
             // below. Maybe current_training_sample != -1 would be enough?
-            bool eff_missing = efficient_missing == 1 &&
+            bool eff_missing = (efficient_missing == 1 ||
+                                efficient_missing == 3        ) &&
                                (previous_training_sample != -2);
             bool imp_missing = impute_missing &&
                                (current_training_sample != -1);
@@ -1202,7 +1188,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         }
                         */
                     }
-                    if (efficient_missing == 1 && current_training_sample >= 0)
+                    if ((efficient_missing == 1 || efficient_missing == 3) &&
+                        current_training_sample >= 0)
                         no_missing_change[current_training_sample] =
                             same_covariance;
 
@@ -1705,7 +1692,7 @@ void GaussMix::computePosteriors() {
         // Clear the additional 'error_covariance' matrix.
         for (int j = 0; j < L; j++)
             error_covariance[j].fill(0);
-    if (efficient_missing == 1) {
+    if (efficient_missing == 1 || efficient_missing == 3) {
         // Loop over all clusters.
         for (int k = 0; k < missing_template.length(); k++) {
             const TVec<int>& samples_clust = spanning_path[k];
@@ -2448,10 +2435,10 @@ void GaussMix::resizeDataBeforeTraining() {
             // TODO May be useful to handle other types of VMats for large
             // datasets.
             // TODO Move outside of this method.
-            if (efficient_missing == 1)
+            if (efficient_missing == 1 || efficient_missing == 3)
                 clust_imputed_missing.resize(L);
         }
-        if (efficient_missing == 1)
+        if (efficient_missing == 1 || efficient_missing == 3)
             no_missing_change.resize(nsamples);
     }
 }
@@ -2949,7 +2936,8 @@ void GaussMix::train()
         BinaryBitsTree tree(1);
         const vertex_descr& root_vertex = *(boost::vertices(tree).first);
         ProgressBar* pb = 0;
-        if (efficient_missing == 1 && report_progress)
+        if ((efficient_missing == 1 || efficient_missing == 3)
+                && report_progress)
             pb = new ProgressBar("Finding unique missing patterns",
                                  train_set->length());
         Vec input, target;
@@ -2959,7 +2947,8 @@ void GaussMix::train()
         TVec<bool> pattern(train_set->inputsize());
         sample_to_template.resize(train_set->length());
         TVec< TVec<int> > pattern_to_samples;
-        for (int i = 0; efficient_missing == 1 && i < train_set->length(); i++) {
+        for (int i = 0; (efficient_missing == 1 || efficient_missing == 3)
+                && i < train_set->length(); i++) {
             train_set->getExample(i, input, target, weight);
             vertex_descr current_vertex = root_vertex;
             for (int k = 0; k < input.length(); k++) {
@@ -3009,10 +2998,11 @@ void GaussMix::train()
         if (pb)
             delete pb;
 
-        if (efficient_missing == 1 && verbosity >= 2)
+        if ((efficient_missing == 1 || efficient_missing == 3)
+                && verbosity >= 2)
             pout << "Found " << n_unique << " unique missing patterns" << endl;
 
-        if (efficient_missing == 1) {
+        if (efficient_missing == 1 || efficient_missing == 3) {
             // Perform some kind of k-median on missing patterns for initial
             // clustering of missing patterns.
             TVec<int> indices(0, missing_patterns.length() - 1, 1);
@@ -3233,7 +3223,7 @@ void GaussMix::train()
                 // clusters_samp[missing_assign[sample_to_template[i]]].append(i);
                 clusters_samp[sample_to_template[i]].append(i);
 
-            if (efficient_missing == 1) {
+            if (efficient_missing == 1 || efficient_missing == 3) {
 #ifdef DIRECTED_HACK
                 typedef boost::adjacency_list < boost::vecS, boost::vecS,
                     boost::directedS,
