@@ -106,6 +106,17 @@ public:
     bool use_only_supervised_part;
     //! Always use supervised target
     bool always_use_supervised_target;
+    //! Threshold on training set error relative improvement,
+    //! before adding a new layer.
+    //! If < 0, then the addition of layers must be done by
+    //! the user.
+    real relative_minimum_improvement;
+    //! Input reconstruction error. The reconstruction error
+    //! of the hidden layers will always be "cross_entropy".
+    //! Choose among:
+    //!   - "cross_entropy" (default, stable version)
+    //!   - "mse"
+    string input_reconstruction_error;
 
 public:
     //#####  Public Member Functions  #########################################

@@ -71,7 +71,7 @@
 #include <plearn/var/UnaryHardSlopeVariable.h>
 #include <plearn/var/Var_operators.h>
 #include <plearn/var/Var_utils.h>
-//#include <plearn/display/DisplayUtils.h>
+#include <plearn/display/DisplayUtils.h>
 
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include <plearn/math/random.h>
@@ -104,6 +104,8 @@ DeepFeatureExtractorNNet::DeepFeatureExtractorNNet()
       use_n_first_as_supervised(-1),
       use_only_supervised_part(false),
       always_use_supervised_target(false),
+      relative_minimum_improvement(-1),
+      input_reconstruction_error("cross_entropy"),
       nhidden_schedule_current_position(-1)
 {
     random_gen = new PRandom();
@@ -231,6 +233,20 @@ declareOption(ol, "cost_funcs", &DeepFeatureExtractorNNet::cost_funcs, OptionBas
                   &DeepFeatureExtractorNNet::always_use_supervised_target, 
                   OptionBase::buildoption, 
                   "Always use supervised target.");
+    declareOption(ol, "relative_minimum_improvement", 
+                  &DeepFeatureExtractorNNet::relative_minimum_improvement,
+                  OptionBase::buildoption, 
+                  "Threshold on training set error relative improvement,\n"
+                  "before adding a new layer. If < 0, then the addition\n"
+                  "of layers must be done by the user." );
+     declareOption(ol, "input_reconstruction_error", 
+                  &DeepFeatureExtractorNNet::input_reconstruction_error,
+                  OptionBase::buildoption, 
+                   "Input reconstruction error. The reconstruction error\n"
+                   "of the hidden layers will always be \"cross_entropy\"."
+                   "Choose among:\n"
+                   "  - \"cross_entropy\" (default)\n"
+                   "  - \"mse\" \n");
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -376,7 +392,18 @@ void DeepFeatureExtractorNNet::build_()
                     //params.push_back(rw);
                     params_to_train.push_back(rw);
                 }
-                output = hiddenLayer(output,rw,"sigmoid",before_transfer_function,use_activations_with_cubed_input);
+                
+                if(always_reconstruct_input || nhidden_schedule_position == 0)
+                {
+                    if(input_reconstruction_error == "cross_entropy")
+                        output = hiddenLayer(output,rw,"sigmoid",before_transfer_function,use_activations_with_cubed_input);
+                    else if (input_reconstruction_error == "mse")
+                        output = hiddenLayer(output,rw,"linear",before_transfer_function,use_activations_with_cubed_input);
+                    else PLERROR("In DeepFeatureExtractorNNet::build_(): %s is not a valid reconstruction error", input_reconstruction_error.c_str());
+                }
+                else
+                    output = hiddenLayer(output,rw,"sigmoid",before_transfer_function,use_activations_with_cubed_input);
+
             }         
         }
 
@@ -539,9 +566,14 @@ void DeepFeatureExtractorNNet::train()
 
     int initial_stage = stage;
     bool early_stop=false;
-    //displayFunction(paramf, true, false, 250);
-    //cout << params_to_train.size() << " params to train" << endl;
-    while(stage<nstages && !early_stop)
+    displayFunction(paramf, true, false, 250);
+    cout << params_to_train.size() << " params to train" << endl;
+    real last_error = REAL_MAX;
+    real this_error;
+    Vec stats;
+    bool flag = (relative_minimum_improvement >= 0 && nhidden_schedule_current_position < nhidden_schedule.length());
+    if(verbosity>2) cout << "Training layer " << nhidden_schedule_current_position+1 << endl;
+    while((stage<nstages || flag) && !early_stop)
     {
         optimizer->nstages = optstage_per_lstage;
         train_stats->forget();
@@ -549,11 +581,21 @@ void DeepFeatureExtractorNNet::train()
         optimizer->optimizeN(*train_stats);
         // optimizer->verifyGradient(1e-4); // Uncomment if you want to check your new Var.
         train_stats->finalize();
+        stats = train_stats->getMean();
         if(verbosity>2)
-            cout << "Epoch " << stage << " train objective: " << train_stats->getMean() << endl;
-        ++stage;
+        {
+            if(flag)
+                cout << "Initialization epoch, reconstruction train objective: " << stats << endl;
+            else
+                cout << "Epoch " << stage << " train objective: " << stats << endl;
+        }
         if(pb)
             pb->update(stage-initial_stage);
+
+        this_error = stats[stats.length()-2];
+        if(flag && last_error - this_error < relative_minimum_improvement * last_error) break;
+        if(!flag) ++stage;
+        last_error = this_error;
     }
     if(verbosity>1)
         cout << "EPOCH " << stage << " train objective: " << train_stats->getMean() << endl;
@@ -564,6 +606,13 @@ void DeepFeatureExtractorNNet::train()
     // Hugo: I don't know why we have to do this?!?
     output_and_target_to_cost->recomputeParents();
     test_costf->recomputeParents();
+    
+    if(relative_minimum_improvement >= 0 && nhidden_schedule_current_position < nhidden_schedule.length())
+    {
+        nhidden_schedule_position++;
+        build();
+        train();
+    }
 }
 
 void DeepFeatureExtractorNNet::computeOutput(const Vec& input, Vec& output) const
@@ -693,7 +742,18 @@ void DeepFeatureExtractorNNet::buildCosts(const Var& the_output, const Var& the_
         for(int i=0; i<costs.length(); i++)
             costs[i] = new SourceVariable(val);
         
-        Var c = stable_cross_entropy(before_transfer_func, the_unsupervised_target);
+        Var c;
+        if(always_reconstruct_input || nhidden_schedule_position == 0)
+        {
+            if(input_reconstruction_error == "cross_entropy")
+                c = stable_cross_entropy(before_transfer_func, the_unsupervised_target);
+            else if (input_reconstruction_error == "mse")
+                c = sumsquare(the_output-the_unsupervised_target);
+            else PLERROR("In DeepFeatureExtractorNNet::buildCosts(): %s is not a valid reconstruction error", input_reconstruction_error.c_str());
+        }
+        else
+            c = stable_cross_entropy(before_transfer_func, the_unsupervised_target);
+
         costs.push_back(c);
         assert( regularizer >= 0 );
         if (regularizer > 0) {
