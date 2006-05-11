@@ -57,6 +57,7 @@ NGramDistribution::NGramDistribution() :
     forget();
     // In a N-Gram, the predicted size is always one.
     predicted_size = 1;
+    predictor_size = -1;
 }
 
 PLEARN_IMPLEMENT_OBJECT(NGramDistribution,
@@ -131,7 +132,8 @@ void NGramDistribution::declareOptions(OptionList& ol)
 ///////////
 void NGramDistribution::build()
 {
-    predictor_size = n - 1;
+    // now set in the constructor to -1
+    //predictor_size = n - 1;
     inherited::build();
     build_();
 }
