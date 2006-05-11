@@ -554,9 +554,11 @@ void GaussMix::updateCholeskyFromPrevious(
 // updateInverseVarianceFromPrevious //
 ///////////////////////////////////////
 // TODO Document
+// Also, note that 'ind_dst' is going to be modified to reflect the reordering
+// of dimensions..
 void GaussMix::updateInverseVarianceFromPrevious(
         const Mat& src, Mat& dst, const Mat& full,
-        const TVec<int>& ind_src, const TVec<int>& ind_dst)
+        const TVec<int>& ind_src, const TVec<int>& ind_dst) const
 {
     // The i-th element of 'is_src' ('is_dst') indicates whether the i-th
     // dimension is in the 'ind_src'('ind_dst') vector.
@@ -1047,13 +1049,19 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     cholesky_queue.resize(1);
                     // pout << "length = " << cholesky_queue.length() << endl;
                     Mat& chol = cholesky_queue[0];
-                    choleskyDecomposition(cov_y_missing, chol);
+                    if (efficient_missing == 1)
+                        choleskyDecomposition(cov_y_missing, chol);
+                    else {
+                        assert( efficient_missing == 3 );
+                        matInvert(cov_y_missing, chol);
+                    }
                     indices_queue.resize(1);
                     TVec<int>& ind = indices_queue[0];
                     ind.resize(n_non_missing);
                     ind << non_missing;
 
                 }
+
                 mu_y = center(j).subVec(0, n_predicted);
                 mu_y_missing.resize(n_non_missing);
                 y_missing.resize(n_non_missing);
@@ -1149,6 +1157,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
 
                         // Optimization: detect when the same covariance matrix
                         // can be re-used.
+                        // TODO What about just the dimensions being reordered?
+                        // Are we losing time in such cases?
                         same_covariance =
                             ind_tpl.length() == ind_tot.length() &&
                             previous_training_sample >= 0;
@@ -1210,8 +1220,14 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     }
                         */
                     if (!same_covariance) {
-                    updateCholeskyFromPrevious(L_tpl, L_tot, joint_cov[j],
-                            ind_tpl, ind_tot);
+                        if (efficient_missing == 1)
+                            updateCholeskyFromPrevious(L_tpl, L_tot,
+                                    joint_cov[j], ind_tpl, ind_tot);
+                        else {
+                            assert( efficient_missing == 3 );
+                            updateInverseVarianceFromPrevious(L_tpl, L_tot,
+                                    joint_inv_cov[j], ind_tpl, ind_tot);
+                        }
                     }
                     // Note to myself: indices in ind_tot will be changed.
 
@@ -1226,8 +1242,13 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     the_L = same_covariance ? &L_tpl : &L_tot;
 
                     n = the_L->length();
-                    for (int i = 0; i < n; i++)
-                        log_det += pl_log((*the_L)(i, i));
+                    if (efficient_missing == 1) {
+                        for (int i = 0; i < n; i++)
+                            log_det += pl_log((*the_L)(i, i));
+                    } else {
+                        assert( efficient_missing == 3 );
+                        log_det += det(*the_L, true);
+                    }
                     assert( !(isnan(log_det) || isinf(log_det)) );
                     log_likelihood = -0.5 * (n * Log2Pi) - log_det;
                     }
@@ -1250,13 +1271,19 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                                 y[ind_tot_k] - center_j[ind_tot_k];
                         }
 
+                    static Vec tmp_vec1;
                     if (impute_missing && current_training_sample >= 0) {
                         // We need to store the conditional expectation of the
                         // sample missing values.
-                        static Vec tmp_vec1, tmp_vec2;
+                        static Vec tmp_vec2;
                         tmp_vec1.resize(the_L->length());
                         tmp_vec2.resize(the_L->length());
-                        choleskySolve(*the_L, y_centered, tmp_vec1, tmp_vec2);
+                        if (efficient_missing == 1)
+                            choleskySolve(*the_L, y_centered, tmp_vec1, tmp_vec2);
+                        else {
+                            assert( efficient_missing == 3 );
+                            product(tmp_vec1, *the_L, y_centered);
+                        }
                         static Mat K2;
                         int ind_tot_length = ind_tot.length();
                         K2.resize(cov_y.length() - ind_tot_length,
@@ -1280,11 +1307,14 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         clust_imputed_missing[j](path_index) << full_vec;
                     }
 
-                    static Vec tmp_vec;
-                    tmp_vec.resize(n);
                     if (n > 0) {
-                        choleskyLeftSolve(*the_L, y_centered, tmp_vec);
-                        log_likelihood -= 0.5 * pownorm(tmp_vec);
+                        if (efficient_missing == 1) {
+                            choleskyLeftSolve(*the_L, y_centered, tmp_vec1);
+                            log_likelihood -= 0.5 * pownorm(tmp_vec1);
+                        } else {
+                            assert( efficient_missing == 3 );
+                            log_likelihood -= 0.5 * dot(y_centered, tmp_vec1);
+                        }
                     }
                     // Now remember L_tot for the generations to come.
                     // TODO This could probably be optimized to avoid useless
@@ -1298,8 +1328,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     // pout << "length = " << cholesky_queue.length() << endl;
 
                     // Free a reference to element in cholesky_queue. This
-                    // is needed beccause this matrix is going to be
-                    // resized.
+                    // is needed because this matrix is going to be resized.
                     L_tpl = dummy_mat;
 
                     if (!same_covariance || cannot_free) {

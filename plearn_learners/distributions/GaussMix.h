@@ -422,7 +422,7 @@ protected:
     // (use the inverse variance lemma to update the inverse covariance matrix)
     void updateInverseVarianceFromPrevious(
         const Mat& src, Mat& dst, const Mat& full,
-        const TVec<int>& ind_src, const TVec<int>& ind_dst);
+        const TVec<int>& ind_src, const TVec<int>& ind_dst) const;
 
     // TODO DOCUMENT!!!
     void addToCovariance(const Vec& y, int j, const Mat& cov, real post);
