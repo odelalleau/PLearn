@@ -162,7 +162,6 @@ public:
     string save_trainingset_prefix;
   
 protected:
-    //#####  Learnt Options  ##################################################
 
     /**
      *  The training set as set by setTrainingSet.  Data-sets are seen as
@@ -176,6 +175,8 @@ protected:
 
     //! Validation set used in some contexts
     VMat validation_set;
+
+    //#####  Learnt Options  ##################################################
 
     //! Learnt inputsize obtained from train_set when doing setTrainingSet
     int inputsize_;
