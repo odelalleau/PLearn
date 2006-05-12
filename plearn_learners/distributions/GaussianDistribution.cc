@@ -183,7 +183,7 @@ void GaussianDistribution::train()
     // Otherwise, just fill the eigen-* matrices to all NaN...
     if (l>0 && maxneigval>0)
     {
-        eigenVecOfSymmMat(covarmat, maxneigval, eigenvalues, eigenvectors);
+        eigenVecOfSymmMat(covarmat, maxneigval, eigenvalues, eigenvectors, (verbosity>=4));
         int neig = 0;
         while(neig<eigenvalues.length() && eigenvalues[neig]>0.)
             neig++;
