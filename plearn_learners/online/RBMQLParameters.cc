@@ -116,9 +116,18 @@ void RBMQLParameters::build_()
     weights_pos_stats.resize( up_layer_size, down_layer_size );
     weights_neg_stats.resize( up_layer_size, down_layer_size );
 
-    down_units_params.resize( 2, down_layer_size );
-    down_units_params_pos_stats.resize( 2 , down_layer_size );
-    down_units_params_neg_stats.resize( 2 , down_layer_size );
+    down_units_params.resize( 2 );
+    down_units_params[0].resize( down_layer_size ) ;     
+    down_units_params[1].resize( down_layer_size ) ; 
+    
+    down_units_params_pos_stats.resize( 2 );
+    down_units_params_pos_stats[0].resize( down_layer_size );
+    down_units_params_pos_stats[1].resize( down_layer_size );
+    
+    down_units_params_neg_stats.resize( 2 );
+    down_units_params_neg_stats[0].resize( down_layer_size );
+    down_units_params_neg_stats[1].resize( down_layer_size );
+    
     for( int i=0 ; i<down_layer_size ; i++ )
     {
         char dut_i = down_units_types[i];
@@ -226,9 +235,18 @@ void RBMQLParameters::update()
 
     for( int i=0 ; i<down_layer_size ; i++ )
     {
-        down_units_params[i] -=
-            learning_rate * (down_units_params_pos_stats[i]/pos_count
-                             - down_units_params_neg_stats[i]/neg_count);
+        // update the bias of the down units
+        down_units_params[0][i] -=
+            learning_rate * (down_units_params_pos_stats[0][i]/pos_count
+                             - down_units_params_neg_stats[0][i]/neg_count);
+        
+        // update the quadratic term of the down units
+        down_units_params[1][i] -=
+            learning_rate * (down_units_params_pos_stats[1][i]/pos_count
+                             - down_units_params_neg_stats[1][i]/neg_count);
+        
+//        cout << "bias[i] " << down_units_params[0][i] << endl ; 
+//        cout << "a[i]    " << down_units_params[1][i] << endl ; 
     }
 
     clearStats();
@@ -239,8 +257,11 @@ void RBMQLParameters::clearStats()
     weights_pos_stats.clear();
     weights_neg_stats.clear();
 
-    down_units_params_pos_stats.clear();
-    down_units_params_neg_stats.clear();
+    down_units_params_pos_stats[0].clear();
+    down_units_params_pos_stats[1].clear();
+    
+    down_units_params_neg_stats[0].clear();
+    down_units_params_neg_stats[1].clear();
 
     up_units_bias_pos_stats.clear();
     up_units_bias_neg_stats.clear();
@@ -323,7 +344,8 @@ void RBMQLParameters::forget()
         random_gen->fill_random_uniform( weights, -d, d );
     }
 
-    down_units_params.clear();
+    down_units_params[0].clear();
+    down_units_params[1].fill(1.);
     up_units_bias.clear();
 
     clearStats();
