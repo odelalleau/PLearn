@@ -142,6 +142,10 @@
 #include <plearn_learners/classifiers/ClassifierFromDensity.h>
 #include <plearn_learners/classifiers/KNNClassifier.h>
 #include <plearn_learners/classifiers/MultiInstanceNNet.h>
+#include <plearn_learners_experimental/MoleculeTemplateLearner.h>
+#include <plearn_learners_experimental/TestLearner.h>
+
+//#include <plearn_learners/classifiers/OverlappingAdaBoost.h> // Does not currently compile.
 #include <plearn_learners/classifiers/ClassifierFromConditionalPDistribution.h>
 
 // Generic
@@ -200,6 +204,7 @@
 #include <plearn_learners/online/RBMMixedLayer.h>
 #include <plearn_learners/online/RBMJointGenericParameters.h>
 #include <plearn_learners/online/HintonDeepBeliefNet.h>
+#include <plearn_learners/online/GaussianDBNClassification.h>
 
 #include <plearn_learners/online/SquaredErrModule.h>
 #include <plearn_learners/online/TanhModule.h>
@@ -282,6 +287,7 @@
 #include <plearn/vmat/RegularGridVMatrix.h>
 #include <plearn/vmat/RemoveDuplicateVMatrix.h>
 #include <plearn/vmat/ReorderByMissingVMatrix.h>
+//#include <plearn/vmat/SelectAttributsSequenceVMatrix.h>
 #include <plearn/vmat/SelectRowsMultiInstanceVMatrix.h>
 #include <plearn/vmat/ShuffleColumnsVMatrix.h>
 #include <plearn/vmat/SortRowsVMatrix.h>
