@@ -5627,7 +5627,7 @@ T det(const TMat<T>& LU, int detsign, bool log_det = false)
             minus = !minus;
             detsign = - detsign;
         }
-        determinant = pl_log(detsign);
+        determinant = pl_log(double(detsign));
     }
     int mod = LU.mod();
     int n = LU.width();
