@@ -632,6 +632,9 @@ void GaussMix::updateInverseVarianceFromPrevious(
     dim_reordered_src.subVec(0, dim_common.length()) << dim_common;
     dim_reordered_src.subVec(dim_common.length(), dim_src_only.length())
         << dim_src_only;
+    src_reordered.setMod(dim_reordered_src.length());
+    src_reordered.resize(dim_reordered_src.length(),
+                         dim_reordered_src.length());
     for (int i = 0; i < dim_reordered_src.length(); i++) {
         int dim_reordered_src_i = dim_reordered_src[i];
         src_reordered(i, i) = src(dim_reordered_src_i, dim_reordered_src_i);
@@ -905,6 +908,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
             }
     } else {
         assert( type_id == TYPE_GENERAL );
+        log_likelihood = 0; // Initialize resultresult  to zero.
         // TODO Put both cases (n_predictor == 0 and other) in same code (they are
         // very close one to each other).
         if (n_predictor == 0) {
@@ -1053,6 +1057,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         choleskyDecomposition(cov_y_missing, chol);
                     else {
                         assert( efficient_missing == 3 );
+                        chol.resize(cov_y_missing.length(),
+                                    cov_y_missing.length());
                         matInvert(cov_y_missing, chol);
                     }
                     indices_queue.resize(1);
@@ -1226,7 +1232,31 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         else {
                             assert( efficient_missing == 3 );
                             updateInverseVarianceFromPrevious(L_tpl, L_tot,
-                                    joint_inv_cov[j], ind_tpl, ind_tot);
+                                    joint_cov[j], ind_tpl, ind_tot);
+#if 0
+                            // Check that the inverse is correctly computed.
+                            VMat L_tpl_vm(L_tpl);
+                            VMat L_tot_vm(L_tot);
+                            VMat joint_cov_vm(joint_cov[j]);
+                            Mat data_tpl(1, ind_tpl.length());
+                            for (int q = 0; q < ind_tpl.length(); q++)
+                                data_tpl(0, q) = ind_tpl[q];
+                            Mat data_tot(1, ind_tot.length());
+                            for (int q = 0; q < ind_tot.length(); q++)
+                                data_tot(0, q) = ind_tot[q];
+                            VMat ind_tpl_vm(data_tpl);
+                            VMat ind_tot_vm(data_tot);
+                            L_tpl_vm->saveAMAT("/u/delallea/tmp/L_tpl_vm.amat",
+                                    false, true);
+                            L_tot_vm->saveAMAT("/u/delallea/tmp/L_tot_vm.amat",
+                                    false, true);
+                            joint_cov_vm->saveAMAT("/u/delallea/tmp/joint_cov_vm.amat",
+                                    false, true);
+                            ind_tpl_vm->saveAMAT("/u/delallea/tmp/ind_tpl_vm.amat",
+                                    false, true);
+                            ind_tot_vm->saveAMAT("/u/delallea/tmp/ind_tot_vm.amat",
+                                    false, true);
+#endif
                         }
                     }
                     // Note to myself: indices in ind_tot will be changed.
@@ -1247,7 +1277,18 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                             log_det += pl_log((*the_L)(i, i));
                     } else {
                         assert( efficient_missing == 3 );
-                        log_det += det(*the_L, true);
+#if 0
+                        VMat the_L_vm(*the_L);
+                        the_L_vm->saveAMAT("/u/delallea/tmp/L.amat", false,
+                                true);
+#endif
+                        // Note: we need to multiply the log-determinant by 0.5
+                        // compared to 'efficient_missing == 1' because (1) it
+                        // is the determinant of the inverse covariance matrix,
+                        // and (2) the determinant computed from Cholesky is
+                        // the one for L, which is the squared root of the one
+                        // of the full matrix.
+                        log_det += -0.5 * det(*the_L, true);
                     }
                     assert( !(isnan(log_det) || isinf(log_det)) );
                     log_likelihood = -0.5 * (n * Log2Pi) - log_det;
