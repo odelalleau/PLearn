@@ -140,6 +140,7 @@ Have fun!
 
 Pascal
 
+\iffalse
 
 \section{Developer CVS access}
 
@@ -157,7 +158,7 @@ cvs -d :ext:your_sourceforge_login@cvs.sourceforge.net:/cvsroot/plearn co PLearn
 \end{verbatim}
 \end{itemize}
 
-
+\fi
 
 \section{Additional tools for developers}
 
@@ -167,15 +168,18 @@ In addition, if you wish to develop new learning algorithms, or otherwise
 \item {\bf ssh} for write access to the SourceForge CVS repository.
 \item {\bf gdb} for basic debugging (or a {\em better} debugger if you have one!)
 \item {\bf valgrind} a wonderful free tool for memory-bug hunting.
+\item {\bf python} for running python scripts, as well as the PLearn build system
 \item {\bf perl} for running perl scripts
 \item {\bf LaTeX, pdflatex, dvips, latex2html, doxygen} to re-generate the documentation. 
 \end{itemize}
+
+
 
 \chapter{Basics}
 
 \section{PLearn for Matrix-Vectors Operations}
 
-PLearn can be used as a kind of Matlab. The notation are much 
+PLearn can be used as a kind of Matlab. The notation are more
 difficult but the efficiency is uncomparable.
 
 \subsection{Creating}
@@ -1977,6 +1981,231 @@ source-tree, and to manipulate matrix files.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\chapter{Managing software growth}
+
+A large library and collection of tools in constant development like PLearn is comparable to a
+vine which keeps growing branches endlessly. As developers adapt it for
+diverse uses, leading it simultaneously in different directions, this
+growth will manifest as an overwhelming tendency to:
+\begin{itemize}
+\item add new classes and files (that's fine!) 
+\item extend existing methods of base classes by adding extra arguments (possibly with
+  default values)
+\item add new member fields to existing base classes
+\item add new methods to existing base classes
+\item add new dependencies between existing files/classes (by adding new
+  {\tt \#include} directives, due for example to the addition of a method taking a novel
+  {\em type} of argument which needs to be "included").
+\item add dependencies to new external libraries/tools 
+\end{itemize}
+This process is natural in the course of development, and is desirable if
+we want to keep the code base adaptable. However if left unchecked it will lead to
+its logical undesirable outcome: a huge collection of files, base classes with
+hundreds of member fields and hundreds of methods (many for obscure special
+purposes), very long compile and link times and huge executables (due to all
+the added dependencies) and an installation nightmare on new environments
+(due to the dependency on a large number of exotic "external libraries").
+
+The aim of this chapter is to raise awareness of these issues, by shedding
+light on them from several angles. This will hopefully help developers get a better
+grip on them and take them properly into account when making design
+decisions (in particular decisions that imply adding a {\tt \#include} in an
+existing file).
+
+\section{A few words on the build system}
+
+Believe it or not, but the {\tt pymake} system is designed to optimally link
+together {\em only} the object files that are {\em strictly necessary} for
+a given executable program, and among them to re-compile only those that really
+need re-compilation.
+
+Now in working with PLearn, many experience the very long compilatin and
+linking of a huge number of files. I insist that this is not due to the
+build system, but only to what you, directly or indirectly, {\em include}
+in your executable.
+
+So while it is useful for some purposes to have a {\tt plearn} executable that
+includes almost everything, it is clearly not {\em this} {\tt plearn.cc} that you
+should be compiling linking and working with when you are {\em developing} new
+algorithms to carry experiments on a more limited subject field.
+
+{\bf Suggestion:} 
+\begin{itemize}
+\item Make a copy of {\tt plearn.cc} into {\tt mylearn.cc} and edit it to
+include only the few classes you (or your script) will need.
+\item Don't include something like {\tt plearn\_inc.h} which includes a large number of
+files you probably don't need. Rather copy-paste the content of {\tt
+plearn\_inc.h} into your {\tt mylearn.cc} and comment out all the things
+you won't need.
+\item Don't commit {\em your} {\tt mylearn.cc} under version control (so
+  that it remains yours and seperate from the others' mylearn).
+\end{itemize}
+
+Using such a {\tt mylearn} should make the list of files linked together
+and correpsonding link time a little shorter.
+
+Now when using pymake's parallel compilation facility, the {\em
+compilation} time for plearn projects is usually reasonable. But since {\em
+linking} cannot be parallelized, link time can be problematic, especially
+when the object files being linked are not on your local machine (due to
+NFS sluggishness). So it is highly recommended, if you want link time to be
+acceptable, that linking does not go through NFS (i.e. link on the machine
+where the files are physically located).
+
+TODO: write about {\tt pymake -dependency}
+
+The only remaining way to improve the issue of compilation and link time
+and executable size is to have a {\em sensible dependency graph} between
+files, so that unnecessary files don't get indirectly "included". This can
+only be achieved by developer awareness and proper restraint when the urge
+rises to add a {\tt \#include} in an existing file. The following section
+will try to give a few hints as to how this can be achieved.
+
+{\bf Remark 1:} You may have had the feeling that if only plearn was made
+into a proper library or set of libraries (static {\tt .a} or dynamic {\tt
+.so}) the compilation and link time problems would somehow vanish. This is
+simply untrue: such a system would necessarily be suboptimal compared to
+the {\bf pymake} approach, as illustrated in the following example. Suppose
+we have a number of object files A,B,C,D,E,F,G bound together in a library,
+and suppose that B,C,D,E,F,G all depend on A but are otherwise independent of each other (ex: they are all direct
+subclasses of A). Now suppose that your executable only needs G
+directly. In addition suppose, we had to make a slight modifitation in
+{\tt A.h} If you go the library route, regenerating your executable will imply
+first regenerating the out-of-date library, which means recompiling
+A,B,C,D,E,F,G and rebuilding the library archive. The linking phase will
+then build your executable from A and G. But with the {\bf pymake}
+approach, only the necessary files A and G will be recompiled (and bound
+together in the executable), which is a more optimal use of ressources.
+Having the ability to generate proper libraries may be desirable for other considerations though.
+
+{\bf Remark 2, limitation of pymake:} for efficiency reasons, pymake doesn't do a
+full C preprocessor pass, and thus doesn't currently understand the
+preprocessor logic of {\tt \#define \#ifdef \#if ... \#else \#endif}. All it
+understands is C and C++ comments. Thus if for ex. you {\tt \#include} something
+within a {\tt \#ifdef SOMEDEF}, whether SOMEDEF happens to be defined or not in
+the current context, pymake will still conclude there is a dependency link
+with the {\tt \#included} file. So in short if you want pymake to ignore a
+{\tt \#include} the only current way is to comment it out. 
+
+
+\section{How to limit compilation and link dependencies}
+
+\subsection{Compilation dependency versus link dependency}
+
+For the rest of our discussion, it is important to distinguish between two
+different kinds of dependencies:
+\begin{itemize}
+\item Saying that a file Y has a {\bf compilation dependency} on a file X
+  means that whenever X changes, Y is to be considered out-of-date and will
+  have to be recompiled if we need an up-to-date version of Y. Ex: Y {\tt
+  \#includes} X or includes another file that includes another file that
+  includes X, etc\ldots In short compilation dependencies affect which files
+  will have to be "recompiled" (and thus affect re-compilation time).
+\item Saying that a file Y has a {\bf link dependency} on a
+  file X means that whenever we need to link with the corresponding object
+  file "X.o" we will also have to link with "Y.o". In short link
+  dependencies affect which files will have to be linked together to
+  produce an executable (and thus directly affects link time).
+\end{itemize}
+
+These two concepts are related, yet subtly different, as will become
+apparent shortly.
+
+\subsection{How dependencies tend to creep in, and ways around them}
+
+Let us begin with a few remarks. Old-fashioed C libraries tended to put
+{\em one function} per .c file (i.e. per compilation unit). This resulted
+in libraries with very fine granularity, and only the {\em necessary
+functions} were included and linked in a given executable. But with classes
+in object oriented C++, the granularity cannot go below the class level
+(one class per compilation unit). And as a minimum, a class carries with it 
+the compilation and link dependencies implied by {\em all its
+ methods} and {\em all their argument types}.
+
+Now when people learn C++ object-oriented programming, especially when
+their background programming experience is a language like Java, there is a
+tendency to want to make everything a method within a class, because it
+appears elegant, and the OO way. But it is important to pause and reflect
+on the consequences and alternatives, especially when adding a method
+implies adding a {\tt \#include} which adds compile and link dependencies.
+
+An example will better illustrate the alternative possible choices:
+
+Suppose we have two independent classes A (files A.h, A.cc) and B (B.h, B.cc),
+and we want to add some operation {\tt f} that requires instances of A and B
+as arguments (or return value). There are essentially 3 ways
+to implement such an operation:
+\begin{itemize}
+\item As a new method of A, taking a B as argument {\tt A::f(B)}
+\item As a new method of B, taking an A as argument {\tt B::f(A)}
+\item As a regular function of A and B {\tt f(A,B)}
+\end{itemize}
+
+Now the consequences in terms of introduced file dependencies are very
+different.
+\begin{enumerate}
+\item Adding {\tt A::f(B)} implies making A depend on B (i.e. you'll no
+  longer be able to link with A without also linking with B, and any change
+  to B.h will at least trigger a recompile of A.cc).
+%, and you'll need
+%  to write a {\tt \#include "B.h"} at least in {\tt A.cc} {Introducing a new method of A taking a B as argument implies adding
+%  at least a link dependency from A on B, and a compilation dependency from
+%  A.cc on B.h (and often also from A.h on B.h)
+\item Similarly, adding {\tt B::f(A)} implies making B depend on A.
+\item On the other hand {\tt f(A,B)} can be put in a separate file
+  (compilation unit) possibly together with other functions of A and
+  B. This does not create any direct compilation or link dependency between
+  classes A and B, and the file containing {\tt f} needs only be included (and consequently
+  compiled and linked with) if the specific funcitonality {\tt f} is
+  needed.
+\end{enumerate}
+
+So whenever it appears at first obvious that we need to add a method
+{\tt A::f(B)} to a
+given class {\tt A}, and that adding such a method forces us to add an {\tt
+\#include "B.h"} directive, it should trigger a red light in the mind of the
+developer. The red light is an invitation to consider the other two alternatives. The
+following considerations should then weigh in the design decision.
+\begin{itemize}
+\item Obviously, if {\tt A::f(B)} is to be a virtual method designed to be
+  redefined in sub-classes of A, then there is no discussing it, it should be
+  {\tt A::f(B)}. But if there is no reason to expect that {\tt f} needs to
+  be virtual in order to be redefined in sub-classes, then the
+  alternatives can and should be considered.
+\item If {\tt f} is a rarely needed functionality with a large
+  implementation code, it is probably best left as a separate function in
+  its own file (posibly with other similar functions).
+\item It may be nicer to group {\tt f(A,B)} with other functions relating
+  to a same topic in a separate file, rather than unreasonably increase the
+  number of methods of A.
+\item But if A is meant to almost always work together with B (i.e. if it
+  makes no sense having an A without also manipulating some kind of B), or
+  if A already depends on B due to some other reason (such as having a
+  member variable of type B) then
+  {\tt A::f(B)} is probably a reasonable design choice. 
+\item When hesitating between {\tt A::f(B)} and {\tt B::f(A)} the choice
+  should be to make the least basic, higher level, least used class depend
+  on the most basic, lower level, more widely used class, rather than the
+  other way round.
+\end{itemize}
+
+TODO: talk about use of forward declaration to reduce compilation dependency,
+but how it doesn't reduce link dependency.
+
+\section{Regarding external library dependencies}
+
+\section{Evolving software in a backward-compatible way}
+
+TODO: talk about 
+\begin{itemize}
+\item Tolerant, evolution-friendly, serialization format
+\item class versioning
+\item new version of class (filename scheme)
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 \chapter{ PLearn coding guidelines and philosophy}
 
  Several people wrote significant parts of PLearn, and if you take a
@@ -1999,7 +2228,7 @@ machine-learning library. Yet I insist on the \emph{can be} : it
 doesn't always have to be, it depends a great deal on what features
 you choose to use and when.
 
- People who discover C++ tend to first be overwhelmed with its wealth
+People who discover C++ tend to first be overwhelmed with its wealth
 of features, and then seem to want to use them all at once in even the
 simplest piece of code (complex templates, deep multiple inheritance
 trees, exceptions, multiple nested namespaces; add multi-threading on
@@ -2068,7 +2297,7 @@ for possible default values (that are to appear only in the .h),
 the prototype in the .h file should be identical to the definition
 in the .cc file and include parameter names.
 
- (i.e. people usually have trouble understanding what float* f(float*,
+ (Ex: people usually have trouble understanding what float* f(float*,
 int, int, char, char*, float); is supposed to do, and defining a new
 type for each argument is \emph{not} the right way of making this
 more understandable\ldots\ giving them a meaningful name is.)
