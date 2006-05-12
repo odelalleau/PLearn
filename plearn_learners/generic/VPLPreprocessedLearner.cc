@@ -57,8 +57,8 @@ VPLPreprocessedLearner::VPLPreprocessedLearner()
 
 PLEARN_IMPLEMENT_OBJECT(
     VPLPreprocessedLearner,
-    "Learner whose training-set, inputs and outputs can be pre/post-processed by VPL code",
-    "See VMatLanguage for the definition of the allowed VPL syntax."
+    "DEPRECATED. Consider using VPLPreprocessedLearner2 instead.",
+    "Learner whose training-set, inputs and outputs can be pre/post-processed by VPL code. See VMatLanguage for the definition of the allowed VPL syntax."
     );
 
 void VPLPreprocessedLearner::declareOptions(OptionList& ol)
