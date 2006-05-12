@@ -222,9 +222,21 @@ public:
     TVec<string> fieldNames() const; //!< Returns the vector of field names.
     void unduplicateFieldNames(); //! Add a numeric suffix to duplicated fieldNames (eg: field.1 field.2 etc..).
 
-    VMField::FieldType fieldType(int fieldindex) const { return getFieldInfos(fieldindex).fieldtype; }
-    VMField::FieldType fieldType(const string& fieldname) const { return fieldType(fieldIndex(fieldname)); }
-    const VMFieldStat& fieldStat(int j) const { return fieldstats[j]; }
+    //! Returns the names of the input fields (if any)
+    virtual TVec<string> inputFieldNames() const;
+
+    //! Returns the names of the target fields (if any)
+    virtual TVec<string> targetFieldNames() const;
+
+    //! Returns the names of the weight fields (if any)
+    virtual TVec<string> weightFieldNames() const;
+
+    //! Returns the names of the extra fields (if any)
+    virtual TVec<string> extraFieldNames() const;
+
+    VMField::FieldType fieldType(int fieldindex) const { return getFieldInfos(fieldindex).fieldtype; } 
+    VMField::FieldType fieldType(const string& fieldname) const { return fieldType(fieldIndex(fieldname)); } 
+    const VMFieldStat& fieldStat(int j) const { return fieldstats[j]; } 
     const VMFieldStat& fieldStat(const string& fieldname) const { return fieldStat(fieldIndex(fieldname)); }
 
     void printFields(PStream& out) const;

@@ -235,6 +235,18 @@ TVec<string> VMatrix::fieldNames() const
     return names;
 }
 
+TVec<string> VMatrix::inputFieldNames() const
+{ return fieldNames().subVec(0,inputsize_); }
+
+TVec<string> VMatrix::targetFieldNames() const
+{ return fieldNames().subVec(inputsize_, targetsize_); }
+
+TVec<string> VMatrix::weightFieldNames() const
+{ return fieldNames().subVec(inputsize_+targetsize_, weightsize_); }
+
+TVec<string> VMatrix::extraFieldNames() const
+{ return fieldNames().subVec(inputsize_+targetsize_+weightsize_,extrasize_); }
+
 ////////////////
 // fieldIndex //
 ////////////////
