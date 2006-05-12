@@ -1,9 +1,10 @@
 *1 ->VecStatsCollector(
 maxnvalues = 0 ;
-no_removal_warnings = 0 ;
 fieldnames = 2 [ "E[test.E[mse]]" "E[train.E[mse]]" ] ;
 compute_covariance = 0 ;
 epsilon = 0 ;
+window = -1 ;
+no_removal_warnings = 0 ;
 stats = 2 [ StatsCollector(
 maxnvalues = 0 ;
 no_removal_warnings = 0 ;
@@ -30,10 +31,10 @@ sum_ = 0 ;
 sumsquare_ = 0 ;
 sumcube_ = 0 ;
 sumfourth_ = 0 ;
-min_ = 0.0521801135176526432 ;
-max_ = 0.0521801135176526432 ;
-first_ = 0.0521801135176526432 ;
-last_ = 0.0521801135176526432 ;
+min_ = 0.052180113517652643 ;
+max_ = 0.052180113517652643 ;
+first_ = 0.052180113517652643 ;
+last_ = 0.052180113517652643 ;
 counts = {};
 more_than_maxnvalues = 1  )
 ] ;

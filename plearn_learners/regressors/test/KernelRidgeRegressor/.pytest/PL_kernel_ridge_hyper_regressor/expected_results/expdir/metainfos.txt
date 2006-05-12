@@ -1,17 +1,17 @@
-__REVISION__ = AP3880.PL5198
+__REVISION__ = PL5566
 expdir_root                    = 
-DATE                           = 20060316
-DATETIME                       = 20060316:145801
-DIRPATH                        = /home/dorionc/PLearn/plearn_learners/regressors/test/KernelRidgeRegressor/.pytest/PL_kernel_ridge_hyper_regressor/expected_results
+DATE                           = 20060512
+DATETIME                       = 20060512:105122
+DIRPATH                        = r:cygwinPLearnplearn_learnersegressors	estKernelRidgeRegressor.pytestPL_kernel_ridge_hyper_regressorexpected_results
 FILEBASE                       = kernel_ridge_hyper_regressor
 FILEEXT                        = pyplearn
 FILENAME                       = kernel_ridge_hyper_regressor.pyplearn
-FILEPATH                       = /home/dorionc/PLearn/plearn_learners/regressors/test/KernelRidgeRegressor/.pytest/PL_kernel_ridge_hyper_regressor/expected_results/kernel_ridge_hyper_regressor.pyplearn
-HOME                           = /home/dorionc
-TIME                           = 145801
+FILEPATH                       = r:cygwinPLearnplearn_learnersegressors	estKernelRidgeRegressor.pytestPL_kernel_ridge_hyper_regressorexpected_resultskernel_ridge_hyper_regressor.pyplearn
+HOME                           = R:cygwin
+TIME                           = 105122
 HyperKRR.kfold                 = 10
-HyperKRR.lambda_list           = 1e-08,1e-06,0.0001,0.01,1.0
-HyperKRR.sigma_list            = 0.01,0.1,1.0,10.0,100.0
+HyperKRR.lambda_list           = 1e-8,1e-6,1e-4,1e-2,1e0
+HyperKRR.sigma_list            = 1e-2,1e-1,1e0,1e1,1e2
 HyperKRR.statnames             = E[test.E[mse]],E[train.E[mse]]
 HyperKRR.valid_fraction        = 0.25
 HyperKRR.which_cost            = 0

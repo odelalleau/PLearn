@@ -16,8 +16,10 @@ class HyperKRR( plargs_namespace ):
     statnames      = ["E[test.E[mse]]",
                       "E[train.E[mse]]"]  # Statistics to measure
     which_cost     = 0                    # Cost to optimize, i.e. E[test.E[mse]]
-    lambda_list    = [ 1e-8, 1e-6, 1e-4, 1e-2, 1e0 ] # Weight decays to try
-    sigma_list     = [ 1e-2, 1e-1, 1e0,  1e1,  1e2 ] # Sigmas to try
+    # Weight decays to try
+    lambda_list    = [ '1e-8', '1e-6', '1e-4', '1e-2', '1e0' ]
+
+    sigma_list     = [ '1e-2', '1e-1', '1e0', '1e1', '1e2' ] # Sigmas to try
     
 
 #####  Inner Learner  #######################################################
