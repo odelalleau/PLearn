@@ -58,12 +58,22 @@ protected:
     Vec sourcevec;
     VMatLanguage program;
 
+    VMatLanguage input_prg_;
+    VMatLanguage target_prg_;
+    VMatLanguage weight_prg_;
+    VMatLanguage extra_prg_;
+
 public:
     // ************************
     // * public build options *
     // ************************
 
     string prg;  // program string in VPL language
+
+    string input_prg;
+    string target_prg;
+    string weight_prg;
+    string extra_prg;
 
     // ****************
     // * Constructors *
@@ -75,6 +85,14 @@ public:
 
     ProcessingVMatrix(VMat the_source, const string& program_string)
         :SourceVMatrix(the_source),prg(program_string)
+    { build_(); }
+
+    ProcessingVMatrix(VMat the_source, const string& inputprg, const string& targetprg, const string& weightprg="", const string& extraprg="")
+        :SourceVMatrix(the_source),
+         input_prg(inputprg),
+         target_prg(targetprg),
+         weight_prg(weightprg),
+         extra_prg(extraprg)
     { build_(); }
 
     // ******************

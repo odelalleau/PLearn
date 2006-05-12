@@ -112,6 +112,9 @@ public:
     inline TVec<string> getOutputFieldNames() const
     { return outputfieldnames; }
 
+    inline int inputsize() const
+    { return srcfieldnames.length(); }
+
     inline int outputsize() const
     { return outputfieldnames.length(); }
 
