@@ -143,11 +143,6 @@ void NGramDistribution::build()
 ////////////
 void NGramDistribution::build_()
 {
-    //predictor_size = n - 1;
-    // We need to re-build the parent class, so that data related to
-    // 'predictor_size' is correctly defined.
-    inherited::build();
-
     if(train_set)
     {
         if(inputsize() != n) PLERROR("In NGramDistribution:build_() : input size should be n=%d", n);
