@@ -50,6 +50,7 @@ class RBMMultinomialLayer;
 class RBMParameters;
 class RBMLLParameters;
 class RBMJointLLParameters;
+class RBMQLParameters;
 
 /**
  * Does the same thing as Hinton's deep belief nets
@@ -98,8 +99,10 @@ public:
     PP<RBMMixedLayer> joint_layer;
 
     //! RBMParameters linking the unsupervised layers.
-    //! params[i] links layers[i] and layers[i+1]
+    //! params[i] links layers[i] and layers[i+1], i>0
     TVec< PP<RBMLLParameters> > params;
+
+    PP<RBMQLParameters> input_params;
 
     //! Parameters linking target_layer and last_layer
     PP<RBMLLParameters> target_params;

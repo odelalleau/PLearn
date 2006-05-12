@@ -2,7 +2,7 @@
 
 // GaussianDBNClassification.cc
 //
-// Copyright (C) 2006 Pascal Lamblin
+// Copyright (C) 2006 Dan Popovici, Pascal Lamblin
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -130,6 +130,10 @@ void GaussianDBNClassification::declareOptions(OptionList& ol)
     declareOption(ol, "target_params", &GaussianDBNClassification::target_params,
                   OptionBase::buildoption,
                   "Parameters linking target_layer and last_layer");
+    
+    declareOption(ol, "input_params", &GaussianDBNClassification::input_params,
+                  OptionBase::buildoption,
+                  "Parameters linking layer[0] and layer[1]");
 
     declareOption(ol, "use_sample_rather_than_expectation_in_positive_phase_statistics",
                   &GaussianDBNClassification::use_sample_rather_than_expectation_in_positive_phase_statistics,
@@ -249,9 +253,11 @@ void GaussianDBNClassification::build_params()
     MODULE_LOG << "build_params() called" << endl;
     if( params.length() == 0 )
     {
+        input_params = new RBMQLParameters() ; 
         params.resize( n_layers-1 );
-        for( int i=0 ; i<n_layers-1 ; i++ )
+        for( int i=1 ; i<n_layers-1 ; i++ )
             params[i] = new RBMLLParameters();
+        // params[0] is not being using, it is not being created
     }
     else if( params.length() != n_layers-1 )
         PLERROR( "GaussianDBNClassification::build_params - params.length() should\n"
@@ -262,9 +268,21 @@ void GaussianDBNClassification::build_params()
     expectation_gradients.resize( n_layers-1 );
     output_gradient.resize( n_predicted );
 
-    for( int i=0 ; i<n_layers-1 ; i++ )
+    input_params->down_units_types = layers[0]->units_types;
+    input_params->up_units_types = layers[1]->units_types;
+    input_params->learning_rate = learning_rate;
+    input_params->initialization_method = initialization_method;
+    input_params->random_gen = random_gen;
+    input_params->build();
+
+    activation_gradients[0].resize( input_params->down_layer_size );
+    expectation_gradients[0].resize( input_params->down_layer_size );
+
+
+    for( int i=1 ; i<n_layers-1 ; i++ )
     {
         //TODO: call changeOptions instead
+        
         params[i]->down_units_types = layers[i]->units_types;
         params[i]->up_units_types = layers[i+1]->units_types;
         params[i]->learning_rate = learning_rate;
@@ -307,7 +325,8 @@ void GaussianDBNClassification::forget()
       - stage = 0
     */
     resetGenerator(seed_);
-    for( int i=0 ; i<n_layers-1 ; i++ )
+    input_params->forget() ; 
+    for( int i=1 ; i<n_layers-1 ; i++ )
         params[i]->forget();
 
     for( int i=0 ; i<n_layers ; i++ )
@@ -344,7 +363,11 @@ void GaussianDBNClassification::expectation(Vec& mu) const
 
     // Propagate input (predictor_part) until penultimate layer
     layers[0]->expectation << predictor_part;
-    for( int i=0 ; i<n_layers-2 ; i++ )
+    input_params->setAsDownInput(layers[0]->expectation) ; 
+    layers[1]->getAllActivations( (RBMQLParameters*) input_params );
+    layers[1]->computeExpectation();
+    
+    for( int i=1 ; i<n_layers-2 ; i++ )
     {
         params[i]->setAsDownInput( layers[i]->expectation );
         layers[i+1]->getAllActivations( (RBMLLParameters*) params[i] );
@@ -421,6 +444,7 @@ void GaussianDBNClassification::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(joint_layer, copies);
     deepCopyField(params, copies);
     deepCopyField(joint_params, copies);
+    deepCopyField(input_params, copies);
     deepCopyField(target_params, copies);
     deepCopyField(training_schedule, copies);
 }
@@ -649,7 +673,12 @@ void GaussianDBNClassification::greedyStep( const Vec& predictor, int index )
 {
     // deterministic propagation until we reach index
     layers[0]->expectation << predictor;
-    for( int i=0 ; i<index ; i++ )
+
+    input_params->setAsDownInput( layers[0]->expectation );
+    layers[1]->getAllActivations( (RBMQLParameters*) input_params );
+    layers[1]->computeExpectation();
+        
+    for( int i=1 ; i<index ; i++ )
     {
         params[i]->setAsDownInput( layers[i]->expectation );
         layers[i+1]->getAllActivations( (RBMLLParameters*) params[i] );
@@ -657,31 +686,63 @@ void GaussianDBNClassification::greedyStep( const Vec& predictor, int index )
     }
 
     // positive phase
-    params[index]->setAsDownInput( layers[index]->expectation );
-    layers[index+1]->getAllActivations((RBMLLParameters*) params[index]);
-    layers[index+1]->computeExpectation();
-    layers[index+1]->generateSample();
-    if (use_sample_rather_than_expectation_in_positive_phase_statistics)
-        params[index]->accumulatePosStats(layers[index]->expectation,
-                                          layers[index+1]->sample );
-    else
-        params[index]->accumulatePosStats(layers[index]->expectation,
-                                          layers[index+1]->expectation );
+    if (index == 0) {
+        input_params->setAsDownInput( layers[index]->expectation );
+        layers[index+1]->getAllActivations((RBMQLParameters*) input_params);
+        layers[index+1]->computeExpectation();
+        layers[index+1]->generateSample();
+        if (use_sample_rather_than_expectation_in_positive_phase_statistics)
+            input_params->accumulatePosStats(layers[index]->expectation,
+                    layers[index+1]->sample );
+        else
+            input_params->accumulatePosStats(layers[index]->expectation,
+                    layers[index+1]->expectation );
 
-    // down propagation
-    params[index]->setAsUpInput( layers[index+1]->sample );
-    layers[index]->getAllActivations( (RBMLLParameters*) params[index] );
+        // down propagation
+        input_params->setAsUpInput( layers[index+1]->sample );
+        layers[index]->getAllActivations( (RBMQLParameters*) input_params );
 
-    // negative phase
-    layers[index]->generateSample();
-    params[index]->setAsDownInput( layers[index]->sample );
-    layers[index+1]->getAllActivations((RBMLLParameters*) params[index]);
-    layers[index+1]->computeExpectation();
-    params[index]->accumulateNegStats( layers[index]->sample,
-                                       layers[index+1]->expectation );
+        // negative phase
+        layers[index]->generateSample();
+        input_params->setAsDownInput( layers[index]->sample );
+        layers[index+1]->getAllActivations((RBMQLParameters*) input_params);
+        layers[index+1]->computeExpectation();
+        input_params->accumulateNegStats( layers[index]->sample,
+                layers[index+1]->expectation );
 
-    // update
-    params[index]->update();
+        // update
+        input_params->update();
+
+    }
+    else {
+        params[index]->setAsDownInput( layers[index]->expectation );
+        layers[index+1]->getAllActivations((RBMLLParameters*) params[index]);
+        layers[index+1]->computeExpectation();
+        layers[index+1]->generateSample();
+        if (use_sample_rather_than_expectation_in_positive_phase_statistics)
+            params[index]->accumulatePosStats(layers[index]->expectation,
+                    layers[index+1]->sample );
+        else
+            params[index]->accumulatePosStats(layers[index]->expectation,
+                    layers[index+1]->expectation );
+
+        // down propagation
+        params[index]->setAsUpInput( layers[index+1]->sample );
+        layers[index]->getAllActivations( (RBMLLParameters*) params[index] );
+
+        // negative phase
+        layers[index]->generateSample();
+        params[index]->setAsDownInput( layers[index]->sample );
+        layers[index+1]->getAllActivations((RBMLLParameters*) params[index]);
+        layers[index+1]->computeExpectation();
+        params[index]->accumulateNegStats( layers[index]->sample,
+                layers[index+1]->expectation );
+
+        // update
+        params[index]->update();
+
+    }
+    
 
 }
 
@@ -690,7 +751,12 @@ void GaussianDBNClassification::jointGreedyStep( const Vec& input )
     // deterministic propagation until we reach n_layers-2, setting the input
     // of the "input" part of joint_layer
     layers[0]->expectation << input.subVec( 0, n_predictor );
-    for( int i=0 ; i<n_layers-2 ; i++ )
+    input_params->setAsDownInput( layers[0]->expectation );
+    layers[1]->getAllActivations( (RBMQLParameters*) input_params );
+    layers[1]->computeExpectation();
+    
+    
+    for( int i=1 ; i<n_layers-2 ; i++ )
     {
         params[i]->setAsDownInput( layers[i]->expectation );
         layers[i+1]->getAllActivations( (RBMLLParameters*) params[i] );
