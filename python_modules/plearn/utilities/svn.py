@@ -1,8 +1,13 @@
-import logging, os, tempfile
+import logging, os, sys, tempfile
 from ppath import ppath
 
 def __report_status( cmd ):
-    return os.WEXITSTATUS( os.system( cmd ) ) == 0
+    if sys.platform == 'win32':
+        # os.WEXITSTATUS is not implemented under Windows. However, on recent
+        # Windows platform, this should be the command exit status.
+        return os.system( cmd ) == 0
+    else:
+        return os.WEXITSTATUS( os.system( cmd ) ) == 0
     
 def add(path):
     add_cmd = "svn add -N %s" % path
