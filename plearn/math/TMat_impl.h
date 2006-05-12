@@ -210,17 +210,6 @@ void elementsEqualTo(const TVec<T>& source, const T& value, const TVec<T>& desti
         else dst[i]=0.0;
 }
 
-template<class T>
-TVec<T> concat(const TVec<T>& v1, const TVec<T>& v2)
-{
-    TVec<T> result(v1.length()+v2.length());
-    for(int i=0; i<v1.length(); i++)
-        result[i] = v1[i];
-    for(int i=0; i<v2.length(); i++)
-        result[i+v1.length()] = v2[i];
-    return result;
-}
-
 //! if the element to remove is the first or the last one, 
 //! then a submatrix (a view) of m will be returned (for efficiency)
 //! otherwise, it is a fresh copy with the element removed.

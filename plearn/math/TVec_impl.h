@@ -234,7 +234,32 @@ template<class T>
 void elementsEqualTo(const TVec<T>& source, const T& value, const TVec<T>& destination);
 
 template<class T>
-TVec<T> concat(const TVec<T>& v1, const TVec<T>& v2);
+TVec<T> concat(const TVec<T>& v1, const TVec<T>& v2)
+{
+    TVec<T> result(v1.length()+v2.length());
+    for(int i=0; i<v1.length(); i++)
+        result[i] = v1[i];
+    for(int i=0; i<v2.length(); i++)
+        result[i+v1.length()] = v2[i];
+    return result;
+}
+
+template<class T>
+TVec<T> concat(const TVec<T>& v1, const TVec<T>& v2, const TVec<T>& v3)
+{
+    TVec<T> result;
+    result.concat(v1,v2,v3);
+    return result;
+}
+
+template<class T>
+TVec<T> concat(const TVec<T>& v1, const TVec<T>& v2, const TVec<T>& v3, const TVec<T>& v4)
+{
+    TVec<T> result;
+    result.concat(v1,v2,v3,v4);
+    return result;
+}
+
 
 //template<class T>
 //TVec<T> concat(const Array< TVec<T> >& varray);

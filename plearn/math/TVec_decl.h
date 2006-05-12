@@ -800,6 +800,18 @@ inline int sizeInBytes(const TVec<T>& x) {
     return s;
 }
 
+//! Returns a TVec which is a concatenation of v1 and v2
+template<class T>
+TVec<T> concat(const TVec<T>& v1, const TVec<T>& v2);
+
+//! Returns a TVec which is a concatenation of v1,v2,v3
+template<class T>
+TVec<T> concat(const TVec<T>& v1, const TVec<T>& v2, const TVec<T>& v3);
+
+//! Returns a TVec which is a concatenation of v1,v2,v3,v4
+template<class T>
+TVec<T> concat(const TVec<T>& v1, const TVec<T>& v2, const TVec<T>& v3, const TVec<T>& v4);
+
 //! returns a TVec from which v1 and v2 are subVec.
 template <class T>
 inline TVec<T> merge(TVec<T>& v1, TVec<T>& v2)
