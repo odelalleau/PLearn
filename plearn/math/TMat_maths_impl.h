@@ -5592,9 +5592,10 @@ void LU_decomposition(TMat<T>& A, TVec<T>& Trow, int& detsign, TVec<T>* p=0)
     if (p!=0) delete pivot;
 }
    
-// return the determinant of A, using LU_decomposition   
+//! Return the determinant of A, using LU decomposition.
+//! If 'log_det' is set to true, the log determinant is returned.
 template<class T>
-T det(const TMat<T>& A)
+T det(const TMat<T>& A, bool log_det = false)
 {
     int n = A.length();
     if (n!=A.width())
@@ -5610,22 +5611,45 @@ T det(const TMat<T>& A)
     TVec<T> p(n);
     int detsign;
     LU_decomposition(LU, Trow, detsign);
-    return det(LU,detsign);
+    return det(LU, detsign, log_det);
 }
 
-// return the determinant of A, whose LU decomposition is given
-// (detsign is as set by LU_decomposition)
+//! Return the determinant of A, whose LU decomposition is given ('detsign' is
+//! as set by the LU_decomposition(..) function).
+//! If 'log_det' is set to true, the log determinant is returned.
 template<class T>
-T det(const TMat<T>& LU, int detsign)
+T det(const TMat<T>& LU, int detsign, bool log_det = false)
 {
     T determinant = detsign;
+    bool minus = false;
+    if (log_det) {
+        if (detsign < 0) {
+            minus = !minus;
+            detsign = - detsign;
+        }
+        determinant = pl_log(detsign);
+    }
     int mod = LU.mod();
     int n = LU.width();
     if (n!=LU.width())
         PLERROR("det(const TMat<T>& LU, int detsign): LU(%d,%d) is not square!",n,LU.width());
     T* LUii = LU.data();
-    for (int i=0;i<n;i++, LUii+=1+mod)
-        determinant *= *LUii;
+    if (log_det) {
+        for (int i=0;i<n;i++, LUii+=1+mod) {
+            real LUii_ = *LUii;
+            if (LUii_ < 0) {
+                minus = !minus;
+                LUii_ = - LUii_;
+            }
+            determinant += pl_log(LUii_);
+        }
+    } else {
+        for (int i=0;i<n;i++, LUii+=1+mod)
+            determinant *= *LUii;
+    }
+    if (log_det && minus)
+        // The determinant is negative: its log should be NaN.
+        determinant = MISSING_VALUE;
     return determinant;
 }
 
