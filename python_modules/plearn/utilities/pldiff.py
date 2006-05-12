@@ -223,9 +223,26 @@ def toldiff(filename1, filename2, precision=1e-6, blanktol=0):
             if abs(n1-n2)>blanktol:
                 return errmsg()
 
+        # Additional checks to avoid triggering a diff between UNIX and DOS
+        # carriage returns.
+        elif c1 == '\n' and c2 == '\r':
+            c2 = f2.read(1)
+            if c2 != '\n':
+                return errmsg()
+            else:
+                c1 = f1.read(1)
+                c2 = f2.read(1)
+        elif c2 == '\n' and c1 == '\r':
+            c1 = f1.read(1)
+            if c1 != '\n':
+                return errmsg()
+            else:
+                c1 = f1.read(1)
+                c2 = f2.read(1)
+
         elif c1!=c2:
             return errmsg()
-
+        
         else:
             c1 = f1.read(1)
             c2 = f2.read(1)
