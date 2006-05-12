@@ -5,18 +5,19 @@ nclasses = 2;
 # You may also specify just one that will be replicated as many times as there are classes.
 estimators = 
 [
-ParzenWindow( sigma_square = 1; outputs_def = "d")
+ParzenWindow( sigma_square = .3; outputs_def = "d")
+ParzenWindow( sigma_square = .3; outputs_def = "d")
 ]
 
 # TVec< double >: The log of the class prior probabilities
-log_priors = TVec(0 0 *0 )
+log_priors = []
  ;
 
 # bool: Whether computeOutput yields log-probabilities or probabilities (of classes given inputs)
 output_log_probabilities = 1 ;
 
 # bool: Whether to normalize the probabilities (if not just compute likelihood * prior for each class)
-normalize_probabilities = 1  ;
+normalize_probabilities = 0;
 
 # PPath: Path of the directory associated with this learner, in which
 # it should save any file it wishes to create. 
