@@ -805,7 +805,8 @@ PStream& operator>>(PStream& in, Object*& x)
             // Find it in map and return ptr;
             map<unsigned int, void *>::iterator it = in.copies_map_in.find(id);
             if (it == in.copies_map_in.end())
-                PLERROR("In PStream::operator>>(Object*&) object (ptr) to be read has not been previously defined");
+                PLERROR("In PStream::operator>>(Object*&) object (ptr) to be read with id='%d' "
+                        "has not been previously defined", id);
             x= static_cast<Object *>(it->second);
         }
     } 

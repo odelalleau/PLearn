@@ -918,8 +918,8 @@ protected:
      *  @code
      *  static void MyDerivedClass::declareMethods(RemoteMethodMap& rmm)
      *  {
-     *      // Insert a backpointer to remote methods; note that this
-     *      // different than for declareOptions()
+     *      // Insert a backpointer to inherited methods; note that this
+     *      // mechanism is different from that of declareOptions()
      *      rmm.inherited(inherited::_getRemoteMethodMap_());
      *
      *      // Mind the extra pair of parenthesis around the docstrings.
