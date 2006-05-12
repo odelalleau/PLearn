@@ -42,6 +42,7 @@
 #include <plearn/io/openString.h>
 #include <plearn/math/VecStatsCollector.h>
 #include <plearn/vmat/FileVMatrix.h>
+#include <plearn/vmat/MemoryVMatrix.h>
 #include <assert.h>
 #include "PTester.h"
 
@@ -140,7 +141,9 @@ void PTester::declareOptions(OptionList& ol)
         "  - cost_name is one of the training or test cost names (depending on dataset) understood \n"
         "    by the underlying learner (see its getTrainCostNames and getTestCostNames methods) \n" 
         "  - S1 and S2 are a statistic, i.e. one of: E (expectation), V(variance), MIN, MAX, STDDEV, ... \n"
-        "    S2 is computed over the samples of a given dataset split. S1 is over the splits. \n"); 
+        "    S2 is computed over the samples of a given dataset split. S1 is over the splits. \n"
+        "They can also be strings of the form S1[dataset.perf_evaluator_name.cost_name] \n"
+        "(see option perf_evaluators) \n"); 
   
     declareOption(
         ol, "statmask", &PTester::statmask, OptionBase::buildoption,
@@ -151,6 +154,12 @@ void PTester::declareOptions(OptionList& ol)
         ol, "learner", &PTester::learner, OptionBase::buildoption,
         "The learner to train/test.\n");
   
+    declareOption(
+        ol, "perf_evaluators", &PTester::perf_evaluators, OptionBase::buildoption,
+        "If specified, the performance evaluations returned by these named performance evaluators,\n"
+        "will be appended to the list of cost statistics computed by the learner's test method.\n"
+        "They will be accessible through the syntax: perf_evaluator_name.cost_name \n"); 
+
     declareOption(
         ol, "report_stats", &PTester::report_stats, OptionBase::buildoption,
         "If true, the computed global statistics specified in statnames will be saved in global_stats.pmat \n"
@@ -489,12 +498,14 @@ Vec PTester::perform(bool call_forget)
         // which need to accumulate statistics.
         TVec<int> acc;
         for (int k = 0; k < nstats; k++)
-            if (statspecs[k].extstat == "ACC") {
+            if (statspecs[k].extstat == "ACC") 
+            {
                 if (statspecs[k].setnum == 0)
                     PLERROR("In PTester::perform - For now, you cannot accumulate train stats");
                 if (acc.find(statspecs[k].setnum) == -1)
                     acc.append(statspecs[k].setnum);
-            } else if (acc.find(statspecs[k].setnum) != -1)
+            } 
+            else if (acc.find(statspecs[k].setnum) != -1)
                 PLERROR("In PTester::perform - You can't have stats with and without 'ACC' for set %d", statspecs[k].setnum);
   
         // int traincostsize = traincostnames.size();
@@ -563,6 +574,10 @@ Vec PTester::perform(bool call_forget)
             }
             else
                 learner->build();
+
+            // perf_eval_costs[setnum][perf_evaluator_name][costname] will contain value 
+            // of the given cost returned by the given perf_evaluator on the given setnum
+            TVec< map<string, map<string, real> > > perf_eval_costs(dsets.length());
             for(int setnum=1; setnum<dsets.length(); setnum++)
             {
                 VMat testset = dsets[setnum];
@@ -575,12 +590,21 @@ Vec PTester::perform(bool call_forget)
                 VMat test_confidence;
                 if (is_splitdir)
                     force_mkdir(splitdir); // TODO Why is this done so late?
+
                 if(is_splitdir && save_test_outputs)
                     test_outputs = new FileVMatrix(splitdir/(setname+"_outputs.pmat"),0,learner->getOutputNames());
                     //test_outputs = new FileVMatrix(splitdir/(setname+"_outputs.pmat"),0,outputsize);
+                else if(!perf_evaluators.empty()) // we don't want to save test outputs to disk, but we need them for pef_evaluators
+                { // So let's store them in a MemoryVMatrix
+                    Mat data(testset.length(),outputsize);
+                    data.resize(0,outputsize);
+                    test_outputs = new MemoryVMatrix(data);
+                    test_outputs->declareFieldNames(learner->getOutputNames());
+                }
+
                 if(is_splitdir && save_test_costs)
                     test_costs = new FileVMatrix(splitdir/(setname+"_costs.pmat"),0,learner->getTestCostNames());
-                //test_costs = new FileVMatrix(splitdir/(setname+"_costs.pmat"),0,testcostsize);
+                    //test_costs = new FileVMatrix(splitdir/(setname+"_costs.pmat"),0,testcostsize);
                 if(is_splitdir && save_test_confidence)
                     test_confidence = new FileVMatrix(splitdir/(setname+"_confidence.pmat"),
                                                       0,2*outputsize);
@@ -588,9 +612,8 @@ Vec PTester::perform(bool call_forget)
                 bool reset_stats = (acc.find(setnum) == -1);
                 if (reset_stats)
                     test_stats->forget();
-                if (testset->length()==0) {
-                    PLWARNING("PTester:: test set % is of length 0, costs will be set to -1",setname.c_str());
-                }
+                if (testset->length()==0) 
+                    PLWARNING("PTester:: test set %s is of length 0, costs will be set to -1",setname.c_str());
 
                 // Before each test set, reset the internal state of the learner
                 learner->resetInternalState();
@@ -601,6 +624,22 @@ Vec PTester::perform(bool call_forget)
                 if(is_splitdir && save_stat_collectors)
                     PLearn::save(splitdir/(setname+"_stats.psave"),test_stats);
 
+                perf_evaluators_t::iterator it = perf_evaluators.begin();
+                perf_evaluators_t::iterator itend = perf_evaluators.end();
+                while(it!=itend)
+                {
+                    PPath perf_eval_dir;
+                    if(is_splitdir)
+                        perf_eval_dir = splitdir/("perfeval_"+it->first);
+                    Vec perf_costvals = it->second->evaluatePerformance(learner, testset, test_outputs, perf_eval_dir);
+                    TVec<string> perf_costnames = it->second->getCostNames();
+                    if(perf_costvals.length()!=perf_costnames.length())
+                        PLERROR("vector of costs returned by performance evaluator differ in size with its vector of costnames");
+                    map<string, real>& costmap = perf_eval_costs[setnum][it->first];
+                    for(int costi = 0; costi<perf_costnames.length(); costi++)
+                        costmap[perf_costnames[costi]] = perf_costvals[costi];
+                    ++it;
+                }
                 computeConfidence(testset, test_confidence);
             }
    
@@ -614,15 +653,29 @@ Vec PTester::perform(bool call_forget)
                     splitres[k+1] = MISSING_VALUE;
 //            PLERROR("PTester::perform, trying to access a test set (test%d) beyond the last one (test%d)",
 //                    sp.setnum, stcol.length()-1);
-                else {
+                else 
+                {
                     if (acc.find(sp.setnum) == -1)
-                        splitres[k+1] = stcol[sp.setnum]->getStat(sp.intstatname);
+                    {
+                        string left, right;
+                        split_on_first(sp.intstatname, ".",left,right);
+                        if(right!="" && perf_evaluators.find(left)!=perf_evaluators.end())
+                        { // looks like a cost from a performance evaluator
+                            map<string, real>& costmap = perf_eval_costs[sp.setnum][left];
+                            if(costmap.find(right)==costmap.end())
+                                PLERROR("No cost named %s appears to be returned by evaluator %s",right.c_str(),left.c_str());
+                            splitres[k+1] = costmap[right];
+                        }
+                        else // must be a cost form a stats collector
+                            splitres[k+1] = stcol[sp.setnum]->getStat(sp.intstatname);
+                    }
                     else
                         splitres[k+1] = MISSING_VALUE;
                 }
             }
 
-            if(split_stats_vm) {
+            if(split_stats_vm) 
+            {
                 split_stats_vm->appendRow(splitres);
                 split_stats_vm->flush();
             }
@@ -719,7 +772,7 @@ void StatSpec::parseStatname(const string& statname)
             PLERROR("Error while parsing statname: expected a closing bracket");
         intstatname = intstatname+"["+costname+"]";
     }
-    else // We've read an opening bracket. That's the new format E[train.E[mse]]
+    else // We've read a dot. That's the new format E[train.E[mse]]
     {
         setname = token;
         if(in.smartReadUntilNext("]",intstatname)==EOF)

@@ -83,6 +83,7 @@ public:
     //! Evaluates performance from the given testset and corresponding learner_output
     //! Performance curves and similar results may be saved in the resultsdir
     //! The call should return a Vec of costs (their names are given by getCostNames())
+    //! The resultsdir should be created if it does not already exist and is needed
     virtual Vec evaluatePerformance(PP<PLearner> learner, VMat testset, VMat learner_output, PPath resultsdir) const = 0;
 
     //#####  PLearn::Object Protocol  #########################################

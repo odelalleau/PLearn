@@ -94,7 +94,8 @@ public:
     PP<Splitter> splitter;
     TVec<TVec<string> > statmask;
     PP<VecStatsCollector> template_stats_collector;
-    TVec<PP<PerformanceEvaluator> > perf_evaluators;
+    typedef map<string, PP<PerformanceEvaluator> > perf_evaluators_t;
+    perf_evaluators_t perf_evaluators;
 
     //! Whether to save 95% confidence intervals for the test outputs;
     //! make sense mostly if 'save_test_outputs' is also true.  The
