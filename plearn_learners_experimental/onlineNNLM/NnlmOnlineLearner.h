@@ -75,7 +75,23 @@ public:
     TVec< PP<OnlineLearningModule> > modules;
     PP<NnlmOutputLayer> output_module;
 
+
+    //! Used in determining the C sets of candidate words for normalization
+    //! in the evaluated discriminant cost
+    VMat ngram_train_set;
     PP<NGramDistribution> theNGram;
+
+    //! Holds candidates
+    TVec<int> shared_candidates;    // frequent (ie paying) words
+    TVec< TVec<int> > candidates;   // context specific candidates
+
+    //! Number of candidates to use from different sources
+    // What to do if multiple sources suggest the same word? Do we have less candidates? Or compensate?
+    int shared_candidates_size;    // frequent words on which we don't want to make mistakes
+    int ngram_candidates_size;     // from a bigram
+    int self_candidates_size;      // from the model itself. Should be used after training has gone a while
+                                // to keep ourselves on track (some words getting too high a score?)
+
 
 
 public:
@@ -88,6 +104,8 @@ public:
     //#####  PLearner Member Functions  #######################################
 
     void buildLayers();
+    void buildCandidates();
+
     void myGetExample(VMat& example_set, int& sample, Vec& input, Vec& target,
 real& weight) const;
 
@@ -118,6 +136,9 @@ real& weight) const;
     // (PLEASE IMPLEMENT IN .cc)
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
                                          const Vec& target, Vec& costs) const;
+
+    //! Computes the approximate discriminant cost and its gradient
+    void computeApproximateDiscriminantCostAndGradient(Vec input, Vec target, Vec output, real nd_cost, Vec train_costs, Vec nd_gradient, Vec ad_gradient);
 
     //! Returns the names of the costs computed by computeCostsFromOutpus (and
     //! thus the test method).

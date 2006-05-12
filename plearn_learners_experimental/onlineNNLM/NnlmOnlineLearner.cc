@@ -51,6 +51,7 @@
 #include <plearn_learners_experimental/onlineNNLM/NnlmOutputLayer.h>
 
 #include <plearn_learners/distributions/NGramDistribution.h>
+#include <plearn_learners/distributions/SymbolNode.h>
 
 namespace PLearn {
 using namespace std;
@@ -60,12 +61,31 @@ PLEARN_IMPLEMENT_OBJECT(
     "Trains a Naive Bayes Neural Network Language Model (NBNNLM).",
     "MULTI-LINE \nHELP");
 
+
+
+class wordAndFreq {
+public:
+  wordAndFreq(int wt, int f) : wordtag(wt), frequency(f){};
+  int wordtag;
+  double frequency;
+};
+
+bool wordAndFreqGT(const wordAndFreq &a, const wordAndFreq &b) 
+{
+    return a.frequency > b.frequency;
+}
+
+
+
 NnlmOnlineLearner::NnlmOnlineLearner()
     :   PLearner(),
         vocabulary_size( -1 ),
         word_representation_size( -1 ),
         context_size( -1 ),
-        context_layer_size( 200 )
+        context_layer_size( 200 ),
+        shared_candidates_size( 100 ),
+        ngram_candidates_size( 50 ),
+        self_candidates_size( 0 )
 {
     // ### You may (or not) want to call build_() to finish building the object
     // ### (doing so assumes the parent classes' build_() have been called too
@@ -97,6 +117,29 @@ void NnlmOnlineLearner::declareOptions(OptionList& ol)
                   "size of word context");
 */
 
+    declareOption(ol, "shared_candidates_size",
+                  &NnlmOnlineLearner::shared_candidates_size,
+                  OptionBase::buildoption,
+                  "Number of candidates in aproximated discriminant cost evaluation drawn from frequent words.");
+
+    declareOption(ol, "ngram_candidates_size",
+                  &NnlmOnlineLearner::ngram_candidates_size,
+                  OptionBase::buildoption,
+                  "Number of candidates in aproximated discriminant cost evaluation drawn from the context (bigram).");
+
+    declareOption(ol, "self_candidates_size",
+                  &NnlmOnlineLearner::self_candidates_size,
+                  OptionBase::buildoption,
+                  "Number of candidates in aproximated discriminant cost evaluation drawn from self candidates (evaluated periodically). NOT IMPLEMENTED!!");
+
+
+    declareOption(ol, "ngram_train_set",
+                  &NnlmOnlineLearner::ngram_train_set,
+                  OptionBase::buildoption,
+                  "train set used for training the ngram used in the evaluation of the sets of words used for normalization in the evaluated discriminant cost. This ProcessSymbolicSequenceVMatrix defines the ngram used (if inputsize is 3 then we have a trigram).");
+
+    
+
     declareOption(ol, "modules", &NnlmOnlineLearner::modules,
                   OptionBase::buildoption,
                   "Layers of the learner");
@@ -123,7 +166,7 @@ void NnlmOnlineLearner::buildLayers()
     // This is done in the NnlmWordRepresentationLayer  
     // BUT in the build... so we need to do it here, because size compality check
     // is performed before the build
-    p_wrl->input_size = inputsize();
+    p_wrl->input_size = inputsize()-1;
     p_wrl->output_size = context_size * word_representation_size;
     p_wrl->vocabulary_size = vocabulary_size;
     p_wrl->word_representation_size = word_representation_size;
@@ -164,7 +207,7 @@ void NnlmOnlineLearner::buildLayers()
     gradients.resize( nmodules+1 );
 
     // first values will be "input" values
-    int size = inputsize();
+    int size = inputsize()-1;
     values[0].resize( size );
     gradients[0].resize( size );
 
@@ -206,6 +249,163 @@ void NnlmOnlineLearner::buildLayers()
 
 }
 
+void NnlmOnlineLearner::buildCandidates()
+{
+
+    // *** Train ngram
+    // Should load it instead
+    cout << "training ngram" << endl;
+
+    theNGram = new NGramDistribution();
+
+    theNGram->n = ngram_train_set->inputsize();
+    theNGram->smoothing = "no_smoothing";
+    theNGram->nan_replace = true;
+    theNGram->setTrainingSet( ngram_train_set );
+    //theNGram->build(); Done in setTrainingSet
+
+    theNGram->train();
+
+
+    // *** Effective building
+    cout << "building candidates" << endl;
+
+    shared_candidates.resize( shared_candidates_size );
+    candidates.resize( vocabulary_size );
+
+
+    std::vector< wordAndFreq > tmp;
+    // temporary list containing the shared candidates
+    list<int> l_tmp_shared_candidates;
+    list<int>::iterator itr_tmp_shared_candidates;
+
+
+    // * Determine most frequent words and so the shared_candidates
+    TVec<int> unigram( 1 );
+    TVec<int> unifreq( 1 );
+
+    // wt means "word tag"
+    // Note -> wt=vocabulary_size-1 corresponds to the (-1) tag in the NGramDistribution
+    // we skip this tag, the 'missing' tag
+    // NOTE Is this appropriate treatment?
+    // I don't see how the missing values could occur anywhere except at the beginning so yes.
+    for(int wt=0; wt<vocabulary_size-1; wt++)  {
+        unigram[0] = wt;
+        unifreq = (theNGram->tree)->freq(unigram);
+        tmp.push_back( wordAndFreq(wt, unifreq[0]) );
+    }
+
+    std::sort(tmp.begin(), tmp.end(), wordAndFreqGT);
+
+    cout << " These are the shared candidates" << endl;
+    cout << "---------------------------------" << endl;
+
+    // HACK we don't check if itr has hit the end... unlikely vocabulary_size is smaller
+    // than shared_candidates_size
+    std::vector< wordAndFreq >::iterator itr_vec;
+    itr_vec=tmp.begin();
+    for(int i=0; i< shared_candidates_size; i++) {
+
+        cout << (train_set->getDictionary(0))->getSymbol( itr_vec->wordtag ) << "\t";
+
+        shared_candidates[i] = itr_vec->wordtag;
+        l_tmp_shared_candidates.push_back(itr_vec->wordtag);
+        itr_vec++;
+    }
+
+    tmp.clear();
+
+    cout << "---------------------------------" << endl;
+    cout << endl;
+
+    // * Add best candidates according to a bigram
+
+    // wt means "word tag"
+    // Note -> wt=vocabulary_size-1 corresponds to the (-1) tag in the NGramDistribution
+    // we skip this tag, the 'missing' tag
+    // NOTE Is this appropriate treatment?
+    map<int, int> frequenciesCopy;
+    map<int,int>::iterator itr;
+    int n_candidates;
+
+
+    
+
+
+    for(int wt=-1; wt<vocabulary_size-1; wt++)  {
+
+        // - fill list of candidates, then sort
+        PP<SymbolNode> node = ((theNGram->tree)->getRoot())->child(wt);
+        if(node)  {
+            frequenciesCopy = node->getFrequencies();
+    
+            itr = frequenciesCopy.begin();
+            while( itr != frequenciesCopy.end() ) {
+                // -1 is the NGram's missing tag, our vocabulary_size-1 tag
+                // Actually, we should not see it as a follower to anything except itself...
+                if( itr->first != -1) {
+                    tmp.push_back( wordAndFreq( itr->first, itr->second ) );
+                } else  {
+                    tmp.push_back( wordAndFreq( vocabulary_size-1, itr->second ) );
+                }
+                itr++;
+            }
+            std::sort(tmp.begin(), tmp.end(), wordAndFreqGT);
+
+            // - resize candidates entry
+            if( ngram_candidates_size < (int) tmp.size() )  {
+                n_candidates = ngram_candidates_size; 
+            } else  {
+                n_candidates = tmp.size();
+            }
+
+            if(wt!=-1)  {
+                candidates[wt].resize( n_candidates );
+            } else  {
+                candidates[ vocabulary_size-1 ].resize( n_candidates );
+            }
+
+            // - fill candidates entry
+
+
+            itr_vec=tmp.begin();
+            for(int i=0; i< n_candidates; i++) {
+                //cout << (train_set->getDictionary(0))->getSymbol( itr_vec->wordtag ) << "\t";
+
+                // ONLY ADD IF NOT IN THE SHARED CANDIDATES
+                // Search the list.
+                itr_tmp_shared_candidates = find( l_tmp_shared_candidates.begin(), l_tmp_shared_candidates.end(), itr_vec->wordtag);
+
+                // if not found -> add it
+                if (itr_tmp_shared_candidates == l_tmp_shared_candidates.end())
+                {
+                    if(wt!=-1)  {
+                        candidates[wt][i] = itr_vec->wordtag;
+                    } else  {
+                        candidates[ vocabulary_size-1 ][i] = itr_vec->wordtag;
+                    }
+                // compensate for not adding this word
+                } else  {
+                    i--;
+                    n_candidates--;
+                }
+                itr_vec++;
+            }
+            // compensate for not adding words
+            if(wt!=-1)  {
+                candidates[wt].resize( n_candidates );
+            } else  {
+                candidates[ vocabulary_size-1 ].resize( n_candidates );
+            }
+
+            tmp.clear();
+        }
+    }
+    l_tmp_shared_candidates.clear();
+
+
+
+}
 void NnlmOnlineLearner::build_()
 {
 
@@ -220,7 +420,7 @@ void NnlmOnlineLearner::build_()
         for( int i = 0; i < train_set->length(); i++ )  {
 
             // * Replace nan input by missing input tag
-            for( int j = 0; j < inputsize(); j++ )  {
+            for( int j = 0; j < inputsize()-1; j++ )  {
               if( is_missing( train_set(i,j) ) )  {
                 // DOES NOT COMPILE !!!
                 //train_set(i,j) = dict_size + 1;
@@ -236,9 +436,9 @@ void NnlmOnlineLearner::build_()
             // *** Problem however - current vocabulary is full for train_set,
             // ie we train OOV on nan-word instances.
             // DO a pretreatment to replace Nan by *Nan* or something like it
-            if( is_missing( train_set(i, inputsize()) ) ) {
+            if( is_missing( train_set(i, inputsize()-1) ) ) {
               //SAME!!!
-              train_set( i, inputsize() ) = 0;
+              train_set( i, inputsize()-1 ) = 0;
             }
 
         }
@@ -255,26 +455,17 @@ void NnlmOnlineLearner::build_()
 
         cout << "vocabulary_size = " << vocabulary_size << endl;
 
-        context_size = inputsize();
+        context_size = inputsize()-1;
 
         // *** Build modules and output_module
         buildLayers();
 
 
-        // *** Train ngram
-        // Should load it instead
-        /*cout << "training ngram" << endl;
-
-        theNGram = new NGramDistribution();
-
-        theNGram->n = 2;
-        theNGram->smoothing = "jelinek-mercer";
-        */
-
+        // *** Build candidates
+        buildCandidates();
 
 
     }
-
 
 }
 
@@ -343,16 +534,37 @@ void NnlmOnlineLearner::myGetExample(VMat& example_set, int& sample, Vec& input,
 real& weight) const
 {
     static Vec row;
-    row.resize( inputsize() + targetsize() + weightsize() );
+    // the actual inputsize is (inputsize()-1) and targetsize() is 1
+    row.resize( inputsize() + weightsize() );
 
     example_set->getRow( sample, row);
 
-    input << row.subVec( 0, inputsize() );
-    target << row.subVec( inputsize(), targetsize() );
+    input << row.subVec( 0, inputsize()-1 );
+    target << row.subVec( inputsize()-1, 1 );
     weight = 1.0;
     if( weightsize() )  {
-        weight = row[ inputsize() + targetsize() ];
+        weight = row[ inputsize() ];
     }
+
+    // *** SHOULD BE DONE IN PRETREATMENT!!! -> but we have a ProcessSymbolicSequenceVMatrix...
+    // * Replace nan in input by '(train_set->getDictionary(0))->size()+1', 
+    // the missing value tag
+    for( int i=0 ; i < inputsize()-1 ; i++ ) {
+      if( is_missing(input[i]) )  {
+        input[i] = vocabulary_size - 1;
+      }
+    }
+    // * Replace a 'nan' in the target by OOV
+    // this nan should not be missing data (seeing the train_set is a
+    // ProcessSymbolicSequenceVMatrix)
+    // but the word "nan", ie "Mrs Nan said she would blabla"
+    // *** Problem however - current vocabulary is full for train_set,
+    // ie we train OOV on nan-word instances.
+    // DO a pretreatment to replace Nan by *Nan* or something like it
+    if( is_missing(target[0]) ) {
+        target[0] = 0;
+    }
+    // *** SHOULD BE DONE IN PRETREATMENT!!!
 
 }
 
@@ -360,32 +572,31 @@ real& weight) const
 void NnlmOnlineLearner::train()
 {
 
-    // This generic PLearner method does a number of standard stuff useful for
-    // (almost) any learner, and return 'false' if no training should take
-    // place. See PLearner.h for more details.
     if (!initTrain())
         return;
 
-    Vec input( inputsize() );
-    Vec target( targetsize() );
-    Vec output( outputsize() );
+    // *** Variables ***
+
+    Vec input( inputsize()-1 );   // the word context
+    Vec target( 1 );              // the word to predict
     real weight;
-    Vec train_costs( getTrainCostNames().length() );
 
     int nsamples = train_set->length();
+    Vec output( outputsize() );   // the output of the semantic layer
+    Vec train_costs( getTrainCostNames().length() );
 
+    // * intermediate variables
+    Vec neglogprob_tr(1);   // - log p(word=t(arget), representation=r)
+
+    Vec non_discr_gradient( context_layer_size );
+    Vec approx_discr_gradient( context_layer_size );
+    Vec out_gradient(1,1); // the gradient wrt the cost is '1'
+
+    // * pb
     ProgressBar* pb = NULL;
-    if(report_progress) 
+    if(report_progress) {
         pb = new ProgressBar("Training", nsamples);
-
-
-    Vec neglogprob_tr(1);   // -log p(word=t(arget), representation=r)
-    Vec neglogprob_cr(1);   // p(word=c, representation=r)
-    real log_sumprob = 0.0;  // log \sum_{c} prob_cr
-
-    Vec gradient_tmp( context_layer_size ); // used in the computation of the approx. discriminant gradient
-    Vec non_discr_gradient( context_layer_size ); // 
-    Vec approx_discr_gradient( context_layer_size ); // 
+    }
 
 
     // *** For stages
@@ -405,83 +616,52 @@ void NnlmOnlineLearner::train()
             if(report_progress)
                 pb->update(sample);
 
-
+            // *** Get example
             myGetExample(train_set, sample, input, target, weight );
 
 
-            // *** SHOULD BE DONE IN PRETREATMENT!!!
-            // * Replace nan in input by '(train_set->getDictionary(0))->size()+1', 
-            // the missing value tag
-            for( int i=0 ; i < inputsize() ; i++ ) {
-              if( is_missing(input[i]) )  {
-                input[i] = (train_set->getDictionary(0))->size()+1;
-              }
-            }
-            // * Replace a 'nan' in the target by OOV
-            // this nan should not be missing data (seeing the train_set is a
-            // ProcessSymbolicSequenceVMatrix)
-            // but the word "nan", ie "Mrs Nan said she would blabla"
-            // *** Problem however - current vocabulary is full for train_set,
-            // ie we train OOV on nan-word instances.
-            // DO a pretreatment to replace Nan by *Nan* or something like it
-            if( is_missing(target[0]) ) {
-                target[0] = 0;
-            }
-            // *** SHOULD BE DONE IN PRETREATMENT!!!
-
-
-            // *** Compute training costs
-            // TODO -> IN LOG???
+            // *** Compute training costs and gradients
 
             // * fprop
             computeOutput(input, output);
 
-            // * Non-discriminant cost -> train_costs[0]
+            // * Non-discriminant cost and gradient
             output_module->setCurrentWord( (int) target[0]);
             output_module->fprop( output, neglogprob_tr);
 
             train_costs[0] += neglogprob_tr[0];
 
-            // * Approximated discriminant cost -> using candidate words
-
-            log_sumprob = 0.0;
-            gradient_tmp.fill(0);
-
-            /*for the word candidates c
-            {
-                output_module->setCurrentWord( c );
-                output_module->fprop( output, neglogprob_cr );
-
-                log_sumprob = logadd(log_sumprob, -neglogprob_cr[0]);
-
+            // so we don't do a /0 with  /sigma2(current_word, i)
+            if( output_module->sumI[ (int) target[0] ] < 2 )  {
+              non_discr_gradient.fill(0.0);
+            } else  {
                 for(int i=0; i<context_layer_size; i++) {
-                    gradient_tmp[i] = logadd( gradient_tmp[i], 
-                        -neglogprob_cr[0] + safelog( ( output[i] - output_module->mu( c, i) ) / output_module->sigma2( c, i) ) );
+                    non_discr_gradient[i] = ( output[i] - output_module->mu( (int) target[0], i) ) 
+                                      / output_module->sigma2( (int) target[0], i);
                 }
             }
 
-            train_costs[1] = neglogprob_tr[0] + log_sumprob;*/
+            // * Approximated discriminant cost and gradient -> using candidate words
+            computeApproximateDiscriminantCostAndGradient(input, target, output, neglogprob_tr[0], train_costs, 
+                                       non_discr_gradient, approx_discr_gradient);
+
+            // *** Update stats
             train_stats->update( train_costs );
 
-            // *** Compute gradients
+            // *** Select which gradient
+            gradients[ nmodules ] << non_discr_gradient;
+            //gradients[ nmodules ] << approx_discr_gradient;
 
-            // bprop
-            Vec out_gradient(1,1); // the gradient wrt the cost is '1'
-
-            for(int i=0; i<context_layer_size; i++) {
-                // LOG???
-                non_discr_gradient[i] = ( output[i] - output_module->mu( (int) target[0], i) ) 
-                                  / output_module->sigma2( (int) target[0], i);
-                //approx_discr_gradient[i] = non_discr_gradient[i] - safeexp( gradient_tmp[i] - log_sumprob);
+            if( sample < 10 ) {
+                cout << "non_discr_gradient" << endl;
+                cout << non_discr_gradient << endl;
+                cout << "approx_discr_gradient" << endl;
+                cout << approx_discr_gradient << endl;
             }
 
-            // select which gradient
-            gradients[ nmodules ] << non_discr_gradient;
 
             // *** Perform update -> bpropUpdate
-
-            // * output_module->bpropUpdate() does not compute input gradient
-            // It should only update itself, and the input gradient computation will be done here
+            
             output_module->bpropUpdate( output,
                                           train_costs.subVec(0,1),
                                           out_gradient );
@@ -492,15 +672,10 @@ void NnlmOnlineLearner::train()
 
             modules[0]->bpropUpdate( values[0], values[1], gradients[1] );
 
-
-            // *** Output some results
-            if( sample < 15)  {
-              pout << "*train cost " << train_costs << endl;
-            }
-
         }// * for examples - END
 
         train_stats->finalize(); // finalize statistics for this epoch
+        pout << "train_stats " << train_stats << endl;
 
     }// *** For stages - END
 
@@ -511,13 +686,107 @@ void NnlmOnlineLearner::train()
 
 }
 
+//! Computes the approximate discriminant cost and its gradient
+void NnlmOnlineLearner::computeApproximateDiscriminantCostAndGradient(Vec input, Vec target, Vec output, real nd_cost, Vec train_costs, Vec nd_gradient, Vec ad_gradient)
+{
+    // *** 
+    // so we don't do a /0 with  /sigma2(current_word, i)
+    if( output_module->sumI[ (int) target[0] ] < 2 )  {
+        train_costs[1] = 0.0;
+        ad_gradient.fill(0.0);
+        return;
+    }
+
+
+    // *** We can compute cost and gradient
+    int c;
+    Vec neglogprob_cr(1);         // - log p(word=c, representation=r)
+    real log_sumprob = nd_cost;   // log \sum_c p(c,r), where r the output (context representation) and c the candidates
+    real alpha;
+    Vec gradient_tmp( context_layer_size ); // used in the computation of the approx. discriminant gradient
+    Vec gradient_tmp_pos( context_layer_size ); // used in the computation of the approx. discriminant gradient
+    Vec gradient_tmp_neg( context_layer_size ); // used in the computation of the approx. discriminant gradient
+    gradient_tmp.fill(-REAL_MAX);
+    gradient_tmp_pos.fill(-REAL_MAX);
+    gradient_tmp_neg.fill(-REAL_MAX);
+
+
+    for(int i=0; i<context_layer_size; i++) {
+        alpha = output[i] - output_module->mu( (int)target[0] , i);
+
+        if( alpha > 0)  {
+            gradient_tmp_pos[i] = -nd_cost + safelog( alpha ) - safelog( output_module->sigma2( (int)target[0], i) );
+        } else  {
+            gradient_tmp_neg[i] = -nd_cost + safelog( -alpha ) - safelog( output_module->sigma2( (int)target[0], i) );
+        }
+
+//        gradient_tmp[i] = safeexp(-nd_cost) * 
+//                            ( alpha ) / output_module->sigma2( (int)target[0], i);
+    }
+
+
+    // *** Compute normalization
+    for( int i=0; i< candidates[ (int) input[ (int) (inputsize()-2) ] ].length(); i++ )
+    {
+        c = candidates[ (int) input[ (int) (inputsize()-2) ] ][i];
+
+        if( c != (int) target[0] )  {
+            output_module->setCurrentWord( c );
+            output_module->fprop( output, neglogprob_cr );
+
+            log_sumprob = logadd(log_sumprob, -neglogprob_cr[0]);
+
+            // so we don't do a /0 with  /sigma2(current_word, i)
+            if( output_module->sumI[ c ] >= 2 )  {
+                for(int i=0; i<context_layer_size; i++) {
+                    alpha = output[i] - output_module->mu( c, i);
+
+                    if( alpha > 0)  {
+                        gradient_tmp_pos[i] = logadd( gradient_tmp_pos[i], 
+                                -neglogprob_cr[0] + safelog( alpha ) - safelog( output_module->sigma2( c, i) ) );
+                    } else  {
+                        gradient_tmp_neg[i] = logadd( gradient_tmp_neg[i], 
+                                -neglogprob_cr[0] + safelog( -alpha ) - safelog( output_module->sigma2( c, i) ) );
+                    }
+
+//                    gradient_tmp[i] += safeexp(-neglogprob_cr[0]) * 
+//                                          ( alpha ) / output_module->sigma2( c, i) ;
+                }
+            }
+
+        } // if not target - END
+    }
+
+    // *** The approcimate discriminant cost
+    train_costs[1] = nd_cost + log_sumprob;
+
+    // *** The corresponding gradient
+    for(int i=0; i<context_layer_size; i++) {
+        if( gradient_tmp_pos[i] > gradient_tmp_neg[i] ) {
+            gradient_tmp[i] = logsub( gradient_tmp_pos[i], gradient_tmp_neg[i] );
+            ad_gradient[i] = nd_gradient[i] - safeexp( gradient_tmp[i] - log_sumprob);
+        } else  {
+            gradient_tmp[i] = logsub( gradient_tmp_neg[i], gradient_tmp_pos[i] );
+            ad_gradient[i] = nd_gradient[i] + safeexp( gradient_tmp[i] - log_sumprob);
+
+//            cout << "nd_gradient[i] " << nd_gradient[i] << endl;
+//            cout << "safeexp( gradient_tmp[i] - log_sumprob) " << safeexp( gradient_tmp[i] - log_sumprob) << endl;
+
+        }
+
+    }
+
+}
+
+
+
 void NnlmOnlineLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
                     VMat testoutputs, VMat testcosts) const
 {
 
-    Vec input( inputsize() );
+    Vec input( inputsize()-1 );
     Vec output( outputsize() );
-    Vec target( targetsize() );
+    Vec target( 1 );
     real weight;
 
     Vec test_costs( getTestCostNames().length() );
@@ -539,28 +808,6 @@ void NnlmOnlineLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
     {
         myGetExample(testset, sample, input, target, weight );
 
-
-        // *** SHOULD DO THIS IN PRETREATMENT!!!
-        // * Replace nan in input by '(train_set->getDictionary(0))->size()+1' 
-        // the missing value tag
-        for( int i=0 ; i < inputsize() ; i++ ) {
-          if( is_missing(input[i]) )  {
-            input[i] = (train_set->getDictionary(0))->size()+1;
-          }
-        }
-        // * Replace a 'nan' in the target by OOV
-        // this nan should not be missing data (seeing the train_set is a
-        // ProcessSymbolicSequenceVMatrix)
-        // but the word "nan", ie "Mrs Nan said she would blabla"
-        // *** Problem however - current vocabulary is full for train_set, ie
-        // we train OOV on nan-word instances.
-        // *** Problem however - current vocabulary is full for train_set, ie
-        // we train OOV on nan-word instances.
-        // DO a pretreatment to replace Nan by *Nan* or something like it
-        if( is_missing(target[0]) ) {
-            target[0] = 0;
-        }
-        // *** SHOULD DO THIS IN PRETREATMENT!!! - END
 
   /*      // * fprop
         computeOutput(input, output);
@@ -636,6 +883,11 @@ void NnlmOnlineLearner::computeOutput(const Vec& input, Vec& output) const
     output << values[ nmodules ];
 
 }
+
+
+
+
+
 
 //! Computes the test costs, ie the full disriminant cost (NLL).
 //! See about how to include/print the perplexity.
