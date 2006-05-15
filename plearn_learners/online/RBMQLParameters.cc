@@ -291,16 +291,16 @@ void RBMQLParameters::computeUnitActivations
         // TODO: change it to work with start and length
         assert( start+length <= down_layer_size );
         Mat activations_mat = activations.toMat( activations.length()/2 , 2);
-        Vec mu = activations_mat.column(0).toVec() ; 
-        Vec sigma = activations_mat.column(1).toVec() ; 
+        Mat mu = activations_mat.column(0) ; 
+        Mat sigma = activations_mat.column(1) ; 
         
-        transposeProduct( mu , weights , input_vec );
+        transposeProduct( mu , weights , input_vec.toMat(input_vec.length() , 1) );
         
         // activations[i-start] = sum_j weights(j,i) input_vec[j] + b[i]
         for(int i=0 ; i<length ; ++i) { 
             real a_i = down_units_params[1][i] ; 
-            mu[i] = - (mu[i] + down_units_params[0][i]) / (2 * a_i * a_i)     ; 
-            sigma[i] = 1 / (2. * a_i * a_i) ; 
+            mu[i][0] = - (mu[i][0] + down_units_params[0][i]) / (2 * a_i * a_i)     ; 
+            sigma[i][0] = 1 / (2. * a_i * a_i) ; 
         }
 
     }
