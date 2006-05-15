@@ -264,6 +264,8 @@ void NnlmOutputLayer::fprop(const Vec& input, Vec& output) const
       vec1[i] = input[i] - mu(current_word, i);
       vec2[i] = 1.0 / sigma2(current_word, i);
 
+//cout << "sigma2(current_word, i) " << sigma2(current_word, i) << endl;
+
       vec2[i] = vec2[i] * vec1[i];
 
       r1 += vec1[i] * vec2[i];
@@ -271,6 +273,8 @@ void NnlmOutputLayer::fprop(const Vec& input, Vec& output) const
       // determinant of variance matrix
       r2 *= sigma2(current_word, i);
     }
+
+
 
     r1 *= -0.5;
 
@@ -283,6 +287,9 @@ void NnlmOutputLayer::fprop(const Vec& input, Vec& output) const
 
     real log_r2 = 0.5 * ( (input_size) * safelog(2.0 * Pi) + safelog(r2) );
     real log_p_i = safelog(pi[current_word]) + r1 - log_r2;
+
+
+    //cout << "log_r2 " << log_r2 << " r1 " << r1 << " safelog(pi[current_word]) " << safelog(pi[current_word]) << endl;
 
     // * Compute output
     output[0] = -( log_p_i );
