@@ -558,7 +558,8 @@ void GaussMix::updateCholeskyFromPrevious(
 // of dimensions..
 void GaussMix::updateInverseVarianceFromPrevious(
         const Mat& src, Mat& dst, const Mat& full,
-        const TVec<int>& ind_src, const TVec<int>& ind_dst) const
+        const TVec<int>& ind_src, const TVec<int>& ind_dst,
+        real* src_log_det, real* dst_log_det) const
 {
     // The i-th element of 'is_src' ('is_dst') indicates whether the i-th
     // dimension is in the 'ind_src'('ind_dst') vector.
@@ -595,7 +596,15 @@ void GaussMix::updateInverseVarianceFromPrevious(
     static Mat P;
     static Mat B;
 
+    // Safety checks.
     assert( src.length() == ind_src.length() );
+    assert( (src_log_det  &&  dst_log_det) ||
+            (!src_log_det && !dst_log_det) );
+
+    if (src_log_det)
+        // Initialize destination determinant to the source one.
+        *dst_log_det = *src_log_det;
+
     int n = ind_src.length();
     int p = ind_dst.length();
     // int m = full.length();
@@ -679,6 +688,11 @@ void GaussMix::updateInverseVarianceFromPrevious(
         product(tmp, B2, tmp2);
         dst_only_removed -= tmp;
         assert( dst_only_removed.isSymmetric(false, true) );
+        // Update the log-determinant if needed.
+        if (src_log_det)
+            *dst_log_det += det(src_reordered.subMat(n_common, n_common,
+                                                     n_src_only, n_src_only),
+                                true);
     }
 
     // At this point, the dimensions that are not present in the
@@ -729,6 +743,10 @@ void GaussMix::updateInverseVarianceFromPrevious(
         Mat dst_top_left = dst.subMat(0, 0, n_common, n_common);
         dst_top_left << tmp2;
         dst_top_left += dst_only_removed;
+        // Update the log-determinant if needed.
+        if (src_log_det)
+            *dst_log_det -= det(dst.subMat(n_common,   n_common,
+                                           n_dst_only, n_dst_only), true);
     }
     // Ensure 'dst' is symmetric, since we did not fill the bottom-right block.
     fillItSymmetric(dst);
@@ -1057,6 +1075,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         choleskyDecomposition(cov_y_missing, chol);
                     else {
                         assert( efficient_missing == 3 );
+                        log_det_queue.resize(1);
+                        log_det_queue[0] = det(cov_y_missing, true);
                         chol.resize(cov_y_missing.length(),
                                     cov_y_missing.length());
                         matInvert(cov_y_missing, chol);
@@ -1065,7 +1085,6 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     TVec<int>& ind = indices_queue[0];
                     ind.resize(n_non_missing);
                     ind << non_missing;
-
                 }
 
                 mu_y = center(j).subVec(0, n_predicted);
@@ -1141,6 +1160,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     int queue_index = -1;
                     int path_index = -1;
                     bool same_covariance = false;
+                    real log_det_tot, log_det_tpl;
                     if (eff_missing) {
                         path_index =
                             sample_to_path_index[current_training_sample];
@@ -1152,6 +1172,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                             queue_index = cholesky_queue.length() - 2;
                         L_tpl = cholesky_queue[queue_index];
                         ind_tpl = indices_queue[queue_index];
+                        if (efficient_missing == 3)
+                            log_det_tpl = log_det_queue[queue_index];
 
                         n_tpl = L_tpl.length();
                         L_tot.resize(n_tpl, n_tpl);
@@ -1232,7 +1254,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         else {
                             assert( efficient_missing == 3 );
                             updateInverseVarianceFromPrevious(L_tpl, L_tot,
-                                    joint_cov[j], ind_tpl, ind_tot);
+                                    joint_cov[j], ind_tpl, ind_tot,
+                                    &log_det_tpl, &log_det_tot);
 #if 0
                             // Check that the inverse is correctly computed.
                             VMat L_tpl_vm(L_tpl);
@@ -1270,7 +1293,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     // pout << "min = " << min(tmp_mat) << endl;
                     */
                     the_L = same_covariance ? &L_tpl : &L_tot;
-
+                    real* the_log_det = same_covariance ? &log_det_tpl
+                                                        : &log_det_tot;
                     n = the_L->length();
                     if (efficient_missing == 1) {
                         for (int i = 0; i < n; i++)
@@ -1282,13 +1306,13 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         the_L_vm->saveAMAT("/u/delallea/tmp/L.amat", false,
                                 true);
 #endif
+
                         // Note: we need to multiply the log-determinant by 0.5
-                        // compared to 'efficient_missing == 1' because (1) it
-                        // is the determinant of the inverse covariance matrix,
-                        // and (2) the determinant computed from Cholesky is
-                        // the one for L, which is the squared root of the one
-                        // of the full matrix.
-                        log_det += -0.5 * det(*the_L, true);
+                        // compared to 'efficient_missing == 1' because the
+                        // determinant computed from Cholesky is the one for L,
+                        // which is the squared root of the one of the full
+                        // matrix.
+                        log_det += 0.5 * *the_log_det;
                     }
                     assert( !(isnan(log_det) || isinf(log_det)) );
                     log_likelihood = -0.5 * (n * Log2Pi) - log_det;
@@ -1366,6 +1390,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         queue_index++;
                     cholesky_queue.resize(queue_index + 1);
                     indices_queue.resize(queue_index + 1);
+                    if (efficient_missing == 3)
+                        log_det_queue.resize(queue_index + 1);
                     // pout << "length = " << cholesky_queue.length() << endl;
 
                     // Free a reference to element in cholesky_queue. This
@@ -1379,6 +1405,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     TVec<int>& ind = indices_queue[queue_index];
                     ind.resize(ind_tot.length());
                     ind << ind_tot;
+                    if (efficient_missing == 3)
+                        log_det_queue[queue_index] = log_det_tot;
                     }
 
                     // pout << "queue_index = " << queue_index << endl;
@@ -2249,6 +2277,7 @@ void GaussMix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(log_likelihood_post_clust,copies);
     deepCopyField(clusters_samp,            copies);
     deepCopyField(cholesky_queue,           copies);
+    deepCopyField(log_det_queue,            copies);
     deepCopyField(imputed_missing,          copies);
     deepCopyField(clust_imputed_missing,    copies);
     deepCopyField(sum_of_posteriors,        copies);

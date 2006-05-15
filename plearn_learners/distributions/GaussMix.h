@@ -112,6 +112,10 @@ protected:
     //! need to be kept in memory during training.
     mutable TVec<Mat> cholesky_queue;
 
+    //! TODO Document (list of determinants of covariance matrices of the
+    //observed part)
+    mutable Vec log_det_queue;
+
     //! TODO Document (the VMats with the imputed missing values).
     TVec<VMat> imputed_missing;
 
@@ -420,9 +424,11 @@ protected:
 
     // TODO DOCUMENT
     // (use the inverse variance lemma to update the inverse covariance matrix)
+    // (may also update the determinant of the corresponding covariance matrix)
     void updateInverseVarianceFromPrevious(
         const Mat& src, Mat& dst, const Mat& full,
-        const TVec<int>& ind_src, const TVec<int>& ind_dst) const;
+        const TVec<int>& ind_src, const TVec<int>& ind_dst,
+        real* src_log_det = 0, real* dst_log_det = 0) const;
 
     // TODO DOCUMENT!!!
     void addToCovariance(const Vec& y, int j, const Mat& cov, real post);
