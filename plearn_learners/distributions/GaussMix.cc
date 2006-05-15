@@ -689,10 +689,13 @@ void GaussMix::updateInverseVarianceFromPrevious(
         dst_only_removed -= tmp;
         assert( dst_only_removed.isSymmetric(false, true) );
         // Update the log-determinant if needed.
-        if (src_log_det)
+        if (src_log_det) {
+            //Profiler::start("det when removing");
             *dst_log_det += det(src_reordered.subMat(n_common, n_common,
                                                      n_src_only, n_src_only),
                                 true);
+            //Profiler::end("det when removing");
+        }
     }
 
     // At this point, the dimensions that are not present in the
@@ -744,9 +747,12 @@ void GaussMix::updateInverseVarianceFromPrevious(
         dst_top_left << tmp2;
         dst_top_left += dst_only_removed;
         // Update the log-determinant if needed.
-        if (src_log_det)
+        if (src_log_det) {
+            //Profiler::start("det when adding");
             *dst_log_det -= det(dst.subMat(n_common,   n_common,
                                            n_dst_only, n_dst_only), true);
+            //Profiler::end("det when adding");
+        }
     }
     // Ensure 'dst' is symmetric, since we did not fill the bottom-right block.
     fillItSymmetric(dst);
@@ -1248,14 +1254,18 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     }
                         */
                     if (!same_covariance) {
-                        if (efficient_missing == 1)
+                        if (efficient_missing == 1) {
+                            //Profiler::start("updateCholeskyFromPrevious, em1");
                             updateCholeskyFromPrevious(L_tpl, L_tot,
                                     joint_cov[j], ind_tpl, ind_tot);
-                        else {
+                            //Profiler::end("updateCholeskyFromPrevious, em1");
+                        } else {
                             assert( efficient_missing == 3 );
+                            //Profiler::start("updateInverseVarianceFromPrevious, em3");
                             updateInverseVarianceFromPrevious(L_tpl, L_tot,
                                     joint_cov[j], ind_tpl, ind_tot,
                                     &log_det_tpl, &log_det_tot);
+                            //Profiler::end("updateInverseVarianceFromPrevious, em3");
 #if 0
                             // Check that the inverse is correctly computed.
                             VMat L_tpl_vm(L_tpl);
