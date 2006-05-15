@@ -569,6 +569,7 @@ real& weight) const
 }
 
 // TODO I've misunderstood how the costs work (don't update for each example! Compute a cost for the stage!). Fix this.
+// Don't train the neural part until stage 2. This way, we get some valid mus, sigmas, etc for the output layer.
 void NnlmOnlineLearner::train()
 {
 
@@ -632,7 +633,8 @@ void NnlmOnlineLearner::train()
             train_costs[0] += neglogprob_tr[0];
 
             // so we don't do a /0 with  /sigma2(current_word, i)
-            if( output_module->sumI[ (int) target[0] ] < 2 )  {
+            //if( output_module->sumI[ (int) target[0] ] < 2 )  {
+            if( stage < 2 )  {
               non_discr_gradient.fill(0.0);
             } else  {
                 for(int i=0; i<context_layer_size; i++) {
@@ -642,8 +644,13 @@ void NnlmOnlineLearner::train()
             }
 
             // * Approximated discriminant cost and gradient -> using candidate words
-            computeApproximateDiscriminantCostAndGradient(input, target, output, neglogprob_tr[0], train_costs, 
+            if( stage < 2 )  {
+                train_costs[1] = 0.0;
+                approx_discr_gradient.fill(0.0);
+            } else  {
+                computeApproximateDiscriminantCostAndGradient(input, target, output, neglogprob_tr[0], train_costs, 
                                        non_discr_gradient, approx_discr_gradient);
+            }
 
             // *** Update stats
             train_stats->update( train_costs );
@@ -689,6 +696,10 @@ void NnlmOnlineLearner::train()
 //! Computes the approximate discriminant cost and its gradient
 void NnlmOnlineLearner::computeApproximateDiscriminantCostAndGradient(Vec input, Vec target, Vec output, real nd_cost, Vec train_costs, Vec nd_gradient, Vec ad_gradient)
 {
+
+    //static int step = 0;
+
+
     // *** 
     // so we don't do a /0 with  /sigma2(current_word, i)
     if( output_module->sumI[ (int) target[0] ] < 2 )  {
@@ -701,7 +712,7 @@ void NnlmOnlineLearner::computeApproximateDiscriminantCostAndGradient(Vec input,
     // *** We can compute cost and gradient
     int c;
     Vec neglogprob_cr(1);         // - log p(word=c, representation=r)
-    real log_sumprob = nd_cost;   // log \sum_c p(c,r), where r the output (context representation) and c the candidates
+    real log_sumprob = -nd_cost;   // log \sum_c p(c,r), where r the output (context representation) and c the candidates
     real alpha;
     Vec gradient_tmp( context_layer_size ); // used in the computation of the approx. discriminant gradient
     Vec gradient_tmp_pos( context_layer_size ); // used in the computation of the approx. discriminant gradient
@@ -724,8 +735,17 @@ void NnlmOnlineLearner::computeApproximateDiscriminantCostAndGradient(Vec input,
 //                            ( alpha ) / output_module->sigma2( (int)target[0], i);
     }
 
+/*  if( step < 10)  {
+        cout << "----------------------------------" << endl; 
+        cout << "neglogprob_tr " << nd_cost << endl; 
+        //cout << "----------------------------------" << endl; 
+    }            */
+
 
     // *** Compute normalization
+    // TODO CONSIDER SHARED CANDIDATES ALSO!!!
+    // TODO CONSIDER SHARED CANDIDATES ALSO!!!
+    // TODO CONSIDER SHARED CANDIDATES ALSO!!!
     for( int i=0; i< candidates[ (int) input[ (int) (inputsize()-2) ] ].length(); i++ )
     {
         c = candidates[ (int) input[ (int) (inputsize()-2) ] ][i];
@@ -734,12 +754,26 @@ void NnlmOnlineLearner::computeApproximateDiscriminantCostAndGradient(Vec input,
             output_module->setCurrentWord( c );
             output_module->fprop( output, neglogprob_cr );
 
+
             log_sumprob = logadd(log_sumprob, -neglogprob_cr[0]);
 
             // so we don't do a /0 with  /sigma2(current_word, i)
             if( output_module->sumI[ c ] >= 2 )  {
                 for(int i=0; i<context_layer_size; i++) {
                     alpha = output[i] - output_module->mu( c, i);
+
+ /* if( step < 15)  {
+        cout << "neglogprob_cr " << neglogprob_cr << endl; 
+                   if( alpha > 0)  {
+        cout << "safelog( alpha ) " << safelog( alpha ) << endl; 
+                    } else  {
+        cout << "safelog( -alpha ) " << safelog( -alpha ) << endl; 
+                    }
+        cout << "- safelog( output_module->sigma2( c, i) ) " << - safelog( output_module->sigma2( c, i) ) << endl;
+  }*/
+
+
+
 
                     if( alpha > 0)  {
                         gradient_tmp_pos[i] = logadd( gradient_tmp_pos[i], 
@@ -757,8 +791,15 @@ void NnlmOnlineLearner::computeApproximateDiscriminantCostAndGradient(Vec input,
         } // if not target - END
     }
 
+
+/*  if( step < 15)  {
+      cout << "log_sumprob " << log_sumprob << endl;
+  }*/
+
+
     // *** The approcimate discriminant cost
     train_costs[1] = nd_cost + log_sumprob;
+
 
     // *** The corresponding gradient
     for(int i=0; i<context_layer_size; i++) {
@@ -776,6 +817,13 @@ void NnlmOnlineLearner::computeApproximateDiscriminantCostAndGradient(Vec input,
 
     }
 
+/*    if( step < 15)  {
+        cout << "gradient_tmp_pos " << endl << gradient_tmp_pos << endl << endl; 
+        cout << "gradient_tmp_neg " << endl << gradient_tmp_neg << endl << endl;
+    }*/
+
+/*    step++;
+    step = step%100000;*/
 }
 
 
