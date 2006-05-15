@@ -49,7 +49,7 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     RankingFromKernel,
-    "This learner will compute \\frac{\\sum_{actives} K(i,j)}{\\sum_{inactives} K(i,j)} for a given kernel K.",
+    "This learner will compute \\frac{\\sum_{actives} K(i,j)}{\\sum_{inactives} K(i,j)} for a given kernel K. ",
     "A lift_output is available to compute ranking based costs. The target must be 1 or 0. \n");
 
 RankingFromKernel::RankingFromKernel() 
