@@ -291,6 +291,10 @@ void HintonDeepBeliefNet::build_params()
                                              params[n_layers-2] );
     joint_params->learning_rate = learning_rate;
     joint_params->random_gen = random_gen;
+
+    // share the biases
+    for( int i=0 ; i<n_layers-2 ; i++ )
+        params[i]->up_units_bias = params[i+1]->down_units_bias;
 }
 
 ////////////
@@ -504,6 +508,7 @@ void HintonDeepBeliefNet::train()
     Vec input( inputsize() );
     Vec target( targetsize() ); // unused
     real weight; // unused
+    Vec train_costs(2);
 
     if( !initTrain() )
     {
@@ -535,21 +540,10 @@ void HintonDeepBeliefNet::train()
         int layer = stage;
         int n_samples_to_see = training_schedule[stage];
 
-        // this progress bar shows the number of loops through the whole
-        // training set
-        ProgressBar* pb = 0;
-
         if( stage < n_layers-2 )
         {
             MODULE_LOG << "Training parameters between layers " << stage
                 << " and " << stage+1 << endl;
-
-            if( report_progress )
-                pb = new ProgressBar( "Training " + classname()
-                                      + " parameters between layers "
-                                      + tostring(stage) + " and "
-                                      + tostring(stage+1),
-                                      n_samples_to_see );
 
             int begin_sample = sample;
             int end_sample = begin_sample + n_samples_to_see;
@@ -559,23 +553,13 @@ void HintonDeepBeliefNet::train()
                 int i = sample % train_set->length();
                 train_set->getExample(i, input, target, weight);
                 greedyStep( input.subVec(0, n_predictor), layer );
-
-                if( pb )
-                    pb->update( sample - begin_sample + 1 );
             }
-
         }
         else if( stage == n_layers-2 )
         {
             MODULE_LOG << "Training joint parameters, between target,"
                 << " penultimate (" << n_layers-2 << ")," << endl
                 << "and last (" << n_layers-1 << ") layers." << endl;
-            if( report_progress )
-                pb = new ProgressBar( "Training " + classname()
-                                      + " parameters between target, "
-                                      + tostring(stage) + " and "
-                                      + tostring(stage+1) + " layers",
-                                      n_samples_to_see );
 
             int begin_sample = sample;
             int end_sample = begin_sample + n_samples_to_see;
@@ -586,9 +570,6 @@ void HintonDeepBeliefNet::train()
                 int i = sample % train_set->length();
                 train_set->getExample(i, input, target, weight);
                 jointGreedyStep( input );
-
-                if( pb )
-                    pb->update( sample - begin_sample + 1 );
             }
         }
         else if( stage == n_layers-1 )
@@ -600,39 +581,19 @@ void HintonDeepBeliefNet::train()
                 sample += n_samples_to_see;
             else if( fine_tuning_method == "EGD" )
             {
-                if( report_progress )
-                    pb = new ProgressBar( "Training all " + classname()
-                                          + " parameters by fine tuning",
-                                          n_samples_to_see );
-
-/*
-pout << "==================" << endl
-    << "Before update:" << endl
-    << "up:      " << joint_params->up_units_params << endl
-    << "weights: " << endl << joint_params->weights << endl
-    << "down:    " << joint_params->down_units_params << endl
-    << endl;
-// */
                 int begin_sample = sample;
                 int end_sample = begin_sample + n_samples_to_see;
                 for( ; sample < end_sample ; sample++ )
                 {
                     // sample is the index in the training set
                     int i = sample % train_set->length();
-                    train_set->getExample(i, input, target, weight);
-                    fineTuneByGradientDescent( input );
+                    if( i == begin_sample % train_set->length() )
+                        train_stats->forget();
 
-                    if( pb )
-                        pb->update( sample - begin_sample + 1 );
+                    train_set->getExample(i, input, target, weight);
+                    fineTuneByGradientDescent( input, train_costs );
+                    train_stats->update( train_costs );
                 }
-/*
-pout << "-------" << endl
-    << "After update:" << endl
-    << "up:      " << joint_params->up_units_params << endl
-    << "weights: " << endl << joint_params->weights << endl
-    << "down:    " << joint_params->down_units_params << endl
-    << endl;
-// */
             }
             else
                 PLERROR( "Fine-tuning methods other than \"EGD\" are not"
@@ -727,7 +688,8 @@ void HintonDeepBeliefNet::jointGreedyStep( const Vec& input )
     joint_params->update();
 }
 
-void HintonDeepBeliefNet::fineTuneByGradientDescent( const Vec& input )
+void HintonDeepBeliefNet::fineTuneByGradientDescent( const Vec& input,
+                                                     const Vec& train_costs )
 {
     // split input in predictor_part and predicted_part
     splitCond(input);
@@ -737,6 +699,16 @@ void HintonDeepBeliefNet::fineTuneByGradientDescent( const Vec& input )
     expectation( output_gradient );
 
     int actual_index = argmax(predicted_part);
+
+    // update train_costs
+    train_costs[0] = -pl_log( store_expect[actual_index] );
+    int predicted_index = argmax( store_expect );
+    if( predicted_index == actual_index )
+        train_costs[1] = 0;
+    else
+        train_costs[1] = 1;
+
+    // output gradient
     output_gradient[actual_index] -= 1.;
 
     joint_params->bpropUpdate( layers[n_layers-2]->expectation,
@@ -800,6 +772,11 @@ TVec<string> HintonDeepBeliefNet::getTestCostNames() const
         result.append( "class_error" );
     }
     return result;
+}
+
+TVec<string> HintonDeepBeliefNet::getTrainCostNames() const
+{
+    return getTestCostNames();
 }
 
 } // end of namespace PLearn

@@ -64,9 +64,6 @@ class HintonDeepBeliefNet : public PDistribution
 public:
     //#####  Public Build Options  ############################################
 
-    //! ### declare public option fields (such as build options) here
-    //! Start your comments with Doxygen-compatible comments such as //!
-
     //! The learning rate
     real learning_rate;
 
@@ -227,6 +224,7 @@ public:
                                          const Vec& target, Vec& costs) const;
 
     virtual TVec<string> getTestCostNames() const;
+    virtual TVec<string> getTrainCostNames() const;
 
     //#####  PLearn::Object Protocol  #########################################
 
@@ -263,7 +261,8 @@ protected:
 
     virtual void greedyStep( const Vec& predictor, int params_index );
     virtual void jointGreedyStep( const Vec& input );
-    virtual void fineTuneByGradientDescent( const Vec& input );
+    virtual void fineTuneByGradientDescent( const Vec& input,
+                                            const Vec& train_costs );
 
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
