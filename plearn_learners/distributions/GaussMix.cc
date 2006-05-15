@@ -682,12 +682,17 @@ void GaussMix::updateInverseVarianceFromPrevious(
         dst_only_removed << B1;
         tmp.resize(B3.length(), B3.width());
         matInvert(B3, tmp);
+        assert( tmp.isSymmetric(false) );
+        fillItSymmetric(tmp);
         tmp2.resize(tmp.length(), B2.length());
         productTranspose(tmp2, tmp, B2);
         tmp.resize(B2.length(), tmp2.width());
         product(tmp, B2, tmp2);
         dst_only_removed -= tmp;
-        assert( dst_only_removed.isSymmetric(false, true) );
+        // Another commented-out assert due to it possibly failing (numerical
+        // imprecisions).
+        // assert( dst_only_removed.isSymmetric(false, true) );
+        fillItSymmetric(dst_only_removed);
         // Update the log-determinant if needed.
         if (src_log_det) {
             //Profiler::start("det when removing");
@@ -735,7 +740,12 @@ void GaussMix::updateInverseVarianceFromPrevious(
         negateElements(tmp);
         tmp += P;
         tmp2.resize(tmp.length(), tmp.width());
+        assert( tmp.isSymmetric(false, true) );
+        fillItSymmetric(tmp);
         matInvert(tmp, tmp2);
+        // Commented-out as it may cause an unwanted crash.
+        // assert( tmp2.isSymmetric(false) );
+        fillItSymmetric(tmp2);
         dst.subMat(n_common, n_common, n_dst_only, n_dst_only) << tmp2;
         tmp.resize(B.width(), tmp2.width());
         transposeProduct(tmp, B, tmp2);
@@ -1085,7 +1095,13 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         log_det_queue[0] = det(cov_y_missing, true);
                         chol.resize(cov_y_missing.length(),
                                     cov_y_missing.length());
+                        assert( cov_y_missing.isSymmetric() );
                         matInvert(cov_y_missing, chol);
+                        // Commenting-out this assert: it can actually fail due
+                        // to some numerical imprecisions during matrix
+                        // inversion, which is a bit annoying.
+                        // assert( chol.isSymmetric(false, true) );
+                        fillItSymmetric(chol);
                     }
                     indices_queue.resize(1);
                     TVec<int>& ind = indices_queue[0];
