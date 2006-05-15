@@ -1,0 +1,144 @@
+%% -*- mode:latex; tex-open-quote:"\\og{}"; tex-close-quote:"\\fg{}" -*-
+%%
+%%  Copyright (c) 1998-2002 by Pascal Vincent
+%%  Copyright (c) 2006 by Dan Popovici
+
+%%
+%%  $Id: faq.tex 5579 2006-05-12 16:18:06Z plearner $
+
+\documentclass[11pt]{book}
+\usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
+\usepackage{ae}                 % use virtual fonts for getting good PDF
+\usepackage{url}                % support URLs properly
+\usepackage{hyperref}
+
+\addtolength{\textheight}{3.5cm}
+\addtolength{\topmargin}{-1.8cm}
+\addtolength{\textwidth}{2.5cm}
+\addtolength{\oddsidemargin}{-1cm}
+\addtolength{\evensidemargin}{-1.5cm}
+
+
+%%%%%%%%% Definitions %%%%%%%%%%%%
+\newcommand{\PLearn}{{\bf \it PLearn}}
+\newcommand{\Object}{{\bf Object}}
+\newcommand{\Learner}{{\bf Learner}} 
+\newcommand{\PPointable}{{\bf PPointable}} 
+\newcommand{\Var}{{\tt Var}}
+\newcommand{\RandomVar}{{\tt RandomVar}}
+
+\parskip=2mm
+\parindent=0mm
+
+\title{\Huge PLearn FAQ\\ \Large A place with questions related to PLearn that come up all the time}
+
+\begin{document}
+
+%%%%%%%% Title Page %%%%%%%%%%
+\pagenumbering{roman}
+\thispagestyle{empty}
+
+\maketitle
+
+\pagebreak
+
+\vspace*{10cm}
+
+
+
+Copyright \copyright\ 2006 Dan Popovici \\
+
+Permission is granted to copy and distribute this document in any medium,
+with or without modification, provided that the following conditions are
+met:
+
+\begin{enumerate}
+\item Modified versions must give fair credit to all authors.
+\item Modified versions may not be written with the aim to discredit, misrepresent, or otherwise taint the
+      reputation of any of the above authors.
+\item Modified versions must retain the above copyright notice, and append to
+   it the names of the authors of the modifications, together with the years the
+   modifications were written.
+\item Modified versions must retain this list of conditions unaltered, 
+    and may not impose any further restrictions.
+\end{enumerate}
+
+
+\pagebreak
+
+%%%%%%%%% Table of contents %%%%%%%%%%%%
+\addcontentsline{toc}{chapter}{\numberline{}Table of contents}
+\tableofcontents
+
+\cleardoublepage\pagebreak
+\pagenumbering{arabic}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{ Introduction and Purpose of this Document } 
+
+The aim of this document is to provide quick answers to questions like which function computes this, or how can I quickly create a new test case using PyTest. An up to date document of this kind should save a considerable amount of time to many people. 
+
+Each entry has an author associated with it. If you think the response of a questions could be improved, just contact the author and make the necessary changes. 
+
+
+
+\chapter{ PLearn }
+
+\chapter{ PyTest }
+
+\chapter{ PyPLearn }
+
+\chapter{ PLearn + SVN }
+
+\section { How to enter your svn password only once }
+
+\begin{verbatim}
+$ ssh-keygen -t rsa     % this will generate a public key, if you don't have one already
+$ ssh-copy-id -i ~/.ssh/id_rsa.pub USERNAME@shell.berlios.de 
+% the last command copies your public key into authorized_keys from the remote
+\end{verbatim}
+
+(added by \href{mailto:popovicd@iro.umontreal.ca}{Dan Popovici})
+
+
+
+
+\chapter*{License}
+
+This document is covered by the license appearing after the title page.
+
+The PLearn software library and tools described in this document are
+distributed under the following BSD-type license:
+
+\begin{verbatim}
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+
+3. The name of the authors may not be used to endorse or promote
+products derived from this software without specific prior written
+permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+\end{verbatim}
+
+
+
+\end{document}
+
