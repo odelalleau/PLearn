@@ -5589,7 +5589,7 @@ void LU_decomposition(TMat<T>& A, TVec<T>& Trow, int& detsign, TVec<T>* p=0)
                 *Aij *= denom;
         }
     }
-    if (p!=0) delete pivot;
+    if (p == 0) delete pivot;
 }
    
 //! Return the determinant of A, using LU decomposition.
@@ -5597,6 +5597,10 @@ void LU_decomposition(TMat<T>& A, TVec<T>& Trow, int& detsign, TVec<T>* p=0)
 template<class T>
 T det(const TMat<T>& A, bool log_det = false)
 {
+    // Work storage.
+    static TMat<T> LU;
+    static TVec<T> Trow, p;
+
     int n = A.length();
     if (n!=A.width())
         PLERROR("det(const TMat<T>& A): A(%d,%d) is not square!",n,A.width());
@@ -5606,11 +5610,12 @@ T det(const TMat<T>& A, bool log_det = false)
         if (max_abs==0)
             return 0.0;
     }
-    TMat<T> LU(A.copy());
-    TVec<T> Trow(n);
-    TVec<T> p(n);
+    LU.resize(A.length(), A.width());
+    LU << A;
+    Trow.resize(n);
+    p.resize(n);
     int detsign;
-    LU_decomposition(LU, Trow, detsign);
+    LU_decomposition(LU, Trow, detsign, &p);
     return det(LU, detsign, log_det);
 }
 
