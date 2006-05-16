@@ -7,23 +7,36 @@ all: guides.all api.html
 #publish:
 #	scp -r * plearner@shell.berlios.de:/home/groups/plearn/htdocs/
 
-publish: 
-	scp -r *.html *_guide *.ps *.pdf *.txt *.jpg html_autodoc python_modules_html plearner@shell.berlios.de:/home/groups/plearn/htdocs/
+publish: publish_guides
+	scp -r html_autodoc python_modules_html plearner@shell.berlios.de:/home/groups/plearn/htdocs/
 
-guides.all: guides.ps guides.html guides.pdf
+publish_guides:
+	scp -r *.html *_guide faq *.ps *.pdf *.txt *.jpg plearner@shell.berlios.de:/home/groups/plearn/htdocs/
+
+guides.all: users_guide.all programmers_guide.all tools_guide.all faq.all
 
 doxygen:
 	doxygen
 
-guides.html: users_guide programmers_guide tools_guide
-
-guides.pdf: users_guide.pdf programmers_guide.pdf tools_guide.pdf
-
-guides.ps: users_guide.ps programmers_guide.ps tools_guide.ps
-
 TEX_INTERACTION_MODE=nonstopmode
 TEX_OPTIONS=--interaction $(TEX_INTERACTION_MODE)
 PDFTEX_OPTIONS=-interaction=$(TEX_INTERACTION_MODE)
+
+faq.all: faq faq.dvi faq.ps faq.pdf
+
+faq: faq.tex
+	latex2html -split 3 -show_section_numbers -local_icons faq.tex
+
+faq.dvi: faq.tex
+	latex $(TEX_OPTIONS) faq
+	latex $(TEX_OPTIONS) faq
+	latex $(TEX_OPTIONS) faq
+
+faq.ps: faq.dvi
+	dvips -Pcmps -t letter faq -o
+
+faq.pdf: faq.dvi
+	pdflatex $(PDFTEX_OPTIONS) faq
 
 users_guide.all: users_guide users_guide.dvi users_guide.ps users_guide.pdf
 
