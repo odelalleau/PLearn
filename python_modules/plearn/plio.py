@@ -396,6 +396,8 @@ class PLearnIO:
                 break
             key,val = self.binread_pair()
             d[key] = val
+        c = self.get()                  # Eat trailing '}'
+        assert c == '}', "Expected a closing '}' in reading dict, but got " + c
         return d
 
     def binread_Storage(self):
@@ -494,5 +496,8 @@ class PLearnIO:
                 if c!='=':
                     raise TypeError('Expected to read = but read '+c)
                 val = self.binread()
+
+                # print >>sys.stderr, "Reading (key,val) =",(key,val)
+                
                 setattr(obj,key,val)
                 
