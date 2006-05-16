@@ -1,4 +1,5 @@
-import warnings                
+import warnings
+from plearn.utilities.pobject  import PObject
 from plearn.utilities          import toolkit
 from plearn.utilities.metaprog import public_attributes
 from plearn.utilities.Bindings import Bindings
@@ -214,6 +215,11 @@ def __plearn_repr( obj, indent_level, inner_repr = plearn_repr ):
     
     elif obj is None:
         return "*0;"
+
+    elif isinstance( obj, PObject ):
+        # A PObject is a lightweight PLearn object received from the PLearn
+        # server mechanism (plservice/plio)
+        return repr(obj)
 
     # No specific mechanism known for that type
     raise TypeError( 'Does not know how to handle type %s (obj = %s)'

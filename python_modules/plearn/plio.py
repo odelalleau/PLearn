@@ -34,8 +34,9 @@
 
 import sys, string
 import numarray
-import plearn.utilities.pl_struct as struct
-from plearn.pyplearn.plearn_repr import plearn_repr, clear_ref_map
+import plearn.utilities.pl_struct  as     struct
+from   plearn.utilities.pobject    import PObject
+from   plearn.pyplearn.plearn_repr import plearn_repr, clear_ref_map
 
 sign_and_digits = string.digits + "+-"
 float_chars = string.digits+"+-.eE" + "naif"   # "nan" and "inf"
@@ -60,9 +61,6 @@ pl_typecode_to_arraytype = {
     '\x11': 'f8'
     }
 
-
-class PObject:
-    pass
 
 class PLearnIO:
 
@@ -208,7 +206,6 @@ class PLearnIO:
             
     def write_typed(self, x):
         spec = plearn_repr(x)+' '
-        # print 'Sending spec string:',spec
         self.write(spec)
 
     def binread(self):
