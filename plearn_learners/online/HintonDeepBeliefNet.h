@@ -64,8 +64,11 @@ class HintonDeepBeliefNet : public PDistribution
 public:
     //#####  Public Build Options  ############################################
 
-    //! The learning rate
+    //! The learning rate used during greedy learning
     real learning_rate;
+
+    //! The learning rate used during the gradient descent
+    real fine_tuning_learning_rate;
 
     //! The weight decay
     real weight_decay;

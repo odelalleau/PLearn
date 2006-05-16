@@ -61,6 +61,7 @@ PLEARN_IMPLEMENT_OBJECT(
 /////////////////////////
 HintonDeepBeliefNet::HintonDeepBeliefNet() :
     learning_rate(0.),
+    fine_tuning_learning_rate(-1.),
     weight_decay(0.),
     use_sample_rather_than_expectation_in_positive_phase_statistics(false)
 {
@@ -74,7 +75,12 @@ void HintonDeepBeliefNet::declareOptions(OptionList& ol)
 {
     declareOption(ol, "learning_rate", &HintonDeepBeliefNet::learning_rate,
                   OptionBase::buildoption,
-                  "Learning rate");
+                  "Learning rate used during greedy learning");
+
+    declareOption(ol, "fine_tuning_learning_rate",
+                  &HintonDeepBeliefNet::fine_tuning_learning_rate,
+                  OptionBase::buildoption,
+                  "Learning rate used during the gradient descent");
 
     declareOption(ol, "weight_decay", &HintonDeepBeliefNet::weight_decay,
                   OptionBase::buildoption,
@@ -94,9 +100,11 @@ void HintonDeepBeliefNet::declareOptions(OptionList& ol)
     declareOption(ol, "training_schedule",
                   &HintonDeepBeliefNet::training_schedule,
                   OptionBase::buildoption,
-                  "Number of examples to use during each of the different"
-                  " greedy\n"
-                  "steps of the training phase.\n");
+                  "Total number of examples that should be seen until each"
+                  " layer\n"
+                  "have been greedily trained.\n"
+                  "We should always have training_schedule[i] <"
+                  " training_schedule[i+1].\n");
 
     declareOption(ol, "fine_tuning_method",
                   &HintonDeepBeliefNet::fine_tuning_method,
@@ -177,6 +185,9 @@ void HintonDeepBeliefNet::build_()
     if( n_layers <= 1 )
         return;
 
+    if( fine_tuning_learning_rate < 0. )
+        fine_tuning_learning_rate = learning_rate;
+
     // check value of initialization_method
     string im = lowerstring( initialization_method );
     if( im == "" || im == "uniform_sqrt" )
@@ -208,8 +219,8 @@ void HintonDeepBeliefNet::build_()
         <<  endl;
     //TODO: build structure to store gradients during gradient descent
 
-    if( training_schedule.length() != n_layers )
-        training_schedule = TVec<int>( n_layers, 1000000 );
+    if( training_schedule.length() != n_layers-1 )
+        training_schedule = TVec<int>( n_layers-1, 1000000 );
     MODULE_LOG << "  training_schedule = " << training_schedule << endl;
     MODULE_LOG << endl;
 
@@ -266,7 +277,6 @@ void HintonDeepBeliefNet::build_params()
         //TODO: call changeOptions instead
         params[i]->down_units_types = layers[i]->units_types;
         params[i]->up_units_types = layers[i+1]->units_types;
-        params[i]->learning_rate = learning_rate;
         params[i]->initialization_method = initialization_method;
         params[i]->random_gen = random_gen;
         params[i]->build();
@@ -281,7 +291,6 @@ void HintonDeepBeliefNet::build_params()
     //TODO: call changeOptions instead
     target_params->down_units_types = target_layer->units_types;
     target_params->up_units_types = last_layer->units_types;
-    target_params->learning_rate = learning_rate;
     target_params->initialization_method = initialization_method;
     target_params->random_gen = random_gen;
     target_params->build();
@@ -289,7 +298,6 @@ void HintonDeepBeliefNet::build_params()
     // build joint_params from params[n_layers-1] and target_params
     joint_params = new RBMJointLLParameters( target_params,
                                              params[n_layers-2] );
-    joint_params->learning_rate = learning_rate;
     joint_params->random_gen = random_gen;
 
     // share the biases
@@ -517,34 +525,133 @@ void HintonDeepBeliefNet::train()
     }
 
     int nsamples = train_set->length();
-    int sample = 0;
     MODULE_LOG << "  nsamples = " << nsamples << endl;
+    MODULE_LOG << "  initial stage = " << stage << endl;
+    MODULE_LOG << "  objective: nstages = " << nstages << endl;
 
-    // Let's define stage and nstages:
-    //   - 0: fresh state, nothing is done
-    //   - 1..n_layers-2: params[stage-1] is trained
-    //   - n_layers-1: joint_params is trained (including params[n_layers-2])
-    //   - n_layers: after the fine tuning
+    ProgressBar* pb = 0;
 
-    MODULE_LOG << "initial stage = " << stage << endl;
-    MODULE_LOG << "objective: nstages = " << nstages << endl;
+    // clear stats of previous epoch
+    train_stats->forget();
 
+    for( int layer=0 ; layer < n_layers-2 ; layer++ )
+    {
+        MODULE_LOG << "Training parameters between layers " << layer
+            << " and " << layer+1 << endl;
+        if( report_progress )
+        {
+            if( layer == 0 && min( training_schedule[layer], nstages ) > 0 )
+                pb = new ProgressBar( "Training layer "+tostring(layer)
+                                      +" of "+classname(),
+                                      min( training_schedule[layer], nstages )
+                                    );
+            if( layer > 0
+                && (min( training_schedule[layer], nstages )
+                    - min( training_schedule[layer-1], nstages )) > 0 )
+                pb = new ProgressBar( "Training layer "+tostring(layer)
+                                      +" of "+classname(),
+                                      min( training_schedule[layer], nstages )
+                                      - min( training_schedule[layer-1],
+                                             nstages ) );
+        }
+
+        params[layer]->learning_rate = learning_rate;
+        for( ; stage<training_schedule[layer] && stage<nstages ; stage++ )
+        {
+            int sample = stage % nsamples;
+            train_set->getExample(sample, input, target, weight);
+            greedyStep( input.subVec(0, n_predictor), layer );
+
+            if( pb )
+            {
+                if( layer == 0 )
+                    pb->update( stage + 1 );
+                else
+                    pb->update( stage - training_schedule[layer-1] + 1 );
+            }
+        }
+    }
+
+    MODULE_LOG << "Training joint parameters, between target,"
+        << " penultimate (" << n_layers-2 << ")," << endl
+        << "and last (" << n_layers-1 << ") layers." << endl;
+    if( report_progress
+        && (min( training_schedule[n_layers-2], nstages )
+            - min( training_schedule[n_layers-3], nstages )) > 0 )
+        pb = new ProgressBar( "Training joint layer (target and "
+                             +tostring(n_layers-2)+") of "+classname(),
+                             min( training_schedule[n_layers-2], nstages )
+                             - min( training_schedule[n_layers-3], nstages ) );
+
+    joint_params->learning_rate = learning_rate;
+    target_params->learning_rate = learning_rate;
+    for( ; stage<training_schedule[n_layers-2] && stage<nstages ; stage++ )
+    {
+        int sample = stage % nsamples;
+        train_set->getExample(sample, input, target, weight);
+        jointGreedyStep( input );
+
+        if( pb )
+            pb->update( stage - training_schedule[n_layers-3] + 1 );
+    }
+
+    MODULE_LOG << "Fine-tuning all parameters, using method "
+        << fine_tuning_method << endl;
+    if( report_progress
+        && (nstages - training_schedule[n_layers-2]) > 0 )
+        pb = new ProgressBar( "Fine-tuning parameters of all layers of "
+                             +classname(),
+                             nstages
+                             - min( training_schedule[n_layers-2], nstages ) );
+
+    for( int i=0 ; i<n_layers-1 ; i++ )
+        params[i]->learning_rate = fine_tuning_learning_rate;
+    joint_params->learning_rate = fine_tuning_learning_rate;
+    target_params->learning_rate = fine_tuning_learning_rate;
+
+    if( fine_tuning_method == "" ) // do nothing
+    {
+        stage = nstages;
+        if( pb )
+            pb->update( nstages - training_schedule[n_layers-2] + 1 );
+    }
+    else if( fine_tuning_method == "EGD" )
+    {
+        int begin_sample = stage % nsamples;
+        for( ; stage<nstages ; stage++ )
+        {
+            int sample = stage % nsamples;
+            if( sample == begin_sample )
+                train_stats->forget();
+
+            train_set->getExample(sample, input, target, weight);
+            fineTuneByGradientDescent( input, train_costs );
+            train_stats->update( train_costs );
+
+            if( pb )
+                pb->update( stage - training_schedule[n_layers-2] + 1 );
+        }
+        train_stats->finalize(); // finalize statistics for this epoch
+    }
+    else
+        PLERROR( "Fine-tuning methods other than \"EGD\" are not"
+                 " implemented yet." );
+/*
     for( ; stage < nstages ; stage++ )
     {
-        // clear stats of previous epoch
-        train_stats->forget();
 
         // loops over the training set, until training_schedule[stage] examples
         // have been seen.
-        // TODO: modify the training set used?
         int layer = stage;
         int n_samples_to_see = training_schedule[stage];
+
 
         if( stage < n_layers-2 )
         {
             MODULE_LOG << "Training parameters between layers " << stage
                 << " and " << stage+1 << endl;
 
+            params[layer]->learning_rate = learning_rate;
             int begin_sample = sample;
             int end_sample = begin_sample + n_samples_to_see;
             for( ; sample < end_sample ; sample++ )
@@ -561,6 +668,8 @@ void HintonDeepBeliefNet::train()
                 << " penultimate (" << n_layers-2 << ")," << endl
                 << "and last (" << n_layers-1 << ") layers." << endl;
 
+            joint_params->learning_rate = learning_rate;
+            target_params->learning_rate = learning_rate;
             int begin_sample = sample;
             int end_sample = begin_sample + n_samples_to_see;
 
@@ -576,6 +685,11 @@ void HintonDeepBeliefNet::train()
         {
             MODULE_LOG << "Fine-tuning all parameters, using method "
                 << fine_tuning_method << endl;
+
+            for( int i=0 ; i<n_layers-1 ; i++ )
+                params[i]->learning_rate = fine_tuning_learning_rate;
+            joint_params->learning_rate = fine_tuning_learning_rate;
+            target_params->learning_rate = fine_tuning_learning_rate;
 
             if( fine_tuning_method == "" ) // do nothing
                 sample += n_samples_to_see;
@@ -602,7 +716,8 @@ void HintonDeepBeliefNet::train()
         }
         train_stats->finalize(); // finalize statistics for this epoch
     }
-    MODULE_LOG << endl;
+    */
+    MODULE_LOG << "Training finished" << endl << endl;
 }
 
 void HintonDeepBeliefNet::greedyStep( const Vec& predictor, int index )
@@ -701,8 +816,8 @@ void HintonDeepBeliefNet::fineTuneByGradientDescent( const Vec& input,
     int actual_index = argmax(predicted_part);
 
     // update train_costs
-    train_costs[0] = -pl_log( store_expect[actual_index] );
-    int predicted_index = argmax( store_expect );
+    train_costs[0] = -pl_log( target_layer->expectation[actual_index] );
+    int predicted_index = argmax( target_layer->expectation );
     if( predicted_index == actual_index )
         train_costs[1] = 0;
     else
