@@ -682,7 +682,9 @@ void GaussMix::updateInverseVarianceFromPrevious(
         dst_only_removed << B1;
         tmp.resize(B3.length(), B3.width());
         matInvert(B3, tmp);
-        assert( tmp.isSymmetric(false) );
+        // Another commented-out assert due to it possibly failing (numerical
+        // imprecisions).
+        // assert( tmp.isSymmetric(false) );
         fillItSymmetric(tmp);
         tmp2.resize(tmp.length(), B2.length());
         productTranspose(tmp2, tmp, B2);
@@ -740,7 +742,8 @@ void GaussMix::updateInverseVarianceFromPrevious(
         negateElements(tmp);
         tmp += P;
         tmp2.resize(tmp.length(), tmp.width());
-        assert( tmp.isSymmetric(false, true) );
+        // Commented-out as it may cause an unwanted crash.
+        // assert( tmp.isSymmetric(false, true) );
         fillItSymmetric(tmp);
         matInvert(tmp, tmp2);
         // Commented-out as it may cause an unwanted crash.
@@ -1079,6 +1082,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                 if (eff_missing && previous_training_sample == -1) {
                     // No previous training sample: we need to compute from
                     // scratch the Cholesky decomposition.
+                    cov_y_missing.setMod(n_non_missing);
                     cov_y_missing.resize(n_non_missing, n_non_missing);
                     for (int k = 0; k < n_non_missing; k++)
                         for (int q = 0; q < n_non_missing; q++)
@@ -1332,6 +1336,21 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         the_L_vm->saveAMAT("/u/delallea/tmp/L.amat", false,
                                 true);
 #endif
+                        if (is_missing(*the_log_det)) {
+                            // That can happen due to numerical imprecisions.
+                            // In such a case we have to recompute the
+                            // determinant and the inverse.
+                            assert( !same_covariance );
+                            cov_y_missing.setMod(n_non_missing);
+                            cov_y_missing.resize(n_non_missing, n_non_missing);
+                            for (int k = 0; k < n_non_missing; k++)
+                                for (int q = 0; q < n_non_missing; q++)
+                                    cov_y_missing(k,q) =
+                                        cov_y(non_missing[k], non_missing[q]);
+                            *the_log_det = det(cov_y_missing, true);
+                            matInvert(cov_y_missing, *the_L);
+                            fillItSymmetric(*the_L);
+                        }
 
                         // Note: we need to multiply the log-determinant by 0.5
                         // compared to 'efficient_missing == 1' because the
