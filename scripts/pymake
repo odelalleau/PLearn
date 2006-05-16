@@ -1548,27 +1548,36 @@ digraph G
         dotfile.write("}\n")
         dotfile.close()
 
-    def link_command(self):
-        """returns the command for making executable target from the .o files in objsfilelist"""        
-        self.objsfilelist = []
+    def get_object_files_to_link(self):
+        """Return the list of object files involved in the link command.
+        These objects may be dummy objects (links to .o files) if the
+        'symlinkobjs' option is used, in which case they are created in this
+        function.
+        """
+        result = []
         objs_count = 0
         for ccfile in self.get_ccfiles_to_link():
-#             print ccfile.filebase
             if symlinkobjs:
                 dummy_obj_file = '%d.o' % objs_count;
                 if os.access(dummy_obj_file, os.F_OK):
                     # First remove an old object file.
                     os.remove(dummy_obj_file)
                 # Note: os.symlink is not implemented on all platforms.
-                # TODO Use toolkit.symlink instead.
+                # TODO Could use toolkit.symlink instead, but we really need
+                # a true link and not a copy (and under Windows, toolkit.symlink
+                # actually does a copy).
                 symlink_command = 'ln -s %s %s' % (ccfile.corresponding_ofile,
                                                    dummy_obj_file)
                 os.system(symlink_command)
                 objs_count += 1
-                self.objsfilelist.append(dummy_obj_file)
+                result.append(dummy_obj_file)
             else:
-                self.objsfilelist.append(ccfile.corresponding_ofile)
+                result.append(ccfile.corresponding_ofile)
+        return result
 
+    def link_command(self):
+        """returns the command for making executable target from the .o files in objsfilelist"""        
+        self.objsfilelist = self.get_object_files_to_link()
         linker = default_linker
         linkeroptions = ""
         so_options = ""
@@ -1644,9 +1653,7 @@ digraph G
         
     def dll_commands(self):
         """returns the command for making dll target from the .o files in objsfilelist and the corresponding .def file"""        
-        self.objsfilelist = []
-        for ccfile in self.get_ccfiles_to_link():
-            self.objsfilelist.append(ccfile.corresponding_ofile)
+        self.objsfilelist = self.get_object_files_to_link()
 
         opt_linkeroptions = self.get_optional_libraries_linkeroptions()
 
@@ -1715,7 +1722,11 @@ digraph G
         
         for command in list_of_commands:
             print command
-            e = os.WEXITSTATUS(os.system(command))
+            if sys.platform == 'win32':
+                # os.WEXITSTATUS is not implemented under Windows.
+                e = os.system(command)
+            else:
+                e = os.WEXITSTATUS(os.system(command))
             if e != 0:
                 last_failed_exit_code = e
 
