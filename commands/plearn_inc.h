@@ -113,6 +113,7 @@
 #include <plearn/ker/GeodesicDistanceKernel.h>
 #include <plearn/ker/LLEKernel.h>
 #include <plearn/ker/NegOutputCostFunction.h>
+//#include <plearn/ker/PolynomialKernel.h>
 #include <plearn/ker/ReconstructionWeightsKernel.h>
 #include <plearn/ker/ThresholdedKernel.h>
 #include <plearn/ker/VMatKernel.h>
@@ -144,9 +145,6 @@
 #include <plearn_learners/classifiers/KNNClassifier.h>
 #include <plearn_learners/classifiers/MultiInstanceNNet.h>
 //#include <plearn_learners/classifiers/OverlappingAdaBoost.h> // Does not currently compile.
-#include <plearn_learners_experimental/MoleculeTemplateLearner.h>
-#include <plearn_learners_experimental/TestLearner.h>
-
 
 // Generic
 #include <plearn_learners/generic/AddCostToLearner.h>
@@ -273,6 +271,7 @@
 //#include <plearn/vmat/LemmatizeVMatrix.h>
 #include <plearn/vmat/LocalNeighborsDifferencesVMatrix.h>
 #include <plearn/vmat/LocallyPrecomputedVMatrix.h>
+//#include <plearn/vmat/MixUnlabeledNeighbourVMatrix.h>
 #include <plearn/vmat/MultiInstanceVMatrix.h>
 #include <plearn/vmat/MultiToUniInstanceSelectRandomVMatrix.h>
 #include <plearn/vmat/OneHotVMatrix.h>
@@ -301,6 +300,14 @@
 #include <plearn/vmat/UCIDataVMatrix.h>
 #include <plearn/vmat/ViewSplitterVMatrix.h>
 #include <plearn/vmat/VMatrixFromDistribution.h>
+
+/*******************
+ * SurfaceTemplate *
+ ******************/
+#include <plearn_learners_experimental/SurfaceTemplate/ScoreLayerVariable.h>
+#include <plearn_learners_experimental/SurfaceTemplate/SurfaceTemplateLearner.h>
+
+
 #endif
 
 
