@@ -356,7 +356,11 @@ void GaussMix::changeOptions(const map<string,string>& name_value)
     // When 'n_eigen' is changed for a learner that is already trained, we need
     // to call forget(), otherwise some asserts may fail during a subsequent
     // build.
-    if (stage > 0 && name_value.find("n_eigen") != name_value.end())
+    if (stage > 0 && (name_value.find("n_eigen") != name_value.end() ||
+                      name_value.find("L")       != name_value.end() ||
+                      name_value.find("seed")    != name_value.end() ||
+                      name_value.find("sigma_min")!=name_value.end() ||
+                      name_value.find("type")    != name_value.end() ))
         forget();
     inherited::changeOptions(name_value);
 }
