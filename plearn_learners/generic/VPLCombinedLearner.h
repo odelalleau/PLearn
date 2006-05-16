@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// VPLPreprocessedLearner2.h
+// VPLCombinedLearner.h
 //
 // Copyright (C) 2005, 2006 Pascal Vincent 
 // 
@@ -33,23 +33,23 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: VPLPreprocessedLearner2.h 5480 2006-05-03 18:57:39Z plearner $ 
+ * $Id: VPLCombinedLearner.h 5480 2006-05-03 18:57:39Z plearner $ 
  ******************************************************* */
 
 // Authors: Pascal Vincent
 
-/*! \file VPLPreprocessedLearner2.h */
+/*! \file VPLCombinedLearner.h */
 
 
-#ifndef VPLPreprocessedLearner2_INC
-#define VPLPreprocessedLearner2_INC
+#ifndef VPLCombinedLearner_INC
+#define VPLCombinedLearner_INC
 
 #include <plearn_learners/generic/PLearner.h>
 #include <plearn/vmat/VMatLanguage.h>
 
 namespace PLearn {
 
-class VPLPreprocessedLearner2: public PLearner
+class VPLCombinedLearner: public PLearner
 {
 
 private:
@@ -58,24 +58,18 @@ private:
   
 protected:
 
-    VMatLanguage input_prg_;
-    VMatLanguage target_prg_;
-    VMatLanguage weight_prg_;
-    VMatLanguage extra_prg_;
     VMatLanguage output_prg_;
     VMatLanguage costs_prg_;
 
-    TVec<string> input_prg_fieldnames; 
-    TVec<string> target_prg_fieldnames;
-    TVec<string> weight_prg_fieldnames;
-    TVec<string> extra_prg_fieldnames;
-    TVec<string> output_prg_fieldnames;
-    TVec<string> costs_prg_fieldnames;
+    TVec<string> outputnames_;
+    TVec<string> costnames_;
 
-    mutable Vec row;
-    mutable Vec processed_input, processed_target, processed_weight, processed_extra;
-    mutable Vec pre_output;
-    mutable Vec pre_costs;
+    mutable Vec invec_for_output_prg;
+    mutable Vec invec_for_costs_prg;
+
+    TVec<int> sublearners_outputsizes;
+    TVec<int> sublearners_ntestcosts;
+    
 
     // *********************
     // * protected options *
@@ -84,6 +78,7 @@ protected:
     TVec<string> orig_fieldnames; // fieldnames of training set
     int orig_inputsize; // inputsize of training set
     int orig_targetsize; // targetsize of training set
+
     
 public:
 
@@ -92,14 +87,7 @@ public:
     // ************************
 
     //! Inner learner which is embedded into the current learner
-    PP<PLearner> learner_;
-
-    string filtering_prg;
-
-    string input_prg;
-    string target_prg;
-    string weight_prg;
-    string extra_prg;
+    TVec< PP<PLearner> > sublearners_;
 
     string output_prg;
     string costs_prg;
@@ -111,7 +99,7 @@ public:
     //! Default constructor.
     // (Make sure the implementation in the .cc
     // initializes all fields to reasonable default values)
-    VPLPreprocessedLearner2();
+    VPLCombinedLearner();
 
 
     // ********************
@@ -122,8 +110,6 @@ private:
 
     //! This does the actual building. 
     void build_();
-
-    void initializeInputPrograms();
 
     void initializeOutputPrograms();
 
@@ -149,7 +135,7 @@ public:
     // Declares other standard object methods.
     // If your class is not instantiatable (it has pure virtual methods)
     // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT.
-    PLEARN_DECLARE_OBJECT(VPLPreprocessedLearner2);
+    PLEARN_DECLARE_OBJECT(VPLCombinedLearner);
 
 
     // **************************
@@ -157,7 +143,6 @@ public:
     // **************************
 
     virtual int outputsize() const;
-
     
     //! Forwarded to inner learner
     virtual void setValidationSet(VMat validset);
@@ -183,29 +168,19 @@ public:
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                          const Vec& target, Vec& costs) const;
 
-    virtual
-    bool computeConfidenceFromOutput(const Vec& input, const Vec& output,
-                                     real probability,
-                                     TVec< pair<real,real> >& intervals) const;
-
-    //! If there's an output_prg, it returns output_prg_fieldnames 
-    //! If there's no output_prg, the call is forwarded to the inner learner
     virtual TVec<string> getOutputNames() const;
 
     virtual TVec<std::string> getTestCostNames() const;
 
-    //! Forwarded to inner learner
     virtual TVec<string> getTrainCostNames() const;
 
-    //! Forwarded to inner learner
     virtual void resetInternalState();
 
-    //! Forwarded to inner learner
     virtual bool isStatefulLearner() const;
 };
 
 // Declares a few other classes and functions related to this class.
-DECLARE_OBJECT_PTR(VPLPreprocessedLearner2);
+DECLARE_OBJECT_PTR(VPLCombinedLearner);
   
 } // end of namespace PLearn
 

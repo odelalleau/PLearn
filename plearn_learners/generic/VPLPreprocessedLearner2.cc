@@ -43,6 +43,7 @@
 
 #include "VPLPreprocessedLearner2.h"
 #include <plearn/vmat/ProcessingVMatrix.h>
+#include <plearn/vmat/FilteredVMatrix.h>
 #include <plearn/base/tostring.h>
 
 namespace PLearn {
@@ -76,6 +77,13 @@ void VPLPreprocessedLearner2::declareOptions(OptionList& ol)
     declareOption(ol, "learner", &VPLPreprocessedLearner2::learner_,
                   OptionBase::buildoption,
                   "The embedded learner");
+
+    declareOption(ol, "filtering_prg", &VPLPreprocessedLearner2::filtering_prg, OptionBase::buildoption,
+                  "Optional program string in VPL language to apply as filtering on the training VMat.\n"
+                  "It's the resulting filtered training set that is passed to the underlying learner.\n"
+                  "This program is to produce a single value interpreted as a boolean: only the rows for which\n"
+                  "it evaluates to non-zero will be kept.\n"
+                  "An empty string means NO FILTERING.");
 
     declareOption(ol, "input_prg", &VPLPreprocessedLearner2::input_prg, OptionBase::buildoption,
                   "Program string in VPL language to be applied to each raw input \n"
@@ -313,7 +321,11 @@ void VPLPreprocessedLearner2::setTrainingSet(VMat training_set, bool call_forget
     orig_targetsize  = training_set->targetsize();
     initializeInputPrograms();
 
-    VMat processed_trainset = new ProcessingVMatrix(training_set, input_prg, target_prg, weight_prg, extra_prg);
+    VMat filtered_trainset = training_set;
+    if(!filtering_prg.empty())
+        filtered_trainset = new FilteredVMatrix(training_set, filtering_prg, "", verbosity>1);
+
+    VMat processed_trainset = new ProcessingVMatrix(filtered_trainset, input_prg, target_prg, weight_prg, extra_prg);
     learner_->setTrainingSet(processed_trainset, false);
     inherited::setTrainingSet(training_set, call_forget); // will call forget if needed
 
