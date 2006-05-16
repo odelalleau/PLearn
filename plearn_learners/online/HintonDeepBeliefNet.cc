@@ -154,11 +154,11 @@ void HintonDeepBeliefNet::declareOptions(OptionList& ol)
                   " target");
 
     declareOption(ol, "joint_layer", &HintonDeepBeliefNet::joint_layer,
-                  OptionBase::learntoption,
+                  OptionBase::nosave,
                   "Concatenation of target_layer and layers[n_layers-1]");
 
     declareOption(ol, "joint_params", &HintonDeepBeliefNet::joint_params,
-                  OptionBase::learntoption,
+                  OptionBase::nosave,
                   "Parameters linking joint_layer and last_layer");
 
     // Now call the parent class' declareOptions().
@@ -636,87 +636,7 @@ void HintonDeepBeliefNet::train()
     else
         PLERROR( "Fine-tuning methods other than \"EGD\" are not"
                  " implemented yet." );
-/*
-    for( ; stage < nstages ; stage++ )
-    {
 
-        // loops over the training set, until training_schedule[stage] examples
-        // have been seen.
-        int layer = stage;
-        int n_samples_to_see = training_schedule[stage];
-
-
-        if( stage < n_layers-2 )
-        {
-            MODULE_LOG << "Training parameters between layers " << stage
-                << " and " << stage+1 << endl;
-
-            params[layer]->learning_rate = learning_rate;
-            int begin_sample = sample;
-            int end_sample = begin_sample + n_samples_to_see;
-            for( ; sample < end_sample ; sample++ )
-            {
-                // sample is the index in the training set
-                int i = sample % train_set->length();
-                train_set->getExample(i, input, target, weight);
-                greedyStep( input.subVec(0, n_predictor), layer );
-            }
-        }
-        else if( stage == n_layers-2 )
-        {
-            MODULE_LOG << "Training joint parameters, between target,"
-                << " penultimate (" << n_layers-2 << ")," << endl
-                << "and last (" << n_layers-1 << ") layers." << endl;
-
-            joint_params->learning_rate = learning_rate;
-            target_params->learning_rate = learning_rate;
-            int begin_sample = sample;
-            int end_sample = begin_sample + n_samples_to_see;
-
-            for( ; sample < end_sample ; sample++ )
-            {
-                // sample is the index in the training set
-                int i = sample % train_set->length();
-                train_set->getExample(i, input, target, weight);
-                jointGreedyStep( input );
-            }
-        }
-        else if( stage == n_layers-1 )
-        {
-            MODULE_LOG << "Fine-tuning all parameters, using method "
-                << fine_tuning_method << endl;
-
-            for( int i=0 ; i<n_layers-1 ; i++ )
-                params[i]->learning_rate = fine_tuning_learning_rate;
-            joint_params->learning_rate = fine_tuning_learning_rate;
-            target_params->learning_rate = fine_tuning_learning_rate;
-
-            if( fine_tuning_method == "" ) // do nothing
-                sample += n_samples_to_see;
-            else if( fine_tuning_method == "EGD" )
-            {
-                int begin_sample = sample;
-                int end_sample = begin_sample + n_samples_to_see;
-                for( ; sample < end_sample ; sample++ )
-                {
-                    // sample is the index in the training set
-                    int i = sample % train_set->length();
-                    if( i == begin_sample % train_set->length() )
-                        train_stats->forget();
-
-                    train_set->getExample(i, input, target, weight);
-                    fineTuneByGradientDescent( input, train_costs );
-                    train_stats->update( train_costs );
-                }
-            }
-            else
-                PLERROR( "Fine-tuning methods other than \"EGD\" are not"
-                         " implemented yet." );
-
-        }
-        train_stats->finalize(); // finalize statistics for this epoch
-    }
-    */
     MODULE_LOG << "Training finished" << endl << endl;
 }
 
