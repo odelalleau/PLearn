@@ -54,9 +54,9 @@ NnlmOutputLayer::NnlmOutputLayer() :
     word_representation_size( -1 ),
     context_size( -1 ),
     cost( 0 ),
-    start_discount_rate( 0.5 ),
+    start_discount_rate( 0.8 ),
     discount_decrease_constant( 0 ),
-    discount_rate( 0.5 ) 
+    discount_rate( 0.8 ) 
 {
     // ### (doing so assumes the parent classes' build_() have been called too
     // ### in the parent classes' constructors, something that you must ensure)
@@ -359,14 +359,22 @@ sigma2(current_word, i);
     if( sumI[ current_word ] >= 1 ) {
       for(int i=0; i<input_size; i++) {
 
-        mu( current_word, i ) = discount_rate * sumX( current_word, i ) / (real)
-sumI[ current_word ] + (1.0 - discount_rate) * input[i];
+          mu( current_word, i ) = discount_rate * mu( current_word, i ) + (1.0 - discount_rate) * input[i];
 
-        sigma2( current_word, i ) = discount_rate * 
-            (  mu(current_word, i) * mu(current_word, i) + (
-sumX2(current_word, i) -2.0 * mu(current_word, i) * sumX(current_word, i)
-) / sumI[ current_word ] )
+          sigma2( current_word, i ) = discount_rate * sigma2( current_word, i ) +
+              + (1.0-discount_rate) * ( input[i] - mu( current_word, i ) ) * ( input[i] - mu( current_word, i ) );
+
+/*
+        mu( current_word, i ) = discount_rate * sumX( current_word, i ) / (real) sumI[ current_word ] + 
+              (1.0 - discount_rate) * input[i];
+
+        sigma2( current_word, i ) = 
+            discount_rate * 
+              (  mu(current_word, i) * mu(current_word, i) + 
+                 (sumX2(current_word, i) - 2.0 * mu(current_word, i) * sumX(current_word, i) ) / sumI[ current_word ] 
+              )
             + (1.0-discount_rate) * input[i]*input[i];
+*/
 
       }
     }
