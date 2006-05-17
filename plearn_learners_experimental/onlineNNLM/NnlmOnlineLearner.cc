@@ -659,13 +659,13 @@ void NnlmOnlineLearner::train()
             gradients[ nmodules ] << non_discr_gradient;
             //gradients[ nmodules ] << approx_discr_gradient;
 
-            if( sample < 10 ) {
+/*            if( sample < 10 ) {
                 cout << "non_discr_gradient" << endl;
                 cout << non_discr_gradient << endl;
                 cout << "approx_discr_gradient" << endl;
                 cout << approx_discr_gradient << endl;
             }
-
+*/
 
             // *** Perform update -> bpropUpdate
             
@@ -743,6 +743,39 @@ void NnlmOnlineLearner::computeApproximateDiscriminantCostAndGradient(Vec input,
 
 
     // *** Compute normalization
+
+    for( int i=0; i< shared_candidates.length(); i++ )
+    {
+        c = shared_candidates[i];
+
+        if( c != (int) target[0] )  {
+            output_module->setCurrentWord( c );
+            output_module->fprop( output, neglogprob_cr );
+
+            log_sumprob = logadd(log_sumprob, -neglogprob_cr[0]);
+
+            // so we don't do a /0 with  /sigma2(current_word, i)
+            if( output_module->sumI[ c ] >= 2 )  {
+                for(int j=0; j<context_layer_size; j++) {
+                    alpha = output[j] - output_module->mu( c, j);
+
+                    if( alpha > 0)  {
+                        gradient_tmp_pos[j] = logadd( gradient_tmp_pos[j], 
+                                -neglogprob_cr[0] + safelog( alpha ) - safelog( output_module->sigma2( c, j) ) );
+                    } else  {
+                        gradient_tmp_neg[j] = logadd( gradient_tmp_neg[j], 
+                                -neglogprob_cr[0] + safelog( -alpha ) - safelog( output_module->sigma2( c, j) ) );
+                    }
+
+//                    gradient_tmp[i] += safeexp(-neglogprob_cr[0]) * 
+//                                          ( alpha ) / output_module->sigma2( c, i) ;
+                }
+            }
+
+        } // if not target - END
+    }
+
+
     // TODO CONSIDER SHARED CANDIDATES ALSO!!!
     // TODO CONSIDER SHARED CANDIDATES ALSO!!!
     // TODO CONSIDER SHARED CANDIDATES ALSO!!!
@@ -759,8 +792,8 @@ void NnlmOnlineLearner::computeApproximateDiscriminantCostAndGradient(Vec input,
 
             // so we don't do a /0 with  /sigma2(current_word, i)
             if( output_module->sumI[ c ] >= 2 )  {
-                for(int i=0; i<context_layer_size; i++) {
-                    alpha = output[i] - output_module->mu( c, i);
+                for(int j=0; j<context_layer_size; j++) {
+                    alpha = output[j] - output_module->mu( c, j);
 
  /* if( step < 15)  {
         cout << "neglogprob_cr " << neglogprob_cr << endl; 
@@ -776,11 +809,11 @@ void NnlmOnlineLearner::computeApproximateDiscriminantCostAndGradient(Vec input,
 
 
                     if( alpha > 0)  {
-                        gradient_tmp_pos[i] = logadd( gradient_tmp_pos[i], 
-                                -neglogprob_cr[0] + safelog( alpha ) - safelog( output_module->sigma2( c, i) ) );
+                        gradient_tmp_pos[j] = logadd( gradient_tmp_pos[j], 
+                                -neglogprob_cr[0] + safelog( alpha ) - safelog( output_module->sigma2( c, j) ) );
                     } else  {
-                        gradient_tmp_neg[i] = logadd( gradient_tmp_neg[i], 
-                                -neglogprob_cr[0] + safelog( -alpha ) - safelog( output_module->sigma2( c, i) ) );
+                        gradient_tmp_neg[j] = logadd( gradient_tmp_neg[j], 
+                                -neglogprob_cr[0] + safelog( -alpha ) - safelog( output_module->sigma2( c, j) ) );
                     }
 
 //                    gradient_tmp[i] += safeexp(-neglogprob_cr[0]) * 
@@ -802,13 +835,13 @@ void NnlmOnlineLearner::computeApproximateDiscriminantCostAndGradient(Vec input,
 
 
     // *** The corresponding gradient
-    for(int i=0; i<context_layer_size; i++) {
-        if( gradient_tmp_pos[i] > gradient_tmp_neg[i] ) {
-            gradient_tmp[i] = logsub( gradient_tmp_pos[i], gradient_tmp_neg[i] );
-            ad_gradient[i] = nd_gradient[i] - safeexp( gradient_tmp[i] - log_sumprob);
+    for(int j=0; j<context_layer_size; j++) {
+        if( gradient_tmp_pos[j] > gradient_tmp_neg[j] ) {
+            gradient_tmp[j] = logsub( gradient_tmp_pos[j], gradient_tmp_neg[j] );
+            ad_gradient[j] = nd_gradient[j] - safeexp( gradient_tmp[j] - log_sumprob);
         } else  {
-            gradient_tmp[i] = logsub( gradient_tmp_neg[i], gradient_tmp_pos[i] );
-            ad_gradient[i] = nd_gradient[i] + safeexp( gradient_tmp[i] - log_sumprob);
+            gradient_tmp[j] = logsub( gradient_tmp_neg[j], gradient_tmp_pos[j] );
+            ad_gradient[j] = nd_gradient[j] + safeexp( gradient_tmp[j] - log_sumprob);
 
 //            cout << "nd_gradient[i] " << nd_gradient[i] << endl;
 //            cout << "safeexp( gradient_tmp[i] - log_sumprob) " << safeexp( gradient_tmp[i] - log_sumprob) << endl;
