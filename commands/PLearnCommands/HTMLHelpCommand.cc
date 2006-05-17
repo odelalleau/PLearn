@@ -515,13 +515,15 @@ void HTMLHelpCommand::helpOnClass(const string& classname, ostream& out,
             string td1_class = (++j % 2 == 0? "argnameeven" : "argnameodd");
             string td2_class = (  j % 2 == 0? "argdoceven"  : "argdocodd");
             
-            if (! doc.returnType().empty() || ! doc.returnDoc().empty())
+            if (! doc.returnType().empty() || ! doc.returnDoc().empty()) {
+                string form_ret = highlight_known_classes(format_free_text(doc.returnDoc()));
                 out << "<tr>" << endl
                     << "<td class=\"rmititle\">Returns</td>" << endl
                     << "<td class=\"" + td1_class + "\">" << return_type << "</td>"
-                    << "<td class=\"" + td2_class + "\">" << doc.returnDoc()  << "</td>" << endl
+                    << "<td class=\"" + td2_class + "\">" << form_ret  << "</td>" << endl
                     << "</tr>"
                     << endl;
+            }
         }
 
         // Inspect base classes
