@@ -918,6 +918,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
     // be resized.
     static Mat dummy_mat;
 
+    Mat* the_cov_y_missing = &cov_y_missing;
+
     // Will contain the final result (the desired log-likelihood).
     real log_likelihood;
 
@@ -1086,25 +1088,25 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                 if (eff_missing && previous_training_sample == -1) {
                     // No previous training sample: we need to compute from
                     // scratch the Cholesky decomposition.
-                    cov_y_missing.setMod(n_non_missing);
-                    cov_y_missing.resize(n_non_missing, n_non_missing);
+                    the_cov_y_missing->setMod(n_non_missing);
+                    the_cov_y_missing->resize(n_non_missing, n_non_missing);
                     for (int k = 0; k < n_non_missing; k++)
                         for (int q = 0; q < n_non_missing; q++)
-                            cov_y_missing(k,q) =
+                            (*the_cov_y_missing)(k,q) =
                                 cov_y(non_missing[k], non_missing[q]);
                     cholesky_queue.resize(1);
                     // pout << "length = " << cholesky_queue.length() << endl;
                     Mat& chol = cholesky_queue[0];
                     if (efficient_missing == 1)
-                        choleskyDecomposition(cov_y_missing, chol);
+                        choleskyDecomposition(*the_cov_y_missing, chol);
                     else {
                         assert( efficient_missing == 3 );
                         log_det_queue.resize(1);
-                        log_det_queue[0] = det(cov_y_missing, true);
-                        chol.resize(cov_y_missing.length(),
-                                    cov_y_missing.length());
-                        assert( cov_y_missing.isSymmetric() );
-                        matInvert(cov_y_missing, chol);
+                        log_det_queue[0] = det(*the_cov_y_missing, true);
+                        chol.resize(the_cov_y_missing->length(),
+                                    the_cov_y_missing->length());
+                        assert( the_cov_y_missing->isSymmetric() );
+                        matInvert(*the_cov_y_missing, chol);
                         // Commenting-out this assert: it can actually fail due
                         // to some numerical imprecisions during matrix
                         // inversion, which is a bit annoying.
@@ -1140,16 +1142,15 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                 */
                 if (!eff_missing) {
                 if (!eff_naive_missing) {
-                    cov_y_missing = dummy_mat;
                     dummy_storage.setMod(n_non_missing);
                     dummy_storage.resize(n_non_missing, n_non_missing);
-                    cov_y_missing = dummy_storage;
+                    the_cov_y_missing = &dummy_storage;
                 } else {
                     assert( efficient_missing == 2 );
                     covs_y_missing.resize(L);
                     Mat& cov_y_missing_j = covs_y_missing[j];
                     cov_y_missing_j.resize(n_non_missing, n_non_missing);
-                    cov_y_missing = cov_y_missing_j;
+                    the_cov_y_missing = &cov_y_missing_j;
                 }
                 if (!eff_naive_missing ||
                     need_recompute[current_training_sample]) {
@@ -1157,7 +1158,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     mu_y_missing[k] = mu_y[non_missing[k]];
                     y_missing[k] = y[non_missing[k]];
                     for (int q = 0; q < n_non_missing; q++) {
-                        cov_y_missing(k,q) =
+                        (*the_cov_y_missing)(k,q) =
                             cov_y(non_missing[k], non_missing[q]);
                     }
                 }
@@ -1173,7 +1174,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                                     need_recompute[current_training_sample]) {
                     eigenvals_allj_missing.resize(L);
                     eigenvecs_allj_missing.resize(L);
-                    eigenVecOfSymmMat(cov_y_missing, n_non_missing,
+                    eigenVecOfSymmMat(*the_cov_y_missing, n_non_missing,
                                       eigenvals_allj_missing[j],
                                       eigenvecs_allj_missing[j]);
                     }
@@ -1345,14 +1346,14 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                             // In such a case we have to recompute the
                             // determinant and the inverse.
                             assert( !same_covariance );
-                            cov_y_missing.setMod(n_non_missing);
-                            cov_y_missing.resize(n_non_missing, n_non_missing);
+                            the_cov_y_missing->setMod(n_non_missing);
+                            the_cov_y_missing->resize(n_non_missing, n_non_missing);
                             for (int k = 0; k < n_non_missing; k++)
                                 for (int q = 0; q < n_non_missing; q++)
-                                    cov_y_missing(k,q) =
+                                    (*the_cov_y_missing)(k,q) =
                                         cov_y(non_missing[k], non_missing[q]);
-                            *the_log_det = det(cov_y_missing, true);
-                            matInvert(cov_y_missing, *the_L);
+                            *the_log_det = det((*the_cov_y_missing), true);
+                            matInvert(*the_cov_y_missing, *the_L);
                             fillItSymmetric(*the_L);
                         }
 
@@ -1686,12 +1687,12 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     int n_non_missing = non_missing.length();
                     mu_y_missing.resize(n_non_missing);
                     y_missing.resize(n_non_missing);
-                    cov_y_missing.resize(n_non_missing, n_non_missing);
+                    the_cov_y_missing->resize(n_non_missing, n_non_missing);
                     for (int k = 0; k < n_non_missing; k++) {
                         mu_y_missing[k] = mu_y[non_missing[k]];
                         y_missing[k] = y[non_missing[k]];
                         for (int j = 0; j < n_non_missing; j++) {
-                            cov_y_missing(k,j) =
+                            (*the_cov_y_missing)(k,j) =
                                 cov_y(non_missing[k], non_missing[j]);
                         }
                     }
@@ -1699,7 +1700,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         log_likelihood = 0;
                     } else {
                         // Perform SVD of cov_y_missing.
-                        eigenVecOfSymmMat(cov_y_missing, n_non_missing,
+                        eigenVecOfSymmMat(*the_cov_y_missing, n_non_missing,
                                 eigenvals_missing, eigenvecs_missing);
 
                         mu_y = mu_y_missing;
