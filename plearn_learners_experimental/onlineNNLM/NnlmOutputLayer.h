@@ -77,6 +77,8 @@ public:
     real start_discount_rate;
     real discount_decrease_constant;
 
+    real coeff_class_conditional_uniform_mixture;
+
 
 public:
     //#####  Public Member Functions  #########################################
@@ -203,6 +205,9 @@ public:
     mutable real r2;
     mutable Vec vec1;
     mutable Vec vec2;
+
+    mutable real log_p_g_r;
+    mutable real sum_log_p_g_r;
 
     int step_number;
 
