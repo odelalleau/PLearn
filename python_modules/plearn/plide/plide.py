@@ -651,7 +651,7 @@ class PlideMain( GladeAppWindow ):
                 options_holder.pyplearn_actualize()
             else:
                 ## FIXME: Generate a brand-new expdir (minor hack)
-                plargs._parse_(["expdir="+generate_expdir()])
+                plargs._parse_(["expdir="+generateExpdir()])
                 
             expdir = plargs.expdir
             plearn_script = eval('str(PyPLearnScript( main() ))', script_env)

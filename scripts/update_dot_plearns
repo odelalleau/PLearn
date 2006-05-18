@@ -1,0 +1,11 @@
+#!/usr/bin/env python
+import os
+from plearn.utilities.moresh import *
+dirlist = ls()
+for fname in dirlist:
+  if fname.endswith(".pyplearn"):
+    plearn = fname.replace('.pyplearn', '.plearn', 1)
+    cmd = 'pyplearn_driver.py %s > %s'%(fname, plearn)
+    print cmd
+    os.system(cmd)
+    print

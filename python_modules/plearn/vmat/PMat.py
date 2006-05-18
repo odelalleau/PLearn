@@ -218,7 +218,7 @@ class PMat( VMat ):
         self.f.write(header)
         
     def read_and_parse_header(self):        
-        header = self.f.read(64)
+        header = self.f.read(64)        
         mat_type, l, w, data_type, endianness = header.split()
         if mat_type!='MATRIX':
             raise ValueError('Invalid file header (should start with MATRIX)')

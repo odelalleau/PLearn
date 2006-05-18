@@ -1,6 +1,246 @@
-import inspect, logging, new, re
+# plargs.py
+# Copyright (C) 2006 Christian Dorion
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#
+#   1. Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#
+#   2. Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#
+#   3. The name of the authors may not be used to endorse or promote
+#      products derived from this software without specific prior written
+#      permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+#  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+#  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+#  NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+#  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#  This file is part of the PLearn library. For more information on the PLearn
+#  library, go to the PLearn Web site at www.plearn.org
+
+# Author: Christian Dorion
+"""Management of command-line options.
+
+A custom (and encouraged) practice is to write large PyPLearn scripts
+which behaviour can be modified by command-line arguments, e.g.:: 
+        
+    prompt %> plearn command_line.pyplearn on_cmd_line="somefile.pmat" input_size=10
+
+with the command_line.pyplearn script being::
+
+    #
+    # command_line.pyplearn
+    #
+    from plearn.pyplearn import *
+
+    dataset = pl.AutoVMatrix( specification = plargs.on_cmd_line,
+                              inputsize     = int( plargs.input_size ),
+                              targetsize    = 1
+                              )
+
+    def main():
+        return pl.SomeRunnableObject( dataset  = dataset,
+                                      internal = SomeObject( dataset = dataset ) )
+
+Those command-line arguments are widely refered as L{plargs}, on
+account of this class, troughout the pyplearn mechanism. Note that
+I{unexpected} (see binders and L{namespaces<plnamespace>} hereafter)
+arguments given on the command line are interpreted as strings, so if
+you want to pass integers (int) or floating-point values (float), you
+will have to cast them as above.
+
+To set default values for some arguments, one can use
+L{plarg_defaults<_plarg_defaults>}. For instance::
+
+    # 
+    # command_line_with_defaults.pyplearn
+    #
+    from plearn.pyplearn import *
+
+    plarg_defaults.on_cmd_line = "some_default_file.pmat"
+    plarg_defaults.input_size  = 10
+    dataset = pl.AutoVMatrix( specification = plargs.on_cmd_line,
+                              inputsize     = plargs.input_size,
+                              targetsize    = 1
+                              )
+
+    def main( ):
+        return pl.SomeRunnableObject( dataset  = dataset,
+                                      internal = SomeObject( dataset = dataset ) )
+    
+which won't fail and use C{"some_default_file.pmat"} with C{input_size=10} if::
+
+    prompt %> plearn command_line_with_defaults.pyplearn
+
+is entered. Note that since I{input_size} was defined as an int
+(C{plarg_defaults.input_size = 10}). Even if
+L{plarg_defaults<_plarg_defaults>} is still supported, it is preferable
+to define all arguments' default values through some I{binder}. We
+refer to subclasses of L{plargs} as I{binders} since they bind default
+values to expected/possible command-line arguments, e.g::
+
+    # 
+    # my_script.pyplearn
+    #
+    from plearn.pyplearn.plargs import *
+
+    class Misc(plargs):
+        algo      = "classical"
+        ma_len    = plopt([126, 252],
+                          doc="A list of moving average lenghts to be used "
+                          "during the preprocessing.")
+        n_inputs  = plopt(10, doc="The number of inputs to be used.")
+
+    print >>sys.stderr, repr(plargs.algo), repr(plargs.n_inputs)
+    assert plargs.n_inputs==Misc.n_inputs
+
+    print >>sys.stderr, Misc.ma_len
+        
+would print (as first line) C{"classical", 10}, a string and an int, if
+no command-line arguments override those L{plargs}. One can always
+access the I{plarg} through C{plargs} or C{Misc} (i.e. the assertion
+never fails).
+
+Note the use of L{plopt} instances. While these are not mandatory, they
+are very useful and powerful tools which one can use to make his
+scripts clearer and more user-friendly when used within
+U{plide<http://plearn.berlios.de/plide>}. Note that list can be
+provided to as command-line argument in the CSV format, that is::
+
+    prompt %> plearn my_script.pyplearn ma_len=22,63,126,252
+    "classical", 10
+    [22, 63, 126, 252]
+
+While I{binders} allow one to define default values for L{plargs},
+these are limited in the sens that clashes can occur::
+
+    # 
+    # complex_script.pyplearn
+    #
+    from plearn.pyplearn.plargs import *
+    
+    class macd(plargs):
+        ma_len = plopt(252,
+                    doc="The moving average length to be used in the macd model.")
+
+    class PCA(plargs):
+        algo      = "classical"
+        ma_len    = plopt([126, 252],
+                          doc="A list of moving average lenghts to be used "
+                          "during the preprocessing.")
+        n_inputs  = plopt(10, doc="The number of inputs to be used.")
+
+    ...
+    #####
+    prompt %> plearn complex_script.pyplearn 
+    Traceback (most recent call last):
+    File "TEST.pyplearn", line 7, in ?
+        class PCA(plargs):
+    File "/home/dorionc/PLearn/python_modules/plearn/pyplearn/plargs.py", line 447, in __new__
+        plopt.define(cls, option, value)
+    File "/home/dorionc/PLearn/python_modules/plearn/pyplearn/plargs.py", line 193, in define
+        raise KeyError(
+    KeyError: "A script should not contain two options of the same name. Clashing
+    definition of plarg 'ma_len' in 'macd' and 'PCA'"
+
+To avoid this type of error, one can L{namespace<plnamespace>} the
+arguments of his script::
+
+    # 
+    # namespaced.pyplearn
+    #
+    from plearn.pyplearn.plargs import *
+    
+    class macd(plnamespace):
+        ma_len = plopt(252,
+                    doc="The moving average length to be used in the macd model.")
+
+    class PCA(plnamespace):
+        algo      = "classical"
+        ma_len    = plopt([126, 252],
+                          doc="A list of moving average lenghts to be used "
+                          "during the preprocessing.")
+        n_inputs  = plopt(10, doc="The number of inputs to be used.")
+
+    print >>sys.stderr, macd.ma_len, PCA.algo, PCA.ma_len
+
+    try:
+        print >>sys.stderr, plargs.n_inputs
+    except AttributeError:
+        print >>sys.stderr, \
+              "n_inputs is namespaced, you must access it through 'PCA'"
+
+    #####
+    prompt %> plearn namespaced.pyplearn macd.ma_len=126 PCA.algo=weird
+    252 weird [126, 252]
+    n_inputs is namespaced, you must access it through 'PCA'
+
+Finally, B{note that} the value of C{plargs.expdir} is generated automatically and
+B{can not} be assigned a default value through binders. This behaviour
+aims to standardize the naming of experiment directories. For debugging
+purpose, however, one may provide on command-line an override to
+C{plargs.expdir} value. Otherwise, one can also provide the I{expdir_root}
+command-line argument as a (relative) path where the expdir should be
+found, e.g.::
+
+    prompt %> plearn my_script.pyplearn expdir_root=Debug
+
+would cause experiment to use the expdir::
+
+    Debug/expdir_2006_05_10_07_58_10
+    
+for instance.
+"""
+import inspect, logging, new, re, sys
 from plearn.pyplearn.context import *
-from plearn.pyplearn.pyplearn import list_cast
+from plearn.utilities.Bindings import Bindings
+
+# Helper function
+def list_cast(slist, elem_cast):
+    """Intelligently casts I{slist} string to a list.
+
+    The I{slist} argument can have the following forms::
+
+        - CSV::
+            slist = "1,2,3" => casted = [1, 2, 3]
+        - CSV with brackets::
+            slist = "[hello,world]" => casted = ["hello", "world"]
+        - List of strings::
+            slist = [ "100.0", "102.5" ] => casted = [ 100.0, 102.5 ]
+
+    The element cast is made using the I{elem_cast} argument.
+    """
+    # CSV (with or without brackets)
+    if isinstance(slist,str):
+        slist = slist.lstrip(' [').rstrip(' ]')
+        return [ elem_cast(e) for e in slist.split(",") ]
+
+    # List of strings
+    elif isinstance(slist, list):
+        return [ elem_cast(e) for e in slist ]
+
+    else:
+        raise ValueError, "Cannot cast '%s' into a list", str(slist)
+
+def warn(message, category=UserWarning, stacklevel=0):
+    import os
+    pytest_state = os.environ.get("PYTEST_STATE", "")
+    if pytest_state!="Active":        
+        from warnings import warn
+        warn(message, category, stacklevel=stacklevel+3)
+
+#######  Classes to Manage Command-Line Arguments  ############################
 
 class plopt(object):
     """Typed command-line options with constraints for PLearn.
@@ -45,20 +285,22 @@ class plopt(object):
 
     A plopt I{holder} refers to either a plargs binder or a plnamespace.
     """
+    
     unnamed = "### UNNAMED ###"
 
     def __init__(self, value, **kwargs):
         self._name  = kwargs.pop("name", self.unnamed)
         self._doc   = kwargs.pop("doc", '')
-        
+
         # type: This keyword can and must only be used when the default
         # value is None. Otherwise, it is infered using 'type(value)'.
         assert not ("type" in kwargs and value is not None)
         if value is None:
             if "type" not in kwargs:
-                raise ValueError(
-                    "When a plopt value defaults to None, a valid type must be "
-                    "provided using the 'type' keyword argument.")
+                warn("When a plopt value defaults to None, a valid type must be "
+                     "provided using the 'type' keyword argument. "
+                     "String is assumed for now...", FutureWarning, 2)
+                kwargs['type'] = str
             self._type = kwargs.pop("type")
         else:
             self._type = type(value)
@@ -113,8 +355,6 @@ class plopt(object):
         else:
             casted = self._type(value)
 
-        # Sanity checks
-        self.checks(casted)
         return casted
     
     def checkBounds(self, value):
@@ -138,7 +378,7 @@ class plopt(object):
 
     def get(self):
         """Returns the current context override, if any, o/w returns the default value."""
-        plopt_overrides = actualContext(self.__class__).plopt_overrides
+        plopt_overrides = actualContext(plopt).plopt_overrides
         if self in plopt_overrides:
             return plopt_overrides[self]
         return self.__default_value
@@ -162,23 +402,36 @@ class plopt(object):
         return self._type
 
     def reset(self):
-        """Simply deletes any override for this plopt in the current context."""
-        actualContext(self.__class__).plopt_overrides.pop(self, None)
+        """Simply deletes any override for this plopt in the current context.
+        
+        Note that the actual implementation of C{define()} leads to
+        forgetting the command-line override if C{reset()} is called on the
+        plopt instance!
+        """
+        actualContext(plopt).plopt_overrides.pop(self, None)
         
     def set(self, value):
         """Sets an override for this plopt in the current context"""
-        # Sanity checks
+        if not isinstance(value, self._type):
+            value = self.cast(value)
+        # Sanity checks 
         self.checkBounds(value)
         self.checkChoices(value)
     
         # The previous didn't raise exeption, the 'value' is valid
-        actualContext(self.__class__).plopt_overrides[self] = value
+        actualContext(plopt).plopt_overrides[self] = value
 
     #######  Static methods  ######################################################
 
     def buildClassContext(context):
         assert not hasattr(context, 'plopt_binders')
         context.plopt_binders = {}
+
+        assert not hasattr(context, 'plopt_namespaces')
+        context.plopt_namespaces = {}
+
+        assert not hasattr(context, 'plopt_tmp_holders')
+        context.plopt_tmp_holders = {}
 
         assert not hasattr(context, 'plopt_overrides')
         context.plopt_overrides = {}
@@ -188,16 +441,60 @@ class plopt(object):
         """Typical pattern to set a plopt instance member in 'holder' for the first time."""
         context = actualContext(plopt)
 
+        if isinstance(holder, _TmpHolder):
+            # Keep a pointer to the tmp-holder in which the option is defined
+            context.plopt_tmp_holders[option] = holder
+            holder.option = value
+
+        else:
+            # Check if an override was defined through parsing before the
+            # holder existed.
+            cmdline_override = None
+            if option in context.plopt_tmp_holders:
+                tmp_holder = context.plopt_tmp_holders.pop(option)
+                tmp_holder.checkConsistency(holder) # raise if inconsistent
+                cmdline_override = tmp_holder.option
+                del tmp_holder
+
+            ### Holder-type specific management
+            plopt._inner_define(holder, option, value)
+
+            # Command-line MUST override mandatory plopts
+            if isinstance(value, mandatory_plopt) and cmdline_override is None:
+                from plearn.pyplearn import PyPLearnError
+                raise PyPLearnError(
+                    "Mandatory argument %s.%s was not received on command line."
+                    %(holder.__name__, value.getName()) )
+            
+            # Overrides the default with the command-line override if any. Note
+            # that this way to proceed leads to forgetting the command-line
+            # override if reset() is called on the plopt instance!!!
+            if cmdline_override is not None:
+                plopt.override(holder, option, cmdline_override)            
+    define = staticmethod(define)
+
+    def _inner_define(holder, option, value):
+        """Holder-type specific management."""
+        context = actualContext(plopt)
+            
         if issubclass(holder, plargs):
             # A script should not contain two options of the same name
             if option in context.plopt_binders:
                 raise KeyError(
                     "A script should not contain two options of the same name. "
                     "Clashing definition of plarg '%s' in '%s' and '%s'"%
-                    (option,context.plopt_binders[option].__name__,holder.__name__) )
-
+                    (option,context.plopt_binders[option].__name__,holder.__name__))
+        
             # Keep a pointer to the binder in which the option is defined
             context.plopt_binders[option] = holder
+
+        elif issubclass(holder, plnamespace):
+            # Keep a pointer to the namespace in which the option is defined
+            context.plopt_namespaces[option] = holder
+
+        else:
+            raise TypeError("Holder '%s' is of an unknown type: %s"
+                            % (holder.__name__, type(holder)) )
 
         # Enforce all 'holder' members to be (named) plopt instances
         if isinstance(value, plopt):
@@ -206,14 +503,19 @@ class plopt(object):
             value = plopt(value, name=option)
 
         # Acutally sets the plopt in the holder
-        type.__setattr__(holder, option, value)
-    define = staticmethod(define)
+        type.__setattr__(holder, option, value)        
+    _inner_define = staticmethod(_inner_define)
+
+    def getHolder(plopt_name):        
+        return actualContext(plopt).plopt_binders.get(plopt_name)
+    getHolder = staticmethod(getHolder)
 
     def iterator(holder):
         """Returns an iterator over the plopt instances contained in the I{holder}"""
-        return iter([ value
-                      for option, value in holder.__dict__.iteritems()
-                      if isinstance(value, plopt) ])
+        keys = holder.__dict__.keys()
+        keys.sort()
+        return iter([ holder.__dict__[key] for key in keys
+                      if isinstance(holder.__dict__[key], plopt) ])
     iterator = staticmethod(iterator)
 
     def override(holder, option, value):
@@ -222,180 +524,24 @@ class plopt(object):
         plopt_instance.set(value)
     override = staticmethod(override)
 
+class mandatory_plopt(plopt):
+    def __init__(self, type, **kwargs):
+        self._type  = type
+        self._name  = kwargs.pop("name", self.unnamed)
+        self._doc   = kwargs.pop("doc", '')        
+
+        # Keep the remaining kwargs for further use.
+        self._kwargs = kwargs
+
+        # For __str__ use only
+        self.__default_value = None
+    
 class plargs(object):
     """Values read from or expected for PLearn command-line variables.
 
-    A custom (and encouraged) practice is to write large PyPLearn scripts
-    which behaviour can be modified by command-line arguments, e.g.:: 
-            
-        prompt %> plearn command_line.pyplearn on_cmd_line="somefile.pmat" input_size=10
-    
-    with the command_line.pyplearn script being::
-
-        #
-        # command_line.pyplearn
-        #
-        from plearn.pyplearn import *
-
-        dataset = pl.AutoVMatrix( specification = plargs.on_cmd_line,
-                                  inputsize     = int( plargs.input_size ),
-                                  targetsize    = 1
-                                  )
-    
-        def main():
-            return pl.SomeRunnableObject( dataset  = dataset,
-                                          internal = SomeObject( dataset = dataset ) )
-
-    Those command-line arguments are widely refered as I{plargs}, on
-    account of this class, troughout the pyplearn mechanism. Note that
-    I{unexpected} (see binders and L{namespaces<plnamespace>} hereafter)
-    arguments given on the command line are interpreted as strings, so if
-    you want to pass integers (int) or floating-point values (float), you
-    will have to cast them as above.
-
-    To set default values for some arguments, one can use
-    L{plarg_defaults<_plarg_defaults>}. For instance::
-
-        # 
-        # command_line_with_defaults.pyplearn
-        #
-        from plearn.pyplearn import *
-
-        plarg_defaults.on_cmd_line = "some_default_file.pmat"
-        plarg_defaults.input_size  = 10
-        dataset = pl.AutoVMatrix( specification = plargs.on_cmd_line,
-                                  inputsize     = plargs.input_size,
-                                  targetsize    = 1
-                                  )
-    
-        def main( ):
-            return pl.SomeRunnableObject( dataset  = dataset,
-                                          internal = SomeObject( dataset = dataset ) )
-        
-    which won't fail and use C{"some_default_file.pmat"} with C{input_size=10} if::
-    
-        prompt %> plearn command_line_with_defaults.pyplearn
-    
-    is entered. Note that since I{input_size} was defined as an int
-    (C{plarg_defaults.input_size = 10}). Even if
-    L{plarg_defaults<_plarg_defaults>} is still supported, it is preferable
-    to define all arguments' default values through some I{binder}. We
-    refer to subclasses of L{plargs} as I{binders} since they bind default
-    values to expected/possible command-line arguments, e.g::
-
-        # 
-        # my_script.pyplearn
-        #
-        from plearn.pyplearn.plargs import *
-
-        class Misc(plargs):
-            algo      = "classical"
-            ma_len    = plopt([126, 252],
-                              doc="A list of moving average lenghts to be used "
-                              "during the preprocessing.")
-            n_inputs  = plopt(10, doc="The number of inputs to be used.")
-
-        print >>sys.stderr, repr(plargs.algo), repr(plargs.n_inputs)
-        assert plargs.n_inputs==Misc.n_inputs
-
-        print >>sys.stderr, Misc.ma_len
-            
-    would print (as first line) C{"classical", 10}, a string and an int, if
-    no command-line arguments override those L{plargs}. One can always
-    access the I{plarg} through C{plargs} or C{Misc} (i.e. the assertion
-    never fails).
-
-    Note the use of L{plopt} instances. While these are not mandatory, they
-    are very useful and powerful tools which one can use to make his
-    scripts clearer and more user-friendly when used within
-    U{plide<http://plearn.berlios.de/plide>}. Note that list can be
-    provided to as command-line argument in the CSV format, that is::
-
-        prompt %> plearn my_script.pyplearn ma_len=22,63,126,252
-        "classical", 10
-        [22, 63, 126, 252]
-
-    While I{binders} allow one to define default values for L{plargs},
-    these are limited in the sens that clashes can occur::
-
-        # 
-        # complex_script.pyplearn
-        #
-        from plearn.pyplearn.plargs import *
-        
-        class macd(plargs):
-            ma_len = plopt(252,
-                        doc="The moving average length to be used in the macd model.")
-
-        class PCA(plargs):
-            algo      = "classical"
-            ma_len    = plopt([126, 252],
-                              doc="A list of moving average lenghts to be used "
-                              "during the preprocessing.")
-            n_inputs  = plopt(10, doc="The number of inputs to be used.")
-
-        ...
-        #####
-        prompt %> plearn complex_script.pyplearn 
-        Traceback (most recent call last):
-        File "TEST.pyplearn", line 7, in ?
-            class PCA(plargs):
-        File "/home/dorionc/PLearn/python_modules/plearn/pyplearn/plargs.py", line 447, in __new__
-            plopt.define(cls, option, value)
-        File "/home/dorionc/PLearn/python_modules/plearn/pyplearn/plargs.py", line 193, in define
-            raise KeyError(
-        KeyError: "A script should not contain two options of the same name. Clashing
-        definition of plarg 'ma_len' in 'macd' and 'PCA'"
-
-    To avoid this type of error, one can L{namespace<plnamespace>} the
-    arguments of his script::
-
-        # 
-        # namespaced.pyplearn
-        #
-        from plearn.pyplearn.plargs import *
-        
-        class macd(plnamespace):
-            ma_len = plopt(252,
-                        doc="The moving average length to be used in the macd model.")
-
-        class PCA(plnamespace):
-            algo      = "classical"
-            ma_len    = plopt([126, 252],
-                              doc="A list of moving average lenghts to be used "
-                              "during the preprocessing.")
-            n_inputs  = plopt(10, doc="The number of inputs to be used.")
-
-        print >>sys.stderr, macd.ma_len, PCA.algo, PCA.ma_len
-
-        try:
-            print >>sys.stderr, plargs.n_inputs
-        except AttributeError:
-            print >>sys.stderr, \
-                  "n_inputs is namespaced, you must access it through 'PCA'"
-
-        #####
-        prompt %> plearn namespaced.pyplearn macd.ma_len=126 PCA.algo=weird
-        252 weird [126, 252]
-        n_inputs is namespaced, you must access it through 'PCA'
-    
-    Finally, B{note that} the value of plargs.expdir is generated automatically and
-    B{can not} be assigned a default value through binders. This behaviour
-    aims to standardize the naming of experiment directories. For debugging
-    purpose, however, one may provide on command-line an override to
-    plargs.expdir value. Otherwise, one can also provide the I{expdir_root}
-    command-line argument as a (relative) path where the expdir should be
-    found, e.g.::
-
-        prompt %> plearn my_script.pyplearn expdir_root=Debug
-
-    would cause experiment to use the expdir::
-
-        Debug/expdir_2006_05_10_07_58_10
-        
-    for instance.
+    The core class of this module. See modules documentation for details on
+    possible uses.
     """
-
     _extensible_ = False
 
     #######  Static methods  ######################################################
@@ -405,6 +551,24 @@ class plargs(object):
         context.binders = {}
     buildClassContext = staticmethod(buildClassContext)
 
+    def checkParsingConsistency():
+        exceptions = [ 'FILEBASE', 'FILEPATH', 'TIME', 'DATETIME',
+                       'FILEEXT', 'DIRPATH', 'DATE', 'HOME', 'FILENAME' ]
+
+        # Note the (hackish?) use of plopt. Needed to ensure the
+        # existance of context.plopt_tmp_holders....        
+        plopt_tmp_holders = actualContext(plopt).plopt_tmp_holders.keys()
+        for ex in exceptions:
+            if ex in plopt_tmp_holders:
+                plopt_tmp_holders.remove(ex)
+
+        if plopt_tmp_holders:
+            raise RuntimeError(
+                "The following arguments were parsed but never used: %s"
+                % ','.join(plopt_tmp_holders) )
+
+    checkParsingConsistency = staticmethod(checkParsingConsistency)
+    
     def getBinders():
         """Returns a list of all binders in the current context."""
         context = actualContext(plargs)
@@ -417,9 +581,36 @@ class plargs(object):
         return binders
     getBinders = staticmethod(getBinders)
 
+    def getContextBindings():
+        """Returns a L{Bindings} instance of plopt name-to-value pairs.
+
+        The bindings could thereafter be used to re-create the current
+        context from a command-line::
+
+            bindings = plargs.getContextBindings()
+            cmdline = [ "%s=%s"%(opt, bindings['opt']) for opt in bindings ]
+            actual_command_line = " ".join(cmdline)
+        """
+        context = actualContext(plargs)
+        bindings = Bindings( )
+
+        for binder in plargs.getBinders():
+            for opt in plopt.iterator(binder):
+                bindings[opt.getName()] = opt.get()
+
+        for namespace in plargs.getNamespaces():
+            for opt in plopt.iterator(namespace):
+                key = "%s.%s"%(namespace.__name__, opt.getName())
+                bindings[key] = opt.get()
+
+        return bindings
+    getContextBindings = staticmethod(getContextBindings)
+
     def getNamespaces():
         """Returns a list of all namespaces in the current context."""
-        context = actualContext(plargs)
+        # Note the (hackish?) use of plnamespace. Needed to ensure the
+        # existance of context.namepaces...
+        context = actualContext(plnamespace) 
         nsp_names = context.namespaces.keys()
         nsp_names.sort()        
         return [ context.namespaces[nsp] for nsp in nsp_names ]
@@ -432,17 +623,15 @@ class plargs(object):
         return holder
     getHolder = staticmethod(getHolder)
 
-    
     def parse(*args):
-        """Parses a list of argument strings.
-
-        ...
-        """
-        if len(args) == 1 and isinstance(args[0], list):
+        """Parses a list of argument strings."""
+        if len(args)==1 and isinstance(args[0], list):
             args = args[0]
 
         context = actualContext(plargs)
         for statement in args:
+            assert isinstance(statement, str), statement
+            
             option, value = statement.split('=', 1)
             option = option.strip()
             value  = value.strip()
@@ -458,18 +647,18 @@ class plargs(object):
             try:
                 holder_name, option = option.split('.')
                 holder = plargs.getHolder(holder_name)
-            except (ValueError, TypeError):
-                holder_name = None
-                holder = context.plopt_binders.get(option)
 
+            # option.split('.') did not return a pair, i.e. not dot in option
+            except ValueError:
+                holder_name, holder = None, plopt.getHolder(option)
+
+            # Was the holder for that option defined?
             if holder is None:
-                msg = "Unkown option '%s'"%option
-                if holder_name:                    
-                    msg = "No namespace or binder named '%s'. %s"%(holder_name, msg)                    
-                raise KeyError("Parsing '%s': %s"%(statement, msg))
-                    
-            setattr(holder, option, value)
+                plopt.define(_TmpHolder(holder_name), option, value)                
+            else:
+                setattr(holder, option, value)
     parse = staticmethod(parse)
+
 
     #######  Metaclass  ###########################################################
     
@@ -524,37 +713,35 @@ class plargs(object):
                         %(cls.__name__, option, err))
 
         def __getattribute__(cls, key):
-            if key.startswith('_'):
-                return type.__getattribute__(cls, key)
+            attr = None
+            try:
+                attr = type.__getattribute__(cls, key)
+                if key.startswith('_') or not isinstance(attr, plopt):
+                    return type.__getattribute__(cls, key)
+            except AttributeError:
+                pass
 
+            # The key should map to a plopt instance, we need the context...
             plargs = cls
             if cls.__name__ != "plargs":
                 plargs = globals()['plargs']
 
+            # Special management of expdir plarg
             if key == "expdir":
                 return actualContext(plargs).getExpdir()
 
+            # Find to holder to which option belongs
             holder = cls
             if cls is plargs:
                 try:
                     holder = actualContext(plargs).plopt_binders[key]
-                except (AttributeError, KeyError):
-                    # Otherwise
-                    try:
-                        return type.__getattribute__(cls, key)
-                    except:
-                        raise AttributeError(
-                            "Unknown option '%s'. Is it namespaced?"%key)
+                except KeyError:
+                    raise AttributeError("Unknown option '%s'. Is it namespaced?"%key)
 
-            try:
-                plopt_instance = type.__getattribute__(holder, key)
-                assert isinstance(plopt_instance, plopt)
-                return plopt_instance.get()
-
-            # Unknown option
-            except AttributeError, err:
-                raise AttributeError(
-                    "Unknown option '%s' in '%s' (%s)"%(key, cls.__name__, err))
+            # We now have a valid holder: dig out the plopt *value*
+            plopt_instance = type.__getattribute__(holder, key)
+            assert isinstance(plopt_instance, plopt)
+            return plopt_instance.get()
 
 # For backward compatibility
 class _plarg_defaults:
@@ -588,7 +775,7 @@ class _plarg_defaults:
         if 'plarg_defaults' not in binders:
             binders['plarg_defaults'] = \
                 new.classobj('plarg_defaults', (plargs,), {'_extensible_' : True})
-            return binders['plarg_defaults']
+        return binders['plarg_defaults']
 
     def __getattribute__(self, option):
         return getattr(self._getBinder(), option)
@@ -678,8 +865,55 @@ class plnamespace:
                     "Namespace %s does not contain a plopt instance named %s. "
                     "One can't set a value to an undefined option."%(cls.__name__, key))
 
-if __name__ == "__main__":
-                
+class _TmpHolder:
+    def __init__(self, holder_name):
+        self._name = holder_name
+
+    def checkConsistency(self, holder):
+        if self._name is None:
+            assert not isinstance(holder, plnamespace)
+        else:
+            assert holder.__name__ == self._name
+
+
+#######  For backward compatibily: will be deprecated soon  ###################
+
+class plargs_binder(plargs):
+    class __metaclass__(plargs.__metaclass__):
+        def __new__(metacls, clsname, bases, dic):            
+            if clsname=="plargs_binder":
+                return type.__new__(metacls, clsname, bases, dic)
+            warn("plargs_binder is deprecated. Inherit directly from plargs instead.",
+                 DeprecationWarning)
+            return plargs.__metaclass__.__new__(metacls, clsname, bases, dic)
+
+class plargs_namespace(plnamespace):
+    class __metaclass__(plnamespace.__metaclass__):
+        def __new__(metacls, clsname, bases, dic):
+            if clsname=="plargs_namespace":
+                return type.__new__(metacls, clsname, bases, dic)
+            warn("plargs_namespace is deprecated. Inherit from plnamespace instead.",
+                 DeprecationWarning)
+            return plnamespace.__metaclass__.__new__(metacls, clsname, bases, dic)
+
+
+#######  Unit Tests: invoked from outside  #####################################
+
+def printCurrentContext(out=sys.stdout):
+    print >>out, "Expdir:", plargs.expdir
+    
+    for binder in plargs.getBinders():
+        print >>out, "Binder:", binder.__name__
+        for opt in plopt.iterator(binder):
+            print >>out, '   ',opt.getName()+':', opt
+        print >>out, ''
+    
+    for namespace in plargs.getNamespaces():
+        print >>out, "Namespace:", namespace.__name__
+        for opt in plopt.iterator(namespace):
+            print >>out, '   ',opt.getName()+':', opt
+
+def test_plargs():                
     print "#######  Binders  #############################################################\n"
     class binder(plargs):
         c = "c"
@@ -741,23 +975,9 @@ if __name__ == "__main__":
 
     print "#######  Contexts Management  #################################################\n"
 
-    def printContext():
-        print "Expdir:", plargs.expdir
-        
-        for binder in plargs.getBinders():
-            print "Binder:", binder.__name__
-            for opt in plopt.iterator(binder):
-                print '   ',opt.getName()+':', opt
-            print
-        
-        for namespace in plargs.getNamespaces():
-            print "Namespace:", namespace.__name__
-            for opt in plopt.iterator(namespace):
-                print '   ',opt.getName()+':', opt
-        
     print "+++ Context 1"
     first_context = getCurrentContext()
-    printContext()
+    printCurrentContext()
     print 
 
     print "+++ Context 2"        
@@ -766,7 +986,7 @@ if __name__ == "__main__":
 
     print "-- Before creation of the new 'n' plnamespace:"
     print n.namespaced
-    printContext()
+    printCurrentContext()
     print
     
     class n(plnamespace):
@@ -774,11 +994,80 @@ if __name__ == "__main__":
 
     print "-- After creation of the new 'n' plnamespace:"
     print n.namespaced
-    printContext()
+    printCurrentContext()
     print
 
 
     print "+++ Back to Context 1"
     setCurrentContext(first_context)
-    printContext()
+    printCurrentContext()
     print 
+
+def test_plargs_parsing():
+    def readScript(*command_line):
+        context_handle = createNewContext()
+        
+        plargs.parse(*command_line)
+
+        class MyBinder(plargs):
+            binded1 = "binded1"
+            binded2 = "binded2"
+            binded3 = "binded3"
+
+        class MyNamespace(plnamespace):
+            namespaced1 = "namespaced1"
+            namespaced2 = "namespaced2"
+            namespaced3 = "namespaced3"
+
+        header = "Context %d"%context_handle
+        header += '\n'+("="*len(header))
+        print header
+        printCurrentContext()
+        plargs.checkParsingConsistency()
+        print 
+        return context_handle, header
+    
+    contexts = [ readScript() ]
+    contexts.append(
+        # list argument
+        readScript(["binded1=BINDED1", "binded2=BINDED2",
+                    "MyNamespace.namespaced3=NAMESPACED3"]) )
+    contexts.append(
+          # string arguments
+          readScript("binded3=BINDED3", "MyNamespace.namespaced1=NAMESPACED1") )
+
+    print 
+    print "Reprint all contexts to ensure nothing was lost or corrupted."
+    print "-------------------------------------------------------------"
+    print 
+    for c, header in contexts:
+        setCurrentContext(c)
+        print header
+        printCurrentContext()
+        print 
+
+    print 
+    print "Misspelled command-line argument"
+    print "-------------------------------------------------------------"
+    print
+    try:
+        readScript(["bindd1=BINDED1", "binded2=BINDED2",
+                    "MyNamespace.namespaced3=NAMESPACED3"])
+    except RuntimeError, err:
+        print 
+        print 'RuntimeError:', err
+
+
+def test_mandatory_plargs(*command_line):
+    from plearn.pyplearn import PyPLearnError
+    plargs.parse(*command_line)
+
+    try:
+        class MyBinder(plargs):
+            mandatory = mandatory_plopt(int,
+                                        doc="Some mandatory int command line argument")
+        
+        print MyBinder.mandatory
+
+    except PyPLearnError, err:
+        print err

@@ -30,10 +30,10 @@ Direct access: FROM_SETATTR
 +++ Context 1
 Expdir: expdir
 Binder: binder
-    e: plopt(value = '** E **' [default: 'e'])
-    d: plopt(value = 'Youppi' [default: 'd'])
-    f: plopt(value = 'f')
     c: plopt(value = 'c')
+    d: plopt(value = 'Youppi' [default: 'd'])
+    e: plopt(value = '** E **' [default: 'e'])
+    f: plopt(value = 'f')
 
 Namespace: n
     namespaced: plopt(value = 'FROM_SETATTR' [default: 'within namespace n'])
@@ -58,10 +58,10 @@ Namespace: n
 +++ Back to Context 1
 Expdir: expdir
 Binder: binder
-    e: plopt(value = '** E **' [default: 'e'])
-    d: plopt(value = 'Youppi' [default: 'd'])
-    f: plopt(value = 'f')
     c: plopt(value = 'c')
+    d: plopt(value = 'Youppi' [default: 'd'])
+    e: plopt(value = '** E **' [default: 'e'])
+    f: plopt(value = 'f')
 
 Namespace: n
     namespaced: plopt(value = 'FROM_SETATTR' [default: 'within namespace n'])

@@ -4,7 +4,6 @@ __cvs_id__ = "$Id$"
 import sys
 import os
 from plearn.pyplearn             import *
-from plearn.pyplearn.pyplearn    import plargs
 from plearn.pyplearn.plearn_repr import *
 
 # Add the absolute directory portion of the current script to the path
@@ -21,11 +20,11 @@ elif len(sys.argv) >= 3 and '--PyPLearnScript' in sys.argv:
     # This is the mecanism used inside the run command to manage logs to
     # expdirs.
     sys.argv.remove('--PyPLearnScript')
-    plargs._parse_(sys.argv[2:])
+    plargs.parse(sys.argv[2:])
     lines += 'print PyPLearnScript( main() )\n'
 else:
     # Default mode: simply dump the plearn_representation of this
-    plargs._parse_(sys.argv[2:])
+    plargs.parse(sys.argv[2:])
     lines += 'print main()\n'
 
 del globals()['sys']

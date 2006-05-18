@@ -52,7 +52,7 @@ def main( pytest_version ):
 
     parser.add_option( '-v', "--verbosity",
                        choices=verb_levels, default="INFO",
-                       help=""
+                       help="One of %s [defaults to INFO]"%','.join(verb_levels)
                        )
 
     

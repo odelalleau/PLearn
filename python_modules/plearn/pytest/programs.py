@@ -170,8 +170,9 @@ class Program(core.PyTestObject):
     def compile(self, publish_dirpath=""):
         # Remove old compile log if any
         publish_target = os.path.join(publish_dirpath, os.path.basename(self.__log_file_path))
-        if os.path.exists(publish_target):
+        if os.path.islink(publish_target):
             os.remove(publish_target)
+        assert not os.path.exists(publish_target)
 
         # Ensure compilation is needed
         if self.compilationSucceeded():
@@ -233,25 +234,35 @@ class Program(core.PyTestObject):
             the_compiler = self.compiler
             redirection = ">&"
 
+        compile_options = ""
+        if self.compile_options is not None:
+            compile_options = self.compile_options
+
         compile_cmd   = "%s %s %s -link-target %s %s %s" \
-                          % ( the_compiler, self.compile_options,
+                          % ( the_compiler, compile_options,
                               self.getProgramPath(),
                               self.getInternalExecPath(),
                               redirection, log_fname )
 
-        
+
         logging.debug(compile_cmd)
         if sys.platform == 'win32':
             compile_exit_code = os.system(compile_cmd)
         else:
             compile_exit_code = os.WEXITSTATUS( os.system(compile_cmd) )
         logging.debug("compile_exit_code <- %d\n"%compile_exit_code)
+
         moresh.popd()
 
         # Report success of fail and remember that compilation was attempted
         self.__attempted_to_compile = True
         if compile_exit_code!=0 and os.path.exists(self.getInternalExecPath()):
             os.remove(self.getInternalExecPath())
+
+        # Strip C++ execs
+        if self.isCompilable() and self.compilationSucceeded():
+            os.system("strip %s"%self.getInternalExecPath())
+            
         return compile_exit_code==0
 
     def getName(self):

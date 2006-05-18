@@ -1,112 +1,149 @@
-"""The PyPLearn Mecanism."""
-__version_id__ = "$Id$"
+# pyplearn/__init__.py
+# Copyright (C) 2004-2006 Christian Dorion
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#
+#   1. Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#
+#   2. Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#
+#   3. The name of the authors may not be used to endorse or promote
+#      products derived from this software without specific prior written
+#      permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+#  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+#  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+#  NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+#  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#  This file is part of the PLearn library. For more information on the PLearn
+#  library, go to the PLearn Web site at www.plearn.org
 
-import new, string, sys
-from pyplearn                  import *
-from PyPLearnObject            import *
+# Author: Christian Dorion
+"""The PyPLearn Mecanism."""
+
+import new, os, sys
+
+from plearn.pyplearn.plargs import *
+from plearn.pyplearn.plearn_repr import plearn_repr
+from plearn.pyplearn.PyPLearnObject import PyPLearnObject, PyPLearnList, PLOption
+
 from plearn.utilities.metaprog import public_attribute_predicate
 
-class __pyplearn_magic_module:
-    """PyPLearn Magic Module.
+#######  Helper functions  ####################################################
 
-    An instance of this class (instanciated as pl) is used to provide
-    the magic behavior whereas bits of Python code like::
+def getPythonSnippet(module):
+    from inspect import getsourcelines
+    return "\\n".join([ s.rstrip() for s in getsourcelines(module)[0] ])
 
-        pl.SequentialAdvisorSelector( comparison_type='foo', ... )
+def include( filename, replace_list = [] ):
+    """Includes the content of a .plearn file.
 
-    On any attempt to access a function from I{pl}, the magic module creates,
-    on the fly, a PLearn-like class (derived from PyPLearnObject) named
-    after the function asked for. The named arguments provided to the
-    function are forwarded to the constructor of this new class to create
-    an instance of the class. Hence, names of the function's arguments are
-    considered as the PLearn object's option names.
+    Some users that have developed complex chunks of PLearn scripts may not
+    be keen to rewrite those in PyPLearn promptly. Hence, this function
+    (combined with plvar()) allows to do both the followings:
+
+      1. Including a .plearn file::
+        #
+        # script.pyplearn
+        #
+        def main():
+            pl_script  = include("dataset.plearn")
+            pl_script += pl.PTester( expdir = plargs.expdir,
+                                     dataset = plvar("DATASET"),
+                                     statnames = ["E[test.E[mse]]", "V[test.E[mse]]"],
+                                     save_test_outputs = 1, 
+                                     provide_learner_expdir = 1,
+                                     
+                                     learner = pl.SomeLearnerClassTakingNoOption();
+                                     ) # end of PTester
+            return pl_script
+
+        where::
+          #
+          # dataset.plearn
+          #
+          $DEFINE{DATASET}{ AutoVMatrix( specification = "somefile.pmat";
+                                         inputsize     = 10; 
+                                         targetsize    = 1              ) }
+
+      2. Importing 'inline' some plearn chunk of code, that is::
+
+        #
+        # dataset2.plearn
+        #
+        AutoVMatrix( specification = ${DATAPATH};
+                     inputsize     = 10; 
+                     targetsize    = 1              )
+
+        #
+        # script2.pyplearn
+        #
+        def main():
+            plvar( 'DATAPATH', 'somefile.pmat' )
+            return pl.PTester( expdir = plargs.expdir,
+                               dataset = include("dataset2.plearn"),
+                               statnames = ["E[test.E[mse]]", "V[test.E[mse]]"],
+                               save_test_outputs = 1, 
+                               provide_learner_expdir = 1,
+                               
+                               learner = pl.SomeLearnerClassTakingNoOption();
+                               )
     """
-    def __getattr__(self, name):
-        if name.startswith('__'):
-            raise AttributeError
+    f = open(filename, 'U')
+    try:
+        include_content = f.read()
+        for (search,replace) in replace_list:
+            include_content = include_content.replace(search,replace)
+    finally:
+        f.close()
+    return PLearnSnippet( include_content )
 
-        def initfunc(**kwargs):
-            klass = new.classobj(name, (PyPLearnObject,), {})
-            assert issubclass( klass, PyPLearnObject )
-
-            obj = klass(**kwargs)
-            assert isinstance(obj, PyPLearnObject)
-            return obj
-        
-        return initfunc
-
-pl = __pyplearn_magic_module()
-
-class PyPLearnScript( PyPLearnObject ):
-    """Feeded by the PyPLearn driver to PLearn's main.
-
-    This class has a PLearn cousin of the same name that is used to wrap
-    PyPLearn scripts feeded to PLearn application. Most user need not to
-    care about the behaviour of this class and its cousin since their
-    effects are hidden in the core of the PLearn main program.
-
-    Basically, feeding a PyPLearnScript to PLearn allows management of
-    files to be writen in the experiment directory after the experiment was
-    ran.
-    """
-    expdir        = PLOption(None)
-    metainfos     = PLOption(None)
-    plearn_script = PLOption(None)
-
-    def __init__(self, main_object, **overrides):
-        PyPLearnObject.__init__(self, **overrides)
-
-        self.expdir        = plargs.expdir
-        self.plearn_script = str( main_object )
-        self.metainfos     = self.get_metainfos()
-
-    def get_metainfos(self):
-        def parse( obj, prefix='' ):
-            results = []
-            for key in dir(obj):
-                if not key.startswith('_'):
-                    value = getattr(obj, key)
-                    if ( public_attribute_predicate(key, value) and
-                         not isinstance( value, plargs.namespace_overrides ) ):
-                        results.append((prefix+key, value))
-            results.sort()
-            return results
-
-        from plearn.utilities.Bindings import Bindings
-        plarg_attrs = Bindings( parse(plarg_defaults) )
-        plarg_attrs.update( parse(plargs) )
-        for clsname, cls in plargs_namespace._subclasses.iteritems():
-            if cls.__dict__['__accessed']:
-                plarg_attrs.update( parse(cls, '%s.'%clsname) )
-        
-        ## Pretty printing
-        pretty            = lambda attr_name: string.ljust(attr_name, 30)
-        def backward_cast( value ):
-            if isinstance( value, list ):
-                return ",".join([ str(e) for e in value ])
-            return str(value)
-
-        attribute_strings = [ '%s = %s'
-                              % ( pretty(attr_name), backward_cast(attr_value) ) 
-                              for attr_name, attr_value in plarg_attrs.iteritems() ]
-        return "\n".join( attribute_strings )
-
-class __TMat:
-    """Python representation of TMat of non-numeric elements."""
-    def __init__( self, nrows, ncols, content ):
-        self.nrows   = nrows
-        self.ncols   = ncols
-        self.content = content
-
-    def _unreferenced( self ):
-        return True
+def plvar( varname, value ):
+    """Emulating PLearn's $DEFINE statement.
     
-    def plearn_repr( self, indent_level=0, inner_repr=plearn_repr ):
-        return "%d %d %s" % (
-            self.nrows, self.ncols, 
-            inner_repr( self.content, indent_level+1 ) 
-            )
+    An old .plearn script (included with include()) may depend on some
+    variables to be defined externally. If one wants to define that
+    variable within a PyPLearn script, he must use this function with two
+    arguments::
 
+        plvar( 'DATASET',
+               pl.AutoVMatrix( specification = "somefile.pmat",
+                               inputsize     = 10, 
+                               targetsize    = 1
+                               )
+               )
+
+    which is strictly equivalent to the old::
+
+        $DEFINE{DATASET}{ AutoVMatrix( specification = "somefile.pmat";
+                                       inputsize     = 10; 
+                                       targetsize    = 1              ) }
+    
+    If, on the other hand, a variable is defined within the PLearn script
+    and must be referenced within PyPLearn, the simple C{plvar('DATASET')}
+    will refer to the variable just as C{${DATASET}} would have.
+    """
+    if value is None:
+        snippet = '${%s}' % varname
+    else:
+        snippet = '$DEFINE{%s}{ %s }' % (
+            varname, plearn_repr( value, indent_level+1 )
+            )
+        
+    return PLearnSnippet( snippet )
+
+# Factory function
 def TMat( *args ):
     """Returns the PyPLearn representation of a TMat.
 
@@ -166,9 +203,168 @@ def TMat( *args ):
     # TMat<T> where T is not real
     return __TMat( nrows, ncols, content )
 
-def getPythonSnippet(module):
-    from inspect import getsourcelines
-    return "\\n".join([ s.rstrip() for s in getsourcelines(module)[0] ])
+
+#######  Core classes  ########################################################
+
+class PyPLearnError( Exception ):
+    """For unexpected or incorrect use of some PyPLearn mechanism."""
+    pass
+
+class UnknownArgumentError( PyPLearnError ):
+    """Attribute known by neither plargs or plarg_defaults.
+
+    This exception is raised when attempting to use a PLearn argument
+    that was not defined, either on the command-line or with
+    plarg_defaults.
+    """
+    def __init__(self, arg_name):
+        self.arg_name = arg_name
+
+    def __str__(self):
+        return "Unknown PyPLearn argument: '%s'." % self.arg_name
+
+class PLearnSnippet:
+    """Wrapper for PLearn code snippets.
+
+    Objects of this class are used to wrap the parts of the Python code
+    that have already be converted to a PLearn string, so they don't
+    get the same treatment as Python strings (which will get wrapped in
+    double quotes by plearn_repr() ).
+    """
+    def __init__(self, s):
+        self.s = s
+
+    def __str__(self):
+        return self.s
+
+    def __repr__(self):
+        return self.s
+
+    def __add__(self, o):
+        raise NotImplementedError("See dorionc")
+    
+    def __iadd__(self, snippet):
+        """Overrides the operator+= on plearn_snippet instances.
+
+        snippet <- plearn_snippet
+        -> plearn_snippet
+        """
+        if not isinstance(snippet, plearn_snippet):
+            raise TypeError("plearn_snippet.__add__ expects a plearn_snippet instance")
+        self.s += snippet.s
+        return self
+
+    def _unreferenced( self ):
+        return True
+
+    def plearn_repr(self, indent_level=0, inner_repr=plearn_repr):
+        return self.s
+
+class PyPLearnScript( PyPLearnObject ):
+    """Feeded by the PyPLearn driver to PLearn's main.
+
+    This class has a PLearn cousin of the same name that is used to wrap
+    PyPLearn scripts feeded to PLearn application. Most user need not to
+    care about the behaviour of this class and its cousin since their
+    effects are hidden in the core of the PLearn main program.
+
+    Basically, feeding a PyPLearnScript to PLearn allows management of
+    files to be writen in the experiment directory after the experiment was
+    ran.
+    """
+    expdir        = PLOption(None)
+    metainfos     = PLOption(None)
+    plearn_script = PLOption(None)
+
+    def __init__(self, main_object, **overrides):
+        PyPLearnObject.__init__(self, **overrides)
+
+        self.expdir        = plargs.expdir
+        self.plearn_script = str( main_object )
+        self.metainfos     = self.getMetainfos()
+
+    def getMetainfos(self):
+        bindings = plargs.getContextBindings()
+
+        def backward_cast(value):
+            if isinstance(value, list):
+                return ",".join([ str(e) for e in value ])
+            return str(value)
+        pretty = lambda opt, val: (opt.ljust(45), backward_cast(val))
+        
+        cmdline = [ "%s = %s"%pretty(opt, bindings[opt]) for opt in bindings ]
+        return "\n".join(cmdline)
+
+class pl:
+    """PyPLearn Magic Module.
+
+    This class is used to provide the magic behavior whereas bits of Python
+    code like::
+
+        pl.SequentialAdvisorSelector( comparison_type='foo', ... )
+
+    On any attempt to access I{method} SUBCLASS from I{pl}, the magic
+    module creates, on the fly, a subclass of PyPLearnObject named
+    subclass. This class is totally independent of any actual subclass of
+    PyPLearnObject which would be named SUBCLASS.
+
+    The named arguments provided to the function are forwarded to the
+    constructor of this new class to create an instance of the
+    class. Hence, names of the function's arguments are considered as the
+    PLearn object's option names.
+    """
+    class __metaclass__(type):
+        def __getattr__(cls, name):
+            if name.startswith('__'):
+                raise AttributeError
+
+            def initfunc(**kwargs):
+                klass = new.classobj(name, (PyPLearnObject,), {})
+                assert issubclass( klass, PyPLearnObject )
+        
+                obj = klass(**kwargs)
+                assert isinstance(obj, PyPLearnObject)
+                return obj
+            
+            return initfunc
+
+class __TMat:
+    """Python representation of TMat of non-numeric elements."""
+    def __init__( self, nrows, ncols, content ):
+        self.nrows   = nrows
+        self.ncols   = ncols
+        self.content = content
+
+    def _unreferenced( self ):
+        return True
+    
+    def plearn_repr( self, indent_level=0, inner_repr=plearn_repr ):
+        return "%d %d %s" % (
+            self.nrows, self.ncols, 
+            inner_repr( self.content, indent_level+1 ) 
+            )
+
+#######  Builtin Tests  #######################################################
+
+def test_pl_magic_module():
+    sub = pl.Subclass(option1="opt1", option2=2)
+    print sub.__class__.__name__, id(sub.__class__)
+    print sub
+    print
+    
+    class Subclass(PyPLearnObject):
+        option1 = PLOption("opt1")
+        option2 = PLOption(2)
+
+    sub2 = Subclass()
+    print sub2.__class__.__name__, id(sub2.__class__)
+    print sub2
+    print
+    
+    sub3 = pl.Subclass()
+    print sub3.__class__.__name__, id(sub3.__class__)
+    print sub3
+    print
 
 if __name__ == "__main__":
     print TMat(2, 2, ["allo", "mon", "petit", "coco"]).plearn_repr()

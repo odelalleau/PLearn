@@ -1,0 +1,100 @@
+Context 1
+=========
+Expdir: expdir
+Binder: MyBinder
+    binded1: plopt(value = 'binded1')
+    binded2: plopt(value = 'binded2')
+    binded3: plopt(value = 'binded3')
+
+Namespace: MyNamespace
+    namespaced1: plopt(value = 'namespaced1')
+    namespaced2: plopt(value = 'namespaced2')
+    namespaced3: plopt(value = 'namespaced3')
+
+Context 2
+=========
+Expdir: expdir2
+Binder: MyBinder
+    binded1: plopt(value = 'BINDED1' [default: 'binded1'])
+    binded2: plopt(value = 'BINDED2' [default: 'binded2'])
+    binded3: plopt(value = 'binded3')
+
+Namespace: MyNamespace
+    namespaced1: plopt(value = 'namespaced1')
+    namespaced2: plopt(value = 'namespaced2')
+    namespaced3: plopt(value = 'NAMESPACED3' [default: 'namespaced3'])
+
+Context 3
+=========
+Expdir: expdir3
+Binder: MyBinder
+    binded1: plopt(value = 'binded1')
+    binded2: plopt(value = 'binded2')
+    binded3: plopt(value = 'BINDED3' [default: 'binded3'])
+
+Namespace: MyNamespace
+    namespaced1: plopt(value = 'NAMESPACED1' [default: 'namespaced1'])
+    namespaced2: plopt(value = 'namespaced2')
+    namespaced3: plopt(value = 'namespaced3')
+
+
+Reprint all contexts to ensure nothing was lost or corrupted.
+-------------------------------------------------------------
+
+Context 1
+=========
+Expdir: expdir
+Binder: MyBinder
+    binded1: plopt(value = 'binded1')
+    binded2: plopt(value = 'binded2')
+    binded3: plopt(value = 'binded3')
+
+Namespace: MyNamespace
+    namespaced1: plopt(value = 'namespaced1')
+    namespaced2: plopt(value = 'namespaced2')
+    namespaced3: plopt(value = 'namespaced3')
+
+Context 2
+=========
+Expdir: expdir2
+Binder: MyBinder
+    binded1: plopt(value = 'BINDED1' [default: 'binded1'])
+    binded2: plopt(value = 'BINDED2' [default: 'binded2'])
+    binded3: plopt(value = 'binded3')
+
+Namespace: MyNamespace
+    namespaced1: plopt(value = 'namespaced1')
+    namespaced2: plopt(value = 'namespaced2')
+    namespaced3: plopt(value = 'NAMESPACED3' [default: 'namespaced3'])
+
+Context 3
+=========
+Expdir: expdir3
+Binder: MyBinder
+    binded1: plopt(value = 'binded1')
+    binded2: plopt(value = 'binded2')
+    binded3: plopt(value = 'BINDED3' [default: 'binded3'])
+
+Namespace: MyNamespace
+    namespaced1: plopt(value = 'NAMESPACED1' [default: 'namespaced1'])
+    namespaced2: plopt(value = 'namespaced2')
+    namespaced3: plopt(value = 'namespaced3')
+
+
+Misspelled command-line argument
+-------------------------------------------------------------
+
+Context 4
+=========
+Expdir: expdir4
+Binder: MyBinder
+    binded1: plopt(value = 'binded1')
+    binded2: plopt(value = 'BINDED2' [default: 'binded2'])
+    binded3: plopt(value = 'binded3')
+
+Namespace: MyNamespace
+    namespaced1: plopt(value = 'namespaced1')
+    namespaced2: plopt(value = 'namespaced2')
+    namespaced3: plopt(value = 'NAMESPACED3' [default: 'namespaced3'])
+
+RuntimeError: The following arguments were parsed but never used: bindd1

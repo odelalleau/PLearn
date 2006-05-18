@@ -1,9 +1,54 @@
-#!/usr/bin/env python
+# PyPLearnObject.py
+# Copyright (C) 2005, 2006 Christian Dorion
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#
+#   1. Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#
+#   2. Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#
+#   3. The name of the authors may not be used to endorse or promote
+#      products derived from this software without specific prior written
+#      permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+#  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+#  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+#  NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+#  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#  This file is part of the PLearn library. For more information on the PLearn
+#  library, go to the PLearn Web site at www.plearn.org
+
+# Author: Christian Dorion
+"""Main classes allowing to emulate PLearn objects in Python.
+
+L{PyPLearnObject} is to base class allowing emulation of PLearn object in
+Python. Subclasses of it can be wrote to specify the L{options<PLOption>}
+default values. These values can be overrode using constructor's kewword
+arguments or by directly setting the attributes after instance's
+construction. Most subclasses of PyPLearnObject are created on the fly
+using the L{pl} magic module, e.g. C{pl.Subclass(option1="opt1", option2=2)}.
+
+At least 95% of PyPLearnObject's (and friends') use it to specify options
+and their default values while all this information is available in the C++
+part of PLearn. This is the unfortunate consequence of the lack of
+communication between the PyPLearn mecanism and PLearn's actual
+library. Some subsequent version of the PyPLearnObject class should
+communicate with PLearn through its RMI protocol.
+"""
 import copy, operator
 from plearn.pyplearn.context import actualContext
 from plearn.pyplearn.plearn_repr import plearn_repr, python_repr, format_list_elements
-
-DEBUG = False
 
 #
 #  Classes
@@ -119,7 +164,7 @@ class PyPLearnObject( PLOptionDict ):
             )
 
     where <Classname> is the name you give to the PyPLearnObject's
-    subclass. The L{PLearn} options are considered to be all attributes
+    subclass. The U{PLearn<www.plearn.org>} options are considered to be all attributes
     whose names do not start with an underscore. Those are said public,
     while any attribute starting with at least one underscore is considered
     internal (protected '_' or private '__').
@@ -130,6 +175,9 @@ class PyPLearnObject( PLOptionDict ):
     # Static buildClassContext method
 
     def buildClassContext(context):
+        assert not hasattr(context, 'pyplearn_object_subclasses')
+        context.pyplearn_object_subclasses = {}
+        
         assert not hasattr(context, 'pyplearn_object_instances')        
         context.pyplearn_object_instances = []
     buildClassContext = staticmethod(buildClassContext)
@@ -181,6 +229,14 @@ class PyPLearnObject( PLOptionDict ):
         '__rdivmod__', '__rpow__', '__rlshift__',
         '__rrshift__', '__rand__', '__rxor__', '__ror__'
         ]
+
+        def __new__(metacls, clsname, bases, dic):
+            cls = PLOptionDict.__metaclass__.__new__(metacls, clsname, bases, dic)
+            PyPLearnObject = cls
+            if clsname!="PyPLearnObject":
+                PyPLearnObject = globals()['PyPLearnObject']
+            actualContext(PyPLearnObject).pyplearn_object_subclasses[clsname] = cls
+            return cls
         
         def __init__(cls, name, bases, dict):
             super(type, cls).__init__(name, bases, dict) 
@@ -248,18 +304,6 @@ class PyPLearnObject( PLOptionDict ):
             indent_level+1
             )
         return "%s(%s)" % (self.classname(), options)
-        # def elem_format( elem ):
-        #     k, v = elem
-        #     try:
-        #         return '%s = %s' % ( k, inner_repr(v, indent_level+1) )
-        #     except Exception, e:
-        #         raise PLOptionError( 'Option %s in %s instance caused an error in %s:\n  %s: %s'
-        #                              % ( k, self.classname(), inner_repr.__name__,
-        #                                  e.__class__.__name__, str(e) ) ) 
-        # 
-        # return "%s(%s)" % ( self.classname(),
-        #                     format_list_elements([ (optname,optval) for (optname,optval) in self.iteritems() ],
-        #                                          elem_format, indent_level+1 ) )
 
     def _serial_number(self):
         return self.__serial_number
@@ -299,8 +343,7 @@ class PyPLearnList( PyPLearnObject ):
         return '[%s]' % format_list_elements([optval for optval in iter(self)],
                                              elem_format, indent_level+1)
 
-if __name__ == '__main__':
-    
+def test_PyPLearnObject_module():    
     class A( PyPLearnObject):
         a = PLOption('a')
         

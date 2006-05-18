@@ -970,7 +970,7 @@ string PPath::extension(bool with_dot) const
 PPath PPath::no_extension() const
 {
     size_t ext_size = extension().size();
-    PPath copy = *this;
+    string copy(*this);
     if (ext_size > 0)
         copy.resize(size() - ext_size - 1);  // Remove the extension and the dot.
     return copy;

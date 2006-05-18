@@ -154,7 +154,7 @@ class Experiment(PyPLearnObject):
 
     def match( cls, expkey=[] ):
         if cls._cached is None:
-            cls.cache_experiments()                        
+            cls.cache_experiments()
         return [ exp for exp in cls._cached if exp.isMatched( expkey ) ]
     match = classmethod( match )
 

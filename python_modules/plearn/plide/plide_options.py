@@ -122,7 +122,7 @@ class PyPLearnOptionsHolder( object ):
         handles logging control.
         """
         ## Generate a brand-new expdir
-        plargs._parse_(["expdir="+generate_expdir()])
+        plargs._parse_(["expdir="+generateExpdir()])
         
         ## Apply the manual overrides
         if self.option_overrides:
