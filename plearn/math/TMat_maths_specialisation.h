@@ -95,33 +95,36 @@ inline void multiplyAcc(const Vec& vec, const Vec& x, real scale)
 
 inline void multiplyAcc(const Mat& mat, const Mat& x, real scale)
 {
-    // The idea is similar to the one in 'operator*=', see comments there.
     assert( mat.length() == x.length() && mat.width() == x.width() );
-    int mod_mat, mod_x;
-    int next_mat, next_x;
-    int n;
-    int size;
-    if (mat.width() >= mat.length()) {
-        // Calling on rows.
-        mod_mat = mod_x = 1;
-        next_mat = mat.mod();
-        next_x = x.mod();
-        n = mat.length();
-        size = mat.width();
-    } else {
-        // Calling on columns.
-        mod_mat = mat.mod();
-        mod_x = x.mod();
-        next_mat = next_x = 1;
-        n = mat.width();
-        size = mat.length();
-    }
+
+    int one = 1;
+    int w = mat.width(); // == x.width()
+    int mod_mat = mat.mod();
     real* data_mat = mat.data();
+    int mod_x = x.mod();
     real* data_x = x.data();
-    for (int i = 0; i < n; i++) {
-        BLAS_MULT_ACC(&size, &scale, data_x, &mod_x, data_mat, &mod_mat);
-        data_mat += next_mat;
-        data_x += next_x;
+
+    if( mat.isEmpty() ) // x.isEmpty() too
+        return;
+
+    if( w == mod_mat && w == mod_x )
+    {
+        // The two matrices have contiguous rows, we do it in one call
+        int n = mat.size(); // == x.size()
+        BLAS_MULT_ACC(&n, &scale, data_x, &one, data_mat, &one);
+    }
+    else if( w == 1 )
+    {
+        // There is only one column, we do it in one call
+        int l = mat.length(); // == x.length(), == mat.size()
+        BLAS_MULT_ACC(&l, &scale, data_x, &mod_x, data_mat, &mod_mat);
+    }
+    else
+    {
+        // We iterate over the rows
+        int l = mat.length(); // == x.length()
+        for( int i=0 ; i<l ; i++, data_mat += mod_mat, data_x += mod_x )
+            BLAS_MULT_ACC(&w, &scale, data_x, &one, data_mat, &one);
     }
 }
 
@@ -144,29 +147,23 @@ inline void operator*=(const Mat& mat, real factor)
 {
     if (mat.isEmpty())
         return;
-    int mod;    // Increment to go to next element in BLAS vector scaling.
-    int next;   // Increment to go to next vector to be scaled.
-    int n;      // Number of iterations to perform.
-    int size;   // Size of the scaled vector given to the BLAS function.
-    // We call the BLAS function repetitively on either rows or columns
-    // (whichever is larger).
-    if (mat.width() >= mat.length()) {
-        // Calling on rows.
-        mod = 1;
-        next = mat.mod();
-        n = mat.length();
-        size = mat.width();
-    } else {
-        // Calling on columns.
-        mod = mat.mod();
-        next = 1;
-        n = mat.width();
-        size = mat.length();
-    }
+
+    int one = 1;
+    int w = mat.width();
+    int mod = mat.mod();
     real* data = mat.data();
-    for (int i = 0; i < n; i++) {
-        BLAS_SCALE(&size, &factor, data, &mod);
-        data += next;
+    if (w == mod)
+    {
+        // The rows are contiguous, so we can do it in one call
+        int n = mat.size();
+        BLAS_SCALE(&n, &factor, data, &one);
+    }
+    else
+    {
+        // We iterate over the rows
+        int l = mat.length();
+        for( int i=0 ; i<l ; i++, data += mod )
+            BLAS_SCALE(&w, &factor, data, &one);
     }
 }
 
@@ -239,7 +236,7 @@ inline void productScaleAcc(const TMat<double>& C, const TMat<double>& A, bool t
 
     if (A.isNull() || B.isNull() || C.isNull()) // Size zero ; don't bother
         return;                                 // with actual calculation
-    
+
     dgemm_(&transb, &transa, &w2, &l1, &w1, &alpha, B.data(), &ldb, A.data(), &lda, &beta, C.data(), &ldc);
 }
 
@@ -267,7 +264,7 @@ inline void productScaleAcc(const TVec<double>& y, const TMat<double>& A, bool t
 
     if (A.isNull() || x.isNull() || y.isNull()) // Size zero ; don't bother
         return;                                 // with actual calculation
-    
+
     dgemv_(&trans, &m, &n, &alpha, A.data(), &lda, x.data(), &one, &beta, y.data(), &one);
 }
 
@@ -285,7 +282,7 @@ inline void externalProductScaleAcc(const TMat<double>& A, const TVec<double>& x
 
     if (A.isNull() || x.isNull() || y.isNull()) // Size zero ; don't bother
         return;                                 // with actual calculation
-    
+
     dger_(&m, &n, &alpha, y.data(), &one, x.data(), &one, A.data(), &lda);
 }
 
@@ -385,7 +382,7 @@ inline void productScaleAcc(const TMat<float>& C, const TMat<float>& A, bool tra
 
     if (A.isNull() || B.isNull() || C.isNull()) // Size zero ; don't bother
         return;                                 // with actual calculation
-    
+
     sgemm_(&transb, &transa, &w2, &l1, &w1, &alpha, B.data(), &ldb, A.data(), &lda, &beta, C.data(), &ldc);
 }
 
@@ -441,7 +438,7 @@ inline void externalProductScaleAcc(const TMat<float>& A, const TVec<float>& x, 
 
     if (A.isNull() || x.isNull() || y.isNull()) // Size zero ; don't bother
         return;                                 // with actual calculation
-    
+
     sger_(&m, &n, &alpha, y.data(), &one, x.data(), &one, A.data(), &lda);
 }
 
