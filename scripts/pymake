@@ -1435,11 +1435,17 @@ class FileInfo:
         
         msg = warningmsgs + errormsgs
 
-        # Dumb heuristic to figure out if compilation failed because of an
-        # out of memory error: for out of memory error, exit code will be
-        # non-zero, but output on stdout/stderr will be only a line or so
-        # ("cc1plus: out of memory allocating...")
-        if self.compilation_status != 0 and 1 <= len(errormsgs + warningmsgs) <= 2:
+        # Somewhat dumb heuristic to figure out if compilation failed
+        # because of an out of memory error: for out of memory error, exit
+        # code will be non-zero, but output on stdout/stderr will be only a
+        # line or so ("cc1plus: out of memory allocating...").
+        #
+        # Use the fact that for an out or memory error, there will be no
+        # line number (like "foo.cc:42: syntax error") in the error message
+        # to distinguish that case from the case of (say) a single error
+        # message for a syntax error, etc.
+        if self.compilation_status != 0 and 1 <= len(msg) <= 2 and \
+               not re.findall(r':\d+:', ''.join(msg)):
             self.retry_compilation = True
         else:
             self.retry_compilation = False
