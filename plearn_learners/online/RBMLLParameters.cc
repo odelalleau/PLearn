@@ -66,14 +66,6 @@ RBMLLParameters::RBMLLParameters( string down_types, string up_types,
 
 void RBMLLParameters::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here.
-    // ### For the "flags" of each option, you should typically specify
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or
-    // ### OptionBase::tuningoption. If you don't provide one of these three,
-    // ### this option will be ignored when loading values from a script.
-    // ### You can also combine flags, for example with OptionBase::nosave:
-    // ### (OptionBase::buildoption | OptionBase::nosave)
-
     declareOption(ol, "learning_rate", &RBMLLParameters::learning_rate,
                   OptionBase::buildoption,
                   "Learning rate");
@@ -198,27 +190,38 @@ void RBMLLParameters::update()
     // updates parameters
     //weights -= learning_rate * (weights_pos_stats/pos_count
     //                              - weights_neg_stats/neg_count)
-    weights_pos_stats /= pos_count;
-    weights_neg_stats /= neg_count;
-    weights_pos_stats -= weights_neg_stats;
-    weights_pos_stats *= learning_rate;
-    weights -= weights_pos_stats;
+    real pos_factor = -learning_rate / pos_count;
+    real neg_factor = learning_rate / neg_count;
+
+    int l = weights.length();
+    int w = weights.width();
+
+    real* w_i = weights.data();
+    real* wps_i = weights_pos_stats.data();
+    real* wns_i = weights_neg_stats.data();
+    for( int i=0 ; i<l ; i++,
+                         wps_i+=weights_pos_stats.mod(),
+                         wns_i+=weights_neg_stats.mod() )
+        for( int j=0 ; j<w ; j++ )
+            w_i[j] += pos_factor * wps_i[j] + neg_factor * wns_i[j];
 
     // down_units_bias -= learning_rate * (down_units_bias_pos_stats/pos_count
     //                                    -down_units_bias_neg_stats/neg_count)
-    down_units_bias_pos_stats /= pos_count;
-    down_units_bias_neg_stats /= neg_count;
-    down_units_bias_pos_stats -= down_units_bias_neg_stats;
-    down_units_bias_pos_stats *= learning_rate;
-    down_units_bias -= down_units_bias_pos_stats;
+    l = down_units_bias.length();
+    real* dub = down_units_bias.data();
+    real* dubps = down_units_bias_pos_stats.data();
+    real* dubns = down_units_bias_neg_stats.data();
+    for( int i=0 ; i<l ; i++ )
+        dub[i] += pos_factor * dubps[i] + neg_factor * dubns[i];
 
     // up_units_bias -= learning_rate * (up_units_bias_pos_stats/pos_count
     //                                   -up_units_bias_neg_stats/neg_count)
-    up_units_bias_pos_stats /= pos_count;
-    up_units_bias_neg_stats /= neg_count;
-    up_units_bias_pos_stats -= up_units_bias_neg_stats;
-    up_units_bias_pos_stats *= learning_rate;
-    up_units_bias -= up_units_bias_pos_stats;
+    l = up_units_bias.length();
+    real* uub = up_units_bias.data();
+    real* uubps = up_units_bias_pos_stats.data();
+    real* uubns = up_units_bias_neg_stats.data();
+    for( int i=0 ; i<l ; i++ )
+        uub[i] += pos_factor * uubps[i] + neg_factor * uubns[i];
 
     clearStats();
 }
@@ -270,7 +273,7 @@ void RBMLLParameters::bpropUpdate(const Vec& input, const Vec& output,
     input_gradient.resize( down_layer_size );
 
     // weights -= learning_rate * output_gradient * input'
-    externalProductAcc( weights, (-learning_rate)*output_gradient, input );
+    externalProductScaleAcc( weights, output_gradient, input, -learning_rate );
 
     // (up) bias -= learning_rate * output_gradient
     multiplyAcc( up_units_bias, output_gradient, -learning_rate );

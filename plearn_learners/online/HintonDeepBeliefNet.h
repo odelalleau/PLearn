@@ -120,7 +120,20 @@ public:
     //!   - "WS" or "wake_sleep"
     string fine_tuning_method;
 
-    bool use_sample_rather_than_expectation_in_positive_phase_statistics;
+//    bool use_sample_rather_than_expectation_in_positive_phase_statistics;
+
+    //! Vector providing information on which information to use during the
+    //! contrastive divergence step:
+    //!   - 0 means that we use the expectation only,
+    //!   - 1 means that we sample (for the next step), but we use the
+    //!     expectation in the CD update formula,
+    //!   - 2 means that we use the sample only.
+    //! The order of the arguments matches the steps of CD:
+    //!   - visible unit during positive phase (you should keep it to 0),
+    //!   - hidden unit during positive phase,
+    //!   - visible unit during negative phase,
+    //!   - hidden unit during negative phase (you should keep it to 0).
+    TVec<int> use_sample_or_expectation;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -261,6 +274,10 @@ protected:
 
 protected:
     //#####  Protected Member Functions  ######################################
+
+    virtual void contrastiveDivergenceStep(const PP<RBMLayer>& down_layer,
+                                           const PP<RBMParameters>& parameters,
+                                           const PP<RBMLayer>& up_layer);
 
     virtual void greedyStep( const Vec& predictor, int params_index );
     virtual void jointGreedyStep( const Vec& input );

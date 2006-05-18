@@ -53,7 +53,7 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(
     HintonDeepBeliefNet,
     "Does the same thing as Hinton's deep belief nets",
-    ""
+    "or, at least, tries to do so..."
 );
 
 /////////////////////////
@@ -63,8 +63,12 @@ HintonDeepBeliefNet::HintonDeepBeliefNet() :
     learning_rate(0.),
     fine_tuning_learning_rate(-1.),
     weight_decay(0.),
-    use_sample_rather_than_expectation_in_positive_phase_statistics(false)
+    use_sample_or_expectation(4)
 {
+    use_sample_or_expectation[0] = 0;
+    use_sample_or_expectation[1] = 1;
+    use_sample_or_expectation[2] = 2;
+    use_sample_or_expectation[3] = 0;
     random_gen = new PRandom();
 }
 
@@ -138,11 +142,31 @@ void HintonDeepBeliefNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Parameters linking target_layer and last_layer");
 
+/*
     declareOption(ol, "use_sample_rather_than_expectation_in_positive_phase_statistics",
                   &HintonDeepBeliefNet::use_sample_rather_than_expectation_in_positive_phase_statistics,
                   OptionBase::buildoption,
                   "In positive phase statistics use output->sample * input\n"
                   "rather than output->expectation * input.\n");
+*/
+    declareOption(ol, "use_sample_or_expectation",
+                  &HintonDeepBeliefNet::use_sample_or_expectation,
+                  OptionBase::buildoption,
+                  "Vector providing information on which information to use"
+                  " during the\n"
+                  "contrastive divergence step:\n"
+                  "  - 0 means that we use the expectation only,\n"
+                  "  - 1 means that we sample (for the next step), but we use"
+                  " the\n"
+                  "    expectation in the CD update formula,\n"
+                  "  - 2 means that we use the sample only.\n"
+                  "The order of the arguments matches the steps of CD:\n"
+                  "  - visible unit during positive phase (you should keep it"
+                  " to 0),\n"
+                  "  - hidden unit during positive phase,\n"
+                  "  - visible unit during negative phase,\n"
+                  "  - hidden unit during negative phase (you should keep it"
+                  " to 0).\n");
 
     declareOption(ol, "n_layers", &HintonDeepBeliefNet::n_layers,
                   OptionBase::learntoption,
@@ -246,11 +270,18 @@ void HintonDeepBeliefNet::build_layers()
 
     last_layer = layers[n_layers-1];
 
-    // concatenate target_layer and layers[n_layers-2] into joint_layer
-    TVec< PP<RBMLayer> > the_sub_layers( 2 );
-    the_sub_layers[0] = target_layer;
-    the_sub_layers[1] = layers[n_layers-2];
-    joint_layer = new RBMMixedLayer( the_sub_layers );
+    // concatenate target_layer and layers[n_layers-2] into joint_layer,
+    // if it is not already done
+    if( !joint_layer
+        || joint_layer->sub_layers.size() !=2
+        || joint_layer->sub_layers[0] != target_layer
+        || joint_layer->sub_layers[1] != layers[n_layers-2] )
+    {
+        TVec< PP<RBMLayer> > the_sub_layers( 2 );
+        the_sub_layers[0] = target_layer;
+        the_sub_layers[1] = layers[n_layers-2];
+        joint_layer = new RBMMixedLayer( the_sub_layers );
+    }
     joint_layer->random_gen = random_gen;
 }
 
@@ -296,8 +327,14 @@ void HintonDeepBeliefNet::build_params()
     target_params->build();
 
     // build joint_params from params[n_layers-1] and target_params
-    joint_params = new RBMJointLLParameters( target_params,
-                                             params[n_layers-2] );
+    // if it is not already done
+    if( !joint_params
+        || joint_params->target_params != target_params
+        || joint_params->cond_params != params[n_layers-2] )
+    {
+        joint_params = new RBMJointLLParameters( target_params,
+                                                 params[n_layers-2] );
+    }
     joint_params->random_gen = random_gen;
 
     // share the biases
@@ -640,6 +677,88 @@ void HintonDeepBeliefNet::train()
     MODULE_LOG << "Training finished" << endl << endl;
 }
 
+// assumes that down_layer->expectation is set
+void HintonDeepBeliefNet::contrastiveDivergenceStep(
+    const PP<RBMLayer>& down_layer,
+    const PP<RBMParameters>& parameters,
+    const PP<RBMLayer>& up_layer )
+{
+    // positive phase
+    if( use_sample_or_expectation[0] == 0 )
+        parameters->setAsDownInput( down_layer->expectation );
+    else
+    {
+        down_layer->generateSample();
+        parameters->setAsDownInput( down_layer->sample );
+    }
+
+    up_layer->getAllActivations( parameters );
+    up_layer->computeExpectation();
+    up_layer->generateSample();
+
+    // accumulate stats using the right vector (sample or expectation)
+    if( use_sample_or_expectation[0] == 2 )
+    {
+        if( use_sample_or_expectation[1] == 2 )
+            parameters->accumulatePosStats(down_layer->sample,
+                                           up_layer->sample );
+        else
+            parameters->accumulatePosStats(down_layer->sample,
+                                           up_layer->expectation );
+    }
+    else
+    {
+        if( use_sample_or_expectation[1] == 2 )
+            parameters->accumulatePosStats(down_layer->expectation,
+                                           up_layer->sample);
+        else
+            parameters->accumulatePosStats(down_layer->expectation,
+                                           up_layer->expectation );
+    }
+
+    // down propagation
+    if( use_sample_or_expectation[1] == 0 )
+        parameters->setAsUpInput( up_layer->expectation );
+    else
+        parameters->setAsUpInput( up_layer->sample );
+
+    down_layer->getAllActivations( parameters );
+    down_layer->computeExpectation();
+    down_layer->generateSample();
+
+    if( use_sample_or_expectation[2] == 0 )
+        parameters->setAsDownInput( down_layer->expectation );
+    else
+        parameters->setAsDownInput( down_layer->sample );
+
+    up_layer->getAllActivations( parameters );
+    up_layer->computeExpectation();
+
+    // accumulate stats using the right vector (sample or expectation)
+    if( use_sample_or_expectation[3] == 2 )
+    {
+        up_layer->generateSample();
+        if( use_sample_or_expectation[2] == 2 )
+            parameters->accumulateNegStats( down_layer->sample,
+                                            up_layer->sample );
+        else
+            parameters->accumulateNegStats( down_layer->expectation,
+                                            up_layer->sample );
+    }
+    else
+    {
+        if( use_sample_or_expectation[2] == 2 )
+            parameters->accumulateNegStats( down_layer->sample,
+                                            up_layer->expectation );
+        else
+            parameters->accumulateNegStats( down_layer->expectation,
+                                            up_layer->expectation );
+    }
+
+    // update
+    parameters->update();
+}
+
 void HintonDeepBeliefNet::greedyStep( const Vec& predictor, int index )
 {
     // deterministic propagation until we reach index
@@ -651,33 +770,10 @@ void HintonDeepBeliefNet::greedyStep( const Vec& predictor, int index )
         layers[i+1]->computeExpectation();
     }
 
-    // positive phase
-    params[index]->setAsDownInput( layers[index]->expectation );
-    layers[index+1]->getAllActivations((RBMLLParameters*) params[index]);
-    layers[index+1]->computeExpectation();
-    layers[index+1]->generateSample();
-    if (use_sample_rather_than_expectation_in_positive_phase_statistics)
-        params[index]->accumulatePosStats(layers[index]->expectation,
-                                          layers[index+1]->sample );
-    else
-        params[index]->accumulatePosStats(layers[index]->expectation,
-                                          layers[index+1]->expectation );
-
-    // down propagation
-    params[index]->setAsUpInput( layers[index+1]->sample );
-    layers[index]->getAllActivations( (RBMLLParameters*) params[index] );
-
-    // negative phase
-    layers[index]->generateSample();
-    params[index]->setAsDownInput( layers[index]->sample );
-    layers[index+1]->getAllActivations((RBMLLParameters*) params[index]);
-    layers[index+1]->computeExpectation();
-    params[index]->accumulateNegStats( layers[index]->sample,
-                                       layers[index+1]->expectation );
-
-    // update
-    params[index]->update();
-
+    // perform one step of CD
+    contrastiveDivergenceStep( layers[index],
+                               (RBMLLParameters*) params[index],
+                               layers[index+1] );
 }
 
 void HintonDeepBeliefNet::jointGreedyStep( const Vec& input )
@@ -695,32 +791,9 @@ void HintonDeepBeliefNet::jointGreedyStep( const Vec& input )
     // now fill the "target" part of joint_layer
     target_layer->expectation << input.subVec( n_predictor, n_predicted );
 
-    // positive phase
-    joint_params->setAsDownInput( joint_layer->expectation );
-    last_layer->getAllActivations( (RBMLLParameters*) joint_params );
-    last_layer->computeExpectation();
-    last_layer->generateSample();
-    if (use_sample_rather_than_expectation_in_positive_phase_statistics)
-        joint_params->accumulatePosStats( joint_layer->expectation,
-                                          last_layer->sample );
-    else
-        joint_params->accumulatePosStats( joint_layer->expectation,
-                                          last_layer->expectation );
-
-    // down propagation
-    joint_params->setAsUpInput( last_layer->sample );
-    joint_layer->getAllActivations( (RBMLLParameters*) joint_params );
-
-    // negative phase
-    joint_layer->generateSample();
-    joint_params->setAsDownInput( joint_layer->sample );
-    last_layer->getAllActivations( (RBMLLParameters*) joint_params );
-    last_layer->computeExpectation();
-    joint_params->accumulateNegStats( joint_layer->sample,
-                                      last_layer->expectation );
-
-    // update
-    joint_params->update();
+    contrastiveDivergenceStep( (RBMLayer *) joint_layer,
+                               (RBMLLParameters *) joint_params,
+                               last_layer );
 }
 
 void HintonDeepBeliefNet::fineTuneByGradientDescent( const Vec& input,
