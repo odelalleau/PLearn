@@ -349,7 +349,7 @@ void FileVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 //////////////////
 FileVMatrix::~FileVMatrix()
 {
-    if (hasMetaDataDir())
+    if (hasMetaDataDir() && isWritable())
         saveFieldInfos();
     FileVMatrix::closeCurrentFile();
 }
