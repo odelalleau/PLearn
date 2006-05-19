@@ -163,6 +163,14 @@ void DictionaryVMatrix::declareOptions(OptionList& ol)
 
 void DictionaryVMatrix::build_()
 {
+    //if(data.length() != 0)
+    //{
+    //    width_ = data.width();
+    //    length_ = data.length();
+    //    if(option_fields.length()==0) option_fields.resize(width_);
+    //    return;
+    //}
+    
     string line = "";
     vector<string> tokens;
     TVec<string> tokens_vec;
@@ -194,7 +202,7 @@ void DictionaryVMatrix::build_()
             tokens = split(line, delimiters);
             if(python)
             {
-                tokens_vec.resize(tokens.size());
+                tokens_vec.resize(int(tokens.size()));
                 for(int i=0; i<tokens_vec.length(); i++)
                     tokens_vec[i] = tokens[i];
                 tokens_vec = python->invoke("process_string_row",tokens_vec).as<TVec<string> >();
@@ -204,12 +212,12 @@ void DictionaryVMatrix::build_()
             }
 
             if(symbols_to_ignore.length() != 0)
-                for(int i=0; i<tokens.size(); i++)
+                for(int i=0; i<int(tokens.size()); i++)
                     if(symbols_to_ignore[i].find(tokens[i]) >= 0)
                         tokens[i] = OOV_TAG;
 
             row_has_oov = false;
-            for(int i=0; i<tokens.size(); i++)
+            for(int i=0; i<int(tokens.size()); i++)
                 if(tokens[i] == OOV_TAG)
                     row_has_oov = true;
 
@@ -276,7 +284,7 @@ void DictionaryVMatrix::build_()
 
             if(python)
             {
-                tokens_vec.resize(tokens.size());
+                tokens_vec.resize(int(tokens.size()));
                 for(int i=0; i<tokens_vec.length(); i++)
                     tokens_vec[i] = tokens[i];
                 tokens_vec = python->invoke("process_string_row",tokens_vec).as<TVec<string> >();
@@ -286,7 +294,7 @@ void DictionaryVMatrix::build_()
             }
 
             if(symbols_to_ignore.length() != 0)
-                for(int i=0; i<tokens.size(); i++)
+                for(int i=0; i<int(tokens.size()); i++)
                     if(symbols_to_ignore[i].find(tokens[i]) >= 0)
                         tokens[i] = OOV_TAG;
 
