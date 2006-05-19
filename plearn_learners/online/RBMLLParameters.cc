@@ -199,9 +199,10 @@ void RBMLLParameters::update()
     real* w_i = weights.data();
     real* wps_i = weights_pos_stats.data();
     real* wns_i = weights_neg_stats.data();
-    for( int i=0 ; i<l ; i++,
-                         wps_i+=weights_pos_stats.mod(),
-                         wns_i+=weights_neg_stats.mod() )
+    int w_mod = weights.mod();
+    int wps_mod = weights_pos_stats.mod();
+    int wns_mod = weights_neg_stats.mod();
+    for( int i=0 ; i<l ; i++, w_i+=w_mod, wps_i+=wps_mod, wns_i+=wns_mod )
         for( int j=0 ; j<w ; j++ )
             w_i[j] += pos_factor * wps_i[j] + neg_factor * wns_i[j];
 
