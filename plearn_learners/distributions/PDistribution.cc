@@ -434,7 +434,8 @@ void PDistribution::setPredictor(const Vec& predictor, bool call_parent) const
     // 'predictor'.
     assert( predictor.length()      >= n_predictor );
     assert( predictor_part.length() == n_predictor );
-    predictor_part << predictor.subVec(0, n_predictor);
+    if (predictor != predictor_part)
+        predictor_part << predictor.subVec(0, n_predictor);
 }
 
 ////////////////////////////////
