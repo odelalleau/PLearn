@@ -446,9 +446,21 @@ void ProcessSymbolicSequenceVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copi
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField(conditions, copies);
+    deepCopyField(string_conditions, copies);
     deepCopyField(delimiters, copies);
+    deepCopyField(string_delimiters, copies);
     deepCopyField(ignored_context, copies);
-    deepCopyField(source, copies);
+    deepCopyField(string_ignored_context, copies);
+    //deepCopyField(source, copies);
+    deepCopyField(current_row_i, copies);
+    deepCopyField(indices, copies);
+    deepCopyField(left_positions, copies);
+    deepCopyField(right_positions, copies);
+    deepCopyField(left_context, copies);
+    deepCopyField(right_context, copies);
+    deepCopyField(row, copies);
+    deepCopyField(element, copies);
+    deepCopyField(target_element, copies);
 }
 
 void ProcessSymbolicSequenceVMatrix::fill_current_row(int i, int& cp, int& target_position) const
@@ -654,7 +666,7 @@ void ProcessSymbolicSequenceVMatrix::fill_current_row(int i, int& cp, int& targe
     if(fixed_context && current_row_i.length()-cp*n_attributes > 0)
     {
         current_row_i.subVec(cp*n_attributes,current_row_i.length()-cp*n_attributes).fill(MISSING_VALUE);
-        cp = current_row_i.length();
+        cp = current_row_i.length()/n_attributes;
     }
 }
 
@@ -669,7 +681,10 @@ void ProcessSymbolicSequenceVMatrix::getExample(int i, Vec& input, Vec& target, 
     // Seperating input and output fields
     input.resize(cp*source->inputsize());
     target.resize(put_only_target_attributes ? source->targetsize() : cp*source->targetsize());
-    weight = 0;
+    if(weightsize_ == 0)
+        weight = 1;
+    else
+        PLERROR("In ProcessSymbolicSequenceVMatrix::getExample(): weighsize() > 0 not implemented");
     for(int t=0; t<cp*n_attributes; t++)
     {
         if(t%n_attributes < source->inputsize())
