@@ -87,9 +87,9 @@ public:
     //! Accumulates negative contribution to the gradient of down_units_params
     Vec down_units_bias_neg_stats;
     //! Accumulates positive contribution to the gradient of down_units_params
-    TVec<Vec> down_units_params_pos_stats;
+    TVec<Vec> up_units_params_pos_stats;
     //! Accumulates negative contribution to the gradient of down_units_params
-    TVec<Vec> down_units_params_neg_stats;
+    TVec<Vec> up_units_params_neg_stats;
 
 public:
     //#####  Public Member Functions  #########################################

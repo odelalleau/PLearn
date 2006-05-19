@@ -126,12 +126,21 @@ void RBMLQParameters::build_()
             PLERROR( "RBMLQParameters::build_() - value '%c' for"
                      " up_units_types[%d]\n"
                      "should be 'l'.\n",
-                     uut_i, i );
+                     dut_i, i );
     }
     
-    up_units_params.resize( 2, up_layer_size );
-    up_units_params_pos_stats.resize( 2 , up_layer_size );
-    up_units_params_neg_stats.resize( 2 , up_layer_size );
+    up_units_params.resize( 2 ) ;
+    up_units_params[0].resize( up_layer_size );
+    up_units_params[1].resize( up_layer_size );
+
+    up_units_params_pos_stats.resize( 2 );
+    up_units_params_pos_stats[0].resize( up_layer_size );
+    up_units_params_pos_stats[1].resize( up_layer_size );
+    
+    up_units_params_neg_stats.resize( 2 );
+    up_units_params_neg_stats[0].resize( up_layer_size );
+    up_units_params_neg_stats[1].resize( up_layer_size );
+
     for( int i=0 ; i<up_layer_size ; i++ )
     {
         char uut_i = up_units_types[i];
@@ -226,9 +235,13 @@ void RBMLQParameters::update()
 
     for( int i=0 ; i<down_layer_size ; i++ )
     {
-        up_units_params[i] -=
-            learning_rate * (up_units_params_pos_stats[i]/pos_count
-                             - up_units_params_neg_stats[i]/neg_count);
+        up_units_params[0][i] -=
+            learning_rate * (up_units_params_pos_stats[0][i]/pos_count
+                             - up_units_params_neg_stats[0][i]/neg_count);
+        
+        up_units_params[1][i] -=
+            learning_rate * (up_units_params_pos_stats[1][i]/pos_count
+                             - up_units_params_neg_stats[1][i]/neg_count);
     }
 
     clearStats();
@@ -239,8 +252,11 @@ void RBMLQParameters::clearStats()
     weights_pos_stats.clear();
     weights_neg_stats.clear();
 
-    up_units_params_pos_stats.clear();
-    up_units_params_neg_stats.clear();
+    up_units_params_pos_stats[0].clear();
+    up_units_params_pos_stats[1].clear();
+    
+    up_units_params_neg_stats[0].clear();
+    up_units_params_neg_stats[1].clear();
 
     down_units_bias_pos_stats.clear();
     down_units_bias_neg_stats.clear();
@@ -260,16 +276,16 @@ void RBMLQParameters::computeUnitActivations
         // TODO: change it to work with start and length
         assert( start+length <= down_layer_size );
         Mat activations_mat = activations.toMat( activations.length()/2 , 2);
-        Vec mu = activations_mat.column(0).toVec() ; 
-        Vec sigma = activations_mat.column(1).toVec() ; 
+        Mat mu = activations_mat.column(0) ; 
+        Mat sigma = activations_mat.column(1) ; 
         
-        transposeProduct( mu , weights , input_vec );
+        product( mu , weights , input_vec.toMat(input_vec.length(),1) );
         
         // activations[i-start] = sum_j weights(j,i) input_vec[j] + b[i]
         for(int i=0 ; i<length ; ++i) { 
             real a_i = up_units_params[1][i] ; 
-            mu[i] = - (mu[i] + up_units_params[0][i]) / (2 * a_i * a_i)     ; 
-            sigma[i] = 1 / (2. * a_i * a_i) ; 
+            mu[i][0] = - (mu[i][0] + up_units_params[0][i]) / (2 * a_i * a_i)     ; 
+            sigma[i][0] = 1 / (2. * a_i * a_i) ; 
         }
         
     }
@@ -280,7 +296,7 @@ void RBMLQParameters::computeUnitActivations
         // mu = activations[i] = -(sum_j weights(i,j) input_vec[j] + b[i])
         //                    / (2 * up_units_params[i][1]^2)
 //        product( weights, input_vec , activations) ;
-        product( activations , weights, input_vec ) ;
+        transposeProduct( activations , weights, input_vec ) ;
         activations += down_units_bias ; 
     }
 }
@@ -290,20 +306,48 @@ void RBMLQParameters::bpropUpdate(const Vec& input, const Vec& output,
                                   Vec& input_gradient,
                                   const Vec& output_gradient)
 {
+    //TODO: clean up the code a bit
     assert( input.size() == down_layer_size );
     assert( output.size() == up_layer_size );
     assert( output_gradient.size() == up_layer_size );
     input_gradient.resize( down_layer_size );
 
     // weights -= learning_rate * output_gradient * input'
-    externalProductAcc( weights, (-learning_rate)*output_gradient, input );
+//    externalProductAcc( weights, (-learning_rate)*output_gradient, input );
+
+    Vec scaled_out_grad(up_layer_size) ;  
+    
+    Vec prod_w_input( up_layer_size ) ; 
+    
+    for(int i=0 ; i<up_layer_size ; ++i) 
+    {
+        real a_i_square = up_units_params[1][i] * up_units_params[1][i] ; 
+        
+        scaled_out_grad[i] = -0.5 * output_gradient[i] / a_i_square ; 
+        
+        up_units_params[0][i] -= learning_rate * ( -0.5 / a_i_square ) *
+                                 output_gradient[i] ; 
+
+        
+        for(int j=0 ; j < down_layer_size ; ++j) {             
+            prod_w_input[i] += weights[i][j] * input[j] ; 
+            weights[i][j] -= learning_rate * ( - 0.5 * input[j] / a_i_square ) * 
+                             output_gradient[i];
+        }
+    }
+
+    for(int i=0 ; i<up_layer_size ; ++i) { 
+        up_units_params[1][i] -= learning_rate * ( up_units_params[0][i] +
+                prod_w_input[i] ) * output_gradient[i] ; 
+    }
 
     // (up) bias -= learning_rate * output_gradient
-    multiplyAcc( up_units_params[0], output_gradient, -learning_rate );
-    //TODO: up_units_params[1] should be changed or not ???
+//    multiplyAcc( up_units_params[0], output_gradient, -learning_rate );
+    
+
 
     // input_gradient = weights' * output_gradient
-    transposeProduct( input_gradient, weights, output_gradient );
+    transposeProduct( input_gradient, weights, scaled_out_grad );
 }
 
 //! reset the parameters to the state they would be BEFORE starting training.
@@ -324,7 +368,9 @@ void RBMLQParameters::forget()
         random_gen->fill_random_uniform( weights, -d, d );
     }
 
-    up_units_params.clear();
+    up_units_params[0].clear();    
+    up_units_params[1].fill(1.);
+    
     down_units_bias.clear();
 
     clearStats();
