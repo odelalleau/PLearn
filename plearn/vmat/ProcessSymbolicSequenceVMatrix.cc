@@ -451,7 +451,6 @@ void ProcessSymbolicSequenceVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copi
     deepCopyField(string_delimiters, copies);
     deepCopyField(ignored_context, copies);
     deepCopyField(string_ignored_context, copies);
-    //deepCopyField(source, copies);
     deepCopyField(current_row_i, copies);
     deepCopyField(indices, copies);
     deepCopyField(left_positions, copies);
