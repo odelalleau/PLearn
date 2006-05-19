@@ -92,6 +92,7 @@ public:
     virtual void bprop();
     virtual void symbolicBprop();
     virtual void rfprop();
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
     void build_();

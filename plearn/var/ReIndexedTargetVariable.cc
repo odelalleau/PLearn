@@ -64,7 +64,7 @@ ReIndexedTargetVariable::ReIndexedTargetVariable(Variable* input1, Variable* inp
 }
 
 ReIndexedTargetVariable::ReIndexedTargetVariable(Variable* input1, Variable* input2, PP<Dictionary> the_dict, TVec<int> the_target_cols)
-    : inherited(input1, input2, input1->length(), input1->width()), dict(the_dict), target_cols(the_target_cols)
+    : inherited(input1, input2, input1->length(), input1->width()), target_cols(the_target_cols), dict(the_dict)
 {
     build_();
 }
@@ -137,6 +137,23 @@ void ReIndexedTargetVariable::symbolicBprop()
 void ReIndexedTargetVariable::rfprop()
 {
     PLERROR("In ReIndexedTargetVariable::rfprop(): not implemented.");
+}
+
+//#ifdef __INTEL_COMPILER
+//#pragma warning(disable:1419)  // Get rid of compiler warning.
+//#endif
+//extern void varDeepCopyField(Var& field, CopiesMap& copies);
+//#ifdef __INTEL_COMPILER
+//#pragma warning(default:1419)
+//#endif
+
+void ReIndexedTargetVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    BinaryVariable::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(source, copies);
+    deepCopyField(row, copies);
+    deepCopyField(target_cols, copies);
+    deepCopyField(dict, copies);
 }
 
 
