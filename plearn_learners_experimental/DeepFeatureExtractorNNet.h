@@ -64,6 +64,10 @@ public:
     TVec<int> nhidden_schedule;
     //! Optimizer of the neural network
     PP<Optimizer> optimizer;
+    //! Optimizer of the supervised phase of the neural network.
+    //! If not specified, then the same optimizer will always
+    //! be used.
+    PP<Optimizer> optimizer_supervised;
     //! Batch size
     int batch_size;
     //! Transfer function for the hidden nodes
@@ -117,6 +121,9 @@ public:
     //!   - "cross_entropy" (default, stable version)
     //!   - "mse"
     string input_reconstruction_error;
+    //! Indication that the supervised phase
+    //! should only train the last layer's parameters.
+    bool dont_train_all_parameters;
 
 public:
     //#####  Public Member Functions  #########################################

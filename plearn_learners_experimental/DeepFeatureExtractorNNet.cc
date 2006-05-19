@@ -106,6 +106,7 @@ DeepFeatureExtractorNNet::DeepFeatureExtractorNNet()
       always_use_supervised_target(false),
       relative_minimum_improvement(-1),
       input_reconstruction_error("cross_entropy"),
+      dont_train_all_parameters(false),
       nhidden_schedule_current_position(-1)
 {
     random_gen = new PRandom();
@@ -117,6 +118,9 @@ void DeepFeatureExtractorNNet::declareOptions(OptionList& ol)
                   "Number of hidden units of each hidden layers to add");
     declareOption(ol, "optimizer", &DeepFeatureExtractorNNet::optimizer, OptionBase::buildoption,
                   "Optimizer of the neural network");
+    declareOption(ol, "optimizer_supervised", &DeepFeatureExtractorNNet::optimizer_supervised, OptionBase::buildoption,
+                  "Optimizer of the supervised phase of the neural network.\n"
+                  "If not specified, then the same optimizer will always be used.\n");
     declareOption(ol, "batch_size", &DeepFeatureExtractorNNet::batch_size, OptionBase::buildoption, 
                   "How many samples to use to estimate the avergage gradient before updating the weights\n"
                   "0 is equivalent to specifying training_set->length() \n");
@@ -239,6 +243,11 @@ declareOption(ol, "cost_funcs", &DeepFeatureExtractorNNet::cost_funcs, OptionBas
                   "Threshold on training set error relative improvement,\n"
                   "before adding a new layer. If < 0, then the addition\n"
                   "of layers must be done by the user." );
+    declareOption(ol, "dont_train_all_parameters", 
+                  &DeepFeatureExtractorNNet::dont_train_all_parameters,
+                  OptionBase::buildoption, 
+                  "Indication that the supervised phase\n" 
+                  "should only train the last layer's parameters.");
      declareOption(ol, "input_reconstruction_error", 
                   &DeepFeatureExtractorNNet::input_reconstruction_error,
                   OptionBase::buildoption, 
@@ -357,10 +366,11 @@ void DeepFeatureExtractorNNet::build_()
             if(!always_use_supervised_target || nhidden_schedule_position >= nhidden_schedule.length())
             {
                 params_to_train.resize(0);
-                for(int i=0; i<params.length(); i++)
-                {
-                    params_to_train.push_back(params[i]);
-                }            
+                if(!dont_train_all_parameters)
+                    for(int i=0; i<params.length(); i++)
+                    {
+                        params_to_train.push_back(params[i]);
+                    }            
                 params.push_back(w);
             }
 
@@ -436,8 +446,6 @@ void DeepFeatureExtractorNNet::build_()
         else
         {
             paramsvalues.resize(params.nelems());
-            if(optimizer)
-                optimizer->reset();
         }
         params.makeSharedValue(paramsvalues);
         //}
@@ -448,8 +456,9 @@ void DeepFeatureExtractorNNet::build_()
         // Reinitialize the optimization phase
         if(optimizer)
             optimizer->reset();
+        if(optimizer_supervised)
+            optimizer_supervised->reset();
         stage = 0;
-
     }
 }
 
@@ -466,6 +475,7 @@ void DeepFeatureExtractorNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(nhidden_schedule, copies);
     deepCopyField(optimizer, copies);
+    deepCopyField(optimizer_supervised, copies);
     deepCopyField(cost_funcs, copies);
     deepCopyField(paramsvalues, copies);
     deepCopyField(params, copies);
@@ -507,6 +517,8 @@ void DeepFeatureExtractorNNet::forget()
 {
     if(optimizer)
         optimizer->reset();
+    if(optimizer_supervised)
+        optimizer_supervised->reset();
     stage = 0;
     
     //params.clear();
@@ -550,10 +562,19 @@ void DeepFeatureExtractorNNet::train()
     else
         totalcost = meanOf(train_set, paramf, nsamples);
 
-    if(optimizer)
+    PP<Optimizer> this_optimizer;
+
+    if(optimizer_supervised && nhidden_schedule_current_position >= nhidden_schedule.length())
+    {
+        optimizer_supervised->setToOptimize(params_to_train, totalcost);  
+        optimizer_supervised->build();
+        this_optimizer = optimizer_supervised;
+    }
+    else if(optimizer)
     {
         optimizer->setToOptimize(params_to_train, totalcost);  
         optimizer->build();
+        this_optimizer = optimizer;
     }
     else PLERROR("DeepFeatureExtractor::train can't train without setting an optimizer first!");
 
@@ -566,8 +587,8 @@ void DeepFeatureExtractorNNet::train()
 
     int initial_stage = stage;
     bool early_stop=false;
-    displayFunction(paramf, true, false, 250);
-    cout << params_to_train.size() << " params to train" << endl;
+    //displayFunction(paramf, true, false, 250);
+    //cout << params_to_train.size() << " params to train" << endl;
     real last_error = REAL_MAX;
     real this_error;
     Vec stats;
@@ -575,10 +596,10 @@ void DeepFeatureExtractorNNet::train()
     if(verbosity>2) cout << "Training layer " << nhidden_schedule_current_position+1 << endl;
     while((stage<nstages || flag) && !early_stop)
     {
-        optimizer->nstages = optstage_per_lstage;
+        this_optimizer->nstages = optstage_per_lstage;
         train_stats->forget();
-        optimizer->early_stop = false;
-        optimizer->optimizeN(*train_stats);
+        this_optimizer->early_stop = false;
+        this_optimizer->optimizeN(*train_stats);
         // optimizer->verifyGradient(1e-4); // Uncomment if you want to check your new Var.
         train_stats->finalize();
         stats = train_stats->getMean();
