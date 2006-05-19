@@ -279,8 +279,6 @@ void RBMQLParameters::computeUnitActivations
     {
         assert( activations.length() == length );
         assert( start+length <= up_layer_size );
-        // mu = activations[i] = -(sum_j weights(i,j) input_vec[j] + b[i])
-        //                    / (2 * up_units_params[i][1]^2)
 //        product( weights, input_vec , activations) ;
         product( activations , weights, input_vec ) ;
         activations += up_units_bias ; 
@@ -288,6 +286,9 @@ void RBMQLParameters::computeUnitActivations
     }
     else
     {
+        // mu = activations[i] = -(sum_j weights(i,j) input_vec[j] + b[i])
+        //                    / (2 * up_units_params[i][1]^2)
+        
         // TODO: change it to work with start and length
         assert( start+length <= down_layer_size );
         Mat activations_mat = activations.toMat( activations.length()/2 , 2);
@@ -346,6 +347,7 @@ void RBMQLParameters::forget()
 
     down_units_params[0].clear();
     down_units_params[1].fill(1.);
+
     up_units_bias.clear();
 
     clearStats();
