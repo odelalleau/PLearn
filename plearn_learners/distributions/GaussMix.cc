@@ -54,6 +54,9 @@
 #include <plearn/vmat/ReorderByMissingVMatrix.h>
 #include <plearn/vmat/SubVMatrix.h>
 #include <plearn/vmat/VMat_basic_stats.h>
+#if 0
+#include <plearn/vmat/SortRowsVMatrix.h>
+#endif
 
 namespace PLearn {
 using namespace std;
@@ -1464,7 +1467,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     }
 
                     if (!eff_missing) {
-                    real squared_norm_y_centered = pownorm(y_centered);
+                    // real squared_norm_y_centered = pownorm(y_centered);
                     int n_eig = n_non_missing;
 
                     real lambda0 = max(var_min, eigenvals.lastElement());
@@ -1473,6 +1476,26 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
 
                     log_likelihood = precomputeGaussianLogCoefficient(
                             eigenvals, n_non_missing);
+
+                    static Vec y_centered_copy;
+                    y_centered_copy.resize(y_centered.length());
+                    y_centered_copy << y_centered; // Backup vector.
+                    for (int k = 0; k < n_eig - 1; k++) {
+                        real lambda = max(var_min, eigenvals[k]);
+                        assert( lambda > 0 );
+                        Vec eigen_k = eigenvecs(k);
+                        real dot_k = dot(eigen_k, y_centered);
+                        log_likelihood -= 0.5 * square(dot_k) / lambda;
+                        multiplyAcc(y_centered, eigen_k, -dot_k);
+                    }
+                    log_likelihood -=
+                        0.5 * pownorm(y_centered) * one_over_lambda0;
+                    y_centered << y_centered_copy; // Restore original vector.
+
+#if 0
+                    // Old code, that had stability issues when dealing with
+                    // large numbers.
+
                     // log_likelihood -= 0.5  * 1/lambda_0 * ||y - mu||^2
                     log_likelihood -=
                         0.5 * one_over_lambda0 * squared_norm_y_centered;
@@ -1487,6 +1510,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                                 0.5 * (1.0 / lambda - one_over_lambda0)
                                     * square(dot(eigenvecs(k), y_centered));
                     }
+#endif
+
                     // Release pointer to 'eigenvecs_missing'.
                     eigenvecs = dummy_mat;
 
@@ -3146,6 +3171,7 @@ void GaussMix::train()
         }
         if (pb)
             delete pb;
+        TVec<int> sample_to_pattern = sample_to_template.copy();
 
         if ((efficient_missing == 1 || efficient_missing == 3)
                 && verbosity >= 2)
@@ -3362,6 +3388,7 @@ void GaussMix::train()
             for (int i = 0; i < missing_patterns.length(); i++)
                 clusters[missing_assign[i]].append(i);
 
+            TVec<int> parent;
             // Fill in list for each sample.
             // TODO Note: cluster_samp and sample_to_template may not really be
             // useful.
@@ -3457,7 +3484,7 @@ void GaussMix::train()
                 }
                 // out.flush();
                 if (pb) delete pb;
-                TVec<int> parent;
+                parent.resize(0);
                 if (edges.isEmpty()) {
                     parent.resize(1);
                     parent[0] = 0;
@@ -3514,6 +3541,14 @@ void GaussMix::train()
                 edges = TVec<Edge>();
 
                 }
+#if 0
+                Mat parent_mat(1, parent.length());
+                for (int p = 0; p < parent.length(); p++)
+                    parent_mat(0, p) = parent[p];
+                VMat parent_vm(parent_mat);
+                parent_vm->saveAMAT("/u/delallea/tmp/parent.amat", false,
+                        true);
+#endif
 
                 n = cluster_tpl.length();
 #ifdef DIRECTED_HACK
@@ -3772,6 +3807,118 @@ void GaussMix::train()
             }
 
             // Compute some statistics on the distances to templates.
+#if 0
+            Vec current_vec, previous_vec;
+            Vec count_added(10000, real(0));
+            Vec count_removed(10000, real(0));
+            int max_added = 0;
+            int max_removed = 0;
+            int sum_added = 0;
+            int sum_removed = 0;
+            int counter_added = 0;
+            int counter_removed = 0;
+            map<int, int> current_to_previous;
+
+            for (int i = 0; i < spanning_path.length(); i++) {
+                TVec<int>& span_path = spanning_path[i];
+                TVec<bool>& span_use_prev = spanning_use_previous[i];
+                TVec<bool>& span_can_free = spanning_can_free[i];
+                TVec<int> cached_nodes;
+                cached_nodes.append(0);
+                int queue_index = 0;
+                for (int k = 1; k < span_path.length(); k++) {
+                    if (span_use_prev[k])
+                        queue_index = cached_nodes.length() - 1;
+                    else
+                        queue_index = cached_nodes.length() - 2;
+                    int previous = cached_nodes[queue_index];
+                    int index_current = span_path[k];
+                    train_set->getExample(index_current,
+                                          input, target, weight);
+                    current_vec.resize(input.length());
+                    current_vec << input;
+
+                    int index_previous = span_path[previous];
+                    train_set->getExample(index_previous, input,
+                                          target, weight);
+                    previous_vec.resize(input.length());
+                    previous_vec << input;
+                    int current_pattern = sample_to_pattern[index_current];
+                    int previous_pattern = sample_to_pattern[index_previous];
+                    if (current_pattern          == previous_pattern ||
+                        parent[current_pattern]  == previous_pattern ||
+                        parent[previous_pattern] == current_pattern)
+                    {} else
+                    {
+                        PLERROR("Houston, we have a problem!");
+                    }
+                    current_to_previous[index_current] = index_previous;
+                    int n_added = 0;
+                    int n_removed = 0;
+                    for (int q = 0; q < input.length(); q++) {
+                        if (is_missing(current_vec[q])) {
+                            if (!missing_patterns(current_pattern, q))
+                                PLERROR("No way!");
+                        } else if (missing_patterns(current_pattern, q))
+                            PLERROR("Way no!");
+                            
+                        if (is_missing(previous_vec[q]) &&
+                            !is_missing(current_vec[q]))
+                            n_added++;
+                        else if (!is_missing(previous_vec[q]) &&
+                                 is_missing(current_vec[q]))
+                            n_removed++;
+                    }
+                    count_added[n_added]++;
+                    count_removed[n_removed]++;
+                    sum_added += n_added;
+                    sum_removed += n_removed;
+                    counter_added++;
+                    counter_removed++;
+                    if (n_added > max_added)
+                        max_added = n_added;
+                    if (n_removed > max_removed)
+                        max_removed = n_removed;
+                    if (span_can_free[k])
+                        cached_nodes.resize(queue_index);
+                    else if (!span_use_prev[k])
+                        cached_nodes.resize(cached_nodes.length() - 1);
+                    cached_nodes.append(k);
+                }
+            }
+            pout << "Mean added  : " << sum_added << "/" << counter_added << " = "
+                << sum_added / real(counter_added) << endl;
+            pout << "Mean removed: " << sum_removed << "/" << counter_removed << " = "
+                << sum_removed / real(counter_removed) << endl;
+
+            Mat cur_to_prev(current_to_previous.size(), 2);
+            map<int, int>::const_iterator it = current_to_previous.begin();
+            int count_i = 0;
+            for (; it != current_to_previous.end(); it++, count_i++) {
+                if (it->first < it->second) {
+                    cur_to_prev(count_i, 0) = it->first;
+                    cur_to_prev(count_i, 1) = it->second;
+                } else {
+                    cur_to_prev(count_i, 0) = it->second;
+                    cur_to_prev(count_i, 1) = it->first;
+                }
+            }
+            PP<SortRowsVMatrix> cur_to_prev_vm = new SortRowsVMatrix();
+            cur_to_prev_vm->source = VMat(cur_to_prev);
+            cur_to_prev_vm->sort_columns = TVec<int>(0, 1, 1);
+            cur_to_prev_vm->build();
+            cur_to_prev_vm->saveAMAT("/u/delallea/tmp/cur_to_prev.amat",
+                    false, true);
+
+            count_added.resize(max_added + 1);
+            count_removed.resize(max_removed + 1);
+            Mat added_mat = count_added.toMat(1, count_added.length());
+            Mat removed_mat = count_removed.toMat(1, count_removed.length());
+            VMat(added_mat)->saveAMAT("/u/delallea/tmp/added.amat", false,
+                    true);
+            VMat(removed_mat)->saveAMAT("/u/delallea/tmp/removed.amat", false,
+                    true);
+
             /*
             Vec stats_diff(missing_patterns.width());
             stats_diff.fill(0);
@@ -3810,7 +3957,8 @@ void GaussMix::train()
             save_vmat = VMat(dist_mat);
             save_vmat->saveAMAT("/u/delallea/tmp/dist_" +
                     tostring(efficient_k_median) + ".amat", true, true);
-        */
+                    */
+#endif
         }
 
         // n_tries.resize(0); Old code, may be removed in the future...
