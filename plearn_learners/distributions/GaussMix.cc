@@ -3548,6 +3548,23 @@ void GaussMix::train()
                 VMat parent_vm(parent_mat);
                 parent_vm->saveAMAT("/u/delallea/tmp/parent.amat", false,
                         true);
+                // Easy verification of cost.
+                int sum_add = 0;
+                int sum_min = 0;
+                for (int q = 0; q < parent.length(); q++) {
+                    if (parent[q] == q)
+                        continue;
+                    TVec<bool> v1 = missing_patterns(q);
+                    TVec<bool> v2 = missing_patterns(parent[q]);
+                    for (int r = 0; r < v1.length(); r++) {
+                        if (v1[r] && !v2[r])
+                            sum_add++;
+                        else if (!v1[r] && v2[r])
+                            sum_min++;
+                    }
+                }
+                pout << "Easy check: " << sum_add << " and " << sum_min <<
+                    endl;
 #endif
 
                 n = cluster_tpl.length();
@@ -3818,7 +3835,7 @@ void GaussMix::train()
             int counter_added = 0;
             int counter_removed = 0;
             map<int, int> current_to_previous;
-
+            TVec<int> is_there(train_set->length(), 0);
             for (int i = 0; i < spanning_path.length(); i++) {
                 TVec<int>& span_path = spanning_path[i];
                 TVec<bool>& span_use_prev = spanning_use_previous[i];
@@ -3843,6 +3860,8 @@ void GaussMix::train()
                                           target, weight);
                     previous_vec.resize(input.length());
                     previous_vec << input;
+                    is_there[index_current] = 1;
+                    is_there[index_previous] = 1;
                     int current_pattern = sample_to_pattern[index_current];
                     int previous_pattern = sample_to_pattern[index_previous];
                     if (current_pattern          == previous_pattern ||
@@ -3852,7 +3871,8 @@ void GaussMix::train()
                     {
                         PLERROR("Houston, we have a problem!");
                     }
-                    current_to_previous[index_current] = index_previous;
+                    if (current_pattern != previous_pattern)
+                        current_to_previous[index_current] = index_previous;
                     int n_added = 0;
                     int n_removed = 0;
                     for (int q = 0; q < input.length(); q++) {
@@ -3886,6 +3906,8 @@ void GaussMix::train()
                     cached_nodes.append(k);
                 }
             }
+            if (is_there.find(0) != -1)
+                PLERROR("OMG!");
             pout << "Mean added  : " << sum_added << "/" << counter_added << " = "
                 << sum_added / real(counter_added) << endl;
             pout << "Mean removed: " << sum_removed << "/" << counter_removed << " = "
