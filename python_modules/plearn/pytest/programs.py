@@ -170,7 +170,7 @@ class Program(core.PyTestObject):
     def compile(self, publish_dirpath=""):
         # Remove old compile log if any
         publish_target = os.path.join(publish_dirpath, os.path.basename(self.__log_file_path))
-        if os.path.islink(publish_target):
+        if os.path.islink(publish_target) or os.path.isfile(publish_target):
             os.remove(publish_target)
         assert not os.path.exists(publish_target)
 
