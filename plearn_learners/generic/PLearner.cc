@@ -254,13 +254,13 @@ void PLearner::declareMethods(RemoteMethodMap& rmm)
                  "this function does nothing.")));
 
     declareMethod(
-        rmm, "computeOutput", &PLearner::computeOutput_remote,
+        rmm, "computeOutput", &PLearner::remote_computeOutput,
         (BodyDoc("On a trained learner, this computes the output from the input"),
          ArgDoc ("input", "Input vector (should have width inputsize)"),
          RetDoc ("Computed output (will have width outputsize)")));
 
     declareMethod(
-        rmm, "use", &PLearner::use_remote,
+        rmm, "use", &PLearner::remote_use,
         (BodyDoc("Compute the output of a trained learner on every row of an\n"
                  "input VMatrix.  The outputs are stored in a .pmat matrix\n"
                  "under the specified filename."),
@@ -268,23 +268,24 @@ void PLearner::declareMethods(RemoteMethodMap& rmm)
          ArgDoc ("output_pmat_fname", "Name of the .pmat to store the computed outputs")));
 
     declareMethod(
-        rmm, "use2", &PLearner::use2_remote,
+        rmm, "use2", &PLearner::remote_use2,
         (BodyDoc("Compute the output of a trained learner on every row of an\n"
                  "input VMatrix.  The outputs are returned as a matrix.\n"),
          ArgDoc ("input_vmat", "VMatrix containing the inputs"),
          RetDoc ("Matrix holding the computed outputs")));
 
     declareMethod(
-        rmm, "computeOutputAndCosts", &PLearner::computeOutputAndCosts_remote,
+        rmm, "computeOutputAndCosts", &PLearner::remote_computeOutputAndCosts,
         (BodyDoc("Compute both the output from the input, and the costs associated\n"
                  "with the desired target.  The computed costs\n"
                  "are returned in the order given by getTestCostNames()\n"),
          ArgDoc ("input",  "Input vector (should have width inputsize)"),
          ArgDoc ("target", "Target vector (for cost computation)"),
-         RetDoc ("A pair of vectors containing output:costs")));
+         RetDoc ("- Vec containing output \n"
+                 "- Vec containing cost")));
 
     declareMethod(
-        rmm, "computeCostsFromOutputs", &PLearner::computeCostsFromOutputs_remote,
+        rmm, "computeCostsFromOutputs", &PLearner::remote_computeCostsFromOutputs,
         (BodyDoc("Compute the costs from already-computed output.  The computed costs\n"
                  "are returned in the order given by getTestCostNames()"),
          ArgDoc ("input",  "Input vector (should have width inputsize)"),
@@ -293,7 +294,7 @@ void PLearner::declareMethods(RemoteMethodMap& rmm)
          RetDoc ("The computed costs vector")));
 
     declareMethod(
-        rmm, "computeCostsOnly", &PLearner::computeCostsOnly_remote,
+        rmm, "computeCostsOnly", &PLearner::remote_computeCostsOnly,
         (BodyDoc("Compute the costs only, without the outputs; for some learners, this\n"
                  "may be more efficient than calling computeOutputAndCosts() if the\n"
                  "outputs are not needed.  (The default implementation simply calls\n"
@@ -303,7 +304,7 @@ void PLearner::declareMethods(RemoteMethodMap& rmm)
          RetDoc ("The computed costs vector")));
 
     declareMethod(
-        rmm, "computeConfidenceFromOutput", &PLearner::computeConfidenceFromOutput_remote,
+        rmm, "computeConfidenceFromOutput", &PLearner::remote_computeConfidenceFromOutput,
         (BodyDoc("Compute a confidence intervals for the output, given the input and the\n"
                  "pre-computed output (resulting from computeOutput or similar).  The\n"
                  "probability level of the confidence interval must be specified.\n"
@@ -323,7 +324,7 @@ void PLearner::declareMethods(RemoteMethodMap& rmm)
 
     declareMethod(
         rmm, "batchComputeOutputAndConfidencePMat",
-        &PLearner::batchComputeOutputAndConfidence_remote,
+        &PLearner::remote_batchComputeOutputAndConfidence,
         (BodyDoc("Repeatedly calls computeOutput and computeConfidenceFromOutput with the\n"
                  "rows of inputs.  Writes outputs_and_confidence rows (as a series of\n"
                  "triples (output, low, high), one for each output).  The results are\n"
@@ -760,7 +761,7 @@ bool PLearner::isStatefulLearner() const
 }
 
 //! Version of computeOutput that returns a result by value
-Vec PLearner::computeOutput_remote(const Vec& input) const
+Vec PLearner::remote_computeOutput(const Vec& input) const
 {
     tmp_output.resize(outputsize());
     computeOutput(input, tmp_output);
@@ -768,14 +769,14 @@ Vec PLearner::computeOutput_remote(const Vec& input) const
 }
 
 //! Version of use that's called by RMI
-void PLearner::use_remote(VMat inputs, string output_fname) const
+void PLearner::remote_use(VMat inputs, string output_fname) const
 {
     VMat outputs = new FileVMatrix(output_fname, inputs.length(), outputsize());
     use(inputs,outputs);
 }
 
 //! Version of use2 that's called by RMI
-Mat PLearner::use2_remote(VMat inputs) const
+Mat PLearner::remote_use2(VMat inputs) const
 {
     Mat outputs(inputs.length(), outputsize());
     use(inputs,outputs);
@@ -783,16 +784,17 @@ Mat PLearner::use2_remote(VMat inputs) const
 }
     
 //! Version of computeOutputAndCosts that's called by RMI
-pair<Vec,Vec> PLearner::computeOutputAndCosts_remote(const Vec& input, const Vec& target) const
+
+tuple<Vec,Vec> PLearner::remote_computeOutputAndCosts(const Vec& input, const Vec& target) const
 {
     tmp_output.resize(outputsize());
     Vec costs(nTestCosts());
     computeOutputAndCosts(input,target,tmp_output,costs);
-    return make_pair(tmp_output, costs);
+    return make_tuple(tmp_output, costs);
 }
 
 //! Version of computeCostsFromOutputs that's called by RMI
-Vec PLearner::computeCostsFromOutputs_remote(const Vec& input, const Vec& output,
+Vec PLearner::remote_computeCostsFromOutputs(const Vec& input, const Vec& output,
                                              const Vec& target) const
 {
     Vec costs(nTestCosts());
@@ -801,7 +803,7 @@ Vec PLearner::computeCostsFromOutputs_remote(const Vec& input, const Vec& output
 }
 
 //! Version of computeCostsOnly that's called by RMI
-Vec PLearner::computeCostsOnly_remote(const Vec& input, const Vec& target) const
+Vec PLearner::remote_computeCostsOnly(const Vec& input, const Vec& target) const
 {
     Vec costs(nTestCosts());
     computeCostsOnly(input,target,costs);
@@ -810,7 +812,7 @@ Vec PLearner::computeCostsOnly_remote(const Vec& input, const Vec& target) const
 
 //! Version of computeConfidenceFromOutput that's called by RMI
 TVec< pair<real,real> >
-PLearner::computeConfidenceFromOutput_remote(const Vec& input, const Vec& output,
+PLearner::remote_computeConfidenceFromOutput(const Vec& input, const Vec& output,
                                              real probability) const
 {
     TVec< pair<real,real> > intervals(output.length());
@@ -822,7 +824,7 @@ PLearner::computeConfidenceFromOutput_remote(const Vec& input, const Vec& output
 }
 
 //! Version of batchComputeOutputAndConfidence that's called by RMI
-void PLearner::batchComputeOutputAndConfidence_remote(VMat inputs, real probability,
+void PLearner::remote_batchComputeOutputAndConfidence(VMat inputs, real probability,
                                                       string pmat_fname) const
 {
     TVec<string> fieldnames;

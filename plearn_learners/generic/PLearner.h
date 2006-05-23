@@ -568,18 +568,18 @@ protected:
 
 private:
     // List of methods that are called by Remote Method Invocation.  Our
-    // convention is to have them end with the _remote suffix.
-    Vec computeOutput_remote(const Vec& input) const;
-    void use_remote(VMat inputs, string output_fname) const;
-    Mat use2_remote(VMat inputs) const;
-    pair<Vec,Vec> computeOutputAndCosts_remote(const Vec& input, const Vec& target) const;
-    Vec computeCostsFromOutputs_remote(const Vec& input,
+    // convention is to have them start with the remote_ prefix.
+    Vec remote_computeOutput(const Vec& input) const;
+    void remote_use(VMat inputs, string output_fname) const;
+    Mat remote_use2(VMat inputs) const;
+    tuple<Vec,Vec> remote_computeOutputAndCosts(const Vec& input, const Vec& target) const;
+    Vec remote_computeCostsFromOutputs(const Vec& input,
                                        const Vec& output, const Vec& target) const;
-    Vec computeCostsOnly_remote(const Vec& input, const Vec& target) const;
-    TVec< pair<real,real> > computeConfidenceFromOutput_remote(const Vec& input,
+    Vec remote_computeCostsOnly(const Vec& input, const Vec& target) const;
+    TVec< pair<real,real> > remote_computeConfidenceFromOutput(const Vec& input,
                                                                const Vec& output,
                                                                real probability) const;
-    void batchComputeOutputAndConfidence_remote(VMat inputs, real probability,
+    void remote_batchComputeOutputAndConfidence(VMat inputs, real probability,
                                                 string pmat_fname) const;
     
 public:
