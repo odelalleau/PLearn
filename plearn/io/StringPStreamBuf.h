@@ -74,6 +74,15 @@ public:
     StringPStreamBuf(const string* ptrs, const string& openmode="r", bool own_string_=false, 
                      streamsize inbuf_capacity=1000, streamsize unget_capacity=100);
 
+    inline const string& getString() const
+    { assert(st); return *st; }
+
+    inline void clear() 
+    { 
+        flush();        
+        st->clear();        
+    }
+
     virtual ~StringPStreamBuf();
 
 protected:
