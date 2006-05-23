@@ -2,7 +2,7 @@
 
 // RemoteTrampoline.h
 //
-// Copyright (C) 2006 Nicolas Chapados
+// Copyright (C) 2006 Nicolas Chapados, Pascal Vincent
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -50,6 +50,7 @@
 #include <plearn/base/PP.h>
 #include <plearn/base/TypeTraits.h>
 #include <plearn/io/PStream.h>
+#include <plearn/io/pl_tuple.h>
 #include "RemoteMethodDoc.h"
 
 namespace PLearn {
@@ -133,6 +134,68 @@ struct RemoteTrampoline : public PPointable
     //! (in .cc to avoid circular .h inclusion problem)
     static void prepareToSendResults(PStream& out, int nres);
 
+    static void sendRemoteMethodVoidResult(PStream& io)
+    {
+        prepareToSendResults(io, 0);
+        io.flush();
+    }
+
+    template<class T>
+    static void sendRemoteMethodResult(PStream& io, const T& r)
+    {
+        prepareToSendResults(io, 1);
+        io << r;
+        io.flush();
+    }
+
+    template<class T1>
+    static void sendRemoteMethodResult(PStream& io, const tuple<T1>& r)
+    {
+        prepareToSendResults(io, 1);
+        io << get<0>(r);
+        io.flush();
+    }
+
+    template<class T1, class T2>
+    static void sendRemoteMethodResult(PStream& io, const tuple<T1,T2>& r)
+    {
+        prepareToSendResults(io, 2);
+        io << get<0>(r) << get<1>(r);
+        io.flush();
+    }
+
+    template<class T1, class T2, class T3>
+    static void sendRemoteMethodResult(PStream& io, const tuple<T1,T2,T3>& r)
+    {
+        prepareToSendResults(io, 3);
+        io << get<0>(r) << get<1>(r) << get<2>(r);
+        io.flush();
+    }
+
+    template<class T1, class T2, class T3, class T4>
+    static void sendRemoteMethodResult(PStream& io, const tuple<T1,T2,T3,T4>& r)
+    {
+        prepareToSendResults(io, 4);
+        io << get<0>(r) << get<1>(r) << get<2>(r) << get<3>(r);
+        io.flush();
+    }
+
+    template<class T1, class T2, class T3, class T4, class T5>
+    static void sendRemoteMethodResult(PStream& io, const tuple<T1,T2,T3,T4,T5>& r)
+    {
+        prepareToSendResults(io, 5);
+        io << get<0>(r) << get<1>(r) << get<2>(r) << get<3>(r) << get<4>(r);
+        io.flush();
+    }
+
+    template<class T1, class T2, class T3, class T4, class T5, class T6>
+    static void sendRemoteMethodResult(PStream& io, const tuple<T1,T2,T3,T4,T5,T6>& r)
+    {
+        prepareToSendResults(io, 6);
+        io << get<0>(r) << get<1>(r) << get<2>(r) << get<3>(r) << get<4>(r) << get<5>(r);
+        io.flush();
+    }
+
 protected:
     //! Name of the method associated with trampoline
     string m_methodname;
@@ -140,7 +203,6 @@ protected:
     //! Documentation associated with the method
     RemoteMethodDoc m_documentation;
 };
-
 
 //#####  Zero Arguments  ######################################################
 
@@ -165,9 +227,7 @@ struct RemoteTrampoline_0 : public RemoteTrampoline
     {
         checkNargs(nargs, expected_nargs);
         TRAMPOLINE_TYPE(R) r = (as<T>(instance)->*m_method)();
-        prepareToSendResults(io, 1);
-        io << r;
-        io.flush();
+        sendRemoteMethodResult(io, r);
     }
 
 protected:
@@ -195,8 +255,7 @@ struct RemoteTrampoline_0<T,void> : public RemoteTrampoline
     {
         checkNargs(nargs, expected_nargs);
         (as<T>(instance)->*m_method)();
-        prepareToSendResults(io, 0);
-        io.flush();
+        sendRemoteMethodVoidResult(io);
     }
 
 protected:
@@ -229,9 +288,7 @@ struct RemoteTrampoline_1 : public RemoteTrampoline
         checkNargs(nargs, expected_nargs);
         TRAMPOLINE_TYPE(A1) a1;  io >> a1;
         TRAMPOLINE_TYPE(R) r = (as<T>(instance)->*m_method)(a1);
-        prepareToSendResults(io, 1);
-        io << r;
-        io.flush();
+        sendRemoteMethodResult(io, r);
     }
 
 protected:
@@ -261,8 +318,7 @@ struct RemoteTrampoline_1<T,void,A1> : public RemoteTrampoline
         checkNargs(nargs, expected_nargs);
         TRAMPOLINE_TYPE(A1) a1;  io >> a1;
         (as<T>(instance)->*m_method)(a1);
-        prepareToSendResults(io, 0);
-        io.flush();
+        sendRemoteMethodVoidResult(io);
     }
 
 protected:
@@ -296,9 +352,7 @@ struct RemoteTrampoline_2 : public RemoteTrampoline
         TRAMPOLINE_TYPE(A1) a1;  io >> a1;
         TRAMPOLINE_TYPE(A2) a2;  io >> a2;
         TRAMPOLINE_TYPE(R) r = (as<T>(instance)->*m_method)(a1,a2);
-        prepareToSendResults(io, 1);
-        io << r;
-        io.flush();
+        sendRemoteMethodResult(io, r);
     }
 
 protected:
@@ -329,8 +383,7 @@ struct RemoteTrampoline_2<T,void,A1,A2> : public RemoteTrampoline
         TRAMPOLINE_TYPE(A1) a1;  io >> a1;
         TRAMPOLINE_TYPE(A2) a2;  io >> a2;
         (as<T>(instance)->*m_method)(a1,a2);
-        prepareToSendResults(io, 0);
-        io.flush();
+        sendRemoteMethodVoidResult(io);
     }
 
 protected:
@@ -365,9 +418,7 @@ struct RemoteTrampoline_3 : public RemoteTrampoline
         TRAMPOLINE_TYPE(A2) a2;  io >> a2;
         TRAMPOLINE_TYPE(A3) a3;  io >> a3;
         TRAMPOLINE_TYPE(R) r = (as<T>(instance)->*m_method)(a1,a2,a3);
-        prepareToSendResults(io, 1);
-        io << r;
-        io.flush();
+        sendRemoteMethodResult(io, r);
     }
 
 protected:
@@ -399,8 +450,7 @@ struct RemoteTrampoline_3<T,void,A1,A2,A3> : public RemoteTrampoline
         TRAMPOLINE_TYPE(A2) a2;  io >> a2;
         TRAMPOLINE_TYPE(A3) a3;  io >> a3;
         (as<T>(instance)->*m_method)(a1,a2,a3);
-        prepareToSendResults(io, 0);
-        io.flush();
+        sendRemoteMethodVoidResult(io);
     }
 
 protected:
@@ -437,9 +487,7 @@ struct RemoteTrampoline_4 : public RemoteTrampoline
         TRAMPOLINE_TYPE(A3) a3;  io >> a3;
         TRAMPOLINE_TYPE(A4) a4;  io >> a4;
         TRAMPOLINE_TYPE(R) r = (as<T>(instance)->*m_method)(a1,a2,a3,a4);
-        prepareToSendResults(io, 1);
-        io << r;
-        io.flush();
+        sendRemoteMethodResult(io, r);
     }
 
 protected:
@@ -473,8 +521,7 @@ struct RemoteTrampoline_4<T,void,A1,A2,A3,A4> : public RemoteTrampoline
         TRAMPOLINE_TYPE(A3) a3;  io >> a3;
         TRAMPOLINE_TYPE(A4) a4;  io >> a4;
         (as<T>(instance)->*m_method)(a1,a2,a3,a4);
-        prepareToSendResults(io, 0);
-        io.flush();
+        sendRemoteMethodVoidResult(io);
     }
 
 protected:
@@ -512,9 +559,7 @@ struct RemoteTrampoline_5 : public RemoteTrampoline
         TRAMPOLINE_TYPE(A4) a4;  io >> a4;
         TRAMPOLINE_TYPE(A5) a5;  io >> a5;
         TRAMPOLINE_TYPE(R) r = (as<T>(instance)->*m_method)(a1,a2,a3,a4,a5);
-        prepareToSendResults(io, 1);
-        io << r;
-        io.flush();
+        sendRemoteMethodResult(io, r);
     }
 
 protected:
@@ -549,8 +594,7 @@ struct RemoteTrampoline_5<T,void,A1,A2,A3,A4,A5> : public RemoteTrampoline
         TRAMPOLINE_TYPE(A4) a4;  io >> a4;
         TRAMPOLINE_TYPE(A5) a5;  io >> a5;
         (as<T>(instance)->*m_method)(a1,a2,a3,a4,a5);
-        prepareToSendResults(io, 0);
-        io.flush();
+        sendRemoteMethodVoidResult(io);
     }
 
 protected:
@@ -627,8 +671,7 @@ struct RemoteTrampoline_6<T,void,A1,A2,A3,A4,A5,A6> : public RemoteTrampoline
         TRAMPOLINE_TYPE(A5) a5;  io >> a5;
         TRAMPOLINE_TYPE(A6) a6;  io >> a6;
         (as<T>(instance)->*m_method)(a1,a2,a3,a4,a5,a6);
-        prepareToSendResults(io, 0);
-        io.flush();
+        sendRemoteMethodVoidResult(io);
     }
 
 protected:

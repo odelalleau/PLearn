@@ -591,7 +591,7 @@ void Object::declareMethods(RemoteMethodMap& rmm)
                   (BodyDoc("Run the given object, if it is runnable; "
                            "raise an exception if it is not.")));
 
-    declareMethod(rmm, "save", &Object::save_remote,
+    declareMethod(rmm, "save", &Object::remote_save,
                   (BodyDoc("Save the given object to disk under the designated filename\n"),
                    ArgDoc ("filepath", "Pathname where the object should be saved"),
                    ArgDoc ("io_formatting",
@@ -819,7 +819,7 @@ PStream& operator>>(PStream& in, Object*& x)
     return in;
 }
 
-void Object::save_remote(const string& filepath, const string& io_formatting) const
+void Object::remote_save(const string& filepath, const string& io_formatting) const
 {
     if(io_formatting=="plearn_ascii")
         PLearn::save(filepath, *this, PStream::plearn_ascii);

@@ -2,7 +2,7 @@
 
 // RemoteTrampoline.cc
 //
-// Copyright (C) 2006 Nicolas Chapados
+// Copyright (C) 2006 Nicolas Chapados, Pascal Vincent
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:

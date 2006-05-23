@@ -936,6 +936,57 @@ protected:
      *  }
      *  @endcode
      *
+     *  IMPORTANT REMARKS:
+     * 
+     *  The types of methods that can be directly declared in this manner is
+     *  restricted to methods that don't have any "result-arguments" (and are
+     *  either void, or *return* their result).  But in C/C++ it is customary
+     *  to implement "multiple results" by passing them as "result-arguments"
+     *  to the call. You can't use declareMethod on such a method: you'll first
+     *  have to write a wrapper method of the correct form that you can declare
+     *  with declareMethod. To *return* multiple results, you should actually
+     *  return a *tuple*.
+     *
+     *  Ex: if you have a method of class PLearner with 2 "result arguments"
+     *  like:
+     *
+     *  @code
+     *  virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
+     *                                     Vec& output, Vec& costs) const;
+     *  @endcode
+     *
+     *  you can't declare it directly with declareMethod, so you'll have to
+     *  write a wrapper-method that you can declare, like the following:
+     *
+     *  @code
+     *  tuple<Vec,Vec> PLearner::remote_computeOutputAndCosts(const Vec& input, 
+     *                                                        const Vec& target) const
+     *  {
+     *    Vec output;
+     *    Vec costs;
+     *    computeOutputAndCosts(input,target,output,costs);
+     *    return make_tuple(output, costs);
+     *  }
+     *  @endcode
+     *
+     *  The policy is to name such wapper methods destined for the remote
+     *  method mechanism by prepending the suffix remote_, and usually to keep
+     *  them private and non-virtual.
+     *
+     *  Note that from the calling-convention perspective of a C++ process
+     *  remote-calling such a tuple-returning method, the results will be
+     *  received as "multiple results" corresponding to the elements of the
+     *  tuple, rather than as a "single result" of type tuple. If instead you
+     *  *really* want your tuple to be received as a single tuple then you should
+     *  return a tuple of your tuple.
+     *
+     *  Also beware, if you have several C++ methods with the same name,
+     *  overloaded for different types of arguments, and you want to make them
+     *  all remote callable, you should declare them with *different*
+     *  corresponding string names in declareMethods. Indeed, the remote method
+     *  mechanism can only distinguish methods based on their string name and
+     *  number of arguments, but not on the types of the arguments.
+     *
      *  @param ol  RemoteMethodMap to be constructed for the current class.
      */
     static void declareMethods(RemoteMethodMap& rmm);
@@ -956,8 +1007,8 @@ private:
     void build_();
 
     //! Version of save that's called by Remote Method Invocation. Our
-    //! convention is to have such functions end with the _remote suffix.
-    void save_remote(const string& filepath, const string& io_formatting) const;
+    //! convention is to have such methods start with the remote_ prefix.
+    void remote_save(const string& filepath, const string& io_formatting) const;
 };
 
 
