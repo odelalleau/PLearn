@@ -651,7 +651,7 @@ void DistRepNNet::build_()
         winputsparse_bias_decay = 0;
 
         buildVarGraph(-1);
-        initializeParams();
+        initializeParams();                        
 
         // Shared values hack...
         if (!do_not_change_params) {
@@ -1218,11 +1218,11 @@ void DistRepNNet::computeOutput(const Vec& inputv, Vec& outputv) const
     row << inputv;
     row.resize(train_set->width());
     row.subVec(inputsize_,train_set->width()-inputsize_).fill(MISSING_VALUE);
-    //if(target_dictionary)
-    //    target_values = target_dictionary->getValues();
-    //else
-    //    target_values = train_set->getValues(row,targetsize_);
-    //outputv[0] = target_values[(int)output_comp[0]];
+    if(target_dictionary)
+        target_values = target_dictionary->getValues();
+    else
+        target_values = train_set->getValues(row,targetsize_);
+    outputv[0] = target_values[(int)output_comp[0]];
     outputv[0] = (int)output_comp[0];
 }
 
