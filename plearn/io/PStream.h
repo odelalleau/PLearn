@@ -161,6 +161,28 @@ public:
     inline void setOutMode(mode_t m) { outmode = m; }
     inline void setMode(mode_t m) { inmode = m; outmode = m; }
 
+    //! if outmode is raw_ascii or raw_binary t will be switched to
+    //! corresponding plearn_ascii, resp. plearn_binary.
+    //! The old mode will be returned, so that you can call setOutMode 
+    //! to revert to the old mode when finished
+    inline mode_t switchToPLearnOutMode() 
+    { 
+        mode_t oldmode = outmode;
+        switch(outmode)
+        {
+        case PStream::raw_ascii:
+        case PStream::pretty_ascii:
+            outmode = PStream::plearn_ascii;
+            break;
+        case PStream::raw_binary:
+            outmode = PStream::plearn_binary;
+            break;
+        default:
+            break;
+        }
+        return oldmode;
+    }
+
     PStream& operator>>(mode_t m) { inmode = m; return *this; }
     PStream& operator<<(mode_t m) { outmode = m; return *this; }
 
@@ -289,6 +311,17 @@ public:
         delete[] buf;
         return *this;
     }
+
+    //! reads the next character and launches a PLERROR if it's different from expect
+    void readExpected(char expect);
+
+    //! reads character one by one, comparing it with tghe sequence in expect (until terminating nul character in expect)
+    //! throws a PLERROR as soon as the character read differes from the character expected.
+    void readExpected(char* expect);
+
+    //! reads character one by one, comparing it with tghe sequence in expect (until terminating nul character in expect)
+    //! throws a PLERROR as soon as the character read differes from the character expected.
+    void readExpected(const string& expect);
 
     //! Reads characters into buf until n characters have been read, or end-of-file has been reached, 
     //! or the next character in the stream is the stop_char.
@@ -596,6 +629,16 @@ inline PStream& operator>>(PStream& in, pair<S, T> &x)
     if(c==0x16) // binary pair
     {
         in >> x.first >> x.second;
+    }
+    else if(c=='(') // it's the parenthesized (first, second) format
+    {
+        in.get();
+        in.skipBlanksAndComments();
+        in >> x.first;
+        in.skipBlanksAndCommentsAndSeparators();
+        in >> x.second;
+        in.skipBlanksAndComments();
+        in.readExpected(')');
     }
     else // suppose it's ascii, separated by :
     {
