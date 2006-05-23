@@ -35,6 +35,7 @@
 #define pl_tuple_INC
 
 #include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_comparison.hpp>
 #include <plearn/io/PStream.h>
 
 namespace PLearn {
