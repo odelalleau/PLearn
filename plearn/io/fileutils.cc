@@ -60,6 +60,7 @@
 #include "openString.h"
 #include "PStream.h"
 #include "PPath.h"
+#include <plearn/base/tostring.h> 
 #include <plearn/base/stringutils.h> //!< For 'slash' // TODO Can we get rid of this ?
 #include <plearn/base/plerror.h>
 #include <plearn/math/pl_math.h>    //!< For 'real'.

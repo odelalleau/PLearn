@@ -40,7 +40,7 @@
  ******************************************************* */
 
 #include "MatIO.h"
-//#include "stringutils.h"
+#include <plearn/base/tostring.h>  
 #include "fileutils.h"
 
 namespace PLearn {

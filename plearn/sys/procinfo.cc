@@ -6,6 +6,7 @@
 #include "procinfo.h"
 #include <plearn/base/plerror.h>
 #include <plearn/base/stringutils.h>
+#include <plearn/base/tostring.h>  
 
 namespace PLearn {
 

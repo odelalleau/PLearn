@@ -46,6 +46,7 @@
 #include "ProgressBar.h"
 #include "stringutils.h"
 #include <math.h>
+#include <plearn/base/tostring.h>  
 
 #if USING_MPI
 #include <plearn/sys/PLMPI.h>

@@ -45,6 +45,7 @@
 #include "Gnuplot.h"
 #include <plearn/math/TMat_maths.h>
 #include <plearn/io/FdPStreamBuf.h>
+#include <plearn/base/tostring.h>  
 
 #if defined(WIN32) && !defined(__CYGWIN__) && !defined(_MINGW_)
 #include <io.h>
