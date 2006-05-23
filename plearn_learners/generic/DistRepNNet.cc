@@ -1223,7 +1223,7 @@ void DistRepNNet::computeOutput(const Vec& inputv, Vec& outputv) const
     else
         target_values = train_set->getValues(row,targetsize_);
     outputv[0] = target_values[(int)output_comp[0]];
-    outputv[0] = (int)output_comp[0];
+    //outputv[0] = (int)output_comp[0];
 }
 
 ///////////////////////////
