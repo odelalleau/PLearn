@@ -36,6 +36,7 @@
 
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
+#include <plearn/base/TypeTraits.h>
 #include <plearn/io/PStream.h>
 
 namespace PLearn {

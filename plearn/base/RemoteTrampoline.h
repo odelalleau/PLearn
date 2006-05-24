@@ -50,7 +50,7 @@
 #include <plearn/base/PP.h>
 #include <plearn/base/TypeTraits.h>
 #include <plearn/io/PStream.h>
-#include <plearn/io/pl_tuple.h>
+#include <plearn/base/tuple.h>
 #include "RemoteMethodDoc.h"
 
 namespace PLearn {
