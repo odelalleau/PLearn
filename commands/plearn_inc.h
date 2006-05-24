@@ -195,18 +195,21 @@
 #include <plearn_learners/online/HintonDeepBeliefNet.h>
 #include <plearn_learners/online/NLLErrModule.h>
 #include <plearn_learners/online/OnlineLearningModule.h>
-#include <plearn_learners/online/RBMParameters.h>
-#include <plearn_learners/online/RBMGenericParameters.h>
-#include <plearn_learners/online/RBMLayer.h>
 #include <plearn_learners/online/RBMBinomialLayer.h>
-#include <plearn_learners/online/RBMMultinomialLayer.h>
 #include <plearn_learners/online/RBMGaussianLayer.h>
-#include <plearn_learners/online/RBMMixedLayer.h>
+#include <plearn_learners/online/RBMGenericParameters.h>
 #include <plearn_learners/online/RBMJointGenericParameters.h>
-
+#include <plearn_learners/online/RBMJointLLParameters.h>
+#include <plearn_learners/online/RBMLayer.h>
+#include <plearn_learners/online/RBMLLParameters.h>
+#include <plearn_learners/online/RBMLQParameters.h>
+#include <plearn_learners/online/RBMMultinomialLayer.h>
+#include <plearn_learners/online/RBMMixedLayer.h>
+#include <plearn_learners/online/RBMParameters.h>
+#include <plearn_learners/online/RBMQLParameters.h>
 #include <plearn_learners/online/SquaredErrModule.h>
-#include <plearn_learners/online/TanhModule.h>
 #include <plearn_learners/online/StackedModulesLearner.h>
+#include <plearn_learners/online/TanhModule.h>
 
 
 /**********
