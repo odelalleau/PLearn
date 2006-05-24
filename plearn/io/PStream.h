@@ -312,25 +312,31 @@ public:
         return *this;
     }
 
-    //! reads the next character and launches a PLERROR if it's different from expect
+    //! Reads the next character and launches a PLERROR if it is different from
+    //! expect.
     void readExpected(char expect);
 
-    //! reads character one by one, comparing it with tghe sequence in expect (until terminating nul character in expect)
-    //! throws a PLERROR as soon as the character read differes from the character expected.
+    //! Reads character one by one, comparing it with the sequence in expect
+    //! (until terminating null character in expect).
+    //! Throws a PLERROR as soon as the character read differs from the
+    //! character expected.
     void readExpected(char* expect);
 
-    //! reads character one by one, comparing it with tghe sequence in expect (until terminating nul character in expect)
-    //! throws a PLERROR as soon as the character read differes from the character expected.
+    //! Reads character one by one, comparing it with the sequence in expect.
+    //! Throws a PLERROR as soon as the character read differs from the
+    //! character expected.
     void readExpected(const string& expect);
 
-    //! Reads characters into buf until n characters have been read, or end-of-file has been reached, 
-    //! or the next character in the stream is the stop_char.
+    //! Reads characters into buf until n characters have been read, or
+    //! end-of-file has been reached, or the next character in the stream is
+    //! the stop_char.
     //! Returns the total number of characters put into buf.
     //! The stopping character met is not extracted from the stream.
     streamsize readUntil(char* buf, streamsize n, char stop_char);
 
-    //! Reads characters into buf until n characters have been read, or end-of-file has been reached, 
-    //! or the next character in the stream is one of the stop_chars (null terminated string)
+    //! Reads characters into buf until n characters have been read, or
+    //! end-of-file has been reached, or the next character in the stream is
+    //! one of the stop_chars (null terminated string).
     //! Returns the total number of characters put into buf.
     //! The stopping character met is not extracted from the stream.
     streamsize readUntil(char* buf, streamsize n, const char* stop_chars);
