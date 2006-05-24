@@ -1688,6 +1688,8 @@ PRUint64       & big-endian    & 0x19        & 4 \\
 \begin{itemize}
 \item booleans are represented the same way in binary mode as in ascii mode: with the character 0 (for false) or 1 (for true). There is no header byte.
 \item C++ pairs are indicated by a header-byte 0x16 followed by serialization of the two elements.
+\item A date (PDate) is written with the header-byte 0xFE followed by a
+  binary serialized double (with appropriate double header) representing the date in YYYYMMDD format.
 \end{itemize}
 
 

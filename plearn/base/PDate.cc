@@ -42,6 +42,7 @@
 #include "PDate.h"
 #include <algorithm>                //!< For std::transform.
 #include "stringutils.h"            //!< For toint.
+#include <plearn/base/tostring.h>  
 //#include "general.h"                // for MISSING_VALUE
 #include <plearn/math/pl_math.h>                //!< For MISSING_VALUE.
 //#include <ctype.h>
@@ -208,6 +209,56 @@ int PDate::weekNumber() const
     return dayOfYear()/7;
 }
 
+
+PStream& operator<<(PStream& out, const PDate& date)
+{
+    char tmpbuf[15];
+
+    switch(out.outmode)
+    {
+    case PStream::plearn_binary:
+    case PStream::raw_binary:
+        out.put((char)0xFE);
+        out << date_to_double(date);
+        break;
+    case PStream::plearn_ascii:        
+        sprintf(tmpbuf,"%04d/%02d/%02d ",date.year,date.month,date.day);
+        out.write(tmpbuf);
+        break;
+
+    case PStream::raw_ascii:
+    case PStream::pretty_ascii:
+        // same as plearn_ascii but with no ending space
+        sprintf(tmpbuf,"%04d/%02d/%02d",date.year,date.month,date.day);
+        out.write(tmpbuf);
+        break;
+    }
+
+    return out;
+}
+
+PStream& operator>>(PStream& in, PDate& date)
+{
+    in.skipBlanksAndComments();
+    int c = in.peek();
+    if(c==0xFE) // binary PDate
+    {
+        double yyyymmdd;
+        in >> yyyymmdd;
+        date = double_to_date(yyyymmdd);
+    }
+    else if(isdigit(c))
+    {
+        in.readAsciiNum(date.year);
+        in.readExpected('/');
+        in.readAsciiNum(date.month);
+        in.readExpected('/');
+        in.readAsciiNum(date.day);
+    }
+    else
+        PLERROR("Not a valid serialized PDate");
+    return in;
+}
 
 float date_to_float(const PDate& t)
 {

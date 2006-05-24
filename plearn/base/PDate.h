@@ -50,6 +50,8 @@
 //#include <iostream>
 #include <string>
 #include <ctime>
+#include <plearn/io/PStream.h>
+#include <plearn/base/TypeTraits.h>
 
 namespace PLearn {
 using namespace std;
@@ -167,6 +169,13 @@ inline ostream& operator<<(ostream& os, const PDate& date)
     return os;
 }
 
+//! Serialization to PStream
+PStream& operator<<(PStream& out, const PDate& date);
+
+//! De-serialization from PStream
+PStream& operator>>(PStream& in, PDate& date);
+
+
 //! Takes a date in cyymmdd format and adds the given number of months (may be negative)
 //! Returns result in CYYMMDD format.  
 inline int CYYMMDD_add_months(int cyymmdd, int nmonths)
@@ -200,6 +209,7 @@ double date_to_double(const PDate& t);
 
 PDate double_to_date(double d);
 
+DECLARE_TYPE_TRAITS(PDate);
 
 } // end of namespace PLearn
 
