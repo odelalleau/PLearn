@@ -48,6 +48,7 @@
 #include "fileutils.h"                  //!< For getNextNonBlankLine.
 #include <plearn/base/stringutils.h>    //!< For toint.
 #include <plearn/base/lexical_cast.h>   //!< For pl_strtod.
+#include <plearn/base/tostring.h>       //!< For PLearn::tostring.
 #include <plearn/io/openFile.h>
 
 namespace PLearn {
@@ -281,7 +282,7 @@ void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, in
                       fieldnames.length(), width, filename.absolute().c_str());
         fieldnames.resize(width);
         for(int i= 0; i < width; ++i)
-            fieldnames[i]= string("Field-") + tostring(i);
+            fieldnames[i]= string("Field-") + PLearn::tostring(i);
     }
   
     // We are now more careful about the possibility of the stream being in a
