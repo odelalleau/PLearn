@@ -53,10 +53,14 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
-#include <plearn/base/tostring.h>
+// Removed inclusion of tostring because it causes circular includes; please
+// include tostring directly in your code now (rather than assume it gets
+// included through stringutils
+// #include <plearn/base/tostring.h>
 #include <plearn/base/lexical_cast.h>
 
 namespace PLearn {
@@ -98,7 +102,6 @@ string upperstring(const string& s);
 //!  returns the next line read from the stream,
 //!  after removing any trailing '\r' and/or '\n'
 string pgetline(istream& in=cin);
-string pgetline(PStream& in);
 
 //! returns true if s is a blank line (containing only space, tab, until end of line or a # comment-character is reached
 bool isBlank(const string& s);

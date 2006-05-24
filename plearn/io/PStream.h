@@ -157,31 +157,19 @@ public:
     inline void setBufferCapacities(streamsize inbuf_capacity, streamsize outbuf_capacity, streamsize unget_capacity)
     { ptr->setBufferCapacities(inbuf_capacity, outbuf_capacity, unget_capacity); }
 
-    inline void setInMode(mode_t m) { inmode = m; }
-    inline void setOutMode(mode_t m) { outmode = m; }
+    inline mode_t setInMode(mode_t m) { mode_t oldmode = inmode; inmode = m; return oldmode; }
+    inline mode_t setOutMode(mode_t m) { mode_t oldmode = outmode; outmode = m; return oldmode; }
     inline void setMode(mode_t m) { inmode = m; outmode = m; }
+
+    inline void clearOutMap() { copies_map_out.clear(); }
+    inline void clearInMap()  { copies_map_in.clear(); }
+    inline void clearInOutMaps()  { clearInMap(); clearOutMap(); }
 
     //! if outmode is raw_ascii or raw_binary t will be switched to
     //! corresponding plearn_ascii, resp. plearn_binary.
     //! The old mode will be returned, so that you can call setOutMode 
     //! to revert to the old mode when finished
-    inline mode_t switchToPLearnOutMode() 
-    { 
-        mode_t oldmode = outmode;
-        switch(outmode)
-        {
-        case PStream::raw_ascii:
-        case PStream::pretty_ascii:
-            outmode = PStream::plearn_ascii;
-            break;
-        case PStream::raw_binary:
-            outmode = PStream::plearn_binary;
-            break;
-        default:
-            break;
-        }
-        return oldmode;
-    }
+    mode_t switchToPLearnOutMode();
 
     PStream& operator>>(mode_t m) { inmode = m; return *this; }
     PStream& operator<<(mode_t m) { outmode = m; return *this; }
@@ -495,6 +483,10 @@ using std::flush;
 using std::endl;
 using std::ws;
 
+//!  returns the next line read from the stream,
+//!  after removing any trailing '\r' and/or '\n'
+string pgetline(PStream& in);
+
   
 /*****
  * op>> & op<< for generic pointers
@@ -634,6 +626,7 @@ inline PStream& operator>>(PStream& in, pair<S, T> &x)
     int c = in.peek();
     if(c==0x16) // binary pair
     {
+        in.get(); // eat the header byte
         in >> x.first >> x.second;
     }
     else if(c=='(') // it's the parenthesized (first, second) format
@@ -667,6 +660,8 @@ void writeMap(PStream& out, const MapT& m)
     typename MapT::const_iterator it = m.begin();
     typename MapT::const_iterator itend = m.end();
 
+    // PStream::mode_t curmode = out.switchToPLearnOutMode();
+
     out.put('{');
     if(!m.empty())
     {
@@ -684,7 +679,9 @@ void writeMap(PStream& out, const MapT& m)
             ++it;
         }
     }
-    out.put('}');    
+    out.put('}');
+
+    // out.setOutMode(curmode);
 }
 
 template<class MapT>

@@ -55,28 +55,28 @@ Calling unary_int(42)       : 42
 Calling unary_long(42L)     : 42
 Calling unary_float(42.01)  : 42.01
 Calling unary_str('Hello')  : Hello
-Calling unary_vec(v)        : 2           3           5           7           11          13          17          19          23          
+Calling unary_vec(v)        : 2 3 5 7 11 13 17 19 23 
 Calling unary_mat(m)        : 
 Called unary_mat with:
 [[  2.   3.   5.]
  [  7.  11.  13.]
  [ 17.  19.  23.]]
-2           3           5           
-7           11          13          
-17          19          23          
+2	3	5	
+7	11	13	
+17	19	23	
 
 Calling unary_mat(m)        : 
 Called unary_mat with:
 [[  3.   5.]
  [ 11.  13.]
  [ 19.  23.]]
-3           5           
-11          13          
-19          23          
+3	5	
+11	13	
+19	23	
 
-Calling unary_list_str(tvs) : Cela        est         juste       et          bon         
-Calling unary_list_str(vecs): Cela        est         juste       et          bon         
-Calling unary_dict(mapsd)   : {"Oui" : 16 , "bon" : 512 , "est" : 64 , "et" : 256 , "il" : 32 , "juste" : 128 }
-Calling binary(2,4)         : 2           4           
-Calling ternary(2,4,8)      : 2           4           8           
-Calling quaternary(2,4,8,16): 2           4           8           16          
+Calling unary_list_str(tvs) : Cela est juste et bon 
+Calling unary_list_str(vecs): Cela est juste et bon 
+Calling unary_dict(mapsd)   : {Oui: 16, bon: 512, est: 64, et: 256, il: 32, juste: 128}
+Calling binary(2,4)         : 2 4 
+Calling ternary(2,4,8)      : 2 4 8 
+Calling quaternary(2,4,8,16): 2 4 8 16 

@@ -20,7 +20,7 @@ Caught Python Exception: 'Encountered Python Exception
 Exception Type: exceptions.NameError
 Exception Value: global name 'buf' is not defined
 Traceback: <traceback object at 0x[memory_address]>'
-Associated 'some_global_map' with: {"Oui" : 16 , "bon" : 512 , "est" : 64 , "et" : 256 , "il" : 32 , "juste" : 128 }
-Read back from Python environment: {"Oui" : 16 , "bon" : 512 , "est" : 64 , "et" : 256 , "il" : 32 , "juste" : 128 }
+Associated 'some_global_map' with: {Oui: 16, bon: 512, est: 64, et: 256, il: 32, juste: 128}
+Read back from Python environment: {Oui: 16, bon: 512, est: 64, et: 256, il: 32, juste: 128}
 Printing some_global_map within Python: {'Oui': 16L, 'est': 64L, 'juste': 128L, 'il': 32L, 'bon': 512L, 'et': 256L}
 Dump of the 'python_other' compiled environment

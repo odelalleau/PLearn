@@ -154,6 +154,17 @@ PStream& ws(PStream& in)
     return in;
 }
 
+string pgetline(PStream& in)
+{
+    string line;
+    in.getline(line);
+    // remove any trailing \n and \r
+    string::size_type pos = line.length();
+    while(pos>=1 && (line[pos - 1]=='\r' || line[pos - 1]=='\n'))
+        pos--;
+    return line.substr(0,pos);
+}
+
 PStream::PStream()
     :inherited(0),
      inmode(plearn_ascii), 
@@ -206,9 +217,28 @@ PStream::~PStream()
 {
 }
 
+PStream::mode_t PStream::switchToPLearnOutMode() 
+{ 
+    mode_t oldmode = outmode;
+    switch(outmode)
+    {
+    case PStream::raw_ascii:
+    case PStream::pretty_ascii:
+        outmode = PStream::plearn_ascii;
+        break;
+    case PStream::raw_binary:
+        outmode = PStream::plearn_binary;
+        break;
+    default:
+        break;
+    }
+    return oldmode;
+}
+
 //////////////////
 // readExpected //
 //////////////////
+
 void PStream::readExpected(char expect)
 {
     int c = get(); 

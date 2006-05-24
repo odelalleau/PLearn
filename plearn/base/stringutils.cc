@@ -251,13 +251,6 @@ string pgetline(istream& in)
     return removenewline(line);
 }
 
-string pgetline(PStream& in)
-{
-    string line;
-    in.getline(line);
-    return removenewline(line);
-}
-
 bool isBlank(const string& s)
 {
     string::size_type l = s.length();

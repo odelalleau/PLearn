@@ -2,7 +2,7 @@
 
 // tostring.cc
 //
-// Copyright (C) 2005 Christian Dorion 
+// Copyright (C) 2005,2006 Christian Dorion, Pascal Vincent 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -36,38 +36,64 @@
  * $Id$ 
  ******************************************************* */
 
-// Authors: Christian Dorion
+// Authors: Christian Dorion, Pascal Vincent
 
 /*! \file tostring.cc */
 
 
 #include "tostring.h"
-#include <plearn/io/openString.h>
+#include <plearn/base/plerror.h>
+// #include <plearn/io/openString.h>
 #include <plearn/math/pl_math.h>    //!< For 'fast_exact_is_equal'.
+
 
 namespace PLearn {
 using namespace std;
 
-string tostring(const double& x)
+PStream& _tostring_static_pstream_(bool lock)
 {
-    static string result;
-    PStream out = openString(result, PStream::raw_ascii, "w");
+    static bool locked = false;
+    static string s;
+    static PStream sout;    
+
+    if(sout.isNull())
+        sout = new StringPStreamBuf(&s, "w");
+    if(lock==locked)
+    {
+        if(locked)
+            exitmsg("In %s, already locked! Operations for PStream serialization (operator <<) should NEVER call tostring or tostring2", __FUNCTION__); 
+        else  
+            exitmsg("In %s, already unlocked! This should never happen", __FUNCTION__);
+    }
+    locked = lock;
+
+    return sout;
+}
+
+string tostring(const double& x, PStream::mode_t io_formatting)
+{
+    // static string result;
+    // PStream out = openString(result, io_formatting, "w");
+
+    // get the PStream and set the lock
+    PStream& out = _tostring_static_pstream_(true);
+    StringPStreamBuf* pbuf = dynamic_cast<StringPStreamBuf*>((PStreamBuf*)out);
+    pbuf->clear();
+    out.clearOutMap();
+    out.setOutMode(io_formatting);
+
     int ix = int(x);
-    if (fast_exact_is_equal(ix, x))
+    if (io_formatting==PStream::raw_ascii && fast_exact_is_equal(ix, x))
         out << ix;
     else
         out << x;
     out.flush();
-    return result;
-}
 
-string tostring(const float& x)
-{
-    // Old code used to set a different precision for float numbers, but the
-    // PStream class has no option for precision, thus we now use the same code
-    // as for double.
-    double copy = x;
-    return tostring(copy);
+    // release the lock
+    _tostring_static_pstream_(false);
+    return pbuf->getString();
+
+    // return result;
 }
 
 } // end of namespace PLearn
