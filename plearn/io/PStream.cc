@@ -206,7 +206,9 @@ PStream::~PStream()
 {
 }
 
-//! reads the next character and launches a PLERROR if it's different from expect
+//////////////////
+// readExpected //
+//////////////////
 void PStream::readExpected(char expect)
 {
     int c = get(); 
@@ -214,16 +216,12 @@ void PStream::readExpected(char expect)
         PLERROR("In readExpected : expected %c, but read %c",expect,c);
 }
 
-//! reads character one by one, comparing it with tghe sequence in expect (until terminating nul character in expect)
-//! throws a PLERROR as soon as the character read differes from the character expected.
 void PStream::readExpected(char* expect)
 {
     for(char c = *expect; c!=0; c=*expect++)
         readExpected(c);    
 }
 
-//! reads character one by one, comparing it with tghe sequence in expect (until terminating nul character in expect)
-//! throws a PLERROR as soon as the character read differes from the character expected.
 void PStream::readExpected(const string& expect)
 {
     int l = expect.size();
