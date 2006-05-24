@@ -113,6 +113,8 @@ void VPLCombinedLearner::build_()
     {
         initializeOutputPrograms();
     }
+    else
+        initializeCostNames();
 }
 
 // ### Nothing to add here, simply calls build_
@@ -223,7 +225,7 @@ void VPLCombinedLearner::initializeOutputPrograms()
 
         int ntest = sublearners_[k]->nTestCosts();
         sublearners_ntestcosts[k] = ntest;
-        TVec<string> testcostnames = getTestCostNames();
+        TVec<string> testcostnames = sublearners_[k]->getTestCostNames();
         for(int p=0; p<ntest; p++)
         {
             string costname = prefix+testcostnames[p];
@@ -245,6 +247,36 @@ void VPLCombinedLearner::initializeOutputPrograms()
         costs_prg_.setSourceFieldNames(infields_for_costs_prg);
         costs_prg_.compileString(costs_prg, costnames_);
     }
+
+}
+
+void VPLCombinedLearner::initializeCostNames()
+{
+    int nlearners = sublearners_.length();
+    sublearners_ntestcosts.resize(nlearners);
+
+    costnames_.resize(0);
+
+    for(int k=0; k<nlearners; k++)
+    {        
+        char tmp[100];
+        sprintf(tmp,"learner%d.",k);
+        string prefix(tmp);
+
+        int ntest = sublearners_[k]->nTestCosts();
+        sublearners_ntestcosts[k] = ntest;
+        TVec<string> testcostnames = sublearners_[k]->getTestCostNames();
+        for(int p=0; p<ntest; p++)
+        {
+            string costname = prefix+testcostnames[p];
+            if(costs_prg.empty())
+                costnames_.append(costname);
+        }
+    }
+
+    if(!costs_prg.empty())
+        VMatLanguage::getOutputFieldNamesFromString(costs_prg, costnames_);
+
 }
 
 void VPLCombinedLearner::setTrainingSet(VMat training_set, bool call_forget)
@@ -390,6 +422,7 @@ TVec<string> VPLCombinedLearner::getTestCostNames() const
 
 TVec<string> VPLCombinedLearner::getTrainCostNames() const
 {
+
     return TVec<string>();
 }
 

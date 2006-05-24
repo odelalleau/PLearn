@@ -142,6 +142,8 @@ void VPLPreprocessedLearner2::build_()
         initializeInputPrograms();
         initializeOutputPrograms();
     }
+    else if(!costs_prg.empty())
+        VMatLanguage::getOutputFieldNamesFromString(costs_prg, costs_prg_fieldnames);
 }
 
 // ### Nothing to add here, simply calls build_
@@ -322,8 +324,9 @@ void VPLPreprocessedLearner2::setTrainingSet(VMat training_set, bool call_forget
     initializeInputPrograms();
 
     VMat filtered_trainset = training_set;
+    PPath filtered_trainset_metadatadir = getExperimentDirectory() / "filtered_train_set.metadata";
     if(!filtering_prg.empty())
-        filtered_trainset = new FilteredVMatrix(training_set, filtering_prg, "", verbosity>1);
+        filtered_trainset = new FilteredVMatrix(training_set, filtering_prg, filtered_trainset_metadatadir, verbosity>1);
 
     VMat processed_trainset = new ProcessingVMatrix(filtered_trainset, input_prg, target_prg, weight_prg, extra_prg);
     learner_->setTrainingSet(processed_trainset, false);
@@ -369,7 +372,7 @@ void VPLPreprocessedLearner2::computeOutputAndCosts(const Vec& input, const Vec&
     assert(tlen==targetsize());
 
     Vec newinput = input;
-    if(input_prg_)
+    if(!input_prg.empty())//input_prg_)
     {
         processed_input.resize(input_prg_fieldnames.length());
         input_prg_.run(input, processed_input);
@@ -380,7 +383,7 @@ void VPLPreprocessedLearner2::computeOutputAndCosts(const Vec& input, const Vec&
     orig_row.resize(orig_fieldnames.length());
 
     Vec newtarget = target;
-    if(target_prg_)
+    if(!target_prg.empty())//target_prg_)
     {
         processed_target.resize(target_prg_fieldnames.length());
         target_prg_.run(orig_row, processed_target);
@@ -389,13 +392,13 @@ void VPLPreprocessedLearner2::computeOutputAndCosts(const Vec& input, const Vec&
 
     learner_->computeOutputAndCosts(newinput, newtarget, pre_output, pre_costs);
 
-    if(output_prg_)
+    if(!output_prg.empty())//output_prg_)
         output_prg_.run(concat(input,pre_output), output);
     else
         output << pre_output;
 
    
-    if(costs_prg_)
+    if(!costs_prg.empty())//costs_prg_)
         costs_prg_.run(concat(input,target,pre_output,pre_costs), costs);
     else
         costs << pre_costs;
@@ -419,7 +422,7 @@ bool VPLPreprocessedLearner2::computeConfidenceFromOutput(
 
     assert( learner_ );
     Vec newinput = input;
-    if(input_prg_)
+    if(!input_prg.empty())//input_prg_)
     {
         processed_input.resize(input_prg_fieldnames.length());
         input_prg_.run(input, processed_input);
@@ -427,7 +430,7 @@ bool VPLPreprocessedLearner2::computeConfidenceFromOutput(
     }
 
     bool status = false;
-    if(!output_prg_) // output is already the output of the underlying learner
+    if(output_prg.empty())//!output_prg_) // output is already the output of the underlying learner
         status = learner_->computeConfidenceFromOutput(newinput, output, probability, intervals);
     else // must recompute the output of underlying learner, and post-process returned intervals
     {
@@ -469,7 +472,7 @@ bool VPLPreprocessedLearner2::computeConfidenceFromOutput(
 
 TVec<string> VPLPreprocessedLearner2::getOutputNames() const
 {
-    if(output_prg_)
+    if(!output_prg.empty())//output_prg_)
         return output_prg_fieldnames;
     else
         return learner_->getOutputNames();
@@ -478,7 +481,7 @@ TVec<string> VPLPreprocessedLearner2::getOutputNames() const
 
 TVec<string> VPLPreprocessedLearner2::getTestCostNames() const
 {
-    if(costs_prg_)
+    if(!costs_prg.empty())//costs_prg_)
         return costs_prg_fieldnames;
     else
         return learner_->getTestCostNames();

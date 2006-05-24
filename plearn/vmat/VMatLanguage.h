@@ -130,6 +130,12 @@ public:
     void compileFile(const PPath& filename, vector<string>& fieldnames);
     void compileString(const string & code, TVec<string>& fieldnames);
 
+    static void getOutputFieldNamesFromString(const string & code, vector<string>& fieldnames);
+    static void getOutputFieldNamesFromString(const string & code, TVec<string>& fieldnames);
+    static void getOutputFieldNamesFromStream(PStream &in, vector<string>& fieldnames);
+    static void staticPreprocess(PStream& in, map<string, string>& defines,
+                                 string&  processed_sourcecode, vector<string>& fieldnames );
+
     inline operator bool() const
     { return program.length()>0; }
 

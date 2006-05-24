@@ -112,7 +112,7 @@ private:
     void build_();
 
     void initializeOutputPrograms();
-
+    void initializeCostNames();
 
 protected: 
   

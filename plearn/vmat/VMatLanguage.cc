@@ -625,6 +625,153 @@ void VMatLanguage::compileStream(PStream & in, vector<string>& fieldnames)
     generateCode(processed_sourcecode);
 }
 
+
+
+void VMatLanguage::getOutputFieldNamesFromString(const string & code, vector<string>& fieldnames)
+{
+    PStream in = openString(code, PStream::raw_ascii);
+    getOutputFieldNamesFromStream(in, fieldnames);
+}
+
+void VMatLanguage::getOutputFieldNamesFromString(const string & code, TVec<string>& fieldnames)
+{
+    vector<string> names;
+    getOutputFieldNamesFromString(code, names);
+    fieldnames.resize(int(names.size()));
+    for(unsigned int i=0; i< names.size(); i++)
+        fieldnames[i] = names[i];
+}
+
+void VMatLanguage::getOutputFieldNamesFromStream(PStream &in, vector<string>& fieldnames)
+{
+
+    map<string,string> defines;
+    string processed_sourcecode;
+    fieldnames.clear();
+    staticPreprocess(in, defines, processed_sourcecode, fieldnames);
+}
+
+void VMatLanguage::staticPreprocess(PStream& in, map<string, string>& defines,
+                                    string& processed_sourcecode, vector<string>& fieldnames)
+{
+    string token;
+    size_t spos;
+    map<string,string>::iterator pos;
+    while(in)
+    {
+        in >> token;
+        pos=defines.find(token);
+
+        // are we sitting on a mapping declaration?
+        if(token[0]=='{')
+        {
+            //skip mapping to avoid brackets conflicts with fieldcopy macro syntax
+            char car;
+            processed_sourcecode+=token;
+            // if the token is only a part of the mapping...
+            if(token.find("}")==string::npos)
+            {
+                // just eat till the end of the mapping
+                while((car=in.get())!='}' && !in.eof())
+                    processed_sourcecode+=car;
+                processed_sourcecode+="}";
+            }
+        }
+        // did we find a fieldName declaration?
+        // format is either :myField or :myField:a:b
+        else if(token[0]==':')
+        {
+            if(isBlank(token.substr(1)))
+                PLERROR("Found a ':' with no fieldname. Do not put a whitespace after the ':'");
+            vector<string> parts=split(token,":");
+            if(parts.size()==3)
+            {
+                int a=toint(parts[1]);
+                int b=0;
+                // let the chance for the second interval boundary to be a "DEFINE"
+                // this is used with onehot and @myfield.ranges10.nbins
+                // ie: @myfield.onehot10 :myfieldonehot:0:@myfield.ranges10.nbins
+                if(pl_isnumber(parts[2]))
+                    b=toint(parts[2]);
+                else
+                {
+                    if(defines.find(parts[2])!=defines.end())
+                        b=toint(defines[parts[2]]);
+                    else
+                        PLERROR("found a undefined non-numeric boundary in multifield declaration : '%s'",parts[2].c_str());
+                }
+
+                for(int i=a;i<=b;i++)
+                    fieldnames.push_back(parts[0]+tostring(i));
+            }
+            else if (parts.size()==1)
+                fieldnames.push_back(token.substr(1));
+            else PLERROR("Strange fieldname format (multiple declaration format is :label:0:10");
+        }
+        // Did we find a fieldcopy macro?
+        else if(token[0]=='[')
+            PLERROR("fieldcopy macro not supported in VMatLanguage::staticPreprocess");
+        // did we find a comment?
+        else if(token[0]=='#')
+            skipRestOfLine(in);
+        // include declaration
+        else if(token=="INCLUDE")
+        {
+            in >> token;
+            // Try to be intelligent and find out if the file belongs directly to another .?mat (the case of a
+            // stats file for example) and warn if the file is out of date
+
+            // Mhhh.. is this still pertinent? This "stats" and "bins" thing is semi-standard I think
+            size_t idx_meta  =  token.find(".metadata");
+            size_t idx_stats =  token.find("stats.");
+            size_t idx_bins  =  token.find("bins.");
+            if(idx_meta!=string::npos && (idx_stats!=string::npos || idx_bins!=string::npos))
+            {
+                string file=token.substr(0,idx_meta);
+                if(getDataSetDate(file) > mtime(token))
+                    PLWARNING("File %s seems out of date with parent matrix %s",token.c_str(),file.c_str());
+            }
+
+            PStream incfile = openFile(token, PStream::raw_ascii, "r");
+            // process recursively this included file
+            // **POSSIBLE DRAWBACK : defines done in this file will be used in the next recursion level
+            staticPreprocess(incfile,defines, processed_sourcecode,fieldnames);
+	
+        }
+        // define declaration
+        else if(token=="DEFINE")
+        {
+            in >> token;
+            string str_buf;
+            in.getline(str_buf);
+            defines[token.c_str()] = str_buf;
+        }
+        else if(pos!=defines.end())
+        {
+            // the token is a macro (define) so we process it recursively until it's stable
+            // (necessary since the define macro can use defines recursively)
+            string oldstr=pos->second,newstr;
+            bool unstable=true;
+            while(unstable)
+            {
+                PStream strm = openString(oldstr, PStream::raw_ascii);
+                newstr="";
+                staticPreprocess(strm,defines,newstr,fieldnames);
+                if(removeblanks(oldstr)==removeblanks(newstr))
+                    unstable=false;
+                oldstr=newstr;
+            }
+            processed_sourcecode+=newstr + " ";
+        }
+        // did we find a reference to a string value of a VMatrix that has overloaded getStringVal(..) e.g.:StrTableVMatrix
+        // In VPL, you can push on the stack the value of a string according to the string map of a particular column
+        // e.g. : to push value of string "WBush" from field MostSuspectAmericanPresidents, write @MostSuspectsAmericanPresidents."WBush"
+        else if ((token[0]=='@' || token[0]=='%') && token[token.length()-1]=='"' && (spos=token.find(".\""))!=string::npos)
+            PLERROR("string values not supported in VMatLanguage::staticPreprocess");
+        else processed_sourcecode+=token + " ";
+    }
+}
+
 //! builds the map if it does not already exist
 void VMatLanguage::build_opcodes_map()
 {
@@ -1124,6 +1271,8 @@ void VMatLanguage::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(mem, copies);
 }
 
+
+
 void  PreprocessingVMatrix::getNewRow(int i, const Vec& v) const
 {
     program.run(i,v);
@@ -1168,6 +1317,7 @@ PreprocessingVMatrix::declareOptions(OptionList &ol)
     declareOption(ol, "program", &PreprocessingVMatrix::program, OptionBase::buildoption, "");
     declareOption(ol, "fieldnames", &PreprocessingVMatrix::fieldnames, OptionBase::buildoption, "");
 }
+
 
 } // end of namespace PLearn
 

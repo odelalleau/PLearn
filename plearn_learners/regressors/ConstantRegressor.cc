@@ -169,6 +169,7 @@ void ConstantRegressor::computeCostsFromOutputs(const Vec& input, const Vec& out
                                                 const Vec& target, Vec& costs) const
 {
     // Compute the costs from *already* computed output. 
+    costs.resize(1);
     costs[0] = powdistance(output,target);
 }                                
 
