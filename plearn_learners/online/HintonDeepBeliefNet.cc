@@ -62,6 +62,9 @@ PLEARN_IMPLEMENT_OBJECT(
 HintonDeepBeliefNet::HintonDeepBeliefNet() :
     learning_rate(0.),
     fine_tuning_learning_rate(-1.),
+    initial_momentum(0.),
+    final_momentum(0.),
+    momentum_switch_time(-1),
     weight_decay(0.),
     use_sample_or_expectation(4)
 {
@@ -85,6 +88,23 @@ void HintonDeepBeliefNet::declareOptions(OptionList& ol)
                   &HintonDeepBeliefNet::fine_tuning_learning_rate,
                   OptionBase::buildoption,
                   "Learning rate used during the gradient descent");
+
+    declareOption(ol, "initial_momentum",
+                  &HintonDeepBeliefNet::initial_momentum,
+                  OptionBase::buildoption,
+                  "Initial momentum factor (should be between 0 and 1)");
+
+    declareOption(ol, "final_momentum",
+                  &HintonDeepBeliefNet::final_momentum,
+                  OptionBase::buildoption,
+                  "Final momentum factor (should be between 0 and 1)");
+
+    declareOption(ol, "momentum_switch_time",
+                  &HintonDeepBeliefNet::momentum_switch_time,
+                  OptionBase::buildoption,
+                  "Number of samples to be seen by layer i before its momentum"
+                  " switches\n"
+                  "from initial_momentum to final_momentum.\n");
 
     declareOption(ol, "weight_decay", &HintonDeepBeliefNet::weight_decay,
                   OptionBase::buildoption,
@@ -571,33 +591,38 @@ void HintonDeepBeliefNet::train()
     // clear stats of previous epoch
     train_stats->forget();
 
+    /***** initial greedy training *****/
     for( int layer=0 ; layer < n_layers-2 ; layer++ )
     {
         MODULE_LOG << "Training parameters between layers " << layer
             << " and " << layer+1 << endl;
-        if( report_progress )
+        int end_stage = min( training_schedule[layer], nstages );
+        if( report_progress && stage < end_stage )
         {
-            if( layer == 0 && min( training_schedule[layer], nstages ) > 0 )
-                pb = new ProgressBar( "Training layer "+tostring(layer)
-                                      +" of "+classname(),
-                                      min( training_schedule[layer], nstages )
-                                    );
-            if( layer > 0
-                && (min( training_schedule[layer], nstages )
-                    - min( training_schedule[layer-1], nstages )) > 0 )
-                pb = new ProgressBar( "Training layer "+tostring(layer)
-                                      +" of "+classname(),
-                                      min( training_schedule[layer], nstages )
-                                      - min( training_schedule[layer-1],
-                                             nstages ) );
+            pb = new ProgressBar( "Training layer "+tostring(layer)
+                                  +" of "+classname(),
+                                  end_stage - stage );
         }
 
         params[layer]->learning_rate = learning_rate;
-        for( ; stage<training_schedule[layer] && stage<nstages ; stage++ )
+
+        int momentum_switch_stage = momentum_switch_time;
+        if( layer > 0 )
+            momentum_switch_stage += training_schedule[layer-1];
+
+        if( stage <= momentum_switch_stage )
+            params[layer]->momentum = initial_momentum;
+        else
+            params[layer]->momentum = final_momentum;
+
+        for( ; stage<end_stage ; stage++ )
         {
             int sample = stage % nsamples;
             train_set->getExample(sample, input, target, weight);
             greedyStep( input.subVec(0, n_predictor), layer );
+
+            if( stage == momentum_switch_stage )
+                params[layer]->momentum = final_momentum;
 
             if( pb )
             {
@@ -609,29 +634,41 @@ void HintonDeepBeliefNet::train()
         }
     }
 
+    /***** joint training *****/
     MODULE_LOG << "Training joint parameters, between target,"
         << " penultimate (" << n_layers-2 << ")," << endl
         << "and last (" << n_layers-1 << ") layers." << endl;
-    if( report_progress
-        && (min( training_schedule[n_layers-2], nstages )
-            - min( training_schedule[n_layers-3], nstages )) > 0 )
+
+    int end_stage = min( training_schedule[n_layers-2], nstages );
+    if( report_progress && stage < end_stage )
         pb = new ProgressBar( "Training joint layer (target and "
                              +tostring(n_layers-2)+") of "+classname(),
-                             min( training_schedule[n_layers-2], nstages )
-                             - min( training_schedule[n_layers-3], nstages ) );
+                             end_stage - stage );
 
     joint_params->learning_rate = learning_rate;
-    target_params->learning_rate = learning_rate;
+//    target_params->learning_rate = learning_rate;
+
+    int momentum_switch_stage =
+        training_schedule[n_layers-3] + momentum_switch_time;
+    if( stage <= momentum_switch_stage )
+        joint_params->momentum = initial_momentum;
+    else
+        joint_params->momentum = final_momentum;
+
     for( ; stage<training_schedule[n_layers-2] && stage<nstages ; stage++ )
     {
         int sample = stage % nsamples;
         train_set->getExample(sample, input, target, weight);
         jointGreedyStep( input );
 
+        if( stage == momentum_switch_stage )
+            joint_params->momentum = final_momentum;
+
         if( pb )
             pb->update( stage - training_schedule[n_layers-3] + 1 );
     }
 
+    /***** fine-tuning *****/
     MODULE_LOG << "Fine-tuning all parameters, using method "
         << fine_tuning_method << endl;
     if( report_progress
@@ -673,6 +710,9 @@ void HintonDeepBeliefNet::train()
     else
         PLERROR( "Fine-tuning methods other than \"EGD\" are not"
                  " implemented yet." );
+
+    if( pb )
+        delete pb;
 
     MODULE_LOG << "Training finished" << endl << endl;
 }
@@ -809,6 +849,11 @@ void HintonDeepBeliefNet::fineTuneByGradientDescent( const Vec& input,
     int actual_index = argmax(predicted_part);
 
     // update train_costs
+#ifdef BOUNDCHECK
+    for( int i=0 ; i<n_predicted ; i++ )
+        assert( is_equal( predicted_part[i], 0. ) ||
+                i == actual_index && is_equal( predicted_part[i], 1. ) );
+#endif
     train_costs[0] = -pl_log( target_layer->expectation[actual_index] );
     int predicted_index = argmax( target_layer->expectation );
     if( predicted_index == actual_index )

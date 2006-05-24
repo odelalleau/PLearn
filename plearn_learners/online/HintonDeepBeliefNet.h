@@ -70,6 +70,16 @@ public:
     //! The learning rate used during the gradient descent
     real fine_tuning_learning_rate;
 
+    //! Initial momentum
+    real initial_momentum;
+
+    //! Final momentum
+    real final_momentum;
+
+    //! number of samples to be seen by layer i before its momentum switches
+    //! from initial_momentum to final_momentum
+    int momentum_switch_time;
+
     //! The weight decay
     real weight_decay;
 
