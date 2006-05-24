@@ -61,6 +61,9 @@ public:
     //! Learning rate
     real learning_rate;
 
+    //! Momentum factor
+    real momentum;
+
     //#####  Learned Options  #################################################
 
     //! Matrix containing unit-to-unit weights (output_size × input_size)
@@ -88,6 +91,11 @@ public:
     Vec down_units_bias_pos_stats;
     //! Accumulates negative contribution to the gradient of down_units_bias
     Vec down_units_bias_neg_stats;
+
+    //! Used if momentum != 0.
+    Mat weights_inc;
+    Vec down_units_bias_inc;
+    Vec up_units_bias_inc;
 
 public:
     //#####  Public Member Functions  #########################################

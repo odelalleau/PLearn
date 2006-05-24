@@ -51,14 +51,16 @@ PLEARN_IMPLEMENT_OBJECT(
 
 RBMLLParameters::RBMLLParameters( real the_learning_rate )
     : inherited(),
-      learning_rate(the_learning_rate)
+      learning_rate(the_learning_rate),
+      momentum(0.)
 {
 }
 
 RBMLLParameters::RBMLLParameters( string down_types, string up_types,
                                   real the_learning_rate )
     : inherited( down_types, up_types ),
-      learning_rate( the_learning_rate )
+      learning_rate( the_learning_rate ),
+      momentum(0.)
 {
     // We're not sure inherited::build() has been called
     build();
@@ -69,6 +71,10 @@ void RBMLLParameters::declareOptions(OptionList& ol)
     declareOption(ol, "learning_rate", &RBMLLParameters::learning_rate,
                   OptionBase::buildoption,
                   "Learning rate");
+
+    declareOption(ol, "momentum", &RBMLLParameters::momentum,
+                  OptionBase::buildoption,
+                  "Momentum factor (should be between 0 and 1)");
 
     declareOption(ol, "weights", &RBMLLParameters::weights,
                   OptionBase::learntoption,
@@ -133,6 +139,13 @@ void RBMLLParameters::build_()
                      uut_i, i );
     }
 
+    if( momentum != 0. )
+    {
+        weights_inc.resize( up_layer_size, down_layer_size );
+        down_units_bias_inc.resize( down_layer_size );
+        up_units_bias_inc.resize( up_layer_size );
+    }
+
     if( needs_forget )
         forget();
 
@@ -159,6 +172,9 @@ void RBMLLParameters::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(up_units_bias_neg_stats, copies);
     deepCopyField(down_units_bias_pos_stats, copies);
     deepCopyField(down_units_bias_neg_stats, copies);
+    deepCopyField(weights_inc, copies);
+    deepCopyField(up_units_bias_inc, copies);
+    deepCopyField(down_units_bias_inc, copies);
 }
 
 void RBMLLParameters::accumulatePosStats( const Vec& down_values,
@@ -202,9 +218,35 @@ void RBMLLParameters::update()
     int w_mod = weights.mod();
     int wps_mod = weights_pos_stats.mod();
     int wns_mod = weights_neg_stats.mod();
-    for( int i=0 ; i<l ; i++, w_i+=w_mod, wps_i+=wps_mod, wns_i+=wns_mod )
-        for( int j=0 ; j<w ; j++ )
-            w_i[j] += pos_factor * wps_i[j] + neg_factor * wns_i[j];
+
+    if( momentum == 0. )
+    {
+        // no need to use weights_inc
+        for( int i=0 ; i<l ; i++, w_i+=w_mod, wps_i+=wps_mod, wns_i+=wns_mod )
+            for( int j=0 ; j<w ; j++ )
+                w_i[j] += pos_factor * wps_i[j] + neg_factor * wns_i[j];
+    }
+    else
+    {
+        // ensure that weights_inc has the right size
+        weights_inc.resize( l, w );
+
+        // The update rule becomes:
+        // weights_inc = momentum * weights_inc
+        //               - learning_rate * (weights_pos_stats/pos_count
+        //                                  - weights_neg_stats/neg_count);
+        // weights += weights_inc;
+        real* winc_i = weights_inc.data();
+        int winc_mod = weights_inc.mod();
+        for( int i=0 ; i<l ; i++, w_i += w_mod, wps_i += wps_mod,
+                             wns_i += wns_mod, winc_i += winc_mod )
+            for( int j=0 ; j<w ; j++ )
+            {
+                winc_i[j] = momentum * winc_i[j]
+                    + pos_factor * wps_i[j] + neg_factor * wns_i[j];
+                w_i[j] += winc_i[j];
+            }
+    }
 
     // down_units_bias -= learning_rate * (down_units_bias_pos_stats/pos_count
     //                                    -down_units_bias_neg_stats/neg_count)
@@ -212,8 +254,32 @@ void RBMLLParameters::update()
     real* dub = down_units_bias.data();
     real* dubps = down_units_bias_pos_stats.data();
     real* dubns = down_units_bias_neg_stats.data();
-    for( int i=0 ; i<l ; i++ )
-        dub[i] += pos_factor * dubps[i] + neg_factor * dubns[i];
+
+    if( momentum == 0. )
+    {
+        // no need to use down_units_bias_inc
+        for( int i=0 ; i<l ; i++ )
+            dub[i] += pos_factor * dubps[i] + neg_factor * dubns[i];
+    }
+    else
+    {
+        // ensure that down_units_bias_inc has the right size
+        down_units_bias_inc.resize( l );
+
+        // The update rule becomes:
+        // down_units_bias_inc =
+        //      momentum * down_units_bias_inc
+        //      - learning_rate * (down_units_bias_pos_stats/pos_count
+        //                         -down_units_bias_neg_stats/neg_count);
+        // down_units_bias += down_units_bias_inc;
+        real* dubinc = down_units_bias_inc.data();
+        for( int i=0 ; i<l ; i++ )
+        {
+            dubinc[i] = momentum * dubinc[i]
+                + pos_factor * dubps[i] + neg_factor * dubns[i];
+            dub[i] += dubinc[i];
+        }
+    }
 
     // up_units_bias -= learning_rate * (up_units_bias_pos_stats/pos_count
     //                                   -up_units_bias_neg_stats/neg_count)
@@ -221,8 +287,31 @@ void RBMLLParameters::update()
     real* uub = up_units_bias.data();
     real* uubps = up_units_bias_pos_stats.data();
     real* uubns = up_units_bias_neg_stats.data();
-    for( int i=0 ; i<l ; i++ )
-        uub[i] += pos_factor * uubps[i] + neg_factor * uubns[i];
+    if( momentum == 0. )
+    {
+        // no need to use up_units_bias_inc
+        for( int i=0 ; i<l ; i++ )
+            uub[i] += pos_factor * uubps[i] + neg_factor * uubns[i];
+    }
+    else
+    {
+        // ensure that up_units_bias_inc has the right size
+        up_units_bias_inc.resize( l );
+
+        // The update rule becomes:
+        // up_units_bias_inc =
+        //      momentum * up_units_bias_inc
+        //      - learning_rate * (up_units_bias_pos_stats/pos_count
+        //                         -up_units_bias_neg_stats/neg_count);
+        // up_units_bias += up_units_bias_inc;
+        real* uubinc = up_units_bias_inc.data();
+        for( int i=0 ; i<l ; i++ )
+        {
+            uubinc[i] = momentum * uubinc[i]
+                + pos_factor * uubps[i] + neg_factor * uubns[i];
+            uub[i] += uubinc[i];
+        }
+    }
 
     clearStats();
 }
