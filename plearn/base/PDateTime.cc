@@ -37,8 +37,10 @@
  ******************************************************* */
 
 //#include <limits.h>                 // from stdc
-#include "stringutils.h"            // For tostring.
 #include "PDateTime.h"
+#include <plearn/base/stringutils.h> 
+#include <plearn/base/lexical_cast.h>  // for toint  
+#include <plearn/base/tostring.h>  
 #include "general.h"                // for MISSING_VALUE
 
 namespace PLearn {
