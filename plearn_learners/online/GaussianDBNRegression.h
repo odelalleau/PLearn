@@ -258,6 +258,7 @@ protected:
 
     virtual void greedyStep( const Vec& predictor, int params_index );
     virtual void fineTuneByGradientDescent( const Vec& input );
+    void fineTuneByGradientDescentLastLayer( const Vec& input );
 
     //! Declares the class options.
     static void declareOptions(OptionList& ol);

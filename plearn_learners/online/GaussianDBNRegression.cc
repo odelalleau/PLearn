@@ -246,8 +246,8 @@ void GaussianDBNRegression::build_params()
                  "be equal to layers.length()-1 (%d != %d).\n",
                  params.length(), n_layers-1 );
 
-    activation_gradients.resize( n_layers );
-    expectation_gradients.resize( n_layers );
+    activation_gradients.resize( n_layers+1 );
+    expectation_gradients.resize( n_layers+1 );
     output_gradient.resize( n_predicted );
 
     input_params->down_units_types = layers[0]->units_types;
@@ -271,10 +271,12 @@ void GaussianDBNRegression::build_params()
         params[i]->initialization_method = initialization_method;
         params[i]->random_gen = random_gen;
         params[i]->build();
-
+        
         activation_gradients[i].resize( params[i]->down_layer_size );
         expectation_gradients[i].resize( params[i]->down_layer_size );
+        
     }
+
 
     if( target_layer && !target_params )
         target_params = new RBMLQParameters();
@@ -509,7 +511,6 @@ void GaussianDBNRegression::train()
     }
 
     int nsamples = train_set->length();
-    int sample = 0;
     MODULE_LOG << "  nsamples = " << nsamples << endl;
 
     // Let's define stage and nstages:
@@ -520,52 +521,94 @@ void GaussianDBNRegression::train()
 
     MODULE_LOG << "initial stage = " << stage << endl;
     MODULE_LOG << "objective: nstages = " << nstages << endl;
+        
+    // clear stats of previous epoch
+    train_stats->forget();
 
-    for( ; stage < nstages ; stage++ )
-    {
-        // clear stats of previous epoch
-        train_stats->forget();
-
-        // loops over the training set, until training_schedule[stage] examples
-        // have been seen.
-        // TODO: modify the training set used?
-        int layer = stage;
-        int n_samples_to_see = training_schedule[stage];
-
+    for(int layer=0 ; layer<n_layers-1 ; ++layer) { 
+            
+        MODULE_LOG << "Training parameters between layers " << layer
+            << " and " << layer+1 << endl;
+        
         // this progress bar shows the number of loops through the whole
         // training set
         ProgressBar* pb = 0;
-
-        if( stage < n_layers-1 )
+              
+        int end_stage = min( training_schedule[layer], nstages );              
+        if( report_progress && stage < end_stage )
         {
-            MODULE_LOG << "Training parameters between layers " << stage
-                << " and " << stage+1 << endl;
+            pb = new ProgressBar( "Training layer "+tostring(layer)+
+                    "of" + classname(), end_stage - stage );
+        }
 
-            if( report_progress )
-                pb = new ProgressBar( "Training " + classname()
-                                      + " parameters between layers "
-                                      + tostring(stage) + " and "
-                                      + tostring(stage+1),
-                                      n_samples_to_see );
 
-            int begin_sample = sample;
-            int end_sample = begin_sample + n_samples_to_see;
-            for( ; sample < end_sample ; sample++ )
-            {
+        for( ; stage < end_stage ; stage++ )
+        {
+
                 // sample is the index in the training set
-                int i = sample % train_set->length();
-                train_set->getExample(i, input, target, weight);
+                int sample = stage % train_set->length();
+                train_set->getExample(sample, input, target, weight);
                 greedyStep( input.subVec(0, n_predictor), layer );
 
                 if( pb )
-                    pb->update( sample - begin_sample + 1 );
-            }
+                {
+                    if( layer == 0 )
+                        pb->update(stage + 1);
+                    else
+                        pb->update(stage - training_schedule[layer-1] + 1);
+                }
 
+                Mat inputs(train_set.length() , n_predictor) ; 
+                Mat outputs(train_set.length() , n_predicted);
+                Mat theta(1 + n_predictor , n_predicted) ; 
+                Vec output_value(n_predicted) ; 
+
+                for(int i=0 ; i<train_set.length() ; ++i) { 
+                    train_set->getExample(i, input, target, weight);
+                    // split input in predictor_part and predicted_part
+                    splitCond(input);
+
+                    // compute predicted_part expectation, conditioned on predictor_part
+                    // (forward pass)
+                    expectation( output_value );
+                    for(int j=0 ; j<n_predictor ; ++j) { 
+                        inputs[i][j] = last_layer->expectation[j] ; 
+//                        cout << last_layer->expectation[j] << " " ; 
+                    }
+                    for(int j=0 ; j<n_predicted ; ++j) { 
+                        outputs[i][j] = input[j+n_predictor] ; 
+                    }
+                }
+
+//                pout << "inputs " << endl << inputs << endl  ; 
+                
+//                pout << "outputs " << endl << outputs << endl  ; 
+                
+                linearRegression(inputs,outputs,0.0,theta); 
+                // init the a_i term
+                target_params->up_units_params[1].fill(1) ; 
+
+//                pout << "Theta" << theta << endl ; 
+
+                // set the bias (b_i)
+                for(int i=0 ; i<n_predicted ; ++i) { 
+                    target_params->up_units_params[0][i] = - 2.0 * theta[i][0] ; 
+                }
+
+                for(int i=0 ; i<n_predicted ; ++i) { 
+                    for(int j=0 ; j<n_predictor ; ++j) { 
+                        target_params->weights[i][j] = -2.0 * theta[j][i+1] ; 
+                    }
+                }
+
+                
         }
-        else if( stage == n_layers-1 )
-        {
-            MODULE_LOG << "Fine-tuning all parameters, using method "
-                << fine_tuning_method << endl;
+            
+
+    }
+/*            
+    MODULE_LOG << "Fine-tuning all parameters, using method "
+    << fine_tuning_method << endl;
 
             if( fine_tuning_method == "" ) // do nothing
                 sample += n_samples_to_see;
@@ -576,6 +619,8 @@ void GaussianDBNRegression::train()
                                           + " parameters by fine tuning",
                                           n_samples_to_see );
 
+*/
+                                          
 /*
 pout << "==================" << endl
     << "Before update:" << endl
@@ -584,9 +629,26 @@ pout << "==================" << endl
     << "down:    " << joint_params->down_units_params << endl
     << endl;
 // */
+
+                // linear regression for last weights
+                
+                
+/*
                 int begin_sample = sample;
                 int end_sample = begin_sample + n_samples_to_see;
                 for( ; sample < end_sample ; sample++ )
+                {
+                    // sample is the index in the training set
+                    int i = sample % train_set->length();
+                    train_set->getExample(i, input, target, weight);
+                    fineTuneByGradientDescentLastLayer( input );
+
+                    if( pb )
+                        pb->update( sample - begin_sample + 1 );
+                }
+
+                sample = begin_sample ; 
+                for( ; sample < 100 ; sample++ )
                 {
                     // sample is the index in the training set
                     int i = sample % train_set->length();
@@ -596,6 +658,9 @@ pout << "==================" << endl
                     if( pb )
                         pb->update( sample - begin_sample + 1 );
                 }
+*/                
+
+                
 /*
 pout << "-------" << endl
     << "After update:" << endl
@@ -604,14 +669,8 @@ pout << "-------" << endl
     << "down:    " << joint_params->down_units_params << endl
     << endl;
 // */
-            }
-            else
-                PLERROR( "Fine-tuning methods other than \"EGD\" are not"
-                         " implemented yet." );
 
-        }
-        train_stats->finalize(); // finalize statistics for this epoch
-    }
+    train_stats->finalize(); // finalize statistics for this epoch
     MODULE_LOG << endl;
 }
 
@@ -692,6 +751,37 @@ void GaussianDBNRegression::greedyStep( const Vec& predictor, int index )
 
 }
 
+
+
+void GaussianDBNRegression::fineTuneByGradientDescentLastLayer( const Vec& input )
+{
+    // split input in predictor_part and predicted_part
+    splitCond(input);
+
+    // compute predicted_part expectation, conditioned on predictor_part
+    // (forward pass)
+    expectation( output_gradient );
+
+    int target_size = predicted_part.size() ; 
+
+    expectation_gradients[n_layers].resize(target_size) ; 
+    
+    for(int i=0 ; i < target_size ; ++i) { 
+        expectation_gradients[n_layers][i] = 2 * (output_gradient[i] - predicted_part[i]) ;
+    }
+
+    target_layer->bpropUpdate( target_layer->activations,
+                               target_layer->expectation,
+                               activation_gradients[n_layers] ,
+                               expectation_gradients[n_layers]) ; 
+    
+    target_params->bpropUpdate( layers[n_layers-1]->expectation,
+                               target_layer->activations,
+                               expectation_gradients[n_layers-1],
+                               activation_gradients[n_layers] );
+    
+}
+
 void GaussianDBNRegression::fineTuneByGradientDescent( const Vec& input )
 {
     // split input in predictor_part and predicted_part
@@ -703,16 +793,23 @@ void GaussianDBNRegression::fineTuneByGradientDescent( const Vec& input )
 
     int target_size = predicted_part.size() ; 
 
+    expectation_gradients[n_layers].resize(target_size) ; 
+    
     for(int i=0 ; i < target_size ; ++i) { 
-        output_gradient[i] = 2 * (output_gradient[i] - predicted_part[i]) ;
+        expectation_gradients[n_layers][i] = 2 * (output_gradient[i] - predicted_part[i]) ;
     }
 
-    target_params->bpropUpdate( layers[n_layers-1]->expectation,
+    target_layer->bpropUpdate( target_layer->activations,
                                target_layer->expectation,
+                               activation_gradients[n_layers] ,
+                               expectation_gradients[n_layers]) ; 
+    
+    target_params->bpropUpdate( layers[n_layers-1]->expectation,
+                               target_layer->activations,
                                expectation_gradients[n_layers-1],
-                               output_gradient );
+                               activation_gradients[n_layers] );
 
-    for( int i=n_layers-2 ; i>1 ; i-- )
+    for( int i=n_layers-1 ; i>1 ; i-- )
     {
         layers[i]->bpropUpdate( layers[i]->activations,
                                 layers[i]->expectation,
@@ -723,6 +820,7 @@ void GaussianDBNRegression::fineTuneByGradientDescent( const Vec& input )
                                   expectation_gradients[i-1],
                                   activation_gradients[i] );
     }
+    
         layers[1]->bpropUpdate( layers[1]->activations,
                                 layers[1]->expectation,
                                 activation_gradients[1],
@@ -732,7 +830,8 @@ void GaussianDBNRegression::fineTuneByGradientDescent( const Vec& input )
                                   layers[1]->activations,
                                   expectation_gradients[0],
                                   activation_gradients[1] );
-    
+                                  
+
 }
 
 void GaussianDBNRegression::computeCostsFromOutputs(const Vec& input,
