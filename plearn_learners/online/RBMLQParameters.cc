@@ -280,7 +280,8 @@ void RBMLQParameters::computeUnitActivations
         Mat sigma = activations_mat.column(1) ; 
         
         product( mu , weights , input_vec.toMat(input_vec.length(),1) );
-        
+
+
         // activations[i-start] = sum_j weights(j,i) input_vec[j] + b[i]
         for(int i=0 ; i<length ; ++i) { 
             real a_i = up_units_params[1][i] ; 
@@ -301,6 +302,9 @@ void RBMLQParameters::computeUnitActivations
     }
 }
 
+inline double cube(double x){
+    return x*x*x ; 
+}
 //! this version allows to obtain the input gradient as well
 void RBMLQParameters::bpropUpdate(const Vec& input, const Vec& output,
                                   Vec& input_gradient,
@@ -308,8 +312,8 @@ void RBMLQParameters::bpropUpdate(const Vec& input, const Vec& output,
 {
     //TODO: clean up the code a bit
     assert( input.size() == down_layer_size );
-    assert( output.size() == up_layer_size );
-    assert( output_gradient.size() == up_layer_size );
+    assert( output.size() == 2 * up_layer_size );
+    assert( output_gradient.size() == 2 * up_layer_size );
     input_gradient.resize( down_layer_size );
 
     // weights -= learning_rate * output_gradient * input'
@@ -323,28 +327,29 @@ void RBMLQParameters::bpropUpdate(const Vec& input, const Vec& output,
     {
         real a_i_square = up_units_params[1][i] * up_units_params[1][i] ; 
         
-        scaled_out_grad[i] = -0.5 * output_gradient[i] / a_i_square ; 
+        scaled_out_grad[i] = -0.5 * output_gradient[2 * i] / a_i_square ; 
         
-        up_units_params[0][i] -= learning_rate * ( -0.5 / a_i_square ) *
-                                 output_gradient[i] ; 
-
+//        up_units_params[0][i] -= learning_rate * ( -0.5 / a_i_square ) *
+//                                 output_gradient[2*i] ; 
         
         for(int j=0 ; j < down_layer_size ; ++j) {             
             prod_w_input[i] += weights[i][j] * input[j] ; 
-            weights[i][j] -= learning_rate * ( - 0.5 * input[j] / a_i_square ) * 
-                             output_gradient[i];
         }
     }
 
+    externalProductAcc( weights, (-learning_rate)*scaled_out_grad, input );
+    
+    // (up) bias -= learning_rate * output_gradient
+    multiplyAcc( up_units_params[0], scaled_out_grad, -learning_rate );
+
     for(int i=0 ; i<up_layer_size ; ++i) { 
-        up_units_params[1][i] -= learning_rate * ( up_units_params[0][i] +
-                prod_w_input[i] ) * output_gradient[i] ; 
+      up_units_params[1][i] -= learning_rate * ( up_units_params[0][i] +
+                prod_w_input[i] ) / (cube(up_units_params[1][i])) *
+          output_gradient[2*i] ; 
     }
 
     // (up) bias -= learning_rate * output_gradient
 //    multiplyAcc( up_units_params[0], output_gradient, -learning_rate );
-    
-
 
     // input_gradient = weights' * output_gradient
     transposeProduct( input_gradient, weights, scaled_out_grad );
