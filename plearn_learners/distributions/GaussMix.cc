@@ -905,7 +905,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
     static Vec y_missing;
     static Vec eigenvals_missing;
     static TVec<Vec> eigenvals_allj_missing;
-    static Mat eigenvecs_missing;
+    static Mat* eigenvecs_missing;
+    static Mat eigenvecs_missing_storage;
     static TVec<Mat> eigenvecs_allj_missing;
     static TVec<int> non_missing;
     static Mat work_mat1, work_mat2;
@@ -920,6 +921,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
     // Dummy matrix to release some storage pointers so that some matrices can
     // be resized.
     static Mat dummy_mat;
+
+    eigenvecs_missing = &eigenvecs_missing_storage;
 
     Mat* the_cov_y_missing = &cov_y_missing;
 
@@ -1182,7 +1185,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                                       eigenvecs_allj_missing[j]);
                     }
                     eigenvals_missing = eigenvals_allj_missing[j];
-                    eigenvecs_missing = eigenvecs_allj_missing[j];
+                    eigenvecs_missing = &eigenvecs_allj_missing[j];
                     }
 
                     real log_det = 0;
@@ -1375,7 +1378,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     if (!eff_missing) {
                     mu_y = mu_y_missing;
                     eigenvals = eigenvals_missing;
-                    eigenvecs = eigenvecs_missing;
+                    eigenvecs = *eigenvecs_missing;
 
                     y_centered << y_missing;
                     y_centered -= mu_y;
@@ -1514,6 +1517,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
 
                     // Release pointer to 'eigenvecs_missing'.
                     eigenvecs = dummy_mat;
+                    eigenvecs_missing = &eigenvecs_missing_storage;
 
                     if (impute_missing && current_training_sample >= 0) {
                         // We need to store the conditional expectation of the
@@ -1726,11 +1730,11 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     } else {
                         // Perform SVD of cov_y_missing.
                         eigenVecOfSymmMat(*the_cov_y_missing, n_non_missing,
-                                eigenvals_missing, eigenvecs_missing);
+                                eigenvals_missing, *eigenvecs_missing);
 
                         mu_y = mu_y_missing;
                         eigenvals = eigenvals_missing;
-                        eigenvecs = eigenvecs_missing;
+                        eigenvecs = *eigenvecs_missing;
 
                         y_centered.resize(n_non_missing);
                         y_centered << y_missing;
