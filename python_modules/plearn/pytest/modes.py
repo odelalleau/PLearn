@@ -681,7 +681,7 @@ class results(ResultsBasedMode):
         super(results, self).__init__(targets, options)
         if TestStatus.nPassed() > 0:
             logging.warning("\nNew results were generated. Verify their validity, and "
-                            "if they are correct, run 'pytest confirm' to confirm the"
+                            "if they are correct, run 'pytest confirm' to confirm the "
                             "new results before your commit.")
 
 class run(ResultsBasedMode):    
