@@ -43,57 +43,55 @@
 
 #include "tostring.h"
 #include <plearn/base/plerror.h>
-// #include <plearn/io/openString.h>
 #include <plearn/math/pl_math.h>    //!< For 'fast_exact_is_equal'.
 
 
 namespace PLearn {
 using namespace std;
 
-PStream& _tostring_static_pstream_(bool lock)
+PStream& _tostring_static_pstream_(bool lock, PStream::mode_t io_formatting)
 {
     static bool locked = false;
     static string s;
+    static StringPStreamBuf* pbuf = 0;
     static PStream sout;    
 
-    if(sout.isNull())
-        sout = new StringPStreamBuf(&s, "w");
-    if(lock==locked)
+    if(!pbuf)
+    {
+        pbuf = new StringPStreamBuf(&s, "w");
+        sout = pbuf;
+    }
+
+    if(lock)
     {
         if(locked)
-            exitmsg("In %s, already locked! Operations for PStream serialization (operator <<) should NEVER call tostring or tostring2", __FUNCTION__); 
-        else  
-            exitmsg("In %s, already unlocked! This should never happen", __FUNCTION__);
+            exitmsg("In %s, already locked! Operations for PStream serialization (operator <<) should NEVER call tostring", __FUNCTION__);             
+        pbuf->clear();
+        sout.setOutMode(io_formatting);
+        locked = true;
     }
-    locked = lock;
+    else // unlock
+    {
+        if(!locked)
+            exitmsg("In %s, already unlocked! This should never happen", __FUNCTION__);
+        sout.flush();
+        sout.clearOutMap();
+        locked = false;
+    }
 
     return sout;
 }
 
 string tostring(const double& x, PStream::mode_t io_formatting)
 {
-    // static string result;
-    // PStream out = openString(result, io_formatting, "w");
-
-    // get the PStream and set the lock
-    PStream& out = _tostring_static_pstream_(true);
-    StringPStreamBuf* pbuf = dynamic_cast<StringPStreamBuf*>((PStreamBuf*)out);
-    pbuf->clear();
-    out.clearOutMap();
-    out.setOutMode(io_formatting);
-
+    PStream& out = _tostring_static_pstream_(true, io_formatting);
     int ix = int(x);
     if (io_formatting==PStream::raw_ascii && fast_exact_is_equal(ix, x))
         out << ix;
     else
         out << x;
-    out.flush();
-
-    // release the lock
-    _tostring_static_pstream_(false);
-    return pbuf->getString();
-
-    // return result;
+    return static_cast<StringPStreamBuf*>(
+        (PStreamBuf*)_tostring_static_pstream_(false))->getString();
 }
 
 } // end of namespace PLearn

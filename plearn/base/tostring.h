@@ -44,33 +44,20 @@
 #ifndef tostring_INC
 #define tostring_INC
 
-#include <map>
 #include <string>
 #include <plearn/io/PStream.h>
 #include <plearn/io/StringPStreamBuf.h>
-// #include <plearn/io/openString.h>
 
 namespace PLearn {
 using namespace std;
 
-/*
-//!  converts anything to a string (same output as with cout << x)
-template<class T> string tostring(const T& x);
-
-template<class K, class V, class C, class A>
-string tostring(const map<K, V, C, A>& x);
-*/
-
 //! Returns an internal static PStream pointing to a StringPStreamBuf
-PStream& _tostring_static_pstream_(bool lock);
+//! This should first be called with lock=true to acquire the lock on
+//! the stream (and set the io_formatting and clear the string buffer)
+//! It should then be called with lock=false to flush the stream and 
+//! release the lock and clear the outmap.
+PStream& _tostring_static_pstream_(bool lock, PStream::mode_t io_formatting = PStream::raw_ascii);
   
-//!  specialised version for char*
-/*
-string tostring(const char* s,
-                PStream::mode_t io_formatting = PStream::raw_ascii)
-{ return string(s); }
-*/
-
 string tostring(const double& x,
                 PStream::mode_t io_formatting = PStream::raw_ascii);
 
@@ -83,52 +70,15 @@ template<class T>
 string tostring2(const T& x, 
                  PStream::mode_t io_formatting = PStream::raw_ascii)
 {
-    /*
-    string s;
-    PStream out = openString(s, io_formatting, "w");
-    out << x << flush;
-    return s;
-    */
-
-    // get the PStream and set the lock
-    PStream& out = _tostring_static_pstream_(true);
-    StringPStreamBuf* pbuf = dynamic_cast<StringPStreamBuf*>((PStreamBuf*)out);
-    pbuf->clear();
-    out.setOutMode(io_formatting);
-    out.clearOutMap();
-    out << x;
-    out.flush();
-    // release the lock
-    _tostring_static_pstream_(false);
-    return pbuf->getString();
+    _tostring_static_pstream_(true, io_formatting) << x;
+    return static_cast<StringPStreamBuf*>(
+        (PStreamBuf*)_tostring_static_pstream_(false))->getString();
 }
 
 template<class T> 
 string tostring(const T& x, PStream::mode_t io_formatting = PStream::raw_ascii)
 { return tostring2(x, io_formatting); }
 
-/*! ******************
- * Implementation *
- ******************
- */
-
-/*    
-template<class T> string tostring(const T& x)
-{
-    ostringstream out;
-    out << x;
-    return out.str();
-}
-
-template<class K, class V, class C, class A>
-string tostring(const map<K, V, C, A>& x)
-{
-    ostringstream out;
-    PStream pout(&out);
-    pout << x;
-    return out.str();
-}
-*/
 
 } // end of namespace PLearn
 
