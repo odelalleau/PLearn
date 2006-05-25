@@ -101,6 +101,7 @@
  ****************/
 #include <plearn_learners/hyper/HyperOptimize.h>
 #include <plearn_learners/hyper/HyperRetrain.h>
+#include <plearn_learners/hyper/HyperSetOption.h>
 
 /**********
  * Kernel *
