@@ -104,8 +104,10 @@ HyperLearner::declareOptions(OptionList &ol)
 
     declareOption(ol, "strategy", &HyperLearner::strategy, OptionBase::buildoption,
                   "The strategy to follow to optimize the hyper-parameters.\n"
-                  "It's a list of hyper-optimization commands to call sequentially,"
-                  "(mostly HyperOptimize and SetOptions commands).");
+                  "It's a list of hyper-optimization commands to call"
+                  " sequentially,\n"
+                  "(mostly HyperOptimize, HyperSetOption and HyperRetrain"
+                  " commands).\n");
 
     declareOption(ol, "provide_strategy_expdir", &HyperLearner::provide_strategy_expdir, OptionBase::buildoption,
                   "should each strategy step be provided a directory expdir/Step# to report its results");
