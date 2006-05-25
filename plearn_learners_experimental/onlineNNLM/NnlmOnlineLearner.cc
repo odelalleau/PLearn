@@ -83,7 +83,7 @@ NnlmOnlineLearner::NnlmOnlineLearner()
         word_representation_size( -1 ),
         context_size( -1 ),
         context_layer_size( 200 ),
-        shared_candidates_size( 100 ),
+        shared_candidates_size( 0 ),
         ngram_candidates_size( 50 ),
         self_candidates_size( 0 )
 {
@@ -172,6 +172,7 @@ void NnlmOnlineLearner::buildLayers()
     p_wrl->word_representation_size = word_representation_size;
     p_wrl->context_size = context_size;
     p_wrl->random_gen = random_gen;
+    p_wrl->start_learning_rate = 10^3;
 
     modules[0] = p_wrl;
 
@@ -183,7 +184,7 @@ void NnlmOnlineLearner::buildLayers()
     p_nnl->input_size = context_size * word_representation_size;
     // HARDCODED FOR NOW
     p_nnl->output_size = context_layer_size;
-    p_nnl->start_learning_rate = 0.01;
+    p_nnl->start_learning_rate = 10^3;
     p_nnl->init_weights_random_scale=1;
     p_nnl->random_gen = random_gen;
 
@@ -603,9 +604,15 @@ void NnlmOnlineLearner::train()
     // *** For stages
     for( ; stage < nstages ; stage++ )
     {
-        if(report_progress)
-            cout << endl << "stage " << stage << endl;
+cout << "#################################################################" << endl;
+cout << "#################################################################" << endl;
+cout << "#################################################################" << endl;
+cout << "#################################################################" << endl;
 
+        if(report_progress) {
+            cout << endl << "stage " << stage << endl;
+            cout << "uniform_mixture_coeff " << output_module->umc << endl;
+        }
         // * clear stats of previous epoch
         train_costs.fill(0);
         train_stats->forget();
@@ -640,6 +647,10 @@ void NnlmOnlineLearner::train()
                 for(int i=0; i<context_layer_size; i++) {
                     non_discr_gradient[i] = ( output[i] - output_module->mu( (int) target[0], i) ) 
                                       / output_module->sigma2( (int) target[0], i);
+
+                    // modification for mixture with uniform * p(r,g|i) / p(r|i)
+                    non_discr_gradient[i] = non_discr_gradient[i] * safeexp( output_module->log_p_rg_i - output_module->log_p_r_i );
+
                 }
             }
 
@@ -656,16 +667,25 @@ void NnlmOnlineLearner::train()
             train_stats->update( train_costs );
 
             // *** Select which gradient
-            gradients[ nmodules ] << non_discr_gradient;
-            //gradients[ nmodules ] << approx_discr_gradient;
+            //gradients[ nmodules ] << non_discr_gradient;
+            gradients[ nmodules ] << approx_discr_gradient;
 
-/*            if( sample < 10 ) {
+            if( sample < 100 ) {
+                cout << "mu[ (int) target[0] ]" << endl;
+                cout << output_module->mu( (int) target[0] ) << endl;
+cout << "-----------------------------------------------------" << endl;
+                cout << "sigma2[ (int) target[0] ]" << endl;
+                cout << output_module->sigma2( (int) target[0] ) << endl;
+cout << "-----------------------------------------------------" << endl;
+
                 cout << "non_discr_gradient" << endl;
                 cout << non_discr_gradient << endl;
+cout << "-----------------------------------------------------" << endl;
                 cout << "approx_discr_gradient" << endl;
                 cout << approx_discr_gradient << endl;
+cout << "*****************************************************" << endl;
             }
-*/
+
 
             // *** Perform update -> bpropUpdate
             
@@ -726,21 +746,14 @@ void NnlmOnlineLearner::computeApproximateDiscriminantCostAndGradient(Vec input,
         alpha = output[i] - output_module->mu( (int)target[0] , i);
 
         if( alpha > 0)  {
-            gradient_tmp_pos[i] = -nd_cost + safelog( alpha ) - safelog( output_module->sigma2( (int)target[0], i) );
+            //gradient_tmp_pos[i] = -nd_cost + safelog( alpha ) - safelog( output_module->sigma2( (int)target[0], i) );
+            gradient_tmp_pos[i] = output_module->log_p_rg_i + safelog( alpha ) - safelog( output_module->sigma2( (int)target[0], i) );
         } else  {
-            gradient_tmp_neg[i] = -nd_cost + safelog( -alpha ) - safelog( output_module->sigma2( (int)target[0], i) );
+            //gradient_tmp_neg[i] = -nd_cost + safelog( -alpha ) - safelog( output_module->sigma2( (int)target[0], i) );
+            gradient_tmp_neg[i] = output_module->log_p_rg_i + safelog( -alpha ) - safelog( output_module->sigma2( (int)target[0], i) );
         }
 
-//        gradient_tmp[i] = safeexp(-nd_cost) * 
-//                            ( alpha ) / output_module->sigma2( (int)target[0], i);
     }
-
-/*  if( step < 10)  {
-        cout << "----------------------------------" << endl; 
-        cout << "neglogprob_tr " << nd_cost << endl; 
-        //cout << "----------------------------------" << endl; 
-    }            */
-
 
     // *** Compute normalization
 
@@ -760,15 +773,17 @@ void NnlmOnlineLearner::computeApproximateDiscriminantCostAndGradient(Vec input,
                     alpha = output[j] - output_module->mu( c, j);
 
                     if( alpha > 0)  {
+                        //gradient_tmp_pos[j] = logadd( gradient_tmp_pos[j], 
+                        //        -neglogprob_cr[0] + safelog( alpha ) - safelog( output_module->sigma2( c, j) ) );
                         gradient_tmp_pos[j] = logadd( gradient_tmp_pos[j], 
-                                -neglogprob_cr[0] + safelog( alpha ) - safelog( output_module->sigma2( c, j) ) );
+                                output_module->log_p_rg_i + safelog( alpha ) - safelog( output_module->sigma2( c, j) ) );
                     } else  {
+                        //gradient_tmp_neg[j] = logadd( gradient_tmp_neg[j], 
+                        //        -neglogprob_cr[0] + safelog( -alpha ) - safelog( output_module->sigma2( c, j) ) );
                         gradient_tmp_neg[j] = logadd( gradient_tmp_neg[j], 
-                                -neglogprob_cr[0] + safelog( -alpha ) - safelog( output_module->sigma2( c, j) ) );
+                                output_module->log_p_rg_i + safelog( -alpha ) - safelog( output_module->sigma2( c, j) ) );
                     }
 
-//                    gradient_tmp[i] += safeexp(-neglogprob_cr[0]) * 
-//                                          ( alpha ) / output_module->sigma2( c, i) ;
                 }
             }
 
@@ -776,8 +791,6 @@ void NnlmOnlineLearner::computeApproximateDiscriminantCostAndGradient(Vec input,
     }
 
 
-    // TODO CONSIDER SHARED CANDIDATES ALSO!!!
-    // TODO CONSIDER SHARED CANDIDATES ALSO!!!
     // TODO CONSIDER SHARED CANDIDATES ALSO!!!
     for( int i=0; i< candidates[ (int) input[ (int) (inputsize()-2) ] ].length(); i++ )
     {
@@ -795,29 +808,19 @@ void NnlmOnlineLearner::computeApproximateDiscriminantCostAndGradient(Vec input,
                 for(int j=0; j<context_layer_size; j++) {
                     alpha = output[j] - output_module->mu( c, j);
 
- /* if( step < 15)  {
-        cout << "neglogprob_cr " << neglogprob_cr << endl; 
-                   if( alpha > 0)  {
-        cout << "safelog( alpha ) " << safelog( alpha ) << endl; 
-                    } else  {
-        cout << "safelog( -alpha ) " << safelog( -alpha ) << endl; 
-                    }
-        cout << "- safelog( output_module->sigma2( c, i) ) " << - safelog( output_module->sigma2( c, i) ) << endl;
-  }*/
-
-
-
-
                     if( alpha > 0)  {
+                        //gradient_tmp_pos[j] = logadd( gradient_tmp_pos[j], 
+                        //        -neglogprob_cr[0] + safelog( alpha ) - safelog( output_module->sigma2( c, j) ) );
                         gradient_tmp_pos[j] = logadd( gradient_tmp_pos[j], 
-                                -neglogprob_cr[0] + safelog( alpha ) - safelog( output_module->sigma2( c, j) ) );
-                    } else  {
-                        gradient_tmp_neg[j] = logadd( gradient_tmp_neg[j], 
-                                -neglogprob_cr[0] + safelog( -alpha ) - safelog( output_module->sigma2( c, j) ) );
-                    }
+                                output_module->log_p_rg_i + safelog( alpha ) - safelog( output_module->sigma2( c, j) ) );
 
-//                    gradient_tmp[i] += safeexp(-neglogprob_cr[0]) * 
-//                                          ( alpha ) / output_module->sigma2( c, i) ;
+                    } else  {
+                        //gradient_tmp_neg[j] = logadd( gradient_tmp_neg[j], 
+                        //        -neglogprob_cr[0] + safelog( -alpha ) - safelog( output_module->sigma2( c, j) ) );
+                        gradient_tmp_neg[j] = logadd( gradient_tmp_neg[j], 
+                                output_module->log_p_rg_i + safelog( -alpha ) - safelog( output_module->sigma2( c, j) ) );
+
+                    }
                 }
             }
 
@@ -825,12 +828,8 @@ void NnlmOnlineLearner::computeApproximateDiscriminantCostAndGradient(Vec input,
     }
 
 
-/*  if( step < 15)  {
-      cout << "log_sumprob " << log_sumprob << endl;
-  }*/
 
-
-    // *** The approcimate discriminant cost
+    // *** The approximate discriminant cost
     train_costs[1] = nd_cost + log_sumprob;
 
 
@@ -842,10 +841,6 @@ void NnlmOnlineLearner::computeApproximateDiscriminantCostAndGradient(Vec input,
         } else  {
             gradient_tmp[j] = logsub( gradient_tmp_neg[j], gradient_tmp_pos[j] );
             ad_gradient[j] = nd_gradient[j] + safeexp( gradient_tmp[j] - log_sumprob);
-
-//            cout << "nd_gradient[i] " << nd_gradient[i] << endl;
-//            cout << "safeexp( gradient_tmp[i] - log_sumprob) " << safeexp( gradient_tmp[i] - log_sumprob) << endl;
-
         }
 
     }
@@ -924,6 +919,11 @@ void NnlmOnlineLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
             pb->update(sample);
 
         entropy += test_costs[0];
+
+        if( sample < 100 ) {
+            cout << sample << " p(i|r) " << safeexp( - test_costs[0] ) << endl;
+        }
+
 
     }
 
