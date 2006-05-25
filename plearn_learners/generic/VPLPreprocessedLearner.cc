@@ -273,7 +273,7 @@ void VPLPreprocessedLearner::setTrainingSet(VMat training_set, bool call_forget)
         int outsize = learner_->outputsize();
         TVec<string> outfieldnames(outsize);
         for(int k=0; k<outsize; k++)
-            outfieldnames[k] = "output"+tostring2(k);
+            outfieldnames[k] = "output"+tostring(k);
         output_prg.setSourceFieldNames(outfieldnames);
         output_prg.compileString(output_postproc, output_prg_fieldnames);
     }

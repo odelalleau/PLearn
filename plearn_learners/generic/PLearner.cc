@@ -830,9 +830,9 @@ void PLearner::remote_batchComputeOutputAndConfidence(VMat inputs, real probabil
     TVec<string> fieldnames;
     for(int j=0; j<outputsize(); j++)
     {
-        fieldnames.append("output_"+tostring2(j));
-        fieldnames.append("low_"+tostring2(j));
-        fieldnames.append("high_"+tostring2(j));
+        fieldnames.append("output_"+tostring(j));
+        fieldnames.append("low_"+tostring(j));
+        fieldnames.append("high_"+tostring(j));
     }
     VMat out_and_conf = new FileVMatrix(pmat_fname,inputs.length(),fieldnames);
     batchComputeOutputAndConfidence(inputs, probability, out_and_conf);
@@ -982,9 +982,9 @@ void PLearner::remote_batchComputeOutputAndConfidence(VMat inputs, real probabil
  *          TVec<string> fieldnames;
  *          for(int j=0; j<outputsize(); j++)
  *          {
- *              fieldnames.append("output_"+tostring2(j));
- *              fieldnames.append("low_"+tostring2(j));
- *              fieldnames.append("high_"+tostring2(j));
+ *              fieldnames.append("output_"+tostring(j));
+ *              fieldnames.append("low_"+tostring(j));
+ *              fieldnames.append("high_"+tostring(j));
  *          }
  *          VMat out_and_conf = new FileVMatrix(pmat_fname,inputs.length(),fieldnames);
  *          batchComputeOutputAndConfidence(inputs, probability, out_and_conf);

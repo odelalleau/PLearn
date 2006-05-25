@@ -168,7 +168,7 @@ real LocallyMagnifiedDistribution::log_density(const Vec& y) const
         real d = NN_costs[width_neighbor-1];
         // Now set new kernel width:
         real newwidth = d*width_factor;
-        weighting_kernel->setOption(width_optionname,tostring2(newwidth));
+        weighting_kernel->setOption(width_optionname,tostring(newwidth));
         weighting_kernel->build(); // rebuild to adapt to width change
     }
 

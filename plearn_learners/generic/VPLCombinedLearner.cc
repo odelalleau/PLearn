@@ -170,7 +170,7 @@ void VPLCombinedLearner::setExperimentDirectory(const PPath& the_expdir)
 {
     inherited::setExperimentDirectory(the_expdir);
     for(int k=0; k<sublearners_.length(); k++)
-        sublearners_[k]->setExperimentDirectory(the_expdir/("SubLearner_"+tostring2(k)));
+        sublearners_[k]->setExperimentDirectory(the_expdir/("SubLearner_"+tostring(k)));
 }
 
 void VPLCombinedLearner::forget()

@@ -56,8 +56,9 @@ using namespace std;
 //! the stream (and set the io_formatting and clear the string buffer)
 //! It should then be called with lock=false to flush the stream and 
 //! release the lock and clear the outmap.
-PStream& _tostring_static_pstream_(bool lock, PStream::mode_t io_formatting = PStream::raw_ascii);
-  
+PStream& _tostring_static_pstream_(bool lock, 
+                                   PStream::mode_t io_formatting = PStream::raw_ascii);
+
 string tostring(const double& x,
                 PStream::mode_t io_formatting = PStream::raw_ascii);
 
@@ -67,18 +68,13 @@ inline string tostring(const float& x,
 
 
 template<class T> 
-string tostring2(const T& x, 
-                 PStream::mode_t io_formatting = PStream::raw_ascii)
+string tostring(const T& x, 
+                PStream::mode_t io_formatting = PStream::raw_ascii)
 {
     _tostring_static_pstream_(true, io_formatting) << x;
     return static_cast<StringPStreamBuf*>(
         (PStreamBuf*)_tostring_static_pstream_(false))->getString();
 }
-
-template<class T> 
-string tostring(const T& x, PStream::mode_t io_formatting = PStream::raw_ascii)
-{ return tostring2(x, io_formatting); }
-
 
 } // end of namespace PLearn
 

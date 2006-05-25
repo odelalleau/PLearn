@@ -108,7 +108,7 @@ void ServerCommand::run(const vector<string>& args)
         string myhostname = "UNKNOWN_HOSTNAME";
         string mypid = "UNKNOWN_PID";      
 #ifndef WIN32
-        mypid = tostring2(getpid());
+        mypid = tostring(getpid());
         if(gethostname(buf, sizeof(buf))==0)
             myhostname = buf;
 #endif

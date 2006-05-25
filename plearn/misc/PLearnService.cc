@@ -55,7 +55,7 @@ using namespace std;
 /*
   void PLearnService::remoteLaunchServers(int nservers, int tcpport, const string& launch_command)
   {
-  string full_command = launch_command+'--tcp '+tostring2(tcpport);
+  string full_command = launch_command+'--tcp '+tostring(tcpport);
   for(int k=0; k<nservers; k++)
   {
   PP<Popen> p = new Popen(full_command);

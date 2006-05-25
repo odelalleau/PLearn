@@ -223,7 +223,7 @@ void KNNRegressor::computeOutput(const Vec& input, Vec& output) const
     for (int i=0, n=knn_costs.size() ; i<n && !has_non_zero_costs ; ++i)
         has_non_zero_costs = !is_missing(knn_costs[i]) && !is_equal(knn_costs[i], 0.0);
     if (! has_non_zero_costs) {
-        string input_str = tostring2(input, PStream::pretty_ascii);
+        string input_str = tostring(input, PStream::pretty_ascii);
         PLWARNING("KNNRegressor::computeOutput: all %d neighbors have zero similarity with\n"
                   "input vector %s;\n"
                   "check the similarity kernel bandwidth.  Replacing them by uniform weights.",

@@ -49,7 +49,8 @@
 namespace PLearn {
 using namespace std;
 
-PStream& _tostring_static_pstream_(bool lock, PStream::mode_t io_formatting)
+PStream& _tostring_static_pstream_(bool lock, 
+                                   PStream::mode_t io_formatting)
 {
     static bool locked = false;
     static string s;
@@ -65,7 +66,9 @@ PStream& _tostring_static_pstream_(bool lock, PStream::mode_t io_formatting)
     if(lock)
     {
         if(locked)
-            exitmsg("In %s, already locked! Operations for PStream serialization (operator <<) should NEVER call tostring", __FUNCTION__);             
+            exitmsg("In %s, already locked! Operations for PStream " 
+                    "serialization (operator <<) should NEVER call "
+                    "tostring", __FUNCTION__);             
         pbuf->clear();
         sout.setOutMode(io_formatting);
         locked = true;
@@ -73,7 +76,8 @@ PStream& _tostring_static_pstream_(bool lock, PStream::mode_t io_formatting)
     else // unlock
     {
         if(!locked)
-            exitmsg("In %s, already unlocked! This should never happen", __FUNCTION__);
+            exitmsg("In %s, already unlocked! "
+                    "This should never happen", __FUNCTION__);
         sout.flush();
         sout.clearOutMap();
         locked = false;
