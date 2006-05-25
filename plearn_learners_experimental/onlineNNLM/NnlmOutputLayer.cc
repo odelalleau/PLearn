@@ -53,14 +53,8 @@ NnlmOutputLayer::NnlmOutputLayer() :
     vocabulary_size( -1 ),
     word_representation_size( -1 ),
     context_size( -1 ),
-    cost( 0 ),
-    start_discount_rate( 0.8 ),
-    discount_decrease_constant( 0 ),
-    coeff_class_conditional_uniform_mixture( 0.9 ),
-    discount_rate( 0.8 ),
-    log_p_g_r( 0.9 ),
-    sum_log_p_g_r( 0 )
-    
+    start_gaussian_learning_discount_rate( 0.8 ),
+    gaussian_learning_decrease_constant( 0 )
 {
     // ### (doing so assumes the parent classes' build_() have been called too
     // ### in the parent classes' constructors, something that you must ensure)
@@ -68,7 +62,7 @@ NnlmOutputLayer::NnlmOutputLayer() :
 
 void NnlmOutputLayer::declareOptions(OptionList& ol)
 {
-
+    // * Built *
     declareOption(ol, "vocabulary_size",
                   &NnlmOutputLayer::vocabulary_size,
                   OptionBase::buildoption,
@@ -84,21 +78,24 @@ void NnlmOutputLayer::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "size of word context");
 
-    declareOption(ol, "start_discount_rate",
-                  &NnlmOutputLayer::start_discount_rate,
+    declareOption(ol, "start_gaussian_learning_discount_rate",
+                  &NnlmOutputLayer::start_gaussian_learning_discount_rate,
                   OptionBase::buildoption,
                   "Discount-rate of stochastic old gaussian values when computing the new values");
 
-    declareOption(ol, "discount_decrease_constant",
-                  &NnlmOutputLayer::discount_decrease_constant,
+    declareOption(ol, "gaussian_learning_decrease_constant",
+                  &NnlmOutputLayer::gaussian_learning_decrease_constant,
                   OptionBase::buildoption,
                   "Decrease constant of gaussian parameters discount rate");
 
-    // * Learnt
-
+    // * Learnt *
     declareOption(ol, "step_number", &NnlmOutputLayer::step_number,
                   OptionBase::learntoption,
                   "The step number, incremented after each update.");
+
+    declareOption(ol, "umc", &NnlmOutputLayer::umc,
+                  OptionBase::learntoption,
+                  "The uniform mixture coefficient. p(r|i) = umc p_gauss + (1-umc) p_uniform");
 
     declareOption(ol, "mu", &NnlmOutputLayer::mu,
                   OptionBase::learntoption,
@@ -132,22 +129,16 @@ void NnlmOutputLayer::build_()
 {
 
     // *** Sanity checks
-    if( input_size <= 0 ) // has not been initialized
-    {
+    if( input_size <= 0 )  {
         PLERROR("NnlmOutputLayer::build_: 'input_size' <= 0 (%i).\n"
                 "You should set it to a positive integer.\n", input_size);
-    }
-    else if( output_size != 1 )
-    {
+    }  else if( output_size != 1 )  {
         PLERROR("NnlmOutputLayer::build_: 'output_size'(=%i) != 1\n"
                   , output_size);
-    }
-    else if( vocabulary_size <= 0 )
-    {
+    }  else if( vocabulary_size <= 0 )  {
         PLERROR("NnlmOutputLayer::build_: 'vocabulary_size' <= 0 (%i).\n"
                   , vocabulary_size);
     }
-
 
     // *** Parameters not initialized
     if( mu.size() == 0 )   {
@@ -166,6 +157,12 @@ void NnlmOutputLayer::build()
 
 void NnlmOutputLayer::resetParameters()
 {
+    step_number = 0;
+    umc = 0.999999999;
+    log_p_g_r = safelog( 0.9 );
+    sum_log_p_g_r = -REAL_MAX;
+
+
     mu.resize( vocabulary_size, input_size);
     mu.fill( 0 );
     sigma2.resize( vocabulary_size, input_size);
@@ -181,18 +178,13 @@ void NnlmOutputLayer::resetParameters()
     sumI.fill( 0 );
     s_sumI = 0;
 
-    vec1.resize(input_size);
-    vec2.resize(input_size);
     context.resize(context_size);
-
-    step_number = 0;
 
 }
 
 void NnlmOutputLayer::setCurrentWord(int the_current_word) 
 {
-    if( the_current_word >= vocabulary_size )
-    {
+    if( the_current_word >= vocabulary_size )  {
         PLERROR("NnlmOutputLayer::setCurrentWord:'the_current_word'(=%i) >= \n"
                   "'vocabulary_size'(=%i)\n"
                   , the_current_word, vocabulary_size);
@@ -220,13 +212,8 @@ void NnlmOutputLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(sumX2, copies);
     deepCopyField(sumI, copies);
 
-    deepCopyField(vec1, copies);
-    deepCopyField(vec2, copies);
-
     deepCopyField(context, copies);
 
-    // ### Remove this line when you have fully implemented this method.
-    //PLERROR("NnlmOutputLayer::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 //! given the input, compute the output (possibly resize it  appropriately)
@@ -240,10 +227,11 @@ void NnlmOutputLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 void NnlmOutputLayer::fprop(const Vec& input, Vec& output) const
 {
 
-    // *** If not ready (need 2 bpropUpdate)
+    // *** If not ready (need 2 bpropUpdate for valid sigma)
     // So we don't do a /0 with /sigma2(current_word, i)
     if( sumI[ current_word ] < 2 )  {
       output.fill(0.0);
+      log_p_g_r = safelog( 0.9 );
       return;
     }
 
@@ -254,11 +242,9 @@ void NnlmOutputLayer::fprop(const Vec& input, Vec& output) const
                 " to 'input_size' (%i != %i)\n", in_size, input_size);
     }
 
-
     // * Compute gaussian's exponent - 'g' means gaussian
-    real r;
-    real g_exponent = 0.0;
-    real det_g_covariance = 1.0;
+    g_exponent = 0.0;
+    det_g_covariance = 1.0;
 
     for(int i=0; i<input_size; i++) {
       r = input[i] - mu(current_word, i);
@@ -270,24 +256,23 @@ void NnlmOutputLayer::fprop(const Vec& input, Vec& output) const
     g_exponent *= -0.5;
 
     // * Compute normalizing factor
-    real log_g_normalization = - 0.5 * ( (input_size) * safelog(2.0 * Pi) + safelog(det_g_covariance) );
+    log_g_normalization = - 0.5 * ( (input_size) * safelog(2.0 * Pi) + safelog(det_g_covariance) );
 
-    // * Compute log p_gaussian(r|i)
-    real log_p_r_i = g_exponent + log_g_normalization;
+    // * Compute log p(r,g|i)
+    log_p_rg_i = safelog(umc) + g_exponent + log_g_normalization;
 
     // * Compute log p(r|i)
-    real a = coeff_class_conditional_uniform_mixture;
-    log_p_r_i = logadd( safelog(a) + log_p_r_i , safelog(1-a) - (input_size) * safelog(2));
+    log_p_r_i = logadd( log_p_rg_i , safelog(1-umc) - (input_size) * safelog(2));
 
     // * Compute log p(r,i)
-    real log_p_ri = safelog(pi[current_word]) + log_p_r_i;
+    log_p_ri = safelog(pi[current_word]) + log_p_r_i;
 
     // * Compute output
     output[0] = -( log_p_ri );
 
     // * Compute posterior for coeff_class_conditional_uniform_mixture evaluation in the bpropUpdate
     // p(generated by gaussian| r) = a p_g(r|i) / p(r|i)
-    log_p_g_r = safelog(a) + g_exponent + log_g_normalization - log_p_r_i;
+    //log_p_g_r = safelog(umc) + g_exponent + log_g_normalization - log_p_r_i;
 
 }
 
@@ -309,20 +294,15 @@ void NnlmOutputLayer::bpropUpdate(const Vec& input, const Vec& output,
     int out_size = output.size();
     int og_size = output_gradient.size();
 
-    // size check
-    if( in_size != input_size )
-    {
+    // *** Sanity checks
+    if( in_size != input_size ) {
         PLERROR("NnlmOutputLayer::bpropUpdate:'input.size()' should be equal\n"
                 " to 'input_size' (%i != %i)\n", in_size, input_size);
-    }
-    if( out_size != output_size )
-    {
+    }  else if( out_size != output_size )  {
         PLERROR("NnlmOutputLayer::bpropUpdate:'output.size()' should be"
                 " equal\n"
                 " to 'output_size' (%i != %i)\n", out_size, output_size);
-    }
-    if( og_size != output_size )
-    {
+    }  else if( og_size != output_size )  {
         PLERROR("NnlmOutputLayer::bpropUpdate:'output_gradient.size()'"
                 " should\n"
                 " be equal to 'output_size' (%i != %i)\n",
@@ -331,27 +311,35 @@ void NnlmOutputLayer::bpropUpdate(const Vec& input, const Vec& output,
 
 
     // TODO is this any good? If so, at least change variable names
-    discount_rate = start_discount_rate + step_number * discount_decrease_constant;
+    gldr = start_gaussian_learning_discount_rate + step_number * gaussian_learning_decrease_constant;
 
     // * Update parameters - using discount
     // discount * ancien + (1-discount) * nouveau
     // so we don't get a sigma that is zero
-    if( sumI[ current_word ] >= 1 ) {
+    if( sumI[ current_word ] >= 2 ) {
 
         for(int i=0; i<input_size; i++) {
 
-            mu( current_word, i ) = discount_rate * mu( current_word, i ) + (1.0 - discount_rate) * input[i];
+            mu( current_word, i ) = gldr * mu( current_word, i ) + (1.0 - gldr) * input[i];
 
             // We reuse the old sigma instead of recomputing it with the new mu... is it a good idea?
             // If we consider we're tracking a moving target maybe.
-            sigma2( current_word, i ) = discount_rate * sigma2( current_word, i ) +
-                + (1.0-discount_rate) * ( input[i] - mu( current_word, i ) ) * ( input[i] - mu( current_word, i ) );
+            sigma2( current_word, i ) = gldr * sigma2( current_word, i ) +
+                + (1.0-gldr) * ( input[i] - mu( current_word, i ) ) * ( input[i] - mu( current_word, i ) );
         }
     // initialize
+    } else if( sumI[ current_word ] == 1 ) {
+        for(int i=0; i<input_size; i++) {
+
+            mu( current_word, i ) = gldr * mu( current_word, i ) + (1.0 - gldr) * input[i];
+
+            // We reuse the old sigma instead of recomputing it with the new mu... is it a good idea?
+            // If we consider we're tracking a moving target maybe.
+            sigma2( current_word, i ) = ( input[i] - mu( current_word, i ) ) * ( input[i] - mu( current_word, i ) );
+        }
     } else  {
         for(int i=0; i<input_size; i++) {
             mu( current_word, i ) = input[i];
-            sigma2( current_word, i ) = 0.5;
         }
     }
 
@@ -367,9 +355,9 @@ void NnlmOutputLayer::bpropUpdate(const Vec& input, const Vec& output,
     if( sumI[ current_word ] >= 1 ) {
         pi[current_word] = (real)sumI[ current_word ] / (real)s_sumI;
 
-        // Update coeff_class_conditional_uniform_mixture
-        sum_log_p_g_r += log_p_g_r;
-        coeff_class_conditional_uniform_mixture = sum_log_p_g_r / s_sumI;
+        // Update uniform mixture coefficient
+        //sum_log_p_g_r = logadd( sum_log_p_g_r, log_p_g_r );
+        //umc = safeexp( sum_log_p_g_r ) / s_sumI;
     }
 
 
@@ -391,7 +379,6 @@ void NnlmOutputLayer::bpropUpdate(const Vec& input, const Vec& output,
 void NnlmOutputLayer::forget()
 {
     resetParameters();
-
 }
 
 /* THIS METHOD IS OPTIONAL

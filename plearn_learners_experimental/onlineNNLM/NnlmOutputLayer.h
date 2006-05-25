@@ -49,9 +49,8 @@ namespace PLearn {
 /**
  * Implements the output layer for the Neural Network Language Model. 
  *
- * We use a 'cost' variable to define behavior (not the greatest solution).
- * Depending on it, fprop and bprop behavior is according to a
- * non-discriminant, evaluated discriminant, or discriminant cost.
+ * The previous layer produces the context's (semantic, etc) representation, 'r'.
+ * This layer holds the model for p(r|w), where w is a word.
  *
  * @todo 
  * @deprecated 
@@ -64,34 +63,31 @@ class NnlmOutputLayer : public OnlineLearningModule
 public:
     //#####  Public Build Options  ############################################
 
-    // NNLM related
+    //! - NNLM related -
     int vocabulary_size;
     int word_representation_size;
     int context_size;
 
-    //! defines cost used
-    int cost;
-
     //! discounts the gaussians' old parameters in the computation of the new
     //! ones
-    real start_discount_rate;
-    real discount_decrease_constant;
-
-    real coeff_class_conditional_uniform_mixture;
-
+    real start_gaussian_learning_discount_rate;
+    real gaussian_learning_decrease_constant;
 
 public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
-    // ### Make sure the implementation in the .cc
-    // ### initializes all fields to reasonable default values.
     NnlmOutputLayer();
 
-    // Your other public member functions go here
+    //! Sets w ( fprop computes p(r,w) )
     void setCurrentWord(int the_current_word);
+
+    //! Sets the context (encoded in wordtags) - NOT USED
     void setContext(const Vec& the_current_context);
 
+
+    //! Computes p(r,w), where r the real distributed context representation 
+    //! in [0,1] and w the word at the considered position
     //! given the input, compute the output (possibly resize it  appropriately)
     virtual void fprop(const Vec& input, Vec& output) const;
 
@@ -101,46 +97,21 @@ public:
     //! (and output should not have been modified since then).
     //! Since sub-classes are supposed to learn ONLINE, the object
     //! is 'ready-to-be-used' just after any bpropUpdate.
-    //! N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS, WHICH
-    //! JUST CALLS
-    //!     bpropUpdate(input, output, input_gradient, output_gradient)
-    //! AND IGNORES INPUT GRADIENT.
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              const Vec& output_gradient);
 
+    //! NOT IMPLEMENTED - GRADIENT COMPUTED IN NnlmOnlineLearner
+    //! And I'm not sure why... TODO find out
     //! this version allows to obtain the input gradient as well
     //! N.B. THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
     // virtual void bpropUpdate(const Vec& input, const Vec& output,
     //                          Vec& input_gradient,
     //                          const Vec& output_gradient);
 
-    //! Similar to bpropUpdate, but adapt based also on the estimation
-    //! of the diagonal of the Hessian matrix, and propagates this
-    //! back. If these methods are defined, you can use them INSTEAD of
-    //! bpropUpdate(...)
-    //! N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS,
-    //! WHICH JUST CALLS
-    //!     bbpropUpdate(input, output, input_gradient, output_gradient,
-    //!                  out_hess, in_hess)
-    //! AND IGNORES INPUT HESSIAN AND INPUT GRADIENT.
-    // virtual void bbpropUpdate(const Vec& input, const Vec& output,
-    //                           const Vec& output_gradient,
-    //                           const Vec& output_diag_hessian);
-
-    //! this version allows to obtain the input gradient and diag_hessian
-    //! N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS, WHICH
-    //! RAISES A PLERROR.
-    // virtual void bbpropUpdate(const Vec& input, const Vec& output,
-    //                           Vec& input_gradient,
-    //                           const Vec& output_gradient,
-    //                           Vec& input_diag_hessian,
-    //                           const Vec& output_diag_hessian);
-
     //! reset the parameters to the state they would be BEFORE starting
     //! training.  Note that this method is necessarily called from
     //! build().
     virtual void forget();
-
 
     //! optionally perform some processing after training, or after a
     //! series of fprop/bpropUpdate calls to prepare the model for truly
@@ -148,9 +119,6 @@ public:
     //! THE SUPER-CLASS DOES NOT DO ANYTHING.
     // virtual void finalize();
 
-    //! in case bpropUpdate does not do anything, make it known
-    //! THE DEFAULT IMPLEMENTATION PROVIDED IN THE SUPER-CLASS RETURNS false;
-    // virtual bool bpropDoesNothing();
 
     //#####  PLearn::Object Protocol  #########################################
 
@@ -181,35 +149,59 @@ private:
 
 private:
     //#####  Private Data Members  ############################################
-public:
-    real discount_rate;
 
-    // The rest of the private stuff goes here
+
+public:
+    //#####  Public NOT Options  ##############################################
+
+    //! keeps track of updates
+    int step_number;
+
+    //! We use a mixture with a uniform to prevent negligeable probabilities
+    //! which cause gradient explosions. Learned as mean of p(g|r)
+    //! (probability that gaussian is responsible for observation, given r)
+    //! uniform mixture coefficient
+    real umc;
+
+    //! The gaussian parameters
+    //! No longer computed as in these comments
     Mat mu;       // mu(i) -> moyenne empirique des x quand y=i
     Mat sigma2;   // sigma2(i) -> variance empirique des x quand y=i
+
+    //! unigramme absolu
     Vec pi;       // pi[i] -> moyenne empirique de y==i
 
+    //! Variables intermédiaires de compte
     Mat sumX;     // sumX(i) -> sum_t x_t 1_{y==i}
     Mat sumX2;    // sumX2(i) -> sum_t x_t^2 1_{y==i}
-
     TVec<int> sumI;     // sumI(i) -> sum_t 1_{y==i}
     int s_sumI;  // sum_t 1
 
-
+    //#####  Don't need to be saved  ##########################################
     //! the current word -> we use its parameters to compute output
     int current_word;
     Vec context;
 
-    // temporary variables
-    mutable real r1;
-    mutable real r2;
-    mutable Vec vec1;
-    mutable Vec vec2;
+    //! temporary variables
+    //! TODO clean this up
+    mutable real r;
+    mutable real g_exponent;
+    mutable real det_g_covariance;
+    mutable real log_g_normalization;
+
+    mutable real log_p_rg_i;
+    mutable real log_p_r_i;
+    mutable real log_p_ri;
 
     mutable real log_p_g_r;
     mutable real sum_log_p_g_r;
 
-    int step_number;
+    //! The original way of computing the mus and sigmas (ex. mu memorize \sum r
+    //! and then divide) had the effect learning slowed down with time.
+    //! We use this discount rate now.
+    //! TODO validate computation of mus and sigmas
+    //! gaussian_learning_discount_rate
+    real gldr;
 
 };
 
