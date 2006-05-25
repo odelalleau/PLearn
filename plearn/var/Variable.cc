@@ -706,6 +706,8 @@ void Variable::updateWithWeightDecay(real step_size, real weight_decay, bool L1,
                             params[i] -= delta;
                         else if (pi<-delta)
                             params[i] += delta;
+                        else
+                            params[i] = 0;
                         if (clear)
                             direction[i] = 0;
                     }
