@@ -6,18 +6,18 @@
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,11 +28,11 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
+/* *******************************************************
  * $Id$
  ******************************************************* */
 
@@ -42,15 +42,15 @@
 namespace PLearn {
 using namespace std;
 
-CartesianProductOracle::CartesianProductOracle() 
+CartesianProductOracle::CartesianProductOracle()
     :OptionsOracle(), last_combination(false)
 /* ### Initialise all fields to their default value */
 {
 }
 
 PLEARN_IMPLEMENT_OBJECT(
-    CartesianProductOracle, 
-    "This OptionsOracle generates all combinations of values for a set of options", 
+    CartesianProductOracle,
+    "This OptionsOracle generates all combinations of values for a set of options",
     "This 'oracle' traverses a fixed list of option values, obtained from a set"
     "of values associated with each option of interest. That list is the cartesian"
     "product of those sets, i.e. it is the list of all combinations of values."
@@ -74,8 +74,8 @@ void CartesianProductOracle::declareOptions(OptionList& ol)
 }
 
 TVec<string>  CartesianProductOracle::getOptionNames() const
-{ 
-    return option_names; 
+{
+    return option_names;
 }
 
 TVec<string> CartesianProductOracle::generateNextTrial(const TVec<string>& older_trial,
@@ -124,7 +124,7 @@ void CartesianProductOracle::build_()
         if (option_values[i].size() == 0)
             PLWARNING("CartesianProductOracle::build_: zero option values were specified\n"
                       "for option '%s'", option_names[i].c_str());
-    
+
     int n=option_names.length();
     option_values_indices.resize(n);
     forget();

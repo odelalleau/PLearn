@@ -6,18 +6,18 @@
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,11 +28,11 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
+/* *******************************************************
  * $Id$
  ******************************************************* */
 
@@ -46,14 +46,14 @@
 namespace PLearn {
 using namespace std;
 
-StepwiseSelectionOracle::StepwiseSelectionOracle() 
+StepwiseSelectionOracle::StepwiseSelectionOracle()
     : option_name("selected_inputs"),
       maxvars(-1),
       last_combination(false)
 { }
 
 PLEARN_IMPLEMENT_OBJECT(
-    StepwiseSelectionOracle, 
+    StepwiseSelectionOracle,
     "This oracle implements a stepwise forward variable selection procedure.",
     "It supports the interface provided by SelectInputsLearner, wherein the\n"
     "variables to selected are specified by a vector of normalized\n"
@@ -85,7 +85,7 @@ void StepwiseSelectionOracle::declareOptions(OptionList& ol)
 }
 
 TVec<string>  StepwiseSelectionOracle::getOptionNames() const
-{ 
+{
     return TVec<string>(1,option_name);
 }
 
@@ -102,7 +102,7 @@ TVec<string> StepwiseSelectionOracle::generateNextTrial(
             combination_performance.push(make_pair(- obtained_objective,
                                                    older_trial[0]));
         }
-    
+
         if (current_indexes_searchset.empty())
             generateNewSearchset();
         if (last_combination)
@@ -148,7 +148,7 @@ void StepwiseSelectionOracle::generateNewSearchset()
 {
     if (last_combination)
         return;
-  
+
     // First find the best-performing combination in combination_performance
     // and convert the option string into a vector of ints to obtain the new
     // base_selected_variables
@@ -178,7 +178,7 @@ void StepwiseSelectionOracle::generateNewSearchset()
         last_combination = true;
         return;
     }
-  
+
     TVec<int> new_combination(newsize);
     new_combination.subVec(0, newsize-1) << base_selected_variables;
     for (set<int>::iterator it = remaining_vars.begin() ;

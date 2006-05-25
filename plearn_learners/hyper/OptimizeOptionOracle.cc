@@ -57,7 +57,7 @@ PLEARN_IMPLEMENT_OBJECT(OptimizeOptionOracle,
 //////////////////////////
 // OptimizeOptionOracle //
 //////////////////////////
-OptimizeOptionOracle::OptimizeOptionOracle() 
+OptimizeOptionOracle::OptimizeOptionOracle()
     : current_direction("not_started"),
       lower_bound(1),
       n_steps(0),
@@ -77,49 +77,49 @@ OptimizeOptionOracle::OptimizeOptionOracle()
 ////////////////////
 void OptimizeOptionOracle::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "option", &OptimizeOptionOracle::option, OptionBase::buildoption, 
+    declareOption(ol, "option", &OptimizeOptionOracle::option, OptionBase::buildoption,
                   "The name of the option to optimize.");
 
-    declareOption(ol, "max_steps", &OptimizeOptionOracle::max_steps, OptionBase::buildoption, 
+    declareOption(ol, "max_steps", &OptimizeOptionOracle::max_steps, OptionBase::buildoption,
                   "The maximum number of steps performed.");
 
-    declareOption(ol, "start_value", &OptimizeOptionOracle::start_value, OptionBase::buildoption, 
+    declareOption(ol, "start_value", &OptimizeOptionOracle::start_value, OptionBase::buildoption,
                   "The value we start from for this option.");
 
-    declareOption(ol, "min_value", &OptimizeOptionOracle::min_value, OptionBase::buildoption, 
+    declareOption(ol, "min_value", &OptimizeOptionOracle::min_value, OptionBase::buildoption,
                   "The minimum value that should be tried.");
 
-    declareOption(ol, "max_value", &OptimizeOptionOracle::max_value, OptionBase::buildoption, 
+    declareOption(ol, "max_value", &OptimizeOptionOracle::max_value, OptionBase::buildoption,
                   "The maximum value that should be tried.");
 
-    declareOption(ol, "relative_precision", &OptimizeOptionOracle::relative_precision, OptionBase::buildoption, 
+    declareOption(ol, "relative_precision", &OptimizeOptionOracle::relative_precision, OptionBase::buildoption,
                   "The precision to which we want to find the optimal option. For instance\n"
                   "0.1 would indicate we want the 'best' value to be found in an interval\n"
                   "of the kind [best - 10% * best, best + 10% * best].");
 
-    declareOption(ol, "factor", &OptimizeOptionOracle::factor, OptionBase::buildoption, 
+    declareOption(ol, "factor", &OptimizeOptionOracle::factor, OptionBase::buildoption,
                   "The factor by which we multiply / divide the current value after\n"
                   "we started from 'start_value'.");
 
-    declareOption(ol, "start_direction", &OptimizeOptionOracle::start_direction, OptionBase::buildoption, 
+    declareOption(ol, "start_direction", &OptimizeOptionOracle::start_direction, OptionBase::buildoption,
                   "The direction we start going to ('up', 'down' or 'random').");
 
-    declareOption(ol, "best", &OptimizeOptionOracle::best, OptionBase::learntoption, 
+    declareOption(ol, "best", &OptimizeOptionOracle::best, OptionBase::learntoption,
                   "The best value found so far.");
 
-    declareOption(ol, "best_objective", &OptimizeOptionOracle::best_objective, OptionBase::learntoption, 
+    declareOption(ol, "best_objective", &OptimizeOptionOracle::best_objective, OptionBase::learntoption,
                   "The objective obtained with option = 'best'.");
 
-    declareOption(ol, "current_direction", &OptimizeOptionOracle::current_direction, OptionBase::learntoption, 
+    declareOption(ol, "current_direction", &OptimizeOptionOracle::current_direction, OptionBase::learntoption,
                   "The current direction we are going ('up', 'down' or 'not_started').");
 
-    declareOption(ol, "lower_bound", &OptimizeOptionOracle::lower_bound, OptionBase::learntoption, 
+    declareOption(ol, "lower_bound", &OptimizeOptionOracle::lower_bound, OptionBase::learntoption,
                   "The lower bound of the interval in which we working.");
 
-    declareOption(ol, "n_steps", &OptimizeOptionOracle::n_steps, OptionBase::learntoption, 
+    declareOption(ol, "n_steps", &OptimizeOptionOracle::n_steps, OptionBase::learntoption,
                   "The number of steps performed so far.");
 
-    declareOption(ol, "upper_bound", &OptimizeOptionOracle::upper_bound, OptionBase::learntoption, 
+    declareOption(ol, "upper_bound", &OptimizeOptionOracle::upper_bound, OptionBase::learntoption,
                   "The upper bound of the interval in which we working.");
 
     // Now call the parent class' declareOptions
@@ -200,7 +200,7 @@ TVec<string> OptimizeOptionOracle::generateNextTrial(const TVec<string>& older_t
         improved = true;
         best_objective = obtained_objective;
     }
-  
+
     if (current_direction == "not_started") {
         // This is the second try.
         if (start_direction == "random") {
@@ -270,8 +270,8 @@ void OptimizeOptionOracle::makeDeepCopyFromShallowCopy(map<const void*, void*>& 
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
+    // ### Call deepCopyField on all "pointer-like" fields
+    // ### that you wish to be deepCopied rather than
     // ### shallow-copied.
     // ### ex:
     // deepCopyField(trainvec, copies);

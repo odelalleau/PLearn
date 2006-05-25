@@ -7,18 +7,18 @@
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -29,14 +29,14 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
 // Author: Pascal Vincent
 
-/* *******************************************************      
- * $Id$ 
+/* *******************************************************
+ * $Id$
  ******************************************************* */
 
 /*! \file EarlyStoppingOracle.cc */
@@ -46,7 +46,7 @@
 namespace PLearn {
 using namespace std;
 
-EarlyStoppingOracle::EarlyStoppingOracle() 
+EarlyStoppingOracle::EarlyStoppingOracle()
     : min_value(-FLT_MAX),
       max_value(FLT_MAX),
       max_degradation(FLT_MAX),
@@ -68,39 +68,39 @@ PLEARN_IMPLEMENT_OBJECT(EarlyStoppingOracle, "ONE LINE DESCR", "NO HELP");
 
 void EarlyStoppingOracle::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "option", &EarlyStoppingOracle::option, OptionBase::buildoption, 
+    declareOption(ol, "option", &EarlyStoppingOracle::option, OptionBase::buildoption,
                   "the name of the option to change");
-    declareOption(ol, "values", &EarlyStoppingOracle::values, OptionBase::buildoption, 
+    declareOption(ol, "values", &EarlyStoppingOracle::values, OptionBase::buildoption,
                   "a list of values to try in sequence ");
-    declareOption(ol, "range", &EarlyStoppingOracle::range, OptionBase::buildoption, 
+    declareOption(ol, "range", &EarlyStoppingOracle::range, OptionBase::buildoption,
                   "a numerical range of the form [ start, end ] or [ start, end, step ] ");
 
-    declareOption(ol, "min_value", &EarlyStoppingOracle::min_value, OptionBase::buildoption, 
+    declareOption(ol, "min_value", &EarlyStoppingOracle::min_value, OptionBase::buildoption,
                   "minimum allowed error beyond which we stop\n");
 
-    declareOption(ol, "max_value", &EarlyStoppingOracle::max_value, OptionBase::buildoption, 
+    declareOption(ol, "max_value", &EarlyStoppingOracle::max_value, OptionBase::buildoption,
                   "maximum allowed error beyond which we stop\n");
 
-    declareOption(ol, "max_degradation", &EarlyStoppingOracle::max_degradation, OptionBase::buildoption, 
+    declareOption(ol, "max_degradation", &EarlyStoppingOracle::max_degradation, OptionBase::buildoption,
                   "maximum allowed degradation from last best objective value\n");
 
-    declareOption(ol, "relative_max_degradation", &EarlyStoppingOracle::relative_max_degradation, OptionBase::buildoption, 
+    declareOption(ol, "relative_max_degradation", &EarlyStoppingOracle::relative_max_degradation, OptionBase::buildoption,
                   "maximum allowed degradation from last best objective, relative to abs(best_objective)\n"
                   "ex: 0.10 will allow a degradation of 10% the magnitude of best_objective\n"
                   "Will be ignored if negative}n");
 
-    declareOption(ol, "min_improvement", &EarlyStoppingOracle::min_improvement, OptionBase::buildoption, 
+    declareOption(ol, "min_improvement", &EarlyStoppingOracle::min_improvement, OptionBase::buildoption,
                   "minimum required improvement from previous objective value\n");
 
-    declareOption(ol, "relative_min_improvement", &EarlyStoppingOracle::relative_min_improvement, OptionBase::buildoption, 
+    declareOption(ol, "relative_min_improvement", &EarlyStoppingOracle::relative_min_improvement, OptionBase::buildoption,
                   "minimum required improvement from previous objective value, relative to it.\n"
                   "ex: 0.01 means we need an improvement of 0.01*abs(previous_objective)  i.e. 1%\n"
                   "Will be ignored if negative\n");
 
-    declareOption(ol, "max_degraded_steps", &EarlyStoppingOracle::max_degraded_steps, OptionBase::buildoption, 
+    declareOption(ol, "max_degraded_steps", &EarlyStoppingOracle::max_degraded_steps, OptionBase::buildoption,
                   "    ax. nb of steps beyond best found\n");
 
-    declareOption(ol, "min_n_steps", &EarlyStoppingOracle::min_n_steps, OptionBase::buildoption, 
+    declareOption(ol, "min_n_steps", &EarlyStoppingOracle::min_n_steps, OptionBase::buildoption,
                   "minimum required number of steps before allowing early stopping\n");
 
     // Now call the parent class' declareOptions
@@ -149,13 +149,13 @@ TVec<string> EarlyStoppingOracle::generateNextTrial(const TVec<string>& older_tr
         }
 
         real improvement = previous_objective-current_objective;
-        real degradation = current_objective-best_objective;      
+        real degradation = current_objective-best_objective;
 
         int n_degraded_steps = current_step-best_step;
 
         // Check if early-stopping condition was met
-        if (( (current_objective < min_value) || 
-              (current_objective > max_value) || 
+        if (( (current_objective < min_value) ||
+              (current_objective > max_value) ||
               (n_degraded_steps >= max_degraded_steps) ||
               (degradation > max_degradation) ||
               (relative_max_degradation>=0 && degradation > relative_max_degradation * abs(best_objective)) ||

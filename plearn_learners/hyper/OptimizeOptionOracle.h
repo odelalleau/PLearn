@@ -67,7 +67,7 @@ protected:
     real lower_bound;
     int n_steps;
     real upper_bound;
-    
+
 public:
 
     // ************************
@@ -96,12 +96,12 @@ public:
     // * OptionsOracle methods *
     // ******************
 
-private: 
+private:
 
-    //! This does the actual building. 
+    //! This does the actual building.
     void build_();
 
-protected: 
+protected:
 
     //! Declares this class' options
     static void declareOptions(OptionList& ol);
@@ -113,7 +113,7 @@ public:
     virtual TVec<string> generateNextTrial(const TVec<string>& older_trial, real obtained_objective);
     virtual void forget();
 
-    // Simply calls inherited::build() then build_() 
+    // Simply calls inherited::build() then build_()
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
@@ -126,7 +126,7 @@ public:
 
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(OptimizeOptionOracle);
-  
+
 } // end of namespace PLearn
 
 #endif
