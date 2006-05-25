@@ -260,9 +260,13 @@ void NnlmWordRepresentationLayer::bpropUpdate(const Vec& input, const Vec& outpu
                   " than 'vocabulary_size' (%i !< %i)\n",
           i, input[i], vocabulary_size);
       }
-
-      for(int j=0; j < output_size; j++)  {
+// MISTAKE???????
+// MISTAKE???????
+      /*for(int j=0; j < output_size; j++)  {
           weights( (int) input[i], j%word_representation_size) -= learning_rate * output_gradient[j];
+      }*/
+      for(int j=0; j < word_representation_size; j++)  {
+          weights( (int) input[i], j) -= learning_rate * output_gradient[j+i*word_representation_size];
       }
 
     }
