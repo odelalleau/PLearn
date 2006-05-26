@@ -1540,7 +1540,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                                         coord_missing[k]);
                         assert( H3.isSymmetric(true, true) );
                         matInvert(H3, H3_inv);
-                        assert( H3_inv.isSymmetric(false, true) );
+                        // assert( H3_inv.isSymmetric(false, true) );
                         fillItSymmetric(H3_inv);
                         }
 
@@ -2770,7 +2770,7 @@ void GaussMix::setPredictor(const Vec& predictor, bool call_parent) const {
                     // wrong, remove the assert and see if it is needed to
                     // potentially set lambda0 to var_min.
                     assert( eigenvals.lastElement() > var_min ||
-                            is_equal(eigenvals.lastElement(), var_min, 0) );
+                            eigenvals.lastElement() / var_min > 0.99 );
                     lambda0 = eigenvals.lastElement();
                     real one_over_lambda0 = 1 / lambda0;
                     Mat& eigenvectors_x_j = eigenvectors_x_miss[j];
@@ -2994,7 +2994,7 @@ void GaussMix::setPredictorPredictedSizes_const(int n_i, int n_t) const
                 // wrong, remove the assert and see if it is needed to
                 // potentially set lambda0 to var_min.
                 assert( eigenvals[n_predictor - 1] > var_min ||
-                        is_equal(eigenvals[n_predictor - 1], var_min, 0) );
+                        eigenvals[n_predictor - 1] / var_min > 0.99 );
                 lambda0 = eigenvals[n_predictor - 1];
                 real one_over_lambda0 = 1 / lambda0;
                 Mat& eigenvectors_x_j = eigenvectors_x[j];
