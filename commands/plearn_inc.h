@@ -167,6 +167,7 @@
 #include <plearn_learners/regressors/LinearRegressor.h>
 #include <plearn_learners/regressors/PLS.h>
 #include <plearn_learners/regressors/RankLearner.h>
+#include <plearn_learners/regressors/RegressorFromDistribution.h>
 
 // Unsupervised/KernelProjection
 #include <plearn_learners/unsupervised/Isomap.h>
