@@ -1,4 +1,4 @@
-# plio.py
+# serialize.py
 # Copyright (C) 2005, 2006 Pascal Vincent, Christian Dorion
 #
 #  Redistribution and use in source and binary forms, with or without

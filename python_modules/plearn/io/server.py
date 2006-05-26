@@ -1,4 +1,4 @@
-# plearn_service.py
+# server.py
 # Copyright (C) 2005 Pascal Vincent
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -32,12 +32,10 @@
 
 # Author: Pascal Vincent
 
-import os, string
+import os, socket, string, sys
 from plearn.pyplearn import *
 from plearn.pyplearn import plearn_repr
-import plearn.plio
-import sys
-import socket
+import plearn.io.serialize
 
 def launch_plearn_server(command = 'plearn server', logger=None):
     if logger: logger.info('LAUNCHING PLEARN SERVER: command = '+command)                
@@ -59,7 +57,7 @@ class RemotePLearnServer:
         If you wish to log debugging info, pass ad logger an instance of a logging.Logger
         as returned for ex. by logging.getLogger()
         """
-        self.io = plearn.plio.PLearnIO(from_server, to_server)
+        self.io = plearn.io.serialize.PLearnIO(from_server, to_server)
         self.log = logger
         self.reserved_ids = []
         self.nextid = 1
