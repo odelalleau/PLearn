@@ -918,9 +918,10 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
     static Vec center_non_missing;
     static Mat cov_y_x;
 
-    // Dummy matrix to release some storage pointers so that some matrices can
-    // be resized.
+    // Dummy matrix and vector to release some storage pointers so that some
+    // matrices can be resized.
     static Mat dummy_mat;
+    static Vec dummy_vec;
 
     eigenvecs_missing = &eigenvecs_missing_storage;
 
@@ -1836,6 +1837,11 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                             * square(dot(eigenvecs(k), y_centered));
                 }
             }
+
+            // Free a potential reference to 'eigenvalues_x_miss' and
+            // 'eigenvectors_x_miss'.
+            eigenvals = dummy_vec;
+            eigenvecs = dummy_mat;
         }
     }
     assert( !isnan(log_likelihood) );
@@ -2763,7 +2769,8 @@ void GaussMix::setPredictor(const Vec& predictor, bool call_parent) const {
                     // covariance of x should also be more than 'var_min'. If I am
                     // wrong, remove the assert and see if it is needed to
                     // potentially set lambda0 to var_min.
-                    assert( eigenvals.lastElement() >= var_min );
+                    assert( eigenvals.lastElement() > var_min ||
+                            is_equal(eigenvals.lastElement(), var_min, 0) );
                     lambda0 = eigenvals.lastElement();
                     real one_over_lambda0 = 1 / lambda0;
                     Mat& eigenvectors_x_j = eigenvectors_x_miss[j];
@@ -2986,7 +2993,8 @@ void GaussMix::setPredictorPredictedSizes_const(int n_i, int n_t) const
                 // covariance of x should also be more than 'var_min'. If I am
                 // wrong, remove the assert and see if it is needed to
                 // potentially set lambda0 to var_min.
-                assert( eigenvals[n_predictor - 1] >= var_min );
+                assert( eigenvals[n_predictor - 1] > var_min ||
+                        is_equal(eigenvals[n_predictor - 1], var_min, 0) );
                 lambda0 = eigenvals[n_predictor - 1];
                 real one_over_lambda0 = 1 / lambda0;
                 Mat& eigenvectors_x_j = eigenvectors_x[j];
@@ -3096,6 +3104,8 @@ void GaussMix::train()
         return;
 
     // When training, we want to learn the full joint distribution.
+    int backup_predicted_size = predicted_size;
+    int backup_predictor_size = predictor_size;
     bool need_restore_sizes = setPredictorPredictedSizes(0, -1);
 
     // Initialization before training.
@@ -4069,8 +4079,13 @@ void GaussMix::train()
         delete pb;
 
     // Restore original predictor and predicted sizes if necessary.
-    if (need_restore_sizes)
-        setPredictorPredictedSizes(predictor_size, predicted_size);
+    if (need_restore_sizes) {
+        setPredictorPredictedSizes(backup_predictor_size,
+                                   backup_predicted_size);
+        // Because the sizes have changed, some data may need to be resized
+        // accordingly.
+        resizeDataBeforeUsing();
+    }
 
     /*
     for (int i = 0; i < save_center.length(); i++) {

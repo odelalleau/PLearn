@@ -449,8 +449,8 @@ bool PDistribution::setPredictorPredictedSizes(int the_predictor_size,
             (the_predicted_size >= 0 || the_predicted_size == -1) );
     int backup_n_predictor = n_predictor;
     int backup_n_predicted = n_predicted;
-    n_predictor = the_predictor_size;
-    n_predicted = the_predicted_size;
+    n_predictor = predictor_size = the_predictor_size;
+    n_predicted = predicted_size = the_predicted_size;
     if (n_predictor < 0) {
         if (n_predicted < 0)
             PLERROR("In PDistribution::setPredictorPredictedSizes - You need"
