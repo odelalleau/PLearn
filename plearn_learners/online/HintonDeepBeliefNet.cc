@@ -671,10 +671,12 @@ void HintonDeepBeliefNet::train()
     /***** fine-tuning *****/
     MODULE_LOG << "Fine-tuning all parameters, using method "
         << fine_tuning_method << endl;
+
+    int init_stage = stage;
     if( report_progress && stage < nstages )
         pb = new ProgressBar( "Fine-tuning parameters of all layers of "
                              +classname(),
-                             nstages - stage );
+                             nstages - init_stage );
 
     for( int i=0 ; i<n_layers-1 ; i++ )
         params[i]->learning_rate = fine_tuning_learning_rate;
@@ -685,7 +687,7 @@ void HintonDeepBeliefNet::train()
     {
         stage = nstages;
         if( pb )
-            pb->update( nstages - training_schedule[n_layers-2] + 1 );
+            pb->update( nstages - init_stage + 1 );
     }
     else if( fine_tuning_method == "EGD" )
     {
@@ -701,7 +703,7 @@ void HintonDeepBeliefNet::train()
             train_stats->update( train_costs );
 
             if( pb )
-                pb->update( stage - training_schedule[n_layers-2] + 1 );
+                pb->update( stage - init_stage + 1 );
         }
         train_stats->finalize(); // finalize statistics for this epoch
     }
