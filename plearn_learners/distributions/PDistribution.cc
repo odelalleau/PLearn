@@ -232,6 +232,8 @@ void PDistribution::computeOutput(const Vec& input, Vec& output) const
     splitCond(input);
 
     string::size_type l = outputs_def.length();
+    output.resize(l);
+
     int k = 0;
     for(unsigned int i=0; i<l; i++)
     {
@@ -348,7 +350,7 @@ void PDistribution::computeCostsFromOutputs(const Vec& input, const Vec& output,
 //////////////////////
 TVec<string> PDistribution::getTestCostNames() const
 {
-    static TVec<string> nll_cost;
+    TVec<string> nll_cost;
     if (nll_cost.isEmpty())
         nll_cost.append("NLL");
     return nll_cost;
@@ -360,7 +362,7 @@ TVec<string> PDistribution::getTestCostNames() const
 TVec<string> PDistribution::getTrainCostNames() const
 {
     // Default = no train cost computed. This may be overridden in subclasses.
-    static TVec<string> no_cost;
+    TVec<string> no_cost;
     return no_cost;
 }
 

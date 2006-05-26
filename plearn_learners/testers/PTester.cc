@@ -630,7 +630,7 @@ Vec PTester::perform(bool call_forget)
                 {
                     PPath perf_eval_dir;
                     if(is_splitdir)
-                        perf_eval_dir = splitdir/("perfeval_"+it->first);
+                        perf_eval_dir = splitdir/setname/("perfeval_"+it->first);
                     Vec perf_costvals = it->second->evaluatePerformance(learner, testset, test_outputs, perf_eval_dir);
                     TVec<string> perf_costnames = it->second->getCostNames();
                     if(perf_costvals.length()!=perf_costnames.length())
