@@ -152,8 +152,8 @@ def surfplot_xymagnitude(regular_xymagnitude):
     nx = size(gridvalues,0)
     ny = size(gridvalues,1)
     gridvalues = reshape(gridvalues,(nx,ny))
-    x = arange(x0,x0+nx*deltax,deltax)
-    y = arange(y0,y0+ny*deltay,deltay)    
+    x = arange(x0,x0+nx*deltax-1e-6,deltax)
+    y = arange(y0,y0+ny*deltay-1e-6,deltay)
     imv.surf(x, y, gridvalues)
 
 

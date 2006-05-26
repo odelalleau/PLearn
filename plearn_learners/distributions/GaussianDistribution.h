@@ -45,7 +45,7 @@
 #ifndef GaussianDistribution_INC
 #define GaussianDistribution_INC
 
-#include "PDistribution.h"
+#include "UnconditionalDistribution.h"
 
 namespace PLearn {
 using namespace std;
@@ -56,9 +56,9 @@ using namespace std;
 // All other eigenvalues are kept at the level of the k+1 th eigenvalue
 // Optionally, a constant sigma is first added to the diagonal of the covariance matrix.
 
-class GaussianDistribution: public PDistribution
+class GaussianDistribution: public UnconditionalDistribution
 {
-    typedef PDistribution inherited;
+    typedef UnconditionalDistribution inherited;
 
 public:
 

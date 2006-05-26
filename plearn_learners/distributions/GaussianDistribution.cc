@@ -142,6 +142,11 @@ void GaussianDistribution::build_()
         PLERROR("In GaussianDistribution::build_ - For the sake of simplicity, the "
                 "option 'ignore_weights_below' in GaussianDistribution has been "
                 "removed. If you were using it, please feel free to complain.");
+    if (mu.length()>0 && predicted_size<=0)
+    {
+        predicted_size = mu.length();
+        inherited::build();
+    }
 }
 
 void GaussianDistribution::forget()

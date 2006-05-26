@@ -98,6 +98,7 @@ elif task == '2d_density':
     train_learner(learnerspec,dataspec,'trained_learner.psave')
     xymagnitude = learner_compute_outputs_on_2d_grid('trained_learner.psave', dataspec, nx, ny)
     transform_magnitude_into_covered_percentage(xymagnitude)
+    print 'xymagnitude.shape = ',xymagnitude.shape
     surfplot_xymagnitude(xymagnitude)
     imshow_xymagnitude(xymagnitude)
     plot_2d_points(data,'bo')

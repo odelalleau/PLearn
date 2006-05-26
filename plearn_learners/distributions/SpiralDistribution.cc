@@ -84,6 +84,10 @@ void SpiralDistribution::build_()
     // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
     // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
     // ### You should assume that the parent class' build_() has already been called.
+    
+    // annoying stuff due to conditional distribution (silly, fix this some day)
+    predicted_size = inputsize();
+    inherited::build();
 }
 
 // ### Nothing to add here, simply calls build_
