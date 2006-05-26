@@ -276,6 +276,7 @@
 //#include <plearn/vmat/LemmatizeVMatrix.h>
 #include <plearn/vmat/LocalNeighborsDifferencesVMatrix.h>
 #include <plearn/vmat/LocallyPrecomputedVMatrix.h>
+#include <plearn/vmat/MeanImputationVMatrix.h>
 //#include <plearn/vmat/MixUnlabeledNeighbourVMatrix.h>
 #include <plearn/vmat/MultiInstanceVMatrix.h>
 #include <plearn/vmat/MultiToUniInstanceSelectRandomVMatrix.h>
