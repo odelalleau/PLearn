@@ -4,7 +4,7 @@
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
 // Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux
-// Copyright (C) 2003 Olivier Delalleau
+// Copyright (C) 2003, 2006 Olivier Delalleau
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -41,6 +41,8 @@
 
 
 #include "MeanImputationVMatrix.h"
+#include <plearn/vmat/SubVMatrix.h>
+#include <plearn/vmat/VMat_basic_stats.h>
 
 namespace PLearn {
 using namespace std;
@@ -49,142 +51,86 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     MeanImputationVMatrix,
-    "VMat class to impute the observed variable mean to replace missing values in the source matrix.",
-    "This class will replace missing values in the underlyng dataset with the observed mean of a variable.\n"
-    "If the number_of_train_samples option is different than zero, the mean is calculated only on that first portion of the underlying VMat.\n"
-    "Otherwise, the mean is calculated on the entire dataset.\n"
-    );
+    "Imputes the observed variable mean to replace missing values in source.",
+    "This class will replace missing values in the underlying dataset with\n"
+    "the observed mean of a variable.\n"
+    "If the 'number_of_train_samples' option is different than zero, the\n"
+    "mean is computed only on that first portion of the underlying VMat.\n"
+    "Otherwise, the mean is computed on the entire dataset.\n"
+);
 
-MeanImputationVMatrix::MeanImputationVMatrix()
-    : obtained_inputsize_from_source(false),
-      obtained_targetsize_from_source(false),
-      obtained_weightsize_from_source(false),
-      number_of_train_samples(0.0)
+///////////////////////////
+// MeanImputationVMatrix //
+///////////////////////////
+MeanImputationVMatrix::MeanImputationVMatrix():
+    obtained_inputsize_from_source(false),
+    obtained_targetsize_from_source(false),
+    obtained_weightsize_from_source(false),
+    number_of_train_samples(0.0)
+{}
+
+MeanImputationVMatrix::MeanImputationVMatrix(VMat the_source,
+                                             real the_number_of_train_samples,
+                                             bool call_build_):
+    inherited(the_source, call_build_),
+    obtained_inputsize_from_source(false),
+    obtained_targetsize_from_source(false),
+    obtained_weightsize_from_source(false),
+    number_of_train_samples(the_number_of_train_samples)
 {
+    if (call_build_)
+        build_();
 }
 
-MeanImputationVMatrix::MeanImputationVMatrix(VMat the_source, real the_number_of_train_samples)
-    : obtained_inputsize_from_source(false),
-      obtained_targetsize_from_source(false),
-      obtained_weightsize_from_source(false)
-{
-    source = the_source;
-    number_of_train_samples = the_number_of_train_samples;
-    build_();
-}
-
-MeanImputationVMatrix::~MeanImputationVMatrix()
-{
-}
-
+////////////////////
+// declareOptions //
+////////////////////
 void MeanImputationVMatrix::declareOptions(OptionList &ol)
 {
 
-    declareOption(ol, "number_of_train_samples", &MeanImputationVMatrix::number_of_train_samples, OptionBase::buildoption,
-                  "If equal to zero, all the underlying dataset samples are used to calculated the variable means.\n"
-                  "If it is a fraction between 0 and 1, this proportion of the samples will be used.\n"
-                  "If greater or equal to 1, the integer portion will be interpreted as the number of samples to use.");
+    declareOption(ol, "number_of_train_samples",
+                  &MeanImputationVMatrix::number_of_train_samples,
+                  OptionBase::buildoption,
+        "If equal to zero, all the underlying dataset samples are used to\n"
+        "compute the variable means. If it is a fraction between 0 and 1,\n"
+        "this proportion of the samples will be used. If greater than or\n"
+        "equal to 1, the integer portion will be interpreted as the number\n"
+        "of samples to use.");
 
-    declareOption(ol, "variable_mean", &MeanImputationVMatrix::variable_mean, OptionBase::learntoption,
-                  "The vector of variable means observed from the source matrix.");
+    declareOption(ol, "variable_mean", &MeanImputationVMatrix::variable_mean,
+                                       OptionBase::learntoption,
+        "The vector of variable means observed from the source matrix.");
 
-    declareOption(ol, "variable_present_count", &MeanImputationVMatrix::variable_present_count, OptionBase::learntoption,
-                  "The vector of non missing variable counts from the source matrix.");
+    declareOption(ol, "obtained_inputsize_from_source",
+                  &MeanImputationVMatrix::obtained_inputsize_from_source,
+                  OptionBase::learntoption,
+        "Set to 1 when the inputsize was obtained from the source matrix.");
 
-    declareOption(ol, "obtained_inputsize_from_source", &MeanImputationVMatrix::obtained_inputsize_from_source, OptionBase::learntoption,
-                  "Set to 1 when the inputsize was obtained from the source matrix.");
+    declareOption(ol, "obtained_targetsize_from_source",
+                  &MeanImputationVMatrix::obtained_targetsize_from_source,
+                  OptionBase::learntoption,
+        "Set to 1 when the targetsize was obtained from the source matrix.");
 
-    declareOption(ol, "obtained_targetsize_from_source", &MeanImputationVMatrix::obtained_targetsize_from_source, OptionBase::learntoption,
-                  "Set to 1 when the targetsize was obtained from the source matrix.");
-
-    declareOption(ol, "obtained_weightsize_from_source", &MeanImputationVMatrix::obtained_weightsize_from_source, OptionBase::learntoption,
-                  "Set to 1 when the weightsize was obtained from the source matrix.");
+    declareOption(ol, "obtained_weightsize_from_source",
+                  &MeanImputationVMatrix::obtained_weightsize_from_source,
+                  OptionBase::learntoption,
+        "Set to 1 when the weightsize was obtained from the source matrix.");
 
     inherited::declareOptions(ol);
 }
 
+///////////
+// build //
+///////////
 void MeanImputationVMatrix::build()
 {
     inherited::build();
     build_();
 }
 
-void MeanImputationVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
-{
-    inherited::makeDeepCopyFromShallowCopy(copies);
-    deepCopyField(variable_mean, copies);
-    deepCopyField(variable_present_count, copies);
-    deepCopyField(obtained_inputsize_from_source, copies);
-    deepCopyField(obtained_targetsize_from_source, copies);
-    deepCopyField(obtained_weightsize_from_source, copies);
-}
-
-void MeanImputationVMatrix::getExample(int i, Vec& input, Vec& target, real& weight)
-{
-    int col;
-    source->getExample(i, input, target, weight);
-    for (col = 0; col < input->length(); col++)
-    {
-        if (is_missing(input[col])) input[col] = variable_mean[col];
-    }
-}
-
-real MeanImputationVMatrix::get(int i, int j) const
-{
-    real variable_value = source->get(i, j);
-    if (is_missing(variable_value)) return variable_mean[j];
-    else return variable_value;
-}
-
-void MeanImputationVMatrix::put(int i, int j, real value)
-{
-    PLERROR("In MeanImputationVMatrix::put not implemented");
-}
-
-void MeanImputationVMatrix::getSubRow(int i, int j, Vec v) const
-{
-    int col;
-    source-> getSubRow(i, j, v);
-    for (col = 0; col < v->length(); col++)
-        if (is_missing(v[col])) v[col] = variable_mean[col + j];
-}
-
-void MeanImputationVMatrix::putSubRow(int i, int j, Vec v)
-{
-    PLERROR("In MeanImputationVMatrix::putSubRow not implemented");
-}
-
-void MeanImputationVMatrix::appendRow(Vec v)
-{
-    PLERROR("In MeanImputationVMatrix::appendRow not implemented");
-}
-
-void MeanImputationVMatrix::insertRow(int i, Vec v)
-{
-    PLERROR("In MeanImputationVMatrix::insertRow not implemented");
-}
-
-void MeanImputationVMatrix::getRow(int i, Vec v) const
-{
-    int col;
-    source-> getRow(i, v);
-    for (col = 0; col < v->length(); col++)
-        if (is_missing(v[col])) v[col] = variable_mean[col];
-}
-
-void MeanImputationVMatrix::putRow(int i, Vec v)
-{
-    PLERROR("In MeanImputationVMatrix::putRow not implemented");
-}
-
-void MeanImputationVMatrix::getColumn(int i, Vec v) const
-{
-    int row;
-    source-> getColumn(i, v);
-    for (row = 0; row < v->length(); row++)
-        if (is_missing(v[row])) v[row] = variable_mean[i];
-}
-
+////////////
+// build_ //
+////////////
 void MeanImputationVMatrix::build_()
 {
     if (source) {
@@ -209,7 +155,7 @@ void MeanImputationVMatrix::build_()
             obtained_weightsize_from_source = true;
         } else if (obtained_weightsize_from_source && weightsize_ != source->weightsize())
             PLERROR(error_msg.c_str());
-        fieldinfos = source->fieldinfos;
+        setMetaInfoFromSource();
         computeMeanVector();
     } else {
         // Restore the original undefined sizes if the current one had been obtained
@@ -229,48 +175,60 @@ void MeanImputationVMatrix::build_()
     }
 }
 
-TVec<real> MeanImputationVMatrix::getMeanVector()
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void MeanImputationVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(variable_mean, copies);
+}
+
+
+///////////////
+// getNewRow //
+///////////////
+void MeanImputationVMatrix::getNewRow(int i, const Vec& v) const
+{
+    assert( source );
+    source->getRow(i, v);
+    for (int j = 0; j < v.length(); j++)
+        if (is_missing(v[j]))
+            v[j] = variable_mean[j];
+}
+
+///////////////////
+// getMeanVector //
+///////////////////
+Vec MeanImputationVMatrix::getMeanVector()
 {
     return variable_mean;
 }
 
+///////////////////////
+// computeMeanVector //
+///////////////////////
 void MeanImputationVMatrix::computeMeanVector()
 {
     int length = length_;
     int width = width_;
-    int row;
-    int col;
-    real variable_value;
     variable_mean.resize(width);
-    variable_present_count.resize(width);
     if (number_of_train_samples > 0.0)
     {
-        if (number_of_train_samples >= 1.0) length = (int) number_of_train_samples;
-        else length = (int) ((double) length * number_of_train_samples);
-        if (length < 1) length = 1;
-        if (length > length_) length = length_;
+        if (number_of_train_samples >= 1.0)
+            length = (int) number_of_train_samples;
+        else
+            length = (int) ((double) length * number_of_train_samples);
+        if (length < 1)
+            length = 1;
+        if (length > length_)
+            length = length_;
     }
-    for (col = 0; col < width; col++)
-    {
-        variable_mean[col] = 0.0;
-        variable_present_count[col] = 0;
-    }
-    for (row = 0; row < length; row++)
-    {
-        for (col = 0; col < width; col++)
-        {
-            variable_value = source->get(row, col);
-            if (!is_missing(variable_value))
-            {
-                variable_mean[col] += variable_value;
-                variable_present_count[col] += 1;
-            }
-        }
-    }
-    for (col = 0; col < width; col++)
-    {
-        if (variable_present_count > 0) variable_mean[col] = variable_mean[col] / variable_present_count[col];
-    }
+    assert( source );
+    VMat sub_source = source;
+    if (length != source->length())
+        sub_source = new SubVMatrix(source, 0, 0, length, source->width());
+    computeMean(sub_source, variable_mean);
 }
 
 } // end of namespace PLearn

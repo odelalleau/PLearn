@@ -4,7 +4,7 @@
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
 // Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux
-// Copyright (C) 2003 Olivier Delalleau
+// Copyright (C) 2003, 2006 Olivier Delalleau
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -64,34 +64,30 @@ private:
 
 public:
 
-    TVec<real> variable_mean;
-    TVec<int>  variable_present_count;
-    real       number_of_train_samples;
+    Vec     variable_mean;
+    real    number_of_train_samples;
 
 public:
 
     MeanImputationVMatrix();
-    MeanImputationVMatrix(VMat the_source, real the_number_of_train_samples = 0.0);
-    virtual            ~MeanImputationVMatrix();
+    MeanImputationVMatrix(VMat the_source,
+                          real the_number_of_train_samples = 0.0,
+                          bool call_build_ = true);
 
-    static void        declareOptions(OptionList &ol);
+
 
     virtual void       build();
     virtual void       makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
+protected:
+
+    static void        declareOptions(OptionList &ol);
+
 public:
 
-    virtual void       getExample(int i, Vec& input, Vec& target, real& weight);
-    virtual real       get(int i, int j) const;
-    virtual void       put(int i, int j, real value);
-    virtual void       getSubRow(int i, int j, Vec v) const;
-    virtual void       putSubRow(int i, int j, Vec v);
-    virtual void       appendRow(Vec v);
-    virtual void       insertRow(int i, Vec v);
-    virtual void       getRow(int i, Vec v) const;
-    virtual void       putRow(int i, Vec v);
-    virtual void       getColumn(int i, Vec v) const;
-    TVec<real> getMeanVector();
+    virtual void getNewRow(int i, const Vec& v) const;
+
+    Vec getMeanVector();
 
 private:
 
