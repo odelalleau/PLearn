@@ -62,10 +62,12 @@ private:
     bool obtained_targetsize_from_source;
     bool obtained_weightsize_from_source;
 
+    Vec     variable_mean;
+
 public:
 
-    Vec     variable_mean;
     real    number_of_train_samples;
+    VMat    mean_source;
 
 public:
 

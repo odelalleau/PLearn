@@ -57,6 +57,9 @@ PLEARN_IMPLEMENT_OBJECT(
     "If the 'number_of_train_samples' option is different than zero, the\n"
     "mean is computed only on that first portion of the underlying VMat.\n"
     "Otherwise, the mean is computed on the entire dataset.\n"
+    "Optionally, if one wants to obtain the variable means from another\n"
+    "dataset than the underlying source VMatrix, the 'mean_source' option\n"
+    "can be specified.\n"
 );
 
 ///////////////////////////
@@ -96,6 +99,12 @@ void MeanImputationVMatrix::declareOptions(OptionList &ol)
         "this proportion of the samples will be used. If greater than or\n"
         "equal to 1, the integer portion will be interpreted as the number\n"
         "of samples to use.");
+
+    declareOption(ol, "mean_source",
+                  &MeanImputationVMatrix::mean_source,
+                  OptionBase::buildoption,
+        "If specified, this VMat will be used to compute the means instead\n"
+        "of the 'source' option.");
 
     declareOption(ol, "variable_mean", &MeanImputationVMatrix::variable_mean,
                                        OptionBase::learntoption,
@@ -182,6 +191,7 @@ void MeanImputationVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(variable_mean, copies);
+    deepCopyField(mean_source,   copies);
 }
 
 
@@ -210,8 +220,18 @@ Vec MeanImputationVMatrix::getMeanVector()
 ///////////////////////
 void MeanImputationVMatrix::computeMeanVector()
 {
-    int length = length_;
+    VMat the_mean_source;
+    if (mean_source) {
+        assert( mean_source->width() == source->width() );
+        the_mean_source = mean_source;
+    } else
+        the_mean_source = source;
+   
+    assert( the_mean_source );
+
+    int length = the_mean_source->length();
     int width = width_;
+    assert( width = the_mean_source->width() );
     variable_mean.resize(width);
     if (number_of_train_samples > 0.0)
     {
@@ -221,13 +241,13 @@ void MeanImputationVMatrix::computeMeanVector()
             length = (int) ((double) length * number_of_train_samples);
         if (length < 1)
             length = 1;
-        if (length > length_)
-            length = length_;
+        if (length > the_mean_source->length())
+            length = the_mean_source->length();
     }
-    assert( source );
-    VMat sub_source = source;
-    if (length != source->length())
-        sub_source = new SubVMatrix(source, 0, 0, length, source->width());
+    VMat sub_source = the_mean_source;
+    if (length != the_mean_source->length())
+        sub_source = new SubVMatrix(sub_source, 0, 0,
+                                    length, sub_source->width());
     computeMean(sub_source, variable_mean);
 }
 
