@@ -232,7 +232,7 @@ void PDistribution::computeOutput(const Vec& input, Vec& output) const
     splitCond(input);
 
     string::size_type l = outputs_def.length();
-    output.resize(l);
+    output.resize(outputsize());
 
     int k = 0;
     for(unsigned int i=0; i<l; i++)
