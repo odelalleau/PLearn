@@ -66,225 +66,6 @@ PL_TYPECODE_TO_ARRAYTYPE  = {
     '\x11': 'f8'
     }
 
-class StringStream:
-    """Reads and writes in a string.
-
-    StringStream instances manage to independent position: the read and the
-    write positions. A L{sync()} method is provided if one wishes to
-    synchronize both positions.
-
-    StringStream instances also offer a number of attributes inspired by
-    File objects.
-
-    @ivar closed: Indicating the current state of the file object. This is
-    a read-only attribute; the close() method changes the value. It may not
-    be available on all file-like objects.
-
-    @type closed: bool
-
-    @ivar newlines: If Python was built with the --with-universal-newlines option (the
-    default) this read-only attribute exists, and for files opened in
-    universal newline read mode it keeps track of the types of newlines
-    encountered while reading the file. The values it can take are '\r',
-    '\n', '\r\n', None (unknown, no newlines read yet) or a tuple
-    containing all the newline types seen, to indicate that multiple
-    newline conventions were encountered. For files not opened in universal
-    newline read mode the value of this attribute will be None.
-
-    @type newlines: str
-    """
-    rpos = RPOS
-    wpos = WPOS
-    
-    def __init__(self, initial_string=""):
-        self.closed   = False
-        self.newlines = sys.stdout.newlines
-
-        self.__pos = [0, 0]
-        self.__internal = initial_string
-
-    def close(self):
-        """Close the stream.
-
-        A closed stream cannot be read or written any more. Any operation
-        which requires that the file be open will raise a ValueError after
-        the file has been closed. Calling close() more than once is
-        allowed.
-        """
-        self.closed = True
-
-    def flush(self):
-        """Dummy method provided only for compatibility with File objects."""
-        pass
-
-    def next(self):
-        """Returns the next line read by readline().
-
-        Will raise a StopIteration when the readline() will return an empty string.
-        """
-        if self.closed:            
-            raise ValueError("Trying to iterate on a closed stream.")
-        line = self.readline()
-        if line=='':
-            raise StopIteration
-        return line
-
-    def __iter__(self):
-        """A file object is its own iterator."""
-        if self.closed:            
-            raise ValueError("Trying to iterate on a closed stream.")
-        return self
-
-    def read(self, size=None):
-        """Read at most I{size} chars from the string.
-
-        Will read less if read hits the end of string before obtaining size
-        chars. Note that if the current position is already at the end of
-        the underlying string, an empty string will be returned.
-        """
-        if self.closed:
-            raise ValueError("Trying to read from a closed stream")
-
-        end = len(self.__internal)
-        if size is not None:
-            end = min(self.__pos[RPOS]+size, end)
-            
-        substring = self.__internal[self.__pos[RPOS] : end]
-        self.__pos[RPOS] = end
-        return substring
-
-    def readline(self, size=None):
-        """Read one entire line from the file.
-
-        A trailing newline character is kept in the string (but may be
-        absent when a file ends with an incomplete line). If the size
-        argument is present and non-negative, it is a maximum char count
-        (including the trailing newline) and an incomplete line may be
-        returned. An empty string is returned only when the end of the
-        underlying string is encountered immediately.
-        """
-        if self.closed:
-            raise ValueError("Trying to read from a closed stream")
-
-        # +1 includes the newline character if any. If there are None,
-        # 'end_of_line' will be zero
-        end_of_line = self.__pos[RPOS] + self.__internal[self.__pos[RPOS] : ].find("\n")+1
-        end = min(end_of_line, len(self.__internal))
-        if size is not None:
-            end = min(self.__pos[RPOS]+size, end)
-
-        substring = self.__internal[self.__pos[RPOS] : end]
-        self.__pos[RPOS] = end
-        return substring
-
-    def readlines(self, sizehint=None):
-        """Read all lines until the end of the underlying string.
-
-        Will return an empty list if no line (or partial line) were read.
-
-        @param sizehint: If the optional I{sizehint} argument is present,
-        instead of reading up to end of stream, whole lines totalling
-        approximately I{sizehint} chars will be read.
-        """
-        if self.closed:            
-            raise ValueError("Trying to read from a closed stream.")
-
-        if self.__pos[RPOS]==len(self.__internal):
-            return []
-
-        if sizehint is None:
-            sizehint = len(self.__internal)
-
-        lines = []
-        while sizehint > 0:
-            line = self.readline(sizehint)
-
-            if line=="":
-                sizehint = 0
-            else:
-                lines.append(line)
-                sizehint -= len(line)
-        
-        return lines
-
-    
-    def seek(self, offset, whence=0, pos=RPOS):
-        """Set the stream's current position.
-
-        @param offset: Offset to seek for.
-        @type  offset: int
-
-        @param whence: The whence argument is optional and defaults to 0
-        (absolute file positioning); other values are 1 (seek relative to
-        the current position) and 2 (seek relative to the file's end).
-
-        @type  whence: choices = [0,1,2]
-
-
-        @param pos: Default behavior of the seek function is to seek for a
-        read position (StringStream.rpos). This behavior can be switched to
-        seeking for a write position by setting the I{pos} param to
-        StringStream.wpos.
-
-        @type  pos: choices = [StringStream.rpos, StringStream.wpos]
-        
-        There is no return value.
-        """
-        assert whence in [0,1,2]
-        assert pos in [StringStream.rpos, StringStream.wpos]
-        
-        if self.closed:            
-            raise ValueError("Trying to seek on a closed stream.")
-
-        if whence==0:
-            self.__pos[pos] = offset
-        elif whence==1:
-            self.__pos[pos] += offset
-        elif whence==2:
-            self.__pos[pos] = len(self.__internal)-offset
-
-    def tell(self, pos=RPOS):
-        """Return the file's current position, like stdio's ftell().
-
-        @param pos: Default behavior of the tell function is to seek for a
-        read position (StringStream.rpos). This behavior can be switched to
-        seeking for a write position by setting the I{pos} param to
-        StringStream.wpos.
-
-        @type  pos: choices = [StringStream.rpos, StringStream.wpos]
-        """
-        assert pos in [StringStream.rpos, StringStream.wpos]
-        return self.__pos[pos]
-        
-
-    def write(self, s):
-        """Write a string to the stream.
-
-        There is no return value.
-        """        
-        if self.closed:            
-            raise ValueError("Trying to write in a closed stream.")
-
-        logging.debug("In write: string is: %s\n"%s)
-
-        self.__internal = "%s%s%s"%(
-            self.__internal[:self.__pos[WPOS]], s, self.__internal[self.__pos[WPOS]:])
-        self.__pos[WPOS] += len(s)
-
-    def writelines(self, sequence):
-        """Write a sequence of strings to the file.
-
-        The sequence can be any iterable object producing strings,
-        typically a list of strings. Note that the name is intended to match
-        readlines(); writelines() does not add line separators.
-
-        There is no return value.        
-        """
-        if self.closed:            
-            raise ValueError("Trying to write in a closed stream.")
-
-        for line in sequence:
-            self.write(line)
 
 class PLearnIO:
 
@@ -701,6 +482,7 @@ class PLearnIO:
             self.unread('TMat(')
             return binread_TMat()
         else:
+            # This uses the black magic defined in the magic module pl
             cls = getattr(pl, classname)
             obj = cls()
 
@@ -752,57 +534,12 @@ def inner_test_StringStream(stream, collected):
                     collected[lno],
                     len(collected[lno]))
 
-def test_StringStream():
-    quotes = file('.quotes', 'r')
-    exec(quotes.read())
-    quotes.close()
-
-    header = "From joined string:"    
-    print header
-    print "="*len(header)
-    stream = StringStream(''.join(collected_quotes_from_Einstein))    
-    inner_test_StringStream(stream, collected_quotes_from_Einstein)
-    print 
-
-    header = "From wrote strings (write):"    
-    print header
-    print "="*len(header)
-    stream = StringStream()
-    for line in collected_quotes_from_Einstein:
-        stream.write(line)
-    inner_test_StringStream(stream, collected_quotes_from_Einstein)
-    print
-
-    header = "From wrote strings (writelines):"    
-    print header
-    print "="*len(header)
-    stream = StringStream()    
-    stream.writelines(collected_quotes_from_Einstein)
-    inner_test_StringStream(stream, collected_quotes_from_Einstein)
-    print
-
-    header = "Final test:"    
-    print header
-    print "="*len(header)    
-    stream = StringStream("HELLO")
-    stream.seek(2, pos=WPOS)
-    assert stream.tell(WPOS)==2, stream.tell(WPOS)
-
-    stream.write("world")
-    assert stream.tell(WPOS) == (2+len("world")), stream.tell(WPOS)
-    print stream.read()
-    print stream.read()
-    stream.close()
-    try:
-        stream.write("FAILURE!")
-    except ValueError, err:
-        print err
-
 def test_PLearnIO_basics():
     from plearn.pyplearn.PyPLearnObject import PyPLearnObject, PLOption
+    from StringIO import StringIO
     logging.root.setLevel(logging._levelNames['DEBUG'])
-    from_server = StringStream()
-    to_server   = StringStream()
+    from_server = StringIO()
+    to_server   = StringIO()
     plearn_io   = PLearnIO(from_server, to_server)
 
     class Test(PyPLearnObject):
@@ -819,5 +556,5 @@ def test_PLearnIO_basics():
     read_test1 = plearn_io.binread_object()
     print read_test1
 
-test_StringStream()
-test_PLearnIO_basics()
+# test_PLearnIO_basics()
+
