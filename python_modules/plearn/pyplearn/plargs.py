@@ -372,9 +372,12 @@ class plopt(object):
     def checkChoices(self, value):
         """Checks that 'value' is one of the 'choices' parsed from self.kwargs."""
         choices = self._kwargs.get("choices", None)
-        if choices is not None and value in choices:
+        if choices is not None and value not in choices:
+            name = ""
+            if self._name != self.unnamed:
+                name = self._name+" " 
             raise ValueError(
-                "Option %s should be in choices=%s"%(self._name, choices))
+                "Option %sshould be in choices=%s"%(name, choices))
 
     def get(self):
         """Returns the current context override, if any, o/w returns the default value."""
