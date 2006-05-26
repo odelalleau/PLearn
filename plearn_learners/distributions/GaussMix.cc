@@ -745,8 +745,13 @@ void GaussMix::updateInverseVarianceFromPrevious(
         transposeProduct(B, W, dst_only_removed);
         tmp.setMod(W.width());
         tmp.resize(B.length(), W.width());
-        product(tmp, B, W);
-        negateElements(tmp);
+        // It can happen that n_common == 0, i.e. there are no common
+        // dimensions. In such a case, P contains the desired covariance.
+        if (n_common > 0) {
+            product(tmp, B, W);
+            negateElements(tmp);
+        } else
+            tmp.fill(0);
         tmp += P;
         tmp2.resize(tmp.length(), tmp.width());
         // Commented-out as it may cause an unwanted crash.
@@ -757,15 +762,17 @@ void GaussMix::updateInverseVarianceFromPrevious(
         // assert( tmp2.isSymmetric(false) );
         fillItSymmetric(tmp2);
         dst.subMat(n_common, n_common, n_dst_only, n_dst_only) << tmp2;
-        tmp.resize(B.width(), tmp2.width());
-        transposeProduct(tmp, B, tmp2);
-        tmp2.resize(tmp.length(), B.width());
-        product(tmp2, tmp, B);
-        negateElements(tmp);
-        dst.subMat(0, n_common, n_common, n_dst_only) << tmp;
-        Mat dst_top_left = dst.subMat(0, 0, n_common, n_common);
-        dst_top_left << tmp2;
-        dst_top_left += dst_only_removed;
+        if (n_common > 0) {
+            tmp.resize(B.width(), tmp2.width());
+            transposeProduct(tmp, B, tmp2);
+            tmp2.resize(tmp.length(), B.width());
+            product(tmp2, tmp, B);
+            negateElements(tmp);
+            dst.subMat(0, n_common, n_common, n_dst_only) << tmp;
+            Mat dst_top_left = dst.subMat(0, 0, n_common, n_common);
+            dst_top_left << tmp2;
+            dst_top_left += dst_only_removed;
+        }
         // Update the log-determinant if needed.
         if (src_log_det) {
             //Profiler::start("det when adding");
@@ -774,7 +781,7 @@ void GaussMix::updateInverseVarianceFromPrevious(
             //Profiler::end("det when adding");
         }
     }
-    // Ensure 'dst' is symmetric, since we did not fill the bottom-right block.
+    // Ensure 'dst' is symmetric, since we did not fill the bottom-left block.
     fillItSymmetric(dst);
 }
 
@@ -1016,6 +1023,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     if (impute_missing) {
                         // We also need to compute the inverse covariance
                         // matrix.
+                        assert( inv_cov_y );
                         inv_cov_y->resize(D, D);
                         inv_cov_y->fill(0);
                         real l0 = 1 / lambda0;
