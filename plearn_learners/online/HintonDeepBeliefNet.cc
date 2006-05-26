@@ -575,16 +575,16 @@ void HintonDeepBeliefNet::train()
     real weight; // unused
     Vec train_costs(2);
 
+    int nsamples = train_set->length();
+    MODULE_LOG << "  nsamples = " << nsamples << endl;
+    MODULE_LOG << "  initial stage = " << stage << endl;
+    MODULE_LOG << "  objective: nstages = " << nstages << endl;
+
     if( !initTrain() )
     {
         MODULE_LOG << "train() aborted" << endl;
         return;
     }
-
-    int nsamples = train_set->length();
-    MODULE_LOG << "  nsamples = " << nsamples << endl;
-    MODULE_LOG << "  initial stage = " << stage << endl;
-    MODULE_LOG << "  objective: nstages = " << nstages << endl;
 
     ProgressBar* pb = 0;
 
@@ -671,12 +671,10 @@ void HintonDeepBeliefNet::train()
     /***** fine-tuning *****/
     MODULE_LOG << "Fine-tuning all parameters, using method "
         << fine_tuning_method << endl;
-    if( report_progress
-        && (nstages - training_schedule[n_layers-2]) > 0 )
+    if( report_progress && stage < nstages )
         pb = new ProgressBar( "Fine-tuning parameters of all layers of "
                              +classname(),
-                             nstages
-                             - min( training_schedule[n_layers-2], nstages ) );
+                             nstages - stage );
 
     for( int i=0 ; i<n_layers-1 ; i++ )
         params[i]->learning_rate = fine_tuning_learning_rate;
