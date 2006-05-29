@@ -21,17 +21,6 @@ relative difference: 2           2
 max relative difference: 2 (at position 0/2, computed = 0 and estimated = 3.999688e-10)
 cos(angle) : nan
 angle : nan
-** Verifying gradient computation **
-Input:                0.2195867   -0.9745065  
-Output:               105.2056
-Computed  gradient:   88.26986    -204.545    
-Estimated gradient:   88.26986    -204.545    
--------------------
-relative difference: 8.361347e-12 1.449453e-11 
--------------------
-max relative difference: 1.449453e-11 (at position 1/2, computed = -204.545 and estimated = -204.545)
-cos(angle) : 1
-angle : 0
 ConjGradientOptimizer - stage 0: 0.771109685362030506
 ConjGradientOptimizer - stage 1: 0.623820670484137363
 ConjGradientOptimizer - stage 2: 0.450241455686290704
