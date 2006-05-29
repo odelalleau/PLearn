@@ -234,8 +234,14 @@ inline void productScaleAcc(const TMat<double>& C, const TMat<double>& A, bool t
     int ldb = B.mod();
     int ldc = C.mod();
 
-    if (A.isNull() || B.isNull() || C.isNull()) // Size zero ; don't bother
-        return;                                 // with actual calculation
+    if (A.isEmpty() || B.isEmpty() || C.isEmpty()) {
+        // Size zero: no need to bother computing anything.
+        // In such a case, the result of the matrix-matrix multiplication, if
+        // not empty, is necessarily zero, since R^0 = {0}.
+        if (!C.isEmpty())
+            C *= beta;
+        return;
+    }
 
     dgemm_(&transb, &transa, &w2, &l1, &w1, &alpha, B.data(), &ldb, A.data(), &lda, &beta, C.data(), &ldc);
 }
@@ -264,9 +270,10 @@ inline void productScaleAcc(const TVec<double>& y, const TMat<double>& A, bool t
 
     if (A.isEmpty() || x.isEmpty() || y.isEmpty()) {
         // Size zero: no need to bother computing anything.
-        // In such a case, the result, if not empty, is necessarily zero, since
-        // R^0 = {0}.
-        y.fill(0);
+        // In such a case, the result of the matrix-vector multiplication, if
+        // not empty, is necessarily zero, since R^0 = {0}.
+        if (!y.isEmpty())
+            y *= beta;
         return;
     }
 
