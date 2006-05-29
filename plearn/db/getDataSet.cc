@@ -73,7 +73,11 @@ VMat getDataSet(const PPath& dataset_path)
     // Parse the base file name and the potential parameters.
     string dataset_abs;
     map<string, string> params;
-    parseBaseAndParameters(dataset_path.absolute(), dataset_abs, params);
+    if (isfile(dataset_path))
+        dataset_abs = dataset_path;
+    else
+        // There may be parameters that need parsing.
+        parseBaseAndParameters(dataset_path.absolute(), dataset_abs, params);
     PPath dataset(dataset_abs);
     bool use_params = false;
 
