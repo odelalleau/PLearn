@@ -1,26 +1,27 @@
-ConjGradientOptimizer - stage 0: 3258.42301333049045
-ConjGradientOptimizer - stage 1: 2523.060818033744
-ConjGradientOptimizer - stage 2: 2128.35410114440674
-ConjGradientOptimizer - stage 3: 1827.19460990680955
-ConjGradientOptimizer - stage 4: 1728.00819474846594
-ConjGradientOptimizer - stage 5: 1593.7395098003567
-ConjGradientOptimizer - stage 6: 1458.24337081497833
-gamma = -0.128672340547531322 < 0 ==> Restarting
-ConjGradientOptimizer - stage 7: 1391.31017315383497
-ConjGradientOptimizer - stage 8: 1369.45982020143538
-ConjGradientOptimizer - stage 9: 1363.94241790379533
-ConjGradientOptimizer - stage 10: 1314.8750863212249
-ConjGradientOptimizer - stage 11: 1285.71532047986716
-ConjGradientOptimizer - stage 12: 1272.55387798622201
-ConjGradientOptimizer - stage 13: 1245.26561120501583
-ConjGradientOptimizer - stage 14: 1213.88492318970088
-ConjGradientOptimizer - stage 15: 1154.36978125011024
-ConjGradientOptimizer - stage 16: 1144.35678059550719
-ConjGradientOptimizer - stage 17: 1113.0073477842634
-ConjGradientOptimizer - stage 18: 1103.04126917532449
-ConjGradientOptimizer - stage 19: 1090.4465599585958
-ConjGradientOptimizer - stage 20: 1085.35830678829757
-ConjGradientOptimizer - stage 21: 1083.77000424404491
-ConjGradientOptimizer - stage 22: 1072.21402913845668
-ConjGradientOptimizer - stage 23: 1040.29627966096973
-ConjGradientOptimizer - stage 24: 1027.16648919779664
+Logging enabled for modules: ConjGradientOptimizer
+[ConjGradientOptimizer] Stage 0: 3258.42301333048681
+[ConjGradientOptimizer] Stage 1: 2523.06081803375082
+[ConjGradientOptimizer] Stage 2: 2128.35410114440219
+[ConjGradientOptimizer] Stage 3: 1827.1946099068025
+[ConjGradientOptimizer] Stage 4: 1728.00819474847185
+[ConjGradientOptimizer] Stage 5: 1593.73950980036261
+[ConjGradientOptimizer] Stage 6: 1458.24337081498061
+[ConjGradientOptimizer] gamma = -0.128672340547546504 < 0 ==> Restarting
+[ConjGradientOptimizer] Stage 7: 1391.31017315382928
+[ConjGradientOptimizer] Stage 8: 1369.45982020142787
+[ConjGradientOptimizer] Stage 9: 1363.94241790378442
+[ConjGradientOptimizer] Stage 10: 1314.87508632121649
+[ConjGradientOptimizer] Stage 11: 1285.71532047986761
+[ConjGradientOptimizer] Stage 12: 1272.55387798622473
+[ConjGradientOptimizer] Stage 13: 1245.26561120501333
+[ConjGradientOptimizer] Stage 14: 1213.88492318973636
+[ConjGradientOptimizer] Stage 15: 1154.36978124990947
+[ConjGradientOptimizer] Stage 16: 1144.35678059522752
+[ConjGradientOptimizer] Stage 17: 1113.00734778421065
+[ConjGradientOptimizer] Stage 18: 1103.04126917509757
+[ConjGradientOptimizer] Stage 19: 1090.44655995836183
+[ConjGradientOptimizer] Stage 20: 1085.35830678625325
+[ConjGradientOptimizer] Stage 21: 1083.77000423841309
+[ConjGradientOptimizer] Stage 22: 1072.21402912961776
+[ConjGradientOptimizer] Stage 23: 1040.2962796713266
+[ConjGradientOptimizer] Stage 24: 1027.16648920270222

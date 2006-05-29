@@ -40,101 +40,16 @@
  * This file is part of the PLearn library.
  ******************************************************* */
 
+#define PL_LOG_MODULE_NAME "GradientOptimizer"
+
 #include "GradientOptimizer.h"
+#include <plearn/io/pl_log.h>
 #include <plearn/math/TMat_maths.h>
 #include <plearn/display/DisplayUtils.h>
 #include <plearn/var/SumOfVariable.h>
 
 namespace PLearn {
 using namespace std;
-
-GradientOptimizer::GradientOptimizer():
-    learning_rate(0.),   
-    start_learning_rate(1e-2),
-    decrease_constant(0),
-    use_stochastic_hack(false),
-    verbosity(0)
-{}
-
-/*
-GradientOptimizer::GradientOptimizer(VarArray the_params, Var the_cost,
-                                     real the_start_learning_rate, 
-                                     real the_decrease_constant,
-                                     int n_updates, const string& filename, 
-                                     int every_iterations)
-    : inherited(the_params,the_cost, n_updates, filename, every_iterations),
-      learning_rate(0.),
-      start_learning_rate(the_start_learning_rate),
-      decrease_constant(the_decrease_constant),
-      use_stochastic_hack(true)
-{ }
-
-GradientOptimizer::GradientOptimizer(VarArray the_params, Var the_cost, 
-                                     VarArray update_for_measure,
-                                     real the_start_learning_rate, 
-                                     real the_decrease_constant,
-                                     int n_updates, const string& filename, 
-                                     int every_iterations)
-    : inherited(the_params,the_cost, update_for_measure,
-                n_updates, filename, every_iterations),
-      learning_rate(0.),
-      start_learning_rate(the_start_learning_rate),
-      decrease_constant(the_decrease_constant),
-      use_stochastic_hack(true)
-{ }
-*/
-
-
-void GradientOptimizer::declareOptions(OptionList& ol)
-{
-    declareOption(ol, "start_learning_rate", &GradientOptimizer::start_learning_rate, OptionBase::buildoption, 
-                  "The initial learning rate\n");
-
-    declareOption(ol, "learning_rate", &GradientOptimizer::learning_rate, OptionBase::learntoption, 
-                  "The current learning rate\n");
-
-    declareOption(ol, "decrease_constant", &GradientOptimizer::decrease_constant, OptionBase::buildoption, 
-                  "The learning rate decrease constant \n");
-
-    declareOption(ol, "lr_schedule", &GradientOptimizer::lr_schedule, OptionBase::buildoption, 
-                  "Fixed schedule instead of decrease_constant. This matrix has 2 columns: iteration_threshold \n"
-                  "and learning_rate_factor. As soon as the iteration number goes above the iteration_threshold,\n"
-                  "the corresponding learning_rate_factor is applied (multiplied) to the start_learning_rate to\n"
-                  "obtain the learning_rate.\n");
-
-    declareOption(ol, "use_stochastic_hack", &GradientOptimizer::use_stochastic_hack, OptionBase::buildoption, 
-                  "Indication that a stochastic hack to accelerate stochastic gradient descent should be used.\n"
-                  "Be aware that it will not take into account minimum and maximum values in variables.\n"
-                  );
-
-    declareOption(ol, "verbosity", &GradientOptimizer::verbosity,
-                                   OptionBase::buildoption, 
-        "Controls the amount of output.");
-
-    inherited::declareOptions(ol);
-}
-
-/*
-  void GradientOptimizer::oldwrite(ostream& out) const
-  {
-  writeHeader(out, "GradientOptimizer", 0);
-  inherited::write(out);  
-  writeField(out, "start_learning_rate", start_learning_rate);
-  writeField(out, "decrease_constant", decrease_constant);
-  writeFooter(out, "GradientOptimizer");
-  }
-
-  void GradientOptimizer::oldread(istream& in)
-  {
-  int ver = readHeader(in, "GradientOptimizer");
-  if(ver!=0)
-  PLERROR("In GradientOptimizer::read version number %d not supported",ver);
-  inherited::oldread(in);
-  readField(in, "start_learning_rate", start_learning_rate);
-  readField(in, "decrease_constant", decrease_constant);
-  readFooter(in, "GradientOptimizer");
-  }
-*/
 
 PLEARN_IMPLEMENT_OBJECT(
     GradientOptimizer,
@@ -154,23 +69,74 @@ PLEARN_IMPLEMENT_OBJECT(
     "\n"
 );
 
+GradientOptimizer::GradientOptimizer():
+    learning_rate(0.),   
+    start_learning_rate(1e-2),
+    decrease_constant(0),
+    use_stochastic_hack(false),
+    verbosity(0)
+{}
+
+
+void GradientOptimizer::declareOptions(OptionList& ol)
+{
+    declareOption(
+        ol, "start_learning_rate", &GradientOptimizer::start_learning_rate,
+        OptionBase::buildoption, 
+        "The initial learning rate\n");
+
+    declareOption(
+        ol, "learning_rate", &GradientOptimizer::learning_rate,
+        OptionBase::learntoption, 
+        "The current learning rate\n");
+
+    declareOption(
+        ol, "decrease_constant", &GradientOptimizer::decrease_constant,
+        OptionBase::buildoption, 
+        "The learning rate decrease constant \n");
+
+    declareOption(
+        ol, "lr_schedule", &GradientOptimizer::lr_schedule,
+        OptionBase::buildoption, 
+        "Fixed schedule instead of decrease_constant. This matrix has 2 columns: iteration_threshold \n"
+        "and learning_rate_factor. As soon as the iteration number goes above the iteration_threshold,\n"
+        "the corresponding learning_rate_factor is applied (multiplied) to the start_learning_rate to\n"
+        "obtain the learning_rate.\n");
+
+    declareOption(
+        ol, "use_stochastic_hack", &GradientOptimizer::use_stochastic_hack,
+        OptionBase::buildoption, 
+        "Indication that a stochastic hack to accelerate stochastic gradient descent should be used.\n"
+        "Be aware that it will not take into account minimum and maximum values in variables.\n"
+        );
+
+    declareOption(
+        ol, "verbosity", &GradientOptimizer::verbosity,
+        OptionBase::buildoption, 
+        "Controls the amount of output.");
+
+    inherited::declareOptions(ol);
+}
+
+
 // static bool displayvg=false;
 
 bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll) 
 {
-    // Big hack for the special case of stochastic gradient, to avoid doing an explicit update
-    // (temporarily change the gradient fields of the parameters to point to the parameters themselves,
-    // so that gradients are "accumulated" directly in the parameters, thus updating them!
+    // Big hack for the special case of stochastic gradient, to avoid doing an
+    // explicit update (temporarily change the gradient fields of the
+    // parameters to point to the parameters themselves, so that gradients are
+    // "accumulated" directly in the parameters, thus updating them!
     SumOfVariable* sumofvar = dynamic_cast<SumOfVariable*>((Variable*)cost);
     Array<Mat> oldgradientlocations;
     bool stochastic_hack = use_stochastic_hack && sumofvar!=0 && sumofvar->nsamples==1;
     //stochastic_hack=false;
     if(stochastic_hack)
-        // make the gradient and values fields of parameters point to the same place,
-        // so that when the descendants of the parameter Var's do a bprop this
-        // automatically increments the parameters (by the right amount since
-        // we set the cost->gradient to -learning_rate).
     {
+        // make the gradient and values fields of parameters point to the same
+        // place, so that when the descendants of the parameter Var's do a
+        // bprop this automatically increments the parameters (by the right
+        // amount since we set the cost->gradient to -learning_rate).
         int n = params.size();
         oldgradientlocations.resize(n);
         for(int i=0; i<n; i++)
@@ -184,12 +150,15 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll)
     int current_schedule = 0;
     int n_schedules = lr_schedule.length();
     if (n_schedules>0)
-        while (current_schedule+1 < n_schedules && stage > lr_schedule(current_schedule,0)) current_schedule++;
+        while (current_schedule+1 < n_schedules && stage > lr_schedule(current_schedule,0))
+            current_schedule++;
+    
     while (stage < stage_max) 
     {
         if (n_schedules>0)
         {
-            while (current_schedule+1 < n_schedules && stage > lr_schedule(current_schedule,0)) current_schedule++;
+            while (current_schedule+1 < n_schedules && stage > lr_schedule(current_schedule,0))
+                current_schedule++;
             learning_rate = start_learning_rate * lr_schedule(current_schedule,1);
         }
         else
@@ -225,9 +194,11 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll)
             if(partial_update_vars.length() != 0) 
                 for(int i=0; i<partial_update_vars.length(); i++)
                     partial_update_vars[i]->clearRowsToUpdate();
-        if (verbosity >= 1)
-            pout << "GradientOptimizer - stage " << stage << ": "
-                 << cost->value << endl;
+        if (verbosity >= 1) {
+            MODULE_LOG << "Stage " << stage << ": " << cost->value
+                       << "\tlr=" << learning_rate
+                       << endl;
+        }
         stats_coll.update(cost->value);
         ++stage;
     }
@@ -241,6 +212,8 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll)
     return false;
 }
 
+// Very old code.  TO BE DEPRECATED
+#if 0
 /*
 real ScaledGradientOptimizer::optimize()
 {
@@ -365,7 +338,7 @@ real ScaledGradientOptimizer::optimize()
     return meancost[0];
 }
 */
-
+#endif // #if 0
 
 } // end of namespace PLearn
 

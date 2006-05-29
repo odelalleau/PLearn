@@ -38,8 +38,10 @@
  * This file is part of the PLearn library.
  ******************************************************* */
 
+#define PL_LOG_MODULE_NAME "ConjGradientOptimizer"
+
 #include "ConjGradientOptimizer.h"
-//#include <plearn/math/TMat_maths.h>
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;
@@ -238,7 +240,7 @@ void ConjGradientOptimizer::findDirection() {
     real gamma = polakRibiere();
     if (gamma < 0 && no_negative_gamma) {
         if (verbosity >= 2)
-            pout << "gamma = " << gamma << " < 0 ==> Restarting" << endl;
+            MODULE_LOG << "gamma = " << gamma << " < 0 ==> Restarting" << endl;
         gamma = 0;
     }
     /*
@@ -393,7 +395,7 @@ bool ConjGradientOptimizer::lineSearch() {
     bool no_improvement_possible = fast_exact_is_equal(step, 0);
     if (no_improvement_possible) {
         if (verbosity >= 2)
-            pout << "No more progress made by the line search, stopping" << endl;
+            MODULE_LOG << "No more progress made by the line search, stopping" << endl;
     } else
         params.update(step, search_direction);
     return !no_improvement_possible;
@@ -444,8 +446,9 @@ bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
         current_cost = cost->value[0];
         // Display current cost value if required.
         if (verbosity >= 2)
-            pout << "ConjGradientOptimizer - stage " << stage << ": "
-                 << current_cost << endl;
+            MODULE_LOG << "Stage " << stage << ": "
+                       << current_cost
+                       << endl;
         stats_coll.update(cost->value);
     
         // Find the new search direction if we need to continue.
@@ -454,7 +457,7 @@ bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
     }
 
     if (early_stop && verbosity >= 2)
-        pout << "Early Stopping!" << endl;
+        MODULE_LOG << "Early Stopping!" << endl;
 
     return early_stop;
 }

@@ -9,7 +9,7 @@ constrain_limit = 0.100000000000000006 ;
 max_extrapolate = 3 ;
 max_eval_per_line_search = 20 ;
 slope_ratio = 10 ;
-nstages = 2121  )
+nstages = 12  )
 ;
 D = 100 ;
 save = 1 ;
