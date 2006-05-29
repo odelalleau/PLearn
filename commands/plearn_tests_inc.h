@@ -53,16 +53,18 @@
 /*********
  * PTest *
  *********/
+#include <plearn/../test_suite/PP/PPTest.h>
 #include <plearn/base/test/ObjectGraphIterator/ObjectGraphIteratorTest.h>
 #include <plearn/io/test/PLLogTest.h>
 #include <plearn/io/test/PPathTest.h>
 #include <plearn/io/test/PStreamBufTest.h>
 #include <plearn/io/test/TupleTest.h>
 #include <plearn/math/test/PentadiagonalSolveInPlace/PentaTest.h>
-#include <plearn/math/test/pl_math/PLMathTest.h>
 #include <plearn/math/test/TMat/TMatTest.h>
 #include <plearn/math/test/VecStatsCollector/RemoveObservationTest.h>
+#include <plearn/math/test/pl_math/PLMathTest.h>
 #include <plearn/misc/test/HeapTest.h>
+#include <plearn/opt/test/ConjRosenbrock.h>
 #include <plearn/python/test/BasicIdentityCallsTest.h>
 #include <plearn/python/test/InjectionTest.h>
 #include <plearn/python/test/InterfunctionXchgTest.h>
@@ -70,9 +72,8 @@
 #include <plearn/var/test/VarUtilsTest.h>
 #include <plearn/vmat/test/AutoVMatrixTest.h>
 #include <plearn/vmat/test/FileVMatrixTest.h>
-#include <plearn/vmat/test/RowBufferedVMatrixTest.h>
 #include <plearn/vmat/test/IndexedVMatrixTest.h>
-#include <plearn/../test_suite/PP/PPTest.h>
+#include <plearn/vmat/test/RowBufferedVMatrixTest.h>
 
 // Some other minimal includes to be able to run tests.
 

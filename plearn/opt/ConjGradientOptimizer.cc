@@ -47,21 +47,22 @@ using namespace std;
 ///////////////////////////
 // ConjGradientOptimizer //
 ///////////////////////////
-ConjGradientOptimizer::ConjGradientOptimizer():
-    constrain_limit(0.1),
-    expected_red(1),
-    max_eval_per_line_search(20),
-    max_extrapolate(3),
-    no_negative_gamma(true),
-    rho(1e-2),
-    sigma(0.5),
-    slope_ratio(100),
-    verbosity(0),
-    line_search_failed(false),
-    line_search_succeeded(false)
-{}
+ConjGradientOptimizer::ConjGradientOptimizer()
+    : constrain_limit(0.1),
+      expected_red(1),
+      max_extrapolate(3),
+      rho(1e-2),
+      sigma(0.5),
+      slope_ratio(100),
+      max_eval_per_line_search(20),
+      no_negative_gamma(true),
+      verbosity(0),
+      line_search_failed(false),
+      line_search_succeeded(false)
+{ }
 
-PLEARN_IMPLEMENT_OBJECT(ConjGradientOptimizer,
+PLEARN_IMPLEMENT_OBJECT(
+    ConjGradientOptimizer,
     "Optimizer based on the conjugate gradient method.",
     "The conjugate gradient algorithm is basically the following :\n"
     "- 0: initialize the search direction d = -gradient\n"
@@ -69,58 +70,102 @@ PLEARN_IMPLEMENT_OBJECT(ConjGradientOptimizer,
     "     function value\n"
     "- 2: move to this minimum, update the search direction d and go to\n"
     "     step 1\n"
-    "The line search algorithm is inspired by Carl Rasmussen's Matlab\n"
+    "The line search algorithm is inspired by Carl Edward Rasmussen's Matlab\n"
     "algorithm from:\n"
     "http://www.kyb.tuebingen.mpg.de/bs/people/carl/code/minimize/minimize.m\n"
     "\n"
     "Many options can be set, however the provided default values should\n"
     "be adequate in most cases.\n"
-);
+    "\n"
+    "A few comments reproduced from Rasmussen's code; we are very grateful for\n"
+    "his publishing detailed code:\n"
+    "\n"
+    "- The Polack-Ribiere flavour of conjugate gradients is used to compute search\n"
+    "  directions, and a line search using quadratic and cubic polynomial\n"
+    "  approximations and the Wolfe-Powell stopping criteria is used together with\n"
+    "  the slope ratio method for guessing initial step sizes. Additionally a bunch\n"
+    "  of checks are made to make sure that exploration is taking place and that\n"
+    "  extrapolation will not be unboundedly large.\n"
+    "\n"
+    "- The code falls naturally into 3 parts, after the initial line search is\n"
+    "  started in the direction of steepest descent. 1) we first enter a while loop\n"
+    "  which uses point 1 (p1) and (p2) to compute an extrapolation (p3), until we\n"
+    "  have extrapolated far enough (Wolfe-Powell conditions). 2) if necessary, we\n"
+    "  enter the second loop which takes p2, p3 and p4 chooses the subinterval\n"
+    "  containing a (local) minimum, and interpolates it, unil an acceptable point\n"
+    "  is found (Wolfe-Powell conditions). Note, that points are always maintained\n"
+    "  in order p0 <= p1 <= p2 < p3 < p4. 3) compute a new search direction using\n"
+    "  conjugate gradients (Polack-Ribiere flavour), or revert to steepest if there\n"
+    "  was a problem in the previous line-search. Return the best value so far, if\n"
+    "  two consecutive line-searches fail, or whenever we run out of function\n"
+    "  evaluations or line-searches. During extrapolation, the \"f\" function may fail\n"
+    "  either with an error or returning Nan or Inf, and minimize should handle this\n"
+    "  gracefully.\n");
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void ConjGradientOptimizer::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "verbosity", &ConjGradientOptimizer::verbosity,
-                                   OptionBase::buildoption, 
+    declareOption(
+        ol, "verbosity", &ConjGradientOptimizer::verbosity,
+        OptionBase::buildoption, 
         "Controls the amount of output.");
 
-    declareOption(ol, "expected_red", &ConjGradientOptimizer::expected_red,
-                                      OptionBase::buildoption, 
+    declareOption(
+        ol, "expected_red", &ConjGradientOptimizer::expected_red,
+        OptionBase::buildoption, 
         "Expected function reduction at first step.");
 
-    declareOption(ol, "no_negative_gamma",
-                  &ConjGradientOptimizer::no_negative_gamma,
-                  OptionBase::buildoption,
+    declareOption(
+        ol, "no_negative_gamma",
+        &ConjGradientOptimizer::no_negative_gamma,
+        OptionBase::buildoption,
         "If true, then a negative value for gamma in the Polak-Ribiere\n"
         "formula will trigger a restart.");
 
-    declareOption(ol, "sigma", &ConjGradientOptimizer::sigma,
-                               OptionBase::buildoption, 
-        "Constant in the Wolfe-Powell stopping conditions.");
+    declareOption(
+        ol, "sigma", &ConjGradientOptimizer::sigma,
+        OptionBase::buildoption, 
+        "Constant in the Wolfe-Powell stopping conditions.  It is the maximum allowed\n"
+        "absolute ratio between previous and new slopes (derivatives in the search\n"
+        "direction), thus setting sigma to low (positive) values forces higher\n"
+        "precision in the line-searches.\n"
+        "Tuning of sigma (depending on the nature of the function to be optimized) may\n"
+        "may speed up the minimization.");
 
-     declareOption(ol, "rho", &ConjGradientOptimizer::rho,
-                              OptionBase::buildoption, 
-        "Constant in the Wolfe-Powell stopping conditions.");
+    declareOption(
+        ol, "rho", &ConjGradientOptimizer::rho,
+        OptionBase::buildoption, 
+        "Constant in the Wolfe-Powell stopping conditions.\n"
+        "Rho is the minimum allowed fraction of the expected (from the slope at the\n"
+        "initial point in the linesearch). Constants must satisfy 0 < rho < sigma < 1.\n"
+        "It is probably not worth playing much with rho.\n");
 
-     declareOption(ol, "constrain_limit",
-                   &ConjGradientOptimizer::constrain_limit,
-                   OptionBase::buildoption, 
-        "Multiplicative coefficient to constrain the evaluation bracket.");
+    declareOption(
+        ol, "constrain_limit",
+        &ConjGradientOptimizer::constrain_limit,
+        OptionBase::buildoption, 
+        "Multiplicative coefficient to constrain the evaluation bracket.\n"
+        "We don't re-evaluate the function if we are within 'constrain_limit'\n"
+        "of the current bracket.");
 
-     declareOption(ol, "max_extrapolate",
-                   &ConjGradientOptimizer::max_extrapolate,
-                   OptionBase::buildoption, 
-        "Maximum coefficient for bracket extrapolation.");
+    declareOption(
+        ol, "max_extrapolate",
+        &ConjGradientOptimizer::max_extrapolate,
+        OptionBase::buildoption, 
+        "Maximum coefficient for bracket extrapolation.  This limits the\n"
+        "extrapolation to be within 'max_extrapolate' times the current step-size");
 
-     declareOption(ol, "max_eval_per_line_search",
-                   &ConjGradientOptimizer::max_eval_per_line_search,
-                  OptionBase::buildoption, 
+    declareOption(
+        ol, "max_eval_per_line_search",
+        &ConjGradientOptimizer::max_eval_per_line_search,
+        OptionBase::buildoption, 
         "Maximum number of function evalutions during line search.");
 
-     declareOption(ol, "slope_ratio", &ConjGradientOptimizer::slope_ratio,
-                                  OptionBase::buildoption, 
+    declareOption(
+        ol, "slope_ratio", &ConjGradientOptimizer::slope_ratio,
+        OptionBase::buildoption, 
         "Maximum slope ratio.");
 
     inherited::declareOptions(ol);

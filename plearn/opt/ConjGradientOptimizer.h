@@ -58,12 +58,12 @@ public:
 
     real constrain_limit;
     real expected_red;
-    int max_eval_per_line_search;
     real max_extrapolate;
-    bool no_negative_gamma;
     real rho;
     real sigma;
     real slope_ratio;
+    int max_eval_per_line_search;
+    bool no_negative_gamma;
     int verbosity;
 
 protected:

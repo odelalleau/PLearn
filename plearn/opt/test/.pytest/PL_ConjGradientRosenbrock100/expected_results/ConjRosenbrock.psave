@@ -1,0 +1,16 @@
+*1 ->ConjRosenbrock(
+opt = *2 ->ConjGradientOptimizer(
+verbosity = 2 ;
+expected_red = 1 ;
+no_negative_gamma = 1 ;
+sigma = 0.100000000000000006 ;
+rho = 0.0500000000000000028 ;
+constrain_limit = 0.100000000000000006 ;
+max_extrapolate = 3 ;
+max_eval_per_line_search = 20 ;
+slope_ratio = 10 ;
+nstages = 2121  )
+;
+D = 100 ;
+save = 1 ;
+save_path = ""  )
