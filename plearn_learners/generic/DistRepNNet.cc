@@ -51,8 +51,12 @@
 #include <plearn/var/BinaryClassificationLossVariable.h>
 #include <plearn/var/ClassificationLossVariable.h>
 #include <plearn/var/ConcatColumnsVariable.h>
+#include <plearn/var/ConcatColumnsVariable.h>
+#include <plearn/var/ConcatRowsVariable.h>
 #include <plearn/var/CrossEntropyVariable.h>
 #include <plearn/var/ExpVariable.h>
+#include <plearn/var/HeterogenuousAffineTransformVariable.h>
+#include <plearn/var/HeterogenuousAffineTransformWeightPenalty.h>
 #include <plearn/var/MarginPerceptronCostVariable.h>
 #include <plearn/var/MulticlassLossVariable.h>
 #include <plearn/var/NegCrossEntropySigmoidVariable.h>
@@ -61,6 +65,7 @@
 #include <plearn/var/SigmoidVariable.h>
 #include <plearn/var/SoftmaxVariable.h>
 #include <plearn/var/SoftplusVariable.h>
+#include <plearn/var/SubMatVariable.h>
 #include <plearn/var/SumVariable.h>
 #include <plearn/var/SumAbsVariable.h>
 #include <plearn/var/SumOfVariable.h>
@@ -353,23 +358,51 @@ void DistRepNNet::build()
     build_();
 }
 
-Var DistRepNNet::buildSparseAffineTransform(VarArray weights, Var input, TVec<int> input_to_dict_index, int begin, VarArray& activated_weights)
-{    
-    Var out = weights.last();
-    for(int j=0; j<weights.length()-1; j++)
+Var DistRepNNet::buildSparseAffineTransform(VarArray weights, Var input, TVec<int> input_to_dict_index, int begin)
+{   
+    TVec<bool> input_is_discrete(weights->length()-1);
+    Vec missing_replace(weights->length()-1);
+    for(int j=0; j<weights->length()-1; j++)
     {
         if(input_to_dict_index[j] < 0)
         {
-            activated_weights.push_back(weights[j]);
-            out = out + weights[j] * input[begin+j];
+            input_is_discrete[j] = false;
+            missing_replace[j] = 0;            
         }
         else
         {
-            activated_weights.push_back(weights[j](isMissing(input[begin+j],true, true, dictionaries[input_to_dict_index[begin+j]]->getId(OOV_TAG))));
-            out = out + activated_weights.last();
+            input_is_discrete[j] = true;
+            missing_replace[j] = dictionaries[input_to_dict_index[begin+j]]->getId(OOV_TAG);            
         }
     }
-    return out;
+    if(weights.length()-1 == input->length())
+        return heterogenuous_affine_transform(isMissing(input,true, true, missing_replace), weights, input_is_discrete);
+    else
+        return heterogenuous_affine_transform(isMissing(subMat(input,begin,0,weights.length()-1,1),true, true, missing_replace), weights, input_is_discrete);
+}
+
+Var DistRepNNet::buildSparseAffineTransformWeightPenalty(VarArray weights, Var input, TVec<int> input_to_dict_index, int begin, real weight_decay, real bias_decay, string penalty_type)
+{   
+    TVec<bool> input_is_discrete(weights.length()-1);
+    Vec missing_replace(weights.length()-1);
+    for(int j=0; j<weights->length()-1; j++)
+    {
+        if(input_to_dict_index[j] < 0)
+        {
+            input_is_discrete[j] = false;
+            missing_replace[j] = 0;            
+        }
+        else
+        {
+            input_is_discrete[j] = true;
+            missing_replace[j] = dictionaries[input_to_dict_index[begin+j]]->getId(OOV_TAG);
+        }
+    }
+    
+    if(weights.length()-1 == input->length())
+        return heterogenuous_affine_transform_weight_penalty(isMissing(input,true, true, missing_replace), weights, input_is_discrete, weight_decay, bias_decay, penalty_type);
+    else
+        return heterogenuous_affine_transform_weight_penalty(isMissing(subMat(input,begin,0,weights.length()-1,1),true, true, missing_replace), weights, input_is_discrete, weight_decay, bias_decay, penalty_type);
 }
 
 void DistRepNNet::buildVarGraph(int task_index)
@@ -476,7 +509,7 @@ void DistRepNNet::buildVarGraph(int task_index)
             this_ntokens = ntokens_extra_tasks[task_index];
         }
                 
-        activated_weights.resize(0);
+        //activated_weights.resize(0);
         VarArray dist_reps(this_ntokens);
         VarArray dist_rep_hids(this_ntokens);
 
@@ -503,8 +536,8 @@ void DistRepNNet::buildVarGraph(int task_index)
         // Building var graph from input to distributed representations
         for(int i=0; i<this_ntokens; i++)
         {
-            if(nhidden_dist_rep_predictor > 0) dist_rep_hids[i] = buildSparseAffineTransform(winputdistrep, input, input_to_dict_index, i*nfeatures_per_token, activated_weights);
-            else dist_reps[i] =  buildSparseAffineTransform(winputdistrep, input, input_to_dict_index, i*nfeatures_per_token, activated_weights);
+            if(nhidden_dist_rep_predictor > 0) dist_rep_hids[i] = buildSparseAffineTransform(winputdistrep, input, input_to_dict_index, i*nfeatures_per_token);
+            else dist_reps[i] =  buildSparseAffineTransform(winputdistrep, input, input_to_dict_index, i*nfeatures_per_token);
 
             if(nhidden_dist_rep_predictor > 0) 
             {
@@ -518,9 +551,9 @@ void DistRepNNet::buildVarGraph(int task_index)
             // To construct the Func...
             token_features = Var(nfeatures_per_token);
             Var dist_rep_hid;
-            VarArray aw;
-            if(nhidden_dist_rep_predictor > 0) dist_rep_hid = buildSparseAffineTransform(winputdistrep, token_features, input_to_dict_index, 0, aw);
-            else dist_rep =  buildSparseAffineTransform(winputdistrep, token_features, input_to_dict_index, 0, aw);
+            //VarArray aw;
+            if(nhidden_dist_rep_predictor > 0) dist_rep_hid = buildSparseAffineTransform(winputdistrep, token_features, input_to_dict_index, 0);
+            else dist_rep =  buildSparseAffineTransform(winputdistrep, token_features, input_to_dict_index, 0);
 
             if(nhidden_dist_rep_predictor > 0) 
             {
@@ -529,7 +562,7 @@ void DistRepNNet::buildVarGraph(int task_index)
             }
         }
         
-        dp_input = hconcat(dist_reps);
+        dp_input = vconcat(dist_reps);
     }
 
     if(fixed_output_weights && !use_dist_reps && (task_index < 0 && nhidden <= 0 || task_index>=0 && nhidden_extra_tasks[task_index] <= 0))
@@ -718,7 +751,14 @@ void DistRepNNet::buildCosts(const Var& the_output, const Var& the_target, int t
      */
 
     // create penalties
-    buildPenalties();
+    
+    int this_ntokens;
+    if(task_index < 0)
+        this_ntokens = ntokens;
+    else
+        this_ntokens = ntokens_extra_tasks[task_index];
+
+    buildPenalties(this_ntokens);
     test_costs = hconcat(costs);
 
     // Apply penalty to cost.
@@ -907,7 +947,7 @@ void DistRepNNet::buildOutputFromInput(int task_index) {
             // network, instead of w1.
             int dim;       
             if(this_nhidden > 0) dim = this_nhidden;
-            else dim = dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1;
+            else dim =  dictionaries[target_dict_index]->size() + (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1); //dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1;
             winputsparse.resize(input->length()+1);
             winputsparse[input->length()] = Var(1,dim);
             for(int j=0; j<winputsparse.length()-1; j++)
@@ -923,7 +963,7 @@ void DistRepNNet::buildOutputFromInput(int task_index) {
 
         if(this_nhidden>0)
         {
-            output = buildSparseAffineTransform(winputsparse,input,input_to_dict_index,0,activated_weights); 
+            output = buildSparseAffineTransform(winputsparse,input,input_to_dict_index,0); 
             output = add_transfer_func(output);
 
             winputsparse_weight_decay = weight_decay + layer1_weight_decay;
@@ -963,7 +1003,7 @@ void DistRepNNet::buildOutputFromInput(int task_index) {
         }
         else
         {
-            output = buildSparseAffineTransform(winputsparse,input,input_to_dict_index,0,activated_weights); 
+            output = buildSparseAffineTransform(winputsparse,input,input_to_dict_index,0); 
 
             winputsparse_weight_decay = weight_decay + output_layer_weight_decay;
             winputsparse_bias_decay = bias_decay + output_layer_bias_decay;
@@ -977,7 +1017,7 @@ void DistRepNNet::buildOutputFromInput(int task_index) {
         }
         else if(this_nhidden>0) params.append(wout);
 
-        output = transpose(output);
+        //output = transpose(output);
     }
     else
     {
@@ -1069,7 +1109,7 @@ void DistRepNNet::buildOutputFromInput(int task_index) {
             if(use_dist_reps)
                 output = affine_transform(dp_input, wout);
             else
-                output = buildSparseAffineTransform(winputsparse,input,input_to_dict_index,0,activated_weights); 
+                output = buildSparseAffineTransform(winputsparse,input,input_to_dict_index,0); 
         }
 
         if(fixed_output_weights)
@@ -1081,7 +1121,7 @@ void DistRepNNet::buildOutputFromInput(int task_index) {
         else if(use_dist_reps)
             params.append(wout);
 
-        output = transpose(output);
+        //output = transpose(output);
     }
     /*
     TVec<bool> class_tag(dictionaries[target_dict_index]->size() + (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1));
@@ -1140,7 +1180,7 @@ void DistRepNNet::buildOutputFromInput(int task_index) {
 ////////////////////
 // buildPenalties //
 ////////////////////
-void DistRepNNet::buildPenalties() {
+void DistRepNNet::buildPenalties(int this_ntokens) {
     penalties.resize(0);  // prevents penalties from being added twice by consecutive builds
     if(w1 && ((layer1_weight_decay + weight_decay)!=0 || (layer1_bias_decay + bias_decay)!=0))
         penalties.append(affine_transform_weight_penalty(w1, (layer1_weight_decay + weight_decay), (layer1_bias_decay + bias_decay), penalty_type));
@@ -1163,8 +1203,9 @@ void DistRepNNet::buildPenalties() {
 
     // Here, affine_transform_weight_penalty is not used differently, since the weight variables don't correspond
     // to an affine_transform (i.e. doesn't contain biases AND a weights)
-    if(winputdistrep.length() != 0 && (input_dist_rep_predictor_weight_decay + weight_decay))
+    if(winputdistrep.length() != 0 && (input_dist_rep_predictor_weight_decay + weight_decay + input_dist_rep_predictor_bias_decay + bias_decay))
     {
+        /*
         for(int i=0; i<activated_weights.length(); i++)
         {
             if(input_to_dict_index[i%nfeatures_per_token] < 0)
@@ -1179,22 +1220,30 @@ void DistRepNNet::buildPenalties() {
                 penalties.append(affine_transform_weight_penalty(activated_weights[i], (input_dist_rep_predictor_weight_decay + weight_decay), 
                                                                  (input_dist_rep_predictor_weight_decay + weight_decay), penalty_type));                   
         }
+        */
+        for(int i=0; i<this_ntokens; i++)
+            penalties.append(buildSparseAffineTransformWeightPenalty(winputdistrep, input, input_to_dict_index, i*nfeatures_per_token, input_dist_rep_predictor_weight_decay + weight_decay, input_dist_rep_predictor_bias_decay + bias_decay, penalty_type));
     }
-    if(winputdistrep.length() != 0 && (input_dist_rep_predictor_bias_decay + bias_decay))
-        penalties.append(affine_transform_weight_penalty(winputdistrep[nfeatures_per_token], (input_dist_rep_predictor_bias_decay + bias_decay), 
-                                                         (input_dist_rep_predictor_bias_decay + bias_decay), penalty_type));
+    //if(winputdistrep.length() != 0 && (input_dist_rep_predictor_bias_decay + bias_decay))
+    //    penalties.append(affine_transform_weight_penalty(winputdistrep[nfeatures_per_token], (input_dist_rep_predictor_bias_decay + bias_decay), 
+    //                                                    (input_dist_rep_predictor_bias_decay + bias_decay), penalty_type));
 
-    if(winputsparse.length() != 0 && winputsparse_weight_decay)
+    if(winputsparse.length() != 0 && (winputsparse_weight_decay + winputsparse_bias_decay != 0))
     {
-        for(int i=0; i<activated_weights.length(); i++)
-        {
-            penalties.append(affine_transform_weight_penalty(activated_weights[i], winputsparse_weight_decay, 
-                                                             winputsparse_weight_decay, penalty_type));
-        }
+        penalties.append(buildSparseAffineTransformWeightPenalty(winputsparse, input, input_to_dict_index, 0, winputsparse_weight_decay, winputsparse_bias_decay, penalty_type));
     }
-    if(winputsparse.length() != 0 && winputsparse_bias_decay)
-        penalties.append(affine_transform_weight_penalty(winputsparse.last(), winputsparse_bias_decay, 
-                                                         winputsparse_bias_decay, penalty_type));
+
+//    if(winputsparse.length() != 0 && winputsparse_weight_decay)
+//    {
+//        for(int i=0; i<activated_weights.length(); i++)
+//        {
+//            penalties.append(affine_transform_weight_penalty(activated_weights[i], winputsparse_weight_decay, 
+//                                                             winputsparse_weight_decay, penalty_type));
+//        }
+//    }
+//    if(winputsparse.length() != 0 && winputsparse_bias_decay)
+//        penalties.append(affine_transform_weight_penalty(winputsparse.last(), winputsparse_bias_decay, 
+//                                                         winputsparse_bias_decay, penalty_type));
 
 }
 
@@ -1440,7 +1489,7 @@ void DistRepNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(invars, copies);
     deepCopyField(invars_extra_tasks, copies);
     deepCopyField(params, copies);
-    deepCopyField(activated_weights, copies);
+    //deepCopyField(activated_weights, copies);
     deepCopyField(input_to_dict_index,copies);
 
     deepCopyField(paramsvalues, copies);

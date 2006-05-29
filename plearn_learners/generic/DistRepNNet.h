@@ -91,7 +91,7 @@ protected:
     VarArray params; 
     //! Weights of the activated features, in the 
     //! distributed representation predictor
-    VarArray activated_weights;
+    //VarArray activated_weights;
     //! Mapping between input and dictionaries
     TVec<int> input_to_dict_index;
     //! Target Dictionary index
@@ -301,7 +301,10 @@ protected:
     static void declareOptions(OptionList& ol);
 
     //! Builds a sparse affine transformation from a set of weights and an input variable.
-    Var buildSparseAffineTransform(VarArray weights, Var input, TVec<int> input_to_dict_index, int begin, VarArray& activated_weights);
+    Var buildSparseAffineTransform(VarArray weights, Var input, TVec<int> input_to_dict_index, int begin);
+
+    //! Builds a sparse affine transformation weight penalty from a set of weights and an input variable.
+    Var buildSparseAffineTransformWeightPenalty(VarArray weights, Var input, TVec<int> input_to_dict_index, int begin, real weight_decay, real bias_decay=0, string penalty_type="L2_square");
 
     //! Builds a var graph from a task, specified by task_index
     void buildVarGraph(int task_index);
@@ -332,7 +335,7 @@ protected:
     void fillWeights(const Var& weights, bool clear_first_row, int use_this_to_scale=-1);
 
     //! Fill the costs penalties.
-    virtual void buildPenalties();
+    virtual void buildPenalties(int this_ntokens);
 
 };
 
