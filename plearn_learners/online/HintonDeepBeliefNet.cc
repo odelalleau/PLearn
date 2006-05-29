@@ -648,8 +648,8 @@ void HintonDeepBeliefNet::train()
     joint_params->learning_rate = learning_rate;
 //    target_params->learning_rate = learning_rate;
 
-    int momentum_switch_stage =
-        training_schedule[n_layers-3] + momentum_switch_time;
+    int previous_stage = (n_layers < 3) ? 0 : training_schedule[n_layers-3];
+    int momentum_switch_stage = momentum_switch_time + previous_stage;
     if( stage <= momentum_switch_stage )
         joint_params->momentum = initial_momentum;
     else
@@ -665,7 +665,7 @@ void HintonDeepBeliefNet::train()
             joint_params->momentum = final_momentum;
 
         if( pb )
-            pb->update( stage - training_schedule[n_layers-3] + 1 );
+            pb->update( stage - previous_stage + 1 );
     }
 
     /***** fine-tuning *****/
@@ -677,6 +677,9 @@ void HintonDeepBeliefNet::train()
         pb = new ProgressBar( "Fine-tuning parameters of all layers of "
                              +classname(),
                              nstages - init_stage );
+
+    MODULE_LOG << "  fine_tuning_learning_rate = "
+        << fine_tuning_learning_rate << endl;
 
     for( int i=0 ; i<n_layers-1 ; i++ )
         params[i]->learning_rate = fine_tuning_learning_rate;
