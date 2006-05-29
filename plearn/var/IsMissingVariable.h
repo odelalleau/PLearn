@@ -62,15 +62,24 @@ protected:
     //! or the actual input value otherwise
     bool set_parallel_missing_output;
     //! Output value when input is missing (NaN)
-    real parallel_missing_output;
+    Vec parallel_missing_outputs;
+
+private:
+    //#####  Private Member Functions  ########################################
+
+    //! This does the actual building.
+    void build_();
 
 public:
     //!  Default constructor for persistence
     IsMissingVariable() {}
-    IsMissingVariable(Variable* input1, bool parallel=0, bool set_parallel_missing_output=0, real parallel_missing_output=0);
+    IsMissingVariable(Variable* input1, bool parallel=0, bool set_parallel_missing_output=0, Vec parallel_missing_outputs = Vec(0));
 
     PLEARN_DECLARE_OBJECT(IsMissingVariable);
     static void declareOptions(OptionList &ol);
+
+    // Simply calls inherited::build() then build_()
+    virtual void build();
 
     virtual string info() const
     { return string("IsMissingVariable ()"); }
@@ -79,11 +88,18 @@ public:
     virtual void fprop();
     virtual void bprop();
     virtual void symbolicBprop();
+
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };
 
 DECLARE_OBJECT_PTR(IsMissingVariable);
 
-inline Var isMissing(Var x, bool parallel=0, bool set_parallel_missing_output=0, real parallel_missing_output=0) { return new IsMissingVariable(x, parallel,set_parallel_missing_output,parallel_missing_output); }
+inline Var isMissing(Var x, bool parallel, bool set_parallel_missing_output, real parallel_missing_output) { 
+    Vec parallel_missing_outputs(x->size()); 
+    parallel_missing_outputs.fill(parallel_missing_output); 
+    return new IsMissingVariable(x, parallel,set_parallel_missing_output,parallel_missing_outputs); }
+inline Var isMissing(Var x, bool parallel=0, bool set_parallel_missing_output=0, Vec parallel_missing_outputs = Vec(0)) { return new IsMissingVariable(x, parallel,set_parallel_missing_output,parallel_missing_outputs); }
 
 } // end of namespace PLearn
 

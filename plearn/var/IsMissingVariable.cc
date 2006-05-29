@@ -52,8 +52,8 @@ PLEARN_IMPLEMENT_OBJECT(IsMissingVariable,
                         "ONE LINE DESCR",
                         "NO HELP");
 
-IsMissingVariable::IsMissingVariable(Variable* input1, bool parall, bool the_set_parallel_missing_output, real the_parallel_missing_output)
-    : inherited(input1, parall?input1->length():1, parall?input1->width():1), parallel(parall), set_parallel_missing_output(the_set_parallel_missing_output), parallel_missing_output(the_parallel_missing_output)
+IsMissingVariable::IsMissingVariable(Variable* input1, bool parall, bool the_set_parallel_missing_output, Vec the_parallel_missing_outputs)
+    : inherited(input1, parall?input1->length():1, parall?input1->width():1), parallel(parall), set_parallel_missing_output(the_set_parallel_missing_output), parallel_missing_outputs(the_parallel_missing_outputs)
 {}
 
 void
@@ -61,15 +61,27 @@ IsMissingVariable::declareOptions(OptionList &ol)
 {
     declareOption(ol, "parallel", &IsMissingVariable::parallel, OptionBase::buildoption, "");
     inherited::declareOptions(ol);
-    declareOption(ol, "parallel_missing_output", &IsMissingVariable::parallel_missing_output, OptionBase::buildoption, "");
+    declareOption(ol, "parallel_missing_outputs", &IsMissingVariable::parallel_missing_outputs, OptionBase::buildoption, "");
     declareOption(ol, "set_parallel_missing_output", &IsMissingVariable::set_parallel_missing_output, OptionBase::buildoption, "");
     inherited::declareOptions(ol);
+}
+
+void IsMissingVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void IsMissingVariable::build_()
+{
+    if(parallel_missing_outputs.length() != input->size())
+        PLERROR("In IsMissingVariable::build_(): parallel_missing_outputs' size is different from input size.");
 }
 
 void IsMissingVariable::recomputeSize(int& l, int& w) const
 {
     if (input) {
-        l = input->length();
+        l = parallel ? input->length() : 1;
         w = parallel ? input->width() : 1;
     } else
         l = w = 0;
@@ -86,7 +98,7 @@ void IsMissingVariable::fprop()
             for(int i=0; i<nelems(); i++)
             {
                 if(!finite(input->valuedata[i]))
-                    valuedata[i] = parallel_missing_output;
+                    valuedata[i] = parallel_missing_outputs[i];
                 else
                     valuedata[i] = input->valuedata[i];
             }
@@ -106,6 +118,13 @@ void IsMissingVariable::bprop() {}
 
 void IsMissingVariable::symbolicBprop() {}
 
+void IsMissingVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    inherited::makeDeepCopyFromShallowCopy(copies);
+
+    deepCopyField(parallel_missing_outputs, copies);
+    //PLERROR("IsMissingVariable::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+}
 
 
 } // end of namespace PLearn
