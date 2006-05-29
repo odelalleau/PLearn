@@ -44,6 +44,7 @@
 #include "TMatTest.h"
 #include <plearn/math/PRandom.h>
 #include <plearn/math/TMat_maths.h>
+#include <plearn/math/TMat_maths_specialisation.h>
 
 namespace PLearn {
 using namespace std;
@@ -213,6 +214,31 @@ void TMatTest::perform()
     Mat multiply_acc_mat = mat.copy();
     multiplyAcc(multiply_acc_mat, mat, -scaled_mat(0, 0));
     this->mat_options["multiplyAcc_mat"]        = multiply_acc_mat;
+
+    // Now test a specific case where problems can occur: the multiplication of
+    // a matrix (m x 0) by a vector of size 0. The result must be a vector of
+    // size m, filled with 0.
+    Vec vec_result(2, 1);
+    Mat mat_m_by_zero(2, 0);
+    Vec vec_zero;
+    product(vec_result, mat_m_by_zero, vec_zero);
+    this->vec_options["product_empty_matrix_by_empty_vector"] =
+                                                            vec_result.copy();
+
+    // Similar but with accumulation.
+    vec_result.fill(1);
+    productAcc(vec_result, mat_m_by_zero, vec_zero);
+    this->vec_options["product_empty_matrix_by_empty_vector_acc"] = vec_result;
+
+    // Similar tests with matrices.
+    Mat mat_result(2, 1, 1);
+    Mat mat_zero(0, 1);
+    product(mat_result, mat_m_by_zero, mat_zero);
+    this->mat_options["product_empty_matrix_by_empty_matrix"] =
+                                                            mat_result.copy();
+    mat_result.fill(1);
+    productAcc(mat_result, mat_m_by_zero, mat_zero);
+    this->mat_options["product_empty_matrix_by_empty_matrix_acc"] = mat_result;
 
     pout << "... DONE!" << endl;
 }

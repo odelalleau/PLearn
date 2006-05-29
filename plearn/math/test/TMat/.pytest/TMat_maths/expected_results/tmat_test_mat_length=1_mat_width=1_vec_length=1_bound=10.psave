@@ -9,8 +9,16 @@ mat_options = {"multiplyAcc_mat" : 1  1  [
 , "operator*=_mat" : 1  1  [ 
 14.1452611430939363 	
 ]
+, "product_empty_matrix_by_empty_matrix" : 2  1  [ 
+0 	
+0 	
+]
+, "product_empty_matrix_by_empty_matrix_acc" : 2  1  [ 
+1 	
+1 	
+]
 };
 real_options = {"argmax" : 0 , "argmin" : 0 , "harmonic_mean" : 2.8537121182307601 , "harmonic_mean (ignore_missing)" : 2.8537121182307601 , "logadd" : 2.8537121182307601 , "max" : 2.8537121182307601 , "mean" : 2.8537121182307601 , "mean (ignore missing)" : 2.8537121182307601 , "median" : 2.8537121182307601 , "min" : 2.8537121182307601 , "norm" : 2.8537121182307601 , "product" : 2.8537121182307601 , "sum" : 2.8537121182307601 , "sum (ignore missing)" : 2.8537121182307601 , "sum_of_log" : 1.04862064439119962 , "sumabs" : 2.8537121182307601 , "sumsquare" : 8.14367285373709215 };
-vec_options = {"exp" : 1 [ 17.3520753895055257 ] , "fasttanh" : 1 [ 0.993390858173370361 ] , "inverted" : 1 [ 0.350420770760849709 ] , "log" : 1 [ 1.04862064439119962 ] , "multiplyAcc_vec" : 1 [ -20.3859857913856573 ] , "nonZeroIndices" : 1 [ 0 ] , "operator*=_vec" : 1 [ 8.14367285373709215 ] , "remove_missing" : 1 [ 2.8537121182307601 ] , "sign" : 1 [ 1 ] , "softmax" : 1 [ 1 ] , "sqrt" : 1 [ 1.6892933783777051 ] , "square" : 1 [ 8.14367285373709215 ] , "squareroot" : 1 [ 1.6892933783777051 ] , "tanh" : 1 [ 0.993379555518381974 ] , "vector" : 1 [ 2.8537121182307601 ] };
+vec_options = {"exp" : 1 [ 17.3520753895055257 ] , "fasttanh" : 1 [ 0.993390858173370361 ] , "inverted" : 1 [ 0.350420770760849709 ] , "log" : 1 [ 1.04862064439119962 ] , "multiplyAcc_vec" : 1 [ -20.3859857913856573 ] , "nonZeroIndices" : 1 [ 0 ] , "operator*=_vec" : 1 [ 8.14367285373709215 ] , "product_empty_matrix_by_empty_vector" : 2 [ 0 0 ] , "product_empty_matrix_by_empty_vector_acc" : 2 [ 1 1 ] , "remove_missing" : 1 [ 2.8537121182307601 ] , "sign" : 1 [ 1 ] , "softmax" : 1 [ 1 ] , "sqrt" : 1 [ 1.6892933783777051 ] , "square" : 1 [ 8.14367285373709215 ] , "squareroot" : 1 [ 1.6892933783777051 ] , "tanh" : 1 [ 0.993379555518381974 ] , "vector" : 1 [ 2.8537121182307601 ] };
 save = 1 ;
 save_path = "tmat_test_mat_length=1_mat_width=1_vec_length=1_bound=10.psave"  )
