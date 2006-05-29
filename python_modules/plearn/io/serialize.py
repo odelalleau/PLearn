@@ -35,7 +35,7 @@
 
 Streams are built using the File objects' specifications
 """
-import logging, sys, string
+import logging, sys, string, struct
 import numarray
 from plearn.pyplearn import pl
 from plearn.pyplearn.plearn_repr import plearn_repr, clear_ref_map
