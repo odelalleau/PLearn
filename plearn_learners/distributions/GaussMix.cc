@@ -382,6 +382,7 @@ void GaussMix::computeMeansAndCovariances() {
         if (sum_columns[j] < epsilon)
             PLWARNING("In GaussMix::computeMeansAndCovariances - A posterior "
                       "is almost zero");
+        assert( !updated_weights(j).hasMissing() );
         VMat weights(columnmatrix(updated_weights(j)));
         bool use_impute_missing = impute_missing && stage > 0;
         VMat input_data = use_impute_missing ? imputed_missing[j]
@@ -1572,6 +1573,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         for (int i = 0; i < n_missing; i++)
                             full_vec[coord_missing[i]] =
                                 center_j[coord_missing[i]] - cond_mean[i];
+                        assert( !full_vec.hasMissing() );
                         imputed_missing[j]->putRow(current_training_sample,
                                                    full_vec);
                     }
@@ -1924,9 +1926,11 @@ void GaussMix::computePosteriors() {
             // We should now be ready to impute missing values.
             for (int i = 0; i < samples_clust.length(); i++) {
                 int s = samples_clust[i];
-                for (int j = 0; j < L; j++)
+                for (int j = 0; j < L; j++) {
+                    assert( !clust_imputed_missing[j](i).hasMissing() );
                     // TODO We are most likely wasting memory here.
                     imputed_missing[j]->putRow(s, clust_imputed_missing[j](i));
+                }
             }
 
             // If the 'impute_missing' method is used, we now need to compute
@@ -3759,7 +3763,7 @@ void GaussMix::train()
                 // node to the next in the path.
                 int sum = 0;
                 int counter = 0;
-                Vec stats_diff(missing_patterns.width());
+                Vec stats_diff(missing_patterns.width() + 1);
                 stats_diff.fill(0);
                 for (int i = 0; i < span_path.length() - 1; i++) {
                     int first = span_path[i];
