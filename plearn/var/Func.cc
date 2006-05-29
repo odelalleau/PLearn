@@ -598,7 +598,7 @@ void Function::verifyGradient(const Vec& input, real step)
     }
     // copy the original input into the VarArray
     fprop(newinput,output);
-    cerr << "Estimated gradient:   " << finitediffgradient;
+    cerr << "Estimated gradient:   " << finitediffgradient << endl;
     cerr << "-------------------" << endl;
   
     cerr << "relative difference: ";

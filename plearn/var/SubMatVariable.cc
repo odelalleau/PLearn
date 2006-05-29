@@ -50,9 +50,15 @@ using namespace std;
 
 /** SubMatVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(SubMatVariable,
-                        "ONE LINE DESCR",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+    SubMatVariable,
+    "Takes a submatrix of an input variable",
+    "This Variable performs creates a view of a subset of an input variable.\n"
+    "The starting row and column in the input variable must be specified, as\n"
+    "well as the new number of rows and columns.\n"
+    "\n"
+    "Variables of this kind can also be created from C++ through the subMat\n"
+    "function.\n");
 
 SubMatVariable::SubMatVariable(Variable* v, int i, int j, int the_length, int the_width)
     : inherited(v, the_length, the_width),
@@ -84,11 +90,27 @@ void SubMatVariable::build_()
 void
 SubMatVariable::declareOptions(OptionList &ol)
 {
-    declareOption(ol, "length_", &SubMatVariable::length_, OptionBase::buildoption, "");
-    declareOption(ol, "width_", &SubMatVariable::width_, OptionBase::buildoption, "");
-    declareOption(ol, "startk", &SubMatVariable::startk, OptionBase::buildoption, "");
-    declareOption(ol, "i_", &SubMatVariable::i_, OptionBase::buildoption, "");
-    declareOption(ol, "j_", &SubMatVariable::j_, OptionBase::buildoption, "");
+    declareOption(
+        ol, "length_", &SubMatVariable::length_, OptionBase::buildoption,
+        "New length (number of rows) of the SubVMatrix variable");
+
+    declareOption(
+        ol, "width_", &SubMatVariable::width_, OptionBase::buildoption,
+        "New width (number of columns) of the SubVMatrix variable");
+
+    declareOption(
+        ol, "i_", &SubMatVariable::i_, OptionBase::buildoption,
+        "Starting ROW in the input variable");
+    
+    declareOption(
+        ol, "j_", &SubMatVariable::j_, OptionBase::buildoption,
+        "Starting COLUMN in the input variable");
+    
+    declareOption(
+        ol, "startk", &SubMatVariable::startk, OptionBase::learntoption,
+        "Should not be set directly: this is equal to the starting element\n"
+        "in the INPUT MATRIX corresponding to the settings of i_ and j_.");
+
     inherited::declareOptions(ol);
 }
 

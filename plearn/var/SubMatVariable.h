@@ -48,18 +48,36 @@
 namespace PLearn {
 using namespace std;
 
+/**
+ *  Takes a submatrix of an input variable.
+ *
+ *  This Variable performs creates a view of a subset of an input variable.
+ *  The starting row and column in the input variable must be specified, as
+ *  well as the new number of rows and columns.
+ *
+ *  Variables of this kind can also be created from C++ through the subMat
+ *  function.
+ */
 class SubMatVariable: public UnaryVariable
 {
-
-private:
-
     typedef UnaryVariable inherited;
 
 protected:
-
+    //! Should not be set directly: this is equal to the starting element
+    //! in the INPUT MATRIX corresponding to the settings of i_ and j_.
     int startk;
-    int length_, width_;
-    int i_, j_;
+
+    //! New length (number of rows) of the SubVMatrix variable
+    int length_;
+
+    //! New width (number of columns) of the SubVMatrix variable
+    int width_;
+
+    //! Starting ROW in the input variable
+    int i_;
+
+    //! Starting COLUMN in the input variable
+    int j_;
 
 public:
 
@@ -79,7 +97,6 @@ public:
     virtual void rfprop();
 
 private:
-
     void build_();
 
 };

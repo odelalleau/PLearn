@@ -49,11 +49,11 @@ using namespace std;
 //////////////////
 // AddMissingVMatrix //
 //////////////////
-AddMissingVMatrix::AddMissingVMatrix():
-  missing_prop(0),
-  only_on_first(-1),
-  random_gen(new PRandom()),
-  seed(-1)
+AddMissingVMatrix::AddMissingVMatrix()
+    : random_gen(new PRandom()),
+      missing_prop(0),
+      only_on_first(-1),
+      seed(-1)
 {}
 
 PLEARN_IMPLEMENT_OBJECT(AddMissingVMatrix,
