@@ -262,8 +262,13 @@ inline void productScaleAcc(const TVec<double>& y, const TMat<double>& A, bool t
     int m = A.width();
     int n = A.length();
 
-    if (A.isNull() || x.isNull() || y.isNull()) // Size zero ; don't bother
-        return;                                 // with actual calculation
+    if (A.isEmpty() || x.isEmpty() || y.isEmpty()) {
+        // Size zero: no need to bother computing anything.
+        // In such a case, the result, if not empty, is necessarily zero, since
+        // R^0 = {0}.
+        y.fill(0);
+        return;
+    }
 
     dgemv_(&trans, &m, &n, &alpha, A.data(), &lda, x.data(), &one, &beta, y.data(), &one);
 }
