@@ -113,7 +113,7 @@ void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
     for( int i=0 ; i<size ; i++ )
     {
         real output_i = output[i];
-        input_gradient[i] = output_i * (1-output_i) * output_gradient[i];
+        input_gradient[i] = - output_i * (1-output_i) * output_gradient[i];
     }
 }
 
