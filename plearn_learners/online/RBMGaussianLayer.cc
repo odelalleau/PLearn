@@ -79,6 +79,13 @@ void RBMGaussianLayer::getUnitActivations( int i, PP<RBMParameters> rbmp,
 void RBMGaussianLayer::getAllActivations( PP<RBMParameters> rbmp, int offset )
 {
     rbmp->computeUnitActivations( offset, size, activations );
+/*    static FILE * f = fopen("mu_sigma.txt" , "wt") ; 
+    if (activations.size() > 2)
+        fprintf(f , "%0.8f %0.8f %0.8f %0.8f \n" , activations[0] , activations[1] ,
+            activations[2], activations[3]) ; 
+    else    
+        fprintf(f , "%0.8f %0.8f\n" , activations[0] , activations[1]) ; 
+*/        
     expectation_is_up_to_date = false;
 }
 
@@ -104,7 +111,16 @@ void RBMGaussianLayer::bpropUpdate(const Vec& input, const Vec& output,
                                    Vec& input_gradient,
                                    const Vec& output_gradient)
 {
-    PLERROR( "RBMGaussianLayer::bpropUpdate not implemented yet." );
+    assert( input.size() == 2 * size );
+    assert( output.size() == size );
+    assert( output_gradient.size() == size );
+    input_gradient.resize( 2 * size ) ; 
+
+    for( int i=0 ; i<size ; ++i ) { 
+        input_gradient[2*i] = output_gradient[i] ; 
+        input_gradient[2*i+1] = 0. ; 
+    }
+
 }
 
 
