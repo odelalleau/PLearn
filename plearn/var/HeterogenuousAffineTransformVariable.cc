@@ -47,7 +47,14 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(
     HeterogenuousAffineTransformVariable,
     "Affine transform with continuous and discrete input",
-    ""
+    "Affine transform that supports continuous and discrete input. The input\n"
+    "(varray[0]) can contain a continuous value or the index of a symbol (e.g. a word).\n"
+    "This is determined by the field input_is_discrete, which contains the information\n"
+    "about which components are discrete.\n" 
+    "All the weights (varray[1..end], with varray.last() being the biases) have the\n"
+    "same width, which corresponds to the size of this variable. The input must be a\n"
+    "row or column vector, and this variable is either going to be a row or column\n"
+    "vector, depending on the input."
     );
 
 HeterogenuousAffineTransformVariable::HeterogenuousAffineTransformVariable()
@@ -103,7 +110,7 @@ void HeterogenuousAffineTransformVariable::fprop()
 
 void HeterogenuousAffineTransformVariable::bprop()
 {
-    varray.last()->gradient << gradient;
+    varray.last()->gradient += gradient;
     int n = size();
     int l = varray.length()-1;
     for(int i=1; i<l; i++)
