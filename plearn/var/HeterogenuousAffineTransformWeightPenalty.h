@@ -59,8 +59,11 @@ public:
 
     //! Indication whether the input components are discrete
     TVec<bool> input_is_discrete;
+    //! Weight decay parameter
     real weight_decay_;
+    //! Bias decay parameter
     real bias_decay_;
+    //! Type of weight decay penalty
     string penalty_type_;
 
 public:

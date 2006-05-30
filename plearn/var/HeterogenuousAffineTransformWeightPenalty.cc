@@ -47,7 +47,11 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(
     HeterogenuousAffineTransformWeightPenalty,
     "Penalty associated to an affine transform with continuous and discrete input",
-    ""
+    "Weight decay penalty associated to an affine transform with continuous and\n"
+    "discrete inputs. The way the weight decay works with the discrete component\n"
+    "weights is that a weight decay is applied only to the activated weights, i.e.\n"
+    "to the rows of the weight matrices corresponding to the discrete components'\n"
+    "values."
     );
 
 HeterogenuousAffineTransformWeightPenalty::HeterogenuousAffineTransformWeightPenalty()
@@ -70,7 +74,7 @@ void HeterogenuousAffineTransformWeightPenalty::recomputeSize(int& l, int& w) co
 
 void HeterogenuousAffineTransformWeightPenalty::fprop()
 {
-    int n = size();
+    int n = varray[1]->width();
     int l = varray.length()-1;
 
     if (penalty_type_ == "L1_square")
@@ -139,7 +143,7 @@ void HeterogenuousAffineTransformWeightPenalty::fprop()
 
 void HeterogenuousAffineTransformWeightPenalty::bprop()
 {
-    int n = size();
+    int n = varray[1]->width();
     int l = varray.length()-1;
 
     if (penalty_type_ == "L1_square")
@@ -272,7 +276,20 @@ void HeterogenuousAffineTransformWeightPenalty::declareOptions(OptionList& ol)
     declareOption(ol, "input_is_discrete", &HeterogenuousAffineTransformWeightPenalty::input_is_discrete,
                   OptionBase::buildoption,
                   "Indication whether each component of the input is discrete or not.");
-    
+    declareOption(ol, "weight_decay_", &HeterogenuousAffineTransformWeightPenalty::weight_decay_,
+                  OptionBase::buildoption,
+                  "Weight decay parameter.");
+    declareOption(ol, "bias_decay_", &HeterogenuousAffineTransformWeightPenalty::bias_decay_,
+                  OptionBase::buildoption,
+                  "Bias decay parameter.");
+    declareOption(ol, "penalty_type_", &HeterogenuousAffineTransformWeightPenalty::penalty_type_,
+                  OptionBase::buildoption,
+                  "Penalty to use on the weights.\n"
+                  "Can be any of:\n"
+                  "  - \"L1\": L1 norm,\n"
+                  "  - \"L1_square\": square of the L1 norm,\n"
+                  "  - \"L2_square\" (default): square of the L2 norm.\n");
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
