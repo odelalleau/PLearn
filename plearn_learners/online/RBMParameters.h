@@ -110,6 +110,7 @@ public:
     virtual void accumulateNegStats( const Vec& down_values,
                                      const Vec& up_values ) = 0;
 
+
     //! Updates parameters according to contrastive divergence gradient
     virtual void update() = 0;
 
@@ -124,6 +125,17 @@ public:
 
     //! given the input, compute the output (possibly resize it  appropriately)
     virtual void fprop(const Vec& input, Vec& output) const;
+
+
+    //! return the number of parameters
+    virtual int nParameters() const = 0;
+
+    //! Make the parameters data be sub-vectors of the given global_parameters.
+    //! The argument should have size >= nParameters. The result is a Vec
+    //! that starts just after this object's parameters end, i.e.
+    //!    result = global_parameters.subVec(nParameters(),global_parameters.size()-nParameters());
+    //! This allows to easily chain calls of this method on multiple RBMParameters.
+    virtual Vec makeParametersPointHere(const Vec& global_parameters) = 0;
 
     //#####  PLearn::Object Protocol  #########################################
 

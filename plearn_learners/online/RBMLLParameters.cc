@@ -408,6 +408,36 @@ void RBMLLParameters::finalize()
 }
 */
 
+//! return the number of parameters
+int RBMLLParameters::nParameters() const
+{
+    return weights.size() + up_units_bias.size() + down_units_bias.size();
+}
+
+//! Make the parameters data be sub-vectors of the given global_parameters.
+//! The argument should have size >= nParameters. The result is a Vec
+//! that starts just after this object's parameters end, i.e.
+//!    result = global_parameters.subVec(nParameters(),global_parameters.size()-nParameters());
+//! This allows to easily chain calls of this method on multiple RBMParameters.
+Vec RBMLLParameters::makeParametersPointHere(const Vec& global_parameters)
+{
+    int n1=weights.size();
+    int n2=up_units_bias.size();
+    int n3=down_units_bias.size();
+    int n = n1+n2+n3; // should be = nParameters()
+    int m = global_parameters.size();
+    if (m<n)
+        PLERROR("RBMLLParameters::makeParametersPointHere: argument has length %d, should be longer than nParameters()=%d",m,n);
+    real* p = global_parameters.data();
+    weights.makeSharedValue(p,n1);
+    p+=n1;
+    up_units_bias.makeSharedValue(p,n2);
+    p+=n2;
+    down_units_bias.makeSharedValue(p,n3);
+    return global_parameters.subVec(n,m-n);
+}
+
+
 
 } // end of namespace PLearn
 
