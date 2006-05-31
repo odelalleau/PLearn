@@ -4,7 +4,7 @@
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
 // Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux
-// Copyright (C) 2003 Olivier Delalleau
+// Copyright (C) 2003, 2006 Olivier Delalleau
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -45,53 +45,42 @@
 #ifndef VariableDeletionVMatrix_INC
 #define VariableDeletionVMatrix_INC
 
-#include "SourceVMatrix.h"
 #include "SelectColumnsVMatrix.h"
 
 namespace PLearn {
 using namespace std;
 
-//!  provides mean imputation for missing variables
-
-class VariableDeletionVMatrix: public SourceVMatrix
+class VariableDeletionVMatrix: public SelectColumnsVMatrix
 {
-    typedef SourceVMatrix inherited;
-
-private:
-
-    bool obtained_inputsize_from_source;
-    bool obtained_targetsize_from_source;
-    bool obtained_weightsize_from_source;
+    typedef SelectColumnsVMatrix inherited;
 
 public:
 
+    real    min_non_missing_threshold;
+    real    max_constant_threshold;
+    int     number_of_train_samples;
+
+    // Deprecated.
     VMat       complete_dataset;
     real       deletion_threshold;
-    bool       remove_columns_with_constant_value;
-    real       number_of_train_samples;
+    int        remove_columns_with_constant_value;
 
 public:
 
     VariableDeletionVMatrix();
-    VariableDeletionVMatrix(VMat the_complete_dataset, real the_threshold, bool the_remove_columns_with_constant_value, real the_number_of_train_samples);
 
-    static void declareOptions(OptionList &ol);
+    VariableDeletionVMatrix(VMat the_source,
+                            real the_min_non_missing_threshold,
+                            bool the_remove_columns_with_constant_value,
+                            int  the_number_of_train_samples,
+                            bool call_build_ = true);
 
     virtual void build();
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-public:
+protected:
 
-    virtual void getExample(int i, Vec& input, Vec& target, real& weight);
-    virtual real get(int i, int j) const;
-    virtual void put(int i, int j, real value);
-    virtual void getSubRow(int i, int j, Vec v) const;
-    virtual void putSubRow(int i, int j, Vec v);
-    virtual void appendRow(Vec v);
-    virtual void insertRow(int i, Vec v);
-    virtual void getRow(int i, Vec v) const;
-    virtual void putRow(int i, Vec v);
-    virtual void getColumn(int i, Vec v) const;
+    static void declareOptions(OptionList &ol);
 
 private:
 
@@ -99,7 +88,6 @@ private:
     void buildIndices();
 
     PLEARN_DECLARE_OBJECT(VariableDeletionVMatrix);
-
 };
 
 DECLARE_OBJECT_PTR(VariableDeletionVMatrix);

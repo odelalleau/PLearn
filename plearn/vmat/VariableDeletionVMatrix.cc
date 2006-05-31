@@ -4,7 +4,7 @@
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
 // Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux
-// Copyright (C) 2003 Olivier Delalleau
+// Copyright (C) 2003, 2006 Olivier Delalleau
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -40,260 +40,256 @@
  ********************************************************************* */
 
 #include "VariableDeletionVMatrix.h"
+#include <plearn/vmat/SubVMatrix.h>
+#include <plearn/vmat/VMat_computeStats.h>
 
 namespace PLearn {
 using namespace std;
 
-/** VariableDeletionVMatrix **/
-
 PLEARN_IMPLEMENT_OBJECT(
     VariableDeletionVMatrix,
-    "VMat class to select columns from a source VMat based on a given threshold percentage of non-missing variables.",
-    "This class will scan the VMat provided as the complete dataset and compute the percentage of non-missing values\n"
-    "of each variables. It then only selects the columns with  a percentage of non-missing higher than the given\n"
-    "threshod parameter.\n"
-    "Optionnaly, variable with non-missing constant values will also be removed.\n"
-    "Note that the ending targets and weight columns are always kept.\n"
-    "The targetsize and weightsize of the underlying matrix are kept.\n"
-    );
+    "Deletes its source's inputs with most missing / constant values.",
+    "The columns that are removed are those that:\n"
+    "- contain a proportion of missing values higher than a threshold\n"
+    "  equal to 1 - min_non_missing_threshold, or\n"
+    "- contain a single value whose proportion in the source dataset is\n"
+    "  higher than (or equal to) max_constant_threshold (if >0).\n"
+    "\n"
+    "Note that this selection is performed only on input variables (the\n"
+    "inputsize is modified accordingly), while the target, weight and extra\n"
+    "columns are always preserved.\n"
+);
 
-VariableDeletionVMatrix::VariableDeletionVMatrix()
-    : obtained_inputsize_from_source(false),
-      obtained_targetsize_from_source(false),
-      obtained_weightsize_from_source(false),
-      deletion_threshold(0),
-      remove_columns_with_constant_value(0),
-      number_of_train_samples(0.0)
+/////////////////////////////
+// VariableDeletionVMatrix //
+/////////////////////////////
+VariableDeletionVMatrix::VariableDeletionVMatrix():
+    min_non_missing_threshold(0),
+    max_constant_threshold(0),
+    number_of_train_samples(0),
+    deletion_threshold(-1),
+    remove_columns_with_constant_value(-1)
+{}
+
+VariableDeletionVMatrix::VariableDeletionVMatrix(
+        VMat the_source, real the_min_non_missing_threshold, 
+        bool the_remove_columns_with_constant_value,
+        int  the_number_of_train_samples,
+        bool call_build_):
+    inherited(the_source, TVec<int>(), call_build_),
+    min_non_missing_threshold(the_min_non_missing_threshold),
+    number_of_train_samples(the_number_of_train_samples),
+    remove_columns_with_constant_value(the_remove_columns_with_constant_value)
 {
+    if (call_build_)
+        build_();
+    PLDEPRECATED("In VariableDeletionVMatrix::VariableDeletionVMatrix - You "
+                 "are using a deprecated constructor");
+    // Note: this constructor should take as argument the new non-deprecated
+    // options.
 }
 
-VariableDeletionVMatrix::VariableDeletionVMatrix(VMat the_complete_dataset, real the_threshold, bool the_remove_columns_with_constant_value, real the_number_of_train_samples)
-    : obtained_inputsize_from_source(false),
-      obtained_targetsize_from_source(false),
-      obtained_weightsize_from_source(false)
-{
-    complete_dataset = the_complete_dataset;
-    deletion_threshold = the_threshold;
-    remove_columns_with_constant_value = the_remove_columns_with_constant_value;
-    number_of_train_samples = the_number_of_train_samples;
-    build();
-}
-
+////////////////////
+// declareOptions //
+////////////////////
 void VariableDeletionVMatrix::declareOptions(OptionList &ol)
 {
 
-    declareOption(ol, "complete_dataset", &VariableDeletionVMatrix::complete_dataset, OptionBase::buildoption,
-                  "The data set with all variables to select the columns from.");
+    declareOption(ol, "min_non_missing_threshold",
+                  &VariableDeletionVMatrix::min_non_missing_threshold,
+                  OptionBase::buildoption,
+        "Minimum proportion of non-missing values for a variable to be kept\n"
+        "(a 1 means only variables with no missing values are kept).");
 
-    declareOption(ol, "deletion_threshold", &VariableDeletionVMatrix::deletion_threshold, OptionBase::buildoption,
-                  "The percentage of non-missing values for a variable above which, the variable will be selected.");
+    declareOption(ol, "max_constant_threshold",
+                  &VariableDeletionVMatrix::max_constant_threshold,
+                  OptionBase::buildoption,
+        "Maximum proportion of a unique value for a variable to be kept\n"
+        "(contrary to 'min_non_missing_threshold', a variable will be\n"
+        "removed if this proportion is attained, so that a 1 means only\n"
+        "constant variables are removed, while 0 is a special value meaning\n"
+        "that none is removed).\n"
+        "Note also that this proportion is computed over the non-missing\n"
+        "values only.");
 
-    declareOption(ol, "remove_columns_with_constant_value", &VariableDeletionVMatrix::remove_columns_with_constant_value, OptionBase::buildoption,
-                  "If set to 1, the columns with constant non-missing values will be removed.");
+    declareOption(ol, "number_of_train_samples",
+                  &VariableDeletionVMatrix::number_of_train_samples,
+                  OptionBase::buildoption,
+        "If equal to zero, all the underlying dataset samples are used to\n"
+        "compute the percentages and constant values.\n"
+        "If it is a fraction between 0 and 1, only this proportion of the\n"
+        "samples will be used.\n"
+        "If greater than or equal to 1, the integer portion will be\n"
+        "interpreted as the number of samples to use.");
 
-    declareOption(ol, "number_of_train_samples", &VariableDeletionVMatrix::number_of_train_samples, OptionBase::buildoption,
-                  "If equal to zero, all the underlying dataset samples are used to calculated the percentages and constant values.\n"
-                  "If it is a fraction between 0 and 1, this proportion of the samples will be used.\n"
-                  "If greater or equal to 1, the integer portion will be interpreted as the number of samples to use.");
+    declareOption(ol, "complete_dataset",
+                  &VariableDeletionVMatrix::complete_dataset,
+                  OptionBase::learntoption,
+        "DEPRECATED (use 'source' instead) - The data set with all variables\n"
+        "to select the columns from.");
 
-    declareOption(ol, "obtained_inputsize_from_source", &VariableDeletionVMatrix::obtained_inputsize_from_source, OptionBase::learntoption,
-                  "Set to 1 when the inputsize was obtained from the source matrix.");
+    declareOption(ol, "deletion_threshold",
+                  &VariableDeletionVMatrix::deletion_threshold,
+                  OptionBase::learntoption,
+        "DEPRECATED (use 'min_non_missing_threshold' instead) - The\n"
+        "percentage of non-missing values for a variable above which\n"
+        "the variable will be selected.");
 
-    declareOption(ol, "obtained_targetsize_from_source", &VariableDeletionVMatrix::obtained_targetsize_from_source, OptionBase::learntoption,
-                  "Set to 1 when the targetsize was obtained from the source matrix.");
-
-    declareOption(ol, "obtained_weightsize_from_source", &VariableDeletionVMatrix::obtained_weightsize_from_source, OptionBase::learntoption,
-                  "Set to 1 when the weightsize was obtained from the source matrix.");
+    declareOption(ol, "remove_columns_with_constant_value",
+                  &VariableDeletionVMatrix::remove_columns_with_constant_value,
+                  OptionBase::learntoption,
+        "DEPRECATED (use 'max_constant_threshold' instead) - If set to 1,\n"
+        "the columns with constant non-missing values will be removed.");
 
     inherited::declareOptions(ol);
+
+    // Hide unused parent class' options.
+
+    redeclareOption(ol, "fields", &VariableDeletionVMatrix::fields,
+                                  OptionBase::nosave,
+        "Not used in VariableDeletionVMatrix.");
+
+    redeclareOption(ol, "fields_partial_match",
+                    &VariableDeletionVMatrix::fields_partial_match,
+                    OptionBase::nosave,
+        "Not used in VariableDeletionVMatrix.");
+
+    redeclareOption(ol, "indices", &VariableDeletionVMatrix::indices,
+                                   OptionBase::nosave,
+        "Not used in VariableDeletionVMatrix.");
+
+    redeclareOption(ol, "extend_with_missing",
+                    &VariableDeletionVMatrix::extend_with_missing,
+                    OptionBase::nosave,
+        "Not used in VariableDeletionVMatrix.");
+
+    redeclareOption(ol, "inputsize", &VariableDeletionVMatrix::inputsize_,
+                                     OptionBase::nosave,
+        "Not used in VariableDeletionVMatrix.");
+
+    redeclareOption(ol, "targetsize", &VariableDeletionVMatrix::targetsize_,
+                                     OptionBase::nosave,
+        "Not used in VariableDeletionVMatrix.");
+                
+    redeclareOption(ol, "weightsize", &VariableDeletionVMatrix::weightsize_,
+                                     OptionBase::nosave,
+        "Not used in VariableDeletionVMatrix.");
+    
+    redeclareOption(ol, "extrasize", &VariableDeletionVMatrix::extrasize_,
+                                     OptionBase::nosave,
+        "Not used in VariableDeletionVMatrix.");
 }
 
+///////////
+// build //
+///////////
 void VariableDeletionVMatrix::build()
 {
-    buildIndices();
     inherited::build();
     build_();
 }
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void VariableDeletionVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(complete_dataset, copies);
-    deepCopyField(deletion_threshold, copies);
-    deepCopyField(remove_columns_with_constant_value, copies);
-    deepCopyField(obtained_inputsize_from_source, copies);
-    deepCopyField(obtained_targetsize_from_source, copies);
-    deepCopyField(obtained_weightsize_from_source, copies);
 }
 
-void VariableDeletionVMatrix::getExample(int i, Vec& input, Vec& target, real& weight)
-{
-    source->getExample(i, input, target, weight);
-}
-
-real VariableDeletionVMatrix::get(int i, int j) const
-{
-    return source->get(i, j);
-}
-
-void VariableDeletionVMatrix::put(int i, int j, real value)
-{
-    PLERROR("In VariableDeletionVMatrix::put not implemented");
-}
-
-void VariableDeletionVMatrix::getSubRow(int i, int j, Vec v) const
-{
-    source-> getSubRow(i, j, v);
-}
-
-void VariableDeletionVMatrix::putSubRow(int i, int j, Vec v)
-{
-    PLERROR("In VariableDeletionVMatrix::putSubRow not implemented");
-}
-
-void VariableDeletionVMatrix::appendRow(Vec v)
-{
-    PLERROR("In VariableDeletionVMatrix::appendRow not implemented");
-}
-
-void VariableDeletionVMatrix::insertRow(int i, Vec v)
-{
-    PLERROR("In VariableDeletionVMatrix::insertRow not implemented");
-}
-
-void VariableDeletionVMatrix::getRow(int i, Vec v) const
-{
-    source-> getRow(i, v);
-}
-
-void VariableDeletionVMatrix::putRow(int i, Vec v)
-{
-    PLERROR("In VariableDeletionVMatrix::putRow not implemented");
-}
-
-void VariableDeletionVMatrix::getColumn(int i, Vec v) const
-{
-    source-> getColumn(i, v);
-}
-
+////////////
+// build_ //
+////////////
 void VariableDeletionVMatrix::build_()
 {
-    if (source) {
-        string error_msg =
-            "In VariableDeletionVMatrix::build_ - For safety reasons, it is forbidden to "
-            "re-use sizes obtained from a previous source VMatrix with a new source "
-            "VMatrix having different sizes";
-        length_ = source->length();
-        width_ = source->width();
-        if(inputsize_<0) {
-            inputsize_ = source->inputsize();
-            obtained_inputsize_from_source = true;
-        } else if (obtained_inputsize_from_source && inputsize_ != source->inputsize())
-            PLERROR(error_msg.c_str());
-        if(targetsize_<0) {
-            targetsize_ = source->targetsize();
-            obtained_targetsize_from_source = true;
-        } else if (obtained_targetsize_from_source && targetsize_ != source->targetsize())
-            PLERROR(error_msg.c_str());
-        if(weightsize_<0) {
-            weightsize_ = source->weightsize();
-            obtained_weightsize_from_source = true;
-        } else if (obtained_weightsize_from_source && weightsize_ != source->weightsize())
-            PLERROR(error_msg.c_str());
-        fieldinfos = source->fieldinfos;
-    } else {
-        // Restore the original undefined sizes if the current one had been obtained
-        // from the source VMatrix.
-        if (obtained_inputsize_from_source) {
-            inputsize_ = -1;
-            obtained_inputsize_from_source = false;
-        }
-        if (obtained_targetsize_from_source) {
-            targetsize_ = -1;
-            obtained_targetsize_from_source = false;
-        }
-        if (obtained_weightsize_from_source) {
-            weightsize_ = -1;
-            obtained_weightsize_from_source = false;
-        }
+    if (complete_dataset) {
+        PLDEPRECATED("In VariableDeletionVMatrix::build_ - The option "
+                     "'complete_dataset' is deprecated, use source instead");
+        if (source && source != complete_dataset)
+            PLERROR("In VariableDeletionVMatrix::build_ - A source was also "
+                    "specified, but it is different from 'complete_dataset'");
+        source = complete_dataset;
     }
-}
+    if (!is_equal(deletion_threshold, -1)) {
+        PLDEPRECATED("In VariableDeletionVMatrix::build_ - You are using the "
+                     "deprecated option 'deletion_threshold', you should "
+                     "instead use 'min_non_missing_threshold'");
+        min_non_missing_threshold = deletion_threshold;
+    }
+    if (remove_columns_with_constant_value != -1) {
+        PLDEPRECATED("In VariableDeletionVMatrix::build_ - You are using the "
+                     "deprecated option 'remove_columns_with_constant_value', "
+                     "you should instead use 'max_constant_threshold'");
+        max_constant_threshold = remove_columns_with_constant_value == 0 ? 0:1;
+    }
 
-void VariableDeletionVMatrix::buildIndices()
-{
-    int complete_dataset_length = complete_dataset->length();
-    int complete_dataset_width = complete_dataset->width();
-    int complete_dataset_targetsize = complete_dataset->targetsize();
-    int complete_dataset_weightsize = complete_dataset->weightsize();
-    int row;
-    int col;
-    TVec<int>  selected_columns_indices;
-    TVec<int>  variable_present_count;
-    TVec<real> variable_last_value;
-    TVec<bool> variable_observed;
-    TVec<bool> variable_constant;
-    variable_present_count.resize(complete_dataset_width);
-    variable_last_value.resize(complete_dataset_width);
-    variable_constant.resize(complete_dataset_width);
-    for (col = 0; col < complete_dataset_width; col++)
-    {
-        variable_present_count[col] = 0;
-        variable_constant[col] = true;
-    }
-    real variable_value;
-    int scanned_length = complete_dataset_length;
-    if (number_of_train_samples > 0.0)
-    {
-        if (number_of_train_samples >= 1.0) scanned_length = (int) number_of_train_samples;
-        else scanned_length = (int) ((double) complete_dataset_length * number_of_train_samples);
-        if (scanned_length < 1) scanned_length = 1;
-        if (scanned_length > complete_dataset_length) scanned_length = complete_dataset_length;
-    }
-    for (row = 0; row < scanned_length; row++)
-    {
-        for (col = 0; col < complete_dataset_width; col++)
-        {
-            variable_value = complete_dataset->get(row, col);
-            if (!is_missing(variable_value))
-            {
-                if (variable_present_count[col] > 0)
-                {
-                    if (variable_value != variable_last_value[col]) variable_constant[col] = false;
-                }
-                variable_present_count[col] += 1;
-                variable_last_value[col] = variable_value;
+    VMat the_train_source = source;
+    if (number_of_train_samples > 0 &&
+        number_of_train_samples < source->length())
+        the_train_source = new SubVMatrix(source, 0, 0,
+                                          number_of_train_samples,
+                                          source->width());
+        
+    TVec<StatsCollector> stats =
+        PLearn::computeStats(the_train_source, -1, false);
+    assert( stats.length() == source->width() );
+    int is = source->inputsize();
+    if (is < 0)
+        PLERROR("In VariableDeletionVMatrix::build_ - The source VMat must "
+                "have an inputsize defined");
+
+    indices.resize(0);
+
+    // First remove columns that have too many missing values.
+    int min_non_missing =
+        int(round(min_non_missing_threshold * source->length()));
+    for (int i = 0; i < is; i++)
+        if (stats[i].nnonmissing() >= min_non_missing)
+            indices.append(i);
+
+    // Then remove columns that are too constant.
+    TVec<int> final_indices;
+    for (int k = 0; k < indices.length(); k++) {
+        int i = indices[k];
+        int max_constant_absolute =
+            int(round(max_constant_threshold * stats[i].nnonmissing()));
+        map<real, StatsCollectorCounts>* counts = stats[i].getCounts();
+        map<real, StatsCollectorCounts>::const_iterator it;
+        bool ok = true;
+        if (max_constant_threshold > 0)
+            for (it = counts->begin(); ok && it != counts->end(); it++) {
+                int n = int(round(it->second.n));
+                if (n >= max_constant_absolute)
+                    ok = false;
             }
-        }
+        if (ok)
+            final_indices.append(i);
     }
-    real adjusted_threshold = deletion_threshold * (real) complete_dataset_length / 100.0;
-    if (complete_dataset_targetsize < 0) complete_dataset_targetsize = 0;
-    if (complete_dataset_weightsize < 0) complete_dataset_weightsize = 0;
-    int target_and_weight = complete_dataset_targetsize + complete_dataset_weightsize;
-    int new_width = target_and_weight;
-    for (col = 0; col < complete_dataset_width - target_and_weight; col++)
-    {
-        if ((real) variable_present_count[col] > adjusted_threshold && (!remove_columns_with_constant_value || !variable_constant[col])) new_width += 1;
-    }
-    selected_columns_indices.resize(new_width);
-    int selected_col = 0;
-    for (col = 0; col < complete_dataset_width - target_and_weight; col++)
-    {
-        if ((real) variable_present_count[col] > adjusted_threshold && (!remove_columns_with_constant_value || !variable_constant[col]))
-        {
-            selected_columns_indices[selected_col] = col;
-            selected_col += 1;
-        }
-    }
-    if (target_and_weight > 0)
-    {
-        for (col = complete_dataset_width - target_and_weight; col < complete_dataset_width; col++)
-        {
-            selected_columns_indices[selected_col] = col;
-            selected_col += 1;
-        }
-    }
-    source = new SelectColumnsVMatrix(complete_dataset, selected_columns_indices);
-    source->defineSizes(new_width - target_and_weight, complete_dataset_targetsize, complete_dataset_weightsize);
+    indices.resize(final_indices.length());
+    indices << final_indices;
+
+    // Define sizes.
+    inputsize_  = indices.length();
+    targetsize_ = source->targetsize();
+    weightsize_ = source->weightsize();
+    extrasize_  = source->extrasize();
+
+    // Add target, weight and extra columns.
+    for (int i = 0; i < source->targetsize(); i++)
+        indices.append(is + i);
+    if (source->targetsize() > 0)
+        is += source->targetsize();
+    for (int i = 0; i < source->weightsize(); i++)
+        indices.append(is + i);
+    if (source->weightsize() > 0)
+        is += source->weightsize();
+    for (int i = 0; i < source->extrasize(); i++)
+        indices.append(is + i);
+
+    // We have modified the selected columns, so the parent class must be
+    // re-built.
+    inherited::build();
 }
 
 } // end of namespace PLearn
