@@ -819,6 +819,26 @@ public:
     inline void push_back(const TVec<T>& newrow) { appendRow(newrow); }
     inline void pop_back() { length_ -= 1; }
 
+    /*!         make the storage point to this address and
+      copy current value to it (i.e. without changing
+      current contents)
+    */
+
+    void makeSharedValue(T* x, int n)
+    {
+        int m = size();
+#ifdef BOUNDCHECK
+        if(n != m)
+            PLERROR("IN TMat::makeSharedValue(T* x, int n)\nn(%d)!=size(%d)",
+                    n,m);
+#endif
+        T* v = data(); //!<  get data start
+        for(int i=0,k=0; i<length_; i++, v+=mod_)
+            for (int j=0;j<width_; j++, k++)
+                x[k] = v[j];
+        storage->pointTo(n,x);
+        offset_ = 0;
+    }
 
     bool isCompact() const
     { return mod() == width(); }
