@@ -209,6 +209,7 @@
 #include <plearn_learners/online/RBMMixedLayer.h>
 #include <plearn_learners/online/RBMParameters.h>
 #include <plearn_learners/online/RBMQLParameters.h>
+#include <plearn_learners/online/RBMTruncExpLayer.h>
 #include <plearn_learners/online/SquaredErrModule.h>
 #include <plearn_learners/online/StackedModulesLearner.h>
 #include <plearn_learners/online/TanhModule.h>
