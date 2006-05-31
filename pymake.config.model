@@ -215,10 +215,10 @@ optionalLibrary( name = 'wordnet',
 optionalLibrary( name = 'X',
                  triggers='?',
                  includedirs = '?',
-                 linkeroptions = '-L/usr/X11R6/lib/ -lXi -lXext -lX11'
+                 linkeroptions = '-L/usr/X11R6/lib/ -lXi -lXext -lX11/'
 )
 
-linkeroptions_tail = ''
+linkeroptions_tail = '-L/u/lisa/local/linux-x86_64/lib/'
 
 ### Using Python code snippets in C++ code
 ### TODO Using /u/lisa/... is quite ugly. But the PLEARN_LIBDIR ppath may also

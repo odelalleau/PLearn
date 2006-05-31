@@ -831,13 +831,14 @@ public:
         if(n != m)
             PLERROR("IN TMat::makeSharedValue(T* x, int n)\nn(%d)!=size(%d)",
                     n,m);
+        if(offset_!=0)
+            PLERROR("IN TMat::makeSharedValue(T* x, int n)\noffset should be 0.");
 #endif
         T* v = data(); //!<  get data start
         for(int i=0,k=0; i<length_; i++, v+=mod_)
             for (int j=0;j<width_; j++, k++)
                 x[k] = v[j];
         storage->pointTo(n,x);
-        offset_ = 0;
     }
 
     bool isCompact() const

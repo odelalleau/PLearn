@@ -151,14 +151,6 @@ public:
     //!   - hidden unit during negative phase (you should keep it to 0).
     TVec<int> use_sample_or_expectation;
 
-    // ** NON-OPTION FIELDS (temporary workspace)
-
-#if USING_MPI
-    //! for MPI parallelization, share parameters of all Parameters boxes
-    Vec global_params;
-    //! and keep track of their value at the previous sharing step between all CPUs
-    Vec previous_global_params;
-#endif 
 
 public:
     //#####  Public Member Functions  #########################################
@@ -267,6 +259,18 @@ public:
     virtual TVec<string> getTestCostNames() const;
     virtual TVec<string> getTrainCostNames() const;
 
+    //! REDEFINE test FOR PARALLELIZATION OF THE TEST
+#if USING_MPI
+    //! Performs test on testset, updating test cost statistics,
+    //! and optionally filling testoutputs and testcosts
+    //! The default version repeatedly calls computeOutputAndCosts or computeCostsOnly
+    //! Note that neither test_stats->forget() nor test_stats->finalize() is called,
+    //! so that you should call them yourself (respectively before and after calling
+    //! this method) if you don't plan to accumulate statistics.
+    virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
+                      VMat testoutputs=0, VMat testcosts=0) const;
+#endif
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
@@ -324,10 +328,21 @@ private:
     //! Build the parameters if needed
     void build_params();
 
+    void shareParamsMPI();
+
 private:
     //#####  Private Data Members  ############################################
 
     // The rest of the private stuff goes here
+
+    // ** NON-OPTION FIELDS (temporary workspace)
+
+#if USING_MPI
+    //! for MPI parallelization, share parameters of all Parameters boxes
+    Vec global_params;
+    //! and keep track of their value at the previous sharing step between all CPUs
+    Vec previous_global_params;
+#endif 
 };
 
 // Declares a few other classes and functions related to this class

@@ -38,6 +38,9 @@
 
 #define PL_LOG_MODULE_NAME "HintonDeepBeliefNet"
 #include <plearn/io/pl_log.h>
+#if USING_MPI
+#include <plearn/sys/PLMPI.h>
+#endif
 
 #include "HintonDeepBeliefNet.h"
 #include "RBMLayer.h"
@@ -389,6 +392,9 @@ void HintonDeepBeliefNet::forget()
     for( int i=0 ; i<n_layers ; i++ )
         layers[i]->reset();
 
+#if USING_MPI
+    global_params.resize(0);
+#endif
     target_params->forget();
     target_layer->reset();
 
@@ -586,18 +592,20 @@ void HintonDeepBeliefNet::train()
 
 #if USING_MPI
     // initialize global parameters for allowing to easily share them across multiple CPUs
+    pout << "taper quelque chose!" << endl;
+    string s;
+    pin >> s;
     if (global_params.size()==0)
     {
-        int n_params = target_params.nParameters()+joint_params.nParameters();
-        for (int i=0;i<params.length();i++)
-            n_params += params[i].nParameters();
+        int n_params = joint_params->nParameters();
+        for (int i=0;i<params.length()-1;i++)
+            n_params += params[i]->nParameters();
         global_params.resize(n_params);
         previous_global_params.resize(n_params);
         Vec p=global_params;
-        for (int i=0;i<params.length();i++)
-            p=params[i].makeParametersPointHere(p);
-        p=joint_params.makeParametersPointHere(p);
-        p=target_params.makeParametersPointHere(p);
+        for (int i=0;i<params.length()-1;i++)
+            p=params[i]->makeParametersPointHere(p);
+        p=joint_params->makeParametersPointHere(p);
         if (p.length()!=0)
             PLERROR("HintonDeepBeliefNet: Inconsistencies between nParameters and makeParametersPointHere!");
     }
@@ -671,10 +679,8 @@ void HintonDeepBeliefNet::train()
 #if USING_MPI
           }
           // time to share among processors
-          if (stage%total_bsize==0)        
-          {
-              MPI_Reduce(
-          }
+          if (stage%total_bsize==0 || stage==end_stage-1)
+              shareParamsMPI();
 #endif
         }
     }
@@ -700,8 +706,14 @@ void HintonDeepBeliefNet::train()
     else
         joint_params->momentum = final_momentum;
 
-    for( ; stage<training_schedule[n_layers-2] && stage<nstages ; stage++ )
+    int last = min(training_schedule[n_layers-2],nstages);
+    for( ; stage< last ; stage++ )
     {
+#if USING_MPI
+            // only look at some of the examples, associated with this process number (rank)
+      if (stage%PLMPI::size==PLMPI::rank) 
+      {
+#endif
         int sample = stage % nsamples;
         train_set->getExample(sample, input, target, weight);
         jointGreedyStep( input );
@@ -711,6 +723,12 @@ void HintonDeepBeliefNet::train()
 
         if( pb )
             pb->update( stage - previous_stage + 1 );
+#if USING_MPI
+       }
+       // time to share among processors
+       if (stage%total_bsize==0 || stage==last-1)
+           shareParamsMPI();
+#endif
     }
 
     /***** fine-tuning *****/
@@ -742,6 +760,11 @@ void HintonDeepBeliefNet::train()
         int begin_sample = stage % nsamples;
         for( ; stage<nstages ; stage++ )
         {
+#if USING_MPI
+            // only look at some of the examples, associated with this process number (rank)
+          if (stage%PLMPI::size==PLMPI::rank) 
+          {
+#endif
             int sample = stage % nsamples;
             if( sample == begin_sample )
                 train_stats->forget();
@@ -752,6 +775,12 @@ void HintonDeepBeliefNet::train()
 
             if( pb )
                 pb->update( stage - init_stage + 1 );
+#if USING_MPI
+          }
+          // time to share among processors
+          if (stage%total_bsize==0 || stage==nstages-1)
+              shareParamsMPI();
+#endif
         }
         train_stats->finalize(); // finalize statistics for this epoch
     }
@@ -979,6 +1008,81 @@ TVec<string> HintonDeepBeliefNet::getTrainCostNames() const
 {
     return getTestCostNames();
 }
+
+void HintonDeepBeliefNet::shareParamsMPI()
+{
+#if USING_MPI
+    if (PLMPI::rank!=0)
+        // after this line global_params contains the delta for all cpus except root
+        global_params -= previous_global_params;
+    // while the root contains the previous global params + its delta
+    previous_global_params << global_params;
+    // hence summing everything (result in cpu0.global_params)
+    // yields the sum of all the changes plus the previous global params:
+    MPI_Reduce(previous_global_params.data(),global_params.data(),
+               global_params.length(), PLMPI_REAL, MPI_SUM, 0, MPI_COMM_WORLD);
+    // send it back to every one
+    MPI_Bcast(global_params.data(), global_params.length(),
+              PLMPI_REAL, 0, MPI_COMM_WORLD);
+    // and save it for next sharing step
+    previous_global_params << global_params;
+#endif
+}
+
+#if USING_MPI
+void HintonDeepBeliefNet::test(VMat testset, PP<VecStatsCollector> test_stats, 
+                               VMat testoutputs, VMat testcosts) const
+{
+    int l = testset.length();
+    Vec input;
+    Vec target;
+    real weight;
+
+    Vec output(outputsize());
+
+    Vec costs(nTestCosts());
+
+    // testset->defineSizes(inputsize(),targetsize(),weightsize());
+
+    ProgressBar* pb = NULL;
+    if(report_progress) 
+        pb = new ProgressBar("Testing learner",l);
+
+    if (l == 0) {
+        // Empty test set: we give -1 cost arbitrarily.
+        costs.fill(-1);
+        test_stats->update(costs);
+    }
+
+    for(int i=0; i<l; i++)
+     if (i%PLMPI::size==PLMPI::rank)
+     {
+        testset.getExample(i, input, target, weight);
+      
+        // Always call computeOutputAndCosts, since this is better
+        // behaved with stateful learners
+        computeOutputAndCosts(input,target,output,costs);
+      
+        if(testoutputs)
+            testoutputs->putOrAppendRow(i,output);
+
+        if(testcosts)
+            testcosts->putOrAppendRow(i, costs);
+
+        if(test_stats)
+            if (PLMPI::rank==0)
+                test_stats->update(costs,weight);
+        // else
+
+        if(report_progress)
+            pb->update(i);
+     }
+
+    if(pb)
+        delete pb;
+
+}
+#endif
 
 } // end of namespace PLearn
 

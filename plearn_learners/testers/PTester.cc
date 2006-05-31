@@ -47,7 +47,9 @@
 #include "PTester.h"
 
 #include <plearn/base/stringutils.h> 
-
+#if USING_MPI
+#include <plearn/sys/PLMPI.h>
+#endif
 
 namespace PLearn {
 using namespace std;
@@ -319,6 +321,11 @@ void PTester::declareMethods(RemoteMethodMap& rmm)
 
 void PTester::build_()
 {
+
+#if USING_MPI
+    if (PLMPI::rank!=0)
+        expdir = "";
+#endif
     statnames_processed.resize(statnames.length());
     statnames_processed << statnames;
     if (statmask) {
