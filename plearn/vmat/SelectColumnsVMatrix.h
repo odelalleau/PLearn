@@ -80,7 +80,8 @@ public:
 
     //! The appropriate fieldinfos are copied upon construction
     //! Here the indices will be shared for efficiency. But you should not modify them afterwards!
-    SelectColumnsVMatrix(VMat the_source, TVec<int> the_indices);
+    SelectColumnsVMatrix(VMat the_source, TVec<int> the_indices,
+                         bool call_build_ = true);
 
     //! Here the indices will be copied locally into an integer vector
     SelectColumnsVMatrix(VMat the_source, Vec the_indices);

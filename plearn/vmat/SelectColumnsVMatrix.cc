@@ -70,13 +70,16 @@ SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, TVec<string> the_fie
     build_();
 }
 
-SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, TVec<int> the_indices)
-    : extend_with_missing(false),
-      indices(the_indices),
-      fields_partial_match(false)
+SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source,
+                                           TVec<int> the_indices,
+                                           bool call_build_):
+    inherited(the_source, call_build_),
+    extend_with_missing(false),
+    indices(the_indices),
+    fields_partial_match(false)
 {
-    source = the_source;
-    build_();
+    if (call_build_)
+        build_();
 }
 
 SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, Vec the_indices)
