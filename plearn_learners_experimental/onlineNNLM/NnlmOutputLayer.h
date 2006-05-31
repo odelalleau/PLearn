@@ -86,6 +86,11 @@ public:
     void setContext(const Vec& the_current_context);
 
 
+    void resetTestVars();
+    void updateTestVars(const Vec& input);
+    void ApplyTestVars();
+
+
     //! Computes p(r,w), where r the real distributed context representation 
     //! in [0,1] and w the word at the considered position
     //! given the input, compute the output (possibly resize it  appropriately)
@@ -176,6 +181,12 @@ public:
     Mat sumX2;    // sumX2(i) -> sum_t x_t^2 1_{y==i}
     TVec<int> sumI;     // sumI(i) -> sum_t 1_{y==i}
     int s_sumI;  // sum_t 1
+
+    //! Variables intermédiaires de compte - *TEST*
+    Mat test_sumX;     // sumX(i) -> sum_t x_t 1_{y==i}
+    Mat test_sumX2;    // sumX2(i) -> sum_t x_t^2 1_{y==i}
+    TVec<int> test_sumI;     // sumI(i) -> sum_t 1_{y==i}
+    int test_s_sumI;  // sum_t 1
 
     //#####  Don't need to be saved  ##########################################
     //! the current word -> we use its parameters to compute output

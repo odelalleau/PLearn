@@ -53,7 +53,7 @@ NnlmOutputLayer::NnlmOutputLayer() :
     vocabulary_size( -1 ),
     word_representation_size( -1 ),
     context_size( -1 ),
-    start_gaussian_learning_discount_rate( 0.8 ),
+    start_gaussian_learning_discount_rate( 0.999 ),
     gaussian_learning_decrease_constant( 0 )
 {
     // ### (doing so assumes the parent classes' build_() have been called too
@@ -178,8 +178,16 @@ void NnlmOutputLayer::resetParameters()
     sumI.fill( 0 );
     s_sumI = 0;
 
-    context.resize(context_size);
+    // *TEST*
+    test_sumX.resize( vocabulary_size, input_size);
+    test_sumX.fill( 0 );
+    test_sumX2.resize( vocabulary_size, input_size);
+    test_sumX2.fill( 0 );
+    test_sumI.resize( vocabulary_size );
+    test_sumI.fill( 0 );
+    test_s_sumI = 0;
 
+    context.resize(context_size);
 }
 
 void NnlmOutputLayer::setCurrentWord(int the_current_word) 
@@ -320,12 +328,31 @@ void NnlmOutputLayer::bpropUpdate(const Vec& input, const Vec& output,
 
         for(int i=0; i<input_size; i++) {
 
-            mu( current_word, i ) = gldr * mu( current_word, i ) + (1.0 - gldr) * input[i];
+            //mu( current_word, i ) = gldr * mu( current_word, i ) + (1.0 - gldr) * input[i];
 
             // We reuse the old sigma instead of recomputing it with the new mu... is it a good idea?
             // If we consider we're tracking a moving target maybe.
-            sigma2( current_word, i ) = gldr * sigma2( current_word, i ) +
-                + (1.0-gldr) * ( input[i] - mu( current_word, i ) ) * ( input[i] - mu( current_word, i ) );
+//            sigma2( current_word, i ) = gldr * sigma2( current_word, i ) +
+//                + (1.0-gldr) * ( input[i] - mu( current_word, i ) ) * ( input[i] - mu( current_word, i ) );
+
+//mu( current_word, i ) = sumX( current_word, i ) / sumI[ current_word ];
+//sigma2( current_word, i ) = (  mu(current_word, i) * mu(current_word, i) + ( sumX2(current_word, i) -2.0 * mu(current_word, i) * sumX(current_word, i)        ) / sumI[ current_word ] );
+mu( current_word, i ) = gldr * mu( current_word, i ) + (1.0 - gldr) * input[i];
+sigma2( current_word, i ) = gldr * 
+            (  mu(current_word, i) * mu(current_word, i) + ( sumX2(current_word, i) -2.0 * mu(current_word, i) * sumX(current_word, i)        ) / sumI[ current_word ] )
+            + (1.0-gldr) * input[i]*input[i];
+
+// CHANGE THIS!!!!!!!!
+// CHANGE THIS!!!!!!!!
+//cout << " --- mu ---" << endl << mu << endl << " --- sigma2 ---" << endl << sigma2 << endl;
+
+if(sigma2( current_word, i )<0.0001)
+{
+//cout << "word " << current_word << " has sigma2[" << i << "] < 0.0001" << endl;
+sigma2( current_word, i ) = 0.0001;
+}
+
+
         }
     // initialize
     } else if( sumI[ current_word ] == 1 ) {
@@ -362,6 +389,55 @@ void NnlmOutputLayer::bpropUpdate(const Vec& input, const Vec& output,
 
 
 }
+
+void NnlmOutputLayer::resetTestVars() {
+
+    // *TEST*
+    test_sumX.fill( 0 );
+    test_sumX2.fill( 0 );
+    test_sumI.fill( 0 );
+    test_s_sumI = 0;
+
+}
+
+void NnlmOutputLayer::updateTestVars(const Vec& input)
+{
+    // * Update counts
+    for(int i=0; i<input_size; i++) {
+      test_sumX( current_word, i ) += input[i];
+      test_sumX2( current_word, i ) += input[i]*input[i];
+    }
+    test_sumI[ current_word ] += 1;
+    test_s_sumI += 1;
+}
+
+void NnlmOutputLayer::ApplyTestVars()
+{
+
+    for(int i=0; i<input_size; i++) {
+
+      mu( current_word, i ) = test_sumX( current_word, i ) / (real) test_sumI[ current_word ];
+
+      sigma2( current_word, i ) = (  mu(current_word, i) * mu(current_word, i) + 
+                ( test_sumX2(current_word, i) -2.0 * mu(current_word, i) * test_sumX(current_word, i)  ) / test_sumI[ current_word ] );
+
+// CHANGE THIS!!!!!!!!
+// CHANGE THIS!!!!!!!!
+// CHANGE THIS!!!!!!!!
+// CHANGE THIS!!!!!!!!
+/*if(i==0)  {
+  cout << " --- mu ---" << endl << mu << endl << " --- sigma2 ---" << endl << sigma2 << endl;
+}*/
+
+if(sigma2( current_word, i )<0.0001)
+{
+sigma2( current_word, i ) = 0.0001;
+}
+
+    }
+
+}
+
 
 /*
 //! this version allows to obtain the input gradient as well
