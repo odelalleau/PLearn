@@ -337,6 +337,9 @@ void RBMLQParameters::bpropUpdate(const Vec& input, const Vec& output,
         }
     }
 
+    // input_gradient = weights' * output_gradient
+    transposeProduct( input_gradient, weights, scaled_out_grad );
+
     externalProductAcc( weights, (-learning_rate)*scaled_out_grad, input );
     
     // (up) bias -= learning_rate * output_gradient
@@ -351,8 +354,6 @@ void RBMLQParameters::bpropUpdate(const Vec& input, const Vec& output,
     // (up) bias -= learning_rate * output_gradient
 //    multiplyAcc( up_units_params[0], output_gradient, -learning_rate );
 
-    // input_gradient = weights' * output_gradient
-    transposeProduct( input_gradient, weights, scaled_out_grad );
 }
 
 //! reset the parameters to the state they would be BEFORE starting training.

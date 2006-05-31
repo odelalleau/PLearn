@@ -317,14 +317,15 @@ void RBMQLParameters::bpropUpdate(const Vec& input, const Vec& output,
     assert( output_gradient.size() == up_layer_size );
     input_gradient.resize( down_layer_size );
 
+    // input_gradient = weights' * output_gradient
+    transposeProduct( input_gradient, weights, output_gradient );
+
     // weights -= learning_rate * output_gradient * input'
     externalProductAcc( weights, (-learning_rate)*output_gradient, input );
 
     // (up) bias -= learning_rate * output_gradient
     multiplyAcc( up_units_bias, output_gradient, -learning_rate );
 
-    // input_gradient = weights' * output_gradient
-    transposeProduct( input_gradient, weights, output_gradient );
 }
 
 //! reset the parameters to the state they would be BEFORE starting training.
