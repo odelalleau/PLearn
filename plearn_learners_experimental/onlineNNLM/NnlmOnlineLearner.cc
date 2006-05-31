@@ -79,66 +79,86 @@ bool wordAndFreqGT(const wordAndFreq &a, const wordAndFreq &b)
 
 NnlmOnlineLearner::NnlmOnlineLearner()
     :   PLearner(),
-        vocabulary_size( -1 ),
         word_representation_size( -1 ),
-        context_size( -1 ),
-        context_layer_size( 200 ),
         shared_candidates_size( 0 ),
         ngram_candidates_size( 50 ),
-        self_candidates_size( 0 )
+        self_candidates_size( 0 ),
+        wrl_lr( 10^1 ),
+        wrl_wd_l1( 0. ),
+        wrl_wd_l2( 0. ),
+        sl_lr( 10^0 ),
+        sl_wd_l1( 0. ),
+        sl_wd_l2( 0. ),
+        vocabulary_size( -1 ),
+        context_size( -1 ),
+        context_layer_size( 200 )
 {
     // ### You may (or not) want to call build_() to finish building the object
     // ### (doing so assumes the parent classes' build_() have been called too
     // ### in the parent classes' constructors, something that you must ensure)
 
-    // ### If this learner needs to generate random numbers, uncomment the
-    // ### line below to enable the use of the inherited PRandom object.
     random_gen = new PRandom();
 }
 
 void NnlmOnlineLearner::declareOptions(OptionList& ol)
 {
-// NOT an option... computed from the train_set's dictionary
-/*
-    declareOption(ol, "vocabulary_size",
-                  &NnlmOnlineLearner::vocabulary_size,
-                  OptionBase::buildoption,
-                  "size of vocabulary used - defines the virtual input size");
-*/
+
+    // *** Build Options *** 
+
     declareOption(ol, "word_representation_size",
                   &NnlmOnlineLearner::word_representation_size,
                   OptionBase::buildoption,
-                  "size of the real distributed word representation");
+                  "Size of the real distributed word representation.");
 
-// NOT an option... it's the train_set's input size
-/*    declareOption(ol, "context_size",
-                  &NnlmOnlineLearner::context_size,
-                  OptionBase::buildoption,
-                  "size of word context");
-*/
-
+    // - Candidate set sizes
     declareOption(ol, "shared_candidates_size",
                   &NnlmOnlineLearner::shared_candidates_size,
                   OptionBase::buildoption,
-                  "Number of candidates in aproximated discriminant cost evaluation drawn from frequent words.");
+                  "Number of candidates drawn from frequent words in aproximated discriminant cost evaluation.");
 
     declareOption(ol, "ngram_candidates_size",
                   &NnlmOnlineLearner::ngram_candidates_size,
                   OptionBase::buildoption,
-                  "Number of candidates in aproximated discriminant cost evaluation drawn from the context (bigram).");
+                  "Number of candidates drawn from the context (bigram) in aproximated discriminant cost evaluation.");
 
     declareOption(ol, "self_candidates_size",
                   &NnlmOnlineLearner::self_candidates_size,
                   OptionBase::buildoption,
-                  "Number of candidates in aproximated discriminant cost evaluation drawn from self candidates (evaluated periodically). NOT IMPLEMENTED!!");
+                  "Number of candidates drawn from the nnlm in aproximated discriminant cost evaluation  (evaluated periodically). NOT IMPLEMENTED!!");
 
-
+    // - Ngram (for evaluating ngram candidates) train set
     declareOption(ol, "ngram_train_set",
                   &NnlmOnlineLearner::ngram_train_set,
                   OptionBase::buildoption,
-                  "train set used for training the ngram used in the evaluation of the sets of words used for normalization in the evaluated discriminant cost. This ProcessSymbolicSequenceVMatrix defines the ngram used (if inputsize is 3 then we have a trigram).");
+                  "Train set used for training the bigram used in the evaluation of the set of candidate words used for normalization   in the evaluated discriminant cost (ProcessSymbolicSequenceVMatrix) (ONLY BIGRAMS).");
 
-    
+    // - Neural part parameters
+    declareOption(ol, "wrl_lr",
+                  &NnlmOnlineLearner::wrl_lr,
+                  OptionBase::buildoption,
+                  "Word representation layer learning rate.");
+    declareOption(ol, "wrl_wd_l1",
+                  &NnlmOnlineLearner::wrl_wd_l1,
+                  OptionBase::buildoption,
+                  "Word representation layer L1 penalty factor.");
+    declareOption(ol, "wrl_wd_l2",
+                  &NnlmOnlineLearner::wrl_wd_l2,
+                  OptionBase::buildoption,
+                  "Word representation layer L2 penalty factor.");
+    declareOption(ol, "sl_lr",
+                  &NnlmOnlineLearner::sl_lr,
+                  OptionBase::buildoption,
+                  "Semantic layer learning rate.");
+    declareOption(ol, "sl_wd_l1",
+                  &NnlmOnlineLearner::sl_wd_l1,
+                  OptionBase::buildoption,
+                  "Semantic layer L1 penalty factor.");
+    declareOption(ol, "sl_wd_l2",
+                  &NnlmOnlineLearner::sl_wd_l2,
+                  OptionBase::buildoption,
+                  "Semantic layer L2 penalty factor.");
+
+    // *** Learnt Options *** 
 
     declareOption(ol, "modules", &NnlmOnlineLearner::modules,
                   OptionBase::buildoption,
@@ -172,7 +192,9 @@ void NnlmOnlineLearner::buildLayers()
     p_wrl->word_representation_size = word_representation_size;
     p_wrl->context_size = context_size;
     p_wrl->random_gen = random_gen;
-    p_wrl->start_learning_rate = 10^3;
+    p_wrl->start_learning_rate = wrl_lr;
+
+    // TODO add the weight decays wrl_wd_l1 and wrl_wd_l2
 
     modules[0] = p_wrl;
 
@@ -184,9 +206,11 @@ void NnlmOnlineLearner::buildLayers()
     p_nnl->input_size = context_size * word_representation_size;
     // HARDCODED FOR NOW
     p_nnl->output_size = context_layer_size;
-    p_nnl->start_learning_rate = 10^3;
+    p_nnl->start_learning_rate = sl_lr;
     p_nnl->init_weights_random_scale=1;
     p_nnl->random_gen = random_gen;
+
+    // TODO add the weight decays wrl_wd_l1 and wrl_wd_l2
 
     modules[1] = p_nnl;
 
@@ -329,17 +353,13 @@ void NnlmOnlineLearner::buildCandidates()
     map<int,int>::iterator itr;
     int n_candidates;
 
-
-    
-
-
     for(int wt=-1; wt<vocabulary_size-1; wt++)  {
 
         // - fill list of candidates, then sort
         PP<SymbolNode> node = ((theNGram->tree)->getRoot())->child(wt);
         if(node)  {
             frequenciesCopy = node->getFrequencies();
-    
+
             itr = frequenciesCopy.begin();
             while( itr != frequenciesCopy.end() ) {
                 // -1 is the NGram's missing tag, our vocabulary_size-1 tag
@@ -484,20 +504,20 @@ void NnlmOnlineLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     deepCopyField(modules, copies);
     deepCopyField(output_module, copies);
-
     deepCopyField(values, copies);
     deepCopyField(gradients, copies);
 
-    // ### Remove this line when you have fully implemented this method.
-    //PLERROR("NnlmOnlineLearner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+// ### How about these?
+//ngram_train_set
+//theNGram
+//shared_candidates
+//candidates
+
 }
 
 //! This is the output size of the layer before the cost layer
 int NnlmOnlineLearner::outputsize() const
 {
-    // Compute and return the size of this learner's output (which typically
-    // may depend on its inputsize(), targetsize() and set options).
-
     if( nmodules < 0 || values.length() <= nmodules )
         return -1;
     else
@@ -523,7 +543,6 @@ void NnlmOnlineLearner::forget()
     output_module->forget();
 
     stage = 0;
-
 }
 
 // Had trouble interfacing with ProcessSymbolicSequenceVMatrix's getExample.
@@ -604,10 +623,6 @@ void NnlmOnlineLearner::train()
     // *** For stages
     for( ; stage < nstages ; stage++ )
     {
-cout << "#################################################################" << endl;
-cout << "#################################################################" << endl;
-cout << "#################################################################" << endl;
-cout << "#################################################################" << endl;
 
         if(report_progress) {
             cout << endl << "stage " << stage << endl;
@@ -670,22 +685,21 @@ cout << "#################################################################" << e
             //gradients[ nmodules ] << non_discr_gradient;
             gradients[ nmodules ] << approx_discr_gradient;
 
-            if( sample < 100 ) {
-                cout << "mu[ (int) target[0] ]" << endl;
+/*            if( sample < 20 ) {
+                cout << "*****************************************************" << endl;
+                cout << "--- mu[ (int) target[0] ] ---" << endl;
                 cout << output_module->mu( (int) target[0] ) << endl;
-cout << "-----------------------------------------------------" << endl;
-                cout << "sigma2[ (int) target[0] ]" << endl;
+
+                cout << "--- sigma2[ (int) target[0] ] --- " << endl;
                 cout << output_module->sigma2( (int) target[0] ) << endl;
-cout << "-----------------------------------------------------" << endl;
 
-                cout << "non_discr_gradient" << endl;
+                cout << "--- non_discr_gradient ---" << endl;
                 cout << non_discr_gradient << endl;
-cout << "-----------------------------------------------------" << endl;
-                cout << "approx_discr_gradient" << endl;
-                cout << approx_discr_gradient << endl;
-cout << "*****************************************************" << endl;
-            }
 
+                cout << "--- approx_discr_gradient ---" << endl;
+                cout << approx_discr_gradient << endl;
+            }
+*/
 
             // *** Perform update -> bpropUpdate
             
@@ -880,26 +894,32 @@ void NnlmOnlineLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
         test_stats->update(test_costs);
     }
 
+
+    // Before testing, evaluate mus and sigmas so they catch up with the representation
+    output_module->resetTestVars();
+
     for( int sample=0 ; sample < nsamples ; sample++ )
     {
         myGetExample(testset, sample, input, target, weight );
 
-
-  /*      // * fprop
+        // * fprop
         computeOutput(input, output);
 
-        // * Set the output_module's "state"
-        // Cost is dependent on the word we want to predict
-        // If we want an evaluated cost, we probably have to set the context also
-        //output_module->setCurrentWord( (int) target[0] );
-        //output_module->setContext
+        output_module->setCurrentWord( (int) target[0]);
+        output_module->updateTestVars(output);
+    }
 
-        // * Compute cost
-        output_module->computeDiscriminantCost(input, output, target, test_costs );
+    //FOR THE VOCABULARY, update parameters
+    cout << "updating parameters" << endl;
+    for(int wt=0; wt<vocabulary_size-1; wt++)  {
+        output_module->setCurrentWord( wt );
+        output_module->ApplyTestVars();
+    }
 
-        if(sample<15)
-          cout << "test cost for sample " << sample << " " << test_costs[0] << endl;
-*/
+    cout << "testing" << endl;
+    for( int sample=0 ; sample < nsamples ; sample++ )
+    {
+        myGetExample(testset, sample, input, target, weight );
 
         // Always call computeOutputAndCosts, since this is better
         // behaved with stateful learners
@@ -920,13 +940,12 @@ void NnlmOnlineLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
 
         entropy += test_costs[0];
 
-        if( sample < 100 ) {
+        if( sample < 20 ) {
             cout << sample << " p(i|r) " << safeexp( - test_costs[0] ) << endl;
         }
 
 
     }
-
 
     entropy /= nsamples;
     perplexity = safeexp(entropy);
@@ -936,30 +955,20 @@ void NnlmOnlineLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
     if(pb)
         delete pb;
 
-
-    cout << "test -> context not set" << endl;
-
 }
 
 
 
 void NnlmOnlineLearner::computeOutput(const Vec& input, Vec& output) const
 {
-    // Compute the output from the input.
-    // int nout = outputsize();
-    // output.resize(nout);
-    // ...
-    // Compute the output from the input.
-    // int nout = outputsize();
-    // output.resize(nout);
-
-    values[0] << input;
-
 
     // fprop
-    for( int i=0 ; i<nmodules ; i++ )
+    values[0] << input;
+    for( int i=0 ; i<nmodules ; i++ ) {
         modules[i]->fprop( values[i], values[i+1] );
+    }
 
+    // 
     output.resize( outputsize() );
     output << values[ nmodules ];
 
@@ -977,39 +986,37 @@ void NnlmOnlineLearner::computeCostsFromOutputs(const Vec& input, const Vec& out
                                            const Vec& target, Vec& costs) const
 {
 
-    Vec nl_p_i;
-    Vec nl_p_j;
-    real l_sum;
+    Vec nl_p_ri;
+    Vec nl_p_rj;
+    real l_sum_p_rj;
 
-    nl_p_i.resize( getTestCostNames().length() );
-    nl_p_j.resize( getTestCostNames().length() );
+    nl_p_ri.resize( getTestCostNames().length() );
+    nl_p_rj.resize( getTestCostNames().length() );
 
 
     // * Compute numerator
     output_module->setCurrentWord( (int)target[0] );
-    output_module->fprop( output, nl_p_i);
+    output_module->fprop( output, nl_p_ri);
 
     // * Compute denominator
     // Normalize over whole vocabulary
 
-    l_sum = 0.0;
+    l_sum_p_rj = -REAL_MAX;
 
-    for(int w=0; w<vocabulary_size; w++)  {
+// ### THIS IS SERIOUS!!!
+//vocabulary_size-1 is the missing tag, which is NEVER SEEN in target
+//and so never trained!!! THE FPROP WILL RETURN 0!!!
+    for(int w=0; w<vocabulary_size-1; w++)  {
 
         output_module->setCurrentWord( w );
-        output_module->fprop( output, nl_p_j);
+        output_module->fprop( output, nl_p_rj);
 
-        // !!!!!!!!!!!!!!!!!!!!!!!1111
-        // we are adding neg logs... any difference?
-        //nl_sum = logadd(nl_sum, nl_p_j[0]);
-        // Let's try this...
-        l_sum = logadd(l_sum, -nl_p_j[0]);
-
+        l_sum_p_rj = logadd(l_sum_p_rj, -nl_p_rj[0]);
     }
 
-    costs[0] = nl_p_i[0] + l_sum;
+    cout << "nl_p_ri " << nl_p_ri[0] << " l_sum_p_rj " << l_sum_p_rj << " safeexp(nl_p_i + l_sum_p_rj) " << safeexp(-(nl_p_ri[0] + l_sum_p_rj)) << endl;
 
-    
+    costs[0] = nl_p_ri[0] + l_sum_p_rj;
 
 }
 

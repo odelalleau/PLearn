@@ -64,26 +64,7 @@ class NnlmOnlineLearner : public PLearner
 public:
     //#####  Public Build Options  ############################################
 
-    // NNLM related
-    int vocabulary_size;
     int word_representation_size;
-    int context_size;
-
-    int context_layer_size;
-
-    //! Layers of the learner - the output layer is separate
-    TVec< PP<OnlineLearningModule> > modules;
-    PP<NnlmOutputLayer> output_module;
-
-
-    //! Used in determining the C sets of candidate words for normalization
-    //! in the evaluated discriminant cost
-    VMat ngram_train_set;
-    PP<NGramDistribution> theNGram;
-
-    //! Holds candidates
-    TVec<int> shared_candidates;    // frequent (ie paying) words
-    TVec< TVec<int> > candidates;   // context specific candidates
 
     //! Number of candidates to use from different sources
     // What to do if multiple sources suggest the same word? Do we have less candidates? Or compensate?
@@ -92,6 +73,40 @@ public:
     int self_candidates_size;      // from the model itself. Should be used after training has gone a while
                                 // to keep ourselves on track (some words getting too high a score?)
 
+    //! Used in determining the C sets of candidate words for normalization
+    //! in the evaluated discriminant cost
+    VMat ngram_train_set;
+
+    //! Neural part parameters
+    real wrl_lr;
+    real wrl_wd_l1;
+    real wrl_wd_l2;
+    real sl_lr;
+    real sl_wd_l1;
+    real sl_wd_l2;
+
+    //#####  Public Learnt Options  ############################################
+
+    //! Layers of the learner - the output layer is separate
+    TVec< PP<OnlineLearningModule> > modules;
+    PP<NnlmOutputLayer> output_module;
+
+    //#####  Public NOT Options  ##############################################
+
+    //! NNLM related
+    int vocabulary_size;    // NOT an option... computed from the train_set's dictionary
+    int context_size;       // NOT an option... the train_set's input size (actually -1, coz target is in input)
+    int context_layer_size;
+
+    // TODO THIS COULD BE A LEARNT OPTION
+    //! Used in determining the C sets of candidate words for normalization
+    //! in the evaluated discriminant cost
+    PP<NGramDistribution> theNGram;
+
+    // TODO THIS COULD BE A LEARNT OPTION
+    //! Holds candidates
+    TVec<int> shared_candidates;    // frequent (ie paying) words
+    TVec< TVec<int> > candidates;   // context specific candidates
 
 
 public:
@@ -106,48 +121,43 @@ public:
     void buildLayers();
     void buildCandidates();
 
-    void myGetExample(VMat& example_set, int& sample, Vec& input, Vec& target,
-real& weight) const;
+    void myGetExample(VMat& example_set, int& sample, Vec& input, Vec& target, real& weight) const;
+
+    // TODO The output layer should compute all its costs - not the learner 
+    //! Computes the approximate discriminant cost and its gradient
+    void computeApproximateDiscriminantCostAndGradient(Vec input, Vec target, Vec output, real nd_cost, Vec train_costs, Vec nd_gradient, Vec ad_gradient);
+
 
     //! Returns the size of this learner's output, (which typically
     //! may depend on its inputsize(), targetsize() and set options).
-    // (PLEASE IMPLEMENT IN .cc)
     virtual int outputsize() const;
 
     //! (Re-)initializes the PLearner in its fresh state (that state may depend
     //! on the 'seed' option) and sets 'stage' back to 0 (this is the stage of
     //! a fresh learner!).
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void forget();
 
     //! The role of the train method is to bring the learner up to
     //! stage==nstages, updating the train_stats collector with training costs
     //! measured on-line in the process.
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void train();
 
     void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs, VMat testcosts) const;
 
     //! Computes the output from the input.
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void computeOutput(const Vec& input, Vec& output) const;
 
     //! Computes the costs from already computed output.
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
                                          const Vec& target, Vec& costs) const;
 
-    //! Computes the approximate discriminant cost and its gradient
-    void computeApproximateDiscriminantCostAndGradient(Vec input, Vec target, Vec output, real nd_cost, Vec train_costs, Vec nd_gradient, Vec ad_gradient);
 
     //! Returns the names of the costs computed by computeCostsFromOutpus (and
     //! thus the test method).
-    // (PLEASE IMPLEMENT IN .cc)
     virtual TVec<std::string> getTestCostNames() const;
 
     //! Returns the names of the objective costs that the train method computes
     //! and  for which it updates the VecStatsCollector train_stats.
-    // (PLEASE IMPLEMENT IN .cc)
     virtual TVec<std::string> getTrainCostNames() const;
 
 
@@ -170,22 +180,19 @@ real& weight) const;
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
-    // ### If your class is not instantiatable (it has pure virtual methods)
-    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS
     PLEARN_DECLARE_OBJECT(NnlmOnlineLearner);
 
     // Simply calls inherited::build() then build_()
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
     //#####  Protected Options  ###############################################
 
     // ### Declare protected option fields (such as learned parameters) here
-    // ...
+
 
     //####  Not Options  ######################################################
 
@@ -200,14 +207,12 @@ protected:
     //#####  Protected Member Functions  ######################################
 
     //! Declares the class options.
-    // (PLEASE IMPLEMENT IN .cc)
     static void declareOptions(OptionList& ol);
 
 private:
     //#####  Private Member Functions  ########################################
 
     //! This does the actual building.
-    // (PLEASE IMPLEMENT IN .cc)
     void build_();
 
 private:
