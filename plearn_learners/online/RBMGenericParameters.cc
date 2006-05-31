@@ -447,6 +447,44 @@ void RBMGenericParameters::finalize()
 */
 
 
+//! return the number of parameters
+int RBMGenericParameters::nParameters() const
+{
+    int m = weights.size();
+    for (int i=0;i<up_units_params.length();i++)
+        m += up_units_params[i].size();
+    for (int i=0;i<down_units_params.length();i++)
+        m += down_units_params[i].size();
+    return m;
+}
+
+//! Make the parameters data be sub-vectors of the given global_parameters.
+//! The argument should have size >= nParameters. The result is a Vec
+//! that starts just after this object's parameters end, i.e.
+//!    result = global_parameters.subVec(nParameters(),global_parameters.size()-nParameters());
+//! This allows to easily chain calls of this method on multiple RBMParameters.
+Vec RBMGenericParameters::makeParametersPointHere(const Vec& global_parameters)
+{
+    int n = nParameters();
+    int m = global_parameters.size();
+    if (m<n)
+        PLERROR("RBMLLParameters::makeParametersPointHere: argument has length %d, should be longer than nParameters()=%d",m,n);
+    real* p = global_parameters.data();
+    weights.makeSharedValue(p,weights.size());
+    p+=weights.size();
+    for (int i=0;i<up_units_params.length();i++)
+    {
+        up_units_params[i].makeSharedValue(p,up_units_params[i].size());
+        p+=up_units_params[i].size();
+    }
+    for (int i=0;i<down_units_params.length();i++)
+    {
+        down_units_params[i].makeSharedValue(p,down_units_params[i].size());
+        p+=down_units_params[i].size();
+    }
+    return global_parameters.subVec(n,m-n);
+}
+
 } // end of namespace PLearn
 
 

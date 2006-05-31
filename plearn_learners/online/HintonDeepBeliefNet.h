@@ -118,6 +118,12 @@ public:
     //! Contains params[n_layers-2] and target_params.
     PP<RBMJointLLParameters> joint_params;
 
+    //! only used when USING_MPI for parallelization
+    //! this is the number of examples seen by one process
+    //! during training after which the weight updates are shared 
+    //! among all the processes.
+    int parallelization_minibatch_size;
+
     //! Number of examples to use during each of the different greedy
     //! steps of the training phase.
     TVec<int> training_schedule;
@@ -144,6 +150,15 @@ public:
     //!   - visible unit during negative phase,
     //!   - hidden unit during negative phase (you should keep it to 0).
     TVec<int> use_sample_or_expectation;
+
+    // ** NON-OPTION FIELDS (temporary workspace)
+
+#if USING_MPI
+    //! for MPI parallelization, share parameters of all Parameters boxes
+    Vec global_params;
+    //! and keep track of their value at the previous sharing step between all CPUs
+    Vec previous_global_params;
+#endif 
 
 public:
     //#####  Public Member Functions  #########################################

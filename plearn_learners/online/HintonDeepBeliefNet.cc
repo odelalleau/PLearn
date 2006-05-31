@@ -188,6 +188,14 @@ void HintonDeepBeliefNet::declareOptions(OptionList& ol)
                   "  - hidden unit during negative phase (you should keep it"
                   " to 0).\n");
 
+    declareOption(ol, "parallelization_minibatch_size",
+                  &HintonDeepBeliefNet::parallelization_minibatch_size,
+                  OptionBase::buildoption,
+                  "Only used when USING_MPI for parallelization.\n"
+                  "This is the number of examples seen by one process\n"
+                  "during training after which the weight updates are shared\n"
+                  "among all the processes.'n");
+
     declareOption(ol, "n_layers", &HintonDeepBeliefNet::n_layers,
                   OptionBase::learntoption,
                   "Number of unsupervised layers, including input layer");
@@ -574,8 +582,28 @@ void HintonDeepBeliefNet::train()
     Vec target( targetsize() ); // unused
     real weight; // unused
     Vec train_costs(2);
-
     int nsamples = train_set->length();
+
+#if USING_MPI
+    // initialize global parameters for allowing to easily share them across multiple CPUs
+    if (global_params.size()==0)
+    {
+        int n_params = target_params.nParameters()+joint_params.nParameters();
+        for (int i=0;i<params.length();i++)
+            n_params += params[i].nParameters();
+        global_params.resize(n_params);
+        previous_global_params.resize(n_params);
+        Vec p=global_params;
+        for (int i=0;i<params.length();i++)
+            p=params[i].makeParametersPointHere(p);
+        p=joint_params.makeParametersPointHere(p);
+        p=target_params.makeParametersPointHere(p);
+        if (p.length()!=0)
+            PLERROR("HintonDeepBeliefNet: Inconsistencies between nParameters and makeParametersPointHere!");
+    }
+    int total_bsize=parallelization_minibatch_size*PLMPI::size;
+#endif
+
     MODULE_LOG << "  nsamples = " << nsamples << endl;
     MODULE_LOG << "  initial stage = " << stage << endl;
     MODULE_LOG << "  objective: nstages = " << nstages << endl;
@@ -615,8 +643,17 @@ void HintonDeepBeliefNet::train()
         else
             params[layer]->momentum = final_momentum;
 
+#if USING_MPI
+        // make a copy of the parameters as they were at the beginning of the minibatch
+        previous_global_params << global_params;
+#endif
         for( ; stage<end_stage ; stage++ )
         {
+#if USING_MPI
+            // only look at some of the examples, associated with this process number (rank)
+          if (stage%PLMPI::size==PLMPI::rank) 
+          {
+#endif
             int sample = stage % nsamples;
             train_set->getExample(sample, input, target, weight);
             greedyStep( input.subVec(0, n_predictor), layer );
@@ -631,6 +668,14 @@ void HintonDeepBeliefNet::train()
                 else
                     pb->update( stage - training_schedule[layer-1] + 1 );
             }
+#if USING_MPI
+          }
+          // time to share among processors
+          if (stage%total_bsize==0)        
+          {
+              MPI_Reduce(
+          }
+#endif
         }
     }
 
