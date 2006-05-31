@@ -87,7 +87,7 @@ void UniformDistribution::declareOptions(OptionList& ol)
                                OptionBase::buildoption,
         "Optionally, the number of dimensions. Provide this option only if\n"
         "you want to generate 'n_dim' dimensions all in [min,max] (in which\n"
-        "case the length of 'min' and 'max' should be 1.");
+        "case the length of 'min' and 'max' should be 1).");
 
     declareOption(ol, "counter", &UniformDistribution::counter, OptionBase::learntoption,
                   "Counts the number of points generated (necessary when 'mesh_size' is used).");
