@@ -64,39 +64,54 @@ class NnlmOnlineLearner : public PLearner
 public:
     //#####  Public Build Options  ############################################
 
+    //! Define model
+    string str_model_type;
+    string str_gaussian_model_cost;
+    string str_gaussian_model_learning;
+    real gaussian_model_sigma2_min;
+
+    //! Size of the real ditributed word representations
     int word_representation_size;
 
-    //! Number of candidates to use from different sources
+    //! Size of the semantic layer
+    int semantic_layer_size;
+
+    //! Number of candidates to use from different sources in the gaussian model
+    //! when we use the approx_discriminant cost
     // What to do if multiple sources suggest the same word? Do we have less candidates? Or compensate?
     int shared_candidates_size;    // frequent words on which we don't want to make mistakes
     int ngram_candidates_size;     // from a bigram
     int self_candidates_size;      // from the model itself. Should be used after training has gone a while
-                                // to keep ourselves on track (some words getting too high a score?)
+                                   // to keep ourselves on track (some words getting too high a score?)
 
     //! Used in determining the C sets of candidate words for normalization
     //! in the evaluated discriminant cost
     VMat ngram_train_set;
 
     //! Neural part parameters
-    real wrl_lr;
+    real wrl_slr;
+    real wrl_dc;
     real wrl_wd_l1;
     real wrl_wd_l2;
-    real sl_lr;
+    real sl_slr;
+    real sl_dc;
     real sl_wd_l1;
     real sl_wd_l2;
 
     //#####  Public Learnt Options  ############################################
 
-    //! Layers of the learner - the output layer is separate
+    //! Layers of the learner
+    //! Separated between the fixed part which computes up to the "semantic layer"
+    //! and the variable part (gaussian or softmax)
     TVec< PP<OnlineLearningModule> > modules;
-    PP<NnlmOutputLayer> output_module;
+    TVec< PP<NnlmOutputLayer> > output_modules;
 
     //#####  Public NOT Options  ##############################################
 
-    //! NNLM related
-    int vocabulary_size;    // NOT an option... computed from the train_set's dictionary
-    int context_size;       // NOT an option... the train_set's input size (actually -1, coz target is in input)
-    int context_layer_size;
+    //! NNLM related - determined from train_set
+    int vocabulary_size;
+    int context_size;       // the train_set's input size -1 (because target is last input)
+
 
     // TODO THIS COULD BE A LEARNT OPTION
     //! Used in determining the C sets of candidate words for normalization
@@ -121,7 +136,7 @@ public:
     void buildLayers();
     void buildCandidates();
 
-    void myGetExample(VMat& example_set, int& sample, Vec& input, Vec& target, real& weight) const;
+    void myGetExample(const VMat& example_set, int& sample, Vec& input, Vec& target, real& weight) const;
 
     // TODO The output layer should compute all its costs - not the learner 
     //! Computes the approximate discriminant cost and its gradient
@@ -202,6 +217,10 @@ protected:
     //! stores the gradients
     TVec<Vec> gradients;
 
+    //! for the second variable part of the model (starts from 'r' on)
+    TVec<Vec> values2;
+    TVec<Vec> gradients2;
+
 
 protected:
     //#####  Protected Member Functions  ######################################
@@ -220,7 +239,15 @@ private:
 
     // The rest of the private stuff goes here
     int nmodules;
+    int nmodules2;
 
+    int model_type;
+    int gaussian_model_cost;
+    int gaussian_model_learning;
+
+    enum{MODEL_TYPE_GAUSSIAN, MODEL_TYPE_SOFTMAX};
+    enum{GAUSSIAN_COST_APPROX_DISCR, GAUSSIAN_COST_NON_DISCR};
+    enum{GAUSSIAN_LEARNING_NON_DISCR, GAUSSIAN_LEARNING_DISCR};
 };
 
 // Declares a few other classes and functions related to this class
