@@ -63,15 +63,14 @@ class NnlmOutputLayer : public OnlineLearningModule
 public:
     //#####  Public Build Options  ############################################
 
-    //! - NNLM related -
-    int vocabulary_size;
-    int word_representation_size;
-    int context_size;
-
     //! discounts the gaussians' old parameters in the computation of the new
     //! ones
     real start_gaussian_learning_discount_rate;
     real gaussian_learning_decrease_constant;
+
+    real sigma2min;
+
+    int virtual_output_size;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -80,16 +79,15 @@ public:
     NnlmOutputLayer();
 
     //! Sets w ( fprop computes p(r,w) )
-    void setCurrentWord(int the_current_word);
+    void setTarget(int the_target);
+    void setCost(int the_cost);
 
-    //! Sets the context (encoded in wordtags) - NOT USED
-    void setContext(const Vec& the_current_context);
-
-
+    //! Used to reevaluate mu and sigma
     void resetTestVars();
     void updateTestVars(const Vec& input);
-    void ApplyTestVars();
+    void applyTestVars();
 
+    void nl_p_ri(const Vec& input, Vec& output) const;
 
     //! Computes p(r,w), where r the real distributed context representation 
     //! in [0,1] and w the word at the considered position
@@ -190,8 +188,9 @@ public:
 
     //#####  Don't need to be saved  ##########################################
     //! the current word -> we use its parameters to compute output
-    int current_word;
-    Vec context;
+    int target;
+    //! the cost
+    int cost;
 
     //! temporary variables
     //! TODO clean this up

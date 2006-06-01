@@ -50,34 +50,18 @@ PLEARN_IMPLEMENT_OBJECT(
 
 NnlmOutputLayer::NnlmOutputLayer() :
     OnlineLearningModule(),
-    vocabulary_size( -1 ),
-    word_representation_size( -1 ),
-    context_size( -1 ),
     start_gaussian_learning_discount_rate( 0.999 ),
-    gaussian_learning_decrease_constant( 0 )
+    gaussian_learning_decrease_constant( 0 ),
+    cost( 0 )
 {
+    // ### You may (or not) want to call build_() to finish building the object
     // ### (doing so assumes the parent classes' build_() have been called too
     // ### in the parent classes' constructors, something that you must ensure)
 }
 
 void NnlmOutputLayer::declareOptions(OptionList& ol)
 {
-    // * Built *
-    declareOption(ol, "vocabulary_size",
-                  &NnlmOutputLayer::vocabulary_size,
-                  OptionBase::buildoption,
-                  "size of vocabulary used");
-
-    declareOption(ol, "word_representation_size",
-                  &NnlmOutputLayer::word_representation_size,
-                  OptionBase::buildoption,
-                  "size of the real distributed word representation");
-
-    declareOption(ol, "context_size",
-                  &NnlmOutputLayer::context_size,
-                  OptionBase::buildoption,
-                  "size of word context");
-
+    // * Build *
     declareOption(ol, "start_gaussian_learning_discount_rate",
                   &NnlmOutputLayer::start_gaussian_learning_discount_rate,
                   OptionBase::buildoption,
@@ -87,6 +71,11 @@ void NnlmOutputLayer::declareOptions(OptionList& ol)
                   &NnlmOutputLayer::gaussian_learning_decrease_constant,
                   OptionBase::buildoption,
                   "Decrease constant of gaussian parameters discount rate");
+
+    declareOption(ol, "virtual_output_size",
+                  &NnlmOutputLayer::virtual_output_size,
+                  OptionBase::buildoption,
+                  "virtual_output_size");
 
     // * Learnt *
     declareOption(ol, "step_number", &NnlmOutputLayer::step_number,
@@ -135,9 +124,6 @@ void NnlmOutputLayer::build_()
     }  else if( output_size != 1 )  {
         PLERROR("NnlmOutputLayer::build_: 'output_size'(=%i) != 1\n"
                   , output_size);
-    }  else if( vocabulary_size <= 0 )  {
-        PLERROR("NnlmOutputLayer::build_: 'vocabulary_size' <= 0 (%i).\n"
-                  , vocabulary_size);
     }
 
     // *** Parameters not initialized
@@ -163,49 +149,56 @@ void NnlmOutputLayer::resetParameters()
     sum_log_p_g_r = -REAL_MAX;
 
 
-    mu.resize( vocabulary_size, input_size);
+      mu.resize( virtual_output_size, input_size);
     mu.fill( 0 );
-    sigma2.resize( vocabulary_size, input_size);
-    sigma2.fill( 0 );
-    pi.resize( vocabulary_size );
+    sigma2.resize( virtual_output_size, input_size);
+    sigma2.fill( sigma2min );
+    pi.resize( virtual_output_size );
     pi.fill( 0 );
 
-    sumX.resize( vocabulary_size, input_size);
+    sumX.resize( virtual_output_size, input_size);
     sumX.fill( 0 );
-    sumX2.resize( vocabulary_size, input_size);
+    sumX2.resize( virtual_output_size, input_size);
     sumX2.fill( 0 );
-    sumI.resize( vocabulary_size );
+    sumI.resize( virtual_output_size );
     sumI.fill( 0 );
     s_sumI = 0;
 
     // *TEST*
-    test_sumX.resize( vocabulary_size, input_size);
+    test_sumX.resize( virtual_output_size, input_size);
     test_sumX.fill( 0 );
-    test_sumX2.resize( vocabulary_size, input_size);
+    test_sumX2.resize( virtual_output_size, input_size);
     test_sumX2.fill( 0 );
-    test_sumI.resize( vocabulary_size );
+    test_sumI.resize( virtual_output_size );
     test_sumI.fill( 0 );
     test_s_sumI = 0;
 
-    context.resize(context_size);
 }
 
-void NnlmOutputLayer::setCurrentWord(int the_current_word) 
+void NnlmOutputLayer::setTarget(int the_target) 
 {
-    if( the_current_word >= vocabulary_size )  {
-        PLERROR("NnlmOutputLayer::setCurrentWord:'the_current_word'(=%i) >= \n"
-                  "'vocabulary_size'(=%i)\n"
-                  , the_current_word, vocabulary_size);
+#ifdef BOUNDCHECK
+    if( the_target >= virtual_output_size )  {
+        PLERROR("NnlmOutputLayer::setTarget:'the_target'(=%i) >= \n"
+                  "'virtual_output_size'(=%i)\n"
+                  , the_target, virtual_output_size);
     }
+#endif
 
-    current_word = the_current_word;
+    target = the_target;
 }
-
-
-void NnlmOutputLayer::setContext(const Vec& the_current_context) 
+// Sets the cost computed in the fprop
+void NnlmOutputLayer::setCost(int the_cost)
 {
-    context << the_current_context;
+#ifdef BOUNDCHECK
+    if( the_cost > 2 || the_cost < 0 )  {
+        PLERROR("NnlmOutputLayer::setCost:'the_cost'(=%i) > \n"
+                  "'2'(=%i)\n"
+                  , the_cost);
+    }
+#endif
 
+    cost = the_cost;
 }
 
 void NnlmOutputLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
@@ -220,7 +213,9 @@ void NnlmOutputLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(sumX2, copies);
     deepCopyField(sumI, copies);
 
-    deepCopyField(context, copies);
+    deepCopyField(test_sumX, copies);
+    deepCopyField(test_sumX2, copies);
+    deepCopyField(test_sumI, copies);
 
 }
 
@@ -234,10 +229,26 @@ void NnlmOutputLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 //!
 void NnlmOutputLayer::fprop(const Vec& input, Vec& output) const
 {
+    // Non-discriminant -log( p(r,i) )
+    if( cost == 0 ) {
+        nl_p_ri( input, output);
+    }
+    // approx-discriminant
+    else if( cost == 1 )  {
 
+    }
+    // discriminant -log( p(i|r) )
+    else if( cost == 2 )  {
+
+    }
+}
+
+void NnlmOutputLayer::nl_p_ri(const Vec& input, Vec& output) const
+{
     // *** If not ready (need 2 bpropUpdate for valid sigma)
-    // So we don't do a /0 with /sigma2(current_word, i)
-    if( sumI[ current_word ] < 2 )  {
+    // So we don't do a /0 with /sigma2(target, i)
+    // TODO CHECK THIS
+    if( sumI[ target ] < 2 )  {
       output.fill(0.0);
       log_p_g_r = safelog( 0.9 );
       return;
@@ -255,11 +266,11 @@ void NnlmOutputLayer::fprop(const Vec& input, Vec& output) const
     det_g_covariance = 1.0;
 
     for(int i=0; i<input_size; i++) {
-      r = input[i] - mu(current_word, i);
-      g_exponent += r * r / sigma2(current_word, i);
+      r = input[i] - mu(target, i);
+      g_exponent += r * r / sigma2(target, i);
 
       // determinant of covariance matrix
-      det_g_covariance *= sigma2(current_word, i);
+      det_g_covariance *= sigma2(target, i);
     }
     g_exponent *= -0.5;
 
@@ -273,10 +284,18 @@ void NnlmOutputLayer::fprop(const Vec& input, Vec& output) const
     log_p_r_i = logadd( log_p_rg_i , safelog(1-umc) - (input_size) * safelog(2));
 
     // * Compute log p(r,i)
-    log_p_ri = safelog(pi[current_word]) + log_p_r_i;
+    log_p_ri = safelog(pi[target]) + log_p_r_i;
 
     // * Compute output
     output[0] = -( log_p_ri );
+
+
+    if( isnan(log_p_ri) ) {
+      cout << "NnlmOutputLayer::nl_p_ri - NAN!!!" << target <<  endl;
+      //cout << mu(target) << endl << sigma2(target) << endl;
+
+    }
+
 
     // * Compute posterior for coeff_class_conditional_uniform_mixture evaluation in the bpropUpdate
     // p(generated by gaussian| r) = a p_g(r|i) / p(r|i)
@@ -324,63 +343,54 @@ void NnlmOutputLayer::bpropUpdate(const Vec& input, const Vec& output,
     // * Update parameters - using discount
     // discount * ancien + (1-discount) * nouveau
     // so we don't get a sigma that is zero
-    if( sumI[ current_word ] >= 2 ) {
+    if( sumI[ target ] >= 2 ) {
 
         for(int i=0; i<input_size; i++) {
 
-            //mu( current_word, i ) = gldr * mu( current_word, i ) + (1.0 - gldr) * input[i];
+            //mu( target, i ) = gldr * mu( target, i ) + (1.0 - gldr) * input[i];
 
             // We reuse the old sigma instead of recomputing it with the new mu... is it a good idea?
             // If we consider we're tracking a moving target maybe.
-//            sigma2( current_word, i ) = gldr * sigma2( current_word, i ) +
-//                + (1.0-gldr) * ( input[i] - mu( current_word, i ) ) * ( input[i] - mu( current_word, i ) );
+//            sigma2( target, i ) = gldr * sigma2( target, i ) +
+//                + (1.0-gldr) * ( input[i] - mu( target, i ) ) * ( input[i] - mu( target, i ) );
 
-//mu( current_word, i ) = sumX( current_word, i ) / sumI[ current_word ];
-//sigma2( current_word, i ) = (  mu(current_word, i) * mu(current_word, i) + ( sumX2(current_word, i) -2.0 * mu(current_word, i) * sumX(current_word, i)        ) / sumI[ current_word ] );
-mu( current_word, i ) = gldr * mu( current_word, i ) + (1.0 - gldr) * input[i];
-sigma2( current_word, i ) = gldr * 
-            (  mu(current_word, i) * mu(current_word, i) + ( sumX2(current_word, i) -2.0 * mu(current_word, i) * sumX(current_word, i)        ) / sumI[ current_word ] )
+//mu( target, i ) = sumX( target, i ) / sumI[ target ];
+//sigma2( target, i ) = (  mu(target, i) * mu(target, i) + ( sumX2(target, i) -2.0 * mu(target, i) * sumX(target, i)        ) / sumI[ target ] );
+mu( target, i ) = gldr * mu( target, i ) + (1.0 - gldr) * input[i];
+sigma2( target, i ) = gldr * 
+            (  mu(target, i) * mu(target, i) + ( sumX2(target, i) -2.0 * mu(target, i) * sumX(target, i)        ) / sumI[ target ] )
             + (1.0-gldr) * input[i]*input[i];
 
 // CHANGE THIS!!!!!!!!
 // CHANGE THIS!!!!!!!!
 //cout << " --- mu ---" << endl << mu << endl << " --- sigma2 ---" << endl << sigma2 << endl;
 
-if(sigma2( current_word, i )<0.0001)
+if(sigma2( target, i )<sigma2min)
 {
-//cout << "word " << current_word << " has sigma2[" << i << "] < 0.0001" << endl;
-sigma2( current_word, i ) = 0.0001;
+//cout << "word " << target << " has sigma2[" << i << "] < 0.0001" << endl;
+sigma2( target, i ) = sigma2min;
 }
 
 
         }
     // initialize
-    } else if( sumI[ current_word ] == 1 ) {
-        for(int i=0; i<input_size; i++) {
-
-            mu( current_word, i ) = gldr * mu( current_word, i ) + (1.0 - gldr) * input[i];
-
-            // We reuse the old sigma instead of recomputing it with the new mu... is it a good idea?
-            // If we consider we're tracking a moving target maybe.
-            sigma2( current_word, i ) = ( input[i] - mu( current_word, i ) ) * ( input[i] - mu( current_word, i ) );
-        }
     } else  {
         for(int i=0; i<input_size; i++) {
-            mu( current_word, i ) = input[i];
+            mu( target, i ) = input[i];
         }
     }
 
 
     // * Update counts
     for(int i=0; i<input_size; i++) {
-      sumX( current_word, i ) += input[i];
-      sumX2( current_word, i ) += input[i]*input[i];
+      sumX( target, i ) += input[i];
+      sumX2( target, i ) += input[i]*input[i];
     }
-    sumI[ current_word ] += 1;
+    sumI[ target ] += 1;
     s_sumI += 1;
 
-    if( sumI[ current_word ] >= 1 ) {
-        pi[current_word] = (real)sumI[ current_word ] / (real)s_sumI;
+    if( sumI[ target ] >= 1 ) {
+        pi[target] = (real)sumI[ target ] / (real)s_sumI;
 
         // Update uniform mixture coefficient
         //sum_log_p_g_r = logadd( sum_log_p_g_r, log_p_g_r );
@@ -404,37 +414,39 @@ void NnlmOutputLayer::updateTestVars(const Vec& input)
 {
     // * Update counts
     for(int i=0; i<input_size; i++) {
-      test_sumX( current_word, i ) += input[i];
-      test_sumX2( current_word, i ) += input[i]*input[i];
+      test_sumX( target, i ) += input[i];
+      test_sumX2( target, i ) += input[i]*input[i];
     }
-    test_sumI[ current_word ] += 1;
+    test_sumI[ target ] += 1;
     test_s_sumI += 1;
 }
 
-void NnlmOutputLayer::ApplyTestVars()
+void NnlmOutputLayer::applyTestVars()
 {
 
     for(int i=0; i<input_size; i++) {
 
-      mu( current_word, i ) = test_sumX( current_word, i ) / (real) test_sumI[ current_word ];
+        mu( target, i ) = test_sumX( target, i ) / (real) test_sumI[ target ];
 
-      sigma2( current_word, i ) = (  mu(current_word, i) * mu(current_word, i) + 
-                ( test_sumX2(current_word, i) -2.0 * mu(current_word, i) * test_sumX(current_word, i)  ) / test_sumI[ current_word ] );
+        sigma2( target, i ) = (  mu(target, i) * mu(target, i) + 
+                ( test_sumX2(target, i) -2.0 * mu(target, i) * test_sumX(target, i)  ) / test_sumI[ target ] );
 
-// CHANGE THIS!!!!!!!!
-// CHANGE THIS!!!!!!!!
-// CHANGE THIS!!!!!!!!
-// CHANGE THIS!!!!!!!!
-/*if(i==0)  {
-  cout << " --- mu ---" << endl << mu << endl << " --- sigma2 ---" << endl << sigma2 << endl;
-}*/
 
-if(sigma2( current_word, i )<0.0001)
-{
-sigma2( current_word, i ) = 0.0001;
-}
+
+        /*if( isnan( mu(target, i) ) || isnan( sigma2(target, i) ) )  {
+            cout << " ---=== " << target << " ===--- test_sumX( target, i ) " << test_sumX( target, i ) << " test_sumI[ target ] " << test_sumI[ target ] << " test_sumX2(target, i) " << test_sumX2(target, i) << endl;
+        }*/
+
+
+
+
+        if(sigma2( target, i )<sigma2min) {
+            sigma2( target, i ) = sigma2min;
+        }
 
     }
+
+    pi[target] = (real)test_sumI[ target ] / (real)test_s_sumI;
 
 }
 
