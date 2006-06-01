@@ -21,7 +21,7 @@ PTester(
             noutputs = 2
             cost_funcs = [ "mse" ]
             optimizer =
-                ConjGradientOptimizer(verbosity = 2)
+                ConjGradientOptimizer(verbosity = 1)
             batch_size = 0
             seed = 123456
             nstages = 25
