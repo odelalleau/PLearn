@@ -218,7 +218,7 @@ optionalLibrary( name = 'X',
                  linkeroptions = '-L/usr/X11R6/lib/ -lXi -lXext -lX11/'
 )
 
-linkeroptions_tail = '-L/u/lisa/local/linux-x86_64/lib/'
+linkeroptions_tail = ''
 
 ### Using Python code snippets in C++ code
 ### TODO Using /u/lisa/... is quite ugly. But the PLEARN_LIBDIR ppath may also
@@ -389,7 +389,7 @@ pymakeOption( name = 'icc',   # For C++, it is actually icpc
               compiler = 'icpc -w1 -wd981 -wd383 -wd869 -wd444 -wd810 -wd1418 -wd654 -wd279',
               compileroptions = '-DUSING_MPI=0 ',
               linker = 'icpc  '
-						)
+              )
 
 pymakeOption( name = 'icc8',   # For C++, it is actually icpc
               description = 'compiling with Intel Compiler (version 8.x), with no MPI support',
@@ -397,7 +397,7 @@ pymakeOption( name = 'icc8',   # For C++, it is actually icpc
               compiler = 'icpc -w1 -wd981 -wd383 -wd869 -wd444 -wd810 -wd1418 -wd654 -wd279',
               compileroptions = '-DUSING_MPI=0 ',
               linker = 'icpc  '
-						)
+              )
 
 pymakeOption( name = 'icc9',   # For C++, it is actually icpc
               description = 'compiling with Intel Compiler (version 9.x), with no MPI support',
@@ -407,7 +407,7 @@ pymakeOption( name = 'icc9',   # For C++, it is actually icpc
               compiler = 'icpc -w1 -wd981 -wd383 -wd869 -wd444 -wd810 -wd1418 -wd654 -wd279 -wd1683',
               compileroptions = '-DUSING_MPI=0 ',
               linker = 'icpc  '
-						)
+              )
 
 pymakeOption( name = 'mpi',
               description = 'compiling and linking with MPI support (and USING_MPI=1)',
