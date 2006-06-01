@@ -11,7 +11,7 @@ libdir          = os.getenv( 'PLEARN_LIBDIR', 'PLEARNDIR:external_libs' )
 ## Adding the standard PLearn-wide bindings
 ppath.add_binding('HOME',           "${HOME}" )
 ppath.add_binding('PLEARNDIR',      plearndir )
-ppath.add_binding('PLEARN_LIBDIR',  libdir    )
+ppath.add_binding('PLEARN_LIBDIR',  "${PLEARN_LIBDIR}" )
 ppath.add_binding('UCI_MLDB',       "PLEARNDIR:examples/data/uci_mldb"  )
 
 ## This function writes the file down
