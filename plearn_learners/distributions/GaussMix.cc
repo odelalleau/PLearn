@@ -388,6 +388,11 @@ void GaussMix::computeMeansAndCovariances() {
         VMat input_data = use_impute_missing ? imputed_missing[j]
                                              : train_set;
 
+        /*
+        input_data->saveAMAT("/u/delallea/tmp/input_data_" +
+                tostring(this->stage) + ".amat", false, true);
+        */
+
         weighted_train_set = new ConcatColumnsVMatrix(
             new SubVMatrix(input_data, 0, 0, nsamples, D), weights);
         weighted_train_set->defineSizes(D, 0, 1);
@@ -2042,7 +2047,6 @@ void GaussMix::expectation(Vec& mu) const
         for (int j = 0; j < L; j++)
             mu += center_y_x(j) * p_j_x[j];
     }
-
 }
 
 ////////////
@@ -2808,7 +2812,7 @@ void GaussMix::setPredictor(const Vec& predictor, bool call_parent) const {
                         if (p < n_predicted)
                             cov_y_x_j(n_predicted + k, p) =
                                 cov_y_x_j(p, n_predicted + k) =
-                                full_cov_j(x_missing, p);
+                                full_cov_j(x_missing, p + n_predictor);
                         else
                             cov_y_x_j(n_predicted + k, p) =
                                 cov_y_x_j(p, n_predicted + k) =
@@ -2819,9 +2823,25 @@ void GaussMix::setPredictor(const Vec& predictor, bool call_parent) const {
                 y_x_mat_miss.resize(L);
                 y_x_mat_miss[j].resize(n_predicted, n_non_missing);
                 if (n_non_missing > 0) {
+                    cross_cov.resize(n_predicted_ext, n_non_missing);
+                    for (int k = 0; k < n_non_missing; k++) {
+                        for (int p = 0; p < n_predicted_ext; p++) {
+                            if (p < n_predicted)
+                                cross_cov(p, k) =
+                                    full_cov_j(non_missing[k],p + n_predictor);
+                            else
+                                cross_cov(p, k) =
+                                    full_cov_j(non_missing[k],
+                                               missing[p - n_predicted]);
+                        }
+                    }
+                                                            
+                    /*
+                       // Old (and BUGGED) code!
                     cross_cov =
                         full_cov_j.subMat(n_non_missing, 0,
                                           n_predicted_ext, n_non_missing);
+                                          */
                     product(work_mat1, cross_cov, inv_cov_x);
                     productTranspose(work_mat2, work_mat1, cross_cov);
                     cov_y_x_j -= work_mat2;
@@ -3028,7 +3048,8 @@ void GaussMix::setPredictorPredictedSizes_const(int n_i, int n_t) const
                 full_cov_j.subMat(n_predictor, n_predictor, n_predicted, n_predicted);
             y_x_mat[j].resize(n_predicted, n_predictor);
             if (n_predictor > 0) {
-                cross_cov = full_cov_j.subMat(n_predictor,0, n_predicted, n_predictor);
+                cross_cov = full_cov_j.subMat(n_predictor, 0,
+                                              n_predicted, n_predictor);
                 product(work_mat1, cross_cov, inv_cov_x);
                 productTranspose(work_mat2, work_mat1, cross_cov);
                 cov_y_x_j -= work_mat2;
@@ -4086,6 +4107,10 @@ void GaussMix::train()
         stage++;
         if (report_progress)
             pb->update(n_steps - nstages + stage);
+        /*
+        if (verbosity >= 10)
+            pout << "Highest eigenvalue: " << max(eigenvalues) << endl;
+        */
     }
     if (pb)
         delete pb;
