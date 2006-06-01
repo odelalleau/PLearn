@@ -1,6 +1,6 @@
 *1 ->ConjRosenbrock(
 opt = *2 ->ConjGradientOptimizer(
-verbosity = 2 ;
+verbosity = 1 ;
 expected_red = 1 ;
 no_negative_gamma = 1 ;
 sigma = 0.100000000000000006 ;
