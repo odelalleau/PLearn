@@ -211,6 +211,16 @@ void ShiftAndRescaleVMatrix::declareOptions(OptionList& ol)
     declareOption(ol, "verbosity", &ShiftAndRescaleVMatrix::verbosity,
                   OptionBase::buildoption,
                   "Controls the amount of output.");
+
+
+    declareOption(ol, "min_max", &ShiftAndRescaleVMatrix::min_max,            
+                  OptionBase::buildoption,
+                  "A vector of size 2 [min,max]. For each column, the elements"
+                  "will be between min and max. If set, it will override the"
+                  "value of automatic");        
+    
+
+    
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -219,7 +229,7 @@ void ShiftAndRescaleVMatrix::build_()
 {
     if( source )
     {
-        if (automatic)
+        if (automatic && min_max.isEmpty())
         {
             if (n_inputs<0)
             {
@@ -273,6 +283,46 @@ void ShiftAndRescaleVMatrix::build_()
             }
             shift.resize(source->width());
             shift.subVec(n_inputs, shift.length()-n_inputs).fill(0);
+        }
+        else {
+            if (!min_max.isEmpty()) {
+                
+                if ( min_max.length()!=2 )
+                    PLERROR("ShiftAndRescale: min_max should have exactly 2"
+                            "elements(if set)") ; 
+                
+                if ( min_max[0] >= min_max[1])
+                    PLERROR("ShiftAndRescale: min_max[0] should be smaller then"
+                            "min_max[1]") ; 
+            if (n_inputs<0)
+            {
+                n_inputs = source->inputsize();
+                if (n_inputs<0)
+                    PLERROR("ShiftAndRescaleVMatrix: either n_inputs should be"
+                            " provided explicitly\n"
+                            "or the source VMatrix should have a set value of"
+                            " inputsize.\n");
+            }
+                
+                Vec min_col(n_inputs) , max_col(n_inputs) ; 
+                Mat data = transpose(source.subMatColumns(0,n_inputs).toMat());
+                     
+                rowMin(data , min_col) ; 
+                rowMax(data , max_col) ; 
+                
+                shift.resize(source->width()) ; 
+                shift.subVec(n_inputs, shift.length()-n_inputs).fill(0);
+                scale.resize(source->width()) ; 
+                scale.subVec(n_inputs, scale.length()-n_inputs).fill(1);
+
+                for(int i=0 ; i<n_inputs ; ++i) { 
+                    shift[i] = (max_col[i] - min_col[i]) / (min_max[1] - min_max[0]) * 
+                                (min_max[0] - (min_max[1] - min_max[0])*min_col[i] /
+                                              (max_col[i] - min_col[i]) ); 
+                    scale[i] = (min_max[1] - min_max[0]) / (max_col[i] - min_col[i]) ; 
+                }
+
+            }
         }
         reset_dimensions();
         setMetaInfoFromSource();

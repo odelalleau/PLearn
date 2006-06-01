@@ -66,6 +66,7 @@ public:
     // VMat vm;
     Vec shift;
     Vec scale;
+    Vec min_max;
 
     //! find shift and scale automatically?
     bool automatic;
