@@ -390,6 +390,7 @@ void VPLPreprocessedLearner2::computeOutputAndCosts(const Vec& input, const Vec&
         newtarget = processed_target;
     }
 
+    pre_costs.resize(learner_->nTestCosts());
     learner_->computeOutputAndCosts(newinput, newtarget, pre_output, pre_costs);
 
     if(!output_prg.empty())//output_prg_)
