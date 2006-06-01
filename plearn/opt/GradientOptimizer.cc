@@ -113,7 +113,12 @@ void GradientOptimizer::declareOptions(OptionList& ol)
     declareOption(
         ol, "verbosity", &GradientOptimizer::verbosity,
         OptionBase::buildoption, 
-        "Controls the amount of output.");
+        "Controls the amount of output.  If zero, does not print anything.\n"
+        "If 'verbosity'=V, print the current cost and learning rate if\n"
+        "\n"
+        "    stage % V == 0\n"
+        "\n"
+        "i.e. every V stages.  (Default=0)\n");
 
     inherited::declareOptions(ol);
 }
@@ -194,7 +199,7 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll)
             if(partial_update_vars.length() != 0) 
                 for(int i=0; i<partial_update_vars.length(); i++)
                     partial_update_vars[i]->clearRowsToUpdate();
-        if (verbosity >= 1) {
+        if (verbosity > 0 && stage % verbosity == 0) {
             MODULE_LOG << "Stage " << stage << ": " << cost->value
                        << "\tlr=" << learning_rate
                        << endl;

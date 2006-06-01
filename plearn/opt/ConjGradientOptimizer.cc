@@ -112,7 +112,12 @@ void ConjGradientOptimizer::declareOptions(OptionList& ol)
     declareOption(
         ol, "verbosity", &ConjGradientOptimizer::verbosity,
         OptionBase::buildoption, 
-        "Controls the amount of output.");
+        "Controls the amount of output.  If zero, does not print anything.\n"
+        "If 'verbosity'=V, print the current cost if\n"
+        "\n"
+        "    stage % V == 0\n"
+        "\n"
+        "i.e. every V stages.  (Default=0)\n");
 
     declareOption(
         ol, "expected_red", &ConjGradientOptimizer::expected_red,
@@ -239,7 +244,7 @@ real ConjGradientOptimizer::computeDerivative(real alpha)
 void ConjGradientOptimizer::findDirection() {
     real gamma = polakRibiere();
     if (gamma < 0 && no_negative_gamma) {
-        if (verbosity >= 2)
+        if (verbosity > 0)
             MODULE_LOG << "gamma = " << gamma << " < 0 ==> Restarting" << endl;
         gamma = 0;
     }
@@ -394,7 +399,7 @@ bool ConjGradientOptimizer::lineSearch() {
         PLWARNING("Negative step!");
     bool no_improvement_possible = fast_exact_is_equal(step, 0);
     if (no_improvement_possible) {
-        if (verbosity >= 2)
+        if (verbosity > 0)
             MODULE_LOG << "No more progress made by the line search, stopping" << endl;
     } else
         params.update(step, search_direction);
@@ -445,7 +450,7 @@ bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
         computeOppositeGradient(delta);
         current_cost = cost->value[0];
         // Display current cost value if required.
-        if (verbosity >= 2)
+        if (verbosity > 0 && stage % verbosity == 0)
             MODULE_LOG << "Stage " << stage << ": "
                        << current_cost
                        << endl;
@@ -456,8 +461,10 @@ bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
             findDirection();
     }
 
-    if (early_stop && verbosity >= 2)
-        MODULE_LOG << "Early Stopping!" << endl;
+    if (early_stop && verbosity > 0)
+        MODULE_LOG << "Early stopping at stage " << stage
+                   << "; current-cost=" << current_cost
+                   << endl;
 
     return early_stop;
 }
