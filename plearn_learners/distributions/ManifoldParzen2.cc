@@ -215,11 +215,11 @@ void ManifoldParzen2::train()
     row.resize(w);
 
     L = l;
-    D = ncomponents;
+    // D = ncomponents;  // This appears to cause a bug, D is expected by GaussMix to be the total input dimensionality, which may be different from ncomponents (Pascal V.)
     n_eigen = ncomponents;
     GaussMix::build(); // TODO Still needed?
-    // resizeStuffBeforeTraining();
-//  setMixtureTypeGeneral(l, ncomponents, w); // TODO Remove this line when it works.
+    resizeDataBeforeTraining();
+    // setMixtureTypeGeneral(l, ncomponents, w); // TODO Remove this line when it works.
 
     // storage for neighbors
     Mat delta_neighbors(nneighbors, w);
@@ -231,34 +231,37 @@ void ManifoldParzen2::train()
             cerr << "[SEQUENTIAL TRAIN: processing pattern #" << i << "/" << l << "]\n";
 
         // center is sample
-        center(i) << trainset(i);
+        Vec center_ = center(i);
 
-        Vec center_(center.width());
-        center_ << trainset(i);
+        if(!learn_mu)
+            center_ << trainset(i);
+
         if(use_last_eigenval)
             computeLocalPrincipalComponents(trainset, i, delta_neighbors,
-                    eigvals, components_eigenvecs, center_,learn_mu);
+                    eigvals, components_eigenvecs, center_, learn_mu);
         else
             computeLocalPrincipalComponents(trainset, i, delta_neighbors,
-                    eigvals, components_eigenvecs, center_,learn_mu,global_lambda0);
+                    eigvals, components_eigenvecs, center_, learn_mu, global_lambda0);
 
         eigvals *= scale_factor;
 
 //    cout<<delta_neighbors<<endl;
 
+        /* What is this d all about??? (-- Pascal V.)
         real d=0;
         for(int k=0;k<delta_neighbors.length();k++)
             d+=dist(delta_neighbors(k),Vec(D,0.0),2);
         d/=delta_neighbors.length();
+        */
 
-        // find out eigenvalue (a.k.a lambda0) that will be used for all D-K directions
+        // find out eigenvalue (a.k.a lambda0) that will be used for all inputsize_-K directions
         real lambda0;
         if(use_last_eigenval)
         {
             // take last (smallest) eigenvalue as a variance in the non-principal directions
             // (but if it is 0 because of linear dependencies in the data, take the
             // last, i.e. smallest, non-zero eigenvalue).
-            int last=ncomponents;
+            int last=min(ncomponents,eigvals.length()-1);
             lambda0 = eigvals[last];
             while (fast_exact_is_equal(lambda0, 0) && last>0)
                 lambda0 = eigvals[--last];
@@ -266,16 +269,15 @@ void ManifoldParzen2::train()
             if (fast_exact_is_equal(lambda0, 0))
                 PLERROR("All (%i) principal components have zero variance!?",eigvals.length());
         }
-        else lambda0 = global_lambda0;
+        else 
+            lambda0 = global_lambda0;
 
         alpha[i] = 1.0 / l;
         n_eigen = eigvals.length() - 1;
         //GaussMix::build();
         //resizeStuffBeforeTraining();
-        if(learn_mu)
-            center(i) << center_;   // Hugo: the mean should be current point...
         eigenvalues(i) << eigvals;
-        // eigenvalues(i, n_eigen_computed - 1) = lambda0; TODO Put back!
+        eigenvalues(i, n_eigen_computed - 1) = lambda0; 
         eigenvectors[i] << components_eigenvecs;
 //    setGaussianGeneral(i, 1.0/l, center, eigvals.subVec(0,eigvals.length()-1), components_eigenvecs.subMatRows(0,eigvals.length()-1), lambda0);
     }
