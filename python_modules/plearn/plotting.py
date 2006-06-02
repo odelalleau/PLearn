@@ -76,14 +76,11 @@ def regular_xyval_to_2d_grid_values(xyval):
     y = xyval[:,1]
     values = xyval[:,2:].copy()
     valsize = size(values,1)
-    print 'valsize=',valsize
-    print 'values.shape=',values.shape
     x0 = x[0]
     y0 = y[0]
 
     k = 1
     if x[1]==x0:
-        print 'ICI'
         deltay = y[1]-y[0]
         while x[k]==x0:
             k = k+1
@@ -94,7 +91,6 @@ def regular_xyval_to_2d_grid_values(xyval):
         values.shape = (nx,ny,valsize)
         values = transpose(values,(1,0,2))
     elif y[1]==y0:
-        print 'LA'
         deltax = x[1]-x[0]
         while y[k]==y0:
             k = k+1
@@ -183,7 +179,9 @@ def plot_2d_class_points(pointlist, styles):
     classnum = 0
     for style in styles:
         points_c = [ [x,y] for x,y,c in pointlist if c==classnum]
-        print 'points',classnum,':',points_c
+        if len(points_c)==0:
+            break
+        # print 'points',classnum,':',points_c
         plot_2d_points(points_c, style)
         classnum += 1
 

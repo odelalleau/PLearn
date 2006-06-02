@@ -40,6 +40,8 @@ from plearn.plotting import *
 
 plearncommand = 'plearn'
 
+CLASS_POINT_STYLES = ['bo','ro','go','mo','co','yo']
+
 def print_usage_and_exit():
     print """
     Usage: pyplot <task> <dataspec> [<learner>]
@@ -83,14 +85,16 @@ try: learnerspec = sys.argv[3]
 except: pass
 
 if task == 'plot_2d':
-    data = load_data(dataspec)
-    data = data[:,0:2]
-    plot_2d_points(data,'o')
+    data = load_data(dataspec)    
+    if data.shape[1]>=3:
+        plot_2d_class_points(data[:,0:3], CLASS_POINT_STYLES)
+    else:
+        plot_2d_points(data[:,0:2],'o')
     show()
 
 elif task == '2d_density':
-    nx = 100
-    ny = 100
+    nx = 200
+    ny = 200
     data = load_data(dataspec)
     data = data[:,0:2]
     # plot_2d_points(data,'o')
@@ -101,7 +105,7 @@ elif task == '2d_density':
     print 'xymagnitude.shape = ',xymagnitude.shape
     surfplot_xymagnitude(xymagnitude)
     imshow_xymagnitude(xymagnitude)
-    plot_2d_points(data,'bo')
+    plot_2d_points(data,'ko')
     show()
 
 elif task == '2d_classif':
@@ -118,8 +122,8 @@ elif task == '2d_classif':
     xyrgb = xy_winner_magnitude_to_xyrgb(xy_winner_margin)
     # print array(xyrgb)
     imshow_xyrgb(xyrgb)
-    print 'Plotting points of ',dataspec, data
-    plot_2d_class_points(data,['bo','ro'])
+    # print 'Plotting points of ',dataspec, data
+    plot_2d_class_points(data,CLASS_POINT_STYLES)
     show()
 
 elif task == '1d_regression':
