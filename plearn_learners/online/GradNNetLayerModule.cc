@@ -303,7 +303,7 @@ void GradNNetLayerModule::build_()
     if (init_weights.size()==0 && init_weights_random_scale!=0 && !random_gen)
         random_gen = new PRandom();
 
-    if( weights.size() == 0 )
+    if( weights.length() != output_size || weights.width() != 1+input_size )
         forget();
 
 }
