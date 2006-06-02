@@ -91,15 +91,7 @@ void RegressorFromDistribution::build_()
 void RegressorFromDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-
-    // ### Call deepCopyField on all "pointer-like" fields
-    // ### that you wish to be deepCopied rather than
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("RegressorFromDistribution::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    deepCopyField(distribution, copies);
 }
 
 ////////////////
