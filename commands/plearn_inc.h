@@ -212,6 +212,7 @@
 #include <plearn_learners/online/RBMTruncExpLayer.h>
 #include <plearn_learners/online/SquaredErrModule.h>
 #include <plearn_learners/online/StackedModulesLearner.h>
+#include <plearn_learners/online/StackedModulesModule.h>
 #include <plearn_learners/online/TanhModule.h>
 
 
