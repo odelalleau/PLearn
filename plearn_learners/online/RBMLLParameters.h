@@ -58,9 +58,6 @@ class RBMLLParameters: public RBMParameters
 public:
     //#####  Public Build Options  ############################################
 
-    //! Learning rate
-    real learning_rate;
-
     //! Momentum factor
     real momentum;
 

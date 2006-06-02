@@ -49,18 +49,16 @@ PLEARN_IMPLEMENT_OBJECT(
     "Stores and learns the parameters between two linear layers of an RBM",
     "");
 
-RBMLLParameters::RBMLLParameters( real the_learning_rate )
-    : inherited(),
-      learning_rate(the_learning_rate),
-      momentum(0.)
+RBMLLParameters::RBMLLParameters( real the_learning_rate ) :
+    inherited(the_learning_rate),
+    momentum(0.)
 {
 }
 
 RBMLLParameters::RBMLLParameters( string down_types, string up_types,
-                                  real the_learning_rate )
-    : inherited( down_types, up_types ),
-      learning_rate( the_learning_rate ),
-      momentum(0.)
+                                  real the_learning_rate ) :
+    inherited( down_types, up_types, the_learning_rate ),
+    momentum(0.)
 {
     // We're not sure inherited::build() has been called
     build();
@@ -68,10 +66,6 @@ RBMLLParameters::RBMLLParameters( string down_types, string up_types,
 
 void RBMLLParameters::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "learning_rate", &RBMLLParameters::learning_rate,
-                  OptionBase::buildoption,
-                  "Learning rate");
-
     declareOption(ol, "momentum", &RBMLLParameters::momentum,
                   OptionBase::buildoption,
                   "Momentum factor (should be between 0 and 1)");

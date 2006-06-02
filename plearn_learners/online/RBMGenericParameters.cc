@@ -50,16 +50,14 @@ PLEARN_IMPLEMENT_OBJECT(
     "Stores and learns the parameters between two layers of an RBM",
     "");
 
-RBMGenericParameters::RBMGenericParameters( real the_learning_rate )
-    : inherited(),
-      learning_rate(the_learning_rate)
+RBMGenericParameters::RBMGenericParameters( real the_learning_rate ) :
+    inherited(the_learning_rate)
 {
 }
 
 RBMGenericParameters::RBMGenericParameters( string down_types, string up_types,
-                                            real the_learning_rate )
-    : inherited( down_types, up_types ),
-      learning_rate( the_learning_rate )
+                                            real the_learning_rate ) :
+    inherited( down_types, up_types, the_learning_rate )
 {
     // We're not sure inherited::build() has been called
     build();
@@ -74,10 +72,6 @@ void RBMGenericParameters::declareOptions(OptionList& ol)
     // ### this option will be ignored when loading values from a script.
     // ### You can also combine flags, for example with OptionBase::nosave:
     // ### (OptionBase::buildoption | OptionBase::nosave)
-
-    declareOption(ol, "learning_rate", &RBMGenericParameters::learning_rate,
-                  OptionBase::buildoption,
-                  "Learning rate");
 
     declareOption(ol, "weights", &RBMGenericParameters::weights,
                   OptionBase::learntoption,

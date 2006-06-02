@@ -59,9 +59,6 @@ class RBMLQParameters: public RBMParameters
 public:
     //#####  Public Build Options  ############################################
 
-    //! Learning rate
-    real learning_rate;
-
     //#####  Learned Options  #################################################
 
     //! Matrix containing unit-to-unit weights (output_size × input_size)

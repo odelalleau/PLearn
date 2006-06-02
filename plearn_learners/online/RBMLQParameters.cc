@@ -49,16 +49,14 @@ PLEARN_IMPLEMENT_OBJECT(
     "Stores and learns the parameters of an RBM between one quadratic layer at the bottom and one linear layer at the top",
     "");
 
-RBMLQParameters::RBMLQParameters( real the_learning_rate )
-    : inherited(),
-      learning_rate(the_learning_rate)
+RBMLQParameters::RBMLQParameters( real the_learning_rate ) :
+    inherited(the_learning_rate)
 {
 }
 
 RBMLQParameters::RBMLQParameters( string down_types, string up_types,
-                                  real the_learning_rate )
-    : inherited( down_types, up_types ),
-      learning_rate( the_learning_rate )
+                                  real the_learning_rate ) :
+    inherited( down_types, up_types, the_learning_rate )
 {
     // We're not sure inherited::build() has been called
     build();
@@ -73,10 +71,6 @@ void RBMLQParameters::declareOptions(OptionList& ol)
     // ### this option will be ignored when loading values from a script.
     // ### You can also combine flags, for example with OptionBase::nosave:
     // ### (OptionBase::buildoption | OptionBase::nosave)
-
-    declareOption(ol, "learning_rate", &RBMLQParameters::learning_rate,
-                  OptionBase::buildoption,
-                  "Learning rate");
 
     declareOption(ol, "weights", &RBMLQParameters::weights,
                   OptionBase::learntoption,

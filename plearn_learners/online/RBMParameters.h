@@ -70,6 +70,9 @@ public:
     //! Same meaning as "up_units_types", but with down units
     string down_units_types;
 
+    //! The learning rate, used both in update() and bpropUpdate() methods
+    real learning_rate;
+
     //! The method used to initialize the weights:
     //!   - "uniform_linear" = a uniform law in [-1/d, 1/d]
     //!   - "uniform_sqrt"   = a uniform law in [-1/sqrt(d), 1/sqrt(d)]
@@ -89,10 +92,11 @@ public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
-    RBMParameters();
+    RBMParameters( real the_learning_rate=0. );
 
     //! Constructor from two string prototypes
-    RBMParameters( string down_types, string up_types );
+    RBMParameters( string down_types, string up_types,
+                   real the_learning_rate=0. );
 
     // Your other public member functions go here
 

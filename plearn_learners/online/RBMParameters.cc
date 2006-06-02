@@ -51,16 +51,19 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
     "Virtual class for the parameters between two layers of an RBM",
     "");
 
-RBMParameters::RBMParameters() :
+RBMParameters::RBMParameters( real the_learning_rate ) :
+    learning_rate(the_learning_rate),
     going_up(true),
     pos_count(0),
     neg_count(0)
 {
 }
 
-RBMParameters::RBMParameters( string down_types, string up_types ) :
+RBMParameters::RBMParameters( string down_types, string up_types,
+                              the_learning_rate ) :
     up_units_types(up_types),
     down_units_types(down_types),
+    learning_rate(the_learning_rate),
     going_up(true),
     pos_count(0),
     neg_count(0)
@@ -90,6 +93,11 @@ void RBMParameters::declareOptions(OptionList& ol)
     declareOption(ol, "down_units_types", &RBMParameters::down_units_types,
                   OptionBase::buildoption,
                   "Same meaning as 'up_units_types', but with down units");
+
+    declareOption(ol, "learning_rate", &RBMParameters::learning_rate,
+                  OptionBase::buildoption,
+                  "The learning rate, used both in update() and bpropUpdate() "
+                  "methods\n");
 
     declareOption(ol, "initialization_method",
                   &RBMParameters::initialization_method,
