@@ -60,7 +60,7 @@ RBMParameters::RBMParameters( real the_learning_rate ) :
 }
 
 RBMParameters::RBMParameters( string down_types, string up_types,
-                              the_learning_rate ) :
+                              real the_learning_rate ) :
     up_units_types(up_types),
     down_units_types(down_types),
     learning_rate(the_learning_rate),
