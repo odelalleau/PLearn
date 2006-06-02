@@ -112,7 +112,7 @@ void GenericNearestNeighbors::declareOptions(OptionList& ol)
         then be moved to such sub-classes that need to access it.
     */
     declareOption(
-        ol, "train_set", &PLearner::train_set,
+        ol, "train_set", &GenericNearestNeighbors::train_set,
         OptionBase::learntoption,
         "train_set is normally not saved in the PLearner base class, \n"
         "But the current implementation of GenericNearestNeighbors, requires\n"
