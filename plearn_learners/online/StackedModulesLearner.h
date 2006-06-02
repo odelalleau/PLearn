@@ -81,9 +81,6 @@ public:
     //!   - "simpler_diag": positive estimation of the diagonal
     string hessian_estimation;
 
-    //! Random numbers generator
-    PP<PRandom> random_gen;
-
 
 public:
     //#####  Public Member Functions  #########################################

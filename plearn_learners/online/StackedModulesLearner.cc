@@ -61,10 +61,10 @@ PLEARN_IMPLEMENT_OBJECT(
 StackedModulesLearner::StackedModulesLearner()
     : cost_funcs( 1, "mse" ),
       hessian_estimation( "none" ),
-      random_gen( new PRandom() ),
       nmodules( 0 ),
       ncosts( 1 )
 {
+    random_gen = new PRandom();
 }
 
 void StackedModulesLearner::declareOptions(OptionList& ol)
