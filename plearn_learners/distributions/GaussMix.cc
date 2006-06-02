@@ -2763,12 +2763,20 @@ void GaussMix::setPredictor(const Vec& predictor, bool call_parent) const {
 
                 // Extract the covariance of the predictor x.
                 Mat cov_x_j_miss = full_cov.subMat(0, 0, n_predictor, n_predictor);
+                cov_x_j.setMod(n_non_missing);
                 cov_x_j.resize(n_non_missing, n_non_missing);
                 for (int k = 0; k < n_non_missing; k++)
                     for (int p = k; p < n_non_missing; p++)
                         cov_x_j(k,p) = cov_x_j(p,k) =
                             cov_x_j_miss(non_missing[k], non_missing[p]);
 
+                // Compute its inverse.
+                inv_cov_x.resize(n_non_missing, n_non_missing);
+                matInvert(cov_x_j, inv_cov_x);
+                assert( inv_cov_x.isSymmetric(false) );
+                fillItSymmetric(inv_cov_x);
+
+#if 0
                 // Compute its SVD.
                 eigenvectors_x_miss[j].resize(n_non_missing, n_non_missing);
                 eigenvals = eigenvalues_x_miss(j);
@@ -2797,6 +2805,7 @@ void GaussMix::setPredictor(const Vec& predictor, bool call_parent) const {
                     for (int i = 0; i < n_non_missing; i++)
                         inv_cov_x(i,i) += one_over_lambda0;
                 }
+#endif
 
                 // Compute the covariance of y|x.
                 // It is only needed when there is a predictor part, since
