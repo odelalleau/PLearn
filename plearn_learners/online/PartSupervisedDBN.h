@@ -50,9 +50,10 @@ class RBMMultinomialLayer;
 class RBMParameters;
 class RBMLLParameters;
 class RBMJointLLParameters;
+class OnlineLearningModule;
 
 /**
- * Does the same thing as Hinton's deep belief nets
+ * Hinton's DBN plus supervised gradient from a logistic regression layer
  *
  * @todo Yes
  *
@@ -66,6 +67,9 @@ public:
 
     //! The learning rate used during greedy learning
     real learning_rate;
+
+    //! The learning rate used for the supervised part during greedy learning
+    real supervised_learning_rate;
 
     //! The learning rate used during the gradient descent
     real fine_tuning_learning_rate;
@@ -117,6 +121,10 @@ public:
     //! Parameters linking joint_layer and last_layer.
     //! Contains params[n_layers-2] and target_params.
     PP<RBMJointLLParameters> joint_params;
+
+    //! Logistic regressors that will provide the supervised gradient
+    //! for each RBMParameters
+    TVec< PP<OnlineLearningModule> > regressors;
 
     //! Number of examples to use during each of the different greedy
     //! steps of the training phase.
@@ -285,14 +293,19 @@ protected:
 protected:
     //#####  Protected Member Functions  ######################################
 
-    virtual void contrastiveDivergenceStep(const PP<RBMLayer>& down_layer,
-                                           const PP<RBMParameters>& parameters,
-                                           const PP<RBMLayer>& up_layer);
+    virtual void supervisedContrastiveDivergenceStep(
+        const PP<RBMLayer>& down_layer,
+        const PP<RBMParameters>& parameters,
+        const PP<RBMLayer>& up_layer,
+        const Vec& target,
+        int index );
 
     virtual void greedyStep( const Vec& predictor, int params_index );
     virtual void jointGreedyStep( const Vec& input );
     virtual void fineTuneByGradientDescent( const Vec& input,
                                             const Vec& train_costs );
+
+    PP<OnlineLearningModule> newLogisticRegressor( int n_inputs ) const;
 
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
@@ -308,6 +321,9 @@ private:
 
     //! Build the parameters if needed
     void build_params();
+
+    //! Build the regressors if needed
+    void build_regressors();
 
 private:
     //#####  Private Data Members  ############################################

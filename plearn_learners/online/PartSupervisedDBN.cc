@@ -40,12 +40,20 @@
 #include <plearn/io/pl_log.h>
 
 #include "PartSupervisedDBN.h"
+
+// RBM includes
 #include "RBMLayer.h"
 #include "RBMMixedLayer.h"
 #include "RBMMultinomialLayer.h"
 #include "RBMParameters.h"
 #include "RBMLLParameters.h"
 #include "RBMJointLLParameters.h"
+
+// OnlineLearningModules includes
+#include "OnlineLearningModule.h"
+#include "StackedModulesModule.h"
+#include "NLLErrModule.h"
+#include "GradNNetLayerModule.h"
 
 namespace PLearn {
 using namespace std;
@@ -362,6 +370,19 @@ void PartSupervisedDBN::build_params()
         params[i]->up_units_bias = params[i+1]->down_units_bias;
 }
 
+void PartSupervisedDBN::build_regressors()
+{
+    MODULE_LOG << "build_regressors() called" << endl;
+    if( regressors.length() != n_layers-1 )
+        regressors.resize( n_layers-1 );
+
+    for( int i=0 ; i<n_layers-1 ; i++ )
+        if( !(regressors[i])
+            || regressors[i]->input_size != params[i]->up_layer_size )
+            regressors[i] = newLogisticRegressor( params[i]->up_layer_size );
+}
+
+
 ////////////
 // forget //
 ////////////
@@ -619,7 +640,7 @@ void PartSupervisedDBN::train()
         {
             int sample = stage % nsamples;
             train_set->getExample(sample, input, target, weight);
-            greedyStep( input.subVec(0, n_predictor), layer );
+            greedyStep( input, layer );
 
             if( stage == momentum_switch_stage )
                 params[layer]->momentum = final_momentum;
@@ -721,12 +742,47 @@ void PartSupervisedDBN::train()
 }
 
 // assumes that down_layer->expectation is set
-void PartSupervisedDBN::contrastiveDivergenceStep(
+void PartSupervisedDBN::supervisedContrastiveDivergenceStep(
     const PP<RBMLayer>& down_layer,
     const PP<RBMParameters>& parameters,
-    const PP<RBMLayer>& up_layer )
+    const PP<RBMLayer>& up_layer,
+    const Vec& target,
+    int index )
 {
-    // positive phase
+
+    if( supervised_learning_rate >= 0 )
+    {
+        // (Deterministic) forward pass
+        parameters->setAsDownInput( down_layer->expectation );
+        up_layer->getAllActivations( parameters );
+        up_layer->computeExpectation();
+
+        // Compute supervised cost and gradient
+        Vec sup_cost(1);
+        regressors[index]->fprop( up_layer->expectation, sup_cost );
+        regressors[index]->bpropUpdate( up_layer->expectation, sup_cost,
+                                        expectation_gradients[index], Vec() );
+
+        // propagate gradient to params
+        up_layer->bpropUpdate( up_layer->activations,
+                               up_layer->expectation,
+                               activation_gradients[index],
+                               expectation_gradients[index] );
+
+        // put the right learning rate
+        parameters->learning_rate = supervised_learning_rate;
+        // updates the parameters
+        parameters->bpropUpdate( down_layer->expectation,
+                                 up_layer->activations,
+                                 expectation_gradients[index-1],
+                                 activation_gradients[index] );
+        // put the learning rate back
+        parameters->learning_rate = learning_rate;
+    }
+
+    // We have to do another forward pass because the weights have changed
+
+    // Re-initialize values in down_layer
     if( use_sample_or_expectation[0] == 0 )
         parameters->setAsDownInput( down_layer->expectation );
     else
@@ -735,6 +791,7 @@ void PartSupervisedDBN::contrastiveDivergenceStep(
         parameters->setAsDownInput( down_layer->sample );
     }
 
+    // positive phase
     up_layer->getAllActivations( parameters );
     up_layer->computeExpectation();
     up_layer->generateSample();
@@ -802,10 +859,10 @@ void PartSupervisedDBN::contrastiveDivergenceStep(
     parameters->update();
 }
 
-void PartSupervisedDBN::greedyStep( const Vec& predictor, int index )
+void PartSupervisedDBN::greedyStep( const Vec& input, int index )
 {
     // deterministic propagation until we reach index
-    layers[0]->expectation << predictor;
+    layers[0]->expectation << input.subVec(0, n_predictor);
     for( int i=0 ; i<index ; i++ )
     {
         params[i]->setAsDownInput( layers[i]->expectation );
@@ -813,10 +870,12 @@ void PartSupervisedDBN::greedyStep( const Vec& predictor, int index )
         layers[i+1]->computeExpectation();
     }
 
-    // perform one step of CD
-    contrastiveDivergenceStep( layers[index],
-                               (RBMLLParameters*) params[index],
-                               layers[index+1] );
+    // perform one step of CD + partially supervised gradient
+    supervisedContrastiveDivergenceStep( layers[index],
+                                         (RBMLLParameters*) params[index],
+                                         layers[index+1],
+                                         input.subVec(n_predictor,n_predicted),
+                                         index );
 }
 
 void PartSupervisedDBN::jointGreedyStep( const Vec& input )
@@ -834,9 +893,11 @@ void PartSupervisedDBN::jointGreedyStep( const Vec& input )
     // now fill the "target" part of joint_layer
     target_layer->expectation << input.subVec( n_predictor, n_predicted );
 
-    contrastiveDivergenceStep( (RBMLayer *) joint_layer,
-                               (RBMLLParameters *) joint_params,
-                               last_layer );
+    supervisedContrastiveDivergenceStep( (RBMLayer *) joint_layer,
+                                         (RBMLLParameters *) joint_params,
+                                         last_layer,
+                                         input.subVec(n_predictor,n_predicted),
+                                         n_layers-2 );
 }
 
 void PartSupervisedDBN::fineTuneByGradientDescent( const Vec& input,
@@ -884,6 +945,42 @@ void PartSupervisedDBN::fineTuneByGradientDescent( const Vec& input,
                                   activation_gradients[i] );
     }
 }
+
+
+PP<OnlineLearningModule> PartSupervisedDBN::newLogisticRegressor(int n_inputs)
+    const
+{
+    // A linear layer of the appropriate size, that will be trained by
+    // stochastic gradient descent, initial weights are 0.
+    PP<GradNNetLayerModule> p_gnnlm = new GradNNetLayerModule();
+    p_gnnlm->input_size = n_inputs;
+    p_gnnlm->output_size = n_predicted;
+    p_gnnlm->start_learning_rate = supervised_learning_rate;
+    p_gnnlm-> init_weights_random_scale = 0.;
+    p_gnnlm->build();
+
+    // The softmax+NLL part
+    PP<NLLErrModule> p_nll = new NLLErrModule();
+    p_nll->input_size = n_predicted;
+    p_nll->output_size = 1;
+    p_nll->build();
+
+    // Stack them, and...
+    TVec< PP<OnlineLearningModule> > stack(2);
+    stack[0] = (GradNNetLayerModule*) p_gnnlm;
+    stack[1] = (NLLErrModule*) p_nll;
+
+    // ... encapsulate them in another Module, that will compute and backprop
+    // the NLL
+    PP<StackedModulesModule> p_smm = new StackedModulesModule();
+    p_smm->modules = stack;
+    p_smm->last_layer_is_cost = true;
+    p_smm->target_size = n_predicted;
+    p_smm->build();
+
+    return (OnlineLearningModule*) (StackedModulesModule*) p_smm;
+}
+
 
 void PartSupervisedDBN::computeCostsFromOutputs(const Vec& input,
                                                   const Vec& output,
