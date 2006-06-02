@@ -220,13 +220,13 @@ void KNNClassifier::train()
 
 void KNNClassifier::computeOutput(const Vec& input, Vec& output) const
 {
-    assert( output.size() == outputsize() );
+    output.resize(outputsize());
 
     // The case where a user-specified kernel complicates the situation 
     const int inputsize = input.size();
-    real* output_data = knn_output.data();
     Vec knn_targets;                           //!< not used by knn
     knn->computeOutputAndCosts(input, knn_targets, knn_output, knn_costs);
+    real* output_data = knn_output.data();
   
     // Cumulate the class weights.  Compute the kernel if it's required.
     class_weights.resize(nclasses);

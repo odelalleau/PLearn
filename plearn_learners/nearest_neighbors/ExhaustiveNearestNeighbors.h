@@ -73,9 +73,10 @@ namespace PLearn {
  * point.  The costs are named 'ker0', 'ker1', ..., 'kerK-1'.
  *
  * The training set is SAVED with this learner, under the option name
- * 'training_mat'. Otherwise, one would NOT be able to reload the learner
+ * 'train_set'. Otherwise, one would NOT be able to reload the learner
  * and carry out test operations!
  */ 
+
 class ExhaustiveNearestNeighbors: public GenericNearestNeighbors
 {
     typedef GenericNearestNeighbors inherited;
@@ -86,7 +87,7 @@ protected:
     static Ker default_kernel;
   
     //! Matrixified version of the training set.  Saved.
-    Mat training_mat;
+    // Mat training_mat;
 
     //! Internal vector for storing useless costs
     mutable Vec costs;
@@ -96,6 +97,10 @@ protected:
 
     //! Internal vector for storing computed indices
     mutable TVec<int> indices;
+
+    //! pre-loaded input part of the training set
+    mutable Mat cached_inputs;
+
   
 public:
     //#####  Public Build Options  ############################################
@@ -176,10 +181,14 @@ protected:
     //! Declares this class' options.
     static void declareOptions(OptionList& ol);
 
+    //! Loads the input part of the train_set in cached_inputs
+    void preloadInputCache() const;
+
     //! Return the top-ranking nearest-neighbors elements as a priority queue
     //! of (kernel-value,train-set-index) pairs
     void findNearestNeighbors(const Vec& input,
                               priority_queue< pair<real,int> >& q) const;
+
 };
 
 // Declares a few other classes and functions related to this class.

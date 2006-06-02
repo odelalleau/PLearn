@@ -71,9 +71,9 @@ PLEARN_IMPLEMENT_OBJECT(
     "The output costs are simply the kernel values for each found training\n"
     "point.  The costs are named 'ker0', 'ker1', ..., 'kerK-1'.\n"
     "\n"
-    "The training set is SAVED with this learner, under the option name\n"
-    "'training_mat'. Otherwise, one would NOT be able to reload the learner\n"
-    "and carry out test operations!\n"
+//    "The training set is SAVED with this learner, under the option name\n"
+//    "'train_set'. Otherwise, one would NOT be able to reload the learner\n"
+//    "and carry out test operations!\n"
     );
 
 Ker ExhaustiveNearestNeighbors::default_kernel = new DistanceKernel();
@@ -81,7 +81,6 @@ Ker ExhaustiveNearestNeighbors::default_kernel = new DistanceKernel();
 ExhaustiveNearestNeighbors::ExhaustiveNearestNeighbors(
     Ker distance_kernel_, bool kernel_is_pseudo_distance_)
     : inherited(),
-      training_mat(),
       kernel_is_pseudo_distance(kernel_is_pseudo_distance_)
 {
     distance_kernel = distance_kernel_;
@@ -89,10 +88,13 @@ ExhaustiveNearestNeighbors::ExhaustiveNearestNeighbors(
 
 void ExhaustiveNearestNeighbors::declareOptions(OptionList& ol)
 {
+    /* // No longer needed: train_set is saved as part of the options of 
+       // parent class GenericNearestNeighbors. See comment there.
     declareOption(
         ol, "training_mat", &ExhaustiveNearestNeighbors::training_mat,
         OptionBase::learntoption,
         "Saved training set");
+    */
 
     declareOption(
         ol, "kernel_is_pseudo_distance",
@@ -130,7 +132,8 @@ void ExhaustiveNearestNeighbors::build()
 
 void ExhaustiveNearestNeighbors::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    deepCopyField(training_mat, copies);
+    deepCopyField(train_set, copies);
+    deepCopyField(cached_inputs, copies);
     deepCopyField(costs,        copies);
     deepCopyField(dummy_vec,    copies);
     deepCopyField(indices,      copies);
@@ -142,14 +145,14 @@ void ExhaustiveNearestNeighbors::setTrainingSet(VMat training_set,
                                                 bool call_forget)
 {
     inherited::setTrainingSet(training_set, call_forget);
+    cached_inputs.resize(0,0);
 }
 
 
 void ExhaustiveNearestNeighbors::forget()
 {
-    // Nothing to forget!
+    cached_inputs.resize(0,0);
 }
-
 
 void ExhaustiveNearestNeighbors::train()
 {
@@ -158,14 +161,14 @@ void ExhaustiveNearestNeighbors::train()
     // setTrainingSet since the training VMat may depend upon some
     // PLearners which may not have been trained when setTrainingSet is
     // called.  It's safer to delay the conversion until necessary.
-    training_mat = getTrainingSet().toMat();
+    cached_inputs.resize(0,0);
+    preloadInputCache();
 }
-
 
 void ExhaustiveNearestNeighbors::computeOutputAndCosts(
     const Vec& input, const Vec& target, Vec& output, Vec& costs) const
 {
-    assert( costs.size() == num_neighbors );
+    costs.resize(num_neighbors);
     priority_queue< pair<real,int> > q;
     findNearestNeighbors(input, q);
     indices.resize(0, num_neighbors);
@@ -184,7 +187,7 @@ void ExhaustiveNearestNeighbors::computeOutputAndCosts(
     for ( ; i < num_neighbors ; ++i )
         costs[i] = MISSING_VALUE;
 
-    constructOutputVector(indices, output, training_mat);
+    constructOutputVector(indices, output);
 }
 
 void ExhaustiveNearestNeighbors::computeOutput(const Vec& input, Vec& output) const
@@ -225,18 +228,26 @@ TVec<string> ExhaustiveNearestNeighbors::getTrainCostNames() const
     return TVec<string>();
 }
 
+void ExhaustiveNearestNeighbors::preloadInputCache() const
+{
+    int l = train_set->length();
+    int ninputs = train_set->inputsize();
+    cached_inputs.resize(l,ninputs);
+    for(int i=0; i<l; i++)
+        train_set->getSubRow(i,0,cached_inputs(i));
+}
 
 void ExhaustiveNearestNeighbors::findNearestNeighbors(
     const Vec& input,
     priority_queue< pair<real,int> >& q) const
 {
     assert( q.empty() );
+    if(cached_inputs.size()==0)
+        preloadInputCache();    
 
-    Vec train_input;
-    int inputsize = train_set->inputsize();
-    for(int i=0, n=training_mat.length() ; i<n ; ++i) {
-        train_input = training_mat(i).subVec(0,inputsize);
-        real kernel_value = distance_kernel(input, train_input);
+    for(int i=0, n=train_set->length() ; i<n ; ++i) 
+    {
+        real kernel_value = distance_kernel(input, cached_inputs(i));
         real q_value = (kernel_is_pseudo_distance? -1 : +1) * kernel_value;
         q.push(make_pair(q_value, i));
     }

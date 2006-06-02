@@ -103,6 +103,22 @@ GenericNearestNeighbors::GenericNearestNeighbors()
 
 void GenericNearestNeighbors::declareOptions(OptionList& ol)
 {
+    /*  train_set is normally not saved in the PLearner base class. 
+        But the current implementation of GenericNearestNeighbors, 
+        unfortunately seems to require to keep it around. 
+        Important note: if this requirement is some day removed (as it should),
+        beware that subclasses such as ExhaustiveNearestNeighbor rely on the
+        train_set being available. Thus the delareOption for train_set should
+        then be moved to such sub-classes that need to access it.
+    */
+    declareOption(
+        ol, "train_set", &PLearner::train_set,
+        OptionBase::learntoption,
+        "train_set is normally not saved in the PLearner base class, \n"
+        "But the current implementation of GenericNearestNeighbors, requires\n"
+        "to keep it around. (see comment in .cc file if you plan to remove\n"
+        "this unnecessary requirement)");
+
     declareOption(
         ol, "num_neighbors", &GenericNearestNeighbors::num_neighbors,
         OptionBase::buildoption,
@@ -206,8 +222,9 @@ void GenericNearestNeighbors::constructOutputVector(const TVec<int>& indices,
                                                     Vec& output,
                                                     const Mat& train_mat_override) const
 {
-    assert( output.size() == outputsize() );
-  
+    // assert( output.size() == outputsize() );
+    output.resize(outputsize());
+
     int i, n=min(num_neighbors, indices.size());
     int inputsize = train_set->inputsize();
     int targetsize = train_set->targetsize();
