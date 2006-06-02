@@ -441,15 +441,9 @@ pymakeOption( name = 'dbg',
 # is -finline hurting?
 # is -funroll-loops hurting?
 
-# TODO What is this ?
-if usingIntelCompiler:
-    pymakeOption( name = 'opt',
-                  description = 'optimized for intel compiler',
-                  compileroptions = '-Wall -O3 -DNDEBUG' )
-else:
-    pymakeOption( name = 'opt',
-                  description = 'optimized mode',
-                  compileroptions = '-Wall -O3 -DNDEBUG');
+pymakeOption( name = 'opt',
+              description = 'optimized for intel compiler',
+              compileroptions = '-Wall -O3 -DNDEBUG' )
 
 pymakeOption( name = 'pintel',
               description = 'parallelized for intel compiler',
