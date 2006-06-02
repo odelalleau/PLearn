@@ -99,6 +99,9 @@ public:
                            bool call_build_=true);
 
     PLEARN_DECLARE_OBJECT(ShiftAndRescaleVMatrix);
+    
+    //! Transform a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     virtual void getNewRow(int i, const Vec& v) const;
 

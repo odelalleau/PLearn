@@ -212,19 +212,19 @@ void ShiftAndRescaleVMatrix::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Controls the amount of output.");
 
-
     declareOption(ol, "min_max", &ShiftAndRescaleVMatrix::min_max,            
                   OptionBase::buildoption,
-                  "A vector of size 2 [min,max]. For each column, the elements"
-                  "will be between min and max. If set, it will override the"
-                  "value of automatic");        
-    
-
+        "A vector of size 2 [min,max]. For each column, the elements will be\n"
+        "shifted and rescaled to be in [min,max]. If set, it will override\n"
+        "the value of the 'automatic' option.");        
     
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void ShiftAndRescaleVMatrix::build_()
 {
     if( source )
@@ -292,7 +292,7 @@ void ShiftAndRescaleVMatrix::build_()
                             "elements(if set)") ; 
                 
                 if ( min_max[0] >= min_max[1])
-                    PLERROR("ShiftAndRescale: min_max[0] should be smaller then"
+                    PLERROR("ShiftAndRescale: min_max[0] should be smaller than"
                             "min_max[1]") ; 
             if (n_inputs<0)
             {
@@ -329,6 +329,9 @@ void ShiftAndRescaleVMatrix::build_()
     }
 }
 
+///////////////
+// getNewRow //
+///////////////
 void ShiftAndRescaleVMatrix::getNewRow(int i, const Vec& v) const
 {
     source->getRow(i, v);
@@ -342,10 +345,24 @@ void ShiftAndRescaleVMatrix::getNewRow(int i, const Vec& v) const
         v *= scale;
 }
 
+///////////
+// build //
+///////////
 void ShiftAndRescaleVMatrix::build()
 {
     inherited::build();
     build_();
+}
+
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void ShiftAndRescaleVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(shift,    copies);
+    deepCopyField(scale,    copies);
+    deepCopyField(min_max,  copies);
 }
 
 } // end of namespace PLearn
