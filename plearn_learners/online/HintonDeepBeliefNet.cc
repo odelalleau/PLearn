@@ -604,27 +604,28 @@ void HintonDeepBeliefNet::train()
     // multiple CPUs
 
     // wait until we can attach a gdb process
-    pout << "START WAITING..." << endl;
-    sleep(20);
-    pout << "DONE WAITING!" << endl;
+    //pout << "START WAITING..." << endl;
+    //sleep(20);
+    //pout << "DONE WAITING!" << endl;
     MPI_Barrier(MPI_COMM_WORLD);
+    int total_bsize=parallelization_minibatch_size*PLMPI::size;
+//#endif
+    forget(); // DEBUGGING TO GET REPRODUCIBLE RESULTS
     if (global_params.size()==0)
     {
-        int n_params = joint_params->nParameters();
+        int n_params = joint_params->nParameters(1,1);
         for (int i=0;i<params.length()-1;i++)
-            n_params += params[i]->nParameters();
+            n_params += params[i]->nParameters(0,1);
         global_params.resize(n_params);
         previous_global_params.resize(n_params);
         Vec p=global_params;
         for (int i=0;i<params.length()-1;i++)
-            p=params[i]->makeParametersPointHere(p);
-        p=joint_params->makeParametersPointHere(p);
+            p=params[i]->makeParametersPointHere(p,0,1);
+        p=joint_params->makeParametersPointHere(p,1,1);
         if (p.length()!=0)
             PLERROR("HintonDeepBeliefNet: Inconsistencies between nParameters and makeParametersPointHere!");
     }
-    int total_bsize=parallelization_minibatch_size*PLMPI::size;
 #endif
-    forget(); // DEBUGGING TO GET REPRODUCIBLE RESULTS
 
     MODULE_LOG << "  nsamples = " << nsamples << endl;
     MODULE_LOG << "  initial stage = " << stage << endl;
@@ -677,7 +678,7 @@ void HintonDeepBeliefNet::train()
           if (stage%PLMPI::size==PLMPI::rank) 
           {
 #endif
-            resetGenerator(1); // DEBUGGING HACK TO MAKE SURE RESULTS ARE INDEPENDENT OF PARALLELIZATION
+//            resetGenerator(1); // DEBUGGING HACK TO MAKE SURE RESULTS ARE INDEPENDENT OF PARALLELIZATION
             int sample = stage % nsamples;
             train_set->getExample(sample, input, target, weight);
             greedyStep( input.subVec(0, n_predictor), layer );

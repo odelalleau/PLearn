@@ -387,11 +387,12 @@ void RBMLQParameters::finalize()
 }
 */
 //! return the number of parameters
-int RBMLQParameters::nParameters() const
+int RBMLQParameters::nParameters(bool share_up_params, bool share_down_params) const
 {
-    int m = weights.size() +  down_units_bias.size();
-    for (int i=0;i<up_units_params.length();i++)
-        m += up_units_params[i].size();
+    int m = weights.size() +  (share_down_params?down_units_bias.size():0);
+    if (share_up_params)
+        for (int i=0;i<up_units_params.length();i++)
+            m += up_units_params[i].size();
     return m;
 }
 
@@ -400,22 +401,26 @@ int RBMLQParameters::nParameters() const
 //! that starts just after this object's parameters end, i.e.
 //!    result = global_parameters.subVec(nParameters(),global_parameters.size()-nParameters());
 //! This allows to easily chain calls of this method on multiple RBMParameters.
-Vec RBMLQParameters::makeParametersPointHere(const Vec& global_parameters)
+Vec RBMLQParameters::makeParametersPointHere(const Vec& global_parameters, bool share_up_params, bool share_down_params)
 {
-    int n = nParameters();
+    int n = nParameters(share_up_params,share_down_params);
     int m = global_parameters.size();
     if (m<n)
         PLERROR("RBMLLParameters::makeParametersPointHere: argument has length %d, should be longer than nParameters()=%d",m,n);
     real* p = global_parameters.data();
     weights.makeSharedValue(p,weights.size());
     p+=weights.size();
-    down_units_bias.makeSharedValue(p,down_units_bias.size());
-    p+=down_units_bias.size();
-    for (int i=0;i<up_units_params.length();i++)
+    if (share_down_params)
     {
-        up_units_params[i].makeSharedValue(p,up_units_params[i].size());
-        p+=up_units_params[i].size();
+        down_units_bias.makeSharedValue(p,down_units_bias.size());
+        p+=down_units_bias.size();
     }
+    if (share_up_params)
+        for (int i=0;i<up_units_params.length();i++)
+        {
+            up_units_params[i].makeSharedValue(p,up_units_params[i].size());
+            p+=up_units_params[i].size();
+        }
     return global_parameters.subVec(n,m-n);
 }
 

@@ -707,6 +707,9 @@ Vec PTester::perform(bool call_forget)
 
     }
 
+#if USING_MPI
+    if (PLMPI::rank==0)
+#endif
     // Perform the final commands provided in final_commands.
     for (int i = 0; i < final_commands.length(); i++) {
         system(final_commands[i].c_str());

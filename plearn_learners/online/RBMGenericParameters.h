@@ -155,15 +155,17 @@ public:
     //! THE SUPER-CLASS DOES NOT DO ANYTHING.
     // virtual void finalize();
 
-    //! return the number of parameters
-    virtual int nParameters() const;
+    //! return the number of parameters (with flags to specify if the up-parameters
+    //! and/or the down-parameters should be counted).
+    virtual int nParameters(bool share_up_params, bool share_down_params) const;
 
     //! Make the parameters data be sub-vectors of the given global_parameters.
     //! The argument should have size >= nParameters. The result is a Vec
     //! that starts just after this object's parameters end, i.e.
-    //!    result = global_parameters.subVec(nParameters(),global_parameters.size()-nParameters());
+    //!    n = nParameters(share_up_params,share_down_params);
+    //!    result = global_parameters.subVec(n,global_parameters.size()-n);
     //! This allows to easily chain calls of this method on multiple RBMParameters.
-    virtual Vec makeParametersPointHere(const Vec& global_parameters);
+    virtual Vec makeParametersPointHere(const Vec& global_parameters, bool share_up_params, bool share_down_params);
 
     //#####  PLearn::Object Protocol  #########################################
 

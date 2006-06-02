@@ -414,6 +414,8 @@ public:
         if(n != length())
             PLERROR("IN TVec::makeSharedValue(T* x, int n)\nn(%d)!=length_(%d)",
                     n,length());
+        if(offset_!=0)
+            PLERROR("IN TVec::makeSharedValue(T* x, int n)\noffset should be 0.");
 #endif
         T* v = data(); //!<  get data start
         for(int i=0; i<n; i++)

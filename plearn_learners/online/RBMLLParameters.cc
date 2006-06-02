@@ -403,9 +403,10 @@ void RBMLLParameters::finalize()
 */
 
 //! return the number of parameters
-int RBMLLParameters::nParameters() const
+int RBMLLParameters::nParameters(bool share_up_params, bool share_down_params) const
 {
-    return weights.size() + up_units_bias.size() + down_units_bias.size();
+    return weights.size() + (share_up_params?up_units_bias.size():0) + 
+        (share_down_params?down_units_bias.size():0);
 }
 
 //! Make the parameters data be sub-vectors of the given global_parameters.
@@ -413,21 +414,25 @@ int RBMLLParameters::nParameters() const
 //! that starts just after this object's parameters end, i.e.
 //!    result = global_parameters.subVec(nParameters(),global_parameters.size()-nParameters());
 //! This allows to easily chain calls of this method on multiple RBMParameters.
-Vec RBMLLParameters::makeParametersPointHere(const Vec& global_parameters)
+Vec RBMLLParameters::makeParametersPointHere(const Vec& global_parameters, bool share_up_params, bool share_down_params)
 {
     int n1=weights.size();
     int n2=up_units_bias.size();
     int n3=down_units_bias.size();
-    int n = n1+n2+n3; // should be = nParameters()
+    int n = n1+(share_up_params?n2:0)+(share_down_params?n3:0); // should be = nParameters()
     int m = global_parameters.size();
     if (m<n)
         PLERROR("RBMLLParameters::makeParametersPointHere: argument has length %d, should be longer than nParameters()=%d",m,n);
     real* p = global_parameters.data();
     weights.makeSharedValue(p,n1);
     p+=n1;
-    up_units_bias.makeSharedValue(p,n2);
-    p+=n2;
-    down_units_bias.makeSharedValue(p,n3);
+    if (share_up_params)
+    {
+        up_units_bias.makeSharedValue(p,n2);
+        p+=n2;
+    }
+    if (share_down_params)
+        down_units_bias.makeSharedValue(p,n3);
     return global_parameters.subVec(n,m-n);
 }
 

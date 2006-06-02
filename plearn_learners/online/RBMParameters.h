@@ -132,14 +132,14 @@ public:
 
 
     //! return the number of parameters
-    virtual int nParameters() const = 0;
+    virtual int nParameters(bool share_up_params, bool share_down_params) const = 0;
 
     //! Make the parameters data be sub-vectors of the given global_parameters.
     //! The argument should have size >= nParameters. The result is a Vec
     //! that starts just after this object's parameters end, i.e.
     //!    result = global_parameters.subVec(nParameters(),global_parameters.size()-nParameters());
     //! This allows to easily chain calls of this method on multiple RBMParameters.
-    virtual Vec makeParametersPointHere(const Vec& global_parameters) = 0;
+    virtual Vec makeParametersPointHere(const Vec& global_parameters, bool share_up_params, bool share_down_params) = 0;
 
     //#####  PLearn::Object Protocol  #########################################
 

@@ -833,6 +833,8 @@ public:
                     n,m);
         if(offset_!=0)
             PLERROR("IN TMat::makeSharedValue(T* x, int n)\noffset should be 0.");
+        if (mod_!=width_)
+            PLERROR("IN TMat::makeSharedValue(T* x, int n)\nMatrix should be compact (mod==width), but isn't.");
 #endif
         T* v = data(); //!<  get data start
         for(int i=0,k=0; i<length_; i++, v+=mod_)
