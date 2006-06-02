@@ -35,10 +35,11 @@
 
 Streams are built using the File objects' specifications
 """
-import logging, sys, string, struct
+import logging, sys, string
 import numarray
 from plearn.pyplearn import pl
 from plearn.pyplearn.plearn_repr import plearn_repr, clear_ref_map
+import plearn.utilities.pl_struct as struct  ## corrige un bug dans struct
 
 RPOS = 0
 WPOS = 1
