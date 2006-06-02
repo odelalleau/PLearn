@@ -2539,11 +2539,12 @@ void GaussMix::resizeDataBeforeUsing()
     eigenvalues_y_x.resize(0, 0);
 
     // Type-specific data.
-    if (type_id == TYPE_SPHERICAL) {
-    } else if (type_id == TYPE_DIAGONAL) {
-    } else {
-        assert( type_id == TYPE_GENERAL );
-
+    switch(type_id)
+    {
+    case TYPE_SPHERICAL:
+    case TYPE_DIAGONAL:
+        break;
+    case TYPE_GENERAL:
         eigenvectors_x.resize(L);
         eigenvectors_y_x.resize(L);
         joint_cov.resize(L);
@@ -2559,11 +2560,16 @@ void GaussMix::resizeDataBeforeUsing()
             // chol_cov_template.resize(efficient_k_median, L);
         if (n_predictor >= 0)
             eigenvalues_x.resize(L, n_predictor);
-        if (n_predicted >= 0) {
+        if (n_predicted >= 0) 
+        {
             center_y_x.resize(L, n_predicted);
             eigenvalues_y_x.resize(L, n_predicted);
         }
         log_coeff.resize(L);
+        break;
+
+    default:
+        PLERROR("Invalid type_id");
     }
 }
 
@@ -2598,19 +2604,22 @@ void GaussMix::resizeDataBeforeTraining() {
     updated_weights.resize(L, nsamples);
 
     // Type-specific data.
-    if (type_id == TYPE_SPHERICAL) {
+    switch(type_id)
+    {
+    case TYPE_SPHERICAL:
         sigma.resize(L);
-    } else if (type_id == TYPE_DIAGONAL) {
+        break;
+    case TYPE_DIAGONAL:
         diags.resize(L, D);
-    } else {
-        assert( type_id == TYPE_GENERAL );
-
+        break;
+    case TYPE_GENERAL:
         eigenvectors.resize(L);
 
         if (n_eigen == -1 || n_eigen == D)
             // We need to compute all eigenvectors.
             n_eigen_computed = D;
-        else {
+        else 
+        {
             if (n_eigen > D || n_eigen < 1)
                 PLERROR("In GaussMix::resizeDataBeforeTraining - Invalid value"
                         " for 'n_eigen' (%d), should be between 1 and %d",
@@ -2620,11 +2629,13 @@ void GaussMix::resizeDataBeforeTraining() {
         eigenvalues.resize(L, n_eigen_computed);
         for (int i = 0; i < eigenvectors.length(); i++)
             eigenvectors[i].resize(n_eigen_computed, D);
-        if (impute_missing) {
+        if (impute_missing) 
+        {
             H3_inverse.resize(L);
             error_covariance.resize(L);
             imputed_missing.resize(L);
-            for (int j = 0; j < L; j++) {
+            for (int j = 0; j < L; j++) 
+            {
                 error_covariance[j].resize(D, D);
                 imputed_missing[j] = new MemoryVMatrix(nsamples, D);
             }
@@ -2640,6 +2651,10 @@ void GaussMix::resizeDataBeforeTraining() {
         }
         if (efficient_missing == 1 || efficient_missing == 3)
             no_missing_change.resize(nsamples);
+        break;
+
+    default:
+        PLERROR("Invalid type_id");
     }
 }
 
