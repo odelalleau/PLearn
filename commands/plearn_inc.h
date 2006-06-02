@@ -197,6 +197,7 @@
 #include <plearn_learners/online/HintonDeepBeliefNet.h>
 #include <plearn_learners/online/NLLErrModule.h>
 #include <plearn_learners/online/OnlineLearningModule.h>
+#include <plearn_learners/online/PartSupervisedDBN.h>
 #include <plearn_learners/online/RBMBinomialLayer.h>
 #include <plearn_learners/online/RBMGaussianLayer.h>
 #include <plearn_learners/online/RBMGenericParameters.h>
