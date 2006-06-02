@@ -3244,7 +3244,8 @@ void GaussMix::train()
         }
         if (pb)
             delete pb;
-        TVec<int> sample_to_pattern = sample_to_template.copy();
+
+        //TVec<int> sample_to_pattern = sample_to_template.copy();
 
         if ((efficient_missing == 1 || efficient_missing == 3)
                 && verbosity >= 2)
