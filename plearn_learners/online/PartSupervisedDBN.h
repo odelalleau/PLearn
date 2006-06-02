@@ -126,6 +126,16 @@ public:
     //! for each RBMParameters
     TVec< PP<OnlineLearningModule> > regressors;
 
+    //! only used when USING_MPI for parallelization
+    //! this is the number of examples seen by one process
+    //! during training after which the weight updates are shared
+    //! among all the processes.
+    int parallelization_minibatch_size;
+
+    //! only used when USING_MPI for parallelization:
+    //! sum or average the delta-w contributions from different processes?
+    bool sum_parallel_contributions;
+
     //! Number of examples to use during each of the different greedy
     //! steps of the training phase.
     TVec<int> training_schedule;
@@ -260,6 +270,20 @@ public:
     virtual TVec<string> getTestCostNames() const;
     virtual TVec<string> getTrainCostNames() const;
 
+    //! REDEFINE test FOR PARALLELIZATION OF THE TEST
+#if USING_MPI
+    //! Performs test on testset, updating test cost statistics,
+    //! and optionally filling testoutputs and testcosts
+    //! The default version repeatedly calls computeOutputAndCosts or
+    //! computeCostsOnly.
+    //! Note that neither test_stats->forget() nor test_stats->finalize() is
+    //! called, so that you should call them yourself (respectively before and
+    //! after calling this method) if you don't plan to accumulate statistics.
+    virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
+                      VMat testoutputs=0, VMat testcosts=0) const;
+#endif
+
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
@@ -325,10 +349,22 @@ private:
     //! Build the regressors if needed
     void build_regressors();
 
+#if USING_MPI
+    void shareParamsMPI();
+#endif
+
 private:
     //#####  Private Data Members  ############################################
 
     // The rest of the private stuff goes here
+
+#if USING_MPI
+    //! for MPI parallelization, share parameters of all Parameters boxes
+    Vec global_params;
+    //! and keep track of their value at the previous sharing step between all
+    //! CPUs
+    Vec previous_global_params;
+#endif
 };
 
 // Declares a few other classes and functions related to this class

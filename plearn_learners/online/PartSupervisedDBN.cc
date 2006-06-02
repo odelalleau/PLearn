@@ -39,6 +39,10 @@
 #define PL_LOG_MODULE_NAME "PartSupervisedDBN"
 #include <plearn/io/pl_log.h>
 
+#if USING_MPI
+#include <plearn/sys/PLMPI.h>
+#endif
+
 #include "PartSupervisedDBN.h"
 
 // RBM includes
@@ -195,6 +199,20 @@ void PartSupervisedDBN::declareOptions(OptionList& ol)
                   "  - visible unit during negative phase,\n"
                   "  - hidden unit during negative phase (you should keep it"
                   " to 0).\n");
+
+    declareOption(ol, "parallelization_minibatch_size",
+                  &PartSupervisedDBN::parallelization_minibatch_size,
+                  OptionBase::buildoption,
+                  "Only used when USING_MPI for parallelization.\n"
+                  "This is the number of examples seen by one process\n"
+                  "during training after which the weight updates are shared\n"
+                  "among all the processes.\n");
+
+    declareOption(ol, "sum_parallel_contributions",
+                  &PartSupervisedDBN::sum_parallel_contributions,
+                  OptionBase::buildoption,
+                  "Only used when USING_MPI for parallelization.\n"
+                  "sum or average the delta-w contributions from different processes?\n");
 
     declareOption(ol, "n_layers", &PartSupervisedDBN::n_layers,
                   OptionBase::learntoption,
@@ -402,6 +420,9 @@ void PartSupervisedDBN::forget()
     for( int i=0 ; i<n_layers ; i++ )
         layers[i]->reset();
 
+#if USING_MPI
+    global_params.resize(0);
+#endif
     target_params->forget();
     target_layer->reset();
 
@@ -529,8 +550,8 @@ void PartSupervisedDBN::setPredictor(const Vec& predictor, bool call_parent)
 // setPredictorPredictedSizes //
 ////////////////////////////////
 bool PartSupervisedDBN::setPredictorPredictedSizes(int the_predictor_size,
-                                                     int the_predicted_size,
-                                                     bool call_parent)
+                                                   int the_predicted_size,
+                                                   bool call_parent)
 {
     bool sizes_have_changed = false;
     if (call_parent)
@@ -597,6 +618,34 @@ void PartSupervisedDBN::train()
     Vec train_costs(2);
 
     int nsamples = train_set->length();
+
+#if USING_MPI
+    // initialize global parameters for allowing to easily share them across
+    // multiple CPUs
+
+    // wait until we can attach a gdb process
+    pout << "START WAITING..." << endl;
+    sleep(20);
+    pout << "DONE WAITING!" << endl;
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (global_params.size()==0)
+    {
+        int n_params = joint_params->nParameters();
+        for (int i=0;i<params.length()-1;i++)
+            n_params += params[i]->nParameters();
+        global_params.resize(n_params);
+        previous_global_params.resize(n_params);
+        Vec p=global_params;
+        for (int i=0;i<params.length()-1;i++)
+            p=params[i]->makeParametersPointHere(p);
+        p=joint_params->makeParametersPointHere(p);
+        if (p.length()!=0)
+            PLERROR("HintonDeepBeliefNet: Inconsistencies between nParameters and makeParametersPointHere!");
+    }
+    int total_bsize=parallelization_minibatch_size*PLMPI::size;
+#endif
+    forget(); // DEBUGGING TO GET REPRODUCIBLE RESULTS
+
     MODULE_LOG << "  nsamples = " << nsamples << endl;
     MODULE_LOG << "  initial stage = " << stage << endl;
     MODULE_LOG << "  objective: nstages = " << nstages << endl;
@@ -636,22 +685,41 @@ void PartSupervisedDBN::train()
         else
             params[layer]->momentum = final_momentum;
 
+#if USING_MPI
+        // make a copy of the parameters as they were at the beginning of
+        // the minibatch
+        if (sum_parallel_contributions)
+            previous_global_params << global_params;
+#endif
         for( ; stage<end_stage ; stage++ )
         {
-            int sample = stage % nsamples;
-            train_set->getExample(sample, input, target, weight);
-            greedyStep( input, layer );
-
-            if( stage == momentum_switch_stage )
-                params[layer]->momentum = final_momentum;
-
-            if( pb )
+#if USING_MPI
+            // only look at some of the examples, associated with this process
+            // number (rank)
+            if (stage%PLMPI::size==PLMPI::rank)
             {
-                if( layer == 0 )
-                    pb->update( stage + 1 );
-                else
-                    pb->update( stage - training_schedule[layer-1] + 1 );
+#endif
+                resetGenerator(1); // DEBUGGING HACK TO MAKE SURE RESULTS ARE INDEPENDENT OF PARALLELIZATION
+                int sample = stage % nsamples;
+                train_set->getExample(sample, input, target, weight);
+                greedyStep( input, layer );
+
+                if( stage == momentum_switch_stage )
+                    params[layer]->momentum = final_momentum;
+
+                if( pb )
+                {
+                    if( layer == 0 )
+                        pb->update( stage + 1 );
+                    else
+                        pb->update( stage - training_schedule[layer-1] + 1 );
+                }
+#if USING_MPI
             }
+            // time to share among processors
+            if (stage%total_bsize==0 || stage==end_stage-1)
+                shareParamsMPI();
+#endif
         }
     }
 
@@ -676,17 +744,30 @@ void PartSupervisedDBN::train()
     else
         joint_params->momentum = final_momentum;
 
-    for( ; stage<training_schedule[n_layers-2] && stage<nstages ; stage++ )
+    int last = min(training_schedule[n_layers-2],nstages);
+    for( ; stage<last ; stage++ )
     {
-        int sample = stage % nsamples;
-        train_set->getExample(sample, input, target, weight);
-        jointGreedyStep( input );
+#if USING_MPI
+        // only look at some of the examples, associated with this process
+        // number (rank)
+        if (stage%PLMPI::size==PLMPI::rank)
+        {
+#endif
+            int sample = stage % nsamples;
+            train_set->getExample(sample, input, target, weight);
+            jointGreedyStep( input );
 
-        if( stage == momentum_switch_stage )
-            joint_params->momentum = final_momentum;
+            if( stage == momentum_switch_stage )
+                joint_params->momentum = final_momentum;
 
-        if( pb )
-            pb->update( stage - previous_stage + 1 );
+            if( pb )
+                pb->update( stage - previous_stage + 1 );
+#if USING_MPI
+        }
+        // time to share among processors
+        if (stage%total_bsize==0 || stage==last-1)
+            shareParamsMPI();
+#endif
     }
 
     /***** fine-tuning *****/
@@ -718,16 +799,28 @@ void PartSupervisedDBN::train()
         int begin_sample = stage % nsamples;
         for( ; stage<nstages ; stage++ )
         {
-            int sample = stage % nsamples;
-            if( sample == begin_sample )
-                train_stats->forget();
+#if USING_MPI
+            // only look at some of the examples, associated with
+            // this process number (rank)
+            if (stage%PLMPI::size==PLMPI::rank)
+            {
+#endif
+                int sample = stage % nsamples;
+                if( sample == begin_sample )
+                    train_stats->forget();
 
-            train_set->getExample(sample, input, target, weight);
-            fineTuneByGradientDescent( input, train_costs );
-            train_stats->update( train_costs );
+                train_set->getExample(sample, input, target, weight);
+                fineTuneByGradientDescent( input, train_costs );
+                train_stats->update( train_costs );
 
-            if( pb )
-                pb->update( stage - init_stage + 1 );
+                if( pb )
+                    pb->update( stage - init_stage + 1 );
+#if USING_MPI
+            }
+            // time to share among processors
+            if (stage%total_bsize==0 || stage==nstages-1)
+                shareParamsMPI();
+#endif
         }
         train_stats->finalize(); // finalize statistics for this epoch
     }
@@ -901,7 +994,7 @@ void PartSupervisedDBN::jointGreedyStep( const Vec& input )
 }
 
 void PartSupervisedDBN::fineTuneByGradientDescent( const Vec& input,
-                                                     const Vec& train_costs )
+                                                   const Vec& train_costs )
 {
     // split input in predictor_part and predicted_part
     splitCond(input);
@@ -983,9 +1076,9 @@ PP<OnlineLearningModule> PartSupervisedDBN::newLogisticRegressor(int n_inputs)
 
 
 void PartSupervisedDBN::computeCostsFromOutputs(const Vec& input,
-                                                  const Vec& output,
-                                                  const Vec& target,
-                                                  Vec& costs) const
+                                                const Vec& output,
+                                                const Vec& target,
+                                                Vec& costs) const
 {
     char c = outputs_def[0];
     if( c == 'l' || c == 'd' )
@@ -1031,6 +1124,116 @@ TVec<string> PartSupervisedDBN::getTrainCostNames() const
 {
     return getTestCostNames();
 }
+
+#if USING_MPI
+void PartSupervisedDBN::shareParamsMPI()
+{
+    if (sum_parallel_contributions)
+    {
+        if (PLMPI::rank!=0)
+            // after this line global_params contains the delta for all cpus
+            // except root
+            global_params -= previous_global_params;
+        // while the root contains the previous global params + its delta
+        previous_global_params << global_params;
+        // hence summing everything (result in cpu0.global_params)
+        // yields the sum of all the changes plus the previous global params:
+        MPI_Reduce(previous_global_params.data(),global_params.data(),
+                   global_params.length(), PLMPI_REAL, MPI_SUM, 0,
+                   MPI_COMM_WORLD);
+        // send it back to every one
+        MPI_Bcast(global_params.data(), global_params.length(),
+                  PLMPI_REAL, 0, MPI_COMM_WORLD);
+        // and save it for next sharing step
+        previous_global_params << global_params;
+    }
+    else // average contributions
+    {
+        previous_global_params << global_params;
+        MPI_Reduce(previous_global_params.data(),global_params.data(),
+                   global_params.length(), PLMPI_REAL, MPI_SUM, 0,
+                   MPI_COMM_WORLD);
+        global_params *= 1.0/PLMPI::size;
+        MPI_Bcast(global_params.data(), global_params.length(),
+                  PLMPI_REAL, 0, MPI_COMM_WORLD);
+    }
+}
+#endif
+
+#if USING_MPI
+void PartSupervisedDBN::test(VMat testset, PP<VecStatsCollector> test_stats,
+                             VMat testoutputs, VMat testcosts) const
+{
+    int l = testset.length();
+    Vec input;
+    Vec target;
+    real weight;
+
+    Vec output(outputsize());
+
+    Vec costs(nTestCosts());
+
+    // testset->defineSizes(inputsize(),targetsize(),weightsize());
+
+    ProgressBar* pb = NULL;
+    if(report_progress)
+        pb = new ProgressBar("Testing learner",l);
+
+    if (l == 0) {
+        // Empty test set: we give -1 cost arbitrarily.
+        costs.fill(-1);
+        test_stats->update(costs);
+    }
+    int n=int(ceil(l/real(PLMPI::size)));
+    Mat my_res(n,costs.size()+2);
+    Mat all_res;
+    if (PLMPI::rank==0) all_res.resize(n*PLMPI::size,costs.size()+2);
+    int k=0;
+    for(int i=0; i<l; i++)
+     if (i%PLMPI::size==PLMPI::rank)
+     {
+        testset.getExample(i, input, target, weight);
+
+        // Always call computeOutputAndCosts, since this is better
+        // behaved with stateful learners
+        computeOutputAndCosts(input,target,output,costs);
+
+        if(testoutputs)
+            testoutputs->putOrAppendRow(i,output);
+
+        if(testcosts)
+            testcosts->putOrAppendRow(i, costs);
+
+        if(test_stats)
+        {
+            my_res.subMat(k,0,1,costs.length()) << costs;
+            my_res(k,costs.length()) = weight;
+            my_res(k++,costs.length()+1) = 1;
+        }
+
+        if(report_progress)
+            pb->update(i);
+     }
+
+    if (PLMPI::rank==0)
+       MPI_Gather(my_res.data(),my_res.size(),PLMPI_REAL,
+                  all_res.data(),my_res.size(),PLMPI_REAL,0,MPI_COMM_WORLD);
+    else
+       MPI_Gather(my_res.data(),my_res.size(),PLMPI_REAL,
+                  0,my_res.size(),PLMPI_REAL,0,MPI_COMM_WORLD);
+
+    if (PLMPI::rank==0)
+       for (int i=0;i<all_res.length();i++)
+          if (all_res(i,costs.length()+1)==1.0)
+             test_stats->update(all_res(i).subVec(0,costs.length()),
+                                all_res(i,costs.length()));
+
+    if(pb)
+        delete pb;
+
+}
+#endif
+
 
 } // end of namespace PLearn
 
