@@ -75,41 +75,23 @@ int NLLErrModule::getTarget(const Vec& input) const
     }
     else if( t_size == input_size )
     {
+        /*
         PLWARNING("NLLErrModule::getTarget: You're giving a target the same\n"
                   "size as the input, instead of an integer. Checking if\n"
                   "this is a one-hot vector from this integer.\n");
+         */
 
         bool invalid_target = false;
         Vec the_target = input.subVec( input_size, t_size );
         // get position of '1'
-        int t = vec_find( the_target, 1. );
-        if( t<0 ) // not found
-        {
-            invalid_target = true;
-        }
-        else
-        {
-            // check if vector matches with a one-hot one
-            Vec one_hot_t = one_hot( input_size, t, 0., 1. );
-            for( int i=0 ; i<input_size ; i++ )
-            {
-                if( !fast_is_equal( the_target[i], one_hot_t[i] ) )
-                {
-                    invalid_target = true;
-                    break;
-                }
-            }
-        }
+        target = argmax( the_target );
 
-        if( invalid_target )
-        {
-            PLERROR("NLLErrModule::getTarget: target provided could not\n"
-                    "be recognized as a one-hot vector from one integer.\n");
-        }
-        else
-        {
-            target = t;
-        }
+#ifdef BOUNDCHECK
+        // check if vector matches with a one-hot one
+        assert( is_equal( the_target[target], 1. ) ) ;
+        for( int i=0 ; i<input_size ; i++ )
+            assert( is_equal( the_target[i], 0. ) || i == target );
+#endif
     }
     else
     {
@@ -181,9 +163,11 @@ void NLLErrModule::bpropUpdate(const Vec& input, const Vec& output,
     }
     if( og_size == 0 )
     {
+        /*
         PLWARNING("NLLErrModule::bpropUpdate: you are not providing"
                   "output_gradient.\n"
                   "Assuming this is the final cost, and output_gradient=1.\n");
+         */
         is_final_cost = true;
     }
     else if( og_size != output_size )
