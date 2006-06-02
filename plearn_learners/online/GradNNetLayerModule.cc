@@ -64,7 +64,6 @@ GradNNetLayerModule::GradNNetLayerModule():
     L1_penalty_factor( 0. ),
     L2_penalty_factor( 0. ),
     step_number( 0 )
-    /* ### Initialize all fields to their default value */
 {
 }
 
@@ -122,7 +121,8 @@ void GradNNetLayerModule::bpropUpdate(const Vec& input, const Vec& output,
     bias_input[0] = 1;
     bias_input.subVec( 1,input_size ) << input;
 
-    externalProductAcc( weights, -learning_rate*output_gradient, bias_input );
+    externalProductScaleAcc( weights, output_gradient, bias_input,
+                             -learning_rate );
 
     if (L1_penalty_factor!=0)
     {
@@ -161,11 +161,12 @@ void GradNNetLayerModule::bpropUpdate(const Vec& input, const Vec& output,
                                       const Vec& output_gradient)
 {
     // compute input_gradient from initial weights
-    input_gradient = transposeProduct( weights, output_gradient
-                                     ).subVec( 1, input_size );
+    input_gradient.resize( input_size );
+    transposeProduct( input_gradient,
+                      weights.subMatColumns(1,input_size), output_gradient );
 
     // do the update (and size check)
-    bpropUpdate( input, output, output_gradient);
+    bpropUpdate( input, output, output_gradient );
 
 
 }
@@ -205,100 +206,22 @@ void GradNNetLayerModule::bbpropUpdate(const Vec& input, const Vec& output,
 // Nothing to forget
 void GradNNetLayerModule::forget()
 {
-    resetWeights();
+    weights.resize( output_size, 1+input_size );
 
     if( init_weights.size() !=0 )
-    {
-        setWeights( init_weights );
-    }
+        weights << init_weights;
     else if (init_weights_random_scale!=0)
     {
         real r = init_weights_random_scale / input_size;
-        random_gen->fill_random_uniform(weights.subMatColumns(1,input_size),-r,r);
+        random_gen->fill_random_uniform(weights.subMatColumns(1,input_size),
+                                        -r,r);
+        weights.subMatColumns(0,1).fill(0);
     }
-
+    else
+        weights.fill(0);
 
     learning_rate = start_learning_rate;
     step_number = 0;
-}
-
-
-Mat GradNNetLayerModule::getWeights() const
-{
-    return weights.copy();
-}
-
-Vec GradNNetLayerModule::getWeights(int i) const
-{
-    return weights(i).copy();
-}
-
-
-void GradNNetLayerModule::setWeights(const Mat& the_weights)
-{
-    int twl = the_weights.length();
-    int tww = the_weights.width();
-    if( twl != output_size )
-    {
-        PLERROR( "GradNNetLayerModule::setWeights: number of weights\n"
-                 "(the_weights.length()) should be equal to output_size\n"
-                 " (%i != %i).\n", twl, output_size );
-    }
-
-    if( tww == input_size )
-    {
-        PLWARNING( "GradNNetLayerModule::setWeights: missing one weight\n"
-                   "(the_weights.width() (=%i) != 1+input_size (=%i)).\n"
-                   "Assuming it was the bias one, and setting it to '0'.\n"
-                   "Be careful: this might not be what you want.\n",
-                   tww, 1+input_size );
-
-        weights.subMat( 0, 0, output_size, 1 ) << Vec( output_size );
-        weights.subMat( 0, 1, output_size, input_size ) << the_weights;
-    }
-    else if( tww == 1+input_size )
-    {
-        weights << the_weights;
-    }
-    else
-    {
-        PLERROR( "GradNNetLayerModule::setWeights: the_weights.length()\n"
-                 "should be equal to 1+input_size (%i != %i).\n",
-                 tww, 1+input_size );
-    }
-}
-
-void GradNNetLayerModule::setWeights(int i, const Vec& the_weights)
-{
-    //weights(i) << the_weights;
-    int tws = the_weights.size();
-    if( tws == input_size )
-    {
-        PLWARNING( "GradNNetLayerModule::setWeights: missing one weight\n"
-                   "(the_weights.size() (=%i) != 1+input_size (=%i)).\n"
-                   "Assuming it was the bias one, and setting it to '1'.\n"
-                   "Be careful: this might not be what you want.\n",
-                   tws, 1+input_size );
-
-        weights(i,0) = 1;
-        weights(i).subVec( 1, input_size ) << the_weights;
-    }
-    else if( tws == input_size+1 )
-    {
-        weights << the_weights;
-    }
-    else
-    {
-        PLERROR( "GradNNetLayerModule::setWeights: the_weights.size()\n"
-                 "should be equal to 1+input_size (%i != %i).\n",
-                 tws, 1+input_size );
-    }
-}
-
-void GradNNetLayerModule::resetWeights()
-{
-    weights.resize( output_size, 1+input_size );
-    weights.fill( 0 );
 }
 
 
@@ -377,13 +300,12 @@ void GradNNetLayerModule::build_()
         output_size = 1;
     }
 
-    if( weights.size() == 0 )
-    {
-        resetWeights();
-    }
-
     if (init_weights.size()==0 && init_weights_random_scale!=0 && !random_gen)
         random_gen = new PRandom();
+
+    if( weights.size() == 0 )
+        forget();
+
 }
 
 

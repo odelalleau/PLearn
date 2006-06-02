@@ -64,15 +64,27 @@ public:
 
     //! Starting learning-rate, by which we multiply the gradient step
     real start_learning_rate;
+
     //! learning_rate = start_learning_rate / (1 + decrease_constant*t),
     //! where t is the number of updates since the beginning
     real decrease_constant;
 
+    //! Optional initial weights of the neurons (bias on first column,
+    //! one row per neuron.
     Mat init_weights;
 
+    //! If init_weights is not provided, the weights are initialized randomly
+    //! from a uniform in [-r,r], with r = init_weights_random_scale/input_size
     real init_weights_random_scale;
 
-    real L1_penalty_factor, L2_penalty_factor; //! weight decays
+    //! Optional (default=0) factor of L1 regularization term
+    real L1_penalty_factor;
+
+    //! Optional (default=0) factor of L2 regularization term
+    real L2_penalty_factor;
+
+    //! The weights, one neuron per line, bias first
+    Mat weights;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -102,11 +114,6 @@ public:
 
     virtual void forget();
 
-    virtual Mat getWeights() const;
-    virtual Vec getWeights(int i) const;
-    virtual void setWeights(const Mat& the_weights);
-    virtual void setWeights(int i, const Vec& the_weights);
-
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
@@ -121,11 +128,9 @@ public:
 
 protected:
     //#####  Protected Options  ###############################################
-    Mat weights; // one neuron per line, bias first
 
 protected:
     //#####  Protected Member Functions  ######################################
-    virtual void resetWeights();
 
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
