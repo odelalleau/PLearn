@@ -43,6 +43,7 @@
 
 #include "LocallyMagnifiedDistribution.h"
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
+#include <plearn/vmat/MemoryVMatrix.h>
 #include <plearn_learners/nearest_neighbors/ExhaustiveNearestNeighbors.h>
 #include <plearn/base/tostring.h>
 
@@ -161,55 +162,74 @@ real LocallyMagnifiedDistribution::log_density(const Vec& y) const
     trainsample.resize(w+ws);
     Vec input = trainsample.subVec(0,w);
 
+    int nneighbors = 0;
     if(width_neighbor>0)
     {
         // Find distance d to width_neighbor neighbour
         NN->computeOutputAndCosts(y, emptyvec, NN_outputs, NN_costs);
+        nneighbors = NN_outputs.length();
         real d = NN_costs[width_neighbor-1];
-        // Now set new kernel width:
-        real newwidth = d*width_factor;
-        weighting_kernel->setOption(width_optionname,tostring(newwidth));
-        weighting_kernel->build(); // rebuild to adapt to width change
+
+        if(weighting_kernel.isNotNull())
+        {
+            // Now set new kernel width:
+            real newwidth = d*width_factor;
+            weighting_kernel->setOption(width_optionname,tostring(newwidth));
+            weighting_kernel->build(); // rebuild to adapt to width change
+        }
     }
 
     double weightsum = 0;
-    for(int i=0; i<l; i++)
+
+    VMat local_trainset;
+    if(weighting_kernel.isNotNull()) // build a weighted local_trainset
     {
-        train_set->getRow(i,trainsample);
-        real weight = weighting_kernel(y,input);
-        if(ws==1)
-            weight *= trainsample[w];
-        weights[i] = weight;
-        weightsum += weight;
+        for(int i=0; i<l; i++)
+        {
+            train_set->getRow(i,trainsample);
+            real weight = weighting_kernel(y,input);
+            if(ws==1)
+                weight *= trainsample[w];
+            weights[i] = weight;
+            weightsum += weight;
+        }
+
+        VMat weight_column(columnmatrix(weights));
+
+        if(ws==0) // append weight column
+            local_trainset = hconcat(train_set, weight_column);
+        else // replace last column by weight column
+            local_trainset = hconcat(train_set.subMatColumns(0,inputsize()), weight_column);
+        local_trainset->defineSizes(w,0,1);        
     }
-
-    VMat weight_column(columnmatrix(weights));
-
-    VMat weighted_trainset;
-    if(ws==0) // append weight column
-        weighted_trainset = hconcat(train_set, weight_column);
-    else // replace last column by weight column
-        weighted_trainset = hconcat(train_set.subMatColumns(0,inputsize()), weight_column);
-    weighted_trainset->defineSizes(w,0,1);
-
+    else // no weighting kernel, we just use the neighbors
+    {
+        Mat neighbors_input(nneighbors, inputsize_);
+        for(int k=0; k<nneighbors; k++)
+            train_set->getSubRow(int(NN_outputs[k]),0,neighbors_input(k));
+        local_trainset = new MemoryVMatrix(neighbors_input);
+        local_trainset->defineSizes(w,0,0);
+    }
     localdistr->forget();
-    localdistr->setTrainingSet(weighted_trainset);
+    localdistr->setTrainingSet(local_trainset);
     localdistr->train();
     double log_local_p = localdistr->log_density(y);
-    double log_p = log_local_p + std::log((float)weightsum) - std::log((float)l) - std::log((float)weighting_kernel(input,input));
 
     switch(mode)
     {
     case 0:
-        return log_p;
+        return log_local_p + pl_log((double)weightsum) - pl_log((double)l) - pl_log((double)weighting_kernel(input,input));
     case 1:
         return log_local_p;
     case 2:
-        return std::log((float)weightsum) - std::log((float)l);
+        return pl_log((double)weightsum) - pl_log((double)l);
     case 3:
-        return std::log((float)weightsum);
+        return pl_log((double)weightsum);
+    case 4:
+        return log_local_p+pl_log((double)nneighbors)-pl_log((double)l);
     default:
-        return log_p;
+        PLERROR("Invalid mode %d", mode);
+        return 0; 
     }
 
 }
