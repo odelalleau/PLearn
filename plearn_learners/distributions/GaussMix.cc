@@ -2786,12 +2786,14 @@ void GaussMix::setPredictor(const Vec& predictor, bool call_parent) const {
                             cov_x_j_miss(non_missing[k], non_missing[p]);
 
                 // Compute its inverse.
+                /*
                 inv_cov_x.resize(n_non_missing, n_non_missing);
                 matInvert(cov_x_j, inv_cov_x);
-                assert( inv_cov_x.isSymmetric(false) );
+                //assert( inv_cov_x.isSymmetric(false) );
                 fillItSymmetric(inv_cov_x);
+                */
 
-#if 0
+#if 1
                 // Compute its SVD.
                 eigenvectors_x_miss[j].resize(n_non_missing, n_non_missing);
                 eigenvals = eigenvalues_x_miss(j);
