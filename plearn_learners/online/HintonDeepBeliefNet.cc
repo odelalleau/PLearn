@@ -49,6 +49,7 @@
 #include "RBMParameters.h"
 #include "RBMLLParameters.h"
 #include "RBMJointLLParameters.h"
+#include <unistd.h>
 
 namespace PLearn {
 using namespace std;
@@ -69,6 +70,8 @@ HintonDeepBeliefNet::HintonDeepBeliefNet() :
     final_momentum(0.),
     momentum_switch_time(-1),
     weight_decay(0.),
+    parallelization_minibatch_size(100),
+    sum_parallel_contributions(0),
     use_sample_or_expectation(4)
 {
     use_sample_or_expectation[0] = 0;
@@ -198,6 +201,12 @@ void HintonDeepBeliefNet::declareOptions(OptionList& ol)
                   "This is the number of examples seen by one process\n"
                   "during training after which the weight updates are shared\n"
                   "among all the processes.'n");
+
+    declareOption(ol, "sum_parallel_contributions",
+                  &HintonDeepBeliefNet::sum_parallel_contributions,
+                  OptionBase::buildoption,
+                  "Only used when USING_MPI for parallelization\n"
+                  "sum or average the delta-w contributions from different processes?\n");
 
     declareOption(ol, "n_layers", &HintonDeepBeliefNet::n_layers,
                   OptionBase::learntoption,
@@ -591,10 +600,14 @@ void HintonDeepBeliefNet::train()
     int nsamples = train_set->length();
 
 #if USING_MPI
-    // initialize global parameters for allowing to easily share them across multiple CPUs
-    pout << "taper quelque chose!" << endl;
-    string s;
-    pin >> s;
+    // initialize global parameters for allowing to easily share them across
+    // multiple CPUs
+
+    // wait until we can attach a gdb process
+    pout << "START WAITING..." << endl;
+    sleep(20);
+    pout << "DONE WAITING!" << endl;
+    MPI_Barrier(MPI_COMM_WORLD);
     if (global_params.size()==0)
     {
         int n_params = joint_params->nParameters();
@@ -611,6 +624,7 @@ void HintonDeepBeliefNet::train()
     }
     int total_bsize=parallelization_minibatch_size*PLMPI::size;
 #endif
+    forget(); // DEBUGGING TO GET REPRODUCIBLE RESULTS
 
     MODULE_LOG << "  nsamples = " << nsamples << endl;
     MODULE_LOG << "  initial stage = " << stage << endl;
@@ -653,7 +667,8 @@ void HintonDeepBeliefNet::train()
 
 #if USING_MPI
         // make a copy of the parameters as they were at the beginning of the minibatch
-        previous_global_params << global_params;
+        if (sum_parallel_contributions)
+            previous_global_params << global_params;
 #endif
         for( ; stage<end_stage ; stage++ )
         {
@@ -662,6 +677,7 @@ void HintonDeepBeliefNet::train()
           if (stage%PLMPI::size==PLMPI::rank) 
           {
 #endif
+            resetGenerator(1); // DEBUGGING HACK TO MAKE SURE RESULTS ARE INDEPENDENT OF PARALLELIZATION
             int sample = stage % nsamples;
             train_set->getExample(sample, input, target, weight);
             greedyStep( input.subVec(0, n_predictor), layer );
@@ -1012,20 +1028,32 @@ TVec<string> HintonDeepBeliefNet::getTrainCostNames() const
 void HintonDeepBeliefNet::shareParamsMPI()
 {
 #if USING_MPI
-    if (PLMPI::rank!=0)
-        // after this line global_params contains the delta for all cpus except root
-        global_params -= previous_global_params;
-    // while the root contains the previous global params + its delta
-    previous_global_params << global_params;
-    // hence summing everything (result in cpu0.global_params)
-    // yields the sum of all the changes plus the previous global params:
-    MPI_Reduce(previous_global_params.data(),global_params.data(),
-               global_params.length(), PLMPI_REAL, MPI_SUM, 0, MPI_COMM_WORLD);
-    // send it back to every one
-    MPI_Bcast(global_params.data(), global_params.length(),
-              PLMPI_REAL, 0, MPI_COMM_WORLD);
-    // and save it for next sharing step
-    previous_global_params << global_params;
+    if (sum_parallel_contributions)
+    {
+        if (PLMPI::rank!=0)
+            // after this line global_params contains the delta for all cpus except root
+            global_params -= previous_global_params;
+        // while the root contains the previous global params + its delta
+        previous_global_params << global_params;
+        // hence summing everything (result in cpu0.global_params)
+        // yields the sum of all the changes plus the previous global params:
+        MPI_Reduce(previous_global_params.data(),global_params.data(),
+                   global_params.length(), PLMPI_REAL, MPI_SUM, 0, MPI_COMM_WORLD);
+        // send it back to every one
+        MPI_Bcast(global_params.data(), global_params.length(),
+                  PLMPI_REAL, 0, MPI_COMM_WORLD);
+        // and save it for next sharing step
+        previous_global_params << global_params;
+    }
+    else // average contributions
+    {
+        previous_global_params << global_params;
+        MPI_Reduce(previous_global_params.data(),global_params.data(),
+                   global_params.length(), PLMPI_REAL, MPI_SUM, 0, MPI_COMM_WORLD);
+        global_params *= 1.0/PLMPI::size;
+        MPI_Bcast(global_params.data(), global_params.length(),
+                  PLMPI_REAL, 0, MPI_COMM_WORLD);
+    }
 #endif
 }
 
@@ -1053,7 +1081,11 @@ void HintonDeepBeliefNet::test(VMat testset, PP<VecStatsCollector> test_stats,
         costs.fill(-1);
         test_stats->update(costs);
     }
-
+    int n=int(ceil(l/real(PLMPI::size)));
+    Mat my_res(n,costs.size()+2);
+    Mat all_res;
+    if (PLMPI::rank==0) all_res.resize(n*PLMPI::size,costs.size()+2);
+    int k=0;
     for(int i=0; i<l; i++)
      if (i%PLMPI::size==PLMPI::rank)
      {
@@ -1070,13 +1102,28 @@ void HintonDeepBeliefNet::test(VMat testset, PP<VecStatsCollector> test_stats,
             testcosts->putOrAppendRow(i, costs);
 
         if(test_stats)
-            if (PLMPI::rank==0)
-                test_stats->update(costs,weight);
-        // else
+        {
+            my_res.subMat(k,0,1,costs.length()) << costs;
+            my_res(k,costs.length()) = weight;
+            my_res(k++,costs.length()+1) = 1;
+        }
 
         if(report_progress)
             pb->update(i);
      }
+
+    if (PLMPI::rank==0)
+       MPI_Gather(my_res.data(),my_res.size(),PLMPI_REAL,
+                  all_res.data(),my_res.size(),PLMPI_REAL,0,MPI_COMM_WORLD);
+    else
+       MPI_Gather(my_res.data(),my_res.size(),PLMPI_REAL,
+                  0,my_res.size(),PLMPI_REAL,0,MPI_COMM_WORLD);
+
+    if (PLMPI::rank==0)
+       for (int i=0;i<all_res.length();i++)
+          if (all_res(i,costs.length()+1)==1.0)
+             test_stats->update(all_res(i).subVec(0,costs.length()),
+                                all_res(i,costs.length()));
 
     if(pb)
         delete pb;

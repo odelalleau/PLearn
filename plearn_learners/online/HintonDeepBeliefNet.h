@@ -124,6 +124,10 @@ public:
     //! among all the processes.
     int parallelization_minibatch_size;
 
+    //! only used when USING_MPI for parallelization:
+    //! sum or average the delta-w contributions from different processes?
+    bool sum_parallel_contributions;
+
     //! Number of examples to use during each of the different greedy
     //! steps of the training phase.
     TVec<int> training_schedule;
