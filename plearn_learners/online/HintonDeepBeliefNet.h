@@ -270,7 +270,7 @@ public:
     virtual TVec<string> getTrainCostNames() const;
 
     //! REDEFINE test FOR PARALLELIZATION OF THE TEST
-#if USING_MPI
+//#if USING_MPI
     //! Performs test on testset, updating test cost statistics,
     //! and optionally filling testoutputs and testcosts
     //! The default version repeatedly calls computeOutputAndCosts or
@@ -280,7 +280,7 @@ public:
     //! after calling this method) if you don't plan to accumulate statistics.
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
                       VMat testoutputs=0, VMat testcosts=0) const;
-#endif
+//#endif
 
     //#####  PLearn::Object Protocol  #########################################
 
