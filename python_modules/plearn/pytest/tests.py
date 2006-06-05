@@ -368,14 +368,14 @@ class Test(PyTestObject):
         assert cls._restrict_to is None
         assert cls._restrict_to_category is None        
         logging.debug("\nRestriction to name %s"%test_name)
-        cls._restrict_to = test_name
+        cls._restrict_to = test_name.split(',')
     restrictTo = classmethod(restrictTo)
     
     def restrictToCategory(cls, category):
         assert cls._restrict_to is None
         assert cls._restrict_to_category is None
         logging.debug("\nRestriction to category %s"%category)
-        cls._restrict_to_category = category
+        cls._restrict_to_category = category.split(',')
     restrictToCategory = classmethod(restrictToCategory)
 
     #######  Instances' Methods  ##################################################
@@ -584,7 +584,7 @@ class Test(PyTestObject):
     def toBeNeglected(self):
         neglect = False
         if self._restrict_to is not None:            
-            neglect = (self._restrict_to != self.name)
+            neglect = (self.name not in self._restrict_to)
             if neglect:
                 logging.debug(
                     "\nNeglecting %s due to name restriction: %s"
@@ -592,7 +592,7 @@ class Test(PyTestObject):
                     )
 
         elif self._restrict_to_category is not None:
-            neglect = self._restrict_to_category != self.category
+            neglect = (self.category not in self._restrict_to_category)
             if neglect:
                 logging.debug(
                     "\nNeglecting %s due to category restriction: %s"
