@@ -80,6 +80,9 @@ HintonDeepBeliefNet::HintonDeepBeliefNet() :
     use_sample_or_expectation[2] = 2;
     use_sample_or_expectation[3] = 0;
     random_gen = new PRandom();
+    ptimer = new PTimer();
+    ptimer->newTimer("training_time");
+    ptimer->newTimer("test_time");
 }
 
 ////////////////////
@@ -401,6 +404,7 @@ void HintonDeepBeliefNet::forget()
       - initialize the learner's parameters, using this random generator
       - stage = 0
     */
+    ptimer->resetAllTimers();
     resetGenerator(seed_);
     for( int i=0 ; i<n_layers-1 ; i++ )
         params[i]->forget();
@@ -513,6 +517,7 @@ void HintonDeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
+    deepCopyField(ptimer, copies);
     deepCopyField(layers, copies);
     deepCopyField(last_layer, copies);
     deepCopyField(target_layer, copies);
@@ -567,7 +572,7 @@ bool HintonDeepBeliefNet::setPredictorPredictedSizes(int the_predictor_size,
 ///////////
 void HintonDeepBeliefNet::train()
 {
-    MODULE_LOG << "train() called" << endl;
+    MODULE_LOG << "train() called " << endl;
     // The role of the train method is to bring the learner up to
     // stage==nstages, updating train_stats with training costs measured
     // on-line in the process.
@@ -603,9 +608,9 @@ void HintonDeepBeliefNet::train()
     Vec input( inputsize() );
     Vec target( targetsize() ); // unused
     real weight; // unused
-    Vec train_costs(2);
+    Vec train_costs(3);
     int nsamples = train_set->length();
-
+    ptimer->startTimer("training_time");
 #if USING_MPI
     // initialize global parameters for allowing to easily share them across
     // multiple CPUs
@@ -681,8 +686,10 @@ void HintonDeepBeliefNet::train()
 #if USING_MPI
         // make a copy of the parameters as they were at the beginning of
         // the minibatch
-        if (sum_parallel_contributions)
-            previous_global_params << global_params;
+        previous_global_params << global_params;
+        if (!sum_parallel_contributions)
+            delta_params.resize(global_params.length());
+
 #endif
         for( ; stage<end_stage ; stage++ )
         {
@@ -826,7 +833,6 @@ void HintonDeepBeliefNet::train()
                 shareParamsMPI();
 #endif
         }
-        train_stats->finalize(); // finalize statistics for this epoch
     }
     else
         PLERROR( "Fine-tuning methods other than \"EGD\" are not"
@@ -835,7 +841,12 @@ void HintonDeepBeliefNet::train()
     if( pb )
         delete pb;
 
-    MODULE_LOG << "Training finished" << endl << endl;
+    ptimer->stopTimer("training_time");
+    real training_time = ptimer->getTimer("training_time");
+    train_costs[2] = training_time;
+    train_stats->update(train_costs);
+    MODULE_LOG << "Training finished in " << endl << training_time << " seconds." << endl;
+    train_stats->finalize(); // finalize statistics 
 }
 
 // assumes that down_layer->expectation is set
@@ -1045,6 +1056,7 @@ TVec<string> HintonDeepBeliefNet::getTestCostNames() const
         result.append( "NLL" );
         result.append( "class_error" );
     }
+    result.append("time");
     return result;
 }
 
@@ -1075,17 +1087,18 @@ void HintonDeepBeliefNet::shareParamsMPI()
     }
     else // average contributions
     {
-        previous_global_params << global_params;
-        MPI_Reduce(previous_global_params.data(),global_params.data(),
+        substract(global_params, previous_global_params, delta_params);
+        MPI_Reduce(delta_params.data(),global_params.data(),
                    global_params.length(), PLMPI_REAL, MPI_SUM, 0, MPI_COMM_WORLD);
         global_params *= 1.0/PLMPI::size;
+        global_params += previous_global_params;
         MPI_Bcast(global_params.data(), global_params.length(),
                   PLMPI_REAL, 0, MPI_COMM_WORLD);
+        previous_global_params << global_params;
     }
 }
 #endif
 
-#if USING_MPI
 void HintonDeepBeliefNet::test(VMat testset, PP<VecStatsCollector> test_stats,
                                VMat testoutputs, VMat testcosts) const
 {
@@ -1100,6 +1113,21 @@ void HintonDeepBeliefNet::test(VMat testset, PP<VecStatsCollector> test_stats,
 
     // testset->defineSizes(inputsize(),targetsize(),weightsize());
 
+    int prank=
+#if USING_MPI
+        PLMPI::rank;
+#else
+        0;
+#endif
+    int psize=
+#if USING_MPI
+        PLMPI::size;
+#else
+        1;
+#endif
+
+    if (prank==0)
+        ptimer->startTimer("test_time");
     ProgressBar* pb = NULL;
     if(report_progress)
         pb = new ProgressBar("Testing learner",l);
@@ -1109,19 +1137,20 @@ void HintonDeepBeliefNet::test(VMat testset, PP<VecStatsCollector> test_stats,
         costs.fill(-1);
         test_stats->update(costs);
     }
-    int n=int(ceil(l/real(PLMPI::size)));
+    int n=int(ceil(l/real(psize)));
     Mat my_res(n,costs.size()+2);
     Mat all_res;
-    if (PLMPI::rank==0) all_res.resize(n*PLMPI::size,costs.size()+2);
+    if (prank==0) all_res.resize(n*psize,costs.size()+2);
+    Vec learner_costs = costs.subVec(0,costs.size()-1);
     int k=0;
     for(int i=0; i<l; i++)
-     if (i%PLMPI::size==PLMPI::rank)
+     if (i%psize==prank)
      {
         testset.getExample(i, input, target, weight);
 
         // Always call computeOutputAndCosts, since this is better
         // behaved with stateful learners
-        computeOutputAndCosts(input,target,output,costs);
+        computeOutputAndCosts(input,target,output,learner_costs);
 
         if(testoutputs)
             testoutputs->putOrAppendRow(i,output);
@@ -1131,7 +1160,8 @@ void HintonDeepBeliefNet::test(VMat testset, PP<VecStatsCollector> test_stats,
 
         if(test_stats)
         {
-            my_res.subMat(k,0,1,costs.length()) << costs;
+            my_res.subMat(k,0,1,learner_costs.length()) << learner_costs;
+            my_res(k,costs.length()-1) = 0;
             my_res(k,costs.length()) = weight;
             my_res(k++,costs.length()+1) = 1;
         }
@@ -1140,24 +1170,35 @@ void HintonDeepBeliefNet::test(VMat testset, PP<VecStatsCollector> test_stats,
             pb->update(i);
      }
 
-    if (PLMPI::rank==0)
+#if USING_MPI
+    if (prank==0)
        MPI_Gather(my_res.data(),my_res.size(),PLMPI_REAL,
                   all_res.data(),my_res.size(),PLMPI_REAL,0,MPI_COMM_WORLD);
     else
        MPI_Gather(my_res.data(),my_res.size(),PLMPI_REAL,
                   0,my_res.size(),PLMPI_REAL,0,MPI_COMM_WORLD);
+#endif
 
-    if (PLMPI::rank==0)
-       for (int i=0;i<all_res.length();i++)
-          if (all_res(i,costs.length()+1)==1.0)
-             test_stats->update(all_res(i).subVec(0,costs.length()),
-                                all_res(i,costs.length()));
+    if (prank==0)
+    {
+        ptimer->stopTimer("test_time");
+        real test_time = ptimer->getTimer("test_time");
+        int nc=costs.length();
+        for (int i=0;i<all_res.length();i++)
+          if (all_res(i,nc+1)==1.0)
+          {
+              if (i==all_res.length()-1)
+                  all_res(i,nc-1)=test_time;
+              else
+                  all_res(i,nc-1)=0;
+              test_stats->update(all_res(i).subVec(0,nc),
+                                 all_res(i,nc));
+          }
+    }
 
     if(pb)
         delete pb;
-
 }
-#endif
 
 } // end of namespace PLearn
 

@@ -41,6 +41,7 @@
 #define HintonDeepBeliefNet_INC
 
 #include <plearn_learners/distributions/PDistribution.h>
+#include <plearn/misc/PTimer.h>
 
 namespace PLearn {
 
@@ -158,6 +159,8 @@ public:
     //!   - hidden unit during negative phase (you should keep it to 0).
     TVec<int> use_sample_or_expectation;
 
+    // measure training and test time
+    PP<PTimer> ptimer;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -353,6 +356,8 @@ private:
     //! and keep track of their value at the previous sharing step between all
     //! CPUs
     Vec previous_global_params;
+    //! difference between the above two
+    Vec delta_params;
 #endif
 };
 
