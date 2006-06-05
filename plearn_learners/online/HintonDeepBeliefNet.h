@@ -120,7 +120,7 @@ public:
 
     //! only used when USING_MPI for parallelization
     //! this is the number of examples seen by one process
-    //! during training after which the weight updates are shared 
+    //! during training after which the weight updates are shared
     //! among all the processes.
     int parallelization_minibatch_size;
 
@@ -267,11 +267,12 @@ public:
 #if USING_MPI
     //! Performs test on testset, updating test cost statistics,
     //! and optionally filling testoutputs and testcosts
-    //! The default version repeatedly calls computeOutputAndCosts or computeCostsOnly
-    //! Note that neither test_stats->forget() nor test_stats->finalize() is called,
-    //! so that you should call them yourself (respectively before and after calling
-    //! this method) if you don't plan to accumulate statistics.
-    virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
+    //! The default version repeatedly calls computeOutputAndCosts or
+    //! computeCostsOnly.
+    //! Note that neither test_stats->forget() nor test_stats->finalize() is
+    //! called, so that you should call them yourself (respectively before and
+    //! after calling this method) if you don't plan to accumulate statistics.
+    virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
                       VMat testoutputs=0, VMat testcosts=0) const;
 #endif
 
@@ -332,7 +333,9 @@ private:
     //! Build the parameters if needed
     void build_params();
 
+#if USING_MPI
     void shareParamsMPI();
+#endif
 
 private:
     //#####  Private Data Members  ############################################
@@ -344,9 +347,10 @@ private:
 #if USING_MPI
     //! for MPI parallelization, share parameters of all Parameters boxes
     Vec global_params;
-    //! and keep track of their value at the previous sharing step between all CPUs
+    //! and keep track of their value at the previous sharing step between all
+    //! CPUs
     Vec previous_global_params;
-#endif 
+#endif
 };
 
 // Declares a few other classes and functions related to this class

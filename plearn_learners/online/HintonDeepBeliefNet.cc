@@ -200,7 +200,7 @@ void HintonDeepBeliefNet::declareOptions(OptionList& ol)
                   "Only used when USING_MPI for parallelization.\n"
                   "This is the number of examples seen by one process\n"
                   "during training after which the weight updates are shared\n"
-                  "among all the processes.'n");
+                  "among all the processes.\n");
 
     declareOption(ol, "sum_parallel_contributions",
                   &HintonDeepBeliefNet::sum_parallel_contributions,
@@ -647,7 +647,12 @@ void HintonDeepBeliefNet::train()
     {
         MODULE_LOG << "Training parameters between layers " << layer
             << " and " << layer+1 << endl;
+
         int end_stage = min( training_schedule[layer], nstages );
+
+        MODULE_LOG << "  stage = " << stage << endl;
+        MODULE_LOG << "  end_stage = " << end_stage << endl;
+
         if( report_progress && stage < end_stage )
         {
             pb = new ProgressBar( "Training layer "+tostring(layer)
@@ -667,37 +672,39 @@ void HintonDeepBeliefNet::train()
             params[layer]->momentum = final_momentum;
 
 #if USING_MPI
-        // make a copy of the parameters as they were at the beginning of the minibatch
+        // make a copy of the parameters as they were at the beginning of
+        // the minibatch
         if (sum_parallel_contributions)
             previous_global_params << global_params;
 #endif
         for( ; stage<end_stage ; stage++ )
         {
 #if USING_MPI
-            // only look at some of the examples, associated with this process number (rank)
-          if (stage%PLMPI::size==PLMPI::rank) 
-          {
-#endif
-//            resetGenerator(1); // DEBUGGING HACK TO MAKE SURE RESULTS ARE INDEPENDENT OF PARALLELIZATION
-            int sample = stage % nsamples;
-            train_set->getExample(sample, input, target, weight);
-            greedyStep( input.subVec(0, n_predictor), layer );
-
-            if( stage == momentum_switch_stage )
-                params[layer]->momentum = final_momentum;
-
-            if( pb )
+            // only look at some of the examples, associated with this process
+            // number (rank)
+            if (stage%PLMPI::size==PLMPI::rank)
             {
-                if( layer == 0 )
-                    pb->update( stage + 1 );
-                else
-                    pb->update( stage - training_schedule[layer-1] + 1 );
-            }
+#endif
+//                resetGenerator(1); // DEBUGGING HACK TO MAKE SURE RESULTS ARE INDEPENDENT OF PARALLELIZATION
+                int sample = stage % nsamples;
+                train_set->getExample(sample, input, target, weight);
+                greedyStep( input.subVec(0, n_predictor), layer );
+
+                if( stage == momentum_switch_stage )
+                    params[layer]->momentum = final_momentum;
+
+                if( pb )
+                {
+                    if( layer == 0 )
+                        pb->update( stage + 1 );
+                    else
+                        pb->update( stage - training_schedule[layer-1] + 1 );
+                }
 #if USING_MPI
-          }
-          // time to share among processors
-          if (stage%total_bsize==0 || stage==end_stage-1)
-              shareParamsMPI();
+            }
+            // time to share among processors
+            if (stage%total_bsize==0 || stage==end_stage-1)
+                shareParamsMPI();
 #endif
         }
     }
@@ -708,6 +715,10 @@ void HintonDeepBeliefNet::train()
         << "and last (" << n_layers-1 << ") layers." << endl;
 
     int end_stage = min( training_schedule[n_layers-2], nstages );
+
+    MODULE_LOG << "  stage = " << stage << endl;
+    MODULE_LOG << "  end_stage = " << end_stage << endl;
+
     if( report_progress && stage < end_stage )
         pb = new ProgressBar( "Training joint layer (target and "
                              +tostring(n_layers-2)+") of "+classname(),
@@ -724,27 +735,27 @@ void HintonDeepBeliefNet::train()
         joint_params->momentum = final_momentum;
 
     int last = min(training_schedule[n_layers-2],nstages);
-    for( ; stage< last ; stage++ )
+    for( ; stage<last ; stage++ )
     {
 #if USING_MPI
-            // only look at some of the examples, associated with this process number (rank)
-      if (stage%PLMPI::size==PLMPI::rank) 
-      {
+        // only look at some of the examples, associated with this process number (rank)
+        if (stage%PLMPI::size==PLMPI::rank)
+        {
 #endif
-        int sample = stage % nsamples;
-        train_set->getExample(sample, input, target, weight);
-        jointGreedyStep( input );
+            int sample = stage % nsamples;
+            train_set->getExample(sample, input, target, weight);
+            jointGreedyStep( input );
 
-        if( stage == momentum_switch_stage )
-            joint_params->momentum = final_momentum;
+            if( stage == momentum_switch_stage )
+                joint_params->momentum = final_momentum;
 
-        if( pb )
-            pb->update( stage - previous_stage + 1 );
+            if( pb )
+                pb->update( stage - previous_stage + 1 );
 #if USING_MPI
-       }
-       // time to share among processors
-       if (stage%total_bsize==0 || stage==last-1)
-           shareParamsMPI();
+        }
+        // time to share among processors
+        if (stage%total_bsize==0 || stage==last-1)
+            shareParamsMPI();
 #endif
     }
 
@@ -779,24 +790,24 @@ void HintonDeepBeliefNet::train()
         {
 #if USING_MPI
             // only look at some of the examples, associated with this process number (rank)
-          if (stage%PLMPI::size==PLMPI::rank) 
-          {
+            if (stage%PLMPI::size==PLMPI::rank)
+            {
 #endif
-            int sample = stage % nsamples;
-            if( sample == begin_sample )
-                train_stats->forget();
+                int sample = stage % nsamples;
+                if( sample == begin_sample )
+                    train_stats->forget();
 
-            train_set->getExample(sample, input, target, weight);
-            fineTuneByGradientDescent( input, train_costs );
-            train_stats->update( train_costs );
+                train_set->getExample(sample, input, target, weight);
+                fineTuneByGradientDescent( input, train_costs );
+                train_stats->update( train_costs );
 
-            if( pb )
-                pb->update( stage - init_stage + 1 );
+                if( pb )
+                    pb->update( stage - init_stage + 1 );
 #if USING_MPI
-          }
-          // time to share among processors
-          if (stage%total_bsize==0 || stage==nstages-1)
-              shareParamsMPI();
+            }
+            // time to share among processors
+            if (stage%total_bsize==0 || stage==nstages-1)
+                shareParamsMPI();
 #endif
         }
         train_stats->finalize(); // finalize statistics for this epoch
@@ -1026,9 +1037,9 @@ TVec<string> HintonDeepBeliefNet::getTrainCostNames() const
     return getTestCostNames();
 }
 
+#if USING_MPI
 void HintonDeepBeliefNet::shareParamsMPI()
 {
-#if USING_MPI
     if (sum_parallel_contributions)
     {
         if (PLMPI::rank!=0)
@@ -1055,11 +1066,11 @@ void HintonDeepBeliefNet::shareParamsMPI()
         MPI_Bcast(global_params.data(), global_params.length(),
                   PLMPI_REAL, 0, MPI_COMM_WORLD);
     }
-#endif
 }
+#endif
 
 #if USING_MPI
-void HintonDeepBeliefNet::test(VMat testset, PP<VecStatsCollector> test_stats, 
+void HintonDeepBeliefNet::test(VMat testset, PP<VecStatsCollector> test_stats,
                                VMat testoutputs, VMat testcosts) const
 {
     int l = testset.length();
@@ -1074,7 +1085,7 @@ void HintonDeepBeliefNet::test(VMat testset, PP<VecStatsCollector> test_stats,
     // testset->defineSizes(inputsize(),targetsize(),weightsize());
 
     ProgressBar* pb = NULL;
-    if(report_progress) 
+    if(report_progress)
         pb = new ProgressBar("Testing learner",l);
 
     if (l == 0) {
@@ -1091,11 +1102,11 @@ void HintonDeepBeliefNet::test(VMat testset, PP<VecStatsCollector> test_stats,
      if (i%PLMPI::size==PLMPI::rank)
      {
         testset.getExample(i, input, target, weight);
-      
+
         // Always call computeOutputAndCosts, since this is better
         // behaved with stateful learners
         computeOutputAndCosts(input,target,output,costs);
-      
+
         if(testoutputs)
             testoutputs->putOrAppendRow(i,output);
 
