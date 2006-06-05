@@ -82,6 +82,7 @@ GaussMix::GaussMix():
     efficient_k_median_iter(100),
     efficient_missing(0),
     epsilon(1e-6),
+    f_eigen(0),
     impute_missing(false),
     kmeans_iterations(5),
     L(1),
@@ -153,6 +154,11 @@ void GaussMix::declareOptions(OptionList& ol)
         "the covariance matrix. The remaining eigenvectors will be given an\n"
         "eigenvalue equal to the next highest eigenvalue. If set to -1, all\n"
         "eigenvectors will be kept.");
+
+    declareOption(ol, "f_eigen", &GaussMix::f_eigen, OptionBase::buildoption,
+        "If == 0, is ignored. Otherwise, it must be a fraction representing\n"
+        "the fraction of eigenvectors that are kept (this value overrides\n"
+        "any setting of the 'n_eigen' option).");
 
     declareOption(ol, "efficient_missing", &GaussMix::efficient_missing,
                                            OptionBase::buildoption,
@@ -321,6 +327,11 @@ void GaussMix::build_()
         type_id = TYPE_GENERAL;
     } else
         PLERROR("In GaussMix::build_ - Type '%s' is unknown", type.c_str());
+
+    // Special case for the 'f_eigen' option: 1 means we keep everything.
+    assert( f_eigen >= 0 && f_eigen <= 1 );
+    if (is_equal(f_eigen, 1))
+        n_eigen = -1;
 
     // Guess values for 'D' and 'n_eigen_computed' if they are not provided
     // (this could be the case for instance when specifying 'by hand' the
@@ -2583,6 +2594,16 @@ void GaussMix::resizeDataBeforeTraining() {
 
     nsamples = train_set->length();
     D = train_set->inputsize();
+
+    if (f_eigen > 0)
+        if (is_equal(f_eigen, 1))
+            n_eigen = -1;
+        else {
+            n_eigen = int(round(f_eigen * D));
+            if (n_eigen == 0)
+                // We always want to keep at least one eigenvector.
+                n_eigen = 1;
+        }
 
     alpha.resize(L);
     clust_imputed_missing.resize(0);

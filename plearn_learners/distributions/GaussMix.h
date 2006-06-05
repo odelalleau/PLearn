@@ -276,6 +276,7 @@ public:
     int efficient_k_median_iter;
     int efficient_missing;
     real epsilon;
+    real f_eigen;
     bool impute_missing;
     int kmeans_iterations;
     int L;
