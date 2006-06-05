@@ -27,6 +27,10 @@ else:
     plargs.parse(sys.argv[2:])
     lines += 'print main()\n'
 
+# Closing the current context so that, for instance, mispelled plargs can
+# be identified.
+lines += "import plearn; plearn.pyplearn.context.closeCurrentContext(); del plearn\n"
+
 del globals()['sys']
 del globals()['os']
 exec ''.join(lines) in globals()

@@ -57,6 +57,9 @@ def actualContext(cls):
     context.buildClassContext(cls)
     return context
 
+def closeCurrentContext():
+    __contexts[__current_context].close()
+    
 def createNewContext():
     global __contexts, __current_context
 
@@ -90,11 +93,18 @@ class __Context(object):
     __expdirs = []
     
     def __init__(self, contextual_classes=[]):
+        self.closed = False
         self.built_class_contexts = []
         for cls in contextual_classes:
             self.buildClassContext(cls)
-        
+
+    def assertNotClosed(self):
+        if self.closed:
+            from plearn.pyplearn import PyPLearnError
+            raise PyPLearnError("Trying to use a closed context!")
+    
     def buildClassContext(self, cls):
+        self.assertNotClosed()
         # try:
         #     print cls, cls.__name__, id(cls),
         #     print id(self.built_class_contexts), self.built_class_contexts,
@@ -105,18 +115,27 @@ class __Context(object):
         #     raise RuntimeError(e)
         
         assert inspect.isclass(cls)
-        if cls not in self.built_class_contexts \
-               and hasattr(cls, "buildClassContext"):
+        if cls not in self.built_class_contexts:
+            if hasattr(cls, "buildClassContext"):
+                # print "Within!",
+                # print id(cls), id(self.built_class_contexts), self.built_class_contexts,
+                # print (cls not in self.built_class_contexts 
+                #        and hasattr(cls, "buildClassContext"))            
+                cls.buildClassContext(self)
 
-            # print "Within!",
-            # print id(cls), id(self.built_class_contexts), self.built_class_contexts,
-            # print (cls not in self.built_class_contexts 
-            #        and hasattr(cls, "buildClassContext"))
-            
-            cls.buildClassContext(self)            
+            # Class' context is considered built even if nothing had to be
+            # done.
             self.built_class_contexts.append(cls)
-            
+
+    def close(self):
+        if self.closed: return
+        for cls in self.built_class_contexts:
+            if hasattr(cls, "closeClassContext"):
+                cls.closeClassContext(self)
+        self.closed = True
+        
     def getExpdir(self):        
+        self.assertNotClosed()
         if not hasattr(self, '_expdir_'):
             expdir = generateExpdir()            
             attempt = 1

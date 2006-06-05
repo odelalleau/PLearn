@@ -97,4 +97,5 @@ Namespace: MyNamespace
     namespaced2: plopt(value = 'namespaced2')
     namespaced3: plopt(value = 'NAMESPACED3' [default: 'namespaced3'])
 
-RuntimeError: The following arguments were parsed but never used: bindd1
+
+PyPLearnError: The following command-line arguments were not expected (misspelled?): bindd1=BINDED1

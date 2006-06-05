@@ -224,6 +224,8 @@ def list_cast(slist, elem_cast):
     # CSV (with or without brackets)
     if isinstance(slist,str):
         slist = slist.lstrip(' [').rstrip(' ]')
+        if slist=="":
+            return []
         return [ elem_cast(e) for e in slist.split(",") ]
 
     # List of strings
@@ -345,10 +347,11 @@ class plopt(object):
         # Special treatment for list option
         elif self._type is list :
             elem_type = self._kwargs.pop("elem_type", None) 
-            if elem_type is None and len(self.get()) > 0:
-                elem_type = type(self.get()[0])
-            else:
-                elem_type = str
+            if elem_type is None:
+                if len(self.get()) > 0:
+                    elem_type = type(self.get()[0])
+                else:
+                    elem_type = str
             casted = list_cast(value, elem_type)
 
         # Simple type cast
@@ -439,6 +442,29 @@ class plopt(object):
         assert not hasattr(context, 'plopt_overrides')
         context.plopt_overrides = {}
     buildClassContext = staticmethod(buildClassContext)
+
+    def closeClassContext(context):
+        exceptions = [ 'FILEBASE', 'FILEPATH', 'TIME', 'DATETIME',
+                       'FILEEXT', 'DIRPATH', 'DATE', 'HOME', 'FILENAME' ]
+
+        del context.plopt_binders
+        del context.plopt_namespaces
+        del context.plopt_overrides
+
+        unused = []
+        for optname, holder in context.plopt_tmp_holders.iteritems():
+            if optname in exceptions: continue
+            unused.append("%s=%s"%(optname, holder.option))
+            
+        if unused:
+            from plearn.pyplearn import PyPLearnError
+            raise PyPLearnError(
+                "The following command-line arguments were not expected (misspelled?): "
+                "%s" % ", ".join(unused))
+
+        # Finally, delete the list
+        del context.plopt_tmp_holders
+    closeClassContext = staticmethod(closeClassContext)    
 
     def define(holder, option, value):
         """Typical pattern to set a plopt instance member in 'holder' for the first time."""
@@ -554,24 +580,6 @@ class plargs(object):
         context.binders = {}
     buildClassContext = staticmethod(buildClassContext)
 
-    def checkParsingConsistency():
-        exceptions = [ 'FILEBASE', 'FILEPATH', 'TIME', 'DATETIME',
-                       'FILEEXT', 'DIRPATH', 'DATE', 'HOME', 'FILENAME' ]
-
-        # Note the (hackish?) use of plopt. Needed to ensure the
-        # existance of context.plopt_tmp_holders....        
-        plopt_tmp_holders = actualContext(plopt).plopt_tmp_holders.keys()
-        for ex in exceptions:
-            if ex in plopt_tmp_holders:
-                plopt_tmp_holders.remove(ex)
-
-        if plopt_tmp_holders:
-            raise RuntimeError(
-                "The following arguments were parsed but never used: %s"
-                % ','.join(plopt_tmp_holders) )
-
-    checkParsingConsistency = staticmethod(checkParsingConsistency)
-    
     def getBinders():
         """Returns a list of all binders in the current context."""
         context = actualContext(plargs)
@@ -1026,8 +1034,7 @@ def test_plargs_parsing():
         header += '\n'+("="*len(header))
         print header
         printCurrentContext()
-        plargs.checkParsingConsistency()
-        print 
+        print        
         return context_handle, header
     
     contexts = [ readScript() ]
@@ -1047,18 +1054,21 @@ def test_plargs_parsing():
         setCurrentContext(c)
         print header
         printCurrentContext()
+        closeCurrentContext()
         print 
 
     print 
     print "Misspelled command-line argument"
     print "-------------------------------------------------------------"
     print
+    from plearn.pyplearn import PyPLearnError
     try:
         readScript(["bindd1=BINDED1", "binded2=BINDED2",
                     "MyNamespace.namespaced3=NAMESPACED3"])
-    except RuntimeError, err:
+        closeCurrentContext()        
+    except PyPLearnError, err:
         print 
-        print 'RuntimeError:', err
+        print 'PyPLearnError:', err
 
 
 def test_mandatory_plargs(*command_line):
@@ -1072,5 +1082,25 @@ def test_mandatory_plargs(*command_line):
         
         print MyBinder.mandatory
 
+    except PyPLearnError, err:
+        print err
+
+def test_misspelled_plargs():
+    from plearn.pyplearn import PyPLearnError
+
+    plargs.parse("binded1=[]", "binded2=[ 2 ]", "namespace='misspelled'")
+
+    class Binder(plargs):
+        binded1 = [ 1 ]
+        binded2 = plopt([], elem_type=int)
+
+    class Namespace(plnamespace):
+        namespaced = "N"
+
+    print Binder.binded1, Binder.binded2, Namespace.namespaced
+
+    from plearn.pyplearn import PyPLearnError
+    try:
+        closeCurrentContext()
     except PyPLearnError, err:
         print err
