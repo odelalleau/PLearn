@@ -317,15 +317,20 @@ protected:
 protected:
     //#####  Protected Member Functions  ######################################
 
-    virtual void supervisedContrastiveDivergenceStep(
+    virtual void contrastiveDivergenceStep(
+        const PP<RBMLayer>& down_layer,
+        const PP<RBMParameters>& parameters,
+        const PP<RBMLayer>& up_layer );
+
+    virtual real supervisedContrastiveDivergenceStep(
         const PP<RBMLayer>& down_layer,
         const PP<RBMParameters>& parameters,
         const PP<RBMLayer>& up_layer,
         const Vec& target,
         int index );
 
-    virtual void greedyStep( const Vec& predictor, int params_index );
-    virtual void jointGreedyStep( const Vec& input );
+    virtual real greedyStep( const Vec& predictor, int params_index );
+    virtual real jointGreedyStep( const Vec& input );
     virtual void fineTuneByGradientDescent( const Vec& input,
                                             const Vec& train_costs );
 
