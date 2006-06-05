@@ -217,6 +217,10 @@ protected:
     //! 'joint_cov' (so that we know there is no need to compute it again).
     TVec<int> stage_joint_cov_computed;
 
+    //! Indicates at which stage the j-th Gaussian has been replaced (due to
+    //! having a too low coefficient alpha[j] < alpha_min).
+    TVec<int> stage_replaced;
+
     //! The i-th element is the index of the missing template of sample i in
     //! the 'missing_template' matrix.
     TVec<int> sample_to_template;

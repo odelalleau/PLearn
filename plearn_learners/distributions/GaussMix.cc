@@ -206,7 +206,8 @@ void GaussMix::declareOptions(OptionList& ol)
     declareOption(ol, "alpha_min", &GaussMix::alpha_min,
                                    OptionBase::buildoption,
         "The minimum weight for each Gaussian. Whenever a Gaussian falls\n"
-        "below 'alpha_min', it is replaced by a new Gaussian.");
+        "below 'alpha_min', it is replaced by a new Gaussian. Note that a\n"
+        "Gaussian may be replaced only once per stage (to avoid cycles).");
 
     declareOption(ol,"sigma_min", &GaussMix::sigma_min,
                                   OptionBase::buildoption,
@@ -2027,11 +2028,13 @@ bool GaussMix::computeMixtureWeights(bool allow_replace) {
                 alpha[j] += posteriors(i,j);
         alpha /= real(nsamples);
         for (int j = 0; j < L && !replaced_gaussian; j++)
-            if (alpha[j] < alpha_min && allow_replace) {
+            if (alpha[j] < alpha_min && allow_replace
+                                     && stage_replaced[j] != this->stage) {
                 // alpha[j] is too small! We need to remove this Gaussian from
                 // the mixture, and find a new (better) one.
                 replaceGaussian(j);
                 replaced_gaussian = true;
+                stage_replaced[j] = this->stage;
             }
     }
     return replaced_gaussian;
@@ -2071,6 +2074,7 @@ void GaussMix::forget()
     D = -1;
     n_eigen_computed = -1;
     ptimer->resetAllTimers();
+    stage_replaced.fill(-1);
     /*
        if (training_time >= 0)
        training_time = 0;
@@ -2419,6 +2423,7 @@ void GaussMix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(chol_joint_cov,           copies);
     // deepCopyField(chol_cov_template,        copies);
     deepCopyField(stage_joint_cov_computed, copies);
+    deepCopyField(stage_replaced,           copies);
     deepCopyField(sample_to_template,       copies);
     deepCopyField(y_centered,               copies);
     deepCopyField(covariance,               copies);
@@ -2623,6 +2628,8 @@ void GaussMix::resizeDataBeforeTraining() {
     initial_weights.resize(nsamples);
     posteriors.resize(nsamples, L);
     updated_weights.resize(L, nsamples);
+    stage_replaced.resize(L);
+    stage_replaced.fill(-1);
 
     // Type-specific data.
     switch(type_id)
