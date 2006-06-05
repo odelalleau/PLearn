@@ -132,12 +132,12 @@ void ExhaustiveNearestNeighbors::build()
 
 void ExhaustiveNearestNeighbors::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    deepCopyField(train_set, copies);
-    deepCopyField(cached_inputs, copies);
-    deepCopyField(costs,        copies);
-    deepCopyField(dummy_vec,    copies);
-    deepCopyField(indices,      copies);
     inherited::makeDeepCopyFromShallowCopy(copies);
+
+    deepCopyField(cached_inputs, copies);
+    deepCopyField(costs,         copies);
+    deepCopyField(dummy_vec,     copies);
+    deepCopyField(indices,       copies);
 }
 
 
