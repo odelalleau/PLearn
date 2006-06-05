@@ -47,7 +47,22 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(
     GaussianizeVMatrix,
     "Transforms its source VMatrix so that its features look Gaussian.",
-    ""
+
+    "This VMat transforms the features of its source that are obviously non-\n"
+    "Gaussian, i.e. when the difference between the maximum and minimum\n"
+    "value is too large compared to the standard deviation (the meaning of\n"
+    "'too large' being controlled by the 'threshold_ratio' option).\n"
+    "\n"
+    "When this happens, the values of a features are sorted and their rank\n"
+    "is used to transform them through the inverse cumulative of a normal\n"
+    "Gaussian, resulting on a distribution that actually looks Gaussian.\n"
+    "Note that, unless specified otherwise through the options, only the\n"
+    "input features are transformed.\n"
+    "\n"
+    "An additional 'train_source' VMat can also be specified in order to\n"
+    "transform new data (in the 'source' option) while the transformation\n"
+    "parameters are learned on a fixed 'train_source' VMat (e.g. when new\n"
+    "test data are obtained and need to be properly Gaussianized).\n"
 );
 
 ////////////////////////
