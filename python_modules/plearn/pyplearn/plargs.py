@@ -429,6 +429,35 @@ class plopt(object):
 
     #######  Static methods  ######################################################
 
+    def addCmdLineOverride(holder_name, optname, value):
+        context = actualContext(plopt)
+        hldr_key = (holder_name, optname)
+        if hldr_key in context.plopt_cmdline_overrides:
+            from plearn.pyplearn import PyPLearnError
+            raise PyPLearnError("Duplicate command-line value for option '%s'"%optname)
+
+        # Use the 'unique' key to store command-line override's value
+        context.plopt_cmdline_overrides[hldr_key] = value
+    addCmdLineOverride = staticmethod(addCmdLineOverride)
+
+    def popCmdLineOverride(actual_holder, optname):
+        context = actualContext(plopt)
+        hldr_key = (actual_holder.__name__, optname)
+        override_value = context.plopt_cmdline_overrides.pop(hldr_key, None)
+
+        # If the option is not namespaced, it may have been provided
+        # without the binder name as prefix. Try accessing the key with
+        # None instead of the holder's name
+        if override_value is None \
+           and not issubclass(actual_holder, plnamespace):
+            hldr_key = (None, optname)
+            override_value = context.plopt_cmdline_overrides.pop(hldr_key, None)
+
+        # Will return None if no option named 'optname' were overridden on
+        # the command line
+        return override_value
+    popCmdLineOverride = staticmethod(popCmdLineOverride)
+
     def buildClassContext(context):
         assert not hasattr(context, 'plopt_binders')
         context.plopt_binders = {}
@@ -436,11 +465,11 @@ class plopt(object):
         assert not hasattr(context, 'plopt_namespaces')
         context.plopt_namespaces = {}
 
-        assert not hasattr(context, 'plopt_tmp_holders')
-        context.plopt_tmp_holders = {}
-
         assert not hasattr(context, 'plopt_overrides')
         context.plopt_overrides = {}
+
+        assert not hasattr(context, 'plopt_cmdline_overrides')
+        context.plopt_cmdline_overrides = {}
     buildClassContext = staticmethod(buildClassContext)
 
     def closeClassContext(context):
@@ -452,54 +481,43 @@ class plopt(object):
         del context.plopt_overrides
 
         unused = []
-        for optname, holder in context.plopt_tmp_holders.iteritems():
+        for (hldr_name, optname), value in context.plopt_cmdline_overrides.iteritems():
             if optname in exceptions: continue
-            unused.append("%s=%s"%(optname, holder.option))
+            unused.append("%s=%s"%(optname, value))
             
         if unused:
             from plearn.pyplearn import PyPLearnError
             raise PyPLearnError(
-                "The following command-line arguments were not expected (misspelled?): "
-                "%s" % ", ".join(unused))
+                "The following command-line arguments were not expected "
+                "(Misspelled? Or namespaced?): %s" % ", ".join(unused))
 
         # Finally, delete the list
-        del context.plopt_tmp_holders
+        del context.plopt_cmdline_overrides
     closeClassContext = staticmethod(closeClassContext)    
 
     def define(holder, option, value):
         """Typical pattern to set a plopt instance member in 'holder' for the first time."""
         context = actualContext(plopt)
 
-        if isinstance(holder, _TmpHolder):
-            # Keep a pointer to the tmp-holder in which the option is defined
-            context.plopt_tmp_holders[option] = holder
-            holder.option = value
+        # Check if an override was defined through parsing before the
+        # holder existed. Returns None in the case no override exists.
+        cmdline_override = plopt.popCmdLineOverride(holder, option)
 
-        else:
-            # Check if an override was defined through parsing before the
-            # holder existed.
-            cmdline_override = None
-            if option in context.plopt_tmp_holders:
-                tmp_holder = context.plopt_tmp_holders.pop(option)
-                tmp_holder.checkConsistency(holder) # raise if inconsistent
-                cmdline_override = tmp_holder.option
-                del tmp_holder
+        ### Holder-type specific management
+        plopt._inner_define(holder, option, value)
 
-            ### Holder-type specific management
-            plopt._inner_define(holder, option, value)
-
-            # Command-line MUST override mandatory plopts
-            if isinstance(value, mandatory_plopt) and cmdline_override is None:
-                from plearn.pyplearn import PyPLearnError
-                raise PyPLearnError(
-                    "Mandatory argument %s.%s was not received on command line."
-                    %(holder.__name__, value.getName()) )
-            
-            # Overrides the default with the command-line override if any. Note
-            # that this way to proceed leads to forgetting the command-line
-            # override if reset() is called on the plopt instance!!!
-            if cmdline_override is not None:
-                plopt.override(holder, option, cmdline_override)            
+        # Command-line MUST override mandatory plopts
+        if isinstance(value, mandatory_plopt) and cmdline_override is None:
+            from plearn.pyplearn import PyPLearnError
+            raise PyPLearnError(
+                "Mandatory argument %s.%s was not received on command line."
+                %(holder.__name__, value.getName()) )
+        
+        # Overrides the default with the command-line override if any. Note
+        # that this way to proceed leads to forgetting the command-line
+        # override if reset() is called on the plopt instance!!!
+        if cmdline_override is not None:
+            plopt.override(holder, option, cmdline_override)            
     define = staticmethod(define)
 
     def _inner_define(holder, option, value):
@@ -665,7 +683,7 @@ class plargs(object):
 
             # Was the holder for that option defined?
             if holder is None:
-                plopt.define(_TmpHolder(holder_name), option, value)                
+                plopt.addCmdLineOverride(holder_name, option, value)
             else:
                 setattr(holder, option, value)
     parse = staticmethod(parse)
@@ -881,11 +899,18 @@ class _TmpHolder:
         self._name = holder_name
 
     def checkConsistency(self, holder):
+        from plearn.pyplearn import PyPLearnError
         if self._name is None:
-            assert not isinstance(holder, plnamespace)
+            assert not issubclass(holder, plnamespace)
         else:
             assert holder.__name__ == self._name
 
+# class _TmpHolderMap(dict):
+#     def __getitem__(self, key):
+#         if not key in self:
+#             self.__setitem__(key, [])
+#         return super(ListMap, self).__getitem__(key)
+    
 
 #######  For backward compatibily: will be deprecated soon  ###################
 

@@ -98,4 +98,4 @@ Namespace: MyNamespace
     namespaced3: plopt(value = 'NAMESPACED3' [default: 'namespaced3'])
 
 
-PyPLearnError: The following command-line arguments were not expected (misspelled?): bindd1=BINDED1
+PyPLearnError: The following command-line arguments were not expected (Misspelled? Or namespaced?): bindd1=BINDED1
