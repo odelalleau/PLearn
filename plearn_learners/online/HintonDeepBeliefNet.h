@@ -70,6 +70,9 @@ public:
     //! The learning rate used during the gradient descent
     real fine_tuning_learning_rate;
 
+    //! 
+    real fine_tuning_decrease_ct;
+
     //! Initial momentum
     real initial_momentum;
 

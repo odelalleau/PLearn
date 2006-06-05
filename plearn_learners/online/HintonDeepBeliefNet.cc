@@ -66,6 +66,7 @@ PLEARN_IMPLEMENT_OBJECT(
 HintonDeepBeliefNet::HintonDeepBeliefNet() :
     learning_rate(0.),
     fine_tuning_learning_rate(-1.),
+    fine_tuning_decrease_ct(0.),
     initial_momentum(0.),
     final_momentum(0.),
     momentum_switch_time(-1),
@@ -94,6 +95,12 @@ void HintonDeepBeliefNet::declareOptions(OptionList& ol)
                   &HintonDeepBeliefNet::fine_tuning_learning_rate,
                   OptionBase::buildoption,
                   "Learning rate used during the gradient descent");
+
+    declareOption(ol, "fine_tuning_decrease_ct",
+                  &HintonDeepBeliefNet::fine_tuning_decrease_ct,
+                  OptionBase::buildoption,
+                  "Decrease constant used during the gradient descent\n"
+                  "(in fact, it will only be updated only once every epoch.\n");
 
     declareOption(ol, "initial_momentum",
                   &HintonDeepBeliefNet::initial_momentum,
@@ -796,6 +803,15 @@ void HintonDeepBeliefNet::train()
                 int sample = stage % nsamples;
                 if( sample == begin_sample )
                     train_stats->forget();
+                if( !fast_exact_is_equal( fine_tuning_learning_rate, 0. ) )
+                {
+                    real cur_learning_rate = fine_tuning_learning_rate
+                        / (1. + fine_tuning_decrease_ct*(stage-init_stage) );
+                    for( int i=0 ; i<n_layers-1 ; i++ )
+                        params[i]->learning_rate = cur_learning_rate;
+                    joint_params->learning_rate = cur_learning_rate;
+                    target_params->learning_rate = cur_learning_rate;
+                }
 
                 train_set->getExample(sample, input, target, weight);
                 fineTuneByGradientDescent( input, train_costs );
