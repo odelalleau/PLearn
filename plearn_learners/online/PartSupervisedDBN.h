@@ -68,8 +68,8 @@ public:
     //! The learning rate used during greedy learning
     real learning_rate;
 
-    //! The learning rate used for the supervised part during greedy learning
-    real supervised_learning_rate;
+    //! The learning rates used for the supervised part during greedy learning
+    Vec supervised_learning_rates;
 
     //! The learning rate used during the gradient descent
     real fine_tuning_learning_rate;
@@ -333,8 +333,6 @@ protected:
     virtual real jointGreedyStep( const Vec& input );
     virtual void fineTuneByGradientDescent( const Vec& input,
                                             const Vec& train_costs );
-
-    PP<OnlineLearningModule> newLogisticRegressor( int n_inputs ) const;
 
     //! Declares the class options.
     static void declareOptions(OptionList& ol);

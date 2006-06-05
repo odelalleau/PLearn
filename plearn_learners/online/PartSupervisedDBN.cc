@@ -99,11 +99,12 @@ void PartSupervisedDBN::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Learning rate used during greedy learning");
 
-    declareOption(ol, "supervised_learning_rate",
-                  &PartSupervisedDBN::supervised_learning_rate,
+    declareOption(ol, "supervised_learning_rates",
+                  &PartSupervisedDBN::supervised_learning_rates,
                   OptionBase::buildoption,
-                  "The learning rate used for the supervised part during"
-                  " greedy learning");
+                  "The learning rates used for the supervised part during"
+                  " greedy learning\n"
+                  "(layer by layer).\n");
 
     declareOption(ol, "fine_tuning_learning_rate",
                   &PartSupervisedDBN::fine_tuning_learning_rate,
@@ -306,12 +307,16 @@ void PartSupervisedDBN::build_()
 
     if( training_schedule.length() != n_layers-1 )
         training_schedule = TVec<int>( n_layers-1, 1000000 );
+
+    // fills with 0's if too short
+    supervised_learning_rates.resize( n_layers-1 );
+
     MODULE_LOG << "  training_schedule = " << training_schedule << endl;
     MODULE_LOG << "learning_rate = " << learning_rate << endl;
     MODULE_LOG << "fine_tuning_learning_rate = "
         << fine_tuning_learning_rate << endl;
-    MODULE_LOG << "supervised_learning_rate = "
-        << supervised_learning_rate << endl;
+    MODULE_LOG << "supervised_learning_rates = "
+        << supervised_learning_rates << endl;
     MODULE_LOG << endl;
 
     build_layers();
@@ -420,7 +425,38 @@ void PartSupervisedDBN::build_regressors()
             || regressors[i]->input_size != params[i]->up_layer_size )
         {
             MODULE_LOG << "creating regressor " << i << endl;
-            regressors[i] = newLogisticRegressor( params[i]->up_layer_size );
+
+            // A linear layer of the appropriate size, that will be trained by
+            // stochastic gradient descent, initial weights are 0.
+            PP<GradNNetLayerModule> p_gnnlm = new GradNNetLayerModule();
+            p_gnnlm->input_size = params[i]->up_layer_size;
+            p_gnnlm->output_size = n_predicted;
+            p_gnnlm->start_learning_rate = supervised_learning_rates[i];
+            MODULE_LOG << "start_learning_rate = "
+                << p_gnnlm->start_learning_rate << endl;
+            p_gnnlm->init_weights_random_scale = 0.;
+            p_gnnlm->build();
+
+            // The softmax+NLL part
+            PP<NLLErrModule> p_nll = new NLLErrModule();
+            p_nll->input_size = n_predicted;
+            p_nll->output_size = 1;
+            p_nll->build();
+
+            // Stack them, and...
+            TVec< PP<OnlineLearningModule> > stack(2);
+            stack[0] = (GradNNetLayerModule*) p_gnnlm;
+            stack[1] = (NLLErrModule*) p_nll;
+
+            // ... encapsulate them in another Module, that will compute
+            // and backprop the NLL
+            PP<StackedModulesModule> p_smm = new StackedModulesModule();
+            p_smm->modules = stack;
+            p_smm->last_layer_is_cost = true;
+            p_smm->target_size = n_predicted;
+            p_smm->build();
+
+            regressors[i] = (StackedModulesModule*) p_smm;
         }
 }
 
@@ -897,7 +933,7 @@ real PartSupervisedDBN::supervisedContrastiveDivergenceStep(
 {
 
     real supervised_cost = MISSING_VALUE;
-    if( supervised_learning_rate > 0 )
+    if( supervised_learning_rates[index] > 0 )
     {
         // (Deterministic) forward pass
         parameters->setAsDownInput( down_layer->expectation );
@@ -921,7 +957,7 @@ real PartSupervisedDBN::supervisedContrastiveDivergenceStep(
                                expectation_gradients[index+1] );
 
         // put the right learning rate
-        parameters->learning_rate = supervised_learning_rate;
+        parameters->learning_rate = supervised_learning_rates[index];
         // updates the parameters
         parameters->bpropUpdate( down_layer->expectation,
                                  up_layer->activations,
@@ -1057,7 +1093,7 @@ real PartSupervisedDBN::jointGreedyStep( const Vec& input )
     }
 
     real supervised_cost = MISSING_VALUE;
-    if( supervised_learning_rate > 0 )
+    if( supervised_learning_rates[n_layers-2] > 0 )
     {
         // deterministic forward pass
         joint_params->setAsCondInput( layers[n_layers-2]->expectation );
@@ -1078,7 +1114,7 @@ real PartSupervisedDBN::jointGreedyStep( const Vec& input )
         output_gradient[actual_index] -= 1.;
 
         // put the right learning rate
-        joint_params->learning_rate = supervised_learning_rate;
+        joint_params->learning_rate = supervised_learning_rates[n_layers-2];
         // backprop and update
         joint_params->bpropUpdate( layers[n_layers-2]->expectation,
                                    target_layer->expectation,
@@ -1144,43 +1180,6 @@ void PartSupervisedDBN::fineTuneByGradientDescent( const Vec& input,
                                   expectation_gradients[i-1],
                                   activation_gradients[i] );
     }
-}
-
-
-PP<OnlineLearningModule> PartSupervisedDBN::newLogisticRegressor(int n_inputs)
-    const
-{
-    // A linear layer of the appropriate size, that will be trained by
-    // stochastic gradient descent, initial weights are 0.
-    PP<GradNNetLayerModule> p_gnnlm = new GradNNetLayerModule();
-    p_gnnlm->input_size = n_inputs;
-    p_gnnlm->output_size = n_predicted;
-    p_gnnlm->start_learning_rate = supervised_learning_rate;
-    MODULE_LOG << "start_learning_rate = "
-        << p_gnnlm->start_learning_rate << endl;
-    p_gnnlm->init_weights_random_scale = 0.;
-    p_gnnlm->build();
-
-    // The softmax+NLL part
-    PP<NLLErrModule> p_nll = new NLLErrModule();
-    p_nll->input_size = n_predicted;
-    p_nll->output_size = 1;
-    p_nll->build();
-
-    // Stack them, and...
-    TVec< PP<OnlineLearningModule> > stack(2);
-    stack[0] = (GradNNetLayerModule*) p_gnnlm;
-    stack[1] = (NLLErrModule*) p_nll;
-
-    // ... encapsulate them in another Module, that will compute and backprop
-    // the NLL
-    PP<StackedModulesModule> p_smm = new StackedModulesModule();
-    p_smm->modules = stack;
-    p_smm->last_layer_is_cost = true;
-    p_smm->target_size = n_predicted;
-    p_smm->build();
-
-    return (OnlineLearningModule*) (StackedModulesModule*) p_smm;
 }
 
 
