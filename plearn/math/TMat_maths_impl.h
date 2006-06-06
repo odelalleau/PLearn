@@ -1730,6 +1730,23 @@ void substract(const TVec<T>& source1, const TVec<T>& source2, TVec<T>& destinat
         d[i] = s1[i]-s2[i];
 }
 
+// destination[i] += source1[i]-source2[i]
+template<class T>
+void substractAcc(const TVec<T>& source1, const TVec<T>& source2, TVec<T>& destination)
+{
+    int n=source1.length();
+    if (n!=source2.length())
+        PLERROR("substract: two sources (l=%d and %d) must have same length",
+                n,source2.length());
+    if (n!=destination.length())
+        destination.resize(n);
+    T* s1=source1.data();
+    T* s2=source2.data();
+    T* d=destination.data();
+    for (int i=0;i<n;i++)
+        d[i] += s1[i]-s2[i];
+}
+
 // destination[i] = source1-source2[i]
 template<class T>
 void substract(T source1, const TVec<T>& source2, TVec<T>& destination)
