@@ -77,7 +77,7 @@ void StackedModulesModule::declareOptions(OptionList& ol)
                   " allowing this\n"
                   "module to behave the same way.\n");
 
-    declareOption(ol, "target_size", &StackedModulesModule::nmodules,
+    declareOption(ol, "target_size", &StackedModulesModule::target_size,
                   OptionBase::buildoption,
                   "If last_layer_is_cost, the size of the target");
 
