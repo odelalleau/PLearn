@@ -1061,7 +1061,7 @@ void HintonDeepBeliefNet::computeCostsFromOutputs(const Vec& input,
         inherited::computeCostsFromOutputs(input, output, target, costs);
     else if( c == 'e' )
     {
-        costs.resize( 2 );
+        costs.resize( 3 );
         splitCond(input);
 
         // actual_index is the actual 'target'
@@ -1079,6 +1079,15 @@ void HintonDeepBeliefNet::computeCostsFromOutputs(const Vec& input,
             costs[1] = 0;
         else
             costs[1] = 1;
+
+        real expected_output =  .0 ; 
+        real expected_teacher = .0 ; 
+        for(int i=0 ; i<n_predicted ; ++i) { 
+            expected_output  += output[i] * i;
+            expected_teacher += predicted_part[i] * i ; 
+        }
+        costs[2] = square(expected_output - expected_teacher) ; 
+
     }
 }
 
@@ -1092,6 +1101,7 @@ TVec<string> HintonDeepBeliefNet::getTestCostNames() const
     {
         result.append( "NLL" );
         result.append( "class_error" );
+        result.append( "WMSE" );
     }
     result.append("time");
     return result;
