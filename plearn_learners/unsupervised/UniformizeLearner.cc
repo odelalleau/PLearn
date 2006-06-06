@@ -112,16 +112,25 @@ void UniformizeLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 }
 
 
+////////////////
+// outputsize //
+////////////////
 int UniformizeLearner::outputsize() const
 {
     return inputsize();
 }
 
+////////////
+// forget //
+////////////
 void UniformizeLearner::forget()
 {
     stage = 0; // untrained
 }
     
+///////////
+// train //
+///////////
 void UniformizeLearner::train()
 {
     // The role of the train method is to bring the learner up to stage==nstages,
@@ -180,24 +189,29 @@ void UniformizeLearner::train()
     }
 }
 
+////////////////////
+// computeRankMap //
+////////////////////
 void UniformizeLearner::computeRankMap(Vec v, int nquantiles, map<real,real>& rankmap)
 {
     rankmap.clear();
-    int l = v.length();
+    int max_index = v.length() - 1;
     sortElements(v);
     rankmap[v[0]] = 0;
-    rankmap[v[l-1]] = 1;
+    rankmap[v[max_index]] = 1;
     for(int k=1; k<nquantiles; k++)
     {
         real rank = real(k)/real(nquantiles);
-        // int pos = l*k/nquantiles;
-        int pos = int(0.5+l*rank);
+        int pos = int(round(rank * max_index));
         real val = v[pos];
-        if(rankmap.find(val)==rankmap.end())
+        if(rankmap.find(val) == rankmap.end())
             rankmap[val] = rank;
     }
 }
 
+///////////////
+// mapToRank //
+///////////////
 real UniformizeLearner::mapToRank(real val, const map<real,real>& rankmap)
 {
     real minv = rankmap.begin()->first;
