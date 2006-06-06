@@ -59,6 +59,13 @@ PLEARN_IMPLEMENT_OBJECT(
     "Note that, unless specified otherwise through the options, only the\n"
     "input features are transformed.\n"
     "\n"
+    "It is important to note that only unique values are considered when\n"
+    "computing the mapping, so that there is no 'hole' in the resulting\n"
+    "distribution. This means the transformation learnt does not depend on\n"
+    "the number of occurences of a specific value, but only on the ordering\n"
+    "of the unique values encountered. The 'uniqueness' is defined by the\n"
+    "PLearn 'is_equal' function, used to approximately compare real numbers.\n"
+    "\n"
     "An additional 'train_source' VMat can also be specified in order to\n"
     "transform new data (in the 'source' option) while the transformation\n"
     "parameters are learned on a fixed 'train_source' VMat (e.g. when new\n"
@@ -172,8 +179,7 @@ void GaussianizeVMatrix::build_()
     // actually Gaussianized, and store the corresponding list of values.
     TVec<int> candidates = features_to_gaussianize.copy();
     features_to_gaussianize.resize(0);
-    counts.resize(0);
-    Vec row(2);
+    values.resize(0);
     for (int i = 0; i < candidates.length(); i++) {
         int j = candidates[i];
         StatsCollector& stat = stats[j];
@@ -181,25 +187,22 @@ void GaussianizeVMatrix::build_()
             continue;
         if ((stat.max() - stat.min()) > threshold_ratio * stat.stddev()) {
             features_to_gaussianize.append(j);
-            counts.append(Mat());
-            Mat& counts_j = counts.lastElement();
-            // We use a dummy iterator to get rid of the last element in the
-            // counts, which is the max real value.
+            values.append(Vec());
+            Vec& values_j = values.lastElement();
             map<real, StatsCollectorCounts>::const_iterator it, it_dummy;
-            map<real,StatsCollectorCounts>* count_map = stat.getCounts();
+            // Note that we obtain the approximate counts, so that almost equal
+            // values have been merged together already.
+            map<real,StatsCollectorCounts>* count_map =
+                                                stat.getApproximateCounts();
+            // We use a dummy iterator to get rid of the last element in the
+            // map, which is the max real value.
             it_dummy = count_map->begin();
             it_dummy++;
-            int count_values = 0;
             for (it = count_map->begin(); it_dummy != count_map->end();
                                           it++, it_dummy++)
             {
-                row[0] = it->first;
-                row[1] = count_values;
-                count_values += it->second.n;
-                counts_j.appendRow(row);
+                values_j.append(it->first);
             }
-            // This scales the ranks so that they are between 0 and 1.
-            counts_j.column(1) /= row[1];
         }
     }
 
@@ -219,21 +222,21 @@ void GaussianizeVMatrix::getNewRow(int i, const Vec& v) const
         real current_val = v[j];
         if (is_missing(current_val))
             continue;
-        // Find closest value in the training data.
-        Mat& counts_j = counts[k];
-        real closest;
-        if (current_val < counts_j(0, 0)) {
+        // Find closest values in the training data.
+        Vec& values_j = values[k];
+        real interpol;
+        if (current_val < values_j[0]) {
             // Smaller than the minimum.
-            closest = 0;
-        } else if (current_val > counts_j(counts_j.length() - 1, 0)) {
+            interpol = 0;
+        } else if (current_val > values_j.lastElement()) {
             // Higher than the maximum.
-            closest = 1;
+            interpol = 1;
         } else {
             int min = 0;
-            int max = counts_j.length() - 1;
+            int max = values_j.length() - 1;
             while (max - min > 1) {
                 int mid = (max + min) / 2;
-                real mid_val = counts_j(mid, 0);
+                real mid_val = values_j[mid];
                 if (current_val < mid_val)
                     max = mid;
                 else if (current_val > mid_val)
@@ -244,25 +247,23 @@ void GaussianizeVMatrix::getNewRow(int i, const Vec& v) const
                 }
             }
             if (min == max)
-                closest = counts_j(min, 1);
+                interpol = min;
             else {
                 assert( max - min == 1 );
-                if (fabs(current_val - counts_j(min, 0)) <
-                    fabs(current_val - counts_j(max, 0)))
-                {
-                    closest = counts_j(min, 1);
-                } else
-                    closest = counts_j(max, 1);
+                interpol = (current_val - values_j[min]) /
+                          (values_j[max] - values_j[min]) + min;
+                assert( !is_missing(interpol) );
             }
         }
-        assert( closest >= 0 && closest <= 1 );
+        interpol /= (values_j.length() - 1);
+        assert( interpol >= 0 && interpol <= 1 );
         // The expectation of the minimum and maximum of n numbers taken from a
         // uniform(0,1) distribution are respectively 1/n+1 and n/n+1: we shift
-        // and rescale 'closest' to be in [1/n+1, n/n+1] before using the
+        // and rescale 'interpol' to be in [1/n+1, n/n+1] before using the
         // inverse of the Gaussian cumulative function.
-        real n = counts_j.length();
-        closest = (n - 1) / (n + 1) * closest + 1 / (n + 1);
-        v[j] = gauss_01_quantile(closest);
+        real n = values_j.length();
+        interpol = (n - 1) / (n + 1) * interpol + 1 / (n + 1);
+        v[j] = gauss_01_quantile(interpol);
     }
 }
 

@@ -102,16 +102,9 @@ protected:
     //! Scaling factor to map the rank to [0,1].
     Vec scaling_factor;
 
-    //! The j-th element is a two-column matrix whose first row is the (sorted)
-    //! list of values appearing in the variable features_to_gaussianize[j],
-    //! and the second row indicates how many occurences are strictly below
-    //! each of these values (i.e. gives their rank).
-    TVec<Mat> counts;
-
-    //#####  Protected Options  ###############################################
-
-    // ### Declare protected option fields (such as learned parameters) here
-    // ...
+    //! The j-th element is the list of values appearing in the variable
+    //! features_to_gaussianize[j].
+    TVec<Vec> values;
 
 protected:
     //#####  Protected Member Functions  ######################################
