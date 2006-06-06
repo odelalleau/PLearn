@@ -482,9 +482,13 @@ class plopt(object):
 
         unused = []
         for (hldr_name, optname), value in context.plopt_cmdline_overrides.iteritems():
-            if optname in exceptions: continue
-            unused.append("%s=%s"%(optname, value))
-            
+            if optname in exceptions:
+                continue
+            elif hldr_name is None:
+                unused.append("%s=%s"%(optname, value))
+            else:
+                unused.append("%s.%s=%s"%(hldr_name, optname, value))
+                
         if unused:
             from plearn.pyplearn import PyPLearnError
             raise PyPLearnError(
