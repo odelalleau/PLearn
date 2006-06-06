@@ -308,6 +308,7 @@
 #include <plearn/vmat/ThresholdVMatrix.h>
 #include <plearn/vmat/TransposeVMatrix.h>
 #include <plearn/vmat/UCIDataVMatrix.h>
+#include <plearn/vmat/UniformizeVMatrix.h>
 #include <plearn/vmat/VariableDeletionVMatrix.h>
 #include <plearn/vmat/ViewSplitterVMatrix.h>
 #include <plearn/vmat/VMatrixFromDistribution.h>
