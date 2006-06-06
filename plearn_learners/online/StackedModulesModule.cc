@@ -52,6 +52,7 @@ PLEARN_IMPLEMENT_OBJECT(
 
 StackedModulesModule::StackedModulesModule() :
     last_layer_is_cost( false ),
+    target_size( 0 ),
     nmodules( 0 )
 {
 }
@@ -75,6 +76,10 @@ void StackedModulesModule::declareOptions(OptionList& ol)
                   "as input, and outputing the cost we will minimize),"
                   " allowing this\n"
                   "module to behave the same way.\n");
+
+    declareOption(ol, "target_size", &StackedModulesModule::nmodules,
+                  OptionBase::buildoption,
+                  "If last_layer_is_cost, the size of the target");
 
     declareOption(ol, "nmodules", &StackedModulesModule::nmodules,
                   OptionBase::learntoption,
@@ -162,6 +167,7 @@ void StackedModulesModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     deepCopyField(modules, copies);
     deepCopyField(values, copies);
+    deepCopyField(cost_layer_input, copies);
     deepCopyField(gradients, copies);
     deepCopyField(diag_hessians, copies);
 }
