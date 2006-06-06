@@ -1,10 +1,8 @@
 // -*- C++ -*-
 
-// PLearn (A C++ Machine Learning Library)
-// Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio, and Rejean Ducharme
-// Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux
-// Copyright (C) 1999-2001, 2006 University of Montreal
+// UniformizeVMatrix.cc
+//
+// Copyright (C) 2006 Olivier Delalleau
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -34,10 +32,10 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
+// Authors: Olivier Delalleau
 
-/* *******************************************************
- * $Id$
- ******************************************************* */
+/*! \file UniformizeVMatrix.cc */
+
 
 #include "UniformizeVMatrix.h"
 
@@ -46,95 +44,164 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     UniformizeVMatrix,
-    "Uniformize (between a and b) each feature in index of its source.",
-    "VMatrix that can be used to uniformize (between a and b) each feature\n"
-    "in its underlying source, such that:\n"
-    "    P(x') = .5         if  a < x'< b\n"
-    "          =  0         otherwise\n"
+    "Transforms its source VMatrix so that its features look uniform.",
+    "This VMat transforms the features of its source that are obviously non-\n"
+    "Gaussian, i.e. when the difference between the maximum and minimum\n"
+    "value is too large compared to the standard deviation (the meaning of\n"
+    "'too large' being controlled by the 'threshold_ratio' option).\n"
     "\n"
-    "We suppose that the original distribution P(x) could be anything, and \n"
-    "we map 'a' with bins[0] and 'b' with bins[N-1].\n"
-    );
+    "It uses an underlying UniformizeLearner to perform uniformization.\n"
+);
 
-UniformizeVMatrix::UniformizeVMatrix(bool call_build_)
-    : inherited(call_build_), a(0), b(1)
+///////////////////////
+// UniformizeVMatrix //
+///////////////////////
+UniformizeVMatrix::UniformizeVMatrix():
+    nquantiles(1000),
+    threshold_ratio(10),
+    uniformize_input(true),
+    uniformize_target(false),
+    uniformize_weight(false),
+    uniformize_extra(false),
+    uniformize_learner( new UniformizeLearner() ),
+    uniformized_source( new PLearnerOutputVMatrix() )
+{}
+
+////////////////////
+// declareOptions //
+////////////////////
+void UniformizeVMatrix::declareOptions(OptionList& ol)
 {
-    // build_() won't do anything
-    /* if( call_build_)
-        build_(); */
+    declareOption(ol, "threshold_ratio", &UniformizeVMatrix::threshold_ratio,
+                                         OptionBase::buildoption,
+        "A source's feature will be uniformized when the following holds:\n"
+        "(max - min) / stddev > threshold_ratio.");
+
+    declareOption(ol, "uniformize_input",
+                  &UniformizeVMatrix::uniformize_input,
+                  OptionBase::buildoption,
+        "Whether or not to uniformize the input part.");
+
+    declareOption(ol, "uniformize_target",
+                  &UniformizeVMatrix::uniformize_target,
+                  OptionBase::buildoption,
+        "Whether or not to uniformize the target part.");
+
+    declareOption(ol, "uniformize_weight",
+                  &UniformizeVMatrix::uniformize_weight,
+                  OptionBase::buildoption,
+        "Whether or not to uniformize the weight part.");
+
+    declareOption(ol, "uniformize_extra",
+                  &UniformizeVMatrix::uniformize_extra,
+                  OptionBase::buildoption,
+        "Whether or not to uniformize the extra part.");
+
+    declareOption(ol, "nquantiles",
+                  &UniformizeVMatrix::nquantiles,
+                  OptionBase::buildoption,
+        "Number of intervals used to divide the sorted values.");
+
+    declareOption(ol, "train_source", &UniformizeVMatrix::train_source,
+                                      OptionBase::buildoption,
+        "An optional VMat that will be used instead of 'source' to compute\n"
+        "the transformation parameters from the distribution statistics.");
+
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
-UniformizeVMatrix::UniformizeVMatrix(VMat the_source,
-                                     Mat the_bins, Vec the_index,
-                                     real the_a, real the_b,
-                                     bool call_build_)
-    : inherited(the_source,
-                the_source->length(), the_source->width(),
-                call_build_),
-      bins(the_bins), index(the_index), a(the_a), b(the_b)
-{
-    if( call_build_ )
-        build_();
-}
-
+///////////
+// build //
+///////////
 void UniformizeVMatrix::build()
 {
     inherited::build();
     build_();
 }
 
+////////////
+// build_ //
+////////////
 void UniformizeVMatrix::build_()
 {
-    if (source) {
-        fieldinfos = source->getFieldInfos();
+    if (!source)
+        return;
 
-        if (a >= b)
-            PLERROR("In UniformizeVMatrix: a (%f) must be strictly smaller than b (%f)", a, b);
-        if (index.length() != bins.length())
-            PLERROR("In UniformizeVMatrix: the number of elements in index (%d) must equal the number of rows in bins (%d)", index.length(), bins.length());
-        if (min(index)<0 || max(index)>source->length()-1)
-            PLERROR("In UniformizeVMatrix: all values of index must be in range [0,%d]",
-                    source->length()-1);
+    if (train_source) {
+        assert( train_source->width() == source->width() );
+        assert( train_source->inputsize()  == source->inputsize() &&
+                train_source->targetsize() == source->targetsize() &&
+                train_source->weightsize() == source->weightsize() &&
+                train_source->extrasize()  == source->extrasize() );
     }
+
+    VMat the_source = train_source ? train_source : source;
+
+    assert( the_source->inputsize() >= 0 && the_source->targetsize() >= 0 &&
+            the_source->weightsize() >= 0 && the_source->extrasize() >= 0 );
+
+    // Find which dimensions to uniformize.
+    TVec<int> features_to_uniformize;
+    int col = 0;
+    if (uniformize_input)
+        features_to_uniformize.append(
+                TVec<int>(col, col + the_source->inputsize() - 1, 1));
+    col += the_source->inputsize();
+    if (uniformize_target)
+        features_to_uniformize.append(
+                TVec<int>(col, col + the_source->targetsize() - 1, 1));
+    col += the_source->targetsize();
+    if (uniformize_weight)
+        features_to_uniformize.append(
+                TVec<int>(col, col + the_source->weightsize() - 1, 1));
+    col += the_source->weightsize();
+    if (uniformize_extra)
+        features_to_uniformize.append(
+                TVec<int>(col, col + the_source->extrasize() - 1, 1));
+    col += the_source->extrasize();
+
+    // Build the UniformizeLearner and associated PLearnerOutputVMatrix.
+    uniformize_learner->forget();
+    uniformize_learner->which_fieldnums = features_to_uniformize;
+    uniformize_learner->nquantiles = this->nquantiles;
+    uniformize_learner->build();
+    uniformize_learner->setTrainingSet(the_source);
+    uniformize_learner->train();
+    TVec< PP<PLearner> > learners;
+    learners.append((UniformizeLearner*) uniformize_learner);
+    uniformized_source->learners = learners;
+    uniformized_source->source = this->source;
+    uniformized_source->build();
+
+    // Obtain meta information from source.
+    setMetaInfoFromSource();
 }
 
-void
-UniformizeVMatrix::declareOptions(OptionList &ol)
-{
-    declareOption(ol, "distr", &UniformizeVMatrix::source,
-                  OptionBase::buildoption,
-                  "DEPRECATED - Use 'source' instead.");
-
-    declareOption(ol, "bins", &UniformizeVMatrix::bins,
-                  OptionBase::buildoption,
-                  "");
-
-    declareOption(ol, "index", &UniformizeVMatrix::index,
-                  OptionBase::buildoption,
-                  "");
-
-    declareOption(ol, "a", &UniformizeVMatrix::a, OptionBase::buildoption, "");
-    declareOption(ol, "b", &UniformizeVMatrix::b, OptionBase::buildoption, "");
-    inherited::declareOptions(ol);
-}
-
+///////////////
+// getNewRow //
+///////////////
 void UniformizeVMatrix::getNewRow(int i, const Vec& v) const
 {
-#ifdef BOUNDCHECK
-    if(i<0 || i>=length())
-        PLERROR("In UniformizeVMatrix::getNewRow OUT OF BOUNDS");
-    if(v.length() != width())
-        PLERROR("In UniformizeVMatrix::getNewRow v.length() must be equal to the VMat's width");
-#endif
+    assert( uniformize_learner->stage > 0 );
+    uniformized_source->getRow(i, v);
+}
 
-    source->getRow(i, v);
-    for(int j=0; j<v.length(); j++) {
-        if (vec_find(index, (real)j) != -1) {
-            Vec x_bin = bins(j);
-            real xx = estimatedCumProb(v[j], x_bin);
-            v[j] = xx*(b-a) - a;
-        }
-    }
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void UniformizeVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    inherited::makeDeepCopyFromShallowCopy(copies);
+
+    // ### Call deepCopyField on all "pointer-like" fields
+    // ### that you wish to be deepCopied rather than
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
+
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("UniformizeVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 } // end of namespace PLearn

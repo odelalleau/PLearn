@@ -1,9 +1,8 @@
 // -*- C++ -*-
 
-// PLearn (A C++ Machine Learning Library)
-// Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
-// Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux
+// UniformizeVMatrix.h
+//
+// Copyright (C) 2006 Olivier Delalleau
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,72 +32,101 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
+// Authors: Olivier Delalleau
 
-/* *******************************************************
- * $Id$
- ******************************************************* */
+/*! \file UniformizeVMatrix.h */
 
-
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
 
 #ifndef UniformizeVMatrix_INC
 #define UniformizeVMatrix_INC
 
-#include "SourceVMatrix.h"
+#include <plearn/vmat/PLearnerOutputVMatrix.h>
+#include <plearn/vmat/SourceVMatrix.h>
+#include <plearn_learners/unsupervised/UniformizeLearner.h>
 
 namespace PLearn {
-using namespace std;
 
-class UniformizeVMatrix: public SourceVMatrix
+class UniformizeVMatrix : public SourceVMatrix
 {
     typedef SourceVMatrix inherited;
 
-protected:
+public:
+    //#####  Public Build Options  ############################################
 
-    // DEPRECATED - Use inherited::source instead
-    // VMat distr;
-    Mat bins;
-    Vec index;
-    real a;
-    real b;
+    int nquantiles;
+    real threshold_ratio;
+    VMat train_source;
+    bool uniformize_input;
+    bool uniformize_target;
+    bool uniformize_weight;
+    bool uniformize_extra;
 
 public:
-    // ******************
-    // *  Constructors  *
-    // ******************
+    //#####  Public Member Functions  #########################################
 
-    //!  default constructor (for automatic deserialization)
-    UniformizeVMatrix(bool call_build_=false);
+    //! Default constructor
+    // ### Make sure the implementation in the .cc
+    // ### initializes all fields to reasonable default values.
+    UniformizeVMatrix();
 
-    //! The original VMFields are copied upon construction
-    UniformizeVMatrix(VMat the_source, Mat the_bins, Vec the_index,
-                      real the_a=0.0, real the_b=1.0, bool call_build_=true);
+    //#####  PLearn::Object Protocol  #########################################
 
+    // Declares other standard object methods.
+    // ### If your class is not instantiatable (it has pure virtual methods)
+    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS
     PLEARN_DECLARE_OBJECT(UniformizeVMatrix);
 
-protected:
-
-    static void declareOptions(OptionList &ol);
-    virtual void getNewRow(int i, const Vec& v) const;
-
-public:
-
+    // Simply calls inherited::build() then build_()
     virtual void build();
 
-    virtual void reset_dimensions()
-    {
-       source->reset_dimensions();
-       width_=source->width();
-       length_=source->length();
-    }
+    //! Transforms a shallow copy into a deep copy
+    // (PLEASE IMPLEMENT IN .cc)
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+
+protected:
+    //#####  Protected Options  ###############################################
+
+    // ### Declare protected option fields (such as learned parameters) here
+    // ...
+
+protected:
+
+    //! The underlying learner that performs the actual normalization.
+    PP<UniformizeLearner> uniformize_learner;
+
+    //! The data that this VMatrix views, i.e. the uniformized version of its
+    //! source.
+    PP<PLearnerOutputVMatrix> uniformized_source;
+    
+    //#####  Protected Member Functions  ######################################
+
+    //! Declares the class options.
+    // (PLEASE IMPLEMENT IN .cc)
+    static void declareOptions(OptionList& ol);
+
+    //! Fill the vector 'v' with the content of the i-th row.
+    //! v is assumed to be the right size.
+    //! ### This function must be overridden in your class
+    virtual void getNewRow(int i, const Vec& v) const;
 
 private:
+    //#####  Private Member Functions  ########################################
+
+    //! This does the actual building.
+    // (PLEASE IMPLEMENT IN .cc)
     void build_();
+
+private:
+    //#####  Private Data Members  ############################################
+
+    // The rest of the private stuff goes here
 };
 
+// Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(UniformizeVMatrix);
 
 } // end of namespace PLearn
+
 #endif
 
 
