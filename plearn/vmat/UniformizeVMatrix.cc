@@ -2,8 +2,9 @@
 
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
+// Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio, and Rejean Ducharme
 // Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux
+// Copyright (C) 1999-2001, 2006 University of Montreal
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -43,23 +44,17 @@
 namespace PLearn {
 using namespace std;
 
-
-/** UniformizeVMatrix **/
-
-PLEARN_IMPLEMENT_OBJECT(UniformizeVMatrix,
-                        "Uniformize (between a and b) each feature in index of"
-                        " source",
-                        "VMatrix that can be used to uniformize (between a and"
-                        " b)\n"
-                        "each feature in index of the underlying distribution"
-                        " such that:\n"
-                        "    P(x') = .5   if  a < x'< b\n"
-                        "          =  0   otherwise\n"
-                        "\n"
-                        "We suppose that the original distribution of x, P(x),"
-                        " could be anything,\n"
-                        "and we map 'a' with bins[0] and 'b' with bins[N-1].\n"
-                       );
+PLEARN_IMPLEMENT_OBJECT(
+    UniformizeVMatrix,
+    "Uniformize (between a and b) each feature in index of its source.",
+    "VMatrix that can be used to uniformize (between a and b) each feature\n"
+    "in its underlying source, such that:\n"
+    "    P(x') = .5         if  a < x'< b\n"
+    "          =  0         otherwise\n"
+    "\n"
+    "We suppose that the original distribution P(x) could be anything, and \n"
+    "we map 'a' with bins[0] and 'b' with bins[N-1].\n"
+    );
 
 UniformizeVMatrix::UniformizeVMatrix(bool call_build_)
     : inherited(call_build_), a(0), b(1)

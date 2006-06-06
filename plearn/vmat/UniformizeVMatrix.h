@@ -45,20 +45,10 @@
 #define UniformizeVMatrix_INC
 
 #include "SourceVMatrix.h"
-#include "VMat.h"
 
 namespace PLearn {
 using namespace std;
 
-
-/*!   VMatrix that can be used to uniformize (between a and b)
-  each feature in index of the underlying distribution such that:
-      P(x') = .5   if  a < x'< b
-            =  0   otherwise
-
-  We suppose that the original distribution of x, P(x), could be anything,
-  and we map "a" with bins[0] and "b" with bins[N-1].
-*/
 class UniformizeVMatrix: public SourceVMatrix
 {
     typedef SourceVMatrix inherited;
