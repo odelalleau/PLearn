@@ -87,6 +87,11 @@ void ClassifierFromDensity::declareOptions(OptionList& ol)
     declareOption(ol, "normalize_probabilities", &ClassifierFromDensity::normalize_probabilities, OptionBase::buildoption,
                   "Whether to normalize the probabilities (if not just compute likelihood * prior for each class)");
 
+    declareOption(ol, "use_these_priors", &ClassifierFromDensity::use_these_priors, OptionBase::buildoption,
+                  "If empty (the default), then prior class probability is determined upon \n"
+                  "training from the empirical class count in the training set. Otherwise this\n"
+                  "must be a vector of length nclasses, specifying these prior class prob. \n");
+
     // Learnt options.
 
     declareOption(ol, "log_priors", &ClassifierFromDensity::log_priors, OptionBase::learntoption,
@@ -165,19 +170,28 @@ void ClassifierFromDensity::train()
 
     if(stage==0)
     {
-        log_priors.resize(nclasses);
-
         map<real, TVec<int> > indices = indicesOfOccurencesInColumn(train_set, inputsize());
 
-        for(int c=0; c<nclasses; c++)
-            log_priors[c] = pl_log(real(indices[real(c)].length())) - pl_log(real(train_set.length())); // how many do we have?
+        log_priors.resize(nclasses);
+        if(use_these_priors.length()==0)
+        {
+            for(int c=0; c<nclasses; c++)
+                log_priors[c] = pl_log(real(indices[real(c)].length())) - pl_log(real(train_set.length())); // how many do we have?
+        }
+        else
+        {
+            if(use_these_priors.length()!=nclasses)
+                PLERROR("In ClassifierFromDensity::train, when compute_empirical_priors is false, you must specify a proper log_priors of length nclasses");  
+            for(int c=0; c<nclasses; c++)
+                log_priors[c] = pl_log(use_these_priors[c]);
+        }
 
         PPath expd = getExperimentDirectory();
 
         for(int c=0; c<nclasses; c++)
         {
             if(verbosity>=1)
-                pout << ">>> Training class " << c;
+                pout << ">>> Training class " << c << endl;
             VMat set_c = train_set.rows(indices[c]);
             int in_sz = set_c->inputsize();
             int targ_sz = set_c->targetsize();
@@ -239,6 +253,7 @@ void ClassifierFromDensity::computeOutput(const Vec& input, Vec& output) const
         // Don't call the estimator in that case, since its output might be
         // ill-defined (NaN or some such), thereby polluting the rest of the
         // output computation
+
         double logprob_c = log_priors[c];
         if (! isinf(log_priors[c]))
             logprob_c += estimators[c]->log_density(input);  // multiply p by the prior
