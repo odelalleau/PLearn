@@ -269,6 +269,7 @@
 #include <plearn/vmat/ExtractNNetParamsVMatrix.h>
 #include <plearn/vmat/FilteredVMatrix.h>
 #include <plearn/vmat/FinancePreprocVMatrix.h>
+#include <plearn/vmat/GaussianizeVMatrix.h>
 #include <plearn/vmat/GeneralizedOneHotVMatrix.h>
 #include <plearn/vmat/GetInputVMatrix.h>
 #include <plearn/vmat/GramVMatrix.h>
