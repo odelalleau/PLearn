@@ -127,7 +127,7 @@ def imshow_xymagnitude(regular_xymagnitude, interpolation='nearest', cmap = cm.j
     
 def imshow_xyrgb(regular_xyrgb, interpolation='nearest'):
     grid_rgb, x0, y0, deltax, deltay = regular_xyval_to_2d_grid_values(regular_xyrgb)
-    print 'grid_rgb shape=',grid_rgb.shape
+    # print 'grid_rgb shape=',grid_rgb.shape
     imshow_2d_grid_rgb(grid_rgb, x0, y0, deltax, deltay, interpolation, cm.jet)
 
 def classcolor(winner,margin=0):
@@ -158,7 +158,7 @@ def imshow_2d_grid_rgb(gridrgb, x0, y0, deltax, deltay, interpolation='nearest',
     ny = size(gridrgb,1)
     extent = (x0-.5*deltax, x0+nx*deltax, y0-.5*deltay, y0+ny*deltay)
      # gridrgb = reshape(gridrgb,(nx,ny))
-    print 'SHAPE:',gridrgb.shape
+    # print 'SHAPE:',gridrgb.shape
     # print 'gridrgb:', gridrgb
     imshow(gridrgb, cmap=cmap, origin='lower', extent=extent, interpolation=interpolation)
 
