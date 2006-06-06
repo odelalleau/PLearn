@@ -122,11 +122,15 @@ public:
     //! Contains params[n_layers-2] and target_params.
     PP<RBMJointLLParameters> joint_params;
 
-    //! only used when USING_MPI for parallelization
-    //! this is the number of examples seen by one process
+    //! This is the number of examples seen by one process
     //! during training after which the weight updates are shared
-    //! among all the processes.
-    int parallelization_minibatch_size;
+    //! among all the processes. When update_only_after_minibatch,
+    //! training is done by minibatches, with parameter updates
+    //! only after each minibatch of that size.
+    int minibatch_size;
+
+    //! update parameters only after a minibatch has been seen
+    bool update_only_after_minibatch;
 
     //! only used when USING_MPI for parallelization:
     //! sum or average the delta-w contributions from different processes?
@@ -350,7 +354,6 @@ private:
 
     // ** NON-OPTION FIELDS (temporary workspace)
 
-#if USING_MPI
     //! for MPI parallelization, share parameters of all Parameters boxes
     Vec global_params;
     //! and keep track of their value at the previous sharing step between all
@@ -358,7 +361,6 @@ private:
     Vec previous_global_params;
     //! difference between the above two
     Vec delta_params;
-#endif
 };
 
 // Declares a few other classes and functions related to this class

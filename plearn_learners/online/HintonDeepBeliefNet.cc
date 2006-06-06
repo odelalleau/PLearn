@@ -71,7 +71,8 @@ HintonDeepBeliefNet::HintonDeepBeliefNet() :
     final_momentum(0.),
     momentum_switch_time(-1),
     weight_decay(0.),
-    parallelization_minibatch_size(100),
+    minibatch_size(100),
+    update_only_after_minibatch(false),
     sum_parallel_contributions(0),
     use_sample_or_expectation(4)
 {
@@ -204,13 +205,21 @@ void HintonDeepBeliefNet::declareOptions(OptionList& ol)
                   "  - hidden unit during negative phase (you should keep it"
                   " to 0).\n");
 
-    declareOption(ol, "parallelization_minibatch_size",
-                  &HintonDeepBeliefNet::parallelization_minibatch_size,
+    declareOption(ol, "minibatch_size",
+                  &HintonDeepBeliefNet::minibatch_size,
                   OptionBase::buildoption,
-                  "Only used when USING_MPI for parallelization.\n"
                   "This is the number of examples seen by one process\n"
                   "during training after which the weight updates are shared\n"
-                  "among all the processes.\n");
+                  "among all the processes. When update_only_after_minibatch,\n"
+                  "training is done by minibatches, with parameter updates\n"
+                  "only after each minibatch of that size.\n");
+
+    declareOption(ol, "update_only_after_minibatch",
+                  &HintonDeepBeliefNet::update_only_after_minibatch,
+                  OptionBase::buildoption,
+                  "update parameters only after a minibatch has been seen.\n"
+                  "CURRENT IMPLEMENTATION IS INEFFICIENT, NOT EXPLOITING\n"
+                  "THE FAST MATRIX OPERATIONS POSSIBLE.\n");
 
     declareOption(ol, "sum_parallel_contributions",
                   &HintonDeepBeliefNet::sum_parallel_contributions,
@@ -620,9 +629,9 @@ void HintonDeepBeliefNet::train()
     //sleep(20);
     //pout << "DONE WAITING!" << endl;
     MPI_Barrier(MPI_COMM_WORLD);
-    int total_bsize=parallelization_minibatch_size*PLMPI::size;
-//#endif
-    forget(); // DEBUGGING TO GET REPRODUCIBLE RESULTS
+    int total_bsize=minibatch_size*PLMPI::size;
+#endif
+    // forget(); // DEBUGGING TO GET REPRODUCIBLE RESULTS
     if (global_params.size()==0)
     {
         int n_params = joint_params->nParameters(1,1);
@@ -637,7 +646,6 @@ void HintonDeepBeliefNet::train()
         if (p.length()!=0)
             PLERROR("HintonDeepBeliefNet: Inconsistencies between nParameters and makeParametersPointHere!");
     }
-#endif
 
     MODULE_LOG << "  nsamples = " << nsamples << endl;
     MODULE_LOG << "  initial stage = " << stage << endl;
@@ -683,14 +691,16 @@ void HintonDeepBeliefNet::train()
         else
             params[layer]->momentum = final_momentum;
 
-#if USING_MPI
         // make a copy of the parameters as they were at the beginning of
         // the minibatch
         previous_global_params << global_params;
-        if (!sum_parallel_contributions)
-            delta_params.resize(global_params.length());
 
-#endif
+        if (!sum_parallel_contributions || update_only_after_minibatch)
+        {
+            delta_params.resize(global_params.length());
+            delta_params.clear();
+        }
+
         for( ; stage<end_stage ; stage++ )
         {
 #if USING_MPI
@@ -719,6 +729,12 @@ void HintonDeepBeliefNet::train()
             // time to share among processors
             if (stage%total_bsize==0 || stage==end_stage-1)
                 shareParamsMPI();
+#else
+            if (update_only_after_minibatch && (stage%minibatch_size==0 || stage==end_stage-1))
+            {
+                global_params += delta_params;
+                delta_params.clear();
+            }
 #endif
         }
     }
@@ -770,6 +786,12 @@ void HintonDeepBeliefNet::train()
         // time to share among processors
         if (stage%total_bsize==0 || stage==last-1)
             shareParamsMPI();
+#else
+        if (update_only_after_minibatch && (stage%minibatch_size==0 || stage==end_stage-1))
+        {
+            global_params += delta_params;
+            delta_params.clear();
+        }
 #endif
     }
 
@@ -831,6 +853,12 @@ void HintonDeepBeliefNet::train()
             // time to share among processors
             if (stage%total_bsize==0 || stage==nstages-1)
                 shareParamsMPI();
+#else
+            if (update_only_after_minibatch && (stage%minibatch_size==0 || stage==end_stage-1))
+            {
+                global_params += delta_params;
+                delta_params.clear();
+            }
 #endif
         }
     }
@@ -928,7 +956,16 @@ void HintonDeepBeliefNet::contrastiveDivergenceStep(
     }
 
     // update
-    parameters->update();
+    if (update_only_after_minibatch)
+    {
+        previous_global_params << global_params;
+        parameters->update();
+        // delta_params += global_params - previous_global_params
+        substractAcc(global_params,previous_global_params,delta_params);
+        global_params << previous_global_params;
+    }
+    else
+        parameters->update();
 }
 
 void HintonDeepBeliefNet::greedyStep( const Vec& predictor, int index )
@@ -1068,7 +1105,7 @@ TVec<string> HintonDeepBeliefNet::getTrainCostNames() const
 #if USING_MPI
 void HintonDeepBeliefNet::shareParamsMPI()
 {
-    if (sum_parallel_contributions)
+    if (sum_parallel_contributions && !update_only_after_minibatch)
     {
         if (PLMPI::rank!=0)
             // after this line global_params contains the delta for all cpus except root
@@ -1087,14 +1124,21 @@ void HintonDeepBeliefNet::shareParamsMPI()
     }
     else // average contributions
     {
-        substract(global_params, previous_global_params, delta_params);
-        MPI_Reduce(delta_params.data(),global_params.data(),
+        if (update_only_after_minibatch)
+        {
+            global_params += delta_params;
+            delta_params.clear();
+        }
+        //substract(global_params, previous_global_params, delta_params);
+        previous_global_params << global_params;
+        //MPI_Reduce(delta_params.data(),global_params.data(),
+        MPI_Reduce(previous_global_params.data(),global_params.data(),
                    global_params.length(), PLMPI_REAL, MPI_SUM, 0, MPI_COMM_WORLD);
         global_params *= 1.0/PLMPI::size;
-        global_params += previous_global_params;
+        //global_params += previous_global_params;
         MPI_Bcast(global_params.data(), global_params.length(),
                   PLMPI_REAL, 0, MPI_COMM_WORLD);
-        previous_global_params << global_params;
+        //previous_global_params << global_params;
     }
 }
 #endif
