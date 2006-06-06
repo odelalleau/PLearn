@@ -135,9 +135,10 @@ void ExhaustiveNearestNeighbors::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField(cached_inputs, copies);
-    deepCopyField(costs,         copies);
-    deepCopyField(dummy_vec,     copies);
-    deepCopyField(indices,       copies);
+    deepCopyField(dummy_vec,    copies);
+    deepCopyField(tmp_indices,      copies);
+    deepCopyField(tmp_distances,      copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 
@@ -165,36 +166,66 @@ void ExhaustiveNearestNeighbors::train()
     preloadInputCache();
 }
 
+// New implementation (more efficient)
+void ExhaustiveNearestNeighbors::findNearestNeighbors(const Vec& input, int K, TVec<int>& indices, Vec& distances) const
+{
+    assert(pq.empty());
+    if(cached_inputs.size()==0)
+        preloadInputCache();    
+
+    int l = train_set->length();
+    for(int i=0; i<l; ++i) 
+    {
+        real d = distance_kernel(input, cached_inputs(i));
+        if(!kernel_is_pseudo_distance) // make it distance-like (smaller means closer)
+            d = -d;
+        if(int(pq.size())<K)
+            pq.push(pair<double,int>(d,i));
+        else if(d<pq.top().first)
+        {
+            pq.pop();
+            pq.push(pair<double,int>(d,i));
+        }
+    }
+
+    int pqsize = (int)pq.size();
+    indices.resize(pqsize);
+    distances.resize(pqsize);
+
+    for(int j=pqsize-1; j>=0; j--)
+    {
+        const pair<real,int>& cur_top = pq.top();
+        real d = cur_top.first;
+        if(!kernel_is_pseudo_distance) // restore actual kernel value (larger means closer)
+            d = -d;
+        distances[j] = d;
+        indices[j] = cur_top.second;
+        pq.pop();
+    }
+}
+
+
 void ExhaustiveNearestNeighbors::computeOutputAndCosts(
     const Vec& input, const Vec& target, Vec& output, Vec& costs) const
 {
+    findNearestNeighbors(input, num_neighbors, tmp_indices, tmp_distances);
+    int effective_num_neighbors = tmp_indices.size();
     costs.resize(num_neighbors);
-    priority_queue< pair<real,int> > q;
-    findNearestNeighbors(input, q);
-    indices.resize(0, num_neighbors);
-
-    // Dequeue the found nearest-neighbors in order of largest
-    int i = 0;
-    for ( ; i<num_neighbors && ! q.empty(); ++i) {
-        const pair<real,int>& cur_top = q.top();
-        costs[i] = (kernel_is_pseudo_distance? -1 : +1) * cur_top.first;
-        indices.push_back(cur_top.second);
-        q.pop();
-    }
-
+    for(int j=0; j<effective_num_neighbors; j++)
+        costs[j] = tmp_distances[j];
     // Make remaining costs into missing values if the found number of
     // neighbors is smaller than the requested number of neighbors
-    for ( ; i < num_neighbors ; ++i )
-        costs[i] = MISSING_VALUE;
+    for(int j=effective_num_neighbors; j<num_neighbors; j++)
+        costs[j] = MISSING_VALUE;
 
-    constructOutputVector(indices, output);
+    constructOutputVector(tmp_indices, output);
 }
+
 
 void ExhaustiveNearestNeighbors::computeOutput(const Vec& input, Vec& output) const
 {
-    costs.resize(num_neighbors);
-    Vec unused_targets;
-    computeOutputAndCosts(input, unused_targets, output, costs);
+    findNearestNeighbors(input, num_neighbors, tmp_indices, tmp_distances);
+    constructOutputVector(tmp_indices, output);
 }
 
 
@@ -235,22 +266,6 @@ void ExhaustiveNearestNeighbors::preloadInputCache() const
     cached_inputs.resize(l,ninputs);
     for(int i=0; i<l; i++)
         train_set->getSubRow(i,0,cached_inputs(i));
-}
-
-void ExhaustiveNearestNeighbors::findNearestNeighbors(
-    const Vec& input,
-    priority_queue< pair<real,int> >& q) const
-{
-    assert( q.empty() );
-    if(cached_inputs.size()==0)
-        preloadInputCache();    
-
-    for(int i=0, n=train_set->length() ; i<n ; ++i) 
-    {
-        real kernel_value = distance_kernel(input, cached_inputs(i));
-        real q_value = (kernel_is_pseudo_distance? -1 : +1) * kernel_value;
-        q.push(make_pair(q_value, i));
-    }
 }
 
 } // end of namespace PLearn

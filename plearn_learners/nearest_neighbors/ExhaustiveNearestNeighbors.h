@@ -89,17 +89,20 @@ protected:
     //! Matrixified version of the training set.  Saved.
     // Mat training_mat;
 
-    //! Internal vector for storing useless costs
-    mutable Vec costs;
-
     //! Internal vector for storing dummy data.
     mutable Vec dummy_vec;
 
     //! Internal vector for storing computed indices
-    mutable TVec<int> indices;
+    mutable TVec<int> tmp_indices;
+
+    //! Internal vector for storing computed kernel values
+    mutable Vec tmp_distances;
 
     //! pre-loaded input part of the training set
     mutable Mat cached_inputs;
+
+    //! The priority queue for finding the k nearest neighbors
+    mutable priority_queue< pair<real,int> > pq;
 
   
 public:
@@ -184,11 +187,10 @@ protected:
     //! Loads the input part of the train_set in cached_inputs
     void preloadInputCache() const;
 
-    //! Return the top-ranking nearest-neighbors elements as a priority queue
-    //! of (kernel-value,train-set-index) pairs
-    void findNearestNeighbors(const Vec& input,
-                              priority_queue< pair<real,int> >& q) const;
-
+    //! Fills the indices and distances vector with the K nearest neighbors. 
+    //! (if there are less than K points in the training set, then indices and distances
+    //! are resized to the effective number of neighbours found).
+    void findNearestNeighbors(const Vec& input, int K, TVec<int>& indices, Vec& distances) const;
 };
 
 // Declares a few other classes and functions related to this class.
