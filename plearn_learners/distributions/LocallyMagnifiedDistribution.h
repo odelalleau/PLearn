@@ -62,29 +62,30 @@ private:
 
 protected:
 
+    Vec emptyvec;
+    mutable Vec NN_outputs;
+    mutable Vec NN_costs;
+
     // *********************
     // * protected options *
     // *********************
 
     PP<GenericNearestNeighbors> NN;
-    Vec emptyvec;
-    mutable Vec NN_outputs;
-    mutable Vec NN_costs;
-
 
 public:
 
     // ************************
     // * public build options *
     // ************************
+    int mode;
+    int nneighbors;
 
+    bool use_rank_weighting;
     //! The kernel that will be used to locally weigh the samples
     Ker weighting_kernel;
 
     //! The distribution that will be trained with local weights
     PP<PDistribution> localdistr;
-
-    int mode;
 
     int width_neighbor;
     real width_factor;

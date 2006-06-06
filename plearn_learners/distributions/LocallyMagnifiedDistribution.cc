@@ -55,6 +55,8 @@ using namespace std;
 //////////////////
 LocallyMagnifiedDistribution::LocallyMagnifiedDistribution()
     :mode(0),
+     nneighbors(-1),
+     use_rank_weighting(false),
      width_neighbor(0),
      width_factor(1.0),
      width_optionname("sigma")
@@ -62,8 +64,8 @@ LocallyMagnifiedDistribution::LocallyMagnifiedDistribution()
 }
 
 PLEARN_IMPLEMENT_OBJECT(LocallyMagnifiedDistribution,
-                        "ONE LINE DESCR",
-                        "NO HELP"
+                        "Density estimation by fitting a local model (localdistr) to a view of the training samples, magnified locally around the test point.",
+                        ""
     );
 
 ////////////////////
@@ -80,11 +82,23 @@ void LocallyMagnifiedDistribution::declareOptions(OptionList& ol)
     declareOption(ol, "mode", &LocallyMagnifiedDistribution::mode, OptionBase::buildoption,
                   "Output computation mode");
 
+    declareOption(ol, "nneighbors", &LocallyMagnifiedDistribution::nneighbors, OptionBase::buildoption,
+                  "If <=0 we use all training points (with an appropriate weight).\n"
+                  "If >0 we consider only that many neighbors of the test point;\n"
+                  "(it's equivalent to giving all other data points a weight of 0)\n");
+
+    declareOption(ol, "use_rank_weighting", &LocallyMagnifiedDistribution::use_rank_weighting, OptionBase::buildoption,
+                  "If true, then we ignore the weighting_kernel, and ascribe weight 1/k to the neighbors\n"
+                  "where k is the index of the neighbor from 1 to nneighbors");
+
     declareOption(ol, "weighting_kernel", &LocallyMagnifiedDistribution::weighting_kernel, OptionBase::buildoption,
-                  "The magnifying kernel that will be used to locally weigh the samples");
+                  "The magnifying kernel that will be used to locally weigh the samples.\n"
+                  "If it is left null, and use_rank_weighting is false, then all \n"
+                  "nneighbors will receive a weight of 1\n");
 
     declareOption(ol, "width_neighbor", &LocallyMagnifiedDistribution::width_neighbor, OptionBase::buildoption,
-                  "If width_neighbor>0, kernel width is set to be the distance to the width_neighbor'th neighbor times the width_factor (Euclidean distance neighbors for now)\n"
+                  "If width_neighbor>0, kernel width is set to be the distance to the \n"
+                  "width_neighbor'th neighbor times the width_factor (Euclidean distance neighbors for now)\n"
                   "If width_neighbor==0, kernel is left as specified upon construction");
 
     declareOption(ol, "width_factor", &LocallyMagnifiedDistribution::width_factor, OptionBase::buildoption,
@@ -98,6 +112,9 @@ void LocallyMagnifiedDistribution::declareOptions(OptionList& ol)
 
     declareOption(ol, "train_set", &LocallyMagnifiedDistribution::train_set, OptionBase::learntoption,
                   "We need to store the training set, as this learner is memory-based...");
+
+    // declareOption(ol, "NN", &LocallyMagnifiedDistribution::NN, OptionBase::learntoption,
+    //              "The nearest neighbor algorithm used to find nearest neighbors");
 
     // Now call the parent class' declareOptions().
     inherited::declareOptions(ol);
@@ -126,26 +143,31 @@ void LocallyMagnifiedDistribution::build_()
     // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
     // ### You should assume that the parent class' build_() has already been called.
 
-    // ### If the distribution is conditional, you should finish build_() by:
-    // PDistribution::finishConditionalBuild();
+    int actual_nneighbors = max(nneighbors, width_neighbor);
+    if(train_set.isNotNull())
+        actual_nneighbors = min(actual_nneighbors, train_set.length());
 
-    if(width_neighbor>0)
+    if(actual_nneighbors>0)
     {
         NN = new ExhaustiveNearestNeighbors(); // for now use Exhaustive search and default Euclidean distance
-        NN->num_neighbors = width_neighbor;
+        NN->num_neighbors = actual_nneighbors;
         NN->copy_input = false;
         NN->copy_target = false;
         NN->copy_weight = false;
         NN->copy_index = true;
         NN->build();
-        if(!train_set.isNull())
+        NN_outputs.resize(actual_nneighbors);
+        NN_costs.resize(actual_nneighbors);
+        if(train_set.isNotNull())
         {
             NN->setTrainingSet(train_set);
             NN->train();
         }
-        NN_outputs.resize(width_neighbor);
-        NN_costs.resize(width_neighbor);
     }
+
+
+    // ### If the distribution is conditional, you should finish build_() by:
+    // PDistribution::finishConditionalBuild();
 
 }
 
@@ -157,32 +179,98 @@ real LocallyMagnifiedDistribution::log_density(const Vec& y) const
     int l = train_set.length();
     int w = inputsize();
     int ws = train_set->weightsize();
-    weights.resize(l);
-    // 'weights' will contain the "localization" weights for the current test point.
     trainsample.resize(w+ws);
     Vec input = trainsample.subVec(0,w);
 
-    int nneighbors = 0;
-    if(width_neighbor>0)
+    assert(targetsize()==0);
+
+    int actual_nneighbors = max(nneighbors, width_neighbor);
+    if(actual_nneighbors>l)
+        actual_nneighbors = l;
+
+    if(actual_nneighbors>0)
+        NN->computeOutputAndCosts(y, emptyvec, NN_outputs, NN_costs);
+
+    if(width_neighbor>0 && weighting_kernel.isNotNull()) // adapt weighting kernel width
     {
         // Find distance d to width_neighbor neighbour
-        NN->computeOutputAndCosts(y, emptyvec, NN_outputs, NN_costs);
-        nneighbors = NN_outputs.length();
         real d = NN_costs[width_neighbor-1];
-
-        if(weighting_kernel.isNotNull())
-        {
-            // Now set new kernel width:
-            real newwidth = d*width_factor;
-            weighting_kernel->setOption(width_optionname,tostring(newwidth));
-            weighting_kernel->build(); // rebuild to adapt to width change
-        }
+        // Now set new kernel width:
+        real newwidth = d*width_factor;
+        weighting_kernel->setOption(width_optionname,tostring(newwidth));
+        weighting_kernel->build(); // rebuild to adapt to width change
     }
 
     double weightsum = 0;
 
     VMat local_trainset;
-    if(weighting_kernel.isNotNull()) // build a weighted local_trainset
+    if(nneighbors>0) // we'll use only the neighbors
+    {
+        int n = NN_outputs.length();
+        Mat neighbors(n, w+1);
+        neighbors.lastColumn().fill(1.0); // default weight 1.0
+        for(int k=0; k<n; k++)
+        {
+            Vec neighbors_k = neighbors(k);
+            Vec neighbors_row = neighbors_k.subVec(0,w+ws);
+            Vec neighbors_input = neighbors_row.subVec(0,w);
+            train_set->getRow(int(NN_outputs[k]),neighbors_row);
+            real weight = 1.;
+            if(use_rank_weighting)
+                weight = 1./(1+k); 
+            else if(weighting_kernel.isNotNull())
+                weight = weighting_kernel(y,neighbors_input);
+            weightsum += weight;
+            neighbors_k[w] *= weight;
+        }
+        local_trainset = new MemoryVMatrix(neighbors);
+        local_trainset->defineSizes(w,0,1); 
+    }
+    else // we'll use all the points
+    {
+        // 'weights' will contain the "localization" weights for the current test point.
+        weights.resize(l);
+        for(int i=0; i<l; i++)
+        {
+            train_set->getRow(i,trainsample);
+            real weight = 1.;
+            if(use_rank_weighting)
+                PLERROR("use_rank_weighting=true, but nneigbors<=0. rank weighting requires specifying a number of neighbors (as it's this that will give the ranking");
+            else if(weighting_kernel.isNotNull())
+                weight = weighting_kernel(y,input);
+            if(ws==1)
+                weight *= trainsample[w];
+            weightsum += weight;
+            weights[i] = weight;
+        }
+
+        VMat weight_column(columnmatrix(weights));
+        if(ws==0) // append weight column
+            local_trainset = hconcat(train_set, weight_column);
+        else // replace last column by weight column
+            local_trainset = hconcat(train_set.subMatColumns(0,w), weight_column);
+        local_trainset->defineSizes(w,0,1);        
+    }
+
+    // perr << "local_trainset =" << endl << local_trainset->toMat() << endl;
+
+
+#if 0
+// OLD CODE
+    if(use_rank_weighting)  // use only the neighbors with rank weighting
+    {
+        Mat neighbors(actual_nneighbors, w+1);
+        for(int k=0; k<actual_nneighbors; k++)
+        {
+            train_set->getSubRow(int(NN_outputs[k]),0,neighbors(k).subVec(0,w));
+            real weight = 1./(1+k); 
+            neighbors(k,w) = weight;
+            weightsum += weight;
+        }
+        local_trainset = new MemoryVMatrix(neighbors);
+        local_trainset->defineSizes(w,0,1); 
+    }
+    else if(weighting_kernel.isNotNull()) // build a weighted local_trainset
     {
         for(int i=0; i<l; i++)
         {
@@ -204,12 +292,15 @@ real LocallyMagnifiedDistribution::log_density(const Vec& y) const
     }
     else // no weighting kernel, we just use the neighbors
     {
-        Mat neighbors_input(nneighbors, inputsize_);
-        for(int k=0; k<nneighbors; k++)
+        Mat neighbors_input(actual_nneighbors, w);
+        for(int k=0; k<actual_nneighbors; k++)
             train_set->getSubRow(int(NN_outputs[k]),0,neighbors_input(k));
         local_trainset = new MemoryVMatrix(neighbors_input);
         local_trainset->defineSizes(w,0,0);
     }
+#endif
+
+
     localdistr->forget();
     localdistr->setTrainingSet(local_trainset);
     localdistr->train();
@@ -226,7 +317,7 @@ real LocallyMagnifiedDistribution::log_density(const Vec& y) const
     case 3:
         return pl_log((double)weightsum);
     case 4:
-        return log_local_p+pl_log((double)nneighbors)-pl_log((double)l);
+        return log_local_p+pl_log((double)actual_nneighbors)-pl_log((double)l);
     default:
         PLERROR("Invalid mode %d", mode);
         return 0; 
@@ -258,8 +349,17 @@ void LocallyMagnifiedDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies
 ///////////
 void LocallyMagnifiedDistribution::train()
 {
-    if(width_neighbor>0) // train nearest neighbor searcher
+    int actual_nneighbors = max(nneighbors, width_neighbor);
+    if(actual_nneighbors>0) // train nearest neighbor searcher
     {
+        actual_nneighbors = min(actual_nneighbors, train_set.length());
+        if(NN->num_neighbors!=actual_nneighbors)
+        {
+            NN->num_neighbors = actual_nneighbors;
+            NN->build();
+            NN_outputs.resize(actual_nneighbors);
+            NN_costs.resize(actual_nneighbors);
+        }
         NN->setTrainingSet(train_set);
         NN->train();
     }
@@ -268,6 +368,8 @@ void LocallyMagnifiedDistribution::train()
 
 void LocallyMagnifiedDistribution::forget()
 {
+    if(NN.isNotNull())
+        NN->forget();
 }
 
 
