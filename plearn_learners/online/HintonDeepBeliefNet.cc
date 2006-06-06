@@ -1153,6 +1153,7 @@ void HintonDeepBeliefNet::shareParamsMPI()
 }
 #endif
 
+#if USING_MPI
 void HintonDeepBeliefNet::test(VMat testset, PP<VecStatsCollector> test_stats,
                                VMat testoutputs, VMat testcosts) const
 {
@@ -1253,6 +1254,7 @@ void HintonDeepBeliefNet::test(VMat testset, PP<VecStatsCollector> test_stats,
     if(pb)
         delete pb;
 }
+#endif
 
 } // end of namespace PLearn
 
