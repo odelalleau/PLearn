@@ -278,6 +278,7 @@ void StatsCollector::forget()
     max_ = MISSING_VALUE;
     first_ = last_ = MISSING_VALUE;
     more_than_maxnvalues = (maxnvalues == 0);
+    approximate_counts.clear();
     sorted = false;
     counts.clear();
     build_();
@@ -324,7 +325,7 @@ void StatsCollector::update(real val, real weight)
                     // Note that doing this in a single operation is not recommended.
                     // Indeed, depending on the compiler, counts.size() may differ by 1
                     // because the [] operator may be called before or after. That's why
-                    // we explicitely call counts.size() first.
+                    // we explicitly call counts.size() first.
                     int id = int(counts.size()) - 1;
                     counts[val].id = id;
                 }
@@ -346,10 +347,17 @@ void StatsCollector::update(real val, real weight)
                     it->second.sumsquare += val*val * weight;
                 }
             }
+            // Erase the approximate counts if they existed previously (less
+            // efficient, but easier to code).
+            if (!approximate_counts.empty())
+                approximate_counts.clear();
         }
     }
 }                           
 
+////////////////////////
+// remove_observation //
+////////////////////////
 void StatsCollector::remove_observation(real val, real weight)
 {
     if(is_missing(val))
@@ -413,6 +421,39 @@ void StatsCollector::remove_observation(real val, real weight)
     }
 }                           
 
+//////////////////////////
+// getApproximateCounts //
+//////////////////////////
+map<real, StatsCollectorCounts>* StatsCollector::getApproximateCounts()
+{
+    if (!approximate_counts.empty())
+        return &approximate_counts;
+    map<real, StatsCollectorCounts>::const_iterator it_begin, it_current, it;
+    it_begin = counts.begin();
+    while (it_begin != counts.end()) {
+        real val_begin = it_begin->first;
+        it_current = it_begin;
+        it_current++;
+        while (it_current != counts.end() &&
+               is_equal(val_begin, it_current->first)) it_current++;
+        // Merge keys between 'begin' and 'current'.
+        StatsCollectorCounts sc = it_begin->second;
+        it = it_begin;
+        for (it++; it != it_current; it++) {
+            sc.n += it->second.n;
+            sc.nbelow += it->second.nbelow;
+            sc.sum += it->second.sum;
+            sc.sumsquare += it->second.sumsquare;
+        }
+        approximate_counts[val_begin] = sc;
+        it_begin = it_current;
+    }
+    return &approximate_counts;
+}
+
+///////////////////
+// getBinMapping //
+///////////////////
 RealMapping StatsCollector::getBinMapping(double discrete_mincount,
                                           double continuous_mincount,
                                           real tolerance,
@@ -539,6 +580,9 @@ RealMapping StatsCollector::getBinMapping(double discrete_mincount,
 }
 
 
+/////////////////////////
+// getAllValuesMapping //
+/////////////////////////
 RealMapping StatsCollector::getAllValuesMapping(TVec<double> * fcount) const
 {
     return getAllValuesMapping(0,fcount);

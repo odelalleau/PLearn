@@ -156,9 +156,12 @@ public:
     real last_;            //!< last encountered nonmissing observation
     bool more_than_maxnvalues;
 
-    map<real,StatsCollectorCounts> counts; 
+    map<real, StatsCollectorCounts> counts; 
 
 protected:
+
+    //! This map is only created when getApproximateCounts() is called.
+    map<real, StatsCollectorCounts> approximate_counts; 
 
     //! Used to store the sorted values (after taking their absolute value),
     //! with their target value (1 or 0) in the second column.
@@ -269,7 +272,16 @@ public:
     //! finishes whatever computation are needed after all updates have been made
     void finalize() {}
 
-    map<real,StatsCollectorCounts> * getCounts(){return &counts;}
+    //! Return the mapping from encountered real values to
+    //! StatsCollectorCounts.
+    map<real, StatsCollectorCounts>* getCounts(){return &counts;}
+
+    //! Same as getCounts(), except that the map that is returned has been
+    //! transformed so that no two keys are equal, where equality is defined
+    //! as the result of the PLearn function 'is_equal'. This means some keys
+    //! may be merged when they are found to be almost equal.
+    map<real, StatsCollectorCounts>* getApproximateCounts();
+    
     int getMaxNValues(){return maxnvalues;}
 
     //! returns a Mat with x,y coordinates for plotting the cdf
