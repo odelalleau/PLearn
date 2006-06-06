@@ -271,6 +271,10 @@ class PLearnIO:
             self.unread(c)
             return self.binread_dict()
 
+        elif c=='(': # tuple
+            self.unread(c)
+            return self.binread_tuple()
+        
         elif c=='0': # boolean
             return False
         elif c=='1':
@@ -402,6 +406,22 @@ class PLearnIO:
         c = self.get()                  # Eat trailing '}'
         assert c == '}', "Expected a closing '}' in reading dict, but got " + c
         return d
+
+    def binread_tuple(self):        
+        elems = []
+        self.skip_blanks_and_comments()
+        c = self.get()
+        if c!='(':
+            raise TypeError('Expected to read a (, but got '+c)
+        while True:
+            self.skip_blanks_and_comments_and_separators()
+            if self.peek() == ')':
+                break
+            elem = self.binread()
+            elems.append(elem)
+        c = self.get()                  # Eat trailing '}'
+        assert c == ')', "Expected a closing ')' in reading tuple, but got " + c
+        return tuple(elems)
 
     def binread_Storage(self):
         self.skip_blanks_and_comments()
