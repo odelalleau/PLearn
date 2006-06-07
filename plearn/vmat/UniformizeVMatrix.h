@@ -53,6 +53,8 @@ class UniformizeVMatrix : public SourceVMatrix
 public:
     //#####  Public Build Options  ############################################
 
+    real max;
+    real min;
     int nquantiles;
     real threshold_ratio;
     VMat train_source;
@@ -84,6 +86,10 @@ public:
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
+
+    //! List of the source's features that need to be uniformized.
+    TVec<int> features_to_uniformize;
+
     //#####  Protected Options  ###############################################
 
     // ### Declare protected option fields (such as learned parameters) here

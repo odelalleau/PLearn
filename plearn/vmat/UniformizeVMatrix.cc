@@ -57,6 +57,8 @@ PLEARN_IMPLEMENT_OBJECT(
 // UniformizeVMatrix //
 ///////////////////////
 UniformizeVMatrix::UniformizeVMatrix():
+    max(1),
+    min(0),
     nquantiles(1000),
     threshold_ratio(10),
     uniformize_input(true),
@@ -72,6 +74,14 @@ UniformizeVMatrix::UniformizeVMatrix():
 ////////////////////
 void UniformizeVMatrix::declareOptions(OptionList& ol)
 {
+    declareOption(ol, "min", &UniformizeVMatrix::min,
+                             OptionBase::buildoption,
+        "The lower bound of the [min,max] interval values are mapped to.");
+
+    declareOption(ol, "max", &UniformizeVMatrix::max,
+                             OptionBase::buildoption,
+        "The upper bound of the [min,max] interval values are mapped to.");
+
     declareOption(ol, "threshold_ratio", &UniformizeVMatrix::threshold_ratio,
                                          OptionBase::buildoption,
         "A source's feature will be uniformized when the following holds:\n"
@@ -128,6 +138,8 @@ void UniformizeVMatrix::build_()
     if (!source)
         return;
 
+    assert( max >= min );
+
     if (train_source) {
         assert( train_source->width() == source->width() );
         assert( train_source->inputsize()  == source->inputsize() &&
@@ -142,7 +154,7 @@ void UniformizeVMatrix::build_()
             the_source->weightsize() >= 0 && the_source->extrasize() >= 0 );
 
     // Find which dimensions to uniformize.
-    TVec<int> features_to_uniformize;
+    features_to_uniformize.resize(0);
     int col = 0;
     if (uniformize_input)
         features_to_uniformize.append(
@@ -185,6 +197,8 @@ void UniformizeVMatrix::getNewRow(int i, const Vec& v) const
 {
     assert( uniformize_learner->stage > 0 );
     uniformized_source->getRow(i, v);
+    for (int j = 0; j < features_to_uniformize.length(); j++)
+        v[j] = min + (max - min) * v[j];
 }
 
 /////////////////////////////////
