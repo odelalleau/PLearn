@@ -135,8 +135,9 @@ void ClassifierFromDensity::build_()
 void ClassifierFromDensity::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-    deepCopyField(estimators, copies);
-    deepCopyField(log_priors, copies);
+    deepCopyField(estimators,       copies);
+    deepCopyField(log_priors,       copies);
+    deepCopyField(use_these_priors, copies);
 }
 
 ////////////////
