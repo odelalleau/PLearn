@@ -235,7 +235,8 @@ void UniformizeLearner::computeOutput(const Vec& input, Vec& output) const
     for(int k=0; k<which_fieldnums.size(); k++)
     {
         int fieldnum = which_fieldnums[k];
-        output[fieldnum] = mapToRank(output[fieldnum], val_to_rank[k]);
+        if (!is_missing(output[fieldnum]))
+            output[fieldnum] = mapToRank(output[fieldnum], val_to_rank[k]);
     }
 }    
 
