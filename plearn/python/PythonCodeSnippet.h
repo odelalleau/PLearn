@@ -117,9 +117,13 @@ public:
      */
     typedef boost::function<PythonObjectWrapper (
         const TVec<PythonObjectWrapper>& args)> StandaloneFunction;
+    
+    //! The snippet prepended to 'code' option for the injections to behave properly.
+    static const char* InjectSetupSnippet;
 
-    // The snippet prepended to 'code' option for the injections to behave properly.
-    static const string InjectSetupSnippet;
+    //! Used to (un)set CURRENT_SNIPPET in Python
+    static const char* SetCurrentSnippetVar;
+    static const char* ResetCurrentSnippetVar;
     
 public:
     /**
@@ -272,6 +276,9 @@ protected:
     //! Call PLERROR if the code contains an error.
     PythonObjectWrapper compileGlobalCode(const string& code) const;
 
+    void setCurrentSnippet(const long& handle) const;
+    void resetCurrentSnippet() const;
+    
     //! If no Python error, do nothing.  If an error occurred, convert the
     //! Python Exception into a C++ exception if required, or otherwise print a
     //! traceback and abort
@@ -286,6 +293,9 @@ protected:
     void injectInternal(const char* python_name, StandaloneFunction* function_ptr);
 
 protected:
+    //! The Python handle for *this* instance
+    long m_handle;
+    
     //! Compiled Python code module and global environment
     PythonObjectWrapper m_compiled_code;
 
@@ -319,6 +329,8 @@ PythonCodeSnippet::invoke(const char* function_name,
 
     PyObject* return_value = 0;
     if (pFunc && PyCallable_Check(pFunc)) {
+        setCurrentSnippet(m_handle);
+
         // Create argument tuple.  Warning: PyTuple_SetItem STEALS references.
         PyObject* pArgs = PyTuple_New(1);
         PyObject* py_arg1 = PythonObjectWrapper::newPyObject(arg1);
@@ -329,12 +341,15 @@ PythonCodeSnippet::invoke(const char* function_name,
                     "from C++ to Python for function '%s'", function_name);
         }
         
-        PyTuple_SetItem(pArgs, 0, py_arg1);
-        
+        PyTuple_SetItem(pArgs, 0, py_arg1);        
+
         return_value = PyObject_CallObject(pFunc, pArgs);
+
         Py_XDECREF(pArgs);
         if (! return_value)
             handlePythonErrors();
+
+        resetCurrentSnippet();        
     }
     else {
         PLERROR("PythonCodeSnippet::invoke: cannot call function '%s'",
@@ -358,6 +373,8 @@ PythonCodeSnippet::invoke(const char* function_name,
 
     PyObject* return_value = 0;
     if (pFunc && PyCallable_Check(pFunc)) {
+        setCurrentSnippet(m_handle);
+
         // Create argument tuple.  Warning: PyTuple_SetItem STEALS references.
         PyObject* pArgs = PyTuple_New(2);
         PyObject* py_arg1 = PythonObjectWrapper::newPyObject(arg1);
@@ -374,9 +391,12 @@ PythonCodeSnippet::invoke(const char* function_name,
         PyTuple_SetItem(pArgs, 1, py_arg2);
         
         return_value = PyObject_CallObject(pFunc, pArgs);
+
         Py_XDECREF(pArgs);
         if (! return_value)
             handlePythonErrors();
+
+        resetCurrentSnippet();
     }
     else
         PLERROR("PythonCodeSnippet::invoke: cannot invoke function '%s'",
@@ -400,6 +420,8 @@ PythonCodeSnippet::invoke(const char* function_name,
 
     PyObject* return_value = 0;
     if (pFunc && PyCallable_Check(pFunc)) {
+        setCurrentSnippet(m_handle);
+
         // Create argument tuple.  Warning: PyTuple_SetItem STEALS references.
         PyObject* pArgs = PyTuple_New(3);
         PyObject* py_arg1 = PythonObjectWrapper::newPyObject(arg1);
@@ -417,11 +439,14 @@ PythonCodeSnippet::invoke(const char* function_name,
         PyTuple_SetItem(pArgs, 0, py_arg1);
         PyTuple_SetItem(pArgs, 1, py_arg2);
         PyTuple_SetItem(pArgs, 2, py_arg3);
-        
+
         return_value = PyObject_CallObject(pFunc, pArgs);
+
         Py_XDECREF(pArgs);
         if (! return_value)
             handlePythonErrors();
+
+        resetCurrentSnippet();
     }
     else
         PLERROR("PythonCodeSnippet::invoke: cannot call function '%s'",
@@ -446,6 +471,8 @@ PythonCodeSnippet::invoke(const char* function_name,
 
     PyObject* return_value = 0;
     if (pFunc && PyCallable_Check(pFunc)) {
+        setCurrentSnippet(m_handle);
+
         // Create argument tuple.  Warning: PyTuple_SetItem STEALS references.
         PyObject* pArgs = PyTuple_New(4);
         PyObject* py_arg1 = PythonObjectWrapper::newPyObject(arg1);
@@ -468,9 +495,12 @@ PythonCodeSnippet::invoke(const char* function_name,
         PyTuple_SetItem(pArgs, 3, py_arg4);
         
         return_value = PyObject_CallObject(pFunc, pArgs);
+
         Py_XDECREF(pArgs);
         if (! return_value)
             handlePythonErrors();
+
+        resetCurrentSnippet();
     }
     else
         PLERROR("PythonCodeSnippet::invoke: cannot call function '%s'",

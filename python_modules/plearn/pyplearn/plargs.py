@@ -206,7 +206,13 @@ import inspect, logging, new, re, sys
 from plearn.pyplearn.context import *
 from plearn.utilities.Bindings import Bindings
 
-# Helper function
+# Helper functions
+
+def neglected_member(name, value):
+    return (name.startswith('_') 
+            or inspect.ismethod(value) or inspect.isfunction(value)
+            or inspect.isroutine(value) or inspect.isclass(value) )
+
 def list_cast(slist, elem_cast):
     """Intelligently casts I{slist} string to a list.
 
@@ -711,10 +717,10 @@ class plargs(object):
 
             # Introspection of the subclasses
             if cls is not plargs:
-                for option, value in dic.iteritems():
-                    if option.startswith('_'):
+                for option, value in dic.iteritems():                    
+                    if neglected_member(option, value):
                         continue
-
+                    
                     # Define the plopt instance
                     plopt.define(cls, option, value)
 
@@ -871,7 +877,7 @@ class plnamespace:
                 context.namespaces[clsname] = cls
 
                 for option, value in dic.iteritems():
-                    if option.startswith('_'):
+                    if neglected_member(option, value):
                         continue
                     # Define the plopt instance
                     plopt.define(cls, option, value)

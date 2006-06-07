@@ -51,12 +51,22 @@
 namespace PLearn {
 using namespace std;
 
-const string PythonCodeSnippet::InjectSetupSnippet =\
-"__injected__ = {}\n"                          // The dictionary in which to inject
-"from plearn.utilities import inject_import\n" // Redefines import statement behavior
-"del inject_import\n\n";                       // Ensures global namespace is
-                                               // not polluted by 'inject_import'
+// #if sizeof(long) < sizeof(void*)
+// #error "Snippets' addresses need to be casted to long"
+// #endif
 
+const char* PythonCodeSnippet::InjectSetupSnippet =\
+// Redefines import statement behavior
+"from plearn.utilities import inject_import as _inject_import_\n"
+// The dictionnary in which to inject
+"__injected__ = {}\n";
+
+const char* PythonCodeSnippet::SetCurrentSnippetVar =\
+// Completed by sprintf using the snippet's address casted to a long
+"_inject_import_.setCurrentSnippet(%d)\n";
+
+const char* PythonCodeSnippet::ResetCurrentSnippetVar = \
+"_inject_import_.resetCurrentSnippet()\n";
 
 //#####  PythonCodeSnippet  ###################################################
 
@@ -96,6 +106,7 @@ PythonCodeSnippet::PythonCodeSnippet(const string& code,
     : inherited(),
       m_code(code),
       m_remap_python_exceptions(remap_python_exceptions),
+      m_handle(long(this)),
       m_compiled_code(),
       m_injected_functions(4),
       m_python_methods(4)
@@ -146,9 +157,17 @@ void PythonCodeSnippet::build_()
     }
 
     // Compile code into global environment
-    if (m_code != "")
-        m_compiled_code = compileGlobalCode(InjectSetupSnippet+m_code);
-
+    if (m_code != ""){
+        // Here we don't call setCurrentSnippet() because it has to be called
+        // between the setup and the m_code... Still have to call
+        // resetCurrentSnippet() afterwards though.
+        char set_current_snippet[100];
+        sprintf(set_current_snippet, SetCurrentSnippetVar, m_handle);
+        m_compiled_code = compileGlobalCode(InjectSetupSnippet+
+                                            string(set_current_snippet)+m_code);
+        resetCurrentSnippet();
+    }
+    
     // Forget about injected functions
     m_injected_functions.purge_memory();
     m_python_methods.purge_memory();
@@ -238,9 +257,13 @@ PythonCodeSnippet::invoke(const char* function_name) const
 
     PyObject* return_value = 0;
     if (pFunc && PyCallable_Check(pFunc)) {
+        setCurrentSnippet(m_handle);
+
         return_value = PyObject_CallObject(pFunc, NULL);
         if (! return_value)
             handlePythonErrors();
+
+        resetCurrentSnippet();
     }
     else
         PLERROR("PythonCodeSnippet::invoke: cannot call function '%s'",
@@ -261,7 +284,8 @@ PythonCodeSnippet::invoke(const char* function_name,
     // pFunc: Borrowed reference
 
     PyObject* return_value = 0;
-    if (pFunc && PyCallable_Check(pFunc)) {
+    if (pFunc && PyCallable_Check(pFunc)) {        
+        setCurrentSnippet(m_handle);
 
         // Create argument tuple.  Warning: PyTuple_SetItem STEALS references.
         PyObject* pArgs = PyTuple_New(args.size());
@@ -272,6 +296,8 @@ PythonCodeSnippet::invoke(const char* function_name,
         Py_XDECREF(pArgs);
         if (! return_value)
             handlePythonErrors();
+
+        resetCurrentSnippet();        
     }
     else
         PLERROR("PythonCodeSnippet::invoke: cannot call function '%s'",
@@ -401,6 +427,37 @@ PythonObjectWrapper PythonCodeSnippet::compileGlobalCode(const string& code) con
     return PythonObjectWrapper(globals);
 }
 
+void PythonCodeSnippet::setCurrentSnippet(const long& handle) const
+{
+    PythonGlobalInterpreterLock gil;         // For thread-safety
+    
+    char set_current_snippet[100];
+    sprintf(set_current_snippet, SetCurrentSnippetVar, handle);    
+    PyRun_String(set_current_snippet, Py_file_input /* exec code block */,
+                 m_compiled_code.getPyObject(), m_compiled_code.getPyObject());
+
+    if (PyErr_Occurred()) {
+        Py_XDECREF(m_compiled_code.getPyObject());
+        PyErr_Print();
+        PLERROR("PythonCodeSnippet::setCurrentSnippet: error compiling "
+                "Python code contained in the 'SetCurrentSnippetVar'.");
+    }
+}
+
+void PythonCodeSnippet::resetCurrentSnippet() const
+{
+    PythonGlobalInterpreterLock gil;         // For thread-safety
+    
+    PyRun_String(ResetCurrentSnippetVar, Py_file_input /* exec code block */,
+                 m_compiled_code.getPyObject(), m_compiled_code.getPyObject());
+
+    if (PyErr_Occurred()) {
+        Py_XDECREF(m_compiled_code.getPyObject());
+        PyErr_Print();
+        PLERROR("PythonCodeSnippet::resetCurrentSnippet: error compiling "
+                "Python code contained in the 'ResetCurrentSnippetVar'.");
+    }
+}
 
 void PythonCodeSnippet::handlePythonErrors() const
 {

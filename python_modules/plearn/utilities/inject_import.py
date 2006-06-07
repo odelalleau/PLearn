@@ -1,13 +1,32 @@
-#
-# Build snippet for a PythonCodeSnippet
-#
-class __injected_functions:
+
+# Should be manipulated from within C++
+CURRENT_SNIPPET = []
+def setCurrentSnippet(handle):
+    CURRENT_SNIPPET.append(handle)
+
+def resetCurrentSnippet():
+    CURRENT_SNIPPET.pop(-1)
+    
+# Class managing the injected functions
+class __injected_functions:        
     def __init__(self, injected):
-        self.__dict__ = injected
-        
-        def frozen_setattr(self, key, val): raise TypeError("Read-only object.")
-        self.__dict__['__setattr__'] = frozen_setattr
-        
+        assert CURRENT_SNIPPET
+        self.__dict__['_snippet_map'] = { CURRENT_SNIPPET[-1] : injected }
+
+    def __setattr__(self, key, val):
+        raise TypeError("Read-only object.")
+
+    def __getattr__(self, key):
+        injected = self._snippet_map[CURRENT_SNIPPET[-1]]
+        if key in injected:
+            return injected[key]
+        raise AttributeError, key
+
+    def update(self, injected):
+        assert CURRENT_SNIPPET
+        self._snippet_map[CURRENT_SNIPPET[-1]] = injected
+
+# Overriding builtin import function
 import __builtin__  
 __builtin_import__ = __builtin__.__import__
 def __inject_import__(name, globals_arg=None, locals_arg=None, fromlist=[]):
@@ -32,7 +51,10 @@ def __inject_import__(name, globals_arg=None, locals_arg=None, fromlist=[]):
     
     module = __builtin_import__(name, globals_arg, locals_arg, fromlist)
     if '__injected__' in globals_arg:
-        setattr(module, 'injected', __injected_functions(globals_arg['__injected__']))
+        if hasattr(module, 'injected'):
+            module.injected.update(globals_arg['__injected__'])
+        else:
+            setattr(module, 'injected', __injected_functions(globals_arg['__injected__']))
     return module
 
 __builtin__.__import__ = __inject_import__
