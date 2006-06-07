@@ -41,6 +41,7 @@
 
 
 #include "MeanImputationVMatrix.h"
+#include <plearn/vmat/ForwardVMatrix.h>
 #include <plearn/vmat/SubVMatrix.h>
 #include <plearn/vmat/VMat_basic_stats.h>
 
@@ -60,6 +61,11 @@ PLEARN_IMPLEMENT_OBJECT(
     "Optionally, if one wants to obtain the variable means from another\n"
     "dataset than the underlying source VMatrix, the 'mean_source' option\n"
     "can be specified.\n"
+    "\n"
+    "If the 'distribution' option is given, then instead of imputing the\n"
+    "global empirical mean, the conditional mean of the missing values given\n"
+    "the observed values in each sample will be used (the distribution must\n"
+    "implement the missingExpectation(..) method).\n"
 );
 
 ///////////////////////////
@@ -105,6 +111,14 @@ void MeanImputationVMatrix::declareOptions(OptionList &ol)
                   OptionBase::buildoption,
         "If specified, this VMat will be used to compute the means instead\n"
         "of the 'source' option.");
+
+    declareOption(ol, "distribution",
+                  &MeanImputationVMatrix::distribution,
+                  OptionBase::buildoption,
+        "If provided, this conditional distribution will provide a way to\n"
+        "compute the conditional mean given observed values. Otherwise, the\n"
+        "empirical mean will be used. This distribution is trained on the\n"
+        "'source' (or 'mean_source') VMat unless it already has a stage > 0.");
 
     declareOption(ol, "variable_mean", &MeanImputationVMatrix::variable_mean,
                                        OptionBase::learntoption,
@@ -166,6 +180,19 @@ void MeanImputationVMatrix::build_()
             PLERROR(error_msg.c_str());
         setMetaInfoFromSource();
         computeMeanVector();
+
+        // Train the user-provided distribution if needed.
+        if (distribution) {
+            distribution->setPredictorPredictedSizes(0, -1);
+            if (distribution->stage == 0) {
+                VMat the_train_source = mean_source ? mean_source : source;
+                // Redefine sizes to train on the whole data.
+                the_train_source = new ForwardVMatrix(the_train_source);
+                the_train_source->defineSizes(the_train_source->width(), 0, 0, 0);
+                distribution->setTrainingSet(the_train_source);
+                distribution->train();
+            }
+        }
     } else {
         // Restore the original undefined sizes if the current one had been obtained
         // from the source VMatrix.
@@ -190,7 +217,9 @@ void MeanImputationVMatrix::build_()
 void MeanImputationVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(cond_mean,     copies);
     deepCopyField(variable_mean, copies);
+    deepCopyField(distribution,  copies);
     deepCopyField(mean_source,   copies);
 }
 
@@ -202,9 +231,17 @@ void MeanImputationVMatrix::getNewRow(int i, const Vec& v) const
 {
     assert( source );
     source->getRow(i, v);
-    for (int j = 0; j < v.length(); j++)
-        if (is_missing(v[j]))
-            v[j] = variable_mean[j];
+    if (v.hasMissing())
+        if (distribution) {
+            distribution->missingExpectation(v, cond_mean);
+            int k = 0;
+            for (int j = 0; j < v.length(); j++)
+                if (is_missing(v[j]))
+                    v[j] = cond_mean[k++];
+        } else
+            for (int j = 0; j < v.length(); j++)
+                if (is_missing(v[j]))
+                    v[j] = variable_mean[j];
 }
 
 ///////////////////

@@ -46,6 +46,7 @@
 #define MeanImputationVMatrix_INC
 
 #include "SourceVMatrix.h"
+#include <plearn_learners/distributions/PDistribution.h>
 
 namespace PLearn {
 using namespace std;
@@ -62,10 +63,15 @@ private:
     bool obtained_targetsize_from_source;
     bool obtained_weightsize_from_source;
 
+    //! Vector used to store the conditional mean of the missing values given
+    //! the observed value, when the 'distribution' option is set.
+    mutable Vec cond_mean;
+
     Vec     variable_mean;
 
 public:
 
+    PP<PDistribution> distribution;
     real    number_of_train_samples;
     VMat    mean_source;
 
