@@ -2063,6 +2063,80 @@ void GaussMix::expectation(Vec& mu) const
     }
 }
 
+////////////////////////
+// missingExpectation //
+////////////////////////
+void GaussMix::missingExpectation(const Vec& input, Vec& mu)
+{
+    static TVec<int> coord_missing;
+    static TVec<int> coord_non_missing;
+    static TVec<int> coord_reordered;
+    static Vec input_non_missing;
+    static Mat center_backup;
+    static Mat mat_storage;
+    static TVec<Mat> eigenvectors_backup;
+    if (!input.hasMissing()) {
+        mu.resize(0);
+        return;
+    }
+    if (type_id != TYPE_GENERAL)
+        PLERROR("In GaussMix::missingExpectation - Not implemented for this "
+                "type");
+
+    // Create coordinate indices lists.
+    coord_missing.resize(0);
+    coord_non_missing.resize(0);
+    input_non_missing.resize(0);
+    for (int i = 0; i < input.length(); i++)
+        if (is_missing(input[i]))
+            coord_missing.append(i);
+        else {
+            coord_non_missing.append(i);
+            input_non_missing.append(input[i]);
+        }
+    int n_missing = coord_missing.length();
+    int n_non_missing = coord_non_missing.length();
+    coord_reordered.resize(input.length());
+    coord_reordered.subVec(0, n_non_missing) << coord_non_missing;
+    coord_reordered.subVec(n_non_missing, n_missing) << coord_missing;
+
+    // Backup existing data.
+    center_backup.resize(center.length(), center.width());
+    center_backup << center;
+    eigenvectors_backup.resize(eigenvectors.length());
+    for (int i = 0; i < eigenvectors.length(); i++) {
+        Mat& eigenvecs_backup = eigenvectors_backup[i];
+        Mat& eigenvecs = eigenvectors[i];
+        eigenvecs_backup.resize(eigenvecs.length(), eigenvecs.width());
+        eigenvecs_backup << eigenvecs;
+    }
+    int predictor_size_backup = predictor_size;
+    int predicted_size_backup = predicted_size;
+
+    // Update components to match the new reordered coordinates.
+    selectColumns(center_backup, coord_reordered, center);
+    for (int i = 0; i < eigenvectors.length(); i++)
+        selectColumns(eigenvectors_backup[i], coord_reordered,
+                                              eigenvectors[i]);
+
+    // Set this distribution as conditional to compute the expectation of the
+    // missing (predicted) part given the observed (predictor) part.
+    setPredictorPredictedSizes(n_non_missing, n_missing);
+    setPredictor(input_non_missing);
+
+    // Compute the expectation.
+    expectation(mu);
+
+    // Restore everything.
+    setPredictorPredictedSizes(predictor_size_backup, predicted_size_backup);
+    center << center_backup;
+    for (int i = 0; i < eigenvectors.length(); i++) {
+        Mat& eigenvecs_backup = eigenvectors_backup[i];
+        Mat& eigenvecs = eigenvectors[i];
+        eigenvecs << eigenvecs_backup;
+    }
+}
+
 ////////////
 // forget //
 ////////////
@@ -3025,6 +3099,14 @@ void GaussMix::setPredictorPredictedSizes_const(int n_i, int n_t) const
         work_mat2.resize(n_predicted, n_predicted);
         Vec eigenvals;
         real var_min = square(sigma_min);
+        // Resize some data accordingly.
+        if (n_predictor >= 0)
+            eigenvalues_x.resize(L, n_predictor);
+        if (n_predicted >= 0) 
+        {
+            center_y_x.resize(L, n_predicted);
+            eigenvalues_y_x.resize(L, n_predicted);
+        }
         for (int j = 0; j < L; j++) {
             // Compute the covariance of x and y|x for the j-th Gaussian (we
             // will need them to compute the likelihood).

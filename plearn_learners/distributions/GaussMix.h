@@ -175,10 +175,10 @@ protected:
     mutable Mat eigenvalues_x;  //!< The eigenvalues of the covariance of X.
     TVec<Mat> y_x_mat;          //!< The product K2 * K1^-1 to compute E[Y|x].
     TVec<Mat> eigenvectors_y_x; //!< The eigenvectors of the covariance of Y|x.
-    Mat eigenvalues_y_x;        //!< The eigenvalues of the covariance of Y|x.
+    mutable Mat eigenvalues_y_x;//!< The eigenvalues of the covariance of Y|x.
 
     //! Used to store the conditional expectation E[Y | X = x].
-    Mat center_y_x;
+    mutable Mat center_y_x;
 
     //! The logarithm of P(j|x), where x is the predictor part.
     mutable Vec log_p_j_x;
@@ -490,6 +490,10 @@ public:
 
     //! Compute E[Y | x].
     virtual void expectation(Vec& mu) const;
+
+    //! Return E[Y | x] where Y is the missing part in the 'input' vector, and
+    //! x in the observed part.
+    virtual void missingExpectation(const Vec& input, Vec& mu);
 
     //! Compute Var[Y | x] (currently not implemented).
     virtual void variance(Mat& cov) const;
