@@ -469,7 +469,7 @@ void selectRows(const TMat<T>& source, const TVec<I>& row_indices, TMat<T>& dest
 }
 
 // select the colums of the source as specified by the
-// vector of indices (between 0 and source.length()-1), copied into
+// vector of indices (between 0 and source.width()-1), copied into
 // the destination matrix (which must have the same width()
 // as the indices vector).
 template <class T, class I>
