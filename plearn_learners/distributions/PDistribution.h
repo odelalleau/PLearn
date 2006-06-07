@@ -226,6 +226,15 @@ public:
     //! Return E[Y | x].
     virtual void expectation(Vec& mu) const;
 
+    //! Return E[Y | x] where Y is the missing part in the 'input' vector, and
+    //! x in the observed part (thus discarding any current setting of
+    //! predictor and predicted sizes).
+    //! The values in return vector 'mu' are ordered like the missing values
+    //! in 'input'.
+    //! This method must be implemented in sub-classes, as the default behavior
+    //! is to throw an error.
+    virtual void missingExpectation(const Vec& input, Vec& mu);
+
     //! Return Var[Y | x].
     virtual void variance(Mat& cov) const;
 

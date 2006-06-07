@@ -533,6 +533,9 @@ real PDistribution::cdf(const Vec& y) const
 void PDistribution::expectation(Vec& mu) const
 { PLERROR("expectation not implemented for this PDistribution"); }
 
+void PDistribution::missingExpectation(const Vec& input, Vec& mu)
+{ PLERROR("missingExpectation not implemented for this PDistribution"); }
+
 void PDistribution::variance(Mat& covar) const
 { PLERROR("variance not implemented for this PDistribution"); }
 
