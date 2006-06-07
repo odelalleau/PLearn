@@ -134,13 +134,11 @@ void ExhaustiveNearestNeighbors::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(cached_inputs, copies);
-    deepCopyField(dummy_vec,    copies);
+    deepCopyField(dummy_vec,        copies);
     deepCopyField(tmp_indices,      copies);
-    deepCopyField(tmp_distances,      copies);
-    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(tmp_distances,    copies);
+    deepCopyField(cached_inputs,    copies);
 }
-
 
 void ExhaustiveNearestNeighbors::setTrainingSet(VMat training_set,
                                                 bool call_forget)
