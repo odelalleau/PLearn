@@ -189,21 +189,36 @@ void UniformizeLearner::train()
     }
 }
 
+//////////////////
+// v_no_missing //
+//////////////////
+Vec UniformizeLearner::v_no_missing;
+
 ////////////////////
 // computeRankMap //
 ////////////////////
-void UniformizeLearner::computeRankMap(Vec v, int nquantiles, map<real,real>& rankmap)
+void UniformizeLearner::computeRankMap(const Vec& v, int nquantiles,
+                                       map<real,real>& rankmap)
 {
+    v_no_missing.resize(v.length()); // Allocate enough memory.
+    if (!v.hasMissing())
+        v_no_missing << v;
+    else {
+        v_no_missing.resize(0);
+        for (int i = 0; i < v.length(); i++)
+            if (!is_missing(v[i]))
+                v_no_missing.append(v[i]);
+    }
     rankmap.clear();
-    int max_index = v.length() - 1;
-    sortElements(v);
-    rankmap[v[0]] = 0;
-    rankmap[v[max_index]] = 1;
+    int max_index = v_no_missing.length() - 1;
+    sortElements(v_no_missing);
+    rankmap[v_no_missing[0]] = 0;
+    rankmap[v_no_missing[max_index]] = 1;
     for(int k=1; k<nquantiles; k++)
     {
         real rank = real(k)/real(nquantiles);
         int pos = int(round(rank * max_index));
-        real val = v[pos];
+        real val = v_no_missing[pos];
         if(rankmap.find(val) == rankmap.end())
             rankmap[val] = rank;
     }
@@ -214,6 +229,7 @@ void UniformizeLearner::computeRankMap(Vec v, int nquantiles, map<real,real>& ra
 ///////////////
 real UniformizeLearner::mapToRank(real val, const map<real,real>& rankmap)
 {
+    assert( !is_missing(val) );
     real minv = rankmap.begin()->first;
     if(val<=minv)
         return 0;
@@ -227,6 +243,9 @@ real UniformizeLearner::mapToRank(real val, const map<real,real>& rankmap)
     return rank;
 }
 
+///////////////////
+// computeOutput //
+///////////////////
 void UniformizeLearner::computeOutput(const Vec& input, Vec& output) const
 {
     int nout = outputsize();
@@ -240,6 +259,9 @@ void UniformizeLearner::computeOutput(const Vec& input, Vec& output) const
     }
 }    
 
+/////////////////////////////
+// computeCostsFromOutputs //
+/////////////////////////////
 void UniformizeLearner::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                                 const Vec& target, Vec& costs) const
 {
@@ -248,13 +270,13 @@ void UniformizeLearner::computeCostsFromOutputs(const Vec& input, const Vec& out
 
 TVec<string> UniformizeLearner::getTestCostNames() const
 {
-    TVec<string> nocosts;
+    static TVec<string> nocosts;
     return nocosts;
 }
 
 TVec<string> UniformizeLearner::getTrainCostNames() const
 {
-    TVec<string> nocosts;
+    static TVec<string> nocosts;
     return nocosts;
 }
 
