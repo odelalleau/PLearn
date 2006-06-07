@@ -1,12 +1,2 @@
-__REVISION__ = AP3880.PL5198
-data                           = PLEARNDIR:examples/data/test_suite/gauss_1D_100pt.amat
-expdir_root                    = 
-DATE                           = 20060316
-DATETIME                       = 20060316:141347
-DIRPATH                        = /home/dorionc/PLearn/plearn/math/test/VecStatsCollector/.pytest/PL_constant_regressor_script/expected_results
-FILEBASE                       = constant_regressor
-FILEEXT                        = pyplearn
-FILENAME                       = constant_regressor.pyplearn
-FILEPATH                       = /home/dorionc/PLearn/plearn/math/test/VecStatsCollector/.pytest/PL_constant_regressor_script/expected_results/constant_regressor.pyplearn
-HOME                           = /home/dorionc
-TIME                           = 141347
+__REVISION__ = AP4497.PL5798
+data                                          = PLEARNDIR:examples/data/test_suite/gauss_1D_100pt.amat

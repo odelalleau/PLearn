@@ -1,12 +1,2 @@
-__REVISION__ = AP3880.PL5198
-data                           = PLEARNDIR:examples/data/test_suite/linear_4x_2y.amat
-expdir_root                    = 
-DATE                           = 20060316
-DATETIME                       = 20060316:145757
-DIRPATH                        = /home/dorionc/PLearn/plearn_learners/regressors/test/StackedPCARegression/.pytest/PL_stacked_pca_regression_script/expected_results
-FILEBASE                       = stacked_pca_regression
-FILEEXT                        = pyplearn
-FILENAME                       = stacked_pca_regression.pyplearn
-FILEPATH                       = /home/dorionc/PLearn/plearn_learners/regressors/test/StackedPCARegression/.pytest/PL_stacked_pca_regression_script/expected_results/stacked_pca_regression.pyplearn
-HOME                           = /home/dorionc
-TIME                           = 145757
+__REVISION__ = AP4497.PL5798
+data                                          = PLEARNDIR:examples/data/test_suite/linear_4x_2y.amat

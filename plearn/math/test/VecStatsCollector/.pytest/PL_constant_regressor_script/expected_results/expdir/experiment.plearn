@@ -13,8 +13,8 @@
     save_test_outputs = 1,
     splitter = *3 -> FractionSplitter(
         splits = 1 2 [
-                0:1,
-                0:1
+                (0, 1),
+                (0, 1)
                 ]
         ),
     statnames = [

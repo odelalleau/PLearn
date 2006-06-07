@@ -228,12 +228,11 @@ def __plearn_repr( obj, indent_level, inner_repr = plearn_repr ):
         return '{%s}' % format_list_elements( obj.items(), elem_format, indent_level+1 )
 
     elif isinstance( obj, tuple ):
-        if len(obj) == 2:
-            return inner_repr( obj[0], indent_level+1 ) + ':' + inner_repr( obj[1], indent_level+1 )
-        else:
-            def elem_format( elem ):
-                return inner_repr(elem, indent_level+1)
-            return '(%s)' % format_list_elements(obj, elem_format, indent_level+1)
+        return '(' + ', '.join( [ inner_repr(elem, indent_level+1) for elem in obj] ) + ')'
+##         if len(obj) == 2:
+##             return inner_repr( obj[0], indent_level+1 ) + ':' + inner_repr( obj[1], indent_level+1 )
+##         else:
+##             return '(' + ', '.join( [ inner_repr(elem, indent_level+1) for elem in obj] ) + ') '
 
     # Stands for TMat<real>
     elif numarray is not None and isinstance( obj, numarray.numarraycore.NumArray ):

@@ -9,12 +9,13 @@ width = 1 ;
 inputsize = 0 ;
 targetsize = 1 ;
 weightsize = 0 ;
+extrasize = 0 ;
 metadatadir = "PLEARNDIR:examples/data/test_suite/gauss_1D_100pt.amat.metadata/"  )
 ;
 splitter = *2 ->FractionSplitter(
 round_to_closest = 0 ;
 splits = 1  2  [ 
-0 : 1  	0 : 1  	
+(0 , 1 )	(0 , 1 )	
 ]
  )
 ;
@@ -39,6 +40,7 @@ verbosity = 1 ;
 nservers = 0 ;
 save_trainingset_prefix = ""  )
 ;
+perf_evaluators = {};
 report_stats = 1 ;
 save_initial_tester = 1 ;
 save_stat_collectors = 1 ;
@@ -52,11 +54,12 @@ provide_learner_expdir = 1 ;
 train = 1 ;
 template_stats_collector = *4 ->VecStatsCollector(
 maxnvalues = 50 ;
-no_removal_warnings = 0 ;
 fieldnames = TVec(0 0 *0 )
 ;
 compute_covariance = 0 ;
 epsilon = 0 ;
+window = -1 ;
+no_removal_warnings = 0 ;
 stats = TVec(0 0 *0 )
 ;
 cov = 0  0  [ 

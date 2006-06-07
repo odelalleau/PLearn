@@ -45,7 +45,7 @@
                 splitter = *5 -> KFoldSplitter( K = 10 ),
                 which_cost = 0
                 ),
-            *8 -> HyperRetrain( splitter = *7 -> FractionSplitter( splits = 1 1 [ 0:1 ] ) )
+            *8 -> HyperRetrain( splitter = *7 -> FractionSplitter( splits = 1 1 [ (0, 1) ] ) )
             ],
         tester = *9 -> PTester(
             provide_learner_expdir = 1,
@@ -60,9 +60,9 @@
     save_test_outputs = 1,
     splitter = *11 -> FractionSplitter(
         splits = 1 3 [
-                0:0.75,
-                0.75:1,
-                0:1
+                (0, 0.75),
+                (0.75, 1),
+                (0, 1)
                 ]
         ),
     statnames = [

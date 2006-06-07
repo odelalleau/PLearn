@@ -255,7 +255,7 @@ class PLearnIO:
             self.unread(c)
             return self.binread_sequence()
 
-        elif c=="\x16": # pair
+        elif c=="\x16": # DEPRECATED binary pair format (for backward compatibility)
             self.unread(c)
             return self.binread_pair()
 
@@ -401,7 +401,12 @@ class PLearnIO:
             self.skip_blanks_and_comments_and_separators()
             if self.peek() == '}':
                 break
-            key,val = self.binread_pair()
+            key = self.binread()
+            self.skip_blanks_and_comments()
+            c = self.get()
+            if c!=':':
+                raise TypeError('Expected to read : but read '+c)
+            val = self.binread()
             d[key] = val
         c = self.get()                  # Eat trailing '}'
         assert c == '}', "Expected a closing '}' in reading dict, but got " + c

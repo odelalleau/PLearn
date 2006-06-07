@@ -1,9 +1,10 @@
 *1 ->VecStatsCollector(
 maxnvalues = 0 ;
-no_removal_warnings = 0 ;
 fieldnames = 5 [ "mse+penalty" "mse" "aic" "bic" "mabic" ] ;
 compute_covariance = 0 ;
 epsilon = 0 ;
+window = -1 ;
+no_removal_warnings = 0 ;
 stats = 5 [ StatsCollector(
 maxnvalues = 0 ;
 no_removal_warnings = 0 ;

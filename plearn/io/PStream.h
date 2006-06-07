@@ -599,6 +599,15 @@ inline PStream& operator<<(PStream& out, T*& ptr)
 template<class A,class B>
 inline PStream& operator<<(PStream& out, const pair<A,B>& x) 
 { 
+    // new format (same as for tuple)
+    out.put('(');
+    out << x.first;
+    out.write(", ");
+    out << x.second;
+    out.put(')');
+
+#if 0
+    // old deprecated format
     switch(out.outmode)
     {
     case PStream::raw_ascii:
@@ -616,6 +625,8 @@ inline PStream& operator<<(PStream& out, const pair<A,B>& x)
     default:
         PLERROR("PStream mode not supported");
     }
+#endif
+
     return out;
 }
 

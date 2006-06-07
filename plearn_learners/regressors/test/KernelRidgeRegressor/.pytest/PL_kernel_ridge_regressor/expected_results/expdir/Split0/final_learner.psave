@@ -477,6 +477,7 @@ width = 1 ;
 inputsize = 1 ;
 targetsize = 0 ;
 weightsize = 0 ;
+extrasize = 0 ;
 metadatadir = ""  )
 ;
 expdir = "PYTEST__PL_kernel_ridge_regressor__RESULTS:expdir/Split0/LearnerExpdir/" ;

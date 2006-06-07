@@ -1,12 +1,2 @@
-__REVISION__ = AP3880.PL5198
-data                           = PLEARNDIR:examples/data/test_suite/linear_2x_2y.amat
-expdir_root                    = 
-DATE                           = 20060316
-DATETIME                       = 20060316:145759
-DIRPATH                        = /home/dorionc/PLearn/plearn_learners/regressors/test/LinearRegressor/.pytest/PL_linear_regressor_script/expected_results
-FILEBASE                       = linear_regressor
-FILEEXT                        = pyplearn
-FILENAME                       = linear_regressor.pyplearn
-FILEPATH                       = /home/dorionc/PLearn/plearn_learners/regressors/test/LinearRegressor/.pytest/PL_linear_regressor_script/expected_results/linear_regressor.pyplearn
-HOME                           = /home/dorionc
-TIME                           = 145759
+__REVISION__ = AP4497.PL5798
+data                                          = PLEARNDIR:examples/data/test_suite/linear_2x_2y.amat

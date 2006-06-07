@@ -1,10 +1,10 @@
 
 ***** Simple pair test *****
 Type: pair< string, pair< int, string > >
-Value: mot1: 3: mot2  
-Value reread from plearn_ascii serialization: mot1: 3: mot2  
+Value: (mot1, (3, mot2))
+Value reread from plearn_ascii serialization: (mot1, (3, mot2))
 Same? 1
-Value reread from plearn_binary serialization: mot1: 3: mot2  
+Value reread from plearn_binary serialization: (mot1, (3, mot2))
 Same? 1
 
 ***** Simple tuple test *****
@@ -17,10 +17,10 @@ Same? 1
 
 ***** Complex tuple test *****
 Type: tuple< int, float, tuple< string, pair< double, int >, map< string, float > >, char >
-Value: (36 , 3.25 , ("mot1" , 4.5 : 3  , {"key1" : 1 , "key2" : 2 , "key3" : 3 }), 'Z' )
-Value reread from plearn_ascii serialization: (36 , 3.25 , ("mot1" , 4.5 : 3  , {"key1" : 1 , "key2" : 2 , "key3" : 3 }), 'Z' )
+Value: (36 , 3.25 , ("mot1" , (4.5 , 3 ), {"key1" : 1 , "key2" : 2 , "key3" : 3 }), 'Z' )
+Value reread from plearn_ascii serialization: (36 , 3.25 , ("mot1" , (4.5 , 3 ), {"key1" : 1 , "key2" : 2 , "key3" : 3 }), 'Z' )
 Same? 1
-Value reread from plearn_binary serialization: (36 , 3.25 , ("mot1" , 4.5 : 3  , {"key1" : 1 , "key2" : 2 , "key3" : 3 }), 'Z' )
+Value reread from plearn_binary serialization: (36 , 3.25 , ("mot1" , (4.5 , 3 ), {"key1" : 1 , "key2" : 2 , "key3" : 3 }), 'Z' )
 Same? 1
 
 **** ALL DONE *****

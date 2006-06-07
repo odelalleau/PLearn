@@ -175,9 +175,9 @@ template<class T1>
 PStream& operator<<(PStream& out, const tuple<T1>& t)
 {
     PStream::mode_t oldmode = out.switchToPLearnOutMode();
-    out.write("(");
+    out.put('(');
     out << get<0>(t);
-    out.write(")");
+    out.put(')');
     out.setOutMode(oldmode);
     return out;
 }
@@ -186,10 +186,10 @@ template<class T1, class T2>
 PStream& operator<<(PStream& out, const tuple<T1,T2>& t)
 {
     PStream::mode_t oldmode = out.switchToPLearnOutMode();
-    out.write("(");
+    out.put('(');
     out << get<0>(t); out.write(", ");
     out << get<1>(t);
-    out.write(")");
+    out.put(')');
     out.setOutMode(oldmode);
     return out;
 }
@@ -198,11 +198,11 @@ template<class T1, class T2, class T3>
 PStream& operator<<(PStream& out, const tuple<T1,T2,T3>& t)
 {
     PStream::mode_t oldmode = out.switchToPLearnOutMode();
-    out.write("(");
+    out.put('(');
     out << get<0>(t); out.write(", ");
     out << get<1>(t); out.write(", ");
     out << get<2>(t);
-    out.write(")");
+    out.put(')');
     out.setOutMode(oldmode);
     return out;
 }
@@ -211,12 +211,12 @@ template<class T1, class T2, class T3, class T4>
 PStream& operator<<(PStream& out, const tuple<T1,T2,T3,T4>& t)
 {
     PStream::mode_t oldmode = out.switchToPLearnOutMode();
-    out.write("(");
+    out.put('(');
     out << get<0>(t); out.write(", ");
     out << get<1>(t); out.write(", ");
     out << get<2>(t); out.write(", ");
     out << get<3>(t);
-    out.write(")");
+    out.put(')');
     out.setOutMode(oldmode);
     return out;
 }
@@ -225,13 +225,13 @@ template<class T1, class T2, class T3, class T4, class T5>
 PStream& operator<<(PStream& out, const tuple<T1,T2,T3,T4,T5>& t)
 {
     PStream::mode_t oldmode = out.switchToPLearnOutMode();
-    out.write("(");
+    out.put('(');
     out << get<0>(t); out.write(", ");
     out << get<1>(t); out.write(", ");
     out << get<2>(t); out.write(", ");
     out << get<3>(t); out.write(", ");
     out << get<4>(t);
-    out.write(")");
+    out.put(')');
     out.setOutMode(oldmode);
     return out;
 }
@@ -240,14 +240,14 @@ template<class T1, class T2, class T3, class T4, class T5, class T6>
 PStream& operator<<(PStream& out, const tuple<T1,T2,T3,T4,T5,T6>& t)
 {
     PStream::mode_t oldmode = out.switchToPLearnOutMode();
-    out.write("(");
+    out.put('(');
     out << get<0>(t); out.write(", ");
     out << get<1>(t); out.write(", ");
     out << get<2>(t); out.write(", ");
     out << get<3>(t); out.write(", ");
     out << get<4>(t); out.write(", ");
     out << get<5>(t);
-    out.write(")");
+    out.put(')');
     out.setOutMode(oldmode);
     return out;
 }

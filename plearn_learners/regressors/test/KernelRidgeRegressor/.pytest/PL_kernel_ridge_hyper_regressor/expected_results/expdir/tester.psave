@@ -15,7 +15,7 @@ metadatadir = "PLEARNDIR:examples/data/test_suite/sin_signcos_1x_2y.amat.metadat
 splitter = *2 ->FractionSplitter(
 round_to_closest = 0 ;
 splits = 1  3  [ 
-0 : 0.75  	0.75 : 1  	0 : 1  	
+(0 , 0.75 )	(0.75 , 1 )	(0 , 1 )	
 ]
  )
 ;
@@ -61,6 +61,7 @@ verbosity = 1 ;
 nservers = 0 ;
 save_trainingset_prefix = ""  )
 ;
+perf_evaluators = {};
 report_stats = 1 ;
 save_initial_tester = 1 ;
 save_stat_collectors = 1 ;
@@ -98,13 +99,13 @@ K = 10 ;
 append_train = 0 ;
 append_non_constant_test = 0 ;
 include_test_in_train = 0 ;
-cross_range = 0 : 1   )
+cross_range = (0 , 1 ) )
  )
 *10 ->HyperRetrain(
 splitter = *11 ->FractionSplitter(
 round_to_closest = 0 ;
 splits = 1  1  [ 
-0 : 1  	
+(0 , 1 )	
 ]
  )
 ;
@@ -128,6 +129,7 @@ verbosity = 1 ;
 nservers = 0 ;
 save_trainingset_prefix = ""  )
 ;
+perf_evaluators = {};
 report_stats = 1 ;
 save_initial_tester = 1 ;
 save_stat_collectors = 1 ;

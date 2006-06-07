@@ -1,9 +1,10 @@
 *1 ->VecStatsCollector(
 maxnvalues = 50 ;
-no_removal_warnings = 0 ;
 fieldnames = 1 [ "mse" ] ;
 compute_covariance = 0 ;
 epsilon = 0 ;
+window = -1 ;
+no_removal_warnings = 0 ;
 stats = 1 [ StatsCollector(
 maxnvalues = 50 ;
 no_removal_warnings = 0 ;

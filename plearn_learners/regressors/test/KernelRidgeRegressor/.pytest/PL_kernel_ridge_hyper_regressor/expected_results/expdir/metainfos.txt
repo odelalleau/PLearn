@@ -1,18 +1,8 @@
-__REVISION__ = PL5566
-expdir_root                    = 
-DATE                           = 20060512
-DATETIME                       = 20060512:105122
-DIRPATH                        = r:cygwinPLearnplearn_learnersegressors	estKernelRidgeRegressor.pytestPL_kernel_ridge_hyper_regressorexpected_results
-FILEBASE                       = kernel_ridge_hyper_regressor
-FILEEXT                        = pyplearn
-FILENAME                       = kernel_ridge_hyper_regressor.pyplearn
-FILEPATH                       = r:cygwinPLearnplearn_learnersegressors	estKernelRidgeRegressor.pytestPL_kernel_ridge_hyper_regressorexpected_resultskernel_ridge_hyper_regressor.pyplearn
-HOME                           = R:cygwin
-TIME                           = 105122
-HyperKRR.kfold                 = 10
-HyperKRR.lambda_list           = 1e-8,1e-6,1e-4,1e-2,1e0
-HyperKRR.sigma_list            = 1e-2,1e-1,1e0,1e1,1e2
-HyperKRR.statnames             = E[test.E[mse]],E[train.E[mse]]
-HyperKRR.valid_fraction        = 0.25
-HyperKRR.which_cost            = 0
-DataOpt.data                   = PLEARNDIR:examples/data/test_suite/sin_signcos_1x_2y.amat
+__REVISION__ = AP4497.PL5798
+DataOpt.data                                  = PLEARNDIR:examples/data/test_suite/sin_signcos_1x_2y.amat
+HyperKRR.kfold                                = 10
+HyperKRR.lambda_list                          = 1e-8,1e-6,1e-4,1e-2,1e0
+HyperKRR.sigma_list                           = 1e-2,1e-1,1e0,1e1,1e2
+HyperKRR.statnames                            = E[test.E[mse]],E[train.E[mse]]
+HyperKRR.valid_fraction                       = 0.25
+HyperKRR.which_cost                           = 0
