@@ -1203,7 +1203,7 @@ void SupervisedDBN::fineTuneByGradientDescent( const Vec& input,
         layers[i+1]->computeExpectation();
     }
 
-    supervised_input.resize( n_predictor );
+    supervised_input.resize( layers[n_layers-1]->expectation.length() );
     supervised_input << layers[n_layers-1]->expectation;
     supervised_input.append( input.subVec( n_predictor, n_predicted ) );
 
