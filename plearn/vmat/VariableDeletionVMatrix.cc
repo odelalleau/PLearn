@@ -243,7 +243,7 @@ void VariableDeletionVMatrix::build_()
 
     // First remove columns that have too many missing values.
     int min_non_missing =
-        int(round(min_non_missing_threshold * source->length()));
+        int(round(min_non_missing_threshold * the_train_source->length()));
     for (int i = 0; i < is; i++)
         if (stats[i].nnonmissing() >= min_non_missing)
             indices.append(i);
