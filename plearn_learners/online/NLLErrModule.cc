@@ -52,6 +52,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "This class computes the Negative Log-Likelihood of the input, given the\n"
     "desired 'target'. Also propagates gradient and diagonal of Hessian\n"
     "backwards.\n"
+    "If output_size = 2, the second output is the classification error.\n"
     );
 
 NLLErrModule::NLLErrModule():
@@ -81,7 +82,6 @@ int NLLErrModule::getTarget(const Vec& input) const
                   "this is a one-hot vector from this integer.\n");
          */
 
-        bool invalid_target = false;
         Vec the_target = input.subVec( input_size, t_size );
         // get position of '1'
         target = argmax( the_target );
@@ -116,6 +116,9 @@ void NLLErrModule::fprop(const Vec& input, Vec& output) const
     Vec input_ = input.subVec( 0, input_size );
     output.resize( output_size );
     output[0] = - pl_log( softmax( input_ )[target] );
+
+    if( output_size > 1 )
+        output[1] = ( argmax( input_ ) == target ) ? 0 : 1;
 }
 
 // Don't modify class
@@ -309,7 +312,7 @@ void NLLErrModule::build_()
                   "Defaulting to '1' (like a sigmoid function ?)\n");
         input_size = 1;
     }
-    if( output_size != 1 )
+    if( output_size != 1 && output_size != 2 )
     {
         PLWARNING("NLLErrModule::build_: 'output_size' (%i) should be 1.\n"
                   "Setting 'output_size' to 1.\n", output_size);

@@ -112,11 +112,11 @@ void StackedModulesModule::build_()
     assert( modules[0]->input_size >= 0 );
     input_size = modules[0]->input_size + target_size;
 
-    int& last_module_output_size = modules[nmodules-1]->output_size;
-    if( last_layer_is_cost )
-        last_module_output_size = 1;
+//    int last_module_output_size = modules[nmodules-1]->output_size;
+//    if( last_layer_is_cost )
+//        last_module_output_size = 1;
 
-    output_size = last_module_output_size;
+    output_size = modules[nmodules-1]->output_size;
 
     // build the modules
     buildLayers();

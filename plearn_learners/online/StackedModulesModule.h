@@ -159,6 +159,7 @@ protected:
 
     //####  Not Options  ######################################################
 
+public: // hack
     //! stores the input and output values of the functions
     TVec<Vec> values;
 

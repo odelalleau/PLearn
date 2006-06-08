@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// PartSupervisedDBN.cc
+// SupervisedDBN.cc
 //
 // Copyright (C) 2006 Pascal Lamblin
 //
@@ -34,9 +34,9 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file PartSupervisedDBN.cc */
+/*! \file SupervisedDBN.cc */
 
-#define PL_LOG_MODULE_NAME "PartSupervisedDBN"
+#define PL_LOG_MODULE_NAME "SupervisedDBN"
 #include <plearn/io/pl_log.h>
 #include <plearn/io/openFile.h>
 
@@ -44,35 +44,37 @@
 #include <plearn/sys/PLMPI.h>
 #endif
 
-#include "PartSupervisedDBN.h"
+#include "SupervisedDBN.h"
 
 // RBM includes
 #include "RBMLayer.h"
-#include "RBMMixedLayer.h"
-#include "RBMMultinomialLayer.h"
+//#include "RBMMixedLayer.h"
+//#include "RBMMultinomialLayer.h"
 #include "RBMParameters.h"
 #include "RBMLLParameters.h"
-#include "RBMJointLLParameters.h"
+//#include "RBMJointLLParameters.h"
 
 // OnlineLearningModules includes
 #include "OnlineLearningModule.h"
 #include "StackedModulesModule.h"
 #include "NLLErrModule.h"
+#include "SquaredErrModule.h"
 #include "GradNNetLayerModule.h"
 
 namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
-    PartSupervisedDBN,
+    SupervisedDBN,
     "Hinton's DBN plus supervised gradient from a logistic regression layer",
-    ""
+    "without top joint layer"
 );
 
 /////////////////////////
-// PartSupervisedDBN //
+// SupervisedDBN //
 /////////////////////////
-PartSupervisedDBN::PartSupervisedDBN() :
+SupervisedDBN::SupervisedDBN() :
+    regression(false),
     learning_rate(0.),
     fine_tuning_learning_rate(-1.),
     initial_momentum(0.),
@@ -93,47 +95,51 @@ PartSupervisedDBN::PartSupervisedDBN() :
 ////////////////////
 // declareOptions //
 ////////////////////
-void PartSupervisedDBN::declareOptions(OptionList& ol)
+void SupervisedDBN::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "learning_rate", &PartSupervisedDBN::learning_rate,
+    declareOption(ol, "regression", &SupervisedDBN::regression,
+                  OptionBase::buildoption,
+                  "If true, the task is regression, else it is classification");
+
+    declareOption(ol, "learning_rate", &SupervisedDBN::learning_rate,
                   OptionBase::buildoption,
                   "Learning rate used during greedy learning");
 
     declareOption(ol, "supervised_learning_rates",
-                  &PartSupervisedDBN::supervised_learning_rates,
+                  &SupervisedDBN::supervised_learning_rates,
                   OptionBase::buildoption,
                   "The learning rates used for the supervised part during"
                   " greedy learning\n"
                   "(layer by layer).\n");
 
     declareOption(ol, "fine_tuning_learning_rate",
-                  &PartSupervisedDBN::fine_tuning_learning_rate,
+                  &SupervisedDBN::fine_tuning_learning_rate,
                   OptionBase::buildoption,
                   "Learning rate used during the gradient descent");
 
     declareOption(ol, "initial_momentum",
-                  &PartSupervisedDBN::initial_momentum,
+                  &SupervisedDBN::initial_momentum,
                   OptionBase::buildoption,
                   "Initial momentum factor (should be between 0 and 1)");
 
     declareOption(ol, "final_momentum",
-                  &PartSupervisedDBN::final_momentum,
+                  &SupervisedDBN::final_momentum,
                   OptionBase::buildoption,
                   "Final momentum factor (should be between 0 and 1)");
 
     declareOption(ol, "momentum_switch_time",
-                  &PartSupervisedDBN::momentum_switch_time,
+                  &SupervisedDBN::momentum_switch_time,
                   OptionBase::buildoption,
                   "Number of samples to be seen by layer i before its momentum"
                   " switches\n"
                   "from initial_momentum to final_momentum.\n");
 
-    declareOption(ol, "weight_decay", &PartSupervisedDBN::weight_decay,
+    declareOption(ol, "weight_decay", &SupervisedDBN::weight_decay,
                   OptionBase::buildoption,
                   "Weight decay");
 
     declareOption(ol, "initialization_method",
-                  &PartSupervisedDBN::initialization_method,
+                  &SupervisedDBN::initialization_method,
                   OptionBase::buildoption,
                   "The method used to initialize the weights:\n"
                   "  - \"uniform_linear\" = a uniform law in [-1/d, 1/d]\n"
@@ -144,7 +150,7 @@ void PartSupervisedDBN::declareOptions(OptionList& ol)
 
 
     declareOption(ol, "training_schedule",
-                  &PartSupervisedDBN::training_schedule,
+                  &SupervisedDBN::training_schedule,
                   OptionBase::buildoption,
                   "Total number of examples that should be seen until each"
                   " layer\n"
@@ -153,7 +159,7 @@ void PartSupervisedDBN::declareOptions(OptionList& ol)
                   " training_schedule[i+1].\n");
 
     declareOption(ol, "fine_tuning_method",
-                  &PartSupervisedDBN::fine_tuning_method,
+                  &SupervisedDBN::fine_tuning_method,
                   OptionBase::buildoption,
                   "Method for fine-tuning the whole network after greedy"
                   " learning.\n"
@@ -163,36 +169,37 @@ void PartSupervisedDBN::declareOptions(OptionList& ol)
                   "  - \"EGD\" or \"error_gradient_descent\"\n"
                   "  - \"WS\" or \"wake_sleep\".\n");
 
-    declareOption(ol, "layers", &PartSupervisedDBN::layers,
+    declareOption(ol, "layers", &SupervisedDBN::layers,
                   OptionBase::buildoption,
                   "Layers that learn representations of the input,"
                   " unsupervisedly.\n"
                   "layers[0] is input layer.\n");
 
-    declareOption(ol, "target_layer", &PartSupervisedDBN::target_layer,
+/*
+    declareOption(ol, "target_layer", &SupervisedDBN::target_layer,
                   OptionBase::buildoption,
                   "Target (or label) layer");
-
-    declareOption(ol, "params", &PartSupervisedDBN::params,
+*/
+    declareOption(ol, "params", &SupervisedDBN::params,
                   OptionBase::buildoption,
                   "RBMParameters linking the unsupervised layers.\n"
                   "params[i] links layers[i] and layers[i+1], except for"
                   "params[n_layers-1],\n"
                   "that links layers[n_layers-1] and last_layer.\n");
-
-    declareOption(ol, "target_params", &PartSupervisedDBN::target_params,
+/*
+    declareOption(ol, "target_params", &SupervisedDBN::target_params,
                   OptionBase::buildoption,
                   "Parameters linking target_layer and last_layer");
-
+*/
 /*
     declareOption(ol, "use_sample_rather_than_expectation_in_positive_phase_statistics",
-                  &PartSupervisedDBN::use_sample_rather_than_expectation_in_positive_phase_statistics,
+                  &SupervisedDBN::use_sample_rather_than_expectation_in_positive_phase_statistics,
                   OptionBase::buildoption,
                   "In positive phase statistics use output->sample * input\n"
                   "rather than output->expectation * input.\n");
 */
     declareOption(ol, "use_sample_or_expectation",
-                  &PartSupervisedDBN::use_sample_or_expectation,
+                  &SupervisedDBN::use_sample_or_expectation,
                   OptionBase::buildoption,
                   "Vector providing information on which information to use"
                   " during the\n"
@@ -211,7 +218,7 @@ void PartSupervisedDBN::declareOptions(OptionList& ol)
                   " to 0).\n");
 
     declareOption(ol, "parallelization_minibatch_size",
-                  &PartSupervisedDBN::parallelization_minibatch_size,
+                  &SupervisedDBN::parallelization_minibatch_size,
                   OptionBase::buildoption,
                   "Only used when USING_MPI for parallelization.\n"
                   "This is the number of examples seen by one process\n"
@@ -219,33 +226,34 @@ void PartSupervisedDBN::declareOptions(OptionList& ol)
                   "among all the processes.\n");
 
     declareOption(ol, "sum_parallel_contributions",
-                  &PartSupervisedDBN::sum_parallel_contributions,
+                  &SupervisedDBN::sum_parallel_contributions,
                   OptionBase::buildoption,
                   "Only used when USING_MPI for parallelization.\n"
                   "sum or average the delta-w contributions from different processes?\n");
 
-    declareOption(ol, "n_layers", &PartSupervisedDBN::n_layers,
+    declareOption(ol, "n_layers", &SupervisedDBN::n_layers,
                   OptionBase::learntoption,
                   "Number of unsupervised layers, including input layer");
-
-    declareOption(ol, "last_layer", &PartSupervisedDBN::last_layer,
+/*
+    declareOption(ol, "last_layer", &SupervisedDBN::last_layer,
                   OptionBase::learntoption,
                   "Last layer, learning joint representations of input and"
                   " target");
 
-    declareOption(ol, "joint_layer", &PartSupervisedDBN::joint_layer,
+    declareOption(ol, "joint_layer", &SupervisedDBN::joint_layer,
                   OptionBase::nosave,
                   "Concatenation of target_layer and layers[n_layers-1]");
 
-    declareOption(ol, "joint_params", &PartSupervisedDBN::joint_params,
+    declareOption(ol, "joint_params", &SupervisedDBN::joint_params,
                   OptionBase::nosave,
                   "Parameters linking joint_layer and last_layer");
-
-    declareOption(ol, "regressors", &PartSupervisedDBN::regressors,
+*/
+    declareOption(ol, "regressors", &SupervisedDBN::regressors,
                   OptionBase::learntoption,
-                  "Logistic regressors that will provide the supervised"
-                  " gradient\n"
-                  "for each RBMParameters\n");
+                  "Linear (if regression) of logistic (if !regression)"
+                  " regressors\n"
+                  " that will provide the supervised gradient for each"
+                  " RBMParameters\n");
 
     // Now call the parent class' declareOptions().
     inherited::declareOptions(ol);
@@ -254,7 +262,7 @@ void PartSupervisedDBN::declareOptions(OptionList& ol)
 ///////////
 // build //
 ///////////
-void PartSupervisedDBN::build()
+void SupervisedDBN::build()
 {
     // ### Nothing to add here, simply calls build_().
     inherited::build();
@@ -264,7 +272,7 @@ void PartSupervisedDBN::build()
 ////////////
 // build_ //
 ////////////
-void PartSupervisedDBN::build_()
+void SupervisedDBN::build_()
 {
     MODULE_LOG << "build_() called" << endl;
     n_layers = layers.length();
@@ -273,6 +281,9 @@ void PartSupervisedDBN::build_()
 
     if( fine_tuning_learning_rate < 0. )
         fine_tuning_learning_rate = learning_rate;
+
+    if( regression )
+        predicted_size = 1;
 
     // check value of initialization_method
     string im = lowerstring( initialization_method );
@@ -299,7 +310,7 @@ void PartSupervisedDBN::build_()
     else if( ftm == "ws" | ftm == "wake_sleep" )
         fine_tuning_method = "WS";
     else
-        PLERROR( "PartSupervisedDBN::build_ - fine_tuning_method \"%s\"\n"
+        PLERROR( "SupervisedDBN::build_ - fine_tuning_method \"%s\"\n"
                  "is unknown.\n", fine_tuning_method.c_str() );
     MODULE_LOG << "  fine_tuning_method = \"" << fine_tuning_method << "\""
         <<  endl;
@@ -324,20 +335,21 @@ void PartSupervisedDBN::build_()
     build_regressors();
 }
 
-void PartSupervisedDBN::build_layers()
+void SupervisedDBN::build_layers()
 {
     MODULE_LOG << "build_layers() called" << endl;
     if( inputsize_ >= 0 )
     {
-        assert( layers[0]->size + target_layer->size == inputsize() );
+        assert( layers[0]->size + predicted_size == inputsize() );
         setPredictorPredictedSizes( layers[0]->size,
-                                    target_layer->size, false );
+                                    predicted_size, false );
         MODULE_LOG << "  n_predictor = " << n_predictor << endl;
         MODULE_LOG << "  n_predicted = " << n_predicted << endl;
     }
 
     for( int i=0 ; i<n_layers ; i++ )
         layers[i]->random_gen = random_gen;
+/*
     target_layer->random_gen = random_gen;
 
     last_layer = layers[n_layers-1];
@@ -355,9 +367,10 @@ void PartSupervisedDBN::build_layers()
         joint_layer = new RBMMixedLayer( the_sub_layers );
     }
     joint_layer->random_gen = random_gen;
+*/
 }
 
-void PartSupervisedDBN::build_params()
+void SupervisedDBN::build_params()
 {
     MODULE_LOG << "build_params() called" << endl;
     if( params.length() == 0 )
@@ -367,13 +380,13 @@ void PartSupervisedDBN::build_params()
             params[i] = new RBMLLParameters();
     }
     else if( params.length() != n_layers-1 )
-        PLERROR( "PartSupervisedDBN::build_params - params.length() should\n"
+        PLERROR( "SupervisedDBN::build_params - params.length() should\n"
                  "be equal to layers.length()-1 (%d != %d).\n",
                  params.length(), n_layers-1 );
 
-    activation_gradients.resize( n_layers-1 );
-    expectation_gradients.resize( n_layers-1 );
-    output_gradient.resize( n_predicted );
+    activation_gradients.resize( n_layers );
+    expectation_gradients.resize( n_layers );
+//    output_gradient.resize( n_predicted );
 
     for( int i=0 ; i<n_layers-1 ; i++ )
     {
@@ -388,6 +401,10 @@ void PartSupervisedDBN::build_params()
         expectation_gradients[i].resize( params[i]->down_layer_size );
     }
 
+    activation_gradients[n_layers-1].resize(params[n_layers-2]->up_layer_size);
+    expectation_gradients[n_layers-1].resize(params[n_layers-2]->up_layer_size);
+
+/*
     if( target_layer && !target_params )
         target_params = new RBMLLParameters();
 
@@ -408,13 +425,14 @@ void PartSupervisedDBN::build_params()
                                                  params[n_layers-2] );
     }
     joint_params->random_gen = random_gen;
+*/
 
     // share the biases
     for( int i=0 ; i<n_layers-2 ; i++ )
         params[i]->up_units_bias = params[i+1]->down_units_bias;
 }
 
-void PartSupervisedDBN::build_regressors()
+void SupervisedDBN::build_regressors()
 {
     MODULE_LOG << "build_regressors() called" << endl;
     if( regressors.length() != n_layers-1 )
@@ -424,7 +442,7 @@ void PartSupervisedDBN::build_regressors()
         if( !(regressors[i])
             || regressors[i]->input_size != params[i]->up_layer_size )
         {
-            MODULE_LOG << "creating regressor " << i << endl;
+            MODULE_LOG << "creating regressor " << i << "..." << endl;
 
             // A linear layer of the appropriate size, that will be trained by
             // stochastic gradient descent, initial weights are 0.
@@ -437,23 +455,35 @@ void PartSupervisedDBN::build_regressors()
             p_gnnlm->init_weights_random_scale = 0.;
             p_gnnlm->build();
 
-            // The softmax+NLL part
-            PP<NLLErrModule> p_nll = new NLLErrModule();
-            p_nll->input_size = n_predicted;
-            p_nll->output_size = 1;
-            p_nll->build();
+            // The cost part
+            PP<OnlineLearningModule> p_cost = NULL;
+
+            if( regression ) // cost is MSE
+            {
+                MODULE_LOG << "... as a SquaredErrModule" << endl;
+                p_cost = new SquaredErrModule();
+            }
+            else // cost is softmax+NLL
+            {
+                MODULE_LOG << "... as an NLLErrModule" << endl;
+                p_cost = new NLLErrModule();
+            }
+
+            p_cost->input_size = n_predicted;
+            p_cost->output_size = 1;
+            p_cost->build();
 
             // Stack them, and...
             TVec< PP<OnlineLearningModule> > stack(2);
             stack[0] = (GradNNetLayerModule*) p_gnnlm;
-            stack[1] = (NLLErrModule*) p_nll;
+            stack[1] = p_cost;
 
             // ... encapsulate them in another Module, that will compute
             // and backprop the NLL
             PP<StackedModulesModule> p_smm = new StackedModulesModule();
             p_smm->modules = stack;
             p_smm->last_layer_is_cost = true;
-            p_smm->target_size = n_predicted;
+            p_smm->target_size = predicted_size;
             p_smm->build();
 
             regressors[i] = (StackedModulesModule*) p_smm;
@@ -464,7 +494,7 @@ void PartSupervisedDBN::build_regressors()
 ////////////
 // forget //
 ////////////
-void PartSupervisedDBN::forget()
+void SupervisedDBN::forget()
 {
     MODULE_LOG << "forget() called" << endl;
     /*!
@@ -480,47 +510,51 @@ void PartSupervisedDBN::forget()
     for( int i=0 ; i<n_layers ; i++ )
         layers[i]->reset();
 
+    for( int i=0 ; i<n_layers-1 ; i++ )
+        regressors[i]->forget();
+
 #if USING_MPI
     global_params.resize(0);
 #endif
+/*
     target_params->forget();
     target_layer->reset();
-
+*/
     stage = 0;
 }
 
 //////////////
 // generate //
 //////////////
-void PartSupervisedDBN::generate(Vec& y) const
+void SupervisedDBN::generate(Vec& y) const
 {
-    PLERROR("generate not implemented for PartSupervisedDBN");
+    PLERROR("generate not implemented for SupervisedDBN");
 }
 
 /////////
 // cdf //
 /////////
-real PartSupervisedDBN::cdf(const Vec& y) const
+real SupervisedDBN::cdf(const Vec& y) const
 {
-    PLERROR("cdf not implemented for PartSupervisedDBN"); return 0;
+    PLERROR("cdf not implemented for SupervisedDBN"); return 0;
 }
 
 /////////////////
 // expectation //
 /////////////////
-void PartSupervisedDBN::expectation(Vec& mu) const
+void SupervisedDBN::expectation(Vec& mu) const
 {
     mu.resize( predicted_size );
 
     // Propagate input (predictor_part) until penultimate layer
     layers[0]->expectation << predictor_part;
-    for( int i=0 ; i<n_layers-2 ; i++ )
+    for( int i=0 ; i<n_layers-1 ; i++ )
     {
         params[i]->setAsDownInput( layers[i]->expectation );
         layers[i+1]->getAllActivations( (RBMLLParameters*) params[i] );
         layers[i+1]->computeExpectation();
     }
-
+/*
     // Set layers[n_layers-2]->expectation (penultimate) as conditionning input
     // of joint_params
     joint_params->setAsCondInput( layers[n_layers-2]->expectation );
@@ -528,16 +562,22 @@ void PartSupervisedDBN::expectation(Vec& mu) const
     // Get all activations on target_layer from target_params
     target_layer->getAllActivations( (RBMLLParameters*) joint_params );
     target_layer->computeExpectation();
-
-    mu << target_layer->expectation;
+*/
+    regressors[n_layers-1]->fprop( layers[n_layers-1]->expectation,
+                                   store_costs );
+    mu << ((StackedModulesModule*) (OnlineLearningModule*)
+                regressors[n_layers-1])->values[1];
 }
 
 /////////////
 // density //
 /////////////
-real PartSupervisedDBN::density(const Vec& y) const
+real SupervisedDBN::density(const Vec& y) const
 {
     assert( y.size() == n_predicted );
+
+    if( regression ) // the probabilistic model does not work
+        return 0;
 
     // TODO: 'y'[0] devrait plutot etre l'entier "index" lui-meme!
     int index = argmax( y );
@@ -557,7 +597,7 @@ real PartSupervisedDBN::density(const Vec& y) const
 /////////////////
 // log_density //
 /////////////////
-real PartSupervisedDBN::log_density(const Vec& y) const
+real SupervisedDBN::log_density(const Vec& y) const
 {
     return pl_log( density(y) );
 }
@@ -565,40 +605,40 @@ real PartSupervisedDBN::log_density(const Vec& y) const
 /////////////////
 // survival_fn //
 /////////////////
-real PartSupervisedDBN::survival_fn(const Vec& y) const
+real SupervisedDBN::survival_fn(const Vec& y) const
 {
-    PLERROR("survival_fn not implemented for PartSupervisedDBN"); return 0;
+    PLERROR("survival_fn not implemented for SupervisedDBN"); return 0;
 }
 
 //////////////
 // variance //
 //////////////
-void PartSupervisedDBN::variance(Mat& cov) const
+void SupervisedDBN::variance(Mat& cov) const
 {
-    PLERROR("variance not implemented for PartSupervisedDBN");
+    PLERROR("variance not implemented for SupervisedDBN");
 }
 
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void PartSupervisedDBN::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+void SupervisedDBN::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField(layers, copies);
-    deepCopyField(last_layer, copies);
-    deepCopyField(target_layer, copies);
-    deepCopyField(joint_layer, copies);
+//    deepCopyField(last_layer, copies);
+//    deepCopyField(target_layer, copies);
+//    deepCopyField(joint_layer, copies);
     deepCopyField(params, copies);
-    deepCopyField(joint_params, copies);
-    deepCopyField(target_params, copies);
+//    deepCopyField(joint_params, copies);
+//    deepCopyField(target_params, copies);
     deepCopyField(training_schedule, copies);
 }
 
 //////////////////
 // setPredictor //
 //////////////////
-void PartSupervisedDBN::setPredictor(const Vec& predictor, bool call_parent)
+void SupervisedDBN::setPredictor(const Vec& predictor, bool call_parent)
     const
 {
     if (call_parent)
@@ -609,9 +649,9 @@ void PartSupervisedDBN::setPredictor(const Vec& predictor, bool call_parent)
 ////////////////////////////////
 // setPredictorPredictedSizes //
 ////////////////////////////////
-bool PartSupervisedDBN::setPredictorPredictedSizes(int the_predictor_size,
-                                                   int the_predicted_size,
-                                                   bool call_parent)
+bool SupervisedDBN::setPredictorPredictedSizes(int the_predictor_size,
+                                               int the_predicted_size,
+                                               bool call_parent)
 {
     bool sizes_have_changed = false;
     if (call_parent)
@@ -620,14 +660,14 @@ bool PartSupervisedDBN::setPredictorPredictedSizes(int the_predictor_size,
 
     // ### Add here any specific code required by your subclass.
     if( the_predictor_size >= 0 && the_predictor_size != layers[0]->size ||
-        the_predicted_size >= 0 && the_predicted_size != target_layer->size )
-        PLERROR( "PartSupervisedDBN::setPredictorPredictedSizes - \n"
+        the_predicted_size >= 0 && the_predicted_size != predicted_size )
+        PLERROR( "SupervisedDBN::setPredictorPredictedSizes - \n"
                  "n_predictor should be equal to layer[0]->size (%d)\n"
-                 "n_predicted should be equal to target_layer->size (%d).\n",
-                 layers[0]->size, target_layer->size );
+                 "n_predicted should be equal to predicted_size (%d).\n",
+                 layers[0]->size, predicted_size );
 
     n_predictor = layers[0]->size;
-    n_predicted = target_layer->size;
+    n_predicted = predicted_size;
 
     // Returned value.
     return sizes_have_changed;
@@ -637,7 +677,7 @@ bool PartSupervisedDBN::setPredictorPredictedSizes(int the_predictor_size,
 ///////////
 // train //
 ///////////
-void PartSupervisedDBN::train()
+void SupervisedDBN::train()
 {
     MODULE_LOG << "train() called" << endl;
     // The role of the train method is to bring the learner up to
@@ -728,7 +768,7 @@ void PartSupervisedDBN::train()
     train_stats->forget();
 
     /***** initial greedy training *****/
-    for( int layer=0 ; layer < n_layers-2 ; layer++ )
+    for( int layer=0 ; layer < n_layers-1 ; layer++ )
     {
         MODULE_LOG << "Training parameters between layers " << layer
             << " and " << layer+1 << endl;
@@ -801,6 +841,7 @@ void PartSupervisedDBN::train()
         }
     }
 
+#if 0
     /***** joint training *****/
     MODULE_LOG << "Training joint parameters, between target,"
         << " penultimate (" << n_layers-2 << ")," << endl
@@ -858,6 +899,7 @@ void PartSupervisedDBN::train()
             shareParamsMPI();
 #endif
     }
+#endif //0
 
     /***** fine-tuning *****/
     MODULE_LOG << "Fine-tuning all parameters, using method "
@@ -873,8 +915,8 @@ void PartSupervisedDBN::train()
 
     for( int i=0 ; i<n_layers-1 ; i++ )
         params[i]->learning_rate = fine_tuning_learning_rate;
-    joint_params->learning_rate = fine_tuning_learning_rate;
-    target_params->learning_rate = fine_tuning_learning_rate;
+//    joint_params->learning_rate = fine_tuning_learning_rate;
+//    target_params->learning_rate = fine_tuning_learning_rate;
 
     if( fine_tuning_method == "" ) // do nothing
     {
@@ -884,7 +926,7 @@ void PartSupervisedDBN::train()
     }
     else if( fine_tuning_method == "EGD" )
     {
-        begin_sample = stage % nsamples;
+        int begin_sample = stage % nsamples;
         for( ; stage<nstages ; stage++ )
         {
 #if USING_MPI
@@ -923,7 +965,7 @@ void PartSupervisedDBN::train()
 }
 
 // assumes that down_layer->expectation is set
-real PartSupervisedDBN::supervisedContrastiveDivergenceStep(
+real SupervisedDBN::supervisedContrastiveDivergenceStep(
     const PP<RBMLayer>& down_layer,
     const PP<RBMParameters>& parameters,
     const PP<RBMLayer>& up_layer,
@@ -939,7 +981,8 @@ real PartSupervisedDBN::supervisedContrastiveDivergenceStep(
         up_layer->getAllActivations( parameters );
         up_layer->computeExpectation();
 
-        Vec supervised_input = up_layer->expectation.copy();
+        supervised_input.resize( up_layer->expectation.size() );
+        supervised_input << up_layer->expectation;
         supervised_input.append( target );
 
         // Compute supervised cost and gradient
@@ -976,7 +1019,7 @@ real PartSupervisedDBN::supervisedContrastiveDivergenceStep(
     return supervised_cost;
 }
 
-void PartSupervisedDBN::contrastiveDivergenceStep(
+void SupervisedDBN::contrastiveDivergenceStep(
     const PP<RBMLayer>& down_layer,
     const PP<RBMParameters>& parameters,
     const PP<RBMLayer>& up_layer )
@@ -1058,7 +1101,7 @@ void PartSupervisedDBN::contrastiveDivergenceStep(
     parameters->update();
 }
 
-real PartSupervisedDBN::greedyStep( const Vec& input, int index )
+real SupervisedDBN::greedyStep( const Vec& input, int index )
 {
     // deterministic propagation until we reach index
     layers[0]->expectation << input.subVec(0, n_predictor);
@@ -1079,7 +1122,8 @@ real PartSupervisedDBN::greedyStep( const Vec& input, int index )
     return sup_cost;
 }
 
-real PartSupervisedDBN::jointGreedyStep( const Vec& input )
+/*
+real SupervisedDBN::jointGreedyStep( const Vec& input )
 {
     // deterministic propagation until we reach n_layers-2, setting the input
     // of the "input" part of joint_layer
@@ -1134,41 +1178,35 @@ real PartSupervisedDBN::jointGreedyStep( const Vec& input )
     // return supervised cost
     return supervised_cost;
 }
+*/
 
-void PartSupervisedDBN::fineTuneByGradientDescent( const Vec& input,
-                                                   const Vec& train_costs )
+void SupervisedDBN::fineTuneByGradientDescent( const Vec& input,
+                                               Vec& train_costs )
 {
     // split input in predictor_part and predicted_part
     splitCond(input);
 
-    // compute predicted_part expectation, conditioned on predictor_part
-    // (forward pass)
-    expectation( output_gradient );
+    // fprop
+    layers[0]->expectation << input.subVec(0, n_predictor);
+    for( int i=0 ; i<n_layers-1 ; i++ )
+    {
+        params[i]->setAsDownInput( layers[i]->expectation );
+        layers[i+1]->getAllActivations( (RBMLLParameters*) params[i] );
+        layers[i+1]->computeExpectation();
+    }
 
-    int actual_index = argmax(predicted_part);
+    supervised_input.resize( n_predictor );
+    supervised_input << layers[n_layers-1]->expectation;
+    supervised_input.append( input.subVec( n_predictor, n_predicted ) );
 
-    // update train_costs
-#ifdef BOUNDCHECK
-    for( int i=0 ; i<n_predicted ; i++ )
-        assert( is_equal( predicted_part[i], 0. ) ||
-                i == actual_index && is_equal( predicted_part[i], 1. ) );
-#endif
-    train_costs[0] = -pl_log( target_layer->expectation[actual_index] );
-    int predicted_index = argmax( target_layer->expectation );
-    if( predicted_index == actual_index )
-        train_costs[1] = 0;
-    else
-        train_costs[1] = 1;
+    // Compute supervised cost and gradient
+    regressors[n_layers-2]->fprop( supervised_input, train_costs );
+    regressors[n_layers-2]->bpropUpdate( supervised_input, train_costs,
+                                         expectation_gradients[n_layers-1],
+                                         Vec() );
 
-    // output gradient
-    output_gradient[actual_index] -= 1.;
-
-    joint_params->bpropUpdate( layers[n_layers-2]->expectation,
-                               target_layer->expectation,
-                               expectation_gradients[n_layers-2],
-                               output_gradient );
-
-    for( int i=n_layers-2 ; i>0 ; i-- )
+    // bprop and update
+    for( int i=n_layers-1 ; i>0 ; i-- )
     {
         layers[i]->bpropUpdate( layers[i]->activations,
                                 layers[i]->expectation,
@@ -1182,58 +1220,49 @@ void PartSupervisedDBN::fineTuneByGradientDescent( const Vec& input,
 }
 
 
-void PartSupervisedDBN::computeCostsFromOutputs(const Vec& input,
-                                                const Vec& output,
-                                                const Vec& target,
-                                                Vec& costs) const
+void SupervisedDBN::computeCostsFromOutputs(const Vec& input,
+                                            const Vec& output,
+                                            const Vec& target,
+                                            Vec& costs) const
 {
     char c = outputs_def[0];
-    if( c == 'l' || c == 'd' )
+    if( (c == 'l' || c == 'd') && !regression )
         inherited::computeCostsFromOutputs(input, output, target, costs);
     else if( c == 'e' )
     {
-        costs.resize( 2 );
-        splitCond(input);
-
-        // actual_index is the actual 'target'
-        int actual_index = argmax(predicted_part);
-#ifdef BOUNDCHECK
-        for( int i=0 ; i<n_predicted ; i++ )
-            assert( is_equal( predicted_part[i], 0. ) ||
-                    i == actual_index && is_equal( predicted_part[i], 1. ) );
-#endif
-        costs[0] = -pl_log( output[actual_index] );
-
-        // predicted_index is the most probable predicted class
-        int predicted_index = argmax(output);
-        if( predicted_index == actual_index )
-            costs[1] = 0;
-        else
-            costs[1] = 1;
+        // assumes computeOutput has just been called
+        // (yes, this is ugly)
+        costs.resize( store_costs.size() );
+        costs << store_costs;
     }
 }
 
-TVec<string> PartSupervisedDBN::getTestCostNames() const
+TVec<string> SupervisedDBN::getTestCostNames() const
 {
     char c = outputs_def[0];
     TVec<string> result;
-    if( c == 'l' || c == 'd' )
+    if( (c == 'l' || c == 'd') && !regression )
         result.append( "NLL" );
     else if( c == 'e' )
     {
-        result.append( "NLL" );
-        result.append( "class_error" );
+        if( regression )
+            result.append( "mse" );
+        else
+        {
+            result.append( "NLL" );
+            result.append( "class_error" );
+        }
     }
     return result;
 }
 
-TVec<string> PartSupervisedDBN::getTrainCostNames() const
+TVec<string> SupervisedDBN::getTrainCostNames() const
 {
     return getTestCostNames();
 }
 
 #if USING_MPI
-void PartSupervisedDBN::shareParamsMPI()
+void SupervisedDBN::shareParamsMPI()
 {
     if (sum_parallel_contributions)
     {
@@ -1268,7 +1297,7 @@ void PartSupervisedDBN::shareParamsMPI()
 #endif
 
 #if USING_MPI
-void PartSupervisedDBN::test(VMat testset, PP<VecStatsCollector> test_stats,
+void SupervisedDBN::test(VMat testset, PP<VecStatsCollector> test_stats,
                              VMat testoutputs, VMat testcosts) const
 {
     int l = testset.length();
