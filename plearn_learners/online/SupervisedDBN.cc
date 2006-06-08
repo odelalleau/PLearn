@@ -470,7 +470,10 @@ void SupervisedDBN::build_regressors()
             }
 
             p_cost->input_size = n_predicted;
-            p_cost->output_size = 1;
+            if( regression )
+                p_cost->output_size = 1;
+            else
+                p_cost->output_size = 2;
             p_cost->build();
 
             // Stack them, and...
