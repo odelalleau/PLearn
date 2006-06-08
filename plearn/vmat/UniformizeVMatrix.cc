@@ -208,14 +208,10 @@ void UniformizeVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields
-    // ### that you wish to be deepCopied rather than
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("UniformizeVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    deepCopyField(train_source,             copies);
+    deepCopyField(features_to_uniformize,   copies);
+    deepCopyField(uniformize_learner,       copies);
+    deepCopyField(uniformized_source,       copies);
 }
 
 } // end of namespace PLearn
