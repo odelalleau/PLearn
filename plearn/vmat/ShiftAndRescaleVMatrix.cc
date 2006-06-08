@@ -185,10 +185,10 @@ void ShiftAndRescaleVMatrix::declareOptions(OptionList& ol)
 
     declareOption(ol, "n_inputs", &ShiftAndRescaleVMatrix::n_inputs,
                   OptionBase::buildoption,
-                  "when automatic, shift and scale only the first n_inputs"
-                  " columns\n"
-                  "(If n_inputs<0, set n_inputs from"
-                  " underlying_vmat->inputsize()).\n");
+        "When automatic, shift and scale only the first n_inputs columns.\n"
+        "Special values are as follows:\n"
+        " -1 : n_inputs <- source->inputsize()\n"
+        " -2 : n_inputs <- source->inputsize() + source->targetsize()");
 
     declareOption(ol, "negate_shift", &ShiftAndRescaleVMatrix::negate_shift,
                   OptionBase::buildoption,
@@ -218,13 +218,21 @@ void ShiftAndRescaleVMatrix::declareOptions(OptionList& ol)
 ////////////
 void ShiftAndRescaleVMatrix::build_()
 {
+    assert( n_inputs >= 0 || n_inputs == -1 || n_inputs == -2 );
     if( source )
     {
         if (automatic && min_max.isEmpty())
         {
             if (n_inputs<0)
             {
-                n_inputs = source->inputsize();
+                if (n_inputs == -1)
+                    n_inputs = source->inputsize();
+                else if (n_inputs == -2) {
+                    assert( source->targetsize() >= 0 );
+                    n_inputs = source->inputsize() + source->targetsize();
+                } else
+                    PLERROR("In ShiftAndRescaleVMatrix::build_ - Wrong value "
+                            "for 'n_inputs'");
                 if (n_inputs<0)
                     PLERROR("ShiftAndRescaleVMatrix: either n_inputs should be"
                             " provided explicitly\n"
