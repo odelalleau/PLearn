@@ -563,10 +563,15 @@ void SupervisedDBN::expectation(Vec& mu) const
     target_layer->getAllActivations( (RBMLLParameters*) joint_params );
     target_layer->computeExpectation();
 */
-    regressors[n_layers-1]->fprop( layers[n_layers-1]->expectation,
-                                   store_costs );
+
+    supervised_input.resize( layers[n_layers-1]->expectation.size() );
+    supervised_input << layers[n_layers-1]->expectation;
+    supervised_input.append( predicted_part ); // yes, it is ugly
+
+    // Compute supervised cost and gradient
+    regressors[n_layers-2]->fprop( supervised_input, store_costs );
     mu << ((StackedModulesModule*) (OnlineLearningModule*)
-                regressors[n_layers-1])->values[1];
+                regressors[n_layers-2])->values[1];
 }
 
 /////////////
