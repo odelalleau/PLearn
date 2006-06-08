@@ -65,7 +65,6 @@ ShiftAndRescaleVMatrix::ShiftAndRescaleVMatrix(bool call_build_)
       n_inputs(-1),
       negate_shift(false),
       no_scale(false),
-      ignore_missing(false),
       verbosity(1)
 {
     if( call_build_ )
@@ -83,7 +82,6 @@ ShiftAndRescaleVMatrix::ShiftAndRescaleVMatrix(VMat the_source,
       n_inputs(-1),
       negate_shift(false),
       no_scale(false),
-      ignore_missing(false),
       verbosity(1)
 {
     if( call_build_ )
@@ -104,7 +102,6 @@ ShiftAndRescaleVMatrix::ShiftAndRescaleVMatrix(VMat the_source,
       n_inputs(-1),
       negate_shift(false),
       no_scale(false),
-      ignore_missing(false),
       verbosity(1)
 {
     if( call_build_ )
@@ -126,7 +123,6 @@ ShiftAndRescaleVMatrix::ShiftAndRescaleVMatrix(VMat the_source,
       n_inputs(the_n_inputs),
       negate_shift(false),
       no_scale(false),
-      ignore_missing(false),
       verbosity(1)
 {
     if( call_build_ )
@@ -150,9 +146,11 @@ ShiftAndRescaleVMatrix::ShiftAndRescaleVMatrix(VMat the_source,
       n_inputs(the_n_inputs),
       negate_shift(false),
       no_scale(false),
-      ignore_missing(the_ignore_missing),
       verbosity(the_verbosity)
 {
+    PLDEPRECATED("In ShiftAndRescaleVMatrix::ShiftAndRescaleVMatrix - This "
+                 "constructor is deprecated, as it takes an option "
+                 "'ignore_missing' that does not exist anymore");
     if( call_build_ )
         build_();
 }
@@ -176,7 +174,7 @@ void ShiftAndRescaleVMatrix::declareOptions(OptionList& ol)
     declareOption(ol, "automatic", &ShiftAndRescaleVMatrix::automatic,
                   OptionBase::buildoption,
                   "Whether shift and scale are determined from the mean and"
-                  " stdev\n"
+                  " stddev\n"
                   "of the source vmatrix, or user-provided.\n");
 
     declareOption(ol, "n_train", &ShiftAndRescaleVMatrix::n_train,
@@ -200,13 +198,6 @@ void ShiftAndRescaleVMatrix::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "If set to 1, no scaling will be performed (only a shift"
                   " will be applied).");
-
-    declareOption(ol, "ignore_missing",
-                  &ShiftAndRescaleVMatrix::ignore_missing,
-                  OptionBase::buildoption,
-                  "If set to 1, then missing values will be ignored when"
-                  " computing\n"
-                  "mean and standard deviation.\n");
 
     declareOption(ol, "verbosity", &ShiftAndRescaleVMatrix::verbosity,
                   OptionBase::buildoption,
@@ -240,32 +231,11 @@ void ShiftAndRescaleVMatrix::build_()
                             "or the source VMatrix should have a set value of"
                             " inputsize.\n");
             }
-            if (ignore_missing)
-            {
-                VMat src_to_normalize;
-                if (n_train>0)
-                    src_to_normalize = source.subMat(0, 0, n_train, n_inputs);
-                else
-                    src_to_normalize = source.subMatColumns(0, n_inputs);
-                TVec<StatsCollector> stats =
-                    PLearn::computeStats(src_to_normalize, 1, false);
-                shift.resize(n_inputs);
-                if (!no_scale)
-                    scale.resize(n_inputs);
-                for (int i = 0; i < n_inputs; i++) {
-                    shift[i] = stats[i].mean();
-                    if (!no_scale)
-                        scale[i] = stats[i].stddev();
-                }
-            }
+            if (n_train>0)
+                computeMeanAndStddev(source.subMatRows(0,n_train),
+                        shift, scale);
             else
-            {
-                if (n_train>0)
-                    computeMeanAndStddev(source.subMatRows(0,n_train),
-                                         shift, scale);
-                else
-                    computeMeanAndStddev(source, shift, scale);
-            }
+                computeMeanAndStddev(source, shift, scale);
             if (!negate_shift)
                 negateElements(shift);
             if (!no_scale) {
