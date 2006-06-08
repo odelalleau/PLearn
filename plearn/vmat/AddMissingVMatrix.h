@@ -70,6 +70,7 @@ public:
   // * public build options *
   // ************************
 
+  bool add_missing_target;
   real missing_prop;
   int  only_on_first;
   long seed;

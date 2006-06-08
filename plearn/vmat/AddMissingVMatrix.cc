@@ -49,11 +49,12 @@ using namespace std;
 //////////////////
 // AddMissingVMatrix //
 //////////////////
-AddMissingVMatrix::AddMissingVMatrix()
-    : random_gen(new PRandom()),
-      missing_prop(0),
-      only_on_first(-1),
-      seed(-1)
+AddMissingVMatrix::AddMissingVMatrix():
+    random_gen(new PRandom()),
+    add_missing_target(true),
+    missing_prop(0),
+    only_on_first(-1),
+    seed(-1)
 {}
 
 PLEARN_IMPLEMENT_OBJECT(AddMissingVMatrix,
@@ -76,6 +77,11 @@ void AddMissingVMatrix::declareOptions(OptionList& ol)
 
   declareOption(ol, "seed", &AddMissingVMatrix::seed, OptionBase::buildoption,
       "Random numbers seed.");
+
+    declareOption(ol, "add_missing_target",
+                  &AddMissingVMatrix::add_missing_target,
+                  OptionBase::buildoption,
+        "Whether or not to add missing values in the target part.");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -117,9 +123,15 @@ void AddMissingVMatrix::getNewRow(int i, const Vec& v) const
   if (only_on_first >= 0 && i >= only_on_first)
     return;
   int n = v.length();
-  for (int j = 0; j < n; j++)
-    if (random_gen->uniform_sample() < missing_prop)
-      v[j] = MISSING_VALUE;
+  for (int j = 0; j < n; j++) {
+      bool is_target = (j >= source->inputsize() &&
+                        j < source->inputsize() + source->targetsize());
+      if ((add_missing_target || !is_target) &&
+          random_gen->uniform_sample() < missing_prop)
+      {
+          v[j] = MISSING_VALUE;
+      }
+  }
 }
 
 /////////////////////////////////
