@@ -185,6 +185,9 @@ void MeanImputationVMatrix::build_()
         if (distribution) {
             distribution->setPredictorPredictedSizes(0, -1);
             if (distribution->stage == 0) {
+                // Currently not implemented for a limited number of training
+                // samples, but it should not be too difficult to do it.
+                assert( number_of_train_samples == 0 );
                 VMat the_train_source = mean_source ? mean_source : source;
                 // Redefine sizes to train on the whole data.
                 the_train_source = new ForwardVMatrix(the_train_source);
