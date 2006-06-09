@@ -111,6 +111,11 @@ public:
     real sigmasq;     //! This gets added to the diagonal of the covariance matrix prior to eigen-decomposition
     bool normalize;   //! If true, we divide by sqrt(eigenval) after projecting on the eigenvec.
     bool normalize_warning;
+
+    //! If true, if a missing value is encountered on an input variable
+    //! for a computeOutput, it is replaced by the estimated mu for that
+    //! variable before projecting on the principal components
+    bool impute_missings;
   
     // Saved options
     Vec mu; //! The (weighted) mean of the samples 

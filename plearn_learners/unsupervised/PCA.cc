@@ -54,18 +54,20 @@ PCA::PCA()
       ncomponents(2),
       sigmasq(0),
       normalize(false),
-      normalize_warning(true)
-{}
+      normalize_warning(true),
+      impute_missings(false)
+{ }
 
-PLEARN_IMPLEMENT_OBJECT(PCA, 
-                        "Performs a Principal Component Analysis preprocessing (projecting on the principal directions).",
-                        "This learner finds the empirical covariance matrix of the input part of\n"
-                        "the training data, and learns to project its input vectors along the\n"
-                        "principal eigenvectors of that matrix, optionally scaling by the inverse\n"
-                        "of the square root of the eigenvalues (to obtained 'sphered', i.e.\n"
-                        "Normal(0,I) data).\n"
-                        "Alternative EM algorithms are provided, that may be useful when there is\n"
-                        "a lot of data or the dimension is very high.\n"
+PLEARN_IMPLEMENT_OBJECT(
+    PCA, 
+    "Performs a Principal Component Analysis preprocessing (projecting on the principal directions).",
+    "This learner finds the empirical covariance matrix of the input part of\n"
+    "the training data, and learns to project its input vectors along the\n"
+    "principal eigenvectors of that matrix, optionally scaling by the inverse\n"
+    "of the square root of the eigenvalues (to obtained 'sphered', i.e.\n"
+    "Normal(0,I) data).\n"
+    "Alternative EM algorithms are provided, that may be useful when there is\n"
+    "a lot of data or the dimension is very high.\n"
     );
 
 void PCA::declareOptions(OptionList& ol)
@@ -106,7 +108,13 @@ void PCA::declareOptions(OptionList& ol)
     // TODO Option added October 26th, 2004. Should be removed in a few months.
     declareOption(ol, "normalize_warning", &PCA::normalize_warning, OptionBase::buildoption, 
                   "(Temp. option). If true, display a warning about the 'normalize' option.");
-  
+
+    declareOption(ol, "impute_missings", &PCA::impute_missings,
+                  OptionBase::buildoption,
+                  "If true, if a missing value is encountered on an input variable\n"
+                  "for a computeOutput, it is replaced by the estimated mu for that\n"
+                  "variable before projecting on the principal components\n");
+    
     // saved options
     declareOption(ol, "mu", &PCA::mu, OptionBase::learntoption,
                   "The (weighted) mean of the samples");
@@ -173,6 +181,14 @@ void PCA::computeOutput(const Vec& input, Vec& output) const
     static Vec x;
     x.resize(input.length());
     x << input;
+
+    // Perform missing-value imputation if requested
+    if (impute_missings)
+        for (int i=0, n=x.size() ; i<n ; ++i)
+            if (is_missing(x[i]))
+                x[i] = mu[i];
+                
+    // Project on eigenvectors
     x -= mu;
     output.resize(ncomponents);
 
