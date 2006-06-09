@@ -75,6 +75,7 @@ private:
 public:
 
     PP<PDistribution> distribution;
+    string  distribution_access_to_target;
     real    number_of_train_samples;
     VMat    mean_source;
 

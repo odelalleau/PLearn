@@ -75,6 +75,7 @@ MeanImputationVMatrix::MeanImputationVMatrix():
     obtained_inputsize_from_source(false),
     obtained_targetsize_from_source(false),
     obtained_weightsize_from_source(false),
+    distribution_access_to_target("train_only"),
     number_of_train_samples(0.0)
 {}
 
@@ -85,6 +86,7 @@ MeanImputationVMatrix::MeanImputationVMatrix(VMat the_source,
     obtained_inputsize_from_source(false),
     obtained_targetsize_from_source(false),
     obtained_weightsize_from_source(false),
+    distribution_access_to_target("train_only"),
     number_of_train_samples(the_number_of_train_samples)
 {
     if (call_build_)
@@ -119,9 +121,18 @@ void MeanImputationVMatrix::declareOptions(OptionList &ol)
         "compute the conditional mean given observed values. Otherwise, the\n"
         "empirical mean will be used. This distribution is trained on the\n"
         "'source' (or 'mean_source') VMat unless it already has a stage > 0.\n"
-        "If a 'number_of_train_samples' is specified, this distribution will\n"
-        "only be given access to target values for these train samples, and\n"
-        "the target will be missing for the rest of the data.");
+        "Whether this distribution has access to the target value or not\n"
+        "depends on the 'distribution_access_to_target' option.\n");
+
+    declareOption(ol, "distribution_access_to_target",
+                  &MeanImputationVMatrix::distribution_access_to_target,
+                  OptionBase::buildoption,
+        "Used only when a distribution is specified, and modifies the way\n"
+        "target values are given to the distribution:\n"
+        "- train_only: only the first 'number_of_train_samples' are given\n"
+        "              access to their target (if this number is 0, all\n"
+        "              samples are given access to their target)\n"
+        "- none      : no sample is given access to its target\n");
 
     declareOption(ol, "variable_mean", &MeanImputationVMatrix::variable_mean,
                                        OptionBase::learntoption,
@@ -215,6 +226,12 @@ void MeanImputationVMatrix::build_()
             obtained_weightsize_from_source = false;
         }
     }
+
+    // Check valid values.
+    if (distribution_access_to_target != "train_only" &&
+        distribution_access_to_target != "none")
+        PLERROR("In MeanImputationVMatrix::build_ - Invalid value for option "
+                "'distribution_access_to_target'");
 }
 
 /////////////////////////////////
@@ -243,7 +260,10 @@ void MeanImputationVMatrix::getNewRow(int i, const Vec& v) const
         if (distribution) {
             Vec target;
             bool restore_target = false;
-            if (number_of_train_samples > 0 && i >= number_of_train_samples) {
+            if ((number_of_train_samples > 0 && i >= number_of_train_samples &&
+                 distribution_access_to_target == "train_only") ||
+                distribution_access_to_target == "none")
+            {
                 tmp_target.resize(source->targetsize());
                 target = v.subVec(source->inputsize(), source->targetsize());
                 tmp_target << target;
