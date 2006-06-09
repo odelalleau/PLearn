@@ -49,11 +49,11 @@ class NnlmOutputLayer;
 class NGramDistribution;
 
 /**
- * Learns a Neural Network Language Model (NNLM).
+ * Trains a Neural Network Language Model (NNLM).
  *
  * This learner is based upon the online module architecture.
  *
- * @todo Migrate original version to this cleaned up version.
+ * @todo
  * @deprecated
  * 
  */
@@ -64,17 +64,33 @@ class NnlmOnlineLearner : public PLearner
 public:
     //#####  Public Build Options  ############################################
 
-    //! Define model
+    //! Defines which model is used
     string str_model_type;
-    string str_gaussian_model_cost;
-    string str_gaussian_model_learning;
-    real gaussian_model_sigma2_min;
+
+    //! --- Fixed (same in both models) part ----------------------------------
 
     //! Size of the real ditributed word representations
     int word_representation_size;
 
     //! Size of the semantic layer
     int semantic_layer_size;
+
+    //! Neural part parameters
+    real wrl_slr;
+    real wrl_dc;
+    real wrl_wd_l1;
+    real wrl_wd_l2;
+    real sl_slr;
+    real sl_dc;
+    real sl_wd_l1;
+    real sl_wd_l2;
+
+    //! --- Gaussian output model specific stuff ------------------------------
+
+    //! Define behavior
+    string str_gaussian_model_train_cost;
+    string str_gaussian_model_learning;
+    real gaussian_model_sigma2_min;
 
     //! Number of candidates to use from different sources in the gaussian model
     //! when we use the approx_discriminant cost
@@ -88,15 +104,13 @@ public:
     //! in the evaluated discriminant cost
     VMat ngram_train_set;
 
-    //! Neural part parameters
-    real wrl_slr;
-    real wrl_dc;
-    real wrl_wd_l1;
-    real wrl_wd_l2;
-    real sl_slr;
-    real sl_dc;
-    real sl_wd_l1;
-    real sl_wd_l2;
+    //! --- Softmax output model specific stuff -------------------------------
+
+    real sm_slr;
+    real sm_dc;
+    real sm_wd_l1;
+    real sm_wd_l2;
+
 
     //#####  Public Learnt Options  ############################################
 
@@ -104,7 +118,7 @@ public:
     //! Separated between the fixed part which computes up to the "semantic layer"
     //! and the variable part (gaussian or softmax)
     TVec< PP<OnlineLearningModule> > modules;
-    TVec< PP<NnlmOutputLayer> > output_modules;
+    TVec< PP<OnlineLearningModule> > output_modules;
 
     //#####  Public NOT Options  ##############################################
 
@@ -112,6 +126,7 @@ public:
     int vocabulary_size;
     int context_size;       // the train_set's input size -1 (because target is last input)
 
+    //! --- Gaussian output model specific stuff ------------------------------
 
     // TODO THIS COULD BE A LEARNT OPTION
     //! Used in determining the C sets of candidate words for normalization
@@ -133,15 +148,17 @@ public:
 
     //#####  PLearner Member Functions  #######################################
 
+    //! 
     void buildLayers();
+
+    //! Specific to the gaussian model
     void buildCandidates();
 
+    //! Interfaces with the ProcessSymbolicSequenceVMatrix's getRow()
     void myGetExample(const VMat& example_set, int& sample, Vec& input, Vec& target, real& weight) const;
 
-    // TODO The output layer should compute all its costs - not the learner 
-    //! Computes the approximate discriminant cost and its gradient
-    void computeApproximateDiscriminantCostAndGradient(Vec input, Vec target, Vec output, real nd_cost, Vec train_costs, Vec nd_gradient, Vec ad_gradient);
-
+    //! Gaussian specific
+    void reevaluateGaussianParameters() const;
 
     //! Returns the size of this learner's output, (which typically
     //! may depend on its inputsize(), targetsize() and set options).
@@ -166,6 +183,8 @@ public:
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
                                          const Vec& target, Vec& costs) const;
 
+    virtual void computeTrainCostsFromOutputs(const Vec& input, const Vec& output,
+                                           const Vec& target, Vec& costs) const;
 
     //! Returns the names of the costs computed by computeCostsFromOutpus (and
     //! thus the test method).
@@ -213,13 +232,13 @@ protected:
 
     //! stores the input and output values of the functions
     TVec<Vec> values;
-
     //! stores the gradients
     TVec<Vec> gradients;
 
-    //! for the second variable part of the model (starts from 'r' on)
-    TVec<Vec> values2;
-    TVec<Vec> gradients2;
+    //! for the second variable part of the model (starts from 'r',
+    //! the semantic layer, on)
+    TVec<Vec> output_values;
+    TVec<Vec> output_gradients;
 
 
 protected:
@@ -237,11 +256,14 @@ private:
 private:
     //#####  Private Data Members  ############################################
 
-    // The rest of the private stuff goes here
+    //! Used for loops
     int nmodules;
-    int nmodules2;
+    int output_nmodules;
 
+    //! Holds model type
     int model_type;
+
+    //! --- Gaussian output model specific stuff ------------------------------
     int gaussian_model_cost;
     int gaussian_model_learning;
 

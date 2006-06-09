@@ -48,6 +48,7 @@
 #include <plearn_learners_experimental/onlineNNLM/NnlmWordRepresentationLayer.h>
 #include <plearn_learners/online/GradNNetLayerModule.h>
 #include <plearn_learners/online/TanhModule.h>
+#include <plearn_learners/online/NLLErrModule.h>
 #include <plearn_learners_experimental/onlineNNLM/NnlmOutputLayer.h>
 
 #include <plearn_learners/distributions/NGramDistribution.h>
@@ -58,36 +59,33 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     NnlmOnlineLearner,
-    "Trains a Neural Network Language Model (NBNNLM).",
+    "Trains a Neural Network Language Model.",
     "MULTI-LINE \nHELP");
 
 
-//! Used to determine most frequent words
+//////////////////////
+// class wordAndFreq
+//////////////////////
+//! Used to sort words according to frequency, when determining candidates
 class wordAndFreq {
 public:
   wordAndFreq(int wt, int f) : wordtag(wt), frequency(f){};
   int wordtag;
   double frequency;
 };
-
 bool wordAndFreqGT(const wordAndFreq &a, const wordAndFreq &b) 
 {
     return a.frequency > b.frequency;
 }
 
-
-
+////////////////////////
+// NnlmOnlineLearner()
+////////////////////////
 NnlmOnlineLearner::NnlmOnlineLearner()
     :   PLearner(),
         str_model_type( "gaussian" ),
-        str_gaussian_model_cost( "approx_discriminant" ),
-        str_gaussian_model_learning( "non_discriminant" ),
-        gaussian_model_sigma2_min(0.0001),
-        word_representation_size( -1 ),
+        word_representation_size( 50 ),
         semantic_layer_size( 200 ),
-        shared_candidates_size( 0 ),
-        ngram_candidates_size( 50 ),
-        self_candidates_size( 0 ),
         wrl_slr( 0.1 ),
         wrl_dc( 0.0 ),
         wrl_wd_l1( 0.0 ),
@@ -96,8 +94,23 @@ NnlmOnlineLearner::NnlmOnlineLearner()
         sl_dc( 0.0 ),
         sl_wd_l1( 0.0 ),
         sl_wd_l2( 0.0 ),
+        str_gaussian_model_train_cost( "approx_discriminant" ),
+        str_gaussian_model_learning( "non_discriminant" ),
+        gaussian_model_sigma2_min(0.000001),
+        shared_candidates_size( 0 ),
+        ngram_candidates_size( 50 ),
+        self_candidates_size( 0 ),
+        sm_slr( 0.1 ),
+        sm_dc( 0.0 ),
+        sm_wd_l1( 0.0 ),
+        sm_wd_l2( 0.0 ),
         vocabulary_size( -1 ),
-        context_size( -1 )
+        context_size( -1 ),
+        nmodules( -1 ),
+        output_nmodules( -1 ),
+        model_type( -1 ),
+        gaussian_model_cost( -1 ),
+        gaussian_model_learning( -1 )
 {
     // ### You may (or not) want to call build_() to finish building the object
     // ### (doing so assumes the parent classes' build_() have been called too
@@ -106,32 +119,21 @@ NnlmOnlineLearner::NnlmOnlineLearner()
     random_gen = new PRandom();
 }
 
+///////////////////
+// declareOptions
+///////////////////
 void NnlmOnlineLearner::declareOptions(OptionList& ol)
 {
 
     // *** Build Options *** 
 
+    // * Model type
     declareOption(ol, "str_model_type",
                   &NnlmOnlineLearner::str_model_type,
                   OptionBase::buildoption,
-                  "Specifies what's used on top of the semantic layer: 'softmax' or 'gaussian'.");
+                  "Specifies what's used on top of the semantic layer: 'softmax' or 'gaussian'(default).");
 
-    // TODO how about combining the two costs: maybe jumpstart with one
-    declareOption(ol, "str_gaussian_model_cost",
-                  &NnlmOnlineLearner::str_gaussian_model_cost,
-                  OptionBase::buildoption,
-                  "In case of a gaussian output module, specifies the cost used for training: 'approx_discriminant' (evaluates p(i|r) from p(r|i), using some candidates for normalization) or 'non_discriminant' (uses p(r|i)).");
-
-    declareOption(ol, "str_gaussian_model_learning",
-                  &NnlmOnlineLearner::str_gaussian_model_learning,
-                  OptionBase::buildoption,
-                  "In case of a gaussian output module, specifies the learning technique: 'discriminant' or 'non_discriminant' (empirical mu and sigma).");
-
-    declareOption(ol, "gaussian_model_sigma2_min",
-                  &NnlmOnlineLearner::gaussian_model_sigma2_min,
-                  OptionBase::buildoption,
-                  "In case of a gaussian output module, specifies the minimal sigma^2.");
-
+    // * Model size
     declareOption(ol, "word_representation_size",
                   &NnlmOnlineLearner::word_representation_size,
                   OptionBase::buildoption,
@@ -142,29 +144,7 @@ void NnlmOnlineLearner::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Size of the semantic layer.");
 
-    // - Candidate set sizes
-    declareOption(ol, "shared_candidates_size",
-                  &NnlmOnlineLearner::shared_candidates_size,
-                  OptionBase::buildoption,
-                  "Number of candidates drawn from frequent words in aproximated discriminant cost evaluation.");
-
-    declareOption(ol, "ngram_candidates_size",
-                  &NnlmOnlineLearner::ngram_candidates_size,
-                  OptionBase::buildoption,
-                  "Number of candidates drawn from the context (bigram) in aproximated discriminant cost evaluation.");
-
-    declareOption(ol, "self_candidates_size",
-                  &NnlmOnlineLearner::self_candidates_size,
-                  OptionBase::buildoption,
-                  "Number of candidates drawn from the nnlm in aproximated discriminant cost evaluation  (evaluated periodically). NOT IMPLEMENTED!!");
-
-    // - Ngram (for evaluating ngram candidates) train set
-    declareOption(ol, "ngram_train_set",
-                  &NnlmOnlineLearner::ngram_train_set,
-                  OptionBase::buildoption,
-                  "Train set used for training the bigram used in the evaluation of the set of candidate words used for normalization   in the evaluated discriminant cost (ProcessSymbolicSequenceVMatrix) (ONLY BIGRAMS).");
-
-    // - Neural part parameters
+    // * Same part parameters
     declareOption(ol, "wrl_slr",
                   &NnlmOnlineLearner::wrl_slr,
                   OptionBase::buildoption,
@@ -198,6 +178,68 @@ void NnlmOnlineLearner::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Semantic layer L2 penalty factor.");
 
+
+    // * Gaussian model specific
+
+    // - model behavior
+    // TODO how about combining the two costs: maybe jumpstart with one
+    declareOption(ol, "str_gaussian_model_train_cost",
+                  &NnlmOnlineLearner::str_gaussian_model_train_cost,
+                  OptionBase::buildoption,
+                  "In case of a gaussian output module, specifies the cost used for training: 'approx_discriminant' (default - evaluates p(i|r) from p(r|i), using some candidates for normalization) or 'non_discriminant' (uses p(r|i)).");
+
+    declareOption(ol, "str_gaussian_model_learning",
+                  &NnlmOnlineLearner::str_gaussian_model_learning,
+                  OptionBase::buildoption,
+                  "In case of a gaussian output module, specifies the learning technique: 'discriminant' or 'non_discriminant' (default - evaluates empirical mu and sigma).");
+
+    declareOption(ol, "gaussian_model_sigma2_min",
+                  &NnlmOnlineLearner::gaussian_model_sigma2_min,
+                  OptionBase::buildoption,
+                  "In case of a gaussian output module, specifies the minimal sigma^2.");
+
+    // - Candidate set sizes
+    declareOption(ol, "shared_candidates_size",
+                  &NnlmOnlineLearner::shared_candidates_size,
+                  OptionBase::buildoption,
+                  "Number of candidates drawn from frequent words in aproximated discriminant cost evaluation.");
+
+    declareOption(ol, "ngram_candidates_size",
+                  &NnlmOnlineLearner::ngram_candidates_size,
+                  OptionBase::buildoption,
+                  "Number of candidates drawn from the context (bigram) in aproximated discriminant cost evaluation.");
+
+    declareOption(ol, "self_candidates_size",
+                  &NnlmOnlineLearner::self_candidates_size,
+                  OptionBase::buildoption,
+                  "Number of candidates drawn from the nnlm in aproximated discriminant cost evaluation  (evaluated periodically). NOT IMPLEMENTED!!");
+
+    // - Ngram (for evaluating ngram candidates) train set
+    declareOption(ol, "ngram_train_set",
+                  &NnlmOnlineLearner::ngram_train_set,
+                  OptionBase::buildoption,
+                  "Train set used for training the bigram used in the evaluation of the set of candidate words used for normalization   in the evaluated discriminant cost (ProcessSymbolicSequenceVMatrix) (ONLY BIGRAMS).");
+
+    // * Softmax specific
+
+    declareOption(ol, "sm_slr",
+                  &NnlmOnlineLearner::sm_slr,
+                  OptionBase::buildoption,
+                  "Softmax layer start learning rate.");
+    declareOption(ol, "sm_dc",
+                  &NnlmOnlineLearner::sm_dc,
+                  OptionBase::buildoption,
+                  "Softmax layer decrease constant.");
+    declareOption(ol, "sm_wd_l1",
+                  &NnlmOnlineLearner::sm_wd_l1,
+                  OptionBase::buildoption,
+                  "Softmax layer L1 penalty factor.");
+    declareOption(ol, "sm_wd_l2",
+                  &NnlmOnlineLearner::sm_wd_l2,
+                  OptionBase::buildoption,
+                  "Softmax layer L2 penalty factor.");
+
+
     // *** Learnt Options *** 
 
     declareOption(ol, "modules", &NnlmOnlineLearner::modules,
@@ -208,17 +250,25 @@ void NnlmOnlineLearner::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Output layers");
 
+    // TODO Are there missing things here?
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
 
+//////////
+// build
+//////////
 void NnlmOnlineLearner::build()
 {
     inherited::build();
     build_();
 }
 
+
+///////////
+// build_
+///////////
 void NnlmOnlineLearner::build_()
 {
 
@@ -228,6 +278,24 @@ void NnlmOnlineLearner::build_()
 
     // *** Sanity Checks ***
     // *** Sanity Checks ***
+    /*int word_representation_size
+    int semantic_layer_size
+    real wrl_slr;
+    real wrl_dc;
+    real wrl_wd_l1;
+    real wrl_wd_l2;
+    real sl_slr;
+    real sl_dc;
+    real sl_wd_l1;
+    real sl_wd_l2;
+    real gaussian_model_sigma2_min
+    int shared_candidates_size;
+    int ngram_candidates_size;
+    int self_candidates_size;
+    real sm_slr;
+    real sm_dc;
+    real sm_wd_l1;
+    real sm_wd_l2;*/
 
 
     // *** Model related ***
@@ -247,21 +315,21 @@ void NnlmOnlineLearner::build_()
     if( model_type == MODEL_TYPE_GAUSSIAN ) {
 
         // * Gaussian model cost *
-        string gmc = lowerstring( str_gaussian_model_cost );
+        string gmc = lowerstring( str_gaussian_model_train_cost );
         if( gmc == "approx_discriminant" || gmc == "" )  {
-            model_type = GAUSSIAN_COST_APPROX_DISCR;
+            gaussian_model_cost = GAUSSIAN_COST_APPROX_DISCR;
         } else if( gmc == "non_dicriminant" )  {
-            model_type = GAUSSIAN_COST_NON_DISCR;
+            gaussian_model_cost = GAUSSIAN_COST_NON_DISCR;
         } else  {
-            PLERROR( "'%s' gaussian model cost is unknown.\n", gmc.c_str() );
+            PLERROR( "'%s' gaussian model train cost is unknown.\n", gmc.c_str() );
         }
 
         // * Gaussian model learning *
         string gml = lowerstring( str_gaussian_model_learning );
         if( gml == "non_discriminant" || gml == "" )  {
-            model_type = GAUSSIAN_LEARNING_NON_DISCR;
+            gaussian_model_learning = GAUSSIAN_LEARNING_NON_DISCR;
         } else if( gml == "discriminant" )  {
-            model_type = GAUSSIAN_LEARNING_DISCR;
+            gaussian_model_learning = GAUSSIAN_LEARNING_DISCR;
         } else  {
             PLERROR( "'%s' gaussian model learning is unknown.\n", gml.c_str() );
         }
@@ -269,98 +337,208 @@ void NnlmOnlineLearner::build_()
 
 
     // *** Vocabulary size ***
-    // dictionary_size +1 for OOV tag ( 0 tag ) +1 for missing tag ( dict_size+1 tag) )
+    // *** Vocabulary size ***
+
+    // the train set's dictionary_size +1 for the 'OOV' tag (tag 0) +1 for the 'missing' tag (tag 'dict_size+1')
     vocabulary_size = (train_set->getDictionary(0))->size()+2;
 
-    if( verbosity > 5 ) {
-        cout << "vocabulary_size = " << vocabulary_size << endl;
+    if( verbosity > 0 ) {
+        cout << "vocabulary_size " << vocabulary_size << endl;
     }
 
     // *** Context size ***
-    // The ProcessSymbolicSequenceVMatric has is all in input. Last input is used as target.
+    // *** Context size ***
+
+    // The ProcessSymbolicSequenceVMatrix has only input. Last input is used as target.
     context_size = inputsize()-1;
 
+    if( verbosity > 0 ) {
+        cout << "context_size " << context_size << endl;
+    }
+
+
+    // *** Build modules and output_module ***
     // *** Build modules and output_module ***
     buildLayers();
 
 
     // *** Build candidates ***
-    buildCandidates();
+    // *** Build candidates ***
+    if( model_type == MODEL_TYPE_GAUSSIAN )  {
+
+        buildCandidates();
+
+        PP<NnlmOutputLayer> p_nol;
+        if( !(p_nol = dynamic_cast<NnlmOutputLayer*>( (OnlineLearningModule*) output_modules[0] ) ) )
+        {
+            PLERROR("NnlmOnlineLearner::build_() - MODEL_TYPE_GAUSSIAN but output_modules[0] is not an NnlmOutputLayer");
+        }
+
+        // TODO clean this
+        // point to the same place
+        p_nol->shared_candidates = shared_candidates;
+        p_nol->candidates = candidates;
+
+        // TODO Set learning method - discriminant or non-discriminant
+
+        // Set Cost 
+        if( gaussian_model_cost == GAUSSIAN_COST_APPROX_DISCR ) {
+            p_nol->setCost(1);
+        } else  { //GAUSSIAN_COST_NON_DISCR
+            p_nol->setCost(0);
+        }
+
+        // Initialize mus and sigmas using 2 passes
+        reevaluateGaussianParameters();
+
+        // ### Should only be evaluated once
+        p_nol->sumI << p_nol->test_sumI;
+        p_nol->s_sumI = p_nol->test_s_sumI;
+
+    }
 
 }
 
 
+////////////////
+// buildLayers
+////////////////
 void NnlmOnlineLearner::buildLayers()
 {
 
-    //------------------------------------------
-    // 1) Fixed part - up to the semantic layer
-    //------------------------------------------
+    // Do we have to build the layers, or did we load them?
+    if( nmodules <= 0 ) {
 
-    nmodules = 3;
-    modules.resize( nmodules );
+        //------------------------------------------
+        // 1) Fixed part - up to the semantic layer
+        //------------------------------------------
+        nmodules = 3;
+        modules.resize( nmodules );
 
-    // *** Word representation layer ***
-    // *** Word representation layer ***
-    PP< NnlmWordRepresentationLayer > p_wrl = new NnlmWordRepresentationLayer();
+        // *** Word representation layer ***
+        // *** Word representation layer ***
+        PP< NnlmWordRepresentationLayer > p_wrl = new NnlmWordRepresentationLayer();
 
-    // This is done in the NnlmWordRepresentationLayer  
-    // BUT in the build... so we need to do it here, because size compality check
-    // is performed before the build
-    p_wrl->input_size = inputsize()-1;
-    p_wrl->output_size = context_size * word_representation_size;
+        p_wrl->input_size = context_size;
+        p_wrl->output_size = context_size * word_representation_size;
 
-    p_wrl->start_learning_rate = wrl_slr;
-    p_wrl->start_learning_rate = wrl_dc;
-    //TODO
-    //p_wrl->L1_penalty_factor = wrl_wd_l1;
-    //p_wrl->L2_penalty_factor = wrl_wd_l2;
+        p_wrl->start_learning_rate = wrl_slr;
+        p_wrl->decrease_constant = wrl_dc;
+        //TODO
+        //p_wrl->L1_penalty_factor = wrl_wd_l1;
+        //p_wrl->L2_penalty_factor = wrl_wd_l2;
+        p_wrl->vocabulary_size = vocabulary_size;
+        p_wrl->word_representation_size = word_representation_size;
+        p_wrl->context_size = context_size;
+        p_wrl->random_gen = random_gen;
 
-    p_wrl->vocabulary_size = vocabulary_size;
-    p_wrl->word_representation_size = word_representation_size;
-    p_wrl->context_size = context_size;
-    p_wrl->random_gen = random_gen;
-
-    modules[0] = p_wrl;
+        modules[0] = p_wrl;
 
 
-    // *** GradNNetLayer ***
-    // *** GradNNetLayer ***
-    PP< GradNNetLayerModule > p_nnl = new GradNNetLayerModule();
+        // *** GradNNetLayer ***
+        // *** GradNNetLayer ***
+        PP< GradNNetLayerModule > p_nnl = new GradNNetLayerModule();
 
-    p_nnl->input_size = context_size * word_representation_size;
-    p_nnl->output_size = semantic_layer_size;
+        p_nnl->input_size = context_size * word_representation_size;
+        p_nnl->output_size = semantic_layer_size;
 
-    p_nnl->start_learning_rate = sl_slr;
-    p_nnl->decrease_constant = sl_dc;
-    p_nnl->L1_penalty_factor = sl_wd_l1;
-    p_nnl->L2_penalty_factor = sl_wd_l2;
+        p_nnl->start_learning_rate = sl_slr;
+        p_nnl->decrease_constant = sl_dc;
+        p_nnl->L1_penalty_factor = sl_wd_l1;
+        p_nnl->L2_penalty_factor = sl_wd_l2;
+        p_nnl->init_weights_random_scale=1;
+        p_nnl->random_gen = random_gen;
 
-    p_nnl->init_weights_random_scale=1;
-    p_nnl->random_gen = random_gen;
-
-    modules[1] = p_nnl;
+        modules[1] = p_nnl;
 
 
-    // *** Tanh layer ***
-    // *** Tanh layer ***
-    PP< TanhModule > p_thm = new TanhModule();
+        // *** Tanh layer ***
+        // *** Tanh layer ***
+        PP< TanhModule > p_thm = new TanhModule();
 
-    p_thm->input_size = semantic_layer_size;
-    p_thm->output_size = semantic_layer_size;
+        p_thm->input_size = semantic_layer_size;
+        p_thm->output_size = semantic_layer_size;
 
-    modules[2] = p_thm;
+        modules[2] = p_thm;
 
+
+        //------------------------------------------
+        // 2) Variable part - over semantic layer
+        //------------------------------------------
+
+        if( model_type == MODEL_TYPE_GAUSSIAN )  {
+
+            output_nmodules = 1;
+            output_modules.resize( output_nmodules );
+
+
+            // *** NnlmOutputLayer ***
+            PP< NnlmOutputLayer > p_nol = new NnlmOutputLayer();
+
+            p_nol->input_size = semantic_layer_size;
+            p_nol->output_size = 1;
+            // the missing tag does NOT get an output (never is the target)
+            p_nol->virtual_output_size = vocabulary_size-1;
+            p_nol->sigma2min = gaussian_model_sigma2_min;
+            p_nol->context_range = vocabulary_size;
+            //TODO Set cost and learning 
+            //int gaussian_model_cost;
+            //int gaussian_model_learning;
+
+            output_modules[0] = p_nol;
+            output_modules[0]->build();
+
+        } else  {
+
+            output_nmodules = 2;
+            output_modules.resize( output_nmodules );
+
+            // *** GradNNetLayer ***
+            // *** GradNNetLayer ***
+            PP< GradNNetLayerModule > p_sm_nnl = new GradNNetLayerModule();
+
+            p_sm_nnl->input_size = semantic_layer_size;  
+            // the missing tag does NOT get an output (never is the target)
+            p_sm_nnl->output_size = vocabulary_size-1;
+
+            p_sm_nnl->start_learning_rate = sm_slr;
+            p_sm_nnl->decrease_constant = sm_dc;
+            p_sm_nnl->L1_penalty_factor = sm_wd_l1;
+            p_sm_nnl->L2_penalty_factor = sm_wd_l2;
+            p_sm_nnl->init_weights_random_scale=1;
+            p_sm_nnl->random_gen = random_gen;
+
+            output_modules[0] = p_sm_nnl;
+            output_modules[0]->build();
+
+
+            // *** Softmax ***
+            output_modules[1] = new NLLErrModule();
+            // the missing tag does NOT get an output (never is the target)
+            output_modules[1]->input_size = vocabulary_size-1;
+            output_modules[1]->output_size = vocabulary_size-1;
+
+            output_modules[1]->build();
+
+            //
+            output_values.resize( 1 );
+            output_gradients.resize( 1 );
+            output_values[0].resize( vocabulary_size-1 );
+            output_gradients[0].resize( vocabulary_size-1 );
+        }
+    } 
 
     // ***  Check on layer size compatibilities, resize values and gradients, and build ***
     // ***  Check on layer size compatibilities, resize values and gradients, and build ***
+    // TODO Right now we simply check up to the semantic layer. And we don't check compatibility
+    // with context_size and word_representation_size and semantic_layer_size.
 
     // variables
     values.resize( nmodules+1 );
     gradients.resize( nmodules+1 );
 
     // first values will be "input" values
-    int size = inputsize()-1;
+    int size = context_size;
     values[0].resize( size );
     gradients[0].resize( size );
 
@@ -387,42 +565,20 @@ void NnlmOnlineLearner::buildLayers()
         gradients[i+1].resize( size );
     }
 
-    //------------------------------------------
-    // 2) Variable part - over semantic layer
-    //------------------------------------------
-
-    if( model_type == MODEL_TYPE_GAUSSIAN )  {
-
-        nmodules2 = 1;
-        output_modules.resize( nmodules2 );
-
-        output_modules[0] = new NnlmOutputLayer();
-
-        output_modules[0]->input_size = semantic_layer_size;
-        output_modules[0]->output_size = 1;
-        // the missing tag does NOT get an output. Or does it?
-        // TODO in any case make sure it doesn t cause problems for normalization
-        output_modules[0]->virtual_output_size = vocabulary_size-1;
-        //TODO Set cost and learning 
-
-        output_modules[0]->sigma2min = gaussian_model_sigma2_min;
-
-        output_modules[0]->build();
-
-    } else  {
-
-    }
 
 }
 
+////////////////////
+// buildCandidates
+////////////////////
 void NnlmOnlineLearner::buildCandidates()
 {
 
     // *** Train ngram ***
     // *** Train ngram ***
 
-    cout << "Training ngram..." << endl;
-
+    cout << "NnlmOnlineLearner::buildCandidates()" << endl;
+    cout << "\ttraining ngram..." << endl;
     theNGram = new NGramDistribution();
 
     theNGram->n = ngram_train_set->inputsize();
@@ -437,7 +593,7 @@ void NnlmOnlineLearner::buildCandidates()
     // *** Effective building ***
     // *** Effective building ***
 
-    cout << "Building candidates..." << endl;
+    cout << "\tbuilding candidates..." << endl;
 
     shared_candidates.resize( shared_candidates_size );
     candidates.resize( vocabulary_size );
@@ -465,7 +621,7 @@ void NnlmOnlineLearner::buildCandidates()
 
     std::sort(tmp.begin(), tmp.end(), wordAndFreqGT);
 
-    cout << " These are the shared candidates:" << endl;
+    //cout << "These are the shared candidates:" << endl;
 
     // HACK we don't check if itr has hit the end... unlikely vocabulary_size is smaller
     // than shared_candidates_size
@@ -565,6 +721,63 @@ void NnlmOnlineLearner::buildCandidates()
 
 }
 
+
+////////////////////////////////
+// reevaluateGaussianParameters
+////////////////////////////////
+//! Reevaluates "fresh" gaussian mus and sigmas - make sure you want to do this
+void NnlmOnlineLearner::reevaluateGaussianParameters() const
+{
+
+    if( model_type != MODEL_TYPE_GAUSSIAN )  {
+        PLWARNING( "NnlmOnlineLearner::reevaluateGaussianParameters(): not a gaussian model. Ignoring call.\n");
+        return;
+    }
+
+    Vec input( inputsize()-1 );
+    Vec target( 1 );
+    real weight;
+    Vec output( outputsize() );   // the output of the semantic layer
+    int nsamples = train_set->length();
+
+    cout << "Reevaluating gaussian parameters..." << endl;
+
+    PP<NnlmOutputLayer> p_nol;
+    if( !(p_nol = dynamic_cast<NnlmOutputLayer*>( (OnlineLearningModule*) output_modules[0] ) ) )
+    {
+        PLERROR("NnlmOnlineLearner::reevaluateGaussianParameters() - output_modules[0] is not an NnlmOutputLayer");
+    }
+
+    p_nol->resetTestVars();
+
+    // * Compute stats
+    for( int sample=0 ; sample < nsamples ; sample++ )
+    {
+        myGetExample(train_set, sample, input, target, weight );
+
+        // * fprop
+        computeOutput(input, output);
+
+        p_nol->setTarget( (int) target[0]);
+        //p_nol->setContext( (int) input[ (inputsize()-2) ] );
+
+        p_nol->updateTestVars(output);
+    }
+
+    // * Apply values 
+    // the missing tag does NOT get an output (never is the target)
+    for(int wt=0; wt<vocabulary_size-1; wt++)  {
+        p_nol->setTarget( wt );
+        //p_nol->setContext( (int) input[ (inputsize()-2) ] );
+        p_nol->applyTestVars();
+    }
+
+}
+
+
+////////////////////////////////
+// makeDeepCopyFromShallowCopy
+////////////////////////////////
 void NnlmOnlineLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
@@ -574,17 +787,21 @@ void NnlmOnlineLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(gradients, copies);
 
     deepCopyField(output_modules, copies);
-    deepCopyField(values2, copies);
-    deepCopyField(gradients2, copies);
+    deepCopyField(output_values, copies);
+    deepCopyField(output_gradients, copies);
 
-// ### How about these?
-//ngram_train_set
-//theNGram
-//shared_candidates
-//candidates
+    // ### How about these?
+    //ngram_train_set
+    //theNGram
+    //shared_candidates
+    //candidates
 
 }
 
+
+///////////////
+// outputsize
+///////////////
 //! This is the output size of the layer before the cost layer
 int NnlmOnlineLearner::outputsize() const
 {
@@ -594,14 +811,17 @@ int NnlmOnlineLearner::outputsize() const
         return values[ nmodules ].length();
 }
 
+
+///////////
+// forget
+///////////
 void NnlmOnlineLearner::forget()
 {
     inherited::forget();
 
-   // reset inputs
+    // reset inputs
     values[0].clear();
     gradients[0].clear();
-
     // reset modules and outputs
     for( int i=0 ; i<nmodules ; i++ )
     {
@@ -610,10 +830,22 @@ void NnlmOnlineLearner::forget()
         gradients[i+1].clear();
     }
 
-    output_modules[0]->forget();
+    if( model_type == MODEL_TYPE_SOFTMAX )  {
+        output_values[0].clear();
+        output_gradients[0].clear();
+    }
+    for( int i=0 ; i<output_nmodules; i++ )
+    {
+        output_modules[i]->forget();
+    }
 
     stage = 0;
 }
+
+
+/////////////////
+// myGetExample
+/////////////////
 
 // Had trouble interfacing with ProcessSymbolicSequenceVMatrix's getExample.
 // In particular, a source matrix of inputsize 1, targetsize 0, weightsize 0
@@ -658,135 +890,96 @@ real& weight) const
 
 }
 
-// TODO I've misunderstood how the costs work (don't update for each example! Compute a cost for the stage!). Fix this.
-// Don't train the neural part until stage 2. This way, we get some valid mus, sigmas, etc for the output layer.
+
+//////////
+// train
+//////////
 void NnlmOnlineLearner::train()
 {
-
     if (!initTrain())
         return;
 
-    // *** Variables ***
-
-    Vec input( inputsize()-1 );   // the word context
-    Vec target( 1 );              // the word to predict
+    Vec input( inputsize()-1 );
+    Vec target( 1 );
     real weight;
-
-    int nsamples = train_set->length();
     Vec output( outputsize() );   // the output of the semantic layer
     Vec train_costs( getTrainCostNames().length() );
-
-    // * intermediate variables
-    Vec neglogprob_tr(1);   // - log p(word=t(arget), representation=r)
-
-    Vec non_discr_gradient( semantic_layer_size );
-    Vec approx_discr_gradient( semantic_layer_size );
     Vec out_gradient(1,1); // the gradient wrt the cost is '1'
+    Vec gradient( semantic_layer_size );
+    int nsamples = train_set->length();
 
-    // * pb
     ProgressBar* pb = NULL;
     if(report_progress) {
         pb = new ProgressBar("Training", nsamples);
     }
 
-
-    // *** For stages
+    // *** For stages ***
     for( ; stage < nstages ; stage++ )
     {
 
         if(report_progress) {
-            cout << endl << "stage " << stage << endl;
-            cout << "uniform_mixture_coeff " << output_modules[0]->umc << endl;
+            cout << "*** Stage " << stage << " ***" << endl;
+            //cout << "uniform_mixture_coeff " << output_modules[0]->umc << " " << 1 - output_modules[0]->umc<< endl;
         }
-        // * clear stats of previous epoch
-        train_costs.fill(0);
+
+        // * clear stats of previous epoch *
         train_stats->forget();
 
-        // * for examples
+        // * for examples *
         for( int sample=0 ; sample < nsamples ; sample++ )
         {
 
             if(report_progress)
                 pb->update(sample);
 
-            // *** Get example
+            // - Get example -
             myGetExample(train_set, sample, input, target, weight );
 
-
-            // *** Compute training costs and gradients
-
-            // * fprop
+            // - Fixed part fprop -
             computeOutput(input, output);
 
-            // * Non-discriminant cost and gradient
-            output_modules[0]->setTarget( (int) target[0]);
-            output_modules[0]->fprop( output, neglogprob_tr);
+            // - Variable part fprop - cost and gradient for this part -
+            // (we don't want to duplicate some computations in gaussian model gradient evaluation)
+            // In gaussian case, gradients[nmodules] is computed here.
+            computeTrainCostsFromOutputs(input, output, target, train_costs );
 
-            train_costs[0] += neglogprob_tr[0];
+            // - bpropUpdate -
 
-            // so we don't do a /0 with  /sigma2(current_word, i)
-            //if( output_modules[0]->sumI[ (int) target[0] ] < 2 )  {
-            if( stage < 2 )  {
-              non_discr_gradient.fill(0.0);
-            } else  {
-                for(int i=0; i<semantic_layer_size; i++) {
-                    non_discr_gradient[i] = ( output[i] - output_modules[0]->mu( (int) target[0], i) ) 
-                                      / output_modules[0]->sigma2( (int) target[0], i);
+            // Variable part
+            if( model_type == MODEL_TYPE_GAUSSIAN )  {
 
-                    // modification for mixture with uniform * p(r,g|i) / p(r|i)
-                    non_discr_gradient[i] = non_discr_gradient[i] * safeexp( output_modules[0]->log_p_rg_i - output_modules[0]->log_p_r_i );
-
+                PP<NnlmOutputLayer> p_nol;
+                if( !(p_nol = dynamic_cast<NnlmOutputLayer*>( (OnlineLearningModule*) output_modules[0] ) ) )
+                {
+                    PLERROR("NnlmOnlineLearner::train() - MODEL_TYPE_GAUSSIAN but output_modules[0] is not an NnlmOutputLayer");
                 }
-            }
 
-            // * Approximated discriminant cost and gradient -> using candidate words
-            if( stage < 2 )  {
-                train_costs[1] = 0.0;
-                approx_discr_gradient.fill(0.0);
+                if( gaussian_model_cost == GAUSSIAN_COST_APPROX_DISCR )  {
+                    output_modules[0]->bpropUpdate( output, train_costs.subVec(1,1), out_gradient );
+                    gradients[nmodules] << p_nol->ad_gradient;
+                } else {  //if( gaussian_model_cost == GAUSSIAN_COST_NON_DISCR )
+                    output_modules[0]->bpropUpdate( output, train_costs.subVec(0,1), out_gradient );
+                    gradients[nmodules] << p_nol->nd_gradient;
+                }
+
             } else  {
-                computeApproximateDiscriminantCostAndGradient(input, target, output, neglogprob_tr[0], train_costs, 
-                                       non_discr_gradient, approx_discr_gradient);
+                output_modules[1]->bpropUpdate( output, train_costs, output_gradients[0], out_gradient );
+                output_modules[0]->bpropUpdate( output, train_costs, gradients[nmodules], output_gradients[0] );
             }
 
-            // *** Update stats
-            train_stats->update( train_costs );
-
-            // *** Select which gradient
-            //gradients[ nmodules ] << non_discr_gradient;
-            gradients[ nmodules ] << approx_discr_gradient;
-
-/*            if( sample < 20 ) {
-                cout << "*****************************************************" << endl;
-                cout << "--- mu[ (int) target[0] ] ---" << endl;
-                cout << output_modules[0]->mu( (int) target[0] ) << endl;
-
-                cout << "--- sigma2[ (int) target[0] ] --- " << endl;
-                cout << output_modules[0]->sigma2( (int) target[0] ) << endl;
-
-                cout << "--- non_discr_gradient ---" << endl;
-                cout << non_discr_gradient << endl;
-
-                cout << "--- approx_discr_gradient ---" << endl;
-                cout << approx_discr_gradient << endl;
+            // Fixed (common to both models) part
+            for( int i=nmodules-1 ; i>0 ; i-- ) {
+                modules[i]->bpropUpdate( values[i], values[i+1], gradients[i], gradients[i+1] );
             }
-*/
-
-            // *** Perform update -> bpropUpdate
-            
-            output_modules[0]->bpropUpdate( output,
-                                          train_costs.subVec(0,1),
-                                          out_gradient );
-
-            for( int i=nmodules-1 ; i>0 ; i-- )
-                modules[i]->bpropUpdate( values[i], values[i+1],
-                                         gradients[i], gradients[i+1] );
-
             modules[0]->bpropUpdate( values[0], values[1], gradients[1] );
+
+
+            // - Update stats -
+            train_stats->update( train_costs );
 
         }// * for examples - END
 
         train_stats->finalize(); // finalize statistics for this epoch
-        pout << "train_stats " << train_stats << endl;
 
     }// *** For stages - END
 
@@ -797,149 +990,10 @@ void NnlmOnlineLearner::train()
 
 }
 
-//! Computes the approximate discriminant cost and its gradient
-void NnlmOnlineLearner::computeApproximateDiscriminantCostAndGradient(Vec input, Vec target, Vec output, real nd_cost, Vec train_costs, Vec nd_gradient, Vec ad_gradient)
-{
 
-    //static int step = 0;
-
-
-    // *** 
-    // so we don't do a /0 with  /sigma2(current_word, i)
-    if( output_modules[0]->sumI[ (int) target[0] ] < 2 )  {
-        train_costs[1] = 0.0;
-        ad_gradient.fill(0.0);
-        return;
-    }
-
-
-    // *** We can compute cost and gradient
-    int c;
-    Vec neglogprob_cr(1);         // - log p(word=c, representation=r)
-    real log_sumprob = -nd_cost;   // log \sum_c p(c,r), where r the output (context representation) and c the candidates
-    real alpha;
-    Vec gradient_tmp( semantic_layer_size ); // used in the computation of the approx. discriminant gradient
-    Vec gradient_tmp_pos( semantic_layer_size ); // used in the computation of the approx. discriminant gradient
-    Vec gradient_tmp_neg( semantic_layer_size ); // used in the computation of the approx. discriminant gradient
-    gradient_tmp.fill(-REAL_MAX);
-    gradient_tmp_pos.fill(-REAL_MAX);
-    gradient_tmp_neg.fill(-REAL_MAX);
-
-
-    for(int i=0; i<semantic_layer_size; i++) {
-        alpha = output[i] - output_modules[0]->mu( (int)target[0] , i);
-
-        if( alpha > 0)  {
-            //gradient_tmp_pos[i] = -nd_cost + safelog( alpha ) - safelog( output_modules[0]->sigma2( (int)target[0], i) );
-            gradient_tmp_pos[i] = output_modules[0]->log_p_rg_i + safelog( alpha ) - safelog( output_modules[0]->sigma2( (int)target[0], i) );
-        } else  {
-            //gradient_tmp_neg[i] = -nd_cost + safelog( -alpha ) - safelog( output_modules[0]->sigma2( (int)target[0], i) );
-            gradient_tmp_neg[i] = output_modules[0]->log_p_rg_i + safelog( -alpha ) - safelog( output_modules[0]->sigma2( (int)target[0], i) );
-        }
-
-    }
-
-    // *** Compute normalization
-
-    for( int i=0; i< shared_candidates.length(); i++ )
-    {
-        c = shared_candidates[i];
-
-        if( c != (int) target[0] )  {
-            output_modules[0]->setTarget( c );
-            output_modules[0]->fprop( output, neglogprob_cr );
-
-            log_sumprob = logadd(log_sumprob, -neglogprob_cr[0]);
-
-            // so we don't do a /0 with  /sigma2(current_word, i)
-            if( output_modules[0]->sumI[ c ] >= 2 )  {
-                for(int j=0; j<semantic_layer_size; j++) {
-                    alpha = output[j] - output_modules[0]->mu( c, j);
-
-                    if( alpha > 0)  {
-                        //gradient_tmp_pos[j] = logadd( gradient_tmp_pos[j], 
-                        //        -neglogprob_cr[0] + safelog( alpha ) - safelog( output_modules[0]->sigma2( c, j) ) );
-                        gradient_tmp_pos[j] = logadd( gradient_tmp_pos[j], 
-                                output_modules[0]->log_p_rg_i + safelog( alpha ) - safelog( output_modules[0]->sigma2( c, j) ) );
-                    } else  {
-                        //gradient_tmp_neg[j] = logadd( gradient_tmp_neg[j], 
-                        //        -neglogprob_cr[0] + safelog( -alpha ) - safelog( output_modules[0]->sigma2( c, j) ) );
-                        gradient_tmp_neg[j] = logadd( gradient_tmp_neg[j], 
-                                output_modules[0]->log_p_rg_i + safelog( -alpha ) - safelog( output_modules[0]->sigma2( c, j) ) );
-                    }
-
-                }
-            }
-
-        } // if not target - END
-    }
-
-
-    // CONSIDER SHARED CANDIDATES ALSO!!!
-    for( int i=0; i< candidates[ (int) input[ (int) (inputsize()-2) ] ].length(); i++ )
-    {
-        c = candidates[ (int) input[ (int) (inputsize()-2) ] ][i];
-
-        if( c != (int) target[0] )  {
-            output_modules[0]->setTarget( c );
-            output_modules[0]->fprop( output, neglogprob_cr );
-
-
-            log_sumprob = logadd(log_sumprob, -neglogprob_cr[0]);
-
-            // so we don't do a /0 with  /sigma2(current_word, i)
-            if( output_modules[0]->sumI[ c ] >= 2 )  {
-                for(int j=0; j<semantic_layer_size; j++) {
-                    alpha = output[j] - output_modules[0]->mu( c, j);
-
-                    if( alpha > 0)  {
-                        //gradient_tmp_pos[j] = logadd( gradient_tmp_pos[j], 
-                        //        -neglogprob_cr[0] + safelog( alpha ) - safelog( output_modules[0]->sigma2( c, j) ) );
-                        gradient_tmp_pos[j] = logadd( gradient_tmp_pos[j], 
-                                output_modules[0]->log_p_rg_i + safelog( alpha ) - safelog( output_modules[0]->sigma2( c, j) ) );
-
-                    } else  {
-                        //gradient_tmp_neg[j] = logadd( gradient_tmp_neg[j], 
-                        //        -neglogprob_cr[0] + safelog( -alpha ) - safelog( output_modules[0]->sigma2( c, j) ) );
-                        gradient_tmp_neg[j] = logadd( gradient_tmp_neg[j], 
-                                output_modules[0]->log_p_rg_i + safelog( -alpha ) - safelog( output_modules[0]->sigma2( c, j) ) );
-
-                    }
-                }
-            }
-
-        } // if not target - END
-    }
-
-
-
-    // *** The approximate discriminant cost
-    train_costs[1] = nd_cost + log_sumprob;
-
-
-    // *** The corresponding gradient
-    for(int j=0; j<semantic_layer_size; j++) {
-        if( gradient_tmp_pos[j] > gradient_tmp_neg[j] ) {
-            gradient_tmp[j] = logsub( gradient_tmp_pos[j], gradient_tmp_neg[j] );
-            ad_gradient[j] = nd_gradient[j] - safeexp( gradient_tmp[j] - log_sumprob);
-        } else  {
-            gradient_tmp[j] = logsub( gradient_tmp_neg[j], gradient_tmp_pos[j] );
-            ad_gradient[j] = nd_gradient[j] + safeexp( gradient_tmp[j] - log_sumprob);
-        }
-
-    }
-
-/*    if( step < 15)  {
-        cout << "gradient_tmp_pos " << endl << gradient_tmp_pos << endl << endl; 
-        cout << "gradient_tmp_neg " << endl << gradient_tmp_neg << endl << endl;
-    }*/
-
-/*    step++;
-    step = step%100000;*/
-}
-
-
-
+/////////
+// test
+/////////
 void NnlmOnlineLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
                     VMat testoutputs, VMat testcosts) const
 {
@@ -948,41 +1002,11 @@ void NnlmOnlineLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
     Vec output( outputsize() );
     Vec target( 1 );
     real weight;
-
     Vec test_costs( getTestCostNames().length() );
-    int nsamples;
     real entropy = 0.0;
     real perplexity = 0.0;
+    int nsamples = testset->length();
 
-
-
-
-    // Before testing, evaluate mus and sigmas so they catch up with the representation
-    output_modules[0]->resetTestVars();
-    cout << "updating parameters" << endl;
-    
-    nsamples = train_set->length();
-
-    for( int sample=0 ; sample < nsamples ; sample++ )
-    {
-        myGetExample(train_set, sample, input, target, weight );
-
-        // * fprop
-        computeOutput(input, output);
-
-        output_modules[0]->setTarget( (int) target[0]);
-        output_modules[0]->updateTestVars(output);
-    }
-
-    //FOR THE VOCABULARY, update parameters
-
-    for(int wt=0; wt<vocabulary_size-1; wt++)  {
-        output_modules[0]->setTarget( wt );
-        output_modules[0]->applyTestVars();
-    }
-
-    cout << "testing" << endl;
-    nsamples = testset->length();
 
     // * Empty test set: we give -1 cost arbitrarily.
     if (nsamples == 0) {
@@ -990,11 +1014,12 @@ void NnlmOnlineLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
         test_stats->update(test_costs);
     }
 
+    // * TODO Should we do this?
+    reevaluateGaussianParameters();
 
     ProgressBar* pb = NULL;
     if(report_progress)
         pb = new ProgressBar("Testing learner",nsamples);
-
 
     for( int sample=0 ; sample < nsamples ; sample++ )
     {
@@ -1002,8 +1027,7 @@ void NnlmOnlineLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
 
         // Always call computeOutputAndCosts, since this is better
         // behaved with stateful learners
-        computeOutputAndCosts(input,target,output,test_costs);
-
+        computeOutputAndCosts(input, target, output, test_costs);
 
         if(testoutputs)
             testoutputs->putOrAppendRow(sample,output);
@@ -1023,7 +1047,6 @@ void NnlmOnlineLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
             cout << sample << " p(i|r) " << safeexp( - test_costs[0] ) << endl;
         }
 
-
     }
 
     entropy /= nsamples;
@@ -1037,7 +1060,9 @@ void NnlmOnlineLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
 }
 
 
-
+//////////////////
+// computeOutput
+//////////////////
 void NnlmOnlineLearner::computeOutput(const Vec& input, Vec& output) const
 {
 
@@ -1054,78 +1079,112 @@ void NnlmOnlineLearner::computeOutput(const Vec& input, Vec& output) const
 }
 
 
+/////////////////////////////////////////////
+// computeTrainCostsAndGradientsFromOutputs
+/////////////////////////////////////////////
+// Compute costs. In gaussian case, compute gradient wrt ouput.
+void NnlmOnlineLearner::computeTrainCostsFromOutputs(const Vec& input, const Vec& output,
+                                           const Vec& target, Vec& costs) const
+{
+
+    if( model_type == MODEL_TYPE_GAUSSIAN )  {
+
+        PP<NnlmOutputLayer> p_nol;
+        if( !(p_nol = dynamic_cast<NnlmOutputLayer*>( (OnlineLearningModule*) output_modules[0] ) ) )
+        {
+            PLERROR("NnlmOnlineLearner::computeTrainCostsAndGradientsFromOutputs - MODEL_TYPE_GAUSSIAN but output_modules[0] is not an NnlmOutputLayer");
+        }
+
+        p_nol->setTarget( (int) target[0] );
+        p_nol->setContext( (int) input[ (int) (inputsize()-2) ] );
+
+        p_nol->fprop( output, costs );
+
+    } else  {
+        Vec example_cost;
+        output_modules[0]->fprop( output, output_values[0] );
+        output_modules[1]->fprop( output_values[0], example_cost);
+
+        costs[0] = example_cost[ (int)target[0] ];
+    }
 
 
+}
 
 
 //! Computes the test costs, ie the full disriminant cost (NLL).
 //! See about how to include/print the perplexity.
 // Compute the costs from *already* computed output.
+// TODO should not iterate over the vocabulary. Properly set output'state and call fprop.
 void NnlmOnlineLearner::computeCostsFromOutputs(const Vec& input, const Vec& output,
                                            const Vec& target, Vec& costs) const
 {
+    if( model_type == MODEL_TYPE_GAUSSIAN )  {
 
-    Vec nl_p_ri;
-    Vec nl_p_rj;
-    real l_sum_p_rj;
+        PP<NnlmOutputLayer> p_nol;
+        if( !(p_nol = dynamic_cast<NnlmOutputLayer*>( (OnlineLearningModule*) output_modules[0] ) ) )
+        {
+            PLERROR("NnlmOnlineLearner::computeCostsFromOutputs - MODEL_TYPE_GAUSSIAN but output_modules[0] is not an NnlmOutputLayer");
+        }
 
-    nl_p_ri.resize( getTestCostNames().length() );
-    nl_p_rj.resize( getTestCostNames().length() );
+        p_nol->setCost(2);
+        p_nol->setTarget( (int)target[0] );
+        p_nol->fprop( output, costs);
 
+        // Re-Set Cost 
+        if( gaussian_model_cost == GAUSSIAN_COST_APPROX_DISCR ) {
+            p_nol->setCost(1);
+        } else  { //GAUSSIAN_COST_NON_DISCR
+            p_nol->setCost(0);
+        }
 
-    // * Compute numerator
-    output_modules[0]->setTarget( (int)target[0] );
-    output_modules[0]->fprop( output, nl_p_ri);
+    } else  {
+        Vec example_cost;
+        output_modules[0]->fprop( output, output_values[0] );
+        output_modules[1]->fprop( output_values[0], example_cost);
 
-    // * Compute denominator
-    // Normalize over whole vocabulary
-
-    l_sum_p_rj = -REAL_MAX;
-
-// ### THIS IS SERIOUS!!!
-//vocabulary_size-1 is the missing tag, which is NEVER SEEN in target
-//and so never trained!!! THE FPROP WILL RETURN 0!!!
-    for(int w=0; w<vocabulary_size-1; w++)  {
-
-        output_modules[0]->setTarget( w );
-        output_modules[0]->fprop( output, nl_p_rj);
-
-        l_sum_p_rj = logadd(l_sum_p_rj, -nl_p_rj[0]);
+        costs[0] = example_cost[ (int)target[0] ];
     }
-
-    //cout << "nl_p_ri " << nl_p_ri[0] << " l_sum_p_rj " << l_sum_p_rj << " safeexp(nl_p_i + l_sum_p_rj) " << safeexp(-(nl_p_ri[0] + l_sum_p_rj)) << endl;
-
-    costs[0] = nl_p_ri[0] + l_sum_p_rj;
 
 }
 
+
+/////////////////////
+// getTestCostNames
+/////////////////////
 TVec<string> NnlmOnlineLearner::getTestCostNames() const
 {
     // Return the names of the costs computed by computeCostsFromOutputs
     // (these may or may not be exactly the same as what's returned by
     // getTrainCostNames).
-    // ...
-
     TVec<string> ret;
     ret.resize(1);
     ret[0] = "NLL";
     return ret;
-
 }
 
+
+//////////////////////
+// getTrainCostNames
+//////////////////////
 TVec<string> NnlmOnlineLearner::getTrainCostNames() const
 {
     // Return the names of the objective costs that the train method computes
     // and for which it updates the VecStatsCollector train_stats
     // (these may or may not be exactly the same as what's returned by
     // getTestCostNames).
-
     TVec<string> ret;
-    ret.resize(2);
-    ret[0] = "nonDisc";
-    ret[1] = "NLLeval";
-    return ret;
 
+    if( model_type == MODEL_TYPE_GAUSSIAN )  {
+        ret.resize(2);
+        ret[0] = "non_discriminant";
+        ret[1] = "approx_discriminant";
+    } else  {
+        ret.resize(1);
+        ret[0] = "NLL";
+    }
+
+    return ret;
 }
 
 
