@@ -923,6 +923,12 @@ void SupervisedDBN::train()
 
     for( int i=0 ; i<n_layers-1 ; i++ )
         params[i]->learning_rate = fine_tuning_learning_rate;
+
+    ((GradNNetLayerModule* )
+        ((StackedModulesModule*)
+            regressors[n_layers-2])->modules[1])->start_learning_rate =
+        fine_tuning_learning_rate;
+
 //    joint_params->learning_rate = fine_tuning_learning_rate;
 //    target_params->learning_rate = fine_tuning_learning_rate;
 
