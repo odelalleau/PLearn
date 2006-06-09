@@ -69,6 +69,9 @@ private:
 
     Vec     variable_mean;
 
+    //! Temporary storage vector for a target.
+    mutable Vec tmp_target;
+
 public:
 
     PP<PDistribution> distribution;

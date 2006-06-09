@@ -118,7 +118,10 @@ void MeanImputationVMatrix::declareOptions(OptionList &ol)
         "If provided, this conditional distribution will provide a way to\n"
         "compute the conditional mean given observed values. Otherwise, the\n"
         "empirical mean will be used. This distribution is trained on the\n"
-        "'source' (or 'mean_source') VMat unless it already has a stage > 0.");
+        "'source' (or 'mean_source') VMat unless it already has a stage > 0.\n"
+        "If a 'number_of_train_samples' is specified, this distribution will\n"
+        "only be given access to target values for these train samples, and\n"
+        "the target will be missing for the rest of the data.");
 
     declareOption(ol, "variable_mean", &MeanImputationVMatrix::variable_mean,
                                        OptionBase::learntoption,
@@ -222,6 +225,7 @@ void MeanImputationVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(cond_mean,     copies);
     deepCopyField(variable_mean, copies);
+    deepCopyField(tmp_target,    copies);
     deepCopyField(distribution,  copies);
     deepCopyField(mean_source,   copies);
 }
@@ -234,13 +238,25 @@ void MeanImputationVMatrix::getNewRow(int i, const Vec& v) const
 {
     assert( source );
     source->getRow(i, v);
+
     if (v.hasMissing())
         if (distribution) {
+            Vec target;
+            bool restore_target = false;
+            if (number_of_train_samples > 0 && i >= number_of_train_samples) {
+                tmp_target.resize(source->targetsize());
+                target = v.subVec(source->inputsize(), source->targetsize());
+                tmp_target << target;
+                target.fill(MISSING_VALUE);
+                restore_target = true;
+            }
             distribution->missingExpectation(v, cond_mean);
             int k = 0;
             for (int j = 0; j < v.length(); j++)
                 if (is_missing(v[j]))
                     v[j] = cond_mean[k++];
+            if (restore_target)
+                target << tmp_target;
         } else
             for (int j = 0; j < v.length(); j++)
                 if (is_missing(v[j]))
