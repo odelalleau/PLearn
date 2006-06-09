@@ -68,9 +68,15 @@ public:
     real start_gaussian_learning_discount_rate;
     real gaussian_learning_decrease_constant;
 
+    //! 
     real sigma2min;
 
+    //! specifies the number of classes for the output (output only computed for 1)
     int virtual_output_size;
+
+    //! specifies the number of different tags in the last input. Determines 
+    //! which candidates are used for normalization in the approxdiscriminant case
+    int context_range;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -79,15 +85,19 @@ public:
     NnlmOutputLayer();
 
     //! Sets w ( fprop computes p(r,w) )
-    void setTarget(int the_target);
+    void setTarget(int the_target) const;
+    void setContext(int the_context) const;
     void setCost(int the_cost);
+
+    void compute_nl_p_ri(const Vec& input, Vec& output) const;
+    void computeApproxDiscriminantCostAndGradient(Vec input, Vec output) const;
+    void addCandidateContribution( int c ) const;
 
     //! Used to reevaluate mu and sigma
     void resetTestVars();
     void updateTestVars(const Vec& input);
     void applyTestVars();
 
-    void nl_p_ri(const Vec& input, Vec& output) const;
 
     //! Computes p(r,w), where r the real distributed context representation 
     //! in [0,1] and w the word at the considered position
@@ -107,9 +117,9 @@ public:
     //! And I'm not sure why... TODO find out
     //! this version allows to obtain the input gradient as well
     //! N.B. THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
-    // virtual void bpropUpdate(const Vec& input, const Vec& output,
-    //                          Vec& input_gradient,
-    //                          const Vec& output_gradient);
+    /*virtual void bpropUpdate(const Vec& input, const Vec& output,
+                              Vec& input_gradient,
+                              const Vec& output_gradient);*/
 
     //! reset the parameters to the state they would be BEFORE starting
     //! training.  Note that this method is necessarily called from
@@ -187,13 +197,31 @@ public:
     int test_s_sumI;  // sum_t 1
 
     //#####  Don't need to be saved  ##########################################
-    //! the current word -> we use its parameters to compute output
-    int target;
-    //! the cost
-    int cost;
+
+    //!Must be set before calling fprop
+    //{
+        //! the cost
+        int cost;
+
+        //! the current word -> we use its parameters to compute output
+        mutable int target;
+        mutable int the_real_target;
+        mutable int context;
+    //}
+
+    mutable Vec its_input;
+    mutable real nd_cost;
+    mutable real ad_cost;
+    mutable Vec nd_gradient;
+    mutable Vec ad_gradient;
 
     //! temporary variables
     //! TODO clean this up
+
+    mutable Vec gradient_tmp;
+    mutable Vec gradient_tmp_pos;
+    mutable Vec gradient_tmp_neg;
+
     mutable real r;
     mutable real g_exponent;
     mutable real det_g_covariance;
@@ -202,9 +230,11 @@ public:
     mutable real log_p_rg_i;
     mutable real log_p_r_i;
     mutable real log_p_ri;
+    mutable real log_sum_p_rj;
 
     mutable real log_p_g_r;
     mutable real sum_log_p_g_r;
+
 
     //! The original way of computing the mus and sigmas (ex. mu memorize \sum r
     //! and then divide) had the effect learning slowed down with time.
@@ -212,6 +242,12 @@ public:
     //! TODO validate computation of mus and sigmas
     //! gaussian_learning_discount_rate
     real gldr;
+
+    // TODO THIS COULD BE A LEARNT OPTION
+    //! Holds candidates
+    TVec<int> shared_candidates;    // frequent (ie paying) words
+    TVec< TVec<int> > candidates;   // context specific candidates
+
 
 };
 

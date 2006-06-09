@@ -45,20 +45,47 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     NnlmOutputLayer,
-    "Implements the output layer for the NNLM.",
+    "Implements the gaussian output layer for the NNLM.",
     "MULTI-LINE \nHELP");
 
+////////////////////
+// NnlmOutputLayer
+////////////////////
 NnlmOutputLayer::NnlmOutputLayer() :
     OnlineLearningModule(),
     start_gaussian_learning_discount_rate( 0.999 ),
     gaussian_learning_decrease_constant( 0 ),
-    cost( 0 )
+    sigma2min( 0.000001),
+    virtual_output_size( -1 ),
+    context_range( -1 ),
+    step_number( 0 ),
+    umc( 0.999999999 ),
+    cost( 0 ),
+    target( -1 ),
+    the_real_target( -1 ),
+    context( -1 ),
+    nd_cost( REAL_MAX ),
+    ad_cost( REAL_MAX ),
+    r( 0.0 ),
+    g_exponent( 0.0 ),
+    det_g_covariance( 0.0 ),
+    log_g_normalization( -REAL_MAX ),
+    log_p_rg_i( -REAL_MAX ),
+    log_p_r_i( -REAL_MAX ),
+    log_p_ri( -REAL_MAX ),
+    log_sum_p_rj( -REAL_MAX ),
+    log_p_g_r( -REAL_MAX ),
+    sum_log_p_g_r( -REAL_MAX ),
+    gldr( 0.0 )
 {
     // ### You may (or not) want to call build_() to finish building the object
     // ### (doing so assumes the parent classes' build_() have been called too
     // ### in the parent classes' constructors, something that you must ensure)
 }
 
+///////////////////
+// declareOptions
+///////////////////
 void NnlmOutputLayer::declareOptions(OptionList& ol)
 {
     // * Build *
@@ -72,10 +99,20 @@ void NnlmOutputLayer::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Decrease constant of gaussian parameters discount rate");
 
+    declareOption(ol, "sigma2min",
+                  &NnlmOutputLayer::sigma2min,
+                  OptionBase::buildoption,
+                  "minimal sigma2 value");
+
     declareOption(ol, "virtual_output_size",
                   &NnlmOutputLayer::virtual_output_size,
                   OptionBase::buildoption,
                   "virtual_output_size");
+
+    declareOption(ol, "context_range",
+                  &NnlmOutputLayer::context_range,
+                  OptionBase::buildoption,
+                  "specifies the number of different tags in the last input. Determines which candidates are used for normalization in the approxdiscriminant case");
 
     // * Learnt *
     declareOption(ol, "step_number", &NnlmOutputLayer::step_number,
@@ -109,11 +146,19 @@ void NnlmOutputLayer::declareOptions(OptionList& ol)
                   OptionBase::learntoption,
                   "sum_t 1" );
 
+    // ### test vars?
+
+
+    // ### other?
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
 
+
+//////////
+//build_
+//////////
 void NnlmOutputLayer::build_()
 {
 
@@ -129,10 +174,20 @@ void NnlmOutputLayer::build_()
     // *** Parameters not initialized
     if( mu.size() == 0 )   {
         resetParameters();
+
+        sumI.resize( virtual_output_size );
+        sumI.fill( 0 );
+        s_sumI = 0;
+        test_sumI.resize( virtual_output_size );
+        test_sumI.fill( 0 );
+        test_s_sumI = 0;
     }
 
 }
 
+//////////
+// build
+//////////
 // ### Nothing to add here, simply calls build_
 void NnlmOutputLayer::build()
 {
@@ -140,16 +195,15 @@ void NnlmOutputLayer::build()
     build_();
 }
 
-
+////////////////////
+// resetParameters
+////////////////////
 void NnlmOutputLayer::resetParameters()
 {
     step_number = 0;
     umc = 0.999999999;
-    log_p_g_r = safelog( 0.9 );
-    sum_log_p_g_r = -REAL_MAX;
 
-
-      mu.resize( virtual_output_size, input_size);
+    mu.resize( virtual_output_size, input_size);
     mu.fill( 0 );
     sigma2.resize( virtual_output_size, input_size);
     sigma2.fill( sigma2min );
@@ -160,40 +214,76 @@ void NnlmOutputLayer::resetParameters()
     sumX.fill( 0 );
     sumX2.resize( virtual_output_size, input_size);
     sumX2.fill( 0 );
-    sumI.resize( virtual_output_size );
+/*    sumI.resize( virtual_output_size );
     sumI.fill( 0 );
-    s_sumI = 0;
+    s_sumI = 0;*/
 
     // *TEST*
     test_sumX.resize( virtual_output_size, input_size);
     test_sumX.fill( 0 );
     test_sumX2.resize( virtual_output_size, input_size);
     test_sumX2.fill( 0 );
-    test_sumI.resize( virtual_output_size );
+/*    test_sumI.resize( virtual_output_size );
     test_sumI.fill( 0 );
-    test_s_sumI = 0;
+    test_s_sumI = 0;*/
 
+    its_input.resize( input_size );
+    its_input.fill( 0 );
+    nd_gradient.resize( input_size );
+    nd_gradient.fill( 0 );
+    ad_gradient.resize( input_size );
+    ad_gradient.fill( 0 );
+
+    gradient_tmp.resize( input_size );
+    gradient_tmp.fill( 0 );
+    gradient_tmp_pos.resize( input_size );
+    gradient_tmp_pos.fill( 0 );
+    gradient_tmp_neg.resize( input_size );
+    gradient_tmp_neg.fill( 0 );
+
+    log_p_g_r = safelog( 0.9 );
+    sum_log_p_g_r = -REAL_MAX;
 }
 
-void NnlmOutputLayer::setTarget(int the_target) 
+//////////////
+// setTarget
+//////////////
+void NnlmOutputLayer::setTarget(int the_target) const
 {
 #ifdef BOUNDCHECK
     if( the_target >= virtual_output_size )  {
-        PLERROR("NnlmOutputLayer::setTarget:'the_target'(=%i) >= \n"
-                  "'virtual_output_size'(=%i)\n"
-                  , the_target, virtual_output_size);
+        PLERROR("NnlmOutputLayer::setTarget:'the_target'(=%i) >= 'virtual_output_size'(=%i)\n",
+                   the_target, virtual_output_size);
     }
 #endif
 
     target = the_target;
 }
+
+///////////////
+// setContext
+///////////////
+void NnlmOutputLayer::setContext(int the_context) const
+{
+#ifdef BOUNDCHECK
+    if( the_context >= context_range )  {
+        PLERROR("NnlmOutputLayer::setContext:'the_context'(=%i) >= 'context_range'(=%i)\n"
+                  , the_context, context_range);
+    }
+#endif
+
+    context = the_context;
+}
+
+////////////
+// setCost
+////////////
 // Sets the cost computed in the fprop
 void NnlmOutputLayer::setCost(int the_cost)
 {
 #ifdef BOUNDCHECK
     if( the_cost > 2 || the_cost < 0 )  {
-        PLERROR("NnlmOutputLayer::setCost:'the_cost'(=%i) > \n"
-                  "'2'(=%i)\n"
+        PLERROR("NnlmOutputLayer::setCost:'the_cost'(=%i) > '2' or < '0'\n"
                   , the_cost);
     }
 #endif
@@ -201,6 +291,9 @@ void NnlmOutputLayer::setCost(int the_cost)
     cost = the_cost;
 }
 
+////////////////////////////////
+// makeDeepCopyFromShallowCopy
+////////////////////////////////
 void NnlmOutputLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
@@ -217,8 +310,19 @@ void NnlmOutputLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(test_sumX2, copies);
     deepCopyField(test_sumI, copies);
 
+    deepCopyField(its_input, copies);
+    deepCopyField(nd_gradient, copies);
+    deepCopyField(ad_gradient, copies);
+
+    deepCopyField(gradient_tmp, copies);
+    deepCopyField(gradient_tmp_pos, copies);
+    deepCopyField(gradient_tmp_neg, copies);
+
 }
 
+//////////
+// fprop
+//////////
 //! given the input, compute the output (possibly resize it  appropriately)
 //! Compute log p(r,i)
 //! where   r is the context's semantic representation (the input)
@@ -229,45 +333,84 @@ void NnlmOutputLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 //!
 void NnlmOutputLayer::fprop(const Vec& input, Vec& output) const
 {
-    // Non-discriminant -log( p(r,i) )
+
+    its_input << input;
+
+    // *** Non-discriminant cost: -log( p(r,i) ) ***
     if( cost == 0 ) {
-        nl_p_ri( input, output);
-    }
-    // approx-discriminant
-    else if( cost == 1 )  {
+
+        compute_nl_p_ri( input, output);
+
+        // * Compute nd_gradient *
+        for(int i=0; i<input_size; i++) {
+            nd_gradient[i] = ( input[i] - mu( target, i) ) / sigma2( target, i);
+            // modification for mixture with uniform * p(r,g|i) / p(r|i)
+            nd_gradient[i] = nd_gradient[i] * safeexp( log_p_rg_i - log_p_r_i );
+        }
+        ad_gradient.fill(0.0);
 
     }
-    // discriminant -log( p(i|r) )
+
+    // *** Approx-discriminant cost ***
+    else if( cost == 1 )  {
+        the_real_target = target;
+        computeApproxDiscriminantCostAndGradient(input, output);
+    }
+
+    // *** Discriminant cost: -log( p(i|r) ) ***
     else if( cost == 2 )  {
+
+        Vec nl_p_ri;
+        Vec nl_p_rj;
+
+        nl_p_ri.resize( 1 );
+        nl_p_rj.resize( 1 );
+
+        // * Compute numerator
+        setTarget( target );
+
+        compute_nl_p_ri( input, nl_p_ri );
+
+        // * Compute denominator
+        // Normalize over whole vocabulary
+
+        log_sum_p_rj = -REAL_MAX;
+
+        // there is no "missing tag" ouput.
+        for(int w=0; w<virtual_output_size; w++)  {
+
+            setTarget( w );
+            compute_nl_p_ri( input, nl_p_rj );
+
+            log_sum_p_rj = logadd(log_sum_p_rj, -nl_p_rj[0]);
+        }
+
+        output[0] = nl_p_ri[0] + log_sum_p_rj;
 
     }
 }
 
-void NnlmOutputLayer::nl_p_ri(const Vec& input, Vec& output) const
+void NnlmOutputLayer::compute_nl_p_ri(const Vec& input, Vec& output) const
 {
-    // *** If not ready (need 2 bpropUpdate for valid sigma)
-    // So we don't do a /0 with /sigma2(target, i)
-    // TODO CHECK THIS
-    if( sumI[ target ] < 2 )  {
-      output.fill(0.0);
-      log_p_g_r = safelog( 0.9 );
-      return;
-    }
 
-    // *** Sanity check
+    // *** Sanity check ***
     int in_size = input.size();
     if( in_size != input_size ) {
-        PLERROR("NnlmOutputLayer::fprop: 'input.size()' should be equal\n"
+        PLERROR("NnlmOutputLayer::compute_nl_p_ri: 'input.size()' should be equal\n"
                 " to 'input_size' (%i != %i)\n", in_size, input_size);
     }
 
-    // * Compute gaussian's exponent - 'g' means gaussian
+    // *** Compute gaussian's exponent - 'g' means gaussian ***
     g_exponent = 0.0;
     det_g_covariance = 1.0;
 
     for(int i=0; i<input_size; i++) {
       r = input[i] - mu(target, i);
       g_exponent += r * r / sigma2(target, i);
+
+    if( isnan(g_exponent) ) {
+      PLERROR( "NnlmOutputLayer::nl_p_ri - NAN!!!\n" );
+    }
 
       // determinant of covariance matrix
       det_g_covariance *= sigma2(target, i);
@@ -291,17 +434,136 @@ void NnlmOutputLayer::nl_p_ri(const Vec& input, Vec& output) const
 
 
     if( isnan(log_p_ri) ) {
-      cout << "NnlmOutputLayer::nl_p_ri - NAN!!!" << target <<  endl;
-      //cout << mu(target) << endl << sigma2(target) << endl;
-
+      PLERROR( "NnlmOutputLayer::nl_p_ri - NAN!!!\n" );
     }
-
 
     // * Compute posterior for coeff_class_conditional_uniform_mixture evaluation in the bpropUpdate
     // p(generated by gaussian| r) = a p_g(r|i) / p(r|i)
     //log_p_g_r = safelog(umc) + g_exponent + log_g_normalization - log_p_r_i;
 
 }
+
+/////////////////////////////////////////////
+// computeApproxDiscriminantCostAndGradient
+/////////////////////////////////////////////
+//! Computes the approximate discriminant cost and its gradient
+void NnlmOutputLayer::computeApproxDiscriminantCostAndGradient(Vec input, Vec output) const
+{
+
+    // *** We can compute cost and gradient ***
+
+    gradient_tmp.fill(-REAL_MAX);
+    gradient_tmp_pos.fill(-REAL_MAX);
+    gradient_tmp_neg.fill(-REAL_MAX);
+    log_sum_p_rj = -REAL_MAX;
+    real alpha;
+
+    // *** Compute for the target ***
+    Vec vec_nd_cost(1);
+    compute_nl_p_ri(input, vec_nd_cost);
+
+
+    // compute nd_gradient
+    for(int i=0; i<input_size; i++) {
+        nd_gradient[i] = ( input[i] - mu( target, i) ) / sigma2( target, i);
+        // modification for mixture with uniform * p(r,g|i) / p(r|i)
+        nd_gradient[i] = nd_gradient[i] * safeexp( log_p_rg_i - log_p_r_i );
+    }
+
+
+    for(int i=0; i< input_size; i++) {
+        alpha = input[i] - mu( the_real_target, i);
+
+        if( alpha > 0)  {
+            gradient_tmp_pos[i] = log_p_rg_i + safelog( alpha ) - safelog( sigma2( the_real_target, i) );
+            if( isnan(gradient_tmp_pos[i]) ) {
+              PLERROR("Bob\n");
+            }
+        } else  {
+            gradient_tmp_neg[i] = log_p_rg_i + safelog( -alpha ) - safelog( sigma2( the_real_target, i) );
+        }
+
+    }
+
+    log_sum_p_rj = log_p_ri;
+    nd_cost = -log_p_ri;
+
+    // *** Compute for the normalization candidates ***
+    int c;
+
+    // shared candidates
+    for( int i=0; i< shared_candidates.length(); i++ )
+    {
+        c = shared_candidates[i];
+        addCandidateContribution( c );
+    }
+
+    // context candidates 
+    for( int i=0; i< candidates[ context ].length(); i++ )
+    {
+        c = candidates[ context ][i];
+        addCandidateContribution( c );
+    }
+
+
+    // *** The approximate discriminant cost ***
+    ad_cost = nd_cost + log_sum_p_rj;
+
+
+    // *** The corresponding approx gradient ***
+    for(int j=0; j<input_size; j++) {
+        if( gradient_tmp_pos[j] > gradient_tmp_neg[j] ) {
+            gradient_tmp[j] = logsub( gradient_tmp_pos[j], gradient_tmp_neg[j] );
+            ad_gradient[j] = nd_gradient[j] - safeexp( gradient_tmp[j] - log_sum_p_rj);
+        } else  {
+            gradient_tmp[j] = logsub( gradient_tmp_neg[j], gradient_tmp_pos[j] );
+            ad_gradient[j] = nd_gradient[j] + safeexp( gradient_tmp[j] - log_sum_p_rj);
+        }
+    }
+
+    output[0] = nd_cost;
+    output[1] = ad_cost;
+}
+
+
+
+void NnlmOutputLayer::addCandidateContribution( int c ) const
+{
+
+    if( c == the_real_target )  {
+        return;
+    }
+    real alpha;
+
+    setTarget( c );
+
+    Vec vec_nd_cost(1);
+    compute_nl_p_ri(its_input, vec_nd_cost);
+
+    log_sum_p_rj = logadd(log_sum_p_rj, -log_p_ri);
+
+    for(int j=0; j<input_size; j++) {
+        alpha = its_input[j] - mu( c, j);
+
+        if( alpha > 0)  {
+            gradient_tmp_pos[j] = logadd( gradient_tmp_pos[j], 
+                    log_p_rg_i + safelog( alpha ) - safelog( sigma2( c, j) ) );
+
+            if( isnan(gradient_tmp_pos[j]) ) {
+              PLERROR("Bob\n");
+            }
+
+
+        } else  {
+            gradient_tmp_neg[j] = logadd( gradient_tmp_neg[j], 
+                    log_p_rg_i + safelog( -alpha ) - safelog( sigma2( c, j) ) );
+        }
+
+    }
+
+}
+
+
 
 
 //! Adapt based on the output gradient: this method should only
@@ -342,44 +604,33 @@ void NnlmOutputLayer::bpropUpdate(const Vec& input, const Vec& output,
 
     // * Update parameters - using discount
     // discount * ancien + (1-discount) * nouveau
-    // so we don't get a sigma that is zero
-    if( sumI[ target ] >= 2 ) {
 
-        for(int i=0; i<input_size; i++) {
+    for(int i=0; i<input_size; i++) {
 
-            //mu( target, i ) = gldr * mu( target, i ) + (1.0 - gldr) * input[i];
+        //mu( target, i ) = gldr * mu( target, i ) + (1.0 - gldr) * input[i];
 
-            // We reuse the old sigma instead of recomputing it with the new mu... is it a good idea?
-            // If we consider we're tracking a moving target maybe.
+        // We reuse the old sigma instead of recomputing it with the new mu... is it a good idea?
+        // If we consider we're tracking a moving target maybe.
 //            sigma2( target, i ) = gldr * sigma2( target, i ) +
 //                + (1.0-gldr) * ( input[i] - mu( target, i ) ) * ( input[i] - mu( target, i ) );
 
 //mu( target, i ) = sumX( target, i ) / sumI[ target ];
 //sigma2( target, i ) = (  mu(target, i) * mu(target, i) + ( sumX2(target, i) -2.0 * mu(target, i) * sumX(target, i)        ) / sumI[ target ] );
-mu( target, i ) = gldr * mu( target, i ) + (1.0 - gldr) * input[i];
-sigma2( target, i ) = gldr * 
-            (  mu(target, i) * mu(target, i) + ( sumX2(target, i) -2.0 * mu(target, i) * sumX(target, i)        ) / sumI[ target ] )
+
+// ### CHANGE THIS!!!!!!!!
+        mu( target, i ) = gldr * mu( target, i ) + (1.0 - gldr) * input[i];
+        sigma2( target, i ) = gldr * (  mu(target, i) * mu(target, i) + ( sumX2(target, i) -2.0 * mu(target, i) * sumX(target, i)        ) / sumI[ target ] )
             + (1.0-gldr) * input[i]*input[i];
 
-// CHANGE THIS!!!!!!!!
-// CHANGE THIS!!!!!!!!
-//cout << " --- mu ---" << endl << mu << endl << " --- sigma2 ---" << endl << sigma2 << endl;
-
-if(sigma2( target, i )<sigma2min)
-{
-//cout << "word " << target << " has sigma2[" << i << "] < 0.0001" << endl;
-sigma2( target, i ) = sigma2min;
-}
-
-
+        if(sigma2( target, i )<sigma2min) {
+            sigma2( target, i ) = sigma2min;
         }
-    // initialize
-    } else  {
-        for(int i=0; i<input_size; i++) {
-            mu( target, i ) = input[i];
+
+        if( isnan( sigma2( target, i ) ) ) {
+          PLERROR( "NnlmOutputLayer::bpropUpdate - isnan( sigma2( target, i ) )!\n" );
         }
+
     }
-
 
     // * Update counts
     for(int i=0; i<input_size; i++) {
@@ -400,6 +651,9 @@ sigma2( target, i ) = sigma2min;
 
 }
 
+//////////////////
+// resetTestVars
+//////////////////
 void NnlmOutputLayer::resetTestVars() {
 
     // *TEST*
@@ -410,6 +664,9 @@ void NnlmOutputLayer::resetTestVars() {
 
 }
 
+///////////////////
+// updateTestVars
+///////////////////
 void NnlmOutputLayer::updateTestVars(const Vec& input)
 {
     // * Update counts
@@ -421,24 +678,22 @@ void NnlmOutputLayer::updateTestVars(const Vec& input)
     test_s_sumI += 1;
 }
 
+//////////////////
+// applyTestVars
+//////////////////
 void NnlmOutputLayer::applyTestVars()
 {
+    if( test_sumI[ target ] == 0 )  {
+        PLERROR("NnlmOutputLayer::applyTestVars - test_sumI[ target ] == 0\n");
+    }
 
     for(int i=0; i<input_size; i++) {
+
 
         mu( target, i ) = test_sumX( target, i ) / (real) test_sumI[ target ];
 
         sigma2( target, i ) = (  mu(target, i) * mu(target, i) + 
                 ( test_sumX2(target, i) -2.0 * mu(target, i) * test_sumX(target, i)  ) / test_sumI[ target ] );
-
-
-
-        /*if( isnan( mu(target, i) ) || isnan( sigma2(target, i) ) )  {
-            cout << " ---=== " << target << " ===--- test_sumX( target, i ) " << test_sumX( target, i ) << " test_sumI[ target ] " << test_sumI[ target ] << " test_sumX2(target, i) " << test_sumX2(target, i) << endl;
-        }*/
-
-
-
 
         if(sigma2( target, i )<sigma2min) {
             sigma2( target, i ) = sigma2min;
@@ -451,10 +706,9 @@ void NnlmOutputLayer::applyTestVars()
 }
 
 
-/*
 //! this version allows to obtain the input gradient as well
 //! N.B. THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
-void NnlmOutputLayer::bpropUpdate(const Vec& input, const Vec& output,
+/*void NnlmOutputLayer::bpropUpdate(const Vec& input, const Vec& output,
                                Vec& input_gradient,
                                const Vec& output_gradient)
 {
@@ -466,6 +720,7 @@ void NnlmOutputLayer::bpropUpdate(const Vec& input, const Vec& output,
 //! Note that this method is necessarily called from build().
 void NnlmOutputLayer::forget()
 {
+    cout << "NnlmOutputLayer::forget()" << endl;
     resetParameters();
 }
 
@@ -519,6 +774,12 @@ void NnlmOutputLayer::bbpropUpdate(const Vec& input, const Vec& output,
 {
 }
 */
+
+
+
+
+
+
 
 
 } // end of namespace PLearn
