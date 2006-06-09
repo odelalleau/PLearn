@@ -144,6 +144,9 @@ void KNNImputationVMatrix::build_()
     Vec imputed_row(source->inputsize());
     sample_index_to_imputed_index.resize(full_source->length());
     sample_index_to_imputed_index.fill(-1);
+    ProgressBar* pb = 0;
+    if (report_progress)
+        pb = new ProgressBar("Imputing missing values", full_source->length());
     for (int i = 0; i < full_source->length(); i++) {
         source->getExample(i, input, target, weight);
         if (input.hasMissing()) {
@@ -176,7 +179,11 @@ void KNNImputationVMatrix::build_()
             imputed_input.appendRow(imputed_row);
             sample_index_to_imputed_index[i] = imputed_input.length() - 1;
         }
+        if (pb)
+            pb->update(i + 1);
     }
+    if (pb)
+        delete pb;
 
     // Obtain meta information from source.
     setMetaInfoFromSource();
