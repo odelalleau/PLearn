@@ -1,0 +1,61 @@
+*1 ->GaussMix(
+L = 1 ;
+type = "general" ;
+n_eigen = -1 ;
+f_eigen = 0 ;
+efficient_missing = 1 ;
+efficient_k_median = 1 ;
+max_samples_in_cluster = -1 ;
+min_samples_in_cluster = 1 ;
+efficient_k_median_iter = 100 ;
+impute_missing = 1 ;
+kmeans_iterations = 5 ;
+alpha_min = 9.99999999999999955e-07 ;
+sigma_min = 9.99999999999999955e-07 ;
+epsilon = 9.99999999999999955e-07 ;
+alpha = 1 [ 1 ] ;
+center = 1  4  [ 
+-0.0301705003251627572 	-0.0474510403986198523 	0.628849390536124653 	7.03250210948744403 	
+]
+;
+sigma = TVec(0 0 *0 )
+;
+diags = 0  0  [ 
+]
+;
+eigenvalues = 1  4  [ 
+13147.8384073578636 	442.068537825659462 	0.284466547263005631 	0.0152413676427337764 	
+]
+;
+eigenvectors = 1 [ 4  4  [ 
+0.000827422761309395808 	0.00897419255431032917 	0.909578695163866024 	0.415433961711812627 	
+-0.0239512691719906377 	0.00442809380444125766 	0.415309456820849077 	-0.909354047533457277 	
+0.987640311865315867 	-0.154833643746558336 	0.0106360391027517358 	-0.0219096283617366376 	
+0.154894371928762625 	0.987889871705050382 	-0.00845736669274983928 	-0.00313175286342002148 	
+]
+] ;
+n_eigen_computed = 4 ;
+D = 4 ;
+outputs_def = "l" ;
+predictor_size = 0 ;
+predicted_size = -1 ;
+predictor_part = TVec(0 0 *0 )
+;
+n_curve_points = -1 ;
+lower_bound = 0 ;
+upper_bound = 0 ;
+n_predictor = 0 ;
+n_predicted = 4 ;
+expdir = "" ;
+seed = 123456 ;
+stage = 10 ;
+n_examples = 150 ;
+inputsize = 4 ;
+targetsize = 0 ;
+weightsize = 0 ;
+forget_when_training_set_changes = 0 ;
+nstages = 10 ;
+report_progress = 1 ;
+verbosity = 1 ;
+nservers = 0 ;
+save_trainingset_prefix = ""  )

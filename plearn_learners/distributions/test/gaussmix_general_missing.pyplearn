@@ -13,6 +13,7 @@ def main():
     l_seed = [ 123456 ]
     l_nstages = [ 10 ]
     l_efficient_missing = [ 0, 1 ]
+    l_impute_missing = [ 0, 1 ]
 
     for L in l_L:
         for type in l_type:
@@ -22,18 +23,20 @@ def main():
                         for seed in l_seed:
                             for nstages in l_nstages:
                                 for efficient_missing in l_efficient_missing:
-                                    distr.append(
-                                        pl.GaussMix(
-                                            L                 = L,
-                                            type              = type,
-                                            n_eigen           = n_eigen,
-                                            kmeans_iterations = kmeans_iterations,
-                                            predictor_size    = predictor_size,
-                                            seed              = seed,
-                                            nstages           = nstages,
-                                            efficient_missing = efficient_missing
+                                    for impute_missing in l_impute_missing:
+                                        distr.append(
+                                            pl.GaussMix(
+                                                L                 = L,
+                                                type              = type,
+                                                n_eigen           = n_eigen,
+                                                kmeans_iterations = kmeans_iterations,
+                                                predictor_size    = predictor_size,
+                                                seed              = seed,
+                                                nstages           = nstages,
+                                                efficient_missing = efficient_missing,
+                                                impute_missing    = impute_missing
+                                            )
                                         )
-                                    )
 
     ptesters = []
     for gm in distr:
@@ -50,9 +53,10 @@ def main():
 
         ptesters.append(
             pl.PTester(
-                expdir = "expdir_%s_%s_%s_%s_%s_%s_%s_%s" \
+                expdir = "expdir_%s_%s_%s_%s_%s_%s_%s_%s_%s" \
                         % ( gm.L, gm.type, gm.n_eigen, gm.kmeans_iterations, \
-                            gm.predictor_size, gm.seed, gm.nstages, gm.efficient_missing ),
+                            gm.predictor_size, gm.seed, gm.nstages, \
+                            gm.efficient_missing, gm.impute_missing),
                 dataset = dataset,
                 splitter = pl.TrainTestSplitter( test_fraction = 0.25 ),
                 learner = gm,
