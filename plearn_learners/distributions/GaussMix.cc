@@ -1457,6 +1457,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
 
                     if (n > 0) {
                         if (efficient_missing == 1) {
+                            tmp_vec1.resize(y_centered.length());
                             choleskyLeftSolve(*the_L, y_centered, tmp_vec1);
                             log_likelihood -= 0.5 * pownorm(tmp_vec1);
                         } else {
