@@ -5237,7 +5237,7 @@ void  choleskyLeftSolve(const TMat<T>& L, const TVec<T>& b, const TVec<T>& y)
         PLERROR("choleskySolve: matrix L (%d x %d) is not square!",
                 n, L.width());
     if (b.length()!=n || y.length()!=n)
-        PLERROR("choleskySolve: RHS vector b(%d) or unknown y(%d) incompatiable with L(%d,%d)",
+        PLERROR("choleskySolve: RHS vector b(%d) or unknown y(%d) incompatible with L(%d,%d)",
                 b.length(),y.length(),n,n);
 #endif
 
@@ -5273,7 +5273,7 @@ void  choleskyRightSolve(const TMat<T>& L, TVec<T>& y, TVec<T>& x)
         PLERROR("choleskySolve: matrix L (%d x %d) is not square!",
                 n, L.width());
     if (x.length()!=n || y.length()!=n)
-        PLERROR("choleskySolve: RHS vector y(%d) or unknown x(%d) incompatiable with L(%d,%d)",
+        PLERROR("choleskySolve: RHS vector y(%d) or unknown x(%d) incompatible with L(%d,%d)",
                 y.length(),x.length(),n,n);
 #endif
 
