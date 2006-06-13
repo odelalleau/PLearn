@@ -64,6 +64,7 @@ StackedLearner::StackedLearner()
 PLEARN_IMPLEMENT_OBJECT(
     StackedLearner, 
     "Implements stacking, that combines two levels of learner, the 2nd level using the 1st outputs as inputs",
+    "NOTE: If you need a simple mechanism for chaining multiple learners, consider using ChainedLearners instead.\n"
     "Stacking is a generic strategy in which two levels (or more, recursively) of learners\n"
     "are combined. The lower level may have one or more learners, and they may be trained\n"
     "on the same or different data from the upper level single learner. A shared learner can\n"
