@@ -49,6 +49,8 @@
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/misc/PLearnService.h>
 #include <plearn/misc/RemotePLearnServer.h>
+// #include <plearn/vmat/MemoryVMatrix.h>
+#include <plearn/vmat/PLearnerOutputVMatrix.h>
 
 namespace PLearn {
 using namespace std;
@@ -622,6 +624,53 @@ void PLearner::use(VMat testset, VMat outputs) const
     }
 }
 
+VMat PLearner::processDataSet(VMat dataset) const
+{
+    // new code using PLearnerOutputVMatrix
+    return new PLearnerOutputVMatrix(dataset, this);
+
+    /* Old code for direct in-memory computation
+
+    Vec input(dataset->inputsize());
+    int nout = outputsize();
+    int targetsize = dataset->targetsize();
+    int weightsize = dataset->weightsize();
+    int extrasize  = dataset->extrasize(); 
+    Vec processed_row(nout+targetsize+weightsize+extrasize);
+    Vec output = processed_row.subVec(0,nout);
+    Vec target = processed_row.subVec(nout,targetsize);
+    Vec weight = processed_row.subVec(nout+targetsize,weightsize);
+    Vec extra  = processed_row.subVec(nout+targetsize+weightsize,extrasize);
+
+    real w;
+    int l = dataset.length();
+    
+    // For now we cache this in memory. A future implementation may offer 
+    // other options, such as caching in file, or on-the-fly computation
+    // vmatrix.
+    Mat processed_data(l,nout+targetsize+weightsize+extrasize);
+
+    for(int i=0; i<l; i++)
+    {
+        dataset->getExample(i, input, target, w);
+        if(weightsize==1)
+            weight[0] = w;
+        dataset->getExtra(i,extra);
+        computeOutput(input, output);
+        processed_data(i) << processed_row;
+    }
+
+    VMat processed_vmat = new MemoryVMatrix(processed_data);
+    processed_vmat->defineSizes(nout, targetsize, weightsize, extrasize);
+    TVec<string> fieldnames = concat(getOutputNames(),  
+                                     dataset->targetFieldNames(),
+                                     dataset->weightFieldNames(),
+                                     dataset->extraFieldNames() );
+    processed_vmat->declareFieldNames(fieldnames);
+    return processed_vmat;
+    */
+
+}
 
 
 TVec<string> PLearner::getOutputNames() const

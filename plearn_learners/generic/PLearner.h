@@ -494,6 +494,13 @@ public:
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
                       VMat testoutputs=0, VMat testcosts=0) const;
 
+    /**
+     * Process a full dataset (possibly containing input,target,weight,extra
+     * parts). Returns processed view of that dataset. The default version
+     * uses computeOutput to process the input part, and simply passes on
+     * the other parts unchanged.
+     */
+    virtual VMat processDataSet(VMat dataset) const;
 
     //#####  Cost Names  ######################################################
 
