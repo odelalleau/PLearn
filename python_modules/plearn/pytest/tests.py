@@ -364,11 +364,21 @@ class Test(PyTestObject):
     _restrict_to = None
     _restrict_to_category = None
 
+    def missingExpectedTests(cls):
+        missing = []
+        if cls._restrict_to is not None:
+            for test_name in cls._restrict_to:
+                if test_name not in cls._instances_map:
+                    missing.append(test_name)
+        return missing
+    missingExpectedTests = classmethod(missingExpectedTests)
+
     def restrictTo(cls, test_name):        
         assert cls._restrict_to is None
         assert cls._restrict_to_category is None        
         logging.debug("\nRestriction to name %s"%test_name)
         cls._restrict_to = test_name.split(',')
+        return cls._restrict_to[:]
     restrictTo = classmethod(restrictTo)
     
     def restrictToCategory(cls, category):
@@ -376,6 +386,7 @@ class Test(PyTestObject):
         assert cls._restrict_to_category is None
         logging.debug("\nRestriction to category %s"%category)
         cls._restrict_to_category = category.split(',')
+        return cls._restrict_to_category[:]
     restrictToCategory = classmethod(restrictToCategory)
 
     #######  Instances' Methods  ##################################################

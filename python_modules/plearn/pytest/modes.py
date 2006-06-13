@@ -141,14 +141,51 @@ class PyTestMode(Mode):
                     os.path.walk( target, self.build_tests, (options, ignored_directories) )
                 else:
                     self.build_tests( (options, ignored_directories), target, os.listdir(target) )
-
+                    
             if len(ignored_directories) > 0:
                 ignored = [ "The following directories (and their subdirectories) were ignored", "" ]
                 ignored.extend( [ '    '+ign for ign in ignored_directories ] )
                 logging.warning('\n'.join(['---']+ignored+['---']))
 
+            # Take the opportunity to update cached test list
             if hasattr(options, 'all') and options.all:
                 core.updateCachedTestList(Test._instances_map)
+
+            # Were all tests provided through --test-name found?
+            self.checkForExpectedTests( )
+
+    def checkForExpectedTests(self):
+        """Assert that all tests provided through --test-name were found."""
+        missing_expected_tests = Test.missingExpectedTests()
+        if not missing_expected_tests:
+            return
+
+        # Some tests were not found!
+        msg_pair = (toolkit.plural(len(missing_expected_tests)),
+                    ','.join(missing_expected_tests))
+        logging.warning('\nSome test%s (%s) were not found!!!'%msg_pair)
+        if hasattr(self.options, 'all') and self.options.all:
+            raise PyTestUsageError(
+                "Asked for test%s named %s which can't be found." % msg_pair)
+            
+        # Try to "fast-locate" missing tests
+        logging.warning('Trying to "fast-locate" missing tests...')
+        cached_test_list = core.getCachedTestList()
+        while missing_expected_tests:
+            test_name = missing_expected_tests.pop()
+            if test_name in cached_test_list:
+                target = cached_test_list[test_name]
+                self.build_tests( (self.options, []), target, os.listdir(target) )
+
+            # If you can't fast locate, use brute force
+            else:
+                logging.warning('Must use brute force since %s was not in cache...'%test_name)
+                self.options.all = True
+                Test._instances_map = {} # To avoid DuplicateName errors
+                for target in plbranches:
+                    os.path.walk( target, self.build_tests, (self.options, []) )
+                # Can't enter an infinite loop since we now have 'self.options.all == True'
+                return self.checkForExpectedTests()
 
     def restrictions(self):
         """Default --test-name and --category management."""
@@ -686,7 +723,6 @@ class results(ResultsBasedMode):
 
 class run(ResultsBasedMode):    
     RoutineType = RunTestRoutine
-
     
 if __name__ == '__main__':
     import os, sys
