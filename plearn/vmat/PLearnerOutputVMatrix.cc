@@ -77,6 +77,24 @@ PLearnerOutputVMatrix::PLearnerOutputVMatrix(VMat source_,
         build_();
 }
 
+PLearnerOutputVMatrix::PLearnerOutputVMatrix(VMat source_,
+                                             PP<PLearner> learner,
+                                             bool put_raw_input_,
+                                             bool train_learners_,
+                                             bool compute_output_once_,
+                                             bool put_non_input_,
+                                             bool call_build_)
+    : inherited(source_, call_build_),
+      put_raw_input(put_raw_input_),
+      put_non_input(put_non_input_),
+      train_learners(train_learners_),
+      compute_output_once(compute_output_once_)
+{
+    learners.resize(1);
+    learners[0] = learner;
+    if( call_build_ )
+        build_();
+}
 
 PLEARN_IMPLEMENT_OBJECT(PLearnerOutputVMatrix,
                         "Use a PLearner to transform the input part of a"
@@ -292,6 +310,7 @@ void PLearnerOutputVMatrix::build_()
         if (put_non_input) {
             targetsize_ = source->targetsize();
             weightsize_ = source->weightsize();
+            extrasize_  = source->extrasize();
             width_ = inputsize_ + targetsize_ + weightsize_;
         }
         else {
@@ -302,21 +321,39 @@ void PLearnerOutputVMatrix::build_()
         length_ = source->length();
 
         // Set field info.
-        if (fieldinfos_source) {
+        if (fieldinfos_source) 
             setFieldInfos(fieldinfos_source->getFieldInfos());
-        } else {
+        else
+        {
+            TVec<string> fieldnames;
+            for(int k=0; k<learners.length(); k++)
+                fieldnames.append(learners[k]->getOutputNames());
+            if(put_raw_input)
+                fieldnames.append(source->inputFieldNames());
+            if(put_non_input)
+            {
+                fieldnames.append(source->targetFieldNames());
+                fieldnames.append(source->weightFieldNames());
+                fieldnames.append(source->extraFieldNames());
+            }
+            declareFieldNames(fieldnames);
+        }
+        /* OLD CODE
+        else {
             fieldinfos.resize(width_);
             if (put_non_input &&
                 source->getFieldInfos().size() >= source->inputsize()
                                                     + source->targetsize())
             {
                 // We can retrieve the information for the target columns.
-                for (int i = 0; i < source->targetsize(); i++) {
+                for (int i = 0; i < source->targetsize(); i++) 
+                {
                     fieldinfos[i + this->inputsize()] =
                         source->getFieldInfos()[i + source->inputsize()];
                 }
             }
         }
+        */
     }
 }
 

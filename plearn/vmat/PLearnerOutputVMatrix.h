@@ -109,6 +109,15 @@ public:
                           bool put_non_input_ = true,
                           bool call_build_ = true);
 
+    // same but for a single learner
+    PLearnerOutputVMatrix(VMat source_,
+                          PP<PLearner>  learner,
+                          bool put_raw_input_=false,
+                          bool train_learners_ = false,
+                          bool compute_output_once_ = false,
+                          bool put_non_input_ = true,
+                          bool call_build_ = true);
+
     // ******************
     // * Object methods *
     // ******************
