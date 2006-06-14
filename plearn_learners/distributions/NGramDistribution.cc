@@ -115,6 +115,9 @@ void NGramDistribution::declareOptions(OptionList& ol)
     declareOption(ol, "tree", &NGramDistribution::tree, OptionBase::buildoption,
                   "NGramTree of the frequencies");
 
+    declareOption(ol, "voc_size", &NGramDistribution::voc_size, OptionBase::learntoption,
+                  "Vocabulary size");
+
     // Now call the parent class' declareOptions().
     inherited::declareOptions(ol);
 
