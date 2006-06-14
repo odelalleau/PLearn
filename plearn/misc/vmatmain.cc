@@ -1573,8 +1573,9 @@ int vmatmain(int argc, char** argv)
             "       Will create <dataset>.field#.dict, where # is the\n"
             "       field (column) number, starting at 0. Those files contain the plearn\n"
             "       scripts of the Dictionary objets for each field.\n"
-            "   or: vmat catstr <dataset>\n"
-            "       Will output the content of <dataset>, using its string mappings\n\n"
+            "   or: vmat catstr <dataset> [separator]\n"
+            "       Will output the content of <dataset>, using its string mappings.\n"
+            "       A column separator can be provided. By default, \"\t\" is used.\n\n"
             "<dataset> is a parameter understandable by getDataSet. This includes \n"
             "all matrix file formats. Type 'vmat help dataset' to see what other\n"
             "<dataset> strings are available." << endl;
@@ -1964,21 +1965,25 @@ int vmatmain(int argc, char** argv)
     }
     else if(command=="catstr")
     {
-        if(argc!=3)
-            PLERROR("'vmat cat' must be used that way : vmat cat FILE");
+        if(argc!=3 && argc != 4)
+            PLERROR("'vmat catstr' must be used that way : vmat cat FILE [separator]");
         string dbname = argv[2];
+        string sep = "\t";
+        if(argc==4)
+            sep = argv[3];
         VMat vm = getDataSet(dbname);
         Vec tmp(vm.width());
-        TVec<string> tmpstr(vm.width());
+        string out = "";
         for(int i=0;i<vm.length();i++)
         {
             vm->getRow(i,tmp);
-            for(int j=0; j<tmpstr.length(); j++)
+            for(int j=0; j<vm.width(); j++)
             {
-                tmpstr[j] = vm->getValString(j,tmp[j]);
-                if(tmpstr[j] == "") tmpstr[j] = tostring(tmp[j]);
+                out = vm->getValString(j,tmp[j]);
+                if(out == "") out = tostring(tmp[j]);
+                cout << out << sep;
             }
-            pout<<tmpstr<<endl;
+            cout << endl;
         }
     }
     else if(command=="sascat")
