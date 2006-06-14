@@ -45,6 +45,7 @@
 #define DeepFeatureExtractorNNet_INC
 
 #include <plearn_learners/generic/PLearner.h>
+#include <plearn/vmat/AppendNeighborsVMatrix.h>
 #include <plearn/opt/Optimizer.h>
 #include <plearn/var/VarArray.h>
 
@@ -124,6 +125,21 @@ public:
     //! Indication that the supervised phase
     //! should only train the last layer's parameters.
     bool dont_train_all_parameters;
+    //! Indication that autoassociator regularisation cost should be used
+    bool use_autoassociator_regularisation;
+    //! Weight of autoassociator regularisation terms
+    real autoassociator_regularisation_weight;
+    //! Number of nearest neighbors 
+    int k_nearest_neighbors_reconstruction;
+    //! Weight of supervised signal used in addition
+    //! to unsupervised signal in unsupervised phase.
+    //! If <= 0, then supervised signal ignored.
+    real supervised_signal_weight;
+    //! Indication that the neighborhood of a point should
+    //! be weighted based on the neighbor's local NLL
+    bool use_neighborhood_weighting;
+    //! Decay for neighborhood weighting computation
+    real neighborhood_exponential_decay;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -209,8 +225,12 @@ protected:
     Var input;
     //! Output variable
     Var output;
+    //! Feature vector output
+    Var feature_vector;
     //! Hidden representation variable
     Var hidden_representation;
+    //! Neighbor indices
+    Var neighbor_indices;
     //! Target variable
     Var target;
     //! Unsupervised target variable
@@ -227,6 +247,10 @@ protected:
     Var test_costs;
     //! Fake supervised data;
     VMat sup_train_set;
+    //! Unsupervised data when using nearest neighbors
+    VMat unsup_train_set;
+    //! Unsupervised data when using nearest neighbors
+    PP<AppendNeighborsVMatrix> knn_train_set;
 
     //! Function: input -> output
     mutable Func f; 
@@ -234,8 +258,15 @@ protected:
     mutable Func test_costf; 
     //! Function: output & target -> cost
     mutable Func output_and_target_to_cost; 
+    //! Function from input space to learned function space
+    mutable Func to_feature_vector;
+    //! Different training_costs 
+    //! used for autoassociator regularisation 
+    TVec<VarArray> autoassociator_params;
+    //! Different training_costs 
+    //! used for autoassociator regularisation 
+    VarArray autoassociator_training_costs;
 
-    
 protected:
     //#####  Protected Member Functions  ######################################
     
@@ -257,7 +288,7 @@ protected:
     void buildTargetAndWeight();
 
     //! Build the costs variable from other variables.
-    void buildCosts(const Var& output, const Var& target, const Var& unsupervised_target, const Var& before_transfer_func);
+    void buildCosts(const Var& output, const Var& target, const Var& unsupervised_target, const Var& before_transfer_func, const Var& output_sup);
 
     //! Build the various functions used in the network.
     void buildFuncs(const Var& the_input, const Var& the_output, const Var& the_target, const Var& the_sampleweight);

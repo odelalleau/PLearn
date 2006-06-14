@@ -56,11 +56,13 @@
 #include <plearn/var/MarginPerceptronCostVariable.h>
 #include <plearn/var/MulticlassLossVariable.h>
 #include <plearn/var/NegCrossEntropySigmoidVariable.h>
+#include "NLLNeighborhoodWeightsVariable.h"
 #include <plearn/var/OneHotSquaredLoss.h>
 #include <plearn/var/PowVariable.h>
 #include <plearn/var/SigmoidVariable.h>
 #include <plearn/var/SoftmaxVariable.h>
 #include <plearn/var/SoftplusVariable.h>
+#include <plearn/var/SubMatVariable.h>
 #include <plearn/var/SumVariable.h>
 #include <plearn/var/SumAbsVariable.h>
 #include <plearn/var/SumOfVariable.h>
@@ -74,6 +76,7 @@
 #include <plearn/display/DisplayUtils.h>
 
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
+#include <plearn/vmat/GetInputVMatrix.h>
 #include <plearn/math/random.h>
 
 namespace PLearn {
@@ -107,6 +110,12 @@ DeepFeatureExtractorNNet::DeepFeatureExtractorNNet()
       relative_minimum_improvement(-1),
       input_reconstruction_error("cross_entropy"),
       dont_train_all_parameters(false),
+      use_autoassociator_regularisation(false),
+      autoassociator_regularisation_weight(1),
+      k_nearest_neighbors_reconstruction(-1),      
+      supervised_signal_weight(-1),
+      use_neighborhood_weighting(false),
+      neighborhood_exponential_decay(0.1),
       nhidden_schedule_current_position(-1)
 {
     random_gen = new PRandom();
@@ -248,6 +257,14 @@ declareOption(ol, "cost_funcs", &DeepFeatureExtractorNNet::cost_funcs, OptionBas
                   OptionBase::buildoption, 
                   "Indication that the supervised phase\n" 
                   "should only train the last layer's parameters.");
+    declareOption(ol, "use_autoassociator_regularisation", 
+                  &DeepFeatureExtractorNNet::use_autoassociator_regularisation,
+                  OptionBase::buildoption, 
+                  "Indication that autoassociator regularisation cost should be used.\n" );
+    declareOption(ol, "autoassociator_regularisation_weight", 
+                  &DeepFeatureExtractorNNet::autoassociator_regularisation_weight,
+                  OptionBase::buildoption, 
+                  "Weight of autoassociator regularisation terms.\n" );
      declareOption(ol, "input_reconstruction_error", 
                   &DeepFeatureExtractorNNet::input_reconstruction_error,
                   OptionBase::buildoption, 
@@ -256,6 +273,26 @@ declareOption(ol, "cost_funcs", &DeepFeatureExtractorNNet::cost_funcs, OptionBas
                    "Choose among:\n"
                    "  - \"cross_entropy\" (default)\n"
                    "  - \"mse\" \n");
+     declareOption(ol, "supervised_signal_weight", 
+                  &DeepFeatureExtractorNNet::supervised_signal_weight,
+                  OptionBase::buildoption, 
+                   "Weight of supervised signal used in addition\n"
+                   "to unsupervised signal in unsupervised phase.\n"
+                   "If <= 0, then supervised signal ignored.\n");
+     declareOption(ol, "k_nearest_neighbors_reconstruction", 
+                  &DeepFeatureExtractorNNet::k_nearest_neighbors_reconstruction,
+                  OptionBase::buildoption, 
+                   "Number of nearest neighbors.");
+     declareOption(ol, "use_neighborhood_weighting", 
+                   &DeepFeatureExtractorNNet::use_neighborhood_weighting,
+                   OptionBase::buildoption, 
+                   "Indication that the neighborhood of a point should\n"
+                   "weighted based on their local likelihood. Used with\n"
+                   "k_nearest_neighbors_reconstruction >= 0");
+     declareOption(ol, "neighborhood_exponential_decay", 
+                   &DeepFeatureExtractorNNet::neighborhood_exponential_decay,
+                   OptionBase::buildoption, 
+                   "Decay for neighborhood weighting computation\n");
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -295,17 +332,35 @@ void DeepFeatureExtractorNNet::build_()
                 biases.push_back(b);
             }
             if (seed_ != 0) random_gen->manual_seed(seed_);
+            if(use_autoassociator_regularisation) 
+            {
+                autoassociator_training_costs.resize(nhidden_schedule.length());
+                autoassociator_params.resize(nhidden_schedule.length());
+            }
         }
         else            
             output = hidden_representation;
+
+        feature_vector = hidden_representation;
 
         Var before_transfer_function;
         params_to_train.resize(0);
 
         if(nhidden_schedule_current_position == -1 || always_reconstruct_input)
-            unsupervised_target = input;
+        {
+            if(k_nearest_neighbors_reconstruction>=0)
+                unsupervised_target = Var((k_nearest_neighbors_reconstruction+1)*inputsize());
+            else
+                unsupervised_target = input;
+            
+        }
         else 
-            unsupervised_target = hidden_representation;
+        {
+            if(k_nearest_neighbors_reconstruction>=0)
+                unsupervised_target = Var((k_nearest_neighbors_reconstruction+1)*nhidden_schedule[nhidden_schedule_current_position]);
+            else
+                unsupervised_target = hidden_representation;
+        }
                 
         int n_added_layers = 0;
         if((nhidden_schedule_position < nhidden_schedule.length() && !always_use_supervised_target) && use_same_input_and_output_weights)
@@ -349,21 +404,23 @@ void DeepFeatureExtractorNNet::build_()
             }
             output = hiddenLayer(output,w,"sigmoid",before_transfer_function,use_activations_with_cubed_input);
             hidden_representation = output;
-        }
+        }        
 
         reconstruction_weights.resize(0);
-        if(always_use_supervised_target || nhidden_schedule_position >= nhidden_schedule.length())
+        Var output_sup;
+        if(nhidden_schedule_position < nhidden_schedule.length() && supervised_signal_weight > 0) output_sup = output;
+        if(output_sup || always_use_supervised_target || nhidden_schedule_position >= nhidden_schedule.length())
         {
             if(noutputs<=0) PLERROR("In DeepFeatureExtractorNNet::build_(): building the output layer but noutputs<=0");
-            if(!always_use_supervised_target || nhidden_schedule_position >= nhidden_schedule.length())
+            if(nhidden_schedule_position >= nhidden_schedule.length())
                 nhidden_schedule_current_position++;
-            n_added_layers++;
+            if(!output_sup)n_added_layers++;
             Var w = new SourceVariable(output->size()+1,noutputs);
             weights.push_back(w);
             //fillWeights(w,true,nhidden_schedule_current_position == 0 ? 0 : -0.5);
             fillWeights(w,true,0);
 
-            if(!always_use_supervised_target || nhidden_schedule_position >= nhidden_schedule.length())
+            if(nhidden_schedule_position >= nhidden_schedule.length())
             {
                 params_to_train.resize(0);
                 if(!dont_train_all_parameters)
@@ -375,10 +432,14 @@ void DeepFeatureExtractorNNet::build_()
             }
 
             params_to_train.push_back(w);
-            output = hiddenLayer(output,w,output_transfer_func,before_transfer_function);
+            if(output_sup)
+                output_sup = hiddenLayer(output_sup,w,output_transfer_func,before_transfer_function);
+            else
+                output = hiddenLayer(output,w,output_transfer_func,before_transfer_function);
             
         }
-        else
+
+        if(!(always_use_supervised_target || nhidden_schedule_position >= nhidden_schedule.length()))
         {
             int it = 0;
             while((!always_reconstruct_input && n_added_layers > 0) || (always_reconstruct_input && it<weights.size()))
@@ -388,7 +449,7 @@ void DeepFeatureExtractorNNet::build_()
                 Var rw;
                 if(use_same_input_and_output_weights)
                 {
-                    rw = vconcat(biases[biases.size()-it-1] & transpose(weights[weights.size()-it]));
+                    rw = vconcat(biases[biases.size()-it-1] & transpose(weights[weights.size()-it-(output_sup ? 1 : 0)]));
                 }
                 else
                 {
@@ -436,7 +497,7 @@ void DeepFeatureExtractorNNet::build_()
         else
             PLERROR("penalty_type \"%s\" not supported", penalty_type.c_str());
 
-        buildCosts(output, target, unsupervised_target, before_transfer_function);
+        buildCosts(output, target, unsupervised_target, before_transfer_function, output_sup);
 
         
         // Shared values hack...
@@ -487,13 +548,19 @@ void DeepFeatureExtractorNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(costs, copies);
     deepCopyField(penalties, copies);
     deepCopyField(sup_train_set, copies);
+    deepCopyField(unsup_train_set, copies);
+    deepCopyField(knn_train_set, copies);
 
     deepCopyField(f, copies);
     deepCopyField(test_costf, copies);
     deepCopyField(output_and_target_to_cost, copies);
+    deepCopyField(to_feature_vector, copies);
+    deepCopyField(autoassociator_params, copies);
+    deepCopyField(autoassociator_training_costs, copies);
 
     varDeepCopyField(input, copies);
     varDeepCopyField(output, copies);
+    varDeepCopyField(feature_vector, copies);
     varDeepCopyField(hidden_representation, copies);
     varDeepCopyField(target, copies);
     varDeepCopyField(unsupervised_target, copies);
@@ -538,13 +605,78 @@ void DeepFeatureExtractorNNet::train()
     if(!train_stats)
         PLERROR("In DeepFeatureExtractor::train, you did not setTrainStatsCollector");
 
+    if(k_nearest_neighbors_reconstruction>=0 && nhidden_schedule_current_position < nhidden_schedule.length())
+    {
+        if(relative_minimum_improvement <= 0)
+            PLERROR("In DeepFeatureExtractorNNEt::build_(): relative_minimum_improvement need to be > 0 when using nearest neighbors reconstruction");
+        if(nhidden_schedule_current_position==0) 
+        {
+            cout << "Computing nearest neighbors" << endl;
+            //knn_train_set = append_neighbors(train_set,k_nearest_neighbors_reconstruction,use_neighborhood_weighting);
+            knn_train_set =  new AppendNeighborsVMatrix();
+            knn_train_set->source=train_set;
+            knn_train_set->n_neighbors=k_nearest_neighbors_reconstruction;
+            knn_train_set->append_neighbor_indices = use_neighborhood_weighting;
+            knn_train_set->build();
+            unsup_train_set = (VMatrix*) knn_train_set;
+            cout << "Done" << endl;
+
+            // Append input
+            unsup_train_set = hconcat(new GetInputVMatrix(train_set),unsup_train_set);
+            unsup_train_set->defineSizes(train_set->inputsize()*(k_nearest_neighbors_reconstruction+2)+(use_neighborhood_weighting?k_nearest_neighbors_reconstruction+1:0),train_set->targetsize(),train_set->weightsize());
+            
+        }
+        else
+        {
+            cout << "Computing nearest neighbors and performing transformation to hidden representation" << endl;
+            knn_train_set->transformation =  to_feature_vector;
+            knn_train_set->defineSizes(-1,-1,-1);
+            knn_train_set->build();
+            unsup_train_set = (VMatrix *)knn_train_set;
+            cout << "Done" << endl;
+
+            int feat_size = nhidden_schedule[nhidden_schedule_current_position-1];
+            // Append input
+            unsup_train_set = hconcat(new GetInputVMatrix(train_set),unsup_train_set);
+            unsup_train_set->defineSizes(train_set->inputsize()+feat_size*(k_nearest_neighbors_reconstruction+1)+(use_neighborhood_weighting?k_nearest_neighbors_reconstruction+1:0),train_set->targetsize(),train_set->weightsize());
+            
+            //
+            //Vec feat_row;
+            //Vec row(knn_train_set->width());
+            //int feat_size = nhidden_schedule[nhidden_schedule_current_position-1];
+            //Mat feat_train_set( knn_train_set->length(),feat_size*(k_nearest_neighbors_reconstruction+1)+knn_train_set->targetsize()+knn_train_set->weightsize());
+            //for(int t=0; t<feat_train_set.length(); t++)
+            //{
+            //    knn_train_set->getRow(t,row);
+            //    feat_row = feat_train_set(t);
+            //    for(int n=0; n<k_nearest_neighbors_reconstruction+1; n++)
+            //    {
+            //        to_feature_vector->fprop(row.subVec(n*inputsize(),inputsize()),feat_row.subVec(n*feat_size,feat_size));
+            //    }
+            //    feat_row.subVec((k_nearest_neighbors_reconstruction+1)*feat_size,knn_train_set->targetsize()+knn_train_set->weightsize()) << row.subVec(knn_train_set->inputsize(),knn_train_set->targetsize()+knn_train_set->weightsize());
+            //}
+            //cout << "Constructing VMatrix" << endl;
+            //unsup_train_set = VMat(feat_train_set);
+            //unsup_train_set->defineSizes(feat_size*(k_nearest_neighbors_reconstruction+1),knn_train_set->targetsize()+knn_train_set->weightsize());
+            //cout << "Done" << endl;
+            //
+            //// Append input
+            //unsup_train_set = hconcat(new GetInputVMatrix(train_set),unsup_train_set);
+            //unsup_train_set->defineSizes(train_set->inputsize()+feat_size*(k_nearest_neighbors_reconstruction+1),train_set->targetsize(),train_set->weightsize());
+
+        }
+
+    }
+
+
     int l;
     if(sup_train_set && (use_only_supervised_part || nhidden_schedule_current_position >= nhidden_schedule.length()))
         l = sup_train_set->length();  
     else
-        l = train_set->length();  
-
-
+        if(unsup_train_set && nhidden_schedule_current_position < nhidden_schedule.length())
+            l = unsup_train_set->length();  
+        else
+            l = train_set->length();
 
     if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
         build();
@@ -560,19 +692,29 @@ void DeepFeatureExtractorNNet::train()
     if(sup_train_set && (use_only_supervised_part || nhidden_schedule_current_position >= nhidden_schedule.length()))
         totalcost = meanOf(sup_train_set,paramf,nsamples);
     else
-        totalcost = meanOf(train_set, paramf, nsamples);
+        if(unsup_train_set && nhidden_schedule_current_position < nhidden_schedule.length())
+            totalcost = meanOf(unsup_train_set, paramf, nsamples);
+        else            
+            totalcost = meanOf(train_set, paramf, nsamples);
 
     PP<Optimizer> this_optimizer;
 
     if(optimizer_supervised && nhidden_schedule_current_position >= nhidden_schedule.length())
     {
-        optimizer_supervised->setToOptimize(params_to_train, totalcost);  
+        if(use_autoassociator_regularisation)
+            optimizer_supervised->setToOptimize(params_to_train, totalcost, autoassociator_training_costs, autoassociator_params, autoassociator_regularisation_weight);
+        else
+            optimizer_supervised->setToOptimize(params_to_train, totalcost);
         optimizer_supervised->build();
         this_optimizer = optimizer_supervised;
     }
     else if(optimizer)
     {
-        optimizer->setToOptimize(params_to_train, totalcost);  
+        if(nhidden_schedule_current_position >= nhidden_schedule.length() && use_autoassociator_regularisation)
+            optimizer->setToOptimize(params_to_train, totalcost, autoassociator_training_costs, autoassociator_params, autoassociator_regularisation_weight);
+        else
+            optimizer->setToOptimize(params_to_train, totalcost);
+
         optimizer->build();
         this_optimizer = optimizer;
     }
@@ -631,6 +773,7 @@ void DeepFeatureExtractorNNet::train()
     if(relative_minimum_improvement >= 0 && nhidden_schedule_current_position < nhidden_schedule.length())
     {
         nhidden_schedule_position++;
+        totalcost = 0;
         build();
         train();
     }
@@ -688,7 +831,7 @@ void DeepFeatureExtractorNNet::buildTargetAndWeight() {
     }
 }
 
-void DeepFeatureExtractorNNet::buildCosts(const Var& the_output, const Var& the_target, const Var& the_unsupervised_target, const Var& before_transfer_func) {
+void DeepFeatureExtractorNNet::buildCosts(const Var& the_output, const Var& the_target, const Var& the_unsupervised_target, const Var& before_transfer_func, const Var& output_sup) {
     //costs.clear();
     costs.resize(0);
     if(always_use_supervised_target || nhidden_schedule_current_position >= nhidden_schedule.length())
@@ -756,24 +899,159 @@ void DeepFeatureExtractorNNet::buildCosts(const Var& the_output, const Var& the_
     }
     else
     {
-        int ncosts = cost_funcs.size();  
-        costs.resize(ncosts);
-        Vec val(1);
-        val[0] = REAL_MAX;
-        for(int i=0; i<costs.length(); i++)
-            costs[i] = new SourceVariable(val);
+        if(output_sup)
+        {            
+            int ncosts = cost_funcs.size();  
+            costs.resize(ncosts);
         
-        Var c;
-        if(always_reconstruct_input || nhidden_schedule_position == 0)
-        {
-            if(input_reconstruction_error == "cross_entropy")
-                c = stable_cross_entropy(before_transfer_func, the_unsupervised_target);
-            else if (input_reconstruction_error == "mse")
-                c = sumsquare(the_output-the_unsupervised_target);
-            else PLERROR("In DeepFeatureExtractorNNet::buildCosts(): %s is not a valid reconstruction error", input_reconstruction_error.c_str());
+            for(int k=0; k<ncosts; k++)
+            {
+                // create costfuncs and apply individual weights if weightpart > 1
+                if(cost_funcs[k]=="mse")
+                    costs[k]= sumsquare(output_sup-the_target);
+                else if(cost_funcs[k]=="mse_onehot")
+                    costs[k] = onehot_squared_loss(output_sup, the_target);
+                else if(cost_funcs[k]=="NLL") 
+                {
+                    if (output_sup->size() == 1) {
+                        // Assume sigmoid output here!
+                        costs[k] = cross_entropy(output_sup, the_target);
+                    } else {
+                        if (output_transfer_func == "log_softmax")
+                            costs[k] = -output_sup[the_target];
+                        else
+                            costs[k] = neg_log_pi(output_sup, the_target);
+                    }
+                } 
+                else if(cost_funcs[k]=="class_error")
+                    costs[k] = classification_loss(output_sup, the_target);
+                else if(cost_funcs[k]=="binary_class_error")
+                    costs[k] = binary_classification_loss(output_sup, the_target);
+                else if(cost_funcs[k]=="multiclass_error")
+                    costs[k] = multiclass_loss(output_sup, the_target);
+                else if(cost_funcs[k]=="cross_entropy")
+                    costs[k] = cross_entropy(output_sup, the_target);
+                else if (cost_funcs[k]=="stable_cross_entropy") {
+                    Var c = stable_cross_entropy(before_transfer_func, the_target);
+                    costs[k] = c;
+                    assert( classification_regularizer >= 0 );
+                    if (classification_regularizer > 0) {
+                        // There is a regularizer to add to the cost function.
+                        dynamic_cast<NegCrossEntropySigmoidVariable*>((Variable*) c)->
+                            setRegularizer(classification_regularizer);
+                    }
+                }
+                else if (cost_funcs[k]=="margin_perceptron_cost")
+                    costs[k] = margin_perceptron_cost(output_sup,the_target,margin);
+                else if (cost_funcs[k]=="lift_output")
+                    costs[k] = lift_output(output_sup, the_target);
+                else  // Assume we got a Variable name and its options
+                {
+                    costs[k]= dynamic_cast<Variable*>(newObject(cost_funcs[k]));
+                    if(costs[k].isNull())
+                        PLERROR("In NNet::build_()  unknown cost_func option: %s",cost_funcs[k].c_str());
+                    costs[k]->setParents(output_sup & the_target);
+                    costs[k]->build();
+                }
+
+                // take into account the sampleweight
+                //if(sampleweight)
+                //  costs[k]= costs[k] * sampleweight; // NO, because this is taken into account (more properly) in stats->update
+                costs[k] = supervised_signal_weight*costs[k];
+            }                    
         }
         else
-            c = stable_cross_entropy(before_transfer_func, the_unsupervised_target);
+        {
+            int ncosts = cost_funcs.size();  
+            costs.resize(ncosts);
+            Vec val(1);
+            val[0] = REAL_MAX;
+            for(int i=0; i<costs.length(); i++)
+                costs[i] = new SourceVariable(val);
+        }
+        Var c;
+
+        if(k_nearest_neighbors_reconstruction>=0)
+        {
+            if(use_neighborhood_weighting)
+            {
+                VarArray copies(k_nearest_neighbors_reconstruction+1);
+                for(int n=0; n<k_nearest_neighbors_reconstruction+1; n++)
+                {
+                    if(always_reconstruct_input || nhidden_schedule_position == 0)
+                    {
+                        if(input_reconstruction_error == "cross_entropy")
+                            copies[n] = before_transfer_func;
+                        else if (input_reconstruction_error == "mse")
+                            copies[n] = the_output;
+                    }
+                    else
+                        copies[n] = before_transfer_func;
+
+                    Var ut;
+                    if(nhidden_schedule_current_position == 0)
+                        ut = subMat(the_unsupervised_target,n*inputsize(),0,inputsize(),1);
+                    else
+                        ut = subMat(the_unsupervised_target,n*nhidden_schedule[nhidden_schedule_current_position-1],0,nhidden_schedule[nhidden_schedule_current_position-1],1);
+
+                    if(always_reconstruct_input || nhidden_schedule_position == 0)
+                    {
+                        if(input_reconstruction_error == "cross_entropy")
+                            copies[n] = stable_cross_entropy(copies[n], ut);
+                        else PLERROR("In DeepFeatureExtractorNNet::buildCosts(): %s is not a valid reconstruction error for nearest neighbor reconstruction", input_reconstruction_error.c_str());
+                    }
+                    else
+                        copies[n] = stable_cross_entropy(copies[n], ut);
+                }
+                c = vconcat(copies);
+                neighbor_indices = Var(k_nearest_neighbors_reconstruction+1);
+                c = transposeProduct(nll_neighborhood_weights(c,neighbor_indices,train_set->length(), neighborhood_exponential_decay),c);
+            }
+            else
+            {
+                VarArray copies(k_nearest_neighbors_reconstruction+1);
+                for(int n=0; n<k_nearest_neighbors_reconstruction+1; n++)
+                {
+                    if(always_reconstruct_input || nhidden_schedule_position == 0)
+                    {
+                        if(input_reconstruction_error == "cross_entropy")
+                            copies[n] = before_transfer_func;
+                        else if (input_reconstruction_error == "mse")
+                            copies[n] = the_output;
+                    }
+                    else
+                        copies[n] = before_transfer_func;
+                }
+
+                Var reconstruct = vconcat(copies);
+
+                if(always_reconstruct_input || nhidden_schedule_position == 0)
+                {
+                    if(input_reconstruction_error == "cross_entropy")
+                        c = stable_cross_entropy(reconstruct, the_unsupervised_target);
+                    else if (input_reconstruction_error == "mse")
+                        c = sumsquare(reconstruct-the_unsupervised_target);
+                    else PLERROR("In DeepFeatureExtractorNNet::buildCosts(): %s is not a valid reconstruction error", input_reconstruction_error.c_str());
+                }
+                else
+                    c = stable_cross_entropy(reconstruct, the_unsupervised_target);
+            }    
+        }
+        else
+        {
+            if(always_reconstruct_input || nhidden_schedule_position == 0)
+            {
+                if(input_reconstruction_error == "cross_entropy")
+                    c = stable_cross_entropy(before_transfer_func, the_unsupervised_target);
+                else if (input_reconstruction_error == "mse")
+                    c = sumsquare(the_output-the_unsupervised_target);
+                else PLERROR("In DeepFeatureExtractorNNet::buildCosts(): %s is not a valid reconstruction error", input_reconstruction_error.c_str());
+            }
+            else
+                c = stable_cross_entropy(before_transfer_func, the_unsupervised_target);
+        }
+
+        if(output_sup) c = c+costs[0];
 
         costs.push_back(c);
         assert( regularizer >= 0 );
@@ -804,14 +1082,14 @@ void DeepFeatureExtractorNNet::buildCosts(const Var& the_output, const Var& the_
     if(penalties.size() != 0) {
         if (weightsize_>0)
             // only multiply by sampleweight if there are weights
-            if(nhidden_schedule_current_position < nhidden_schedule.length())
+            if(nhidden_schedule_current_position < nhidden_schedule.length() && !always_use_supervised_target)
                 training_cost = hconcat(sampleweight*sum(hconcat(costs[costs.length()-2] & penalties))
                                         & (test_costs*sampleweight));
             else
                 training_cost = hconcat(sampleweight*sum(hconcat(costs[0] & penalties))
                                         & (test_costs*sampleweight));
         else {
-            if(nhidden_schedule_current_position < nhidden_schedule.length())
+            if(nhidden_schedule_current_position < nhidden_schedule.length() && !always_use_supervised_target)
                 training_cost = hconcat(sum(hconcat(costs[costs.length()-2] & penalties)) & test_costs);
             else
                 training_cost = hconcat(sum(hconcat(costs[0] & penalties)) & test_costs);
@@ -913,6 +1191,16 @@ void DeepFeatureExtractorNNet::buildFuncs(const Var& the_input, const Var& the_o
         invars.push_back(the_input);
         testinvars.push_back(the_input);
     }
+    if(k_nearest_neighbors_reconstruction>=0 && nhidden_schedule_current_position < nhidden_schedule.length())
+    {
+        invars.push_back(unsupervised_target);
+        testinvars.push_back(unsupervised_target);
+        if(neighbor_indices)
+        {
+            invars.push_back(neighbor_indices);
+            testinvars.push_back(neighbor_indices);
+        }
+    }
     if (the_output)
         outvars.push_back(the_output);
     if(the_target)
@@ -930,6 +1218,14 @@ void DeepFeatureExtractorNNet::buildFuncs(const Var& the_input, const Var& the_o
     test_costf->recomputeParents();
     output_and_target_to_cost = Func(outvars, test_costs); 
     output_and_target_to_cost->recomputeParents();
+    if(use_autoassociator_regularisation && nhidden_schedule_current_position < nhidden_schedule.length())
+    {
+        autoassociator_training_costs[nhidden_schedule_current_position] = training_cost;
+        autoassociator_params[nhidden_schedule_current_position].resize(params_to_train.length());
+        for(int i=0; i<params_to_train.length(); i++)
+            autoassociator_params[nhidden_schedule_current_position][i] = params_to_train[i];
+    }
+    to_feature_vector = Func(input,feature_vector);
 }
 
 
