@@ -54,24 +54,27 @@ PLEARN_IMPLEMENT_OBJECT(SelectRowsVMatrix,
 SelectRowsVMatrix::SelectRowsVMatrix()
     : obtained_inputsize_from_source(false),
       obtained_targetsize_from_source(false),
-      obtained_weightsize_from_source(false)
+      obtained_weightsize_from_source(false),
+      rows_to_remove(false)
 {}
 
-SelectRowsVMatrix::SelectRowsVMatrix(VMat the_source, TVec<int> the_indices)
+SelectRowsVMatrix::SelectRowsVMatrix(VMat the_source, TVec<int> the_indices, bool the_rows_to_remove)
     : obtained_inputsize_from_source(false),
       obtained_targetsize_from_source(false),
       obtained_weightsize_from_source(false),
-      indices(the_indices)
+      indices(the_indices),
+      rows_to_remove(the_rows_to_remove)
 {
     source = the_source;
     build_();
 }
 
 //! Here the indices will be copied locally into an integer vector
-SelectRowsVMatrix::SelectRowsVMatrix(VMat the_source, Vec the_indices)
+SelectRowsVMatrix::SelectRowsVMatrix(VMat the_source, Vec the_indices, bool the_rows_to_remove)
     : obtained_inputsize_from_source(false),
       obtained_targetsize_from_source(false),
-      obtained_weightsize_from_source(false)
+      obtained_weightsize_from_source(false),
+      rows_to_remove(the_rows_to_remove)
 {
     source = the_source;
     indices.resize(the_indices.length());
@@ -80,25 +83,19 @@ SelectRowsVMatrix::SelectRowsVMatrix(VMat the_source, Vec the_indices)
 }
 
 real SelectRowsVMatrix::get(int i, int j) const
-{ return source->get(indices[i], j); }
+{ return source->get(selected_indices[i], j); }
 
 void SelectRowsVMatrix::getSubRow(int i, int j, Vec v) const
-{ source->getSubRow(indices[i], j, v); }
+{ source->getSubRow(selected_indices[i], j, v); }
 
 real SelectRowsVMatrix::dot(int i1, int i2, int inputsize) const
-{ return source->dot(int(indices[i1]), int(indices[i2]), inputsize); }
+{ return source->dot(int(selected_indices[i1]), int(selected_indices[i2]), inputsize); }
 
 real SelectRowsVMatrix::dot(int i, const Vec& v) const
-{ return source->dot(indices[i],v); }
-
-real SelectRowsVMatrix::getStringVal(int col, const string & str) const
-{ return source->getStringVal(col, str); }
-
-string SelectRowsVMatrix::getValString(int col, real val) const
-{ return source->getValString(col,val); }
+{ return source->dot(selected_indices[i],v); }
 
 string SelectRowsVMatrix::getString(int row, int col) const
-{ return source->getString(indices[row], col); }
+{ return source->getString(selected_indices[row], col); }
 
 const map<string,real>& SelectRowsVMatrix::getStringToRealMapping(int col) const
 { return source->getStringToRealMapping(col);}
@@ -116,6 +113,10 @@ void SelectRowsVMatrix::declareOptions(OptionList &ol)
     declareOption(ol, "indices_vmat", &SelectRowsVMatrix::indices_vmat, OptionBase::buildoption,
                   "If provided, will override the 'indices' option: the indices will be taken\n"
                   "from the first column of the given VMatrix (taking the closest integer).");
+
+    declareOption(ol, "rows_to_remove", &SelectRowsVMatrix::rows_to_remove, OptionBase::buildoption,
+                  "Indication that the rows specified in indices or indices_vmat\n"
+                  "should be removed, not selected from the source VMatrix.");
 
     // Learnt options.
 
@@ -158,6 +159,7 @@ void SelectRowsVMatrix::declareOptions(OptionList &ol)
 void SelectRowsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(selected_indices, copies);
     deepCopyField(indices,      copies);
     deepCopyField(indices_vmat, copies);
 }
@@ -182,7 +184,24 @@ void SelectRowsVMatrix::build_()
         for (int i = 0; i < n; i++)
             indices[i] = int(round(indices_vmat->get(i,0)));
     }
-    length_ = indices.length();
+
+    if(rows_to_remove)
+    {
+        TVec<bool> tag(source->length());
+        tag.fill(1);
+        for(int i=0; i<indices.length(); i++)
+            tag[indices[i]] = false;
+        selected_indices.resize(0);
+        for(int i=0; i<source->length(); i++)
+            if(tag[i]) selected_indices.push_back(i);
+        
+    }
+    else
+    {
+        selected_indices = indices;
+    }
+
+    length_ = selected_indices.length();
     if (source) {
         string error_msg =
             "In SelectRowsVMatrix::build_ - For safety reasons, it is forbidden to "
@@ -221,6 +240,40 @@ void SelectRowsVMatrix::build_()
             obtained_weightsize_from_source = false;
         }
     }
+}
+
+real SelectRowsVMatrix::getStringVal(int col, const string & str) const
+{ return source->getStringVal(col, str); }
+
+string SelectRowsVMatrix::getValString(int col, real val) const
+{ return source->getValString(col,val); }
+
+PP<Dictionary> SelectRowsVMatrix::getDictionary(int col) const
+{
+#ifdef BOUNDCHECK
+    if(col>=width_)
+        PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
+#endif
+    return source->getDictionary(col);
+}
+
+
+Vec SelectRowsVMatrix::getValues(int row, int col) const
+{
+#ifdef BOUNDCHECK
+    if(col>=width_)
+        PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
+#endif
+    return source->getValues(selected_indices[row],col);
+}
+
+Vec SelectRowsVMatrix::getValues(const Vec& input, int col) const
+{
+#ifdef BOUNDCHECK
+    if(col>=width_)
+        PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
+#endif
+    return source->getValues(input, col);
 }
 
 } // end of namespace PLearn

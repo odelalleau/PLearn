@@ -66,10 +66,16 @@ protected:
     bool obtained_targetsize_from_source;
     bool obtained_weightsize_from_source;
 
+    TVec<int> selected_indices;
+
 public:
 
     //! Public build options
     TVec<int> indices;
+    
+    //! Indication that the rows specified in indices or indices_vmat
+    //! should be removed, not selected from the source VMatrix.
+    bool rows_to_remove;
 
     VMat indices_vmat;
 
@@ -81,10 +87,10 @@ public:
 
     //! Also copies the original fieldinfos upon construction
     //! Here the indices will be shared for efficiency. But you should not modify them afterwards!
-    SelectRowsVMatrix(VMat the_source, TVec<int> the_indices);
+    SelectRowsVMatrix(VMat the_source, TVec<int> the_indices, bool the_rows_to_remove = false);
 
     //! Here the indices will be copied locally into an integer vector
-    SelectRowsVMatrix(VMat the_source, Vec the_indices);
+    SelectRowsVMatrix(VMat the_source, Vec the_indices, bool the_rows_to_remove = false);
 
     PLEARN_DECLARE_OBJECT(SelectRowsVMatrix);
 
@@ -111,6 +117,16 @@ public:
     virtual void reset_dimensions() { source->reset_dimensions(); width_=source->width(); }
     virtual real dot(int i1, int i2, int inputsize) const;
     virtual real dot(int i, const Vec& v) const;
+
+    //! Return the Dictionary object for a certain field, or a null pointer
+    //! if there isn't one
+    virtual PP<Dictionary> getDictionary(int col) const;
+    
+    //! Returns the possible values for a certain field in the VMatrix
+    virtual Vec getValues(int row, int col) const;
+    
+    //! Returns the possible values of a certain field (column) given the input 
+    virtual Vec getValues(const Vec& input, int col) const;
 
 private:
 
