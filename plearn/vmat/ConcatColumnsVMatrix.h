@@ -92,9 +92,6 @@ public:
     //! Transforms a shallow copy into a deep copy.
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-private:
-    void build_();
-
     //! Return the Dictionary object for a certain field, or a null pointer
     //! if there isn't one
     virtual PP<Dictionary> getDictionary(int col) const;
@@ -104,6 +101,9 @@ private:
 
     //! Returns the possible values of a certain field (column) given the input
     virtual Vec getValues(const Vec& input, int col) const;
+
+private:
+    void build_();
 
 };
 
