@@ -40,7 +40,6 @@
 
 /*! \file ClassSeparationSplitter.cc */
 
-#include "RemoveRowsVMatrix.h"
 #include "SelectRowsVMatrix.h"
 #include "ClassSeparationSplitter.h"
 #include <plearn/math/random.h>
@@ -147,22 +146,17 @@ TVec<VMat> ClassSeparationSplitter::getSplit(int k)
     TVec<int> classes_k = classes[k];
     Vec row(dataset->width());
     TVec<int> indices(0);
-    Vec indices_real(0);
     for(int i=0; i<dataset->length(); i++)
     {
         dataset->getRow(i,row);
         if(classes_k.find((int)row[dataset->inputsize()]) >= 0)
         {
             indices.push_back(i);
-            indices_real.push_back(i);
         }
     }
 
     TVec<VMat> split(2);
-    split[0] = new RemoveRowsVMatrix(dataset,indices_real);
-    // RemoveRowsVMatrix does not set the different sizes
-    // Maybe this should be corrected?
-    split[0]->defineSizes(dataset->inputsize(),dataset->targetsize(),dataset->weightsize());
+    split[0] = new SelectRowsVMatrix(dataset,indices, true);
     split[1] = new SelectRowsVMatrix(dataset,indices);
     if(append_train) split.append(split[0]);
     return split;
