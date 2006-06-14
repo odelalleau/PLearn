@@ -74,6 +74,8 @@ public:
   real missing_prop;
   int  only_on_first;
   long seed;
+  //! Columns which will be filled with missing values
+  TVec<int> missing_values_columns;
 
   // ****************
   // * Constructors *
@@ -107,6 +109,19 @@ public:
 
   //! Transforms a shallow copy into a deep copy.
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+
+  //! Return the Dictionary object for a certain field, or a null pointer
+  //! if there isn't one
+  virtual PP<Dictionary> getDictionary(int col) const;
+
+  //! Returns the possible values for a certain field in the VMatrix
+  virtual Vec getValues(int row, int col) const;
+
+  //! Returns the possible values of a certain field (column) given the input 
+  virtual Vec getValues(const Vec& input, int col) const;
+
+  virtual string getValString(int col, real val) const;
+  virtual real getStringVal(int col, const string & str) const;
 
   //! Declares name and deepCopy methods
   PLEARN_DECLARE_OBJECT(AddMissingVMatrix);

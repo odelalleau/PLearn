@@ -58,10 +58,14 @@ AddMissingVMatrix::AddMissingVMatrix():
 {}
 
 PLEARN_IMPLEMENT_OBJECT(AddMissingVMatrix,
-    "Randomly add missing values to an underlying VMatrix.",
-    "Note that you should precompute such a VMatrix, since the missing\n"
-    "values will change within the same row if it is accessed more than\n"
-    "once.\n"
+                        "Adds missing values to an underlying VMatrix",
+                        "The columns which will be filled with missing values can be defined\n" 
+                        "by the user using the field missing_values_columns or determined\n"
+                        "randomly, for each sample (if missing_values_columns is empty).\n"
+                        "When randomly adding missing values to an underlying VMatrix,\n"
+                        "note that you should precompute such a VMatrix, since the missing\n"
+                        "values will change within the same row if it is accessed more than\n"
+                        "once.\n"
 );
 
 ////////////////////
@@ -77,6 +81,9 @@ void AddMissingVMatrix::declareOptions(OptionList& ol)
 
   declareOption(ol, "seed", &AddMissingVMatrix::seed, OptionBase::buildoption,
       "Random numbers seed.");
+
+  declareOption(ol, "missing_values_columns", &AddMissingVMatrix::missing_values_columns, OptionBase::buildoption,
+      "Columns which will be filled with missing values.");
 
     declareOption(ol, "add_missing_target",
                   &AddMissingVMatrix::add_missing_target,
@@ -123,13 +130,22 @@ void AddMissingVMatrix::getNewRow(int i, const Vec& v) const
   if (only_on_first >= 0 && i >= only_on_first)
     return;
   int n = v.length();
-  for (int j = 0; j < n; j++) {
-      bool is_target = (j >= source->inputsize() &&
-                        j < source->inputsize() + source->targetsize());
-      if ((add_missing_target || !is_target) &&
+
+  if (missing_values_columns.length()>0)
+  {
+      for (int j = 0; j < missing_values_columns.length(); j++)
+          v[missing_values_columns[j]] = MISSING_VALUE;
+  }
+  else   
+  {
+      for (int j = 0; j < n; j++) {
+          bool is_target = (j >= source->inputsize() &&
+                            j < source->inputsize() + source->targetsize());
+          if ((add_missing_target || !is_target) &&
           random_gen->uniform_sample() < missing_prop)
-      {
-          v[j] = MISSING_VALUE;
+          {
+              v[j] = MISSING_VALUE;
+          }
       }
   }
 }
@@ -141,6 +157,53 @@ void AddMissingVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(random_gen, copies);
+  deepCopyField(missing_values_columns, copies);
+}
+
+real AddMissingVMatrix::getStringVal(int col, const string & str) const
+{
+#ifdef BOUNDCHECK
+    if(col>=width_)
+        PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
+#endif
+    return source->getStringVal(col,str);
+}
+
+string AddMissingVMatrix::getValString(int col, real val) const
+{
+#ifdef BOUNDCHECK
+    if(col>=width_)
+        PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
+#endif
+    return source->getValString(col,val);
+}
+
+PP<Dictionary> AddMissingVMatrix::getDictionary(int col) const
+{
+#ifdef BOUNDCHECK
+    if(col>=width_)
+        PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
+#endif
+    return source->getDictionary(col);
+}
+
+
+Vec AddMissingVMatrix::getValues(int row, int col) const
+{
+#ifdef BOUNDCHECK
+    if(col>=width_)
+        PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
+#endif
+    return source->getValues(row,col);
+}
+
+Vec AddMissingVMatrix::getValues(const Vec& input, int col) const
+{
+#ifdef BOUNDCHECK
+    if(col>=width_)
+        PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
+#endif
+    return source->getValues(input, col);
 }
 
 } // end of namespace PLearn
