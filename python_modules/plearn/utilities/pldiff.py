@@ -192,9 +192,17 @@ def toldiff(filename1, filename2, precision=1e-6, blanktol=0):
 
     c1 = f1.read(1) 
     c2 = f2.read(1)
+    line1 = 1
+    line2 = 1
 
-    errmsg = lambda : 'Files differ before positions: %d %d\n'%(f1.tell(),f2.tell())
+    errmsg = lambda : 'Files differ before positions %d and %d at lines %d and %d\n'%(f1.tell(),f2.tell(), line1, line2)
     while c1 or c2:            
+
+        if c1 == '\n':
+            line1 += 1
+        if c2 == '\n':
+            line2 += 1
+
         if c1 and c1 in numerical:
             num1 = ''
             num2 = ''
@@ -230,6 +238,8 @@ def toldiff(filename1, filename2, precision=1e-6, blanktol=0):
             if c2 != '\n':
                 return errmsg()
             else:
+                line1 += 1
+                line2 += 1
                 c1 = f1.read(1)
                 c2 = f2.read(1)
         elif c2 == '\n' and c1 == '\r':
@@ -237,6 +247,8 @@ def toldiff(filename1, filename2, precision=1e-6, blanktol=0):
             if c1 != '\n':
                 return errmsg()
             else:
+                line1 += 1
+                line2 += 1
                 c1 = f1.read(1)
                 c2 = f2.read(1)
 
