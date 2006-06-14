@@ -412,8 +412,10 @@ bool ConjGradientOptimizer::lineSearch() {
 void ConjGradientOptimizer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-    PLERROR("In ConjGradientOptimizer::makeDeepCopyFromShallowCopy - Not "
-            "implementented");
+    deepCopyField(current_opp_gradient, copies);
+    deepCopyField(search_direction, copies);
+    deepCopyField(tmp_storage, copies);
+    deepCopyField(delta, copies);
 }
 
 ///////////////
