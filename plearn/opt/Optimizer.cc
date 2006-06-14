@@ -75,7 +75,7 @@ void Optimizer::build()
 void Optimizer::build_()
 {
     if (cost)
-        setToOptimize(params, cost);
+        setToOptimize(params, cost, other_costs, other_params, other_weight);
 }
 
 ///////////
@@ -100,13 +100,22 @@ void Optimizer::declareOptions(OptionList& ol)
 ///////////////////
 // setToOptimize //
 ///////////////////
-void Optimizer::setToOptimize(const VarArray& the_params, Var the_cost)
+void Optimizer::setToOptimize(const VarArray& the_params, Var the_cost, VarArray the_other_costs, TVec<VarArray> the_other_params, real the_other_weight)
 {
     params = the_params;//displayVarGraph(params, true, 333, "p1", false);
     cost = the_cost;//displayVarGraph(cost[0], true, 333, "c1", false);
     proppath = propagationPath(params,cost);//displayVarGraph(proppath, true, 333, "x1", false);
     VarArray path_from_all_sources_to_direct_parents = propagationPathToParentsOfPath(params, cost);
     path_from_all_sources_to_direct_parents.fprop();//displayVarGraph(path_from_all_sources_to_direct_parents, true, 333, "x1", false);
+
+    // This is probably not complete. Maybe a 
+    // path_from_all_sources_to_direct_parents should also be computed and fproped
+    other_costs = the_other_costs;
+    other_params = the_other_params;
+    other_proppaths.resize(other_costs.length());
+    for(int i=0; i<other_proppaths.length(); i++)
+        other_proppaths[i] = propagationPath(other_params[i],other_costs[i]);
+    other_weight = the_other_weight;
 }
 
 /*
@@ -151,6 +160,9 @@ void Optimizer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     varDeepCopyField(cost, copies);
     deepCopyField(partial_update_vars, copies);
     deepCopyField(proppath, copies);
+    deepCopyField(other_costs, copies);
+    deepCopyField(other_params, copies);
+    deepCopyField(other_proppaths, copies);
 }
 
 void Optimizer::verifyGradient(real minval, real maxval, real step)

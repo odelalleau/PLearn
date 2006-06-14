@@ -132,6 +132,7 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll)
     // explicit update (temporarily change the gradient fields of the
     // parameters to point to the parameters themselves, so that gradients are
     // "accumulated" directly in the parameters, thus updating them!
+
     SumOfVariable* sumofvar = dynamic_cast<SumOfVariable*>((Variable*)cost);
     Array<Mat> oldgradientlocations;
     bool stochastic_hack = use_stochastic_hack && sumofvar!=0 && sumofvar->nsamples==1;
@@ -150,6 +151,16 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll)
     else
         params.clearGradient();
 
+    if(other_costs.length() != 0)
+    {
+        for(int i=0; i<other_params.length(); i++)
+            other_params[i].clearGradient();
+    }
+
+    // Big hack for the special case of stochastic gradient, to avoid doing an explicit update
+    // (temporarily change the gradient fields of the parameters to point to the parameters themselves,
+    // so that gradients are "accumulated" directly in the parameters, thus updating them!
+
     int stage_max = stage + nstages; // the stage to reach
 
     int current_schedule = 0;
@@ -159,7 +170,7 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll)
             current_schedule++;
     
     while (stage < stage_max) 
-    {
+    {        
         if (n_schedules>0)
         {
             while (current_schedule+1 < n_schedules && stage > lr_schedule(current_schedule,0))
@@ -168,6 +179,43 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll)
         }
         else
             learning_rate = start_learning_rate/(1.0+decrease_constant*stage);
+
+        if(other_costs.length() != 0)
+        {
+            for(int i=0; i<other_costs.length(); i++)
+            {
+                other_proppaths[i].clearGradient();
+                other_costs[i]->gradient[0] = -learning_rate*other_weight;
+
+                static bool display_var_graph_before_fbprop=false;
+                if (display_var_graph_before_fbprop)
+                    displayVarGraph(other_proppaths[i], true, 333);
+                //displayVarGraph(other_proppaths[i], true, 333);
+                other_proppaths[i].fbprop(); 
+                //displayVarGraph(other_proppaths[i], true, 333);
+#ifdef BOUNDCHECK
+                int np = other_params[i].size();
+                for(int j=0; j<np; j++)
+                    if (other_params[i][j]->value.hasMissing())
+                        PLERROR("parameter updated with NaN");
+#endif
+                static bool display_var_graph=false;
+                if (display_var_graph)
+                    displayVarGraph(proppath, true, 333);
+
+//       // Debugging of negative NLL bug...
+//       if (cost->value[0] <= 0) {
+//         displayVarGraph(proppath, true, 333);
+//         cerr << "Negative NLL cost vector = " << cost << endl;
+//         PLERROR("Negative NLL encountered in optimization");
+//       }
+
+                // set params += -learning_rate * params.gradient
+                other_params[i].updateAndClear();
+            }
+        }
+
+
         proppath.clearGradient();
         cost->gradient[0] = -learning_rate;
 

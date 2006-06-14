@@ -80,6 +80,10 @@ public:
     int nstages; //!< number of steps to perform when calling optimizeN
     int stage;   //!< current number of steps performed
 
+    VarArray other_costs;
+    TVec<VarArray> other_params;
+    TVec<VarArray> other_proppaths;
+    real other_weight;
 
 public:
 
@@ -96,7 +100,7 @@ public:
 
     virtual void reset(); 
 
-    virtual void setToOptimize(const VarArray& the_params, Var the_cost);
+    virtual void setToOptimize(const VarArray& the_params, Var the_cost, VarArray the_other_costs = VarArray(0), TVec<VarArray> the_other_params = TVec<VarArray>(0), real the_other_weight = 1);
 
     /*
     virtual void setVarArrayOption(const string& optionname,
