@@ -124,6 +124,24 @@ TVec<int> NGramTree::freq(TVec<int> ngram)
     return ret;
 }
 
+TVec<map<int,int> *> NGramTree::freqs(TVec<int> ngram)
+{
+    TVec<map<int,int>* > ret(ngram.length());
+    ret[0] = root->freqs();
+  
+    int n=1;
+    PP<SymbolNode> it = root;
+    for(int i=ngram.length()-2; i>=0; i--)
+    {
+        it = it->child(ngram[i]);
+        if(!it)
+            break;
+        ret[n] = it->freqs();
+        n++;
+    }
+    return ret;
+}
+
 TVec<int> NGramTree::normalization(TVec<int> ngram)
 {
     TVec<int> ret(ngram.length());

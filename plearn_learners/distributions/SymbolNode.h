@@ -129,6 +129,9 @@ public:
     //! Gives the number of different symbol in frequencies map
     int n_freq(){return frequencies.size();}
 
+    //! Gives a pointer to the frequencies map
+    map<int,int>* freqs(){ return &frequencies;}
+
     //! Gives the corresponding SymbolNode child, or 0 if nonexistant
     PP<SymbolNode> child(int child_);
 

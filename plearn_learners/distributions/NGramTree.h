@@ -108,6 +108,11 @@ public:
     //! Gives frequencies of the ngram, 1gram, ..., (n-1)gram and ngram (total frequency)
     TVec<int> freq(TVec<int> ngram);
 
+    //! Returns the freqency maps in the paths corresponding to the ngram.
+    //! Note that w^i in the ngram w^i_{i-n+1} is not needed, so
+    //! it is ignored in the ngram field.
+    TVec<map<int,int>*> freqs(TVec<int> ngram);
+
     //! Gives the normalization factor for the 1gram, ..., (n-1)gram and ngram for max. likelihood estimator
     TVec<int> normalization(TVec<int> ngram);
 
