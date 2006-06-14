@@ -11,14 +11,9 @@ eigenvectors = 2  4  [
 ]
 ;
 outputs_def = "l" ;
-predictor_size = 0 ;
-predicted_size = -1 ;
-predictor_part = TVec(0 0 *0 )
-;
 n_curve_points = -1 ;
 lower_bound = 0 ;
 upper_bound = 0 ;
-n_predictor = 0 ;
 n_predicted = 4 ;
 expdir = "PYTEST__PL_GaussianDistribution__RESULTS:expdir_2_True_123456/Split0/LearnerExpdir/" ;
 seed = 123456 ;
