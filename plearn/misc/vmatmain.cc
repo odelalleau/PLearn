@@ -35,6 +35,8 @@
  * $Id$
  ******************************************************* */
 
+#include <plearn/python/PythonCodeSnippet.h>
+
 #include <algorithm>                         // for max
 #include <iostream>
 #include <iomanip>                           // for setw and such
@@ -46,6 +48,7 @@
 #include <plearn/base/lexical_cast.h>
 #include <plearn/math/StatsCollector.h>
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
+#include <plearn/vmat/DictionaryVMatrix.h>
 #include <plearn/vmat/SelectColumnsVMatrix.h>
 #include <plearn/vmat/SubVMatrix.h>
 #include <plearn/vmat/VMatLanguage.h>
@@ -2029,8 +2032,22 @@ int vmatmain(int argc, char** argv)
     }
     else if(command=="dictionary")
     {
-        string vmat_file = argv[2];        
-        VMat vmat = getDataSet(vmat_file);
+        string vmat_file = argv[2];
+        string ext = extract_extension(vmat_file);
+        VMat vmat;
+        if(ext == ".txt")
+        {
+            DictionaryVMatrix* dvmat = new DictionaryVMatrix();
+            TVec<PPath> file_names(1);
+            file_names[0] = vmat_file;
+            dvmat->file_names = file_names;
+            dvmat->delimiters = "";
+            dvmat->build();            
+            vmat = dvmat;
+        }
+        else
+            vmat = getDataSet(vmat_file);
+
         for(int i=0; i<vmat->width(); i++)
         {
             if(vmat->getDictionary(i))
@@ -2039,6 +2056,7 @@ int vmatmain(int argc, char** argv)
                 save(dico_name,*(vmat->getDictionary(i)));
             }
         }
+
     }
     else if(command=="help")
     {
