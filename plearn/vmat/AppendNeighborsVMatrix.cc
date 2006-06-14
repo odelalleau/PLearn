@@ -51,7 +51,7 @@ using namespace std;
 
 
 AppendNeighborsVMatrix::AppendNeighborsVMatrix()
-    :inherited(), n_neighbors(1)
+    :inherited(), n_neighbors(1), append_neighbor_indices(false)
     /* ### Initialise all fields to their default value */
 {
 }
@@ -63,7 +63,10 @@ PLEARN_IMPLEMENT_OBJECT(AppendNeighborsVMatrix,
                         "The current row is excluded of the nearest neighbors\n"
                         "for that row.\n"
                         "Also, keeps the target and weight information.\n"
-                        ""
+                        "Finally, the user can define a transformation function\n"
+                        "to map the nearest neighbors to some other space. Note that\n"
+                        "the nearest neighbors are still computed in the source VMatrix\n"
+                        "input space."
     );
 
 void AppendNeighborsVMatrix::getNewRow(int i, const Vec& v) const
@@ -74,11 +77,30 @@ void AppendNeighborsVMatrix::getNewRow(int i, const Vec& v) const
     for(int j=0; j<input_parts.width(); j++)
     {
         source->getExample(input_parts(i,j),input,target,weight);
-        v.subVec(j*source->inputsize(),source->inputsize()) << input;
-        if(j==0) 
+        if(transformation)
         {
-            v.subVec(input_parts.width()*source->inputsize(),source->targetsize()) << target;
-            if(weightsize() > 0) v[width_-1] = weight;
+            transformation->fprop(input,transf);
+            v.subVec(j*transf.length(),transf.length()) << transf;
+            if(j==0) 
+            {
+                if(append_neighbor_indices)
+                    v.subVec(input_parts.width()*transf.length(),input_parts.width()) << input_parts(i);
+                v.subVec(inputsize_,source->targetsize()) << target;
+                if(weightsize() > 0) v[width_-1] = weight;
+            }
+                    
+        }
+        else
+        {
+            v.subVec(j*source->inputsize(),source->inputsize()) << input;
+            if(j==0) 
+            {         
+                if(append_neighbor_indices)
+                    v.subVec(input_parts.width()*source->inputsize(),input_parts.width()) << input_parts(i);
+                v.subVec(inputsize_,source->targetsize()) << target;
+                if(weightsize() > 0) v[width_-1] = weight;
+            }
+
         }
     }
 }
@@ -89,6 +111,14 @@ void AppendNeighborsVMatrix::declareOptions(OptionList& ol)
                   "Number of nearest neighbors. Determines the width of this vmatrix, which\n"
                   "is source->width() * n_neighbors.\n");
 
+    declareOption(ol, "transformation", &AppendNeighborsVMatrix::transformation, OptionBase::buildoption,
+                  "Transformation to apply on the nearest neighbors\n");
+
+    declareOption(ol, "append_neighbor_indices", &AppendNeighborsVMatrix::append_neighbor_indices, OptionBase::buildoption,
+                  "Indication that the nearest neighbor indices should\n"
+                  "appended to the input part. The index of the current\n"
+                  "sample is also appended.\n");
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -96,22 +126,12 @@ void AppendNeighborsVMatrix::declareOptions(OptionList& ol)
 void AppendNeighborsVMatrix::build_()
 {
     // find the nearest neighbors, if not done already
-    if (source && (input_parts.length()==0 || source->length()!=length_ || source->inputsize() * input_parts.width() + source->targetsize() + source->weightsize() != width_))
+    if (source && (input_parts.length() != source->length() || input_parts.width() != n_neighbors+1 ))
         // WARNING: will not work if source is changed but has the same dimensions
     {
         if(n_neighbors <=0)
            PLERROR("In  AppendNeighborsVMatrix::build_(): n_neighbors should be > 0"); 
         input_parts.resize(source->length(),n_neighbors+1); // +1 because we also get current row
-
-        width_ = source->inputsize() * input_parts.width() + source->targetsize() + source->weightsize();
-        length_ = source->length();
-
-        if(inputsize_ < 0) inputsize_ = source->inputsize() * input_parts.width();
-        if(targetsize_ < 0) targetsize_ = source->targetsize();
-        if(weightsize_ < 0) weightsize_ = source->weightsize();
-
-        if(width_ != inputsize_ + targetsize_ + weightsize_)
-            PLERROR("In  AppendNeighborsVMatrix::build_(): width_ != inputsize_ + targetsize_ + weightsize_");
 
         input.resize(source->inputsize());
         target.resize(source->targetsize());
@@ -132,6 +152,45 @@ void AppendNeighborsVMatrix::build_()
             computeNearestNeighbors(neighbors_source,input,neighbors_of_i,-1);
         }
     }
+
+    if(source->length()!=length_ || (transformation ? transformation->outputs.nelems() * input_parts.width() : source->inputsize() * input_parts.width()) 
+       + (append_neighbor_indices ? input_parts.width() : 0) + source->targetsize() + source->weightsize() != width_)
+    {
+        if(transformation)
+        {
+            if(transformation->inputs.nelems() != source->inputsize())
+                PLERROR("Cannot use transformation with input size different from source->inputsize()");
+            transf.resize(transformation->outputs.nelems());
+
+            width_ = transformation->outputs.nelems() * input_parts.width()
+                + (append_neighbor_indices ? input_parts.width() : 0) 
+                + source->targetsize() + source->weightsize();
+            length_ = source->length();
+
+            if(inputsize_ < 0) 
+                inputsize_ = transformation->outputs.nelems() * input_parts.width()
+                    + (append_neighbor_indices ? input_parts.width() : 0);
+            if(targetsize_ < 0) targetsize_ = source->targetsize();
+            if(weightsize_ < 0) weightsize_ = source->weightsize();            
+        }
+        else
+        {
+            width_ = source->inputsize() * input_parts.width() 
+                + (append_neighbor_indices ? input_parts.width() : 0) 
+                + source->targetsize() + source->weightsize();
+            length_ = source->length();
+
+            if(inputsize_ < 0) 
+                inputsize_ = source->inputsize() * input_parts.width()
+                    + (append_neighbor_indices ? input_parts.width() : 0);
+            if(targetsize_ < 0) targetsize_ = source->targetsize();
+            if(weightsize_ < 0) weightsize_ = source->weightsize();            
+
+        }
+
+        if(width_ != inputsize_ + targetsize_ + weightsize_)
+            PLERROR("In  AppendNeighborsVMatrix::build_(): width_ != inputsize_ + targetsize_ + weightsize_");
+    }
 }
 
 // ### Nothing to add here, simply calls build_
@@ -147,6 +206,9 @@ void AppendNeighborsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(input, copies);
     deepCopyField(target, copies);
     deepCopyField(input_parts, copies);
+    deepCopyField(transf, copies);
+    deepCopyField(transformation, copies);
+    
 }
 
 } // end of namespace PLearn

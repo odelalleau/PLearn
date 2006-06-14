@@ -45,6 +45,7 @@
 #define AppendNeighborsVMatrix_INC
 
 #include "SourceVMatrix.h"
+#include <plearn/var/Func.h>
 
 namespace PLearn {
 using namespace std;
@@ -63,7 +64,7 @@ private:
     typedef SourceVMatrix inherited;
 
     //! Used to store data and save memory allocations.
-    mutable Vec input, target;
+    mutable Vec input, target, transf;
     mutable real weight;
 
 protected:
@@ -84,6 +85,11 @@ public:
 
     //! Number of nearest neighbors
     int n_neighbors;
+    //! Transformation to apply on the nearest neighbors
+    Func transformation;
+    //! Indication that the nearest neighbor indices should
+    //! be appended to the input part.
+    bool append_neighbor_indices;
 
     // ****************
     // * Constructors *
@@ -123,11 +129,13 @@ public:
 };
 DECLARE_OBJECT_PTR(AppendNeighborsVMatrix);
 
-inline VMat append_neighbors(VMat source, int n_neighbors)
+inline VMat append_neighbors(VMat source, int n_neighbors, bool append_neighbor_indices = false, Func transformation=0)
 {
     AppendNeighborsVMatrix* vmat = new AppendNeighborsVMatrix();
     vmat->source=source;
     vmat->n_neighbors=n_neighbors;
+    vmat->transformation = transformation;
+    vmat->append_neighbor_indices = append_neighbor_indices;
     vmat->build();
     return vmat;
 }
