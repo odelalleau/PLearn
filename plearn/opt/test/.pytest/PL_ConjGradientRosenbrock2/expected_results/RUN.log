@@ -1,42 +1,42 @@
 rosenbrock(0 0 ) = 1 
 ** Verifying gradient computation **
-Input:                0           0           
+Input:                0 0 
 Output:               1
-Computed  gradient:   -2          0           
-Estimated gradient:   -2          0           
+Computed  gradient:   -2 0 
+Estimated gradient:   -2.00000000000200018 0 
 -------------------
-relative difference: 1.000089e-12 0           
+relative difference: 1.00008890058184099e-12 0 
 -------------------
-max relative difference: 1.000089e-12 (at position 0/2, computed = -2 and estimated = -2)
+max relative difference: 1.00008890058184099e-12 (at position 0/2, computed = -2 and estimated = -2.00000000000200018)
 cos(angle) : 1
 angle : 0
 ** Verifying gradient computation **
-Input:                1           1           
+Input:                1 1 
 Output:               0
-Computed  gradient:   0           0           
-Estimated gradient:   3.999688e-10 -1.110222e-14 
+Computed  gradient:   0 0 
+Estimated gradient:   3.99968835891135422e-10 -1.11022243112306703e-14 
 -------------------
-relative difference: 2           2           
+relative difference: 2 2 
 -------------------
-max relative difference: 2 (at position 0/2, computed = 0 and estimated = 3.999688e-10)
+max relative difference: 2 (at position 0/2, computed = 0 and estimated = 3.99968835891135422e-10)
 cos(angle) : nan
 angle : nan
 [ConjGradientOptimizer] Stage 0: 0.771109685362030506
 [ConjGradientOptimizer] Stage 1: 0.623820670484137363
-[ConjGradientOptimizer] Stage 2: 0.450241455686290704
-[ConjGradientOptimizer] Stage 3: 0.324894116831040858
-[ConjGradientOptimizer] Stage 4: 0.289080509880982384
-[ConjGradientOptimizer] Stage 5: 0.134528951900985683
-[ConjGradientOptimizer] Stage 6: 0.0451997258669295521
-[ConjGradientOptimizer] Stage 7: 0.0432489603494071728
-[ConjGradientOptimizer] Stage 8: 0.0243882970263967144
-[ConjGradientOptimizer] Stage 9: 0.0096480200338116464
-[ConjGradientOptimizer] Stage 10: 0.00349181359417502458
-[ConjGradientOptimizer] Stage 11: 0.000747066325399959479
+[ConjGradientOptimizer] Stage 2: 0.450241455686290259
+[ConjGradientOptimizer] Stage 3: 0.324894116831040636
+[ConjGradientOptimizer] Stage 4: 0.289080509880981829
+[ConjGradientOptimizer] Stage 5: 0.134528951900989568
+[ConjGradientOptimizer] Stage 6: 0.0451997258669274427
+[ConjGradientOptimizer] Stage 7: 0.0432489603494031899
+[ConjGradientOptimizer] Stage 8: 0.0243882970263747424
+[ConjGradientOptimizer] Stage 9: 0.00964802003379824739
+[ConjGradientOptimizer] Stage 10: 0.00349181359415567678
+[ConjGradientOptimizer] Stage 11: 0.000747066325395875615
 
 After optimization:
-inputs = 0.973055345897172463 0.947295530117836959 
-output = 0.000747066325399959479 
+inputs = 0.973055345897248625 0.947295530117985396 
+output = 0.000747066325395875615 
 
 Optimization stats collector: VecStatsCollector(
 maxnvalues = 0;
@@ -48,14 +48,14 @@ window = -1;
 no_removal_warnings = 0;
 stats = # samples: 12
 # missing: 0
-mean: 0.226699939445132337
-stddev: 0.266560802017491161
-stderr: 0.0769494754001005254
-min: 0.000747066325399959479
+mean: 0.226699939445127147
+stddev: 0.266560802017495546
+stderr: 0.0769494754001017883
+min: 0.000747066325395875615
 max: 0.771109685362030506
 
 first: 0.771109685362030506
-last:  0.000747066325399959479
+last:  0.000747066325395875615
 
 counts size: 0
  ;

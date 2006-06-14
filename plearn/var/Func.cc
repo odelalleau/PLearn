@@ -486,6 +486,9 @@ VarArray Function::operator()(const VarArray& new_inputs) const
   }
 */
 
+///////////////////
+// verifyHessian //
+///////////////////
 void Function::verifyHessian(const Vec& input, real step)
 {
     // Job a Charles...
@@ -566,6 +569,9 @@ void Function::verifyHessian(const Vec& input, real step)
 
   
 
+////////////////////
+// verifyGradient //
+////////////////////
 void Function::verifyGradient(const Vec& input, real step)
 {
     if(outputsize!=1)
@@ -575,10 +581,10 @@ void Function::verifyGradient(const Vec& input, real step)
     output_gradient[0]=1.0;
     Vec gradient(inputsize);
     fbprop(input, output, gradient,output_gradient);
-    cerr << "** Verifying gradient computation **" << endl;
-    cerr << "Input:                " << input << endl;
-    cerr << "Output:               " << output[0] << endl;
-    cerr << "Computed  gradient:   " << gradient << endl;
+    perr << "** Verifying gradient computation **" << endl;
+    perr << "Input:                " << input << endl;
+    perr << "Output:               " << output[0] << endl;
+    perr << "Computed  gradient:   " << gradient << endl;
     //displayFunction(this,true);
     // Now computing the gradient by finite difference
     Vec newinput = input.copy();
@@ -598,10 +604,10 @@ void Function::verifyGradient(const Vec& input, real step)
     }
     // copy the original input into the VarArray
     fprop(newinput,output);
-    cerr << "Estimated gradient:   " << finitediffgradient << endl;
-    cerr << "-------------------" << endl;
+    perr << "Estimated gradient:   " << finitediffgradient << endl;
+    perr << "-------------------" << endl;
   
-    cerr << "relative difference: ";
+    perr << "relative difference: ";
     // 'Safe' relative difference, that does not display a 'nan' when both
     // computed and estimated gradients are zero.
     Vec num = apply(gradient - finitediffgradient,FABS);
@@ -609,10 +615,10 @@ void Function::verifyGradient(const Vec& input, real step)
     for (int i = 0; i < num.length(); i++)
         if (!fast_exact_is_equal(num[i], 0))
             num[i] /= denom[i];
-    cerr << num << endl;
+    perr << num << endl;
     //    apply(gradient - finitediffgradient,(tRealFunc)fabs)/(0.5*apply(gradient + finitediffgradient,(tRealFunc)fabs));
-    cerr << "-------------------" << endl;
-    cerr << "max relative difference: ";
+    perr << "-------------------" << endl;
+    perr << "max relative difference: ";
     // As above, this is a 'safe' relative difference.
     // TODO Question: are we re-doing the same computations as above?
     num = apply(gradient - finitediffgradient,(tRealFunc)FABS);
@@ -621,14 +627,21 @@ void Function::verifyGradient(const Vec& input, real step)
         if (!fast_exact_is_equal(num[i], 0))
             num[i] /= denom[i];
     int pos = argmax(num);
-    cerr << max(num) << " (at position " << pos << "/" << num.length()
+    perr << max(num) << " (at position " << pos << "/" << num.length()
          << ", computed = " << gradient[pos] << " and estimated = "
          << finitediffgradient[pos] << ")" << endl;
-    real cos_angle = dot(gradient,finitediffgradient)/(norm(gradient)*norm(finitediffgradient));
+    real norm_gradient = norm(gradient);
+    real norm_finitediffgradient = norm(finitediffgradient);
+    real cos_angle = fast_exact_is_equal(norm_gradient*norm_finitediffgradient,
+                                         0)
+        ? MISSING_VALUE
+        : dot(gradient,finitediffgradient) /
+          (norm_gradient*norm_finitediffgradient);
     if (cos_angle > 1)
         cos_angle = 1;      // Numerical imprecisions can lead to such situation.
-    cerr << "cos(angle) : " << cos_angle << endl;
-    cerr << "angle : " << acos(cos_angle) << endl;
+    perr << "cos(angle) : " << cos_angle << endl;
+    perr << "angle : " << ( is_missing(cos_angle) ? MISSING_VALUE
+                                                : acos(cos_angle) ) << endl;
 }
 
 void Function::verifyGradient(real minval, real maxval, real step)
@@ -645,6 +658,9 @@ void Function::verifyGradient(real step)
     verifyGradient(input, step);
 }
 
+////////////////////////////
+// verifySymbolicGradient //
+////////////////////////////
 void Function::verifySymbolicGradient(const Vec& in)
 {
     if(in.length()!=inputsize)
