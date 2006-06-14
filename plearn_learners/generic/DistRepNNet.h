@@ -247,6 +247,9 @@ public:
     TVec<int> ntokens_extra_tasks;
     //! Number of features per token
     int nfeatures_per_token;
+    //! Number of features for each token
+    //! (nfeatures_per_token is used if nfeatures_for_each_token.length()==0)
+    TVec<int> nfeatures_for_each_token;
     //! Target dictionary
     PP<Dictionary> target_dictionary;
     //! Target distributed representations    
@@ -257,8 +260,13 @@ public:
     bool use_output_weights_bases;
     //! Indication that the possible targets varies from
     //! one input vector to another
-    bool possible_targets_varies;
-
+    //bool possible_targets_varies;
+    //! Indication that the extra tasks will only 
+    //! be used at the first epoch
+    bool use_extra_tasks_only_on_first_epoch;
+    //! Indication that the parameters on the sparse input
+    //! should be initialized to zero
+    bool initialize_sparse_params_to_zero;
     //! Architecture of the neural network
     //string nnet_architecture;
 
@@ -290,6 +298,10 @@ public:
 
     virtual void makeDeepCopyFromShallowCopy(CopiesMap &copies);
 
+    //! Gives distributed representation for token features.
+    //! If nfeatures_for_each_token is defined, then token_features
+    //! should contain the features for all tokens, and distributed
+    //! representations of all the tokens are concatenated.
     void getTokenDistRep(TVec<string>& token_features, Vec& dist_rep);
 
     //! Methods to get the network's (learned) parameters.
@@ -318,7 +330,7 @@ protected:
 
     //! Return a variable that is the result of the application of the
     //! given transfer function on the input variable
-    Var add_transfer_func(const Var& input, string transfer_func = "default");
+    Var add_transfer_func(const Var& input, string transfer_func = "default", VarArray mus=0, Var sigma=0);
 
     //! Build the output of the neural network, from the given input.
     void buildOutputFromInput(int task_index);

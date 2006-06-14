@@ -134,7 +134,9 @@ ntokens(-1),
 nfeatures_per_token(-1),
 //consider_unseen_classes(0),
 use_dist_reps(1),
-use_output_weights_bases(0)
+use_output_weights_bases(0),
+use_extra_tasks_only_on_first_epoch(false),
+initialize_sparse_params_to_zero(false)
 {}
 
 DistRepNNet::~DistRepNNet()
@@ -291,6 +293,12 @@ void DistRepNNet::declareOptions(OptionList& ol)
     declareOption(ol, "use_output_weights_bases", &DistRepNNet::use_output_weights_bases, OptionBase::buildoption, 
                   "Indication that bases for output weights should be used");
 
+    declareOption(ol, "use_extra_tasks_only_on_first_epoch", &DistRepNNet::use_extra_tasks_only_on_first_epoch, OptionBase::buildoption, 
+                  "Indication that the extra tasks will only be used at the first epoch");
+
+    declareOption(ol, "initialize_sparse_params_to_zero", &DistRepNNet::initialize_sparse_params_to_zero, OptionBase::buildoption, 
+                  "Indication that the parameters on the sparse input should be initialized to zero");
+
     /*
     declareOption(ol, "nnet_architecture", &DistRepNNet::nnet_architecture, OptionBase::buildoption, 
                   "Architecture of the neural network:\n"
@@ -307,6 +315,9 @@ void DistRepNNet::declareOptions(OptionList& ol)
 
     declareOption(ol, "nfeatures_per_token", &DistRepNNet::nfeatures_per_token, OptionBase::buildoption, 
                   "Number of features per token.\n");    
+
+    declareOption(ol, "nfeatures_for_each_token", &DistRepNNet::nfeatures_for_each_token, OptionBase::buildoption, 
+                  "Number of features for each token (nfeatures_per_token is used if nfeatures_for_each_token.length()==0).\n");    
 
     declareOption(ol, "nhidden_dist_rep_predictor", &DistRepNNet::nhidden_dist_rep_predictor, OptionBase::buildoption, 
                   "Number of hidden units of the neural network predictor for the distributed representation.\n");
@@ -364,7 +375,7 @@ Var DistRepNNet::buildSparseAffineTransform(VarArray weights, Var input, TVec<in
     Vec missing_replace(weights->length()-1);
     for(int j=0; j<weights->length()-1; j++)
     {
-        if(input_to_dict_index[j] < 0)
+        if(input_to_dict_index[begin+j] < 0)
         {
             input_is_discrete[j] = false;
             missing_replace[j] = 0;            
@@ -387,7 +398,7 @@ Var DistRepNNet::buildSparseAffineTransformWeightPenalty(VarArray weights, Var i
     Vec missing_replace(weights.length()-1);
     for(int j=0; j<weights->length()-1; j++)
     {
-        if(input_to_dict_index[j] < 0)
+        if(input_to_dict_index[begin+j] < 0)
         {
             input_is_discrete[j] = false;
             missing_replace[j] = 0;            
@@ -495,13 +506,31 @@ void DistRepNNet::buildVarGraph(int task_index)
         int this_ntokens;
         if(task_index < 0)
         {
-            if(ntokens <= 0) PLERROR("In DistRepNNet::buildVarGraph(): ntokens should be > 0");
-            if(nfeatures_per_token <= 0) PLERROR("In DistRepNNet::buildVarGraph(): nfeatures_per_token should be > 0");
-            if(ntokens * nfeatures_per_token != task_set->inputsize()) PLERROR("In DistRepNNet::buildVarGraph(): ntokens * nfeatures_per_token != task_set->inputsize()");
+            if(nfeatures_for_each_token.length() == 0)
+            {
+                if(ntokens <= 0) PLERROR("In DistRepNNet::buildVarGraph(): ntokens should be > 0");
+                if(nfeatures_per_token <= 0) PLERROR("In DistRepNNet::buildVarGraph(): nfeatures_per_token should be > 0");
+                if(ntokens * nfeatures_per_token != task_set->inputsize()) PLERROR("In DistRepNNet::buildVarGraph(): ntokens * nfeatures_per_token != task_set->inputsize()");
+            }
+            else
+            {
+                int sum_feat = 0;
+                for(int f=0; f<nfeatures_for_each_token.length(); f++)
+                {
+                    if(nfeatures_for_each_token[f] <= 0) PLERROR("In DistRepNNet::buildVarGraph(): nfeatures_for_each_token[%d] should be > 0", f);
+                    sum_feat += nfeatures_for_each_token[f];        
+                }
+                if(sum_feat != inputsize())
+                    PLERROR("In DistRepNNet::buildVarGraph(): sum of nfeatures_for_each_token should be equal to inputsize");
+                if(nfeatures_for_each_token.length() != ntokens)
+                    PLERROR("In DistRepNNet::buildVarGraph(): nfeatures_for_each_token should be of size ntokens=%d", ntokens);
+            }
             this_ntokens = ntokens;
         }
         else
         {
+            if(nfeatures_for_each_token.length() != 0)
+                PLERROR("In DistRepNNet::buildVarGraph(): usage of nfeatures_for_each_token with extra tasks is not supported yet");
             if(task_index >= ntokens_extra_tasks.length()) PLERROR("In DistRepNNet::buildVarGraph(): ntokens not defined for task %d", task_index);
             if(ntokens_extra_tasks[task_index] <= 0) PLERROR("In DistRepNNet::buildVarGraph(): ntokens[%d] should be > 0", task_index);
             if(nfeatures_per_token <= 0) PLERROR("In DistRepNNet::buildVarGraph(): nfeatures_per_token should be > 0");
@@ -513,52 +542,135 @@ void DistRepNNet::buildVarGraph(int task_index)
         VarArray dist_reps(this_ntokens);
         VarArray dist_rep_hids(this_ntokens);
 
-        if(winputdistrep.length() == 0)
+        if(nfeatures_for_each_token.length() != 0)
         {
-            winputdistrep.resize(nfeatures_per_token+1);
-            if(nhidden_dist_rep_predictor > 0) winputdistrep[nfeatures_per_token] = Var(1,nhidden_dist_rep_predictor);
-            else winputdistrep[nfeatures_per_token] = Var(1,dim);
-            for(int j=0; j<nfeatures_per_token; j++)
+            if(winputdistrep.length() == 0)
             {
-                if(input_to_dict_index[j] < 0)
-                    if(nhidden_dist_rep_predictor > 0) winputdistrep[j] = Var(nhidden_dist_rep_predictor);
-                    else winputdistrep[j] = Var(dim);
-                else                            
-                    if(nhidden_dist_rep_predictor > 0) winputdistrep[j] = Var(dictionaries[input_to_dict_index[j]]->size()+1,nhidden_dist_rep_predictor);
-                    else winputdistrep[j] = Var(dictionaries[input_to_dict_index[j]]->size()+1,dim);
-                if(nhidden_dist_rep_predictor > 0) woutdistrep = Var(nhidden_dist_rep_predictor+1,dim);
+                //! TODO: reuse weight matrices when dictionary is the same...
+                winputdistrep.resize(sum(nfeatures_for_each_token)+this_ntokens);
+                int sum = 0;
+                int sum_dict = 0;
+                if(nhidden_dist_rep_predictor>0)
+                    PLERROR("In DistRepNNet::buildVarGraph(): nhidden_dist_rep_predictor>0 is not supported with nfeatures_for_each_token");                    
+                for(int t=0; t<this_ntokens; t++)
+                {
+                    if(nhidden_dist_rep_predictor > 0) winputdistrep[sum+nfeatures_for_each_token[t]] = Var(1,nhidden_dist_rep_predictor);
+                    else winputdistrep[sum+nfeatures_for_each_token[t]] = Var(1,dim);
+                    for(int j=0; j<nfeatures_for_each_token[t]; j++)
+                    {
+                        if(input_to_dict_index[sum_dict+j] < 0)
+                            if(nhidden_dist_rep_predictor > 0) winputdistrep[sum+j] = Var(1,nhidden_dist_rep_predictor);
+                            else winputdistrep[sum+j] = Var(1,dim);
+                        else                            
+                            if(nhidden_dist_rep_predictor > 0) winputdistrep[sum+j] = Var(dictionaries[input_to_dict_index[sum_dict+j]]->size()+1,nhidden_dist_rep_predictor);
+                            else winputdistrep[sum+j] = Var(dictionaries[input_to_dict_index[sum_dict+j]]->size()+1,dim);
+                        if(nhidden_dist_rep_predictor > 0) woutdistrep = Var(nhidden_dist_rep_predictor+1,dim);
+                    }
+                    sum += nfeatures_for_each_token[t]+1;
+                    sum_dict += nfeatures_for_each_token[t];
+                }
+                params.append(winputdistrep);
+                partial_update_vars.append(winputdistrep);
+                if(nhidden_dist_rep_predictor > 0) params.append(woutdistrep); 
             }
-            params.append(winputdistrep);
-            partial_update_vars.append(winputdistrep);
-            if(nhidden_dist_rep_predictor > 0) params.append(woutdistrep); 
+
+            // Building var graph from input to distributed representations
+            int sum = 0;
+            int sum_dict = 0;
+            for(int i=0; i<this_ntokens; i++)
+            {
+                //if(nhidden_dist_rep_predictor > 0) dist_rep_hids[i] = buildSparseAffineTransform(winputdistrep, input, input_to_dict_index, i*nfeatures_per_token);
+                //else 
+                dist_reps[i] =  buildSparseAffineTransform(winputdistrep.subVarArray(sum,nfeatures_for_each_token[i]+1), input, input_to_dict_index, sum_dict);
+                
+                //if(nhidden_dist_rep_predictor > 0) 
+                //{
+                //    dist_rep_hids[i] = add_transfer_func(dist_rep_hids[i]);
+                //    dist_reps.append(affine_transform(dist_rep_hids[i],woutdistrep));
+                //}
+                sum += nfeatures_for_each_token[i]+1;
+                sum_dict += nfeatures_for_each_token[i];
+            }
+
         }
-
-        // Building var graph from input to distributed representations
-        for(int i=0; i<this_ntokens; i++)
+        else
         {
-            if(nhidden_dist_rep_predictor > 0) dist_rep_hids[i] = buildSparseAffineTransform(winputdistrep, input, input_to_dict_index, i*nfeatures_per_token);
-            else dist_reps[i] =  buildSparseAffineTransform(winputdistrep, input, input_to_dict_index, i*nfeatures_per_token);
-
-            if(nhidden_dist_rep_predictor > 0) 
+            if(winputdistrep.length() == 0)
             {
-                dist_rep_hids[i] = add_transfer_func(dist_rep_hids[i]);
-                dist_reps.append(affine_transform(dist_rep_hids[i],woutdistrep));
+                winputdistrep.resize(nfeatures_per_token+1);
+                if(nhidden_dist_rep_predictor > 0) winputdistrep[nfeatures_per_token] = Var(1,nhidden_dist_rep_predictor);
+                else winputdistrep[nfeatures_per_token] = Var(1,dim);
+                for(int j=0; j<nfeatures_per_token; j++)
+                {
+                    if(input_to_dict_index[j] < 0)
+                        if(nhidden_dist_rep_predictor > 0) winputdistrep[j] = Var(1,nhidden_dist_rep_predictor);
+                        else winputdistrep[j] = Var(1,dim);
+                    else                            
+                        if(nhidden_dist_rep_predictor > 0) winputdistrep[j] = Var(dictionaries[input_to_dict_index[j]]->size()+1,nhidden_dist_rep_predictor);
+                        else winputdistrep[j] = Var(dictionaries[input_to_dict_index[j]]->size()+1,dim);
+                    if(nhidden_dist_rep_predictor > 0) woutdistrep = Var(nhidden_dist_rep_predictor+1,dim);
+                }
+                params.append(winputdistrep);
+                partial_update_vars.append(winputdistrep);
+                if(nhidden_dist_rep_predictor > 0) params.append(woutdistrep);
             }
+
+            // Building var graph from input to distributed representations
+            for(int i=0; i<this_ntokens; i++)
+            {
+                if(nhidden_dist_rep_predictor > 0) dist_rep_hids[i] = buildSparseAffineTransform(winputdistrep, input, input_to_dict_index, i*nfeatures_per_token);
+                else dist_reps[i] =  buildSparseAffineTransform(winputdistrep, input, input_to_dict_index, i*nfeatures_per_token);
+                
+                if(nhidden_dist_rep_predictor > 0) 
+                {
+                    dist_rep_hids[i] = add_transfer_func(dist_rep_hids[i]);
+                    dist_reps.append(affine_transform(dist_rep_hids[i],woutdistrep));
+                }
+            }
+            
         }
 
         if(task_index < 0)
         {
             // To construct the Func...
-            token_features = Var(nfeatures_per_token);
-            Var dist_rep_hid;
+            if(nfeatures_for_each_token.length() != 0)
+                token_features = Var(sum(nfeatures_for_each_token));
+            else
+                token_features = Var(nfeatures_per_token);
             //VarArray aw;
-            if(nhidden_dist_rep_predictor > 0) dist_rep_hid = buildSparseAffineTransform(winputdistrep, token_features, input_to_dict_index, 0);
-            else dist_rep =  buildSparseAffineTransform(winputdistrep, token_features, input_to_dict_index, 0);
 
-            if(nhidden_dist_rep_predictor > 0) 
+            if(nfeatures_for_each_token.length() != 0)
             {
-                dist_rep_hid = add_transfer_func(dist_rep_hid);                
-                dist_rep = affine_transform(dist_rep_hid,woutdistrep);
+                int sum = 0;
+                int sum_dict = 0;
+                VarArray dist_reps(this_ntokens);
+                for(int i=0; i<this_ntokens; i++)
+                {
+                    //if(nhidden_dist_rep_predictor > 0) dist_rep_hids[i] = buildSparseAffineTransform(winputdistrep, input, input_to_dict_index, i*nfeatures_per_token);
+                    //else 
+                    dist_reps[i] =  buildSparseAffineTransform(winputdistrep.subVarArray(sum,nfeatures_for_each_token[i]+1), token_features, input_to_dict_index, sum_dict);
+                    
+                    //if(nhidden_dist_rep_predictor > 0) 
+                    //{
+                    //    dist_rep_hids[i] = add_transfer_func(dist_rep_hids[i]);
+                    //    dist_reps.append(affine_transform(dist_rep_hids[i],woutdistrep));
+                    //}
+                    sum += nfeatures_for_each_token[i]+1;
+                    sum_dict += nfeatures_for_each_token[i];
+                }
+                dist_rep = vconcat(dist_reps);
+            }
+            else
+            {
+                Var dist_rep_hid;
+                if(nhidden_dist_rep_predictor > 0) dist_rep_hid = buildSparseAffineTransform(winputdistrep, token_features, input_to_dict_index, 0);
+                else dist_rep =  buildSparseAffineTransform(winputdistrep, token_features, input_to_dict_index, 0);
+                
+                if(nhidden_dist_rep_predictor > 0) 
+                {
+                    dist_rep_hid = add_transfer_func(dist_rep_hid);                
+                    dist_rep = affine_transform(dist_rep_hid,woutdistrep);
+                }
             }
         }
         
@@ -947,13 +1059,13 @@ void DistRepNNet::buildOutputFromInput(int task_index) {
             // network, instead of w1.
             int dim;       
             if(this_nhidden > 0) dim = this_nhidden;
-            else dim =  dictionaries[target_dict_index]->size() + (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1); //dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1;
+            else dim = dictionaries[target_dict_index]->size() + (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1);
             winputsparse.resize(input->length()+1);
             winputsparse[input->length()] = Var(1,dim);
             for(int j=0; j<winputsparse.length()-1; j++)
             {
                 if(input_to_dict_index[j] < 0)
-                    winputsparse[j] = Var(dim);
+                    winputsparse[j] = Var(1,dim);
                 else
                     winputsparse[j] = Var(dictionaries[input_to_dict_index[j]]->size()+1,dim);
             }
@@ -974,7 +1086,7 @@ void DistRepNNet::buildOutputFromInput(int task_index) {
             if(direct_in_to_out)
             {
                 PLERROR("In buildOutputFromInput(): direct_in_to_out option not implemented for sparse input.");
-                direct_wout = Var(dp_input->size(), dictionaries[target_dict_index]->size() + (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1),"direct_wout");
+                direct_wout = Var(dictionaries[target_dict_index]->size() + (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1), dp_input->size(), "direct_wout");
                 params.append(direct_wout);
             }                           
         }
@@ -997,7 +1109,7 @@ void DistRepNNet::buildOutputFromInput(int task_index) {
         {            
             // ici: ajouter option sans biais pour sparse product...
             if(direct_in_to_out)
-                output = affine_transform(output, wout) + product(dp_input,direct_wout);
+                output = affine_transform(output, wout) + product(direct_wout,dp_input);
             else
                 output = affine_transform(output, wout);
         }
@@ -1076,11 +1188,13 @@ void DistRepNNet::buildOutputFromInput(int task_index) {
         {
             w1 = Var(1 + dp_input->size(), this_nhidden, "w1");
             params.append(w1);
+            
             output = affine_transform(dp_input, w1); 
             output = add_transfer_func(output);
+            
             if(direct_in_to_out)
             {
-                direct_wout = Var(dp_input->size(), dictionaries[target_dict_index]->size() + (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1),"direct_wout");
+                direct_wout = Var(dictionaries[target_dict_index]->size() + (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1), dp_input->size(), "direct_wout");
                 params.append(direct_wout);
             }                           
         }
@@ -1100,7 +1214,7 @@ void DistRepNNet::buildOutputFromInput(int task_index) {
         if(this_nhidden > 0)
         {            
             if(direct_in_to_out)
-                output = affine_transform(output, wout) + product(dp_input,direct_wout);
+                output = affine_transform(output, wout) + product(direct_wout,dp_input);
             else
                 output = affine_transform(output, wout);
         }
@@ -1221,8 +1335,23 @@ void DistRepNNet::buildPenalties(int this_ntokens) {
                                                                  (input_dist_rep_predictor_weight_decay + weight_decay), penalty_type));                   
         }
         */
-        for(int i=0; i<this_ntokens; i++)
-            penalties.append(buildSparseAffineTransformWeightPenalty(winputdistrep, input, input_to_dict_index, i*nfeatures_per_token, input_dist_rep_predictor_weight_decay + weight_decay, input_dist_rep_predictor_bias_decay + bias_decay, penalty_type));
+        // Apply only bias decay for first token, since these biases are present in all dist. rep. predictions
+        if(nfeatures_for_each_token.length() != 0)
+        {
+            int sum=0;
+            int sum_dict = 0;
+            for(int i=0; i<nfeatures_for_each_token.length(); i++)
+            {
+                penalties.append(buildSparseAffineTransformWeightPenalty(winputdistrep.subVarArray(sum,nfeatures_for_each_token[i]+1), input, input_to_dict_index, sum_dict, input_dist_rep_predictor_weight_decay + weight_decay, input_dist_rep_predictor_bias_decay + bias_decay, penalty_type));
+                sum += nfeatures_for_each_token[i]+1;
+                sum_dict += nfeatures_for_each_token[i];
+            }
+        }
+        else
+        {
+            for(int i=0; i<this_ntokens; i++)
+                penalties.append(buildSparseAffineTransformWeightPenalty(winputdistrep, input, input_to_dict_index, i*nfeatures_per_token, input_dist_rep_predictor_weight_decay + weight_decay, (i==0 ? input_dist_rep_predictor_bias_decay + bias_decay : 0), penalty_type));
+        }
     }
     //if(winputdistrep.length() != 0 && (input_dist_rep_predictor_bias_decay + bias_decay))
     //    penalties.append(affine_transform_weight_penalty(winputdistrep[nfeatures_per_token], (input_dist_rep_predictor_bias_decay + bias_decay), 
@@ -1286,12 +1415,12 @@ void DistRepNNet::computeOutputAndCosts(const Vec& inputv, const Vec& targetv,
     row << inputv;
     row.resize(train_set->width());
     row.subVec(inputsize_,train_set->width()-inputsize_).fill(MISSING_VALUE);
-    //if(target_dictionary)
-    //    target_values = target_dictionary->getValues();
-    //else
-    //    target_values = train_set->getValues(row,inputsize_);
-    //outputv[0] = target_values[(int)output_comp[0]];
-    outputv[0] = (int)output_comp[0];
+    if(target_dictionary)
+        target_values = target_dictionary->getValues();
+    else
+        target_values = train_set->getValues(row,inputsize_);
+    outputv[0] = target_values[(int)output_comp[0]];
+    //outputv[0] = (int)output_comp[0];
     //for(int i=0; i<costsv.length(); i++)
     //    if(is_missing(costsv[i]))
     //        cout << "WHAT THE FUCK!!!" << endl;
@@ -1366,7 +1495,7 @@ TVec<string> DistRepNNet::getTestCostNames() const
 ///////////////////////
 // add_transfer_func //
 ///////////////////////
-Var DistRepNNet::add_transfer_func(const Var& input, string transfer_func) {
+Var DistRepNNet::add_transfer_func(const Var& input, string transfer_func, VarArray mus, Var sigma) {
     Var result;
     if (transfer_func == "default")
         transfer_func = hidden_transfer_func;
@@ -1388,8 +1517,7 @@ Var DistRepNNet::add_transfer_func(const Var& input, string transfer_func) {
         result = unary_hard_slope(input,0,1);
     else if(transfer_func=="symm_hard_slope")
         result = unary_hard_slope(input,-1,1);
-    else
-        PLERROR("In DistRepNNet::add_transfer_func(): Unknown value for transfer_func: %s",transfer_func.c_str());
+    else PLERROR("In DistRepNNet::add_transfer_func(): Unknown value for transfer_func: %s",transfer_func.c_str());
     return result;
 }
 
@@ -1434,27 +1562,61 @@ void DistRepNNet::initializeParams(bool set_seed, int task_index)
     if(woutdistrep) fillWeights(woutdistrep,true);
     if(winputdistrep.size() != 0)
     {
-        for(int i=0; i<nfeatures_per_token; i++)
+        if(initialize_sparse_params_to_zero)
         {
-            if(task_index < 0)
-                fillWeights(winputdistrep[i],false,train_set->inputsize());
-            else
-                fillWeights(winputdistrep[i],false,extra_tasks[task_index]->inputsize());
+            for(int i=0; i<winputdistrep.length(); i++)
+                winputdistrep[i]->value.fill(0.0);
         }
-        winputdistrep[nfeatures_per_token]->value.fill(0.0);
+        else
+        {
+            if(nfeatures_for_each_token.length() != 0)
+            {
+                int sum = 0;
+                for(int t=0; t<nfeatures_for_each_token.length(); t++)
+                {
+                    for(int i=0; i<nfeatures_for_each_token[t]; i++)
+                    {
+                        if(task_index < 0)
+                            fillWeights(winputdistrep[sum+i],false,train_set->inputsize());
+                        else
+                            fillWeights(winputdistrep[sum+i],false,extra_tasks[task_index]->inputsize());
+                    }
+                    winputdistrep[sum+nfeatures_for_each_token[t]]->value.fill(0.0);
+                    sum += nfeatures_for_each_token[t]+1;
+                }
+            }
+            else
+            {
+                for(int i=0; i<nfeatures_per_token; i++)
+                {
+                    if(task_index < 0)
+                        fillWeights(winputdistrep[i],false,train_set->inputsize());
+                    else
+                        fillWeights(winputdistrep[i],false,extra_tasks[task_index]->inputsize());
+                }
+                winputdistrep[nfeatures_per_token]->value.fill(0.0);
+            }
+        }
     }
     if(winputsparse.size() != 0)
     {
-        for(int i=0; i<winputsparse.size(); i++)
+        if(initialize_sparse_params_to_zero)
         {
-            if(task_index < 0)
-                fillWeights(winputsparse[i],false,train_set->inputsize());
-            else
-                fillWeights(winputsparse[i],false,extra_tasks[task_index]->inputsize());
+            for(int i=0; i<winputsparse.length(); i++)
+                winputsparse[i]->value.fill(0.0);
         }
-        winputsparse.last()->value.fill(0.0);
+        else
+        {
+            for(int i=0; i<winputsparse.size(); i++)
+            {
+                if(task_index < 0)
+                    fillWeights(winputsparse[i],false,train_set->inputsize());
+                else
+                    fillWeights(winputsparse[i],false,extra_tasks[task_index]->inputsize());
+            }
+            winputsparse.last()->value.fill(0.0);
+        }
     }
-    
 }
 
 //! To use varDeepCopyField.
@@ -1567,57 +1729,60 @@ void DistRepNNet::train()
     
     if(!train_stats)
         PLERROR("In DistRepNNet::train, you did not setTrainStatsCollector");
-    int current_stage = stage;
-    for(int t=0; t<extra_tasks.length(); t++)
-    {
-        int l = extra_tasks[t]->length();  
-        
-        // number of samples seen by optimizer before each optimizer update
-        int nsamples = batch_size>0 ? batch_size : l;
-        paramf = Func(invars_extra_tasks[t], training_cost_extra_tasks[t]); // parameterized function to optimize
-        Var totalcost = meanOf(extra_tasks[t], paramf, nsamples, true);
-        if(optimizer_extra_tasks[t])
-        {
-            optimizer_extra_tasks[t]->setToOptimize(params, totalcost);
-            if(partial_update_vars.length() != 0) optimizer_extra_tasks[t]->setPartialUpdateVars(partial_update_vars);
-            optimizer_extra_tasks[t]->build();
-        }
-        else PLERROR("DistRepNNet::train can't train without setting an optimizer first!");
-        
-        // number of optimizer stages corresponding to one learner stage (one epoch)
-        int optstage_per_lstage = l/nsamples;
-        
-        ProgressBar* pb = 0;
-        if(report_progress)
-            pb = new ProgressBar("Extra task " + tostring(t) + ", Training " + classname() + " from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
-        
-        int initial_stage = stage;
-        bool early_stop=false;
-        //displayFunction(paramf, true, false, 250);
-        //cout << params.size() << " params to train" << endl;
-        while(stage<nstages && !early_stop)
-        {
-            optimizer_extra_tasks[t]->nstages = optstage_per_lstage;
-            train_stats->forget();
-            optimizer_extra_tasks[t]->early_stop = false;
-            optimizer_extra_tasks[t]->optimizeN(*train_stats);
-            // optimizer->verifyGradient(1e-4); // Uncomment if you want to check your new Var.
-            train_stats->finalize();
-            if(verbosity>2)
-                cout << "Epoch " << stage << " train objective: " << train_stats->getMean() << endl;
-            ++stage;
-            if(pb)
-                pb->update(stage-initial_stage);
-        }
-        if(verbosity>1)
-            cout << "EPOCH " << stage << " train objective: " << train_stats->getMean() << endl;
-        
-        if(pb)
-            delete pb;
-        stage = current_stage;
-    }
     
-
+    if(!use_extra_tasks_only_on_first_epoch || stage == 0)
+    {
+        int current_stage = stage;
+        for(int t=0; t<extra_tasks.length(); t++)
+        {
+            int l = extra_tasks[t]->length();  
+            
+            // number of samples seen by optimizer before each optimizer update
+            int nsamples = batch_size>0 ? batch_size : l;
+            paramf = Func(invars_extra_tasks[t], training_cost_extra_tasks[t]); // parameterized function to optimize
+            Var totalcost = meanOf(extra_tasks[t], paramf, nsamples, true);
+            if(optimizer_extra_tasks[t])
+            {
+                optimizer_extra_tasks[t]->setToOptimize(params, totalcost);
+                if(partial_update_vars.length() != 0) optimizer_extra_tasks[t]->setPartialUpdateVars(partial_update_vars);
+                optimizer_extra_tasks[t]->build();
+            }
+            else PLERROR("DistRepNNet::train can't train without setting an optimizer first!");
+            
+            // number of optimizer stages corresponding to one learner stage (one epoch)
+            int optstage_per_lstage = l/nsamples;
+            
+            ProgressBar* pb = 0;
+            if(report_progress)
+                pb = new ProgressBar("Extra task " + tostring(t) + ", Training " + classname() + " from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
+            
+            int initial_stage = stage;
+            bool early_stop=false;
+            //displayFunction(paramf, true, false, 250);
+            //cout << params.size() << " params to train" << endl;
+            while(stage<nstages && !early_stop)
+            {
+                optimizer_extra_tasks[t]->nstages = optstage_per_lstage;
+                train_stats->forget();
+                optimizer_extra_tasks[t]->early_stop = false;
+                optimizer_extra_tasks[t]->optimizeN(*train_stats);
+                // optimizer->verifyGradient(1e-4); // Uncomment if you want to check your new Var.
+                train_stats->finalize();
+                if(verbosity>2)
+                    cout << "Epoch " << stage << " train objective: " << train_stats->getMean() << endl;
+                ++stage;
+                if(pb)
+                    pb->update(stage-initial_stage);
+            }
+            if(verbosity>1)
+                cout << "EPOCH " << stage << " train objective: " << train_stats->getMean() << endl;
+            
+            if(pb)
+                delete pb;
+            stage = current_stage;
+        }
+    }    
+    
     int l = train_set->length();  
 
     if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
