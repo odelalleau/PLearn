@@ -1,0 +1,2 @@
+__REVISION__ = PL5838
+data                                          = PLEARNDIR:examples/data/test_suite/gauss_1D_100pt.amat

@@ -1,0 +1,55 @@
+*5 -> PTester(
+    dataset = *1 -> AutoVMatrix(
+        inputsize = 0,
+        specification = "PLEARNDIR:examples/data/test_suite/gauss_1D_100pt.amat",
+        targetsize = 1,
+        weightsize = 0
+        ),
+    expdir = "expdir",
+    learner = *2 -> ConstantRegressor( ),
+    provide_learner_expdir = 1,
+    save_test_confidence = 1,
+    save_test_costs = 1,
+    save_test_outputs = 1,
+    splitter = *3 -> FractionSplitter(
+        splits = 1 2 [
+                (0, 1),
+                (0, 1)
+                ]
+        ),
+    statnames = [
+        "E[train.E[mse]]",
+        "E[test.E[mse]]",
+        "E[test.V[mse]]",
+        "E[test.STDDEV[mse]]",
+        "E[test.STDERROR[mse]]",
+        "E[test.SKEW[mse]]",
+        "E[test.KURT[mse]]",
+        "E[test.MIN[mse]]",
+        "E[test.MAX[mse]]",
+        "E[test.RANGE[mse]]",
+        "E[test.SUM[mse]]",
+        "E[test.SUMSQ[mse]]",
+        "E[test.FIRST[mse]]",
+        "E[test.LAST[mse]]",
+        "E[test.N[mse]]",
+        "E[test.NMISSING[mse]]",
+        "E[test.NNONMISSING[mse]]",
+        "E[test.SHARPERATIO[mse]]",
+        "E[test.ZSTAT[mse]]",
+        "E[test.PZ1t[mse]]",
+        "E[test.PZ2t[mse]]",
+        "E[test.PSEUDOQ(0.001)[mse]]",
+        "E[test.PSEUDOQ(0.01)[mse]]",
+        "E[test.PSEUDOQ(0.05)[mse]]",
+        "E[test.PSEUDOQ(0.25)[mse]]",
+        "E[test.PSEUDOQ(0.5)[mse]]",
+        "E[test.PSEUDOQ(0.75)[mse]]",
+        "E[test.PSEUDOQ(0.95)[mse]]",
+        "E[test.PSEUDOQ(0.99)[mse]]",
+        "E[test.PSEUDOQ(0.999)[mse]]",
+        "E[test.IQR[mse]]",
+        "E[test.PRR[mse]]"
+        ],
+    template_stats_collector = *4 -> VecStatsCollector( maxnvalues = 50 )
+    )
