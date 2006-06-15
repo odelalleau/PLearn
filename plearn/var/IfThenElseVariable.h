@@ -49,11 +49,12 @@ namespace PLearn {
 using namespace std;
 
 
-/*!   Variable that represents the element-wise IF-THEN-ELSE:
-  the first parent is the test (0 or different from 0),
-  the second parent is the value returned when the test is !=0,
-  the third parent is the value returned when the test is ==0,
-*/
+/**
+ *  Variable that represents the element-wise IF-THEN-ELSE:
+ *  - The first parent is the test (0 or different from 0)
+ *  - The second parent is the value returned when the test is !=0,
+ *  - The third parent is the value returned when the test is ==0,
+ */
 class IfThenElseVariable: public NaryVariable
 {
     typedef NaryVariable inherited;

@@ -50,9 +50,13 @@ using namespace std;
 
 /** IfThenElseVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(IfThenElseVariable,
-                        "Variable that represents the element-wise IF-THEN-ELSE",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+    IfThenElseVariable,
+    "Variable that represents the element-wise IF-THEN-ELSE",
+    "Variable that represents the element-wise IF-THEN-ELSE:\n"
+    "- The first parent is the test (0 or different from 0)\n"
+    "- The second parent is the value returned when the test is !=0,\n"
+    "- The third parent is the value returned when the test is ==0,\n");
 
 IfThenElseVariable::IfThenElseVariable(Var IfVar, Var ThenVar, Var ElseVar)
     : inherited(IfVar & ThenVar & (VarArray)ElseVar,ThenVar->length(), ThenVar->width())
