@@ -115,7 +115,7 @@ public:
     //! If true, if a missing value is encountered on an input variable
     //! for a computeOutput, it is replaced by the estimated mu for that
     //! variable before projecting on the principal components
-    bool impute_missings;
+    bool impute_missing;
   
     // Saved options
     Vec mu; //! The (weighted) mean of the samples 

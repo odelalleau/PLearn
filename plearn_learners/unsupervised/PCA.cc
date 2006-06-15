@@ -36,7 +36,10 @@
  * $Id$ 
  ******************************************************* */
 
+#define PL_LOG_MODULE_NAME "PCA"
+
 /*! \file PCA.cc */
+#include <plearn/io/pl_log.h>
 #include <plearn/vmat/CenteredVMatrix.h>
 #include <plearn/vmat/GetInputVMatrix.h>
 #include "PCA.h"
@@ -55,7 +58,7 @@ PCA::PCA()
       sigmasq(0),
       normalize(false),
       normalize_warning(true),
-      impute_missings(false)
+      impute_missing(false)
 { }
 
 PLEARN_IMPLEMENT_OBJECT(
@@ -66,8 +69,14 @@ PLEARN_IMPLEMENT_OBJECT(
     "principal eigenvectors of that matrix, optionally scaling by the inverse\n"
     "of the square root of the eigenvalues (to obtained 'sphered', i.e.\n"
     "Normal(0,I) data).\n"
+    "\n"
     "Alternative EM algorithms are provided, that may be useful when there is\n"
     "a lot of data or the dimension is very high.\n"
+    "\n"
+    "Note that for the 'classical' algorithm, it is no longer an error to\n"
+    "specify a number of components larger than the training set's inputsize;\n"
+    "if this happens, the number of components is simply set to be the inputsize,\n"
+    "and a warning message is output to the PCA named log\n"
     );
 
 void PCA::declareOptions(OptionList& ol)
@@ -109,7 +118,7 @@ void PCA::declareOptions(OptionList& ol)
     declareOption(ol, "normalize_warning", &PCA::normalize_warning, OptionBase::buildoption, 
                   "(Temp. option). If true, display a warning about the 'normalize' option.");
 
-    declareOption(ol, "impute_missings", &PCA::impute_missings,
+    declareOption(ol, "impute_missing", &PCA::impute_missing,
                   OptionBase::buildoption,
                   "If true, if a missing value is encountered on an input variable\n"
                   "for a computeOutput, it is replaced by the estimated mu for that\n"
@@ -183,7 +192,7 @@ void PCA::computeOutput(const Vec& input, Vec& output) const
     x << input;
 
     // Perform missing-value imputation if requested
-    if (impute_missings)
+    if (impute_missing)
         for (int i=0, n=x.size() ; i<n ; ++i)
             if (is_missing(x[i]))
                 x[i] = mu[i];
@@ -279,10 +288,15 @@ int PCA::outputsize() const
 
 void PCA::classical_algo( )
 {  
-    if ( ncomponents > train_set->inputsize() )
-        PLERROR( "In PCA::train - You asked for %d components, but the "
-                 "training set inputsize is only %d",
-                 ncomponents, train_set->inputsize() );
+    if ( ncomponents > train_set->inputsize() ) {
+        ncomponents = train_set->inputsize();
+        MODULE_LOG
+            << "PCA::train: You asked for " << ncomponents
+            << "components, but the training set inputsize is only "
+            << train_set->inputsize()
+            << "; using " << train_set->inputsize() << " components"
+            << endl;
+    }
 
     ProgressBar* pb = 0;
     if (report_progress)
