@@ -348,6 +348,17 @@ class confirm( PyTestMode ):
 
     def __init__( self, targets, options ):
         super(confirm, self).__init__(targets, options)
+
+        # Trying to isolate a weard bug in confirm...        
+        true_level = logging.root.level
+        logging.root.removeHandler(core.hdlr)
+
+        import StringIO
+        strstream = StringIO.StringIO()
+        hdlr      = logging.StreamHandler(strstream)        
+        logging.root.addHandler(hdlr)
+        logging.root.setLevel(logging._levelNames["DEBUG"])
+        ###
         
         for (family, test_list) in Test._families_map.iteritems():
             os.chdir( family )
@@ -380,12 +391,20 @@ class confirm( PyTestMode ):
                     "%s was not." % family
                     )
 
+        # ... trying to isolate a weard bug in confirm
+        logging.root.removeHandler(hdlr)
+        core.mail("PyTest Confirm Log", strstream.getvalue())
+
+        logging.root.addHandler(core.hdlr)
+        ###
+
     def migrate_results_trees(self, expected_results, confirmed_results):
         cwd = os.getcwd()
         expected_results = moresh.relative_path(expected_results, cwd)
         confirmed_results = moresh.relative_path(confirmed_results, cwd)
         
         # Files are listed in 'topdown' order.
+        logging.debug("Migrating %s to %s"%(confirmed_results,expected_results))
         common_files, unique_to_expected, unique_to_confirmed =\
             moresh.compare_trees(expected_results, confirmed_results, ["\.svn"])
 
@@ -397,6 +416,7 @@ class confirm( PyTestMode ):
         
         # Old expected results to be removed
         for expected_filepath in unique_to_expected:
+            logging.debug("recursive_remove %s --force"%expected_filepath)
             version_control.recursive_remove(expected_filepath, '--force')
 
         # New expected results to be added

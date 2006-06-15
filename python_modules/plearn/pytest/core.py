@@ -21,6 +21,17 @@ class PyTestUsageError(Exception):
 
 #######  Configs and Caches  ##################################################
 
+def mail(subject, msg_content, to="dorionc@apstat.com"):
+    # Opening the senmail process
+    from popen2 import Popen3
+    sendmail = Popen3('mail %s -s "%s"'%(to,subject), True)
+
+    # "Body" of the mail
+    sendmail.tochild.write("%s\n"%msg_content)
+
+    # "Closing" the mail process
+    sendmail.tochild.close()
+
 def pytest_config_path():
     from plearn.utilities.ppath import plearn_configs
     return os.path.join(plearn_configs, 'pytest')

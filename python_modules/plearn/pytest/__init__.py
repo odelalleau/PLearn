@@ -10,33 +10,6 @@ import core, modes
 
 __all__ = [ "main" ]
     
-########################################################################
-## Functions are listed by alphabetical order
-
-def mail():
-    raise DeprecationWarning
-    # Opening the senmail process
-    sendmail = Popen3("sendmail -t", True)
-
-    # "Header" of the mail
-    sendmail.tochild.write("From: PyTest -compilePLL -mail\n")
-    sendmail.tochild.write("Subject: PyTest -- List of files that did not compile\n")
-    sendmail.tochild.write("To: " + options.mail + "\n")
-
-    # Changing the mode of the savelog_file from write to read
-    savelog_file.close()
-    savelog_file = open(options.savelog, "r")
-
-    # "Body" of the mail
-    sendmail.tochild.write(savelog_file.read() + "\n")
-    sendmail.tochild.write(".\n")
-
-    # "Closing" the mail mode
-    sendmail.tochild.close()
-    savelog_file.close()
-    options.savelog = None # that way the file isn't closed twice
-    #                      # ( see end of pytest() )
-
 ###################################################################################
 ## MAIN PROGRAM
 def main( pytest_version ):
@@ -83,9 +56,9 @@ def main( pytest_version ):
     
     ## Managing the verbosity option.
     # In Python2.4: logging.basicConfig(level=logging.DEBUG, ...)
-    hdlr = logging.StreamHandler()
-    hdlr.setFormatter( logging.Formatter("%(message)s") )
-    logging.root.addHandler(hdlr)
+    core.hdlr = logging.StreamHandler()
+    core.hdlr.setFormatter( logging.Formatter("%(message)s") )
+    logging.root.addHandler(core.hdlr)
     logging.root.setLevel(logging._levelNames[options.verbosity])
     
     if ( hasattr( options, 'mail' )
