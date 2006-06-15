@@ -43,13 +43,7 @@
         "E[test.PSEUDOQ(0.01)[mse]]",
         "E[test.PSEUDOQ(0.05)[mse]]",
         "E[test.PSEUDOQ(0.25)[mse]]",
-        "E[test.PSEUDOQ(0.5)[mse]]",
-        "E[test.PSEUDOQ(0.75)[mse]]",
-        "E[test.PSEUDOQ(0.95)[mse]]",
-        "E[test.PSEUDOQ(0.99)[mse]]",
-        "E[test.PSEUDOQ(0.999)[mse]]",
-        "E[test.IQR[mse]]",
-        "E[test.PRR[mse]]"
+        "E[test.PSEUDOQ(0.5)[mse]]"
         ],
     template_stats_collector = *4 -> VecStatsCollector( maxnvalues = 50 )
     )

@@ -24,9 +24,3 @@ E[test.PSEUDOQ(0.01)[mse]]	0
 E[test.PSEUDOQ(0.05)[mse]]	0
 E[test.PSEUDOQ(0.25)[mse]]	0
 E[test.PSEUDOQ(0.5)[mse]]	0
-E[test.PSEUDOQ(0.75)[mse]]	0
-E[test.PSEUDOQ(0.95)[mse]]	0
-E[test.PSEUDOQ(0.99)[mse]]	0
-E[test.PSEUDOQ(0.999)[mse]]	0
-E[test.IQR[mse]]	0
-E[test.PRR[mse]]	0
