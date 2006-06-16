@@ -109,16 +109,15 @@ void AddMissingVMatrix::build()
 ////////////
 void AddMissingVMatrix::build_()
 {
-  // ### This method should do the real building of the object,
-  // ### according to set 'options', in *any* situation.
-  // ### Typical situations include:
-  // ###  - Initial building of an object from a few user-specified options
-  // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-  // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-  // ### You should assume that the parent class' build_() has already been called.
+    // Ensure we are not using both a missing values proportion and
+    // user-specified missing columns.
+    if (!fast_exact_is_equal(missing_prop, 0) &&
+            !missing_values_columns.isEmpty())
+        PLERROR("In AddMissingVMatrix::build_ - You may only use one of these "
+                "two options: 'missing_prop' or 'missing_values_columns'");
 
-  random_gen->manual_seed(seed);
-  setMetaInfoFromSource();
+    random_gen->manual_seed(seed);
+    setMetaInfoFromSource();
 }
 
 ///////////////
