@@ -188,9 +188,14 @@ void SelectRowsVMatrix::build_()
     if(rows_to_remove)
     {
         TVec<bool> tag(source->length());
-        tag.fill(1);
-        for(int i=0; i<indices.length(); i++)
+        tag.fill(true);
+        int count_to_remove = 0;
+        for(int i=0; i<indices.length(); i++) {
             tag[indices[i]] = false;
+            count_to_remove++;
+        }
+        // Allocate enough memory.
+        selected_indices.resize(source->length() - count_to_remove);
         selected_indices.resize(0);
         for(int i=0; i<source->length(); i++)
             if(tag[i]) selected_indices.push_back(i);
@@ -198,7 +203,8 @@ void SelectRowsVMatrix::build_()
     }
     else
     {
-        selected_indices = indices;
+        selected_indices.resize(indices.length());
+        selected_indices << indices;
     }
 
     length_ = selected_indices.length();
