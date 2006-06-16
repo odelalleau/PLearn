@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// ManifoldParzen2.h
+// ParzenWindow.h
 //
 // Copyright (C) 2003 Pascal Vincent, Julien Keable
 //

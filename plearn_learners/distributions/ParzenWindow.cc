@@ -106,33 +106,37 @@ void ParzenWindow::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void ParzenWindow::train()
 {
-    Mat trainset(train_set);
-    int l = train_set.length();
-
-    type = "spherical";
-    L = l;
-    D = -1;
-    GaussMix::build();
-    resizeDataBeforeTraining(); // TODO See exactly what this does.
-//  setMixtureTypeGeneral(l, ncomponents, w); // TODO Remove this line when it works.
-
-
-    for(int i=0; i<l; i++)
+    if(stage<1)
     {
-        if(i%100==0)
-            cerr << "[SEQUENTIAL TRAIN: processing pattern #" << i << "/" << l << "]\n";
-
-        // center is sample
-        center(i) << trainset(i);
-        sigma[i] = sigma_square;
-
-        alpha[i] = 1.0 / l;
+        int l = train_set.length();
+        type = "spherical";
+        L = l;
+        D = -1;
+        GaussMix::build();  // rebuild because options chnged
+        resizeDataBeforeTraining(); // TODO See exactly what this does.
+    
+        // new code proprly taking sample weights into account
+        bool has_weights = train_set->hasWeights();
+        real default_weight = 1.0/l;
+        Vec target;    
+        real weight = 0;
+    
+        for(int i=0; i<l; i++)
+        {
+            // if(i%100==0)
+            //    cerr << "[SEQUENTIAL TRAIN: processing pattern #" << i << "/" << l << "]\n";            
+            Vec input = center(i);
+            train_set->getExample(i,input,target,weight);
+            sigma[i] = sigma_square;
+            alpha[i] = has_weights ?weight :default_weight;
+            // resizeStuffBeforeTraining(); TODO Put back?
+        }
         GaussMix::build();
-        // resizeStuffBeforeTraining(); TODO Put back?
+        
+        stage = 1;
+        // precomputeStuff(); TODO Put back?
+        build(); // rebuild
     }
-    stage = 1;
-    // precomputeStuff(); TODO Put back?
-    build();
 }
 
 } // end of namespace PLearn

@@ -3,6 +3,7 @@ sigma_square = 1 ;
 L = 150 ;
 type = "spherical" ;
 n_eigen = -1 ;
+f_eigen = 0 ;
 efficient_missing = 0 ;
 efficient_k_median = 1 ;
 max_samples_in_cluster = -1 ;
