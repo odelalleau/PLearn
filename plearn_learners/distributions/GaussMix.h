@@ -485,7 +485,7 @@ public:
     //! Return survival fn = P(Y>y | x).
     virtual real survival_fn(const Vec& y) const;
 
-    //! Return survival fn = P(Y<y | x).
+    //! Return cumulative density fn = P(Y<y | x).
     virtual real cdf(const Vec& y) const;
 
     //! Compute E[Y | x].
