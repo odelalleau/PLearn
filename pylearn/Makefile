@@ -2,6 +2,8 @@ PYSTE_FILES = $(wildcard *.pyste)
 CPP_FILES = $(addprefix pylearn/_, $(addsuffix .cpp, $(basename $(PYSTE_FILES))))
 
 pylearn.so: $(CPP_FILES) | gen_pymake_buildenv gen_main
+	echo "You have to remove std::string from the list of bases"
+	echo "from PPath in _base.cpp before this will compile."
 	cd pylearn && pymake -safeopt -so pylearn.cc
 	ln -sf pylearn/libpylearn.so pylearn.so
 	chmod -x pylearn.so

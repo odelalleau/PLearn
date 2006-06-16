@@ -12,6 +12,10 @@ p_object = Class('PLearn::Object', 'plearn/base/Object.h')
 exclude_stuff(p_object, 'deepCopy')
 set_our_policy(p_object)
 
+p_path = Class('PLearn::PPath', 'plearn/io/PPath.h')
+exclude_stuff(p_path)
+for op in ('/', '/=', '==', '!='):
+    exclude(p_path.operator[op])
 
 # Useful global functions
 
