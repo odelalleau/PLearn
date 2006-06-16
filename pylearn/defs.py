@@ -22,7 +22,9 @@ exclude_list = [ 'begin', 'end', 'top', 'firstElement', 'lastElement',
                  'compact_begin', 'compact_end', 'rowelements_begin',
                  'rowelements_end', 'rowdata',
                  # Exclude some more stuff to wrap TVec<string> and TMat<VMat>
-                 'findIndices', 'find', 'input'
+                 'findIndices', 'find', 'input',
+                 # Exclude rmi stuff
+                 'getRemoteMethodMap', '_getRemoteMethodMap_',
                  ]
 
 # We exclude the operator<< and operator>> because wrapping them using

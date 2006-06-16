@@ -21,7 +21,7 @@ pylearn/%.h: FORCE
 FORCE:
 
 pylearn/_%.cpp: %.pyste
-	pyste --multiple --out=pylearn --cache-dir=pyste.cache -I `pwd`/.. -D USEDOUBLE $<
+	pyste --multiple --out=pylearn --cache-dir=pyste.cache -I `pwd`/.. -D USE_EXCEPTIONS -D USEDOUBLE $<
 	touch $@
 
 install:

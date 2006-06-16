@@ -2,6 +2,8 @@
 
 from defs import *
 
+declaration_code('#include <plearn/vmat/VMat.h>')
+
 # PLearn base classes...
 
 Class('PLearn::PPointable', 'plearn/base/PP.h')
