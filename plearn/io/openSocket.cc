@@ -45,9 +45,9 @@
 #include <plearn/io/PStream.h>
 #include <plearn/io/PrPStreamBuf.h>
 #include "openSocket.h"
-#include <mozilla/nspr/prio.h>
-#include <mozilla/nspr/prerror.h>
-#include <mozilla/nspr/prnetdb.h>
+#include <firefox/nspr/prio.h>
+#include <firefox/nspr/prerror.h>
+#include <firefox/nspr/prnetdb.h>
 
 
 namespace PLearn {

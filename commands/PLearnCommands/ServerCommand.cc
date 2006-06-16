@@ -49,9 +49,9 @@
 #include <plearn/io/pl_log.h>
 #include <plearn/io/PrPStreamBuf.h>
 #include <plearn/base/tostring.h>
-#include <mozilla/nspr/prio.h>
-#include <mozilla/nspr/prerror.h>
-#include <mozilla/nspr/prnetdb.h>
+#include <firefox/nspr/prio.h>
+#include <firefox/nspr/prerror.h>
+#include <firefox/nspr/prnetdb.h>
 
 #ifndef WIN32
 // POSIX includes for getpid() and gethostname()

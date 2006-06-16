@@ -341,8 +341,13 @@ optionalLibrary( name='boost_thread',
                  triggers = 'boost/thread*',
                  linkeroptions = '-lboost_thread' )
 
+# OLD version...
+# optionalLibrary( name = 'NSPR',
+#                  triggers = 'mozilla/nspr/*',
+#                  linkeroptions = '-L/usr/lib/mozilla -lnspr4')
+
 optionalLibrary( name = 'NSPR',
-                 triggers = 'mozilla/nspr/*',
+                 triggers = 'firefox/nspr/*',
                  linkeroptions = '-L/usr/lib/mozilla -lnspr4')
 
 # What linker options to put always after those from the optional libraries

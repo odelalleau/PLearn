@@ -42,7 +42,7 @@
 
 
 #include "PrPStreamBuf.h"
-#include <mozilla/nspr/prio.h>
+#include <firefox/nspr/prio.h>
 #include <stdio.h>
 
 namespace PLearn {
