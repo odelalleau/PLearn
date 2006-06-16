@@ -2,8 +2,8 @@ PYSTE_FILES = $(wildcard *.pyste)
 CPP_FILES = $(addprefix pylearn/_, $(addsuffix .cpp, $(basename $(PYSTE_FILES))))
 
 pylearn.so: $(CPP_FILES) | gen_pymake_buildenv gen_main
-	cd pylearn && pymake -o pylearn.so -so pylearn.cc
-	ln -sf pylearn/OBJS/linux-i386__g++_dbg_double_throwerrors_blas/libpylearn.so pylearn.so
+	cd pylearn && pymake -safeopt -so pylearn.cc
+	ln -sf pylearn/libpylearn.so pylearn.so
 	chmod -x pylearn.so
 
 gen_pymake_buildenv: $(CPP_FILES:.cpp=.h)
