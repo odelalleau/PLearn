@@ -83,35 +83,11 @@ public:
     // string weighting_method;
 
 public:
+
     //#####  Public Member Functions  #########################################
 
-    //! Default constructor, usually does nothing
+    //! Default constructor.
     ScoreLayerVariable();
-
-    //! Constructor initializing from input variables
-    // NaryVariable constructor (inherited) takes a VarArray as
-    // argument.  You can either construct from a VarArray (if the
-    // number of parent Var is not fixed, for instance), or construct
-    // a VarArray from Var by operator &: input1 & input2 &
-    // input3. You can also do both, uncomment what you prefer.
-
-    // ### Make sure the implementation in the .cc calls inherited constructor
-    // ### and initializes all fields with reasonable default values.
-    // ScoreLayerVariable(const VarArray& vararray);
-    // ScoreLayerVariable(Var input1, Var input2, Var input3, ...);
-
-    // ### If your class has parameters, you probably want a constructor that
-    // ### initializes them
-    // ScoreLayerVariable(Var input1, Var input2,
-    //              param_type the_parameter, ...);
-
-    // ### If your parent variables are a meaning and you want to be able to
-    // ### access them easily, you can add functions like:
-    // Var& First() { return varray[0]; }
-    // Var& Second() { return varray[1]; }
-    // ...
-
-    // Your other public member functions go here
 
     //! Return the molecule template associated with the given (real number)
     //! molecule id and activity.

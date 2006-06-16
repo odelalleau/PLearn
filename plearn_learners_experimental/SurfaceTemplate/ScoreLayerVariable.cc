@@ -227,23 +227,6 @@ void ScoreLayerVariable::build_()
         templates_source->getExample(templates[i], input, target, weight);
         PP<MoleculeTemplate> mol_template =
             getMoleculeTemplate(input[0], target[0]);
-        /*
-        PPath molecule_path = mappings_source->getValString(0, input[0]);
-        if (molecule_path.isEmpty())
-            PLERROR("In ScoreLayerVariable::build_ - Could not find associated"
-                    " mapping");
-        string canonic_path = molecule_path.canonical();
-        // Load the molecule if necessary.
-        if (molecules.find(canonic_path) == molecules.end()) {
-            Molecule* new_molecule =
-                new MoleculeTemplate(molecule_path, int(target[0]));
-            molecules[canonic_path] = new_molecule;
-        }
-        assert( molecules.find(canonic_path) != molecules.end() );
-        // Create storage variable for the coordinates of the nearest neighbors in
-        // the molecule.
-        PP<Molecule> mol_template = molecules[canonic_path];
-        */
         Var molecule_coordinates(mol_template->n_points(), 3);
         // Create the ICP aligner that will be used for this template.
         CopiesMap copies;
