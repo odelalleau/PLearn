@@ -1984,9 +1984,9 @@ int vmatmain(int argc, char** argv)
             {
                 out = vm->getValString(j,tmp[j]);
                 if(out == "") out = tostring(tmp[j]);
-                cout << out << sep;
+                pout << out << sep;
             }
-            cout << endl;
+            pout << endl;
         }
     }
     else if(command=="sascat")
