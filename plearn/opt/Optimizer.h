@@ -80,9 +80,13 @@ public:
     int nstages; //!< number of steps to perform when calling optimizeN
     int stage;   //!< current number of steps performed
 
+    //! Other costs (for regularisation for example)
     VarArray other_costs;
+    //! Parameters of other costs to update (usually a subset of params)
     TVec<VarArray> other_params;
+    //! Propagation paths of other_costs
     TVec<VarArray> other_proppaths;
+    //! Weight for all the other costs
     real other_weight;
 
 public:
