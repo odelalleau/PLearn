@@ -165,7 +165,18 @@ vector<string> PL_Log::namedLogging() const
 
     return r;
 }
-            
+
+
+/**
+ *  Return true if logging is enabled for the specified module
+ */
+bool PL_Log::loggingEnabled(const string& module_name) const
+{
+    return (named_logging_kind == AllModules ||
+            (named_logging_kind == SomeModules &&
+             enabled_modules.find(module_name) != enabled_modules.end()));
+}
+
 
 PL_Log& PL_Log::instance()    
 {

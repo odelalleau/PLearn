@@ -164,6 +164,9 @@ public:
 
     //! Return the list of modules for which named logging is enabled
     vector<string> namedLogging() const;
+
+    //! Return true if logging is enabled for the given module
+    bool loggingEnabled(const string& module_name) const;
     
     //! Return number of times logger() has been called
     long loggerCount() const                   { return logger_count; }
