@@ -81,68 +81,84 @@ PLEARN_IMPLEMENT_OBJECT(
 
 void PCA::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "ncomponents", &PCA::ncomponents, OptionBase::buildoption,
-                  "The number of principal components to keep (that's also the outputsize).");
+    declareOption(
+        ol, "ncomponents", &PCA::ncomponents, OptionBase::buildoption,
+        "The number of principal components to keep (that's also the outputsize).");
   
-    declareOption(ol, "sigmasq", &PCA::sigmasq, OptionBase::buildoption,
-                  "This gets added to the diagonal of the covariance matrix prior to eigen-decomposition.");
+    declareOption(
+        ol, "sigmasq", &PCA::sigmasq, OptionBase::buildoption,
+        "This gets added to the diagonal of the covariance matrix prior to\n"
+        "eigen-decomposition (classical algorighm only)");
   
-    declareOption(ol, "normalize", &PCA::normalize, OptionBase::buildoption, 
-                  "If true, we divide by sqrt(eigenval) after projecting on the eigenvec.");
+    declareOption(
+        ol, "normalize", &PCA::normalize, OptionBase::buildoption, 
+        "If true, we divide by sqrt(eigenval) after projecting on the eigenvec.");
   
-    declareOption( ol, "algo", &PCA::algo,
-                   OptionBase::buildoption,
-                   "The algorithm used to perform the Principal Component Analysis:\n"
-                   "    - 'classical'   : compute the eigenvectors of the covariance matrix\n"
-                   "    \n"
-                   "    - 'incremental' : Uses the classical algorithm but compute the\n"
-                   "                      covariance matrix in an incremental manner. \n"
-                   "    \n"
-                   "    - 'em'          : EM algorithm from \"EM algorithms for PCA and\n"
-                   "                      SPCA\" by S. Roweis\n"
-                   "    \n"
-                   "    - 'em_orth'     : a variant of 'em', where orthogonal components\n"
-                   "                      are directly computed          " );
+    declareOption(
+        ol, "algo", &PCA::algo, OptionBase::buildoption,
+        "The algorithm used to perform the Principal Component Analysis:\n"
+        "- 'classical'   : compute the eigenvectors of the covariance matrix\n"
+        "  \n"
+        "- 'incremental' : Uses the classical algorithm but computes the\n"
+        "                  covariance matrix in an incremental manner. When\n"
+        "                  'incremental' is used, a new training set is\n"
+        "                  assumed to be a superset of the old training set,\n"
+        "                  i.e. begining with the rows of the old training\n"
+        "                  set but ending with some new rows.\n"
+        "\n"
+        "- 'em'          : EM algorithm from \"EM algorithms for PCA and\n"
+        "                  SPCA\" by S. Roweis\n"
+        "\n"
+        "- 'em_orth'     : a variant of 'em', where orthogonal components\n"
+        "                  are directly computed\n");
 
-    declareOption( ol, "horizon", &PCA::_horizon,
-                   OptionBase::buildoption,
-                   "Incremental algorithm option: This option specifies a window over\n"
-                   "which the PCA should be done. That is, if the length of the training\n"
-                   "set is greater than 'horizon', the observations that will effectively\n"
-                   "contribute to the covariance matrix will only be the last 'horizon'\n"
-                   "ones. All negative values being interpreted as 'keep all observations'.\n"
-                   "\n"
-                   "Default: -1 (all observations are kept)" );
+    declareOption(
+        ol, "horizon", &PCA::_horizon, OptionBase::buildoption,
+        "Incremental algorithm option: This option specifies a window over\n"
+        "which the PCA should be done. That is, if the length of the training\n"
+        "set is greater than 'horizon', the observations that will effectively\n"
+        "contribute to the covariance matrix will only be the last 'horizon'\n"
+        "ones. All negative values being interpreted as 'keep all observations'.\n"
+        "\n"
+        "Default: -1 (all observations are kept)" );
   
     // TODO Option added October 26th, 2004. Should be removed in a few months.
-    declareOption(ol, "normalize_warning", &PCA::normalize_warning, OptionBase::buildoption, 
-                  "(Temp. option). If true, display a warning about the 'normalize' option.");
+    declareOption(
+        ol, "normalize_warning", &PCA::normalize_warning, OptionBase::buildoption, 
+        "(Temp. option). If true, display a warning about the 'normalize' option.");
 
-    declareOption(ol, "impute_missing", &PCA::impute_missing,
-                  OptionBase::buildoption,
-                  "If true, if a missing value is encountered on an input variable\n"
-                  "for a computeOutput, it is replaced by the estimated mu for that\n"
-                  "variable before projecting on the principal components\n");
+    declareOption(
+        ol, "impute_missing", &PCA::impute_missing,
+        OptionBase::buildoption,
+        "If true, if a missing value is encountered on an input variable\n"
+        "for a computeOutput, it is replaced by the estimated mu for that\n"
+        "variable before projecting on the principal components\n");
     
-    // saved options
-    declareOption(ol, "mu", &PCA::mu, OptionBase::learntoption,
-                  "The (weighted) mean of the samples");
-    declareOption(ol, "eigenvals", &PCA::eigenvals, OptionBase::learntoption,
-                  "The ncomponents eigenvalues corresponding to the principal directions kept");
-    declareOption(ol, "eigenvecs", &PCA::eigenvecs, OptionBase::learntoption,
-                  "A ncomponents x inputsize matrix containing the principal eigenvectors");
+    // learnt options
+    declareOption(
+        ol, "mu", &PCA::mu, OptionBase::learntoption,
+        "The (weighted) mean of the samples");
+
+    declareOption(
+        ol, "eigenvals", &PCA::eigenvals, OptionBase::learntoption,
+        "The ncomponents eigenvalues corresponding to the principal directions kept");
+
+    declareOption(
+        ol, "eigenvecs", &PCA::eigenvecs, OptionBase::learntoption,
+        "A ncomponents x inputsize matrix containing the principal eigenvectors");
   
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 
-    declareOption( ol, "oldest_observation", &PCA::_oldest_observation,
-                   OptionBase::learntoption,
-                   "Incremental algo:\n"
-                   "The first time values are fed to _incremental_stats, we must remember\n"
-                   "the first observation in order not to remove observation that never\n"
-                   "contributed to the covariance matrix.\n"
-                   "\n"
-                   "Initialized to -1;" );
+    declareOption(
+        ol, "oldest_observation", &PCA::_oldest_observation,
+        OptionBase::learntoption,
+        "Incremental algo:\n"
+        "The first time values are fed to _incremental_stats, we must remember\n"
+        "the first observation in order not to remove observation that never\n"
+        "contributed to the covariance matrix.\n"
+        "\n"
+        "Initialized to -1;" );
 }
 
 ///////////
@@ -303,13 +319,13 @@ void PCA::classical_algo( )
         pb = new ProgressBar("Training PCA", 2);
 
     Mat covarmat;
-    computeInputMeanAndCovar(train_set, mu, covarmat);
+    computeInputMeanAndCovar(train_set, mu, covarmat, sigmasq);
     if (mu.hasMissing() || covarmat.hasMissing())
         PLERROR("PCA::classical_algo: missing values encountered in training set\n");
     if (pb)
         pb->update(1);
   
-    eigenVecOfSymmMat(covarmat, ncomponents, eigenvals, eigenvecs);      
+    eigenVecOfSymmMat(covarmat, ncomponents, eigenvals, eigenvecs);
     if (pb)
         pb->update(2);
 

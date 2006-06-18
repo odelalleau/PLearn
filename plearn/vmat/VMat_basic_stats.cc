@@ -272,9 +272,12 @@ TVec<Mat> computeConditionalMeans(const VMat& trainset, int targetsize, Mat& bas
 ////////////////////////////
 // computeMeanAndVariance //
 ////////////////////////////
-void computeMeanAndVariance(const VMat& d, Vec& meanvec, Vec& variancevec)
+void computeMeanAndVariance(const VMat& d, Vec& meanvec, Vec& variancevec,
+                            double epsilon)
 {
     VecStatsCollector sc;
+    sc.epsilon = epsilon;
+    sc.build();
     int n = d->length();
     Vec row(d->width());
     for (int i = 0; i < n; i++) {
@@ -305,11 +308,13 @@ void computeInputMean(const VMat& d, Vec& meanvec)
 //////////////////////////////
 // computeInputMeanAndCovar //
 //////////////////////////////
-void computeInputMeanAndCovar(const VMat& d, Vec& meanvec, Mat& covarmat)
+void computeInputMeanAndCovar(const VMat& d, Vec& meanvec, Mat& covarmat,
+                              double epsilon)
 {
     assert( d->inputsize() >= 0 );
     VecStatsCollector sc;
     sc.compute_covariance = true;
+    sc.epsilon = epsilon;
     sc.build();
     int n = d->length();
     Vec input, target;
@@ -325,10 +330,13 @@ void computeInputMeanAndCovar(const VMat& d, Vec& meanvec, Mat& covarmat)
 /////////////////////////////////
 // computeInputMeanAndVariance //
 /////////////////////////////////
-void computeInputMeanAndVariance(const VMat& d, Vec& meanvec, Vec& var)
+void computeInputMeanAndVariance(const VMat& d, Vec& meanvec, Vec& var,
+                                 double epsilon)
 {
     assert( d->inputsize() >= 0 );
     VecStatsCollector sc;
+    sc.epsilon=epsilon;
+    sc.build();
     int n = d->length();
     Vec input, target;
     real weight;
@@ -344,8 +352,10 @@ void computeInputMeanAndVariance(const VMat& d, Vec& meanvec, Vec& var)
 ///////////////////////////////
 // computeInputMeanAndStddev //
 ///////////////////////////////
-void computeInputMeanAndStddev(const VMat& d, Vec& meanvec, Vec& stddev) {
-    computeInputMeanAndVariance(d, meanvec, stddev);
+void computeInputMeanAndStddev(const VMat& d, Vec& meanvec, Vec& stddev,
+                               double epsilon)
+{
+    computeInputMeanAndVariance(d, meanvec, stddev, epsilon);
     for (int i = 0; i < stddev.length(); i++) {
 #ifdef BOUNDCHECK
         if (stddev[i] < 0)
@@ -358,10 +368,12 @@ void computeInputMeanAndStddev(const VMat& d, Vec& meanvec, Vec& stddev) {
 /////////////////////////////////
 // computeWeightedMeanAndCovar //
 /////////////////////////////////
-void computeWeightedMeanAndCovar(const Vec& weights, const VMat& d, Vec& meanvec, Mat& covarmat)
+void computeWeightedMeanAndCovar(const Vec& weights, const VMat& d, Vec& meanvec, Mat& covarmat,
+                                 double epsilon)
 {
     VecStatsCollector sc;
     sc.compute_covariance = true;
+    sc.epsilon = epsilon;
     sc.build();
     int n = d->length();
     Vec row(d->width());
@@ -376,10 +388,11 @@ void computeWeightedMeanAndCovar(const Vec& weights, const VMat& d, Vec& meanvec
 /////////////////////////
 // computeMeanAndCovar //
 /////////////////////////
-void computeMeanAndCovar(const VMat& d, Vec& meanvec, Mat& covarmat)
+void computeMeanAndCovar(const VMat& d, Vec& meanvec, Mat& covarmat, double epsilon)
 {
     VecStatsCollector sc;
     sc.compute_covariance = true;
+    sc.epsilon = epsilon;
     sc.build();
     int n = d->length();
     Vec row(d->width());
@@ -481,9 +494,10 @@ void computeMeanAndCovar(const VMat& d, Vec& meanvec, Mat& covarmat)
 //////////////////////////
 // computeMeanAndStddev //
 //////////////////////////
-void computeMeanAndStddev(const VMat& d, Vec& meanvec, Vec& stddevvec)
+void computeMeanAndStddev(const VMat& d, Vec& meanvec, Vec& stddevvec,
+                          double epsilon)
 {
-    computeMeanAndVariance(d, meanvec, stddevvec);
+    computeMeanAndVariance(d, meanvec, stddevvec, epsilon);
     for(int i=0; i<stddevvec.length(); i++)
         stddevvec[i] = sqrt(stddevvec[i]);
 }
