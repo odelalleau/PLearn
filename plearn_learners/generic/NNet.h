@@ -133,6 +133,7 @@ public:
     bool do_not_change_params;
 
     Var first_hidden_layer;
+    bool first_hidden_layer_is_output;
     bool transpose_first_hidden_layer;
     int n_non_params_in_first_hidden_layer;
 

@@ -114,6 +114,7 @@ output_transfer_func(""),
 hidden_transfer_func("tanh"),
 interval_minval(0), interval_maxval(1),
 do_not_change_params(false),
+first_hidden_layer_is_output(false),
 transpose_first_hidden_layer(false),
 n_non_params_in_first_hidden_layer(0),
 batch_size(1),
@@ -254,6 +255,11 @@ void NNet::declareOptions(OptionList& ol)
                   "A user-specified NAry Var that computes the output of the first hidden layer\n"
                   "from the network input vector and a set of parameters. Its first argument should\n"
                   "be the network input and the remaining arguments the tunable parameters.\n");
+
+    declareOption(ol, "first_hidden_layer_is_output",
+                  &NNet::first_hidden_layer_is_output, OptionBase::buildoption,
+        "If true and a 'first_hidden_layer' Var is provided, then this layer\n"
+        "will be considered as the NNet output before transfer function.");
 
     declareOption(ol, "n_non_params_in_first_hidden_layer",
                   &NNet::n_non_params_in_first_hidden_layer,
@@ -603,19 +609,29 @@ void NNet::buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& be
         params.append(rbf_sigmas);
     }
 
-    // output layer before transfer function
-    wout = Var(1 + output->size(), outputsize(), "wout");
-    output = affine_transform(output, wout);
-    if (!fixed_output_weights)
-        params.append(wout);
-    else
-    {
-        outbias = Var(output->size(),"outbias");
-        output = output + outbias;
-        params.append(outbias);
+    // Output layer before transfer function.
+    if (!first_hidden_layer_is_output) {
+        wout = Var(1 + output->size(), outputsize(), "wout");
+        output = affine_transform(output, wout);
+        if (!fixed_output_weights)
+            params.append(wout);
+        else
+        {
+            outbias = Var(output->size(), "outbias");
+            output = output + outbias;
+            params.append(outbias);
+        }
+    } else {
+        // Verify we have provided a 'first_hidden_layer' Variable: even though
+        // one might want to use this option without such a Var, it would be
+        // simpler in this case to just set 'nhidden' to 0.
+        if (!first_hidden_layer)
+            PLERROR("In NNet::buildOutputFromInput - The option "
+                    "'first_hidden_layer_is_output' can only be used in "
+                    "conjunction with a 'first_hidden_layer' Variable");
     }
 
-    // direct in-to-out layer
+    // Direct in-to-out layer.
     if(direct_in_to_out)
     {
         wdirect = Var(the_input->size(), outputsize(), "wdirect");
