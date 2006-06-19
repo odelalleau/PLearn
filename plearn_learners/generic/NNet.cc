@@ -579,6 +579,7 @@ void NNet::buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& be
     // second hidden layer
     if(nhidden2>0)
     {
+        assert( !first_hidden_layer_is_output );
         w2 = Var(1 + output.length(), nhidden2, "w2");
         params.append(w2);
         output = hiddenLayer(output, w2);
