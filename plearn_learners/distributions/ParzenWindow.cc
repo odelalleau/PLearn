@@ -120,6 +120,7 @@ void ParzenWindow::train()
         real default_weight = 1.0/l;
         Vec target;    
         real weight = 0;
+        real weight_sum = 0;
     
         for(int i=0; i<l; i++)
         {
@@ -128,9 +129,16 @@ void ParzenWindow::train()
             Vec input = center(i);
             train_set->getExample(i,input,target,weight);
             sigma[i] = sigma_square;
-            alpha[i] = has_weights ?weight :default_weight;
+            if(has_weights)
+            {
+                alpha[i] = weight;
+                weight_sum += weight;
+            }
+            else
+                alpha[i] = default_weight;
             // resizeStuffBeforeTraining(); TODO Put back?
         }
+        alpha /= weight_sum;
         GaussMix::build();
         
         stage = 1;
