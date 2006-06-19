@@ -138,7 +138,8 @@ void ParzenWindow::train()
                 alpha[i] = default_weight;
             // resizeStuffBeforeTraining(); TODO Put back?
         }
-        alpha /= weight_sum;
+        if(has_weights)
+            alpha /= weight_sum;
         GaussMix::build();
         
         stage = 1;
