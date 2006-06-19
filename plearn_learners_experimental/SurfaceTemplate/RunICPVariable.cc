@@ -168,12 +168,19 @@ void RunICPVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     // ### shallow-copied.
     // ### ex:
     // deepCopyField(trainvec, copies);
+// To be deeped copied
+    deepCopyField(icp_aligners, copies);
+    deepCopyField(templates,copies);
+    deepCopyField(molecule_coordinates,copies);
+    deepCopyField(paths_to_resize, copies);
+    deepCopyField(score_layer, copies);
 
     // ### If you want to deepCopy a Var field:
     // varDeepCopyField(somevariable, copies);
 
+
     // ### Remove this line when you have fully implemented this method.
-    PLERROR("RunICPVariable::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+        // PLERROR("RunICPVariable::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 void RunICPVariable::declareOptions(OptionList& ol)

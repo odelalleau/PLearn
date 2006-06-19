@@ -298,9 +298,10 @@ void SurfaceTemplateLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     // ### shallow-copied.
     // ### ex:
     // deepCopyField(trainvec, copies);
+    deepCopyField(templates_source, copies);
 
     // ### Remove this line when you have fully implemented this method.
-    PLERROR("SurfaceTemplateLearner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // PLERROR("SurfaceTemplateLearner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 ////////////////////

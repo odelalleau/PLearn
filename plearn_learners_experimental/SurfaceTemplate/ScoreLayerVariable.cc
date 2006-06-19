@@ -243,6 +243,7 @@ void ScoreLayerVariable::build_()
             icp_aligner->all_template_feat_dev->matValue.column(j).fill(
                     chemical_stats[feature_name].stddev());
         }
+// BC TODO ADD pout des stats
         // Declare this new template (with associated molecule coordinates) to
         // the RunICPVariable.
         run_icp_var->addTemplate(icp_aligner, (MoleculeTemplate*) mol_template,
@@ -466,12 +467,20 @@ void ScoreLayerVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     // ### shallow-copied.
     // ### ex:
     // deepCopyField(trainvec, copies);
+    deepCopyField(icp_aligner_template, copies);
+    deepCopyField(templates_source, copies);
+    deepCopyField(mappings_source, copies);
+    deepCopyField(random_gen, copies);
+    deepCopyField(outputs, copies);
+    deepCopyField(molecule_templates, copies);
+    deepCopyField(molecules, copies);
 
     // ### If you want to deepCopy a Var field:
     // varDeepCopyField(somevariable, copies);
+    varDeepCopyField(final_output, copies);
 
     // ### Remove this line when you have fully implemented this method.
-    PLERROR("ScoreLayerVariable::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // PLERROR("ScoreLayerVariable::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 ///////////////////
