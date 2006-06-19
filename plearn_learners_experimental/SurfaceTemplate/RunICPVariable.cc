@@ -115,6 +115,11 @@ void RunICPVariable::fprop()
         PP<Molecule> template_mol = templates[i];
         icp->setMolecule(molecule);
         icp->run();
+        // Modify score normalization coefficient if needed.
+        if (score_layer->normalize_by_n_features)
+            score_layer->setScalingCoefficient(i,
+                real(1.0 / (template_mol->n_points() *
+                            (3 + icp->used_template_features.width()))));
         // Some variables will need to be resized after ICP has been run.
         paths_to_resize[i].sizeprop();
         // Compute the aligned coordinates of the template and store them in
