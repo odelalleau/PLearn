@@ -80,6 +80,7 @@ public:
     int n_inactive_templates;
     bool normalize_by_n_features;
     long seed_;
+    bool simple_mixture;
     VMat templates_source;
 
 public:

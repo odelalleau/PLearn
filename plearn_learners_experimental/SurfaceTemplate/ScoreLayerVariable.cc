@@ -45,7 +45,7 @@
 #include <plearn/var/MinusScalarVariable.h>
 #include <plearn/var/RowSumSquareVariable.h>
 #include <plearn/var/SigmoidVariable.h>
-#include <plearn/var/SourceVariable.h>
+#include <plearn/var/SoftmaxVariable.h>
 #include <plearn/var/SquareRootVariable.h>
 #include <plearn/var/SubMatVariable.h>
 #include <plearn/var/SumVariable.h>
@@ -73,6 +73,7 @@ ScoreLayerVariable::ScoreLayerVariable():
     n_inactive_templates(-1),
     normalize_by_n_features(false),
     seed_(-1),
+    simple_mixture(false),
     random_gen(new PRandom())
 {}
 
@@ -101,7 +102,7 @@ void ScoreLayerVariable::declareOptions(OptionList& ol)
                   &ScoreLayerVariable::normalize_by_n_features,
                   OptionBase::buildoption,
         "If true, the score will be normalized by the number of features,\n"
-        "i.e. scaled by one over (3 + number of common chemical features).\n");
+        "i.e. scaled by one over (3 + number of common chemical features).");
 
     declareOption(ol, "seed", &ScoreLayerVariable::seed_,
                   OptionBase::buildoption,
@@ -115,6 +116,16 @@ void ScoreLayerVariable::declareOptions(OptionList& ol)
         "there must be a binary target indicating whether a molecule is\n"
         "active or inactive. This VMat is also used to initialize standard\n"
         "deviations of chemical features.");
+
+    // It is a learnt option as usually it will be set by the
+    // SurfaceTemplateLearner above.
+    declareOption(ol, "simple_mixture", &ScoreLayerVariable::simple_mixture,
+                  OptionBase::learntoption,
+        "If true, then instead of being a layer of scores, it will be a\n"
+        "single-unit layer where scores have been processed to compute an\n"
+        "activity probability, by adding a log coefficient to each template,\n"
+        "performing a softmax on the resulting scores and summing over the\n"
+        "weights obtained for active templates.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -223,8 +234,11 @@ void ScoreLayerVariable::build_()
     outputs.resize(0);
     scaling_coeffs.resize(0);
     int index_in_run_icp_var = 0; // Current index.
+    TVec<int> indices_of_active; // List of active templates.
     for (int i = 0; i < templates.length(); i++) {
         templates_source->getExample(templates[i], input, target, weight);
+        if (is_equal(target[0], 1))
+            indices_of_active.append(i);
         PP<MoleculeTemplate> mol_template =
             getMoleculeTemplate(input[0], target[0]);
         Var molecule_coordinates(mol_template->n_points(), 3);
@@ -329,8 +343,7 @@ void ScoreLayerVariable::build_()
         // 'normalize_by_n_features': this is because the number of features
         // depends on the molecule being aligned, thus the scaling coefficient
         // will be modified at run time by the RunICPVariable.
-        Mat scaling_coeff(1, 1, real(1.0 / mol_template->n_points()));
-        Var scaling_var = new SourceVariable(scaling_coeff);
+        Var scaling_var = var(real(1.0 / mol_template->n_points()));
         scaling_coeffs.append(scaling_var);
         total_cost = scaling_var * total_cost;
 
@@ -341,17 +354,55 @@ void ScoreLayerVariable::build_()
         VarArray path_outputs = total_cost;
         VarArray& path_to_resize = run_icp_var->getPathsToResize(i);
         path_to_resize = propagationPath(path_inputs, path_outputs);
+
+        // (6) Add template coefficient in the case of the simple mixture mode.
+        if (simple_mixture) {
+            Var coeff = var(real(1.0 / templates.length()));
+            coeff->min_value = 1e-10;
+            coeff->max_value = 1;
+            total_cost += log(coeff);
+            optimized_params.append(coeff);
+        }
+
+        // (7) Build output array.
         outputs.append(total_cost);
     }
+
     // Append the additional input features if they are present.
     if (templates_source->inputsize() > 1) {
+        if (simple_mixture)
+            PLERROR("In ScoreLayerVariable::build_ - The simple mixture model "
+                    "is not meant to be used with extra input information");
         Var input_var = varray[0];
         assert( input_var->width() == 1 );
         Var input_minus_molecule_id =
             PLearn::subMat(input_var, 1, 0, input_var->length() - 1, 1);
         outputs.append(input_minus_molecule_id);
     }
+
+    // Concatenate all outputs in a single Variable.
     final_output = vconcat(outputs);
+
+    // Build softmax output for activity probability in the case of the simple
+    // mixture model.
+    if (simple_mixture) {
+        Var softmax_output = softmax(final_output);
+        assert( list_of_active.length() > 0 );
+        assert( softmax_output->width() == 1 );
+        // Select only active templates (we assume - and verify - here that
+        // they they are the first ones).
+        if (list_of_active[0] != 0 ||
+            list_of_active.lastElement() != list_of_active.length() - 1)
+        {
+            PLERROR("In ScoreLayerVariable::build_ - The active templates must"
+                    " be first");
+        }
+        final_output = PLearn::subMat(softmax_output, 0, 0,
+                                      list_of_active.length(), 1);
+        // Then we just sum over the resulting posteriors.
+        final_output = sum(final_output);
+    }
+    
     // The final 'varray' will contain, in this order:
     // - the input variable to this layer (already here)
     // - the parameters (means, standard deviations, ...)
