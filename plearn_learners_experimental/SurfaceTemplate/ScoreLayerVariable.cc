@@ -45,6 +45,7 @@
 #include <plearn/var/MinusScalarVariable.h>
 #include <plearn/var/RowSumSquareVariable.h>
 #include <plearn/var/SigmoidVariable.h>
+#include <plearn/var/SourceVariable.h>
 #include <plearn/var/SquareRootVariable.h>
 #include <plearn/var/SubMatVariable.h>
 #include <plearn/var/SumVariable.h>
@@ -70,11 +71,10 @@ PLEARN_IMPLEMENT_OBJECT(
 ScoreLayerVariable::ScoreLayerVariable():
     n_active_templates(-1),
     n_inactive_templates(-1),
+    normalize_by_n_features(false),
     seed_(-1),
     random_gen(new PRandom())
-    // weighting_method("none")
-{
-}
+{}
 
 ////////////////////
 // declareOptions //
@@ -97,6 +97,12 @@ void ScoreLayerVariable::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
         "Number of templates of inactive molecules (-1 means all of them).");
 
+    declareOption(ol, "normalize_by_n_features",
+                  &ScoreLayerVariable::normalize_by_n_features,
+                  OptionBase::buildoption,
+        "If true, the score will be normalized by the number of features,\n"
+        "i.e. scaled by one over (3 + number of common chemical features).\n");
+
     declareOption(ol, "seed", &ScoreLayerVariable::seed_,
                   OptionBase::buildoption,
         "Seed of the random number generator (similar to a PLearner's seed).");
@@ -109,13 +115,6 @@ void ScoreLayerVariable::declareOptions(OptionList& ol)
         "there must be a binary target indicating whether a molecule is\n"
         "active or inactive. This VMat is also used to initialize standard\n"
         "deviations of chemical features.");
-
-    /*
-    declareOption(ol, "weighting_method",
-                  &ScoreLayerVariable::weighting_method,
-                  OptionBase::buildoption,
-        "See help of ComputeScoreVariable for this option.");
-        */
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -222,6 +221,7 @@ void ScoreLayerVariable::build_()
 
     // Create the corresponding score variables.
     outputs.resize(0);
+    scaling_coeffs.resize(0);
     int index_in_run_icp_var = 0; // Current index.
     for (int i = 0; i < templates.length(); i++) {
         templates_source->getExample(templates[i], input, target, weight);
@@ -324,9 +324,15 @@ void ScoreLayerVariable::build_()
                     weighted_total_geometric_distance)
             - sum(log(template_coordinates_stddev))
             - sum(log(template_features_stddev));
-        total_cost = real(1.0 / mol_template->n_points()) * total_cost;
-        // TODO Question: do we take all features stddev, or only the used
-        // ones? (current code = only the used ones)
+        // Note that at build time, the scaling coefficient is always equal to
+        // one over the number of points, regardless of the value of option
+        // 'normalize_by_n_features': this is because the number of features
+        // depends on the molecule being aligned, thus the scaling coefficient
+        // will be modified at run time by the RunICPVariable.
+        Mat scaling_coeff(1, 1, real(1.0 / mol_template->n_points()));
+        Var scaling_var = new SourceVariable(scaling_coeff);
+        scaling_coeffs.append(scaling_var);
+        total_cost = scaling_var * total_cost;
 
         // (5) Compute path on which sizes will have to be updated after ICP.
         VarArray path_inputs = icp_aligner->used_template_features &
@@ -335,12 +341,6 @@ void ScoreLayerVariable::build_()
         VarArray path_outputs = total_cost;
         VarArray& path_to_resize = run_icp_var->getPathsToResize(i);
         path_to_resize = propagationPath(path_inputs, path_outputs);
-        /*
-        Var score_var =
-            new ComputeScoreVariable(params, molecules[canonic_path],
-                                     //weighting_method,
-                                     icp_aligner_template);
-                                     */
         outputs.append(total_cost);
     }
     // Append the additional input features if they are present.
@@ -462,25 +462,16 @@ void ScoreLayerVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields
-    // ### that you wish to be deepCopied rather than
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
+    deepCopyField(run_icp_var,          copies);
     deepCopyField(icp_aligner_template, copies);
-    deepCopyField(templates_source, copies);
-    deepCopyField(mappings_source, copies);
-    deepCopyField(random_gen, copies);
-    deepCopyField(outputs, copies);
-    deepCopyField(molecule_templates, copies);
-    deepCopyField(molecules, copies);
-
-    // ### If you want to deepCopy a Var field:
-    // varDeepCopyField(somevariable, copies);
-    varDeepCopyField(final_output, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    // PLERROR("ScoreLayerVariable::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    deepCopyField(templates_source,     copies);
+    deepCopyField(mappings_source,      copies);
+    deepCopyField(random_gen,           copies);
+    deepCopyField(outputs,              copies);
+    varDeepCopyField(final_output,      copies);
+    deepCopyField(molecule_templates,   copies);
+    deepCopyField(molecules,            copies);
+    deepCopyField(scaling_coeffs,       copies);
 }
 
 ///////////////////
@@ -502,6 +493,16 @@ void ScoreLayerVariable::recomputeSize(int& l, int& w) const
 void ScoreLayerVariable::setMappingsSource(const VMat& source_vmat)
 {
     mappings_source = source_vmat;
+}
+
+///////////////////////////
+// setScalingCoefficient //
+///////////////////////////
+void ScoreLayerVariable::setScalingCoefficient(int i, real coeff)
+{
+    assert( i << scaling_coeffs.length() );
+    assert( scaling_coeffs[i]->nelems() == 1 );
+    scaling_coeffs[i]->value[0] = coeff;
 }
 
 } // end of namespace PLearn

@@ -78,9 +78,9 @@ public:
     PP<ChemicalICP> icp_aligner_template;
     int n_active_templates;
     int n_inactive_templates;
+    bool normalize_by_n_features;
     long seed_;
     VMat templates_source;
-    // string weighting_method;
 
 public:
 
@@ -103,6 +103,9 @@ public:
     //! Obtain the mappings of the input variable from a VMatrix.
     void setMappingsSource(const VMat& source_vmat);
 
+    //! Modify scaling coefficient for i-th score to set it to 'coeff'.
+    void setScalingCoefficient(int i, real coeff);
+
     //#####  PLearn::Variable methods #########################################
     virtual void recomputeSize(int& l, int& w) const;
     virtual void fprop();
@@ -116,15 +119,12 @@ public:
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
-    // ### If your class is not instantiatable (it has pure virtual methods)
-    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT
     PLEARN_DECLARE_OBJECT(ScoreLayerVariable);
 
     // Simply calls inherited::build() then build_()
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
@@ -155,6 +155,15 @@ protected:
 
     //! Number of inactive molecules in the templates source.
     int n_inactive_in_source;
+
+    //! The i-th element is a 1x1 Var that contains the normalization
+    //! coefficient for the score of template number i.
+    //! This normalization coefficient is equal to one over the number of
+    //! points in the template, optionally also multiplied by one over the
+    //! number of features common with the current aligned molecules (i.e.
+    //! 3 + the number of common chemical features); this optional additional
+    //! normalization depending on the 'normalize_by_n_features' option.
+    VarArray scaling_coeffs;
 
     //#####  Protected Options  ###############################################
 
