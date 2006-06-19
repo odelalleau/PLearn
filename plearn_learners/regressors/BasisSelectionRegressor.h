@@ -41,6 +41,7 @@
 #define BasisSelectionRegressor_INC
 
 #include <plearn_learners/generic/PLearner.h>
+#include <plearn/math/RealFunction.h>
 
 namespace PLearn {
 
@@ -55,103 +56,32 @@ namespace PLearn {
  * should be used instead.
  */
 
-
-
-
-class IMPFeatureSpec
-{
-public:
-    //! Refers to the index of the concerned input field x=value[fieldpos]
-    int fieldpos;
-
-    //! Note: refval==MISSING_VALUE is an acceptable value 
-    real refval;
-
-    //! '/' stub         f(x) = max(x-refval,0)
-    //! '>' step         f(x) = (x>=refval)
-    //! '=' indicator    f(x) = (x==refval)
-    //! '1'              f(x) = 1
-    char functype;
-
-    //! Combination type: how to combine the result of evaluating the function with
-    //! a previous feature specified in other_feature_pos
-    //! '0' no combination
-    //! '*' produce f(x)*features[other_feature_pos]
-    //! '!' produce f(x)*(1.-features[other_feature_pos])
-    char combintype;
-    
-    //! other_feature_pos must refer to a feature preceding this one
-    //! Should be -1 if not combining with any other feature
-    int other_feature_pos;
-
-    IMPFeatureSpec()
-        :fieldpos(-1),
-         refval(-FLT_MAX),
-         functype('1'),
-         combintype('0'),
-         other_feature_pos(-1)
-    {}
-
-    real evaluateFeature(real fieldval, real other_feature_val) const
-    {
-        real fval = 0.;
-        switch(functype)
-        {
-        case '/':
-            fval = max(fieldval-refval,0.);
-            break;
-        case '>':
-            fval = (fieldval>=refval ?1. :0.);
-            break;
-        case '=':
-            fval = (is_missing(refval)&&is_missing(fieldval)) || (fieldval==refval ?1. :0.);
-            break;
-        case '1':
-            fval = 1.;
-            break;
-        default:
-            PLERROR("Invalid functype %c", functype);
-        }
-
-        switch(combintype)
-        {
-        case '0':
-            break;
-        case '*':
-            fval *= other_feature_val;
-            break;
-        case '!':
-            fval *= 1.0-other_feature_val;
-            break;
-        default:
-            PLERROR("Invalid combintype %c", combintype);
-        }
-        return fval;
-    }
-
-};
-
-
-inline PStream& operator<<(PStream& out, const IMPFeatureSpec& fs)
-{
-    out << fs.fieldpos << fs.refval << fs.functype << fs.combintype << fs.other_feature_pos << endl;
-    return out;
-}
-
-inline PStream& operator>>(PStream& in, IMPFeatureSpec& fs)
-{
-    in >> fs.fieldpos >> fs.refval >> fs.functype >> fs.combintype >> fs.other_feature_pos;
-    return in;
-}
-
-
 class BasisSelectionRegressor : public PLearner
 {
     typedef PLearner inherited;
 
-    TVec<IMPFeatureSpec> featurespecs;
-    Mat features;
+    bool consider_bias;
+    TVec<Func> explicit_functions;
+    bool consider_raw_inputs;
+    bool consider_input_range_indicators;
+    TVec<Ker> kernels;
+    Mat kernel_centers;
+    int n_kernel_centers_to_pick;
+
+    bool consider_interaction_terms;
+
+    TVec<RealFunc> selected_functions;
     Vec alphas;
+
+    TVec<RealFunc> candidate_functions;
+
+    PP<PLearner> learner;
+
+
+
+
+
+    Mat features;
     real bias;
 
     // extended feature mean (element 0 is constant 1.0 to incorporate the bias)
@@ -166,7 +96,7 @@ class BasisSelectionRegressor : public PLearner
     Vec weights;
     double weights_sum;
     
-
+    mutable Vec featurevec;
 
 public:
     //#####  Public Build Options  ############################################
