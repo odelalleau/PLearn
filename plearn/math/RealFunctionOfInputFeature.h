@@ -79,7 +79,8 @@ public:
     virtual real evaluate(const Vec& x) const;
 
     //! This should be implemented in subclasses
-    virtual real evaluateFeature(real x) const = 0;
+    //! default verison returns the value of the feature unaltered
+    virtual real evaluateFeature(real x) const;
 
     //#####  PLearn::Object Protocol  #########################################
 

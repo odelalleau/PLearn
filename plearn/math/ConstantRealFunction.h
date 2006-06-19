@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// RealFunction.h
+// ConstantRealFunction.h
 //
 // Copyright (C) 2006 Pascal Vincent
 //
@@ -34,13 +34,13 @@
 
 // Authors: Pascal Vincent
 
-/*! \file RealFunction.h */
+/*! \file ConstantRealFunction.h */
 
 
-#ifndef RealFunction_INC
-#define RealFunction_INC
+#ifndef ConstantRealFunction_INC
+#define ConstantRealFunction_INC
 
-#include <plearn/base/Object.h>
+#include <plearn/math/RealFunction.h>
 
 namespace PLearn {
 
@@ -54,23 +54,27 @@ namespace PLearn {
  * @deprecated Write deprecated stuff here if there is any.  Indicate what else
  * should be used instead.
  */
-class RealFunction : public Object
+class ConstantRealFunction : public RealFunction
 {
-    typedef Object inherited;
+    typedef RealFunction inherited;
 
 public:
     //#####  Public Build Options  ############################################
 
     //! ### declare public option fields (such as build options) here
-    //! Start your comments with Doxygen-compatible comments such as //!
+    real constantval;
 
 public:
     //#####  Public Member Functions  #########################################
 
-    RealFunction() {}
+    //! Default constructor
+    // ### Make sure the implementation in the .cc
+    // ### initializes all fields to reasonable default values.
+    ConstantRealFunction()
+        :constantval(1.0)
+    {}
 
-    // Your other public member functions go here
-    virtual real evaluate(const Vec& x) const = 0;
+    virtual real evaluate(const Vec& x) const;
 
     inline real operator()(const Vec& x) const
     { return evaluate(x); }
@@ -78,9 +82,7 @@ public:
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
-    // ### If your class is not instantiatable (it has pure virtual methods)
-    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT
-    PLEARN_DECLARE_ABSTRACT_OBJECT(RealFunction);
+    PLEARN_DECLARE_OBJECT(ConstantRealFunction);
 
     // Simply calls inherited::build() then build_()
     virtual void build();
@@ -116,9 +118,7 @@ private:
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(RealFunction);
-
-typedef PP<RealFunction> RealFunc;
+DECLARE_OBJECT_PTR(ConstantRealFunction);
 
 } // end of namespace PLearn
 

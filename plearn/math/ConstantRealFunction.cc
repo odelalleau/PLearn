@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// RealFunctionOfInputFeature.cc
+// ConstantRealFunction.cc
 //
 // Copyright (C) 2006 Pascal Vincent
 //
@@ -34,61 +34,61 @@
 
 // Authors: Pascal Vincent
 
-/*! \file RealFunctionOfInputFeature.cc */
+/*! \file ConstantRealFunction.cc */
 
 
-#include "RealFunctionOfInputFeature.h"
+#include "ConstantRealFunction.h"
 
 namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
-    RealFunctionOfInputFeature,
-    "This is a base class for real functions that are functions of a single input feature.",
-    "The index of that input feature is specified in which_feature.\n"
-    "The default is to return that selected feature unaltered."
+    ConstantRealFunction,
+    "A Function Vec->real that always returns the same constant",
+    ""
     );
 
 // ### Nothing to add here, simply calls build_
-void RealFunctionOfInputFeature::build()
+void ConstantRealFunction::build()
 {
     inherited::build();
     build_();
 }
 
-void RealFunctionOfInputFeature::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+void ConstantRealFunction::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
-void RealFunctionOfInputFeature::declareOptions(OptionList& ol)
+void ConstantRealFunction::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here.
-    // ### For the "flags" of each option, you should typically specify
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or
-    // ### OptionBase::tuningoption. If you don't provide one of these three,
-    // ### this option will be ignored when loading values from a script.
-    // ### You can also combine flags, for example with OptionBase::nosave:
-    // ### (OptionBase::buildoption | OptionBase::nosave)
-
-    declareOption(ol, "which_feature", &RealFunctionOfInputFeature::which_feature,
+    declareOption(ol, "constantval", &ConstantRealFunction::constantval,
                   OptionBase::buildoption,
-                  "Index of the input feature considered");
-
+                  "The constant real returned by evaluate");
+    
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
 
-real RealFunctionOfInputFeature::evaluate(const Vec& x) const
+real ConstantRealFunction::evaluate(const Vec& x) const
 {
-    return evaluateFeature(x[which_feature]);
+    return constantval;
 }
 
-real RealFunctionOfInputFeature::evaluateFeature(real x) const
-{ return x; }
 
-void RealFunctionOfInputFeature::build_()
-{}
+void ConstantRealFunction::build_()
+{
+    // ### This method should do the real building of the object,
+    // ### according to set 'options', in *any* situation.
+    // ### Typical situations include:
+    // ###  - Initial building of an object from a few user-specified options
+    // ###  - Building of a "reloaded" object: i.e. from the complete set of
+    // ###    all serialised options.
+    // ###  - Updating or "re-building" of an object after a few "tuning"
+    // ###    options have been modified.
+    // ### You should assume that the parent class' build_() has already been
+    // ### called.
+}
 
 
 } // end of namespace PLearn
