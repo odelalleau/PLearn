@@ -54,7 +54,8 @@ PLEARN_IMPLEMENT_OBJECT(
 ////////////////////////////
 SurfaceTemplateLearner::SurfaceTemplateLearner():
     min_feature_dev(1e-3),
-    min_geom_dev(1e-3)
+    min_geom_dev(1e-3),
+    simple_mixture(false)
 {
     nhidden2 = 10;
     // Set some NNet options whose value is fixed in this learner.
@@ -88,6 +89,13 @@ void SurfaceTemplateLearner::declareOptions(OptionList& ol)
                   &SurfaceTemplateLearner::first_hidden_layer,
                   OptionBase::buildoption,
         "The layer of scores (should be a ScoreLayerVariable).");
+
+    declareOption(ol, "simple_mixture",
+                  &SurfaceTemplateLearner::simple_mixture,
+                  OptionBase::buildoption,
+        "If true, then instead of building another hidden layer on top of\n"
+        "alignment scores, we use them directly in a mixture of Gaussians\n"
+        "fashion to estimate the probability of being active.");
 
     declareOption(ol, "templates_source",
                   &SurfaceTemplateLearner::templates_source,
@@ -266,6 +274,8 @@ void SurfaceTemplateLearner::build_()
                 icp_aligners[i]->template_geom_dev->setMinValue(min_geom_dev);
             }
         }
+        // Set value of 'simple_mixture' option.
+        score_layer->simple_mixture = this->simple_mixture;
     }
 }
 
@@ -281,6 +291,10 @@ void SurfaceTemplateLearner::build()
     // should make sure it does not break anything first.
     if (!train_set && templates_source)
         this->train_set = templates_source;
+
+    // Because the overall network is built in the NNet build, the simple
+    // mixture case must be handled before calling it.
+    first_hidden_layer_is_output = simple_mixture;
 
     inherited::build();
     build_();

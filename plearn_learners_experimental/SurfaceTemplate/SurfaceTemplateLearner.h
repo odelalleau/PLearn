@@ -65,6 +65,8 @@ public:
     real min_feature_dev;
     real min_geom_dev;
 
+    bool simple_mixture;
+
     VMat templates_source;
 
 protected:
