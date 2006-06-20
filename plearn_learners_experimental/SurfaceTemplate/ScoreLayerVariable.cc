@@ -42,7 +42,6 @@
 #include <plearn/var/ColumnSumVariable.h>
 #include <plearn/var/ConcatRowsVariable.h>
 #include <plearn/var/LogVariable.h>
-#include <plearn/var/MinusScalarVariable.h>
 #include <plearn/var/RowSumSquareVariable.h>
 #include <plearn/var/SigmoidVariable.h>
 #include <plearn/var/SoftmaxVariable.h>
@@ -147,7 +146,8 @@ void ScoreLayerVariable::bprop()
 {
     // The gradient is back-propagated only on the score variables, since the
     // other variables are inputs that do not need be updated.
-    int n = getNActiveTemplates() + getNInactiveTemplates();
+    int n = simple_mixture ? 1
+                           : getNActiveTemplates() + getNInactiveTemplates();
     assert( n <= length() );
     real* copy_grad_ptr = final_output->gradientdata;
     real* grad_ptr = gradientdata;
@@ -292,6 +292,8 @@ void ScoreLayerVariable::build_()
         optimized_params.append(icp_aligner->all_template_feat_dev);
         Var feature_distance_at_each_point =
             rowSumSquare(diff_features / template_features_stddev);
+        feature_distance_at_each_point->setName(
+                "feature_distance_at_each_point_" + tostring(i));
         Var total_feature_distance = columnSum(feature_distance_at_each_point);
         total_feature_distance->setName("total_feature_distance_"+tostring(i));
         // (2) Compute the associated weights for the geometric distance.
@@ -303,12 +305,14 @@ void ScoreLayerVariable::build_()
         } else if (wm == "features_sigmoid") {
             Var shift = icp_aligner->weighting_params[0];
             Var slope = icp_aligner->weighting_params[1];
-            weights = - sigmoid(slope *
-                    new MinusScalarVariable(
-                        squareroot(feature_distance_at_each_point),
-                        shift));
+            // We add a small value to avoid zero distances, as the square root
+            // is not differentiable at zero.
+            Var regularized_distances = feature_distance_at_each_point + 1e-10;
+            Var l1_dist = squareroot(regularized_distances);
+            weights = - sigmoid(slope * (l1_dist - shift));
             shift->setName("shift_" + tostring(i));
             slope->setName("slope_" + tostring(i));
+            weights->setName("weights_" + tostring(i));
             optimized_params.append(shift);
             optimized_params.append(slope);
         } else {
@@ -328,6 +332,7 @@ void ScoreLayerVariable::build_()
         optimized_params.append(template_coordinates_stddev);
         Var distance_at_each_point =
             rowSumSquare(diff_coordinates / template_coordinates_stddev);
+        distance_at_each_point->setName("distance_at_each_point_"+tostring(i));
         Var weighted_total_geometric_distance =
             columnSum(distance_at_each_point * weights);
         weighted_total_geometric_distance->setName(
