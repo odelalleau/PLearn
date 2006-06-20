@@ -53,7 +53,7 @@
 /*********
  * PTest *
  *********/
-#include <plearn/../test_suite/PP/PPTest.h>
+#include <plearn/base/test/PP/PPTest.h>
 #include <plearn/base/test/ObjectGraphIterator/ObjectGraphIteratorTest.h>
 #include <plearn/io/test/PLLogTest.h>
 #include <plearn/io/test/PPathTest.h>

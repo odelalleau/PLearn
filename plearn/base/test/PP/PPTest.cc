@@ -42,12 +42,35 @@
 
 
 #include "PPTest.h"
-#include "../t_general.h"
+
+#define T_ERR(_Type__, _The_Message__)\
+cerr << "\n============================================================" << endl;\
+cerr << "" 		<< _Type__ << " " << flush;\
+cerr << "At " << __FILE__ << ":" << __LINE__;                   \
+cerr << endl << _The_Message__ << endl;\
+cerr << "============================================================\n" << endl;\
+exit(1);
+
+#define T_ASSERT(__Test_, __Message_)\
+if( !(__Test_) ){\
+T_ERR("T_ASSERT", (__Message_) )};
+
+bool __result = false;	//!< Maybe not clean, but it doesn't work otherwise
+#define DO_TEST(__name, __testFunction)\
+__result = false;\
+cout << endl;\
+cout << "Step:\t " << __name << endl;\
+cout << "Doing ..." << endl << endl;\
+__result = __testFunction;\
+if(__result){ cout << "PASSED" << endl; }\
+else{ PLERROR("****FAIL****"); }\
+cout << endl << endl;
 
 #define MAX_SIZE 11
 
 namespace PLearn {
 using namespace std;
+
 
 PLEARN_IMPLEMENT_OBJECT(
     PPTest,
