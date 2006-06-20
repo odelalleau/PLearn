@@ -743,7 +743,10 @@ class results(ResultsBasedMode):
 
 class run(ResultsBasedMode):    
     RoutineType = RunTestRoutine
-    
+
+
+#######  Builtin Unit Tests  ##################################################
+
 def testAllModes():
     import os, sys
     def vsystem(cmd):        

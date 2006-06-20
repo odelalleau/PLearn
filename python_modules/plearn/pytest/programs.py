@@ -97,6 +97,7 @@ class Program(core.PyTestObject):
     name = PLOption(None)
     compiler = PLOption(None)
     compile_options = PLOption(None)
+    no_plearn_options = PLOption(False)
 
     #######  Program instances are singletons  ####################################
 
@@ -154,7 +155,10 @@ class Program(core.PyTestObject):
         optname, val = option_pair
         if val is None:
             return ""
-        return super(Program, self)._optionFormat(option_pair, indent_level, inner_repr)
+        elif optname=="no_plearn_options" and not val:
+            return "" # Don't print the default value
+        else:
+            return super(Program, self)._optionFormat(option_pair, indent_level, inner_repr)
 
     def compilationSucceeded(self):
         exec_exists = os.path.exists(self.getInternalExecPath())
@@ -324,7 +328,7 @@ class Program(core.PyTestObject):
                 logging.debug("+ pytest.config provided '-%s' prevails"%opt_option)    
 
     def invoke(self, arguments, logfname):
-        if self.isPLearnCommand():            
+        if self.isPLearnCommand() and not self.no_plearn_options:            
             # arguments = "--no-version %s"%arguments
             arguments = "--no-version --no-progress %s"%arguments
         #command = '%s %s >& %s'%(self.getInternalExecPath(), arguments, logfname)
