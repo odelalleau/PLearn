@@ -144,6 +144,7 @@
 #include <plearn_learners/classifiers/ClassifierFromConditionalPDistribution.h>
 #include <plearn_learners/classifiers/ClassifierFromDensity.h>
 #include <plearn_learners/classifiers/KNNClassifier.h>
+//#include <plearn_learners/classifiers/SVMClassificationTorch.h>
 #include <plearn_learners/classifiers/MultiInstanceNNet.h>
 //#include <plearn_learners/classifiers/OverlappingAdaBoost.h> // Does not currently compile.
 
@@ -193,11 +194,13 @@
 
 // Online
 #include <plearn_learners/online/GaussianDBNClassification.h>
+#include <plearn_learners/online/GaussianDBNRegression.h>
 #include <plearn_learners/online/GradNNetLayerModule.h>
 #include <plearn_learners/online/HintonDeepBeliefNet.h>
 #include <plearn_learners/online/NLLErrModule.h>
 #include <plearn_learners/online/OnlineLearningModule.h>
 #include <plearn_learners/online/PartSupervisedDBN.h>
+#include <plearn_learners/online/GaussPartSupervisedDBN.h>
 #include <plearn_learners/online/RBMBinomialLayer.h>
 #include <plearn_learners/online/RBMGaussianLayer.h>
 #include <plearn_learners/online/RBMGenericParameters.h>
