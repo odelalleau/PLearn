@@ -88,6 +88,10 @@ public:
     // (PLEASE IMPLEMENT IN .cc)
     virtual void forget();
 
+
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+
+
     //! The role of the train method is to bring the learner up to
     //! stage==nstages, updating the train_stats collector with training costs
     //! measured on-line in the process.

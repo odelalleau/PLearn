@@ -60,8 +60,6 @@ ChainedLearners::ChainedLearners()
 
 void ChainedLearners::declareOptions(OptionList& ol)
 {
-    TVec< tuple< PP<PLearner>, string, char> > learners;
-    // ### ex:
     declareOption(ol, "learners", &ChainedLearners::learners, 
                   OptionBase::buildoption,
                   "This is a list of learners to train in sequence.");
@@ -121,6 +119,19 @@ void ChainedLearners::forget()
         learners[k]->forget();
     inherited::forget();
     stage = 0;
+}
+
+void ChainedLearners::setTrainingSet(VMat training_set, bool call_forget)
+{
+    inherited::setTrainingSet(training_set, call_forget);
+    VMat dataset = getTrainingSet();
+    int nlearners = learners.length();
+    for(int k=0; k<nlearners; k++)
+    {
+        learners[k]->setTrainingSet(dataset, call_forget);
+        if(k<nlearners-1)
+            dataset = learners[k]->processDataSet(dataset);            
+    }
 }
 
 void ChainedLearners::train()

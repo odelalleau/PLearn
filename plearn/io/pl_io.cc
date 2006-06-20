@@ -644,6 +644,8 @@ size_t new_read_compressed(FILE* in, real* vec, int l, bool swap_endians)
 
     while(l)
     {
+        if(l<0)
+            PLERROR("Big problem in new_read_compressed: l=%d", l);
         mode = (unsigned char)(getc(in)); 
         ++nbytes;
         unsigned char N1 = (mode & 0x1F);
