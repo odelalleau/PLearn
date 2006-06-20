@@ -63,6 +63,67 @@ time_t getDataSetDate(const PPath& dataset_path);
 //! Return the dataset pointed by 'dataset_path'.
 VMat getDataSet(const PPath& dataset_path);
 
+
+/**
+ *  Extension registrar for new file types.  If you want to extend getDataSet
+ *  so that it recognizes new extensions (and constructs the correct type of
+ *  VMatrix automatically), you should instantiate a static
+ *  VMatrixExtensionRegistrar object within the .cc of your new VMatrix type.
+ *  This object will automatically register the new extension with getDataSet,
+ *  so that when you try to open a file of that extension, the instantiation
+ *  function is called.  For example:
+ *
+ *      VMatrixExtensionRegistrar(
+ *          "fancyext",                      // Note: no leading period
+ *          &FancyVMatrix::instantiateFromPPath,
+ *          "Fancy new file format, giving a FancyVMatrix")
+ *
+ *  This associates files with the ".fancyext" extension with a construction
+ *  function (that must take a single PPath argument and returns a VMat).  The
+ *  last argument is some documentation.
+ */
+class VMatrixExtensionRegistrar
+{
+public:
+    typedef VMat (*VMatrixInstantiator)(const PPath& filename);
+    typedef map<string,VMatrixExtensionRegistrar> ExtensionMap;
+    
+public:
+    VMatrixExtensionRegistrar(const string& file_extension,
+                              VMatrixInstantiator instantiation_function,
+                              const string& documentation);
+
+    //! Return the documentation associated with a registrar
+    const string& documentation() const
+    {
+        return m_documentation;
+    }
+    
+    
+    //#####  Static Interface  ################################################
+    
+    //! Return the list of all registered extensions
+    static const ExtensionMap& registeredExtensions()
+    {
+        return registeredExtensionsAux();
+    }
+
+    //! Register a new extension
+    static void registerExtension(const VMatrixExtensionRegistrar& new_extension);
+
+    //! Return the instantiator given an extension, or NULL if not found
+    static VMatrixInstantiator getInstantiator(const string& file_extension);
+
+private:
+    // Members
+    string m_file_extension;
+    VMatrixInstantiator m_instantiator;
+    string m_documentation;
+    
+    //! Set of registered extensions
+    static ExtensionMap& registeredExtensionsAux();
+};
+
 } // end of namespace PLearn
 
 #endif

@@ -132,6 +132,11 @@ VMat getDataSet(const PPath& dataset_path)
             if (vm.isNull())
                 PLERROR("In getDataSet - Object described in %s is not a VMatrix subclass",
                         dataset.absolute().c_str());
+        } else if (VMatrixExtensionRegistrar::VMatrixInstantiator inst =
+                   VMatrixExtensionRegistrar::getInstantiator(ext))
+        {
+            // Support user-added extensions
+            vm = inst(dataset);
         }
         else 
             PLERROR("In getDataSet - Unknown extension for VMat file: %s", ext.c_str());
@@ -177,19 +182,83 @@ VMat getDataSet(const PPath& dataset_path)
 // getDataSetHelp //
 ////////////////////
 string getDataSetHelp() {
-    return "Dataset specification must be either:\n"
+
+    // First make a list of all registered extensions
+    string exts;
+    for (VMatrixExtensionRegistrar::ExtensionMap::const_iterator
+             it  = VMatrixExtensionRegistrar::registeredExtensions().begin(),
+             end = VMatrixExtensionRegistrar::registeredExtensions().end()
+             ; it != end ; ++it)
+    {
+        exts += "  ." + it->first +
+            string(max(0, 7-int(it->first.size())), ' ') + ": " +
+            it->second.documentation() + '\n';
+    }
+    
+    return string(
+        "Dataset specification must be either:\n"
         "- a file with extension:\n"
         "  .amat   : ASCII VMatrix\n"
         "  .abmat  : ASCII binary (0/1) VMatrix\n"
         "  .pmat   : PLearn file VMatrix\n"
         "  .vmat   : PLearn script\n"
-        "  .pymat  : Python script\n"
+        "  .pymat  : Python script\n")
+        + exts + string(
         "- a directory with extension:\n"
         "  .dmat   : Disk VMatrix\n"
         "\n"
         "Optionally, arguments for scripts can be given with the following syntax:\n"
-        "  path/file.ext::arg1=val1::arg2=val2::arg3=val3\n";
+        "  path/file.ext::arg1=val1::arg2=val2::arg3=val3\n");
 }
+
+
+//#####  VMatrixExtensionRegistrar  ###########################################
+
+
+VMatrixExtensionRegistrar::VMatrixExtensionRegistrar(
+    const string& extension, VMatrixInstantiator instantiator, const string& doc)
+    : m_file_extension(extension),
+      m_instantiator(instantiator),
+      m_documentation(doc)
+{
+    registerExtension(*this);
+}
+
+
+void VMatrixExtensionRegistrar::registerExtension(const VMatrixExtensionRegistrar& ext)
+{
+    // If inserting same extension a second time, does NOT override first call
+    if (registeredExtensionsAux().insert(
+            make_pair(ext.m_file_extension,ext)).second)
+    {
+        NAMED_LOG("VMatrixExtensionRegistrar")
+            << "Registered new VMatrix extension: " << ext.m_file_extension
+            << " (" << ext.m_documentation << ")"
+            << endl;
+    }   
+}
+
+
+VMatrixExtensionRegistrar::VMatrixInstantiator
+VMatrixExtensionRegistrar::getInstantiator(const string& ext)
+{
+    map<string,VMatrixExtensionRegistrar>::const_iterator found =
+        registeredExtensions().find(ext);
+    if (found == registeredExtensions().end())
+        return 0;
+    else
+        return found->second.m_instantiator;
+}
+
+// Static member definition
+VMatrixExtensionRegistrar::ExtensionMap&
+VMatrixExtensionRegistrar::registeredExtensionsAux()
+{
+    // Sidestep order-or-static-initialization issue across translation units
+    static ExtensionMap extensions;
+    return extensions;
+}
+
 
 } // end of namespace PLearn
 
