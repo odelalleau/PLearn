@@ -3,7 +3,7 @@
 
 // HyperOptimize.cc
 //
-// Copyright (C) 2003-2004 ApSTAT Technologies Inc.
+// Copyright (C) 2003-2006 ApSTAT Technologies Inc.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -34,6 +34,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 // Author: Pascal Vincent
+// Documentation: Nicolas Chapados
+
 
 /* *******************************************************
  * $Id$
@@ -43,36 +45,65 @@
 #include "HyperOptimize.h"
 #include "HyperLearner.h"
 #include <plearn/vmat/FileVMatrix.h>
+#include <plearn/vmat/MemoryVMatrix.h>
 #include <plearn/base/stringutils.h>
 
 namespace PLearn {
 using namespace std;
 
+PLEARN_IMPLEMENT_OBJECT(
+    HyperOptimize,
+    "Carry out an hyper-parameter optimization according to an Oracle",
+    "HyperOptimize is part of a sequence of HyperCommands (specified within an\n"
+    "HyperLearner) to optimize a validation cost over settings of\n"
+    "hyper-parameters provided by an Oracle.  [NOTE: The \"underlying learner\" is\n"
+    "the PLearner object (specified within the enclosing HyperLearner) whose\n"
+    "hyper-parameters we are trying to optimize.]\n"
+    "\n"
+    "The sequence of steps followed by HyperOptimize is as follows:\n"
+    "\n"
+    "- 1) Gather a \"trial\" from an Oracle.  A \"trial\" is a full setting of\n"
+    "  hyperparameters (option name/value pairs) that the underlying learner\n"
+    "  should be trained with.\n"
+    "\n"
+    "- 2) Set the options within the underlying learner that correspond to\n"
+    "  the current trial.\n"
+    "\n"
+    "- 3) Train and test the underlying learner.  The tester used for this\n"
+    "  purpose is a PTester specified in the enclosing HyperLearner.  By\n"
+    "  default, we rely on that PTester's Splitter as well; however, an\n"
+    "  overriding Splitter may be specified within the HyperCommand.\n"
+    "\n"
+    "- 4) After training/testing, measure the cost to optimize, given by the\n"
+    "  'which_cost' option.  This specifies an index into the test statistics\n"
+    "  given by the 'statnames' option in PTester.  The measured cost gives\n"
+    "  the performance of the current trial, i.e. how well does perform the\n"
+    "  current setting of hyper-parameters.\n"
+    "\n"
+    "- 5) Repeat steps 1-4 until the Oracle tells us \"no more trials\".\n"
+    "\n"
+    "- 6) Find the best setting of hyper-parameters among all those tried.\n"
+    "  (\"best\" defined as that which minimises the cost measured in Step 4).\n"
+    "\n"
+    "- 7) Set the underlying learner within the enclosing HyperLearner to be\n"
+    "  the BEST ONE found in Step 6.\n"
+    "\n"
+    "Optionally, instead of a plain Train/Test in Step 3, a SUB-STRATEGY may be\n"
+    "invoked.  This can be viewed as a \"sub-routine\" for hyperoptimization and\n"
+    "can be used to implement a form of conditioning: given the current setting\n"
+    "for hyper-parameters X,Y,Z, find the best setting of hyper-parameters\n"
+    "T,U,V.  The most common example is for doing early-stopping when training a\n"
+    "neural network: a first-level HyperOptimize command can use an\n"
+    "ExplicitListOracle to jointly optimize over weight-decays and the number of\n"
+    "hidden units.  A sub-strategy can then be used with an EarlyStoppingOracle\n"
+    "to find the optimal number of training stages (epochs) for each combination\n"
+    "of weight-decay/hidden units.\n"
+    "\n"
+    "Note that after optimization, the matrix of all trials is available through\n"
+    "the option 'resultsmat' (which is declared as nosave).  This is available\n"
+    "even if no expdir has been declared.\n"
+    );
 
-//! A generic deep_copy function based on serialization
-//! (this does not use the deepCopy method mechanism, and may currently work
-//! better for a number of classes, as the makeDeepCopyFromShallowCopy methods are
-//! not properly implemented everywhere...)
-
-/*
-  template<class T>
-  T deep_copy(const T& x)
-  {
-  ostrstream out_;
-  PStream out(&out_);
-  out << x;
-  char* buf = out_.str();
-  int n = out_.pcount();
-  string s(buf,n);
-  out_.freeze(false); // return ownership to the stream, so that it may free it...
-
-  T y;
-  istrstream in_(s.c_str());
-  PStream in(&in_);
-  in >> y;
-  return y;
-  }
-*/
 
 HyperOptimize::HyperOptimize()
     : which_cost(-1),
@@ -80,42 +111,54 @@ HyperOptimize::HyperOptimize()
       provide_tester_expdir(false),
       rerun_after_sub(false),
       provide_sub_expdir(true)
-{
-    // ...
+{ }
 
-    // ### You may or may not want to call build_() to finish building the object
-    // build_();
-}
-
-PLEARN_IMPLEMENT_OBJECT(HyperOptimize, "ONE LINE DESCR", "NO HELP");
 
 void HyperOptimize::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
+    declareOption(
+        ol, "which_cost", &HyperOptimize::which_cost, OptionBase::buildoption,
+        "An index in the tester's statnames to be used as the objective cost to minimize");
 
-    declareOption(ol, "which_cost", &HyperOptimize::which_cost, OptionBase::buildoption,
-                  "an index in the tester's statnames to be used as the objective cost to minimize");
-    declareOption(ol, "min_n_trials", &HyperOptimize::min_n_trials, OptionBase::buildoption,
-                  "minimum nb of trials before saving best model");
-    declareOption(ol, "oracle", &HyperOptimize::oracle, OptionBase::buildoption,
-                  "Oracle to interrogate to get hyper-parameter values to try.");
-    declareOption(ol, "provide_tester_expdir", &HyperOptimize::provide_tester_expdir, OptionBase::buildoption,
-                  "should the tester be provided with an expdir for each option combination to test");
-    declareOption(ol, "sub_strategy", &HyperOptimize::sub_strategy, OptionBase::buildoption,
-                  "Optional sub-strategy to optimize other hyper-params (for each combination given by the oracle)");
-    declareOption(ol, "rerun_after_sub", &HyperOptimize::rerun_after_sub, OptionBase::buildoption,
-                  "If this is true, a new evaluation will be performed after executing the sub-strategy, \n"
-                  "using this HyperOptimizer's splitter and which_cost \n"
-                  "This is useful if the sub_strategy optimizes a different cost, or uses different splitting.\n");
-    declareOption(ol, "provide_sub_expdir", &HyperOptimize::provide_sub_expdir, OptionBase::buildoption,
-                  "should sub_strategy commands be provided an expdir");
-    declareOption(ol, "splitter", &HyperOptimize::splitter, OptionBase::buildoption,
-                  "If not specified, we'll use default splitter specified in the hyper-learner's tester option");
+    declareOption(
+        ol, "min_n_trials", &HyperOptimize::min_n_trials, OptionBase::buildoption,
+        "Minimum nb of trials before saving best model");
 
+    declareOption(
+        ol, "oracle", &HyperOptimize::oracle, OptionBase::buildoption,
+        "Oracle to interrogate to get hyper-parameter values to try.");
+
+    declareOption(
+        ol, "provide_tester_expdir", &HyperOptimize::provide_tester_expdir, OptionBase::buildoption,
+        "Should the tester be provided with an expdir for each option combination to test");
+
+    declareOption(
+        ol, "sub_strategy", &HyperOptimize::sub_strategy, OptionBase::buildoption,
+        "Optional sub-strategy to optimize other hyper-params (for each combination given by the oracle)");
+
+    declareOption(
+        ol, "rerun_after_sub", &HyperOptimize::rerun_after_sub, OptionBase::buildoption,
+        "If this is true, a new evaluation will be performed after executing the sub-strategy, \n"
+        "using this HyperOptimizer's splitter and which_cost. \n"
+        "This is useful if the sub_strategy optimizes a different cost, or uses different splitting.\n");
+
+    declareOption(
+        ol, "provide_sub_expdir", &HyperOptimize::provide_sub_expdir, OptionBase::buildoption,
+        "Should sub_strategy commands be provided an expdir");
+
+    declareOption(
+        ol, "splitter", &HyperOptimize::splitter, OptionBase::buildoption,
+        "If not specified, we'll use default splitter specified in the hyper-learner's tester option");
+
+    declareOption(
+        ol, "resultsmat", &HyperOptimize::resultsmat,
+        OptionBase::buildoption | OptionBase::nosave,
+        "Gives access to the results of all trials during the last training.\n"
+        "The last row lists the best results found and kept.  Note that this\n"
+        "is declared 'nosave' and is intended for programmatic access by other\n"
+        "functions through the getOption() mechanism. If an expdir is declared\n"
+        "this matrix is available under the name 'results.pmat' in the expdir.");
+    
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -146,22 +189,31 @@ void HyperOptimize::setExperimentDirectory(const PPath& the_expdir)
 
 void HyperOptimize::createResultsMat()
 {
-    if(expdir!="")
+    TVec<string> cost_fields = getResultNames();
+    TVec<string> option_fields = hlearner->option_fields;
+    int w = 2 + option_fields.length() + cost_fields.length();
+
+    // If we have an expdir, create a FileVMatrix to save the results.
+    // Otherwise, just a MemoryVMatrix to make the results available as a
+    // getOption after training.
+    if (! expdir.empty())
     {
         string fname = expdir+"results.pmat";
-        TVec<string> cost_fields = getResultNames();
-        TVec<string> option_fields = hlearner->option_fields;
-        int w = 2 + option_fields.length() + cost_fields.length();
         resultsmat = new FileVMatrix(fname,0,w);
-        int j=0;
-        resultsmat->declareField(j++, "_trial_");
-        resultsmat->declareField(j++, "_objective_");
-        for(int k=0; k<option_fields.length(); k++)
-            resultsmat->declareField(j++, option_fields[k]);
-        for(int k=0; k<cost_fields.length(); k++)
-            resultsmat->declareField(j++, cost_fields[k]);
-        resultsmat->saveFieldInfos();
     }
+    else
+        resultsmat = new MemoryVMatrix(0,w);
+
+    int j=0;
+    resultsmat->declareField(j++, "_trial_");
+    resultsmat->declareField(j++, "_objective_");
+    for(int k=0; k<option_fields.length(); k++)
+        resultsmat->declareField(j++, option_fields[k]);
+    for(int k=0; k<cost_fields.length(); k++)
+        resultsmat->declareField(j++, cost_fields[k]);
+
+    if (! expdir.empty())
+        resultsmat->saveFieldInfos();
 }
 
 void HyperOptimize::reportResult(int trialnum,  const Vec& results)

@@ -3,7 +3,7 @@
 
 // HyperOptimize.h
 //
-// Copyright (C) 2003-2004 ApSTAT Technologies Inc.
+// Copyright (C) 2003-2006 ApSTAT Technologies Inc.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -34,6 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 // Author: Pascal Vincent
+// Documentation: Nicolas Chapados
 
 /* *******************************************************
  * $Id$
@@ -50,10 +51,62 @@
 namespace PLearn {
 using namespace std;
 
+/**
+ *  Carry out an hyper-parameter optimization according to an Oracle
+ *
+ *  HyperOptimize is part of a sequence of HyperCommands (specified within an
+ *  HyperLearner) to optimize a validation cost over settings of
+ *  hyper-parameters provided by an Oracle.  [NOTE: The "underlying learner" is
+ *  the PLearner object (specified within the enclosing HyperLearner) whose
+ *  hyper-parameters we are trying to optimize.]
+ *
+ *  The sequence of steps followed by HyperOptimize is as follows:
+ *
+ *  - 1) Gather a "trial" from an Oracle.  A "trial" is a full setting of
+ *    hyperparameters (option name/value pairs) that the underlying learner
+ *    should be trained with.
+ *
+ *  - 2) Set the options within the underlying learner that correspond to
+ *    the current trial.
+ *
+ *  - 3) Train and test the underlying learner.  The tester used for this
+ *    purpose is a PTester specified in the enclosing HyperLearner.  By
+ *    default, we rely on that PTester's Splitter as well; however, an
+ *    overriding Splitter may be specified within the HyperCommand.
+ *
+ *  - 4) After training/testing, measure the cost to optimize, given by the
+ *    'which_cost' option.  This specifies an index into the test statistics
+ *    given by the 'statnames' option in PTester.  The measured cost gives
+ *    the performance of the current trial, i.e. how well does perform the
+ *    current setting of hyper-parameters.
+ *
+ *  - 5) Repeat steps 1-4 until the Oracle tells us "no more trials".
+ *
+ *  - 6) Find the best setting of hyper-parameters among all those tried.
+ *    ("best" defined as that which minimises the cost measured in Step 4).
+ *
+ *  - 7) Set the underlying learner within the enclosing HyperLearner to be
+ *    the BEST ONE found in Step 6.
+ *
+ *  Optionally, instead of a plain Train/Test in Step 3, a SUB-STRATEGY may be
+ *  invoked.  This can be viewed as a "sub-routine" for hyperoptimization and
+ *  can be used to implement a form of conditioning: given the current setting
+ *  for hyper-parameters X,Y,Z, find the best setting of hyper-parameters
+ *  T,U,V.  The most common example is for doing early-stopping when training a
+ *  neural network: a first-level HyperOptimize command can use an
+ *  ExplicitListOracle to jointly optimize over weight-decays and the number of
+ *  hidden units.  A sub-strategy can then be used with an EarlyStoppingOracle
+ *  to find the optimal number of training stages (epochs) for each combination
+ *  of weight-decay/hidden units.
+ *
+ *  Note that after optimization, the matrix of all trials is available through
+ *  the option 'resultsmat' (which is declared as nosave).  This is available
+ *  even if no expdir has been declared.
+ */
 class HyperOptimize: public HyperCommand
 {
 protected:
-
+    //! Store the results computed for each trial
     VMat resultsmat;
 
 public:
