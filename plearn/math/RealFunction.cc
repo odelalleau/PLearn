@@ -94,6 +94,16 @@ void RealFunction::build_()
     // ### called.
 }
 
+void evaluate_functions(const TVec<RealFunc>& functions, const Vec& input, 
+                        Vec& featurevec)
+{
+    int n = functions.size();
+    featurevec.resize(n);
+    for(int k=0; k<n; k++)
+        featurevec[k] = functions[k]->evaluate(input);
+}
+
+
 
 } // end of namespace PLearn
 

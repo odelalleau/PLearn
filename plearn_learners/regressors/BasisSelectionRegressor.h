@@ -42,6 +42,7 @@
 
 #include <plearn_learners/generic/PLearner.h>
 #include <plearn/math/RealFunction.h>
+#include <plearn/ker/Kernel.h>
 
 namespace PLearn {
 
@@ -60,49 +61,22 @@ class BasisSelectionRegressor : public PLearner
 {
     typedef PLearner inherited;
 
-    bool consider_bias;
-    TVec<Func> explicit_functions;
+public:
+    //#####  Public Build Options  ############################################
+    bool consider_constant_function;
+    TVec<RealFunc> explicit_functions;
     bool consider_raw_inputs;
     bool consider_input_range_indicators;
     TVec<Ker> kernels;
-    Mat kernel_centers;
+    mutable Mat kernel_centers;
     int n_kernel_centers_to_pick;
-
     bool consider_interaction_terms;
+    PP<PLearner> learner;
 
+    //#####  Public Learnt Options  ############################################
     TVec<RealFunc> selected_functions;
     Vec alphas;
 
-    TVec<RealFunc> candidate_functions;
-
-    PP<PLearner> learner;
-
-
-
-
-
-    Mat features;
-    real bias;
-
-    // extended feature mean (element 0 is constant 1.0 to incorporate the bias)
-    Vec featuremean;
-    // extended covariance matrix (position 0 is the incorporated bias term)
-    Mat featurecov;
-
-    Vec target;
-    Vec residue;
-    double residue_sum;
-    double residue_sum_sq;
-    Vec weights;
-    double weights_sum;
-    
-    mutable Vec featurevec;
-
-public:
-    //#####  Public Build Options  ############################################
-
-    //! ### declare public option fields (such as build options) here
-    //! Start your comments with Doxygen-compatible comments such as //!
 
 public:
     //#####  Public Member Functions  #########################################
@@ -111,6 +85,8 @@ public:
     // ### Make sure the implementation in the .cc
     // ### initializes all fields to reasonable default values.
     BasisSelectionRegressor();
+
+    void printModelFunction(PStream& out) const;
 
     //#####  PLearner Member Functions  #######################################
 
@@ -193,36 +169,48 @@ protected:
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
 
-    void initResidueWeightAndBias();
-    void updateResidue(const Vec& feature, real alpha, real b);
-    void backfit();
-    void appendFeature(const IMPFeatureSpec& fs, real alpha, real b);
-    Vec getFieldValues(int fieldpos);
-    void computeFeatureVec(const IMPFeatureSpec& fs, Vec& featurevec);
-    void fitFeature(const IMPFeatureSpec& fs, real& alpha, real& b, real& newsqerror);
-
-    // First call should call this with  best_newsqerror = FLT_MAX;
-    void fitFeatureAndKeepBest(const IMPFeatureSpec& fs,  
-                                            IMPFeatureSpec& best_fs,  real& best_alpha, real& best_b, 
-                                            real& best_newsqerror);
-
-    void printFunction(PStream& out) const;
-    void printFeature(PStream& out, const IMPFeatureSpec& fs) const;
-    void findBestNewFeature(IMPFeatureSpec& best_fs, real& best_alpha, real& best_b, real& best_newsqerror);
-    real computePrediction(const Vec& input) const;
-    real recompute_residue_sum_sq() const;
-
-
 private:
     //#####  Private Member Functions  ########################################
 
     //! This does the actual building.
     void build_();
 
+    void appendCandidateFunctionsOfSingleField(int fieldnum, TVec<RealFunc>& functions) const;
+    void appendKernelFunctions(TVec<RealFunc>& functions) const;
+    void appendConstantFunction(TVec<RealFunc>& functions) const;
+    void buildAllCandidateFunctions(TVec<RealFunc>& functions) const;
+
+    //! Returns the index of the function most correlated (or anti-correlated) with the residue
+    void findMostCorrelatedCandidateFunction(const TVec<RealFunc>& functions, const Vec& residue,
+                                             int& best_featurenum, real& best_abs_correl) const;
+
+    void computeWeightedCorrelationsWithY(const TVec<RealFunc>& functions, const Vec& Y,  
+                                          real& wsum,
+                                          Vec& E_x, Vec& V_x,
+                                          real& E_y, real& V_y,
+                                          Vec& E_xy, Vec& V_xy,
+                                          Vec& covar, Vec& correl) const;
+    void appendFunction(RealFunc f);
+    void retrainLearner();
+    void initTargetResidueWeight();
+    void recomputeFeatures();
+    void recomputeResidue();
+    void computeOutputFromFeaturevec(const Vec& featurevec, Vec& output) const;
+
 private:
     //#####  Private Data Members  ############################################
 
-    // The rest of the private stuff goes here
+    TVec<RealFunc> candidate_functions;
+    Mat features;
+    Vec residue;
+    Vec weights;
+    double residue_sum;
+    double residue_sum_sq;
+    double weights_sum;
+
+    mutable Vec input;
+    mutable Vec target;
+    mutable Vec featurevec;
 };
 
 // Declares a few other classes and functions related to this class

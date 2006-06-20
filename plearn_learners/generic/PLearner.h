@@ -210,7 +210,7 @@ protected:
      *  present, will be automatically initialized from the 'seed' option in
      *  build() and forget().
      */
-    PP<PRandom> random_gen;
+    mutable PP<PRandom> random_gen;
 
 public:
     //! Default Constructor

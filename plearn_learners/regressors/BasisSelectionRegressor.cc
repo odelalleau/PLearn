@@ -38,6 +38,13 @@
 
 
 #include "BasisSelectionRegressor.h"
+#include <plearn/math/RealFunctionOfInputFeature.h>
+#include <plearn/math/RealFunctionFromKernel.h>
+#include <plearn/math/ConstantRealFunction.h>
+#include <plearn/math/RealFunctionProduct.h>
+#include <plearn/math/RealRangeIndicatorFunction.h>
+#include <plearn/math/TruncatedRealFunction.h>
+#include <plearn/vmat/MemoryVMatrix.h>
 
 namespace PLearn {
 using namespace std;
@@ -48,11 +55,15 @@ PLEARN_IMPLEMENT_OBJECT(
     "MULTI-LINE \nHELP");
 
 BasisSelectionRegressor::BasisSelectionRegressor()
-/* ### Initialize all fields to their default value here */
-{
-    if(random_gen.isNull() && n_kernel_centers_to_pick>0)
-        random_gen = new PRandom();
-}
+    : consider_constant_function(false),
+      consider_raw_inputs(true),
+      consider_input_range_indicators(false),
+      n_kernel_centers_to_pick(-1),
+      consider_interaction_terms(false),
+      residue_sum(0),
+      residue_sum_sq(0),
+      weights_sum(0)
+{}
 
 void BasisSelectionRegressor::declareOptions(OptionList& ol)
 {
@@ -71,31 +82,54 @@ void BasisSelectionRegressor::declareOptions(OptionList& ol)
     // ...
 
 
-    declareOption(ol, "consider_raw_inputs", &BasisSelectionRegressor::selected_functions,
-                  OptionBase::learntoption,
-                  "The basis functions selected by the algorithm");
+    //#####  Public Build Options  ############################################
+
+    declareOption(ol, "consider_constant_function", &BasisSelectionRegressor::consider_constant_function,
+                  OptionBase::buildoption,
+                  "");
+
+    declareOption(ol, "explicit_functions", &BasisSelectionRegressor::explicit_functions,
+                  OptionBase::buildoption,
+                  "");
+
+    declareOption(ol, "consider_raw_inputs", &BasisSelectionRegressor::consider_raw_inputs,
+                  OptionBase::buildoption,
+                  "");
+
+    declareOption(ol, "consider_input_range_indicators", &BasisSelectionRegressor::consider_input_range_indicators,
+                  OptionBase::buildoption,
+                  "");
+
+    declareOption(ol, "kernels", &BasisSelectionRegressor::kernels,
+                  OptionBase::buildoption,
+                  "");
+
+    declareOption(ol, "kernel_centers", &BasisSelectionRegressor::kernel_centers,
+                  OptionBase::buildoption,
+                  "");
+
+    declareOption(ol, "n_kernel_centers_to_pick", &BasisSelectionRegressor::n_kernel_centers_to_pick,
+                  OptionBase::buildoption,
+                  "");
+
+    declareOption(ol, "consider_interaction_terms", &BasisSelectionRegressor::consider_interaction_terms,
+                  OptionBase::buildoption,
+                  "");
+
+    declareOption(ol, "learner", &BasisSelectionRegressor::learner,
+                  OptionBase::buildoption,
+                  "");
+
+
+    //#####  Public Learnt Options  ############################################
 
     declareOption(ol, "selected_functions", &BasisSelectionRegressor::selected_functions,
                   OptionBase::learntoption,
-                  "The basis functions selected by the algorithm");
-    
-    // Mat features;
+                  "");
 
     declareOption(ol, "alphas", &BasisSelectionRegressor::alphas,
                   OptionBase::learntoption,
-                  "Help text describing this option");
-
-    declareOption(ol, "bias", &BasisSelectionRegressor::bias,
-                  OptionBase::learntoption,
-                  "Help text describing this option");
-    /*
-    Vec target;
-    Vec residue;
-    double residue_sum;
-    double residue_sum_sq;
-    Vec weights;
-    double weights_sum;
-    */
+                  "");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -145,6 +179,7 @@ int BasisSelectionRegressor::outputsize() const
 
 void BasisSelectionRegressor::forget()
 {
+    
     //! (Re-)initialize the PLearner in its fresh state (that state may depend
     //! on the 'seed' option) and sets 'stage' back to 0 (this is the stage of
     //! a fresh learner!)
@@ -154,62 +189,49 @@ void BasisSelectionRegressor::forget()
       - initialize the learner's parameters, using this random generator
       - stage = 0
     */
+
+    selected_functions.resize(0);
+    target.resize(0);
+    residue.resize(0);
+    weights.resize(0);
+    features.resize(0,0);
+    if(n_kernel_centers_to_pick>=0)
+        kernel_centers.resize(0,0);
+    if(learner.isNotNull())
+        learner->forget();
+
+    stage = 0;
 }
 
-TVec<string> BasisSelectionRegressor::producePossibleVPLFunctionsForField(int fieldnum)
-{
-    TVec<string> vplcodes;
-    vplcodes.append("@"+train_set->fieldName(fieldnum));
-    return vplcodes;
-}
-
-void BasisSelectionRegressor::produceCandidateVPLCodes()
-{
-    int insize = inputsize();
-    candidate_vplcodes.resize(0);
-    for(int j=0; j<insize; j++)
-    {
-        TVec<string> codes_for_field = getPossibleVPLFunctionsForField(j);
-        candidate_vplcodes.append(codes_for_field);
-    }
-    string fullcode = join(vplcodes,"\n");
-    TVec<string> fieldnames;
-    candidates_program.compileString(fullcode, fieldnames);
-}
-
-//! Returns the number of already selected features
-int BasisSelectionRegressor::nSelectedFeatures() const
-{
-    return selected_functions.length(); 
-}
-
-void BasisSelectionRegressor::appendCandidateFunctionsOfSingleField(int fieldnum, TVec<RealFunc>& functions)
+void BasisSelectionRegressor::appendCandidateFunctionsOfSingleField(int fieldnum, TVec<RealFunc>& functions) const
 {
     if(consider_raw_inputs)
-        functions.append(new RealFunctionOfInputFeature(int fieldnum));
+        functions.append(new RealFunctionOfInputFeature(fieldnum));
     if(consider_input_range_indicators)
     {
         PLERROR("consider_input_range_indicators mode not yet properly implemented");
-        StatsCollector& st = train_set->getStats(fieldnum);
-        st.getBinMapping();        
+        // StatsCollector& st = train_set->getStats(fieldnum);
+        // st.getBinMapping();        
     }
 }
 
-void BasisSelectionRegressor::appendKernelFunctions(TVec<RealFunc>& functions)
+void BasisSelectionRegressor::appendKernelFunctions(TVec<RealFunc>& functions) const
 {
-    if(kernel_centers.length()<=0 && pick_kernel_centers>=0)
+    if(kernel_centers.length()<=0 && n_kernel_centers_to_pick>=0)
     {
         int nc = n_kernel_centers_to_pick;
         kernel_centers.resize(nc, inputsize());
         Vec target;
         real weight;        
         int l = train_set->length();
+        if(random_gen.isNull())
+            random_gen = new PRandom();
         random_gen->manual_seed(seed_);
         for(int i=0; i<nc; i++)
         {
             Vec input = kernel_centers(i);
             int rowpos = min(int(l*random_gen->uniform_sample()),l-1);
-            train_set->getRow(rowpos, input, target, weight);
+            train_set->getExample(rowpos, input, target, weight);
         }
     }
 
@@ -221,17 +243,17 @@ void BasisSelectionRegressor::appendKernelFunctions(TVec<RealFunc>& functions)
     }
 }
 
-void BasisSelectionRegressor::appendConstantFunction(TVec<RealFunc>& functions)
+void BasisSelectionRegressor::appendConstantFunction(TVec<RealFunc>& functions) const
 {
     functions.append(new ConstantRealFunction());
 }
 
-void BasisSelectionRegressor::buildAllCandidateFunctions(TVec<RealFunc>& functions)
+void BasisSelectionRegressor::buildAllCandidateFunctions(TVec<RealFunc>& functions) const
 {
     functions.resize(0);
 
-    if(consider_bias)
-        appendConstantFunction();
+    if(consider_constant_function)
+        appendConstantFunction(functions);
     
     if(explicit_functions.length()>0)
         functions.append(explicit_functions);
@@ -240,11 +262,11 @@ void BasisSelectionRegressor::buildAllCandidateFunctions(TVec<RealFunc>& functio
         appendCandidateFunctionsOfSingleField(fieldnum, functions);
     
     if(kernels.length()>0)
-        appendKernelFunctions();
+        appendKernelFunctions(functions);
 
     if(consider_interaction_terms)
     {
-        int candidate_start = consider_bias?1:0; // skip bias
+        int candidate_start = consider_constant_function?1:0; // skip bias
         int ncandidates = functions.length();
         int nselected = selected_functions.length();
         for(int k=0; k<nselected; k++)
@@ -254,13 +276,12 @@ void BasisSelectionRegressor::buildAllCandidateFunctions(TVec<RealFunc>& functio
 }
 
 /* Returns the index of the most correlated (or anti-correlated) feature 
-among the full candidate features. If none has a |correlation| with the residue > 1e-6,
-the call returns -1
+among the full candidate features. 
 */
-void BasisSelectionRegressor::findMostCorrelatedCandidateFeature(const TVec<RealFunc>& functions, const Vec& residue,
-                                                                 int& best_featurenum, real& best_abs_correl)
+void BasisSelectionRegressor::findMostCorrelatedCandidateFunction(const TVec<RealFunc>& functions, const Vec& residue,
+                                                                  int& best_featurenum, real& best_abs_correl) const
 {
-    int n_candidates = nFullCandidateFeatures();
+    int n_candidates = functions.size();
     static Mat tmpvecs;
     tmpvecs.resize(6, n_candidates);
     Vec E_x = tmpvecs(0);
@@ -279,7 +300,7 @@ void BasisSelectionRegressor::findMostCorrelatedCandidateFeature(const TVec<Real
                                      E_xy, V_xy,
                                      covar, correl);
     best_featurenum = -1;
-    best_abs_correl = 1e-6;
+    best_abs_correl = 0;
     for(int j=0; j<n_candidates; j++)
     {
         real abs_correl = fabs(correl[j]);
@@ -296,7 +317,7 @@ void BasisSelectionRegressor::computeWeightedCorrelationsWithY(const TVec<RealFu
                                                                Vec& E_x, Vec& V_x,
                                                                real& E_y, real& V_y,
                                                                Vec& E_xy, Vec& V_xy,
-                                                               Vec& covar, Vec& correl)
+                                                               Vec& covar, Vec& correl) const
 {
     int n_candidates = functions.length();
     E_x.resize(n_candidates);
@@ -320,7 +341,7 @@ void BasisSelectionRegressor::computeWeightedCorrelationsWithY(const TVec<RealFu
     {
         real y = Y[i];
         train_set->getExample(i, input, target, w);
-        evaluateFunctions(functions, input, candidate_features);
+        evaluate_functions(functions, input, candidate_features);
         wsum += w;
         E_y  += w*y;
         V_y  += w*y*y;
@@ -397,93 +418,99 @@ void weighted_XY_statistics(const Vec& X, const Vec& Y, const Vec& W,
     }
     real inv_wsum = 1.0/wsum;
     E_x  *= inv_wsum;
-    V_x  = V_x*inv_wsum - E_x*Ex;
+    V_x  = V_x*inv_wsum - E_x*E_x;
     E_y  *= inv_wsum;
     V_y  = V_y*inv_wsum - E_y*E_y;
     E_xy = E_xy*inv_wsum;
     V_xy = V_xy*inv_wsum - E_xy*E_xy;
 
     covar = E_xy - E_x*E_y;
-    correl = cov/sqrt(V_x*V_y);
+    correl = covar/sqrt(V_x*V_y);
 }
+
+void BasisSelectionRegressor::appendFunction(RealFunc f)
+{
+    int l = train_set->length();
+    int nf = selected_functions.length();    
+    features.resize(l,nf,l*nf,true);  // enlarge width while preserving content
+    real weight;
+    for(int i=0; i<l; i++)
+    {
+        train_set->getExample(i,input,target,weight);
+        features(i,nf) = f->evaluate(input);
+    }
+    selected_functions.append(f);
+}
+
+void BasisSelectionRegressor::retrainLearner()
+{
+    int l  = selected_functions.length();
+    int nf = selected_functions.length();
+    features.resize(l,nf+2, l*nf, true); // enlarge width while preserving content
+    // append residue (as target) and weight columns to features matrix
+    for(int i=0; i<l; i++)
+    {
+        features(i,nf) = residue[i];
+        features(i,nf+1) = weights[i];
+    }
+
+    VMat newtrainset = new MemoryVMatrix(features);
+    newtrainset->defineSizes(nf,1,1);
+    learner->setTrainingSet(newtrainset);
+    learner->forget();
+    learner->train();
+    // resize features matrix so it containsonly the features
+    features.resize(l,nf);
+}
+
 
 void BasisSelectionRegressor::train()
 {
-    static Vec input;  // static so we don't reallocate memory each time...
-    static Vec target; // (but be careful that static means shared!)
-    input.resize(inputsize());    // the train_set's inputsize()
-    target.resize(targetsize());  // the train_set's targetsize()
-    real weight;
-
     if (!initTrain())
         return;
 
     Vec train_costs(1);
-
-    Vec feature;
-
-    int l = train_set->length();
-    residue.resize(l);
-    targetvec.resize(l);
-
-    bias = 0.;
-    real wsum;
     while(stage<nstages)
     {
-        if(stage==0)
+        if(target.length()==0)
         {
-            wsum = 0.;
-            for(int i=0; i<l; i++)
+            initTargetResidueWeight();
+            if(selected_functions.length()>0)
             {
-                train_set->getExample(i,input,target,weight);
-                wsum += weight;
-                real t = target[0];
-                targetvec[i] = t;
-                bias += weight*t;
+                recomputeFeatures();
+                recomputeResidue();
             }
-            bias /= wsum;
-            recomputeResidue();
-        }
-        else
-        {
         }
 
-        int BasisSelectionRegressor::findMostCorrelatedCandidateFeature(const Vec& residue)
+        buildAllCandidateFunctions(candidate_functions);
+        int best_featurenum = -1;
+        real best_abs_correl = 0;
+        findMostCorrelatedCandidateFunction(candidate_functions, residue, best_featurenum, best_abs_correl);
+        perr << "\n\n*** Stage " << stage << " *****" << endl
+             << "Most correlated: index=" << best_featurenum << endl 
+             << "  abs_correl=" << best_abs_correl << endl
+             << "  function= " << candidate_functions[best_featurenum]
+             << endl;
+        appendFunction(candidate_functions[best_featurenum]);
+        perr << "residue_sum_sq before retrain: " << residue_sum_sq << endl;
+        retrainLearner();
+        recomputeResidue();
+        perr << "residue_sum_sq after retrain: " << residue_sum_sq << endl;
 
         // clear statistics of previous epoch
         train_stats->forget();
-
-        perr << "*** Stage " << stage << endl;
-        if(stage==0)
-            initResidueWeightAndBias();
-        else
-        {
-            findBestNewFeature(newfs, alpha, b, newsqerror);
-            perr << "+ " << alpha << "*";
-            printFeature(perr, newfs);
-            perr << "\n b: " << b << endl;
-            perr << "newsqerror: " << newsqerror << endl;        
-            appendFeature(newfs, alpha, b);
-        }
-        perr << "new bias: " << bias << endl;
-        perr << "residue_sum_sq: " << residue_sum_sq << endl;
-        perr << "recomputed residue_sum_sq: " << recompute_residue_sum_sq() << endl;
         train_costs[0] = residue_sum_sq;
         train_stats->update(train_costs, weights_sum);
-
-        ++stage;
         train_stats->finalize(); // finalize statistics for this epoch
+        ++stage;
     }
 }
 
-
-#if 0
-// Old code
-
-void BasisSelectionRegressor::initResidueWeightAndBias()
+void BasisSelectionRegressor::initTargetResidueWeight()
 {
     int l = train_set.length();
     residue.resize(l);
+    target.resize(l);
     residue_sum = 0.;
     residue_sum_sq = 0.;
     weights.resize(l);
@@ -495,13 +522,16 @@ void BasisSelectionRegressor::initResidueWeightAndBias()
     for(int i=0; i<l; i++)
     {
         train_set->getExample(i, input, target, w);
-        real resval = target[0];
-        residue[i] = resval;
-        residue_sum += w*resval;
-        residue_sum_sq += w*square(resval);        
+        real t = target[0];
+        target[i] = t;
+        residue[i] = t;
+        residue_sum += w*t;
+        residue_sum_sq += w*square(t);        
         weights[i] = w;
         weights_sum += w;
     }
+
+    /*
     bias = residue_sum/weights_sum;
 
     // Now sutract the bias
@@ -515,224 +545,38 @@ void BasisSelectionRegressor::initResidueWeightAndBias()
         residue_sum += w*resval;
         residue_sum_sq += w*square(resval);        
     }
-    
+    */
 }
 
-void BasisSelectionRegressor::updateResidue(const Vec& feature, real alpha, real b)
+void BasisSelectionRegressor::recomputeFeatures()
 {
-    int l = residue.length();
-    residue_sum = 0.;
-    residue_sum_sq = 0.;
-
-    perr << "prev_residue: " << residue << endl;
-    perr << "new feature: " << feature << endl;
+    int l = train_set.length();
+    int nf = selected_functions.length();
+    features.resize(l,nf);
+    real weight = 0;
     for(int i=0; i<l; i++)
     {
-        residue[i] -= alpha*feature[i]+b;
-        real resval = residue[i];
-        real w = weights[i];
-        residue_sum += w*resval;
-        residue_sum_sq += w*square(resval);        
-    }
-    perr << "new_residue: " << residue << endl;
+        train_set->getExample(i, input, target, weight);
+        Vec v = features(i);
+        evaluate_functions(selected_functions, input, v);        
+    }    
 }
 
-
-/*
-void BasisSelectionRegressor::updateFeatureStats()
-{
-    int n = featurespecs.length();
-    Vec newfeature = features(n-1);
-    int l = newfeature.length();
-    real m = mean(newfeature);
-    // real m = dot(newfeature,weights)/weights_sum;
-    featuremean.append(m);
-    featurecov.resize(1+n, 1+n, 10000, true);
-    Vec newcovrow = featurecov(n);
-    newcovrow.fill(0.);
-
-    real biascov = 0;
-    for(int i; i<l; i++)
-    {
-    }
-
-    for(int i=1; i<l; i++)
-    {
-        residue[i] -= alpha*feature[i]+b;
-        real resval = residue[i];
-        real w = weights[i];
-        residue_sum += w*resval;
-        residue_sum_sq += w*square(resval);        
-    }
-    perr << "new_residue: " << residue << endl;
-}
-*/
-
-void BasisSelectionRegressor::backfit()
-{
-    PLERROR("backfit not yet implemented");
-}
-
-void BasisSelectionRegressor::appendFeature(const IMPFeatureSpec& fs, real alpha, real b)
-{
-    Vec featurevec;
-    computeFeatureVec(fs, featurevec);
-    featurespecs.append(fs);
-    features.appendRow(featurevec);
-    alphas.append(alpha);
-    bias += b;
-    updateResidue(featurevec, alpha, b);
-    // updateFeatureStats(featurevec);
-}
-
-Vec BasisSelectionRegressor::getFieldValues(int fieldpos)
-{
-    static Vec cached_column;
-    static int cached_col_num = -1;
-    if(fieldpos!=cached_col_num)
-    {
-        cached_column.resize(train_set.length());
-        train_set->getColumn(fieldpos,cached_column);
-        cached_col_num = fieldpos;
-    }
-    return cached_column;
-}
-
-void BasisSelectionRegressor::computeFeatureVec(const IMPFeatureSpec& fs, Vec& featurevec)
-{
-    Vec fieldvalues = getFieldValues(fs.fieldpos);
-    Vec other_featurevec;
-    if(fs.combintype!='0')
-        other_featurevec = features(fs.other_feature_pos);
-    int l = fieldvalues.length();
-    featurevec.resize(l);
-    for(int i=0; i<l; i++)
-    {
-        double other_feature_val = (other_featurevec.length()<=0 ?0. :other_featurevec[i]);
-        featurevec[i] = fs.evaluateFeature(fieldvalues[i], other_feature_val);
-    }
-}
-
-void BasisSelectionRegressor::fitFeature(const IMPFeatureSpec& fs, real& alpha, real& b, real& newsqerror)
-{
-    static Vec featurevec;
-    computeFeatureVec(fs, featurevec);
-    int l = residue.length();
-
-    double feature_sum    = 0.;
-    double feature_sum_sq = 0.;
-    double dotprod        = 0.;
-    for(int i=0; i<l; i++)
-    {
-        double res  = residue[i];
-        double fval = featurevec[i];
-        double w    = weights[i];
-        feature_sum += w*fval;
-        feature_sum_sq += w*square(fval);
-        dotprod += w*fval*res;
-    }
-    
-    alpha = (weights_sum*dotprod - feature_sum*residue_sum)
-        /(weights_sum*feature_sum_sq - square(feature_sum));
-
-    b = (residue_sum - alpha*feature_sum)/weights_sum;
-
-    newsqerror = residue_sum_sq - 2.*alpha*dotprod 
-        - 2.*b*residue_sum + square(alpha)*feature_sum_sq 
-        + 2.*alpha*b*feature_sum+weights_sum*square(b);
-}
-
-
-// First call should call this with  best_newsqerror = FLT_MAX;
-void BasisSelectionRegressor::fitFeatureAndKeepBest(const IMPFeatureSpec& fs,  
-                                                      IMPFeatureSpec& best_fs,  real& best_alpha, real& best_b, 
-                                                      real& best_newsqerror)
-{
-    real alpha = 0;
-    real b = 0;
-    real newsqerror = 0;
-
-    perr << "Trying feature: ";
-    printFeature(perr, fs);
-    perr << endl;
-
-    fitFeature(fs, alpha, b, newsqerror);
-    perr << "-> newsqerror = " << newsqerror << endl;
-
-    if(newsqerror<best_newsqerror)
-    {
-        best_newsqerror = newsqerror;
-        best_alpha = alpha;
-        best_b = b;
-        best_fs = fs;
-    }
-}
-
-
-// OLD TRAIN METHOD
-void BasisSelectionRegressor::train()
-{
-    static Vec input;  // static so we don't reallocate memory each time...
-    static Vec target; // (but be careful that static means shared!)
-    input.resize(inputsize());    // the train_set's inputsize()
-    target.resize(targetsize());  // the train_set's targetsize()
-
-    if (!initTrain())
-        return;
-
-    Vec train_costs(1);
-
-    Vec feature;
-
-    while(stage<nstages)
-    {
-        // clear statistics of previous epoch
-        train_stats->forget();
-
-        IMPFeatureSpec newfs;
-        real alpha = 0.;
-        real b = 0.;
-        real newsqerror = 0.;
-        perr << "*** Stage " << stage << endl;
-        if(stage==0)
-            initResidueWeightAndBias();
-        else
-        {
-            findBestNewFeature(newfs, alpha, b, newsqerror);
-            perr << "+ " << alpha << "*";
-            printFeature(perr, newfs);
-            perr << "\n b: " << b << endl;
-            perr << "newsqerror: " << newsqerror << endl;        
-            appendFeature(newfs, alpha, b);
-        }
-        perr << "new bias: " << bias << endl;
-        perr << "residue_sum_sq: " << residue_sum_sq << endl;
-        perr << "recomputed residue_sum_sq: " << recompute_residue_sum_sq() << endl;
-        train_costs[0] = residue_sum_sq;
-        train_stats->update(train_costs, weights_sum);
-
-        ++stage;
-        train_stats->finalize(); // finalize statistics for this epoch
-    }
-}
-#endif
-
-void BasisSelectionRegressor::recomputeResidue() const
+void BasisSelectionRegressor::recomputeResidue()
 {
     int l = train_set.length();
     residue.resize(l);
     residue_sum = 0;
     residue_sum_sq = 0;
-    Vec input(inputsize());
     Vec output(outputsize());
-    Vec target(targetsize());
-    real w;
     // perr << "recomp_residue: { ";
     for(int i=0; i<l; i++)
     {
-        train_set->getExample(i, input, target, w);
-        computeOutput(input,output);
-        real resid = target[0]-output[0];
+        // train_set->getExample(i, input, target, w);
+        real t = target[i];
+        real w = weights[i];
+        computeOutputFromFeaturevec(features(i),output);
+        real resid = t-output[0];
         residue[i] = resid;
         residue_sum += resid;
         residue_sum_sq += w*square(resid);
@@ -740,29 +584,23 @@ void BasisSelectionRegressor::recomputeResidue() const
     // perr << "}" << endl;
 }
 
-void BasisSelectionRegressor::evaluateFunctions(const TVec<Func>& functions, const Vec& input, 
-                                                Vec& featurevec)
-{
-    featurevec.resize(functions);
-    int n = selected_functions.size();
-    featurevec.resize(n);
-    for(int k=0; k<n; k++)
-        featurevec[k] = functions[k]->evaluate(input);
-}
-
-void BasisSelectionRegressor::computeOutput(const Vec& input, Vec& output) const
+void BasisSelectionRegressor::computeOutputFromFeaturevec(const Vec& featurevec, Vec& output) const
 {
     int nout = outputsize();
     if(nout!=1)
         PLERROR("outputsize should always be one for this learner");
     output.resize(nout);
 
-    evaluateFunctions(selected_functions, input, featurevec);
-    
     if(learner.isNull())
         output[0] = dot(alphas, featurevec);
     else
         learner->computeOutput(featurevec, output);
+}
+
+void BasisSelectionRegressor::computeOutput(const Vec& input, Vec& output) const
+{
+    evaluate_functions(selected_functions, input, featurevec);
+    computeOutputFromFeaturevec(featurevec, output);
 }
 
 void BasisSelectionRegressor::printModelFunction(PStream& out) const
@@ -773,8 +611,6 @@ void BasisSelectionRegressor::printModelFunction(PStream& out) const
         out << endl;
     }
 }
-
-
 
 void BasisSelectionRegressor::computeCostsFromOutputs(const Vec& input, const Vec& output,
                                            const Vec& target, Vec& costs) const

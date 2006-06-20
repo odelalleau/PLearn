@@ -120,6 +120,11 @@ DECLARE_OBJECT_PTR(RealFunction);
 
 typedef PP<RealFunction> RealFunc;
 
+//! Computes featurevec which results from evaluating each function at the given input
+void evaluate_functions(const TVec<RealFunc>& functions, const Vec& input, 
+                        Vec& featurevec);
+
+
 } // end of namespace PLearn
 
 #endif
