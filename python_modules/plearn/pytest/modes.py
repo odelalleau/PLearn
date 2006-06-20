@@ -744,7 +744,7 @@ class results(ResultsBasedMode):
 class run(ResultsBasedMode):    
     RoutineType = RunTestRoutine
     
-if __name__ == '__main__':
+def testAllModes():
     import os, sys
     def vsystem(cmd):        
         print >>sys.stderr, '#  %s\n' % cmd
@@ -753,7 +753,7 @@ if __name__ == '__main__':
         print >>sys.stderr, ''
 
     ## Since run results are not under version control...
-    os.chdir(os.path.join(ppath.ppath('PLEARNDIR'), 'test_suite/svn_tests'))
+    os.chdir(os.path.join(os.path.dirname(__file__), '.pytest/svn_tests'))
 
     ## Creates a new test script
     f = open('INTERNAL_SCRIPT.py', 'w')
