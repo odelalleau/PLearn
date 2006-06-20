@@ -875,7 +875,8 @@ void NNet::initializeParams(bool set_seed)
         wout->matValue(0).clear();
     }
     else {
-        fillWeights(wout, true);
+        if (wout)
+            fillWeights(wout, true);
     }
 }
 
