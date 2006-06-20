@@ -343,6 +343,36 @@ class PyPLearnList( PyPLearnObject ):
         return '[%s]' % format_list_elements([optval for optval in iter(self)],
                                              elem_format, indent_level+1)
 
+class PyPLearnSingleton(PyPLearnObject):
+    """Singleton w.r.t. their overrides.
+    
+    Instances of a class derived from PyPLearnSingleton will be singleton
+    w.r.t. their overrides.
+    """
+    _singletons = {}
+
+    class __metaclass__(PyPLearnObject.__metaclass__):                
+        def __call__(cls, **overrides):
+            hashable = cls._getInstanceKey(overrides)
+            if hashable not in cls._singletons:
+                instance = cls.__new__(cls, **overrides)
+                instance.__init__(**overrides)
+                cls._singletons[hashable] = instance
+            return cls._singletons[hashable]
+
+    def _getInstanceKey(cls, overrides):
+        """Convert overrides to an (hashable) string."""
+        hashable = [ ]
+        for key,val in overrides.iteritems():
+            if isinstance(val, PyPLearnObject):
+                hashable.append( '%s=*%d'%(key, val._serial_number()) )
+            else:
+                hashable.append( '%s=%s'%(key, val) )
+        hashable.sort()
+        hashable = ';'.join([cls.__name__]+hashable)
+        return hashable                
+    _getInstanceKey = classmethod(_getInstanceKey)
+
 def test_PyPLearnObject_module():    
     class A( PyPLearnObject):
         a = PLOption('a')
