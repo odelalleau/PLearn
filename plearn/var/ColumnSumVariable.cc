@@ -48,22 +48,31 @@ using namespace std;
 
 /** ColumnSumVariable **/
 
-ColumnSumVariable::ColumnSumVariable(Variable* input)
-    :UnaryVariable(input, 1, input->width()) {}
+PLEARN_IMPLEMENT_OBJECT(
+    ColumnSumVariable,
+    "A row vector whose elements are the sums of each column in its source.",
+    ""
+);
 
+///////////////////////
+// ColumnSumVariable //
+///////////////////////
+ColumnSumVariable::ColumnSumVariable(Variable* input):
+    inherited(input, 1, input->width())
+{}
 
-PLEARN_IMPLEMENT_OBJECT(ColumnSumVariable, "ONE LINE DESCR", "NO HELP");
-
+///////////////////
+// recomputeSize //
+///////////////////
 void ColumnSumVariable::recomputeSize(int& l, int& w) const
-{ l=1; w=input->width(); }
+{
+    l = 1;
+    w = input->width();
+}
 
-
-
-
-
-
-
-
+///////////
+// fprop //
+///////////
 void ColumnSumVariable::fprop()
 {
     value.clear();
@@ -73,7 +82,9 @@ void ColumnSumVariable::fprop()
             valuedata[j] += input->valuedata[k];
 }
 
-
+///////////
+// bprop //
+///////////
 void ColumnSumVariable::bprop()
 {
     int k=0;
@@ -82,13 +93,13 @@ void ColumnSumVariable::bprop()
             input->gradientdata[k] += gradientdata[j];
 }
 
-
+///////////////////
+// symbolicBprop //
+///////////////////
 void ColumnSumVariable::symbolicBprop()
 {
     input->accg(g);
 }
-
-
 
 } // end of namespace PLearn
 

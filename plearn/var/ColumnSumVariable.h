@@ -52,8 +52,13 @@ using namespace std;
 //!  result is a single row that contains the sum of each column of the input
 class ColumnSumVariable: public UnaryVariable
 {
-protected:
+
+private:
+
     typedef UnaryVariable inherited;
+
+public:
+
     //!  Default constructor for persistence
     ColumnSumVariable() {}
 
