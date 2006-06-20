@@ -396,8 +396,8 @@ void ScoreLayerVariable::build_()
         assert( softmax_output->width() == 1 );
         // Select only active templates (we assume - and verify - here that
         // they they are the first ones).
-        if (list_of_active[0] != 0 ||
-            list_of_active.lastElement() != list_of_active.length() - 1)
+        if (min(list_of_active) != 0 ||
+            max(list_of_active) != list_of_active.length() - 1)
         {
             PLERROR("In ScoreLayerVariable::build_ - The active templates must"
                     " be first");
