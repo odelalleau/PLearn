@@ -1185,11 +1185,14 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     cov_y_missing_j.resize(n_non_missing, n_non_missing);
                     the_cov_y_missing = &cov_y_missing_j;
                 }
+
+                for (int k = 0; k < n_non_missing; k++)
+                    y_missing[k] = y[non_missing[k]];
+
                 if (!eff_naive_missing ||
                     need_recompute[current_training_sample]) {
                 for (int k = 0; k < n_non_missing; k++) {
                     mu_y_missing[k] = mu_y[non_missing[k]];
-                    y_missing[k] = y[non_missing[k]];
                     for (int q = 0; q < n_non_missing; q++) {
                         (*the_cov_y_missing)(k,q) =
                             cov_y(non_missing[k], non_missing[q]);
