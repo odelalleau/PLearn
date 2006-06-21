@@ -152,7 +152,7 @@ void HyperOptimize::declareOptions(OptionList& ol)
 
     declareOption(
         ol, "resultsmat", &HyperOptimize::resultsmat,
-        OptionBase::buildoption | OptionBase::nosave,
+        OptionBase::learntoption | OptionBase::nosave,
         "Gives access to the results of all trials during the last training.\n"
         "The last row lists the best results found and kept.  Note that this\n"
         "is declared 'nosave' and is intended for programmatic access by other\n"
@@ -196,7 +196,7 @@ void HyperOptimize::createResultsMat()
     // If we have an expdir, create a FileVMatrix to save the results.
     // Otherwise, just a MemoryVMatrix to make the results available as a
     // getOption after training.
-    if (! expdir.empty())
+    if (! expdir.isEmpty())
     {
         string fname = expdir+"results.pmat";
         resultsmat = new FileVMatrix(fname,0,w);
@@ -212,7 +212,7 @@ void HyperOptimize::createResultsMat()
     for(int k=0; k<cost_fields.length(); k++)
         resultsmat->declareField(j++, cost_fields[k]);
 
-    if (! expdir.empty())
+    if (! expdir.isEmpty())
         resultsmat->saveFieldInfos();
 }
 
