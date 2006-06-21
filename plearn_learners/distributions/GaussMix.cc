@@ -927,6 +927,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
     static Mat cov_y_missing;
     static Mat dummy_storage;
     static TVec<Mat> covs_y_missing;
+    static TVec<Vec> mus_y_missing;
     static Vec y_missing;
     static Vec eigenvals_missing;
     static TVec<Vec> eigenvals_allj_missing;
@@ -951,6 +952,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
     eigenvecs_missing = &eigenvecs_missing_storage;
 
     Mat* the_cov_y_missing = &cov_y_missing;
+    Vec* the_mu_y_missing = &mu_y_missing;
 
     // Will contain the final result (the desired log-likelihood).
     real log_likelihood;
@@ -1153,7 +1155,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                 }
 
                 mu_y = center(j).subVec(0, n_predicted);
-                mu_y_missing.resize(n_non_missing);
+                the_mu_y_missing->resize(n_non_missing);
                 y_missing.resize(n_non_missing);
                 // Fill in first the coordinates which are in the template,
                 // then the coordinates specific to this data point.
@@ -1184,6 +1186,10 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     Mat& cov_y_missing_j = covs_y_missing[j];
                     cov_y_missing_j.resize(n_non_missing, n_non_missing);
                     the_cov_y_missing = &cov_y_missing_j;
+                    mus_y_missing.resize(L);
+                    Vec& mu_y_missing_j = mus_y_missing[j];
+                    mu_y_missing_j.resize(n_non_missing);
+                    the_mu_y_missing = &mu_y_missing_j;
                 }
 
                 for (int k = 0; k < n_non_missing; k++)
@@ -1192,7 +1198,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                 if (!eff_naive_missing ||
                     need_recompute[current_training_sample]) {
                 for (int k = 0; k < n_non_missing; k++) {
-                    mu_y_missing[k] = mu_y[non_missing[k]];
+                    (*the_mu_y_missing)[k] = mu_y[non_missing[k]];
                     for (int q = 0; q < n_non_missing; q++) {
                         (*the_cov_y_missing)(k,q) =
                             cov_y(non_missing[k], non_missing[q]);
@@ -1406,7 +1412,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
 
                     y_centered.resize(n_non_missing);
                     if (!eff_missing) {
-                    mu_y = mu_y_missing;
+                    mu_y = *the_mu_y_missing;
                     eigenvals = eigenvals_missing;
                     eigenvecs = *eigenvecs_missing;
 
@@ -1746,11 +1752,11 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                             non_missing.append(k);
                     mu_y = center_y_x(j);
                     int n_non_missing = non_missing.length();
-                    mu_y_missing.resize(n_non_missing);
+                    the_mu_y_missing->resize(n_non_missing);
                     y_missing.resize(n_non_missing);
                     the_cov_y_missing->resize(n_non_missing, n_non_missing);
                     for (int k = 0; k < n_non_missing; k++) {
-                        mu_y_missing[k] = mu_y[non_missing[k]];
+                        (*the_mu_y_missing)[k] = mu_y[non_missing[k]];
                         y_missing[k] = y[non_missing[k]];
                         for (int j = 0; j < n_non_missing; j++) {
                             (*the_cov_y_missing)(k,j) =
@@ -1764,7 +1770,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         eigenVecOfSymmMat(*the_cov_y_missing, n_non_missing,
                                 eigenvals_missing, *eigenvecs_missing);
 
-                        mu_y = mu_y_missing;
+                        mu_y = *the_mu_y_missing;
                         eigenvals = eigenvals_missing;
                         eigenvecs = *eigenvecs_missing;
 
