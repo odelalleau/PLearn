@@ -821,8 +821,8 @@ void viewVMat(const VMat& vm)
                 // clear the rest of the line
                 clrtoeol();
                 move(LINES-1, (int)strlen(strmsg));
-                char l[10];
-                getnstr(l, 10);
+                char l[20];
+                getnstr(l, 20);
                 string searchme = removeblanks(l);
                 real searchval = vm_showed(curi,curj);
                 if(searchme!="")
@@ -854,10 +854,19 @@ void viewVMat(const VMat& vm)
                 mvprintw(LINES-1,0,"Searching for value %f ...",searchval);
                 clrtoeol();
                 refresh();
+                int curi_backup = curi;
                 ++curi; // start searching from next row
                 while(curi<vm_showed->length() &&
                       !fast_exact_is_equal(cached[curi], searchval))
                     ++curi;
+                bool found = (curi < vm_showed->length());
+                if (!found) {
+                    // Try approximate match.
+                    curi = curi_backup + 1;
+                    while(curi<vm_showed->length() &&
+                            !is_equal(cached[curi], searchval))
+                        ++curi;
+                }
                 if(curi>=vm_showed->length())
                     curi = 0;
                 ni = transposed ? (COLS-leftcolwidth)/valwidth : LINES-4;
