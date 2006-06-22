@@ -71,6 +71,7 @@ public:
     mutable Mat kernel_centers;
     int n_kernel_centers_to_pick;
     bool consider_interaction_terms;
+    bool normalize_features;
     PP<PLearner> learner;
 
     //#####  Public Learnt Options  ############################################
@@ -178,21 +179,35 @@ private:
     void appendCandidateFunctionsOfSingleField(int fieldnum, TVec<RealFunc>& functions) const;
     void appendKernelFunctions(TVec<RealFunc>& functions) const;
     void appendConstantFunction(TVec<RealFunc>& functions) const;
-    void buildAllCandidateFunctions(TVec<RealFunc>& functions) const;
 
-    //! Returns the index of the function most correlated (or anti-correlated) with the residue
-    void findMostCorrelatedCandidateFunction(const TVec<RealFunc>& functions, const Vec& residue,
-                                             int& best_featurenum, real& best_abs_correl) const;
+    //! Fills the simple_candidate_functions
+    void buildSimpleCandidateFunctions();
+
+    //! Builds candidate_functions.
+    //! If consider_interactionis false, candidate_functions is the same as simple_candidate_functions
+    //! If consider_interactions is true,  candidate_functions will in addidion include all products 
+    //! between simple_candidate_functions and selected_functions 
+    void buildAllCandidateFunctions();
+
+    //! Returns the index of the best candidate function (most colinear with the residue)
+    void findBestCandidateFunction(int& best_candidate_index, real& best_score) const;
+
+    void computeWeightedAveragesWithResidue(const TVec<RealFunc>& functions,   
+                                            real& wsum,
+                                            Vec& E_x, Vec& E_xx,
+                                            real& E_y, real& E_yy,
+                                            Vec& E_xy) const;
 
     void computeWeightedCorrelationsWithY(const TVec<RealFunc>& functions, const Vec& Y,  
                                           real& wsum,
                                           Vec& E_x, Vec& V_x,
                                           real& E_y, real& V_y,
                                           Vec& E_xy, Vec& V_xy,
-                                          Vec& covar, Vec& correl) const;
-    void appendFunction(RealFunc f);
+                                          Vec& covar, Vec& correl,
+                                          real min_variance = 1e-6) const;
+    void appendFunctionToSelection(int candidate_index);
     void retrainLearner();
-    void initTargetResidueWeight();
+    void initTargetsResidueWeight();
     void recomputeFeatures();
     void recomputeResidue();
     void computeOutputFromFeaturevec(const Vec& featurevec, Vec& output) const;
@@ -200,16 +215,18 @@ private:
 private:
     //#####  Private Data Members  ############################################
 
+    TVec<RealFunc> simple_candidate_functions;
     TVec<RealFunc> candidate_functions;
     Mat features;
     Vec residue;
+    Vec targets;
     Vec weights;
     double residue_sum;
     double residue_sum_sq;
     double weights_sum;
 
     mutable Vec input;
-    mutable Vec target;
+    mutable Vec targ;
     mutable Vec featurevec;
 };
 
