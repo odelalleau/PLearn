@@ -46,10 +46,56 @@
 namespace PLearn {
 using namespace std;
 
-//! Note that many methods are declared as 'const' because of the 'const'
-//! plague, but are actually not true 'const' methods.
-//! This is also why a lot of stuff is mutable.
-// TODO Would it be possible to remove some 'const' stuff for cleaner code?
+/**
+ *  Base class for PLearn probability distributions.
+ *  
+ *  PDistributions derive from PLearner, as some of them may be fitted to data by
+ *  training, but they have additional methods allowing e.g. to compute density
+ *  or generate data points.
+ *  
+ *  By default, a PDistribution may be conditional to a predictor part x, in
+ *  order to represent the conditional distribution of P(Y | X = x). An
+ *  unconditional distribution should derive from UnconditionalDistribution as it
+ *  has a simpler interface.
+ *  
+ *  Since we want to be able to compute for instance P(Y = y | X = x), both the
+ *  predictor part 'x' and the predicted part 'y' must be considered as input
+ *  from the PLearner framework point of view. Thus one must specify the size of
+ *  the predictor part by the 'predictor_size' option, and the size of the
+ *  predicted by the 'predicted_size' option, satisfying the following equality:
+ *  
+ *      predictor_size + predicted_size == inputsize  (1)
+ *  
+ *  Optionally, 'predictor_size' or 'predicted_size' (but not both) may be set to
+ *  -1, and the PDistribution will automatically guess the other size so that
+ *  equation (1) is satisfied (actually, in order to preserve the user-provided
+ *  values of 'predictor_size' and 'predicted_size', the guessed values are
+ *  stored in the learnt options 'n_predictor' and 'n_predicted'). This way,
+ *  unconditional distributions can be created by setting 'predictor_size' to 0
+ *  and 'predicted_size' to -1.
+ *  
+ *  The default implementations of the learner-type methods for computing
+ *  outputs and costs work as follows:
+ *    - the 'outputs_def' option allows to choose what is in the output
+ *      (e.g. log density, expectation, ...)
+ *    - the cost is a vector of size 1 containing only the negative log-
+ *      likelihood (NLL), i.e. -log(P(y|x)).
+ *  
+ *  For conditional distributions, the input must always be made of both the
+ *  'predictor' part (x) and the 'predicted' part (y), even if the output may not
+ *  need the predicted part (e.g. to compute E[Y | X = x]).  The exception is
+ *  when computeOutput(..) needs to be called successively with the same value of
+ *  'x': in this case, after a first call with both 'x' and 'y', one may only
+ *  provide 'y' as input in later calls, and 'x' will be assumed to be
+ *  unchanged. Or, alternatively, one can set the 'predictor_part' option first,
+ *  either through the options system or using the setPredictor(..) method.
+ *  
+ *  IMPLEMENTATION NOTES:
+ *    Note that many methods are declared as 'const' because of the 'const'
+ *    plague, but are actually not true 'const' methods.
+ *    This is also why a lot of stuff is mutable.
+ *  TODO: Would it be possible to remove some 'const' stuff for cleaner code?
+ */
 class PDistribution: public PLearner
 {
 
