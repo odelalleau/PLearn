@@ -60,6 +60,8 @@ void viewVMat(const VMat& vm);
 
 void plotVMats(char* defs[], int ndefs);
 
+VMat getVMat(const PPath& source, const PPath& indexf);
+
 int vmatmain(int argc, char** argv);
 
 } // end of namespace PLearn

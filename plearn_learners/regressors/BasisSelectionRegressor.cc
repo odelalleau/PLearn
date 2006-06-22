@@ -216,6 +216,8 @@ void BasisSelectionRegressor::forget()
     if(learner.isNotNull())
         learner->forget();
 
+    candidate_functions.resize(0);
+
     stage = 0;
 }
 
@@ -315,11 +317,13 @@ void BasisSelectionRegressor::findBestCandidateFunction(int& best_candidate_inde
     
     Vec scores = (E_xy-E_y*E_x)/sqrt(E_xx-square(E_x));
 
-    perr << "E_xy = " << E_xy << endl;
+    if(verbosity>=10)
+        perr << "E_xy = " << E_xy << endl;
     best_candidate_index = -1;
     best_score = 0;
 
-    perr << "scores: ";
+    if(verbosity>=10)
+        perr << "scores: ";
     for(int j=0; j<n_candidates; j++)
     {
         real score = 0;
@@ -327,14 +331,17 @@ void BasisSelectionRegressor::findBestCandidateFunction(int& best_candidate_inde
             score = fabs((E_xy[j]-E_y*E_x[j])/(1e-6+sqrt(E_xx[j]-square(E_x[j]))));
         else
             score = fabs(E_xy[j]);
-        perr << score << ' '; 
+        if(verbosity>=10)
+            perr << score << ' '; 
         if(score>best_score)
         {
             best_candidate_index = j;
             best_score = score;
         }
     }
-    perr << endl;
+
+    if(verbosity>=10)
+        perr << endl;
 
     /*
     computeWeightedCorrelationsWithY(candidate_functions, residue,  
@@ -604,18 +611,22 @@ void BasisSelectionRegressor::train()
         int best_candidate_index = -1;
         real best_score = 0;
         findBestCandidateFunction(best_candidate_index, best_score);
-        perr << "\n\n*** Stage " << stage << " *****" << endl
-             << "Best candidate: index=" << best_candidate_index << endl
-             << "  score=" << best_score << endl;
+        if(verbosity>=2)
+            perr << "\n\n*** Stage " << stage << " *****" << endl
+                 << "Best candidate: index=" << best_candidate_index << endl
+                 << "  score=" << best_score << endl;
         if(best_candidate_index>=0)
         {
-            perr << "  function= " << candidate_functions[best_candidate_index] << endl;
+            if(verbosity>=2)
+                perr << "  function= " << candidate_functions[best_candidate_index] << endl;
             appendFunctionToSelection(best_candidate_index);
 
-            perr << "residue_sum_sq before retrain: " << residue_sum_sq << endl;
+            if(verbosity>=2)
+                perr << "residue_sum_sq before retrain: " << residue_sum_sq << endl;
             retrainLearner();
             recomputeResidue();
-            perr << "residue_sum_sq after retrain: " << residue_sum_sq << endl;
+            if(verbosity>=2)
+                perr << "residue_sum_sq after retrain: " << residue_sum_sq << endl;
         }
         // clear statistics of previous epoch
         train_stats->forget();
@@ -748,7 +759,7 @@ TVec<string> BasisSelectionRegressor::getTestCostNames() const
 TVec<string> BasisSelectionRegressor::getTrainCostNames() const
 {
     TVec<string> costnames(1);
-    costnames[0] = "MSE";
+    costnames[0] = "mse";
     return costnames;
 }
 

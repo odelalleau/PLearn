@@ -54,6 +54,7 @@
 #include <plearn/vmat/VMatLanguage.h>
 #include <plearn/vmat/VVMatrix.h>
 #include <plearn/vmat/VMat.h>
+#include <plearn/vmat/SelectRowsFileIndexVMatrix.h>
 #include <plearn/math/TMat_maths.h>
 #include <plearn/base/stringutils.h>
 #include <plearn/db/getDataSet.h>
@@ -1534,6 +1535,16 @@ void plotVMats(char* defs[], int ndefs)
     cin.get();
 }
 
+
+VMat getVMat(const PPath& source, const PPath& indexf)
+{
+    VMat vm= getDataSet(source);
+    if(indexf != "")
+        vm= new SelectRowsFileIndexVMatrix(vm, indexf);
+    return vm;
+}
+
+
 int vmatmain(int argc, char** argv)
 {
   
@@ -1542,7 +1553,11 @@ int vmatmain(int argc, char** argv)
         // Use the VMatCommand help instead of repeating the same help message twice...
 #if 0
         cerr << 
-            "Usage: vmat info <dataset> \n"
+            "Usage: vmat [options] command [params...]\n"
+            "Options:\n"
+            "       -i <indexfile> : use indexfile as index to access the 1st table\n"
+            "Commands:\n"
+            "       vmat info <dataset> \n"
             "       Will info about dataset (size, etc..)\n"
             "   or: vmat fields <dataset> [name_only] [transpose]\n"
             "       To list the fields with their names (if 'name_only' is specified, the indexes won't be displayed,\n"
@@ -1597,6 +1612,13 @@ int vmatmain(int argc, char** argv)
         exit(0);
     }
 
+    PPath indexf= "";
+    if(string(argv[1])=="-i")
+    {
+        indexf= argv[2];
+        argv+= 2;//skip -i and indexfile name
+    }
+
     string command = argv[1];
 
     if(command=="cdf")
@@ -1605,7 +1627,7 @@ int vmatmain(int argc, char** argv)
         for(int i=2; i<argc; i++)
         {
             string dbname = argv[i];
-            VMat vm = getDataSet(dbname);
+            VMat vm = getVMat(dbname, indexf);
             vmats.append(vm);
         }
         interactiveDisplayCDF(vmats);
@@ -1625,7 +1647,7 @@ int vmatmain(int argc, char** argv)
     {
         string source = argv[2];
         string destination = argv[3];
-        VMat vm = getDataSet(source);
+        VMat vm = getVMat(source, indexf);
 
         /**
          * Interpret the following options:
@@ -1710,7 +1732,7 @@ int vmatmain(int argc, char** argv)
     else if(command=="info")
     {
         string dbname = argv[2];
-        VMat vm = getDataSet(dbname);
+        VMat vm = getVMat(dbname, indexf);
         pout<<vm.length()<<" x "<<vm.width()<<endl;
         pout << "inputsize: " << vm->inputsize() << endl;
         pout << "targetsize: " << vm->targetsize() << endl;
@@ -1741,7 +1763,7 @@ int vmatmain(int argc, char** argv)
             transpose = (string(argv[4]) == "transpose");
         }
         string dbname = argv[2];
-        VMat vm = getDataSet(dbname);
+        VMat vm = getVMat(dbname, indexf);
         if (add_info) {
             pout<<"FieldNames: ";
             if (!transpose) {
@@ -1780,13 +1802,13 @@ int vmatmain(int argc, char** argv)
                         "to print the binning");
         }
         
-        VMat vm = getDataSet(dbname);
+        VMat vm = getVMat(dbname, indexf);
         vm->printFieldInfo(pout, fieldname_or_num, print_binning);
     }
     else if(command=="stats")
     {
         string dbname = argv[2];
-        VMat vm = getDataSet(dbname);
+        VMat vm = getVMat(dbname, indexf);
         displayBasicStats(vm);
     }
     else if(command=="gendef")
@@ -1796,7 +1818,7 @@ int vmatmain(int argc, char** argv)
         for(int i=3;i<argc;i++)
             bins[i-3]=toint(argv[i]);
       
-        VMat vm = getDataSet(dbname);
+        VMat vm = getVMat(dbname, indexf);
         TVec<StatsCollector> sc = vm->getStats();
         // write stats file in metadatadir
         string name = vm->getMetaDataDir()+"/stats.def";
@@ -1844,7 +1866,7 @@ int vmatmain(int argc, char** argv)
         string dbname = argv[2];
         string prefix = argv[3];
         int kval=toint(argv[4]);
-        VMat vm = getDataSet(dbname);
+        VMat vm = getVMat(dbname, indexf);
         for(int i=0;i<kval;i++)
         {
             ofstream out((prefix+"_train_"+tostring(i+1)+".vmat").c_str());
@@ -1889,7 +1911,7 @@ int vmatmain(int argc, char** argv)
             typen=2;
         else PLERROR("Unknown operation: %s",type.c_str());
 
-        VMat vm = getDataSet(dbname);
+        VMat vm = getVMat(dbname, indexf);
         ofstream out(destvmat.c_str());
       
         out<<"<SOURCES>"<<endl;
@@ -1924,14 +1946,14 @@ int vmatmain(int argc, char** argv)
     }
     else if(command=="diststat")
     {
-        VMat vm = getDataSet(argv[2]);
+        VMat vm = getVMat(argv[2], indexf);
         int inputsize = atoi(argv[3]);
         printDistanceStatistics(vm, inputsize);      
     }
     else if(command=="diff")
     {
-        VMat vm1 = getDataSet(argv[2]);
-        VMat vm2 = getDataSet(argv[3]);
+        VMat vm1 = getVMat(argv[2], indexf);
+        VMat vm2 = getVMat(argv[3], indexf);
         double tol = 1e-6;
         int verb = 1;
         if(argc >= 5)
@@ -1946,7 +1968,7 @@ int vmatmain(int argc, char** argv)
             PLERROR("'vmat cat' must be used that way : vmat cat FILE [vplFilteringCode]");
         string dbname = argv[2];
         string code;
-        VMat vm = getDataSet(dbname);
+        VMat vm = getVMat(dbname, indexf);
         Vec tmp(vm.width());
         if(argc==4) 
 
@@ -1983,7 +2005,7 @@ int vmatmain(int argc, char** argv)
         string sep = "\t";
         if(argc==4)
             sep = argv[3];
-        VMat vm = getDataSet(dbname);
+        VMat vm = getVMat(dbname, indexf);
         Vec tmp(vm.width());
         string out = "";
         for(int i=0;i<vm.length();i++)
@@ -2005,7 +2027,7 @@ int vmatmain(int argc, char** argv)
         string dbname = argv[2];
         string outname = argv[3];
         string code;
-        VMat vm = getDataSet(dbname);
+        VMat vm = getVMat(dbname, indexf);
         ofstream out(outname.c_str());
         for (int i=0;i<vm.width();i++)
             out << vm->fieldName(i) << "\t";
@@ -2029,7 +2051,7 @@ int vmatmain(int argc, char** argv)
     else if(command=="view")
     {
         vmat_view_dataset = string(argv[2]);
-        VMat vm = getDataSet(vmat_view_dataset);
+        VMat vm = getVMat(vmat_view_dataset, indexf);
         viewVMat(vm);
     }
     else if(command=="plot")
@@ -2055,7 +2077,7 @@ int vmatmain(int argc, char** argv)
             vmat = dvmat;
         }
         else
-            vmat = getDataSet(vmat_file);
+            vmat = getVMat(vmat_file, indexf);
 
         for(int i=0; i<vmat->width(); i++)
         {
