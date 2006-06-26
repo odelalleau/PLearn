@@ -396,7 +396,11 @@ void StatsCollector::remove_observation(real val, real weight)
         sumfourth_ -= sqval*sqval        * weight;
 
         if(fast_exact_is_equal(nnonmissing_, 0)) {
-            // first value encountered
+            // We removed the last observation. It may be safer to reset
+            // everything so that numerical approximations do not lead to
+            // negative values for statistics that should always be
+            // positive. We don't call forget() since missing values' count
+            // would be lost...
             min_ = max_ = first_ = last_ = MISSING_VALUE;
             sum_ = sumsquare_ = sumcube_ = sumfourth_ = sumsquarew_ = 0.0;
         }

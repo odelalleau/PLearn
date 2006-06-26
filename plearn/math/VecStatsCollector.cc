@@ -50,9 +50,7 @@ VecStatsCollector::VecStatsCollector():
     maxnvalues(0), compute_covariance(false), epsilon(0.0),
     m_window(-1), no_removal_warnings(false), // Window mechanism
     sum_non_missing_weights(0),
-    sum_non_missing_square_weights(0),
-    // Window mechanism    
-    m_nobs(0), m_cursor(0)
+    sum_non_missing_square_weights(0)
 {}
 
 PLEARN_IMPLEMENT_OBJECT(VecStatsCollector,
@@ -149,6 +147,12 @@ double VecStatsCollector::getStat(const string& statspec)
     return getStats(fieldnum).getStat(statname);
 }
 
+const Mat& VecStatsCollector::getObservations() const
+{
+    assert( m_window > 0 );
+    return m_observation_window->m_observations;
+}
+
 void VecStatsCollector::setFieldNames(TVec<string> the_fieldnames)
 {
     fieldnames = the_fieldnames.copy();
@@ -210,7 +214,7 @@ void VecStatsCollector::update(const Vec& x, real weight)
 
     for(int k=0; k<n; k++)
         stats[k].update(x[k], weight);
-       
+
     if(compute_covariance) {
         if (x.hasMissing()) {
             // Slower version to handle missing values.
@@ -240,25 +244,16 @@ void VecStatsCollector::update(const Vec& x, real weight)
                 sum_cross(i)                 += weight * x[i];
         }
     }
-
-
+    
     // Window mechanism
     if (m_window > 0)
     {
-        m_nobs++;        
-        m_observations.resize(MIN(m_nobs,m_window), n);
-        if (m_nobs > m_window)
-        {
-            Vec outdated = m_observations(m_cursor % m_window);
-            this->remove_observation(outdated);
-            m_nobs--;
-        }
-
-        m_observations(m_cursor % m_window) << x;
-        m_cursor++;        
-        
-        assert( m_nobs <= m_window );
-    }    
+        tuple<Vec, real> outdated = m_observation_window->update(x, weight);
+        Vec& obs = get<0>(outdated);
+        real weight = get<1>(outdated);
+        if ( obs.isNotEmpty() )
+            remove_observation(obs, weight);
+    }
 }
 
 ////////////////////////
@@ -341,10 +336,7 @@ void VecStatsCollector::update(const Mat& m, const Vec& weights)
 void VecStatsCollector::build_()
 {
     if (m_window > 0)
-    {
-        m_observations.resize(m_window, 0);
-        m_observations.resize(0, 0);
-    }
+        m_observation_window = new ObservationWindow(m_window);
 }
 
 void VecStatsCollector::build()
@@ -364,9 +356,8 @@ void VecStatsCollector::forget()
     sum_non_missing_square_weights = 0;
 
     // Window mechanism
-    m_nobs = 0;
-    m_cursor = 0;    
-    m_observations.resize(0, 0);
+    if ( m_window > 0 )
+        m_observation_window->forget();
 }
 
 void VecStatsCollector::finalize()
@@ -608,7 +599,7 @@ void VecStatsCollector::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(sum_cross,                copies);
     deepCopyField(sum_cross_weights,        copies);
     deepCopyField(sum_cross_square_weights, copies);
-    deepCopyField(m_observations,           copies);
+    deepCopyField(m_observation_window,     copies);
 }
 
 } // end of namespace PLearn

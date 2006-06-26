@@ -46,6 +46,7 @@
 // From PLearn
 #include <plearn/base/Object.h>
 #include "StatsCollector.h"
+#include "ObservationWindow.h"
 
 namespace PLearn {
 using namespace std;
@@ -226,7 +227,7 @@ public:
     void append(const VecStatsCollector& vsc, const string fieldname_prefix="",
                 const TVec<string>& new_fieldnames = TVec<string>() );
 
-    const Mat& getObservations() { return m_observations; }
+    const Mat& getObservations() const;
     
     //! Transforms a shallow copy into a deep copy
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
@@ -244,9 +245,7 @@ protected:
     TVec<string> fieldnames;
 
     //! Window mechanism
-    int m_nobs;
-    int m_cursor;
-    Mat m_observations;
+    PP<ObservationWindow> m_observation_window;
     
 protected: 
     //! Declares this class' options
@@ -261,7 +260,6 @@ private:
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(VecStatsCollector);
 
-  
 } // end of namespace PLearn
 
 #endif

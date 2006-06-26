@@ -86,7 +86,12 @@ protected:
     VecStatsCollector m_windowed_vsc;
     
 protected:    
-    static bool compareStats(int t, const VecStatsCollector& batch, const VecStatsCollector& online, const string& stat);
+    static bool compareStats(int t, const string& stat,
+                             const VecStatsCollector& batch,
+                             const VecStatsCollector& online);
+    bool compareCovariance(int t,
+                           const VecStatsCollector& batch,
+                           const VecStatsCollector& online);
     static void declareOptions(OptionList& ol);
 
 private:
@@ -94,6 +99,12 @@ private:
 
     //! This does the actual building.
     void build_();
+
+private:
+    //#####  Private Members  #################################################
+
+    Mat m_batch_cov;
+    Mat m_online_cov;
 };
 
 // Declares a few other classes and functions related to this class

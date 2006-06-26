@@ -93,7 +93,8 @@ void RemoveObservationTest::build_()
 // compareStats //
 //////////////////
 bool RemoveObservationTest::
-compareStats(int t, const VecStatsCollector& batch, const VecStatsCollector& online, const string& stat)
+compareStats(int t, const string& stat,
+             const VecStatsCollector& batch, const VecStatsCollector& online)
 {
     int len = batch.length();
     assert(len==online.length());
@@ -111,6 +112,26 @@ compareStats(int t, const VecStatsCollector& batch, const VecStatsCollector& onl
     return false;
 }
 
+bool RemoveObservationTest::
+compareCovariance(int t,
+                  const VecStatsCollector& batch, const VecStatsCollector& online)
+{
+    int len = batch.length();
+    assert(len==online.length());
+    
+    batch.getCovariance(m_batch_cov);
+    online.getCovariance(m_online_cov);
+
+    if ( !m_batch_cov.isEqual(m_online_cov, 5e-6) )
+    {
+        cerr << "At time " << t << " covariance differ!" << endl
+             << "batch\n  " << m_batch_cov(0) << endl    
+             << "online\n  " << m_online_cov(0) << endl << endl;
+        return true;
+    }
+    return false;
+}
+
 /////////////
 // perform //
 /////////////
@@ -120,11 +141,13 @@ void RemoveObservationTest::perform()
     int T = 2500;
     
     Vec obs(N);
-    VecStatsCollector vsc;    
+    VecStatsCollector vsc;
+    vsc.compute_covariance = true;
     vsc.no_removal_warnings = true;
     vsc.build();
 
     m_windowed_vsc.m_window = 100;
+    m_windowed_vsc.compute_covariance = true;
     m_windowed_vsc.no_removal_warnings = true;
     m_windowed_vsc.build();
 
@@ -141,16 +164,19 @@ void RemoveObservationTest::perform()
         vsc.forget();
         vsc.update(m_windowed_vsc.getObservations());
 
-        bool stop = compareStats(t, vsc, m_windowed_vsc, "N");
-        stop = stop || compareStats(t, vsc, m_windowed_vsc, "NMISSING");
-        stop = stop || compareStats(t, vsc, m_windowed_vsc, "NNONMISSING");
-        stop = stop || compareStats(t, vsc, m_windowed_vsc, "E");
-        stop = stop || compareStats(t, vsc, m_windowed_vsc, "V");
-        stop = stop || compareStats(t, vsc, m_windowed_vsc, "STDDEV");
-        stop = stop || compareStats(t, vsc, m_windowed_vsc, "STDERROR");
-        stop = stop || compareStats(t, vsc, m_windowed_vsc, "SKEW");
-        stop = stop || compareStats(t, vsc, m_windowed_vsc, "KURT");
+        bool stop =    compareStats(t, "N"          , vsc, m_windowed_vsc);
+        stop = stop || compareStats(t, "NMISSING"   , vsc, m_windowed_vsc);
+        stop = stop || compareStats(t, "NNONMISSING", vsc, m_windowed_vsc);
+        stop = stop || compareStats(t, "E"          , vsc, m_windowed_vsc);
+        stop = stop || compareStats(t, "V"          , vsc, m_windowed_vsc);
+        stop = stop || compareStats(t, "STDDEV"     , vsc, m_windowed_vsc);
+        stop = stop || compareStats(t, "STDERROR"   , vsc, m_windowed_vsc);
+        stop = stop || compareStats(t, "SKEW"       , vsc, m_windowed_vsc);
+        stop = stop || compareStats(t, "KURT"       , vsc, m_windowed_vsc);
 
+        // Special covariance treatment
+        stop = stop || compareCovariance(t, vsc, m_windowed_vsc);
+        
         if( stop )
             break;
     }
