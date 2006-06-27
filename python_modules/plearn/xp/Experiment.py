@@ -126,7 +126,7 @@ class Experiment(PyPLearnObject):
 
     ##
     # PyPLearnObject's classmethod
-    _unreferenced = classmethod( lambda cls: True )
+    _by_value = classmethod( lambda cls: True )
 
     def cache_experiments( cls, exproot=None, forget=True ):
         if exproot is None:

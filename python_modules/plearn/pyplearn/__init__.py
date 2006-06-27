@@ -254,7 +254,7 @@ class PLearnSnippet:
         self.s += snippet.s
         return self
 
-    def _unreferenced( self ):
+    def _by_value( self ):
         return True
 
     def plearn_repr(self, indent_level=0, inner_repr=plearn_repr):
@@ -335,7 +335,7 @@ class __TMat:
         self.ncols   = ncols
         self.content = content
 
-    def _unreferenced( self ):
+    def _by_value( self ):
         return True
     
     def plearn_repr( self, indent_level=0, inner_repr=plearn_repr ):

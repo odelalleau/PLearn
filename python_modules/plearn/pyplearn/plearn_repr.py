@@ -120,8 +120,14 @@ def plearn_repr( obj, indent_level = 0 ):
     serialization mechanism.
     """ 
     # Classes may specify themselves as unreferenced.
-    noref = hasattr( obj, '_unreferenced' ) and obj._unreferenced()
-    
+    noref = False
+    try:        
+        noref = obj._by_value
+        if callable(noref):
+            noref = noref()
+    except AttributeError:
+        pass
+        
     # To be referenced, object must provide the serial number interface
     if not noref and hasattr(obj, '_serial_number') and callable(obj._serial_number):        
         # The current object can be referenced
@@ -320,3 +326,36 @@ if __name__ == "__main__":
     br = bindref( 'peanut', pl.Peanut( inside = refvalue ) )
     print br
     
+
+    print "#####  Testing deepcopy vs by_value   ########################################"
+    def id_print(obj):
+        # print "Python Id:", id(obj)
+        print "PyPLObj Id:", obj._serial_number()
+        print "Object:", obj
+        print 
+        
+    print
+    print "***** Deep copy"
+
+    referenced = pl.Referenced(inner_obj = pl.InnerObject(id = 1))
+    id_print(referenced)
+
+    print "Printing the same Python object:"
+    id_print(referenced)
+
+    print "Printing a deep copy:"
+    import copy
+    id_print(copy.deepcopy(referenced))
+
+    print
+    print "***** By value"
+    
+    unreferenced = pl.UnReferenced(inner_obj = pl.InnerObject(id = 1), _by_value=True)
+    id_print(unreferenced)
+    
+    print "Printing the same Python object:"
+    id_print(unreferenced)
+
+    print "Printing a deep copy:"
+    import copy
+    id_print(copy.deepcopy(unreferenced))

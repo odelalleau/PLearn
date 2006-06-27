@@ -5,7 +5,7 @@ from plearn.pyplearn.PyPLearnObject import PLOption, PyPLearnObject
 #######  PyTestObject  ########################################################
 
 class PyTestObject(PyPLearnObject):
-    def _unreferenced(self):
+    def _by_value(self):
         return True
 
 #######  Exceptions  ##########################################################

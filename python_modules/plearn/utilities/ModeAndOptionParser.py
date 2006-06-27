@@ -27,9 +27,9 @@ class Mode( PyPLearnObject ):
     #
     #  Class methods
     #
-    def _unreferenced( cls ):
+    def _by_value( cls ):
         return True
-    _unreferenced = classmethod( _unreferenced )
+    _by_value = classmethod( _by_value )
 
     def aliases( cls ):
         return []

@@ -331,7 +331,7 @@ class PyPLearnList( PyPLearnObject ):
     def __iter__(self):
         return PyPLearnList._non_null_iterator(self.itervalues())
 
-    def _unreferenced(self):
+    def _by_value(self):
         return True
     
     def plearn_repr(self, indent_level=0, inner_repr=plearn_repr):

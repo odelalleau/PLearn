@@ -40,3 +40,30 @@ toplevel3
     p = "p"
     )
 *7 -> Peanut( inside = *6; )
+#####  Testing deepcopy vs by_value   ########################################
+
+***** Deep copy
+PyPLObj Id: 9
+Object: *9 -> Referenced( inner_obj = *8 -> InnerObject( id = 1 ) )
+
+Printing the same Python object:
+PyPLObj Id: 9
+Object: *9;
+
+Printing a deep copy:
+PyPLObj Id: 11
+Object: *11 -> Referenced( inner_obj = *10 -> InnerObject( id = 1 ) )
+
+
+***** By value
+PyPLObj Id: 13
+Object: UnReferenced( inner_obj = *12 -> InnerObject( id = 1 ) )
+
+Printing the same Python object:
+PyPLObj Id: 13
+Object: UnReferenced( inner_obj = *12; )
+
+Printing a deep copy:
+PyPLObj Id: 15
+Object: UnReferenced( inner_obj = *13 -> InnerObject( id = 1 ) )
+
