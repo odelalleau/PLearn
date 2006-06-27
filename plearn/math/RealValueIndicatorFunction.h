@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// RealFunction.h
+// RealValueIndicatorFunction.h
 //
 // Copyright (C) 2006 Pascal Vincent
 //
@@ -34,13 +34,13 @@
 
 // Authors: Pascal Vincent
 
-/*! \file RealFunction.h */
+/*! \file RealValueIndicatorFunction.h */
 
 
-#ifndef RealFunction_INC
-#define RealFunction_INC
+#ifndef RealValueIndicatorFunction_INC
+#define RealValueIndicatorFunction_INC
 
-#include <plearn/base/Object.h>
+#include <plearn/math/RealFunctionOfInputFeature.h>
 
 namespace PLearn {
 
@@ -54,49 +54,38 @@ namespace PLearn {
  * @deprecated Write deprecated stuff here if there is any.  Indicate what else
  * should be used instead.
  */
-class RealFunction : public Object
+class RealValueIndicatorFunction : public RealFunctionOfInputFeature
 {
-    typedef Object inherited;
+    typedef RealFunctionOfInputFeature inherited;
 
 public:
     //#####  Public Build Options  ############################################
 
-    //! ### declare public option fields (such as build options) here
-    //! Start your comments with Doxygen-compatible comments such as //!
-
-    //! Optional short info string describing the function instance
-    string info;
-
+    real value;
+    
 public:
     //#####  Public Member Functions  #########################################
 
-    RealFunction() {}
+    //! Default constructor
+    RealValueIndicatorFunction()
+        :value(0)
+    {}
 
-    // Your other public member functions go here
-    virtual real evaluate(const Vec& x) const = 0;
+    RealValueIndicatorFunction(int featurenum, real the_value)
+        :inherited(featurenum), value(the_value)
+    {}
 
-    inline real operator()(const Vec& x) const
-    { return evaluate(x); }
-
-    void setInfo(const string& infostr)
-    { info = infostr; }
-
-    string getInfo() const
-    { return info; }
-
+    virtual real evaluateFeature(real x) const;
 
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
-    // ### If your class is not instantiatable (it has pure virtual methods)
-    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT
-    PLEARN_DECLARE_ABSTRACT_OBJECT(RealFunction);
+    PLEARN_DECLARE_OBJECT(RealValueIndicatorFunction);
 
     // Simply calls inherited::build() then build_()
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
@@ -109,14 +98,12 @@ protected:
     //#####  Protected Member Functions  ######################################
 
     //! Declares the class options.
-    // (PLEASE IMPLEMENT IN .cc)
     static void declareOptions(OptionList& ol);
 
 private:
     //#####  Private Member Functions  ########################################
 
     //! This does the actual building.
-    // (PLEASE IMPLEMENT IN .cc)
     void build_();
 
 private:
@@ -126,14 +113,7 @@ private:
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(RealFunction);
-
-typedef PP<RealFunction> RealFunc;
-
-//! Computes featurevec which results from evaluating each function at the given input
-void evaluate_functions(const TVec<RealFunc>& functions, const Vec& input, 
-                        Vec& featurevec);
-
+DECLARE_OBJECT_PTR(RealValueIndicatorFunction);
 
 } // end of namespace PLearn
 

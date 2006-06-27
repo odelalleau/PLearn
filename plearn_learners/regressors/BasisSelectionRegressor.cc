@@ -42,8 +42,9 @@
 #include <plearn/math/RealFunctionFromKernel.h>
 #include <plearn/math/ConstantRealFunction.h>
 #include <plearn/math/RealFunctionProduct.h>
+#include <plearn/math/RealValueIndicatorFunction.h>
 #include <plearn/math/RealRangeIndicatorFunction.h>
-#include <plearn/math/TruncatedRealFunction.h>
+// #include <plearn/math/TruncatedRealFunction.h>
 #include <plearn/vmat/MemoryVMatrix.h>
 
 namespace PLearn {
@@ -62,6 +63,8 @@ BasisSelectionRegressor::BasisSelectionRegressor()
     : consider_constant_function(false),
       consider_raw_inputs(true),
       consider_input_range_indicators(false),
+      indicator_desired_prob(0.05),
+      indicator_min_prob(0.01),
       n_kernel_centers_to_pick(-1),
       consider_interaction_terms(false),
       normalize_features(false),
@@ -105,7 +108,24 @@ void BasisSelectionRegressor::declareOptions(OptionList& ol)
 
     declareOption(ol, "consider_input_range_indicators", &BasisSelectionRegressor::consider_input_range_indicators,
                   OptionBase::buildoption,
-                  "IMPLEMENTATION NOT FINISHED");
+                  "If true, then we'll include in the dictionary indicatr functions\n"
+                  "triggered by input ranges and input special values\n"
+                  "Special values will include all symbolic values\n"
+                  "(detected by the existance of a corresponding string mapping)\n"
+                  "as well as MISSING_VALUE (nan) (if it's present more than \n"
+                  "indicator_min_prob fraction of the training set).\n"
+                  "Real ranges will be formed in accordance to indicator_desired_prob \n"
+                  "and indicator_min_prob options. The necessary statistics are obtained\n"
+                  "from the counts in the StatsCollector of the train_set VMatrix.\n");
+
+    declareOption(ol, "indicator_desired_prob", &BasisSelectionRegressor::indicator_desired_prob,
+                  OptionBase::buildoption,
+                  "The algo will try to build input ranges that have at least that probability of occurencein the training set.");
+
+    declareOption(ol, "indicator_min_prob", &BasisSelectionRegressor::indicator_min_prob,
+                  OptionBase::buildoption,
+                  "This will be used instead of indicator_desired_prob, for missing values, \n"
+                  "and ranges immediately followed by a symbolic value");
 
     declareOption(ol, "kernels", &BasisSelectionRegressor::kernels,
                   OptionBase::buildoption,
@@ -146,6 +166,10 @@ void BasisSelectionRegressor::declareOptions(OptionList& ol)
     declareOption(ol, "alphas", &BasisSelectionRegressor::alphas,
                   OptionBase::learntoption,
                   "CURRENTLY UNUSED");
+
+    declareOption(ol, "candidate_functions", &BasisSelectionRegressor::candidate_functions,
+                  OptionBase::learntoption,
+                  "The list of current candidate functions.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -223,13 +247,97 @@ void BasisSelectionRegressor::forget()
 
 void BasisSelectionRegressor::appendCandidateFunctionsOfSingleField(int fieldnum, TVec<RealFunc>& functions) const
 {
+    string fieldname = train_set->fieldName(fieldnum);
     if(consider_raw_inputs)
-        functions.append(new RealFunctionOfInputFeature(fieldnum));
+    {
+        RealFunc f = new RealFunctionOfInputFeature(fieldnum);
+        f->setInfo(fieldname);
+        functions.append(f);
+    }
     if(consider_input_range_indicators)
     {
-        PLERROR("consider_input_range_indicators mode not yet properly implemented");
-        // StatsCollector& st = train_set->getStats(fieldnum);
-        // st.getBinMapping();        
+        const map<real,string>& smap = train_set->getRealToStringMapping(fieldnum);
+        map<real,string>::const_iterator sit = smap.begin();
+        map<real,string>::const_iterator smapend = smap.end();
+
+        while(sit!=smapend)
+        {
+            RealFunc f = new RealValueIndicatorFunction(fieldnum, sit->first);
+            f->setInfo(fieldname+"="+sit->second);
+            functions.append(f);
+            ++sit;
+        }
+
+        StatsCollector& st = train_set->getStats(fieldnum);
+        real n = st.n();
+        real min_count = indicator_min_prob*n;
+        real desired_count = indicator_desired_prob*n;
+        if(st.nmissing() >= min_count)
+        {
+            RealFunc f = new RealValueIndicatorFunction(fieldnum, MISSING_VALUE);
+            f->setInfo(fieldname+"=MISSING");
+            functions.append(f);
+        }
+        
+        map<real, StatsCollectorCounts>* counts = st.getApproximateCounts();
+        map<real,StatsCollectorCounts>::const_iterator cit = counts->begin();
+        map<real,StatsCollectorCounts>::const_iterator cend = counts->end();
+        real cumcount = 0;
+        real low = -FLT_MAX;
+        real val = FLT_MAX;
+        while(cit!=cend)
+        {
+            val = cit->first;
+            cumcount += cit->second.nbelow;
+            bool in_smap = (smap.find(val)!=smapend);
+            if(cumcount>=desired_count || in_smap&&cumcount>=min_count)
+            {
+                RealRange range(']',low,val,'[');
+                RealFunc f = new RealRangeIndicatorFunction(fieldnum, range);
+                f->setInfo(fieldname+"__"+tostring(range));
+                functions.append(f);
+                cumcount = 0;
+                low = val;
+            }
+
+            cumcount += cit->second.n;
+            if(in_smap)
+            {
+                cumcount = 0;
+                low = val;
+            }
+            else if(cumcount>=desired_count)
+            {
+                RealRange range(']',low,val,']');
+                RealFunc f = new RealRangeIndicatorFunction(fieldnum, range);
+                f->setInfo(fieldname+"__"+tostring(range));
+                functions.append(f);
+                cumcount = 0;
+                low = val;
+            }            
+            ++cit;
+        }
+        // last chunk
+        if(cumcount>0)
+        {
+            if(cumcount>=min_count)
+            {
+                RealRange range(']',low,val,']');
+                RealFunc f = new RealRangeIndicatorFunction(fieldnum, range);
+                f->setInfo(fieldname+"__"+tostring(range));
+                functions.append(f);
+            }
+            else if(functions.length()>0) // possibly lump it together with last range
+            {
+                RealRangeIndicatorFunction* f = (RealRangeIndicatorFunction*)(RealFunction*)functions.lastElement();
+                RealRange& range = f->range;
+                if(smap.find(range.high)!=smapend) // last element does not appear to be symbolic
+                {                    
+                    range.high = val; // OK, change the last range to include val
+                    f->setInfo(fieldname+"__"+tostring(range));
+                }
+            }
+        }
     }
 }
 
@@ -316,6 +424,9 @@ void BasisSelectionRegressor::findBestCandidateFunction(int& best_candidate_inde
                                        wsum, E_x, E_xx, E_y, E_yy, E_xy);
     
     Vec scores = (E_xy-E_y*E_x)/sqrt(E_xx-square(E_x));
+
+    if(verbosity>=5)
+        perr << "n_candidates = " << n_candidates << endl;
 
     if(verbosity>=10)
         perr << "E_xy = " << E_xy << endl;
@@ -593,6 +704,10 @@ void BasisSelectionRegressor::train()
         return;
 
     Vec train_costs(1);
+
+    if(stage==0)
+        buildAllCandidateFunctions();
+
     while(stage<nstages)
     {
         if(targets.length()==0)
@@ -605,28 +720,33 @@ void BasisSelectionRegressor::train()
             }
         }
 
-        if(candidate_functions.length()==0)
-            buildAllCandidateFunctions();
-        
-        int best_candidate_index = -1;
-        real best_score = 0;
-        findBestCandidateFunction(best_candidate_index, best_score);
-        if(verbosity>=2)
-            perr << "\n\n*** Stage " << stage << " *****" << endl
-                 << "Best candidate: index=" << best_candidate_index << endl
-                 << "  score=" << best_score << endl;
-        if(best_candidate_index>=0)
+        if(candidate_functions.length()>0)
+        {
+            int best_candidate_index = -1;  
+            real best_score = 0;
+            findBestCandidateFunction(best_candidate_index, best_score);
+            if(verbosity>=2)
+                perr << "\n\n*** Stage " << stage << " *****" << endl
+                     << "Best candidate: index=" << best_candidate_index << endl
+                     << "  score=" << best_score << endl;
+            if(best_candidate_index>=0)
+            {
+                if(verbosity>=2)
+                    perr << "  function= " << candidate_functions[best_candidate_index] << endl;
+                appendFunctionToSelection(best_candidate_index);
+
+                if(verbosity>=2)
+                    perr << "residue_sum_sq before retrain: " << residue_sum_sq << endl;
+                retrainLearner();
+                recomputeResidue();
+                if(verbosity>=2)
+                    perr << "residue_sum_sq after retrain: " << residue_sum_sq << endl;
+            }
+        }
+        else
         {
             if(verbosity>=2)
-                perr << "  function= " << candidate_functions[best_candidate_index] << endl;
-            appendFunctionToSelection(best_candidate_index);
-
-            if(verbosity>=2)
-                perr << "residue_sum_sq before retrain: " << residue_sum_sq << endl;
-            retrainLearner();
-            recomputeResidue();
-            if(verbosity>=2)
-                perr << "residue_sum_sq after retrain: " << residue_sum_sq << endl;
+                perr << "\n\n*** Stage " << stage << " : no more candidate functions. *****" << endl;
         }
         // clear statistics of previous epoch
         train_stats->forget();

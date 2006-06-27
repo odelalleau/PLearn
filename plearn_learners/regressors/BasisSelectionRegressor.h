@@ -67,6 +67,8 @@ public:
     TVec<RealFunc> explicit_functions;
     bool consider_raw_inputs;
     bool consider_input_range_indicators;
+    real indicator_desired_prob;
+    real indicator_min_prob;
     TVec<Ker> kernels;
     mutable Mat kernel_centers;
     int n_kernel_centers_to_pick;

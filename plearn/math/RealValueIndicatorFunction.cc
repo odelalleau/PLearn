@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// RealFunction.cc
+// RealValueIndicatorFunction.cc
 //
 // Copyright (C) 2006 Pascal Vincent
 //
@@ -34,33 +34,34 @@
 
 // Authors: Pascal Vincent
 
-/*! \file RealFunction.cc */
+/*! \file RealValueIndicatorFunction.cc */
 
 
-#include "RealFunction.h"
+#include "RealValueIndicatorFunction.h"
+#include <plearn/math/pl_math.h>
 
 namespace PLearn {
 using namespace std;
 
-PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
-    RealFunction,
-    "Base class for functions Vec->real",
+PLEARN_IMPLEMENT_OBJECT(
+    RealValueIndicatorFunction,
+    "An indicator function, yielding whether a given input feature equals a given value",
     ""
     );
 
 // ### Nothing to add here, simply calls build_
-void RealFunction::build()
+void RealValueIndicatorFunction::build()
 {
     inherited::build();
     build_();
 }
 
-void RealFunction::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+void RealValueIndicatorFunction::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
-void RealFunction::declareOptions(OptionList& ol)
+void RealValueIndicatorFunction::declareOptions(OptionList& ol)
 {
     // ### Declare all of this object's options here.
     // ### For the "flags" of each option, you should typically specify
@@ -70,37 +71,23 @@ void RealFunction::declareOptions(OptionList& ol)
     // ### You can also combine flags, for example with OptionBase::nosave:
     // ### (OptionBase::buildoption | OptionBase::nosave)
 
-    declareOption(ol, "info", &RealFunction::info,
+    declareOption(ol, "value", &RealValueIndicatorFunction::value,
                   OptionBase::buildoption,
-                  "An optional short info string describing the function instance");
+                  "Evaluation will return 1 if x[which_feature] equals value; 0 otherwise.\n"
+                  "Comparison uses is_equal function which handles 'nan' and 'inf' correctly,\n"
+                  "and also has a small tolerance for float values.\n");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
 
-void RealFunction::build_()
+real RealValueIndicatorFunction::evaluateFeature(real x) const
 {
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation.
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of
-    // ###    all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning"
-    // ###    options have been modified.
-    // ### You should assume that the parent class' build_() has already been
-    // ### called.
+    return is_equal(x,value);
 }
 
-void evaluate_functions(const TVec<RealFunc>& functions, const Vec& input, 
-                        Vec& featurevec)
-{
-    int n = functions.size();
-    featurevec.resize(n);
-    for(int k=0; k<n; k++)
-        featurevec[k] = functions[k]->evaluate(input);
-}
-
+void RealValueIndicatorFunction::build_()
+{}
 
 
 } // end of namespace PLearn
