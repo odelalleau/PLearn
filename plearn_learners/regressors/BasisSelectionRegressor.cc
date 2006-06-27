@@ -39,6 +39,7 @@
 
 #include "BasisSelectionRegressor.h"
 #include <plearn/math/RealFunctionOfInputFeature.h>
+#include <plearn/math/ShiftAndRescaleFeatureRealFunction.h>
 #include <plearn/math/RealFunctionFromKernel.h>
 #include <plearn/math/ConstantRealFunction.h>
 #include <plearn/math/RealFunctionProduct.h>
@@ -62,6 +63,7 @@ PLEARN_IMPLEMENT_OBJECT(
 BasisSelectionRegressor::BasisSelectionRegressor()
     : consider_constant_function(false),
       consider_raw_inputs(true),
+      consider_normalized_inputs(false),
       consider_input_range_indicators(false),
       indicator_desired_prob(0.05),
       indicator_min_prob(0.01),
@@ -104,7 +106,15 @@ void BasisSelectionRegressor::declareOptions(OptionList& ol)
     declareOption(ol, "consider_raw_inputs", &BasisSelectionRegressor::consider_raw_inputs,
                   OptionBase::buildoption,
                   "If true, then functions which select one of the raw inputs\n" 
-                  "will be included in the dictionary");
+                  "will be included in the dictionary."
+                  "Beware that missing values (NaN) will be left as such.");
+
+    declareOption(ol, "consider_normalized_inputs", &BasisSelectionRegressor::consider_normalized_inputs,
+                  OptionBase::buildoption,
+                  "If true, then functions which select and normalize inputs\n" 
+                  "will be included in the dictionary. \n"
+                  "Missing values will be replaced by 0 (i.e. the mean of normalized input)\n"
+                  "Inputs which have nearly zero variance will be ignored.\n");
 
     declareOption(ol, "consider_input_range_indicators", &BasisSelectionRegressor::consider_input_range_indicators,
                   OptionBase::buildoption,
@@ -248,11 +258,27 @@ void BasisSelectionRegressor::forget()
 void BasisSelectionRegressor::appendCandidateFunctionsOfSingleField(int fieldnum, TVec<RealFunc>& functions) const
 {
     string fieldname = train_set->fieldName(fieldnum);
+    StatsCollector& st = train_set->getStats(fieldnum);
     if(consider_raw_inputs)
     {
         RealFunc f = new RealFunctionOfInputFeature(fieldnum);
         f->setInfo(fieldname);
         functions.append(f);
+    }
+    if(consider_normalized_inputs)
+    {
+        if(st.nnonmissing()>0)
+        {
+            real m = st.mean();
+            real stddev = st.stddev();
+            if(stddev>1e-9)
+            {
+                RealFunc f = new ShiftAndRescaleFeatureRealFunction(fieldnum, -m, 1./stddev, 0.);
+                f->setInfo(fieldname+"-"+tostring(m)+"/"+tostring(stddev));
+                functions.append(f);
+            }
+        }
+
     }
     if(consider_input_range_indicators)
     {
@@ -268,7 +294,6 @@ void BasisSelectionRegressor::appendCandidateFunctionsOfSingleField(int fieldnum
             ++sit;
         }
 
-        StatsCollector& st = train_set->getStats(fieldnum);
         real n = st.n();
         real min_count = indicator_min_prob*n;
         real desired_count = indicator_desired_prob*n;
@@ -403,7 +428,11 @@ void BasisSelectionRegressor::buildAllCandidateFunctions()
         int nselected = selected_functions.length();
         for(int k=0; k<nselected; k++)
             for(int j=candidate_start; j<ncandidates; j++)
-                candidate_functions.append( new RealFunctionProduct(selected_functions[k],simple_candidate_functions[j]) );
+            {
+                RealFunc f = new RealFunctionProduct(selected_functions[k],simple_candidate_functions[j]);
+                f->setInfo("("+selected_functions[k]->getInfo()+"*"+simple_candidate_functions[j]->getInfo()+")");
+                candidate_functions.append(f);
+            }
     }
 }
 
@@ -496,6 +525,10 @@ void BasisSelectionRegressor::computeWeightedAveragesWithResidue(const TVec<Real
     Vec candidate_features;
     real w;
     int l = train_set->length();
+
+    ProgressBar* pb = 0;
+    if(report_progress)
+        pb = new ProgressBar("Computing residue scores for " + tostring(n_candidates) + " candidate functions", l);
     for(int i=0; i<l; i++)
     {
         real y = Y[i];
@@ -513,6 +546,8 @@ void BasisSelectionRegressor::computeWeightedAveragesWithResidue(const TVec<Real
             E_xx[j] += wx*x;
             E_xy[j] += wx*y;
         }
+        if(pb)
+            pb->update(i);
     }
 
     // Finalize computation
@@ -522,6 +557,10 @@ void BasisSelectionRegressor::computeWeightedAveragesWithResidue(const TVec<Real
     E_y  *= inv_wsum;
     E_yy *= inv_wsum;
     E_xy *= inv_wsum;
+
+    if(pb)
+        delete pb;
+
 }
 
 
@@ -732,6 +771,8 @@ void BasisSelectionRegressor::train()
             if(best_candidate_index>=0)
             {
                 if(verbosity>=2)
+                    perr << "  function info = " << candidate_functions[best_candidate_index]->getInfo() << endl;                
+                if(verbosity>=3)
                     perr << "  function= " << candidate_functions[best_candidate_index] << endl;
                 appendFunctionToSelection(best_candidate_index);
 
