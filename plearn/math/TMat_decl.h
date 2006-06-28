@@ -265,13 +265,13 @@ public:
                 }
                 offset_ = new_offset;
             }
-            else // old code, verbatim
+            else
             {
-                int new_size = offset_+new_length*MAX(mod(),new_width);
-                if(offset_+new_size>storage->length())
-                    storage->resize(new_size + extra);
-                if(new_width>mod())
+                if (new_width > mod())
                     mod_ = new_width;
+                int new_size = offset_ + new_length * mod() + extra;
+                if (new_size > storage->length())
+                    storage->resize(new_size);
             }
             length_ = new_length;
             width_ = new_width;
@@ -291,10 +291,12 @@ public:
     { return mod_; }
 
     //! Set a new value for 'mod'. The content of the matrix will be destroyed
-    //! (i.e. moved around).
-    inline void setMod(int new_mod)
+    //! (i.e. moved around). In addition, if the new mod is strictly less than
+    //! the width, the width will be set to this new mod (in order to ensure it
+    //! remains a valid Mat).
+    void setMod(int new_mod)
     {
-        if (new_mod == mod_)
+        if (new_mod == mod())
             // Nothing to do (the new mod is equal to the old one).
             return;
         if (storage.isNull()) {
@@ -304,10 +306,25 @@ public:
         if (storage->usage() > 1)
             PLERROR("In setMod - You cannot change the 'mod' of a matrix "
                     "whose storage is shared");
-        if (new_mod > mod())
+        if (new_mod > mod()) {
+            // The mod is increased: we may need a larger storage. To this
+            // extent, the matrix is first resized to a width equal to the new
+            // mod, to ensure the storage is large enough for the new mod.
+            int width_backup = width();
             resize(length(), new_mod);
-        else
+            assert( mod() == new_mod );
+            width_ = width_backup;
+        } else {
+            // Note that since new_mod < curent mod, then the storage is
+            // necessarily already large enough and does not need resizing.
             mod_ = new_mod;
+            if (new_mod < width()) {
+                // We cannot just change the mod, because in order to be a
+                // valid Mat, we must have mod >= width. Thus we also change
+                // the width to match the new mod.
+                width_ = new_mod;
+            }
+        }
     }
 
     inline PP< Storage<T> > getStorage() const 
