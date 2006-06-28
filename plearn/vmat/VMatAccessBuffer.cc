@@ -112,6 +112,28 @@ lookAhead(int row, const Vec& rowbuf)
     assert( int(m_cached_rows.size()) <= m_max_size );
 }
 
+//! Deep copying
+VMatAccessBuffer* VMatAccessBuffer::deepCopy(CopiesMap& copies) const
+{
+    CopiesMap::iterator it = copies.find(this);
+    if(it!=copies.end())  //!<  a copy already exists, so return it
+        return (VMatAccessBuffer*) it->second;
+  
+    //! Otherwise call the copy constructor to obtain a copy
+    VMatAccessBuffer* deep_copy = new VMatAccessBuffer(*this);
+
+    deepCopyField(this->m_source,      copies);
+    deepCopyField(this->m_row_buffer,  copies);
+    deepCopyField(this->m_cached_rows, copies);
+    
+    //!  Put the copy in the map
+    copies[this] = deep_copy;
+
+    //!  return the completed deep_copy
+    return deep_copy;
+}
+
+
 } // end of namespace PLearn
 
 

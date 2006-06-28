@@ -54,6 +54,9 @@ public:
     VMatAccessBuffer(VMat source, int max_size=50);
     void getRow(int row, const Vec& rowbuf);
     void lookAhead(int row, const Vec& rowbuf);
+
+    //! Deep copying
+    VMatAccessBuffer* deepCopy(CopiesMap& copies) const;
     
 private:
     VMat        m_source;
