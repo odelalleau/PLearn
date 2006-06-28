@@ -118,6 +118,13 @@ public:
     //! Updates parameters according to contrastive divergence gradient
     virtual void update() = 0;
 
+    //! Updates parameters according to contrastive divergence gradient,
+    //! not using the statistics but the explicit values passed
+    virtual void update( const Vec& pos_down_values,
+                         const Vec& pos_up_values,
+                         const Vec& neg_down_values,
+                         const Vec& neg_up_values);
+
     //! Clear all information accumulated during stats
     virtual void clearStats() = 0;
 

@@ -310,6 +310,123 @@ void RBMLLParameters::update()
     clearStats();
 }
 
+// Instead of using the statistics, we assume we have only one markov chain
+// runned and we update the parameters from the first 4 values of the chain
+void RBMLLParameters::update( const Vec& pos_down_values, // v_0
+                              const Vec& pos_up_values,   // h_0
+                              const Vec& neg_down_values, // v_1
+                              const Vec& neg_up_values )  // h_1
+{
+    // weights -= learning_rate * ( h_0 v_0' - h_1 v_1' );
+    // or:
+    // weights[i][j] += learning_rate * (h_1[i] v_1[j] - h_0[i] v_0[j]);
+
+    int l = weights.length();
+    int w = weights.width();
+    assert( pos_up_values.length() == l );
+    assert( neg_up_values.length() == l );
+    assert( pos_down_values.length() == w );
+    assert( neg_down_values.length() == w );
+
+    real* w_i = weights.data();
+    real* puv_i = pos_up_values.data();
+    real* nuv_i = neg_up_values.data();
+    real* pdv = pos_down_values.data();
+    real* ndv = neg_down_values.data();
+    int w_mod = weights.mod();
+
+    if( momentum == 0. )
+    {
+        for( int i=0 ; i<l ; i++, w_i += w_mod, puv_i++, nuv_i++ )
+            for( int j=0 ; j<w ; j++ )
+                w_i[j] += learning_rate * (*nuv_i * ndv[j] - *puv_i * pdv[j]);
+    }
+    else
+    {
+        // ensure that weights_inc has the right size
+        weights_inc.resize( l, w );
+
+        // The update rule becomes:
+        // weights_inc = momentum * weights_inc
+        //               - learning_rate * ( h_0 v_0' - h_1 v_1' );
+        // weights += weights_inc;
+
+        real* winc_i = weights_inc.data();
+        int winc_mod = weights_inc.mod();
+        for( int i=0 ; i<l ; i++, w_i += w_mod, winc_i += winc_mod,
+                             puv_i++, nuv_i++ )
+            for( int j=0 ; j<w ; j++ )
+            {
+                winc_i[j] = momentum * winc_i[j]
+                    + learning_rate * (*nuv_i * ndv[j] - *puv_i * pdv[j]);
+                w_i[j] += winc_i[j];
+            }
+    }
+
+    // down_units_bias -= learning_rate * ( v_0 - v_1 )
+
+    real* dub = down_units_bias.data();
+    // pdv and ndv didn't change since last time
+    // real* pdv = pos_down_values.data();
+    // real* ndv = neg_down_values.data();
+
+    if( momentum == 0. )
+    {
+        // no need to use down_units_bias_inc
+        for( int j=0 ; j<w ; j++ )
+            dub[j] += learning_rate * ( ndv[j] - pdv[j] );
+    }
+    else
+    {
+        // ensure that down_units_bias_inc has the right size
+        down_units_bias_inc.resize( w );
+
+        // The update rule becomes:
+        // down_units_bias_inc = momentum * down_units_bias_inc
+        //                       - learning_rate * ( v_0 - v_1 )
+        // down_units_bias += down_units_bias_inc;
+
+        real* dubinc = down_units_bias_inc.data();
+        for( int j=0 ; j<w ; j++ )
+        {
+            dubinc[j] = momentum * dubinc[j]
+                + learning_rate * ( ndv[j] - pdv[j] );
+            dub[j] += dubinc[j];
+        }
+    }
+
+    // up_units_bias -= learning_rate * ( h_0 - h_1 )
+    real* uub = up_units_bias.data();
+    real* puv = pos_up_values.data();
+    real* nuv = neg_up_values.data();
+
+    if( momentum == 0. )
+    {
+        // no need to use up_units_bias_inc
+        for( int i=0 ; i<l ; i++ )
+            uub[i] += learning_rate * (nuv[i] - puv[i] );
+    }
+    else
+    {
+        // ensure that up_units_bias_inc has the right size
+        up_units_bias_inc.resize( l );
+
+        // The update rule becomes:
+        // up_units_bias_inc =
+        //      momentum * up_units_bias_inc
+        //      - learning_rate * (up_units_bias_pos_stats/pos_count
+        //                         -up_units_bias_neg_stats/neg_count);
+        // up_units_bias += up_units_bias_inc;
+        real* uubinc = up_units_bias_inc.data();
+        for( int i=0 ; i<l ; i++ )
+        {
+            uubinc[i] = momentum * uubinc[i]
+                + learning_rate * ( nuv[i] - puv[i] );
+            uub[i] += uubinc[i];
+        }
+    }
+}
+
 void RBMLLParameters::clearStats()
 {
     weights_pos_stats.clear();

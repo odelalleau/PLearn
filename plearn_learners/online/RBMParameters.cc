@@ -167,6 +167,17 @@ void RBMParameters::setAsDownInput( const Vec& input ) const
     going_up = true;
 }
 
+void RBMParameters::update( const Vec& pos_down_values,
+                            const Vec& pos_up_values,
+                            const Vec& neg_down_values,
+                            const Vec& neg_up_values)
+{
+    // Not-so-efficient implementation
+    accumulatePosStats( pos_down_values, pos_up_values );
+    accumulateNegStats( neg_down_values, neg_up_values );
+    update();
+}
+
 //! given the input, compute the output (possibly resize it  appropriately)
 void RBMParameters::fprop(const Vec& input, Vec& output) const
 {
