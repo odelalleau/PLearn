@@ -4225,6 +4225,25 @@ T max(const TMat<T>& mat)
     return maxval;
 }
 
+template<class T>
+T maxabs(const TMat<T>& mat)
+{
+#ifdef BOUNDCHECK
+    if(mat.length()==0 || mat.width()==0)
+        PLERROR("IN T max(const TMat<T>& mat) mat has 0 size");
+#endif
+    T* m_i = mat.data();
+    double maxval = m_i[0];
+    for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
+        for(int j=0; j<mat.width(); j++)
+        {
+            T a=fabs(m_i[j]);
+            if(a>maxval)
+                maxval = a;
+        }
+    return maxval;
+}
+
 //! Stores the position of the min in the 'mini' & 'minj' arg.
 template<class T>
 void argmin(const TMat<T>& mat, int& mini, int& minj)
