@@ -85,11 +85,14 @@ def pytest_defines():
     return "Unchanged"
 
 __cached_list_fname = "test_map.cfg"
-def getCachedTestList():
+def getCachedTestMap():
     cached_list_fpath = os.path.join(pytest_config_path(), __cached_list_fname)
-    return eval( file(cached_list_fpath, 'r').read() )
+    try:
+        return eval( file(cached_list_fpath, 'r').read() )
+    except IOError:
+        return {}
 
-def updateCachedTestList(test_map):
+def updateCachedTestMap(test_map):
     pytest_configs = pytest_config_path()
     if not os.path.isdir(pytest_configs):
         os.mkdir(pytest_configs)

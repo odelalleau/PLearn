@@ -147,9 +147,9 @@ class PyTestMode(Mode):
                 ignored.extend( [ '    '+ign for ign in ignored_directories ] )
                 logging.warning('\n'.join(['---']+ignored+['---']))
 
-            # Take the opportunity to update cached test list
+            # Take the opportunity to update cached test map
             if hasattr(options, 'all') and options.all:
-                core.updateCachedTestList(Test._instances_map)
+                core.updateCachedTestMap(Test._instances_map)
 
             # Were all tests provided through --test-name found?
             self.checkForExpectedTests( )
@@ -170,11 +170,11 @@ class PyTestMode(Mode):
             
         # Try to "fast-locate" missing tests
         logging.warning('Trying to "fast-locate" missing tests...')
-        cached_test_list = core.getCachedTestList()
+        cached_test_map = core.getCachedTestMap()
         while missing_expected_tests:
             test_name = missing_expected_tests.pop()
-            if test_name in cached_test_list:
-                target = cached_test_list[test_name]
+            if test_name in cached_test_map:
+                target = cached_test_map[test_name]
                 self.build_tests( (self.options, []), target, os.listdir(target) )
 
             # If you can't fast locate, use brute force
@@ -277,12 +277,12 @@ class locate(list):
     (Equivalent to 'pytest list --all -n <test_name>')
     """
     def __init__(self, targets, options):
-        cached_test_list = core.getCachedTestList()
+        cached_test_map = core.getCachedTestMap()
         if len(targets) != 1:
             logging.critical("Usage: pytest locate <test_name>")
 
-        elif targets[0] in cached_test_list:
-            test_dir = cached_test_list[targets[0]]
+        elif targets[0] in cached_test_map:
+            test_dir = cached_test_map[targets[0]]
             logging.warning("In %s\n    %s"%(test_dir, targets[0]))
             
         else:
