@@ -404,14 +404,20 @@ pymakeOption( name = 'icc8',   # For C++, it is actually icpc
               linker = 'icpc  '
               )
 
+icc9_exec = os.environ.get('ICC9DIR', '')
+if icc9_exec == '':
+  icc9_exec = 'icpc'
+else:
+  icc9_exec = os.path.join(icc9_exec, 'bin', 'icpc')
+
 pymakeOption( name = 'icc9',   # For C++, it is actually icpc
               description = 'compiling with Intel Compiler (version 9.x), with no MPI support',
               # Disable some warnings:
               # remark #1683: explicit conversion of a 64-bit integral type to a smaller
               #               integral type (potential portability problem)
-              compiler = 'icpc -w1 -wd981 -wd383 -wd869 -wd444 -wd810 -wd1418 -wd654 -wd279 -wd1683',
+              compiler = icc9_exec + ' -w1 -wd981 -wd383 -wd869 -wd444 -wd810 -wd1418 -wd654 -wd279 -wd1683',
               compileroptions = '-DUSING_MPI=0 ',
-              linker = 'icpc  '
+              linker = icc9_exec + ' '
               )
 
 pymakeOption( name = 'mpi',
