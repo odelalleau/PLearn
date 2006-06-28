@@ -1,23 +1,23 @@
 // -*- C++ -*-
-// ObservationWindow.h
-// 
+
+// VMatAccessBuffer.cc
+//
 // Copyright (C) 2006 Christian Dorion
-// Copyright (C) 2006 ApStat Technologies Inc.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,70 +28,91 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/*! \file ObservationWindow.h */
-#ifndef ObservationWindow_INC
-#define ObservationWindow_INC
+// Authors: Christian Dorion
 
-// From C++ stdlib
-#include <map>
+/*! \file VMatAccessBuffer.cc */
 
-// From PLearn
-#include <plearn/base/PP.h>
-#include <plearn/base/tuple.h>
-#include <plearn/math/TVec.h>
+
+#include "VMatAccessBuffer.h"
 
 namespace PLearn {
 using namespace std;
 
-class ObservationWindow: public PPointable
+VMatAccessBuffer::
+VMatAccessBuffer(VMat source, int max_size)
+    : m_source( source ),
+      m_current_row( -1 ),
+      m_max_size( max_size )
 {
-public:    
-    int m_window;
-
-    int m_nobs;
-    int m_cursor;
-    Mat m_observations;
-    Vec m_obs_weights;    
-    
-    ObservationWindow(int window=-1);
-
-    //! Returns the current length (not m_window!).
-    int length() const;
-    
-    void forget();
-    tuple<Vec, real> update(const Vec& obs, real weight=1.0);
-
-    //! Intelligent accessors
-    const Vec   getObs   (int t)          const;
-          real  getObs   (int t, int col) const;
-          real  getWeight(int t)          const;
-    
-    const Vec lastObs() const;
-    real lastWeight() const;
-    
-    //! Deep copying
-    ObservationWindow* deepCopy(CopiesMap& copies) const;
-};
-
-inline PStream& operator<<(PStream& out, const ObservationWindow& win)
-{
-    out << "ObservationWindow(len=" << win.length() << ", window=" << win.m_window << ")";
-    return out;
+    m_row_buffer.resize(m_source.width());
 }
 
-inline PStream& operator<<(PStream& out, const ObservationWindow* win)
+void
+VMatAccessBuffer::
+getRow(int row, const Vec& rowbuf)
+{    
+    int last_row = m_current_row + m_cached_rows.size() - 1;        
+
+    bool much_below = false;
+    if ( row < m_current_row )
+    {
+        int new_size = last_row - row + 1;
+        much_below = ( new_size > m_max_size );
+        if ( !much_below )
+            while ( m_current_row > row ) {
+                m_source->getRow(--m_current_row, m_row_buffer);
+                m_cached_rows.push_front(m_row_buffer.copy());
+            }
+    }
+
+    if ( much_below || row > last_row )
+    {
+        m_source->getRow(row, m_row_buffer);
+        
+        m_current_row = row;
+        m_cached_rows.clear();
+        m_cached_rows.push_back(m_row_buffer.copy());        
+    }
+    
+    else
+    {
+        for ( ; m_current_row < row; ++m_current_row )
+            m_cached_rows.pop_front();        
+        m_row_buffer << m_cached_rows[0];
+    }
+    
+    // Finally    
+    rowbuf << m_row_buffer;
+    assert( m_current_row == row );
+    assert( int(m_cached_rows.size()) <= m_max_size );
+}
+
+void
+VMatAccessBuffer::
+lookAhead(int row, const Vec& rowbuf)
 {
-    out << *win;
-    return out;
+    assert( row > m_current_row );
+    int last_row = m_current_row + m_cached_rows.size() - 1;
+
+    if ( row <= last_row )
+        m_row_buffer << m_row_buffer[row-m_current_row];
+    else
+        for ( ; last_row < row; ++last_row )
+        {
+            m_source->getRow(row, m_row_buffer);
+            m_cached_rows.push_back(m_row_buffer);
+        }
+    
+    // Finally    
+    rowbuf << m_row_buffer;
+    assert( int(m_cached_rows.size()) <= m_max_size );
 }
 
 } // end of namespace PLearn
-
-#endif
 
 
 /*

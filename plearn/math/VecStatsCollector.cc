@@ -153,6 +153,13 @@ const Mat& VecStatsCollector::getObservations() const
     return m_observation_window->m_observations;
 }
 
+const PP<ObservationWindow>
+VecStatsCollector::getObservationWindow() const
+{
+    assert( m_window > 0 );
+    return m_observation_window;
+}
+
 void VecStatsCollector::setFieldNames(TVec<string> the_fieldnames)
 {
     fieldnames = the_fieldnames.copy();

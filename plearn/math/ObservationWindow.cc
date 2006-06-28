@@ -82,6 +82,49 @@ ObservationWindow::update(const Vec& obs, real weight/*=1.0*/)
     return tuple<Vec, real>(outdated, outdated_weight);
 }
 
+const Vec ObservationWindow::getObs(int t) const
+{
+    assert( t < m_window );
+    if ( length() < m_window )
+        return m_observations(t);
+
+    int obs_index = (m_cursor+t) % m_window;
+    return m_observations(obs_index);
+}
+
+real ObservationWindow::getObs(int t, int col) const
+{
+    assert( t < m_window ); 
+    if ( length() < m_window )
+        return m_observations(t, col);
+
+    int obs_index = (m_cursor+t) % m_window;
+    return m_observations(obs_index, col);
+}
+
+real ObservationWindow::getWeight(int t) const
+{
+    assert( t < m_window ); 
+    if ( length() < m_window )
+        return m_obs_weights[t];
+
+    int obs_index = (m_cursor+t) % m_window;
+    return m_obs_weights[obs_index];
+}
+
+const Vec ObservationWindow::lastObs() const
+{
+    int last_obs = (m_cursor-1) % m_window;
+    return m_observations(last_obs);
+}
+
+real ObservationWindow::lastWeight() const
+{
+    int last_obs = (m_cursor-1) % m_window;
+    return m_obs_weights[last_obs];
+}
+
+
 //! Deep copying
 ObservationWindow* ObservationWindow::deepCopy(CopiesMap& copies) const
 {

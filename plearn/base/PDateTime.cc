@@ -181,6 +181,17 @@ void double_to_hhmmss(double fraction, int& hh, int& mm, int& ss)
     ss = int(fraction * 60);
 }
 
+int delta_seconds(const PDateTime& current, const PDateTime& past)
+{
+    if ( current == past )
+        return 0;
+
+    double jcurrent   = current.toJulianDay();
+    double jpast      = past.toJulianDay();
+    double delta_days = jcurrent - jpast;
+
+    return int( delta_days * SECONDS_PER_DAY );
+}
 
 } // end of namespace PLearn
 

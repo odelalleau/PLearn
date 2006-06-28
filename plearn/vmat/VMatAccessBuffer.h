@@ -1,23 +1,23 @@
 // -*- C++ -*-
-// ObservationWindow.h
-// 
+
+// VMatAccessBuffer.h
+//
 // Copyright (C) 2006 Christian Dorion
-// Copyright (C) 2006 ApStat Technologies Inc.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,66 +28,42 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/*! \file ObservationWindow.h */
-#ifndef ObservationWindow_INC
-#define ObservationWindow_INC
+// Authors: Christian Dorion
 
-// From C++ stdlib
-#include <map>
+/*! \file VMatAccessBuffer.h */
 
-// From PLearn
-#include <plearn/base/PP.h>
-#include <plearn/base/tuple.h>
-#include <plearn/math/TVec.h>
+
+#ifndef VMatAccessBuffer_INC
+#define VMatAccessBuffer_INC
+
+#include <deque>
+#include "VMat.h"
 
 namespace PLearn {
-using namespace std;
 
-class ObservationWindow: public PPointable
+/**
+ * Simple buffer class for getRow calls on a VMat.
+ */
+class VMatAccessBuffer: public PPointable
 {
-public:    
-    int m_window;
-
-    int m_nobs;
-    int m_cursor;
-    Mat m_observations;
-    Vec m_obs_weights;    
+public:
+    VMatAccessBuffer(VMat source, int max_size=50);
+    void getRow(int row, const Vec& rowbuf);
+    void lookAhead(int row, const Vec& rowbuf);
     
-    ObservationWindow(int window=-1);
-
-    //! Returns the current length (not m_window!).
-    int length() const;
-    
-    void forget();
-    tuple<Vec, real> update(const Vec& obs, real weight=1.0);
-
-    //! Intelligent accessors
-    const Vec   getObs   (int t)          const;
-          real  getObs   (int t, int col) const;
-          real  getWeight(int t)          const;
-    
-    const Vec lastObs() const;
-    real lastWeight() const;
-    
-    //! Deep copying
-    ObservationWindow* deepCopy(CopiesMap& copies) const;
+private:
+    VMat        m_source;
+    int         m_current_row;
+    int         m_max_size;
+    Vec         m_row_buffer;
+    deque<Vec>  m_cached_rows;                
 };
+    
 
-inline PStream& operator<<(PStream& out, const ObservationWindow& win)
-{
-    out << "ObservationWindow(len=" << win.length() << ", window=" << win.m_window << ")";
-    return out;
-}
-
-inline PStream& operator<<(PStream& out, const ObservationWindow* win)
-{
-    out << *win;
-    return out;
-}
 
 } // end of namespace PLearn
 

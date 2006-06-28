@@ -228,6 +228,7 @@ public:
                 const TVec<string>& new_fieldnames = TVec<string>() );
 
     const Mat& getObservations() const;
+    const PP<ObservationWindow> getObservationWindow() const;
     
     //! Transforms a shallow copy into a deep copy
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);

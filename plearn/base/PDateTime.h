@@ -48,6 +48,8 @@
 namespace PLearn {
 using namespace std;
 
+#define SECONDS_PER_DAY 86400 // 24*60*60
+
 /*!  PDateTime must be a concrete class with no virtual function.  Hence it
   MUST NOT UNDER ANY CONSIDERATION UNDER HEAVY PRISON PENALTY derive from
   Object.  The reason that PDateTime is different from the related PDate
@@ -165,6 +167,10 @@ double hhmmss_to_double(int hh, int mm, int ss);
 
 //! convert a day fraction (< 1) to hours/minutes/seconds
 void double_to_hhmmss(double fraction, int& hh, int& mm, int& ss);
+
+//! Return the number of seconds between the two dates. Current date *can* be
+//! lower than past one: the delta will be negative.
+int delta_seconds(const PDateTime& current, const PDateTime& past);
 
 } // end of namespace PLearn
 

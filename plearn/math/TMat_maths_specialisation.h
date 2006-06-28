@@ -140,7 +140,8 @@ inline void operator*=(const Vec& vec, real factor)
 {
     int mod = 1;
     int n = vec.length();
-    BLAS_SCALE(&n, &factor, vec.data(), &mod);
+    if ( n != 0 )
+        BLAS_SCALE(&n, &factor, vec.data(), &mod);
 }
 
 inline void operator*=(const Mat& mat, real factor)
