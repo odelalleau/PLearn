@@ -67,12 +67,7 @@ HintonDeepBeliefNet::HintonDeepBeliefNet() :
     learning_rate(0.),
     fine_tuning_learning_rate(-1.),
     fine_tuning_decrease_ct(0.),
-    initial_momentum(0.),
-    final_momentum(0.),
-    momentum_switch_time(-1),
     weight_decay(0.),
-    minibatch_size(100),
-    update_only_after_minibatch(false),
     sum_parallel_contributions(0),
     use_sample_or_expectation(4)
 {
@@ -106,23 +101,6 @@ void HintonDeepBeliefNet::declareOptions(OptionList& ol)
                   "Decrease constant used during the gradient descent\n"
                   "(in fact, it will only be updated only once every epoch.\n");
 
-    declareOption(ol, "initial_momentum",
-                  &HintonDeepBeliefNet::initial_momentum,
-                  OptionBase::buildoption,
-                  "Initial momentum factor (should be between 0 and 1)");
-
-    declareOption(ol, "final_momentum",
-                  &HintonDeepBeliefNet::final_momentum,
-                  OptionBase::buildoption,
-                  "Final momentum factor (should be between 0 and 1)");
-
-    declareOption(ol, "momentum_switch_time",
-                  &HintonDeepBeliefNet::momentum_switch_time,
-                  OptionBase::buildoption,
-                  "Number of samples to be seen by layer i before its momentum"
-                  " switches\n"
-                  "from initial_momentum to final_momentum.\n");
-
     declareOption(ol, "weight_decay", &HintonDeepBeliefNet::weight_decay,
                   OptionBase::buildoption,
                   "Weight decay");
@@ -137,7 +115,6 @@ void HintonDeepBeliefNet::declareOptions(OptionList& ol)
                   "  - \"zero\"           = all weights are set to 0,\n"
                   "where d = max( up_layer_size, down_layer_size ).\n");
 
-
     declareOption(ol, "training_schedule",
                   &HintonDeepBeliefNet::training_schedule,
                   OptionBase::buildoption,
@@ -146,17 +123,6 @@ void HintonDeepBeliefNet::declareOptions(OptionList& ol)
                   "have been greedily trained.\n"
                   "We should always have training_schedule[i] <"
                   " training_schedule[i+1].\n");
-
-    declareOption(ol, "fine_tuning_method",
-                  &HintonDeepBeliefNet::fine_tuning_method,
-                  OptionBase::buildoption,
-                  "Method for fine-tuning the whole network after greedy"
-                  " learning.\n"
-                  "One of:\n"
-                  "  - \"none\"\n"
-                  "  - \"CD\" or \"contrastive_divergence\"\n"
-                  "  - \"EGD\" or \"error_gradient_descent\"\n"
-                  "  - \"WS\" or \"wake_sleep\".\n");
 
     declareOption(ol, "layers", &HintonDeepBeliefNet::layers,
                   OptionBase::buildoption,
@@ -179,13 +145,6 @@ void HintonDeepBeliefNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Parameters linking target_layer and last_layer");
 
-/*
-    declareOption(ol, "use_sample_rather_than_expectation_in_positive_phase_statistics",
-                  &HintonDeepBeliefNet::use_sample_rather_than_expectation_in_positive_phase_statistics,
-                  OptionBase::buildoption,
-                  "In positive phase statistics use output->sample * input\n"
-                  "rather than output->expectation * input.\n");
-*/
     declareOption(ol, "use_sample_or_expectation",
                   &HintonDeepBeliefNet::use_sample_or_expectation,
                   OptionBase::buildoption,
@@ -204,22 +163,6 @@ void HintonDeepBeliefNet::declareOptions(OptionList& ol)
                   "  - visible unit during negative phase,\n"
                   "  - hidden unit during negative phase (you should keep it"
                   " to 0).\n");
-
-    declareOption(ol, "minibatch_size",
-                  &HintonDeepBeliefNet::minibatch_size,
-                  OptionBase::buildoption,
-                  "This is the number of examples seen by one process\n"
-                  "during training after which the weight updates are shared\n"
-                  "among all the processes. When update_only_after_minibatch,\n"
-                  "training is done by minibatches, with parameter updates\n"
-                  "only after each minibatch of that size.\n");
-
-    declareOption(ol, "update_only_after_minibatch",
-                  &HintonDeepBeliefNet::update_only_after_minibatch,
-                  OptionBase::buildoption,
-                  "update parameters only after a minibatch has been seen.\n"
-                  "CURRENT IMPLEMENTATION IS INEFFICIENT, NOT EXPLOITING\n"
-                  "THE FAST MATRIX OPERATIONS POSSIBLE.\n");
 
     declareOption(ol, "sum_parallel_contributions",
                   &HintonDeepBeliefNet::sum_parallel_contributions,
@@ -285,25 +228,10 @@ void HintonDeepBeliefNet::build_()
     MODULE_LOG << "  initialization_method = \"" << initialization_method
         << "\"" << endl;
 
-    // check value of fine_tuning_method
-    string ftm = lowerstring( fine_tuning_method );
-    if( ftm == "" | ftm == "none" )
-        fine_tuning_method = "";
-    else if( ftm == "cd" | ftm == "contrastive_divergence" )
-        fine_tuning_method = "CD";
-    else if( ftm == "egd" | ftm == "error_gradient_descent" )
-        fine_tuning_method = "EGD";
-    else if( ftm == "ws" | ftm == "wake_sleep" )
-        fine_tuning_method = "WS";
-    else
-        PLERROR( "HintonDeepBeliefNet::build_ - fine_tuning_method \"%s\"\n"
-                 "is unknown.\n", fine_tuning_method.c_str() );
-    MODULE_LOG << "  fine_tuning_method = \"" << fine_tuning_method << "\""
-        <<  endl;
     //TODO: build structure to store gradients during gradient descent
 
     if( training_schedule.length() != n_layers-1 )
-        training_schedule = TVec<int>( n_layers-1, 1000000 );
+        training_schedule = TVec<int>( n_layers-1 );
     MODULE_LOG << "  training_schedule = " << training_schedule << endl;
     MODULE_LOG << endl;
 
@@ -629,8 +557,8 @@ void HintonDeepBeliefNet::train()
     //sleep(20);
     //pout << "DONE WAITING!" << endl;
     MPI_Barrier(MPI_COMM_WORLD);
-    int total_bsize=minibatch_size*PLMPI::size;
-#endif
+    //int total_bsize=minibatch_size*PLMPI::size;
+    int total_bsize=PLMPI::size;
     // forget(); // DEBUGGING TO GET REPRODUCIBLE RESULTS
     if (global_params.size()==0)
     {
@@ -646,6 +574,7 @@ void HintonDeepBeliefNet::train()
         if (p.length()!=0)
             PLERROR("HintonDeepBeliefNet: Inconsistencies between nParameters and makeParametersPointHere!");
     }
+#endif
 
     MODULE_LOG << "  nsamples = " << nsamples << endl;
     MODULE_LOG << "  initial stage = " << stage << endl;
@@ -682,24 +611,11 @@ void HintonDeepBeliefNet::train()
 
         params[layer]->learning_rate = learning_rate;
 
-        int momentum_switch_stage = momentum_switch_time;
-        if( layer > 0 )
-            momentum_switch_stage += training_schedule[layer-1];
-
-        if( stage <= momentum_switch_stage )
-            params[layer]->momentum = initial_momentum;
-        else
-            params[layer]->momentum = final_momentum;
-
+#if USING_MPI
         // make a copy of the parameters as they were at the beginning of
         // the minibatch
         previous_global_params << global_params;
-
-        if (!sum_parallel_contributions || update_only_after_minibatch)
-        {
-            delta_params.resize(global_params.length());
-            delta_params.clear();
-        }
+#endif
 
         for( ; stage<end_stage ; stage++ )
         {
@@ -714,9 +630,6 @@ void HintonDeepBeliefNet::train()
                 train_set->getExample(sample, input, target, weight);
                 greedyStep( input.subVec(0, n_predictor), layer );
 
-                if( stage == momentum_switch_stage )
-                    params[layer]->momentum = final_momentum;
-
                 if( pb )
                 {
                     if( layer == 0 )
@@ -729,13 +642,13 @@ void HintonDeepBeliefNet::train()
             // time to share among processors
             if (stage%total_bsize==0 || stage==end_stage-1)
                 shareParamsMPI();
-#else
-            if (update_only_after_minibatch && (stage%minibatch_size==0 || stage==end_stage-1))
-            {
-                global_params += delta_params;
-                delta_params.clear();
-            }
 #endif
+        }
+
+        if( pb )
+        {
+            delete pb;
+            pb = 0;
         }
     }
 
@@ -758,12 +671,6 @@ void HintonDeepBeliefNet::train()
 //    target_params->learning_rate = learning_rate;
 
     int previous_stage = (n_layers < 3) ? 0 : training_schedule[n_layers-3];
-    int momentum_switch_stage = momentum_switch_time + previous_stage;
-    if( stage <= momentum_switch_stage )
-        joint_params->momentum = initial_momentum;
-    else
-        joint_params->momentum = final_momentum;
-
     int last = min(training_schedule[n_layers-2],nstages);
     for( ; stage<last ; stage++ )
     {
@@ -776,9 +683,6 @@ void HintonDeepBeliefNet::train()
             train_set->getExample(sample, input, target, weight);
             jointGreedyStep( input );
 
-            if( stage == momentum_switch_stage )
-                joint_params->momentum = final_momentum;
-
             if( pb )
                 pb->update( stage - previous_stage + 1 );
 #if USING_MPI
@@ -786,18 +690,16 @@ void HintonDeepBeliefNet::train()
         // time to share among processors
         if (stage%total_bsize==0 || stage==last-1)
             shareParamsMPI();
-#else
-        if (update_only_after_minibatch && (stage%minibatch_size==0 || stage==end_stage-1))
-        {
-            global_params += delta_params;
-            delta_params.clear();
-        }
 #endif
+    }
+    if( pb )
+    {
+        delete pb;
+        pb = 0;
     }
 
     /***** fine-tuning *****/
-    MODULE_LOG << "Fine-tuning all parameters, using method "
-        << fine_tuning_method << endl;
+    MODULE_LOG << "Fine-tuning all parameters, by gradient descent" << endl;
 
     int init_stage = stage;
     if( report_progress && stage < nstages )
@@ -813,58 +715,40 @@ void HintonDeepBeliefNet::train()
     joint_params->learning_rate = fine_tuning_learning_rate;
     target_params->learning_rate = fine_tuning_learning_rate;
 
-    if( fine_tuning_method == "" ) // do nothing
+    int begin_sample = stage % nsamples;
+    for( ; stage<nstages ; stage++ )
     {
-        stage = nstages;
-        if( pb )
-            pb->update( nstages - init_stage + 1 );
-    }
-    else if( fine_tuning_method == "EGD" )
-    {
-        int begin_sample = stage % nsamples;
-        for( ; stage<nstages ; stage++ )
+#if USING_MPI
+        // only look at some of the examples, associated with this process number (rank)
+        if (stage%PLMPI::size==PLMPI::rank)
         {
-#if USING_MPI
-            // only look at some of the examples, associated with this process number (rank)
-            if (stage%PLMPI::size==PLMPI::rank)
-            {
 #endif
-                int sample = stage % nsamples;
-                if( sample == begin_sample )
-                    train_stats->forget();
-                if( !fast_exact_is_equal( fine_tuning_learning_rate, 0. ) )
-                {
-                    real cur_learning_rate = fine_tuning_learning_rate
-                        / (1. + fine_tuning_decrease_ct*(stage-init_stage) );
-                    for( int i=0 ; i<n_layers-1 ; i++ )
-                        params[i]->learning_rate = cur_learning_rate;
-                    joint_params->learning_rate = cur_learning_rate;
-                    target_params->learning_rate = cur_learning_rate;
-                }
-
-                train_set->getExample(sample, input, target, weight);
-                fineTuneByGradientDescent( input, train_costs );
-                train_stats->update( train_costs );
-
-                if( pb )
-                    pb->update( stage - init_stage + 1 );
-#if USING_MPI
-            }
-            // time to share among processors
-            if (stage%total_bsize==0 || stage==nstages-1)
-                shareParamsMPI();
-#else
-            if (update_only_after_minibatch && (stage%minibatch_size==0 || stage==end_stage-1))
+            int sample = stage % nsamples;
+            if( sample == begin_sample )
+                train_stats->forget();
+            if( !fast_exact_is_equal( fine_tuning_learning_rate, 0. ) )
             {
-                global_params += delta_params;
-                delta_params.clear();
+                real cur_learning_rate = fine_tuning_learning_rate
+                    / (1. + fine_tuning_decrease_ct*(stage-init_stage) );
+                for( int i=0 ; i<n_layers-1 ; i++ )
+                    params[i]->learning_rate = cur_learning_rate;
+                joint_params->learning_rate = cur_learning_rate;
+                target_params->learning_rate = cur_learning_rate;
             }
-#endif
+
+            train_set->getExample(sample, input, target, weight);
+            fineTuneByGradientDescent( input, train_costs );
+            train_stats->update( train_costs );
+
+            if( pb )
+                pb->update( stage - init_stage + 1 );
+#if USING_MPI
         }
+        // time to share among processors
+        if (stage%total_bsize==0 || stage==nstages-1)
+            shareParamsMPI();
+#endif
     }
-    else
-        PLERROR( "Fine-tuning methods other than \"EGD\" are not"
-                 " implemented yet." );
 
     if( pb )
         delete pb;
@@ -897,24 +781,19 @@ void HintonDeepBeliefNet::contrastiveDivergenceStep(
     up_layer->generateSample();
 
     // accumulate stats using the right vector (sample or expectation)
+    // we store a copy of positive phase values
+    pos_down_values.resize( down_layer->size );
+    pos_up_values.resize( up_layer->size );
+
     if( use_sample_or_expectation[0] == 2 )
-    {
-        if( use_sample_or_expectation[1] == 2 )
-            parameters->accumulatePosStats(down_layer->sample,
-                                           up_layer->sample );
-        else
-            parameters->accumulatePosStats(down_layer->sample,
-                                           up_layer->expectation );
-    }
+        pos_down_values << down_layer->sample;
     else
-    {
-        if( use_sample_or_expectation[1] == 2 )
-            parameters->accumulatePosStats(down_layer->expectation,
-                                           up_layer->sample);
-        else
-            parameters->accumulatePosStats(down_layer->expectation,
-                                           up_layer->expectation );
-    }
+        pos_down_values << down_layer->expectation;
+
+    if( use_sample_or_expectation[1] == 2 )
+        pos_up_values << up_layer->sample;
+    else
+        pos_up_values << up_layer->expectation;
 
     // down propagation
     if( use_sample_or_expectation[1] == 0 )
@@ -926,6 +805,7 @@ void HintonDeepBeliefNet::contrastiveDivergenceStep(
     down_layer->computeExpectation();
     down_layer->generateSample();
 
+    // negative phase
     if( use_sample_or_expectation[2] == 0 )
         parameters->setAsDownInput( down_layer->expectation );
     else
@@ -935,37 +815,22 @@ void HintonDeepBeliefNet::contrastiveDivergenceStep(
     up_layer->computeExpectation();
 
     // accumulate stats using the right vector (sample or expectation)
-    if( use_sample_or_expectation[3] == 2 )
-    {
-        up_layer->generateSample();
-        if( use_sample_or_expectation[2] == 2 )
-            parameters->accumulateNegStats( down_layer->sample,
-                                            up_layer->sample );
-        else
-            parameters->accumulateNegStats( down_layer->expectation,
-                                            up_layer->sample );
-    }
+    // no need to copy because the values won't change before update
+    Vec neg_down_values;
+    Vec neg_up_values;
+    if( use_sample_or_expectation[2] == 2 )
+        neg_down_values = down_layer->sample;
     else
-    {
-        if( use_sample_or_expectation[2] == 2 )
-            parameters->accumulateNegStats( down_layer->sample,
-                                            up_layer->expectation );
-        else
-            parameters->accumulateNegStats( down_layer->expectation,
-                                            up_layer->expectation );
-    }
+        neg_down_values = down_layer->expectation;
+
+    if( use_sample_or_expectation[3] == 2 )
+        neg_up_values = up_layer->sample;
+    else
+        neg_up_values = up_layer->expectation;
 
     // update
-    if (update_only_after_minibatch)
-    {
-        previous_global_params << global_params;
-        parameters->update();
-        // delta_params += global_params - previous_global_params
-        substractAcc(global_params,previous_global_params,delta_params);
-        global_params << previous_global_params;
-    }
-    else
-        parameters->update();
+    parameters->update(pos_down_values, pos_up_values,
+                       neg_down_values, neg_up_values);
 }
 
 void HintonDeepBeliefNet::greedyStep( const Vec& predictor, int index )
@@ -1115,7 +980,7 @@ TVec<string> HintonDeepBeliefNet::getTrainCostNames() const
 #if USING_MPI
 void HintonDeepBeliefNet::shareParamsMPI()
 {
-    if (sum_parallel_contributions && !update_only_after_minibatch)
+    if (sum_parallel_contributions)
     {
         if (PLMPI::rank!=0)
             // after this line global_params contains the delta for all cpus except root
@@ -1134,11 +999,6 @@ void HintonDeepBeliefNet::shareParamsMPI()
     }
     else // average contributions
     {
-        if (update_only_after_minibatch)
-        {
-            global_params += delta_params;
-            delta_params.clear();
-        }
         //substract(global_params, previous_global_params, delta_params);
         previous_global_params << global_params;
         //MPI_Reduce(delta_params.data(),global_params.data(),
@@ -1168,18 +1028,8 @@ void HintonDeepBeliefNet::test(VMat testset, PP<VecStatsCollector> test_stats,
 
     // testset->defineSizes(inputsize(),targetsize(),weightsize());
 
-    int prank=
-#if USING_MPI
-        PLMPI::rank;
-#else
-        0;
-#endif
-    int psize=
-#if USING_MPI
-        PLMPI::size;
-#else
-        1;
-#endif
+    int prank=PLMPI::rank;
+    int psize=PLMPI::size;
 
     if (prank==0)
         ptimer->startTimer("test_time");
@@ -1225,14 +1075,12 @@ void HintonDeepBeliefNet::test(VMat testset, PP<VecStatsCollector> test_stats,
             pb->update(i);
      }
 
-#if USING_MPI
     if (prank==0)
        MPI_Gather(my_res.data(),my_res.size(),PLMPI_REAL,
                   all_res.data(),my_res.size(),PLMPI_REAL,0,MPI_COMM_WORLD);
     else
        MPI_Gather(my_res.data(),my_res.size(),PLMPI_REAL,
                   0,my_res.size(),PLMPI_REAL,0,MPI_COMM_WORLD);
-#endif
 
     if (prank==0)
     {

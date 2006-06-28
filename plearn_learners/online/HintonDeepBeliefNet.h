@@ -74,16 +74,6 @@ public:
     //! 
     real fine_tuning_decrease_ct;
 
-    //! Initial momentum
-    real initial_momentum;
-
-    //! Final momentum
-    real final_momentum;
-
-    //! number of samples to be seen by layer i before its momentum switches
-    //! from initial_momentum to final_momentum
-    int momentum_switch_time;
-
     //! The weight decay
     real weight_decay;
 
@@ -122,16 +112,6 @@ public:
     //! Contains params[n_layers-2] and target_params.
     PP<RBMJointLLParameters> joint_params;
 
-    //! This is the number of examples seen by one process
-    //! during training after which the weight updates are shared
-    //! among all the processes. When update_only_after_minibatch,
-    //! training is done by minibatches, with parameter updates
-    //! only after each minibatch of that size.
-    int minibatch_size;
-
-    //! update parameters only after a minibatch has been seen
-    bool update_only_after_minibatch;
-
     //! only used when USING_MPI for parallelization:
     //! sum or average the delta-w contributions from different processes?
     bool sum_parallel_contributions;
@@ -139,16 +119,6 @@ public:
     //! Number of examples to use during each of the different greedy
     //! steps of the training phase.
     TVec<int> training_schedule;
-
-    //! Method for fine-tuning the whole network after greedy learning.
-    //! One of:
-    //!   - "none"
-    //!   - "CD" or "contrastive_divergence"
-    //!   - "EGD" or "error_gradient_descent"
-    //!   - "WS" or "wake_sleep"
-    string fine_tuning_method;
-
-//    bool use_sample_rather_than_expectation_in_positive_phase_statistics;
 
     //! Vector providing information on which information to use during the
     //! contrastive divergence step:
@@ -315,6 +285,10 @@ protected:
     //! gradient wrt output activations
     mutable Vec output_gradient;
 
+    // store copy of positive statistics
+    mutable Vec pos_down_values;
+    mutable Vec pos_up_values;
+
 
 protected:
     //#####  Protected Member Functions  ######################################
@@ -354,13 +328,13 @@ private:
 
     // ** NON-OPTION FIELDS (temporary workspace)
 
+#if USING_MPI
     //! for MPI parallelization, share parameters of all Parameters boxes
     Vec global_params;
     //! and keep track of their value at the previous sharing step between all
     //! CPUs
     Vec previous_global_params;
-    //! difference between the above two
-    Vec delta_params;
+#endif
 };
 
 // Declares a few other classes and functions related to this class
