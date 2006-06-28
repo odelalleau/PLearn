@@ -4230,7 +4230,7 @@ T maxabs(const TMat<T>& mat)
 {
 #ifdef BOUNDCHECK
     if(mat.length()==0 || mat.width()==0)
-        PLERROR("IN T max(const TMat<T>& mat) mat has 0 size");
+        PLERROR("IN T maxabs(const TMat<T>& mat) mat has 0 size");
 #endif
     T* m_i = mat.data();
     double maxval = m_i[0];
