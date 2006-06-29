@@ -99,12 +99,12 @@ lookAhead(int row, const Vec& rowbuf)
     int last_row = m_current_row + m_cached_rows.size() - 1;
 
     if ( row <= last_row )
-        m_row_buffer << m_row_buffer[row-m_current_row];
+        m_row_buffer << m_cached_rows[row-m_current_row];
     else
-        for ( ; last_row < row; ++last_row )
+        while ( last_row < row )
         {
-            m_source->getRow(row, m_row_buffer);
-            m_cached_rows.push_back(m_row_buffer);
+            m_source->getRow(++last_row, m_row_buffer);
+            m_cached_rows.push_back(m_row_buffer.copy());
         }
     
     // Finally    
