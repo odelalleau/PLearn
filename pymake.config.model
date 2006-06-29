@@ -367,10 +367,16 @@ options_choices = [
 
 # Description of options, and associated settings
 
+if( platform=='linux-i386' or force_32bits ):
+    gcc_opt_options = '-mmmx -msse -mfpmath=sse -march=i686'
+else:
+    gcc_opt_options = ''
+
 pymakeOption( name = 'g++',
               description = 'compiling with g++, with no MPI support',
               compiler = 'g++',
-              compileroptions = '-Wno-deprecated -pedantic -DUSING_MPI=0 -Wno-long-long -ftemplate-depth-100 -mmmx -msse -mfpmath=sse -march=i686',
+              compileroptions = '-Wno-deprecated -pedantic -DUSING_MPI=0 -Wno-long-long -ftemplate-depth-100 ' \
+                      + gcc_opt_options,
               linker = 'g++' )
 
 pymakeOption( name = 'g++3',
