@@ -875,8 +875,8 @@ void GaussMix::addToCovariance(const Vec& y, int j,
     // full matrix.
     for (int i = 0; i < the_ind_inv->length(); i++) {
         int the_ind_inv_i = (*the_ind_inv)[i];
-        for (int j = 0; j < the_ind_inv->length(); j++)
-            cov(the_ind_inv_i, (*the_ind_inv)[j]) += post * (*the_H_inv)(i, j);
+        for (int k = 0; k < the_ind_inv->length(); k++)
+            cov(the_ind_inv_i, (*the_ind_inv)[k]) += post * (*the_H_inv)(i, k);
     }
 
     bool cannot_free =
@@ -1216,9 +1216,21 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                                     need_recompute[current_training_sample]) {
                     eigenvals_allj_missing.resize(L);
                     eigenvecs_allj_missing.resize(L);
-                    eigenVecOfSymmMat(*the_cov_y_missing, n_non_missing,
-                                      eigenvals_allj_missing[j],
-                                      eigenvecs_allj_missing[j]);
+                    // TODO We probably do not need this 'cov_backup', since
+                    // the matrix 'the_cov_y_missing' should not be re-used.
+                    // Once this is tested and verified, it could be removed
+                    // for efficiency reasons.
+                    static Mat cov_backup;
+                    cov_backup.setMod(the_cov_y_missing->width());
+                    cov_backup.resize(the_cov_y_missing->length(),
+                                      the_cov_y_missing->width());
+                    cov_backup << *the_cov_y_missing;
+                    eigenVecOfSymmMat(cov_backup, n_non_missing,
+                            eigenvals_allj_missing[j],
+                            eigenvecs_allj_missing[j]);
+
+                    assert( eigenvals_allj_missing[j].length()==n_non_missing);
+                    assert( !cov_backup.hasMissing() );
                     }
                     eigenvals_missing = eigenvals_allj_missing[j];
                     eigenvecs_missing = &eigenvecs_allj_missing[j];
@@ -1758,9 +1770,9 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     for (int k = 0; k < n_non_missing; k++) {
                         (*the_mu_y_missing)[k] = mu_y[non_missing[k]];
                         y_missing[k] = y[non_missing[k]];
-                        for (int j = 0; j < n_non_missing; j++) {
-                            (*the_cov_y_missing)(k,j) =
-                                cov_y(non_missing[k], non_missing[j]);
+                        for (int q = 0; q < n_non_missing; q++) {
+                            (*the_cov_y_missing)(k,q) =
+                                cov_y(non_missing[k], non_missing[q]);
                         }
                     }
                     if (n_non_missing == 0) {
@@ -1778,9 +1790,9 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         y_centered << y_missing;
                         y_centered -= mu_y;
                         real squared_norm_y_centered = pownorm(y_centered);
-                        int n_eig = n_non_missing;
+                        int n_eigen = n_non_missing;
 
-                        real lambda0 = max(var_min, eigenvals.lastElement());
+                        lambda0 = max(var_min, eigenvals.lastElement());
                         assert( lambda0 > 0 );
                         real one_over_lambda0 = 1.0 / lambda0;
 
@@ -1790,7 +1802,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         log_likelihood -=
                             0.5 * one_over_lambda0 * squared_norm_y_centered;
 
-                        for (int k = 0; k < n_eig - 1; k++) {
+                        for (int k = 0; k < n_eigen - 1; k++) {
                             // log_likelihood -= 0.5 * (1/lambda_k - 1/lambda_0)
                             //                       * ((y - mu)'.v_k)^2
                             real lambda = max(var_min, eigenvals[k]);
@@ -2399,7 +2411,7 @@ void GaussMix::kmeans(const VMat& samples, int nclust, TVec<int>& clust_idx,
             for (j = 0;
                  j < input.length()
                     && clust_stat[i].stats.length() > 0
-                    && clust_stat[i].getStats(j).nnonmissing() == 0;
+                    && is_equal(clust_stat[i].getStats(j).nnonmissing(), 0);
                  j++) {}
             if (j < input.length())
                 // There have been some samples assigned to this cluster.
@@ -3388,7 +3400,7 @@ void GaussMix::train()
             bool finished = false;
             TVec<int> n_diffs(n_clusters);
             int count_iter = 0;
-            ProgressBar* pb = 0;
+            pb = 0;
             if (report_progress)
                 pb = new ProgressBar("Performing k-median on " +
                         tostring(missing_patterns.length())    +
@@ -3617,7 +3629,7 @@ void GaussMix::train()
                 spanning_can_free.resize(missing_template.length());
                 for (int tpl = 0; tpl < missing_template.length(); tpl++) {
                 // Find minimum spanning tree of the missing patterns' graph.
-                ProgressBar* pb = 0;
+                pb = 0;
                 TVec<int> cluster_tpl = clusters[tpl];
                 int n = cluster_tpl.length();
                 n = (n * (n - 1)) / 2;
