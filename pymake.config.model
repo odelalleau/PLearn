@@ -370,7 +370,7 @@ options_choices = [
 pymakeOption( name = 'g++',
               description = 'compiling with g++, with no MPI support',
               compiler = 'g++',
-              compileroptions = '-Wno-deprecated -pedantic -DUSING_MPI=0 -Wno-long-long -ftemplate-depth-100',
+              compileroptions = '-Wno-deprecated -pedantic -DUSING_MPI=0 -Wno-long-long -ftemplate-depth-100 -mmmx -msse -mfpmath=sse -march=i686',
               linker = 'g++' )
 
 pymakeOption( name = 'g++3',
