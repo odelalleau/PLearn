@@ -218,7 +218,27 @@ void BasisSelectionRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     // deepCopyField(trainvec, copies);
 
     // ### Remove this line when you have fully implemented this method.
-    PLERROR("BasisSelectionRegressor::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    //PLERROR("BasisSelectionRegressor::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+
+    inherited::makeDeepCopyFromShallowCopy(copies);
+
+    deepCopyField(explicit_functions, copies);
+    deepCopyField(kernels, copies);
+    deepCopyField(kernel_centers, copies);
+    deepCopyField(learner, copies);
+    deepCopyField(selected_functions, copies);
+    deepCopyField(alphas, copies);
+
+    deepCopyField(simple_candidate_functions, copies);
+    deepCopyField(candidate_functions, copies);
+    deepCopyField(features, copies);
+    deepCopyField(residue, copies);
+    deepCopyField(targets, copies);
+    deepCopyField(weights, copies);
+
+    deepCopyField(input, copies);
+    deepCopyField(targ, copies);
+    deepCopyField(featurevec, copies);
 }
 
 
@@ -791,7 +811,7 @@ void BasisSelectionRegressor::train()
         }
         // clear statistics of previous epoch
         train_stats->forget();
-        train_costs[0] = residue_sum_sq;
+        train_costs[0] = residue_sum_sq/weights_sum;
         train_stats->update(train_costs, weights_sum);
         train_stats->finalize(); // finalize statistics for this epoch
         ++stage;

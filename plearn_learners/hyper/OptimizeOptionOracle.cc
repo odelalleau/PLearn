@@ -104,6 +104,8 @@ void OptimizeOptionOracle::declareOptions(OptionList& ol)
     declareOption(ol, "start_direction", &OptimizeOptionOracle::start_direction, OptionBase::buildoption,
                   "The direction we start going to ('up', 'down' or 'random').");
 
+    //***************
+
     declareOption(ol, "best", &OptimizeOptionOracle::best, OptionBase::learntoption,
                   "The best value found so far.");
 

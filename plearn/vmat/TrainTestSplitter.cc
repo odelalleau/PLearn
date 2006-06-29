@@ -43,16 +43,18 @@
 /*! \file TrainTestSplitter.cc */
 
 #include "TrainTestSplitter.h"
+#include <plearn/math/PRandom.h>
+#include <plearn/vmat/SelectRowsVMatrix.h>
 
 namespace PLearn {
 using namespace std;
 
 TrainTestSplitter::TrainTestSplitter(real the_test_fraction)
-    : append_train(false), test_fraction(the_test_fraction), calc_with_pct(true), test_fraction_abs(0)
+    : append_train(false), test_fraction(the_test_fraction), calc_with_pct(true), test_fraction_abs(0), shuffle_seed(-1)
 {}
 
 TrainTestSplitter::TrainTestSplitter(int the_test_fraction_abs)
-    : append_train(false), test_fraction(0.0), calc_with_pct(false), test_fraction_abs(the_test_fraction_abs)
+    : append_train(false), test_fraction(0.0), calc_with_pct(false), test_fraction_abs(the_test_fraction_abs), shuffle_seed(-1)
 {}
 
 PLEARN_IMPLEMENT_OBJECT(
@@ -76,11 +78,18 @@ void TrainTestSplitter::declareOptions(OptionList& ol)
     declareOption(ol, "test_fraction_abs", &TrainTestSplitter::test_fraction_abs, OptionBase::buildoption,
                   "the number of example of the dataset reserved to the test set");
 
+    declareOption(ol, "shuffle_seed", &TrainTestSplitter::shuffle_seed, OptionBase::buildoption,
+                  "if seed is >0, the vmat should be shuffled before being split (using this seed)\n"
+                  "NOTE: the records in each subset remain in the original order");
+
     inherited::declareOptions(ol);
 }
 
 void TrainTestSplitter::build_()
 {
+    if(calc_with_pct && (test_fraction < 0.0 || test_fraction > 1.0))
+        PLERROR("TrainTestSplitter: test_fraction must be between 0 and 1; %f is not a valid value.", test_fraction);
+
 }
 
 // ### Nothing to add here, simply calls build_
@@ -114,14 +123,17 @@ TVec<VMat> TrainTestSplitter::getSplit(int k)
     int test_length = calc_with_pct ? int(test_fraction*l) : test_fraction_abs;
     int train_length = l - test_length;
 
+    if(0 < shuffle_seed)
+        getRandomSubsets(train_length, test_length);
+
     if(train_length == l)
         split_[0] = dataset;//to get the right metadatadir when its the same matrix
     else
-        split_[0] = dataset.subMatRows(0, train_length);
+        split_[0] = 0<shuffle_seed? new SelectRowsVMatrix(dataset, train_indices) : dataset.subMatRows(0, train_length);
     if(test_length == l)
         split_[1] = dataset;//to get the right metadatadir when its the same matrix
     else
-        split_[1] = dataset.subMatRows(train_length, test_length);
+        split_[1] = 0<shuffle_seed? new SelectRowsVMatrix(dataset, test_indices) : dataset.subMatRows(train_length, test_length);
 
     if (append_train) {
         split_.resize(3);
@@ -129,6 +141,24 @@ TVec<VMat> TrainTestSplitter::getSplit(int k)
     }
     return split_;
 }
+
+
+void TrainTestSplitter::getRandomSubsets(int train_length, int test_length)
+{
+    int n= train_length+test_length;
+    TVec<int> v(n);
+    for(int i= 0; i < n; ++i)
+        v[i]= i;
+    
+    PRandom(shuffle_seed).shuffleElements(v);
+
+    train_indices= v.subVec(0, train_length);
+    test_indices= v.subVec(train_length, test_length);
+    
+    sortElements(train_indices);
+    sortElements(test_indices);
+}
+
 
 } // end of namespace PLearn
 

@@ -724,6 +724,15 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
         test_stats->update(costs);
     }
 
+    /*
+    perr << "PLearner::test class=" << this->classname()
+         << "\tl=" << l 
+         << "\tinputsize=" << testset->inputsize() 
+         << "\ttargetsize=" << testset->targetsize() 
+         << "\tweightsize=" << testset->weightsize() 
+         << endl;
+    */
+
     for(int i=0; i<l; i++)
     {
         testset.getExample(i, input, target, weight);

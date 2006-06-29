@@ -175,6 +175,8 @@ public:
 
     virtual void train();
 
+    virtual void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs, VMat testcosts) const;
+
     virtual void computeOutput(const Vec& input, Vec& output) const;
 
     virtual void computeOutputAndCosts(const Vec& input, const Vec& target, 

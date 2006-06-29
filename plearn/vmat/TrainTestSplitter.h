@@ -57,7 +57,8 @@ protected:
     // *********************
 
     // ### declare protected option fields (such as learnt parameters) here
-    // ...
+    
+    TVec<int> train_indices, test_indices;
 
 public:
 
@@ -69,6 +70,7 @@ public:
     real test_fraction; // the fraction of the dataset to be used as test (hese will be the last few samples of the dataset)
     bool calc_with_pct;
     int test_fraction_abs;
+    long shuffle_seed;
 
     // ****************
     // * Constructors *
@@ -93,13 +95,14 @@ protected:
     // (Please implement in .cc)
     static void declareOptions(OptionList& ol);
 
+    void getRandomSubsets(int train_length, int test_length);
+
 public:
     // simply calls inherited::build() then build_()
     virtual void build();
 
     //! Declares name and deepCopy methods
     PLEARN_DECLARE_OBJECT(TrainTestSplitter);
-
 
     // ********************************
     // *        Splitter methods      *

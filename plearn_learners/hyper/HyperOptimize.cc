@@ -325,6 +325,7 @@ Vec HyperOptimize::optimize()
         real objective = results[which_cost];
 
         option_vals = oracle->generateNextTrial(option_vals,objective);
+
         if(!is_missing(objective) &&
            (objective < best_objective || best_results.length()==0) && (trialnum>=min_n_trials || !option_vals))
         {

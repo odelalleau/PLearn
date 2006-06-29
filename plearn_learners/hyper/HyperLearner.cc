@@ -56,10 +56,12 @@ PLEARN_IMPLEMENT_OBJECT(
 
 TVec<string> HyperLearner::getTrainCostNames() const
 {
-    if (strategy.size() > 0)
-        return strategy.lastElement()->getResultNames();
-    else
-        return TVec<string>();
+    return tester->learner->getTrainCostNames();
+
+//     if (strategy.size() > 0)
+//         return strategy.lastElement()->getResultNames();
+//     else
+//         return TVec<string>();
 }
 
 HyperLearner::HyperLearner()
@@ -256,6 +258,20 @@ void HyperLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(dont_restart_upon_change, copies);
     deepCopyField(strategy, copies);
 }
+
+
+TVec<string> HyperLearner::getOutputNames() const
+{
+    return getLearner()->getOutputNames();
+}
+
+void HyperLearner::setTrainStatsCollector(PP<VecStatsCollector> statscol)
+{
+    assert( learner_ );
+    inherited::setTrainStatsCollector(statscol);
+    learner_->setTrainStatsCollector(statscol);
+}
+
 
 } // end of namespace PLearn
 

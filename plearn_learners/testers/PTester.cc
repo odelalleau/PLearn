@@ -617,6 +617,9 @@ Vec PTester::perform(bool call_forget)
                                                       0,2*outputsize);
           
                 bool reset_stats = (acc.find(setnum) == -1);
+
+                //perr << "reset_stats= " << reset_stats << endl;
+
                 if (reset_stats)
                     test_stats->forget();
                 if (testset->length()==0) 

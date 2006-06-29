@@ -336,6 +336,91 @@ void VPLPreprocessedLearner2::setTrainingSet(VMat training_set, bool call_forget
 }
 
 
+void VPLPreprocessedLearner2::test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs, VMat testcosts) const
+{
+
+
+    VMat filtered_testset = testset;
+    PPath filtered_testset_metadatadir = getExperimentDirectory() / "filtered_test_set.metadata";
+/*
+    // DO NOT FILTER THE TESTSET
+    if(!filtering_prg.empty())
+        filtered_testset = new FilteredVMatrix(testset, filtering_prg, filtered_testset_metadatadir, verbosity>1);
+*/
+    VMat processed_testset = new ProcessingVMatrix(filtered_testset, input_prg, target_prg, weight_prg, extra_prg);
+
+    int l = processed_testset.length();
+    Vec input;
+    Vec target;
+    real weight;
+    Vec proc_input;
+    Vec proc_target;
+    real proc_weight;
+
+    Vec output(outputsize());
+
+    Vec costs(nTestCosts());
+
+    // testset->defineSizes(inputsize(),targetsize(),weightsize());
+
+    ProgressBar* pb = NULL;
+    if(report_progress) 
+        pb = new ProgressBar("Testing learner",l);
+
+    if (l == 0) {
+        // Empty test set: we give -1 cost arbitrarily.
+        costs.fill(-1);
+        test_stats->update(costs);
+    }
+
+
+    perr << "VPLPreprocessedLearner2::test class=" << this->classname()
+         << "\tl=" << l 
+         << "\tinputsize=" << processed_testset->inputsize() 
+         << "\ttargetsize=" << processed_testset->targetsize() 
+         << "\tweightsize=" << processed_testset->weightsize() 
+         << endl;
+
+    for(int i=0; i<l; i++)
+    {
+        processed_testset.getExample(i, proc_input, proc_target, proc_weight);
+        filtered_testset.getExample(i, input, target, weight);
+      
+        // Always call computeOutputAndCosts, since this is better
+        // behaved with stateful learners
+        pre_costs.resize(learner_->nTestCosts());
+        learner_->computeOutputAndCosts(proc_input,proc_target,pre_output,pre_costs);
+
+        if(!output_prg.empty())
+            output_prg_.run(concat(input,pre_output), output);
+        else
+            output << pre_output;
+
+        if(!costs_prg.empty())
+            costs_prg_.run(concat(input,target,pre_output,pre_costs), costs);
+        else
+            costs << pre_costs;
+      
+        if(testoutputs)
+            testoutputs->putOrAppendRow(i,output);
+
+        if(testcosts)
+            testcosts->putOrAppendRow(i, costs);
+
+        if(test_stats)
+            test_stats->update(costs,proc_weight);
+
+        if(report_progress)
+            pb->update(i);
+    }
+
+    if(pb)
+        delete pb;
+
+}
+
+
+
 void VPLPreprocessedLearner2::computeOutput(const Vec& input, Vec& output) const
 {
     assert( learner_ );

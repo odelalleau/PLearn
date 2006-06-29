@@ -110,6 +110,12 @@ public:
 
     void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
+
+    virtual TVec<string> getOutputNames() const;
+
+    virtual void setTrainStatsCollector(PP<VecStatsCollector> statscol);
+
+
 }; // class HyperLearner
 
 DECLARE_OBJECT_PTR(HyperLearner);

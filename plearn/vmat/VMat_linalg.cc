@@ -282,6 +282,9 @@ real weightedLinearRegression(
         outputwise_sum_squared_Y.resize(targetsize);
         outputwise_sum_squared_Y.fill(0.0);
 
+        sum_squared_Y= 0.0;
+        sum_gammas= 0.0;
+
         // Prepare to comnpute weighted XtX and XtY
         Vec x(X.width());
         Vec y(Y.width());
@@ -321,7 +324,10 @@ real weightedLinearRegression(
         squared_loss += sum_squared_Y;
         squared_loss -= 2*dot(XtY,theta_t);
     }
-    return squared_loss/l;
+    // return squared_loss/l;
+    // perr << "linreg/l: " << squared_loss << "/" << l << "=" << squared_loss/l << endl;
+    // perr << "linreg/sg: " << squared_loss << "/" << sum_gammas << "=" << squared_loss/sum_gammas << endl;
+    return squared_loss/sum_gammas;
 }
 
 //! Version that does all the memory allocations of XtX, XtY and
