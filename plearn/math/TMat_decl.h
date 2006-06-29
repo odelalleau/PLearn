@@ -267,11 +267,11 @@ public:
             }
             else
             {
-                if (new_width > mod())
+                int new_size = offset_+new_length*MAX(mod(),new_width); 	 
+                if(offset_+new_size>storage->length()) 	 
+                    storage->resize(new_size + extra); 	 
+                if(new_width>mod())
                     mod_ = new_width;
-                int new_size = offset_ + new_length * mod() + extra;
-                if (new_size > storage->length())
-                    storage->resize(new_size);
             }
             length_ = new_length;
             width_ = new_width;
