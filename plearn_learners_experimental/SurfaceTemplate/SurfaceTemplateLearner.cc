@@ -64,7 +64,6 @@ SurfaceTemplateLearner::SurfaceTemplateLearner():
     output_transfer_func = "sigmoid";
     cost_funcs = TVec<string>(1, "stable_cross_entropy");
     transpose_first_hidden_layer = false;
-    batch_size = 1;
     n_non_params_in_first_hidden_layer = 1;
 }
 
@@ -225,10 +224,6 @@ void SurfaceTemplateLearner::declareOptions(OptionList& ol)
                     &SurfaceTemplateLearner::do_not_change_params,
                     OptionBase::nosave,
         "Not used (simplification).");
-
-    redeclareOption(ol, "batch_size", &SurfaceTemplateLearner::batch_size,
-                                      OptionBase::nosave,
-        "Not used (= 1).");
 
     redeclareOption(ol, "initialization_method",
                     &SurfaceTemplateLearner::initialization_method,
