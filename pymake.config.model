@@ -252,6 +252,7 @@ elif domain_name.endswith('.ms'):
     python_version = '2.4'
     compileflags += ' -DPL_PYTHON_VERSION=240'
     python_lib_root = '/opt/python2.4/lib'
+    linkeroptions_tail += '-lcprts -lunwind'
 elif domain_name.endswith('.rqchp.qc.ca'):
     numpy_includedirs   = [ '/usr/network.ALTIX/python-2.4.1/include' ]
     numpy_site_packages = join(homedir, '../delallea/local/lib/python2.4/site-packages/numarray -lutil')
