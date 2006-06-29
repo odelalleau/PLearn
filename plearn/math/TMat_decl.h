@@ -267,10 +267,20 @@ public:
             }
             else
             {
-                int new_size = offset_+new_length*MAX(mod(),new_width); 	 
-                if(offset_+new_size>storage->length()) 	 
-                    storage->resize(new_size + extra); 	 
-                if(new_width>mod())
+                // 'new_size' takes into account the ABSOLUTELY REQUIRED size
+                // to hold the elements of the matrix.  We only resize the
+                // underlying storage when the latter is not big enough to hold
+                // 'new_size'.  When resizing the storage, we include 'extra'
+                // more elements to anticipate further resizes (e.g. coming
+                // from appendRow()).  IMPORTANT NOTE: don't include those
+                // 'extra' bytes in the computation of 'new_size', for
+                // otherwise a matrix reallocation will occur EVERY TIME
+                // appendRow is called, turning an amortized O(N) algorithm
+                // into an O(N^2) one.
+                int new_size = offset_+new_length*MAX(mod(),new_width);
+                if(new_size > storage->length())
+                    storage->resize(new_size + extra);
+                if(new_width > mod())
                     mod_ = new_width;
             }
             length_ = new_length;
