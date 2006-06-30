@@ -358,6 +358,15 @@ void SurfaceTemplateLearner::train()
     PP<ScoreLayerVariable> score_layer =
         (ScoreLayerVariable*) ((Variable*) first_hidden_layer);
     score_layer->setMappingsSource(train_set);
+    if (stage == 0) {
+        // Make sure all ICP aligners forget any previously computed alignment.
+        // This can be important when they use some memory scheme, since at
+        // build time a first alignment might be performed, and should probably
+        // be forgotten.
+        TVec< PP<ChemicalICP> > icps = score_layer->run_icp_var->icp_aligners;
+        for (int i = 0; i < icps.length();  i++)
+            icps[i]->forgetMemorizedAlignments();
+    }
     inherited::train();
 }
 
