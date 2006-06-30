@@ -1432,24 +1432,44 @@ class FileInfo:
             if verbose>=4:
                 print 'RETURN STATUS: ', self.compilation_status
             del errormsgs[-1]
-        
+
         msg = warningmsgs + errormsgs
 
-        # Somewhat dumb heuristic to figure out if compilation failed
-        # because of an out of memory error: for out of memory error, exit
-        # code will be non-zero, but output on stdout/stderr will be only a
-        # line or so ("cc1plus: out of memory allocating...").
+        # Somewhat dumb heuristic to figure out why compilation failed.
         #
-        # Use the fact that for an out or memory error, there will be no
-        # line number (like "foo.cc:42: syntax error") in the error message
-        # to distinguish that case from the case of (say) a single error
-        # message for a syntax error, etc.
-        if self.compilation_status != 0 and 1 <= len(msg) <= 2 and \
+        # If the host does not exist or refuses ssh connection,
+        # no errormsgs is returned at all, and the first line of
+        # warningmsgs begins by 'ssh: '.
+        #
+        # You might want to add other special cases of warningmsgs here.
+        #
+        # If it failed because of an out of memory error: for out of
+        # memory error, exit code will be non-zero, but output on
+        # stdout/stderr will be only a line or so ("cc1plus: out of
+        # memory allocating...").
+        #
+        # Use the fact that for an out or memory error, there will be
+        # no line number (like "foo.cc:42: syntax error") in the error
+        # message to distinguish that case from the case of (say) a
+        # single error message for a syntax error, etc.
+        if not hasattr(self,"compilation_status"):
+            if warningmsgs and warningmsgs[0].startswith('ssh: '):
+                # The hostname has a problem, so we remove it from the list
+                # and retry on another machine
+                list_of_hosts.remove(self.hostname)
+                self.hostname = ''
+                self.retry_compilation = True
+            else:
+                # There was an undefined problem,
+                # we consider the compilation has failed
+                self.compilation_status = -2 # should I put another value?
+                self.retry_compilation = False
+        elif self.compilation_status != 0 and 1 <= len(msg) <= 2 and \
                not re.findall(r':\d+:', ''.join(msg)):
             self.retry_compilation = True
         else:
             self.retry_compilation = False
-        
+
         if msg:
             print self.filebase+self.fileext,':', string.join(msg,'')
 
@@ -1458,7 +1478,7 @@ class FileInfo:
                 self.launched.wait() # we don't like defunct and zombies around, do we?
             except OSError:
                 pass # don't know why, but sometimes i get a OSError: [Errno 10] No child processes
-        
+
         # don't know if this is useful, but anyway...
         if platform=='win32':
             self.launched[1].close()
@@ -1839,19 +1859,28 @@ def parallel_compile(files_to_compile, num_retries=3):
             errs[ccfile.launched.childerr] = ccfile  
             hostnum = hostnum + 1
         else: # all processes are busy, wait for something to finish...
-            iwtd, owtd, ewtd = select.select(outs.keys()+errs.keys(), [], [])
-            f = iwtd[0] 
-            if errs.has_key(f):
-                info = errs[f]
-            elif outs.has_key(f):
-                info = outs[f]
-            del errs[info.launched.childerr]
-            del outs[info.launched.fromchild]
-            info.finished_compilation() # print error messages, warnings, and get failure/success status
-            hostname = info.hostname
-            ccfile.launch_compilation(hostname)
-            outs[ccfile.launched.fromchild] = ccfile  
-            errs[ccfile.launched.childerr] = ccfile  
+            hostname = ''
+            while hostname == '':
+                # if the process finished because the host was unreachable,
+                # we do not want to reuse it
+                iwtd, owtd, ewtd = select.select(outs.keys()+errs.keys(), [], [])
+                f = iwtd[0]
+                if errs.has_key(f):
+                    info = errs[f]
+                elif outs.has_key(f):
+                    info = outs[f]
+                del errs[info.launched.childerr]
+                del outs[info.launched.fromchild]
+                info.finished_compilation() # print error messages, warnings, and get failure/success status
+                hostname = info.hostname
+
+                # This should not happen unless localhost is unable to compile
+                if not list_of_hosts:
+                    raise "Couldn't access ANY of the listed hosts for compilation"
+            else:
+                ccfile.launch_compilation(hostname)
+                outs[ccfile.launched.fromchild] = ccfile  
+                errs[ccfile.launched.childerr] = ccfile  
 
     # Now wait until everybody is finished
     while outs:
