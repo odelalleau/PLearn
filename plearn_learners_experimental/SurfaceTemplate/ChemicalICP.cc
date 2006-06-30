@@ -48,9 +48,9 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     ChemicalICP,
-    "ONE LINE USER DESCRIPTION",
-    "MULTI LINE\nHELP FOR USERS"
-    );
+    "Iterative Closest Points (ICP) aligner.",
+    ""
+);
 
 ChemicalICP::ChemicalICP():
       mol_feat_indices( new UnaryVariable() ),
@@ -59,6 +59,7 @@ ChemicalICP::ChemicalICP():
       weighting_method( "features_sigmoid" ),
       weighting_params( Vec(2,1) ),
       matching_method( "exhaustive" ),
+      memory( "none" ),
       initial_angles_step( 0 ),
       max_iter( 50 ),
       error_t( 0 ),
@@ -78,15 +79,7 @@ ChemicalICP::ChemicalICP():
                                                      template_feat_indices) ),
       used_template_feat_dev( new VarColumnsVariable(all_template_feat_dev,
                                                      template_feat_indices) )
-{
-    // ...
-
-    // ### You may (or not) want to call build_() to finish building the object
-    // ### (doing so assumes the parent classes' build_() have been called too
-    // ### in the parent classes' constructors, something that you must ensure)
-
-//pout << "Default constructor called" << endl;
-}
+{}
 
 ChemicalICP::ChemicalICP( const MolTemplate& the_template,
                           const Mol& the_molecule,
@@ -103,6 +96,7 @@ ChemicalICP::ChemicalICP( const MolTemplate& the_template,
       weighting_method(the_weighting_method),
       weighting_params(the_weighting_params),
       matching_method( the_matching_method ),
+      memory( "none" ),
       initial_angles_step( 0 ),
       max_iter( 50 ),
       error_t( 0 ),
@@ -247,9 +241,24 @@ pout << "t_feat_dev(0) = " << t_feat_dev(0) << endl;
 pout << "feat_distances2(0) = " << feat_distances2(0) << endl;*/
 }
 
+///////////////////////////////
+// forgetMemorizedAlignments //
+///////////////////////////////
+void ChemicalICP::forgetMemorizedAlignments()
+{
+    mem_aligned_molecules.resize(0);
+    mem_error.resize(0);
+    mem_rotation.resize(0);
+    mem_translation.resize(0);
+    mem_matching.resize(0);
+    mem_count.resize(0);
+}
+
+/////////
+// run //
+/////////
 void ChemicalICP::run()
 {
-//pout << "begin run()" << endl;
     if( initial_angles_list.length() > 0 )
     {
         if( initial_angles_step > 0 )
@@ -277,6 +286,33 @@ void ChemicalICP::run()
                     initial_angles_list.appendRow( angles );
                 }
     }
+
+    // Only perform the alignment if we do not just obtain the result from a
+    // previously memorized alignment.
+    bool realign = true;
+    int find_mol = -1;
+    if (memory != "none") {
+        find_mol = mem_aligned_molecules.find(molecule);
+        if (find_mol == -1) {
+            // This molecule had not been previously aligned.
+            find_mol = mem_aligned_molecules.length();
+            mem_aligned_molecules.append(molecule);
+            // Dummy additions just to resize the vectors correctly.
+            mem_error.append(0);
+            mem_rotation.append(Mat());
+            mem_translation.append(Vec());
+            mem_matching.append(TVec<int>());
+            mem_count.append(0);
+        }
+    }
+
+    if (every_x > 0) {
+        assert( find_mol >= 0 );
+        if (mem_count[find_mol] % every_x != 0)
+            realign = false;
+    }
+
+    if (realign) {
 
     int n_points = mol_template->n_points();
     if( n_points < 3 )
@@ -369,6 +405,32 @@ pout << "    iteration = " << n_iter << " / " << max_iter << endl
     translation = best_translation;
     matching = best_matching;
 
+    if (memory != "none") {
+        // Remember this alignment.
+        assert( find_mol >= 0 );
+        mem_error[find_mol] = error;
+        mem_rotation[find_mol].resize(rotation.length(), rotation.width());
+        mem_rotation[find_mol] << rotation;
+        mem_translation[find_mol].resize(translation.length());
+        mem_translation[find_mol] << translation;
+        mem_matching[find_mol].resize(matching.length());
+        mem_matching[find_mol] << matching;
+    }
+
+    } else {
+        assert( find_mol >= 0 );
+        error = mem_error[find_mol];
+        // Copies make the code simpler, though it would be slightly more
+        // efficient to use resize and the << operator.
+        rotation = mem_rotation[find_mol].copy();
+        translation = mem_translation[find_mol].copy();
+        matching = mem_matching[find_mol].copy();
+    }
+
+    if (find_mol >= 0)
+        // Increment counter of alignments for this molecule.
+        mem_count[find_mol]++;
+
     // Update the 'matching_neighbors' variable.
     matching_neighbors->resize(matching.length(), 1);
     for (int i = 0; i < matching.length(); i++)
@@ -376,9 +438,11 @@ pout << "    iteration = " << n_iter << " / " << max_iter << endl
 
     if( !fast_is_equal( initial_angles_step, 0. ) )
         initial_angles_list.resize( 0, 3 );
-
 }
 
+///////////////////////////
+// matchNearestNeighbors //
+///////////////////////////
 void ChemicalICP::matchNearestNeighbors( const Mat& tr_template_coords,
                                          const Mat& matched_mol_coords )
 {
@@ -548,15 +612,13 @@ void ChemicalICP::build()
     build_();
 }
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void ChemicalICP::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields
-    // ### that you wish to be deepCopied rather than
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
     varDeepCopyField(mol_feat_indices, copies);
     varDeepCopyField(template_feat_indices, copies);
     varDeepCopyField(matching_neighbors, copies);
@@ -571,6 +633,14 @@ void ChemicalICP::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(weights, copies);
     deepCopyField(used_properties, copies);
     deepCopyField(other_base_properties, copies);
+
+    deepCopyField(mem_aligned_molecules,    copies);
+    deepCopyField(mem_error,                copies);
+    deepCopyField(mem_rotation,             copies);
+    deepCopyField(mem_translation,          copies);
+    deepCopyField(mem_matching,             copies);
+    deepCopyField(mem_count,                copies);
+    
     deepCopyField(used_feat_names, copies);
     deepCopyField(feat_distances2, copies);
 
@@ -585,6 +655,9 @@ void ChemicalICP::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     varDeepCopyField(used_template_feat_dev, copies);
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void ChemicalICP::declareOptions(OptionList& ol)
 {
     // declareOption(ol, "myoption", &ChemicalICP::myoption, OptionBase::buildoption,
@@ -627,6 +700,13 @@ void ChemicalICP::declareOptions(OptionList& ol)
                   "    - \"exhaustive\": exhaustive search (caching feature"
                   " distances).\n"
                   );
+
+    declareOption(ol, "memory", &ChemicalICP::memory, OptionBase::buildoption,
+        "The kind of memory allowing ICP to re-use previous alignments:\n"
+        "- 'none'   : no memory\n"
+        "- 'every-X': the alignment for a given molecule is re-computed only\n"
+        "             once every X times it is asked\n"
+    );
 
     declareOption(ol, "initial_angles_step", &ChemicalICP::initial_angles_step,
                   OptionBase::buildoption,
@@ -678,6 +758,9 @@ void ChemicalICP::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void ChemicalICP::build_()
 {
 
@@ -687,6 +770,18 @@ void ChemicalICP::build_()
     used_template_features->setName("used_template_features");
     used_template_feat_dev->setName("used_template_feat_dev");
 #endif
+
+    if (memory == "none") {
+        // A negative value for 'every_x' means it is not used.
+        every_x = -1;
+    } else if (memory.find("every-") == 0) {
+        string x = memory.substr(6);
+        every_x = atoi(x.c_str());
+        if (every_x <= 0)
+            PLERROR("In ChemicalICP::build_ - The X value in 'every-X' (option"
+                    " 'memory') must be positive");
+    } else
+        PLERROR("In ChemicalICP::build_ - Invalid value for option 'memory'");
 
     if( feature_names.size() > 0 &&
         lowerstring( feature_names[0] ) == "none" )

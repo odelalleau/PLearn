@@ -100,6 +100,8 @@ public:
     //!   - "exhaustive": exhaustive search (caching feature distances).
     string matching_method;
 
+    string memory;
+
     //! Tries initial rotations every "initial_angles_step" degrees
     real initial_angles_step;
 
@@ -132,6 +134,37 @@ public:
     VarArray other_base_properties;
 
 protected:
+
+    //! When the memory option is set to 'every-X', this variable contains the
+    //! value of X.
+    int every_x;
+
+    // Memorized data. These variables are used when the memory option is not
+    // set to 'none', in order to remember previous alignements.
+
+    //! List of molecules previously aligned.
+    TVec< PP<Molecule> > mem_aligned_molecules;
+
+    //! List of errors corresponding to molecules in 'mem_aligned_molecules'.
+    Vec mem_error;
+
+    //! List of rotation matrices corresponding to molecules in
+    //! 'mem_aligned_molecules'.
+    TVec<Mat> mem_rotation;
+
+    //! List of translation vectors corresponding to molecules in
+    //! 'mem_aligned_molecules'.
+    TVec<Vec> mem_translation;
+
+    //! List of matching vectors corresponding to molecules in
+    //! 'mem_aligned_molecules'.
+    TVec< TVec<int> > mem_matching;
+
+    //! Indicates the number of time each molecule in 'mem_aligned_molecules'
+    //! has been aligned (regardless of whether or not this alignement has been
+    //! recomputed or obtained from a previous alignemnt).
+    TVec<int> mem_count;
+    
     //#####  Protected Options  ###############################################
 
     // ### Declare protected option fields (such as learned parameters) here
@@ -186,6 +219,8 @@ public:
     //! in a file (in plearn format)
     virtual void saveMatch( const PPath& filename );
 
+    //! Forget any previously memorized alignment.
+    void forgetMemorizedAlignments();
 
     //#####  PLearn::Object Protocol  #########################################
 
