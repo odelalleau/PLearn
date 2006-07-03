@@ -41,6 +41,7 @@
 #include <plearn/io/openFile.h>
 #include <plearn/var/UnaryVariable.h>
 #include <plearn/var/VarColumnsVariable.h>
+#include <plearn/io/pl_log.h>
 #include "geometry.h"
 
 namespace PLearn {
@@ -332,10 +333,10 @@ void ChemicalICP::run()
     Mat matched_mol_coords( n_points, 3 );
 
     int n_initial_angles = initial_angles_list.length();
-//pout << n_initial_angles << " initial angles to try" << endl;
+    NAMED_LOG("ICP+NNet") << n_initial_angles << " initial angles to try" << endl;
     for( int i=0 ; i<n_initial_angles ; i++ )
     {
-//pout << "global iteration number " << i << endl;
+		NAMED_LOG("ICP+NNet") << "global iteration number " << i << endl;
         // initialization
         rotation = rotationMatrixFromAngles( initial_angles_list(i) );
         translation.fill(0);
@@ -349,39 +350,38 @@ void ChemicalICP::run()
         applyGeomTransformation( rotation, translation,
                                  template_coordinates->matValue,
                                  tr_template_coords );
-/*pout << "beginning:" << endl
-    << "rotation = " << endl << rotation << endl
-    << "translation = " << translation << endl
-    << "template_coordinates->matValue = " << endl
-    << template_coordinates->matValue << endl
-    << "tr_template_coords = " << endl << tr_template_coords << endl
-    << endl;
-*/
+		NAMED_LOG("ICPDEBUG") << "beginning ICP:" << endl
+			<< "rotation = " << endl << rotation << endl
+		<< "translation = " << translation << endl
+		<< "template_coordinates->matValue = " << endl
+		<< template_coordinates->matValue << endl
+		<< "tr_template_coords = " << endl << tr_template_coords << endl
+		<< endl;
         // main loop
         do
         {
-//pout << "    beginning of main loop" << endl;
-//pout << "    matchNearestNeighbors()" << endl;
+			NAMED_LOG("ICPDEBUG") << "    beginning of main loop" << endl;
+			NAMED_LOG("ICPDEBUG") << "    matchNearestNeighbors()" << endl;
             matchNearestNeighbors( tr_template_coords, matched_mol_coords );
-//pout << "    minimizeWeightedDistance()" << endl;
+			NAMED_LOG("ICPDEBUG") << "    minimizeWeightedDistance()" << endl;
             minimizeWeightedDistance( tr_template_coords, matched_mol_coords,
                                       delta_rot_length, delta_trans_length );
-//pout << "    applyGeomTransformation()" << endl;
+			NAMED_LOG("ICPDEBUG") << "    applyGeomTransformation()" << endl;
             applyGeomTransformation( rotation, translation,
                                      template_coordinates->matValue,
                                      tr_template_coords );
-//pout << "tr_template_coords = " << endl << tr_template_coords << endl;
+			NAMED_LOG("ICPDEBUG") << "tr_template_coords = " << endl << tr_template_coords << endl;
             error = computeWeightedDistance( tr_template_coords,
                                              matched_mol_coords );
             n_iter++;
-/*pout << "end of main loop" << endl;
-pout << "    iteration = " << n_iter << " / " << max_iter << endl
-     << "    error = " << error << " / " << error_t << endl
-     << "    delta_rot_length = " << delta_rot_length << " / "
-         << angle_t << endl
-     << "    delta_trans_length = " << delta_trans_length << " / "
-         << trans_t << endl
-     << endl;*/
+			NAMED_LOG("ICPDEBUG") << "end of main loop" << endl;
+			NAMED_LOG("ICPDEBUG") << "    iteration = " << n_iter << " / " << max_iter << endl
+				<< "    error = " << error << " / " << error_t << endl
+				<< "    delta_rot_length = " << delta_rot_length << " / "
+				<< angle_t << endl
+				<< "    delta_trans_length = " << delta_trans_length << " / "
+				<< trans_t << endl
+				<< endl;
         }
         while( n_iter < max_iter &&
                error > error_t &&
@@ -396,7 +396,7 @@ pout << "    iteration = " << n_iter << " / " << max_iter << endl
             best_translation << translation;
             best_matching << matching;
         }
-//pout << "end global iteration number " << i << endl << endl;
+		NAMED_LOG("ICP+NNet") << "end global iteration number " << i << endl;
     }
 
     // get best parameters
