@@ -90,9 +90,8 @@ void AutoLinearRegressor::declareOptions(OptionList& ol)
                   "training the regressor.\n");
 
     declareOption(ol, "mean_target", &AutoLinearRegressor::mean_target,
-                  OptionBase::buildoption,
-                  "Whether to include a bias term in the regression \n"
-                  "Note: this is currently ignored.\n");
+                  OptionBase::learntoption,
+                  "The mean of the target. (used as a default bias)");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -178,7 +177,8 @@ void AutoLinearRegressor::train()
         Mat X = tset.subMatColumns(0,ninputs);
         Mat Y = tset.subMatColumns(ninputs, ntargets);
 
-        mean_target = mean(Y);
+        mean_target.resize(ntargets);
+        columnMean(Y, mean_target);
         Y -= mean_target;
 
         weights.resize(insize, ntargets);
