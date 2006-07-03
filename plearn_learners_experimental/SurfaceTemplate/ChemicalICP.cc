@@ -287,6 +287,7 @@ void ChemicalICP::run()
                     initial_angles_list.appendRow( angles );
                 }
     }
+    NAMED_LOG("ICP+NNet") << "begin run()" << endl;
 
     // Only perform the alignment if we do not just obtain the result from a
     // previously memorized alignment.
