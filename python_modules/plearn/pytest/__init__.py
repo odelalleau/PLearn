@@ -1,6 +1,6 @@
 __version_id__ = "$Id: __init__.py 3647 2005-06-23 15:49:51Z dorionc $"
                             
-import os, sys, time
+import os, sys, time, logging
 
 from plearn.utilities import toolkit
 from plearn.utilities.ModeAndOptionParser import Mode, ModeAndOptionParser, OptionGroup
@@ -18,16 +18,10 @@ def main( pytest_version ):
     parser = ModeAndOptionParser( usage = "%prog mode [options] target*",
                                   version = "%prog " + pytest_version()   )
     
-    import logging
-    verb_levels = [ level
-                    for level in logging._levelNames
-                    if isinstance(level, type('')) ]
-
+    verb_levels = [l for l in logging._levelNames if isinstance(l, basestring)]
     parser.add_option( '-v', "--verbosity",
                        choices=verb_levels, default="INFO",
-                       help="One of %s [defaults to INFO]"%','.join(verb_levels)
-                       )
-
+                       help="One of %s [defaults to INFO]"%','.join(verb_levels) )
     
     parser.add_option("--mail", default=None,
                       help='Not supported yet.')
