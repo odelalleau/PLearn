@@ -113,8 +113,10 @@ using namespace std;
   //! argument, with computations flowing in the other direction.
   //! This is the same as backConvolve1D(source_signal, kernel, dest_signal, 1), i.e.
   //! the kernel window is stepped by one. The source signal is set with
-  //!    source_signal[k] = sum_{j=0}^{NK-1} 1_{k>=j && k-j<ND} dest_signal[k-j]*kernel[j]
-  //! If the accumulate flag is set, then source_signal is incremented rather than set.
+  //! for i=0 to nd-1:
+  //!   for j=0 to nk-1:
+  //!    source_signal[i+j] += dest_signal[i]*kernel[j]
+  //! If the accumulate flag is not set, then source_signal is first cleared.
   //! N.B. THIS IS THE SAME AS COMPUTING dC/dsource_signal (into the source_signal argument),
   //! GIVEN dC/ddest_signal, i.e. this function does part of the work done by convolve1Dbackprop
   //! and convolve1DbackpropUpdate (it does not compute the gradient with respect to the kernel).
@@ -141,6 +143,45 @@ using namespace std;
   //! for i=0 to nd-1:
   //!   for j=0 to nk-1:
   //!    source_signal[i+j] += dest_signal[i]*kernel[j]
+        real di=d[i];
+        for (int j=0;j<nk;j++)
+          s[j] += di*k[j];
+      }
+  }
+
+  //! Back-convolve INTO a "source" signal of length NS with a kernel of length NK
+  //! and FROM a "destination" signal which should be of length NS-NK+
+  //! This is EXACTLY the TRANSPOSE operation of a convolve1D with the same
+  //! arguments, with computations flowing in the other direction.
+  //! for i=0 to nd-1:
+  //!   for j=0 to nk-1:
+  //!    source_signal[i*step+j] += dest_signal[i]*kernel[j]
+  //! If the accumulate flag is not set, then source_signal is first cleared.
+  //! N.B. THIS IS THE SAME AS COMPUTING dC/dsource_signal (into the source_signal argument),
+  //! GIVEN dC/ddest_signal, i.e. this function does part of the work done by convolve1Dbackprop.
+  void backConvolve1D(const Vec& source_signal, const Vec& kernel, 
+                      Vec& dest_signal, int step, bool accumulate=true)
+  {
+    int ns=source_signal.length();
+    int nk=kernel.length();
+    int nd=dest_signal.length();
+#ifdef BOUNDCHECK
+    if (step<1)
+      PLERROR("convolve1D: step[%d] should be a positive integer\n",step);
+    if (ns!=nd*step+nk-1)
+      PLERROR("convolve1D: source_signal.length()[%d] should equal step[%d] times dest_signal.length()[%d] + kernel.length()[%d] - step\n",
+              ns,step,nd,nk);
+#endif
+    if (!accumulate)
+        dest_signal.clear();
+    real* s=source_signal.data();
+    real* k=kernel.data();
+    real* d=dest_signal.data();
+    for (int i=0;i<nd;i++,s+=step)
+      {
+  //! for i=0 to nd-1:
+  //!   for j=0 to nk-1:
+  //!    source_signal[i*step+j] += dest_signal[i]*kernel[j]
         real di=d[i];
         for (int j=0;j<nk;j++)
           s[j] += di*k[j];
@@ -231,6 +272,57 @@ using namespace std;
                   somme += s1[k2]*k[k2];
               }
             d[j]=somme;
+          }
+      }
+  }
+
+  //! Back-convolve INTO a (N1S x N2S) "source" image with a (N1K x N2K) kernel matrix,
+  //! and FROM a "destination" image of dimensions (N1D x N2D), with NiS = NiD + NiK - 1.
+  //! This is EXACTLY the TRANSPOSE of convolve2D(source_image, kernel, dest_image, 1, 1)
+  //! with the same arguments, computations flowing in the other direction.
+  //! the kernel window is stepped by one in both directions. The destination image is
+  //! for i1=0 to N1D-1:
+  //!  for i2=0 to N2D-1:
+  //!   for j1=0 to N1K-1:
+  //!    for j2=0 to N2K-1:
+  //!     source_signal[i1+j1,i2+j2] += dest_signal[i1,i2]*kernel[j1,j2]
+  //! If the accumulate flag is not set, then source_signal is first cleared.
+  //! N.B. When dest_signal has been computed from kernel and source_signal
+  //! using convolve2D, THIS IS THE SAME AS COMPUTING dC/dsource_signal 
+  //! (into the source_signal argument), GIVEN dC/ddest_signal, i.e. 
+  //! this function does part of the work done by convolve2Dbackprop.
+  void backConvolve2D(const Mat& source_image, const Mat& kernel, 
+                      Mat& dest_image, bool accumulate=true)
+  {
+    int n1s=source_image.length();
+    int n2s=source_image.width();
+    int n1k=kernel.length();
+    int n2k=kernel.width();
+    int n1d=dest_image.length();
+    int n2d=dest_image.width();
+#ifdef BOUNDCHECK
+    if (n1d!=n1s-n1k+1)
+      PLERROR("convolve2D: source_image.length()[%d]-kernel.length()[%d]+1 should equal dest_image.length()[%d]\n",
+              n1s,n1k,n1d);
+    if (n2d!=n2s-n2k+1)
+      PLERROR("convolve2D: source_image.width()[%d]-kernel.width()[%d]+1 should equal dest_image.width()[%d]\n",
+              n2s,n2k,n2d);
+#endif
+    int sm = source_image.mod();
+    real* s = source_image.data();
+    for (int i=0;i<n1d;i+,s+=sm)
+      {
+        real* d = dest_image(i);
+        for (int j=0;i<n2d;j+)
+          {
+            real* s1=&s[j];
+            dj=d[j];
+            for (int k1=0;k1<n1k;k1++,s1+=sm)
+              {
+                real* k=kernel(k1);
+                for (int k2=0;k2<n2k;k2++)
+                    s1[k2] += dj * k[k2];
+              }
           }
       }
   }
