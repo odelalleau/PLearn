@@ -55,18 +55,20 @@ using namespace std;
   //! The destination signal is
   //!    dest_signal[i] = sum_{j=0}^{NK-1} source_signal[i*step+j]*kernel[j]
   void convolve1D(const Vec& source_signal, const Vec& kernel, 
-                  Vec& dest_signal, int step)
+                  Vec& dest_signal, int step=1, bool accumulate=true)
   {
     int ns=source_signal.length();
     int nk=kernel.length();
     int nd=dest_signal.length();
 #ifdef BOUNDCHECK
     if (step<1)
-      PLERROR("convolve1D: step[%d] should be a positive integer\n",step);
+      PLERROR("convolve1D: step (%d) should be a positive integer\n",step);
     if (ns!=nd*step+nk-1)
-      PLERROR("convolve1D: source_signal.length()[%d] should equal step[%d] times dest_signal.length()[%d] + kernel.length()[%d] - step\n",
-              ns,step,nd,nk);
+      PLERROR("convolve1D: source_signal.length() (%d) should equal (step (%d) * dest_signal.length() (%d) + kernel.length() (%d) - 1) (%d)\n",
+              ns,step,nd,nk,nd*step+nk-1);
 #endif
+    if (!accumulate)
+        dest_signal.clear();
     real* s=source_signal.data();
     real* k=kernel.data();
     real* d=dest_signal.data();
@@ -90,17 +92,17 @@ using namespace std;
   //! N.B. THIS IS THE SAME AS COMPUTING dC/dsource_signal (into the source_signal argument),
   //! GIVEN dC/ddest_signal, i.e. this function does part of the work done by convolve1Dbackprop.
   void backConvolve1D(const Vec& source_signal, const Vec& kernel, 
-                      Vec& dest_signal, int step, bool accumulate=true)
+                      Vec& dest_signal, int step=1, bool accumulate=true)
   {
     int ns=source_signal.length();
     int nk=kernel.length();
     int nd=dest_signal.length();
 #ifdef BOUNDCHECK
     if (step<1)
-      PLERROR("convolve1D: step[%d] should be a positive integer\n",step);
+      PLERROR("backConvolve1D: step (%d) should be a positive integer\n",step);
     if (ns!=nd*step+nk-1)
-      PLERROR("convolve1D: source_signal.length()[%d] should equal step[%d] times dest_signal.length()[%d] + kernel.length()[%d] - step\n",
-              ns,step,nd,nk);
+      PLERROR("backConvolve1D: source_signal.length() (%d) should equal (step (%d) * dest_signal.length() (%d) + kernel.length() (%d) - 1) (%d)\n",
+              ns,step,nd,nk,nd*step+nk-1);
 #endif
     if (!accumulate)
         dest_signal.clear();
@@ -123,24 +125,26 @@ using namespace std;
   //! as per convolve1D(source_signal, kernel, dest_signal):
   //!    dC/dsource_signal[k] += sum_{j=0}^{NK-1} 1_{k>=j && k-j<ND} dC_ddest_signal[k-j]*kernel[j]
   //!    dC/dkernel[j] += sum_{k=0}^{ND-1} 1_{k>=j && k-j<ND} dC_ddest_signal[k-j]*source_signal[k]
-  //! (consider the equivalence: k = i+j)
+  //! if step=1 (consider the equivalence: k = i+j)
   void convolve1Dbackprop(const Vec& source_signal, const Vec& kernel, 
                           const Vec& dC_ddest_signal, 
                           Vec& dC_dsource_signal, Vec& dC_dkernel,
-                          int step, bool accumulate=true)
+                          int step=1, bool accumulate=true)
   {
     int ns=source_signal.length();
     int nk=kernel.length();
     int nd=dC_ddest_signal.length();
 #ifdef BOUNDCHECK
-    if (nd!=ns-nk+1)
-      PLERROR("convolve1Dbackprop: source_signal.length()[%d]-kernel.length()[%d]+1 should equal dest_signal.length()[%d]\n",
-              ns,nk,nd);
+    if (step<1)
+      PLERROR("convolve1Dbackprop: step (%d) should be a positive integer\n",step);
+    if (ns!=nd*step+nk-1)
+      PLERROR("convolve1Dbackprop: source_signal.length() (%d) should equal (step (%d) * dest_signal.length() (%d) + kernel.length() (%d) - 1) (%d)\n",
+              ns,step,nd,nk,nd*step+nk-1);
     if (dC_dsource_signal.length()!=ns)
-      PLERROR("convolve1Dbackprop: source_signal.length()[%d] should equal dC_dsource_signal.length()[%d]\n",
+      PLERROR("convolve1Dbackprop: source_signal.length() (%d) should equal dC_dsource_signal.length() (%d)\n",
               ns,dC_dsource_signal.length());
     if (dC_dkernel.length()!=nk)
-      PLERROR("convolve1Dbackprop: kernel.length()[%d] should equal dC_dkernel.length()[%d]\n",
+      PLERROR("convolve1Dbackprop: kernel.length() (%d) should equal dC_dkernel.length() (%d)\n",
               nk,dC_dkernel.length());
 #endif
     if (!accumulate)
@@ -150,12 +154,12 @@ using namespace std;
     real* k=kernel.data();
     real* dCdk=dC_dkernel.data();
     real* dCdd=dC_ddest_signal.data();
-    for (int i=0;i<nd;i++,dCds++,s++)
+    for (int i=0;i<nd;i++,dCds+=step,s+=step)
       {
   //! for i=0 to nd-1:
   //!   for j=0 to nk-1:
-  //!     dC_dsource_signal[i+j] += dC_ddest_signal[i]*kernel[j]
-  //!     dC_dkernel[j] += dC_ddest_signal[i]*source_signal[i+j]
+  //!     dC_dsource_signal[i*step+j] += dC_ddest_signal[i]*kernel[j]
+  //!     dC_dkernel[j] += dC_ddest_signal[i]*source_signal[i*step+j]
         real di=dCdd[i];
         for (int j=0;j<nk;j++)
         {
@@ -168,12 +172,12 @@ using namespace std;
 
   //! Convolve a (N1S x N2S) source image with a (N1K x N2K) kernel matrix,
   //! and put result in a destination matrix of dimensions (N1D x N2D), 
-  //! stepping by (step1,step2) in each direction, with NiS = NiD*step + NiK - 1.
+  //! stepping by (step1,step2) in each direction, with NiS = NiD*stepi + NiK - 1.
   //! The destination image is
   //!    dest_image[i,j] = 
-  //!      sum_{k1=0}^{N1K-1} sum_{k2=0}^{N2K-1} source_image[i+k1,j+k2]*kernel[k1,k2]
+  //!      sum_{k1=0}^{N1K-1} sum_{k2=0}^{N2K-1} source_image[i*step1+k1,j*step2+k2]*kernel[k1,k2]
   void convolve2D(const Mat& source_image, const Mat& kernel, 
-                  Mat& dest_image, int step1, int step2, bool accumulate=true)
+                  Mat& dest_image, int step1=1, int step2=1, bool accumulate=true)
   {
     int n1s=source_image.length();
     int n2s=source_image.width();
@@ -182,29 +186,36 @@ using namespace std;
     int n1d=dest_image.length();
     int n2d=dest_image.width();
 #ifdef BOUNDCHECK
-    if (n1d!=n1s-n1k+1)
-      PLERROR("convolve2D: source_image.length()[%d]-kernel.length()[%d]+1 should equal dest_image.length()[%d]\n",
-              n1s,n1k,n1d);
-    if (n2d!=n2s-n2k+1)
-      PLERROR("convolve2D: source_image.width()[%d]-kernel.width()[%d]+1 should equal dest_image.width()[%d]\n",
-              n2s,n2k,n2d);
+    if (step1<1)
+      PLERROR("convolve2D: step1 (%d) should be a positive integer\n",step1);
+    if (n1s!=n1d*step1+n1k-1)
+      PLERROR("convolve2D: source_image.length() (%d) should equal (step1 (%d) * dest_image.length() (%d) + kernel.length() (%d) - 1) (%d)\n",
+              n1s,step1,n1d,n1k,n1d*step1+n1k-1);
+    if (step2<1)
+      PLERROR("convolve2D: step2 (%d) should be a positive integer\n",step2);
+    if (n2s!=n2d*step2+n2k-1)
+      PLERROR("convolve2D: source_image.width() (%d) should equal (step2 (%d) * dest_image.width() (%d) + kernel.width() (%d) - 1) (%d)\n",
+              n2s,step2,n2d,n2k,n2d*step2+n2k-1);
 #endif
     if (!accumulate)
         dest_image.clear();
     int sm = source_image.mod();
+    int dm = dest_image.mod();
+    int km = kernel.mod();
     real* s = source_image.data();
-    for (int i=0;i<n1d;i+,s+=sm*step1)
-      {
-        real* d = dest_image(i);
-        for (int j=0;i<n2d;j++)
+    real* d = dest_image.data();
+    for (int i=0;i<n1d;i++,s+=sm*step1,d+=dm)
+    {
+        real* s1 = s; // copy to iterate over columns
+        for (int j=0;j<n2d;j++,s1+=step2)
           {
             real somme=0;
-            real* s1=&s[j];
-            for (int k1=0;k1<n1k;k1++,s1+=sm)
+            real* k = kernel.data();
+            real* ss = s1; // copy to iterate over sub-rows
+            for (int l=0;l<n1k;l++,ss+=sm,k+=km)
               {
-                real* k=kernel(k1);
-                for (int k2=0;k2<n2k;k2++)
-                  somme += s1[k2]*k[k2];
+                for (int m=0;m<n2k;m++)
+                  somme += ss[m]*k[m];
               }
             d[j]=somme;
           }
@@ -227,7 +238,7 @@ using namespace std;
   //! (into the source_signal argument), GIVEN dC/ddest_signal, i.e. 
   //! this function does part of the work done by convolve2Dbackprop.
   void backConvolve2D(const Mat& source_image, const Mat& kernel, 
-                      Mat& dest_image, bool accumulate=true)
+                      Mat& dest_image, int step1=1, int step2=1 bool accumulate=true)
   {
     int n1s=source_image.length();
     int n2s=source_image.width();
@@ -236,27 +247,36 @@ using namespace std;
     int n1d=dest_image.length();
     int n2d=dest_image.width();
 #ifdef BOUNDCHECK
-    if (n1d!=n1s-n1k+1)
-      PLERROR("convolve2D: source_image.length()[%d]-kernel.length()[%d]+1 should equal dest_image.length()[%d]\n",
-              n1s,n1k,n1d);
-    if (n2d!=n2s-n2k+1)
-      PLERROR("convolve2D: source_image.width()[%d]-kernel.width()[%d]+1 should equal dest_image.width()[%d]\n",
-              n2s,n2k,n2d);
+    if (step1<1)
+      PLERROR("backConvolve2D: step1 (%d) should be a positive integer\n",step1);
+    if (n1s!=n1d*step1+n1k-1)
+      PLERROR("backConvolve2D: source_image.length() (%d) should equal (step1 (%d) * dest_image.length() (%d) + kernel.length() (%d) - 1) (%d)\n",
+              n1s,step1,n1d,n1k,n1d*step1+n1k-1);
+    if (step2<1)
+      PLERROR("backConvolve2D: step2 (%d) should be a positive integer\n",step2);
+    if (n2s!=n2d*step2+n2k-1)
+      PLERROR("backConvolve2D: source_image.width() (%d) should equal (step2 (%d) * dest_image.width() (%d) + kernel.width() (%d) - 1) (%d)\n",
+              n2s,step2,n2d,n2k,n2d*step2+n2k-1);
 #endif
+    if (!accumulate)
+        source_image.clear();
     int sm = source_image.mod();
+    int dm = dest_image.mod();
+    int km = kernel.mod();
     real* s = source_image.data();
-    for (int i=0;i<n1d;i+,s+=sm)
+    real* d = dest_image.data();
+    for (int i=0;i<n1d;i++,s+=sm*stap1,d+=dm)
       {
-        real* d = dest_image(i);
-        for (int j=0;i<n2d;j++)
+        real* s1 = s; // copy to iterate over columns
+        for (int j=0;j<n2d;j++,s1+=step2)
           {
-            real* s1=&s[j];
-            dj=d[j];
-            for (int k1=0;k1<n1k;k1++,s1+=sm)
+            real* k = kernel.data();
+            real* ss = s1; // copy to iterate over sub-rows
+            real d_ij=d[j];
+            for (int l=0;l<n1k;l++,s1+=sm)
               {
-                real* k=kernel(k1);
-                for (int k2=0;k2<n2k;k2++)
-                    s1[k2] += dj * k[k2];
+                for (int m=0;m<n2k;m++)
+                    ss[m] += d_ij * k[m];
               }
           }
       }
