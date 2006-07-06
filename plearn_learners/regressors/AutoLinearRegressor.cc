@@ -181,16 +181,20 @@ void AutoLinearRegressor::train()
         columnMean(Y, mean_target);
         Y -= mean_target;
 
-        weights.resize(insize, ntargets);
+        //weights.resize(insize, ntargets);
+        weights.resize(ntargets, insize);
         real best_GCV;
       
         weight_decay = ridgeRegressionByGCV(X, Y, weights, best_GCV);
 
-        Mat weights_excluding_biases = weights.subMatRows(include_bias? 1 : 0, ninputs);
+        //Mat weights_excluding_biases = weights.subMatRows(include_bias? 1 : 0, ninputs);
+        Mat weights_excluding_biases = weights.subMatColumns(include_bias? 1 : 0, ninputs);
         weights_norm = dot(weights_excluding_biases,weights_excluding_biases);
 
-        Vec trcosts(1);
+        //Vec trcosts(1);
+        Vec trcosts(2);
         trcosts[0] = best_GCV;
+        trcosts[1] = best_GCV;
         train_stats->update(trcosts);
 
         ++stage;
@@ -205,14 +209,14 @@ void AutoLinearRegressor::computeOutput(const Vec& input, Vec& output) const
     int nout = outputsize();
     output.resize(nout);
     if(!include_bias)        
-        transposeProduct(output,weights,input);
+        product(output,weights,input);
     else
     {   
         int nin = inputsize();
         extendedinput.resize(1+nin);
         extendedinput.subVec(1,nin) << input;
         extendedinput[0] = 1.0;
-        transposeProduct(output,weights,extendedinput);
+        product(output,weights,extendedinput);
     }
     output += mean_target;
 }
@@ -239,6 +243,7 @@ TVec<string> AutoLinearRegressor::getTrainCostNames() const
 {
     TVec<string> names;
     names.push_back("GCV_mse");
+    names.push_back("mse");
     return names;
 }
 

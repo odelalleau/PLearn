@@ -61,10 +61,15 @@ private:
     //! the build is complete.
     bool build_complete;
 
+
 protected:
 
     VMatLanguage program;
     IntVecFile indexes;  // indexes[i] is the
+
+    bool allow_repeat_rows;
+    string repeat_id_field_name; // 0, 1, ..., n-1; "" means no field is added
+    string repeat_count_field_name; // n; "" means no field is added
 
     //! Generates the index file if it does not already exist.
     //! If it exists and is up to date, simply opens it.
@@ -88,7 +93,10 @@ public:
 
     //! Convenience constructor.
     FilteredVMatrix(VMat the_source, const string& program_string,
-                    const PPath& the_metadatadir = "", bool the_report_progress = true);
+                    const PPath& the_metadatadir = "", bool the_report_progress = true,
+                    bool allow_repeat_rows_= false, 
+                    const string& repeat_id_field_name_= "",
+                    const string& repeat_count_field_name_= "");
 
     virtual void setMetaDataDir(const PPath& the_metadatadir);
 

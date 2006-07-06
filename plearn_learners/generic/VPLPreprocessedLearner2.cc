@@ -51,7 +51,12 @@ using namespace std;
 
 VPLPreprocessedLearner2::VPLPreprocessedLearner2() 
     :orig_inputsize(-1),
-     orig_targetsize(-1)
+     orig_targetsize(-1),
+     use_filtering_prg_for_repeat(false),
+     repeat_id_field_name(""),
+     repeat_count_field_name(""),
+     ignore_test_costs(false)
+
 {
 }
 
@@ -130,6 +135,24 @@ void VPLPreprocessedLearner2::declareOptions(OptionList& ol)
                   "original inputsize of the training set");
     declareOption(ol, "orig_targetsize", &VPLPreprocessedLearner2::orig_targetsize, OptionBase::learntoption,
                   "original targetsize of the training set");
+
+
+    declareOption(ol, "use_filtering_prg_for_repeat", &VPLPreprocessedLearner2::use_filtering_prg_for_repeat, OptionBase::buildoption,
+                  "When true, the result of the filtering program indicates the number of times a row should be repeated (0..n).\n"
+                  "(sets FilteredVMatrix::allow_repeat_rows.)");
+
+    declareOption(ol, "repeat_id_field_name", &VPLPreprocessedLearner2::repeat_id_field_name, OptionBase::buildoption,
+                  "Field name for the repetition id (0, 1, ..., n-1).  No field is added if empty.");
+
+    declareOption(ol, "repeat_count_field_name", &VPLPreprocessedLearner2::repeat_count_field_name, OptionBase::buildoption,
+                  "Field name for the number of repetitions (n).  No field is added if empty.");
+
+    declareOption(ol, "ignore_test_costs", &VPLPreprocessedLearner2::ignore_test_costs, OptionBase::buildoption,
+                  "WARNING: THIS IS AN UGLY HACK!!\n"
+                  "When set to true, computeOutputAndCosts will simply call computeOutput and return bogus costs.");
+
+
+
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -245,7 +268,7 @@ void VPLPreprocessedLearner2::initializeInputPrograms()
         input_prg_fieldnames.resize(0);
     }
 
-    if(!target_prg.empty())
+    if(!target_prg.empty() && !ignore_test_costs)
     {
         target_prg_.setSourceFieldNames(orig_fieldnames);
         target_prg_.compileString(target_prg, target_prg_fieldnames);
@@ -256,7 +279,7 @@ void VPLPreprocessedLearner2::initializeInputPrograms()
         target_prg_fieldnames.resize(0);
     }
 
-    if(!weight_prg.empty())
+    if(!weight_prg.empty() && !ignore_test_costs)
     {
         weight_prg_.setSourceFieldNames(orig_fieldnames);
         weight_prg_.compileString(weight_prg, weight_prg_fieldnames);
@@ -326,7 +349,8 @@ void VPLPreprocessedLearner2::setTrainingSet(VMat training_set, bool call_forget
     VMat filtered_trainset = training_set;
     PPath filtered_trainset_metadatadir = getExperimentDirectory() / "filtered_train_set.metadata";
     if(!filtering_prg.empty())
-        filtered_trainset = new FilteredVMatrix(training_set, filtering_prg, filtered_trainset_metadatadir, verbosity>1);
+        filtered_trainset = new FilteredVMatrix(training_set, filtering_prg, filtered_trainset_metadatadir, verbosity>1,
+                                                use_filtering_prg_for_repeat, repeat_id_field_name, repeat_count_field_name);
 
     VMat processed_trainset = new ProcessingVMatrix(filtered_trainset, input_prg, target_prg, weight_prg, extra_prg);
     learner_->setTrainingSet(processed_trainset, false);
@@ -339,14 +363,16 @@ void VPLPreprocessedLearner2::setTrainingSet(VMat training_set, bool call_forget
 void VPLPreprocessedLearner2::test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs, VMat testcosts) const
 {
 
+    inherited::test(testset, test_stats, testoutputs, testcosts);
 
+/*
     VMat filtered_testset = testset;
     PPath filtered_testset_metadatadir = getExperimentDirectory() / "filtered_test_set.metadata";
-/*
+
     // DO NOT FILTER THE TESTSET
-    if(!filtering_prg.empty())
-        filtered_testset = new FilteredVMatrix(testset, filtering_prg, filtered_testset_metadatadir, verbosity>1);
-*/
+    //if(!filtering_prg.empty())
+        //filtered_testset = new FilteredVMatrix(testset, filtering_prg, filtered_testset_metadatadir, verbosity>1);
+
     VMat processed_testset = new ProcessingVMatrix(filtered_testset, input_prg, target_prg, weight_prg, extra_prg);
 
     int l = processed_testset.length();
@@ -416,7 +442,7 @@ void VPLPreprocessedLearner2::test(VMat testset, PP<VecStatsCollector> test_stat
 
     if(pb)
         delete pb;
-
+*/
 }
 
 
@@ -449,6 +475,12 @@ void VPLPreprocessedLearner2::computeOutputAndCosts(const Vec& input, const Vec&
 { 
     output.resize(outputsize());
     costs.resize(nTestCosts());
+
+    if(ignore_test_costs)
+    {
+        costs.fill(-1);
+        return computeOutput(input, output);
+    }
 
     assert( learner_ );
     int ilen = input.length();

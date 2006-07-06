@@ -1121,7 +1121,7 @@ class FileInfo:
                 appendunique(optlibs, self.triggered_libraries)
                 for include in self.includes_from_sourcedirs:
                     # print 'lookin up include', include.filebase+include.fileext
-                    include.collect_optional_libraries(optlibs, visited_files)        
+                    include.collect_optional_libraries(optlibs, visited_files)
 
     def get_optional_libraries(self):
         """returns the list of all OptionalLibrary that this file triggers directly or indirectly"""

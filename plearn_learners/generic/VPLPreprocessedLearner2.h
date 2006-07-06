@@ -84,6 +84,11 @@ protected:
     TVec<string> orig_fieldnames; // fieldnames of training set
     int orig_inputsize; // inputsize of training set
     int orig_targetsize; // targetsize of training set
+
+    bool use_filtering_prg_for_repeat;
+    string repeat_id_field_name; // 0, 1, ..., n-1; "" means no field is added
+    string repeat_count_field_name; // n; "" means no field is added
+    bool ignore_test_costs;
     
 public:
 

@@ -50,15 +50,26 @@ using namespace std;
 FilteredVMatrix::FilteredVMatrix()
     : inherited(),
       build_complete(false),
+      allow_repeat_rows(false),
+      repeat_id_field_name(""),
+      repeat_count_field_name(""),
       report_progress(true)
 {
 }
 
 FilteredVMatrix::FilteredVMatrix( VMat the_source, const string& program_string,
-                                  const PPath& the_metadatadir, bool the_report_progress)
+                                  const PPath& the_metadatadir, bool the_report_progress,
+                                  bool allow_repeat_rows_, 
+                                  const string& repeat_id_field_name_,
+                                  const string& repeat_count_field_name_)
+
     : SourceVMatrix(the_source),
+      allow_repeat_rows(allow_repeat_rows_),
+      repeat_id_field_name(repeat_id_field_name_),
+      repeat_count_field_name(repeat_count_field_name_),
       report_progress(the_report_progress),
       prg(program_string)
+
 {
     metadatadir = the_metadatadir;
     build_();
@@ -77,6 +88,7 @@ void FilteredVMatrix::openIndex()
     if(!force_mkdir(getMetaDataDir()))
         PLERROR("In FilteredVMatrix::openIndex could not create directory %s",getMetaDataDir().absolute().c_str());
 
+
     if(isfile(idxfname) && mtime(idxfname)>=getMtime())
         indexes.open(idxfname);
     else  // let's (re)create the index
@@ -93,8 +105,15 @@ void FilteredVMatrix::openIndex()
             if (report_progress)
                 pb->update(i);
             program.run(i,result);
-            if(!fast_exact_is_equal(result[0], 0))
-                indexes.append(i);
+            if(!allow_repeat_rows)
+            {
+                if(!fast_exact_is_equal(result[0], 0))
+                    indexes.append(i);
+            }
+            else
+                for(real x= result[0]; x > 0; --x)
+                    indexes.append(i);
+
         }
         if (pb)
             delete pb;
@@ -122,7 +141,31 @@ void FilteredVMatrix::getNewRow(int i, const Vec& v) const
 {
     if (indexes.length() == -1)
         PLERROR("In FilteredVMatrix::getNewRow - The filtered indexes are not set, make sure you provided a metadatadir");
-    source->getRow(indexes[i],v);
+
+    int j= source->width();
+
+    source->getRow(indexes[i],v.subVec(0, j));
+
+    if("" != repeat_id_field_name)
+    {
+        int k= 1;
+        while(k <= i && indexes[i]==indexes[i-k])
+            ++k;
+        v[j++]= static_cast<real>(k-1);
+    }
+
+    if("" != repeat_count_field_name)
+    {
+        int k0= 1;
+        while(k0 <= i && indexes[i]==indexes[i-k0])
+            ++k0;
+        --k0;
+        int k1= 1;
+        while(k1+i < length() && indexes[i]==indexes[i+k1])
+            ++k1;
+        v[j++]= static_cast<real>(k0+k1);
+    }
+
 }
 
 void FilteredVMatrix::declareOptions(OptionList& ol)
@@ -133,6 +176,16 @@ void FilteredVMatrix::declareOptions(OptionList& ol)
 
     declareOption(ol, "report_progress", &FilteredVMatrix::report_progress, OptionBase::buildoption,
                   "Whether to report the filtering progress or not.");
+
+    declareOption(ol, "allow_repeat_rows", &FilteredVMatrix::allow_repeat_rows, OptionBase::buildoption,
+                  "When true, the result of the program indicates the number of times this row should be repeated.\n"
+                  "Simple filtering when false.");
+
+    declareOption(ol, "repeat_id_field_name", &FilteredVMatrix::repeat_id_field_name, OptionBase::buildoption,
+                  "Field name for the repetition id (0, 1, ..., n-1).  No field is added if empty.");
+
+    declareOption(ol, "repeat_count_field_name", &FilteredVMatrix::repeat_count_field_name, OptionBase::buildoption,
+                  "Field name for the number of repetitions (n).  No field is added if empty.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -150,8 +203,29 @@ void FilteredVMatrix::build_()
         else
             // Ensure we do not retain a previous value for length and width.
             length_ = width_ = -1;
+
+        Array<VMField> finfos= source->getFieldInfos().copy();
+            
+        if("" != repeat_id_field_name)
+        {
+            finfos.append(VMField(repeat_id_field_name));
+            if(0 < width_)
+                ++width_;
+        }
+
+        if("" != repeat_count_field_name)
+        {
+            finfos.append(VMField(repeat_count_field_name));
+            if(0 < width_)
+                ++width_;
+        }
+
+        setFieldInfos(finfos);
+
     } else
         length_ = width_ = 0;
+
+
 }
 
 // ### Nothing to add here, simply calls build_
