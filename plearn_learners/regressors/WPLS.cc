@@ -356,7 +356,10 @@ int WPLS::outputsize() const
     return os;
 }
 
-void computeWeightedInputMeanAndStddev(const VMat& d, Vec& means, Vec& stddev)
+// Unbiased estimators of mean and variance are (all sums taken over index i)
+// xbar = [ sum(wi*xi) ] / [ sum(wi) ]
+// var  = [ sum(wi*xi*xi) - xbar * xbar * sum(wi) ] / [ sum(wi)  - sum(wi*wi) / sum(wi) ] 
+void computeWeightedInputOutputMeansAndStddev(const VMat& d, Vec& means, Vec& stddev)
 {
     assert( d->inputsize() >= 0 );
     int n = d->length();
@@ -366,29 +369,30 @@ void computeWeightedInputMeanAndStddev(const VMat& d, Vec& means, Vec& stddev)
     stddev.resize(p+m);
     Vec input(p+m), target(p+m);
     real weight;
-    real sum_weight;
-    Vec sum_data(p+m), sum_data2(p+m);
-    sum_data.fill(0.0);
-    sum_data2.fill(0.0);
+    real sum_wi, sum_wi2;
+    Vec sum_wixi(p+m), sum_wixi2(p+m);
+    sum_wixi.fill(0.0);
+    sum_wixi2.fill(0.0);
     for (int i = 0; i < n; i++) {
         d->getExample(i, input, target, weight);
-        sum_weight += weight;
+        sum_wi += weight;
+        sum_wi2 += weight * weight;
         for (int j = 0; j<p; j++) {  
-            sum_data[j]  += weight*input[j];
-            sum_data2[j] += weight*input[j]*input[j];
+            sum_wixi[j]  += weight*input[j];
+            sum_wixi2[j] += weight*input[j]*input[j];
         }
         for (int j = 0; j<m; j++) {  
-            sum_data[p+j]  += weight*target[j];
-            sum_data2[p+j] += weight*target[j]*target[j];
+            sum_wixi[p+j]  += weight*target[j];
+            sum_wixi2[p+j] += weight*target[j]*target[j];
         }
     }
-
-    real adjust = sqrt(sum_weight/(sum_weight-1));
-    real mj;
+  
+    real adjust = sqrt( sum_wi - sum_wi2 /sum_wi );
+    real xbar;
     for (int j = 0; j<p+m; j++) {
-        mj = sum_data[j]/sum_weight;
-        means[j] = mj; 
-        stddev[j] = sqrt(sum_data2[j]/sum_weight - mj*mj) * adjust;
+        xbar = sum_wixi[j]/sum_wi;
+        means[j] = m; 
+        stddev[j] = sqrt(sum_wixi2[j] - xbar * xbar * sum_wi) / adjust;
     }
 }
 
@@ -425,7 +429,7 @@ void WPLS::train()
     VMat d = new SubVMatrix(train_set,0,0,train_set->length(), train_set->width());
     d->defineSizes(train_set->inputsize() + train_set->targetsize(), 0, train_set->weightsize(), 0);
     Vec means, stddev;
-    computeWeightedInputMeanAndStddev(d, means, stddev);
+    computeWeightedInputOutputMeansAndStddev(d, means, stddev);
     if (verbosity >= 2) {
         cout << "means = " << means;
         cout << "stddev = " << stddev;
