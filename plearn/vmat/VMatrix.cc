@@ -1150,7 +1150,8 @@ TVec<StatsCollector> VMatrix::getStats() const
 {
     if(!field_stats)
     {
-        PPath statsfile = getMetaDataDir() / "stats.psave";
+        PPath metadatadir = getMetaDataDir();
+        PPath statsfile =  metadatadir / "stats.psave";
         if (isfile(statsfile) && getMtime()<mtime(statsfile))
         {
             if(getMtime()==0)
@@ -1161,7 +1162,8 @@ TVec<StatsCollector> VMatrix::getStats() const
         {
             VMat vm = const_cast<VMatrix*>(this);
             field_stats = PLearn::computeStats(vm, 2000);
-            PLearn::save(statsfile, field_stats);
+            if(metadatadir!="")
+                PLearn::save(statsfile, field_stats);
         }
     }
     return field_stats;
