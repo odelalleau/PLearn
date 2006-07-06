@@ -148,7 +148,7 @@ void convolve1Dbackprop(const Vec& source_signal, const Vec& kernel,
     if (ns!=nd*step+nk-1)
         PLERROR("convolve1Dbackprop: source_signal.length() (%d) should"
                 " equal:\n"
-                "(step (%d) * dest_signal.length() (%d) + kernel.length() (%d)"
+                "(step (%d) * dC_ddest_signal.length() (%d) + kernel.length() (%d)"
                 " - 1) (%d)\n",
                 ns,step,nd,nk,nd*step+nk-1);
     if (dC_dsource_signal.length()!=ns)
@@ -335,10 +335,10 @@ void convolve2Dbackprop(const Mat& source_image, const Mat& kernel,
     int n2d=dC_ddest_image.width();
 #ifdef BOUNDCHECK
     if (step1<1)
-        PLERROR("backConvolve2D: step1 (%d) should be a positive integer\n",
+        PLERROR("convolve2Dbackprop: step1 (%d) should be a positive integer\n",
                 step1);
     if (n1s!=n1d*step1+n1k-1)
-        PLERROR("backConvolve2D: source_image.length() (%d) should equal:\n"
+        PLERROR("convolve2Dbackprop: dC_dsource_image.length() (%d) should equal:\n"
                 "(step1 (%d) * dest_image.length() (%d) + kernel.length() (%d)"
                 " - 1) (%d)\n",
                 n1s,step1,n1d,n1k,n1d*step1+n1k-1);
@@ -352,10 +352,10 @@ void convolve2Dbackprop(const Mat& source_image, const Mat& kernel,
                 " dC_dkernel.length() (%d)\n",
                 n1k,dC_dkernel.length());
     if (step2<1)
-        PLERROR("backConvolve2D: step2 (%d) should be a positive integer\n",
+        PLERROR("convolve2Dbackprop: step2 (%d) should be a positive integer\n",
                 step2);
     if (n2s!=n2d*step2+n2k-1)
-        PLERROR("backConvolve2D: source_image.width() (%d) should equal:\n"
+        PLERROR("convolve2Dbackprop: dC_dsource_image.width() (%d) should equal:\n"
                 "(step2 (%d) * dest_image.width() (%d) + kernel.width() (%d)"
                 " - 1) (%d)\n",
                 n2s,step2,n2d,n2k,n2d*step2+n2k-1);
