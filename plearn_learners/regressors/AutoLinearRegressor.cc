@@ -53,6 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(
 
 AutoLinearRegressor::AutoLinearRegressor()
     : include_bias(false),
+      min_weight_decay(1e-6),
       weight_decay(0.0)
 {
 }
@@ -77,6 +78,11 @@ void AutoLinearRegressor::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Whether to include a bias term in the regression \n"
                   "Note: this is currently ignored.\n");
+
+    declareOption(ol, "min_weight_decay", &AutoLinearRegressor::min_weight_decay,
+                  OptionBase::buildoption, 
+                  "The minimum weight decay to try.");
+
 
     declareOption(ol, "weight_decay", &AutoLinearRegressor::weight_decay,
                   OptionBase::learntoption, 
@@ -170,12 +176,24 @@ void AutoLinearRegressor::train()
         // extended inputs
         int insize = ninputs; 
 
-        if(nweights!=0)
-            PLERROR("In AutoLinearRegressor, sample weights not yet supported");
 
-        Mat tset = train_set->toMat();
+        Mat tset = train_set->toMat().copy();
+        int l = tset.length();
         Mat X = tset.subMatColumns(0,ninputs);
         Mat Y = tset.subMatColumns(ninputs, ntargets);
+
+        if(nweights!=0)
+        {
+            int wpos = ninputs+ntargets;
+            for(int i=0; i<l; i++)
+            {
+                real sw = sqrt(tset(i,wpos));
+                X(i) *= sw;
+                Y(i) *= sw;
+            }
+        }
+            PLERROR("In AutoLinearRegressor, sample weights not yet supported");
+
 
         mean_target.resize(ntargets);
         columnMean(Y, mean_target);
@@ -185,7 +203,7 @@ void AutoLinearRegressor::train()
         weights.resize(ntargets, insize);
         real best_GCV;
       
-        weight_decay = ridgeRegressionByGCV(X, Y, weights, best_GCV);
+        weight_decay = ridgeRegressionByGCV(X, Y, weights, best_GCV, false, -1, 5, min_weight_decay);
 
         //Mat weights_excluding_biases = weights.subMatRows(include_bias? 1 : 0, ninputs);
         Mat weights_excluding_biases = weights.subMatColumns(include_bias? 1 : 0, ninputs);

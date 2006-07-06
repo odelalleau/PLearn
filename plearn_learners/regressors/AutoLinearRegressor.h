@@ -65,6 +65,8 @@ public:
     //! Start your comments with Doxygen-compatible comments such as //!
     //! Whether to include a bias term in the regression (true by default)
     bool include_bias;
+
+    real min_weight_decay;
   
     real weight_decay;
 
