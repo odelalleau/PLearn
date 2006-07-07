@@ -196,13 +196,6 @@ void WPLS::build_()
         this->m = train_set->targetsize();
         this->p = train_set->inputsize();
         this->w = train_set->weightsize();
-//        mean_input.resize(p);
-//        stddev_input.resize(p);
-//        mean_target.resize(m);
-//        stddev_target.resize(m);
-        if (train_set->weightsize() > 0) {
-            PLWARNING("In WPLS::build_ - The train set has weights, but the optimization algorithm won't use them");
-        }
         // Check method consistency.
         if (method == "wpls1") {
             // Make sure the target is 1-dimensional.
@@ -210,7 +203,7 @@ void WPLS::build_()
                 PLERROR("In WPLS::build_ - With the 'wpls1' method, target should be 1-dimensional");
             }
         } else if (method == "kernel") {
-            // Everything should be ok.
+            PLERROR("In WPLS::build_ - option 'method=kernel' not implemented yet");
         } else {
             PLERROR("In WPLS::build_ - Unknown value for option 'method'");
         }
@@ -496,7 +489,7 @@ void WPLS::train()
     Mat Q(m, k);
     
     if (method == "kernel") {
-        PLERROR("Method kernel is not yet implemented");       
+        PLERROR("You shouldn't be here... !?");       
     } else if (method == "wpls1") {
         Vec s(n);
         Vec old_s(n);
