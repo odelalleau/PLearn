@@ -45,6 +45,7 @@
 #include <plearn/vmat/ShiftAndRescaleVMatrix.h>
 #include <plearn/vmat/SubVMatrix.h>
 #include <plearn/math/TMat_maths.h>    //!< For dist.
+#include <plearn/math/pl_math.h>       // !< for isnan
 #include <plearn/vmat/VMat_linalg.h>
 
 namespace PLearn {
@@ -383,9 +384,11 @@ void computeWeightedInputOutputMeansAndStddev(const VMat& d, Vec& means, Vec& st
     real adjust = sqrt( sum_wi - sum_wi2 /sum_wi );
     real xbar;
     for (int j = 0; j<p+m; j++) {
-        xbar = sum_wixi[j]/sum_wi;
-        means[j] = m; 
+        xbar      = sum_wixi[j]/sum_wi;
+        means[j]  = xbar; 
         stddev[j] = sqrt(sum_wixi2[j] - xbar * xbar * sum_wi) / adjust;
+        if (stddev[j] < 1e-10)
+            stddev[j] = 1.0;
     }
 }
 
@@ -420,12 +423,12 @@ void WPLS::train()
     int n    = train_set->length();
     int wlen = train_set->weightsize();
     VMat d = new SubVMatrix(train_set,0,0,train_set->length(), train_set->width());
-    d->defineSizes(train_set->inputsize() + train_set->targetsize(), 0, train_set->weightsize(), 0);
+    d->defineSizes(train_set->inputsize(), train_set->targetsize(), train_set->weightsize(), 0);
     Vec means, stddev;
     computeWeightedInputOutputMeansAndStddev(d, means, stddev);
     if (verbosity >= 2) {
-        cout << "means = " << means;
-        cout << "stddev = " << stddev;
+        cout << "means = " << means << endl;
+        cout << "stddev = " << stddev << endl;
     }
     normalize(d, means, stddev);
     mean_input  = means.subVec(0, p);
@@ -505,25 +508,27 @@ void WPLS::train()
         bool finished;
         real dold;
         for (int h = 0; h < k; h++) {
-            if (verbosity >= 2)
+            if (verbosity >= 1)
                 cout << "h=" << h << endl;
             s << Y;
             normalize(s, 2.0);  
             finished = false;
+            int count = 0;
             while (!finished) {
+                count++;
                 old_s << s;
                 transposeProduct(lx, X, s);
                 product(s, X, lx);
                 normalize(s, 2.0);
-                dold = 0.0;
-                for (int i=0; i<n; i++)
-                    dold += square(old_s[i] - s[i]);
-                dold = sqrt(dold);
+                dold = norm(old_s -s);
                 if (dold < precision)
                     finished = true;
-                else
+                else {
                     if (verbosity >= 2)
                         cout << "dold = " << dold << endl;
+                    if (count%100==0 && verbosity>=1)
+                        cout << "loop counts = " << count << endl;
+                }
             }
             transposeProduct(lx, X, s);
             ly[0] = dot(s, Y);
