@@ -61,7 +61,7 @@ tuple<Vec, real>
 ObservationWindow::update(const Vec& obs, real weight/*=1.0*/)
 {
     Vec outdated;
-    real outdated_weight;
+    real outdated_weight = 0.0;
     
     m_nobs++;        
     m_observations.resize(MIN(m_nobs,m_window), obs.size());
@@ -79,7 +79,8 @@ ObservationWindow::update(const Vec& obs, real weight/*=1.0*/)
     m_cursor++;        
     
     assert( m_nobs <= m_window );
-    return tuple<Vec, real>(outdated, outdated_weight);
+    m_last_update_rvalue = tuple<Vec, real>(outdated, outdated_weight);
+    return m_last_update_rvalue;
 }
 
 const Vec ObservationWindow::getObs(int t) const

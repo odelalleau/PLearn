@@ -56,11 +56,15 @@ public:
     int m_cursor;
     Mat m_observations;
     Vec m_obs_weights;    
+
+    tuple<Vec, real> m_last_update_rvalue;
     
     ObservationWindow(int window=-1);
 
     //! Returns the current length (not m_window!).
-    int length() const;
+    int  length () const;
+    bool isEmpty() const { return length() == 0; }
+    bool isFull () const { return length() == m_window; }
     
     void forget();
     tuple<Vec, real> update(const Vec& obs, real weight=1.0);
