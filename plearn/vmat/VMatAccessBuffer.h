@@ -51,7 +51,7 @@ namespace PLearn {
 class VMatAccessBuffer: public PPointable
 {
 public:
-    VMatAccessBuffer(VMat source, int max_size=50);
+    VMatAccessBuffer(VMat source, int max_size=250);
     void getRow(int row, const Vec& rowbuf);
     void lookAhead(int row, const Vec& rowbuf);
 
