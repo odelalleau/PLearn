@@ -238,6 +238,7 @@ if domain_name.endswith('iro.umontreal.ca'):
         linkeroptions_tail += '-L/cygdrive/r/python2.4_mingw'
         numpy_site_packages = join(homedir, \
               'local/lib/python2.4/site-packages/numarray')
+        numpy_includedirs = []
     else:
         numpy_includedirs   = [ '/u/lisa/local/' + platform + '/include/' ]
         ### Python needs the 32 bits include directories when compiling in 32 bits
