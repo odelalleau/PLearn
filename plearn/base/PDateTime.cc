@@ -190,7 +190,7 @@ int delta_seconds(const PDateTime& current, const PDateTime& past)
     double jpast      = past.toJulianDay();
     double delta_days = jcurrent - jpast;
 
-    return int( delta_days * SECONDS_PER_DAY );
+    return int( round(delta_days*SECONDS_PER_DAY) ); 
 }
 
 } // end of namespace PLearn
