@@ -382,23 +382,6 @@ You may now run Cygwin and launch the Boost installation:
 \verb! -sPYTHON_VERSION=2.4 --builddir=/tmp/boost_build install!
 \end{enumerate}
 
-NO CYGWIN:
-\begin{verbatim}
-feynman ~/tmp/boost_1_33_1 > ../boost-jam-3.1.11/bin.cygwinx86/bjam.exe -sTOOLS=gcc-nocygwin --prefix=$HOME/local -sPYTHON_ROOT=R:\\python2.4_mingw -sPYTHON_VERSION=2.4 -sPYTHON_LIB_PATH=/cygdrive/r/python2.4_mingw --builddir=/tmp/boost_build_nocygwin install
-\end{verbatim}
-
-WARNING! It deletes the old libraries that were compiled with cygwin! => you cannot 'easily' have both.
-NOTE: need to keep old Cygwin Python so that python scripts (e.g. pymake) work.
-LAPACK INSTALL (SUX)
-UNINSTALL LAPACK + .cshrc (+ autres?)
-PDCURSES... FAUT EDITER LE pymake.config.model A LA MAIN POUR SWITCH PDCURSES / NCURSES (BEURK)
-NE PAS OUBLIER DE COMPILER PDCURSES AVEC -mno-cygwin (a rajouter a deux endroits!)
-
-UGLY!
-\begin{verbatim}
-/cygdrive/r/python2.4_mingw/include
-\end{verbatim}
-
 The installation command above will install Boost in the \verb!local! directory
 under your home directory: you may remove the \verb!--prefix! option to perform
 a system-wide installation (however, installing under your home directory is often
@@ -507,34 +490,6 @@ Go to \verb!$PLEARNDIR! and launch \verb!pytest run --all!.
 Note that, typically, the test-suite first compiles \verb!$PLEARNDIR/commands/plearn_tests!,
 and thus may look like it is stalled, while it is actually compiling or linking
 in the background.
-
-\subsection{Installation with MinGW}
-
-- MSys MSYS-1.0.10.exe from http://www.mingw.org/ then Download
-- msys.bat:
-\begin{verbatim}
-@set PATH=R:\msys\bin
-@set HOME=R:\msys\home
-\end{verbatim}
-- uncompress mingw-runtime-3.9.tar.gz
-- uncompress gcc-core-3.4.2-20040916-1.tar.gz
-- uncompress gcc-g++-3.4.2-20040916-1.tar.gz
-- uncompress binutils-2.15.91-20040904-1.tar.gz
-- uncompress w32api-3.5
-- rajouter /etc/fstab contenant R:/mingw /mingw
-- download de python-2.4.2.msi pour installation Python
-- download de http://starship.python.net/crew/kernr/mingw32/pexports-0.42h.zip
-=> pexports.exe dans /r/mingw/bin
-
-
-
-- NO : Subversion : svn-win32-1.2.3.zip from http://subversion.tigris.org/servlets/ProjectDocumentList?folderID=91
-- subversion-1.1.4.tar.gz from http://subversion.tigris.org/servlets/ProjectDocumentList?folderID=260\&expandFolder=74
-tar zxvf subversion-1.1.4.tar.gz
-cd subversion-1.1.4
-./configure
-=> IMPOSSIBLE DE FAIRE FONCTIONNER SVN SOUS MINGW !!
-=> UTILISER CYGWIN ?...
 
 \chapter{Overview of the directory structure}
 
