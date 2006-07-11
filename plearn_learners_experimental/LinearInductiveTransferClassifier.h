@@ -83,6 +83,12 @@ public:
     bool dont_consider_train_targets;
     //! Indication that a bias should be used for weights prediction
     bool use_bias_in_weights_prediction;
+    //! Indication that the classifier works with multiple targets,
+    //! possibly ON simulatneously
+    bool multi_target_classifier;
+    //! Minimum variance for all coordinates, which is added
+    //! to the maximum likelihood estimates.
+    real sigma_min;
 
 public:
     //#####  Public Member Functions  #########################################

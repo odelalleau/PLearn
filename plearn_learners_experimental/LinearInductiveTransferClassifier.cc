@@ -48,10 +48,14 @@
 #include <plearn/var/AffineTransformWeightPenalty.h>
 #include <plearn/var/ClassificationLossVariable.h>
 #include <plearn/var/ConcatColumnsVariable.h>
+#include <plearn/var/ColumnSumVariable.h>
 #include <plearn/var/ConcatRowsVariable.h>
 #include <plearn/var/CrossEntropyVariable.h>
+#include <plearn/var/DuplicateRowVariable.h>
+#include <plearn/var/DivVariable.h>
 #include <plearn/var/ExpVariable.h>
 //#include <plearn/var/LogSoftmaxVariable.h>
+#include <plearn/var/LiftOutputVariable.h>
 #include <plearn/var/MulticlassLossVariable.h>
 #include <plearn/var/NegCrossEntropySigmoidVariable.h>
 #include <plearn/var/OneHotVariable.h>
@@ -90,7 +94,9 @@ LinearInductiveTransferClassifier::LinearInductiveTransferClassifier()
       initialization_method("uniform_linear"), 
       model_type("discriminative"),
       dont_consider_train_targets(false),
-      use_bias_in_weights_prediction(false)
+      use_bias_in_weights_prediction(false),
+      multi_target_classifier(false),
+      sigma_min(1e-5)
 {
     random_gen = new PRandom();
 }
@@ -132,6 +138,12 @@ void LinearInductiveTransferClassifier::declareOptions(OptionList& ol)
                   "should not be considered when tagging a new set\n");
     declareOption(ol, "use_bias_in_weights_prediction", &LinearInductiveTransferClassifier::use_bias_in_weights_prediction, OptionBase::buildoption, 
                   "Indication that a bias should be used for weights prediction\n");
+    declareOption(ol, "multi_target_classifier", &LinearInductiveTransferClassifier::multi_target_classifier, OptionBase::buildoption, 
+                  "Indication that the classifier works with multiple targets,\n"
+                  "possibly ON simulatneously.\n");
+    declareOption(ol, "sigma_min", &LinearInductiveTransferClassifier::sigma_min, OptionBase::buildoption, 
+                  "Minimum variance for all coordinates, which is added\n"
+                  "to the maximum likelihood estimates.\n");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -151,7 +163,7 @@ void LinearInductiveTransferClassifier::build_()
         if (seed_ != 0) random_gen->manual_seed(seed_);//random_gen->manual_seed(seed_);
 
         input = Var(inputsize(), "input");
-        target = Var(1,"target");
+        target = Var(targetsize(),"target");
         if(class_reps.size()<=0) 
             PLERROR("LinearInductiveTransferClassifier::build_(): class_reps is empty");
         noutputs = class_reps.length();
@@ -179,7 +191,8 @@ void LinearInductiveTransferClassifier::build_()
         }
 
         A = Var(inputsize_,class_reps_to_use.width());
-        fillWeights(A,false);        
+        //fillWeights(A,false);        
+        A->value.fill(0);
         s = Var(1,inputsize_,"sigma_square");
         s->value.fill(1);
         params.push_back(A);
@@ -188,34 +201,43 @@ void LinearInductiveTransferClassifier::build_()
         class_reps_var = new SourceVariable(class_reps_to_use);
         Var weights = productTranspose(A,class_reps_var);
         if(model_type == "discriminative" || model_type == "discriminative_1_vs_all")
-            weights =vconcat(product(exp(s),square(weights)) & weights); // Making sure that this value is going to be positive
+            weights =vconcat(-product(exp(s),square(weights)) & weights); // Making sure that this value is going to be positive
         else
-            weights =vconcat(product(s,square(weights)) & weights);
+            weights =vconcat(-columnSum(square(weights)/transpose(duplicateRow(s,noutputs))) & 2*weights/transpose(duplicateRow(s,noutputs)));
         output = affine_transform(input, weights);
 
         Var sup_output;
         Var new_output;
 
         TVec<bool> class_tags(noutputs);
-        Vec row(train_set.width());
-        int target_class;
-        class_tags.fill(0);
-        for(int i=0; i<train_set.length(); i++)
+        if(targetsize() == 1)
         {
-            train_set->getRow(i,row);
-            target_class = (int) row[train_set->inputsize()];
-            class_tags[target_class] = 1;
+            Vec row(train_set.width());
+            int target_class;
+            class_tags.fill(0);
+            for(int i=0; i<train_set.length(); i++)
+            {
+                train_set->getRow(i,row);
+                target_class = (int) row[train_set->inputsize()];
+                class_tags[target_class] = 1;
+            }
+            
+            seen_targets.resize(0);
+            unseen_targets.resize(0);
+            for(int i=0; i<class_tags.length(); i++)
+                if(class_tags[i])
+                    seen_targets.push_back(i);
+                else
+                    unseen_targets.push_back(i);
         }
         
-        seen_targets.resize(0);
-        unseen_targets.resize(0);
-        for(int i=0; i<class_tags.length(); i++)
-            if(class_tags[i])
-                seen_targets.push_back(i);
-            else
-                unseen_targets.push_back(i);
+        if(targetsize() != 1 && !multi_target_classifier)
+            PLERROR("In LinearInductiveTransferClassifier::build_(): when targetsize() != 1, multi_target_classifier should be true.");
+        if(targetsize() == 1 && multi_target_classifier)
+            PLERROR("In LinearInductiveTransferClassifier::build_(): when targetsize() == 1, multi_target_classifier should be false.");
         
-        if(seen_targets.length() != class_tags.length())
+
+        if(targetsize() == 1 && seen_targets.length() != class_tags.length())
         {
             sup_output = new VarRowsVariable(output,new SourceVariable(seen_targets));
             if(dont_consider_train_targets)
@@ -258,10 +280,12 @@ void LinearInductiveTransferClassifier::build_()
         // Build costs
         if(model_type == "discriminative" || model_type == "discriminative_1_vs_all")
         {
-            costs.resize(2);
-            new_costs.resize(2);
             if(model_type == "discriminative")
             {
+                if(targetsize() != 1)
+                    PLERROR("In LinearInductiveTransferClassifier::build_(): can't use discriminative model with targetsize() != 1");
+                costs.resize(2);
+                new_costs.resize(2);
                 sup_output = softmax(sup_output);
                 costs[0] = neg_log_pi(sup_output,sup_target);
                 costs[1] = classification_loss(sup_output, sup_target);
@@ -271,22 +295,52 @@ void LinearInductiveTransferClassifier::build_()
             }
             if(model_type == "discriminative_1_vs_all")
             {
-                
-                costs[0] = stable_cross_entropy(sup_output, onehot(seen_targets.length(),sup_target));
-                costs[1] = classification_loss(sigmoid(sup_output), sup_target);
-                if(dont_consider_train_targets)
-                    new_costs[0] = stable_cross_entropy(new_output, onehot(unseen_targets.length(),new_target));
+                costs.resize(2);
+                new_costs.resize(2);
+                if(targetsize() == 1)
+                {
+                    costs[0] = stable_cross_entropy(sup_output, onehot(seen_targets.length(),sup_target));
+                    costs[1] = classification_loss(sigmoid(sup_output), sup_target);
+                }
                 else
-                    new_costs[0] = stable_cross_entropy(new_output, onehot(noutputs,new_target));
-                new_costs[1] = classification_loss(sigmoid(new_output), new_target);
+                {
+                    costs[0] = stable_cross_entropy(sup_output, sup_target, true);
+                    costs[1] = transpose(lift_output(sigmoid(sup_output), sup_target));
+                }
+                if(targetsize() == 1)
+                {
+                    if(dont_consider_train_targets)
+                        new_costs[0] = stable_cross_entropy(new_output, onehot(unseen_targets.length(),new_target));
+                    else
+                        new_costs[0] = stable_cross_entropy(new_output, onehot(noutputs,new_target));
+                    new_costs[1] = classification_loss(sigmoid(new_output), new_target);
+                }
+                else
+                {
+                    new_costs.resize(costs.length());
+                    for(int i=0; i<new_costs.length(); i++)
+                        new_costs[i] = costs[i];
+                }
             }
         }
         else if(model_type == "generative")
         {
             costs.resize(1);
-            costs[0] = classification_loss(sup_output, sup_target);
-            new_costs.resize(1);
-            new_costs[0] = classification_loss(new_output, new_target);
+            if(targetsize() == 1)
+                costs[0] = classification_loss(sup_output, sup_target);
+            else
+                costs[0] = transpose(lift_output(sigmoid(sup_output), sup_target));
+            if(targetsize() == 1)
+            {
+                new_costs.resize(1);
+                new_costs[0] = classification_loss(new_output, new_target);
+            }
+            else
+            {
+                new_costs.resize(costs.length());
+                for(int i=0; i<new_costs.length(); i++)
+                    new_costs[i] = costs[i];
+            }
         }
         else PLERROR("LinearInductiveTransferClassifier::build_(): model_type \"%s\" invalid",model_type.c_str());
 
@@ -482,17 +536,38 @@ void LinearInductiveTransferClassifier::train()
         for(int i=0; i<train_set->length(); i++)
         {
             train_set->getExample(i,input,target,weight);
-            if(weightsize()>0)
+            if(targetsize() == 1)
             {
-                externalProductScaleAcc(ww,class_reps_var->matValue((int)target[0]),class_reps_var->matValue((int)target[0]),weight);
-                externalProductScaleAcc(xw,input,class_reps_var->matValue((int)target[0]),weight);
+                if(weightsize()>0)
+                {
+                    externalProductScaleAcc(ww,class_reps_var->matValue((int)target[0]),class_reps_var->matValue((int)target[0]),weight);
+                    externalProductScaleAcc(xw,input,class_reps_var->matValue((int)target[0]),weight);
+                }
+                else
+                {
+                    externalProductAcc(ww,class_reps_var->matValue((int)target[0]),class_reps_var->matValue((int)target[0]));
+                    externalProductAcc(xw,input,class_reps_var->matValue((int)target[0]));
+                }
             }
             else
-            {
-                externalProductAcc(ww,class_reps_var->matValue((int)target[0]),class_reps_var->matValue((int)target[0]));
-                externalProductAcc(xw,input,class_reps_var->matValue((int)target[0]));
-            }
+                for(int j=0; j<target.length(); j++)
+                {
+                    if(fast_exact_is_equal(target[j], 1))
+                        if(weightsize()>0)
+                        {
+                            externalProductScaleAcc(ww,class_reps_var->matValue(j),class_reps_var->matValue(j),weight);
+                            externalProductScaleAcc(xw,input,class_reps_var->matValue(j),weight);
+                        }
+                        else
+                        {
+                            externalProductAcc(ww,class_reps_var->matValue(j),class_reps_var->matValue(j));
+                            externalProductAcc(xw,input,class_reps_var->matValue(j));
+                        }   
+                }
         }
+        if(weight_decay > 0)
+            for(int i=0; i<ww.length(); i++)
+                ww(i,i) = ww(i,i) + weight_decay;
         matInvert(ww,ww_inv);
         A->value.fill(0);
         productAcc(A->matValue, xw, ww_inv);
@@ -504,22 +579,43 @@ void LinearInductiveTransferClassifier::train()
         for(int i=0; i<train_set->length(); i++)
         {
             train_set->getExample(i,input,target,weight);
-            product(weights,A->matValue,class_reps_var->matValue((int)target[0]));
-            if(weightsize()>0)
+            if(targetsize() == 1)
             {
-                diffSquareMultiplyAcc(s->value,weights,input,weight);
-                sum += weight;
+                product(weights,A->matValue,class_reps_var->matValue((int)target[0]));
+                if(weightsize()>0)
+                {
+                    diffSquareMultiplyAcc(s->value,weights,input,weight);
+                    sum += weight;
+                }
+                else
+                {
+                    diffSquareMultiplyAcc(s->value,weights,input,1.0);
+                    sum++;
+                }
             }
             else
-            {
-                diffSquareMultiplyAcc(s->value,weights,input,1.0);
-                sum++;
-            }
+                for(int j=0; j<target.length(); j++)
+                {
+                    if(fast_exact_is_equal(target[j], 1))
+                    {
+                        product(weights,A->matValue,class_reps_var->matValue(j));
+                        if(weightsize()>0)
+                        {
+                            diffSquareMultiplyAcc(s->value,weights,input,weight);
+                            sum += weight;
+                        }
+                        else
+                        {
+                            diffSquareMultiplyAcc(s->value,weights,input,1.0);
+                            sum++;
+                        }
+                    }
+                }
         }
         s->value /= sum;
-        s->value *= weight_decay+1;
+        s->value += sigma_min;
 
-        if(verbosity > 2)
+        if(verbosity > 2 && !multi_target_classifier)
         {
             Func paramf = Func(invars, training_cost);
             paramf->recomputeParents();
@@ -550,20 +646,58 @@ void LinearInductiveTransferClassifier::computeOutput(const Vec& input, Vec& out
 void LinearInductiveTransferClassifier::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                            const Vec& target, Vec& costs) const
 {
+    if(targetsize() != 1)
+        costs.resize(costs.length()-1+targetsize());
     if(seen_targets.find(target[0])>=0)
         sup_output_and_target_to_cost->fprop(output&target, costs);
     else
         output_and_target_to_cost->fprop(output&target, costs);
+    if(targetsize() != 1)
+    {
+        costs.resize(costs.length()+1);
+        int i;
+        for(i=0; i<target.length(); i++)
+            if(!is_missing(target[i]))
+                break;
+        if(i>= target.length())
+            PLERROR("In LinearInductiveTransferClassifier::computeCostsFromOutputs(): all targets are missing, can't compute cost");
+        if(model_type == "generative")
+            costs[costs.length()-1] = costs[i];
+        else
+            costs[costs.length()-1] = costs[i+1];
+        costs[costs.length()-targetsize()-1] = costs[costs.length()-1];
+        costs.resize(costs.length()-targetsize());
+    }
 }
 
 void LinearInductiveTransferClassifier::computeOutputAndCosts(const Vec& inputv, const Vec& targetv, 
                                  Vec& outputv, Vec& costsv) const
 {
+    if(targetsize() != 1)
+        costsv.resize(costsv.length()-1+targetsize());
+
     outputv.resize(outputsize());
     if(seen_targets.find(targetv[0])>=0)
         sup_test_costf->fprop(inputv&targetv, outputv&costsv);
     else
         test_costf->fprop(inputv&targetv, outputv&costsv);
+
+    if(targetsize() != 1)
+    {
+        costsv.resize(costsv.length()+1);
+        int i;
+        for(i=0; i<targetv.length(); i++)
+            if(!is_missing(targetv[i]))
+                break;
+        if(i>= targetv.length())
+            PLERROR("In LinearInductiveTransferClassifier::computeCostsFromOutputs(): all targets are missing, can't compute cost");
+        if(model_type == "generative")
+            costsv[costsv.length()-1] = costsv[i];
+        else
+            costsv[costsv.length()-1] = costsv[i+1];
+        costsv[costsv.length()-targetsize()-1] = costsv[costsv.length()-1];
+        costsv.resize(costsv.length()-targetsize());
+    }
 }
 
 TVec<string> LinearInductiveTransferClassifier::getTestCostNames() const
@@ -571,22 +705,40 @@ TVec<string> LinearInductiveTransferClassifier::getTestCostNames() const
     TVec<string> costs_str;
     if(model_type == "discriminative" || model_type == "discriminative_1_vs_all")
     {
-        costs_str.resize(2);
         if(model_type == "discriminative")
         {
+            costs_str.resize(2);
             costs_str[0] = "NLL";
             costs_str[1] = "class_error";
         }
         if(model_type == "discriminative_1_vs_all")
         {
+            costs_str.resize(1);
             costs_str[0] = "cross_entropy";
-            costs_str[1] = "class_error";
+            if(!multi_target_classifier)
+            {
+                costs_str.resize(2);
+                costs_str[1] = "class_error";
+            }
+            else
+            {
+                costs_str.resize(2);
+                costs_str[1] = "lift_first";
+            }
         }
     }
     else if(model_type == "generative")
     {
-        costs_str.resize(1);
-        costs_str[0] = "class_error";
+        if(!multi_target_classifier)
+        {
+            costs_str.resize(1);
+            costs_str[0] = "class_error";
+        }
+        else
+        {
+            costs_str.resize(1);            
+            costs_str[0] = "lift_first";
+        }
     }
     return costs_str;
 }
