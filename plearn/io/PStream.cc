@@ -37,7 +37,7 @@
 #include "NullPStreamBuf.h"
 #include "PrPStreamBuf.h"
 #include <plearn/math/pl_math.h>
-#include <firefox/nspr/prio.h>
+#include <nspr/prio.h>
 #include <ctype.h>
 
 

@@ -43,7 +43,7 @@
 // #define PL_LOG_MODULE_NAME "PPath"
 
 #include <ctype.h>
-#include <firefox/nspr/prenv.h>
+#include <nspr/prenv.h>
 
 #include "PPath.h"
 #include "PStream.h"

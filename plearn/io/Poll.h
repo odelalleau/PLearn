@@ -45,7 +45,7 @@
 #define Poll_INC
 
 #include <vector>
-#include <firefox/nspr/prio.h>
+#include <nspr/prio.h>
 #include <plearn/io/PStream.h>
 
 

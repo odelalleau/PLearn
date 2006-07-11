@@ -42,7 +42,7 @@
 #include <fstream>
 /*
 // we use PRInt64 and PRUint64 for types from NSPR for 64 bit integers
-#include <firefox/nspr/prlong.h>
+#include <nspr/prlong.h>
 */
 #include <plearn/base/byte_order.h>
 #include <plearn/base/pl_hash_fun.h>

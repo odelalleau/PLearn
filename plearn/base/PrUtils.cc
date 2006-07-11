@@ -42,7 +42,7 @@
 
 
 #include "PrUtils.h"
-#include <firefox/nspr/prerror.h>
+#include <nspr/prerror.h>
 
 namespace PLearn {
 using namespace std;

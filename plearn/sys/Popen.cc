@@ -42,9 +42,9 @@
 
 #include "Popen.h"
 
-#include <firefox/nspr/prio.h>
-#include <firefox/nspr/prproces.h>
-#include <firefox/nspr/prenv.h>
+#include <nspr/prio.h>
+#include <nspr/prproces.h>
+#include <nspr/prenv.h>
 #include <plearn/base/stringutils.h>
 #include <plearn/base/PrUtils.h>
 #include <plearn/io/PrPStreamBuf.h>

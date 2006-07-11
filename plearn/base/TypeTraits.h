@@ -50,7 +50,7 @@
 #include <list>
 #include <map>
 #include <set>
-#include <firefox/nspr/prlong.h>
+#include <nspr/prlong.h>
 
 namespace PLearn {
 using std::string;
