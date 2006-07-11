@@ -130,6 +130,15 @@ public:
 
 DECLARE_OBJECT_PTR(AddMissingVMatrix);
 
+inline VMat add_missing(VMat source, TVec<int> missing_values_columns)
+  {
+    AddMissingVMatrix* ret = new AddMissingVMatrix();
+    ret->source = source;
+    ret->missing_values_columns = missing_values_columns;
+    ret->build();
+    return ret;
+  }
+
 } // end of namespace PLearn
 
 #endif
