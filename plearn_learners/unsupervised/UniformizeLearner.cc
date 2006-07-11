@@ -46,7 +46,9 @@ namespace PLearn {
 using namespace std;
 
 UniformizeLearner::UniformizeLearner() 
-    :nquantiles(200)
+    :weight_field_index(-1),
+     nquantiles(200),
+     raw_inputs_as_output(false)
 {
     // ...
 
@@ -72,12 +74,22 @@ void UniformizeLearner::declareOptions(OptionList& ol)
     //               "Help text describing this option");
     // ...
 
+    //build
+    
     declareOption(ol, "which_fieldnames", &UniformizeLearner::which_fieldnames, OptionBase::buildoption,
-                  "The names of the fields to uniformize");
+                  "The names of the fields to uniformize.\n"
+                  "If both which_fieldnames and which_fieldnums are empty, all fields are normalized.");
     declareOption(ol, "which_fieldnums", &UniformizeLearner::which_fieldnums, OptionBase::buildoption,
-                  "The indexes of the fields to uniformize. Leave this option empty if you specify which_fieldnames.");
+                  "The indexes of the fields to uniformize. Leave this option empty if you specify which_fieldnames.\n"
+                  "If both which_fieldnames and which_fieldnums are empty, all fields are normalized.");
     declareOption(ol, "nquantiles", &UniformizeLearner::nquantiles, OptionBase::buildoption,
                   "How many intervals to use to divide the sorted values");
+
+    declareOption(ol, "raw_inputs_as_output", &UniformizeLearner::raw_inputs_as_output, OptionBase::buildoption,
+                  "If true, raw inputs are appended to uniformized outputs for all uniformized fields.");
+
+    //learnt
+
     declareOption(ol, "val_to_rank", &UniformizeLearner::val_to_rank, OptionBase::learntoption,
                   "Remembers mapping between a few values and their [0,1] ranking.");
 
@@ -87,6 +99,7 @@ void UniformizeLearner::declareOptions(OptionList& ol)
 
 void UniformizeLearner::build_()
 {
+    
 }
 
 // ### Nothing to add here, simply calls build_
@@ -104,6 +117,7 @@ void UniformizeLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(val_to_rank,      copies);
     deepCopyField(which_fieldnames, copies);
     deepCopyField(which_fieldnums,  copies);
+    deepCopyField(input_field_names,  copies);
 }
 
 
@@ -112,7 +126,16 @@ void UniformizeLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////
 int UniformizeLearner::outputsize() const
 {
-    return inputsize();
+    int nk= 0;
+    if(raw_inputs_as_output)
+    {
+        nk= which_fieldnames.length();
+        if(nk == 0)
+            nk= which_fieldnums.size();
+        if(nk == 0)//no field specified: uniformize all
+            nk= inputsize();
+    }
+    return nk+inputsize();
 }
 
 ////////////
@@ -121,6 +144,46 @@ int UniformizeLearner::outputsize() const
 void UniformizeLearner::forget()
 {
     stage = 0; // untrained
+}
+
+
+
+
+void UniformizeLearner::setTrainingSet(VMat training_set, bool call_forget)
+{
+    inherited::setTrainingSet(training_set, call_forget);
+    VMat dataset = getTrainingSet();
+
+    if(dataset->weightsize() == 0)
+        return;//no weights
+    if(dataset->weightsize() > 1)
+        PLERROR("in UniformizeLearner::setTrainingSet: Only one weight supported.");
+
+    if(0 < train_set->weightsize())
+        weight_field_index= dataset->fieldIndex(dataset->weightFieldNames()[0]);
+    
+    input_field_names.resize(dataset->inputsize());
+    input_field_names << dataset->inputFieldNames();
+
+    int nk = which_fieldnames.length();
+    if(nk==0)
+        nk = which_fieldnums.size();
+    else
+    {
+        which_fieldnums.resize(nk);
+        for(int k=0; k<nk; k++)
+            which_fieldnums[k] = train_set->getFieldIndex(which_fieldnames[k]);
+    }
+
+    if(nk == 0)//no field specified, uniformize all.
+    {
+        nk= train_set->inputsize();
+        which_fieldnums.resize(nk);
+        for(int k= 0; k < nk; ++k)
+            which_fieldnums[k]= k;
+    }
+
+    
 }
     
 ///////////
@@ -170,7 +233,26 @@ void UniformizeLearner::train()
                 which_fieldnums[k] = train_set->getFieldIndex(which_fieldnames[k]);
         }
 
+        if(nk == 0)//no field specified, uniformize all.
+        {
+            nk= train_set->inputsize();
+            which_fieldnums.resize(nk);
+            for(int k= 0; k < nk; ++k)
+                which_fieldnums[k]= k;
+        }
+
+
         int l = train_set->length();
+
+        bool weighted= train_set->weightsize() == 1;
+
+        static Vec colw;
+        if(weighted)
+        {
+            colw.resize(l);
+            train_set->getColumn(weight_field_index, colw);
+        }
+
         static Vec colv;
         colv.resize(l);
       
@@ -178,7 +260,10 @@ void UniformizeLearner::train()
         for(int k=0; k<nk; k++)
         {
             train_set->getColumn(which_fieldnums[k],colv);
-            computeRankMap(colv, nquantiles, val_to_rank[k]);
+            if(weighted)
+                computeWeightedRankMap(colv, nquantiles, val_to_rank[k], colw);
+            else
+                computeRankMap(colv, nquantiles, val_to_rank[k]);
         }
         stage = 1; // trained
     }
@@ -219,6 +304,62 @@ void UniformizeLearner::computeRankMap(const Vec& v, int nquantiles,
     }
 }
 
+
+void UniformizeLearner::computeWeightedRankMap(const Vec& v, int nquantiles, map<real,real>& rankmap, const Vec& weights)
+{
+    int l= v.length();
+
+    Mat vw(0, 2);
+
+    if (!v.hasMissing())
+    {
+        vw.resize(l,2);
+        vw.column(0) << v;
+        vw.column(1) << weights;
+
+    }
+    else 
+    {
+        Vec vvw(2);
+        for (int i = 0; i < l; i++)
+            if (!is_missing(v[i]))
+            {
+                vvw[0]= v[i];
+                vvw[1]= weights[i];
+                vw.appendRow(vvw);
+            }
+    }
+
+    
+
+    rankmap.clear();
+    int max_index = vw.length() - 1;
+    sortRows(vw, TVec<int>(1,0));
+
+    for (int i = 1; i < l; i++)
+        vw(i,1)+= vw(i-1,1);
+
+    rankmap[vw(0,0)] = 0;
+    rankmap[vw(max_index,0)] = 1;
+    real totw= vw(max_index,1);
+
+    for(int k=1, i= 0; k<nquantiles; ++k)
+    {
+        real rank = real(k)/real(nquantiles);
+        real qw= totw*rank;
+        while(vw(i,1) < qw)
+            ++i;
+
+        real val = vw(i,0);
+
+        rank= vw(i,1)/totw;
+
+        if(rankmap.find(val) == rankmap.end())
+            rankmap[val]= rank;
+    }
+}
+
+
 ///////////////
 // mapToRank //
 ///////////////
@@ -243,6 +384,7 @@ real UniformizeLearner::mapToRank(real val, const map<real,real>& rankmap)
 ///////////////////
 void UniformizeLearner::computeOutput(const Vec& input, Vec& output) const
 {
+/*
     int nout = outputsize();
     output.resize(nout);
     output << input;
@@ -252,6 +394,15 @@ void UniformizeLearner::computeOutput(const Vec& input, Vec& output) const
         if (!is_missing(output[fieldnum]))
             output[fieldnum] = mapToRank(output[fieldnum], val_to_rank[k]);
     }
+*/
+    int n= outputsize();
+    output.resize(n);
+    int nk= which_fieldnums.size();
+    for(int k= 0; k < nk; ++k)
+        output[k]= mapToRank(input[which_fieldnums[k]], val_to_rank[k]);
+    for(int k= nk; k < n; ++k)
+        output[k]= input[k-nk];
+
 }    
 
 /////////////////////////////
@@ -273,6 +424,21 @@ TVec<string> UniformizeLearner::getTrainCostNames() const
 {
     static TVec<string> nocosts;
     return nocosts;
+}
+
+
+TVec<string> UniformizeLearner::getOutputNames() const
+{
+    int n = outputsize();
+    TVec<string> outnames(n);
+    int nk= which_fieldnums.size();
+
+    for(int k= 0; k < nk; ++k)
+        outnames[k]= string("uniformized_")+input_field_names[which_fieldnums[k]];
+    for(int k= nk; k < n; ++k)
+        outnames[k]= input_field_names[k-nk];
+
+    return outnames;
 }
 
 

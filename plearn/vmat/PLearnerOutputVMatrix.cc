@@ -311,7 +311,7 @@ void PLearnerOutputVMatrix::build_()
             targetsize_ = source->targetsize();
             weightsize_ = source->weightsize();
             extrasize_  = source->extrasize();
-            width_ = inputsize_ + targetsize_ + weightsize_;
+            width_ = inputsize_ + targetsize_ + weightsize_ + extrasize_;
         }
         else {
             targetsize_ = 0;

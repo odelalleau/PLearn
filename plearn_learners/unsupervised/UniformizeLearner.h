@@ -58,6 +58,9 @@ protected:
     //! Temporary storage vector used to store a copy without missing values.
     static Vec v_no_missing;
     
+    int weight_field_index;
+    TVec<string> input_field_names;
+
     // ** learnt options **
 
     TVec< map<real,real> > val_to_rank;
@@ -71,6 +74,8 @@ public:
     TVec<string> which_fieldnames;
     TVec<int> which_fieldnums;
     int nquantiles;
+
+    bool raw_inputs_as_output;
 
     // ****************
     // * Constructors *
@@ -148,6 +153,11 @@ public:
     virtual TVec<string> getTrainCostNames() const;
 
 
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+
+    virtual TVec<string> getOutputNames() const;
+
+
     // *** SUBCLASS WRITING: ***
     // While in general not necessary, in case of particular needs 
     // (efficiency concerns for ex) you may also want to overload
@@ -164,6 +174,9 @@ public:
     //! Missing values in v are ignored.
     static void computeRankMap(const Vec& v, int nquantiles,
                                map<real,real>& rankmap);
+
+
+    static void computeWeightedRankMap(const Vec& v, int nquantiles, map<real,real>& rankmap, const Vec& weights);
 
     //! Map non-missing value val to its [0,1] rank.
     static real mapToRank(real val, const map<real,real>& rankmap);

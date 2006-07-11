@@ -136,7 +136,12 @@ void AutoLinearRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     // deepCopyField(trainvec, copies);
 
     // ### Remove this line when you have fully implemented this method.
-    PLERROR("AutoLinearRegressor::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    //PLERROR("AutoLinearRegressor::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(weights, copies);
+    deepCopyField(mean_target, copies);
+
 }
 
 
@@ -184,6 +189,7 @@ void AutoLinearRegressor::train()
 
         if(nweights!=0)
         {
+            PLERROR("In AutoLinearRegressor, sample weights not yet supported");
             int wpos = ninputs+ntargets;
             for(int i=0; i<l; i++)
             {
@@ -192,8 +198,6 @@ void AutoLinearRegressor::train()
                 Y(i) *= sw;
             }
         }
-            PLERROR("In AutoLinearRegressor, sample weights not yet supported");
-
 
         mean_target.resize(ntargets);
         columnMean(Y, mean_target);

@@ -118,6 +118,11 @@ public:
     virtual TVec<std::string> getTrainCostNames() const;
 
 
+    virtual TVec<string> getOutputNames() const;
+
+    virtual void setExperimentDirectory(const PPath& the_expdir);
+
+
     // *** SUBCLASS WRITING: ***
     // While in general not necessary, in case of particular needs
     // (efficiency concerns for ex) you may also want to overload
