@@ -56,7 +56,7 @@ PLEARN_IMPLEMENT_OBJECT(
 // LiftOutputVariable //
 ////////////////////////
 LiftOutputVariable::LiftOutputVariable(Variable* netout, Variable* target)
-    : inherited(netout,target,1,1)
+    : inherited(netout,target,netout->length(),netout->width())
 {
     build_();
 }
@@ -82,24 +82,39 @@ LiftOutputVariable::build_()
 // recomputeSize //
 ///////////////////
 void LiftOutputVariable::recomputeSize(int& l, int& w) const
-{ l=1, w=1; }
+{ 
+    //l=1, w=1;
+    if(input1)
+    {
+        l=input1->length(); 
+        w=input1->width(); 
+    }
+}
 
 ///////////
 // fprop //
 ///////////
 void LiftOutputVariable::fprop()
 {
-    real output = input1->valuedata[0];
-    real target = input2->valuedata[0];
-    assert(fast_exact_is_equal(target, 0) || fast_exact_is_equal(target, 1.0));
-    if (fast_exact_is_equal(target, 1.0)) {
-        if (fast_exact_is_equal(output, 0.0)) {
-            // We need to make sure the output is positive.
-            output = 1e-10;
+    for(int i=0;i<size(); i++)
+    {
+        real output = input1->valuedata[i];
+        real target = input2->valuedata[i];
+        if(!is_missing(target))
+        {
+            assert(fast_exact_is_equal(target, 0) || fast_exact_is_equal(target, 1.0));
+            if (fast_exact_is_equal(target, 1.0)) {
+                if (fast_exact_is_equal(output, 0.0)) {
+                    // We need to make sure the output is positive.
+                    output = 1e-10;
+                }
+                valuedata[i] = output;
+            } else {
+                valuedata[i] = -output;
+            }
         }
-        valuedata[0] = output;
-    } else {
-        valuedata[0] = -output;
+        else
+            valuedata[i] = output;
     }
 }
 
