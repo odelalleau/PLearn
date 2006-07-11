@@ -25,6 +25,18 @@ def cyymmdd_to_ordinal(x):
 def ordinal_to_cyymmdd(ordinal):
     return date_to_cyymmdd(date.fromordinal(int(ordinal)))
 
+def convertPLDateTime(cyymmdd, hhmnss):
+    cyymmdd  = int(cyymmdd)
+    cyymm,dd = divmod(cyymmdd,100)
+    cyy,mm   = divmod(cyymm,100)
+    yyyy = 1900+cyy
+
+    hhmnss = int(hhmnss)
+    hhmn,ss = divmod(hhmnss, 100)
+    hh,mn = divmod(hhmn, 100)
+
+    return datetime(yyyy, mm, dd, hh, mn, ss)
+
 #
 #  Module classes
 #
