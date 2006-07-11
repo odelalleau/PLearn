@@ -42,20 +42,20 @@
 
 #include "SelectRowsVMatrix.h"
 #include "ClassSeparationSplitter.h"
-#include <plearn/math/random.h>
 
 namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     ClassSeparationSplitter,
-    "Splitter that separates examples of one class (test) from the examples of other classes (train)",
+    "Splitter that separates examples of some classes (test) from the examples of other classes (train)",
     "This splitter is intended to measure inductive transfer performance from some tasks to another task"
     );
 
 ClassSeparationSplitter::ClassSeparationSplitter()
-    :Splitter(), numsplits(-1), nclasses(-1), nclasses_test_set(1), select_classes_randomly(1), append_train(0)
+    :Splitter(), numsplits(-1), nclasses(-1), nclasses_test_set(1), select_classes_randomly(1), append_train(0), seed(-1)
 {
+    random_gen = new PRandom();
 }
 
 void ClassSeparationSplitter::declareOptions(OptionList& ol)
@@ -70,10 +70,13 @@ void ClassSeparationSplitter::declareOptions(OptionList& ol)
                   "Classes to isolate from the others, for each split. When this field is specified,\n"
                   "then nclasses, nclasses_test_set and nsplit are ignored.");
     declareOption(ol, "select_classes_randomly", &ClassSeparationSplitter::select_classes_randomly, OptionBase::buildoption,
-                  "Indication that the classes should be chose at random.\n"
+                  "Indication that the classes should be chosen at random.\n"
                   "Otherwise, the classes are selected by order of their index.");
     declareOption(ol, "append_train", &ClassSeparationSplitter::append_train, OptionBase::buildoption,
                   "Indication that the training set should be appended to the split sets lists.");
+
+    declareOption(ol, "seed", &ClassSeparationSplitter::seed, OptionBase::buildoption,
+                  "Seed of random generator");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -81,6 +84,9 @@ void ClassSeparationSplitter::declareOptions(OptionList& ol)
 
 void ClassSeparationSplitter::build_()
 {
+    if (seed != 0)
+        random_gen->manual_seed(seed);
+
     if(classes.length() == 0)
     {
         if(nclasses <= 0) PLERROR("In ClassSeparationSplitter::build_(): nclasses should be > 0");
@@ -92,14 +98,17 @@ void ClassSeparationSplitter::build_()
         int it = 0;
         for(int i=0; i<numsplits; i++)
         {
-            classes[i].resize(nclasses_test_set);
-
             if(select_classes_randomly)
             {
-                random_subset_indices(classes[i],nclasses);
+                classes[i].resize(nclasses);
+                for(int j=0; j<nclasses; j++)
+                    classes[i][j] = j;
+                random_gen->shuffleElements(classes[i]);
+                classes.resize(nclasses_test_set);
             }
             else
             {
+                classes[i].resize(nclasses_test_set);
                 for(int j=0; j<nclasses_test_set; j++)
                 {
                     classes[i][j] = it%nclasses;
@@ -122,6 +131,7 @@ void ClassSeparationSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     Splitter::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField(classes, copies);
+    deepCopyField(random_gen, copies);
 
     //PLERROR("ClassSeparationSplitter::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }

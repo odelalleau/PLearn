@@ -45,6 +45,7 @@
 #define ClassSeparationSplitter_INC
 
 #include <plearn/vmat/Splitter.h>
+#include <plearn/math/PRandom.h>
 
 namespace PLearn {
 
@@ -71,13 +72,16 @@ public:
     //! Number of classes in the test sets.
     int nclasses_test_set;
 
-    //! Indication that the classes should be chose at random.
+    //! Indication that the classes should be chosen at random.
     //! Otherwise, the classes are selected by order of their index.
     bool select_classes_randomly;
 
     //! Indication that the training set should be appended
     //! to the split sets lists.
     bool append_train;
+
+    //! Seed of random generator
+    real seed;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -115,6 +119,8 @@ public:
 
 protected:
     //#####  Protected Options  ###############################################
+
+    PP<PRandom> random_gen;
 
 protected:
     //#####  Protected Member Functions  ######################################
