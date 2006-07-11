@@ -126,7 +126,7 @@ void TextFilesVMatrix::buildIdx()
     int lineno = 0;
     for(unsigned char fileno=0; fileno<txtfiles.length(); fileno++)
     {
-        FILE* f = txtfiles[fileno];
+        FILE* f = txtfiles[(int)fileno];
         fseek(f,0,SEEK_SET);
 
         int nskip = 0; // number of header lines to skip
@@ -264,7 +264,7 @@ string TextFilesVMatrix::getTextRow(int i) const
     unsigned char fileno;
     int pos;
     getFileAndPos(i, fileno, pos);
-    FILE* f = txtfiles[fileno];
+    FILE* f = txtfiles[(int)fileno];
     fseek(f,pos,SEEK_SET);
     if(!fgets(buf, sizeof(buf), f))
         PLERROR("Problem in TextFilesVMatrix::getTextRow fgets for row %d returned NULL",i);
