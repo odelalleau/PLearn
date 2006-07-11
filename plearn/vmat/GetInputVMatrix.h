@@ -114,6 +114,15 @@ public:
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(GetInputVMatrix);
 
+inline VMat get_input(VMat source, int inputsize, int targetsize, int weightsize=0)
+  {
+    GetInputVMatrix* ret = new GetInputVMatrix(source);
+    ret->defineSizes(inputsize,targetsize,weightsize);
+    ret->build();
+    return ret;
+  }
+
+
 } // end of namespace PLearn
 
 #endif
