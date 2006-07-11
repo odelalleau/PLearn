@@ -527,6 +527,12 @@ def vsystem( cmd, prefix='+++', quiet=False ):
         print prefix, cmd
         os.system( cmd )
 
+class ListMap(dict):
+    def __getitem__(self, key):
+        if not key in self:
+            self.__setitem__(key, [])
+        return super(ListMap, self).__getitem__(key)
+
 class WString:
     """Writable String.
 
