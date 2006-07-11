@@ -71,7 +71,7 @@
 
 \vspace*{8cm}
 
-Copyright \copyright\ 1998-2002 Pascal Vincent, Yoshua Bengio \\
+Copyright \copyright\ 1998-2006 Pascal Vincent, Yoshua Bengio \\
 Copyright \copyright\ 2002 Julien Keable \\
 Copyright \copyright\ 2003 R\'ejean Ducharme \\
 Copyright \copyright\ 2004 Martin Monperrus \\
@@ -509,7 +509,10 @@ contains mostly python and perl scripts
   \item {\tt xpdir} lists the content of PLearn experiment directories
   \item {\tt perlgrep}, {\tt search-replace}, and {\tt undo-search-replace} allow for simple code lookup and transformations.
   \item {\tt pytansform} and the transformations in {\tt Transformations/} allow for complex code transformations.
-  \item {\tt cvschangeroot} is used to recursively change the locally recorded cvs root. This is useful to indicate that the repository has moved.
+  \item {\tt cvschangeroot} is used to recursively change the locally
+  recorded cvs root. This is useful to indicate that the repository has
+  moved. Note however that we now use a SVN repository for PLearn rather
+  than CVS.
   \item \ldots
   \end{itemize}
 \item \verb!commands/! \\ 
@@ -651,16 +654,16 @@ A \VMat is essentially:
 \begin{itemize}
 \item A $l \times d$ matrix of reals ($l$ is its {\em length}, $d$ its {\em width}),
 \item optionally with an associated {\em fieldname} for each column (or {\em field}),
-\item optionally with associated {\em inputsize, targetsize, weightsize}
+\item optionally with associated {\em inputsize, targetsize, weightsize, extrasize}
 \item optionally with strings associated to specific values of a given column
 \end{itemize}
 
-The {\em inputsize, targetsize, weightsize} are important information for
+The {\em inputsize, targetsize, weightsize, extrasize} are important information for
 learning algorithms, as they specify which part of each row is to be
 considered the known input (the first {\em inputsize} elements), which part
 is the target to predict (the next {\em targetsize} elements), and whether
 or not they are followed by a sample weight ({\em weightsize = 0 or
-  1}).
+  1}). The {\em extrasize} fields can be used to store any extra information.
 
 For the traditional {\em tasks} of statistical machine learning, we have
 the following conventions regarding datasets and ``sizes'':
@@ -683,7 +686,7 @@ $5 \times 2$ matrix:
 \begin{verbatim}
 #size: 5 2
 #: x y     
-#sizes: 1 1 0
+#sizes: 1 1 0 0
 
 0    3
 0.5  4
@@ -693,7 +696,7 @@ $5 \times 2$ matrix:
 \end{verbatim}
 
 This represents a $5 \times 2$ matrix whose columns are named {\em x} and
-{\em y}, and whose {\em inputsize=1, targetsize=1, weightsize=0}.
+{\em y}, and whose {\em inputsize=1, targetsize=1, weightsize=0, extrasize=0}.
 
 \section{Viewing Data Matrices}
 
@@ -1311,7 +1314,8 @@ character               & {\tt 'x'} \\ \hline
                         & {\tt 4 [ 10 20 30 40 ] } \\ 
                         & {\tt 4 [ "aa", "bb", "cc", "dd" ] } \\ \hline
 2D matrices             & \verb!3 2 [ 1 2  10 20  30 40 ]!    \\ \hline
-pairs                   & {\tt 1 : "one" }  \\ \hline
+pairs                   & {\tt (1, "one")}  \\ \hline
+tuples                  & {\tt (1, "one", 3.5)}  \\ \hline
 maps                    & \verb!{ 1:"one", 2 :"two", 3: "three" }! \\ \hline
 pointers to new object  & \verb!*1 -> ObjType( ... )! \\ \hline
 reference to pointer    & \verb!*1;! \\ \hline
@@ -1329,15 +1333,20 @@ a separator (blank, comma, \ldots) or opening or closing symbol (parenthesis, br
 Ascii data file.
 
 The new format is as follows:
-The size of the matrix is indicated by a line starting with \verb!#size:! and followed by length (number of rows) and width (number of columns)
-An optional line starting with \verb!#:! gives the names of the fields (the columns)
-Regular comment lines start with a single \verb!#!.
+\begin{itemize}
+\item The size of the matrix is indicated by a line starting with \verb!#size:! and followed by length (number of rows) and width (number of columns).
+\item An optional line starting with \verb!#sizes:! gives the {\tt
+  inputsize, targetsize, weightsize, extrasize}.
+\item An optional line starting with \verb!#:! gives the names of the fields (the columns)
+\item Regular comment lines start with a single \verb!#!.
+\end{itemize}
 
 ex:
 
 \begin{verbatim}
 # Characteristics of a population of 534
 #size: 534 3
+#sizes: 2 1 0 0 
 #:  age height weight
      33  1.72   71
     25  1.80   80
@@ -1351,7 +1360,8 @@ PLearn native binary format.
 
 File containing a description of a virtual dataset.
 
-A .vmat is a text specification of a dataset built from the composition of source data, possibly with operations applied to it.
+A .vmat contains the specification of a subclass of VMatrix, in plearn
+serialization format. 
 
 \verbatiminput{../examples/train.vmat} 
 
@@ -1385,11 +1395,6 @@ Here is a basic NNet script object:
 % ------------------------------------------------------------------------------------------
 % ------------------------------------------------------------------------------------------
 
-\section{The .sdb File Format}
-
-Any simpledb can be automatically seen as a numeric vmat dataset. 
-String fields are removed.
-
 \section{The .dmat/ Format }
 
 Directory containing compressed data.
@@ -1401,101 +1406,14 @@ Contains:
 \item fieldnames
 \end{itemize}
 
-\section{Advanced .vmat}
 
-The description is made through a set of sections (all optional except SOURCES) enclosed in xml-like tags.
-
-There is a program named vmat (although it handles many dataset formats) that can be used to perform useful tasks with datasets. Two of them are relevant here. 
-
-Calling \verb!vmat gendef datasetname 10 20! will first generate a stats.def file in the metadata directory of the dataset containing a define for each field for each supported statistic. Then it will generate files bins10.def and bins20.def containing defines that can be used to bin the fields (with 10 and 20 bins). These defines can then be used (with INCLUDE) in the VPL code.
-
-Use \verb!vmat genvmat datasetname (binned\{num\} | onehot\{num\} | normalized)! to generate automatically a vmat that will do the same operation on all fields.
-
-Here's an example of a .vmat file:
-\begin{verbatim}
-<SOURCES>
-/u/Gaston/some_source.amat /u/Gaston/some_source3.sdb
-</SOURCES>
-
-<PREFILTER>
-INCLUDE /u/Gaston/some_source.amat.metadata/stats.def
-@some_field @some_field.mean >=
-</PREFILTER>
-
-# this is a comment
-
-<JOIN>
-/u/jkeable/PLearn/UserExp/jkeable/joinVMatrix/slave.amat
-[id,val] == [id,val1]
-MEAN(claim) :claim.mean
-</JOIN>
-
-<PROCESSING>
-%0 %1 + :my_sum
-# this is another comment
-[%2:@claim.mean]
-</PROCESSING>
-
-<POSTFILTER>
-@claim.mean isnan not
-</POSTFILTER>
-
-<SIZES>
-100
-1
-0
-</SIZES>
-
-<PRECOMPUTE> dmat </PRECOMPUTE>
-\end{verbatim}
-
-
-\subsection{SOURCES}
-The SOURCES section is the only one that is not optional. It describes the source dataset(s) (in any format) that the vmat will be built from. In its most complex form, the syntax of the specification is a matrix of NxM dataset strings. The datasets are first concatenated horizontally, then vertically. Thus, all datasets on a same row must have the same length, and the results of all horizontal concatenation, the same width.
-
-\subsection{PREFILTER and POSTFILTER}
-
-Those sections are use to perform filtering at different stages of the vmat construction. Prefiltering is made after processing of the SOURCES section, while the postfiltering is made after the JOIN and PROCESSING section are executed. 
-
-The syntax of the filtering operations is VPL, which is a postfix language described further down. After execution of the code, a value must remain on the execution stack. If it non zero, the row will be kept, otherwise, it is rejected.
-
-\subsection{JOIN}
-
-This section is used to perform a pseudo-join operation between a master and a slave table. At this time, a standard join operation (cartesian product) is not possible. Instead, slave rows matching a master row are used to compute statistics appended to the master row. The syntax is:
-
-\begin{verbatim}
-slave_dataset
-[master_field1,...,master_fieldN] == [slave_field1,...,slave_fieldN]
-STATISTIC1(slavefield1) :newfield_name1
-STATISTIC2(slavefield2) :newfield_name2
-...
-\end{verbatim}
-where STATISTIC is one of: {COUNT | NNONMISSING | NMISSING | SUM | SUMSQUARE | MEAN | VARIANCE | STDDEV | STDERR | MIN | MAX}. 
-
-Note that you can repeat the operation multiple times in a single JOIN section.
-
-\subsection{PROCESSING}
-Use this section to modify or create new fields in the dataset (e.g: binning operations, onehot conversions, etc..). The processing is specified with VPL, described later.
-
-As soon as you declare a PROCESSING section, all fields resulting from previous operations (sources concatenation, join operations) are not included automatically in the resulting matrix (obviously, you can still refer to them), so it is empty unless you declare them manually. In the small example given above, the operations done are the replacement of the first two fields by their sum, and then the remaining fields are appended in the resulting matrix with the second line. See VPL section for more details.
-
-\subsection{SIZES}
-This section lets you define the input size, target size and weight size of the matrix.
-They must be given in this specificic order, each on one line.
-This is especially useful when the .vmat file is loaded through an AutoVMatrix for instance, so
-you don't have to specify the sizes in the AutoVMatrix itself.
-
-\subsection{PRECOMPUTE}
-When you need speed, use this section to create a precomputed version of you vmat. This version will be computed the first time the vmat is loaded. You specify the type of file you want the precomputed version to be saved to (dmat or pmat). See example above.
-
-The synchronization of the precomputed version is ensured through an almost-intelligent mechanism that checks the date of sources recursively. Note: we decided that include files (e.g: statistics) that are out of date issue a warning, but will not force recomputation. This could be changed. 
-
-\subsection{DEBUG}
-Including this section will force output of preprocessed VPL to stderr.
-
-\subsection{The VPL language}
-VPL (vmat processing language) is a home brewed mini-language in postfix notation. As of today, it is used is the \{PRE,POST\}FILT\-ERING and PROCESSING sections of a .vmat file. It supports INCLUDEs instructions and DEFINEs (dumb named string constants). It can handle reals as well as dates (format is: CYYMMDD, where C is 0 (1900-1999) or 1 (2000-2099). The language will not be extensively described here. For more info, you can look at
-plearn/vmat/VMatLanguage.*. 
+\section{The VPL language}
+VPL (vmat processing language) is a home brewed mini-language in postfix
+notation. As of today, it is used is the \{PRE,POST\}FILT\-ERING and
+PROCESSING sections of a .vmat file. It can handle reals as well as dates
+(format is: CYYMMDD, where C is 0 (1900-1999) or 1 (2000-2099). The
+language will not be extensively described here. For more info, you can
+look at plearn/vmat/VMatLanguage.*.
 
 A VPL code snippet is always applied to the row of a VMatrix, and can only refer to data of that row. The result of the execution will be a vector, which is the execution stack at code termination. 
 
@@ -1507,17 +1425,15 @@ There are two notations to refer to a field value: the @ symbol followed by the 
 
 To batch-copy fields, use the following syntax: [field1:fieldn] (fields can be in @ or \% notation).
 
-Here's a real-life example of a PROCESSING section:
+Here's a real-life example:
 
 \begin{verbatim}
-<PROCESSING>
 @lease_indicator 88 == 1 0 ifelse :lease_indicator
 @rate_class 1 - 7 onehot :rate_class:0:6
 @collision_deductible { 2->1; 4->2; 5->3; 6->4; 7->5; 
 [8 8]->6; MISSING->0; OTHER->0 }
 7 onehot :collision_deductible:0:6
 @roadstar_indicator 89 == 1 0 ifelse :roadstar_indicator
-</PROCESSING>
 \end{verbatim}
 
 \section{The Metadata Directory}
@@ -1644,7 +1560,6 @@ PRUint64       & big-endian    & 0x19        & 4 \\
 
 \begin{itemize}
 \item booleans are represented the same way in binary mode as in ascii mode: with the character 0 (for false) or 1 (for true). There is no header byte.
-\item C++ pairs are indicated by a header-byte 0x16 followed by serialization of the two elements.
 \item A date (PDate) is written with the header-byte 0xFE followed by a
   binary serialized double (with appropriate double header) representing the date in YYYYMMDD format.
 \end{itemize}
@@ -1735,136 +1650,6 @@ on big-endian            &             & base-type given by header byte in previ
 \end{tabular}
 
 
-
-
-
-\chapter{(DEPRECATED) Directory and file structure for old experiments}
-
-This is the structure with the old experiment system. And it's deprecated. 
-
-\begin{verbatim}
-/home/exp/<project>/<task>/
-  - dataset.aliases
-  - model.aliases
-   
-.../modelalias/
-  # for normal train/test
-  <trainalias>.<testalias>.results
-  <trainalias>.psave                   # best model so far
-  <trainalias>.epoch<epoch>.psave
-  <trainalias>.epoch<epoch>.<testalias>.outputs
-  <trainalias>.epoch<epoch>.<testalias>.costs
-
-  # For bootstrap ( <i> is the index of the trainset variant )
-  <trainalias>.bs_<bsparams>_<i>.<testalias>.results
-  <trainalias>.bs_<bsparams>.testalias.results.summary
-  <trainalias>.bs_<bsparams>_<i>.psave   # best model so far
-  <trainalias>.bs_<bsparams>_<i>.epoch<epoch>.psave
-  <trainalias>.bs_<bsparams>_<i>.epoch<epoch>.<testalias>.outputs
-  <trainalias>.bs_<bsparams>_<i>.epoch<epoch>.<testalias>.costs
-
-  # For k-fold  ( <i> is the index of the trainset variant )
-  <trainalias>.kf_<k>_<i>.<testalias>.results
-  <trainalias>.kf_<k>.testalias.results.summary
-  <trainalias>.kf_<k>_<i>.psave   # best model so far
-  <trainalias>.kf_<k>_<i>.epoch<epoch>.psave
-  <trainalias>.kf_<k>_<i>.epoch<epoch>.<testalias>.outputs
-  <trainalias>.kf_<k>_<i>.epoch<epoch>.<testalias>.costs
-  
-  # For sequential validation  ( <i> is the index of the trainset variant )
-  <trainalias>.sv_<svparams>_<i>.<testalias>.results
-  <trainalias>.sv_<svparams>.testalias.results.summary
-  <trainalias>.sv_<svparams>_<i>.psave   # best model so far
-  <trainalias>.sv_<svparams>_<i>.epoch<epoch>.psave
-  <trainalias>.sv_<svparams>_<i>.epoch<epoch>.<testalias>.outputs
-  <trainalias>.sv_<svparams>_<i>.epoch<epoch>.<testalias>.costs
-\end{verbatim}
-
-And from the old\_plearn command....:
-
-\begin{verbatim}
-The 'plearn' program is designed to strongly encourage the following
-directory and file structure for carrying experiments.  Suppose we have a
-root "experiment" directory, EXP, that is to contain all the results of all
-the experiments on all projects ever carried.
-
-Here is the recommended structure:
-
-EXP/PROJECT/TASK/DATA-REPRESENTATION/MODELALIAS
-|___________________________________|
-                 |
-            SPECDIR (will typically contain 'dataset.aliases', specifying datasets 
-                                            and 'model.aliases' specifying learners with learneroptions)
-
-PROJECT is the name of the higher level project, regarding a particular set
-
-TASK should represent a particular learning task for which you wish to
-     assess different methods (ex: condprob_of_claim)
-
-DATA-REPRESENTATION is the notion of using different data representations
-                    (to suit underlying learner) for a task. (ex:
-                    onehot_inputs_integer_target)
-
-The directory organization down to DATA-REPRESENTATION is only
-indicative. You may name the directories as you please (including the
-DATA-REPRESENTATION directory), add or omit hierarchy levels, etc...
-
-The organization below DATA-REPRESENTATION is however enforced by the
-'plearn' program.  DATA-REPRESENTATION *must* contain a 'dataset.aliases'
-file defining the datasets to be used (in that representation). Everything
-below DATA-REPRESENTATION will use those datasets. 
-
-Because it contains the actual dataset specification in dataset.aliases 
-and models specifications in model.aliases
-we also call EXP/PROJECT/TASK/DATA-REPRESENTATION/
-             |___________________________________|
-                              |
-                           SPECDIR
-
-Ex of dataset.aliases file:
-train /home/db/finance/stock3proj/discreterepr_trainset
-valid /home/db/finance/stock3proj/discreterepr_testset1
-test /home/db/finance/stock3proj/discreterepr_testset2
-
-An alias for 'train' is mandatory. You can give aliases to any number of
-other datasets ('valid' and 'test' are customary but you could also use
-'test1' 'testsomemore' 'strangetestset' etc...)
-The actual dataset specification can be any string understood by getDataSet.
-
-
-The model.aliases file should contain one line for each
-learnertype+learnerparams you are considering. The line starts for an
-'alias' for that particular learnertype+learnerparams combination. That
-alias, which will also be the name of its result directory, must be
-followed by a learner classname, and a semi-column separated string of
-options of the form optionname=optionvalue, in the format understood by
-that learner's setOption method.
-
-Formally, that is: 
-<alias> <classname> <option1=...; option2=...; ...>
-ex: knn5 KNN inputsize=210; k=5 
-
-The following files will typically be created consequently by the 'plearn' program
-in the corresponding <alias> directory.
-
-- train.objective   
-  Ascii file reporting the cost as it is optimized by the learner (and other possible costs)
-- model#.psave        
-  Contains the saved model (at 'epoch' #, see below).
-- <datasetalias>.results 
-  Ascii file reporting the average costs achieved by the model on the 
-  specified dataset (also includes stderr, min, max of those costs)
-- model#.<datasetalias>.outputs.pmat 
-  The individual outputs of the model obtained on the specified dataset
-- model#.<datasetalias>.costs.pmat
-  The individual costs of the model obtained on the specified dataset
-
-For learners performing iterative optimization (or some form of incremental
-learning) and able to save and test intermediate models, the # stands for
-the 'epoch' number of the model saved (starting at 0).  It will also
-correspond to the data-row number in train.objective and
-<datasetalias>.results
-\end{verbatim}
 
 
 \chapter*{License}
