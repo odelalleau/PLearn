@@ -76,6 +76,13 @@
 
 #endif
 
+// Undefine HAVE_LONG_LONG so we do not get an annoying warning when using
+// PythonIncludes.h together with NSPR or other libraries that also define
+// this. Works only because PythonIncludes.h *must* be the very first include,
+// so we know that if there is an HAVE_LONG_LONG defined, we are the one that
+// defined it.
+//
+#undef HAVE_LONG_LONG
 
 
 /*
