@@ -58,11 +58,13 @@ protected:
     //! (1-t)(r*log(o)+(1-r)*log(1-o)) + t*(r*log(1-o)+(1-r)*log(o))
     //! (t = target, o = output, r = regularizer = a small value)
     real regularizer;
+    //! Indication that missing targets should be ignored
+    bool ignore_missing;
   
 public:
     //!  Default constructor for persistence
-    NegCrossEntropySigmoidVariable() {}
-    NegCrossEntropySigmoidVariable(Variable* netout, Variable* target, real regularizer_ = 0.0);
+    NegCrossEntropySigmoidVariable() : ignore_missing(false) {}
+    NegCrossEntropySigmoidVariable(Variable* netout, Variable* target, real regularizer_ = 0.0, bool ignore_missing_ = false);
 
     PLEARN_DECLARE_OBJECT(NegCrossEntropySigmoidVariable);
 
@@ -80,9 +82,9 @@ protected:
 
 DECLARE_OBJECT_PTR(NegCrossEntropySigmoidVariable);
 
-inline Var stable_cross_entropy(Var linear_output, Var target)
+inline Var stable_cross_entropy(Var linear_output, Var target, bool ignore_missing=false)
 {
-    return new NegCrossEntropySigmoidVariable(linear_output, target);
+    return new NegCrossEntropySigmoidVariable(linear_output, target, 0, ignore_missing);
 }
 
 } // end of namespace PLearn

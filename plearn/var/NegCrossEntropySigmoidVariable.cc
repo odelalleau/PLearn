@@ -56,8 +56,8 @@ PLEARN_IMPLEMENT_OBJECT(NegCrossEntropySigmoidVariable,
 ////////////////////////////////////
 // NegCrossEntropySigmoidVariable //
 ////////////////////////////////////
-NegCrossEntropySigmoidVariable::NegCrossEntropySigmoidVariable(Variable* netout, Variable* target, real regularizer_)
-    : inherited(netout,target,1,1),regularizer(regularizer_)
+NegCrossEntropySigmoidVariable::NegCrossEntropySigmoidVariable(Variable* netout, Variable* target, real regularizer_, bool ignore_missing_)
+    : inherited(netout,target,1,1),regularizer(regularizer_), ignore_missing(ignore_missing_)
 {
     build_();
 }
@@ -95,24 +95,27 @@ void NegCrossEntropySigmoidVariable::fprop()
     {
         real output = sigmoid(input1->valuedata[i]);
         real target = input2->valuedata[i];
-        if (fast_exact_is_equal(output,0.0)) {
-            if (fast_exact_is_equal(target, 1.0)) {
-                PLWARNING("NegCrossEntropySigmoidVariable::fprop: model output is 0 and target is 1, cost should be infinite !");
-                cost += -1e9;
-            } // If target == 0.0 do nothing, cost is 0.
-        } else if (fast_exact_is_equal(output, 1.0)) {
-            if (fast_exact_is_equal(target, 0.0)) {
-                PLWARNING("NegCrossEntropySigmoidVariable::fprop: model output is 1 and target is 0, cost should be infinite !");
-                cost += -1e9;
-            } // If target == 1.0 do nothing, cost is 0.
-        } else {
-            if (fast_exact_is_equal(regularizer, 0)) {
-                // Standard cross entropy.
-                cost += target*pl_log(output) + (1.0-target)*pl_log(1.0-output);
+        if(!ignore_missing || !is_missing(target))
+        {
+            if (fast_exact_is_equal(output,0.0)) {
+                if (fast_exact_is_equal(target, 1.0)) {
+                    PLWARNING("NegCrossEntropySigmoidVariable::fprop: model output is 0 and target is 1, cost should be infinite !");
+                    cost += -1e9;
+                } // If target == 0.0 do nothing, cost is 0.
+            } else if (fast_exact_is_equal(output, 1.0)) {
+                if (fast_exact_is_equal(target, 0.0)) {
+                    PLWARNING("NegCrossEntropySigmoidVariable::fprop: model output is 1 and target is 0, cost should be infinite !");
+                    cost += -1e9;
+                } // If target == 1.0 do nothing, cost is 0.
             } else {
-                // Regularized cross entropy.
-                cost += target*((1 - regularizer) * pl_log(output) + regularizer * pl_log(1.0 - output)) +
-                    (1.0-target)*((1 - regularizer) * pl_log(1.0-output) + regularizer * pl_log(output));
+                if (fast_exact_is_equal(regularizer, 0)) {
+                    // Standard cross entropy.
+                    cost += target*pl_log(output) + (1.0-target)*pl_log(1.0-output);
+                } else {
+                    // Regularized cross entropy.
+                    cost += target*((1 - regularizer) * pl_log(output) + regularizer * pl_log(1.0 - output)) +
+                        (1.0-target)*((1 - regularizer) * pl_log(1.0-output) + regularizer * pl_log(output));
+                }
             }
         }
     }
@@ -129,17 +132,21 @@ void NegCrossEntropySigmoidVariable::bprop()
     {
         real output = sigmoid(input1->valuedata[i]);
         real target = input2->valuedata[i];
-        if (fast_exact_is_equal(regularizer, 0)) {
-            // Standard cross entropy.
-            input1->gradientdata[i] += gr*(output - target);
-        } else {
-            // Regularized cross entropy.
-            if (fast_exact_is_equal(target, 0.0)) {
-                input1->gradientdata[i] += gr*((1-regularizer) * output - regularizer * (1-output));
-            } else if (fast_exact_is_equal(target, 1.0)) {
-                input1->gradientdata[i] += gr*(regularizer * output - (1-regularizer) * (1-output));
+        if(!ignore_missing || !is_missing(target))
+        {
+
+            if (fast_exact_is_equal(regularizer, 0)) {
+                // Standard cross entropy.
+                input1->gradientdata[i] += gr*(output - target);
             } else {
-                PLERROR("NegCrossEntropySigmoidVariable::bprop: target is neither 0 nor 1");
+                // Regularized cross entropy.
+                if (fast_exact_is_equal(target, 0.0)) {
+                    input1->gradientdata[i] += gr*((1-regularizer) * output - regularizer * (1-output));
+                } else if (fast_exact_is_equal(target, 1.0)) {
+                    input1->gradientdata[i] += gr*(regularizer * output - (1-regularizer) * (1-output));
+                } else {
+                    PLERROR("NegCrossEntropySigmoidVariable::bprop: target is neither 0 nor 1");
+                }
             }
         }
     }
