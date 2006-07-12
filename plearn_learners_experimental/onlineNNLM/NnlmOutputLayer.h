@@ -47,10 +47,22 @@
 namespace PLearn {
 
 /**
- * Implements the output layer for the Neural Network Language Model. 
+ * Implements an output layer for the Neural Network Language Model. 
  *
- * The previous layer produces the context's (semantic, etc) representation, 'r'.
- * This layer holds the model for p(r|w), where w is a word.
+ * Given 'r' the output of the previous layer (the representation of the input),
+ * and 't' the target class, this module models p(r|t) as a mixture between a gaussian
+ * model and a uniform: p(r|t) = umc * p_g(r|t) + (1-umc) p_u(r|t).
+ * We have p_u(r|c) = 1.0 / 2^input_size
+ * 
+ * The output is then computed from p(r,t) = p(r|t) * p(t):
+ *   - cost = DISCRIMINANT: output is NL of p(t|r) = p(r,t) / sum_{u=0}^{target_cardinality} p(r,u)
+ *   - cost = DISCRIMINANT APPROXIMATED: output is NL of p(t|r)_approx =  p(r,t) / sum_{u' \in Candidates} p(r,u')
+ *   - cost = NON DISCRIMINANT: output is NL of p(r,t)
+ *
+ * Learning of \mu_u and \Sigma_u can be:
+ *   - EMPIRICAL
+ *   - DISCRIMINANT
+ *
  *
  * @todo 
  * @deprecated 
@@ -63,20 +75,23 @@ class NnlmOutputLayer : public OnlineLearningModule
 public:
     //#####  Public Build Options  ############################################
 
-    //! discounts the gaussians' old parameters in the computation of the new
-    //! ones
-    real start_gaussian_learning_discount_rate;
-    real gaussian_learning_decrease_constant;
+    //! specifies the range of the values of 'target'
+    int target_cardinality;
+    //! specifies the range of the values of 'context' (ex: + 'missing' tag)
+    int context_cardinality;
 
-    //! 
+    //! minimal value \sigma^2 can have
     real sigma2min;
 
-    //! specifies the number of classes for the output (output only computed for 1)
-    int virtual_output_size;
+    //! Discriminant learning - dl
+    real dl_start_learning_rate;
+    real dl_decrease_constant;
 
-    //! specifies the number of different tags in the last input. Determines 
-    //! which candidates are used for normalization in the approxdiscriminant case
-    int context_range;
+    //! Empirical learning - el
+    //! discounts the gaussians' old parameters in the computation of the new ones
+    real el_start_discount_rate;
+    real el_decrease_constant;
+
 
 public:
     //#####  Public Member Functions  #########################################
@@ -84,23 +99,54 @@ public:
     //! Default constructor
     NnlmOutputLayer();
 
-    //! Sets w ( fprop computes p(r,w) )
+    //! Sets t, the target
     void setTarget(int the_target) const;
+    //! Sets the context. The Candidates set of the approximated discriminant cost is determined from the context
     void setContext(int the_context) const;
+    //! Sets the cost used in the fprop()
     void setCost(int the_cost);
 
-    void compute_nl_p_ri(const Vec& input, Vec& output) const;
-    void computeApproxDiscriminantCostAndGradient(Vec input, Vec output) const;
-    void addCandidateContribution( int c ) const;
+    //! Used to evaluate class counts
+    void resetClassCounts();
+    void incrementClassCount(int the_target);
+    void applyClassCounts();  // computes the pi[]
 
-    //! Used to reevaluate mu and sigma
+    //! Used for a fresh evaluation of mu and sigma
+    //! Manipulate sumR and sumR2
     void resetTestVars();
     void updateTestVars(const Vec& input);
     void applyTestVars();
 
+    //! Resizes variables and sets pretty much everything back to a 'zero' value
+    void resetParameters();
 
-    //! Computes p(r,w), where r the real distributed context representation 
-    //! in [0,1] and w the word at the considered position
+    //! Computes -log( p(r,t) )
+    void compute_nl_p_rt(const Vec& input, Vec& output) const;
+
+    //! Computes the approximation -log( p(t|r) ) using only some candidates for normalization
+    void compute_approx_nl_p_t_r(const Vec& input, Vec& output) const;
+
+    //! Computes -log( p(t|r) )
+    void compute_nl_p_t_r(const Vec& input, Vec& output) const;
+    void getBestCandidates(Vec& candidate_tags, Vec& probabilities) const;
+
+		//! Compute gradients of different costs with respect to input
+    void computeNonDiscriminantGradient() const;
+    void computeApproxDiscriminantGradient() const;
+    void computeDiscriminantGradient() const;
+    void addCandidateContribution( int c ) const;
+    
+		//! Compute and apply gradients of different costs with respect to mus
+    void applyMuGradient() const;
+    void applyMuTargetGradient() const;
+    void applyMuCandidateGradient(int c) const;
+
+		//! Compute and apply gradients of different costs with respect to sigmas
+    void applySigmaGradient() const;
+    void applySigmaTargetGradient() const;
+    void applySigmaCandidateGradient(int c) const;
+
+    //! Computes 'cost' for the 'target'
     //! given the input, compute the output (possibly resize it  appropriately)
     virtual void fprop(const Vec& input, Vec& output) const;
 
@@ -110,16 +156,16 @@ public:
     //! (and output should not have been modified since then).
     //! Since sub-classes are supposed to learn ONLINE, the object
     //! is 'ready-to-be-used' just after any bpropUpdate.
-    virtual void bpropUpdate(const Vec& input, const Vec& output,
-                             const Vec& output_gradient);
+    /*virtual void bpropUpdate(const Vec& input, const Vec& output,
+                             const Vec& output_gradient);*/
 
     //! NOT IMPLEMENTED - GRADIENT COMPUTED IN NnlmOnlineLearner
     //! And I'm not sure why... TODO find out
     //! this version allows to obtain the input gradient as well
     //! N.B. THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
-    /*virtual void bpropUpdate(const Vec& input, const Vec& output,
+    virtual void bpropUpdate(const Vec& input, const Vec& output,
                               Vec& input_gradient,
-                              const Vec& output_gradient);*/
+                              const Vec& output_gradient);
 
     //! reset the parameters to the state they would be BEFORE starting
     //! training.  Note that this method is necessarily called from
@@ -158,7 +204,6 @@ private:
 
     //! This does the actual building.
     void build_();
-    void resetParameters();
 
 private:
     //#####  Private Data Members  ############################################
@@ -171,32 +216,46 @@ public:
     int step_number;
 
     //! We use a mixture with a uniform to prevent negligeable probabilities
-    //! which cause gradient explosions. Learned as mean of p(g|r)
+    //! which cause gradient explosions. 
+    //! Should be learned as mean of p(g|r)
     //! (probability that gaussian is responsible for observation, given r)
     //! uniform mixture coefficient
     real umc;
 
-    //! The gaussian parameters
-    //! No longer computed as in these comments
-    Mat mu;       // mu(i) -> moyenne empirique des x quand y=i
-    Mat sigma2;   // sigma2(i) -> variance empirique des x quand y=i
+    //! pi(i) = empirical mean when of c==i, ie p(c)
+    Vec pi;
 
-    //! unigramme absolu
-    Vec pi;       // pi[i] -> moyenne empirique de y==i
+    //! Gaussian parameters - p_g(r|c)
+    Mat mu;
+    Mat sigma2;
 
-    //! Variables intermédiaires de compte
-    Mat sumX;     // sumX(i) -> sum_t x_t 1_{y==i}
-    Mat sumX2;    // sumX2(i) -> sum_t x_t^2 1_{y==i}
-    TVec<int> sumI;     // sumI(i) -> sum_t 1_{y==i}
+    //! EMPIRICAL LEARNING
+    //! Intermediaries
     int s_sumI;  // sum_t 1
+    TVec<int> sumI;     // sumI(i) -> sum_t 1_{c==i}
 
-    //! Variables intermédiaires de compte - *TEST*
-    Mat test_sumX;     // sumX(i) -> sum_t x_t 1_{y==i}
-    Mat test_sumX2;    // sumX2(i) -> sum_t x_t^2 1_{y==i}
-    TVec<int> test_sumI;     // sumI(i) -> sum_t 1_{y==i}
-    int test_s_sumI;  // sum_t 1
+    Mat sumR;     // sumR(i) -> sum_t r_t 1_{c==i}
+    Mat sumR2;    // sumR2(i) -> sum_t r_t^2 1_{c==i}
+
+    Mat test_sumR;
+    Mat test_sumR2;
+
+    // TODO THIS COULD BE A LEARNT OPTION
+    //! Holds candidates
+    TVec<int> shared_candidates;    // frequent (ie paying) words
+    TVec< TVec<int> > candidates;   // context specific candidates
+
+    // for learning umc
+    //mutable real log_p_g_r;
+    //mutable real sum_log_p_g_r;
 
     //#####  Don't need to be saved  ##########################################
+
+    enum{COST_DISCR=0, COST_APPROX_DISCR=1, COST_NON_DISCR=2};  // ### Watchout... also defined in NnlmOnlineLearner.
+    enum{LEARNING_DISCRIMINANT=0, LEARNING_EMPIRICAL=1};        // Granted, this is not good.
+
+    // Specifies learning procedure
+    int learning;
 
     //!Must be set before calling fprop
     //{
@@ -209,45 +268,39 @@ public:
         mutable int context;
     //}
 
-    mutable Vec its_input;
-    mutable real nd_cost;
-    mutable real ad_cost;
-    mutable Vec nd_gradient;
-    mutable Vec ad_gradient;
+    //##### Intermediates ######################################################
 
-    //! temporary variables
-    //! TODO clean this up
-
-    mutable Vec gradient_tmp;
-    mutable Vec gradient_tmp_pos;
-    mutable Vec gradient_tmp_neg;
-
-    mutable real r;
+    mutable real s;
     mutable real g_exponent;
-    mutable real det_g_covariance;
+    mutable real g_det_covariance;
     mutable real log_g_normalization;
 
-    mutable real log_p_rg_i;
-    mutable real log_p_r_i;
-    mutable real log_p_ri;
-    mutable real log_sum_p_rj;
+    mutable Vec vec_log_p_rg_t;
+    mutable Vec vec_log_p_r_t;
+    mutable Vec vec_log_p_rt;
+    mutable real log_sum_p_ru;
 
-    mutable real log_p_g_r;
-    mutable real sum_log_p_g_r;
+    // holds \Sigma^-1 (r-\mu)
+    mutable Mat beta;
 
+    // holds pi[] * p_rg_t * \Sigma^-1 (r-\mu)
+    //mutable Mat gamma;
+
+    mutable Vec nd_gradient;
+    mutable Vec ad_gradient;
+    mutable Vec fd_gradient;
+
+    mutable Vec gradient_log_tmp;
+    mutable Vec gradient_log_tmp_pos;
+    mutable Vec gradient_log_tmp_neg;
 
     //! The original way of computing the mus and sigmas (ex. mu memorize \sum r
     //! and then divide) had the effect learning slowed down with time.
     //! We use this discount rate now.
     //! TODO validate computation of mus and sigmas
     //! gaussian_learning_discount_rate
-    real gldr;
-
-    // TODO THIS COULD BE A LEARNT OPTION
-    //! Holds candidates
-    TVec<int> shared_candidates;    // frequent (ie paying) words
-    TVec< TVec<int> > candidates;   // context specific candidates
-
+    mutable real el_dr;
+    mutable real dl_lr;
 
 };
 
