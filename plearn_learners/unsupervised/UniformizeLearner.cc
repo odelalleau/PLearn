@@ -93,6 +93,9 @@ void UniformizeLearner::declareOptions(OptionList& ol)
     declareOption(ol, "val_to_rank", &UniformizeLearner::val_to_rank, OptionBase::learntoption,
                   "Remembers mapping between a few values and their [0,1] ranking.");
 
+    declareOption(ol, "input_field_names", &UniformizeLearner::input_field_names, OptionBase::learntoption,
+                  "Remembers the names of the input fields.");
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
