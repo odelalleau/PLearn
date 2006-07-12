@@ -186,28 +186,27 @@ void AutoLinearRegressor::train()
         int l = tset.length();
         Mat X = tset.subMatColumns(0,ninputs);
         Mat Y = tset.subMatColumns(ninputs, ntargets);
+        Vec gamma; // the weights
+
+        mean_target.resize(ntargets);
+        mean_target.fill(0);
 
         if(nweights!=0)
         {
-            PLERROR("In AutoLinearRegressor, sample weights not yet supported");
-            int wpos = ninputs+ntargets;
-            for(int i=0; i<l; i++)
-            {
-                real sw = sqrt(tset(i,wpos));
-                X(i) *= sw;
-                Y(i) *= sw;
-            }
+            gamma = tset.column(ninputs+ntargets).toVecCopy();
+            for(int i=0;  i<l; i++)
+                multiplyAcc(mean_target, Y(i), gamma[i]);
+            mean_target /= sum(gamma);
         }
-
-        mean_target.resize(ntargets);
-        columnMean(Y, mean_target);
+        else
+            columnMean(Y, mean_target);
         Y -= mean_target;
 
         //weights.resize(insize, ntargets);
         weights.resize(ntargets, insize);
         real best_GCV;
       
-        weight_decay = ridgeRegressionByGCV(X, Y, weights, best_GCV, false, -1, 5, min_weight_decay);
+        weight_decay = weightedRidgeRegressionByGCV(X, Y, gamma, weights, best_GCV, min_weight_decay);
 
         //Mat weights_excluding_biases = weights.subMatRows(include_bias? 1 : 0, ninputs);
         Mat weights_excluding_biases = weights.subMatColumns(include_bias? 1 : 0, ninputs);

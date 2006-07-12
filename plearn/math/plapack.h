@@ -645,7 +645,7 @@ real GCV(Mat X, Mat Y, real weight_decay, bool X_is_transposed=false, Mat* W=0);
 //!                   ( n - p + sum_{j=1}^p (weight_decay  / (d_j^2 + weight_decay)) )^2
 //! where Z = U' Y, z_j is the j-th element of Z and d_j is the j-th singular value of X, with X = U D V' the SVD.
 //! The vector s with s_i = (weight_decay  / (d_j^2 + weight_decay)) must also be pre-computed.
-real GCVfromSVD(int n, real Y2minusZ2, Vec Z, Vec s);
+real GCVfromSVD(real n, real Y2minusZ2, Vec Z, Vec s);
 
 //! Perform ridge regression WITH model selection (i.e. choosing the weight decay).
 //! The selection of weight decay is done in order to minimize the Generalized Cross Validation
@@ -670,6 +670,9 @@ real GCVfromSVD(int n, real Y2minusZ2, Vec Z, Vec s);
 //! Set best_GCV to the GCV of the selected weight decay and return that selected weight decay.
 real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_GCV, bool X_is_transposed=false, 
                           real initial_weight_decay_guess=-1, int explore_threshold=5, real min_weight_decay=0);
+
+
+real weightedRidgeRegressionByGCV(Mat X, Mat Y, Vec gamma, Mat W, real& best_gcv, real min_weight_decay=0);
 
 
 // COMMENTED OUT BECAUSE INCORRECT COMPUTATION OF GCV: CORRECT COMPUTATION DONE WITH ABOVE ROUTINES

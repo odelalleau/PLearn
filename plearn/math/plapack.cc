@@ -764,7 +764,7 @@ real GCV(Mat X, Mat Y, real weight_decay, bool X_is_transposed, Mat* W)
 //!                   ( n - p + sum_{j=1}^p (weight_decay  / (d_j^2 + weight_decay)) )^2
 //! where Z = U' Y, z_j is the j-th element of Z and d_j is the j-th singular value of X, with X = U D V' the SVD.
 //! The vector s with s_i = (weight_decay  / (d_j^2 + weight_decay)) must also be pre-computed.
-real GCVfromSVD(int n, real Y2minusZ2, Vec Z, Vec s)
+real GCVfromSVD(real n, real Y2minusZ2, Vec Z, Vec s)
 {
     int p = s.length();
     real numerator=Y2minusZ2, denominator=n-p;
@@ -857,10 +857,18 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_gcv, bool X_is_transpo
     best_gcv = 1e38;
     real best_weight_decay = min_weight_decay;
     if (initial_weight_decay_guess<0) // TRY ALL EIGENVALUES
+        // for (int i=1;i<=rank;i++)
         for (int i=1;i<rank;i++)
         {
             bool stop=false;
-            real weight_decay = exp(0.5*(pl_log(eigen_values[i-1])+pl_log(eigen_values[i])));
+            real weight_decay = 0;
+            /*
+            if(i==rank)
+                weight_decay = min_weight_decay;
+            else
+            */
+            weight_decay = exp(0.5*(pl_log(eigen_values[i-1])+pl_log(eigen_values[i])));
+            // perr << "Trying weight_decay = " << weight_decay;
             if (weight_decay < min_weight_decay)
             {
                 weight_decay = min_weight_decay;
@@ -868,12 +876,13 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_gcv, bool X_is_transpo
             }
             for (int j=0;j<rank;j++)
                 s[j] = weight_decay / (weight_decay + eigen_values[j]);
-            gcv[i] = 0;
+            real gcv_i = 0;
             for (int j=0;j<m;j++)
-                gcv[i] += GCVfromSVD(n,y2[j]-z2[j], Z(j), s);
-            if (gcv[i]<best_gcv)
+                gcv_i += GCVfromSVD(n,y2[j]-z2[j], Z(j), s);
+            // perr << " -> gcv =  " << gcv_i << endl;
+            if (gcv_i<best_gcv)
             {
-                best_gcv=gcv[i];
+                best_gcv=gcv_i;
                 best_weight_decay = weight_decay;
                 best_s << s;
             }
@@ -1002,6 +1011,115 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_gcv, bool X_is_transpo
                 }
             }
         }
+    }
+
+    // compute weights for selected weight decay
+    for (int j=0;j<m;j++)
+    {
+        Vec zj = Z(j);
+        for (int i=0;i<rank;i++)
+            zj[i] *= best_s[i]*singular_values[i]/best_weight_decay;
+        transposeProduct(W(j),Vt,zj);
+    }
+    return best_weight_decay;
+}
+
+
+
+real weightedRidgeRegressionByGCV(Mat X, Mat Y, Vec gamma, Mat W, real& best_gcv, real min_weight_decay)
+{
+    int l = X.length();
+    Mat Xcopy = X.copy();
+    Mat Ycopy = Y.copy();    
+
+    real gamma_sum = 0;
+    if(gamma.length()==0)
+        gamma_sum = l;    
+    else
+    {
+        gamma_sum = sum(gamma);
+        for(int i=0; i<l; i++)
+        {
+            real s = sqrt(gamma[i]);
+            Xcopy(i) *= s;
+            Ycopy(i) *= s;
+        }
+    }
+    
+    int n = Ycopy.length();
+    int m = Ycopy.width();
+    int p = Xcopy.width();
+    int nx = Xcopy.length();
+
+    if (nx!=n)
+        PLERROR("ridgeRegressionByGCV: incompatible arguments X and Y don't have same number of examples: %d and %d\n",nx,n);
+    if (W.length()!=m)
+        PLERROR("ridgeRegressionByGCV: incompatible arguments W and Y don't have compatible dimensions: %d and %d\n",W.length(),m);
+    if (W.width()!=p)
+        PLERROR("ridgeRegressionByGCV: incompatible arguments W and X don't have compatible dimensions: %d and %d\n",W.width(),p);
+    static Mat U, Vt, Z, squaredZ;
+    static Vec singular_values, eigen_values, s, y2, z2, best_s;
+    int rank = min(n,p);
+    U.resize(n,rank);
+    Vt.resize(rank,p);
+    singular_values.resize(rank);
+    eigen_values.resize(rank);
+    Z.resize(m,rank);
+    squaredZ.resize(m,rank);
+    s.resize(rank);
+    best_s.resize(rank);
+    y2.resize(m);
+    z2.resize(m);
+    assert( !Xcopy.hasMissing() );
+    SVD(Xcopy, U, singular_values, Vt, 'S', 2);
+    // perr << "Singular values: " << singular_values << endl;
+    for (int i=0;i<rank;i++)
+        eigen_values[i] = singular_values[i]*singular_values[i];
+    // perr << "Eigen values: " << eigen_values << endl;
+
+    for (int j=0;j<m;j++)
+    {
+        Mat Yj = Ycopy.column(j);
+        Vec Zj = Z(j);
+        y2[j] = sumsquare(Yj);
+        transposeProduct(Zj.toMat(rank,1),U,Yj);
+        z2[j] = pownorm(Zj);
+    }
+
+    static Vec gcv;
+    gcv.resize(rank);
+    gcv.fill(-1.);
+    best_gcv = 1e38;
+    real best_weight_decay = min_weight_decay;
+
+    for (int i=1;i<=rank;i++)
+    {
+        bool stop=false;
+        real weight_decay = 0;
+        if(i==rank)
+            weight_decay = min_weight_decay;
+        else
+            weight_decay = exp(0.5*(pl_log(eigen_values[i-1])+pl_log(eigen_values[i])));
+        // perr << "Trying weight_decay = " << weight_decay;
+        if (weight_decay < min_weight_decay)
+        {
+            weight_decay = min_weight_decay;
+            stop = true;
+        }
+        for (int j=0;j<rank;j++)
+            s[j] = weight_decay / (weight_decay + eigen_values[j]);
+        real gcv_i = 0;
+        for (int j=0;j<m;j++)
+            gcv_i += GCVfromSVD(gamma_sum,y2[j]-z2[j], Z(j), s);
+        // perr << " -> gcv =  " << gcv_i << endl;
+        if (gcv_i<best_gcv)
+        {
+            best_gcv=gcv_i;
+            best_weight_decay = weight_decay;
+            best_s << s;
+        }
+        if (stop)
+            break;
     }
 
     // compute weights for selected weight decay
