@@ -508,10 +508,10 @@ def printusage():
     print
     print 'Other possible options are:'
     print '  -force: force recompilation of all necessary files, even if they are up to date.'
-    print '  -local: don\'t use parallel compilation, even if there is a .pymake/<platform>.hosts file.'
+    print '  -local: do not use parallel compilation, even if there is a .pymake/<platform>.hosts file.'
     print '  -tmp[=tmp_dir]: compile all objects into a single directory (default is /tmp/OBJS).'
     print '                  This option currently implies \'-local\'.'
-    print '  -clean: removes all OBJS subrdirectories recursively in all given directories'
+    print '  -clean: remove all OBJS subrdirectories recursively in all given directories'
     print '  -checkobj: will report all source files that don\'t have *any* correponding .o in OBJS.'
     print '             This processes recursively from given directories and is typically called'
     print '             after a pymake -clean, and a pymake . to get the list of files that failed to compile.'
@@ -532,15 +532,18 @@ def printusage():
     print '  -ssh: run compilation commands on remote hosts with ssh instead of rsh (default).'
     print '  -symlinkobjs: at link time, will create links to the used object files (of the form'
     print '                1.o, 2.o, etc) in order to obtain a smaller link command line.'
-    print
-    print "A special option is -dependency: if this is given, target won't be compiled or linked,"
-    print "but information regarding the dependency graph will be produced insted, as follows:"
-    print "  pymake -dependency target "
-    print "    will generate the full dependency graph of target in targetname.dot and targetname.ps file."
-    print "  pymake -dependency target dependency "
-    print "    will look for dependency (which must be a filename.cc or filename.h"
-    print "    without full path or a library_name) and print out the first path it"
-    print "    finds in the dependency graph that links target and dependency"
+    print ''
+    print 'There exist special options that will not compile or link the target, but instead'
+    print 'perform various operations. These special options are:'
+    print '  -dependency: information regarding the dependency graph will be produced, as follows:'
+    print '      pymake -dependency target'
+    print '          will generate the full dependency graph of target in targetname.dot and '
+    print '          targetname.ps files.'
+    print '      pymake -dependency target dependency '
+    print '          will look for dependency (which must be a filename.cc or filename.h'
+    print '          without full path or a library_name) and print out the first path it'
+    print '          finds in the dependency graph that links target and dependency'
+    print '  -vcproj: a Visual Studio project file (.vcproj) for the target will be created.'
     print
     print """The configuration file 'config' for pymake is searched for
 first in the .pymake subdirectory of the current directory, then similarly
@@ -684,6 +687,12 @@ if 'dist' in optionargs:
     optionargs.remove('dist')    
 else:
     distribute = 0
+
+vcproj = 0
+if 'vcproj' in optionargs:
+    vcproj = 1
+    force_recompilation = 1
+    optionargs.remove('vcproj')
 
 SPC = 0
 if 'spc' in optionargs :
@@ -1311,8 +1320,10 @@ class FileInfo:
         # Restore original working directory.
         os.chdir(backup_cwd)
 
-    def compile_command(self):
-        """returns the command line necessary to compile this .cc file"""
+    def compiler_options(self):
+        """returns the compilation options to give on the compiler command
+           line when compiling this .cc file
+        """
         fname = join(self.filedir,'.'+self.filebase+'.override_compile_options')
         options_override = {}
         if os.path.isfile(fname):
@@ -1320,30 +1331,21 @@ class FileInfo:
             options_override = eval(f.read())
             f.close()
 
-        compiler = default_compiler
         compileroptions = ""
 
         if force_32bits:
-            compileroptions = compileroptions + ' -m32'
+            compileroptions += ' -m32'
 
         for opt in options:
             optdef = pymake_options_defs[opt]
             if options_override.has_key(opt):
-                compileroptions = compileroptions+ ' ' + options_override[opt]
+                compileroptions += ' ' + options_override[opt]
             else:
-                compileroptions = compileroptions + ' ' + optdef.compileroptions
-            if optdef.compiler:
-                compiler = optdef.compiler
+                compileroptions += ' ' + optdef.compileroptions
 
         optlib_compopt = self.get_optional_libraries_compileroptions();
-        # print optlib_compopt
 
-        if platform == 'win32' or nice_value == '0':
-          nice = ''
-        else:
-          nice = nice_command + nice_value + ' '
-
-        command = nice + compiler + ' ' + compileflags + ' ' + compileroptions + ' ' + string.join(optlib_compopt, ' ')
+        compileroptions = compileflags + ' ' + compileroptions + ' ' + string.join(optlib_compopt, ' ')
 
         includedirs = [] + sourcedirs + mandatory_includedirs + self.get_optional_libraries_includedirs()
         if includedirs:
@@ -1351,9 +1353,28 @@ class FileInfo:
             # Make sure we have no '\' character, which Cygwin / Windows does
             # not always handle properly in paths.
             joined_includedirs = joined_includedirs.replace("\\", "/")
-            command = command + ' -I' + joined_includedirs
+            compileroptions += ' -I' + joined_includedirs
 
-        command = command + ' -o ' + self.corresponding_ofile + ' -c ' + self.filepath
+        return compileroptions
+
+    def compile_command(self):
+        """returns the command line necessary to compile this .cc file"""
+
+        compiler = default_compiler
+
+        for opt in options:
+            optdef = pymake_options_defs[opt]
+            if optdef.compiler:
+                compiler = optdef.compiler
+
+
+        if platform == 'win32' or nice_value == '0':
+          nice = ''
+        else:
+          nice = nice_command + nice_value + ' '
+
+        command = nice + compiler + ' ' + self.compiler_options() + \
+                  ' -o ' + self.corresponding_ofile + ' -c ' + self.filepath
 
         return command
 
@@ -2092,10 +2113,212 @@ try:
             print '++++ Computing dependencies of '+target+' ...'
             get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_link, linkname)
 
-            # We dont want to compile. We will extract the necessary file to compile
-            # the target with a makefile
             if distribute:
+                # We dont want to compile. We will extract the necessary file to compile
+                # the target with a makefile
                 distribute_source(target, ccfiles_to_compile, executables_to_link, linkname)
+
+            elif vcproj: # We only want to generate a Visual Studio project file.
+                list_of_file_objects = ccfiles_to_compile.keys()
+
+                (project_base_name_with_dir, ext) = os.path.splitext(target)
+                project_base_name = os.path.basename(project_base_name_with_dir)
+                vcproj_file = project_base_name + '.vcproj'
+                print 'Creating Visual Studio project file %s for target %s.' % \
+                    (vcproj_file, target)
+                import xml.dom.ext
+                import xml.dom.minidom
+                vcproj_xml = xml.dom.minidom.Document()
+                root = vcproj_xml.createElement("VisualStudioProject")
+                root.setAttribute('Name', project_base_name)
+                root.setAttribute('ProjectType', 'Visual C++')
+                root.setAttribute('Version', '7.10')
+                root.setAttribute('Keyword', 'Win32Proj')
+                platforms_node = vcproj_xml.createElement('Platforms')
+                platform_node = vcproj_xml.createElement('Platform')
+                platform_node.setAttribute('Name', 'Win32')
+                platforms_node.appendChild(platform_node)
+                root.appendChild(platforms_node)
+
+                configurations_node = vcproj_xml.createElement('Configurations')
+                configuration_node = vcproj_xml.createElement('Configuration')
+                configuration_node.setAttribute('Name', 'Debug|Win32')
+                configuration_node.setAttribute('OutputDirectory', 'Debug')
+                configuration_node.setAttribute('IntermediateDirectory', 'Debug')
+                configuration_node.setAttribute('ConfigurationType', '1')
+                configuration_node.setAttribute('CharacterSet', '2')
+                tool_node = vcproj_xml.createElement('Tool')
+                tool_node.setAttribute('Name', 'VCCLCompilerTool')
+                tool_node.setAttribute('AdditionalOptions', list_of_file_objects[0].compiler_options())
+                tool_node.setAttribute('Optimization', '0')
+                tool_node.setAttribute('AdditionalIncludeDirectories', plearndir)
+                tool_node.setAttribute('PreprocessorDefinitions', 'WIN32;_DEBUG;_CONSOLE')
+                tool_node.setAttribute('MinimalRebuild', 'TRUE')
+                tool_node.setAttribute('BasicRuntimeChecks', '3')
+                tool_node.setAttribute('RuntimeLibrary', '5')
+                tool_node.setAttribute('UsePrecompiledHeader', '0')
+                tool_node.setAttribute('WarningLevel', '3')
+                tool_node.setAttribute('Detect64BitPortabilityProblems', 'TRUE')
+                tool_node.setAttribute('DebugInformationFormat', '4')
+                configuration_node.appendChild(tool_node)
+                tool_node = vcproj_xml.createElement('Tool')
+                tool_node.setAttribute('Name', 'VCCustomBuildTool')
+                configuration_node.appendChild(tool_node)
+                tool_node = vcproj_xml.createElement('Tool')
+                tool_node.setAttribute('Name', 'VCLinkerTool')
+                tool_node.setAttribute('OutputFile', '$(OutDir)/%s.exe' % project_base_name)
+                tool_node.setAttribute('LinkIncremental', '2')
+                tool_node.setAttribute('GenerateDebugInformation', 'TRUE')
+                tool_node.setAttribute('ProgramDatabaseFile', '$(OutDir)/%s.pdb' % project_base_name)
+                tool_node.setAttribute('SubSystem', '1')
+                tool_node.setAttribute('TargetMachine', '1')
+                configuration_node.appendChild(tool_node)
+                tool_node = vcproj_xml.createElement('Tool')
+                tool_node.setAttribute('Name', 'VCMIDLTool')
+                configuration_node.appendChild(tool_node)
+                tool_node = vcproj_xml.createElement('Tool')
+                tool_node.setAttribute('Name', 'VCPostBuildEventTool')
+                configuration_node.appendChild(tool_node)
+                tool_node = vcproj_xml.createElement('Tool')
+                tool_node.setAttribute('Name', 'VCPreBuildEventTool')
+                configuration_node.appendChild(tool_node)
+                tool_node = vcproj_xml.createElement('Tool')
+                tool_node.setAttribute('Name', 'VCPreLinkEventTool')
+                configuration_node.appendChild(tool_node)
+                tool_node = vcproj_xml.createElement('Tool')
+                tool_node.setAttribute('Name', 'VCResourceCompilerTool')
+                configuration_node.appendChild(tool_node)
+                tool_node = vcproj_xml.createElement('Tool')
+                tool_node.setAttribute('Name', 'VCWebServiceProxyGeneratorTool')
+                configuration_node.appendChild(tool_node)
+                tool_node = vcproj_xml.createElement('Tool')
+                tool_node.setAttribute('Name', 'VCXMLDataGeneratorTool')
+                configuration_node.appendChild(tool_node)
+                tool_node = vcproj_xml.createElement('Tool')
+                tool_node.setAttribute('Name', 'VCWebDeploymentTool')
+                configuration_node.appendChild(tool_node)
+                tool_node = vcproj_xml.createElement('Tool')
+                tool_node.setAttribute('Name', 'VCManagedWrapperGeneratorTool')
+                configuration_node.appendChild(tool_node)
+                tool_node = vcproj_xml.createElement('Tool')
+                tool_node.setAttribute('Name', 'VCAuxiliaryManagedWrapperGeneratorTool')
+                configuration_node.appendChild(tool_node)
+                configurations_node.appendChild(configuration_node)
+                root.appendChild(configurations_node)
+
+                references_node = vcproj_xml.createElement('References')
+                root.appendChild(references_node)
+                files_node = vcproj_xml.createElement('Files')
+                filter_source_node = vcproj_xml.createElement('Filter')
+                filter_source_node.setAttribute('Name', 'Source Files')
+                filter_source_node.setAttribute('Filter', \
+                                      'cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx')
+                files_node.appendChild(filter_source_node)
+                filter_header_node = vcproj_xml.createElement('Filter')
+                filter_header_node.setAttribute('Name', 'Header Files')
+                filter_header_node.setAttribute('Filter', \
+                                      'h;hpp;hxx;hm;inl;inc;xsd')
+                files_node.appendChild(filter_header_node)
+                root.appendChild(files_node)
+                globals_node = vcproj_xml.createElement('Globals')
+                root.appendChild(globals_node)
+                vcproj_xml.appendChild(root)
+                #xml.dom.ext.PrettyPrint(vcproj_xml)
+
+                # Find all files to add to the project.
+                # TODO Note that there must be missing header files (those with
+                # no corresponding cc file).
+                list_of_files = []
+                for ccfile in list_of_file_objects:
+                    list_of_files.append(ccfile.filepath)
+                    (basename, ext) = \
+                        os.path.splitext(os.path.realpath(ccfile.filepath))
+                    if os.path.exists(basename + '.h'):
+                        list_of_files.append(basename + '.h')
+
+                # Now go through all files and add them to the project, also
+                # creating the corresponding directory hierarchy.
+                plearn_root = os.path.realpath(plearndir)
+                current_dir = os.path.realpath(os.getcwd())
+                for ccfile in list_of_files:
+                    file = os.path.realpath(ccfile)
+                    # Find relative Windows path.
+                    win_path = file
+                    prefix = os.path.commonprefix((file, current_dir))
+                    # Get rid of potential truncated directory name due to the
+                    # way commonprefix(..) works (character by character).
+                    (prefix, tail) = os.path.split(prefix)
+                    win_path = ''
+                    if prefix != '':
+                        head = current_dir
+                        while head != prefix:
+                            (head, tail) = os.path.split(head)
+                            win_path = os.path.join(win_path, '..')
+                    else:
+                        print 'Cannot currently recover relative path if ' \
+                              'there is no common prefix'
+                        sys.exit(1)
+                    win_path += file[len(prefix):]
+                    win_path = win_path.replace('/', '\\')
+
+                    # Find out if this file is in PLearn.
+                    if os.path.commonprefix((file, plearn_root)) == plearn_root:
+                        is_in_plearn = True
+                        file = file[len(plearn_root) + 1:]
+                        # print file
+                    else:
+                        is_in_plearn = False
+                    directory = os.path.dirname(file)
+                    tail = 'dummy'
+                    list_of_dirs = []
+                    while directory != '' and tail != '':
+                        (directory, tail) = os.path.split(directory)
+                        if tail != '':
+                            list_of_dirs.append(tail)
+                    if is_in_plearn:
+                        list_of_dirs.append('PLearn')
+                    list_of_dirs.reverse()
+                    # print list_of_dirs
+                    (base, ext) = os.path.splitext(file)
+                    if ext == '.cc' or ext == '.cpp':
+                        current_files_node = filter_source_node
+                    elif ext == '.h':
+                        current_files_node = filter_header_node
+                    else:
+                        print 'File %s has an unknown extension, aborting!' \
+                                % file
+                        sys.exit(1)
+                    for directory in list_of_dirs:
+                        # Check if this directory already exists.
+                        found = False
+                        for n in current_files_node.childNodes:
+                            if n.localName == 'Filter' and n.getAttribute('Name') == directory:
+                                found = True
+                                current_files_node = n
+                        if not found:
+                            new_node = vcproj_xml.createElement('Filter')
+                            new_node.setAttribute('Name', directory)
+                            #new_node.setAttribute('Filter', '')
+                            current_files_node.appendChild(new_node)
+                            current_files_node = new_node
+                    new_file_node = vcproj_xml.createElement('File')
+                    new_file_node.setAttribute('RelativePath', win_path)
+                    current_files_node.appendChild(new_file_node)
+
+                saved_file_tmp_name = vcproj_file + '.tmp'
+                saved_file_tmp = open(saved_file_tmp_name, 'w')
+                xml.dom.ext.PrettyPrint(vcproj_xml, saved_file_tmp)
+                saved_file_tmp.close()
+                # This 'magic' sed command is meant to make sure the 'Name'
+                # attribute is always first, as otherwise Visual Studio does
+                # not want to load the project file.
+                command_to_run = \
+                    "sed -e \"s/<\\([^ ]\\+\\) \\(.*\\)\\( Name='[^']*'\\)\\(.*\\)>/<\\1\\3 \\2\\4>/g\" %s" % saved_file_tmp_name
+                final_content = toolkit.command_output(command_to_run)
+                saved_file = open(vcproj_file, 'w')
+                saved_file.writelines(final_content)
+                os.remove(saved_file_tmp_name)
+
             else:
                 print '++++ Compiling...'
                 if platform=='win32':
