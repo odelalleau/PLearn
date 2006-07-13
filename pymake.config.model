@@ -361,8 +361,8 @@ linkeroptions_tail += ' -L' + libdir + ' -lm'
 # First option that appears in each group is the default, and is assumed if you
 # do not specify any option from that group.
 options_choices = [
-  [ 'g++', 'g++3', 'g++no-cygwin', 'icc', 'icc8', 'icc9', 'mpi', 'purify', 'quantify' ],
-  [ 'dbg', 'opt', 'pintel', 'gprof', 'safegprof', 'safeopt', 'safeoptdbg', 'checkopt' ],
+  [ 'g++', 'g++3', 'g++no-cygwin', 'icc', 'icc8', 'icc9', 'mpi', 'purify', 'quantify', 'vc++' ],
+  [ 'dbg', 'opt', 'pintel', 'gprof', 'safegprof', 'safeopt', 'safeoptdbg', 'checkopt', 'genericvc++' ],
   [ 'double', 'float' ],
   [ 'throwerrors', 'exiterrors' ], 
   [ 'blas', 'p3blas','p4blas','athlonblas','pentiumblas', 'mammouthblas', 'noblas', 'veclib', 'scs'],
@@ -448,6 +448,13 @@ pymakeOption( name = 'quantify',
               compileroptions = '-DUSING_MPI=0 -ftemplate-depth-100',
               linker = 'quantify -g++ g++' )
 
+pymakeOption( name = 'vc++',
+              description = 'compiling with Visual Studio (.Net 2003)',
+              compiler = 'vc++', # Dummy.
+              compileroptions = '-DUSING_MPI=0' \
+                      + gcc_opt_options,
+              linker = 'g++' )
+
 pymakeOption( name = 'dbg',
               description = 'debug mode',
               compileroptions = '-Wall -g -O0 -DBOUNDCHECK' )
@@ -493,6 +500,12 @@ pymakeOption( name = 'safegprof',
               description = 'safe optimized mode with profiler support (-pg)',
               compileroptions = '-Wall -O3 -DBOUNDCHECK -pg',
               linkeroptions = '-pg' )
+
+pymakeOption( name = 'genericvc++',
+              description = 'Generic compilation options for Visual C++: ' \
+                            'the debug/opt options are actually set directly '\
+                            'in the .vcproj project file',
+              compileroptions = '' )
 
 lapack_linkeroptions = '-llapack'
 blas_linkeroptions = '-lblas -lg2c'
