@@ -135,6 +135,9 @@ PStream& operator>>(PStream& in, RealRange &x);
  */
 class RealMapping: public Object
 {
+private:
+	    typedef Object inherited;
+
 protected: 
     static void declareOptions(OptionList& ol);
 
@@ -154,7 +157,6 @@ public:
     real other_mapsto; // value to which to map values not inmapping, if keep_other_as_is is false 
     
 public:
-    typedef Object inherited;
     PLEARN_DECLARE_OBJECT(RealMapping);
     
     RealMapping()
