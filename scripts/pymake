@@ -693,6 +693,10 @@ if 'vcproj' in optionargs:
     vcproj = 1
     force_recompilation = 1
     optionargs.remove('vcproj')
+    if 'vc++' not in optionargs:
+        optionargs.append('vc++')
+    if 'genericvc++' not in optionargs:
+        optionargs.append('genericvc++')
 
 SPC = 0
 if 'spc' in optionargs :
@@ -2149,9 +2153,19 @@ try:
                 configuration_node.setAttribute('CharacterSet', '2')
                 tool_node = vcproj_xml.createElement('Tool')
                 tool_node.setAttribute('Name', 'VCCLCompilerTool')
-                tool_node.setAttribute('AdditionalOptions', list_of_file_objects[0].compiler_options())
+                comp_options = list_of_file_objects[0].compiler_options()
+                comp_options += ' -DBOUNDCHECK' # Enable BOUNDCHECK in debug.
+                comp_options += ' /GR' # Enable runtime type information
+                                       # for dynamic casts.
+
+                # Get rid of potential MinGW definition when pymake is run under
+                # MinGW to generate the Visual Studio project.
+                comp_options = comp_options.replace('-D_MINGW_', '')
+                tool_node.setAttribute('AdditionalOptions', comp_options)
                 tool_node.setAttribute('Optimization', '0')
-                tool_node.setAttribute('AdditionalIncludeDirectories', plearndir)
+                # TODO Automatically add include directories from CPATH, or from
+                # a command-line argument?
+                tool_node.setAttribute('AdditionalIncludeDirectories', plearndir + ';R:\cygwin\local\include')
                 tool_node.setAttribute('PreprocessorDefinitions', 'WIN32;_DEBUG;_CONSOLE')
                 tool_node.setAttribute('MinimalRebuild', 'TRUE')
                 tool_node.setAttribute('BasicRuntimeChecks', '3')
@@ -2239,11 +2253,11 @@ try:
                 # Now go through all files and add them to the project, also
                 # creating the corresponding directory hierarchy.
                 plearn_root = os.path.realpath(plearndir)
-                current_dir = os.path.realpath(os.getcwd())
+                current_dir = os.path.normcase(os.path.realpath(os.getcwd()))
                 for ccfile in list_of_files:
-                    file = os.path.realpath(ccfile)
+                    file = os.path.normcase(os.path.realpath(ccfile))
                     # Find relative Windows path.
-                    win_path = file
+                    file = os.path.normcase(file)
                     prefix = os.path.commonprefix((file, current_dir))
                     # Get rid of potential truncated directory name due to the
                     # way commonprefix(..) works (character by character).
@@ -2256,7 +2270,8 @@ try:
                             win_path = os.path.join(win_path, '..')
                     else:
                         print 'Cannot currently recover relative path if ' \
-                              'there is no common prefix'
+                              'there is no common prefix (between %s and %s)' \
+                              % (file, current_dir)
                         sys.exit(1)
                     win_path += file[len(prefix):]
                     win_path = win_path.replace('/', '\\')
