@@ -1380,6 +1380,11 @@ void VMatrix::compacify() {}
 ///////////
 Mat VMatrix::toMat() const
 {
+    return toMatCopy();
+}
+
+Mat VMatrix::toMatCopy() const
+{
     Mat m(length(),width());
     getMat(0,0,m);
     return m;

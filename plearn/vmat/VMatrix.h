@@ -514,14 +514,19 @@ public:
     bool find(const Vec& input, real tolerance, int* i = 0, int i_start = 0) const;
 
 /*! Returns a Mat with the same data as this VMat
-  The default version of this method copies the data in a fresh Mat created in memory
+  The default version of this method calls toMatCopy(). 
   However this method will typically be overrided by subclasses (such as MemoryVMatrix)
   whose internal representation is already a Mat in order to return this Mat directly to avoid
   a new memory allocation and copy of elements. In this case, and in this case only, modifying
   the elements of the returned Mat will logically result in modified elements in the original
-  VMatrix view of it.
+  VMatrix view of it. If you want to be sure that altering the content of the returned Mat
+  won't modify the data contained in the VMatrix, you should call toMatCopy() instead.
 */
     virtual Mat toMat() const;
+
+//! Returns a Mat with the same data as this VMat.
+//! This method copies the data in a fresh Mat created in memory
+    Mat toMatCopy() const;
 
     //! The default implementation of this method does nothing,
     //! but subclasses may overload it to reallocate memory to exactly what is needed and no more.
@@ -549,6 +554,10 @@ public:
     //! Returns the result of the dot product between row i and the given vec (only v.length() first elements of row i are considered).
     virtual real dot(int i, const Vec& v) const;
 
+    //! conversion to Mat
+    //! WARNING: modifying the content of the returned Mat may or may not modify the content of 
+    //! the VMatrix, depending on the type of the VMatrix. If you want to be sure to get a *copy*
+    //! of the data, consider calling toMatCopy() instead.
     operator Mat() const { return toMat(); }
 
     //! Output the content of the VMat in the stream 'out'.
