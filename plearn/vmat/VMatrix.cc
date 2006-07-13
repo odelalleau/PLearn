@@ -1162,7 +1162,7 @@ TVec<StatsCollector> VMatrix::getStats() const
         {
             VMat vm = const_cast<VMatrix*>(this);
             field_stats = PLearn::computeStats(vm, 2000);
-            if(metadatadir!="")
+            if(!metadatadir.isEmpty())
                 PLearn::save(statsfile, field_stats);
         }
     }
