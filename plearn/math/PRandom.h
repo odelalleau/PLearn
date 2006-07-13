@@ -82,7 +82,7 @@ protected:
     boost::uniform_01<boost::mt19937>* uniform_01;
 
     //! The actual seed used by the random number generator.
-    uint32_t the_seed;
+	boost::uint32_t the_seed;
     
     // *********************
     // * protected options *
@@ -130,9 +130,10 @@ public:
     { return normal_distribution; }
     boost::uniform_01<boost::mt19937>*        get_uniform_01()               const
     { return uniform_01; }
-    uint32_t get_the_seed()   const { return the_seed; }
-    long     get_fixed_seed() const { return fixed_seed; }
-    long     get_seed()       const { return seed_; }
+	
+	boost::uint32_t get_the_seed()   const { return the_seed; }
+    long            get_fixed_seed() const { return fixed_seed; }
+    long            get_seed()       const { return seed_; }
 
 private: 
 
