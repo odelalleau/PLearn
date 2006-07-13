@@ -65,7 +65,7 @@ target_platform = platform
 
 homedir = os.environ['HOME']
 if platform=='win32':
-  homedir = 'R:/'
+    homedir = 'R:/'
 
 myhostname = socket.gethostname()
 pos = string.find(myhostname,'.')
@@ -74,7 +74,7 @@ if pos>=0:
 
 cpp_exts = ['.cc','.c','.C','.cpp','.CC', '.cxx']
 h_exts = ['.h','.H','.hpp'] 
-    
+
 # QT specific stuff. If this is true, then qt's include dir and library are added for compilation and linkage
 useqt = 0
 qtdir=''
@@ -95,7 +95,7 @@ def log_link_command( command, exec_path ):
                                )
     f.write("\n\nmv %s %s" % (exec_path, exe_target))
     f.close()
-    
+
 dorionc_hacked_pymake = False
 if '--log-link' in args:
     dorionc_hacked_pymake = True
@@ -131,25 +131,25 @@ verbose=3
 
 # a few useful functions
 def convertWinToLinux(path):
-  """in windows, replace all directory separator \\ by / (for use in MinGW)"""
-  if platform=='win32':
-    return string.replace(path,"\\","/")
-  else:
-    return path
+    """in windows, replace all directory separator \\ by / (for use in MinGW)"""
+    if platform=='win32':
+        return string.replace(path,"\\","/")
+    else:
+        return path
 
-    
+
 def join(dir,file,file2="",file3=""):
-  """simply call os.path.join and convertWinToLinux"""
-  if file2=='':
-    res = convertWinToLinux(os.path.join(dir, file))
-  elif file3=='':
-    res = convertWinToLinux(os.path.join(dir, file, file2))
-  else:
-    res = convertWinToLinux(os.path.join(dir, file, file2, file3))
-  return res
+    """simply call os.path.join and convertWinToLinux"""
+    if file2=='':
+        res = convertWinToLinux(os.path.join(dir, file))
+    elif file3=='':
+        res = convertWinToLinux(os.path.join(dir, file, file2))
+    else:
+        res = convertWinToLinux(os.path.join(dir, file, file2, file3))
+    return res
 
 def abspath(mypath):
-    """returns the absolute path of the file, with a hack to remove the leading /export/ that causes problems at DIRO"""    
+    """returns the absolute path of the file, with a hack to remove the leading /export/ that causes problems at DIRO"""
     p = convertWinToLinux(os.path.abspath(mypath))    # python 1.5 does not have abspath
     rmprefix = '/export/'
     lenprefix = len(rmprefix)
@@ -187,7 +187,7 @@ def unique(l):
             lfilt.append(e)
     return lfilt
 
-    
+
 # This is used for buffering mtime calls
 mtime_map = {}
 
@@ -256,7 +256,7 @@ class OptionalLibrary:
                     # print 'INCLUDE ' + include  + ' TRIGGERED BY INCDIR ' + incldir
                     return fullpath
 
-        return known_trigger       
+        return known_trigger
 
     # Replaces lists and potential functions in the compiler and linker options
     # by a single string.
@@ -282,8 +282,8 @@ class OptionalLibrary:
                 return options
             else: # It must be a list.
                 return string.join( map(convert_to_str, options), '' )
-    
-   
+
+
         self.compileroptions = convert_options_to_string( self.compileroptions )
         self.linkeroptions   = convert_options_to_string( self.linkeroptions   )
 
@@ -352,14 +352,14 @@ default_config_text = r"""
 """
 
 def locateconfigfile(file,configdir,config_text=''):
-        
+
     # first look in the current directory then look in its parents
     directory = convertWinToLinux(configdir)
-            
+
     while os.path.isdir(directory) and os.access(directory,os.W_OK) and directory!='/':
-        
+
         fpath = join(directory,'.pymake',file);
-        
+
         modelpath = join(directory,'pymake.'+file+'.model')
         if os.path.isfile(modelpath) and mtime(modelpath)>mtime(fpath):
             print '*****************************************************'
@@ -378,10 +378,10 @@ def locateconfigfile(file,configdir,config_text=''):
             try: os.makedirs(join(directory,'.pymake'))
             except: pass
             shutil.copyfile(modelpath,fpath)
-        
+
         if os.path.isfile(fpath):
             return fpath
-        
+
         directory = abspath(join(directory,'..'))
 
     # nothing was found in current directory or its parents, let's look in the homedir 
@@ -401,14 +401,14 @@ def locateconfigfile(file,configdir,config_text=''):
             f.write(config_text)
             f.close()
             return fpath
-       
+
     return ''
-    
+
 def _process_distcc_hosts(host_list):
     """Processes a distcc-style string describing hosts used for
     compilation. Returns a list of hosts that can be used by pymake."""
     hosts = []
-    
+
     # Remove trailing \n
     if host_list[-1] == '\n':
         host_list = host_list[:-1]
@@ -455,7 +455,7 @@ def get_distcc_hosts():
     """Searches in the locations distcc uses to store list of machines used
     for parallel compilation. Returns a list of machines usable by pymake,
     or None if no distcc configuration was found."""
-    
+
     # First try $DISTCC_HOSTS environment variable.
     contents = os.getenv('DISTCC_HOSTS')
     if contents is not None:
@@ -581,7 +581,7 @@ if len(args)==0:
     printusage()
     sys.exit(100)
 
-    
+
 #######################################################
 # special calling options, that don't actually compile anything
 #######################################################
@@ -635,7 +635,7 @@ print
 
 if 'link' in optionargs:
     force_link = 1;
-    optionargs.remove('link')    
+    optionargs.remove('link')
 else:
     force_link = 0;
 
@@ -684,7 +684,7 @@ if 'dist' in optionargs:
     distribute = 1
     force_link = 1
     force_recompilation = 1
-    optionargs.remove('dist')    
+    optionargs.remove('dist')
 else:
     distribute = 0
 
@@ -720,7 +720,7 @@ if 'spc' in optionargs :
 #         print cmd
         os.system(cmd)
     optionargs.remove('spc')
-    
+
 local_compilation = 0 # do we want to do everything locally?
 if platform=='win32':
   local_compilation = 1 # in windows, we ALWAYS work locally
@@ -846,7 +846,7 @@ if local_compilation:
     list_of_hosts = nprocesses_per_processor * ['localhost']
 else:
     distcc_list_of_hosts = get_distcc_hosts()
-    
+
     if SPC:
         hostspath_list = [locateconfigfile('SPC.hosts', homedir)]
     elif force_32bits:
@@ -861,7 +861,7 @@ else:
     for h in hostspath_list:
         if h:
             hostspath_list_is_empty = False
-            
+
     if not hostspath_list_is_empty:
         if distcc_list_of_hosts is not None:
             print '*** Overriding distcc settings. (Remove pymake *.hosts file to use distcc settings.)'
@@ -906,7 +906,7 @@ def remove_comments(text):
     text = rmcppcomment_regexp.sub('\n',text)
     text = remove_c_comments(text)
     return text
-           
+
 class FileInfo:
     """
     This class is specifically designed to hold all useful information about .cc and .h files.
@@ -961,7 +961,7 @@ class FileInfo:
     qobject_regexp = re.compile(r'\bQ\_OBJECT\b',re.M)
     #hasmain_regexp = re.compile(r'\b(main|mpi_master_main)\s*\(',re.M)
     hasmain_regexp = re.compile(r'\b(main|IMPLEMENT_APP)\s*\(',re.M)
-    
+
     def __init__(self,filepath):
         if not os.path.exists(filepath):
             raise "Couldn't find file " + filepath
@@ -1022,19 +1022,19 @@ class FileInfo:
     def mocFile(self):
         """QT specific : if moc_'filename'.cc is older than 'filename'.h,
         then moc 'filename'.h (generates) moc_'filename'.cc"""
-    
+
         if qtdir == '':
             print "\nError : The qtdir variable is unset but the file " + self.filepath + " seems to use QT (a Q_OBJECT declaration was found). In your .pymake/config file, assign the qtdir variable to the path to Trolltech's QT installation. Example : qtdir = '/usr/lib/qt3/'"
             sys.exit(100)
 
         if (os.path.isfile(self.mocfilename)) and self.get_depmtime() <= os.path.getmtime(self.mocfilename):
             return 0
-                  
+
         return os.WEXITSTATUS(os.system(qtdir+"bin/moc "+self.filepath+" -o "+self.mocfilename))
 
     def analyseFile(self):
         global useqt
-        
+
         self.mtime = os.path.getmtime(self.filepath)
         self.filedir, fname = os.path.split(self.filepath)
         self.filebase, self.fileext = os.path.splitext(fname)
@@ -1042,12 +1042,12 @@ class FileInfo:
         # Parse the file to get includes and check if there's a main()
         self.parse_file()
         # transform the list of includes from a list of file names to a list of correspondinf FileInfo
-        self.includes_from_sourcedirs = map(file_info,self.includes_from_sourcedirs) 
+        self.includes_from_sourcedirs = map(file_info,self.includes_from_sourcedirs)
 
         if self.fileext in h_exts:
             self.is_ccfile = 0
 
-            # get the corresponding .cc file's FileInfo (if there is such a file) 
+            # get the corresponding .cc file's FileInfo (if there is such a file)
             self.corresponding_ccfile = 0
             for newext in cpp_exts:
                 ccpath = join(self.filedir, self.filebase + newext)
@@ -1057,7 +1057,7 @@ class FileInfo:
 
         elif self.fileext in cpp_exts:
             self.is_ccfile = 1
-            
+
             if objspolicy == 1:
               self.corresponding_ofile = join(self.filedir, objsdir, self.filebase+'.o')
             elif objspolicy == 2:
@@ -1075,7 +1075,7 @@ class FileInfo:
                 self.corresponding_output = join(self.filedir, objsdir, 'lib'+self.filebase+'.so')
 
             elif self.hasmain:
-                self.corresponding_output = join(self.filedir, objsdir, self.filebase)                
+                self.corresponding_output = join(self.filedir, objsdir, self.filebase)
 
         else:
             raise 'Attempting to build a FileInfo from a file that is not a .cc or .h or similar file ('+self.filepath+')'
@@ -1084,7 +1084,7 @@ class FileInfo:
             useqt = 1
             self.mocFile()
             self.corresponding_moc_cc = file_info(self.mocfilename)
-        
+
     def collect_ccfiles_to_link(self, ccfiles_to_link, visited_hfiles):
         """completes the ccfiles_to_link list by appending the FileInfo
         for all .cc files related to this file through includes and .cc
@@ -1109,15 +1109,15 @@ class FileInfo:
                     include.collect_ccfiles_to_link(ccfiles_to_link, visited_hfiles)
 
     def get_ccfiles_to_link(self):
-        """returns the list of FileInfos of all .cc files that need to be linked together to produce the corresponding_output"""        
+        """returns the list of FileInfos of all .cc files that need to be linked together to produce the corresponding_output"""
         if not hasattr(self,"ccfiles_to_link"):
             #if not self.hasmain or not self.is_ccfile:
             if (not self.hasmain and not create_dll and not create_so) or not self.is_ccfile:
-                raise "called get_ccfiles_to_link on a file that is not a .cc file or that does not contain a main()" 
+                raise "called get_ccfiles_to_link on a file that is not a .cc file or that does not contain a main()"
             self.ccfiles_to_link = []
             visited_hfiles = []
             self.collect_ccfiles_to_link(self.ccfiles_to_link,visited_hfiles)
-            
+
         return self.ccfiles_to_link
 
 
@@ -1156,8 +1156,8 @@ class FileInfo:
         for x in optional_libraries_defs:
             if x in optlibs:
                 sol = sol + [x]
-        return sol            
-        
+        return sol
+
 #     def get_optional_libraries(self):
 #         """returns the list of *all* OptionalLibrary that need to be linked with any program that uses this file, in the right order"""
 #         print "go(",self.filebase+self.fileext,")"
@@ -1211,16 +1211,7 @@ class FileInfo:
                 linkeroptions = linkeroptions + '-L'+qtdir + 'lib/ -lqt-mt'
         return linkeroptions
 
-# as of date 09/07/2004
-# no need to -lXi -lXext -lX11 to compile PLearn
-# removing following code to speed up linking
-# if needed, this should go in an option in pymake.config.model
-# Martin
-#        if platform=='win32':
-#            return linkeroptions
-#        else:
-#            return linkeroptions + ' -L/usr/X11R6/lib/ -lXi -lXext -lX11'
-        
+
     def get_depmtime(self):
         "returns the single latest last modification time of"
         "this file and all its .h dependencies through includes"
@@ -1271,7 +1262,7 @@ class FileInfo:
 
     def nfs_wait_for_corresponding_ofile(self):
         """wait until nfs catches up...."""
-        while not self.corresponding_ofile_is_up_to_date():            
+        while not self.corresponding_ofile_is_up_to_date():
             time.sleep(0.1) #no active wait (was 'pass') -xsm
 
     def nfs_wait_for_all_linkable_ofiles(self):
@@ -1284,7 +1275,7 @@ class FileInfo:
         odir = join(self.filedir, objsdir)
         if not os.path.isdir(odir):  # make sure the OBJS dir exists, otherwise the command will fail
             os.makedirs(odir)
-        
+
     def make_symbolic_link(self, linkname, symlink_source_basename = None):
         """Recreates the symbolic link in filedir pointing to the
         executable in subdirectory objsdir.
@@ -1392,8 +1383,8 @@ class FileInfo:
                 return [rel_dir, self.filebase + self.fileext]
         print "Unable to find where the file is include : " + self.filepath
         return []
-                
-                
+
+
 
     def launch_compilation(self,hostname):
         """Launches the compilation of this .cc file on given host using rsh
@@ -1401,12 +1392,12 @@ class FileInfo:
         The call returns the pid of the launched process.
         This will create a field 'launched', which is a Popen3 object,
         and 'hostname' to remember on which host it has been launched.
-        """        
+        """
         # We do an 'echo $?'  at the end because rsh doesn't transmit the status byte correctly.
 
         if os.path.isfile(self.corresponding_ofile):
             os.remove(self.corresponding_ofile)
-        
+
         quotedcommand = "'cd " + self.filedir + "; " + self.compile_command() + "; echo $?'"
         self.hostname = hostname
         if hostname=='localhost' or hostname==myhostname:
@@ -1420,8 +1411,8 @@ class FileInfo:
             self.launched = Popen3(self.shcommand, 1, 10000)
         if verbose>=2:
             print '[ LAUNCHED',self.filebase+self.fileext,'on',self.hostname,']'
-        
-    	if verbose>=3:
+
+        if verbose>=3:
             print quotedcommand
 
     def update_compilation_messages(self):
@@ -1451,7 +1442,7 @@ class FileInfo:
         else:
             warningmsgs = self.launched.childerr.readlines() # print warnings
             errormsgs = self.launched.fromchild.readlines()
-            
+
         if errormsgs:
             self.compilation_status = int(errormsgs[-1])  # last line was an echo $? (because rsh doesn't transmit the status byte correctly)
             if verbose>=4:
@@ -1551,10 +1542,10 @@ class FileInfo:
                 return True
             for hfile in self.includes_from_sourcedirs:
                 if hfile.print_dependency_path(dep, visited_files):
-                    print '  '+self.filepath                
+                    print '  '+self.filepath
                     return True
             return False
-        
+
 
     def build_dependency_graph(self, dotfile, visited_files):
         if self not in visited_files:
@@ -1578,7 +1569,7 @@ class FileInfo:
                     dotfile.write(lib.name+'[shape="box",label="'+lib.name+'",fontsize=10,height=0.2,width=0.4,fontname="Helvetica",color="red3",style="filled",fontcolor="white"];\n')
                 dotfile.write(self.dotid()+' -> '+lib.name+' [dir=forward,color="red3",fontsize=10,style="solid",fontname="Helvetica"];\n')
                 print self.filename(),'->',lib.name
-                
+
 
     def save_dependency_graph(self, dotfilename):
         """Will save the dependency graph originating from this node into the dotfilename file
@@ -1593,7 +1584,7 @@ digraph G
 {
   edge [fontname="Helvetica",fontsize=10,labelfontname="Helvetica",labelfontsize=10];
   node [fontname="Helvetica",fontsize=10,shape=record];
-""")     
+""")
         visited_files = []
         self.build_dependency_graph(dotfile, visited_files)
         dotfile.write("}\n")
@@ -1627,7 +1618,7 @@ digraph G
         return result
 
     def link_command(self):
-        """returns the command for making executable target from the .o files in objsfilelist"""        
+        """returns the command for making executable target from the .o files in objsfilelist"""
         self.objsfilelist = self.get_object_files_to_link()
         linker = default_linker
         linkeroptions = ""
@@ -1637,7 +1628,7 @@ digraph G
         if create_so:
             so_options = " -shared "
         elif static_linking:
-            so_options = " -static "            
+            so_options = " -static "
         for opt in options:
             optdef = pymake_options_defs[opt]
             if optdef.linkeroptions:
@@ -1647,7 +1638,7 @@ digraph G
 
         command = linker + so_options + ' -o ' + self.corresponding_output + ' ' + string.join(self.objsfilelist,' ') + ' ' + self.get_optional_libraries_linkeroptions() + ' ' + linkeroptions + ' ' + linkeroptions_tail
 
-        # print "CALLED link_command WITH optional_libraries_linkeroptions of: ", self.get_optional_libraries_linkeroptions()        
+        # print "CALLED link_command WITH optional_libraries_linkeroptions of: ", self.get_optional_libraries_linkeroptions()
         if dorionc_hacked_pymake:
             log_link_command( command, self.corresponding_output )
 
@@ -1675,7 +1666,7 @@ digraph G
             pass
         command = self.link_command()
         if verbose>=3:
-	        print command
+            print command
 
         # The 'WEXITSTATUS' function is only available under Unix.
         # Under Windows, the value returned by 'os.system' is meaningless,
@@ -1697,13 +1688,13 @@ digraph G
                 pass
             os.rename(self.corresponding_output, corresponding_output)
             if verbose>=2:
-                print "Successfully created " + self.corresponding_output + " and renamed it to " + corresponding_output 
+                print "Successfully created " + self.corresponding_output + " and renamed it to " + corresponding_output
 
         self.corresponding_output = corresponding_output
         return link_exit_code
-        
+
     def dll_commands(self):
-        """returns the command for making dll target from the .o files in objsfilelist and the corresponding .def file"""        
+        """returns the command for making dll target from the .o files in objsfilelist and the corresponding .def file"""
         self.objsfilelist = self.get_object_files_to_link()
 
         opt_linkeroptions = self.get_optional_libraries_linkeroptions()
@@ -1770,7 +1761,7 @@ digraph G
     def launch_dll_wrapping(self):
         last_failed_exit_code = 0
         list_of_commands = self.dll_commands()
-        
+
         for command in list_of_commands:
             print command
             if sys.platform == 'win32':
@@ -1814,7 +1805,7 @@ def get_ccpath_from_noncc_path(filepath):
 def isccfile(filepath):
     (base,ext) = os.path.splitext(filepath)
     return ext in cpp_exts
-    
+
 def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_link,linkname):
     """A target can be a .cc file, a binary target, or a directory.
     The function updates (by appending to them) ccfiles_to_compile and ofiles_to_link
@@ -1825,7 +1816,7 @@ def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_l
     if os.path.basename(target)[0] == '.': # ignore files and directories starting with a dot
         return 
     if os.path.isdir(target):
-        if os.path.basename(target) not in ['OBJS','CVS']: # skip OBJS and CVS directories    
+        if os.path.basename(target) not in ['OBJS','CVS']: # skip OBJS and CVS directories
             print "Entering " + target
             for direntry in os.listdir(target):
                 newtarget = join(target,direntry)
@@ -1836,7 +1827,7 @@ def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_l
         if isccfile(target):
             cctarget = target
         else:
-            cctarget = get_ccpath_from_noncc_path(target)            
+            cctarget = get_ccpath_from_noncc_path(target)
 
         if not cctarget:
             print "Warning: bad target", target
@@ -1867,21 +1858,21 @@ def parallel_compile(files_to_compile, num_retries=3):
     hostnum = 0
     outs = {}  # a dictionary indexed by the stdout of the process launched by popen, and containing the corresponding FileInfo object 
     errs = {}  # a dictionary indexed by the stderrs of the process launched by popen, and containing the corresponding FileInfo object 
-    
-    
+
+
     for ccfile in files_to_compile:
-        
+
         ccfile.make_objs_dir() # make sure the OBJS dir exists, otherwise the command will fail
         #print len(outs)
-        
+
         if len(outs) < len(list_of_hosts):# len(outs) number of launched compilation
             if len(files_to_compile)==1: # if there's just one file to compile, we compile it locally to avoid a long "Waiting for NFS to catch up!"
                 hostname = 'localhost'
             else:
                 hostname = list_of_hosts[hostnum]
             ccfile.launch_compilation(hostname)
-            outs[ccfile.launched.fromchild] = ccfile  
-            errs[ccfile.launched.childerr] = ccfile  
+            outs[ccfile.launched.fromchild] = ccfile
+            errs[ccfile.launched.childerr] = ccfile
             hostnum = hostnum + 1
         else: # all processes are busy, wait for something to finish...
             hostname = ''
@@ -1904,16 +1895,16 @@ def parallel_compile(files_to_compile, num_retries=3):
                     raise "Couldn't access ANY of the listed hosts for compilation"
             else:
                 ccfile.launch_compilation(hostname)
-                outs[ccfile.launched.fromchild] = ccfile  
-                errs[ccfile.launched.childerr] = ccfile  
+                outs[ccfile.launched.fromchild] = ccfile
+                errs[ccfile.launched.childerr] = ccfile
 
     # Now wait until everybody is finished
     while outs:
         if len(outs)<=10:
-            if verbose>=2:        
+            if verbose>=2:
                 print '[ STILL WAITING FOR:',string.join(map( lambda(f): f.filebase+f.fileext + ' on ' + f.hostname, outs.values()), ', '),']'
         iwtd, owtd, ewtd = select.select(outs.keys()+errs.keys(), [], [])
-        f = iwtd[0] 
+        f = iwtd[0]
         if errs.has_key(f):
             info = errs[f]
         elif outs.has_key(f):
@@ -1953,7 +1944,7 @@ def sequential_link(executables_to_link, linkname):
             return 1
         else:
             print 'Waiting for NFS to catch up...'
-            ccfile.nfs_wait_for_all_linkable_ofiles()            
+            ccfile.nfs_wait_for_all_linkable_ofiles()
             if verbose>=2:
                 print '[ LINKING',ccfile.filebase,']'
             link_exit_code = ccfile.launch_linking()
@@ -1970,12 +1961,12 @@ def sequential_dll(target_file_info):
     failures =  target_file_info.failed_ccfiles_to_link()
     if failures:
         print '[ Executable target',target_file_info.filebase,'not remade because of previous compilation errors. ]'
-       
+
         print '   Errors were while compiling files:'
         print '   '+string.join(failures,'\n   ')
     else:
         print 'Waiting for NFS to catch up...'
-        target_file_info.nfs_wait_for_all_linkable_ofiles()            
+        target_file_info.nfs_wait_for_all_linkable_ofiles()
         print '[ CREATING DLL',target_file_info.filebase+'.dll',']'
         target_file_info.launch_dll_wrapping()
 
@@ -1987,7 +1978,7 @@ def mychmod(path,mode):
   except: pass
   (head, tail) = os.path.split(path)
   if tail:
-    mychmod(head,mode)
+      mychmod(head,mode)
 
 ## this function takes a target, and extract all the sources necessary
 ## to compile the target, in a directory call your_target.dist
@@ -2050,15 +2041,15 @@ def distribute_source(target, cfiles_to_compile, executables_to_link, linkname):
 
     for ccfile in ccfiles_to_compile.keys():
         [dir_cc, file_cc] = ccfile.get_rel_dir_file()
-                
+
         makefile.write('OBJS/' + ccfile.filebase + ".o : " + os.path.join(dir_cc,file_cc) + "\n")
         makefile.write('\t' + compiler + ' ' + compileflags + ' ' + \
                        compileroptions + ' -o OBJS/' + ccfile.filebase + ".o -c " + os.path.join(dir_cc,file_cc))
         makefile.write("\n")
         makefile.write("\n")
-        
+
     makefile.close()
-    
+
 
 try:
     if 'dependency' in optionargs: # We only want to learn something about the dependency graph
@@ -2067,14 +2058,14 @@ try:
             target_path = os.path.abspath(target)
         else:
             target_path = os.path.dirname(os.path.abspath(target))
-            
-        configpath = locateconfigfile('config',target_path,default_config_text)    
+
+        configpath = locateconfigfile('config',target_path,default_config_text)
         execfile( configpath )
         sourcedirs = unique(sourcedirs)
-        
+
         cctarget = target
         if not isccfile(target):
-            cctarget = get_ccpath_from_noncc_path(target)            
+            cctarget = get_ccpath_from_noncc_path(target)
         info = file_info(cctarget)
 
         if len(otherargs)==1: # only the target was specified: generate the full graph
@@ -2087,7 +2078,7 @@ try:
             print 'First encountered dependency path linking '+target+' to '+dep+ ' :'
             if not info.print_dependency_path(dep,[]):
                 print 'THERE APPEARS TO BE NO SUCH DEPENDENCY.'
-                
+
     else: # We want to compile and possibly link
         for target in otherargs:
 
@@ -2099,11 +2090,11 @@ try:
             else:
                 target_path = os.path.dirname(os.path.abspath(target))
 
-            configpath = locateconfigfile('config',target_path,default_config_text)    
+            configpath = locateconfigfile('config',target_path,default_config_text)
             execfile( configpath )
             # remove duplicates from sourcedirs
             sourcedirs = unique(sourcedirs)
-        
+
             options = getOptions(options_choices,optionargs)
 
             # Building name of object subdirectory
