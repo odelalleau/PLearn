@@ -107,12 +107,14 @@ private:
 
     typedef Object inherited;
 
-protected:
+public:
+
     //!  Default constructor for persistence
     Variable() : varnum(++nvars), marked(false), varname(), allows_partial_update(false),
                  gradient_status(0), valuedata(0), gradientdata(0), min_value(-FLT_MAX),
                  max_value(FLT_MAX), dont_bprop_here(false) {}
 
+protected:
     static void declareOptions(OptionList & ol);
   
     friend class Var;
@@ -132,7 +134,6 @@ protected:
     bool marked; //!<  used for building the propagation paths
     string varname; //!<  used when printing or drawing the var graph (see setName and getName)
 
-protected:
     bool allows_partial_update; //!<  only if this is true then the following two fields are used.
     int gradient_status; //!<  0: no gradient was accumulated, 1: to some rows, 2: everywhere.
     TVec<int> rows_to_update; //!<  the list of rows to update.
