@@ -101,7 +101,10 @@ public:
     // simply calls inherited::build() then build_()
     virtual void build();
 
-    //! Declares name and deepCopy methods
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+
+    //! Declares various object methods.
     PLEARN_DECLARE_OBJECT(TrainTestSplitter);
 
     // ********************************

@@ -143,6 +143,9 @@ TVec<VMat> TrainTestSplitter::getSplit(int k)
 }
 
 
+//////////////////////
+// getRandomSubsets //
+//////////////////////
 void TrainTestSplitter::getRandomSubsets(int train_length, int test_length)
 {
     int n= train_length+test_length;
@@ -159,6 +162,15 @@ void TrainTestSplitter::getRandomSubsets(int train_length, int test_length)
     sortElements(test_indices);
 }
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void TrainTestSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+  inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(train_indices, copies);
+  deepCopyField(test_indices,  copies);
+}
 
 } // end of namespace PLearn
 
