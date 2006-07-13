@@ -121,6 +121,18 @@ PStream& operator<<(PStream& out, const RealRange& x);
 PStream& operator>>(PStream& in, RealRange &x);
 
 
+/**
+ *  Mapping between ranges and values.
+ *
+ *  RealMapping is used as a component of binning operations.  It divides the
+ *  real line in a set of ranges, and associates each range with a single
+ *  (usually integer) value.  The ranges are specified as follows:
+ *
+ *  - ]low,high[ : both endpoints are EXCLUDED
+ *  - [low,high[ : lower endpoint INCLUDED, upper endpoint EXCLUDED
+ *  - [low,high] : both endpoints are INCLUDED
+ *  - ]low,high] : lower endpoint EXCLUDED, upper endpoint INCLUDED
+ */
 class RealMapping: public Object
 {
 protected: 

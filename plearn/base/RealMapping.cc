@@ -49,9 +49,17 @@ namespace PLearn {
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT(RealMapping,
-                        "Mapping between ranges and values.",
-                        ""
+PLEARN_IMPLEMENT_OBJECT(
+    RealMapping,
+    "Mapping between ranges and values.",
+    "RealMapping is used as a component of binning operations.  It divides the\n"
+    "real line in a set of ranges, and associates each range with a single\n"
+    "(usually integer) value.  The ranges are specified as follows:\n"
+    "\n"
+    "- ]low,high[ : both endpoints are EXCLUDED\n"
+    "- [low,high[ : lower endpoint INCLUDED, upper endpoint EXCLUDED\n"
+    "- [low,high] : both endpoints are INCLUDED\n"
+    "- ]low,high] : lower endpoint EXCLUDED, upper endpoint INCLUDED\n"
     );
 
 ////////
