@@ -212,7 +212,7 @@ int PDate::weekNumber() const
 
 PStream& operator<<(PStream& out, const PDate& date)
 {
-    char tmpbuf[15];
+    char tmpbuf[50];
 
     switch(out.outmode)
     {
