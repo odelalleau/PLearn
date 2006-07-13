@@ -170,22 +170,16 @@ inline real negative(real a) { if (a<0) return a; return 0; }
 #  define RAD2DEG 57.29578
 #endif
 
-/*
-#if defined(_MSC_VER) || defined(_MINGW_)
-//!  drand48 does not exist in NT... because ANSI
-//!  declared it obsolete in 1990 or so
-#define drand48() ( rand()/ (double)(RAND_MAX+1) )
-//!  Non-ansi, BSD function
-#define log1p(a) pl_log((real)1.0+(real)a)
-#define rint(a) (int)(a+(real)0.5)
-#define isnan(x) _isnan(x)
-#define finite(x) _finite(x)
-#endif
-*/
-
-#if defined(DARWIN)
-#define isnan(x) __isnan(x)
-#define isinf(x) __isinf(x)
+// Specific definitions for some non-Linux OS.
+#if defined(DARWIN)     // Mac OS.
+#define isnan __isnan
+#define isinf __isinf
+#elif defined(_MSC_VER)	// Microsoft Visual Studio.
+#define isnan(x) (_isnan(x) != 0)
+#define isinf _finite
+#define round(x) int(x + 0.5)
+#define rint round
+#define log1p(x) pl_log(1.0 + x)
 #endif
 
 //! Test float equality (correctly deals with 'nan' and 'inf' values).
