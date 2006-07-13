@@ -97,7 +97,7 @@ void AutoLinearRegressor::declareOptions(OptionList& ol)
 
     declareOption(ol, "mean_target", &AutoLinearRegressor::mean_target,
                   OptionBase::learntoption,
-                  "The mean of the target. (used as a default bias)");
+                  "The mean of the target (used as a default bias).");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
