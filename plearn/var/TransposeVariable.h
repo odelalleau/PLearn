@@ -4,19 +4,23 @@
 
 #include <plearn/var/UnaryVariable.h>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
 class TransposeVariable: public UnaryVariable
 {
-protected:
+private:
     typedef UnaryVariable inherited;
+
+public:
+
     //!  Default constructor for persistence
-    TransposeVariable() : startk() {}
+    TransposeVariable() : startk(0) {}
 
 protected:
     int startk;
+
 public:
     TransposeVariable(Variable* v);
     PLEARN_DECLARE_OBJECT(TransposeVariable);
@@ -34,11 +38,10 @@ DECLARE_OBJECT_PTR(TransposeVariable);
 inline Var transpose(Var v)
 { return new TransposeVariable(v); }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif 
 
-
 /*
   Local Variables:
   mode:c++
