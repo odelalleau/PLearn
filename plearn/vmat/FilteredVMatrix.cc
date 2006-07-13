@@ -111,7 +111,7 @@ void FilteredVMatrix::openIndex()
                     indexes.append(i);
             }
             else
-                for(real x= result[0]; x > 0; --x)
+                for(int x = int(round(result[0])); x > 0; --x)
                     indexes.append(i);
 
         }
