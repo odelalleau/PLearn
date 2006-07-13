@@ -118,7 +118,7 @@ void TVec<T>::input(PStream& in) const
     T* v = data();
     for(int i=0; i<length(); i++)
     {
-        if(!(in>>v[i]))
+        if(!bool(in>>v[i])) // Explicit cast to bool required in Visual C++.
             PLERROR("In TVec::input error encountered while reading vector");
     
     }
@@ -326,7 +326,7 @@ void TMat<T>::input(PStream& in) const
         T* v = rowdata(i);
         for (int j=0;j<width();j++)
         {
-            if(!(in>>v[j]))
+            if(!bool(in>>v[j])) // Visual C++ requires explicit cast to bool.
                 PLERROR("In TMat<T>::input error encountered while reading matrix");
         }
     }
