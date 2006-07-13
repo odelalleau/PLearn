@@ -4,8 +4,9 @@
 
 #include <map>
 #include <string>
-#include <utility>                           //!< for pair
-#include "plerror.h"                         //!< For PLWARNING.
+#include <time.h>	//!< For definition of 'clock_t'.
+#include <utility>      //!< For pair.
+#include "plerror.h"    //!< For PLWARNING.
 
 //! Macro to define deep copy for types that actually do not require
 //! any deep copy (such as int, real, etc.).
