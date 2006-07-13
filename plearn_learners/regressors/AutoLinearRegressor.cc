@@ -182,8 +182,9 @@ void AutoLinearRegressor::train()
         int insize = ninputs; 
 
 
-        Mat tset = train_set->toMat().copy();
+        Mat tset = train_set->toMatCopy();
         int l = tset.length();
+        
         Mat X = tset.subMatColumns(0,ninputs);
         Mat Y = tset.subMatColumns(ninputs, ntargets);
         Vec gamma; // the weights

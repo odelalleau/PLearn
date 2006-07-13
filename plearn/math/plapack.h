@@ -672,6 +672,15 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_GCV, bool X_is_transpo
                           real initial_weight_decay_guess=-1, int explore_threshold=5, real min_weight_decay=0);
 
 
+//! Similar to ridgeRegressionByGCV, but with support form sample weights gamma.
+//! If gamma is empty, then this will perform an unweighted ridge regression based on GCV.
+//! WARNING: contrary to the unweighted version, here X and Y are modified by the call
+//! (this is to be more memory efficient), if you odn't want this, call it with X.copy() and Y.copy().
+/*! Note: I'm not 100% sure that this weighted version is really correct. 
+  All it does is multiply the rows of X and Y by sqrt(gamma[i]) and then essentially the code
+  is a slightly modified copy-paste of the unweighted version, where the number of samples is replaced
+  by the sum of the weights in one or two spots. Somebody should more carefully check the maths!
+ */
 real weightedRidgeRegressionByGCV(Mat X, Mat Y, Vec gamma, Mat W, real& best_gcv, real min_weight_decay=0);
 
 

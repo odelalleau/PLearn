@@ -819,8 +819,8 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_gcv, bool X_is_transpo
         PLERROR("ridgeRegressionByGCV: incompatible arguments W and Y don't have compatible dimensions: %d and %d\n",W.length(),m);
     if (W.width()!=p)
         PLERROR("ridgeRegressionByGCV: incompatible arguments W and X don't have compatible dimensions: %d and %d\n",W.width(),p);
-    static Mat Xcopy, U, Vt, Z, squaredZ;
-    static Vec singular_values, eigen_values, s, y2, z2, best_s;
+    Mat Xcopy, U, Vt, Z, squaredZ;
+    Vec singular_values, eigen_values, s, y2, z2, best_s;
     Xcopy.resize(n,p);
     if (X_is_transposed)
         transpose(X, Xcopy);
@@ -851,7 +851,7 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_gcv, bool X_is_transpo
         z2[j] = pownorm(Zj);
     }
 
-    static Vec gcv;
+    Vec gcv;
     gcv.resize(rank);
     gcv.fill(-1.);
     best_gcv = 1e38;
@@ -1029,8 +1029,6 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_gcv, bool X_is_transpo
 real weightedRidgeRegressionByGCV(Mat X, Mat Y, Vec gamma, Mat W, real& best_gcv, real min_weight_decay)
 {
     int l = X.length();
-    Mat Xcopy = X.copy();
-    Mat Ycopy = Y.copy();    
 
     real gamma_sum = 0;
     if(gamma.length()==0)
@@ -1041,15 +1039,15 @@ real weightedRidgeRegressionByGCV(Mat X, Mat Y, Vec gamma, Mat W, real& best_gcv
         for(int i=0; i<l; i++)
         {
             real s = sqrt(gamma[i]);
-            Xcopy(i) *= s;
-            Ycopy(i) *= s;
+            X(i) *= s;
+            Y(i) *= s;
         }
     }
     
-    int n = Ycopy.length();
-    int m = Ycopy.width();
-    int p = Xcopy.width();
-    int nx = Xcopy.length();
+    int n = Y.length();
+    int m = Y.width();
+    int p = X.width();
+    int nx = X.length();
 
     if (nx!=n)
         PLERROR("ridgeRegressionByGCV: incompatible arguments X and Y don't have same number of examples: %d and %d\n",nx,n);
@@ -1057,8 +1055,8 @@ real weightedRidgeRegressionByGCV(Mat X, Mat Y, Vec gamma, Mat W, real& best_gcv
         PLERROR("ridgeRegressionByGCV: incompatible arguments W and Y don't have compatible dimensions: %d and %d\n",W.length(),m);
     if (W.width()!=p)
         PLERROR("ridgeRegressionByGCV: incompatible arguments W and X don't have compatible dimensions: %d and %d\n",W.width(),p);
-    static Mat U, Vt, Z, squaredZ;
-    static Vec singular_values, eigen_values, s, y2, z2, best_s;
+    Mat U, Vt, Z, squaredZ;
+    Vec singular_values, eigen_values, s, y2, z2, best_s;
     int rank = min(n,p);
     U.resize(n,rank);
     Vt.resize(rank,p);
@@ -1070,8 +1068,7 @@ real weightedRidgeRegressionByGCV(Mat X, Mat Y, Vec gamma, Mat W, real& best_gcv
     best_s.resize(rank);
     y2.resize(m);
     z2.resize(m);
-    assert( !Xcopy.hasMissing() );
-    SVD(Xcopy, U, singular_values, Vt, 'S', 2);
+    SVD(X, U, singular_values, Vt, 'S', 2);
     // perr << "Singular values: " << singular_values << endl;
     for (int i=0;i<rank;i++)
         eigen_values[i] = singular_values[i]*singular_values[i];
@@ -1079,14 +1076,14 @@ real weightedRidgeRegressionByGCV(Mat X, Mat Y, Vec gamma, Mat W, real& best_gcv
 
     for (int j=0;j<m;j++)
     {
-        Mat Yj = Ycopy.column(j);
+        Mat Yj = Y.column(j);
         Vec Zj = Z(j);
         y2[j] = sumsquare(Yj);
         transposeProduct(Zj.toMat(rank,1),U,Yj);
         z2[j] = pownorm(Zj);
     }
 
-    static Vec gcv;
+    Vec gcv;
     gcv.resize(rank);
     gcv.fill(-1.);
     best_gcv = 1e38;
