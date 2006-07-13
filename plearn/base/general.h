@@ -272,7 +272,7 @@ inline int sizeInBytes(float x) { return sizeof(float); }
 inline int sizeInBytes(double x) { return sizeof(double); }
 inline int sizeInBytes(long x) { return sizeof(long); }
 inline int sizeInBytes(char x) { return sizeof(char); }
-inline int sizeInBytes(string x) { return x.length(); }
+inline int sizeInBytes(string x) { return int(x.length()); }
 template <class T>
 inline int sizeInBytes(T* x) { 
     int n = sizeof(T*); 
