@@ -351,7 +351,7 @@ optionalLibrary( name='boost_thread',
 
 optionalLibrary( name = 'NSPR',
                  triggers = 'nspr/*',
-                 includedirs = ['/usr/include/mozilla','/usr/include/firefox'],
+                 includedirs = ['/usr/include/firefox','/usr/include/mozilla'],
                  linkeroptions = '-L/usr/lib/mozilla -lnspr4')
 
 # What linker options to put always after those from the optional libraries
