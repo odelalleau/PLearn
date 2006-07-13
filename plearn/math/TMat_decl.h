@@ -221,7 +221,9 @@ public:
                     {
                         // if width has increased, bet that it will increase again in the future,
                         // similarly for length,  so allocate the extra as extra mod
-                        float l=length_, l1=new_length, w=width_, w1=new_width, x=extra;
+                        float l=float(length_), l1=float(new_length),
+							  w=float(width_),  w1=float(new_width),
+							  x=float(extra);
                         // Solve the following equations to apportion the extra 
                         // while keeping the same percentage increase in width and length:
                         //   Solve[{x+w1*l1==w2*l2,(w2/w1 - 1)/(l2/l1 - 1) == (w1/w - 1)/(l1/l - 1)},{w2,l2}]
@@ -234,7 +236,7 @@ public:
                                       4*l*(l - l1)*l1*w*(w - w1)*w1*(l1*w1 + x))));
                         float l2a = -(-l1*l1*w*w1 + l*l1*w1*w1 + 
                                       sqrt(square(l1*l1*w*w1 - l*l1*w1*w1) + 
-                                           4*l*(l - l1)*l1*w*(w - w1)*w1*(l1*w1 + x)))/(2.*l*(w - w1)*w1);
+                                           4*l*(l - l1)*l1*w*(w - w1)*w1*(l1*w1 + x)))/(2*l*(w - w1)*w1);
                         float w2b =w1*(-1 - l1/(l - l1) + w1/w + (l1*w1)/(l*w - l1*w) - 
                                        (2*l*(-w + w1)*x)/
                                        (-2*l*l1*w*w1 + l1*l1*w*w1 + l*l1*w1*w1 + 
@@ -242,7 +244,7 @@ public:
                                              4*l*(l - l1)*l1*w*(w - w1)*w1*(l1*w1 + x))));
                         float l2b = (l1*l1*w*w1 - l*l1*w1*w1 + 
                                      sqrt(square(l1*l1*w*w1 - l*l1*w1*w1) + 
-                                          4*l*(l - l1)*l1*w*(w - w1)*w1*(l1*w1 + x)))/(2.*l*(w - w1)*w1);
+                                          4*l*(l - l1)*l1*w*(w - w1)*w1*(l1*w1 + x)))/(2*l*(w - w1)*w1);
 
                         // pick one that is feasible and maximizes the mod
                         if (w2b>w2a && w2b>w1 && l2b>l1)
