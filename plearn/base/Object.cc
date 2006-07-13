@@ -573,6 +573,49 @@ void Object::call(const string& methodname, int nargs, PStream& io)
                 methodname.c_str(), nargs, classname().c_str());
 }
 
+// We use an anonymous namespace to ensure the following classes are local to
+// this specific translation unit.
+// Note that these classes have been moved out of the declareMethods Object
+// method as otherwise compilation will fail with Microsoft Visual C++.
+namespace {
+
+	// The following are custom trampolines for the very special case where
+	// no C++ function can be mapped to these remote functions, since their
+	// return type is polymorphic.
+	struct ObjectTrampolineGetOption : public RemoteTrampoline
+	{
+		ObjectTrampolineGetOption(const string& methodname, const RemoteMethodDoc& doc)
+			: RemoteTrampoline(methodname, doc)
+		{ }
+
+		virtual void call(Object* instance, int nargs, PStream& io) const
+		{
+			checkNargs(nargs, 1);
+			string optionname;
+			io >> optionname;
+			prepareToSendResults(io, 1);
+			instance->writeOptionVal(io, optionname);
+			io.flush();
+		}
+	};
+
+	struct ObjectTrampolineGetObject : public RemoteTrampoline
+	{
+		ObjectTrampolineGetObject(const string& methodname, const RemoteMethodDoc& doc)
+			: RemoteTrampoline(methodname, doc)
+		{ }
+
+		virtual void call(Object* instance, int nargs, PStream& io) const
+		{
+			checkNargs(nargs, 0);
+			prepareToSendResults(io, 1);
+			io << *instance;
+			io.flush();
+		}
+	};
+
+} // End of anonymous namespace.
+
 void Object::declareMethods(RemoteMethodMap& rmm)
 {
     declareMethod(rmm, "changeOptions", &Object::changeOptions,
@@ -600,26 +643,6 @@ void Object::declareMethods(RemoteMethodMap& rmm)
                            "- \"plearn_binary\": use the PLearn binary format, which can be\n"
                            "  more efficient for large objects\n")));
 
-    // The following are custom trampolines for the very special case where
-    // no C++ function can be mapped to these remote functions, since their
-    // return type is polymorphic.
-    struct ObjectTrampolineGetOption : public RemoteTrampoline
-    {
-        ObjectTrampolineGetOption(const string& methodname, const RemoteMethodDoc& doc)
-            : RemoteTrampoline(methodname, doc)
-        { }
-
-        virtual void call(Object* instance, int nargs, PStream& io) const
-        {
-            checkNargs(nargs, 1);
-            string optionname;
-            io >> optionname;
-            prepareToSendResults(io, 1);
-            instance->writeOptionVal(io, optionname);
-            io.flush();
-        }
-    };
-
     rmm.insert(
         "getOption", 1,
         new ObjectTrampolineGetOption(
@@ -631,21 +654,6 @@ void Object::declareMethods(RemoteMethodMap& rmm)
              RetDoc ("Value contained in the option"),
              ArgTypeDoc("string"),
              RetTypeDoc("(polymorphic)"))));
-
-    struct ObjectTrampolineGetObject : public RemoteTrampoline
-    {
-        ObjectTrampolineGetObject(const string& methodname, const RemoteMethodDoc& doc)
-            : RemoteTrampoline(methodname, doc)
-        { }
-
-        virtual void call(Object* instance, int nargs, PStream& io) const
-        {
-            checkNargs(nargs, 0);
-            prepareToSendResults(io, 1);
-            io << *instance;
-            io.flush();
-        }
-    };
 
     rmm.insert(
         "getObject", 0,
