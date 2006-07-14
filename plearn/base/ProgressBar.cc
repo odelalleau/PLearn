@@ -46,7 +46,8 @@
 #include "ProgressBar.h"
 #include "stringutils.h"
 #include <math.h>
-#include <plearn/base/tostring.h>  
+#include <plearn/base/tostring.h>
+#include <plearn/math/pl_math.h>	//!< For round(..).
 
 #if USING_MPI
 #include <plearn/sys/PLMPI.h>
