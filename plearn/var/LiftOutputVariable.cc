@@ -114,7 +114,7 @@ void LiftOutputVariable::fprop()
             }
         }
         else
-            valuedata[i] = output;
+            valuedata[i] = MISSING_VALUE;
     }
 }
 
