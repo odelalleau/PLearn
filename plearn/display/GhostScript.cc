@@ -331,11 +331,7 @@ void GhostScript::multilineShow(real x, real y, const string& text, real newline
       }
     else // diagonal
       {
-#if defined(_MINGW_)
-        r /= sqrt(2.0);
-#else
-        r /= M_SQRT2;
-#endif
+        r /= M_SQRT2; // M_SQRT2 == sqrt(2.0)
         drawLine(x-r,y-ry,x+r,y+ry);
         drawLine(x-r,y+ry,x+r,y-ry);
       }
