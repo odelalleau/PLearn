@@ -2,7 +2,7 @@
 #include "TransposeVariable.h"
 #include <plearn/var/Var_utils.h>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -113,9 +113,9 @@ void TransposeVariable::rfprop()
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
-
+
 /*
   Local Variables:
   mode:c++
