@@ -41,13 +41,9 @@
 
 /*! \file PRandom.cc */
 
-#define __STDC_LIMIT_MACROS     //!< For UINT32_MAX.
-#include <stdint.h>
-
 // Constants used for random numbers generation.
 #define RAND_EPS 1.2e-7
 #define RAND_RNMX (1.0 - RAND_EPS)
-
 
 #include "PRandom.h"
 
@@ -297,7 +293,7 @@ void PRandom::manual_seed(long x)
 //////////////////
 void PRandom::manual_seed_(long x)
 {
-    the_seed = uint32_t(x);
+    the_seed = boost::uint32_t(x);
     rgen.seed(the_seed);
     if (uniform_01) {
         // The boost::uniform_01 object must be re-constructed from the updated
