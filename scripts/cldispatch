@@ -1,0 +1,33 @@
+#!/usr/bin/python2.3
+#
+# cldispatch: dispatch utility for parallel PLearn
+#
+# Copyright 2004, Apstat Technologies, inc.
+# All rights reserved.
+
+from optparse import OptionParser
+from plearn.parallel.dispatch import *
+
+#
+# Main
+#
+
+def main():
+    parser = OptionParser()
+    parser.add_option('-n', '--num-available-machines',
+                      help='Prints the number of available machines',
+                      action='store_true', default=False)
+    
+    (options, args) = parser.parse_args()
+
+
+    if options.num_available_machines:
+        # This should simply be Task.n_available_machines() but I have to
+        # rethink initialization of Task (see plearn.parallel.dispatch)
+        from plearn.parallel.dispatch import SshTask        
+        print SshTask.n_available_machines()
+    elif args:        
+        launch_task( args, wait = True )
+
+if __name__ == '__main__':
+    main()
