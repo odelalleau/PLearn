@@ -41,19 +41,14 @@
  * This file is part of the PLearn library.
  ******************************************************* */
 
-// Win32 specific declarations
+// Win32 specific declarations.
 #if defined(WIN32) && !defined(__CYGWIN__) && !defined(_MINGW_)
-#include <direct.h>
-#error The line below looks weird and dangerous - Check chdir everywhere
-#define chdir _chdir
-#include <Windows.h>
-
+#include <direct.h> // Needed for declaration of _chdir.
+#define SYSTEM_CHDIR _chdir
 #else
-
+#define SYSTEM_CHDIR chdir
 #include <unistd.h>
 #endif // WIN32
-
-//#include <strstream>
 
 #include "fileutils.h"
 #include "openFile.h"
@@ -106,7 +101,7 @@ static PRStatus PR_GetFileInfo64_NoWildcards(const char *fn,
 ///////////
 int chdir(const PPath& path) 
 { 
-    int status = ::chdir(path.absolute().c_str()); 
+    int status = ::SYSTEM_CHDIR(path.absolute().c_str()); 
     if (status!=0)
         PLERROR("Could not chdir to %s.",path.absolute().c_str());
     return status;
@@ -1366,10 +1361,6 @@ void removeReferenceToFile(const PPath& file)
                 "references to file '%s', but it is not in the counter map",
                 file.absolute().c_str());
 }
-
-#ifdef WIN32
-#undef chdir
-#endif
 
 } // end of namespace PLearn
 
