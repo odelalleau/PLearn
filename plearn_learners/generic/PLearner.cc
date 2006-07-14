@@ -677,13 +677,8 @@ TVec<string> PLearner::getOutputNames() const
 {
     int n = outputsize();
     TVec<string> outnames(n);
-    char tmp[21];
-    tmp[20] = '\0';
     for(int k=0; k<n; k++)
-    {
-        snprintf(tmp,20,"out%d",k);
-        outnames[k] = tmp;
-    }
+        outnames[k] = "out" + tostring(k);
     return outnames;
 }
 
