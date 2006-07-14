@@ -49,7 +49,6 @@
 #include <nspr/prio.h>
 
 namespace PLearn {
-using namespace std;
 
 // Functions to read from a file written in any representation
 
@@ -96,7 +95,7 @@ inline void PR_Write_double(PRFileDesc *f, double value, bool is_file_bigendian=
 
 #endif
 
-
+
 /*
   Local Variables:
   mode:c++
