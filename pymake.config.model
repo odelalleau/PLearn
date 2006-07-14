@@ -1,5 +1,5 @@
 #!python
-   
+
 #############################################################################################################
 ## WARNING                                                                                                  #
 #  if you add options don't forget to add in the pymake file                                                #
@@ -56,7 +56,6 @@ mandatory_includedirs = []
 # (sys.byteorder does not exist in older versions of python)
 if platform=='linux-i386':
     compileflags = '-DLINUX -DLITTLEENDIAN'
-#    compileflags = '-DLINUX -DLITTLEENDIAN -mcpu=i686 -march=i686 -ftemplate-depth-100'
 elif platform=='linux-ppc':
     compileflags = '-DLINUXPPC -DBIGENDIAN'
 elif platform=='linux-alpha':
@@ -151,44 +150,16 @@ optionalLibrary( name = 'xml',
 optionalLibrary( name = 'xml-apstat',
                  includedirs = ['/usr/include/xercesc', '/usr/include/xalanc'],
                  linkeroptions = ( ' -lxalan-c -lxerces-c' ) )
-                                  
-
-#optionalLibrary( name = 'wxwindows',
-#                 triggers = 'wx/*.h',        
-#                 includedirs = ['/u/lisa/local/linux-i386/Install/wxWindows/wxGTK-2.2.9/lib/wx/include/gtk-2.2', '/u/lisa/local/linux-i386/Install/wxWindows/wxGTK-2.2.9/include','/usr/include/gtk-1.2', '/usr/include/glib-1.2', '/usr/lib/glib/include', '/usr/X11R6/include'],
-#                 compileroptions = '-DwxINSTALL_PREFIX=\"/u/lisa/local/linux-i386/\"  -D__WXGTK__ -DGTK_NO_CHECK_CASTS -D_REENTRANT -MMD -Wno-long-long',
-#                 linkeroptions = '/u/lisa/local/linux-i386/Install/wxWindows/wxGTK-2.2.9/lib/libwx_gtk-2.2.so.6.2.6 -L/usr/lib -L/usr/X11R6/lib -lgtk -lgdk -rdynamic -lgmodule -lgthread -lglib -lpthread -ldl -lXi -lXext -lX11 -lm  -lpng -ljpeg -ltiff  -ldl -lpthread -lz -lm' )
 
 
 optionalLibrary( name = 'arpack',
                  triggers = 'arpack_proto.h',
                  linkeroptions = '-L'+ libdir +'/ARPACK/OBJS/' + target_platform + ' -larpack -lg2c' )
 
-# Note: now blas and lapack are together.
-#optionalLibrary( name = 'lapack',
-#                 triggers = 'lapack_proto.h',
-#                 linkeroptions = lapack_linkeroptions 
-#                 )
-
 optionalLibrary( name = 'opengl',
                  triggers = 'GL/gl.h',
                  linkeroptions = '-lGL -lGLU -lglut'
                  )
-
-
-# optionalLibrary( name = 'blas',
-#                 triggers = ['blas_proto.h','lapack_proto.h'],
-#                 linkeroptions = '-lblas'
-#                 linkeroptions = '-L' + libdir + '/intelmkl/lib/32 -lmkl_p4 -lmkl_vml_p4 -lpthread'
-#                 linkeroptions = '-L' + libdir + '/intelmkl/lib/32 -lmkl_p3 -lmkl_vml_p3 -lpthread'
-#                 linkeroptions = '-L' + libdir + '/intelmkl/lib/32 -lmkl -lvml -lpthread'
-#                 linkeroptions = '-L' + libdir + '/atlas_athlon256 -lcblas -lf77blas -latlas'
-#                 )
-
-# optionalLibrary( name = 'g2c',
-#                 triggers = ['blas_proto.h','lapack_proto.h'],
-#                 linkeroptions = '-lg2c'
-#                 )
 
 # Note: under Unix-like systems, one will probably use 'ncurses'.
 # However, 'ncurses' is not implemented under Windows, and one can instead use
@@ -197,7 +168,7 @@ optionalLibrary( name = 'opengl',
 optionalLibrary( name = 'ncurses',
                  triggers = 'curses.h',
                  linkeroptions = '-lncurses'
-               )
+                 )
 
 if( (platform=='linux-x86_64') & (not force_32bits) ):
     wn_includedirs = '/u/lisa/WordNet/LINUX_64/v2.0/include'
@@ -280,7 +251,7 @@ optionalLibrary( name = 'python',
 
 # Operating system as defined by Torch when creating libraries.
 if platform=='win32': ## os.uname is not defined under Windows...
-  os.uname = lambda: ('Win32',)
+    os.uname = lambda: ('Win32',)
 torch_os = os.uname()[0]
 
 # Base for the directory where we can find the Torch library.
@@ -289,32 +260,31 @@ torch_libdir = join(libdir, 'torch/' + torch_os + '_')
 # Torch defines USE_DOUBLE when using real <=> double, and DEBUG in debug mode.
 # The directory in which the library is stored is 'torch_os'_<dbg/opt>_<float/double>
 torch_compiler_options = ''
-if usingOpt:
-  # Optimized mode.
-  torch_libdir += 'opt_'
-else:
-  # Debug mode.
-  torch_libdir += 'dbg_'
-  torch_compiler_options += '-DDEBUG '
 
-if usingFloat:
-  # real <=> float
-  torch_libdir += 'float'
+if 'opt' in optionargs:
+    # Optimized mode.
+    torch_libdir += 'opt_'
 else:
-  # real <=> double
-  torch_libdir += 'double'
-  torch_compiler_options += '-DUSE_DOUBLE '
+    # Debug mode.
+    torch_libdir += 'dbg_'
+    torch_compiler_options += '-DDEBUG '
+
+if 'float' in optionargs:
+    # real <=> float
+    torch_libdir += 'float'
+else:
+    # real <=> double
+    torch_libdir += 'double'
+    torch_compiler_options += '-DUSE_DOUBLE '
 
 optionalLibrary( name = 'torch',
                  triggers = 'torch/*',
                  linkeroptions = '-L' + torch_libdir + ' -ltorch',
                  compileroptions = torch_compiler_options
-               ) 
+                 )
 
 optionalLibrary( name='boost',
                  triggers = 'boost*',
-#                 includedirs = libdir + '/../include',  ## You don't need it if you set CPATH environment 
-#                 linkeroptions = '-L'+libdir            ## Systematically added in linkeroptions_tail
                  linkeroptions = ''
 )
 
@@ -364,12 +334,16 @@ options_choices = [
   [ 'g++', 'g++3', 'g++no-cygwin', 'icc', 'icc8', 'icc9', 'mpi', 'purify', 'quantify', 'vc++' ],
   [ 'dbg', 'opt', 'pintel', 'gprof', 'safegprof', 'safeopt', 'safeoptdbg', 'checkopt', 'genericvc++' ],
   [ 'double', 'float' ],
-  [ 'throwerrors', 'exiterrors' ], 
+  [ 'throwerrors', 'exiterrors' ],
   [ 'blas', 'p3blas','p4blas','athlonblas','pentiumblas', 'mammouthblas', 'noblas', 'veclib', 'scs'],
 ]
 
 
 # Description of options, and associated settings
+
+
+###
+# Declaration of "compiler" options
 
 if( platform=='linux-i386' or force_32bits ):
     gcc_opt_options = '-mmmx -msse -mfpmath=sse -march=i686'
@@ -416,9 +390,9 @@ pymakeOption( name = 'icc8',   # For C++, it is actually icpc
 
 icc9_exec = os.environ.get('ICC9DIR', '')
 if icc9_exec == '':
-  icc9_exec = 'icpc'
+    icc9_exec = 'icpc'
 else:
-  icc9_exec = os.path.join(icc9_exec, 'bin', 'icpc')
+    icc9_exec = os.path.join(icc9_exec, 'bin', 'icpc')
 
 pymakeOption( name = 'icc9',   # For C++, it is actually icpc
               description = 'compiling with Intel Compiler (version 9.x), with no MPI support',
@@ -432,19 +406,19 @@ pymakeOption( name = 'icc9',   # For C++, it is actually icpc
 
 pymakeOption( name = 'mpi',
               description = 'compiling and linking with MPI support (and USING_MPI=1)',
-              compiler = 'mpiCC',               
+              compiler = 'mpiCC',
               compileroptions = '-DUSING_MPI=1 -ftemplate-depth-100',
               linker = 'mpiCC' )
 
 pymakeOption( name = 'purify',
               description = 'compiling and linking with purify g++',
-              compiler = 'purify -g++ g++',               
+              compiler = 'purify -g++ g++',
               compileroptions = '-DUSING_MPI=0 -ftemplate-depth-100',
               linker = 'purify -g++ g++' )
 
 pymakeOption( name = 'quantify',
               description = 'compiling and linking with quantify g++',
-              compiler = 'quantify -g++ g++',               
+              compiler = 'quantify -g++ g++',
               compileroptions = '-DUSING_MPI=0 -ftemplate-depth-100',
               linker = 'quantify -g++ g++' )
 
@@ -455,19 +429,13 @@ pymakeOption( name = 'vc++',
                       + gcc_opt_options,
               linker = 'g++' )
 
+###
+# Declaration of "optimisation" options
+
 pymakeOption( name = 'dbg',
               description = 'debug mode',
               compileroptions = '-Wall -g -O0 -DBOUNDCHECK' )
 
-#pymakeOption( name = 'wx',
-#              description = 'wxWindos support',
-#              compileroptions = '
-    
-
-# is -fomit-frame-pointer helping?
-# does -malign-double indeed create core-dumps?
-# is -finline hurting?
-# is -funroll-loops hurting?
 
 pymakeOption( name = 'opt',
               description = 'optimized for intel compiler',
@@ -489,7 +457,7 @@ pymakeOption( name='safeoptdbg',
 pymakeOption( name = 'checkopt',
               description = 'some variation on optimized mode',
               compileroptions = '-Wall -O3 -funroll-loops' )
-  
+
 ### Same optimization options as -opt
 pymakeOption( name = 'gprof',
               description = 'optimized mode with profiler support (-pg)',
@@ -507,20 +475,40 @@ pymakeOption( name = 'genericvc++',
                             'in the .vcproj project file',
               compileroptions = '' )
 
+###
+# Declaration of "real" type options
+
+pymakeOption( name = 'float',
+              description = 'float mode (real==float)',
+              compileroptions = '-DUSEFLOAT')
+
+pymakeOption( name = 'double',
+              description = 'double mode (real==double)',
+              compileroptions = '-DUSEDOUBLE')
+
+###
+# Declaration of error-handling options
+
+pymakeOption( name = 'throwerrors',
+              description = 'defines the USE_EXCEPTIONS flag so that PLERROR throws an exception (?)',
+              compileroptions = '-DUSE_EXCEPTIONS' )
+
+pymakeOption( name = 'exiterrors',
+              description = 'PLERROR will not throw exceptions, but write the error message and exit' )
+
+###
+# Declaration of blas/lapack options
+
 lapack_linkeroptions = '-llapack'
 blas_linkeroptions = '-lblas -lg2c'
 
 # Jasmin : In OS X, there is a framework with blas and lapack
-#if platform=='darwin':
-#    lapack_linkeroptions = '-L/sw/lib/ -llapack'
 if platform=='darwin':
     blas_linkeroptions = '-framework vecLib'
     lapack_linkeroptions = ''
-#    blas_linkeroptions = '-L/sw/lib/ -lcblas -lf77blas -latlas -lg2c'
 
 pymakeOption( name = 'noblas',
               description = 'compilation and linking without BLAS',
-              #linkeroptions = '-lg2c'              
               )
 
 pymakeOption( name = 'blas',
@@ -563,35 +551,8 @@ pymakeOption( name = 'scs',
               compileroptions = '-D USE_BLAS_SPECIALISATIONS',
               linkeroptions = '-lscs -lpthread')
 
-pymakeOption( name = 'float',
-              description = 'float mode (real==float)',
-              compileroptions = '-DUSEFLOAT')
-
-pymakeOption( name = 'double',
-              description = 'double mode (real==double)',
-              compileroptions = '-DUSEDOUBLE')
-
-pymakeOption( name = 'throwerrors',
-              description = 'defines the USE_EXCEPTIONS flag so that PLERROR throws an exception (?)',
-              compileroptions = '-DUSE_EXCEPTIONS' )
-
-pymakeOption( name = 'exiterrors',
-              description = 'PLERROR will not throw exceptions, but write the error message and exit' )
-
+###
+# Declaration of other options
 pymakeOption( name = 'spc',
               description = 'Use of Smart Parallel Compilation')
-              
-              
-nprocesses_per_processor = 1
 
-# LISA hack to set the number of processes per processor on a 'machine name' basis
-if myhostname[0:5]=='troll':
-    nprocesses_per_processor = 16
-if myhostname[0:4]=='zeus':
-    nprocesses_per_processor = 18
-if myhostname[0:6]=='canari':
-    nprocesses_per_processor = 2
-if myhostname[0:7]=='frontal':
-    nprocesses_per_processor = 4
-if myhostname[0:6]=='merlin':
-    nprocesses_per_processor = 1

@@ -443,7 +443,7 @@ def _process_distcc_hosts(host_list):
             smallest_num = min(smallest_num, num)
 
     # For distcc, localhost is usually not added when the list of hosts is
-    # long because locahost is busy doing the preprocessing. This does not
+    # long because localhost is busy doing the preprocessing. This does not
     # hold for pymake, so add localhost if it is not present.
     if 'localhost' not in hosts:
         hosts.extend(['localhost'] * smallest_num)
@@ -723,7 +723,7 @@ if 'spc' in optionargs :
 
 local_compilation = 0 # do we want to do everything locally?
 if platform=='win32':
-  local_compilation = 1 # in windows, we ALWAYS work locally
+    local_compilation = 1 # in windows, we ALWAYS work locally
 if 'local' in optionargs:
     local_compilation = 1
     optionargs.remove('local')
@@ -772,25 +772,6 @@ if 'ssh' in optionargs:
     # Re-define 'rshcommand' in order to use ssh instead.
     rshcommand = 'ssh -x'
     optionargs.remove('ssh')
-
-#if options_choices[0][0] == 'icc'
-if 'icc' in optionargs:
-    usingIntelCompiler = 1
-    #optionargs.remove('icc')
-else:
-    usingIntelCompiler = 0
-
-if 'float' in optionargs:
-    usingFloat = 1
-else:
-    usingFloat = 0
-
-if 'opt' in optionargs:
-    usingOpt = 1
-else:
-    usingOpt = 0
-
-temp_objs=0
 
 for option in optionargs:
     if option.count('tmp', 0, 3) == 1:
