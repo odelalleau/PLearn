@@ -785,7 +785,7 @@ void StatsCollector::newwrite(PStream& out) const
         out << "max: " << max() << "\n\n";
         out << "first: " << first_obs() << "\n";
         out << "last:  " << last_obs()  << "\n\n";
-        out << "counts size: " << counts.size() << "\n";
+        out << "counts size: " << (unsigned int) counts.size() << "\n";
         map<real,StatsCollectorCounts>::const_iterator it = counts.begin();
         map<real,StatsCollectorCounts>::const_iterator itend = counts.end();
         for(; it!=itend; ++it)
