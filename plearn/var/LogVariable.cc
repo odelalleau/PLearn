@@ -83,13 +83,15 @@ void LogVariable::fprop()
     {
         valuedata[i] = safeflog(input->valuedata[i]);
 #ifdef BOUNDCHECK
-        if (!finite(valuedata[i]) && finite(input->valuedata[i]))
+		real val = valuedata[i];
+		real ival = input->valuedata[i];
+        if ((isnan(val) || isinf(val)) && !(isnan(ival) || isinf(ival)))
         {
-            //PLWARNING("LogVariable::fprop qqchose va pas");
-            cout << "inputdata[i]= " << input->valuedata[i] << endl;
-            cout << "valuedata[i]= " << valuedata[i] << endl;
+            //PLWARNING("LogVariable::fprop something is wrong");
+            pout << "inputdata[i]= " << input->valuedata[i] << endl;
+            pout << "valuedata[i]= " << valuedata[i] << endl;
             displayVarGraph(this, true, 250);
-            PLERROR("LogVariable::fprop qqchose va pas");
+            PLERROR("LogVariable::fprop Something is wrong");
         }
 #endif
     }
