@@ -2148,6 +2148,7 @@ try:
                 comp_options += ' -DBOUNDCHECK' # Enable BOUNDCHECK in debug.
                 comp_options += ' /GR' # Enable runtime type information
                                        # for dynamic casts.
+                comp_options += ' -DPL_REPOSITORY_REVISION=0' # TODO Temp value
 
                 # Get rid of potential MinGW definition when pymake is run under
                 # MinGW to generate the Visual Studio project.
