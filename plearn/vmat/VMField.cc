@@ -108,7 +108,7 @@ void VMFieldStat::write(PStream& out) const
         << min_ << ' '
         << max_ << "    ";
 
-    out << counts.size() << "  ";
+    out << (unsigned int) counts.size() << "  ";
 
     map<real,int>::const_iterator it = counts.begin();
     map<real,int>::const_iterator countsend = counts.end();
