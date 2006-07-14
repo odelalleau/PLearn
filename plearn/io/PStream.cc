@@ -254,7 +254,7 @@ void PStream::readExpected(char* expect)
 
 void PStream::readExpected(const string& expect)
 {
-    int l = expect.size();
+    int l = int(expect.size());
     for(int i=0; i<l; i++)
         readExpected(expect[i]);
 }
@@ -1369,7 +1369,7 @@ PStream& PStream::operator>>(bool &x)
             PLERROR("In PStream::operator>>(bool &x) wrong format for bool, must be one "
                     "of characters 0 or 1 or unquoted strings True or False" );
         else
-            x = bool(parsed);
+            x = (parsed != 0);
         break;
 
     default:
