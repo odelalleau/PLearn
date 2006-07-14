@@ -136,6 +136,10 @@ public:
         return ! (*this < rhs);
     }
 
+    bool sameDay(const PDateTime& rhs) const {
+        return day   == rhs.day && month == rhs.month && year  == rhs.year;
+    }
+    
 /*!     Convert a PDateTime into a Julian day.
   See http://quasar.as.utexas.edu/BillInfo/JulianDatesG.html
   (if still existing...) for details.
