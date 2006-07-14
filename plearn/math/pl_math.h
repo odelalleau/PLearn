@@ -95,6 +95,11 @@ extern _plearn_nan_type plearn_nan;
 #define INFINITY numeric_limits<real>::infinity()
 #endif
 
+//! Define M_SQRT2 as the square root of 2 (may not be defined on all systems).
+#ifndef M_SQRT2
+#define M_SQRT2 1.41421356237309504880
+#endif
+
 //! Under Cygwin with GCC, log(x) with x < 0 returns -Inf instead of NaN.
 //! Thus one should use the 'pl_log' function instead of 'log', so that this
 //! behavior can safely be fixed.
