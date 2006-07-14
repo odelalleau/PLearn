@@ -124,7 +124,6 @@ void ProcessingVMatrix::build_()
         return;
 
     length_ = source->length();
-    setMetaInfoFromSource();
 
     TVec<string> fieldnames;
     if(!prg.empty()) // ignore the *_prg
@@ -138,6 +137,15 @@ void ProcessingVMatrix::build_()
         fieldinfos.resize(nfields);
         for(int j=0; j<nfields; j++)
             fieldinfos[j] = VMField(fieldnames[j]);
+
+        if(inputsize_<0)
+            inputsize_ = nfields;
+        if(targetsize_<0)
+            targetsize_ = 0;            
+        if(weightsize_<0)
+            weightsize_ = 0;
+        if(extrasize_<0)
+            extrasize_ = 0;            
     }
     else // use the *_prg
     {
@@ -188,6 +196,8 @@ void ProcessingVMatrix::build_()
 
     declareFieldNames(fieldnames);
     sourcevec.resize(source->width());
+    
+    setMetaInfoFromSource();
 }
 
 void ProcessingVMatrix::build()
