@@ -1,0 +1,10 @@
+# Simple object with a VMat option, used in test PL_diff_VMat.
+SubVMatrix(
+    source =
+        MemoryVMatrix( 
+            data = 1  1  [ 
+                1
+            ]
+        )
+)
+
