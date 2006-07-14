@@ -311,7 +311,7 @@ void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, in
                 loadmat >> inp_element;
                 if (pl_isnumber(inp_element)) 
                 {
-                    mat_i[j] = pl_strtod(inp_element.c_str(), 0);
+                    mat_i[j] = T(pl_strtod(inp_element.c_str(), 0));
                     if (map_sr) 
                     {
                         T val = mat_i[j];
@@ -343,7 +343,7 @@ void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, in
                                 for (int k = 0; k < i; k++) 
                                 {
                                     if (fast_exact_is_equal(mat(k, j), val))
-                                        mat(k, j) = it->second;
+                                        mat(k, j) = T(it->second);
                                 }
                             }
                         }
@@ -358,12 +358,12 @@ void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, in
                         map<string,real>::iterator it = m.find(inp_element);
                         if(it != m.end()) // It already exists in the map.
                         {
-                            mat_i[j] = it->second;
+                            mat_i[j] = T(it->second);
                         } 
                         else           // We need to add it.
                         {                            
                             (*map_sr)[j][inp_element] = current_map[j];
-                            mat_i[j] = current_map[j];
+                            mat_i[j] = T(current_map[j]);
                             current_map[j]++;
                         }
                     } 
@@ -467,7 +467,7 @@ void loadAscii(const PPath& filename, TVec<T>& vec)
     for(; it!=itend; ++it) {
         if (in) {
             in >> inp_element;
-            *it = pl_strtod(inp_element.c_str(), 0);
+            *it = T(pl_strtod(inp_element.c_str(), 0));
         }
         if (!in) {
             in.clear();
