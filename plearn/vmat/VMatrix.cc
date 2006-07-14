@@ -724,7 +724,7 @@ real VMatrix::addStringMapping(int col, string str)
         val = it->second;
     else // str not found in map: add a new mapping
     {
-        val = - m.size() - 100;
+        val = - real(m.size()) - 100;
         addStringMapping(col, str, val);
     }
     return val;
@@ -1062,7 +1062,7 @@ void VMatrix::lockMetaDataDir(time_t max_lock_age, bool verbose) const
 ///////////////////////
 void VMatrix::unlockMetaDataDir() const
 {
-    if(!lockf_)
+    if(!bool(lockf_))
         PLERROR("In VMatrix::unlockMetaDataDir() was called while no lock is held by this object");
     lockf_ = PStream();   // Release the lock.
     PPath lockfile = metadatadir / ".lock";
