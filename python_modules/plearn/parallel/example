@@ -1,0 +1,87 @@
+#!/usr/bin/env python
+"""Example of dispatch script.
+
+I usually create a file named 'dispatch' (which I renamed here to example)
+in the directory where I intend to lunch experiments. Launching my
+experiments is then as simple as::
+
+    prompt % ./dispatch
+    > inari
+    > finlearn --no-version opal_mixture.pyplearn
+    > start_year=2006 maximum_leverage=3 cash_level=5000000.0 n_years=1
+    > last_date=1060630 targetvol=0.05 warmup_seqval=252 last_year=2006
+    > start_date=1060531 expdir_root=LimitedLeverage/ global_prop_trcost=0.0005
+    > expdir=expdir_2006_07_14_14_14_49
+    > kamado
+    > finlearn --no-version opal_mixture.pyplearn start_year=2006
+    > maximum_leverage=3 cash_level=5000000.0 n_years=1 last_date=1060630
+    > targetvol=0.05 warmup_seqval=252 last_year=2006 start_date=1060531
+    > expdir_root=LimitedLeverage/ global_prop_trcost=0.001
+    > expdir=expdir_2006_07_14_14_14_50
+    > kamado
+    > ...
+
+assuming that I have execution rights on 'dispatch'. Note that here, the
+command is only printed because of (take a look below) the 'echo' statement
+in my 'dispatch.program'.
+
+If I remember well, there were still a few bugs in output redirection,
+which is why I never use it: everything is currently drop to std out... The
+list of machine is managed in a simplistic fashion; MAX_LOADAVG was added
+for that reason but still doesn't do the job that well...
+
+Remember that I developped that on spare time, which I have very few
+of... Still it does the job for us at work: most simulations launched for
+our biggest client are launched using this dispactcher...
+"""
+import copy, os, sys
+from plearn.parallel.dispatch import ArgumentsOracle, Dispatch
+dispatch = Dispatch( max_nmachines = 20 )
+
+def OutOfSample(specs, dir=''):
+    oos = { "_script_"           : "single.pyplearn",
+                            
+            "expdir_root"        : os.path.join("OutOfSample", dir),
+            "targetvol"          : [ 0.05, 0.06, 0.07, 0.08, 0.09, 0.10 ],
+
+            "start_year"         : 2006,
+            "start_date"         : 1060531,
+            "last_date"          : 1060630,
+            "last_year"          : 2006,
+            "n_years"            : 1,
+            'warmup_seqval'      : 252,
+            'global_prop_trcost' : [ 0.0005, 0.001 ],
+            'cash_level'         : 5e6
+            }
+    oos.update(specs)
+    return oos
+
+def LimitedLeverage(specs, dir=''):
+    specs.update({ "expdir_root" : os.path.join("LimitedLeverage", dir),
+                   "maximum_leverage" : 3 })
+    return OutOfSample(specs, dir) 
+
+#
+#  Main
+#
+if __name__ == '__main__':
+    start_year = 2000
+    n_years    = 6
+
+    OOS = LimitedLeverage # Selects the type of exp to run
+    oracles = [ 
+        ArgumentsOracle(
+            OOS({'_script_'   : 'opal_mixture.pyplearn'})
+            )]
+
+    try:
+        if '--count' in sys.argv:
+            dispatch.program = None
+        else:
+            dispatch.program = 'echo finlearn --no-version'
+        dispatch.start( *oracles )
+        print "On", sum([ len(oracle) for oracle in oracles ]), "requested experiments."
+                   
+    except KeyboardInterrupt:
+        print "Interrupted by user."
+        sys.exit(0)
