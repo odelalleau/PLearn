@@ -376,12 +376,23 @@ return new_opt->diff(refer, other, diffs);
 
 
 //! diff for VMat.
+#ifndef _MSC_VER
+// Currently, this piece of code is problematic with Visual Studio .Net 2003:
+// it triggers an error when compiling certain files (e.g. RealMapping.cc)
+// that do not depend on VMat.h: even though it looks like in such a case this
+// specific diff function should not be compiled, Visual C++ does compile it,
+// resulting in an error about the PStream >> VMat operation not being defined.
+// As a workaround, this function is thus disabled with Visual Studio: this is
+// however not a good solution, since it means diffs performed on a VMat option
+// will not behave as expected, and the test PL_diff_VMat will fail.
 template<class ObjectType>
 int diff(const string& refer, const string& other, const Option<ObjectType, VMat >* opt, PLearnDiff* diffs)
 {
     return diff(refer, other,
                 (Option<ObjectType, PP<VMatrix> >*) opt, diffs);
 }
+#endif
+
 
 //! Add 'prefix' in front of the last 'n' difference names in 'diffs'.
  void addDiffPrefix(const string& prefix, PLearnDiff* diffs, int n);
