@@ -315,9 +315,13 @@ def istexfile(file_path):
     return ext in ['.tex','.sty','.bib']
 
 def isvmat( file_path ):
-    """True if the extension of I{file_path} is one of I{.amat}, I{.dmat}, I{.pmat} or I{.vmat}."""
+    """True if the extension of I{file_path} matches a standard vmat extension.
+
+    Understood extensions: I{.amat}, I{.dmat}, I{.tkmat}, I{.pmat},
+    I{.pymat} or I{.vmat}.
+    """
     (base,ext) = os.path.splitext(file_path)
-    return ext in [ '.amat', '.dmat', '.pmat','.vmat' ]
+    return ext in [ '.amat', '.dmat', '.tkmat', '.pmat', '.pymat', '.vmat' ]
 
 def keep_a_timed_version( path ):
     backup = "%s.%s" % ( path, date_time_string() )
