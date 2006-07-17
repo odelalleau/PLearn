@@ -52,6 +52,14 @@
  *  library includes are carried out.  (Python.h plays hacks with some macros)
  */
 
+// Under Windows with Microsoft Visual Studio in debug mode, _DEBUG is defined
+// resulting in a dependence on the python24_d.lib library file. To get rid of
+// this, we undefine _DEBUG before including the python headers.
+#if defined(WIN32) && defined(_DEBUG)
+#define NEED_REDEFINE_DEBUG
+#undef _DEBUG
+#endif
+
 #ifndef PL_PYTHON_VERSION
 #  define PL_PYTHON_VERSION 230
 #endif
@@ -74,6 +82,12 @@
 
 #  error "PL_PYTHON_VERSION should be defined to one of: 230, 240"
 
+#endif
+
+// Redefine _DEBUG if needed (see above).
+#ifdef NEED_REDEFINE_DEBUG
+#define _DEBUG
+#undef NEED_REDEFINE_DEBUG
 #endif
 
 // Undefine HAVE_LONG_LONG so we do not get an annoying warning when using
