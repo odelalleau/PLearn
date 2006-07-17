@@ -153,6 +153,10 @@ Vec Dictionary::getValues(TVec<string> options)
         for(map<string,int>::iterator it = string_to_int.begin(); it != string_to_int.end(); it++)
             if(!oov_not_in_possible_values || oov_tag_id != it->second)
                 possible_values[i++] = it->second;
+        //! This version might be better!
+        //for(map<int,string>::iterator it = int_to_string.begin(); it != int_to_string.end(); it++)
+        //    if(!oov_not_in_possible_values || oov_tag_id != it->first)
+        //        possible_values[i++] = it->first;
         refill_possible_values = false;
     }
     return possible_values;

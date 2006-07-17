@@ -131,7 +131,7 @@ public:
     PLEARN_DECLARE_OBJECT(Dictionary);
 
     //! Set update dictionary mode : UPDATE/NO_UPDATE.
-    virtual void  setUpdateMode(int up_mode);
+    virtual void setUpdateMode(int up_mode);
 
     //! Gives the id of a symbol in the dictionary
     //! If the symbol is not in the dictionary, 
@@ -153,7 +153,7 @@ public:
 
     //! Returns a Vec containing every possible id values of the Dictionary
     //! Options can be specified to restrict the number of possible values. 
-    //! Here, values is simply copied (which can be costly!), and then the copy is returned
+    //! NOTE: the vectorr returned may use memory also used by the Dictionary object!
     virtual Vec getValues(TVec<string> options=TVec<string>(0));
 
     //! Indicates if a symbol is in the dictionary
