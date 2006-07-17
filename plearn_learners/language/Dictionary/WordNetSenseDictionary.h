@@ -46,6 +46,12 @@
 #include "Dictionary.h"
 #include "wn.h"
 
+#define WN_ROOT_NODE "wn_root_node"
+#define WN_NOUN_NODE "wn_noun_node"
+#define WN_VERB_NODE "wn_verb_node"
+#define WN_ADJ_NODE "wn_adj_node"
+#define WN_ADV_NODE "wn_adv_node"
+
 namespace PLearn {
 using namespace std;
 
@@ -61,7 +67,9 @@ string getSynsetKey(SynsetPtr ssp);
 SynsetPtr getSynsetPtr(string synset_key);
 //! Extract senses for a word and a certain POS tag, as a certain
 //! symbol type. Appends the extracted senses to the TVec senses
-void extractSenses(string word, int wn_pos, string symbol_type, TVec<string>& senses);
+void extractSenses(string word, int wn_pos, string symbol_type, TVec<string>& senses,TVec<int>& tagcnts, TVec< TVec<string> >& ancestors, bool extract_ancestors=false);
+//! Extracts synset
+void extractAncestors(TVec<SynsetPtr> anc, TVec< TVec<string> >& anc_str, string root_node=WN_ROOT_NODE);
 //! Stems a word
 string stemWord(string word);
 //! Stems a word, according to a POS
@@ -99,6 +107,23 @@ public:
     //! Type of representation (symbol) of the senses
     string symbol_type;
 
+    //! Possible values for a certain word
+    hash_map<string,Vec > possible_values_for_word;
+
+    // Hierarchy information:
+
+    //! Indication that the WordNet hierarchy will be used
+    bool use_wordnet_hierarchy;
+
+    //! Synset children mapping
+    hash_map<int, TVec<int> > children;
+
+    //! Synset parents mapping
+    hash_map<int, TVec<int> > parents;
+
+    //! Prior distribution p(sense|word) given by WordNet
+    hash_map<string, real> sense_prior;
+
 protected:
 
     //! Stems of words (temporary computation field)
@@ -107,12 +132,18 @@ protected:
     //! Senses of words (temporary computation field)
     TVec<string> senses;
 
-    // ****************
-    // * Constructors *
-    // ****************
+    //! Senses of words (temporary computation field)
+    TVec< TVec<string> > ancestors_vec;
 
-    //! Default constructor.
-    WordNetSenseDictionary();
+    //! Tag counts for senses (temporary computation field)
+    TVec<int> tagcnts;
+
+    //! Temporary variable when returning an int;
+    int ret;
+
+    //! Temporary variable for sense_prior computation
+    string word_sense;
+
 
     // ******************
     // * Object methods *
@@ -129,6 +160,14 @@ protected:
     void getSensesFromWordNet(TVec<string> options);
 
 public:
+
+    // ****************
+    // * Constructors *
+    // ****************
+
+    //! Default constructor.
+    WordNetSenseDictionary();
+
     // Declares other standard object methods.
     PLEARN_DECLARE_OBJECT(WordNetSenseDictionary);
 
@@ -137,6 +176,22 @@ public:
     virtual Vec getValues(TVec<string> options=TVec<string>(0));
     
     virtual int size(TVec<string> options=TVec<string>(0));
+
+    //! Returns the parents of a sense (synset)
+    //! Will give an empty vector is sense id incorrect
+    //! or use_wordnet_hierarchy is false.
+    virtual void parentsOf(int sense, TVec<int>& the_parents);
+
+    //! Returns the children of a sense (synset)
+    //! Will give an empty vector is sense id incorrect
+    //! or use_wordnet_hierarchy is false.
+    virtual void childrenOf(int sense, TVec<int>& the_children);
+
+    //! Return the id of WN_ROOT_NODE
+    virtual int rootNode();
+
+    //! Prior distribution over senses of a word, given by WordNet
+    virtual real sensePrior(string word, string sense);
 
     // simply calls inherited::build() then build_() 
     virtual void build();
