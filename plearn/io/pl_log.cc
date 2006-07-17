@@ -123,7 +123,7 @@ void PL_Log::enableNamedLogging(const vector<string>& module_names)
 {
     enabled_modules.clear();
     named_logging_kind = SomeModules;
-    for (int i=0, n=module_names.size() ; i<n ; ++i) {
+    for (int i=0, n=int(module_names.size()) ; i<n ; ++i) {
         if (module_names[i] == "__ALL__") {
             named_logging_kind = AllModules;
             break;
