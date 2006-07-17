@@ -40,12 +40,34 @@
 
 /*! \file FdPStreamBuf.cc */
 
+#include "FdPStreamBuf.h"
+
 #if defined(WIN32) && !defined(__CYGWIN__) && !defined(_MINGW_)
-// This file does not compile under windows and should not be used anyways.
+// Dummy implementation to prevent compilation and link errors, as the "normal"
+// code does not compiler under Windows.
+
+namespace PLearn {
+
+FdPStreamBuf::FdPStreamBuf(int in_fd, int out_fd,
+						   bool own_in_, bool own_out_):
+	PStreamBuf(true, false)
+{
+	PLERROR("The FdPStreamBuf class cannot be used on this system");
+}
+
+FdPStreamBuf::~FdPStreamBuf() {}
+
+FdPStreamBuf::streamsize FdPStreamBuf::read_(char* p, streamsize n)
+{
+	return 0;
+}
+
+void FdPStreamBuf::write_(const char* p, streamsize n) {}
+
+}
 
 #else // POSIX
 
-#include "FdPStreamBuf.h"
 #include <unistd.h>
 
 namespace PLearn {
