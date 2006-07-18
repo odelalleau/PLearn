@@ -1961,6 +1961,20 @@ def mychmod(path,mode):
   if tail:
       mychmod(head,mode)
 
+def cygwin_to_win_paths(paths):
+    """Return the list of Windows paths corresponding to the colon-separated
+       list provided as argument"""
+    path_list = paths.split(':')
+    test_cygpath = toolkit.command_output('which cygpath')
+    if len(test_cygpath) != 1 or len(test_cygpath[0]) < 2 or \
+       (test_cygpath[0][0] != '/' and test_cygpath[0][1] != ':'):
+        return path_list
+    result = []
+    for path in path_list:
+        result.append( \
+            toolkit.command_output('cygpath -w %s' % path)[0].rstrip('\n'))
+    return result
+
 ## this function takes a target, and extract all the sources necessary
 ## to compile the target, in a directory call your_target.dist
 ## in this directory, there will be a Makefile that is able to compile
@@ -2136,9 +2150,15 @@ try:
                 comp_options = comp_options.replace('-D_MINGW_', '')
                 tool_node.setAttribute('AdditionalOptions', comp_options)
                 tool_node.setAttribute('Optimization', '0')
-                # TODO Automatically add include directories from CPATH, or from
-                # a command-line argument?
-                tool_node.setAttribute('AdditionalIncludeDirectories', plearndir + ';R:\cygwin\local\include')
+
+                # Automatically add include directories from CPATH
+                cpath_env = os.getenv('CPATH')
+                add_include_dirs = [ plearndir ]
+                if cpath_env is not None:
+                    add_include_dirs += cygwin_to_win_paths(cpath_env)
+
+                tool_node.setAttribute('AdditionalIncludeDirectories', \
+                                       ';'.join(add_include_dirs))
                 tool_node.setAttribute('PreprocessorDefinitions', 'WIN32;_DEBUG;_CONSOLE')
                 tool_node.setAttribute('MinimalRebuild', 'TRUE')
                 tool_node.setAttribute('BasicRuntimeChecks', '3')
@@ -2153,8 +2173,55 @@ try:
                 configuration_node.appendChild(tool_node)
                 tool_node = vcproj_xml.createElement('Tool')
                 tool_node.setAttribute('Name', 'VCLinkerTool')
-                tool_node.setAttribute('OutputFile', '$(OutDir)/%s.exe' % project_base_name)
+
+                # Add additional library dependencies.
+                for linkf in executables_to_link.keys():
+                    # Obtain the link command: we set 'symlinkobjs' to 0 to
+                    # ensure no file links are created.
+                    tmp = symlinkobjs
+                    symlinkobjs = 0
+                    link_command = linkf.link_command()
+                    symlinkobjs = tmp
+                    # Extract libraries that must be linked with, i.e. linker
+                    # options of the form '-lxxx'.
+                    add_libs = []
+                    start = 0
+                    while (start >= 0):
+                        start = link_command.find(' -l', start)
+                        if start >= 0:
+                            end = link_command.find(' ', start+1)
+                            if end < 0:
+                                # Might happen if '-lxxx' is the very last
+                                # statement on the link command line.
+                                end = len(link_command)
+                            libname = link_command[start+3:end]
+                            # Handle some special cases.
+                            if libname == 'python24':
+                                result = '%s.lib' % libname
+                            elif libname in ['numarray', 'lapack', 'm']:
+                                # These libraries are not needed with Visual
+                                # Studio, and can be safely ignored.
+                                result = None
+                            else:
+                                # Default name is 'libxxx.lib'.
+                                result = 'lib%s.lib' % libname
+                            if result is not None:
+                                add_libs.append(result)
+                            start += 1
+
+                tool_node.setAttribute('AdditionalDependencies', \
+                                       ' '.join(add_libs))
+
+                tool_node.setAttribute('OutputFile',
+                                       '$(OutDir)/%s.exe' % project_base_name)
                 tool_node.setAttribute('LinkIncremental', '2')
+
+                # Automatically add library directories from LIBRARY_PATH.
+                library_path_env = os.getenv('LIBRARY_PATH')
+                if library_path_env is not None:
+                    add_lib_dirs = cygwin_to_win_paths(library_path_env)
+                    tool_node.setAttribute('AdditionalLibraryDirectories', \
+                                           ';'.join(add_lib_dirs))
                 tool_node.setAttribute('GenerateDebugInformation', 'TRUE')
                 tool_node.setAttribute('ProgramDatabaseFile', '$(OutDir)/%s.pdb' % project_base_name)
                 tool_node.setAttribute('SubSystem', '1')
