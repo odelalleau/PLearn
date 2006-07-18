@@ -171,6 +171,13 @@ class VMat:
             if key<0: key+=self.length
             return self.getRow(key)
 
+    def getFieldIndex(self, fieldname):
+        try:
+            return self.fieldnames.index(fieldname)
+        except ValueError:
+            raise ValueError( "VMat has no field named %s. Field names: %s"
+                              %(fieldname, ','.join(self.fieldnames)) )
+
 class PMat( VMat ):
 
     def __init__(self, fname, openmode='r', fieldnames=[], elemtype='d',
