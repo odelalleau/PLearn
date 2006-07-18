@@ -473,7 +473,12 @@ pymakeOption( name = 'genericvc++',
               description = 'Generic compilation options for Visual C++: ' \
                             'the debug/opt options are actually set directly '\
                             'in the .vcproj project file',
-              compileroptions = '' )
+              compileroptions = '',
+              # The GCC library is currently needed to use the BLAS library
+              # compiled with GCC. A couple of things need to be investigated:
+              # - can we find a better Windows BLAS library?
+              # - does this bring copyright issues?
+              linkeroptions = '-lgcc')
 
 ###
 # Declaration of "real" type options
