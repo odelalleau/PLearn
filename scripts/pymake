@@ -2143,7 +2143,14 @@ try:
                 comp_options += ' -DBOUNDCHECK' # Enable BOUNDCHECK in debug.
                 comp_options += ' /GR' # Enable runtime type information
                                        # for dynamic casts.
-                comp_options += ' -DPL_REPOSITORY_REVISION=0' # TODO Temp value
+                # Note that the following line implies that a function named
+                # PL_repository_revision has been defined in the config file,
+                # as it is currently the case in pymake.config.model.
+                # A future (better) version of this code should rather gather
+                # individual compilation options for each file, and set them
+                # accordingly in the Visual Studio project file.
+                comp_options += ' -DPL_REPOSITORY_REVISION=%s' \
+                                % PL_repository_revision()
 
                 # Get rid of potential MinGW definition when pymake is run under
                 # MinGW to generate the Visual Studio project.
