@@ -205,8 +205,21 @@ class Bindings( object ):
         for value_set in iter_cross_product( *self.values() ):
             exploded.append( cls( zip(self.ordered_keys, value_set) ) )
         return exploded
-    
 
+    def getKey(self, index):
+        assert isinstance(index, int)
+        return self.ordered_keys[index]
+
+    def getValue(self, index):
+        assert isinstance(index, int)
+        key = self.ordered_keys[index]
+        return self[key]
+    
+    def getItem(self, index):
+        assert isinstance(index, int)
+        key = self.ordered_keys[index]
+        return key, self[key]
+        
 
 if __name__ == "__main__":
     print "\nEmbedded test/tutorial for Bindings.py.\n"
