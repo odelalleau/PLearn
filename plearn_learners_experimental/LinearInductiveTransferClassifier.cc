@@ -51,6 +51,7 @@
 #include <plearn/var/ColumnSumVariable.h>
 #include <plearn/var/ConcatRowsVariable.h>
 #include <plearn/var/CrossEntropyVariable.h>
+#include <plearn/var/DotProductVariable.h>
 #include <plearn/var/DuplicateRowVariable.h>
 #include <plearn/var/DivVariable.h>
 #include <plearn/var/ExpVariable.h>
@@ -201,10 +202,18 @@ void LinearInductiveTransferClassifier::build_()
         class_reps_var = new SourceVariable(class_reps_to_use);
         Var weights = productTranspose(A,class_reps_var);
         if(model_type == "discriminative" || model_type == "discriminative_1_vs_all")
-            weights =vconcat(-product(exp(s),square(weights)) & weights); // Making sure that this value is going to be positive
+        {
+            weights =vconcat(-product(exp(s),square(weights)) & weights); // Making sure that the scaling factor is going to be positive
+            output = affine_transform(input, weights);
+        }
         else
+        {
             weights =vconcat(-columnSum(square(weights)/transpose(duplicateRow(s,noutputs))) & 2*weights/transpose(duplicateRow(s,noutputs)));
-        output = affine_transform(input, weights);
+            if(targetsize() == 1)
+                output = affine_transform(input, weights);
+            else
+                output = exp(affine_transform(input, weights) - duplicateRow(dot(transpose(input)/s,input),noutputs))+REAL_EPSILON;
+        }
 
         Var sup_output;
         Var new_output;
