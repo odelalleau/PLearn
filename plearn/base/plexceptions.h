@@ -63,7 +63,18 @@ public:
     string message() const { return msg; }; // Return error message
 };
 
+
+// //! Useful tracing facility for error messages (GCC only)
+// #ifdef __GNUC__
+// #  ifdef __FUNCTION__
+// #     undef __FUNCTION__
+// #  endif
+// const char* pl_prettify_function(const char* function_name);
+// #  define __FUNCTION__ pl_prettify_function(__PRETTY_FUNCTION__)
+// #endif
+
 } // end of namespace PLearn
+
 
 #endif //!<  pexceptions_INC
 

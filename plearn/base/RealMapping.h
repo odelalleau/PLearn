@@ -135,11 +135,7 @@ PStream& operator>>(PStream& in, RealRange &x);
  */
 class RealMapping: public Object
 {
-private:
-	    typedef Object inherited;
-
-protected: 
-    static void declareOptions(OptionList& ol);
+    typedef Object inherited;
 
 public:
     typedef pair<RealRange, real> single_mapping_t;
@@ -147,14 +143,27 @@ public:
     typedef map<RealRange, real> mapping_t;
     typedef mapping_t::iterator iterator;
     typedef mapping_t::const_iterator const_iterator;
-    mapping_t mapping; // defines mapping from real ranges to values
-    // o_mapping contains the same mappings as 'mapping', but they are 
-    // ordered so that the lower limits of ranges are in ascending order
-    // NOTE : before any access, it must be created with a call to buildOrderedMapping()
+
+    //! Defines mapping from real ranges to values
+    mapping_t mapping;
+
+    //! Value to which to map missing values (can be missing value)
+    real missing_mapsto;
+
+    //! If true, values not in mapping are left as is, otherwise they're
+    //! mapped to other_mapsto
+    bool keep_other_as_is;
+
+    //! Value to which to map values not inmapping, if keep_other_as_is is
+    //! false 
+    real other_mapsto;
+
+    /**
+     *  o_mapping contains the same mappings as 'mapping', but they are ordered
+     *  so that the lower limits of ranges are in ascending order NOTE : before
+     *  any access, it must be created with a call to buildOrderedMapping()
+     */
     ordered_mapping_t o_mapping; 
-    real missing_mapsto; // value to which to map missing values (can be missing value)
-    bool keep_other_as_is; // if true, values not in mapping are left as is, otherwise they're mappred to other_mapsto
-    real other_mapsto; // value to which to map values not inmapping, if keep_other_as_is is false 
     
 public:
     PLEARN_DECLARE_OBJECT(RealMapping);
@@ -249,6 +258,8 @@ public:
     //! e.g.: [0,1[  [1, 5[  [5, 10]  ]10, 15]--> <0,1,5,10,15>.
     Vec getCutPoints() const;
 
+protected: 
+    static void declareOptions(OptionList& ol);
 };
 
 DECLARE_OBJECT_PTR(RealMapping);

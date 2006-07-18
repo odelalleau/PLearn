@@ -167,9 +167,25 @@ real RealMapping::maxMappedToValue()
 
 void RealMapping::declareOptions(OptionList& ol) 
 {
-    declareOption(ol, "mapping", &RealMapping::mapping, OptionBase::buildoption,
-                  "The mapping");
+    declareOption(
+        ol, "mapping", &RealMapping::mapping, OptionBase::buildoption,
+        "The mapping");
 
+    declareOption(
+        ol, "missing_mapsto", &RealMapping::missing_mapsto, OptionBase::buildoption,
+        "Value to which to map missing values (can be missing value)");
+
+    declareOption(
+        ol, "keep_other_as_is", &RealMapping::keep_other_as_is,
+        OptionBase::buildoption,
+        "If true, values not in mapping are left as is, otherwise they're\n"
+        "mapped to 'other_mapsto' (default=True)");
+
+    declareOption(
+        ol, "other_mapsto", &RealMapping::other_mapsto, OptionBase::buildoption,
+        "Value to which to map values not in mapping, if 'keep_other_as_is' is\n"
+        "false");
+    
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
