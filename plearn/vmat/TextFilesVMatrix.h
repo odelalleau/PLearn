@@ -90,7 +90,9 @@ public:
     // * public build options *
     // ************************
 
-    PPath metadatapath; //!< the path to the .metadata directory
+    /// The path to the .metadata directory
+    /// @deprecated Use metadadir of VMatrix class instead.
+    PPath metadatapath; 
 
     //! A list of paths to raw text files containing the records
     TVec<string> txtfilenames;

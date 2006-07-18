@@ -34,7 +34,7 @@
  * $Id$
  ******************************************************* */
 
-// Author: Pascal Vincent
+// Author: Pascal Vincent, Christian Hudon
 
 /*! \file TextFilesVMatrix.cc */
 #include <plearn/base/PDate.h>
@@ -216,11 +216,18 @@ void TextFilesVMatrix::build_()
     mapfiles.resize(n);
     mapfiles.fill(0);
 
-    setMetaDataDir(metadatapath);              // should be changed for metadatadir!?!?
+    if (metadatapath != "") {
+        PLWARNING("In TextFilesVMatrix::build_: metadatapath option is deprecated. "
+                  "You should use metadatadir instead.\n");
 
-    if(!force_mkdir(getMetaDataDir()))
-        PLERROR("In TextFilesVMatrix::build_: could not create directory '%s'",
-                getMetaDataDir().absolute().c_str());
+        metadatadir = metadatapath;
+        setMetaDataDir(metadatapath);
+
+        if(!force_mkdir(getMetaDataDir()))
+            PLERROR("In TextFilesVMatrix::build_: could not create directory '%s'",
+                    getMetaDataDir().absolute().c_str());
+    }
+    
     PPath metadir = getMetaDataDir();
     PPath idxfname = metadir/"txtmat.idx";
 
@@ -273,7 +280,6 @@ string TextFilesVMatrix::getTextRow(int i) const
 
 void TextFilesVMatrix::loadMappings()
 {
-//  static char buf[1000];
     int n = fieldspec.size();
     for(int k=0; k<n; k++)
     {
@@ -292,30 +298,6 @@ void TextFilesVMatrix::loadMappings()
                 mapping[k][strval] = real_val;
             }
         }
-
-        /*
-          FILE* f = fopen(fname.c_str(),"rb");
-          if(f)
-          {
-          int c = 0;
-          while(c!=EOF)
-          {
-          int l =0;
-          do { c = fgetc(f); }
-          while(c!='"' && c!=EOF);
-          if(c==EOF)
-          break;
-          do { c = fgetc(f); buf[l++]=c; }
-          while(c!='"' && c!=EOF);
-          buf[--l] = '\0';
-          string strval = buf;
-          real val;
-          fscanf(f,"%lf",&val);
-          mapping[k][strval] = val;
-          }
-          fclose(f);
-          }
-        */
     }
 }
 
@@ -668,7 +650,8 @@ void TextFilesVMatrix::getNewRow(int i, const Vec& v) const
 void TextFilesVMatrix::declareOptions(OptionList& ol)
 {
     declareOption(ol, "metadatapath", &TextFilesVMatrix::metadatapath, OptionBase::buildoption,
-                  "Path of the metadata directory (in which to store the index, ...)");
+                  "Path of the metadata directory (in which to store the index, ...)\n"
+                  "DEPRECATED: use metadatadir instead.\n");
 
     declareOption(ol, "txtfilenames", &TextFilesVMatrix::txtfilenames, OptionBase::buildoption,
                   "A list of paths to raw text files containing the records");
