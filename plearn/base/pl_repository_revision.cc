@@ -40,6 +40,10 @@
 
 /*! \file pl_repository_revision.cc */
 
+// Macro definitions used to transform the PL_REPOSITORY_REVISION variable
+// into a string. Taken from http://www.delorie.com/gnu/docs/gcc/cpp_17.html.
+#define TO_STRING(s) #s
+#define MACRO_TO_STRING(s) TO_STRING(s)
 
 #include "pl_repository_revision.h"
 
@@ -51,8 +55,8 @@ using namespace std;
 ////////////////////////////
 string pl_repository_revision()
 {
-    // PL_REPOSITORY_REVISION is a command-line define from pymake
-    return string(PL_REPOSITORY_REVISION);
+    // PL_REPOSITORY_REVISION is a command-line define from pymake.
+    return MACRO_TO_STRING(PL_REPOSITORY_REVISION);
 }
 
 ////////////////////////////////
