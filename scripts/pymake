@@ -2170,6 +2170,7 @@ try:
                 tool_node.setAttribute('MinimalRebuild', 'TRUE')
                 tool_node.setAttribute('BasicRuntimeChecks', '3')
                 tool_node.setAttribute('RuntimeLibrary', '5')
+                tool_node.setAttribute('ForceConformanceInForLoopScope', 'TRUE')
                 tool_node.setAttribute('UsePrecompiledHeader', '0')
                 tool_node.setAttribute('WarningLevel', '3')
                 tool_node.setAttribute('Detect64BitPortabilityProblems', 'TRUE')
