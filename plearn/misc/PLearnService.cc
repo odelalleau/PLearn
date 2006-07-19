@@ -89,7 +89,7 @@ void PLearnService::connectToServers(PPath serversfile)
     while(in)
     {
         in.skipBlanksAndComments();
-        if(!bool(in))
+        if(!in)
             break;
         in >> hostname >> tcpport >> pid;
         if(in)

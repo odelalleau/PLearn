@@ -1062,7 +1062,7 @@ void VMatrix::lockMetaDataDir(time_t max_lock_age, bool verbose) const
 ///////////////////////
 void VMatrix::unlockMetaDataDir() const
 {
-    if(!bool(lockf_))
+    if(!lockf_)
         PLERROR("In VMatrix::unlockMetaDataDir() was called while no lock is held by this object");
     lockf_ = PStream();   // Release the lock.
     PPath lockfile = metadatadir / ".lock";
