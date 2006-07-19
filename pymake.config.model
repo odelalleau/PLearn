@@ -482,7 +482,6 @@ pymakeOption( name = 'quantify',
 pymakeOption( name = 'vc++',
               description = 'compiling with Visual Studio (.Net 2003)',
               compiler = 'vc++', # Dummy.
-              compileroptions = gcc_opt_options,
               cpp_definitions = ['USING_MPI=0'],
               linker = 'g++' )
 
