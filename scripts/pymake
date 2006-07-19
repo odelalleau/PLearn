@@ -923,6 +923,10 @@ else:
 # randomize order of list_of_hosts
 shuffle(list_of_hosts)
 
+def remove_escaped_endlines(text):
+    escaped_endline = re.compile(r'\\\n')
+    return escaped_endline.sub(' ', text)
+
 def remove_comments(text):
     result = ''
     prevpos = 0
@@ -950,6 +954,10 @@ def remove_comments(text):
             else:
                 prevpos += 2
     return result
+
+def get_cpp_code(text):
+    includes_and_ifs = re.compile(r'^\s*#[ \t]*((?:include|if|elif|else|endif|include).*)', re.M)
+    return '\n'.join( includes_and_ifs.findall(text) )
 
 class FileInfo:
     """
@@ -1001,9 +1009,8 @@ class FileInfo:
     """
 
     # static patterns useful for parsing the file
-    include_regexp = re.compile(r'^\s*#include\s*(?:"|<)([^\s\"\>]+)(?:"|>)',re.M)
+    include_regexp = re.compile(r'^include\s*(?:"|<)([^\s\"\>]+)(?:"|>)',re.M)
     qobject_regexp = re.compile(r'\bQ\_OBJECT\b',re.M)
-    #hasmain_regexp = re.compile(r'\b(main|mpi_master_main)\s*\(',re.M)
     hasmain_regexp = re.compile(r'\b(main|IMPLEMENT_APP)\s*\(',re.M)
 
     def __init__(self,filepath):
@@ -1024,15 +1031,17 @@ class FileInfo:
     def parse_file(self):
         """ Parses the file, and sets self.includes_from_sourcedirs, self.triggered_libraries and self.hasmain"""
 
-        # print "Parsing " + self.filepath
+        # print "Parsing", self.filepath
 
         f = open(self.filepath,"r")
         text = f.read()
         f.close()
+        text = remove_escaped_endlines(text)
         text = remove_comments(text)
+        cpp_code = get_cpp_code(text)
         self.includes_from_sourcedirs = []
         self.triggered_libraries = []
-        for includefile in FileInfo.include_regexp.findall(text):
+        for includefile in FileInfo.include_regexp.findall(cpp_code):
             #print 'Considering include ' + includefile
             for optlib in optional_libraries_defs:
                 triggered_by = optlib.is_triggered_by(includefile)
@@ -1058,9 +1067,9 @@ class FileInfo:
 
         self.hasmain = FileInfo.hasmain_regexp.search(text)
         if platform!='win32':
-          self.hasqobject = FileInfo.qobject_regexp.search(text)
+            self.hasqobject = FileInfo.qobject_regexp.search(text)
         else:
-          self.hasqobject = False
+            self.hasqobject = False
         self.mocfilename = "moc_"+self.filebase+".cc"
 
     def mocFile(self):
