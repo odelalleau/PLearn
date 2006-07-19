@@ -540,7 +540,7 @@ void BallTreeNearestNeighbors::computeOutputAndCosts(
     FindBallKNN( q, input, num_neighbors );
 
     // dequeue the found nearest neighbors, beginning by the farthest away
-    int n_found = q.size();
+    int n_found = int(q.size());
     TVec<int> neighbors( n_found );
     for( int i=n_found-1 ; i>=0 ; i-- )
     {
@@ -572,7 +572,7 @@ void BallTreeNearestNeighbors::computeOutput(
     FindBallKNN( q, input, num_neighbors );
 
     // dequeue the found nearest neighbors, beginning by the farthest away
-    int n_found = q.size();
+    int n_found = int(q.size());
     TVec<int> neighbors( n_found );
     for( int i=n_found-1 ; i>=0 ; i-- )
     {
@@ -743,7 +743,7 @@ void BallTreeNearestNeighbors::BallKNN(
             if( dist < d2_sofar )
             {
                 q.push( make_pair(dist, j) );
-                int n_found = q.size();
+                int n_found = int(q.size());
                 if( n_found > k )
                     q.pop();
                 if( n_found >= k )
