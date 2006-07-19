@@ -186,7 +186,7 @@ void KNNRegressor::setTrainingSet(VMat training_set, bool call_forget)
     // - set number of neighbors
     // - set training set (which performs a build if necessary)
     int n = training_set.length();
-    int num_neighbors = max(kmin, int(kmult*pow(n,kpow)));
+    int num_neighbors = max(kmin, int(kmult*pow(double(n), double(kpow))));
     knn->num_neighbors = num_neighbors;
     knn->copy_input  = true;
     knn->copy_target = true;
