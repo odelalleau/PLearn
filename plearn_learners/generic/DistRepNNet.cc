@@ -800,7 +800,7 @@ void DistRepNNet::build_()
 
         // Shared values hack...
         if (!do_not_change_params) {
-            if((bool)paramsvalues && (paramsvalues.size() == params.nelems()))
+            if(paramsvalues.length() == params.nelems())
                 params << paramsvalues;
             else
             {

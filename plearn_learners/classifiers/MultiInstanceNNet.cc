@@ -336,7 +336,7 @@ void MultiInstanceNNet::build_()
         }
 
         // Shared values hack...
-        if((bool)paramsvalues && (paramsvalues.size() == params.nelems()))
+        if(paramsvalues.length() == params.nelems())
             params << paramsvalues;
         else
         {
