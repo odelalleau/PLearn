@@ -1,5 +1,4 @@
 #include <sys/types.h>
-#include <unistd.h>                          // for getpid
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
@@ -7,6 +6,18 @@
 #include <plearn/base/plerror.h>
 #include <plearn/base/stringutils.h>
 #include <plearn/base/tostring.h>  
+
+#if defined(WIN32) && defined(_MSC_VER)
+// unistd.h is not available under Microsoft Visual Studio, and some function
+// names are not the same.
+#define popen _popen
+#define pclose _pclose
+#define getpid _getpid
+#define pid_t int
+#include <process.h>
+#else
+#include <unistd.h>                          // for getpid
+#endif
 
 namespace PLearn {
 
