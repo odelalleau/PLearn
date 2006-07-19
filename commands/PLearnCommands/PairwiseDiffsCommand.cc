@@ -136,7 +136,7 @@ void PairwiseDiffsCommand::run(const vector<string>& origargs)
 
     // Find maximum-length filename
     int maxlen = 0;
-    for (int i=0, n=args.size() ; i<n ; ++i)
+    for (int i=0, n=int(args.size()) ; i<n ; ++i)
         maxlen = max(maxlen, int(args[i].size()));
 
     // Print out heading row
@@ -145,20 +145,20 @@ void PairwiseDiffsCommand::run(const vector<string>& origargs)
     cout << setw(maxlen) << "Filename1" << ' '
          << setw(maxlen) << "Filename2" << ' ';
     cout.setf(ios_base::right);
-    for (int i=0, n=stats.size() ; i<n ; ++i)
+    for (int i=0, n=int(stats.size()) ; i<n ; ++i)
         cout << setw(width) << stats[i] << ' ';
     cout << endl;
     cout.setf(ios_base::left);
   
     // What we have in args is a list of filenames.  Go over them.
-    for (int i=0, n=args.size() ; i < n-1 ; ++i) {
+    for (int i=0, n=int(args.size()) ; i < n-1 ; ++i) {
         for (int j=i+1 ; j < n ; ++j) {
             PP<StatsCollector> sc = accumInStatsCol(costname, args[i], args[j]);
 
             // Print out result
             cout << setw(maxlen) << args[i] << ' '
                  << setw(maxlen) << args[j] << ' ';
-            for (int k=0, m=stats.size() ; k<m ; ++k) {
+            for (int k=0, m=int(stats.size()) ; k<m ; ++k) {
                 real stat = sc->getStat(stats[k]);
                 cout << format("%+"+tostring(width)+".7f ") % stat;
             }
