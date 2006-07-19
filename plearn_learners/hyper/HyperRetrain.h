@@ -53,8 +53,12 @@ class VecStatsCollector;
 
 class HyperRetrain: public HyperCommand
 {
-public:
+
+private:
+
     typedef HyperCommand inherited;
+
+public:
 
     PLEARN_DECLARE_OBJECT(HyperRetrain);
 
@@ -69,6 +73,8 @@ protected:
     // ****************
     // * Constructors *
     // ****************
+
+public:
 
     // Default constructor, make sure the implementation in the .cc
     // initializes all fields to reasonable default values.
