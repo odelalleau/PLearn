@@ -115,8 +115,8 @@ void RBMParameters::declareOptions(OptionList& ol)
 
 void RBMParameters::build_()
 {
-    up_layer_size = up_units_types.size();
-    down_layer_size = down_units_types.size();
+    up_layer_size = int(up_units_types.size());
+    down_layer_size = int(down_units_types.size());
     if( up_layer_size == 0 || down_layer_size == 0 )
         return;
 

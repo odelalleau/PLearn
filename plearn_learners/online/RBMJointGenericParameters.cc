@@ -120,8 +120,9 @@ void RBMJointGenericParameters::build_units_types()
     down_units_types += cond_params->down_units_types;
 
     // to avoid "forget()" being called in RBMParameters::build_()
-    weights.resize( up_units_types.length(), down_units_types.length() );
-    out_act.resize( up_units_types.length() );
+    weights.resize( int(up_units_types.length()),
+                    int(down_units_types.length()) );
+    out_act.resize( int(up_units_types.length()) );
 }
 
 void RBMJointGenericParameters::build_()

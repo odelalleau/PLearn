@@ -138,7 +138,7 @@ void RBMGaussianLayer::declareOptions(OptionList& ol)
 void RBMGaussianLayer::build_()
 {
     if( size < 0 )
-        size = units_types.size();
+        size = int(units_types.size());
     if( size != (int) units_types.size() )
         units_types = string( size, 'q' );
 
