@@ -114,6 +114,11 @@ options_choices = []
 nprocesses_per_processor = 1
 rshcommand = 'rsh '
 compileflags = ''
+# List of all C preprocessor variables possibly initialized at compilation
+# time, and that are not defined or redefined in the code
+cpp_variables = []
+# 
+cpp_definitions = []
 
 #objspolicy=1 -> for dir/truc.cc object file in   dir/platform_opt/truc.o (objects file are in a directory corresponding to the cc file directory)
 #objspolicy=2 -> for dir/truc.cc object file in   objsdir/platform_opt/truc.o (all objects file are in the same directory)
@@ -210,17 +215,18 @@ def mtime(filepath):
 pymake_options_defs = {}
 
 class PymakeOption:
-    def __init__(self, name, description, compiler, compileroptions, linker, linkeroptions):
+    def __init__(self, name, description, compiler, compileroptions, cpp_definitions, linker, linkeroptions):
         self.name = name
         self.description = description
         self.compiler = compiler
         self.compileroptions = compileroptions
+        self.cpp_definitions = cpp_definitions
         self.linker = linker
         self.linkeroptions = linkeroptions
 
-# adds a posible option to the pymake_options_defs
-def pymakeOption( name, description, compiler='', compileroptions='', linker='', linkeroptions='' ):
-    pymake_options_defs[name] = PymakeOption(name, description, compiler, compileroptions, linker, linkeroptions)
+# adds a possible option to the pymake_options_defs
+def pymakeOption( name, description, compiler='', compileroptions='', cpp_definitions=[], linker='', linkeroptions='' ):
+    pymake_options_defs[name] = PymakeOption(name, description, compiler, compileroptions, cpp_definitions, linker, linkeroptions)
 
 
 optional_libraries_defs = []
@@ -297,12 +303,18 @@ def optionalLibrary( name, linkeroptions, includedirs=[], triggers='', compilero
     optional_libraries_defs.append( OptionalLibrary(name, includedirs, triggers, linkeroptions, compileroptions, compile_as_source) )
 
 default_config_text = r"""
-# List of directories in which to look for .h includes and corresponding .cc files to compile and link with your program
-# (no need to include the current directory, it is implicit)
+# List of directories in which to look for .h includes and corresponding
+# .cc files to compile and link with your program (no need to include
+# the current directory, it is implicit)
 #sourcedirs = []
 
-# directories other than those in sourcedirs, that will be added as list of includes (-I...) to all compilations
+# directories other than those in sourcedirs, that will be added as list
+# of includes (-I...) to all compilations
 #mandatory_includedirs = []
+
+# List of all C preprocessor variables possibly initialized at compilation
+# time, and that are not defined or redefined in the code
+#cpp_variables = [ 'BOUNDCHECK' ]
 
 # Add available external libraries In the order in which the linkeroptions
 # must appear on the linker command line (typically most basic libraries
@@ -320,16 +332,18 @@ default_config_text = r"""
 #linkeroptions_tail = '-lstdc++ -lm'
 
 # List of lists of mutually exclusive pymake options.
-# First option that appears in each group is the default, and is assumed if you don't specify any option from that group
+# First option that appears in each group is the default, and is assumed
+# if you don't specify any option from that group
 #options_choices = [
 #  [ 'g++', 'CC'],
 #  [ 'dbg', 'opt']
 #]
 
 
-# Description of options, and associated settings
-# name and description are mandatory (description will appear in usage display of pymake)
-# you can then specify any one or more of compiler, compileroptions, linker, linkeroptions
+# Description of options, and associated settings name and description
+# are mandatory (description will appear in usage display of pymake)
+# you can then specify any one or more of compiler, compileroptions,
+# cpp_definitions, linker, linkeroptions
 
 #pymakeOption( name = 'g++',
 #              description = 'use g++ compiler and linker',
@@ -344,7 +358,8 @@ default_config_text = r"""
 
 #pymakeOption( name = 'dbg',
 #              description = 'debug mode (defines BOUNDCHECK)',
-#              compileroptions = '-Wall -g -DBOUNDCHECK' )
+#              compileroptions = '-Wall -g',
+#              cpp_definitions = [ 'DBOUNDCHECK' ] )
 
 #pymakeOption( name = 'opt',
 #              description = 'optimized mode',
@@ -505,47 +520,63 @@ def printusage():
         print ' * One of ' + string.join(map(lambda s: '-'+s, choice),', ') + ' (default is -' + choice[0] + ') where:'
         for item in choice:
             print '   -'+item + ': ' + pymake_options_defs[item].description
-    print
-    print 'Other possible options are:'
-    print '  -force: force recompilation of all necessary files, even if they are up to date.'
-    print '  -local: do not use parallel compilation, even if there is a .pymake/<platform>.hosts file.'
-    print '  -tmp[=tmp_dir]: compile all objects into a single directory (default is /tmp/OBJS).'
-    print '                  This option currently implies \'-local\'.'
-    print '  -clean: remove all OBJS subrdirectories recursively in all given directories'
-    print '  -checkobj: will report all source files that don\'t have *any* correponding .o in OBJS.'
-    print '             This processes recursively from given directories and is typically called'
-    print '             after a pymake -clean, and a pymake . to get the list of files that failed to compile.'
-    print '  -static: produce a statically linked executable'
-    print '  -so:  create a shared object (.so) instead of an executable file.'
-    print '  -dll: create a dll instead of an executable file.'
-    print '        It probably works ONLY on Windows with MinGW installed.'
-    print '  -dllno-cygwin: create a dll instead of an executable file, with no'
-    print '                 dependence to the Cygwin dll. It probably works'
-    print '                 only on Windows with Cygwin installed.'
-    print '                 Note: SAS does not seem to like the -g option in'
-    print '                 g++, thus one should use -opt if the dll is meant'
-    print '                 to be used in SAS.'
-    print '  -m32: force compilation in 32bits mode.'
-    print '        Works on AMD64 (linux-x86_64) and linux-i386 machines, probably also on ia64.'
-    print '        Allows to compile on .pymake/linux-x86_64.hosts,'
-    print '        linux-ia64.hosts and linux-i386.hosts.'
-    print '  -ssh: run compilation commands on remote hosts with ssh instead of rsh (default).'
-    print '  -symlinkobjs: at link time, will create links to the used object files (of the form'
-    print '                1.o, 2.o, etc) in order to obtain a smaller link command line.'
-    print ''
-    print 'There exist special options that will not compile or link the target, but instead'
-    print 'perform various operations. These special options are:'
-    print '  -dependency: information regarding the dependency graph will be produced, as follows:'
-    print '      pymake -dependency target'
-    print '          will generate the full dependency graph of target in targetname.dot and '
-    print '          targetname.ps files.'
-    print '      pymake -dependency target dependency '
-    print '          will look for dependency (which must be a filename.cc or filename.h'
-    print '          without full path or a library_name) and print out the first path it'
-    print '          finds in the dependency graph that links target and dependency'
-    print '  -vcproj: a Visual Studio project file (.vcproj) for the target will be created.'
-    print
-    print """The configuration file 'config' for pymake is searched for
+    print """
+Options specifying the type of compiled file to produce:
+  -dll: create a dll instead of an executable file.
+        It probably works ONLY on Windows with MinGW installed.
+  -dllno-cygwin: create a dll instead of an executable file, with no
+                 dependence to the Cygwin dll. It probably works
+                 only on Windows with Cygwin installed.
+                 Note: SAS does not seem to like the -g option in
+                 g++, thus one should use -opt if the dll is meant
+                 to be used in SAS.
+  -m32: force compilation in 32bits mode.
+        Works on AMD64 (linux-x86_64) and linux-i386 machines, probably also
+        on ia64. Allows to compile on .pymake/linux-x86_64.hosts,
+        linux-ia64.hosts and linux-i386.hosts.
+  -so:  create a shared object (.so) instead of an executable file.
+  -static: produce a statically linked executable.
+
+Options that will not affect the final compiled file:
+  -force: force recompilation of all necessary files,
+          even if they are up to date.
+  -local: do not use parallel compilation, even if there is a
+          .pymake/<platform>.hosts file.
+  -ssh: run compilation commands on remote hosts with ssh instead of rsh
+        (default).
+  -symlinkobjs: at link time, will create links to the used object files
+                (of the form 1.o, 2.o, etc) in order to obtain a smaller link
+                command line.
+  -tmp[=tmp_dir]: compile all objects into a single directory (default is
+                  /tmp/OBJS). This option currently implies '-local'.
+  -v[...]: specify the verbosity level, '-vvv' is equivalent to '-v3'.
+           1 -> get *** Running ... / ++++ Computing
+           2 -> get Launched / Finished / Still waiting
+           3 -> get lauched command (default)
+           4 -> get extra information
+
+There exist special options that will not compile or link the target, but
+instead perform various operations. These special options are:
+  -clean: remove all OBJS subrdirectories recursively in all given directories.
+  -checkobj: report all source files that don't have *any* correponding .o in
+             OBJS. This processes recursively from given directories and is
+             typically called after a pymake -clean, and a pymake, to get the
+             list of files that failed to compile.
+  -dependency: information regarding the dependency graph will be produced:
+      pymake -dependency target
+          will generate the full dependency graph of target in targetname.dot
+          and targetname.ps files.
+      pymake -dependency target dependency
+          will look for dependency (which must be a filename.cc or filename.h
+          without full path or a library_name) and print out the first path it
+          finds in the dependency graph that links target and dependency.
+  -dist: extract all the sources necessary to compile the target, in a
+         directory called <target>.dist, and create there a Makefile that is
+         able to compile and link the target.
+  -vcproj: a Visual Studio project file (.vcproj) for the target will be
+           created.
+
+The configuration file 'config' for pymake is searched for
 first in the .pymake subdirectory of the current directory, then similarly
 in the .pymake subdirectory of parent directories of the current directory,
 and as last resort in the .pymake subdirectory of your homedir. Also, if
@@ -698,29 +729,6 @@ if 'vcproj' in optionargs:
     if 'genericvc++' not in optionargs:
         optionargs.append('genericvc++')
 
-SPC = 0
-if 'spc' in optionargs :
-    SPC = 1
-
-    ########################
-    ### The presence of this PLearn specific variable is against the Pymake design:
-    ###  Anything that is specific to our library should be done in the config file!
-    ### REMOVE THIS FROM HERE!
-    # New: The ppath configuration file contains all PLearn relative settings
-    from plearn.utilities.ppath import ppath
-    plearndir = ppath('PLEARNDIR')
-    if not plearndir:
-        print 'Error: PLEARNDIR is necessary in order to get the pyfreemachines script'
-        sys.exit(100);
-    else:
-        try: os.makedirs(join(homedir,'.pymake'))
-        except: pass
-        print '*** Running pymake using Smart Parallel Compilation'
-        cmd=plearndir+'/scripts/pyfreemachines '+join(homedir,'.pymake','SPC.hosts');
-#         print cmd
-        os.system(cmd)
-    optionargs.remove('spc')
-
 local_compilation = 0 # do we want to do everything locally?
 if platform=='win32':
     local_compilation = 1 # in windows, we ALWAYS work locally
@@ -785,6 +793,16 @@ for option in optionargs:
                 objsdir = option[4:]
             optionargs.remove(option)
             optionargs.append('tmp')
+    elif option[0] == 'v':
+        if option == 'v' or option == 'v1' or option == 'v0':
+            verbose = 1
+        elif option == 'v'*2 or option == 'v2':
+            verbose = 2
+        elif option == 'v'*3 or option == 'v3':
+            verbose = 3
+        elif option[:4] == 'v'*4 or option == 'v4':
+            verbose = 4
+        optionargs.remove(option)
 
 if 'tmp' in optionargs:
     objspolicy = 2
@@ -801,7 +819,6 @@ else:
 def getOptions(options_choices,optionargs):
     options = []
 
-
     for choice in options_choices:
         nmatches = 0
         for item in choice:
@@ -810,7 +827,8 @@ def getOptions(options_choices,optionargs):
                 if nmatches<1:
                     options.append(item)
                 else:
-                    print 'PROBLEM: options ' + item + ' and ' + options[-1] + ' are mutually exclusive. Ignoring ' + item 
+                    print 'Error: options ' + item + ' and ' + options[-1] + ' are mutually exclusive. Aborting.'
+                    sys.exit(100)
                 nmatches = nmatches+1
         if nmatches<1:
             options.append(choice[0])
@@ -821,6 +839,50 @@ def getOptions(options_choices,optionargs):
 
     return options
 
+# Takes a list of defined options and of C preprocessor variables
+# that should be defined at compile time (passing -DOPTION... to the
+# compiler), and return a list of undefined variables, a list of defined
+# variables, and a dict of variables with their values.
+def get_cpp_definitions(cpp_definitions, options, cpp_variables):
+    # By default, all variables are undefined
+    undefined_cpp_vars = cpp_variables[:]
+    defined_cpp_vars = []
+    cpp_vars_values = {}
+
+    for definition in cpp_definitions:
+        process_cpp_definition( definition, undefined_cpp_vars,
+                                defined_cpp_vars, cpp_vars_values )
+
+    for opt in options:
+        optdef = pymake_options_defs[opt]
+        for definition in optdef.cpp_definitions:
+            process_cpp_definition( definition, undefined_cpp_vars,
+                                    defined_cpp_vars, cpp_vars_values )
+
+    return undefined_cpp_vars, defined_cpp_vars, cpp_vars_values
+
+# Helper function
+def process_cpp_definition(cpp_definition,
+                           undefined_cpp_vars,
+                           defined_cpp_vars,
+                           cpp_vars_values):
+    name_value = cpp_definition.split("=",1)
+    # name_value[0] contains the variable name
+    var_name = name_value[0]
+
+    # mark this variable as defined
+    defined_cpp_vars.append(var_name)
+
+    # unmark it as undefined
+    while var_name in undefined_cpp_vars:
+        undefined_cpp_vars.remove(var_name)
+
+    # if a value is present, store it
+    if len(name_value) > 1:
+        # name_value[1] contains the variable value
+        var_value = name_value[1]
+        cpp_vars_values[var_name] = var_value
+
 list_of_hosts = []
 
 if local_compilation:
@@ -828,9 +890,7 @@ if local_compilation:
 else:
     distcc_list_of_hosts = get_distcc_hosts()
 
-    if SPC:
-        hostspath_list = [locateconfigfile('SPC.hosts', homedir)]
-    elif force_32bits:
+    if force_32bits:
         hostspath_list = [locateconfigfile('linux-i386.hosts', homedir),
                           locateconfigfile('linux-x86_64.hosts', homedir),
                           locateconfigfile('linux-ia64.hosts', homedir)]
@@ -863,30 +923,33 @@ else:
 # randomize order of list_of_hosts
 shuffle(list_of_hosts)
 
-
-# rmccomment_regexp = re.compile(r'([^/])\/\*([^\*]|\*(?!\/))*\*\/',re.M)
-rmcppcomment_regexp = re.compile(r'//[^\n]*\n',re.M)
-
-def remove_c_comments(text):
+def remove_comments(text):
     result = ''
     prevpos = 0
     while 1:
-        pos = string.find(text,'/*',prevpos)
-        if pos<0:
+        pos_c = string.find(text, '/*', prevpos)
+        pos_cc = string.find(text, '//', prevpos)
+        if pos_c<0 and pos_cc<0:
+            # There is no comment left
             result = result + text[prevpos:]
             break
-        result = result + text[prevpos:pos]
-        prevpos = string.find(text,'*/',pos+2)
-        if prevpos<0:
-            result = result + text[pos:]
-            break
-        prevpos = prevpos + 2
-    return result;
-
-def remove_comments(text):
-    text = rmcppcomment_regexp.sub('\n',text)
-    text = remove_c_comments(text)
-    return text
+        elif pos_cc>=0 and (pos_c<0 or pos_cc<pos_c):
+            # The next comment is C++ style
+            result = result + text[prevpos:pos_cc] + '\n'
+            prevpos = string.find(text, '\n', pos_cc+2)
+            if prevpos<0:
+                break
+            else:
+                prevpos += 1
+        elif pos_c>=0 and (pos_cc<0 or pos_c<pos_cc):
+            # The next comment is C style
+            result = result + text[prevpos:pos_c]
+            prevpos = string.find(text, '*/', pos_c+2)
+            if prevpos<0:
+                break
+            else:
+                prevpos += 2
+    return result
 
 class FileInfo:
     """
@@ -1318,10 +1381,11 @@ class FileInfo:
                 compileroptions += ' ' + options_override[opt]
             else:
                 compileroptions += ' ' + optdef.compileroptions
+                compileroptions += ''.join([' -D'+d for d in optdef.cpp_definitions])
 
         optlib_compopt = self.get_optional_libraries_compileroptions();
 
-        compileroptions = compileflags + ' ' + compileroptions + ' ' + string.join(optlib_compopt, ' ')
+        compileroptions = compileflags + ''.join([' -D'+d for d in cpp_definitions]) + compileroptions + ' ' + string.join(optlib_compopt, ' ')
 
         includedirs = [] + sourcedirs + mandatory_includedirs + self.get_optional_libraries_includedirs()
         if includedirs:
@@ -1374,11 +1438,14 @@ class FileInfo:
         This will create a field 'launched', which is a Popen3 object,
         and 'hostname' to remember on which host it has been launched.
         """
-        # We do an 'echo $?'  at the end because rsh doesn't transmit the status byte correctly.
 
-        if os.path.isfile(self.corresponding_ofile):
+        # Remove .o file if it exists
+        try:
             os.remove(self.corresponding_ofile)
+        except OSError:
+            pass
 
+        # We do an 'echo $?'  at the end because rsh doesn't transmit the status byte correctly.
         quotedcommand = "'cd " + self.filedir + "; " + self.compile_command() + "; echo $?'"
         self.hostname = hostname
         if hostname=='localhost' or hostname==myhostname:
@@ -2011,6 +2078,7 @@ def distribute_source(target, cfiles_to_compile, executables_to_link, linkname):
     for opt in options:
         optdef = pymake_options_defs[opt]
         compileroptions = compileroptions + ' ' + optdef.compileroptions
+        compileroptions += ''.join([' -D'+d for d in (cpp_definitions + optdef.cpp_definitions)])
         if optdef.compiler:
             compiler = optdef.compiler
 
@@ -2091,6 +2159,10 @@ try:
             sourcedirs = unique(sourcedirs)
 
             options = getOptions(options_choices,optionargs)
+
+            # Get the global preprocessor variables definitions.
+            undefined_cpp_vars, defined_cpp_vars, cpp_vars_values = \
+                    get_cpp_definitions(cpp_definitions, options, cpp_variables)
 
             # Building name of object subdirectory
             if  objspolicy== 1:
