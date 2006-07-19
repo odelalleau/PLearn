@@ -224,6 +224,11 @@ public:
 
     operator bool() const
     { return good(); }
+
+    //! Test whether a PStream is in an invalid state.
+    // This operator is required for compilation under Visual C++.
+    bool operator !() const
+    { return !good(); }
   
     /******
      * The folowing methods are 'forwarded' from {i|o}stream.
