@@ -125,8 +125,7 @@ void CartesianProductOracle::build_()
             PLWARNING("CartesianProductOracle::build_: zero option values were specified\n"
                       "for option '%s'", option_names[i].c_str());
 
-    int n=option_names.length();
-    option_values_indices.resize(n);
+    option_values_indices.resize(option_names.length());
     forget();
 }
 
