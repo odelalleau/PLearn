@@ -924,7 +924,7 @@ else:
 shuffle(list_of_hosts)
 
 def remove_escaped_endlines(text):
-    escaped_endline = re.compile(r'\\\n')
+    escaped_endline = re.compile(r'\\(\r\n|\n|\r)')
     return escaped_endline.sub(' ', text)
 
 def remove_comments(text):
