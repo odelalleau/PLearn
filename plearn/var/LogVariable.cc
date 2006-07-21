@@ -83,9 +83,9 @@ void LogVariable::fprop()
     {
         valuedata[i] = safeflog(input->valuedata[i]);
 #ifdef BOUNDCHECK
-		real val = valuedata[i];
-		real ival = input->valuedata[i];
-        if ((isnan(val) || isinf(val)) && !(isnan(ival) || isinf(ival)))
+        real val = valuedata[i];
+        real ival = input->valuedata[i];
+        if (!finite(val) && finite(ival))
         {
             //PLWARNING("LogVariable::fprop something is wrong");
             pout << "inputdata[i]= " << input->valuedata[i] << endl;
