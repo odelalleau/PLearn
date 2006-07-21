@@ -56,6 +56,7 @@ using namespace std;
 class NistDB: public VMatrix
 {
 protected:
+    // TODO: use PStream?
     mutable ifstream imagef;
     mutable ifstream labelf;
     mutable unsigned char buf[28*28];

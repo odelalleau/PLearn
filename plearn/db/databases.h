@@ -56,7 +56,7 @@ using namespace std;
 
 
 //!  This will input a 2d binary classification problem (launches a java applet)
-Mat input2dSet(const string& filename="data2d.amat");
+Mat input2dSet(const PPath& filename="data2d.amat");
 
 //!  normalize both training_set and test_set according to mean and stddev computed on training_set
 void normalizeDataSets(Mat& training_set, Mat& test_set);

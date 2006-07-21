@@ -54,8 +54,8 @@ NistDB::NistDB(bool train)
 {
     if(train)
     {
-        imagef.open(DBDIR"/MNIST/train-images-idx3-ubyte");
-        labelf.open(DBDIR"/MNIST/train-labels-idx1-ubyte");
+        imagef.open(PPath("DBDIR:MNIST/train-images-idx3-ubyte").c_str());
+        labelf.open(PPath("DBDIR:MNIST/train-labels-idx1-ubyte").c_str());
         length_ = 60000;
     }
     else
@@ -63,8 +63,8 @@ NistDB::NistDB(bool train)
         //      imagef.open(DBDIR"/MNIST/test-images.idx3-ubyte");
         //      labelf.open(DBDIR"/MNIST/test-labels.idx1-ubyte");
         //      length_ = 60000;
-        imagef.open(DBDIR"/MNIST/t10k-images-idx3-ubyte");
-        labelf.open(DBDIR"/MNIST/t10k-labels-idx1-ubyte");
+        imagef.open(PPath("DBDIR:MNIST/t10k-images-idx3-ubyte").c_str());
+        labelf.open(PPath("DBDIR:MNIST/t10k-labels-idx1-ubyte").c_str());
         length_ = 10000;
     }
     if(!imagef)

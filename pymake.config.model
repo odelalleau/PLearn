@@ -1,16 +1,18 @@
 #!python
 
-#############################################################################################################
-## WARNING                                                                                                  #
-#  if you add options don't forget to add in the pymake file                                                #
-#       optionargs.remove('myoption')                                                                       #
-#  If you don't, because of the follwing pymake command                                                     #
-#       #Building name of object subdirectory                                                               #
-#       objsdir = join('OBJS', target_platform + '__' + string.join(options,'_'))                           #
-#       print '*** Running pymake using following options: ' + string.join(map(lambda o: '-'+o, options))   #
-# you will create useless OBJS repertory                                                                    #
-# (unless the option changes the resulting OBJS files)                                                      #
-#############################################################################################################
+###############################################################################
+## WARNING                                                                    #
+#  if you add options don't forget to add in the pymake file                  #
+#       optionargs.remove('myoption')                                         #
+#  If you don't, because of the follwing pymake command                       #
+#       #Building name of object subdirectory                                 #
+#       objsdir = join('OBJS', target_platform + '__' \                       #
+#               + string.join(options,'_'))                                   #
+#       print '*** Running pymake using following options: ' \                #
+#               + string.join(map(lambda o: '-'+o, options))                  #
+# you will create useless OBJS repertory                                      #
+# (unless the option changes the resulting OBJS files)                        #
+###############################################################################
 
 import os, os.path
 from plearn.utilities.ppath import ppath
@@ -133,18 +135,6 @@ cpp_variables += [ 'BIGENDIAN', 'LITTLEENDIAN' ]
 cpp_variables += [ 'USE_EXCEPTIONS' ]
 cpp_definitions += [ 'USE_EXCEPTIONS' ]
 
-#################################################################
-## DBDIR and METADBDIR should be moved to PLEARN_CONFIGS soon  ##
-#################################################################
-# If the DBDIR environment variable is not defined, we use the default "/u/lisa/Database"
-dbdir = os.environ.get('DBDIR','/u/lisa/Database')
-compileflags = compileflags + ' -DDBDIR=\\"' + dbdir + '\\"' 
-# If the METADATADIR environment variable is not defined, we use the default "/u/lisa/db/metadata"
-metadatadir = os.environ.get('METADATADIR','/u/lisa/db/metadata')
-compileflags = compileflags + ' -DMETADATADIR=\\"' + metadatadir + '\\"' 
-#################################################################
-#################################################################
-
 
 #####  Repository Revision String Generation  ###############################
 
@@ -237,11 +227,12 @@ optionalLibrary( name = 'wordnet',
                  linkeroptions = wn_linkeroptions
                  )
 
-optionalLibrary( name = 'X',
-                 triggers='?',
-                 includedirs = '?',
-                 linkeroptions = '-L/usr/X11R6/lib/ -lXi -lXext -lX11/'
-)
+## If someone some day wants to link against X libraries
+# optionalLibrary( name = 'X',
+#                  triggers='?',
+#                  includedirs = '?',
+#                  linkeroptions = '-L/usr/X11R6/lib/ -lXi -lXext -lX11/'
+#                  )
 
 
 linkeroptions_tail = ''
@@ -337,7 +328,7 @@ optionalLibrary( name = 'torch',
 optionalLibrary( name='boost',
                  triggers = 'boost*',
                  linkeroptions = ''
-)
+                 )
 
 optionalLibrary( name='boost_date_time',
                  triggers = 'boost/date_time*',

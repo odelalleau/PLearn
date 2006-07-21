@@ -59,7 +59,7 @@ using namespace std;
 
 #define JAVA "java"
 
-Mat input2dSet(const string& filename)
+Mat input2dSet(const PPath& filename)
 {
     Mat data;
     if(!pathexists(filename))
@@ -176,19 +176,14 @@ void remapClassnums(VMat& data, real remap_minval_to, real remap_maxval_to)
             data->put(i,inputsize,remap_maxval_to);
     }
 }
-#ifdef DBDIR
-static const string dbdir_name = DBDIR;
-#else
-static const string dbdir_name = "";
-#endif
 
 VMat loadBreastCancerWisconsin(bool normalize, bool uniq)
 {
     Mat data;
     if(uniq)
-        loadAscii(dbdir_name+ "/Breast/breast-cancer-wisconsin-uniq.amat",data);
+        loadAscii("DBDIR:Breast/breast-cancer-wisconsin-uniq.amat",data);
     else
-        loadAscii(dbdir_name+ "/Breast/breast-cancer-wisconsin.amat",data);
+        loadAscii("DBDIR:Breast/breast-cancer-wisconsin.amat",data);
     if(normalize)
     {
         Mat datainput = data.subMatColumns(0,data.width()-1);
@@ -202,9 +197,9 @@ int loadBreastCancer(VMat& training_set, VMat& validation_set, VMat& test_set, i
 {
     Mat data;
     if(uniq)
-        loadAscii(dbdir_name + "/Breast/breast-cancer-wisconsin-uniq.amat",data);
+        loadAscii("DBDIR:Breast/breast-cancer-wisconsin-uniq.amat",data);
     else
-        loadAscii(dbdir_name + "/Breast/breast-cancer-wisconsin.amat",data);
+        loadAscii("DBDIR:Breast/breast-cancer-wisconsin.amat",data);
   
     shuffleRows(data);
   
@@ -225,7 +220,7 @@ int loadBreastCancer(VMat& training_set, VMat& validation_set, VMat& test_set, i
   
 VMat loadPimaIndians(bool normalize)
 {
-    Mat data = loadUCIMLDB(dbdir_name + "/UCI_MLDB/pima-indians-diabetes/pima-indians-diabetes.data");
+    Mat data = loadUCIMLDB("UCI_MLDB_REP:pima-indians-diabetes/pima-indians-diabetes.data");
     if(normalize)
     {
         Mat datainput = data.subMatColumns(0,data.width()-1);
@@ -238,7 +233,7 @@ VMat loadPimaIndians(bool normalize)
 VMat loadHousing(bool normalize)
 {
     Mat data;
-    loadGnuplot(dbdir_name + "/UCI_MLDB/housing/housing.data", data);
+    loadGnuplot("UCI_MLDB_REP:housing/housing.data", data);
     Mat inputs = data.subMatColumns(0,13);
     Mat targets = data.subMatColumns(13,1);
     if (normalize)
@@ -253,7 +248,7 @@ VMat loadHousing(bool normalize)
 
 VMat loadSonar()
 {
-    Mat data = loadUCIMLDB(dbdir_name + "/UCI_MLDB/undocumented/connectionist-bench/sonar/sonar.all-data");
+    Mat data = loadUCIMLDB("UCI_MLDB_REP:undocumented/connectionist-bench/sonar/sonar.all-data");
     shuffleRows(data);
     // no need to normalize
     return VMat(data);
@@ -261,7 +256,7 @@ VMat loadSonar()
 
 VMat loadIonosphere()
 {
-    Mat data = loadUCIMLDB(dbdir_name + "/UCI_MLDB/ionosphere/ionosphere.data");
+    Mat data = loadUCIMLDB("UCI_MLDB_REP:ionosphere/ionosphere.data");
     shuffleRows(data);
     // no need to normalize
     return VMat(data);
@@ -270,7 +265,7 @@ VMat loadIonosphere()
 VMat loadDiabetes(bool normalize)
 {
     Mat data;
-    loadAscii(dbdir_name + "/Diabetes/diabetes.amat",data);
+    loadAscii("DBDIR:Diabetes/diabetes.amat",data);
 
     if(normalize)
     {
@@ -284,7 +279,7 @@ VMat loadDiabetes(bool normalize)
 int loadDiabetes(VMat& training_set, VMat& validation_set, VMat& test_set, int ntrain, int nvalid)
 {
     Mat data;
-    loadAscii(dbdir_name + "/Diabetes/diabetes.amat",data);
+    loadAscii("DBDIR:Diabetes/diabetes.amat",data);
 
     shuffleRows(data);
 
@@ -306,7 +301,7 @@ int loadDiabetes(VMat& training_set, VMat& validation_set, VMat& test_set, int n
 int loadATT800(VMat& training_set, VMat& test_set)
 {
     Mat data;
-    loadAscii(dbdir_name + "/ATT800/att800.amat",data);
+    loadAscii("DBDIR:ATT800/att800.amat",data);
 
     // preprocessing the data:
     Mat durations = data.subMatColumns(0,12);
@@ -354,7 +349,7 @@ int loadATT800(VMat& training_set, VMat& test_set)
 VMat loadLetters(bool normalize)
 {
     Mat letters;
-    loadAscii(dbdir_name + "/Letter/letter.amat",letters);
+    loadAscii("DBDIR:Letter/letter.amat",letters);
 
     if(normalize)
     {
@@ -377,7 +372,7 @@ VMat loadLetters(const char* class0, const char* class1, bool normalize)
         letter_classnum[class1[i]-'A'] = 1;
 
     Mat letters;
-    loadAscii(dbdir_name + "/Letter/letter.amat",letters);
+    loadAscii("DBDIR:Letter/letter.amat",letters);
 
     int nkeptsamples = 0;
     for(int i=0; i<letters.length(); i++)
@@ -416,7 +411,7 @@ int loadLetters(VMat& training_set, VMat& validation_set, VMat& test_set, char* 
         letter_classnum[which_letters[i]-'A'] = classnum++;
 
     Mat letters;
-    loadAscii(dbdir_name + "/Letter/letter.amat",letters);
+    loadAscii("DBDIR:Letter/letter.amat",letters);
 
     Mat keptletters(letters.length(),letters.width());
     int k=0;
@@ -469,7 +464,7 @@ VMat loadLetters(int n_letters, bool do_shuffle)
         letter_classnum[letter++] = classnum++;
 
     Mat letters;
-    loadAscii(dbdir_name + "/Letter/letter.amat",letters);
+    loadAscii("DBDIR:Letter/letter.amat",letters);
 
     Mat keptletters(letters.length(),letters.width());
     int k=0;
@@ -517,19 +512,19 @@ int loadLetters(VMat& training_set, VMat& validation_set, VMat& test_set, int n_
 
 void loadCorelDatamat(int classnum, Mat& train, Mat& valid, Mat& test)
 {
-    char filename[1000];
     int len;
     int width = 16*16*16*2;
+    PPath filename;
 
     // Load train
     {
-        sprintf(filename,(dbdir_name + "/Corel/train/size%d").c_str(),classnum);
-        ifstream sizein(filename);
+        filename = "DBDIR:Corel/train/size" + tostring(classnum);
+        ifstream sizein(filename.c_str()); // TODO: use a PStream?
         sizein >> len;
         Mat datamat(len, width);
 
-        sprintf(filename,(dbdir_name + "/Corel/train/histo%d").c_str(),classnum);
-        ifstream datain(filename);
+        filename = "DBDIR:Corel/train/histo" + tostring(classnum);
+        ifstream datain(filename.c_str());
 #ifdef USEFLOAT
         datain.read((char*)datamat.data(), len*width*4);
 #ifdef LITTLEENDIAN
@@ -547,13 +542,13 @@ void loadCorelDatamat(int classnum, Mat& train, Mat& valid, Mat& test)
 
     // Load valid
     {
-        sprintf(filename,(dbdir_name + "/Corel/valid/size%d").c_str(),classnum);
-        ifstream sizein(filename);
+        filename = "DBDIR:Corel/valid/size" + tostring(classnum);
+        ifstream sizein(filename.c_str());
         sizein >> len;
         Mat datamat(len, width);
 
-        sprintf(filename,(dbdir_name + "/Corel/valid/histo%d").c_str(),classnum);
-        ifstream datain(filename);
+        filename = "DBDIR:Corel/valid/histo" + tostring(classnum);
+        ifstream datain(filename.c_str());
 #ifdef USEFLOAT
         datain.read((char*)datamat.data(), len*width*4);
 #ifdef BIGENDIAN
@@ -572,13 +567,13 @@ void loadCorelDatamat(int classnum, Mat& train, Mat& valid, Mat& test)
 
     // Load test
     {
-        sprintf(filename,(dbdir_name + "/Corel/test/size%d").c_str(),classnum);
-        ifstream sizein(filename);
+        filename = "DBDIR:Corel/test/size" + tostring(classnum);
+        ifstream sizein(filename.c_str());
         sizein >> len;
         Mat datamat(len, width);
 
-        sprintf(filename,(dbdir_name + "/Corel/test/histo%d").c_str(),classnum);
-        ifstream datain(filename);
+        filename = "DBDIR:Corel/test/histo" + tostring(classnum);
+        ifstream datain(filename.c_str());
 #ifdef USEFLOAT
         datain.read((char*)datamat.data(), len*width*4);
 #ifdef BIGENDIAN
@@ -671,8 +666,7 @@ void loadCorel(Mat& training_set, Mat& validation_set, Mat& test_set, int negati
 void loadCallxx(int year, VMat& d)
 {
     Mat data;
-    char filename[1000];
-    sprintf(filename,(dbdir_name + "/Finance/call%d.stc.data").c_str(),year);
+    PPath filename = "DBDIR:Finance/call" + tostring(year) + ".stc.data";
     loadAscii(filename, data);
     d = VMat(data);
 }
@@ -687,25 +681,25 @@ void loadUSPS(VMat& trainset, VMat& testset, bool use_smooth)
 
     if(use_smooth)
     {
-        traininputs = loadSNMat(dbdir_name + "/usps/train-patterns-smoo.mat");
-        testinputs = loadSNMat(dbdir_name + "/usps/test-patterns-smoo.mat");
+        traininputs = loadSNMat("DBDIR:usps/train-patterns-smoo.mat");
+        testinputs = loadSNMat("DBDIR:usps/test-patterns-smoo.mat");
     }
     else
     {
-        traininputs = loadSNMat(dbdir_name + "/usps/ocr16-train.mat");
-        testinputs = loadSNMat(dbdir_name + "/usps/ocr16-test.mat");      
+        traininputs = loadSNMat("DBDIR:usps/ocr16-train.mat");
+        testinputs = loadSNMat("DBDIR:usps/ocr16-test.mat");
     }
     //traininputs += 1.0;
     //traininputs /= 2.0;
     //testinputs += 1.0;
     //testinputs /= 2.0;
 
-    traindesired = loadSNMat(dbdir_name + "/usps/train-desired.mat");
+    traindesired = loadSNMat("DBDIR:usps/train-desired.mat");
     Mat trainclasses(traininputs.length(),1);
     for(int i=0; i<traindesired.length(); i++)
         trainclasses(i,0) = argmax(traindesired(i));
 
-    testdesired = loadSNMat(dbdir_name + "/usps/test-desired.mat");
+    testdesired = loadSNMat("DBDIR:usps/test-desired.mat");
     Mat testclasses(testinputs.length(),1);
     for(int i=0; i<testdesired.length(); i++)
         testclasses(i,0) = argmax(testdesired(i));
@@ -720,14 +714,14 @@ VMat loadUSPS(bool use_smooth)
     Mat traindesired;
 
     if(use_smooth)
-        traininputs = loadSNMat(dbdir_name + "/usps/patterns-smoo.mat");
+        traininputs = loadSNMat("DBDIR:usps/patterns-smoo.mat");
     else
-        traininputs = loadSNMat(dbdir_name + "/usps/ocr16.pat");
+        traininputs = loadSNMat("DBDIR:usps/ocr16.pat");
         
     traininputs += real(1.0);
     traininputs /= real(2.0);
 
-    traindesired = loadSNMat(dbdir_name + "/usps/desired.mat");
+    traindesired = loadSNMat("DBDIR:usps/desired.mat");
     Mat trainclasses(traininputs.length(),1);
     for(int i=0; i<traindesired.length(); i++)
         trainclasses(i,0) = argmax(traindesired(i));
@@ -740,7 +734,7 @@ VMat loadUSPS(bool use_smooth)
 void loadLetters(int& inputsize, int& nclasses, VMat& trainset, VMat& testset)
 {
     Mat letters;
-    loadAscii(dbdir_name + "/Letter/letter.amat",letters);
+    loadAscii("DBDIR:Letter/letter.amat",letters);
     inputsize = letters.width()-1;
     nclasses = 26;
     trainset = VMat(letters.subMatRows(0,16000));
@@ -885,39 +879,39 @@ void loadUCI(VMat& trainset, VMat& testset, VMat& allset, string db_spec, string
         script_file += "_ID=" + id;
     }
     script_file += ".plearn";
-    string db_dir;
+    PPath db_dir;
     if (type=="MLDB") {
-        db_dir = dbdir_name + "/UCI_MLDB/" + db_spec;
-    } else if (type=="KDD") {
-        db_dir = dbdir_name + "/UCI_KDD/" + db_spec;
+        db_dir = PPath("UCI_MLDB_REP:") / db_spec;
+    } else if (type=="KDD") { // TODO: a PPath protocol for UCI_KDD?
+        db_dir = PPath("DBDIR:UCI_KDD") / db_spec;
     } else {
         PLERROR("In loadUCI: Unknown dataset type: %s.",type.c_str());
     }
-    Object* obj = PLearn::macroLoadObject(db_dir + "/" + script_file);
+    Object* obj = PLearn::macroLoadObject(db_dir / script_file);
     PP<UCISpecification> uci_spec = static_cast<UCISpecification*>(obj);
     if (uci_spec->file_train != "") {
         if (uci_spec->format=="UCI") {
-            loadUCISet(trainset, db_dir + "/" + uci_spec->file_train, uci_spec);
+            loadUCISet(trainset, db_dir / uci_spec->file_train, uci_spec);
         } else if (uci_spec->format=="AMAT") {
-            loadUCIAMat(trainset,db_dir + "/" + uci_spec->file_train, uci_spec);
+            loadUCIAMat(trainset, db_dir / uci_spec->file_train, uci_spec);
         } else {
             PLERROR("In loadUCI: Format '%s' unsupported",uci_spec->format.c_str());
         }
     }
     if (uci_spec->file_test != "") {
         if (uci_spec->format=="UCI") {
-            loadUCISet(testset, db_dir + "/" + uci_spec->file_test, uci_spec);
+            loadUCISet(testset, db_dir / uci_spec->file_test, uci_spec);
         } else if (uci_spec->format=="AMAT") {
-            loadUCIAMat(testset,db_dir + "/" + uci_spec->file_test, uci_spec);
+            loadUCIAMat(testset, db_dir / uci_spec->file_test, uci_spec);
         } else {
             PLERROR("In loadUCI: Format '%s' unsupported",uci_spec->format.c_str());
         }
     }
     if (uci_spec->file_all != "") {
         if (uci_spec->format=="UCI") {
-            loadUCISet(allset, db_dir + "/" + uci_spec->file_all, uci_spec);
+            loadUCISet(allset, db_dir / uci_spec->file_all, uci_spec);
         } else if (uci_spec->format=="AMAT") {
-            loadUCIAMat(allset, db_dir + "/" + uci_spec->file_all, uci_spec);
+            loadUCIAMat(allset, db_dir / uci_spec->file_all, uci_spec);
         } else {
             PLERROR("In loadUCI: Format '%s' unsupported",uci_spec->format.c_str());
         }

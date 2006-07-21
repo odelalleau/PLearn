@@ -95,8 +95,8 @@ protected:
     //! Are write operations tolerated?
     bool writable;
 
-    //! Path of directory (possibly relative to DBDIR) that will contain meta information
-    //! on this dataset (fieldnames, cached statistics, etc...) and possibly the data itself.
+    //! Path of directory that will contain meta information on this dataset
+    //! (fieldnames, cached statistics, etc...) and possibly the data itself.
     PPath metadatadir;
 
     //! Statistics for each field.

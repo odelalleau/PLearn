@@ -6,12 +6,14 @@ import plearn.utilities.ppath as ppath
 
 ## Synchronization with the environment variable
 plearndir       = os.getenv( 'PLEARNDIR',     'HOME:PLearn'             )
-libdir          = os.getenv( 'PLEARN_LIBDIR', 'PLEARNDIR:external_libs' )
+dbdir           = os.getenv( 'DBDIR',         '/u/lisa/Database'        )
 
 ## Adding the standard PLearn-wide bindings
 ppath.add_binding('HOME',           "${HOME}" )
 ppath.add_binding('PLEARNDIR',      plearndir )
 ppath.add_binding('PLEARN_LIBDIR',  "${PLEARN_LIBDIR}" )
+ppath.add_binding('DBDIR',          dbdir )
+ppath.add_binding('UCI_MLDB_REP',   "DBDIR:UCI_MLDB" )
 ppath.add_binding('UCI_MLDB',       "PLEARNDIR:examples/data/uci_mldb"  )
 
 ## This function writes the file down
