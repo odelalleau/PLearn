@@ -49,7 +49,7 @@
 #include "RBMParameters.h"
 #include "RBMLLParameters.h"
 #include "RBMJointLLParameters.h"
-#include <unistd.h>
+//#include <unistd.h>
 
 namespace PLearn {
 using namespace std;
