@@ -823,13 +823,13 @@ def getOptions(options_choices,optionargs):
         nmatches = 0
         for item in choice:
             if item in optionargs:
-                optionargs.remove(item)
+                while item in optionargs: optionargs.remove(item)
                 if nmatches<1:
                     options.append(item)
+                    nmatches = nmatches+1
                 else:
                     print 'Error: options ' + item + ' and ' + options[-1] + ' are mutually exclusive. Aborting.'
                     sys.exit(100)
-                nmatches = nmatches+1
         if nmatches<1:
             options.append(choice[0])
     if optionargs: # there are remaining optionargs
