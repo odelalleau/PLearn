@@ -897,12 +897,15 @@ class plnamespace:
                 return attr
 
         def __setattr__(cls, key, value):
-            try:
-                plopt.override(cls, key, value)
-            except AttributeError:
-                raise AttributeError(
-                    "Namespace %s does not contain a plopt instance named %s. "
-                    "One can't set a value to an undefined option."%(cls.__name__, key))
+            if key.startswith('_'):
+                type.__setattr__(cls,key,value)
+            else:
+                try:
+                    plopt.override(cls, key, value)
+                except AttributeError:
+                    raise AttributeError(
+                        "Namespace %s does not contain a plopt instance named %s. "
+                        "One can't set a value to an undefined option."%(cls.__name__, key))
 
 class _TmpHolder:
     def __init__(self, holder_name):
