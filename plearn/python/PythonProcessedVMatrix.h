@@ -104,6 +104,12 @@ namespace PLearn {
  *
  *  - getSourceRow(row_no): a function that returns a numarray vector
  *    containing the given row in the source matrix.
+ *
+ *  In addition, a map (from string to string) named "params" is defined as an
+ *  option at the C++ level, and is made available to the Python code as a
+ *  global variable called, appropriately, "params".  Note that to change this
+ *  map programmatically (after build), should should call the setParams()
+ *  member function to ensure that the changes are propagated into Python.
  */
 class PythonProcessedVMatrix : public SourceVMatrix
 {
@@ -120,12 +126,23 @@ public:
      */
     string m_code;
 
+    /**
+     *  General-purpose parameters that are injected into the Python code
+     *  snippet as a global variable under the name "params".  Can be used for
+     *  passing processing arguments to the Python code.
+     */
+    map<string,string> m_params;
+
 public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
     PythonProcessedVMatrix();
 
+    //! Set new parameters into the Python code snippet.  The option m_params
+    //! is updated as well
+    void setParams(const map<string,string>& params);
+    
     
     //#####  PLearn::Object Protocol  #########################################
 

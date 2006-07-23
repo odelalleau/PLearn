@@ -94,6 +94,12 @@ PLEARN_IMPLEMENT_OBJECT(
     "\n"
     "- getSourceRow(row_no): a function that returns a numarray vector\n"
     "  containing the given row in the source matrix.\n"
+    "\n"
+    "In addition, a map (from string to string) named \"params\" is defined as an\n"
+    "option at the C++ level, and is made available to the Python code as a\n"
+    "global variable called, appropriately, \"params\".  Note that to change this\n"
+    "map programmatically (after build), should should call the setParams()\n"
+    "member function to ensure that the changes are propagated into Python.\n"
     );
 
 
@@ -116,6 +122,12 @@ void PythonProcessedVMatrix::declareOptions(OptionList& ol)
                   "described in the class documentation must be provided.  Note that,\n"
                   "after an initial build(), changing this string calling build() again\n"
                   "DOES NOT result in the recompilation of the code.\n");
+
+    declareOption(ol, "params", &PythonProcessedVMatrix::m_params,
+                  OptionBase::buildoption,
+                  "General-purpose parameters that are injected into the Python code\n"
+                  "snippet as a global variable under the name \"params\".  Can be used for\n"
+                  "passing processing arguments to the Python code.\n");
     
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -153,6 +165,10 @@ void PythonProcessedVMatrix::build_()
     python->setGlobalObject("source_inputsize",   source->inputsize());
     python->setGlobalObject("source_targetsize",  source->targetsize());
     python->setGlobalObject("source_weightsize",  source->weightsize());
+
+    // Set the parameters if any are defined
+    if (! m_params.empty())
+        setParams(m_params);
     
     // Get the new fieldnames (and the new width by the same token)
     TVec<string> fieldnames =
@@ -182,6 +198,15 @@ void PythonProcessedVMatrix::build_()
     // Finally, call the Python builder if one exists
     if (python->isInvokable("build"))
         python->invoke("build");
+}
+
+
+//#####  setParams  ###########################################################
+
+void PythonProcessedVMatrix::setParams(const map<string,string>& params)
+{
+    m_params = params;
+    python->setGlobalObject("params", params);
 }
 
 
