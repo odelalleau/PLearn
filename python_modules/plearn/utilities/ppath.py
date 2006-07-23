@@ -81,6 +81,8 @@ special_directories    = [ skeldir,
 def get_domain_name():
     from socket import getfqdn
     host_name = getfqdn()
+    if host_name == 'localhost':
+        return ''
     i = host_name.find('.')
     assert i != -1, "getfqdn didn't return a fully-qualified name (no '.')."
     return host_name[i+1:]
