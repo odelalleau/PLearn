@@ -100,6 +100,11 @@ extern _plearn_nan_type plearn_nan;
 #define M_SQRT2 1.41421356237309504880
 #endif
 
+//! Define M_PI as Pi (may not be defined on all systems).
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 //! Under Cygwin with GCC, log(x) with x < 0 returns -Inf instead of NaN.
 //! Thus one should use the 'pl_log' function instead of 'log', so that this
 //! behavior can safely be fixed.
@@ -179,9 +184,21 @@ inline real negative(real a) { if (a<0) return a; return 0; }
 #if defined(DARWIN)     // Mac OS.
 #define isnan __isnan
 #define isinf __isinf
+
 #elif defined(_MSC_VER)	// Microsoft Visual Studio.
 #define isnan(x) (_isnan(x) != 0)
-#define isinf _finite
+
+// 'isinf' cannot be just redefined, as there is apparently no existing
+// function exhibiting the same behavior.
+template<class T>
+inline int isinf(T x)
+{
+    return x == numeric_limits<T>::infinity() ? 1
+        : -x == numeric_limits<T>::infinity() ? -1
+                                              : 0;
+}
+
+#define finite _finite
 #define round(x) int(x + 0.5)
 #define rint round
 #define log1p(x) pl_log(1.0 + x)
