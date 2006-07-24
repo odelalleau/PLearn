@@ -476,11 +476,10 @@ pymakeOption( name = 'vc++',
               cpp_definitions = ['USING_MPI=0'],
               linker = 'g++' )
 
+cpp_variables += ['USING_MPI']
+
 
 #####  Debugging/Optimization Options  ######################################
-
-cpp_variables += ['USING_MPI']
-cpp_variables += ['BOUNDCHECK', 'NDEBUG']
 
 pymakeOption( name = 'dbg',
               description = 'debug mode',
@@ -536,6 +535,8 @@ pymakeOption( name = 'genericvc++',
               # - does this bring copyright issues?
               linkeroptions = '-lgcc')
 
+cpp_variables += ['BOUNDCHECK', 'NDEBUG']
+
 
 #####  Floating-Point Number Representation  ################################
 
@@ -568,7 +569,6 @@ cpp_variables += ['USEFLOAT', 'USEDOUBLE']
 
 lapack_linkeroptions = '-llapack'
 blas_linkeroptions   = '-lblas -lg2c'
-cpp_variables       += ['USE_BLAS_SPECIALISATIONS']
 
 # Jasmin : In OS X, there is a framework with blas and lapack
 if platform=='darwin':
@@ -618,7 +618,9 @@ pymakeOption( name = 'scs',
               description = "BLAS and lapack intel super optimized library",
               cpp_definitions = ['USE_BLAS_SPECIALISATIONS'],
               linkeroptions = '-lscs -lpthread' )
-              
+
+cpp_variables += ['USE_BLAS_SPECIALISATIONS']
+
 
 #####  Logging Behavior  ####################################################
 
@@ -629,24 +631,26 @@ pymakeOption( name = 'scs',
 
 pymakeOption( name            = 'logging=mand',
               description     = 'Compile-time enable MANDATORY log messages',
-              compileroptions = '-DPL_LOG_VERBOSITY=0' )
-              
+              cpp_definitions = ['PL_LOG_VERBOSITY=0'] )
+
 pymakeOption( name            = 'logging=imp',
               description     = 'Compile-time enable IMPORTANT (or better) log messages',
-              compileroptions = '-DPL_LOG_VERBOSITY=1' )
-              
+              cpp_definitions = ['PL_LOG_VERBOSITY=1'] )
+
 pymakeOption( name            = 'logging=normal',
               description     = 'Compile-time enable NORMAL (or better) log messages',
-              compileroptions = '-DPL_LOG_VERBOSITY=5' )
-              
+              cpp_definitions = ['PL_LOG_VERBOSITY=5'] )
+
 pymakeOption( name            = 'logging=dbg',
               description     = 'Compile-time enable DEBUG (or better) log messages',
-              compileroptions = '-DPL_LOG_VERBOSITY=10' )
-              
+              cpp_definitions = ['PL_LOG_VERBOSITY=10'] )
+
 pymakeOption( name            = 'logging=extreme',
               description     = 'Compile-time enable EXTREME (or better) log messages',
-              compileroptions = '-DPL_LOG_VERBOSITY=500' ) 
-              
+              cpp_definitions = ['PL_LOG_VERBOSITY=500'] )
+
+cpp_variables += ['PL_LOG_VERBOSITY']
+
 
 #####  Network Setup  #######################################################
 
