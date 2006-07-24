@@ -189,7 +189,8 @@ void ReconstructionWeightsKernel::computeWeights() {
     Mat distances(n_examples, n_examples);
     dist_ker->computeGramMatrix(distances);
     neighbors =
-        computeKNNeighbourMatrixFromDistanceMatrix(distances, knn, true, report_progress);
+        computeKNNeighbourMatrixFromDistanceMatrix(distances, knn, true,
+												   report_progress != 0);
     distances = Mat(); // Free memory.
     // Fill the 'is_neighbor_of' vector.
     is_neighbor_of.resize(n_examples);

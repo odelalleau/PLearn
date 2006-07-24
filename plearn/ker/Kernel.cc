@@ -454,7 +454,7 @@ Vec Kernel::getParameters() const
 // hasData //
 /////////////
 bool Kernel::hasData() {
-    return data;
+    return data.isNotNull();
 }
 
 ///////////

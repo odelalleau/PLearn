@@ -248,7 +248,9 @@ void GeodesicDistanceKernel::setDataForKernelMatrix(VMat the_data) {
     Mat distances(n,n);
     distance_kernel->computeGramMatrix(distances);
     // Compute knn - nearest neighbors.
-    TMat<int> neighborhoods = Kernel::computeKNNeighbourMatrixFromDistanceMatrix(distances, knn, true, report_progress);
+    TMat<int> neighborhoods =
+		Kernel::computeKNNeighbourMatrixFromDistanceMatrix(
+			distances, knn, true, report_progress != 0);
     // Compute geodesic distance by Floyd or Djikstra's algorithm.
     Mat geodesic(n,n);
     real big_value = REAL_MAX / 3.0; // To make sure no overflow.
@@ -288,8 +290,8 @@ void GeodesicDistanceKernel::setDataForKernelMatrix(VMat the_data) {
         // (j is a neighbor of i if it was already a neighbor, or if i was a
         // neighbor of j).
         TVec< TVec<int> > sym_neighborhoods(n);
-        int neighb;
-        for (int i = 0; i < n; i++) {
+        int neighb, i;
+        for (i = 0; i < n; i++) {
             for (int j = 1; j < knn; j++) {
                 neighb = neighborhoods(i, j);
                 sym_neighborhoods[i].append(neighb);
@@ -298,7 +300,7 @@ void GeodesicDistanceKernel::setDataForKernelMatrix(VMat the_data) {
         }
         Vec d;
         TVec<bool> T(n);
-        int t, min, i, j, m, k;
+        int t, min, j, m, k;
         real dist;
         for (k = 0; k < n; k++) {
             d = geodesic(k);
