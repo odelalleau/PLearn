@@ -47,6 +47,7 @@
 
 // Put includes here
 #include <string>
+#include <plearn/io/openString.h>
 
 namespace PLearn {
 using namespace std;
@@ -94,8 +95,30 @@ inline double toreal    (const string& s)
 {
     return todouble(s);
 }
-
 #endif 
+
+
+/**
+ *  Utility function to convert any string to a C++ object using the PStream
+ *  deserialisation mechanism.  The objects are assumed to be in plearn_ascii
+ *  format.  This function is inspired by one of the same name in Boost.  Call
+ *  it as follows:
+ *
+ *    map<string,string> zemap =
+ *        lexical_cast< map<string,string> >("{\"abc\":\"def\", \"uvw\":\"xyz\"}");
+ *
+ *  Useful for inline vectors (if you don't mind the performance hit):
+ *
+ *    Vec myvec = lexical_cast<Vec>("[1,1,2,3,5,8,13,21]");
+ */
+template <class T>
+T lexical_cast(const string& str)
+{
+    PStream in = openString(str, PStream::plearn_ascii);
+    T obj;
+    in >> obj;
+    return obj;
+}
 
 
 } // end of namespace PLearn
