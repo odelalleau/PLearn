@@ -83,26 +83,6 @@ qtdir=''
 args = sys.argv[:]
 del args[0] # ignore program name
 
-#####
-# To be removed as soon as pymake is fixed under Windows!!!
-def log_link_command( command, exec_path ):
-    f = open("link.log", "w")
-    f.write(command)
-
-    dirname, basename = os.path.split(exec_path)
-    exe_target = os.path.join( dirname,
-                               "../../%s" % (basename[:-3]+"exe")
-                               )
-    f.write("\n\nmv %s %s" % (exec_path, exe_target))
-    f.close()
-
-dorionc_hacked_pymake = False
-if '--log-link' in args:
-    dorionc_hacked_pymake = True
-    args.remove('--log-link')
-#####
-
-
 # initialize a few variables to their default values...
 # these may be overridden by the config file
 default_compiler = 'g++'
@@ -143,15 +123,9 @@ def convertWinToLinux(path):
         return path
 
 
-def join(dir,file,file2="",file3=""):
+def join(*path_list):
     """simply call os.path.join and convertWinToLinux"""
-    if file2=='':
-        res = convertWinToLinux(os.path.join(dir, file))
-    elif file3=='':
-        res = convertWinToLinux(os.path.join(dir, file, file2))
-    else:
-        res = convertWinToLinux(os.path.join(dir, file, file2, file3))
-    return res
+    return convertWinToLinux(os.path.join(*path_list))
 
 def abspath(mypath):
     """returns the absolute path of the file, with a hack to remove the leading /export/ that causes problems at DIRO"""
@@ -1694,10 +1668,6 @@ digraph G
                 linker = optdef.linker
 
         command = linker + so_options + ' -o ' + self.corresponding_output + ' ' + string.join(self.objsfilelist,' ') + ' ' + self.get_optional_libraries_linkeroptions() + ' ' + linkeroptions + ' ' + linkeroptions_tail
-
-        # print "CALLED link_command WITH optional_libraries_linkeroptions of: ", self.get_optional_libraries_linkeroptions()
-        if dorionc_hacked_pymake:
-            log_link_command( command, self.corresponding_output )
 
         return command
 
