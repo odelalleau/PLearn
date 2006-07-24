@@ -106,19 +106,19 @@ def set_logdir( logdir ):
 
 
 class ArgumentsOracle( list ):
-    def build( cls, oracle_struct ):
-        if isinstance( oracle_struct, Bindings ):
+    def build(cls, oracle_struct):
+        if isinstance(oracle_struct, Bindings):
             list_of_bindings = oracle_struct.explode_values()
         else:
             try:
-                list_of_bindings = Bindings( oracle_struct ).explode_values()
+                list_of_bindings = Bindings(oracle_struct).explode_values()
             except Exception, ex:
-                raise TypeError( ex )
+                raise TypeError(ex)
         return list_of_bindings
-    build = classmethod( build )
+    build = classmethod(build)
     
     def __init__( self, *args ):
-        list.__init__( self, reduce( operator.add, [ self.build(a) for a in args ] ) )
+        list.__init__(self, reduce(operator.add, [ self.build(a) for a in args ]))
 
 #
 # Module Classes
@@ -285,16 +285,18 @@ class Dispatch( PyPLearnObject ):
     # list of strings.
     constant_args            = PLOption(list)
 
+    # Either "expkey" or "named_args"
+    protocol                 = PLOption("expkey") 
+
     max_nmachines            = PLOption(6)
     logdir                   = PLOption(None) #"LOGS"
 
     # Path to the directory where experiments are to be loaded
     expdir_root              = PLOption(None) # Default: os.getcwd()
 
-    running_tasks            = PLOption(list)        
-
     allow_unexpected_options = lambda self : False
-    def __init__( self, _predicate=inexistence_predicate, **overrides ):
+    def __init__( self, oracles=None,
+                  _predicate=inexistence_predicate, **overrides ):
         PyPLearnObject.__init__( self, **overrides )
         self._predicate = _predicate
 
@@ -302,6 +304,9 @@ class Dispatch( PyPLearnObject ):
         if self.expdir_root is None:
             self.expdir_root = os.getcwd()
         self.__check_constant_args()
+
+        if oracles:                    
+            self.start( *oracles )
 
     def __check_constant_args( self ):
         if isinstance( self.constant_args, str ): 
@@ -330,11 +335,14 @@ class Dispatch( PyPLearnObject ):
             self.expdir_root = expdir_root
             if os.path.isdir(self.expdir_root):
                 Experiment.cache_experiments( self.expdir_root )
-
-        expkey = [ "%s=%s"%(k,v) for (k,v) in argument_bindings.iteritems() ]
-        if not self._predicate( expkey ):
-            raise RejectedByPredicate( ' '.join(_quoted(expkey)) )
-        return expkey
+        
+        if self.protocol=="expkey":            
+            expkey = [ "%s=%s"%(k,v) for (k,v) in argument_bindings.iteritems() ]
+            if not self._predicate( expkey ):
+                raise RejectedByPredicate( ' '.join(_quoted(expkey)) )
+            return expkey
+        elif self.protocol=="named_args":
+            return [ arg%argument_bindings for arg in self.constant_args ]
 
     def start( self, *oracles ):
         """Frees all tasks if a keyboard interrupt is caught."""
@@ -358,7 +366,8 @@ class Dispatch( PyPLearnObject ):
                 print >>sys.stderr, "\n(%d tasks done)"%task_sum
             if delayed_tasks:
                 print >>sys.stderr, "\n(%d tasks delayed)"%delayed_tasks
-            
+            print "On", sum([ len(oracle) for oracle in oracles ]), "requested experiments."
+
         except KeyboardInterrupt:
             sys.stderr.write("\nInterrupted by user.\n")
             self.free( )
@@ -383,7 +392,8 @@ class Dispatch( PyPLearnObject ):
             prepend = [ "echo", "$HOST;", 'nice', self.program ]
             if self.script:
                 prepend.append( self.script )
-            prepend.extend( self.constant_args )
+            if self.protocol=="expkey":
+                prepend.extend( self.constant_args )
 
             if self.script.find( '.pyplearn' ) != -1:
                 expdir = generateExpdir()
@@ -393,7 +403,7 @@ class Dispatch( PyPLearnObject ):
                 arguments.append( "expdir=%s" % expdir )
 
             # Module function defined above
-            ##raw_input( prepend+arguments )
+            ##raw_input( prepend+_quoted(arguments) )
             launch_task( prepend+_quoted(arguments) )
 
             if Task.count( ) == self.max_nmachines:

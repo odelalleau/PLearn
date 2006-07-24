@@ -1,10 +1,10 @@
 import os, sets, sys
 from plearn.utilities import toolkit
-from plearn.pyplearn.PyPLearnObject import PLOption, PyPLearnObject
+from plearn.pyplearn.PyPLearnObject import PLOption, PyPLearnObject, PyPLearnSingleton
 
 #######  PyTestObject  ########################################################
 
-class PyTestObject(PyPLearnObject):
+class PyTestObject(PyPLearnSingleton):
     def _by_value(self):
         return True
 

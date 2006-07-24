@@ -76,19 +76,19 @@ def plcommand(command_name):
 
     return command_path
 
-def Singleton(SuperMeta):
-    class _Singleton(SuperMeta):
-        def __init__(self, *args):
-            type.__init__(self, *args)
-            self._singletons = {}
-    
-        def __call__(self, **overrides):
-            signature = self._signature(**overrides)
-            if not signature in self._singletons:
-                overrides['_signature'] = signature
-                self._singletons[signature] = type.__call__(self, **overrides)
-            return self._singletons[signature]
-    return _Singleton
+#SING: def Singleton(SuperMeta):
+#SING:     class _Singleton(SuperMeta):
+#SING:         def __init__(self, *args):
+#SING:             type.__init__(self, *args)
+#SING:             self._singletons = {}
+#SING:     
+#SING:         def __call__(self, **overrides):
+#SING:             signature = self._signature(**overrides)
+#SING:             if not signature in self._singletons:
+#SING:                 overrides['_signature'] = signature
+#SING:                 self._singletons[signature] = type.__call__(self, **overrides)
+#SING:             return self._singletons[signature]
+#SING:     return _Singleton
 
 class Program(core.PyTestObject):
 
@@ -101,7 +101,7 @@ class Program(core.PyTestObject):
 
     #######  Program instances are singletons  ####################################
 
-    __metaclass__ = Singleton(core.PyTestObject.__metaclass__)
+    #SING: __metaclass__ = Singleton(core.PyTestObject.__metaclass__)
     def _signature(cls, **overrides):
         options = dict([ (opt, None) for opt in cls.class_options() ])
         options.update(overrides)                
@@ -141,15 +141,17 @@ class Program(core.PyTestObject):
         assert self.compiler is not None or self.compile_options is None
 
         # Methods are called even if messages are not logged
-        logging.debug( self.getProgramPath() )
+        logging.debug("\nProgram: "+self.getProgramPath())
 
-        internal_exec_path = self.getInternalExecPath(overrides.pop('_signature'))
+        #SING: internal_exec_path = self.getInternalExecPath(overrides.pop('_signature'))
+        internal_exec_path = self.getInternalExecPath(self._signature(**overrides))
         logging.debug("Internal Exec Path: %s"%internal_exec_path)
         if self.isCompilable():
             if self.compiler is None:
                 self.compiler = Program.default_compiler
             self.__attempted_to_compile = False
             self.__log_file_path = internal_exec_path+'.log'
+        logging.debug("Program instance: %s\n"%repr(self))
 
     def _optionFormat(self, option_pair, indent_level, inner_repr):
         optname, val = option_pair
@@ -277,7 +279,9 @@ class Program(core.PyTestObject):
             assert candidate is None
             return self._internal_exec_path
 
-        if candidate == self.name:            
+        logging.debug("Parsing for internal exec path; candidate=%s"%candidate)
+        
+        if candidate == self.name:
             self._internal_exec_path = self.getProgramPath()
         else:
             self._internal_exec_path = \
@@ -293,7 +297,7 @@ class Program(core.PyTestObject):
 
     def getProgramPath(self):
         if hasattr(self, '_program_path'):
-            return self._program_path
+            return self._program_path        
 
         try:
             self._program_path = find_local_program(self.name)
