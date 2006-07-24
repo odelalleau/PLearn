@@ -131,7 +131,7 @@ public:
  *  changed in the future.
  */
 template <class T>
-class ConvertFromPyObject
+struct ConvertFromPyObject
 { };
 
 template <>
