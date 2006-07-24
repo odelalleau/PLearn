@@ -62,17 +62,13 @@
 #include <plearn/io/openFile.h>
 #include <plearn/io/load_and_save.h>
 
-// norman: added check
-#if defined(WIN32) && !defined(_MINGW_) && !defined(__CYGWIN__)
-#include "curses.h"
-#elif !defined(_MINGW_)
-#include "curses.h"
-#else
+#if defined(WIN32) && !defined(__CYGWIN__)
 // There does not seem to be a Windows implementation of 'ncurses', thus we use
 // 'pdcurses' instead.
 #include <pdcurses/curses.h>
+#else
+#include "curses.h"
 #endif
-
 
 // Some of the above 'curses.h' includes may define those annoying macros,
 // which would conflict with the code that follows.
@@ -1741,13 +1737,16 @@ int vmatmain(int argc, char** argv)
         VVMatrix * vvm = dynamic_cast<VVMatrix*>((VMatrix*)vm);
         if(vvm!=NULL)
         {
-            pout<<"Last modification (including dependencies of .vmat): "<<vvm->getMtime()<<endl;
+            pout<< "Last modification (including dependencies of .vmat): "
+                << long(vvm->getMtime()) << endl;
             bool ispre=vvm->isPrecomputedAndUpToDate();
             pout<<"precomputed && uptodate : ";
             if(ispre)
             {
                 pout <<"yes : " << vvm->getPrecomputedDataName()<<endl;
-                pout<<"timestamp of precom. data : "<<getDataSetDate(vvm->getPrecomputedDataName())<<endl;
+                pout<< "timestamp of precom. data : "
+                    << long(getDataSetDate(vvm->getPrecomputedDataName()))
+                    << endl;
             }
             else pout <<"no"<<endl;
         }
