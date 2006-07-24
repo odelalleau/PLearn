@@ -2287,7 +2287,7 @@ try:
                             # Handle some special cases.
                             if libname == 'python24':
                                 result = '%s.lib' % libname
-                            elif libname in ['numarray', 'lapack', 'm']:
+                            elif libname in ['numarray', 'm']:
                                 # These libraries are not needed with Visual
                                 # Studio, and can be safely ignored.
                                 result = None
