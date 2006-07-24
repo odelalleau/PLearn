@@ -131,7 +131,7 @@ void TextFilesVMatrix::buildIdx()
 
         int nskip = 0; // number of header lines to skip
         if(!skipheader.isEmpty())
-            nskip = skipheader[fileno];
+            nskip = skipheader[int(fileno)];
 
         // read the data rows and build the index
         for(;;)

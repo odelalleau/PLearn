@@ -142,17 +142,20 @@ void RepeatSplitter::build_()
                         PLERROR("In RepeatSplitter::build_ - 'force_proportion' is only implemented for a binary target");
                     }
                     // Ensure the proportion of the targets respect the constraints.
-                    int j = 0;
-                    for (map<real,StatsCollectorCounts>::iterator it = tsc.getCounts()->begin(); j < count; j++) {
+                    int index = 0;
+                    for (map<real,StatsCollectorCounts>::iterator it =
+                            tsc.getCounts()->begin(); index < count; index++)
+                    {
                         t = it->first;
-                        real prop_t = real(it->second.n) / real(dataset->length());
-                        // Find the step to use to check the proportion is ok. We want a
-                        // step such that each 'step' examples, there should be at least two
-                        // with this target, but less than 'step - 10'.
-                        // For instance, for a proportion of 0.1, 'step' would be 20,
-                        // and for a proportion of 0.95, it would be 200.
-                        // We also want the approximation made when rounding to be
-                        // negligible.
+                        real prop_t = real(it->second.n) /
+                                      real(dataset->length());
+                        // Find the step to use to check the proportion is ok.
+                        // We want a step such that each 'step' examples, there
+                        // should be at least two with this target, but less
+                        // than 'step - 10'.  For instance, for a proportion of
+                        // 0.1, 'step' would be 20, and for a proportion of
+                        // 0.95, it would be 200.  We also want the
+                        // approximation made when rounding to be negligible.
                         int step = 20;
                         bool ok = false;
                         while (!ok) {

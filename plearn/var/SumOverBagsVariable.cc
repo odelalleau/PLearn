@@ -256,7 +256,7 @@ void SumOverBagsVariable::fpropOneBag(bool do_bprop)
         }
         if (bag_size==0 && !(int(bag_signal[0]) & 1))
             PLERROR("SumOverBagsVariable: data synchronization error, first row of bag has wrong bag signal");
-        reached_end_of_bag = (int(bag_signal[0]) & 2);
+        reached_end_of_bag = (int(bag_signal[0]) & 2) != 0;
         if(++curpos == vmat->length())
         {
             curpos = 0;

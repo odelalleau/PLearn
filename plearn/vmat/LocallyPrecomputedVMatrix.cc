@@ -126,7 +126,7 @@ void LocallyPrecomputedVMatrix::build_()
                      " using the 'temporary' option instead of "
                      "the 'remove_when_done' option, which is deprecated.");
         assert( remove_when_done == 0 || remove_when_done == 1 );
-        temporary = remove_when_done;
+        temporary = remove_when_done != 0;
     }
 
     if (!hasMetaDataDir()) {

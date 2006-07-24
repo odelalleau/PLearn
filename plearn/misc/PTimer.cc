@@ -168,7 +168,7 @@ void PTimer::startTimer(const string& timer_name)
 {
     assert( name_to_idx.find(timer_name) != name_to_idx.end() );
     int timer_id = name_to_idx[timer_name];
-    start_long[timer_id] = time(0);
+    start_long[timer_id] = long(time(0));
     start_clock_t[timer_id] = clock();
 }
 
@@ -180,7 +180,7 @@ void PTimer::stopTimer(const string& timer_name)
     assert( name_to_idx.find(timer_name) != name_to_idx.end() );
     int timer_id = name_to_idx[timer_name];
     clock_t time_clock_t = clock() - start_clock_t[timer_id];
-    long time_long = time(0) - start_long[timer_id];
+    long time_long = long(time(0)) - start_long[timer_id];
     if (time_long > 1800)
         // More than 30 mins: we use the approximate length.
         total_times[timer_id] += time_long;

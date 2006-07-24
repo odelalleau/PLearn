@@ -369,7 +369,7 @@ void HTMLHelpCommand::helpOnClass(const string& classname, ostream& out,
   
     OptionList& options = (*entry.getoptionlist_method)();    
 
-    int i=0;
+    int index = 0;
     for( OptionList::iterator olIt = options.begin(); olIt!=options.end();
          ++olIt ) {
 
@@ -389,7 +389,8 @@ void HTMLHelpCommand::helpOnClass(const string& classname, ostream& out,
                 defaultval = (*olIt)->writeIntoString(obj);
             defclass = (*olIt)->optionHolderClassName(obj);
         }
-        out << string("  <tr class=\"") + (i++ % 2 == 0? "even" : "odd") + "\">" << endl
+        out << string("  <tr class=\"") + (index++ % 2 == 0? "even" : "odd")
+			                            + "\">" << endl
             << "    <td>"
             << "<div class=\"opttype\">" << highlight_known_classes(quote(opttype))
             << "</div>" << endl
@@ -410,7 +411,7 @@ void HTMLHelpCommand::helpOnClass(const string& classname, ostream& out,
         out << "    </td>" << endl
             << "  </tr>" << endl;
     }
-    if (i == 0)
+    if (index == 0)
         out << "<tr><td>This class does not specify any build options.</td></tr>"
             << endl;
 
@@ -424,7 +425,7 @@ void HTMLHelpCommand::helpOnClass(const string& classname, ostream& out,
         << "<h2>List of Instantiable Derived Classes</h2>" << endl
         << "<table cellspacing=\"0\" cellpadding=\"0\">" << endl;
 
-    i = 0;
+    index = 0;
     for(it = type_map.begin(); it!=itend; ++it)
     {
         const TypeMapEntry& e = it->second;
@@ -433,7 +434,8 @@ void HTMLHelpCommand::helpOnClass(const string& classname, ostream& out,
             Object* o = (*e.constructor)();
             if( (*entry.isa_method)(o) ) {
                 string helpurl = string("class_") + it->first + ".html";
-                out << string("  <tr class=\"") + (i++%2 == 0? "even" : "odd") + "\">" << endl
+                out << string("  <tr class=\"") +
+					   (index++%2 == 0? "even" : "odd") + "\">" << endl
                     << "    <td><a href=\"" << helpurl << "\">"
                     << quote(it->first) << "</a></td><td>" << quote(e.one_line_descr)
                     << "    </td>"
@@ -443,7 +445,7 @@ void HTMLHelpCommand::helpOnClass(const string& classname, ostream& out,
                 delete o;
         }
     }
-    if (i == 0)
+    if (index == 0)
         out << "<tr><td>This class does not have instantiable derived classes.</td></tr>"
             << endl;
 
@@ -454,7 +456,7 @@ void HTMLHelpCommand::helpOnClass(const string& classname, ostream& out,
     out << "<div class=\"rmitable\">" << endl
         << "<h2>List of Remote-Callable Methods</h2>" << endl
         << "<table cellspacing=\"0\" cellpadding=\"0\">" << endl;
-    i = 0;
+    index = 0;
     while (rmm) {
         RemoteMethodMap::MethodMap::const_iterator
             it = rmm->begin(), end = rmm->end();
@@ -498,7 +500,7 @@ void HTMLHelpCommand::helpOnClass(const string& classname, ostream& out,
                     + "  <td class=\"" + td2_class + "\">" + arg_doc  + "</td>";
             }
 
-            string tr_class = (i++ == 0? "first" : "others");
+            string tr_class = (index++ == 0? "first" : "others");
             out << "<tr class=\"" << tr_class << +  + "\">" << endl
                 << "<td colspan=\"3\"><div class=\"rmiprototype\">"
                 << return_type
@@ -529,7 +531,7 @@ void HTMLHelpCommand::helpOnClass(const string& classname, ostream& out,
         // Inspect base classes
         rmm = rmm->inheritedMethods();
     }
-    if (i == 0)
+    if (index == 0)
         out << "<tr><td>This class does not define any remote-callable methods.</td></tr>"
             << endl;
 
