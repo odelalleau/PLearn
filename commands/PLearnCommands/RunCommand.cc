@@ -51,6 +51,7 @@
 #include <plearn/io/PyPLearnScript.h>
 
 #include <plearn/io/openString.h>
+#include <plearn/io/openFile.h>
 
 namespace PLearn {
 using namespace std;
@@ -69,6 +70,8 @@ void RunCommand::run(const vector<string>& args)
     string script;
 
     PP<PyPLearnScript> pyplearn_script;
+    PStream in;
+
     if (extension == ".pyplearn")
     {
         // Make a copy of args with the first argument (the name of the script)
@@ -84,8 +87,10 @@ void RunCommand::run(const vector<string>& args)
         // the time the PyPLearnScript is built. 
         if ( script == "" )
             return;    
+
+        in = openString( script, PStream::plearn_ascii );
     }
-    else
+    else if(extension==".plearn")  // perform plearn macro expansion
     {
         map<string, string> vars;
         // populate vars with the arguments passed on the command line
@@ -101,9 +106,15 @@ void RunCommand::run(const vector<string>& args)
         }
 
         script = readFileAndMacroProcess(scriptfile, vars);
+        in = openString( script, PStream::plearn_ascii );
     }
-  
-    PStream in = openString( script, PStream::plearn_ascii );
+    else if(extension==".psave") // do not perform plearn macro expansion
+    {
+        in = openFile(scriptfile, PStream::plearn_ascii);
+    }
+    else
+        PLERROR("Invalid extension for script file. Must be one of .pyplearn .plearn .psave")
+
     while ( in )
     {
         PP<Object> o = readObject(in);
