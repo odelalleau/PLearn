@@ -106,10 +106,12 @@ namespace PLearn {
  *    containing the given row in the source matrix.
  *
  *  In addition, a map (from string to string) named "params" is defined as an
- *  option at the C++ level, and is made available to the Python code as a
- *  global variable called, appropriately, "params".  Note that to change this
- *  map programmatically (after build), should should call the setParams()
- *  member function to ensure that the changes are propagated into Python.
+ *  option at the C++ level, and is made available to the Python code via two
+ *  injected functions: getParam(name), and setParam(name,value).  Both
+ *  functions directly modify the C++ map, so that there is never any
+ *  synchronization issues, and further enable Python to communicate back some
+ *  'side information' to C++.  In addition, the injected function getParams()
+ *  returns the entire map.
  */
 class PythonProcessedVMatrix : public SourceVMatrix
 {
@@ -169,6 +171,17 @@ protected:
     //! VMatrix
     PythonObjectWrapper getSourceRow(const TVec<PythonObjectWrapper>& args) const;
 
+    //! Injected into the Python code to return m_params.
+    PythonObjectWrapper getParams(const TVec<PythonObjectWrapper>& args) const;
+
+    //! Injected into the Python code to return the m_param value associated
+    //! to the given key (sole argument).  Returns None if not found.
+    PythonObjectWrapper getParam(const TVec<PythonObjectWrapper>& args) const;
+
+    //! Injected into the Python code to set the m_param value associated
+    //! to the given key.  Always return None.
+    PythonObjectWrapper setParam(const TVec<PythonObjectWrapper>& args);
+    
     //! If not already done, compile the Python snippet and inject the
     //! required stuff into the Python environment
     void compileAndInject();

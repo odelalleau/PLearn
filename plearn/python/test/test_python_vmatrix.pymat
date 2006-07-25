@@ -19,12 +19,21 @@ source_mat = pl.MemoryVMatrix(
 ### indentation would be reflected inside the string and Python is very
 ### indentation-sensitive.
 processing_code = """
+import sys
 from numarray import *
 
 def getRow(row_no, source_row):
     return concatenate((10*row_no, 2*source_row))
 
 def getFieldNames(source_field_names):
+    print >>sys.stderr, 'source_field_names:', source_field_names
+    print >>sys.stderr, 'source_length     :', source_length
+    print >>sys.stderr, 'source_width      :', source_width
+    print >>sys.stderr, 'source_inputsize  :', source_inputsize
+    print >>sys.stderr, 'source_targetsize :', source_targetsize
+    print >>sys.stderr, 'source_weightsize :', source_weightsize
+    print >>sys.stderr, 'params            :', getParams()
+    print >>sys.stderr, 'source row(1)     :', getSourceRow(1)
     return ['tricky_rownum', 'field1', 'field2']
 
 #def getSizes(source_inputsize, source_targetsize, source_weightsize):
@@ -36,7 +45,8 @@ def getFieldNames(source_field_names):
 ### the processing_code.
 processed_mat = pl.PythonProcessedVMatrix(
     source = source_mat,
-    code = processing_code)
+    code   = processing_code,
+    params = { 'key1':'value1', 'key2':'value2' })
     
 
 ### The main function must return the VMatrix object.

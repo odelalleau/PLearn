@@ -96,10 +96,12 @@ PLEARN_IMPLEMENT_OBJECT(
     "  containing the given row in the source matrix.\n"
     "\n"
     "In addition, a map (from string to string) named \"params\" is defined as an\n"
-    "option at the C++ level, and is made available to the Python code as a\n"
-    "global variable called, appropriately, \"params\".  Note that to change this\n"
-    "map programmatically (after build), should should call the setParams()\n"
-    "member function to ensure that the changes are propagated into Python.\n"
+    "option at the C++ level, and is made available to the Python code via two\n"
+    "injected functions: getParam(name), and setParam(name,value).  Both\n"
+    "functions directly modify the C++ map, so that there is never any\n"
+    "synchronization issues, and further enable Python to communicate back some\n"
+    "'side information' to C++.  In addition, the injected function getParams()\n"
+    "returns the entire map.\n"
     );
 
 
@@ -250,6 +252,51 @@ PythonProcessedVMatrix::getSourceRow(const TVec<PythonObjectWrapper>& args) cons
 }
 
 
+//#####  getParams  ###########################################################
+
+PythonObjectWrapper
+PythonProcessedVMatrix::getParams(const TVec<PythonObjectWrapper>& args) const
+{
+    if (args.size() != 0)
+        PLERROR("PythonProcessedVMatrix::getParams: expected 0 argument; got %d",
+                args.size());
+
+    return PythonObjectWrapper(m_params);
+}
+
+
+//#####  getParam  ############################################################
+
+PythonObjectWrapper
+PythonProcessedVMatrix::getParam(const TVec<PythonObjectWrapper>& args) const
+{
+    if (args.size() != 1)
+        PLERROR("PythonProcessedVMatrix::getParam: expected 1 argument; got %d",
+                args.size());
+    string key = args[0].as<string>();
+    map<string,string>::const_iterator found = m_params.find(key);
+    if (found != m_params.end())
+        return PythonObjectWrapper(found->second);
+    else
+        return PythonObjectWrapper();        // None
+}
+
+
+//#####  setParam  ############################################################
+
+PythonObjectWrapper
+PythonProcessedVMatrix::setParam(const TVec<PythonObjectWrapper>& args)
+{
+    if (args.size() != 2)
+        PLERROR("PythonProcessedVMatrix::setParam: expected 2 arguments; got %d",
+                args.size());
+    string key   = args[0].as<string>();
+    string value = args[1].as<string>();
+    m_params[key] = value;
+    return PythonObjectWrapper();
+}
+
+
 //#####  compileAndInject  ####################################################
 
 void PythonProcessedVMatrix::compileAndInject()
@@ -258,8 +305,10 @@ void PythonProcessedVMatrix::compileAndInject()
         python = new PythonCodeSnippet(m_code);
         assert( python );
         python->build();
-        python->inject("getSourceRow", this,
-                       &PythonProcessedVMatrix::getSourceRow);
+        python->inject("getSourceRow", this, &PythonProcessedVMatrix::getSourceRow);
+        python->inject("getParams",    this, &PythonProcessedVMatrix::getParams);
+        python->inject("getParam",     this, &PythonProcessedVMatrix::getParam);
+        python->inject("setParam",     this, &PythonProcessedVMatrix::setParam);
     }
 }
 
