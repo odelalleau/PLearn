@@ -768,6 +768,7 @@ for option in optionargs:
             optionargs.remove(option)
             optionargs.append('tmp')
     elif option[0] == 'v':
+        remove_verbosity_option = True
         if option == 'v' or option == 'v1' or option == 'v0':
             verbose = 1
         elif option == 'v'*2 or option == 'v2':
@@ -776,7 +777,11 @@ for option in optionargs:
             verbose = 3
         elif option[:4] == 'v'*4 or option == 'v4':
             verbose = 4
-        optionargs.remove(option)
+        else:
+            # Not a verbosity option, just an option starting with a 'v'.
+            remove_verbosity_option = False
+        if remove_verbosity_option:
+            optionargs.remove(option)
 
 if 'tmp' in optionargs:
     objspolicy = 2
