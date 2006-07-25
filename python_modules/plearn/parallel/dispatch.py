@@ -13,21 +13,20 @@ __all__ = [
     "Task",
     
     # Functions
-    "get_ssh_machines",
-    "launch_task",
-    "set_logdir",
+    "get_ssh_machines", "launch_task", "set_logdir",
 
     # Classes
-    "ArgumentsOracle",
-    "Dispatch"
+    "ArgumentsOracle", "Dispatch"
     ]
+
+
+#######  Module Variables  ####################################################
 
 #
 # Definitions for the different known clusters
 #  These could be moved in a config file...
 #  ( cluster.config in .plearn )
 #
-
 TASK_TYPE_MAP    = { 'apstat.com':       'SshTask',
                      'iro.umontreal.ca': 'ClusterTask'
                      }
@@ -59,20 +58,15 @@ SSH_MACHINES_MAP = { 'apstat.com': [ # 'embla',
 MAX_LOADAVG = { 'inari'  : 6 ,
                 'kamado' : 6 }
 
-#
-# Module Variables
-#
+LOGDIR      = None  # May be set by set_logdir()
+DOMAIN_NAME = get_domain_name()
 
-# Private Variables
-LOGDIR          = None  # May be set by set_logdir()
-DOMAIN_NAME     = get_domain_name()
 
-# Public Variables
-Task            = None # Will be initialize at first call to launch_task
+#######  To be assigned to a subclass of TaskType when these will be declared
+Task = None
 
-#
-# Module Functions
-#
+
+#######  Module Functions  ####################################################
 
 ################################################################################
 # KNOWN ISSUE: The current way of managing machines is slightly hackish
@@ -92,10 +86,10 @@ def get_ssh_machines():
     return machines
 
 def launch_task( argv, wait = False ):
-    global Task
-    if Task is None:
-        Task = globals()[ TASK_TYPE_MAP[ DOMAIN_NAME ] ]
-
+    # global Task
+    # if Task is None:
+    #     Task = globals()[ TASK_TYPE_MAP[ DOMAIN_NAME ] ]
+    assert Task is not None
     task = Task( argv )
     task.launch( wait )
 
@@ -104,6 +98,8 @@ def set_logdir( logdir ):
     global LOGDIR
     LOGDIR = logdir
 
+
+#######  Module Classes  ######################################################
 
 class ArgumentsOracle( list ):
     def build(cls, oracle_struct):
@@ -120,10 +116,6 @@ class ArgumentsOracle( list ):
     def __init__( self, *args ):
         list.__init__(self, reduce(operator.add, [ self.build(a) for a in args ]))
 
-#
-# Module Classes
-#
-    
 class EmptyTaskListError( Exception ): pass
 class EmptyMachineListError( Exception ): pass
     
@@ -268,6 +260,11 @@ class ClusterTask( TaskType ):
 
     def free( self ):
         pass
+
+#######  Assigning Task  ######################################################
+#######  Now that TaskType subclasses are all declared, Task can be assigned
+    
+Task = globals()[ TASK_TYPE_MAP[ DOMAIN_NAME ] ]
 
 class RejectedByPredicate( Exception ): pass
 
