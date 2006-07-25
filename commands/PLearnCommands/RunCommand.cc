@@ -113,7 +113,7 @@ void RunCommand::run(const vector<string>& args)
         in = openFile(scriptfile, PStream::plearn_ascii);
     }
     else
-        PLERROR("Invalid extension for script file. Must be one of .pyplearn .plearn .psave")
+        PLERROR("Invalid extension for script file. Must be one of .pyplearn .plearn .psave");
 
     while ( in )
     {
