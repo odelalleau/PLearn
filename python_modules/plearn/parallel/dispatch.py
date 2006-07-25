@@ -1,6 +1,7 @@
-import inspect, operator, os, signal, sys, time
+import inspect, logging, operator, os, signal, sys, time
 
-from socket                         import getfqdn
+from popen2 import Popen4
+
 from plearn.utilities.ppath         import get_domain_name
 from plearn.utilities.moresh        import *
 from plearn.utilities.Bindings      import *
@@ -18,6 +19,12 @@ __all__ = [
     # Classes
     "ArgumentsOracle", "Dispatch"
     ]
+
+# In Python2.4: logging.basicConfig(level=logging.DEBUG, ...)
+__hdlr = logging.StreamHandler()
+__hdlr.setFormatter( logging.Formatter("%(message)s") )
+logging.root.addHandler(__hdlr)
+logging.root.setLevel(logging._levelNames["INFO"])
 
 
 #######  Module Variables  ####################################################
@@ -85,15 +92,12 @@ def get_ssh_machines():
     shuffle( machines )
     return machines
 
-def launch_task( argv, wait = False ):
-    # global Task
-    # if Task is None:
-    #     Task = globals()[ TASK_TYPE_MAP[ DOMAIN_NAME ] ]
+def launch_task(argv, wait=False):
     assert Task is not None
     task = Task( argv )
     task.launch( wait )
 
-def set_logdir( logdir ):
+def set_logdir(logdir):
     """Instead of writing to stdout, tasks will be logged in a file within I{logdir}."""
     global LOGDIR
     LOGDIR = logdir
@@ -128,12 +132,17 @@ class TaskType:
     count = classmethod( count )
 
     def kill_all_tasks( cls ):
-        for pid in cls._child_processes:
+        for pid, task in cls._child_processes.iteritems():
             try:
-                os.kill( pid, signal.SIGTERM )
+                os.kill(pid, signal.SIGTERM)
+                logging.info( "Killed process with id %d (%d)"
+                              %(pid, task.process.wait()) )
             except OSError:
-                pass            
-    kill_all_tasks = classmethod( kill_all_tasks )
+                assert task.process.poll() != -1, \
+                       "Failed to kill task with pid %d"%task.process.pid
+            task.free()
+        cls._child_processes = {}
+    kill_all_tasks = classmethod(kill_all_tasks)
 
     def n_available_machines( cls ):
         """Returns the number of machines currently available for cluster job dispatch."""
@@ -147,20 +156,27 @@ class TaskType:
         """Selecting a completed task."""
         if cls.count() == 0:
             raise EmptyTaskListError()
-            
-        pid, exit_status = os.wait()
 
-        completed = cls._child_processes.pop( pid )
+        try:
+            pid, exit_status = os.wait()
+            completed = cls._child_processes.pop(pid)
+            completed.process.wait()
+        except OSError:
+            if cls._child_processes:
+                pid, completed = cls._child_processes.popitem()
+                assert completed.process.poll() != -1
+            else:
+                return None
+
         completed.free()
-
         return completed
-    select = classmethod( select )
+    select = classmethod(select)
 
     #
     # Instance methods
     #
     
-    def __init__( self, argv ):
+    def __init__(self, argv):
         self.argv    = argv
         self.logfile = None
 
@@ -177,24 +193,24 @@ class TaskType:
             self.argv.extend([ ">&", self.logfile ])
 
         
-    def launch( self, wait ):
+    def launch(self, wait):
         """Launch process on an available machine"""
         try:
-            argv     = self.launch_args( )
+            argv = self.launch_args( )
 
             # Always using no wait to get the process id...
-            self.pid = os.spawnvp( os.P_NOWAIT, argv[0], argv )        
-            self._child_processes[ self.pid ] = self
-            
+            self.process = Popen4(" ".join(argv))        
             if wait:
-                self.select( )
+                self.process.wait( )
+            else:
+                self._child_processes[ self.process.pid ] = self
 
         except EmptyMachineListError:
-            print >>sys.stderr, "Waiting for a machine to be freed..."
+            logging.info("Waiting for a machine to be freed...")
             try:
-                self.select( )
+                TaskType.select( )
             except EmptyTaskListError:
-                time.sleep(15)      
+                time.sleep(15) 
             self.launch(wait)
             
 
@@ -360,16 +376,17 @@ class Dispatch( PyPLearnObject ):
                 delayed_tasks += delayed
 
             if task_sum:
-                print >>sys.stderr, "\n(%d tasks done)"%task_sum
+                logging.info("\n(%d tasks done)"%task_sum)
             if delayed_tasks:
-                print >>sys.stderr, "\n(%d tasks delayed)"%delayed_tasks
-            print "On", sum([ len(oracle) for oracle in oracles ]), "requested experiments."
+                logging.info("\n(%d tasks delayed)"%delayed_tasks)
+            logging.info( "[On %d requested experiments.]"
+                          % sum([ len(oracle) for oracle in oracles ]) )
 
         except KeyboardInterrupt:
-            sys.stderr.write("\nInterrupted by user.\n")
+            logging.error("\nInterrupted by user.\n")
             self.free( )
 
-    def __start( self, arguments_oracle ):
+    def __start(self, arguments_oracle):
         """Parallel dispatch; respecting max_nmachines."""
         counter = 0
         delayed = 0
@@ -378,11 +395,11 @@ class Dispatch( PyPLearnObject ):
                 # Parses for special keywords and join keys to values.
                 arguments = self.getArguments( argument_bindings )
             except RejectedByPredicate, rejected:
-                print 'Already exists:', str(rejected)
+                logging.info('Already exists: %s'%str(rejected))
                 continue
 
             if self.program is None:
-                print 'Delayed:'," ".join(_quoted(arguments))
+                logging.info('Delayed: %s'%(" ".join(_quoted(arguments))))
                 delayed += 1
                 continue
             
@@ -404,24 +421,36 @@ class Dispatch( PyPLearnObject ):
             launch_task( prepend+_quoted(arguments) )
 
             if Task.count( ) == self.max_nmachines:
-                print >>sys.stderr, "Using %d machines or more; waiting..." % self.max_nmachines
+                logging.info( "+++ Using %d machines or more; waiting..."
+                              % self.max_nmachines )
                 completed = Task.select()
+                self.log(completed)
             counter += 1
 
         ## Wait for all experiments completion
         while Task is not None: # Task is none if no tasks were launched...
             try:
                 completed = Task.select()
+                self.log(completed)
             except EmptyTaskListError:
                 break
         return counter, delayed
 
-    def free( self ):
+    def log(self, task):
+        if task is None:
+            return
+        logging.info( "##### Task with pid %d ended with signal %d"
+                      % (task.process.pid, task.process.poll()) )
+        logging.info( task.process.fromchild.read() )
+        logging.info("#"*80)
+        logging.info('')
+
+    def free(self):
         try:
             Task.kill_all_tasks()
-            sys.stderr.write("\nDone.\n")
+            logging.error("\nDone.\n")
         except KeyboardInterrupt:
-            sys.stderr.write( "\nCan not interrupt Dispatch.free() please wait...\n" )
+            logging.error( "\nCan not interrupt Dispatch.free() please wait...\n" )
             self.free( )    
 
 if __name__ == "__main__":
