@@ -25,7 +25,7 @@ __hdlr = logging.StreamHandler()
 __hdlr.setFormatter( logging.Formatter("%(message)s") )
 logging.root.addHandler(__hdlr)
 logging.root.setLevel(logging._levelNames["INFO"])
-
+#logging.root.setLevel(logging._levelNames["DEBUG"])
 
 #######  Module Variables  ####################################################
 
@@ -65,9 +65,9 @@ SSH_MACHINES_MAP = { 'apstat.com': [ # 'embla',
 MAX_LOADAVG = { 'inari'  : 6 ,
                 'kamado' : 6 }
 
+SLEEP_TIME  = 15
 LOGDIR      = None  # May be set by set_logdir()
 DOMAIN_NAME = get_domain_name()
-
 
 #######  To be assigned to a subclass of TaskType when these will be declared
 Task = None
@@ -155,13 +155,17 @@ class TaskType:
     def select( cls ):
         """Selecting a completed task."""
         if cls.count() == 0:
+            logging.debug("* Raising EmptyTaskListError")
             raise EmptyTaskListError()
 
         try:
             pid, exit_status = os.wait()
             completed = cls._child_processes.pop(pid)
-            completed.process.wait()
+            completed.process.sts = exit_status # Hack for poll() to work...
+            logging.debug( "* Completed process (pid=%d) with exit_status %d (?=%d)"
+                    %(completed.process.pid, exit_status, completed.process.poll()) )
         except OSError:
+            logging.debug("* select() called but all tasks are over")
             if cls._child_processes:
                 pid, completed = cls._child_processes.popitem()
                 assert completed.process.poll() != -1
@@ -169,6 +173,7 @@ class TaskType:
                 return None
 
         completed.free()
+        logging.debug("* select() returns task with pid %d"%completed.process.pid)
         return completed
     select = classmethod(select)
 
@@ -178,21 +183,7 @@ class TaskType:
     
     def __init__(self, argv):
         self.argv    = argv
-        self.logfile = None
 
-        # Logging management
-        if LOGDIR and os.path.isdir( LOGDIR ):
-            raise NotImplementedError('Bugs in logging...') 
-            
-            self.logfile = "_".join( self.argv )            
-
-            for s in [" ", ".", "/", ';']:
-                self.logfile = self.logfile.replace(s, "_")
-
-            self.logfile = os.path.join( LOGDIR, self.logfile )
-            self.argv.extend([ ">&", self.logfile ])
-
-        
     def launch(self, wait):
         """Launch process on an available machine"""
         try:
@@ -202,18 +193,28 @@ class TaskType:
             self.process = Popen4(" ".join(argv))        
             if wait:
                 self.process.wait( )
+                self.free()
             else:
                 self._child_processes[ self.process.pid ] = self
-
+                logging.debug( "* children %d (%d)"
+                               %(self.process.pid,len(self._child_processes)) )
+                
         except EmptyMachineListError:
             logging.info("Waiting for a machine to be freed...")
             try:
                 TaskType.select( )
             except EmptyTaskListError:
-                time.sleep(15) 
+                time.sleep(SLEEP_TIME) 
             self.launch(wait)
             
-
+    def free(self):
+        if LOGDIR and os.path.isdir(LOGDIR):
+            filepath = os.path.join(LOGDIR, "%s-pid=%d"%(
+                self.argv[0], self.process.pid ))
+            logfile = open(filepath, 'w')
+            print >>logfile, "[%s]"%" ".join(self.argv)
+            print >>logfile, self.process.fromchild.read()
+            logfile.close()
 
 class SshTask( TaskType ):
 
@@ -245,7 +246,8 @@ class SshTask( TaskType ):
             
         return ['ssh', '-x', self.host, 'cd', os.getcwd(), ';', 'nice'] + self.argv
 
-    def free( self ):
+    def free(self):
+        TaskType.free(self)
         self._machines.append( self.host )
 
 class ClusterTask( TaskType ):
@@ -274,13 +276,11 @@ class ClusterTask( TaskType ):
         return ['cluster', '--execute', self.argv[0], '--force',
                 '--wait', '--duree=120h', '--'] + self.argv[1:]
 
-    def free( self ):
-        pass
 
 #######  Assigning Task  ######################################################
-#######  Now that TaskType subclasses are all declared, Task can be assigned
-    
+#######  Now that TaskType subclasses are all declared, Task can be assigned    
 Task = globals()[ TASK_TYPE_MAP[ DOMAIN_NAME ] ]
+
 
 class RejectedByPredicate( Exception ): pass
 
@@ -360,11 +360,11 @@ class Dispatch( PyPLearnObject ):
     def start( self, *oracles ):
         """Frees all tasks if a keyboard interrupt is caught."""
         if self.logdir is not None:
-            if not os.path.exists( self.logdir ):
-                os.mkdir( self.logdir )
+            if not os.path.exists(self.logdir):
+                os.mkdir(self.logdir)
 
             # Module function set_logdir()
-            set_logdir( self.logdir )
+            set_logdir(self.logdir)
             
         try:
             task_sum = 0
@@ -383,8 +383,8 @@ class Dispatch( PyPLearnObject ):
                           % sum([ len(oracle) for oracle in oracles ]) )
 
         except KeyboardInterrupt:
-            logging.error("\nInterrupted by user.\n")
-            self.free( )
+            logging.error("! Interrupted by user.")
+            self.free()
 
     def __start(self, arguments_oracle):
         """Parallel dispatch; respecting max_nmachines."""
@@ -411,8 +411,8 @@ class Dispatch( PyPLearnObject ):
 
             if self.script.find( '.pyplearn' ) != -1:
                 expdir = generateExpdir()
-                time.sleep( 1 ) ## Making sure the next expdir will be generated at
-                                ## another 'time', i.e. on another second
+                time.sleep(1) ## Making sure the next expdir will be generated at
+                              ## another 'time', i.e. on another second
 
                 arguments.append( "expdir=%s" % expdir )
 
@@ -428,7 +428,7 @@ class Dispatch( PyPLearnObject ):
             counter += 1
 
         ## Wait for all experiments completion
-        while Task is not None: # Task is none if no tasks were launched...
+        while Task is not None:
             try:
                 completed = Task.select()
                 self.log(completed)
@@ -438,19 +438,20 @@ class Dispatch( PyPLearnObject ):
 
     def log(self, task):
         if task is None:
+            logging.debug("* Select returned None!")
             return
-        logging.info( "##### Task with pid %d ended with signal %d"
-                      % (task.process.pid, task.process.poll()) )
-        logging.info( task.process.fromchild.read() )
-        logging.info("#"*80)
-        logging.info('')
+        if LOGDIR is None:
+            logging.info( "##### Task with pid %d ended with signal %d"
+                          % (task.process.pid, task.process.poll()) )
+            logging.info( task.process.fromchild.read() )
+            logging.info('')
 
     def free(self):
         try:
             Task.kill_all_tasks()
-            logging.error("\nDone.\n")
+            logging.error("! Done.")
         except KeyboardInterrupt:
-            logging.error( "\nCan not interrupt Dispatch.free() please wait...\n" )
+            logging.error("! Can not interrupt Dispatch.free() please wait...")
             self.free( )    
 
 if __name__ == "__main__":

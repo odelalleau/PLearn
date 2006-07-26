@@ -22,10 +22,7 @@ def main():
 
 
     if options.num_available_machines:
-        # This should simply be Task.n_available_machines() but I have to
-        # rethink initialization of Task (see plearn.parallel.dispatch)
-        from plearn.parallel.dispatch import SshTask        
-        print SshTask.n_available_machines()
+        print Task.n_available_machines()
     elif args:        
         launch_task( args, wait = True )
 
