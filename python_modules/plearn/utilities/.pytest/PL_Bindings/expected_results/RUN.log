@@ -1,0 +1,77 @@
+
+Embedded test/tutorial for Bindings.py.
+
+Bindings: 
+Acts like a Python dictionary but keeps the addition order.
+
+#####  Testing __init__ behaviours
+
+Bindings: {1: "a", 2: "b", 3: "c"}
+Keys:  1 2 3
+Values:  "a" "b" "c"
+Items:  (1, 'a') (2, 'b') (3, 'c')
+
+
+
+Bindings: {0: None, 1: None, 2: None, 3: None, 4: None}
+Keys:  0 1 2 3 4
+Values:  None None None None None
+Items:  (0, None) (1, None) (2, None) (3, None) (4, None)
+
+
+
+Bindings: {0: "DefaultValue", 1: "DefaultValue", 2: "DefaultValue", 3: "DefaultValue", 4: "DefaultValue"}
+Keys:  0 1 2 3 4
+Values:  "DefaultValue" "DefaultValue" "DefaultValue" "DefaultValue" "DefaultValue"
+Items:  (0, 'DefaultValue') (1, 'DefaultValue') (2, 'DefaultValue') (3, 'DefaultValue') (4, 'DefaultValue')
+
+
+
+Bindings: {"a": 1, "c": [], "b": 2.5}
+Keys:  a c b
+Values:  1 [] 2.5
+Items:  ('a', 1) ('c', []) ('b', 2.5)
+
+
+#####  Testing addition ordering
+After
+    bind = Bindings( [(1, "a"), (2, "b"), (3, "c")] )
+
+Bindings: {1: "a", 2: "b", 3: "c"}
+Keys:  1 2 3
+Values:  "a" "b" "c"
+Items:  (1, 'a') (2, 'b') (3, 'c')
+
+
+Then doing
+   bind[4] = "d"
+
+Bindings: {1: "a", 2: "b", 3: "c", 4: "d"}
+Keys:  1 2 3 4
+Values:  "a" "b" "c" "d"
+Items:  (1, 'a') (2, 'b') (3, 'c') (4, 'd')
+
+
+Note that binding an existing argument keeps the original order of keys, i.e. after
+bind[3] = "*C*"
+
+Bindings: {1: "a", 2: "b", 3: "*C*", 4: "d"}
+Keys:  1 2 3 4
+Values:  "a" "b" "*C*" "d"
+Items:  (1, 'a') (2, 'b') (3, '*C*') (4, 'd')
+
+
+Therefore, to change the order, one should do
+    del bind[3]
+    bind[3] = "newC"
+
+Bindings: {1: "a", 2: "b", 4: "d", 3: "newC"}
+Keys:  1 2 4 3
+Values:  "a" "b" "d" "newC"
+Items:  (1, 'a') (2, 'b') (4, 'd') (3, 'newC')
+
+
+#####  Testing iterators (hence ordering again...)
+Success!
+
+

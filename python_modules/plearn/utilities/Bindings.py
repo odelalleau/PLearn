@@ -44,20 +44,16 @@ class Bindings( object ):
         for item in iterator:
             pair = None
 
-            ## Key
-            if len(item) == 1:
+            try:
+                ilen = len(item)
+                if ilen != 2:
+                    raise ValueError(
+                        "The Bindings constructor should be provided a list of keys "
+                        "or pairs or a mapping object supporting iteritems." )
+                pair = item
+            except TypeError, err: # len() of unsized object
                 pair = (item, value)
 
-            ## Pair
-            elif len(item) == 2:
-                pair = item
-
-            else:
-                raise ValueError( "The Bindings constructor should be provided "
-                                  "a list of keys or pairs or a mapping "
-                                  "object supporting iteritems."
-                                  )
-            
             self.__setitem__( *pair )
 
     ## Emulating containers ##########################################    
@@ -221,6 +217,83 @@ class Bindings( object ):
         return key, self[key]
         
 
+#######  Embedded Tests  ######################################################
+
+def _print_bindings(b):
+    print "\nBindings: %s" % b
+
+    print "Keys: ",
+    for bkey in b.iterkeys():
+        print bkey,
+    print
+
+    print "Values: ",
+    for bval in b.itervalues():
+        print quote_if(bval),
+    print
+
+    print "Items: ",
+    for bitem in b.iteritems():
+        print bitem,
+    print
+
+    print "\n"
+
+
+def _test_ctors():
+    print "#####  Testing __init__ behaviours"    
+
+    bind = Bindings( [(1, "a"), (2, "b"), (3, "c")] )
+    _print_bindings(bind)
+
+    bind = Bindings( range(5) )
+    _print_bindings(bind)
+
+    bind = Bindings(range(5), "DefaultValue")
+    _print_bindings(bind)
+
+    bind = Bindings({"a":1, "b":2.5, "c":[]})
+    _print_bindings(bind)
+    
+def _test_ordering():
+    print "#####  Testing addition ordering"    
+
+    bind = Bindings( [(1, "a"), (2, "b"), (3, "c")] )
+    print 'After\n    bind = Bindings( [(1, "a"), (2, "b"), (3, "c")] )'
+    _print_bindings(bind)
+    
+    bind[4] = "d"
+    print 'Then doing\n   bind[4] = "d"' 
+    _print_bindings(bind)
+
+    bind[3] = "*C*"
+    print 'Note that binding an existing argument keeps the original order of keys, i.e. after'
+    print 'bind[3] = "*C*"'    
+    _print_bindings(bind)
+
+    del bind[3]
+    bind[3] = "newC"
+    print "Therefore, to change the order, one should do"
+    print '    del bind[3]'
+    print '    bind[3] = "newC"'
+    _print_bindings(bind)    
+
+def _test_iterators():
+    print "#####  Testing iterators (hence ordering again...)"    
+
+    list_of_pairs = [(1, "a"), (2, "b"), (3, "c"), (4, "d")]
+    bindings = Bindings(list_of_pairs)
+
+    iterkeys   = bindings.iterkeys()
+    itervalues = bindings.itervalues()
+    iteritems  = bindings.iteritems()
+    for pair in list_of_pairs:
+        assert pair[0] == iterkeys.next()
+        assert pair[1] == itervalues.next()
+        assert pair    == iteritems.next()
+    print "Success!"
+    print "\n"
+
 if __name__ == "__main__":
     print "\nEmbedded test/tutorial for Bindings.py.\n"
 
@@ -228,45 +301,6 @@ if __name__ == "__main__":
     print doc(Bindings)
     print 
     
-    def print_bindings(b):
-        print "\nBindings: %s" % b
-
-        print "Keys: ",
-        for bkey in b.iterkeys():
-            print bkey,
-        print
-
-        print "Values: ",
-        for bval in b.itervalues():
-            print quote_if(bval),
-        print
-
-        print "Items: ",
-        for bitem in b.iteritems():
-            print bitem,
-        print
-
-        print "\n"
-
-    bind = Bindings( [(1, "a"), (2, "b"), (3, "c")] )
-    print 'After\n    bind = Bindings( [(1, "a"), (2, "b"), (3, "c")] )'
-    print_bindings(bind)
-    
-    bind[4] = "d"
-    print 'Then doing\n   bind[4] = "d"' 
-    print_bindings(bind)
-
-    bind[3] = "*C*"
-    print 'Note that binding an existing argument keeps the original order of keys, i.e. after'
-    print 'bind[3] = "*C*"'    
-    print_bindings(bind)
-
-    del bind[3]
-    bind[3] = "newC"
-    print "Therefore, to change the order, one should do"
-    print '    del bind[3]'
-    print '    bind[3] = "newC"'
-    print_bindings(bind)
-
-    
-    
+    _test_ctors()
+    _test_ordering()
+    _test_iterators()
