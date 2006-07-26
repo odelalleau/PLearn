@@ -46,16 +46,19 @@
 #include <plearn/base/pl_repository_revision.h>
 #include <plearn/base/stringutils.h>
 #include <plearn/db/getDataSet.h>
+#include <plearn/io/fileutils.h>
 #include <plearn/io/pl_log.h>
 #include <plearn/math/random.h>
 #include <plearn/misc/Calendar.h>
 #include <plearn/misc/PLearnService.h>
-#include <plearn/sys/PLMPI.h>
 #include <plearn/vmat/VMat.h>
 
-//#define PL_PROFILE
+#if USING_MPI
+#include <plearn/sys/PLMPI.h>
+#endif
 
-#ifdef PL_PROFILE    
+//#define PL_PROFILE
+#ifdef PL_PROFILE
 #include <plearn/sys/Profiler.h>
 #endif
 
@@ -275,7 +278,9 @@ int plearn_main( int argc, char** argv,
     int EXIT_CODE = 0;
     try {
 
+#if USING_MPI
         PLMPI::init(&argc, &argv);
+#endif
 
         seed();
 
@@ -291,9 +296,11 @@ int plearn_main( int argc, char** argv,
             return 0;
         }
 
-        PLearnCommandRegistry::run(command, command_line);				
+        PLearnCommandRegistry::run(command, command_line);
+#if USING_MPI
         PLMPI::finalize();
-  
+#endif
+
     } // end of try
     catch(const PLearnError& e)
     {

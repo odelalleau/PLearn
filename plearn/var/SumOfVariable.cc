@@ -41,8 +41,11 @@
  ******************************************************* */
 
 #include "SumOfVariable.h"
-#include <plearn/sys/PLMPI.h>
 #include <plearn/display/DisplayUtils.h>
+
+#if USING_MPI
+#include <plearn/sys/PLMPI.h>
+#endif
 
 namespace PLearn {
 using namespace std;

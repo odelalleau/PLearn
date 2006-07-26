@@ -41,7 +41,6 @@
  ******************************************************* */
 
 #include "UnfoldedSumOfVariable.h"
-#include <plearn/sys/PLMPI.h>
 #include <plearn/display/DisplayUtils.h>
 
 namespace PLearn {

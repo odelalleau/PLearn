@@ -41,8 +41,11 @@
  ******************************************************* */
 
 #include "NegLogProbCostFunction.h"
-#include <plearn/sys/PLMPI.h>
 #include <plearn/math/TMat_maths.h>
+
+#if USING_MPI
+#include <plearn/sys/PLMPI.h>
+#endif
 
 namespace PLearn {
 using namespace std;
@@ -69,7 +72,7 @@ real NegLogProbCostFunction::evaluate(const Vec& output, const Vec& target) cons
     else 
     {
         if(!normalize) // we assume output gives a real probability for each class
-#if USING_MPI      
+#if USING_MPI
 #define SEND_PROB_TAG 981
         {
             // EACH CPU ONLY CARRIES THE CORRECT outputs IN THE INTERVAL
@@ -108,7 +111,7 @@ real NegLogProbCostFunction::evaluate(const Vec& output, const Vec& target) cons
 #endif
         else // outputs may not sum to 1, so we'll normalize them
         {
-#if USING_MPI      
+#if USING_MPI
             if (PLMPI::size>1 && out_end>=0)
                 PLERROR("condprob used in parallel mode: normalize not implemented");
 #endif
