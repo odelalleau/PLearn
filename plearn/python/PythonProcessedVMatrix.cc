@@ -128,8 +128,8 @@ void PythonProcessedVMatrix::declareOptions(OptionList& ol)
     declareOption(ol, "params", &PythonProcessedVMatrix::m_params,
                   OptionBase::buildoption,
                   "General-purpose parameters that are injected into the Python code\n"
-                  "snippet as a global variable under the name \"params\".  Can be used for\n"
-                  "passing processing arguments to the Python code.\n");
+                  "snippet and accessible via the getParam/setParam functions.  Can be\n"
+                  "used for passing processing arguments to the Python code.\n");
     
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -168,10 +168,6 @@ void PythonProcessedVMatrix::build_()
     python->setGlobalObject("source_targetsize",  source->targetsize());
     python->setGlobalObject("source_weightsize",  source->weightsize());
 
-    // Set the parameters if any are defined
-    if (! m_params.empty())
-        setParams(m_params);
-    
     // Get the new fieldnames (and the new width by the same token)
     TVec<string> fieldnames =
         python->invoke("getFieldNames", source->fieldNames()).as< TVec<string> >();
@@ -200,15 +196,6 @@ void PythonProcessedVMatrix::build_()
     // Finally, call the Python builder if one exists
     if (python->isInvokable("build"))
         python->invoke("build");
-}
-
-
-//#####  setParams  ###########################################################
-
-void PythonProcessedVMatrix::setParams(const map<string,string>& params)
-{
-    m_params = params;
-    python->setGlobalObject("params", params);
 }
 
 

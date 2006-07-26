@@ -130,8 +130,8 @@ public:
 
     /**
      *  General-purpose parameters that are injected into the Python code
-     *  snippet as a global variable under the name "params".  Can be used for
-     *  passing processing arguments to the Python code.
+     *  snippet and accessible via the getParam/setParam functions.  Can be
+     *  used for passing processing arguments to the Python code.
      */
     map<string,string> m_params;
 
@@ -141,11 +141,7 @@ public:
     //! Default constructor
     PythonProcessedVMatrix();
 
-    //! Set new parameters into the Python code snippet.  The option m_params
-    //! is updated as well
-    void setParams(const map<string,string>& params);
-    
-    
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
