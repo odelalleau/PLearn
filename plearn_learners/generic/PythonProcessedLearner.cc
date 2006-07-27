@@ -200,6 +200,66 @@ TVec<string> PythonProcessedLearner::getOutputNames() const
 }
 
 
+//#####  getParams  ###########################################################
+
+PythonObjectWrapper
+PythonProcessedLearner::getParams(const TVec<PythonObjectWrapper>& args) const
+{
+    if (args.size() != 0)
+        PLERROR("PythonProcessedLearner::getParams: expected 0 argument; got %d",
+                args.size());
+
+    return PythonObjectWrapper(m_params);
+}
+
+
+//#####  getParam  ############################################################
+
+PythonObjectWrapper
+PythonProcessedLearner::getParam(const TVec<PythonObjectWrapper>& args) const
+{
+    if (args.size() != 1)
+        PLERROR("PythonProcessedLearner::getParam: expected 1 argument; got %d",
+                args.size());
+    string key = args[0].as<string>();
+    map<string,string>::const_iterator found = m_params.find(key);
+    if (found != m_params.end())
+        return PythonObjectWrapper(found->second);
+    else
+        return PythonObjectWrapper();        // None
+}
+
+
+//#####  setParam  ############################################################
+
+PythonObjectWrapper
+PythonProcessedLearner::setParam(const TVec<PythonObjectWrapper>& args)
+{
+    if (args.size() != 2)
+        PLERROR("PythonProcessedLearner::setParam: expected 2 arguments; got %d",
+                args.size());
+    string key   = args[0].as<string>();
+    string value = args[1].as<string>();
+    m_params[key] = value;
+    return PythonObjectWrapper();
+}
+
+
+//#####  compileAndInject  ####################################################
+
+void PythonProcessedLearner::compileAndInject()
+{
+    if (! python) {
+        python = new PythonCodeSnippet(m_code);
+        assert( python );
+        python->build();
+        python->inject("getParams",    this, &PythonProcessedLearner::getParams);
+        python->inject("getParam",     this, &PythonProcessedLearner::getParam);
+        python->inject("setParam",     this, &PythonProcessedLearner::setParam);
+    }
+}
+
+
 } // end of namespace PLearn
 
 

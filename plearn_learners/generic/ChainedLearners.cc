@@ -214,14 +214,18 @@ TVec<string> ChainedLearners::getTrainCostNames() const
 
 
 TVec<string> ChainedLearners::getOutputNames() const
-{ return learners.lastElement()->getOutputNames(); }
+{
+    return learners.lastElement()->getOutputNames();
+}
 
 
 void ChainedLearners::setExperimentDirectory(const PPath& the_expdir)
 {
     inherited::setExperimentDirectory(the_expdir);
-    for(int k= 0; k < learners.length(); ++k)
-        learners[k]->setExperimentDirectory(the_expdir/("SubLearner_"+tostring(k)));
+    if (! the_expdir.empty())
+        for(int k= 0; k < learners.length(); ++k)
+            learners[k]->setExperimentDirectory(the_expdir /
+                                                ("SubLearner_"+tostring(k)));
 }
 
 
