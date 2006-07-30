@@ -100,10 +100,31 @@ public:
     // Build options inherited from learner:
     // inputsize, outputszie, targetsize, experiment_name, save_at_every_epoch 
 
-    // Build options:    
-    int nhidden;    // number of hidden units in first hidden layer (default:0)
-    int nhidden2;   // number of hidden units in second hidden layer (default:0)
-    int noutputs;   // number of output units (outputsize)
+
+    //#####  Public Build Options  ############################################
+
+    /// number of hidden units in first hidden layer (default:0)
+    int nhidden;
+
+    /// number of hidden units in second hidden layer (default:0)
+    int nhidden2;
+
+    /**
+     *  Number of output units. This gives this learner its outputsize.  It is
+     *  typically of the same dimensionality as the target for regression
+     *  problems.  But for classification problems where target is just the
+     *  class number, noutputs is usually of dimensionality number of classes
+     *  (as we want to output a score or probability vector, one per class).
+     *
+     *  The default value is 0, which is caught at build-time and gives an
+     *  error.  If a value of -1 is put, noutputs is set from the targetsize of
+     *  the trainingset the first time setTrainingSet() is called on the
+     *  learner (appropriate for regression scenarios).  This allows using the
+     *  learner as a 'template' without knowing in advance the number of
+     *  outputs it should have to handle.  Future extensions will cover the
+     *  case of automatically discovering the outputsize for classification.
+     */
+    int noutputs;
 
     real weight_decay; // default: 0
     real bias_decay;   // default: 0 
@@ -159,6 +180,14 @@ public:
 
     virtual void build();
     virtual void forget(); // simply calls initializeParams()
+
+    /**
+     *  Overridden to support the case where noutputs==-1, in which case
+     *  noutputs is set automatically from the targetsize of the training set
+     *  (correct for the regression case; should be extended to cover
+     *  classification scenarios in the future as well.)
+     */
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
     virtual int outputsize() const;
     virtual TVec<string> getTrainCostNames() const;
