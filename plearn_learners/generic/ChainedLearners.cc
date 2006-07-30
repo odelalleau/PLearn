@@ -184,12 +184,14 @@ void ChainedLearners::computeOutput(const Vec& input, Vec& output) const
         learners[0]->computeOutput(input, output);
     else
     {
+        tmp_output.resize(learners[0]->outputsize());
         learners[0]->computeOutput(input, tmp_output);
         for(int k=1; k<nlearners-1; k++)
         {
             int n = tmp_output.length();
             tmp_input.resize(n);
             tmp_input << tmp_output;
+            tmp_output->resize(learners[k]->outputsize());
             learners[k]->computeOutput(tmp_input, tmp_output);
         }
         learners[nlearners-1]->computeOutput(tmp_output, output);
