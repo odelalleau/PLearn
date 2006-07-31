@@ -388,6 +388,7 @@ void convolve2Dbackprop(const Mat& source_image, const Mat& kernel,
     real* s = source_image.data();
     real* dCds = dC_dsource_image.data();
     real* dCdd = dC_ddest_image.data();
+
     for (int i=0;i<n1d;i++,s+=sm*step1,dCds+=dCdsm*step1,dCdd+=dCddm)
     {
         real* s1 = s; // copy to iterate over columns
