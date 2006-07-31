@@ -50,9 +50,11 @@
 namespace PLearn {
 
 /**
- * This class propagates the 'tanh' function forwards, and its gradient
- * and diagonal of the Hessian backwards.
+ * This class propagates a (possibly scaled) 'tanh' function.
  *
+ * The output is ex_scale( in_scale * input ), for each coordinate.
+ * Usually in_scale = ex_scale = 1, but the values in_scale = 2/3 and
+ * ex_scale = 1.7159 are also used.
  */
 class TanhModule : public OnlineLearningModule
 {
@@ -60,7 +62,8 @@ class TanhModule : public OnlineLearningModule
 
 public:
     //#####  Public Build Options  ############################################
-
+    real in_scale;
+    real ex_scale;
 
 public:
     //#####  Public Member Functions  #########################################

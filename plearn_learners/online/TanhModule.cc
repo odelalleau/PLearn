@@ -48,13 +48,14 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     TanhModule,
-    "Propagates Tanh function",
+    "Propagates a (possibly scaled) Tanh function",
     "This class propagates the \'tanh\' function forwards, and its gradient\n"
     "and diagonal of the Hessian backwards.\n"
     );
 
-TanhModule::TanhModule()
-    /* ### Initialize all fields to their default value */
+TanhModule::TanhModule() :
+    in_scale(1),
+    ex_scale(1)
 {
 }
 
@@ -73,7 +74,7 @@ void TanhModule::fprop(const Vec& input, Vec& output) const
     output.resize( output_size );
     for( int i=0 ; i<output_size ; i++ )
     {
-        output[i] = tanh( input[i] );
+        output[i] = ex_scale * tanh( in_scale * input[i] );
     }
 }
 
@@ -144,9 +145,11 @@ void TanhModule::bpropUpdate(const Vec& input, const Vec& output,
     {
         real output_i = output[i];
         if( is_final_cost )
-            input_gradient[i] = (1 - output_i*output_i);
+            input_gradient[i] = in_scale *
+                (ex_scale - output_i*output_i/ex_scale);
         else
-            input_gradient[i] = (1 - output_i*output_i)*output_gradient[i];
+            input_gradient[i] = in_scale *
+                (ex_scale - output_i*output_i/ex_scale)*output_gradient[i];
     }
 
 }
@@ -202,9 +205,9 @@ void TanhModule::bbpropUpdate(const Vec& input, const Vec& output,
     for( int i=0 ; i<input_size ; i++ )
     {
         real output_i = output[i];
-        real fprime_i = (1-output_i*output_i);
+        real fprime_i = in_scale * (ex_scale-output_i*output_i / ex_scale);
         if( is_final_cost )
-            input_diag_hessian[i] = -2*fprime_i*output_i;
+            input_diag_hessian[i] = -2*in_scale/ex_scale*fprime_i*output_i;
         else
         {
             if( estimate_simpler_diag_hessian )
@@ -213,7 +216,7 @@ void TanhModule::bbpropUpdate(const Vec& input, const Vec& output,
             else
                 input_diag_hessian[i] =
                     fprime_i*fprime_i*output_diag_hessian[i]
-                    - 2*fprime_i * output_i * output_gradient[i];
+                    - 2*in_scale/ex_scale*fprime_i*output_i*output_gradient[i];
         }
     }
 
