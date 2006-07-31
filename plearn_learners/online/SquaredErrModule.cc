@@ -133,9 +133,11 @@ void SquaredErrModule::bpropUpdate(const Vec& input, const Vec& output,
     }
     if( og_size == 0 )
     {
+        /*
         PLWARNING("SquaredErrModule::bpropUpdate: you are not providing"
                   "output_gradient.\n"
                   "Assuming this is the final cost, and output_gradient=1.\n");
+         */
         is_final_cost = true;
     }
     else if( og_size != output_size )
