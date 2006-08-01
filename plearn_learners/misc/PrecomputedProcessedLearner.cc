@@ -42,6 +42,7 @@
 #include <plearn/io/pl_log.h>
 #include <plearn/vmat/PrecomputedVMatrix.h>
 #include <plearn/vmat/MemoryVMatrix.h>
+#include <plearn/sys/procinfo.h>
 
 namespace PLearn {
 using namespace std;
@@ -156,6 +157,9 @@ VMat PrecomputedProcessedLearner::processDataSet(VMat dataset) const
 {
     VMat raw_processed = inherited::processDataSet(dataset);
 
+    DBG_MODULE_LOG << "BEFORE PRECOMPUTE. Process memory: "
+                   << getProcessDataMemory() << endl;
+
     MODULE_LOG << "Precomputing "
                << raw_processed.length() << 'x' << raw_processed.width()
                << " to " << m_precomp_type
@@ -163,6 +167,10 @@ VMat PrecomputedProcessedLearner::processDataSet(VMat dataset) const
     
     if (m_precomp_type == "memory") {
         Mat precomp = raw_processed.toMat();
+
+        DBG_MODULE_LOG << "AFTER PRECOMPUTE. Process memory: "
+                       << getProcessDataMemory() << endl;
+
         return VMat(precomp);
     }
     else {
@@ -176,6 +184,10 @@ VMat PrecomputedProcessedLearner::processDataSet(VMat dataset) const
         precomp->precomp_type = m_precomp_type;
         precomp->build();
         precomp->setMetaDataDir(expdir / "precomputed_processed.metadata");
+
+        DBG_MODULE_LOG << "AFTER PRECOMPUTE. Process memory: "
+                       << getProcessDataMemory() << endl;
+
         return (VMatrix*)precomp;
     }
 }
