@@ -1,0 +1,17 @@
+# This test file will generate a simple vmat containing 10 examples sampled
+# uniformly in [0,1], with a fixed arbitrary seed.
+
+VMatrixFromDistribution( 
+    # PP< PDistribution >: The distribution this matrix will be generated from
+    distr =
+        UniformDistribution( 
+            # TVec< double >: The inferior bound for all intervals.
+            min = 1 [ 0 ]
+            # TVec< double >: The superior bound for all intervals.
+            max = 1 [ 1 ]
+        );
+    # long: The initial generator_seed to initialize the distribution's generator
+    generator_seed = 484930
+    # int: number of samples to draw
+    nsamples = 10
+)
