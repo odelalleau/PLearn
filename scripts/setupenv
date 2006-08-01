@@ -13,7 +13,7 @@ export PLEARNDIR="`pwd`"
 export PLEARN_LIBDIR="$PLEARNDIR/external_libs"
 
 # Set up path for shell and python
-export PATH="$PLEARNDIR/scripts:$PLEARNDIR/commands:/usr/local/bin:$PATH"
+export PATH="$PLEARNDIR/scripts:$PLEARNDIR/commands:$PATH"
 export PYTHONPATH="$PLEARNDIR/python_modules"
 
 exec "$@"
