@@ -1132,7 +1132,7 @@ void VMatrix::loadAllStringMappings()
     if (! hasMetaDataDir() || ! isdir(getSFIFDirectory()))
         return;
 
-    PPath finfo = getMetaDataDir() / "FieldInfo";
+    PPath finfo = getSFIFDirectory();
     if (!force_mkdir(finfo))
         return;
 
