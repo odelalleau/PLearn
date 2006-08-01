@@ -22,6 +22,9 @@ class __injected_functions:
             return injected[key]
         raise AttributeError, key
 
+    def __str__(self):
+        return str(CURRENT_SNIPPET[-1])
+
     def update(self, injected):
         assert CURRENT_SNIPPET
         self._snippet_map[CURRENT_SNIPPET[-1]] = injected
