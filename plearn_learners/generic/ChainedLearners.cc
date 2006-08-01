@@ -224,7 +224,7 @@ TVec<string> ChainedLearners::getOutputNames() const
 void ChainedLearners::setExperimentDirectory(const PPath& the_expdir)
 {
     inherited::setExperimentDirectory(the_expdir);
-    if (! the_expdir.empty())
+    if (! the_expdir.isEmpty())
         for(int k= 0; k < learners.length(); ++k)
             learners[k]->setExperimentDirectory(the_expdir /
                                                 ("SubLearner_"+tostring(k)));
