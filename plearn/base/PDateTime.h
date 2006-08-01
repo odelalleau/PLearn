@@ -145,6 +145,10 @@ public:
   (if still existing...) for details.
 */
     double toJulianDay() const;
+
+    //! Return a PDateTime object corresponding to the current local date
+    //! and time.
+    static PDateTime currentLocalTime();
 };
 
 //!  subtract two dates, the result being counted in days (+ fractions)

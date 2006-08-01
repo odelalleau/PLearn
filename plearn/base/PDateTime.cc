@@ -108,6 +108,9 @@ void PDateTime::setMissing()
     day = 0;
 }  
   
+//////////
+// info //
+//////////
 string PDateTime::info() const
 {
     return tostring(year)+ slash+
@@ -118,6 +121,21 @@ string PDateTime::info() const
         right(tostring(int(sec)),   2, '0');
 }
 
+//////////////////////
+// currentLocalTime //
+//////////////////////
+PDateTime PDateTime::currentLocalTime() {
+    time_t current;
+    tm* ptr;
+    time(&current);
+    ptr = ::localtime(&current);
+    return PDateTime(ptr->tm_year + 1900, ptr->tm_mon + 1, ptr->tm_mday,
+                     ptr->tm_hour, ptr->tm_min, ptr->tm_sec);
+}
+
+/////////////////
+// toJulianDay //
+/////////////////
 double PDateTime::toJulianDay() const
 {
     if (year < 1582)
@@ -192,6 +210,7 @@ int delta_seconds(const PDateTime& current, const PDateTime& past)
 
     return int( round(delta_days*SECONDS_PER_DAY) ); 
 }
+
 
 } // end of namespace PLearn
 
