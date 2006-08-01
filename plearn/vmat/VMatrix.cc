@@ -1131,21 +1131,7 @@ void VMatrix::loadAllStringMappings()
 {
     if (! hasMetaDataDir() || ! isdir(getSFIFDirectory()))
         return;
-
-    PPath finfo = getSFIFDirectory();
-    if (!force_mkdir(finfo))
-        return;
-
-    // If there are no .smap files, there is no need to waste time checking for
-    // their existence.
-    vector<PPath> entries = PLearn::lsdir_fullpath(finfo);
-    vector<PPath>::const_iterator it = entries.begin();
-    for (; it != entries.end(); it++)
-        if (it->extension(true) == ".smap")
-            break;
-    if (it == entries.end())
-        return;
-
+    
     for(int i=0;i<width();i++)
         loadStringMapping(i);
 }
