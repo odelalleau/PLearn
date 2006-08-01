@@ -148,8 +148,8 @@ void convolve1Dbackprop(const Vec& source_signal, const Vec& kernel,
     if (ns!=step*(nd-1)+nk)
         PLERROR("convolve1Dbackprop: source_signal.length() (%d) should"
                 " equal %d:\n"
-                "step (%d) * (dC_ddest_signal.length() (%d) - 1) + kernel.length()"
-                " (%d)\n",
+                "step (%d) * (dC_ddest_signal.length() (%d) - 1) +"
+                " kernel.length() (%d)\n",
                 ns,step*(nd-1)+nk,step,nd,nk);
     if (dC_dsource_signal.length()!=ns)
         PLERROR("convolve1Dbackprop: source_signal.length() (%d) should"
@@ -186,6 +186,48 @@ void convolve1Dbackprop(const Vec& source_signal, const Vec& kernel,
         }
     }
 }
+
+//! Same as above, but increments only dC/dkernel, not dC/dsource_signal
+//!    dC/dkernel[j] += sum_{k=0}^{ND-1} 1_{k>=j && k-j<ND} dC_ddest_signal[k-j]*source_signal[k]
+//! (consider the equivalence: k = i+j)
+void convolve1Dbackprop(const Vec& source_signal,
+                        const Vec& dC_ddest_signal,
+                        const Vec& dC_dkernel,
+                        int step=1, bool accumulate=true)
+{
+    int ns=source_signal.length();
+    int nk=dC_dkernel.length();
+    int nd=dC_ddest_signal.length();
+#ifdef BOUNDCHECK
+    if (step<1)
+        PLERROR("convolve1Dbackprop: step (%d) should be a positive integer\n",
+                step);
+    if (ns!=step*(nd-1)+nk)
+        PLERROR("convolve1Dbackprop: source_signal.length() (%d) should"
+                " equal %d:\n"
+                "step (%d) * (dC_ddest_signal.length() (%d) - 1) +"
+                " dC_dkernel.length() (%d)\n",
+                ns,step*(nd-1)+nk,step,nd,nk);
+#endif
+    if (!accumulate)
+        dC_dkernel.clear();
+
+    real* s=source_signal.data();
+    real* dCdk=dC_dkernel.data();
+    real* dCdd=dC_ddest_signal.data();
+
+    //! for i=0 to nd-1:
+    //!   for j=0 to nk-1:
+    //!     dC_dkernel[j] += dC_ddest_signal[i]*source_signal[i*step+j]
+    for (int i=0;i<nd;i++,s+=step)
+    {
+        real di=dCdd[i];
+        for (int j=0;j<nk;j++)
+            dCdk[j] += di*s[j];
+    }
+}
+
+
 //! Increment dC/ddest_signal and dC/dkernel, given dC/ddest_signal, with
 //! source_signal computed as per
 //! backConvolve1D(source_signal, kernel, dest_signal):
@@ -246,6 +288,47 @@ void backConvolve1Dbackprop(const Vec& kernel, const Vec& dest_signal,
             dCdk[j] += dCds[j]*di;
         }
         dCdd[i] += dCdd_i_sum;
+    }
+}
+
+
+//! Same as above, but increments only dC/dkernel, not  dC/ddest_signal
+//!    dC/dkernel[j] += sum_{i=0}^{ND-1} dC_dsource_signal[i+j]*dest_signal[i]
+void backConvolve1Dbackprop(const Vec& dest_signal,
+                            const Vec& dC_dsource_signal,
+                            const Vec& dC_dkernel,
+                            int step=1, bool accumulate=true)
+{
+    int ns=dC_dsource_signal.length();
+    int nk=dC_dkernel.length();
+    int nd=dest_signal.length();
+#ifdef BOUNDCHECK
+    if (step<1)
+        PLERROR("backConvolve1Dbackprop: step (%d) should be a positive"
+                " integer\n",
+                step);
+    if (ns!=step*(nd-1)+nk)
+        PLERROR("backConvolve1Dbackprop: dC_dsource_signal.length() (%d)\n"
+                "should equal %d:\n"
+                "step (%d) * (dest_signal.length() (%d) - 1) + dC_dkernel.length()"
+                " (%d)\n",
+                ns,step*(nd-1)+nk,step,nd,nk);
+#endif
+    if (!accumulate)
+        dC_dkernel.clear();
+
+    real* dCdk=dC_dkernel.data();
+    real* d=dest_signal.data();
+    real* dCds=dC_dsource_signal.data();
+
+    //! for i=0 to nd-1:
+    //!   for j=0 to nk-1:
+    //!     dC_dkernel[j] += dC_dsource_signal[i*step+j]*dest_signal[i]
+    for (int i=0;i<nd;i++,dCds+=step)
+    {
+        real di = d[i];
+        for (int j=0;j<nk;j++)
+            dCdk[j] += dCds[j]*di;
     }
 }
 
@@ -474,6 +557,72 @@ void convolve2Dbackprop(const Mat& source_image, const Mat& kernel,
         }
     }
 }
+
+
+//! As above, but increments only dC/dkernel, not dC/dsource_image
+//! for i1=0 to N1D-1:
+//!  for i2=0 to N2D-1:
+//!   for j1=0 to N1K-1:
+//!    for j2=0 to N2K-1:
+//!     dC/dkernel[j1,j2] += dC/dest_image[i1,i2]*source_image[i1+j1,i2+j2]
+void convolve2Dbackprop(const Mat& source_image,
+                        const Mat& dC_ddest_image,
+                        const Mat& dC_dkernel,
+                        int step1=1, int step2=1, bool accumulate=true)
+{
+    int n1s=source_image.length();
+    int n2s=source_image.width();
+    int n1k=dC_dkernel.length();
+    int n2k=dC_dkernel.width();
+    int n1d=dC_ddest_image.length();
+    int n2d=dC_ddest_image.width();
+#ifdef BOUNDCHECK
+    if (step1<1)
+        PLERROR("convolve2Dbackprop: step1 (%d) should be a positive integer\n",
+                step1);
+    if (n1s!=step1*(n1d-1)+n1k)
+        PLERROR("convolve2Dbackprop: source_image.length() (%d) should equal"
+                " %d:\n"
+                "step1 (%d) * (dest_image.length() (%d) - 1) +"
+                " dC_dkernel.length() (%d)\n",
+                n1s,step1*(n1d-1)+n1k,step1,n1d,n1k);
+
+    if (step2<1)
+        PLERROR("convolve2Dbackprop: step2 (%d) should be a positive integer\n",
+                step2);
+    if (n2s!=step2*(n2d-1)+n2k)
+        PLERROR("convolve2Dbackprop: source_image.width() (%d) should equal"
+                " %d:\n"
+                "step2 (%d) * (dest_image.width() (%d) - 1) +"
+                " dC_dkernel.width() (%d)\n",
+                n2s,step2*(n2d-1)+n2k,step2,n2d,n2k);
+#endif
+    if (!accumulate)
+        dC_dkernel.clear();
+
+    int sm = source_image.mod();
+    int dCdkm = dC_dkernel.mod();
+    int dCddm = dC_ddest_image.mod();
+
+    real* s = source_image.data();
+    real* dCdd = dC_ddest_image.data();
+
+    for (int i=0;i<n1d;i++,s+=sm*step1,dCdd+=dCddm)
+    {
+        real* s1 = s; // copy to iterate over columns
+        for (int j=0;j<n2d;j++,s1+=step2)
+        {
+            real* dCdk = dC_dkernel.data();
+            real* ss = s1; // copy to iterate over sub-rows
+            real dCdd_ij=dCdd[j];
+            for (int l=0;l<n1k;l++,ss+=sm,dCdk+=dCdkm)
+                for (int m=0;m<n2k;m++)
+                    dCdk[m] += dCdd_ij * ss[m];
+        }
+    }
+}
+
+
 //! Increment dC/ddest_image and dC/dkernel, given dC/dsource_image, with
 //! source_image computed as per
 //! backConvolve2D(source_image, kernel, dest_image):
@@ -569,6 +718,71 @@ void backConvolve2Dbackprop(const Mat& kernel, const Mat& dest_image,
                 }
             }
             dCdd[j] += dCdd_ij_sum;
+        }
+    }
+}
+
+//! As above, but increments only dC/dkernel, not dC/ddest_image
+//! for i1=0 to N1D-1:
+//!  for i2=0 to N2D-1:
+//!   for j1=0 to N1K-1:
+//!    for j2=0 to N2K-1:
+//!     dC/dkernel[j1,j2] += dC/dsource_image[i1+j1,i2+j2]*dest_image[i1,i2]
+void backConvolve2Dbackprop(const Mat& dest_image,
+                            const Mat& dC_dsource_image,
+                            const Mat& dC_dkernel,
+                            int step1=1, int step2=1, bool accumulate=true)
+{
+    int n1s=dC_dsource_image.length();
+    int n2s=dC_dsource_image.width();
+    int n1k=dC_dkernel.length();
+    int n2k=dC_dkernel.width();
+    int n1d=dest_image.length();
+    int n2d=dest_image.width();
+#ifdef BOUNDCHECK
+    if (step1<1)
+        PLERROR("backConvolve2Dbackprop: step1 (%d) should be a positive"
+                " integer\n",
+                step1);
+    if (n1s!=step1*(n1d-1)+n1k)
+        PLERROR("backConvolve2Dbackprop: dC_dsource_image.length() (%d)\n"
+                "should equal %d:\n"
+                "step1 (%d) * (dest_image.length() (%d) - 1) +"
+                " dC_dkernel.length() (%d)\n",
+                n1s,step1*(n1d-1)+n1k,step1,n1d,n1k);
+
+    if (step2<1)
+        PLERROR("backConvolve2Dbackprop: step2 (%d) should be a positive"
+                " integer\n",
+                step2);
+    if (n2s!=step2*(n2d-1)+n2k)
+        PLERROR("backConvolve2Dbackprop: source_image.width() (%d)\n"
+                "should equal %d:\n"
+                "step2 (%d) * (dest_image.width() (%d) - 1) +"
+                " dC_dkernel.width() (%d)\n",
+                n2s,step2*(n2d-1)+n2k,step2,n2d,n2k);
+#endif
+    if (!accumulate)
+        dC_dkernel.clear();
+
+    int dCdkm = dC_dkernel.mod();
+    int dm = dest_image.mod();
+    int dCdsm = dC_dsource_image.mod();
+
+    real* d = dest_image.data();
+    real* dCds = dC_dsource_image.data();
+
+    for (int i=0;i<n1d;i++,d+=dm,dCds+=dCdsm*step1)
+    {
+        real* dCds1 = dCds; // copy to iterate over columns
+        for (int j=0;j<n2d;j++,dCds1+=step2)
+        {
+            real* dCdk = dC_dkernel.data();
+            real* dCdss = dCds1; // copy to iterate over sub-rows
+            real d_ij=d[j];
+            for (int l=0;l<n1k;l++,dCdss+=dCdsm,dCdk+=dCdkm)
+                for (int m=0;m<n2k;m++)
+                    dCdk[m] += dCdss[m]*d_ij;
         }
     }
 }
