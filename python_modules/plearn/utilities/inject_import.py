@@ -6,7 +6,7 @@ def setCurrentSnippet(handle):
 
 def resetCurrentSnippet():
     CURRENT_SNIPPET.pop(-1)
-    
+
 # Class managing the injected functions
 class __injected_functions:        
     def __init__(self, injected):
@@ -14,7 +14,8 @@ class __injected_functions:
         self.__dict__['_snippet_map'] = { CURRENT_SNIPPET[-1] : injected }
 
     def __setattr__(self, key, val):
-        raise TypeError("Read-only object.")
+        injected = self._snippet_map[CURRENT_SNIPPET[-1]]
+        injected[key] = val
 
     def __getattr__(self, key):
         injected = self._snippet_map[CURRENT_SNIPPET[-1]]
