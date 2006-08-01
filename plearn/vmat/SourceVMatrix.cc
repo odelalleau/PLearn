@@ -89,7 +89,7 @@ void SourceVMatrix::setMetaDataDir(const PPath& the_metadatadir)
         source->setMetaDataDir(the_metadatadir/"Source");
 
     // Set mapping and info files from source if not set
-    if(hasFieldInfos())
+    if(isdir(getSFIFDirectory()) && hasFieldInfos())
     {
         for(int j=0; j<width_; j++)
         {
