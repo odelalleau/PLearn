@@ -575,6 +575,10 @@ class plopt(object):
                       if isinstance(holder.__dict__[key], plopt) ])
     iterator = staticmethod(iterator)
 
+    def optdict(holder):
+        return dict([ (opt.getName(), opt.get()) for opt in plopt.iterator(holder) ])
+    optdict = staticmethod(optdict)
+
     def override(holder, option, value):
         """Typical pattern to override the value of an existing plopt instance."""
         plopt_instance = type.__getattribute__(holder, option)
@@ -697,8 +701,7 @@ class plargs(object):
             else:
                 setattr(holder, option, value)
     parse = staticmethod(parse)
-
-
+    
     #######  Metaclass  ###########################################################
     
     class __metaclass__(type):
