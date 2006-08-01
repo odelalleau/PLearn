@@ -16,4 +16,7 @@ export PLEARN_LIBDIR="$PLEARNDIR/external_libs"
 export PATH="$PLEARNDIR/scripts:$PLEARNDIR/commands:$PATH"
 export PYTHONPATH="$PLEARNDIR/python_modules"
 
+# Temporary workaround
+export DISTCC_HOSTS="@inari/4"
+
 exec "$@"
