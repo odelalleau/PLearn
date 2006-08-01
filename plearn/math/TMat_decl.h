@@ -347,6 +347,9 @@ public:
 
     bool hasMissing() const
     {
+        if ( isEmpty() )
+            return false;
+        
         iterator it = begin();
         iterator itend = end();
         for(; it!=itend; ++it)
