@@ -112,26 +112,45 @@ VMatrix::VMatrix(int the_length, int the_width, bool call_build_):
 ////////////////////
 void VMatrix::declareOptions(OptionList & ol)
 {
-    declareOption(ol, "writable", &VMatrix::writable, OptionBase::buildoption, "Are write operations permitted?");
-    declareOption(ol, "length", &VMatrix::length_, OptionBase::buildoption,
-                  "Length of the matrix (number of rows)");
-    declareOption(ol, "width", &VMatrix::width_, OptionBase::buildoption,
-                  "Width of the matrix (number of columns; -1 indicates this varies from sample to sample...)");
-    declareOption(ol, "inputsize", &VMatrix::inputsize_, OptionBase::buildoption,
-                  "Size of input part (-1 if variable or unspecified, 0 if no input)");
-    declareOption(ol, "targetsize", &VMatrix::targetsize_, OptionBase::buildoption,
-                  "Size of target part (-1 if variable or unspecified, 0 if no target)");
-    declareOption(ol, "weightsize", &VMatrix::weightsize_, OptionBase::buildoption,
-                  "Size of weights (-1 if unspecified, 0 if no weight, 1 for sample weight, >1 currently not supported).");
-    declareOption(ol, "extrasize", &VMatrix::extrasize_, OptionBase::buildoption,
-                  "Size of extra fields (additional info). Defaults to 0");
-    declareOption(ol, "metadatadir", &VMatrix::metadatadir, OptionBase::buildoption,
-                  "A directory in which to store meta-information for this matrix \n"
-                  "You don't always have to give this explicitly. For ex. if your \n"
-                  "VMat is the outer VMatrix in a .vmat file, the metadatadir will \n"
-                  "automatically be set to name_of_vmat_file.metadata/ \n"
-                  "And if it is the source inside another VMatrix that sets its \n"
-                  "metadatadir, it will often be set from that surrounding vmat's metadata.\n");
+    declareOption(
+        ol, "writable", &VMatrix::writable, OptionBase::buildoption,
+        "Are write operations permitted?");
+
+    declareOption(
+        ol, "length", &VMatrix::length_, OptionBase::buildoption,
+        "Length of the matrix (number of rows)");
+
+    declareOption(
+        ol, "width", &VMatrix::width_, OptionBase::buildoption,
+        "Width of the matrix (number of columns; -1 indicates this varies\n"
+        "from sample to sample...)");
+
+    declareOption(
+        ol, "inputsize", &VMatrix::inputsize_, OptionBase::buildoption,
+        "Size of input part (-1 if variable or unspecified, 0 if no input)");
+
+    declareOption(
+        ol, "targetsize", &VMatrix::targetsize_, OptionBase::buildoption,
+        "Size of target part (-1 if variable or unspecified, 0 if no target)");
+
+    declareOption(
+        ol, "weightsize", &VMatrix::weightsize_, OptionBase::buildoption,
+        "Size of weights (-1 if unspecified, 0 if no weight, 1 for sample\n"
+        "weight, >1 currently not supported).");
+
+    declareOption(
+        ol, "extrasize", &VMatrix::extrasize_, OptionBase::buildoption,
+        "Size of extra fields (additional info). Defaults to 0");
+
+    declareOption(
+        ol, "metadatadir", &VMatrix::metadatadir, OptionBase::buildoption,
+        "A directory in which to store meta-information for this matrix \n"
+        "You don't always have to give this explicitly. For ex. if your \n"
+        "VMat is the outer VMatrix in a .vmat file, the metadatadir will \n"
+        "automatically be set to name_of_vmat_file.metadata/ \n"
+        "And if it is the source inside another VMatrix that sets its \n"
+        "metadatadir, it will often be set from that surrounding vmat's metadata.\n");
+    
     inherited::declareOptions(ol);
 }
 
@@ -141,16 +160,29 @@ void VMatrix::declareOptions(OptionList & ol)
 void VMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-    deepCopyField(get_row, copies);
-    deepCopyField(dotrow_1, copies);
-    deepCopyField(dotrow_2, copies);
+    deepCopyField(get_row,     copies);
+    deepCopyField(dotrow_1,    copies);
+    deepCopyField(dotrow_2,    copies);
     deepCopyField(field_stats, copies);
-    deepCopyField(map_sr, copies);
-    deepCopyField(map_rs, copies);
-    deepCopyField(fieldinfos, copies);
-    deepCopyField(fieldstats, copies);
+    deepCopyField(map_sr,      copies);
+    deepCopyField(map_rs,      copies);
+    deepCopyField(fieldinfos,  copies);
+    deepCopyField(fieldstats,  copies);
+
     // TODO See if we can deep-copy a PStream (and what it means).
 }
+
+/////////////////
+// init_map_sr //
+/////////////////
+void VMatrix::init_map_sr() const
+{
+    if (map_sr.length()==0 || map_sr.length() != width()) {
+        map_sr.resize(width());
+        map_rs.resize(width());
+    }
+}
+
 
 ///////////////////
 // getFieldInfos //
@@ -635,6 +667,18 @@ string VMatrix::resolveFieldInfoLink(const PPath& target, const PPath& source)
     else return contents;
 }
 
+//////////////////////
+// getSFIFDirectory //
+//////////////////////
+PPath VMatrix::getSFIFDirectory() const
+{
+    PPath meta = getMetaDataDir();
+    if (meta.empty())
+        PLERROR("%s: cannot have a SFIFDirectory if there is no metadatadir",
+                __FUNCTION__);
+    return meta / "FieldInfo";
+}
+
 /////////////////////
 // setSFIFFilename //
 /////////////////////
@@ -646,7 +690,7 @@ void VMatrix::setSFIFFilename(int col, string ext, const PPath& filepath)
 void VMatrix::setSFIFFilename(string fieldname, string ext, const PPath& filepath)
 {
     PPath target      = makeFileNameValid(fieldname+ext);
-    PPath normalfname = getMetaDataDir() / "FieldInfo" / target;
+    PPath normalfname = getSFIFDirectory() / target;
     PPath normalfname_lnk = normalfname + ".lnk";
 
     rm(normalfname_lnk);
@@ -672,8 +716,8 @@ PPath VMatrix::getSFIFFilename(int col, string ext)
 PPath VMatrix::getSFIFFilename(string fieldname, string ext)
 {
     PPath  target           = makeFileNameValid(fieldname+ext);
-    PPath  normalfname      = getMetaDataDir() / "FieldInfo" / target;
-    string defaultlinkfname = getMetaDataDir() / "FieldInfo" / "__default.lnk";
+    PPath  normalfname      = getSFIFDirectory() / target;
+    string defaultlinkfname = getSFIFDirectory() / "__default.lnk";
 
     if(isfile(normalfname))
         return normalfname;
@@ -696,7 +740,7 @@ bool VMatrix::isSFIFDirect(int col, string ext)
 bool VMatrix::isSFIFDirect(string fieldname, string ext)
 {
     PPath target      = makeFileNameValid(fieldname+ext);
-    PPath normalfname = getMetaDataDir() / "FieldInfo" / target;
+    PPath normalfname = getSFIFDirectory() / target;
     return getSFIFFilename(fieldname,ext) == normalfname;
 }
 
@@ -1085,6 +1129,9 @@ PPath VMatrix::getMetaDataDir() const
 ///////////////////////////
 void VMatrix::loadAllStringMappings()
 {
+    if (! hasMetaDataDir() || ! isdir(getSFIFDirectory()))
+        return;
+    
     for(int i=0;i<width();i++)
         loadStringMapping(i);
 }
@@ -1098,8 +1145,7 @@ void VMatrix::loadStringMapping(int col)
         return;
     PPath fname = getSFIFFilename(col,".smap");
     init_map_sr();
-    force_mkdir( getMetaDataDir() / "FieldInfo" );
-
+    force_mkdir( getSFIFDirectory() );
     if(!isfile(fname))
         return;
 
