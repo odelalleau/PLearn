@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// Subsampling2DModule.cc
+// Supersampling2DModule.cc
 //
 // Copyright (C) 2006 Pascal Lamblin
 //
@@ -34,13 +34,13 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file Subsampling2DModule.cc */
+/*! \file Supersampling2DModule.cc */
 
 
-#define PL_LOG_MODULE_NAME "Subsampling2DModule"
+#define PL_LOG_MODULE_NAME "Supersampling2DModule"
 #include <plearn/io/pl_log.h>
 
-#include "Subsampling2DModule.h"
+#include "Supersampling2DModule.h"
 #include <plearn/math/Convolutions.h>
 #include <plearn/math/TMat_maths.h>
 
@@ -48,11 +48,11 @@ namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
-    Subsampling2DModule,
+    Supersampling2DModule,
     "Apply convolution filters on (possibly multiple) 2D inputs (images)",
     "");
 
-Subsampling2DModule::Subsampling2DModule() :
+Supersampling2DModule::Supersampling2DModule() :
     n_input_images(1),
     input_images_length(-1),
     input_images_width(-1),
@@ -70,46 +70,46 @@ Subsampling2DModule::Subsampling2DModule() :
 {
 }
 
-void Subsampling2DModule::declareOptions(OptionList& ol)
+void Supersampling2DModule::declareOptions(OptionList& ol)
 {
-    // declareOption(ol, "myoption", &Subsampling2DModule::myoption,
+    // declareOption(ol, "myoption", &Supersampling2DModule::myoption,
     //               OptionBase::buildoption,
     //               "Help text describing this option");
 
-    declareOption(ol, "n_input_images", &Subsampling2DModule::n_input_images,
+    declareOption(ol, "n_input_images", &Supersampling2DModule::n_input_images,
                   OptionBase::buildoption,
                   "Number of input images present at the same time in the"
                   " input vector");
 
     declareOption(ol, "input_images_length",
-                  &Subsampling2DModule::input_images_length,
+                  &Supersampling2DModule::input_images_length,
                   OptionBase::buildoption,
                   "Length of each of the input images");
 
     declareOption(ol, "input_images_width",
-                  &Subsampling2DModule::input_images_width,
+                  &Supersampling2DModule::input_images_width,
                   OptionBase::buildoption,
                   "Width of each of the input images");
 
-    declareOption(ol, "kernel_length", &Subsampling2DModule::kernel_length,
+    declareOption(ol, "kernel_length", &Supersampling2DModule::kernel_length,
                   OptionBase::buildoption,
-                  "Length of the areas to sum"
+                  "Length of the area corresponding to one pixel"
                   );
 
-    declareOption(ol, "kernel_width", &Subsampling2DModule::kernel_width,
+    declareOption(ol, "kernel_width", &Supersampling2DModule::kernel_width,
                   OptionBase::buildoption,
-                  "Width of the areas to sum"
+                  "Width of the area corresponding to one pixel"
                   );
 
     declareOption(ol, "start_learning_rate",
-                  &Subsampling2DModule::start_learning_rate,
+                  &Supersampling2DModule::start_learning_rate,
                   OptionBase::buildoption,
                   "Starting learning-rate, by which we multiply the gradient"
                   " step"
                   );
 
     declareOption(ol, "decrease_constant",
-                  &Subsampling2DModule::decrease_constant,
+                  &Supersampling2DModule::decrease_constant,
                   OptionBase::buildoption,
                   "learning_rate = start_learning_rate / (1 +"
                   " decrease_constant*t),\n"
@@ -117,20 +117,20 @@ void Subsampling2DModule::declareOptions(OptionList& ol)
                   );
 
     declareOption(ol, "output_images_length",
-                  &Subsampling2DModule::output_images_length,
+                  &Supersampling2DModule::output_images_length,
                   OptionBase::learntoption,
                   "Length of the output images");
 
     declareOption(ol, "output_images_width",
-                  &Subsampling2DModule::output_images_width,
+                  &Supersampling2DModule::output_images_width,
                   OptionBase::learntoption,
                   "Width of the output images");
 
-    declareOption(ol, "scale", &Subsampling2DModule::scale,
+    declareOption(ol, "scale", &Supersampling2DModule::scale,
                   OptionBase::learntoption,
                   "Contains the scale of the output images");
 
-    declareOption(ol, "bias", &Subsampling2DModule::bias,
+    declareOption(ol, "bias", &Supersampling2DModule::bias,
                   OptionBase::learntoption,
                   "Contains the bias of the output images");
 
@@ -139,58 +139,50 @@ void Subsampling2DModule::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 
     // Redeclare some of the parent's options as learntoptions
-    redeclareOption(ol, "input_size", &Subsampling2DModule::input_size,
+    redeclareOption(ol, "input_size", &Supersampling2DModule::input_size,
                     OptionBase::learntoption,
                     "Size of the input, computed from n_input_images,\n"
                     "n_input_length and n_input_width.\n");
 
-    redeclareOption(ol, "output_size", &Subsampling2DModule::output_size,
+    redeclareOption(ol, "output_size", &Supersampling2DModule::output_size,
                     OptionBase::learntoption,
                     "Size of the output, computed from n_output_images,\n"
                     "n_output_length and n_output_width.\n");
 }
 
-void Subsampling2DModule::build_()
+void Supersampling2DModule::build_()
 {
     MODULE_LOG << "build_() called" << endl;
 
     // Verify the parameters
     if( n_input_images < 1 )
-        PLERROR("Subsampling2DModule::build_: 'n_input_images' < 1 (%i).\n",
+        PLERROR("Supersampling2DModule::build_: 'n_input_images' < 1 (%i).\n",
                 n_input_images);
 
     if( input_images_length < 0 )
-        PLERROR("Subsampling2DModule::build_: 'input_images_length'<0 (%i).\n",
+        PLERROR("Supersampling2DModule::build_: 'input_images_length'<0 (%i)."
+                "\n",
                 input_images_length);
 
     if( input_images_width < 0 )
-        PLERROR("Subsampling2DModule::build_: 'input_images_width'<0 (%i).\n",
+        PLERROR("Supersampling2DModule::build_: 'input_images_width'<0 (%i)."
+                "\n",
                 input_images_width);
 
     if( kernel_length < 0 )
-        PLERROR("Subsampling2DModule::build_: 'kernel_length'<0 (%i).\n",
+        PLERROR("Supersampling2DModule::build_: 'kernel_length'<0 (%i).\n",
                 kernel_length);
 
     if( kernel_width < 0 )
-        PLERROR("Subsampling2DModule::build_: 'kernel_width'<0 (%i).\n",
+        PLERROR("Supersampling2DModule::build_: 'kernel_width'<0 (%i).\n",
                 kernel_width);
-
-    if( input_images_length % kernel_length != 0 )
-        PLERROR("Subsampling2DModule::build_: input_images_length (%i)\n"
-                "should be a multiple of kernel_length (%i).\n",
-                input_images_length, kernel_length);
-
-    if( input_images_width % kernel_width != 0 )
-        PLERROR("Subsampling2DModule::build_: input_images_width (%i)\n"
-                "should be a multiple of kernel_width (%i).\n",
-                input_images_width, kernel_width);
 
     // Build the learntoptions from the buildoptions
     input_images_size = input_images_length * input_images_width;
     input_size = n_input_images * input_size;
 
-    output_images_length = input_images_length / kernel_length;
-    output_images_width = input_images_width / kernel_width;
+    output_images_length = input_images_length * kernel_length;
+    output_images_width = input_images_width * kernel_width;
     output_images_size = output_images_length * output_images_width;
 
     kernel_size = kernel_length * kernel_width;
@@ -208,14 +200,14 @@ void Subsampling2DModule::build_()
     kernel_gradient.resize(kernel_length, kernel_width);
 }
 
-void Subsampling2DModule::build()
+void Supersampling2DModule::build()
 {
     inherited::build();
     build_();
 }
 
 
-void Subsampling2DModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+void Supersampling2DModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
@@ -232,11 +224,12 @@ void Subsampling2DModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 }
 
 //! given the input, compute the output (possibly resize it  appropriately)
-void Subsampling2DModule::fprop(const Vec& input, Vec& output) const
+void Supersampling2DModule::fprop(const Vec& input, Vec& output) const
 {
     // Check size
     if( input.size() != input_size )
-        PLERROR("Subsampling2DModule::fprop: input.size() should be equal to\n"
+        PLERROR("Supersampling2DModule::fprop: input.size() should be equal"
+                " to\n"
                 "input_size (%i != %i).\n", input.size(), input_size);
     output.resize(output_size);
 
@@ -257,8 +250,8 @@ void Subsampling2DModule::fprop(const Vec& input, Vec& output) const
     {
         output_images[i].fill( bias[i] );
         kernel.fill( scale[i] );
-        convolve2D( input_images[i], kernel, output_images[i],
-                    kernel_length, kernel_width, true );
+        backConvolve2D( output_images[i], kernel, input_images[i],
+                        kernel_length, kernel_width, true );
     }
 }
 
@@ -273,27 +266,27 @@ void Subsampling2DModule::fprop(const Vec& input, Vec& output) const
 //! JUST CALLS
 //!     bpropUpdate(input, output, input_gradient, output_gradient)
 //! AND IGNORES INPUT GRADIENT.
-void Subsampling2DModule::bpropUpdate(const Vec& input, const Vec& output,
+void Supersampling2DModule::bpropUpdate(const Vec& input, const Vec& output,
                                const Vec& output_gradient)
 {
 }
 */
 
 //! this version allows to obtain the input gradient as well
-void Subsampling2DModule::bpropUpdate(const Vec& input, const Vec& output,
+void Supersampling2DModule::bpropUpdate(const Vec& input, const Vec& output,
                                       Vec& input_gradient,
                                       const Vec& output_gradient)
 {
     // Check size
     if( input.size() != input_size )
-        PLERROR("Subsampling2DModule::bpropUpdate: input.size() should be\n"
+        PLERROR("Supersampling2DModule::bpropUpdate: input.size() should be\n"
                 "equal to input_size (%i != %i).\n", input.size(), input_size);
     if( output.size() != output_size )
-        PLERROR("Subsampling2DModule::bpropUpdate: output.size() should be\n"
+        PLERROR("Supersampling2DModule::bpropUpdate: output.size() should be\n"
                 "equal to output_size (%i != %i).\n",
                 output.size(), output_size);
     if( output_gradient.size() != output_size )
-        PLERROR("Subsampling2DModule::bpropUpdate: output_gradient.size()"
+        PLERROR("Supersampling2DModule::bpropUpdate: output_gradient.size()"
                 " should be\n"
                 "equal to output_size (%i != %i).\n",
                 output_gradient.size(), output_size);
@@ -319,10 +312,10 @@ void Subsampling2DModule::bpropUpdate(const Vec& input, const Vec& output,
     for( int i=0 ; i<n_input_images ; i++ )
     {
         kernel.fill( scale[i] );
-        convolve2Dbackprop( input_images[i], kernel,
-                            output_gradients[i],
-                            input_gradients[i], kernel_gradient,
-                            kernel_length, kernel_width, false );
+        backConvolve2Dbackprop( kernel, input_images[i],
+                                input_gradients[i],
+                                output_gradients[i], kernel_gradient,
+                                kernel_length, kernel_width, false );
 
         // The scale's gradient is the sum of contributions to kernel_gradient
         scale[i] -= learning_rate * sum( kernel_gradient );
@@ -332,7 +325,7 @@ void Subsampling2DModule::bpropUpdate(const Vec& input, const Vec& output,
 
 //! reset the parameters to the state they would be BEFORE starting training.
 //! Note that this method is necessarily called from build().
-void Subsampling2DModule::forget()
+void Supersampling2DModule::forget()
 {
     real scale_factor = 1./(kernel_length*kernel_width);
     random_gen->fill_random_uniform( scale, -scale_factor, scale_factor );
@@ -344,7 +337,7 @@ void Subsampling2DModule::forget()
 //! Note that this method is necessarily called from build().
 //! THE DEFAULT IMPLEMENTATION PROVIDED IN THE SUPER-CLASS DOES NOT DO
 //! ANYTHING.
-void Subsampling2DModule::finalize()
+void Supersampling2DModule::finalize()
 {
 }
 */
@@ -352,7 +345,7 @@ void Subsampling2DModule::finalize()
 /* THIS METHOD IS OPTIONAL
 //! in case bpropUpdate does not do anything, make it known
 //! THE DEFAULT IMPLEMENTATION PROVIDED IN THE SUPER-CLASS RETURNS false;
-bool Subsampling2DModule::bpropDoesNothing()
+bool Supersampling2DModule::bpropDoesNothing()
 {
 }
 */
@@ -367,7 +360,7 @@ bool Subsampling2DModule::bpropDoesNothing()
 //!     bbpropUpdate(input, output, input_gradient, output_gradient,
 //!                  in_hess, out_hess)
 //! AND IGNORES INPUT HESSIAN AND INPUT GRADIENT.
-void Subsampling2DModule::bbpropUpdate(const Vec& input, const Vec& output,
+void Supersampling2DModule::bbpropUpdate(const Vec& input, const Vec& output,
                                 const Vec& output_gradient,
                                 const Vec& output_diag_hessian)
 {
@@ -378,19 +371,19 @@ void Subsampling2DModule::bbpropUpdate(const Vec& input, const Vec& output,
 //! of the diagonal of the Hessian matrix, and propagates this
 //! back. If these methods are defined, you can use them INSTEAD of
 //! bpropUpdate(...)
-void Subsampling2DModule::bbpropUpdate(const Vec& input, const Vec& output,
-                                       Vec& input_gradient,
-                                       const Vec& output_gradient,
-                                       Vec& input_diag_hessian,
-                                       const Vec& output_diag_hessian)
+void Supersampling2DModule::bbpropUpdate(const Vec& input, const Vec& output,
+                                         Vec& input_gradient,
+                                         const Vec& output_gradient,
+                                         Vec& input_diag_hessian,
+                                         const Vec& output_diag_hessian)
 {
     // This version forwards the second order information, but does not
     // actually use it for the update.
 
     // Check size
     if( output_diag_hessian.size() != output_size )
-        PLERROR("Subsampling2DModule::bbpropUpdate: output_diag_hessian.size()"
-                "\n"
+        PLERROR("Supersampling2DModule::bbpropUpdate:"
+                " output_diag_hessian.size()\n"
                 "should be equal to output_size (%i != %i).\n",
                 output_diag_hessian.size(), output_size);
     input_diag_hessian.resize(input_size);
@@ -413,9 +406,9 @@ void Subsampling2DModule::bbpropUpdate(const Vec& input, const Vec& output,
     {
         kernel.fill( scale[i] );
         squared_kernel.fill( scale[i]*scale[i] );
-        backConvolve2D( input_diag_hessians[i], squared_kernel,
-                        output_diag_hessians[i],
-                        kernel_length, kernel_width, false );
+        convolve2D( output_diag_hessians[i], squared_kernel,
+                    input_diag_hessians[i],
+                    kernel_length, kernel_width, false );
     }
 
     // Call bpropUpdate()

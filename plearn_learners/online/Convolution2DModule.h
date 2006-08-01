@@ -167,13 +167,11 @@ public:
     //                           const Vec& output_diag_hessian);
 
     //! this version allows to obtain the input gradient and diag_hessian
-    //! N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS, WHICH
-    //! RAISES A PLERROR.
-    // virtual void bbpropUpdate(const Vec& input, const Vec& output,
-    //                           Vec& input_gradient,
-    //                           const Vec& output_gradient,
-    //                           Vec& input_diag_hessian,
-    //                           const Vec& output_diag_hessian);
+    virtual void bbpropUpdate(const Vec& input, const Vec& output,
+                              Vec& input_gradient,
+                              const Vec& output_gradient,
+                              Vec& input_diag_hessian,
+                              const Vec& output_diag_hessian);
 
     //! reset the parameters to the state they would be BEFORE starting
     //! training.  Note that this method is necessarily called from
@@ -233,9 +231,13 @@ private:
     TVec<Mat> output_images;
     TVec<Mat> input_gradients;
     TVec<Mat> output_gradients;
+    TVec<Mat> input_diag_hessians;
+    TVec<Mat> output_diag_hessians;
 
     // Will store gradients wrt kernels
     mutable Mat kernel_gradient;
+    // Will store the term-to-term squared kernels (for bbprop)
+    mutable Mat squared_kernel;
 };
 
 // Declares a few other classes and functions related to this class

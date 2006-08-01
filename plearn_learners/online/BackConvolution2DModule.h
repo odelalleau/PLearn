@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// Subsampling2DModule.h
+// BackConvolution2DModule.h
 //
 // Copyright (C) 2006 Pascal Lamblin
 //
@@ -34,21 +34,21 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file Subsampling2DModule.h */
+/*! \file BackConvolution2DModule.h */
 
 
-#ifndef Subsampling2DModule_INC
-#define Subsampling2DModule_INC
+#ifndef BackConvolution2DModule_INC
+#define BackConvolution2DModule_INC
 
 #include <plearn_learners/online/OnlineLearningModule.h>
 
 namespace PLearn {
 
 /**
- * Reduce the size of the 2D images by adding the values of nearby pixels.
+ * Transpose of Convolution2DModule
  *
  */
-class Subsampling2DModule : public OnlineLearningModule
+class BackConvolution2DModule : public OnlineLearningModule
 {
     typedef OnlineLearningModule inherited;
 
@@ -67,11 +67,27 @@ public:
     //! Width of each of the input images
     int input_images_width;
 
-    //! Length of the areas to sum
+    //! Number of output images to put in the output vector
+    int n_output_images;
+
+    //! Length of each filter (or kernel) applied on an input image
     int kernel_length;
 
-    //! Width of the areas to sum
+    //! Width of each filter (or kernel) applied on an input image
     int kernel_width;
+
+    //! Horizontal step of the kernels
+    int kernel_step1;
+
+    //! Vertical step of the kernels
+    int kernel_step2;
+
+    //! Matrix of connections:
+    //! it has n_input_images rows and n_output_images columns,
+    //! each output image will only be connected to a subset of the
+    //! input images, where a non-zero value is present in this matrix.
+    //! If this matrix is not provided, it will be fully connected.
+    TMat<int> connection_matrix;
 
     //! Starting learning-rate, by which we multiply the gradient step
     real start_learning_rate;
@@ -82,10 +98,11 @@ public:
 
 
     //#####  Learnt options, that we would want to access  ####################
-    //! Scale applied to the sum (for each image)
-    Vec scale;
 
-    //! Bias added after the scaling
+    //! Contains the kernels between input and output images
+    TMat<Mat> kernels;
+
+    //! Contains the bias of the output images
     Vec bias;
 
     //#####  Not options  #####################################################
@@ -104,14 +121,13 @@ public:
     //! Size of the input images (length * width)
     int kernel_size;
 
-
 public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
     // ### Make sure the implementation in the .cc
     // ### initializes all fields to reasonable default values.
-    Subsampling2DModule();
+    BackConvolution2DModule();
 
     // Your other public member functions go here
 
@@ -178,7 +194,7 @@ public:
     // Declares other standard object methods.
     // ### If your class is not instantiatable (it has pure virtual methods)
     // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT
-    PLEARN_DECLARE_OBJECT(Subsampling2DModule);
+    PLEARN_DECLARE_OBJECT(BackConvolution2DModule);
 
     // Simply calls inherited::build() then build_()
     virtual void build();
@@ -199,6 +215,9 @@ private:
     //! This does the actual building.
     void build_();
 
+    //! Build the kernels
+    void build_kernels();
+
 private:
     //#####  Private Data Members  ############################################
 
@@ -215,16 +234,14 @@ private:
     TVec<Mat> input_diag_hessians;
     TVec<Mat> output_diag_hessians;
 
-    // Will store the temporary kernels
-    mutable Mat kernel;
-    // Will store the temporary squared kernels
-    mutable Mat squared_kernel;
     // Will store gradients wrt kernels
     mutable Mat kernel_gradient;
+    // Will store the term-to-term squared kernels (for bbprop)
+    mutable Mat squared_kernel;
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(Subsampling2DModule);
+DECLARE_OBJECT_PTR(BackConvolution2DModule);
 
 } // end of namespace PLearn
 

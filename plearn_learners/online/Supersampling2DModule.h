@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// Subsampling2DModule.h
+// Supersampling2DModule.h
 //
 // Copyright (C) 2006 Pascal Lamblin
 //
@@ -34,21 +34,21 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file Subsampling2DModule.h */
+/*! \file Supersampling2DModule.h */
 
 
-#ifndef Subsampling2DModule_INC
-#define Subsampling2DModule_INC
+#ifndef Supersampling2DModule_INC
+#define Supersampling2DModule_INC
 
 #include <plearn_learners/online/OnlineLearningModule.h>
 
 namespace PLearn {
 
 /**
- * Reduce the size of the 2D images by adding the values of nearby pixels.
+ * Augment the size of 2D images by duplicating pixels.
  *
  */
-class Subsampling2DModule : public OnlineLearningModule
+class Supersampling2DModule : public OnlineLearningModule
 {
     typedef OnlineLearningModule inherited;
 
@@ -67,10 +67,10 @@ public:
     //! Width of each of the input images
     int input_images_width;
 
-    //! Length of the areas to sum
+    //! Length of the area corresponding to one pixel
     int kernel_length;
 
-    //! Width of the areas to sum
+    //! Width of the area corresponding to one pixel
     int kernel_width;
 
     //! Starting learning-rate, by which we multiply the gradient step
@@ -111,7 +111,7 @@ public:
     //! Default constructor
     // ### Make sure the implementation in the .cc
     // ### initializes all fields to reasonable default values.
-    Subsampling2DModule();
+    Supersampling2DModule();
 
     // Your other public member functions go here
 
@@ -178,7 +178,7 @@ public:
     // Declares other standard object methods.
     // ### If your class is not instantiatable (it has pure virtual methods)
     // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT
-    PLEARN_DECLARE_OBJECT(Subsampling2DModule);
+    PLEARN_DECLARE_OBJECT(Supersampling2DModule);
 
     // Simply calls inherited::build() then build_()
     virtual void build();
@@ -224,7 +224,7 @@ private:
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(Subsampling2DModule);
+DECLARE_OBJECT_PTR(Supersampling2DModule);
 
 } // end of namespace PLearn
 

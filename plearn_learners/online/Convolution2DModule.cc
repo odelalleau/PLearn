@@ -257,6 +257,8 @@ void Convolution2DModule::build_()
     output_images.resize(n_output_images);
     input_gradients.resize(n_input_images);
     output_gradients.resize(n_output_images);
+    input_diag_hessians.resize(n_input_images);
+    output_diag_hessians.resize(n_output_images);
 }
 
 void Convolution2DModule::build_kernels()
@@ -275,11 +277,13 @@ void Convolution2DModule::build_kernels()
         for( int i=0 ; i<n_input_images ; i++ )
             for( int j=0 ; j<n_output_images ; j++ )
             {
-                if( connection_matrix(i,j) == 0
-                    && kernels(i,j).size() != 0 )
+                if( connection_matrix(i,j) == 0 )
                 {
-                    need_rebuild = true;
-                    break;
+                    if( kernels(i,j).size() != 0 )
+                    {
+                        need_rebuild = true;
+                        break;
+                    }
                 }
                 else if( kernels(i,j).length() != kernel_length
                          || kernels(i,j).width() != kernel_width )
@@ -294,6 +298,7 @@ void Convolution2DModule::build_kernels()
         forget();
 
     kernel_gradient.resize(kernel_length, kernel_width);
+    squared_kernel.resize(kernel_length, kernel_width);
 }
 
 void Convolution2DModule::build()
@@ -314,7 +319,10 @@ void Convolution2DModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(output_images, copies);
     deepCopyField(input_gradients, copies);
     deepCopyField(output_gradients, copies);
+    deepCopyField(input_diag_hessians, copies);
+    deepCopyField(output_diag_hessians, copies);
     deepCopyField(kernel_gradient, copies);
+    deepCopyField(squared_kernel, copies);
 
 }
 
@@ -407,16 +415,16 @@ void Convolution2DModule::bpropUpdate(const Vec& input, const Vec& output,
     for( int j=0 ; j<n_output_images ; j++ )
     {
         for( int i=0 ; i<n_input_images ; j++ )
-        {
             if( connection_matrix(i,j) != 0 )
+            {
                 convolve2Dbackprop( input_images[i], kernels(i,j),
                                     output_gradients[j],
                                     input_gradients[i], kernel_gradient,
                                     kernel_step1, kernel_step2, false );
 
-            // kernel(i,j) -= learning_rate * kernel_gradient
-            multiplyAcc( kernels(i,j), kernel_gradient, -learning_rate );
-        }
+                // kernel(i,j) -= learning_rate * kernel_gradient
+                multiplyAcc( kernels(i,j), kernel_gradient, -learning_rate );
+            }
         bias[j] -= learning_rate * sum( output_gradients[j] );
     }
 
@@ -478,27 +486,55 @@ void Convolution2DModule::bbpropUpdate(const Vec& input, const Vec& output,
 }
 */
 
-/* THIS METHOD IS OPTIONAL
 //! Similar to bpropUpdate, but adapt based also on the estimation
 //! of the diagonal of the Hessian matrix, and propagates this
 //! back. If these methods are defined, you can use them INSTEAD of
 //! bpropUpdate(...)
-//! N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS, WHICH
-//! RAISES A PLERROR.
 void Convolution2DModule::bbpropUpdate(const Vec& input, const Vec& output,
-                                Vec& input_gradient,
-                                const Vec& output_gradient,
-                                Vec& input_diag_hessian,
-                                const Vec& output_diag_hessian)
+                                       Vec& input_gradient,
+                                       const Vec& output_gradient,
+                                       Vec& input_diag_hessian,
+                                       const Vec& output_diag_hessian)
 {
     // This version forwards the second order information, but does not
     // actually use it for the update.
 
-    (...)
-    Mat kernel2 = kernel * kernel;
-    backConvolve2D(input_diag_hessians[i], kernel2, output_diag_hessians[j]);
+    // Check size
+    if( output_diag_hessian.size() != output_size )
+        PLERROR("Convolution2DModule::bbpropUpdate: output_diag_hessian.size()"
+                "\n"
+                "should be equal to output_size (%i != %i).\n",
+                output_diag_hessian.size(), output_size);
+    input_diag_hessian.resize(input_size);
+
+    // Make input_diag_hessians and output_diag_hessians point to the right
+    // places
+    for( int i=0 ; i<n_input_images ; i++ )
+        input_diag_hessians[i] =
+            input_diag_hessian.subVec(i*input_images_size, input_images_size)
+                .toMat( input_images_length, input_images_width );
+
+    for( int j=0 ; j<n_output_images ; j++ )
+        output_diag_hessians[j] =
+            output_diag_hessian.subVec(j*output_images_size,output_images_size)
+                .toMat( output_images_length, output_images_width );
+
+    // Propagates to input_diag_hessian
+    for( int j=0 ; j<n_output_images ; j++ )
+        for( int i=0 ; j<n_input_images ; i++ )
+            if( connection_matrix(i,j) != 0 )
+            {
+                squared_kernel << kernels(i,j);
+                squared_kernel *= kernels(i,j); // term-to-term product
+
+                backConvolve2D( input_diag_hessians[i], squared_kernel,
+                                output_diag_hessians[j],
+                                kernel_step1, kernel_step2, false );
+            }
+
+    // Call bpropUpdate()
+    bpropUpdate( input, output, input_gradient, output_gradient );
 }
-*/
 
 
 } // end of namespace PLearn
