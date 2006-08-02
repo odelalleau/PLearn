@@ -37,7 +37,7 @@
 /*! \file BackConvolution2DModule.cc */
 
 
-#define PL_LOG_MODULE_NAME "HintonDeepBeliefNet"
+#define PL_LOG_MODULE_NAME "BackConvolution2DModule"
 #include <plearn/io/pl_log.h>
 
 #include "BackConvolution2DModule.h"

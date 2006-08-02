@@ -37,7 +37,7 @@
 /*! \file Convolution2DModule.cc */
 
 
-#define PL_LOG_MODULE_NAME "HintonDeepBeliefNet"
+#define PL_LOG_MODULE_NAME "Convolution2DModule"
 #include <plearn/io/pl_log.h>
 
 #include "Convolution2DModule.h"

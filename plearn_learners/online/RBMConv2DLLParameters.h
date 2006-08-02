@@ -226,6 +226,8 @@ private:
     // The rest of the private stuff goes here
     mutable Mat down_image;
     mutable Mat up_image;
+    mutable Mat down_image_gradient;
+    mutable Mat up_image_gradient;
     Mat kernel_gradient;
 };
 

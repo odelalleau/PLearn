@@ -36,7 +36,8 @@
 
 /*! \file RBMConv2DLLParameters.cc */
 
-
+#define PL_LOG_MODULE_NAME "RBMConv2DLLParameters"
+#include <plearn/io/pl_log.h>
 
 #include "RBMConv2DLLParameters.h"
 #include <plearn/math/TMat_maths.h>
@@ -120,8 +121,12 @@ void RBMConv2DLLParameters::declareOptions(OptionList& ol)
 
 void RBMConv2DLLParameters::build_()
 {
+    MODULE_LOG << "build_() called" << endl;
     if( up_layer_size == 0 || down_layer_size == 0 )
+    {
+        MODULE_LOG << "build_() aborted" << endl;
         return;
+    }
 
     assert( down_image_length > 0 );
     assert( down_image_width > 0 );
@@ -134,7 +139,7 @@ void RBMConv2DLLParameters::build_()
 
     kernel_length = down_image_length - kernel_step1 * (up_image_length-1);
     assert( kernel_length > 0 );
-    kernel_width = down_image_length - kernel_step1 * (up_image_length-1);
+    kernel_width = down_image_width - kernel_step2 * (up_image_width-1);
     assert( kernel_width > 0 );
 
     output_size = 0;
@@ -216,6 +221,8 @@ void RBMConv2DLLParameters::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(down_units_bias_inc, copies);
     deepCopyField(down_image, copies);
     deepCopyField(up_image, copies);
+    deepCopyField(down_image_gradient, copies);
+    deepCopyField(up_image_gradient, copies);
 }
 
 void RBMConv2DLLParameters::accumulatePosStats( const Vec& down_values,
@@ -224,8 +231,8 @@ void RBMConv2DLLParameters::accumulatePosStats( const Vec& down_values,
     down_image = down_values.toMat( down_image_length, down_image_width );
     up_image = up_values.toMat( up_image_length, up_image_width );
 
-    /*  for i=0 to down_image_length:
-     *   for j=0 to down_image_width:
+    /*  for i=0 to up_image_length:
+     *   for j=0 to up_image_width:
      *     for l=0 to kernel_length:
      *       for m=0 to kernel_width:
      *         kernel_pos_stats(l,m) +=
@@ -245,8 +252,8 @@ void RBMConv2DLLParameters::accumulateNegStats( const Vec& down_values,
 {
     down_image = down_values.toMat( down_image_length, down_image_width );
     up_image = up_values.toMat( up_image_length, up_image_width );
-    /*  for i=0 to down_image_length:
-     *   for j=0 to down_image_width:
+    /*  for i=0 to up_image_length:
+     *   for j=0 to up_image_width:
      *     for l=0 to kernel_length:
      *       for m=0 to kernel_width:
      *         kernel_neg_stats(l,m) +=
@@ -384,16 +391,8 @@ void RBMConv2DLLParameters::update( const Vec& pos_down_values, // v_0
     assert( pos_down_values.length() == down_layer_size );
     assert( neg_down_values.length() == down_layer_size );
 
-    Mat pos_down_image = pos_down_values.toMat( down_image_length,
-                                                down_image_width );
-    Mat pos_up_image = pos_up_values.toMat( up_image_length,
-                                            up_image_width );
-    Mat neg_down_image = neg_down_values.toMat( down_image_length,
-                                                down_image_width );
-    Mat neg_up_image = neg_up_values.toMat( up_image_length,
-                                            up_image_width );
-    /*  for i=0 to down_image_length:
-     *   for j=0 to down_image_width:
+    /*  for i=0 to up_image_length:
+     *   for j=0 to up_image_width:
      *     for l=0 to kernel_length:
      *       for m=0 to kernel_width:
      *         kernel_neg_stats(l,m) -= learning_rate *
@@ -409,18 +408,18 @@ void RBMConv2DLLParameters::update( const Vec& pos_down_values, // v_0
 
     if( momentum == 0. )
     {
-        for( int i=0; i<down_image_length; i++,
-                                           puv+=up_image_width,
-                                           nuv+=up_image_width,
-                                           pdv+=kernel_step1*down_image_width,
-                                           ndv+=kernel_step1*down_image_width )
+        for( int i=0; i<up_image_length; i++,
+                                         puv+=up_image_width,
+                                         nuv+=up_image_width,
+                                         pdv+=kernel_step1*down_image_width,
+                                         ndv+=kernel_step1*down_image_width )
         {
             // copies to iterate over columns
             real* pdv1 = pdv;
             real* ndv1 = ndv;
-            for( int j=0; j<down_image_width; j++,
-                                              pdv1+=kernel_step2,
-                                              ndv1+=kernel_step2 )
+            for( int j=0; j<up_image_width; j++,
+                                            pdv1+=kernel_step2,
+                                            ndv1+=kernel_step2 )
             {
                 real* k = kernel.data();
                 real* pdv2 = pdv1; // copy to iterate over sub-rows
@@ -622,16 +621,16 @@ void RBMConv2DLLParameters::bpropUpdate(const Vec& input, const Vec& output,
     assert( output_gradient.size() == up_layer_size );
     input_gradient.resize( down_layer_size );
 
-    Mat input_image = input.toMat( down_image_length, down_image_width );
-    Mat output_image = output.toMat( down_image_length, down_image_width );
-    Mat input_image_gradient = input_gradient.toMat( down_image_length,
-                                                     down_image_width );
-    Mat output_image_gradient = output_gradient.toMat( down_image_length,
-                                                       down_image_width );
+    down_image = input.toMat( down_image_length, down_image_width );
+    up_image = output.toMat( up_image_length, up_image_width );
+    down_image_gradient = input_gradient.toMat( down_image_length,
+                                                down_image_width );
+    up_image_gradient = output_gradient.toMat( up_image_length,
+                                               up_image_width );
 
     // update input_gradient and kernel_gradient
-    convolve2Dbackprop( input_image, kernel,
-                        output_image_gradient, input_image_gradient,
+    convolve2Dbackprop( down_image, kernel,
+                        up_image_gradient, down_image_gradient,
                         kernel_gradient,
                         kernel_step1, kernel_step2, false );
 
