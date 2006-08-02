@@ -123,7 +123,7 @@ void VPLPreprocessedLearner2::declareOptions(OptionList& ol)
 
     declareOption(ol, "costs_prg", &VPLPreprocessedLearner2::costs_prg, OptionBase::buildoption,
                   "Program string in VPL language to obtain postprocessed test costs\n"
-                  "from a concatenation of the raw input fields and arget fields, \n"
+                  "from a concatenation of the raw input fields and target fields, \n"
                   "and the underlying learner's outputs and test costs.\n"
                   "Note that names must be given to the generated values with :fieldname VPL syntax.\n"
                   "If it's an empty string, then we'll output the underlying learner's test costs.\n"
