@@ -1120,9 +1120,12 @@ def generate_vcproj_files(target, ccfiles_to_compile, executables_to_link, linkn
                 # Handle some special cases.
                 if libname == 'python24':
                     result = '%s.lib' % libname
-                elif libname in ['numarray', 'm']:
+                elif libname in ['numarray', 'boost_regex', 'm']:
                     # These libraries are not needed with Visual
-                    # Studio, and can be safely ignored.
+                    # Studio, and can be ignored.
+                    # Note: dependence on the Boost libraries is
+                    # apparently obtained automatically by Visual
+                    # Studio.
                     result = None
                 else:
                     # Default name is 'libxxx.lib'.
