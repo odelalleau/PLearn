@@ -287,7 +287,7 @@ void ChemicalICP::run()
                     initial_angles_list.appendRow( angles );
                 }
     }
-    NAMED_LOG("ICP+NNet") << "begin run()" << endl;
+    EXTREME_NAMED_LOG("ICP+NNet") << "begin run()" << endl;
 
     // Only perform the alignment if we do not just obtain the result from a
     // previously memorized alignment.
@@ -334,10 +334,10 @@ void ChemicalICP::run()
     Mat matched_mol_coords( n_points, 3 );
 
     int n_initial_angles = initial_angles_list.length();
-    NAMED_LOG("ICP+NNet") << n_initial_angles << " initial angles to try" << endl;
+    EXTREME_NAMED_LOG("ICP+NNet") << n_initial_angles << " initial angles to try" << endl;
     for( int i=0 ; i<n_initial_angles ; i++ )
     {
-		NAMED_LOG("ICP+NNet") << "global iteration number " << i << endl;
+		EXTREME_NAMED_LOG("ICP+NNet") << "global iteration number " << i << endl;
         // initialization
         rotation = rotationMatrixFromAngles( initial_angles_list(i) );
         translation.fill(0);
@@ -351,7 +351,7 @@ void ChemicalICP::run()
         applyGeomTransformation( rotation, translation,
                                  template_coordinates->matValue,
                                  tr_template_coords );
-		NAMED_LOG("ICPDEBUG") << "beginning ICP:" << endl
+		EXTREME_NAMED_LOG("ICPDEBUG") << "beginning ICP:" << endl
 			<< "rotation = " << endl << rotation << endl
 		<< "translation = " << translation << endl
 		<< "template_coordinates->matValue = " << endl
@@ -361,22 +361,22 @@ void ChemicalICP::run()
         // main loop
         do
         {
-			NAMED_LOG("ICPDEBUG") << "    beginning of main loop" << endl;
-			NAMED_LOG("ICPDEBUG") << "    matchNearestNeighbors()" << endl;
+			EXTREME_NAMED_LOG("ICPDEBUG") << "    beginning of main loop" << endl;
+			EXTREME_NAMED_LOG("ICPDEBUG") << "    matchNearestNeighbors()" << endl;
             matchNearestNeighbors( tr_template_coords, matched_mol_coords );
-			NAMED_LOG("ICPDEBUG") << "    minimizeWeightedDistance()" << endl;
+			EXTREME_NAMED_LOG("ICPDEBUG") << "    minimizeWeightedDistance()" << endl;
             minimizeWeightedDistance( tr_template_coords, matched_mol_coords,
                                       delta_rot_length, delta_trans_length );
-			NAMED_LOG("ICPDEBUG") << "    applyGeomTransformation()" << endl;
+			EXTREME_NAMED_LOG("ICPDEBUG") << "    applyGeomTransformation()" << endl;
             applyGeomTransformation( rotation, translation,
                                      template_coordinates->matValue,
                                      tr_template_coords );
-			NAMED_LOG("ICPDEBUG") << "tr_template_coords = " << endl << tr_template_coords << endl;
+			EXTREME_NAMED_LOG("ICPDEBUG") << "tr_template_coords = " << endl << tr_template_coords << endl;
             error = computeWeightedDistance( tr_template_coords,
                                              matched_mol_coords );
             n_iter++;
-			NAMED_LOG("ICPDEBUG") << "end of main loop" << endl;
-			NAMED_LOG("ICPDEBUG") << "    iteration = " << n_iter << " / " << max_iter << endl
+			EXTREME_NAMED_LOG("ICPDEBUG") << "end of main loop" << endl;
+			EXTREME_NAMED_LOG("ICPDEBUG") << "    iteration = " << n_iter << " / " << max_iter << endl
 				<< "    error = " << error << " / " << error_t << endl
 				<< "    delta_rot_length = " << delta_rot_length << " / "
 				<< angle_t << endl
@@ -397,7 +397,7 @@ void ChemicalICP::run()
             best_translation << translation;
             best_matching << matching;
         }
-		NAMED_LOG("ICP+NNet") << "end global iteration number " << i << endl;
+		EXTREME_NAMED_LOG("ICP+NNet") << "end global iteration number " << i << endl;
     }
 
     // get best parameters
