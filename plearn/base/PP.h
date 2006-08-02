@@ -218,7 +218,8 @@ inline void deepCopyField(PP<T>& field, CopiesMap& copies)
         // Indeed, there is a risk of this causing trouble, because the 'copies' map
         // may contain invalid mappings refering to now deleted objects.
         if (field->usage() == 1)
-            PLWARNING("In deepCopyField(PP<T>& field, ...) - The usage() of the underlying object is only 1, this is unusual");
+            PLWARNING("In deepCopyField(PP<T>& field, ...) - The usage() of the underlying object is only 1, this is unusual\n"
+                      "( Did you call inherited::makeDeepCopyFromShallowCopy twice?  You can't. )");
         field = field->deepCopy(copies);
     }
 }

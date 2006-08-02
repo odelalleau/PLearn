@@ -370,6 +370,7 @@ public:
                     }
                     if (new_length>old_length)
                         clear_n(newp,(new_length+extrarows-old_length)*new_mod);
+
                     delete[] data;
                 }
                 length_ = newsize;

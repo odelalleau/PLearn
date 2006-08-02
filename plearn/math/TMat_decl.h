@@ -257,9 +257,10 @@ public:
                             extracols=int(ceil(w2a-w1));
                         } else // no valid solution to the system of equation, use a heuristic
                         {
-                            extracols = int(ceil(sqrt(real(extra))/new_length));
-                            extrarows = int((extra+l1*w1)/(w1+extracols) - l1);
+                            extracols = max(0,int(ceil(sqrt(real(extra))/new_length)));
+                            extrarows = max(0,int((extra+l1*w1)/(w1+extracols) - l1));
                         }
+
                     }
                     storage->resizeMat(new_length,new_width,extrarows,extracols,
                                        new_offset,mod_,length_,width_,offset_);
