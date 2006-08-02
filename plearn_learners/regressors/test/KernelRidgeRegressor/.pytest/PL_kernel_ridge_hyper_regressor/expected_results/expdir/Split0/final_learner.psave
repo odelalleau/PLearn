@@ -758,13 +758,14 @@ template_stats_collector = *0 ;
 global_template_stats_collector = *0 ;
 final_commands = TVec(0 0 *0 )
 ;
-save_test_confidence = 0  )
+save_test_confidence = 0 ;
+enforce_clean_expdir = 1  )
 ;
 option_fields = 2 [ "weight_decay" "kernel.sigma" ] ;
 dont_restart_upon_change = TVec(0 0 *0 )
 ;
 strategy = 2 [ *7 ->HyperOptimize(
-which_cost = 0 ;
+which_cost = "0" ;
 min_n_trials = 0 ;
 oracle = *8 ->CartesianProductOracle(
 option_names = 2 [ "weight_decay" "kernel.sigma" ] ;

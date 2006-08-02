@@ -1,6 +1,6 @@
 *1 ->VecStatsCollector(
 maxnvalues = 0 ;
-fieldnames = 1 [ "mse" ] ;
+fieldnames = 2 [ "E[test.E[mse]]" "E[train.E[mse]]" ] ;
 compute_covariance = 0 ;
 epsilon = 0 ;
 window = -1 ;

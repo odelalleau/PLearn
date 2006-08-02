@@ -1,4 +1,4 @@
-__REVISION__ = AP4625.PL5955
+__REVISION__ = "AP4830.PL6169"
 DataOpt.data                                  = PLEARNDIR:examples/data/test_suite/sin_signcos_1x_2y.amat
 HyperKRR.kfold                                = 10
 HyperKRR.lambda_list                          = 1e-8,1e-6,1e-4,1e-2,1e0
