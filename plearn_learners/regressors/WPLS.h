@@ -71,18 +71,22 @@ protected:
     Vec stddev_target;
     int w;
     Mat W;
-
+    Mat P;
+    Mat Q;
+//    PP<WPLS> parent;
+    
 public:
 
     // ************************
     // * public build options *
     // ************************
 
-    int k;
     string method;
     real precision;
     bool output_the_score;
     bool output_the_target;
+    string parent_filename;   
+    int  parent_sub;   
 
     // ****************
     // * Constructors *

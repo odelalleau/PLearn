@@ -47,6 +47,9 @@
 #include <plearn/math/TMat_maths.h>    //!< For dist.
 #include <plearn/math/pl_math.h>       // !< for isnan
 #include <plearn/vmat/VMat_linalg.h>
+#include <plearn/io/load_and_save.h>
+#include <plearn_learners/generic/VPLCombinedLearner.h>
+#include <plearn_learners/generic/VPLPreprocessedLearner2.h>
 
 namespace PLearn {
 using namespace std;
@@ -55,11 +58,12 @@ WPLS::WPLS()
     : m(-1),
       p(-1),
       w(0),
-      k(1),
       method("kernel"),
       precision(1e-6),
       output_the_score(0),
-      output_the_target(1)
+      output_the_target(1),
+      parent_filename("tmp"),
+      parent_sub(0)
 {}
 
 PLEARN_IMPLEMENT_OBJECT(WPLS,
@@ -129,9 +133,6 @@ void WPLS::declareOptions(OptionList& ol)
 {
     // Build options.
 
-    declareOption(ol, "k", &WPLS::k, OptionBase::buildoption,
-                  "The number of components (factors) computed.");
-
     declareOption(ol, "method", &WPLS::method, OptionBase::buildoption,
                   "The WPLS algorithm used ('wpls1' or 'kernel', see help for more details).\n");
 
@@ -160,8 +161,20 @@ void WPLS::declareOptions(OptionList& ol)
     declareOption(ol, "p", &WPLS::p, OptionBase::learntoption,
                   "Used to store the input size.");
 
+    declareOption(ol, "parent_filename", &WPLS::parent_filename, OptionBase::buildoption,
+                  "For hyper-parameter selection purposes: use incremental learning to speed-up process");
+    
+    declareOption(ol, "parent_sub", &WPLS::parent_sub, OptionBase::buildoption,
+                  "Tells which of the sublearners (of the combined learner) should be used.");
+    
     declareOption(ol, "precision", &WPLS::precision, OptionBase::buildoption,
                   "The precision to which we compute the eigenvectors.");
+    
+    declareOption(ol, "P", &WPLS::P, OptionBase::learntoption,
+                  "Matrix that maps features to observed inputs: X = T.P' + E.");
+
+    declareOption(ol, "Q", &WPLS::Q, OptionBase::learntoption,
+                  "Matrix that maps features to observed outputs: Y = T.P' + F.");
 
     declareOption(ol, "stddev_input", &WPLS::stddev_input, OptionBase::learntoption,
                   "The standard deviation of the input data X.");
@@ -174,6 +187,9 @@ void WPLS::declareOptions(OptionList& ol)
     
     declareOption(ol, "W", &WPLS::W, OptionBase::learntoption,
                   "The regression matrix in T = X.W.");
+    
+    
+
     
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -244,8 +260,8 @@ void WPLS::computeOutput(const Vec& input, Vec& output) const
     input_copy /= stddev_input;
     int target_start = 0;
     if (output_the_score) {
-        transposeProduct(output.subVec(0, this->k), W, input_copy);
-        target_start = this->k;
+        transposeProduct(output.subVec(0, this->nstages), W, input_copy);
+        target_start = this->nstages;
     }
     if (output_the_target) {
         if (this->m > 0) {
@@ -269,6 +285,8 @@ void WPLS::forget()
     // Free memory.
     B = Mat();
     W = Mat();
+    P = Mat();
+    Q = Mat();
 }
 
 //////////////////////
@@ -309,6 +327,8 @@ void WPLS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(stddev_input, copies);
     deepCopyField(stddev_target, copies);
     deepCopyField(W, copies);
+    deepCopyField(P, copies);
+    deepCopyField(Q, copies);
 }
 
 ///////////////////////
@@ -340,7 +360,7 @@ int WPLS::outputsize() const
 {
     int os = 0;
     if (output_the_score) {
-        os += this->k;
+        os += this->nstages;
     }
     if (output_the_target && m >= 0) {
         // If m < 0, this means we don't know yet the target size, thus we
@@ -411,7 +431,7 @@ void multiplyColumns(Mat& m, Vec& v)
 ///////////
 void WPLS::train()
 {
-    if (stage == 1) {
+    if (stage == nstages) {
         // Already trained.
         if (verbosity >= 1)
             cout << "Skipping WPLS training" << endl;
@@ -487,9 +507,9 @@ void WPLS::train()
         WE.fill(1.0);
     
     // Some common initialization.
-    W.resize(p, k);
-    Mat P(p, k);
-    Mat Q(m, k);
+    W.resize(p, nstages);
+    P.resize(p, nstages);
+    Q.resize(m, nstages);
     
     if (method == "kernel") {
         PLERROR("You shouldn't be here... !?");       
@@ -498,18 +518,60 @@ void WPLS::train()
         Vec old_s(n);
         Vec lx(p);
         Vec ly(1);
-        Mat T(n,k);
+        Mat T(n,nstages);
         Mat tmp_np(n,p), tmp_pp(p,p);
 
         ProgressBar* pb = 0;
         if(report_progress) {
-            pb = new ProgressBar("Computing the components", k);
+            pb = new ProgressBar("Computing the components", nstages);
         }
         bool finished;
         real dold;
-        for (int h = 0; h < k; h++) {
+
+        if (parent_filename != "") {
+            string expdir = getExperimentDirectory();
+            int pos = expdir.find("Split");
+            string the_split = expdir.substr(pos,6);
+            int pos2 = parent_filename.find("Split");
+            int nremain = parent_filename.length() - 6 - pos2;
+            parent_filename = parent_filename.substr(0,pos2) + the_split + parent_filename.substr(pos2+6,nremain);
+            PP<VPLCombinedLearner> combined_parent;
+            PLearn::load(parent_filename, combined_parent);
+            //if (VPLPreprocessedLearner2* vplpl = dynamic_cast<VPLPreprocessedLearner2*>(
+            //        combined_parent->sublearners_[parent_sub]))
+            //{
+            //    parent = vplpl->learner_;
+            //}
+            //else
+            //    PLERROR("Unsupported type for sublearners of the combined
+            //    learner");
+            
+            PP<VPLPreprocessedLearner2> vplpl = (PP<VPLPreprocessedLearner2>)(combined_parent->sublearners_[parent_sub]);
+            PP<WPLS> parent = (PP<WPLS>)(vplpl->learner_);
+            //VPLPreprocessedLearner2* vplpl = (VPLPreprocessedLearner2*)(combined_parent->sublearners_[parent_sub]);
+            //WPLS* parent (WPLS*)(vplpl->learner_);
+            int k = parent->nstages;
+            Mat tmp_nk(n,k);
+            if (parent->stage < nstages) {
+                Mat tmp_n1(n,1);
+                product(tmp_n1, X, parent->B);
+                for (int i=0; i<n; i++)
+                    Y[i] -= tmp_n1(i,0);
+                product(tmp_nk,X,parent->W);
+                productTranspose(tmp_np,tmp_nk,parent->P);
+                X -= tmp_np;
+                stage = k;
+            } else {
+                product(tmp_nk,X,parent->W);
+                T = tmp_nk.subMat(0,0,n,nstages);
+                P = (parent->P).subMat(0,0,p,nstages);
+                Q = (parent->Q).subMat(0,0,m,nstages);
+                stage = nstages;
+            }
+        }
+        while (stage < nstages) {
             if (verbosity >= 1)
-                cout << "h=" << h << endl;
+                cout << "stage=" << stage << endl;
             s << Y;
             normalize(s, 2.0);  
             finished = false;
@@ -532,14 +594,14 @@ void WPLS::train()
             }
             transposeProduct(lx, X, s);
             ly[0] = dot(s, Y);
-            T.column(h) << s;
-            P.column(h) << lx;
-            Q.column(h) << ly;
+            T.column(stage) << s;
+            P.column(stage) << lx;
+            Q.column(stage) << ly;
             externalProduct(tmp_np,s,lx);
             X -= tmp_np;
             Y -= ly[0] * s;
             if (report_progress)
-                pb->update(h);
+            stage++;
         }
         if (pb) 
             delete pb;
@@ -575,7 +637,7 @@ void WPLS::train()
         product(tmp_pp,invDmat,Vt);
         product(tmp_np,U,tmp_pp);
         transposeProduct(W, tmp_np, T);
-        B.resize(p,m);
+        B.resize(p,1);
         productTranspose(B, W, Q);
         if (verbosity >= 2) {
             cout << "W = " << W << endl;
@@ -584,7 +646,6 @@ void WPLS::train()
         if (verbosity >= 1)
             cout << "WPLS training ended" << endl;
     }
-    stage = 1;
 }
 
 } // end of namespace PLearn
