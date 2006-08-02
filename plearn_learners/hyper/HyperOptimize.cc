@@ -106,7 +106,8 @@ PLEARN_IMPLEMENT_OBJECT(
 
 
 HyperOptimize::HyperOptimize()
-    : which_cost(-1),
+    : which_cost_pos(-1),
+      which_cost(),
       min_n_trials(0),
       provide_tester_expdir(false),
       rerun_after_sub(false),
@@ -118,7 +119,7 @@ void HyperOptimize::declareOptions(OptionList& ol)
 {
     declareOption(
         ol, "which_cost", &HyperOptimize::which_cost, OptionBase::buildoption,
-        "An index in the tester's statnames to be used as the objective cost to minimize");
+        "An index or a name in the tester's statnames to be used as the objective cost to minimize");
 
     declareOption(
         ol, "min_n_trials", &HyperOptimize::min_n_trials, OptionBase::buildoption,
@@ -172,6 +173,7 @@ void HyperOptimize::build_()
     // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
     // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
     // ### You should assume that the parent class' build_() has already been called.
+
 }
 
 // ### Nothing to add here, simply calls build_
@@ -185,6 +187,11 @@ void HyperOptimize::setExperimentDirectory(const PPath& the_expdir)
 {
     inherited::setExperimentDirectory(the_expdir);
     createResultsMat();
+
+    which_cost_pos= getResultNames().find(which_cost);
+    if(which_cost_pos < 0)
+        which_cost_pos= toint(which_cost);
+    
 }
 
 void HyperOptimize::createResultsMat()
@@ -233,7 +240,7 @@ void HyperOptimize::reportResult(int trialnum,  const Vec& results)
         Vec newres(resultsmat.width());
         int j=0;
         newres[j++] = trialnum;
-        newres[j++] = which_cost;
+        newres[j++] = which_cost_pos;
 
         for(int k=0; k<option_fields.length(); k++)
         {
@@ -322,7 +329,7 @@ Vec HyperOptimize::optimize()
             results = runTest(trialnum);
 
         reportResult(trialnum,results);
-        real objective = results[which_cost];
+        real objective = results[which_cost_pos];
 
         option_vals = oracle->generateNextTrial(option_vals,objective);
 

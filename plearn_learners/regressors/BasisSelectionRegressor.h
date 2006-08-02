@@ -124,6 +124,10 @@ public:
     // (PLEASE IMPLEMENT IN .cc)
     virtual TVec<std::string> getTestCostNames() const;
 
+
+    //! simply forwards stats coll. to sub-learner
+    virtual void setTrainStatsCollector(PP<VecStatsCollector> statscol);
+
     //! Returns the names of the objective costs that the train method computes
     //! and  for which it updates the VecStatsCollector train_stats.
     // (PLEASE IMPLEMENT IN .cc)

@@ -160,6 +160,7 @@ void VPLProcessor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     deepCopyField(input_prg_fieldnames, copies);
     deepCopyField(processed_input, copies);
+    deepCopyField(orig_fieldnames, copies);
 }
 
 int VPLProcessor::outputsize() const

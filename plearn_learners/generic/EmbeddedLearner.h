@@ -166,6 +166,9 @@ public:
     //! Forwarded to inner learner
     virtual TVec<string> getTrainCostNames() const;
 
+    //! Forwarded to inner learner
+    virtual TVec<string> getOutputNames() const;
+
     //! NOT forwarded by default
     // virtual int nTestCosts() const;
 

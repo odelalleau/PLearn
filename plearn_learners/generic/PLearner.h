@@ -591,6 +591,7 @@ private:
     
 public:
     PLEARN_DECLARE_ABSTRACT_OBJECT(PLearner);
+
 };
 
 DECLARE_OBJECT_PTR(PLearner);

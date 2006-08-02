@@ -119,7 +119,8 @@ public:
     // * public build options *
     // ************************
 
-    int which_cost;
+    int which_cost_pos;
+    string which_cost;
     int min_n_trials;
     PP<OptionsOracle> oracle;
     bool provide_tester_expdir;  // should tester be provided with an expdir for each test run

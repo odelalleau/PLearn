@@ -209,8 +209,6 @@ void BasisSelectionRegressor::build()
 
 void BasisSelectionRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    inherited::makeDeepCopyFromShallowCopy(copies);
-
     // ### Call deepCopyField on all "pointer-like" fields
     // ### that you wish to be deepCopied rather than
     // ### shallow-copied.
@@ -239,6 +237,7 @@ void BasisSelectionRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(input, copies);
     deepCopyField(targ, copies);
     deepCopyField(featurevec, copies);
+
 }
 
 
@@ -707,7 +706,7 @@ void BasisSelectionRegressor::appendFunctionToSelection(int candidate_index)
     RealFunc f = candidate_functions[candidate_index];
     int l = train_set->length();
     int nf = selected_functions.length();    
-    features.resize(l,nf+1,l*nf,true);  // enlarge width while preserving content
+    features.resize(l,nf+1, max(1,static_cast<int>(0.25*l*nf)),true);  // enlarge width while preserving content
     real weight;
     for(int i=0; i<l; i++)
     {
@@ -724,27 +723,28 @@ void BasisSelectionRegressor::appendFunctionToSelection(int candidate_index)
 }
 
 void BasisSelectionRegressor::retrainLearner()
-{
+{    
     int l  = train_set->length();
     int nf = selected_functions.length();
     bool weighted = train_set->hasWeights();
+
+    // set dummy training set, so that undelying learner frees reference to previous training set
+    VMat newtrainset = new MemoryVMatrix(1,nf+(weighted?2:1));
+    newtrainset->defineSizes(nf,1,weighted?1:0);
+    learner->setTrainingSet(newtrainset);
+    learner->forget();
+
+    features.resize(l,nf+(weighted?2:1), max(1,int(0.25*l*nf)), true); // enlarge width while preserving content
     if(weighted)
-    {
-        features.resize(l,nf+2, l*nf, true); // enlarge width while preserving content
-        // append target and weight columns to features matrix
-        for(int i=0; i<l; i++)
+        for(int i=0; i<l; i++) // append target and weight columns to features matrix
         {
             features(i,nf) = targets[i];
             features(i,nf+1) = weights[i];
         }
-    }
     else // no weights
-    {
-        features.resize(l,nf+1, l*nf, true); // enlarge width while preserving content
         features.lastColumn() << targets; // append target column to features matrix
-    }
 
-    VMat newtrainset = new MemoryVMatrix(features.copy());
+    newtrainset = new MemoryVMatrix(features);
     newtrainset->defineSizes(nf,1,weighted?1:0);
     // perr.clearOutMap();
     // perr << "new train set:\n" << newtrainset << endl; 
@@ -762,7 +762,6 @@ void BasisSelectionRegressor::train()
     if (!initTrain())
         return;
 
-    Vec train_costs(1);
 
     if(stage==0)
         buildAllCandidateFunctions();
@@ -810,10 +809,11 @@ void BasisSelectionRegressor::train()
                 perr << "\n\n*** Stage " << stage << " : no more candidate functions. *****" << endl;
         }
         // clear statistics of previous epoch
-        train_stats->forget();
-        train_costs[0] = residue_sum_sq/weights_sum;
-        train_stats->update(train_costs, weights_sum);
-        train_stats->finalize(); // finalize statistics for this epoch
+        // train_stats->forget();
+        // Vec train_costs(1);
+        // train_costs[0] = residue_sum_sq/weights_sum;
+        // train_stats->update(train_costs, weights_sum);
+        // train_stats->finalize(); // finalize statistics for this epoch
         ++stage;
     }
 }
@@ -937,11 +937,19 @@ TVec<string> BasisSelectionRegressor::getTestCostNames() const
     return getTrainCostNames();
 }
 
+void BasisSelectionRegressor::setTrainStatsCollector(PP<VecStatsCollector> statscol)
+{ 
+    train_stats = statscol; 
+    learner->setTrainStatsCollector(statscol);
+}
+
+
 TVec<string> BasisSelectionRegressor::getTrainCostNames() const
 {
-    TVec<string> costnames(1);
-    costnames[0] = "mse";
-    return costnames;
+//     TVec<string> costnames(1);
+//     costnames[0] = "mse";
+//     return costnames;
+    return learner->getTrainCostNames();
 }
 
 

@@ -94,6 +94,8 @@ void ChainedLearners::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(learners, copies);
+    deepCopyField(tmp_input, copies);
+    deepCopyField(tmp_output, copies);
 }
 
 

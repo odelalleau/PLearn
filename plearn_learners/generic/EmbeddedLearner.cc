@@ -229,6 +229,12 @@ TVec<string> EmbeddedLearner::getTrainCostNames() const
     return learner_->getTrainCostNames();
 }
 
+TVec<string> EmbeddedLearner::getOutputNames() const
+{
+    assert( learner_ );
+    return learner_->getOutputNames();
+}
+
 void EmbeddedLearner::resetInternalState()
 {
     assert( learner_ );

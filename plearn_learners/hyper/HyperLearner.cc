@@ -51,17 +51,24 @@ namespace PLearn {
 PLEARN_IMPLEMENT_OBJECT(
     HyperLearner,
     "Learner which optimizes a set of hyper-parameters.",
-    "");
+    "Note that the train costs produced by HyperLearner are the cost-stats \n"
+    "produced by the underlying PTester, and thus have the form: \n"
+    "for ex: E[train.E[mse]]  \n"
+    "Consequently if you embed the HyperLearner in a higher level PTester \n"
+    "the produced cost-stats will be accessible through the form: \n"
+    "        E[train.E[E[train.E[mse]]]]. \n"
+    "The test costs are EmbeddedLearner's test costs and have the form:\n"
+    "        mse\n"
+    "They are accessible in the higher level PTester as: \n"
+    "for ex: E[test1.E[mse]]");
 
 
 TVec<string> HyperLearner::getTrainCostNames() const
 {
-    return tester->learner->getTrainCostNames();
-
-//     if (strategy.size() > 0)
-//         return strategy.lastElement()->getResultNames();
-//     else
-//         return TVec<string>();
+    if (strategy.size() > 0)
+        return strategy.lastElement()->getResultNames();
+    else
+        return TVec<string>();
 }
 
 HyperLearner::HyperLearner()
@@ -190,6 +197,9 @@ void HyperLearner::train()
         setTrainStatsCollector(new VecStatsCollector()); // set a dummy one if
     // none is set...
 
+    train_stats->setFieldNames(getTrainCostNames());
+    
+
     if(stage==0 && nstages>0)
     {
         for(int commandnum=0; commandnum<strategy.length(); commandnum++)
@@ -259,18 +269,6 @@ void HyperLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(strategy, copies);
 }
 
-
-TVec<string> HyperLearner::getOutputNames() const
-{
-    return getLearner()->getOutputNames();
-}
-
-void HyperLearner::setTrainStatsCollector(PP<VecStatsCollector> statscol)
-{
-    assert( learner_ );
-    inherited::setTrainStatsCollector(statscol);
-    learner_->setTrainStatsCollector(statscol);
-}
 
 
 } // end of namespace PLearn

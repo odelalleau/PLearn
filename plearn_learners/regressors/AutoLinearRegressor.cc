@@ -127,8 +127,6 @@ void AutoLinearRegressor::build()
 
 void AutoLinearRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    inherited::makeDeepCopyFromShallowCopy(copies);
-
     // ### Call deepCopyField on all "pointer-like" fields
     // ### that you wish to be deepCopied rather than
     // ### shallow-copied.
@@ -141,6 +139,7 @@ void AutoLinearRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(weights, copies);
     deepCopyField(mean_target, copies);
+    deepCopyField(extendedinput, copies);
 
 }
 
