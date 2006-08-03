@@ -137,17 +137,7 @@ void NnlmWordRepresentationLayer::build_()
 
     // *** Initialize weights if not loaded
     if( weights.size() == 0 )   {
-
-        resetWeights();
-
-        // TODO add an option for the seed
-        if( !random_gen )   {
-            random_gen = new PRandom( 1 );
-        }
-
-        real r = 1.0 / sqrt(input_size);
-        random_gen->fill_random_uniform(weights,-r,r);
-
+				forget();
     }
 
 }
@@ -251,6 +241,7 @@ void NnlmWordRepresentationLayer::bpropUpdate(const Vec& input, const Vec& outpu
 
     learning_rate = start_learning_rate / ( 1.0 + decrease_constant * step_number);
 
+    //cout << "NnlmWordRepresentationLayer::bpropUpdate -> output_gradient is " << output_gradient << endl;
 
     // magnitude of index check and update
     for( int i=0; i<input_size; i++)  {
@@ -265,9 +256,13 @@ void NnlmWordRepresentationLayer::bpropUpdate(const Vec& input, const Vec& outpu
       /*for(int j=0; j < output_size; j++)  {
           weights( (int) input[i], j%word_representation_size) -= learning_rate * output_gradient[j];
       }*/
+
+//cout << "word rep gradient ";
       for(int j=0; j < word_representation_size; j++)  {
           weights( (int) input[i], j) -= learning_rate * output_gradient[j+i*word_representation_size];
+//cout << - learning_rate * output_gradient[j+i*word_representation_size] << " ";
       }
+//cout << endl;
 
     }
 
@@ -300,9 +295,10 @@ void NnlmWordRepresentationLayer::forget()
         random_gen = new PRandom( 1 );
     }
 
-    real r = 1.0 / sqrt(input_size);
-    random_gen->fill_random_uniform(weights,-r,r);
-
+    //real r = 1.0 / sqrt(input_size);
+    //random_gen->fill_random_uniform(weights,-r,r);
+		random_gen->fill_random_uniform(weights,-1.0,1.0);
+	
     // *** 
     step_number = 0;
 
