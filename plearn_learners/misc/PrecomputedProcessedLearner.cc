@@ -112,9 +112,7 @@ void PrecomputedProcessedLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 int PrecomputedProcessedLearner::outputsize() const
 {
-    VMat trset = getTrainingSet();
-    assert( trset );
-    return trset->inputsize();
+    return inputsize_;
 }
 
 void PrecomputedProcessedLearner::forget()
