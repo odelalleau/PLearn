@@ -79,6 +79,24 @@ namespace PLearn {
  *
  *  - setParam(key,value): set a new value for the 'params' element
  *    corresponding to key.
+ *
+ *  NOTE ON RELOADED MODELS.  If a PythonProcessedLearner is saved to disk and
+ *  later reloaded, it is likely that a setTrainingSet will not be called on
+ *  the model (which would establish the outputsize through a call to
+ *  getOutputNames).  If this happens, the PythonProcessedLearner looks in its
+ *  'params' to locate the following entries:
+ *
+ *  - fieldnames
+ *  - inputsize
+ *  - targetsize
+ *  - weightsize
+ *  - extrasize
+ *
+ *  If it can find them all, the outputsize() function automatically invokes
+ *  getOutputNames to establish the proper dimensions of the learner.  Note
+ *  that your Python code should normally manually update these options within
+ *  the getOutputNames() function to ensure that they are saved with the
+ *  learner after training.
  */
 class PythonProcessedLearner : public PLearner
 {
@@ -170,6 +188,9 @@ protected:
     //! If not already done, compile the Python snippet and inject the
     //! required stuff into the Python environment
     void compileAndInject();
+
+    //! Sets the outputnames from the fieldnames/*size stored in params
+    void setOutputNamesFromParams();
     
 protected:
     //! Cached version of the output names 

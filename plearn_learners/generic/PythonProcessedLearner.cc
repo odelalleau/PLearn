@@ -38,6 +38,8 @@
 
 
 #include "PythonProcessedLearner.h"
+#include <plearn/base/lexical_cast.h>
+#include <plearn/sys/Profiler.h>
 
 namespace PLearn {
 using namespace std;
@@ -74,6 +76,24 @@ PLEARN_IMPLEMENT_OBJECT(
     "\n"
     "- setParam(key,value): set a new value for the 'params' element\n"
     "  corresponding to key.\n"
+    "\n"
+    "NOTE ON RELOADED MODELS.  If a PythonProcessedLearner is saved to disk and\n"
+    "later reloaded, it is likely that a setTrainingSet will not be called on\n"
+    "the model (which would establish the outputsize through a call to\n"
+    "getOutputNames).  If this happens, the PythonProcessedLearner looks in its\n"
+    "'params' to locate the following entries:\n"
+    "\n"
+    "- fieldnames\n"
+    "- inputsize\n"
+    "- targetsize\n"
+    "- weightsize\n"
+    "- extrasize\n"
+    "\n"
+    "If it can find them all, the outputsize() function automatically invokes\n"
+    "getOutputNames to establish the proper dimensions of the learner.  Note\n"
+    "that your Python code should normally manually update these options within\n"
+    "the getOutputNames() function to ensure that they are saved with the\n"
+    "learner after training.\n"
     );
 
 PythonProcessedLearner::PythonProcessedLearner()
@@ -157,6 +177,11 @@ void PythonProcessedLearner::setTrainingSet(VMat training_set, bool call_forget)
 int PythonProcessedLearner::outputsize() const
 {
     assert( python );
+
+    // Reloaded model for which we have not yet established the outputsize
+    if (m_outputnames.size() == 0)
+        const_cast<PythonProcessedLearner*>(this)->setOutputNamesFromParams();
+    
     return m_outputnames.size();
 }
 
@@ -174,8 +199,10 @@ void PythonProcessedLearner::train()
 void PythonProcessedLearner::computeOutput(const Vec& input, Vec& output) const
 {
     assert( python );
+    Profiler::start("PythonProcessedLearner");
     Vec processed = python->invoke("computeOutput", input).as<Vec>();
     output << processed;
+    Profiler::end("PythonProcessedLearner");
 }
 
 void PythonProcessedLearner::computeCostsFromOutputs(const Vec& input, const Vec& output,
@@ -259,6 +286,33 @@ void PythonProcessedLearner::compileAndInject()
     }
 }
 
+
+//#####  setOutputNamesFromParams  ############################################
+
+void PythonProcessedLearner::setOutputNamesFromParams()
+{
+    assert( python );
+    map<string,string>::iterator NOT_FOUND = m_params.end();
+    if (m_params.find("fieldnames") == NOT_FOUND ||
+        m_params.find("inputsize")  == NOT_FOUND ||
+        m_params.find("targetsize") == NOT_FOUND ||
+        m_params.find("weightsize") == NOT_FOUND ||
+        m_params.find("extrasize")  == NOT_FOUND )
+        PLERROR("%s: Cannot find one of {'fieldnames','inputsize','targetsize',\n"
+                "'weightsize','extrasize'} in params in order to set outputnames\n"
+                "from params", __FUNCTION__);
+
+    string fieldnames = m_params["fieldnames"];
+    search_replace(fieldnames, "'", "\"");
+    TVec<string> fields = lexical_cast< TVec<string> >(fieldnames);
+    int inputsize       = lexical_cast<int>(m_params["inputsize" ]);
+    int targetsize      = lexical_cast<int>(m_params["targetsize"]);
+    int weightsize      = lexical_cast<int>(m_params["weightsize"]);
+    int extrasize       = lexical_cast<int>(m_params["extrasize" ]);
+
+    m_outputnames = python->invoke("getOutputNames", fields, inputsize, targetsize,
+                                   weightsize, extrasize).as< TVec<string> >();
+}
 
 } // end of namespace PLearn
 
