@@ -37,6 +37,7 @@
 /*! \file NnlmOnlineLearner.h */
 
 
+
 #ifndef NnlmOnlineLearner_INC
 #define NnlmOnlineLearner_INC
 
@@ -65,7 +66,9 @@ public:
     //#####  Public Build Options  ############################################
 
     //! Defines which model is used
-    string str_model_type;
+    string str_input_model;    // 'wrl' (default) or 'gnnl'
+    string str_output_model;    // 'gaussian' (default) or 'softmax'
+
 
     //! --- Fixed (same in both models) part ----------------------------------
 
@@ -91,6 +94,7 @@ public:
     string str_gaussian_model_train_cost;
     string str_gaussian_model_learning;
     real gaussian_model_sigma2_min;
+    real gaussian_model_dl_slr;
 
     //! Number of candidates to use from different sources in the gaussian model
     //! when we use the approx_discriminant cost
@@ -148,17 +152,16 @@ public:
 
     //#####  PLearner Member Functions  #######################################
 
-    //! 
+    //! builds the layers, ie modules and output_modules
     void buildLayers();
 
     //! Specific to the gaussian model
     void buildCandidates();
+    void reevaluateGaussianParameters() const;
+    void evaluateGaussianCounts() const;
 
     //! Interfaces with the ProcessSymbolicSequenceVMatrix's getRow()
     void myGetExample(const VMat& example_set, int& sample, Vec& input, Vec& target, real& weight) const;
-
-    //! Gaussian specific
-    void reevaluateGaussianParameters() const;
 
     //! Returns the size of this learner's output, (which typically
     //! may depend on its inputsize(), targetsize() and set options).
@@ -268,8 +271,8 @@ private:
     int gaussian_model_learning;
 
     enum{MODEL_TYPE_GAUSSIAN, MODEL_TYPE_SOFTMAX};
-    enum{GAUSSIAN_COST_APPROX_DISCR, GAUSSIAN_COST_NON_DISCR};
-    enum{GAUSSIAN_LEARNING_NON_DISCR, GAUSSIAN_LEARNING_DISCR};
+    enum{GAUSSIAN_COST_DISCR=0, GAUSSIAN_COST_APPROX_DISCR=1, GAUSSIAN_COST_NON_DISCR=2};
+    enum{GAUSSIAN_LEARNING_DISCR=0, GAUSSIAN_LEARNING_EMPIRICAL=1};
 };
 
 // Declares a few other classes and functions related to this class
