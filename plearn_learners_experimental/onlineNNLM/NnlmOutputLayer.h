@@ -128,7 +128,7 @@ public:
 
     //! Computes -log( p(t|r) )
     void compute_nl_p_t_r(const Vec& input, Vec& output) const;
-    void getBestCandidates(Vec& candidate_tags, Vec& probabilities) const;
+    void getBestCandidates(const Vec& input, Vec& candidate_tags, Vec& probabilities) const;
 
 		//! Compute gradients of different costs with respect to input
     void computeNonDiscriminantGradient() const;
@@ -272,7 +272,7 @@ public:
 
     mutable real s;
     mutable real g_exponent;
-    mutable real g_det_covariance;
+    mutable real log_g_det_covariance;
     mutable real log_g_normalization;
 
     mutable Vec vec_log_p_rg_t;
@@ -289,6 +289,9 @@ public:
     mutable Vec nd_gradient;
     mutable Vec ad_gradient;
     mutable Vec fd_gradient;
+
+    mutable Vec bill;
+    mutable Vec bob;
 
     mutable Vec gradient_log_tmp;
     mutable Vec gradient_log_tmp_pos;

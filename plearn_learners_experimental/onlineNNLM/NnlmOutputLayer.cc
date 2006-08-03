@@ -55,7 +55,7 @@ PLEARN_IMPLEMENT_OBJECT(
 //! Used to sort words according to probability
 class wordAndProb {
 public:
-  wordAndProb(int wt, int p) : wordtag(wt), probability(p){};
+  wordAndProb(int wt, double p) : wordtag(wt), probability(p){};
   int wordtag;
   double probability;
 };
@@ -71,7 +71,7 @@ NnlmOutputLayer::NnlmOutputLayer() :
     OnlineLearningModule(),
     target_cardinality( -1 ),
     context_cardinality( -1 ),
-    sigma2min( 0.000001 ), // ### VERY IMPORTANT!!!
+      sigma2min( 0.000001 ), // ### VERY IMPORTANT!!!
     dl_start_learning_rate( 0.0 ),
     dl_decrease_constant( 0.0 ),
     el_start_discount_rate( 0.99 ), // ### VERY IMPORTANT!!!
@@ -85,7 +85,7 @@ NnlmOutputLayer::NnlmOutputLayer() :
     context( -1 ),
     s( 0.0 ),
     g_exponent( 0.0 ),
-    g_det_covariance( 0.0 ),
+    log_g_det_covariance( -REAL_MAX ),
     log_g_normalization( -REAL_MAX ),
     log_sum_p_ru( -REAL_MAX )
     //log_p_g_r( -REAL_MAX ),
@@ -285,6 +285,11 @@ void NnlmOutputLayer::resetParameters()
     fd_gradient.resize( input_size );
     fd_gradient.fill( 0.0 );
 
+    bill.resize( input_size );
+    bill.fill( 0.0 );
+    bob.resize( input_size );
+    bob.fill( 0.0 );
+
 
     gradient_log_tmp.resize( input_size );
     gradient_log_tmp.fill( 0.0 );
@@ -300,7 +305,7 @@ void NnlmOutputLayer::resetParameters()
     vec_log_p_r_t.resize( target_cardinality );
     vec_log_p_rt.resize( target_cardinality );
     beta.resize( target_cardinality, input_size );
-    gamma.resize( target_cardinality, input_size );
+    //gamma.resize( target_cardinality, input_size );
 
 }
 
@@ -382,7 +387,7 @@ void NnlmOutputLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(vec_log_p_rt, copies);
 
     deepCopyField(beta, copies);
-    deepCopyField(gamma, copies);
+    //deepCopyField(gamma, copies);
 
 }
 
@@ -437,12 +442,16 @@ void NnlmOutputLayer::compute_nl_p_rt(const Vec& input, Vec& output) const
     // NOTE \Sigma is a diagonal matrix, ie det() = \Prod and inverse is 1/...
 
     g_exponent = 0.0;
-    g_det_covariance = 1.0;
+    log_g_det_covariance = 0.0;
+
+    //cout << "**** s ";
 
     for(int i=0; i<input_size; i++) {
-
+      //cout << "g_exponent " << g_exponent << endl;
       // s = r[i] - mu_t[i]
       s = input[i] - mu(target, i);
+
+      //cout << s ;
 
       // memorize this calculation for gradients computation
       beta(target, i) = s / sigma2(target, i);
@@ -450,34 +459,43 @@ void NnlmOutputLayer::compute_nl_p_rt(const Vec& input, Vec& output) const
       g_exponent += s * beta(target, i);
 
       // determinant of covariance matrix
-      g_det_covariance *= sigma2(target, i);
+      log_g_det_covariance += safelog( sigma2(target, i) );
     }
+    //cout << endl;
 
     g_exponent *= -0.5;
 
     // ### Should we use logs here?
-    cout << "g_exponent " << g_exponent << " g_det_covariance " << g_det_covariance << endl;
+    //cout << "g_exponent " << g_exponent << " log_g_det_covariance " << log_g_det_covariance << endl;
 
 #ifdef BOUNDCHECK
-    if( isnan(g_exponent) || isnan(g_det_covariance) ) {
+    if( isnan(g_exponent) || isnan(log_g_det_covariance) ) {
       PLERROR( "NnlmOutputLayer::compute_nl_p_rt - NAN present.\n" );
     }
 #endif
 
     // * Compute normalizing factor
-    log_g_normalization = - 0.5 * ( (input_size) * safelog(2.0 * Pi) + safelog(g_det_covariance) );
+    log_g_normalization = - 0.5 * ( (input_size) * safelog(2.0 * Pi) + log_g_det_covariance );
+
+    //cout << "log_g_normalization " << log_g_normalization << endl;
 
     // * Compute log p(r,g|t) = log( p(r|t,g) p(g) ) = log( umc p_gaussian(r|t) )
     vec_log_p_rg_t[target] = safelog(umc) + g_exponent + log_g_normalization;
 
+    //cout << "p(r,g|t) " << safeexp( vec_log_p_rg_t[target] ) << endl;
+
     // * Compute log p(r|t) = log( umc p_g(r|t) + (1-umc) p_u(r|t) )
     vec_log_p_r_t[target] = logadd( vec_log_p_rg_t[target] , safelog(1.0-umc) - (input_size) * safelog(2.0));
+
+    //cout << "p_u " << safeexp( safelog(1.0-umc) - (input_size) * safelog(2.0) ) << endl;
 
     // * Compute log p(r,t)
     vec_log_p_rt[target] = safelog(pi[target]) + vec_log_p_r_t[target];
 
     // * Compute output
     output[0] = - vec_log_p_rt[target];
+
+    //cout << "safeexp( vec_log_p_rt[target] ) " << safeexp( vec_log_p_rt[target] ) << endl;
 
 #ifdef BOUNDCHECK
     if( isnan(vec_log_p_rt[target]) ) {
@@ -518,7 +536,11 @@ void NnlmOutputLayer::compute_nl_p_t_r(const Vec& input, Vec& output) const
         log_sum_p_ru = logadd(log_sum_p_ru, -nl_p_ru[0]);
     }
 
+    //cout << "log_p_rt[0] " << -nl_p_rt[0] << " log_sum_p_ru " << log_sum_p_ru << endl;
+
     output[0] = nl_p_rt[0] + log_sum_p_ru;
+
+    //cout << "p_t_r " << safeexp( - output[0] ) << endl;
 
 #ifdef BOUNDCHECK
     if( isnan(output[0]) ) {
@@ -530,7 +552,7 @@ void NnlmOutputLayer::compute_nl_p_t_r(const Vec& input, Vec& output) const
 
 //! May be called after compute_nl_p_t_r to find out which words get highest probability 
 //! according to the model
-void NnlmOutputLayer::getBestCandidates(Vec& candidate_tags, Vec& probabilities) const
+void NnlmOutputLayer::getBestCandidates(const Vec& input, Vec& candidate_tags, Vec& probabilities) const
 {
 		candidate_tags.resize(10);
 		probabilities.resize(10);
@@ -538,14 +560,14 @@ void NnlmOutputLayer::getBestCandidates(Vec& candidate_tags, Vec& probabilities)
     std::vector< wordAndProb > tmp;
 		Vec nl_p_ru(1);
 
-    for(int u=0; u<target_cardinality; u++)  {
+    for(int u=0; u<target_cardinality; u++)  {  
         setTarget( u );
         compute_nl_p_rt( input, nl_p_ru );
 
-        tmp.push_back( wordAndProb( u, safeexp( - (nl_p_ru[0] + log_sum_p_ru) ) );
+        tmp.push_back( wordAndProb( u, safeexp( - (nl_p_ru[0] + log_sum_p_ru) ) ) );
     }
 
-    std::sort(tmp.begin(), tmp.end(), wordAndFreqGT);
+    std::sort(tmp.begin(), tmp.end(), wordAndProbGT);
 
     // HACK we don't check if itr has hit the end... unlikely target_cardinality is smaller than 10
     std::vector< wordAndProb >::iterator itr_vec;
@@ -619,11 +641,14 @@ void NnlmOutputLayer::compute_approx_nl_p_t_r(const Vec& input, Vec& output) con
 //! MUST be called after the corresponding fprop
 void NnlmOutputLayer::computeNonDiscriminantGradient() const
 {
+    //cout << "vec_log_p_rg_t[the_real_target] " << vec_log_p_rg_t[the_real_target] << " vec_log_p_r_t[the_real_target] " << vec_log_p_r_t[the_real_target] << endl;
+
     real tmp = safeexp( vec_log_p_rg_t[the_real_target] - vec_log_p_r_t[the_real_target] );
 
     for(int i=0; i<input_size; i++) {
         nd_gradient[i] = beta( the_real_target, i) * tmp;
     }
+
 }
 
 
@@ -707,6 +732,9 @@ void NnlmOutputLayer::computeDiscriminantGradient() const
         }
     }
 
+//cout << "===nd_gradient " << nd_gradient << endl;
+//cout << "---fd_gradient " << nd_gradient << endl;
+
 }
 
 /////////////////////////////
@@ -753,8 +781,8 @@ void NnlmOutputLayer::addCandidateContribution( int c ) const
 void NnlmOutputLayer::resetTestVars() {
 
     // *TEST*
-    test_sumR.fill( 0 );
-    test_sumR2.fill( 0 );
+    test_sumR.fill( 0.0 );
+    test_sumR2.fill( 0.0 );
 
 }
 
@@ -781,19 +809,23 @@ void NnlmOutputLayer::applyTestVars()
 
     for(int i=0; i<input_size; i++) {
 
-
         mu( target, i ) = test_sumR( target, i ) / (real) sumI[ target ];
 
-        sigma2( target, i ) = (  mu(target, i) * mu(target, i) + 
-                ( test_sumR2(target, i) -2.0 * mu(target, i) * test_sumR(target, i)  ) / sumI[ target ] );
+        // TODO diviser par (n-1) au lieu de n
+        sigma2( target, i ) = mu(target, i) * mu(target, i) + 
+                ( test_sumR2(target, i) - 2.0 * mu(target, i) * test_sumR(target, i)  ) / sumI[ target ];
 
         if(sigma2( target, i )<sigma2min) {
+            cout << "NnlmOutputLayer::applyTestVars() -> sigma2( target, i )<sigma2min!"<<endl;
             sigma2( target, i ) = sigma2min;
         }
 
     }
-
-    pi[target] = (real)sumI[ target ] / (real)s_sumI;
+/*
+    cout << "***" << target << "***" << sumI[ target ] << " sur " << s_sumI << endl;
+    cout << mu( target ) << endl;
+    cout << sigma2( target ) << endl;
+*/
 
 }
 
@@ -844,6 +876,17 @@ void NnlmOutputLayer::bpropUpdate(const Vec& input, const Vec& output,
     else  {
         PLERROR("NnlmOutputLayer::bpropUpdate - invalid cost\n");
     }
+
+//    cout << "NnlmOutputLayer::bpropUpdate -> input_gradient " << input_gradient << endl; 
+
+    #ifdef BOUNDCHECK
+    for(int i=0; i<input_size; i++) {
+        if( isnan(input_gradient[i]) ) {
+          PLERROR( "NnlmOutputLayer::bpropUpdate - isnan(input_gradient[i]) true.\n" );
+        }
+    }
+    #endif
+
 
 
     // *** Discriminant learning of mu and sigma ***
@@ -964,6 +1007,9 @@ void NnlmOutputLayer::applyMuGradient() const
                 applyMuCandidateGradient(u);
             }
         }
+
+
+
     }
     else  {
         PLERROR("NnlmOutputLayer::applyMuGradient - invalid cost\n");
@@ -971,12 +1017,14 @@ void NnlmOutputLayer::applyMuGradient() const
 
 }
 ////////////////////
-// applyMuGradient
+// applyMuTargetGradient
 ////////////////////
 //! MUST be called after the corresponding fprop
 //! 
 void NnlmOutputLayer::applyMuTargetGradient() const
 {
+//    Vec bill( input_size );
+
 
     Vec mu_gradient( input_size );
     mu_gradient << nd_gradient;
@@ -992,16 +1040,21 @@ void NnlmOutputLayer::applyMuTargetGradient() const
         }
 
         mu(the_real_target,i) -= dl_lr * mu_gradient[i];
+
+//bill[i] = mu_gradient[i];
     }
+//cout << "MU target GRADIENT " << bill << endl;
 
 }
 ////////////////////
-// applyMuGradient
+// applyMuCandidateGradient
 ////////////////////
 //! MUST be called after the corresponding fprop
 //! 
 void NnlmOutputLayer::applyMuCandidateGradient(int c) const
 {
+//    Vec bill( input_size );
+
     Vec mu_gradient(input_size);
 
     for( int i=0; i<input_size; i++ ) {
@@ -1013,8 +1066,10 @@ void NnlmOutputLayer::applyMuCandidateGradient(int c) const
                 safelog( pi[c] ) + vec_log_p_rg_t[c] + safelog( -beta(c,i) ) - log_sum_p_ru );
         }
         mu(c,i) -= dl_lr * mu_gradient[i];
-    }
 
+//bill[i] = - dl_lr * mu_gradient[i];
+    }
+//cout << "MU candidate GRADIENT " << bill << endl;
 }
 
 ///////////////////////
@@ -1022,6 +1077,7 @@ void NnlmOutputLayer::applyMuCandidateGradient(int c) const
 ///////////////////////
 void NnlmOutputLayer::applySigmaGradient() const
 {
+    dl_lr = dl_start_learning_rate / ( 1.0 + dl_decrease_constant * step_number);
 
     Vec sigma2_gradient( input_size );
 
@@ -1071,6 +1127,7 @@ void NnlmOutputLayer::applySigmaGradient() const
                 applySigmaCandidateGradient(u);
             }
         }
+
     }
     else  {
         PLERROR("NnlmOutputLayer::applySigmaGradient - invalid cost\n");
@@ -1080,6 +1137,8 @@ void NnlmOutputLayer::applySigmaGradient() const
 }
 void NnlmOutputLayer::applySigmaTargetGradient() const
 {
+  //  Vec bob( input_size );
+
     Vec sigma2_gradient( input_size );
 
     real tmp = -0.5 * safeexp( vec_log_p_rg_t[ the_real_target ] - vec_log_p_r_t[ the_real_target ] );
@@ -1091,12 +1150,23 @@ void NnlmOutputLayer::applySigmaTargetGradient() const
         sigma2_gradient[i] = tmp * tmp3;
         sigma2_gradient[i] += tmp2 * tmp3;
         sigma2(the_real_target,i) -= dl_lr * sigma2_gradient[i];
+
+            // Enforce minimal sigma
+            if(sigma2( the_real_target, i )<sigma2min) {
+                sigma2( the_real_target, i ) = sigma2min;
+            }
+
+//bob[i] = sigma2_gradient[i];
     }
+//cout << "SIGMA target GRADIENT " << bob << endl;
+
 }
 
 
 void NnlmOutputLayer::applySigmaCandidateGradient(int c) const
 {
+//    Vec bob( input_size );
+
     Vec sigma2_gradient( input_size );
 
     real tmp2 = 0.5 * pi[c] * safeexp( vec_log_p_rg_t[ c ] - log_sum_p_ru );
@@ -1106,8 +1176,15 @@ void NnlmOutputLayer::applySigmaCandidateGradient(int c) const
         tmp3 = beta(c,i) * beta(c,i) - 1.0/sigma2(c,i);
         sigma2_gradient[i] = tmp2 * tmp3;
         sigma2(c,i) -= dl_lr * sigma2_gradient[i];
-    }
 
+            // Enforce minimal sigma
+            if(sigma2( c, i )<sigma2min) {
+                sigma2( c, i ) = sigma2min;
+            }
+//bob[i] = - dl_lr * sigma2_gradient[i];
+
+    }
+//cout << "SIGMA candidate GRADIENT " << bob << endl;
 }
 
 //! reset the parameters to the state they would be BEFORE starting training.
