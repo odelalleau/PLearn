@@ -96,17 +96,88 @@ PDateTime::PDateTime(string date)
                 "\"YYYY/MM/DD\" or \"YYYY/MM/DD hh:mm:ss\" format");
 }
 
+///////////////
+// isMissing //
+///////////////
 bool PDateTime::isMissing() const
 {
     return year == SHRT_MIN && month == 0 && day == 0;
 }
 
+////////////////
+// setMissing //
+////////////////
 void PDateTime::setMissing()
 {
     year = SHRT_MIN;
     month = 0;
     day = 0;
 }  
+
+///////////////
+// incSecond //
+///////////////
+void PDateTime::incSecond(int sec_inc)
+{
+    int new_sec = int(sec) + sec_inc;
+    int min_inc = new_sec / 60;
+    sec = (unsigned char) (new_sec % 60);
+    incMinute(min_inc);
+}
+
+///////////////
+// incMinute //
+///////////////
+void PDateTime::incMinute(int min_inc)
+{
+    int new_min = int(min) + min_inc;
+    int hour_inc = new_min / 60;
+    min = (unsigned char) (new_min % 60);
+    incHour(hour_inc);
+}
+
+/////////////
+// incHour //
+/////////////
+void PDateTime::incHour(int hour_inc)
+{
+    int new_hour = int(hour) + hour_inc;
+    int day_inc = new_hour / 24;
+    hour = (unsigned char) (new_hour % 24);
+    incDay(day_inc);
+}
+
+////////////
+// incDay //
+////////////
+void PDateTime::incDay(int day_inc)
+{
+    assert( day_inc >= 0 );
+    int new_day = int(day) + day_inc;
+    int max_day = 31;
+    if (month == 2) {
+        if (year < 1900 || year > 2100)
+            PLERROR("In PDateTime::incDay - This code is probably not going to"
+                    " work for year %d", int(year));
+        max_day = year % 4 == 0 ? 29 : 28;
+    } else if (month == 4 || month == 6 || month == 9 || month == 11)
+        max_day = 30;
+    if (new_day <= max_day) {
+        day = (unsigned char) new_day;
+        return;
+    }
+    // We need to switch to next month.
+    assert( max_day >= int(day) );
+    int days_to_next_month = max_day - int(day) + 1;
+    month++;
+    if (month == 13) {
+        // We need to switch to next year.
+        year++;
+        month = 1;
+    }
+    day = 1;
+    incDay(day_inc - days_to_next_month);
+}
   
 //////////
 // info //

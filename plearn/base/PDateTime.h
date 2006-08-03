@@ -146,6 +146,15 @@ public:
 */
     double toJulianDay() const;
 
+    //! Increment the current date by a given number of seconds.
+    void incSecond  (int sec_inc);
+    //! Increment the current date by a given number of minutes.
+    void incMinute  (int min_inc);
+    //! Increment the current date by a given number of hours.
+    void incHour    (int hour_inc);
+    //! Increment the current date by a given number of days.
+    void incDay     (int day_inc);
+
     //! Return a PDateTime object corresponding to the current local date
     //! and time.
     static PDateTime currentLocalTime();
