@@ -49,7 +49,6 @@
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/misc/PLearnService.h>
 #include <plearn/misc/RemotePLearnServer.h>
-// #include <plearn/vmat/MemoryVMatrix.h>
 #include <plearn/vmat/PLearnerOutputVMatrix.h>
 
 namespace PLearn {
@@ -626,50 +625,8 @@ void PLearner::use(VMat testset, VMat outputs) const
 
 VMat PLearner::processDataSet(VMat dataset) const
 {
-    // new code using PLearnerOutputVMatrix
+    // PLearnerOutputVMatrix does exactly this.
     return new PLearnerOutputVMatrix(dataset, this);
-
-    /* Old code for direct in-memory computation
-
-    Vec input(dataset->inputsize());
-    int nout = outputsize();
-    int targetsize = dataset->targetsize();
-    int weightsize = dataset->weightsize();
-    int extrasize  = dataset->extrasize(); 
-    Vec processed_row(nout+targetsize+weightsize+extrasize);
-    Vec output = processed_row.subVec(0,nout);
-    Vec target = processed_row.subVec(nout,targetsize);
-    Vec weight = processed_row.subVec(nout+targetsize,weightsize);
-    Vec extra  = processed_row.subVec(nout+targetsize+weightsize,extrasize);
-
-    real w;
-    int l = dataset.length();
-    
-    // For now we cache this in memory. A future implementation may offer 
-    // other options, such as caching in file, or on-the-fly computation
-    // vmatrix.
-    Mat processed_data(l,nout+targetsize+weightsize+extrasize);
-
-    for(int i=0; i<l; i++)
-    {
-        dataset->getExample(i, input, target, w);
-        if(weightsize==1)
-            weight[0] = w;
-        dataset->getExtra(i,extra);
-        computeOutput(input, output);
-        processed_data(i) << processed_row;
-    }
-
-    VMat processed_vmat = new MemoryVMatrix(processed_data);
-    processed_vmat->defineSizes(nout, targetsize, weightsize, extrasize);
-    TVec<string> fieldnames = concat(getOutputNames(),  
-                                     dataset->targetFieldNames(),
-                                     dataset->weightFieldNames(),
-                                     dataset->extraFieldNames() );
-    processed_vmat->declareFieldNames(fieldnames);
-    return processed_vmat;
-    */
-
 }
 
 
@@ -686,8 +643,6 @@ TVec<string> PLearner::getOutputNames() const
 // useOnTrain //
 ////////////////
 void PLearner::useOnTrain(Mat& outputs) const {
-    // NC declares this method to be tested...
-    // PLWARNING("In PLearner::useOnTrain - This method has not been tested yet, remove this warning if it works fine");
     VMat train_output(outputs);
     use(train_set, train_output);
 }
@@ -698,37 +653,25 @@ void PLearner::useOnTrain(Mat& outputs) const {
 void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats, 
                     VMat testoutputs, VMat testcosts) const
 {
-    int l = testset.length();
+    int len = testset.length();
     Vec input;
     Vec target;
     real weight;
 
     Vec output(outputsize());
-
     Vec costs(nTestCosts());
 
-    // testset->defineSizes(inputsize(),targetsize(),weightsize());
-
     ProgressBar* pb = NULL;
-    if(report_progress) 
-        pb = new ProgressBar("Testing learner",l);
+    if (report_progress) 
+        pb = new ProgressBar("Testing learner", len);
 
-    if (l == 0) {
+    if (len == 0) {
         // Empty test set: we give -1 cost arbitrarily.
         costs.fill(-1);
         test_stats->update(costs);
     }
 
-    /*
-    perr << "PLearner::test class=" << this->classname()
-         << "\tl=" << l 
-         << "\tinputsize=" << testset->inputsize() 
-         << "\ttargetsize=" << testset->targetsize() 
-         << "\tweightsize=" << testset->weightsize() 
-         << endl;
-    */
-
-    for(int i=0; i<l; i++)
+    for (int i = 0; i < len; i++)
     {
         testset.getExample(i, input, target, weight);
       
@@ -736,20 +679,20 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
         // behaved with stateful learners
         computeOutputAndCosts(input,target,output,costs);
       
-        if(testoutputs)
-            testoutputs->putOrAppendRow(i,output);
+        if (testoutputs)
+            testoutputs->putOrAppendRow(i, output);
 
-        if(testcosts)
+        if (testcosts)
             testcosts->putOrAppendRow(i, costs);
 
-        if(test_stats)
-            test_stats->update(costs,weight);
+        if (test_stats)
+            test_stats->update(costs, weight);
 
-        if(report_progress)
+        if (report_progress)
             pb->update(i);
     }
 
-    if(pb)
+    if (pb)
         delete pb;
 
 }
@@ -890,180 +833,6 @@ void PLearner::remote_batchComputeOutputAndConfidence(VMat inputs, real probabil
     VMat out_and_conf = new FileVMatrix(pmat_fname,inputs.length(),fieldnames);
     batchComputeOutputAndConfidence(inputs, probability, out_and_conf);
 }
-
-/**
- *  void PLearner::call(const string& methodname, int nargs, PStream& io)
- *  {
- *      if(methodname=="setTrainingSet")
- *      {
- *          if(nargs!=2) PLERROR("PLearner remote method setTrainingSet takes 2 argument");
- *          VMat training_set;
- *          bool call_forget;
- *          io >> training_set >> call_forget;
- *          setTrainingSet(training_set, call_forget);
- *          prepareToSendResults(io, 0);
- *          io.flush();
- *      }
- *      else if(methodname=="setExperimentDirectory")
- *      {
- *          if(nargs!=1) PLERROR("PLearner remote method setExperimentDirectory takes 1 argument");
- *          PPath the_expdir;
- *          io >> the_expdir;
- *          setExperimentDirectory(the_expdir);
- *          prepareToSendResults(io, 0);
- *          io.flush();      
- *      }
- *      else if(methodname=="getExperimentDirectory")
- *      {
- *          if(nargs!=0) PLERROR("PLearner remote method getExperimentDirectory takes 0 arguments");
- *          PPath result = getExperimentDirectory();
- *          prepareToSendResults(io, 1);
- *          io << result;
- *          io.flush();      
- *      }
- *      else if(methodname=="forget")
- *      {
- *          if(nargs!=0) PLERROR("PLearner remote method forget takes 0 arguments");
- *          forget();
- *          prepareToSendResults(io, 0);
- *          io.flush();      
- *      }
- *      else if(methodname=="train")
- *      {
- *          if(nargs!=0) PLERROR("PLearner remote method train takes 0 arguments");
- *          train();
- *          prepareToSendResults(io, 0);
- *          io.flush();      
- *      }
- *      else if(methodname=="resetInternalState")
- *      {
- *          if(nargs!=0) PLERROR("PLearner remote method resetInternalState takes 0 arguments");
- *          resetInternalState();
- *          prepareToSendResults(io, 0);
- *          io.flush();
- *      }
- *      else if(methodname=="computeOutput")
- *      {
- *          if(nargs!=1) PLERROR("PLearner remote method computeOutput takes 1 argument");
- *          Vec input;
- *          io >> input;
- *          tmp_output.resize(outputsize());
- *          computeOutput(input,tmp_output);
- *          prepareToSendResults(io, 1);
- *          io << tmp_output;
- *          io.flush();    
- *      }
- *      else if(methodname=="use") // use inputs_vmat output_pmat_fname --> void
- *      {
- *          if(nargs!=2) PLERROR("PLearner remote method use requires 2 argument");
- *          VMat inputs;
- *          string output_fname;
- *          io >> inputs >> output_fname;
- *          VMat outputs = new FileVMatrix(output_fname, inputs.length(), outputsize());
- *          use(inputs,outputs);
- *          prepareToSendResults(io, 0);
- *          io.flush();      
- *      }
- *      else if(methodname=="use2") // use inputs_vmat --> outputs
- *      {
- *          if(nargs!=1) PLERROR("PLearner remote method use2 requires 1 argument");
- *          VMat inputs;
- *          io >> inputs;
- *          // DBG_LOG << " Arg0 = " << inputs << endl;
- *          Mat outputs(inputs.length(),outputsize());
- *          use(inputs,outputs);
- *          prepareToSendResults(io, 1);
- *          io << outputs;
- *          io.flush();      
- *      }
- *      else if(methodname=="computeOutputAndCosts")
- *      {
- *          if(nargs!=2) PLERROR("PLearner remote method computeOutputAndCosts takes 2 arguments");
- *          Vec input, target;
- *          io >> input >> target;
- *          tmp_output.resize(outputsize());
- *          Vec costs(nTestCosts());
- *          computeOutputAndCosts(input,target,tmp_output,costs);
- *          prepareToSendResults(io, 2);
- *          io << tmp_output << costs;
- *          io.flush();
- *      }
- *      else if(methodname=="computeCostsFromOutputs")
- *      {
- *          if(nargs!=3) PLERROR("PLearner remote method computeCostsFromOutputs takes 3 arguments");
- *          Vec input, output, target;
- *          io >> input >> output >> target;
- *          Vec costs;
- *          computeCostsFromOutputs(input,output,target,costs);
- *          prepareToSendResults(io, 1);
- *          io << costs;
- *          io.flush();
- *      }
- *      else if(methodname=="computeCostsOnly")
- *      {
- *          if(nargs!=3) PLERROR("PLearner remote method computeCostsOnly takes 3 arguments");
- *          Vec input, target;
- *          io >> input >> target;
- *          Vec costs(nTestCosts());
- *          computeCostsOnly(input,target,costs);
- *          prepareToSendResults(io, 1);
- *          io << costs;
- *          io.flush();
- *      }
- *      else if(methodname=="computeConfidenceFromOutput")
- *      {
- *          if(nargs!=3) PLERROR("PLearner remote method computeConfidenceFromOutput takes 3 arguments: input, output, probability");
- *          Vec input, output;
- *          real probability;
- *          io >> input >> output >> probability;
- *        
- *          TVec< pair<real,real> > intervals(output.length());
- *          bool ok = computeConfidenceFromOutput(input, output, probability, intervals);
- *          prepareToSendResults(io, 2);
- *          io << ok << intervals;
- *          io.flush();
- *      }
- *      else if(methodname=="batchComputeOutputAndConfidencePMat") // input_vmat probability result_pmat_filename
- *      {
- *          if(nargs!=3) 
- *              PLERROR("PLearner remote method batchComputeOutputAndConfidencePMat takes 3 arguments:\n"
- *                      "input_vmat, probability, result_pmat_filename");
- *          VMat inputs;
- *          real probability;
- *          string pmat_fname;
- *          io >> inputs >> probability >> pmat_fname;
- *          TVec<string> fieldnames;
- *          for(int j=0; j<outputsize(); j++)
- *          {
- *              fieldnames.append("output_"+tostring(j));
- *              fieldnames.append("low_"+tostring(j));
- *              fieldnames.append("high_"+tostring(j));
- *          }
- *          VMat out_and_conf = new FileVMatrix(pmat_fname,inputs.length(),fieldnames);
- *          batchComputeOutputAndConfidence(inputs, probability, out_and_conf);
- *          prepareToSendResults(io,0);
- *          io.flush();
- *      }  
- *      else if(methodname=="getTestCostNames")
- *      {
- *          if(nargs!=0) PLERROR("PLearner remote method getTestCostNames takes 0 arguments");
- *          TVec<string> result = getTestCostNames();
- *          prepareToSendResults(io, 1);
- *          io << result;
- *          io.flush();     
- *      }
- *      else if(methodname=="getTrainCostNames")
- *      {
- *          if(nargs!=0) PLERROR("PLearner remote method getTrainCostNames takes 0 arguments");
- *          TVec<string> result = getTrainCostNames();
- *          prepareToSendResults(io, 1);
- *          io << result;
- *          io.flush();     
- *      }
- *      else
- *          inherited::call(methodname, nargs, io);
- *  }
- */
 
 } // end of namespace PLearn
 
