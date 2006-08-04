@@ -95,15 +95,17 @@ class OptionBase:
         assert not isinstance(value, OptionBase)
         self.__class__.__option_id += 1
         self._id = self.__option_id
-
+        self._doc = kwargs.pop('doc', '')
+        
         if ( inspect.ismethod(value) or inspect.isfunction(value) 
-             or inspect.isroutine(value) or inspect.isclass(value) ):                 
+             or inspect.isroutine(value) or inspect.isclass(value) ):
             self._callable = value
             self._args     = args
             self._kwargs   = kwargs
 
         else:
-            assert len(args) == 0 and len(kwargs) == 0
+            assert len(args) == 0 and len(kwargs) == 0, \
+                   "args: %s\nkwargs: %s"%(args, kwargs)
             self._callable = copy.deepcopy
             self._args     = [ value ]
             self._kwargs   = kwargs
