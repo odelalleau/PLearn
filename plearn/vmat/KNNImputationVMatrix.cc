@@ -172,8 +172,8 @@ void KNNImputationVMatrix::build_()
     sample_index_to_imputed_index.fill(-1);
     ProgressBar* pb = 0;
     if (report_progress)
-        pb = new ProgressBar("Imputing missing values", full_source->length());
-    for (int i = 0; i < full_source->length(); i++) {
+        pb = new ProgressBar("Imputing missing values", source->length());
+    for (int i = 0; i < source->length(); i++) {
         source->getExample(i, input, target, weight);
         if (input.hasMissing()) {
             if (neighbors)
