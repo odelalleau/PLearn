@@ -41,16 +41,22 @@
 #define GaussianDBNClassification_INC
 
 #include <plearn_learners/distributions/PDistribution.h>
+#include "RBMMixedLayer.h"
+#include "RBMMultinomialLayer.h"
+#include "RBMQLParameters.h"
 
 namespace PLearn {
 
 class RBMLayer;
-class RBMMixedLayer;
-class RBMMultinomialLayer;
 class RBMParameters;
 class RBMLLParameters;
 class RBMJointLLParameters;
-class RBMQLParameters;
+// Note: cannot use forward declaration with PP<>. Thus the following lines are
+// commented out. It *can* sometimes work though depending on the includes
+// around, this is why there are still some forward declarations above.
+// class RBMMixedLayer;
+// class RBMMultinomialLayer; 
+// class RBMQLParameters;
 
 /**
  * Does the same thing as Hinton's deep belief nets
