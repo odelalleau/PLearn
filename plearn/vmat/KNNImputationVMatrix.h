@@ -63,6 +63,7 @@ public:
 
     VMat full_source;
     int knn;
+    VMat neighbors;
     int n_train_samples;
     bool report_progress;
 

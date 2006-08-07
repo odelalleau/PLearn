@@ -55,9 +55,16 @@ PLEARN_IMPLEMENT_OBJECT(
     "same variable.\n"
     "If no sample can be found with an observed value, the global mean of\n"
     "the variable is used.\n"
-    "In its current implementation, the distance relationships are obtained\n"
-    "from the full dataset (i.e. with no missing values), that must also be\n"
-    "provided.\n"
+    "\n"
+    "In its current implementation, the neighborhood relationships can be\n"
+    "obtained in two different manners:\n"
+    "- from the full dataset (i.e. with no missing values), if provided by\n"
+    "  the 'full_source' option\n"
+    "- from another VMat (the 'neighbors' option) that lists the neighbors\n"
+    "  of each sample by increasing order of distance (in this case, the\n"
+    "  'full_source' option can be used to specify another VMat whose\n"
+    "  samples are the neighbors indexed in the 'neighbors' VMat, and that\n"
+    "  will be used to compute the local mean instead of the source VMat).\n"
 );
 
 //////////////////////////
@@ -78,9 +85,18 @@ void KNNImputationVMatrix::declareOptions(OptionList& ol)
                              OptionBase::buildoption,
         "Number of nearest neighbors considered.");
 
+    declareOption(ol, "neighbors", &KNNImputationVMatrix::neighbors,
+                                   OptionBase::buildoption,
+        "Optional VMat that, if specified, contains in element (i,j) the\n"
+        "j-th nearest neighbor of sample i, either in 'source' or (if\n"
+        "provided) in 'full_source'.");
+
     declareOption(ol, "full_source", &KNNImputationVMatrix::full_source,
                                      OptionBase::buildoption,
-        "Same dataset as 'source', but with no missing values.");
+        "If 'neighbors' is not provided, this is the same dataset as\n"
+        "'source', but with no missing values.\n"
+        "Otherwise, this is another dataset, possibly with missing values,\n"
+        "that corresponds to the neighbors indexed in 'neighbors'.");
 
     declareOption(ol, "n_train_samples",
                   &KNNImputationVMatrix::n_train_samples,
@@ -118,10 +134,15 @@ void KNNImputationVMatrix::build_()
     assert( full_source->length() == source->length() );
     assert( full_source->width()  == source->width()  );
 
-    VMat candidates = full_source;
+    VMat candidates;
+    if (neighbors)
+        candidates = full_source ? full_source : source;
+    else
+        candidates = full_source;
+   
     if (n_train_samples > 0)
-        candidates = new SubVMatrix(full_source, 0, 0, n_train_samples,
-                                                       source->width());
+        candidates = new SubVMatrix(candidates, 0, 0, n_train_samples,
+                                                      candidates->width());
 
     // Prepare nearest neighbor learner.
     PP<ExhaustiveNearestNeighbors> nn_learner =
@@ -130,8 +151,11 @@ void KNNImputationVMatrix::build_()
     nn_learner->copy_target = false;
     nn_learner->copy_index = true;
     nn_learner->build();
-    nn_learner->setTrainingSet(candidates);
-    nn_learner->train();
+
+    if (!neighbors) {
+        nn_learner->setTrainingSet(candidates);
+        nn_learner->train();
+    }
 
     // Compute global mean.
     Vec global_mean;
@@ -139,6 +163,8 @@ void KNNImputationVMatrix::build_()
 
     // Perform actual missing values imputation.
     Vec input, target, output, input_nn;
+    if (neighbors)
+        output.resize(neighbors->width());
     real weight;
     imputed_input.resize(0, source->inputsize());
     Vec imputed_row(source->inputsize());
@@ -150,7 +176,10 @@ void KNNImputationVMatrix::build_()
     for (int i = 0; i < full_source->length(); i++) {
         source->getExample(i, input, target, weight);
         if (input.hasMissing()) {
-            nn_learner->computeOutput(input, output);
+            if (neighbors)
+                neighbors->getRow(i, output);
+            else
+                nn_learner->computeOutput(input, output);
             for (int k = 0; k < input.length(); k++)
                 if (is_missing(input[k])) {
                     int j = 0;
@@ -158,8 +187,12 @@ void KNNImputationVMatrix::build_()
                     real mean = 0;
                     while (count_neighbors < knn && j < output.length()) {
                         int neighbor_index = int(round(output[j]));
-                        source->getExample(neighbor_index, input_nn, target,
-                                                                     weight);
+                        if (neighbors && full_source)
+                            full_source->getExample(neighbor_index, input_nn,
+                                                    target, weight);
+                        else
+                            source->getExample(neighbor_index, input_nn,
+                                               target, weight);
                         if (!is_missing(input_nn[k])) {
                             mean += input_nn[k];
                             count_neighbors++;
@@ -210,6 +243,7 @@ void KNNImputationVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField(full_source,                      copies);
+    deepCopyField(neighbors,                        copies);
     deepCopyField(imputed_input,                    copies);
     deepCopyField(sample_index_to_imputed_index,    copies);
 }
