@@ -742,7 +742,7 @@ unsigned char new_get_compr_data_type(double x, double tolerance)
     else if(fast_exact_is_equal(x, 1.))
         return 0;
     else if(fast_exact_is_equal(double(char(x)), x) &&
-            !fast_exact_is_equal(x, -128))
+            !fast_exact_is_equal(x, -128)) // -128 codes for missing value
         return 1;
     else if(fabs(double(float(x))-x)<=tolerance)
         return 2;
@@ -755,7 +755,8 @@ unsigned char new_get_compr_data_type(float x)
         return 1;
     else if(fast_exact_is_equal(x, 1.))
         return 0;
-    else if(fast_exact_is_equal(float(char(x)), x))
+    else if(fast_exact_is_equal(float(char(x)), x) && 
+            !fast_exact_is_equal(x, -128)) // -128 codes for missing value
         return 1;
     return 2;
 }
