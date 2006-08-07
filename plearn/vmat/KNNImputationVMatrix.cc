@@ -131,8 +131,8 @@ void KNNImputationVMatrix::build_()
         return;
 
     assert( full_source );
-    assert( full_source->length() == source->length() );
-    assert( full_source->width()  == source->width()  );
+    assert( neighbors || full_source->length() == source->length() );
+    assert( full_source->width() == source->width()  );
 
     VMat candidates;
     if (neighbors)
@@ -168,7 +168,7 @@ void KNNImputationVMatrix::build_()
     real weight;
     imputed_input.resize(0, source->inputsize());
     Vec imputed_row(source->inputsize());
-    sample_index_to_imputed_index.resize(full_source->length());
+    sample_index_to_imputed_index.resize(source->length());
     sample_index_to_imputed_index.fill(-1);
     ProgressBar* pb = 0;
     if (report_progress)
