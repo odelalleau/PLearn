@@ -7,6 +7,7 @@ import time
 from subprocess import Popen,PIPE
 from utils import *
 from configobj import ConfigObj
+from textwrap import dedent
 
 STATUS_FINISHED = 0
 STATUS_RUNNING = 1
@@ -99,7 +100,7 @@ class Task:
         self.commands.append("python utils.py " + 'set_current_date ' +
                 string.join([self.log_file,'FINISHED_TIME',time_format],' '))
 
-        print "self.commands =", self.commands
+        #print "self.commands =", self.commands
 
     def get_status(self):
         #TODO: catch exception if value not available
@@ -175,7 +176,7 @@ class DBICluster(DBIBase):
         if int(self.file_redirect_stderr):
             error = file(self.log_file + '.pre_batch.err', 'w')
         self.pre = Popen(pre_batch_command, shell=True, stdout=output, stderr=error)
-        print 'pre_batch_command =', pre_batch_command
+        #print 'pre_batch_command =', pre_batch_command
 
         # Execute all Tasks (including pre_tasks and post_tasks if any)
         for task in self.tasks:
@@ -188,13 +189,13 @@ class DBICluster(DBIBase):
         if int(self.file_redirect_stderr):
             error = file(self.log_file + '.post_batch.err', 'w')
         self.post = Popen(post_batch_command, shell=True, stdout=output, stderr=error)
-        print 'post_batch_command =', post_batch_command
+        #print 'post_batch_command =', post_batch_command
 
     def clean(self):
         #TODO: delete all log files for the current batch
         pass
 
-def DBIbqtools(DBIBase):
+class DBIbqtools(DBIBase):
 
     def __init__( self, commands, **args ):
         DBIBase.__init__(self, commands, **args)
@@ -206,29 +207,29 @@ def DBIbqtools(DBIBase):
 
         # create the right symlink for parent in self.temp_dir_name
         self.parent_dir = 'parent'
-        os.symlink( '..', parent_dir )
+        os.symlink( '..', self.parent_dir )
 
         # check if log directory exists, if not create it
-        self.log_dir = os.path.join( parent_dir, self.log_dir )
+        self.log_dir = os.path.join( self.parent_dir, self.log_dir )
         if not os.path.exists(self.log_dir):
             os.mkdir(self.log_dir)
 
+        self.log_file = os.path.join( self.parent_dir, self.log_file )
+
         # create the information about the tasks
         for command in commands:
-            # pre_tasks and post_tasks commands have to be added to command
-            # before the creation of the Task object
-            all_commands = pre_tasks + [command] + post_tasks
-            self.tasks.append(Task(all_commands, self.log_dir, self.time_format))
+            self.tasks.append(Task(command, self.log_dir, self.time_format,
+                                   self.pre_tasks, self.post_tasks))
 
 
     def run(self):
-        pre_batch_command = ';'.join( pre_batch );
+        pre_batch_command = ';'.join( self.pre_batch );
         if int(self.file_redirect_stdout):
             pre_batch_command += ' >> ' + self.log_file + '.pre_batch.out'
         if int(self.file_redirect_stderr):
             pre_batch_command += ' 2>> ' + self.log_file + '.pre_batch.err'
 
-        post_batch_command = ';'.join( post_batch );
+        post_batch_command = ';'.join( self.post_batch );
         if int(self.file_redirect_stdout):
             post_batch_command += ' >> ' + self.log_file + '.post_batch.out'
         if int(self.file_redirect_stderr):
@@ -237,17 +238,22 @@ def DBIbqtools(DBIBase):
         # create one (sh) script that will launch the appropriate ~~command~~
         # in the right environment
         launcher = open( 'launcher', 'w' )
-        f.write( dedent('''\
+        bq_cluster_home = os.getenv( 'BQ_CLUSTER_HOME', '$HOME' )
+        bq_shell_cmd = os.getenv( 'BQ_SHELL_CMD', '/bin/sh -c' )
+        launcher.write( dedent('''\
                 #!/bin/sh
-                HOME=$BQ_CLUSTER_HOME
+
+                HOME=%s
                 export HOME
-                ($BQ_SHELL_COMMAND '~~task~~')'''
+
+                (%s '~~task~~')'''
+                % (bq_cluster_home, bq_shell_cmd)
                 ) )
 
         if int(self.file_redirect_stdout):
-            f.write( ' >> ~~logfile~~.out' )
+            launcher.write( ' >> ~~logfile~~.out' )
         if int(self.file_redirect_stderr):
-            f.write( ' 2>> ~~logfile~~.err' )
+            launcher.write( ' 2>> ~~logfile~~.err' )
         launcher.close()
 
         # create a file containing the list of commands, one per line
@@ -255,7 +261,7 @@ def DBIbqtools(DBIBase):
         tasks_file = open( 'tasks', 'w' )
         logfiles_file = open( 'logfiles', 'w' )
         for task in self.tasks:
-            tasks_file.write( task.command + '\n' )
+            tasks_file.write( ';'.join(task.commands) + '\n' )
             logfiles_file.write( task.log_file + '\n' )
         tasks_file.close()
         logfiles_file.close()
@@ -266,13 +272,24 @@ def DBIbqtools(DBIBase):
                 batchName = dbi_batch
                 command = sh launcher
                 templateFiles = launcher
-                remoteHost = auto
+                linkFiles = parent;parent/utils.py
+                remoteHost = Auto
                 param1 = (task, logfile) = load tasks, logfiles
                 concurrentJobs = 200
+
                 preBatch = ''' + pre_batch_command + '''
                 postBatch = ''' + post_batch_command +'''
                 ''') )
         bqsubmit_dat.close()
+
+        # Launch bqsubmit
+        output = PIPE
+        error = PIPE
+        if int(self.file_redirect_stdout):
+            output = file(self.log_file + '.out', 'w')
+        if int(self.file_redirect_stderr):
+            error = file(self.log_file + '.err', 'w')
+        self.p = Popen( 'bqsubmit', shell=True, stdout=output, stderr=error)
 
 
     def clean(self):
