@@ -149,20 +149,18 @@ void UniformizeLearner::forget()
     stage = 0; // untrained
 }
 
-
-
-
+////////////////////
+// setTrainingSet //
+////////////////////
 void UniformizeLearner::setTrainingSet(VMat training_set, bool call_forget)
 {
     inherited::setTrainingSet(training_set, call_forget);
     VMat dataset = getTrainingSet();
 
-    if(dataset->weightsize() == 0)
-        return;//no weights
     if(dataset->weightsize() > 1)
-        PLERROR("in UniformizeLearner::setTrainingSet: Only one weight supported.");
+        PLERROR("In UniformizeLearner::setTrainingSet: Only one weight supported.");
 
-    if(0 < train_set->weightsize())
+    if(train_set->weightsize() > 0)
         weight_field_index= dataset->fieldIndex(dataset->weightFieldNames()[0]);
     
     input_field_names.resize(dataset->inputsize());
@@ -185,8 +183,6 @@ void UniformizeLearner::setTrainingSet(VMat training_set, bool call_forget)
         for(int k= 0; k < nk; ++k)
             which_fieldnums[k]= k;
     }
-
-    
 }
     
 ///////////
