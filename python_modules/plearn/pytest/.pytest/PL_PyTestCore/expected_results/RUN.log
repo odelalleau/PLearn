@@ -39,6 +39,10 @@
 #
 
 #
+#  pytest meld -h
+#
+
+#
 #  pytest prune -h
 #
 
