@@ -315,7 +315,7 @@ class meld(locate):
             assert( len(Test._instances_map)==1 )
             test = Test._instances_map[test_name]
             
-        elif isinstance(self._listed, list):
+        elif isinstance(self._listed, type([])):
             assert( len(self._listed)==1 )            
             test = self._listed[0]
 
