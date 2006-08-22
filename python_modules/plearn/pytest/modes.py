@@ -254,6 +254,7 @@ class list(PyTestMode):
         formatted_string = lambda n,d: \
             "%s Disabled: %s" % (n.ljust(25), str(d).ljust(15))
 
+        self._listed = []
         for (family, test_list) in Test._families_map.iteritems():
             formatted_strings = []
 
@@ -262,6 +263,7 @@ class list(PyTestMode):
                     continue
                 if self.options.enabled  and test.disabled:
                     continue
+                self._listed.append(test)
                 formatted_strings.append(
                     formatted_string(test.name, test.disabled)
                     )
@@ -283,7 +285,8 @@ class locate(list):
 
         elif targets[0] in cached_test_map:
             test_dir = cached_test_map[targets[0]]
-            logging.warning("In %s\n    %s"%(test_dir, targets[0]))
+            self._listed = test_dir, targets[0]
+            logging.warning("In %s\n    %s"%self._listed)
             
         else:
             options.all = True
@@ -293,6 +296,36 @@ class locate(list):
             except KeyError:
                 logging.critical("No test named %s found."%options.test_name)
 
+class meld(locate):
+    """Starts meld to compare the expected/run results directory trees.
+
+    Usage: pytest meld <test_name>
+    """
+    def __init__(self, targets, options):
+        super(meld, self).__init__(targets, options)
+        if isinstance(self._listed, tuple):
+            moresh.pushd()
+            dirc = self._listed[0]
+            test_name = self._listed[1]
+            assert( test_name.find(',') == -1 )
+
+            Test.restrictTo(test_name)
+            self.build_tests((options, []), dirc, os.listdir(dirc))
+
+            assert( len(Test._instances_map)==1 )
+            test = Test._instances_map[test_name]
+            
+        elif isinstance(self._listed, list):
+            assert( len(self._listed)==1 )            
+            test = self._listed[0]
+
+        else:
+            raise TypeError, type(self._listed)
+
+        expected = test.resultsDirectory(EXPECTED_RESULTS)
+        run_results = test.resultsDirectory(RUN_RESULTS)
+        os.system("meld %s %s"%(expected, run_results))
+        
 class prune( PyTestMode ):
     """Removes all pytest directories within given test directories."""    
     def option_groups(cls, parser):
