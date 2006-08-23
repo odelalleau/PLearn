@@ -114,15 +114,15 @@ class Optimizer(Thread):
             jobs_to_run = jobs_to_run - 1
             param_values.append(key)
             
-        print commands 
 
         if len(commands) > 0:
-            batch = DBICluster(commands)
+            batch = DBIbqtools(commands,pre_batch='cd parent',add_unique_id = 1)
             self.jobs.append(batch)
             # add the info about the unique_id
             for index, task in enumerate(batch.tasks):
-                task.command = task.command + 'unique_id=' + task.unique_id
+#                task.command = task.command + 'unique_id=' + task.unique_id
                 task.param_values = param_values[index] 
+#		print task.command
 
             batch.run()
 
@@ -231,11 +231,11 @@ def get_results(job_id):
 if __name__=="__main__":
     param_desc = []
 #    param_desc.append(Param(name = 'weight_decay', type='real',values = [0.01,0.1,0.5]  ) )
-    param_desc.append(Param(name = 'nhidden', type='int',values = [10,20,40,50,70,80,90,100,200,500]  ) )
-    param_desc.append(Param(name = 'nstages', type='int',values = [100,200,400,600,800,1000,2000]  ) )
+    param_desc.append(Param(name = 'nhidden', type='int',values = [10,20,40,80,160,320,640,1280]  ) )
+    param_desc.append(Param(name = 'nstages', type='int',values = [1000,2000,4000,8000]  ) )
     param_desc.append(Param(name = 'learning_rate', type='double',values = [0.05,0.0001,0.001,0.01,0.005]  ) )
     param_desc.append(Param(name = 'weight_decay', type='double',values = [0.002,0.004,0.001,0,0.1,0.01]  ) )
-    opt = DiscreteRandomOptimizer(param_desc, 20, get_results, n_max_iter = 20)
+    opt = DiscreteRandomOptimizer(param_desc, 10, get_results, n_max_iter = 500)
     opt.start()
     opt.join()
     best_tuple, best_perf = opt.get_best_result()
