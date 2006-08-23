@@ -403,6 +403,9 @@ class plopt(object):
     def getChoices(self):
         return self._kwargs.get("choices", None)
 
+    def getDefault(self):
+        return self.__default_value
+
     def getFreeChoices(self):
         return self._kwargs.get("free_choices", None)
 
@@ -432,6 +435,9 @@ class plopt(object):
     
         # The previous didn't raise exeption, the 'value' is valid
         actualContext(plopt).plopt_overrides[self] = value
+
+    def setDefault(self, default):
+        self.__default_value = default
 
     #######  Static methods  ######################################################
 
@@ -823,7 +829,19 @@ class _plarg_defaults:
         return getattr(self._getBinder(), option)
 
     def __setattr__(self, option, value):
-        setattr(self._getBinder(), option, value)
+        defaults = self._getBinder()
+
+        # Say the default was value of a given was set to 'D'. It, the
+        # *default* valuw, can well be set modified later to 'E'. But we
+        # want this to modify the script behaviour IFF the option's value
+        # was *not* overriden from the command line. A simple call to
+        # 'setattr' would discard the command-line override!
+        if hasattr(defaults, option):
+            attr_plopt = object.__getattribute__(defaults,option)
+            attr_plopt.setDefault(value)
+            return
+
+        setattr(defaults, option, value)
 plarg_defaults = _plarg_defaults()
         
 class plnamespace:
