@@ -1,3 +1,5 @@
+#! /usr/bin/env python2.4
+
 import sys,time,random,md5,glob,string
 from configobj import ConfigObj
 
@@ -21,9 +23,10 @@ def set_config_value(file, keyword, value):
 
 def get_config_value(file, keyword):
     config = ConfigObj(file)
-#    try: 
-    return config[keyword]
-#    except KeyError
+    try: 
+        return config[keyword]
+    except KeyError:
+        return -1
 
 def set_current_date(file, keyword,time_format):
     config = ConfigObj(file) 

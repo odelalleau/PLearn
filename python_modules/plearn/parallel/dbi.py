@@ -66,8 +66,9 @@ class DBIBase:
 
 class Task:
 
-    def __init__(self, command, log_dir, time_format, pre_tasks=[], post_tasks=[]):
+    def __init__(self, command, log_dir, time_format, pre_tasks=[], post_tasks=[], args = {}):
         self.unique_id = get_new_sid('')
+        self.add_unique_id = 0
         formatted_command = re.sub( '[^a-zA-Z0-9]', '_', command );
         self.log_file = truncate( os.path.join(log_dir, self.unique_id +'_'+ formatted_command), 200) + ".log"
         # The "python utils.py..." command is not exactly the same for every
@@ -76,7 +77,14 @@ class Task:
         # pre-command has to be executed afterwards, it also has to be part of
         # the command itself. Therefore, no need for pre- and post-commands in
         # the Task class
-        #self.command = command
+
+
+
+        for key in args.keys():
+            self.__dict__[key] = args[key]
+
+        if self.add_unique_id:
+                command = command + ' unique_id=' + self.unique_id
         #self.before_commands = []
         #self.user_defined_before_commands = []
         #self.user_defined_after_commands = []
@@ -84,21 +92,25 @@ class Task:
 
         self.commands = []
 
-        self.commands.append("python utils.py " + 'set_config_value '+
+        self.commands.append("cd parent")
+        self.commands.append("utils.py " + 'set_config_value '+
                 string.join([self.log_file,'STATUS',str(STATUS_RUNNING)],' '))
         # set the current date in the field LAUNCH_TIME
-        self.commands.append("python utils.py " + 'set_current_date '+
+        self.commands.append("utils.py " + 'set_current_date '+
                 string.join([self.log_file,'LAUNCH_TIME',time_format],' '))
 
         self.commands.extend( pre_tasks )
+        #cd to parent diectory, run the command, and then cd back
+#	command = 'cd parent;' + command + ';cd ' + self.temp_dir 
         self.commands.append( command )
         self.commands.extend( post_tasks )
 
-        self.commands.append("python utils.py " + 'set_config_value '+
+        self.commands.append("utils.py " + 'set_config_value '+
                 string.join([self.log_file,'STATUS',str(STATUS_FINISHED)],' '))
         # set the current date in the field FINISHED_TIME
-        self.commands.append("python utils.py " + 'set_current_date ' +
+        self.commands.append("utils.py " + 'set_current_date ' +
                 string.join([self.log_file,'FINISHED_TIME',time_format],' '))
+#     self.commands.append("cd parent")
 
         #print "self.commands =", self.commands
 
@@ -210,16 +222,17 @@ class DBIbqtools(DBIBase):
         os.symlink( '..', self.parent_dir )
 
         # check if log directory exists, if not create it
-        self.log_dir = os.path.join( self.parent_dir, self.log_dir )
+#        self.log_dir = os.path.join( self.parent_dir, self.log_dir )
         if not os.path.exists(self.log_dir):
             os.mkdir(self.log_dir)
 
         self.log_file = os.path.join( self.parent_dir, self.log_file )
 
         # create the information about the tasks
+        args['temp_dir'] = self.temp_dir
         for command in commands:
             self.tasks.append(Task(command, self.log_dir, self.time_format,
-                                   self.pre_tasks, self.post_tasks))
+                                   self.pre_tasks, self.post_tasks,args))
 
 
     def run(self):
@@ -237,6 +250,8 @@ class DBIbqtools(DBIBase):
 
         # create one (sh) script that will launch the appropriate ~~command~~
         # in the right environment
+
+
         launcher = open( 'launcher', 'w' )
         bq_cluster_home = os.getenv( 'BQ_CLUSTER_HOME', '$HOME' )
         bq_shell_cmd = os.getenv( 'BQ_SHELL_CMD', '/bin/sh -c' )
@@ -273,13 +288,13 @@ class DBIbqtools(DBIBase):
                 command = sh launcher
                 templateFiles = launcher
                 linkFiles = parent;parent/utils.py
-                remoteHost = Auto
+                remoteHost = ss3
                 param1 = (task, logfile) = load tasks, logfiles
                 concurrentJobs = 200
 
-                preBatch = ''' + pre_batch_command + '''
-                postBatch = ''' + post_batch_command +'''
                 ''') )
+#                preBatch = ''' + pre_batch_command + '''
+#                postBatch = ''' + post_batch_command +'''
         bqsubmit_dat.close()
 
         # Launch bqsubmit
@@ -291,13 +306,18 @@ class DBIbqtools(DBIBase):
             error = file(self.log_file + '.err', 'w')
         self.p = Popen( 'bqsubmit', shell=True, stdout=output, stderr=error)
 
+        os.chdir('parent')
 
-    def clean(self):
+def clean(self):
         pass
 
 
 def main():
-    jobs = DBICluster(['ls','sleep 2'])
+    tasks = [] 
+    for i in range(1):
+        tasks.append('./main')
+	
+    jobs = DBIbqtools(tasks)
     jobs.run()
     jobs.clean()
 #    config['LOG_DIRECTORY'] = 'LOGS/'
