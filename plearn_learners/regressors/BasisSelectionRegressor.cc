@@ -934,7 +934,8 @@ void BasisSelectionRegressor::computeCostsFromOutputs(const Vec& input, const Ve
 
 TVec<string> BasisSelectionRegressor::getTestCostNames() const
 {
-    return getTrainCostNames();
+    //return getTrainCostNames();
+    return TVec<string>(1,string("mse"));
 }
 
 void BasisSelectionRegressor::setTrainStatsCollector(PP<VecStatsCollector> statscol)
