@@ -193,7 +193,7 @@ void SurfaceTemplateLearner::declareOptions(OptionList& ol)
     redeclareOption(ol, "output_transfer_func",
                     &SurfaceTemplateLearner::output_transfer_func,
                     OptionBase::nosave,
-        "Not used (= sigmoid).");
+        "Not used (= sigmoid or none, depending on 'simple_mixture').");
 
     redeclareOption(ol, "hidden_transfer_func",
                     &SurfaceTemplateLearner::hidden_transfer_func,
@@ -290,6 +290,11 @@ void SurfaceTemplateLearner::build()
     // Because the overall network is built in the NNet build, the simple
     // mixture case must be handled before calling it.
     first_hidden_layer_is_output = simple_mixture;
+
+    // Since we are already hacking this method, we may continue doing so:
+    // depending on the value of 'simple_mixture' (true or false), the output
+    // transfer function should be either nothing or a sigmoid.
+    output_transfer_func = simple_mixture ? "none" : "sigmoid";
 
     inherited::build();
     build_();
