@@ -90,12 +90,14 @@ void ScoreLayerVariable::declareOptions(OptionList& ol)
     declareOption(ol, "n_active_templates",
                   &ScoreLayerVariable::n_active_templates,
                   OptionBase::buildoption,
-        "Number of templates of active molecules (-1 means all of them).");
+        "Number of randomly chosen templates of active molecules (-1 means\n"
+        "we take all of them and they are not shuffled).");
 
     declareOption(ol, "n_inactive_templates",
                   &ScoreLayerVariable::n_inactive_templates,
                   OptionBase::buildoption,
-        "Number of templates of inactive molecules (-1 means all of them).");
+        "Number of randomly chosen templates of inactive molecules (-1 means\n"
+        "we take all of them and they are not shuffled).");
 
     declareOption(ol, "normalize_by_n_features",
                   &ScoreLayerVariable::normalize_by_n_features,
@@ -214,8 +216,10 @@ void ScoreLayerVariable::build_()
     }
     n_active_in_source = list_of_active.length();
     n_inactive_in_source = list_of_inactive.length();
-    random_gen->shuffleElements(list_of_active);
-    random_gen->shuffleElements(list_of_inactive);
+    if (n_active_templates != -1)
+        random_gen->shuffleElements(list_of_active);
+    if (n_inactive_templates != -1)
+        random_gen->shuffleElements(list_of_inactive);
     assert( list_of_active.length() >= getNActiveTemplates() );
     assert( list_of_inactive.length() >= getNInactiveTemplates() );
     list_of_active.resize(getNActiveTemplates());
