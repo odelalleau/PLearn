@@ -224,7 +224,10 @@ void ScoreLayerVariable::build_()
     assert( list_of_inactive.length() >= getNInactiveTemplates() );
     list_of_active.resize(getNActiveTemplates());
     list_of_inactive.resize(getNInactiveTemplates());
-    TVec<int>& templates = list_of_active; // Renaming to avoid confusion.
+    // We do a copy of the list of active molecules instead of just appending
+    // the inactive ones because this list may be reused later (in the case of
+    // the simple mixture for instance).
+    TVec<int> templates = list_of_active.copy();
     templates.append(list_of_inactive);
 
     // Create the Var that will run all ICPs.
