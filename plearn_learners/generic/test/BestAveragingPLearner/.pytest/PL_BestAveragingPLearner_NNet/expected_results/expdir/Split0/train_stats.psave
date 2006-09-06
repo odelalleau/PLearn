@@ -1,0 +1,230 @@
+*1 ->VecStatsCollector(
+maxnvalues = 0 ;
+fieldnames = 13 [ "learner0_mse+penalty" "learner0_mse" "learner1_mse+penalty" "learner1_mse" "learner2_mse+penalty" "learner2_mse" "learner3_mse+penalty" "learner3_mse" "learner4_mse+penalty" "learner4_mse" "selected_0" "selected_1" "selected_2" ] ;
+compute_covariance = 0 ;
+epsilon = 0 ;
+window = -1 ;
+no_removal_warnings = 0 ;
+stats = 13 [ StatsCollector(
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 1 ;
+sumsquarew_ = 1 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+sumcube_ = 0 ;
+sumfourth_ = 0 ;
+min_ = 378.546472488439917 ;
+max_ = 378.546472488439917 ;
+first_ = 378.546472488439917 ;
+last_ = 378.546472488439917 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 1 ;
+sumsquarew_ = 1 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+sumcube_ = 0 ;
+sumfourth_ = 0 ;
+min_ = 378.53883283487005 ;
+max_ = 378.53883283487005 ;
+first_ = 378.53883283487005 ;
+last_ = 378.53883283487005 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 1 ;
+sumsquarew_ = 1 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+sumcube_ = 0 ;
+sumfourth_ = 0 ;
+min_ = 1037.15448458735546 ;
+max_ = 1037.15448458735546 ;
+first_ = 1037.15448458735546 ;
+last_ = 1037.15448458735546 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 1 ;
+sumsquarew_ = 1 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+sumcube_ = 0 ;
+sumfourth_ = 0 ;
+min_ = 1037.13608363349476 ;
+max_ = 1037.13608363349476 ;
+first_ = 1037.13608363349476 ;
+last_ = 1037.13608363349476 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 1 ;
+sumsquarew_ = 1 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+sumcube_ = 0 ;
+sumfourth_ = 0 ;
+min_ = 1728.0369849651579 ;
+max_ = 1728.0369849651579 ;
+first_ = 1728.0369849651579 ;
+last_ = 1728.0369849651579 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 1 ;
+sumsquarew_ = 1 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+sumcube_ = 0 ;
+sumfourth_ = 0 ;
+min_ = 1728.02926321886116 ;
+max_ = 1728.02926321886116 ;
+first_ = 1728.02926321886116 ;
+last_ = 1728.02926321886116 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 1 ;
+sumsquarew_ = 1 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+sumcube_ = 0 ;
+sumfourth_ = 0 ;
+min_ = 1068.20700071256078 ;
+max_ = 1068.20700071256078 ;
+first_ = 1068.20700071256078 ;
+last_ = 1068.20700071256078 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 1 ;
+sumsquarew_ = 1 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+sumcube_ = 0 ;
+sumfourth_ = 0 ;
+min_ = 1068.17736443550598 ;
+max_ = 1068.17736443550598 ;
+first_ = 1068.17736443550598 ;
+last_ = 1068.17736443550598 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 1 ;
+sumsquarew_ = 1 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+sumcube_ = 0 ;
+sumfourth_ = 0 ;
+min_ = 584.712392040341228 ;
+max_ = 584.712392040341228 ;
+first_ = 584.712392040341228 ;
+last_ = 584.712392040341228 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 1 ;
+sumsquarew_ = 1 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+sumcube_ = 0 ;
+sumfourth_ = 0 ;
+min_ = 584.705657748810495 ;
+max_ = 584.705657748810495 ;
+first_ = 584.705657748810495 ;
+last_ = 584.705657748810495 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 1 ;
+sumsquarew_ = 1 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+sumcube_ = 0 ;
+sumfourth_ = 0 ;
+min_ = 0 ;
+max_ = 0 ;
+first_ = 0 ;
+last_ = 0 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 1 ;
+sumsquarew_ = 1 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+sumcube_ = 0 ;
+sumfourth_ = 0 ;
+min_ = 4 ;
+max_ = 4 ;
+first_ = 4 ;
+last_ = 4 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 1 ;
+sumsquarew_ = 1 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+sumcube_ = 0 ;
+sumfourth_ = 0 ;
+min_ = 1 ;
+max_ = 1 ;
+first_ = 1 ;
+last_ = 1 ;
+counts = {};
+more_than_maxnvalues = 1  )
+] ;
+cov = 0  0  [ 
+]
+;
+sum_cross = 0  0  [ 
+]
+;
+sum_cross_weights = 0  0  [ 
+]
+;
+sum_cross_square_weights = 0  0  [ 
+]
+;
+sum_non_missing_weights = 0 ;
+sum_non_missing_square_weights = 0  )

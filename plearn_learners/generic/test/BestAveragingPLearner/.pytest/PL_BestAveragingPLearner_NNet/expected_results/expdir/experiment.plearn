@@ -1,0 +1,60 @@
+*6 -> PTester(
+    call_forget_in_run = 0,
+    dataset = *1 -> AutoVMatrix(
+        filename = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.pmat",
+        inputsize = 3,
+        targetsize = 2
+        ),
+    enforce_clean_expdir = 0,
+    expdir = "expdir",
+    learner = *4 -> BestAveragingPLearner(
+        best_learner_num = 3,
+        comparison_statspec = "E[mse]",
+        initial_seed = 1827,
+        learner_template = *3 -> NNet(
+            batch_size = 0,
+            bias_decay = 0,
+            cost_funcs = [ "mse" ],
+            direct_in_to_out = 0,
+            hidden_transfer_func = "tanh",
+            initialization_method = "uniform_linear",
+            nhidden = 4,
+            noutputs = -1,
+            nstages = 101,
+            optimizer = *2 -> ConjGradientOptimizer(
+                nstages = 1,
+                rho = 0.05,
+                sigma = 0.1,
+                slope_ratio = 10,
+                verbosity = 100
+                ),
+            output_transfer_func = "none",
+            penalty_type = "L2_square",
+            report_progress = 1,
+            verbosity = 1,
+            weight_decay = 1e-06
+            ),
+        total_learner_num = 5,
+        verbosity = 1
+        ),
+    provide_learner_expdir = 1,
+    report_stats = 1,
+    save_data_sets = 0,
+    save_initial_learners = 1,
+    save_initial_tester = 0,
+    save_learners = 1,
+    save_stat_collectors = 1,
+    save_test_confidence = 0,
+    save_test_costs = 1,
+    save_test_outputs = 1,
+    splitter = *5 -> TrainTestSplitter( test_fraction = 0.25 ),
+    statnames = [
+        "E[test.E[mse]]",
+        "E[train.E[learner0_mse]]",
+        "E[train.E[learner1_mse]]",
+        "E[train.E[learner2_mse]]",
+        "E[train.E[learner3_mse]]",
+        "E[train.E[learner4_mse]]"
+        ],
+    train = 1
+    )

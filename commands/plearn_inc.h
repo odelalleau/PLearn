@@ -151,6 +151,7 @@
 // Generic
 #include <plearn_learners/generic/AddCostToLearner.h>
 #include <plearn_learners/generic/AddLayersNNet.h>
+#include <plearn_learners/generic/BestAveragingPLearner.h>
 #include <plearn_learners/generic/DistRepNNet.h>
 #include <plearn_learners/generic/NNet.h>
 #include <plearn_learners/generic/SelectInputSubsetLearner.h>
