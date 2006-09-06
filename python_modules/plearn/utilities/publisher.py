@@ -46,16 +46,15 @@ class Publisher:
 
         def __call__(self, subclass, *args, **kwargs):
             if subclass not in self.publisher.subclasses:
-                raise ValueError("%s(%s, ...): Asset %s unknown. Choose among:\n%s"
+                raise ValueError("%s(%s, ...): Class %s is unknown. Choose among:\n%s"
                     %(self.name, subclass, subclass, self.publisher.subclasses.keys()))
             
             SubClass = self.publisher.subclasses[subclass]
             function = getattr(SubClass, self.name)
-            logging.debug("Assetized function is %s"%function)
             try:
                 return function(*args, **kwargs)
             except TypeError, err:
-                raise TypeError("%s -- Note that asset name %s was extracted from arguments"
+                raise TypeError("%s -- Note that class name %s was extracted from arguments"
                                 %(err, subclass))
                         
     def __init__(self, environment, basecls, dic):
