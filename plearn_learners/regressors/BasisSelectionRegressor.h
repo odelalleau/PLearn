@@ -164,6 +164,7 @@ public:
     // (PLEASE IMPLEMENT IN .cc)
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
+    virtual void setExperimentDirectory(const PPath& the_expdir);
 
 protected:
     //#####  Protected Options  ###############################################

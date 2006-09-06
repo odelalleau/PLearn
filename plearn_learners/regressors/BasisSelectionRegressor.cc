@@ -199,6 +199,16 @@ void BasisSelectionRegressor::build_()
     // ### called.
 }
 
+
+
+
+void BasisSelectionRegressor::setExperimentDirectory(const PPath& the_expdir)
+{ 
+    inherited::setExperimentDirectory(the_expdir);
+    learner->setExperimentDirectory(the_expdir / "SubLearner");
+}
+
+
 // ### Nothing to add here, simply calls build_
 void BasisSelectionRegressor::build()
 {
