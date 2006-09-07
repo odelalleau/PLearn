@@ -32,19 +32,20 @@
 # Author: Christian Dorion
 
 import logging
-# __hdlr = logging.StreamHandler()
-# __hdlr.setFormatter( logging.Formatter("[futures.py] %(message)s") )
-# logging.root.addHandler(__hdlr)
-# logging.root.setLevel(logging._levelNames["DEBUG"])
+__hdlr = logging.StreamHandler()
+__hdlr.setFormatter( logging.Formatter("[futures.py] %(message)s") )
+logging.root.addHandler(__hdlr)
+logging.root.setLevel(logging._levelNames["DEBUG"])
 
 class Publisher:
-    """Publishes staticmethod instances from the provided base class."""
+    """Publishes classmethod instances from the provided base class."""
     class Function:
         def __init__(self, publisher, function_name):
             self.name = function_name
             self.publisher = publisher
 
         def __call__(self, subclass, *args, **kwargs):
+            logging.debug("Calling %s(%s, %s, %s)"%(self.name, subclass, args, kwargs))
             if subclass not in self.publisher.subclasses:
                 raise ValueError("%s(%s, ...): Class %s is unknown. Choose among:\n%s"
                     %(self.name, subclass, subclass, self.publisher.subclasses.keys()))
@@ -63,7 +64,7 @@ class Publisher:
         self.subclasses = dic["_subclasses"]
         
         for function_name, function in dic.iteritems():
-            if isinstance(function, staticmethod):
+            if isinstance(function, classmethod):
                 logging.debug("* PUBLISHING %s"%function_name)
                 environment[function_name] = self.Function(self, function_name)
                 logging.debug("%s: %s"%(function_name, environment[function_name]))
