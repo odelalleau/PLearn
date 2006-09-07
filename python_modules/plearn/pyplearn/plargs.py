@@ -832,7 +832,7 @@ class _plarg_defaults:
         defaults = self._getBinder()
 
         # Say the default was value of a given was set to 'D'. It, the
-        # *default* valuw, can well be set modified later to 'E'. But we
+        # *default* value, can well be set modified later to 'E'. But we
         # want this to modify the script behaviour IFF the option's value
         # was *not* overriden from the command line. A simple call to
         # 'setattr' would discard the command-line override!
