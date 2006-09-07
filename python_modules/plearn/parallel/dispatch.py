@@ -1,4 +1,4 @@
-import inspect, logging, operator, os, signal, sys, time
+import inspect, logging, operator, os, select, signal, sys, time
 
 from popen2 import Popen4
 
@@ -48,7 +48,7 @@ SSH_MACHINES_MAP = { 'apstat.com': [ # 'embla',
                                      'kamado',
                                      'kamado',
                                      'kamado',
-                                     'loki',
+                                     # 'loki',
                                      'odin',
                                      'midgard',
                                      # 'valhalla',
@@ -65,6 +65,7 @@ SSH_MACHINES_MAP = { 'apstat.com': [ # 'embla',
 MAX_LOADAVG = { 'inari'  : 6 ,
                 'kamado' : 6 }
 
+BUFSIZE     = 4096
 SLEEP_TIME  = 15
 LOGDIR      = None  # May be set by set_logdir()
 DOMAIN_NAME = get_domain_name()
@@ -72,18 +73,25 @@ DOMAIN_NAME = get_domain_name()
 #######  To be assigned to a subclass of TaskType when these will be declared
 Task = None
 
-
 #######  Module Functions  ####################################################
 
 ################################################################################
 # KNOWN ISSUE: The current way of managing machines is slightly hackish
 # with regard to load average. Here we have to multiply instances of the
-# name of a machine by ist MAX_LOADAVG due the remove in launch_args()
+# name of a machine by ist MAX_LOADAVG due the remove in getLaunchCommand()
 #
-#           self.host = self.available_machines().next()
+#           self.host = self.listAvailableMachines().next()
 #           self._machines.remove( self.host )
 # 
 ################################################################################
+#DBG: import traceback
+#DBG: _waitpid = os.waitpid
+#DBG: def my_waitpid(*args):
+#DBG:     print 'MY WAIT:', args
+#DBG:     traceback.print_stack()
+#DBG:     return _waitpid(*args)
+#DBG: os.waitpid = my_waitpid
+
 def get_ssh_machines():
     from random import shuffle
     machines = []
@@ -122,7 +130,7 @@ class ArgumentsOracle( list ):
 
 class EmptyTaskListError( Exception ): pass
 class EmptyMachineListError( Exception ): pass
-    
+
 class TaskType:
     _child_processes = {}
 
@@ -132,25 +140,27 @@ class TaskType:
     count = classmethod( count )
 
     def kill_all_tasks( cls ):
-        for pid, task in cls._child_processes.iteritems():
+        task_list = cls._child_processes.values()
+        for task in task_list:
             try:
-                os.kill(pid, signal.SIGTERM)
-                logging.info( "Killed process with id %d (%d)"
-                              %(pid, task.process.wait()) )
+                os.kill(task.process.pid, signal.SIGTERM)
+                exit_status = task.process.wait()
+                logging.info(
+                    "Killed process with id %d (%d)"%(task.process.pid, exit_status) )
             except OSError:
                 assert task.process.poll() != -1, \
                        "Failed to kill task with pid %d"%task.process.pid
             task.free()
-        cls._child_processes = {}
+        assert not cls._child_processes
     kill_all_tasks = classmethod(kill_all_tasks)
 
-    def n_available_machines( cls ):
+    def availableMachinesCount( cls ):
         """Returns the number of machines currently available for cluster job dispatch."""
         avail = 0
-        for am in cls.available_machines():
+        for am in cls.listAvailableMachines():
             avail += 1
         return avail
-    n_available_machines = classmethod( n_available_machines )
+    availableMachinesCount = classmethod(availableMachinesCount)
 
     def select( cls ):
         """Selecting a completed task."""
@@ -158,22 +168,50 @@ class TaskType:
             logging.debug("* Raising EmptyTaskListError")
             raise EmptyTaskListError()
 
-        try:
-            pid, exit_status = os.wait()
-            completed = cls._child_processes.pop(pid)
-            completed.process.sts = exit_status # Hack for poll() to work...
-            logging.debug( "* Completed process (pid=%d) with exit_status %d (?=%d)"
-                    %(completed.process.pid, exit_status, completed.process.poll()) )
-        except OSError:
-            logging.debug("* select() called but all tasks are over")
-            if cls._child_processes:
-                pid, completed = cls._child_processes.popitem()
-                assert completed.process.poll() != -1
-            else:
-                return None
+        #####  Waiting for a child to end
+        completed = None
 
-        completed.free()
-        logging.debug("* select() returns task with pid %d"%completed.process.pid)
+        # Add the child end pipe to the list of selectable fd
+        select_from = cls._child_processes.keys()
+        pid_to_child = dict([ (task.process.pid,task)
+                              for task in cls._child_processes.values() ])
+
+        while completed is None:
+            # Note that a timeout must be provided to select in case tasks
+            # don't write anything...
+            logging.debug("* select.select(%s, ...)"%pid_to_child.keys())
+            iwtd, owtd, ewtd = select.select(select_from, [], [], 1)
+            assert not owtd and not ewtd
+
+            # Pipes ready to be read must be to avoid tasks being frozen
+            # due to filled buffers...
+            logging.debug("* select.select() returned list of len=%d"%len(iwtd))
+            for fromchild in iwtd:
+                ready = cls._child_processes[fromchild]
+                read_str = ready.process.fromchild.read(BUFSIZE)
+                if hasattr(ready, 'logfile'):
+                    ready.logfile.write(read_str)
+
+            # Since opening a Popen4 task will call waitpid on already open
+            # tasks (_cleanup() in popen2.py), one MUST NOT call os.waitpid
+            # on its own when he uses Popen4 tasks. Otherwise, processes
+            # whose ending will have been caught by the cleanup will never
+            # appear here to have ended and this process will enter an ever
+            # lasting loop... Calling poll on each instance will return the
+            # exit status caught be the cleanup function if any or try a
+            # waitpid call with os.WNOHANG.
+            #
+            # If poll()'s return value is nonnegative, the task is finished
+            # and the return value is the exit code it returned. Otherwise,
+            # the task is still running.
+            for task in cls._child_processes.values():
+                if task.process.poll() >= 0:
+                    completed = task
+                    completed.free()
+                    break
+
+        logging.debug("* select() returns task with pid %d\n"%completed.process.pid)
+        logging.debug("*   and for which poll() returns %d\n"%completed.process.poll())
         return completed
     select = classmethod(select)
 
@@ -182,20 +220,29 @@ class TaskType:
     #
     
     def __init__(self, argv):
-        self.argv    = argv
+        self.argv = argv
 
-    def launch(self, wait):
+    def launch(self, wait=False):
         """Launch process on an available machine"""
         try:
-            argv = self.launch_args( )
+            command = self.getLaunchCommand( )
 
             # Always using no wait to get the process id...
-            self.process = Popen4(" ".join(argv))        
+            self.process = Popen4(command)
+            task_signature = "[%s]"%command
+            if LOGDIR and os.path.isdir(LOGDIR):
+                filepath = os.path.join(LOGDIR, self.getLogFileBaseName())
+                self.logfile = open(filepath, 'w')
+                self.logfile.write( task_signature )
+
+            logging.info(task_signature)            
             if wait:
+                logging.debug(
+                    "* TaskType.launch() waits for process (id=%d)"%self.process.pid )
                 self.process.wait( )
                 self.free()
             else:
-                self._child_processes[ self.process.pid ] = self
+                self._child_processes[ self.process.fromchild ] = self
                 logging.debug( "* children %d (%d)"
                                %(self.process.pid,len(self._child_processes)) )
                 
@@ -204,23 +251,25 @@ class TaskType:
             try:
                 TaskType.select( )
             except EmptyTaskListError:
+                logging.debug("* time.sleep(%d)"%SLEEP_TIME)
                 time.sleep(SLEEP_TIME) 
             self.launch(wait)
             
     def free(self):
-        if LOGDIR and os.path.isdir(LOGDIR):
-            filepath = os.path.join(LOGDIR, "%s-pid=%d"%(
-                self.argv[0], self.process.pid ))
-            logfile = open(filepath, 'w')
-            print >>logfile, "[%s]"%" ".join(self.argv)
-            print >>logfile, self.process.fromchild.read()
-            logfile.close()
+        logging.debug("* Freeing task with pid=%d"%self.process.pid)
+        Self = self.__class__._child_processes.pop(self.process.fromchild)
+        assert Self == self
+        
+        if hasattr(self, 'logfile'):
+            self.logfile.write( self.process.fromchild.read() )
+            self.logfile.close()
+            
 
 class SshTask( TaskType ):
 
     _machines = get_ssh_machines()
     
-    def available_machines( cls ):
+    def listAvailableMachines( cls ):
         for m in cls._machines:
             max_loadavg = MAX_LOADAVG.get(m, 2)
             
@@ -230,28 +279,34 @@ class SshTask( TaskType ):
 
             if loadavg < max_loadavg:
                 yield m
-    available_machines = classmethod( available_machines )
+    listAvailableMachines = classmethod(listAvailableMachines)
 
     #
     # Instance methods
     #
 
-    def launch_args( self ):
+    def getLaunchCommand( self ):
         # Get the first available machine
         try:
-            self.host = self.available_machines().next()
+            self.host = self.listAvailableMachines().next()
             self._machines.remove( self.host )
         except StopIteration:
             raise EmptyMachineListError
-            
-        return ['ssh', '-x', self.host, 'cd', os.getcwd(), ';', 'nice'] + self.argv
+
+        actual_command = ' '.join(['cd', os.getcwd(), ';', 'nice'] + self.argv)
+        actual_command = actual_command.replace("'", "\'")
+        actual_command = actual_command.replace('"', '\"')
+        return "ssh -x %s '%s'"%(self.host, actual_command)
+
+    def getLogFileBaseName(self):
+        return "ssh-%s-pid=%d"%(self.host, self.process.pid)
 
     def free(self):
-        TaskType.free(self)
         self._machines.append( self.host )
+        TaskType.free(self)
 
 class ClusterTask( TaskType ):
-    def available_machines( cls ):
+    def listAvailableMachines( cls ):
         p = os.popen('cluster --charge')
         for line in p:
             if line.find('en panne') == -1:
@@ -266,16 +321,19 @@ class ClusterTask( TaskType ):
                 if not line[comma+1:colon].strip():
                     # The name of the machine is found before the first comma
                     yield line[:comma]
-    available_machines = classmethod( available_machines )
+    listAvailableMachines = classmethod(listAvailableMachines)
 
     #
     # Instance methods
     #
 
-    def launch_args( self ):
-        return ['cluster', '--execute', self.argv[0], '--force',
-                '--wait', '--duree=120h', '--'] + self.argv[1:]
+    def getLaunchCommand( self ):
+        return ' '.join(['cluster', '--execute', self.argv[0], '--force',
+                         '--wait', '--duree=120h', '--'] + self.argv[1:])
 
+    def getLogFileBaseName(self):
+        return "%s-pid=%d"%(self.argv[0], self.process.pid)
+    
 
 #######  Assigning Task  ######################################################
 #######  Now that TaskType subclasses are all declared, Task can be assigned    
@@ -306,6 +364,8 @@ class Dispatch( PyPLearnObject ):
 
     # Path to the directory where experiments are to be loaded
     expdir_root              = PLOption(None) # Default: os.getcwd()
+
+    delay                    = PLOption(False)
 
     allow_unexpected_options = lambda self : False
     def __init__( self, oracles=None,
@@ -398,11 +458,7 @@ class Dispatch( PyPLearnObject ):
                 logging.info('Already exists: %s'%str(rejected))
                 continue
 
-            if self.program is None:
-                logging.info('Delayed: %s'%(" ".join(_quoted(arguments))))
-                delayed += 1
-                continue
-            
+            assert self.program
             prepend = [ "echo", "$HOST;", 'nice', self.program ]
             if self.script:
                 prepend.append( self.script )
@@ -416,43 +472,38 @@ class Dispatch( PyPLearnObject ):
 
                 arguments.append( "expdir=%s" % expdir )
 
-            # Module function defined above
-            ##raw_input( prepend+_quoted(arguments) )
-            launch_task( prepend+_quoted(arguments) )
+            # # Module function defined above
+            # launch_task( prepend+_quoted(arguments) )
+            assert Task is not None
+            task = Task(prepend+_quoted(arguments)+[";", "echo", "'Task Done.'"])
+            if self.delay:
+                logging.info('Delayed: %s'%task.getLaunchCommand())
+                delayed += 1
+                continue            
 
+            task.launch()
             if Task.count( ) == self.max_nmachines:
                 logging.info( "+++ Using %d machines or more; waiting..."
                               % self.max_nmachines )
                 completed = Task.select()
-                self.log(completed)
             counter += 1
 
         ## Wait for all experiments completion
         while Task is not None:
             try:
                 completed = Task.select()
-                self.log(completed)
             except EmptyTaskListError:
                 break
         return counter, delayed
-
-    def log(self, task):
-        if task is None:
-            logging.debug("* Select returned None!")
-            return
-        if LOGDIR is None:
-            logging.info( "##### Task with pid %d ended with signal %d"
-                          % (task.process.pid, task.process.poll()) )
-            logging.info( task.process.fromchild.read() )
-            logging.info('')
 
     def free(self):
         try:
             Task.kill_all_tasks()
             logging.error("! Done.")
         except KeyboardInterrupt:
-            logging.error("! Can not interrupt Dispatch.free() please wait...")
-            self.free( )    
+            logging.error("! Dispatch.free() interupted.")
+            # logging.error("! Can not interrupt Dispatch.free() please wait...")
+            # self.free( )    
 
 if __name__ == "__main__":
     dispatch = Dispatch( program = "time", logdir=None )
