@@ -426,7 +426,7 @@ class confirm( PyTestMode ):
 
         # ... trying to isolate a weard bug in confirm
         logging.root.removeHandler(hdlr)
-        core.mail("PyTest Confirm Log", strstream.getvalue())
+        #core.mail("PyTest Confirm Log", strstream.getvalue())
 
         logging.root.addHandler(core.hdlr)
         ###

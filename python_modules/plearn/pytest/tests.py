@@ -570,7 +570,7 @@ class Test(PyTestObject):
         statsHeader = TestStatus.summaryHeader()
 
         # Hackish hardcoded display summing to 80...
-        C = 6; S = len("** FAILED **")+2; H = len(statsHeader)+2
+        C = 6; S = len("** FAILED **")+2; H = len(statsHeader)+3
         N = 80 - (C+S+H); 
         def vpformat(c,n,s, h):
             if len(n) < N:
