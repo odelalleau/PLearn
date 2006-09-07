@@ -40,6 +40,7 @@ def array_columns( a, cols ):
     if isinstance( cols, int ):
         indices = [ cols ]
     elif isinstance( cols, slice ):
+        print cols
         indices = range( *cols.indices(cols.stop) )
     else:
         indices = list( cols )            
@@ -159,7 +160,21 @@ class VMat:
             shape = rows.getshape()                       
             if len(shape) == 1:
                 return rows[ key[1] ]
-            return array_columns( rows, key[1] )
+
+            cols = key[1]
+            if isinstance(cols, slice):
+                start, stop, step = cols.start, cols.stop, cols.step
+                if start is None:
+                    start = 0
+
+                if stop is None:
+                    stop = self.width
+                elif stop < 0:
+                    stop = self.width+stop
+
+                cols = slice(start, stop, step)
+
+            return array_columns(rows, cols)
 
         elif isinstance( key, str ):
             # The key is considered to be a fieldname and a column is
