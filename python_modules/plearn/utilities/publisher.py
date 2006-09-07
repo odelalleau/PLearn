@@ -32,10 +32,10 @@
 # Author: Christian Dorion
 
 import logging
-__hdlr = logging.StreamHandler()
-__hdlr.setFormatter( logging.Formatter("[futures.py] %(message)s") )
-logging.root.addHandler(__hdlr)
-logging.root.setLevel(logging._levelNames["DEBUG"])
+#__hdlr = logging.StreamHandler()
+#__hdlr.setFormatter( logging.Formatter("[futures.py] %(message)s") )
+#logging.root.addHandler(__hdlr)
+#logging.root.setLevel(logging._levelNames["DEBUG"])
 
 class Publisher:
     """Publishes classmethod instances from the provided base class."""
