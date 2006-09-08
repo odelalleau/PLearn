@@ -55,9 +55,11 @@ PLEARN_IMPLEMENT_OBJECT(
     "Profiler class instead.\n"
     );
 
+////////////
+// PTimer //
+////////////
 PTimer::PTimer() 
-{
-}
+{}
 
 ///////////
 // build //
@@ -166,8 +168,13 @@ void PTimer::resetTimer(const string& timer_name)
 ////////////////
 void PTimer::startTimer(const string& timer_name)
 {
-    assert( name_to_idx.find(timer_name) != name_to_idx.end() );
-    int timer_id = name_to_idx[timer_name];
+    map<string, int>::const_iterator it = name_to_idx.find(timer_name);
+    if (it == name_to_idx.end()) {
+        // The timer does not already exist.
+        this->newTimer(timer_name);
+        it = name_to_idx.find(timer_name);
+    }
+    int timer_id = it->second;
     start_long[timer_id] = long(time(0));
     start_clock_t[timer_id] = clock();
 }

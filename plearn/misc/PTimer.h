@@ -68,8 +68,6 @@ public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
-    // ### Make sure the implementation in the .cc
-    // ### initializes all fields to reasonable default values.
     PTimer();
 
     // Your other public member functions go here
@@ -86,7 +84,7 @@ public:
     //! Reset a specific timer.
     void resetTimer(const string& timer_name);
 
-    //! Start a timer.
+    //! Start a timer. If the timer does not already exist, it is created.
     void startTimer(const string& timer_name);
 
     //! Stop a timer.
