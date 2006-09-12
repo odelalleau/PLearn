@@ -49,6 +49,8 @@
 #include <nspr/prerror.h>
 #include <nspr/prnetdb.h>
 
+#define PL_LOG_MODULE_NAME "openSocket"
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;
@@ -91,10 +93,20 @@ PStream openSocket(const string& hostname, int port,
     while ((host_entry_index = PR_EnumerateHostEnt(host_entry_index, &host,
                                                    port, &address)) != 0)
     {
-        if (PR_Connect(socket, &address, timeout) == PR_SUCCESS)
+        if (PR_Connect(socket, &address, PR_SecondsToInterval(timeout))
+                                                                == PR_SUCCESS)
         {
             st = new PrPStreamBuf(socket, socket, true, true);
             return st;
+        } else {
+#ifdef BOUNDCHECK
+            string ip_adr = "Unknown IP address";
+            if (PR_NetAddrToString(&address, buf, sizeof(buf)) == PR_SUCCESS)
+                ip_adr = buf;
+            MODULE_LOG << "Error trying to connect to host entry index "
+                       << host_entry_index << " (" << ip_adr << "): "
+                       << getPrErrorString() << endl;
+#endif
         }
     }
 
