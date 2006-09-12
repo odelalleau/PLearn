@@ -859,8 +859,8 @@ public:
 
     void makeSharedValue(T* x, int n)
     {
-        int m = size();
 #ifdef BOUNDCHECK
+        int m = size();
         if(n != m)
             PLERROR("IN TMat::makeSharedValue(T* x, int n)\nn(%d)!=size(%d)",
                     n,m);
