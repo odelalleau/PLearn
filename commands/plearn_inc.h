@@ -60,13 +60,14 @@
 /*****************
  * Miscellaneous *
  *****************/
-#include <plearn_learners/misc/Grapher.h>
-#include <plearn_learners/misc/VariableSelectionWithDirectedGradientDescent.h>
+#include <plearn/db/UCISpecification.h>
+#include <plearn/io/openUrl.h>
 #include <plearn/math/ManualBinner.h>
 #include <plearn/math/SoftHistogramBinner.h>
 #include <plearn/misc/ShellScript.h>
 #include <plearn/misc/RunObject.h>
-#include <plearn/db/UCISpecification.h>
+#include <plearn_learners/misc/Grapher.h>
+#include <plearn_learners/misc/VariableSelectionWithDirectedGradientDescent.h>
 #include <plearn_learners/testers/PTester.h>
 
 /***********
