@@ -48,6 +48,7 @@
 #ifndef TVec_decl_INC
 #define TVec_decl_INC
 
+#include <algorithm>
 #include <iterator>
 #include <numeric>
 #include <functional>
@@ -390,18 +391,35 @@ public:
         if(n != length())
             PLERROR("IN TVec::copyFrom(T* x, int n)\nVecs do not have the same length()");
 #endif
-        if (n == 0) return; // Nothing to copy.
+        if (n == 0)
+            return; // Nothing to copy.
         T* v1 = data(); //!<  get data start
-        for(int i=0; i<n; i++)
-            v1[i] = x[i];
+
+        // The following was compiled into an inefficient loop.  Modern C++
+        // compilers transform 'copy' into memmove whenever possible, so use
+        // that.
+        //
+        // for(int i=0; i<n; i++)
+        //    v1[i] = x[i];
+
+        std::copy(x, x+n, v1);
     }
 
     //!  copy to a C TVec starting at x
     void copyTo(T* x) const
     {
         T* v1 = data(); // get data start
-        for(int i=0; i<length(); i++)
-            x[i] = v1[i];
+        if (! v1)
+            return;
+
+        // The following was compiled into an inefficient loop.  Modern C++
+        // compilers transform 'copy' into memmove whenever possible, so use
+        // that.
+        //
+        // for(int i=0; i<length(); i++)
+        //     x[i] = v1[i];
+
+        std::copy(v1, v1+length(), x);
     }
 
     /*!         make the storage point to this address and
