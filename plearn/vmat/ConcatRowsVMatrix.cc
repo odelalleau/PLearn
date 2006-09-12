@@ -46,14 +46,16 @@ using namespace std;
 
 /** ConcatRowsVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT(ConcatRowsVMatrix,
-                        "Concatenates the rows of a number of VMats.",
-                        "If the VMats do not have the same fields, it is possible to either keep\n"
-                        "only the common fields ('only_common_fields' = 1), or to keep them all\n"
-                        "and add missing values accordingly ('fill_missing' = 1).\n"
-                        "If none of these options is set, the VMats are assumed to have the same\n"
-                        "fields.\n"
+PLEARN_IMPLEMENT_OBJECT(
+    ConcatRowsVMatrix,
+    "Concatenates the rows of a number of VMats.",
+    "If the VMats do not have the same fields, it is possible to either keep\n"
+    "only the common fields ('only_common_fields' = 1), or to keep them all\n"
+    "and add missing values accordingly ('fill_missing' = 1).\n"
+    "If none of these options is set, the VMats are assumed to have the same\n"
+    "fields.\n"
     );
+
 
 ///////////////////////
 // ConcatRowsVMatrix //
@@ -62,7 +64,10 @@ ConcatRowsVMatrix::ConcatRowsVMatrix(TVec<VMat> the_sources)
     : sources(the_sources),
       fill_missing(false),
       fully_check_mappings(false),
-      only_common_fields(false)
+      only_common_fields(false),
+      m_last_vmat_index(-1),
+      m_last_vmat_startrow(-1),
+      m_last_vmat_lastrow(-1)
 {
     if (sources.size() > 0)
         build_();
@@ -73,7 +78,10 @@ ConcatRowsVMatrix::ConcatRowsVMatrix(VMat d1, VMat d2,
     : sources(2),
       fill_missing(false),
       fully_check_mappings(the_fully_check_mapping),
-      only_common_fields(false)
+      only_common_fields(false),
+      m_last_vmat_index(-1),
+      m_last_vmat_startrow(-1),
+      m_last_vmat_lastrow(-1)
 {
     sources[0] = d1;
     sources[1] = d2;
@@ -164,6 +172,9 @@ void ConcatRowsVMatrix::build_()
     inputsize_ = to_concat[0]->inputsize();
     targetsize_ = to_concat[0]->targetsize();
     weightsize_ = to_concat[0]->weightsize();
+
+    // Reset last-used cache for completeness
+    m_last_vmat_index = m_last_vmat_startrow = m_last_vmat_lastrow = -1;
 }
 
 /////////
@@ -195,7 +206,8 @@ real ConcatRowsVMatrix::dot(int i, const Vec& v) const
 ///////////////////////////////
 // ensureMappingsConsistency //
 ///////////////////////////////
-void ConcatRowsVMatrix::ensureMappingsConsistency() {
+void ConcatRowsVMatrix::ensureMappingsConsistency()
+{
     // Make sure the string mappings are consistent.
     // For this, we start from the mappings of the first VMat, and add missing
     // mappings obtained from the other VMats. If another VMat has a different
@@ -264,7 +276,8 @@ void ConcatRowsVMatrix::ensureMappingsConsistency() {
 ///////////////////
 // findAllFields //
 ///////////////////
-void ConcatRowsVMatrix::findAllFields() {
+void ConcatRowsVMatrix::findAllFields()
+{
     // At this point, fieldinfos already contains the fields of the first
     // concatenated VMat.
     bool report_progress = true;
@@ -309,7 +322,8 @@ void ConcatRowsVMatrix::findAllFields() {
 //////////////////////
 // findCommonFields //
 //////////////////////
-void ConcatRowsVMatrix::findCommonFields() {
+void ConcatRowsVMatrix::findCommonFields()
+{
     // Find out which fields need to be kept.
     TVec<VMField> final_fields(fieldinfos.length());
     final_fields << fieldinfos;
@@ -343,7 +357,8 @@ void ConcatRowsVMatrix::findCommonFields() {
 ////////////////////////
 // fullyCheckMappings //
 ////////////////////////
-void ConcatRowsVMatrix::fullyCheckMappings(bool report_progress) {
+void ConcatRowsVMatrix::fullyCheckMappings(bool report_progress)
+{
     Vec row(width());
     TVec<int> max(width());
     ProgressBar* pb = 0;
@@ -399,28 +414,6 @@ real ConcatRowsVMatrix::get(int i, int j) const
         }
         return val;
     }
-}
-
-//////////////////
-// getpositions //
-//////////////////
-void ConcatRowsVMatrix::getpositions(int i, int& whichvm, int& rowofvm) const
-{
-#ifdef BOUNDCHECK
-    if(i<0 || i>=length())
-        PLERROR("In ConcatRowsVMatrix::getpositions OUT OF BOUNDS");
-#endif
-
-    int pos = 0;
-    int k=0;
-    while(i>=pos+to_concat[k]->length())
-    {
-        pos += to_concat[k]->length();
-        k++;
-    }
-
-    whichvm = k;
-    rowofvm = i-pos;
 }
 
 ///////////////
@@ -487,6 +480,28 @@ void ConcatRowsVMatrix::reset_dimensions() {
     for (int i=0;i<to_concat.size();i++)
         to_concat[i]->reset_dimensions();
     recomputeDimensions();
+}
+
+/////////////////////
+// getPositionsAux //
+/////////////////////
+void ConcatRowsVMatrix::getPositionsAux(int i, int& whichvm, int& rowofvm) const
+{
+    int pos = 0;
+    int k=0;
+    while(i>=pos+to_concat[k]->length())
+    {
+        pos += to_concat[k]->length();
+        k++;
+    }
+
+    // Update cache of last-used VMat
+    m_last_vmat_index    = k;
+    m_last_vmat_startrow = pos;
+    m_last_vmat_lastrow  = pos + to_concat[k]->length() - 1;
+    
+    whichvm = k;
+    rowofvm = i-pos;
 }
 
 

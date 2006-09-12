@@ -51,13 +51,10 @@ using namespace std;
 
 class ConcatRowsVMatrix: public VMatrix
 {
-
-private:
-
     typedef VMatrix inherited;
 
 protected:
-
+    //! The (original) VMats to concatenate
     TVec<VMat> sources;
 
     //! A vector containing the final VMats to concatenate.
@@ -74,7 +71,6 @@ protected:
     //! columns). The element (i, j) is a mapping that says which value needs
     //! to be replaced with  what in the j-th column of the i-th matrix. This
     //! is to fix the mappings when 'need_fix_mappings' is true.
-
     TMat< map<real, real> > fixed_mappings;
 
 public:
@@ -104,10 +100,11 @@ public:
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
-
-    //!  Returns the index of the correct VMat in the sources and the row
-    //!  number in this VMat that correspond to row i in the ConcatRowsVMat.
-    void getpositions(int i, int& whichvm, int& rowofvm) const;
+    /// Return the index of the correct VMat in the sources and the row number
+    /// in this VMat that correspond to row i in the ConcatRowsVMat.  The
+    /// inline version performs a cache lookup, or calls the out-of-line
+    /// version getPositionsAux, which performs a linear search
+    inline void getpositions(int i, int& whichvm, int& rowofvm) const;
 
     static void declareOptions(OptionList &ol);
 
@@ -135,6 +132,20 @@ private:
     //! forward to the underlying VMats).
     void recomputeDimensions();
 
+    /// Used in the implementation of getpositions (out-of-line version)
+    void getPositionsAux(int i, int& whichvm, int& rowofvm) const;
+
+private:
+    /// Cache of the index of the last-recently used VMat; -1 if invalid
+    mutable int m_last_vmat_index;
+
+    /// Cache of the starting row in the ConcatRowsVMatrix corresponding to
+    /// to the first row of m_last_vmat_index; -1 if invalid
+    mutable int m_last_vmat_startrow;
+
+    /// Cache of the last row (inclusive) in the ConcatRowsVMatrix
+    /// corresponding to m_last_vmat_index; -1 if invalid
+    mutable int m_last_vmat_lastrow;
 };
 
 DECLARE_OBJECT_PTR(ConcatRowsVMatrix);
@@ -150,6 +161,31 @@ inline VMat vconcat(TVec<VMat> ds) {
         return new ConcatRowsVMatrix(ds);
     }
 }
+
+//////////////////
+// getpositions //
+//////////////////
+inline void ConcatRowsVMatrix::getpositions(int i, int& whichvm, int& rowofvm) const
+{
+#ifdef BOUNDCHECK
+    if(i<0 || i>=length())
+        PLERROR("In ConcatRowsVMatrix::getpositions OUT OF BOUNDS");
+#endif
+
+    // Start by looking if i belongs to the most-recently-used VMat. If so, no
+    // need to search for it
+    if (i >= m_last_vmat_startrow && i <= m_last_vmat_lastrow) {
+        assert( m_last_vmat_index >= 0 );
+        whichvm = m_last_vmat_index;
+        rowofvm = i - m_last_vmat_startrow;
+        return;
+    }
+
+    // Now in cache: perform linear search out-of-line
+    getPositionsAux(i, whichvm, rowofvm);
+}
+
+
 
 } // end of namespace PLearn
 #endif
