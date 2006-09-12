@@ -951,6 +951,27 @@ PPath PPath::basename() const
     return substr(slash_pos+1);
 }
 
+//////////////
+// hostname //
+//////////////
+string PPath::hostname() const
+{
+    if (!isAbsPath())
+        PLERROR("In PPath::hostname - Can only be used with an absolute path");
+    if (isRoot())
+        PLERROR("In PPath::hostname - The path cannot be a root directory");
+    int i = 0;
+    PPath paths[2];
+    paths[0] = *this;
+    paths[1] = paths[0].up();
+    while (!paths[1 - i].isRoot()) {
+        i = 1 - i;
+        paths[1 - i] = paths[i].up();
+    }
+    paths[i].removeTrailingSlash();
+    return paths[i].basename();
+}
+
 ///////////////
 // extension //
 ///////////////

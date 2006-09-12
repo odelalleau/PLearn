@@ -81,7 +81,7 @@ form looks like:
 
 METAPROTOCOL:foo/bar
 
-where METAPROCOL is a kind of define whose value is parsed out of the PPath
+where METAPROTOCOL is a kind of define whose value is parsed out of the PPath
 config file (found in ${PLEARN_CONFIGS}/ppath.config or in
 ${HOME}/.plearn/ppath.config if the PLEARN_CONFIG environment variable is
 not defined). The rest of the path is relative to the expanded value of the
@@ -436,6 +436,18 @@ PPath::home, PPath::getenv (with a default value!) and PPath::getcwd.
                    PPath("foo/bar/hi.cc").basename()    // "hi.cc"
                  */
                  PPath basename  () const;
+
+                 /*!
+                   Return the hostname of a PPath representing an url.
+                   Although this method is meant to be called on a PPath with
+                   a HTTP or FTP protocol, it may also be used with other
+                   protocols.
+
+                   PPath::hostname example:
+
+                   PPath("http://foo.com/bar/hi").hostname() // "foo.com"
+                 */
+                 string hostname() const;
 
                  /*!
                    Return the extension of basename() (or an empty string if it has no
