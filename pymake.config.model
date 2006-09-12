@@ -376,11 +376,19 @@ linkeroptions_tail += ' -L' + libdir + ' -lm'
 # First option that appears in each group is the default, and is assumed if you
 # do not specify any option from that group.
 options_choices = [
-  [ 'g++', 'g++3', 'g++no-cygwin', 'icc', 'icc8', 'icc9', 'mpi', 'purify', 'quantify', 'vc++' ],
-  [ 'dbg', 'opt', 'pintel', 'gprof', 'safegprof', 'safeopt', 'safeoptdbg', 'checkopt', 'genericvc++' ],
+  [ 'g++', 'g++3', 'g++no-cygwin', 'icc', 'icc8', 'icc9', 'mpi',
+    'purify', 'quantify', 'vc++' ],
+  
+  [ 'dbg', 'opt', 'pintel', 'gprof', 'optdbggprof', 'safegprof',
+    'safeopt', 'safeoptdbg', 'checkopt', 'genericvc++' ],
+  
   [ 'double', 'float' ],
+  
   # [ 'throwerrors', 'exiterrors' ],
-  [ 'blas', 'p3blas','p4blas','athlonblas','pentiumblas', 'mammouthblas', 'noblas', 'veclib', 'scs'],
+  
+  [ 'blas', 'p3blas','p4blas','athlonblas','pentiumblas', 'mammouthblas',
+    'noblas', 'veclib', 'scs'],
+  
   [ 'logging=dbg', 'logging=mand', 'logging=imp', 'logging=normal', 'logging=extreme' ]
 ]
 
@@ -515,6 +523,12 @@ pymakeOption( name = 'checkopt',
 pymakeOption( name = 'gprof',
               description = 'optimized mode with profiler support (-pg)',
               compileroptions = '-Wall -O3 -pg',
+              cpp_definitions = ['NDEBUG'],
+              linkeroptions = '-pg' )
+
+pymakeOption( name = 'optdbggprof',
+              description = 'optimized mode with profiler support WITH DEBUGGING (-pg)',
+              compileroptions = '-Wall -O3 -g -pg',
               cpp_definitions = ['NDEBUG'],
               linkeroptions = '-pg' )
 
