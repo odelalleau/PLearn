@@ -154,5 +154,8 @@ class __Context(object):
 
         return os.path.join(self._expdir_root_, self._expdir_)
 
+    def getExpdirRoot(self):
+        return self._expdir_root_
+
 __contexts = [ __Context() ]
 __current_context = 0

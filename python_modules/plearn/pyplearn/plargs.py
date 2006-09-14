@@ -777,6 +777,8 @@ class plargs(object):
             # Special management of expdir plarg
             if key == "expdir":
                 return actualContext(plargs).getExpdir()
+            elif key == "expdir_root":
+                return actualContext(plargs).getExpdirRoot()
 
             # Find to holder to which option belongs
             holder = cls
@@ -889,7 +891,11 @@ class plnamespace:
     def getHolder(holder_name):
         return actualContext(plnamespace).namespaces.get(holder_name)
     getHolder = staticmethod(getHolder)
-    
+
+    def getPlopt(cls, optname):
+        return object.__getattribute__(cls, optname)
+    getPlopt = classmethod(getPlopt)
+        
     class __metaclass__(type):
         def __new__(metacls, clsname, bases, dic):
             cls = type.__new__(metacls, clsname, bases, dic)
