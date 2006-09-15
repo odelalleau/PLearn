@@ -656,7 +656,6 @@ void VMatLanguage::staticPreprocess(PStream& in, map<string, string>& defines,
                                     string& processed_sourcecode, vector<string>& fieldnames)
 {
     string token;
-    size_t spos;
     map<string,string>::iterator pos;
     while(in)
     {
@@ -767,7 +766,7 @@ void VMatLanguage::staticPreprocess(PStream& in, map<string, string>& defines,
         // did we find a reference to a string value of a VMatrix that has overloaded getStringVal(..) e.g.:StrTableVMatrix
         // In VPL, you can push on the stack the value of a string according to the string map of a particular column
         // e.g. : to push value of string "WBush" from field MostSuspectAmericanPresidents, write @MostSuspectsAmericanPresidents."WBush"
-        else if ((token[0]=='@' || token[0]=='%') && token[token.length()-1]=='"' && (spos=token.find(".\""))!=string::npos)
+        else if ((token[0]=='@' || token[0]=='%') && token[token.length()-1]=='"' && token.find(".\"")!=string::npos)
             PLERROR("string values not supported in VMatLanguage::staticPreprocess");
         else processed_sourcecode+=token + " ";
     }
