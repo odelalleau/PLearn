@@ -91,9 +91,9 @@ class VMatrix: public Object
 
 protected:
 
-    int length_;    ///< Length of the VMatrix.
-    int width_;     ///< Width of the VMatrix.
-    time_t mtime_;  ///< Time of "last modification" of files containing the data.
+    mutable int length_;    ///< Length of the VMatrix.
+    int width_;             ///< Width of the VMatrix.
+    time_t mtime_;          ///< Time of "last modification" of data files.
 
     /// For training/testing data sets we assume each row is composed of 4
     /// parts: an input part, a target part, and a weight part.  These fields
