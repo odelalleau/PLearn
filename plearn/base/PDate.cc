@@ -50,6 +50,46 @@
 namespace PLearn {
 using namespace std;
 
+
+
+//#####  Static Methods  ######################################################
+
+PDate PDate::lastDateOfMonth(int year, int month)
+{
+    PDate date = PDate(year, month, int(lastDayOfMonth(year, month)));
+    assert( date.isValid() );
+    return date;
+}
+
+unsigned char PDate::lastDayOfMonth(int year, int month)
+{
+    unsigned char day = 28;
+    switch ( month ) {
+    case 1: case 3: case 5: case 7: case 8: case 10: case 12:
+        day = 31;
+        break;
+        
+    case 4: case 6: case 9: case 11:
+        day = 30;
+        break;
+
+    case 2:
+        day = 28;
+        if ( year %  4  == 0 ) day = 29;
+        if ( year % 100 == 0 ) day = 28;
+        if ( year % 400 == 0 ) day = 29;
+        break;
+
+    default:
+        PLERROR("%s: Invalid month argument %d", __FUNCTION__, month);
+    }
+
+    return day;
+}
+
+
+//#####  Instance Methods  ####################################################
+
 PDate::PDate()
 {
     setMissing();
@@ -69,6 +109,7 @@ PDate::PDate(int julian_day)
     day = jb - jd - jf;
     month = (je>13) ? je-13 : je-1;
     year = (month>2) ? jc-4716 : jc-4715;
+    assert( isValid() );
 }
 
 PDate::PDate(string date)
@@ -157,7 +198,7 @@ PDate::PDate(string date)
     else
         PLERROR("PDate::PDate: the passed date string is not in a known format: %s", date.c_str());
 
-    if(year<1900 || year>3000 || month<1 || month>12 || day<1 || day>31)
+    if( !isValid() )
         PLERROR("Invalid date string: %s",date.c_str());
 }
 
@@ -172,7 +213,24 @@ void PDate::setMissing()
     month = 0;
     day = 0;
 }  
-  
+
+bool PDate::isValid() const
+{
+    // Managing leap years
+    if (month==2 && day==29)
+    {
+        bool valid = false;
+        if ( year %  4  == 0 ) valid = true;
+        if ( year % 100 == 0 ) valid = false;
+        if ( year % 400 == 0 ) valid = true;
+        return valid;
+    }
+
+    return year  >= 1900  &&  year  <= 3000 &&
+           month >=    1  &&  month <=   12 &&
+           day   >=    1  &&  day   <= lastDayOfMonth();
+}
+
 string PDate::info() const
 {
     return tostring(year)+slash+

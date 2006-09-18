@@ -64,6 +64,10 @@ using namespace std;
 class PDate
 {
 public:
+    static PDate lastDateOfMonth(int year, int month); // Builds a PDate
+    static unsigned char lastDayOfMonth(int year, int month);
+
+public:
     short year; //!<  ex: 1983, 2001, -350, ...
     unsigned char month; //!<  1..12
     unsigned char day; //!<  1..31
@@ -87,7 +91,11 @@ public:
 
     //!  Missing date handling
     bool isMissing() const;
-    void setMissing();  
+    void setMissing();
+    
+    //!  Returns true if the date is valid; manages leap years.
+    bool isValid() const;
+    unsigned char lastDayOfMonth() const { return PDate::lastDayOfMonth(year, month); }
     
     string info() const; //!<  returns the date in the format //!<  yyyy/mm/dd
 
