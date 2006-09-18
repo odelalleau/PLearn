@@ -2,19 +2,21 @@
 
 import os
 from plearn           import xp
-from plearn.utilities import toolkit
+#from plearn.utilities import toolkit
+from plearn.utilities import svn
 
 # Builds are tuples of the form (major, minor, plearn_revision) where
 # plearn_revision is the SVN revision of the PLearn project when the
 # project's version was released.
 build_list = [
-    # Major, Minor, PLearn Rev 
-    (   0,     1,       3646  )
+    # "Major.Minor" PLearn Rev 
+    ( "0.1",        3646 )
     ]
 
 def xp_version( ):
     xp_dir = os.path.dirname( xp.__file__ )
-    vtup = toolkit.version( xp_dir, build_list )
-    return '.'.join([ str(v) for v in vtup ])
+    #vtup = toolkit.version( xp_dir, build_list )
+    #return '.'.join([ str(v) for v in vtup ])
+    return svn.project_version(xp_dir, build_list)
 
 xp.main( xp_version )
