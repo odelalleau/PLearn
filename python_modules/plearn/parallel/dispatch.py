@@ -256,9 +256,10 @@ class TaskType:
             self.launch(wait)
             
     def free(self):
-        logging.debug("* Freeing task with pid=%d"%self.process.pid)
-        Self = self.__class__._child_processes.pop(self.process.fromchild)
-        assert Self == self
+        if hasattr(self, 'process'):
+            logging.debug("* Freeing task with pid=%d"%self.process.pid)
+            Self = self.__class__._child_processes.pop(self.process.fromchild)
+            assert Self == self
         
         if hasattr(self, 'logfile'):
             self.logfile.write( self.process.fromchild.read() )
@@ -296,7 +297,7 @@ class SshTask( TaskType ):
         actual_command = ' '.join(['cd', os.getcwd(), ';', 'nice'] + self.argv)
         actual_command = actual_command.replace("'", "\'")
         actual_command = actual_command.replace('"', '\"')
-        return "ssh -x %s '%s'"%(self.host, actual_command)
+        return "ssh -X %s '%s'"%(self.host, actual_command)
 
     def getLogFileBaseName(self):
         return "ssh-%s-pid=%d"%(self.host, self.process.pid)
@@ -466,11 +467,17 @@ class Dispatch( PyPLearnObject ):
                 prepend.extend( self.constant_args )
 
             if self.script.find( '.pyplearn' ) != -1:
-                expdir = generateExpdir()
-                time.sleep(1) ## Making sure the next expdir will be generated at
-                              ## another 'time', i.e. on another second
+                expdir = None
+                for arg in arguments:
+                    if arg.startswith("expdir="):
+                        expdir = arg
+                        break
 
-                arguments.append( "expdir=%s" % expdir )
+                if expdir is None:
+                    expdir = generateExpdir()
+                    time.sleep(1) ## Making sure the next expdir will be generated at
+                                  ## another 'time', i.e. on another second
+                    arguments.append( "expdir=%s" % expdir )
 
             # # Module function defined above
             # launch_task( prepend+_quoted(arguments) )
@@ -479,6 +486,7 @@ class Dispatch( PyPLearnObject ):
             if self.delay:
                 logging.info('Delayed: %s'%task.getLaunchCommand())
                 delayed += 1
+                task.free() # Since it won't be launch, free the resources...
                 continue            
 
             task.launch()
