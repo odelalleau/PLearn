@@ -118,6 +118,21 @@ def save_array_as_pmat( fname, ar, fieldnames=[] ):
 
 #######  Iterators  ###########################################################
 
+class VMatIt:
+    def __init__(self, vmat):                
+        self.vmat = vmat
+        self.cur_row = 0
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        if self.cur_row==self.vmat.length:
+            raise StopIteration
+        row = self.vmat.getRow(self.cur_row)
+        self.cur_row += 1
+        return row    
+
 class ColumnIt:
     def __init__(self, vmat, col):                
         self.vmat = vmat
@@ -137,6 +152,9 @@ class ColumnIt:
 #######  VMat classes  ########################################################
 
 class VMat:
+    def __iter__(self):
+        return VMatIt(self)
+    
     def __getitem__( self, key ):
         if isinstance( key, slice ):
             start, stop, step = key.start, key.stop, key.step
