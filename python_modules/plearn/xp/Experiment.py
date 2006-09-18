@@ -183,7 +183,8 @@ class Experiment(PyPLearnObject):
 
     def loadPMat( self, *pmats ):
         for pmat in pmats:
-            setattr( self, pmat[:-5], PMat( os.path.join(self.abspath, pmat) ) )
+            attr_name = os.path.basename(pmat).replace('.pmat', '')
+            setattr( self, attr_name, PMat( os.path.join(self.abspath, pmat) ) )
 
     def getKey( self, expkey = None ):
         if expkey is None:
