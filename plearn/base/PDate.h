@@ -95,6 +95,7 @@ public:
     
     //!  Returns true if the date is valid; manages leap years.
     bool isValid() const;
+    PDate lastDateOfMonth() const { return PDate::lastDateOfMonth(year, month); }
     unsigned char lastDayOfMonth() const { return PDate::lastDayOfMonth(year, month); }
     
     string info() const; //!<  returns the date in the format //!<  yyyy/mm/dd
