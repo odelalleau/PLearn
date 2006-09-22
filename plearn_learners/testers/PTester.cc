@@ -825,7 +825,8 @@ void StatSpec::parseStatname(const string& statname)
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void PTester::makeDeepCopyFromShallowCopy(CopiesMap& copies) {
+void PTester::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(statnames, copies);
     deepCopyField(statnames_processed, copies);
@@ -837,8 +838,6 @@ void PTester::makeDeepCopyFromShallowCopy(CopiesMap& copies) {
     deepCopyField(statmask, copies);
     deepCopyField(template_stats_collector, copies);
     deepCopyField(perf_evaluators, copies);
-
-
 }
 
 } // end of namespace PLearn
