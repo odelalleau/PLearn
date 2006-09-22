@@ -46,16 +46,30 @@ using namespace std;
 
 /** InterleaveVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT(InterleaveVMatrix, "ONE LINE DESC", "ONE LINE HELP");
+PLEARN_IMPLEMENT_OBJECT(
+    InterleaveVMatrix,
+    "Interleave several VMats row-wise",
+    "This class interleaves several VMats (with consecutive rows always coming\n"
+    "from a different source VMat) thus possibly including more than once the\n"
+    "rows of the small VMats.  For example, if source1.length()==10 and\n"
+    "source2.length()==30 then the resulting VM will have 60 rows, and 3\n"
+    "repetitions of each row of source1, with rows taken as follows:\n"
+    "\n"
+    "  source1.row(0), source2.row(0), source1.row(1), source2.row(1), ...,\n"
+    "  source1.row(9), source2.row(9), source1.row(0), cource2.row(10), ...\n"
+    "\n"
+    "Note that if source2.length() is not a multiple of source1.length() some\n"
+    "records from source1 will be repeated once more than others.\n"
+    );
 
 InterleaveVMatrix::InterleaveVMatrix()
-{
-}
+{ }
 
 InterleaveVMatrix::InterleaveVMatrix(TVec<VMat> the_sources)
     : sources(the_sources)
 {
-    build();
+    if (sources.size() > 0)
+        build();
 }
 
 InterleaveVMatrix::InterleaveVMatrix(VMat source1, VMat source2)
@@ -79,9 +93,6 @@ void InterleaveVMatrix::build_()
         if (n<1)
             PLERROR("InterleaveVMatrix expects >= 1 sources, got %d",n);
 
-        // Copy the parent fields
-        fieldinfos = sources[0]->getFieldInfos();
-
         width_ = sources[0]->width();
         int maxl = 0;
         for (int i = 0; i < n; i++) {
@@ -93,14 +104,17 @@ void InterleaveVMatrix::build_()
                 maxl=l;
         }
         length_ = n * maxl;
+
+        // Finally copy remaining meta information from first VMatrix
+        setMetaInfoFrom(sources[0]);
     }
 }
 
-void
-InterleaveVMatrix::declareOptions(OptionList &ol)
+void InterleaveVMatrix::declareOptions(OptionList &ol)
 {
     declareOption(ol, "sources", &InterleaveVMatrix::sources,
-                  OptionBase::buildoption, "");
+                  OptionBase::buildoption,
+                  "Set of VMats to be concatenated");
 
     inherited::declareOptions(ol);
 }
@@ -127,6 +141,12 @@ void InterleaveVMatrix::getSubRow(int i, int j, Vec v) const
     int m = i%n; // which source
     int pos = int(i/n) % sources[m].length(); // position within sources[m]
     sources[m]->getSubRow(pos, j, v);
+}
+
+void InterleaveVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(sources, copies);
 }
 
 } // end of namespace PLearn

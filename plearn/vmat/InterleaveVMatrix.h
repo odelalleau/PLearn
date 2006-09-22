@@ -50,17 +50,21 @@ namespace PLearn {
 using namespace std;
 
 
-/*!   This class interleaves several VMats (with consecutive rows
-  always coming from a different source VMat) thus possibly
-  including more than once the rows of the small VMats.
-  For example, if source1.length()==10 and source2.length()==30 then
-  the resulting VM will have 60 rows, and 3 repetitions
-  of each row of source1, with rows taken as follows:
-  source1.row(0), source2.row(0), source1.row(1), source2.row(1), ...,
-  source1.row(9), source2.row(9), source1.row(0), cource2.row(10), ...
-  Note that if source2.length() is not a multiple of source1.length()
-  some records from source1 will be repeated once more than others.
-*/
+/**
+ *  Interleave several VMats row-wise
+ *
+ *  This class interleaves several VMats (with consecutive rows always coming
+ *  from a different source VMat) thus possibly including more than once the
+ *  rows of the small VMats.  For example, if source1.length()==10 and
+ *  source2.length()==30 then the resulting VM will have 60 rows, and 3
+ *  repetitions of each row of source1, with rows taken as follows:
+ *
+ *    source1.row(0), source2.row(0), source1.row(1), source2.row(1), ...,
+ *    source1.row(9), source2.row(9), source1.row(0), cource2.row(10), ...
+ *
+ *  Note that if source2.length() is not a multiple of source1.length() some
+ *  records from source1 will be repeated once more than others.
+ */
 class InterleaveVMatrix: public VMatrix
 {
     typedef VMatrix inherited;
@@ -85,6 +89,10 @@ public:
 
     virtual void build();
 
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+
+    //! VMatrix overrides
     virtual real get(int i, int j) const;
     virtual void getSubRow(int i, int j, Vec v) const;
     virtual void reset_dimensions()
