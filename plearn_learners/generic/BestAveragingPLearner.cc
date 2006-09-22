@@ -337,7 +337,7 @@ void BestAveragingPLearner::train()
 
     // Find the M best train costs
     sort(model_scores.begin(), model_scores.end());
-    assert( m_best_learner_num < model_scores.size() );
+    assert( m_best_learner_num <= model_scores.size() );
     m_best_learners.resize(m_best_learner_num);
     for (int i=0 ; i<m_best_learner_num ; ++i) {
         m_best_learners[i] = m_learner_set[model_scores[i].second];
