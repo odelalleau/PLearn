@@ -136,7 +136,9 @@ double VecStatsCollector::getStat(const string& statspec)
     in.smartReadUntilNext("]", fieldname);
     int fieldnum = getFieldNum(fieldname);  
     if(fieldnum<0)
-        PLERROR("In VecStatsCollector::getStat invalid fieldname: %s",fieldname.c_str());
+        PLERROR("In VecStatsCollector::getStat invalid fieldname: %s;\n"
+                "valid fieldnames are: %s",fieldname.c_str(),
+                tostring(fieldnames).c_str());
 
     // It could be that nothing was accumulated into the stats collector,
     // which is different from accessing the "wrong" field.  In the first
