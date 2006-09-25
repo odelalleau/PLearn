@@ -101,6 +101,18 @@ public:
     long m_initial_seed;
 
     /**
+     *  Use in conjunction with 'initial_seed'; option name pointing to the
+     *  seed to be initialized.  The default is just 'seed', which is the
+     *  PLearner option name for the seed, and is adequate if the
+     *  learner_template is "shallow", such as NNet.  This option is useful if
+     *  the learner_template is a complex learner (e.g. HyperLearner) and the
+     *  seed must actually be set inside one of the inner learners.  In the
+     *  particular case of HyperLearner, one could use 'learner.seed' as the
+     *  value for this option.
+     */
+    string m_seed_option;
+    
+    /**
      *  Total number of learners to instantiate from learner_template (if
      *  'learner_set' is not specified.
      */

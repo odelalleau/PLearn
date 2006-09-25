@@ -68,6 +68,7 @@ PLEARN_IMPLEMENT_OBJECT(
 
 BestAveragingPLearner::BestAveragingPLearner()
     : m_initial_seed(-1),
+      m_seed_option("seed"),
       m_total_learner_num(0),
       m_best_learner_num(0),
       m_cached_outputsize(-1)
@@ -109,6 +110,18 @@ void BestAveragingPLearner::declareOptions(OptionList& ol)
         "that is being instantiated.  If this value is <= 0, it is used as-is\n"
         "without being incremented.\n");
 
+    declareOption(
+        ol, "seed_option", &BestAveragingPLearner::m_seed_option,
+        OptionBase::buildoption,
+        "Use in conjunction with 'initial_seed'; option name pointing to the\n"
+        "seed to be initialized.  The default is just 'seed', which is the\n"
+        "PLearner option name for the seed, and is adequate if the\n"
+        "learner_template is \"shallow\", such as NNet.  This option is useful if\n"
+        "the learner_template is a complex learner (e.g. HyperLearner) and the\n"
+        "seed must actually be set inside one of the inner learners.  In the\n"
+        "particular case of HyperLearner, one could use 'learner.seed' as the\n"
+        "value for this option.\n");
+    
     declareOption(
         ol, "total_learner_num", &BestAveragingPLearner::m_total_learner_num,
         OptionBase::buildoption,
@@ -180,7 +193,7 @@ void BestAveragingPLearner::build_()
         m_learner_set.resize(N);
         for (int i=0 ; i<N ; ++i) {
             PP<PLearner> new_learner = PLearn::deepCopy(m_learner_template);
-            new_learner->seed_ = cur_seed;
+            new_learner->setOption(m_seed_option, tostring(cur_seed));
             new_learner->build();
             new_learner->forget();
             m_learner_set[i] = new_learner;
