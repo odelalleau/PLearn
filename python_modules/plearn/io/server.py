@@ -260,7 +260,10 @@ class RemotePLearnServer:
     def close(self):
         if not self.closed:
             if self.log: self.log.info('NOW CLOSING: method close() called')                
-            self.logged_write('!Q')
+            try:
+                self.logged_write('!Q')
+            except IOError:
+                pass
             if self.log: self.log.info('WAITING FOR CHILD PROCESS TO FINISH: os.wait()')                
             os.wait()
             if self.log: self.log.info('CLOSED.')
