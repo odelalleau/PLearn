@@ -146,6 +146,7 @@ class RemotePLearnServer:
     def logged_write(self,msg):
         """Writes msg to self.io and possibly writes a corresponding entry in the logfile"""
         self.io.write(msg)
+        self.io.flush()
         if self.log: self.log.debug('SENDING: '+msg)
         
     def logged_write_args(self,args):
@@ -160,24 +161,29 @@ class RemotePLearnServer:
     def callNewObject(self, objid, objspecstr):
         self.clearMaps()
         self.logged_write('!N '+str(objid)+' '+objspecstr+'\n')
-        self.io.flush()
         self.expectResults(0)
 
     def callLoadObject(self, objid, filepath):
         self.clearMaps()
         self.logged_write('!L '+str(objid)+' '+filepath+'\n')
-        self.io.flush()
         self.expectResults(0)
 
     def callDeleteObject(self, objid):
         self.logged_write('!D '+str(objid)+'\n')
-        self.io.flush()
         self.expectResults(0)
 
     def callDeleteAllObjects(self):
         self.logged_write('!Z \n')
-        self.io.flush()
         self.expectResults(0)
+
+    def isAlive(self):
+        """Check if the connection is still up by doing a ping."""
+        try:
+            self.logged_write('!P \n')
+            self.expectResults(0)
+            return True
+        except:
+            return False
 
     def clearMaps(self):
         if self.clear_maps:
@@ -217,7 +223,6 @@ class RemotePLearnServer:
     def callFunction(self, functionname, *args):
         self.sendFunctionCallHeader(functionname, len(args))
         self.logged_write_args(args)
-        self.io.flush()
         nresults = self.getResultsCount()
         results = []
         for i in xrange(nresults):
@@ -232,7 +237,6 @@ class RemotePLearnServer:
     def callMethod(self, objid, methodname, *args):
         self.sendMethodCallHeader(objid, methodname, len(args))
         self.logged_write_args(args)
-        self.io.flush()
 
         if self.dbg_dump:
             print 'DEBUG DUMP AFTER CALL OF METHOD',methodname,args
@@ -257,7 +261,6 @@ class RemotePLearnServer:
         if not self.closed:
             if self.log: self.log.info('NOW CLOSING: method close() called')                
             self.logged_write('!Q')
-            self.io.flush()
             if self.log: self.log.info('WAITING FOR CHILD PROCESS TO FINISH: os.wait()')                
             os.wait()
             if self.log: self.log.info('CLOSED.')
@@ -295,3 +298,4 @@ class RemotePObject:
 ##         to_server.write()
 
 
+# vim: filetype=python:expandtab:shiftwidth=4:tabstop=8:softtabstop=4 :
