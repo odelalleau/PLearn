@@ -1000,7 +1000,10 @@ def distribute_source(target, ccfiles_to_compile, executables_to_link, linkname)
     makefile.close()
 
 def find_dependency(args):
-    configpath = get_config_path(args[0])
+    global sourcedirs
+
+    target = args[0]
+    configpath = get_config_path(target)
     execfile( configpath, globals() )
     sourcedirs = unique(sourcedirs)
 
@@ -2241,9 +2244,10 @@ def main( args ):
 
     # Filetype extensions
     cpp_exts = ['.cc','.c','.C','.cpp','.CC', '.cxx']
-    h_exts = ['.h','.H','.hpp'] 
+    h_exts = ['.h','.H','.hpp']
 
-    # QT specific stuff. If this is true, then qt's include dir and library are added for compilation and linkage
+    # QT specific stuff. If this is true, then qt's include dir and
+    # library are added for compilation and linkage
     useqt = 0
     qtdir=''
 
@@ -2263,6 +2267,11 @@ def main( args ):
     cpp_variables = []
     # C preprocessor definitions
     cpp_definitions = []
+
+    # Default value, to be used in -dependency mode
+    undefined_cpp_vars = []
+    defined_cpp_vars = []
+    cpp_vars_values = {}
 
     #objspolicy=1 -> for dir/truc.cc object file in   dir/platform_opt/truc.o (objects file are in a directory corresponding to the cc file directory)
     #objspolicy=2 -> for dir/truc.cc object file in   objsdir/platform_opt/truc.o (all objects file are in the same directory)
