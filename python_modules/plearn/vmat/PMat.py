@@ -197,9 +197,14 @@ class VMat:
         elif isinstance( key, str ):
             # The key is considered to be a fieldname and a column is
             # returned.
-            return array_columns( self.getRows(0,self.length),
-                                  self.fieldnames.index(key)  )
-            
+            try:
+                return array_columns( self.getRows(0,self.length),
+                                      self.fieldnames.index(key)  )
+            except ValueError:
+                print >>sys.stderr, "Key is", key, "while fieldnames are"
+                print >>sys.stderr, self.fieldnames
+                raise
+                
         else:
             if key<0: key+=self.length
             return self.getRow(key)
