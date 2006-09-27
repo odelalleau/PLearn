@@ -54,6 +54,7 @@
 #include <plearn/var/GradientAdaboostCostVariable.h>
 #include <plearn/var/MulticlassLossVariable.h>
 #include <plearn/var/NegCrossEntropySigmoidVariable.h>
+#include <plearn/var/NegLogPoissonVariable.h>
 #include <plearn/var/OneHotSquaredLoss.h>
 // #include "RBFLayerVariable.h" //TODO Put it back when the file exists.
 #include <plearn/var/SigmoidVariable.h>
@@ -268,8 +269,8 @@ void NNet::declareOptions(OptionList& ol)
         "  - \"class_error\" (classification error) \n"
         "  - \"binary_class_error\" (classification error for a 0-1 binary classifier)\n"
         "  - \"multiclass_error\" \n"
-        "  - \"cross_entropy\" (for binary classification)\n"
-        "  - \"stable_cross_entropy\" (more accurate backprop and possible regularization, for binary classification)\n"
+        "  - \"cross_entropy\" (for binary classification)\n" 
+       "  - \"stable_cross_entropy\" (more accurate backprop and possible regularization, for binary classification)\n"
         "  - \"margin_perceptron_cost\" (a hard version of the cross_entropy, uses the 'margin' option)\n"
         "  - \"lift_output\" (not a real cost function, just the output for lift computation)\n"
         "  - \"conf_rated_adaboost_cost\" (for confidence rated Adaboost)\n"
@@ -443,6 +444,7 @@ void NNet::setTrainingSet(VMat training_set, bool call_forget)
         noutputs = training_set->targetsize();
 
     inherited::setTrainingSet(training_set, call_forget);
+    cout << "name = " << name << endl << "targetsize = " << targetsize_ << endl << "weightsize = " << weightsize_ << endl;
 }
 
 
@@ -482,6 +484,9 @@ void NNet::buildCosts(const Var& the_output, const Var& the_target, const Var& h
             costs[k] = multiclass_loss(the_output, the_target);
         else if(cost_funcs[k]=="cross_entropy")
             costs[k] = cross_entropy(the_output, the_target);
+        else if(cost_funcs[k]=="scaled_cross_entropy") {
+            costs[k] = cross_entropy(the_output, the_target, true);
+        } 
         else if(cost_funcs[k]=="conf_rated_adaboost_cost")
         {
             if(output_transfer_func != "sigmoid")
@@ -510,6 +515,9 @@ void NNet::buildCosts(const Var& the_output, const Var& the_target, const Var& h
             costs[k] = margin_perceptron_cost(the_output,the_target,margin);
         else if (cost_funcs[k]=="lift_output")
             costs[k] = lift_output(the_output, the_target);
+        else if (cost_funcs[k]=="neglogpoissonvariable")
+            costs[k] = neglogpoissonvariable(the_output, the_target);
+        
         else  // Assume we got a Variable name and its options
         {
             costs[k]= dynamic_cast<Variable*>(newObject(cost_funcs[k]));
@@ -589,12 +597,13 @@ void NNet::buildFuncs(const Var& the_input, const Var& the_output, const Var& th
     output_and_target_to_cost = Func(outvars, test_costs); 
     // Since there will be a fprop() in the network, we need to make sure the
     // input is valid.
-    if (train_set && train_set->length() >= 1) {
-        Vec input, target;
-        real weight;
-        train_set->getExample(0, input, target, weight);
-        the_input->matValue << input;
-    }
+    
+    //if (train_set && train_set->length() >= 1) {
+    //    Vec input, target;
+    //    real weight;
+    //    train_set->getExample(0, input, target, weight);
+    //    the_input->matValue << input;
+    // }
     output_and_target_to_cost->recomputeParents();
 }
 
@@ -1010,7 +1019,7 @@ void NNet::train()
         PLERROR("In NNet::train, you did not setTrainStatsCollector");
 
     int l = train_set->length();  
-
+    
     if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
         build();
 
