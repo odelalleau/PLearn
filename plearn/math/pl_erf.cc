@@ -63,7 +63,7 @@ real pl_gammln(real z)
     static double gamma = 5.0;
     gz = (z+0.5)*pl_log(z+gamma+0.5);
     gz -= z+gamma+0.5;
-    gz += 0.5*pl_log(2*Pi);
+    gz += 0.5*Log2Pi;
     tmp = pl_gammln_cof[0];
     for(int i=1;i<7;i++) tmp += pl_gammln_cof[i]/(z+i);
     gz += pl_log(tmp/z);
