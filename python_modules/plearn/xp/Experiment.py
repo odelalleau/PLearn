@@ -160,7 +160,8 @@ class Experiment(PyPLearnObject):
 
     def match_one( cls, expkey ):
         matches = cls.match( expkey )
-        assert len(matches) == 1, "%d\n%s" % (len(matches), expkey)
+        assert len(matches) == 1, \
+            "Key matches %d experiments\n%s" % (len(matches), expkey)
         return matches[0]    
     match_one = classmethod( match_one )
 
