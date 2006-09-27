@@ -444,7 +444,7 @@ void NNet::setTrainingSet(VMat training_set, bool call_forget)
         noutputs = training_set->targetsize();
 
     inherited::setTrainingSet(training_set, call_forget);
-    cout << "name = " << name << endl << "targetsize = " << targetsize_ << endl << "weightsize = " << weightsize_ << endl;
+    //cout << "name = " << name << endl << "targetsize = " << targetsize_ << endl << "weightsize = " << weightsize_ << endl;
 }
 
 
@@ -484,8 +484,8 @@ void NNet::buildCosts(const Var& the_output, const Var& the_target, const Var& h
             costs[k] = multiclass_loss(the_output, the_target);
         else if(cost_funcs[k]=="cross_entropy")
             costs[k] = cross_entropy(the_output, the_target);
-        else if(cost_funcs[k]=="scaled_cross_entropy") {
-            costs[k] = cross_entropy(the_output, the_target, true);
+//        else if(cost_funcs[k]=="scaled_cross_entropy") {
+//            costs[k] = cross_entropy(the_output, the_target, true);
         } 
         else if(cost_funcs[k]=="conf_rated_adaboost_cost")
         {
