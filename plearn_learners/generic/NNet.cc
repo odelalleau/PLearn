@@ -486,7 +486,7 @@ void NNet::buildCosts(const Var& the_output, const Var& the_target, const Var& h
             costs[k] = cross_entropy(the_output, the_target);
 //        else if(cost_funcs[k]=="scaled_cross_entropy") {
 //            costs[k] = cross_entropy(the_output, the_target, true);
-        } 
+//        } 
         else if(cost_funcs[k]=="conf_rated_adaboost_cost")
         {
             if(output_transfer_func != "sigmoid")
