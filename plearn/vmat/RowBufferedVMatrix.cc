@@ -115,9 +115,9 @@ void RowBufferedVMatrix::getSubRow(int i, int j, Vec v) const
     if(current_row_index!=i)
     {
 #ifdef BOUNDCHECK
-        if (i < 0 || i >= length())
+        if ((i < 0 || i >= length()) && length() >= 0)
             PLERROR("In RowBufferedVMatrix::getSubRow: row index (%d) outside valid range [%d,%d]", i, 0, length_-1);
-        if (j < 0 || j >= width())
+        if ((j < 0 || j >= width()) && width() >= 0)
             PLERROR("In RowBufferedVMatrix::getSubRow: column index (%d) outside valid range [%d,%d]", i, 0, width_-1);
 #endif
         current_row.resize(width_);
