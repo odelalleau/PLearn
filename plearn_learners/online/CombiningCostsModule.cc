@@ -142,9 +142,14 @@ void CombiningCostsModule::bpropUpdate(const Vec& input, const Vec& target,
     Vec partial_gradient;
     for( int i=0 ; i<n_sub_costs ; i++ )
     {
-        sub_costs[i]->bpropUpdate( input, target, sub_costs_values[i],
-                                   partial_gradient );
-        multiplyAcc( input_gradient, partial_gradient, cost_weights[i] );
+        if( cost_weights[i] != 0. )
+        {
+            sub_costs[i]->bpropUpdate( input, target, sub_costs_values[i],
+                                       partial_gradient );
+            multiplyAcc( input_gradient, partial_gradient, cost_weights[i] );
+        }
+        else
+            sub_costs[i]->bpropUpdate( input, target, sub_costs_values[i] );
     }
 }
 
