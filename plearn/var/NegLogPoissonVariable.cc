@@ -50,7 +50,7 @@ using namespace std;
 /** NegLogPoissonVariable **/
 
 PLEARN_IMPLEMENT_OBJECT(NegLogPoissonVariable,
-                        "cost =  sum_i {exp(output_i) - output_i * target_i}",
+                        "cost =  sum_i {exp(output_i) - output_i * target_i + log(target_i!)}",
                         "NO HELP");
 
 
@@ -93,7 +93,7 @@ void NegLogPoissonVariable::fprop()
     {
         real output = input1->valuedata[i];
         real target = input2->valuedata[i];
-        cost += exp(output) - output * target;
+        cost += exp(output) - output * target + pl_gammln(target);
     }
     valuedata[0] = -cost;
 }

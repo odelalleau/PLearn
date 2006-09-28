@@ -44,12 +44,13 @@
 #define NegLogPoissonVariable_INC
 
 #include "BinaryVariable.h"
+#include <plearn/math/pl_erf.h>
 
 namespace PLearn {
 using namespace std;
 
  
-//! cost =  sum_i {exp(output_i) - output_i * target_i }
+//! cost =  sum_i { exp(output_i) - output_i * target_i + log(target_i!) }
 //
 // We can link the notation used above to the usual
 // statistical notation in the following way:
@@ -58,10 +59,6 @@ using namespace std;
 // and k = target_i, the number of observed events
 // Thus, the cost corresponds to the negative log likelihood
 // of the Poisson density
-// !!BEWARE!!: for speed of computation, we have omitted the term log(target_i!)
-// this has positively absolutely no effet on optimization but the
-// (negative log) likelihood given is a scaled version of the true value.
-// This *will* affect comparisons across datasets and across models.
 
 class NegLogPoissonVariable: public BinaryVariable
 {
