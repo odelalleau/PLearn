@@ -63,9 +63,7 @@ public:
 
     // Your other public member functions go here
 
-    //! given the input, compute the output
-    virtual void fprop(const Vec& input_and_target, Vec& output) const;
-
+    //! given the input and target, compute the cost
     virtual void fprop(const Vec& input, const Vec& target, Vec& cost) const;
 
     //! Adapt based on the output gradient: this method should only

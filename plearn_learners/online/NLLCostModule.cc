@@ -83,12 +83,6 @@ void NLLCostModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
-void NLLCostModule::fprop(const Vec& input_and_target, Vec& output) const
-{
-    fprop( input_and_target.subVec( 0, input_size ),
-           input_and_target.subVec( input_size, target_size ),
-           output );
-}
 
 void NLLCostModule::fprop(const Vec& input, const Vec& target, Vec& cost) const
 {

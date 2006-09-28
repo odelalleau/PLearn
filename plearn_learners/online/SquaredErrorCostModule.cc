@@ -83,14 +83,6 @@ void SquaredErrorCostModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 }
 
 
-void SquaredErrorCostModule::fprop(const Vec& input_and_target, Vec& output)
-    const
-{
-    fprop( input_and_target.subVec( 0, input_size ),
-           input_and_target.subVec( input_size, target_size ),
-           output );
-}
-
 void SquaredErrorCostModule::fprop(const Vec& input, const Vec& target,
                                    Vec& cost) const
 {
