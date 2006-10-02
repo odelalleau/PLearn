@@ -197,8 +197,10 @@ class RemotePLearnServer:
         ## The implementation of this function is complicated by the fact
         ## that we cannot expect the pipes to really work at all; in this
         ## case, expectResults() might get stuck in an infinite loop.  To
-        ## this end, we start a second thread to actually query the PLearn
-        ## server, and we wait for the ping to respond through an Event.
+        ## this end, we start a timer which interrupts the main thread if
+        ## we wait too long.  (It is not possible to kill a thread in
+        ## Python, so the alternative of busy waiting in a second thread
+        ## must be ruled out).
 
         t = Timer(timeout, interrupt_main)
         
