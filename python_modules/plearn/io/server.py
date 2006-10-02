@@ -33,6 +33,9 @@
 # Author: Pascal Vincent
 
 import os, socket, string, sys
+from threading import Timer
+from thread    import interrupt_main
+
 from plearn.pyplearn import *
 from plearn.pyplearn import plearn_repr
 import plearn.io.serialize
@@ -65,7 +68,16 @@ class RemotePLearnServer:
         self.clear_maps = True
         self.dbg_dump = False
         self.closed = False
-        if self.log: self.log.info('CONNEXION ESTABLISHED WITH PLEARN SERVER')
+
+        ## Ensure that the server is responding. Otherwise raise an error
+        if not self.isAlive():
+            raise RuntimeError, \
+                  "Cannot establish connection with PLearn Server: " \
+                  "'ping' request did not respond"
+        
+        if self.log:
+            self.log.info('CONNEXION ESTABLISHED WITH PLEARN SERVER')
+
         self.callFunction("binary")
         self.callFunction("implicit_storage",True)        
         
@@ -176,13 +188,28 @@ class RemotePLearnServer:
         self.logged_write('!Z \n')
         self.expectResults(0)
 
-    def isAlive(self):
-        """Check if the connection is still up by doing a ping."""
+    def isAlive(self, timeout=2):
+        """Check if the connection is still up by doing a ping.
+
+        The optional 'timeout' argument specifies how long we should wait
+        (in seconds; may be a fraction) for an answer before giving up.
+        """
+        ## The implementation of this function is complicated by the fact
+        ## that we cannot expect the pipes to really work at all; in this
+        ## case, expectResults() might get stuck in an infinite loop.  To
+        ## this end, we start a second thread to actually query the PLearn
+        ## server, and we wait for the ping to respond through an Event.
+
+        t = Timer(timeout, interrupt_main)
+        
         try:
+            t.start()
             self.logged_write('!P \n')
-            self.expectResults(0)
+            self.expectResults(0)   # Might die in infinite loop...
+            t.cancel()
             return True
         except:
+            t.cancel()
             return False
 
     def clearMaps(self):
