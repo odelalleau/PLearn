@@ -1,4 +1,4 @@
-#! /usr/bin/env python2.4
+#! /usr/bin/env python
 
 import sys,time,random,md5,glob,string
 from configobj import ConfigObj
