@@ -597,13 +597,12 @@ void NNet::buildFuncs(const Var& the_input, const Var& the_output, const Var& th
     output_and_target_to_cost = Func(outvars, test_costs); 
     // Since there will be a fprop() in the network, we need to make sure the
     // input is valid.
-    
-    //if (train_set && train_set->length() >= 1) {
-    //    Vec input, target;
-    //    real weight;
-    //    train_set->getExample(0, input, target, weight);
-    //    the_input->matValue << input;
-    // }
+    if (train_set && train_set->length() >= 1) {
+        Vec input, target;
+        real weight;
+        train_set->getExample(0, input, target, weight);
+        the_input->matValue << input;
+    }
     output_and_target_to_cost->recomputeParents();
 }
 
