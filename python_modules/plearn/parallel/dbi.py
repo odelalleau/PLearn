@@ -18,9 +18,16 @@ STATUS_ERROR = 3
 class DBIBase:
 
     def __init__(self, commands, **args ):
+        #generate a new unique id
         self.unique_id = get_new_sid('')
+
+        # option is not used yet
         self.has_short_duration = 0
+
+        # if all machines are full, run the jobs one by one on the localhost
         self_use_localhost_if_full = 1
+
+        # the( human readable) time format used in log file
         self.time_format = "%Y-%m-%d/%H:%M:%S"
 
         # Commands to be executed once before the entire batch
@@ -29,14 +36,16 @@ class DBIBase:
         self.pre_tasks = []
         # The main tasks to be dispatched
         self.tasks = []
-        # Commands to be executed before after task in tasks
+        # Commands to be executed after each task in tasks
         self.post_tasks = []
         # Commands to be executed once after the entire batch
         self.post_batch = []
 
+        # the default directory where to keep all the log files
         self.log_dir = 'LOGS'
         self.log_file = os.path.join( self.log_dir, self.unique_id )
 
+        #
         self.file_redirect_stdout = 0
         self.file_redirect_stderr = 0
 
@@ -92,14 +101,14 @@ class Task:
 
         self.commands = []
 
-        self.commands.append("cd parent")
+        self.commands.extend( pre_tasks )
+#        self.commands.append("cd parent")
         self.commands.append("utils.py " + 'set_config_value '+
                 string.join([self.log_file,'STATUS',str(STATUS_RUNNING)],' '))
         # set the current date in the field LAUNCH_TIME
         self.commands.append("utils.py " + 'set_current_date '+
                 string.join([self.log_file,'LAUNCH_TIME',time_format],' '))
 
-        self.commands.extend( pre_tasks )
         #cd to parent diectory, run the command, and then cd back
 #	command = 'cd parent;' + command + ';cd ' + self.temp_dir 
         self.commands.append( command )
@@ -232,7 +241,7 @@ class DBIbqtools(DBIBase):
         args['temp_dir'] = self.temp_dir
         for command in commands:
             self.tasks.append(Task(command, self.log_dir, self.time_format,
-                                   self.pre_tasks, self.post_tasks,args))
+                                   [self.pre_tasks,'cd parent;'], self.post_tasks,args))
 
 
     def run(self):
@@ -311,13 +320,19 @@ class DBIbqtools(DBIBase):
 def clean(self):
         pass
 
+# creates an object of type ('DBI' + launch_system) if it exists
+def DBI(commands, launch_system):
+    try:
+        str = 'DBI'+launch_system+'(commands)'
+        jobs = eval('DBI'+launch_system+'(commands)')
+    except NameError:
+        print 'The launch system ',launch_system, ' does not exists. Available systems are: Cluster, bqtools and condor will be available soon'
+        sys.exit(1)
+    return jobs
 
 def main():
-    tasks = [] 
-    for i in range(1):
-        tasks.append('./main')
-	
-    jobs = DBIbqtools(tasks)
+    #    jobs = DBICluster(['ls','sleep 2'])
+    jobs = DBI(['ls','sleep 5'],'Cluster')
     jobs.run()
     jobs.clean()
 #    config['LOG_DIRECTORY'] = 'LOGS/'
