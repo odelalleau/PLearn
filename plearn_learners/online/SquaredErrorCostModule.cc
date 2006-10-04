@@ -118,6 +118,11 @@ void SquaredErrorCostModule::bbpropUpdate(const Vec& input, const Vec& target,
     input_diag_hessian.fill( 2 );
 }
 
+TVec<string> SquaredErrorCostModule::name()
+{
+    return TVec<string>(1, "mse");
+}
+
 } // end of namespace PLearn
 
 

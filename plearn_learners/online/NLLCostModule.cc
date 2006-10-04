@@ -124,6 +124,11 @@ void NLLCostModule::bbpropUpdate(const Vec& input, const Vec& target,
     input_diag_hessian[ the_target ] = input_gradient_t * input_gradient_t;
 }
 
+TVec<string> NLLCostModule::name()
+{
+    return TVec<string>(1, "NLL");
+}
+
 } // end of namespace PLearn
 
 

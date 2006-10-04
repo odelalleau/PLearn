@@ -107,6 +107,9 @@ public:
     //! in case bpropUpdate does not do anything, make it known
     virtual bool bpropDoesNothing();
 
+    //! Indicates the name of the computed costs
+    virtual TVec<string> name();
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.

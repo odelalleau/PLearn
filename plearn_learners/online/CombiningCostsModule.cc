@@ -222,6 +222,17 @@ bool CombiningCostsModule::bpropDoesNothing()
     return true;
 }
 
+//! Indicates the name of the computed costs
+TVec<string> CombiningCostsModule::name()
+{
+    TVec<string> names(1, "combined_cost");
+    for( int i=0 ; i<n_sub_costs ; i++ )
+        names.append( sub_costs[i]->name() );
+
+    return names;
+}
+
+
 } // end of namespace PLearn
 
 

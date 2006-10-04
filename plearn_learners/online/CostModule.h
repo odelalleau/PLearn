@@ -106,6 +106,9 @@ public:
 
     virtual void forget();
 
+    //! Indicates the name of the computed costs
+    virtual TVec<string> name();
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.

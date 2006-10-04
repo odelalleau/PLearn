@@ -189,6 +189,11 @@ void CostModule::forget()
 {
 }
 
+TVec<string> CostModule::name()
+{
+    return TVec<string>();
+}
+
 } // end of namespace PLearn
 
 
