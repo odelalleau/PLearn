@@ -139,6 +139,12 @@ PCalendar Calendar::makeCalendar(const Vec& dates)
 
 void Calendar::build_()
 {
+    // If we have dwim_timestamps_ and no timestamps_, fill latter from former
+    if (dwim_timestamps_.size() > 0 && timestamps_.size() == 0) {
+        PCalendar cal = makeCalendar(dwim_timestamps_);
+        timestamps_ = cal->timestamps_;
+    }
+
     // perform some preventive checks
     bool doublons = false;
     bool disordered = false;
@@ -156,16 +162,54 @@ void Calendar::build_()
         }
     }
     if (doublons)
-        PLWARNING("In Calendar::build_(), provided timestamps contained repetitions. The calendar's behavior is therefore undefined. Please check it.");
+        PLWARNING("In Calendar::build_(), provided timestamps contained repetitions.\n"
+                  "The calendar's behavior is therefore undefined. Please check it.");
     if (disordered)
-        PLWARNING("In Calendar::build_(), provided timestamps were disordered.  The calendar's behavior is therefore undefined. Please check it.");
+        PLWARNING("In Calendar::build_(), provided timestamps were disordered.\n"
+                  "The calendar's behavior is therefore undefined. Please check it.");
 }
 
 void Calendar::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "timestamps", &Calendar::timestamps_, OptionBase::buildoption,
-                  "List of the time stamps (in julian time) that are the skeleton of this calendar.");
+    declareOption(
+        ol, "timestamps", &Calendar::timestamps_,
+        OptionBase::buildoption,
+        "List of the time stamps (in julian time) that are the\n"
+        "skeleton of this calendar.");
+
+    declareOption(
+        ol, "dwim_timestamps", &Calendar::dwim_timestamps_,
+        OptionBase::buildoption,
+        "Alternative list of \"human timestamps\" that may be provided in any of\n"
+        "the following formats: Julian, CYYMMDD, YYYYMMDD.  The format is\n"
+        "recognized automatically.  The dates need not be sorted; they will be\n"
+        "sorted automatically.  After construction of the calendar, the option\n"
+        "'timestamps' is filled out with the converted Julian timesteps.\n");
+        
     inherited::declareOptions(ol);
+}
+
+void Calendar::declareMethods(RemoteMethodMap& rmm)
+{
+    // Insert a backpointer to remote methods; note that this
+    // different than for declareOptions()
+    rmm.inherited(inherited::_getRemoteMethodMap_());
+
+    declareMethod(
+        rmm, "setGlobalCalendar", &Calendar::remote_setGlobalCalendar,
+        (BodyDoc("Set a global calendar keyed to the given string.\n"
+                 "The calendar is created if it does not already exist."),
+         ArgDoc ("calendar_name",  "Name of the global calendar to be set"),
+         ArgDoc ("calendar_dates", "List of dates that belong to the calendar,\n"
+                                   "either in CYYMMDD or YYYYMMDD format")));
+
+    declareMethod(
+        rmm, "getGlobalCalendar", &Calendar::remote_getGlobalCalendar,
+        (BodyDoc("Return the dates that belong to the global calendar,\n"
+                 "given its name"),
+         ArgDoc ("calendar_name", "Name of the global calendar to be accessed"),
+         RetDoc ("Set of dates that belong to the calendar, in PLearn\n"
+                 "Julian Date format")));
 }
 
 void Calendar::build()
@@ -360,36 +404,21 @@ const Calendar* Calendar::getGlobalCalendar(const string& calendar_name)
 }
 
 
-void Calendar::call(const string& methodname, int nargs, PStream& io)
+void Calendar::remote_setGlobalCalendar(string calendar_name, Vec calendar_dates)
 {
-    if (methodname == "setGlobalCalendar") {
-        if (nargs != 2)
-            PLERROR("Calendar remote method 'setGlobalCalendar' takes 2 arguments:\n"
-                    "string calendar_name, Vec calendar_dates");
-        string calendar_name;
-        Vec calendar_dates;
-        io >> calendar_name >> calendar_dates;
-        setGlobalCalendar(calendar_name, makeCalendar(calendar_dates));
-        prepareToSendResults(io, 0);
-        io.flush();
-    }
-    else if (methodname == "getGlobalCalendar") {
-        if (nargs != 1)
-            PLERROR("Calendar remote method 'getGlobalCalendar' takes 1 argument:\n"
-                    "string calendar_name");
-        string calendar_name;
-        io >> calendar_name;
-        const Calendar* cal = getGlobalCalendar(calendar_name);
-        if (! cal)
-            PLERROR("Global calendar '%s' not found", calendar_name.c_str());
-        else {
-            prepareToSendResults(io, 1);
-            io << cal->timestamps_;
-            io.flush();
-        }
+    setGlobalCalendar(calendar_name, makeCalendar(calendar_dates));
+}
+
+
+Vec Calendar::remote_getGlobalCalendar(string calendar_name)
+{
+    const Calendar* cal = getGlobalCalendar(calendar_name);
+    if (! cal) {
+        PLERROR("Global calendar '%s' not found", calendar_name.c_str());
+        return Vec();                        //!< Shut up compiler
     }
     else
-        inherited::call(methodname, nargs, io);
+        return cal->timestamps_;
 }
 
 } // end of namespace PLearn

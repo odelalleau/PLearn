@@ -93,28 +93,31 @@ const CTime MIN_CTIME   = INT_MIN;
 //! Range of calendar times.
 typedef PRange<CTime> CTimeRange;
 
-/*!
-  This class encapsulates the concept of a calendar as an ordered
-  finite list of timestamps. The idea is to provide a tool to
-  convert a continuous representation of time (as julian dates)
-  into a discrete one. Not only the calendar time units (CTime) are
-  different, but the time axis may "leap-over" time ranges in
-  the continous time (JTime) axis.
-   
-  For instance, one may want to represent a conception of time
-  where time is sampled daily but only during business week days
-  (i.e. monday to friday) s.t. when time t is a friday, time (t+1)
-  will be the next monday (and not saturday). Such a calendar would
-  contain, in its internal representation, a list of timestamps that
-  correspond to, say, Midnight of every Mon/Tues/Wednes/Thurs/Fri-days
-  from, say, 1900 to 2099.
 
-  In addition, the class supports a set of global (static) calendars keyed
-  by a string.  Functions are provided to set/get global calendars
-  associated with string keys.  A Remote-Method interface is provided as
-  well to set global calendars.  Special operators are available in
-  VMatLanguage to access those global calendars.
-*/
+/**
+ *  Encapsulates the concept of a calendar as an ordered finite list of timestamps.
+ *
+ *  This class encapsulates the concept of a calendar as an ordered
+ *  finite list of timestamps. The idea is to provide a tool to
+ *  convert a continuous representation of time (as julian dates)
+ *  into a discrete one. Not only the calendar time units (CTime) are
+ *  different, but the time axis may "leap-over" time ranges in
+ *  the continous time (JTime) axis.
+ *   
+ *  For instance, one may want to represent a conception of time
+ *  where time is sampled daily but only during business week days
+ *  (i.e. monday to friday) s.t. when time t is a friday, time (t+1)
+ *  will be the next monday (and not saturday). Such a calendar would
+ *  contain, in its internal representation, a list of timestamps that
+ *  correspond to, say, Midnight of every Mon/Tues/Wednes/Thurs/Fri-days
+ *  from, say, 1900 to 2099.
+ * 
+ *  In addition, the class supports a set of global (static) calendars keyed
+ *  by a string.  Functions are provided to set/get global calendars
+ *  associated with string keys.  A Remote-Method interface is provided as
+ *  well to set global calendars.  Special operators are available in
+ *  VMatLanguage to access those global calendars.
+ */
 class Calendar : public Object
 {
 private:
@@ -145,6 +148,15 @@ public:
     //! The list of julian timestamps that define this calendar.
     JTimeVec timestamps_;
 
+    /**
+     *  Alternative list of "human timestamps" that may be provided in any of
+     *  the following formats: Julian, CYYMMDD, YYYYMMDD.  The format is
+     *  recognized automatically.  The dates need not be sorted; they will be
+     *  sorted automatically.  After construction of the calendar, the option
+     *  'timestamps' is filled out with the converted Julian timesteps.
+     */
+    Vec dwim_timestamps_;
+
 public:
     //! Default constructor.
     Calendar();
@@ -152,12 +164,15 @@ public:
     //! Constructor with specified timestamps (julian dates)
     Calendar(const JTimeVec& timestamps);
 
-    //! This returns a calendar from a vector of "dates".  The following
-    //! are supported: YYYYMMDD, CYYMMDD, julian dates.  The format is
-    //! recognized automatically.  The dates need not be sorted; they will
-    //! be sorted automatically.
-    //! The storage for the dates vector is copied, thus 'dates' is not
-    //! altered by this function, and can be safely modified afterwards.
+    /**
+     *  This returns a calendar from a vector of "dates".  The following are
+     *  supported: YYYYMMDD, CYYMMDD, julian dates.  The format is recognized
+     *  automatically.  The dates need not be sorted; they will be sorted
+     *  automatically.
+     *
+     *  The storage for the dates vector is copied, thus 'dates' is not altered
+     *  by this function, and can be safely modified afterwards.
+     */
     static PCalendar makeCalendar(const Vec& dates);
 
 private:
@@ -168,6 +183,9 @@ protected:
     //! Declares this class' options.
     static void declareOptions(OptionList& ol);
   
+    //! Declare the methods that are remote-callable
+    static void declareMethods(RemoteMethodMap& rmm);
+
 public:
     PLEARN_DECLARE_OBJECT(Calendar);
 
@@ -176,9 +194,6 @@ public:
 
     //! Transforms a shallow copy into a deep copy.
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-
-    //! Support for remote method invocation
-    virtual void call(const string& methodname, int nargs, PStream& io);
 
 
     //#####  Calendar-Specific Functions  #####################################
@@ -204,20 +219,20 @@ public:
     inline JTime getTime(CTime calendar_time) const;
     inline JTime operator[](CTime calendar_time) const;
 
-    /*!
-      Returns the calendar time corresponding to julian time "julian_time".
-      If not found, returns the index of the first timestamp that is greater
-      or equal to "julian_time", or the last index if "julian_time" is bigger
-      than all of the timestamps. Returns an error if the calendar contains no
-      timestamps.
-    */
+    /**
+     *  Returns the calendar time corresponding to julian time "julian_time".
+     *  If not found, returns the index of the first timestamp that is greater
+     *  or equal to "julian_time", or the last index if "julian_time" is bigger
+     *  than all of the timestamps. Returns an error if the calendar contains
+     *  no timestamps.
+     */
     CTime getCalendarTime(JTime julian_time, bool use_lower_bound = true) const;
 
-    /*!
-      Returns true iff julian_time is a valid timestamp. If specified,
-      argument calendar_time will be filled with the right value if true and
-      will be left unchanged if not.
-    */
+    /**
+     *  Returns true iff julian_time is a valid timestamp. If specified,
+     *  argument calendar_time will be filled with the right value if true and
+     *  will be left unchanged if not.
+     */
     bool containsTime(JTime julian_time, CTime *calendar_time = 0) const;
 
     //! Return the JTime of the day in the calendar that comes ON OR AFTER
@@ -236,7 +251,6 @@ public:
 
     //#####  Resamplings  ######################################################
 
-  
     //! Associate or modify a resampling to another calendar
     void setResampling(Calendar* other_cal, const TVec<int>& resampling)
     { active_resamplings[other_cal] = resampling; }
@@ -275,6 +289,12 @@ public:
     //! Return a pointer to the global calendar given the string.
     //! Return a NULL pointer if the calendar does not exist
     static const Calendar* getGlobalCalendar(const string& calendar_name);
+
+
+    //#####  Remote-Callables  ################################################
+    
+    void remote_setGlobalCalendar(string calendar_name, Vec calendar_dates);
+    Vec remote_getGlobalCalendar(string calendar_name);
 };
 
 // Declares a few other classes and functions related to this class
