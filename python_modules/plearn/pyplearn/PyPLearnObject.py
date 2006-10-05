@@ -372,6 +372,10 @@ class PyPLearnSingleton(PyPLearnObject):
         hashable = ';'.join([cls.__name__]+hashable)
         return hashable                
     _getInstanceKey = classmethod(_getInstanceKey)
+    
+    def __deepcopy__(self, memo):
+        """Singletons are NEVER deepcopied"""
+        return self
 
 def test_PyPLearnObject_module():    
     class A( PyPLearnObject):
