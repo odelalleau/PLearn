@@ -427,6 +427,13 @@ def re_filter_list(strlist, undesired_regexp):
 def short_doc(obj):
     return doc(obj, 0)
 
+def subset(list1, list2):
+    """Returns True if all elements in list1 are elements of list2."""
+    for elem in list1:
+        if not elem in list2:
+            return False
+    return True
+
 def symlink( to_path, from_path, force = False, is_exe = False ):
     """Symbolic link to a disk resource.
     This function creates a symbolic link 'from_path' to 'to_path'.
