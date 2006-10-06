@@ -370,16 +370,10 @@ void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, in
                     else
                         PLERROR("In loadAscii - You need to provide 'map_sr' if you want to load an ASCII file with strings");
                 }
-            } 
+            }
             else 
             {
-                PLERROR("In loadAscii - Missing values are not supported anymore (for the moment)");
-                /* Old code, not PStream-compatible.
-                   if (!loadmat) {
-                   // loadmat.clear();
-                   mat_i[j] = MISSING_VALUE;
-                   }
-                */
+                PLERROR("In loadAscii - Not enough elements in row %d", i);
             }
         }
     }
