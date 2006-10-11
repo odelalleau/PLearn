@@ -133,10 +133,8 @@ void ProcessingVMatrix::build_()
         int nfields = fieldnames.size();
         width_ = nfields;
 
-        // Set field infos.
-        fieldinfos.resize(nfields);
-        for(int j=0; j<nfields; j++)
-            fieldinfos[j] = VMField(fieldnames[j]);
+        declareFieldNames(fieldnames);
+        setMetaInfoFromSource();
 
         if(inputsize_<0)
             inputsize_ = nfields;
@@ -192,12 +190,11 @@ void ProcessingVMatrix::build_()
             extrasize_ = 0;
         
         width_ = inputsize_+targetsize_+weightsize_+extrasize_;
+        declareFieldNames(fieldnames);
+        setMetaInfoFromSource();
     }
 
-    declareFieldNames(fieldnames);
     sourcevec.resize(source->width());
-    
-    setMetaInfoFromSource();
 }
 
 void ProcessingVMatrix::build()
