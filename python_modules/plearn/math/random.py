@@ -1,4 +1,5 @@
 from numarray import *
+from numarray.random_array import normal
 
 def arma(P, RHO, ma_weights, T=None, epsilon=None):
     """Returns an ARMA(P, Q) process. (Q <- len(ma_weights))
@@ -14,7 +15,7 @@ def arma(P, RHO, ma_weights, T=None, epsilon=None):
     course, the summation is truncated whenever $t < P$.
     """
     if epsilon is None:
-        epsilon = random_array.normal(0, 1, (T,))
+        epsilon = normal(0, 1, (T,))
     elif T is None:
         raise ValueError("You must provide T or epsilon.")
 
@@ -65,3 +66,17 @@ def moving_average(ma_weights, T=None, epsilon=None):
     """
     return arma(-1, float('NaN'), # Disabling AR 
                 ma_weights, T, epsilon=epsilon)
+
+
+#####  Builtin Tests  #######################################################
+
+if __name__ == "__main__":
+    import matplotlib
+    from pylab import *
+
+    T = 1000
+    x_range = range(0, T)
+    plot(x_range, moving_average([0.25], T))
+    plot(x_range, autoregressive(1, 0.85, T))
+    plot(x_range, arma(1, 0.85, [0.25], T))
+    show()
