@@ -87,6 +87,7 @@ SubVMatrix::SubVMatrix(VMat the_source,
       fistart(the_fistart), flength(the_flength)
     // Note that istart will be set to the right value in build_().
 {
+    assert( the_source->length() >= 0 );
     if( call_build_ )
         build_();
 }
@@ -116,31 +117,44 @@ void SubVMatrix::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
+///////////
+// build //
+///////////
 void SubVMatrix::build()
 {
     inherited::build();
     build_();
 }
 
+////////////
+// build_ //
+////////////
 void SubVMatrix::build_()
 {
     int sl = source->length();
     int sw = source->width();
 
-    if (fistart >= 0)
+    if (fistart >= 0) {
+        assert( sl >= 0 );
         istart = int(fistart * sl);
+    }
 
-    if (flength >= 0)
+    if (flength >= 0) {
+        assert( sl >= 0 );
         length_ = int(flength * sl);
+    }
 
-    if(length_ < 0)
+    if(length_ < 0) {
+        assert( sl >= 0 );
         length_ = sl - istart;
+    }
 
     if(width_ < 0 && sw >= 0)
         width_ = sw - jstart;
 
-    if(istart+length() > sl || jstart+width() > sw)
-        PLERROR("In SubVMatrix constructor OUT OF BOUNDS of source VMatrix");
+    if((sl >= 0 && istart + length() > sl) || jstart+width() > sw)
+        PLERROR("In SubVMatrix::build_ - Out of bounds of the source's length "
+                "or width");
 
     // Copy the source field names.
     fieldinfos.resize(width());
@@ -222,8 +236,16 @@ void SubVMatrix::build_()
     //  cerr << "inputsize: "<<inputsize_ << "  targetsize:"<<targetsize_<<"weightsize:"<<weightsize_<<endl;
 }
 
+//////////////////////
+// reset_dimensions //
+//////////////////////
 void SubVMatrix::reset_dimensions()
 {
+    // This seems like an old method that is not used anymore, and should not
+    // be used anyway as it probably does not work correctly. Keeping it with
+    // an error message until it is removed for good, in order to possibly
+    // detect some uses of it.
+    PLERROR("In SubVMatrix::reset_dimensions - Not working anymore");
     int delta_length = source->length()-length_;
     int delta_width = 0; // source->width()-width_; HACK
     source->reset_dimensions();
@@ -231,6 +253,9 @@ void SubVMatrix::reset_dimensions()
     width_=source->width()-delta_width;
 }
 
+///////////////
+// getNewRow //
+///////////////
 void SubVMatrix::getNewRow(int i, const Vec& v) const
 {
 #ifdef BOUNDCHECK
