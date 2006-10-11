@@ -82,7 +82,7 @@ real RowBufferedVMatrix::get(int i, int j) const
     if(current_row_index!=i)
     {
 #ifdef BOUNDCHECK
-        if (i < 0 || i >= length())
+        if (i < 0 || (i >= length() && length() >= 0))
             PLERROR("In RowBufferedVMatrix::get: row index (%d) outside valid range [%d,%d]", i, 0, length_-1);
         if (j < 0 || j >= width())
             PLERROR("In RowBufferedVMatrix::get: column index (%d) outside valid range [%d,%d]", j, 0, width_-1);
@@ -98,7 +98,7 @@ real RowBufferedVMatrix::get(int i, int j) const
 void RowBufferedVMatrix::getRow(int i, Vec v) const {
     if (current_row_index != i) {
 #ifdef BOUNDCHECK
-        if (i < 0 || i >= length())
+        if (i < 0 || (i >= length() && length() >= 0))
             PLERROR("In RowBufferedVMatrix::getRow: row index (%d) outside valid range [%d,%d]", i, 0, length_-1);
 #endif
         current_row.resize(width_);
@@ -132,9 +132,9 @@ void RowBufferedVMatrix::getSubRow(int i, int j, Vec v) const
 real RowBufferedVMatrix::dot(int i1, int i2, int inputsize) const
 {
 #ifdef BOUNDCHECK
-    if (i1 < 0 || i1 >= length())
+    if (i1 < 0 || (i1 >= length() && length() >= 0))
         PLERROR("In RowBufferedVMatrix::dot: first row index (%d) outside valid range [%d,%d]", i1, 0, length_-1);
-    if (i2 < 0 || i2 >= length())
+    if (i2 < 0 || (i2 >= length() && length() >= 0))
         PLERROR("In RowBufferedVMatrix::dot: second row index (%d) outside valid range [%d,%d]", i2, 0, length_-1);
 #endif
     int w = width_;
