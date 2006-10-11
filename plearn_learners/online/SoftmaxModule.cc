@@ -102,7 +102,7 @@ void SoftmaxModule::bpropUpdate(const Vec& input, const Vec& output,
     // input_gradient = output_gradient * output
     //                  - (output_gradient . output ) output
     multiply( output_gradient, output, input_gradient );
-    multiplyAcc( output_gradient, output, -dot( output_gradient, output ) );
+    multiplyAcc( input_gradient, output, -dot( output_gradient, output ) );
 }
 
 //! reset the parameters to the state they would be BEFORE starting training.
