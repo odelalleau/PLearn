@@ -73,7 +73,7 @@ PLEARN_IMPLEMENT_OBJECT(KFoldSplitter,
 void KFoldSplitter::declareOptions(OptionList& ol)
 {
     declareOption(ol, "K", &KFoldSplitter::K, OptionBase::buildoption,
-                  "Split dataset in K parts (you can use K = -1 to perform leave-one-out CV");
+                  "Split dataset in K parts (you can use K = -1 to perform leave-one-out CV).");
 
     declareOption(ol, "append_train", &KFoldSplitter::append_train, OptionBase::buildoption,
                   "If set to 1, the trainset will be appended after in the returned sets.");
