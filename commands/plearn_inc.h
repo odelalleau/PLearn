@@ -222,7 +222,6 @@
 #include <plearn_learners/online/StackedModulesModule.h>
 #include <plearn_learners/online/Subsampling2DModule.h>
 #include <plearn_learners/online/Supersampling2DModule.h>
-#include <plearn_learners/online/TanhModule.cc>
 #include <plearn_learners/online/TanhModule.h>
 
 /**********
