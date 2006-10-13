@@ -41,7 +41,7 @@
 #define RBMParameters_INC
 
 #include <plearn/base/Object.h>
-#include "OnlineLearningModule.h"
+#include "../OnlineLearningModule.h"
 
 namespace PLearn {
 using namespace std;
@@ -53,6 +53,7 @@ class RBMLayer;
  * Virtual class for the parameters between two layers of an RBM.
  *
  * @todo: yes
+ * @deprecated Use ../RBMConnection.h instead
  */
 class RBMParameters: public OnlineLearningModule
 {

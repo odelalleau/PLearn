@@ -49,6 +49,7 @@ using namespace std;
  * Layer in an RBM formed with binomial units
  *
  * @todo: yes
+ * @deprecated Use ../RBMTruncExpLayer.h instead
  */
 class RBMTruncExpLayer: public RBMLayer
 {

@@ -50,6 +50,7 @@ using namespace std;
  * Stores and learns the parameters between two linear layers of an RBM.
  *
  * @todo: yes
+ * @deprecated Use ../RBMMatrixConnection.h instead
  */
 class RBMLLParameters: public RBMParameters
 {

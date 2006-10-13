@@ -56,6 +56,7 @@ class RBMJointLLParameters;
  * Does the same thing as Hinton's deep belief nets
  *
  * @todo Yes
+ * @deprecated Use ../DeepBeliefNet.h instead
  *
  */
 class HintonDeepBeliefNet : public PDistribution

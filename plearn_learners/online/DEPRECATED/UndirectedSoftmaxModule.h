@@ -46,7 +46,7 @@
 
 #include <plearn/base/Object.h>
 #include <plearn/math/TMat_maths.h>
-#include "OnlineLearningModule.h"
+#include "../OnlineLearningModule.h"
 
 namespace PLearn {
 
@@ -54,6 +54,7 @@ namespace PLearn {
  * This class
  *
  *
+ * @deprecated Use ../RBMClassificationModule.h instead
  */
 class UndirectedSoftmaxModule : public OnlineLearningModule
 {

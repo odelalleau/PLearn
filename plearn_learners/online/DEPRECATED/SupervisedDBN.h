@@ -57,6 +57,7 @@ class OnlineLearningModule;
  * but without joint layer on top
  *
  * @todo Yes
+ * @deprecated Use ../DeepBeliefNet.h instead
  *
  */
 class SupervisedDBN : public PDistribution

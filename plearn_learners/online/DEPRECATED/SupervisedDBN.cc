@@ -55,11 +55,11 @@
 //#include "RBMJointLLParameters.h"
 
 // OnlineLearningModules includes
-#include "OnlineLearningModule.h"
-#include "StackedModulesModule.h"
-#include "NLLErrModule.h"
-#include "SquaredErrModule.h"
-#include "GradNNetLayerModule.h"
+#include "../OnlineLearningModule.h"
+#include "../StackedModulesModule.h"
+#include "../NLLErrModule.h"
+#include "../SquaredErrModule.h"
+#include "../GradNNetLayerModule.h"
 
 namespace PLearn {
 using namespace std;

@@ -56,6 +56,7 @@ class OnlineLearningModule;
  * Hinton's DBN plus supervised gradient from a logistic regression layer
  *
  * @todo Yes
+ * @deprecated Use ../DeepBeliefNet.h instead
  *
  */
 class PartSupervisedDBN : public PDistribution

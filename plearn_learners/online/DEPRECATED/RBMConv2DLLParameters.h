@@ -50,6 +50,7 @@ using namespace std;
  * Filter between two linear layers of a 2D convolutional RBM.
  *
  * @todo: yes
+ * @deprecated Use ../RBMConv2DConnection.h instead
  */
 class RBMConv2DLLParameters: public RBMParameters
 {

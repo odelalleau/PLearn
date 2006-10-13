@@ -51,6 +51,7 @@ using namespace std;
  * layer of an RBM. The lower layer is quadratic and the upper one is linear. 
  * See RBMLQParameters.* when the layers are switched. 
  * @todo: yes
+ * @deprecated Use ../RBMMatrixConnection.h instead
  */
 class RBMQLParameters: public RBMParameters
 {

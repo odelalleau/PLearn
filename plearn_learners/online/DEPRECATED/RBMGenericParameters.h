@@ -51,6 +51,7 @@ using namespace std;
  * Stores and learns the parameters between two layers of an RBM.
  *
  * @todo: yes
+ * @deprecated Use ../RBMMixedConnection.h instead
  */
 class RBMGenericParameters: public RBMParameters
 {

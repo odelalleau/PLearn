@@ -57,6 +57,7 @@ class RBMJointLLParameters;
  * earlier layers
  *
  * @todo Yes
+ * @deprecated Make a new class instead
  *
  */
 class UnfrozenDeepBeliefNet : public HintonDeepBeliefNet

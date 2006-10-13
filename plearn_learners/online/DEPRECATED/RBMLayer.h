@@ -53,6 +53,7 @@ class PRandom;
  * Virtual class for a layer in an RBM.
  *
  * @todo: yes
+ * @deprecated Use ../RBMLayer.h instead
  */
 class RBMLayer: public Object
 {
