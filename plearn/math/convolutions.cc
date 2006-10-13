@@ -1,9 +1,10 @@
 // -*- C++ -*-
-// Convolutions.h
+// convolutions.cc
 
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
+// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of
+// Montreal
 //
 
 // Redistribution and use in source and binary forms, with or without
@@ -40,12 +41,10 @@
  * This file is part of the PLearn library.
  ******************************************************* */
 
-/*! \file plearn/math/Convolutions.h */
+/*! \file plearn/math/convolutions.cc */
 
-#ifndef MODULE_CONVOLUTIONS
-#define MODULE_CONVOLUTIONS
 
-#include <plearn/math/TMat.h>
+#include "convolutions.h"
 
 namespace PLearn {
 using namespace std;
@@ -56,7 +55,7 @@ using namespace std;
 //! The destination signal is
 //!    dest_signal[i] = sum_{j=0}^{NK-1} source_signal[i*step+j]*kernel[j]
 void convolve1D(const Vec& source_signal, const Vec& kernel,
-                const Vec& dest_signal, int step=1, bool accumulate=true)
+                const Vec& dest_signal, int step, bool accumulate)
 {
     int nk=kernel.length();
     int nd=dest_signal.length();
@@ -96,7 +95,7 @@ void convolve1D(const Vec& source_signal, const Vec& kernel,
 //! source_signal argument), GIVEN dC/ddest_signal, i.e. this function
 //! does part of the work done by convolve1Dbackprop.
 void backConvolve1D(const Vec& source_signal, const Vec& kernel,
-                    const Vec& dest_signal, int step=1, bool accumulate=true)
+                    const Vec& dest_signal, int step, bool accumulate)
 {
     int nk=kernel.length();
     int nd=dest_signal.length();
@@ -136,7 +135,7 @@ void backConvolve1D(const Vec& source_signal, const Vec& kernel,
 void convolve1Dbackprop(const Vec& source_signal, const Vec& kernel,
                         const Vec& dC_ddest_signal,
                         const Vec& dC_dsource_signal, const Vec& dC_dkernel,
-                        int step=1, bool accumulate=true)
+                        int step, bool accumulate)
 {
     int nk=kernel.length();
     int nd=dC_ddest_signal.length();
@@ -193,7 +192,7 @@ void convolve1Dbackprop(const Vec& source_signal, const Vec& kernel,
 void convolve1Dbackprop(const Vec& source_signal,
                         const Vec& dC_ddest_signal,
                         const Vec& dC_dkernel,
-                        int step=1, bool accumulate=true)
+                        int step, bool accumulate)
 {
     int nk=dC_dkernel.length();
     int nd=dC_ddest_signal.length();
@@ -237,7 +236,7 @@ void backConvolve1Dbackprop(const Vec& kernel, const Vec& dest_signal,
                             const Vec& dC_ddest_signal,
                             const Vec& dC_dsource_signal,
                             const Vec& dC_dkernel,
-                            int step=1, bool accumulate=true)
+                            int step, bool accumulate)
 {
     int nk=kernel.length();
     int nd=dest_signal.length();
@@ -297,7 +296,7 @@ void backConvolve1Dbackprop(const Vec& kernel, const Vec& dest_signal,
 void backConvolve1Dbackprop(const Vec& dest_signal,
                             const Vec& dC_dsource_signal,
                             const Vec& dC_dkernel,
-                            int step=1, bool accumulate=true)
+                            int step, bool accumulate)
 {
     int nk=dC_dkernel.length();
     int nd=dest_signal.length();
@@ -341,7 +340,7 @@ void backConvolve1Dbackprop(const Vec& dest_signal,
 //!      sum_{k1=0}^{N1K-1} sum_{k2=0}^{N2K-1} source_image[i*step1+k1,j*step2+k2]*kernel[k1,k2]
 void convolve2D(const Mat& source_image, const Mat& kernel,
                 const Mat& dest_image,
-                int step1=1, int step2=1, bool accumulate=true)
+                int step1, int step2, bool accumulate)
 {
     int n1k=kernel.length();
     int n2k=kernel.width();
@@ -409,7 +408,7 @@ void convolve2D(const Mat& source_image, const Mat& kernel,
 //! this function does part of the work done by convolve2Dbackprop.
 void backConvolve2D(const Mat& source_image, const Mat& kernel,
                     const Mat& dest_image,
-                    int step1=1, int step2=1, bool accumulate=true)
+                    int step1, int step2, bool accumulate)
 {
     int n1k=kernel.length();
     int n2k=kernel.width();
@@ -471,7 +470,7 @@ void backConvolve2D(const Mat& source_image, const Mat& kernel,
 void convolve2Dbackprop(const Mat& source_image, const Mat& kernel,
                         const Mat& dC_ddest_image,
                         const Mat& dC_dsource_image, const Mat& dC_dkernel,
-                        int step1=1, int step2=1, bool accumulate=true)
+                        int step1, int step2, bool accumulate)
 {
     int n1k=kernel.length();
     int n2k=kernel.width();
@@ -566,7 +565,7 @@ void convolve2Dbackprop(const Mat& source_image, const Mat& kernel,
 void convolve2Dbackprop(const Mat& source_image,
                         const Mat& dC_ddest_image,
                         const Mat& dC_dkernel,
-                        int step1=1, int step2=1, bool accumulate=true)
+                        int step1, int step2, bool accumulate)
 {
     int n1k=dC_dkernel.length();
     int n2k=dC_dkernel.width();
@@ -633,7 +632,7 @@ void convolve2Dbackprop(const Mat& source_image,
 void backConvolve2Dbackprop(const Mat& kernel, const Mat& dest_image,
                             const Mat& dC_ddest_image,
                             const Mat& dC_dsource_image, const Mat& dC_dkernel,
-                            int step1=1, int step2=1, bool accumulate=true)
+                            int step1, int step2, bool accumulate)
 {
     int n1k=kernel.length();
     int n2k=kernel.width();
@@ -729,7 +728,7 @@ void backConvolve2Dbackprop(const Mat& kernel, const Mat& dest_image,
 void backConvolve2Dbackprop(const Mat& dest_image,
                             const Mat& dC_dsource_image,
                             const Mat& dC_dkernel,
-                            int step1=1, int step2=1, bool accumulate=true)
+                            int step1, int step2, bool accumulate)
 {
     int n1k=dC_dkernel.length();
     int n2k=dC_dkernel.width();
@@ -786,8 +785,6 @@ void backConvolve2Dbackprop(const Mat& dest_image,
 }
 
 } // end of namespace PLearn
-
-#endif //!<  MODULE_CONVOLUTIONS
 
 
 /*
