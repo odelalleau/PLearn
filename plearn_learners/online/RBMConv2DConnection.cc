@@ -41,7 +41,7 @@
 
 #include "RBMConv2DConnection.h"
 #include <plearn/math/TMat_maths.h>
-#include <plearn/math/Convolutions.h>
+#include <plearn/math/convolutions.h>
 
 namespace PLearn {
 using namespace std;

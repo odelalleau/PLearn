@@ -41,7 +41,7 @@
 #include <plearn/io/pl_log.h>
 
 #include "BackConvolution2DModule.h"
-#include <plearn/math/Convolutions.h>
+#include <plearn/math/convolutions.h>
 #include <plearn/math/TMat_maths.h>
 
 namespace PLearn {
