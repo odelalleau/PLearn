@@ -195,32 +195,35 @@
 #include <plearn_learners/nearest_neighbors/GenericNearestNeighbors.h>
 
 // Online
-#include <plearn_learners/online/GaussianDBNClassification.h>
-#include <plearn_learners/online/GaussianDBNRegression.h>
+#include <plearn_learners/online/BackConvolution2DModule.h>
+#include <plearn_learners/online/CombiningCostsModule.h>
+#include <plearn_learners/online/Convolution2DModule.h>
+#include <plearn_learners/online/CostModule.h>
+#include <plearn_learners/online/DeepBeliefNet.h>
 #include <plearn_learners/online/GradNNetLayerModule.h>
-#include <plearn_learners/online/HintonDeepBeliefNet.h>
+#include <plearn_learners/online/NLLCostModule.h>
 #include <plearn_learners/online/NLLErrModule.h>
 #include <plearn_learners/online/OnlineLearningModule.h>
-#include <plearn_learners/online/PartSupervisedDBN.h>
-#include <plearn_learners/online/GaussPartSupervisedDBN.h>
 #include <plearn_learners/online/RBMBinomialLayer.h>
+#include <plearn_learners/online/RBMClassificationModule.h>
+#include <plearn_learners/online/RBMConnection.h>
+#include <plearn_learners/online/RBMConv2DConnection.h>
 #include <plearn_learners/online/RBMGaussianLayer.h>
-#include <plearn_learners/online/RBMGenericParameters.h>
-#include <plearn_learners/online/RBMJointGenericParameters.h>
-#include <plearn_learners/online/RBMJointLLParameters.h>
 #include <plearn_learners/online/RBMLayer.h>
-#include <plearn_learners/online/RBMLLParameters.h>
-#include <plearn_learners/online/RBMLQParameters.h>
-#include <plearn_learners/online/RBMMultinomialLayer.h>
+#include <plearn_learners/online/RBMMatrixConnection.h>
+#include <plearn_learners/online/RBMMixedConnection.h>
 #include <plearn_learners/online/RBMMixedLayer.h>
-#include <plearn_learners/online/RBMParameters.h>
-#include <plearn_learners/online/RBMQLParameters.h>
+#include <plearn_learners/online/RBMMultinomialLayer.h>
 #include <plearn_learners/online/RBMTruncExpLayer.h>
+#include <plearn_learners/online/SoftmaxModule.h>
 #include <plearn_learners/online/SquaredErrModule.h>
+#include <plearn_learners/online/SquaredErrorCostModule.h>
 #include <plearn_learners/online/StackedModulesLearner.h>
 #include <plearn_learners/online/StackedModulesModule.h>
+#include <plearn_learners/online/Subsampling2DModule.h>
+#include <plearn_learners/online/Supersampling2DModule.h>
+#include <plearn_learners/online/TanhModule.cc>
 #include <plearn_learners/online/TanhModule.h>
-
 
 /**********
  * Python *
