@@ -1,0 +1,278 @@
+// -*- C++ -*-
+
+// RBMMixedLayer.cc
+//
+// Copyright (C) 2006 Pascal Lamblin & Dan Popovici
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+//
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//     documentation and/or other materials provided with the distribution.
+//
+//  3. The name of the authors may not be used to endorse or promote
+//     products derived from this software without specific prior written
+//     permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+// NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// This file is part of the PLearn library. For more information on the PLearn
+// library, go to the PLearn Web site at www.plearn.org
+
+// Authors: Pascal Lamblin & Dan Popovici
+
+/*! \file RBMPLayer.cc */
+
+
+
+#include "RBMMixedLayer.h"
+#include <plearn/math/TMat_maths.h>
+#include "RBMConnection.h"
+
+namespace PLearn {
+using namespace std;
+
+PLEARN_IMPLEMENT_OBJECT(
+    RBMMixedLayer,
+    "Layer in an RBM, concatenating other sub-layers",
+    "");
+
+RBMMixedLayer::RBMMixedLayer()
+{
+}
+
+RBMMixedLayer::RBMMixedLayer( TVec< PP<RBMLayer> > the_sub_layers ) :
+    sub_layers( the_sub_layers )
+{
+    build();
+}
+
+void RBMMixedLayer::getUnitActivation( int i, PP<RBMConnection> rbmc,
+                                       int offset )
+{
+    inherited::getUnitActivation( i, rbmc, offset );
+
+    int j = layer_of_unit[i];
+    sub_layers[j]->expectation_is_up_to_date = false;
+}
+
+void RBMMixedLayer::getAllActivations( PP<RBMConnection> rbmc, int offset )
+{
+    inherited::getAllActivations( rbmc, offset );
+    for( int i=0 ; i<n_layers ; i++ )
+        sub_layers[i]->expectation_is_up_to_date = false;
+}
+
+
+void RBMMixedLayer::generateSample()
+{
+    for( int i=0 ; i<n_layers ; i++ )
+        sub_layers[i]->generateSample();
+}
+
+void RBMMixedLayer::computeExpectation()
+{
+    if( expectation_is_up_to_date )
+        return;
+
+    for( int i=0 ; i<n_layers ; i++ )
+        sub_layers[i]->computeExpectation();
+
+    expectation_is_up_to_date = true;
+}
+
+void RBMMixedLayer::bpropUpdate( const Vec& input, const Vec& output,
+                                 Vec& input_gradient,
+                                 const Vec& output_gradient )
+{
+    assert( input.size() == size );
+    assert( output.size() == size );
+    assert( output_gradient.size() == size );
+
+    input_gradient.resize( size );
+
+    for( int i=0 ; i<n_layers ; i++ )
+    {
+        int begin = init_positions[i];
+        int size_i = sub_layers[i]->size;
+
+        Vec part_input_grad;
+        sub_layers[i]->bpropUpdate( input.subVec( begin, size_i ),
+                                    output.subVec( begin, size_i ),
+                                    part_input_grad,
+                                    output_gradient.subVec( begin, size_i ) );
+
+        // part_input_grad has to be resizeable
+        input_gradient.subVec( begin, size_i ) << part_input_grad;
+    }
+}
+
+void RBMMixedLayer::declareOptions(OptionList& ol)
+{
+    declareOption(ol, "sub_layers", &RBMMixedLayer::sub_layers,
+                  OptionBase::buildoption,
+                  "The concatenated RBMLayers composing this layer.");
+
+    declareOption(ol, "init_positions", &RBMMixedLayer::init_positions,
+                  OptionBase::learntoption,
+                  " Initial index of the sub_layers.");
+
+    declareOption(ol, "layer_of_unit", &RBMMixedLayer::layer_of_unit,
+                  OptionBase::learntoption,
+                  "layer_of_unit[i] is the index of sub_layer containing unit"
+                  " i.");
+
+    declareOption(ol, "n_layers", &RBMMixedLayer::n_layers,
+                  OptionBase::learntoption,
+                  "Number of sub-layers.");
+
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
+
+    redeclareOption(ol, "bias", &RBMMixedLayer::bias,
+                    OptionBase::nosave,
+                    "bias is the concatenation of the sub_layer's biases.");
+
+    redeclareOption(ol, "learning_rate", &RBMMixedLayer::learning_rate,
+                    OptionBase::nosave,
+                    "There is no global learning rate, only sublayers'.");
+
+    redeclareOption(ol, "momentum", &RBMMixedLayer::momentum,
+                    OptionBase::nosave,
+                    "There is no global momentum, only sublayers'.");
+}
+
+void RBMMixedLayer::accumulatePosStats( const Vec& pos_values )
+{
+    for( int i=0 ; i<n_layers ; i++ )
+    {
+        Vec sub_pos_values = pos_values.subVec( init_positions[i],
+                                                sub_layers[i]->size );
+        sub_layers[i]->accumulatePosStats( sub_pos_values );
+    }
+    pos_count++;
+}
+
+void RBMMixedLayer::accumulateNegStats( const Vec& neg_values )
+{
+    for( int i=0 ; i<n_layers ; i++ )
+    {
+        Vec sub_neg_values = neg_values.subVec( init_positions[i],
+                                                sub_layers[i]->size );
+        sub_layers[i]->accumulateNegStats( sub_neg_values );
+    }
+    neg_count++;
+}
+
+void RBMMixedLayer::update()
+{
+    for( int i=0 ; i<n_layers ; i++ )
+        sub_layers[i]->update();
+
+    clearStats();
+}
+
+void RBMMixedLayer::update( const Vec& pos_values, const Vec& neg_values )
+{
+    for( int i=0 ; i<n_layers ; i++ )
+    {
+        int begin = init_positions[i];
+        int size_i = sub_layers[i]->size;
+        Vec sub_pos_values = pos_values.subVec( begin, size_i );
+        Vec sub_neg_values = neg_values.subVec( begin, size_i );
+
+        sub_layers[i]->update( sub_pos_values, sub_neg_values );
+    }
+}
+
+void RBMMixedLayer::reset()
+{
+    for( int i=0 ; i<n_layers ; i++ )
+        sub_layers[i]->reset();
+
+    expectation_is_up_to_date = false;
+}
+
+void RBMMixedLayer::clearStats()
+{
+    for( int i=0 ; i<n_layers ; i++ )
+        sub_layers[i]->clearStats();
+
+    pos_count = 0;
+    neg_count = 0;
+}
+
+void RBMMixedLayer::build_()
+{
+    units_types = "";
+    size = 0;
+    activation.resize( 0 );
+    sample.resize( 0 );
+    expectation.resize( 0 );
+    expectation_is_up_to_date = false;
+    bias.resize( 0 );
+    layer_of_unit.resize( 0 );
+
+    n_layers = sub_layers.size();
+    init_positions.resize( n_layers );
+
+    for( int i=0 ; i<n_layers ; i++ )
+    {
+        init_positions[i] = size;
+
+        PP<RBMLayer> cur_layer = sub_layers[i];
+        units_types += cur_layer->units_types;
+        size += cur_layer->size;
+
+        activation = merge( activation, cur_layer->activation );
+        sample = merge( sample, cur_layer->sample );
+        expectation = merge( expectation, cur_layer->expectation );
+        bias = merge( bias, cur_layer->bias );
+        layer_of_unit.append( TVec<int>( cur_layer->size, i ) );
+    }
+}
+
+void RBMMixedLayer::build()
+{
+    inherited::build();
+    build_();
+}
+
+
+void RBMMixedLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    inherited::makeDeepCopyFromShallowCopy(copies);
+
+    deepCopyField(sub_layers, copies);
+    deepCopyField(init_positions, copies);
+    deepCopyField(layer_of_unit, copies);
+}
+
+
+} // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :
