@@ -1,23 +1,23 @@
 // -*- C++ -*-
 
 // PTester.cc
-// 
+//
 // Copyright (C) 2002 Pascal Vincent, Frederic Morin
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,12 +28,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id$ 
+/* *******************************************************
+ * $Id$
  ******************************************************* */
 
 /*! \file PTester.cc */
@@ -46,7 +46,7 @@
 #include <assert.h>
 #include "PTester.h"
 
-#include <plearn/base/stringutils.h> 
+#include <plearn/base/stringutils.h>
 #if USING_MPI
 #include <plearn/sys/PLMPI.h>
 #endif
@@ -77,7 +77,7 @@ template<class T> TVec<T> operator&(const T& x, const TVec<T>& v)
     return res;
 }
 
-PTester::PTester() 
+PTester::PTester()
     :  provide_learner_expdir(false),
        report_stats(true),
        save_data_sets(false),
@@ -95,7 +95,7 @@ PTester::PTester()
 
 PLEARN_IMPLEMENT_OBJECT(
     PTester,
-    "Manages a learning experiment, with training and estimation of generalization error.", 
+    "Manages a learning experiment, with training and estimation of generalization error.",
     "The PTester class allows you to describe a typical learning experiment that you wish to perform, \n"
     "as a training/testing of a learning algorithm on a particular dataset.\n"
     "The splitter is used to obtain one or several (such as for k-fold) splits of the dataset \n"
@@ -119,7 +119,7 @@ void PTester::declareOptions(OptionList& ol)
         "Path of this tester's directory in which to save all tester results.\n"
         "The directory will be created if it does not already exist.\n"
         "If this is an empty string, no directory is created and no output file is generated.\n");
-  
+
     declareOption(
         ol, "dataset", &PTester::dataset, OptionBase::buildoption,
         "The dataset to use to generate splits. \n"
@@ -130,11 +130,11 @@ void PTester::declareOptions(OptionList& ol)
         "The sizes of those areas are given by the VMatrix options \n"
         "inputsize targetsize, and weightsize, which are typically used by the \n"
         "learner upon building\n");
-  
+
     declareOption(
         ol, "splitter", &PTester::splitter, OptionBase::buildoption,
         "The splitter to use to generate one or several train/test tuples from the dataset.");
-  
+
     declareOption(
         ol, "statnames", &PTester::statnames, OptionBase::buildoption,
         "A list of global statistics we are interested in.\n"
@@ -142,26 +142,26 @@ void PTester::declareOptions(OptionList& ol)
         "  - dataset is train or test1 or test2 ... (train being \n"
         "    the first dataset in a split, test1 the second, ...) \n"
         "  - cost_name is one of the training or test cost names (depending on dataset) understood \n"
-        "    by the underlying learner (see its getTrainCostNames and getTestCostNames methods) \n" 
+        "    by the underlying learner (see its getTrainCostNames and getTestCostNames methods) \n"
         "  - S1 and S2 are a statistic, i.e. one of: E (expectation), V(variance), MIN, MAX, STDDEV, ... \n"
         "    S2 is computed over the samples of a given dataset split. S1 is over the splits. \n"
         "They can also be strings of the form S1[dataset.perf_evaluator_name.cost_name] \n"
-        "(see option perf_evaluators) \n"); 
-  
+        "(see option perf_evaluators) \n");
+
     declareOption(
         ol, "statmask", &PTester::statmask, OptionBase::buildoption,
         "A list of lists of masks. If provided, each of the lists is used to compose the statnames_processed.\n"
         "If not provided the statnames are those in the 'statnames' list. See the class help for an example.\n");
-  
+
     declareOption(
         ol, "learner", &PTester::learner, OptionBase::buildoption,
         "The learner to train/test.\n");
-  
+
     declareOption(
         ol, "perf_evaluators", &PTester::perf_evaluators, OptionBase::buildoption,
         "If specified, the performance evaluations returned by these named performance evaluators,\n"
         "will be appended to the list of cost statistics computed by the learner's test method.\n"
-        "They will be accessible through the syntax: perf_evaluator_name.cost_name \n"); 
+        "They will be accessible through the syntax: perf_evaluator_name.cost_name \n");
 
     declareOption(
         ol, "report_stats", &PTester::report_stats, OptionBase::buildoption,
@@ -169,59 +169,59 @@ void PTester::declareOptions(OptionList& ol)
         "and the corresponding per-split statistics will be saved in split_stats.pmat \n"
         "For reference, all cost names (as given by the learner's getTrainCostNames() and getTestCostNames() ) \n"
         "will be reported in files train_cost_names.txt and test_cost_names.txt");
-  
+
     declareOption(
         ol, "save_initial_tester", &PTester::save_initial_tester, OptionBase::buildoption,
         "If true, this PTester object will be saved in its initial state in tester.psave \n"
         "Thus if the initial .plearn file gets lost, or modified, we can always see what this tester was.\n");
-  
+
     declareOption(
         ol, "save_stat_collectors", &PTester::save_stat_collectors, OptionBase::buildoption,
         "If true, stat collectors for split#k will be saved in Split#k/train_stats.psave and Split#k/test#i_stats.psave");
-  
+
     declareOption(
         ol, "save_learners", &PTester::save_learners, OptionBase::buildoption,
         "If true, the final trained learner for split#k will be saved in Split#k/final_learner.psave");
-  
+
     declareOption(
         ol, "save_initial_learners", &PTester::save_initial_learners, OptionBase::buildoption,
         "If true, the initial untrained learner for split#k (just after forget() has been called) will be saved in Split#k/initial_learner.psave");
-  
+
     declareOption(
         ol, "save_data_sets", &PTester::save_data_sets, OptionBase::buildoption,
         "If true, the data set generated for split #k will be saved as Split#k/training_set.psave Split#k/test1_set.psave ...");
-  
+
     declareOption(
         ol, "save_test_outputs", &PTester::save_test_outputs, OptionBase::buildoption,
         "If true, the outputs of the test for split #k will be saved in Split#k/test#i_outputs.pmat");
-  
+
     declareOption(
         ol, "call_forget_in_run", &PTester::call_forget_in_run, OptionBase::buildoption,
         "Indication that run() should make perform() call forget() on the learner to train (won't work for more than 1 split).\n");
-  
+
     declareOption(
         ol, "save_test_costs", &PTester::save_test_costs, OptionBase::buildoption,
         "If true, the costs of the test for split #k will be saved in Split#k/test#i_costs.pmat");
-  
+
     declareOption(
         ol, "provide_learner_expdir", &PTester::provide_learner_expdir, OptionBase::buildoption,
         "If true, each learner to be trained will have its experiment directory set to Split#k/LearnerExpdir/");
-  
+
     declareOption(
         ol, "train", &PTester::train, OptionBase::buildoption,
         "If true, the learners are trained, otherwise only tested (in that case it is advised\n"
         "to load an already trained learner in the 'learner' field)");
-  
+
     declareOption(
         ol, "template_stats_collector", &PTester::template_stats_collector, OptionBase::buildoption,
         "If provided, this instance of a subclass of VecStatsCollector will be used as a template\n"
         "to build all the stats collector used during training and testing of the learner");
-  
+
     declareOption(
         ol, "global_template_stats_collector", &PTester::global_template_stats_collector, OptionBase::buildoption,
         "If provided, this instance of a subclass of VecStatsCollector will be used as a template\n"
         "to build all the global stats collector that collects statistics over splits");
-  
+
     declareOption(
         ol, "final_commands", &PTester::final_commands, OptionBase::buildoption,
         "If provided, the shell commands given will be executed after training is completed");
@@ -244,7 +244,7 @@ void PTester::declareOptions(OptionList& ol)
         "some precomputed results that are being generated as the model is\n"
         "loaded, so it is not empty.  In those contexts, it makes sense to allow\n"
         "this option to be false.\n");
-    
+
     inherited::declareOptions(ol);
 }
 
@@ -284,7 +284,7 @@ void PTester::declareMethods(RemoteMethodMap& rmm)
         rmm, "getExperimentDirectory", &PTester::getExperimentDirectory,
         (BodyDoc("Return the currently-set experiment directory (see setExperimentDirectory)."),
          RetDoc ("Current expdir.")));
-}    
+}
 
 // The following is no longer necessary with the declareMethod mechanism
 // (to be deleted)
@@ -302,7 +302,7 @@ void PTester::declareMethods(RemoteMethodMap& rmm)
  *         io << result;
  *         io.flush();
  *     }
- *     else if(methodname=="getStatNames") 
+ *     else if(methodname=="getStatNames")
  *     {
  *         if(nargs!=0) PLERROR("PTester remote method getStatNames takes 0 argument");
  *         TVec<string> result = getStatNames();
@@ -317,7 +317,7 @@ void PTester::declareMethods(RemoteMethodMap& rmm)
  *         io >> the_expdir;
  *         setExperimentDirectory(the_expdir);
  *         prepareToSendResults(io, 0);
- *         io.flush();      
+ *         io.flush();
  *     }
  *     else if(methodname=="getExperimentDirectory")
  *     {
@@ -325,7 +325,7 @@ void PTester::declareMethods(RemoteMethodMap& rmm)
  *         PPath result = getExperimentDirectory();
  *         prepareToSendResults(io, 1);
  *         io << result;
- *         io.flush();      
+ *         io.flush();
  *     }
  *     else
  *         inherited::call(methodname, nargs, io);
@@ -383,8 +383,8 @@ void PTester::build_()
                     "statistics through statmask)");
         temp[d] = statnames_processed;
         for (int i=0;i<sm.length();i++) {
-            temp[1-d].resize(temp[d].length() * sm[i].length());      
-      
+            temp[1-d].resize(temp[d].length() * sm[i].length());
+
             for (int j=0;j<sm[i].length();j++) {
                 string mask = sm[i][j];
                 size_t pos;
@@ -428,8 +428,8 @@ void PTester::run()
 ////////////////////////////
 // setExperimentDirectory //
 ////////////////////////////
-void PTester::setExperimentDirectory(const PPath& the_expdir) 
-{ 
+void PTester::setExperimentDirectory(const PPath& the_expdir)
+{
     expdir = the_expdir / "";
 }
 
@@ -456,7 +456,7 @@ Vec PTester::perform(bool call_forget)
             if(!force_mkdir(expdir))
                 PLERROR("In PTester Could not create experiment directory %s",expdir.c_str());
             expdir = expdir.absolute() / "";
-    
+
             // Save this tester description in the expdir
             if(save_initial_tester)
                 PLearn::save( expdir / "tester.psave", *this);
@@ -491,7 +491,7 @@ Vec PTester::perform(bool call_forget)
                 stcol[setnum]->setFieldNames(testcostnames);
 
             stcol[setnum]->build();
-            stcol[setnum]->forget();      
+            stcol[setnum]->forget();
         }
 
         PP<VecStatsCollector> train_stats = stcol[0];
@@ -518,16 +518,16 @@ Vec PTester::perform(bool call_forget)
         // which need to accumulate statistics.
         TVec<int> acc;
         for (int k = 0; k < nstats; k++)
-            if (statspecs[k].extstat == "ACC") 
+            if (statspecs[k].extstat == "ACC")
             {
                 if (statspecs[k].setnum == 0)
                     PLERROR("In PTester::perform - For now, you cannot accumulate train stats");
                 if (acc.find(statspecs[k].setnum) == -1)
                     acc.append(statspecs[k].setnum);
-            } 
+            }
             else if (acc.find(statspecs[k].setnum) != -1)
                 PLERROR("In PTester::perform - You can't have stats with and without 'ACC' for set %d", statspecs[k].setnum);
-  
+
         // int traincostsize = traincostnames.size();
         // int testcostsize = testcostnames.size();
 
@@ -535,8 +535,8 @@ Vec PTester::perform(bool call_forget)
         VMat split_stats_vm;   // the vmat in which to save per split result stats
         if(expdir!="" && report_stats)
         {
-            saveStringInFile(expdir/"train_cost_names.txt", join(traincostnames,"\n")+"\n"); 
-            saveStringInFile(expdir/"test_cost_names.txt", join(testcostnames,"\n")+"\n"); 
+            saveStringInFile(expdir/"train_cost_names.txt", join(traincostnames,"\n")+"\n");
+            saveStringInFile(expdir/"test_cost_names.txt", join(testcostnames,"\n")+"\n");
 
             global_stats_vm = new FileVMatrix(expdir/"global_stats.pmat", 1, nstats);
             for(int k=0; k<nstats; k++)
@@ -565,7 +565,7 @@ Vec PTester::perform(bool call_forget)
                 PLearn::save(splitdir/"training_set.psave",trainset);
 
             if(train && provide_learner_expdir)
-            {  
+            {
                 if(is_splitdir)
                     learner->setExperimentDirectory( splitdir/"LearnerExpdir/" );
                 else
@@ -595,7 +595,7 @@ Vec PTester::perform(bool call_forget)
             else
                 learner->build();
 
-            // perf_eval_costs[setnum][perf_evaluator_name][costname] will contain value 
+            // perf_eval_costs[setnum][perf_evaluator_name][costname] will contain value
             // of the given cost returned by the given perf_evaluator on the given setnum
             TVec< map<string, map<string, real> > > perf_eval_costs(dsets.length());
             for(int setnum=1; setnum<dsets.length(); setnum++)
@@ -628,19 +628,19 @@ Vec PTester::perform(bool call_forget)
                 if(is_splitdir && save_test_confidence)
                     test_confidence = new FileVMatrix(splitdir/(setname+"_confidence.pmat"),
                                                       0,2*outputsize);
-          
+
                 bool reset_stats = (acc.find(setnum) == -1);
 
                 //perr << "reset_stats= " << reset_stats << endl;
 
                 if (reset_stats)
                     test_stats->forget();
-                if (testset->length()==0) 
+                if (testset->length()==0)
                     PLWARNING("PTester:: test set %s is of length 0, costs will be set to -1",setname.c_str());
 
                 // Before each test set, reset the internal state of the learner
                 learner->resetInternalState();
-          
+
                 learner->test(testset, test_stats, test_outputs, test_costs);
                 if (reset_stats)
                     test_stats->finalize();
@@ -665,7 +665,7 @@ Vec PTester::perform(bool call_forget)
                 }
                 computeConfidence(testset, test_confidence);
             }
-   
+
             Vec splitres(1+nstats);
             splitres[0] = splitnum;
 
@@ -676,7 +676,7 @@ Vec PTester::perform(bool call_forget)
                     splitres[k+1] = MISSING_VALUE;
 //            PLERROR("PTester::perform, trying to access a test set (test%d) beyond the last one (test%d)",
 //                    sp.setnum, stcol.length()-1);
-                else 
+                else
                 {
                     if (acc.find(sp.setnum) == -1)
                     {
@@ -689,7 +689,7 @@ Vec PTester::perform(bool call_forget)
                                 PLERROR("No cost named %s appears to be returned by evaluator %s",right.c_str(),left.c_str());
                             splitres[k+1] = costmap[right];
                         }
-                        else // must be a cost form a stats collector
+                        else // must be a cost from a stats collector
                             splitres[k+1] = stcol[sp.setnum]->getStat(sp.intstatname);
                     }
                     else
@@ -697,7 +697,7 @@ Vec PTester::perform(bool call_forget)
                 }
             }
 
-            if(split_stats_vm) 
+            if(split_stats_vm)
             {
                 split_stats_vm->appendRow(splitres);
                 split_stats_vm->flush();
@@ -804,7 +804,7 @@ void StatSpec::parseStatname(const string& statname)
         if(in.smartReadUntilNext("]",intstatname)==EOF)
             PLERROR("Error while parsing statname: expected a closing bracket");
     }
-    
+
     if(setname=="train")
         setnum = 0;
     else if(setname=="test")
@@ -814,9 +814,9 @@ void StatSpec::parseStatname(const string& statname)
         setnum = toint(setname.substr(4));
         if(setnum==0)
             PLERROR("In parseStatname: use the name train instead of test0.\n"
-                    "The first set of a split is the training set. The following are test sets named test1 test2 ..."); 
+                    "The first set of a split is the training set. The following are test sets named test1 test2 ...");
         if(setnum<=0)
-            PLERROR("In parseStatname: parse error for %s",statname.c_str());        
+            PLERROR("In parseStatname: parse error for %s",statname.c_str());
     }
     else
         PLERROR("In parseStatname: parse error for %s",statname.c_str());
