@@ -929,8 +929,18 @@ void DeepBeliefNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
     costs.resize( 0 );
 
     if( use_classification_cost )
+    {
+        real nll_cost;
         classification_cost->CostModule::fprop( output.subVec(0, n_classes),
-                                                target, costs );
+                                                target, nll_cost );
+
+        real class_error =
+            (argmax(output.subVec(0, n_classes)) == (int) round(target[0]))? 0
+                                                                           : 1;
+        costs.resize(2);
+        costs[0] = nll_cost;
+        costs[1] = class_error;
+    }
 
     if( final_cost )
     {
