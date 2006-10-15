@@ -568,7 +568,8 @@ public:
     //! for compatibility with Array
     inline void appendIfNotThereAlready(const T& newval)
     {
-        T* v = data();
+        T* v;
+        if(length_>0) v = data();
         for (int i=0;i<length();i++)
             if (newval==v[i]) return;
         append(newval);
