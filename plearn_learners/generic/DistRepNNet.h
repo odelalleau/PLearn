@@ -64,8 +64,8 @@ private:
     mutable Vec row;
     //! Token features vector
     mutable Vec tf;
-    //mutable Vec cost_paramf;
-    
+    mutable TVec<string> options;
+
 protected:
 
     //! Output of the neural network

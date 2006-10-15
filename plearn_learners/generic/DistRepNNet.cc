@@ -42,7 +42,7 @@
 
 #include <plearn/var/SourceVariable.h>
 #include <plearn/var/VarRowsVariable.h>
-#include <plearn/var/PotentialsVariable.h>
+//#include <plearn/var/PotentialsVariable.h>
 #include <plearn/var/IsMissingVariable.h>
 #include <plearn/var/ReIndexedTargetVariable.h>
 #include <plearn/var/LogSoftmaxVariable.h>
@@ -814,6 +814,8 @@ void DistRepNNet::build_()
         }
         
         output_comp.resize(1);
+        options.resize(0);
+        //output_comp.resize(outputsize());
     }
 }
 
@@ -926,7 +928,9 @@ void DistRepNNet::buildFuncs(VarArray& invars) {
         invars.push_back(sampleweight);
     }
     f = Func(input, argmax(output));
+    //f = Func(input, output);
     test_costf = Func(testinvars, argmax(output)&test_costs);
+    //test_costf = Func(testinvars,output&test_costs);
     test_costf->recomputeParents();
     if(dist_rep)
         token_to_dist_rep = Func(token_features,dist_rep);
@@ -1397,9 +1401,14 @@ void DistRepNNet::computeOutput(const Vec& inputv, Vec& outputv) const
     row.resize(train_set->width());
     row.subVec(inputsize_,train_set->width()-inputsize_).fill(MISSING_VALUE);
     if(target_dictionary)
-        target_values = target_dictionary->getValues();
+        target_dictionary->getValues(options,target_values);
     else
-        target_values = train_set->getValues(row,inputsize_);
+        train_set->getValues(row,inputsize_,target_values);
+    // TO REMOVE!!!
+    //for(int i=0; i<outputv.length(); i++)
+    //{
+    //    outputv[(int)target_values[i]] = output->valuedata[i];
+    //}
     outputv[0] = target_values[(int)output_comp[0]];
     //outputv[0] = (int)output_comp[0];
 }
@@ -1416,9 +1425,9 @@ void DistRepNNet::computeOutputAndCosts(const Vec& inputv, const Vec& targetv,
     row.resize(train_set->width());
     row.subVec(inputsize_,train_set->width()-inputsize_).fill(MISSING_VALUE);
     if(target_dictionary)
-        target_values = target_dictionary->getValues();
+        target_dictionary->getValues(options,target_values);
     else
-        target_values = train_set->getValues(row,inputsize_);
+        train_set->getValues(row,inputsize_,target_values);
     outputv[0] = target_values[(int)output_comp[0]];
     //outputv[0] = (int)output_comp[0];
     //for(int i=0; i<costsv.length(); i++)
@@ -1700,6 +1709,7 @@ void DistRepNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////
 int DistRepNNet::outputsize() const {
     return targetsize_;
+    //return dictionaries[target_dict_index]->size() + (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1); 
 }
 
 void DistRepNNet::getTokenDistRep(TVec<string>& token_features, Vec& dist_rep)
