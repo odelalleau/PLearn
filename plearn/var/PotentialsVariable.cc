@@ -112,7 +112,8 @@ PotentialsVariable::declareOptions(OptionList &ol)
 void PotentialsVariable::recomputeSize(int& l, int& w) const
 {
     if (distr) {
-        l = distr->getValues(input->value,distr->inputsize()).size();
+        distr->getValues(input->value,distr->inputsize(),values);
+        l = values.length();
         w = 1;
     } else
         l = w = 0;
@@ -140,7 +141,7 @@ void PotentialsVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 void PotentialsVariable::fprop()
 {
     //temp_comps.resize(length(),proppath.nelems());
-    values = distr->getValues(input->value,distr->inputsize());
+    distr->getValues(input->value,distr->inputsize(),values);
     
     for(int i=0; i<length(); i++)
     {        

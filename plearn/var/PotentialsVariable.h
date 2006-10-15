@@ -60,7 +60,7 @@ protected:
     TVec< VarArray > temp_comps;
     VarArray proppath;
     // To avoid allocation/deallocations in fprop/bprop
-    Vec values;
+    mutable Vec values;
 
 public:
  

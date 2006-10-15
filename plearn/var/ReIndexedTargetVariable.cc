@@ -50,12 +50,20 @@ using namespace std;
 /** ReIndexedTargetVariable **/
 
 PLEARN_IMPLEMENT_OBJECT(ReIndexedTargetVariable,
-                        "ONE LINE DESCR",
-                        "NO HELP");
+                        "Variable that reindexes a variable according to a reference list of possible values.",
+                        "Inspired from ReIndexedTargetVMatrix, this variable reindexes a\n"
+                        "variable (input1) according to the getValues(row,target_col,values) function of\n"
+                        "a given VMatrix. The user must specify the input part of the VMatrix\n"
+                        "(input2), and the columns numbers corresponding to input1's fields.\n"
+                        "In order to construct a row when calling getValues(row,target_col,values),\n"
+                        "input2 is used for the input part, and the rest of the row is filled\n"
+                        "with NaN.\n"
+                        "The user can, alternatively, directly give a Dictionary object\n"
+                        "that will give the possible values. Then, input2 is ignored.\n");
 
 
 ReIndexedTargetVariable::ReIndexedTargetVariable()
-{ }
+{}
   
 ReIndexedTargetVariable::ReIndexedTargetVariable(Variable* input1, Variable* input2, VMat the_source, TVec<int> the_target_cols)
     : inherited(input1, input2, input1->length(), input1->width()), source(the_source), target_cols(the_target_cols)
@@ -79,20 +87,29 @@ ReIndexedTargetVariable::build()
 void
 ReIndexedTargetVariable::build_()
 {
-    if (input1 && input2 && (source || dict)) {
-        if(!input1->isVec() || !input2->isVec())
-            PLERROR("In ReIndexedTargetVariable: input1 or input2 must be a vector var");
+    if (input1 && input2 && source) {
+        if(!input1->isVec()) 
+            PLERROR("In ReIndexedTargetVariable: input1 must be a vector var");
+        if(!input2->isVec())
+            PLERROR("In ReIndexedTargetVariable: input2 must be a vector var");
+
         if(input1->size() != target_cols.length())
             PLERROR("In ReIndexedTargetVariable: input1 should be of size target_cols.length()");        
-        if(source)
-        {
-            if(input2->size() != source->inputsize())
+        if(input2->size() != source->inputsize())
             PLERROR("In ReIndexedTargetVariable: input2 should be of size source->inputsize()");
 
-            row.resize(source->width());
-            row.subVec(source->inputsize(),source->width()-source->inputsize()).fill(MISSING_VALUE);
-        }
+        row.resize(source->width());
+        row.subVec(source->inputsize(),source->width()-source->inputsize()).fill(MISSING_VALUE);        
     }
+    else if (input1 && dict)
+    {
+        if(!input1->isVec()) 
+            PLERROR("In ReIndexedTargetVariable: input1 must be a vector var");
+
+        if(input1->size() != target_cols.length())
+            PLERROR("In ReIndexedTargetVariable: input1 should be of size target_cols.length()");        
+    }
+    options.resize(0);
 }
 
 void
@@ -115,9 +132,15 @@ void ReIndexedTargetVariable::fprop()
     for (int j=0; j<input1->size(); j++)
     {          
         if(source)
-            valuedata[j] = source->getValues(row,target_cols[j]).find((int)input1->valuedata[j]);
+        {
+            source->getValues(row,target_cols[j],values);
+            valuedata[j] = values.find((int)input1->valuedata[j]);
+        }
         else
-            valuedata[j] = dict->getValues().find((int)input1->valuedata[j]);
+        {
+            dict->getValues(options,values);
+            valuedata[j] = values.find((int)input1->valuedata[j]);
+        }
         
         if(valuedata[j] < 0) PLERROR("In ReIndexedTargetVariable::fprop(): target %d is not among possible values",input1->valuedata[j]);
     }
@@ -152,6 +175,8 @@ void ReIndexedTargetVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     BinaryVariable::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(source, copies);
     deepCopyField(row, copies);
+    deepCopyField(values, copies);
+    deepCopyField(options, copies);
     deepCopyField(target_cols, copies);
     deepCopyField(dict, copies);
 }

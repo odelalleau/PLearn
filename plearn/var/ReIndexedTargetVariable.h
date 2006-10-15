@@ -51,11 +51,11 @@ using namespace std;
 
 /*
   Inspired from ReIndexedTargetVMatrix, this variable reindexes a
-  variable (input1) according to the getValues(row,target_col) function of
+  variable (input1) according to the getValues(row,target_col,values) function of
   a given VMatrix. The user must specify the input part of the VMatrix
   (input2), and the columns numbers corresponding to input1's fields. 
-  In order to construct row when calling getValues(row,target_col), 
-  input2 is used for the input part, and the rest of row is filled
+  In order to construct a row when calling getValues(row,target_col,values), 
+  input2 is used for the input part, and the rest of the row is filled
   with NaN.
   The user can, alternatively, directly give a Dictionary object
   that will give the possible values. Then, input2 is ignored.
@@ -66,6 +66,8 @@ class ReIndexedTargetVariable: public BinaryVariable
 
 protected:
     Vec row;
+    Vec values;
+    TVec<string> options;
 
 public:
     //! VMatrix that gives the possible values for the target columns
