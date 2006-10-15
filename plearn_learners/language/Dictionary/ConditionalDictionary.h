@@ -53,7 +53,7 @@ using namespace std;
   depend on the option fields. It is defined simply by
   giving a mapping file, where each row has the form:
   
-  OPTION_1 ... OPTION_M[\tab]TAG_1 TAG_2 TAG)3 ...
+  OPTION_1 ... OPTION_M[\tab]TAG_1 TAG_2 TAG_3 ...
 
   where [\tab] is the tabulation character. For
   instance, a Part Of Speech Dictionary could be
@@ -80,6 +80,9 @@ protected:
 
     //! Option fields to possible symbols mapping
     map<string,Vec> options_to_symbols;
+
+    //! possible values vector
+    Vec possible_values;
 
 public:
 
@@ -118,7 +121,7 @@ public:
     // Declares other standard object methods.
     PLEARN_DECLARE_OBJECT(ConditionalDictionary);
 
-    virtual Vec getValues(TVec<string> options=TVec<string>(0));
+    virtual void getValues(TVec<string> options, Vec& values);
     
     virtual int size(TVec<string> options=TVec<string>(0));
 

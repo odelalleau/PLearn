@@ -69,7 +69,7 @@ using namespace std;
 
   An object from Dictionary is instantiated empty, and then symbols can be added in the
   dictionary by using getId() (with update_mode == UPDATE). Subclasses will normaly 
-  permit more sophisticated instantiation.
+  permit more sophisticated instantiations.
 */
 
 class Dictionary: public Object
@@ -88,14 +88,12 @@ protected:
     map<string,int> string_to_int;
     //! int to string mapping
     map<int,string> int_to_string;
-    //! possible values vector
-    Vec possible_values;
     //! id of OOV_TAG
     int oov_tag_id;
-    //! Indication that the possible_values vector needs to be updated
-    bool refill_possible_values;
-    //! Last value of oov_not_in_possible_values
-    bool last_oov_not_in_possible_values;
+    // Indication that the possible_values vector needs to be updated
+    //bool refill_possible_values;
+    // Last value of oov_not_in_possible_values
+    //bool last_oov_not_in_possible_values;
 
 public:
 
@@ -151,10 +149,11 @@ public:
     //! Options can be specified to restrict the number of possible values. 
     virtual int size(TVec<string> options=TVec<string>(0));
 
-    //! Returns a Vec containing every possible id values of the Dictionary
-    //! Options can be specified to restrict the number of possible values. 
-    //! NOTE: the vectorr returned may use memory also used by the Dictionary object!
-    virtual Vec getValues(TVec<string> options=TVec<string>(0));
+    //! Fills a Vec containing every possible id values of the Dictionary
+    //! Options can be specified to restrict the number of possible values.
+    //! A Vec instead of a TVec<int> is required, for compatibility with
+    //! the getValues() function of VMatrix objects.
+    virtual void getValues(TVec<string> options, Vec& values);
 
     //! Indicates if a symbol is in the dictionary
     //! The OOV_TAG, is by definition, out of the dictionary

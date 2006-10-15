@@ -318,6 +318,7 @@ void WordNetSenseDictionary::getSensesFromWordNet(TVec<string> options)
     tagcnts.resize(0);
 
     word = removeblanks(options[0]);
+    // This may be unnecessary, given "options_stem_words"
     if(options_to_lower_case) word = lowerstring(word);    
     
     if(wn_pos < 0)
@@ -463,7 +464,7 @@ int WordNetSenseDictionary::getId(string symbol, TVec<string> options)
     // call getValues, which fills possible_values and gets the ids for all those senses, to do a compatibility check, if necessary
     if(update_mode == UPDATE && options.length() != 0)
     {
-        getValues(options);
+        getValues(options, possible_values);
         //getSensesFromWordNet(options); 
         if(possible_values.find(ret) < 0)
             PLWARNING("In WordNetSenseDictionary::getId(): sense %s is not among possible symbols",symbol.c_str());
@@ -481,28 +482,26 @@ int WordNetSenseDictionary::getId(string symbol, TVec<string> options)
     return ret;
 }
 
-Vec WordNetSenseDictionary::getValues(TVec<string> options)
+void WordNetSenseDictionary::getValues(TVec<string> options, Vec& values)
 { 
     if(options.length() == 0)
-        return inherited::getValues();
+        return inherited::getValues(options,values);
     else
     {
-        refill_possible_values = 1;        
+        //refill_possible_values = 1;        
         if(options.length() > 1) PLERROR("In WordNetSenseDictionary::getSensesFromWordNet(): options.length()>1 not supported");
         if(possible_values_for_word.find(options[0]) == possible_values_for_word.end())
         {
             getSensesFromWordNet(options);
-            possible_values.resize(senses.length());
+            values.resize(senses.length());
             for(int i=0; i<senses.length(); i++)
-                possible_values[i] = inherited::getId(senses[i]);
-            possible_values_for_word[options[0]] = possible_values.copy();
-            return possible_values;        
+                values[i] = inherited::getId(senses[i]);
+            possible_values_for_word[options[0]] = values.copy();
         }
         else
         {
-            possible_values.resize(possible_values_for_word[options[0]].length());
-            possible_values << possible_values_for_word[options[0]];
-            return possible_values;        
+            values.resize(possible_values_for_word[options[0]].length());
+            values << possible_values_for_word[options[0]];            
         }
     }
 }
@@ -512,7 +511,8 @@ int WordNetSenseDictionary::size(TVec<string> options){
         return inherited::size();
     else       
     {
-        return getValues().length();
+        getValues(options,possible_values);
+        return possible_values.length();            
     }
 }
 
@@ -551,6 +551,7 @@ real WordNetSenseDictionary::sensePrior(string word, string sense){
 void WordNetSenseDictionary::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(possible_values, copies);
     deepCopyField(stems, copies);
     deepCopyField(senses, copies);
     deepCopyField(ancestors_vec, copies);

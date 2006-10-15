@@ -67,6 +67,7 @@ string getSynsetKey(SynsetPtr ssp);
 SynsetPtr getSynsetPtr(string synset_key);
 //! Extract senses for a word and a certain POS tag, as a certain
 //! symbol type. Appends the extracted senses to the TVec senses
+//! and appends ancestor paths to TVec<TVec> ancestors
 void extractSenses(string word, int wn_pos, string symbol_type, TVec<string>& senses,TVec<int>& tagcnts, TVec< TVec<string> >& ancestors, bool extract_ancestors=false);
 //! Extracts synset
 void extractAncestors(TVec<SynsetPtr> anc, TVec< TVec<string> >& anc_str, string root_node=WN_ROOT_NODE);
@@ -91,6 +92,9 @@ private:
     typedef Dictionary inherited;
 
 protected:
+
+    //! possible values vector
+    Vec possible_values;
 
 public:
 
@@ -173,7 +177,7 @@ public:
 
     virtual int getId(string symbol, TVec<string> options = TVec<string>(0));
 
-    virtual Vec getValues(TVec<string> options=TVec<string>(0));
+    virtual void getValues(TVec<string> options, Vec& values);
     
     virtual int size(TVec<string> options=TVec<string>(0));
 

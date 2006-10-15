@@ -136,28 +136,31 @@ void ConditionalDictionary::build()
     build_();
 }
 
-Vec ConditionalDictionary::getValues(TVec<string> options)
+void ConditionalDictionary::getValues(TVec<string> options, Vec& values)
 { 
     if(options.length() == 0)
-        inherited::getValues();
+        inherited::getValues(options, values);
 
     string ret = get_option_string(options);
     if(options_to_symbols.find(ret) != options_to_symbols.end())
-        return options_to_symbols[ret];
+        values << options_to_symbols[ret];
     else
-        return inherited::getValues();
+        inherited::getValues(options, values);
 }
 
 int ConditionalDictionary::size(TVec<string> options){
     if(options.length() == 0)
         return inherited::size();
     else         
-        return getValues(options).length();            
+    {
+        getValues(options,possible_values);
+        return possible_values.length();
+    }
 }
 
 void ConditionalDictionary::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);    
     deepCopyField(options_to_symbols, copies);
     deepCopyField(tmp_sym, copies);
 }

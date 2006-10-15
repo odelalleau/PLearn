@@ -48,7 +48,9 @@ using namespace std;
   
 Dictionary::Dictionary()
     :
-    refill_possible_values(true), update_mode(UPDATE), oov_not_in_possible_values(false)
+    //refill_possible_values(true), 
+        update_mode(UPDATE), 
+        oov_not_in_possible_values(false)
 {
 }
 
@@ -111,7 +113,7 @@ int Dictionary::getId(string symbol, TVec<string> options)
             index=int(string_to_int.size());
             string_to_int[symbol] = index;
             int_to_string[index] = symbol;
-            refill_possible_values = true;
+            //refill_possible_values = true;
         }
         return string_to_int[symbol];
     }
@@ -143,23 +145,26 @@ int Dictionary::size(TVec<string> options){
     return int(string_to_int.size())-1;
 }
 
-Vec Dictionary::getValues(TVec<string> options)
+void Dictionary::getValues(TVec<string> options, Vec& values)
 { 
-    if(refill_possible_values || last_oov_not_in_possible_values != oov_not_in_possible_values)
-    {
-        last_oov_not_in_possible_values = oov_not_in_possible_values;
-        possible_values.resize((int) string_to_int.size() - (oov_not_in_possible_values ? 1 : 0));
-        int i=0;
-        for(map<string,int>::iterator it = string_to_int.begin(); it != string_to_int.end(); it++)
-            if(!oov_not_in_possible_values || oov_tag_id != it->second)
-                possible_values[i++] = it->second;
-        //! This version might be better!
-        //for(map<int,string>::iterator it = int_to_string.begin(); it != int_to_string.end(); it++)
-        //    if(!oov_not_in_possible_values || oov_tag_id != it->first)
-        //        possible_values[i++] = it->first;
-        refill_possible_values = false;
-    }
-    return possible_values;
+    //if(refill_possible_values || last_oov_not_in_possible_values != oov_not_in_possible_values)
+    //{
+    //    last_oov_not_in_possible_values = oov_not_in_possible_values;
+    //possible_values.resize((int) string_to_int.size() - (oov_not_in_possible_values ? 1 : 0));
+    values.resize((int) string_to_int.size() - (oov_not_in_possible_values ? 1 : 0));
+    int i=0;
+    for(map<string,int>::iterator it = string_to_int.begin(); it != string_to_int.end(); it++)
+        if(!oov_not_in_possible_values || oov_tag_id != it->second)
+            //possible_values[i++] = it->second;
+            values[i++] = it->second;
+    //! This version might be better!
+    //for(map<int,string>::iterator it = int_to_string.begin(); it != int_to_string.end(); it++)
+    //    if(!oov_not_in_possible_values || oov_tag_id != it->first)
+    //        possible_values[i++] = it->first;
+    //refill_possible_values = false;
+    //}
+    //values.resize(possible_values.length());
+    //values << possible_values;
 }
 
 bool Dictionary::isIn(string symbol, TVec<string> options){
@@ -175,7 +180,7 @@ void Dictionary::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
     //deepCopyField(string_to_int, copies);
     //deepCopyField(int_to_string, copies);
-    deepCopyField(possible_values, copies);
+    //deepCopyField(possible_values, copies);
 }
 
 } // end of namespace PLearn
