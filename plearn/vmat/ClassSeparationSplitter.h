@@ -81,7 +81,7 @@ public:
     bool append_train;
 
     //! Seed of random generator
-    real seed;
+    long seed;
 
 public:
     //#####  Public Member Functions  #########################################
