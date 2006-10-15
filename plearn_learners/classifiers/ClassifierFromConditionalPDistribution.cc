@@ -126,7 +126,11 @@ void ClassifierFromConditionalPDistribution::makeDeepCopyFromShallowCopy(CopiesM
 int ClassifierFromConditionalPDistribution::outputsize() const
 {
     if(nclasses > 0) return nclasses;
-    else return train_set->getValues(0,inputsize()).length();
+    else
+    {
+        train_set->getValues(0,inputsize(),target_values);
+        return target_values.length();
+    }
 }
 
 ////////////
@@ -176,7 +180,7 @@ void ClassifierFromConditionalPDistribution::computeOutput(const Vec& input, Vec
     pcd_input.subVec(0,inputsize()) << input;
     if(nclasses <= 0)
     {   
-        target_values = train_set->getValues(input, inputsize());
+        train_set->getValues(input, inputsize(),target_values);
         output.resize(target_values.length());
         for(int i=0; i<target_values.length(); i++)
         {
@@ -220,7 +224,10 @@ void ClassifierFromConditionalPDistribution::computeCostsFromOutputs(const Vec& 
     {
         int c;
         if(nclasses <= 0)
-            c = train_set->getValues(input,inputsize()).find(target[0]);
+        {
+            train_set->getValues(input,inputsize(),target_values);
+            c = target_values.find(target[0]);           
+        }
         else
             c = (int)target[0];
         costs[0] = (int) (argmax(output) != c);
