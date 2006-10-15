@@ -149,7 +149,9 @@ void NGramDistribution::build_()
     if(train_set)
     {
         if(inputsize() != n) PLERROR("In NGramDistribution:build_() : input size should be n=%d", n);
-        voc_size = train_set->getValues(0,n-1).length();
+        Vec values;
+        train_set->getValues(0,n-1,values);
+        voc_size = values.length();
         if(voc_size <= 0) PLERROR("In NGramDistribution:build_() : vocabulary size is <= 0");
 
         if(nan_replace) voc_size++;
