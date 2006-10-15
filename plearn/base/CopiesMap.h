@@ -37,6 +37,7 @@
 
 #include <deque>
 #include <map>
+#include <plearn/base/pl_hash_fun.h>
 #include <set>
 #include <list>
 #include <vector>
@@ -104,6 +105,8 @@ typedef map<int, string> map_int_string;
 NODEEPCOPY(double)
 NODEEPCOPY(float)
 NODEEPCOPY(int)
+NODEEPCOPY(const int)
+NODEEPCOPY(const string)
 NODEEPCOPY(unsigned int)
 NODEEPCOPY(clock_t)
 NODEEPCOPY(bool)
@@ -146,6 +149,14 @@ template <class T, class U, class Compare, class Alloc>
 void deepCopyField(map<T,U,Compare,Alloc>& c, CopiesMap& copies)
 {
     for (typename map<T,U,Compare,Alloc>::iterator it = c.begin(), end=c.end()
+             ; it != end ; ++it)
+        deepCopyField(*it, copies);
+}
+
+template <class T, class U, class Compare, class Alloc>
+void deepCopyField(hash_map<T,U,Compare,Alloc>& c, CopiesMap& copies)
+{
+    for (typename hash_map<T,U,Compare,Alloc>::iterator it = c.begin(), end=c.end()
              ; it != end ; ++it)
         deepCopyField(*it, copies);
 }
