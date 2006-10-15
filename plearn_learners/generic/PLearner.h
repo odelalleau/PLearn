@@ -467,6 +467,7 @@ public:
      *  rows of inputs.  Writes outputs_and_confidence rows (as a series of
      *  triples (output, low, high), one for each output)
      */
+    virtual
     void batchComputeOutputAndConfidence(VMat inputs, real probability,
                                          VMat outputs_and_confidence) const;
 
