@@ -121,7 +121,7 @@ private:
 
     //! Temporary fields
     mutable Vec left_context, right_context,
-        row, element, target_element;
+        row, element, target_element, subinput;
 
 protected:
 
@@ -161,6 +161,10 @@ public:
 
     //! Indication that the last accessed context should be put in a buffer.
     bool use_last_context;
+
+    //! Indication to exclude from the VMatrix the context centered 
+    //! around a token with missing value target fields. 
+    bool exclude_missing_target_tokens;
 
     //! Conditions to be satisfied for the exclusion or inclusion (see
     //! conditions_for_exclusion) of elements in the VMatrix.
@@ -291,9 +295,9 @@ public:
     //! for field# col. Or returns "" if no string is associated.
     virtual string getValString(int col, real val) const;
 
-    virtual Vec getValues(int row, int col) const;
+    virtual void getValues(int row, int col, Vec& values) const;
 
-    virtual Vec getValues(const Vec& input, int col) const;
+    virtual void getValues(const Vec& input, int col, Vec& values) const;
 
     virtual void getExample(int i, Vec& input, Vec& target, real& weight);
 

@@ -96,7 +96,7 @@ void ReIndexedTargetVMatrix::getNewRow(int i, const Vec& v) const
     source->getRow(i,v);
     for(t=inputsize_; t<targetsize_+inputsize_; t++)
     {
-        values = source->getValues(i,t);
+        source->getValues(i,t,values);
 
         oov_index = -1;
         if(ignore_oov_tag)

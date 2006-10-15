@@ -274,7 +274,7 @@ PP<Dictionary> ConcatColumnsVMatrix::getDictionary(int col) const
 }
 
 
-Vec ConcatColumnsVMatrix::getValues(int row, int col) const
+void ConcatColumnsVMatrix::getValues(int row, int col, Vec& values) const
 {
 #ifdef BOUNDCHECK
     if(col>=width_)
@@ -286,10 +286,10 @@ Vec ConcatColumnsVMatrix::getValues(int row, int col) const
         pos += sources[k]->width();
         k++;
     }
-    return sources[k]->getValues(row,col-pos);
+    sources[k]->getValues(row,col-pos,values);
 }
 
-Vec ConcatColumnsVMatrix::getValues(const Vec& input, int col) const
+void ConcatColumnsVMatrix::getValues(const Vec& input, int col, Vec& values) const
 {
 #ifdef BOUNDCHECK
     if(col>=width_)
@@ -301,8 +301,7 @@ Vec ConcatColumnsVMatrix::getValues(const Vec& input, int col) const
         pos += sources[k]->width();
         k++;
     }
-    return sources[k]->getValues(input, col-pos);
-
+    sources[k]->getValues(input.subVec(pos,sources[k]->width()), col-pos, values);
 }
 
 void ConcatColumnsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)

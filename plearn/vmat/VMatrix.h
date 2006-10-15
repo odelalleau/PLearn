@@ -632,13 +632,6 @@ public:
         int X_startcol, int X_ncols,
         Mat& result, int startrow=0, int nrows=-1, int ignore_this_row=-1) const;
 
-    /// Returns the possible values for a certain field in the VMatrix.
-    virtual Vec getValues(int row, int col) const {return Vec(0);}
-
-    /// Gives the possible values of a certain field (column) given the input.
-    virtual Vec getValues(const Vec& input, int col) const {return Vec(0);}
-
-    
     //#####  String Mappings  #################################################
 
     /// Make sure string mappings are the right size.
@@ -655,7 +648,6 @@ public:
      */
     void saveStringMappings(int col, const PPath& fname,
                             map<string, real>* str_to_real = 0);
-
     /// Adds a string<->real mapping
     void addStringMapping(int col, string str, real val);
 
@@ -719,6 +711,11 @@ public:
     /// there isn't one
     virtual PP<Dictionary> getDictionary(int col) const;
 
+    //! Returns the possible values for a certain field in the VMatrix.
+    virtual void getValues(int row, int col, Vec& values) const { values.resize(0);}
+
+    //! Gives the possible values of a certain field (column) given the input.
+    virtual void getValues(const Vec& input, int col, Vec& values) const { values.resize(0);}
 
     //#####  SFIF Files  ######################################################
     

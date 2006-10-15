@@ -123,10 +123,10 @@ public:
     virtual PP<Dictionary> getDictionary(int col) const;
     
     //! Returns the possible values for a certain field in the VMatrix
-    virtual Vec getValues(int row, int col) const;
+    virtual void getValues(int row, int col, Vec& values) const;
     
     //! Returns the possible values of a certain field (column) given the input 
-    virtual Vec getValues(const Vec& input, int col) const;
+    virtual void getValues(const Vec& input, int col, Vec& values) const;
 
 private:
 

@@ -85,6 +85,9 @@ public:
     virtual void getNewRow(int i, const Vec& v) const;
     virtual real get(int i, int j) const;
     virtual void getSubRow(int i, int j, Vec v) const;
+    virtual real getStringVal(int col, const string & str) const;
+    virtual string getValString(int col, real val) const;
+    virtual string getString(int row,int col) const;
     virtual void getMat(int i, int j, Mat m) const;
     virtual void put(int i, int j, real value);
     virtual void putSubRow(int i, int j, Vec v);
@@ -106,11 +109,11 @@ public:
     //! if there isn't one
     virtual PP<Dictionary>  getDictionary(int col) const;
 
-    //! Returns the possible values for a certain field in the VMatrix
-    virtual Vec getValues(int row, int col) const;
+    //! Gives the possible values for a certain field in the VMatrix
+    virtual void getValues(int row, int col, Vec& values) const;
 
     //! Gives the possible values of a certain field (column) given the input
-    virtual Vec getValues(const Vec& input, int col) const;
+    virtual void getValues(const Vec& input, int col, Vec& values) const;
 
 protected:
 

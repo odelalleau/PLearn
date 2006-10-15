@@ -100,7 +100,7 @@ protected:
     //! Number of attributes in the input text file (\t separated)
     int n_attributes;
 
-    //! Python code snippets
+    //! Python code snippet
     PP<PythonCodeSnippet> python;
 
 public:
@@ -166,10 +166,10 @@ public:
 
     virtual string getValString(int col, real val) const;
 
-    virtual Vec getValues(int row, int col) const;
+    virtual void getValues(int row, int col, Vec& values) const;
 
     //! Gives the possible values of a certain field (column) given the input
-    virtual Vec getValues(const Vec& input, int col) const;
+    virtual void getValues(const Vec& input, int col, Vec& values) const;
 
     // Simply call inherited::build() then build_().
     virtual void build();

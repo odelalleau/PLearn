@@ -268,19 +268,27 @@ PP<Dictionary>  LemmatizeVMatrix::getDictionary(int col) const
 }
 
 
-Vec LemmatizeVMatrix::getValues(int row, int col) const
+void LemmatizeVMatrix::getValues(int row, int col, Vec& values) const
 {
     if(row < 0 || row >= length_) PLERROR("In LemmatizeVMatrix::getValues() : invalid row %d, length()=%d", row, length_);
     if(col == inputsize_-1)
-        return lemma_dict->getValues();
-    return source->getValues(row,col - (col < inputsize_-1?0:1));
+    {
+        TVec<string> options(0);
+        lemma_dict->getValues(options,values);
+    }
+    else
+        source->getValues(row,col - (col < inputsize_-1?0:1),values);
 }
 
-Vec LemmatizeVMatrix::getValues(const Vec& input, int col) const
+void LemmatizeVMatrix::getValues(const Vec& input, int col, Vec& values) const
 {
     if(col == inputsize_-1)
-        return lemma_dict->getValues();
-    return source->getValues(input,col - (col < inputsize_-1?0:1));
+    {
+        TVec<string> options(0);
+        lemma_dict->getValues(options,values);
+    }
+    else
+        source->getValues(input,col - (col < inputsize_-1?0:1),values);
 }
 
 

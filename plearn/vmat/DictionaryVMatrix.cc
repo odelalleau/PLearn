@@ -107,7 +107,7 @@ PP<Dictionary>  DictionaryVMatrix::getDictionary(int col) const
 }
 
 
-Vec DictionaryVMatrix::getValues(int row, int col) const
+void DictionaryVMatrix::getValues(int row, int col, Vec& values) const
 {
     if(row < 0 || row >= length_) PLERROR("In DictionaryVMatrix::getValues() : invalid row %d, length()=%d", row, length_);
     if(col < 0 || col >= width_) PLERROR("In DictionaryVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
@@ -116,10 +116,10 @@ Vec DictionaryVMatrix::getValues(int row, int col) const
     {
         options[i] = dictionaries[option_fields[col][i]]->getSymbol((int)data(row,option_fields[col][i]));
     }
-    return  dictionaries[col]->getValues(options);
+    dictionaries[col]->getValues(options, values);
 }
 
-Vec DictionaryVMatrix::getValues(const Vec& input, int col) const
+void DictionaryVMatrix::getValues(const Vec& input, int col, Vec& values) const
 {
     if(col < 0 || col >= width_) PLERROR("In DictionaryVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
     TVec<string> options(option_fields[col].length());
@@ -127,7 +127,7 @@ Vec DictionaryVMatrix::getValues(const Vec& input, int col) const
     {
         options[i] = dictionaries[option_fields[col][i]]->getSymbol((int)input[option_fields[col][i]]);
     }
-    return  dictionaries[col]->getValues(options);
+    dictionaries[col]->getValues(options, values);
 }
 
 

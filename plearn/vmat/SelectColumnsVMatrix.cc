@@ -147,6 +147,7 @@ void SelectColumnsVMatrix::declareOptions(OptionList &ol)
 void SelectColumnsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(sinput, copies);
     deepCopyField(indices, copies);
     deepCopyField(fields, copies);
 }
@@ -253,6 +254,9 @@ void SelectColumnsVMatrix::build_()
                 }
             }
         }
+
+        sinput.resize(width());
+        sinput.fill(MISSING_VALUE);
     }
 }
 
@@ -314,26 +318,32 @@ PP<Dictionary> SelectColumnsVMatrix::getDictionary(int col) const
 }
 
 
-Vec SelectColumnsVMatrix::getValues(int row, int col) const
+void SelectColumnsVMatrix::getValues(int row, int col, Vec& values) const
 {
     if(col>=width_)
         PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
     static int the_col;
     the_col = indices[col];
     if (the_col == -1)
-        return Vec(0);
-    return source->getValues(row,the_col);
+        values.resize(0);
+    else
+        source->getValues(row,the_col,values);
 }
 
-Vec SelectColumnsVMatrix::getValues(const Vec& input, int col) const
+void SelectColumnsVMatrix::getValues(const Vec& input, int col, Vec& values) const
 {
     if(col>=width_)
         PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
     static int the_col;
     the_col = indices[col];
     if (the_col == -1)
-        return Vec(0);
-    return source->getValues(input, the_col);
+        values.resize(0);
+    else
+    {
+        for(int i=0; i<indices.length(); i++)
+            sinput[indices[i]] = input[i];
+        source->getValues(sinput, the_col, values);
+    }
 }
 
 } // end of namespace PLearn

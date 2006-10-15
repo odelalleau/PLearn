@@ -60,6 +60,9 @@ private:
 
     typedef SourceVMatrix inherited;
 
+    //! Input vector for source VMatrix
+    Vec sinput;
+
 public:
 
     // Public build options.
@@ -119,11 +122,11 @@ public:
     //! if there isn't one
     virtual PP<Dictionary> getDictionary(int col) const;
 
-    //! Returns the possible values for a certain field in the VMatrix
-    virtual Vec getValues(int row, int col) const;
+    //! Gives the possible values for a certain field in the VMatrix
+    virtual void getValues(int row, int col, Vec& values) const;
 
-    //! Returns the possible values of a certain field (column) given the input
-    virtual Vec getValues(const Vec& input, int col) const;
+    //! Gives the possible values of a certain field (column) given the input
+    virtual void getValues(const Vec& input, int col, Vec& values) const;
 
 
 private:

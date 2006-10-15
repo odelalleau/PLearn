@@ -168,14 +168,14 @@ PP<Dictionary> SourceVMatrix::getDictionary(int col) const
     return source->getDictionary(col);
 }
 
-Vec SourceVMatrix::getValues(int row, int col) const
+void SourceVMatrix::getValues(int row, int col, Vec& values) const
 {
-    return source->getValues(row,col);
+    source->getValues(row,col,values);
 }
 
-Vec SourceVMatrix::getValues(const Vec& input, int col) const
+void SourceVMatrix::getValues(const Vec& input, int col, Vec& values) const
 {
-    return source->getValues(input,col);
+    source->getValues(input,col,values);
 }
 
 } // end of namespace PLearn

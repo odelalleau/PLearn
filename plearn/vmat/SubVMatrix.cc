@@ -282,6 +282,33 @@ void SubVMatrix::getSubRow(int i, int j, Vec v) const
     source->getSubRow(i+istart,j+jstart,v);
 }
 
+real SubVMatrix::getStringVal(int col, const string & str) const
+{ 
+#ifdef BOUNDCHECK
+    if(col<0 || col>=width())
+        PLERROR("In SubVMatrix::getStringVal(): OUT OF BOUND access");
+#endif
+    return source->getStringVal(jstart+col, str); 
+}
+
+string SubVMatrix::getValString(int col, real val) const
+{ 
+#ifdef BOUNDCHECK
+    if(col<0 || col>=width())
+        PLERROR("In SubVMatrix::getValString(): OUT OF BOUND access");
+#endif
+    return source->getValString(jstart+col,val); 
+}
+
+string SubVMatrix::getString(int row, int col) const
+{ 
+#ifdef BOUNDCHECK
+    if(row<0 || row>=length() || col<0 || col>=width())
+        PLERROR("In SubVMatrix::getString(): OUT OF BOUND access");
+#endif
+    return source->getString(row, jstart+col); 
+}
+
 void SubVMatrix::getMat(int i, int j, Mat m) const
 {
 #ifdef BOUNDCHECK
@@ -358,23 +385,23 @@ PP<Dictionary> SubVMatrix::getDictionary(int col) const
     return source->getDictionary(col+jstart);
 }
 
-Vec SubVMatrix::getValues(int row, int col) const
+void SubVMatrix::getValues(int row, int col, Vec& values) const
 {
 #ifdef BOUNDCHECK
     if(row<0 || row>=length() || col<0 || col>=width())
         PLERROR("In SubVMatrix::getValues(row,col) OUT OF BOUND access");
 #endif
-    return source->getValues(row+istart,col+jstart);
+    source->getValues(row+istart,col+jstart, values);
 }
 
-Vec SubVMatrix::getValues(const Vec& input, int col) const
+void SubVMatrix::getValues(const Vec& input, int col, Vec& values) const
 {
 #ifdef BOUNDCHECK
     if(col<0 || col>=width())
         PLERROR("In SubVMatrix::getValues(row,col) OUT OF BOUND access");
 #endif
-    return source->getValues(input.subVec(jstart, input.length()-jstart),
-                             col+jstart);
+    source->getValues(input.subVec(jstart, input.length()-jstart),
+                      col+jstart, values);
 }
 
 } // end of namespace PLearn

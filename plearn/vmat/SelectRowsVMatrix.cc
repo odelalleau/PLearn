@@ -264,22 +264,22 @@ PP<Dictionary> SelectRowsVMatrix::getDictionary(int col) const
 }
 
 
-Vec SelectRowsVMatrix::getValues(int row, int col) const
+void SelectRowsVMatrix::getValues(int row, int col, Vec& values) const
 {
 #ifdef BOUNDCHECK
     if(col>=width_)
         PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
 #endif
-    return source->getValues(selected_indices[row],col);
+    source->getValues(selected_indices[row],col,values);
 }
 
-Vec SelectRowsVMatrix::getValues(const Vec& input, int col) const
+void SelectRowsVMatrix::getValues(const Vec& input, int col, Vec& values) const
 {
 #ifdef BOUNDCHECK
     if(col>=width_)
         PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
 #endif
-    return source->getValues(input, col);
+    source->getValues(input, col, values);
 }
 
 } // end of namespace PLearn

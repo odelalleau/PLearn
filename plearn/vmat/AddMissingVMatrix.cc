@@ -187,22 +187,22 @@ PP<Dictionary> AddMissingVMatrix::getDictionary(int col) const
 }
 
 
-Vec AddMissingVMatrix::getValues(int row, int col) const
+void AddMissingVMatrix::getValues(int row, int col, Vec& values) const
 {
 #ifdef BOUNDCHECK
     if(col>=width_)
         PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
 #endif
-    return source->getValues(row,col);
+    source->getValues(row,col,values);
 }
 
-Vec AddMissingVMatrix::getValues(const Vec& input, int col) const
+void AddMissingVMatrix::getValues(const Vec& input, int col, Vec& values) const
 {
 #ifdef BOUNDCHECK
     if(col>=width_)
         PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
 #endif
-    return source->getValues(input, col);
+    source->getValues(input, col,values);
 }
 
 } // end of namespace PLearn

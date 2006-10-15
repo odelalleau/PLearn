@@ -132,15 +132,14 @@ PP<Dictionary> RandomSamplesFromVMatrix::getDictionary(int col) const
     return source->getDictionary(col);
 }
 
-Vec RandomSamplesFromVMatrix::getValues(int row, int col) const
+void RandomSamplesFromVMatrix::getValues(int row, int col, Vec& values) const
 {
     PLERROR("In RandomSamplesFromVMatrix::getValues(): Cannot give possible values given a row index because samples are independent of the row index.");
-    return Vec(0);
 }
 
-Vec RandomSamplesFromVMatrix::getValues(const Vec& input, int col) const
+void RandomSamplesFromVMatrix::getValues(const Vec& input, int col, Vec& values) const
 {
-    return source->getValues(input,col);
+    source->getValues(input,col,values);
 }
 
 } // end of namespace PLearn

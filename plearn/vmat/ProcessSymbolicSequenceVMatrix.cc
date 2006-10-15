@@ -52,7 +52,8 @@ ProcessSymbolicSequenceVMatrix::ProcessSymbolicSequenceVMatrix(bool call_build_)
     : inherited(call_build_),
       n_left_context(2), n_right_context(2),
       conditions_offset(0), conditions_for_exclusion(1), full_context(true),
-      put_only_target_attributes(false), use_last_context(true)
+      put_only_target_attributes(false), use_last_context(true), 
+      exclude_missing_target_tokens(false)
     /* ### Initialise all fields to their default value */
 {
     if( call_build_ )
@@ -196,6 +197,14 @@ void ProcessSymbolicSequenceVMatrix::declareOptions(OptionList& ol)
                   "Indication that the last accessed context should be put in"
                   " a buffer.\n");
 
+    declareOption(ol, "exclude_missing_target_tokens",
+                  &ProcessSymbolicSequenceVMatrix::exclude_missing_target_tokens,
+                  OptionBase::buildoption,
+                  "Indication to exclude from the VMatrix the context centered\n"
+                  "around a token with missing value target fields.\n");
+
+
+
     declareOption(ol, "conditions",
                   &ProcessSymbolicSequenceVMatrix::conditions,
                   OptionBase::buildoption,
@@ -273,6 +282,7 @@ void ProcessSymbolicSequenceVMatrix::build_()
     indices.clear();
     indices.resize(0);
     int current_context_length = 0;
+    bool target_contains_missing = false;
     ProgressBar *pb = new ProgressBar("Gathering information from source VMat of length " + tostring(source->length()), source->length());
     for(int i=0; i<source->length(); i++)
     {
@@ -293,13 +303,28 @@ void ProcessSymbolicSequenceVMatrix::build_()
         if(i + conditions_offset >= 0 && i + conditions_offset < source->length())
         {
             source->getRow(i+conditions_offset,row);
-            if(is_true(conditions,row))
+            if(exclude_missing_target_tokens)
             {
-                if(!conditions_for_exclusion) indices.append(i);
+                target_contains_missing = false;
+                int ni = source->targetsize()+source->inputsize();
+                for(int i=source->inputsize(); i<ni; i++)
+                    if(is_missing(row[i]))
+                    {
+                        target_contains_missing = true;
+                        break;
+                    }
             }
-            else
+            
+            if(!exclude_missing_target_tokens || !target_contains_missing)
             {
-                if(conditions_for_exclusion) indices.append(i);
+                if(is_true(conditions,row))
+                {
+                    if(!conditions_for_exclusion) indices.append(i);
+                }
+                else
+                {
+                    if(conditions_for_exclusion) indices.append(i);
+                }
             }
         }
         pb->update(i+1);
@@ -395,7 +420,7 @@ string ProcessSymbolicSequenceVMatrix::getValString(int col, real val) const
     return "";
 }
 
-Vec ProcessSymbolicSequenceVMatrix::getValues(int row, int col) const
+void ProcessSymbolicSequenceVMatrix::getValues(int row, int col, Vec& values) const
 {
     if(row < 0 || row >= length_) PLERROR("In ProcessSymbolicSequenceVMatrix::getValues() : invalid row %d, length()=%d", row, length_);
     if(col < 0 || col >= width_) PLERROR("In ProcessSymbolicSequenceVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
@@ -406,24 +431,55 @@ Vec ProcessSymbolicSequenceVMatrix::getValues(int row, int col) const
             src_col = col%source->inputsize();
         else
             src_col = source->inputsize() + (col-max_context_length * source->inputsize())%source->targetsize();
-        return source->getValues(indices[row],src_col);
+        source->getValues(indices[row],src_col, values);
     }
-    return Vec(0);
+    else
+        values.resize(0);
 }
 
-Vec ProcessSymbolicSequenceVMatrix::getValues(const Vec& input, int col) const
+void ProcessSymbolicSequenceVMatrix::getValues(const Vec& input, int col, Vec& values) const
 {
     if(col < 0 || col >= width_) PLERROR("In ProcessSymbolicSequenceVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
     if(source)
     {
-        int src_col;
-        if(col < max_context_length * source->inputsize())
-            src_col = col%source->inputsize();
+        int sinputsize = source->inputsize();
+        int stargetsize = source->targetsize();
+        int src_col,this_col;
+        if(col < max_context_length * sinputsize)
+            src_col = col%sinputsize;
         else
-            src_col = source->inputsize() + (col-max_context_length * source->inputsize())%source->targetsize();
-        return source->getValues(input,src_col);
+            src_col = sinputsize + (col-max_context_length * sinputsize)%stargetsize;
+
+        // Fill subinput input part
+        subinput.resize(sinputsize);
+        if(col>=inputsize_)
+        {
+            if(put_only_target_attributes)
+                this_col = n_left_context;
+            else
+                this_col = (col-inputsize_)/stargetsize;
+        }
+        else
+            this_col = col/sinputsize;
+        subinput << input.subVec(this_col*sinputsize,sinputsize);
+
+        // Fill subinput target part
+        subinput.resize(sinputsize+stargetsize);
+        if(!put_only_target_attributes || col == inputsize_ || (col<inputsize_ && col/sinputsize == n_left_context))
+        {
+            if(put_only_target_attributes)
+                subinput.subVec(sinputsize,stargetsize) << input.subVec(inputsize_,stargetsize);
+            else
+                subinput.subVec(sinputsize,stargetsize) << input.subVec(inputsize_+this_col*stargetsize,stargetsize);
+                
+        }
+        else
+        {
+            subinput.subVec(sinputsize,stargetsize).fill(MISSING_VALUE);
+        }
+        source->getValues(subinput,src_col,values);
     }
-    return Vec(0);
+    else values.resize(0);
 }
 
 PP<Dictionary> ProcessSymbolicSequenceVMatrix::getDictionary(int col) const
@@ -457,6 +513,7 @@ void ProcessSymbolicSequenceVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copi
     deepCopyField(right_positions, copies);
     deepCopyField(left_context, copies);
     deepCopyField(right_context, copies);
+    deepCopyField(subinput, copies);
     deepCopyField(row, copies);
     deepCopyField(element, copies);
     deepCopyField(target_element, copies);
