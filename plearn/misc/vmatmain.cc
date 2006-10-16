@@ -595,7 +595,18 @@ void viewVMat(const VMat& vm)
                     real val = v[j];
                     string s = vm_showed->getValString(j,val);
                     if (!view_strings || s == "")
-                        s = tostring(val);
+                    {
+                        // problem of display, because if val is a double,
+                        // tostring(val) has 18 digits, which is more than the
+                        // 14 we have for display. Cropping the end doesn't
+                        // solve the problem when the last characters are
+                        // "e-6"...
+                        //s = tostring(val);
+                        // TODO: find a better solution
+                        char tmp[15];
+                        sprintf(tmp, "%14g", val);
+                        s = tmp;
+                    }
                     else {
                         // This is a string. Maybe we want to indent it to the right.
                         // In this case we truncate it to its last characters.
