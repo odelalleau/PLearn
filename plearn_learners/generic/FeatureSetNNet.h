@@ -273,6 +273,14 @@ private:
     
     //! Classification loss
     real classification_loss(const Vec& outputv, int target) const;
+    
+    //! Argmax function that lets you define the default (first)
+    //! component used for comparisons. This is useful to avoid bias in the prediction
+    //! when the getValues() provides some information about
+    //! the prior distribution of the targets (e.g. the first target given by 
+    //! getValues() is the most likely) and the output of the model is
+    //! the same for all targets.
+    int my_argmax(const Vec& vec, int default_compare=0) const;
 
 public:
 

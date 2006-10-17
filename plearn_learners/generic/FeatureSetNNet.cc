@@ -811,6 +811,24 @@ void FeatureSetNNet::computeCostsFromOutputs(const Vec& inputv, const Vec& outpu
     PLERROR("In FeatureSetNNet::computeCostsFromOutputs(): output is not enough to compute costs");
 }
 
+int FeatureSetNNet::my_argmax(const Vec& vec, int default_compare) const
+{
+#ifdef BOUNDCHECK
+    if(vec.length()==0)
+        PLERROR("IN int argmax(const TVec<T>& vec) vec has zero length");
+#endif
+    real* v = vec.data();
+    int indexmax = default_compare;
+    real maxval = v[default_compare];
+    for(int i=0; i<vec.length(); i++)
+        if(v[i]>maxval)
+        {
+            maxval = v[i];
+            indexmax = i;
+        }
+    return indexmax;
+}
+
 ///////////////////
 // computeOutput //
 ///////////////////
@@ -821,7 +839,7 @@ void FeatureSetNNet::computeOutput(const Vec& inputv, Vec& outputv) const
     {
         //row.subVec(0,inputsize_) << inputv;
         //target_values_reference_set->getValues(row,inputsize_,target_values);
-        outputv[0] = target_values[argmax(output_comp)];
+        outputv[0] = target_values[my_argmax(output_comp,rgen->uniform_multinomial_sample(output_comp.length()))];
     }
     else
         outputv[0] = argmax(output_comp);
@@ -838,7 +856,7 @@ void FeatureSetNNet::computeOutputAndCosts(const Vec& inputv, const Vec& targetv
     {
         //row.subVec(0,inputsize_) << inputv;
         //target_values_reference_set->getValues(row,inputsize_,target_values);
-        outputv[0] = target_values[argmax(output_comp)];
+        outputv[0] = target_values[my_argmax(output_comp,rgen->uniform_multinomial_sample(output_comp.length()))];
     }
     else
         outputv[0] = argmax(output_comp);
