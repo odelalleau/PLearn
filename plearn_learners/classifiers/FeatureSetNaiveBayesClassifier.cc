@@ -56,6 +56,7 @@ PLEARN_IMPLEMENT_OBJECT(FeatureSetNaiveBayesClassifier, "Naive Bayes classifier 
 
 FeatureSetNaiveBayesClassifier::FeatureSetNaiveBayesClassifier() // DEFAULT VALUES FOR ALL OPTIONS
     :
+rgen(new PRandom()),
 possible_targets_vary(0),
 input_dependent_posterior_estimation(0),
 smoothing_constant(0)
@@ -191,6 +192,9 @@ void FeatureSetNaiveBayesClassifier::build_()
         }
         val_string_reference_set = train_set;
         target_values_reference_set = train_set;
+
+        if (seed_>=0)
+            rgen->manual_seed(seed_);
     }
 }
 
@@ -203,6 +207,25 @@ void FeatureSetNaiveBayesClassifier::computeCostsFromOutputs(const Vec& inputv, 
     PLERROR("In FeatureSetNaiveBayesClassifier::computeCostsFromOutputs(): output is not enough to compute costs");
 }
 
+int FeatureSetNaiveBayesClassifier::my_argmax(const Vec& vec, int default_compare) const
+{
+#ifdef BOUNDCHECK
+    if(vec.length()==0)
+        PLERROR("IN int argmax(const TVec<T>& vec) vec has zero length");
+#endif
+    real* v = vec.data();
+    int indexmax = default_compare;
+    real maxval = v[default_compare];
+    for(int i=0; i<vec.length(); i++)
+        if(v[i]>maxval)
+        {
+            maxval = v[i];
+            indexmax = i;
+        }
+    return indexmax;
+}
+
+
 ///////////////////
 // computeOutput //
 ///////////////////
@@ -210,7 +233,7 @@ void FeatureSetNaiveBayesClassifier::computeOutput(const Vec& inputv, Vec& outpu
 {
     getProbs(inputv,output_comp);
     if(possible_targets_vary)
-        outputv[0] = target_values[argmax(output_comp)];
+        outputv[0] = target_values[my_argmax(output_comp,rgen->uniform_multinomial_sample(output_comp.length()))];
     else
         outputv[0] = argmax(output_comp);
 }
@@ -223,7 +246,7 @@ void FeatureSetNaiveBayesClassifier::computeOutputAndCosts(const Vec& inputv, co
 {
     getProbs(inputv,output_comp);
     if(possible_targets_vary)
-        outputv[0] = target_values[argmax(output_comp)];
+        outputv[0] = target_values[my_argmax(output_comp,rgen->uniform_multinomial_sample(output_comp.length()))];
     else
         outputv[0] = argmax(output_comp);
     costsv[0] = (outputv[0] == targetv[0] ? 0 : 1);
@@ -264,10 +287,20 @@ void FeatureSetNaiveBayesClassifier::makeDeepCopyFromShallowCopy(CopiesMap& copi
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     // Private variables
+    deepCopyField(target_values,copies);
+    deepCopyField(output_comp,copies);
+    deepCopyField(row,copies);
+    deepCopyField(feats,copies);
 
     // Protected variables
+    deepCopyField(val_string_reference_set,copies);
+    deepCopyField(target_values_reference_set,copies);
+    deepCopyField(rgen,copies);
 
     // Public variables
+    deepCopyField(feature_class_counts,copies);
+    deepCopyField(sum_feature_class_counts,copies);
+    deepCopyField(class_counts,copies);
 
     // Public build options
     deepCopyField(feat_sets,copies);
@@ -386,7 +419,7 @@ void FeatureSetNaiveBayesClassifier::getProbs(const Vec& inputv, Vec& outputv) c
     {
         for(int i=0; i<target_values.length(); i++)
         {
-            outputv[i] = safeflog(class_counts[(int)target_values[i]]+smoothing_constant*total_feats_per_token);
+            outputv[i] = safeflog(class_counts[(int)target_values[i]]);
             for(int k=0; k<inputsize_; k++)
             {
                 if(input_dependent_posterior_estimation)
@@ -409,7 +442,7 @@ void FeatureSetNaiveBayesClassifier::getProbs(const Vec& inputv, Vec& outputv) c
     {
         for(int i=0; i<total_output_size; i++)
         {
-            outputv[i] = safeflog(class_counts[i]+smoothing_constant);
+            outputv[i] = safeflog(class_counts[i]);
             for(int k=0; k<inputsize_; k++)
             {
                 if(input_dependent_posterior_estimation)

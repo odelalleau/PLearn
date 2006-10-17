@@ -39,6 +39,7 @@
 #define FeatureSetNaiveBayesClassifier_INC
 
 #include <plearn_learners/generic/PLearner.h>
+#include <plearn/math/PRandom.h>
 #include <plearn/feat/FeatureSet.h>
 
 namespace PLearn {
@@ -85,6 +86,8 @@ protected:
     mutable VMat val_string_reference_set;
     //! Possible target values mapping.
     mutable VMat target_values_reference_set;
+    //! Random number generator for parameters initialization
+    PP<PRandom> rgen;
 
 public: 
     //! Feature-class pair counts
@@ -112,6 +115,8 @@ public:
 
 private:
     void build_();
+
+    int my_argmax(const Vec& vec, int default_compare=0) const;
 
 public:
 
