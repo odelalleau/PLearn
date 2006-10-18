@@ -60,6 +60,24 @@ RBMMixedLayer::RBMMixedLayer( TVec< PP<RBMLayer> > the_sub_layers ) :
     build();
 }
 
+
+void RBMMixedLayer::setLearningRate( real the_learning_rate )
+{
+    inherited::setLearningRate( the_learning_rate );
+
+    for( int i=0 ; i<n_layers ; i++ )
+        sub_layers[i]->setLearningRate( the_learning_rate );
+}
+
+void RBMMixedLayer::setMomentum( real the_momentum )
+{
+    inherited::setMomentum( the_momentum );
+
+    for( int i=0 ; i<n_layers ; i++ )
+        sub_layers[i]->setMomentum( the_momentum );
+}
+
+
 void RBMMixedLayer::getUnitActivation( int i, PP<RBMConnection> rbmc,
                                        int offset )
 {
@@ -242,6 +260,14 @@ void RBMMixedLayer::build_()
         expectation = merge( expectation, cur_layer->expectation );
         bias = merge( bias, cur_layer->bias );
         layer_of_unit.append( TVec<int>( cur_layer->size, i ) );
+
+        if( learning_rate >= 0. )
+            sub_layers[i]->setLearningRate( learning_rate );
+
+        if( momentum >= 0. )
+            sub_layers[i]->setMomentum( momentum );
+
+        sub_layers[i]->random_gen = random_gen;
     }
 }
 

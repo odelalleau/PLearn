@@ -301,6 +301,7 @@ void DeepBeliefNet::build_classification_cost()
     joint_layer->sub_layers.resize( 2 );
     joint_layer->sub_layers[0] = layers[ n_layers-2 ];
     joint_layer->sub_layers[1] = target_layer;
+    joint_layer->random_gen = random_gen;
     joint_layer->build();
 }
 
@@ -506,9 +507,9 @@ void DeepBeliefNet::train()
                                   +" of "+classname(),
                                   end_stage - stage );
 
-        layers[i]->learning_rate = cd_learning_rate;
-        connections[i]->learning_rate = cd_learning_rate;
-        layers[i+1]->learning_rate = cd_learning_rate;
+        layers[i]->setLearningRate( cd_learning_rate );
+        connections[i]->setLearningRate( cd_learning_rate );
+        layers[i+1]->setLearningRate( cd_learning_rate );
 
         for( ; stage<end_stage ; stage++ )
         {
@@ -633,8 +634,8 @@ void DeepBeliefNet::greedyStep( const Vec& input, const Vec& target, int index )
         layers[ index+1 ]->computeExpectation();
 
         // put appropriate learning rate
-        connections[ index ]->learning_rate = grad_learning_rate;
-        layers[ index+1 ]->learning_rate = grad_learning_rate;
+        connections[ index ]->setLearningRate( grad_learning_rate );
+        layers[ index+1 ]->setLearningRate( grad_learning_rate );
 
         // Backward pass
         real cost;
@@ -657,8 +658,8 @@ void DeepBeliefNet::greedyStep( const Vec& input, const Vec& target, int index )
                                            activation_gradients[ index+1 ] );
 
         // put back old learning rate
-        connections[ index ]->learning_rate = cd_learning_rate;
-        layers[ index+1 ]->learning_rate = cd_learning_rate;
+        connections[ index ]->setLearningRate( cd_learning_rate );
+        layers[ index+1 ]->setLearningRate( cd_learning_rate );
     }
 
     contrastiveDivergenceStep( layers[ index ],
@@ -695,11 +696,11 @@ void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
         layers[ n_layers-1 ]->computeExpectation();
 
         // put appropriate learning rate
-        classification_module->previous_to_last->learning_rate =
-            grad_learning_rate;
-        classification_module->last_to_target->learning_rate =
-            grad_learning_rate;
-        layers[ n_layers-1 ]->learning_rate = grad_learning_rate;
+        classification_module->previous_to_last->setLearningRate(
+            grad_learning_rate );
+        classification_module->last_to_target->setLearningRate(
+            grad_learning_rate );
+        layers[ n_layers-1 ]->setLearningRate( grad_learning_rate );
 
         // Backward pass
         real cost;
@@ -723,11 +724,11 @@ void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
             activation_gradients[ n_layers-1 ] );
 
         // put back old learning rate
-        classification_module->previous_to_last->learning_rate =
-            cd_learning_rate;
-        classification_module->last_to_target->learning_rate =
-            cd_learning_rate;
-        layers[ n_layers-1 ]->learning_rate = cd_learning_rate;
+        classification_module->previous_to_last->setLearningRate(
+            cd_learning_rate );
+        classification_module->last_to_target->setLearningRate(
+            cd_learning_rate );
+        layers[ n_layers-1 ]->setLearningRate( cd_learning_rate );
     }
 
     contrastiveDivergenceStep(
@@ -984,16 +985,16 @@ void DeepBeliefNet::setLearningRate( real the_learning_rate )
 {
     for( int i=0 ; i<n_layers-1 ; i++ )
     {
-        layers[i]->learning_rate = the_learning_rate;
-        connections[i]->learning_rate = the_learning_rate;
+        layers[i]->setLearningRate( the_learning_rate );
+        connections[i]->setLearningRate( the_learning_rate );
     }
-    layers[n_layers-1]->learning_rate = the_learning_rate;
+    layers[n_layers-1]->setLearningRate( the_learning_rate );
 
     if( use_classification_cost )
     {
-        classification_module->last_to_target->learning_rate =
-            the_learning_rate;
-        classification_module->last_layer->learning_rate = the_learning_rate;
+        classification_module->last_to_target->setLearningRate(
+            the_learning_rate );
+        classification_module->last_layer->setLearningRate( the_learning_rate );
     }
 
     if( final_module_has_learning_rate )

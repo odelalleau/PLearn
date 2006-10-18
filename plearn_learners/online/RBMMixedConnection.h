@@ -48,7 +48,8 @@ using namespace std;
 
 /**
  * Contains a matrix of other RBMConnections, acting as submatrix of the linear
- * transformation this class computes.
+ * transformation this class computes. If a PP<RBMConnection> is null, it will
+ * be considered as a 0-filled matrix.
  *
  * @todo: yes
  */
@@ -73,6 +74,11 @@ public:
     RBMMixedConnection();
 
     // Your other public member functions go here
+
+    //! Sets the learning rate, also in the sub_connections
+    virtual void setLearningRate( real the_learning_rate );
+    //! Sets the momentum, also in the sub_connections
+    virtual void setMomentum( real the_momentum );
 
     virtual void setAsUpInput( const Vec& input ) const;
     virtual void setAsDownInput( const Vec& input ) const;
@@ -119,7 +125,6 @@ public:
     //                          const Vec& output_gradient);
 
     //! this version allows to obtain the input gradient as well
-    //! N.B. THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              Vec& input_gradient,
                              const Vec& output_gradient);
@@ -161,8 +166,14 @@ protected:
     //! Initial vertical index of the blocks
     TVec<int> up_init_positions;
 
+    //! Vertical sizes of the blocks
+    TVec<int> up_block_sizes;
+
     //! Initial horizontal index of the blocks
     TVec<int> down_init_positions;
+
+    //! Horizontal sizes of the blocks
+    TVec<int> down_block_sizes;
 
     TVec<int> row_of;
     TVec<int> col_of;

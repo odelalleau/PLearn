@@ -109,6 +109,12 @@ public:
 
     // Your other public member functions go here
 
+    //! Sets the learning rate
+    virtual void setLearningRate( real the_learning_rate );
+
+    //! Sets the momentum
+    virtual void setMomentum( real the_momentum );
+
     //! Uses "rbmc" to compute the activation of unit "i" of this layer.
     //! This activation is computed by the "i+offset"-th unit of "rbmc"
     virtual void getUnitActivation( int i, PP<RBMConnection> rbmc,

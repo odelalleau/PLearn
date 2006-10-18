@@ -70,6 +70,11 @@ public:
     //! Constructor from the sub_layers
     RBMMixedLayer( TVec< PP<RBMLayer> > the_sub_layers );
 
+    //! Sets the learning rate, also in the sub_layers
+    virtual void setLearningRate( real the_learning_rate );
+
+    //! Sets the momentum, also in the sub_layers
+    virtual void setMomentum( real the_momentum );
 
     // Your other public member functions go here
     //! Uses "rbmc" to compute the activation of unit "i" of this layer.

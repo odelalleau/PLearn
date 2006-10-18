@@ -76,11 +76,11 @@ public:
 
     //#####  Not Options  #####################################################
 
-    //! Number of units on up layer
-    int up_size;
-
     //! Number of units on down layer
     int down_size;
+
+    //! Number of units on up layer
+    int up_size;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -89,6 +89,12 @@ public:
     RBMConnection( real the_learning_rate=0. );
 
     // Your other public member functions go here
+
+    //! Sets the learning rate
+    virtual void setLearningRate( real the_learning_rate );
+
+    //! Sets the momentum
+    virtual void setMomentum( real the_momentum );
 
     //! Sets input_vec to input, and going_up to false
     virtual void setAsUpInput( const Vec& input ) const;

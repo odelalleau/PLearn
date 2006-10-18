@@ -64,14 +64,6 @@ RBMConnection::RBMConnection( real the_learning_rate ) :
 
 void RBMConnection::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here.
-    // ### For the "flags" of each option, you should typically specify
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or
-    // ### OptionBase::tuningoption. If you don't provide one of these three,
-    // ### this option will be ignored when loading values from a script.
-    // ### You can also combine flags, for example with OptionBase::nosave:
-    // ### (OptionBase::buildoption | OptionBase::nosave)
-
     declareOption(ol, "down_size", &RBMConnection::down_size,
                   OptionBase::buildoption,
                   "The size of the up layer");
@@ -148,11 +140,17 @@ void RBMConnection::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields
-    // ### that you wish to be deepCopied rather than
-    // ### shallow-copied.
-
     deepCopyField(input_vec, copies);
+}
+
+void RBMConnection::setLearningRate( real the_learning_rate )
+{
+    learning_rate = the_learning_rate;
+}
+
+void RBMConnection::setMomentum( real the_momentum )
+{
+    momentum = the_momentum;
 }
 
 void RBMConnection::setAsUpInput( const Vec& input ) const

@@ -151,6 +151,18 @@ void RBMLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(bias_inc, copies);
 }
 
+
+void RBMLayer::setLearningRate( real the_learning_rate )
+{
+    learning_rate = the_learning_rate;
+}
+
+void RBMLayer::setMomentum( real the_momentum )
+{
+    momentum = the_momentum;
+}
+
+
 void RBMLayer::getUnitActivation( int i, PP<RBMConnection> rbmc, int offset )
 {
     Vec act = activation.subVec(i,1);
