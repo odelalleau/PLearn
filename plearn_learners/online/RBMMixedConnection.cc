@@ -106,7 +106,9 @@ void RBMMixedConnection::build_()
         return;
 
     up_init_positions.resize( n_up_blocks );
+    up_block_sizes.resize( n_up_blocks );
     down_init_positions.resize( n_down_blocks );
+    down_block_sizes.resize( n_down_blocks );
     row_of.resize( 0 );
     col_of.resize( 0 );
 
@@ -346,6 +348,10 @@ void RBMMixedConnection::computeProduct( int start, int length,
                                          bool accumulate ) const
 {
     assert( activations.length() == length );
+
+    if( !accumulate )
+        activations.subVec( start, length ).fill( 0. );
+
     if( going_up )
     {
         assert( start+length <= up_size );
@@ -362,8 +368,7 @@ void RBMMixedConnection::computeProduct( int start, int length,
                 if( sub_connections(init_row,j) )
                 {
                     sub_connections(init_row,j)->computeProduct(
-                        start_in_row, length, activations,
-                        accumulate || (j>0) );
+                        start_in_row, length, activations, true );
                 }
             }
         }
@@ -384,7 +389,7 @@ void RBMMixedConnection::computeProduct( int start, int length,
                 {
                     sub_connections(init_row,j)->computeProduct(
                         start_in_init_row, len_in_init_row,
-                        sub_activations, accumulate || (j>0) );
+                        sub_activations, true );
                 }
             }
 
@@ -399,8 +404,7 @@ void RBMMixedConnection::computeProduct( int start, int length,
                     if( sub_connections(i,j) )
                     {
                         sub_connections(i,j)->computeProduct(
-                            0, up_size_i, sub_activations,
-                            accumulate || (j>0) );
+                            0, up_size_i, sub_activations, true );
                     }
                 }
 
@@ -415,8 +419,7 @@ void RBMMixedConnection::computeProduct( int start, int length,
                 if( sub_connections(end_row,j) )
                 {
                     sub_connections(end_row,j)->computeProduct(
-                        0, len_in_end_row, sub_activations,
-                        accumulate || (j>0) );
+                        0, len_in_end_row, sub_activations, true );
                 }
             }
         }
@@ -437,8 +440,7 @@ void RBMMixedConnection::computeProduct( int start, int length,
                 if( sub_connections(i,init_col) )
                 {
                     sub_connections(i,init_col)->computeProduct(
-                        start_in_col, length, activations,
-                        accumulate || (i>0) );
+                        start_in_col, length, activations, true );
                 }
             }
         }
@@ -459,7 +461,7 @@ void RBMMixedConnection::computeProduct( int start, int length,
                 {
                     sub_connections(i,init_col)->computeProduct(
                         start_in_init_col, len_in_init_col,
-                        sub_activations, accumulate || (i>0) );
+                        sub_activations, true );
                 }
             }
 
@@ -474,8 +476,7 @@ void RBMMixedConnection::computeProduct( int start, int length,
                     if( sub_connections(i,j) )
                     {
                         sub_connections(i,j)->computeProduct(
-                            0, down_size_j, sub_activations,
-                            accumulate || (i>0) );
+                            0, down_size_j, sub_activations, true );
                     }
                 }
 
@@ -490,8 +491,7 @@ void RBMMixedConnection::computeProduct( int start, int length,
                 if( sub_connections(i,end_col) )
                 {
                     sub_connections(i,end_col)->computeProduct(
-                        0, len_in_end_col, sub_activations,
-                        accumulate || (i>0) );
+                        0, len_in_end_col, sub_activations, true );
                 }
             }
         }
