@@ -143,6 +143,19 @@ void exitmsg(const char* msg, ...)
 }
 
 
+void pl_assert_fail(const char* expr, const char* file, unsigned line,
+                    const char* function, const char* message)
+{
+    PLERROR("Assertion failed: %s\n"
+            "Function: %s\n"
+            "    File: %s\n"
+            "    Line: %d"
+            "%s%s",
+            expr, function, file, line,
+            (message && *message? "\n Message: " : ""),
+            message);
+}
+
 } // end of namespace PLearn
 
 

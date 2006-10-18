@@ -48,6 +48,7 @@
 #ifndef perror_INC
 #define perror_INC
 
+#include <assert.h>
 #include "plexceptions.h"
 
 namespace PLearn {
@@ -64,7 +65,51 @@ void errormsg(const char* msg, ...);
 void warningmsg(const char* msg, ...);
 void deprecationmsg(const char* msg, ...);
 void exitmsg(const char* msg, ...);
+void pl_assert_fail(const char* expr, const char* file, unsigned line,
+                    const char* function, const char* message);
 
+// Redefine the assert mechanism to throw an exception through PLERROR.  Also
+// define a pl_assert which takes an explanation -- to be refined with ... a la
+// errormsg.
+#if defined(assert) && ! defined(PL_ASSERT_DEFINED)
+#  undef assert
+#endif
+
+// When debugging, do nothing (do static cast as in GCC)
+#ifdef  NDEBUG
+
+#  define assert(expr) static_cast<void>(0)
+#  define pl_assert(expr, message) static_cast<void>(0)
+
+#else   // ! defined(NDEBUG)
+
+#  define assert(expr)                                                      \
+   static_cast<void>((expr) ? 0 :                                           \
+                     (PLearn::pl_assert_fail(#expr, __FILE__, __LINE__,     \
+                                             PL_ASSERT_FUNCTION, ""), 0))               
+
+#  define pl_assert(expr, message)                                          \
+   static_cast<void>((expr) ? 0 :                                           \
+                     (PLearn::pl_assert_fail(#expr, __FILE__, __LINE__,     \
+                                             PL_ASSERT_FUNCTION, (message)), 0))         
+
+#  define PL_ASSERT_DEFINED
+
+#endif  // NDEBUG
+
+
+// Use the function prettification code present in GCC's assert.h include
+#if defined __USE_GNU
+#  define PL_ASSERT_FUNCTION	__PRETTY_FUNCTION__
+#else
+#  if defined __STDC_VERSION__ && __STDC_VERSION__ >= 199901L
+#    define PL_ASSERT_FUNCTION	__func__
+#  else
+#    define PL_ASSERT_FUNCTION	((__const char *) 0)
+#  endif
+#endif
+
+    
 } // end of namespace PLearn
 
 #endif
