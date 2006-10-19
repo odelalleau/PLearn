@@ -66,11 +66,11 @@ public:
     //#####  Public Build Options  ############################################
 
     //! Defines which model is used
-    string str_input_model;    // 'wrl' (default) or 'gnnl'
-    string str_output_model;    // 'gaussian' (default) or 'softmax'
+    string str_input_model;    // 'wrl' (default) or 'gnnl' (a gradnnetlayer)
+    string str_output_model;    // 'gaussian' (default) or 'softmax' (a gradnnetlayer + softmax)
 
 
-    //! --- Fixed (same in both models) part ----------------------------------
+    //! --- Fixed (same in both output models) part ----------------------------------
 
     //! Size of the real ditributed word representations
     int word_representation_size;
@@ -95,6 +95,7 @@ public:
     string str_gaussian_model_learning;
     real gaussian_model_sigma2_min;
     real gaussian_model_dl_slr;
+    real gaussian_model_dl_dc;
 
     //! Number of candidates to use from different sources in the gaussian model
     //! when we use the approx_discriminant cost
@@ -158,7 +159,7 @@ public:
     //! Specific to the gaussian model
     void buildCandidates();
     void reevaluateGaussianParameters() const;
-    void evaluateGaussianCounts() const;
+    //void evaluateGaussianCounts() const;
 
     //! Interfaces with the ProcessSymbolicSequenceVMatrix's getRow()
     void myGetExample(const VMat& example_set, int& sample, Vec& input, Vec& target, real& weight) const;
@@ -270,7 +271,7 @@ private:
     int gaussian_model_cost;
     int gaussian_model_learning;
 
-    enum{MODEL_TYPE_GAUSSIAN, MODEL_TYPE_SOFTMAX};
+    enum{MODEL_TYPE_GAUSSIAN=0, MODEL_TYPE_SOFTMAX=1};
     enum{GAUSSIAN_COST_DISCR=0, GAUSSIAN_COST_APPROX_DISCR=1, GAUSSIAN_COST_NON_DISCR=2};
     enum{GAUSSIAN_LEARNING_DISCR=0, GAUSSIAN_LEARNING_EMPIRICAL=1};
 };
