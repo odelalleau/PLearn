@@ -71,11 +71,10 @@ NnlmOutputLayer::NnlmOutputLayer() :
     OnlineLearningModule(),
     target_cardinality( -1 ),
     context_cardinality( -1 ),
-      sigma2min( 0.000001 ), // ### VERY IMPORTANT!!!
+    sigma2min( 0.001 ), // ### VERY IMPORTANT!!!
     dl_start_learning_rate( 0.0 ),
     dl_decrease_constant( 0.0 ),
-    el_start_discount_rate( 0.99 ), // ### VERY IMPORTANT!!!
-    el_decrease_constant( 0.0 ), // ### VERY IMPORTANT!!!
+    el_start_discount_factor( 0.01 ), // ### VERY IMPORTANT!!!
     step_number( 0 ),
     umc( 0.999999 ), // ###
     learning( LEARNING_DISCRIMINANT ),
@@ -87,9 +86,8 @@ NnlmOutputLayer::NnlmOutputLayer() :
     g_exponent( 0.0 ),
     log_g_det_covariance( -REAL_MAX ),
     log_g_normalization( -REAL_MAX ),
-    log_sum_p_ru( -REAL_MAX )
-    //log_p_g_r( -REAL_MAX ),
-    //sum_log_p_g_r( -REAL_MAX ),
+    log_sum_p_ru( -REAL_MAX ),
+    is_learning( false )
 {
     // ### You may (or not) want to call build_() to finish building the object
     // ### (doing so assumes the parent classes' build_() have been called too
@@ -107,6 +105,7 @@ void NnlmOutputLayer::declareOptions(OptionList& ol)
                   &NnlmOutputLayer::target_cardinality,
                   OptionBase::buildoption,
                   "Number of target tags.");
+
     declareOption(ol, "context_cardinality",
                   &NnlmOutputLayer::context_cardinality,
                   OptionBase::buildoption,
@@ -115,7 +114,7 @@ void NnlmOutputLayer::declareOptions(OptionList& ol)
     declareOption(ol, "sigma2min",
                   &NnlmOutputLayer::sigma2min,
                   OptionBase::buildoption,
-                  "Minimal value for the diagonal of the covariance matrix.");
+                  "Minimal value for the diagonal covariance matrix.");
 
     declareOption(ol, "dl_start_learning_rate",
                   &NnlmOutputLayer::dl_start_learning_rate,
@@ -126,16 +125,15 @@ void NnlmOutputLayer::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Discriminant learning decrease constant.");
 
-    declareOption(ol, "el_start_discount_rate",
-                  &NnlmOutputLayer::el_start_discount_rate,
+    declareOption(ol, "el_start_discount_factor",
+                  &NnlmOutputLayer::el_start_discount_factor,
                   OptionBase::buildoption,
-                  "Empirical learning discount-rate of old gaussian values when computing the new values.");
-    declareOption(ol, "el_decrease_constant",
+                  "How much weight is given to the first example of a given word with respect to the last, ex 0,2.");
+/*    declareOption(ol, "el_decrease_constant",
                   &NnlmOutputLayer::el_decrease_constant,
                   OptionBase::buildoption,
                   "Empirical learning decrease constant of gaussian parameters discount rate.");
-
-// ### 'learning' a build option?
+*/
 
     // * Learnt Options *
     // * Learnt Options *
@@ -170,15 +168,20 @@ void NnlmOutputLayer::declareOptions(OptionList& ol)
                   OptionBase::learntoption,
                   "sum_t 1" );
 
-    // ### test vars?
-
-
     // ### other?
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
 
+//////////
+// build
+//////////
+void NnlmOutputLayer::build()
+{
+    inherited::build();
+    build_();
+}
 
 //////////
 //build_
@@ -198,58 +201,44 @@ void NnlmOutputLayer::build_()
     // *** Parameters not initialized ***
     if( mu.size() == 0 )   {
         resetParameters();
-        resetClassCounts();
     }
 
 }
 
-//////////
-// build
-//////////
-void NnlmOutputLayer::build()
+////////////////////////////////
+// makeDeepCopyFromShallowCopy
+////////////////////////////////
+void NnlmOutputLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    inherited::build();
-    build_();
+    inherited::makeDeepCopyFromShallowCopy(copies);
+
+    deepCopyField(pi, copies);
+    deepCopyField(mu, copies);
+    deepCopyField(sigma2, copies);
+
+    deepCopyField(sumI, copies);
+    deepCopyField(sumR, copies);
+    deepCopyField(sumR2, copies);
+
+    deepCopyField(el_start_learning_rate, copies);
+    deepCopyField(el_decrease_constant, copies);
+    deepCopyField(el_last_update, copies);
+
+    deepCopyField(vec_log_p_rg_t, copies);
+    deepCopyField(vec_log_p_r_t, copies);
+    deepCopyField(vec_log_p_rt, copies);
+
+    deepCopyField(beta, copies);
+
+    deepCopyField(nd_gradient, copies);
+    deepCopyField(ad_gradient, copies);
+    deepCopyField(fd_gradient, copies);
+
+    deepCopyField(gradient_log_tmp, copies);
+    deepCopyField(gradient_log_tmp_pos, copies);
+    deepCopyField(gradient_log_tmp_neg, copies);
 }
 
-
-/////////////////////
-// resetClassCounts
-/////////////////////
-void NnlmOutputLayer::resetClassCounts()
-{
-    s_sumI = 0;
-    sumI.resize( target_cardinality );
-    sumI.fill( 0 );
-    // HACK in case no OOV in trainset
-    sumI[0] = 1;
-}
-
-////////////////////////
-// incrementClassCount
-////////////////////////
-void NnlmOutputLayer::incrementClassCount(int the_target)
-{
-#ifdef BOUNDCHECK
-    if( the_target >= target_cardinality )  {
-        PLERROR("NnlmOutputLayer::incrementCount:'the_target'(=%i) >= 'target_cardinality'(=%i)\n",
-                   the_target, target_cardinality);
-    }
-#endif
-
-    sumI[the_target] += 1;;
-    s_sumI += 1;
-}
-
-////////////////
-// applyCounts
-////////////////
-void NnlmOutputLayer::applyClassCounts()
-{
-    for( int tgt=0; tgt < target_cardinality; tgt++ )  {
-        pi[tgt] = (real)sumI[ tgt ] / (real)s_sumI;
-    }
-}
 
 
 ////////////////////
@@ -258,6 +247,9 @@ void NnlmOutputLayer::applyClassCounts()
 // NOTE doesn't reset the class counts
 void NnlmOutputLayer::resetParameters()
 {
+
+    cout << "NnlmOutputLayer::resetParameters()" << endl;
+
     step_number = 0;
     umc = 0.999999; // ###
 
@@ -268,15 +260,19 @@ void NnlmOutputLayer::resetParameters()
     sigma2.resize( target_cardinality, input_size);
     sigma2.fill( 0.0 );
 
-    sumR.resize( target_cardinality, input_size);
-    sumR.fill( 0.0 );
-    sumR2.resize( target_cardinality, input_size);
-    sumR2.fill( 0.0 );
+    // ### for a global_sigma2
+    global_mu.resize(input_size);
+    global_mu.fill( 0.0 );
+    global_sigma2.resize(input_size);
+    global_sigma2.fill( 0.0 );
+    // ### for a global_sigma2
 
-    test_sumR.resize( target_cardinality, input_size);
-    test_sumR.fill( 0.0 );
-    test_sumR2.resize( target_cardinality, input_size);
-    test_sumR2.fill( 0.0 );
+    resetAllClassVars();
+
+    vec_log_p_rg_t.resize( target_cardinality );
+    vec_log_p_r_t.resize( target_cardinality );
+    vec_log_p_rt.resize( target_cardinality );
+    beta.resize( target_cardinality, input_size );
 
     nd_gradient.resize( input_size );
     nd_gradient.fill( 0.0 );
@@ -290,7 +286,6 @@ void NnlmOutputLayer::resetParameters()
     bob.resize( input_size );
     bob.fill( 0.0 );
 
-
     gradient_log_tmp.resize( input_size );
     gradient_log_tmp.fill( 0.0 );
     gradient_log_tmp_pos.resize( input_size );
@@ -301,11 +296,155 @@ void NnlmOutputLayer::resetParameters()
     //log_p_g_r = safelog( 0.9 );
     //sum_log_p_g_r = -REAL_MAX;
 
-    vec_log_p_rg_t.resize( target_cardinality );
-    vec_log_p_r_t.resize( target_cardinality );
-    vec_log_p_rt.resize( target_cardinality );
-    beta.resize( target_cardinality, input_size );
-    //gamma.resize( target_cardinality, input_size );
+}
+
+
+//////////////////////
+// resetAllClassVars
+//////////////////////
+// There could be a problem if for example OOV is never seen in train set -> /0.
+void NnlmOutputLayer::resetAllClassVars() {
+
+    cout << "NnlmOutputLayer::resetAllClassVars()" << endl;
+
+    s_sumI = 0;
+    sumI.resize( target_cardinality );
+    sumI.fill( 0 );
+    sumR.resize( target_cardinality, input_size);
+    sumR.fill( 0.0 );
+    sumR2.resize( target_cardinality, input_size);
+    sumR2.fill( 0.0 );
+
+    // ### for a global_sigma2
+    global_sumR.resize(input_size);
+    global_sumR.fill( 0.0 );
+    global_sumR2.resize(input_size);
+    global_sumR2.fill( 0.0 );
+    // ### for a global_sigma2
+}
+
+////////////////////
+// updateClassVars
+////////////////////
+// Updates the count variables for the target, given the input
+void NnlmOutputLayer::updateClassVars(const int the_target, const Vec& the_input)
+{
+    #ifdef BOUNDCHECK
+    if( the_target >= target_cardinality )  {
+        PLERROR("NnlmOutputLayer::updateClassVars:'the_target'(=%i) >= 'target_cardinality'(=%i)\n",
+                   the_target, target_cardinality);
+    }
+    #endif
+
+    s_sumI++;
+    sumI[the_target]++;
+    for(int i=0; i<input_size; i++) {
+      sumR( the_target, i ) += the_input[i];
+      sumR2( the_target, i ) += the_input[i]*the_input[i];
+
+      // ### for a global_sigma2
+      global_sumR[i] += the_input[i];
+      global_sumR2[i] += the_input[i]*the_input[i];
+      // ### for a global_sigma2
+    }
+
+}
+
+//////////////////////
+// applyAllClassVars
+//////////////////////
+void NnlmOutputLayer::applyAllClassVars()
+{
+
+
+
+    // ### global values
+    for(int i=0; i<input_size; i++) {
+        global_mu[i] = global_sumR[i] / (real) s_sumI;
+
+        // Diviser par (n-1) au lieu de n
+        global_sigma2[i] = ( (real) s_sumI * global_mu[i] * global_mu[i] + 
+                  global_sumR2[i] - 2.0 * global_mu[i] * global_sumR[i]  ) / (s_sumI - 1);
+
+        if(global_sigma2[i]<sigma2min) {
+            cout << "NnlmOutputLayer::applyAllClassVars() -> global_sigma2[i]<sigma2min" << endl;
+            global_sigma2[i] = sigma2min;
+        }
+
+    } // for input_size
+    // ### global values
+
+
+
+    for( int t=0; t<target_cardinality; t++ ) {
+
+        #ifdef BOUNDCHECK
+        if( sumI[ t ] <= 1 )  {
+            PLERROR("NnlmOutputLayer::applyAllClassVars - sumI[ %i ] <= 1\n", t);
+        }
+        #endif
+
+        for(int i=0; i<input_size; i++) {
+            pi[t] = (real) sumI[ t ] / s_sumI;
+            mu( t, i ) = sumR( t, i ) / (real) sumI[ t ];
+
+    // ### global values
+/*
+            // Diviser par (n-1) au lieu de n
+            sigma2( t, i ) = ( sumI[ t ] * mu(t, i) * mu(t, i) + 
+                     sumR2(t, i) - 2.0 * mu(t, i) * sumR(t, i)  ) / (sumI[ t ] - 1);
+
+            if(sigma2( t, i )<sigma2min) {
+                //cout << "***" << t << "***" << sumI[ t ] << " sur " << s_sumI << endl;
+                //cout << "NnlmOutputLayer::applyAllClassVars() -> sigma2(" << t << "," << i <<") "
+                //    << sigma2(t, i) <<" < sigma2min(" << sigma2min <<")! Setting to sigma2min." <<endl;
+
+                sigma2( t, i ) = sigma2min;
+            }
+*/
+            sigma2( t, i ) = global_sigma2[i];
+
+
+    // ### global values
+
+        } // for input_size
+
+/*        cout << "***" << t << "***" << sumI[ t ] << " sur " << s_sumI << endl;
+        cout << mu( t ) << endl;
+        cout << sigma2( t ) << endl;*/
+
+    } // for target_cardinality
+
+
+
+}
+
+///////////////////////////////////////////
+// computeEmpiricalLearningRateParameters
+///////////////////////////////////////////
+// MUST be called after sumI[] is initialized with proper counts.
+// In the case of empirical learning of mu and sigma, we use a learning rate for mu: mu' = (1-lr) mu + lr r.
+// This learning rate should depend on word's frequency (to compensate for the rate of evolution of 'r' with 
+// respect to the frequency of occurence of the word.
+// Here, we compute the slr so that the first example of the train set will have a weight in the sum
+// that is el_start_discount_factor% of the weight the last example has (in a pass over the data).
+void NnlmOutputLayer::computeEmpiricalLearningRateParameters()
+{
+    // *** Start learning rate *** 
+    // (1-slr)^n = el_start_discount_factor -> slr = 1 - (el_start_discount_factor)^{1/n}
+    el_start_learning_rate.resize(target_cardinality);
+    el_start_learning_rate.fill(1.0);
+    for(int i=0; i<target_cardinality; i++) {
+        el_start_learning_rate[i] -= pow( el_start_discount_factor, 1.0/sumI[i] );
+    }
+
+    // *** Decrease constant *** 
+    el_decrease_constant.resize(target_cardinality);
+    el_decrease_constant.fill(0.0);
+
+    // *** To memorize the step of the last update to the word ***
+    el_last_update.resize(target_cardinality);
+    el_last_update.fill(s_sumI);
 
 }
 
@@ -355,41 +494,22 @@ void NnlmOutputLayer::setCost(int the_cost)
     cost = the_cost;
 }
 
-////////////////////////////////
-// makeDeepCopyFromShallowCopy
-////////////////////////////////
-void NnlmOutputLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+////////////
+// setLearning 
+////////////
+// 
+void NnlmOutputLayer::setLearning(int the_learning)
 {
-    inherited::makeDeepCopyFromShallowCopy(copies);
+#ifdef BOUNDCHECK
+    if( the_learning > 1 || the_learning < 0 )  {
+        PLERROR("NnlmOutputLayer::setLearning:'the_learning'(=%i) > '1' or < '0'\n"
+                  , the_learning);
+    }
+#endif
 
-    deepCopyField(pi, copies);
-    deepCopyField(mu, copies);
-    deepCopyField(sigma2, copies);
-
-    deepCopyField(sumI, copies);
-    deepCopyField(sumR, copies);
-    deepCopyField(sumR2, copies);
-
-    deepCopyField(test_sumR, copies);
-    deepCopyField(test_sumR2, copies);
-
-//    deepCopyField(its_input, copies);
-    deepCopyField(nd_gradient, copies);
-    deepCopyField(ad_gradient, copies);
-    deepCopyField(fd_gradient, copies);
-
-    deepCopyField(gradient_log_tmp, copies);
-    deepCopyField(gradient_log_tmp_pos, copies);
-    deepCopyField(gradient_log_tmp_neg, copies);
-
-    deepCopyField(vec_log_p_rg_t, copies);
-    deepCopyField(vec_log_p_r_t, copies);
-    deepCopyField(vec_log_p_rt, copies);
-
-    deepCopyField(beta, copies);
-    //deepCopyField(gamma, copies);
-
+    learning = the_learning;
 }
+
 
 //////////
 // fprop
@@ -405,6 +525,13 @@ void NnlmOutputLayer::fprop(const Vec& input, Vec& output) const
 {
 
     the_real_target = target;
+
+
+    // *** In the case of empirical (max likelihood) learning of mu and sigma ***
+    // we can update mu and sigma before computing the cost and backpropagating.
+    if( (learning==LEARNING_EMPIRICAL) && is_learning )  {
+        applyMuAndSigmaEmpiricalUpdate(input);
+    }
 
     // *** Non-discriminant cost: -log( p(r,t) ) ***
     if( cost == COST_NON_DISCR ) {
@@ -775,59 +902,6 @@ void NnlmOutputLayer::addCandidateContribution( int c ) const
 {
 }*/
 
-//////////////////
-// resetTestVars
-//////////////////
-void NnlmOutputLayer::resetTestVars() {
-
-    // *TEST*
-    test_sumR.fill( 0.0 );
-    test_sumR2.fill( 0.0 );
-
-}
-
-///////////////////
-// updateTestVars
-///////////////////
-void NnlmOutputLayer::updateTestVars(const Vec& input)
-{
-    // * Update counts
-    for(int i=0; i<input_size; i++) {
-      test_sumR( target, i ) += input[i];
-      test_sumR2( target, i ) += input[i]*input[i];
-    }
-}
-
-//////////////////
-// applyTestVars
-//////////////////
-void NnlmOutputLayer::applyTestVars()
-{
-    if( sumI[ target ] == 0 )  {
-        PLERROR("NnlmOutputLayer::applyTestVars - sumI[ %i ] == 0\n", target);
-    }
-
-    for(int i=0; i<input_size; i++) {
-
-        mu( target, i ) = test_sumR( target, i ) / (real) sumI[ target ];
-
-        // TODO diviser par (n-1) au lieu de n
-        sigma2( target, i ) = mu(target, i) * mu(target, i) + 
-                ( test_sumR2(target, i) - 2.0 * mu(target, i) * test_sumR(target, i)  ) / sumI[ target ];
-
-        if(sigma2( target, i )<sigma2min) {
-            cout << "NnlmOutputLayer::applyTestVars() -> sigma2( target, i )<sigma2min!"<<endl;
-            sigma2( target, i ) = sigma2min;
-        }
-
-    }
-/*
-    cout << "***" << target << "***" << sumI[ target ] << " sur " << s_sumI << endl;
-    cout << mu( target ) << endl;
-    cout << sigma2( target ) << endl;
-*/
-
-}
 
 
 //! this version allows to obtain the input gradient as well
@@ -855,7 +929,6 @@ void NnlmOutputLayer::bpropUpdate(const Vec& input, const Vec& output,
                 " be equal to 'output_size' (%i != %i)\n",
                 og_size, output_size);
     }
-
 
     // *** Compute input_gradient ***
     // *** Compute input_gradient ***
@@ -896,60 +969,93 @@ void NnlmOutputLayer::bpropUpdate(const Vec& input, const Vec& output,
         applyMuGradient();
         applySigmaGradient();
     }
-
-
     // *** Empirical learning of mu and sigma ***
     // *** Empirical learning of mu and sigma ***
 
-    else if( learning == LEARNING_EMPIRICAL )  {
+    //if( learning == LEARNING_EMPIRICAL )  {
+    //    applyMuAndSigmaEmpirical();
+    //}
 
-        // mu(i) -> moyenne empirique des x quand y=i
-        // sigma2(i) -> variance empirique des x quand y=i
 
-        // TODO I tend to think this update should be done before computing the cost, in the fprop,
-        // since this non discriminant learning procedure does not require computation of the cost
+}
 
-        // TODO is this any good? If so, at least change variable names
-        el_dr = el_start_discount_rate + step_number * el_decrease_constant;
+///////////////////////////////////
+// applyMuAndSigmaEmpiricalUpdate
+///////////////////////////////////
+// TODO I tend to think this update should be done before computing the cost, in the fprop,
+// since this non discriminant learning procedure does not require computation of the cost
+// Each word is seen a different number of times in the train set
+void NnlmOutputLayer::applyMuAndSigmaEmpiricalUpdate(const Vec& input) const
+{
+    // *** Update counts *** 
+    for(int i=0; i<input_size; i++) {
+        s_sumI++;
+        sumI[ target ]++;
+        sumR( target, i ) += input[i];
+        sumR2( target, i ) += input[i]*input[i];
 
-        // * Update parameters - using discount
-        // discount * ancien + (1-discount) * nouveau
-        for(int i=0; i<input_size; i++) {
-            // ###
-            //mu( target, i ) = sumR( target, i ) / sumI[ target ];
-            mu( target, i ) = el_dr * mu( target, i ) + (1.0 - el_dr) * input[i];
+        // ### for a global_sigma2
+        global_sumR[i] += input[i];
+        global_sumR2[i] += input[i]*input[i];
+        // ### for a global_sigma2
 
-            // ### hum... 
-            // sigma2( target, i ) = (  mu(target, i) * mu(target, i) + ( sumR2(target, i) -2.0 * mu(target, i) * sumR(target, i) ) / 
-            //                        sumI[ target ] );
-            sigma2( target, i ) = el_dr * (  mu(target, i) * mu(target, i) + ( sumR2(target, i) -2.0 * mu(target, i) * sumR(target, i)        ) / sumI[ target ] )
-                + (1.0-el_dr) * input[i]*input[i];
-
-            // Enforce minimal sigma
-            if(sigma2( target, i )<sigma2min) {
-                sigma2( target, i ) = sigma2min;
-            }
-
-            if( isnan( sigma2( target, i ) ) ) {
-              PLERROR( "NnlmOutputLayer::bpropUpdate - isnan( sigma2( target, i ) )!\n" );
-            }
-        }
-
-        // * Update counts
-        for(int i=0; i<input_size; i++) {
-          sumR( target, i ) += input[i];
-          sumR2( target, i ) += input[i]*input[i];
-        }
-
-        // Update uniform mixture coefficient
-        //sum_log_p_g_r = logadd( sum_log_p_g_r, log_p_g_r );
-        //umc = safeexp( sum_log_p_g_r ) / s_sumI;
     }
 
-    else  {
-        PLERROR( "NnlmOutputLayer::bpropUpdate - invalid 'learning' value.\n");
+    // *** Intermediate values ***
+    int n_ex_since_last_update = s_sumI - (int)el_last_update[target];
+    Vec old_mu;
+    old_mu << mu(target);
+    el_last_update[target] = sumI[ target ];
+
+
+    // *** Compute learning rate ***
+    //real el_lr = el_start_learning_rate[target] / ( 1.0 + sumI[target] * el_decrease_constant[target] );
+    //cout << "el_lr " << el_lr << endl;
+
+    // *** Update mu ***
+    for(int i=0; i<input_size; i++) {
+        mu( target, i ) = sumR( target, i ) / sumI[ target ];
+        //mu( target, i ) = (1.0-el_lr) * mu( target, i ) + el_lr * input[i];
+
+        // ### for a global_sigma2
+        global_mu[i] = global_sumR[i] / (real) s_sumI;
     }
 
+    // *** Update sigma ***
+    for(int i=0; i<input_size; i++) {
+
+        // ### for a global_sigma2
+        // Diviser par (n-1) au lieu de n
+        global_sigma2[i] = ( (real) s_sumI * global_mu[i] * global_mu[i] + 
+                  global_sumR2[i] - 2.0 * global_mu[i] * global_sumR[i]  ) / (s_sumI - 1);
+
+/*        sigma2( target, i ) = (sumI[target]*mu(target, i)*mu(target, i) + sumR2(target,i) -2.0 * mu(target, i) * sumR(target, i) ) / 
+                                (sumI[target]-1);
+*/
+          sigma2( target, i ) = global_sigma2[i];
+
+
+      // ### for a global_sigma2
+
+
+        // Add reguralizer to compensate for the frequency at which the word is seen
+        // TODO
+        // old_mu
+
+        // Enforce minimal sigma
+        if(sigma2( target, i )<sigma2min) {
+            cout << "<sigma2min!" << endl;
+            sigma2( target, i ) = sigma2min;
+        }
+
+        if( isnan( sigma2( target, i ) ) ) {
+          PLERROR( "NnlmOutputLayer::applyMuAndSigmaEmpiricalUpdate - isnan( sigma2( target, i ) )!\n" );
+        }
+    }
+
+    // Update uniform mixture coefficient
+    //sum_log_p_g_r = logadd( sum_log_p_g_r, log_p_g_r );
+    //umc = safeexp( sum_log_p_g_r ) / s_sumI;
 }
 
 ////////////////////

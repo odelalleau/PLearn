@@ -1,5 +1,4 @@
 // -*- C++ -*-
-
 // NnlmOutputLayer.h
 //
 // Copyright (C) 2006 Pierre-Antoine Manzagol
@@ -47,7 +46,7 @@
 namespace PLearn {
 
 /**
- * Implements an output layer for the Neural Network Language Model. 
+ * Implements a gaussian-based output layer for the Neural Network Language Model. 
  *
  * Given 'r' the output of the previous layer (the representation of the input),
  * and 't' the target class, this module models p(r|t) as a mixture between a gaussian
@@ -77,20 +76,22 @@ public:
 
     //! specifies the range of the values of 'target'
     int target_cardinality;
+
     //! specifies the range of the values of 'context' (ex: + 'missing' tag)
     int context_cardinality;
 
     //! minimal value \sigma^2 can have
     real sigma2min;
 
-    //! Discriminant learning - dl
+    //! Discriminant learning (of \mu_u and \Sigma_u) - dl
     real dl_start_learning_rate;
     real dl_decrease_constant;
 
-    //! Empirical learning - el
-    //! discounts the gaussians' old parameters in the computation of the new ones
-    real el_start_discount_rate;
-    real el_decrease_constant;
+    //! Empirical learning (of \mu_u and \Sigma_u) - el
+    // how much the first example of this word in the trainset should be worth in the sum
+    // relatively to the last. /mu' = (1-/alpha) /mu + /alpha r
+    // Determine (1-/alpha)^n = el_start_discount_factor
+    real el_start_discount_factor; 
 
 
 public:
@@ -99,52 +100,27 @@ public:
     //! Default constructor
     NnlmOutputLayer();
 
+    //! Resizes variables and sets pretty much everything back to a 'zero' value
+    void resetParameters();
+
+    //! Used for initializing s_sumI, sumI, sumR, sumR2, as well as pi, mu and sigma2
+    //! to the max likelihood values.
+    void resetAllClassVars();
+    void updateClassVars(const int the_target, const Vec& the_input); // for "target"
+    void applyAllClassVars();
+
+    //! Computes the word specific empirical learning rates
+    //! MUST be called after a valid call to applyClassCounts()
+    void computeEmpiricalLearningRateParameters();
+
     //! Sets t, the target
     void setTarget(int the_target) const;
     //! Sets the context. The Candidates set of the approximated discriminant cost is determined from the context
     void setContext(int the_context) const;
     //! Sets the cost used in the fprop()
     void setCost(int the_cost);
+    void setLearning(int the_learning);
 
-    //! Used to evaluate class counts
-    void resetClassCounts();
-    void incrementClassCount(int the_target);
-    void applyClassCounts();  // computes the pi[]
-
-    //! Used for a fresh evaluation of mu and sigma
-    //! Manipulate sumR and sumR2
-    void resetTestVars();
-    void updateTestVars(const Vec& input);
-    void applyTestVars();
-
-    //! Resizes variables and sets pretty much everything back to a 'zero' value
-    void resetParameters();
-
-    //! Computes -log( p(r,t) )
-    void compute_nl_p_rt(const Vec& input, Vec& output) const;
-
-    //! Computes the approximation -log( p(t|r) ) using only some candidates for normalization
-    void compute_approx_nl_p_t_r(const Vec& input, Vec& output) const;
-
-    //! Computes -log( p(t|r) )
-    void compute_nl_p_t_r(const Vec& input, Vec& output) const;
-    void getBestCandidates(const Vec& input, Vec& candidate_tags, Vec& probabilities) const;
-
-		//! Compute gradients of different costs with respect to input
-    void computeNonDiscriminantGradient() const;
-    void computeApproxDiscriminantGradient() const;
-    void computeDiscriminantGradient() const;
-    void addCandidateContribution( int c ) const;
-    
-		//! Compute and apply gradients of different costs with respect to mus
-    void applyMuGradient() const;
-    void applyMuTargetGradient() const;
-    void applyMuCandidateGradient(int c) const;
-
-		//! Compute and apply gradients of different costs with respect to sigmas
-    void applySigmaGradient() const;
-    void applySigmaTargetGradient() const;
-    void applySigmaCandidateGradient(int c) const;
 
     //! Computes 'cost' for the 'target'
     //! given the input, compute the output (possibly resize it  appropriately)
@@ -177,6 +153,44 @@ public:
     //! out-of-sample operation.  THE DEFAULT IMPLEMENTATION PROVIDED IN
     //! THE SUPER-CLASS DOES NOT DO ANYTHING.
     // virtual void finalize();
+
+
+    //! Computes -log( p(r,t) )
+    void compute_nl_p_rt(const Vec& input, Vec& output) const;
+
+    //! Computes the approximation -log( p(t|r) ) using only some candidates for normalization
+    void compute_approx_nl_p_t_r(const Vec& input, Vec& output) const;
+
+    //! Computes -log( p(t|r) )
+    void compute_nl_p_t_r(const Vec& input, Vec& output) const;
+
+    //! returns best candidates according to compute_nl_p_t_r
+    void getBestCandidates(const Vec& input, Vec& candidate_tags, Vec& probabilities) const;
+
+    //! Gradients with respect to input
+    //{
+        void computeNonDiscriminantGradient() const;
+        void computeApproxDiscriminantGradient() const;
+        void computeDiscriminantGradient() const;
+        void addCandidateContribution( int c ) const;
+    //}
+
+
+    //! mu and sigma updates
+    //{
+        //! empirical
+        void applyMuAndSigmaEmpiricalUpdate(const Vec& input) const;
+
+        //! Compute and apply gradients of different costs with respect to mus
+        void applyMuGradient() const;
+        void applyMuTargetGradient() const;
+        void applyMuCandidateGradient(int c) const;
+
+        //! Compute and apply gradients of different costs with respect to sigmas
+        void applySigmaGradient() const;
+        void applySigmaTargetGradient() const;
+        void applySigmaCandidateGradient(int c) const;
+    //}
 
 
     //#####  PLearn::Object Protocol  #########################################
@@ -229,16 +243,19 @@ public:
     Mat mu;
     Mat sigma2;
 
+    Vec global_mu;
+    Vec global_sigma2;
+
     //! EMPIRICAL LEARNING
     //! Intermediaries
-    int s_sumI;  // sum_t 1
+    mutable int s_sumI;  // sum_t 1
     TVec<int> sumI;     // sumI(i) -> sum_t 1_{c==i}
 
     Mat sumR;     // sumR(i) -> sum_t r_t 1_{c==i}
     Mat sumR2;    // sumR2(i) -> sum_t r_t^2 1_{c==i}
 
-    Mat test_sumR;
-    Mat test_sumR2;
+    Vec global_sumR;
+    Vec global_sumR2;
 
     // TODO THIS COULD BE A LEARNT OPTION
     //! Holds candidates
@@ -297,6 +314,10 @@ public:
     mutable Vec gradient_log_tmp_pos;
     mutable Vec gradient_log_tmp_neg;
 
+    Vec el_start_learning_rate;
+    Vec el_decrease_constant;
+    Vec el_last_update;
+
     //! The original way of computing the mus and sigmas (ex. mu memorize \sum r
     //! and then divide) had the effect learning slowed down with time.
     //! We use this discount rate now.
@@ -304,6 +325,8 @@ public:
     //! gaussian_learning_discount_rate
     mutable real el_dr;
     mutable real dl_lr;
+
+    bool is_learning;
 
 };
 
