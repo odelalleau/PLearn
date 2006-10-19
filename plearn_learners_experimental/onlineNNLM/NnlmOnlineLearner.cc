@@ -71,7 +71,7 @@ class wordAndFreq {
 public:
   wordAndFreq(int wt, int f) : wordtag(wt), frequency(f){};
   int wordtag;
-  double frequency;
+  int frequency;
 };
 bool wordAndFreqGT(const wordAndFreq &a, const wordAndFreq &b) 
 {
@@ -83,24 +83,26 @@ bool wordAndFreqGT(const wordAndFreq &a, const wordAndFreq &b)
 ////////////////////////
 NnlmOnlineLearner::NnlmOnlineLearner()
     :   PLearner(),
-        word_representation_size( 50 ),
-        semantic_layer_size( 200 ),
-        wrl_slr( 0.1 ),
+        str_input_model( "wrl" ),
+        str_output_model( "gaussian" ),
+        word_representation_size( 30 ),
+        semantic_layer_size( 100 ),
+        wrl_slr( 0.001 ),
         wrl_dc( 0.0 ),
         wrl_wd_l1( 0.0 ),
         wrl_wd_l2( 0.0 ),
-        sl_slr( 0.1 ),
+        sl_slr( 0.001 ),
         sl_dc( 0.0 ),
         sl_wd_l1( 0.0 ),
         sl_wd_l2( 0.0 ),
         str_gaussian_model_train_cost( "approx_discriminant" ),
         str_gaussian_model_learning( "non_discriminant" ),
         gaussian_model_sigma2_min(0.000001),
-        gaussian_model_dl_slr(0.0001),
+        gaussian_model_dl_slr(0.001),
         shared_candidates_size( 0 ),
         ngram_candidates_size( 50 ),
         self_candidates_size( 0 ),
-        sm_slr( 0.1 ),
+        sm_slr( 0.001 ),
         sm_dc( 0.0 ),
         sm_wd_l1( 0.0 ),
         sm_wd_l2( 0.0 ),
@@ -190,7 +192,7 @@ void NnlmOnlineLearner::declareOptions(OptionList& ol)
     declareOption(ol, "str_gaussian_model_train_cost",
                   &NnlmOnlineLearner::str_gaussian_model_train_cost,
                   OptionBase::buildoption,
-                  "In case of a gaussian output module, specifies the cost used for training: 'approx_discriminant' (default - evaluates p(i|r) from p(r|i), using some candidates for normalization) or 'non_discriminant' (uses p(r|i)).");
+                  "In case of a gaussian output module, specifies the cost used for training (i a word, r a semantic layer representation) : 'discriminant' (computes p(i|r) exactly, with full computation of normalizer), 'approx_discriminant' (default - uses some candidate words for normalization) or 'non_discriminant' (uses p(r|i)).");
 
     declareOption(ol, "str_gaussian_model_learning",
                   &NnlmOnlineLearner::str_gaussian_model_learning,
@@ -207,16 +209,21 @@ void NnlmOnlineLearner::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "In case of a gaussian output module with discriminant learning, this specifies the starting learning rate.");
 
+    declareOption(ol, "gaussian_model_dl_dc",
+                  &NnlmOnlineLearner::gaussian_model_dl_dc,
+                  OptionBase::buildoption,
+                  "In case of a gaussian output module with discriminant learning, this specifies the decrease constant.");
+
     // - Candidate set sizes
     declareOption(ol, "shared_candidates_size",
                   &NnlmOnlineLearner::shared_candidates_size,
                   OptionBase::buildoption,
-                  "Number of candidates drawn from frequent words in aproximated discriminant cost evaluation.");
+                  "Number of candidates drawn from frequent words in aproximate discriminant cost evaluation.");
 
     declareOption(ol, "ngram_candidates_size",
                   &NnlmOnlineLearner::ngram_candidates_size,
                   OptionBase::buildoption,
-                  "Number of candidates drawn from the context (bigram) in aproximated discriminant cost evaluation.");
+                  "Number of candidates drawn from the context (using bigram) in aproximated discriminant cost evaluation.");
 
     declareOption(ol, "self_candidates_size",
                   &NnlmOnlineLearner::self_candidates_size,
@@ -308,8 +315,8 @@ void NnlmOnlineLearner::build_()
     real sm_wd_l2;*/
 
 
-    // *** Model related ***
-    // *** Model related ***
+    // *** Determine Model ***
+    // *** Determine Model  ***
 
     // * Model type *
     string mt = lowerstring( str_output_model );
@@ -355,7 +362,7 @@ void NnlmOnlineLearner::build_()
     vocabulary_size = (train_set->getDictionary(0))->size()+2;
 
     if( verbosity > 0 ) {
-        cout << "vocabulary_size " << vocabulary_size << endl;
+        cout << "\tvocabulary_size = " << vocabulary_size << endl;
     }
 
     // Ensure MINIMAL dictionary coherence, ie size, with ngram set
@@ -373,7 +380,7 @@ void NnlmOnlineLearner::build_()
     context_size = inputsize()-1;
 
     if( verbosity > 0 ) {
-        cout << "context_size " << context_size << endl;
+        cout << "\tcontext_size = " << context_size << endl;
     }
 
 
@@ -381,51 +388,11 @@ void NnlmOnlineLearner::build_()
     // *** Build modules and output_module ***
     buildLayers();
 
-
-    // *** Build candidates ***
-    // *** Build candidates ***
-    if( model_type == MODEL_TYPE_GAUSSIAN )  {
-
-        buildCandidates();
-
-        PP<NnlmOutputLayer> p_nol;
-        if( !(p_nol = dynamic_cast<NnlmOutputLayer*>( (OnlineLearningModule*) output_modules[0] ) ) )
-        {
-            PLERROR("NnlmOnlineLearner::build_() - MODEL_TYPE_GAUSSIAN but output_modules[0] is not an NnlmOutputLayer");
-        }
-
-        // TODO clean this
-        // point to the same place
-        p_nol->shared_candidates = shared_candidates;
-        p_nol->candidates = candidates;
-
-        // TODO Set learning method - discriminant or non-discriminant
-
-        // Set Cost 
-        if( gaussian_model_cost == GAUSSIAN_COST_APPROX_DISCR ) {
-            p_nol->setCost(GAUSSIAN_COST_APPROX_DISCR);
-        } else if( gaussian_model_cost == GAUSSIAN_COST_NON_DISCR ) {
-            p_nol->setCost(GAUSSIAN_COST_NON_DISCR);
-        } else { //GAUSSIAN_COST_DISCR
-            p_nol->setCost(GAUSSIAN_COST_DISCR);
-        }
-
-        evaluateGaussianCounts();
-
-        // Not here, because forget will be called after and it resets mus and sigmas
-        // Initialize mus and sigmas using 1 pass
-        //reevaluateGaussianParameters();
-
-
-        // ### Should only be evaluated once
-        //p_nol->sumI << p_nol->test_sumI;
-        //p_nol->s_sumI = p_nol->test_s_sumI;
-
-    }
-
     cout << "NnlmOnlineLearner::build_() - DONE!" << endl;
 }
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////
 // buildLayers
@@ -433,7 +400,8 @@ void NnlmOnlineLearner::build_()
 void NnlmOnlineLearner::buildLayers()
 {
 
-    // Do we have to build the layers, or did we load them?
+    // *** Do we have to build the layers, or did we load them? ***
+
     if( nmodules <= 0 ) {
 
         //------------------------------------------
@@ -442,8 +410,7 @@ void NnlmOnlineLearner::buildLayers()
         nmodules = 3;
         modules.resize( nmodules );
 
-
-
+        // *** First layer ***
         string ilm = lowerstring( str_input_model );
         if( ilm == "wrl" || ilm == "" )  {
             // *** Word representation layer ***
@@ -620,6 +587,55 @@ void NnlmOnlineLearner::buildLayers()
         gradients[i+1].resize( size );
     }
 
+    // *** Gaussian Model ***
+    // *** Gaussian Model ***
+
+    if( model_type == MODEL_TYPE_GAUSSIAN )  {
+
+        // * Build candidates
+        if( gaussian_model_cost == GAUSSIAN_COST_APPROX_DISCR )  {
+            buildCandidates();
+        }
+
+        // * Set 
+        PP<NnlmOutputLayer> p_nol;
+        if( !(p_nol = dynamic_cast<NnlmOutputLayer*>( (OnlineLearningModule*) output_modules[0] ) ) )
+        {
+            PLERROR("NnlmOnlineLearner::build_() - MODEL_TYPE_GAUSSIAN but output_modules[0] is not an NnlmOutputLayer");
+        }
+
+        // TODO clean this
+        // point to the same place
+        p_nol->shared_candidates = shared_candidates;
+        p_nol->candidates = candidates;
+
+        // TODO Set learning method - discriminant or non-discriminant
+        p_nol->setLearning(gaussian_model_learning);
+
+        // Set Cost 
+        if( gaussian_model_cost == GAUSSIAN_COST_APPROX_DISCR ) {
+            p_nol->setCost(GAUSSIAN_COST_APPROX_DISCR);
+        } else if( gaussian_model_cost == GAUSSIAN_COST_NON_DISCR ) {
+            p_nol->setCost(GAUSSIAN_COST_NON_DISCR);
+        } else { //GAUSSIAN_COST_DISCR
+            p_nol->setCost(GAUSSIAN_COST_DISCR);
+        }
+
+        //evaluateGaussianCounts();
+        //reevaluateGaussianParameters();
+        // * 
+
+        // Not here, because forget will be called after and it resets mus and sigmas
+        // Initialize mus and sigmas using 1 pass
+        //reevaluateGaussianParameters();
+
+
+        // ### Should only be evaluated once
+        //p_nol->sumI << p_nol->test_sumI;
+        //p_nol->s_sumI = p_nol->test_s_sumI;
+
+    }
+
 
 }
 
@@ -789,7 +805,7 @@ if( itr_vec->wordtag > vocabulary_size -1 )
 ////////////////////////////////
 // evaluateGaussianCounts
 ////////////////////////////////
-void NnlmOnlineLearner::evaluateGaussianCounts() const
+/*void NnlmOnlineLearner::evaluateGaussianCounts() const
 {
 
     if( model_type != MODEL_TYPE_GAUSSIAN )  {
@@ -824,8 +840,10 @@ void NnlmOnlineLearner::evaluateGaussianCounts() const
     // * Apply values 
     p_nol->applyClassCounts();
 
-}
 
+
+}
+*/
 ////////////////////////////////
 // reevaluateGaussianParameters
 ////////////////////////////////
@@ -851,7 +869,7 @@ void NnlmOnlineLearner::reevaluateGaussianParameters() const
         PLERROR("NnlmOnlineLearner::reevaluateGaussianParameters() - output_modules[0] is not an NnlmOutputLayer");
     }
 
-    p_nol->resetTestVars();
+    p_nol->resetAllClassVars();
 
     // * Compute stats
     for( int sample=0 ; sample < nsamples ; sample++ )
@@ -861,22 +879,19 @@ void NnlmOnlineLearner::reevaluateGaussianParameters() const
         // * fprop
         computeOutput(input, output);
 
-        p_nol->setTarget( (int) target[0]);
+        //p_nol->setTarget( (int) target[0]);
         //p_nol->setContext( (int) input[ (inputsize()-2) ] );
 
-        p_nol->updateTestVars(output);
+        p_nol->updateClassVars((int) target[0], output);
     }
 
     // * Apply values 
-    // the missing tag does NOT get an output (never is the target)
-    for(int wt=0; wt<vocabulary_size-1; wt++)  {
-        p_nol->setTarget( wt );
-        //p_nol->setContext( (int) input[ (inputsize()-2) ] );
-        p_nol->applyTestVars();
-    }
+    p_nol->applyAllClassVars();
+
 
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////
 // makeDeepCopyFromShallowCopy
@@ -948,7 +963,6 @@ void NnlmOnlineLearner::forget()
     stage = 0;
 }
 
-
 /////////////////
 // myGetExample
 /////////////////
@@ -1001,6 +1015,8 @@ real& weight) const
 
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//jusqu'a a la fin
 
 //////////
 // train
@@ -1022,13 +1038,36 @@ void NnlmOnlineLearner::train()
     // Initialize mus and sigmas using 1 pass
     reevaluateGaussianParameters();
 
+    if(stage==0)  {
+        PP<NnlmOutputLayer> p_nol;
+        if( !(p_nol = dynamic_cast<NnlmOutputLayer*>( (OnlineLearningModule*) output_modules[0] ) ) )
+        {
+            PLERROR("NnlmOnlineLearner::train() - MODEL_TYPE_GAUSSIAN but output_modules[0] is not an NnlmOutputLayer");
+        }
+
+        p_nol->computeEmpiricalLearningRateParameters();
+    }
+
+    if( model_type == MODEL_TYPE_GAUSSIAN )  {
+
+        PP<NnlmOutputLayer> p_nol;
+        if( !(p_nol = dynamic_cast<NnlmOutputLayer*>( (OnlineLearningModule*) output_modules[0] ) ) )
+        {
+            PLERROR("NnlmOnlineLearner::train() - MODEL_TYPE_GAUSSIAN but output_modules[0] is not an NnlmOutputLayer");
+        }
+
+        p_nol->is_learning = true;
+
+    }
+
+
 //---------------
-    PP<GradNNetLayerModule> p_gnn;
+/*    PP<GradNNetLayerModule> p_gnn;
     if( !(p_gnn = dynamic_cast<GradNNetLayerModule*>( (OnlineLearningModule*) modules[1] ) ) )
     {
         PLERROR("NnlmOnlineLearner::train - modules[1] is not a GradNNetLayerModule");
     }
-    p_gnn->printVariance();
+    p_gnn->printVariance();*/
 //---------------
 
     ProgressBar* pb = NULL;
@@ -1044,6 +1083,26 @@ void NnlmOnlineLearner::train()
             cout << "*** Stage " << stage << " ***" << endl;
             //cout << "uniform_mixture_coeff " << output_modules[0]->umc << " " << 1 - output_modules[0]->umc<< endl;
         }
+
+
+
+        if( model_type == MODEL_TYPE_GAUSSIAN )  {
+
+            PP<NnlmOutputLayer> p_nol;
+            if( !(p_nol = dynamic_cast<NnlmOutputLayer*>( (OnlineLearningModule*) output_modules[0] ) ) )
+            {
+                PLERROR("NnlmOnlineLearner::train() - MODEL_TYPE_GAUSSIAN but output_modules[0] is not an NnlmOutputLayer");
+            }
+
+            cout << "global_mu " << p_nol->global_mu << endl;
+            cout << "global_sigma2 " << p_nol->global_sigma2 << endl;
+        }
+
+
+
+
+
+
 
         // * clear stats of previous epoch *
         train_stats->forget();
@@ -1104,8 +1163,23 @@ void NnlmOnlineLearner::train()
 
         train_stats->finalize(); // finalize statistics for this epoch
 
+
+    // Initialize mus and sigmas using 1 pass
+    reevaluateGaussianParameters();
+
+
     }// *** For stages - END
 
+    if( model_type == MODEL_TYPE_GAUSSIAN )  {
+
+        PP<NnlmOutputLayer> p_nol;
+        if( !(p_nol = dynamic_cast<NnlmOutputLayer*>( (OnlineLearningModule*) output_modules[0] ) ) )
+        {
+            PLERROR("NnlmOnlineLearner::train() - MODEL_TYPE_GAUSSIAN but output_modules[0] is not an NnlmOutputLayer");
+        }
+
+        p_nol->is_learning = false;
+    }
 
     if(pb)
         delete pb;
@@ -1145,6 +1219,20 @@ void NnlmOnlineLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
 
     // * TODO Should we do this?
     //reevaluateGaussianParameters();
+
+    if( model_type == MODEL_TYPE_GAUSSIAN )  {
+
+        PP<NnlmOutputLayer> p_nol;
+        if( !(p_nol = dynamic_cast<NnlmOutputLayer*>( (OnlineLearningModule*) output_modules[0] ) ) )
+        {
+            PLERROR("NnlmOnlineLearner::train() - MODEL_TYPE_GAUSSIAN but output_modules[0] is not an NnlmOutputLayer");
+        }
+
+        cout << "global_mu " << p_nol->global_mu << endl;
+        cout << "global_sigma2 " << p_nol->global_sigma2 << endl;
+    }
+
+
 
     ProgressBar* pb = NULL;
     if(report_progress)
