@@ -50,9 +50,9 @@ using namespace std;
 /** NegLogPoissonVariable **/
 
 PLEARN_IMPLEMENT_OBJECT(NegLogPoissonVariable,
-                        "cost =  sum_i {exp(output_i) - output_i * target_i + log(target_i!)}",
-                        "NO HELP");
-
+                        "Negative loglikelihood of the poisson distribution",
+                        "Negative loglikelihood of the poisson distribution\n"
+                        "cost =  sum_i {exp(output_i) - output_i * target_i + log(target_i!)}");
 
 
 NegLogPoissonVariable::NegLogPoissonVariable(Variable* netout, Variable* target)
@@ -93,9 +93,11 @@ void NegLogPoissonVariable::fprop()
     {
         real output = input1->valuedata[i];
         real target = input2->valuedata[i];
-        cost += exp(output) - output * target + pl_gammln(target);
+        cost += exp(output);
+        if(target>0)
+            cost +=  - output * target; // + pl_gammln(target+1);
     }
-    valuedata[0] = -cost;
+    valuedata[0] = cost;
 }
 
 void NegLogPoissonVariable::bprop()
