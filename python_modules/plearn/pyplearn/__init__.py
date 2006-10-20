@@ -260,6 +260,10 @@ class PLearnSnippet:
     def plearn_repr(self, indent_level=0, inner_repr=plearn_repr):
         return self.s
 
+### Alias the two things for now
+RealRange = PLearnSnippet
+
+
 class PyPLearnScript( PyPLearnObject ):
     """Feeded by the PyPLearn driver to PLearn's main.
 
