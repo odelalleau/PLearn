@@ -515,9 +515,12 @@ void NNet::buildCosts(const Var& the_output, const Var& the_target, const Var& h
             costs[k] = margin_perceptron_cost(the_output,the_target,margin);
         else if (cost_funcs[k]=="lift_output")
             costs[k] = lift_output(the_output, the_target);
-        else if (cost_funcs[k]=="neglogpoissonvariable")
-            costs[k] = neglogpoissonvariable(the_output, the_target);
-        
+        else if (cost_funcs[k]=="neglogpoissonvariable") {
+            VarArray the_varray(the_output, the_target);
+            if (weightsize()>0)
+                the_varray.push_back(sampleweight);
+            costs[k] = neglogpoissonvariable(the_varray);
+        }        
         else  // Assume we got a Variable name and its options
         {
             costs[k]= dynamic_cast<Variable*>(newObject(cost_funcs[k]));
