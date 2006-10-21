@@ -43,32 +43,20 @@
 #ifndef NegLogPoissonVariable_INC
 #define NegLogPoissonVariable_INC
 
-#include "BinaryVariable.h"
+#include "NaryVariable.h"
 #include <plearn/math/pl_erf.h>
 
 namespace PLearn {
 using namespace std;
-
  
-//! cost =  sum_i { exp(output_i) - output_i * target_i + log(target_i!) }
-//
-// We can link the notation used above to the usual
-// statistical notation in the following way:
-// lambda = exp(output_i) 
-// where exponentiation ensures a positive value for lambda
-// and k = target_i, the number of observed events
-// Thus, the cost corresponds to the negative log likelihood
-// of the Poisson density
-
-class NegLogPoissonVariable: public BinaryVariable
+class NegLogPoissonVariable: public NaryVariable
 {
-    typedef BinaryVariable inherited;
+    typedef NaryVariable inherited;
 
 public:
     //!  Default constructor for persistence
     NegLogPoissonVariable() {}
-    NegLogPoissonVariable(Variable* netout, Variable* target);
-    NegLogPoissonVariable(Variable* netout, Variable* target, bool scaled_targets_);
+    NegLogPoissonVariable(VarArray& the_varray);
     
     PLEARN_DECLARE_OBJECT(NegLogPoissonVariable);
 
@@ -87,12 +75,15 @@ public:
     
 protected:
     void build_();
+    bool has_weight;
 };
 
 DECLARE_OBJECT_PTR(NegLogPoissonVariable);
 
-inline Var neglogpoissonvariable(Var network_output, Var targets, bool scaled_targets_=false)
-{ return new NegLogPoissonVariable(network_output, targets, scaled_targets_); }
+inline Var neglogpoissonvariable(VarArray& the_varray)
+{
+    return new NegLogPoissonVariable(the_varray);
+}
 
 } // end of namespace PLearn
 

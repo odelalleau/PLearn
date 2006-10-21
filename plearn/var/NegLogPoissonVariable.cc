@@ -45,24 +45,24 @@
 namespace PLearn {
 using namespace std;
 
-
-
 /** NegLogPoissonVariable **/
 
 PLEARN_IMPLEMENT_OBJECT(NegLogPoissonVariable,
                         "Negative loglikelihood of the poisson distribution",
                         "Negative loglikelihood of the poisson distribution\n"
-                        "cost =  sum_i {exp(output_i) - output_i * target_i + log(target_i!)}");
+                        "cost =  sum_i {exp(output_i) - output_i * target_i + log(target_i!)}\n"
+                        "Thus, wrt usual notation, output_i = log(lambda_i)");
 
+// We can link the notation used above to the usual
+// statistical notation in the following way:
+// lambda = exp(output_i) 
+// where exponentiation ensures a positive value for lambda
+// and k = target_i, the number of observed events
+// Thus, the cost corresponds to the negative log likelihood
+// of the Poisson density
 
-NegLogPoissonVariable::NegLogPoissonVariable(Variable* netout, Variable* target)
-    : inherited(netout,target,1,1), scaled_targets(false)
-{
-    build_();
-}
-
-NegLogPoissonVariable::NegLogPoissonVariable(Variable* netout, Variable* target, bool scaled_targets_)
-    : inherited(netout,target,1,1), scaled_targets(scaled_targets_)
+NegLogPoissonVariable::NegLogPoissonVariable(VarArray& the_varray)
+    : inherited(the_varray, 1, 1)
 {
     build_();
 }
@@ -77,11 +77,11 @@ NegLogPoissonVariable::build()
 void
 NegLogPoissonVariable::build_()
 {
-    // input1 and input2 are (respectively) netout and target from constructor
-    if (input1 && input2 && (input1->size() != input2->size()))
+    if (varray[0] && varray[1] && (varray[0]->size() != varray[1]->size()))
         PLERROR("In NegLogPoissonVariable: netout and target must have the same size");
+    if (varray.size()>2 && varray[0] && varray[2] && (varray[0]->size() != varray[2]->size()))
+        PLERROR("In NegLogPoissonVariable: netout and weight must have the same size");
 }
-
 
 void NegLogPoissonVariable::recomputeSize(int& l, int& w) const
 { l=1, w=1; }
@@ -89,13 +89,14 @@ void NegLogPoissonVariable::recomputeSize(int& l, int& w) const
 void NegLogPoissonVariable::fprop()
 {
     real cost = 0.0;
-    for (int i=0; i<input1->size(); i++)
+    for (int i=0; i<varray[0]->size(); i++)
     {
-        real output = input1->valuedata[i];
-        real target = input2->valuedata[i];
-        cost += exp(output);
-        if(target>0)
-            cost +=  - output * target; // + pl_gammln(target+1);
+        real output = varray[0]->valuedata[i];
+        real target = varray[1]->valuedata[i];
+        real weight = 1;
+        if (varray.size()>2)
+            weight = varray[2]->valuedata[i];
+        cost += exp(output) * weight - (output + pl_log(weight) ) * target + pl_gammln(target+1);
     }
     valuedata[0] = cost;
 }
@@ -103,11 +104,14 @@ void NegLogPoissonVariable::fprop()
 void NegLogPoissonVariable::bprop()
 {
     real gr = *gradientdata;
-    for (int i=0; i<input1->size(); i++)
+    for (int i=0; i<varray[0]->size(); i++)
     {
-        real output = input1->valuedata[i];
-        real target = input2->valuedata[i];
-        input1->gradientdata[i] += gr* ( exp(output) - target );
+        real output = varray[0]->valuedata[i];
+        real target = varray[1]->valuedata[i];
+        real weight = 1;
+        if (varray.size()>2)
+            weight = varray[2]->valuedata[i];
+        varray[0]->gradientdata[i] += gr* ( exp(output) * weight - target );
     }
 }
 
