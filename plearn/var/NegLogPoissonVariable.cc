@@ -50,8 +50,11 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(NegLogPoissonVariable,
                         "Negative loglikelihood of the poisson distribution",
                         "Negative loglikelihood of the poisson distribution\n"
-                        "cost =  sum_i {exp(output_i) - output_i * target_i + log(target_i!)}\n"
-                        "Thus, wrt usual notation, output_i = log(lambda_i)");
+                        "cost_i = {exp(output_i) - output_i * target_i + log(target_i!)} / weight_i\n"
+                        "cost   = sum_i weight_i * cost_i\n"
+                        "Thus, wrt usual notation, output_i = log(lambda_i)\n"
+                        "Note that, in order to comply with regular procedures, cost_i\n"
+                        "is divided by weight_i and multiplied back when computing the weighted cost");
 
 // We can link the notation used above to the usual
 // statistical notation in the following way:
@@ -96,7 +99,9 @@ void NegLogPoissonVariable::fprop()
         real weight = 1;
         if (varray.size()>2)
             weight = varray[2]->valuedata[i];
-        cost += exp(output) * weight - (output + pl_log(weight) ) * target + pl_gammln(target+1);
+        real log_fact_target = pl_gammln(target+1);
+//        cost += exp(output) * weight - (output + pl_log(weight) ) * target + log_fact_target;
+        cost += exp(output) - (output + pl_log(weight)) * target / weight + log_fact_target / weight;
     }
     valuedata[0] = cost;
 }
@@ -111,7 +116,8 @@ void NegLogPoissonVariable::bprop()
         real weight = 1;
         if (varray.size()>2)
             weight = varray[2]->valuedata[i];
-        varray[0]->gradientdata[i] += gr* ( exp(output) * weight - target );
+        varray[0]->gradientdata[i] += gr* ( exp(output) - target / weight);
+//        varray[0]->gradientdata[i] += gr* ( exp(output) * weight - target);
     }
 }
 
