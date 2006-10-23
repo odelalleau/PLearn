@@ -966,6 +966,20 @@ PP<Dictionary> VMatrix::getDictionary(int col) const
     return 0;
 }
 
+///////////////
+// getValues //
+///////////////
+void VMatrix::getValues(int row, int col, Vec& values) const 
+{ 
+    values.resize(0);
+}
+
+void VMatrix::getValues(const Vec& input, int col, Vec& values) const 
+{ 
+    values.resize(0);
+}
+
+
 ///////////////////
 // copySizesFrom //
 ///////////////////

@@ -712,10 +712,14 @@ public:
     virtual PP<Dictionary> getDictionary(int col) const;
 
     //! Returns the possible values for a certain field in the VMatrix.
-    virtual void getValues(int row, int col, Vec& values) const { values.resize(0);}
+    //! For example, if "col" corresponds to the target column, this
+    //! function could fill "values" with the class indices of the possible 
+    //! target classes for the example at row "row".
+    //! The default getValues(...) function gives an empty "values"
+    virtual void getValues(int row, int col, Vec& values) const;
 
     //! Gives the possible values of a certain field (column) given the input.
-    virtual void getValues(const Vec& input, int col, Vec& values) const { values.resize(0);}
+    virtual void getValues(const Vec& input, int col, Vec& values) const;
 
     //#####  SFIF Files  ######################################################
     
