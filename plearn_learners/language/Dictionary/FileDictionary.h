@@ -51,7 +51,6 @@ using namespace std;
 /*! This class implements a Dictionary instantiated from a file. 
   Each line of the file should be a symbol to be inserted in the dictionary. 
   Blanks are removed at the beginning and end of every line
-  Even if the OOV_TAG symbol is not present in the vector, it is added automatically.
 */
 
 class FileDictionary: public Dictionary
@@ -89,7 +88,7 @@ public:
       \param file_name file containing the symbols of the dictionary
       \param up_mode update mode
     */
-    FileDictionary(string file_name,bool up_mode=DEFAULT_UPDATE);
+    FileDictionary(string file_name,bool up_mode=NO_UPDATE);
 
     // ******************
     // * Object methods *

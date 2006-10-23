@@ -1441,7 +1441,7 @@ void FeatureSetNNet::initializeParams(bool set_seed)
 
 
     PP<Dictionary> dict = train_set->getDictionary(inputsize_);
-    total_output_size = dict->size() + (dict->oov_not_in_possible_values ? 0 : 1);
+    total_output_size = dict->size();
 
     total_feats_per_token = 0;
     for(int i=0; i<n_feat_sets; i++)

@@ -48,43 +48,72 @@ using namespace std;
   
 Dictionary::Dictionary()
     :
-    //refill_possible_values(true), 
-        update_mode(UPDATE), 
-        oov_not_in_possible_values(false)
+    update_mode(UPDATE), 
+    dont_insert_oov_symbol(false),
+    oov_symbol("<oov>")
 {
 }
 
 PLEARN_IMPLEMENT_OBJECT(Dictionary,
                         "Mapping string->int and int->string",
-                        "A dictionary is a mapping between a string and and index (int).\n"
-                        "Depending on the update mode, the dictionay can include an unknown \n"
-                        "word when asking for its Id with getId();\n"
-                        "if update_mode == UPDATE, add the word and return its Id\n"
-                        "if  update_mode == NO_UPDATE, return -1\n"
-                        "\n"
-                        "Also, when asking for the symbol associated to an Id, no update is possible.\n"
-                        "If the id is not in the dictionary, than the symbol is ""\n"
-                        "\n"                     
-                        "An object from Dictionary is instantiated empty, and then symbols can be added in the\n"
-                        "dictionary by using getId() (with update_mode == UPDATE). Subclasses will normaly \n"
-                        "permit more sophisticated instantiation.\n");
+  "A dictionary is a mapping between a string and an index or ID (int).\n"
+  "Depending on the update mode, the dictionay can include an unknown \n"
+  "word when asking for its ID with getId();\n"
+  "if update_mode == UPDATE, add the word and return its ID\n"
+  "if update_mode == NO_UPDATE, return OOV symbol's ID (see below)\n"
+  "\n"
+  "Also, when asking for the symbol associated to an ID, no update is \n"
+  "possible. If the ID has not been assigned by the dictionary, \n"
+  "then the returned symbol is \"\".\n"
+  "\n"
+  "A Dictionary object is instantiated empty, and then symbols can \n"
+  "be added in the dictionary by using getId() (with update_mode == UPDATE).\n"
+  "By default, IDs are assigned by starting with the ID 0 and incrementing\n"
+  "the assigned IDs as symbols are added in the dictionary. \n"
+  "\n"
+  "Also, a \"out-of-vocabulary\" (OOV) symbol is assigned an ID which \n"
+  "is equal to the number of symbols (other than the OOV symbol) \n"
+  "that are in the dictionary at the current state. By default, \n"
+  "this symbol corresponds to the string \"<oov>\". \n"
+  "\n"
+  "The OOV symbol's ID is returned by the getId(symbol) function if\n"
+  "\"symbol\" is not in the dictionary. Also by default, this OOV token is\n" 
+  "considered as part of the dictionary, but this can be changed\n"
+  "using the dont_insert_oov_symbol option. If dont_insert_oov_token\n"
+  "is true, then the size(), isIn() and getValues() functions\n"
+  "do not consider the oov symbol as part of the dictionary. Note that\n"
+  "getId() will still return the oov symbol's ID for unknown symbols,\n"
+  "and getSymbol() will still return the OOV symbol for its ID.\n"
+);
 
 void Dictionary::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "update_mode", &Dictionary::update_mode, OptionBase::buildoption, "update_mode : 0(no_update)/1(update). Default is update");
-    declareOption(ol, "string_to_int", &Dictionary::string_to_int, OptionBase::learntoption, "string to int mapping");
-    declareOption(ol, "int_to_string", &Dictionary::int_to_string, OptionBase::learntoption, "int to string mapping");
-    declareOption(ol, "oov_tag_id", &Dictionary::oov_tag_id, OptionBase::learntoption, "id of the OOV_TAG");
-    declareOption(ol, "oov_not_in_possible_values", &Dictionary::oov_not_in_possible_values, OptionBase::learntoption, "Indication that \"oov\" should not be part of the possible values");
+    declareOption(ol, "update_mode", &Dictionary::update_mode, 
+                  OptionBase::buildoption, 
+                  "update_mode : 0(no_update)/1(update). Default is update");
+    declareOption(ol, "oov_symbol", &Dictionary::oov_symbol, 
+                  OptionBase::buildoption, 
+                  "String symbol for \"out-of-vocabulary\" token.");
+    declareOption(ol, "string_to_int", &Dictionary::string_to_int, 
+                  OptionBase::learntoption, "string to int mapping");
+    declareOption(ol, "int_to_string", &Dictionary::int_to_string, 
+                  OptionBase::learntoption, "int to string mapping");
+    declareOption(ol, "dont_insert_oov_symbol", 
+                  &Dictionary::dont_insert_oov_symbol, 
+                  OptionBase::buildoption, 
+                  "Indication that the OOV symbol should not be considered"
+                  "as part of the dictionary"); 
+    // For backward compatibility...
+    declareOption(ol, "oov_not_in_possible_values", 
+                  &Dictionary::dont_insert_oov_symbol, 
+                  OptionBase::buildoption,
+                  "Indication that the OOV symbol should not be considered"
+                  "as part of the dictionary"); 
+
     inherited::declareOptions(ol);
 }
 
 void Dictionary::build_(){
-    int last_update_mode = update_mode;
-    update_mode = UPDATE;
-    // the dictionary must contain oov
-    oov_tag_id = getId(OOV_TAG);
-    update_mode = last_update_mode;
 }
 
 // ### Nothing to add here, simply calls build_
@@ -94,8 +123,10 @@ void Dictionary::build()
     build_();
 }
 
-void  Dictionary::setUpdateMode(int up_mode)
+void Dictionary::setUpdateMode(int up_mode)
 {
+    if(up_mode != UPDATE && up_mode != NO_UPDATE)
+        PLERROR("In Dictionary::setUpdateMode(): incompatible update mode %d", up_mode);
     update_mode =up_mode;
 }
 
@@ -103,8 +134,11 @@ int Dictionary::getId(string symbol, TVec<string> options)
 {
     // Gives the id of a symbol in the dictionary
     // If the symbol is not in the dictionary, 
-    // returns index of OOV_TAG if update_mode = NO_UPDATE,
+    // returns index of OOV symbol if update_mode = NO_UPDATE,
     // insert the new word otherwise and return its index
+
+    if(symbol == oov_symbol) return string_to_int.size();
+
     int index;
     if(update_mode== UPDATE)
     {
@@ -113,16 +147,15 @@ int Dictionary::getId(string symbol, TVec<string> options)
             index=int(string_to_int.size());
             string_to_int[symbol] = index;
             int_to_string[index] = symbol;
-            //refill_possible_values = true;
         }
         return string_to_int[symbol];
     }
     else
     {
-        // NO update mode
+        // No update mode
         if(string_to_int.find(symbol) == string_to_int.end()){
-            // word not found, return oov
-            return string_to_int[OOV_TAG];
+            // word not found, return OOV symbol's ID
+            return string_to_int.size();
         }else{
             return string_to_int[symbol];
         }
@@ -132,55 +165,58 @@ int Dictionary::getId(string symbol, TVec<string> options)
 string Dictionary::getSymbol(int id, TVec<string>options)const
 {
     if(int_to_string.find(id) == int_to_string.end())
-        return OOV_TAG;
+    {
+        if(id == ((int)string_to_int.size()))
+            return oov_symbol;
+        else
+            return "";
+    }
     else
         return int_to_string.find(id)->second;
 }
 
 int Dictionary::size(TVec<string> options){
-    if(string_to_int.size() < 1)
-        PLERROR("In Dictionary::size(): string mapping should at least contain the OOV_TAG (did you forget to call build()?)");
-    // By definition, OOV_TAG is not in the Dictionary (but of course
-    // must be in the string mapping...
-    return int(string_to_int.size())-1;
+    if(dont_insert_oov_symbol)
+        return int(string_to_int.size());
+    else
+        return int(string_to_int.size())+1;
 }
 
 void Dictionary::getValues(TVec<string> options, Vec& values)
 { 
-    //if(refill_possible_values || last_oov_not_in_possible_values != oov_not_in_possible_values)
-    //{
-    //    last_oov_not_in_possible_values = oov_not_in_possible_values;
-    //possible_values.resize((int) string_to_int.size() - (oov_not_in_possible_values ? 1 : 0));
-    values.resize((int) string_to_int.size() - (oov_not_in_possible_values ? 1 : 0));
+    values.resize(size());
     int i=0;
-    for(map<string,int>::iterator it = string_to_int.begin(); it != string_to_int.end(); it++)
-        if(!oov_not_in_possible_values || oov_tag_id != it->second)
-            //possible_values[i++] = it->second;
-            values[i++] = it->second;
-    //! This version might be better!
-    //for(map<int,string>::iterator it = int_to_string.begin(); it != int_to_string.end(); it++)
-    //    if(!oov_not_in_possible_values || oov_tag_id != it->first)
-    //        possible_values[i++] = it->first;
-    //refill_possible_values = false;
-    //}
-    //values.resize(possible_values.length());
-    //values << possible_values;
+    for(map<int,string>::iterator it = int_to_string.begin(); it != int_to_string.end(); it++)
+        values[i++] = it->first;
+    if(!dont_insert_oov_symbol)
+        values[i] = i; // OOV symbol's ID
 }
 
 bool Dictionary::isIn(string symbol, TVec<string> options){
+    if(symbol == oov_symbol) return !dont_insert_oov_symbol;
     int last_update_mode = update_mode;
     update_mode = NO_UPDATE;
     int id = getId(symbol,options);
     update_mode = last_update_mode;
-    return id != oov_tag_id;
+    return id != ((int)string_to_int.size());
+}
+
+bool Dictionary::isIn(int id, TVec<string> options) 
+{ 
+    return id < size() && id >= 0;
+}
+
+void Dictionary::clear()
+{
+    string_to_int.clear(); 
+    int_to_string.clear();
 }
 
 void Dictionary::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-    //deepCopyField(string_to_int, copies);
-    //deepCopyField(int_to_string, copies);
-    //deepCopyField(possible_values, copies);
+    deepCopyField(string_to_int, copies);
+    deepCopyField(int_to_string, copies);
 }
 
 } // end of namespace PLearn

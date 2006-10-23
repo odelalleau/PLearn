@@ -59,12 +59,14 @@ PLEARN_IMPLEMENT_OBJECT(FileDictionary,
                         "Dictionary instantiated from a file",
                         "This class simply permits the instantiation of a Dictionary from a file that contains a list of symbols.\n"
                         "Each line of the file should be a symbol to be inserted in the dictionary.\n"
-                        "Blanks are removed at the beginning and end of every line.\n"
-                        "Even if the OOV_TAG symbol is not present in the vector, it is added automatically.\n");
+                        "Blanks are removed at the beginning and end of every line.\n");
 
 void FileDictionary::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "file_name_dict", &FileDictionary::file_name_dict, OptionBase::buildoption, "file name for the dictionary");
+    declareOption(ol, "file_name_dict", 
+                  &FileDictionary::file_name_dict, 
+                  OptionBase::buildoption, 
+                  "File name for the dictionary");
     inherited::declareOptions(ol);
 }
 

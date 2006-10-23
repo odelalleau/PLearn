@@ -58,12 +58,14 @@ VecDictionary::VecDictionary(TVec<string> symbols, bool up_mode)
 PLEARN_IMPLEMENT_OBJECT(VecDictionary,
                         "Dictionary instantiation from a TVec<string>",
                         "This class implements a Dictionary instantiated from a TVec<string>.\n" 
-                        "Each element of the TVec<string> is a symbol to be inserted in the Dictionary.\n"
-                        "Even if the OOV_TAG symbol is not present in the vector, it is added automatically.\n");
+                        "Each element of the TVec<string> is a symbol to be inserted in the Dictionary.\n");
 
 void VecDictionary::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "vector_dict", &VecDictionary::vector_dict, OptionBase::buildoption, "TVec<string> containing the symbols of the dictionary");
+    declareOption(ol, "vector_dict", 
+                  &VecDictionary::vector_dict, 
+                  OptionBase::buildoption, 
+                  "TVec<string> containing the symbols of the dictionary");
     inherited::declareOptions(ol);
 }
 

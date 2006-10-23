@@ -153,8 +153,11 @@ int ConditionalDictionary::size(TVec<string> options){
         return inherited::size();
     else         
     {
-        getValues(options,possible_values);
-        return possible_values.length();
+        string ret = get_option_string(options);
+        if(options_to_symbols.find(ret) != options_to_symbols.end())
+            return options_to_symbols[ret].length();
+        else
+            return inherited::size();
     }
 }
 

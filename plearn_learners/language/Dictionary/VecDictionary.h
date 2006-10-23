@@ -55,7 +55,6 @@ using namespace std;
 
 /*! This class implements a Dictionary instantiated from a TVec<string>. 
   Each element of the TVec<string> is a symbol to be inserted in the Dictionary.
-  Even if the OOV_TAG symbol is not present in the vector, it is added automatically
 */
 
 class VecDictionary: public Dictionary
@@ -93,7 +92,7 @@ public:
       \param symbols vector of the symbols of the dictionary
       \param up_mode update mode
     */
-    VecDictionary(TVec<string> symbols,bool up_mode=DEFAULT_UPDATE);
+    VecDictionary(TVec<string> symbols,bool up_mode=NO_UPDATE);
   
     // ******************
     // * Object methods *

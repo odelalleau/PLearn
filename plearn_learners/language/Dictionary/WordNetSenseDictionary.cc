@@ -43,6 +43,7 @@
 
 #include "WordNetSenseDictionary.h"
 #include <plearn/base/stringutils.h>
+#include <plearn/base/lexical_cast.h>
 
 namespace PLearn {
 using namespace std;
@@ -399,22 +400,25 @@ void WordNetSenseDictionary::getSensesFromWordNet(TVec<string> options)
     if(use_wordnet_hierarchy)
     {
         int n1,n2;
+        string str1,str2;
         for(int i=0; i<ancestors_vec.length(); i++)
         {            
             for(int j=0; j<ancestors_vec[i].length(); j++)
-            {
+            {                
                 if(j != ancestors_vec[i].length()-1)
                 {
-                    n1 = inherited::getId(ancestors_vec[i][j]);
-                    n2 = inherited::getId(ancestors_vec[i][j+1]);
+                    str1 = ancestors_vec[i][j];
+                    str2 = ancestors_vec[i][j+1];
                 }
                 else
                 {
-                    n1 = inherited::getId(ancestors_vec[i].last());
-                    n2 = inherited::getId(WN_ROOT_NODE);
+                    str1 = ancestors_vec[i].last();
+                    str2 = WN_ROOT_NODE;
                 }
-
-                if(n1 == oov_tag_id || n2 == oov_tag_id)
+                n1 = inherited::getId(str1);
+                n2 = inherited::getId(str2);
+                
+                if(!isIn(str1) || !isIn(str2))
                     continue;
                 
                 if(parents.find(n1) == parents.end())
@@ -459,6 +463,43 @@ int WordNetSenseDictionary::getId(string symbol, TVec<string> options)
         else PLERROR("In getId(): symbol_type %s not valid", symbol_type.c_str());
     }
 
+    // Convert WordNet sense number to sense symbol
+    if(options.length() == 2 && pl_isnumber(symbol))
+    {
+        char* cword = cstr(options[0]);
+        int wn_pos = -1;
+        if(strstr(options[1].c_str(),"NN")) wn_pos = NOUN;
+        if(strstr(options[1].c_str(),"VB")) wn_pos = VERB;
+        if(strstr(options[1].c_str(),"JJ")) wn_pos = ADJ;
+        if(strstr(options[1].c_str(),"RB")) wn_pos = ADV;
+        if (wn_pos < 0) 
+            PLERROR("In WordNetSenseDictionary::extractSenses(): %s is an invalid POS", options[1].c_str());
+
+        SynsetPtr ssp = NULL;
+        IndexPtr idx = getindex(cword, wn_pos);
+        ssp = findtheinfo_ds(cword, wn_pos, -HYPERPTR, toint(symbol));
+        
+        if (ssp == NULL) 
+            PLERROR("In WordNetSenseDictionary::extractSenses(): cannot find sense with number %s for word %s of POS %s", symbol.c_str(), options[0].c_str(), options[1].c_str());
+        
+        if(symbol_type == "sense_key")
+        {
+            char *charsk = WNSnsToStr(idx, toint(symbol));
+            symbol = string(charsk);
+            delete charsk;
+        }
+        else if(symbol_type == "synset_key")
+        {
+            symbol = getSynsetKey(ssp);
+        }
+        else PLERROR("In extractSenses(): symbol_type %s not valid", symbol_type.c_str());
+        if(ssp->nextss != NULL)
+            PLERROR("In extractSenses(): more than one possible sense for sense number %s of word %s of POS %s", symbol.c_str(), options[0].c_str(), options[1].c_str());
+        free_syns(ssp);
+        free_index(idx);
+        delete cword;
+    }
+
     ret = inherited::getId(symbol,options);
 
     // call getValues, which fills possible_values and gets the ids for all those senses, to do a compatibility check, if necessary
@@ -488,8 +529,8 @@ void WordNetSenseDictionary::getValues(TVec<string> options, Vec& values)
         return inherited::getValues(options,values);
     else
     {
-        //refill_possible_values = 1;        
-        if(options.length() > 1) PLERROR("In WordNetSenseDictionary::getSensesFromWordNet(): options.length()>1 not supported");
+        //refill_possible_values = 1;
+        //if(options.length() > 1) PLERROR("In WordNetSenseDictionary::getSensesFromWordNet(): options.length()>1 not supported");
         if(possible_values_for_word.find(options[0]) == possible_values_for_word.end())
         {
             getSensesFromWordNet(options);

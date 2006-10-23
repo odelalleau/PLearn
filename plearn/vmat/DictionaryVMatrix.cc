@@ -151,7 +151,7 @@ void DictionaryVMatrix::declareOptions(OptionList& ol)
                   "Symbols that are ignored, i.e. considered as \"<oov>\" a priori when reading\n"
                   "the text files. In NLP, this is usually called a stop word list.\n");
     declareOption(ol, "remove_rows_with_oov", &DictionaryVMatrix::remove_rows_with_oov, OptionBase::buildoption,
-                  "Indication that a row that has a OOV_TAG field should be ignored, i.e. removed\n"
+                  "Indication that a row that has a OOV symbol field should be ignored, i.e. removed\n"
                   "of the VMatrix.\n");
     declareOption(ol, "data", &DictionaryVMatrix::data, OptionBase::learntoption,
                   "Matrix containing the concatenated and encoded text files\n");
@@ -211,16 +211,6 @@ void DictionaryVMatrix::build_()
                     tokens[i] = tokens_vec[i];
             }
 
-            if(symbols_to_ignore.length() != 0)
-                for(int i=0; i<int(tokens.size()); i++)
-                    if(symbols_to_ignore[i].find(tokens[i]) >= 0)
-                        tokens[i] = OOV_TAG;
-
-            row_has_oov = false;
-            for(int i=0; i<int(tokens.size()); i++)
-                if(tokens[i] == OOV_TAG)
-                    row_has_oov = true;
-
             // Set n_attributes
             if(it==0)
             {
@@ -252,6 +242,16 @@ void DictionaryVMatrix::build_()
                 if(option_fields.length()==0) option_fields.resize(n_attributes);
                 frequencies.resize(n_attributes);
             }
+
+            if(symbols_to_ignore.length() != 0)
+                for(int i=0; i<int(tokens.size()); i++)
+                    if(symbols_to_ignore[i].find(tokens[i]) >= 0)
+                        tokens[i] = dictionaries[i]->oov_symbol;
+
+            row_has_oov = false;
+            for(int i=0; i<int(tokens.size()); i++)
+                if(tokens[i] == dictionaries[i]->oov_symbol)
+                    row_has_oov = true;
 
             // Count frequencies...
             for(int j=0; j<n_attributes; j++)
@@ -296,7 +296,7 @@ void DictionaryVMatrix::build_()
             if(symbols_to_ignore.length() != 0)
                 for(int i=0; i<int(tokens.size()); i++)
                     if(symbols_to_ignore[i].find(tokens[i]) >= 0)
-                        tokens[i] = OOV_TAG;
+                        tokens[i] = dictionaries[i]->oov_symbol;
 
             /*
             for(int i=0; i<to_lower_case.size(); i++)
@@ -321,12 +321,12 @@ void DictionaryVMatrix::build_()
                         data(it,j) = dictionaries[j]->getId(tokens[j],options);
                     }
                     else
-                        data(it,j) = dictionaries[j]->getId(OOV_TAG);
+                        data(it,j) = dictionaries[j]->getId(dictionaries[j]->oov_symbol);
                 }
             }
             row_has_oov = false;
             for(int j=0; j<n_attributes; j++)
-                if(data(it,j) == dictionaries[j]->getId(OOV_TAG))
+                if(data(it,j) == dictionaries[j]->getId(dictionaries[j]->oov_symbol))
                     row_has_oov = true;
 
             if(!remove_rows_with_oov || !row_has_oov) it++;

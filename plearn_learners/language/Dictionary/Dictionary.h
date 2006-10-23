@@ -50,26 +50,38 @@
 
 #define NO_UPDATE 0
 #define UPDATE 1
-// Default mode for the dicionary
-#define DEFAULT_UPDATE 0
-
-#define OOV_TAG "<oov>"
 
 namespace PLearn {
 using namespace std;
 
-/*! A dictionary is a mapping between a string and and index (int).
+/*! A dictionary is a mapping between a string and an index or ID (int).
   Depending on the update mode, the dictionay can include an unknown 
-  word when asking for its Id with getId();
-  if update_mode == UPDATE, add the word and return its Id
-  if  update_mode == NO_UPDATE, return -1
+  word when asking for its ID with getId();
+  if update_mode == UPDATE, add the word and return its ID
+  if update_mode == NO_UPDATE, return OOV symbol's ID (see below)
   
-  Also, when asking for the symbol associated to an Id, no update is possible.
-  If the id is not in the dictionary, than the symbol is ""
+  Also, when asking for the symbol associated to an ID, no update is 
+  possible. If the ID has not been assigned by the dictionary, 
+  then the returned symbol is "".
 
-  An object from Dictionary is instantiated empty, and then symbols can be added in the
-  dictionary by using getId() (with update_mode == UPDATE). Subclasses will normaly 
-  permit more sophisticated instantiations.
+  A Dictionary object is instantiated empty, and then symbols can 
+  be added in the dictionary by using getId() (with update_mode == UPDATE).
+  By default, IDs are assigned by starting with the ID 0 and incrementing
+  the assigned IDs as symbols are added in the dictionary. 
+
+  Also, a "out-of-vocabulary" (OOV) symbol is assigned an ID which 
+  is equal to the number of symbols (other than the OOV symbol) 
+  that are in the dictionary at the current state. By default, 
+  this symbol corresponds to the string "<oov>". 
+
+  The OOV symbol's ID is returned by the getId(symbol) function if
+  "symbol" is not in the dictionary. Also by default, this OOV token is 
+  considered as part of the dictionary, but this can be changed
+  using the dont_insert_oov_symbol option. If dont_insert_oov_token
+  is true, then the size(), isIn() and getValues() functions
+  do not consider the oov symbol as part of the dictionary. Note that
+  getId() will still return the oov symbol's ID for unknown symbols,
+  and getSymbol() will still return the OOV symbol for its ID.
 */
 
 class Dictionary: public Object
@@ -88,12 +100,6 @@ protected:
     map<string,int> string_to_int;
     //! int to string mapping
     map<int,string> int_to_string;
-    //! id of OOV_TAG
-    int oov_tag_id;
-    // Indication that the possible_values vector needs to be updated
-    //bool refill_possible_values;
-    // Last value of oov_not_in_possible_values
-    //bool last_oov_not_in_possible_values;
 
 public:
 
@@ -102,8 +108,11 @@ public:
     // ************************
     //! update mode update/no update 
     int update_mode;
-    //! Indication that "oov" should not be part of the possible values
-    bool oov_not_in_possible_values;
+    //! Indication that "oov" should not be considered as part of the
+    //! dictionary
+    bool dont_insert_oov_symbol;
+    //! Symbol for "out-of-vocabulary" token
+    string oov_symbol;
 
     // ****************
     // * Constructors *
@@ -131,9 +140,9 @@ public:
     //! Set update dictionary mode : UPDATE/NO_UPDATE.
     virtual void setUpdateMode(int up_mode);
 
-    //! Gives the id of a symbol in the dictionary
+    //! Gives the ID of a symbol in the dictionary
     //! If the symbol is not in the dictionary, 
-    //! returns the index of oov if update_mode = NO_UPDATE.
+    //! returns the index of oov token if update_mode = NO_UPDATE.
     //! Insert the new word otherwise and return its index
     //! When a symbol is added to the dictionary, the following fields
     //! are updated: string_to_int, int_to_string, values
@@ -145,27 +154,29 @@ public:
     //! Options can be specified ...
     virtual  string getSymbol(int id, TVec<string> options = TVec<string>(0))const;
   
-    //! Get size of the dictionary (number of differents values in the dictionary)
+    //! Get size of the dictionary (number of symbols in the dictionary)
     //! Options can be specified to restrict the number of possible values. 
     virtual int size(TVec<string> options=TVec<string>(0));
 
-    //! Fills a Vec containing every possible id values of the Dictionary
+    //! Fills a Vec containing every possible ID values of the Dictionary
     //! Options can be specified to restrict the number of possible values.
     //! A Vec instead of a TVec<int> is required, for compatibility with
     //! the getValues() function of VMatrix objects.
     virtual void getValues(TVec<string> options, Vec& values);
 
     //! Indicates if a symbol is in the dictionary
-    //! The OOV_TAG, is by definition, out of the dictionary
+    //! The OOV symbol is considered as in the dictionary if 
+    //! dont_insert_oov_symbol is false.
     //! Options can be specified ...
     virtual bool isIn(string symbol, TVec<string> options=TVec<string>(0));
 
     //! Indicates if an id is in the dictionary
-    //! The OOV_TAG id, is by definition, out of the dictionary
+    //! The OOV symbol's ID is considered as in the dictionary if 
+    //! dont_insert_oov_symbol is false.
     //! Options can be specified ...
-    virtual bool isIn(int id, TVec<string> options=TVec<string>(0)) { return getSymbol(id,options) != OOV_TAG;};
+    virtual bool isIn(int id, TVec<string> options=TVec<string>(0));
 
-    virtual void clear(){string_to_int.clear(); int_to_string.clear();};
+    virtual void clear();
 
     // simply calls inherited::build() then build_() 
     virtual void build();

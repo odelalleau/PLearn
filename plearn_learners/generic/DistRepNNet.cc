@@ -383,7 +383,7 @@ Var DistRepNNet::buildSparseAffineTransform(VarArray weights, Var input, TVec<in
         else
         {
             input_is_discrete[j] = true;
-            missing_replace[j] = dictionaries[input_to_dict_index[begin+j]]->getId(OOV_TAG);            
+            missing_replace[j] = dictionaries[input_to_dict_index[begin+j]]->getId(dictionaries[input_to_dict_index[begin+j]]->oov_symbol);            
         }
     }
     if(weights.length()-1 == input->length())
@@ -406,7 +406,7 @@ Var DistRepNNet::buildSparseAffineTransformWeightPenalty(VarArray weights, Var i
         else
         {
             input_is_discrete[j] = true;
-            missing_replace[j] = dictionaries[input_to_dict_index[begin+j]]->getId(OOV_TAG);
+            missing_replace[j] = dictionaries[input_to_dict_index[begin+j]]->getId(dictionaries[input_to_dict_index[begin+j]]->oov_symbol);
         }
     }
     
@@ -1063,7 +1063,7 @@ void DistRepNNet::buildOutputFromInput(int task_index) {
             // network, instead of w1.
             int dim;       
             if(this_nhidden > 0) dim = this_nhidden;
-            else dim = dictionaries[target_dict_index]->size() + (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1);
+            else dim = dictionaries[target_dict_index]->size(); //+ (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1);
             winputsparse.resize(input->length()+1);
             winputsparse[input->length()] = Var(1,dim);
             for(int j=0; j<winputsparse.length()-1; j++)
@@ -1090,7 +1090,9 @@ void DistRepNNet::buildOutputFromInput(int task_index) {
             if(direct_in_to_out)
             {
                 PLERROR("In buildOutputFromInput(): direct_in_to_out option not implemented for sparse input.");
-                direct_wout = Var(dictionaries[target_dict_index]->size() + (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1), dp_input->size(), "direct_wout");
+                direct_wout = Var(dictionaries[target_dict_index]->size()
+                                  //+ (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1)
+                                  , dp_input->size(), "direct_wout");
                 params.append(direct_wout);
             }                           
         }
@@ -1102,9 +1104,13 @@ void DistRepNNet::buildOutputFromInput(int task_index) {
             params.append(w2);
             output = affine_transform(output,w2);
             output = add_transfer_func(output);
-            wout = Var(1 + this_nhidden2, dictionaries[target_dict_index]->size() + (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1), "wout");
+            wout = Var(1 + this_nhidden2, dictionaries[target_dict_index]->size()
+                       //+ (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1)
+                       , "wout");
         }
-        else if(this_nhidden > 0) wout = Var(1 + this_nhidden, dictionaries[target_dict_index]->size() + (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1), "wout");
+        else if(this_nhidden > 0) wout = Var(1 + this_nhidden, dictionaries[target_dict_index]->size()
+                                             //+ (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1)
+                                             , "wout");
 
         if (this_nhidden2>0 && this_nhidden==0)
             PLERROR("DistRepNNet:: can't have nhidden2 (=%d) > 0 while nhidden=0",this_nhidden2);
@@ -1157,7 +1163,7 @@ void DistRepNNet::buildOutputFromInput(int task_index) {
                 // représentations lorsque les dictionnaires sont les mêmes...
                 // Ne pas oublier de partager les poids w1theta et wouttheta
 
-                dp_all_targets = Var(dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1,dist_rep_dim.last(),"dp_all_targets");
+                //dp_all_targets = Var(dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1,dist_rep_dim.last(),"dp_all_targets");
                 // Penser à l'initialisation!!!! Comment faire!!!
                 params.append(dp_all_targets);
                 
@@ -1184,7 +1190,9 @@ void DistRepNNet::buildOutputFromInput(int task_index) {
             }
             else
             {
-                wout = Var(1 + before_output_size, dictionaries[target_dict_index]->size() + (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1), "wout");                
+                wout = Var(1 + before_output_size, dictionaries[target_dict_index]->size()
+                           //+ (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1)
+                           , "wout");                
             }
         }
 
@@ -1198,7 +1206,9 @@ void DistRepNNet::buildOutputFromInput(int task_index) {
             
             if(direct_in_to_out)
             {
-                direct_wout = Var(dictionaries[target_dict_index]->size() + (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1), dp_input->size(), "direct_wout");
+                direct_wout = Var(dictionaries[target_dict_index]->size()
+                                  //+ (dictionaries[target_dict_index]->oov_not_in_possible_values ? 0 : 1)
+                                  , dp_input->size(), "direct_wout");
                 params.append(direct_wout);
             }                           
         }
