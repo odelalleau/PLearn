@@ -62,9 +62,10 @@ LearnerCommand::LearnerCommand():
 
                   "The following forms of the learner command are allowed:\n"
                   "\n"
-                  "learner train <learner_spec.plearn> <trainset.vmat> <trained_learner.psave>\n"
+                  "learner train <learner_spec.plearn> <trainset.vmat> <trained_learner.psave> [no_forget]\n"
                   "  -  Will train the specified learner on the specified trainset and save the resulting trained learner as\n"
-                  "     trained_learner.psave\n"
+                  "     trained_learner.psave. If the optional keyword argument 'no_forget' is provided, then the learner will\n"
+                  "     not be reset by calling forget before training.\n"
                   "\n"
                   "learner test <trained_learner.psave> <testset.vmat> <cost.stats> [<outputs.pmat>] [<costs.pmat>]\n"
                   "  -  Tests the specified learner on the testset. Will produce a cost.stats file (viewable with the plearn stats\n"
@@ -98,7 +99,10 @@ LearnerCommand::LearnerCommand():
 ///////////
 // train //
 ///////////
-void LearnerCommand::train(const string& learner_spec_file, const string& trainset_spec, const string& save_learner_file)
+void LearnerCommand::train(const string& learner_spec_file,
+                           const string& trainset_spec,
+                           const string& save_learner_file,
+                           bool no_forget)
 {
     PP<PLearner> learner;
     string learner_spec = readFileAndMacroProcess(learner_spec_file);
@@ -107,7 +111,7 @@ void LearnerCommand::train(const string& learner_spec_file, const string& trains
     VMat trainset = getDataSet(trainset_spec);
     PP<VecStatsCollector> train_stats = new VecStatsCollector();
     learner->setTrainStatsCollector(train_stats);
-    learner->setTrainingSet(trainset);
+    learner->setTrainingSet(trainset, !no_forget);
     learner->train();
     PLearn::save(save_learner_file, learner);
 }
@@ -323,10 +327,13 @@ void LearnerCommand::run(const vector<string>& args)
     string command = args[0];
     if(command=="train")
     {
-        if (args.size()==4)
-            train(args[1],args[2],args[3]);
+        if (args.size()==4 || args.size() == 5)
+            train(args[1], args[2], args[3],
+                  args.size() == 5 && args[4] == "no_forget");
         else 
-            PLERROR("LearnerCommand::run you must provide 'plearn learner train learner_spec_file trainset_spec save_learner_file'");
+            PLERROR("LearnerCommand::run you must provide 'plearn learner "
+                    "train learner_spec_file trainset_spec save_learner_file "
+                    "[no_forget]'");
     }
     else if(command=="test")    
     {
