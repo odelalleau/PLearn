@@ -3,11 +3,15 @@
 filename = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.pmat"
 
 def buildOptimizer():
-    return pl.ConjGradientOptimizer(nstages     = 1,
-                                    sigma       = 0.1,
-                                    rho         = 0.05,
-                                    slope_ratio = 10,
-                                    verbosity   = 100)
+    return pl.GradientOptimizer(start_learning_rate = 0.01,
+                                decrease_constant   = 1e-4,
+                                verbosity           = 100)
+
+    ## return pl.ConjGradientOptimizer(nstages     = 1,
+    ##                                 sigma       = 0.1,
+    ##                                 rho         = 0.05,
+    ##                                 slope_ratio = 10,
+    ##                                 verbosity   = 100)
 
 def buildNNet():
     return pl.NNet(
@@ -23,9 +27,9 @@ def buildNNet():
         optimizer               = buildOptimizer(),
         batch_size              = 0,      # Batch optimization, put 1 for stochastic
         initialization_method   = "uniform_linear",
-        nstages                 = 101,
+        nstages                 = 501,
         report_progress         = 1,
-        verbosity               = 1)
+        verbosity               = 0)
 
 def buildBestAvg():
     return pl.BestAveragingPLearner(
