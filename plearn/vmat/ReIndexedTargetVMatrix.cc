@@ -42,7 +42,7 @@
 
 
 #include "ReIndexedTargetVMatrix.h"
-#include <plearn_learners/language/Dictionary.h>
+#include <plearn/dict/Dictionary.h>
 
 namespace PLearn {
 using namespace std;

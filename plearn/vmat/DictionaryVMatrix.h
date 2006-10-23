@@ -48,7 +48,7 @@
 
 #include <plearn/base/stringutils.h>
 #include <plearn/vmat/RowBufferedVMatrix.h>
-#include <plearn_learners/language/Dictionary/Dictionary.h>
+#include <plearn/dict/Dictionary.h>
 
 // number of attributes of dictionary specifications
 #define DIC_SPECIFICATION_SIZE 3

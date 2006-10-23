@@ -75,9 +75,9 @@
 /**************
  * Dictionary *
  **************/
-// #include <plearn_learners/language/Dictionary/Dictionary.h>
-// #include <plearn_learners/language/Dictionary/FileDictionary.h>
-// #include <plearn_learners/language/Dictionary/VecDictionary.h>
+// #include <plearn/dict/Dictionary.h>
+// #include <plearn/dict/FileDictionary.h>
+// #include <plearn/dict/VecDictionary.h>
 
 /****************
  * HyperCommand *

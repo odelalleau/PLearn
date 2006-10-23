@@ -73,6 +73,7 @@
 #include <commands/PLearnCommands/AutoRunCommand.h>
 #include <commands/PLearnCommands/DiffCommand.h>
 #include <commands/PLearnCommands/FieldConvertCommand.h>
+#include <commands/PLearnCommands/FillFeatureSetCommand.h>
 #include <commands/PLearnCommands/HelpCommand.h>
 #include <commands/PLearnCommands/JulianDateCommand.h>
 #include <commands/PLearnCommands/KolmogorovSmirnovCommand.h>
@@ -87,11 +88,24 @@
 /**************
  * Dictionary *
  **************/
-#include <plearn_learners/language/Dictionary/Dictionary.h>
-#include <plearn_learners/language/Dictionary/FileDictionary.h>
-#include <plearn_learners/language/Dictionary/VecDictionary.h>
-#include <plearn_learners/language/Dictionary/WordNetSenseDictionary.h>
-#include <plearn_learners/language/Dictionary/ConditionalDictionary.h>
+#include <plearn/dict/Dictionary.h>
+#include <plearn/dict/FileDictionary.h>
+#include <plearn/dict/VecDictionary.h>
+#include <plearn/dict/WordNetSenseDictionary.h>
+#include <plearn/dict/ConditionalDictionary.h>
+
+/**************
+ * FeatureSet *
+ **************/
+
+#include <plearn/feat/FeatureSet.h>
+#include <plearn/feat/ConcatDisjointFeatureSet.h>
+#include <plearn/feat/CachedFeatureSet.h>
+#include <plearn/feat/HashMapFeatureSet.h>
+#include <plearn/feat/WordNetFeatureSet.h>
+#include <plearn/feat/PythonFeatureSet.h>
+#include <plearn/feat/IdentityFeatureSet.h>
+#include <plearn/feat/CachedFeatureSet.h>
 
 /****************
  * HyperCommand *
@@ -102,9 +116,9 @@
 /*************
  * Optimizer *
  *************/
-#include <plearn/opt/AdaptGradientOptimizer.h>
-#include <plearn/opt/ConjGradientOptimizer.h>
-#include <plearn/opt/GradientOptimizer.h>
+//#include <plearn/opt/AdaptGradientOptimizer.h>
+//#include <plearn/opt/ConjGradientOptimizer.h>
+//#include <plearn/opt/GradientOptimizer.h>
 
 /****************
  * OptionOracle *
@@ -120,7 +134,9 @@
 
 // Generic
 #include <plearn_learners/generic/AddCostToLearner.h>
-#include <plearn_learners/generic/DistRepNNet.h>
+//#include <plearn_learners/generic/DistRepNNet.h>
+#include <plearn_learners/generic/FeatureSetNNet.h>
+#include <plearn_learners/classifiers/FeatureSetNaiveBayesClassifier.h>
 
 // Classifier
 #include <plearn_learners/classifiers/ClassifierFromConditionalPDistribution.h>
@@ -153,7 +169,7 @@
 #include <plearn/vmat/StackedSplitter.h>
 #include <plearn/vmat/TrainTestSplitter.h>
 #include <plearn/vmat/TrainValidTestSplitter.h>
-#include <plearn/vmat/ClassSeparationSplitter.h>
+//#include <plearn/vmat/ClassSeparationSplitter.h>
 
 /***********
  * VMatrix *
@@ -163,10 +179,11 @@
 #include <plearn/vmat/BootstrapVMatrix.h>
 #include <plearn/vmat/DictionaryVMatrix.h>
 #include <plearn/vmat/GetInputVMatrix.h>
+#include <plearn/vmat/LemmatizeVMatrix.h>
 #include <plearn/vmat/PLearnerOutputVMatrix.h>
 #include <plearn/vmat/PrecomputedVMatrix.h>
 #include <plearn/vmat/ProcessSymbolicSequenceVMatrix.h>
-#include <plearn/vmat/LemmatizeVMatrix.h>
+#include <plearn/vmat/RandomSamplesFromVMatrix.h>
 #include <plearn/vmat/SortRowsVMatrix.h>
 #endif
 

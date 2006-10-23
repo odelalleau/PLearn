@@ -38,7 +38,7 @@
 
 
 #include "WordNetFeatureSet.h"
-#include <plearn_learners/language/Dictionary/WordNetSenseDictionary.h>
+#include <plearn/dict/WordNetSenseDictionary.h>
 
 namespace PLearn {
 using namespace std;

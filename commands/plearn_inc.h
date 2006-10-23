@@ -92,10 +92,10 @@
 /**************
  * Dictionary *
  **************/
-#include <plearn_learners/language/Dictionary/Dictionary.h>
-#include <plearn_learners/language/Dictionary/FileDictionary.h>
-#include <plearn_learners/language/Dictionary/VecDictionary.h>
-#include <plearn_learners/language/Dictionary/ConditionalDictionary.h>
+#include <plearn/dict/Dictionary.h>
+#include <plearn/dict/FileDictionary.h>
+#include <plearn/dict/VecDictionary.h>
+#include <plearn/dict/ConditionalDictionary.h>
 
 /****************
  * HyperCommand *
@@ -153,7 +153,7 @@
 #include <plearn_learners/generic/AddCostToLearner.h>
 #include <plearn_learners/generic/AddLayersNNet.h>
 #include <plearn_learners/generic/BestAveragingPLearner.h>
-#include <plearn_learners/generic/DistRepNNet.h>
+//#include <plearn_learners/generic/DistRepNNet.h>
 #include <plearn_learners/generic/NNet.h>
 #include <plearn_learners/generic/SelectInputSubsetLearner.h>
 #include <plearn_learners/generic/StackedLearner.h>
@@ -193,6 +193,10 @@
 #include <plearn_learners/nearest_neighbors/BallTreeNearestNeighbors.h>
 #include <plearn_learners/nearest_neighbors/ExhaustiveNearestNeighbors.h>
 #include <plearn_learners/nearest_neighbors/GenericNearestNeighbors.h>
+
+// Experimental
+#include <plearn_learners_experimental/DeepFeatureExtractorNNet.h>
+#include <plearn_learners_experimental/LinearInductiveTransferClassifier.h>
 
 // Online
 #include <plearn_learners/online/BackConvolution2DModule.h>
@@ -234,6 +238,7 @@
  * Splitter *
  ************/
 #include <plearn/vmat/BinSplitter.h>
+#include <plearn/vmat/ClassSeparationSplitter.h>
 #include <plearn/vmat/ConcatSetsSplitter.h>
 #include <plearn/vmat/DBSplitter.h>
 #include <plearn/vmat/ExplicitSplitter.h>
@@ -241,6 +246,7 @@
 #include <plearn/vmat/FractionSplitter.h>
 #include <plearn/vmat/KFoldSplitter.h>
 #include <plearn/vmat/NoSplitSplitter.h>
+#include <plearn/vmat/MultiTaskSeparationSplitter.h>
 #include <plearn/vmat/RepeatSplitter.h>
 #include <plearn/vmat/SourceVMatrixSplitter.h>
 #include <plearn/vmat/StackedSplitter.h>
@@ -263,10 +269,12 @@
  * VMatrix *
  ***********/
 #include <plearn/vmat/AddMissingVMatrix.h>
+#include <plearn/vmat/AppendNeighborsVMatrix.h>
 #include <plearn/vmat/AsciiVMatrix.h>
 #include <plearn/vmat/AutoVMatrix.h>
 #include <plearn/vmat/BootstrapVMatrix.h>
 #include <plearn/vmat/CenteredVMatrix.h>
+#include <plearn/vmat/ClassSubsetVMatrix.h>
 #include <plearn/vmat/CompactVMatrix.h>
 #include <plearn/vmat/CompressedVMatrix.h>
 #include <plearn/vmat/CumVMatrix.h>
@@ -291,6 +299,7 @@
 #include <plearn/vmat/MeanImputationVMatrix.h>
 //#include <plearn/vmat/MixUnlabeledNeighbourVMatrix.h>
 #include <plearn/vmat/MultiInstanceVMatrix.h>
+#include <plearn/vmat/MultiTargetOneHotVMatrix.h>
 #include <plearn/vmat/MultiToUniInstanceSelectRandomVMatrix.h>
 #include <plearn/vmat/OneHotVMatrix.h>
 #include <plearn/vmat/PLearnerOutputVMatrix.h>
@@ -309,6 +318,7 @@
 #include <plearn/vmat/ShuffleColumnsVMatrix.h>
 #include <plearn/vmat/SortRowsVMatrix.h>
 #include <plearn/vmat/SparseVMatrix.h>
+#include <plearn/vmat/SplitWiseValidationVMatrix.h>
 #include <plearn/vmat/SubInputVMatrix.h>
 #include <plearn/vmat/TemporaryDiskVMatrix.h>
 #include <plearn/vmat/TemporaryFileVMatrix.h>
@@ -320,6 +330,7 @@
 #include <plearn/vmat/VariableDeletionVMatrix.h>
 #include <plearn/vmat/ViewSplitterVMatrix.h>
 #include <plearn/vmat/VMatrixFromDistribution.h>
+
 
 /*******************
  * SurfaceTemplate *

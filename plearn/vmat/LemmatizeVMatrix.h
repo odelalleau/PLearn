@@ -45,8 +45,8 @@
 #define LemmatizeVMatrix_INC
 
 #include <plearn/vmat/SourceVMatrix.h>
-#include <plearn_learners/language/Dictionary/Dictionary.h>
-#include <plearn_learners/language/Dictionary/WordNetSenseDictionary.h>
+#include <plearn/dict/Dictionary.h>
+#include <plearn/dict/WordNetSenseDictionary.h>
 
 namespace PLearn {
 

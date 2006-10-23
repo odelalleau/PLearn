@@ -61,7 +61,7 @@
 /**************
  * Dictionary *
  **************/
-//#include <plearn_learners/language/Dictionary/WordNetSenseDictionary.h>
+//#include <plearn/dict/WordNetSenseDictionary.h>
 
 /*********
  * Torch *
