@@ -80,13 +80,13 @@ void RBMMixedConnection::declareOptions(OptionList& ol)
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 
-    redeclareOption(ol, "learning_rate", &RBMMixedConnection::learning_rate,
-                    OptionBase::nosave,
-                    "There is no global learning rate, only sub-blocks'.");
+    redeclareOption(ol, "down_size", &RBMMixedConnection::down_size,
+                    OptionBase::learntoption,
+                    "It is computed from the sizes of the sub-blocks.");
 
-    redeclareOption(ol, "momentum", &RBMMixedConnection::momentum,
-                    OptionBase::nosave,
-                    "There is no global momentum, only sub-blocks'.");
+    redeclareOption(ol, "up_size", &RBMMixedConnection::up_size,
+                    OptionBase::learntoption,
+                    "It is computed from the sizes of the sub-blocks.");
 
     redeclareOption(ol, "initialization_method",
                     &RBMMixedConnection::initialization_method,
@@ -168,6 +168,9 @@ void RBMMixedConnection::build_()
             }
         }
 
+    // for OnlineLearningModule interface
+    input_size = down_size;
+    output_size = up_size;
 }
 
 void RBMMixedConnection::build()

@@ -49,8 +49,9 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(
     TanhModule,
     "Propagates a (possibly scaled) Tanh function",
-    "This class propagates the \'tanh\' function forwards, and its gradient\n"
-    "and diagonal of the Hessian backwards.\n"
+    "The output is ex_scale( in_scale * input ), for each coordinate.\n"
+    "Usually in_scale = ex_scale = 1, but the values in_scale = 2/3 and\n"
+    "ex_scale = 1.7159 are also used.\n"
     );
 
 TanhModule::TanhModule() :
@@ -89,17 +90,17 @@ void TanhModule::bpropUpdate(const Vec& input, const Vec& output,
     // size check
     if( in_size != input_size )
     {
-        PLWARNING("TanhModule::bpropUpdate: 'input.size()' should be equal\n"
-                  " to 'input_size' (%i != %i)\n", in_size, input_size);
+        PLERROR("TanhModule::bpropUpdate: 'input.size()' should be equal\n"
+                " to 'input_size' (%i != %i)\n", in_size, input_size);
     }
     if( out_size != output_size )
     {
-        PLWARNING("TanhModule::bpropUpdate: 'output.size()' should be equal\n"
-                  " to 'output_size' (%i != %i)\n", out_size, output_size);
+        PLERROR("TanhModule::bpropUpdate: 'output.size()' should be equal\n"
+                " to 'output_size' (%i != %i)\n", out_size, output_size);
     }
     if( og_size != output_size )
     {
-        PLWARNING("TanhModule::bpropUpdate: 'output_gradient.size()' should\n"
+        PLERROR("TanhModule::bpropUpdate: 'output_gradient.size()' should\n"
                   " be equal to 'output_size' (%i != %i)\n",
                   og_size, output_size);
     }
@@ -112,7 +113,6 @@ void TanhModule::bpropUpdate(const Vec& input, const Vec& output,
     int in_size = input.size();
     int out_size = output.size();
     int og_size = output_gradient.size();
-    bool is_final_cost = false; // if yes, consider output_gradient=1
 
     // size check
     if( in_size != input_size )
@@ -125,15 +125,7 @@ void TanhModule::bpropUpdate(const Vec& input, const Vec& output,
         PLERROR("TanhModule::bpropUpdate: 'output.size()' should be equal\n"
                 " to 'output_size' (%i != %i)\n", out_size, output_size);
     }
-    if( og_size == 0 )
-    {
-        PLWARNING("TanhModule::bpropUpdate: you are not providing"
-                  " output_gradient.\n"
-                  "Assuming that sum of outputs is the final cost, and"
-                  " output_gradient=1.\n");
-        is_final_cost = true;
-    }
-    else if( og_size != output_size )
+    if( og_size != output_size )
     {
         PLERROR("TanhModule::bpropUpdate: 'output_gradient.size()' should\n"
                 " be equal to 'output_size' (%i != %i)\n",
@@ -144,12 +136,8 @@ void TanhModule::bpropUpdate(const Vec& input, const Vec& output,
     for( int i=0 ; i<input_size ; i++ )
     {
         real output_i = output[i];
-        if( is_final_cost )
-            input_gradient[i] = in_scale *
-                (ex_scale - output_i*output_i/ex_scale);
-        else
-            input_gradient[i] = in_scale *
-                (ex_scale - output_i*output_i/ex_scale)*output_gradient[i];
+        input_gradient[i] = in_scale *
+            (ex_scale - output_i*output_i/ex_scale)*output_gradient[i];
     }
 
 }
@@ -162,9 +150,9 @@ void TanhModule::bbpropUpdate(const Vec& input, const Vec& output,
     int odh_size = output_diag_hessian.size();
     if( odh_size != output_size )
     {
-        PLWARNING("TanhModule::bbpropUpdate : 'output_diag_hessian.size()'\n"
-                  " should be equal to 'output_size' (%i != %i)\n",
-                  odh_size, output_size);
+        PLERROR("TanhModule::bbpropUpdate : 'output_diag_hessian.size()'\n"
+                " should be equal to 'output_size' (%i != %i)\n",
+                odh_size, output_size);
     }
 
     bpropUpdate( input, output, output_gradient );
@@ -179,19 +167,10 @@ void TanhModule::bbpropUpdate(const Vec& input, const Vec& output,
                               const Vec& output_diag_hessian)
 {
     int odh_size = output_diag_hessian.size();
-    bool is_final_cost = false;
 
     // size check
     // others size checks will be done in bpropUpdate()
-    if( odh_size == 0 )
-    {
-        PLWARNING("TanhModule::bbpropUpdate: you are not providing"
-                  " output_gradient.\n"
-                  "Assuming sum of outputs is the final cost, and"
-                  " output_diag_hessian=0.\n");
-        is_final_cost = true;
-    }
-    else if( odh_size != output_size )
+    if( odh_size != output_size )
     {
         PLERROR("TanhModule::bbpropUpdate : 'output_diag_hessian.size()'\n"
                 " should be equal to 'output_size' (%i != %i)\n",
@@ -206,18 +185,14 @@ void TanhModule::bbpropUpdate(const Vec& input, const Vec& output,
     {
         real output_i = output[i];
         real fprime_i = in_scale * (ex_scale-output_i*output_i / ex_scale);
-        if( is_final_cost )
-            input_diag_hessian[i] = -2*in_scale/ex_scale*fprime_i*output_i;
+
+        if( estimate_simpler_diag_hessian )
+            input_diag_hessian[i] =
+                fprime_i*fprime_i*output_diag_hessian[i];
         else
-        {
-            if( estimate_simpler_diag_hessian )
-                input_diag_hessian[i] =
-                    fprime_i*fprime_i*output_diag_hessian[i];
-            else
-                input_diag_hessian[i] =
-                    fprime_i*fprime_i*output_diag_hessian[i]
-                    - 2*in_scale/ex_scale*fprime_i*output_i*output_gradient[i];
-        }
+            input_diag_hessian[i] =
+                fprime_i*fprime_i*output_diag_hessian[i]
+                - 2*in_scale/ex_scale*fprime_i*output_i*output_gradient[i];
     }
 
 }
@@ -242,33 +217,28 @@ void TanhModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void TanhModule::declareOptions(OptionList& ol)
 {
+    declareOption(ol, "in_scale", &TanhModule::in_scale,
+                  OptionBase::buildoption,
+                  "Inner scale");
+
+    declareOption(ol, "ex_scale", &TanhModule::ex_scale,
+                  OptionBase::buildoption,
+                  "External scale");
+
     inherited::declareOptions(ol);
+
+    redeclareOption(ol, "output_size", &TanhModule::output_size,
+                    OptionBase::learntoption,
+                    "output_size = input_size");
+
 }
 
 void TanhModule::build_()
 {
-    if( input_size < 0 && output_size < 0 ) // neither were initialized
-    {
-        PLWARNING("TanhModule::build_: 'input_size' and 'output_size' are <0.\n"
-                  "You should set them to the same positive integer.\n"
-                  "Defaulting to '1' (scalar version).\n");
-        input_size = 1;
-        output_size = 1;
-    }
-    else if( input_size < 0 ) // assume input_size has been forgotten
-    {
-        PLWARNING("TanhModule::build_: 'input_size' is < 0, setting to\n"
-                  " 'output_size' (%i). Please check.\n", input_size);
-        input_size = output_size;
-    }
-    else if( input_size != output_size ) // assume user wanted input_size
-    {
-        PLWARNING("TanhModule::build_: 'output_size' should be equal to\n"
-                  " 'input_size' (%i != %i), setting to 'input_size' (%i)\n"
-                  " Please check, this might not be what you would want.\n",
-                  output_size, input_size, input_size);
-        output_size = input_size;
-    }
+    if( input_size < 0 )
+        PLERROR("TanhModule::build_: 'input_size' (%d) < 0", input_size);
+
+    output_size = input_size;
 }
 
 

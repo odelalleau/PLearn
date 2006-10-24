@@ -176,9 +176,6 @@ void GradNNetLayerModule::bbpropUpdate(const Vec& input, const Vec& output,
                                        const Vec& output_gradient,
                                        const Vec& output_diag_hessian)
 {
-    PLWARNING("GradNNetLayerModule::bbpropUpdate: You're providing\n"
-              "'output_diag_hessian', but it will not be used.\n");
-
     int odh_size = output_diag_hessian.size();
     if( odh_size != output_size )
     {
