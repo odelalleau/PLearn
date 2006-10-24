@@ -105,6 +105,15 @@ void RBMMultinomialLayer::computeExpectation()
     expectation_is_up_to_date = true;
 }
 
+
+void RBMMultinomialLayer::fprop( const Vec& input, Vec& output ) const
+{
+    assert( input.size() == input_size );
+    output.resize( output_size );
+
+    softmaxMinus( input, output );
+}
+
 void RBMMultinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
                                       Vec& input_gradient,
                                       const Vec& output_gradient)

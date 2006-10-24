@@ -112,6 +112,23 @@ void RBMMixedLayer::computeExpectation()
     expectation_is_up_to_date = true;
 }
 
+
+void RBMMixedLayer::fprop( const Vec& input, Vec& output ) const
+{
+    assert( input.size() == input_size );
+    output.resize( output_size );
+
+    for( int i=0 ; i<n_layers ; i++ )
+    {
+        int begin = init_positions[i];
+        int size_i = sub_layers[i]->size;
+
+        sub_layers[i]->fprop( input, tmp );
+        output.subVec( begin, size_i ) << tmp;
+    }
+}
+
+
 void RBMMixedLayer::bpropUpdate( const Vec& input, const Vec& output,
                                  Vec& input_gradient,
                                  const Vec& output_gradient )
@@ -127,14 +144,13 @@ void RBMMixedLayer::bpropUpdate( const Vec& input, const Vec& output,
         int begin = init_positions[i];
         int size_i = sub_layers[i]->size;
 
-        Vec part_input_grad;
         sub_layers[i]->bpropUpdate( input.subVec( begin, size_i ),
                                     output.subVec( begin, size_i ),
-                                    part_input_grad,
+                                    tmp,
                                     output_gradient.subVec( begin, size_i ) );
 
-        // part_input_grad has to be resizeable
-        input_gradient.subVec( begin, size_i ) << part_input_grad;
+        // because tmp is resizeable
+        input_gradient.subVec( begin, size_i ) << tmp;
     }
 }
 

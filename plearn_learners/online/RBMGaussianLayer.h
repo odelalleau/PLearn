@@ -91,6 +91,9 @@ public:
     //! compute the standard deviation
     virtual void computeStdDeviation() ;
 
+    //! forward propagation
+    virtual void fprop( const Vec& input, Vec& output ) const;
+
     //! back-propagates the output gradient to the input
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              Vec& input_gradient, const Vec& output_gradient);

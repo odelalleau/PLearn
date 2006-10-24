@@ -125,6 +125,19 @@ void RBMTruncExpLayer::computeExpectation()
     expectation_is_up_to_date = true;
 }
 
+
+void RBMTruncExpLayer::fprop( const Vec& input, Vec& output ) const
+{
+    assert( input.size() == input_size );
+    output.resize( output_size );
+
+    for( int i=0 ; i<size ; i++ )
+    {
+        real x_i = input[i];
+        output[i] = 1/(1-exp(x_i)) + 1/x_i;
+    }
+}
+
 void RBMTruncExpLayer::bpropUpdate(const Vec& input, const Vec& output,
                                    Vec& input_gradient,
                                    const Vec& output_gradient)

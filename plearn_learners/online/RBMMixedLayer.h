@@ -92,6 +92,9 @@ public:
     //! compute the expectation
     virtual void computeExpectation() ;
 
+    //! forward propagation
+    virtual void fprop( const Vec& input, Vec& output ) const;
+
     //! back-propagates the output gradient to the input
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              Vec& input_gradient, const Vec& output_gradient);
@@ -155,6 +158,7 @@ private:
     //#####  Private Data Members  ############################################
 
     // The rest of the private stuff goes here
+    mutable Vec tmp;
 };
 
 // Declares a few other classes and functions related to this class

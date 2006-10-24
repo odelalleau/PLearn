@@ -107,6 +107,15 @@ void RBMBinomialLayer::computeExpectation()
     expectation_is_up_to_date = true;
 }
 
+void RBMBinomialLayer::fprop( const Vec& input, Vec& output ) const
+{
+    assert( input.size() == input_size );
+    output.resize( output_size );
+
+    for( int i=0 ; i<size ; i++ )
+        output[i] = sigmoid( -input[i] );
+}
+
 void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
                                    Vec& input_gradient,
                                    const Vec& output_gradient)
