@@ -284,18 +284,12 @@ void GradNNetLayerModule::declareOptions(OptionList& ol)
 void GradNNetLayerModule::build_()
 {
     if( input_size < 0 ) // has not been initialized
-    {
-        PLERROR("GradNNetLayerModule::build_: 'input_size' < 0 (%i).\n"
-                "You should set it to a positive integer.\n", input_size);
-    }
-    else if( output_size < 0 ) // default to 1 neuron
-    {
-        PLWARNING("GradNNetLayerModule::build_: 'output_size' is < 0 (%i),\n"
-                  " you should set it to a positive integer (the number of"
-                  " neurons).\n"
-                  " Defaulting to 1.\n", output_size);
-        output_size = 1;
-    }
+        return;
+
+    if( output_size < 0 )
+        PLERROR("GradNNetLayerModule::build_: 'output_size' is < 0 (%i),\n"
+                " you should set it to a positive integer (the number of"
+                " neurons).\n", output_size);
 
     if (init_weights.size()==0 && init_weights_random_scale!=0 && !random_gen)
         random_gen = new PRandom();

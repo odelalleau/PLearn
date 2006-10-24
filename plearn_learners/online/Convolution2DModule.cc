@@ -229,11 +229,12 @@ void Convolution2DModule::build_()
 
     // Build the learntoptions from the buildoptions
     input_images_size = input_images_length * input_images_width;
-    input_size = n_input_images * input_size;
+    input_size = n_input_images * input_images_size;
 
     output_images_length = (input_images_length-kernel_length)/kernel_step1+1;
     output_images_width = (input_images_width - kernel_width)/kernel_step2+1;
     output_images_size = output_images_length * output_images_width;
+    output_size = n_output_images * output_images_size;
 
     kernel_size = kernel_length * kernel_width;
 
@@ -414,7 +415,7 @@ void Convolution2DModule::bpropUpdate(const Vec& input, const Vec& output,
     learning_rate = start_learning_rate / (1+decrease_constant*step_number);
     for( int j=0 ; j<n_output_images ; j++ )
     {
-        for( int i=0 ; i<n_input_images ; j++ )
+        for( int i=0 ; i<n_input_images ; i++ )
             if( connection_matrix(i,j) != 0 )
             {
                 convolve2Dbackprop( input_images[i], kernels(i,j),
@@ -435,6 +436,8 @@ void Convolution2DModule::bpropUpdate(const Vec& input, const Vec& output,
 void Convolution2DModule::forget()
 {
     real scale_factor = 1./(kernel_length*kernel_width);
+
+    kernels.resize( n_input_images, n_output_images );
     for( int i=0 ; i<n_input_images ; i++ )
         for( int j=0 ; j<n_output_images ; j++ )
         {

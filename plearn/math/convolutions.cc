@@ -512,7 +512,7 @@ void convolve2Dbackprop(const Mat& source_image, const Mat& kernel,
                 " equal:\n"
                 "dC_dsource_image.width() (%d)\n",
                 n2s,dC_dsource_image.width());
-    if (dC_dkernel.length()!=n2k)
+    if (dC_dkernel.width()!=n2k)
         PLERROR("convolve2Dbackprop: kernel.width() (%d) should equal:\n"
                 " dC_dkernel.width() (%d)\n",
                 n2k,dC_dkernel.width());
