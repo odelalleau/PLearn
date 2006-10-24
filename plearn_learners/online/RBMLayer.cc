@@ -77,6 +77,13 @@ void RBMLayer::clearStats()
     neg_count = 0;
 }
 
+void RBMLayer::forget()
+{
+    bias.clear();
+    reset();
+    clearStats();
+}
+
 void RBMLayer::declareOptions(OptionList& ol)
 {
     declareOption(ol, "units_types", &RBMLayer::units_types,
@@ -86,10 +93,6 @@ void RBMLayer::declareOptions(OptionList& ol)
                   "  - 'l' if the energy function of this unit is linear\n"
                   "    (binomial or multinomial unit),\n"
                   "  - 'q' if it is quadratic (for a gaussian unit).\n");
-
-    declareOption(ol, "random_gen", &RBMLayer::random_gen,
-                  OptionBase::buildoption,
-                  "Random generator.");
 
     declareOption(ol, "size", &RBMLayer::size,
                   OptionBase::buildoption,
@@ -109,6 +112,14 @@ void RBMLayer::declareOptions(OptionList& ol)
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
+
+    redeclareOption(ol, "input_size", &RBMLayer::input_size,
+                    OptionBase::learntoption,
+                    "input_size = size");
+
+    redeclareOption(ol, "output_size", &RBMLayer::output_size,
+                    OptionBase::learntoption,
+                    "output_size = size");
 }
 
 void RBMLayer::build_()
@@ -116,9 +127,8 @@ void RBMLayer::build_()
     if( size <= 0 )
         return;
 
-    if( !random_gen )
-        random_gen = new PRandom();
-    random_gen->build();
+    input_size = size;
+    output_size = size;
 
     activation.resize( size );
     sample.resize( size );
@@ -141,7 +151,6 @@ void RBMLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(random_gen, copies);
     deepCopyField(activation, copies);
     deepCopyField(sample, copies);
     deepCopyField(expectation, copies);
@@ -177,6 +186,22 @@ void RBMLayer::getAllActivations( PP<RBMConnection> rbmc, int offset )
     activation += bias;
     expectation_is_up_to_date = false;
 }
+
+// unefficient
+void RBMLayer::fprop( const Vec& input, Vec& output ) const
+{
+    // Yes it's ugly, blame the const plague
+    RBMLayer* This = const_cast<RBMLayer*>(this);
+
+    assert( input.size() == This->input_size );
+    output.resize( This->output_size );
+
+    This->activation << input;
+    This->expectation_is_up_to_date = false;
+
+    output << This->expectation;
+}
+
 
 void RBMLayer::accumulatePosStats( const Vec& pos_values )
 {

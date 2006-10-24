@@ -41,22 +41,22 @@
 #define RBMLayer_INC
 
 #include <plearn/base/Object.h>
+#include "OnlineLearningModule.h"
 
 namespace PLearn {
 using namespace std;
 
 // forward declarations
 class RBMConnection;
-class PRandom;
 
 /**
  * Virtual class for a layer in an RBM.
  *
  * @todo: yes
  */
-class RBMLayer: public Object
+class RBMLayer: public OnlineLearningModule
 {
-    typedef Object inherited;
+    typedef OnlineLearningModule inherited;
 
 public:
     //#####  Public Build Options  ############################################
@@ -75,9 +75,6 @@ public:
     //!     multinomial unit),
     //!   - 'q' if it is quadratic (for a gaussian unit)
     string units_types;
-
-    //! Random number generator
-    PP<PRandom> random_gen;
 
     //#####  Learnt Options  ##################################################
 
@@ -130,6 +127,9 @@ public:
     //! compute the expectation
     virtual void computeExpectation() = 0 ;
 
+    //! computes the expectation from the activation
+    virtual void fprop( const Vec& input, Vec& output ) const;
+
     //! back-propagates the output gradient to the input,
     //! and update the bias (and possibly the quadratic term)
     virtual void bpropUpdate(const Vec& input, const Vec& output,
@@ -153,6 +153,9 @@ public:
 
     //! resets the statistics and counts
     virtual void clearStats();
+
+    //! forgets everything
+    virtual void forget();
 
     //! return units_types
     inline string getUnitsTypes()

@@ -185,6 +185,13 @@ void RBMGaussianLayer::clearStats()
     inherited::clearStats();
 }
 
+void RBMGaussianLayer::forget()
+{
+    quad_coeff.fill( 2. );
+
+    inherited::forget();
+}
+
 void RBMGaussianLayer::declareOptions(OptionList& ol)
 {
     declareOption(ol, "min_quad_coeff", &RBMGaussianLayer::min_quad_coeff,
