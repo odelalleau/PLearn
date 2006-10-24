@@ -109,16 +109,18 @@ void PLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void PLearner::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "expdir", &PLearner::expdir, OptionBase::buildoption, 
-                  "Path of the directory associated with this learner, in which\n"
-                  "it should save any file it wishes to create. \n"
-                  "The directory will be created if it does not already exist.\n"
-                  "If expdir is the empty string (the default), then the learner \n"
-                  "should not create *any* file. Note that, anyway, most file creation and \n"
-                  "reporting are handled at the level of the PTester class rather than \n"
-                  "at the learner's. \n");
+    declareOption(
+        ol, "expdir", &PLearner::expdir, OptionBase::buildoption | OptionBase::nosave, 
+        "Path of the directory associated with this learner, in which\n"
+        "it should save any file it wishes to create. \n"
+        "The directory will be created if it does not already exist.\n"
+        "If expdir is the empty string (the default), then the learner \n"
+        "should not create *any* file. Note that, anyway, most file creation and \n"
+        "reporting are handled at the level of the PTester class rather than \n"
+        "at the learner's. \n");
 
-    declareOption(ol, "seed", &PLearner::seed_, OptionBase::buildoption, 
+    declareOption(
+        ol, "seed", &PLearner::seed_, OptionBase::buildoption, 
         "The initial seed for the random number generator used in this\n"
         "learner, for instance for parameter initialization.\n"
         "If -1 is provided, then a 'random' seed is chosen based on time\n"
@@ -128,65 +130,78 @@ void PLearner::declareOptions(OptionList& ol)
         "With a given positive seed, build() and forget() should always\n"
         "initialize the parameters to the same values.");
 
-    declareOption(ol, "stage", &PLearner::stage, OptionBase::learntoption, 
-                  "The current training stage, since last fresh initialization (forget()): \n"
-                  "0 means untrained, n often means after n epochs or optimization steps, etc...\n"
-                  "The true meaning is learner-dependant."
-                  "You should never modify this option directly!"
-                  "It is the role of forget() to bring it back to 0,\n"
-                  "and the role of train() to bring it up to 'nstages'...");
+    declareOption(
+        ol, "stage", &PLearner::stage, OptionBase::learntoption, 
+        "The current training stage, since last fresh initialization (forget()): \n"
+        "0 means untrained, n often means after n epochs or optimization steps, etc...\n"
+        "The true meaning is learner-dependant."
+        "You should never modify this option directly!"
+        "It is the role of forget() to bring it back to 0,\n"
+        "and the role of train() to bring it up to 'nstages'...");
 
-    declareOption(ol, "n_examples", &PLearner::n_examples, OptionBase::learntoption, 
-                  "The number of samples in the training set.\n"
-                  "Obtained from training set with setTrainingSet.");
+    declareOption(
+        ol, "n_examples", &PLearner::n_examples, OptionBase::learntoption, 
+        "The number of samples in the training set.\n"
+        "Obtained from training set with setTrainingSet.");
 
-    declareOption(ol, "inputsize", &PLearner::inputsize_, OptionBase::learntoption, 
-                  "The number of input columns in the data sets."
-                  "Obtained from training set with setTrainingSet.");
+    declareOption(
+        ol, "inputsize", &PLearner::inputsize_, OptionBase::learntoption, 
+        "The number of input columns in the data sets."
+        "Obtained from training set with setTrainingSet.");
 
-    declareOption(ol, "targetsize", &PLearner::targetsize_, OptionBase::learntoption, 
-                  "The number of target columns in the data sets."
-                  "Obtained from training set with setTrainingSet.");
+    declareOption(
+        ol, "targetsize", &PLearner::targetsize_, OptionBase::learntoption, 
+        "The number of target columns in the data sets."
+        "Obtained from training set with setTrainingSet.");
 
-    declareOption(ol, "weightsize", &PLearner::weightsize_, OptionBase::learntoption, 
-                  "The number of cost weight columns in the data sets."
-                  "Obtained from training set with setTrainingSet.");
+    declareOption(
+        ol, "weightsize", &PLearner::weightsize_, OptionBase::learntoption, 
+        "The number of cost weight columns in the data sets."
+        "Obtained from training set with setTrainingSet.");
 
-    declareOption(ol, "forget_when_training_set_changes", &PLearner::forget_when_training_set_changes, OptionBase::buildoption, 
-                  "Whether or not to call the forget() method (re-initialize model as before training) in setTrainingSet when the\n"
-                  "training set changes (e.g. of dimension).");
+    declareOption(
+        ol, "forget_when_training_set_changes",
+        &PLearner::forget_when_training_set_changes, OptionBase::buildoption, 
+        "Whether or not to call the forget() method (re-initialize model \n"
+        "as before training) in setTrainingSet when the\n"
+        "training set changes (e.g. of dimension).");
 
-    declareOption(ol, "nstages", &PLearner::nstages, OptionBase::buildoption, 
-                  "The stage until which train() should train this learner and return.\n"
-                  "The meaning of 'stage' is learner-dependent, but for learners whose \n"
-                  "training is incremental (such as involving incremental optimization), \n"
-                  "it is typically synonym with the number of 'epochs', i.e. the number \n"
-                  "of passages of the optimization process through the whole training set, \n"
-                  "since the last fresh initialisation.");
+    declareOption(
+        ol, "nstages", &PLearner::nstages, OptionBase::buildoption, 
+        "The stage until which train() should train this learner and return.\n"
+        "The meaning of 'stage' is learner-dependent, but for learners whose \n"
+        "training is incremental (such as involving incremental optimization), \n"
+        "it is typically synonym with the number of 'epochs', i.e. the number \n"
+        "of passages of the optimization process through the whole training set, \n"
+        "since the last fresh initialisation.");
 
-    declareOption(ol, "report_progress", &PLearner::report_progress, OptionBase::buildoption, 
-                  "should progress in learning and testing be reported in a ProgressBar.\n");
+    declareOption(
+        ol, "report_progress", &PLearner::report_progress, OptionBase::buildoption, 
+        "should progress in learning and testing be reported in a ProgressBar.\n");
 
-    declareOption(ol, "verbosity", &PLearner::verbosity, OptionBase::buildoption, 
-                  "Level of verbosity. If 0 should not write anything on perr. \n"
-                  "If >0 may write some info on the steps performed along the way.\n"
-                  "The level of details written should depend on this value.");
+    declareOption(
+        ol, "verbosity", &PLearner::verbosity, OptionBase::buildoption, 
+        "Level of verbosity. If 0 should not write anything on perr. \n"
+        "If >0 may write some info on the steps performed along the way.\n"
+        "The level of details written should depend on this value.");
 
-    declareOption(ol, "nservers", &PLearner::nservers, OptionBase::buildoption, 
-                  "Max number of computation servers to use in parallel with the main process.\n"
-                  "If <=0 no parallelization will occur at this level.\n");
+    declareOption(
+        ol, "nservers", &PLearner::nservers, OptionBase::buildoption, 
+        "Max number of computation servers to use in parallel with the main process.\n"
+        "If <=0 no parallelization will occur at this level.\n");
 
-    declareOption(ol, "save_trainingset_prefix", &PLearner::save_trainingset_prefix,
-                  OptionBase::buildoption,
-                  "Whether the training set should be saved upon a call to\n"
-                  "setTrainingSet().  The saved file is put in the learner's expdir\n"
-                  "(assuming there is one) and has the form \"<prefix>_trainset_XXX.pmat\"\n"
-                  "The prefix is what this option specifies.  'XXX' is a unique\n"
-                  "serial number that is globally incremented with each saved\n"
-                  "setTrainingSet.  This option is useful when manipulating very\n"
-                  "complex nested learner structures, and you want to ensure that\n"
-                  "the inner learner is getting the correct results.  (Default="",\n"
-                  "i.e. don't save anything.)\n");
+    declareOption(
+        ol, "save_trainingset_prefix", &PLearner::save_trainingset_prefix,
+        OptionBase::buildoption,
+        "Whether the training set should be saved upon a call to\n"
+        "setTrainingSet().  The saved file is put in the learner's expdir\n"
+        "(assuming there is one) and has the form \"<prefix>_trainset_XXX.pmat\"\n"
+        "The prefix is what this option specifies.  'XXX' is a unique\n"
+        "serial number that is globally incremented with each saved\n"
+        "setTrainingSet.  This option is useful when manipulating very\n"
+        "complex nested learner structures, and you want to ensure that\n"
+        "the inner learner is getting the correct results.  (Default="",\n"
+        "i.e. don't save anything.)\n");
   
     inherited::declareOptions(ol);
 }
