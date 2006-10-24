@@ -57,6 +57,7 @@ class PRandom;
  * measured.
  *
  * @todo Finish this class...
+ * @deprecated Use ../ModulesLearner instead
  *
  */
 class StackedModulesLearner : public PLearner
