@@ -152,7 +152,7 @@ void PDateTime::incHour(int hour_inc)
 ////////////
 void PDateTime::incDay(int day_inc)
 {
-    assert( day_inc >= 0 );
+    PLASSERT( day_inc >= 0 );
     int new_day = int(day) + day_inc;
     int max_day = 31;
     if (month == 2) {
@@ -167,7 +167,7 @@ void PDateTime::incDay(int day_inc)
         return;
     }
     // We need to switch to next month.
-    assert( max_day >= int(day) );
+    PLASSERT( max_day >= int(day) );
     int days_to_next_month = max_day - int(day) + 1;
     month++;
     if (month == 13) {

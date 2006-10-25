@@ -364,7 +364,7 @@ void UniformizeLearner::computeWeightedRankMap(const Vec& v, int nquantiles, map
 ///////////////
 real UniformizeLearner::mapToRank(real val, const map<real,real>& rankmap)
 {
-    assert( !is_missing(val) );
+    PLASSERT( !is_missing(val) );
     real minv = rankmap.begin()->first;
     if(val<=minv)
         return 0;

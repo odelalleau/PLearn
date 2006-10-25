@@ -128,19 +128,19 @@ void RBMConv2DLLParameters::build_()
         return;
     }
 
-    assert( down_image_length > 0 );
-    assert( down_image_width > 0 );
-    assert( down_image_length * down_image_width == down_layer_size );
-    assert( up_image_length > 0 );
-    assert( up_image_width > 0 );
-    assert( up_image_length * up_image_width == up_layer_size );
-    assert( kernel_step1 > 0 );
-    assert( kernel_step2 > 0 );
+    PLASSERT( down_image_length > 0 );
+    PLASSERT( down_image_width > 0 );
+    PLASSERT( down_image_length * down_image_width == down_layer_size );
+    PLASSERT( up_image_length > 0 );
+    PLASSERT( up_image_width > 0 );
+    PLASSERT( up_image_length * up_image_width == up_layer_size );
+    PLASSERT( kernel_step1 > 0 );
+    PLASSERT( kernel_step2 > 0 );
 
     kernel_length = down_image_length - kernel_step1 * (up_image_length-1);
-    assert( kernel_length > 0 );
+    PLASSERT( kernel_length > 0 );
     kernel_width = down_image_width - kernel_step2 * (up_image_width-1);
-    assert( kernel_width > 0 );
+    PLASSERT( kernel_width > 0 );
 
     output_size = 0;
     bool needs_forget = false; // do we need to reinitialize the parameters?
@@ -386,10 +386,10 @@ void RBMConv2DLLParameters::update( const Vec& pos_down_values, // v_0
                                     const Vec& neg_down_values, // v_1
                                     const Vec& neg_up_values )  // h_1
 {
-    assert( pos_up_values.length() == up_layer_size );
-    assert( neg_up_values.length() == up_layer_size );
-    assert( pos_down_values.length() == down_layer_size );
-    assert( neg_down_values.length() == down_layer_size );
+    PLASSERT( pos_up_values.length() == up_layer_size );
+    PLASSERT( neg_up_values.length() == up_layer_size );
+    PLASSERT( pos_down_values.length() == down_layer_size );
+    PLASSERT( neg_down_values.length() == down_layer_size );
 
     /*  for i=0 to up_image_length:
      *   for j=0 to up_image_width:
@@ -553,10 +553,10 @@ void RBMConv2DLLParameters::computeUnitActivations
     ( int start, int length, const Vec& activations ) const
 {
     // Unoptimized way, that computes all the activations and return a subvec
-    assert( activations.length() == length );
+    PLASSERT( activations.length() == length );
     if( going_up )
     {
-        assert( start+length <= up_layer_size );
+        PLASSERT( start+length <= up_layer_size );
         down_image = input_vec.toMat( down_image_length, down_image_width );
 
         // special cases:
@@ -589,7 +589,7 @@ void RBMConv2DLLParameters::computeUnitActivations
     }
     else
     {
-        assert( start+length <= down_layer_size );
+        PLASSERT( start+length <= down_layer_size );
         up_image = input_vec.toMat( up_image_length, up_image_width );
 
         // special cases
@@ -616,9 +616,9 @@ void RBMConv2DLLParameters::bpropUpdate(const Vec& input, const Vec& output,
                                         Vec& input_gradient,
                                         const Vec& output_gradient)
 {
-    assert( input.size() == down_layer_size );
-    assert( output.size() == up_layer_size );
-    assert( output_gradient.size() == up_layer_size );
+    PLASSERT( input.size() == down_layer_size );
+    PLASSERT( output.size() == up_layer_size );
+    PLASSERT( output_gradient.size() == up_layer_size );
     input_gradient.resize( down_layer_size );
 
     down_image = input.toMat( down_image_length, down_image_width );

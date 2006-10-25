@@ -144,7 +144,7 @@ void TorchLearner::computeCostsFromOutputs(const Vec& input, const Vec& output,
 ///////////////////
 void TorchLearner::computeOutput(const Vec& input, Vec& output) const
 {
-    assert( outputsize_ >= 0);
+    PLASSERT( outputsize_ >= 0);
     output.resize(outputsize_);
     inputs->copyFrom(input.data());
     machine->forward(inputs);
@@ -201,8 +201,8 @@ int TorchLearner::outputsize() const
 {
     // Compute and return the size of this learner's output, (which typically
     // may depend on its inputsize(), targetsize() and set options).
-    assert( machine );
-    assert( outputsize_ >= 0 || machine->machine->outputs );
+    PLASSERT( machine );
+    PLASSERT( outputsize_ >= 0 || machine->machine->outputs );
     if (outputsize_ >=0)
         return outputsize_;
     return machine->machine->outputs->frame_size;

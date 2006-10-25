@@ -375,7 +375,7 @@ int WPLS::outputsize() const
 // var  = [ sum(wi*xi*xi) - xbar * xbar * sum(wi) ] / [ sum(wi)  - sum(wi*wi) / sum(wi) ] 
 void computeWeightedInputOutputMeansAndStddev(const VMat& d, Vec& means, Vec& stddev)
 {
-    assert( d->inputsize() >= 0 );
+    PLASSERT( d->inputsize() >= 0 );
     int n = d->length();
     int p = d->inputsize();
     int m = d->targetsize();

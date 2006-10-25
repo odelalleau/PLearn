@@ -223,7 +223,7 @@ int matInvert(Mat& in, Mat& inverse)
 {
     // If the matrix is empty, just do nothing instead of crashing.
     if (in.isEmpty()) {
-        assert( inverse.isEmpty() );
+        PLASSERT( inverse.isEmpty() );
         return 0;
     }
 
@@ -837,7 +837,7 @@ real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_gcv, bool X_is_transpo
     best_s.resize(rank);
     y2.resize(m);
     z2.resize(m);
-    assert( !Xcopy.hasMissing() );
+    PLASSERT( !Xcopy.hasMissing() );
     SVD(Xcopy, U, singular_values, Vt, 'S', 2);
     for (int i=0;i<rank;i++)
         eigen_values[i] = singular_values[i]*singular_values[i];

@@ -126,7 +126,7 @@ void PTimer::build_()
 //////////////
 real PTimer::getTimer(const string& timer_name)
 {
-    assert( name_to_idx.find(timer_name) != name_to_idx.end() );
+    PLASSERT( name_to_idx.find(timer_name) != name_to_idx.end() );
     int timer_id = name_to_idx[timer_name];
     return total_times[timer_id];
 }
@@ -136,7 +136,7 @@ real PTimer::getTimer(const string& timer_name)
 //////////////
 void PTimer::newTimer(const string& timer_name)
 {
-    assert( name_to_idx.find(timer_name) == name_to_idx.end() );
+    PLASSERT( name_to_idx.find(timer_name) == name_to_idx.end() );
     int n_timers = total_times.length();
     name_to_idx[timer_name] = n_timers;
     total_times.append(0);
@@ -158,7 +158,7 @@ void PTimer::resetAllTimers()
 ////////////////
 void PTimer::resetTimer(const string& timer_name)
 {
-    assert( name_to_idx.find(timer_name) != name_to_idx.end() );
+    PLASSERT( name_to_idx.find(timer_name) != name_to_idx.end() );
     int timer_id = name_to_idx[timer_name];
     total_times[timer_id] = 0;
 }
@@ -184,7 +184,7 @@ void PTimer::startTimer(const string& timer_name)
 ///////////////
 void PTimer::stopTimer(const string& timer_name)
 {
-    assert( name_to_idx.find(timer_name) != name_to_idx.end() );
+    PLASSERT( name_to_idx.find(timer_name) != name_to_idx.end() );
     int timer_id = name_to_idx[timer_name];
     clock_t time_clock_t = clock() - start_clock_t[timer_id];
     long time_long = long(time(0)) - start_long[timer_id];

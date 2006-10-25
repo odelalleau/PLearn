@@ -204,7 +204,7 @@ void RBMJointLLParameters::setAsDownInput( const Vec& input ) const
 
 void RBMJointLLParameters::setAsCondInput( const Vec& input ) const
 {
-    assert( input.size() == cond_size );
+    PLASSERT( input.size() == cond_size );
     input_vec = input;
     target_given_cond = true;
     going_up = false;
@@ -224,8 +224,8 @@ void RBMJointLLParameters::computeUnitActivations
 {
     if( target_given_cond )
     {
-        assert( activations.length() == length );
-        assert( start+length <= target_size );
+        PLASSERT( activations.length() == length );
+        PLASSERT( start+length <= target_size );
 
         out_act << up_units_bias;
         Mat V = weights.subMatColumns( target_size, cond_size );
@@ -259,9 +259,9 @@ void RBMJointLLParameters::bpropUpdate(const Vec& input,
                                        Vec& input_gradient,
                                        const Vec& output_gradient)
 {
-    assert( input.size() == cond_size );
-    assert( output.size() == target_size );
-    assert( output_gradient.size() == target_size );
+    PLASSERT( input.size() == cond_size );
+    PLASSERT( output.size() == target_size );
+    PLASSERT( output_gradient.size() == target_size );
     input_gradient.resize( cond_size );
     input_gradient.clear();
 

@@ -150,7 +150,7 @@ void ScoreLayerVariable::bprop()
     // other variables are inputs that do not need be updated.
     int n = simple_mixture ? 1
                            : getNActiveTemplates() + getNInactiveTemplates();
-    assert( n <= length() );
+    PLASSERT( n <= length() );
     real* copy_grad_ptr = final_output->gradientdata;
     real* grad_ptr = gradientdata;
     for (int i = 0; i < n; i++, copy_grad_ptr++, grad_ptr++)
@@ -187,7 +187,7 @@ void ScoreLayerVariable::build_()
     // molecule templates.
     VMat mappings_source_backup = mappings_source;
     setMappingsSource(templates_source);
-    assert( templates_source->targetsize() == 1 );
+    PLASSERT( templates_source->targetsize() == 1 );
 
     // Randomly select active and inactive templates.
     TVec<int> list_of_active, list_of_inactive;
@@ -197,7 +197,7 @@ void ScoreLayerVariable::build_()
     map<string, StatsCollector> chemical_stats;
     for (int i = 0; i < n; i++) {
         templates_source->getExample(i, input, target, weight);
-        assert( fast_exact_is_equal(target[0], 0) ||
+        PLASSERT( fast_exact_is_equal(target[0], 0) ||
                 fast_exact_is_equal(target[0], 1) );
         if (fast_exact_is_equal(target[0], 0))
             list_of_inactive.append(i);
@@ -220,8 +220,8 @@ void ScoreLayerVariable::build_()
         random_gen->shuffleElements(list_of_active);
     if (n_inactive_templates != -1)
         random_gen->shuffleElements(list_of_inactive);
-    assert( list_of_active.length() >= getNActiveTemplates() );
-    assert( list_of_inactive.length() >= getNInactiveTemplates() );
+    PLASSERT( list_of_active.length() >= getNActiveTemplates() );
+    PLASSERT( list_of_inactive.length() >= getNInactiveTemplates() );
     list_of_active.resize(getNActiveTemplates());
     list_of_inactive.resize(getNInactiveTemplates());
     // We do a copy of the list of active molecules instead of just appending
@@ -386,7 +386,7 @@ void ScoreLayerVariable::build_()
             PLERROR("In ScoreLayerVariable::build_ - The simple mixture model "
                     "is not meant to be used with extra input information");
         Var input_var = varray[0];
-        assert( input_var->width() == 1 );
+        PLASSERT( input_var->width() == 1 );
         Var input_minus_molecule_id =
             PLearn::subMat(input_var, 1, 0, input_var->length() - 1, 1);
         outputs.append(input_minus_molecule_id);
@@ -399,8 +399,8 @@ void ScoreLayerVariable::build_()
     // mixture model.
     if (simple_mixture) {
         Var softmax_output = softmax(final_output);
-        assert( list_of_active.length() > 0 );
-        assert( softmax_output->width() == 1 );
+        PLASSERT( list_of_active.length() > 0 );
+        PLASSERT( softmax_output->width() == 1 );
         // Select only active templates (we assume - and verify - here that
         // they they are the first ones).
         if (min(list_of_active) != 0 ||
@@ -439,7 +439,7 @@ void ScoreLayerVariable::fprop()
 {
     // Just need to copy the data from 'final_output'.
     int n = nelems();
-    assert( n == length() );
+    PLASSERT( n == length() );
     real* copy_ptr = final_output->valuedata;
     real* ptr = valuedata;
     for (int i = 0; i < n; i++, ptr++, copy_ptr++)
@@ -451,7 +451,7 @@ void ScoreLayerVariable::fprop()
 /////////////////
 PP<Molecule> ScoreLayerVariable::getMolecule(real molecule_id)
 {
-    assert( mappings_source );
+    PLASSERT( mappings_source );
     PPath molecule_path = mappings_source->getValString(0, molecule_id);
     if (molecule_path.isEmpty())
         PLERROR("In ScoreLayerVariable::getMolecule - Could not find "
@@ -465,7 +465,7 @@ PP<Molecule> ScoreLayerVariable::getMolecule(real molecule_id)
         molecules[canonic_path] = molecule;
     } else
         molecule = molecules[canonic_path];
-    assert( molecule );
+    PLASSERT( molecule );
     return molecule;
 }
 
@@ -475,10 +475,10 @@ PP<Molecule> ScoreLayerVariable::getMolecule(real molecule_id)
 PP<MoleculeTemplate> ScoreLayerVariable::getMoleculeTemplate(real molecule_id,
                                                              real activity)
 {
-    assert( fast_exact_is_equal(activity, 0) ||
+    PLASSERT( fast_exact_is_equal(activity, 0) ||
             fast_exact_is_equal(activity, 1) ||
             fast_exact_is_equal(activity, -1) );
-    assert( mappings_source );
+    PLASSERT( mappings_source );
     PPath molecule_path = mappings_source->getValString(0, molecule_id);
     if (molecule_path.isEmpty())
         PLERROR("In ScoreLayerVariable::getMolecule - Could not find "
@@ -492,7 +492,7 @@ PP<MoleculeTemplate> ScoreLayerVariable::getMoleculeTemplate(real molecule_id,
         molecule_templates[canonic_path] = molecule;
     } else
         molecule = molecule_templates[canonic_path];
-    assert( molecule );
+    PLASSERT( molecule );
     return molecule;
 }
 
@@ -563,8 +563,8 @@ void ScoreLayerVariable::setMappingsSource(const VMat& source_vmat)
 ///////////////////////////
 void ScoreLayerVariable::setScalingCoefficient(int i, real coeff)
 {
-    assert( i << scaling_coeffs.length() );
-    assert( scaling_coeffs[i]->nelems() == 1 );
+    PLASSERT( i << scaling_coeffs.length() );
+    PLASSERT( scaling_coeffs[i]->nelems() == 1 );
     scaling_coeffs[i]->value[0] = coeff;
 }
 

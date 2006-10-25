@@ -140,8 +140,8 @@ void GaussianizeVMatrix::build_()
         return;
 
     if (train_source) {
-        assert( train_source->width() == source->width() );
-        assert( train_source->inputsize()  == source->inputsize() &&
+        PLASSERT( train_source->width() == source->width() );
+        PLASSERT( train_source->inputsize()  == source->inputsize() &&
                 train_source->targetsize() == source->targetsize() &&
                 train_source->weightsize() == source->weightsize() &&
                 train_source->extrasize()  == source->extrasize() );
@@ -149,7 +149,7 @@ void GaussianizeVMatrix::build_()
 
     VMat the_source = train_source ? train_source : source;
 
-    assert( the_source->inputsize() >= 0 && the_source->targetsize() >= 0 &&
+    PLASSERT( the_source->inputsize() >= 0 && the_source->targetsize() >= 0 &&
             the_source->weightsize() >= 0 && the_source->extrasize() >= 0 );
 
     // Find which dimensions to Gaussianize.
@@ -215,7 +215,7 @@ void GaussianizeVMatrix::build_()
 ///////////////
 void GaussianizeVMatrix::getNewRow(int i, const Vec& v) const
 {
-    assert( source );
+    PLASSERT( source );
     source->getRow(i, v);
     for (int k = 0; k < features_to_gaussianize.length(); k++) {
         int j = features_to_gaussianize[k];
@@ -249,14 +249,14 @@ void GaussianizeVMatrix::getNewRow(int i, const Vec& v) const
             if (min == max)
                 interpol = min;
             else {
-                assert( max - min == 1 );
+                PLASSERT( max - min == 1 );
                 interpol = (current_val - values_j[min]) /
                           (values_j[max] - values_j[min]) + min;
-                assert( !is_missing(interpol) );
+                PLASSERT( !is_missing(interpol) );
             }
         }
         interpol /= (values_j.length() - 1);
-        assert( interpol >= 0 && interpol <= 1 );
+        PLASSERT( interpol >= 0 && interpol <= 1 );
         // The expectation of the minimum and maximum of n numbers taken from a
         // uniform(0,1) distribution are respectively 1/n+1 and n/n+1: we shift
         // and rescale 'interpol' to be in [1/n+1, n/n+1] before using the

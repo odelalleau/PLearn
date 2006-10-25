@@ -133,7 +133,7 @@ void PythonProcessedLearner::build_()
 {
     // First step, compile the Python code
     compileAndInject();
-    assert( python );
+    PLASSERT( python );
 
     // Ensure that the required functions are defined
     const char* FUNC_ERR = "%s: the Python code snippet must define the function '%s'";
@@ -160,8 +160,8 @@ void PythonProcessedLearner::setTrainingSet(VMat training_set, bool call_forget)
 {
     inherited::setTrainingSet(training_set, call_forget);
     VMat trset = getTrainingSet();
-    assert( trset  );
-    assert( python );
+    PLASSERT( trset  );
+    PLASSERT( python );
     
     TVec<string> fields = trset->fieldNames();
     int inputsize  = trset->inputsize();
@@ -176,7 +176,7 @@ void PythonProcessedLearner::setTrainingSet(VMat training_set, bool call_forget)
 
 int PythonProcessedLearner::outputsize() const
 {
-    assert( python );
+    PLASSERT( python );
 
     // Reloaded model for which we have not yet established the outputsize
     if (m_outputnames.size() == 0)
@@ -198,7 +198,7 @@ void PythonProcessedLearner::train()
 
 void PythonProcessedLearner::computeOutput(const Vec& input, Vec& output) const
 {
-    assert( python );
+    PLASSERT( python );
     Profiler::start("PythonProcessedLearner");
     Vec processed = python->invoke("computeOutput", input).as<Vec>();
     output << processed;
@@ -278,7 +278,7 @@ void PythonProcessedLearner::compileAndInject()
 {
     if (! python) {
         python = new PythonCodeSnippet(m_code);
-        assert( python );
+        PLASSERT( python );
         python->build();
         python->inject("getParams",    this, &PythonProcessedLearner::getParams);
         python->inject("getParam",     this, &PythonProcessedLearner::getParam);
@@ -291,7 +291,7 @@ void PythonProcessedLearner::compileAndInject()
 
 void PythonProcessedLearner::setOutputNamesFromParams()
 {
-    assert( python );
+    PLASSERT( python );
     map<string,string>::iterator NOT_FOUND = m_params.end();
     if (m_params.find("fieldnames") == NOT_FOUND ||
         m_params.find("inputsize")  == NOT_FOUND ||

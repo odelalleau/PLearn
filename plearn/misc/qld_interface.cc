@@ -69,11 +69,11 @@ void qld_interface(
     int M = A.length();
     int N = A.width();
 
-    assert( M >= 1 && N >= 1 );
-    assert( M == B.length() );
-    assert( N == C.width()  &&  N == C.length() );
-    assert( N == D.length() );
-    assert( N == XL.length() && N == XU.length() );
+    PLASSERT( M >= 1 && N >= 1 );
+    PLASSERT( M == B.length() );
+    PLASSERT( N == C.width()  &&  N == C.length() );
+    PLASSERT( N == D.length() );
+    PLASSERT( N == XL.length() && N == XU.length() );
   
     int MMAX  = max(M,1);
     int NMAX  = N;

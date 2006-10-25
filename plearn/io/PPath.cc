@@ -406,7 +406,7 @@ PPath::PPath(const string& path_)
         // We need to convert the path by ourselves.
         if (!startsWith(*the_path, "/cygdrive/"))
             pout << "SHIT: " << *the_path << endl;
-        assert( startsWith(*the_path, "/cygdrive/") );
+        PLASSERT( startsWith(*the_path, "/cygdrive/") );
         // Remove '/cygdrive'.
         new_path = the_path->substr(9);
         // Copy drive letter from second to first position.
@@ -710,7 +710,7 @@ PPath PPath::absolute(bool add_protocol) const
     // ===> we concatenate the current working directory of the process.
     else
     {
-        assert( _protocol.empty() );
+        PLASSERT( _protocol.empty() );
         abspath = PPath::getcwd() / *this;
     }
 

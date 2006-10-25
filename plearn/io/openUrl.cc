@@ -62,7 +62,7 @@ PStream openUrl(const PPath& url, PStream::mode_t io_formatting)
     // Ask for document.
     size_t path_start = url.find(hostname);
     string path_on_server = url.substr(path_start + hostname.size());
-    assert( !path_on_server.empty() );
+    PLASSERT( !path_on_server.empty() );
     string http_request = "GET " + path_on_server + " HTTP/1.0\n\n";
     MODULE_LOG << "HTTP request to " << hostname << ": " << http_request
                << endl;

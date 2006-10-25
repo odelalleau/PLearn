@@ -127,7 +127,7 @@ void TObject::updateFromPLearn(Torch::Object* ptr) {
         cout << endl;
       }
 #endif
-      assert( torch_objects.find(object) != torch_objects.end() ); // Sanity check.
+      PLASSERT( torch_objects.find(object) != torch_objects.end() ); // Sanity check.
       torch_objects.erase(object);
     }
     object = ptr;
@@ -139,7 +139,7 @@ void TObject::updateFromPLearn(Torch::Object* ptr) {
       }
       cout << endl;
 #endif
-    assert( torch_objects.find(object) == torch_objects.end() ); // Sanity check.
+    PLASSERT( torch_objects.find(object) == torch_objects.end() ); // Sanity check.
     torch_objects[object] = this;
   }
   else if (!object)

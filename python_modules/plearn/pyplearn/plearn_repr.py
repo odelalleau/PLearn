@@ -195,6 +195,7 @@ def format_list_elements( the_list, element_format, indent_level ):
         elems_as_str = " %s " % formatted_list[0]
         
     else:
+        ## Indent by 4 spaces for each indent_level
         token  = ",\n%s" % (" " * 4*indent_level)
         elems_as_str  = token[1:]
         elems_as_str += token.join(formatted_list)

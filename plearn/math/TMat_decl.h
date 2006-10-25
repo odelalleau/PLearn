@@ -325,7 +325,7 @@ public:
             // mod, to ensure the storage is large enough for the new mod.
             int width_backup = width();
             resize(length(), new_mod);
-            assert( mod() == new_mod );
+            PLASSERT( mod() == new_mod );
             width_ = width_backup;
         } else {
             // Note that since new_mod < curent mod, then the storage is
@@ -904,7 +904,7 @@ public:
         }
 
         int n = length();
-        assert( width() == n );
+        PLASSERT( width() == n );
 
         if (exact_check) {
             for (int i = 0; i < n - 1 ; i++)

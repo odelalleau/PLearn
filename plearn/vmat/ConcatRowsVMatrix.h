@@ -175,7 +175,7 @@ inline void ConcatRowsVMatrix::getpositions(int i, int& whichvm, int& rowofvm) c
     // Start by looking if i belongs to the most-recently-used VMat. If so, no
     // need to search for it
     if (i >= m_last_vmat_startrow && i <= m_last_vmat_lastrow) {
-        assert( m_last_vmat_index >= 0 );
+        PLASSERT( m_last_vmat_index >= 0 );
         whichvm = m_last_vmat_index;
         rowofvm = i - m_last_vmat_startrow;
         return;

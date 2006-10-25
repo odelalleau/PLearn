@@ -138,11 +138,11 @@ void UniformizeVMatrix::build_()
     if (!source)
         return;
 
-    assert( max >= min );
+    PLASSERT( max >= min );
 
     if (train_source) {
-        assert( train_source->width() == source->width() );
-        assert( train_source->inputsize()  == source->inputsize() &&
+        PLASSERT( train_source->width() == source->width() );
+        PLASSERT( train_source->inputsize()  == source->inputsize() &&
                 train_source->targetsize() == source->targetsize() &&
                 train_source->weightsize() == source->weightsize() &&
                 train_source->extrasize()  == source->extrasize() );
@@ -150,7 +150,7 @@ void UniformizeVMatrix::build_()
 
     VMat the_source = train_source ? train_source : source;
 
-    assert( the_source->inputsize() >= 0 && the_source->targetsize() >= 0 &&
+    PLASSERT( the_source->inputsize() >= 0 && the_source->targetsize() >= 0 &&
             the_source->weightsize() >= 0 && the_source->extrasize() >= 0 );
 
     // Find which dimensions to uniformize.
@@ -195,7 +195,7 @@ void UniformizeVMatrix::build_()
 ///////////////
 void UniformizeVMatrix::getNewRow(int i, const Vec& v) const
 {
-    assert( uniformize_learner->stage > 0 );
+    PLASSERT( uniformize_learner->stage > 0 );
     uniformized_source->getRow(i, v);
     for (int j = 0; j < features_to_uniformize.length(); j++)
         v[j] = min + (max - min) * v[j];

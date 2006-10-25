@@ -218,7 +218,7 @@ void ShiftAndRescaleVMatrix::declareOptions(OptionList& ol)
 ////////////
 void ShiftAndRescaleVMatrix::build_()
 {
-    assert( n_inputs >= 0 || n_inputs == -1 || n_inputs == -2 );
+    PLASSERT( n_inputs >= 0 || n_inputs == -1 || n_inputs == -2 );
     if( source )
     {
         if (automatic && min_max.isEmpty())
@@ -228,7 +228,7 @@ void ShiftAndRescaleVMatrix::build_()
                 if (n_inputs == -1)
                     n_inputs = source->inputsize();
                 else if (n_inputs == -2) {
-                    assert( source->targetsize() >= 0 );
+                    PLASSERT( source->targetsize() >= 0 );
                     n_inputs = source->inputsize() + source->targetsize();
                 } else
                     PLERROR("In ShiftAndRescaleVMatrix::build_ - Wrong value "

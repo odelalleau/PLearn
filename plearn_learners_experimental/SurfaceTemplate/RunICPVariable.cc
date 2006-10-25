@@ -104,7 +104,7 @@ void RunICPVariable::recomputeSize(int& l, int& w) const
 ///////////
 void RunICPVariable::fprop()
 {
-    assert( score_layer );
+    PLASSERT( score_layer );
     // We obtain the molecule from the input variable.
     PP<Molecule> molecule = score_layer->getMolecule(input->value[0]);
     // Launch all ICPs.
@@ -133,7 +133,7 @@ void RunICPVariable::fprop()
         // Obtain the coordinates of the nearest neighbors in the aligned
         // molecule.
         Mat molecule_coords = molecule_coordinates[i]->matValue;
-        assert( molecule_coords.length() == template_mol->n_points() );
+        PLASSERT( molecule_coords.length() == template_mol->n_points() );
         for (int k = 0; k < template_mol->n_points(); k++) {
             int neighbor = icp->matching[k];
             molecule_coords(k) << molecule->coordinates(neighbor);

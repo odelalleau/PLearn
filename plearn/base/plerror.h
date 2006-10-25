@@ -48,7 +48,7 @@
 #ifndef perror_INC
 #define perror_INC
 
-#include <assert.h>
+#include <string>
 #include "plexceptions.h"
 
 namespace PLearn {
@@ -66,29 +66,33 @@ void warningmsg(const char* msg, ...);
 void deprecationmsg(const char* msg, ...);
 void exitmsg(const char* msg, ...);
 void pl_assert_fail(const char* expr, const char* file, unsigned line,
-                    const char* function, const char* message);
+                    const char* function, const std::string& message);
 
-// Redefine the assert mechanism to throw an exception through PLERROR.  Also
-// define a pl_assert which takes an explanation -- to be refined with ... a la
-// errormsg.
-#if defined(assert) && ! defined(PL_ASSERT_DEFINED)
-#  undef assert
-#endif
+// Redefine the assert mechanism to throw an exception through PLERROR.
+// The following macros are defined:
+//
+// 1) PLASSERT:     same syntax as standard PLASSERT(), but throws exception
+//
+// 2) PLASSERT_MSG: accepts a second argument (std::string) which indicates
+//                  a cause for the assertion failure.  If one needs to
+//                  perform complex formatting on that string (substitute
+//                  variables, etc.), it is recommended to use the Boost
+//                  'format' library.
 
 // When debugging, do nothing (do static cast as in GCC)
 #ifdef  NDEBUG
 
-#  define assert(expr) static_cast<void>(0)
-#  define pl_assert(expr, message) static_cast<void>(0)
+#  define PLASSERT(expr) static_cast<void>(0)
+#  define PLASSERT_MSG(expr, message) static_cast<void>(0)
 
 #else   // ! defined(NDEBUG)
 
-#  define assert(expr)                                                      \
+#  define PLASSERT(expr)                                                    \
    static_cast<void>((expr) ? 0 :                                           \
                      (PLearn::pl_assert_fail(#expr, __FILE__, __LINE__,     \
                                              PL_ASSERT_FUNCTION, ""), 0))               
 
-#  define pl_assert(expr, message)                                          \
+#  define PLASSERT_MSG(expr, message)                                       \
    static_cast<void>((expr) ? 0 :                                           \
                      (PLearn::pl_assert_fail(#expr, __FILE__, __LINE__,     \
                                              PL_ASSERT_FUNCTION, (message)), 0))         

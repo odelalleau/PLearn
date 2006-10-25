@@ -271,8 +271,8 @@ void RBMQLParameters::computeUnitActivations
     //activations[2 * i + 1] = sigma of unit (i - start)
     if( going_up )
     {
-        assert( activations.length() == length );
-        assert( start+length <= up_layer_size );
+        PLASSERT( activations.length() == length );
+        PLASSERT( start+length <= up_layer_size );
 //        product( weights, input_vec , activations) ;
         product( activations , weights, input_vec ) ;
         activations += up_units_bias ; 
@@ -284,7 +284,7 @@ void RBMQLParameters::computeUnitActivations
         //                    / (2 * up_units_params[i][1]^2)
         
         // TODO: change it to work with start and length
-        assert( start+length <= down_layer_size );
+        PLASSERT( start+length <= down_layer_size );
         Mat activations_mat = activations.toMat( activations.length()/2 , 2);
         Mat mu = activations_mat.column(0) ; 
         Mat sigma = activations_mat.column(1) ; 
@@ -306,9 +306,9 @@ void RBMQLParameters::bpropUpdate(const Vec& input, const Vec& output,
                                   Vec& input_gradient,
                                   const Vec& output_gradient)
 {
-    assert( input.size() == down_layer_size );
-    assert( output.size() == up_layer_size );
-    assert( output_gradient.size() == up_layer_size );
+    PLASSERT( input.size() == down_layer_size );
+    PLASSERT( output.size() == up_layer_size );
+    PLASSERT( output_gradient.size() == up_layer_size );
     input_gradient.resize( down_layer_size );
 
     // input_gradient = weights' * output_gradient

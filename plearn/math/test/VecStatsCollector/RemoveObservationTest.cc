@@ -97,7 +97,7 @@ compareStats(int t, const string& stat,
              const VecStatsCollector& batch, const VecStatsCollector& online)
 {
     int len = batch.length();
-    assert(len==online.length());
+    PLASSERT(len==online.length());
     
     Mat batch_stats(1, len, batch.getAllStats(stat));
     Mat online_stats(1, len, online.getAllStats(stat));
@@ -117,7 +117,7 @@ compareCovariance(int t,
                   const VecStatsCollector& batch, const VecStatsCollector& online)
 {
     int len = batch.length();
-    assert(len==online.length());
+    PLASSERT(len==online.length());
     
     batch.getCovariance(m_batch_cov);
     online.getCovariance(m_online_cov);

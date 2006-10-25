@@ -147,8 +147,8 @@ void TMatTest::build_()
 /////////////
 void TMatTest::perform()
 {
-    assert( vec_length > 0 ); // TODO Make it work with vec_length == 0
-    assert( bound > 0 );
+    PLASSERT( vec_length > 0 ); // TODO Make it work with vec_length == 0
+    PLASSERT( bound > 0 );
     Vec vec( vec_length );
     PRandom::common(false)->fill_random_uniform(vec, -bound, bound);
     Mat mat(mat_length, mat_width);

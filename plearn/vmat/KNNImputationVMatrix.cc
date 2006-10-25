@@ -130,9 +130,9 @@ void KNNImputationVMatrix::build_()
     if (!source)
         return;
 
-    assert( full_source );
-    assert( neighbors || full_source->length() == source->length() );
-    assert( full_source->width() == source->width()  );
+    PLASSERT( full_source );
+    PLASSERT( neighbors || full_source->length() == source->length() );
+    PLASSERT( full_source->width() == source->width()  );
 
     VMat candidates;
     if (neighbors)
@@ -230,7 +230,7 @@ void KNNImputationVMatrix::getNewRow(int i, const Vec& v) const
     source->getRow(i, v);
     if (v.hasMissing()) {
         int idx = sample_index_to_imputed_index[i];
-        assert( idx >= 0 );
+        PLASSERT( idx >= 0 );
         v.subVec(0, inputsize_) << imputed_input(idx);
     }
 }

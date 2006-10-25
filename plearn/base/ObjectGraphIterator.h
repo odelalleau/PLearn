@@ -235,7 +235,7 @@ public:
     //! returns a null pointer.
     const Object* operator*() const
     {
-        assert( !invalid() );
+        PLASSERT( !invalid() );
         return m_it->first;
     }
 
@@ -245,7 +245,7 @@ public:
     //! constructed with the option compute_optnames set to 'false'.
     const string& getCurrentOptionName() const
     {
-        assert( !invalid() );
+        PLASSERT( !invalid() );
         return m_it->second;
     }
     

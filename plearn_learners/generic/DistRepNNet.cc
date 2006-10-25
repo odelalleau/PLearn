@@ -1495,7 +1495,7 @@ void DistRepNNet::forget()
 ///////////////////////
 TVec<string> DistRepNNet::getTrainCostNames() const
 {
-    assert( !cost_funcs.isEmpty() );
+    PLASSERT( !cost_funcs.isEmpty() );
     int n_costs = cost_funcs.length();
     TVec<string> train_costs(n_costs + 1);
     train_costs[0] = cost_funcs[0] + "+penalty";

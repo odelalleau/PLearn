@@ -345,7 +345,7 @@ void Kernel::computeGramMatrix(Mat K) const
         }
         if (report_progress) {
             count += i + 1;
-            assert( pb );
+            PLASSERT( pb );
             pb->update(count);
         }
     }

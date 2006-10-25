@@ -123,7 +123,7 @@ void RBMMixedConnection::build_()
                 if( up_block_sizes[i] == 0 ) // first non-null sub_connection
                     up_block_sizes[i] = sub_connections(i,j)->up_size;
                 else
-                    assert( sub_connections(i,j)->up_size ==
+                    PLASSERT( sub_connections(i,j)->up_size ==
                             up_block_sizes[i] );
             }
         }
@@ -142,7 +142,7 @@ void RBMMixedConnection::build_()
                 if( down_block_sizes[j] == 0 ) // first non-null sub_connection
                     down_block_sizes[j] = sub_connections(i,j)->down_size;
                 else
-                    assert( sub_connections(i,j)->down_size ==
+                    PLASSERT( sub_connections(i,j)->down_size ==
                             down_block_sizes[j] );
             }
         }
@@ -350,14 +350,14 @@ void RBMMixedConnection::computeProduct( int start, int length,
                                          const Vec& activations,
                                          bool accumulate ) const
 {
-    assert( activations.length() == length );
+    PLASSERT( activations.length() == length );
 
     if( !accumulate )
         activations.subVec( start, length ).fill( 0. );
 
     if( going_up )
     {
-        assert( start+length <= up_size );
+        PLASSERT( start+length <= up_size );
 
         int init_row = row_of[start];
         int end_row = row_of[start+length-1];
@@ -429,7 +429,7 @@ void RBMMixedConnection::computeProduct( int start, int length,
     }
     else
     {
-        assert( start+length <= down_size );
+        PLASSERT( start+length <= down_size );
 
         int init_col = col_of[start];
         int end_col = col_of[start+length-1];
@@ -506,9 +506,9 @@ void RBMMixedConnection::bpropUpdate(const Vec& input, const Vec& output,
                                       Vec& input_gradient,
                                       const Vec& output_gradient)
 {
-    assert( input.size() == down_size );
-    assert( output.size() == up_size );
-    assert( output_gradient.size() == up_size );
+    PLASSERT( input.size() == down_size );
+    PLASSERT( output.size() == up_size );
+    PLASSERT( output_gradient.size() == up_size );
     input_gradient.resize( down_size );
 
     for( int j=0 ; j<n_down_blocks ; j++ )

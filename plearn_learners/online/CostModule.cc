@@ -106,7 +106,7 @@ void CostModule::fprop(const Vec& input, const Vec& target, real& cost) const
 //! for compatibility with OnlineLearningModule interface
 void CostModule::fprop(const Vec& input_and_target, Vec& output) const
 {
-    assert( input_and_target.size() == input_size + target_size );
+    PLASSERT( input_and_target.size() == input_size + target_size );
     fprop( input_and_target.subVec( 0, input_size ),
            input_and_target.subVec( input_size, target_size ),
            output );

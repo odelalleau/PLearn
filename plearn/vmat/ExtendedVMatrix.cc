@@ -126,7 +126,7 @@ void ExtendedVMatrix::build_()
     this->width_  = source->width()  + left_extent + right_extent;
 
     if ( ! extfieldnames.isEmpty() )
-        assert( extfieldnames.length() == left_extent + right_extent );
+        PLASSERT( extfieldnames.length() == left_extent + right_extent );
 
     TVec<string> fieldnames = source->fieldNames( );
     TVec<string> extended_fieldnames( width() );

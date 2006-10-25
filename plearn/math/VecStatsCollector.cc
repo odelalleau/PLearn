@@ -151,14 +151,14 @@ double VecStatsCollector::getStat(const string& statspec)
 
 const Mat& VecStatsCollector::getObservations() const
 {
-    assert( m_window > 0 );
+    PLASSERT( m_window > 0 );
     return m_observation_window->m_observations;
 }
 
 const PP<ObservationWindow>
 VecStatsCollector::getObservationWindow() const
 {
-    assert( m_window > 0 );
+    PLASSERT( m_window > 0 );
     return m_observation_window;
 }
 
@@ -270,7 +270,7 @@ void VecStatsCollector::update(const Vec& x, real weight)
 ////////////////////////
 void VecStatsCollector::remove_observation(const Vec& x, real weight)
 {
-    assert( stats.size() > 0 );
+    PLASSERT( stats.size() > 0 );
 
     int n = x.size();
 
@@ -455,7 +455,7 @@ void VecStatsCollector::getCovariance(Mat& covar) const {
     // The second case occurs when sum^i,j_k w(k) == sqrt(sum^i,j_k w(k)^2)
     //                                            == sum^{i or j}_k w(k)
     static Vec meanvec;
-    assert( compute_covariance && cov.length() == cov.width() );
+    PLASSERT( compute_covariance && cov.length() == cov.width() );
     int d = cov.length();
     getMean(meanvec);
     covar.resize(d,d);
@@ -542,7 +542,7 @@ void VecStatsCollector::append(const VecStatsCollector& vsc,
 
     // Take care of field names
     if (new_fieldnames.size() > 0) {
-        assert( new_fieldnames.size() == vsc.stats.size() );
+        PLASSERT( new_fieldnames.size() == vsc.stats.size() );
         fieldnames.append(new_fieldnames);
     }
     else {
@@ -558,7 +558,7 @@ void VecStatsCollector::append(const VecStatsCollector& vsc,
     if (compute_covariance) {
         const int oldsize = cov.width();
         const int vscsize = vsc.cov.width();
-        assert( oldsize == cov.length() && vscsize == vsc.cov.length() );
+        PLASSERT( oldsize == cov.length() && vscsize == vsc.cov.length() );
         int new_n = stats.size();
         Mat newcov(new_n, new_n, 0.0);
         Mat new_sum_cross(new_n, new_n, 0.0);

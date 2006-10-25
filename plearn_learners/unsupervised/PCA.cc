@@ -360,7 +360,7 @@ void PCA::incremental_algo()
     */
     if ( _oldest_observation == -1 )
         _oldest_observation = start;
-    assert( _horizon <= 0 || (start-_horizon) <= _oldest_observation ); 
+    PLASSERT( _horizon <= 0 || (start-_horizon) <= _oldest_observation ); 
   
     Vec observation;
     for ( int obs=start; obs < train_set.length(); obs++ )

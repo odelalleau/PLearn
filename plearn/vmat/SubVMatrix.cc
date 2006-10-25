@@ -87,7 +87,7 @@ SubVMatrix::SubVMatrix(VMat the_source,
       fistart(the_fistart), flength(the_flength)
     // Note that istart will be set to the right value in build_().
 {
-    assert( the_source->length() >= 0 );
+    PLASSERT( the_source->length() >= 0 );
     if( call_build_ )
         build_();
 }
@@ -135,17 +135,17 @@ void SubVMatrix::build_()
     int sw = source->width();
 
     if (fistart >= 0) {
-        assert( sl >= 0 );
+        PLASSERT( sl >= 0 );
         istart = int(fistart * sl);
     }
 
     if (flength >= 0) {
-        assert( sl >= 0 );
+        PLASSERT( sl >= 0 );
         length_ = int(flength * sl);
     }
 
     if(length_ < 0) {
-        assert( sl >= 0 );
+        PLASSERT( sl >= 0 );
         length_ = sl - istart;
     }
 

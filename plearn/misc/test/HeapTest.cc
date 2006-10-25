@@ -146,17 +146,17 @@ void HeapTest::perform()
         data[i] = gaussian_01();
     make_heap(data.begin(), data.end());
 
-    assert(is_valid_heap(data.begin(), data.end()));
+    PLASSERT(is_valid_heap(data.begin(), data.end()));
 
     // Destroy heap and reconstruct it
     for (int i=0; i<m; ++i) {
         int j = int(bounded_uniform(0,n));
-        assert(j>=0 && j<n);
+        PLASSERT(j>=0 && j<n);
 
         data[j] = gaussian_01();
         if (! is_valid_heap(data.begin(), data.end())) {
             update_heap(data.begin(), data.end(), data.begin()+j);
-            assert(is_valid_heap(data.begin(), data.end()));
+            PLASSERT(is_valid_heap(data.begin(), data.end()));
         }
     }
 

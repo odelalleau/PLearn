@@ -387,7 +387,7 @@ inline real mypow(real x, real p)
 
 inline real ipow(real x, int p)
 { 
-    assert( p >= 0 );
+    PLASSERT( p >= 0 );
     real result = 1.0;
     while(p--)
         result *= x;
@@ -396,7 +396,7 @@ inline real ipow(real x, int p)
 
 inline int ipow(int x, int p)
 { 
-    assert( p >= 0 );
+    PLASSERT( p >= 0 );
     int result = 1;
     while(p--)
         result *= x;

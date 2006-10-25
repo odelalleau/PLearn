@@ -121,8 +121,8 @@ void CombiningCostsModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 void CombiningCostsModule::fprop(const Vec& input, const Vec& target,
                                  Vec& cost) const
 {
-    assert( input.size() == input_size );
-    assert( target.size() == target_size );
+    PLASSERT( input.size() == input_size );
+    PLASSERT( target.size() == target_size );
     cost.resize( output_size );
 
     for( int i=0 ; i<n_sub_costs ; i++ )
@@ -135,8 +135,8 @@ void CombiningCostsModule::fprop(const Vec& input, const Vec& target,
 void CombiningCostsModule::bpropUpdate(const Vec& input, const Vec& target,
                                        real cost, Vec& input_gradient)
 {
-    assert( input.size() == input_size );
-    assert( target.size() == target_size );
+    PLASSERT( input.size() == input_size );
+    PLASSERT( target.size() == target_size );
     input_gradient.resize( input_size );
 
     Vec partial_gradient;
@@ -156,8 +156,8 @@ void CombiningCostsModule::bpropUpdate(const Vec& input, const Vec& target,
 void CombiningCostsModule::bpropUpdate(const Vec& input, const Vec& target,
                                        real cost)
 {
-    assert( input.size() == input_size );
-    assert( target.size() == target_size );
+    PLASSERT( input.size() == input_size );
+    PLASSERT( target.size() == target_size );
 
     for( int i=0 ; i<n_sub_costs ; i++ )
         sub_costs[i]->bpropUpdate( input, target, sub_costs_values[i] );
@@ -168,8 +168,8 @@ void CombiningCostsModule::bbpropUpdate(const Vec& input, const Vec& target,
                                         Vec& input_gradient,
                                         Vec& input_diag_hessian)
 {
-    assert( input.size() == input_size );
-    assert( target.size() == target_size );
+    PLASSERT( input.size() == input_size );
+    PLASSERT( target.size() == target_size );
     input_gradient.resize( input_size );
     input_diag_hessian.resize( input_size );
 
@@ -188,8 +188,8 @@ void CombiningCostsModule::bbpropUpdate(const Vec& input, const Vec& target,
 void CombiningCostsModule::bbpropUpdate(const Vec& input, const Vec& target,
                                         real cost)
 {
-    assert( input.size() == input_size );
-    assert( target.size() == target_size );
+    PLASSERT( input.size() == input_size );
+    PLASSERT( target.size() == target_size );
 
     for( int i=0 ; i<n_sub_costs ; i++ )
         sub_costs[i]->bpropUpdate( input, target, sub_costs_values[i] );

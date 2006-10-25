@@ -84,7 +84,7 @@ void SoftmaxModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 //! given the input, compute the output (possibly resize it  appropriately)
 void SoftmaxModule::fprop(const Vec& input, Vec& output) const
 {
-    assert( input.size() == input_size );
+    PLASSERT( input.size() == input_size );
     output.resize( output_size );
 
     softmax( input, output );
@@ -94,9 +94,9 @@ void SoftmaxModule::bpropUpdate(const Vec& input, const Vec& output,
                                 Vec& input_gradient,
                                 const Vec& output_gradient)
 {
-    assert( input.size() == input_size );
-    assert( output.size() == output_size );
-    assert( output_gradient.size() == output_size );
+    PLASSERT( input.size() == input_size );
+    PLASSERT( output.size() == output_size );
+    PLASSERT( output_gradient.size() == output_size );
     input_gradient.resize( input_size );
 
     // input_gradient = output_gradient * output

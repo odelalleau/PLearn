@@ -83,7 +83,7 @@ void MultiTaskSeparationSplitter::declareOptions(OptionList& ol)
 void MultiTaskSeparationSplitter::build_()
 {
     if (seed != 0)
-        random_gen->manual_seed(seed);
+        random_gen->manual_seed(long(seed));
 
     if(tasks.length() == 0 && dataset)
     {

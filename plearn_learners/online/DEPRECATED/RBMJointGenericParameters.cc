@@ -212,7 +212,7 @@ void RBMJointGenericParameters::setAsDownInput( const Vec& input ) const
 
 void RBMJointGenericParameters::setAsCondInput( const Vec& input ) const
 {
-    assert( input.size() == cond_size );
+    PLASSERT( input.size() == cond_size );
     input_vec = input;
     target_given_cond = true;
     going_up = false;
@@ -223,7 +223,7 @@ void RBMJointGenericParameters::computeLinearUnitActivations
 {
     if( target_given_cond )
     {
-        assert( activations.length() == 1 );
+        PLASSERT( activations.length() == 1 );
         Mat V = weights.subMatColumns(target_size, cond_size);
         if (i==0)
             for (int j=0;j<weights.length(); j++)
@@ -281,7 +281,7 @@ void RBMJointGenericParameters::computeUnitActivations
     else
         units_types = down_units_types;
 
-    assert( start+length <= (int) units_types.length() );
+    PLASSERT( start+length <= (int) units_types.length() );
     int cur_pos = 0; // position index inside activations
 
     for( int i=start ; i<start+length ; i++ )

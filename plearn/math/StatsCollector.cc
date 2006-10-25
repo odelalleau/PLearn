@@ -243,7 +243,7 @@ void StatsCollector::declareOptions(OptionList& ol)
 ////////////
 void StatsCollector::build_()
 {
-    assert( maxnvalues == -1 || maxnvalues >= 0 );
+    PLASSERT( maxnvalues == -1 || maxnvalues >= 0 );
     // make sure counts.size==0. If not, the object must have been loaded, and FLT_MAX is an existing key
     // but rounded to some precision, and there would be 2 keys approx.=  FLT_MAX
     if(storeCounts() && counts.size()==0)
@@ -363,15 +363,15 @@ void StatsCollector::remove_observation(real val, real weight)
     if(is_missing(val))
     {
         nmissing_ -= weight;
-        assert( nmissing_ >= 0 );
+        PLASSERT( nmissing_ >= 0 );
     }
     else
     {
         sorted = false;
         nnonmissing_ -= weight;
         sumsquarew_  -= weight * weight;
-        assert( nnonmissing_ >= 0 );
-        assert( sumsquarew_  >= 0 );
+        PLASSERT( nnonmissing_ >= 0 );
+        PLASSERT( sumsquarew_  >= 0 );
 
         if( !no_removal_warnings )
         {
@@ -752,7 +752,7 @@ real StatsCollector::pseudo_quantile(real q) const
         return MISSING_VALUE;
 
     // If we stopped at the first bin, do not interpolate with previous bin
-    assert( it != end );
+    PLASSERT( it != end );
     if (is_missing(previous_position))
         return it->first;
 

@@ -303,11 +303,11 @@ void RBMGenericParameters::clearStats()
 void RBMGenericParameters::computeLinearUnitActivations
     ( int i, const Vec& activations ) const
 {
-    assert( activations.length() == 1 );
+    PLASSERT( activations.length() == 1 );
 
     if( going_up )
     {
-        assert( up_units_types[i] == 'l' );
+        PLASSERT( up_units_types[i] == 'l' );
 
         // activations[0] = sum_j weights(i,j) input_vec[j] + b[i]
         product( activations, weights.subMatRows(i,1), input_vec );
@@ -315,7 +315,7 @@ void RBMGenericParameters::computeLinearUnitActivations
     }
     else
     {
-        assert( down_units_types[i] == 'l' );
+        PLASSERT( down_units_types[i] == 'l' );
 
         // activations[0] = sum_j weights(j,i) input_vec[j] + b[i]
         transposeProduct( activations, weights.subMatColumns(i,1), input_vec );
@@ -326,11 +326,11 @@ void RBMGenericParameters::computeLinearUnitActivations
 void RBMGenericParameters::computeQuadraticUnitActivations
     ( int i, const Vec& activations ) const
 {
-    assert( activations.length() == 2 );
+    PLASSERT( activations.length() == 2 );
 
     if( going_up )
     {
-        assert( up_units_types[i] == 'q' );
+        PLASSERT( up_units_types[i] == 'q' );
 
         // activations[0] = -(sum_j weights(i,j) input_vec[j] + b[i])
         //                    / (2 * up_units_params[i][1]^2)
@@ -344,7 +344,7 @@ void RBMGenericParameters::computeQuadraticUnitActivations
     }
     else
     {
-        assert( down_units_types[i] == 'q' );
+        PLASSERT( down_units_types[i] == 'q' );
 
         // activations[0] = -(sum_j weights(j,i) input_vec[j] + b[i])
         //                    / (2 * down_units_params[i][1]^2)
@@ -368,7 +368,7 @@ void RBMGenericParameters::computeUnitActivations
     else
         units_types = down_units_types;
 
-    assert( start+length <= (int) units_types.length() );
+    PLASSERT( start+length <= (int) units_types.length() );
     int cur_pos = 0; // position index inside activations
 
     for( int i=start ; i<start+length ; i++ )

@@ -155,14 +155,14 @@ void RBMParameters::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void RBMParameters::setAsUpInput( const Vec& input ) const
 {
-    assert( input.size() == up_layer_size );
+    PLASSERT( input.size() == up_layer_size );
     input_vec = input;
     going_up = false;
 }
 
 void RBMParameters::setAsDownInput( const Vec& input ) const
 {
-    assert( input.size() == down_layer_size );
+    PLASSERT( input.size() == down_layer_size );
     input_vec = input;
     going_up = true;
 }

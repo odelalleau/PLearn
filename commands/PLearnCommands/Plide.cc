@@ -71,7 +71,7 @@ public:
     PlideProgressPlugin(PythonCodeSnippet* python)
         : m_python(python)
     {
-        assert( m_python );
+        PLASSERT( m_python );
     }
 
     //! Destructor releases all pending progress bars from GUI
@@ -97,7 +97,7 @@ protected:
 
 PlideProgressPlugin::~PlideProgressPlugin()
 {
-    assert( m_python );
+    PLASSERT( m_python );
     for (map<ProgressBar*, int>::const_iterator it = m_progress_ids.begin(),
              end = m_progress_ids.end() ; it != end ; ++it)
     {
@@ -109,7 +109,7 @@ PlideProgressPlugin::~PlideProgressPlugin()
 
 void PlideProgressPlugin::addProgressBar(ProgressBar* pb)
 {
-    assert( pb && m_python );
+    PLASSERT( pb && m_python );
     if (m_progress_ids.find(pb) == m_progress_ids.end()) {
         m_progress_ids[pb] =
             m_python->invoke("AllocateProgressBar", pb->title).as<int>();
@@ -118,7 +118,7 @@ void PlideProgressPlugin::addProgressBar(ProgressBar* pb)
 
 void PlideProgressPlugin::killProgressBar(ProgressBar* pb)
 {
-    assert( pb && m_python );
+    PLASSERT( pb && m_python );
     map<ProgressBar*, int>::iterator found = m_progress_ids.find(pb);
     if (found != m_progress_ids.end()) {
         m_python->invoke("ReleaseProgressBar", int(found->second));
@@ -128,7 +128,7 @@ void PlideProgressPlugin::killProgressBar(ProgressBar* pb)
 
 void PlideProgressPlugin::update(ProgressBar* pb, unsigned long newpos)
 {
-    assert( pb && m_python );
+    PLASSERT( pb && m_python );
     map<ProgressBar*, int>::const_iterator found = m_progress_ids.find(pb);
     if (found != m_progress_ids.end()) {
         int progress_id = found->second;
@@ -175,7 +175,7 @@ void PlideLogPStreamBuf::outputParameters(const string& module_name, int request
 
 void PlideLogPStreamBuf::flush()
 {
-    assert( st && m_python );
+    PLASSERT( st && m_python );
     inherited::flush();
     if (! st->empty()) {
         m_python->invoke("LogAppend", m_module_name, m_requested_verbosity, *st);
@@ -208,7 +208,7 @@ protected:
 PStream& PlideLogPlugin::getStream(PStream::mode_t outmode, const string& module_name,
                                    int requested_verbosity)
 {
-    assert( m_streambuf );
+    PLASSERT( m_streambuf );
     m_pstream.setOutMode(outmode);
     m_streambuf->outputParameters(module_name, requested_verbosity);
     m_streambuf->flush();
@@ -375,7 +375,7 @@ PythonObjectWrapper Plide::helpIndex(const TVec<PythonObjectWrapper>& args) cons
     if (args.size() != 0)
         PLERROR("%sExpecting 0 argument; got %d", __FUNCTION__, args.size());
 
-    assert( m_help_config && m_help_command );
+    PLASSERT( m_help_config && m_help_command );
     ostringstream os;
     m_help_command->helpIndex(os, m_help_config);
     return os.str();
@@ -386,7 +386,7 @@ PythonObjectWrapper Plide::helpCommands(const TVec<PythonObjectWrapper>& args) c
     if (args.size() != 0)
         PLERROR("%sExpecting 0 argument; got %d", __FUNCTION__, args.size());
 
-    assert( m_help_config && m_help_command );
+    PLASSERT( m_help_config && m_help_command );
     ostringstream os;
     m_help_command->helpCommands(os, m_help_config);
     return os.str();
@@ -397,7 +397,7 @@ PythonObjectWrapper Plide::helpClasses(const TVec<PythonObjectWrapper>& args) co
     if (args.size() != 0)
         PLERROR("%sExpecting 0 argument; got %d", __FUNCTION__, args.size());
 
-    assert( m_help_config && m_help_command );
+    PLASSERT( m_help_config && m_help_command );
     ostringstream os;
     m_help_command->helpClasses(os, m_help_config);
     return os.str();
@@ -408,7 +408,7 @@ PythonObjectWrapper Plide::helpOnCommand(const TVec<PythonObjectWrapper>& args) 
     if (args.size() != 1)
         PLERROR("%sExpecting 1 argument; got %d", __FUNCTION__, args.size());
 
-    assert( m_help_config && m_help_command );
+    PLASSERT( m_help_config && m_help_command );
     ostringstream os;
     m_help_command->helpOnCommand(args[0].as<string>(), os, m_help_config);
     return os.str();
@@ -419,7 +419,7 @@ PythonObjectWrapper Plide::helpOnClass(const TVec<PythonObjectWrapper>& args) co
     if (args.size() != 1)
         PLERROR("%sExpecting 1 argument; got %d", __FUNCTION__, args.size());
 
-    assert( m_help_config && m_help_command );
+    PLASSERT( m_help_config && m_help_command );
     ostringstream os;
     m_help_command->helpOnClass(args[0].as<string>(), os, m_help_config);
     return os.str();
@@ -473,7 +473,7 @@ void Plide::executePyPLearn(const string& script_code, const string& root_dir) c
     PStream pyplearn_in = openString(script_code, PStream::plearn_ascii);
     PP<PyPLearnScript> pyplearn_script = new PyPLearnScript;
     pyplearn_in >> pyplearn_script;
-    assert( pyplearn_script );
+    PLASSERT( pyplearn_script );
 
     PStream plearn_in = openString(pyplearn_script->getScript(),
                                    PStream::plearn_ascii);

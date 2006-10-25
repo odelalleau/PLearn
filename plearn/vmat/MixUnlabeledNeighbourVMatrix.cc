@@ -160,7 +160,7 @@ void MixUnlabeledNeighbourVMatrix::build_()
                     int n_kept = int(round(frac*bag_indices.length()));
                     for(int i=0; i < n_kept; i++) {
                         if (source->weightsize() > 0) {
-                            assert( source->weightsize() == 1 );
+                            PLASSERT( source->weightsize() == 1 );
                             neighbor_weights.append(weight); // normally still pointing to the correct weight
                         }
                         indices.push_back(bag_indices[i]);
@@ -182,7 +182,7 @@ void MixUnlabeledNeighbourVMatrix::build_()
                     int n_kept = int(round(frac*bag_indices.length()));
                     for(int i=0; i < n_kept; i++) {
                         if (source->weightsize() > 0) {
-                            assert( source->weightsize() == 1 );
+                            PLASSERT( source->weightsize() == 1 );
                             neighbor_weights.append(weight); // normally still pointing to the correct weight
                         }
                         indices.push_back(bag_indices[i]);

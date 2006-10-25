@@ -230,18 +230,18 @@ void RandomGaussMix::build_()
         // Generate random eigenvalues.
         Vec eigenvals = eigenvalues(j);
         variance_distribution->generate(eigenvals);
-        assert( eigenvals.length() == D );
+        PLASSERT( eigenvals.length() == D );
         // Note that eigenvalues must be sorted in decreasing order.
         sortElements(eigenvals);
         eigenvals.swap();
         // Generate random mean.
         Vec mean_j = center(j);
         mean_distribution->generate(mean_j);
-        assert( mean_j.length() == D );
+        PLASSERT( mean_j.length() == D );
         // Generate random weight.
         Vec alpha_j = alpha.subVec(j, 1);
         weight_distribution->generate(alpha_j);
-        assert( alpha_j.length() == 1 );
+        PLASSERT( alpha_j.length() == 1 );
     }
     // Normalize 'alpha' so that it sums to 1.
     real sum = 0;
@@ -252,7 +252,7 @@ void RandomGaussMix::build_()
                     "cannot be negative");
         sum += alpha_j;
     }
-    assert( sum > 0 );
+    PLASSERT( sum > 0 );
     alpha /= sum;
     // Set a few parameters that are needed.
     alpha_min = min(alpha);

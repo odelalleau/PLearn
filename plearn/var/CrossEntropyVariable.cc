@@ -85,9 +85,9 @@ void CrossEntropyVariable::fprop()
     {
         real output = input1->valuedata[i];
         real target = input2->valuedata[i];
-        assert( fast_exact_is_equal(target, 0) ||
+        PLASSERT( fast_exact_is_equal(target, 0) ||
                 fast_exact_is_equal(target, 1)    );
-        assert( output >= 0 && output <= 1 );
+        PLASSERT( output >= 0 && output <= 1 );
         if ((fast_exact_is_equal(output,0) && !fast_exact_is_equal(target,0))
          || (fast_exact_is_equal(output,1) && !fast_exact_is_equal(target,1)))
             PLERROR("CrossEntropyVariable::fprop: model output is either exactly "

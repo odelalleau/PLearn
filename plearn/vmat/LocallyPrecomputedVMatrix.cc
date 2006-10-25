@@ -125,7 +125,7 @@ void LocallyPrecomputedVMatrix::build_()
         PLDEPRECATED("In LocallyPrecomputedVMatrix::build_ - You should now be"
                      " using the 'temporary' option instead of "
                      "the 'remove_when_done' option, which is deprecated.");
-        assert( remove_when_done == 0 || remove_when_done == 1 );
+        PLASSERT( remove_when_done == 0 || remove_when_done == 1 );
         temporary = remove_when_done != 0;
     }
 
@@ -172,7 +172,7 @@ LocallyPrecomputedVMatrix::~LocallyPrecomputedVMatrix()
             openString(precomp_source->getOption("filename"), PStream::plearn_ascii)
                 >> filename_option;
         else {
-            assert( precomp_type == "dmat" );
+            PLASSERT( precomp_type == "dmat" );
             openString(precomp_source->getOption("dirname"), PStream::plearn_ascii)
                 >> filename_option;
         }

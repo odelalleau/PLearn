@@ -146,7 +146,7 @@ void HTMLHelpCommand::copySnippet(ostream& os, const string& document)
 
 void HTMLHelpCommand::helpIndex()
 {
-    assert( config );
+    PLASSERT( config );
     ofstream os((config->output_dir + "/" + "index.html").c_str());
     helpIndex(os, config);
 }
@@ -178,7 +178,7 @@ void HTMLHelpCommand::helpIndex(ostream& os, const HTMLHelpConfig* config)
 
 void HTMLHelpCommand::helpCommands()
 {
-    assert( config );
+    PLASSERT( config );
     ofstream os((config->output_dir + "/" + "command_index.html").c_str());
     helpCommands(os, config);
     
@@ -226,7 +226,7 @@ void HTMLHelpCommand::helpCommands(ostream& os, const HTMLHelpConfig* config)
 
 void HTMLHelpCommand::helpOnCommand(const string& theCommand)
 {
-    assert( config );
+    PLASSERT( config );
     ofstream os((config->output_dir + "/" + "command_"+theCommand+".html").c_str());
     helpOnCommand(theCommand, os, config);
 }
@@ -260,7 +260,7 @@ void HTMLHelpCommand::helpOnCommand(const string& theCommand, ostream& os,
 
 void HTMLHelpCommand::helpClasses()
 {
-    assert( config );
+    PLASSERT( config );
     ofstream os((config->output_dir + "/" + "class_index.html").c_str());
     helpClasses(os, config);
     
@@ -307,7 +307,7 @@ void HTMLHelpCommand::helpClasses(ostream& os, const HTMLHelpConfig* config)
 
 void HTMLHelpCommand::helpOnClass(const string& classname)
 {
-    assert( config );
+    PLASSERT( config );
     ofstream out((config->output_dir + "/class_" + classname + ".html").c_str());
     helpOnClass(classname, out, config);
 }
@@ -463,7 +463,7 @@ void HTMLHelpCommand::helpOnClass(const string& classname, ostream& out,
         for ( ; it != end ; ++it ) {
             const string& method_name = it->first.first;
             const RemoteTrampoline* t = it->second;
-            assert( t );
+            PLASSERT( t );
             const RemoteMethodDoc& doc = t->documentation();
 
             // Generate the method signature and argument-list table in HTML form

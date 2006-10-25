@@ -109,7 +109,7 @@ void StackedModulesModule::build_()
     if( !last_layer_is_cost )
         target_size = 0;
 
-    assert( modules[0]->input_size >= 0 );
+    PLASSERT( modules[0]->input_size >= 0 );
     input_size = modules[0]->input_size + target_size;
 
 //    int last_module_output_size = modules[nmodules-1]->output_size;
@@ -175,8 +175,8 @@ void StackedModulesModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 //! given the input, compute the output (possibly resize it  appropriately)
 void StackedModulesModule::fprop(const Vec& input, Vec& output) const
 {
-    assert( input.size() == input_size );
-    assert( modules[0]->input_size + target_size == input_size );
+    PLASSERT( input.size() == input_size );
+    PLASSERT( modules[0]->input_size + target_size == input_size );
     int last_input_size = values[nmodules-1].size();
 
     values[0] << input.subVec(0, input_size - target_size );

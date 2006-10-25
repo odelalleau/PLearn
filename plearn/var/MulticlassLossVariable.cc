@@ -87,7 +87,7 @@ void MulticlassLossVariable::fprop()
     {
         real output = input1->valuedata[i];
         real target = input2->valuedata[i];
-        assert( fast_exact_is_equal(target, 1) ||
+        PLASSERT( fast_exact_is_equal(target, 1) ||
                 fast_exact_is_equal(target, 0) );
         cost += fast_exact_is_equal(target, 1) ? output<0.5 : output>0.5;
     }

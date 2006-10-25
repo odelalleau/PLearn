@@ -311,7 +311,7 @@ void computeInputMean(const VMat& d, Vec& meanvec)
 void computeInputMeanAndCovar(const VMat& d, Vec& meanvec, Mat& covarmat,
                               double epsilon)
 {
-    assert( d->inputsize() >= 0 );
+    PLASSERT( d->inputsize() >= 0 );
     VecStatsCollector sc;
     sc.compute_covariance = true;
     sc.epsilon = epsilon;
@@ -333,7 +333,7 @@ void computeInputMeanAndCovar(const VMat& d, Vec& meanvec, Mat& covarmat,
 void computeInputMeanAndVariance(const VMat& d, Vec& meanvec, Vec& var,
                                  double epsilon)
 {
-    assert( d->inputsize() >= 0 );
+    PLASSERT( d->inputsize() >= 0 );
     VecStatsCollector sc;
     sc.epsilon=epsilon;
     sc.build();

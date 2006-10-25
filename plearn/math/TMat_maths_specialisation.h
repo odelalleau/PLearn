@@ -88,14 +88,14 @@ inline real* copy(real* first, real* last, real* dest)
 inline void multiplyAcc(const Vec& vec, const Vec& x, real scale)
 {
     int n = vec.length();
-    assert( vec.length() == x.length() );
+    PLASSERT( vec.length() == x.length() );
     int one = 1;
     BLAS_MULT_ACC(&n, &scale, x.data(), &one, vec.data(), &one);
 }
 
 inline void multiplyAcc(const Mat& mat, const Mat& x, real scale)
 {
-    assert( mat.length() == x.length() && mat.width() == x.width() );
+    PLASSERT( mat.length() == x.length() && mat.width() == x.width() );
 
     int one = 1;
     int w = mat.width(); // == x.width()

@@ -189,10 +189,10 @@ void RBMMatrixConnection::update( const Vec& pos_down_values, // v_0
 
     int l = weights.length();
     int w = weights.width();
-    assert( pos_up_values.length() == l );
-    assert( neg_up_values.length() == l );
-    assert( pos_down_values.length() == w );
-    assert( neg_down_values.length() == w );
+    PLASSERT( pos_up_values.length() == l );
+    PLASSERT( neg_up_values.length() == l );
+    PLASSERT( pos_down_values.length() == w );
+    PLASSERT( neg_down_values.length() == w );
 
     real* w_i = weights.data();
     real* puv_i = pos_up_values.data();
@@ -243,10 +243,10 @@ void RBMMatrixConnection::computeProduct( int start, int length,
                                           const Vec& activations,
                                           bool accumulate ) const
 {
-    assert( activations.length() == length );
+    PLASSERT( activations.length() == length );
     if( going_up )
     {
-        assert( start+length <= up_size );
+        PLASSERT( start+length <= up_size );
         // activations[i-start] += sum_j weights(i,j) input_vec[j]
 
         if( accumulate )
@@ -260,7 +260,7 @@ void RBMMatrixConnection::computeProduct( int start, int length,
     }
     else
     {
-        assert( start+length <= down_size );
+        PLASSERT( start+length <= down_size );
         // activations[i-start] += sum_j weights(j,i) input_vec[j]
         if( accumulate )
             transposeProductAcc( activations,
@@ -278,9 +278,9 @@ void RBMMatrixConnection::bpropUpdate(const Vec& input, const Vec& output,
                                       Vec& input_gradient,
                                       const Vec& output_gradient)
 {
-    assert( input.size() == down_size );
-    assert( output.size() == up_size );
-    assert( output_gradient.size() == up_size );
+    PLASSERT( input.size() == down_size );
+    PLASSERT( output.size() == up_size );
+    PLASSERT( output_gradient.size() == up_size );
     input_gradient.resize( down_size );
 
     // input_gradient = weights' * output_gradient

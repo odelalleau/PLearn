@@ -180,7 +180,7 @@ void ParentableObject::setParent(Object* parent)
 
 void ParentableObject::checkParent() const
 {
-    assert( m_parent );
+    PLASSERT( m_parent );
 }
 
 

@@ -115,14 +115,14 @@ void VMatKernel::build_()
 // evaluate //
 //////////////
 real VMatKernel::evaluate(const Vec& x1, const Vec& x2) const {
-    assert( source );
-    assert( x1.size()==1 && x2.size()==1 );
+    PLASSERT( source );
+    PLASSERT( x1.size()==1 && x2.size()==1 );
     return source->get(int(x1[0]),int(x2[0]));
 }
 
 void VMatKernel::computeGramMatrix(Mat K) const
 {
-    assert( source );
+    PLASSERT( source );
     K << source->toMat();
 }
 
@@ -131,7 +131,7 @@ void VMatKernel::computeGramMatrix(Mat K) const
 // evaluate_i_j //
 //////////////////
 real VMatKernel::evaluate_i_j(int i, int j) const {
-    assert( source );
+    PLASSERT( source );
     return source->get(i,j);
 }
 

@@ -114,7 +114,7 @@ void RBMGaussianLayer::computeStdDeviation()
 
 void RBMGaussianLayer::fprop( const Vec& input, Vec& output ) const
 {
-    assert( input.size() == input_size );
+    PLASSERT( input.size() == input_size );
     output.resize( output_size );
 
     for( int i=0 ; i<size ; i++ )
@@ -128,9 +128,9 @@ void RBMGaussianLayer::bpropUpdate(const Vec& input, const Vec& output,
                                    Vec& input_gradient,
                                    const Vec& output_gradient)
 {
-    assert( input.size() == size );
-    assert( output.size() == size );
-    assert( output_gradient.size() == size );
+    PLASSERT( input.size() == size );
+    PLASSERT( output.size() == size );
+    PLASSERT( output_gradient.size() == size );
     input_gradient.resize( size );
 
     for( int i=0 ; i<size ; ++i )

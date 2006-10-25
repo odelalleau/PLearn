@@ -217,7 +217,7 @@ void DeepBeliefNet::build_()
     // build the classification module, its cost and the joint layer
     if( use_classification_cost )
     {
-        assert( n_classes >= 2 );
+        PLASSERT( n_classes >= 2 );
         build_classification_cost();
     }
 
@@ -237,7 +237,7 @@ void DeepBeliefNet::build_layers_and_connections()
                 connections.length(), n_layers-1);
 
     if( inputsize_ >= 0 )
-        assert( layers[0]->size == inputsize() );
+        PLASSERT( layers[0]->size == inputsize() );
 
     activation_gradients.resize( n_layers );
     expectation_gradients.resize( n_layers );
@@ -615,7 +615,7 @@ void DeepBeliefNet::train()
 
 void DeepBeliefNet::greedyStep( const Vec& input, const Vec& target, int index )
 {
-    assert( index < n_layers );
+    PLASSERT( index < n_layers );
 
     layers[0]->expectation << input;
     for( int i=0 ; i<index ; i++ )
@@ -669,7 +669,7 @@ void DeepBeliefNet::greedyStep( const Vec& input, const Vec& target, int index )
 
 void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
 {
-    assert( joint_layer );
+    PLASSERT( joint_layer );
 
     layers[0]->expectation << input;
     for( int i=0 ; i<n_layers-2 ; i++ )

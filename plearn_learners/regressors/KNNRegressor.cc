@@ -178,7 +178,7 @@ int KNNRegressor::outputsize() const
 
 void KNNRegressor::setTrainingSet(VMat training_set, bool call_forget)
 {
-    assert( knn );
+    PLASSERT( knn );
     inherited::setTrainingSet(training_set,call_forget);
 
     // Now we carry out a little bit of tweaking on the embedded knn:
@@ -199,19 +199,19 @@ void KNNRegressor::setTrainingSet(VMat training_set, bool call_forget)
 
 void KNNRegressor::forget()
 {
-    assert( knn );
+    PLASSERT( knn );
     knn->forget();
 }
     
 void KNNRegressor::train()
 {
-    assert( knn );
+    PLASSERT( knn );
     knn->train();
 }
 
 void KNNRegressor::computeOutput(const Vec& input, Vec& output) const
 {
-    assert( output.size() == outputsize() );
+    PLASSERT( output.size() == outputsize() );
 
     // Start by computing the nearest neighbors
     Vec knn_targets;                           //!< not used by knn
@@ -295,7 +295,7 @@ void KNNRegressor::computeOutput(const Vec& input, Vec& output) const
 void KNNRegressor::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                            const Vec& target, Vec& costs) const
 {
-    assert( costs.size() == 1 );
+    PLASSERT( costs.size() == 1 );
     costs[0] = powdistance(output,target,2);
 }
 

@@ -340,7 +340,7 @@ void SupervisedDBN::build_layers()
     MODULE_LOG << "build_layers() called" << endl;
     if( inputsize_ >= 0 )
     {
-        assert( layers[0]->size + predicted_size == inputsize() );
+        PLASSERT( layers[0]->size + predicted_size == inputsize() );
         setPredictorPredictedSizes( layers[0]->size,
                                     predicted_size, false );
         MODULE_LOG << "  n_predictor = " << n_predictor << endl;
@@ -582,7 +582,7 @@ void SupervisedDBN::expectation(Vec& mu) const
 /////////////
 real SupervisedDBN::density(const Vec& y) const
 {
-    assert( y.size() == n_predicted );
+    PLASSERT( y.size() == n_predicted );
 
     if( regression ) // the probabilistic model does not work
         return 0;
@@ -1161,7 +1161,7 @@ real SupervisedDBN::jointGreedyStep( const Vec& input )
         int actual_index = argmax( input.subVec( n_predictor, n_predicted ) );
 #ifdef BOUNDCHECK
         for( int i=0 ; i<n_predicted ; i++ )
-            assert( is_equal( input[n_predictor+i], 0. ) ||
+            PLASSERT( is_equal( input[n_predictor+i], 0. ) ||
                     i == actual_index && is_equal( input[n_predictor+i], 1 ) );
 #endif
 

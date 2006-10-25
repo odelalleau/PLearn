@@ -87,7 +87,7 @@ PL_Log::PL_Log(PP<PL_LogPlugin> plugin)
 PStream& PL_Log::logger(int requested_verbosity)
 {
     static const string module_name;         // Empty string
-    assert( m_plugin );
+    PLASSERT( m_plugin );
     logger_count++;
     if (requested_verbosity <= runtime_verbosity)
         return m_plugin->getStream(m_outmode, module_name, requested_verbosity);

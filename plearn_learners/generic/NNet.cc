@@ -437,7 +437,7 @@ void NNet::build_()
 
 void NNet::setTrainingSet(VMat training_set, bool call_forget)
 {
-    assert( training_set );
+    PLASSERT( training_set );
     
     // Automatically set noutputs from targetsize if not already set
     if (noutputs < 0)
@@ -504,7 +504,7 @@ void NNet::buildCosts(const Var& the_output, const Var& the_target, const Var& h
         else if (cost_funcs[k]=="stable_cross_entropy") {
             Var c = stable_cross_entropy(before_transfer_func, the_target);
             costs[k] = c;
-            assert( classification_regularizer >= 0 );
+            PLASSERT( classification_regularizer >= 0 );
             if (classification_regularizer > 0) {
                 // There is a regularizer to add to the cost function.
                 dynamic_cast<NegCrossEntropySigmoidVariable*>((Variable*) c)->
@@ -651,7 +651,7 @@ void NNet::buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& be
     // second hidden layer
     if(nhidden2>0)
     {
-        assert( !first_hidden_layer_is_output );
+        PLASSERT( !first_hidden_layer_is_output );
         w2 = Var(1 + output.length(), nhidden2, "w2");
         params.append(w2);
         output = hiddenLayer(output, w2);
@@ -869,7 +869,7 @@ void NNet::forget()
 ///////////////////////
 TVec<string> NNet::getTrainCostNames() const
 {
-    assert( !cost_funcs.isEmpty() );
+    PLASSERT( !cost_funcs.isEmpty() );
     int n_costs = cost_funcs.length();
     TVec<string> train_costs(n_costs + 1);
     train_costs[0] = cost_funcs[0] + "+penalty";

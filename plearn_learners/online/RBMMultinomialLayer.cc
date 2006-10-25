@@ -108,7 +108,7 @@ void RBMMultinomialLayer::computeExpectation()
 
 void RBMMultinomialLayer::fprop( const Vec& input, Vec& output ) const
 {
-    assert( input.size() == input_size );
+    PLASSERT( input.size() == input_size );
     output.resize( output_size );
 
     softmaxMinus( input, output );
@@ -118,9 +118,9 @@ void RBMMultinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
                                       Vec& input_gradient,
                                       const Vec& output_gradient)
 {
-    assert( input.size() == size );
-    assert( output.size() == size );
-    assert( output_gradient.size() == size );
+    PLASSERT( input.size() == size );
+    PLASSERT( output.size() == size );
+    PLASSERT( output_gradient.size() == size );
     input_gradient.resize( size );
 
     // input_gradient = output_gradient * output

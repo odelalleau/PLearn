@@ -233,7 +233,7 @@ void VariableDeletionVMatrix::build_()
         
     TVec<StatsCollector> stats =
         PLearn::computeStats(the_train_source, -1, false);
-    assert( stats.length() == source->width() );
+    PLASSERT( stats.length() == source->width() );
     int is = source->inputsize();
     if (is < 0)
         PLERROR("In VariableDeletionVMatrix::build_ - The source VMat must "

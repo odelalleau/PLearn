@@ -446,7 +446,7 @@ protected:
 template <class T>
 TVec<T> ConvertFromPyObject< TVec<T> >::convert(PyObject* pyobj)
 {
-    assert( pyobj );
+    PLASSERT( pyobj );
     
     // Here, we support both Python Tuples and Lists
     if (PyTuple_Check(pyobj)) {
@@ -478,7 +478,7 @@ TVec<T> ConvertFromPyObject< TVec<T> >::convert(PyObject* pyobj)
 template <class T>
 std::vector<T> ConvertFromPyObject< std::vector<T> >::convert(PyObject* pyobj)
 {
-    assert( pyobj );
+    PLASSERT( pyobj );
     
     // Simple but inefficient implementation: create temporary TVec and copy
     // into a vector
@@ -489,7 +489,7 @@ std::vector<T> ConvertFromPyObject< std::vector<T> >::convert(PyObject* pyobj)
 template <class T, class U>
 std::map<T,U> ConvertFromPyObject< std::map<T,U> >::convert(PyObject* pyobj)
 {
-    assert( pyobj );
+    PLASSERT( pyobj );
     if (! PyDict_Check(pyobj))
         PLPythonConversionError("ConvertFromPyObject< std::map<T,U> >", pyobj);
     
@@ -508,7 +508,7 @@ std::map<T,U> ConvertFromPyObject< std::map<T,U> >::convert(PyObject* pyobj)
 template <class T, class U>
 std::pair<T,U> ConvertFromPyObject< std::pair<T,U> >::convert(PyObject* pyobj)
 {
-    assert( pyobj );
+    PLASSERT( pyobj );
     // Here, we support both Python Tuples and Lists
     if (! PyTuple_Check(pyobj) && PyTuple_GET_SIZE(pyobj) != 2)
         PLPythonConversionError("ConvertFromPyObject< std::pair<T,U> >", pyobj);

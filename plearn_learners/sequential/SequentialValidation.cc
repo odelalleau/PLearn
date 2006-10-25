@@ -416,7 +416,7 @@ void SequentialValidation::run()
 
 void SequentialValidation::warmupModel(int warmup_size)
 {
-    assert( warmup_size < init_train_size );
+    PLASSERT( warmup_size < init_train_size );
     setTestStartTime(init_train_size - warmup_size, true /* call_build */);
   
     for (int t = init_train_size-warmup_size ; t<init_train_size ; ++t) {
@@ -437,7 +437,7 @@ void SequentialValidation::setTestStartTime(int test_start_time, bool call_build
     // until AFTER build, and we want the setTestStartTime() message to
     // propagate to everybody.
 
-    assert( test_start_time > 0 );
+    PLASSERT( test_start_time > 0 );
   
     // Start with the accessory learners
     for (int a=0, n=accessory_learners.length() ; a<n ; ++a ) {
@@ -502,19 +502,19 @@ bool SequentialValidation::shouldTrain(int t)
 VMat SequentialValidation::trainVMat(int t)
 {
     // exclude t, last training pair is (t-2,t-1)
-    assert( dataset );
+    PLASSERT( dataset );
     return dataset.subMatRows(0,t);
 }
 
 VMat SequentialValidation::testVMat(int t)
 {
-    assert( dataset );
+    PLASSERT( dataset );
     return dataset.subMatRows(0,t+1);
 }
 
 int SequentialValidation::maxTimeStep() const
 {
-    assert( dataset );
+    PLASSERT( dataset );
     return dataset.length();
 }
 

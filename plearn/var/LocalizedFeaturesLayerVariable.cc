@@ -165,13 +165,13 @@ void LocalizedFeaturesLayerVariable::computeSubsets()
         Mat mu_copy;
         real sig = sigma;
         if (shared_weights && n_box >= 0) {
-            assert( n_box >= 2 );
+            PLASSERT( n_box >= 2 );
             int count_max = ipow(n_box, dim);
             mu.resize(count_max, dim);
             mu_copy.resize(mu.length(), mu.width());
             // Find bounding box of the features.
             TVec< pair<real,real> > bbox = feature_locations->getBoundingBox();
-            assert( bbox.length() == dim );
+            PLASSERT( bbox.length() == dim );
             // Heuristic for approximate volume of the neighbors.
             real total_volume = 1.0;
             for (int i = 0; i < dim; i++)
@@ -411,7 +411,7 @@ void LocalizedFeaturesLayerVariable::bprop()
                 for (int j=0;j<subset_size;j++,dw++)
                     *dw += dact * x[subset[j]];
             if (backprop_to_inputs) {
-                assert( !shared_weights || n_box < 0 ); // Case not handled.
+                PLASSERT( !shared_weights || n_box < 0 ); // Case not handled.
                 for (int j=0;j<subset_size;j++,w++)
                     dx[subset[j]] += dact * *w;
             }

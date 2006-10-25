@@ -107,7 +107,7 @@ void EmbeddedLearner::build()
 
 void EmbeddedLearner::setTrainingSet(VMat training_set, bool call_forget)
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
     bool training_set_has_changed = !train_set || !(train_set->looksTheSameAs(training_set));
     // If 'call_forget' is true, learner_->forget() will be called
     // in this->forget() (called by PLearner::setTrainingSet a few lines below),
@@ -122,21 +122,21 @@ void EmbeddedLearner::setTrainingSet(VMat training_set, bool call_forget)
 
 void EmbeddedLearner::setValidationSet(VMat validset)
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
     inherited::setValidationSet(validset);
     learner_->setValidationSet(validset);
 }
 
 void EmbeddedLearner::setTrainStatsCollector(PP<VecStatsCollector> statscol)
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
     inherited::setTrainStatsCollector(statscol);
     learner_->setTrainStatsCollector(statscol);
 }
 
 void EmbeddedLearner::setExperimentDirectory(const PPath& the_expdir)
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
     inherited::setExperimentDirectory(the_expdir);
     if (provide_learner_expdir) {
         if (!the_expdir.isEmpty())
@@ -148,32 +148,32 @@ void EmbeddedLearner::setExperimentDirectory(const PPath& the_expdir)
 
 int EmbeddedLearner::inputsize() const
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
     return learner_->inputsize();
 }
 
 int EmbeddedLearner::targetsize() const
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
     return learner_->targetsize();
 }
 
 int EmbeddedLearner::outputsize() const
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
     return learner_->outputsize();
 }
 
 void EmbeddedLearner::forget()
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
     learner_->forget();
     stage = 0;
 }
 
 void EmbeddedLearner::train()
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
     learner_->train();
     stage = learner_->stage;
 }
@@ -182,7 +182,7 @@ void EmbeddedLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
                            VMat testoutputs, VMat testcosts) const
 {
     if (forward_test) {
-        assert( learner_ );
+        PLASSERT( learner_ );
         learner_->test(testset, test_stats, testoutputs, testcosts);
     } else
         inherited::test(testset, test_stats, testoutputs, testcosts);
@@ -190,21 +190,21 @@ void EmbeddedLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
 
 void EmbeddedLearner::computeOutput(const Vec& input, Vec& output) const
 { 
-    assert( learner_ );
+    PLASSERT( learner_ );
     learner_->computeOutput(input, output); 
 }
 
 void EmbeddedLearner::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                               const Vec& target, Vec& costs) const
 { 
-    assert( learner_ );
+    PLASSERT( learner_ );
     learner_->computeCostsFromOutputs(input, output, target, costs); 
 }
                                                       
 void EmbeddedLearner::computeOutputAndCosts(const Vec& input, const Vec& target, 
                                             Vec& output, Vec& costs) const
 { 
-    assert( learner_ );
+    PLASSERT( learner_ );
     learner_->computeOutputAndCosts(input, target, output, costs); 
 }
 
@@ -212,38 +212,38 @@ bool EmbeddedLearner::computeConfidenceFromOutput(
     const Vec& input, const Vec& output,
     real probability, TVec< pair<real,real> >& intervals) const
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
     return learner_->computeConfidenceFromOutput(input,output,probability,
                                                  intervals);
 }
 
 TVec<string> EmbeddedLearner::getTestCostNames() const
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
     return learner_->getTestCostNames();
 }
 
 TVec<string> EmbeddedLearner::getTrainCostNames() const
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
     return learner_->getTrainCostNames();
 }
 
 TVec<string> EmbeddedLearner::getOutputNames() const
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
     return learner_->getOutputNames();
 }
 
 void EmbeddedLearner::resetInternalState()
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
     learner_->resetInternalState();
 }
 
 bool EmbeddedLearner::isStatefulLearner() const
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
     return learner_->isStatefulLearner();
 }
 

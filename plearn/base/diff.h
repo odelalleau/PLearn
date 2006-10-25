@@ -87,7 +87,7 @@ int diff(const string& refer, const string& other,
     pout << "Calling basic diff with Option< ObjectType, "
          << opt->optiontype() << " >" << endl;
     */
-    assert( diffs );
+    PLASSERT( diffs );
     return diff(diffs, refer, other, opt->optionname());
 }
 
@@ -339,7 +339,7 @@ int diff(const string& refer, const string& other, const Option<ObjectType, PP<P
         // This is actually not an object: just compare the two strings.
         return diff(diffs, refer, other, opt->optionname());
     other_obj = dynamic_cast<Object*>((PointedType*) other_pp);
-    assert( other_obj.isNotNull() );
+    PLASSERT( other_obj.isNotNull() );
     int n_diffs = diff(refer_obj, other_obj, diffs);
     addDiffPrefix(diffs, opt->optionname() + ".", n_diffs);
     return n_diffs;

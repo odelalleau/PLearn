@@ -80,13 +80,13 @@ void PythonObjectWrapper::initializePython()
 
 bool ConvertFromPyObject<bool>::convert(PyObject* pyobj)
 {
-    assert( pyobj );
+    PLASSERT( pyobj );
     return PyObject_IsTrue(pyobj) != 0;
 }
 
 int ConvertFromPyObject<int>::convert(PyObject* pyobj)
 {
-    assert( pyobj );
+    PLASSERT( pyobj );
     if (! PyInt_Check(pyobj))
         PLPythonConversionError("ConvertFromPyObject<int>", pyobj);
     return int(PyInt_AS_LONG(pyobj));
@@ -94,7 +94,7 @@ int ConvertFromPyObject<int>::convert(PyObject* pyobj)
 
 long ConvertFromPyObject<long>::convert(PyObject* pyobj)
 {
-    assert( pyobj );
+    PLASSERT( pyobj );
     if (! PyLong_Check(pyobj))
         PLPythonConversionError("ConvertFromPyObject<long>", pyobj);
     return PyLong_AsLong(pyobj);
@@ -102,7 +102,7 @@ long ConvertFromPyObject<long>::convert(PyObject* pyobj)
 
 double ConvertFromPyObject<double>::convert(PyObject* pyobj)
 {
-    assert( pyobj );
+    PLASSERT( pyobj );
     if (! PyFloat_Check(pyobj))
         PLPythonConversionError("ConvertFromPyObject<double>", pyobj);
     return PyFloat_AS_DOUBLE(pyobj);
@@ -110,7 +110,7 @@ double ConvertFromPyObject<double>::convert(PyObject* pyobj)
 
 string ConvertFromPyObject<string>::convert(PyObject* pyobj)
 {
-    assert( pyobj );
+    PLASSERT( pyobj );
     if (! PyString_Check(pyobj))
         PLPythonConversionError("ConvertFromPyObject<string>", pyobj);
     return PyString_AsString(pyobj);
@@ -120,7 +120,7 @@ void ConvertFromPyObject<Vec>::convert(PyObject* pyobj, Vec& v)
 {
     // NA_InputArray possibly creates a well-behaved temporary (i.e. not
     // discontinuous is memory)
-    assert( pyobj );
+    PLASSERT( pyobj );
     PyArrayObject* pyarr = NA_InputArray(pyobj, tFloat64, NUM_C_ARRAY);
     if (! pyarr)
         PLPythonConversionError("ConvertFromPyObject<Vec>", pyobj);
@@ -144,7 +144,7 @@ void ConvertFromPyObject<Mat>::convert(PyObject* pyobj, Mat& m)
 {
     // NA_InputArray possibly creates a well-behaved temporary (i.e. not
     // discontinuous is memory)
-    assert( pyobj );
+    PLASSERT( pyobj );
     PyArrayObject* pyarr = NA_InputArray(pyobj, tFloat64, NUM_C_ARRAY);
     if (! pyarr)
         PLPythonConversionError("ConvertFromPyObject<Mat>", pyobj);

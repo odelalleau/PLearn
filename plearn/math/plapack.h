@@ -522,7 +522,7 @@ template<class num_t>
 inline void SVD(const TMat<num_t>& A, TMat<num_t>& U, TVec<num_t>& S, TMat<num_t>& Vt, char JOBZ='A', real safeguard = 1)
 {
     // A = U.S.Vt -> At = V.S.Ut
-    assert( !A.hasMissing() );
+    PLASSERT( !A.hasMissing() );
     lapackSVD(A,Vt,S,U,JOBZ, safeguard);
 }
 

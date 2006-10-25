@@ -102,7 +102,7 @@ void LiftOutputVariable::fprop()
         real target = input2->valuedata[i];
         if(!is_missing(target))
         {
-            assert(fast_exact_is_equal(target, 0) || fast_exact_is_equal(target, 1.0));
+            PLASSERT(fast_exact_is_equal(target, 0) || fast_exact_is_equal(target, 1.0));
             if (fast_exact_is_equal(target, 1.0)) {
                 if (fast_exact_is_equal(output, 0.0)) {
                     // We need to make sure the output is positive.

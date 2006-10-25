@@ -78,7 +78,7 @@ void LogVariable::recomputeSize(int& l, int& w) const
 ///////////
 void LogVariable::fprop()
 {
-    assert( input && nelems() == input->nelems() );
+    PLASSERT( input && nelems() == input->nelems() );
     for(int i=0; i<nelems(); i++)
     {
         valuedata[i] = safeflog(input->valuedata[i]);
@@ -102,7 +102,7 @@ void LogVariable::fprop()
 ///////////
 void LogVariable::bprop()
 {
-    assert( input && input->gradientdata == input->gradient.data() );
+    PLASSERT( input && input->gradientdata == input->gradient.data() );
     for(int i=0; i<nelems(); i++)
         if (input->valuedata[i]>0)
             input->gradientdata[i] += gradientdata[i]/input->valuedata[i];

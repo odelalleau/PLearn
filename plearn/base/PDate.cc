@@ -57,7 +57,7 @@ using namespace std;
 PDate PDate::lastDateOfMonth(int year, int month)
 {
     PDate date = PDate(year, month, int(lastDayOfMonth(year, month)));
-    assert( date.isValid() );
+    PLASSERT( date.isValid() );
     return date;
 }
 
@@ -109,7 +109,7 @@ PDate::PDate(int julian_day)
     day = jb - jd - jf;
     month = (je>13) ? je-13 : je-1;
     year = (month>2) ? jc-4716 : jc-4715;
-    assert( isValid() );
+    PLASSERT( isValid() );
 }
 
 PDate::PDate(string date)

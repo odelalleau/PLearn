@@ -116,9 +116,9 @@ void RBMClassificationModule::build_()
     last_size = last_layer->size;
     output_size = target_layer->size;
 
-    assert( previous_to_last->up_size == last_size );
-    assert( last_to_target->up_size == last_size );
-    assert( last_to_target->down_size == output_size );
+    PLASSERT( previous_to_last->up_size == last_size );
+    PLASSERT( last_to_target->up_size == last_size );
+    PLASSERT( last_to_target->down_size == output_size );
 
     d_last_act.resize( last_size );
     d_target_act.resize( output_size );
@@ -157,7 +157,7 @@ void RBMClassificationModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 //! given the input, compute the output (possibly resize it  appropriately)
 void RBMClassificationModule::fprop(const Vec& input, Vec& output) const
 {
-    assert( input.size() == input_size );
+    PLASSERT( input.size() == input_size );
     output.resize( output_size );
 
     // input is supposed to be an expectation or sample from the previous layer
@@ -212,9 +212,9 @@ void RBMClassificationModule::bpropUpdate(const Vec& input, const Vec& output,
                                           const Vec& output_gradient)
 {
     // size checks
-    assert( input.size() == input_size );
-    assert( output.size() == output_size );
-    assert( output_gradient.size() == output_size );
+    PLASSERT( input.size() == input_size );
+    PLASSERT( output.size() == output_size );
+    PLASSERT( output_gradient.size() == output_size );
     input_gradient.resize( input_size );
     input_gradient.clear();
 

@@ -136,7 +136,7 @@ void KMeansClustering::train()
     // The role of the train method is to bring the learner up to stage==nstages,
     // updating train_stats with training costs measured on-line in the process.
 
-    assert( n_clusters_ > 0 );
+    PLASSERT( n_clusters_ > 0 );
   
     static Vec input;  // static so we don't reallocate/deallocate memory each time...
     static Vec target; // (but be careful that static means shared!)

@@ -330,7 +330,7 @@ void GaussMix::build_()
         PLERROR("In GaussMix::build_ - Type '%s' is unknown", type.c_str());
 
     // Special case for the 'f_eigen' option: 1 means we keep everything.
-    assert( f_eigen >= 0 && f_eigen <= 1 );
+    PLASSERT( f_eigen >= 0 && f_eigen <= 1 );
     if (is_equal(f_eigen, 1))
         n_eigen = -1;
 
@@ -339,15 +339,15 @@ void GaussMix::build_()
     // parameters of the mixture of Gaussians).
     // Make also a few checks to ensure all values are coherent.
     if (stage > 0) {
-        assert( D == -1 || D == center.width() );
+        PLASSERT( D == -1 || D == center.width() );
         if (D == -1)
             D = center.width();
-        assert( n_eigen_computed == -1 ||
+        PLASSERT( n_eigen_computed == -1 ||
                 n_eigen_computed == eigenvalues.width() );
         if (n_eigen_computed == -1)
             n_eigen_computed = eigenvalues.width();
-        assert( n_eigen == -1 || n_eigen_computed <= n_eigen + 1 );
-        assert( n_eigen_computed <= D );
+        PLASSERT( n_eigen == -1 || n_eigen_computed <= n_eigen + 1 );
+        PLASSERT( n_eigen_computed <= D );
     }
 
     // Make sure everything is correctly resized before using the object.
@@ -394,7 +394,7 @@ void GaussMix::computeMeansAndCovariances() {
         if (sum_columns[j] < epsilon)
             PLWARNING("In GaussMix::computeMeansAndCovariances - A posterior "
                       "is almost zero");
-        assert( !updated_weights(j).hasMissing() );
+        PLASSERT( !updated_weights(j).hasMissing() );
         VMat weights(columnmatrix(updated_weights(j)));
         bool use_impute_missing = impute_missing && stage > 0;
         VMat input_data = use_impute_missing ? imputed_missing[j]
@@ -425,7 +425,7 @@ void GaussMix::computeMeansAndCovariances() {
                 PLERROR("In GaussMix::computeMeansAndCovariances - A "
                         "standard deviation is 'nan'");
         } else {
-            assert( type_id == TYPE_GENERAL );
+            PLASSERT( type_id == TYPE_GENERAL );
             //Profiler::start("computeInputMeanAndCovar");
             computeInputMeanAndCovar(weighted_train_set, center_j, covariance);
             //Profiler::end("computeInputMeanAndCovar");
@@ -433,10 +433,10 @@ void GaussMix::computeMeansAndCovariances() {
                 // Need to add the extra contributions.
                 if (sum_of_posteriors[j] > 0) {
                     error_covariance[j] /= sum_of_posteriors[j];
-                    assert( covariance.isSymmetric() );
-                    assert( error_covariance[j].isSymmetric() );
+                    PLASSERT( covariance.isSymmetric() );
+                    PLASSERT( error_covariance[j].isSymmetric() );
                     covariance += error_covariance[j];
-                    assert( covariance.isSymmetric() );
+                    PLASSERT( covariance.isSymmetric() );
                 }
             }
             if (center_j.hasMissing()) {
@@ -469,7 +469,7 @@ void GaussMix::computeMeansAndCovariances() {
                     for (int k = i; k < D; k++)
                         if (is_missing(covariance(i,k))) {
                             covariance(i,k) = 0;
-                            assert( is_missing(covariance(k,i)) ||
+                            PLASSERT( is_missing(covariance(k,i)) ||
                                     covariance(k,i) == 0 );
                             covariance(k,i) = 0;
                         }
@@ -485,7 +485,7 @@ void GaussMix::computeMeansAndCovariances() {
             Vec eigenvals = eigenvalues(j);
             eigenVecOfSymmMat(covariance, n_eigen_computed, eigenvals,
                                                             eigenvectors[j]);
-            assert( eigenvals.length() == n_eigen_computed );
+            PLASSERT( eigenvals.length() == n_eigen_computed );
 
             // Currently, the returned covariance matrix returned is not
             // guaranteed to be semi-definite positive. Thus we need to ensure
@@ -516,7 +516,7 @@ void GaussMix::updateCholeskyFromPrevious(
     static TVec<bool> is_updated;
     static TVec<int> indices_new;
     static Vec new_row;
-    assert( chol_previous.length() == indices_previous.length() );
+    PLASSERT( chol_previous.length() == indices_previous.length() );
     if (indices_updated.isEmpty()) {
         // All values are missing: the returned matrix should be empty.
         chol_updated.resize(0, 0);
@@ -530,7 +530,7 @@ void GaussMix::updateCholeskyFromPrevious(
         max_indice = max(max_indice, max(indices_previous));
     if (!indices_updated.isEmpty())
         max_indice = max(max_indice, max(indices_updated));
-    assert( max_indice >= 0 );
+    PLASSERT( max_indice >= 0 );
     is_updated.resize(max_indice + 1);
     is_previous.resize(max_indice + 1);
     is_updated.fill(false);
@@ -622,8 +622,8 @@ void GaussMix::updateInverseVarianceFromPrevious(
     static Mat B;
 
     // Safety checks.
-    assert( src.length() == ind_src.length() );
-    assert( (src_log_det  &&  dst_log_det) ||
+    PLASSERT( src.length() == ind_src.length() );
+    PLASSERT( (src_log_det  &&  dst_log_det) ||
             (!src_log_det && !dst_log_det) );
 
     if (src_log_det)
@@ -697,19 +697,19 @@ void GaussMix::updateInverseVarianceFromPrevious(
     } else {
         // Compute the matrix corresponding to the removal of the dimensions
         // that appear only in the source matrix.
-        assert( src_reordered.isSymmetric() );
+        PLASSERT( src_reordered.isSymmetric() );
         Mat B1 = src_reordered.subMat(0, 0, n_common, n_common);
         Mat B2 = src_reordered.subMat(0, n_common, n_common, n_src_only);
         B3.setMod(n_src_only);
         B3.resize(n_src_only, n_src_only);
         B3 << src_reordered.subMat(n_common, n_common, n_src_only, n_src_only);
-        assert( B3.isSymmetric() );
+        PLASSERT( B3.isSymmetric() );
         dst_only_removed << B1;
         tmp.resize(B3.length(), B3.width());
         matInvert(B3, tmp);
         // Another commented-out assert due to it possibly failing (numerical
         // imprecisions).
-        // assert( tmp.isSymmetric(false) );
+        // PLASSERT( tmp.isSymmetric(false) );
         fillItSymmetric(tmp);
         tmp2.resize(tmp.length(), B2.length());
         productTranspose(tmp2, tmp, B2);
@@ -718,7 +718,7 @@ void GaussMix::updateInverseVarianceFromPrevious(
         dst_only_removed -= tmp;
         // Another commented-out assert due to it possibly failing (numerical
         // imprecisions).
-        // assert( dst_only_removed.isSymmetric(false, true) );
+        // PLASSERT( dst_only_removed.isSymmetric(false, true) );
         fillItSymmetric(dst_only_removed);
         // Update the log-determinant if needed.
         if (src_log_det) {
@@ -773,11 +773,11 @@ void GaussMix::updateInverseVarianceFromPrevious(
         tmp += P;
         tmp2.resize(tmp.length(), tmp.width());
         // Commented-out as it may cause an unwanted crash.
-        // assert( tmp.isSymmetric(false, true) );
+        // PLASSERT( tmp.isSymmetric(false, true) );
         fillItSymmetric(tmp);
         matInvert(tmp, tmp2);
         // Commented-out as it may cause an unwanted crash.
-        // assert( tmp2.isSymmetric(false) );
+        // PLASSERT( tmp2.isSymmetric(false) );
         fillItSymmetric(tmp2);
         dst.subMat(n_common, n_common, n_dst_only, n_dst_only) << tmp2;
         if (n_common > 0) {
@@ -810,9 +810,9 @@ void GaussMix::addToCovariance(const Vec& y, int j,
                                const Mat& cov, real post)
 {
     //Profiler::start("addToCovariance");
-    assert( y.length() == cov.length() && y.length() == cov.width() );
-    assert( n_predictor == 0 );
-    assert( impute_missing );
+    PLASSERT( y.length() == cov.length() && y.length() == cov.width() );
+    PLASSERT( n_predictor == 0 );
+    PLASSERT( impute_missing );
     static TVec<int> coord_missing;
     static Mat inv_cov_y_missing;
     static Mat H_inv_tpl;
@@ -840,7 +840,7 @@ void GaussMix::addToCovariance(const Vec& y, int j,
         matInvert(inv_cov_y_missing, cond_inv);
         // Take care of numerical imprecisions that may cause the inverse not
         // to be exactly symmetric.
-        assert( cond_inv.isSymmetric(false, true) );
+        PLASSERT( cond_inv.isSymmetric(false, true) );
         fillItSymmetric(cond_inv);
         indices_inv_queue.resize(1);
         TVec<int>& ind = indices_inv_queue[0];
@@ -968,7 +968,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
         }
         mu_y = center(j).subVec(start, size);
         if (type_id == TYPE_DIAGONAL) {
-            assert( diags.length() == L && diags.width() == n_predictor+n_predicted );
+            PLASSERT( diags.length() == L && diags.width() == n_predictor+n_predicted );
             diag_j = diags(j).subVec(start, size);
         }
         log_likelihood = 0;
@@ -984,14 +984,14 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     gauss_log_density_stddev(y[k], mu_y[k], stddev);
             }
     } else {
-        assert( type_id == TYPE_GENERAL );
+        PLASSERT( type_id == TYPE_GENERAL );
         log_likelihood = 0; // Initialize resultresult  to zero.
         // TODO Put both cases (n_predictor == 0 and other) in same code (they are
         // very close one to each other).
         if (n_predictor == 0) {
             // Simple case: there is no predictor part.
-            assert( !is_predictor );
-            assert( y.length() == n_predicted );
+            PLASSERT( !is_predictor );
+            PLASSERT( y.length() == n_predicted );
 
             // When not in training mode, 'previous_training_sample' is set to
             // -2, and 'current_training_sample' is set to -1.
@@ -1024,7 +1024,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     cov_y.fill(0);
                     Mat& eigenvectors_j = eigenvectors[j];
 
-                    assert( eigenvectors_j.width() == D );
+                    PLASSERT( eigenvectors_j.width() == D );
 
                     for (int k = 0; k < n_eigen_computed - 1; k++)
                         externalProductScaleAcc(
@@ -1037,13 +1037,13 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     // By construction, the resulting matrix is symmetric. However,
                     // it may happen that it is not exactly the case due to numerical
                     // approximations. Thus we ensure it is perfectly symmetric.
-                    assert( cov_y.isSymmetric(false) );
+                    PLASSERT( cov_y.isSymmetric(false) );
                     fillItSymmetric(cov_y);
 
                     if (impute_missing) {
                         // We also need to compute the inverse covariance
                         // matrix.
-                        assert( inv_cov_y );
+                        PLASSERT( inv_cov_y );
                         inv_cov_y->resize(D, D);
                         inv_cov_y->fill(0);
                         real l0 = 1 / lambda0;
@@ -1055,7 +1055,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         for (int i = 0; i < D; i++)
                             (*inv_cov_y)(i, i) += l0;
                         // For the same reason as above.
-                        assert( inv_cov_y->isSymmetric(false) );
+                        PLASSERT( inv_cov_y->isSymmetric(false) );
                         fillItSymmetric(*inv_cov_y);
                     }
 
@@ -1093,7 +1093,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                 int tpl_idx;
                 TVec<bool> missing_tpl;
                 if (efficient_missing) {
-                assert( current_training_sample != -1 );
+                PLASSERT( current_training_sample != -1 );
                 tpl_idx =
                     sample_to_template[current_training_sample];
                 missing_tpl = missing_template(tpl_idx);
@@ -1135,17 +1135,17 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     if (efficient_missing == 1)
                         choleskyDecomposition(*the_cov_y_missing, chol);
                     else {
-                        assert( efficient_missing == 3 );
+                        PLASSERT( efficient_missing == 3 );
                         log_det_queue.resize(1);
                         log_det_queue[0] = det(*the_cov_y_missing, true);
                         chol.resize(the_cov_y_missing->length(),
                                     the_cov_y_missing->length());
-                        assert( the_cov_y_missing->isSymmetric() );
+                        PLASSERT( the_cov_y_missing->isSymmetric() );
                         matInvert(*the_cov_y_missing, chol);
                         // Commenting-out this assert: it can actually fail due
                         // to some numerical imprecisions during matrix
                         // inversion, which is a bit annoying.
-                        // assert( chol.isSymmetric(false, true) );
+                        // PLASSERT( chol.isSymmetric(false, true) );
                         fillItSymmetric(chol);
                     }
                     indices_queue.resize(1);
@@ -1181,7 +1181,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     dummy_storage.resize(n_non_missing, n_non_missing);
                     the_cov_y_missing = &dummy_storage;
                 } else {
-                    assert( efficient_missing == 2 );
+                    PLASSERT( efficient_missing == 2 );
                     covs_y_missing.resize(L);
                     Mat& cov_y_missing_j = covs_y_missing[j];
                     cov_y_missing_j.resize(n_non_missing, n_non_missing);
@@ -1229,8 +1229,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                             eigenvals_allj_missing[j],
                             eigenvecs_allj_missing[j]);
 
-                    assert( eigenvals_allj_missing[j].length()==n_non_missing);
-                    assert( !cov_backup.hasMissing() );
+                    PLASSERT( eigenvals_allj_missing[j].length()==n_non_missing);
+                    PLASSERT( !cov_backup.hasMissing() );
                     }
                     eigenvals_missing = eigenvals_allj_missing[j];
                     eigenvecs_missing = &eigenvecs_allj_missing[j];
@@ -1339,7 +1339,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                                     joint_cov[j], ind_tpl, ind_tot);
                             //Profiler::end("updateCholeskyFromPrevious, em1");
                         } else {
-                            assert( efficient_missing == 3 );
+                            PLASSERT( efficient_missing == 3 );
                             //Profiler::start("updateInverseVarianceFromPrevious, em3");
                             updateInverseVarianceFromPrevious(L_tpl, L_tot,
                                     joint_cov[j], ind_tpl, ind_tot,
@@ -1389,7 +1389,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         for (int i = 0; i < n; i++)
                             log_det += pl_log((*the_L)(i, i));
                     } else {
-                        assert( efficient_missing == 3 );
+                        PLASSERT( efficient_missing == 3 );
 #if 0
                         VMat the_L_vm(*the_L);
                         the_L_vm->saveAMAT("/u/delallea/tmp/L.amat", false,
@@ -1399,7 +1399,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                             // That can happen due to numerical imprecisions.
                             // In such a case we have to recompute the
                             // determinant and the inverse.
-                            assert( !same_covariance );
+                            PLASSERT( !same_covariance );
                             the_cov_y_missing->setMod(n_non_missing);
                             the_cov_y_missing->resize(n_non_missing, n_non_missing);
                             for (int k = 0; k < n_non_missing; k++)
@@ -1418,7 +1418,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         // matrix.
                         log_det += 0.5 * *the_log_det;
                     }
-                    assert( !(isnan(log_det) || isinf(log_det)) );
+                    PLASSERT( !(isnan(log_det) || isinf(log_det)) );
                     log_likelihood = -0.5 * (n * Log2Pi) - log_det;
                     }
 
@@ -1450,7 +1450,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         if (efficient_missing == 1)
                             choleskySolve(*the_L, y_centered, tmp_vec1, tmp_vec2);
                         else {
-                            assert( efficient_missing == 3 );
+                            PLASSERT( efficient_missing == 3 );
                             product(tmp_vec1, *the_L, y_centered);
                         }
                         static Mat K2;
@@ -1482,7 +1482,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                             choleskyLeftSolve(*the_L, y_centered, tmp_vec1);
                             log_likelihood -= 0.5 * pownorm(tmp_vec1);
                         } else {
-                            assert( efficient_missing == 3 );
+                            PLASSERT( efficient_missing == 3 );
                             log_likelihood -= 0.5 * dot(y_centered, tmp_vec1);
                         }
                     }
@@ -1523,7 +1523,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     int n_eig = n_non_missing;
 
                     real lambda0 = max(var_min, eigenvals.lastElement());
-                    assert( lambda0 > 0 );
+                    PLASSERT( lambda0 > 0 );
                     real one_over_lambda0 = 1.0 / lambda0;
 
                     log_likelihood = precomputeGaussianLogCoefficient(
@@ -1534,7 +1534,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     y_centered_copy << y_centered; // Backup vector.
                     for (int k = 0; k < n_eig - 1; k++) {
                         real lambda = max(var_min, eigenvals[k]);
-                        assert( lambda > 0 );
+                        PLASSERT( lambda > 0 );
                         Vec eigen_k = eigenvecs(k);
                         real dot_k = dot(eigen_k, y_centered);
                         log_likelihood -= 0.5 * square(dot_k) / lambda;
@@ -1556,7 +1556,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         // log_likelihood -= 0.5 * (1/lambda_k - 1/lambda_0)
                         //                       * ((y - mu)'.v_k)^2
                         real lambda = max(var_min, eigenvals[k]);
-                        assert( lambda > 0 );
+                        PLASSERT( lambda > 0 );
                         if (lambda > lambda0)
                             log_likelihood -=
                                 0.5 * (1.0 / lambda - one_over_lambda0)
@@ -1586,9 +1586,9 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                             for (int k = 0; k < n_missing; k++)
                                 H3(i,k) = (*inv_cov_y)(coord_missing[i],
                                         coord_missing[k]);
-                        assert( H3.isSymmetric(true, true) );
+                        PLASSERT( H3.isSymmetric(true, true) );
                         matInvert(H3, H3_inv);
-                        // assert( H3_inv.isSymmetric(false, true) );
+                        // PLASSERT( H3_inv.isSymmetric(false, true) );
                         fillItSymmetric(H3_inv);
                         }
 
@@ -1612,7 +1612,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         for (int i = 0; i < n_missing; i++)
                             full_vec[coord_missing[i]] =
                                 center_j[coord_missing[i]] - cond_mean[i];
-                        assert( !full_vec.hasMissing() );
+                        PLASSERT( !full_vec.hasMissing() );
                         imputed_missing[j]->putRow(current_training_sample,
                                                    full_vec);
                     }
@@ -1633,7 +1633,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                 real var_min = square(sigma_min);
                 int n_eig = n_eigen_computed;
                 real lambda0 = max(var_min, eigenvals[n_eig - 1]);
-                assert( lambda0 > 0 );
+                PLASSERT( lambda0 > 0 );
 
                 real one_over_lambda0 = 1.0 / lambda0;
                 // log_likelihood -= 0.5  * 1/lambda_0 * ||y - mu||^2
@@ -1643,7 +1643,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     // log_likelihood -= 0.5 * (1/lambda_k - 1/lambda_0)
                     //                       * ((y - mu)'.v_k)^2
                     real lambda = max(var_min, eigenvals[k]);
-                    assert( lambda > 0 );
+                    PLASSERT( lambda > 0 );
                     if (lambda > lambda0)
                         log_likelihood -= 0.5 * (1.0 / lambda - one_over_lambda0)
                             * square(dot(eigenvecs(k), y_centered));
@@ -1675,7 +1675,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     // eigenvectors and eigenvalues:
                     // full_cov = sum_k (lambda_k - lambda0) v_k v_k' + lambda0.I
 
-                    assert( n_predictor + n_predicted == D );
+                    PLASSERT( n_predictor + n_predicted == D );
 
                     Mat& full_cov_j = full_cov;
                     full_cov_j.resize(D, D);
@@ -1684,7 +1684,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
 
                     full_cov_j.fill(0);
                     Mat& eigenvectors_j = eigenvectors[j];
-                    assert( eigenvectors_j.width() == D );
+                    PLASSERT( eigenvectors_j.width() == D );
 
                     for (int k = 0; k < n_eigen_computed - 1; k++)
                         externalProductScaleAcc(
@@ -1698,7 +1698,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     // By construction, the resulting matrix is symmetric. However,
                     // it may happen that it is not exactly the case due to numerical
                     // approximations. Thus we ensure it is perfectly symmetric.
-                    assert( full_cov_j.isSymmetric(false) );
+                    PLASSERT( full_cov_j.isSymmetric(false) );
                     fillItSymmetric(full_cov_j);
 
                     // Extract the covariance of the predictor x.
@@ -1742,7 +1742,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     Mat& eigenvectors_j = eigenvectors_y_x[j];
                     int n_eig = eigenvectors_j.length();
 
-                    assert( eigenvectors_j.width() == n_predicted );
+                    PLASSERT( eigenvectors_j.width() == n_predicted );
 
                     for (int k = 0; k < n_eig - 1; k++)
                         externalProductScaleAcc(
@@ -1755,7 +1755,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     // By construction, the resulting matrix is symmetric. However,
                     // it may happen that it is not exactly the case due to numerical
                     // approximations. Thus we ensure it is perfectly symmetric.
-                    assert( cov_y.isSymmetric(false) );
+                    PLASSERT( cov_y.isSymmetric(false) );
                     fillItSymmetric(cov_y);
                     // Then extract what we want.
                     non_missing.resize(0);
@@ -1793,7 +1793,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         int n_eigen = n_non_missing;
 
                         lambda0 = max(var_min, eigenvals.lastElement());
-                        assert( lambda0 > 0 );
+                        PLASSERT( lambda0 > 0 );
                         real one_over_lambda0 = 1.0 / lambda0;
 
                         log_likelihood = precomputeGaussianLogCoefficient(
@@ -1806,7 +1806,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                             // log_likelihood -= 0.5 * (1/lambda_k - 1/lambda_0)
                             //                       * ((y - mu)'.v_k)^2
                             real lambda = max(var_min, eigenvals[k]);
-                            assert( lambda > 0 );
+                            PLASSERT( lambda > 0 );
                             if (lambda > lambda0)
                                 log_likelihood -=
                                     0.5 * (1.0 / lambda - one_over_lambda0)
@@ -1828,7 +1828,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     int n_eig = eigenvals.length();
 
                     real lambda0 = max(var_min, eigenvals.lastElement());
-                    assert( lambda0 > 0 );
+                    PLASSERT( lambda0 > 0 );
 
                     real one_over_lambda0 = 1.0 / lambda0;
                     // log_likelihood -= 0.5  * 1/lambda_0 * ||y - mu||^2
@@ -1838,8 +1838,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                         // log_likelihood -= 0.5 * (1/lambda_k - 1/lambda_0)
                         //                       * ((y - mu)'.v_k)^2
                         real lambda = max(var_min, eigenvals[k]);
-                        assert( lambda > 0 );
-                        assert( lambda >= lambda0 );
+                        PLASSERT( lambda > 0 );
+                        PLASSERT( lambda >= lambda0 );
                         if (lambda > lambda0)
                             log_likelihood -= 0.5 * (1.0 / lambda - one_over_lambda0)
                                 * square(dot(eigenvecs(k), y_centered));
@@ -1869,7 +1869,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                 int n_eig = eigenvals.length();
 
                 real lambda0 = max(var_min, eigenvals[n_eig - 1]);
-                assert( lambda0 > 0 );
+                PLASSERT( lambda0 > 0 );
 
                 real one_over_lambda0 = 1.0 / lambda0;
                 // log_likelihood -= 0.5  * 1/lambda_0 * ||y - mu||^2
@@ -1879,8 +1879,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     // log_likelihood -= 0.5 * (1/lambda_k - 1/lambda_0)
                     //                       * ((y - mu)'.v_k)^2
                     real lambda = max(var_min, eigenvals[k]);
-                    assert( lambda > 0 );
-                    assert( lambda >= lambda0 );
+                    PLASSERT( lambda > 0 );
+                    PLASSERT( lambda >= lambda0 );
                     if (lambda > lambda0)
                         log_likelihood -= 0.5 * (1.0 / lambda - one_over_lambda0)
                             * square(dot(eigenvecs(k), y_centered));
@@ -1893,7 +1893,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
             eigenvecs = dummy_mat;
         }
     }
-    assert( !isnan(log_likelihood) );
+    PLASSERT( !isnan(log_likelihood) );
     //Profiler::end("computeLogLikelihood");
     return log_likelihood;
 }
@@ -1903,8 +1903,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
 //////////////////////////////
 void GaussMix::computeAllLogLikelihoods(const Vec& sample, const Vec& log_like)
 {
-    assert( sample.length()   == D );
-    assert( log_like.length() == L );
+    PLASSERT( sample.length()   == D );
+    PLASSERT( log_like.length() == L );
     for (int j = 0; j < L; j++)
         log_like[j] = computeLogLikelihood(sample, j);
 }
@@ -1966,7 +1966,7 @@ void GaussMix::computePosteriors() {
             for (int i = 0; i < samples_clust.length(); i++) {
                 int s = samples_clust[i];
                 for (int j = 0; j < L; j++) {
-                    assert( !clust_imputed_missing[j](i).hasMissing() );
+                    PLASSERT( !clust_imputed_missing[j](i).hasMissing() );
                     // TODO We are most likely wasting memory here.
                     imputed_missing[j]->putRow(s, clust_imputed_missing[j](i));
                 }
@@ -1996,7 +1996,7 @@ void GaussMix::computePosteriors() {
         // First we need to compute the likelihood P(s_i | j).
         current_training_sample = i;
         computeAllLogLikelihoods(sample_row, log_likelihood_post);
-        assert( !log_likelihood_post.hasMissing() );
+        PLASSERT( !log_likelihood_post.hasMissing() );
         for (int j = 0; j < L; j++)
             log_likelihood_post[j] += pl_log(alpha[j]);
         real log_sum_likelihood = logadd(log_likelihood_post);
@@ -2076,9 +2076,9 @@ void GaussMix::expectation(Vec& mu) const
         for (int j = 0; j < L; j++)
             mu += center(j).subVec(n_predictor, n_predicted) * coeff[j];
     } else {
-        assert( type_id == TYPE_GENERAL );
+        PLASSERT( type_id == TYPE_GENERAL );
         // The case 'n_predictor == 0' is considered above.
-        assert( n_predictor > 0 );
+        PLASSERT( n_predictor > 0 );
         mu.fill(0);
         for (int j = 0; j < L; j++)
             mu += center_y_x(j) * p_j_x[j];
@@ -2198,7 +2198,7 @@ void GaussMix::generateFromGaussian(Vec& sample, int given_gaussian) const {
 
     // The assert below may fail if one forgets to provide a predictor part
     // through the 'setPredictor' method.
-    assert( n_predictor == 0 || p_j_x.length() == L );
+    PLASSERT( n_predictor == 0 || p_j_x.length() == L );
 
     if (given_gaussian < 0)
         j = random_gen->multinomial_sample(n_predictor == 0 ? alpha : p_j_x);
@@ -2216,12 +2216,12 @@ void GaussMix::generateFromGaussian(Vec& sample, int given_gaussian) const {
             sample[k] = random_gen->gaussian_mu_sigma(mu_y[k], stddev);
         }
     } else {
-        assert( type_id == TYPE_GENERAL );
+        PLASSERT( type_id == TYPE_GENERAL );
         static Vec norm_vec;
         if (n_predictor == 0) {
             // Simple case.
-            assert( eigenvectors[j].width() == n_predicted );
-            assert( center(j).length() == n_predicted );
+            PLASSERT( eigenvectors[j].width() == n_predicted );
+            PLASSERT( center(j).length() == n_predicted );
 
             Vec eigenvals = eigenvalues(j);
             Mat eigenvecs = eigenvectors[j].subMat(0, 0, n_eigen_computed,
@@ -2266,7 +2266,7 @@ void GaussMix::generateFromGaussian(Vec& sample, int given_gaussian) const {
             sample += mu_y;
         }
     }
-    assert( !sample.hasMissing() );
+    PLASSERT( !sample.hasMissing() );
 }
 
 /*
@@ -2464,7 +2464,7 @@ real GaussMix::log_density(const Vec& y) const
         real logp_j_x = n_predictor == 0 ? pl_log(alpha[j])
                                      : log_p_j_x[j];
         log_likelihood_dens[j] = computeLogLikelihood(y, j) + logp_j_x;
-        assert( !isnan(log_likelihood_dens[j]) );
+        PLASSERT( !isnan(log_likelihood_dens[j]) );
     }
     return logadd(log_likelihood_dens);
 }
@@ -2559,7 +2559,7 @@ void GaussMix::precomputeAllGaussianLogCoefficients()
     if (type_id == TYPE_SPHERICAL || type_id == TYPE_DIAGONAL) {
         // Nothing to do.
     } else {
-        assert( type_id == TYPE_GENERAL );
+        PLASSERT( type_id == TYPE_GENERAL );
         // Precompute the log_coeff.
         for (int j = 0; j < L; j++)
             log_coeff[j] = precomputeGaussianLogCoefficient(eigenvalues(j), D);
@@ -2576,7 +2576,7 @@ real GaussMix::precomputeGaussianLogCoefficient(const Vec& eigenvals,
     real last_eigenval = INFINITY;
 #endif
     int n_eig = eigenvals.length();
-    assert( dimension >= n_eig );
+    PLASSERT( dimension >= n_eig );
     real log_det = 0;
     real var_min = square(sigma_min);
     for (int k = 0; k < n_eig; k++) {
@@ -2605,10 +2605,10 @@ real GaussMix::precomputeGaussianLogCoefficient(const Vec& eigenvals,
 void GaussMix::replaceGaussian(int j) {
     // This is supposed to be called only during training, when there is no
     // predictor part (we use the full joint distribution).
-    assert( n_predictor == 0 );
+    PLASSERT( n_predictor == 0 );
     // Find the Gaussian with highest weight.
     int high = argmax(alpha);
-    assert( high != j );
+    PLASSERT( high != j );
     // Generate the new center from this Gaussian.
     Vec new_center = center(j);
     generateFromGaussian(new_center, high);
@@ -2618,7 +2618,7 @@ void GaussMix::replaceGaussian(int j) {
     } else if (type_id == TYPE_DIAGONAL) {
         diags(j) << diags(high);
     } else {
-        assert( type_id == TYPE_GENERAL );
+        PLASSERT( type_id == TYPE_GENERAL );
         eigenvalues(j) << eigenvalues(high);
         eigenvectors[j] << eigenvectors[high];
         log_coeff[j] = log_coeff[high];
@@ -2689,7 +2689,7 @@ void GaussMix::resizeDataBeforeUsing()
 // resizeDataBeforeTraining //
 //////////////////////////////
 void GaussMix::resizeDataBeforeTraining() {
-    assert( train_set );
+    PLASSERT( train_set );
 
     n_eigen_computed = -1;
 
@@ -2804,7 +2804,7 @@ void GaussMix::setPredictor(const Vec& predictor, bool call_parent) const {
 
     if (n_predictor == 0) {
         // There is no predictor part anyway: nothing to do.
-        assert( predictor_part.isEmpty() );
+        PLASSERT( predictor_part.isEmpty() );
         return;
     }
 
@@ -2860,7 +2860,7 @@ void GaussMix::setPredictor(const Vec& predictor, bool call_parent) const {
             int n_non_missing = non_missing.length();
             int n_missing = missing.length();
             int n_predicted_ext = n_predicted + n_missing;
-            assert( n_missing + n_non_missing == n_predictor );
+            PLASSERT( n_missing + n_non_missing == n_predictor );
 
             work_mat1.resize(n_predicted_ext, n_non_missing);
             work_mat2.resize(n_predicted_ext, n_predicted_ext);
@@ -2874,7 +2874,7 @@ void GaussMix::setPredictor(const Vec& predictor, bool call_parent) const {
                 // full_cov = sum_k (lambda_k - lambda0) v_k v_k' + lambda0.I
                 // TODO Do we really need to compute the full matrix?
 
-                assert( n_predictor + n_predicted == D );
+                PLASSERT( n_predictor + n_predicted == D );
 
                 Mat& full_cov_j = full_cov;
                 full_cov_j.resize(D, D);
@@ -2883,7 +2883,7 @@ void GaussMix::setPredictor(const Vec& predictor, bool call_parent) const {
 
                 full_cov_j.fill(0);
                 Mat& eigenvectors_j = eigenvectors[j];
-                assert( eigenvectors_j.width() == D );
+                PLASSERT( eigenvectors_j.width() == D );
 
                 for (int k = 0; k < n_eigen_computed - 1; k++)
                     externalProductScaleAcc(
@@ -2897,7 +2897,7 @@ void GaussMix::setPredictor(const Vec& predictor, bool call_parent) const {
                 // By construction, the resulting matrix is symmetric. However,
                 // it may happen that it is not exactly the case due to numerical
                 // approximations. Thus we ensure it is perfectly symmetric.
-                assert( full_cov_j.isSymmetric(false) );
+                PLASSERT( full_cov_j.isSymmetric(false) );
                 fillItSymmetric(full_cov_j);
 
                 // Extract the covariance of the predictor x.
@@ -2913,7 +2913,7 @@ void GaussMix::setPredictor(const Vec& predictor, bool call_parent) const {
                 /*
                 inv_cov_x.resize(n_non_missing, n_non_missing);
                 matInvert(cov_x_j, inv_cov_x);
-                //assert( inv_cov_x.isSymmetric(false) );
+                //PLASSERT( inv_cov_x.isSymmetric(false) );
                 fillItSymmetric(inv_cov_x);
                 */
 
@@ -2934,7 +2934,7 @@ void GaussMix::setPredictor(const Vec& predictor, bool call_parent) const {
                     // covariance of x should also be more than 'var_min'. If I am
                     // wrong, remove the assert and see if it is needed to
                     // potentially set lambda0 to var_min.
-                    assert( eigenvals.lastElement() > var_min ||
+                    PLASSERT( eigenvals.lastElement() > var_min ||
                             eigenvals.lastElement() / var_min > 0.99 );
                     lambda0 = eigenvals.lastElement();
                     real one_over_lambda0 = 1 / lambda0;
@@ -3005,7 +3005,7 @@ void GaussMix::setPredictor(const Vec& predictor, bool call_parent) const {
                 // interested in.
                 cov_y_x = cov_y_x_j.subMat(0, 0, n_predicted, n_predicted);
                 // Ensure covariance matrix is perfectly symmetric.
-                assert( cov_y_x.isSymmetric(false, true) );
+                PLASSERT( cov_y_x.isSymmetric(false, true) );
                 fillItSymmetric(cov_y_x);
                 eigenVecOfSymmMat(cov_y_x, n_predicted,
                                   eigenvals, eigenvectors_y_x[j]);
@@ -3052,10 +3052,10 @@ void GaussMix::setPredictor(const Vec& predictor, bool call_parent) const {
 ///////////////////////////
 void GaussMix::getInitialWeightsFrom(const VMat& vmat)
 {
-    assert( vmat->weightsize() == 1 );
+    PLASSERT( vmat->weightsize() == 1 );
     Vec tmp1, tmp2;
     real w;
-    assert( vmat );
+    PLASSERT( vmat );
     ProgressBar* pb = 0;
     if (report_progress)
         pb = new ProgressBar("Getting sample weights from data set",
@@ -3115,7 +3115,7 @@ void GaussMix::setPredictorPredictedSizes_const(int n_i, int n_t) const
     if (type_id == TYPE_SPHERICAL || type_id == TYPE_DIAGONAL ) {
         // Nothing to do.
     } else {
-        assert( type_id == TYPE_GENERAL );
+        PLASSERT( type_id == TYPE_GENERAL );
 
         work_mat1.resize(n_predicted, n_predictor);
         work_mat2.resize(n_predicted, n_predicted);
@@ -3137,7 +3137,7 @@ void GaussMix::setPredictorPredictedSizes_const(int n_i, int n_t) const
             // eigenvectors and eigenvalues:
             // full_cov = sum_k (lambda_k - lambda0) v_k v_k' + lambda0.I
 
-            assert( n_predictor + n_predicted == D );
+            PLASSERT( n_predictor + n_predicted == D );
             Mat& full_cov_j = full_cov;
             full_cov_j.resize(D, D);
             eigenvals = eigenvalues(j);
@@ -3145,7 +3145,7 @@ void GaussMix::setPredictorPredictedSizes_const(int n_i, int n_t) const
 
             full_cov_j.fill(0);
             Mat& eigenvectors_j = eigenvectors[j];
-            assert( eigenvectors_j.width() == D );
+            PLASSERT( eigenvectors_j.width() == D );
 
             for (int k = 0; k < n_eigen_computed - 1; k++)
                 externalProductScaleAcc(full_cov_j, eigenvectors_j(k),
@@ -3157,7 +3157,7 @@ void GaussMix::setPredictorPredictedSizes_const(int n_i, int n_t) const
             // By construction, the resulting matrix is symmetric. However,
             // it may happen that it is not exactly the case due to numerical
             // approximations. Thus we ensure it is perfectly symmetric.
-            assert( full_cov_j.isSymmetric(false) );
+            PLASSERT( full_cov_j.isSymmetric(false) );
             fillItSymmetric(full_cov_j);
 
             // Extract the covariance of the predictor x.
@@ -3183,7 +3183,7 @@ void GaussMix::setPredictorPredictedSizes_const(int n_i, int n_t) const
                 // covariance of x should also be more than 'var_min'. If I am
                 // wrong, remove the assert and see if it is needed to
                 // potentially set lambda0 to var_min.
-                assert( eigenvals[n_predictor - 1] > var_min ||
+                PLASSERT( eigenvals[n_predictor - 1] > var_min ||
                         eigenvals[n_predictor - 1] / var_min > 0.99 );
                 lambda0 = eigenvals[n_predictor - 1];
                 real one_over_lambda0 = 1 / lambda0;
@@ -3217,7 +3217,7 @@ void GaussMix::setPredictorPredictedSizes_const(int n_i, int n_t) const
             eigenvectors_y_x[j].resize(n_predicted, n_predicted);
             eigenvals = eigenvalues_y_x(j);
             // Ensure covariance matrix is perfectly symmetric.
-            assert( cov_y_x_j.isSymmetric(false, true) );
+            PLASSERT( cov_y_x_j.isSymmetric(false, true) );
             fillItSymmetric(cov_y_x_j);
             eigenVecOfSymmMat(cov_y_x_j, n_predicted, eigenvals, eigenvectors_y_x[j]);
             log_coeff_y_x[j] =
@@ -3779,7 +3779,7 @@ void GaussMix::train()
                 // Compute list of nodes, from top to bottom.
                 TVec<int> top_to_bottom;
                 TVec<int> status(n, 0);
-                assert( parent.length() == n );
+                PLASSERT( parent.length() == n );
                 // Status: 0 = still has a parent
                 //         1 = candidate with no parent
                 //         2 = done
@@ -3790,7 +3790,7 @@ void GaussMix::train()
                     else
                         status[int(i)] = 1;
                 // Ensure there is only a single one in the resulting tree.
-                assert( status.find(1, status.find(1) + 1) == -1 );
+                PLASSERT( status.find(1, status.find(1) + 1) == -1 );
                 int count = 0;
                 // Now we're ready to loop over all elements.
                 while (true) {
@@ -3807,7 +3807,7 @@ void GaussMix::train()
                     }
                     if (count == last_count && loop) {
                         // We must have gone through all nodes.
-                        assert( status.find(0) == -1 );
+                        PLASSERT( status.find(0) == -1 );
                         break;
                     }
                     status[count] = 2;
@@ -3815,7 +3815,7 @@ void GaussMix::train()
                     TVec<int> child = children[count];
                     for (int i = 0; i < child.length(); i++) {
                         int j = child[i];
-                        assert( status[j] == 0 );
+                        PLASSERT( status[j] == 0 );
                         status[j] = 1;
                     }
                 }
@@ -3843,7 +3843,7 @@ void GaussMix::train()
                     }
                     if (balanced)
                         max++;
-                    assert( max >= 0 );
+                    PLASSERT( max >= 0 );
                     message_up[k] = max;
                 }
 
@@ -3876,7 +3876,7 @@ void GaussMix::train()
                         max++;
                     // Note that 'max' can be zero when we have only one single
                     // point.
-                    assert( max > 0 || n == 1);
+                    PLASSERT( max > 0 || n == 1);
                     message_down[j] = max;
                 }
 
@@ -3896,7 +3896,7 @@ void GaussMix::train()
 
                 // Find the node to start from.
                 int start_node = argmin(cost);
-                assert( cost[start_node] == min_cost );
+                PLASSERT( cost[start_node] == min_cost );
 #endif // DIRECTED_HACK
 
                 // Compute a node ordering giving rise to the mininum cost.
@@ -3921,7 +3921,7 @@ void GaussMix::train()
                         root = i;
                     else
                         children[ parent[i] ].append(i);
-                assert( root >= 0 );
+                PLASSERT( root >= 0 );
                 // Then deduce the ordered list of nodes.
                 create_list(parent, children, span_path, span_use_previous,
                             span_can_free, root, true, false);
@@ -3930,9 +3930,9 @@ void GaussMix::train()
                               false, true, start_node, -1, parent,
                               children, message_up, message_down);
 #endif
-                assert( span_path.length()          == n );
-                assert( span_can_free.length()      == n );
-                assert( span_use_previous.length()  == n );
+                PLASSERT( span_path.length()          == n );
+                PLASSERT( span_can_free.length()      == n );
+                PLASSERT( span_use_previous.length()  == n );
                 // At this point the index in 'span_path' are the index within
                 // the cluster 'tpl': we replace them by the global sample
                 // index.
@@ -4005,7 +4005,7 @@ void GaussMix::train()
                         span_can_free.append(the_can_free[j]);
                         span_use_prev.append(the_use_prev[j]);
                         for (int k = 0; k < samples_list.length(); k++) {
-                            assert(sample_to_path_index[samples_list[k]]==-1);
+                            PLASSERT(sample_to_path_index[samples_list[k]]==-1);
                             sample_to_path_index[samples_list[k]] = count;
                             count++;
                             // Other samples with same pattern will reuse the
@@ -4020,13 +4020,13 @@ void GaussMix::train()
                     }
 #ifdef BOUNDCHECK
                     int n_samples_in_cluster = clusters_samp[i].length();
-                    assert( span_path.length()      == n_samples_in_cluster );
-                    assert( span_can_free.length()  == n_samples_in_cluster );
-                    assert( span_use_prev.length()  == n_samples_in_cluster );
+                    PLASSERT( span_path.length()      == n_samples_in_cluster );
+                    PLASSERT( span_can_free.length()  == n_samples_in_cluster );
+                    PLASSERT( span_use_prev.length()  == n_samples_in_cluster );
 #endif
                 }
                 // Make sure all samples belong to a path.
-                assert( sample_to_path_index.find(-1) == -1 );
+                PLASSERT( sample_to_path_index.find(-1) == -1 );
             }
 
             // Compute some statistics on the distances to templates.
@@ -4219,7 +4219,7 @@ void GaussMix::train()
         alpha_vm->saveAMAT("/u/delallea/tmp/alpha.amat", false, true);
         VMat center_vm(center);
         center_vm->saveAMAT("/u/delallea/tmp/center.amat", false, true);
-        assert(eigenvalues.width() == D);
+        PLASSERT(eigenvalues.width() == D);
         for (int j = 0; j < L; j++) {
             Vec eigenvals = eigenvalues(j);
             Mat& eigenvecs = eigenvectors[j];
@@ -4347,7 +4347,7 @@ void GaussMix::traverse_tree(TVec<int>& path,
         candidates[i] = candidates[arg_min];
         candidates[arg_min] = tmp;
         int node = candidates[i];
-        assert( node != index_node && node != previous_node );
+        PLASSERT( node != index_node && node != previous_node );
         bool can_free = (i == candidates.length() - 1);
         bool can_use_previous = (i == 0);
         traverse_tree(path, span_can_free, span_use_previous, can_free,

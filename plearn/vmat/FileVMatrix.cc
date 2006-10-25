@@ -129,14 +129,14 @@ void FileVMatrix::build_()
                      "is now deprecated, please use the "
                      "TemporaryFileVMatrix class instead: this data file "
                      "may thus not be properly deleted");
-        assert( remove_when_done == 0 || remove_when_done == 1 );
+        PLASSERT( remove_when_done == 0 || remove_when_done == 1 );
     }
     if (track_ref != -1) {
         PLDEPRECATED("In FileVMatrix::build_ - The option 'track_ref' "
                      "is now deprecated, please use the "
                      "TemporaryFileVMatrix class instead: this data file "
                      "may thus not be properly deleted");
-        assert( track_ref == 0 || track_ref == 1 );
+        PLASSERT( track_ref == 0 || track_ref == 1 );
     }
     // Since we are going to re-create it, we can close the current f.
     closeCurrentFile();

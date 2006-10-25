@@ -212,8 +212,8 @@ int GenericNearestNeighbors::outputsize() const
     if (copy_index)
         base_outputsize += 1;
 
-    assert( num_neighbors > 0 );
-    assert( base_outputsize > 0 );
+    PLASSERT( num_neighbors > 0 );
+    PLASSERT( base_outputsize > 0 );
   
     return num_neighbors * base_outputsize;
 }
@@ -222,7 +222,7 @@ void GenericNearestNeighbors::constructOutputVector(const TVec<int>& indices,
                                                     Vec& output,
                                                     const Mat& train_mat_override) const
 {
-    // assert( output.size() == outputsize() );
+    // PLASSERT( output.size() == outputsize() );
     output.resize(outputsize());
 
     int i, n=min(num_neighbors, indices.size());
@@ -240,7 +240,7 @@ void GenericNearestNeighbors::constructOutputVector(const TVec<int>& indices,
             train_set->getRow(indices[i], currow);
             currow_data = currow.data();
         }
-        assert( currow_data );
+        PLASSERT( currow_data );
 
         if(copy_input) {
             copy(currow_data, currow_data+inputsize, output_data);

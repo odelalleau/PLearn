@@ -58,11 +58,11 @@ PLEARN_IMPLEMENT_OBJECT(BinaryOpVMatrix,
 
 void BinaryOpVMatrix::getNewRow(int i, const Vec& v) const
 {
-    assert( source1 && source2 );
+    PLASSERT( source1 && source2 );
     row1.resize(source1.width());
     row2.resize(source2.width());
-    assert( row1.size() == row2.size() );
-    assert( v.size()    == row1.size() );
+    PLASSERT( row1.size() == row2.size() );
+    PLASSERT( v.size()    == row1.size() );
 
     source1->getRow(i, row1);
     source2->getRow(i, row2);

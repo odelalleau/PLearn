@@ -84,7 +84,7 @@ void PMemArena::deallocate(void* p)
         watermark += object_size;
     else {
         // Otherwise, add p to free_list
-        assert( belongsToArena(p) );
+        PLASSERT( belongsToArena(p) );
         void** new_free_head = static_cast<void**>(p);
         *new_free_head = free_list;
         free_list = new_free_head;
@@ -150,10 +150,10 @@ void PMemPool::deallocate(void* p)
         else {
             // Find arena from map
             map<void*,PMemArena*>::iterator arena_it = stormap.upper_bound(p);
-            assert( arena_it != stormap.begin() );
+            PLASSERT( arena_it != stormap.begin() );
             --arena_it;
             PMemArena* arena = arena_it->second;
-            assert( arena && arena->belongsToArena(p));
+            PLASSERT( arena && arena->belongsToArena(p));
             arena->deallocate(p);
             last_arena = arena;
         }
@@ -161,9 +161,9 @@ void PMemPool::deallocate(void* p)
         // Check to see if arena should be eliminated
         if (last_arena && last_arena->empty()) {
             map<void*,PMemArena*>::iterator arena_it = stormap.upper_bound(p);
-            assert( arena_it != stormap.begin() );
+            PLASSERT( arena_it != stormap.begin() );
             --arena_it;
-            assert( last_arena == arena_it->second );
+            PLASSERT( last_arena == arena_it->second );
             stormap.erase(arena_it);
             arenas.remove(last_arena);
             last_arena = 0;

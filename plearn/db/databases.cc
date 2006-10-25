@@ -990,7 +990,7 @@ void loadUCIAMat(VMat& data, string file, PP<UCISpecification> uci_spec)
 // loadUCISet //
 ////////////////
 void loadUCISet(VMat& data, PP<UCISpecification> uci_spec) {
-    assert( uci_spec );
+    PLASSERT( uci_spec );
     if (!uci_spec->data_all.isEmpty())
         loadUCISet(data, uci_spec->data_all.absolute(), uci_spec);
     else {

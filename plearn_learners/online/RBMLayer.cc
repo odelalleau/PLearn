@@ -193,7 +193,7 @@ void RBMLayer::fprop( const Vec& input, Vec& output ) const
     // Yes it's ugly, blame the const plague
     RBMLayer* This = const_cast<RBMLayer*>(this);
 
-    assert( input.size() == This->input_size );
+    PLASSERT( input.size() == This->input_size );
     output.resize( This->output_size );
 
     This->activation << input;

@@ -72,7 +72,7 @@ ObjectOptionsIterator::ObjectOptionsIterator(const Object* root,
 {
     if (m_object) {
         m_options = &m_object->getOptionList();
-        assert( m_options );
+        PLASSERT( m_options );
 
         if (m_options->size() > 0) {
             m_invalid = false;
@@ -97,7 +97,7 @@ bool ObjectOptionsIterator::operator==(const ObjectOptionsIterator& rhs) const
 
 const Object* ObjectOptionsIterator::operator*() const
 {
-    assert( !m_invalid && m_object && m_options );
+    PLASSERT( !m_invalid && m_object && m_options );
 
     if (m_max_index > 0)
         return (*m_options)[m_cur_option]->getIndexedObject(m_object,
@@ -109,7 +109,7 @@ const Object* ObjectOptionsIterator::operator*() const
 
 string ObjectOptionsIterator::getCurrentOptionName() const
 {
-    assert( !m_invalid && m_object && m_options );
+    PLASSERT( !m_invalid && m_object && m_options );
     string optionname = (*m_options)[m_cur_option]->optionname();
     if (m_max_index > 0)
         optionname += '[' + tostring(m_cur_index) + ']';
@@ -119,20 +119,20 @@ string ObjectOptionsIterator::getCurrentOptionName() const
 
 OptionBase::flag_t ObjectOptionsIterator::getCurrentOptionFlags() const
 {
-    assert( !m_invalid && m_object && m_options );
+    PLASSERT( !m_invalid && m_object && m_options );
     return (*m_options)[m_cur_option]->flags();
 }
 
 
 const ObjectOptionsIterator& ObjectOptionsIterator::operator++()
 {
-    assert( !m_invalid && m_object && m_options );
+    PLASSERT( !m_invalid && m_object && m_options );
 
     do {
         // Start by considering current iteration within an indexable option
         if (m_max_index > 0) {
             ++m_cur_index;
-            assert( m_cur_index <= m_max_index );
+            PLASSERT( m_cur_index <= m_max_index );
             if (m_cur_index < m_max_index)
                 return *this;
         }
@@ -210,7 +210,7 @@ bool ObjectGraphIterator::operator==(const ObjectGraphIterator& rhs) const
 
 const ObjectGraphIterator& ObjectGraphIterator::operator++()
 {
-    assert( !invalid() );
+    PLASSERT( !invalid() );
     for ( ++m_it ; m_it != m_end && m_isa_tester && !m_isa_tester(**this) ; ++m_it )
         continue;
     return *this;

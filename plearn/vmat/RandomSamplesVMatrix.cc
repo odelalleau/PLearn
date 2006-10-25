@@ -149,7 +149,7 @@ void RandomSamplesVMatrix::build_()
     }
 
     // Find out length of this VMat if the 'n_non_preserved' option is set.
-    assert( n_non_preserved >= 0 || n_non_preserved == -1 ||
+    PLASSERT( n_non_preserved >= 0 || n_non_preserved == -1 ||
             n_non_preserved == -2 );
     if (n_non_preserved >= 0)
         length_ = indices.length() + n_non_preserved;

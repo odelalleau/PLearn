@@ -206,7 +206,7 @@ int LLC::outputsize() const
 ///////////
 void LLC::train()
 {
-    assert( mixture );
+    PLASSERT( mixture );
     if (stage >= nstages) {
         PLWARNING("In LLC::train - Learner has already been trained, skipping training");
         return;

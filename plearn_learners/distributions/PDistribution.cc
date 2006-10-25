@@ -436,8 +436,8 @@ void PDistribution::setPredictor(const Vec& predictor, bool call_parent) const
 {
     // Default behavior: only fill 'predictor_part' with first elements of
     // 'predictor'.
-    assert( predictor.length()      >= n_predictor );
-    assert( predictor_part.length() == n_predictor );
+    PLASSERT( predictor.length()      >= n_predictor );
+    PLASSERT( predictor_part.length() == n_predictor );
     if (predictor != predictor_part)
         predictor_part << predictor.subVec(0, n_predictor);
 }
@@ -449,7 +449,7 @@ bool PDistribution::setPredictorPredictedSizes(int the_predictor_size,
                                                int the_predicted_size,
                                                bool call_parent)
 {
-    assert( (the_predictor_size  >= 0 || the_predictor_size  == -1) &&
+    PLASSERT( (the_predictor_size  >= 0 || the_predictor_size  == -1) &&
             (the_predicted_size >= 0 || the_predicted_size == -1) );
     int backup_n_predictor = n_predictor;
     int backup_n_predicted = n_predicted;
@@ -500,7 +500,7 @@ void PDistribution::splitCond(const Vec& input) const {
         // (or that there is none at all).
         predicted_part << input;
     } else {
-        assert( input.length() == n_predictor + n_predicted );
+        PLASSERT( input.length() == n_predictor + n_predicted );
         predicted_part << input.subVec(n_predictor, n_predicted);
         setPredictor(input);
     }

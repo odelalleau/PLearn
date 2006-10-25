@@ -75,7 +75,7 @@ public:
                      streamsize inbuf_capacity=1000, streamsize unget_capacity=100);
 
     inline const string& getString() const
-    { assert(st); return *st; }
+    { PLASSERT(st); return *st; }
 
     inline void clear() 
     { 

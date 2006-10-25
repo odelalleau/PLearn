@@ -736,7 +736,7 @@ Vec PTester::perform(bool call_forget)
 
 void PTester::computeConfidence(VMat test_set, VMat confidence)
 {
-    assert(learner);
+    PLASSERT(learner);
     if (!confidence)
         return;
     ProgressBar* pb = 0;

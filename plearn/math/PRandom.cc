@@ -214,7 +214,7 @@ real PRandom::exp_sample() {
 //////////////////////////
 void PRandom::fill_random_discrete(const Vec& dest, const Vec& set)
 {
-    assert( dest.isEmpty() || !set.isEmpty() );
+    PLASSERT( dest.isEmpty() || !set.isEmpty() );
     Vec::iterator it = dest.begin();
     Vec::iterator itend = dest.end();
     int n = set.length();

@@ -138,7 +138,7 @@ void UniformDistribution::build_()
             PLERROR("In UniformDistribution::build_ - The value of 'n_dim' "
                     "does not match the length of the 'min' vector");
     }
-    assert( n_dim == min.length() );
+    PLASSERT( n_dim == min.length() );
     for (int i = 0; i < n_dim; i++) {
         if (min[i] > max[i]) {
             PLERROR("In UniformDistribution::build_ - 'min' should be always <= 'max'");

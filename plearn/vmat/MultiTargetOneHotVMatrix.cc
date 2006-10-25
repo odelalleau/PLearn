@@ -385,7 +385,7 @@ void MultiTargetOneHotVMatrix::build_()
 ///////////////
 void MultiTargetOneHotVMatrix::getNewRow(int i, const Vec& v) const
 {
-  assert( source && source_target || source_and_target);
+  PLASSERT( source && source_target || source_and_target);
   int is = source_inputsize;
   int ts;
   if(source_and_target)

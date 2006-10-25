@@ -87,15 +87,15 @@ getRow(int row, const Vec& rowbuf)
     
     // Finally    
     rowbuf << m_row_buffer;
-    assert( m_current_row == row );
-    assert( int(m_cached_rows.size()) <= m_max_size );
+    PLASSERT( m_current_row == row );
+    PLASSERT( int(m_cached_rows.size()) <= m_max_size );
 }
 
 void
 VMatAccessBuffer::
 lookAhead(int row, const Vec& rowbuf)
 {
-    assert( row > m_current_row );
+    PLASSERT( row > m_current_row );
     int last_row = m_current_row + m_cached_rows.size() - 1;
 
     if ( row <= last_row )
@@ -109,7 +109,7 @@ lookAhead(int row, const Vec& rowbuf)
     
     // Finally    
     rowbuf << m_row_buffer;
-    assert( int(m_cached_rows.size()) <= m_max_size );
+    PLASSERT( int(m_cached_rows.size()) <= m_max_size );
 }
 
 //! Deep copying

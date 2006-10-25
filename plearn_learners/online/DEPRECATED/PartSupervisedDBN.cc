@@ -329,7 +329,7 @@ void PartSupervisedDBN::build_layers()
     MODULE_LOG << "build_layers() called" << endl;
     if( inputsize_ >= 0 )
     {
-        assert( layers[0]->size + target_layer->size == inputsize() );
+        PLASSERT( layers[0]->size + target_layer->size == inputsize() );
         setPredictorPredictedSizes( layers[0]->size,
                                     target_layer->size, false );
         MODULE_LOG << "  n_predictor = " << n_predictor << endl;
@@ -537,7 +537,7 @@ void PartSupervisedDBN::expectation(Vec& mu) const
 /////////////
 real PartSupervisedDBN::density(const Vec& y) const
 {
-    assert( y.size() == n_predicted );
+    PLASSERT( y.size() == n_predicted );
 
     // TODO: 'y'[0] devrait plutot etre l'entier "index" lui-meme!
     int index = argmax( y );
@@ -1103,7 +1103,7 @@ real PartSupervisedDBN::jointGreedyStep( const Vec& input )
         int actual_index = argmax( input.subVec( n_predictor, n_predicted ) );
 #ifdef BOUNDCHECK
         for( int i=0 ; i<n_predicted ; i++ )
-            assert( is_equal( input[n_predictor+i], 0. ) ||
+            PLASSERT( is_equal( input[n_predictor+i], 0. ) ||
                     i == actual_index && is_equal( input[n_predictor+i], 1 ) );
 #endif
 
@@ -1150,7 +1150,7 @@ void PartSupervisedDBN::fineTuneByGradientDescent( const Vec& input,
     // update train_costs
 #ifdef BOUNDCHECK
     for( int i=0 ; i<n_predicted ; i++ )
-        assert( is_equal( predicted_part[i], 0. ) ||
+        PLASSERT( is_equal( predicted_part[i], 0. ) ||
                 i == actual_index && is_equal( predicted_part[i], 1. ) );
 #endif
     train_costs[0] = -pl_log( target_layer->expectation[actual_index] );
@@ -1199,7 +1199,7 @@ void PartSupervisedDBN::computeCostsFromOutputs(const Vec& input,
         int actual_index = argmax(predicted_part);
 #ifdef BOUNDCHECK
         for( int i=0 ; i<n_predicted ; i++ )
-            assert( is_equal( predicted_part[i], 0. ) ||
+            PLASSERT( is_equal( predicted_part[i], 0. ) ||
                     i == actual_index && is_equal( predicted_part[i], 1. ) );
 #endif
         costs[0] = -pl_log( output[actual_index] );

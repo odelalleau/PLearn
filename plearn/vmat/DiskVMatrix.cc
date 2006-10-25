@@ -286,7 +286,7 @@ void DiskVMatrix::getNewRow(int i, const Vec& v) const
     if(swap_endians)
         endianswap(&position);
     FILE* f = dataf[int(filenum)];
-    assert( f );
+    PLASSERT( f );
     fseek(f,position,SEEK_SET);
     if(old_format)
         binread_compressed(f,v.data(),v.length());

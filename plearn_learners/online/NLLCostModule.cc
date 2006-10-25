@@ -86,8 +86,8 @@ void NLLCostModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void NLLCostModule::fprop(const Vec& input, const Vec& target, Vec& cost) const
 {
-    assert( input.size() == input_size );
-    assert( target.size() == target_size );
+    PLASSERT( input.size() == input_size );
+    PLASSERT( target.size() == target_size );
     cost.resize( output_size );
 
     int the_target = (int) round( target[0] );
@@ -97,8 +97,8 @@ void NLLCostModule::fprop(const Vec& input, const Vec& target, Vec& cost) const
 void NLLCostModule::bpropUpdate(const Vec& input, const Vec& target, real cost,
                                 Vec& input_gradient)
 {
-    assert( input.size() == input_size );
-    assert( target.size() == target_size );
+    PLASSERT( input.size() == input_size );
+    PLASSERT( target.size() == target_size );
     input_gradient.resize( input_size );
 
     int the_target = (int) round( target[0] );

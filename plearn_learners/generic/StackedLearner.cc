@@ -359,7 +359,7 @@ void StackedLearner::computeOutput(const Vec& input, Vec& output) const
     {
         // This is a bit inconvenient... Make it a temporary matrix
         // If it's often needed, i'll optimize it further  --Nicolas
-        assert( base_learners_outputs.size() > 0 );
+        PLASSERT( base_learners_outputs.size() > 0 );
         Mat base_outputs_mat(base_learners_outputs.size(),
                              base_learners[0]->outputsize());
         for (int i=0, n=base_learners_outputs.size() ; i<n ; ++i)
@@ -484,7 +484,7 @@ TVec<string> StackedLearner::getTrainCostNames() const
 void StackedLearner::resizeBaseLearnersOutputs() {
     // Ensure that all base learners have the same outputsize if we don't use
     // a combiner
-    assert( base_learners.size() > 0 && base_learners[0] );
+    PLASSERT( base_learners.size() > 0 && base_learners[0] );
     if (! combiner && ! share_learner) {
         int outputsize = base_learners[0]->outputsize();
         if (outputsize > 0) {
@@ -506,7 +506,7 @@ void StackedLearner::resizeBaseLearnersOutputs() {
 
 void StackedLearner::setBaseLearnersTrainingSet(VMat base_trainset, bool call_forget)
 {
-    assert( base_learners.size() > 0 );
+    PLASSERT( base_learners.size() > 0 );
   
     // Handle parameter sharing
     if(share_learner) {

@@ -182,7 +182,7 @@ real LocallyMagnifiedDistribution::log_density(const Vec& y) const
     trainsample.resize(w+ws);
     Vec input = trainsample.subVec(0,w);
 
-    assert(targetsize()==0);
+    PLASSERT(targetsize()==0);
 
     int actual_nneighbors = max(nneighbors, width_neighbor);
     if(actual_nneighbors>l)

@@ -151,7 +151,7 @@ public:
 
     //!  Set here the allocator you want (we capture the object)
     static void allocator(alloc_type* the_alloc) {
-        assert(the_alloc);
+        PLASSERT(the_alloc);
         alloc = the_alloc;
     }
     static alloc_type& allocator() {

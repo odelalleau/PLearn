@@ -185,14 +185,14 @@ void VPLPreprocessedLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void VPLPreprocessedLearner::setValidationSet(VMat validset)
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
     inherited::setValidationSet(validset);
     learner_->setValidationSet(validset);
 }
 
 void VPLPreprocessedLearner::setTrainStatsCollector(PP<VecStatsCollector> statscol)
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
     inherited::setTrainStatsCollector(statscol);
     learner_->setTrainStatsCollector(statscol);
 }
@@ -203,35 +203,35 @@ int VPLPreprocessedLearner::outputsize() const
         return output_prg_fieldnames.length();
     else
     {
-        assert( learner_ );
+        PLASSERT( learner_ );
         return learner_->outputsize();
     }
 }
 
 void VPLPreprocessedLearner::setExperimentDirectory(const PPath& the_expdir)
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
     inherited::setExperimentDirectory(the_expdir);
     learner_->setExperimentDirectory(the_expdir);
 }
 
 void VPLPreprocessedLearner::forget()
 {
-    assert( learner_);
+    PLASSERT( learner_);
     learner_->forget();
     stage = 0;
 }
     
 void VPLPreprocessedLearner::train()
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
     learner_->train();
     stage = learner_->stage;
 }
 
 void VPLPreprocessedLearner::setTrainingSet(VMat training_set, bool call_forget)
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
 
     if(trainset_preproc!="")
     {
@@ -298,7 +298,7 @@ void VPLPreprocessedLearner::setTrainingSet(VMat training_set, bool call_forget)
 
 void VPLPreprocessedLearner::computeOutput(const Vec& input, Vec& output) const
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
     output.resize(outputsize());
     Vec newinput = input;
     if(input_prg)
@@ -326,11 +326,11 @@ void VPLPreprocessedLearner::computeOutputAndCosts(const Vec& input, const Vec& 
     output.resize(outputsize());
     costs.resize(nTestCosts());
 
-    assert( learner_ );
+    PLASSERT( learner_ );
     int ilen = input.length();
     int tlen = target.length();
-    assert(ilen==inputsize());
-    assert(tlen==targetsize());
+    PLASSERT(ilen==inputsize());
+    PLASSERT(tlen==targetsize());
 
     if(row_prg)
     {
@@ -381,7 +381,7 @@ bool VPLPreprocessedLearner::computeConfidenceFromOutput(
         PLERROR("In VPLPreprocessedLearner::computeConfidenceFromOutput, length of passed output (%d)"
                 "differes from outputsize (%d)!",output.length(),d);
 
-    assert( learner_ );
+    PLASSERT( learner_ );
     Vec newinput = input;
     if(input_prg)
     {
@@ -455,19 +455,19 @@ TVec<string> VPLPreprocessedLearner::getTestCostNames() const
 
 TVec<string> VPLPreprocessedLearner::getTrainCostNames() const
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
     return learner_->getTrainCostNames();
 }
 
 void VPLPreprocessedLearner::resetInternalState()
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
     learner_->resetInternalState();
 }
 
 bool VPLPreprocessedLearner::isStatefulLearner() const
 {
-    assert( learner_ );
+    PLASSERT( learner_ );
     return learner_->isStatefulLearner();
 }
 

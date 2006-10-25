@@ -58,22 +58,22 @@ void choleskyAppendDimension(Mat& L, const Vec& new_row)
 {
     static Vec last_row;
     int n = L.length();
-    assert( L.width() == n);
-    assert( new_row.length() == n + 1 );
-    assert( new_row.last() >= 0 );
+    PLASSERT( L.width() == n);
+    PLASSERT( new_row.length() == n + 1 );
+    PLASSERT( new_row.last() >= 0 );
 
     if (n == 0) {
         // Simpler version for this specific case.
         L.resize(1, 1);
         L(0, 0) = sqrt(new_row[0]);
-        assert( !L.hasMissing() );
+        PLASSERT( !L.hasMissing() );
         return;
     }
 
     last_row.resize(n);
     choleskyLeftSolve(L, new_row.subVec(0, n), last_row);
     last_row.append(sqrt(new_row.last() - pownorm(last_row)));
-    assert( !last_row.hasMissing() );
+    PLASSERT( !last_row.hasMissing() );
     L.resize(n + 1, n + 1, 0, true);
     L(n) << last_row;
 }
@@ -291,7 +291,7 @@ void chol_dxch_tr(Mat& R, int l, int m)
 void chol_rotapp(real c, real s, const Vec& x, const Vec& y)
 {
     static Vec t;
-    assert( x.length() == y.length() );
+    PLASSERT( x.length() == y.length() );
     t.resize(x.length());
     t << x;
     multiplyScaledAdd(y, c, s, t);
@@ -305,8 +305,8 @@ void chol_rotapp(real c, real s, const Vec& x, const Vec& y)
 void chol_rotapp_tr(real c, real s, const Mat& x, const Mat& y)
 {
     static Mat t;
-    assert( x.length() == y.length() );
-    assert( x.width() == 1 );
+    PLASSERT( x.length() == y.length() );
+    PLASSERT( x.width() == 1 );
     t.resize(x.length(), x.width());
     t << x;
     x *= c;

@@ -119,7 +119,7 @@ double pl_strtod(const char* nptr, char** endptr)
         return MISSING_VALUE;
     if (infinity)
         return minus ? - INFINITY : INFINITY;
-    assert( false );
+    PLASSERT( false );
     return 0;
 #else
     // Under other operating systems, there shoud be no problems with NaN and

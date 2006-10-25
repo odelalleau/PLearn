@@ -309,7 +309,7 @@ void ChemicalICP::run()
     }
 
     if (every_x > 0) {
-        assert( find_mol >= 0 );
+        PLASSERT( find_mol >= 0 );
         if (mem_count[find_mol] % every_x != 0)
             realign = false;
     }
@@ -408,7 +408,7 @@ void ChemicalICP::run()
 
     if (memory != "none") {
         // Remember this alignment.
-        assert( find_mol >= 0 );
+        PLASSERT( find_mol >= 0 );
         mem_error[find_mol] = error;
         mem_rotation[find_mol].resize(rotation.length(), rotation.width());
         mem_rotation[find_mol] << rotation;
@@ -419,7 +419,7 @@ void ChemicalICP::run()
     }
 
     } else {
-        assert( find_mol >= 0 );
+        PLASSERT( find_mol >= 0 );
         error = mem_error[find_mol];
         // Copies make the code simpler, though it would be slightly more
         // efficient to use resize and the << operator.

@@ -109,7 +109,7 @@ real pl_gser(real a, real x) {
 // the incomplete gamma function
 real  pl_gcf(real a, real x)
 {
-    assert( !is_missing(a) && !is_missing(x) );
+    PLASSERT( !is_missing(a) && !is_missing(x) );
   
     int i;
     real an,b,c,d,del,h;

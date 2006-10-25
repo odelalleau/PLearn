@@ -201,7 +201,7 @@ void MeanImputationVMatrix::build_()
             if (distribution->stage == 0) {
                 // Currently not implemented for a limited number of training
                 // samples, but it should not be too difficult to do it.
-                assert( number_of_train_samples == 0 );
+                PLASSERT( number_of_train_samples == 0 );
                 VMat the_train_source = mean_source ? mean_source : source;
                 // Redefine sizes to train on the whole data.
                 the_train_source = new ForwardVMatrix(the_train_source);
@@ -253,7 +253,7 @@ void MeanImputationVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ///////////////
 void MeanImputationVMatrix::getNewRow(int i, const Vec& v) const
 {
-    assert( source );
+    PLASSERT( source );
     source->getRow(i, v);
 
     if (v.hasMissing())
@@ -298,16 +298,16 @@ void MeanImputationVMatrix::computeMeanVector()
 {
     VMat the_mean_source;
     if (mean_source) {
-        assert( mean_source->width() == source->width() );
+        PLASSERT( mean_source->width() == source->width() );
         the_mean_source = mean_source;
     } else
         the_mean_source = source;
    
-    assert( the_mean_source );
+    PLASSERT( the_mean_source );
 
     int length = the_mean_source->length();
     int width = width_;
-    assert( width = the_mean_source->width() );
+    PLASSERT( width = the_mean_source->width() );
     variable_mean.resize(width);
     if (number_of_train_samples > 0.0)
     {

@@ -268,7 +268,7 @@ void RBMLQParameters::computeUnitActivations
     {
 
         // TODO: change it to work with start and length
-        assert( start+length <= down_layer_size );
+        PLASSERT( start+length <= down_layer_size );
         Mat activations_mat = activations.toMat( activations.length()/2 , 2);
         Mat mu = activations_mat.column(0) ; 
         Mat sigma = activations_mat.column(1) ; 
@@ -286,8 +286,8 @@ void RBMLQParameters::computeUnitActivations
     }
     else
     {
-        assert( activations.length() == length );
-        assert( start+length <= up_layer_size );
+        PLASSERT( activations.length() == length );
+        PLASSERT( start+length <= up_layer_size );
         // mu = activations[i] = -(sum_j weights(i,j) input_vec[j] + b[i])
         //                    / (2 * up_units_params[i][1]^2)
 //        product( weights, input_vec , activations) ;
@@ -305,9 +305,9 @@ void RBMLQParameters::bpropUpdate(const Vec& input, const Vec& output,
                                   const Vec& output_gradient)
 {
     //TODO: clean up the code a bit
-    assert( input.size() == down_layer_size );
-    assert( output.size() == 2 * up_layer_size );
-    assert( output_gradient.size() == 2 * up_layer_size );
+    PLASSERT( input.size() == down_layer_size );
+    PLASSERT( output.size() == 2 * up_layer_size );
+    PLASSERT( output_gradient.size() == 2 * up_layer_size );
     input_gradient.resize( down_layer_size );
 
     // weights -= learning_rate * output_gradient * input'

@@ -88,9 +88,9 @@ int NLLErrModule::getTarget(const Vec& input) const
 
 #ifdef BOUNDCHECK
         // check if vector matches with a one-hot one
-        assert( is_equal( the_target[target], 1. ) ) ;
+        PLASSERT( is_equal( the_target[target], 1. ) ) ;
         for( int i=0 ; i<input_size ; i++ )
-            assert( is_equal( the_target[i], 0. ) || i == target );
+            PLASSERT( is_equal( the_target[i], 0. ) || i == target );
 #endif
     }
     else

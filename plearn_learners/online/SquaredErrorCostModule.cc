@@ -86,8 +86,8 @@ void SquaredErrorCostModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 void SquaredErrorCostModule::fprop(const Vec& input, const Vec& target,
                                    Vec& cost) const
 {
-    assert( input.size() == input_size );
-    assert( target.size() == target_size );
+    PLASSERT( input.size() == input_size );
+    PLASSERT( target.size() == target_size );
     cost.resize( output_size );
 
     cost[0] = powdistance( input, target );
@@ -97,8 +97,8 @@ void SquaredErrorCostModule::fprop(const Vec& input, const Vec& target,
 void SquaredErrorCostModule::bpropUpdate(const Vec& input, const Vec& target,
                                          real cost, Vec& input_gradient)
 {
-    assert( input.size() == input_size );
-    assert( target.size() == target_size );
+    PLASSERT( input.size() == input_size );
+    PLASSERT( target.size() == target_size );
     input_gradient.resize( input_size );
 
     // input_gradient = 2*(input - target)

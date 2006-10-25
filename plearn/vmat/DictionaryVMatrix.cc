@@ -182,7 +182,7 @@ void DictionaryVMatrix::build_()
     if (!python && code != "")
     {
         python = new PythonCodeSnippet(code);
-        assert( python );
+        PLASSERT( python );
         python->build();
     }
 

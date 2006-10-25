@@ -810,7 +810,7 @@ public:
     //!  Permit limited random access from an iterator (positive
     //!  directions only!)
     RowIterator operator[](int i) {
-        assert(i >= 0);
+        PLASSERT(i >= 0);
         RowIterator it = *this;
         while (i--)
             ++it;
@@ -1516,7 +1516,7 @@ void SimpleDB<KT,QR>::computeSize()
     int fd = seekToEnd();
     assert (fd != -1 && last >= 0);
     off_t pos = lseek(fd, 0ul, SEEK_CUR);
-    assert(row_size > 0 && pos % row_size == 0);
+    PLASSERT(row_size > 0 && pos % row_size == 0);
     size_ = pos / row_size + last * max_records_file;
     }
     */

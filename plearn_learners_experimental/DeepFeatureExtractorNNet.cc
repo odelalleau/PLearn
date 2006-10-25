@@ -869,7 +869,7 @@ void DeepFeatureExtractorNNet::buildCosts(const Var& the_output, const Var& the_
             else if (cost_funcs[k]=="stable_cross_entropy") {
                 Var c = stable_cross_entropy(before_transfer_func, the_target);
                 costs[k] = c;
-                assert( classification_regularizer >= 0 );
+                PLASSERT( classification_regularizer >= 0 );
                 if (classification_regularizer > 0) {
                     // There is a regularizer to add to the cost function.
                     dynamic_cast<NegCrossEntropySigmoidVariable*>((Variable*) c)->
@@ -934,7 +934,7 @@ void DeepFeatureExtractorNNet::buildCosts(const Var& the_output, const Var& the_
                 else if (cost_funcs[k]=="stable_cross_entropy") {
                     Var c = stable_cross_entropy(before_transfer_func, the_target);
                     costs[k] = c;
-                    assert( classification_regularizer >= 0 );
+                    PLASSERT( classification_regularizer >= 0 );
                     if (classification_regularizer > 0) {
                         // There is a regularizer to add to the cost function.
                         dynamic_cast<NegCrossEntropySigmoidVariable*>((Variable*) c)->
@@ -1054,7 +1054,7 @@ void DeepFeatureExtractorNNet::buildCosts(const Var& the_output, const Var& the_
         if(output_sup) c = c+costs[0];
 
         costs.push_back(c);
-        assert( regularizer >= 0 );
+        PLASSERT( regularizer >= 0 );
         if (regularizer > 0) {
             // There is a regularizer to add to the cost function.
             dynamic_cast<NegCrossEntropySigmoidVariable*>((Variable*) c)->

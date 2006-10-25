@@ -149,8 +149,8 @@ void PythonProcessedVMatrix::build_()
 {
     // First step, compile the Python code
     compileAndInject();
-    assert( python );
-    assert( source );
+    PLASSERT( python );
+    PLASSERT( source );
     
     // Next ensure that we have some consistency
     if (! python->isInvokable("getRow"))
@@ -290,7 +290,7 @@ void PythonProcessedVMatrix::compileAndInject()
 {
     if (! python) {
         python = new PythonCodeSnippet(m_code);
-        assert( python );
+        PLASSERT( python );
         python->build();
         python->inject("getSourceRow", this, &PythonProcessedVMatrix::getSourceRow);
         python->inject("getParams",    this, &PythonProcessedVMatrix::getParams);

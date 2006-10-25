@@ -149,7 +149,7 @@ void KernelRidgeRegressor::forget()
     
 void KernelRidgeRegressor::train()
 {
-    assert( m_kernel );
+    PLASSERT( m_kernel );
     if (! train_set)
         PLERROR("KernelRidgeRegressor::train: the training set must be specified");
     int inputsize  = train_set->inputsize() ;
@@ -183,9 +183,9 @@ void KernelRidgeRegressor::train()
 
 void KernelRidgeRegressor::computeOutput(const Vec& input, Vec& output) const
 {
-    assert( m_kernel && m_params.isNotNull() && m_training_inputs );
+    PLASSERT( m_kernel && m_params.isNotNull() && m_training_inputs );
 
-    assert( output.size() == m_params.width() );
+    PLASSERT( output.size() == m_params.width() );
     m_kernel_evaluations.resize(m_params.length());
     m_kernel->evaluate_all_x_i(input, m_kernel_evaluations);
 

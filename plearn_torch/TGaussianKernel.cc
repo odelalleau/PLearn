@@ -135,7 +135,7 @@ void TGaussianKernel::updateFromTorch() {
   if (gaussian_kernel->g == 0)
     g = 0;
   else {
-    assert( gaussian_kernel->g > 0 );
+    PLASSERT( gaussian_kernel->g > 0 );
     sigma = 1.0 / sqrt(gaussian_kernel->g);
     if (g >= 0)
       g = gaussian_kernel->g;

@@ -78,14 +78,14 @@ ObservationWindow::update(const Vec& obs, real weight/*=1.0*/)
     m_obs_weights[m_cursor % m_window] = weight;
     m_cursor++;        
     
-    assert( m_nobs <= m_window );
+    PLASSERT( m_nobs <= m_window );
     m_last_update_rvalue = tuple<Vec, real>(outdated, outdated_weight);
     return m_last_update_rvalue;
 }
 
 const Vec ObservationWindow::getObs(int t) const
 {
-    assert( t < m_window );
+    PLASSERT( t < m_window );
     if ( length() < m_window )
         return m_observations(t);
 
@@ -95,7 +95,7 @@ const Vec ObservationWindow::getObs(int t) const
 
 real ObservationWindow::getObs(int t, int col) const
 {
-    assert( t < m_window ); 
+    PLASSERT( t < m_window ); 
     if ( length() < m_window )
         return m_observations(t, col);
 
@@ -105,7 +105,7 @@ real ObservationWindow::getObs(int t, int col) const
 
 real ObservationWindow::getWeight(int t) const
 {
-    assert( t < m_window ); 
+    PLASSERT( t < m_window ); 
     if ( length() < m_window )
         return m_obs_weights[t];
 

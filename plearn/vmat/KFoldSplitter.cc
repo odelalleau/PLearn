@@ -92,7 +92,7 @@ void KFoldSplitter::declareOptions(OptionList& ol)
 
 void KFoldSplitter::build_()
 {
-    assert( K > 0 || K == -1 );
+    PLASSERT( K > 0 || K == -1 );
 }
 
 void KFoldSplitter::build()
@@ -127,7 +127,7 @@ TVec<VMat> KFoldSplitter::getSplit(int k)
     real start = cross_range.first;
     real end   = cross_range.second;
     int n_data = dataset->length();
-    assert( start >= 0 && end >= 0 && end > start && start < n_data && end < n_data );
+    PLASSERT( start >= 0 && end >= 0 && end > start && start < n_data && end < n_data );
     int i_start = 0;
     if (start > 0)
         i_start = start >= 1 ? int(round(start)) : int(round(n_data * start));

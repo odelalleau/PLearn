@@ -167,7 +167,7 @@ void ExhaustiveNearestNeighbors::train()
 // New implementation (more efficient)
 void ExhaustiveNearestNeighbors::findNearestNeighbors(const Vec& input, int K, TVec<int>& indices, Vec& distances) const
 {
-    assert(pq.empty());
+    PLASSERT(pq.empty());
     if(cached_inputs.size()==0)
         preloadInputCache();    
 

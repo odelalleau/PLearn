@@ -96,7 +96,7 @@ TVec<string> StepwiseSelectionOracle::generateNextTrial(
         return TVec<string>();
     else {
         if (older_trial.size() > 0) {
-            assert(older_trial.size() == 1);
+            PLASSERT(older_trial.size() == 1);
             // insert negative of objective since priority_queue computes
             // the maximum of its inserted elements
             combination_performance.push(make_pair(- obtained_objective,
@@ -108,7 +108,7 @@ TVec<string> StepwiseSelectionOracle::generateNextTrial(
         if (last_combination)
             return TVec<string>();
 
-        assert(current_indexes_searchset.begin() !=
+        PLASSERT(current_indexes_searchset.begin() !=
                current_indexes_searchset.end());
 
         string optionval = *current_indexes_searchset.begin();
@@ -160,7 +160,7 @@ void StepwiseSelectionOracle::generateNewSearchset()
     }
     else {
         // There should have been nothing computed before...
-        assert( base_selected_variables.size() == 0);
+        PLASSERT( base_selected_variables.size() == 0);
     }
 
     // Second, find the remaining variables (not in base_selected_variables)

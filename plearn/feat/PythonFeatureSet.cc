@@ -82,7 +82,7 @@ void PythonFeatureSet::build_()
     if (code != "")
     {
         python = new PythonCodeSnippet(code);
-        assert( python );
+        PLASSERT( python );
         python->build();
     }
 

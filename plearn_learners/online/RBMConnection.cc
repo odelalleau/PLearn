@@ -155,14 +155,14 @@ void RBMConnection::setMomentum( real the_momentum )
 
 void RBMConnection::setAsUpInput( const Vec& input ) const
 {
-    assert( input.size() == up_size );
+    PLASSERT( input.size() == up_size );
     input_vec = input;
     going_up = false;
 }
 
 void RBMConnection::setAsDownInput( const Vec& input ) const
 {
-    assert( input.size() == down_size );
+    PLASSERT( input.size() == down_size );
     input_vec = input;
     going_up = true;
 }

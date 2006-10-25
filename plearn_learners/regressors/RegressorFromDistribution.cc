@@ -131,7 +131,7 @@ void RegressorFromDistribution::train()
 ///////////////////
 void RegressorFromDistribution::computeOutput(const Vec& input, Vec& output) const
 {
-    assert( distribution );
+    PLASSERT( distribution );
     distribution->setPredictor(input);
     distribution->expectation(output);
 }
@@ -174,7 +174,7 @@ void RegressorFromDistribution::setTrainingSet(VMat training_set,
                                                bool call_forget)
 {
     inherited::setTrainingSet(training_set, call_forget);
-    assert( training_set->inputsize()  >= 0 &&
+    PLASSERT( training_set->inputsize()  >= 0 &&
             training_set->targetsize() >= 1    );
     // Create a dataset whose input part is the concatenation of the input and
     // target parts of the training set.
@@ -183,7 +183,7 @@ void RegressorFromDistribution::setTrainingSet(VMat training_set,
     all_input_trainset->defineSizes(training_set->inputsize() +
             training_set->targetsize(), 0, training_set->weightsize(),
             training_set->extrasize());
-    assert( distribution );
+    PLASSERT( distribution );
     // Note that 'call_forget' is set to false in the following call, because
     // if it was true, then distribution->forget() would have already been
     // called in this->forget().

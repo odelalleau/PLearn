@@ -115,7 +115,7 @@ void ThresholdedKernel::build_()
     if (source_kernel && !source_kernel->is_symmetric)
         PLERROR("In ThresholdedKernel::build_ - The source kernel must currently "
                 "be symmetric");
-    assert( knn_approximation >= 0);
+    PLASSERT( knn_approximation >= 0);
     knn_approx = !fast_exact_is_equal(knn_approximation, 0);
     if (knn_approx) {
         if (knn_approximation > 1)
@@ -167,7 +167,7 @@ real ThresholdedKernel::evaluate(const Vec& x1, const Vec& x2) const {
             return k_x1_x2;
         return threshold;
     }
-    assert( false );
+    PLERROR("ThresholdedKernel::evaluate: unsupported method '%s'", method.c_str());
     return MISSING_VALUE;
 }
 
@@ -182,7 +182,7 @@ real ThresholdedKernel::evaluate_i_j(int i, int j) const {
         else
             return threshold;
     }
-    assert( false );
+    PLERROR("ThresholdedKernel::evaluate_i_j: unsupported method '%s'", method.c_str());
     return MISSING_VALUE;
 }
 
@@ -215,7 +215,7 @@ real ThresholdedKernel::evaluate_i_x_again(int i, const Vec& x, real squared_nor
         else
             return threshold;
     }
-    assert( false );
+    PLERROR("ThresholdedKernel::evaluate_i_x_again: unsupported method '%s'", method.c_str());
     return MISSING_VALUE;
 }
 
@@ -292,7 +292,7 @@ void ThresholdedKernel::setDataForKernelMatrix(VMat the_data) {
         if (knn_approx) {
             if (knn_approximation <= 1) {
                 n_approx = int(round(knn_approximation * n));
-                assert( n_approx >= 1 );
+                PLASSERT( n_approx >= 1 );
             } else {
                 int k_int = int(round(knn_approximation));
                 if (k_int > n)
@@ -368,7 +368,7 @@ void ThresholdedKernel::setDataForKernelMatrix(VMat the_data) {
                         PLERROR("In ThresholdedKernel::setDataForKernelMatrix "
                                 "- Cannot currently cache the Gram matrix when"
                                 " using the knn approximation");
-                    assert( !knn_approx );
+                    PLASSERT( !knn_approx );
                     // Let us cache the sparse Gram matrix.
                     if (!fast_exact_is_equal(threshold, 0))
                         PLWARNING("In ThresholdedKernel::setDataForKernelMatrix - The sparse "
@@ -406,7 +406,7 @@ void ThresholdedKernel::setDataForKernelMatrix(VMat the_data) {
     }
     k_x_xi.resize(knn_approx ? n_approx : n);
     k_x_xi_mat = k_x_xi.toMat(k_x_xi.length(), 1);
-    assert( !knn_kernel_values.hasMissing() );
+    PLASSERT( !knn_kernel_values.hasMissing() );
 }
 
 /////////////////////////

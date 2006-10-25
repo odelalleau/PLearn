@@ -186,7 +186,7 @@ int KNNClassifier::outputsize() const
 
 void KNNClassifier::setTrainingSet(VMat training_set, bool call_forget)
 {
-    assert( knn );
+    PLASSERT( knn );
     inherited::setTrainingSet(training_set,call_forget);
 
     // Now we carry out a little bit of tweaking on the embedded knn:
@@ -208,13 +208,13 @@ void KNNClassifier::setTrainingSet(VMat training_set, bool call_forget)
 
 void KNNClassifier::forget()
 {
-    assert( knn );
+    PLASSERT( knn );
     knn->forget();
 }
     
 void KNNClassifier::train()
 {
-    assert( knn );
+    PLASSERT( knn );
     knn->train();
 }
 
@@ -248,7 +248,7 @@ void KNNClassifier::computeOutput(const Vec& input, Vec& output) const
             PLERROR("KNNClassifier::computeOutput: expected the class to be between 0 "
                     "and %d but found %f", nclasses-1, nn_class);
         w *= *output_data++;                     //!< account for training weight
-        assert( w >= 0.0 );
+        PLASSERT( w >= 0.0 );
         class_weights[nn_class] += w;
         total_weight += w;
     }
@@ -270,7 +270,7 @@ void KNNClassifier::computeOutput(const Vec& input, Vec& output) const
 void KNNClassifier::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                             const Vec& target, Vec& costs) const
 {
-    assert( costs.size() == 2 );
+    PLASSERT( costs.size() == 2 );
     int sel_class = argmax(output);
     costs[0] = sel_class != int(target[0]);
     costs[1] = -pl_log(output[int(target[0])]);

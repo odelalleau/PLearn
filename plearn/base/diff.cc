@@ -55,7 +55,7 @@ using namespace std;
   int diff(const string& refer, const string& other, const OptionBase* opt, PLearnDiff* diffs)
   {
   pout << "Calling basic diff with Option< ObjectType, " << opt->optiontype() << " >" << endl;
-  assert( diffs );
+  PLASSERT( diffs );
   return diffs->diff(refer, other, opt->optionname());
   }
 */
@@ -70,7 +70,7 @@ int diff(PP<Object> refer, PP<Object> other, PLearnDiff* diffs)
         diffs = new PLearnDiff();
         delete_diffs = true;
     }
-    assert(diffs);
+    PLASSERT(diffs);
     // Check objects are of the same class.
     string refer_class = refer ? refer->classname() : "null";
     string other_class = other ? other->classname() : "null";
@@ -79,7 +79,7 @@ int diff(PP<Object> refer, PP<Object> other, PLearnDiff* diffs)
         return n_diffs; // We cannot compare two objects from different classes.
     else if (!other && !refer)
         return 0; // Both objects are null pointers.
-    assert( other && refer );
+    PLASSERT( other && refer );
     OptionList& options = refer->getOptionList();
     for (OptionList::const_iterator it = options.begin(); it != options.end(); it++) {
         // pout << "Comparing " << (*it)->optionname() << endl;

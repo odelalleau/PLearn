@@ -99,7 +99,7 @@ void PLearnDiff::build()
 ///////////////////
 void PLearnDiff::addDiffPrefix(const string& prefix, int n)
 {
-    assert( n >= 0 && n <= diffs.length() );
+    PLASSERT( n >= 0 && n <= diffs.length() );
     int l = diffs.length() - 1;
     for (int j = 0; j < n; j++)
         diffs(l - j, 0) = prefix + diffs(l - j, 0);
@@ -107,7 +107,7 @@ void PLearnDiff::addDiffPrefix(const string& prefix, int n)
 
 void addDiffPrefix(PLearnDiff* diffs, const string& prefix, int n)
 {
-    assert( diffs );
+    PLASSERT( diffs );
     diffs->addDiffPrefix(prefix, n);
 }
 
@@ -132,7 +132,7 @@ int PLearnDiff::diff(const string& refer, const string& other, const string& nam
 
 int diff(PLearnDiff* diffs, const string& refer, const string& other, const string& name)
 {
-    assert( diffs );
+    PLASSERT( diffs );
     return diffs->diff(refer, other, name);
 }
 
@@ -149,7 +149,7 @@ void PLearnDiff::forget()
 ////////////////////////////
 real get_absolute_tolerance(PLearnDiff* diffs)
 {
-    assert( diffs );
+    PLASSERT( diffs );
     return diffs->absolute_tolerance;
 }
 
@@ -158,7 +158,7 @@ real get_absolute_tolerance(PLearnDiff* diffs)
 ////////////////////////////
 real get_relative_tolerance(PLearnDiff* diffs)
 {
-    assert( diffs );
+    PLASSERT( diffs );
     return diffs->relative_tolerance;
 }
 

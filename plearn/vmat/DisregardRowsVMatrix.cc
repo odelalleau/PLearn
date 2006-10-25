@@ -74,7 +74,7 @@ DisregardRowsVMatrix::DisregardRowsVMatrix(VMat the_source)
       _disregard_missings(true),
       _maximum_length(-1)
 {
-    assert( the_source );
+    PLASSERT( the_source );
     source = the_source;
     build();
 }

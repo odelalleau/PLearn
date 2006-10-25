@@ -103,7 +103,7 @@ void RunObject::build_()
         PLDEPRECATED("In RunObject::build_ - Option 'underlying_object' is now"
                      " deprecated, please use the 'objects' option (note that "
                      "this is still going to work as usual)");
-        assert( objects.isEmpty() && !run_objects );
+        PLASSERT( objects.isEmpty() && !run_objects );
         run_objects = false;
         objects.resize(0);
         objects.append(underlying_object);
@@ -112,7 +112,7 @@ void RunObject::build_()
         PLDEPRECATED("In RunObject::build_ - Option 'save_object_name' is now"
                      "deprecated, please use the 'save_files' option (note "
                      "that this is still going to work as usual)");
-        assert(save_files.isEmpty() && !run_objects && objects.length() == 1);
+        PLASSERT(save_files.isEmpty() && !run_objects && objects.length() == 1);
         save_files.resize(0);
         save_files.append(save_object_name);
     }
@@ -146,13 +146,13 @@ void RunObject::run() {
         for (int i = 0; i < objects.length(); i++)
             objects[i]->run();
 
-    assert( save_files.isEmpty() || save_files.length() == 1
+    PLASSERT( save_files.isEmpty() || save_files.length() == 1
                                  || save_files.length() == objects.length() );
     if (!save_files.isEmpty()) {
         TVec<PPath> paths = save_files;
         if (paths.length() != objects.length()) {
             // Automatically generate paths with an increasing counter.
-            assert( paths.length() == 1 );
+            PLASSERT( paths.length() == 1 );
             PPath basepath = paths[0];
             PPath no_ext = basepath.no_extension();
             string ext = basepath.extension(true);
@@ -160,7 +160,7 @@ void RunObject::run() {
             for (int i = 0; i < paths.length(); i++)
                 paths[i] = no_ext + "_" + tostring(i) + ext;
         }
-        assert( objects.length() == paths.length() );
+        PLASSERT( objects.length() == paths.length() );
         for (int i = 0; i < objects.length(); i++)
             PLearn::save(paths[i], objects[i]);
     }

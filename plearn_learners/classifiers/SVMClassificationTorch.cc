@@ -165,10 +165,10 @@ void SVMClassificationTorch::computeCostsFromOutputs(const Vec& input, const Vec
     // No cost computed.
     // For safety, we check we are trying to do binary classification with -1
     // and 1, or 0 and 1 when the 'target_01' option is set.
-    assert( target.length() == 1 &&
+    PLASSERT( target.length() == 1 &&
             ((target_01  && (target[0] == 1 || target[0] == 0)) ||
              (!target_01 && (target[0] == 1 || target[0] == -1))) );
-    assert( output.length() == 1 );
+    PLASSERT( output.length() == 1 );
     costs.resize(1);
     real sig_output = sigmoid(output[0]);
     if (fast_exact_is_equal(sig_output, 0))
@@ -248,7 +248,7 @@ void SVMClassificationTorch::setTrainingSet(VMat training_set, bool call_forget)
     if (target_01) {
         // Create processing program.
         int target_col = training_set->inputsize();
-        assert( target_col > 0 );
+        PLASSERT( target_col > 0 );
         string prog = "[%0:%" + tostring(target_col - 1) + "] %" +
             tostring(target_col) + " 1 == 1 -1 ifelse :target";
         if (training_set->weightsize() > 0) {

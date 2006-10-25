@@ -143,7 +143,7 @@ public:
     virtual int indexableSize(const Object* o) const
     {
         const ObjectType* oto = dynamic_cast<const ObjectType*>(o);
-        assert( oto );
+        PLASSERT( oto );
         return indexableObjectSize(oto->*ptr);
     }
 

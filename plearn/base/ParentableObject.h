@@ -241,7 +241,7 @@ template <class T>
 void TypedParentableObject<T>::checkParent() const
 {
     // We simply dynamically check that the parent, makes sense
-    assert( m_parent );
+    PLASSERT( m_parent );
     if (! dynamic_cast<T*>(m_parent))
         PLERROR("TypedParentableObject::checkParent: Expected a parent of type %s\n"
                 "but got one of type %s", T::_classname_().c_str(),

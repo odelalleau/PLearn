@@ -70,7 +70,7 @@ ostream& operator<<(ostream& out, const map<Key, Value>& m)
         for ( unsigned int elem = 0; elem < m.size()-1; elem++, it++ ) 
             out << it->first << " : " << it->second << ", " << flush;
 
-        assert( it != m.end() );
+        PLASSERT( it != m.end() );
         out << it->first << " : " << it->second << flush;
     }
   
