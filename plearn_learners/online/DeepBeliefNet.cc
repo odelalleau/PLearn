@@ -822,6 +822,8 @@ void DeepBeliefNet::fineTuningStep( const Vec& input, const Vec& target,
                                             expectation_gradients[n_layers-2],
                                             class_gradient );
     }
+    else
+        train_costs.resize(0);
 
     for( int i=n_layers-2 ; i>0 ; i-- )
     {
