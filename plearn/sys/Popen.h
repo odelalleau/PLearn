@@ -88,7 +88,11 @@ public:
         has been read. (Some progs block until their output is read.)
     */
     int wait();
-    
+
+    /** Close the pipes and forcibly terminate the process. If you wait until
+        the process terminates by itself, you should call the wait() member
+        function before the destructor is called.
+     */
     ~Popen();
 };
 

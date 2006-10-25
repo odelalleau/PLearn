@@ -167,6 +167,11 @@ int Popen::wait()
 
 Popen::~Popen()
 {
+    // If we get here, there's no way the caller that instantiated us will be
+    // reading any more from the process at the other end of the pipe, and they
+    // won't be able to retrieve the exit code either. So just make sure we
+    // don't hang on the wait and that we don't leave zombie processes around.
+    PR_KillProcess(process);
     wait();
 }
 
