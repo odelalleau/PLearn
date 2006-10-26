@@ -795,6 +795,10 @@ def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_l
             if info.hasmain or create_dll or create_so:
                 if not force_link and not force_recompilation and info.corresponding_output_is_up_to_date() and not create_dll and not create_so:
                     info.make_symbolic_link(linkname) # remake the correct symbolic link
+                    if os.path.islink(target):
+                        target_path = os.path.dirname(target)
+                        toolkit.symlink(os.path.join(info.filedir, info.filebase),
+                                        os.path.join(target_path, info.filebase), True, True)
                     print 'Target',info.filebase,'is up to date.'
                 else:
                     executables_to_link[info] = 1
@@ -892,6 +896,7 @@ def sequential_link(executables_to_link, linkname):
     """executables_to_link is a list of FileInfo of .cc files that contain a main()
     and whose corresponding executable should be made"""
     for ccfile in executables_to_link:
+        print 'exec', executables_to_link
         failures =  ccfile.failed_ccfiles_to_link()
         if failures:
             print '[ Executable target',ccfile.filebase,'not remade because of previous compilation errors. ]'
@@ -1712,27 +1717,28 @@ class FileInfo:
         backup_cwd = os.getcwd()
         os.chdir(self.filedir)
 
-        # User-provided base name for the file we point to?
-        if symlink_source_basename is not None:
-            symlink_to_base = symlink_source_basename
-        else:
-            symlink_to_base = self.filebase
+        try:
+            # User-provided base name for the file we point to?
+            if symlink_source_basename is not None:
+                symlink_to_base = symlink_source_basename
+            else:
+                symlink_to_base = self.filebase
 
-        symlink_to = join(objsdir, symlink_to_base)
-        if linkname != '':
-            symlink_to = join(self.filedir, symlink_to)
+            symlink_to = join(objsdir, symlink_to_base)
+            if linkname != '':
+                symlink_to = join(self.filedir, symlink_to)
 
-        # User-provided path for the link itself?
-        if linkname == '':
-            symlink_from = join(self.filedir, self.filebase)
-        else:
-            symlink_from = linkname
+            # User-provided path for the link itself?
+            if linkname == '':
+                symlink_from = join(self.filedir, self.filebase)
+            else:
+                symlink_from = linkname
 
-        # Create symbolic link.
-        toolkit.symlink(symlink_to, symlink_from, True, True)
-
-        # Restore original working directory.
-        os.chdir(backup_cwd)
+            # Create symbolic link.
+            toolkit.symlink(symlink_to, symlink_from, True, True)
+        finally:
+            # Restore original working directory.
+            os.chdir(backup_cwd)
 
     def compiler_options(self):
         """returns the compilation options to give on the compiler command
