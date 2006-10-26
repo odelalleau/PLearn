@@ -1,6 +1,15 @@
 from math import *
-from numarray import asarray, choose, zeros, shape, ufunc
+from numarray import asarray, choose, concatenate, zeros, shape, ufunc
 
+def lag(array, k, fill=zeros):
+    assert len(shape(array)) == 1, "Manages row vector only"
+    if k > 0:
+        return concatenate([array[k:], fill((k,))])
+    elif k < 0:
+        return concatenate([fill((-k,)), array[:k]])
+    else:
+        return array
+        
 def sign(m):
     m = asarray(m)
     return zeros(shape(m))-ufunc.less(m,0)+ufunc.greater(m,0)
