@@ -896,7 +896,6 @@ def sequential_link(executables_to_link, linkname):
     """executables_to_link is a list of FileInfo of .cc files that contain a main()
     and whose corresponding executable should be made"""
     for ccfile in executables_to_link:
-        print 'exec', executables_to_link
         failures =  ccfile.failed_ccfiles_to_link()
         if failures:
             print '[ Executable target',ccfile.filebase,'not remade because of previous compilation errors. ]'
