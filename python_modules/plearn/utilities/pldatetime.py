@@ -13,6 +13,14 @@ def cyymmdd_to_date(x):
     yyyy = 1900+cyy
 
     return date(yyyy,mm,dd)
+
+def yyyymmdd_to_date(x):    
+    yyyymmdd  = int(x)
+    yyyymm,dd = divmod(yyyymmdd,100)
+    yyyy,mm   = divmod(yyyymm,100)
+
+    return date(yyyy,mm,dd)
+
   
 def date_to_cyymmdd(d):
     return (d.year-1900)*10000 + d.month*100 +d.day
