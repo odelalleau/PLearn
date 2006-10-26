@@ -286,7 +286,7 @@ class SshTask( TaskType ):
     # Instance methods
     #
 
-    def getLaunchCommand( self ):
+    def getLaunchCommand( self, Xopt='-x' ):
         # Get the first available machine
         try:
             self.host = self.listAvailableMachines().next()
@@ -297,7 +297,7 @@ class SshTask( TaskType ):
         actual_command = ' '.join(['cd', os.getcwd(), ';', 'nice'] + self.argv)
         actual_command = actual_command.replace("'", "\'")
         actual_command = actual_command.replace('"', '\"')
-        return "ssh -X %s '%s'"%(self.host, actual_command)
+        return "ssh %s %s '%s'"%(self.host, Xopt, actual_command)
 
     def getLogFileBaseName(self):
         return "ssh-%s-pid=%d"%(self.host, self.process.pid)
