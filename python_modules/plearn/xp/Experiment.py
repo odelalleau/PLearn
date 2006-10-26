@@ -185,7 +185,11 @@ class Experiment(PyPLearnObject):
     def loadPMat( self, *pmats ):
         for pmat in pmats:
             attr_name = os.path.basename(pmat).replace('.pmat', '')
-            setattr( self, attr_name, PMat( os.path.join(self.abspath, pmat) ) )
+            if hasattr(self, attr_name):
+                assert getattr(self, "_pmat_%s"%attr_name) == pmat
+            else:
+                setattr(self, "_pmat_%s"%attr_name, pmat)
+                setattr(self, attr_name, PMat(os.path.join(self.abspath, pmat)))
 
     def getKey( self, expkey = None ):
         if expkey is None:
