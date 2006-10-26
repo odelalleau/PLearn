@@ -44,7 +44,7 @@ def array_columns( a, cols ):
         indices = range( *cols.indices(cols.stop) )
     else:
         indices = list( cols )            
-        
+
     return numarray.take(a, indices, axis=1)
 
 def load_pmat_as_array(fname):
