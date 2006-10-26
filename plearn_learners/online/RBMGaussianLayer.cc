@@ -93,7 +93,7 @@ void RBMGaussianLayer::computeExpectation()
     for( int i=0 ; i<size ; i++ )
     {
         real a_i = quad_coeff[i];
-        expectation[i] = activation[i] / (2 * a_i * a_i);
+        expectation[i] = - activation[i] / (2 * a_i * a_i);
     }
 
     expectation_is_up_to_date = true;
@@ -120,7 +120,7 @@ void RBMGaussianLayer::fprop( const Vec& input, Vec& output ) const
     for( int i=0 ; i<size ; i++ )
     {
         real a_i = quad_coeff[i];
-        output[i] = input[i] / (2 * a_i * a_i);
+        output[i] = - input[i] / (2 * a_i * a_i);
     }
 }
 
@@ -136,7 +136,7 @@ void RBMGaussianLayer::bpropUpdate(const Vec& input, const Vec& output,
     for( int i=0 ; i<size ; ++i )
     {
         real a_i = quad_coeff[i];
-        input_gradient[i] = output_gradient[i] / (2 * a_i * a_i);
+        input_gradient[i] = - output_gradient[i] / (2 * a_i * a_i);
     }
 
     if( momentum == 0. )
