@@ -152,6 +152,9 @@ public:
     //! Default constructor.
     PyPLearnScript();
 
+    //! Runs the embedded runnable object.
+    virtual void run();
+
     //! Returns the internal script representation
     const string& getScript() { return plearn_script; }
 

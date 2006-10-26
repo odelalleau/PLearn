@@ -59,7 +59,6 @@ process( const string& scriptfile,
          const vector<string>& args,
          const string& drivername   )
 {
-    string plearn_script; // TODO What is this ?
     bool do_help = false;
     bool do_dump = false;
   
@@ -192,7 +191,7 @@ openScriptFile(int argc, char** argv, const std::string& drivername)
     
     return openString(script, PStream::plearn_ascii);
 }
-  
+
 PyPLearnScript::PyPLearnScript() :
     plearn_script(""),
     vars(),
@@ -209,6 +208,20 @@ PLEARN_IMPLEMENT_OBJECT( PyPLearnScript,
                          "version of the scripts from their PyPLearn counterpart is also written\n"
                          "in Python. Hence, this class is needed to bridge between the output of\n"
                          "this driver and the PLearn commands." );
+
+void PyPLearnScript::run()
+{
+    PStream in = openString( plearn_script, PStream::plearn_ascii );
+
+    while ( in )
+    {
+        PP<Object> o = readObject(in);
+        o->run();
+        in.skipBlanksAndCommentsAndSeparators();
+    }
+
+    close();
+}
 
 void PyPLearnScript::declareOptions(OptionList& ol)
 {
