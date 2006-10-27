@@ -34,6 +34,7 @@ def getFieldNames(source_field_names):
     print >>sys.stderr, 'source_weightsize :', source_weightsize
     print >>sys.stderr, 'params            :', getParams()
     print >>sys.stderr, 'source row(1)     :', getSourceRow(1)
+    sys.stderr.flush()
     return ['tricky_rownum', 'field1', 'field2']
 
 #def getSizes(source_inputsize, source_targetsize, source_weightsize):
