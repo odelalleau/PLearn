@@ -415,13 +415,22 @@ PythonObjectWrapper PythonCodeSnippet::compileGlobalCode(const string& code) con
     PyDict_SetItemString(globals, "__builtins__", PyEval_GetBuiltins());
 
     if (code != "") {
-        PyRun_String(code.c_str(), Py_file_input /* exec code block */,
+#ifdef WIN32
+        // Under Windows, it appears the Python code will not execute with
+        // Windows carriage returns. Thus we first make a copy of the code and
+        // replace any carriage return by a Unix one.
+        string code_copy = code;
+        PLearn::search_replace(code_copy, "\r\n", "\n");
+#else
+        const string& code_copy = code;
+#endif
+        PyRun_String(code_copy.c_str(), Py_file_input /* exec code block */,
                      globals, globals);
         if (PyErr_Occurred()) {
             Py_XDECREF(globals);
             PyErr_Print();
-            PLERROR("PythonCodeSnippet::resetInternalState: error compiling Python code\n"
-                    "contained in the 'code' option.");
+            PLERROR("PythonCodeSnippet::resetInternalState: error compiling "
+                    "Python code contained in the 'code' option.");
         }
     }
     return PythonObjectWrapper(globals);
