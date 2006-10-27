@@ -123,6 +123,7 @@ class Experiment(PyPLearnObject):
     _cached_exp_fname = 'Experiment.cache'  
     _lhs_length       = 35
     _cached           = None          # See cache_experiments
+    _opened_pmats     = []
 
     ##
     # PyPLearnObject's classmethod
@@ -175,6 +176,10 @@ class Experiment(PyPLearnObject):
 
         # Update abspath
         self.abspath = os.path.abspath( self.path )
+
+    def __del__(self):
+        for pmat in self._opened_pmats:
+            pmat.close()
         
     def __cmp__( self, other ):
         raise NotImplementedError( 'Use keycmp( x1, x2, expkey )' )
@@ -188,8 +193,11 @@ class Experiment(PyPLearnObject):
             if hasattr(self, attr_name):
                 assert getattr(self, "_pmat_%s"%attr_name) == pmat
             else:
-                setattr(self, "_pmat_%s"%attr_name, pmat)
-                setattr(self, attr_name, PMat(os.path.join(self.abspath, pmat)))
+                setattr(self, "_pmat_%s"%attr_name, pmat)                
+
+                pmat = PMat(os.path.join(self.abspath, pmat))
+                setattr(self, attr_name, pmat)
+                self._opened_pmats.append(pmat)
 
     def getKey( self, expkey = None ):
         if expkey is None:

@@ -257,6 +257,9 @@ class PMat( VMat ):
             for row in array:
                 self.appendRow( row_format(row) )
 
+    def __del__(self):
+        self.close()
+
     def write_header(self):
         header = 'MATRIX ' + str(self.length) + ' ' + str(self.width) + ' '
 
@@ -311,10 +314,12 @@ class PMat( VMat ):
         self.fieldnames = []
         fieldnamefile = os.path.join(self.fname+'.metadata','fieldnames')
         if os.path.isfile(fieldnamefile):
-            for row in open(fieldnamefile):
+            f = open(fieldnamefile)
+            for row in f:
                 row = row.split()
                 if len(row)>0:
                     self.fieldnames.append(row[0])
+            f.close()
         else:
             self.fieldnames = [ "field_"+str(i) for i in range(self.width) ]
             
@@ -381,7 +386,8 @@ class PMat( VMat ):
         self.f.flush()
 
     def close(self):
-        self.f.close()
+        if hasattr(self, 'f'):
+            self.f.close()
 
     def append(self,row):
         self.appendRow(row)

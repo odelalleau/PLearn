@@ -18,16 +18,16 @@ def triggerLightGraySetup():
     FIGURE_BG  = 'w'        
     AXES_BG    = '#E9E9E9'  
     GRID_COL   = '#AAAAAA'  
-    FONTSIZE   = 16
+    FONTSIZE   = 15
     FONTPROP   = FontProperties(family='sans-serif', weight='normal', size=FONTSIZE)
 
     global LEGEND_FONTSIZE, LEGEND_FONTPROP
-    LEGEND_FONTSIZE = 14
+    LEGEND_FONTSIZE = 13
     LEGEND_FONTPROP = FontProperties(family='sans-serif',
                                      weight='normal', size=LEGEND_FONTSIZE)    
 
     global TICK_LABEL_FONTSIZE, TICK_LABEL_FONTPROP
-    TICK_LABEL_FONTSIZE = 14
+    TICK_LABEL_FONTSIZE = 13
     TICK_LABEL_FONTPROP = FontProperties(family='sans-serif',
                                          weight='normal', size=TICK_LABEL_FONTSIZE)        
     matplotlib.rc('text',           usetex=True)

@@ -49,7 +49,7 @@ SSH_MACHINES_MAP = { 'apstat.com': [ # 'embla',
                                      'kamado',
                                      'kamado',
                                      # 'loki',
-                                     'odin',
+                                     # 'odin',
                                      'midgard',
                                      # 'valhalla',
                                      'vili'

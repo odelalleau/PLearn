@@ -1,5 +1,5 @@
 import pylab
-from plearn.graphical import FONTSIZE, LEGEND_FONTPROP, TICK_LABEL_FONTPROP
+from plearn.report import GRID_COL, FONTSIZE, LEGEND_FONTPROP, TICK_LABEL_FONTPROP
 
 LEFT, WIDTH = 0.125, 0.8
 LINE_COLORS = [ '#660033', 'b', 'r', 'k', "#CDBE70",
@@ -17,12 +17,12 @@ def getBounds(frame):
 def getWideRect(bottom, height):
     return [ LEFT, bottom, WIDTH, height ]
 
-def addLegend(axes, legend_map, sorted_keys=None):
+def setLegend(axes, legend_map, sorted_keys=None):
     if not sorted_keys:
         sorted_keys = legend_map.keys(); sorted_keys.sort()
     values = [ legend_map[k] for k in sorted_keys ]
-    axes.legend(values, sorted_keys, loc=0, shadow=True, prop=LEGEND_FONTPROP)
-    
+    legend = axes.legend(values, sorted_keys, loc=0, shadow=True)
+    legend.set_zorder(100)
 
 class Struct(dict):
     def __init__(self, **members):
