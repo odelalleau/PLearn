@@ -1,6 +1,6 @@
 """Bindings: Acts like a Python dictionary but keeps the addition order."""
 
-from toolkit import quote_if, doc
+from plearn.utilities.toolkit import quote_if, doc
 
 def c_iterator( container, itype="iteritems" ):
     if hasattr(container, itype ):
