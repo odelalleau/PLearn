@@ -565,13 +565,14 @@ public:
             v[currentsize+i] = newvec[i];
     }
 
-    //! for compatibility with Array
+    //! For compatibility with Array.
     inline void appendIfNotThereAlready(const T& newval)
     {
-        T* v=0;
-        if(length_>0) v = data();
-        for (int i=0;i<length();i++)
-            if (newval==v[i]) return;
+        if(length()>0) {
+            T* v = data();
+            for (int i=0;i<length();i++)
+                if (newval==v[i]) return;
+        }
         append(newval);
     }
 
