@@ -114,7 +114,7 @@ public:
 
     VecStatsCollector();
       
-    int length() const { return stats.length(); }
+    virtual int length() const;
     int size() const { return length(); }
 
     //! simply calls inherited::build() then build_()

@@ -46,38 +46,46 @@
 namespace PLearn {
 using namespace std;
 
-VecStatsCollector::VecStatsCollector():
-    maxnvalues(0), compute_covariance(false), epsilon(0.0),
-    m_window(-1), no_removal_warnings(false), // Window mechanism
-    sum_non_missing_weights(0),
-    sum_non_missing_square_weights(0)
-{}
+VecStatsCollector::VecStatsCollector()
+    : maxnvalues(0),
+      compute_covariance(false),
+      epsilon(0.0),
+      m_window(-1),
+      no_removal_warnings(false), // Window mechanism
+      sum_non_missing_weights(0),
+      sum_non_missing_square_weights(0)
+{ }
 
-PLEARN_IMPLEMENT_OBJECT(VecStatsCollector,
-                        "Collects basic statistics on a vector",
-                        "VecStatsCollector allows to collect statistics on a series of vectors.\n"
-                        "Individual vectors x are presented by calling update(x), and this class will\n"
-                        "collect both individual statistics for each element (as a Vec<StatsCollector>)\n"
-                        "as well as (optionally) compute the covariance matrix."
+PLEARN_IMPLEMENT_OBJECT(
+    VecStatsCollector,
+    "Collects basic statistics on a vector",
+    "VecStatsCollector allows to collect statistics on a series of vectors.\n"
+    "Individual vectors x are presented by calling update(x), and this class will\n"
+    "collect both individual statistics for each element (as a Vec<StatsCollector>)\n"
+    "as well as (optionally) compute the covariance matrix."
     );
 
 void VecStatsCollector::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "maxnvalues", &VecStatsCollector::maxnvalues,
-                                    OptionBase::buildoption,
+    declareOption(
+        ol, "maxnvalues", &VecStatsCollector::maxnvalues,
+        OptionBase::buildoption,
         "Maximum number of different values to keep track of for each element.\n"
         "If -1, we will keep track of all different values.\n"
         "If 0, we will only keep track of global statistics.\n");
 
-    declareOption(ol, "fieldnames", &VecStatsCollector::fieldnames, OptionBase::buildoption,
-                  "Names of the fields of the vector");
+    declareOption(
+        ol, "fieldnames", &VecStatsCollector::fieldnames, OptionBase::buildoption,
+        "Names of the fields of the vector");
 
-    declareOption(ol, "compute_covariance", &VecStatsCollector::compute_covariance, OptionBase::buildoption,
-                  "Should we compute and keep the covariance X'X ?");
+    declareOption(
+        ol, "compute_covariance", &VecStatsCollector::compute_covariance, OptionBase::buildoption,
+        "Should we compute and keep the covariance X'X ?");
 
-    declareOption(ol, "epsilon", &VecStatsCollector::epsilon, OptionBase::buildoption,
-                  "Optional regularization to *add* to the variance vector "
-                  "(used *only* in getVariance, getCovariance and getStdDev).");
+    declareOption(
+        ol, "epsilon", &VecStatsCollector::epsilon, OptionBase::buildoption,
+        "Optional regularization to *add* to the variance vector "
+        "(used *only* in getVariance, getCovariance and getStdDev).");
 
     declareOption(
         ol, "window", &VecStatsCollector::m_window,
@@ -100,31 +108,43 @@ void VecStatsCollector::declareOptions(OptionList& ol)
         "\n"
         "Default: false (0)." );
   
-    declareOption(ol, "stats", &VecStatsCollector::stats, OptionBase::learntoption,
-                  "the stats for each element");
+    declareOption(
+        ol, "stats", &VecStatsCollector::stats, OptionBase::learntoption,
+        "the stats for each element");
 
-    declareOption(ol, "cov", &VecStatsCollector::cov, OptionBase::learntoption,
-                  "The uncentered and unnormalized covariance matrix (mean not subtracted): X'X");
+    declareOption(
+        ol, "cov", &VecStatsCollector::cov, OptionBase::learntoption,
+        "The uncentered and unnormalized covariance matrix (mean not subtracted): X'X");
 
-    declareOption(ol, "sum_cross", &VecStatsCollector::sum_cross, OptionBase::learntoption,
-                  "Element (i,j) is equal to the (weighted) sum of x_i when both x_i and x_j were observed");
+    declareOption(
+        ol, "sum_cross", &VecStatsCollector::sum_cross, OptionBase::learntoption,
+        "Element (i,j) is equal to the (weighted) sum of x_i when both x_i and x_j were observed");
 
-    declareOption(ol, "sum_cross_weights", &VecStatsCollector::sum_cross_weights, OptionBase::learntoption,
-                  "Element (i,j) is the sum of weights when both x_i and x_j were observed\n"
-                  "(only used when 'compute_covariance' is set to 1)\n");
+    declareOption(
+        ol, "sum_cross_weights", &VecStatsCollector::sum_cross_weights, OptionBase::learntoption,
+        "Element (i,j) is the sum of weights when both x_i and x_j were observed\n"
+        "(only used when 'compute_covariance' is set to 1)\n");
 
-    declareOption(ol, "sum_cross_square_weights", &VecStatsCollector::sum_cross_square_weights, OptionBase::learntoption,
-                  "Element (i,j) is the sum of square weights when both x_i and x_j were observed\n"
-                  "(only used when 'compute_covariance' is set to 1)\n");
+    declareOption(
+        ol, "sum_cross_square_weights", &VecStatsCollector::sum_cross_square_weights, OptionBase::learntoption,
+        "Element (i,j) is the sum of square weights when both x_i and x_j were observed\n"
+        "(only used when 'compute_covariance' is set to 1)\n");
 
-    declareOption(ol, "sum_non_missing_weights", &VecStatsCollector::sum_non_missing_weights, OptionBase::learntoption,
-                  "Sum of weights for vectors with no missing value.");
+    declareOption(
+        ol, "sum_non_missing_weights", &VecStatsCollector::sum_non_missing_weights, OptionBase::learntoption,
+        "Sum of weights for vectors with no missing value.");
 
-    declareOption(ol, "sum_non_missing_square_weights", &VecStatsCollector::sum_non_missing_square_weights, OptionBase::learntoption,
-                  "Sum of square weights for vectors with no missing value.");
+    declareOption(
+        ol, "sum_non_missing_square_weights", &VecStatsCollector::sum_non_missing_square_weights, OptionBase::learntoption,
+        "Sum of square weights for vectors with no missing value.");
     
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
+}
+
+int VecStatsCollector::length() const
+{
+    return stats.length();
 }
 
 double VecStatsCollector::getStat(const string& statspec)
