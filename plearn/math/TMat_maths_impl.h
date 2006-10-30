@@ -3327,6 +3327,50 @@ void externalProductScaleAcc(const TMat<T>& mat, const TVec<T>& v1, const TVec<T
     }
 }
 
+// mat[i][j] *= v1[i] * v2[j]
+template<class T>
+void externalProductMultUpdate(const TMat<T>& mat, const TVec<T>& v1, const TVec<T>& v2)
+{
+#ifdef BOUNDCHECK
+    if (v1.length()!=mat.length() || mat.width()!=v2.length())
+        PLERROR("externalProductMultUpdate(mat,v1,v2), incompatible arguments %dx%d= %d times %d",
+                mat.length(),mat.width(),v1.length(), v2.length());
+#endif
+    const T* v_1=v1.data();
+    const T* v_2=v2.data();
+    const int N = mat.length();
+    const int M = mat.width();
+    for (int i=0 ; i<N ; ++j) {
+        T* mi = mat[i];
+        T v1i = v_1[i];
+        for (int j=0; j<M ; ++j)
+            mi[j] *= v1i * v_2[j];
+    }
+}
+
+
+// mat[i][j] /= v1[i] * v2[j]
+template<class T>
+void externalProductDivUpdate(const TMat<T>& mat, const TVec<T>& v1, const TVec<T>& v2)
+{
+#ifdef BOUNDCHECK
+    if (v1.length()!=mat.length() || mat.width()!=v2.length())
+        PLERROR("externalProductDivUpdate(mat,v1,v2), incompatible arguments %dx%d= %d times %d",
+                mat.length(),mat.width(),v1.length(), v2.length());
+#endif
+    const T* v_1=v1.data();
+    const T* v_2=v2.data();
+    const int N = mat.length();
+    const int M = mat.width();
+    for (int i=0 ; i<N ; ++j) {
+        T* mi = mat[i];
+        T v1i = v_1[i];
+        for (int j=0; j<M ; ++j)
+            mi[j] /= v1i * v_2[j];
+    }
+}
+
+
 // result[i,j] = sum_k m1[i,k] * m2[j,k]
 template<class T>
 void productTranspose(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m2)
