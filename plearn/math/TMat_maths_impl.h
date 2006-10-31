@@ -3340,7 +3340,7 @@ void externalProductMultUpdate(const TMat<T>& mat, const TVec<T>& v1, const TVec
     const T* v_2=v2.data();
     const int N = mat.length();
     const int M = mat.width();
-    for (int i=0 ; i<N ; ++j) {
+    for (int i=0 ; i<N ; ++i) {
         T* mi = mat[i];
         T v1i = v_1[i];
         for (int j=0; j<M ; ++j)
@@ -3362,7 +3362,7 @@ void externalProductDivUpdate(const TMat<T>& mat, const TVec<T>& v1, const TVec<
     const T* v_2=v2.data();
     const int N = mat.length();
     const int M = mat.width();
-    for (int i=0 ; i<N ; ++j) {
+    for (int i=0 ; i<N ; ++i) {
         T* mi = mat[i];
         T v1i = v_1[i];
         for (int j=0; j<M ; ++j)
