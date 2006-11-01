@@ -127,6 +127,10 @@ private:
     //#####  Private Data Members  ############################################
 
     // The rest of the private stuff goes here
+
+    // Holds the result of the fprop's softmax
+    mutable Vec fp_sm;
+
 };
 
 // Declares a few other classes and functions related to this class

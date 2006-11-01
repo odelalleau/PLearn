@@ -115,7 +115,10 @@ void NLLErrModule::fprop(const Vec& input, Vec& output) const
 
     Vec input_ = input.subVec( 0, input_size );
     output.resize( output_size );
-    output[0] = - pl_log( softmax( input_ )[target] );
+
+    fp_sm = softmax( input_ );
+    output[0] = - pl_log( fp_sm[target] );
+
 
     if( output_size > 1 )
         output[1] = ( argmax( input_ ) == target ) ? 0 : 1;
@@ -180,12 +183,11 @@ void NLLErrModule::bpropUpdate(const Vec& input, const Vec& output,
                 og_size, output_size);
     }
 
-    Vec input_ = input.subVec( 0, input_size );
-
     // input_gradient[i] = output_gradient*( softmax(input)[i] ) if i!=target
     // input_gradient[target] = output_gradient*( softmax(input)[target] )
     input_gradient.resize( input_size );
-    input_gradient << softmax( input_ );
+    input_gradient << fp_sm;
+
     input_gradient[target] -= 1;
     if( !is_final_cost )
         input_gradient *= output_gradient[0];
@@ -320,6 +322,8 @@ void NLLErrModule::build_()
     }
 
     target_size = 1;
+
+    fp_sm.resize(input_size);
 }
 
 
