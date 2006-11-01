@@ -147,6 +147,7 @@ private:
     // The rest of the private stuff goes here
     real learning_rate;
     int step_number;
+    mutable Vec bias_input;
 
 };
 
