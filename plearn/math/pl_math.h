@@ -177,11 +177,7 @@ inline real negative(real a) { if (a<0) return a; return 0; }
 #endif
 
 // Specific definitions for some non-Linux OS.
-#if defined(DARWIN)     // Mac OS.
-#define isnan __isnan
-#define isinf __isinf
-
-#elif defined(_MSC_VER)	// Microsoft Visual Studio.
+#if defined(_MSC_VER)	// Microsoft Visual Studio.
 #define isnan(x) (_isnan(x) != 0)
 
 // 'isinf' cannot be just redefined, as there is apparently no existing
