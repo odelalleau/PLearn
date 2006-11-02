@@ -163,20 +163,20 @@ class TaskType:
     availableMachinesCount = classmethod(availableMachinesCount)
 
     def select( cls ):
-        """Selecting a completed task."""
+        """Finds, frees and returns ompleted tasks."""
         if cls.count() == 0:
             logging.debug("* Raising EmptyTaskListError")
             raise EmptyTaskListError()
 
         #####  Waiting for a child to end
-        completed = None
+        completed = []
 
         # Add the child end pipe to the list of selectable fd
         select_from = cls._child_processes.keys()
         pid_to_child = dict([ (task.process.pid,task)
                               for task in cls._child_processes.values() ])
 
-        while completed is None:
+        while len(completed)==0:
             # Note that a timeout must be provided to select in case tasks
             # don't write anything...
             logging.debug("* select.select(%s, ...)"%pid_to_child.keys())
@@ -204,14 +204,12 @@ class TaskType:
             # If poll()'s return value is nonnegative, the task is finished
             # and the return value is the exit code it returned. Otherwise,
             # the task is still running.
-            for task in cls._child_processes.values():
+            running_tasks = cls._child_processes.values()
+            for task in running_tasks:
                 if task.process.poll() >= 0:
-                    completed = task
-                    completed.free()
-                    break
+                    task.free()
+                    completed.append(task)
 
-        logging.debug("* select() returns task with pid %d\n"%completed.process.pid)
-        logging.debug("*   and for which poll() returns %d\n"%completed.process.poll())
         return completed
     select = classmethod(select)
 
@@ -360,7 +358,8 @@ class Dispatch( PyPLearnObject ):
     # Either "expkey" or "named_args"
     protocol                 = PLOption("expkey") 
 
-    max_nmachines            = PLOption(6)
+    max_nmachines            = PLOption(6,
+                                doc="Max number of machines. Use -1 for no limit.")
     logdir                   = PLOption(None) #"LOGS"
 
     # Path to the directory where experiments are to be loaded
