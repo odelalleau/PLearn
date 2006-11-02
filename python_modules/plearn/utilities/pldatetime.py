@@ -1,6 +1,5 @@
 from datetime                  import *
 from fpconst                   import isNaN
-from matplotlib.ticker         import Locator, Formatter
 from plearn.utilities.Bindings import Bindings
 
 #
