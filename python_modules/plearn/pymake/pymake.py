@@ -433,18 +433,19 @@ class OptionalLibrary:
         self.linkeroptions = linkeroptions
         self.compileroptions = compileroptions
         self.compile_as_source = compile_as_source
+        # print 'OptionalLibrary '+name+' '+repr(self.triggers)
 
     def is_triggered_by(self, include):
         """returns true if this particular include command is supposed to trigger this library"""
         known_trigger = False
         for trigger in self.triggers:
             if fnmatch.fnmatch(include,trigger):
-                # print 'INCLUDE ' + include  + ' TRIGGERED BY TRIGGER ' + trigger
+                # print 'OPTIONAL LIBRARY '+self.name+': INCLUDE ' + include  + ' TRIGGERED BY TRIGGER ' + trigger
                 known_trigger = True
                 break
 
-        # Returns the filepath if the file exists.
-        if include[0]!='/': # look for it in includedirs
+        # If no trigger is specified, look up if include file is to be found in the includedirs
+        if len(self.triggers)==0 and include[0]!='/': # look for it in includedirs
             for incldir in self.includedirs:
                 fullpath = join(incldir,include)
                 if os.path.isfile(fullpath):
@@ -489,7 +490,10 @@ def optionalLibrary( name, linkeroptions, includedirs=[], triggers='', compilero
     if type(includedirs) != ListType:
         includedirs = [ includedirs ]
     if type(triggers) != ListType:
-        triggers = [ triggers ]
+        if triggers=='':
+            triggers=[]
+        else:
+            triggers = [ triggers ]
     optional_libraries_defs.append( OptionalLibrary(name, includedirs, triggers, linkeroptions, compileroptions, compile_as_source) )
 
 
@@ -1409,14 +1413,15 @@ class FileInfo:
         self.triggered_libraries = []
         for includefile in minicpreproc.get_include_list(cpp_code, undefined_cpp_vars, defined_cpp_vars, cpp_vars_values):
             #print 'Considering include ' + includefile
-            for optlib in optional_libraries_defs:
+            for optlib in optional_libraries_defs:                
                 triggered_by = optlib.is_triggered_by(includefile)
 
                 if triggered_by and not optlib in self.triggered_libraries:
                     # print 'triggered: ' + optlib.name + '(file = ' + self.filepath + ', ' + includefile + ')'
+                    # print optlib.name + ' TRIGGERED BY INCLUDE ' + `includefile` + ' IN ' + `self.filepath` + ' triggers = '+repr(optlib.triggers) 
                     optlib.convert_all_options_to_strings()
                     self.triggered_libraries.append(optlib)
-                    # print optlib.name + ' TRIGGERED BY INCLUDE ' + includefile + ' IN ' + self.filepath 
+                    # print optlib.name + ' TRIGGERED BY INCLUDE ' + includefile + ' IN ' + self.filepath + ' triggers = '+repr(optlib.triggers) 
 
                 # Some optional libraries may have to be recompiled...
                 if isinstance(triggered_by, type("")) and optlib.compile_as_source:
