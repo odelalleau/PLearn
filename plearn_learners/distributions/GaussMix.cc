@@ -40,6 +40,7 @@
 /*! \file GaussMix.cc */
 #include "GaussMix.h"
 
+#include <limits>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/prim_minimum_spanning_tree.hpp>
 
@@ -2573,7 +2574,7 @@ real GaussMix::precomputeGaussianLogCoefficient(const Vec& eigenvals,
                                                 int dimension) const
 {
 #ifdef BOUNDCHECK
-    real last_eigenval = INFINITY;
+    real last_eigenval = numeric_limits<double>::infinity();
 #endif
     int n_eig = eigenvals.length();
     PLASSERT( dimension >= n_eig );
