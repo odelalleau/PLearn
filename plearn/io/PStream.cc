@@ -33,6 +33,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
+#include <limits>
 #include "PStream.h"
 #include "NullPStreamBuf.h"
 #include "PrPStreamBuf.h"
@@ -714,7 +715,11 @@ void PStream::readAsciiNum(double &x)
     case 'i':
     case 'I':
         if (toupper(get())=='N' && toupper(get())=='F')
-            x = opposite ? - INFINITY : INFINITY;
+        {
+            x = numeric_limits<double>::infinity();
+            if(opposite)
+                x = -x;
+        }
         else
             PLERROR(error_msg);
         break ; 
