@@ -178,6 +178,9 @@ class Experiment(PyPLearnObject):
         self.abspath = os.path.abspath( self.path )
 
     def __del__(self):
+        self.close()
+        
+    def close(self):
         for pmat in self._opened_pmats:
             pmat.close()
         

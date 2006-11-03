@@ -49,7 +49,6 @@ def isNotNaN(f):
 def replace_nans(a, with=0.0):
     return choose(isNotNaN(a), (with, a))
 
-
 if __name__ == '__main__':
     print fast_softmax([ 0, 0, 100 ])
     print
