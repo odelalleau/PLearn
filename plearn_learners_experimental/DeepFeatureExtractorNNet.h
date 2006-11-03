@@ -52,7 +52,7 @@
 namespace PLearn {
 
 /**
- * Deep Neural Network that extracts features in an unsupervised way.
+ * Deep Neural Network that extracts features in a greedy, mostly unsupervised way.
  */
 class DeepFeatureExtractorNNet : public PLearner
 {
@@ -85,11 +85,14 @@ public:
     real bias_decay;   
     //! Penalty to use on the weights (for weight and bias decay)
     string penalty_type;
-    //! Used only in the stable_cross_entropy cost function, to fight overfitting (0<=r<1)
+    //! Used only in the stable_cross_entropy cost function, 
+    //! to fight overfitting (0<=r<1)
     real classification_regularizer; 
-    //! Used in the stable_cross_entropy cost function of the hidden activations, in the unsupervised stages (0<=r<1)
+    //! Used in the stable_cross_entropy cost function of the hidden 
+    //! activations, in the unsupervised stages (0<=r<1)
     real regularizer; 
-    //! Margin requirement, used only with the margin_perceptron_cost cost function
+    //! Margin requirement, used only with the margin_perceptron_cost 
+    //! cost function
     real margin;
     //! The method used to initialize the weights
     string initialization_method;
@@ -97,20 +100,20 @@ public:
     Vec paramsvalues; 
     //! Number of outputs for the neural network
     int noutputs;
-    //! Use the same weights for the input and output weights for the autoassociators
+    //! Use the same weights for the input and output weights 
+    //! for the autoassociators
     bool use_same_input_and_output_weights;
     //! Always use the reconstruction cost of the input, not of 
     //! the last layer. This option should be used if
     //! use_same_input_and_output_weights is true.
     bool always_reconstruct_input;
     //! Use the cubed value of the input of the activation functions
+    //! (not used for reconstruction/auto-associator layers and ouput layer)
     bool use_activations_with_cubed_input;
     //! To simulate semi-supervised learning
     int use_n_first_as_supervised;
     //! Use only supervised part
     bool use_only_supervised_part;
-    //! Always use supervised target
-    bool always_use_supervised_target;
     //! Threshold on training set error relative improvement,
     //! before adding a new layer.
     //! If < 0, then the addition of layers must be done by
@@ -122,24 +125,20 @@ public:
     //!   - "cross_entropy" (default, stable version)
     //!   - "mse"
     string input_reconstruction_error;
-    //! Indication that the supervised phase
-    //! should only train the last layer's parameters.
-    bool dont_train_all_parameters;
-    //! Indication that autoassociator regularisation cost should be used
-    bool use_autoassociator_regularisation;
     //! Weight of autoassociator regularisation terms
+    //! in the fine-tuning phase.
+    //! If it is equal to 0, 
+    //! then the unsupervised signal is ignored.
     real autoassociator_regularisation_weight;
-    //! Number of nearest neighbors 
-    int k_nearest_neighbors_reconstruction;
     //! Weight of supervised signal used in addition
-    //! to unsupervised signal in unsupervised phase.
-    //! If <= 0, then supervised signal ignored.
+    //! to unsupervised signal in greedy phase.
+    //! This weights should be in [0,1]. If it is equal
+    //! to 0, then the supervised signal is ignored.
+    //! If it is equal to 1, then the unsupervised signal
+    //! is ignored.
     real supervised_signal_weight;
-    //! Indication that the neighborhood of a point should
-    //! be weighted based on the neighbor's local NLL
-    bool use_neighborhood_weighting;
-    //! Decay for neighborhood weighting computation
-    real neighborhood_exponential_decay;
+    //! Number of nearest neighbors to reconstruct in greedy phase
+    int k_nearest_neighbors_reconstruction;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -175,8 +174,8 @@ public:
     //! thus the test method). 
     virtual TVec<std::string> getTestCostNames() const;
 
-    //! Returns the names of the objective costs that the train method computes and 
-    //! for which it updates the VecStatsCollector train_stats.
+    //! Returns the names of the objective costs that the train method 
+    //! computes and for which it updates the VecStatsCollector train_stats.
     virtual TVec<std::string> getTrainCostNames() const;
 
 
@@ -207,7 +206,11 @@ public:
 protected:
     //#####  Protected Options  ###############################################
 
-    //! Index of the layer that is being trained at the current state
+    //! Index of the hidden layer that was added last.
+    //! When equal to nhidden_schedule.length(), then only
+    //! the output layer is currently being trained. When
+    //! It is equal to nhidden_schedule.length()+1, the
+    //! whole network is being fine-tuned.
     int nhidden_schedule_current_position;
     //! Parameter variables
     VarArray params;
@@ -276,27 +279,34 @@ protected:
     //! Return a variable that is the hidden layer corresponding to given
     //! input and weights. If the 'default' transfer_func is used, we use the
     //! hidden_transfer_func option.
-    Var hiddenLayer(const Var& input, const Var& weights, string transfer_func, Var& before_transfer_function, bool use_cubed_value=false);
+    Var hiddenLayer(const Var& input, const Var& weights, string transfer_func, 
+                    Var& before_transfer_function, bool use_cubed_value=false);
 
     //! Build the output of the neural network, from the given input.
     //! The hidden layer is also made available in the 'hidden_layer' parameter.
     //! The output before the transfer function is applied is also made
     //! available in the 'before_transfer_func' parameter.
-    void buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& before_transfer_func);
+    void buildOutputFromInput(const Var& the_input, Var& hidden_layer, 
+                              Var& before_transfer_func);
 
     //! Builds the target and sampleweight variables.
     void buildTargetAndWeight();
 
     //! Build the costs variable from other variables.
-    void buildCosts(const Var& output, const Var& target, const Var& unsupervised_target, const Var& before_transfer_func, const Var& output_sup);
+    void buildCosts(const Var& output, const Var& target, 
+                    const Var& unsupervised_target, 
+                    const Var& before_transfer_func, const Var& output_sup);
 
     //! Build the various functions used in the network.
-    void buildFuncs(const Var& the_input, const Var& the_output, const Var& the_target, const Var& the_sampleweight);
+    void buildFuncs(const Var& the_input, const Var& the_output, 
+                    const Var& the_target, const Var& the_sampleweight);
 
-    //! Fill a matrix of weights according to the 'initialization_method' specified.
+    //! Fill a matrix of weights according to the 
+    //! 'initialization_method' specified.
     //! The 'clear_first_row' boolean indicates whether we should fill the first
     //! row with zeros.
-    void fillWeights(const Var& weights, bool fill_first_row, real fill_with_this=0);
+    void fillWeights(const Var& weights, bool fill_first_row, 
+                     real fill_with_this=0);
 
     //! Fill the costs penalties.
     virtual void buildPenalties();
