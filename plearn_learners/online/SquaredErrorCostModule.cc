@@ -103,7 +103,7 @@ void SquaredErrorCostModule::bpropUpdate(const Vec& input, const Vec& target,
 
     // input_gradient = 2*(input - target)
     substract( input, target, input_gradient );
-    input_gradient *= 2;
+    input_gradient *= 2.0;
 }
 
 
