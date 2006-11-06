@@ -53,7 +53,7 @@ from plearn.pl_pygtk import GladeAppWindow, GladeDialog, MessageBox
 #####  PLearn Imports  ######################################################
 
 from plearn.utilities.metaprog import public_members
-from plearn.pyplearn.pyplearn  import *
+from plearn.pyplearn           import *
 from plearn.utilities.toolkit  import doc as toolkit_doc
 
 

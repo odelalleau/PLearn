@@ -101,15 +101,21 @@ class MatrixViewer( object ):
 #####  Standalone Running  ##################################################
 
 if __name__ == "__main__":
-    from pmat_list_model import PMatListModel
+    from plearn.plide.pmat_list_model import PMatListModel
     from plearn.vmat.PMat import PMat
+    import sys
+    
+    if len(sys.argv) != 2:
+        print >>sys.stderr, "Usage: %s filename.pmat" % sys.argv[0]
+        sys.exit(1)
 
-    pmat = PMatListModel(PMat("/projects/finance/Desjardins/term_structure/Cotton.pmat",
-                              openmode = 'r'))
+    fname = sys.argv[1]
+    pmat = PMatListModel(PMat(fname, openmode = 'r'))
     viewer = MatrixViewer(pmat)
 
     window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-    window.set_size_request(600,400)
+    window.set_size_request(800,600)
+    window.set_title(fname)
     window.connect("delete_event", lambda w,e: gtk.main_quit())
     window.add(viewer.get_widget())
     window.show()
