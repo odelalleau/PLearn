@@ -105,6 +105,12 @@ elif platform=='irix6'  :
     cpp_definitions += [ 'SGI', 'BIGENDIAN' ]
 elif platform=='irix6-n32' :
     cpp_definitions += [ 'SGI', 'BIGENDIAN' ]
+elif platform=='darwin' :
+    if sys.byteorder == 'little':
+        cpp_definitions += [ 'DARWIN', 'LITTLEENDIAN' ]
+    else:
+        cpp_definitions += [ 'DARWIN', 'BIGENDIAN' ]
+        compileflags += ' -fno-coalesce'
 elif platform=='win32' :
     cpp_definitions += [ 'WIN32', '_MINGW_', 'LITTLEENDIAN' ]
     # When using the standard Win32 Python (instead of the built-in Cygwin
@@ -113,9 +119,6 @@ elif platform=='win32' :
     # However, just like for the 'cygwin' platform below, the -symlinkobjs
     # pymake option is required.
     symlinkobjs = 1
-elif platform=='darwin' :
-    cpp_definitions += [ 'DARWIN', 'BIGENDIAN' ]
-    compileflags += ' -fno-coalesce'
 elif platform=='cygwin' :
     cpp_definitions += [ 'WIN32', 'LITTLEENDIAN' ]
     # Cygwin limitations impose to use the -symlinkobjs pymake option,
@@ -275,20 +278,35 @@ elif domain_name.endswith('.rqchp.qc.ca'):
     cpp_definitions += [ 'PL_PYTHON_VERSION=240' ]
     python_lib_root = '/usr/network.ALTIX/python-2.4.1/lib'
     linkeroptions_tail += '-lcprts -lifcore -lcxa' # -lunwind -lguide' # -lguide_stats -lifcoremt -lifport -limf -lipr'
+elif platform=='darwin':
+    python_version = sys.version[0:3]
+    # numpy_includedirs   = [ '/usr/network.ALTIX/python-2.4.1/include' ]
+    cpp_definitions += [ 'PL_PYTHON_VERSION='+python_version[0]+python_version[2]+'0' ]
+    python_lib_root = '/sw/lib'
+    numpy_site_packages = '/sw/lib/python'+python_version+'/site-packages/numarray' 
+    numpy_includedirs   = [ '/sw/include/python'+python_version]
 else:
     numpy_includedirs   = []
     numpy_site_packages = '/usr/lib/python2.3/site-packages/numarray' 
     python_version = '2.3'
     python_lib_root = '/usr/lib'
 
-
-optionalLibrary( name = 'python',
+if platform!='darwin':
+    optionalLibrary( name = 'python',
                  triggers = '[Pp]ython*',
                  includedirs = numpy_includedirs,
                  linkeroptions = ( '-L%s -lnumarray ' % numpy_site_packages + 
                                    '-L%s/python%s/config -lpython%s ' % (python_lib_root, python_version, python_version) +
                                    '-Xlinker -export-dynamic ' + 
                                    '-Xlinker -rpath -Xlinker %s' % numpy_site_packages )
+                 )
+else:
+    optionalLibrary( name = 'python',
+                 triggers = '[Pp]ython*',
+                 includedirs = numpy_includedirs,
+                 linkeroptions = ( '-L%s -lnumarray ' % numpy_site_packages + 
+                                   '-L%s/python%s/config -lpython%s ' % (python_lib_root, python_version, python_version) +
+                                   '' )
                  )
 
 # Operating system as defined by Torch when creating libraries.
@@ -364,7 +382,7 @@ optionalLibrary( name='boost_thread',
 optionalLibrary( name = 'NSPR',
                  triggers = 'nspr/*',
                  includedirs = ['/usr/include/firefox','/usr/include/mozilla'],
-                 linkeroptions = '-L/usr/lib/mozilla -lnspr4')
+                 linkeroptions = '-lnspr4')
 
 # What linker options to put always after those from the optional libraries
 linkeroptions_tail += ' -L' + libdir + ' -lm'
@@ -400,10 +418,14 @@ if target_platform=='linux-i386':
 else:
     gcc_opt_options = ''
 
+pedantic_mode = ' -pedantic '
+if platform=='darwin':
+    pedantic_mode = ' '
+    
 pymakeOption( name = 'g++',
               description = 'compiling with g++, with no MPI support',
               compiler = 'g++',
-              compileroptions = '-Wno-deprecated -pedantic -Wno-long-long -ftemplate-depth-100 ' \
+              compileroptions = '-Wno-deprecated '+pedantic_mode+'-Wno-long-long -ftemplate-depth-100 ' \
                       + gcc_opt_options,
               cpp_definitions = ['USING_MPI=0'],
               linker = 'g++' )
@@ -411,7 +433,7 @@ pymakeOption( name = 'g++',
 pymakeOption( name = 'g++3',
               description = 'compiling with g++3 (version 3.0), with no MPI support',
               compiler = 'g++3',
-              compileroptions = '-Wno-deprecated -pedantic -ftemplate-depth-100',
+              compileroptions = '-Wno-deprecated '+pedantic_mode+'-ftemplate-depth-100',
               cpp_definitions = ['USING_MPI=0'],
               linker = 'g++3' )
 
@@ -419,7 +441,7 @@ pymakeOption( name = 'g++no-cygwin',
               description = 'compiling with g++, with no MPI support, ' \
                           + 'without the need of the Cygwin DLL',
               compiler = 'g++',
-              compileroptions = '-Wno-deprecated -pedantic ' \
+              compileroptions = '-Wno-deprecated '+pedantic_mode \
                               + '-Wno-long-long -ftemplate-depth-100 '\
                               + '-mno-cygwin',
               cpp_definitions = ['USING_MPI=0', '_MINGW_'],
