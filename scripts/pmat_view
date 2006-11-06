@@ -1,0 +1,4 @@
+#!/usr/bin/python
+
+from plearn.plide.matrix_viewer import main
+main()

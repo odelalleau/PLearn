@@ -100,7 +100,7 @@ class MatrixViewer( object ):
 
 #####  Standalone Running  ##################################################
 
-if __name__ == "__main__":
+def main():
     from plearn.plide.pmat_list_model import PMatListModel
     from plearn.vmat.PMat import PMat
     import sys
@@ -121,3 +121,6 @@ if __name__ == "__main__":
     window.show()
 
     gtk.main()
+
+if __name__ == "__main__":
+    main()
