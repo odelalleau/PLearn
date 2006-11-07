@@ -79,7 +79,7 @@ private:
     //! since they are used by many different functions
     mutable Vec gradient;
     mutable string str;
-    mutable real * pval1, * pval2, * pval3, * pval4;
+    mutable real * pval1, * pval2, * pval3, * pval4, * pval5;
     mutable real val, val2, grad;
     mutable int offset;
     mutable int ni,nj,nk,id,nfeats,ifeats;
@@ -258,6 +258,12 @@ public:
     bool possible_targets_vary;
     //! FeatureSets to apply on input
     TVec<PP<FeatureSet> > feat_sets;
+    //! Indication that the input IDs should be used as the feature ID.
+    //! The ID/string mapping provided by the input VMatrix Dictionary
+    //! objects is hence used.
+    //! This implies that all VMatrices (even those at test time) that
+    //! provide the input vectors should use the same Dictionary objects.
+    bool use_input_as_feature;
 
 private:
     void build_();

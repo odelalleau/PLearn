@@ -38,6 +38,9 @@
 
 #include "FeatureSetNNet.h"
 #include <plearn/vmat/SubVMatrix.h>
+//#include <plearn/sys/Profiler.h>
+#include <time.h>
+#include <stdio.h>
 
 namespace PLearn {
 using namespace std;
@@ -296,7 +299,7 @@ void FeatureSetNNet::build_()
 
         if(n_feat_sets == 0)
             PLERROR("In FeatureSetNNet::build_(): at least one FeatureSet must be provided\n");
-
+        
         if(inputsize_ % n_feat_sets != 0)
             PLERROR("In FeatureSetNNet::build_(): feat_sets.length() must be a divisor of inputsize()");
         
@@ -343,12 +346,13 @@ void FeatureSetNNet::build_()
 
 void FeatureSetNNet::fprop(const Vec& inputv, Vec& outputv, const Vec& targetv, Vec& costsv, real sampleweight) const
 {
+    
     fpropOutput(inputv,outputv);
-    if(is_missing(outputv[0]))
-        cout << "What the fuck" << endl;
+    //if(is_missing(outputv[0]))
+    //    cout << "What the fuck" << endl;
     fpropCostsFromOutput(inputv, outputv, targetv, costsv, sampleweight);
-    if(is_missing(costsv[0]))
-        cout << "Re-What the fuck" << endl;
+    //if(is_missing(costsv[0]))
+    //    cout << "Re-What the fuck" << endl;
 
 }
 
@@ -371,7 +375,7 @@ void FeatureSetNNet::fpropOutput(const Vec& inputv, Vec& outputv) const
         feat_sets[i%n_feat_sets]->getFeatures(str,feats[i]);
         nfeats += feats[i].length();
     }
-
+    
     feat_input.resize(nfeats);
     offset = 0;
     id = 0;
@@ -386,7 +390,6 @@ void FeatureSetNNet::fpropOutput(const Vec& inputv, Vec& outputv) const
         else
             offset = 0;
     }
-    
 
     // Fprop to output
     if(dist_rep_dim > 0) // x -> d(x)
@@ -398,6 +401,7 @@ void FeatureSetNNet::fpropOutput(const Vec& inputv, Vec& outputv) const
             ifeats = 0;
             for(int j=0; j<n_feat_sets; j++,i++)
                 ifeats += feats[i].length();
+            
             add_affine_transform(feat_input.subVec(nfeats,ifeats),
                                  wout_dist_rep, bout_dist_rep,
                                  nnet_input.subVec(id*dist_rep_dim,dist_rep_dim),
@@ -511,7 +515,11 @@ void FeatureSetNNet::bprop(Vec& inputv, Vec& outputv, Vec& targetv, Vec& costsv,
     // Gradient through cost
     if(cost_funcs[0]=="NLL") 
     {
-        gradient_outputv[reind_target] = learning_rate*sampleweight/(outputv[reind_target]+1e-5);
+        // Permits to avoid numerical precision errors
+        if(output_transfer_func == "softmax")
+            gradient_outputv[reind_target] = learning_rate*sampleweight;
+        else
+            gradient_outputv[reind_target] = learning_rate*sampleweight/(outputv[reind_target]);            
     }
     else if(cost_funcs[0]=="class_error")
     {
@@ -783,20 +791,20 @@ void FeatureSetNNet::clearProppathGradient()
     if(cost_funcs[0]=="NLL") 
         gradient_outputv[reind_target] = 0;
     else
-        gradient_outputv.fill(0);
-    gradient_act_outputv.fill(0);
-
+        gradient_outputv.clear();
+    gradient_act_outputv.clear();
+    
     if(dist_rep_dim>0)
-        gradient_nnet_input.fill(0);
+        gradient_nnet_input.clear();
 
     if(nhidden>0) 
     {
-        gradient_hiddenv.fill(0);
-        gradient_act_hiddenv.fill(0);
+        gradient_hiddenv.clear();
+        gradient_act_hiddenv.clear();
         if(nhidden2>0) 
         {
-            gradient_hidden2v.fill(0);
-            gradient_act_hidden2v.fill(0);
+            gradient_hidden2v.clear();
+            gradient_act_hidden2v.clear();
         }
     }
 }
@@ -995,7 +1003,7 @@ void FeatureSetNNet::gradient_transfer_func(Vec& output, Vec& gradient_input, Ve
                 pval3++;                
             }   
         }
-        else
+        else // Permits speedup and avoids numerical precision errors
         {
             pval2 = output.data();
             pval3 = gradient_input.data();
@@ -1005,10 +1013,12 @@ void FeatureSetNNet::gradient_transfer_func(Vec& output, Vec& gradient_input, Ve
             for(int i=0; i<ni; i++)
             {
                 if(nll_softmax_speed_up_target!=i)
-                    *pval3++ -= grad * val * (*pval2++);
+                    //*pval3++ -= grad * val * (*pval2++);
+                    *pval3++ -= grad * (*pval2++);
                 else
                 {
-                    *pval3++ += grad * val * (1.0-val);
+                    //*pval3++ += grad * val * (1.0-val);
+                    *pval3++ += grad * (1.0-val);
                     pval2++;
                 }
             }   
@@ -1068,13 +1078,16 @@ void FeatureSetNNet::add_affine_transform(Vec input, Mat weights, Vec bias, Vec 
     {
         ni = input.length();
         nj = output.length();
-        pval3 = input.data();
-        for(int i=0; i<ni; i++)
+        if(ni != 0)
         {
-            pval1 = output.data();
-            pval2 = weights[(int)(*pval3++)];
-            for(int j=0; j<nj;j++)
-                *pval1++ += *pval2++;
+            pval3 = input.data();
+            for(int i=0; i<ni; i++)
+            {
+                pval1 = output.data();
+                pval2 = weights[(int)(*pval3++)];
+                for(int j=0; j<nj;j++)
+                    *pval1++ += *pval2++;
+            }
         }
     }
     else if(input_is_sparse && output_is_sparse)
@@ -1082,14 +1095,17 @@ void FeatureSetNNet::add_affine_transform(Vec input, Mat weights, Vec bias, Vec 
         // Weights
         ni = input.length();
         nj = output.length();
-        pval2 = input.data();
-        for(int i=0; i<ni; i++)
+        if(ni != 0)
         {
-            pval1 = output.data();
-            pval3 = output_indices.data();
-            for(int j=0; j<nj; j++)
-                *pval1++ += weights((int)(*pval2),(int)*pval3++);
-            pval2++;
+            pval2 = input.data();
+            for(int i=0; i<ni; i++)
+            {
+                pval1 = output.data();
+                pval3 = output_indices.data();
+                for(int j=0; j<nj; j++)
+                    *pval1++ += weights((int)(*pval2),(int)*pval3++);
+                pval2++;
+            }
         }
     }
 }
@@ -1111,16 +1127,82 @@ void FeatureSetNNet::gradient_affine_transform(Vec input, Mat weights, Vec bias,
             pval2 = goutput.data();
             pval3 = output_indices.data();
             ni = goutput.length();
-            for(int i=0; i<ni; i++)
-                pval1[(int)*pval3++] += *pval2++;
+            
+            if(fast_exact_is_equal(bias_decay, 0))
+            {
+                // Without bias decay
+                for(int i=0; i<ni; i++)
+                    pval1[(int)*pval3++] += *pval2++;
+            }
+            else
+            {
+                // With bias decay
+                if(penalty_type == "L2_square")
+                {
+                    pval4 = bias.data();
+                    val = -two(learning_rate)*bias_decay;
+                    for(int i=0; i<ni; i++)
+                    {
+                        pval1[(int)*pval3] += *pval2++ + val*(pval4[(int)*pval3]);
+                        pval3++;
+                    }
+                }
+                else if(penalty_type == "L1")
+                {
+                    pval4 = bias.data();
+                    val = -learning_rate*bias_decay;
+                    for(int i=0; i<ni; i++)
+                    {
+                        val2 = pval4[(int)*pval3];
+                        if(val2 > 0 )
+                            pval1[(int)*pval3] += *pval2 + val;
+                        else if(val2 < 0)
+                            pval1[(int)*pval3] += *pval2 - val;
+                        pval2++;
+                        pval3++;
+                    }
+                }
+            }
         }
         else
         {
             pval1 = gbias.data();
             pval2 = goutput.data();
             ni = goutput.length();
-            for(int i=0; i<ni; i++)
-                *pval1++ += *pval2++;
+            if(fast_exact_is_equal(bias_decay, 0))
+            {
+                // Without bias decay
+                for(int i=0; i<ni; i++)
+                    *pval1++ += *pval2++;
+            }
+            else
+            {
+                // With bias decay
+                if(penalty_type == "L2_square")
+                {
+                    pval3 = bias.data();
+                    val = -two(learning_rate)*bias_decay;
+                    for(int i=0; i<ni; i++)
+                    {
+                        *pval1++ += *pval2++ + val * (*pval3++);
+                    }
+                }
+                else if(penalty_type == "L1")
+                {
+                    pval3 = bias.data();
+                    val = -learning_rate*bias_decay;
+                    for(int i=0; i<ni; i++)
+                    {
+                        if(*pval3 > 0)
+                            *pval1 += *pval2 + val;
+                        else if(*pval3 < 0)
+                            *pval1 += *pval2 - val;
+                        pval1++;
+                        pval2++;
+                        pval3++;
+                    }
+                }
+            }
         }
     }
 
@@ -1128,9 +1210,81 @@ void FeatureSetNNet::gradient_affine_transform(Vec input, Mat weights, Vec bias,
     if(!input_is_sparse && !output_is_sparse)
     {        
         // Input
-        productAcc(ginput, weights, goutput);
+        //productAcc(ginput, weights, goutput);
         // Weights
-        externalProductAcc(gweights, input, goutput);
+        //externalProductAcc(gweights, input, goutput);
+
+        // Faster code to do this, which limits the accesses
+        // to memory
+
+        ni = input.length();
+        nj = goutput.length();
+        pval3 = ginput.data();
+        pval5 = input.data();
+        
+        if(fast_exact_is_equal(weight_decay, 0))
+        {
+            // Without weight decay
+            for(int i=0; i<ni; i++) {
+                
+                pval1 = goutput.data();
+                pval2 = weights[i];
+                pval4 = gweights[i];
+                for(int j=0; j<nj; j++) {
+                    *pval3 += *pval2 * (*pval1);
+                    *pval4 += *pval5 * (*pval1);
+                    pval1++;
+                    pval2++;
+                    pval4++;
+                }
+                pval3++;
+                pval5++;
+            }   
+        }
+        else
+        {
+            //With weight decay            
+            if(penalty_type == "L2_square")
+            {
+                val = -two(learning_rate)*weight_decay;
+                for(int i=0; i<ni; i++) {   
+                    pval1 = goutput.data();
+                    pval2 = weights[i];
+                    pval4 = gweights[i];
+                    for(int j=0; j<nj; j++) {
+                        *pval3 += *pval2 * (*pval1);
+                        *pval4 += *pval5 * (*pval1) + val * (*pval2);
+                        pval1++;
+                        pval2++;
+                        pval4++;
+                    }
+                    pval3++;
+                    pval5++;
+                }
+            }
+            else if(penalty_type == "L1")
+            {
+                val = -learning_rate*weight_decay;
+                for(int i=0; i<ni; i++) {
+                    
+                    pval1 = goutput.data();
+                    pval2 = weights[i];
+                    pval4 = gweights[i];
+                    for(int j=0; j<nj; j++) {
+                        *pval3 += *pval2 * (*pval1);
+                        if(*pval2 > 0)
+                            *pval4 += *pval5 * (*pval1) + val;
+                        else if(*pval2 < 0)
+                            *pval4 += *pval5 * (*pval1) - val;
+                        pval1++;
+                        pval2++;
+                        pval4++;
+                    }
+                    pval3++;
+                    pval5++;
+                }
+            }
+        }
     }
     else if(!input_is_sparse && output_is_sparse)
     {
@@ -1138,53 +1292,215 @@ void FeatureSetNNet::gradient_affine_transform(Vec input, Mat weights, Vec bias,
         nj = input.length();
         pval1 = goutput.data();
         pval3 = output_indices.data();
-        for(int i=0; i<ni; i++)
+        
+        if(fast_exact_is_equal(weight_decay, 0))
         {
-            pval2 = input.data();
-            pval4 = ginput.data();
-            for(int j=0; j<nj; j++)
+            // Without weight decay
+            for(int i=0; i<ni; i++)
             {
-                // Input
-                *pval4++ += weights(j,(int)(*pval3))*(*pval1);
-                // Weights
-                gweights(j,(int)(*pval3)) += (*pval2++)*(*pval1);
+                pval2 = input.data();
+                pval4 = ginput.data();
+                for(int j=0; j<nj; j++)
+                {
+                    // Input
+                    *pval4++ += weights(j,(int)(*pval3))*(*pval1);
+                    // Weights
+                    gweights(j,(int)(*pval3)) += (*pval2++)*(*pval1);
+                }
+                pval1++;
+                pval3++;
             }
-            pval1++;
-            pval3++;
+        }
+        else
+        {
+            // With weight decay
+            if(penalty_type == "L2_square")
+            {
+                val = -two(learning_rate)*weight_decay;
+                for(int i=0; i<ni; i++)
+                {
+                    pval2 = input.data();
+                    pval4 = ginput.data();
+                    for(int j=0; j<nj; j++)
+                    {
+                        val2 = weights(j,(int)(*pval3));
+                        // Input
+                        *pval4++ += val2*(*pval1);
+                        // Weights
+                        gweights(j,(int)(*pval3)) += (*pval2++)*(*pval1) + val*val2;
+                    }
+                    pval1++;
+                    pval3++;
+                }
+            }
+            else if(penalty_type == "L1")
+            {
+                val = -learning_rate*weight_decay;
+                for(int i=0; i<ni; i++)
+                {
+                    pval2 = input.data();
+                    pval4 = ginput.data();
+                    for(int j=0; j<nj; j++)
+                    {
+                        val2 = weights(j,(int)(*pval3));
+                        // Input
+                        *pval4++ += val2*(*pval1);
+                        // Weights
+                        if(val2 > 0)
+                            gweights(j,(int)(*pval3)) += (*pval2)*(*pval1) + val;
+                        else if(val2 < 0)
+                            gweights(j,(int)(*pval3)) += (*pval2)*(*pval1) - val;
+                        pval2++;
+                    }
+                    pval1++;
+                    pval3++;
+                }
+            }
         }
     }
     else if(input_is_sparse && !output_is_sparse)
     {
-        // Weights
         ni = input.length();
         nj = goutput.length();
-        pval3 = input.data();
-        for(int i=0; i<ni; i++)
+
+        if(fast_exact_is_equal(weight_decay, 0))
         {
-            pval1 = goutput.data();
-            pval2 = gweights[(int)(*pval3++)];
-            for(int j=0; j<nj;j++)
-                *pval2++ += *pval1++;
+            // Without weight decay
+            if(ni != 0)
+            {
+                pval3 = input.data();
+                for(int i=0; i<ni; i++)
+                {
+                    pval1 = goutput.data();
+                    pval2 = gweights[(int)(*pval3++)];
+                    for(int j=0; j<nj;j++)
+                        *pval2++ += *pval1++;
+                }
+            }
+        }
+        else
+        {
+            // With weight decay
+            if(penalty_type == "L2_square")
+            {
+                if(ni != 0)
+                {
+                    pval3 = input.data();                    
+                    val = -two(learning_rate)*weight_decay;
+                    for(int i=0; i<ni; i++)
+                    {
+                        pval1 = goutput.data();
+                        pval2 = gweights[(int)(*pval3)];
+                        pval4 = weights[(int)(*pval3++)];
+                        for(int j=0; j<nj;j++)
+                        {
+                            *pval2++ += *pval1++ + val * (*pval4++);
+                        }
+                    }
+                }
+            }
+            else if(penalty_type == "L1")
+            {
+                if(ni != 0)
+                {
+                    pval3 = input.data();
+                    val = learning_rate*weight_decay;
+                    for(int i=0; i<ni; i++)
+                    {
+                        pval1 = goutput.data();
+                        pval2 = gweights[(int)(*pval3)];
+                        pval4 = weights[(int)(*pval3++)];
+                        for(int j=0; j<nj;j++)
+                        {
+                            if(*pval4 > 0)
+                                *pval2 += *pval1 + val;
+                            else if(*pval4 < 0)
+                                *pval2 += *pval1 - val;
+                            pval1++;
+                            pval2++;
+                            pval4++;
+                        }
+                    }
+                }
+            }
         }
     }
     else if(input_is_sparse && output_is_sparse)
     {
-        // Weights
         ni = input.length();
         nj = goutput.length();
-        pval2 = input.data();
-        for(int i=0; i<ni; i++)
+
+        if(fast_exact_is_equal(weight_decay, 0))
         {
-            pval1 = goutput.data();
-            pval3 = output_indices.data();
-            for(int j=0; j<nj; j++)
-                gweights((int)(*pval2),(int)*pval3++) += *pval1++;
-            pval2++;
+            // Without weight decay
+            if(ni != 0)
+            {
+                pval2 = input.data();
+                for(int i=0; i<ni; i++)
+                {
+                    pval1 = goutput.data();
+                    pval3 = output_indices.data();
+                    for(int j=0; j<nj; j++)
+                        gweights((int)(*pval2),(int)*pval3++) += *pval1++;
+                    pval2++;
+                }
+            }
+        }
+        else
+        {
+            // With weight decay
+            if(penalty_type == "L2_square")
+            {
+                if(ni != 0)
+                {
+                    pval2 = input.data();
+                    val = -two(learning_rate)*weight_decay;                    
+                    for(int i=0; i<ni; i++)
+                    {
+                        pval1 = goutput.data();
+                        pval3 = output_indices.data();
+                        for(int j=0; j<nj; j++)
+                        {
+                            gweights((int)(*pval2),(int)*pval3) 
+                                += *pval1++ 
+                                + val * weights((int)(*pval2),(int)*pval3);
+                            pval3++;
+                        }
+                        pval2++;
+                    }
+                }
+            }
+            else if(penalty_type == "L1")
+            {
+                if(ni != 0)
+                {
+                    pval2 = input.data();
+                    val = -learning_rate*weight_decay;                    
+                    for(int i=0; i<ni; i++)
+                    {
+                        pval1 = goutput.data();
+                        pval3 = output_indices.data();
+                        for(int j=0; j<nj; j++)
+                        {
+                            val2 = weights((int)(*pval2),(int)*pval3);
+                            if(val2 > 0)
+                                gweights((int)(*pval2),(int)*pval3) 
+                                    += *pval1 + val;
+                            else if(val2 < 0)
+                                gweights((int)(*pval2),(int)*pval3) 
+                                    += *pval1 - val;
+                            pval1++;
+                            pval3++;
+                        }
+                        pval2++;
+                    }
+                }
+            }
         }
     }
 
-    gradient_penalty(input,weights,bias,gweights,gbias,input_is_sparse,output_is_sparse,
-                     learning_rate,weight_decay,bias_decay,output_indices);
+//    gradient_penalty(input,weights,bias,gweights,gbias,input_is_sparse,output_is_sparse,
+//                     learning_rate,weight_decay,bias_decay,output_indices);
 }
 
 void FeatureSetNNet::gradient_penalty(Vec input, Mat weights, Vec bias, 
@@ -1242,9 +1558,10 @@ void FeatureSetNNet::gradient_penalty(Vec input, Mat weights, Vec bias,
                 for(int i=0; i<ni; i++)
                 {
                     if(*pval2 > 0)
-                        *pval1++ += val;
+                        *pval1 += val;
                     else if(*pval2 < 0)
-                        *pval1++ -= val;
+                        *pval1 -= val;
+                    pval1++;
                     pval2++;
                 }
             }
@@ -1330,74 +1647,80 @@ void FeatureSetNNet::gradient_penalty(Vec input, Mat weights, Vec bias,
         {
             ni = input.length();
             nj = output_indices.length();
-            pval3 = input.data();
-            if(penalty_type == "L2_square")
+            if(ni != 0)
             {
-                val = -two(learning_rate)*weight_decay;
-                for(int i=0; i<ni; i++)
+                pval3 = input.data();
+                if(penalty_type == "L2_square")
                 {
-                    pval1 = weights[(int)(*pval3)];
-                    pval2 = gweights[(int)(*pval3++)];
-                    for(int j=0; j<nj;j++)
-                        *pval2++ += val * *pval1++;
-                }
-            }
-            else if(penalty_type == "L1")
-            {
-                val = -learning_rate*weight_decay;
-                for(int i=0; i<ni; i++)
-                {
-                    pval1 = weights[(int)(*pval3)];
-                    pval2 = gweights[(int)(*pval3++)];
-                    for(int j=0; j<nj;j++)
+                    val = -two(learning_rate)*weight_decay;
+                    for(int i=0; i<ni; i++)
                     {
-                        if(*pval1 > 0)
-                            *pval2++ += val;
-                        else if(*pval1 < 0)
-                            *pval2++ -= val;
-                        pval1++;
+                        pval1 = weights[(int)(*pval3)];
+                        pval2 = gweights[(int)(*pval3++)];
+                        for(int j=0; j<nj;j++)
+                            *pval2++ += val * *pval1++;
                     }
-                }                
+                }
+                else if(penalty_type == "L1")
+                {
+                    val = -learning_rate*weight_decay;
+                    for(int i=0; i<ni; i++)
+                    {
+                        pval1 = weights[(int)(*pval3)];
+                        pval2 = gweights[(int)(*pval3++)];
+                        for(int j=0; j<nj;j++)
+                        {
+                            if(*pval1 > 0)
+                                *pval2 += val;
+                            else if(*pval1 < 0)
+                                *pval2 -= val;
+                            pval2++;
+                            pval1++;
+                        }
+                    }                
+                }
             }
         }
         else if(input_is_sparse && output_is_sparse)
         {
             ni = input.length();
             nj = output_indices.length();
-            pval1 = input.data();
-            
-            if(penalty_type == "L2_square")
+            if(ni != 0)
             {
-                val = -two(learning_rate)*weight_decay;
-                for(int i=0; i<ni; i++)
+                pval1 = input.data();
+                if(penalty_type == "L2_square")
                 {
-                    pval2 = output_indices.data();
-                    for(int j=0; j<nj; j++)
+                    val = -two(learning_rate)*weight_decay;
+                    for(int i=0; i<ni; i++)
                     {
-                        gweights((int)(*pval1),(int)*pval2) += val*weights((int)(*pval1),(int)*pval2);
+                        pval2 = output_indices.data();
+                        for(int j=0; j<nj; j++)
+                        {
+                            gweights((int)(*pval1),(int)*pval2) += val*weights((int)(*pval1),(int)*pval2);
                         pval2++;
+                        }
+                        pval1++;
                     }
-                    pval1++;
                 }
-            }
-            else if(penalty_type == "L1")
-            {
-                val = -learning_rate*weight_decay;
-                for(int i=0; i<ni; i++)
+                else if(penalty_type == "L1")
                 {
-                    pval2 = output_indices.data();
-                    for(int j=0; j<nj; j++)
+                    val = -learning_rate*weight_decay;
+                    for(int i=0; i<ni; i++)
                     {
-                        val2 = weights((int)(*pval1),(int)*pval2);
-                        if(val2 > 0)
-                            gweights((int)(*pval1),(int)*pval2) += val;
-                        else if(val2 < 0)
-                            gweights((int)(*pval1),(int)*pval2) -= val;
-                        pval2++;
+                        pval2 = output_indices.data();
+                        for(int j=0; j<nj; j++)
+                        {
+                            val2 = weights((int)(*pval1),(int)*pval2);
+                            if(val2 > 0)
+                                gweights((int)(*pval1),(int)*pval2) += val;
+                            else if(val2 < 0)
+                                gweights((int)(*pval1),(int)*pval2) -= val;
+                            pval2++;
+                        }
+                        pval1++;
                     }
-                    pval1++;
+                    
                 }
-                
             }
         }
     }
@@ -1406,6 +1729,15 @@ void FeatureSetNNet::gradient_penalty(Vec input, Mat weights, Vec bias,
 void FeatureSetNNet::compute_softmax(const Vec& x, const Vec& y) const
 {
     int n = x.length();
+    
+//    real* yp = y.data();
+//    real* xp = x.data();
+//    for(int i=0; i<n; i++)
+//    {
+//        *yp++ = *xp > 1e-5 ? *xp : 1e-5;
+//        xp++;
+//    }
+
     if (n>0)
     {
         real* yp = y.data();
@@ -1456,14 +1788,14 @@ void FeatureSetNNet::initializeParams(bool set_seed)
         nnet_input.resize(nnet_inputsize);
 
         fillWeights(wout_dist_rep);
-        bout_dist_rep.fill(0);
+        bout_dist_rep.clear();
 
         gradient_wout_dist_rep.resize(total_feats_per_token,dist_rep_dim);
         gradient_bout_dist_rep.resize(dist_rep_dim);
         gradient_nnet_input.resize(nnet_inputsize);
-        gradient_wout_dist_rep.fill(0);
-        gradient_bout_dist_rep.fill(0);
-        gradient_nnet_input.fill(0);
+        gradient_wout_dist_rep.clear();
+        gradient_bout_dist_rep.clear();
+        gradient_nnet_input.clear();
     }
     else
     {
@@ -1478,16 +1810,16 @@ void FeatureSetNNet::initializeParams(bool set_seed)
         hiddenv.resize(nhidden);
 
         fillWeights(w1);
-        b1.fill(0);
+        b1.clear();
 
         gradient_w1.resize(nnet_inputsize,nhidden);
         gradient_b1.resize(nhidden);
         gradient_hiddenv.resize(nhidden);
         gradient_act_hiddenv.resize(nhidden);
-        gradient_w1.fill(0);
-        gradient_b1.fill(0);
-        gradient_hiddenv.fill(0);
-        gradient_act_hiddenv.fill(0);
+        gradient_w1.clear();
+        gradient_b1.clear();
+        gradient_hiddenv.clear();
+        gradient_act_hiddenv.clear();
         if(nhidden2>0) 
         {
             w2.resize(nhidden,nhidden2);
@@ -1497,7 +1829,7 @@ void FeatureSetNNet::initializeParams(bool set_seed)
             bout.resize(total_output_size);
 
             fillWeights(w2);
-            b2.fill(0);
+            b2.clear();
 
             gradient_w2.resize(nhidden,nhidden2);
             gradient_b2.resize(nhidden2);
@@ -1505,12 +1837,12 @@ void FeatureSetNNet::initializeParams(bool set_seed)
             gradient_act_hidden2v.resize(nhidden2);
             gradient_wout.resize(nhidden2,total_output_size);
             gradient_bout.resize(total_output_size);
-            gradient_w2.fill(0);
-            gradient_b2.fill(0);
-            gradient_hidden2v.fill(0);
-            gradient_act_hidden2v.fill(0);
-            gradient_wout.fill(0);
-            gradient_bout.fill(0);
+            gradient_w2.clear();
+            gradient_b2.clear();
+            gradient_hidden2v.clear();
+            gradient_act_hidden2v.clear();
+            gradient_wout.clear();
+            gradient_bout.clear();
         }
         else
         {
@@ -1519,8 +1851,8 @@ void FeatureSetNNet::initializeParams(bool set_seed)
 
             gradient_wout.resize(nhidden,total_output_size);
             gradient_bout.resize(total_output_size);
-            gradient_wout.fill(0);
-            gradient_bout.fill(0);
+            gradient_wout.clear();
+            gradient_bout.clear();
         }
             
         if(direct_in_to_out)
@@ -1531,7 +1863,7 @@ void FeatureSetNNet::initializeParams(bool set_seed)
             fillWeights(direct_wout);
                 
             gradient_direct_wout.resize(nnet_inputsize,total_output_size);
-            gradient_direct_wout.fill(0);
+            gradient_direct_wout.clear();
             gradient_direct_bout.resize(0); // idem
         }
     }
@@ -1542,11 +1874,11 @@ void FeatureSetNNet::initializeParams(bool set_seed)
 
         gradient_wout.resize(nnet_inputsize,total_output_size);
         gradient_bout.resize(total_output_size);
-        gradient_wout.fill(0);
-        gradient_bout.fill(0);
+        gradient_wout.clear();
+        gradient_bout.clear();
     }
 
-    fillWeights(wout);
+    //fillWeights(wout);
     
     if (fixed_output_weights) {
         static Vec values;
@@ -1561,12 +1893,12 @@ void FeatureSetNNet::initializeParams(bool set_seed)
     else 
         fillWeights(wout);
 
-    bout.fill(0);
+    bout.clear();
 
     gradient_outputv.resize(total_output_size);
     gradient_act_outputv.resize(total_output_size);
-    gradient_outputv.fill(0);
-    gradient_act_outputv.fill(0);
+    gradient_outputv.clear();
+    gradient_act_outputv.clear();
 }
 
 /////////////////////////////////
@@ -1642,6 +1974,7 @@ int FeatureSetNNet::outputsize() const {
 ///////////
 void FeatureSetNNet::train()
 {
+    //Profiler::activate();
     if(!train_set)
         PLERROR("In FeatureSetNNet::train, you did not setTrainingSet");
 
@@ -1730,6 +2063,10 @@ void FeatureSetNNet::train()
     {
         for(int t=0; t<l;)
         {
+            //if(t%1000 == 0)
+            //{
+            //    cout << "Time: " << clock()/CLOCKS_PER_SEC << " seconds." << endl;
+            //}
             for(int i=0; i<bs; i++)
             {
                 //if(t == 71705)
@@ -1739,10 +2076,14 @@ void FeatureSetNNet::train()
                 //    cout << "It's going to fuck !!!" << endl;
                 
                 train_set->getExample(t%l,inputv,targetv,sample_weight);
+                //Profiler::start("fprop()");
                 fprop(inputv,outputv,targetv,costsv,sample_weight);
+                //Profiler::end("fprop()");
+                //Profiler::start("bprop()");
                 bprop(inputv,outputv,targetv,costsv,
                       start_learning_rate/(bs*(1.0+decrease_constant*total_updates)),
                       sample_weight);
+                //Profiler::end("bprop()");
                 train_stats->update(costsv);
                 t++;
             }
@@ -1790,6 +2131,7 @@ void FeatureSetNNet::train()
             }
         }
     }
+    //Profiler::report(cout);
 }
 
 void FeatureSetNNet::verify_gradient(Vec& input, Vec targetv, real step)
@@ -1820,10 +2162,10 @@ void FeatureSetNNet::verify_gradient(Vec& input, Vec targetv, real step)
         nnet_inputsize = dist_rep_dim*inputsize_/n_feat_sets;
         est_gradient_wout_dist_rep.resize(total_feats_per_token,dist_rep_dim);
         est_gradient_bout_dist_rep.resize(dist_rep_dim);
-        est_gradient_wout_dist_rep.fill(0);
-        est_gradient_bout_dist_rep.fill(0);
-        gradient_wout_dist_rep.fill(0);
-        gradient_bout_dist_rep.fill(0);
+        est_gradient_wout_dist_rep.clear();
+        est_gradient_bout_dist_rep.clear();
+        gradient_wout_dist_rep.clear();
+        gradient_bout_dist_rep.clear();
     }
     else
     {
@@ -1834,51 +2176,51 @@ void FeatureSetNNet::verify_gradient(Vec& input, Vec targetv, real step)
     {
         est_gradient_w1.resize(nnet_inputsize,nhidden);
         est_gradient_b1.resize(nhidden);
-        est_gradient_w1.fill(0);
-        est_gradient_b1.fill(0);
-        gradient_w1.fill(0);
-        gradient_b1.fill(0);
+        est_gradient_w1.clear();
+        est_gradient_b1.clear();
+        gradient_w1.clear();
+        gradient_b1.clear();
         if(nhidden2>0) 
         {
             est_gradient_w2.resize(nhidden,nhidden2);
             est_gradient_b2.resize(nhidden2);
             est_gradient_wout.resize(nhidden2,total_output_size);
             est_gradient_bout.resize(total_output_size);
-            est_gradient_w2.fill(0);
-            est_gradient_b2.fill(0);
-            est_gradient_wout.fill(0);
-            est_gradient_bout.fill(0);
-            gradient_w2.fill(0);
-            gradient_b2.fill(0);
-            gradient_wout.fill(0);
-            gradient_bout.fill(0);
+            est_gradient_w2.clear();
+            est_gradient_b2.clear();
+            est_gradient_wout.clear();
+            est_gradient_bout.clear();
+            gradient_w2.clear();
+            gradient_b2.clear();
+            gradient_wout.clear();
+            gradient_bout.clear();
         }
         else
         {
             est_gradient_wout.resize(nhidden,total_output_size);
             est_gradient_bout.resize(total_output_size);
-            est_gradient_wout.fill(0);
-            est_gradient_bout.fill(0);
-            gradient_wout.fill(0);
-            gradient_bout.fill(0);
+            est_gradient_wout.clear();
+            est_gradient_bout.clear();
+            gradient_wout.clear();
+            gradient_bout.clear();
         }
             
         if(direct_in_to_out)
         {
             est_gradient_direct_wout.resize(nnet_inputsize,total_output_size);
-            est_gradient_direct_wout.fill(0);
+            est_gradient_direct_wout.clear();
             est_gradient_direct_bout.resize(0); // idem
-            gradient_direct_wout.fill(0);                        
+            gradient_direct_wout.clear();                        
         }
     }
     else
     {
         est_gradient_wout.resize(nnet_inputsize,total_output_size);
         est_gradient_bout.resize(total_output_size);
-        est_gradient_wout.fill(0);
-        est_gradient_bout.fill(0);
-        gradient_wout.fill(0);
-        gradient_bout.fill(0);
+        est_gradient_wout.clear();
+        est_gradient_bout.clear();
+        gradient_wout.clear();
+        gradient_bout.clear();
     }
 
     fprop(input, output_comp, targetv, costsv);
@@ -2139,23 +2481,26 @@ void FeatureSetNNet::verify_gradient_affine_transform(
     {
         ni = input.length();
         nj = weights.width();
-        pval3 = input.data();
-        for(int i=0; i<ni; i++)
+        if(ni != 0 )
         {
-            pval1 = est_gweights[(int)(*pval3)];
-            pval2 = weights[(int)(*pval3++)];
-            for(int j=0; j<nj;j++)
+            pval3 = input.data();
+            for(int i=0; i<ni; i++)
             {
-                *pval2 += step;
-                fprop(global_input, global_output, global_targetv, global_costs, sampleweight);
-                out1 = global_costs[0];
-                *pval2 -= 2*step;
-                fprop(global_input, global_output, global_targetv, global_costs, sampleweight);
-                out2 = global_costs[0];
-                *pval1 = (out1-out2)/(2*step);
-                *pval2 += step;
-                pval1++;
-                pval2++;
+                pval1 = est_gweights[(int)(*pval3)];
+                pval2 = weights[(int)(*pval3++)];
+                for(int j=0; j<nj;j++)
+                {
+                    *pval2 += step;
+                    fprop(global_input, global_output, global_targetv, global_costs, sampleweight);
+                    out1 = global_costs[0];
+                    *pval2 -= 2*step;
+                    fprop(global_input, global_output, global_targetv, global_costs, sampleweight);
+                    out2 = global_costs[0];
+                    *pval1 = (out1-out2)/(2*step);
+                    *pval2 += step;
+                    pval1++;
+                    pval2++;
+                }
             }
         }
     }
@@ -2164,23 +2509,26 @@ void FeatureSetNNet::verify_gradient_affine_transform(
         // Weights
         ni = input.length();
         nj = output_indices.length();
-        pval2 = input.data();
-        for(int i=0; i<ni; i++)
+        if(ni != 0)
         {
-            pval3 = output_indices.data();
-            for(int j=0; j<nj; j++)
+            pval2 = input.data();
+            for(int i=0; i<ni; i++)
             {
-                weights((int)(*pval2),(int)*pval3) += step;
-                fprop(global_input, global_output, global_targetv, global_costs, sampleweight);
-                out1 = global_costs[0];
-                weights((int)(*pval2),(int)*pval3) -= 2*step;
-                fprop(global_input, global_output, global_targetv, global_costs, sampleweight);
-                out2 = global_costs[0];
-                est_gweights((int)(*pval2),(int)*pval3)  = (out1-out2)/(2*step);
-                weights((int)(*pval2),(int)*pval3) += step;
-                pval3++;
+                pval3 = output_indices.data();
+                for(int j=0; j<nj; j++)
+                {
+                    weights((int)(*pval2),(int)*pval3) += step;
+                    fprop(global_input, global_output, global_targetv, global_costs, sampleweight);
+                    out1 = global_costs[0];
+                    weights((int)(*pval2),(int)*pval3) -= 2*step;
+                    fprop(global_input, global_output, global_targetv, global_costs, sampleweight);
+                    out2 = global_costs[0];
+                    est_gweights((int)(*pval2),(int)*pval3)  = (out1-out2)/(2*step);
+                    weights((int)(*pval2),(int)*pval3) += step;
+                    pval3++;
+                }
+                pval2++;
             }
-            pval2++;
         }
     }
 }
