@@ -98,16 +98,16 @@ void Dictionary::declareOptions(OptionList& ol)
                   OptionBase::learntoption, "string to int mapping");
     declareOption(ol, "int_to_string", &Dictionary::int_to_string, 
                   OptionBase::learntoption, "int to string mapping");
-    declareOption(ol, "dont_insert_oov_symbol", 
-                  &Dictionary::dont_insert_oov_symbol, 
-                  OptionBase::buildoption, 
-                  "Indication that the OOV symbol should not be considered"
-                  "as part of the dictionary"); 
     // For backward compatibility...
     declareOption(ol, "oov_not_in_possible_values", 
                   &Dictionary::dont_insert_oov_symbol, 
                   OptionBase::buildoption,
-                  "Indication that the OOV symbol should not be considered"
+                  "DEPRECATED, use dont_insert_oov_symbol instead: Indication that\n"
+                  "the OOV symbol should not be considered as part of the dictionary"); 
+    declareOption(ol, "dont_insert_oov_symbol", 
+                  &Dictionary::dont_insert_oov_symbol, 
+                  OptionBase::buildoption, 
+                  "Indication that the OOV symbol should not be considered\n"
                   "as part of the dictionary"); 
 
     inherited::declareOptions(ol);
