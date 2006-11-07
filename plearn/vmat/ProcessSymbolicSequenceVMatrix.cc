@@ -307,8 +307,8 @@ void ProcessSymbolicSequenceVMatrix::build_()
             {
                 target_contains_missing = false;
                 int ni = source->targetsize()+source->inputsize();
-                for(int i=source->inputsize(); i<ni; i++)
-                    if(is_missing(row[i]))
+                for(int j=source->inputsize(); j<ni; j++)
+                    if(is_missing(row[j]))
                     {
                         target_contains_missing = true;
                         break;
@@ -753,6 +753,32 @@ void ProcessSymbolicSequenceVMatrix::getExample(int i, Vec& input, Vec& target, 
             }
             else
                 target[t/n_attributes * source->targetsize() + t%n_attributes - source->inputsize() ] = current_row_i[t];
+    }
+
+    if(fixed_context)
+    {
+        // Verify if inputsize and targetsize were redefined
+        if(inputsize_ > input.length())
+        {
+            input.resize(inputsize_);
+            int it = 0;
+            for(int i=cp*source->inputsize(); i<inputsize_; i++)
+                input[i] = target[it++];
+            for(int i=0; i<targetsize_; i++)
+                target[i] = target[it++];
+            target.resize(targetsize_);
+        }
+        else if(targetsize() > target.length())
+        {
+            target.resize(targetsize_);
+            int it = cp*source->inputsize()-inputsize_;
+            for(int i=0; it<targetsize_; i++)
+                target[it++] = target[i];
+            it = inputsize_;
+            for(int i=0; it<input.length(); i++)
+                target[i] = input[it++];
+            input.resize(inputsize_);
+        }
     }
 
     return;
