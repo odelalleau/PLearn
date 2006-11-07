@@ -1,9 +1,8 @@
 // -*- C++ -*-
 
-// plearn_full_inc.h
+// viewVMat.h
+// Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux, Rejean Ducharme
 //
-// Copyright (C) 2005 Olivier Delalleau 
-// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -33,40 +32,23 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id$ 
+ * $Id: viewVMat.h 5937 2006-06-22 22:20:23Z saintmlx $
  ******************************************************* */
 
-// Authors: Olivier Delalleau
+#ifndef viewVMat_INC
+#define viewVMat_INC
 
-/*! \file plearn_full_inc.h */
+#include <string>
+#include <plearn/vmat/VMat.h>
 
-/*! Include here all classes available in the PLearn CVS repository
-  that are dependent upon some external libraries.
-*/
+namespace PLearn {
+using namespace std;
 
-#ifndef plearn_full_inc_INC
-#define plearn_full_inc_INC
+//! Enters curses interactive view of dataset vm.
+//! dataset_spec is the optional specification of the dataset that will be used to "reload" it
+void viewVMat(const VMat& vm, string dataset_spec="");
 
-/*********
- * Boost *
- *********/
-#include <commands/PLearnCommands/HTMLHelpCommand.h>
-
-/**********
- * Curses *
- **********/
-#include <commands/PLearnCommands/VMatCommand.h>
-
-/**************
- * Dictionary *
- **************/
-//#include <plearn/dict/WordNetSenseDictionary.h>
-
-/*********
- * Torch *
- *********/
-//#include <plearn_learners/classifiers/SVMClassificationTorch.h>
-
+} // end of namespace PLearn
 
 #endif
 

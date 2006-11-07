@@ -2194,6 +2194,26 @@ but how it doesn't reduce link dependency.
 
 \section{Regarding external library dependencies}
 
+External dependencies tend to creep in in the codebase, and if unchecked, end up causing
+a nighightmare for installation, link times, and memory usage of the
+running software. So it is a good policy to try and limit this, based on
+the following three guideleines
+\begin{itemize}
+\item {\bf If something similar already exists within PLearn, prefer using that.}
+\item {\bf If it can easily be done without introducing a new dependency, then
+  do it that way (even if it feels a little less {\em cool}.}
+\item {\bf Prefer using an external library that is already used in PLearn
+(and approved) than a introducing new one.} 
+\end{itemize}
+
+A few remarks regarding specific external libraries
+\begin{itemize}
+\item Use PLearn's intrusive smart pointers ({\tt PP}, \ldots) for all
+  PLearn objects. Use boost's \verb!shared_ptr! for non PLearn classes. 
+\item Use PLearn's PStream and serialization mechanism rather than any
+  other C++ streams or serialization system  (including std::stream).
+\end{itemize}
+
 \section{Evolving software in a backward-compatible way}
 
 TODO: talk about 

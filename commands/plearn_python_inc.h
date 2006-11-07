@@ -1,8 +1,8 @@
 // -*- C++ -*-
 
-// plearn_full_inc.h
+// plearn_python_inc.h
 //
-// Copyright (C) 2005 Olivier Delalleau 
+// Copyright (C) 2006 Pascal Vincent
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,40 +33,29 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id$ 
+ * $Id: plearn_python_inc.h 6346 2006-10-24 17:02:02Z lamblin $ 
  ******************************************************* */
 
-// Authors: Olivier Delalleau
+// Authors: Pascal Vincent
 
-/*! \file plearn_full_inc.h */
+/*! \file plearn_python_inc.h */
 
-/*! Include here all classes available in the PLearn CVS repository
-  that are dependent upon some external libraries.
+/*! Include here all classes available in the PLearn repository 
+  that imply linking with the python runtime.
 */
 
-#ifndef plearn_full_inc_INC
-#define plearn_full_inc_INC
+#ifndef plearn_python_inc_INC
+#define plearn_python_inc_INC
 
-/*********
- * Boost *
- *********/
-#include <commands/PLearnCommands/HTMLHelpCommand.h>
+/******************************************************
+ * Python includes must come FIRST, as per Python doc *
+ ******************************************************/
+#include <plearn/python/PythonIncludes.h>
 
-/**********
- * Curses *
- **********/
-#include <commands/PLearnCommands/VMatCommand.h>
-
-/**************
- * Dictionary *
- **************/
-//#include <plearn/dict/WordNetSenseDictionary.h>
-
-/*********
- * Torch *
- *********/
-//#include <plearn_learners/classifiers/SVMClassificationTorch.h>
-
+#include <plearn/python/PythonCodeSnippet.h>
+#include <plearn/python/PythonProcessedVMatrix.h>
+#include <plearn/vmat/DictionaryVMatrix.h>
+#include <commands/PLearnCommands/VMatDictionaryCommand.h>
 
 #endif
 

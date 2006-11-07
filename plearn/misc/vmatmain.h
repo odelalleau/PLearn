@@ -56,8 +56,6 @@ void printDistanceStatistics(VMat vm, int inputsize);
 
 // void printConditionalStats(VMat vm, int condfield);
 
-void viewVMat(const VMat& vm);
-
 void plotVMats(char* defs[], int ndefs);
 
 VMat getVMat(const PPath& source, const PPath& indexf);

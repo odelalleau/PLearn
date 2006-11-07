@@ -1,8 +1,8 @@
 // -*- C++ -*-
 
-// plearn_full_inc.h
+// plearn_lapack_inc.h
 //
-// Copyright (C) 2005 Olivier Delalleau 
+// Copyright (C) 2006 Pascal Vincent
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,39 +33,46 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id$ 
+ * $Id: plearn_lapack_inc.h 6346 2006-10-24 17:02:02Z lamblin $ 
  ******************************************************* */
 
-// Authors: Olivier Delalleau
+// Authors: Pascal Vincent
 
-/*! \file plearn_full_inc.h */
+/*! \file plearn_lapack_inc.h */
 
-/*! Include here all classes available in the PLearn CVS repository
-  that are dependent upon some external libraries.
+/*! Include here all classes available in the PLearn repository 
+  that do depend on LAPACK and BLAS (in addition to NSPR and boost)
+  but no other fancy library.
 */
 
-#ifndef plearn_full_inc_INC
-#define plearn_full_inc_INC
+#ifndef plearn_lapack_inc_INC
+#define plearn_lapack_inc_INC
 
-/*********
- * Boost *
- *********/
-#include <commands/PLearnCommands/HTMLHelpCommand.h>
+// Regressors
+#include <plearn_learners/regressors/LinearRegressor.h>
+#include <plearn_learners/regressors/PLS.h>
 
-/**********
- * Curses *
- **********/
-#include <commands/PLearnCommands/VMatCommand.h>
+// Unsupervised/KernelProjection
+#include <plearn_learners/unsupervised/Isomap.h>
+#include <plearn_learners/unsupervised/KernelPCA.h>
+#include <plearn_learners/unsupervised/LLE.h>
+#include <plearn_learners/unsupervised/PCA.h>
+#include <plearn_learners/unsupervised/SpectralClustering.h>
 
-/**************
- * Dictionary *
- **************/
-//#include <plearn/dict/WordNetSenseDictionary.h>
+// Kernels
+#include <plearn/ker/LLEKernel.h>
+#include <plearn/ker/ReconstructionWeightsKernel.h>
 
-/*********
- * Torch *
- *********/
-//#include <plearn_learners/classifiers/SVMClassificationTorch.h>
+// PDistribution
+#include <plearn_learners/distributions/GaussianDistribution.h>
+#include <plearn_learners/distributions/GaussMix.h>
+#include <plearn_learners/distributions/RandomGaussMix.h>
+#include <plearn_learners/distributions/ParzenWindow.h>
+#include <plearn_learners/distributions/ManifoldParzen2.h>
+
+// Experimental
+#include <plearn_learners_experimental/LinearInductiveTransferClassifier.h>
+#include <plearn_learners_experimental/SurfaceTemplate/SurfaceTemplateLearner.h>
 
 
 #endif

@@ -1,9 +1,8 @@
 // -*- C++ -*-
 
-// plearn_full_inc.h
+// plearn.cc
+// Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux, Rejean Ducharme
 //
-// Copyright (C) 2005 Olivier Delalleau 
-// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -33,42 +32,24 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id$ 
+ * $Id: plearn_light.cc 3995 2005-08-25 13:58:23Z chapados $
  ******************************************************* */
 
-// Authors: Olivier Delalleau
+#include "plearn_version.h"
+#include "plearn_noblas_inc.h"
+#include "plearn_lapack_inc.h"
+#include "plearn_curses_inc.h"
+#include "PLearnCommands/plearn_main.h"
 
-/*! \file plearn_full_inc.h */
+using namespace PLearn;
 
-/*! Include here all classes available in the PLearn CVS repository
-  that are dependent upon some external libraries.
-*/
-
-#ifndef plearn_full_inc_INC
-#define plearn_full_inc_INC
-
-/*********
- * Boost *
- *********/
-#include <commands/PLearnCommands/HTMLHelpCommand.h>
-
-/**********
- * Curses *
- **********/
-#include <commands/PLearnCommands/VMatCommand.h>
-
-/**************
- * Dictionary *
- **************/
-//#include <plearn/dict/WordNetSenseDictionary.h>
-
-/*********
- * Torch *
- *********/
-//#include <plearn_learners/classifiers/SVMClassificationTorch.h>
-
-
-#endif
+int main(int argc, char** argv)
+{
+    return plearn_main( argc, argv, 
+                        PLEARN_MAJOR_VERSION, 
+                        PLEARN_MINOR_VERSION, 
+                        PLEARN_FIXLEVEL       );
+}
 
 
 /*

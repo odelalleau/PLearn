@@ -13,7 +13,7 @@ publish: publish_guides
 publish_guides:
 	scp -r *.html *_guide faq *.ps *.pdf *.txt *.jpg plearner@shell.berlios.de:/home/groups/plearn/htdocs/
 
-guides.all: users_guide.all programmers_guide.all tools_guide.all faq.all
+guides.all: installation_guide.all users_guide.all programmers_guide.all tools_guide.all faq.all
 
 doxygen:
 	doxygen
@@ -37,6 +37,23 @@ faq.ps: faq.dvi
 
 faq.pdf: faq.dvi
 	pdflatex $(PDFTEX_OPTIONS) faq
+
+installation_guide.all: installation_guide installation_guide.dvi installation_guide.ps installation_guide.pdf
+
+installation_guide: installation_guide.tex
+	latex2html -split 3 -show_section_numbers -local_icons installation_guide.tex
+
+installation_guide.dvi: installation_guide.tex
+	latex $(TEX_OPTIONS) installation_guide
+	latex $(TEX_OPTIONS) installation_guide
+	latex $(TEX_OPTIONS) installation_guide
+
+installation_guide.ps: installation_guide.dvi
+	dvips -Pcmps -t letter installation_guide -o
+
+installation_guide.pdf: installation_guide.dvi
+	pdflatex $(PDFTEX_OPTIONS) installation_guide
+
 
 users_guide.all: users_guide users_guide.dvi users_guide.ps users_guide.pdf
 

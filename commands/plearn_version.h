@@ -1,8 +1,8 @@
 // -*- C++ -*-
 
-// plearn_full_inc.h
+// plearn_version.h
 //
-// Copyright (C) 2005 Olivier Delalleau 
+// Copyright (C) 2006 Pascal Vincent
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,40 +33,20 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id$ 
+ * $Id: plearn_version.h 6346 2006-10-24 17:02:02Z lamblin $ 
  ******************************************************* */
 
-// Authors: Olivier Delalleau
+// Authors: Pascal Vincent
 
-/*! \file plearn_full_inc.h */
+/*! \file plearn_version.h */
 
-/*! Include here all classes available in the PLearn CVS repository
-  that are dependent upon some external libraries.
-*/
+#ifndef plearn_version_INC
+#define plearn_version_INC
 
-#ifndef plearn_full_inc_INC
-#define plearn_full_inc_INC
-
-/*********
- * Boost *
- *********/
-#include <commands/PLearnCommands/HTMLHelpCommand.h>
-
-/**********
- * Curses *
- **********/
-#include <commands/PLearnCommands/VMatCommand.h>
-
-/**************
- * Dictionary *
- **************/
-//#include <plearn/dict/WordNetSenseDictionary.h>
-
-/*********
- * Torch *
- *********/
-//#include <plearn_learners/classifiers/SVMClassificationTorch.h>
-
+// Version number.
+#define PLEARN_MAJOR_VERSION 0
+#define PLEARN_MINOR_VERSION 92
+#define PLEARN_FIXLEVEL 0
 
 #endif
 
