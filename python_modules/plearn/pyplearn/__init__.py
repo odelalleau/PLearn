@@ -32,7 +32,7 @@
 # Author: Christian Dorion
 """The PyPLearn Mecanism."""
 
-import new, os, sys
+import copy, new, os, sys
 
 from plearn.pyplearn.plargs import *
 from plearn.pyplearn.plearn_repr import plearn_repr
@@ -334,19 +334,48 @@ class pl:
 
 class __TMat:
     """Python representation of TMat of non-numeric elements."""
-    def __init__( self, nrows, ncols, content ):
+    def __init__(self, nrows, ncols, content):
         self.nrows   = nrows
         self.ncols   = ncols
         self.content = content
 
-    def _by_value( self ):
+    def _by_value(self):
         return True
     
-    def plearn_repr( self, indent_level=0, inner_repr=plearn_repr ):
+    def plearn_repr(self, indent_level=0, inner_repr=plearn_repr):
         return "%d %d %s" % (
             self.nrows, self.ncols, 
             inner_repr( self.content, indent_level+1 ) 
             )
+
+class Storage:
+    instance_count = 0
+    
+    def __init__(self, data):        
+        self.data = data
+        self.__class__.instance_count += 1
+        self.serial_number = self.instance_count
+
+    def plearn_repr(self, indent_level=0, inner_repr=plearn_repr):
+        return inner_repr(self.data, indent_level)
+    
+    def __deepcopy__(self, memo):
+        """For the deepcopy mechanism."""
+        return self.__class__( copy.deepcopy(self.data, memo) ) 
+
+    def _serial_number(self):
+        # This is slightly hackish but otherwise instances of storage would
+        # clash with PyPLearnObject instances...
+        return "Storage%d"%self.serial_number
+
+class TVec:
+    def __init__(self, vector):        
+        self.storage = Storage(vector)
+
+    def plearn_repr(self, indent_level=0, inner_repr=plearn_repr):
+        return "TVec(%d, 0, %s)" % (
+            len(self.storage.data), inner_repr(self.storage, indent_level+1) )
+
 
 #######  Builtin Tests  #######################################################
 
@@ -372,3 +401,26 @@ def test_pl_magic_module():
 
 if __name__ == "__main__":
     print TMat(2, 2, ["allo", "mon", "petit", "coco"]).plearn_repr()
+    print 
+
+    print "Simply list:\n"
+    a = [1, 2, 3]
+    print plearn_repr(a)
+    print plearn_repr(a)
+    print "---"
+    print
+    
+    print "TVec( list ):\n"
+    b = TVec(a)
+    print plearn_repr(b)
+    print plearn_repr(b)
+    print "---"
+    print
+    
+    print "copy.deepcopy( tvec ):\n"
+    c = copy.deepcopy(b)
+    print plearn_repr(c)
+    print plearn_repr(c)
+    print "---"
+    print
+    
