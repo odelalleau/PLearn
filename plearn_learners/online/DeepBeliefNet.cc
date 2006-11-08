@@ -698,8 +698,6 @@ void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
         // put appropriate learning rate
         classification_module->previous_to_last->setLearningRate(
             grad_learning_rate );
-        classification_module->last_to_target->setLearningRate(
-            grad_learning_rate );
         layers[ n_layers-1 ]->setLearningRate( grad_learning_rate );
 
         // Backward pass
@@ -725,8 +723,6 @@ void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
 
         // put back old learning rate
         classification_module->previous_to_last->setLearningRate(
-            cd_learning_rate );
-        classification_module->last_to_target->setLearningRate(
             cd_learning_rate );
         layers[ n_layers-1 ]->setLearningRate( cd_learning_rate );
     }
@@ -994,9 +990,9 @@ void DeepBeliefNet::setLearningRate( real the_learning_rate )
 
     if( use_classification_cost )
     {
-        classification_module->last_to_target->setLearningRate(
+        classification_module->joint_connection->setLearningRate(
             the_learning_rate );
-        classification_module->last_layer->setLearningRate( the_learning_rate );
+        joint_layer->setLearningRate( the_learning_rate );
     }
 
     if( final_module_has_learning_rate )
