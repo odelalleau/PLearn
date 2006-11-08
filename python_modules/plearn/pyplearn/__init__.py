@@ -403,7 +403,7 @@ if __name__ == "__main__":
     print TMat(2, 2, ["allo", "mon", "petit", "coco"]).plearn_repr()
     print 
 
-    print "Simply list:\n"
+    print "Simple list:\n"
     a = [1, 2, 3]
     print plearn_repr(a)
     print plearn_repr(a)
