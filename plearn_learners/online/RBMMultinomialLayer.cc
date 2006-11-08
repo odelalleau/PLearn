@@ -123,10 +123,14 @@ void RBMMultinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
     PLASSERT( output_gradient.size() == size );
     input_gradient.resize( size );
 
-    // input_gradient = output_gradient * output
-    //                  - (output_gradient . output ) output
-    multiply( output_gradient, output, input_gradient );
-    multiplyAcc( input_gradient, output, -dot( output_gradient, output ) );
+    // input_gradient[i] =
+    //      (output_gradient . output - output_gradient[i] ) output[i]
+    real outg_dot_out = dot( output_gradient, output );
+    real* out = output.data();
+    real* outg = output_gradient.data();
+    real* ing = input_gradient.data();
+    for( int i=0 ; i<size ; i++ )
+        ing[i] = (outg_dot_out - outg[i]) * out[i];
 
     if( momentum == 0. )
     {
