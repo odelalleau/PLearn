@@ -510,6 +510,7 @@ void RBMMixedConnection::bpropUpdate(const Vec& input, const Vec& output,
     PLASSERT( output.size() == up_size );
     PLASSERT( output_gradient.size() == up_size );
     input_gradient.resize( down_size );
+    input_gradient.clear();
 
     for( int j=0 ; j<n_down_blocks ; j++ )
     {
