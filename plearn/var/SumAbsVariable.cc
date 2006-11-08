@@ -59,7 +59,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "   value(0,0) = sum_i abs(input[i])\n"
     "\n"
     "where input[i] is the i-th element of its input variable\n"
-    "(dimensionality does not matter; its viewed as a long vector).");
+    "(dimensionality does not matter; it's viewed as a long vector).");
 
 SumAbsVariable::SumAbsVariable(Variable* input)
     : inherited(input, 1, 1) {}

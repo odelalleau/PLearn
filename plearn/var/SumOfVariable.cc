@@ -54,9 +54,16 @@ using namespace std;
 
 /** SumOfVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(SumOfVariable,
-                        "Variable that sums the value of a Func evaluated on each row of a VMat",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+    SumOfVariable,
+    "Sums the value of a Function evaluated on each row of a VMatrix",
+    "SumOfVariable computes the sum of the value of a Func evaluated on each row\n"
+    "of a VMat.  This summation is not necessarily constrained to be over all\n"
+    "the rows: each fprop computes the sum over 'nsample' rows of the associated\n"
+    "VMatrix.  This Variable is used within the implementation of NNet to create\n"
+    "the optimization criterion over the training set (which corresponds here to\n"
+    "the VMatrix we are summing over).\n");
+    
 
 SumOfVariable::SumOfVariable(VMat the_distr, Func the_f, int the_nsamples,bool the_do_sizeprop)
     : inherited(nonInputParentsOfPath(the_f->inputs,the_f->outputs), 
@@ -98,10 +105,17 @@ SumOfVariable::build_()
 void
 SumOfVariable::declareOptions(OptionList &ol)
 {
-    declareOption(ol, "distr", &SumOfVariable::distr, OptionBase::buildoption, "");
-    declareOption(ol, "f", &SumOfVariable::f, OptionBase::buildoption, "");
-    declareOption(ol, "nsamples", &SumOfVariable::nsamples, OptionBase::buildoption, "");
-    declareOption(ol, "curpos", &SumOfVariable::curpos, OptionBase::buildoption, "");
+    declareOption(ol, "distr", &SumOfVariable::distr, OptionBase::buildoption,
+                  "VMatrix over which the summation should be done.");
+    declareOption(ol, "f", &SumOfVariable::f, OptionBase::buildoption,
+                  "Function that is passed the rows of the VMat as input.");
+    declareOption(ol, "nsamples", &SumOfVariable::nsamples, OptionBase::buildoption,
+                  "How many rows of the VMatrix should be summed at a time when\n"
+                  "performing an fprop/bprop on the Variable.  If -1 (the default)\n"
+                  "the length of 'distr' is assumed, i.e. the sum is done over\n"
+                  "all rows of the matrix.");
+    declareOption(ol, "curpos", &SumOfVariable::curpos, OptionBase::buildoption,
+                  "Current position (row) in the VMatrix we are summing over.");
     inherited::declareOptions(ol);
 }
 

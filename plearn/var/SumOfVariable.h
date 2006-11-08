@@ -49,6 +49,16 @@ namespace PLearn {
 using namespace std;
 
 
+/**
+ *  Sums the value of a Function evaluated on each row of a VMatrix
+ *
+ *  SumOfVariable computes the sum of the value of a Func evaluated on each row
+ *  of a VMat.  This summation is not necessarily constrained to be over all
+ *  the rows: each fprop computes the sum over 'nsample' rows of the associated
+ *  VMatrix.  This Variable is used within the implementation of NNet to create
+ *  the optimization criterion over the training set (which corresponds here to
+ *  the VMatrix we are summing over).
+ */
 class SumOfVariable: public NaryVariable
 {
     typedef NaryVariable inherited;

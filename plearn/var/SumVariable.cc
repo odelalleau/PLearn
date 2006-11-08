@@ -49,9 +49,15 @@ using namespace std;
 
 /** SumVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(SumVariable,
-                        "ONE LINE DESCR",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+    SumVariable,
+    "Compute the sum of all elements in the input Var",
+    "This Variable always has a size of 1 element:\n"
+    "\n"
+    "   value(0,0) = sum_i input[i]\n"
+    "\n"
+    "where input[i] is the i-th element of its input variable\n"
+    "(dimensionality does not matter; it's viewed as a long vector).");
 
 SumVariable::SumVariable(Variable* input)
     : inherited(input, 1, 1)

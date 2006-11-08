@@ -50,8 +50,12 @@ using namespace std;
 
 
 
-/*! * Sum reductions... * */
-
+/**
+ *  Compute the sum of all elements in the input Var
+ *
+ *  This Variable returns the sum of all elements of its single input
+ *  Variable.
+ */
 class SumVariable: public UnaryVariable
 {
     typedef UnaryVariable inherited;
