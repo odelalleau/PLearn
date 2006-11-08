@@ -229,6 +229,13 @@ void ModulesLearner::train()
     if( !initTrain() )
         return;
 
+    ProgressBar* pb = 0;
+    if( report_progress )
+        pb = new ProgressBar( "Training " + classname() + " from stage "
+                              + tostring(stage) + " to " + tostring(nstages),
+                              nstages - stage );
+
+    int initial_stage = stage;
     for( ; stage < nstages ; stage++ )
     {
         // clear stats of previous epoch
@@ -259,6 +266,14 @@ void ModulesLearner::train()
             train_stats->update( costs );
         }
         train_stats->finalize(); // finalize statistics for this epoch
+
+        if(pb)
+            pb->update( stage+1 - initial_stage );
+    }
+    if( pb )
+    {
+        delete pb;
+        pb = 0;
     }
 }
 
