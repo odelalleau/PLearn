@@ -78,6 +78,7 @@
 #include <commands/PLearnCommands/JulianDateCommand.h>
 #include <commands/PLearnCommands/KolmogorovSmirnovCommand.h>
 #include <commands/PLearnCommands/LearnerCommand.h>
+#include <commands/PLearnCommands/OutputFeaturesCommand.h>
 #include <commands/PLearnCommands/ReadAndWriteCommand.h>
 #include <commands/PLearnCommands/RunCommand.h>
 #include <commands/PLearnCommands/ServerCommand.h>
@@ -167,6 +168,7 @@
 #include <plearn/vmat/RepeatSplitter.h>
 #include <plearn/vmat/SourceVMatrixSplitter.h>
 #include <plearn/vmat/StackedSplitter.h>
+#include <plearn/vmat/TextFilesVMatrix.h>
 #include <plearn/vmat/TrainTestSplitter.h>
 #include <plearn/vmat/TrainValidTestSplitter.h>
 //#include <plearn/vmat/ClassSeparationSplitter.h>
