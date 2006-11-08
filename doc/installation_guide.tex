@@ -10,7 +10,7 @@
 \usepackage{html}               % package for latex2html
 % \usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
 % \usepackage{ae}                 % use virtual fonts for getting good PDF
-% \usepackage{hyperref}
+\usepackage{hyperref}
 \usepackage{verbatim}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -104,10 +104,8 @@ met:
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\chapter{Overview}
+\chapter{Overview of requirements}
 \label{chap:label}
-
-\section{Requirements}
 
 {\bf Note:} most of the tools and libraries required for PLearn are already
 installed on typical Linux (or other unix-like) systems, or are easy to
@@ -119,27 +117,27 @@ compilers, but as we work mainly with Linux/gcc, we only very occasionally
 check the working and correct problems on other platforms.
 
 
-\subsection{Required tools}
+\section{Required tools}
 
 To be able to download, compile and use PLearn, you need the following
 tools to be installed on your system (for detailed instructions for
 installation under Windows, you may go directly to section~\ref{sec:windows}).
 \begin{itemize}
-\item {\bf g++} (http://gcc.gnu.org). We recommend using the latest version,
+\item {\bf g++} (\url{http://gcc.gnu.org}). We recommend using the latest version,
   but it should work with 3.2 and above. It is certainly possible to
   compile PLearn with other compilers (we do this from time to time), but
   it may necessitate some tweaking.
-\item {\bf python} (http://www.python.org). Version 2.3.3 or above (may
+\item {\bf python} (\url{http://www.python.org}). Version 2.3.3 or above (may
   work with older versions, but no guarantee). We use python scripts
   heavily to make our life easier, noticeably as our compilation framework
   (but if you're really {\em in love} with Makefiles you can probably do without
   pymake).
-\item {\bf subversion (svn)} for version control ( see http://subversion.tigris.org/ )
-Note: some local subprojects may still be based on CVS for version control (http://www.cvshome.org)
+\item {\bf subversion (svn)} for version control ( see \url{http://subversion.tigris.org/} )
+Note: some local subprojects may still be based on CVS for version control (\url{http://www.cvshome.org})
 \end{itemize}
 
 
-\subsection{External library dependencies}
+\section{External library dependencies}
 
 Parts of PLearn depend on the following external libraries. Depending on
 which parts of PLearn you want to compile and use, they may require
@@ -171,7 +169,7 @@ in the appropriate chapter).
 \item {\bf optional:} {\bf MPI} libraries for parallelization.
 \end{itemize}
 
-\subsection{Python related dependencies}
+\section{Python related dependencies}
 
 Nearly all higher level GUI demos and plotting facilities are written in
 python (which calls upon plearn) using essentially the following software
@@ -200,7 +198,7 @@ In addition the following tools can be useful:
 \item {\bf graphviz} to plot graphs.
 \end{itemize}
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Downloading PLearn}
 
 After having been hosted for several years on SourceForge (under CVS), as
@@ -298,8 +296,8 @@ compiled with {\tt pymake}. If you look at the \verb!plearn_*.cc! files closely,
 notice that they are all built in the same manner, simply including a
 number of things they need, and invoking a single function
 \verb!plearn_main!. So they only differ in the functionalities they
-\#include. They have been arranged by groups external library dependencies
-that will be needed to compile and link each of them. In short:
+\#include. They have been arranged according to the external
+library dependencies that will be needed to compile and link each of them. In short:
 \begin{itemize}
 \item \verb!plearn_noblas!   depends only on NSPR, boost  (if you don't have blas, it must be compiled with \verb!pymake -noblas plearn_noblas! ) 
 \item \verb!plearn_lapack!   depends on NSPR, boost, BLAS, LAPACK
@@ -310,7 +308,8 @@ Since \verb!plearn_noblas! has the smallest number of requirements, it should be
 easiest to get to compile and link. But several important learning algorithms require LAPACK. 
 \verb!plearn_lapack! will contain the most useful 99\% of PLearn. 
 \item \verb!commands/PLearnCommands/! contains the source code for all PLearn
-{\em commands} (these commands are included in the above \verb!plearn_*!).
+{\em commands}. These commands are included in the above \verb!plearn_*!
+programs and can be invoked with these programs in a command-line fashion.
 \item \verb!commands/language/! contains some programs for manipulating language
 corpus and WordNet related stuff.
 \item \verb!python_modules/! \\
@@ -537,7 +536,7 @@ Let us just create the appropriate links for those needed by PLearn:
 \subsubsection{Installing NumArray}
 
 Download NumArray from \\
-\url{http://www.stsci.edu/resources/software_hardware/numarray} \\
+\url{http://www.stsci.edu/resources/software\_hardware/numarray} \\
 then install it with the following commands:
 \begin{verbatim}
 tar zxvf numarray-1.5.0.tar.gz

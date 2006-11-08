@@ -5,9 +5,11 @@
 %%  $Id$
 
 \documentclass[11pt]{book}
-\usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
-\usepackage{ae}                 % use virtual fonts for getting good PDF
-\usepackage{isolatin1}		% support for French accents
+\usepackage{html}               % package for latex2html
+\usepackage{hyperref}
+%\usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
+%\usepackage{ae}                 % use virtual fonts for getting good PDF
+% \usepackage{isolatin1}		% support for French accents
 
 %%%%%%%%% Definitions %%%%%%%%%%%%
 \newcommand{\PLearn}{\bf \it PLearn}
@@ -69,50 +71,50 @@ met:
 
 \chapter{PLearn scripts}
 
-\section{upackage}
+%% \section{upackage}
 
-{\bf upackage} is a python script (together with a set of python modules)
-that can be used to easily install libraries and other tools on your
-system.  It was created in order to simplify the installation of external
-components on which PLearn depends, but it is a general packaging system
-(usage is similar to {\em apt-get} or {\em emerge}) that may be used to install
-about anything.
+%% {\bf upackage} is a python script (together with a set of python modules)
+%% that can be used to easily install libraries and other tools on your
+%% system.  It was created in order to simplify the installation of external
+%% components on which PLearn depends, but it is a general packaging system
+%% (usage is similar to {\em apt-get} or {\em emerge}) that may be used to install
+%% about anything.
 
-The {\bf u} in {\bf upackage} stands for {\bf u}ser, as you don'y need to
-  be root to install stuff with {\bf upackage}.
+%% The {\bf u} in {\bf upackage} stands for {\bf u}ser, as you don'y need to
+%%   be root to install stuff with {\bf upackage}.
 
-Other typical packaging systems work under a number of assumptions:
-\begin{itemize}
-\item The person installing the package must have administrative rights
-\item Dependency checking is done by requiring other packages \emph{of
-  the same packaging system} to be installed (usually relying on a
-  local database listing previously installed packages).
-\item They are restricted to a single operating-system, even worse: to a specific
-  distribution of that operating system. 
-\end{itemize}
+%% Other typical packaging systems work under a number of assumptions:
+%% \begin{itemize}
+%% \item The person installing the package must have administrative rights
+%% \item Dependency checking is done by requiring other packages \emph{of
+%%   the same packaging system} to be installed (usually relying on a
+%%   local database listing previously installed packages).
+%% \item They are restricted to a single operating-system, even worse: to a specific
+%%   distribution of that operating system. 
+%% \end{itemize}
 
-If you are a user then there are two possibilities. Either you are in the
-ideal situation where somebody has written a package for your {\em
-specific} os and distribution, and you are a very good friend of an {\em
-efficient and dedicated} system administrator (not the overworked kind that
-will "look into the matter when I have time"). Or you are not in
-that ideal situation. Then you can always install by yourself from
-source\ldots And you know how the music goes: search the web for some
-install doc, find where to download the archive from, unpack, try to
-compile, understand what is going wrong, patch some files, find out missing
-dependencies and start over again for each of those: recurse!
+%% If you are a user then there are two possibilities. Either you are in the
+%% ideal situation where somebody has written a package for your {\em
+%% specific} os and distribution, and you are a very good friend of an {\em
+%% efficient and dedicated} system administrator (not the overworked kind that
+%% will "look into the matter when I have time"). Or you are not in
+%% that ideal situation. Then you can always install by yourself from
+%% source\ldots And you know how the music goes: search the web for some
+%% install doc, find where to download the archive from, unpack, try to
+%% compile, understand what is going wrong, patch some files, find out missing
+%% dependencies and start over again for each of those: recurse!
 
-We don't want people willing to try out plearn to have such a huge barrier to
-entry. Hence {\bf upackage} is essentially an attempt to automate what
-you'd do if installing all the dependencies by hand.
+%% We don't want people willing to try out plearn to have such a huge barrier to
+%% entry. Hence {\bf upackage} is essentially an attempt to automate what
+%% you'd do if installing all the dependencies by hand.
 
-In other words: {\bf upackage} aims at becoming an automated non-root
-cross-distribution and even cross-platform package installation system.
+%% In other words: {\bf upackage} aims at becoming an automated non-root
+%% cross-distribution and even cross-platform package installation system.
 
 
 \section{pymake}
 
-\section{cvschangeroot}
+\section{pyskeleton}
 
 \section{perlgrep}
 
@@ -120,12 +122,14 @@ cross-distribution and even cross-platform package installation system.
 
 \section{pytransform}
 
+\section{cvschangeroot}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \chapter{The PLearn test-suite }
 
-{\em This article is a stub. You can help PLearn by expanding it.}
-(\copyright Wikipedia)
+%{\em This article is a stub. You can help PLearn by expanding it.}
+%(\copyright Wikipedia)
 
 PLearn test-suite is still in development by its author Christian
 Dorion, but it is already usable and should probably be used by anyone

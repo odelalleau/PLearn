@@ -45,14 +45,12 @@ installation_guide: installation_guide.tex
 
 installation_guide.dvi: installation_guide.tex
 	latex $(TEX_OPTIONS) installation_guide
-	latex $(TEX_OPTIONS) installation_guide
-	latex $(TEX_OPTIONS) installation_guide
 
 installation_guide.ps: installation_guide.dvi
 	dvips -Pcmps -t letter installation_guide -o
 
 installation_guide.pdf: installation_guide.dvi
-	pdflatex $(PDFTEX_OPTIONS) installation_guide
+	pdflatex $(PDFTEX_OPTIONS) installation_guide.tex
 
 
 users_guide.all: users_guide users_guide.dvi users_guide.ps users_guide.pdf
