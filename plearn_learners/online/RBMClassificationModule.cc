@@ -233,7 +233,6 @@ void RBMClassificationModule::bpropUpdate(const Vec& input, const Vec& output,
         for( int k=0 ; k<output_size ; k++ )
         {
             // dC/d( w_ik + target_act_i )
-            //real d_z = d_target_act[k]*(-sigmoid(-w[k] - last_act[i]));
             real d_z = d_target_act[k]*(sigmoid(-w[k] - last_act[i]));
             w[k] -= last_to_target->learning_rate * d_z;
 
