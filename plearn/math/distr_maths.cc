@@ -415,7 +415,7 @@ void sums2Gaussian(real sum_w, Vec sum_wx, Mat sum_wx2, Vec mu, Mat cov_evectors
         multiply(sum_wx,normf,mu);
         // sigma = sum_x2 / sum_1  - mu mu'
         multiply(sum_wx2,sum_wx2,normf);
-        externalProductScaleAcc(sum_wx2,mu,mu,-1);
+        externalProductScaleAcc(sum_wx2,mu,mu,-1.0);
         // perform eigendecoposition of the covariance matrix
         eigenVecOfSymmMat(sum_wx2,mu.length(),cov_evalues,cov_evectors,false);
     }
