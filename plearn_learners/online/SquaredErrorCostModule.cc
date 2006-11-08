@@ -115,7 +115,7 @@ void SquaredErrorCostModule::bbpropUpdate(const Vec& input, const Vec& target,
     bpropUpdate( input, target, cost, input_gradient );
 
     input_diag_hessian.resize( input_size );
-    input_diag_hessian.fill( 2 );
+    input_diag_hessian.fill( 2. );
 }
 
 TVec<string> SquaredErrorCostModule::name()
