@@ -37,7 +37,6 @@
  ******************************************************* */
 
 //! All includes should now go into plearn_inc.h and plearn_full_inc.h
-#include "plearn_inc.h"
 #include "plearn_full_inc.h"
 #include "PLearnCommands/plearn_main.h"
 

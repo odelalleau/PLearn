@@ -47,15 +47,27 @@
 #ifndef plearn_full_inc_INC
 #define plearn_full_inc_INC
 
-/*********
- * Boost *
- *********/
-#include <commands/PLearnCommands/HTMLHelpCommand.h>
 
-/**********
- * Curses *
- **********/
-#include <commands/PLearnCommands/VMatCommand.h>
+// Include version numbers.
+#include "plearn_version.h"
+
+/******************************************************
+ * Python includes must come FIRST, as per Python doc *
+ ******************************************************/
+// Include stuff that implies linking with the python runtime
+#include "plearn_python_inc.h"
+
+// Include stuff that only depends on NSPR and boost
+#include "plearn_noblas_inc.h"
+
+// Include stuff that also depends on LAPACK (and BLAS)
+#include "plearn_lapack_inc.h"
+
+// Include stuff for interactive curses uses
+#include "plearn_curses_inc.h"
+
+// * extra stuff from Boost *
+#include <commands/PLearnCommands/HTMLHelpCommand.h>
 
 /**************
  * Dictionary *
