@@ -27,7 +27,7 @@ class PerfMeasure:
 
 
 def create_command(param_desc, param_values):
-    command = 'plearn abalone_nnet.pyplearn '
+    command = './plearn dbn.pyplearn '
     for param_index in range(len(param_desc)):
         command = command + param_desc[param_index].name +'='+ str(param_values[param_index]) + ' '        
 
@@ -73,9 +73,10 @@ class Optimizer(Thread):
                     
                     #delete temporary files
                     try:
-                        shutil.rmtree('expdir_' + task.unique_id) 
-                        os.remove(task.unique_id + '.amat')
-                        os.remove(task.unique_id + '.vmat')
+                        pass
+                        #                        shutil.rmtree('expdir_' + task.unique_id) 
+                        #os.remove(task.unique_id + '.amat')
+                        #os.remove(task.unique_id + '.vmat')
                     except IOError:
                         pass
 
@@ -116,7 +117,7 @@ class Optimizer(Thread):
             
 
         if len(commands) > 0:
-            batch = DBIbqtools(commands,pre_batch='cd parent',add_unique_id = 1)
+            batch = DBICondor(commands,add_unique_id = 1)
             self.jobs.append(batch)
             # add the info about the unique_id
             for index, task in enumerate(batch.tasks):
@@ -226,16 +227,17 @@ def get_results(job_id):
         line = fi.readline()
 
     values = line.split()
-    return (float(values[2]), float(values[3]))
+    return (float(values[9]), float(values[10]))
 
 if __name__=="__main__":
     param_desc = []
 #    param_desc.append(Param(name = 'weight_decay', type='real',values = [0.01,0.1,0.5]  ) )
-    param_desc.append(Param(name = 'nhidden', type='int',values = [10,20,40,80,160,320,640,1280]  ) )
-    param_desc.append(Param(name = 'nstages', type='int',values = [1000,2000,4000,8000]  ) )
-    param_desc.append(Param(name = 'learning_rate', type='double',values = [0.05,0.0001,0.001,0.01,0.005]  ) )
-    param_desc.append(Param(name = 'weight_decay', type='double',values = [0.002,0.004,0.001,0,0.1,0.01]  ) )
-    opt = DiscreteRandomOptimizer(param_desc, 10, get_results, n_max_iter = 500)
+    param_desc.append(Param(name = 'n_hidden', type='int',values = [10,20,40,80,160]  ) )
+    param_desc.append(Param(name = 'n_epochs_grad', type='int',values = [4000,8000,16000,32000,64000,128000,250000]  ) )
+    param_desc.append(Param(name = 'n_epochs_cd', type='int',values = [0,0,50,100,200,1000]  ) )
+    param_desc.append(Param(name = 'grad_learning_rate', type='double',values = [0.05,0.001,0.1,0.01]  ) )
+    param_desc.append(Param(name = 'cd_learning_rate', type='double',values = [0.0001,0.001,0.0001,0.000001]  ) )
+    opt = DiscreteRandomOptimizer(param_desc, 20, get_results, n_max_iter = 5000)
     opt.start()
     opt.join()
     best_tuple, best_perf = opt.get_best_result()

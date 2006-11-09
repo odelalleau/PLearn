@@ -8,7 +8,8 @@ from subprocess import Popen,PIPE
 from utils import *
 from configobj import ConfigObj
 from textwrap import dedent
-
+import pdb
+from time import sleep
 STATUS_FINISHED = 0
 STATUS_RUNNING = 1
 STATUS_WAITING = 2
@@ -100,13 +101,13 @@ class Task:
         #self.after_commands = []
 
         self.commands = []
-
-        self.commands.extend( pre_tasks )
+        if len(pre_tasks) > 0:
+            self.commands.extend( pre_tasks )
 #        self.commands.append("cd parent")
-        self.commands.append("utils.py " + 'set_config_value '+
+        self.commands.append("./utils.py " + 'set_config_value '+
                 string.join([self.log_file,'STATUS',str(STATUS_RUNNING)],' '))
         # set the current date in the field LAUNCH_TIME
-        self.commands.append("utils.py " + 'set_current_date '+
+        self.commands.append("./utils.py " + 'set_current_date '+
                 string.join([self.log_file,'LAUNCH_TIME',time_format],' '))
 
         #cd to parent diectory, run the command, and then cd back
@@ -114,10 +115,10 @@ class Task:
         self.commands.append( command )
         self.commands.extend( post_tasks )
 
-        self.commands.append("utils.py " + 'set_config_value '+
+        self.commands.append("./utils.py " + 'set_config_value '+
                 string.join([self.log_file,'STATUS',str(STATUS_FINISHED)],' '))
         # set the current date in the field FINISHED_TIME
-        self.commands.append("utils.py " + 'set_current_date ' +
+        self.commands.append("./utils.py " + 'set_current_date ' +
                 string.join([self.log_file,'FINISHED_TIME',time_format],' '))
 #     self.commands.append("cd parent")
 
@@ -317,6 +318,87 @@ class DBIbqtools(DBIBase):
 
         os.chdir('parent')
 
+class DBICondor(DBIBase):
+
+    def __init__( self, commands, **args ):
+        DBIBase.__init__(self, commands, **args)
+
+        # check if log directory exists, if not create it
+#        self.log_dir = os.path.join( self.parent_dir, self.log_dir )
+        if not os.path.exists(self.log_dir):
+            os.mkdir(self.log_dir)
+
+#        self.log_file = os.path.join( self.parent_dir, self.log_file )
+
+        # create the information about the tasks
+#        args['temp_dir'] = self.temp_dir
+        for command in commands:
+            self.tasks.append(Task(command, self.log_dir, self.time_format,
+                                   self.pre_tasks, self.post_tasks,args))
+
+            #keeps a list of the temporary files created, so that they can be deleted at will            
+        self.temp_files = []
+
+    def run_one_job(self, task):
+        
+        # create the bqsubmit.dat, with
+
+        condor_data = task.unique_id + '.data'
+        self.temp_files.append(condor_data)
+        param_dat = open(condor_data, 'w')
+
+        param_dat.write( dedent('''\
+                #!/bin/bash
+                %s''' %(';'.join(task.commands))))
+
+        condor_file = task.unique_id + ".condor"
+        self.temp_files.append(condor_file)
+        condor_dat = open( condor_file, 'w' )
+        condor_dat.write( dedent('''\
+                executable = ./launch.sh
+                arguments = sh %s
+                universe = vanilla
+                requirements = (Arch == "X86_64")
+                output         = main.out
+                error          = main.error
+                log            = main.log
+                environment    = LD_LIBRARY_PATH=/cluster/diro/home/lisa/local/linux-x86_64/lib/python2.4/site-packages/numarray:/cluster/diro/home/lisa/local/linux-x86_64/lib:/usr/local/lib:/cluster/diro/home/lisa/local/linux-x86_64/lib32;PATH=/cluster/diro/home/lisa/PLearn/scripts:/soft/lisa/linux/bin:/u/lisa/local/linux-x86_64/bin:/u/popovicd/PLearn/commands:/u/popovicd/PLearn/scripts:/Scripts:/commands:/u/popovicd/Scripts:/soft/diro/share/moe/bin-i4lx:/u/lamblinp/code/usr/bin:/u/popovicd/PLearn:/u/popovicd/PLearn/scripts:/u/popovicd/PLearn/commands:/u/popovicd/projects/apstatsoft:/u/popovicd/projects/apstatsoft/scripts:/u/popovicd/projects/apstatsoft/commands:/usr/kerberos/bin:/u/popovicd/GNUstep/Tools:/usr/GNUstep/Local/Tools:/usr/GNUstep/System/Tools:/usr/local/bin:/bin:/usr/bin:/usr/X11R6/bin:/opt/diro/bin:/u/lisa/local/linux-i386/bin;PYTHONPATH=/cluster/diro/home/lisa/PLearn/python_modules:/cluster/diro/home/lisa/local/linux-x86_64/lib/python2.4/site-packages:/u/lisa/local/linux-x86_64/lib/python2.3/site-packages:/u/lisa/local/linux-x86_64/lib/python2.2/site-packages:/u/lisa/local/linux-x86_64/lib/python2.4/site-packages/vtk_python:/u/lisa/local/linux-x86_64/lib/python2.3/site-packages/Numeric:/u/popovicd/PLearn/python_modules:/u/popovicd/projects/apstatsoft/python_modules:
+                queue
+
+                ''' % (condor_data) ) )
+#                preBatch = ''' + pre_batch_command + '''
+#                postBatch = ''' + post_batch_command +'''
+        condor_dat.close()
+
+        # Launch bqsubmit
+        output = PIPE
+        error = PIPE
+        if int(self.file_redirect_stdout):
+            output = file(self.log_file + '.out', 'w')
+        if int(self.file_redirect_stderr):
+            error = file(self.log_file + '.err', 'w')
+        self.p = Popen( 'condor_submit '+ condor_file, shell=True, stdout=output, stderr=error)
+
+
+    def clean(self):
+                
+        sleep(20)
+        for file_name in self.temp_files:
+            try:
+                os.remove(file_name)
+            except os.error:
+                pass
+            pass    
+
+
+    def run(self):
+
+        for task in self.tasks:
+            self.run_one_job(task)
+
+
+
+
 def clean(self):
         pass
 
@@ -326,15 +408,19 @@ def DBI(commands, launch_system):
         str = 'DBI'+launch_system+'(commands)'
         jobs = eval('DBI'+launch_system+'(commands)')
     except NameError:
-        print 'The launch system ',launch_system, ' does not exists. Available systems are: Cluster, bqtools and condor will be available soon'
+        print 'The launch system ',launch_system, ' does not exists. Available systems are: Cluster, bqtools and Condor'
         sys.exit(1)
     return jobs
 
 def main():
     #    jobs = DBICluster(['ls','sleep 2'])
-    jobs = DBI(['ls','sleep 5'],'Cluster')
+    jobs = DBI([
+   './plearn dbn.pyplearn n_epochs_grad=250 n_hidden=25 grad_learning_rate=0.05 n_epochs_cd=0 cd_learning_rate=0.00001 unique_id=x25 recons_file=r.txt',
+   './plearn dbn.pyplearn n_epochs_grad=250 n_hidden=35 grad_learning_rate=0.05 n_epochs_cd=0 cd_learning_rate=0.00001 unique_id=x35 recons_file=r.txt'
+   ],'Condor')
     jobs.run()
-    jobs.clean()
+#    jobs.clean()
+
 #    config['LOG_DIRECTORY'] = 'LOGS/'
 if __name__ == "__main__":
     main()
