@@ -46,7 +46,7 @@ class AxisLimits:
 class FigureWrapper(object):
     SAVE = True
     
-    def __init__(self, labelsize=FONTSIZE):
+    def __init__(self):
         self.figure = getNewFigure()
 
     def addAxes(self, rect, *args, **kwargs):

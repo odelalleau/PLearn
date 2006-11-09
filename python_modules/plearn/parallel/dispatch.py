@@ -48,11 +48,11 @@ SSH_MACHINES_MAP = { 'apstat.com': [ # 'embla',
                                      'kamado',
                                      'kamado',
                                      'kamado',
-                                     # 'loki',
-                                     # 'odin',
-                                     'midgard',
-                                     # 'valhalla',
-                                     'vili'
+                                     #'loki',
+                                     #'odin',
+                                     #'midgard',
+                                     #'valhalla',
+                                     #'vili'
                                      ],
 
                      'iro.umontreal.ca' : [ 'lhmm',    'lknn',    'lmfa',      'lmlp',
