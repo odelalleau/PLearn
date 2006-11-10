@@ -1,3 +1,4 @@
+import os, sys
 
 # Should be manipulated from within C++
 CURRENT_SNIPPET = []
@@ -6,6 +7,14 @@ def setCurrentSnippet(handle):
 
 def resetCurrentSnippet():
     CURRENT_SNIPPET.pop(-1)
+
+# Add '' (current directory) to sys.path if it's not already there.
+# (When a python interpreter is embedded within a C program, the
+# current directory is not part of the python search path, whereas
+# the normal python behavior is to have it when starting a normal
+# interpreter from the shell).
+if not '' in sys.path:
+    sys.path = [ '' ] + sys.path
 
 # Class managing the injected functions
 class __injected_functions:        
@@ -52,7 +61,9 @@ def __inject_import__(name, globals_arg=None, locals_arg=None, fromlist=[]):
     
     if locals_arg is None:
         locals_arg = globals_arg
-    
+
+    # print >>sys.stderr, "Python path is:",sys.path
+    # print >>sys.stderr, "Current directory is:",os.getcwd()
     module = __builtin_import__(name, globals_arg, locals_arg, fromlist)
     if '__injected__' in globals_arg:
         if hasattr(module, 'injected'):
