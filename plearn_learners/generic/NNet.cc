@@ -270,11 +270,12 @@ void NNet::declareOptions(OptionList& ol)
         "  - \"binary_class_error\" (classification error for a 0-1 binary classifier)\n"
         "  - \"multiclass_error\" \n"
         "  - \"cross_entropy\" (for binary classification)\n" 
-       "  - \"stable_cross_entropy\" (more accurate backprop and possible regularization, for binary classification)\n"
+        "  - \"stable_cross_entropy\" (more accurate backprop and possible regularization, for binary classification)\n"
         "  - \"margin_perceptron_cost\" (a hard version of the cross_entropy, uses the 'margin' option)\n"
         "  - \"lift_output\" (not a real cost function, just the output for lift computation)\n"
         "  - \"conf_rated_adaboost_cost\" (for confidence rated Adaboost)\n"
         "  - \"gradient_adaboost_cost\" (also for confidence rated Adaboost)\n"
+        "  - \"poisson_nll\"\n"
         "The FIRST function of the list will be used as \n"
         "the objective function to optimize \n"
         "(possibly with an added weight decay penalty) \n");
