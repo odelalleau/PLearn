@@ -136,7 +136,11 @@ class Experiment(PyPLearnObject):
                 cls.cache_experiments( exproot=exproot, forget=False )
             return
 
-        if cls._cached is None or forget:
+        if cls._cached is None:
+            cls._cached = []
+        elif forget:
+            for exp in cls._cached:
+                exp.close()
             cls._cached = []
 
         if exproot:
