@@ -409,12 +409,18 @@ following packages through fink:
 Optional libraries also easily installable from fink:
 \begin{itemize}
 \item {\tt ncurses}  (useful for viewing dataset tables)
-\item {\tt numarray-py24}
-\item {\tt pygtk2-py24}  and  {\tt matplotlib-py24}  (if you want to play with the
-  python GUI tools and demo)
+\item {\tt numarray-py24} for efficient matrix/vector manipulations in python
 \item {\tt matplotlib-py24} for 2D graphics
 \item {\tt mayavi-py24} for 3D interactive graphics
+\item {\tt pygtk2-py24} if you want to play with the
+  python GUI tools and demo.
 \end{itemize}
+
+% NOTE: I couldn't get plide to run on Mac OS X, due to missing gtkhtml2
+% dependency. It seems that this dependency might be in a
+% gnome-python2-extras-py24 package, which is not yet available on fink, and
+% which I couldn't get to compile and link from the source
+% http://ftp.gnome.org/pub/GNOME/sources/gnome-python-extras/
 
 \subsection{Environment setup}
 
@@ -428,10 +434,13 @@ simply doing a \verb!source $HOME/.profile!)
 source /sw/bin/init.sh
 
 # adapt to your configuration if your PLearn directory is not $HOME/PLearn
-export PATH=/sw/bin:/sw/sbin:$HOME/PLearn/scripts:$HOME/PLearn/commands:.:$PATH
+export PLEARNDIR=$HOME/PLearn
+export PATH=/sw/bin:/sw/sbin:$PLEARNDIR/scripts:$PLEARNDIR/commands:.:$PATH
 export LD_LIBRARY_PATH="/sw/lib:/sw/lib/mozilla:$LD_LIBRARY_PATH"
 export LIBRARY_PATH=$LD_LIBRARY_PATH
-export CPATH="/sw/include:/sw/include/mozilla:$UPACKAGEPREFIX/include:$GPACKAGEPREFIX/include:$CPATH"
+export CPATH="/sw/include:/sw/include/mozilla:$CPATH"
+export PYTHONPATH="$PLEARNDIR/python_modules:$PLEARNDIR/scripts:$PYTHONPATH"
+export SKELETONS_PATH=$PLEARNDIR/scripts/Skeletons
 \end{verbatim}
 
 Restart a new shell for these to take effect. Make sure they're well
