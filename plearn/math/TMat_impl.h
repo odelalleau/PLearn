@@ -116,11 +116,13 @@ template <class T>
 void TVec<T>::input(PStream& in) const
 {
     T* v = data();
-    for(int i=0; i<length(); i++)
+    int l = length();
+    for(int i=0; i<l; i++)
     {
-        if(!(in>>v[i]))
-            PLERROR("In TVec::input error encountered while reading vector");
-    
+        in.skipBlanksAndCommentsAndSeparators();
+        if(in.peek()==EOF || in.eof())
+            PLERROR("In TVec::input encountered EOF before reading the last element of %d",l);
+        in>>v[i];
     }
 }
 
