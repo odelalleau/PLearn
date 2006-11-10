@@ -573,6 +573,7 @@ void Object::call(const string& methodname, int nargs, PStream& io)
                 methodname.c_str(), nargs, classname().c_str());
 }
 
+
 // We use an anonymous namespace to ensure the following classes are local to
 // this specific translation unit.
 // Note that these classes have been moved out of the declareMethods Object
@@ -837,6 +838,18 @@ void Object::remote_save(const string& filepath, const string& io_formatting) co
         PLERROR("In Object remote method save: invalid io_formatting %s",
                 io_formatting.c_str());
 }
+
+void callFunction(const string& funcname, int nargs, PStream& io)
+{
+    // Look up methodname in the RemoteMethodMap
+    RemoteMethodMap& rmm = getGlobalFunctionMap();
+    if (const RemoteTrampoline* trampoline = rmm.lookup(funcname,nargs))
+        trampoline->call(0, nargs, io);
+    else
+        PLERROR("No function has been registered with name '%s' and %d arguments",
+                funcname.c_str(), nargs);
+}
+
 
 /*
   PStream& operator>>(PStream &in, Object * &o)

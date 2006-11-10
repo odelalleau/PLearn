@@ -312,11 +312,21 @@ class RemotePObject:
             return self.callMethod(methodname,*args)
         return f
 
+    #def __setattr__(self, optionname, value):
+    #    print optionname, value
+        # self.callMethod('setOption',optionname,value)
+
     def callMethod(self,methodname, *args):
         return self.server.callMethod(self.objid, methodname, *args)
 
     def delete(self):
         self.server.delete(self.objid)
+
+    def __repr__(self):
+        return repr(self.getObject())
+    
+    def __str__(self):
+        return str(self.getObject())
 
 ##     def getOptionAsString(self, optionname):
 ##         serv = self.server

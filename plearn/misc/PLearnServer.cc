@@ -93,8 +93,9 @@ void PLearnServer::callFunction(const string& name, int nargs)
         io << revs;
     }
     else
-        PLERROR("In PLearnServer::callFunction Invalid function name %s",name.c_str());
-
+    {
+        PLearn::callFunction(name, nargs, io);
+    }
     io << endl;
     DBG_LOG << "-> FUNCTION CALL DONE." << endl;
 }

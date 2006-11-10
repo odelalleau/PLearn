@@ -1012,6 +1012,12 @@ private:
 };
 
 
+//! Calls a function previously declared with the declareFunction mechanism.
+//! This is used by the remote function call mechanism, and is the
+//! equivalent of method Object::call but for global functions and static methods.
+void callFunction(const string& funcname, int nargs, PStream& io);
+
+
 //#####  Inline Implementations  ##############################################
 
 /**

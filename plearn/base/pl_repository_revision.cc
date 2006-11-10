@@ -46,6 +46,8 @@
 #define MACRO_TO_STRING(s) TO_STRING(s)
 
 #include "pl_repository_revision.h"
+#include <plearn/base/StaticInitializer.h>
+#include <plearn/base/RemoteDeclareMethod.h>
 
 namespace PLearn {
 using namespace std;
@@ -75,7 +77,19 @@ string pl_repository_compile_time()
     return string(__TIME__);
 }
 
+static void declareRemoteFunctions()
+{
+    declareFunction("essai", &pl_repository_revision,
+                    (BodyDoc("Return a string giving the version-control repository revision(s)\n"
+                             "with which this PLearn executable has been compiled.\n")));
+}
+
+static StaticInitializer _remote_function_initializer_(&declareRemoteFunctions);
+
+
 } // end of namespace PLearn
+
+
 
 
 /*

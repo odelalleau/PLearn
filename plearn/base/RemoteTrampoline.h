@@ -69,6 +69,10 @@ class Object;
 
 #define ATYPE_DOC(T) ArgTypeDoc(TypeTraits< TRAMPOLINE_TYPE(T) >::name())
 
+#define FTRAMPOLINE_TYPE(T) \
+    boost::remove_cv< boost::remove_reference<T>::type >::type
+
+#define FRTYPE_DOC(T) RetTypeDoc(TypeTraits< FTRAMPOLINE_TYPE(T) >::name())
 
 /**
  *  Base for the trampoline mechanism of PLearn remote method invocation
@@ -111,7 +115,10 @@ struct RemoteTrampoline : public PPointable
      *  Perform the act of binding arguments on a stream with an object
      *  instance.  The actual number of arguments is passed only for
      *  error-checking, since the trampoline knows the number of arguments that
-     *  it is expecting.
+     *  it is expecting. If this is used to call a global function or 
+     *  a static method that was declared with declareFunction, instead
+     *  of a regular method declared with declareMethod, then the instance 
+     *  argument is ignored (and should be passed 0 by convention). 
      */
     virtual void call(Object* instance, int nargs, PStream& io) const = 0;
 
@@ -633,9 +640,7 @@ struct RemoteTrampoline_6 : public RemoteTrampoline
         TRAMPOLINE_TYPE(A5) a5;  io >> a5;
         TRAMPOLINE_TYPE(A6) a6;  io >> a6;
         TRAMPOLINE_TYPE(R) r = (as<T>(instance)->*m_method)(a1,a2,a3,a4,a5,a6);
-        prepareToSendResults(io, 1);
-        io << r;
-        io.flush();
+        sendRemoteMethodResult(io, r);
     }
 
 protected:
@@ -677,6 +682,508 @@ struct RemoteTrampoline_6<T,void,A1,A2,A3,A4,A5,A6> : public RemoteTrampoline
 protected:
     MethodType m_method;
 };
+
+
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+///   Trampolines for functions          
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+
+
+//#####  Zero Arguments  ######################################################
+
+/**
+ *  Trampoline for a non-void 0-argument function
+ */
+template <class R>
+struct FRemoteTrampoline_0 : public RemoteTrampoline
+{
+    typedef RemoteTrampoline inherited;
+    enum { expected_nargs = 0 };
+    typedef R (*FunctionType)();
+    
+    FRemoteTrampoline_0(const string& functionname, const RemoteMethodDoc& doc,
+                       FunctionType m)
+        : inherited(functionname, (doc,
+                                 RTYPE_DOC(R))),
+          m_function(m)
+    { }
+
+    virtual void call(Object* nullinstance, int nargs, PStream& io) const
+    {
+        checkNargs(nargs, expected_nargs);
+        TRAMPOLINE_TYPE(R) r = (*m_function)();
+        sendRemoteMethodResult(io, r);
+    }
+
+protected:
+    FunctionType m_function;
+};
+
+/**
+ *  Trampoline for a void 0-argument function
+ */
+template <>
+struct FRemoteTrampoline_0<void> : public RemoteTrampoline
+{
+    typedef RemoteTrampoline inherited;
+    enum { expected_nargs = 0 };
+    typedef void (*FunctionType)();
+    
+    FRemoteTrampoline_0(const string& functionname, const RemoteMethodDoc& doc,
+                       FunctionType m)
+        : inherited(functionname, (doc, RetTypeDoc("void"))),
+          m_function(m)
+    { }
+
+    virtual void call(Object* nullinstance, int nargs, PStream& io) const
+    {
+        checkNargs(nargs, expected_nargs);
+        (*m_function)();
+        sendRemoteMethodVoidResult(io);
+    }
+
+protected:
+    FunctionType m_function;
+};
+
+
+//#####  1 Argument  ##########################################################
+
+/**
+ *  Trampoline for a non-void 1-argument function
+ */
+template <class R, class A1>
+struct FRemoteTrampoline_1 : public RemoteTrampoline
+{
+    typedef RemoteTrampoline inherited;
+    enum { expected_nargs = 1 };
+    typedef R (*FunctionType)(A1);
+    
+    FRemoteTrampoline_1(const string& functionname, const RemoteMethodDoc& doc,
+                       FunctionType m)
+        : inherited(functionname, (doc,
+                                 RTYPE_DOC(R),
+                                 ATYPE_DOC(A1))),
+          m_function(m)
+    { }
+
+    virtual void call(Object* nullinstance, int nargs, PStream& io) const
+    {
+        checkNargs(nargs, expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1;  io >> a1;
+        TRAMPOLINE_TYPE(R) r = (*m_function)(a1);
+        sendRemoteMethodResult(io, r);
+    }
+
+protected:
+    FunctionType m_function;
+};
+
+/**
+ *  Trampoline for a void 1-argument function
+ */
+template <class A1>
+struct FRemoteTrampoline_1<void,A1> : public RemoteTrampoline
+{
+    typedef RemoteTrampoline inherited;
+    enum { expected_nargs = 1 };
+    typedef void (*FunctionType)(A1);
+    
+    FRemoteTrampoline_1(const string& functionname, const RemoteMethodDoc& doc,
+                       FunctionType m)
+        : inherited(functionname, (doc,
+                                 RTYPE_DOC(void),
+                                 ATYPE_DOC(A1))),
+          m_function(m)
+    { }
+
+    virtual void call(Object* nullinstance, int nargs, PStream& io) const
+    {
+        checkNargs(nargs, expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1;  io >> a1;
+        (*m_function)(a1);
+        sendRemoteMethodVoidResult(io);
+    }
+
+protected:
+    FunctionType m_function;
+};
+
+
+//#####  2 Arguments  #########################################################
+
+/**
+ *  Trampoline for a non-void 2-argument function
+ */
+template <class R, class A1, class A2>
+struct FRemoteTrampoline_2 : public RemoteTrampoline
+{
+    typedef RemoteTrampoline inherited;
+    enum { expected_nargs = 2 };
+    typedef R (*FunctionType)(A1,A2);
+    
+    FRemoteTrampoline_2(const string& functionname, const RemoteMethodDoc& doc,
+                       FunctionType m)
+        : inherited(functionname, (doc,
+                                 RTYPE_DOC(R),
+                                 ATYPE_DOC(A1), ATYPE_DOC(A2))),
+          m_function(m)
+    { }
+
+    virtual void call(Object* nullinstance, int nargs, PStream& io) const
+    {
+        checkNargs(nargs, expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1;  io >> a1;
+        TRAMPOLINE_TYPE(A2) a2;  io >> a2;
+        TRAMPOLINE_TYPE(R) r = (*m_function)(a1,a2);
+        sendRemoteMethodResult(io, r);
+    }
+
+protected:
+    FunctionType m_function;
+};
+
+/**
+ *  Trampoline for a void 2-argument function
+ */
+template <class A1, class A2>
+struct FRemoteTrampoline_2<void,A1,A2> : public RemoteTrampoline
+{
+    typedef RemoteTrampoline inherited;
+    enum { expected_nargs = 2 };
+    typedef void (*FunctionType)(A1,A2);
+    
+    FRemoteTrampoline_2(const string& functionname, const RemoteMethodDoc& doc,
+                       FunctionType m)
+        : inherited(functionname, (doc,
+                                 RTYPE_DOC(void),
+                                 ATYPE_DOC(A1), ATYPE_DOC(A2))),
+          m_function(m)
+    { }
+
+    virtual void call(Object* nullinstance, int nargs, PStream& io) const
+    {
+        checkNargs(nargs, expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1;  io >> a1;
+        TRAMPOLINE_TYPE(A2) a2;  io >> a2;
+        (*m_function)(a1,a2);
+        sendRemoteMethodVoidResult(io);
+    }
+
+protected:
+    FunctionType m_function;
+};
+
+
+//#####  3 Arguments  #########################################################
+
+/**
+ *  Trampoline for a non-void 3-argument function
+ */
+template <class R, class A1, class A2, class A3>
+struct FRemoteTrampoline_3 : public RemoteTrampoline
+{
+    typedef RemoteTrampoline inherited;
+    enum { expected_nargs = 3 };
+    typedef R (*FunctionType)(A1,A2,A3);
+    
+    FRemoteTrampoline_3(const string& functionname, const RemoteMethodDoc& doc,
+                       FunctionType m)
+        : inherited(functionname, (doc,
+                                 RTYPE_DOC(R),
+                                 ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3))),
+          m_function(m)
+    { }
+
+    virtual void call(Object* nullinstance, int nargs, PStream& io) const
+    {
+        checkNargs(nargs, expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1;  io >> a1;
+        TRAMPOLINE_TYPE(A2) a2;  io >> a2;
+        TRAMPOLINE_TYPE(A3) a3;  io >> a3;
+        TRAMPOLINE_TYPE(R) r = (*m_function)(a1,a2,a3);
+        sendRemoteMethodResult(io, r);
+    }
+
+protected:
+    FunctionType m_function;
+};
+
+/**
+ *  Trampoline for a void 3-argument function
+ */
+template <class A1, class A2, class A3>
+struct FRemoteTrampoline_3<void,A1,A2,A3> : public RemoteTrampoline
+{
+    typedef RemoteTrampoline inherited;
+    enum { expected_nargs = 3 };
+    typedef void (*FunctionType)(A1,A2,A3);
+    
+    FRemoteTrampoline_3(const string& functionname, const RemoteMethodDoc& doc,
+                       FunctionType m)
+        : inherited(functionname, (doc,
+                                 RTYPE_DOC(void),
+                                 ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3))),
+          m_function(m)
+    { }
+
+    virtual void call(Object* nullinstance, int nargs, PStream& io) const
+    {
+        checkNargs(nargs, expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1;  io >> a1;
+        TRAMPOLINE_TYPE(A2) a2;  io >> a2;
+        TRAMPOLINE_TYPE(A3) a3;  io >> a3;
+        (*m_function)(a1,a2,a3);
+        sendRemoteMethodVoidResult(io);
+    }
+
+protected:
+    FunctionType m_function;
+};
+
+
+//#####  4 Arguments  #########################################################
+
+/**
+ *  Trampoline for a non-void 4-argument function
+ */
+template <class R, class A1, class A2, class A3, class A4>
+struct FRemoteTrampoline_4 : public RemoteTrampoline
+{
+    typedef RemoteTrampoline inherited;
+    enum { expected_nargs = 4 };
+    typedef R (*FunctionType)(A1,A2,A3,A4);
+    
+    FRemoteTrampoline_4(const string& functionname, const RemoteMethodDoc& doc,
+                       FunctionType m)
+        : inherited(functionname, (doc,
+                                 RTYPE_DOC(R),
+                                 ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3),
+                                 ATYPE_DOC(A4))),
+          m_function(m)
+    { }
+
+    virtual void call(Object* nullinstance, int nargs, PStream& io) const
+    {
+        checkNargs(nargs, expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1;  io >> a1;
+        TRAMPOLINE_TYPE(A2) a2;  io >> a2;
+        TRAMPOLINE_TYPE(A3) a3;  io >> a3;
+        TRAMPOLINE_TYPE(A4) a4;  io >> a4;
+        TRAMPOLINE_TYPE(R) r = (*m_function)(a1,a2,a3,a4);
+        sendRemoteMethodResult(io, r);
+    }
+
+protected:
+    FunctionType m_function;
+};
+
+/**
+ *  Trampoline for a void 4-argument function
+ */
+template <class A1, class A2, class A3, class A4>
+struct FRemoteTrampoline_4<void,A1,A2,A3,A4> : public RemoteTrampoline
+{
+    typedef RemoteTrampoline inherited;
+    enum { expected_nargs = 4 };
+    typedef void (*FunctionType)(A1,A2,A3,A4);
+    
+    FRemoteTrampoline_4(const string& functionname, const RemoteMethodDoc& doc,
+                       FunctionType m)
+        : inherited(functionname, (doc,
+                                 RTYPE_DOC(void),
+                                 ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3),
+                                 ATYPE_DOC(A4))),
+          m_function(m)
+    { }
+
+    virtual void call(Object* nullinstance, int nargs, PStream& io) const
+    {
+        checkNargs(nargs, expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1;  io >> a1;
+        TRAMPOLINE_TYPE(A2) a2;  io >> a2;
+        TRAMPOLINE_TYPE(A3) a3;  io >> a3;
+        TRAMPOLINE_TYPE(A4) a4;  io >> a4;
+        (*m_function)(a1,a2,a3,a4);
+        sendRemoteMethodVoidResult(io);
+    }
+
+protected:
+    FunctionType m_function;
+};
+
+
+//#####  5 Arguments  #########################################################
+
+/**
+ *  Trampoline for a non-void 5-argument function
+ */
+template <class R, class A1, class A2, class A3, class A4, class A5>
+struct FRemoteTrampoline_5 : public RemoteTrampoline
+{
+    typedef RemoteTrampoline inherited;
+    enum { expected_nargs = 5 };
+    typedef R (*FunctionType)(A1,A2,A3,A4,A5);
+    
+    FRemoteTrampoline_5(const string& functionname, const RemoteMethodDoc& doc,
+                       FunctionType m)
+        : inherited(functionname, (doc,
+                                 RTYPE_DOC(R),
+                                 ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3),
+                                 ATYPE_DOC(A4), ATYPE_DOC(A5))),
+          m_function(m)
+    { }
+
+    virtual void call(Object* nullinstance, int nargs, PStream& io) const
+    {
+        checkNargs(nargs, expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1;  io >> a1;
+        TRAMPOLINE_TYPE(A2) a2;  io >> a2;
+        TRAMPOLINE_TYPE(A3) a3;  io >> a3;
+        TRAMPOLINE_TYPE(A4) a4;  io >> a4;
+        TRAMPOLINE_TYPE(A5) a5;  io >> a5;
+        TRAMPOLINE_TYPE(R) r = (*m_function)(a1,a2,a3,a4,a5);
+        sendRemoteMethodResult(io, r);
+    }
+
+protected:
+    FunctionType m_function;
+};
+
+/**
+ *  Trampoline for a void 5-argument function
+ */
+template <class A1, class A2, class A3, class A4, class A5>
+struct FRemoteTrampoline_5<void,A1,A2,A3,A4,A5> : public RemoteTrampoline
+{
+    typedef RemoteTrampoline inherited;
+    enum { expected_nargs = 5 };
+    typedef void (*FunctionType)(A1,A2,A3,A4,A5);
+    
+    FRemoteTrampoline_5(const string& functionname, const RemoteMethodDoc& doc,
+                       FunctionType m)
+        : inherited(functionname, (doc,
+                                 RTYPE_DOC(void),
+                                 ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3),
+                                 ATYPE_DOC(A4), ATYPE_DOC(A5))),
+          m_function(m)
+    { }
+
+    virtual void call(Object* nullinstance, int nargs, PStream& io) const
+    {
+        checkNargs(nargs, expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1;  io >> a1;
+        TRAMPOLINE_TYPE(A2) a2;  io >> a2;
+        TRAMPOLINE_TYPE(A3) a3;  io >> a3;
+        TRAMPOLINE_TYPE(A4) a4;  io >> a4;
+        TRAMPOLINE_TYPE(A5) a5;  io >> a5;
+        (*m_function)(a1,a2,a3,a4,a5);
+        sendRemoteMethodVoidResult(io);
+    }
+
+protected:
+    FunctionType m_function;
+};
+
+
+//#####  6 Arguments  #########################################################
+
+/**
+ *  Trampoline for a non-void 6-argument function
+ */
+template <class R, class A1, class A2, class A3, class A4, class A5, class A6>
+struct FRemoteTrampoline_6 : public RemoteTrampoline
+{
+    typedef RemoteTrampoline inherited;
+    enum { expected_nargs = 6 };
+    typedef R (*FunctionType)(A1,A2,A3,A4,A5,A6);
+    
+    FRemoteTrampoline_6(const string& functionname, const RemoteMethodDoc& doc,
+                       FunctionType m)
+        : inherited(functionname, (doc,
+                                 RTYPE_DOC(R),
+                                 ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3),
+                                 ATYPE_DOC(A4), ATYPE_DOC(A5), ATYPE_DOC(A6))),
+          m_function(m)
+    { }
+
+    virtual void call(Object* nullinstance, int nargs, PStream& io) const
+    {
+        checkNargs(nargs, expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1;  io >> a1;
+        TRAMPOLINE_TYPE(A2) a2;  io >> a2;
+        TRAMPOLINE_TYPE(A3) a3;  io >> a3;
+        TRAMPOLINE_TYPE(A4) a4;  io >> a4;
+        TRAMPOLINE_TYPE(A5) a5;  io >> a5;
+        TRAMPOLINE_TYPE(A6) a6;  io >> a6;
+        TRAMPOLINE_TYPE(R) r = (*m_function)(a1,a2,a3,a4,a5,a6);
+        sendRemoteMethodResult(io, r);
+    }
+
+protected:
+    FunctionType m_function;
+};
+
+/**
+ *  Trampoline for a void 6-argument function
+ */
+template <class A1, class A2, class A3, class A4, class A5, class A6>
+struct FRemoteTrampoline_6<void,A1,A2,A3,A4,A5,A6> : public RemoteTrampoline
+{
+    typedef RemoteTrampoline inherited;
+    enum { expected_nargs = 6 };
+    typedef void (*FunctionType)(A1,A2,A3,A4,A5,A6);
+    
+    FRemoteTrampoline_6(const string& functionname, const RemoteMethodDoc& doc,
+                       FunctionType m)
+        : inherited(functionname, (doc,
+                                 RTYPE_DOC(void),
+                                 ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3),
+                                 ATYPE_DOC(A4), ATYPE_DOC(A5), ATYPE_DOC(A6))),
+          m_function(m)
+    { }
+
+    virtual void call(Object* nullinstance, int nargs, PStream& io) const
+    {
+        checkNargs(nargs, expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1;  io >> a1;
+        TRAMPOLINE_TYPE(A2) a2;  io >> a2;
+        TRAMPOLINE_TYPE(A3) a3;  io >> a3;
+        TRAMPOLINE_TYPE(A4) a4;  io >> a4;
+        TRAMPOLINE_TYPE(A5) a5;  io >> a5;
+        TRAMPOLINE_TYPE(A6) a6;  io >> a6;
+        (*m_function)(a1,a2,a3,a4,a5,a6);
+        sendRemoteMethodVoidResult(io);
+    }
+
+protected:
+    FunctionType m_function;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 } // end of namespace PLearn

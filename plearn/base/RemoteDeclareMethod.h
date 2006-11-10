@@ -53,6 +53,109 @@ namespace PLearn {
 // What follows is a utility cast to bring const methods into non-const
 #define METHOD_UNCONST(M) (typename Trampoline::MethodType)(M)
 
+//! This function returns the map in which all remote functions and static
+//! methods are to be registered (with declareFunction).
+RemoteMethodMap& getGlobalFunctionMap();
+
+// What follows is a bunch of 'declareFunction' overloads, each instantiating the
+// appropriate FRemoteTrampoline
+
+//#####  0 Argument  ##########################################################
+
+template <class R>
+inline void declareFunction(const string& funcname,
+                            R (*func)(),
+                            const RemoteMethodDoc& doc)
+{
+    RemoteMethodMap& rmm = getGlobalFunctionMap();
+    typedef FRemoteTrampoline_0<R> Trampoline;
+    rmm.insert(funcname, Trampoline::expected_nargs,
+               new Trampoline(funcname, doc, func));
+}
+
+
+//#####  1 Argument  ##########################################################
+
+template <class R, class A1>
+inline void declareFunction(const string& funcname,
+                            R (*func)(A1),
+                            const RemoteMethodDoc& doc)
+{
+    RemoteMethodMap& rmm = getGlobalFunctionMap();
+    typedef FRemoteTrampoline_1<R,A1> Trampoline;
+    rmm.insert(funcname, Trampoline::expected_nargs,
+               new Trampoline(funcname, doc, func));
+}
+
+
+//#####  2 Arguments  #########################################################
+
+template <class R, class A1, class A2>
+inline void declareFunction(const string& funcname,
+                            R (*func)(A1,A2),
+                            const RemoteMethodDoc& doc)
+{
+    RemoteMethodMap& rmm = getGlobalFunctionMap();
+    typedef FRemoteTrampoline_2<R,A1,A2> Trampoline;
+    rmm.insert(funcname, Trampoline::expected_nargs,
+               new Trampoline(funcname, doc, func));
+}
+
+
+//#####  3 Arguments  #########################################################
+
+template <class R, class A1, class A2, class A3>
+inline void declareFunction(const string& funcname,
+                            R (*func)(A1,A2,A3),
+                            const RemoteMethodDoc& doc)
+{
+    RemoteMethodMap& rmm = getGlobalFunctionMap();
+    typedef FRemoteTrampoline_3<R,A1,A2,A3> Trampoline;
+    rmm.insert(funcname, Trampoline::expected_nargs,
+               new Trampoline(funcname, doc, func));
+}
+
+
+//#####  4 Arguments  #########################################################
+
+template <class R, class A1, class A2, class A3, class A4>
+inline void declareFunction(const string& funcname,
+                            R (*func)(A1,A2,A3,A4),
+                            const RemoteMethodDoc& doc)
+{
+    RemoteMethodMap& rmm = getGlobalFunctionMap();
+    typedef FRemoteTrampoline_4<R,A1,A2,A3,A4> Trampoline;
+    rmm.insert(funcname, Trampoline::expected_nargs,
+               new Trampoline(funcname, doc, func));
+}
+
+//#####  5 Arguments  #########################################################
+
+template <class R, class A1, class A2, class A3, class A4, class A5>
+inline void declareFunction(const string& funcname,
+                            R (*func)(A1,A2,A3,A4,A5),
+                            const RemoteMethodDoc& doc)
+{
+    RemoteMethodMap& rmm = getGlobalFunctionMap();
+    typedef FRemoteTrampoline_5<R,A1,A2,A3,A4,A5> Trampoline;
+    rmm.insert(funcname, Trampoline::expected_nargs,
+               new Trampoline(funcname, doc, func));
+}
+
+//#####  6 Arguments  #########################################################
+
+template <class R, class A1, class A2, class A3, class A4, class A5, class A6>
+inline void declareFunction(const string& funcname,
+                            R (*func)(A1,A2,A3,A4,A5,A6),
+                            const RemoteMethodDoc& doc)
+{
+    RemoteMethodMap& rmm = getGlobalFunctionMap();
+    typedef FRemoteTrampoline_6<R,A1,A2,A3,A4,A5,A6> Trampoline;
+    rmm.insert(funcname, Trampoline::expected_nargs,
+               new Trampoline(funcname, doc, func));
+}
+
+
 // What follows is a bunch of 'declareMethod' overloads, each instantiating the
 // appropriate RemoteTrampoline
 

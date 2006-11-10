@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
-// plearn.cc
-// Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux, Rejean Ducharme
+// plearn_curses.cc
+// Copyright (C) 2006 Pascal Vincent
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
