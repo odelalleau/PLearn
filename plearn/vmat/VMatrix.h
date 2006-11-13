@@ -125,6 +125,9 @@ protected:
     /// Declare this class' options.
     static void declareOptions(OptionList & ol);
 
+    //! Declare the methods that are remote-callable
+    static void declareMethods(RemoteMethodMap& rmm);
+
 public:
     // @TODO Move to protected / private if we don't want to use it directly
     mutable Array<VMField> fieldinfos;

@@ -837,7 +837,8 @@ void PTester::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(splitter, copies);
     deepCopyField(statmask, copies);
     deepCopyField(template_stats_collector, copies);
-    deepCopyField(perf_evaluators, copies);
+    for(perf_evaluators_t::iterator it= perf_evaluators.begin(); it != perf_evaluators.end(); ++it)
+        deepCopyField(it->second, copies);
 }
 
 } // end of namespace PLearn

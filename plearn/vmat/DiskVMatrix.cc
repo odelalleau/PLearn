@@ -140,6 +140,8 @@ void DiskVMatrix::build()
 void DiskVMatrix::build_()
 {
     closeCurrentFiles(); // All file pointers will be re-created.
+    if(writable && width_ > 0 && !isdir(dirname))
+        freshnewfile= true;
     if(!freshnewfile)
     {
         if(!isdir(dirname))
@@ -239,6 +241,7 @@ void DiskVMatrix::build_()
         dataf.append(f);
     }
     freshnewfile=false;
+    loadAllStringMappings();//make sure string mappings are loaded after width is set
 }
 
 void DiskVMatrix::declareOptions(OptionList &ol)

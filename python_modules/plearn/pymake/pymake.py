@@ -2230,7 +2230,7 @@ def main( args ):
     global optionargs, otherargs, linkname, link_target_override, \
             create_dll, relocatable_dll, no_cygwin, force_32bits, create_so, \
             static_linking, force_recompilation, force_link, \
-            local_compilation, symlinkobjs, temp_objs, distribute, vcproj
+            local_compilation, symlinkobjs, temp_objs, distribute, vcproj, local_ofiles
 
     # Variables that wouldn't need to be global
     # TODO: fix it
@@ -2411,6 +2411,12 @@ def main( args ):
         local_compilation = 1 # in windows, we ALWAYS work locally
     else:
         local_compilation = 0
+
+    if 'local_ofiles' in optionargs:
+        local_ofiles = 1
+        optionargs.remove('local_ofiles')
+    else:
+        local_ofiles = 0
 
     if 'ssh' in optionargs:
         # Re-define 'rshcommand' in order to use ssh instead.

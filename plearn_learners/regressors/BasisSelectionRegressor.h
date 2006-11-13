@@ -65,6 +65,9 @@ public:
     //#####  Public Build Options  ############################################
     bool consider_constant_function;
     TVec<RealFunc> explicit_functions;
+    TVec<RealFunc> explicit_interaction_functions;
+    TVec<string> explicit_interaction_variables;
+    TVec<RealFunc> mandatory_functions;
     bool consider_raw_inputs;
     bool consider_normalized_inputs;
     bool consider_input_range_indicators;
@@ -74,13 +77,20 @@ public:
     mutable Mat kernel_centers;
     int n_kernel_centers_to_pick;
     bool consider_interaction_terms;
+    int max_interaction_terms;
+    bool consider_sorted_encodings;
+    int max_n_vals_for_sorted_encodings;
     bool normalize_features;
     PP<PLearner> learner;
+    bool precompute_features;
+    int n_threads;
 
     //#####  Public Learnt Options  ############################################
     TVec<RealFunc> selected_functions;
     Vec alphas;
 
+
+    struct thread_wawr;
 
 public:
     //#####  Public Member Functions  #########################################

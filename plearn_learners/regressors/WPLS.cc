@@ -403,10 +403,19 @@ void computeWeightedInputOutputMeansAndStddev(const VMat& d, Vec& means, Vec& st
   
     real adjust = sqrt( sum_wi - sum_wi2 /sum_wi );
     real xbar;
-    for (int j = 0; j<p+m; j++) {
+    real var;
+    for (int j = 0; j<p+m; j++) 
+    {
         xbar      = sum_wixi[j]/sum_wi;
         means[j]  = xbar; 
-        stddev[j] = sqrt(sum_wixi2[j] - xbar * xbar * sum_wi) / adjust;
+        //make sure we do sqrt of a number >= 0
+        var= sum_wixi2[j] - xbar * xbar * sum_wi;
+        if(var < 0.)
+        {
+            PLWARNING("In WPLS::computeWeightedInputOutputMeansAndStddev: var < 0; setting it to 0.");
+            var= 0.;
+        }
+        stddev[j] = sqrt(var) / adjust;
         if (stddev[j] < 1e-10)
             stddev[j] = 1.0;
     }
@@ -583,6 +592,8 @@ void WPLS::train()
                 product(s, X, lx);
                 normalize(s, 2.0);
                 dold = norm(old_s -s);
+                if(isnan(dold))
+                    PLERROR("dold is nan");
                 if (dold < precision)
                     finished = true;
                 else {

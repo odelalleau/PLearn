@@ -47,6 +47,11 @@
 #include <plearn/math/RealRangeIndicatorFunction.h>
 // #include <plearn/math/TruncatedRealFunction.h>
 #include <plearn/vmat/MemoryVMatrix.h>
+#include <plearn/math/random.h>
+#include <plearn/vmat/RealFunctionsProcessedVMatrix.h>
+
+#include <boost/thread.hpp>
+
 
 namespace PLearn {
 using namespace std;
@@ -69,10 +74,16 @@ BasisSelectionRegressor::BasisSelectionRegressor()
       indicator_min_prob(0.01),
       n_kernel_centers_to_pick(-1),
       consider_interaction_terms(false),
+      max_interaction_terms(-1),
+      consider_sorted_encodings(false),
+      max_n_vals_for_sorted_encodings(-1),
       normalize_features(false),
+      precompute_features(true),
+      n_threads(0),
       residue_sum(0),
       residue_sum_sq(0),
       weights_sum(0)
+
 {}
 
 void BasisSelectionRegressor::declareOptions(OptionList& ol)
@@ -102,6 +113,17 @@ void BasisSelectionRegressor::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "This (optional) list of explicitly given RealFunctions\n"
                   "will get included in the dictionary");
+
+    declareOption(ol, "explicit_interaction_variables", &BasisSelectionRegressor::explicit_interaction_variables,
+                  OptionBase::buildoption,
+                  "This (optional) list of explicitly given variables (fieldnames)\n"
+                  "will get included in the dictionary for interaction terms ONLY\n"
+                  "(i.e. these interact with the other functions.)");
+
+    declareOption(ol, "mandatory_functions", &BasisSelectionRegressor::mandatory_functions,
+                  OptionBase::buildoption,
+                  "This (optional) list of explicitly given RealFunctions\n"
+                  "will be automatically selected.");
 
     declareOption(ol, "consider_raw_inputs", &BasisSelectionRegressor::consider_raw_inputs,
                   OptionBase::buildoption,
@@ -158,6 +180,20 @@ void BasisSelectionRegressor::declareOptions(OptionList& ol)
                   "If true, the dictionary will be enriched, at each stage, by the product of\n"
                   "each of the already chosen basis functions with each of the dictionary functions\n");
 
+    declareOption(ol, "max_interaction_terms", &BasisSelectionRegressor::max_interaction_terms,
+                  OptionBase::buildoption,
+                  "Maximum number of interaction terms to consider.  -1 means no max.\n"
+                  "If more terms are possible, some are chosen randomly at each stage.\n");
+
+    declareOption(ol, "consider_sorted_encodings", &BasisSelectionRegressor::consider_sorted_encodings,
+                  OptionBase::buildoption,
+                  "If true, the dictionary will be enriched with encodings sorted in target order.\n"
+                  "This will be done for all fields with less than max_n_vals_for_sorted_encodings different values.\n");
+
+    declareOption(ol, "max_n_vals_for_sorted_encodings", &BasisSelectionRegressor::max_n_vals_for_sorted_encodings,
+                  OptionBase::buildoption,
+                  "Maximum number of different values for a field to be considered for a sorted encoding.\n");
+
     declareOption(ol, "normalize_features", &BasisSelectionRegressor::normalize_features,
                   OptionBase::buildoption,
                   "EXPERIMENTAL OPTION (under development)");
@@ -166,6 +202,14 @@ void BasisSelectionRegressor::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "The underlying learner to be trained with the extracted features.");
 
+    declareOption(ol, "precompute_features", &BasisSelectionRegressor::precompute_features,
+                  OptionBase::buildoption,
+                  "True if features mat should be kept in memory; false if each row should be recalculated every time it is needed.");
+
+    declareOption(ol, "n_threads", &BasisSelectionRegressor::n_threads,
+                  OptionBase::buildoption,
+                  "The number of threads to use when computing residue scores.\n"
+                  "NOTE: MOST OF PLEARN IS NOT THREAD-SAFE; THIS CODE ASSUMES THAT SOME PARTS ARE, BUT THESE MAY CHANGE.");
 
     //#####  Public Learnt Options  ############################################
 
@@ -180,6 +224,14 @@ void BasisSelectionRegressor::declareOptions(OptionList& ol)
     declareOption(ol, "candidate_functions", &BasisSelectionRegressor::candidate_functions,
                   OptionBase::learntoption,
                   "The list of current candidate functions.");
+
+
+    declareOption(ol, "explicit_interaction_functions", &BasisSelectionRegressor::explicit_interaction_functions,
+                  OptionBase::learntoption,
+                  "This (optional) list of explicitly given RealFunctions\n"
+                  "will get included in the dictionary for interaction terms ONLY\n"
+                  "(i.e. these interact with the other functions.)");
+
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -231,6 +283,9 @@ void BasisSelectionRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField(explicit_functions, copies);
+    deepCopyField(explicit_interaction_functions, copies);
+    deepCopyField(explicit_interaction_variables, copies);
+    deepCopyField(mandatory_functions, copies);
     deepCopyField(kernels, copies);
     deepCopyField(kernel_centers, copies);
     deepCopyField(learner, copies);
@@ -326,7 +381,7 @@ void BasisSelectionRegressor::appendCandidateFunctionsOfSingleField(int fieldnum
         real n = st.n();
         real min_count = indicator_min_prob*n;
         real desired_count = indicator_desired_prob*n;
-        if(st.nmissing() >= min_count)
+        if(st.nmissing() >= min_count && n-st.nmissing() >= min_count)
         {
             RealFunc f = new RealValueIndicatorFunction(fieldnum, MISSING_VALUE);
             f->setInfo(fieldname+"=MISSING");
@@ -344,7 +399,8 @@ void BasisSelectionRegressor::appendCandidateFunctionsOfSingleField(int fieldnum
             val = cit->first;
             cumcount += cit->second.nbelow;
             bool in_smap = (smap.find(val)!=smapend);
-            if(cumcount>=desired_count || in_smap&&cumcount>=min_count)
+            if((cumcount>=desired_count || in_smap&&cumcount>=min_count) &&
+               (n-cumcount>=desired_count || in_smap&&n-cumcount>=min_count))
             {
                 RealRange range(']',low,val,'[');
                 RealFunc f = new RealRangeIndicatorFunction(fieldnum, range);
@@ -360,7 +416,7 @@ void BasisSelectionRegressor::appendCandidateFunctionsOfSingleField(int fieldnum
                 cumcount = 0;
                 low = val;
             }
-            else if(cumcount>=desired_count)
+            else if(cumcount>=desired_count && n-cumcount>=desired_count)
             {
                 RealRange range(']',low,val,']');
                 RealFunc f = new RealRangeIndicatorFunction(fieldnum, range);
@@ -374,7 +430,7 @@ void BasisSelectionRegressor::appendCandidateFunctionsOfSingleField(int fieldnum
         // last chunk
         if(cumcount>0)
         {
-            if(cumcount>=min_count)
+            if(cumcount>=min_count && n-cumcount>=min_count)
             {
                 RealRange range(']',low,val,']');
                 RealFunc f = new RealRangeIndicatorFunction(fieldnum, range);
@@ -429,8 +485,6 @@ void BasisSelectionRegressor::appendConstantFunction(TVec<RealFunc>& functions) 
 
 void BasisSelectionRegressor::buildSimpleCandidateFunctions()
 {
-    simple_candidate_functions.resize(0);
-
     if(consider_constant_function)
         appendConstantFunction(simple_candidate_functions);
     
@@ -446,23 +500,59 @@ void BasisSelectionRegressor::buildSimpleCandidateFunctions()
 
 void BasisSelectionRegressor::buildAllCandidateFunctions()
 {
+    bool mandatory_fns_just_added= false;
+    if(selected_functions.length()==0)
+    {
+        candidate_functions= mandatory_functions.copy();
+        while(candidate_functions.length() > 0)
+            appendFunctionToSelection(0);
+        mandatory_fns_just_added= true;
+    }
+
     if(simple_candidate_functions.length()==0)
         buildSimpleCandidateFunctions();
 
     candidate_functions = simple_candidate_functions.copy();
+    TVec<RealFunc> interaction_candidate_functions;
+
+    int candidate_start = consider_constant_function?1:0; // skip bias
+    int ncandidates = simple_candidate_functions.length();
     if(consider_interaction_terms)
     {
-        int candidate_start = consider_constant_function?1:0; // skip bias
-        int ncandidates = simple_candidate_functions.length();
         int nselected = selected_functions.length();
         for(int k=0; k<nselected; k++)
             for(int j=candidate_start; j<ncandidates; j++)
             {
                 RealFunc f = new RealFunctionProduct(selected_functions[k],simple_candidate_functions[j]);
                 f->setInfo("("+selected_functions[k]->getInfo()+"*"+simple_candidate_functions[j]->getInfo()+")");
-                candidate_functions.append(f);
+                interaction_candidate_functions.append(f);
             }
     }
+
+    // explicit interaction variables / functions
+    explicit_interaction_functions.resize(0);
+    for(int k= 0; k < explicit_interaction_variables.length(); ++k)
+        appendCandidateFunctionsOfSingleField(train_set->getFieldIndex(explicit_interaction_variables[k]), 
+                                              explicit_interaction_functions);
+
+    for(int k= 0; k < explicit_interaction_functions.length(); ++k)
+        for(int j= candidate_start; j < ncandidates; ++j)
+        {
+            RealFunc f = new RealFunctionProduct(explicit_interaction_functions[k],simple_candidate_functions[j]);
+            f->setInfo("("+explicit_interaction_functions[k]->getInfo()+"*"+simple_candidate_functions[j]->getInfo()+")");
+            interaction_candidate_functions.append(f);
+        }
+
+    
+    if(max_interaction_terms < 0)
+        candidate_functions.append(interaction_candidate_functions);
+    else
+    {
+        shuffleElements(interaction_candidate_functions);
+        for(int i= 0; i < max_interaction_terms && i < interaction_candidate_functions.length(); ++i)
+            candidate_functions.append(interaction_candidate_functions[i]);
+    }
+
 }
 
 /* Returns the index of the most correlated (or anti-correlated) feature 
@@ -533,12 +623,107 @@ void BasisSelectionRegressor::findBestCandidateFunction(int& best_candidate_inde
 }
 
 
+
+
+//function-object for a thread
+struct BasisSelectionRegressor::thread_wawr
+{
+    int tid, nt;
+    const TVec<RealFunc>& functions;
+    real& wsum;
+    Vec& E_x;
+    Vec& E_xx;
+    real& E_y;
+    real& E_yy;
+    Vec& E_xy;
+    const Vec& Y;
+    boost::mutex& ts_mx;
+    const VMat& train_set;  
+    boost::mutex& pb_mx;
+    ProgressBar* pb;
+
+    thread_wawr(int tid_, int nt_,
+                const TVec<RealFunc>& functions_,  
+                real& wsum_,
+                Vec& E_x_, Vec& E_xx_,
+                real& E_y_, real& E_yy_,
+                Vec& E_xy_, const Vec& Y_, boost::mutex& ts_mx_,
+                const VMat& train_set_,
+                boost::mutex& pb_mx_,
+                ProgressBar* pb_)
+        : tid(tid_), 
+          nt(nt_),
+          functions(functions_),
+          wsum(wsum_),
+          E_x(E_x_),
+          E_xx(E_xx_),
+          E_y(E_y_),
+          E_yy(E_yy_),
+          E_xy(E_xy_),
+          Y(Y_),
+          ts_mx(ts_mx_),
+          train_set(train_set_),
+          pb_mx(pb_mx_),
+          pb(pb_)
+    {}
+
+    void operator()()
+    {
+        Vec input, targ;
+        real w;
+        Vec candidate_features;
+        int n_candidates = functions.length();
+        int l= train_set->length();
+     
+        E_x.resize(n_candidates);
+        E_x.fill(0.);
+        E_xx.resize(n_candidates);
+        E_xx.fill(0.);
+        E_y = 0.;
+        E_yy = 0.;
+        E_xy.resize(n_candidates);
+        E_xy.fill(0.);
+        wsum = 0.;
+   
+        for(int i=tid; i<l; i+= nt)
+        {
+            real y = Y[i];
+            {
+                boost::mutex::scoped_lock lock(ts_mx);
+                train_set->getExample(i, input, targ, w);
+            }
+            evaluate_functions(functions, input, candidate_features);
+            wsum += w;
+            real wy = w*y;
+            E_y  += wy;
+            E_yy  += wy*y;
+            for(int j=0; j<n_candidates; j++)
+            {
+                real x = candidate_features[j];
+                real wx = w*x;
+                E_x[j] += wx;
+                E_xx[j] += wx*x;
+                E_xy[j] += wx*y;
+            }
+            if(pb)
+            {
+                boost::mutex::scoped_lock lock(pb_mx);
+                if(pb->currentpos < static_cast<unsigned int>(i))
+                    pb->update(i);
+            }
+        }
+    }
+};
+
+
+
 void BasisSelectionRegressor::computeWeightedAveragesWithResidue(const TVec<RealFunc>& functions,  
                                                                  real& wsum,
                                                                  Vec& E_x, Vec& E_xx,
                                                                  real& E_y, real& E_yy,
                                                                  Vec& E_xy) const
 {
+
     const Vec& Y = residue;
     int n_candidates = functions.length();
     E_x.resize(n_candidates);
@@ -558,26 +743,66 @@ void BasisSelectionRegressor::computeWeightedAveragesWithResidue(const TVec<Real
     ProgressBar* pb = 0;
     if(report_progress)
         pb = new ProgressBar("Computing residue scores for " + tostring(n_candidates) + " candidate functions", l);
-    for(int i=0; i<l; i++)
+
+    if(n_threads > 0)
     {
-        real y = Y[i];
-        train_set->getExample(i, input, targ, w);
-        evaluate_functions(functions, input, candidate_features);
-        wsum += w;
-        real wy = w*y;
-        E_y  += wy;
-        E_yy  += wy*y;
-        for(int j=0; j<n_candidates; j++)
+        Vec wsums(n_threads);
+        TVec<Vec> E_xs(n_threads);
+        TVec<Vec> E_xxs(n_threads);
+        Vec E_ys(n_threads);
+        Vec E_yys(n_threads);
+        TVec<Vec> E_xys(n_threads);
+        boost::mutex ts_mx, pb_mx;
+        TVec<boost::thread* > threads(n_threads);
+        TVec<thread_wawr* > tws(n_threads);
+
+        for(int i= 0; i < n_threads; ++i)
         {
-            real x = candidate_features[j];
-            real wx = w*x;
-            E_x[j] += wx;
-            E_xx[j] += wx*x;
-            E_xy[j] += wx*y;
+            tws[i]= new thread_wawr(i, n_threads, functions, 
+                                    wsums[i], 
+                                    E_xs[i], E_xxs[i],
+                                    E_ys[i], E_yys[i],
+                                    E_xys[i], Y, ts_mx, train_set,
+                                    pb_mx, pb);
+            threads[i]= new boost::thread(*tws[i]);
         }
-        if(pb)
-            pb->update(i);
+        for(int i= 0; i < n_threads; ++i)
+        {
+            threads[i]->join();
+            wsum+= wsums[i];
+            E_y+= E_ys[i];
+            E_yy+= E_yys[i];
+            for(int j= 0; j < n_candidates; ++j)
+            {
+                E_x[j]+= E_xs[i][j];
+                E_xx[j]+= E_xxs[i][j];
+                E_xy[j]+= E_xys[i][j];
+            }
+            delete threads[i];
+            delete tws[i];
+        }
     }
+    else // single-thread version
+        for(int i=0; i<l; i++)
+        {
+            real y = Y[i];
+            train_set->getExample(i, input, targ, w);
+            evaluate_functions(functions, input, candidate_features);
+            wsum += w;
+            real wy = w*y;
+            E_y  += wy;
+            E_yy  += wy*y;
+            for(int j=0; j<n_candidates; j++)
+            {
+                real x = candidate_features[j];
+                real wx = w*x;
+                E_x[j] += wx;
+                E_xx[j] += wx*x;
+                E_xy[j] += wx*y;
+            }
+            if(pb)
+                pb->update(i);
+        }
 
     // Finalize computation
     real inv_wsum = 1.0/wsum;
@@ -716,15 +941,17 @@ void BasisSelectionRegressor::appendFunctionToSelection(int candidate_index)
     RealFunc f = candidate_functions[candidate_index];
     int l = train_set->length();
     int nf = selected_functions.length();    
-    features.resize(l,nf+1, max(1,static_cast<int>(0.25*l*nf)),true);  // enlarge width while preserving content
-    real weight;
-    for(int i=0; i<l; i++)
+    if(precompute_features)
     {
-        train_set->getExample(i,input,targ,weight);
-        features(i,nf) = f->evaluate(input);
+        features.resize(l,nf+1, max(1,static_cast<int>(0.25*l*nf)),true);  // enlarge width while preserving content
+        real weight;
+        for(int i=0; i<l; i++)
+        {
+            train_set->getExample(i,input,targ,weight);
+            features(i,nf) = f->evaluate(input);
+        }
     }
     selected_functions.append(f);
-
 
     if(!consider_interaction_terms)
         candidate_functions.remove(candidate_index);
@@ -744,17 +971,22 @@ void BasisSelectionRegressor::retrainLearner()
     learner->setTrainingSet(newtrainset);
     learner->forget();
 
-    features.resize(l,nf+(weighted?2:1), max(1,int(0.25*l*nf)), true); // enlarge width while preserving content
-    if(weighted)
-        for(int i=0; i<l; i++) // append target and weight columns to features matrix
-        {
-            features(i,nf) = targets[i];
-            features(i,nf+1) = weights[i];
-        }
-    else // no weights
-        features.lastColumn() << targets; // append target column to features matrix
-
-    newtrainset = new MemoryVMatrix(features);
+    if(precompute_features)
+    {
+        features.resize(l,nf+(weighted?2:1), max(1,int(0.25*l*nf)), true); // enlarge width while preserving content
+        if(weighted)
+            for(int i=0; i<l; i++) // append target and weight columns to features matrix
+            {
+                features(i,nf) = targets[i];
+                features(i,nf+1) = weights[i];
+            }
+        else // no weights
+            features.lastColumn() << targets; // append target column to features matrix
+    
+        newtrainset = new MemoryVMatrix(features);
+    }
+    else
+        newtrainset= new RealFunctionsProcessedVMatrix(train_set, selected_functions, false, true, true);
     newtrainset->defineSizes(nf,1,weighted?1:0);
     // perr.clearOutMap();
     // perr << "new train set:\n" << newtrainset << endl; 
@@ -762,19 +994,27 @@ void BasisSelectionRegressor::retrainLearner()
     learner->forget();
     learner->train();
     // perr << "retrained learner:\n" << learner << endl;
-    // resize features matrix so it containsonly the features
-    features.resize(l,nf);
+    // resize features matrix so it contains only the features
+    if(precompute_features)
+        features.resize(l,nf);
 }
 
 
 void BasisSelectionRegressor::train()
 {
-    if (!initTrain())
-        return;
-
+    if(nstages > 0)
+    {
+        if (!initTrain())
+            return;
+    } // work around so that nstages can be zero...
+    else if (!train_stats)
+        train_stats = new VecStatsCollector();
 
     if(stage==0)
+    {
+        simple_candidate_functions.resize(0);
         buildAllCandidateFunctions();
+    }
 
     while(stage<nstages)
     {
@@ -784,6 +1024,8 @@ void BasisSelectionRegressor::train()
             if(selected_functions.length()>0)
             {
                 recomputeFeatures();
+                if(stage==0) // only mandatory funcs.
+                    retrainLearner();
                 recomputeResidue();
             }
         }
@@ -870,6 +1112,8 @@ void BasisSelectionRegressor::initTargetsResidueWeight()
 
 void BasisSelectionRegressor::recomputeFeatures()
 {
+    if(!precompute_features)
+        return;
     int l = train_set.length();
     int nf = selected_functions.length();
     features.resize(l,nf);
@@ -895,7 +1139,15 @@ void BasisSelectionRegressor::recomputeResidue()
         // train_set->getExample(i, input, targ, w);
         real t = targets[i];
         real w = weights[i];
-        computeOutputFromFeaturevec(features(i),output);
+        if(precompute_features)
+            computeOutputFromFeaturevec(features(i),output);
+        else
+        {
+            real wt;
+            train_set->getExample(i,input,targ,wt);
+            computeOutput(input,output);
+        }
+
         real resid = t-output[0];
         residue[i] = resid;
         // perr << "feature " << i << ": " << features(i) << " t:" << t << " out: " << output[0] << " resid: " << residue[i] << endl;

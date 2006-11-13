@@ -154,6 +154,33 @@ void VMatrix::declareOptions(OptionList & ol)
     inherited::declareOptions(ol);
 }
 
+void VMatrix::declareMethods(RemoteMethodMap& rmm)
+{
+    // Insert a backpointer to remote methods; note that this
+    // different than for declareOptions()
+    rmm.inherited(inherited::_getRemoteMethodMap_());
+
+    declareMethod(
+        rmm, "declareFieldNames", &VMatrix::declareFieldNames,
+        (BodyDoc("Declares the field names.\n"),
+         ArgDoc ("fnames", "TVec of field names.\n")));
+    
+    declareMethod(
+        rmm, "appendRow", &VMatrix::appendRow,
+        (BodyDoc("Appends a row to the VMatrix.\n"),
+         ArgDoc ("v", "Vec with values (row) to append.\n")));
+
+    declareMethod(
+        rmm, "saveFieldInfos", &VMatrix::saveFieldInfos,
+        (BodyDoc("Saves field names, etc. in metadatadir.\n")));
+
+    declareMethod(
+        rmm, "flush", &VMatrix::flush,
+        (BodyDoc("Flush mods. to disk.\n")));
+
+}
+
+
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
