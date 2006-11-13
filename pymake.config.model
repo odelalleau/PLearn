@@ -370,9 +370,15 @@ optionalLibrary( name='boost_signals',
                  triggers = 'boost/signals*',
                  linkeroptions = '-lboost_signals' )
 
+
 optionalLibrary( name='boost_thread',
                  triggers = 'boost/thread*',
-                 linkeroptions = '-lboost_thread' )
+                 linkeroptions = '-lboost_thread -pthread', 
+                 compileroptions = '-pthread' )
+
+# optionalLibrary( name='boost_thread',
+#                  triggers = 'boost/thread*',
+#                  linkeroptions = '-lboost_thread -pthread' )
 
 # OLD version...
 # optionalLibrary( name = 'NSPR',
