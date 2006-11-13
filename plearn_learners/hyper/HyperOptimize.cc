@@ -173,7 +173,6 @@ void HyperOptimize::build_()
     // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
     // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
     // ### You should assume that the parent class' build_() has already been called.
-
 }
 
 // ### Nothing to add here, simply calls build_
@@ -186,12 +185,7 @@ void HyperOptimize::build()
 void HyperOptimize::setExperimentDirectory(const PPath& the_expdir)
 {
     inherited::setExperimentDirectory(the_expdir);
-    createResultsMat();
-
-    which_cost_pos= getResultNames().find(which_cost);
-    if(which_cost_pos < 0)
-        which_cost_pos= toint(which_cost);
-    
+    createResultsMat();    
 }
 
 void HyperOptimize::createResultsMat()
@@ -300,6 +294,10 @@ Vec HyperOptimize::optimize()
                 option_vals.size(), option_names.size());
 
     int trialnum = 0;
+
+    which_cost_pos= getResultNames().find(which_cost);
+    if(which_cost_pos < 0)
+        which_cost_pos= toint(which_cost);
 
     Vec results;
     while(option_vals)
