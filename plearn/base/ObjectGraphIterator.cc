@@ -57,18 +57,28 @@ using namespace std;
 //#####  ObjectOptionsIterator  ###############################################
 
 ObjectOptionsIterator::ObjectOptionsIterator()
-    : m_invalid(true), m_skip_nulls(true),
-      m_object(0), m_options(0),
-      m_cur_option(), m_cur_index(), m_max_index()
+    : m_invalid(true),
+      m_ignore_nontraversable(false),
+      m_skip_nulls(true),
+      m_object(0),
+      m_options(0),
+      m_cur_option(),
+      m_cur_index(),
+      m_max_index()
 { }
 
 
 ObjectOptionsIterator::ObjectOptionsIterator(const Object* root,
+                                             bool ignore_nontraversable,
                                              bool skip_nulls)
     : m_invalid(true),
+      m_ignore_nontraversable(ignore_nontraversable),
       m_skip_nulls(skip_nulls),
-      m_object(root), m_options(0),
-      m_cur_option(), m_cur_index(), m_max_index()
+      m_object(root),
+      m_options(0),
+      m_cur_option(),
+      m_cur_index(),
+      m_max_index()
 {
     if (m_object) {
         m_options = &m_object->getOptionList();
@@ -138,12 +148,14 @@ const ObjectOptionsIterator& ObjectOptionsIterator::operator++()
         }
 
         // Otherwise find next option accessible as object, and that is not
-        // marked with the 'nontraversable' flag.  Go to invalid state if
-        // cannot find any
+        // marked with the 'nontraversable' flag (assuming
+        // 'ignore_nontraversable' is not set).  Go to invalid state if cannot
+        // find any
         const int n = m_options->size();
         for ( ++m_cur_option ; m_cur_option < n ; ++m_cur_option ) {
-            if (    (*m_options)[m_cur_option]->isAccessibleAsObject() &&
-                 ! ((*m_options)[m_cur_option]->flags() & OptionBase::nontraversable) )
+            if (      (*m_options)[m_cur_option]->isAccessibleAsObject() &&
+                 ( m_ignore_nontraversable ||
+                   ! ((*m_options)[m_cur_option]->flags() & OptionBase::nontraversable)) )
             {
                 m_cur_index = 0;
                 m_max_index = (*m_options)[m_cur_option]->indexableSize(m_object);
@@ -233,6 +245,9 @@ void ObjectGraphIterator::buildTraversalGraph(const Object* root,
     SeenSet seen;
     const SeenSet::iterator not_seen = seen.end();
     QAppender appender;
+
+    bool ignore_nontraversable = tt & IgnoreNonTraversable;
+    tt = TraversalType(int(tt) & ~IgnoreNonTraversable);
     
     switch (tt & ~Reversed) {
     case BreadthOrder  : appender = &Q::push_front; break;
@@ -252,7 +267,8 @@ void ObjectGraphIterator::buildTraversalGraph(const Object* root,
         object_queue.pop_back();
         m_object_list.push_back(cur_objname);
 
-        ObjectOptionsIterator options(cur_objname.first), end_options;
+        ObjectOptionsIterator options(cur_objname.first, ignore_nontraversable),
+                              end_options;
         for ( ; options != end_options ; ++options) {
             const Object* candidate_object = *options;
             if (candidate_object && seen.find(candidate_object) == not_seen) {

@@ -85,12 +85,19 @@ public:
      *  Iterate along all first-level sub-objects of the given object.
      *
      *  @param root          Object on which to iterate
+     *
+     *  @param ignore_nontraversable
+     *                       If true, even the options with the
+     *                       "nontraversable" flag are traversed
+     *
      *  @param skip_nulls    If true, null sub-objects are skipped (default);
      *                       in some instances, it's necesary to iterate along
      *                       ALL options, including null objects, whereupon
      *                       you specify false.
      */
-    ObjectOptionsIterator(const Object* root, bool skip_nulls = true);
+    ObjectOptionsIterator(const Object* root,
+                          bool ignore_nontraversable = false,
+                          bool skip_nulls = true);
 
     // Default assignment, copy constructor, destructor
 
@@ -137,6 +144,7 @@ public:
 
 protected:
     bool m_invalid;                          //!< If true: invalid state
+    bool m_ignore_nontraversable;            //!< If true: traverse nontraversable
     bool m_skip_nulls;                       //!< If true: never return null ptrs
     const Object* m_object;                  //!< Object we are pointing to
     const OptionList* m_options;             //!< OptionList of that object
@@ -191,6 +199,14 @@ public:
     //! For convenience, you can bitwise-or this value with normal traversal
     //! types to get the reversed ones
     static const int Reversed = 64;
+
+    /**
+     *  If this option is true, traverse even non-traversable options.  This
+     *  sometimes makes sense for "deep-initialization" purposes.  You can
+     *  bitwise-or this option to TraversalType when creating the
+     *  ObjectGraphIterator.
+     */
+    static const int IgnoreNonTraversable = 128;
 
 
 public:
