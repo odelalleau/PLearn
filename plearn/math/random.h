@@ -148,8 +148,8 @@ void random_subset_indices(const TVec<int>& dest, int n);
 template<class T>
 void shuffleElements(const TVec<T>& vec)
 {
-    if(vec.length() <= 0)
-        return;//don't try to shuffle an empty vec.
+    if (vec.isEmpty())
+        return; // Do not try to shuffle an empty vec.
     
     T* v = vec.data();
     for(int i=0; i<vec.length(); i++)
