@@ -281,7 +281,7 @@ def local_filepath(filepath):
 
 def copyfile_verbose(src, dst):
     print ("[ COPYING\t" + src + "\n  -->\t\t" + dst + " ]")
-    shutil.copyfile(src, dst)
+    shutil.copy2(src, dst)
 
 def copy_ofiles_locally(executables_to_link):
     print '++++ Copying ofiles locally for ', string.join(map(lambda x: x.filebase, executables_to_link.keys()))
