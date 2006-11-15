@@ -480,7 +480,6 @@ weightsize = 0 ;
 extrasize = 0 ;
 metadatadir = ""  )
 ;
-expdir = "" ;
 seed = -1 ;
 stage = 0 ;
 n_examples = 225 ;
