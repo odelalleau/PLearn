@@ -280,17 +280,17 @@ def local_filepath(filepath):
     return os.path.normpath(local_ofiles_base_path + '/' + filepath)
 
 def copyfile_verbose(src, dst):
-    print ("[ COPYING\t" + src + "\t-->\t" + dst + "]")
+    print ("[ COPYING\t" + src + "\n  -->\t\t" + dst + " ]")
     shutil.copyfile(src, dst)
 
-def copy_ofiles_locally(ccfiles_to_compile, executables_to_link):
+def copy_ofiles_locally(executables_to_link):
     print '++++ Copying ofiles locally for ', string.join(map(lambda x: x.filebase, executables_to_link.keys()))
-    files_to_copy= [f.corresponding_ofile for f in ccfiles_to_compile.keys()]
+    files_to_copy= []
     #find other ofiles to copy
     for e in executables_to_link.keys():
         for f in e.get_object_files_to_link():
             lf= local_filepath(f)
-            if mtime(f) != mtime(lf):
+            if mtime(f) > mtime(lf):
                 files_to_copy+= [f]
                 
     for f in files_to_copy:
@@ -2615,7 +2615,7 @@ def main( args ):
 
             if force_link or (executables_to_link.keys() and not create_dll):
                 if local_ofiles:
-                    copy_ofiles_locally(ccfiles_to_compile, executables_to_link)
+                    copy_ofiles_locally(executables_to_link)
 
                 print '++++ Linking', string.join(map(lambda x: x.filebase, executables_to_link.keys()))
                 ret = sequential_link(executables_to_link.keys(),linkname)
