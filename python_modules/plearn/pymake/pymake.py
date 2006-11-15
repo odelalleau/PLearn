@@ -272,6 +272,34 @@ def mtime(filepath):
             mtime_map[filepath] = 0
     return mtime_map[filepath]
 
+def local_filepath(filepath):
+    """
+    gives the local version of a filepath
+    i.e. appends local_ofiles_base_path to filepath
+    """
+    return os.path.normpath(local_ofiles_base_path + '/' + filepath)
+
+def copyfile_verbose(src, dst):
+    print ("[ COPYING\t" + src + "\t-->\t" + dst + "]")
+    shutil.copyfile(src, dst)
+
+def copy_ofiles_locally(ccfiles_to_compile, executables_to_link):
+    print '++++ Copying ofiles locally for ', string.join(map(lambda x: x.filebase, executables_to_link.keys()))
+    files_to_copy= [f.corresponding_ofile for f in ccfiles_to_compile.keys()]
+    #find other ofiles to copy
+    for e in executables_to_link.keys():
+        for f in e.get_object_files_to_link():
+            lf= local_filepath(f)
+            if mtime(f) != mtime(lf):
+                files_to_copy+= [f]
+                
+    for f in files_to_copy:
+        lf= local_filepath(f)
+        ldir= os.path.dirname(lf)
+        if not os.path.isdir(ldir):
+            os.makedirs(ldir)
+        copyfile_verbose(f, lf)
+
 ###  Processing of configuration files
 
 def get_config_path(target):
@@ -903,8 +931,9 @@ def sequential_link(executables_to_link, linkname):
             print '   '+string.join(failures,'\n   ')
             return 1
         else:
-            print 'Waiting for NFS to catch up...'
-            ccfile.nfs_wait_for_all_linkable_ofiles()
+            if not local_ofiles:
+                print 'Waiting for NFS to catch up...'
+                ccfile.nfs_wait_for_all_linkable_ofiles()
             if verbose>=2:
                 print '[ LINKING',ccfile.filebase,']'
             link_exit_code = ccfile.launch_linking()
@@ -1486,7 +1515,6 @@ class FileInfo:
               self.corresponding_ofile = join(self.filedir, objsdir, self.filebase+'.o')
             elif objspolicy == 2:
               self.corresponding_ofile = join(objsdir, self.filebase+'.o')
-            #print self.corresponding_ofile
 
             if link_target_override:
                 self.corresponding_output = link_target_override
@@ -2048,6 +2076,8 @@ digraph G
     def link_command(self):
         """returns the command for making executable target from the .o files in objsfilelist"""
         self.objsfilelist = self.get_object_files_to_link()
+        if local_ofiles:
+            self.objsfilelist= map(local_filepath, self.objsfilelist)
         linker = default_linker
         linkeroptions = ""
         so_options = ""
@@ -2083,7 +2113,11 @@ digraph G
 
     def launch_linking(self):
         corresponding_output = self.corresponding_output
-        self.corresponding_output = self.corresponding_output+".new"
+        new_corresponding_output = self.corresponding_output+".new"
+        if local_ofiles:
+            self.corresponding_output = local_filepath(new_corresponding_output)
+        else:
+            self.corresponding_output = new_corresponding_output
         try:
             os.remove(self.corresponding_output)
         except OSError:
@@ -2110,9 +2144,14 @@ digraph G
                 os.remove(corresponding_output)
             except OSError:
                 pass
-            os.rename(self.corresponding_output, corresponding_output)
+            
+            if local_ofiles:
+                copyfile_verbose(self.corresponding_output, new_corresponding_output)
+                    
+            os.rename(new_corresponding_output, corresponding_output)
+                   
             if verbose>=2:
-                print "Successfully created " + self.corresponding_output + " and renamed it to " + corresponding_output
+                print "Successfully created " + new_corresponding_output + " and renamed it to " + corresponding_output
 
         self.corresponding_output = corresponding_output
         return link_exit_code
@@ -2230,7 +2269,8 @@ def main( args ):
     global optionargs, otherargs, linkname, link_target_override, \
             create_dll, relocatable_dll, no_cygwin, force_32bits, create_so, \
             static_linking, force_recompilation, force_link, \
-            local_compilation, symlinkobjs, temp_objs, distribute, vcproj, local_ofiles
+            local_compilation, symlinkobjs, temp_objs, distribute, vcproj, \
+            local_ofiles, local_ofiles_base_path
 
     # Variables that wouldn't need to be global
     # TODO: fix it
@@ -2418,6 +2458,8 @@ def main( args ):
     else:
         local_ofiles = 0
 
+    local_ofiles_base_path= '/tmp/.pymake/local_ofiles/' # could add an option for that...
+
     if 'ssh' in optionargs:
         # Re-define 'rshcommand' in order to use ssh instead.
         rshcommand = 'ssh -x'
@@ -2572,6 +2614,9 @@ def main( args ):
                 parallel_compile(ccfiles_to_compile.keys())
 
             if force_link or (executables_to_link.keys() and not create_dll):
+                if local_ofiles:
+                    copy_ofiles_locally(ccfiles_to_compile, executables_to_link)
+
                 print '++++ Linking', string.join(map(lambda x: x.filebase, executables_to_link.keys()))
                 ret = sequential_link(executables_to_link.keys(),linkname)
                 if ret != 0:
