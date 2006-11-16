@@ -612,6 +612,7 @@ void WPLS::train()
             X -= tmp_np;
             Y -= ly[0] * s;
             if (report_progress)
+                pb->update(stage);
             stage++;
         }
         if (pb) 

@@ -296,6 +296,8 @@ def copy_ofiles_locally(executables_to_link):
     files_to_copy= []
     #find other ofiles to copy
     for e in executables_to_link.keys():
+        print "Waiting for NFS..."
+        e.nfs_wait_for_all_linkable_ofiles()
         for f in e.get_object_files_to_link():
             lf= local_filepath(f)
             if mtime(f) > mtime(lf):
