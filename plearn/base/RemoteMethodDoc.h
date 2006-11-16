@@ -2,7 +2,7 @@
 
 // RemoteMethodDoc.h
 //
-// Copyright (C) 2006 Nicolas Chapados
+// Copyright (C) 2006 Nicolas Chapados, Pascal Vincent
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -44,6 +44,8 @@
 #include <string>
 #include <list>
 #include <utility>                           // For pair
+#include <vector>
+#include "plearn/base/tuple.h"
 
 namespace PLearn {
 
@@ -146,7 +148,27 @@ public:
         : m_args_doc(1, doc)
     { }
 
+    void setName(const string& methodname) const
+    { m_name = methodname; }
+
     //! Access documentation components
+
+    const string& name() const
+    {
+        return m_name;
+    }
+
+    //! Will perform consistency checks 
+    //! (such as verifying if margs_doc and m_args_type have the same size)
+    //! and launch an exception if inconsistencies are detected.
+    void checkConsistency() const;
+
+    int nArgs() const
+    {        
+        checkConsistency();
+        return m_args_type.size();
+    }
+
     const string& bodyDoc() const
     {
         return m_body_doc;
@@ -207,8 +229,17 @@ public:
         m_args_type.push_back(doc.m_typestr);
         return *this;
     }
+    
+    //! Returns a string repretenting the "prototype" (signature) of the function in the doc.
+    //! Argsep is used a sthe separator between arguments (typically ", " or ",\n")
+    string getPrototypeString(string argsep=", ") const;
+
+    //! return full help text for the function in the doc.
+    string getFullHelpText() const;
+
 
 protected:
+    mutable string m_name;                   //!< Function name
     mutable string m_body_doc;               //!< Function body documentation
     mutable string m_return_doc;             //!< Return value documentation
     mutable string m_return_type;            //!< Type string for return value

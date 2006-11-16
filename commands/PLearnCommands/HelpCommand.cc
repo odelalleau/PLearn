@@ -44,6 +44,7 @@
 #include <plearn/base/stringutils.h>
 #include <plearn/base/TypeFactory.h>    //!< For displayObjectHelp().
 #include <plearn/io/fileutils.h>        //!< For isfile().
+#include <plearn/base/HelpSystem.h>
 
 namespace PLearn {
 using namespace std;

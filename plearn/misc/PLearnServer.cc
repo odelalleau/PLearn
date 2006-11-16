@@ -42,6 +42,7 @@
 
 
 #include "PLearnServer.h"
+#include <plearn/base/RemoteDeclareMethod.h>
 #include <plearn/base/pl_repository_revision.h>
 #include <plearn/base/Object.h>
 #include <plearn/base/plerror.h>
@@ -54,11 +55,66 @@ using namespace std;
 
 // Put function implementations here.
 
+PLearnServer* PLearnServer::instance = 0;
+
 PLearnServer::PLearnServer(const PStream& input_output)
     :io(input_output), clear_maps(true)
 {
-    
+    if(instance!=0)
+        PLERROR("An instance of PLearnServer already exists");
+    instance = this;
 }
+
+PLearnServer::~PLearnServer()
+{
+    instance = 0;
+}
+
+PLearnServer* PLearnServer::getInstance()
+{ 
+    return instance; 
+}
+
+
+void PLearnServer::cd(const string path)
+{
+    chdir(path);
+}
+
+void PLearnServer::binary()
+{
+    getInstance()->io.setMode(PStream::plearn_binary);
+}
+
+void PLearnServer::ascii()
+{
+    getInstance()->io.setMode(PStream::plearn_ascii);
+}
+
+void PLearnServer::implicit_storage(bool impl_stor)
+{
+    getInstance()->io.implicit_storage = impl_stor;
+}
+
+
+BEGIN_DECLARE_REMOTE_FUNCTIONS
+
+declareFunction("cd", &PLearnServer::cd,
+                (BodyDoc("change directory (calls chdir)\n"),
+                 ArgDoc ("path", "Path of directory where to go")));
+
+declareFunction("binary", &PLearnServer::binary,
+                (BodyDoc("change the mode of the io of the PLearnServer instance to plearn_binary \n")));
+
+declareFunction("ascii", &PLearnServer::ascii,
+                (BodyDoc("change the mode of the io of the PLearnServer instance to plearn_ascii\n")));
+
+declareFunction("implicit_storage", &PLearnServer::implicit_storage,
+                (BodyDoc("change the implicit_storage mode of the io of the PLearnServer instance.\n"),
+                 ArgDoc ("impl_stor", "Whether or not to use implicit_storage")));
+
+END_DECLARE_REMOTE_FUNCTIONS
+
 
 void PLearnServer::callFunction(const string& name, int nargs)
 {

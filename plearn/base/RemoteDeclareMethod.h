@@ -2,7 +2,7 @@
 
 // RemoteDeclareMethod.h
 //
-// Copyright (C) 2006 Nicolas Chapados
+// Copyright (C) 2006 Nicolas Chapados, Pascal Vincent
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -47,6 +47,7 @@
 #include "RemoteMethodMap.h"
 #include "RemoteMethodDoc.h"
 #include "RemoteTrampoline.h"
+#include <plearn/base/StaticInitializer.h>
 
 namespace PLearn {
 
@@ -56,6 +57,10 @@ namespace PLearn {
 //! This function returns the map in which all remote functions and static
 //! methods are to be registered (with declareFunction).
 RemoteMethodMap& getGlobalFunctionMap();
+
+
+#define BEGIN_DECLARE_REMOTE_FUNCTIONS static void declareRemoteFunctions() {
+#define END_DECLARE_REMOTE_FUNCTIONS } static StaticInitializer _remote_function_initializer_(&declareRemoteFunctions);
 
 // What follows is a bunch of 'declareFunction' overloads, each instantiating the
 // appropriate FRemoteTrampoline

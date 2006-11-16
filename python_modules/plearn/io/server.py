@@ -54,6 +54,20 @@ def connect_to_plearn_server(hostname, port, logger=None):
         
 class RemotePLearnServer:
 
+    def help(self, request):
+        print """
+        
+        Remote functions that are part of the online help system:
+        (Note: all ...name arguments must be strings)
+        
+        listFunctions()
+        listFunctionPrototypes()
+        helpFunction(functionname)
+        listMethods(classname)
+        listMethodPrototypes(classname)
+        helpMethod(classname, methodname)
+        """        
+
     def __init__(self, from_server, to_server, logger=None):
         """from_server and to_server are expected to be two file-like objects
         (supporting read, write, flush).
@@ -262,6 +276,11 @@ class RemotePLearnServer:
             return results[0]
         elif len(results)>1:
             return results
+
+    def __getattr__(self,functionname):
+        def f(*args):
+            return self.callFunction(functionname,*args)
+        return f
 
     def callMethod(self, objid, methodname, *args):
         self.sendMethodCallHeader(objid, methodname, len(args))

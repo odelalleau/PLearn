@@ -57,9 +57,10 @@ class PLearnServer
 {
 private:
 
+    static PLearnServer* instance;
+
     void callFunction(const string& name, int nargs);
     void printHelp();
-
 
 protected:
     typedef map<int, PP<Object> > ObjMap;
@@ -69,6 +70,7 @@ protected:
     ObjMap objmap;
 public:
     PLearnServer(const PStream& input_output);
+    ~PLearnServer();
 
     //! Enters the server loop which listens for commands and executes them.
     //! Returns false only if server kill command '!K' was issued
@@ -76,6 +78,22 @@ public:
     //! In principle this call does not throw any exception (exceptions are caught 
     //! inside the run loop and if possible transmitted to the client with a '!E' reply.)
     bool run();
+
+    static PLearnServer* getInstance();
+
+    // The following static methods are declared as remote functions (see .cc)
+
+    //! change directory (calls chdir)
+    static void cd(const string path);
+
+    //! change the mode of the io of the PLearnServer instance to plearn_binary 
+    static void binary();
+
+    //! change the mode of the io of the PLearnServer instance to plearn_ascii
+    static void ascii();
+
+    //! change the implicit_storage mode of the io of the PLearnServer instance.
+    static void implicit_storage(bool impl_stor);
 
 };
 

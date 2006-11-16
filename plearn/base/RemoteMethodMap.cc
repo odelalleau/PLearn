@@ -71,7 +71,52 @@ const RemoteTrampoline* RemoteMethodMap::lookup(const string& methodname, int ar
     else
         return 0;
 }
-                                                
+
+vector< pair<string, int> > RemoteMethodMap::getMethodList() const
+{
+    int n = size();
+    vector< pair<string,int> > flist(n);
+    RemoteMethodMap::MethodMap::const_iterator it = begin();
+    for(int i=0; i<n; ++i, ++it)
+        flist[i] = it->first;
+    return flist;
+}
+
+vector<string> RemoteMethodMap::getMethodPrototypes() const
+{
+    int n = size();
+    vector<string> prototypes(n);
+    RemoteMethodMap::MethodMap::const_iterator it = begin();
+    for(int i=0; i<n; ++i, ++it)
+        prototypes[i] = it->second->documentation().getPrototypeString();
+    return prototypes;
+}
+
+string RemoteMethodMap::getMethodHelpText(const string& methodname, int arity) const
+{
+    string txt;
+    if(arity>=0)
+    {
+        const RemoteTrampoline* tramp = lookup(methodname, arity, true);
+        if(tramp==0)
+            PLERROR("RemoteMethodMap contains no method %s with %d arguments",methodname.c_str(), arity);
+        txt = tramp->documentation().getFullHelpText();
+    }
+    else
+    {
+        RemoteMethodMap::MethodMap::const_iterator it = begin();
+        RemoteMethodMap::MethodMap::const_iterator itend = end();
+        for(; it!=itend; ++it)
+        {
+            if(it->first.first==methodname)
+                txt += it->second->documentation().getFullHelpText()+"\n";
+        }
+        if(txt=="")
+            txt = "** No method named "+methodname+ " **\n";
+    } 
+    return txt;
+}
+
 
 } // end of namespace PLearn
 

@@ -44,6 +44,7 @@
 #include <map>
 #include <string>
 #include <utility>
+#include <vector>
 
 // From PLearn
 #include "PP.h"
@@ -123,6 +124,11 @@ public:
         return m_inherited;
     }
 
+    int size() const
+    {
+        return m_methods.size();
+    }
+
     //! Return a begin-iterator to the elements
     MethodMap::const_iterator begin() const
     {
@@ -134,6 +140,21 @@ public:
     {
         return m_methods.end();
     }
+    
+    //! Returns a list of all methods in the given map as pairs of (funtionname, nargs)
+    vector< pair<string, int> > getMethodList() const;
+
+    //! Returns a list of the prototypes of all the methods in the given map
+    vector<string> getMethodPrototypes() const;
+
+    //! Returns full help on the specified method in the map.
+    //! If nargs is >=0 the call will launch an exception if no method
+    //! with the given name and arity (number of arguments) exists in the map.
+    //! If nargs is <0 the call will give full help about all 
+    //! registered methods with that name (whatever their arity),
+    //! or return the string "** No method named ... **"
+    string getMethodHelpText(const string& methodname, int arity=-1) const;
+    
 
 protected:
     MethodMap m_methods;                     //!< Set of methods at this level

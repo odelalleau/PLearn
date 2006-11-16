@@ -1,9 +1,8 @@
 // -*- C++ -*-
 
-// pl_repository_revision.cc
-//
-// Copyright (C) 2005 Nicolas Chapados 
-// 
+// RemoteMethodDoc.cc
+// Copyright (c) 2006 Pascal Vincent
+
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -32,59 +31,67 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
- ******************************************************* */
 
-// Authors: Nicolas Chapados
-
-/*! \file pl_repository_revision.cc */
-
-// Macro definitions used to transform the PL_REPOSITORY_REVISION variable
-// into a string. Taken from http://www.delorie.com/gnu/docs/gcc/cpp_17.html.
-#define TO_STRING(s) #s
-#define MACRO_TO_STRING(s) TO_STRING(s)
-
-#include "pl_repository_revision.h"
-#include <plearn/base/RemoteDeclareMethod.h>
+#include "RemoteMethodDoc.h"
+// #include "stringutils.h"    //!< For addprefix.
 
 namespace PLearn {
 using namespace std;
 
-////////////////////////////
-// pl_repository_revision //
-////////////////////////////
-string pl_repository_revision()
+void RemoteMethodDoc::checkConsistency() const
 {
-    // PL_REPOSITORY_REVISION is a command-line define from pymake.
-    return MACRO_TO_STRING(PL_REPOSITORY_REVISION);
+    int argdocsize = m_args_doc.size();
+    int argtypesize = m_args_type.size();
+    if(argdocsize != argtypesize)
+        PLERROR("Number of ArgDoc (%d) inconsistent with number of arguments (%d)",argdocsize,argtypesize);
+}
+    
+//! Returns a string repretenting the "prototype" (signature) of the function in the doc.
+//! Argsep is used a sthe separator between arguments (typically ", " or ",\n")
+string RemoteMethodDoc::getPrototypeString(string argsep) const
+{
+    string txt = returnType()+" "+name()+"(";
+    list<ArgDoc>::const_iterator arg;
+    list<ArgDoc>::const_iterator argbegin = argListDoc().begin();        
+    list<ArgDoc>::const_iterator argend = argListDoc().end();
+    list<string>::const_iterator argtype = argListType().begin();
+    for(arg=argbegin; arg!=argend; ++arg, ++argtype)
+    {
+        if(arg!=argbegin)
+            txt += argsep;
+        txt += *argtype+" "+arg->m_argument_name;
+    }
+    txt += ")";
+    return txt;
 }
 
-////////////////////////////////
-// pl_repository_compile_date //
-////////////////////////////////
-string pl_repository_compile_date()
+string RemoteMethodDoc::getFullHelpText() const
 {
-    return string(__DATE__);
+    int nargs = nArgs();
+    string txt = getPrototypeString() + "\n";
+    txt += bodyDoc() + "\n";
+    if(nargs==0)
+        txt += "TAKES NO ARGUMENTS.\n";
+    else
+    {
+        list<ArgDoc>::const_iterator arg = argListDoc().begin();        
+        list<ArgDoc>::const_iterator argend = argListDoc().end();
+        list<string>::const_iterator argtype = argListType().begin();
+        txt += "ARGUMENTS: \n";
+        for(; arg!=argend; ++arg, ++argtype)
+        {
+            txt += arg->m_argument_name + " : " 
+                +  *argtype + "\n"
+                +  arg->m_doc + "\n";
+        }
+    }
+    txt += "RETURNS: ";
+    txt += returnType() + "\n";
+    txt += returnDoc() + "\n";
+    return txt;
 }
-
-////////////////////////////////
-// pl_repository_compile_time //
-////////////////////////////////
-string pl_repository_compile_time()
-{
-    return string(__TIME__);
-}
-
-BEGIN_DECLARE_REMOTE_FUNCTIONS
-    declareFunction("pl_repository_revision", &pl_repository_revision,
-                    (BodyDoc("Return a string giving the version-control repository revision(s)\n"
-                             "with which this PLearn executable has been compiled.\n")));
-END_DECLARE_REMOTE_FUNCTIONS
 
 } // end of namespace PLearn
-
-
 
 
 /*

@@ -103,7 +103,10 @@ struct RemoteTrampoline : public PPointable
     RemoteTrampoline(const string& methodname, const RemoteMethodDoc& doc)
         : m_methodname(methodname),
           m_documentation(doc)
-    { }
+    {
+        m_documentation.setName(methodname);
+        m_documentation.checkConsistency();
+    }
 
     //! Documentation accessor
     const RemoteMethodDoc& documentation() const
