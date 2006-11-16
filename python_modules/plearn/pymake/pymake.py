@@ -83,6 +83,13 @@ Options that will not affect the final compiled file:
   -link: force relinking of the target, even if it is up to date.
   -local: do not use parallel compilation, even if there is a
           .pymake/<platform>.hosts file.
+  -local_ofiles: use parallel compilation, but copy all .o files
+                 to /tmp/.pymake/local_ofiles/... prior to linking;
+                 target is created locally and then copied to its
+                 final destination.
+                 N.B. you can set the local_ofiles_base_path global
+                 variable in your config file to use another path
+                 than /tmp/.pymake/local_ofiles/.
   -ssh: run compilation commands on remote hosts with ssh instead of rsh
         (default).
   -symlinkobjs: at link time, will create links to the used object files
@@ -90,6 +97,7 @@ Options that will not affect the final compiled file:
                 command line.
   -tmp[=tmp_dir]: compile all objects into a single directory (default is
                   /tmp/OBJS). This option currently implies '-local'.
+                  N.B. this option is not related to -local_ofiles.
   -v[...]: specify the verbosity level, '-vvv' is equivalent to '-v3'.
            1 -> get *** Running ... / ++++ Computing
            2 -> get Launched / Finished / Still waiting
