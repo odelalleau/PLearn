@@ -50,9 +50,16 @@ using namespace std;
 
 /** MaxVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(MaxVariable,
-                        "ONE LINE DESCR",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+    MaxVariable,
+    "Variable which returns the maximum value of its (single) input",
+    "This Variable always has a size of 1 element:\n"
+    "\n"
+    "   value(0,0) = max_i input[i]\n"
+    "\n"
+    "where input[i] is the i-th element of its input variable\n"
+    "(dimensionality does not matter; it's viewed as a long vector).");
+    "Note that this works with a single ");
 
 MaxVariable::MaxVariable(Variable* input)
     : inherited(input, 1, 1)

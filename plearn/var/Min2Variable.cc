@@ -36,65 +36,100 @@
 
 
 /* *******************************************************      
- * $Id$
+ * $Id: Min2Variable.cc 3994 2005-08-25 13:35:03Z chapados $
  * This file is part of the PLearn library.
  ******************************************************* */
 
-#include "ArgminVariable.h"
-#include "ElementAtPositionVariable.h"
-#include "MinVariable.h"
+#include "Min2Variable.h"
+#include "Var_operators.h"
 
 namespace PLearn {
 using namespace std;
 
 
-/** MinVariable **/
+/** Min2Variable **/
+
 
 PLEARN_IMPLEMENT_OBJECT(
-    MinVariable,
-    "Variable which returns the minimum value of its (single) input",
-    "This Variable always has a size of 1 element:\n"
+    Min2Variable,
+    "Elementwise minimum over two source variables",
+    "This variable assumes that the source variables have the same dimensionality\n"
+    "and it takes that dimensionality.  Its values are defined as the element-wise\n"
+    "minimum between its source variables:\n"
     "\n"
-    "   value(0,0) = min_i input[i]\n"
+    "  min(v1,v2)[i] = min(v1[i],v2[i])\n"
     "\n"
-    "where input[i] is the i-th element of its input variable\n"
-    "(dimensionality does not matter; it's viewed as a long vector).");
-    "Note that this works with a single ");
+    "with same dimensions as the input vectors");
 
-MinVariable::MinVariable(Variable* input)
-    : inherited(input, 1, 1) {}
-
-
-void MinVariable::recomputeSize(int& l, int& w) const
-{ l=1; w=1; }
-
-void MinVariable::fprop()
+Min2Variable::Min2Variable(Variable* input1, Variable* input2)
+    : inherited(input1, input2, input1->length(), input1->width())
 {
-    real minval = input->valuedata[0];
-    for(int i=1; i<input->nelems(); i++)
-    {
-        real val = input->valuedata[i];
-        if(val<minval)
-            minval = val;
-    }
-    valuedata[0] = minval;
+    PLASSERT( input1 && input2 );
+    build_();
 }
 
-
-void MinVariable::bprop()
+void
+Min2Variable::build()
 {
-    real minval = valuedata[0];
-    for(int i=0; i<input->nelems(); i++)
-    {
-        if(input->valuedata[i]==minval)
-            input->gradientdata[i] += gradientdata[0];
+    inherited::build();
+    build_();
+}
+
+void
+Min2Variable::build_()
+{
+    if (input1 && input2) {
+        if (input1->length() != input2->length()  ||  input1->width() != input2->width())
+            PLERROR("IN Min2Variable input1 and input2 must have the same size");
     }
 }
 
 
-void MinVariable::symbolicBprop()
+void Min2Variable::recomputeSize(int& l, int& w) const
 {
-    input->accg(new ElementAtPositionVariable(g, argmin(input), input->length(), input->width()));
+    if (input1) {
+        l = input1->length();
+        w = input1->width();
+    } else
+        l = w = 0;
+}
+
+void Min2Variable::fprop()
+{
+    PLASSERT( input1 && input2 );
+    int n=input1->value.length();
+    real* v1=input1->value.data();
+    real* v2=input2->value.data();
+    real* v=value.data();
+    for (int i=0;i<n;i++)
+        v[i] = std::min(v1[i],v2[i]);
+}
+
+
+void Min2Variable::bprop()
+{
+    PLASSERT( input1 && input2 );
+    int n=input1->value.length();
+    real* v1=input1->value.data();
+    real* v2=input2->value.data();
+    real* grad1=input1->gradient.data();
+    real* grad2=input2->gradient.data();
+    real* grad=gradient.data();
+    for (int i=0;i<n;i++)
+    {
+        if (v1[i]<v2[i])
+            grad1[i] += grad[i];
+        if (v2[i]<v1[i])
+            grad2[i] += grad[i];
+    }
+}
+
+
+void Min2Variable::symbolicBprop()
+{
+    PLASSERT( input1 && input2 );
+    input1->accg((input2<input1)*g);
+    input2->accg((input1<input2)*g);
 }
 
 

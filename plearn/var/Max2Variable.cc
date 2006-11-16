@@ -50,14 +50,21 @@ using namespace std;
 /** Max2Variable **/
 
 
-PLEARN_IMPLEMENT_OBJECT(Max2Variable,
-                        "Elementwise max over 2 elements: max(v1,v2)[i] = max(v1[i],v2[i]) "
-                        "with same dimensions as the input vectors",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+    Max2Variable,
+    "Elementwise maximum over two source variables",
+    "This variable assumes that the source variables have the same dimensionality\n"
+    "and it takes that dimensionality.  Its values are defined as the element-wise\n"
+    "maximum between its source variables:\n"
+    "\n"
+    "  max(v1,v2)[i] = max(v1[i],v2[i])\n"
+    "\n"
+    "with same dimensions as the input vectors");
 
 Max2Variable::Max2Variable(Variable* input1, Variable* input2)
     : inherited(input1, input2, input1->length(), input1->width())
 {
+    PLASSERT( input1 && input2 );
     build_();
 }
 
@@ -89,6 +96,7 @@ void Max2Variable::recomputeSize(int& l, int& w) const
 
 void Max2Variable::fprop()
 {
+    PLASSERT( input1 && input2 );
     int n=input1->value.length();
     real* v1=input1->value.data();
     real* v2=input2->value.data();
@@ -100,6 +108,7 @@ void Max2Variable::fprop()
 
 void Max2Variable::bprop()
 {
+    PLASSERT( input1 && input2 );
     int n=input1->value.length();
     real* v1=input1->value.data();
     real* v2=input2->value.data();
@@ -118,6 +127,7 @@ void Max2Variable::bprop()
 
 void Max2Variable::symbolicBprop()
 {
+    PLASSERT( input1 && input2 );
     input1->accg((input2<input1)*g);
     input2->accg((input1<input2)*g);
 }

@@ -36,70 +36,56 @@
 
 
 /* *******************************************************      
- * $Id$
+ * $Id: Min2Variable.h 4802 2006-01-17 20:55:56Z lheureup $
  * This file is part of the PLearn library.
  ******************************************************* */
 
-#include "ArgminVariable.h"
-#include "ElementAtPositionVariable.h"
-#include "MinVariable.h"
+#ifndef Min2Variable_INC
+#define Min2Variable_INC
+
+#include "BinaryVariable.h"
 
 namespace PLearn {
 using namespace std;
 
-
-/** MinVariable **/
-
-PLEARN_IMPLEMENT_OBJECT(
-    MinVariable,
-    "Variable which returns the minimum value of its (single) input",
-    "This Variable always has a size of 1 element:\n"
-    "\n"
-    "   value(0,0) = min_i input[i]\n"
-    "\n"
-    "where input[i] is the i-th element of its input variable\n"
-    "(dimensionality does not matter; it's viewed as a long vector).");
-    "Note that this works with a single ");
-
-MinVariable::MinVariable(Variable* input)
-    : inherited(input, 1, 1) {}
-
-
-void MinVariable::recomputeSize(int& l, int& w) const
-{ l=1; w=1; }
-
-void MinVariable::fprop()
+/*!   elementwise min over 2 elements:
+  min(v1,v2)[i] = min(v1[i],v2[i])
+  with same dimensions as the input vectors
+  (both must have same length())
+*/
+class Min2Variable: public BinaryVariable
 {
-    real minval = input->valuedata[0];
-    for(int i=1; i<input->nelems(); i++)
-    {
-        real val = input->valuedata[i];
-        if(val<minval)
-            minval = val;
-    }
-    valuedata[0] = minval;
-}
+    typedef BinaryVariable inherited;
 
+public:
+    //!  Default constructor for persistence
+    Min2Variable() {}
+    Min2Variable(Variable* input1, Variable* input2);
 
-void MinVariable::bprop()
-{
-    real minval = valuedata[0];
-    for(int i=0; i<input->nelems(); i++)
-    {
-        if(input->valuedata[i]==minval)
-            input->gradientdata[i] += gradientdata[0];
-    }
-}
+    PLEARN_DECLARE_OBJECT(Min2Variable);
 
+    virtual void build();
 
-void MinVariable::symbolicBprop()
-{
-    input->accg(new ElementAtPositionVariable(g, argmin(input), input->length(), input->width()));
-}
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 
+protected:
+    void build_();
+};
 
+DECLARE_OBJECT_PTR(Min2Variable);
+
+#ifdef min
+#undef min
+#endif
+inline Var min(Var v1, Var v2)
+{ return new Min2Variable(v1,v2); }
 
 } // end of namespace PLearn
+
+#endif 
 
 
 /*
