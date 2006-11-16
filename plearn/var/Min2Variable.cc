@@ -128,8 +128,8 @@ void Min2Variable::bprop()
 void Min2Variable::symbolicBprop()
 {
     PLASSERT( input1 && input2 );
-    input1->accg((input2<input1)*g);
-    input2->accg((input1<input2)*g);
+    input1->accg((input1<input2)*g);
+    input2->accg((input2<input1)*g);
 }
 
 

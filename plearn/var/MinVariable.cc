@@ -59,7 +59,6 @@ PLEARN_IMPLEMENT_OBJECT(
     "\n"
     "where input[i] is the i-th element of its input variable\n"
     "(dimensionality does not matter; it's viewed as a long vector).");
-    "Note that this works with a single ");
 
 MinVariable::MinVariable(Variable* input)
     : inherited(input, 1, 1) {}
