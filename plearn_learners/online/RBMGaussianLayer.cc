@@ -279,10 +279,6 @@ void RBMGaussianLayer::accumulateNegStats( const Vec& neg_values )
 
 void RBMGaussianLayer::update()
 {
-/*    pout << "----" << endl
-        << "a = " << quad_coeff << endl
-        << "b = " << bias << endl;
-*/
     // quad_coeff -= learning_rate * (quad_coeff_pos_stats/pos_count
     //                                - quad_coeff_neg_stats/neg_count)
     real pos_factor = -learning_rate / pos_count;
@@ -315,20 +311,15 @@ void RBMGaussianLayer::update()
         }
     }
 
+    // We will need to recompute sigma
+    sigma_is_up_to_date = false;
+
     // will update the bias, and clear the statistics
     inherited::update();
-/*    pout << "-" << endl
-        << "a = " << quad_coeff << endl
-        << "b = " << bias << endl;
-*/
 }
 
 void RBMGaussianLayer::update( const Vec& pos_values, const Vec& neg_values)
 {
-/*    pout << "----" << endl
-        << "a = " << quad_coeff << endl
-        << "b = " << bias << endl;
-*/
     // quad_coeff[i] -= learning_rate * 2 * quad_coeff[i] * (pos_values[i]^2
     //                                                       - neg_values[i]^2)
     real two_lr = 2 * learning_rate;
@@ -359,13 +350,11 @@ void RBMGaussianLayer::update( const Vec& pos_values, const Vec& neg_values)
         }
     }
 
+    // We will need to recompute sigma
+    sigma_is_up_to_date = false;
+
     // update the bias
     inherited::update( pos_values, neg_values );
-/*
-    pout << "-" << endl
-        << "a = " << quad_coeff << endl
-        << "b = " << bias << endl;
-*/
 }
 
 } // end of namespace PLearn
