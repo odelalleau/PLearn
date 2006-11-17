@@ -282,6 +282,13 @@ protected:
     Var hiddenLayer(const Var& input, const Var& weights, string transfer_func, 
                     Var& before_transfer_function, bool use_cubed_value=false);
 
+    //! Return a variable that is the hidden layer corresponding to given
+    //! input and weights. If the 'default' transfer_func is used, we use the
+    //! hidden_transfer_func option.
+    Var hiddenLayer(const Var& input, const Var& weights, const Var& bias, 
+                    bool transpose_weights, string transfer_func, 
+                    Var& before_transfer_function, bool use_cubed_value=false);
+
     //! Build the output of the neural network, from the given input.
     //! The hidden layer is also made available in the 'hidden_layer' parameter.
     //! The output before the transfer function is applied is also made

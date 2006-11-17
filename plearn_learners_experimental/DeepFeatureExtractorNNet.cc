@@ -45,6 +45,7 @@
 #include <plearn/var/AffineTransformVariable.h>
 #include <plearn/var/SourceVariable.h>
 #include <plearn/var/AffineTransformWeightPenalty.h>
+#include <plearn/var/BiasWeightAffineTransformVariable.h>
 #include <plearn/var/BinaryClassificationLossVariable.h>
 #include <plearn/var/ClassificationLossVariable.h>
 #include <plearn/var/ConcatColumnsVariable.h>
@@ -366,6 +367,7 @@ void DeepFeatureExtractorNNet::build_()
             if(use_same_input_and_output_weights)
             {
                 Var b = new SourceVariable(1,inputsize());
+                b->setName("b0");
                 b->value.clear();
                 biases.push_back(b);
             }
@@ -435,6 +437,7 @@ void DeepFeatureExtractorNNet::build_()
                     Var w_weights = new SourceVariable(
                         output->size(),
                         nhidden_schedule[nhidden_schedule_current_position]);
+                    w_weights->setName("w" + tostring(nhidden_schedule_current_position+1));
                     weights.push_back(w_weights);
                     fillWeights(w_weights,false);
                     params.push_back(w_weights);
@@ -443,12 +446,16 @@ void DeepFeatureExtractorNNet::build_()
                     // Bias
                     Var w_biases = new SourceVariable(
                         1,nhidden_schedule[nhidden_schedule_current_position]);
+                    w_biases->setName("b" + tostring(nhidden_schedule_current_position+1));
                     biases.push_back(w_biases);
                     w_biases->value.clear();
                     params.push_back(w_biases);
                     params_to_train.push_back(w_biases);
 
-                    w = vconcat(w_biases & w_weights);
+                    //w = vconcat(w_biases & w_weights);
+                    output = hiddenLayer(
+                        output,w_weights,w_biases,false,"sigmoid",
+                        before_transfer_function,use_activations_with_cubed_input);
                 }
                 else // ... or have different set of weights.
                 {
@@ -456,15 +463,16 @@ void DeepFeatureExtractorNNet::build_()
                     w = new SourceVariable(
                         output->size()+1,
                         nhidden_schedule[nhidden_schedule_current_position]);
+                    w->setName("wb" + tostring(nhidden_schedule_current_position+1));
                     weights.push_back(w);
                     fillWeights(w,true,0);            
                     params.push_back(w);
                     params_to_train.push_back(w);
+                    output = hiddenLayer(
+                        output,w,"sigmoid",
+                        before_transfer_function,use_activations_with_cubed_input);
                 }
 
-                output = hiddenLayer(
-                    output,w,"sigmoid",
-                    before_transfer_function,use_activations_with_cubed_input);
                 hidden_representation = output;
             }
 
@@ -491,6 +499,7 @@ void DeepFeatureExtractorNNet::build_()
                             "building the output layer but noutputs<=0");
 
                 Var w = new SourceVariable(output->size()+1,noutputs);
+                w->setName("wbout");
                 fillWeights(w,true,0);
             
                 // If all hidden layers have been added, these weights
@@ -532,17 +541,40 @@ void DeepFeatureExtractorNNet::build_()
                 // Add reconstruction/auto-associator layers until last layer
                 // is reached, or until input reconstruction is reached
                 // if always_reconstruct_input is true
+                string rec_trans_func = "some_transfer_func";
                 while((!always_reconstruct_input && n_added_layers > 0) 
                       || (always_reconstruct_input && it<weights.size()))
-                {
+                {                    
                     n_added_layers--;
                     it++;                
-                    Var rw;
+
+                    if((always_reconstruct_input 
+                        && nhidden_schedule_current_position-it == -1) 
+                       || nhidden_schedule_current_position == 0)
+                    {
+                        if(input_reconstruction_error == "cross_entropy")
+                            rec_trans_func = "sigmoid";
+                        else if (input_reconstruction_error == "mse")
+                            rec_trans_func = "linear";
+                        else PLERROR("In DeepFeatureExtractorNNet::build_(): %s "
+                                     "is not a valid reconstruction error", 
+                                     input_reconstruction_error.c_str());
+                    }
+                    else
+                        rec_trans_func = "sigmoid";
+
                     if(use_same_input_and_output_weights)
-                        rw = vconcat(biases[biases.size()-it-1] 
-                                     & transpose(weights[weights.size()-it]));
+                    {
+                        output =  hiddenLayer(
+                            output,weights[weights.size()-it],
+                            biases[biases.size()-it-1], 
+                            true, rec_trans_func,
+                            before_transfer_function,
+                            use_activations_with_cubed_input);
+                    }
                     else
                     {
+                        Var rw;
                         if(nhidden_schedule_current_position-it == -1)
                             rw  = new SourceVariable(output->size()+1,inputsize());
                         else
@@ -551,36 +583,14 @@ void DeepFeatureExtractorNNet::build_()
                                 nhidden_schedule[
                                     nhidden_schedule_current_position-it]);
                         reconstruction_weights.push_back(rw);
+                        rw->setName("rwb" + tostring(nhidden_schedule_current_position-it+1));
                         fillWeights(rw,true,0);
                         params_to_train.push_back(rw);
-                    }
-                
-                    if((always_reconstruct_input 
-                        && nhidden_schedule_current_position-it == -1) 
-                       || nhidden_schedule_current_position == 0)
-                    {
-                        if(input_reconstruction_error == "cross_entropy")
-                            output = hiddenLayer(
-                                output,rw,"sigmoid",
-                                before_transfer_function,
-                                //use_activations_with_cubed_input);
-                                false);
-                        else if (input_reconstruction_error == "mse")
-                            output = hiddenLayer(
-                                output,rw,"linear",
-                                before_transfer_function,
-                                //use_activations_with_cubed_input);
-                                false);
-                        else PLERROR("In DeepFeatureExtractorNNet::build_(): %s "
-                                     "is not a valid reconstruction error", 
-                                     input_reconstruction_error.c_str());
-                    }
-                    else
-                        output = hiddenLayer(
-                            output,rw,"sigmoid",
+                        output =  hiddenLayer(
+                            output,rw, rec_trans_func,
                             before_transfer_function,
-                            //use_activations_with_cubed_input);
-                            false);
+                            use_activations_with_cubed_input);
+                    }                
                 }         
             }
 
@@ -846,6 +856,7 @@ void DeepFeatureExtractorNNet::train()
 
     //displayFunction(paramf, true, false, 250);
     //cout << params_to_train.size() << " params to train" << endl;
+    //cout << params.size() << " params" << endl;
     int initial_stage = stage;
     real last_error = REAL_MAX;
     real this_error = 0;
@@ -902,6 +913,7 @@ void DeepFeatureExtractorNNet::train()
         build();
         train();
     }
+    //PLERROR("fuck");
 }
 
 void DeepFeatureExtractorNNet::computeOutput(const Vec& input, Vec& output) const
@@ -1242,6 +1254,42 @@ Var DeepFeatureExtractorNNet::hiddenLayer(const Var& input,
                                           Var& before_transfer_function, 
                                           bool use_cubed_value) {
     Var hidden = affine_transform(input, weights); 
+    if(use_cubed_value)
+        hidden = pow(hidden,3);    
+    before_transfer_function = hidden;
+    Var result;
+    if(transfer_func=="linear")
+        result = hidden;
+    else if(transfer_func=="tanh")
+        result = tanh(hidden);
+    else if(transfer_func=="sigmoid")
+        result = sigmoid(hidden);
+    else if(transfer_func=="softplus")
+        result = softplus(hidden);
+    else if(transfer_func=="exp")
+        result = exp(hidden);
+    else if(transfer_func=="softmax")
+        result = softmax(hidden);
+    else if (transfer_func == "log_softmax")
+        result = log_softmax(hidden);
+    else if(transfer_func=="hard_slope")
+        result = unary_hard_slope(hidden,0,1);
+    else if(transfer_func=="symm_hard_slope")
+        result = unary_hard_slope(hidden,-1,1);
+    else
+        PLERROR("In DeepFeatureExtractorNNet::hiddenLayer - "
+                "Unknown value for transfer_func: %s",transfer_func.c_str());
+    return result;
+}
+
+Var DeepFeatureExtractorNNet::hiddenLayer(const Var& input, 
+                                          const Var& weights, const Var& bias, 
+                                          bool transpose_weights,
+                                          string transfer_func, 
+                                          Var& before_transfer_function, 
+                                          bool use_cubed_value) {
+    Var hidden = bias_weight_affine_transform(input, weights, 
+                                              bias,transpose_weights); 
     if(use_cubed_value)
         hidden = pow(hidden,3);    
     before_transfer_function = hidden;
