@@ -1,0 +1,192 @@
+#!/usr/bin/env python
+import os, sys
+from math import *
+from numarray import *
+from plearn.vmat.PMat import *
+from plearn.utilities.pldatetime import *
+
+def augmented_pmat(pmat_path):
+    pmat = PMat(pmat_path, 'r')
+    fieldnames = pmat.fieldnames + [
+        "ADJPRC", "DRET", "LOGDRET", "MRET", "LOGMRET" ]
+    augmented  = array(type=Float64, shape=(pmat.length, len(fieldnames)))
+    augmented[:,:pmat.width] = pmat # Copy the original data
+
+    d   = pmat.fieldnames.index('DATE')    
+
+    # Individual Stock
+    prc = pmat.fieldnames.index('PRC')
+    adj = pmat.fieldnames.index('CFACPR')
+    compute_returns(pmat, augmented, d, prc, adj)        
+
+    # Override the pmat with the augmented one
+    pmat.close()
+    save_array_as_pmat(pmat_path, augmented, fieldnames)
+
+def merged_augmented_pmat(daily_path, monthly_pmat_path):
+    daily   = PMat(daily_path, 'r')
+    monthly = PMat(monthly_pmat_path, 'r')
+    assert daily.width == monthly.width
+
+    dd = daily.fieldnames.index('DATE')
+    md = monthly.fieldnames.index('caldt')
+    assert dd==md
+    
+    # Adding log returns; do not replicate the date
+    fieldnames = []
+    for f, fieldname in enumerate(daily.fieldnames):
+        if fieldname=="DATE":
+            fieldnames.append("DATE")
+        else:
+            mfieldname = monthly.fieldnames[f]
+            assert fieldname==mfieldname.upper()
+            fieldnames.append(fieldname)
+            fieldnames.append("LOG%s"%fieldname)
+            fieldnames.append(mfieldname) 
+            fieldnames.append("log%s"%mfieldname)           
+    augmented = array(type=Float64, shape=(daily.length, len(fieldnames)))
+
+
+    mrow  = 0
+    mylog = lambda ret : (ret < 1e-06 and float('nan')) or log(ret)
+    for r, row in enumerate(daily):
+        date = row[dd]
+        try:
+            mdate = monthly[mrow, md]
+        except IndexError:
+            mdate = -1
+            
+        augmented[r, 0] = date
+        for c, col in enumerate(row):
+            if c==0:
+                augmented[r, 0] = date
+                continue
+
+            augc = 1 + 4*(c-1)
+            dret = row[c]
+            augmented[r, augc]   = dret           # Daily return 
+            augmented[r, augc+1] = mylog(1+dret)  # Daily log return 
+            
+            if mdate == date:
+                mret = monthly[mrow, c]
+                augmented[r, augc+2] = mret          # Monthly return 
+                augmented[r, augc+3] = mylog(1+mret) # Monthly log return 
+                mrow += 1
+            else:
+                augmented[r, augc+2] = float('nan')  # Monthly return 
+                augmented[r, augc+3] = float('nan')  # Monthly log return
+
+    daily.close()
+    monthly.close()
+    save_array_as_pmat(daily_path, augmented, fieldnames)                
+
+def compute_returns(pmat, augmented, d, prc, adj):
+    prev_price       = float('nan')
+    prev_month       = None
+    prev_month_price = float('nan')
+
+    for r, row in enumerate(pmat):
+        w = pmat.width
+
+        date       = yyyymmdd_to_date(row[d])
+        price      = row[prc]
+        adjustment = row[adj]
+
+        if price < 1e-3:
+            price = pmat[r-1,prc]
+            adjustment = pmat[r-1,adj]
+            
+        # ADJPRC
+        adjusted_price = price / adjustment
+        augmented[r,w] = adjusted_price
+        w += 1
+
+        # DRET
+        augmented[r,w] = adjusted_price/prev_price - 1.0
+        w += 1
+
+        # LOGDRET
+        augmented[r,w] = log(adjusted_price) - log(prev_price)
+        w += 1
+
+        if prev_month is None or month_delta(date, prev_month)==1:            
+            # MRET
+            augmented[r,w]   = adjusted_price/prev_month_price - 1.0
+            w += 1
+
+            # LOGMRET
+            augmented[r,w]   = log(adjusted_price) - log(prev_month_price)
+            w += 1
+            
+            prev_month       = date
+            prev_month_price = adjusted_price
+        else:
+            # MRET
+            augmented[r,w]   = float('nan')
+            w += 1
+
+            # LOGMRET
+            augmented[r,w]   = float('nan')
+            w += 1
+
+        # Memoize the (adjusted) price observation
+        prev_price = adjusted_price
+
+def crsp_to_amat(crsp_path):
+    amat_path = crsp_path.replace('crsp', 'amat')
+    crsp = open(crsp_path, 'r')
+    amat = open(amat_path, 'w')
+
+    fieldnames = True
+    for line in crsp:
+        if line.strip() != '':
+            if fieldnames:
+                amat.write("#:%s"%line)
+                fieldnames = False
+            else:
+                amat.write(line)
+    crsp.close()
+    amat.close()                
+    return amat_path
+
+def month_delta(now, past):
+    year_delta  = now.year - past.year
+    month_delta = now.month -  past.month
+    return month_delta + 12*year_delta
+
+if __name__ == "__main__":
+    crsp = []
+    if len(sys.argv) > 1:
+        assert len(sys.argv) == 2
+        crsp = [ sys.argv[1] ]
+    else:
+        dirlist = os.listdir(os.getcwd())
+        for fname in dirlist:
+            if fname.endswith(".crsp"):
+                crsp.append(fname)
+
+    for fname in crsp:
+        print "Converting", fname        
+        amat_path = crsp_to_amat(fname)
+        pmat_path = amat_path.replace('amat', 'pmat')
+        os.system('plearn vmat convert %s %s'%(amat_path, pmat_path))
+        try:            
+            # Individual Stock
+            augmented_pmat(pmat_path)
+        except ValueError:
+            # Market Index
+            monthly = fname+'M'
+            assert os.path.exists(monthly)
+            monthly_amat_path = crsp_to_amat(monthly)
+
+            # amatM is an invalid vmat extension...
+            os.system("mv %s Monthly%s"%(monthly_amat_path, monthly_amat_path[:-1]))
+            monthly_amat_path = "Monthly%s"%monthly_amat_path[:-1]
+
+            monthly_pmat_path = monthly_amat_path.replace('amat', 'pmat')
+            print monthly_amat_path, '->', monthly_pmat_path
+            os.system('plearn vmat convert %s %s'%(
+                monthly_amat_path, monthly_pmat_path))
+            merged_augmented_pmat(pmat_path, monthly_pmat_path)
+            os.system("rm -rf %s*"%monthly_pmat_path) # Remove the monthly pmat...
+        print
