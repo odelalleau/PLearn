@@ -12,7 +12,7 @@ def augmented_pmat(pmat_path):
     augmented  = array(type=Float64, shape=(pmat.length, len(fieldnames)))
     augmented[:,:pmat.width] = pmat # Copy the original data
 
-    d   = pmat.fieldnames.index('DATE')    
+    d = pmat.fieldnames.index('DATE')    
 
     # Individual Stock
     prc = pmat.fieldnames.index('PRC')
@@ -53,6 +53,7 @@ def merged_augmented_pmat(daily_path, monthly_pmat_path):
         date = row[dd]
         try:
             mdate = monthly[mrow, md]
+            #print date, mdate, "(%d)"%mrow, (mdate == date)
         except IndexError:
             mdate = -1
             
@@ -71,10 +72,12 @@ def merged_augmented_pmat(daily_path, monthly_pmat_path):
                 mret = monthly[mrow, c]
                 augmented[r, augc+2] = mret          # Monthly return 
                 augmented[r, augc+3] = mylog(1+mret) # Monthly log return 
-                mrow += 1
             else:
                 augmented[r, augc+2] = float('nan')  # Monthly return 
                 augmented[r, augc+3] = float('nan')  # Monthly log return
+
+        if mdate == date:
+            mrow += 1
 
     daily.close()
     monthly.close()
