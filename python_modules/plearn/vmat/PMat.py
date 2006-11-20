@@ -245,7 +245,7 @@ class PMat( VMat ):
             self.load_fieldnames()
 
         else:
-            raise ValueError("Currently only supported openmodes are 'r' and 'w': "+repr(openmode)+" is not supported")
+            raise ValueError("Currently only supported openmodes are 'r', 'w' and 'a': "+repr(openmode)+" is not supported")
 
         if array is not None:
             shape  = array.getshape()
