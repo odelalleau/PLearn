@@ -28,9 +28,10 @@ def twikiTable(table, headers=[], writer=DEFAULT_WRITER):
     for line in table:
         twikiTableLine(line, writer=writer)
 
-def latexTable(table, headers=[],
-               align="", padding=0.5, caption="", label="",
-               fontsize="", writer=DEFAULT_WRITER):
+def latexTable(table, headers=[], 
+               align="", super_headers=[],
+               padding=0.5, vpadding=0.0, caption="", label="",
+               fontsize="", landscape=False, writer=DEFAULT_WRITER):
     lwriter = lambda line : writer("%s\n"%line)
     if align:
         assert len(align)==len(table[0]), "%d != %d"%(len(align), len(table[0])) 
@@ -38,19 +39,31 @@ def latexTable(table, headers=[],
         align = "c"*len(table[0])
 
     if padding:
-        padded = "%s@{\\hspace{%.3fcm}}"%(align[0],padding)
+        vpad = ""
+        if vpadding > 0:
+            vpad = r"\raisebox{%.3fcm}{\rule{0pt}{%.3fcm}}"%(-0.5*vpadding, vpadding)
+            
+        padded = r"%s@{\hspace{%.3fcm}%s}"%(align[0],padding,vpad)        
         for a in align[1:-1]:
             padded += "%s@{\\hspace{%.3fcm}}"%(a,2*padding)
         if len(align) > 1:
             padded += "%s@{\\hspace{%.3fcm}}"%(align[-1],padding)
         align = padded    
-        
-    lwriter("\\begin{table}[!htp]")
+
+    if landscape:
+        lwriter(r"\begin{landscape}")
+        lwriter(r"\addtocounter{@inlandscapetable}{1}")
+    lwriter("\\begin{table}")
+    
     lwriter("\\begin{center}")
     if fontsize:
         lwriter(fontsize)
     lwriter("\\begin{tabular}{%s}"%align)
     
+    if super_headers:
+        writer("  ")
+        latexTableLine(super_headers, writer)
+
     if headers:
         writer("  ")
         latexTableLine(headers, writer)
@@ -67,18 +80,25 @@ def latexTable(table, headers=[],
     lwriter("\\hline")
        
     lwriter("\\end{tabular}")
+    lwriter("\\end{center}")
     if caption:
         lwriter("    \\tabcaption{%s}"%caption)
     if label:
         lwriter("    \\label{table:%s}"%label)
-    lwriter("\\end{center}")
+
     lwriter("\\end{table}")                
+    if landscape:
+        lwriter(r"\addtocounter{@inlandscapetable}{-1}")
+        lwriter(r"\end{landscape}")
 
 def latexTableLine(line, writer=DEFAULT_WRITER):
-    for elem in line[:-1]:
-        if elem is not None: # For \multicolumn...
-            writer(" %s &"%elem)
-    writer(" %s \\\\ \n"%line[-1])
+    handling_multicol = [] # For \multicolumn...
+    for elem in line: 
+        if elem is None:
+            assert handling_multicol and handling_multicol[-1].find("multicol") != -1
+        else:
+            handling_multicol.append(elem)
+    writer('&'.join(handling_multicol) + r"\\" + "\n")
 
 def strictlyUpperTriangularTable(table, headers=[], format="%s"):
     """Returns a table of strings and modified headers suitable for latex/twikiTable.
@@ -116,3 +136,38 @@ def strictlyUpperTriangularTable(table, headers=[], format="%s"):
         formatted.append(formatted_row)
 
     return formatted, ['']+headers[1:]
+
+def sideBySideTables(tables, headers, shared_headers):
+    """Puts tables side by side in a single table.
+
+    Tables are to be provided as a list ('tables') and 'headers' must be a
+    list of lists of headers. The shared headers will be written only once
+    at the begging of the merged table.
+    """
+    rows = len(tables[0])    
+    columns = len(headers[0])
+    shared_columns = len(shared_headers)
+    
+    merged_table = []
+    for r in range(rows):
+        row = tables[0][r]
+        if isinstance(row, str): # Single string is wrote as is...
+            merged_table.append(row)
+            continue
+        
+        merged_row = list(row[:shared_columns])
+        for table in tables:
+            row = table[r]            
+            merged_row.extend( row[shared_columns:] )
+            merged_row.append("")
+        assert merged_row.pop()=="" # Don't add empty col after last table
+        merged_table.append(merged_row)
+
+    merged_headers = list(shared_headers)
+    for hdrs in headers:
+        merged_headers.extend(hdrs[shared_columns:])
+        merged_headers.append("")
+    assert merged_headers.pop()=="" # Don't add empty col after last table
+
+    return merged_table, merged_headers
+        

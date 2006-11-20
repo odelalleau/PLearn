@@ -1,4 +1,4 @@
-import pylab
+import pylab, os
 from plearn.report import GRID_COL, FONTSIZE, LEGEND_FONTPROP, TICK_LABEL_FONTPROP
 
 LEFT, WIDTH = 0.125, 0.8
@@ -9,7 +9,7 @@ __figure_counter = 0
 def getNewFigure():
     global __figure_counter
     __figure_counter += 1
-    return pylab.figure(__figure_counter)
+    return pylab.figure(__figure_counter, figsize=(12,10))
 
 def getBounds(frame):
     return [ frame.get_x(), frame.get_y(), frame.get_width(), frame.get_height() ]
@@ -17,11 +17,11 @@ def getBounds(frame):
 def getWideRect(bottom, height):
     return [ LEFT, bottom, WIDTH, height ]
 
-def setLegend(axes, legend_map, sorted_keys=None):
+def setLegend(axes, legend_map, sorted_keys=None, loc=0):
     if not sorted_keys:
         sorted_keys = legend_map.keys(); sorted_keys.sort()
     values = [ legend_map[k] for k in sorted_keys ]
-    legend = axes.legend(values, sorted_keys, loc=0, shadow=True)
+    legend = axes.legend(values, sorted_keys, loc=loc, shadow=True)
     legend.set_zorder(100)
 
 class Struct(dict):
@@ -44,8 +44,6 @@ class AxisLimits:
         self.max = max(limits[1], self.max)    
 
 class FigureWrapper(object):
-    SAVE = True
-    
     def __init__(self):
         self.figure = getNewFigure()
 
@@ -54,28 +52,21 @@ class FigureWrapper(object):
         axes.getRectangle = lambda : rect
         return axes
 
-    def publish(self, path):
-        if self.SAVE:
-            self.figure.savefig(path, dpi=600)
+    def publish(self, path=""):
+        if path:
+            if path.endswith('.pdf'):
+                eps_path = path.replace('.pdf','.eps')
+                self.figure.savefig(eps_path, dpi=600)
+                os.system("epstopdf %s; rm -f %s"%(eps_path,eps_path))
+            else:
+                self.figure.savefig(path, dpi=600)
 
         fp = TICK_LABEL_FONTPROP
         for axes in self.figure.get_axes():
             for label in axes.get_xticklabels():
                 label.set_fontproperties(fp)
             for label in axes.get_yticklabels():
-                label.set_fontproperties(fp)
-            
-    def show(cls):
-        if not cls.SAVE:
-            pylab.show()
-    show = classmethod(show)
-
-    def toggleSave(cls, save=None):
-        if isinstance(save, bool):
-            cls.SAVE = save
-        else:
-            cls.SAVE = not cls.SAVE
-    toggleSave = classmethod(toggleSave)
+                label.set_fontproperties(fp)            
 
 class TwoFramesFigure(FigureWrapper):
     def __init__(self,
