@@ -176,7 +176,7 @@ void RBMLayer::getUnitActivation( int i, PP<RBMConnection> rbmc, int offset )
 {
     Vec act = activation.subVec(i,1);
     rbmc->computeProduct( i+offset, 1, act );
-    act[0] += bias[0];
+    act[0] += bias[i];
     expectation_is_up_to_date = false;
 }
 
