@@ -73,6 +73,7 @@ public:
 
     PLEARN_DECLARE_OBJECT(BiasWeightAffineTransformVariable);
 
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
     virtual void build();
 
     virtual void recomputeSize(int& l, int& w) const;

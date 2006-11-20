@@ -64,6 +64,16 @@ BiasWeightAffineTransformVariable::BiasWeightAffineTransformVariable(
     build_();
 }
 
+void 
+BiasWeightAffineTransformVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    varDeepCopyField(vec, copies);
+    varDeepCopyField(weights, copies);
+    varDeepCopyField(bias, copies);
+}
+
+
 void
 BiasWeightAffineTransformVariable::build()
 {
