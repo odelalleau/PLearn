@@ -306,7 +306,7 @@ void PCA::classical_algo( )
 {  
     if ( ncomponents > train_set->inputsize() ) {
         ncomponents = train_set->inputsize();
-        MODULE_LOG
+        IMP_MODULE_LOG
             << "PCA::train: You asked for " << ncomponents
             << "components, but the training set inputsize is only "
             << train_set->inputsize()
