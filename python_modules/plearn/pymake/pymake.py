@@ -292,17 +292,13 @@ def copyfile_verbose(src, dst):
     shutil.copy2(src, dst)
 
 def copy_ofiles_locally(executables_to_link):
-    print '++++ Copying ofiles locally for ', string.join(map(lambda x: x.filebase, executables_to_link.keys()))
+    print '++++ Copying ofiles locally for ', string.join(map(lambda x: x.filebase, executables_to_link)) 
     files_to_copy= []
-    #find other ofiles to copy
-    for e in executables_to_link.keys():
-        print "Waiting for NFS..."
-        e.nfs_wait_for_all_linkable_ofiles()
+    for e in executables_to_link: 
         for f in e.get_object_files_to_link():
             lf= local_filepath(f)
             if mtime(f) > mtime(lf):
                 files_to_copy+= [f]
-                
     for f in files_to_copy:
         lf= local_filepath(f)
         ldir= os.path.dirname(lf)
@@ -941,9 +937,10 @@ def sequential_link(executables_to_link, linkname):
             print '   '+string.join(failures,'\n   ')
             return 1
         else:
-            if not local_ofiles:
-                print 'Waiting for NFS to catch up...'
-                ccfile.nfs_wait_for_all_linkable_ofiles()
+            print 'Waiting for NFS to catch up...'
+            ccfile.nfs_wait_for_all_linkable_ofiles()
+            if local_ofiles:
+                copy_ofiles_locally(executables_to_link)
             if verbose>=2:
                 print '[ LINKING',ccfile.filebase,']'
             link_exit_code = ccfile.launch_linking()
@@ -2624,9 +2621,6 @@ def main( args ):
                 parallel_compile(ccfiles_to_compile.keys())
 
             if force_link or (executables_to_link.keys() and not create_dll):
-                if local_ofiles:
-                    copy_ofiles_locally(executables_to_link)
-
                 print '++++ Linking', string.join(map(lambda x: x.filebase, executables_to_link.keys()))
                 ret = sequential_link(executables_to_link.keys(),linkname)
                 if ret != 0:
