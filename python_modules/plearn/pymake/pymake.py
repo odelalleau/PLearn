@@ -268,7 +268,8 @@ def unique(l):
 mtime_map = {}
 
 def forget_mtime(filepath):
-    del mtime_map[filepath]
+    try: del mtime_map[filepath]
+    except: pass
 
 def mtime(filepath):
     "a buffered os.path.getmtime"
@@ -291,20 +292,31 @@ def copyfile_verbose(src, dst):
     print ("[ COPYING\t" + src + "\n  -->\t\t" + dst + " ]")
     shutil.copy2(src, dst)
 
-def copy_ofiles_locally(executables_to_link):
-    print '++++ Copying ofiles locally for ', string.join(map(lambda x: x.filebase, executables_to_link)) 
+def copy_ofile_locally(f):
+    lf= local_filepath(f)
+    ldir= os.path.dirname(lf)
+    if not os.path.isdir(ldir):
+        os.makedirs(ldir)
+    copyfile_verbose(f, lf)
+
+def get_ofiles_to_copy(executables_to_link):
+    if not local_ofiles:
+        return []
     files_to_copy= []
     for e in executables_to_link: 
         for f in e.get_object_files_to_link():
+            forget_mtime(f)
             lf= local_filepath(f)
+            forget_mtime(lf)
             if mtime(f) > mtime(lf):
                 files_to_copy+= [f]
+    return files_to_copy
+
+def copy_ofiles_locally(executables_to_link):
+    print '++++ Copying remaining ofiles locally for ', string.join(map(lambda x: x.filebase, executables_to_link)) 
+    files_to_copy= get_ofiles_to_copy(executables_to_link)
     for f in files_to_copy:
-        lf= local_filepath(f)
-        ldir= os.path.dirname(lf)
-        if not os.path.isdir(ldir):
-            os.makedirs(ldir)
-        copyfile_verbose(f, lf)
+        copy_ofile_locally(f)
 
 ###  Processing of configuration files
 
@@ -846,12 +858,46 @@ def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_l
 
 ###  File compilation and linking
 
-def parallel_compile(files_to_compile, num_retries=3):
+def parallel_compile(files_to_compile, num_retries=3, ofiles_to_copy=[]):
     """files_to_compile is a list of FileInfo of .cc files"""
 
+    def wait_for_some_completion(outs, errs, ofiles_to_copy, files_to_check):
+        # copy ofiles while waiting
+        if local_ofiles and ofiles_to_copy != []:
+            copy_ofile_locally(ofiles_to_copy[0])
+            del ofiles_to_copy[0]
+        # if the process finished because the host was unreachable,
+        # we do not want to reuse it
+        iwtd, owtd, ewtd = select.select(outs.keys()+errs.keys(), [], [], 0.00000001)
+        if iwtd == []:
+            return ''
+        f = iwtd[0]
+        if errs.has_key(f):
+            info = errs[f]
+        elif outs.has_key(f):
+            info = outs[f]
+        del errs[info.launched.childerr]
+        del outs[info.launched.fromchild]
+        info.finished_compilation() # print error messages, warnings, and get failure/success status
+        # check for new ofiles to copy
+        if local_ofiles:
+            for i in xrange(len(files_to_check)):
+                if files_to_check[i].corresponding_ofile_is_up_to_date():
+                    ofiles_to_copy+= [files_to_check[i].corresponding_ofile]
+                    del files_to_check[i]
+            if hasattr(info, "compilation_status") and info.compilation_status == 0:
+                if info.corresponding_ofile_is_up_to_date():
+                    ofiles_to_copy+= [info.corresponding_ofile]
+                else:
+                    files_to_check+= [info]
+        return info.hostname
+
+
     hostnum = 0
+    hostname= ''
     outs = {}  # a dictionary indexed by the stdout of the process launched by popen, and containing the corresponding FileInfo object 
-    errs = {}  # a dictionary indexed by the stderrs of the process launched by popen, and containing the corresponding FileInfo object 
+    errs = {}  # a dictionary indexed by the stderrs of the process launched by popen, and containing the corresponding FileInfo object
+    files_to_check= []
 
 
     for ccfile in files_to_compile:
@@ -871,19 +917,7 @@ def parallel_compile(files_to_compile, num_retries=3):
         else: # all processes are busy, wait for something to finish...
             hostname = ''
             while hostname == '':
-                # if the process finished because the host was unreachable,
-                # we do not want to reuse it
-                iwtd, owtd, ewtd = select.select(outs.keys()+errs.keys(), [], [])
-                f = iwtd[0]
-                if errs.has_key(f):
-                    info = errs[f]
-                elif outs.has_key(f):
-                    info = outs[f]
-                del errs[info.launched.childerr]
-                del outs[info.launched.fromchild]
-                info.finished_compilation() # print error messages, warnings, and get failure/success status
-                hostname = info.hostname
-
+                hostname= wait_for_some_completion(outs, errs, ofiles_to_copy, files_to_check)
                 # This should not happen unless localhost is unable to compile
                 if not list_of_hosts:
                     raise "Couldn't access ANY of the listed hosts for compilation"
@@ -894,18 +928,10 @@ def parallel_compile(files_to_compile, num_retries=3):
 
     # Now wait until everybody is finished
     while outs:
-        if len(outs)<=10:
+        if len(outs)<=10 and hostname != '':
             if verbose>=2:
                 print '[ STILL WAITING FOR:',string.join(map( lambda(f): f.filebase+f.fileext + ' on ' + f.hostname, outs.values()), ', '),']'
-        iwtd, owtd, ewtd = select.select(outs.keys()+errs.keys(), [], [])
-        f = iwtd[0]
-        if errs.has_key(f):
-            info = errs[f]
-        elif outs.has_key(f):
-            info = outs[f]
-        del errs[info.launched.childerr]
-        del outs[info.launched.fromchild]
-        info.finished_compilation() # print error messages, warnings, and get failure/success status
+        hostname= wait_for_some_completion(outs, errs, ofiles_to_copy, files_to_check)
 
     # Check if we should retry some compilations...
     ccfiles_to_retry = [c for c in files_to_compile if c.retry_compilation]
@@ -913,7 +939,7 @@ def parallel_compile(files_to_compile, num_retries=3):
         if num_retries > 0:
             if verbose >= 2:
                 print '[ RETRYING COMPILATION FOR %d FILES ]' % len(ccfiles_to_retry)
-            parallel_compile(ccfiles_to_retry, num_retries-1)
+            parallel_compile(ccfiles_to_retry, num_retries-1, ofiles_to_copy)
         else:
             if verbose >= 2:
                 print '[ %d FILES TO RETRY, BUT NO MORE TRIES AVAILABLE ]' % len(ccfiles_to_retry)
@@ -2618,7 +2644,9 @@ def main( args ):
             if platform=='win32':
                 win32_parallel_compile(ccfiles_to_compile.keys())
             else:
-                parallel_compile(ccfiles_to_compile.keys())
+                ofiles_to_copy= get_ofiles_to_copy(executables_to_link.keys())
+                ofiles_to_copy= [x for x in ofiles_to_copy if x not in [y.corresponding_ofile for y in ccfiles_to_compile.keys()]]
+                parallel_compile(ccfiles_to_compile.keys(), ofiles_to_copy= ofiles_to_copy)
 
             if force_link or (executables_to_link.keys() and not create_dll):
                 print '++++ Linking', string.join(map(lambda x: x.filebase, executables_to_link.keys()))
