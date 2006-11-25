@@ -350,6 +350,7 @@ class PyPLearnSingleton(PyPLearnObject):
     w.r.t. their overrides.
     """
     _singletons = {}
+    __should_deepcopy = False
 
     class __metaclass__(PyPLearnObject.__metaclass__):                
         def __call__(cls, **overrides):
@@ -374,8 +375,15 @@ class PyPLearnSingleton(PyPLearnObject):
     _getInstanceKey = classmethod(_getInstanceKey)
     
     def __deepcopy__(self, memo):
-        """Singletons are NEVER deepcopied"""
+        if self.__should_deepcopy:
+            return super(PyPLearnSingleton, self).__deepcopy__(memo)
         return self
+
+    def deepcopy(self, memo={}):
+        self.__should_deepcopy = True
+        dcp = copy.deepcopy(self, memo)
+        self.__should_deepcopy = False
+        return dcp
 
 def test_PyPLearnObject_module():    
     class A( PyPLearnObject):
