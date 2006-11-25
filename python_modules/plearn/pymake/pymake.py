@@ -868,7 +868,7 @@ def parallel_compile(files_to_compile, num_retries=3, ofiles_to_copy=[]):
             del ofiles_to_copy[0]
         # if the process finished because the host was unreachable,
         # we do not want to reuse it
-        iwtd, owtd, ewtd = select.select(outs.keys()+errs.keys(), [], [], 0.00000001)
+        iwtd, owtd, ewtd = select.select(outs.keys()+errs.keys(), [], [], 0.0001)
         if iwtd == []:
             return ''
         f = iwtd[0]
