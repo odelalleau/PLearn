@@ -881,10 +881,10 @@ def parallel_compile(files_to_compile, num_retries=3, ofiles_to_copy=[]):
         info.finished_compilation() # print error messages, warnings, and get failure/success status
         # check for new ofiles to copy
         if local_ofiles:
-            for i in xrange(len(files_to_check)):
-                if files_to_check[i].corresponding_ofile_is_up_to_date():
-                    ofiles_to_copy+= [files_to_check[i].corresponding_ofile]
-                    del files_to_check[i]
+            for f in files_to_check:
+                if f.corresponding_ofile_is_up_to_date():
+                    ofiles_to_copy+= [f.corresponding_ofile]
+                    del files_to_check[files_to_check.index(f)]
             if hasattr(info, "compilation_status") and info.compilation_status == 0:
                 if info.corresponding_ofile_is_up_to_date():
                     ofiles_to_copy+= [info.corresponding_ofile]
