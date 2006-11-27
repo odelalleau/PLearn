@@ -16,6 +16,11 @@ def resetCurrentSnippet():
 if not '' in sys.path:
     sys.path = [ '' ] + sys.path
 
+# In some embedded Python systems (2.4?), argv may not be in sys.
+# If it's not, add an empty one.
+if not 'argv' in sys.__dict__:
+    sys.argv = ['']
+
 # Class managing the injected functions
 class __injected_functions:        
     def __init__(self, injected):
