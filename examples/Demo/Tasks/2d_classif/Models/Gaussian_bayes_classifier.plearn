@@ -1,0 +1,44 @@
+$DEFINE{DENSITY_ESTIMATOR}
+{  GaussianDistribution( 
+    # int: number of eigenvectors to keep when training
+    k = 1000  ;
+
+    # double: Value to add to the empirical eigenvalues to obtain actual variance.
+    gamma = 0  ;
+
+    # double: Imposes a minimum over the actual variances to be used.
+    # Actual variance used in the principal directions is max(min_eig, eigenvalue_i+gamma)
+    min_eig = 0  ;
+
+    # bool: If true, the actual variance used for directions in the nullspace of VDV' 
+    # (i.e. orthogonal to the kept eigenvectors) will be the same as the
+    # actual variance used for the last principal direction. 
+    # If false, the actual variance used for directions in the nullspace 
+    # will be max(min_eig, gamma)
+    use_last_eig = 0  ;
+
+    # float: DEPRECATED: When doing a weighted fitting (weightsize==1), points with a weight below this value will be ignored
+    ignore_weights_below = 0  ;
+
+    # string: See help for this option in PDistribution. Basically, this is the
+    # same, except that 'E' and 'V' are obviously not allowed.
+    outputs_def = "d"  ;
+
+    );  
+}
+
+ClassifierFromDensity( 
+  # int: The number of classes
+  nclasses = 2;
+
+  # TVec< PP< PDistribution > >: The array of density estimators, one for each class.
+  # You may also specify just one that will be replicated as many times as there are classes.
+  estimators = [ ${DENSITY_ESTIMATOR}, ${DENSITY_ESTIMATOR} ]
+
+  # bool: Whether computeOutput yields log-probabilities or probabilities (of classes given inputs)
+  output_log_probabilities = 0  ;
+
+  # bool: Whether to normalize the probabilities (if not just compute likelihood * prior for each class)
+  normalize_probabilities = 1  ;
+
+  );

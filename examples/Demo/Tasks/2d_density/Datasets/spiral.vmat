@@ -1,0 +1,8 @@
+VMatrixFromDistribution(
+  distr = SpiralDistribution(), 
+  # nsamples=10600, 
+  generator_seed = 10,
+  nsamples=200, 
+  inputsize=2, 
+  targetsize=0, 
+  weightsize=0);

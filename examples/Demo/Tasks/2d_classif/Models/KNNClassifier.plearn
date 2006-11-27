@@ -1,0 +1,36 @@
+
+KNNClassifier( 
+# PP< GenericNearestNeighbors >: The K-nearest-neighbors finder to use (default is an
+# ExhaustiveNearestNeighbors with a GaussianKernel, sigma=1)
+
+knn = ExhaustiveNearestNeighbors(
+          kernel_is_pseudo_distance = 0 ;
+          distance_kernel = GaussianKernel(sigma = 0.1)
+        )
+
+# int: Number of classes in the problem.  MUST be specified.
+nclasses = 2;
+
+# int: Minimum number of neighbors to use (default=5)
+kmin = 1;
+
+# double: Multiplicative factor on n^kpow to determine number of neighbors to
+# use (default=0)
+kmult = 0  ;
+
+# double: Power of the number of training examples to determine number of
+# neighbors (default=0.5)
+kpow = 0.5  ;
+
+# bool: Whether to weigh each of the K neighbors by the kernel evaluations,
+# obtained from the costs coming out of the 'knn' object (default=true)
+use_knn_costs_as_weights = 0;
+
+# Ker: Disregard the 'use_knn_costs_as_weights' option, and use this kernel
+# to weight the observations.  If this object is not specified
+# (default), and the 'use_knn_costs_as_weights' is false, the
+# rectangular kernel is used.
+kernel = *0  ;
+
+);
+

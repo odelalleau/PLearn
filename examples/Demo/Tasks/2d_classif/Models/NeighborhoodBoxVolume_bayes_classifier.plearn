@@ -1,0 +1,45 @@
+$DEFINE{DENSITY_ESTIMATOR}
+{ NeighborhoodBoxVolumeDensityEstimator( 
+    # int: 
+    nneighbors = 3;
+
+    # double: 
+    min_radius = 1e-6  ;
+
+    # string: Defines what will be given in output. This is a string where the
+    # characters have the following meaning:
+    # - 'l' : log_density
+    # - 'd' : density
+    # - 'c' : cdf
+    # - 's' : survival_fn
+    # - 'e' : expectation
+    # - 'v' : variance.
+    # 
+    # If these options are specified in lower case they give the value
+    # associated with a given observation. In upper case, a curve is
+    # evaluated at regular intervals and produced in output (as a
+    # histogram). For 'L', 'D', 'C', 'S', it is the predicted part that
+    # varies, while for 'E' and 'V' it is the predictor part (for
+    # conditional distributions).
+    # The number of curve points is given by the 'n_curve_points' option.
+    # Note that the upper case letters only work for scalar variables, in
+    # order to produce a one-dimensional curve.
+    outputs_def = "d"  ;
+    );  
+}
+
+ClassifierFromDensity( 
+  # int: The number of classes
+  nclasses = 2;
+
+  # TVec< PP< PDistribution > >: The array of density estimators, one for each class.
+  # You may also specify just one that will be replicated as many times as there are classes.
+  estimators = [ ${DENSITY_ESTIMATOR}, ${DENSITY_ESTIMATOR} ]
+
+  # bool: Whether computeOutput yields log-probabilities or probabilities (of classes given inputs)
+  output_log_probabilities = 0  ;
+
+  # bool: Whether to normalize the probabilities (if not just compute likelihood * prior for each class)
+  normalize_probabilities = 1  ;
+
+  );

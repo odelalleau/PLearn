@@ -1,0 +1,22 @@
+ChainedLearners( 
+  # TVec< PP< PLearner > >: This is a list of learners to train in sequence.
+  learners = [
+    # NormalizationLearner(),
+    PCA(
+           # int: The number of principal components to keep (that's also the outputsize).
+           ncomponents = 2  ;
+
+           # bool: If true, we divide by sqrt(eigenval) after projecting on the eigenvec.
+           normalize = 0;
+
+           # double: This gets added to the diagonal of the covariance matrix prior to eigen-decomposition.
+           sigmasq = 0;
+
+           # bool: If true, if a missing value is encountered on an input variable
+           # for a computeOutput, it is replaced by the estimated mu for that
+           # variable before projecting on the principal components
+           impute_missings = 0  ;
+       )
+     ]) 
+
+

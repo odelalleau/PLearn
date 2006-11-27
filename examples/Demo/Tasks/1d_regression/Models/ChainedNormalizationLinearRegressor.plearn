@@ -1,0 +1,5 @@
+ChainedLearners( 
+learners = [ NormalizationLearner(),
+             LinearRegressor( weight_decay = 1e-6) 
+           ] 
+ )

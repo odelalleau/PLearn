@@ -1,0 +1,95 @@
+GaussianDistribution( 
+# int: number of eigenvectors to keep when training
+k = 1000  ;
+
+# double: Value to add to the empirical eigenvalues to obtain actual variance.
+gamma = 0  ;
+
+# double: Imposes a minimum over the actual variances to be used.
+# Actual variance used in the principal directions is max(min_eig, eigenvalue_i+gamma)
+min_eig = 0  ;
+
+# bool: If true, the actual variance used for directions in the nullspace of VDV' 
+# (i.e. orthogonal to the kept eigenvectors) will be the same as the
+# actual variance used for the last principal direction. 
+# If false, the actual variance used for directions in the nullspace 
+# will be max(min_eig, gamma)
+use_last_eig = 0  ;
+
+# float: DEPRECATED: When doing a weighted fitting (weightsize==1), points with a weight below this value will be ignored
+ignore_weights_below = 0  ;
+
+# string: See help for this option in PDistribution. Basically, this is the
+# same, except that 'E' and 'V' are obviously not allowed.
+outputs_def = "d"  ;
+
+# int: The number of points for which the output is evaluated when
+# outputs_defs is upper case (produces a histogram).
+# The lower_bound and upper_bound options specify where the curve
+# begins and ends. Note that these options (upper case letters) only
+# work for scalar variables.
+n_curve_points = -1  ;
+
+# double: The lower bound of scalar Y values to compute a histogram of the
+# distribution when upper case outputs_def are specified.
+lower_bound = 0  ;
+
+# double: The upper bound of scalar Y values to compute a histogram of the
+# distribution when upper case outputs_def are specified.
+upper_bound = 0  ;
+
+# PPath: Path of the directory associated with this learner, in which
+# it should save any file it wishes to create. 
+# The directory will be created if it does not already exist.
+# If expdir is the empty string (the default), then the learner 
+# should not create *any* file. Note that, anyway, most file creation and 
+# reporting are handled at the level of the PTester class rather than 
+# at the learner's. 
+expdir = ""  ;
+
+# long: The initial seed for the random number generator used in this
+# learner, for instance for parameter initialization.
+# If -1 is provided, then a 'random' seed is chosen based on time
+# of day, ensuring that different experiments run differently.
+# If 0 is provided, no (re)initialization of the random number
+# generator is performed.
+# With a given positive seed, build() and forget() should always
+# initialize the parameters to the same values.
+seed = -1  ;
+
+# bool: Whether or not to call the forget() method (re-initialize model as before training) in setTrainingSet when the
+# training set changes (e.g. of dimension).
+forget_when_training_set_changes = 0  ;
+
+# int: The stage until which train() should train this learner and return.
+# The meaning of 'stage' is learner-dependent, but for learners whose 
+# training is incremental (such as involving incremental optimization), 
+# it is typically synonym with the number of 'epochs', i.e. the number 
+# of passages of the optimization process through the whole training set, 
+# since the last fresh initialisation.
+nstages = 1  ;
+
+# bool: should progress in learning and testing be reported in a ProgressBar.
+report_progress = 1  ;
+
+# int: Level of verbosity. If 0 should not write anything on perr. 
+# If >0 may write some info on the steps performed along the way.
+# The level of details written should depend on this value.
+verbosity = 1  ;
+
+# int: Max number of computation servers to use in parallel with the main process.
+# If <=0 no parallelization will occur at this level.
+nservers = 0  ;
+
+# string: Whether the training set should be saved upon a call to
+# setTrainingSet().  The saved file is put in the learner's expdir
+# (assuming there is one) and has the form "<prefix>_trainset_XXX.pmat"
+# The prefix is what this option specifies.  'XXX' is a unique
+# serial number that is globally incremented with each saved
+# setTrainingSet.  This option is useful when manipulating very
+# complex nested learner structures, and you want to ensure that
+# the inner learner is getting the correct results.  (Default=,
+# i.e. don't save anything.)
+save_trainingset_prefix = ""  ;
+
+);

@@ -1,0 +1,57 @@
+
+BasisSelectionRegressor( 
+# bool: 
+consider_constant_function = 0;
+
+# TVec< PP< RealFunction > >: 
+explicit_functions = [];
+
+# bool: 
+consider_raw_inputs = 0;
+
+consider_normalized_inputs = 1;
+
+# bool: 
+consider_input_range_indicators = 1;
+
+indicator_desired_prob = 0.10;
+indicator_min_prob = 0.10;
+
+# TVec< Ker >: 
+kernels = [ GaussianKernel(sigma=0.2)
+            GaussianKernel(sigma=0.1)
+            # GaussianKernel(sigma=0.05)
+            # GaussianKernel(sigma=0.3)
+];
+
+# TMat< double >: 
+kernel_centers = 0  0  [] 
+
+# int: 
+n_kernel_centers_to_pick = 0;
+
+seed = 33;
+
+# bool: 
+consider_interaction_terms = 0;
+
+# blah
+normalize_features = 1;
+
+# PP< PLearner >: 
+learner = LinearRegressor(include_bias=1, weight_decay = 1e-6);
+
+forget_when_training_set_changes = 0  ;
+
+# int: The stage until which train() should train this learner and return.
+# The meaning of 'stage' is learner-dependent, but for learners whose 
+# training is incremental (such as involving incremental optimization), 
+# it is typically synonym with the number of 'epochs', i.e. the number 
+# of passages of the optimization process through the whole training set, 
+# since the last fresh initialisation.
+nstages = 10;
+
+verbosity = 5;
+
+);
+

@@ -1,0 +1,11 @@
+LinearRegressor( 
+# bool: Whether to include a bias term in the regression (true by default)
+include_bias = 1  ;
+
+# bool: Whether to use the Cholesky decomposition or not, when solving the linear system. Default=1 (true)
+cholesky = 1  ;
+
+# double: The weight decay is the factor that multiplies the squared norm of the parameters in the loss function
+weight_decay = 1e-6;
+);
+

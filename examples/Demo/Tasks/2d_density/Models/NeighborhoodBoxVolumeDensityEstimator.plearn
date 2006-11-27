@@ -1,0 +1,28 @@
+NeighborhoodBoxVolumeDensityEstimator( 
+# int: 
+nneighbors = 1;
+
+# double: 
+min_radius = 1e-6  ;
+
+# string: Defines what will be given in output. This is a string where the
+# characters have the following meaning:
+# - 'l' : log_density
+# - 'd' : density
+# - 'c' : cdf
+# - 's' : survival_fn
+# - 'e' : expectation
+# - 'v' : variance.
+# 
+# If these options are specified in lower case they give the value
+# associated with a given observation. In upper case, a curve is
+# evaluated at regular intervals and produced in output (as a
+# histogram). For 'L', 'D', 'C', 'S', it is the predicted part that
+# varies, while for 'E' and 'V' it is the predictor part (for
+# conditional distributions).
+# The number of curve points is given by the 'n_curve_points' option.
+# Note that the upper case letters only work for scalar variables, in
+# order to produce a one-dimensional curve.
+outputs_def = "d"  ;
+
+);

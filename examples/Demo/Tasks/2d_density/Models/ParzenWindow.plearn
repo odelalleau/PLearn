@@ -1,0 +1,170 @@
+ParzenWindow( 
+# double: Spherical variance parameter
+sigma_square = .07;
+
+# int: Number of Gaussians in the mixture.
+L = 1  ;
+
+# string: This is the type of covariance matrix for each Gaussian:
+#    - spherical : spherical covariance matrix sigma^2 * I
+#    - diagonal  : diagonal covariance matrix, given by standard
+#                  deviations 'diags'
+#    - general   : unconstrained covariance matrix (defined by its
+#                  eigenvectors)
+type = "spherical"  ;
+
+# int: If type is 'general', the number of eigenvectors used to compute
+# the covariance matrix. The remaining eigenvectors will be given an
+# eigenvalue equal to the next highest eigenvalue. If set to -1, all
+# eigenvectors will be kept.
+n_eigen = -1  ;
+
+# int: If not 0, computations with missing values will be more efficient:
+# - 1: most efficient method
+# - 2: less naive method than 0, where we compute the matrices
+#      only once per missing pattern (not as good as 1)
+# - 3: same as 1, but using inverse variance lemma instead of
+#      Cholesky (could be more efficient after all)
+efficient_missing = 0  ;
+
+# int: Starting number of clusters used.
+efficient_k_median = 1  ;
+
+# int: Maximum number of samples allowed in each cluster (ignored if -1).
+# More than 'efficient_k_median' clusters may be used in order to
+# comply with this constraint.
+max_samples_in_cluster = -1  ;
+
+# int: Minimum number of samples allowed in each cluster.
+# Less than 'efficient_k_median' clusters may be used in order to
+# comply with this constraint.
+min_samples_in_cluster = 1  ;
+
+# int: Maximum number of iterations in k-median.
+efficient_k_median_iter = 100  ;
+
+# bool: If true, missing values will be imputed their conditional mean when
+# computing the covariance matrix. Note that even if the current
+# default value of this option is false, the 'true' EM algorithm
+# requires it to be set to true.
+impute_missing = 0  ;
+
+# int: Maximum number of iterations performed in initial K-means.
+kmeans_iterations = 5  ;
+
+# double: The minimum weight for each Gaussian. Whenever a Gaussian falls
+# below 'alpha_min', it is replaced by a new Gaussian.
+alpha_min = 9.99999999999999955e-07  ;
+
+# double: The minimum standard deviation allowed. In all computations, any
+# standard deviation below 'sigma_min' (or variance below its square)
+# will be replaced by 'sigma_min' (or its square). This regularizes
+# the Gaussians (and should not be too high nor too small).
+sigma_min = 9.99999999999999955e-07  ;
+
+# double: A small number to check for near-zero probabilities.
+epsilon = 9.99999999999999955e-07  ;
+
+# string: Defines what will be given in output. This is a string where the
+# characters have the following meaning:
+# - 'l' : log_density
+# - 'd' : density
+# - 'c' : cdf
+# - 's' : survival_fn
+# - 'e' : expectation
+# - 'v' : variance.
+# 
+# If these options are specified in lower case they give the value
+# associated with a given observation. In upper case, a curve is
+# evaluated at regular intervals and produced in output (as a
+# histogram). For 'L', 'D', 'C', 'S', it is the predicted part that
+# varies, while for 'E' and 'V' it is the predictor part (for
+# conditional distributions).
+# The number of curve points is given by the 'n_curve_points' option.
+# Note that the upper case letters only work for scalar variables, in
+# order to produce a one-dimensional curve.
+outputs_def = "d"  ;
+
+# int: The (user-provided) size of the predictor x in p(y|x). A value of
+# -1 means the algorithm should find it out by itself.
+predictor_size = 0  ;
+
+# int: The (user-provided) size of the predicted y in p(y|x). A value of
+# -1 means the algorithm should find it out by itself.
+predicted_size = -1  ;
+
+# TVec< double >: In conditional distributions, the predictor part (x in P(Y|X=x)).
+predictor_part = TVec(0 0 *0 )
+ ;
+
+# int: The number of points for which the output is evaluated when
+# outputs_defs is upper case (produces a histogram).
+# The lower_bound and upper_bound options specify where the curve
+# begins and ends. Note that these options (upper case letters) only
+# work for scalar variables.
+n_curve_points = -1  ;
+
+# double: The lower bound of scalar Y values to compute a histogram of the
+# distribution when upper case outputs_def are specified.
+lower_bound = 0  ;
+
+# double: The upper bound of scalar Y values to compute a histogram of the
+# distribution when upper case outputs_def are specified.
+upper_bound = 0  ;
+
+# PPath: Path of the directory associated with this learner, in which
+# it should save any file it wishes to create. 
+# The directory will be created if it does not already exist.
+# If expdir is the empty string (the default), then the learner 
+# should not create *any* file. Note that, anyway, most file creation and 
+# reporting are handled at the level of the PTester class rather than 
+# at the learner's. 
+expdir = ""  ;
+
+# long: The initial seed for the random number generator used in this
+# learner, for instance for parameter initialization.
+# If -1 is provided, then a 'random' seed is chosen based on time
+# of day, ensuring that different experiments run differently.
+# If 0 is provided, no (re)initialization of the random number
+# generator is performed.
+# With a given positive seed, build() and forget() should always
+# initialize the parameters to the same values.
+seed = -1  ;
+
+# bool: Whether or not to call the forget() method (re-initialize model as before training) in setTrainingSet when the
+# training set changes (e.g. of dimension).
+forget_when_training_set_changes = 0  ;
+
+# int: The stage until which train() should train this learner and return.
+# The meaning of 'stage' is learner-dependent, but for learners whose 
+# training is incremental (such as involving incremental optimization), 
+# it is typically synonym with the number of 'epochs', i.e. the number 
+# of passages of the optimization process through the whole training set, 
+# since the last fresh initialisation.
+nstages = 1  ;
+
+# bool: should progress in learning and testing be reported in a ProgressBar.
+report_progress = 1  ;
+
+# int: Level of verbosity. If 0 should not write anything on perr. 
+# If >0 may write some info on the steps performed along the way.
+# The level of details written should depend on this value.
+verbosity = 1  ;
+
+# int: Max number of computation servers to use in parallel with the main process.
+# If <=0 no parallelization will occur at this level.
+nservers = 0  ;
+
+# string: Whether the training set should be saved upon a call to
+# setTrainingSet().  The saved file is put in the learner's expdir
+# (assuming there is one) and has the form "<prefix>_trainset_XXX.pmat"
+# The prefix is what this option specifies.  'XXX' is a unique
+# serial number that is globally incremented with each saved
+# setTrainingSet.  This option is useful when manipulating very
+# complex nested learner structures, and you want to ensure that
+# the inner learner is getting the correct results.  (Default=,
+# i.e. don't save anything.)
+save_trainingset_prefix = ""  ;
+
+);
+

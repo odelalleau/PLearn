@@ -1,0 +1,12 @@
+NormalizationLearner( 
+# double: If the empirical standard deviation is lower than this, we'll use this value to 
+# compute inv_stddev (this is to prevent getting too large or even infinite values for inv_stddev
+min_allowed_stddev = 1e-6  ;
+
+# bool: How to handle missing values: 
+#   If true (the default), missing values will be replaced by 
+#   the post-normalization mean, which is 0. 
+#   If false missing values will be left as missing values. 
+set_missing_to_zero = 1  ;
+);
+
