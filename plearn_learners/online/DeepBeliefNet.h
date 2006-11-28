@@ -260,6 +260,18 @@ protected:
     mutable Vec pos_down_values;
     mutable Vec pos_up_values;
 
+    //! Keeps the index of the NLL cost in train_costs
+    int nll_cost_index; 
+    
+    //! Keeps the index of the CLASS cost in train_costs    
+    int class_cost_index; 
+    
+    //! Keeps the index of the final cost in train_costs
+    int final_cost_index; 
+    
+    //! Keeps the index of the reconstruction cost in train_costs
+    int recons_cost_index; 
+
 protected:
     //#####  Protected Member Functions  ######################################
 
