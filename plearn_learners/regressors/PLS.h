@@ -70,6 +70,11 @@ protected:
     Vec stddev_target;
     Mat W;
 
+    /// Estimate of the residual variance for each output variable.  Saved as a
+    /// learned option to allow outputting confidence intervals when model is
+    /// reloaded and used in test mode.
+    Vec resid_variance;
+  
 public:
 
     // ************************
@@ -81,6 +86,7 @@ public:
     real precision;
     bool output_the_score;
     bool output_the_target;
+    bool compute_confidence;
 
     // ****************
     // * Constructors *
@@ -105,6 +111,9 @@ protected:
     //! Declares this class' options.
     static void declareOptions(OptionList& ol);
 
+    //! Compute the variance of residuals on the specified dataset
+    void computeResidVariance(VMat dataset, Vec& resid_variance);
+    
 public:
 
     // ************************
@@ -145,7 +154,11 @@ public:
     //! Computes the costs from already computed output. 
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                          const Vec& target, Vec& costs) const;
-                                
+
+    //! Compute confidence intervals from already-computed outputs.
+    virtual bool computeConfidenceFromOutput(const Vec&, const Vec& output, real probability,
+                                             TVec< pair<real,real> >& intervals) const;
+    
     //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method).
     virtual TVec<string> getTestCostNames() const;
 

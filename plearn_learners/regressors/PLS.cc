@@ -40,12 +40,20 @@
 
 /*! \file PLS.cc */
 
+#define PL_LOG_MODULE_NAME "PLS"
+
+// From boost
+#include <boost/scoped_ptr.hpp>
+
+// From PLearn
+#include <plearn/io/pl_log.h>
+#include <plearn/math/TMat_maths.h>    //!< For dist.
+#include <plearn/math/pl_erf.h>
 #include <plearn/math/plapack.h>
-#include "PLS.h"
 #include <plearn/vmat/ShiftAndRescaleVMatrix.h>
 #include <plearn/vmat/SubVMatrix.h>
-#include <plearn/math/TMat_maths.h>    //!< For dist.
 #include <plearn/vmat/VMat_linalg.h>
+#include "PLS.h"
 
 namespace PLearn {
 using namespace std;
@@ -56,68 +64,70 @@ PLS::PLS()
       k(1),
       method("kernel"),
       precision(1e-6),
-      output_the_score(0),
-      output_the_target(1)
+      output_the_score(false),
+      output_the_target(true),
+      compute_confidence(false)
 {}
 
-PLEARN_IMPLEMENT_OBJECT(PLS,
-                        "Partial Least Squares Regression (PLSR).",
-                        "You can use this learner to perform regression, and / or dimensionality\n"
-                        "reduction.\n"
-                        "PLS regression assumes the target Y and the data X are linked through:\n"
-                        " Y = T.Q' + E\n"
-                        " X = T.P' + F\n"
-                        "The underlying coefficients T (the 'scores') and the loading matrices\n"
-                        "Q and P are seeked. It is then possible to compute the prediction y for\n"
-                        "a new input x, as well as its score vector t (its representation in\n"
-                        "lower-dimensional coordinates).\n"
-                        "The available algorithms to perform PLS (chosen by the 'method' option) are:\n"
-                        "\n"
-                        " ====  PLS1  ====\n"
-                        "The classical PLS algorithm, suitable only for a 1-dimensional target. The\n"
-                        "following algorithm is taken from 'Factor Analysis in Chemistry', with an\n"
-                        "additional loop that (I believe) was missing:\n"
-                        " (1) Let X (n x p) = the centered and normalized input data\n"
-                        "     Let y (n x 1) = the centered and normalized target data\n"
-                        "     Let k be the number of components extracted\n"
-                        " (2) s = y\n"
-                        " (3) lx' = s' X, s = X lx (normalized)\n"
-                        " (4) If s has changed by more than 'precision', loop to (3)\n"
-                        " (5) ly = s' y\n"
-                        " (6) lx' = s' X\n"
-                        " (7) Store s, lx and ly in the columns of respectively T, P and Q\n"
-                        " (8) X = X - s lx', y = y - s ly, loop to (2) k times\n"
-                        " (9) Set W = (T P')^(+) T, where the ^(+) is the right pseudoinverse\n"
-                        "\n"
-                        " ==== Kernel ====\n"
-                        "The code implements a NIPALS-PLS-like algorithm, which is a so-called\n"
-                        "'kernel' algorithm (faster than more classical implementations).\n"
-                        "The algorithm, inspired from 'Factor Analysis in Chemistry' and above all\n"
-                        "www.statsoftinc.com/textbook/stpls.html, is the following:\n"
-                        " (1) Let X (n x p) = the centered and normalized input data\n"
-                        "     Let Y (n x m) = the centered and normalized target data\n"
-                        "     Let k be the number of components extracted\n"
-                        " (2) Initialize A_0 = X'Y, M_0 = X'X, C_0 = Identity(p), and h = 0\n"
-                        " (3) q_h = largest eigenvector of B_h = A_h' A_h, found by the NIPALS method:\n"
-                        "       (3.a) q_h = a (normalized) randomn column of B_h\n"
-                        "       (3.b) q_h = B_h q_h\n"
-                        "       (3.c) normalize q_h\n"
-                        "       (3.d) if q_h has changed by more than 'precision', go to (b)\n"
-                        " (4) w_h = C_h A_h q_h, normalize w_h and store it in a column of W (p x k)\n"
-                        " (5) p_h = M_h w_h, c_h = w_h' p_h, p_h = p_h / c_h and store it in a column\n"
-                        "     of P (p x k)\n"
-                        " (6) q_h = A_h' w_h / c_h, and store it in a column of Q (m x k)\n"
-                        " (7) A_h+1 = A_h - c_h p_h q_h'\n"
-                        "     M_h+1 = M_h - c_h p_h p_h',\n"
-                        "     C_h+1 = C_h - w_h p_h\n"
-                        " (8) h = h+1, and if h < k, go to (3)\n"
-                        "\n"
-                        "The result is then given by:\n"
-                        " - Y = X B, with B (p x m) = W Q'\n"
-                        " - T = X W, where T is the score (reduced coordinates)\n"
-                        "\n"
-                        "You can choose to have the score (T) and / or the target (Y) in the output\n"
-                        "of the learner (default is target only, i.e. regression)."
+PLEARN_IMPLEMENT_OBJECT(
+    PLS,
+    "Partial Least Squares Regression (PLSR).",
+    "You can use this learner to perform regression, and / or dimensionality\n"
+    "reduction.\n"
+    "PLS regression assumes the target Y and the data X are linked through:\n"
+    " Y = T.Q' + E\n"
+    " X = T.P' + F\n"
+    "The underlying coefficients T (the 'scores') and the loading matrices\n"
+    "Q and P are seeked. It is then possible to compute the prediction y for\n"
+    "a new input x, as well as its score vector t (its representation in\n"
+    "lower-dimensional coordinates).\n"
+    "The available algorithms to perform PLS (chosen by the 'method' option) are:\n"
+    "\n"
+    " ====  PLS1  ====\n"
+    "The classical PLS algorithm, suitable only for a 1-dimensional target. The\n"
+    "following algorithm is taken from 'Factor Analysis in Chemistry', with an\n"
+    "additional loop that (I believe) was missing:\n"
+    " (1) Let X (n x p) = the centered and normalized input data\n"
+    "     Let y (n x 1) = the centered and normalized target data\n"
+    "     Let k be the number of components extracted\n"
+    " (2) s = y\n"
+    " (3) lx' = s' X, s = X lx (normalized)\n"
+    " (4) If s has changed by more than 'precision', loop to (3)\n"
+    " (5) ly = s' y\n"
+    " (6) lx' = s' X\n"
+    " (7) Store s, lx and ly in the columns of respectively T, P and Q\n"
+    " (8) X = X - s lx', y = y - s ly, loop to (2) k times\n"
+    " (9) Set W = (T P')^(+) T, where the ^(+) is the right pseudoinverse\n"
+    "\n"
+    " ==== Kernel ====\n"
+    "The code implements a NIPALS-PLS-like algorithm, which is a so-called\n"
+    "'kernel' algorithm (faster than more classical implementations).\n"
+    "The algorithm, inspired from 'Factor Analysis in Chemistry' and above all\n"
+    "www.statsoftinc.com/textbook/stpls.html, is the following:\n"
+    " (1) Let X (n x p) = the centered and normalized input data\n"
+    "     Let Y (n x m) = the centered and normalized target data\n"
+    "     Let k be the number of components extracted\n"
+    " (2) Initialize A_0 = X'Y, M_0 = X'X, C_0 = Identity(p), and h = 0\n"
+    " (3) q_h = largest eigenvector of B_h = A_h' A_h, found by the NIPALS method:\n"
+    "       (3.a) q_h = a (normalized) randomn column of B_h\n"
+    "       (3.b) q_h = B_h q_h\n"
+    "       (3.c) normalize q_h\n"
+    "       (3.d) if q_h has changed by more than 'precision', go to (b)\n"
+    " (4) w_h = C_h A_h q_h, normalize w_h and store it in a column of W (p x k)\n"
+    " (5) p_h = M_h w_h, c_h = w_h' p_h, p_h = p_h / c_h and store it in a column\n"
+    "     of P (p x k)\n"
+    " (6) q_h = A_h' w_h / c_h, and store it in a column of Q (m x k)\n"
+    " (7) A_h+1 = A_h - c_h p_h q_h'\n"
+    "     M_h+1 = M_h - c_h p_h p_h',\n"
+    "     C_h+1 = C_h - w_h p_h\n"
+    " (8) h = h+1, and if h < k, go to (3)\n"
+    "\n"
+    "The result is then given by:\n"
+    " - Y = X B, with B (p x m) = W Q'\n"
+    " - T = X W, where T is the score (reduced coordinates)\n"
+    "\n"
+    "You can choose to have the score (T) and / or the target (Y) in the output\n"
+    "of the learner (default is target only, i.e. regression)."
     );
 
 ////////////////////
@@ -140,6 +150,13 @@ void PLS::declareOptions(OptionList& ol)
     declareOption(ol, "output_the_target", &PLS::output_the_target, OptionBase::buildoption,
                   "If set to 1, then (the prediction of) the target will be included in the\n"
                   "output (after the score).");
+
+    declareOption(ol, "compute_confidence", &PLS::compute_confidence,
+                  OptionBase::buildoption,
+                  "If set to 1, the variance of the residuals on the training set is\n"
+                  "computed after training in order to allow the computation of confidence\n"
+                  "intervals.  In the current implementation, this entails performing another\n"
+                  "traversal of the training set.");
 
     // Learnt options.
 
@@ -170,6 +187,12 @@ void PLS::declareOptions(OptionList& ol)
     declareOption(ol, "W", &PLS::W, OptionBase::learntoption,
                   "The regression matrix in T = X.W.");
 
+    declareOption(ol, "resid_variance", &PLS::resid_variance, OptionBase::learntoption,
+                  "Estimate of the residual variance for each output variable.  Saved as a\n"
+                  "learned option to allow outputting confidence intervals when model is\n"
+                  "reloaded and used in test mode.  These are saved only if the option\n"
+                  "'compute_confidence' is true at train-time.");
+    
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -258,6 +281,38 @@ void PLS::computeOutput(const Vec& input, Vec& output) const
         }
     }
 }
+
+
+/////////////////////////////////
+// computeConfidenceFromOutput //
+/////////////////////////////////
+
+bool PLS::computeConfidenceFromOutput(const Vec&, const Vec& output, real probability,
+                                      TVec< pair<real,real> >& intervals) const
+{
+    // Must figure out where the real output starts within the output vector
+    if (! output_the_target)
+        PLERROR("PLS::computeConfidenceFromOutput: the option 'output_the_target' "
+                "must be enabled in order to compute confidence intervals");
+    int ostart = (output_the_score? k : 0);
+    Vec regr_output = output.subVec(ostart, m);
+
+    if (m != resid_variance.size())
+        PLERROR("PLS::computeConfidenceFromOutput: residual variance not yet computed "
+                "or its size (= %d) does not match the output size (= %d)",
+                resid_variance.size(), m);
+
+    // two-tailed
+    const real multiplier = gauss_01_quantile((1+probability)/2);
+    intervals.resize(m);
+    for (int i=0; i<m; ++i) {
+        real half_width = multiplier * sqrt(resid_variance[i]);
+        intervals[i] = std::make_pair(output[i] - half_width,
+                                      output[i] + half_width);
+    }
+    return true;
+}
+
 
 ////////////
 // forget //
@@ -355,20 +410,14 @@ void PLS::train()
 {
     if (stage == 1) {
         // Already trained.
-        if (verbosity >= 1) {
-            cout << "Skipping PLS training" << endl;
-        }
+        MODULE_LOG << "Skipping PLS training" << endl;
         return;
     }
-    if (verbosity >= 1) {
-        cout << "PLS training started" << endl;
-    }
+    MODULE_LOG << "PLS training started" << endl;
 
     // Construct the centered and normalized training set, for the input
     // as well as the target part.
-    if (verbosity >= 2) {
-        cout << " Normalization of the data" << endl;
-    }
+    DBG_MODULE_LOG << "Normalizing of the data" << endl;
     VMat input_part = new SubVMatrix(train_set,
                                      0, 0,
                                      train_set->length(),
@@ -404,9 +453,7 @@ void PLS::train()
 
     if (method == "kernel") {
         // Initialize the various coefficients.
-        if (verbosity >= 2) {
-            cout << " Initialization of the coefficients" << endl;
-        }
+        DBG_MODULE_LOG << "Initialization of the coefficients" << endl;
         Vec ph(p);
         Vec qh(m);
         Vec wh(p);
@@ -427,10 +474,10 @@ void PLS::train()
         }
 
         // Iterate k times to find the k first factors.
-        ProgressBar* pb = 0;
-        if(report_progress) {
-            pb = new ProgressBar("Computing the components", k);
-        }
+        boost::scoped_ptr<ProgressBar> pb(
+            report_progress? new ProgressBar("Computing the PLS components", k)
+            : 0);
+
         for (int h = 0; h < this->k; h++) {
             Ah_t_Ah = transposeProduct(Ah,Ah);
             if (m == 1) {
@@ -464,8 +511,6 @@ void PLS::train()
             if (pb)
                 pb->update(h + 1);
         }
-        if (pb)
-            delete pb;
     } else if (method == "pls1") {
         Vec s(n);
         Vec old_s(n);
@@ -475,11 +520,14 @@ void PLS::train()
         Mat T(n,k);
         Mat X = X_vmatrix->toMat();
         y << Y_vmatrix->toMat();
-        ProgressBar* pb = 0;
-        if(report_progress) {
-            pb = new ProgressBar("Computing the components", k);
-        }
+
+        boost::scoped_ptr<ProgressBar> pb(
+            report_progress? new ProgressBar("Computing the PLS components", k)
+            : 0);
+
         for (int h = 0; h < k; h++) {
+            if (pb)
+                pb->update(h);
             s << y;
             normalize(s, 2.0);
             bool finished = false;
@@ -505,14 +553,8 @@ void PLS::train()
                 }
                 y[i] -= s[i] * ly[0];
             }
-            if (report_progress)
-                pb->update(h);
         }
-        if (pb)
-            delete pb;
-        if (verbosity >= 2) {
-            cout << " Computation of the corresponding coefficients" << endl;
-        }
+        DBG_MODULE_LOG << " Computation of the corresponding coefficients" << endl;
         Mat tmp(n, p);
         productTranspose(tmp, T, P);
         Mat U, Vt;
@@ -538,11 +580,46 @@ void PLS::train()
     }
     B.resize(p,m);
     productTranspose(B, W, Q);
-    if (verbosity >= 1) {
-        cout << "PLS training ended" << endl;
-    }
+
+    // If we requested confidence intervals, compute the variance of the
+    // residuals on the training set
+    if (compute_confidence)
+        computeResidVariance(train_set, resid_variance);
+    else
+        resid_variance.resize(0);
+    
+    MODULE_LOG << "PLS training ended" << endl;
     stage = 1;
 }
+
+
+//#####  computeResidVariance  ################################################
+
+void PLS::computeResidVariance(VMat dataset, Vec& resid_variance)
+{
+    PLASSERT( dataset.isNotNull() && m >= 0 );
+    bool old_output_score = output_the_score;
+    bool old_output_target= output_the_target;
+    output_the_score  = false;
+    output_the_target = true;
+
+    resid_variance.resize(m);
+    resid_variance.fill(0.0);
+    Vec input, target, output(m);
+    real weight;
+    for (int i=0, n=dataset.length() ; i<n ; ++i) {
+        dataset->getExample(i, input, target, weight);
+        computeOutput(input, output);
+        target -= output;
+        target *= target;                    // Square of residual
+        resid_variance += target;
+    }
+    resid_variance /= (dataset.length() - inputsize());
+
+    output_the_score  = old_output_score;
+    output_the_target = old_output_target;
+}
+
 
 } // end of namespace PLearn
 

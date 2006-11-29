@@ -43,8 +43,9 @@ PTester(
                     output_the_score = 0  ;
                     output_the_target = 1  ;
                     precision = 1e-6  ;
-                    verbosity = 1
-                    report_progress = 1
+                    verbosity = 1 ;
+                    report_progress = 1 ;
+                    compute_confidence = 1
                 ) 
             check_output_consistency = 0
             rescale_output = 0
@@ -54,8 +55,7 @@ PTester(
     save_data_sets =0;
     save_initial_tester = 0;
     save_stat_collectors = 0;
-    save_learners = 0
-
+    save_learners = 1
 ); 
 
 
