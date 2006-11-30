@@ -362,6 +362,7 @@ void PLS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(stddev_input, copies);
     deepCopyField(stddev_target, copies);
     deepCopyField(W, copies);
+    deepCopyField(resid_variance, copies);
 }
 
 ///////////////////////
