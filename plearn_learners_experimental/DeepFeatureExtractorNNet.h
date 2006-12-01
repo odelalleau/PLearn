@@ -71,6 +71,8 @@ public:
     PP<Optimizer> optimizer_supervised;
     //! Batch size
     int batch_size;
+    //! Batch size used for supervised phase
+    int batch_size_supervised;
     //! Transfer function for the hidden nodes
     string hidden_transfer_func;
     //! Output transfer function, when all hidden layers are added 

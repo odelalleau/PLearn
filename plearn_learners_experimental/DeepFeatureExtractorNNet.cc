@@ -91,7 +91,8 @@ PLEARN_IMPLEMENT_OBJECT(
     "margin-perceptron cost, etc.).");
 
 DeepFeatureExtractorNNet::DeepFeatureExtractorNNet() 
-    : batch_size(1), 
+    : batch_size(1),
+      batch_size_supervised(1), 
       output_transfer_func("softmax"),
       nhidden_schedule_position(0),
       weight_decay(0), 
@@ -139,6 +140,12 @@ void DeepFeatureExtractorNNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption, 
                   "How many samples to use to estimate the avergage gradient\n"
                   "before updating the weights\n"
+                  "0 is equivalent to specifying training_set->length() \n");
+    
+    declareOption(ol, "batch_size_supervised", &DeepFeatureExtractorNNet::batch_size_supervised, 
+                  OptionBase::buildoption, 
+                  "How many samples to use to estimate the avergage gradient\n"
+                  "before updating the weights, for the supervised phase.\n"
                   "0 is equivalent to specifying training_set->length() \n");
     
     declareOption(ol, "output_transfer_func", 
@@ -795,7 +802,14 @@ void DeepFeatureExtractorNNet::train()
         build();
 
     // Number of samples seen by optimizer before each optimizer update
-    int nsamples = batch_size>0 ? batch_size : l;
+    int nsamples;
+    if(supervised_signal_weight == 1
+       || nhidden_schedule_current_position >= nhidden_schedule.length())
+        nsamples = batch_size_supervised>0 ? batch_size_supervised : l;        
+    else
+        nsamples = batch_size>0 ? batch_size : l;
+
+
     // Parameterized function to optimize
     Func paramf = Func(invars, training_cost); 
     Var totalcost;
@@ -981,8 +995,7 @@ void DeepFeatureExtractorNNet::buildCosts(const Var& the_output,
     costs.resize(0);
 
     // If in a mainly supervised phase ...
-    if(supervised_signal_weight == 1 
-       || nhidden_schedule_current_position >= nhidden_schedule.length())
+    if(nhidden_schedule_current_position >= nhidden_schedule.length())
     {
 
         // ... add supervised costs ...
@@ -1119,62 +1132,70 @@ void DeepFeatureExtractorNNet::buildCosts(const Var& the_output,
         }
         Var c;
 
-
-        // ... then insert appropriate unsupervised reconstruction cost.
-        if(k_nearest_neighbors_reconstruction>=0)
+        // ... then insert appropriate unsupervised reconstruction cost ...
+        if(supervised_signal_weight == 1) // ... unless only using supervised signal.
         {
-
-            VarArray copies(k_nearest_neighbors_reconstruction+1);
-            for(int n=0; n<k_nearest_neighbors_reconstruction+1; n++)
+            Vec val(1);
+            val[0] = REAL_MAX;
+            costs.push_back(new SourceVariable(val));
+        }
+        else
+        {
+            if(k_nearest_neighbors_reconstruction>=0)
+            {
+                
+                VarArray copies(k_nearest_neighbors_reconstruction+1);
+                for(int n=0; n<k_nearest_neighbors_reconstruction+1; n++)
+                {
+                    if(always_reconstruct_input || nhidden_schedule_position == 0)
+                    {
+                        if(input_reconstruction_error == "cross_entropy")
+                            copies[n] = before_transfer_func;
+                        else if (input_reconstruction_error == "mse")
+                            copies[n] = the_output;
+                    }
+                    else
+                        copies[n] = before_transfer_func;
+                }
+                
+                Var reconstruct = vconcat(copies);
+                
+                if(always_reconstruct_input || nhidden_schedule_position == 0)
+                {
+                    if(input_reconstruction_error == "cross_entropy")
+                        c = stable_cross_entropy(reconstruct, the_unsupervised_target);
+                    else if (input_reconstruction_error == "mse")
+                        c = sumsquare(reconstruct-the_unsupervised_target);
+                    else PLERROR("In DeepFeatureExtractorNNet::buildCosts(): %s is not "
+                                 "a valid reconstruction error", 
+                                 input_reconstruction_error.c_str());
+                }
+                else
+                    c = stable_cross_entropy(reconstruct, the_unsupervised_target);
+                
+            }
+            else
             {
                 if(always_reconstruct_input || nhidden_schedule_position == 0)
                 {
                     if(input_reconstruction_error == "cross_entropy")
-                        copies[n] = before_transfer_func;
+                        c = stable_cross_entropy(before_transfer_func, 
+                                                 the_unsupervised_target);
                     else if (input_reconstruction_error == "mse")
-                        copies[n] = the_output;
+                        c = sumsquare(the_output-the_unsupervised_target);
+                    else PLERROR("In DeepFeatureExtractorNNet::buildCosts(): %s is not "
+                                 "a valid reconstruction error", 
+                                 input_reconstruction_error.c_str());
                 }
                 else
-                    copies[n] = before_transfer_func;
-            }
-
-            Var reconstruct = vconcat(copies);
-
-            if(always_reconstruct_input || nhidden_schedule_position == 0)
-            {
-                if(input_reconstruction_error == "cross_entropy")
-                    c = stable_cross_entropy(reconstruct, the_unsupervised_target);
-                else if (input_reconstruction_error == "mse")
-                    c = sumsquare(reconstruct-the_unsupervised_target);
-                else PLERROR("In DeepFeatureExtractorNNet::buildCosts(): %s is not "
-                             "a valid reconstruction error", 
-                             input_reconstruction_error.c_str());
-            }
-            else
-                c = stable_cross_entropy(reconstruct, the_unsupervised_target);
-             
-        }
-        else
-        {
-            if(always_reconstruct_input || nhidden_schedule_position == 0)
-            {
-                if(input_reconstruction_error == "cross_entropy")
                     c = stable_cross_entropy(before_transfer_func, 
                                              the_unsupervised_target);
-                else if (input_reconstruction_error == "mse")
-                    c = sumsquare(the_output-the_unsupervised_target);
-                else PLERROR("In DeepFeatureExtractorNNet::buildCosts(): %s is not "
-                             "a valid reconstruction error", 
-                             input_reconstruction_error.c_str());
             }
-            else
-                c = stable_cross_entropy(before_transfer_func, 
-                                         the_unsupervised_target);
+        
+            if(output_sup) c = (1-supervised_signal_weight) * c + costs[0];
+            costs.push_back(c);
         }
 
-        if(output_sup) c = (1-supervised_signal_weight) * c + costs[0];
-
-        costs.push_back(c);
         PLASSERT( regularizer >= 0 );
         if (regularizer > 0) {
             // There is a regularizer to add to the cost function.
