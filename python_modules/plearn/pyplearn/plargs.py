@@ -202,7 +202,7 @@ would cause experiment to use the expdir::
     
 for instance.
 """
-import inspect, logging, new, re, sys
+import copy, inspect, logging, new, re, sys
 from plearn.pyplearn.context import *
 from plearn.utilities.Bindings import Bindings
 
@@ -895,6 +895,41 @@ class plnamespace:
     def getPlopt(cls, optname):
         return object.__getattribute__(cls, optname)
     getPlopt = classmethod(getPlopt)
+
+    def inherit(namespace):
+        """A deep-copy driven inheritance-like mechanism.
+
+        In the context of plnamespace, usual (Python) inheritance is not
+        satisfatory. Indeed, the options defined in some base class will be
+        shared among subclasses. However, when one would want to subclass a
+        plnamespace, it is more likely the he want the 'subclass' to have
+        options 'of the same name' than the ones in the base-class but
+        still independent.
+
+        This method provide a concise way to enact this inheritance-like
+        relationship between some New and some Existing namespaces
+
+            class New(plnamespace):
+                __metaclass__ = plnamespace.inherit(Existing)
+
+                other_option  = plopt("Other",
+                                      doc="An option that is not in the base class.")
+
+        Note that if 'Existing.some_option=VALUE' is overriden through the command-line,
+        the value of 'New.some_option' will be VALUE unless explicitely overrode. 
+        """
+        META = plnamespace.__metaclass__
+        class __metaclass__(META):
+            def __new__(metacls, clsname, bases, dic):
+                # Do not use plopt.optdict: the documentation, choices and other
+                # property would be lost...
+                optdict = dict([ (
+                    opt.getName(), opt) for opt in plopt.iterator(namespace) ])
+                dic.update( copy.deepcopy(optdict) )
+                cls = META.__new__(metacls, clsname, bases, dic)
+                return cls        
+        return __metaclass__
+    inherit = staticmethod(inherit)
         
     class __metaclass__(type):
         def __new__(metacls, clsname, bases, dic):
