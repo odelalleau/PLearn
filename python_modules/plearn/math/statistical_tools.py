@@ -219,6 +219,69 @@ def ols_regression(X, Y, intercept=True):
 
     @return: alpha, beta, epsilon, sigma.
     """
+    X, Y  = _regression_series(X, Y)    
+    T, K  = X.shape
+    T2, N = Y.shape
+    assert T==T2, "T,T2,N,K=%s"%[T, T2, N, K]
+    
+    Xorig = X
+    Yorig = Y
+    y_column = lambda ycol : Yorig[:,ycol]
+    # if N==1:
+    #     y_column = lambda ycol : ycol==0 and Yorig
+    
+    iota = lambda length: ones(shape=(length,1), type=Float64) 
+    beta = array(shape=(N,K), type=Float64)
+    alpha = array(shape=(N,), type=Float64)
+    epsilon = zeros(shape=(N,T), type=Float64)    
+    for ycol in range(N):
+        Ycol = y_column(ycol)
+        Xcol = Xorig[where(isNotNaN(Ycol))]
+        Y    = Ycol[ where(isNotNaN(Ycol)) ]
+
+        # Add an intercept
+        if intercept:
+            Tprime = Xcol.shape[0]
+            X = concatenate([ iota(Tprime), Xcol ], 1)
+            assert X.shape==(Tprime,K+1)
+        else:
+            X = Xcol
+
+        # OLS estimates
+        Xt          = transpose(X)
+        XtX         = mmult(Xt, X)
+        aug_beta    = mmult(inverse(XtX), Xt, Y)
+        
+        # Extract the intercept
+        if intercept:
+            alpha[ycol] = aug_beta[0]
+            beta[ycol]  = aug_beta[1:]
+        else:
+            alpha[ycol] = 0.0
+            beta[ycol]  = aug_beta
+
+        prediction = alpha[ycol] + mmult(Xcol, beta[ycol])
+        epsilon[ycol][where(isNotNaN(Ycol))] = Y - prediction
+    sigma = mmult(epsilon, transpose(epsilon)) / T
+
+    # for convenience...
+    if K==1:
+        beta = beta.getflat()
+
+    return alpha, beta, epsilon, sigma
+
+def ols_regressionBAK(X, Y, intercept=True):
+    """Perform an OLS regression (Robust to NaNs).
+    
+        Y = alpha + X beta + epsilon
+    
+    If the 'intercept' argument is False, 'alpha' is enforced to be
+    zero. The 'sigma' output is
+
+        mmult(epsilon, transpose(epsilon)) / T .
+
+    @return: alpha, beta, epsilon, sigma.
+    """
     #X, Y  = _regression_series(X, Y)    
     T, K  = _2D_shape(X)
     T2, N = _2D_shape(Y)
@@ -241,7 +304,8 @@ def ols_regression(X, Y, intercept=True):
 
         # Add an intercept
         if intercept:
-            Tprime = X.shape[0]
+            Tprime = Xcol.shape[0]
+            print Tprime, shape(Xcol)
             X = concatenate([ iota(Tprime), Xcol ], 1)
             assert X.shape==(Tprime,K+1)
         else:
@@ -356,22 +420,14 @@ class LinearGMM(object):
         # And these are the residuals
         self.uhat = y - mmult(X, self.beta)
 
-if __name__ == "__main__":        
-    from numarray.random_array import seed, random, normal
-    seed(02, 25)
-    
-    # Setting the problem
-    K = 3
-    T = 10
-    ALPHA = 10*ones(shape=(T,))
+
+
+def test_ols_regression(T, K, alpha=0.0, scale=10.0, plot=False):
     u = normal(0, 1, (T,))
     beta = range(1, K+1)
     
-    X = 10 * random((T, K))
-
-    #print shape(X), shape(beta)
-
-    Y = 100.0 + mmult(X, beta) + u    
+    X = scale * random((T, K))
+    Y = alpha + mmult(X, beta) + u    
 
     
     print "Beta:", beta
@@ -385,19 +441,50 @@ if __name__ == "__main__":
     print "Beta OLS (with intercept %s):"%ols[0], ols[1], "(%.3f)"%matrix_distance(ols[1],beta)
 
     print
-    scipy = stats.linregress(X, Y)
+    if K==1:
+        X = X.getflat()
+    scipy = stats.linregress(X, Y)    
     print "Beta SciPy (with intercept %s):"%scipy[1],
-    print scipy[0], "(%.3f)"%matrix_distance(scipy[0],beta)
+    print scipy[0], "(%.3f)"%matrix_distance(array(scipy[0]),beta)
 
-    if False:
+    if plot:
         import pylab
         pylab.hold(True)
         pylab.scatter(X, Y)
         xlims = pylab.xlim()
-        pylab.plot([0, xlims[1]], [0, olsR[1][0,0]*xlims[1]], label="No intercept")
-        pylab.plot([0, xlims[1]], [ols[0][0], ols[1][0,0]*xlims[1]], label="With intercept")
+        pylab.plot([0, xlims[1]], [0, olsR[1][0]*xlims[1]], label="No intercept")
+
+        intercept = ols[0][0]
+        line_end  = intercept + ols[1][0]*xlims[1]
+        pylab.plot([0, xlims[1]], [intercept, line_end], label="With intercept")
+
+        intercept = scipy[1]
+        line_end  = intercept + scipy[0]*xlims[1]
+        pylab.plot([0, xlims[1]], [intercept, line_end], label="SciPy")
+
         pylab.legend(loc=0)
         pylab.show()
+
+    return X, Y, olsR, ols, scipy
+
+if __name__ == "__main__":        
+    from numarray.random_array import seed, random, normal
+    seed(02, 25)
+    
+    # Setting the problem
+    print "T=10, K=1, (a, b)=(50, 1)"
+    test_ols_regression(10, 1, 50.0, plot=True)
+
+    print
+    print "T=100, K=1, (a, b)=(25, 1)"
+    test_ols_regression(100, 1, 25.0, plot=True)
+
+    print
+    print "T=100, K=3 (a, b)=(25, 1)"
+    try:
+        test_ols_regression(100, 3, 25.0)
+    except:
+        print "SciPy FAILS!"
 
     # # Performing OLS
     # Xt = transpose(X)
