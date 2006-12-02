@@ -31,9 +31,31 @@
 
 # Author: Christian Dorion
 from arrays import *
+from scipy import stats
 from scipy.stats import \
-     mean, hmean, std, var, cov, skew, kurtosis, skewtest, kurtosistest
+     mean, hmean, std, var, cov, skew, kurtosis, skewtest, kurtosistest     
 from scipy.stats.distributions import norm, chi2
+
+def _chk_asarray(a, axis):
+    if axis is None:
+        a = ravel(a)
+        outaxis = 0
+    else:
+        a = asarray(a)
+        outaxis = axis
+    return a, outaxis
+
+# Corrected from the scipy bugged version
+def nanmean(x,axis=-1):
+    """Compute the mean over the given axis ignoring nans.
+    """
+    x, axis = _chk_asarray(x,axis)
+    x = x.copy()
+    Norig = x.shape[axis]
+    factor = 1.0-sum(isnan(x),axis)*1.0/Norig
+    putmask(x,isnan(x),0)
+    return mean(x,axis)/factor
+
 
 def autocorrelation(series, k=1, biased=True):
     """Returns autocorrelation of order 'k' and corresponding two-tailed pvalue.
@@ -162,6 +184,87 @@ def studentized_range(means, variances, sample_sizes):
     mse = sum(variances) / len(variances)
     return (max(means) - min(means)) / sqrt(mse/nh)
 
+def _regression_series(*series):
+    series = list(series)
+    for s, S in enumerate(series):        
+        if len(S.shape)==1:
+            series[s] = transpose( array([ S ]) )
+        elif len(S.shape)==2:
+            pass
+        else:
+            raise ValueError(
+                "Regression series are expected to be uni- or bidimensional. "
+                "Current series is shaped %s" % shape(S) )
+    return series
+
+def _2D_shape(S):
+    if len(S.shape)==1:
+        return S.shape[0], 1
+    elif len(S.shape)==2:
+        return S.shape
+    else:
+        raise ValueError(
+            "Regression series are expected to be uni- or bidimensional. "
+            "Current series is shaped %s" % shape(S) )
+    
+def ols_regression(X, Y, intercept=True):
+    """Perform an OLS regression (Robust to NaNs).
+    
+        Y = alpha + X beta + epsilon
+    
+    If the 'intercept' argument is False, 'alpha' is enforced to be
+    zero. The 'sigma' output is
+
+        mmult(epsilon, transpose(epsilon)) / T .
+
+    @return: alpha, beta, epsilon, sigma.
+    """
+    #X, Y  = _regression_series(X, Y)    
+    T, K  = _2D_shape(X)
+    T2, N = _2D_shape(Y)
+    assert T==T2, "T,T2,N,K=%s"%[T, T2, N, K]
+    
+    Xorig = X
+    Yorig = Y
+    y_column = lambda ycol : Yorig[:,ycol]
+    if N==1:
+        y_column = lambda ycol : ycol==0 and Yorig
+    
+    iota = lambda length: ones(shape=(length,1), type=Float64) 
+    beta = array(shape=(N,K), type=Float64)
+    alpha = array(shape=(N,), type=Float64)
+    epsilon = zeros(shape=(N,T), type=Float64)    
+    for ycol in range(N):
+        Ycol = y_column(ycol)
+        Xcol = Xorig[where(isNotNaN(Ycol))]
+        Y    = Ycol[ where(isNotNaN(Ycol)) ]
+
+        # Add an intercept
+        if intercept:
+            Tprime = X.shape[0]
+            X = concatenate([ iota(Tprime), Xcol ], 1)
+            assert X.shape==(Tprime,K+1)
+        else:
+            X = Xcol
+
+        # OLS estimates
+        Xt          = transpose(X)
+        XtX         = mmult(Xt, X)
+        aug_beta    = mmult(inverse(XtX), Xt, Y)
+        
+        # Extract the intercept
+        if intercept:
+            alpha[ycol] = aug_beta[0]
+            beta[ycol]  = aug_beta[1:]
+        else:
+            alpha[ycol] = 0.0
+            beta[ycol]  = aug_beta
+
+        prediction = alpha[ycol] + mmult(Xcol, beta[ycol])
+        epsilon[ycol][where(isNotNaN(Ycol))] = Y - prediction
+    sigma = mmult(epsilon, transpose(epsilon)) / T
+    return alpha, beta, epsilon, sigma
+    
 
 #####  Very First Sketch...  ################################################
 
@@ -254,30 +357,58 @@ class LinearGMM(object):
         self.uhat = y - mmult(X, self.beta)
 
 if __name__ == "__main__":        
-    def matrix_distance(m1, m2):
-        return maximum.reduce( fabs(ravel(m1-m2)) )
-
     from numarray.random_array import seed, random, normal
     seed(02, 25)
     
     # Setting the problem
-    T = 5
+    K = 3
+    T = 10
+    ALPHA = 10*ones(shape=(T,))
     u = normal(0, 1, (T,))
-    beta = range(T)
+    beta = range(1, K+1)
     
-    X = 100 * random((T, T))
-    y = mmult(X, beta) + u    
-    
-    # Performing OLS
-    Xt = transpose(X)
-    XtX = mmult(Xt, X)
-    XtY = mmult(Xt, y)
-    beta_ols = mmult( inverse(XtX), XtY)
-    print "Distance beta_0 and beta_ols:", matrix_distance(beta, beta_ols)
-    
-    gmm = LinearGMM(y, X, X)
-    print "Distance beta_ols and beta_IV:", matrix_distance(beta_ols, gmm.beta_iv)
-    print "Distance beta_ols and beta_GMM:", matrix_distance(beta_ols, gmm.beta)
+    X = 10 * random((T, K))
 
-    print "GMM residuals:"
-    print gmm.uhat
+    #print shape(X), shape(beta)
+
+    Y = 100.0 + mmult(X, beta) + u    
+
+    
+    print "Beta:", beta
+
+    print 
+    olsR = ols_regression(X, Y, False)
+    print "Beta OLS (no intercept):", olsR[1], "(%.3f)"%matrix_distance(olsR[1],beta)
+
+    print 
+    ols = ols_regression(X, Y, True)
+    print "Beta OLS (with intercept %s):"%ols[0], ols[1], "(%.3f)"%matrix_distance(ols[1],beta)
+
+    print
+    scipy = stats.linregress(X, Y)
+    print "Beta SciPy (with intercept %s):"%scipy[1],
+    print scipy[0], "(%.3f)"%matrix_distance(scipy[0],beta)
+
+    if False:
+        import pylab
+        pylab.hold(True)
+        pylab.scatter(X, Y)
+        xlims = pylab.xlim()
+        pylab.plot([0, xlims[1]], [0, olsR[1][0,0]*xlims[1]], label="No intercept")
+        pylab.plot([0, xlims[1]], [ols[0][0], ols[1][0,0]*xlims[1]], label="With intercept")
+        pylab.legend(loc=0)
+        pylab.show()
+
+    # # Performing OLS
+    # Xt = transpose(X)
+    # XtX = mmult(Xt, X)
+    # XtY = mmult(Xt, y)
+    # beta_ols = mmult( inverse(XtX), XtY)
+    # print "Distance beta_0 and beta_ols:", matrix_distance(beta, beta_ols)
+    # 
+    # gmm = LinearGMM(y, X, X)
+    # print "Distance beta_ols and beta_IV:", matrix_distance(beta_ols, gmm.beta_iv)
+    # print "Distance beta_ols and beta_GMM:", matrix_distance(beta_ols, gmm.beta)
+    # 
+    # print "GMM residuals:"
+    # print gmm.uhat

@@ -52,6 +52,9 @@ class FigureWrapper(object):
         axes.getRectangle = lambda : rect
         return axes
 
+    def gca(self):
+        return self.figure.gca()
+
     def publish(self, path=""):
         if path:
             if path.endswith('.pdf'):

@@ -36,9 +36,16 @@ from numarray.linear_algebra import inverse as __numarray_inverse
 
 def inverse(a):
     """Built over numarray's inverse() function while handling scalars."""
-    if isinstance(a, (int, long, float, complex)):
+    if isinstance(a, (int, long, float, complex)) or a.shape == (1,):
         return 1.0/a
     return __numarray_inverse(a)
+
+# __numarray_transpose = transpose
+# def transpose(a):
+#     print a.shape
+#     if len(a.shape) == 1:
+#         return reshape(a, (1,a.shape[0]))
+#     return __numarray_transpose(a)
 
 def lag(series, k, fill=zeros):
     """Returns a lagged version of 'series'.
