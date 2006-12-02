@@ -35,6 +35,29 @@ from numarray import *
 from numarray.linear_algebra import inverse as __numarray_inverse
 from numarray.linear_algebra import determinant
 
+def _2D_shape(M):
+    if len(M.shape)==1:
+        return M.shape[0], 1
+    elif len(M.shape)==2:
+        return M.shape
+    else:
+        raise ValueError(
+            "Matrices are expected to be uni- or bidimensional. "
+            "Current matrices is shaped %s" % shape(M) )
+
+def _as_matrix(*matrices):
+    matrices = list(matrices)
+    for m, M in enumerate(matrices):        
+        if len(M.shape)==1:
+            matrices[m] = transpose( array([ M ]) )
+        elif len(M.shape)==2:
+            pass
+        else:
+            raise ValueError(
+                "Matrices are expected to be uni- or bidimensional. "
+                "Current matrices is shaped %s" % shape(M) )
+    return matrices
+    
 def inverse(a):
     """Built over numarray's inverse() function while handling scalars."""
     if isinstance(a, (int, long, float, complex)) or a.shape == (1,):
@@ -47,6 +70,19 @@ def inverse(a):
 #     if len(a.shape) == 1:
 #         return reshape(a, (1,a.shape[0]))
 #     return __numarray_transpose(a)
+
+def kronecker(m1, m2):    
+    M1, M2 = _as_matrix(m1, m2) 
+    l1, w1 = shape(M1)
+    l2, w2 = shape(M2)
+    K = array(shape=(l1*l2, w1*w2), type=Float64)
+    for i in range(l1):
+        for j in range(w1):
+            K[i*l2:(i+1)*l2, j*w2:(j+1)*w2] = M1[i,j] * m2
+
+    if w1==1 and w2==1:
+        K = K.getflat()
+    return K
 
 def lag(series, k, fill=zeros):
     """Returns a lagged version of 'series'.
@@ -158,3 +194,9 @@ if __name__ == '__main__':
     a = [1.0, float('NaN'), 3.0, float('NaN')]
     print a
     print replace_nans(a)
+
+    print 
+    print "Kronecker Product"
+    print kronecker(array([1, 0]), identity(3))
+    print
+    print kronecker(array([[1, 2],[3, 4]]), identity(3))

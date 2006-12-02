@@ -31,6 +31,7 @@
 
 # Author: Christian Dorion
 from arrays import *
+from arrays import _as_matrix
 from scipy import stats
 from scipy.stats import \
      mean, hmean, std, var, cov, skew, kurtosis, skewtest, kurtosistest     
@@ -184,29 +185,6 @@ def studentized_range(means, variances, sample_sizes):
     mse = sum(variances) / len(variances)
     return (max(means) - min(means)) / sqrt(mse/nh)
 
-def _regression_series(*series):
-    series = list(series)
-    for s, S in enumerate(series):        
-        if len(S.shape)==1:
-            series[s] = transpose( array([ S ]) )
-        elif len(S.shape)==2:
-            pass
-        else:
-            raise ValueError(
-                "Regression series are expected to be uni- or bidimensional. "
-                "Current series is shaped %s" % shape(S) )
-    return series
-
-def _2D_shape(S):
-    if len(S.shape)==1:
-        return S.shape[0], 1
-    elif len(S.shape)==2:
-        return S.shape
-    else:
-        raise ValueError(
-            "Regression series are expected to be uni- or bidimensional. "
-            "Current series is shaped %s" % shape(S) )
-    
 def ols_regression(X, Y, intercept=True):
     """Perform an OLS regression (Robust to NaNs).
     
@@ -219,7 +197,7 @@ def ols_regression(X, Y, intercept=True):
 
     @return: alpha, beta, epsilon, sigma.
     """
-    X, Y  = _regression_series(X, Y)    
+    X, Y  = _as_matrix(X, Y)    
     T, K  = X.shape
     T2, N = Y.shape
     assert T==T2, "T,T2,N,K=%s"%[T, T2, N, K]
@@ -273,66 +251,6 @@ def ols_regression(X, Y, intercept=True):
         epsilon = epsilon.getflat()
         
     return alpha, beta, epsilon, sigma
-
-def ols_regressionBAK(X, Y, intercept=True):
-    """Perform an OLS regression (Robust to NaNs).
-    
-        Y = alpha + X beta + epsilon
-    
-    If the 'intercept' argument is False, 'alpha' is enforced to be
-    zero. The 'sigma' output is
-
-        mmult(epsilon, transpose(epsilon)) / T .
-
-    @return: alpha, beta, epsilon, sigma.
-    """
-    #X, Y  = _regression_series(X, Y)    
-    T, K  = _2D_shape(X)
-    T2, N = _2D_shape(Y)
-    assert T==T2, "T,T2,N,K=%s"%[T, T2, N, K]
-    
-    Xorig = X
-    Yorig = Y
-    y_column = lambda ycol : Yorig[:,ycol]
-    if N==1:
-        y_column = lambda ycol : ycol==0 and Yorig
-    
-    iota = lambda length: ones(shape=(length,1), type=Float64) 
-    beta = array(shape=(N,K), type=Float64)
-    alpha = array(shape=(N,), type=Float64)
-    epsilon = zeros(shape=(N,T), type=Float64)    
-    for ycol in range(N):
-        Ycol = y_column(ycol)
-        Xcol = Xorig[where(isNotNaN(Ycol))]
-        Y    = Ycol[ where(isNotNaN(Ycol)) ]
-
-        # Add an intercept
-        if intercept:
-            Tprime = Xcol.shape[0]
-            print Tprime, shape(Xcol)
-            X = concatenate([ iota(Tprime), Xcol ], 1)
-            assert X.shape==(Tprime,K+1)
-        else:
-            X = Xcol
-
-        # OLS estimates
-        Xt          = transpose(X)
-        XtX         = mmult(Xt, X)
-        aug_beta    = mmult(inverse(XtX), Xt, Y)
-        
-        # Extract the intercept
-        if intercept:
-            alpha[ycol] = aug_beta[0]
-            beta[ycol]  = aug_beta[1:]
-        else:
-            alpha[ycol] = 0.0
-            beta[ycol]  = aug_beta
-
-        prediction = alpha[ycol] + mmult(Xcol, beta[ycol])
-        epsilon[ycol][where(isNotNaN(Ycol))] = Y - prediction
-    sigma = mmult(epsilon, transpose(epsilon)) / T
-    return alpha, beta, epsilon, sigma
-    
 
 #####  Very First Sketch...  ################################################
 
