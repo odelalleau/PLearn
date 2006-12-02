@@ -33,6 +33,7 @@
 from math import *
 from numarray import *
 from numarray.linear_algebra import inverse as __numarray_inverse
+from numarray.linear_algebra import determinant
 
 def inverse(a):
     """Built over numarray's inverse() function while handling scalars."""

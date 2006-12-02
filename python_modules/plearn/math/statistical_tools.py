@@ -267,7 +267,11 @@ def ols_regression(X, Y, intercept=True):
     # for convenience...
     if K==1:
         beta = beta.getflat()
-
+    if N==1:
+        alpha   = alpha.  getflat()
+        beta    = beta.   getflat()
+        epsilon = epsilon.getflat()
+        
     return alpha, beta, epsilon, sigma
 
 def ols_regressionBAK(X, Y, intercept=True):
