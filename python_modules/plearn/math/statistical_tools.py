@@ -186,7 +186,7 @@ def studentized_range(means, variances, sample_sizes):
     return (max(means) - min(means)) / sqrt(mse/nh)
 
 def ols_regression(X, Y, intercept=True):
-    """Perform an OLS regression (Robust to NaNs).
+    """Perform an OLS regression (Robust to NaNs in targets).
     
         Y = alpha + X beta + epsilon
     
@@ -205,32 +205,38 @@ def ols_regression(X, Y, intercept=True):
     Xorig = X
     Yorig = Y
     y_column = lambda ycol : Yorig[:,ycol]
-    # if N==1:
-    #     y_column = lambda ycol : ycol==0 and Yorig
-    
     iota = lambda length: ones(shape=(length,1), type=Float64) 
+
+    # Add an intercept if required
+    if intercept:
+        X = concatenate([ iota(T), Xorig ], 1)
+        assert X.shape==(T,K+1)
+
+    # Seeking computational efficiency...
+    Xt         = transpose(X)
+    XtX        = mmult(Xt, X)
+    XtX_inv    = inverse(XtX)
+    XtX_inv_Xt = mmult(XtX_inv, Xt)
+
+    # To be estimated
     beta = array(shape=(N,K), type=Float64)
     alpha = array(shape=(N,), type=Float64)
     epsilon = zeros(shape=(N,T), type=Float64)    
     for ycol in range(N):
         Ycol = y_column(ycol)
-        Xcol = Xorig[where(isNotNaN(Ycol))]
-        Y    = Ycol[ where(isNotNaN(Ycol)) ]
-
-        # Add an intercept
-        if intercept:
-            Tprime = Xcol.shape[0]
-            X = concatenate([ iota(Tprime), Xcol ], 1)
-            assert X.shape==(Tprime,K+1)
-        else:
-            X = Xcol
-
-        # OLS estimates
-        Xt          = transpose(X)
-        XtX         = mmult(Xt, X)
-        aug_beta    = mmult(inverse(XtX), Xt, Y)
+        Y    = Ycol[ where(isNotNaN(Ycol)) ] 
         
-        # Extract the intercept
+        _T_ = len(Y)
+        if _T_ != T: # There were NaNs...
+            _X_   = X[where(isNotNaN(Ycol))]  # Filtered X
+            _Xt_  = transpose(_X_)
+            _XtX_ = mmult(_Xt_, _X_)            
+            aug_beta = mmult(inverse(_XtX_), _Xt_, Y)
+        else:
+            _X_ = X
+            aug_beta = mmult(XtX_inv_Xt ,Y)
+        
+        # Extract the intercept if any
         if intercept:
             alpha[ycol] = aug_beta[0]
             beta[ycol]  = aug_beta[1:]
@@ -238,9 +244,19 @@ def ols_regression(X, Y, intercept=True):
             alpha[ycol] = 0.0
             beta[ycol]  = aug_beta
 
-        prediction = alpha[ycol] + mmult(Xcol, beta[ycol])
+        prediction = mmult(_X_, aug_beta)
         epsilon[ycol][where(isNotNaN(Ycol))] = Y - prediction
-    sigma = mmult(epsilon, transpose(epsilon)) / T
+
+    # Is sigma really supposed to be NxN?
+    sigma = mmult(epsilon, transpose(epsilon)) / T    
+
+    # if hccm is not None:
+    #     Sigma = mmult(transpose(epsilon), epsilon) / N
+    #     print shape(XtX_inv), shape(Xt), shape(Sigma), shape(X), shape(XtX_inv)
+    #     H = mmult(XtX_inv, Xt, Sigma, X, XtX_inv) 
+    #     resize(hccm, H.shape)
+    #     hccm[:] = H[:]
+    #     print H
 
     # for convenience...
     if K==1:
