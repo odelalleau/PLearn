@@ -1,0 +1,36 @@
+from plearn.pyplearn import *
+
+plarg_defaults.data  = "PLEARNDIR:examples/data/test_suite/sin_signcos_1x_2y.amat"
+plarg_defaults.sigma = "1.0"
+
+dataset = pl.AutoVMatrix(
+    specification = plargs.data,
+    inputsize = 1,
+    targetsize = 2,
+    weightsize = 0
+    )
+
+learner = pl.GaussianProcessRegressor(
+    kernel             = pl.GaussianKernel(sigma=float(plargs.sigma)),
+    weight_decay       = 1e-2,
+    compute_confidence = True
+    )
+
+splitter = pl.FractionSplitter(
+    splits = TMat(1,3, [ (0,0.75) , (0.75,1) , (0,1) ])
+    )
+
+tester = pl.PTester(
+    expdir    = plargs.expdir,
+    dataset   = dataset,
+    splitter  = splitter,
+    learner   = learner,
+    statnames = ['E[train.E[mse]]', 'E[test1.E[mse]]', 'E[test2.E[mse]]' ],
+    provide_learner_expdir = 1,
+    save_test_costs        = 1,
+    save_test_outputs      = 1,
+    save_test_confidence   = 1
+    )
+
+def main():
+    return tester

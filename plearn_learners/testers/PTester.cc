@@ -743,7 +743,7 @@ void PTester::computeConfidence(VMat test_set, VMat confidence)
     const int n = test_set.length();
     if (learner->report_progress)
         pb = new ProgressBar("Computing Confidence Intervals", n);
-    Vec input, target, output;
+    Vec input, target, output(learner->outputsize());
     TVec< pair<real,real> > intervals;
     Vec intervals_real;
     real weight;
