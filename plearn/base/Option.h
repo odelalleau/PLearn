@@ -117,6 +117,12 @@ public:
     virtual const Object* getIndexedObject(const Object *o, int i) const
     { return toIndexedObjectPtr(dynamic_cast<const ObjectType*>(o)->*ptr, i); };
 
+    virtual void* getAsVoidPtr(Object* o) const
+    { return &(dynamic_cast<ObjectType*>(o)->*ptr); }
+    
+    virtual const void* getAsVoidPtr(const Object* o) const
+    { return &(dynamic_cast<const ObjectType*>(o)->*ptr); }
+    
     virtual string optionHolderClassName(const Object* o) const
     { return dynamic_cast<const ObjectType*>(o)->ObjectType::_classname_(); }
 

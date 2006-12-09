@@ -177,7 +177,17 @@ public:
     //! Return as an Object* the i-th item option, which must be either a TVec
     //! or an Array.  It's an error to call this function if the indexed item
     //! does not refer to an Object* or PP<Object>.
-    virtual const Object *getIndexedObject(const Object *o, int i) const = 0;    
+    virtual const Object *getIndexedObject(const Object *o, int i) const = 0;
+
+    //! Return the option contained in the specified object as a raw void*.
+    //! Can be used with the optiontype() accessor to cast to an appropriate
+    //! type.  Should be used sparingly and only when absolutely necessary.
+    virtual void* getAsVoidPtr(Object* o) const = 0;
+
+    //! Return the option contained in the specified object as a raw void*.
+    //! Can be used with the optiontype() accessor to cast to an appropriate
+    //! type.  Should be used sparingly and only when absolutely necessary.
+    virtual const void* getAsVoidPtr(const Object* o) const = 0;
 
 
     //#####  Option Information  ##############################################
