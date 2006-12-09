@@ -41,6 +41,8 @@
  ******************************************************* */
 
 #include "Kernel.h"
+#include <plearn/base/lexical_cast.h>
+#include <plearn/base/tostring.h>
 #include <plearn/base/ProgressBar.h>
 #include <plearn/math/TMat_maths.h>
 
@@ -316,7 +318,8 @@ void Kernel::computeNearestNeighbors(const Vec& x, Mat& k_xi_x_sorted, int knn) 
 ///////////////////////
 void Kernel::computeGramMatrix(Mat K) const
 {
-    if (!data) PLERROR("Kernel::computeGramMatrix should be called only after setDataForKernelMatrix");
+    if (!data)
+        PLERROR("Kernel::computeGramMatrix should be called only after setDataForKernelMatrix");
     if (!is_symmetric)
         PLERROR("In Kernel::computeGramMatrix - Currently not implemented for non-symmetric kernels");
     if (cache_gram_matrix && gram_matrix_is_cached) {
@@ -437,6 +440,48 @@ void Kernel::computeSparseGramMatrix(TVec<Mat> K) const
         sparse_gram_matrix_is_cached = true;
     }
 }
+
+
+/////////////////////////////////
+// computeGramMatrixDerivative //
+/////////////////////////////////
+void Kernel::computeGramMatrixDerivative(Mat& KD, const string& kernel_param,
+                                         real epsilon) const
+{
+    // This function is conceptually const, but the evaluation by finite
+    // differences in a generic way requires some change-options, which
+    // formally require a const-away cast.
+    Kernel* This = const_cast<Kernel*>(this);
+    bool old_cache = cache_gram_matrix;
+    This->cache_gram_matrix = false;
+
+    if (!data)
+        PLERROR("Kernel::computeGramMatrixDerivative should be called only after "
+                "setDataForKernelMatrix");
+
+    int W = dataInputsize();
+    KD.resize(W,W);
+    Mat KDminus(W,W);
+
+    string cur_param_str = getOption(kernel_param);
+    real cur_param = lexical_cast<real>(cur_param_str);
+
+    // Compute the positive part of the finite difference
+    This->changeOption(kernel_param, tostring(cur_param+epsilon));
+    computeGramMatrix(KD);
+
+    // Compute the negative part of the finite difference
+    This->changeOption(kernel_param, tostring(cur_param-epsilon));
+    computeGramMatrix(KDminus);
+
+    // Finalize computation
+    KD -= KDminus;
+    KD /= 2.*epsilon;
+
+    This->changeOption(kernel_param, cur_param_str);
+    This->cache_gram_matrix = old_cache;
+}
+
 
 ///////////////////
 // setParameters //

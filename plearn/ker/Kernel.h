@@ -91,63 +91,84 @@ public:
     //!  ** Subclasses must overload this method **
     virtual real evaluate(const Vec& x1, const Vec& x2) const = 0; //!<  returns K(x1,x2) 
 
-    //!  ** Subclasses may overload these methods to provide efficient kernel matrix access **
+    //!  ** Subclasses may override these methods to provide efficient kernel matrix access **
 
-    /*!     
-      This method sets the data VMat that will be used to define the kernel
-      matrix. It may precompute values from this that may later accelerate
-      the evaluation of a kernel matrix element
-    */
+    /**    
+     *  This method sets the data VMat that will be used to define the kernel
+     *  matrix. It may precompute values from this that may later accelerate
+     *  the evaluation of a kernel matrix element
+     */
     virtual void setDataForKernelMatrix(VMat the_data);
 
-    /*!
-      This method is meant to be used any time the data matrix
-      is appended a new row by an outer instance (e.g. SequentialKernel).
-      Through this method, the kernel must update any data dependent internal 
-      structure. The internal structures should have consistent length with 
-      the data matrix, assuming a sequential growing of the vmat.
-    */
+    /**
+     *  This method is meant to be used any time the data matrix is appended a
+     *  new row by an outer instance (e.g. SequentialKernel).  Through this
+     *  method, the kernel must update any data dependent internal
+     *  structure. The internal structures should have consistent length with
+     *  the data matrix, assuming a sequential growing of the vmat.
+     */
     virtual void addDataForKernelMatrix(const Vec& newRow);
 
 
     //! Return data_inputsize.
-    virtual int dataInputsize() {
+    int dataInputsize() const
+    {
         return data_inputsize;
     }
 
     //! Return n_examples.
-    virtual int nExamples()
-    { return n_examples; }
+    int nExamples() const
+    {
+        return n_examples;
+    }
 
     //!  returns evaluate(data(i),data(j))
     virtual real evaluate_i_j(int i, int j) const; 
 
-/*!     returns evaluate(data(i),x)
-  [squared_norm_of_x is just a hint that may
-  allow to speed up computation if it is already known, 
-  but it's optional]
-*/
+    /**
+     *  Return evaluate(data(i),x).
+     *
+     *  [squared_norm_of_x is just a hint that may allow to speed up
+     *  computation if it is already known, but it's optional]
+     */
     virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const; 
 
     //!  returns evaluate(x,data(i)) [default version calls evaluate_i_x if
     //!  kernel is_symmetric]
     virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const; 
 
-    //! Return evaluate(data(i),x), where x is the same as in the precedent call
-    //! to this same function (except if 'first_time' is true). This can be used to speed
-    //! up successive computations of K(x_i, x) (default version just calls evaluate_i_x).
+    /**
+     *  Return evaluate(data(i),x), where x is the same as in the precedent
+     *  call to this same function (except if 'first_time' is true). This can
+     *  be used to speed up successive computations of K(x_i, x) (default
+     *  version just calls evaluate_i_x).
+     */
     virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false) const;
     virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false) const;
 
     //! Call evaluate_i_j to fill each of the entries (i,j) of symmetric matrix K.
     virtual void computeGramMatrix(Mat K) const;
 
-    //! Fill K[i] with the non-zero elements of row i of the Gram matrix.
-    //! Specifically, K[i] is a (k_i x 2) matrix where k_i is the number of
-    //! non-zero elements in the i-th row of the Gram matrix, and
-    //! K[i](k) = [ <index of k-th non-zero element> <value of k-th non-zero element>]
+    /**
+     *  Fill K[i] with the non-zero elements of row i of the Gram matrix.
+     *  Specifically, K[i] is a (k_i x 2) matrix where k_i is the number of
+     *  non-zero elements in the i-th row of the Gram matrix, and K[i](k) =
+     *  [<index of k-th non-zero element> <value of k-th non-zero element>]
+    */
     virtual void computeSparseGramMatrix(TVec<Mat> K) const;
 
+    /**
+     *  Compute the derivative of the Gram matrix with respect to one of the
+     *  kernel's parameters.  The default implementation is to perform this
+     *  operation by finite difference (using the specified epsilon), but
+     *  specific kernels may override this in the interest of speed and memory
+     *  consumption (which requires, in the default implementation, a second
+     *  Gram matrix in intermediate storage).  The kernel parameter is
+     *  specified using the getOption/setOption syntax.
+     */
+    virtual void computeGramMatrixDerivative(Mat& KD, const string& kernel_param,
+                                             real epsilon=1e-6) const;
+    
     //!  ** Subclasses may overload these methods ** 
     //!  They provide a generic way to set and retrieve kernel parameters
     virtual void setParameters(Vec paramvec); //!<  default version produces an error
@@ -167,7 +188,9 @@ public:
     void evaluate_all_x_i(const Vec& x, const Vec& k_x_xi, real squared_norm_of_x=-1, int istart = 0) const;
 
     inline real operator()(const Vec& x1, const Vec& x2) const
-    { return evaluate(x1,x2); }
+    {
+        return evaluate(x1,x2);
+    }
 
     //! Return true iif there is a data matrix set for this kernel.
     bool hasData();
@@ -200,8 +223,7 @@ public:
     Mat estimateHistograms(Mat input_and_class, real minval, real maxval, int nbins) const;
     real test(VMat d, real threshold, real sameness_below_threshold, real sameness_above_threshold) const;
     virtual void build();
-    //virtual void oldwrite(ostream& out) const;
-    //virtual void oldread(istream& in);
+
     virtual ~Kernel();
 
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
