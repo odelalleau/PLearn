@@ -74,11 +74,8 @@ def autocorrelation(series, k=1, biased=True):
     sigma = var(series)
 
     # Centered observations
-    obs = series-mu
-    
-    # The third argument to lag() is such that the returned vector has
-    # length (l-k), where l is the length of 'obs'. 
-    lagged = lag(obs, k, lambda shape : array([])) 
+    obs = series-mu    
+    lagged = lag(obs, k) 
     truncated = obs[:-k]
     assert len(lagged) == len(truncated)
 

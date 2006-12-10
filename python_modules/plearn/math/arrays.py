@@ -84,15 +84,17 @@ def kronecker(m1, m2):
         K = K.getflat()
     return K
 
-def lag(series, k, fill=zeros):
+def lag(series, k=1, fill=(lambda shape : array([]))):
     """Returns a lagged version of 'series'.
 
-    Default behavior is to return an array of the same length than 'series'
-    with last 'k' elements equal to 0 (read first 'k' elements if 'k' is
-    negative). This behavior can be modified by providing a user-defined
-    'fill' function which accepts a shape tuple as single argument.
+    Default behavior is to return an array with abs(k) elements less than
+    'series'. This behavior can be modified by providing a user-defined
+    'fill' function which accepts a shape tuple as single argument. To
+    have, for instance, last 'k' elements equal to 0 (read first 'k'
+    elements if 'k' is negative), 'fill' could be the zeros() function from
+    numarray.
     """
-    assert len(shape(series)) == 1, "Manages row vector only"
+    assert len(shape(series)) == 1, "Manages row vectors only"
     if k > 0:
         return concatenate([series[k:], fill((k,))])
     elif k < 0:
@@ -171,6 +173,10 @@ def replace_nans(a, with=0.0):
     return choose(isNotNaN(a), (with, a))
 
 if __name__ == '__main__':
+    a = array(range(10))
+    print "lag(%s): %s"%(a, lag(a))
+    print 
+    
     print fast_softmax([ 0, 0, 100 ])
     print
     print isNaN(float('NaN'))
