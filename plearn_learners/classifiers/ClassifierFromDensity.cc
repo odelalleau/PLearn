@@ -192,7 +192,7 @@ void ClassifierFromDensity::train()
         for(int c=0; c<nclasses; c++)
         {
             if(verbosity>=1)
-                pout << ">>> Training class " << c << endl;
+                perr << ">>> Training class " << c << endl;
             VMat set_c = train_set.rows(indices[c]);
             int in_sz = set_c->inputsize();
             int targ_sz = set_c->targetsize();
@@ -211,7 +211,7 @@ void ClassifierFromDensity::train()
             if (expd!="")
                 estimators[c]->setExperimentDirectory(expd / "Class" / tostring(c));
             if (verbosity>=1)
-                pout << " ( " << set_c.length() << " samples)" << endl;
+                perr << " ( " << set_c.length() << " samples)" << endl;
             estimators[c]->setTrainingSet(set_c);
             PP<VecStatsCollector> train_stats = new VecStatsCollector();
             train_stats->setFieldNames(estimators[c]->getTrainCostNames());
@@ -221,20 +221,20 @@ void ClassifierFromDensity::train()
         }
         stage = nstages; // trained!
         if (verbosity >= 2)
-            pout << ">>> Training is over" << endl;
+            perr << ">>> Training is over" << endl;
     }
     if(stage>0 && stage<nstages)
     {
         for(int c=0; c<nclasses; c++)
         {
             if(verbosity>=1)
-                pout << ">>> Training class " << c;
+                perr << ">>> Training class " << c;
             estimators[c]->nstages = nstages;
             estimators[c]->train();
         }
         stage = nstages;
         if (verbosity >= 2)
-            pout << ">>> Training is over" << endl;
+            perr << ">>> Training is over" << endl;
     }
     
 }
