@@ -161,6 +161,17 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
     rmm.inherited(inherited::_getRemoteMethodMap_());
 
     declareMethod(
+        rmm, "getRow", &VMatrix::getRowVec,
+        (BodyDoc("Returns a row of a matrix \n"),
+         ArgDoc ("i", "Position of the row to get.\n"),
+         RetDoc ("row i vector")));
+
+    declareMethod(
+        rmm, "getMat", &VMatrix::toMat,
+        (BodyDoc("Returns the content of the vmat as a Mat\n"),
+         RetDoc ("The conent of this VMatrix as a Mat")));
+
+    declareMethod(
         rmm, "declareFieldNames", &VMatrix::declareFieldNames,
         (BodyDoc("Declares the field names.\n"),
          ArgDoc ("fnames", "TVec of field names.\n")));
@@ -171,6 +182,11 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
          ArgDoc ("v", "Vec with values (row) to append.\n")));
 
     declareMethod(
+        rmm, "appendRows", &VMatrix::appendRows,
+        (BodyDoc("Appends rows to the VMatrix.\n"),
+         ArgDoc ("rows", "A matrix containing the rows to append.\n")));
+
+    declareMethod(
         rmm, "saveFieldInfos", &VMatrix::saveFieldInfos,
         (BodyDoc("Saves field names, etc. in metadatadir.\n")));
 
@@ -178,6 +194,12 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
         rmm, "flush", &VMatrix::flush,
         (BodyDoc("Flush mods. to disk.\n")));
 
+    declareMethod(
+        rmm, "getBoundingBox", &VMatrix::getBoundingBox,
+        (BodyDoc("Returns the (possibly enlarged) bounding box of the data."),
+         ArgDoc ("extra_percent", "if non 0, then the box is enlarged in both ends\n"
+                 "of every direction by that given percentage"),
+         RetDoc ("bounding box as as a vector of (min,max) pairs")));         
 }
 
 
@@ -1706,6 +1728,19 @@ void VMatrix::accumulateXtX(int X_startcol, int X_ncols,
             getSubRow(i,X_startcol,x);
             externalProductAcc(result, x,x);
         }
+}
+
+Vec VMatrix::getRowVec(int i) const
+{
+    Vec v(width());
+    getRow(i,v);
+    return v;
+}
+
+void VMatrix::appendRows(Mat rows)
+{
+    for(int i=0; i<rows.length(); i++)
+        appendRow(rows(i));
 }
 
 } // end of namespace PLearn
