@@ -37,7 +37,6 @@ from threading import Timer
 from thread    import interrupt_main
 
 from plearn.pyplearn import *
-from plearn.pyplearn import plearn_repr
 import plearn.io.serialize
 
 def launch_plearn_server(command = 'plearn server', logger=None):
@@ -54,8 +53,14 @@ def connect_to_plearn_server(hostname, port, logger=None):
         
 class RemotePLearnServer:
 
-    def help(self, request):
+    def help(self):
         print """
+        You can create remote object with either the new or load methods:
+         + new takes an object specification as either a string or pyplearn object.
+         + load takes a lath to a file (.plearn, .pyplearn, .psave, .vmat, .pymat)
+        You can then call (remote) methods on the returned stubs as you would call normal methods.
+        
+        Remote PLearn functions can be called as methods of the present server object.
         
         Remote functions that are part of the online help system:
         (Note: all ...name arguments must be strings)
@@ -103,11 +108,12 @@ class RemotePLearnServer:
         
     def reserve_new_id(self):
         """Returns an available object id and adds it to self.reserved_ids"""
-        newid = 1
+        startid = 10000
+        newid = startid
         if self.reserved_ids:
             first_id = self.reserved_ids[0]
             last_id  = self.reserved_ids[-1]
-            if first_id>1:
+            if first_id>startid:
                 newid = first_id-1
                 self.reserved_ids.insert(0,newid)
             elif last_id-first_id+1 == len(self.reserved_ids):
@@ -148,6 +154,10 @@ class RemotePLearnServer:
         return obj
 
     def load(self, objfilepath):
+        """This will load the object from the specified file
+        into the server, and return a remote handler for it.
+        File may be a .plearn, .pyplearn, .psave, .vmat, .pymat
+        """
         objid = self.reserve_new_id()
         self.callLoadObject(objid, objfilepath)
         obj = RemotePObject(self, objid)
@@ -232,6 +242,11 @@ class RemotePLearnServer:
         if self.clear_maps:
             self.io.clear_maps()
 
+        # re-register all objects from self.objects:
+        pref_map = PRefMap.getCurrentPRefMap()
+        for obj in self.objects.values():
+            pref_map.registerPLearnRef(obj._serial_number())
+
     def sendFunctionCallHeader(self, funcname, nargs):
         self.clearMaps()
         self.logged_write('!F '+funcname+' '+str(nargs)+' ')
@@ -244,6 +259,9 @@ class RemotePLearnServer:
         self.io.skip_blanks_and_comments()
         c = self.io.get()
         if c!='!':
+            print c
+            while c!='':
+                print self.io.get()
             raise TypeError("Returns received from server are expected to start with a ! but read "+c)
         c = self.io.get()
         if c=='R':
@@ -284,6 +302,7 @@ class RemotePLearnServer:
 
     def callMethod(self, objid, methodname, *args):
         self.sendMethodCallHeader(objid, methodname, len(args))
+        # print 'sending ARGS', args
         self.logged_write_args(args)
 
         if self.dbg_dump:
@@ -325,6 +344,10 @@ class RemotePObject:
     def __init__(self, serv, objid):
         self.server = serv
         self.objid = objid
+        self._by_value = False
+
+    def _serial_number(self):
+        return self.objid
         
     def __getattr__(self,methodname):
         def f(*args):
@@ -341,11 +364,16 @@ class RemotePObject:
     def delete(self):
         self.server.delete(self.objid)
 
+    def plearn_repr(self, indent_level, inner_repr):
+        return " *"+str(self.objid)+"; "
+
     def __repr__(self):
-        return repr(self.getObject())
+        # return repr(self.getObject())
+        return 'RemotePObject(objid='+str(self.objid)+')'
     
     def __str__(self):
-        return str(self.getObject())
+        #    return str(self.getObject())
+        return self.__repr__()
 
 ##     def getOptionAsString(self, optionname):
 ##         serv = self.server

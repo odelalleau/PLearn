@@ -35,6 +35,11 @@
 import copy, new, os, sys
 
 from plearn.pyplearn.plargs import *
+# Need to import PRefMap here in order to access it. (because somebody decided to 
+# define plearn_repr here as the corresponding function from the plearn_repr module,
+# there was no way to acces the plearn_repr module from the outside...)
+from plearn.pyplearn.plearn_repr import PRefMap
+from plearn.pyplearn.plearn_repr import PLearnRepr
 from plearn.pyplearn.plearn_repr import plearn_repr
 from plearn.pyplearn.PyPLearnObject import PyPLearnObject, PyPLearnList, PLOption
 

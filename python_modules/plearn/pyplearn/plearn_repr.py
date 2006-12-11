@@ -62,6 +62,15 @@ def bindref( refname, obj ):
     globals()[refname] = obj
     return obj
 
+# Class for explicitly giving a PLearn representation as a string in 
+# PLearn serialization format. 
+class PLearnRepr:
+    def __init__( self, reprstring):
+        self.reprstring = reprstring
+
+    def plearn_repr(self, indent_level, inner_repr):
+        return self.reprstring
+
 #
 #  Helper classes
 #
@@ -100,6 +109,11 @@ class PRefMap( Bindings ):
         #raw_input((len(self.ordered_keys), key, value ))
         self.references[ key ] = PRef( len(self.ordered_keys) )
 
+    def registerPLearnRef(self, plearnref):
+        ref = PRef( plearnref )
+        ref.expanded = True
+        self.references[ plearnref ] = ref
+
     def __getitem__( self, key ):
         ref = self.references[ key ]
         if ref.expanded:
@@ -132,12 +146,11 @@ def plearn_repr( obj, indent_level = 0 ):
     if not noref and hasattr(obj, '_serial_number') and callable(obj._serial_number):        
         # The current object can be referenced
         pref_map = PRefMap.getCurrentPRefMap()
-        object_id = obj._serial_number()        
+        object_id = obj._serial_number()
 
         # Create a first representation of the object.
         if object_id not in pref_map:
             pref_map[ object_id ] = __plearn_repr( obj, indent_level )
-
         return pref_map[ object_id ]
 
     else:
