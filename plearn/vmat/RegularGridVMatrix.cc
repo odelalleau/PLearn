@@ -59,6 +59,11 @@ RegularGridVMatrix::RegularGridVMatrix(TVec<int> the_dimensions, TVec< pair<real
     build_();
 }
 
+RegularGridVMatrix::RegularGridVMatrix(TVec<int> the_dimensions, Vec the_coordstart, Vec the_coordend)
+    :dimensions(the_dimensions.copy()), coordstart(the_coordstart.copy()), coordend(the_coordend.copy())
+{
+    build_();
+}
 
 PLEARN_IMPLEMENT_OBJECT(RegularGridVMatrix, "ONE LINE DESCR",
                         "RegularGridVMatrix represents the list of coordinates along a regularly spaced grid.");
@@ -75,7 +80,7 @@ void RegularGridVMatrix::getNewRow(int i, const Vec& v) const
     {
         int idx_k = idx%dimensions[k];
         idx = idx/dimensions[k];
-        v[k] = range[k].first + (range[k].second-range[k].first)/(dimensions[k]-1)*idx_k;
+        v[k] = coordstart[k] + (coordend[k]-coordstart[k])/(dimensions[k]-1)*idx_k;
     }
 }
 
@@ -97,6 +102,12 @@ void RegularGridVMatrix::declareOptions(OptionList& ol)
     declareOption(ol, "range", &RegularGridVMatrix::range, OptionBase::buildoption,
                   "A vector of low:high pairs with as many dimensions as the grid\n"
                   "ex for 2D: [ -10:10 -3:4 ] \n");
+    declareOption(ol, "coordstart", &RegularGridVMatrix::coordstart, OptionBase::buildoption,
+                  "A vector of all the start ocoordinates of the grid in each dimension\n"
+                  "ex for 2D: [ -10, -3 ] \n");
+    declareOption(ol, "coordend", &RegularGridVMatrix::coordend, OptionBase::buildoption,
+                  "A vector of all the end coordinates of the grid in each dimension\n"
+                  "ex for 2D: [ 5, 4 ] \n");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -104,6 +115,18 @@ void RegularGridVMatrix::declareOptions(OptionList& ol)
 
 void RegularGridVMatrix::build_()
 {
+    int n = range.length();
+    if(n>0)
+    {
+        coordstart.resize(n);
+        coordend.resize(n);
+        for(int k=0; k<n; k++)
+        {
+            coordstart[k] = range[k].first;
+            coordstart[k] = range[k].second;
+        }
+    }
+
     width_ = dimensions.length();
     length_ = (width_ ? product(dimensions) : 0);
     if(inputsize_<0)
@@ -126,6 +149,8 @@ void RegularGridVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(dimensions, copies);
     deepCopyField(range, copies);
+    deepCopyField(coordstart, copies);
+    deepCopyField(coordend, copies);
 }
 
 } // end of namespace PLearn

@@ -61,6 +61,8 @@ public:
     // ************************
 
     TVec<int> dimensions;
+    Vec coordstart;
+    Vec coordend;
     TVec< pair<real,real> > range;
 
     // ****************
@@ -71,6 +73,9 @@ public:
     // initializes all fields to reasonable default values.
     RegularGridVMatrix();
 
+    RegularGridVMatrix(TVec<int> the_dimensions, Vec the_coordstart, Vec the_coordend);
+
+    //! DEPRECATED constructor
     RegularGridVMatrix(TVec<int> the_dimensions, TVec< pair<real,real> > the_range);
 
     // ******************
