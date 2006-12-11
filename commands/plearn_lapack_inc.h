@@ -53,6 +53,7 @@
 #include <plearn_learners/regressors/PLS.h>
 
 // Unsupervised/KernelProjection
+#include <plearn_learners/unsupervised/NormalizationLearner.h>
 #include <plearn_learners/unsupervised/Isomap.h>
 #include <plearn_learners/unsupervised/KernelPCA.h>
 #include <plearn_learners/unsupervised/LLE.h>

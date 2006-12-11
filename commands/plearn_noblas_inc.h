@@ -77,6 +77,10 @@
 #include <commands/PLearnCommands/ServerCommand.h>
 #include <commands/PLearnCommands/TestDependenciesCommand.h>
 #include <commands/PLearnCommands/TestDependencyCommand.h>
+
+// * extra stuff from Boost to generate help *
+#include <commands/PLearnCommands/HTMLHelpCommand.h>
+
 //#include <commands/PLearnCommands/TxtmatCommand.h>
 
 
@@ -145,9 +149,12 @@
 //#include <plearn_learners/generic/DistRepNNet.h>
 #include <plearn_learners/generic/NNet.h>
 #include <plearn_learners/generic/SelectInputSubsetLearner.h>
+#include <plearn_learners/generic/ChainedLearners.h>
 #include <plearn_learners/generic/StackedLearner.h>
 #include <plearn_learners/generic/TestingLearner.h>
 #include <plearn_learners/generic/VPLPreprocessedLearner.h>
+#include <plearn_learners/generic/VPLPreprocessedLearner2.h>
+#include <plearn_learners/generic/VPLCombinedLearner.h>
 
 // Hyper
 #include <plearn_learners/hyper/HyperLearner.h>
@@ -159,6 +166,7 @@
 #include <plearn_learners/regressors/RankLearner.h>
 #include <plearn_learners/regressors/RegressorFromDistribution.h>
 
+// Unsupervised
 #include <plearn_learners/unsupervised/UniformizeLearner.h>
 
 // PDistribution

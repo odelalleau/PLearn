@@ -66,9 +66,6 @@
 // Include stuff for interactive curses uses
 #include "plearn_curses_inc.h"
 
-// * extra stuff from Boost *
-#include <commands/PLearnCommands/HTMLHelpCommand.h>
-
 /**************
  * Dictionary *
  **************/
