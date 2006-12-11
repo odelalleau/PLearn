@@ -66,7 +66,8 @@ def latexTable(table, headers=[],
                fontsize="", landscape=False, writer=DEFAULT_WRITER):
     lwriter = lambda line : writer("%s\n"%line)
     if align:
-        assert len(align)==len(table[0]), "%d != %d"%(len(align), len(table[0])) 
+        assert len(align)==len(table[0]), \
+               "%d != %d --- %s"%(len(align), len(table[0]), table[0])
     else:
         align = "c"*len(table[0])
 

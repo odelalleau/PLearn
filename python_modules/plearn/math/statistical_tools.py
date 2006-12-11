@@ -33,8 +33,7 @@
 from arrays import *
 from arrays import _as_matrix
 from scipy import stats
-from scipy.stats import \
-     mean, hmean, std, var, cov, skew, kurtosis, skewtest, kurtosistest     
+from scipy.stats import mean, hmean, std, var, cov, skew, kurtosis
 from scipy.stats.distributions import norm, chi2
 
 def _chk_asarray(a, axis):
@@ -95,7 +94,89 @@ def autocorrelation(series, k=1, biased=True):
 
     # The two-tailed p-value is twice the prob that value of a std normal r.v.
     # turns out to be greater than the (absolute) value of Z
-    return rho_k, 2*( 1 - norm.cdf(abs(Z)) )
+    pvalue = 2*( 1 - norm.cdf(abs(Z)) )
+    assert pvalue >= 0.0 and pvalue <= 1.0
+    return rho_k, pvalue
+
+
+def skewtest(a,axis=-1):
+    """Tests whether the skew is significantly different from a normal distribution.
+
+    Axis can equal None (ravel array first), an integer (the axis over
+    which to operate), or a sequence (operate over multiple axes).
+
+    NOTE: This function is mostly copied from scipy.stats.stats, but
+    corrects for a major bug: the pvalue returned by SciPy is not valid
+    when the skewness is negative! The return values also are slightly
+    different: the skew is actually returned will the z-score is not.
+
+    Returns: skewness and 2-tail z-probability
+    """
+    a, axis = _chk_asarray(a, axis)
+    if axis is None:
+        a = ravel(a)
+        axis = 0
+    skewness = skew(a,axis)
+    n = float(a.shape[axis])
+    if n<8:
+        print "skewtest only valid for n>=8 ... continuing anyway, n=",n
+    y = skewness * sqrt(((n+1)*(n+3)) / (6.0*(n-2)) )
+    beta2 = ( 3.0*(n*n+27*n-70)*(n+1)*(n+3) ) / ( (n-2.0)*(n+5)*(n+7)*(n+9) )
+    W2 = -1 + sqrt(2*(beta2-1))
+    delta = 1/sqrt(log(sqrt(W2)))
+    alpha = sqrt(2.0/(W2-1))
+    y = where(equal(y,0),1,y)
+    Z = delta*log(y/alpha + sqrt((y/alpha)**2+1))
+    
+    # The two-tailed p-value is twice the prob that value of a std normal r.v.
+    # turns out to be greater than the (absolute) value of Z
+    pvalue = 2*( 1 - norm.cdf(abs(Z)) )
+    assert pvalue >= 0.0 and pvalue <= 1.0
+    return skewness, pvalue
+# Prevent user to use SciPy function
+stats.skewtest = skewtest
+
+
+def kurtosistest(a,axis=-1):
+    """Tests whether a dataset has normal kurtosis
+
+    That is, test whether kurtosis=3(n-1)/(n+1). Valid only for n>20.  Axis
+    can equal None (ravel array first), an integer (the axis over which to
+    operate), or a sequence (operate over multiple axes).
+
+    NOTE: This function is mostly copied from scipy.stats.stats, but
+    corrects for a major bug: the pvalue returned by SciPy is not valid
+    when the kurtosis is negative! The return values also are slightly
+    different: the kurtosis is actually returned will the z-score is not.
+
+    Returns: kurtosis and 2-tail z-probability.
+    """
+    a, axis = _chk_asarray(a, axis)
+    n = float(a.shape[axis])
+    if n<20:
+        print "kurtosistest only valid for n>=20 ... continuing anyway, n=",n
+    kurt = kurtosis(a,axis)
+    E = 3.0*(n-1) /(n+1)
+    varkurt = 24.0*n*(n-2)*(n-3) / ((n+1)*(n+1)*(n+3)*(n+5))
+    x = (kurt-E)/sqrt(varkurt)
+    sqrtbeta1 = 6.0*(n*n-5*n+2)/((n+7)*(n+9)) * sqrt((6.0*(n+3)*(n+5))/
+                                                       (n*(n-2)*(n-3)))
+    A = 6.0 + 8.0/sqrtbeta1 *(2.0/sqrtbeta1 + sqrt(1+4.0/(sqrtbeta1**2)))
+    term1 = 1 -2/(9.0*A)
+    denom = 1 +x*sqrt(2/(A-4.0))
+    denom = where(less(denom,0), 99, denom)
+    term2 = where(equal(denom,0), term1, power((1-2.0/A)/denom,1/3.0))
+    Z = ( term1 - term2 ) / sqrt(2/(9.0*A))
+    Z = where(equal(denom,99), 0, Z)
+    
+    # The two-tailed p-value is twice the prob that value of a std normal r.v.
+    # turns out to be greater than the (absolute) value of Z
+    pvalue = 2*( 1 - norm.cdf(abs(Z)) )
+    assert pvalue >= 0.0 and pvalue <= 1.0
+    return kurt, pvalue    
+# Prevent user to use SciPy function
+stats.kurtosistest = kurtosistest
+    
 
 def Qstatistic(series, m, ljung_box=False):
     """Returns 'Q_m' and the corresponding pvalue.
@@ -117,7 +198,7 @@ def Qstatistic(series, m, ljung_box=False):
 
     Q_m = 0.0
     for k in range(1, m+1): # Last index is not returned by range...
-        Q_m += correction(k) * autocorrelation(series, k, biased=True)[0]
+        Q_m += correction(k) * autocorrelation(series, k, biased=True)[0]**2
 
     Q_m *= T
     if ljung_box:
@@ -162,20 +243,28 @@ def variance_ratio(series, q, rw_hypothesis=1):
 
     if rw_hypothesis==3:
         raise NotImplementedError
-
     raise ValueError("'rw_hypothesis' must be in [0,1,3].")
 
-    # pp. 52-55 do not use the above summation!!!
-    n = (T-1) / q
-    nleft = (T-1) % q
-    obs, T = series[nleft:], n*q+1
-    assert len(obs) == T
-    raise ValueError(n)
-        
+def as_stat_pair(*stats):
+    formatted = []
+    for stat,pvalue in stats:
+        assert pvalue >= 0.0 and pvalue <= 1.0, "Invalid probability %.3f"%pvalue
+        pair = stat, report_significance(pvalue, "%.3f")
+        formatted.append(stacked_pair(pair, '%.2f', r'\text{\scriptsize (%s)}'))
+        #    r"$\underset{\text{(%s)}}{%.2f}$"%(pair[1], pair[0]) )
+    if len(formatted)==1:
+        return formatted[0]
+    return formatted
+
+def stacked_pair(pair, fmt1='%s', fmt2='%s'):
+    #return (r"$\overset{"+fmt1+'}{\underset{'+fmt2+'}{}}$')%pair
+    return (r"$\begin{matrix}"+fmt1+r' \\ '+fmt2+r"\end{matrix}$")%pair
+    
 def report_significance(pvalue, format, threshold=0.05):
     if pvalue < threshold:
         format = r"\textbf{%s}"%format
     return format%pvalue
+
 
 def studentized_range(means, variances, sample_sizes):
     nh = hmean(sample_sizes)

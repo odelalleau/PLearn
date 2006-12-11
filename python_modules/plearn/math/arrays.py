@@ -109,8 +109,8 @@ def mmult(*args):
     """Shorthand for matrix multiplication
 
     Numarray's 'matrixmultiply' function takes only two matrices at a time,
-    which can make statements quite heavy when multiply many matrices. This
-    function accepts as many matrices as one ones, processing multiplication
+    which can make statements quite heavy when multiplying many matrices. This
+    function accepts as many matrices as one wants, processing multiplication
     'from left to right'.
     """
     return reduce(matrixmultiply, args)
@@ -123,7 +123,7 @@ def rrange(start, stop, step, include_stop=False):
     behaviour is similar to all Python range* functions, but can be set
     True for convenience.
     """
-    npoints = (stop-start) / step
+    npoints = int((stop-start) / step)
     if include_stop:
         npoints += 1
     return [ start+step*d for d in range(npoints) ]

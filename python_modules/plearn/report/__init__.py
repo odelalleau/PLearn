@@ -61,7 +61,7 @@ def triggerLightGraySetup():
     global TICK_LABEL_FONTSIZE, TICK_LABEL_FONTPROP
     TICK_LABEL_FONTSIZE = 10
     TICK_LABEL_FONTPROP = FontProperties(family='sans-serif',
-                                         weight='normal', size=TICK_LABEL_FONTSIZE)        
+                                         weight='normal', size=TICK_LABEL_FONTSIZE)
     matplotlib.rc('text',           usetex=True)
     matplotlib.rc('tick',           color='k')
     matplotlib.rc('figure',         facecolor=FIGURE_BG)

@@ -38,10 +38,10 @@ LINE_COLORS = [ '#660033', 'b', 'r', 'k', "#CDBE70",
                 "#FF8C69", "#65754D", "#4d6575", "#754d65" ]
 
 __figure_counter = 0
-def getNewFigure():
+def getNewFigure(figsize=(12,10)):
     global __figure_counter
     __figure_counter += 1
-    return pylab.figure(__figure_counter, figsize=(12,10))
+    return pylab.figure(__figure_counter, figsize=figsize)
 
 def getBounds(frame):
     return [ frame.get_x(), frame.get_y(), frame.get_width(), frame.get_height() ]
@@ -79,8 +79,8 @@ class AxisLimits:
         self.max = max(limits[1], self.max)    
 
 class FigureWrapper(object):
-    def __init__(self):
-        self.figure = getNewFigure()
+    def __init__(self, figsize=(12,10)):
+        self.figure = getNewFigure(figsize)
 
     def addAxes(self, rect, *args, **kwargs):
         axes = self.figure.add_axes(rect, *args, **kwargs)
@@ -133,13 +133,16 @@ class TextWriter:
         >>        "business roll day: %d" % roll_day )
     """
     def __init__(self, axes, x_start=0.0, y_start=0.0,
-                 offset_x=0.0, offset_y=0.075, font_size=FONTSIZE):
+                 offset_x=0.0, offset_y=0.075, font_size=None):
         self.axes      = axes
         self.cur_x     = x_start
         self.cur_y     = y_start
         self.offset_x  = offset_x
         self.offset_y  = offset_y
+
         self.font_size = font_size
+        if font_size is None:
+            self.font_size = FONTSIZE
         
     def __call__(self, *texts, **kwargs):
         """Writes text in axes.
