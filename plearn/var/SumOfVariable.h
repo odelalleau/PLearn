@@ -104,20 +104,32 @@ protected:
 DECLARE_OBJECT_PTR(SumOfVariable);
 
 //!  sumOf
-inline Var sumOf(VMat distr, Func f, int nsamples, bool the_do_sizeprop=false)
-{ return new SumOfVariable(distr,f,nsamples,the_do_sizeprop); }
+inline Var sumOf(VMat distr, Func f, int nsamples=-1, bool the_do_sizeprop=false)
+{ 
+    if(nsamples<0) nsamples = distr.length();
+    return new SumOfVariable(distr,f,nsamples,the_do_sizeprop); 
+}
 
 //!  deprecated old version do not use!
-inline Var sumOf(Var output, const VarArray& inputs, VMat distr, int nsamples, VarArray parameters=VarArray(), bool the_do_sizeprop=false)
-{ return sumOf(distr,Func(inputs,output),nsamples,the_do_sizeprop); }
+inline Var sumOf(Var output, const VarArray& inputs, VMat distr, int nsamples=-1, VarArray parameters=VarArray(), bool the_do_sizeprop=false)
+{ 
+    if(nsamples<0) nsamples = distr.length();
+    return sumOf(distr,Func(inputs,output),nsamples,the_do_sizeprop); 
+}
 
 //!  meanOf
-inline Var meanOf(VMat distr, Func f, int nsamples, bool the_do_sizeprop=false)
-{ return new SumOfVariable(distr,f/nsamples,nsamples, the_do_sizeprop); }
+inline Var meanOf(VMat distr, Func f, int nsamples=-1, bool the_do_sizeprop=false)
+{ 
+    if(nsamples<0) nsamples = distr.length();
+    return new SumOfVariable(distr,f/nsamples,nsamples, the_do_sizeprop); 
+}
 
 //!  deprecated old version do not use!
-inline Var meanOf(Var output, const VarArray& inputs, VMat distr, int nsamples, VarArray parameters=VarArray(), bool the_do_sizeprop=false)
-{ return meanOf(distr, Func(inputs,output), nsamples, the_do_sizeprop); }
+inline Var meanOf(Var output, const VarArray& inputs, VMat distr, int nsamples=-1, VarArray parameters=VarArray(), bool the_do_sizeprop=false)
+{ 
+    if(nsamples<0) nsamples = distr.length();
+    return meanOf(distr, Func(inputs,output), nsamples, the_do_sizeprop); 
+}
 
 } // end of namespace PLearn
 
