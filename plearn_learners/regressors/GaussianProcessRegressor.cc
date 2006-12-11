@@ -43,6 +43,7 @@
 // From PLearn
 #include <plearn/vmat/ExtendedVMatrix.h>
 #include <plearn/math/pl_erf.h>
+#include <plearn/math/TMat_maths.h>
 
 #include "GaussianProcessRegressor.h"
 
@@ -94,7 +95,11 @@ void GaussianProcessRegressor::declareOptions(OptionList& ol)
 
     declareOption(ol, "include_bias", &GaussianProcessRegressor::m_include_bias,
                   OptionBase::buildoption,
-                  "Whether to include a bias term in the regression (true by default)");
+                  "Whether to include a bias term in the regression (true by default)\n"
+                  "The effect of this option is NOT to prepend a column of 1 to the inputs\n"
+                  "(which has often no effect for GP regression), but to estimate a\n"
+                  "separate mean of the targets, perform the GP regression on the\n"
+                  "zero-mean targets, and add it back when computing the outputs.\n");
 
     declareOption(ol, "compute_confidence", &GaussianProcessRegressor::m_compute_confidence,
                   OptionBase::buildoption,
@@ -113,6 +118,10 @@ void GaussianProcessRegressor::declareOptions(OptionList& ol)
                   "be saved since the confidence intervals are obtained from the equation\n"
                   "\n"
                   "  sigma^2 = k(x,x) - k(x)'(M + lambda I)^-1 k(x)\n");
+
+    declareOption(ol, "target_mean", &GaussianProcessRegressor::m_target_mean,
+                  OptionBase::learntoption,
+                  "Mean of the targets, if the option 'include_bias' is true");
     
     declareOption(ol, "training_inputs", &GaussianProcessRegressor::m_training_inputs,
                   OptionBase::learntoption,
@@ -148,11 +157,10 @@ void GaussianProcessRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(m_kernel,               copies);
     deepCopyField(m_params,               copies);
     deepCopyField(m_gram_inverse,         copies);
+    deepCopyField(m_target_mean,          copies);
     deepCopyField(m_training_inputs,      copies);
     deepCopyField(m_kernel_evaluations,   copies);
     deepCopyField(m_gram_inverse_product, copies);
-    deepCopyField(m_extended_input,       copies);
-    deepCopyField(m_actual_input,         copies);
 }
 
 
@@ -163,13 +171,9 @@ void GaussianProcessRegressor::setTrainingSet(VMat training_set, bool call_forge
     if (inputsize < 0)
         PLERROR("GaussianProcessRegressor::setTrainingSet: the training set inputsize "
                 "must be specified (current value = %d)", inputsize);
-    m_training_inputs = training_set.subMatColumns(0, inputsize);
-    if (m_include_bias)                          // prepend a first column of ones
-        m_training_inputs = new ExtendedVMatrix(m_training_inputs,0,0,1,0,1.0);
 
     // Convert to a real matrix in order to make saving it saner
-    m_training_inputs = m_training_inputs.toMat();
-
+    m_training_inputs = training_set.subMatColumns(0, inputsize).toMat();
     inherited::setTrainingSet(training_set, call_forget);
 }
 
@@ -182,6 +186,7 @@ int GaussianProcessRegressor::outputsize() const
 void GaussianProcessRegressor::forget()
 {
     m_params.resize(0,0);
+    m_target_mean.resize(0);
     m_gram_inverse.resize(0,0);
 }
     
@@ -212,6 +217,13 @@ void GaussianProcessRegressor::train()
         Mat RHS_identity = RHS.subMatColumns(targetsize, trainlength);
         identityMatrix(RHS_identity);
     }
+
+    // Subtract the mean if we require it
+    if (m_include_bias) {
+        m_target_mean.resize(RHS_target.width());
+        columnMean(RHS_target, m_target_mean);
+        RHS_target -= m_target_mean;
+    }
     
     // Compute Gram Matrix and add weight decay to diagonal
     m_kernel->setDataForKernelMatrix(m_training_inputs);
@@ -240,25 +252,19 @@ void GaussianProcessRegressor::computeOutput(const Vec& input, Vec& output) cons
 {
     PLASSERT( m_kernel && m_params.isNotNull() && m_training_inputs );
     PLASSERT( output.size() == m_params.width() );
-    PLASSERT( input.size() + m_include_bias == m_training_inputs.width() );
+    PLASSERT( input.size() == m_training_inputs.width() );
 
-    if (m_include_bias) {
-        m_extended_input.resize(m_training_inputs.width());
-        m_extended_input.subVec(1,input.size()) << input;
-        m_extended_input[0] = 1.0;
-        m_actual_input = m_extended_input;
-    }
-    else
-        m_actual_input = input;
-    
     m_kernel_evaluations.resize(m_params.length());
-    m_kernel->evaluate_all_x_i(m_actual_input, m_kernel_evaluations);
+    m_kernel->evaluate_all_x_i(input, m_kernel_evaluations);
 
     // Finally compute k(x,x_i) * (M + \lambda I)^-1 y
     product(Mat(1, output.size(), output),
             Mat(1, m_kernel_evaluations.size(), m_kernel_evaluations),
             m_params);
-}    
+
+    if (m_include_bias)
+        output += m_target_mean;
+}
 
 
 void GaussianProcessRegressor::computeCostsFromOutputs(const Vec& input, const Vec& output, 
@@ -282,9 +288,9 @@ bool GaussianProcessRegressor::computeConfidenceFromOutput(
     }
 
     // BIG-BIG assumption: assume that computeOutput has just been called and
-    // that m_kernel_evaluations and m_actual_input point to the right stuff.
+    // that m_kernel_evaluations contains the right stuff.
     PLASSERT( m_kernel && m_gram_inverse.isNotNull() );
-    real base_sigma_sq = m_kernel(m_actual_input, m_actual_input);
+    real base_sigma_sq = m_kernel(input, input);
     m_gram_inverse_product.resize(m_kernel_evaluations.size());
     product(m_gram_inverse_product, m_gram_inverse, m_kernel_evaluations);
     real sigma_reductor = dot(m_gram_inverse_product, m_kernel_evaluations);

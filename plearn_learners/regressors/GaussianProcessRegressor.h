@@ -93,7 +93,13 @@ public:
      */
     real m_weight_decay;
 
-    /// Whether to include a bias term in the regression (true by default)
+    /**
+     *  Whether to include a bias term in the regression (true by default).
+     *  The effect of this option is NOT to prepend a column of 1 to the inputs
+     *  (which has often no effect for GP regression), but to estimate a
+     *  separate mean of the targets, perform the GP regression on the
+     *  zero-mean targets, and add it back when computing the outputs.
+     */
     bool m_include_bias;
     
     /**
@@ -183,6 +189,9 @@ protected:
      *    sigma^2 = k(x,x) - k(x)'(M + lambda I)^-1 k(x)
      */
     Mat m_gram_inverse;
+
+    /// Mean of the targets, if the option 'include_bias' is true
+    Vec m_target_mean;
     
     /// Saved version of the training set inputs, which must be kept along for
     /// carrying out kernel evaluations with the test point
@@ -193,13 +202,6 @@ protected:
 
     /// Buffer for the product of the gram inverse with kernel evaluations
     mutable Vec m_gram_inverse_product;
-    
-    /// Buffer for test-time extended input (with prepended 1)
-    mutable Vec m_extended_input;
-
-    /// Point to computeOutput input vector or m_extended_input depending on
-    /// whether we include a bias or not
-    mutable Vec m_actual_input;
     
 protected:
     /// Declares the class options.

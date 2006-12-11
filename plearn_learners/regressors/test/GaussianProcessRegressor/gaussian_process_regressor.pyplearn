@@ -13,6 +13,7 @@ dataset = pl.AutoVMatrix(
 learner = pl.GaussianProcessRegressor(
     kernel             = pl.GaussianKernel(sigma=float(plargs.sigma)),
     weight_decay       = 1e-2,
+    include_bias       = True,
     compute_confidence = True
     )
 
