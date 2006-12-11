@@ -15,6 +15,10 @@ publish_guides:
 
 guides.all: installation_guide.all users_guide.all programmers_guide.all tools_guide.all faq.all
 
+autodoc_plearn_curses: 
+	cd html_autodoc; plearn_curses htmlhelp html_config.plearn
+	cd html_autodoc/doc; ln -s ../plearn.css .; cp ../plearn.jpg .;	cp ../background.png .
+
 doxygen:
 	doxygen
 
