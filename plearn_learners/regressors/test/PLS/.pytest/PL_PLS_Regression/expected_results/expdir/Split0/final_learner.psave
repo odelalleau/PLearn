@@ -1,0 +1,67 @@
+*1 ->AddCostToLearner(
+check_output_consistency = 0 ;
+combine_bag_outputs_method = 1 ;
+compute_costs_on_bags = 0 ;
+costs = 1 [ "mse" ] ;
+force_output_to_target_interval = 0 ;
+rescale_output = 0 ;
+rescale_target = 0 ;
+from_max = 1 ;
+from_min = -1 ;
+to_max = 1 ;
+to_min = 0 ;
+learner = *2 ->PLS(
+k = 2 ;
+method = "kernel" ;
+output_the_score = 0 ;
+output_the_target = 1 ;
+compute_confidence = 1 ;
+B = 4  2  [ 
+-0.174498821360297707 	0.0239985476804070626 	
+0.582838740892529517 	0.424165772250576556 	
+0.430529485361565378 	0.389118088343416491 	
+0.077716880973910496 	0.197115112951040672 	
+]
+;
+m = 2 ;
+mean_input = 4 [ -0.165805617977527908 0.0649350561797752551 -0.179678764044943706 -0.266772808988764154 ] ;
+mean_target = 2 [ 9.27822258426967394 12.5197274157303422 ] ;
+p = 4 ;
+precision = 9.99999999999999955e-07 ;
+stddev_input = 4 [ 1.02533987571522656 0.907879458155756214 10.2127464892209581 2.20306521047586523 ] ;
+stddev_target = 2 [ 91.688773485497947 52.9609603436480612 ] ;
+W = 4  2  [ 
+0.150874872496814444 	-0.686800560990906583 	
+0.635886606317772718 	0.582146198455780195 	
+0.641022725955828543 	0.172742074361498826 	
+0.402461006263830301 	-0.399463350998994493 	
+]
+;
+resid_variance = 2 [ 22.5737055559344419 422.505428803337963 ] ;
+seed = -1 ;
+stage = 1 ;
+n_examples = 89 ;
+inputsize = 4 ;
+targetsize = 2 ;
+weightsize = 0 ;
+forget_when_training_set_changes = 0 ;
+nstages = 1 ;
+report_progress = 1 ;
+verbosity = 1 ;
+nservers = 0 ;
+save_trainingset_prefix = ""  )
+;
+provide_learner_expdir = 1 ;
+expdir_append = "" ;
+seed = -1 ;
+stage = 1 ;
+n_examples = 89 ;
+inputsize = 4 ;
+targetsize = 2 ;
+weightsize = 0 ;
+forget_when_training_set_changes = 0 ;
+nstages = 1 ;
+report_progress = 1 ;
+verbosity = 1 ;
+nservers = 0 ;
+save_trainingset_prefix = ""  )
