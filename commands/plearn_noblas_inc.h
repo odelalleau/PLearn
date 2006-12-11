@@ -161,11 +161,11 @@
 
 // Regressors
 #include <plearn_learners/regressors/ConstantRegressor.h>
+#include <plearn_learners/regressors/GaussianProcessRegressor.h>
 #include <plearn_learners/regressors/KernelRidgeRegressor.h>
 #include <plearn_learners/regressors/KNNRegressor.h>
 #include <plearn_learners/regressors/RankLearner.h>
 #include <plearn_learners/regressors/RegressorFromDistribution.h>
-
 // Unsupervised
 #include <plearn_learners/unsupervised/UniformizeLearner.h>
 
