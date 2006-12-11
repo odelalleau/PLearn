@@ -173,6 +173,21 @@ public:
 
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(PyPLearnScript);
+
+
+//! Reads an object from the given filepath, performaing adequate 
+//! preprocessing according to file extension.
+//! Currently supported file extensions are: 
+//! .psave : no preprocessing performed
+//! .plearn .vmat : perform simple plearn macro processing
+//! .pyplearn .pymat: use python preprocessor
+//! The given args vector can be used to pass string arguments of the form argname=value.
+Object* smartLoadObject(PPath filepath, const vector<string>& args);
+
+//! Same as smartLoadObject(PPath, vector<string>) but passing an empty vector<string>
+inline Object* smartLoadObject(PPath filepath)
+{ vector<string> args; return smartLoadObject(filepath, args); }
+
   
 } // end of namespace PLearn
 

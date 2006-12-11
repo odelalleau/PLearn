@@ -302,6 +302,69 @@ void PyPLearnScript::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
+Object* smartLoadObject(PPath filepath, const vector<string>& args)
+{
+    if (!isfile(filepath))
+        PLERROR("Non-existent script file: %s\n",filepath.c_str());
+    
+    const string extension = extract_extension(filepath);
+    string script;
+
+    PP<PyPLearnScript> pyplearn_script;
+    PStream in;
+
+    if (extension == ".pyplearn" || extension==".pymat")
+    {
+        // Make a copy of args with the first argument (the name of the script)
+        // removed, leaving the first argument to the script at index 0.
+        vector<string> pyplearn_args(args.size()-1);
+        copy(args.begin() + 1, args.end(), pyplearn_args.begin());
+    
+        pyplearn_script = PyPLearnScript::process(filepath, pyplearn_args);
+        script          = pyplearn_script->getScript();
+    
+        // When we call the pyplearn script with either
+        // --help or --dump, everything will already have been done by
+        // the time the PyPLearnScript is built. 
+        if ( script == "" )
+            PLERROR("Empty script");
+
+        in = openString( script, PStream::plearn_ascii );
+    }
+    else if(extension==".plearn" || extension==".vmat")  // perform plearn macro expansion
+    {
+        map<string, string> vars;
+        // populate vars with the arguments passed on the command line
+        for (unsigned int i=1; i<args.size(); i++)
+        {
+            string option = args[i];
+            // Skip --foo command-lines options.
+            if (option.size() < 2 || option.substr(0, 2) != "--")
+            {
+                pair<string, string> name_val = split_on_first(option, "=");
+                vars[name_val.first] = name_val.second;
+            }
+        }
+
+        script = readFileAndMacroProcess(filepath, vars);
+        in = openString( script, PStream::plearn_ascii );
+    }
+    else if(extension==".psave") // do not perform plearn macro expansion
+    {
+        in = openFile(filepath, PStream::plearn_ascii);
+    }
+    else
+        PLERROR("In smartLoadObject: unsupported file extension. Must be one of .pyplearn .pymat .plearn .vmat .psave");
+
+    Object* o = readObject(in);
+    
+    if ( pyplearn_script.isNotNull() )
+        pyplearn_script->close();
+
+    return o;
+}
+
+
 } // end of namespace PLearn
 
 
