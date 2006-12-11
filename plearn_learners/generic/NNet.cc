@@ -1019,7 +1019,8 @@ void NNet::train()
         PLERROR("In NNet::train, you did not setTrainingSet");
     
     if(!train_stats)
-        PLERROR("In NNet::train, you did not setTrainStatsCollector");
+        setTrainStatsCollector(new VecStatsCollector());
+    // PLERROR("In NNet::train, you did not setTrainStatsCollector");
 
     int l = train_set->length();  
     
