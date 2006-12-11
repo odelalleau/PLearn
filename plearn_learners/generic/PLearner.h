@@ -478,6 +478,9 @@ public:
      */
     virtual void use(VMat testset, VMat outputs) const;
 
+    //! Returns a Mat that is a concatenation of the inputs and computed outputs.
+    Mat computeInputOutputMat(VMat inputs) const;
+
     /**
      *  Compute the output on the training set of the learner, and save the
      *  result in the provided matrix.

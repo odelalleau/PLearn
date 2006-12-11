@@ -291,6 +291,13 @@ void PLearner::declareMethods(RemoteMethodMap& rmm)
          RetDoc ("Matrix holding the computed outputs")));
 
     declareMethod(
+        rmm, "computeInputOutputMat", &PLearner::computeInputOutputMat,
+        (BodyDoc("Returns a matrix which is a (horizontal) concatenation\n"
+                 "and the computed outputs.\n"),
+         ArgDoc ("inputs", "VMatrix containing the inputs"),
+         RetDoc ("Matrix holding the inputs+computed_outputs")));
+
+    declareMethod(
         rmm, "computeOutputAndCosts", &PLearner::remote_computeOutputAndCosts,
         (BodyDoc("Compute both the output from the input, and the costs associated\n"
                  "with the desired target.  The computed costs\n"
@@ -771,6 +778,23 @@ bool PLearner::isStatefulLearner() const
     return false;
 }
 
+Mat PLearner::computeInputOutputMat(VMat inputs) const
+{
+    int l = inputs.length();
+    int nin = inputsize();
+    int nout = outputsize();
+    Mat m(l, nin+nout);
+    for(int i=0; i<l; i++)
+    {
+        Vec v = m(i);
+        Vec invec = v.subVec(0,nin);
+        Vec outvec = v.subVec(nin,nout);
+        inputs->getRow(i, invec);
+        computeOutput(invec, outvec);
+    }
+    return m;
+}
+
 //! Version of computeOutput that returns a result by value
 Vec PLearner::remote_computeOutput(const Vec& input) const
 {
@@ -848,6 +872,7 @@ void PLearner::remote_batchComputeOutputAndConfidence(VMat inputs, real probabil
     VMat out_and_conf = new FileVMatrix(pmat_fname,inputs.length(),fieldnames);
     batchComputeOutputAndConfidence(inputs, probability, out_and_conf);
 }
+
 
 } // end of namespace PLearn
 
