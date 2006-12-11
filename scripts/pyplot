@@ -1,0 +1,201 @@
+#!/usr/bin/env python
+
+# pyplot
+# Copyright (C) 2005-2006 Pascal Vincent
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#
+#   1. Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#
+#   2. Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#
+#   3. The name of the authors may not be used to endorse or promote
+#      products derived from this software without specific prior written
+#      permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+#  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+#  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+#  NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+#  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#  This file is part of the PLearn library. For more information on the PLearn
+#  library, go to the PLearn Web site at www.plearn.org
+
+
+# Author: Pascal Vincent
+
+# Note: this version uses the plearn server remote method call mechanism
+# to call plearn from python.
+# The older version of pyplot which used system to call the plearn learner command
+# to perform its comptations has been renamed oldpyplot
+
+import os
+import sys
+import time
+from plearn.io.server import *
+from plearn.plotting import *
+
+serv = launch_plearn_server()
+
+plearncommand = 'plearn'
+
+CLASS_POINT_STYLES = ['bo','ro','go','mo','co','yo']
+
+def print_usage_and_exit():
+    print """
+    Usage: pyplot <task> <dataspec> [<learner>]
+      task can be plot_2d 2d_density 2d_classif 2d_mapping 1d_regression
+      dataspec can be a .amat .pmat .vmat .pymat
+      learner must be a .plearn .pyplearn or .psave file (it's ignored for plot_2d)
+      """
+    sys.exit()
+
+if len(sys.argv)<3:
+    print_usage_and_exit()
+
+
+def openVMat(vmatspec):
+    if vmatspec.endswith(".amat") or vmatspec.endswith(".pmat"):
+        vmat = serv.new('AutoVMatrix(specification ="'+vmatspec+'");')
+    else:
+        vmat = serv.load(vmatspec)
+    return vmat
+
+
+task = sys.argv[1]
+dataspec = sys.argv[2]
+learnerspec = ''
+try: learnerspec = sys.argv[3]
+except: pass
+
+enlargement = 0.05
+nsamples = [200, 200]
+
+if task == 'plot_2d':
+    print 'Creating vmat'
+    vmat = openVMat(dataspec)
+    print 'Getting data matrix'
+    data = vmat.getMat()
+    print 'Data loaded'
+    if data.shape[1]>=3:
+        plot_2d_class_points(data[:,0:3], CLASS_POINT_STYLES)
+    else:
+        plot_2d_points(data[:,0:2],'o')
+    show()
+
+elif task == '2d_density':
+    vmat = openVMat(dataspec)
+    bbox = vmat.getBoundingBox(enlargement)
+    data = vmat.getMat()
+    data = data[:,0:2]
+    # plot_2d_points(data,'o')
+    # show()
+    print 'Creating learner'
+    learner = serv.load(learnerspec)
+    print 'Setting training set'
+    learner.setTrainingSet(vmat,True)
+    print 'Training learner'
+    learner.train()
+    print 'Saving trained learner'
+    learner.save('trained_learner.psave','plearn_ascii')
+    print 'Computing outputs on grid'
+    xymagnitude = learner.computeInputOutputMat(
+        pl.RegularGridVMatrix(coordstart=[pair[0] for pair in bbox],
+                              coordend=[pair[1] for pair in bbox],
+                              dimensions = nsamples))
+    transform_magnitude_into_covered_percentage(xymagnitude)
+    # print 'xymagnitude.shape = ',xymagnitude.shape
+    imshow_xymagnitude(xymagnitude)
+    plot_2d_points(data,'ko')
+    show()
+    surfplot_xymagnitude(xymagnitude)
+    raw_input()
+
+elif task == '2d_classif':
+    vmat = openVMat(dataspec)
+    print 'Getting data:'
+    data = vmat.getMat()
+    print data
+    print 'Getting data bounding box'
+    bbox = vmat.getBoundingBox(enlargement)[0:2]
+    print bbox
+    while True:
+        print 'Loading learner'
+        learner = serv.load(learnerspec)
+        print 'Setting training set'
+        learner.setTrainingSet(vmat,True)
+        learner.train()
+        print 'Saving trained learner'
+        learner.save('trained_learner.psave','plearn_ascii')
+        print 'computing outputs...'
+        xyscores = learner.computeInputOutputMat(
+            pl.RegularGridVMatrix(coordstart=[pair[0] for pair in bbox],
+                                  coordend=[pair[1] for pair in bbox],
+                                  dimensions = nsamples))
+        print 'scores:'
+        print xyscores
+        xy_winner_margin = xyscores_to_winner_and_margin(xyscores)
+        # print xy_winner_margin
+        xyrgb = xy_winner_magnitude_to_xyrgb(xy_winner_margin)
+        # print array(xyrgb)
+        imshow_xyrgb(xyrgb)
+        # print 'Plotting points of ',dataspec, data
+        plot_2d_class_points(data,CLASS_POINT_STYLES)
+        show()
+        del learner
+
+elif task == '2d_mapping':
+    vmat = openVMat(dataspec)
+    data = vmat.getMat()
+    learner = serv.load(learnerspec)
+    print 'Setting training set'
+    learner.setTrainingSet(vmat,True)
+    learner.train()
+    print 'Saving trained learner'
+    learner.save('trained_learner.psave','plearn_ascii')
+    plot_2d_points(data[:,0:2],'ro')
+    outputs = learner.use2(vmat)
+    plot_2d_points(outputs[:,0:2],'bo')
+    show()
+
+elif task == '1d_regression':
+    nx = 100
+    vmat = openVMat(dataspec)
+    data = vmat.getMat()
+    print 'Getting data bounding box'
+    bbox = vmat.getBoundingBox(enlargement)
+    xrange = bbox[0]
+
+    print 'Loading learner'
+    learner = serv.load(learnerspec)
+    print 'Setting training set'
+    learner.setTrainingSet(vmat,True)
+    learner.train()
+    print 'Saving trained learner'
+    learner.save('trained_learner.psave','plearn_ascii')
+    print 'computing outputs...'
+    scores = learner.computeInputOutputMat(
+        pl.RegularGridVMatrix(coordstart=[xrange[0]],
+                              coordend=[xrange[1]],
+                              dimensions = nsamples))
+    print 'scores:'
+    print scores
+    print scores.shape
+    # print scores
+    plot_2d_points(scores,'b-')
+    plot_2d_points(data,'ro')
+    show()
+    
+else:
+    print_usage_and_exit()
+    
