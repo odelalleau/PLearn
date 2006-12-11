@@ -7,7 +7,7 @@ def pldoc_help():
     prog = os.path.basename( sys.argv[0] )
     print    
     print '\n'.join([ "%s will generate, in the current working directory, a directory"%prog,
-                      "named 'html'. Use your favorite browser to view 'html/index.html'"                     
+                      "named 'html'. Use your favorite browser to view 'html/index.html'"
                       ])
     print
     sys.exit()
