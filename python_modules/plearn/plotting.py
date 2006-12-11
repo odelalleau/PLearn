@@ -33,15 +33,16 @@
 # Author: Pascal Vincent
 
 # from array import *
+from numarray import *
+from mayavi.tools import imv
 
 import string
 import matplotlib
 # matplotlib.interactive(True)
-matplotlib.use('TkAgg')
+#matplotlib.use('TkAgg')
 #matplotlib.use('GTK')
   
 from pylab import *
-from mayavi.tools import imv
 from plearn.vmat.PMat import *
 
 threshold = 0
