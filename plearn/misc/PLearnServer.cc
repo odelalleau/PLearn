@@ -50,6 +50,8 @@
 #include <plearn/io/load_and_save.h>
 #include <plearn/io/pl_log.h>
 
+#include <plearn/io/PyPLearnScript.h> // For smartLoadObject
+
 namespace PLearn {
 using namespace std;
 
@@ -256,7 +258,8 @@ bool PLearnServer::run()
                 io >> obj_id >> filepath;
                 DBG_LOG << "  obj_id = " << obj_id << endl;
                 DBG_LOG << "  filepath = " << filepath << endl;                
-                PLearn::load(filepath,obj);
+                // PLearn::load(filepath,obj);
+                obj = smartLoadObject(filepath);
                 objmap[obj_id] = obj;
                 Object::prepareToSendResults(io,0);
                 io << endl;  
