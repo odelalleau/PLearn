@@ -196,6 +196,7 @@ void DynamicallyLinkedRBMsModel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
+    deepCopyField(visible_layer, copies);
     // deepCopyField(, copies);
 
     PLERROR("DynamicallyLinkedRBMsModel::makeDeepCopyFromShallowCopy(): "
@@ -271,7 +272,7 @@ void DynamicallyLinkedRBMsModel::train()
         PLERROR("DynamicallyLinkedRBMsModel::train(): \n"
                 "build() must be called before train()");                
 
-    Vec input( visible_size );
+    Vec input( inputsize() );
     Vec target( targetsize() );
     real weight = 0; // Unused
     Vec train_costs( getTrainCostNames().length() );
@@ -317,11 +318,11 @@ void DynamicallyLinkedRBMsModel::train()
             
                 clamp_visible_units(input);
                 
-                rbm_update();
-                
-                if( pb )
-                    pb->update( stage + 1 - init_stage);
+                rbm_update();                
             }
+
+            if( pb )
+                pb->update( stage + 1 - init_stage);
             stage++;
         }    
         if( pb )
@@ -372,10 +373,10 @@ void DynamicallyLinkedRBMsModel::train()
                 clamp_visible_units(input);
                 
                 dynamic_connections_update();
-                
-                if( pb )
-                    pb->update( stage + 1 - init_stage);
+                                
             }
+            if( pb )
+                pb->update( stage + 1 - init_stage);
             stage++;
         }    
         if( pb )
@@ -429,11 +430,11 @@ void DynamicallyLinkedRBMsModel::train()
             
                 clamp_visible_units(input);
                 
-                fine_tuning_update();
-                
-                if( pb )
-                    pb->update( stage + 1 - init_stage);
+                fine_tuning_update();                                
             }
+
+            if( pb )
+                pb->update( stage + 1 - init_stage);
             stage++;
         }    
         if( pb )

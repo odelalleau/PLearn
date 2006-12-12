@@ -45,7 +45,6 @@
 #include <plearn_learners/online/RBMClassificationModule.h>
 #include <plearn_learners/online/RBMLayer.h>
 #include <plearn_learners/online/RBMConnection.h>
-#include <plearn/misc/PTimer.h>
 
 namespace PLearn {
 
