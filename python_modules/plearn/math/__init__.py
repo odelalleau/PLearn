@@ -30,5 +30,20 @@
 #  library, go to the PLearn Web site at www.plearn.org
 
 # Author: Christian Dorion
-from arrays import *
 
+# Most of the content of this __init__ file has been moved to 'arrays.py'. For
+# backward comptibility, the functions defined there are forwarded
+# here. However, the 'arrays' module requires numarray... this 'try'
+# statement should make sure other stuff defined here still work even when
+# numarray is not available.
+try:
+    from arrays import *
+except ImportError:
+    pass
+
+def floats_are_equal(a, b, numtol=1e-6):
+    # print "Comparing floats ",a,b,numtol
+    minabs = min(abs(a),abs(b))
+    if minabs<1.0:
+        return abs(a-b) <= numtol
+    return abs(a-b) <= numtol*minabs
