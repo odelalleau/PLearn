@@ -58,26 +58,24 @@ using namespace std;
 
 class NaryVariable: public Variable
 {
-    //typedef NaryVariable inherited;
-
-protected:
-    //!  Default constructor for persistence
-    NaryVariable() {}
-    static void declareOptions(OptionList & ol);
-  
-public: // Temporarily public for GradientOptimizer hack (speed contest, Pascal)
-    VarArray varray;
-
-    // norman: moved to public (TEMP!)
     typedef Variable inherited;
 
 public:
+    //#####  Public Build Options  ############################################
+
+    VarArray varray;
+
+public:
+    //#####  PLearn::Object Interface  ########################################
+
+    NaryVariable() {}
     NaryVariable(const VarArray& the_varray, int thelength, int thewidth=1);
+
     PLEARN_DECLARE_ABSTRACT_OBJECT(NaryVariable);
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  
-  
+    
+    //#####  PLearn::Variable Interface  ######################################
 
     virtual bool markPath();
     virtual void buildPath(VarArray& proppath);
@@ -95,6 +93,10 @@ public:
         pout << endl; 
     }
     virtual void resizeRValue();
+
+protected:
+    //!  Default constructor for persistence
+    static void declareOptions(OptionList & ol);
 };
 
 
