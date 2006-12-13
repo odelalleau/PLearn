@@ -55,16 +55,20 @@ class BinaryVariable: public Variable
     typedef Variable inherited;
   
 protected:
+
     Var input1;
     Var input2;
 
 public:
     BinaryVariable() {}
-    BinaryVariable(Variable* v1, Variable* v2, int thelength, int thewidth);
+    BinaryVariable(Variable* v1, Variable* v2, int thelength, int thewidth,
+                   bool call_build_ = true);
     PLEARN_DECLARE_ABSTRACT_OBJECT(BinaryVariable);
-    static void declareOptions(OptionList & ol);
 
     virtual void setParents(const VarArray& parents);
+
+    // Simply calls inherited::build() then build_().
+    virtual void build();
   
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
     virtual bool markPath();
@@ -82,8 +86,19 @@ public:
         pout << endl; 
     }
     virtual void resizeRValue();
+
+protected:
+
+    static void declareOptions(OptionList & ol);
+
+private:
+
+    //! This does the actual building.
+    void build_();
+
 }; 
 
+DECLARE_OBJECT_PTR(BinaryVariable);
 
 } // end of namespace PLearn
 

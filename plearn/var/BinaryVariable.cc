@@ -46,18 +46,30 @@ namespace PLearn {
 
 using namespace std;
 
-/** BinaryVariable **/
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
+    BinaryVariable,
+    "Variable that takes two other variables as input.",
+    ""
+);
 
-BinaryVariable::BinaryVariable(Variable* v1, Variable* v2, int thelength,int thewidth)
-    :Variable(thelength,thewidth), input1(v1), input2(v2) 
+////////////////////
+// BinaryVariable //
+////////////////////
+BinaryVariable::BinaryVariable(Variable* v1, Variable* v2, int thelength,
+                               int thewidth, bool call_build_):
+    inherited(thelength, thewidth, call_build_), 
+    input1(v1),
+    input2(v2) 
 {
     input1->disallowPartialUpdates();
     input2->disallowPartialUpdates();
+    if (call_build_)
+        build_();
 }
 
-
-PLEARN_IMPLEMENT_ABSTRACT_OBJECT(BinaryVariable, "ONE LINE DESCR", "NO HELP");
-
+////////////////////
+// declareOptions //
+////////////////////
 void BinaryVariable::declareOptions(OptionList& ol)
 {
     declareOption(ol, "input1", &BinaryVariable::input1, OptionBase::buildoption, 
@@ -68,6 +80,20 @@ void BinaryVariable::declareOptions(OptionList& ol)
 
     inherited::declareOptions(ol);
 }
+
+///////////
+// build //
+///////////
+void BinaryVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+////////////
+// build_ //
+////////////
+void BinaryVariable::build_() {}
 
 void BinaryVariable::setParents(const VarArray& parents)
 {
