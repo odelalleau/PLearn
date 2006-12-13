@@ -6,7 +6,7 @@ Z(sub_objects = [])
 Built structure: 
 *1 ->Z(
 dummy_option1 = "" ;
-sub_objects = TVec(0 0 *0 )
+sub_objects = []
 ;
 dummy_option2 = 0  )
 

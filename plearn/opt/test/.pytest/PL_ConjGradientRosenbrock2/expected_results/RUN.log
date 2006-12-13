@@ -40,7 +40,7 @@ output = 0.000747066325395875615
 
 Optimization stats collector: VecStatsCollector(
 maxnvalues = 0;
-fieldnames = TVec(00*0 )
+fieldnames = []
 ;
 compute_covariance = 0;
 epsilon = 0;

@@ -246,6 +246,8 @@ public:
              || out.outmode==PStream::raw_binary
              || out.outmode==PStream::pretty_ascii ) )
             writeSequence(out,v);
+        else if(storage.isNull())
+            out.write("[]\n");
         else // write explicit storage
         {
             out.write("TVec("); 
