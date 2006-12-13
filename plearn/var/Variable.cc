@@ -173,12 +173,13 @@ void Var::operator=(const Mat& m)
 
 int Variable::nvars = 0;
 
-Variable::Variable(int thelength, int thewidth)
-    :varnum(++nvars), marked(false), varname(""),  
-     allows_partial_update(false), gradient_status(0),
-     matValue(thelength,thewidth), matGradient(thelength,thewidth), 
-     min_value(-FLT_MAX), max_value(FLT_MAX), diaghessiandata(0), rvaluedata(0),
-     dont_bprop_here(false)
+Variable::Variable(int thelength, int thewidth, bool call_build_):
+    inherited(call_build_),
+    varnum(++nvars), marked(false), varname(""),  
+    allows_partial_update(false), gradient_status(0),
+    matValue(thelength,thewidth), matGradient(thelength,thewidth), 
+    min_value(-FLT_MAX), max_value(FLT_MAX), diaghessiandata(0), rvaluedata(0),
+    dont_bprop_here(false)
 {
     value = matValue.toVec();
     gradient = matGradient.toVec();
@@ -190,6 +191,8 @@ Variable::Variable(int thelength, int thewidth)
         gradientdata = gradient.data();
     else
         gradientdata = 0;
+    if (call_build_)
+        build_();
 }
 
 Variable::Variable(const Mat& m)
@@ -242,14 +245,22 @@ void Variable::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void Variable::build_()
 { 
+    int l_previous = length();
+    int w_previous = width();
     int l, w;
     recomputeSize(l, w);
-    if (l && w)
-        resize(l,w);
+    if (l && w && (l != l_previous || w != w_previous))
+        resize(l, w);
 }
 
+///////////
+// build //
+///////////
 void Variable::build()
 {
     inherited::build();

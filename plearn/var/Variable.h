@@ -157,7 +157,7 @@ public:
     bool dont_bprop_here; //!< if true, children are encouraged not to bprop gradient in this var (saves computation time)
   
 public:
-    Variable(int thelength, int thewidth);
+    Variable(int thelength, int thewidth, bool call_build_ = true);
     Variable(const Mat& m);  //!<  this variable's value and m will be views of the same data
 
     int length() const { return matValue.length(); }
