@@ -197,6 +197,7 @@ void RBMLayer::fprop( const Vec& input, Vec& output ) const
     output.resize( This->output_size );
 
     This->activation << input;
+    This->activation += bias;
     This->expectation_is_up_to_date = false;
 
     output << This->expectation;

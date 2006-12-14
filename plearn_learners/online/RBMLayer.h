@@ -127,7 +127,8 @@ public:
     //! compute the expectation
     virtual void computeExpectation() = 0 ;
 
-    //! computes the expectation from the activation
+    //! Adds the bias to input, consider this as the activation, then compute
+    //! the expectation
     virtual void fprop( const Vec& input, Vec& output ) const;
 
     //! back-propagates the output gradient to the input,

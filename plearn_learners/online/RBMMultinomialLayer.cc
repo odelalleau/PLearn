@@ -111,7 +111,8 @@ void RBMMultinomialLayer::fprop( const Vec& input, Vec& output ) const
     PLASSERT( input.size() == input_size );
     output.resize( output_size );
 
-    softmaxMinus( input, output );
+    // inefficient
+    softmaxMinus( input+bias, output );
 }
 
 void RBMMultinomialLayer::bpropUpdate(const Vec& input, const Vec& output,

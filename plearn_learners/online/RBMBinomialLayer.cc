@@ -113,7 +113,7 @@ void RBMBinomialLayer::fprop( const Vec& input, Vec& output ) const
     output.resize( output_size );
 
     for( int i=0 ; i<size ; i++ )
-        output[i] = sigmoid( -input[i] );
+        output[i] = sigmoid( -input[i] - bias[i] );
 }
 
 void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& output,

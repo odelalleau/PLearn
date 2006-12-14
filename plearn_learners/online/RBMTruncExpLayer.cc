@@ -133,7 +133,7 @@ void RBMTruncExpLayer::fprop( const Vec& input, Vec& output ) const
 
     for( int i=0 ; i<size ; i++ )
     {
-        real x_i = input[i];
+        real x_i = input[i] + bias[i];
         output[i] = 1/(1-exp(x_i)) + 1/x_i;
     }
 }

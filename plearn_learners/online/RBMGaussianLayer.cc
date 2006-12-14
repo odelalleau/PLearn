@@ -120,7 +120,7 @@ void RBMGaussianLayer::fprop( const Vec& input, Vec& output ) const
     for( int i=0 ; i<size ; i++ )
     {
         real a_i = quad_coeff[i];
-        output[i] = - input[i] / (2 * a_i * a_i);
+        output[i] = - (input[i] + bias[i]) / (2 * a_i * a_i);
     }
 }
 
