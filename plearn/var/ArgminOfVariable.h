@@ -53,6 +53,9 @@ using namespace std;
   value of expression (which may depend on inputs). */
 class ArgminOfVariable: public NaryVariable
 {
+
+    typedef NaryVariable inherited;
+    
 protected:
     //!  protected default constructor for persistence
     ArgminOfVariable() : inputs(), expression(), values_of_v(), v(),
