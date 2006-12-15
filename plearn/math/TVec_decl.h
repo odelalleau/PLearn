@@ -246,7 +246,7 @@ public:
              || out.outmode==PStream::raw_binary
              || out.outmode==PStream::pretty_ascii ) )
             writeSequence(out,v);
-        else if(storage.isNull())
+        else if(storage.isNull() && out.outmode!=PStream::plearn_binary)
             out.write("[]\n");
         else // write explicit storage
         {
