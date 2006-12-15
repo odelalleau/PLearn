@@ -91,7 +91,7 @@ static void save_vmat_as_csv(VMat source, ostream& destination,
     }
     destination << "\n";
 
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if (verbose)
         pb = new ProgressBar(cout, "Saving to CSV", source.length());
   
@@ -131,7 +131,6 @@ static void save_vmat_as_csv(VMat source, ostream& destination,
             destination << "\n";
         }
     }
-    delete pb;
 }
 
   

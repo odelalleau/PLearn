@@ -229,7 +229,7 @@ void ModulesLearner::train()
     if( !initTrain() )
         return;
 
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if( report_progress )
         pb = new ProgressBar( "Training " + classname() + " from stage "
                               + tostring(stage) + " to " + tostring(nstages),
@@ -269,11 +269,6 @@ void ModulesLearner::train()
 
         if(pb)
             pb->update( stage+1 - initial_stage );
-    }
-    if( pb )
-    {
-        delete pb;
-        pb = 0;
     }
 }
 

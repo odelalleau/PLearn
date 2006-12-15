@@ -80,7 +80,7 @@ void MovingAverage::declareOptions(OptionList& ol)
 
 void MovingAverage::train()
 {
-    ProgressBar* pb;
+    PP<ProgressBar> pb;
 
     static Vec input(0);
     static Vec target(targetsize());
@@ -123,14 +123,12 @@ void MovingAverage::train()
 #endif
 
     train_stats->finalize();
-
-    if (pb) delete pb;
 }
  
 void MovingAverage::test(VMat testset, PP<VecStatsCollector> test_stats,
                          VMat testoutputs, VMat testcosts) const
 {
-    ProgressBar* pb;
+    PP<ProgressBar> pb;
 
     static Vec input(0);
     static Vec target(targetsize());
@@ -174,8 +172,6 @@ void MovingAverage::test(VMat testset, PP<VecStatsCollector> test_stats,
 #ifdef DEBUG
     cout << "MovingAverage.last_test_t = " << last_test_t << endl;
 #endif
-
-    if (pb) delete pb;
 }
 
 void MovingAverage::computeCostsFromOutputs(const Vec& inputs, const Vec& outputs,

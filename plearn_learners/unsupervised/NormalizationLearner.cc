@@ -153,7 +153,7 @@ void NormalizationLearner::train()
         real weight;
 
         VecStatsCollector st;
-        ProgressBar* pb = 0;
+        PP<ProgressBar> pb;
         if(report_progress)
             pb = new ProgressBar("NormalizationLearner computing statistics ",l);
 
@@ -165,8 +165,6 @@ void NormalizationLearner::train()
                 pb->update(i);
         }
         st.finalize();
-        if(pb)
-            delete pb;
 
         st.getMean(meanvec);
         Vec stddev = st.getStdDev();

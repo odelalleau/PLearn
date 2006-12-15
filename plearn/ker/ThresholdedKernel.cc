@@ -281,7 +281,7 @@ void ThresholdedKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 void ThresholdedKernel::setDataForKernelMatrix(VMat the_data) {
     inherited::setDataForKernelMatrix(the_data);
     int n = the_data->length();
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     knn_sub = knn_approx ? int(round(knn * real(n_approx) / real(n)))
                              : knn;
     if (knn_sub <= 0)
@@ -320,8 +320,6 @@ void ThresholdedKernel::setDataForKernelMatrix(VMat the_data) {
                 if (report_progress)
                     pb->update(i+1);
             }
-            if (pb)
-                delete pb;
             if (cache_gram_matrix) {
                 // Since we have the Gram matrix at hand, we may cache it now.
                 thresholdGramMatrix(gram_matrix);
@@ -400,8 +398,6 @@ void ThresholdedKernel::setDataForKernelMatrix(VMat the_data) {
                     sparse_gram_matrix_is_cached = true;
                 }
             }
-            if (pb)
-                delete pb;
         }
     }
     k_x_xi.resize(knn_approx ? n_approx : n);
@@ -413,7 +409,7 @@ void ThresholdedKernel::setDataForKernelMatrix(VMat the_data) {
 // thresholdGramMatrix //
 /////////////////////////
 void ThresholdedKernel::thresholdGramMatrix(const Mat& K) const {
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     int n = K.length();
     if (K.width() != n)
         PLERROR("In ThresholdedKernel::thresholdGramMatrix - A square matrix is expected");
@@ -430,8 +426,6 @@ void ThresholdedKernel::thresholdGramMatrix(const Mat& K) const {
                 pb->update(i+1);
         }
     }
-    if (pb)
-        delete pb;
 }
 
 

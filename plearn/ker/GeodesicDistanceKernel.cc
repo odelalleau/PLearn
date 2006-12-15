@@ -249,12 +249,12 @@ void GeodesicDistanceKernel::setDataForKernelMatrix(VMat the_data) {
     distance_kernel->computeGramMatrix(distances);
     // Compute knn - nearest neighbors.
     TMat<int> neighborhoods =
-		Kernel::computeKNNeighbourMatrixFromDistanceMatrix(
-			distances, knn, true, report_progress != 0);
+        Kernel::computeKNNeighbourMatrixFromDistanceMatrix(
+            distances, knn, true, report_progress != 0);
     // Compute geodesic distance by Floyd or Djikstra's algorithm.
     Mat geodesic(n,n);
     real big_value = REAL_MAX / 3.0; // To make sure no overflow.
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if (report_progress)
         pb = new ProgressBar("Computing geodesic distances", n);
     if (shortest_algo == "floyd") {
@@ -333,8 +333,6 @@ void GeodesicDistanceKernel::setDataForKernelMatrix(VMat the_data) {
     } else {
         PLERROR("In GeodesicDistanceKernel::setDataForKernelMatrix - Unknown value for 'shortest_algo'");
     }
-    if (pb)
-        delete pb;
     // Save the result in geo_distances.
     if (geodesic_file == "") {
         geo_distances = VMat(geodesic);

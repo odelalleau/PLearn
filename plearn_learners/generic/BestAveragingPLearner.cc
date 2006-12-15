@@ -39,9 +39,6 @@
 // From C++ stdlib
 #include <algorithm>
 
-// From Boost
-#include <boost/scoped_ptr.hpp>
-
 // From PLearn
 #include <plearn/base/ProgressBar.h>
 #include "BestAveragingPLearner.h"
@@ -321,7 +318,7 @@ void BestAveragingPLearner::train()
     const int N = m_learner_set.size();
     m_learner_train_costs.resize(N);
     TVec< pair<real, int> > model_scores(N);
-    boost::scoped_ptr<ProgressBar> pb(verbosity?
+    PP<ProgressBar> pb(verbosity?
         new ProgressBar("Training sublearners of BestAveragingPLearner",N) : 0);
 
     // Basic idea is to train all sublearners, then sample the train statistic

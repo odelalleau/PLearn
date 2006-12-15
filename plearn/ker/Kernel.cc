@@ -328,7 +328,7 @@ void Kernel::computeGramMatrix(Mat K) const
     }
     int l=data->length();
     int m=K.mod();
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     int count = 0;
     if (report_progress)
         pb = new ProgressBar("Computing Gram matrix for " + classname(), (l * (l + 1)) / 2);
@@ -348,12 +348,10 @@ void Kernel::computeGramMatrix(Mat K) const
         }
         if (report_progress) {
             count += i + 1;
-            PLASSERT( pb );
+            PLASSERT( pb.isNotNull() );
             pb->update(count);
         }
     }
-    if (pb)
-        delete pb;
     if (cache_gram_matrix) {
         gram_matrix.resize(l,l);
         gram_matrix << K;
@@ -401,7 +399,7 @@ void Kernel::computeSparseGramMatrix(TVec<Mat> K) const
         return;
     }
     int l=data->length();
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     int count = 0;
     if (report_progress) {
         pb = new ProgressBar("Computing sparse Gram matrix for " + classname(), (l * (l + 1)) / 2);
@@ -427,9 +425,6 @@ void Kernel::computeSparseGramMatrix(TVec<Mat> K) const
             count += i + 1;
             pb->update(count);
         }
-    }
-    if (pb) {
-        delete pb;
     }
     if (cache_gram_matrix) {
         sparse_gram_matrix.resize(l);
@@ -518,7 +513,7 @@ void Kernel::apply(VMat m1, VMat m2, Mat& result) const
     }
     Vec m1_i(m1w);
     Vec m2_j(m2w);
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     bool easy_case = (is_symmetric && m1 == m2);
     int l1 = m1->length();
     int l2 = m2->length();
@@ -566,8 +561,6 @@ void Kernel::apply(VMat m1, VMat m2, Mat& result) const
             }
         }
     }
-    if (pb)
-        delete pb;
 }
 
 
@@ -649,7 +642,7 @@ TMat<int> Kernel::computeKNNeighbourMatrixFromDistanceMatrix(const Mat& D, int k
     TMat<int> neighbours(npoints, knn);  
     Mat tmpsort(npoints,2);
 
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if (report_progress) {
         pb = new ProgressBar("Computing neighbour matrix", npoints);
     }
@@ -673,8 +666,6 @@ TMat<int> Kernel::computeKNNeighbourMatrixFromDistanceMatrix(const Mat& D, int k
         if (pb)
             pb->update(i);
     }
-    if (pb)
-        delete pb;
     return neighbours;
 }
 
@@ -688,7 +679,7 @@ Mat Kernel::computeNeighbourMatrixFromDistanceMatrix(const Mat& D, bool insure_s
     Mat neighbours(npoints, npoints);  
     Mat tmpsort(npoints,2);
 
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if (report_progress) {
         pb = new ProgressBar("Computing neighbour matrix", npoints);
     }
@@ -709,8 +700,6 @@ Mat Kernel::computeNeighbourMatrixFromDistanceMatrix(const Mat& D, bool insure_s
         if (pb)
             pb->update(i);
     }
-    if (pb)
-        delete pb;
     return neighbours;
 }
 

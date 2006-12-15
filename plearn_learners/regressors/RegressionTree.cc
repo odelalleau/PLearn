@@ -164,7 +164,7 @@ void RegressionTree::build_()
 void RegressionTree::train()
 {
     if (stage == 0) initialiseTree();
-    ProgressBar* pb = NULL;
+    PP<ProgressBar> pb;
     if (report_progress)
     {
         pb = new ProgressBar("RegressionTree : train stages: ", nstages);
@@ -177,7 +177,6 @@ void RegressionTree::train()
         }
         if (report_progress) pb->update(stage);
     }
-    if (report_progress) delete pb;
     if (compute_train_stats < 1) return;
     if (report_progress)
     {
@@ -193,7 +192,6 @@ void RegressionTree::train()
         if (report_progress) pb->update(each_train_sample_index);
     }
     train_stats->finalize();
-    if (report_progress) delete pb; 
 }
 
 void RegressionTree::verbose(string the_msg, int the_level)

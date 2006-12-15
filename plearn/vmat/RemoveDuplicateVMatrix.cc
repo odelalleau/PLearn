@@ -154,7 +154,7 @@ void RemoveDuplicateVMatrix::build_()
         }
         real delta = epsilon > 0 ? epsilon : 1e-4;
         int count = 0;
-        ProgressBar* pb = 0;
+        PP<ProgressBar> pb;
         bool report_progress = (!compute_gram && verbosity >= 1);
         int iterate = 0;
         if (report_progress)
@@ -199,8 +199,6 @@ void RemoveDuplicateVMatrix::build_()
             if (report_progress)
                 pb->update(iterate);
         }
-        if (pb)
-            delete pb;
         indices.resize(0);
         for (int i = 0; i < n; i++)
             if (!removed[i])

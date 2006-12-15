@@ -1400,7 +1400,7 @@ void GaussianContinuum::train()
   // number of optimizer stages corresponding to one learner stage (one epoch)
   int optstage_per_lstage = l/nsamples;
 
-  ProgressBar* pb = 0;
+  PP<ProgressBar> pb;
   if(report_progress>0)
     pb = new ProgressBar("Training GaussianContinuum from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
 
@@ -1429,9 +1429,6 @@ void GaussianContinuum::train()
   if(verbosity>1)
     cout << "EPOCH " << stage << " train objective: " << train_stats->getMean() << endl;
 
-  if(pb)
-    delete pb;
-  
   update_reference_set_parameters();
 
   cout << "best train: " << get_nll(train_set,train_set,0,n_neighbors_density) << endl;

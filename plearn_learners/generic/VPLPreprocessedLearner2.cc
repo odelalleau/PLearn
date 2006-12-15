@@ -389,7 +389,7 @@ void VPLPreprocessedLearner2::test(VMat testset, PP<VecStatsCollector> test_stat
 
     // testset->defineSizes(inputsize(),targetsize(),weightsize());
 
-    ProgressBar* pb = NULL;
+    PP<ProgressBar> pb;
     if(report_progress) 
         pb = new ProgressBar("Testing learner",l);
 
@@ -439,9 +439,6 @@ void VPLPreprocessedLearner2::test(VMat testset, PP<VecStatsCollector> test_stat
         if(report_progress)
             pb->update(i);
     }
-
-    if(pb)
-        delete pb;
 */
 }
 

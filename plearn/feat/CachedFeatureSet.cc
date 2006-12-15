@@ -137,7 +137,7 @@ void CachedFeatureSet::addFeatures(VMat tokens, int min_freq)
     string token;
     Vec row(tokens->width());
 
-    ProgressBar* pb=0;
+    PP<ProgressBar> pb;
     int id=0;
 
     if(report_progress)
@@ -153,7 +153,6 @@ void CachedFeatureSet::addFeatures(VMat tokens, int min_freq)
             if(report_progress) pb->update(++id);
         }
     }
-    if(report_progress) delete(pb);
     return;
 }
 

@@ -283,7 +283,7 @@ void ProcessSymbolicSequenceVMatrix::build_()
     indices.resize(0);
     int current_context_length = 0;
     bool target_contains_missing = false;
-    ProgressBar *pb = new ProgressBar("Gathering information from source VMat of length " + tostring(source->length()), source->length());
+    PP<ProgressBar> pb = new ProgressBar("Gathering information from source VMat of length " + tostring(source->length()), source->length());
     for(int i=0; i<source->length(); i++)
     {
         source->getRow(i,row);
@@ -314,7 +314,7 @@ void ProcessSymbolicSequenceVMatrix::build_()
                         break;
                     }
             }
-            
+
             if(!exclude_missing_target_tokens || !target_contains_missing)
             {
                 if(is_true(conditions,row))

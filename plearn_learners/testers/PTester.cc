@@ -739,7 +739,7 @@ void PTester::computeConfidence(VMat test_set, VMat confidence)
     PLASSERT(learner);
     if (!confidence)
         return;
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     const int n = test_set.length();
     if (learner->report_progress)
         pb = new ProgressBar("Computing Confidence Intervals", n);
@@ -760,7 +760,6 @@ void PTester::computeConfidence(VMat test_set, VMat confidence)
         }
         confidence->putOrAppendRow(i,intervals_real);
     }
-    delete pb;
 }
 
 

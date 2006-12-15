@@ -146,7 +146,6 @@ void VariableSelectionWithDirectedGradientDescent::train()
 
     input_weights.fill(0);
     weights_selected.fill(false);
-    pb = NULL;
     if (report_progress)
     {
         pb = new ProgressBar("VariableSelectionWithDirectedGradientDescent : train stages: ", nstages);
@@ -230,7 +229,6 @@ void VariableSelectionWithDirectedGradientDescent::train()
     }
     if (report_progress)
     {
-        delete pb;
         pb = new ProgressBar("VariableSelectionWithDirectedGradientDescent : computing the training statistics: ", length);
     }
     train_stats->forget();
@@ -245,7 +243,6 @@ void VariableSelectionWithDirectedGradientDescent::train()
         if (report_progress) pb->update(row);
     }
     train_stats->finalize();
-    if (report_progress) delete pb;
     verbose("VariableSelectionWithDirectedGradientDescent: After " + tostring(stage) + " stages, average error is: "
             + tostring(train_stats->getMean()), 1);
 }

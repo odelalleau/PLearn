@@ -313,7 +313,7 @@ void FieldConvertCommand::run(const vector<string> & args)
     // Minimun number of representants of a class to be considered significant.
     int n_enough = (int) (FRAC_ENOUGH * vm->length());
 
-    ProgressBar* pb = new ProgressBar("Analyzing fields", vm->width());
+    PP<ProgressBar> pb = new ProgressBar("Analyzing fields", vm->width());
 
     // Process each field.
     for(int i=0;i<vm->width();i++)
@@ -689,8 +689,6 @@ void FieldConvertCommand::run(const vector<string> & args)
         pb->update(i);
    
     }
-
-    delete pb;
 
     // Add the target.
     out << "%" << target << " :target\n</PROCESSING>"<<endl;

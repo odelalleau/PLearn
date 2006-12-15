@@ -54,7 +54,7 @@ void computeStats(VMat m, VecStatsCollector& st, bool report_progress)
     st.setFieldNames(m->fieldNames());
     Vec v(m.width());
     int l = m.length();
-    ProgressBar* pbar = 0;
+    PP<ProgressBar> pbar;
     if (report_progress)
         pbar = new ProgressBar("Computing statistics", l);
     for(int i=0; i<l; i++)
@@ -64,8 +64,6 @@ void computeStats(VMat m, VecStatsCollector& st, bool report_progress)
         if (report_progress)
             pbar->update(i);
     }
-    if (pbar)
-        delete pbar;
     st.finalize();
 }
 

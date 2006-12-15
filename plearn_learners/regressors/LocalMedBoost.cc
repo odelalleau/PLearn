@@ -187,7 +187,7 @@ void LocalMedBoost::train()
             sorted_train_set->initRegisters(train_set);
         }
     }
-    ProgressBar* pb = NULL;
+    PP<ProgressBar> pb;
     if (report_progress) pb = new ProgressBar("LocalMedBoost: train stages: ", nstages);
     for (; stage < nstages; stage++)
     {
@@ -232,7 +232,6 @@ void LocalMedBoost::train()
         recomputeSampleWeight();
         if (report_progress) pb->update(stage);
     }
-    if (report_progress) delete pb;
     if (report_progress)
     {
         pb = new ProgressBar("LocalMedBoost : computing the statistics: ", train_set->length());
@@ -249,7 +248,6 @@ void LocalMedBoost::train()
         if (report_progress) pb->update(each_train_sample_index);
     }
     train_stats->finalize();
-    if (report_progress) delete pb;
     verbose("LocalMedBoost: we are done, thank you!", 3);
 }
 

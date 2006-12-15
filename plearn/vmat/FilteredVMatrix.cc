@@ -97,7 +97,7 @@ void FilteredVMatrix::openIndex()
         int l = source.length();
         Vec result(1);
         indexes.open(idxfname,true);
-        ProgressBar* pb = 0;
+        PP<ProgressBar> pb;
         if (report_progress)
             pb = new ProgressBar("Filtering source vmat", l);
         for(int i=0; i<l; i++)
@@ -115,8 +115,6 @@ void FilteredVMatrix::openIndex()
                     indexes.append(i);
 
         }
-        if (pb)
-            delete pb;
         indexes.close();
         indexes.open(idxfname);
     }

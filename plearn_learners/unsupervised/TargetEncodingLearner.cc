@@ -178,7 +178,7 @@ void TargetEncodingLearner::buildEncodingsFromTrainset()
   encode_col.resize(n);
   encode_col.fill(true);
   
-  ProgressBar* pb = 0;
+  PP<ProgressBar> pb;
   if(report_progress)
     pb = new ProgressBar("TargetEncodingLearner computing statistics ",l);
 
@@ -222,9 +222,6 @@ void TargetEncodingLearner::buildEncodingsFromTrainset()
   mean= tot_wt_targ / tot_weight;
   defaults.resize(n);
   defaults.fill(mean);
-
-  if(pb)
-    delete pb;
 
   for(int i= 0; i < n; ++i)
     {

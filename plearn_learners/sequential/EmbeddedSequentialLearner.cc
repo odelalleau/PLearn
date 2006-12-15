@@ -124,7 +124,7 @@ void EmbeddedSequentialLearner::test(VMat testset, PP<VecStatsCollector> test_st
     // has today's price as input (all that WITHOUT CHEATING or breaking the Criminal
     // Code.)
     int start = MAX(last_train_t-1,last_test_t);
-    ProgressBar* pb = NULL;
+    PP<ProgressBar> pb;
     if(report_progress)
         pb = new ProgressBar("Testing learner",l-start);
     for (int t=start; t<testset.length(); t++)
@@ -158,9 +158,6 @@ void EmbeddedSequentialLearner::test(VMat testset, PP<VecStatsCollector> test_st
         }
     }
     last_test_t = testset.length();
-
-    if (pb)
-        delete pb;
 }
 
 void EmbeddedSequentialLearner::forget()

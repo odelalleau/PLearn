@@ -340,7 +340,7 @@ void DatedJoinVMatrix::build_()
             PLERROR("DatedJoinVMatrix: No slave_date_interval_end_field_name was provided and no slave_date_interval_end_field_index was provided!");
 
         // INDEX THE SLAVE
-        ProgressBar* pb=new ProgressBar("DatedJoinVMatrix: indexing the slave.",slave.length());
+        PP<ProgressBar> pb=new ProgressBar("DatedJoinVMatrix: indexing the slave.",slave.length());
         key.resize(slave_key_indices.length());
         slave_row.resize(slave.width());
         master_row.resize(master.width());
@@ -352,7 +352,6 @@ void DatedJoinVMatrix::build_()
             mp.insert(make_pair(key,i));
             pb->update(i);
         }
-        delete pb;
 
         // set the width and the length
         if (master_field_indices.size()>0)
@@ -472,7 +471,6 @@ void DatedJoinVMatrix::build_()
             }
             pb->update(i);
         }
-        delete pb;
     }
 }
 

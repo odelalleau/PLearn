@@ -219,7 +219,7 @@ void ConcatRowsVMatrix::ensureMappingsConsistency()
     map<string, real>* cur_map;
     map<string, real>::iterator it, find_map, jt;
     bool report_progress = false; // Turn it on for debugging.
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if (report_progress)
         pb = new ProgressBar("Checking mappings consistency", width());
     for (int j = 0; j < width(); j++) {
@@ -269,8 +269,6 @@ void ConcatRowsVMatrix::ensureMappingsConsistency()
         if (report_progress)
             pb->update(j + 1);
     }
-    if (pb)
-        delete pb;
 }
 
 ///////////////////
@@ -282,7 +280,7 @@ void ConcatRowsVMatrix::findAllFields()
     // concatenated VMat.
     bool report_progress = true;
     TVec<VMField> other_fields;
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     int count;
     if (report_progress) {
         count = 0;
@@ -306,8 +304,6 @@ void ConcatRowsVMatrix::findAllFields()
                 pb->update(++count);
         }
     }
-    if (pb)
-        delete pb;
     // Create the vector of field names.
     TVec<string> fnames(fieldinfos.length());
     for (int i = 0; i < fieldinfos.length(); i++)
@@ -361,7 +357,7 @@ void ConcatRowsVMatrix::fullyCheckMappings(bool report_progress)
 {
     Vec row(width());
     TVec<int> max(width());
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if (report_progress)
         pb = new ProgressBar("Full check of string mappings", length());
     int count = 0;
@@ -389,8 +385,6 @@ void ConcatRowsVMatrix::fullyCheckMappings(bool report_progress)
                 pb->update(++count);
         }
     }
-    if (pb)
-        delete pb;
 }
 
 /////////

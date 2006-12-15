@@ -284,7 +284,7 @@ void DynamicallyLinkedRBMsModel::train()
         return;
     }
 
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
 
     // clear stats of previous epoch
     train_stats->forget();
@@ -325,12 +325,6 @@ void DynamicallyLinkedRBMsModel::train()
                 pb->update( stage + 1 - init_stage);
             stage++;
         }    
-        if( pb )
-        {
-            delete pb;
-            pb = 0;
-        }
-
     }
 
     /***** dynamic phase training  *****/
@@ -379,12 +373,6 @@ void DynamicallyLinkedRBMsModel::train()
                 pb->update( stage + 1 - init_stage);
             stage++;
         }    
-        if( pb )
-        {
-            delete pb;
-            pb = 0;
-        }
-
     }
 
     /***** fine-tuning *****/
@@ -437,12 +425,6 @@ void DynamicallyLinkedRBMsModel::train()
                 pb->update( stage + 1 - init_stage);
             stage++;
         }    
-        if( pb )
-        {
-            delete pb;
-            pb = 0;
-        }
-
     }
 
     train_stats->finalize();

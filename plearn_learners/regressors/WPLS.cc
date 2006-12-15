@@ -530,7 +530,7 @@ void WPLS::train()
         Mat T(n,nstages);
         Mat tmp_np(n,p), tmp_pp(p,p);
 
-        ProgressBar* pb = 0;
+        PP<ProgressBar> pb;
         if(report_progress) {
             pb = new ProgressBar("Computing the components", nstages);
         }
@@ -615,8 +615,6 @@ void WPLS::train()
                 pb->update(stage);
             stage++;
         }
-        if (pb) 
-            delete pb;
         productTranspose(tmp_np, T, P);
         
         if (verbosity >= 2) {

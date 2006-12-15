@@ -167,7 +167,7 @@ void HashMapFeatureSet::addFeatures(VMat tokens, int min_freq)
     Vec row(tokens->width());
     TVec<string> f_str_temp;
 
-    ProgressBar* pb=0;
+    PP<ProgressBar> pb;
     int id=0;
 
     if(min_freq > 1)
@@ -237,7 +237,6 @@ void HashMapFeatureSet::addFeatures(VMat tokens, int min_freq)
             if(report_progress) pb->update(++id);
         }
     }
-    if(report_progress) delete(pb);
 }
 
 void HashMapFeatureSet::clear()

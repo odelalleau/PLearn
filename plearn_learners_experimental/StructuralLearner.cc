@@ -955,7 +955,7 @@ void StructuralLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
 {
     int l = testset.length();
 
-    ProgressBar* pb = NULL;
+    PP<ProgressBar> pb;
     if(report_progress) 
         pb = new ProgressBar("Testing learner",l);
 
@@ -1229,9 +1229,6 @@ void StructuralLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
         }*/
     } // while still examples
   } // if viterbi decoding
-
-  if(pb)
-    delete pb;
 
 }
 

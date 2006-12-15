@@ -170,7 +170,7 @@ void KNNImputationVMatrix::build_()
     Vec imputed_row(source->inputsize());
     sample_index_to_imputed_index.resize(source->length());
     sample_index_to_imputed_index.fill(-1);
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if (report_progress)
         pb = new ProgressBar("Imputing missing values", source->length());
     for (int i = 0; i < source->length(); i++) {
@@ -215,8 +215,6 @@ void KNNImputationVMatrix::build_()
         if (pb)
             pb->update(i + 1);
     }
-    if (pb)
-        delete pb;
 
     // Obtain meta information from source.
     setMetaInfoFromSource();

@@ -220,7 +220,7 @@ void RegressionTreeRegisters::sortRows()
     }
     verbose("RegressionTreeRegisters: The train set is being sorted", 3);
     sorted_row.resize(length, inputsize);
-    ProgressBar* pb = NULL;
+    PP<ProgressBar> pb;
     if (report_progress)
     {
         pb = new ProgressBar("RegressionTreeRegisters : sorting the train set on input dimensions: ", inputsize);
@@ -237,7 +237,6 @@ void RegressionTreeRegisters::sortRows()
         sortEachDim(sample_dim);
         if (report_progress) pb->update(sample_dim);
     }
-    if (report_progress) delete pb;
     inverted_sorted_row.resize(length, inputsize);
     for (each_train_sample_index = 0; each_train_sample_index < length; each_train_sample_index++)
     {

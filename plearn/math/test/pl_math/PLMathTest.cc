@@ -148,7 +148,7 @@ void PLMathTest::perform()
     samples.append(MISSING_VALUE);
     samples.append(INFINITY);
     samples.append(-INFINITY);
-    ProgressBar* pb = new ProgressBar("Performing tests", samples.length());
+    PP<ProgressBar> pb = new ProgressBar("Performing tests", samples.length());
     for (int i = 0; i < samples.length(); i++) {
         int j;
         real x = samples[i];
@@ -240,8 +240,6 @@ void PLMathTest::perform()
         if (pb)
             pb->update(i + 1);
     }
-    if (pb)
-        delete pb;
 }
 
 } // end of namespace PLearn

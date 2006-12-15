@@ -391,7 +391,7 @@ void DeepNNet::train()
         forget();  // reset the learner to stage=0
     int initial_stage = stage;
 
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if (report_progress) {
         pb = new ProgressBar("Training " + classname() + " from stage " + tostring(stage) + " to " + tostring(nstages), nstages - stage);
     }
@@ -527,8 +527,6 @@ void DeepNNet::train()
         if (report_progress)
             pb->update(stage - initial_stage);
     }
-    if (pb)
-        delete pb;
     training_time += real(clock() - start_train) / real(CLOCKS_PER_SEC);
 }
 

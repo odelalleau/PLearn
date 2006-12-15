@@ -443,7 +443,7 @@ void TangentLearner::train()
     // number of optimizer stages corresponding to one learner stage (one epoch)
     int optstage_per_lstage = l/nsamples;
 
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if(report_progress>0)
         pb = new ProgressBar("Training TangentLearner from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
 
@@ -464,9 +464,6 @@ void TangentLearner::train()
     }
     if(verbosity>1)
         cout << "EPOCH " << stage << " train objective: " << train_stats->getMean() << endl;
-
-    if(pb)
-        delete pb;
 }
 
 void TangentLearner::initializeParams()

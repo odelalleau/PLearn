@@ -217,7 +217,7 @@ void AdaBoost::train()
         example_weights.resize(n);
         if (train_set->weightsize()>0)
         {
-            ProgressBar *pb=0;
+            PP<ProgressBar> pb;
             if(report_progress) pb = new ProgressBar("AdaBoost round " + tostring(stage) +
                                                      ": extracting initial weights", n);
             initial_sum_weights=0;
@@ -227,7 +227,6 @@ void AdaBoost::train()
                 example_weights[i]=weight;
                 initial_sum_weights += weight;
             }
-            if(report_progress) delete(pb);
             example_weights *= real(1.0)/initial_sum_weights;
         }
         else 
@@ -246,7 +245,7 @@ void AdaBoost::train()
     {
         VMat weak_learner_training_set;
         { 
-            ProgressBar *pb=0;
+            PP<ProgressBar> pb;
             if(report_progress) pb = new ProgressBar("AdaBoost round " + tostring(stage) +
                                                      ": making training set for weak learner", n);
             // We shall now construct a training set for the new weak learner:
@@ -270,7 +269,6 @@ void AdaBoost::train()
                         }
                     }
                 }
-                if(report_progress) delete(pb);
                 train_indices.resize(0,n);
                 map<real,int>::iterator it = indices.begin();
                 map<real,int>::iterator last = indices.end();
@@ -305,7 +303,7 @@ void AdaBoost::train()
 
         // calculate its weighted training error 
         {
-            ProgressBar *pb=0;
+            PP<ProgressBar> pb;
             if(report_progress) pb = new ProgressBar("computing weighted training error of weak learner",n);
             learners_error[stage] = 0;
             for (int i=0; i<n; ++i) {
@@ -348,7 +346,6 @@ void AdaBoost::train()
                     }
                 }
             }
-            if(report_progress) delete(pb);
         }
 
         if (verbosity>1)
@@ -493,7 +490,7 @@ void AdaBoost::train()
         if (compute_training_error)
         {
             {
-                ProgressBar *pb=0;
+                PP<ProgressBar> pb;
                 if(report_progress) pb = new ProgressBar("computing weighted training error of whole model",n);
                 train_stats->forget();
                 static Vec err(1);
@@ -504,7 +501,6 @@ void AdaBoost::train()
                     computeCostsOnly(input,target,err);
                     train_stats->update(err);
                 }
-                if(report_progress) delete(pb);
                 train_stats->finalize();
             }
             if (verbosity>2)

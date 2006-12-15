@@ -2379,7 +2379,7 @@ void GaussMix::kmeans(const VMat& samples, int nclust, TVec<int>& clust_idx,
         }
     }
 
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if (report_progress)
         pb = new ProgressBar("Performing K-Means to initialize centers", maxit);
     int iteration = maxit;
@@ -2446,8 +2446,6 @@ void GaussMix::kmeans(const VMat& samples, int nclust, TVec<int>& clust_idx,
         if (report_progress)
             pb->update(maxit - iteration + 1);
     }
-    if (pb)
-        delete pb;
     if (report_progress && verbosity >= 2 && iteration > 0)
         pout << "K-Means performed in only " << maxit - iteration << " iterations."
              << endl;
@@ -3057,7 +3055,7 @@ void GaussMix::getInitialWeightsFrom(const VMat& vmat)
     Vec tmp1, tmp2;
     real w;
     PLASSERT( vmat );
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if (report_progress)
         pb = new ProgressBar("Getting sample weights from data set",
                              vmat->length());
@@ -3067,8 +3065,6 @@ void GaussMix::getInitialWeightsFrom(const VMat& vmat)
         if (report_progress)
             pb->update(i + 1);
     }
-    if (pb)
-        delete pb;
 }
 
 ///////////////////////
@@ -3315,7 +3311,7 @@ void GaussMix::train()
 
         BinaryBitsTree tree(1);
         const vertex_descr& root_vertex = *(boost::vertices(tree).first);
-        ProgressBar* pb = 0;
+        PP<ProgressBar> pb;
         if ((efficient_missing == 1 || efficient_missing == 3)
                 && report_progress)
             pb = new ProgressBar("Finding unique missing patterns",
@@ -3375,8 +3371,6 @@ void GaussMix::train()
             if (report_progress)
                 pb->update(i + 1);
         }
-        if (pb)
-            delete pb;
 
         //TVec<int> sample_to_pattern = sample_to_template.copy();
 
@@ -3401,7 +3395,6 @@ void GaussMix::train()
             bool finished = false;
             TVec<int> n_diffs(n_clusters);
             int count_iter = 0;
-            pb = 0;
             if (report_progress)
                 pb = new ProgressBar("Performing k-median on " +
                         tostring(missing_patterns.length())    +
@@ -3565,8 +3558,6 @@ void GaussMix::train()
                 if (report_progress)
                     pb->update(count_iter);
             }
-            if (pb)
-                delete pb;
             if (finished && verbosity >= 2)
                 pout << "K-median stopped after only " << count_iter
                      << " iterations" << endl;
@@ -3630,7 +3621,6 @@ void GaussMix::train()
                 spanning_can_free.resize(missing_template.length());
                 for (int tpl = 0; tpl < missing_template.length(); tpl++) {
                 // Find minimum spanning tree of the missing patterns' graph.
-                pb = 0;
                 TVec<int> cluster_tpl = clusters[tpl];
                 int n = cluster_tpl.length();
                 n = (n * (n - 1)) / 2;
@@ -3690,7 +3680,6 @@ void GaussMix::train()
                         pb->update(progress);
                 }
                 // out.flush();
-                if (pb) delete pb;
                 parent.resize(0);
                 if (edges.isEmpty()) {
                     parent.resize(1);
@@ -4237,7 +4226,7 @@ void GaussMix::train()
         ptimer->stopTimer("init_time");
     }
 
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     int n_steps = nstages - stage;
     if (report_progress)
         pb = new ProgressBar("Training GaussMix", n_steps);
@@ -4272,8 +4261,6 @@ void GaussMix::train()
             pout << "Highest eigenvalue: " << max(eigenvalues) << endl;
         */
     }
-    if (pb)
-        delete pb;
 
     // Restore original predictor and predicted sizes if necessary.
     if (need_restore_sizes) {

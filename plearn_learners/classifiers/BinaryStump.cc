@@ -261,7 +261,7 @@ void BinaryStump::train()
 
         feature = 0;
         threshold = sf[0].second-1; 
-        ProgressBar *pb = 0;
+        PP<ProgressBar> pb;
         if(report_progress)
             pb = new ProgressBar("Finding best stump",inputsize()*sf.length());
         int prog = 0;
@@ -335,7 +335,6 @@ void BinaryStump::train()
             prog++;
             if(report_progress) pb->update(prog);
         }
-        if(report_progress) delete(pb);
     }
   
     Vec costs(1); costs[0] = best_error;

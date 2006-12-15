@@ -41,9 +41,6 @@
 /*! \file VMat_linalg.cc */
 
 
-// From Boost
-#include <boost/scoped_ptr.hpp>
-
 // From PLearn
 #include <plearn/base/ProgressBar.h>
 #include "VMat_linalg.h"
@@ -199,7 +196,7 @@ real linearRegression(
         int l=X.length();
 
         // Display progress bar iff we have some verbosity
-        boost::scoped_ptr<ProgressBar> pb(
+        PP<ProgressBar> pb(
             verbose_every?
             new ProgressBar("Performing Unweighted Linear Regression", l) : 0);
 
@@ -207,7 +204,7 @@ real linearRegression(
         {
             if (pb)
                 pb->update(i);
-            
+
             X->getRow(i,x);
             Y->getRow(i,y);
             externalProductAcc(XtX, x,x);
@@ -305,7 +302,7 @@ real weightedLinearRegression(
         real gamma_i;
 
         // Display progress bar iff we have some verbosity
-        boost::scoped_ptr<ProgressBar> pb(
+        PP<ProgressBar> pb(
             verbose_every?
             new ProgressBar("Performing Weighted Linear Regression", l) : 0);
 

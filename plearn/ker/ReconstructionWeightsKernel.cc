@@ -152,7 +152,7 @@ void ReconstructionWeightsKernel::computeLLEMatrix(const Mat& lle_mat) const {
     if (lle_mat.length() != n_examples || lle_mat.width() != n_examples)
         PLERROR("In ReconstructionWeightsKernel::computeLLEMatrix - Wrong size for 'lle_mat'");
     lle_mat.clear();
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if (report_progress)
         pb = new ProgressBar("Computing LLE matrix", n_examples);
     int neighb_j, neighb_k;
@@ -171,8 +171,6 @@ void ReconstructionWeightsKernel::computeLLEMatrix(const Mat& lle_mat) const {
         if (report_progress)
             pb->update(i + 1);
     }
-    if (pb)
-        delete pb;
 }
 
 ////////////////////
@@ -208,7 +206,7 @@ void ReconstructionWeightsKernel::computeWeights() {
         sortRows(is_neighbor_of[i]);
     // Then compute the weights for each point i.
     TVec<int> neighbors_of_i;
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if (report_progress)
         pb = new ProgressBar("Computing reconstruction weights", n_examples);
     for (int i = 0; i < n_examples; i++) {
@@ -220,8 +218,6 @@ void ReconstructionWeightsKernel::computeWeights() {
         if (report_progress)
             pb->update(i+1);
     }
-    if (pb)
-        delete pb;
 }
 
 //////////////

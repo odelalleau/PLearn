@@ -1772,7 +1772,7 @@ void DistRepNNet::train()
             // number of optimizer stages corresponding to one learner stage (one epoch)
             int optstage_per_lstage = l/nsamples;
             
-            ProgressBar* pb = 0;
+            PP<ProgressBar> pb;
             if(report_progress)
                 pb = new ProgressBar("Extra task " + tostring(t) + ", Training " + classname() + " from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
             
@@ -1797,8 +1797,6 @@ void DistRepNNet::train()
             if(verbosity>1)
                 cout << "EPOCH " << stage << " train objective: " << train_stats->getMean() << endl;
             
-            if(pb)
-                delete pb;
             stage = current_stage;
         }
     }    
@@ -1823,7 +1821,7 @@ void DistRepNNet::train()
     // number of optimizer stages corresponding to one learner stage (one epoch)
     int optstage_per_lstage = l/nsamples;
 
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if(report_progress)
         pb = new ProgressBar("Training " + classname() + " from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
 
@@ -1847,9 +1845,6 @@ void DistRepNNet::train()
     }
     if(verbosity>1)
         cout << "EPOCH " << stage << " train objective: " << train_stats->getMean() << endl;
-
-    if(pb)
-        delete pb;
 
     // HUGO: Why?
     test_costf->recomputeParents();

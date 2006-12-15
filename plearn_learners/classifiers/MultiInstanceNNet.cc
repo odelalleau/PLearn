@@ -451,7 +451,7 @@ void MultiInstanceNNet::train()
         {
             n_bags=0;
             int l = train_set->length();
-            ProgressBar* pb = 0;
+            PP<ProgressBar> pb;
             if(report_progress)
                 pb = new ProgressBar("Counting nb bags in train_set for MultiInstanceNNet ", l);
             Vec row(train_set->width());
@@ -466,8 +466,6 @@ void MultiInstanceNNet::train()
                 if(pb)
                     pb->update(i);
             }
-            if(pb)
-                delete pb;
             optstage_per_lstage = n_bags/batch_size;
         }
         training_set_has_changed = false;
@@ -481,7 +479,7 @@ void MultiInstanceNNet::train()
     }
 
 
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if(report_progress)
         pb = new ProgressBar("Training MultiInstanceNNet from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
 
@@ -502,9 +500,6 @@ void MultiInstanceNNet::train()
     }
     if(verbosity>1)
         cout << "EPOCH " << stage << " train objective: " << train_stats->getMean() << endl;
-
-    if(pb)
-        delete pb;
 
     //if (batch_size==0)
     //  optimizer->verifyGradient(0.001);

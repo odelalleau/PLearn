@@ -1070,7 +1070,7 @@ void NnlmOnlineLearner::train()
     p_gnn->printVariance();*/
 //---------------
 
-    ProgressBar* pb = NULL;
+    PP<ProgressBar> pb;
     if(report_progress) {
         pb = new ProgressBar("Training", nsamples);
     }
@@ -1181,10 +1181,6 @@ void NnlmOnlineLearner::train()
         p_nol->is_learning = false;
     }
 
-    if(pb)
-        delete pb;
-
-
 }
 
 
@@ -1234,7 +1230,7 @@ void NnlmOnlineLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
 
 
 
-    ProgressBar* pb = NULL;
+    PP<ProgressBar> pb;
     if(report_progress)
         pb = new ProgressBar("Testing learner",nsamples);
 
@@ -1295,9 +1291,6 @@ void NnlmOnlineLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
     perplexity = safeexp(entropy);
 
     cout << "entropy: " << entropy << " perplexity " << perplexity << endl;
-
-    if(pb)
-        delete pb;
 
 }
 

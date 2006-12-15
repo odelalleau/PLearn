@@ -387,7 +387,7 @@ void NGramDistribution::train()
     TVec<int> int_row(n);
 
 
-    ProgressBar* pb =  new ProgressBar("Inserting ngrams in NGramTree", contexts_train->length());
+    PP<ProgressBar> pb =  new ProgressBar("Inserting ngrams in NGramTree", contexts_train->length());
     for(int i=0; i<contexts_train->length(); i++)
     {
         contexts_train->getRow(i,row);
@@ -396,8 +396,6 @@ void NGramDistribution::train()
 
         pb->update(i+1);
     }
-
-    delete(pb);
 
     // Smoothing techniques parameter estimation
     if(smoothing == "jelinek-mercer")

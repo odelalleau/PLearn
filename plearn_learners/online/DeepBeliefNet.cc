@@ -503,7 +503,7 @@ void DeepBeliefNet::train()
         return;
     }
 
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
 
     // clear stats of previous epoch
     train_stats->forget();
@@ -544,13 +544,6 @@ void DeepBeliefNet::train()
                 else
                     pb->update( stage - training_schedule[i-1] + 1 );
         }
-
-        if( pb )
-        {
-            delete pb;
-            pb = 0;
-        }
-
     }
 
     // possible supervised part
@@ -581,12 +574,6 @@ void DeepBeliefNet::train()
 
             if( pb )
                 pb->update( stage - previous_stage + 1 );
-        }
-
-        if( pb )
-        {
-            delete pb;
-            pb = 0 ;
         }
     }
 
@@ -660,12 +647,6 @@ void DeepBeliefNet::train()
 
         if( pb )
             pb->update( stage - init_stage + 1 );
-    }
-
-    if( pb )
-    {
-        delete pb;
-        pb = 0;
     }
 
     //update the reconstruction error

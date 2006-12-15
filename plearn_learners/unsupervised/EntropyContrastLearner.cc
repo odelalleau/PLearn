@@ -434,7 +434,7 @@ void EntropyContrastLearner::train()
         optimizer->reset();
     }
     else PLERROR("EntropyContrastLearner::train can't train without setting an optimizer first!");
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if(report_progress>0) {
         pb = new ProgressBar("Training EntropyContrastLearner from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
     }
@@ -494,10 +494,6 @@ void EntropyContrastLearner::train()
         //   V_b.copyFrom(V_b_save);
         W.copyFrom(W_save);
         // W_b.copyFrom(W_b_save);
-    }
-
-    if(pb) {
-        delete pb;
     }
 
     Vec x_(inputsize());

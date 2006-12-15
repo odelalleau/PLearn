@@ -585,7 +585,7 @@ void PLearner::use(VMat testset, VMat outputs) const
         real weight;
         Vec output(outputsize());
 
-        ProgressBar* pb = NULL;
+        PP<ProgressBar> pb;
         if(report_progress)
             pb = new ProgressBar("Using learner",l);
 
@@ -597,9 +597,6 @@ void PLearner::use(VMat testset, VMat outputs) const
             if(pb)
                 pb->update(i);
         }
-
-        if(pb)
-            delete pb;
     }
     else // parallel code
     {
@@ -683,7 +680,7 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
     Vec output(outputsize());
     Vec costs(nTestCosts());
 
-    ProgressBar* pb = NULL;
+    PP<ProgressBar> pb;
     if (report_progress) 
         pb = new ProgressBar("Testing learner", len);
 
@@ -713,9 +710,6 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
         if (report_progress)
             pb->update(i);
     }
-
-    if (pb)
-        delete pb;
 
 }
 

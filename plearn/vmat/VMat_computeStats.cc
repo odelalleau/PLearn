@@ -54,7 +54,7 @@ TVec<StatsCollector> computeStats(VMat m, int maxnvalues, bool report_progress)
     int l = m.length();
     TVec<StatsCollector> stats(w, StatsCollector(maxnvalues));
     Vec v(w);
-    ProgressBar* pbar = 0;
+    PP<ProgressBar> pbar;
     if (report_progress)
         pbar = new ProgressBar("Computing statistics", l);
     for(int i=0; i<l; i++)
@@ -65,8 +65,6 @@ TVec<StatsCollector> computeStats(VMat m, int maxnvalues, bool report_progress)
         if (report_progress)
             pbar->update(i);
     }
-    if (pbar)
-        delete pbar;
     return stats;
 }
 

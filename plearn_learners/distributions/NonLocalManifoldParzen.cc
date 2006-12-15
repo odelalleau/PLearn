@@ -832,7 +832,7 @@ void NonLocalManifoldParzen::train()
     // number of optimizer stages corresponding to one learner stage (one epoch)
     if(optstage_per_lstage < 0) optstage_per_lstage = train_set->length()/nsamples;
 
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if(report_progress>0)
         pb = new ProgressBar("Training NonLocalManifoldParzen from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
 
@@ -873,9 +873,6 @@ void NonLocalManifoldParzen::train()
     }
     if(verbosity>1)
         cout << "EPOCH " << stage << " train objective: " << train_stats->getMean() << endl;
-
-    if(pb)
-        delete pb;
 
     if(save_every < 0 && store_prediction && !flag)
     {

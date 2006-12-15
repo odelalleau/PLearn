@@ -314,7 +314,7 @@ void PCA::classical_algo( )
             << endl;
     }
 
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if (report_progress)
         pb = new ProgressBar("Training PCA", 2);
 
@@ -330,13 +330,11 @@ void PCA::classical_algo( )
         pb->update(2);
 
     stage += 1;
-    if (pb)
-        delete pb;
 }
 
 void PCA::incremental_algo()
 {
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if (report_progress)
         pb = new ProgressBar("Incremental PCA", 2);
 
@@ -397,10 +395,7 @@ void PCA::incremental_algo()
     eigenVecOfSymmMat( covarmat, ncomponents, eigenvals, eigenvecs );      
 
     if (pb)
-    {
         pb->update(2);
-        delete pb;
-    }
   
     // Remember the number of observation
     stage = train_set.length();
@@ -411,7 +406,7 @@ void PCA::incremental_algo()
 // clean up to do.
 void PCA::em_algo()
 {
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
 
     int n = train_set->length();
     int p = train_set->inputsize();
@@ -470,9 +465,6 @@ void PCA::em_algo()
     product(eigenvecs, true_pca.eigenvecs, C);
     eigenvals.resize(k);
     eigenvals << true_pca.eigenvals;
-
-    if (pb)
-        delete pb;
 }
 
 // Here, I just copied the ... content of the if ( algo == "em" ) { ... }
@@ -480,7 +472,7 @@ void PCA::em_algo()
 // clean up to do.
 void PCA::em_orth_algo()
 {
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
   
     int n = train_set->length();
     int p = train_set->inputsize();
@@ -563,9 +555,6 @@ void PCA::em_orth_algo()
     // Copy the eigenvectors.
     eigenvecs.resize(k, p);
     eigenvecs << C;
-
-    if (pb)
-        delete pb;
 }
 
 void PCA::train()

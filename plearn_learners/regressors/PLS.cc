@@ -42,9 +42,6 @@
 
 #define PL_LOG_MODULE_NAME "PLS"
 
-// From boost
-#include <boost/scoped_ptr.hpp>
-
 // From PLearn
 #include <plearn/io/pl_log.h>
 #include <plearn/math/TMat_maths.h>    //!< For dist.
@@ -475,7 +472,7 @@ void PLS::train()
         }
 
         // Iterate k times to find the k first factors.
-        boost::scoped_ptr<ProgressBar> pb(
+        PP<ProgressBar> pb(
             report_progress? new ProgressBar("Computing the PLS components", k)
             : 0);
 
@@ -522,7 +519,7 @@ void PLS::train()
         Mat X = X_vmatrix->toMat();
         y << Y_vmatrix->toMat();
 
-        boost::scoped_ptr<ProgressBar> pb(
+        PP<ProgressBar> pb(
             report_progress? new ProgressBar("Computing the PLS components", k)
             : 0);
 

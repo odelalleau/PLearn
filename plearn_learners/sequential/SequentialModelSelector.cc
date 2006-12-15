@@ -237,8 +237,8 @@ void SequentialModelSelector::train()
 
     if( last_call_train_t < start_t )
         return;
-  
-    ProgressBar* pb = NULL;
+
+    PP<ProgressBar> pb;
     if (report_progress)
         pb = new ProgressBar("Training SequentialModelSelector learner",train_set.length());
 
@@ -359,7 +359,7 @@ void SequentialModelSelector::test(VMat test_set, PP<VecStatsCollector> test_sta
     if( test_set.length()-1 < start_t )
         return;
 
-    ProgressBar* pb = NULL;
+    PP<ProgressBar> pb;
     if (report_progress)
         pb = new ProgressBar("Testing SequentialModelSelector learner",test_set.length());
 

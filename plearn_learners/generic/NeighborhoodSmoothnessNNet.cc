@@ -631,7 +631,7 @@ void NeighborhoodSmoothnessNNet::train()
     {
         n_bags=0;
         int l = train_set->length();
-        ProgressBar* pb = 0;
+        PP<ProgressBar> pb;
         if(report_progress)
             pb = new ProgressBar("Counting nb bags in train_set for NeighborhoodSmoothnessNNet", l);
         Vec row(train_set->width());
@@ -645,8 +645,6 @@ void NeighborhoodSmoothnessNNet::train()
             if(pb)
                 pb->update(i);
         }
-        if(pb)
-            delete pb;
     }
 
     int true_batch_size = batch_size;
@@ -671,7 +669,7 @@ void NeighborhoodSmoothnessNNet::train()
         optimizer->build();
     }
 
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if(report_progress)
         pb = new ProgressBar("Training NeighborhoodSmoothnessNNet from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
 
@@ -692,9 +690,6 @@ void NeighborhoodSmoothnessNNet::train()
     }
     if(verbosity>1)
         cout << "EPOCH " << stage << " train objective: " << train_stats->getMean() << endl;
-
-    if(pb)
-        delete pb;
 
     // TODO Not sure if this is needed, but just in case...
     output_and_target_to_cost->recomputeParents();

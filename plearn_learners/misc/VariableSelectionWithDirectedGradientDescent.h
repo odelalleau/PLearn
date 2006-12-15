@@ -64,7 +64,7 @@ private:
     TVec<bool> weights_selected;
     TVec<int> selected_variables;
   
-    ProgressBar* pb;
+    PP<ProgressBar> pb;
     int row;
     int col;
     Vec sample_input;

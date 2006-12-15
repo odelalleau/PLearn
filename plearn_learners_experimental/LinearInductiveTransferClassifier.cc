@@ -506,7 +506,7 @@ void LinearInductiveTransferClassifier::train()
         // number of optimizer stages corresponding to one learner stage (one epoch)
         int optstage_per_lstage = l/nsamples;
 
-        ProgressBar* pb = 0;
+        PP<ProgressBar> pb;
         if(report_progress)
             pb = new ProgressBar("Training " + classname() + " from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
 
@@ -529,9 +529,6 @@ void LinearInductiveTransferClassifier::train()
         }
         if(verbosity>1)
             cout << "EPOCH " << stage << " train objective: " << train_stats->getMean() << endl;
-
-        if(pb)
-            delete pb;
     }
     else
     {

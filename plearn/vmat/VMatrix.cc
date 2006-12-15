@@ -1667,7 +1667,7 @@ void VMatrix::saveAMAT(const PPath& amatfile, bool verbose, bool no_header, bool
     if(!no_header)
         out << "#sizes: " << inputsize() << ' ' << targetsize() << ' ' << weightsize() << ' ' << extrasize() << endl;
 
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if (verbose)
         pb = new ProgressBar(cout, "Saving to amat", length());
 
@@ -1692,8 +1692,6 @@ void VMatrix::saveAMAT(const PPath& amatfile, bool verbose, bool no_header, bool
                 pb->update(i + 1);
         }
     }
-    if (pb)
-        delete pb;
 }
 
 ///////////////////

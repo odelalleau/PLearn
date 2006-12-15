@@ -149,7 +149,7 @@ void MultiTargetOneHotVMatrix::build_()
     if (source->length() != source_target->length())
       PLERROR("In MultiTargetOneHotVMatrix::build_ - 'source' and 'source_target' must have same length");
     // We need to browse through the data.
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if (verbosity >= 1)
       pb = new ProgressBar("Building new data view", source->length());
 //    int target_col = source->inputsize();
@@ -186,7 +186,6 @@ void MultiTargetOneHotVMatrix::build_()
       if (pb)
         pb->update(i+1);
     }
-    if (pb) delete pb;
     if (reweight_targets) {
       int max_target = argmax(count_targets);
       if (count_targets[max_target] == 0)
@@ -263,7 +262,7 @@ void MultiTargetOneHotVMatrix::build_()
   else if(source_and_target)
   {
     // We need to browse through the data.
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if (verbosity >= 1)
       pb = new ProgressBar("Building new data view", source_and_target->length());
     //    int target_col = source->inputsize();
@@ -302,7 +301,6 @@ void MultiTargetOneHotVMatrix::build_()
       if (pb)
         pb->update(i+1);
     }
-    if (pb) delete pb;
     if (reweight_targets) {
       int max_target = argmax(count_targets);
       if (count_targets[max_target] == 0)

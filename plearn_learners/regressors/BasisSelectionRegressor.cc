@@ -640,7 +640,7 @@ struct BasisSelectionRegressor::thread_wawr
     boost::mutex& ts_mx;
     const VMat& train_set;  
     boost::mutex& pb_mx;
-    ProgressBar* pb;
+    PP<ProgressBar> pb;
 
     thread_wawr(int tid_, int nt_,
                 const TVec<RealFunc>& functions_,  
@@ -650,7 +650,7 @@ struct BasisSelectionRegressor::thread_wawr
                 Vec& E_xy_, const Vec& Y_, boost::mutex& ts_mx_,
                 const VMat& train_set_,
                 boost::mutex& pb_mx_,
-                ProgressBar* pb_)
+                PP<ProgressBar> pb_)
         : tid(tid_), 
           nt(nt_),
           functions(functions_),
@@ -740,7 +740,7 @@ void BasisSelectionRegressor::computeWeightedAveragesWithResidue(const TVec<Real
     real w;
     int l = train_set->length();
 
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if(report_progress)
         pb = new ProgressBar("Computing residue scores for " + tostring(n_candidates) + " candidate functions", l);
 
@@ -811,9 +811,6 @@ void BasisSelectionRegressor::computeWeightedAveragesWithResidue(const TVec<Real
     E_y  *= inv_wsum;
     E_yy *= inv_wsum;
     E_xy *= inv_wsum;
-
-    if(pb)
-        delete pb;
 
 }
 

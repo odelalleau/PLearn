@@ -1991,7 +1991,7 @@ void FeatureSetNNet::train()
     int l = train_set->length();  
     int bs = batch_size>0 ? batch_size : l;
 
-    ProgressBar* pb = 0;
+    PP<ProgressBar> pb;
     if(report_progress)
         pb = new ProgressBar("Training " + classname() + " from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
 
@@ -2099,8 +2099,6 @@ void FeatureSetNNet::train()
                  << train_stats->getMean() << endl;
         if(pb) pb->update(stage-initial_stage);
     }
-    
-    if(pb) delete pb;
 
     if(stochastic_gradient_descent_speedup)
     {

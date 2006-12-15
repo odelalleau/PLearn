@@ -333,7 +333,7 @@ void FeatureSetNaiveBayesClassifier::train()
 
     if(stage == 0)
     {
-        ProgressBar* pb = 0;
+        PP<ProgressBar> pb;
         if(report_progress)
             pb = new ProgressBar("Training " + classname() 
                                  + " from stage 0 to " + tostring(l), l);
@@ -385,7 +385,6 @@ void FeatureSetNaiveBayesClassifier::train()
 
             if(pb) pb->update(t);
         }
-        if(pb) delete pb;
         stage = 1;
         train_stats->finalize();
         if(verbosity>1)

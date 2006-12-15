@@ -259,7 +259,7 @@ void LearnerCommand::analyze_inputs(const string& data_file, const string& resul
         PLearn::load(learner_files[i], learners[i]);
     int n_outputs = learners[0]->outputsize();
     // Analyze inputs.
-    ProgressBar* pb = new ProgressBar("Analyzing inputs", data->length());
+    PP<ProgressBar> pb = new ProgressBar("Analyzing inputs", data->length());
     Vec v(dim);
     Vec w(dim);
     Mat outputs(n_learners, n_outputs);
@@ -296,7 +296,6 @@ void LearnerCommand::analyze_inputs(const string& data_file, const string& resul
             w[j] = v[j];
         }
     }
-    delete pb;
     // Compiling stats.
     pb = new ProgressBar("Compiling statistics", dim);
     for (int j = 0; j < dim; pb->update(++j)) {
@@ -315,7 +314,6 @@ void LearnerCommand::analyze_inputs(const string& data_file, const string& resul
             fieldnames.append(stats[i]);
     results->declareFieldNames(fieldnames);
     results->saveAllStringMappings();
-    delete pb;
 }
 
 /////////

@@ -109,7 +109,7 @@ struct NullProgressBarPlugin : public ProgressBarPlugin
 //! FAQ: 
 //! Q #1 : How do I reuse the same progress bar?
 //! A #1 : simply call progress_bar(i) again with 'i' from 0..maxpos (The text progress bar plugin will display a new progress bar)
-class ProgressBar
+class ProgressBar : public PPointable
 {
 public:
     string title;
