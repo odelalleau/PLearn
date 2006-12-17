@@ -64,7 +64,7 @@ DeepBeliefNet::DeepBeliefNet() :
     class_cost_index( -1 ),
     recons_cost_index( -1 ),
     final_cost_index( -1 )
-        
+
 {
     random_gen = new PRandom();
 }
@@ -479,22 +479,22 @@ void DeepBeliefNet::train()
     Vec target( targetsize() );
     real weight; // unused
 
-    TVec<string> train_cost_names = getTrainCostNames() ; 
+    TVec<string> train_cost_names = getTrainCostNames() ;
     Vec train_costs( train_cost_names.length() );
-    train_costs.fill(MISSING_VALUE) ; 
+    train_costs.fill(MISSING_VALUE) ;
 
     //give the indexes the right values
-    
+
     if ( classification_cost )
-        nll_cost_index = train_cost_names.find(classification_cost->name()[0]);  
-    if ( final_cost->name() )
-        final_cost_index = train_cost_names.find(final_cost->name()[0]);  
-    
-    recons_cost_index = train_cost_names.find("recons_error");  
-    
-    class_cost_index = train_cost_names.find("class_error");  
-    
-    
+        nll_cost_index = train_cost_names.find(classification_cost->name()[0]);
+    if ( final_cost )
+        final_cost_index = train_cost_names.find(final_cost->name()[0]);
+
+    recons_cost_index = train_cost_names.find("recons_error");
+
+    class_cost_index = train_cost_names.find("class_error");
+
+
     int nsamples = train_set->length();
 
     if( !initTrain() )
@@ -580,15 +580,15 @@ void DeepBeliefNet::train()
     /**** compute reconstruction error*****/
     real train_recons_error = 0.0;
 
-    RBMLayer * down_layer = get_pointer(layers[0]) ;  
-    RBMLayer * up_layer =  get_pointer(layers[1]) ; 
+    RBMLayer * down_layer = get_pointer(layers[0]) ;
+    RBMLayer * up_layer =  get_pointer(layers[1]) ;
     RBMConnection * parameters = get_pointer(connections[0]);
-    
-    for(int train_index = 0 ; train_index < nsamples ; train_index++) 
+
+    for(int train_index = 0 ; train_index < nsamples ; train_index++)
     {
-        
+
         train_set->getExample( train_index, input, target, weight );
-                
+
           down_layer->expectation << input;
 
           // up
@@ -604,15 +604,15 @@ void DeepBeliefNet::train()
           down_layer->generateSample();
 
           //    result += powdistance( input, down_layer->expectation );
-        
+
           for( int i=0 ; i<input.size() ; i++ )
               train_recons_error += (input[i] - down_layer->expectation[i])
                                   * (input[i] - down_layer->expectation[i]);
 
     }
 
-    train_recons_error /= nsamples ; 
-    
+    train_recons_error /= nsamples ;
+
 
     /***** fine-tuning by gradient descent *****/
     if( stage >= nstages )
@@ -652,7 +652,7 @@ void DeepBeliefNet::train()
     //update the reconstruction error
     train_costs.fill( MISSING_VALUE );
     train_costs[recons_cost_index] = train_recons_error;
-    train_stats->update( train_costs ) ; 
+    train_stats->update( train_costs ) ;
 
     train_stats->finalize();
 }
@@ -821,6 +821,8 @@ void DeepBeliefNet::fineTuningStep( const Vec& input, const Vec& target,
                                      expectation_gradients[ n_layers-1 ] );
         }
 
+        train_costs[final_cost_index] = final_cost_value[0];
+
         layers[ n_layers-1 ]->bpropUpdate( layers[ n_layers-1 ]->activation,
                                            layers[ n_layers-1 ]->expectation,
                                            activation_gradients[ n_layers-1 ],
@@ -873,9 +875,6 @@ void DeepBeliefNet::fineTuningStep( const Vec& input, const Vec& target,
                                        expectation_gradients[i-1],
                                        activation_gradients[i] );
     }
-
-    train_costs[final_cost_index] = final_cost_value[0];
-
 }
 
 // assumes that down_layer->expectation is set
@@ -965,13 +964,13 @@ void DeepBeliefNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
 {
     // Compute the costs from *already* computed output.
 
-    TVec<string> test_cost_names = getTestCostNames() ;  
+    TVec<string> test_cost_names = getTestCostNames() ;
 
     int test_final_cost_index = -1 ;
     int test_class_cost_index = test_cost_names.find("class_error") ;
 
     costs.resize( test_cost_names.length() );
-    costs.fill( MISSING_VALUE ); 
+    costs.fill( MISSING_VALUE );
 
     if( use_classification_cost )
     {
@@ -993,7 +992,7 @@ void DeepBeliefNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
     if( final_cost )
     {
 
-        test_final_cost_index = test_cost_names.find(final_cost->name()[0]) ; 
+        test_final_cost_index = test_cost_names.find(final_cost->name()[0]) ;
         int init = use_classification_cost ? n_classes : 0;
         Vec final_costs;
         final_cost->fprop( output.subVec( init, output.size() - init ),
@@ -1002,8 +1001,8 @@ void DeepBeliefNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
         if ( final_cost_value.length() > 1 )
             PLERROR("DeepBeliefNet::computeCostsFromOutputs needs to be fixed"
                     "to handle final costs with more then one element") ;
-        
-        costs[test_final_cost_index] = final_cost_value[0] ; 
+
+        costs[test_final_cost_index] = final_cost_value[0] ;
         costs.append(final_cost_value[0]);
     }
 
@@ -1030,7 +1029,7 @@ TVec<string> DeepBeliefNet::getTestCostNames() const
 
 TVec<string> DeepBeliefNet::getTrainCostNames() const
 {
-    TVec<string> cost_names = getTestCostNames() ; 
+    TVec<string> cost_names = getTestCostNames() ;
     cost_names.append("recons_error");
     return cost_names;
 }
