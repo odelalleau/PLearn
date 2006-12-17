@@ -226,6 +226,8 @@ void HyperLearner::train()
         {
             if(expdir=="")
                 PLERROR("Cannot save final model: no experiment directory has been set");
+            if( getLearner().isNull() )
+                PLERROR("Cannot save final model: no best learner has been obtained");
             PLearn::save(expdir+"final_learner.psave",*getLearner());
         }
 

@@ -351,13 +351,14 @@ Vec HyperOptimize::optimize()
     // revert to best_learner
     hlearner->setLearner(best_learner);
 
-    // report best result again
-    reportResult(-1,best_results);
-
     if (best_results.isEmpty())
         // This could happen for instance if all results are NaN.
         PLWARNING("In HyperOptimize::optimize - Could not find a best result, something "
                   "must be wrong");
+    else
+        // report best result again, if not empty
+        reportResult(-1,best_results);
+
     return best_results;
 }
 
