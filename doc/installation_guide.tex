@@ -154,7 +154,7 @@ in the appropriate chapter).
 \item {\bf required:} parts of PLearn have come to depend on some of the
   {\bf boost} C++ libraries (http://www.boost.org). You might as well install all
   of boost. We use in particular: {\em tuple, random, type\_traits, call\_traits, smart\_ptr, bind, function, graph, (utility), (regex), (format), (thread).}
-\item {\bf highly recommended:} {\bf blas} and {\bf lapack} libraries provide linear algebra
+\item {\bf almost required:} {\bf blas} and {\bf lapack} libraries provide linear algebra
   subroutines that several learning algorithms depend upon. There are standard
   packages (RPMS\ldots) for most Linux distributions, and come as part of
   the {\em veclib} framework under Mac OS X.
@@ -354,7 +354,20 @@ directives such as, for ex:
 
 We suppose you have all the necessary software requirements in place (especially python).
 
-First, edit your .cshrc or .bashrc and 
+For ex. under ubuntu, you can check the following packages install (using
+synaptic for ex.):
+
+Required:
+{\tt g++, python2.4, python, libnspr4, libnspr-dev, libboost-dev,
+libboost-regex1.33.1, libboost-regex-dev, libboost-graph1.33.1, libboost-graph-dev} \\
+Strongly suggested: \verb!libncurses5, libncurses5-dev! and some version of lapack and blas. Ex:
+{\tt refblas3, lapack3, lapack3-dev} \\
+Recommended (python and graphics related):
+{\tt ipython, python-matplotlib, 
+python-numarray, python-numpy, mayavi, python2.4-dev,
+python-tk, python-gtk2, python-gtkhtml2} \\
+
+Then edit your .cshrc or .bashrc and 
 \begin{itemize}
 \item Set the {\tt PLEARNDIR} environment variable to the path of your PLearn directory. 
 (csh ex: \verb!setenv PLEARNDIR ${HOME}/PLearn!)
@@ -383,7 +396,8 @@ pymake -noblas plearn_noblas.cc
 If it doesn't work, you may have to adapt the configuration file to your system
 (PLearn/.pymake/config)
 
-If it does work, you can try to \verb!pymake plearn_lapack.cc!
+If it does work, you can try to \verb!pymake plearn_lapack.cc! or even
+\verb!pymake plearn_curses.cc!
 
 
 \section{Installation on Mac OS X}
@@ -448,6 +462,21 @@ defined in the new shell.
 
 \subsection{PLearn setup and compilation}
 
+From within your PLearn directory run {\tt ./setup}. This should create a
+{\tt .plearn} sub-directory in your home directory, that will contain some
+configuration files.
+
+The compiling commands are:
+\begin{verbatim}
+cd PLearn/commands/
+pymake -noblas plearn_noblas.cc
+\end{verbatim}
+
+If it doesn't work, you may have to adapt the configuration file to your system
+(PLearn/.pymake/config)
+
+If it does work, you can try to \verb!pymake plearn_lapack.cc! or even
+\verb!pymake plearn_curses.cc!
 
 \section{Installation on Windows with cygwin}
 \label{sec:windows}
