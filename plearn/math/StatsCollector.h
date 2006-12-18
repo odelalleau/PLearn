@@ -214,7 +214,7 @@ public:
     real stderror() const               { return sqrt(variance()/nnonmissing()); }
     real first_obs() const              { return first_; }
     real last_obs() const               { return last_; }
-    real sharperatio() const            { return mean()/stddev(); }
+    real sharperatio() const;
     real mean_over_skewness() const     { return mean()/skewness(); }
     real mean_over_skewness_ms() const;        //!< Special version for model selection
     real mean_over_kurtosis() const     { return mean()/kurtosis(); }

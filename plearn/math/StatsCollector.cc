@@ -938,6 +938,22 @@ real StatsCollector::kurtosis() const
     return numerator / denominator - 3.0;
 }
 
+/////////////////
+// sharperatio //
+/////////////////
+real StatsCollector::sharperatio() const
+{
+    // Be careful because due to numerical errors, it is possible to get data
+    // series with extremely small returns and standard deviations, where we
+    // would be expecting a SharpeRatio of "exactly" 0.0.
+    real m = mean();
+    real s = stddev();
+    if (is_equal(m, 0.0) || is_equal(s, 0.0))
+        return 0.0;
+    else
+        return m/s;
+}
+    
 ///////////////////////////
 // mean_over_skewness_ms //
 ///////////////////////////
