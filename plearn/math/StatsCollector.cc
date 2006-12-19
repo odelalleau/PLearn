@@ -948,7 +948,9 @@ real StatsCollector::sharperatio() const
     // would be expecting a SharpeRatio of "exactly" 0.0.
     real m = mean();
     real s = stddev();
-    if (is_equal(m, 0.0) || is_equal(s, 0.0))
+    if (is_missing(m) || is_missing(s))
+        return MISSING_VALUE;
+    else if (is_equal(m, 0.0) || is_equal(s, 0.0))
         return 0.0;
     else
         return m/s;
