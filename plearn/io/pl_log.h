@@ -118,6 +118,8 @@ protected:
 };
 
 
+class LogInterceptorPStreamBuf;              //!< Forward declare
+
 /**
  *  Interceptive version PL_LogPlugin.  This plugin intercepts the requests
  *  made to specific log-names, and appends them to a list of log entries that
