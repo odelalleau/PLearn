@@ -123,7 +123,25 @@ void RBMMixedLayer::fprop( const Vec& input, Vec& output ) const
         int begin = init_positions[i];
         int size_i = sub_layers[i]->size;
 
-        sub_layers[i]->fprop( input, tmp );
+        sub_layers[i]->fprop( input.subVec(begin, size_i), tmp );
+        output.subVec( begin, size_i ) << tmp;
+    }
+}
+
+void RBMMixedLayer::fprop( const Vec& input, const Vec& rbm_bias, 
+                           Vec& output ) const
+{
+    PLASSERT( input.size() == input_size );
+    PLASSERT( rbm_bias.size() == input_size );
+    output.resize( output_size );
+
+    for( int i=0 ; i<n_layers ; i++ )
+    {
+        int begin = init_positions[i];
+        int size_i = sub_layers[i]->size;
+
+        sub_layers[i]->fprop( input.subVec(begin, size_i),
+                              rbm_bias.subVec(begin,size_i), tmp );
         output.subVec( begin, size_i ) << tmp;
     }
 }
@@ -151,6 +169,73 @@ void RBMMixedLayer::bpropUpdate( const Vec& input, const Vec& output,
 
         // because tmp is resizeable
         input_gradient.subVec( begin, size_i ) << tmp;
+    }
+}
+
+void RBMMixedLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias, 
+                                const Vec& output,
+                                Vec& input_gradient, Vec& rbm_bias_gradient,
+                                const Vec& output_gradient)
+{
+    PLASSERT( input.size() == size );
+    PLASSERT( rbm_bias.size() == size );
+    PLASSERT( output.size() == size );
+    PLASSERT( output_gradient.size() == size );
+
+    input_gradient.resize( size );
+    rbm_bias_gradient.resize( size );
+
+    for( int i=0 ; i<n_layers ; i++ )
+    {
+        int begin = init_positions[i];
+        int size_i = sub_layers[i]->size;
+
+        sub_layers[i]->bpropUpdate( input.subVec( begin, size_i ),
+                                    rbm_bias.subVec( begin, size_i),
+                                    output.subVec( begin, size_i ),
+                                    tmp, tmpb,
+                                    output_gradient.subVec( begin, size_i ) );
+
+        // because tmp and tmpb is resizeable
+        input_gradient.subVec( begin, size_i ) << tmp;
+        rbm_bias_gradient.subVec( begin, size_i) << tmpb;
+    }
+}
+
+real RBMMixedLayer::fpropNLL(const Vec& target)
+{
+    computeExpectation();
+
+    PLASSERT( target.size() == input_size );
+    nlls.resize(n_layers);
+
+    real ret = 0;
+    real nlli = 0;
+    for( int i=0 ; i<n_layers ; i++ )
+    {
+        int begin = init_positions[i];
+        int size_i = sub_layers[i]->size;
+        nlli = sub_layers[i]->fpropNLL( target.subVec(begin, size_i));
+        nlls[i] = nlli;
+        ret += nlli;
+    }
+    return ret;
+}
+
+void RBMMixedLayer::bpropNLL(const Vec& target, real nll, Vec bias_gradient)
+{
+    computeExpectation();
+
+    PLASSERT( target.size() == input_size );
+    bias_gradient.resize( size );
+
+    for( int i=0 ; i<n_layers ; i++ )
+    {
+        int begin = init_positions[i];
+        int size_i = sub_layers[i]->size;
+        sub_layers[i]->bpropNLL( target.subVec(begin, size_i), nlls[i],
+                                 tmpb );
+        bias_gradient.subVec(begin, size_i) << tmpb;
     }
 }
 

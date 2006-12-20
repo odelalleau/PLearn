@@ -115,6 +115,17 @@ void RBMMultinomialLayer::fprop( const Vec& input, Vec& output ) const
     softmaxMinus( input+bias, output );
 }
 
+void RBMMultinomialLayer::fprop( const Vec& input, const Vec& rbm_bias,
+                                 Vec& output ) const
+{
+    PLASSERT( input.size() == input_size );
+    PLASSERT( rbm_bias.size() == input_size );
+    output.resize( output_size );
+
+    // inefficient
+    softmaxMinus( input+rbm_bias, output );
+}
+
 void RBMMultinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
                                       Vec& input_gradient,
                                       const Vec& output_gradient)
@@ -149,6 +160,63 @@ void RBMMultinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
     }
 }
 
+void RBMMultinomialLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias, 
+                                      const Vec& output,
+                                      Vec& input_gradient, Vec& rbm_bias_gradient,
+                                      const Vec& output_gradient)
+{
+    PLASSERT( input.size() == size );
+    PLASSERT( rbm_bias.size() == size );
+    PLASSERT( output.size() == size );
+    PLASSERT( output_gradient.size() == size );
+    input_gradient.resize( size );
+    rbm_bias_gradient.resize( size );
+
+    // input_gradient[i] =
+    //      (output_gradient . output - output_gradient[i] ) output[i]
+    real outg_dot_out = dot( output_gradient, output );
+    real* out = output.data();
+    real* outg = output_gradient.data();
+    real* ing = input_gradient.data();
+    for( int i=0 ; i<size ; i++ )
+        ing[i] = (outg_dot_out - outg[i]) * out[i];
+
+    rbm_bias_gradient << input_gradient;
+}
+
+real RBMMultinomialLayer::fpropNLL(const Vec& target)
+{
+    computeExpectation();
+
+    PLASSERT( target.size() == input_size );
+
+    real ret = 0;
+    
+    real target_i, expectation_i;
+    for( int i=0 ; i<size ; i++ )
+    {
+        target_i = target[i];
+        expectation_i = expectation[i];
+        if(!fast_exact_is_equal(target_i,0.0))
+            ret -= target_i * pl_log(expectation_i);
+    }
+    return ret;
+}
+
+void RBMMultinomialLayer::bpropNLL(const Vec& target, real nll, Vec bias_gradient)
+{
+    computeExpectation();
+
+    PLASSERT( target.size() == input_size );
+    bias_gradient.resize( size );
+
+    real sum_tar = sum( target );
+    real* exp = expectation.data();
+    real* tar = target.data();
+    real* biasg = bias_gradient.data();
+    for( int i=0 ; i<size ; i++ )
+        biasg[i] = tar[i] - sum_tar * exp[i];    
+}
 
 void RBMMultinomialLayer::declareOptions(OptionList& ol)
 {

@@ -203,6 +203,30 @@ void RBMLayer::fprop( const Vec& input, Vec& output ) const
     output << This->expectation;
 }
 
+void RBMLayer::fprop( const Vec& input, const Vec& rbm_bias,
+                      Vec& output ) const
+{
+    PLERROR("In RBMLayer::fprop(): not implemented");
+}
+
+void RBMLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias, 
+                           const Vec& output,
+                           Vec& input_gradient, Vec& rbm_bias_gradient,
+                           const Vec& output_gradient)
+{
+    PLERROR("In RBMLayer::bpropUpdate(): not implemented");
+}
+
+real RBMLayer::fpropNLL(const Vec& target)
+{
+    PLERROR("In RBMLayer::fpropNLL(): not implemented");
+    return REAL_MAX;
+}
+
+void RBMLayer::bpropNLL(const Vec& target, real nll, Vec bias_gradient)
+{
+    PLERROR("In RBMLayer::bpropNLL(): not implemented");
+}
 
 void RBMLayer::accumulatePosStats( const Vec& pos_values )
 {
@@ -277,6 +301,39 @@ void RBMLayer::update( const Vec& pos_values, const Vec& neg_values)
         }
     }
 }
+
+void RBMLayer::getAllBias(const Vec& rbm_bias)
+{
+    PLASSERT( rbm_bias.size() == size );
+    bias << rbm_bias;
+}
+
+void RBMLayer::bpropCD(Vec& bias_gradient)
+{
+    // grad = bias_pos_stats/pos_count - bias_neg_stats/neg_count
+
+    real* bg = bias_gradient.data();
+    real* bps = bias_pos_stats.data();
+    real* bns = bias_neg_stats.data();
+
+    for( int i=0 ; i<size ; i++ )
+        bg[i] = bps[i]/pos_count - bns[i]/neg_count;
+}
+
+void RBMLayer::bpropCD(const Vec& pos_values, const Vec& neg_values, 
+                       Vec& bias_gradient)
+{
+    // grad = bias_pos_stats/pos_count - bias_neg_stats/neg_count
+
+    real* bg = bias_gradient.data();
+    real* bps = pos_values.data();
+    real* bns = neg_values.data();
+
+    for( int i=0 ; i<size ; i++ )
+        bg[i] = bps[i]/pos_count - bns[i]/neg_count;
+}
+
+
 
 } // end of namespace PLearn
 

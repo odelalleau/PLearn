@@ -116,6 +116,17 @@ void RBMBinomialLayer::fprop( const Vec& input, Vec& output ) const
         output[i] = sigmoid( -input[i] - bias[i] );
 }
 
+void RBMBinomialLayer::fprop( const Vec& input, const Vec& rbm_bias,
+                      Vec& output ) const
+{
+    PLASSERT( input.size() == input_size );
+    PLASSERT( rbm_bias.size() == input_size );
+    output.resize( output_size );
+
+    for( int i=0 ; i<size ; i++ )
+        output[i] = sigmoid( -input[i] - rbm_bias[i]);
+}
+
 void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
                                    Vec& input_gradient,
                                    const Vec& output_gradient)
@@ -147,7 +158,59 @@ void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
     }
 }
 
+void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias, 
+                           const Vec& output,
+                           Vec& input_gradient, Vec& rbm_bias_gradient,
+                           const Vec& output_gradient)
+{
+    PLASSERT( input.size() == size );
+    PLASSERT( rbm_bias.size() == size );
+    PLASSERT( output.size() == size );
+    PLASSERT( output_gradient.size() == size );
+    input_gradient.resize( size );
+    rbm_bias_gradient.resize( size );
 
+    for( int i=0 ; i<size ; i++ )
+    {
+        real output_i = output[i];
+        input_gradient[i] = - output_i * (1-output_i) * output_gradient[i];
+    }
+
+    rbm_bias << input_gradient;
+}
+
+real RBMBinomialLayer::fpropNLL(const Vec& target)
+{
+    computeExpectation();
+
+    PLASSERT( target.size() == input_size );
+
+    real ret = 0;
+    real target_i, expectation_i;
+    for( int i=0 ; i<size ; i++ )
+    {
+        target_i = target[i];
+        expectation_i = expectation[i];
+        if(!fast_exact_is_equal(target_i,0.0))
+            ret -= target_i * pl_log(expectation_i);
+        if(!fast_exact_is_equal(target_i,1.0)) 
+            ret -= (1-target_i) * pl_log(1-expectation_i);
+    }
+    return ret;
+}
+
+void RBMBinomialLayer::bpropNLL(const Vec& target, real nll, Vec bias_gradient)
+{
+    computeExpectation();
+
+    PLASSERT( target.size() == input_size );
+    bias_gradient.resize( size );
+
+    for( int i=0 ; i<size ; i++ )
+    {
+        bias_gradient[i] = target[i]-expectation[i];
+    }
+}
 
 void RBMBinomialLayer::declareOptions(OptionList& ol)
 {

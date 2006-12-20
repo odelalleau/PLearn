@@ -131,11 +131,30 @@ public:
     //! the expectation
     virtual void fprop( const Vec& input, Vec& output ) const;
 
+    //! computes the expectation given the conditional input 
+    //! and the given bias
+    virtual void fprop( const Vec& input, const Vec& rbm_bias, 
+                        Vec& output ) const;
+
     //! back-propagates the output gradient to the input,
     //! and update the bias (and possibly the quadratic term)
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              Vec& input_gradient,
                              const Vec& output_gradient) = 0 ;
+
+    //! back-propagates the output gradient to the input and the bias
+    virtual void bpropUpdate(const Vec& input, const Vec& rbm_bias, 
+                             const Vec& output,
+                             Vec& input_gradient, Vec& rbm_bias_gradient,
+                             const Vec& output_gradient) ;
+
+    //! Computes the negative log-likelihood of target given the 
+    //! internal activations of the layer
+    virtual real fpropNLL(const Vec& target);
+    
+    //! Computes the gradient of the negative log-likelihood of target
+    //! with respect to the layer's bias, given the internal activations
+    virtual void bpropNLL(const Vec& target, real nll, Vec bias_gradient);
 
     //! Accumulates positive phase statistics
     virtual void accumulatePosStats( const Vec& pos_values );
@@ -164,6 +183,18 @@ public:
         return units_types;
     }
 
+    //! Set the internal bias values to rbm_bias
+    virtual void getAllBias(const Vec& rbm_bias);
+
+    //! Computes the contrastive divergence bias with respect to the bias
+    //! (or activations, which is equivalent)
+    virtual void bpropCD(Vec& bias_gradient);
+
+    //! Computes the contrastive divergence bias with respect to the bias
+    //! (or activations, which is equivalent), given the positive and
+    //! negative phase values.
+    virtual void bpropCD(const Vec& pos_values, const Vec& neg_values, 
+                    Vec& bias_gradient);
 
     //#####  PLearn::Object Protocol  #########################################
 
@@ -184,7 +215,7 @@ protected:
     Vec bias_pos_stats;
     //! Accumulates negative contribution to the gradient of bias
     Vec bias_neg_stats;
-    //! Stores the momentum of the gradient
+    //! Stores the momenconst Vec& pos, const Vec& neg, tum of the gradient
     Vec bias_inc;
 
     //! Count of positive examples
