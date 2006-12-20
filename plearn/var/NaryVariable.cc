@@ -115,8 +115,8 @@ VarArray NaryVariable::sources()
         for(int i=0; i<varray.size(); i++)
             if (!varray[i].isNull())
                 a &= varray[i]->sources();
-        if (a.size()==0)
-            a &= Var(this);
+        //if (a.size()==0)
+        //    a &= Var(this);
     }
     return a;
 }
