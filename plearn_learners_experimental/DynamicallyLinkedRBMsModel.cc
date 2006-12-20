@@ -134,9 +134,9 @@ void DynamicallyLinkedRBMsModel::build_()
     if(train_set)
     {
         visible_size = 0;
-        symbol_size.resize(0);
+        symbol_sizes.resize(0);
         PP<Dictionary> dict;
-        int dict_size = 0;
+        int dict_size = 0;//not used
         for(int i=0; i<train_set->inputsize(); i++)
         {
             dict = train_set->getDictionary(i);
@@ -163,7 +163,7 @@ void DynamicallyLinkedRBMsModel::build_()
 
         visible_layer->size = visible_size;
 
-        connections->down_size = visible_size;
+         connections->down_size = visible_size;
         connections->up_size = hidden_layer->size;
         
         dynamic_connections->input_size = hidden_layer->size;
@@ -273,7 +273,7 @@ void DynamicallyLinkedRBMsModel::train()
                 "build() must be called before train()");                
 
     Vec input( inputsize() );
-    Vec target( targetsize() );
+    Vec target( targetsize() );// Unused
     real weight = 0; // Unused
     Vec train_costs( getTrainCostNames().length() );
     int nsamples = train_set->length();
@@ -284,7 +284,7 @@ void DynamicallyLinkedRBMsModel::train()
         return;
     }
 
-    PP<ProgressBar> pb;
+    ProgressBar* pb = 0;
 
     // clear stats of previous epoch
     train_stats->forget();
@@ -302,8 +302,7 @@ void DynamicallyLinkedRBMsModel::train()
         MODULE_LOG << "  rbm_learning_rate = " << rbm_learning_rate << endl;
 
         if( report_progress && stage < end_stage )
-            pb = new ProgressBar( "Training layer "+tostring(i)
-                                  +" of "+classname(),
+            pb = new ProgressBar( "RBM training phase of "+classname(),
                                   end_stage - init_stage );
 
         visible_layer->setLearningRate( rbm_learning_rate );
@@ -325,6 +324,12 @@ void DynamicallyLinkedRBMsModel::train()
                 pb->update( stage + 1 - init_stage);
             stage++;
         }    
+        if( pb )
+        {
+            delete pb;
+            pb = 0;
+        }
+
     }
 
     /***** dynamic phase training  *****/
@@ -341,8 +346,7 @@ void DynamicallyLinkedRBMsModel::train()
         MODULE_LOG << "  dynamic_learning_rate = " << dynamic_learning_rate << endl;
 
         if( report_progress && stage < end_stage )
-            pb = new ProgressBar( "Training layer "+tostring(i)
-                                  +" of "+classname(),
+            pb = new ProgressBar( "Dynamic training phase of "+classname(),
                                   end_stage - init_stage );
 
         previous_hidden_layer.resize(hidden_layer->size);
@@ -360,7 +364,7 @@ void DynamicallyLinkedRBMsModel::train()
                     // previous_hidden_layer << hidden_layer->sample;
                 }
                 else
-                    previous_hidden_activations.clear();
+                    previous_hidden_layer.clear();
 
                 train_set->getExample(sample, input, target, weight);
             
@@ -373,6 +377,12 @@ void DynamicallyLinkedRBMsModel::train()
                 pb->update( stage + 1 - init_stage);
             stage++;
         }    
+        if( pb )
+        {
+            delete pb;
+            pb = 0;
+        }
+
     }
 
     /***** fine-tuning *****/
@@ -391,8 +401,7 @@ void DynamicallyLinkedRBMsModel::train()
         MODULE_LOG << "  fine_tuning_learning_rate = " << fine_tuning_learning_rate << endl;
 
         if( report_progress && stage < end_stage )
-            pb = new ProgressBar( "Training layer "+tostring(i)
-                                  +" of "+classname(),
+            pb = new ProgressBar( "Fine-tuning training phase of "+classname(),
                                   end_stage - init_stage );
 
         previous_hidden_layer.resize(hidden_layer->size);
@@ -412,7 +421,7 @@ void DynamicallyLinkedRBMsModel::train()
                     // previous_hidden_layer << hidden_layer->sample;
                 }
                 else
-                    previous_hidden_activations.clear();
+                    previous_hidden_layer.clear();
 
                 train_set->getExample(sample, input, target, weight);
             
@@ -425,6 +434,12 @@ void DynamicallyLinkedRBMsModel::train()
                 pb->update( stage + 1 - init_stage);
             stage++;
         }    
+        if( pb )
+        {
+            delete pb;
+            pb = 0;
+        }
+
     }
 
     train_stats->finalize();
@@ -453,17 +468,69 @@ void DynamicallyLinkedRBMsModel::clamp_visible_units(const Vec& input)
 
 void DynamicallyLinkedRBMsModel::rbm_update()
 {
-    // Positive phase
-
-    // Negative phase
-
-    // CD update ...
+    Vec pos_down;
+    Vec pos_up;
     
-    // ... of visible_layer bias ...
-
-    // ... of hidden_layer bias ...
+    Vec neg_down;
+    Vec neg_up;
     
-    // ... of connections between layers.
+
+    //###### Positive phase #####################
+
+    //up phase
+    connections->setAsDownInput( visible_layer->expectation );
+    
+    hidden_layer->getAllActivations( connections );
+
+    hidden_layer->computeExpectation();
+
+
+    //save the stats for the positive phase
+    pos_down = visible_layer->expectation.copy();
+    pos_up = hidden_layer->expectation.copy();
+
+
+
+    //down phase
+    hidden_layer->generateSample();
+    
+    connections->setAsUpInput( hidden_layer->sample );
+
+    visible_layer->getAllActivations( connections );
+
+    visible_layer->computeExpectation();
+    
+    visible_layer->generateSample();
+
+
+
+
+    //############ Negative phase  ##################
+
+    connections->setAsDownInput( visible_layer->sample );
+    
+    hidden_layer->getAllActivations( connections );
+
+    hidden_layer->computeExpectation();
+
+
+    //save the stats for the negative phase
+    neg_down = visible_layer->sample.copy();
+    neg_up = hidden_layer->expectation.copy();
+
+
+    
+    
+    //############ CD update #########################
+
+    visible_layer->update( pos_down, neg_down ); // ... of visible_layer bias ...
+
+    hidden_layer->update( pos_up, neg_up );// ... of hidden_layer bias ...
+    
+    connections->update( pos_down, pos_up, neg_down, neg_up ); // ... of connections between layers.
+    
+    
+   
 }
 
 void DynamicallyLinkedRBMsModel::dynamic_connections_update()
