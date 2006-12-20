@@ -762,21 +762,21 @@ void ProcessSymbolicSequenceVMatrix::getExample(int i, Vec& input, Vec& target, 
         {
             input.resize(inputsize_);
             int it = 0;
-            for(int i=cp*source->inputsize(); i<inputsize_; i++)
-                input[i] = target[it++];
-            for(int i=0; i<targetsize_; i++)
-                target[i] = target[it++];
+            for(int t=cp*source->inputsize(); t<inputsize_; t++)
+                input[t] = target[it++];
+            for(int t=0; t<targetsize_; t++)
+                target[t] = target[it++];
             target.resize(targetsize_);
         }
         else if(targetsize() > target.length())
         {
             target.resize(targetsize_);
             int it = cp*source->inputsize()-inputsize_;
-            for(int i=0; it<targetsize_; i++)
-                target[it++] = target[i];
+            for(int t=0; it<targetsize_; t++)
+                target[it++] = target[t];
             it = inputsize_;
-            for(int i=0; it<input.length(); i++)
-                target[i] = input[it++];
+            for(int t=0; it<input.length(); t++)
+                target[t] = input[it++];
             input.resize(inputsize_);
         }
     }
