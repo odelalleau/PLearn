@@ -40,17 +40,20 @@
 
 /**
  *  @file pl_log.h
- *
- *  
  */
 
 
 #ifndef pl_log_INC
 #define pl_log_INC
 
+// From C++ stdlib
 #include <vector>
+#include <deque>
+#include <map>
 #include <set>
 #include <string>
+
+// From Plearn
 #include "PStream.h"
 
 namespace PLearn {
@@ -112,6 +115,55 @@ public:
 
 protected:
     PStream m_pstream;                       //!< Actual stream to use
+};
+
+
+/**
+ *  Interceptive version PL_LogPlugin.  This plugin intercepts the requests
+ *  made to specific log-names, and appends them to a list of log entries that
+ *  is kept separately for each intercepted log-name.  Requests that are made
+ *  to other log-names are passed through to a 'chained plugin', for further
+ *  processing.
+ */
+class PL_LogPluginInterceptor : public PL_LogPlugin
+{
+    typedef PL_LogPlugin inherited;
+    friend class LogInterceptorPStreamBuf;
+    typedef map< string, deque<string> > LogMap;
+
+public:
+    PL_LogPluginInterceptor(const set<string>& intercept_lognames,
+                            PL_LogPlugin* previous);
+
+    virtual PStream& getStream(PStream::mode_t outmode, const string& module_name,
+                               int requested_verbosity);
+
+    //! Return the log entries accumulated so far under the given logname
+    const deque<string>& logEntries(const string& logname) const;
+
+    //! Erase all log entries associated with given logname.  If logname is
+    //! empty, ALL entries are cleared, regardless of logname
+    void clearLog(const string& logname);
+
+protected:
+    //! Append a new log entry under given logname
+    void appendLog(const string& logname, const string& logentry);
+    
+protected:
+    //! List of intercepted lognames
+    set<string> m_intercept_lognames;
+
+    //! Previous plugin to process log entries that are not intercepted
+    PL_LogPlugin* m_previous;
+
+    //! Current log entries for each logname
+    mutable LogMap m_log_entries;
+
+    //! Streambuf that's actually tasked with accumulating strings
+    PP<LogInterceptorPStreamBuf> m_streambuf;
+
+    //! PStream object that's returned by a call to getStream
+    PStream m_pstream;
 };
 
 

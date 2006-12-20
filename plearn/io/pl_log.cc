@@ -48,6 +48,7 @@
 
 // From FinLearn
 #include <plearn/base/stringutils.h>
+#include <plearn/io/StringPStreamBuf.h>
 #include "pl_log.h"
 
 namespace PLearn {
@@ -66,6 +67,103 @@ PStream& PL_LogPluginPStream::getStream(
     if (! module_name.empty())
         m_pstream << '[' << module_name << "] ";
     return m_pstream;
+}
+
+
+//#####  LogInterceptorPStreamBuf  ############################################
+
+/**
+ *  This class sends stuff to a PL_LogPluginInterceptor when it's flushed.
+ */
+class LogInterceptorPStreamBuf : public StringPStreamBuf
+{
+    typedef StringPStreamBuf inherited;
+
+public:
+    LogInterceptorPStreamBuf(PL_LogPluginInterceptor* log_plugin)
+        : inherited(new string, "w", true /* DO own */),
+          m_log_plugin(log_plugin),
+          m_requested_verbosity(-1)
+    { }
+
+    //! Establish current-mode module-name and verbosity
+    void outputParameters(const string& module_name, int requested_verbosity);
+
+    //! Flush actually invokes the Python function LogAppend if the
+    //! string is not empty, and it empties it.
+    virtual void flush();
+
+protected:
+    PL_LogPluginInterceptor* m_log_plugin;
+    string m_module_name;
+    int m_requested_verbosity;
+};
+
+void LogInterceptorPStreamBuf::outputParameters(const string& module_name,
+                                                int requested_verbosity)
+{
+    m_module_name = module_name;
+    m_requested_verbosity = requested_verbosity;
+}
+
+void LogInterceptorPStreamBuf::flush()
+{
+    PLASSERT( st && m_log_plugin );
+    inherited::flush();
+    if (! st->empty()) {
+        m_log_plugin->appendLog(m_module_name, *st);
+        st->clear();
+    }
+}
+
+
+//#####  PL_LogPluginInterceptor  #############################################
+
+PL_LogPluginInterceptor::PL_LogPluginInterceptor(const set<string>& intercept_lognames,
+                                                 PL_LogPlugin* previous)
+    : m_intercept_lognames(intercept_lognames),
+      m_previous(previous),
+      m_streambuf(new LogInterceptorPStreamBuf(this)),
+      m_pstream(m_streambuf)
+{
+    PLASSERT( m_previous );
+}
+
+
+PStream& PL_LogPluginInterceptor::getStream(
+    PStream::mode_t outmode, const string& module_name, int requested_verbosity)
+{
+    // If the module name is not intercepted, hand to previous handler
+    PLASSERT( m_previous && m_streambuf );
+    if (m_intercept_lognames.find(module_name) == m_intercept_lognames.end())
+        return m_previous->getStream(outmode, module_name, requested_verbosity);
+    
+    m_pstream.setOutMode(outmode);
+    m_streambuf->outputParameters(module_name, requested_verbosity);
+    m_streambuf->flush();
+    return m_pstream;
+}
+
+
+const deque<string>& PL_LogPluginInterceptor::logEntries(const string& logname) const
+{
+    // May be empty -- don't barf
+    return m_log_entries[logname];
+}
+
+
+void PL_LogPluginInterceptor::clearLog(const string& logname)
+{
+    if (logname.empty())
+        m_log_entries.clear();
+    else
+        m_log_entries[logname].clear();
+}
+
+
+void PL_LogPluginInterceptor::appendLog(const string& logname, const string& logentry)
+{
+    m_log_entries[logname].push_back(logentry);
 }
 
 
