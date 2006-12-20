@@ -135,8 +135,7 @@ void DynamicallyLinkedRBMsModel::build_()
     {
         visible_size = 0;
         symbol_sizes.resize(0);
-        PP<Dictionary> dict;
-        int dict_size = 0;//not used
+        PP<Dictionary> dict;        
         for(int i=0; i<train_set->inputsize(); i++)
         {
             dict = train_set->getDictionary(i);
@@ -276,7 +275,6 @@ void DynamicallyLinkedRBMsModel::train()
     Vec target( targetsize() );// Unused
     real weight = 0; // Unused
     Vec train_costs( getTrainCostNames().length() );
-    int nsamples = train_set->length();
 
     if( !initTrain() )
     {
@@ -535,12 +533,26 @@ void DynamicallyLinkedRBMsModel::rbm_update()
 
 void DynamicallyLinkedRBMsModel::dynamic_connections_update()
 {
+    // Obtain target hidden_layer h_t
+    connections->setAsDownInput(visible_layer->expectation);
+    hidden_layer->getAllActivations(connections);
+    hidden_layer->computeExpectation();
+    hidden_layer_target << hidden_layer->expectation;
+
     // Use "previous_hidden_layer" field and "dynamic_connections" module 
     // to set bias of "hidden_layer"
 
+    dynamic_connections->fprop(previous_hidden_layer,hidden_layer->activation);
+    hidden_layer->expectation_is_up_to_date = false;
+
     // Ask "hidden_layer" for maximum likelyhood gradient on bias
+    real nll = hidden_layer->fpropNLL(hidden_layer_target);
+    hidden_layer->bpropNLL(hidden_layer_target, nll, bias_gradient);
 
     // bpropUpdate through dynamic_connections
+    dynamic_connections->bpropUpdate(previous_hidden_layer,
+                                     hidden_layer->activation,
+                                     input_gradient, bias_gradient);
 }
 
 void DynamicallyLinkedRBMsModel::fine_tuning_update()

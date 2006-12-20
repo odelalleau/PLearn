@@ -186,8 +186,17 @@ public:
 protected:
     //#####  Not Options  #####################################################
 
-    //! Stores bias_gradient
+    //! Stores conditional bias
+    mutable Vec cond_bias;
+
+    //! Stores bias gradient
     mutable Vec bias_gradient;
+
+    //! Stores hidden layer target in dynamic learning phase
+    mutable Vec hidden_layer_target;
+
+    //! Stores input gradient of dynamic connections
+    mutable Vec input_gradient;
 
     //! Stores previous hidden layer value
     mutable Vec previous_hidden_layer;
