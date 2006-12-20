@@ -117,6 +117,14 @@ void OnlineLearningModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
+void OnlineLearningModule::setLearningRate( real& dynamic_learning_rate )
+{
+ PLERROR("In OnlineLearningModule.cc: method 'setLearningRate' not"
+            "implemented.\n"
+            "Please implement it in your derived class, or use"
+            "'setLearningRate'.\n");
+}
+
 void OnlineLearningModule::declareOptions(OptionList& ol)
 {
     declareOption(ol, "input_size", &OnlineLearningModule::input_size,

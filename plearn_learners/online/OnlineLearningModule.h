@@ -96,7 +96,7 @@ public:
     PP<PRandom> random_gen;
 
 public:
-    //#####  Public Member Functions  #########################################
+    //#####  Public Member Fun ctions  #########################################
 
     //! Default constructor
     OnlineLearningModule();
@@ -170,6 +170,7 @@ public:
     //! Transforms a shallow copy into a deep copy
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
+    virtual void setLearningRate(real& dynamic_learning_rate);
 
 protected:
     //#####  Protected Member Functions  ######################################
