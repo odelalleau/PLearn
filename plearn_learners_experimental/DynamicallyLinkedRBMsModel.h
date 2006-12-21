@@ -142,8 +142,10 @@ public:
     void clamp_visible_units(const Vec& input);
 
     //! Updates the RBM parameters in the rbm training phase,
-    //! after the visible units have been clamped
-    void rbm_update();
+    //! after the visible units have been clamped.
+    //! Outputs the negative log-likelihood of the visible training example
+    //! given the down phase expectation of the visible unit.
+    real rbm_update();
 
     //! Updates the dynamic connections in the dynamic training
     //! phase, after the visible units have been clamped
@@ -200,6 +202,9 @@ protected:
 
     //! Stores previous hidden layer value
     mutable Vec previous_hidden_layer;
+
+    //! Stores a sample from the hidden layer
+    mutable Vec hidden_layer_sample;
 
     //! Store a copy of the positive phase values
     mutable Vec pos_down_values;
