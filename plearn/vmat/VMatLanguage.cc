@@ -43,6 +43,7 @@
 #include "VMatLanguage.h"
 #include <plearn/base/PDate.h>
 #include <plearn/base/stringutils.h>
+#include <plearn/base/plerror.h>
 #include <plearn/db/getDataSet.h>
 #include <plearn/io/fileutils.h>
 #include <plearn/io/openFile.h>
@@ -178,6 +179,8 @@ PLEARN_IMPLEMENT_OBJECT(VMatLanguage,
                         " _ memget         : mempos    --> a  (gets 'a' from memory in position mempos)\n"
                         " _ sumabs         : v0 v1 v2 ... vn  -->  sum_i |vi|\n"
                         "                    (no pop, and starts from the beginning of the stack)\n"
+                        " _ varproduct     : a0 a1 ... an n+1 b0 b1 ... bm m+1 ... num_vars -> res0 ..."
+                        "                    (product of encoded variables)"
     );
 
 //////////////////
@@ -841,6 +844,7 @@ void VMatLanguage::build_opcodes_map()
         opcodes["gausshot"]  = 61;  // index nclasses sigma --> smooth one-hot
         opcodes["sigmoid"]  = 62;   // a -> sigmoid(a)
         opcodes["cos"]  = 63;   // a -> cos(a)
+        opcodes["varproduct"] = 64; // a0 a1 ... an n+1 b0 b1 ... bm m+1 ... num_vars -> res0 ... (product of encoded variables)
     }
 }
 
@@ -1227,6 +1231,51 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
         case 63: // cos
         {
             pstack.push(cos(pstack.pop()));
+            break;
+        }
+        case 64: // varproduct
+        {
+            real num_vars_real = pstack.pop();
+            if (num_vars_real <= 0)
+                PLERROR("VMatLanguage: varproduct: num_vars must be a strictly positive number.");
+            int num_vars = (int)num_vars_real;
+            if (num_vars != num_vars_real)
+                PLERROR("VMatLanguage: varproduct: num_vars must be an integer.");
+            TVec<Vec> vars(num_vars);
+            int result_size = 1;
+
+            // Store all the encoded variables on the stack into "vars"
+            for (int i = num_vars - 1; i >= 0; i--) {
+                real var_size_real = pstack.pop();
+                if (var_size_real <= 0)
+                    PLERROR("VMatLanguage: varproduct: var_size must be a strictly positive number.");
+                int var_size = (int)var_size_real;
+                if (var_size != var_size_real)
+                    PLERROR("VMatLanguage: varproduct: var_size must be an integer.");
+
+                result_size *= var_size;
+                vars[i].resize(var_size);
+                for (int j = var_size - 1; j >= 0 ; j--)
+                    vars[i][j] = pstack.pop();
+            }
+
+            Vec result(result_size, 1);
+            int step_size = result_size;
+
+            // Accumulate variable product into "result" variable.
+            for (int var_index = 0; var_index < num_vars; var_index++) {
+                step_size /= vars[var_index].size();
+                for (int var_data_index = 0; var_data_index < vars[var_index].size(); var_data_index++) {
+                    for (int dest_index = 0; dest_index < result_size; dest_index += step_size) {
+                        result[dest_index] *= vars[var_index][var_data_index];
+                    }
+                }
+            }
+            PLASSERT(step_size == 1);
+
+            // Put the result onto the stack
+            for (int i = 0; i < result_size; i++)
+                pstack.push(result[i]);
             break;
         }
         default:
