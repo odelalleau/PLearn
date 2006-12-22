@@ -525,6 +525,14 @@ real DynamicallyLinkedRBMsModel::rbm_update()
         pos_down_values, pos_up_values, visible_layer->sample
         , hidden_layer->sample ); // ... of connections between layers.
     
+    // Compute reconstruction error
+    
+    connections->setAsUpInput( pos_up_values );
+
+    visible_layer->getAllActivations( connections );
+
+    visible_layer->computeExpectation();
+    
     return visible_layer->fpropNLL(pos_down_values);
    
 }
