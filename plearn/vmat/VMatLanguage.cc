@@ -114,6 +114,7 @@ PLEARN_IMPLEMENT_OBJECT(VMatLanguage,
                         " _ gausshot       : index nclasses sigma --> smooth 'one-hot' representation of\n"
                         "                    index using a gaussian of width sigma.  Maximum value remains 1;\n"
                         "                    useful if there is some locality structure in the classes\n"
+                        " _ thermometer    : index nclasses --> thermometer representation of index\n"
                         " _ +              : a b   -->  a + b\n"
                         " _ -              : a b   -->  a - b\n"
                         " _ *              : a b   -->  a * b\n"
@@ -845,6 +846,7 @@ void VMatLanguage::build_opcodes_map()
         opcodes["sigmoid"]  = 62;   // a -> sigmoid(a)
         opcodes["cos"]  = 63;   // a -> cos(a)
         opcodes["varproduct"] = 64; // a0 a1 ... an n+1 b0 b1 ... bm m+1 ... num_vars -> res0 ... (product of encoded variables)
+        opcodes["thermometer"] = 65; // index nclasses -> thermometer encoding
     }
 }
 
@@ -1278,6 +1280,15 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
                 pstack.push(result[i]);
             break;
         }
+        case 65: // thermometer
+        {
+            int nclasses = int(pstack.pop());
+            int index = int(pstack.pop());
+            for (int i = 0; i < nclasses; i++)
+                pstack.push(i > index ? 1 : 0);
+            
+            break;
+        }        
         default:
             PLERROR("BUG IN PreproInterpretor::run while running program: invalid opcode: %d", op);
         }
