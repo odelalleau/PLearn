@@ -296,36 +296,56 @@ public:
     void clearDiagHessian(); 
     void clearSymbolicGradient() { g = Var(); }
 
-/*!     set value = value + (step_size * coeff + b) * direction 
-  with step_size possibly scaled down s.t. box constraints are satisfied
-  return true if box constraints have been hit with the update
-  If (allows_partial_update) the update is done where necessary. // NB: Wrong ?
-*/
-    bool update(real step_size, Vec direction_vec, real coeff = 1.0, real b = 0.0);
+    /**
+     *  set value = value + (step_size * coeff + b) * direction
+     *
+     *  with step_size possibly scaled down s.t. box constraints are satisfied
+     *  return true if box constraints have been hit with the update If
+     *  (allows_partial_update) the update is done where necessary. NB: Wrong ?
+     */
+    virtual bool update(real step_size, Vec direction_vec,
+                        real coeff = 1.0, real b = 0.0);
 
-/*!     set value[i] = value[i] + (step_sizes[i]*coeff + b) * direction[i]
-  with step_size possibly scaled down s.t. box constraints are satisfied
-  return true if box constraints have been hit with the update
-*/
-    bool update(Vec step_sizes, Vec direction_vec, real coeff = 1.0, real b = 0.0);
+    /**
+     *  set value[i] = value[i] + (step_sizes[i]*coeff + b) * direction[i]
+     *
+     *  with step_size possibly scaled down s.t. box constraints are satisfied
+     *  return true if box constraints have been hit with the update
+     */
+    virtual bool update(Vec step_sizes, Vec direction_vec,
+                        real coeff = 1.0, real b = 0.0);
+
+    /**
+     *  set value = value + step_size * gradient
+     *
+     *  with step_size possibly scaled down s.t. box constraints are satisfied
+     *  return true if box constraints have been hit with the update
+     */
+    virtual bool update(real step_size, bool clear=false);
+
+    /**
+     *  set value = new_value
+     *
+     *  projected down in each direction independently in the subspace in which
+     *  the box constraints are satisfied.  return true if box constraints have
+     *  been hit with the update
+     */
+    virtual bool update(Vec new_value);
 
     //! Set value += gradient (respecting potential box constraints), and clear
     //! the gradient.
-    void updateAndClear();
+    virtual void updateAndClear();
 
-/*!     set value = value + step_size * gradient
-  with step_size possibly scaled down s.t. box constraints are satisfied
-  return true if box constraints have been hit with the update
-*/
-    bool update(real step_size, bool clear=false);
-
-    //! if (L1)
-    //!   value += learning_rate*gradient
-    //!   decrease |value| by learning_rate*weight_decay if it does not make value change sign
-    //! else // L2
-    //!   value += learning_rate*(gradient  - weight_decay*value)
-    //! if (clear) gradient=0
-    void updateWithWeightDecay(real step_size, real weight_decay, bool L1, bool clear=true);
+    /**
+     *  if (L1)
+     *    value += learning_rate*gradient
+     *    decrease |value| by learning_rate*weight_decay if it does not make value change sign
+     *  else // L2
+     *    value += learning_rate*(gradient  - weight_decay*value)
+     *  if (clear) gradient=0
+     */
+    virtual void updateWithWeightDecay(real step_size, real weight_decay,
+                                       bool L1, bool clear=true);
 
     //!  send message that update may be sometimes needed on only parts of the Variable
     void allowPartialUpdates()
@@ -353,24 +373,19 @@ public:
         }
     }
 
-
-/*!     set value = new_value
-  projected down in each direction independently  in the
-  subspace in which the box constraints are satisfied.
-  return true if box constraints have been hit with the update
-*/
-    bool update(Vec new_value);
-
-/*!     Using the box constraints on the values, return
-  the maximum allowable step_size in the given direction
-  i.e., argmax_{step_size} {new = value + step_size * direction, new in box}
-*/
+    /**
+     *  Using the box constraints on the values, return the maximum allowable
+     *  step_size in the given direction i.e.,
+     *
+     *  argmax_{step_size} {new = value + step_size * direction, new in box}
+     */
     real maxUpdate(Vec direction);
 
-/*!     sets the marked flag of all the sVariable that are to be in the fprop path.
-  The input sVariable that are of interest are to be marked first.
-  Then markPath is to be called from the output Variable of interest
-*/
+    /**
+     *  Sets the marked flag of all the sVariable that are to be in the fprop
+     *  path.  The input sVariable that are of interest are to be marked first.
+     *  Then markPath is to be called from the output Variable of interest
+     */
     virtual bool markPath() =0;
 
     //!  Finally buildPath is to be called from the output Variable of interest
@@ -420,11 +435,12 @@ public:
 
     virtual bool isConstant() { return false; }
 
-/*!     find all constant sources that influence this Variable, build 
-  a propagation path from them to this Variable, and fprop through it.
-  This can be useful to make sure that all dependencies are 
-  computed at least once. This function uses source(), below.
-*/
+    /**
+     *  Find all constant sources that influence this Variable, build a
+     *  propagation path from them to this Variable, and fprop through it.
+     *  This can be useful to make sure that all dependencies are computed at
+     *  least once. This function uses source(), below.
+     */
     virtual void fprop_from_all_sources();
 
     //!  if not marked, find all constant sources that influence this Variable.
