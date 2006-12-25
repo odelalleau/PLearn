@@ -454,7 +454,7 @@ void Kernel::computeGramMatrixDerivative(Mat& KD, const string& kernel_param,
         PLERROR("Kernel::computeGramMatrixDerivative should be called only after "
                 "setDataForKernelMatrix");
 
-    int W = dataInputsize();
+    int W = nExamples();
     KD.resize(W,W);
     Mat KDminus(W,W);
 
@@ -463,10 +463,12 @@ void Kernel::computeGramMatrixDerivative(Mat& KD, const string& kernel_param,
 
     // Compute the positive part of the finite difference
     This->changeOption(kernel_param, tostring(cur_param+epsilon));
+    This->build();                           //!< Temporarily necessary
     computeGramMatrix(KD);
 
     // Compute the negative part of the finite difference
     This->changeOption(kernel_param, tostring(cur_param-epsilon));
+    This->build();                           //!< Temporarily necessary
     computeGramMatrix(KDminus);
 
     // Finalize computation
@@ -474,6 +476,7 @@ void Kernel::computeGramMatrixDerivative(Mat& KD, const string& kernel_param,
     KD /= 2.*epsilon;
 
     This->changeOption(kernel_param, cur_param_str);
+    This->build();                           //!< Temporarily necessary
     This->cache_gram_matrix = old_cache;
 }
 
