@@ -49,10 +49,11 @@ using namespace std;
 /**
  *  Variable which wraps an option of an object.
  *
- *  The option can refer to either an integer, a real value, a vector or a
- *  matrix within the object: the option will discover its size automatically.
- *  Furthermore, upon performing an fprop on the variable, this translates into
- *  a changeOption on the object.
+ *  This variable serves to mirror its contents onto an option of a PLearn
+ *  Object.  The option can refer to either an integer, a real value, a vector
+ *  or a matrix within the object: the option will discover its size
+ *  automatically.  Furthermore, upon performing an fprop on the variable, this
+ *  translates into a changeOption on the object.
  */
 class ObjectOptionVariable : public Variable
 {
@@ -68,16 +69,29 @@ public:
     //! Name of the option we are wrapping within the object
     string m_option_name;
 
-    //! Optional initial value that should be set into the option.  This is
-    //! a string that is set with 'changeOption'
+    /**
+     *  Optional initial value that should be set into the option.  This is a
+     *  string that is set with 'changeOption'.  Note that this exact initial
+     *  value is initially set into the option, regardless of the setting for
+     *  'log_variable'.
+     */
     string m_initial_value;
+
+    /**
+     *  If true, the contents ('value') of the variable is assumed to be the
+     *  log of the contents of the mirrored object option.  This can be useful
+     *  when performing unconstrained optimization on the variable, but the
+     *  option values should remain positive.
+     */
+    bool m_log_variable;
     
 public:
     //!  Default constructor for persistence
     ObjectOptionVariable();
     ObjectOptionVariable(PP<Object> root, const string& option_name,
-                         const string& initial_value="");
+                         const string& initial_value="", bool log_variable=false);
 
+    
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
@@ -116,6 +130,18 @@ public:
         pout << endl; 
     }
 
+    // All the 'update' methods are overridden to be followed by an fprop(),
+    // whose purpose is to reflect the contents of the updated Variable value
+    // within the mirrorred object-option.
+    virtual bool update(real step_size, Vec direction_vec, real coeff = 1.0, real b = 0.0);
+    virtual bool update(Vec step_sizes, Vec direction_vec, real coeff = 1.0, real b = 0.0);
+    virtual bool update(real step_size, bool clear=false);
+    virtual bool update(Vec new_value);
+    virtual void updateAndClear();
+    virtual void updateWithWeightDecay(real step_size, real weight_decay,
+                                       bool L1, bool clear=true);
+    
+    
 protected:
     //! Declares the class options.
     static void declareOptions(OptionList& ol);

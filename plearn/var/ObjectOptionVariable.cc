@@ -44,6 +44,7 @@
 #include <plearn/base/TypeTraits.h>
 #include <plearn/base/OptionBase.h>
 #include <plearn/base/lexical_cast.h>
+#include <plearn/math/TMat_maths.h>
 
 namespace PLearn {
 using namespace std;
@@ -59,16 +60,19 @@ PLEARN_IMPLEMENT_OBJECT(
     "a changeOption on the object.\n");
 
 ObjectOptionVariable::ObjectOptionVariable()
-    : m_final_object(0),
+    : m_log_variable(false),
+      m_final_object(0),
       m_option_type(OptionTypeUnknown),
       m_option_int(0),
       m_index(-1)
 { }
 
 ObjectOptionVariable::ObjectOptionVariable(PP<Object> root, const string& option_name,
-                                           const string& initial_value)
+                                           const string& initial_value, bool log_variable)
     : m_root(root),
       m_option_name(option_name),
+      m_initial_value(initial_value),
+      m_log_variable(log_variable),
       m_final_object(0),
       m_option_type(OptionTypeUnknown),
       m_option_int(0),
@@ -76,6 +80,12 @@ ObjectOptionVariable::ObjectOptionVariable(PP<Object> root, const string& option
 {
     if (m_root)
         build();
+}
+
+
+void ObjectOptionVariable::declareOptions(OptionList& ol)
+{
+    inherited::declareOptions(ol);
 }
 
 
@@ -162,6 +172,9 @@ void ObjectOptionVariable::build_()
     default:
         PLASSERT( false );
     }
+
+    if (m_log_variable)
+        compute_log(value, value);
 }
 
 void ObjectOptionVariable::build()
@@ -185,22 +198,35 @@ void ObjectOptionVariable::fprop()
     switch (m_option_type) {
     case OptionTypeInt:
         PLASSERT( m_option_int );
-        *m_option_int = int(value[0]);
+        if (m_log_variable)
+            *m_option_int = int(exp(value[0]));
+        else
+            *m_option_int = int(value[0]);
         break;
 
     case OptionTypeReal:
         PLASSERT( m_option_real );
-        *m_option_real = value[0];
+        if (m_log_variable)
+            *m_option_real = exp(value[0]);
+        else
+            *m_option_real = value[0];
         break;
 
     case OptionTypeVec:
         PLASSERT( m_option_vec );
-        *m_option_vec << value;
+        if (m_log_variable)
+            exp(value, *m_option_vec);
+        else
+            *m_option_vec << value;
         break;
 
     case OptionTypeMat:
         PLASSERT( m_option_mat );
         *m_option_mat << matValue;
+        if (m_log_variable) {
+            Vec option_vec = m_option_mat->toVec();
+            exp(option_vec, option_vec);
+        }
         break;
 
     default:
@@ -211,6 +237,11 @@ void ObjectOptionVariable::fprop()
     // optimize this away in the future
     PLASSERT( m_final_object );
     m_final_object->build();
+}
+
+void ObjectOptionVariable::setParents(const VarArray& parents)
+{
+    PLERROR("ObjectOptionVariable::setParents: this variable has no parents.");
 }
 
 void ObjectOptionVariable::bprop() {} // No input: nothing to bprop
@@ -267,6 +298,51 @@ void ObjectOptionVariable::buildPath(VarArray& proppath)
         clearMark();
     }
 }
+
+
+//#####  update*  #############################################################
+
+bool ObjectOptionVariable::update(real step_size, Vec direction_vec, real coeff, real b)
+{
+    bool ret = inherited::update(step_size, direction_vec, coeff, b);
+    fprop();
+    return ret;
+}
+
+bool ObjectOptionVariable::update(Vec step_sizes, Vec direction_vec, real coeff, real b)
+{
+    bool ret = inherited::update(step_sizes, direction_vec, coeff, b);
+    fprop();
+    return ret;
+}
+
+bool ObjectOptionVariable::update(real step_size, bool clear)
+{
+    bool ret = inherited::update(step_size, clear);
+    fprop();
+    return ret;
+}
+
+bool ObjectOptionVariable::update(Vec new_value)
+{
+    bool ret = inherited::update(new_value);
+    fprop();
+    return ret;
+}
+
+void ObjectOptionVariable::updateAndClear()
+{
+    inherited::updateAndClear();
+    fprop();
+}
+
+void ObjectOptionVariable::updateWithWeightDecay(real step_size, real weight_decay,
+                                                 bool L1, bool clear)
+{
+    inherited::updateWithWeightDecay(step_size, weight_decay, L1, clear);
+    fprop();
+}
+
 
 } // end of namespace PLearn
 
