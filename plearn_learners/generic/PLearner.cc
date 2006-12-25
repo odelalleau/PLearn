@@ -57,7 +57,7 @@ using namespace std;
 PLearner::PLearner()
     : n_train_costs_(-1),
       n_test_costs_(-1),
-      seed_(-1), 
+      seed_(1827),                           //!< R.I.P. L.v.B.
       stage(0),
       nstages(1),
       report_progress(true),

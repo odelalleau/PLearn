@@ -110,7 +110,8 @@ public:
 
     /**
      *  The seed used for the random number generator in initializing the
-     *  learner (see forget() method).
+     *  learner (see forget() method).  Default value=1827 for experiment
+     *  reproducibility.
      */
     long seed_;
 
