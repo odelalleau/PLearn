@@ -50,12 +50,15 @@
 
 namespace PLearn {
 
+class GaussianProcessNLLVariable;            //!< Forward-declare
+class Optimizer;
+
 /**
  *  Implements Gaussian Process Regression (GPR) with an arbitrary kernel
  *
  *  Given a kernel K(x,y) = phi(x)'phi(y), where phi(x) is the projection of a
- *  vector x into feature space, this class implements a version of the ridge
- *  estimator, giving the prediction at x as
+ *  vector x into feature space, this class implements a version of Gaussian
+ *  Process Regression, giving the prediction at x as
  *
  *      f(x) = k(x)'(M + lambda I)^-1 y,
  *
@@ -69,6 +72,13 @@ namespace PLearn {
  *  where the element (i,j) is equal to K(xi, xj), lambda is the VARIANCE of
  *  the observation noise (and can be interpreted as a weight decay
  *  coefficient), and y is the vector of training-set targets.
+ *
+ *  The uncertainty in a prediction can be computed by calling
+ *  computeConfidenceFromOutput.  Furthermore, if desired, this learner allows
+ *  optimization of the kernel hyperparameters by direct optimization of the
+ *  marginal likelihood w.r.t. the hyperparameters.  This mechanism relies on a
+ *  user-provided Optimizer (see the 'optimizer' option) and does not rely on
+ *  the PLearn HyperLearner system.
  *
  *  The disadvantage of this learner is that its training time is O(N^3) in the
  *  number of training examples (due to the matrix inversion).  When saving the
@@ -105,10 +115,27 @@ public:
     /**
      *  Whether to perform the additional train-time computations required
      *  to compute confidence intervals.  This includes computing a separate
-     *  inverse of the Gram matrix
+     *  inverse of the Gram matrix.
      */
     bool m_compute_confidence;
-    
+
+    /**
+     *  List of hyperparameters to optimize.  They must be specified in the
+     *  form "option-name":initial-value, where 'option-name' is the name of an
+     *  option to set within the Kernel object (the array-index form
+     *  'option[i]' is supported), and 'initial-value' is the
+     *  (PLearn-serialization string representation) for starting point for the
+     *  optimization.  Currently, the hyperparameters are constrained to be
+     *  scalars.
+     */
+    TVec< pair<string,string> > m_hyperparameters;
+
+    /**
+     *  Specification of the optimizer to use for train-time hyperparameter
+     *  optimization.  A ConjGradientOptimizer should be an adequate choice.
+     */
+    PP<Optimizer> m_optimizer;
+
 
 public:
     //#####  Public Member Functions  #########################################
@@ -171,16 +198,29 @@ public:
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
+    /// Declares the class options.
+    static void declareOptions(OptionList& ol);
+
+    /// Optimize the hyperparameters if any.  Return a Variable on which
+    /// train() carries out a final fprop for obtaining the final trained
+    /// learner parameters.
+    PP<GaussianProcessNLLVariable> hyperOptimize(const Mat& inputs,
+                                                 const Mat& targets);
+
+    /// Minor utility function to dump the contents of a varray to a log
+    static void logVarray(const VarArray& varr, const string& title="");
+    
+protected:
     //#####  Protected Options  ###############################################
 
     /**
-     *  Vector of learned parameters, determined from the equation
+     *  Matrix of learned parameters, determined from the equation
      *
      *    (M + lambda I)^-1 y
      *
      *  (don't forget that y can be a matrix for multivariate output problems)
      */
-    Mat m_params;
+    Mat m_alpha;
 
     /**
      *  Inverse of the Gram matrix, used to compute confidence intervals (must
@@ -203,10 +243,6 @@ protected:
     /// Buffer for the product of the gram inverse with kernel evaluations
     mutable Vec m_gram_inverse_product;
     
-protected:
-    /// Declares the class options.
-    static void declareOptions(OptionList& ol);
-
 private: 
     /// This does the actual building. 
     void build_();
