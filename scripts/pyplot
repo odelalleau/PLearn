@@ -187,7 +187,7 @@ elif task == '1d_regression':
     scores = learner.computeInputOutputMat(
         pl.RegularGridVMatrix(coordstart=[xrange[0]],
                               coordend=[xrange[1]],
-                              dimensions = nsamples))
+                              dimensions = nsamples[:1]))
     print 'scores:'
     print scores
     print scores.shape
