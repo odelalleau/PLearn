@@ -58,11 +58,11 @@ namespace PLearn {
  *  Similar to C.E. Rasmussen's GPML code (see http://www.gaussianprocess.org),
  *  this kernel function is specified as:
  *
- *    k(x,y) = sf2 * exp(- 0.5 * (sum_i (x_i - y_i)^2 / w_i)) + sn2
+ *    k(x,y) = sf2 * exp(- 0.5 * (sum_i (x_i - y_i)^2 / w_i)) + delta_x,y*sn2
  *
- *  where sf2 is the exp of the 'log_signal_variance' option, sn2 is the exp of
- *  the 'log_noise_variance' option, and w_i is exp(log_global_sigma +
- *  log_input_sigma[i]).
+ *  where sf2 is the exp of the 'log_signal_sigma' option, sn2 is the exp of
+ *  the 'log_noise_sigma' option (added only if x==y), and w_i is
+ *  exp(log_global_sigma + log_input_sigma[i]).
  *
  *  Note that to make its operations more robust when used with unconstrained
  *  optimizaiton of hyperparameters, all hyperparameters of this kernel are
@@ -76,10 +76,10 @@ public:
     //#####  Public Build Options  ############################################
 
     //! Log of the global signal variance.  Default value=0.0
-    real m_log_signal_variance;
+    real m_log_signal_sigma;
 
     //! Log of the global noise variance.  Default value=0.0
-    real m_log_noise_variance;
+    real m_log_noise_sigma;
     
     /**
      *  Log of the global length-scale.  Note that if ARD is performed on
@@ -107,6 +107,11 @@ public:
     //! Compute K(x1,x2).
     virtual real evaluate(const Vec& x1, const Vec& x2) const;
 
+    //! Directly compute the derivative with respect to hyperparameters
+    //! (Faster than finite differences...)
+    // virtual void computeGramMatrixDerivative(Mat& KD, const string& kernel_param,
+    //                                          real epsilon=1e-6) const;
+    
 
     //#####  PLearn::Object Protocol  #########################################
 

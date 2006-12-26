@@ -55,11 +55,11 @@ PLEARN_IMPLEMENT_OBJECT(
     "Similar to C.E. Rasmussen's GPML code (see http://www.gaussianprocess.org),\n"
     "this kernel function is specified as:\n"
     "\n"
-    "  k(x,y) = sf2 * exp(- 0.5 * (sum_i (x_i - y_i)^2 / w_i)) + sn2\n"
+    "  k(x,y) = sf2 * exp(- 0.5 * (sum_i (x_i - y_i)^2 / w_i)) + delta_x,y*sn2\n"
     "\n"
-    "where sf2 is the exp of the 'log_signal_variance' option, sn2 is the exp of\n"
-    "the 'log_noise_variance' option, and w_i is exp(log_global_sigma +\n"
-    "log_input_sigma[i]).\n"
+    "where sf2 is the exp of the 'log_signal_sigma' option, sn2 is the exp of\n"
+    "the 'log_noise_sigma' option (added only if x==y), and w_i is\n"
+    "exp(log_global_sigma + log_input_sigma[i]).\n"
     "\n"
     "Note that to make its operations more robust when used with unconstrained\n"
     "optimizaiton of hyperparameters, all hyperparameters of this kernel are\n"
@@ -68,8 +68,8 @@ PLEARN_IMPLEMENT_OBJECT(
 
 
 SquaredExponentialARDKernel::SquaredExponentialARDKernel()
-    : m_log_signal_variance(0.0),
-      m_log_noise_variance(0.0),
+    : m_log_signal_sigma(0.0),
+      m_log_noise_sigma(0.0),
       m_log_global_sigma(0.0)
 { }
 
@@ -79,14 +79,14 @@ SquaredExponentialARDKernel::SquaredExponentialARDKernel()
 void SquaredExponentialARDKernel::declareOptions(OptionList& ol)
 {
     declareOption(
-        ol, "log_signal_variance",
-        &SquaredExponentialARDKernel::m_log_signal_variance,
+        ol, "log_signal_sigma",
+        &SquaredExponentialARDKernel::m_log_signal_sigma,
         OptionBase::buildoption,
         "Log of the global signal variance.  Default value=0.0");
 
     declareOption(
-        ol, "log_noise_variance",
-        &SquaredExponentialARDKernel::m_log_noise_variance,
+        ol, "log_noise_sigma",
+        &SquaredExponentialARDKernel::m_log_noise_sigma,
         OptionBase::buildoption,
         "Log of the global noise variance.  Default value=0.0");
     
@@ -135,7 +135,7 @@ real SquaredExponentialARDKernel::evaluate(const Vec& x1, const Vec& x2) const
     PLASSERT( !m_log_input_sigma.size() || x1.size() == m_log_input_sigma.size() );
 
     if (x1.size() == 0)
-        return exp(2*m_log_signal_variance) + exp(2*m_log_noise_variance);
+        return exp(2*m_log_signal_sigma) + exp(2*m_log_noise_sigma);
     
     const real* px1 = x1.data();
     const real* px2 = x2.data();
@@ -148,13 +148,13 @@ real SquaredExponentialARDKernel::evaluate(const Vec& x1, const Vec& x2) const
             real diff   = *px1++ - *px2++;
             real sqdiff = diff * diff;
             sum_sqdiff += sqdiff;
-            expval     += sqdiff / exp(m_log_global_sigma + *pinpsig++);
+            expval     += sqdiff / exp(2*(m_log_global_sigma + *pinpsig++));
         }
     }
     else {
-        real global_sigma = exp(m_log_global_sigma);
+        real global_sigma = exp(2*m_log_global_sigma);
         for (int i=0, n=x1.size() ; i<n ; ++i) {
-            real diff = *px1++ - *px2++;
+            real diff   = *px1++ - *px2++;
             real sqdiff = diff * diff;
             sum_sqdiff += sqdiff;
             expval     += sqdiff / global_sigma;
@@ -164,9 +164,60 @@ real SquaredExponentialARDKernel::evaluate(const Vec& x1, const Vec& x2) const
     // We add a noise variance only if x and y are equal (within machine tolerance)
     real noise_cov = 0.0;
     if (is_equal(sum_sqdiff, 0))
-        noise_cov = exp(2*m_log_noise_variance);
-    return exp(2*m_log_signal_variance + -0.5 * expval) + noise_cov;
+        noise_cov = exp(2*m_log_noise_sigma);
+    return exp(2*m_log_signal_sigma + -0.5 * expval) + noise_cov;
 }
+
+
+//#####  computeGramMatrixDerivative  #########################################
+
+/**
+void SquaredExponentialARDKernel::computeGramMatrixDerivative(
+    Mat& KD, const string& kernel_param, real epsilon) const
+{
+    static const string LSV = "log_signal_sigma";
+    static const string LNV = "log_noise_sigma";
+    static const string LGS = "log_global_sigma";
+    static const string LIS = "log_input_sigma[";
+
+    const int W = nExamples();
+    KD.resize(W,W);
+    const int mod = KD.mod();
+    real* KDij;
+    real* KDji;
+
+    // log_signal_sigma
+    if (kernel_param == LSV) {
+
+    }
+
+    // log_noise_sigma
+    else if (kernel_param == LNV) {
+        for (int i=0 ; i<W ; ++i) {
+            KDij = KD[i];
+            KDji = &KD[0][i];
+            for (int j=0 ; j<i ; ++j, Kji += m) {
+                // Below main diagonal, we have to check if x_i == x_j
+                
+            }
+        }
+        
+    }
+
+    // log_global_sigma
+    else if (kernel_param == LGS) {
+
+    }
+
+    // log_input_sigma
+    else if (kernel_param.substr(0,16) == LIS) {
+
+    }
+    else
+        PLERROR("SquaredExponentialARDKernel::computeGramMatrixDerivative: "
+                "unknown hyperparameter '%s'", kernel_param.c_str());
+}
+*/
 
 
 //#####  makeDeepCopyFromShallowCopy  #########################################
