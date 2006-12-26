@@ -298,6 +298,16 @@ void PLearner::declareMethods(RemoteMethodMap& rmm)
          RetDoc ("Matrix holding the inputs+computed_outputs")));
 
     declareMethod(
+        rmm, "computeInputOutputConfMat", &PLearner::computeInputOutputConfMat,
+        (BodyDoc("Return a Mat that is the contatenation of inputs, outputs, lower\n"
+                 "confidence bound, and upper confidence bound.  If confidence intervals\n"
+                 "cannot be computed for the learner, they are filled with MISSING_VALUE.\n"),
+         ArgDoc ("inputs", "VMatrix containing the inputs"),
+         ArgDoc ("probability", "Level at which the confidence intervals should be computed, "
+                                "e.g. 0.95."),
+         RetDoc ("Matrix holding the inputs+outputs+confidence-low+confidence-high")));
+
+    declareMethod(
         rmm, "computeOutputAndCosts", &PLearner::remote_computeOutputAndCosts,
         (BodyDoc("Compute both the output from the input, and the costs associated\n"
                  "with the desired target.  The computed costs\n"
@@ -772,6 +782,9 @@ bool PLearner::isStatefulLearner() const
     return false;
 }
 
+
+//#####  computeInputOutputMat  ###############################################
+
 Mat PLearner::computeInputOutputMat(VMat inputs) const
 {
     int l = inputs.length();
@@ -788,6 +801,42 @@ Mat PLearner::computeInputOutputMat(VMat inputs) const
     }
     return m;
 }
+
+
+//#####  computeInputOutputConfMat  ###########################################
+
+Mat PLearner::computeInputOutputConfMat(VMat inputs, real probability) const
+{
+    int l = inputs.length();
+    int nin = inputsize();
+    int nout = outputsize();
+    Mat m(l, nin+3*nout);
+    TVec< pair<real,real> > intervals;
+    for(int i=0; i<l; i++)
+    {
+        Vec v = m(i);
+        Vec invec   = v.subVec(0,nin);
+        Vec outvec  = v.subVec(nin,nout);
+        Vec lowconf = v.subVec(nin+nout, nout);
+        Vec hiconf  = v.subVec(nin+2*nout, nout);
+        inputs->getRow(i, invec);
+        computeOutput(invec, outvec);
+        bool conf_avail = computeConfidenceFromOutput(invec, outvec, probability,
+                                                      intervals);
+        if (conf_avail) {
+            for (int i=0, n=intervals.size() ; i<n ; ++i) {
+                lowconf[i] = intervals[i].first;
+                hiconf[i]  = intervals[i].second;
+            }
+        }
+        else {
+            lowconf << MISSING_VALUE;
+            hiconf  << MISSING_VALUE;
+        }
+    }
+    return m;
+}
+
 
 //! Version of computeOutput that returns a result by value
 Vec PLearner::remote_computeOutput(const Vec& input) const

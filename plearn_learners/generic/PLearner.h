@@ -483,6 +483,13 @@ public:
     Mat computeInputOutputMat(VMat inputs) const;
 
     /**
+     *  Return a Mat that is the contatenation of inputs, outputs, lower
+     *  confidence bound, and upper confidence bound.  If confidence intervals
+     *  cannot be computed for the learner, they are filled with MISSING_VALUE.
+     */
+    Mat computeInputOutputConfMat(VMat inputs, real probability) const;
+    
+    /**
      *  Compute the output on the training set of the learner, and save the
      *  result in the provided matrix.
      */
