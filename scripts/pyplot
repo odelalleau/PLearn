@@ -42,12 +42,12 @@
 import os
 import sys
 import time
+from fpconst import isNaN
 from plearn.io.server import *
 from plearn.plotting import *
 
-serv = launch_plearn_server()
-
-plearncommand = 'plearn'
+server_command = 'plearn server'
+serv = launch_plearn_server(command = server_command)
 
 CLASS_POINT_STYLES = ['bo','ro','go','mo','co','yo']
 
@@ -78,7 +78,7 @@ learnerspec = ''
 try: learnerspec = sys.argv[3]
 except: pass
 
-enlargement = 0.05
+enlargement = 0.1
 nsamples = [200, 200]
 
 if task == 'plot_2d':
@@ -184,15 +184,25 @@ elif task == '1d_regression':
     print 'Saving trained learner'
     learner.save('trained_learner.psave','plearn_ascii')
     print 'computing outputs...'
-    scores = learner.computeInputOutputMat(
+    scores = learner.computeInputOutputConfMat(
         pl.RegularGridVMatrix(coordstart=[xrange[0]],
                               coordend=[xrange[1]],
-                              dimensions = nsamples[:1]))
+                              dimensions = nsamples[:1]),
+        0.95)
+    
     print 'scores:'
     print scores
     print scores.shape
     # print scores
-    plot_2d_points(scores,'b-')
+    if not isNaN(scores[0,2]):
+        xr = scores[:,0]
+        low = scores[:,2]
+        hi  = scores[:,3]
+        interval_x = concatenate((xr,xr[::-1]))
+        interval_y = concatenate((low,hi[::-1]))
+        fill(interval_x, interval_y, '#CCCCFF', linewidth=0)
+
+    plot_2d_points(scores[:,0:2],'b-')
     plot_2d_points(data,'ro')
     show()
     
