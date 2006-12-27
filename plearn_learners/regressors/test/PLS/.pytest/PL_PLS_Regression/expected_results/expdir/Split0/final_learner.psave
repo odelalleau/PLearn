@@ -38,7 +38,7 @@ W = 4  2  [
 ]
 ;
 resid_variance = 2 [ 22.5737055559344419 422.505428803337963 ] ;
-seed = -1 ;
+seed = 1827 ;
 stage = 1 ;
 n_examples = 89 ;
 inputsize = 4 ;
@@ -53,7 +53,7 @@ save_trainingset_prefix = ""  )
 ;
 provide_learner_expdir = 1 ;
 expdir_append = "" ;
-seed = -1 ;
+seed = 1827 ;
 stage = 1 ;
 n_examples = 89 ;
 inputsize = 4 ;

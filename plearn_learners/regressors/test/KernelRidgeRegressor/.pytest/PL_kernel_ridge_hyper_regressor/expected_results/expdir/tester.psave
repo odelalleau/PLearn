@@ -20,7 +20,7 @@ splits = 1  3  [
  )
 ;
 statnames = 2 [ "E[test1.E[mse]]" "E[test2.E[mse]]" ] ;
-statmask = TVec(0 0 *0 )
+statmask = []
 ;
 learner = *3 ->HyperLearner(
 tester = *4 ->PTester(
@@ -28,7 +28,7 @@ expdir = "" ;
 dataset = *0 ;
 splitter = *0 ;
 statnames = 2 [ "E[test.E[mse]]" "E[train.E[mse]]" ] ;
-statmask = TVec(0 0 *0 )
+statmask = []
 ;
 learner = *5 ->KernelRidgeRegressor(
 kernel = *6 ->GaussianKernel(
@@ -47,7 +47,7 @@ params = 0  0  [
 ]
 ;
 training_inputs = *0 ;
-seed = -1 ;
+seed = 1827 ;
 stage = 0 ;
 n_examples = -1 ;
 inputsize = -1 ;
@@ -74,13 +74,13 @@ provide_learner_expdir = 1 ;
 train = 1 ;
 template_stats_collector = *0 ;
 global_template_stats_collector = *0 ;
-final_commands = TVec(0 0 *0 )
+final_commands = []
 ;
 save_test_confidence = 0 ;
 enforce_clean_expdir = 1  )
 ;
 option_fields = 2 [ "weight_decay" "kernel.sigma" ] ;
-dont_restart_upon_change = TVec(0 0 *0 )
+dont_restart_upon_change = []
 ;
 strategy = 2 [ *7 ->HyperOptimize(
 which_cost = "0" ;
@@ -90,7 +90,7 @@ option_names = 2 [ "weight_decay" "kernel.sigma" ] ;
 option_values = 2 [ 5 [ "1e-8" "1e-6" "1e-4" "1e-2" "1e0" ] 5 [ "1e-2" "1e-1" "1e0" "1e1" "1e2" ] ]  )
 ;
 provide_tester_expdir = 0 ;
-sub_strategy = TVec(0 0 *0 )
+sub_strategy = []
 ;
 rerun_after_sub = 0 ;
 provide_sub_expdir = 1 ;
@@ -142,7 +142,7 @@ provide_learner_expdir = 1 ;
 train = 1 ;
 template_stats_collector = *0 ;
 global_template_stats_collector = *0 ;
-final_commands = TVec(0 0 *0 )
+final_commands = []
 ;
 save_test_confidence = 0 ;
 enforce_clean_expdir = 1  )

@@ -175,22 +175,21 @@ diags = 0  0  [
 eigenvalues = 0  0  [ 
 ]
 ;
-eigenvectors = TVec(0 0 *0 )
+eigenvectors = []
 ;
 n_eigen_computed = 0 ;
 D = 4 ;
 outputs_def = "l" ;
 predictor_size = 0 ;
 predicted_size = -1 ;
-predictor_part = TVec(0 0 *0 )
+predictor_part = []
 ;
 n_curve_points = -1 ;
 lower_bound = 0 ;
 upper_bound = 0 ;
 n_predictor = 0 ;
 n_predicted = 4 ;
-expdir = "" ;
-seed = -1 ;
+seed = 1827 ;
 stage = 1 ;
 n_examples = 150 ;
 inputsize = 4 ;

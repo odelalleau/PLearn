@@ -20,14 +20,13 @@ splits = 1  2  [
  )
 ;
 statnames = 32 [ "E[train.E[mse]]" "E[test.E[mse]]" "E[test.V[mse]]" "E[test.STDDEV[mse]]" "E[test.STDERROR[mse]]" "E[test.SKEW[mse]]" "E[test.KURT[mse]]" "E[test.MIN[mse]]" "E[test.MAX[mse]]" "E[test.RANGE[mse]]" "E[test.SUM[mse]]" "E[test.SUMSQ[mse]]" "E[test.FIRST[mse]]" "E[test.LAST[mse]]" "E[test.N[mse]]" "E[test.NMISSING[mse]]" "E[test.NNONMISSING[mse]]" "E[test.SHARPERATIO[mse]]" "E[test.ZSTAT[mse]]" "E[test.PZ1t[mse]]" "E[test.PZ2t[mse]]" "E[test.PSEUDOQ(0.001)[mse]]" "E[test.PSEUDOQ(0.01)[mse]]" "E[test.PSEUDOQ(0.05)[mse]]" "E[test.PSEUDOQ(0.25)[mse]]" "E[test.PSEUDOQ(0.5)[mse]]" "E[test.PSEUDOQ(0.75)[mse]]" "E[test.PSEUDOQ(0.95)[mse]]" "E[test.PSEUDOQ(0.99)[mse]]" "E[test.PSEUDOQ(0.999)[mse]]" "E[test.IQR[mse]]" "E[test.PRR[mse]]" ] ;
-statmask = TVec(0 0 *0 )
+statmask = []
 ;
 learner = *3 ->ConstantRegressor(
 weight_decay = 0 ;
-constant_output = TVec(0 0 *0 )
+constant_output = []
 ;
-expdir = "" ;
-seed = -1 ;
+seed = 1827 ;
 stage = 0 ;
 n_examples = -1 ;
 inputsize = -1 ;
@@ -54,13 +53,13 @@ provide_learner_expdir = 1 ;
 train = 1 ;
 template_stats_collector = *4 ->VecStatsCollector(
 maxnvalues = 50 ;
-fieldnames = TVec(0 0 *0 )
+fieldnames = []
 ;
 compute_covariance = 0 ;
 epsilon = 0 ;
 window = -1 ;
 no_removal_warnings = 0 ;
-stats = TVec(0 0 *0 )
+stats = []
 ;
 cov = 0  0  [ 
 ]
@@ -78,6 +77,7 @@ sum_non_missing_weights = 0 ;
 sum_non_missing_square_weights = 0  )
 ;
 global_template_stats_collector = *0 ;
-final_commands = TVec(0 0 *0 )
+final_commands = []
 ;
-save_test_confidence = 1  )
+save_test_confidence = 1 ;
+enforce_clean_expdir = 1  )

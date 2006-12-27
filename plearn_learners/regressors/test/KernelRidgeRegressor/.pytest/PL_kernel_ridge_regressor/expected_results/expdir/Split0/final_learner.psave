@@ -469,7 +469,7 @@ data = 225  1  [
 ]
 ;
 source = *0 ;
-fieldnames = TVec(0 0 *0 )
+fieldnames = []
 ;
 writable = 0 ;
 length = 225 ;
@@ -480,8 +480,7 @@ weightsize = 0 ;
 extrasize = 0 ;
 metadatadir = ""  )
 ;
-expdir = "PYTEST__PL_kernel_ridge_regressor__RESULTS:expdir/Split0/LearnerExpdir/" ;
-seed = -1 ;
+seed = 1827 ;
 stage = 0 ;
 n_examples = 225 ;
 inputsize = 1 ;

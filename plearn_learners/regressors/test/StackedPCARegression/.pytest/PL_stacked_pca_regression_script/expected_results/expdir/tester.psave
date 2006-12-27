@@ -20,7 +20,7 @@ splits = 1  2  [
  )
 ;
 statnames = 8 [ "E[train.E[mse]]" "E[train.E[aic]]" "E[train.E[bic]]" "E[train.E[mabic]]" "E[test.E[mse]]" "E[test.E[aic]]" "E[test.E[bic]]" "E[test.E[mabic]]" ] ;
-statmask = TVec(0 0 *0 )
+statmask = []
 ;
 learner = *3 ->StackedLearner(
 base_learners = 1 [ *4 ->PCA(
@@ -30,15 +30,15 @@ normalize = 1 ;
 algo = "classical" ;
 horizon = -1 ;
 normalize_warning = 0 ;
-mu = TVec(0 0 *0 )
+impute_missing = 0 ;
+mu = []
 ;
-eigenvals = TVec(0 0 *0 )
+eigenvals = []
 ;
 eigenvecs = 0  0  [ 
 ]
 ;
-expdir = "" ;
-seed = -1 ;
+seed = 1827 ;
 stage = 0 ;
 n_examples = -1 ;
 inputsize = -1 ;
@@ -62,9 +62,8 @@ weights = 0  0  [
 ;
 AIC = nan ;
 BIC = nan ;
-resid_variance = TVec(0 0 *0 )
+resid_variance = []
 ;
-expdir = "" ;
 stage = 0 ;
 n_examples = -1 ;
 inputsize = -1 ;
@@ -86,8 +85,7 @@ precompute_base_learners_output = 1 ;
 put_raw_input = 0 ;
 share_learner = 0 ;
 nsep = 1 ;
-expdir = "" ;
-seed = -1 ;
+seed = 1827 ;
 stage = 0 ;
 n_examples = -1 ;
 inputsize = -1 ;
@@ -114,6 +112,7 @@ provide_learner_expdir = 1 ;
 train = 1 ;
 template_stats_collector = *0 ;
 global_template_stats_collector = *0 ;
-final_commands = TVec(0 0 *0 )
+final_commands = []
 ;
-save_test_confidence = 1  )
+save_test_confidence = 1 ;
+enforce_clean_expdir = 1  )
