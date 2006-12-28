@@ -80,10 +80,24 @@ class Optimizer;
  *  user-provided Optimizer (see the 'optimizer' option) and does not rely on
  *  the PLearn HyperLearner system.
  *
+ *  GaussianProcessRegressor produces the following train costs:
+ *
+ *  - "nmll" : the negative marginal log-likelihood on the training set.
+ *  - "mse"  : the mean-squared error on the training set (by convention,
+ *             divided by two)
+ *
+ *  and the following test costs:
+ *
+ *  - "nll" : the negative log-likelihood of the test example under the
+ *            predictive distribution.  Available only if the option
+ *            'compute_confidence' is true.
+ *  - "mse" : the squared error of the test example with respect to the
+ *            predictive mean (by convention, divided by two).
+ *
  *  The disadvantage of this learner is that its training time is O(N^3) in the
  *  number of training examples (due to the matrix inversion).  When saving the
- *  learner, the training set must be saved, along with an additional vector of
- *  the length of the training set.
+ *  learner, the training set inputs must be saved, along with an additional
+ *  matrix of length number-of-training-examples, and width number-of-targets.
  */
 class GaussianProcessRegressor : public PLearner
 {
@@ -129,6 +143,19 @@ public:
      *  scalars.
      */
     TVec< pair<string,string> > m_hyperparameters;
+
+    /**
+     *  If the kernel support automatic relevance determination (ARD; e.g.
+     *  SquaredExponentialARDKernel), the list of hyperparameters corresponding
+     *  to each input can be created automatically by giving an option prefix
+     *  and an initial value.  The ARD options are created to have the form
+     *
+     *     'prefix[0]', 'prefix[1]', 'prefix[N-1]'
+     *
+     *  where N is the number of inputs.  This option is useful when the
+     *  dataset inputsize is not (easily) known ahead of time. 
+     */
+    pair<string,string> m_ARD_hyperprefix_initval;
 
     /**
      *  Specification of the optimizer to use for train-time hyperparameter
@@ -242,7 +269,10 @@ protected:
 
     /// Buffer for the product of the gram inverse with kernel evaluations
     mutable Vec m_gram_inverse_product;
-    
+
+    //! Buffer to hold confidence intervals when computing costs from outputs
+    mutable TVec< pair<real,real> > m_intervals;
+
 private: 
     /// This does the actual building. 
     void build_();

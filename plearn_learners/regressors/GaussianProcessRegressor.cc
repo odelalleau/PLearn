@@ -83,11 +83,25 @@ PLEARN_IMPLEMENT_OBJECT(
     "user-provided Optimizer (see the 'optimizer' option) and does not rely on\n"
     "the PLearn HyperLearner system.\n"
     "\n"
+    "GaussianProcessRegressor produces the following train costs:\n"
+    "\n"
+    "- \"nmll\" : the negative marginal log-likelihood on the training set.\n"
+    "- \"mse\"  : the mean-squared error on the training set (by convention,\n"
+    "           divided by two)\n"
+    "\n"
+    "and the following test costs:\n"
+    "\n"
+    "- \"nll\" : the negative log-likelihood of the test example under the\n"
+    "          predictive distribution.  Available only if the option\n"
+    "          'compute_confidence' is true.\n"
+    "- \"mse\" : the squared error of the test example with respect to the\n"
+    "          predictive mean (by convention, divided by two).\n"
+    "\n"
     "The disadvantage of this learner is that its training time is O(N^3) in the\n"
     "number of training examples (due to the matrix inversion).  When saving the\n"
-    "learner, the training set must be saved, along with an additional vector of\n"
-    "the length of the training set.\n");
-
+    "learner, the training set inputs must be saved, along with an additional\n"
+    "matrix of length number-of-training-examples, and width number-of-targets.\n"
+    );
 
 GaussianProcessRegressor::GaussianProcessRegressor() 
     : m_weight_decay(0.0),
@@ -138,6 +152,20 @@ void GaussianProcessRegressor::declareOptions(OptionList& ol)
         "optimization.  Currently, the hyperparameters are constrained to be\n"
         "scalars.\n");
 
+    declareOption(
+        ol, "ARD_hyperprefix_initval",
+        &GaussianProcessRegressor::m_ARD_hyperprefix_initval,
+        OptionBase::buildoption,
+        "If the kernel support automatic relevance determination (ARD; e.g.\n"
+        "SquaredExponentialARDKernel), the list of hyperparameters corresponding\n"
+        "to each input can be created automatically by giving an option prefix\n"
+        "and an initial value.  The ARD options are created to have the form\n"
+        "\n"
+        "   'prefix[0]', 'prefix[1]', 'prefix[N-1]'\n"
+        "\n"
+        "where N is the number of inputs.  This option is useful when the\n"
+        "dataset inputsize is not (easily) known ahead of time. \n");
+    
     declareOption(
         ol, "optimizer", &GaussianProcessRegressor::m_optimizer,
         OptionBase::buildoption,
@@ -215,6 +243,7 @@ void GaussianProcessRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(m_training_inputs,      copies);
     deepCopyField(m_kernel_evaluations,   copies);
     deepCopyField(m_gram_inverse_product, copies);
+    deepCopyField(m_intervals,            copies);
 }
 
 
@@ -296,11 +325,17 @@ void GaussianProcessRegressor::train()
     nll->fprop();
     m_alpha = nll->alpha();
     m_gram_inverse = nll->gramInverse();
+
+    // Compute train MSE, as 1/(2N) * dot(z,z), with z=K*alpha - y
+    Mat residuals(m_alpha.length(), m_alpha.width());
+    product(residuals, nll->gram(), m_alpha);
+    residuals -= targets;
+    real mse = dot(residuals, residuals) / (2 * trainlength);
     
     // And accumulate some statistics
     Vec costs(2);
     costs[0] = nll->value[0];
-    costs[1] = nll->trainMSE();
+    costs[1] = mse;
     getTrainStatsCollector()->update(costs);
     MODULE_LOG << "Train NLL: " << costs[0] << endl;
 }
@@ -333,8 +368,32 @@ void GaussianProcessRegressor::computeCostsFromOutputs(const Vec& input, const V
                                                        const Vec& target, Vec& costs) const
 {
     costs.resize(2);
+
+    // NLL cost is the NLL of the target under the predictive distribution
+    // (centered at predictive mean, with variance obtainable from the
+    // confidence bounds).  HOWEVER, to obain it, we have to be able to compute
+    // the confidence bounds.  If impossible, simply set missing-value for the
+    // NLL cost.
+    if (m_compute_confidence) {
+        static const float PROBABILITY = 0.3829;    // 0.5 stddev
+        bool confavail = computeConfidenceFromOutput(input, output, PROBABILITY,
+                                                     m_intervals);
+        assert( confavail && m_intervals.size() == output.size() &&
+                output.size() == target.size() );
+        static const real LN_2PI_OVER_2 = pl_log(2*M_PI) / 2.0;
+        real nll = 0;
+        for (int i=0, n=output.size() ; i<n ; ++i) {
+            real sigma = m_intervals[i].second - m_intervals[i].first;
+            sigma = max(sigma, 1e-15);        // Very minor regularization
+            real diff = target[i] - output[i];
+            nll += diff*diff / (2.*sigma*sigma) + pl_log(sigma) + LN_2PI_OVER_2;
+        }
+        costs[0] = nll;
+    }
+    else
+        costs[0] = MISSING_VALUE;
+    
     real squared_loss = 0.5*powdistance(output,target);
-    costs[0] = squared_loss;                 //!< FIXME: COMPUTE NLL
     costs[1] = squared_loss;
 }     
 
@@ -385,7 +444,10 @@ TVec<string> GaussianProcessRegressor::getTestCostNames() const
 
 TVec<string> GaussianProcessRegressor::getTrainCostNames() const
 {
-    return getTestCostNames();
+    TVec<string> c(2);
+    c[0] = "nmll";
+    c[1] = "mse";
+    return c;
 }
 
 
@@ -396,20 +458,42 @@ GaussianProcessRegressor::hyperOptimize(const Mat& inputs, const Mat& targets)
 {
     // If there are no hyperparameters or optimizer, just create a simple
     // variable and return it right away.
-    if (! m_optimizer || m_hyperparameters.size() == 0)
+    if (! m_optimizer || (m_hyperparameters.size() == 0 &&
+                          m_ARD_hyperprefix_initval.first.empty()) )
+    {
         return new GaussianProcessNLLVariable(
             m_kernel, m_weight_decay, inputs, targets,
             TVec<string>(), VarArray(), m_compute_confidence);
+    }
 
     // Otherwise create Vars that wrap each hyperparameter
-    const int numhyper = m_hyperparameters.size();
-    VarArray     hyperparam_vars (numhyper);
-    TVec<string> hyperparam_names(numhyper);
-    for (int i=0 ; i<numhyper ; ++i) {
+    const int numhyper  = m_hyperparameters.size();
+    const int numinputs = ( ! m_ARD_hyperprefix_initval.first.empty() ?
+                            inputsize() : 0 );
+    VarArray     hyperparam_vars (numhyper + numinputs);
+    TVec<string> hyperparam_names(numhyper + numinputs);
+    int i;
+    for (i=0 ; i<numhyper ; ++i) {
         hyperparam_names[i] = m_hyperparameters[i].first;
         hyperparam_vars [i] = new ObjectOptionVariable(
             (Kernel*)m_kernel, m_hyperparameters[i].first, m_hyperparameters[i].second);
         hyperparam_vars[i]->setName(m_hyperparameters[i].first);
+    }
+
+    // If specified, create the Vars for automatic relevance determination
+    string& ARD_name = m_ARD_hyperprefix_initval.first;
+    string& ARD_init = m_ARD_hyperprefix_initval.second;
+    if (! ARD_name.empty()) {
+        // Small hack to ensure the ARD vector in the kernel has proper size
+        Vec init(numinputs, lexical_cast<double>(ARD_init));
+        m_kernel->changeOption(ARD_name, tostring(init, PStream::plearn_ascii));
+        
+        for (int j=0 ; j<numinputs ; ++j, ++i) {
+            hyperparam_names[i] = ARD_name + '[' + tostring(j) + ']';
+            hyperparam_vars [i] = new ObjectOptionVariable(
+                (Kernel*)m_kernel, hyperparam_names[i], ARD_init);
+            hyperparam_vars [i]->setName(hyperparam_names[i]);
+        }
     }
 
     // Create the cost-function variable
