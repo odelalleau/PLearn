@@ -131,12 +131,12 @@ public:
     //! Accessor to the last computed 'alpha' matrix in an fprop
     const Mat& alpha() const { return m_alpha; }
 
+    //! Accessor to the last computed gram matrix in an fprop
+    const Mat& gram() const { return m_gram; }
+    
     //! Accessor to the last computed gram matrix inverse in an fprop
     const Mat& gramInverse() const { return m_inverse_gram; }
 
-    //! Accessor to the training mse after an fprop
-    real trainMSE() const { return m_mse; }
-    
 
     //#####  PLearn::Object Protocol  #########################################
 
@@ -195,9 +195,6 @@ protected:
     //! Temporary storage for holding the right-hand-side to be solved by Cholesky
     Mat m_rhs_tmp;
 
-    //! Temporary holder of training-set MSE after an fprop
-    real m_mse;
-    
 protected:
     //! Declares the class options.
     static void declareOptions(OptionList& ol);

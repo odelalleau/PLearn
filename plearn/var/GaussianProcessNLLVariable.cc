@@ -65,8 +65,7 @@ PLEARN_IMPLEMENT_OBJECT(
 GaussianProcessNLLVariable::GaussianProcessNLLVariable()
     : m_kernel(0),
       m_noise(0),
-      m_allow_bprop(true),
-      m_mse(0)
+      m_allow_bprop(true)
 { }
 
 
@@ -81,8 +80,7 @@ GaussianProcessNLLVariable::GaussianProcessNLLVariable(
       m_targets(targets),
       m_hyperparam_names(hyperparam_names),
       m_hyperparam_vars(hyperparam_vars),
-      m_allow_bprop(allow_bprop),
-      m_mse(0)
+      m_allow_bprop(allow_bprop)
 {
     build();
 }
@@ -157,12 +155,8 @@ void GaussianProcessNLLVariable::fprop()
     logdet_log2pi += 0.5 * n * pl_log(2*M_PI);
     
     real nll = 0;
-    m_mse = 0;
-    for (int i=0 ; i<m ; ++i) {
-        real cur_mse = 0.5*dot(m_targets.column(i), m_alpha.column(i));
-        m_mse += cur_mse;
-        nll   += cur_mse + logdet_log2pi;
-    }
+    for (int i=0 ; i<m ; ++i)
+        nll += 0.5*dot(m_targets.column(i), m_alpha.column(i)) + logdet_log2pi;
     value[0] = nll;
 }
 
