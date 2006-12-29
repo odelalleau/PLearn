@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// RationalQuadraticARDKernel.cc
+// IIDNoiseKernel.cc
 //
 // Copyright (C) 2006 Nicolas Chapados
 //
@@ -34,51 +34,47 @@
 
 // Authors: Nicolas Chapados
 
-/*! \file RationalQuadraticARDKernel.cc */
+/*! \file IIDNoiseKernel.cc */
 
-
-#include "RationalQuadraticARDKernel.h"
+#include <plearn/math/TMat_maths.h>
+#include "IIDNoiseKernel.h"
 
 namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
-    RationalQuadraticARDKernel,
-    "Rational-Quadratic kernel that can be used for Automatic Relevance Determination",
-    "This kernel can be interpreted as an infinite mixture of\n"
-    "SquaredExponentialARDKernel (with different characteristic length-scales),\n"
-    "allowing a greater variety of \"interesting\" functions to be generated.\n"
-    "Similar to C.E. Rasmussen's GPML code (see http://www.gaussianprocess.org),\n"
-    "this kernel is specified as:\n"
+    IIDNoiseKernel,
+    "Kernel representing independent and identically-distributed observation noise",
+    "This Kernel is typically used as a base class for covariance functions used\n"
+    "in gaussian processes (see GaussianProcessRegressor).  It represents simple\n"
+    "i.i.d. additive noise:\n"
     "\n"
-    "  k(x,y) = sf2 * [1 + (sum_i (x_i - y_i)^2 / w_i)/(2*alpha)]^(-alpha) + delta_x,y*sn2\n"
+    "  k(x,y) = delta_x,y * sn2\n"
     "\n"
-    "where sf2 is the exp of twice the 'log_signal_sigma' option, sn2 is the\n"
-    "exp of twice the 'log_noise_sigma' option (added only if x==y), and w_i\n"
-    "is exp(2*log_global_sigma + 2*log_input_sigma[i]).\n"
+    "where delta_x,y is the Kronecker delta function, and sn2 is the exp of\n"
+    "twice the 'log_noise_sigma' option.\n"
     "\n"
     "Note that to make its operations more robust when used with unconstrained\n"
-    "optimizaiton of hyperparameters, all hyperparameters of this kernel are\n"
+    "optimization of hyperparameters, all hyperparameters of this kernel are\n"
     "specified in the log-domain.\n"
     );
 
 
-RationalQuadraticARDKernel::RationalQuadraticARDKernel()
-    : m_log_alpha(0.0)
+IIDNoiseKernel::IIDNoiseKernel()
+    : m_log_noise_sigma(0.0)
 { }
 
 
 //#####  declareOptions  ######################################################
 
-void RationalQuadraticARDKernel::declareOptions(OptionList& ol)
+void IIDNoiseKernel::declareOptions(OptionList& ol)
 {
     declareOption(
-        ol, "log_alpha",
-        &RationalQuadraticARDKernel::m_log_alpha,
+        ol, "log_noise_sigma",
+        &IIDNoiseKernel::m_log_noise_sigma,
         OptionBase::buildoption,
-        "Log of the alpha parameter in the rational-quadratic kernel.\n"
-        "Default value=0.0");
-
+        "Log of the global noise variance.  Default value=0.0");
+    
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -86,7 +82,7 @@ void RationalQuadraticARDKernel::declareOptions(OptionList& ol)
 
 //#####  build  ###############################################################
 
-void RationalQuadraticARDKernel::build()
+void IIDNoiseKernel::build()
 {
     // ### Nothing to add here, simply calls build_
     inherited::build();
@@ -96,59 +92,53 @@ void RationalQuadraticARDKernel::build()
 
 //#####  build_  ##############################################################
 
-void RationalQuadraticARDKernel::build_()
+void IIDNoiseKernel::build_()
 { }
 
 
 //#####  evaluate  ############################################################
 
-real RationalQuadraticARDKernel::evaluate(const Vec& x1, const Vec& x2) const
+real IIDNoiseKernel::evaluate(const Vec& x1, const Vec& x2) const
 {
-    PLASSERT( x1.size() == x2.size() );
-    PLASSERT( !m_log_input_sigma.size() || x1.size() == m_log_input_sigma.size() );
-
-    if (x1.size() == 0)
-        return exp(2*m_log_signal_sigma) + exp(2*m_log_noise_sigma);
-    
-    const real* px1 = x1.data();
-    const real* px2 = x2.data();
-    real sf2        = exp(2*m_log_signal_sigma);
-    real alpha      = exp(m_log_alpha);
-    real sum_wt     = 0.0;
-    real sum_sqdiff = 0.0;
-    
-    if (m_log_input_sigma.size() > 0) {
-        const real* pinpsig = m_log_input_sigma.data();
-        for (int i=0, n=x1.size() ; i<n ; ++i) {
-            real diff   = *px1++ - *px2++;
-            real sqdiff = diff * diff;
-            sum_sqdiff += sqdiff;
-            sum_wt     += sqdiff / exp(2*(m_log_global_sigma + *pinpsig++));
-        }
-    }
-    else {
-        real global_sigma = exp(2*m_log_global_sigma);
-        for (int i=0, n=x1.size() ; i<n ; ++i) {
-            real diff   = *px1++ - *px2++;
-            real sqdiff = diff * diff;
-            sum_sqdiff += sqdiff;
-            sum_wt     += sqdiff / global_sigma;
-        }
-    }
-
-    // We add a noise variance only if x and y are equal (within machine tolerance)
-    real noise_cov = 0.0;
-    if (is_equal(sum_sqdiff, 0))
-        noise_cov = exp(2*m_log_noise_sigma);
-    return sf2 * pow(1 + sum_wt / (2.*alpha), -alpha) + noise_cov;
+    if (fast_is_equal(powdistance(x1,x2,2), 0.0))
+        return exp(2*m_log_noise_sigma);
+    else
+        return 0.0;
 }
 
 
 //#####  makeDeepCopyFromShallowCopy  #########################################
 
-void RationalQuadraticARDKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+void IIDNoiseKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
+}
+
+
+//#####  computeGramMatrixDerivative  #########################################
+
+void IIDNoiseKernel::computeGramMatrixDerivative(Mat& KD, const string& kernel_param,
+                                                 real epsilon) const
+{
+    static const string LNS("log_noise_sigma");
+    if (kernel_param == LNS) {
+        if (!data)
+            PLERROR("Kernel::computeGramMatrixDerivative should be called only after "
+                    "setDataForKernelMatrix");
+
+        // For efficiency reasons, we only accumulate a derivative on the
+        // diagonal of the kernel matrix, even if two training examples happen
+        // to be EXACTLY identical.  (May change in the future if this turns
+        // out to be a problem).
+        int W = nExamples();
+        KD.resize(W,W);
+        KD.fill(0.0);
+        real deriv = 2*exp(2*m_log_noise_sigma);
+        for (int i=0 ; i<W ; ++i)
+            KD(i,i) = deriv;
+    }
+    else
+        inherited::computeGramMatrixDerivative(KD, kernel_param, epsilon);
 }
 
 } // end of namespace PLearn

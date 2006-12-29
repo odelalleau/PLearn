@@ -40,7 +40,7 @@
 #ifndef RationalQuadraticARDKernel_INC
 #define RationalQuadraticARDKernel_INC
 
-#include <plearn/ker/Kernel.h>
+#include <plearn/ker/ARDBaseKernel.h>
 
 namespace PLearn {
 
@@ -64,35 +64,16 @@ namespace PLearn {
  *  optimizaiton of hyperparameters, all hyperparameters of this kernel are
  *  specified in the log-domain.
  */
-class RationalQuadraticARDKernel : public Kernel
+class RationalQuadraticARDKernel : public ARDBaseKernel
 {
-    typedef Kernel inherited;
+    typedef ARDBaseKernel inherited;
 
 public:
     //#####  Public Build Options  ############################################
 
-    //! Log of the global signal variance.  Default value=0.0
-    real m_log_signal_sigma;
-
-    //! Log of the global noise variance.  Default value=0.0
-    real m_log_noise_sigma;
-
     //! Log of the alpha parameter in the rational-quadratic kernel.
     //! Default value=0.0
     real m_log_alpha;
-    
-    /**
-     *  Log of the global length-scale.  Note that if ARD is performed on
-     *  input-specific sigmas, this hyperparameter should have a fixed value
-     *  (and not be varied during the optimization).  Default value=0.0.
-     */
-    real m_log_global_sigma;
-
-    /**
-     *  If specified, contain input-specific length-scales that can be
-     *  individually optimized for.
-     */
-    Vec m_log_input_sigma;
 
 public:
     //#####  Public Member Functions  #########################################

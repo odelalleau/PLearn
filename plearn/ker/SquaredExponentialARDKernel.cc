@@ -62,15 +62,12 @@ PLEARN_IMPLEMENT_OBJECT(
     "exp(log_global_sigma + log_input_sigma[i]).\n"
     "\n"
     "Note that to make its operations more robust when used with unconstrained\n"
-    "optimizaiton of hyperparameters, all hyperparameters of this kernel are\n"
+    "optimization of hyperparameters, all hyperparameters of this kernel are\n"
     "specified in the log-domain.\n"
     );
 
 
 SquaredExponentialARDKernel::SquaredExponentialARDKernel()
-    : m_log_signal_sigma(0.0),
-      m_log_noise_sigma(0.0),
-      m_log_global_sigma(0.0)
 { }
 
 
@@ -78,33 +75,6 @@ SquaredExponentialARDKernel::SquaredExponentialARDKernel()
 
 void SquaredExponentialARDKernel::declareOptions(OptionList& ol)
 {
-    declareOption(
-        ol, "log_signal_sigma",
-        &SquaredExponentialARDKernel::m_log_signal_sigma,
-        OptionBase::buildoption,
-        "Log of the global signal variance.  Default value=0.0");
-
-    declareOption(
-        ol, "log_noise_sigma",
-        &SquaredExponentialARDKernel::m_log_noise_sigma,
-        OptionBase::buildoption,
-        "Log of the global noise variance.  Default value=0.0");
-    
-    declareOption(
-        ol, "log_global_sigma",
-        &SquaredExponentialARDKernel::m_log_global_sigma,
-        OptionBase::buildoption,
-        "Log of the global length-scale.  Note that if ARD is performed on\n"
-        "input-specific sigmas, this hyperparameter should have a fixed value\n"
-        "(and not be varied during the optimization).  Default value=0.0.\n");
-
-    declareOption(
-        ol, "log_input_sigma",
-        &SquaredExponentialARDKernel::m_log_input_sigma,
-        OptionBase::buildoption,
-        "If specified, contain input-specific length-scales that can be\n"
-        "individually optimized for.\n");
-
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -225,8 +195,6 @@ void SquaredExponentialARDKernel::computeGramMatrixDerivative(
 void SquaredExponentialARDKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-
-    deepCopyField(m_log_input_sigma, copies);
 }
 
 } // end of namespace PLearn

@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// SquaredExponentialARDKernel.h
+// IIDNoiseKernel.h
 //
 // Copyright (C) 2006 Nicolas Chapados
 //
@@ -34,54 +34,47 @@
 
 // Authors: Nicolas Chapados
 
-/*! \file SquaredExponentialARDKernel.h */
+/*! \file IIDNoiseKernel.h */
 
 
-#ifndef SquaredExponentialARDKernel_INC
-#define SquaredExponentialARDKernel_INC
+#ifndef IIDNoiseKernel_INC
+#define IIDNoiseKernel_INC
 
-#include <plearn/ker/ARDBaseKernel.h>
+#include <plearn/ker/Kernel.h>
 
 namespace PLearn {
 
 /**
- *  Squared-Exponential kernel that can be used for Automatic Relevance
- *  Determination
+ *  Kernel representing independent and identically-distributed observation noise
  *
- *  This is a variant of the GaussianKernel (a.k.a. Radial Basis Function)
- *  that provides a different length-scale parameter for each input variable.
- *  When used in conjunction with GaussianProcessRegressor, this kernel may be
- *  used for Automatic Relevance Determination (ARD), a procedure wherein the
- *  significance of each input variable for the prediction task is found
- *  automatically through numerical optimization.
+ *  This Kernel is typically used as a base class for covariance functions used
+ *  in gaussian processes (see GaussianProcessRegressor).  It represents simple
+ *  i.i.d. additive noise:
  *
- *  Similar to C.E. Rasmussen's GPML code (see http://www.gaussianprocess.org),
- *  this kernel function is specified as:
+ *    k(x,y) = delta_x,y * sn2
  *
- *    k(x,y) = sf2 * exp(- 0.5 * (sum_i (x_i - y_i)^2 / w_i)) + delta_x,y*sn2
- *
- *  where sf2 is the exp of the 'log_signal_sigma' option, sn2 is the exp of
- *  the 'log_noise_sigma' option (added only if x==y), and w_i is
- *  exp(log_global_sigma + log_input_sigma[i]).
+ *  where delta_x,y is the Kronecker delta function, and sn2 is the exp of
+ *  twice the 'log_noise_sigma' option.
  *
  *  Note that to make its operations more robust when used with unconstrained
  *  optimization of hyperparameters, all hyperparameters of this kernel are
  *  specified in the log-domain.
  */
-class SquaredExponentialARDKernel : public ARDBaseKernel
+class IIDNoiseKernel : public Kernel
 {
-    typedef ARDBaseKernel inherited;
+    typedef Kernel inherited;
 
 public:
     //#####  Public Build Options  ############################################
 
-    // (No new options other than those inherited)
+    //! Log of the global noise variance.  Default value=0.0
+    real m_log_noise_sigma;
     
 public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
-    SquaredExponentialARDKernel();
+    IIDNoiseKernel();
 
 
     //#####  Kernel Member Functions  #########################################
@@ -91,14 +84,13 @@ public:
 
     //! Directly compute the derivative with respect to hyperparameters
     //! (Faster than finite differences...)
-    // virtual void computeGramMatrixDerivative(Mat& KD, const string& kernel_param,
-    //                                          real epsilon=1e-6) const;
-    
+    virtual void computeGramMatrixDerivative(Mat& KD, const string& kernel_param,
+                                             real epsilon=1e-6) const;
 
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
-    PLEARN_DECLARE_OBJECT(SquaredExponentialARDKernel);
+    PLEARN_DECLARE_OBJECT(IIDNoiseKernel);
 
     // Simply calls inherited::build() then build_()
     virtual void build();
@@ -116,7 +108,7 @@ private:
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(SquaredExponentialARDKernel);
+DECLARE_OBJECT_PTR(IIDNoiseKernel);
 
 } // end of namespace PLearn
 

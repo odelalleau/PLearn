@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// SquaredExponentialARDKernel.h
+// ARDBaseKernel.h
 //
 // Copyright (C) 2006 Nicolas Chapados
 //
@@ -34,71 +34,63 @@
 
 // Authors: Nicolas Chapados
 
-/*! \file SquaredExponentialARDKernel.h */
+/*! \file ARDBaseKernel.h */
 
 
-#ifndef SquaredExponentialARDKernel_INC
-#define SquaredExponentialARDKernel_INC
+#ifndef ARDBaseKernel_INC
+#define ARDBaseKernel_INC
 
-#include <plearn/ker/ARDBaseKernel.h>
+#include <plearn/ker/IIDNoiseKernel.h>
 
 namespace PLearn {
 
 /**
- *  Squared-Exponential kernel that can be used for Automatic Relevance
- *  Determination
+ *  Base class for kernels that carry out Automatic Relevance Determination (ARD)
  *
- *  This is a variant of the GaussianKernel (a.k.a. Radial Basis Function)
- *  that provides a different length-scale parameter for each input variable.
- *  When used in conjunction with GaussianProcessRegressor, this kernel may be
- *  used for Automatic Relevance Determination (ARD), a procedure wherein the
- *  significance of each input variable for the prediction task is found
- *  automatically through numerical optimization.
- *
- *  Similar to C.E. Rasmussen's GPML code (see http://www.gaussianprocess.org),
- *  this kernel function is specified as:
- *
- *    k(x,y) = sf2 * exp(- 0.5 * (sum_i (x_i - y_i)^2 / w_i)) + delta_x,y*sn2
- *
- *  where sf2 is the exp of the 'log_signal_sigma' option, sn2 is the exp of
- *  the 'log_noise_sigma' option (added only if x==y), and w_i is
- *  exp(log_global_sigma + log_input_sigma[i]).
+ *  The purpose of this Kernel is to introduce utility options that are
+ *  generally shared by Kernels that perform Automatic Relevance Determination
+ *  (ARD).  It does not introduce any specific behavior related to those
+ *  options (since exactly where the ARD hyperparameters are used is very
+ *  kernel-specific, this is left to derived classes).
  *
  *  Note that to make its operations more robust when used with unconstrained
  *  optimization of hyperparameters, all hyperparameters of this kernel are
  *  specified in the log-domain.
  */
-class SquaredExponentialARDKernel : public ARDBaseKernel
+class ARDBaseKernel : public IIDNoiseKernel
 {
-    typedef ARDBaseKernel inherited;
+    typedef IIDNoiseKernel inherited;
 
 public:
     //#####  Public Build Options  ############################################
 
-    // (No new options other than those inherited)
-    
+    //! Log of the global signal variance.  Default value=0.0
+    real m_log_signal_sigma;
+
+    /**
+     *  Log of the global length-scale.  Note that if ARD is performed on
+     *  input-specific sigmas, this hyperparameter should have a fixed value
+     *  (and not be varied during the optimization).  Default value=0.0.
+     */
+    real m_log_global_sigma;
+
+    /**
+     *  If specified, contain input-specific length-scales that can be
+     *  individually optimized for (these are the ARD hyperparameters).
+     */
+    Vec m_log_input_sigma;
+
 public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
-    SquaredExponentialARDKernel();
+    ARDBaseKernel();
 
-
-    //#####  Kernel Member Functions  #########################################
-
-    //! Compute K(x1,x2).
-    virtual real evaluate(const Vec& x1, const Vec& x2) const;
-
-    //! Directly compute the derivative with respect to hyperparameters
-    //! (Faster than finite differences...)
-    // virtual void computeGramMatrixDerivative(Mat& KD, const string& kernel_param,
-    //                                          real epsilon=1e-6) const;
-    
 
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
-    PLEARN_DECLARE_OBJECT(SquaredExponentialARDKernel);
+    PLEARN_DECLARE_OBJECT(ARDBaseKernel);
 
     // Simply calls inherited::build() then build_()
     virtual void build();
@@ -116,7 +108,7 @@ private:
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(SquaredExponentialARDKernel);
+DECLARE_OBJECT_PTR(ARDBaseKernel);
 
 } // end of namespace PLearn
 
