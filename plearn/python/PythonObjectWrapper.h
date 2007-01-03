@@ -184,6 +184,13 @@ struct ConvertFromPyObject<Mat>
     static void convert(PyObject* pyobj, Mat& result);
 };
 
+template <>
+struct ConvertFromPyObject<VMat>
+{
+    // Return new MemoryVMatrix
+    static VMat convert(PyObject*);
+};
+
 template <class T>
 struct ConvertFromPyObject< TVec<T> >
 {

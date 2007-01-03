@@ -165,6 +165,13 @@ Mat ConvertFromPyObject<Mat>::convert(PyObject* pyobj)
     return m;
 }
 
+VMat ConvertFromPyObject<VMat>::convert(PyObject* pyobj)
+{
+    Mat m;
+    ConvertFromPyObject<Mat>::convert(pyobj, m);
+    return m;
+}
+
 
 //#####  Constructors+Destructors  ############################################
 
