@@ -46,6 +46,8 @@
 #include <plearn_learners/online/RBMLayer.h>
 #include <plearn_learners/online/RBMConnection.h>
 
+#include <plearn_learners/online/GradNNetLayerModule.h>
+
 namespace PLearn {
 
 /**
@@ -139,7 +141,7 @@ public:
     virtual TVec<std::string> getTrainCostNames() const;
 
     //! Clamps the visible units based on an input vector
-    void clamp_visible_units(const Vec& input);
+    void clamp_visible_units(const Vec& input) const;
 
     //! Updates the RBM parameters in the rbm training phase,
     //! after the visible units have been clamped.
@@ -149,12 +151,15 @@ public:
 
     //! Updates the dynamic connections in the dynamic training
     //! phase, after the visible units have been clamped
-    void dynamic_connections_update();
+    //! Outputs the negative log-likelihood of the hidden representation
+    //! of training example t given a sample from the hidden representation
+    //! of training example t-1.
+    real dynamic_connections_update();
 
     //! Updates both the RBM parameters and the 
     //! dynamic connections in the fine tuning phase,
     //! after the visible units have been clamped
-    void fine_tuning_update();
+    real fine_tuning_update();
 
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
                       VMat testoutputs=0, VMat testcosts=0) const;
@@ -199,7 +204,10 @@ protected:
 
     //! Stores input gradient of dynamic connections
     mutable Vec input_gradient;
-
+    
+    //! Stores previous hidden layer value
+    mutable Vec previous_input;
+    
     //! Stores previous hidden layer value
     mutable Vec previous_hidden_layer;
 
