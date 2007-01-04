@@ -139,12 +139,14 @@ class Program(core.PyTestObject):
         core.PyTestObject.__init__(self, **overrides)
         assert self.name is not None
         assert self.compiler is not None or self.compile_options is None
+        logging.debug("Creating program using compiler %s with compile_options '%s'."%(self.compiler, self.compile_options))
 
         # Methods are called even if messages are not logged
         logging.debug("\nProgram: "+self.getProgramPath())
 
         #SING: internal_exec_path = self.getInternalExecPath(overrides.pop('_signature'))
-        internal_exec_path = self.getInternalExecPath(self._signature(**overrides))
+        #CLS:  internal_exec_path = self.getInternalExecPath(self._signature(**overrides))
+        internal_exec_path = self.getInternalExecPath(self.__signature())
         logging.debug("Internal Exec Path: %s"%internal_exec_path)
         if self.isCompilable():
             if self.compiler is None:
@@ -152,6 +154,17 @@ class Program(core.PyTestObject):
             self.__attempted_to_compile = False
             self.__log_file_path = internal_exec_path+'.log'
         logging.debug("Program instance: %s\n"%repr(self))
+
+    def __signature(self):
+        if self.compiler is None:
+            signature = self.name
+        else:
+            if self.compile_options == "":
+                self.compile_options = None                
+            signature = "%s__compiler_%s__options_%s"%(
+                self.name, self.compiler, self.compile_options)
+        signature = signature.replace('-', '') # Compile options...
+        return signature.replace(' ', '_')
 
     def _optionFormat(self, option_pair, indent_level, inner_repr):
         optname, val = option_pair

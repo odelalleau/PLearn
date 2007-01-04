@@ -704,11 +704,13 @@ class RoutineBasedMode(PyTestMode):
     #  Instance methods
     #    
     def __init__( self, targets, options ):
-        super(RoutineBasedMode, self).__init__(targets, options)
-
         logging.debug("--pymake-compile (=%s) option forwarded to Program."%options.pymake_compile)
         Program.pymake_opt_override = options.pymake_compile
-        
+
+        # The option had to be forwarded to Program *before* calling the
+        # inherited ctor since Program instances are instanciated there...
+        super(RoutineBasedMode, self).__init__(targets, options)
+
         test_instances = Test._instances_map.items()        
         self.dispatch_tests(test_instances)
 
