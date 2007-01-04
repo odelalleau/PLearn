@@ -509,7 +509,7 @@ GaussianProcessRegressor::hyperOptimize(const Mat& inputs, const Mat& targets)
     m_optimizer->setToOptimize(hyperparam_vars, (Variable*)nll);
     m_optimizer->build();
     PP<ProgressBar> pb(
-        report_progress? new ProgressBar("Hyperoptimizing GaussianProcessRegressor "
+        report_progress? new ProgressBar("Training GaussianProcessRegressor "
                                          "from stage " + tostring(stage) + " to stage " +
                                          tostring(nstages), nstages-stage)
         : 0);
