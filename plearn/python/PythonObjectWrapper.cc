@@ -55,10 +55,12 @@ using namespace std;
 
 // Error-reporting
 void PLPythonConversionError(const char* function_name,
-                             PyObject* pyobj)
+                             PyObject* pyobj, bool print_traceback)
 {
-    fprintf(stderr,"For python object: ");
-    PyObject_Print(pyobj, stderr, Py_PRINT_RAW);
+    if (print_traceback) {
+        fprintf(stderr,"For python object: ");
+        PyObject_Print(pyobj, stderr, Py_PRINT_RAW);
+    }
     PLERROR("Cannot convert Python object using %s", function_name);
 }
 
@@ -78,52 +80,54 @@ void PythonObjectWrapper::initializePython()
 
 //#####  ConvertFromPyObject  #################################################
 
-bool ConvertFromPyObject<bool>::convert(PyObject* pyobj)
+bool ConvertFromPyObject<bool>::convert(PyObject* pyobj, bool print_traceback)
 {
     PLASSERT( pyobj );
     return PyObject_IsTrue(pyobj) != 0;
 }
 
-int ConvertFromPyObject<int>::convert(PyObject* pyobj)
+int ConvertFromPyObject<int>::convert(PyObject* pyobj, bool print_traceback)
 {
     PLASSERT( pyobj );
     if (! PyInt_Check(pyobj))
-        PLPythonConversionError("ConvertFromPyObject<int>", pyobj);
+        PLPythonConversionError("ConvertFromPyObject<int>", pyobj, print_traceback);
     return int(PyInt_AS_LONG(pyobj));
 }
 
-long ConvertFromPyObject<long>::convert(PyObject* pyobj)
+long ConvertFromPyObject<long>::convert(PyObject* pyobj, bool print_traceback)
 {
     PLASSERT( pyobj );
     if (! PyLong_Check(pyobj))
-        PLPythonConversionError("ConvertFromPyObject<long>", pyobj);
+        PLPythonConversionError("ConvertFromPyObject<long>", pyobj, print_traceback);
     return PyLong_AsLong(pyobj);
 }
 
-double ConvertFromPyObject<double>::convert(PyObject* pyobj)
+double ConvertFromPyObject<double>::convert(PyObject* pyobj, bool print_traceback)
 {
     PLASSERT( pyobj );
     if (! PyFloat_Check(pyobj))
-        PLPythonConversionError("ConvertFromPyObject<double>", pyobj);
+        PLPythonConversionError("ConvertFromPyObject<double>", pyobj,
+                                print_traceback);
     return PyFloat_AS_DOUBLE(pyobj);
 }
 
-string ConvertFromPyObject<string>::convert(PyObject* pyobj)
+string ConvertFromPyObject<string>::convert(PyObject* pyobj, bool print_traceback)
 {
     PLASSERT( pyobj );
     if (! PyString_Check(pyobj))
-        PLPythonConversionError("ConvertFromPyObject<string>", pyobj);
+        PLPythonConversionError("ConvertFromPyObject<string>", pyobj,
+                                print_traceback);
     return PyString_AsString(pyobj);
 }
 
-void ConvertFromPyObject<Vec>::convert(PyObject* pyobj, Vec& v)
+void ConvertFromPyObject<Vec>::convert(PyObject* pyobj, Vec& v, bool print_traceback)
 {
     // NA_InputArray possibly creates a well-behaved temporary (i.e. not
     // discontinuous is memory)
     PLASSERT( pyobj );
     PyArrayObject* pyarr = NA_InputArray(pyobj, tFloat64, NUM_C_ARRAY);
     if (! pyarr)
-        PLPythonConversionError("ConvertFromPyObject<Vec>", pyobj);
+        PLPythonConversionError("ConvertFromPyObject<Vec>", pyobj, print_traceback);
     if (pyarr->nd != 1)
         PLERROR("ConvertFromPyObject<Vec>: Dimensionality of the returned array "
                 "should be 1; got %d", pyarr->nd);
@@ -133,21 +137,21 @@ void ConvertFromPyObject<Vec>::convert(PyObject* pyobj, Vec& v)
     Py_XDECREF(pyarr);
 }
 
-Vec ConvertFromPyObject<Vec>::convert(PyObject* pyobj)
+Vec ConvertFromPyObject<Vec>::convert(PyObject* pyobj, bool print_traceback)
 {
     Vec v;
-    convert(pyobj, v);
+    convert(pyobj, v, print_traceback);
     return v;
 }
 
-void ConvertFromPyObject<Mat>::convert(PyObject* pyobj, Mat& m)
+void ConvertFromPyObject<Mat>::convert(PyObject* pyobj, Mat& m, bool print_traceback)
 {
     // NA_InputArray possibly creates a well-behaved temporary (i.e. not
     // discontinuous is memory)
     PLASSERT( pyobj );
     PyArrayObject* pyarr = NA_InputArray(pyobj, tFloat64, NUM_C_ARRAY);
     if (! pyarr)
-        PLPythonConversionError("ConvertFromPyObject<Mat>", pyobj);
+        PLPythonConversionError("ConvertFromPyObject<Mat>", pyobj, print_traceback);
     if (pyarr->nd != 2)
         PLERROR("ConvertFromPyObject<Mat>: Dimensionality of the returned array "
                 "should be 2; got %d", pyarr->nd);
@@ -158,17 +162,17 @@ void ConvertFromPyObject<Mat>::convert(PyObject* pyobj, Mat& m)
     Py_XDECREF(pyarr);
 }
 
-Mat ConvertFromPyObject<Mat>::convert(PyObject* pyobj)
+Mat ConvertFromPyObject<Mat>::convert(PyObject* pyobj, bool print_traceback)
 {
     Mat m;
-    convert(pyobj, m);
+    convert(pyobj, m, print_traceback);
     return m;
 }
 
-VMat ConvertFromPyObject<VMat>::convert(PyObject* pyobj)
+VMat ConvertFromPyObject<VMat>::convert(PyObject* pyobj, bool print_traceback)
 {
     Mat m;
-    ConvertFromPyObject<Mat>::convert(pyobj, m);
+    ConvertFromPyObject<Mat>::convert(pyobj, m, print_traceback);
     return m;
 }
 

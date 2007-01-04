@@ -63,8 +63,10 @@ namespace PLearn {
 
 class PythonObjectWrapper;                   // Forward-declare
 
-//! Used for error reporting
-void PLPythonConversionError(const char* function_name, PyObject* pyobj);
+//! Used for error reporting.  If 'print_traceback' is true, a full
+//! Python traceback is printed to stderr.  Otherwise, raise PLERROR.
+void PLPythonConversionError(const char* function_name, PyObject* pyobj,
+                             bool print_traceback);
 
 
 //#####  PythonGlobalInterpreterLock  #########################################
@@ -137,82 +139,84 @@ struct ConvertFromPyObject
 template <>
 struct ConvertFromPyObject<bool>
 {
-    static bool convert(PyObject*);
+    static bool convert(PyObject*, bool print_traceback);
 };
 
 template <>
 struct ConvertFromPyObject<int>
 {
-    static int convert(PyObject*);
+    static int convert(PyObject*, bool print_traceback);
 };
 
 template <>
 struct ConvertFromPyObject<long>
 {
-    static long convert(PyObject*);
+    static long convert(PyObject*, bool print_traceback);
 };
 
 template <>
 struct ConvertFromPyObject<double>
 {
-    static double convert(PyObject*);
+    static double convert(PyObject*, bool print_traceback);
 };
 
 template <>
 struct ConvertFromPyObject<string>
 {
-    static string convert(PyObject*);
+    static string convert(PyObject*, bool print_traceback);
 };
 
 template <>
 struct ConvertFromPyObject<Vec>
 {
     // Return fresh storage
-    static Vec convert(PyObject*);
+    static Vec convert(PyObject*, bool print_traceback);
 
     // Convert into pre-allocated Vec; resize it if necessary
-    static void convert(PyObject* pyobj, Vec& result);
+    static void convert(PyObject* pyobj, Vec& result,
+                        bool print_traceback);
 };
 
 template <>
 struct ConvertFromPyObject<Mat>
 {
     // Return fresh storage
-    static Mat convert(PyObject*);
+    static Mat convert(PyObject*, bool print_traceback=true);
 
     // Convert into pre-allocated Vec; resize it if necessary
-    static void convert(PyObject* pyobj, Mat& result);
+    static void convert(PyObject* pyobj, Mat& result,
+                        bool print_traceback);
 };
 
 template <>
 struct ConvertFromPyObject<VMat>
 {
     // Return new MemoryVMatrix
-    static VMat convert(PyObject*);
+    static VMat convert(PyObject*, bool print_traceback);
 };
 
 template <class T>
 struct ConvertFromPyObject< TVec<T> >
 {
-    static TVec<T> convert(PyObject*);
+    static TVec<T> convert(PyObject*, bool print_traceback);
 };
 
 template <class T>
 struct ConvertFromPyObject< std::vector<T> >
 {
-    static std::vector<T> convert(PyObject*);
+    static std::vector<T> convert(PyObject*, bool print_traceback);
 };
 
 template <class T, class U>
 struct ConvertFromPyObject< std::map<T,U> >
 {
-    static std::map<T,U> convert(PyObject*);
+    static std::map<T,U> convert(PyObject*, bool print_traceback);
 };
 
 template <class T, class U>
 struct ConvertFromPyObject< std::pair<T,U> >
 {
-    static std::pair<T,U> convert(PyObject*);
+    static std::pair<T,U> convert(PyObject*, bool print_traceback);
 };
 
 
@@ -321,14 +325,25 @@ public:
 
     //#####  Conversion Back to C++  ##########################################
 
-    // General version that relies on ConvertFromPyOBject
+    //! General version that relies on ConvertFromPyOBject
     template <class T>
     T as() const
     {
-        return ConvertFromPyObject<T>::convert(m_object);
+        return ConvertFromPyObject<T>::convert(m_object, true);
+    }
+
+    /**
+     *  Conversion that does not print any traceback to stderr if there is a
+     *  conversion error.  This should be used in the rare cases where multiple
+     *  return types are expected from Python and one wants to attempt several
+     *  (e.g. from more specific to more general).
+     */
+    template <class T>
+    T asNoTraceback() const
+    {
+        return ConvertFromPyObject<T>::convert(m_object, false);
     }
     
-
 
     //#####  Low-Level PyObject Creation  #####################################
 
@@ -451,7 +466,7 @@ protected:
 //#####  ConvertFromPyObject Implementations  #################################
 
 template <class T>
-TVec<T> ConvertFromPyObject< TVec<T> >::convert(PyObject* pyobj)
+TVec<T> ConvertFromPyObject< TVec<T> >::convert(PyObject* pyobj, bool print_traceback)
 {
     PLASSERT( pyobj );
     
@@ -462,7 +477,7 @@ TVec<T> ConvertFromPyObject< TVec<T> >::convert(PyObject* pyobj)
         TVec<T> v(size);
         for (int i=0 ; i<size ; ++i) {
             PyObject* elem_i = PyTuple_GET_ITEM(pyobj, i);
-            v[i] = ConvertFromPyObject<T>::convert(elem_i);
+            v[i] = ConvertFromPyObject<T>::convert(elem_i, print_traceback);
         }
         return v;
     }
@@ -472,61 +487,67 @@ TVec<T> ConvertFromPyObject< TVec<T> >::convert(PyObject* pyobj)
         TVec<T> v(size);
         for (int i=0 ; i<size ; ++i) {
             PyObject* elem_i = PyList_GET_ITEM(pyobj, i);
-            v[i] = ConvertFromPyObject<T>::convert(elem_i);
+            v[i] = ConvertFromPyObject<T>::convert(elem_i, print_traceback);
         }
         return v;
     }
     else
-        PLPythonConversionError("ConvertFromPyObject< TVec<T> >", pyobj);
+        PLPythonConversionError("ConvertFromPyObject< TVec<T> >", pyobj,
+                                print_traceback);
 
     return TVec<T>();                        // Shut up compiler
 }
 
 template <class T>
-std::vector<T> ConvertFromPyObject< std::vector<T> >::convert(PyObject* pyobj)
+std::vector<T> ConvertFromPyObject< std::vector<T> >::convert(PyObject* pyobj,
+                                                              bool print_traceback)
 {
     PLASSERT( pyobj );
     
     // Simple but inefficient implementation: create temporary TVec and copy
     // into a vector
-    TVec<T> v = ConvertFromPyObject< TVec<T> >::convert(pyobj);
+    TVec<T> v = ConvertFromPyObject< TVec<T> >::convert(pyobj, print_traceback);
     return std::vector<T>(v.begin(), v.end());
 }
 
 template <class T, class U>
-std::map<T,U> ConvertFromPyObject< std::map<T,U> >::convert(PyObject* pyobj)
+std::map<T,U> ConvertFromPyObject< std::map<T,U> >::convert(PyObject* pyobj,
+                                                            bool print_traceback)
 {
     PLASSERT( pyobj );
     if (! PyDict_Check(pyobj))
-        PLPythonConversionError("ConvertFromPyObject< std::map<T,U> >", pyobj);
+        PLPythonConversionError("ConvertFromPyObject< std::map<T,U> >", pyobj,
+                                print_traceback);
     
     PyObject *key, *value;
     int pos = 0;
     std::map<T,U> result;
 
     while (PyDict_Next(pyobj, &pos, &key, &value)) {
-        T the_key = ConvertFromPyObject<T>::convert(key);
-        U the_val = ConvertFromPyObject<U>::convert(value);
+        T the_key = ConvertFromPyObject<T>::convert(key, print_traceback);
+        U the_val = ConvertFromPyObject<U>::convert(value, print_traceback);
         result.insert(make_pair(the_key,the_val));
     }
     return result;
 }
 
 template <class T, class U>
-std::pair<T,U> ConvertFromPyObject< std::pair<T,U> >::convert(PyObject* pyobj)
+std::pair<T,U> ConvertFromPyObject< std::pair<T,U> >::convert(PyObject* pyobj,
+                                                              bool print_traceback)
 {
     PLASSERT( pyobj );
     // Here, we support both Python Tuples and Lists
     if (! PyTuple_Check(pyobj) && PyTuple_GET_SIZE(pyobj) != 2)
-        PLPythonConversionError("ConvertFromPyObject< std::pair<T,U> >", pyobj);
+        PLPythonConversionError("ConvertFromPyObject< std::pair<T,U> >", pyobj,
+                                print_traceback);
 
     std::pair<T,U> p;
 
     PyObject* first = PyTuple_GET_ITEM(pyobj, 0);
-    p.first = ConvertFromPyObject<T>::convert(first);
+    p.first = ConvertFromPyObject<T>::convert(first, print_traceback);
 
     PyObject* second = PyTuple_GET_ITEM(pyobj, 1);
-    p.second = ConvertFromPyObject<T>::convert(second);
+    p.second = ConvertFromPyObject<T>::convert(second, print_traceback);
 
     return p;
 }
