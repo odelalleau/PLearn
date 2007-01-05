@@ -279,9 +279,9 @@ void VecStatsCollector::update(const Vec& x, real weight)
     {
         tuple<Vec, real> outdated = m_observation_window->update(x, weight);
         Vec& obs = get<0>(outdated);
-        real weight = get<1>(outdated);
+        real w = get<1>(outdated);
         if ( obs.isNotEmpty() )
-            remove_observation(obs, weight);
+            remove_observation(obs, w);
     }
 }
 
