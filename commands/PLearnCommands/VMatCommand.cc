@@ -136,6 +136,15 @@ void VMatCommand::run(const vector<string>& args)
         for(int k=0; k<bbox.length(); k++)
             cout << bbox[k].first << " : " << bbox[k].second << endl;
     }
+    else if (command == "view")
+    {
+        // The 'view' command has been moved to VMatViewCommand (to avoid
+        // a forced dependency on the curses library).
+        vector<string> new_args(args.size() - 1);
+        for (size_t i = 1; i < args.size(); i++)
+            new_args[i - 1] = args[i];
+        PLearnCommandRegistry::run("vmat_view", new_args);
+    }
     else
     {
         // Dirty hack to plug into old vmatmain code
