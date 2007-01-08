@@ -525,6 +525,7 @@ GaussianProcessRegressor::hyperOptimize(const Mat& inputs, const Mat& targets)
         early_stopping = m_optimizer->optimizeN(*statscol);
         statscol->finalize();
     }
+    pb = 0;                                  // Finish progress bar right now
 
     // Some logging about the final values
     logVarray(hyperparam_vars, "Hyperparameter final values:");
@@ -539,7 +540,7 @@ void GaussianProcessRegressor::logVarray(const VarArray& varr,
 {
     string entry = title + '\n';
     for (int i=0, n=varr.size() ; i<n ; ++i) {
-        entry += right(varr[i]->getName(), 25) + ": " + tostring(varr[i]->value[0]);
+        entry += right(varr[i]->getName(), 35) + ": " + tostring(varr[i]->value[0]);
         if (i < n-1)
             entry += '\n';
     }
