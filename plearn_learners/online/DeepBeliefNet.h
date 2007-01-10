@@ -247,6 +247,8 @@ protected:
 
     mutable Vec class_gradient;
 
+    mutable Vec class_input_gradient;
+
     //! Stores the gradient of the cost at the input of final_cost
     mutable Vec final_cost_gradient;
 

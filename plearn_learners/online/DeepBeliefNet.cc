@@ -835,6 +835,9 @@ void DeepBeliefNet::fineTuningStep( const Vec& input, const Vec& target,
             expectation_gradients[ n_layers-2 ],
             activation_gradients[ n_layers-1 ] );
     }
+    else  {
+        expectation_gradients[ n_layers-2 ]->clear();
+    }
 
     if( use_classification_cost )
     {
@@ -859,8 +862,10 @@ void DeepBeliefNet::fineTuningStep( const Vec& input, const Vec& target,
 
         classification_module->bpropUpdate( layers[ n_layers-2 ]->expectation,
                                             class_output,
-                                            expectation_gradients[n_layers-2],
+                                            class_input_gradient,
                                             class_gradient );
+
+        expectation_gradients[n_layers-2] += class_input_gradient;
     }
 
     for( int i=n_layers-2 ; i>0 ; i-- )
