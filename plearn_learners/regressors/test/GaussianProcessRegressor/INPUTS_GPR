@@ -1,0 +1,8 @@
+!L 1 learner_hyperopt.plearn
+!M 1 setTrainingSet 2 MemoryVMatrix(data = 5 2 [5 10 6 11 5.5 11 10 15 20 3], inputsize=1, targetsize=1, weightsize=0) 0
+!M 1 train 0
+!M 1 getObject 0
+!M 1 computeOutput 1 [ 10 ]
+!M 1 computeOutput 1 [ 12 ]
+!M 1 computeOutputCovMat 1 4 1 [8 9 10 12]
+!Q
