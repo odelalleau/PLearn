@@ -1,0 +1,102 @@
+Type !? to get some help.
+!R 0 
+!R 0 
+!R 0 
+!R 1 GaussianProcessRegressor(
+kernel = *1 ->RationalQuadraticARDKernel(
+log_alpha = 1.045475 ;
+log_signal_sigma = 1.788859 ;
+log_global_sigma = 0 ;
+log_input_sigma = 1 [ 1.605025 ] ;
+log_noise_sigma = -1.084960 ;
+is_symmetric = 1 ;
+report_progress = 0 ;
+specify_dataset = *0 ;
+cache_gram_matrix = 0 ;
+data_inputsize = 1 ;
+n_examples = 5  )
+;
+weight_decay = 0 ;
+include_bias = 1 ;
+compute_confidence = 1 ;
+confidence_epsilon = 1.000000e-08 ;
+hyperparameters = 3 [ ("log_signal_sigma" , "0.0" )("log_noise_sigma" , "0.0" )("log_alpha" , "0.0" )] ;
+ARD_hyperprefix_initval = ("log_input_sigma" , "0.0" );
+optimizer = *2 ->ConjGradientOptimizer(
+verbosity = 1 ;
+expected_red = 1 ;
+no_negative_gamma = 1 ;
+sigma = 0.100000 ;
+rho = 0.050000 ;
+constrain_limit = 0.100000 ;
+max_extrapolate = 3 ;
+max_eval_per_line_search = 20 ;
+slope_ratio = 10 ;
+nstages = 1  )
+;
+alpha = 5  1  [ 
+-1.448018 	
+-1.758700 	
+2.977907 	
+0.366193 	
+-0.252937 	
+]
+;
+gram_inverse = 5  5  [ 
+2.375045 	0.318202 	-2.795014 	0.183693 	-0.015760 	
+0.318202 	2.916507 	-3.005313 	-0.300764 	0.023724 	
+-2.795014 	-3.005313 	5.750029 	0.045140 	-0.001069 	
+0.183693 	-0.300764 	0.045140 	0.105748 	-0.013296 	
+-0.015760 	0.023724 	-0.001069 	-0.013296 	0.029873 	
+]
+;
+target_mean = 1 [ 10 ] ;
+training_inputs = *3 ->MemoryVMatrix(
+data = 5  1  [ 
+5 	
+6 	
+5.5 	
+10 	
+20 	
+]
+;
+source = *0 ;
+fieldnames = []
+;
+writable = 0 ;
+length = 5 ;
+width = 1 ;
+inputsize = 1 ;
+targetsize = 0 ;
+weightsize = 0 ;
+extrasize = 0 ;
+metadatadir = ""  )
+;
+seed = 1827 ;
+stage = 10 ;
+n_examples = 5 ;
+inputsize = 1 ;
+targetsize = 1 ;
+weightsize = 0 ;
+forget_when_training_set_changes = 0 ;
+nstages = 10 ;
+report_progress = 1 ;
+verbosity = 1 ;
+nservers = 0 ;
+save_trainingset_prefix = ""  )
+
+!R 1 1 [ 15.000000 ] 
+!R 1 1 [ 14.402740 ] 
+!R 2 4  1  [ 
+13.500058 	
+14.425999 	
+15.000000 	
+14.402740 	
+]
+1 [ 4  4  [ 
+0.495755 	0.296446 	-1.492139e-13 	-0.618033 	
+0.296446 	0.372151 	-1.207922e-13 	-0.472278 	
+-6.394884e-14 	-2.060573e-13 	9.999907e-09 	-1.065814e-13 	
+-0.618033 	-0.472278 	-5.684341e-14 	2.538947 	
+]
+] 
