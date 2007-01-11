@@ -464,6 +464,29 @@ public:
                                      TVec< pair<real,real> >& intervals) const;
 
     /**
+     *  Version of computeOutput that is capable of returning an output matrix
+     *  given an input matrix (set of output vectors), as well as the complete
+     *  covariance matrix between the outputs
+     *
+     *  A separate covariance matrix is returned for each output dimension, but
+     *  these matrices are allowed to share the same storage.  This would be
+     *  the case in situations where the output covariance really depends only
+     *  on the location of the training inputs, as in, e.g.,
+     *  GaussianProcessRegressor.
+     *
+     *  The default implementation is to repeatedly call computeOutput,
+     *  followed by computeConfidenceFromOutput (sampled with probability
+     *  Erf[1/(2*Sqrt(2))], to extract 1*stddev given by subtraction of the two
+     *  intervals, then squaring the stddev to obtain the variance), thereby
+     *  filling a diagonal output covariance matrix.  If
+     *  computeConfidenceFromOutput returns 'false' (confidence intervals not
+     *  supported), the returned covariance matrix is filled with
+     *  MISSING_VALUE.
+     */
+    virtual void computeOutputCovMat(const Mat& inputs, Mat& outputs,
+                                     TVec<Mat>& covariance_matrices) const;
+    
+    /**
      *  Repeatedly calls computeOutput and computeConfidenceFromOutput with the
      *  rows of inputs.  Writes outputs_and_confidence rows (as a series of
      *  triples (output, low, high), one for each output)
@@ -598,6 +621,7 @@ private:
     TVec< pair<real,real> > remote_computeConfidenceFromOutput(const Vec& input,
                                                                const Vec& output,
                                                                real probability) const;
+    tuple<Mat, TVec<Mat> > remote_computeOutputCovMat(const Mat& inputs) const;
     void remote_batchComputeOutputAndConfidence(VMat inputs, real probability,
                                                 string pmat_fname) const;
     

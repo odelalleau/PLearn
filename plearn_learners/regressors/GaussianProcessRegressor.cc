@@ -106,7 +106,8 @@ PLEARN_IMPLEMENT_OBJECT(
 GaussianProcessRegressor::GaussianProcessRegressor() 
     : m_weight_decay(0.0),
       m_include_bias(true),
-      m_compute_confidence(false)
+      m_compute_confidence(false),
+      m_confidence_epsilon(1e-8)
 { }
 
 
@@ -139,8 +140,16 @@ void GaussianProcessRegressor::declareOptions(OptionList& ol)
         OptionBase::buildoption,
         "Whether to perform the additional train-time computations required\n"
         "to compute confidence intervals.  This includes computing a separate\n"
-        "inverse of the Gram matrix.\n");
+        "inverse of the Gram matrix.  Specification of this option is necessary\n"
+        "for calling both computeConfidenceFromOutput and computeOutputCovMat.\n");
 
+    declareOption(
+        ol, "confidence_epsilon", &GaussianProcessRegressor::m_confidence_epsilon,
+        OptionBase::buildoption,
+        "Small regularization to be added post-hoc to the computed output\n"
+        "covariance matrix and confidence intervals; this is mostly used as a\n"
+        "disaster prevention device, to avoid negative predictive variance\n");
+    
     declareOption(
         ol, "hyperparameters", &GaussianProcessRegressor::m_hyperparameters,
         OptionBase::buildoption,
@@ -209,6 +218,10 @@ void GaussianProcessRegressor::build_()
     if (! m_kernel)
         PLERROR("GaussianProcessRegressor::build_: 'kernel' option must be specified");
 
+    if (! m_kernel->is_symmetric)
+        PLERROR("GaussianProcessRegressor::build_: the kernel (%s) must be symmetric",
+                m_kernel->classname().c_str());
+    
     // If we are reloading the model, set the training inputs into the kernel
     if (m_training_inputs)
         m_kernel->setDataForKernelMatrix(m_training_inputs);
@@ -220,6 +233,9 @@ void GaussianProcessRegressor::build_()
         PLERROR("GaussianProcessRegressor::build_: 'hyperparameters' are specified "
                 "but no 'optimizer'; an optimizer is required in order to carry out "
                 "hyperparameter optimization");
+
+    if (m_confidence_epsilon < 0)
+        PLERROR("GaussianProcessRegressor::build_: 'confidence_epsilon' must be non-negative");
 }
 
 // ### Nothing to add here, simply calls build_
@@ -234,16 +250,19 @@ void GaussianProcessRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(m_kernel,               copies);
-    deepCopyField(m_hyperparameters,      copies);
-    deepCopyField(m_optimizer,            copies);
-    deepCopyField(m_alpha,                copies);
-    deepCopyField(m_gram_inverse,         copies);
-    deepCopyField(m_target_mean,          copies);
-    deepCopyField(m_training_inputs,      copies);
-    deepCopyField(m_kernel_evaluations,   copies);
-    deepCopyField(m_gram_inverse_product, copies);
-    deepCopyField(m_intervals,            copies);
+    deepCopyField(m_kernel,                     copies);
+    deepCopyField(m_hyperparameters,            copies);
+    deepCopyField(m_optimizer,                  copies);
+    deepCopyField(m_alpha,                      copies);
+    deepCopyField(m_gram_inverse,               copies);
+    deepCopyField(m_target_mean,                copies);
+    deepCopyField(m_training_inputs,            copies);
+    deepCopyField(m_kernel_evaluations,         copies);
+    deepCopyField(m_gram_inverse_product,       copies);
+    deepCopyField(m_intervals,                  copies);
+    deepCopyField(m_gram_traintest_inputs,      copies);
+    deepCopyField(m_gram_inv_traintest_product, copies);
+    deepCopyField(m_sigma_reductor,             copies);
 }
 
 
@@ -346,15 +365,23 @@ void GaussianProcessRegressor::train()
 void GaussianProcessRegressor::computeOutput(const Vec& input, Vec& output) const
 {
     PLASSERT( m_kernel && m_alpha.isNotNull() && m_training_inputs );
-    PLASSERT( output.size() == m_alpha.width() );
-    PLASSERT( input.size() == m_training_inputs.width() );
+    PLASSERT( m_alpha.width()  == output.size() );
+    PLASSERT( m_alpha.length() == m_training_inputs.length() );
+    PLASSERT( input.size()     == m_training_inputs.width()  );
 
     m_kernel_evaluations.resize(m_alpha.length());
-    m_kernel->evaluate_all_x_i(input, m_kernel_evaluations);
+    computeOutputAux(input, output, m_kernel_evaluations);
+}
+
+
+void GaussianProcessRegressor::computeOutputAux(
+    const Vec& input, Vec& output, Vec& kernel_evaluations) const
+{
+    m_kernel->evaluate_all_x_i(input, kernel_evaluations);
 
     // Finally compute k(x,x_i) * (M + \lambda I)^-1 y
     product(Mat(1, output.size(), output),
-            Mat(1, m_kernel_evaluations.size(), m_kernel_evaluations),
+            Mat(1, kernel_evaluations.size(), kernel_evaluations),
             m_alpha);
 
     if (m_include_bias)
@@ -375,7 +402,7 @@ void GaussianProcessRegressor::computeCostsFromOutputs(const Vec& input, const V
     // the confidence bounds.  If impossible, simply set missing-value for the
     // NLL cost.
     if (m_compute_confidence) {
-        static const float PROBABILITY = 0.3829;    // 0.5 stddev
+        static const float PROBABILITY = pl_erf(1. / (2*sqrt(2)));  // 0.5 stddev
         bool confavail = computeConfidenceFromOutput(input, output, PROBABILITY,
                                                      m_intervals);
         assert( confavail && m_intervals.size() == output.size() &&
@@ -418,7 +445,7 @@ bool GaussianProcessRegressor::computeConfidenceFromOutput(
     m_gram_inverse_product.resize(m_kernel_evaluations.size());
     product(m_gram_inverse_product, m_gram_inverse, m_kernel_evaluations);
     real sigma_reductor = dot(m_gram_inverse_product, m_kernel_evaluations);
-    real sigma = sqrt(max(0., base_sigma_sq - sigma_reductor));
+    real sigma = sqrt(max(0., base_sigma_sq - sigma_reductor + m_confidence_epsilon));
 
     // two-tailed
     const real multiplier = gauss_01_quantile((1+probability)/2);
@@ -428,6 +455,80 @@ bool GaussianProcessRegressor::computeConfidenceFromOutput(
         intervals[i] = std::make_pair(output[i] - half_width,
                                       output[i] + half_width);
     return true;
+}
+
+
+//#####  computeOutputCovMat  #################################################
+
+void GaussianProcessRegressor::computeOutputCovMat(
+    const Mat& inputs, Mat& outputs, TVec<Mat>& covariance_matrices) const
+{
+    PLASSERT( m_kernel && m_alpha.isNotNull() && m_training_inputs );
+    PLASSERT( m_alpha.width()  == outputsize() );
+    PLASSERT( m_alpha.length() == m_training_inputs.length() );
+    PLASSERT( inputs.width()   == m_training_inputs.width()  );
+    PLASSERT( inputs.width()   == inputsize() );
+    const int N = inputs.length();
+    const int M = outputsize();
+    const int T = m_training_inputs.length();
+    outputs.resize(N, M);
+    covariance_matrices.resize(M);
+
+    // Preallocate space for the covariance matrix, and since all outputs share
+    // the same matrix, copy it into the remaining elements of
+    // covariance_matrices
+    Mat& covmat = covariance_matrices[0];
+    covmat.resize(N, N);
+    for (int j=1 ; j<M ; ++j)
+        covariance_matrices[j] = covmat;
+
+    // Start by computing the matrix of kernel evaluations between the train
+    // and test outputs, and compute the output
+    m_gram_traintest_inputs.resize(N, T);
+    for (int i=0 ; i<N ; ++i) {
+        Vec cur_traintest_kereval = m_gram_traintest_inputs(i);
+        Vec cur_output = outputs(i);
+        computeOutputAux(inputs(i), cur_output, cur_traintest_kereval);
+    }
+
+    // Next compute the kernel evaluations between the test inputs; more or
+    // less lifted from Kernel.cc ==> must see with Olivier how to better
+    // factor this code
+    Mat& K = covmat;
+    K.resize(N,N);
+    const int mod = K.mod();
+    real Kij;
+    real* Ki;
+    real* Kji;
+    for (int i=0 ; i<N ; ++i) {
+        Ki  = K[i];
+        Kji = &K[0][i];
+        const Vec& cur_input_i = inputs(i);
+        for (int j=0 ; j<=i ; ++j, Kji += mod) {
+            Kij = m_kernel->evaluate(cur_input_i, inputs(j));
+            *Ki++ = Kij;
+            if (j<i)
+                *Kji = Kij;    // Assume symmetry, checked at build
+        }
+    }
+
+    // The predictive covariance matrix is (c.f. Rasmussen and Williams):
+    //
+    //    cov(f*) = K(X*,X*) - K(X*,X) [K(X,X) + sigma*I]^-1 K(X,X*)
+    //
+    // where X are the training inputs, and X* are the test inputs.
+    m_gram_inv_traintest_product.resize(T,N);
+    m_sigma_reductor.resize(N,N);
+    productTranspose(m_gram_inv_traintest_product, m_gram_inverse,
+                     m_gram_traintest_inputs);
+    product(m_sigma_reductor, m_gram_traintest_inputs,
+            m_gram_inv_traintest_product);
+    covmat -= m_sigma_reductor;
+
+    // As a preventive measure, never output negative variance, even though
+    // this does not garantee the non-negative-definiteness of the matrix
+    for (int i=0 ; i<N ; ++i)
+        covmat(i,i) = max(0.0, covmat(i,i) + m_confidence_epsilon);
 }
 
 

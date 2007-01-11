@@ -46,6 +46,7 @@
 #include <plearn/base/stringutils.h>
 #include <plearn/io/fileutils.h>
 #include <plearn/io/pl_log.h>
+#include <plearn/math/pl_erf.h>
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/misc/PLearnService.h>
 #include <plearn/misc/RemotePLearnServer.h>
@@ -356,6 +357,32 @@ void PLearner::declareMethods(RemoteMethodMap& rmm)
                  "know how to compute them.")));
 
     declareMethod(
+        rmm, "computeOutputCovMat", &PLearner::remote_computeOutputCovMat,
+        (BodyDoc("Version of computeOutput that is capable of returning an output matrix\n"
+                 "given an input matrix (set of output vectors), as well as the complete\n"
+                 "covariance matrix between the outputs.\n"
+                 "\n"
+                 "A separate covariance matrix is returned for each output dimension, but\n"
+                 "these matrices are allowed to share the same storage.  This would be\n"
+                 "the case in situations where the output covariance really depends only\n"
+                 "on the location of the training inputs, as in, e.g.,\n"
+                 "GaussianProcessRegressor.\n"
+                 "\n"
+                 "The default implementation is to repeatedly call computeOutput,\n"
+                 "followed by computeConfidenceFromOutput (sampled with probability\n"
+                 "Erf[1/(2*Sqrt(2))], to extract 1*stddev given by subtraction of the two\n"
+                 "intervals, then squaring the stddev to obtain the variance), thereby\n"
+                 "filling a diagonal output covariance matrix.  If\n"
+                 "computeConfidenceFromOutput returns 'false' (confidence intervals not\n"
+                 "supported), the returned covariance matrix is filled with\n"
+                 "MISSING_VALUE.\n"),
+         ArgDoc ("inputs", "Matrix containing the set of test points"),
+         RetDoc ("Two quantities are returned:\n"
+                 "- The matrix containing the expected output (as rows) for each input row.\n"
+                 "- A vector of covariance matrices between the outputs (one covariance\n"
+                 "  matrix per output dimension).\n")));
+    
+    declareMethod(
         rmm, "batchComputeOutputAndConfidencePMat",
         &PLearner::remote_batchComputeOutputAndConfidence,
         (BodyDoc("Repeatedly calls computeOutput and computeConfidenceFromOutput with the\n"
@@ -551,6 +578,52 @@ bool PLearner::computeConfidenceFromOutput(
     intervals.resize(output.size());
     intervals.fill(std::make_pair(MISSING_VALUE,MISSING_VALUE));  
     return false;
+}
+
+void PLearner::computeOutputCovMat(const Mat& inputs, Mat& outputs,
+                                   TVec<Mat>& covariance_matrices) const
+{
+    PLASSERT( inputs.width() == inputsize() && outputsize() > 0 );
+    const int N = inputs.length();
+    const int M = outputsize();
+    outputs.resize(N, M);
+    covariance_matrices.resize(M);
+
+    bool has_confidence  = true;
+    bool init_covariance = 0;
+    Vec cur_input, cur_output;
+    TVec< pair<real,real> > intervals;
+    for (int i=0 ; i<N ; ++i) {
+        cur_input  = inputs(i);
+        cur_output = outputs(i);
+        computeOutput(cur_input, cur_output);
+        if (has_confidence) {
+            static const real probability = pl_erf(1. / (2*sqrt(2)));
+            has_confidence = computeConfidenceFromOutput(cur_input, cur_output,
+                                                         probability, intervals);
+            if (has_confidence) {
+                // Create the covariance matrices only once; filled with zeros
+                if (! init_covariance) {
+                    for (int j=0 ; j<M ; ++j)
+                        covariance_matrices[j] = Mat(N, N, 0.0);
+                    init_covariance = true;
+                }
+                
+                // Compute the variance for each output j, and set it on
+                // element i,i of the j-th covariance matrix
+                for (int j=0 ; j<M ; ++j) {
+                    float stddev = intervals[j].second - intervals[j].first;
+                    float var = stddev*stddev;
+                    covariance_matrices[j](i,i) = var;
+                }
+            }
+        }
+    }
+
+    // If confidence intervals are not supported, fill the covariance matrices
+    // with missing values
+    for (int j=0 ; j<M ; ++j)
+        covariance_matrices[j] = Mat(N, N, MISSING_VALUE);
 }
 
 void PLearner::batchComputeOutputAndConfidence(VMat inputs, real probability, VMat outputs_and_confidence) const
@@ -899,6 +972,16 @@ PLearner::remote_computeConfidenceFromOutput(const Vec& input, const Vec& output
         return intervals;
     else
         return TVec< pair<real,real> >();
+}
+
+//! Version of computeOutputCovMat that's called by RMI
+tuple<Mat, TVec<Mat> >
+PLearner::remote_computeOutputCovMat(const Mat& inputs) const
+{
+    Mat outputs;
+    TVec<Mat> covmat;
+    computeOutputCovMat(inputs, outputs, covmat);
+    return make_tuple(outputs, covmat);
 }
 
 //! Version of batchComputeOutputAndConfidence that's called by RMI

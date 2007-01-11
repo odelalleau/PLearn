@@ -129,10 +129,18 @@ public:
     /**
      *  Whether to perform the additional train-time computations required
      *  to compute confidence intervals.  This includes computing a separate
-     *  inverse of the Gram matrix.
+     *  inverse of the Gram matrix.  Specification of this option is necessary
+     *  for calling both computeConfidenceFromOutput and computeOutputCovMat.
      */
     bool m_compute_confidence;
 
+    /**
+     *  Small regularization to be added post-hoc to the computed output
+     *  covariance matrix and confidence intervals; this is mostly used as a
+     *  disaster prevention device, to avoid negative predictive variance
+     */
+    real m_confidence_epsilon;
+    
     /**
      *  List of hyperparameters to optimize.  They must be specified in the
      *  form "option-name":initial-value, where 'option-name' is the name of an
@@ -204,6 +212,10 @@ public:
                                      real probability,
                                      TVec< pair<real,real> >& intervals) const;
 
+    /// Compute the posterior mean and covariance matrix of a set of inputs
+    virtual void computeOutputCovMat(const Mat& inputs, Mat& outputs,
+                                     TVec<Mat>& covariance_matrices) const;
+    
     /// Returns the names of the costs computed by computeCostsFromOutputs (and
     /// thus the test method). 
     virtual TVec<std::string> getTestCostNames() const;
@@ -228,6 +240,12 @@ protected:
     /// Declares the class options.
     static void declareOptions(OptionList& ol);
 
+    /// Utility internal function for computeOutput, which accepts the
+    /// destination for kernel evaluations in argument, and performs no error
+    /// checking nor vector resizes
+    void computeOutputAux(const Vec& input, Vec& output,
+                          Vec& kernel_evaluations) const;
+    
     /// Optimize the hyperparameters if any.  Return a Variable on which
     /// train() carries out a final fprop for obtaining the final trained
     /// learner parameters.
@@ -273,6 +291,16 @@ protected:
     //! Buffer to hold confidence intervals when computing costs from outputs
     mutable TVec< pair<real,real> > m_intervals;
 
+    //! Buffer to hold the Gram matrix of train inputs with test inputs.
+    //! Element i,j contains K(test(i), train(j)).
+    mutable Mat m_gram_traintest_inputs;
+
+    //! Buffer to hold the product of the gram inverse with gram_traintest_inputs
+    mutable Mat m_gram_inv_traintest_product;
+
+    //! Buffer to hold the sigma reductor for m_gram_inverse_product
+    mutable Mat m_sigma_reductor;
+    
 private: 
     /// This does the actual building. 
     void build_();
