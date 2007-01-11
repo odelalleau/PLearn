@@ -49,18 +49,29 @@ using namespace std;
 
 ProcessingVMatrix::ProcessingVMatrix()
     :inherited()
-    /* ### Initialise all fields to their default value */
 {
-    // ...
-
-    // ### You may or may not want to call build_() to finish building the object
-    // build_();
 }
 
 PLEARN_IMPLEMENT_OBJECT(
     ProcessingVMatrix,
     "VMatrix whose rows are processed using a VPL script",
-    "See class VMatLanguage for help on VPL syntax."
+    "This VMatrix class processes each for of a source VMatrix using VPL scripts.\n"
+    "The result of this VMatrix can be defined in one of two ways. The first way is to\n"
+    "use a single program (in option 'prg') to process the whole row\n"
+    "and set the inputsize, targetsize, weightsize and extrasize variables to defines\n"
+    "which part of the output of the VPL program is treated as input, target, etc.\n"
+    "of the VMatrix \n"
+    "\n"
+    "The second way is to have separate programs for each of the input, target, etc.\n"
+    "parts of the VMatrix (using options 'input_prg', 'target_prg', 'weight_prg' and\n"
+    "extra_prg), and then the respective inputsize, etc. will be inferred automatically\n"
+    "from the length of the output of each respective VPL program.\n"
+    "\n"
+    "Note that in both cases, an empty program will produce a vector of length 0 as output\n"
+    "If you want for example the output target vector of this VMatrix to be a copy of its\n"
+    "input target vector, this must be done explicitly using a short VPL program.\n"
+    "\n"
+    "See class VMatLanguage for a description of the VPL syntax."
     );
 
 void ProcessingVMatrix::getNewRow(int i, const Vec& v) const
