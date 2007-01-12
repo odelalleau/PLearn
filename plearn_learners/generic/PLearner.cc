@@ -598,7 +598,7 @@ void PLearner::computeOutputCovMat(const Mat& inputs, Mat& outputs,
         cur_output = outputs(i);
         computeOutput(cur_input, cur_output);
         if (has_confidence) {
-            static const real probability = pl_erf(1. / (2*sqrt(2)));
+            static const real probability = pl_erf(1. / (2*sqrt(2.0)));
             has_confidence = computeConfidenceFromOutput(cur_input, cur_output,
                                                          probability, intervals);
             if (has_confidence) {

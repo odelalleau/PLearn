@@ -111,7 +111,7 @@ void SummationKernel::build_()
     for (int i=0, n=m_terms.size() ; i<n ; ++i) {
         if (! m_terms[i])
             PLERROR("SummationKernel::build_: kernel for term[%d] is not specified",i);
-        is_symmetric = is_symmetric && m_terms[i]->is_symmetric
+        is_symmetric = is_symmetric && m_terms[i]->is_symmetric;
     }
 
     if (m_input_indexes.size() > 0 && m_terms.size() != m_input_indexes.size())
