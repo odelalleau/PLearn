@@ -48,11 +48,11 @@ SSH_MACHINES_MAP = { 'apstat.com': [ # 'embla',
                                      'kamado',
                                      'kamado',
                                      'kamado',
-                                     #'loki',
-                                     #'odin',
-                                     #'midgard',
-                                     #'valhalla',
-                                     #'vili'
+                                     # 'loki',
+                                     # 'odin',
+                                     # 'midgard',
+                                     # 'valhalla',
+                                     # 'vili'
                                      ],
 
                      'iro.umontreal.ca' : [ 'lhmm',    'lknn',    'lmfa',      'lmlp',
@@ -62,8 +62,8 @@ SSH_MACHINES_MAP = { 'apstat.com': [ # 'embla',
                      }
 
 # To override the default of 2
-MAX_LOADAVG = { 'inari'  : 6 ,
-                'kamado' : 6 }
+MAX_LOADAVG = { 'inari'  : 4 ,
+                'kamado' : 4 }
 
 BUFSIZE     = 4096
 SLEEP_TIME  = 15
@@ -367,6 +367,9 @@ class Dispatch( PyPLearnObject ):
 
     delay                    = PLOption(False)
 
+    ## Time interval (seconds) to wait before launching a new task
+    launch_delay_seconds     = PLOption(1)
+
     allow_unexpected_options = lambda self : False
     def __init__( self, oracles=None,
                   _predicate=inexistence_predicate, **overrides ):
@@ -474,8 +477,9 @@ class Dispatch( PyPLearnObject ):
 
                 if expdir is None:
                     expdir = generateExpdir()
-                    time.sleep(1) ## Making sure the next expdir will be generated at
-                                  ## another 'time', i.e. on another second
+                    ## Making sure the next expdir will be generated at
+                    ## another 'time', i.e. on another second
+                    time.sleep(self.launch_delay_seconds) 
                     arguments.append( "expdir=%s" % expdir )
 
             # # Module function defined above

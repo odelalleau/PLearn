@@ -264,8 +264,8 @@ void viewVMat(const VMat& vm, string dataset_spec)
                         // "e-6"...
                         //s = tostring(val);
                         // TODO: find a better solution
-                        char tmp[15];
-                        sprintf(tmp, "%14g", val);
+                        char tmp[1000];
+                        sprintf(tmp, "%14.12g", val);
                         s = tmp;
                     }
                     else {
