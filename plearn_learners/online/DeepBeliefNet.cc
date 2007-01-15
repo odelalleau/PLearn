@@ -379,7 +379,15 @@ void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(joint_layer, copies);
     deepCopyField(activation_gradients, copies);
     deepCopyField(expectation_gradients, copies);
+    deepCopyField(final_cost_input, copies);
+    deepCopyField(final_cost_value, copies);
+    deepCopyField(final_cost_output, copies);
+    deepCopyField(class_output, copies);
+    deepCopyField(class_gradient, copies);
     deepCopyField(final_cost_gradient, copies);
+    deepCopyField(pos_down_values, copies);
+    deepCopyField(pos_up_values, copies);
+
 }
 
 
