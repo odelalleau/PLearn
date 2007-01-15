@@ -586,6 +586,7 @@ real DynamicallyLinkedRBMsModel::dynamic_connections_update()
     // to set bias of "hidden_layer"
 
     dynamic_connections->fprop(previous_hidden_layer,hidden_layer->activation);
+    // hidden_layer->activation *= alpha;
     hidden_layer->expectation_is_up_to_date = false;
     hidden_layer->computeExpectation();
 
@@ -594,6 +595,11 @@ real DynamicallyLinkedRBMsModel::dynamic_connections_update()
     hidden_layer->bpropNLL(hidden_layer_target, nll, bias_gradient);
 
     // bpropUpdate through dynamic_connections
+    // real delta = 0;
+    // for(int i=0; i<hidden_layer->size; i++)
+    //    delta -= dynamic_learning_rate * bias_gradient[i] * hidden_layer->activation[i]/alpha;
+    // bias_gradient *= alpha;
+    // alpha += delta;
     dynamic_connections->bpropUpdate(previous_hidden_layer,
                                      hidden_layer->activation,
                                      input_gradient, bias_gradient);
@@ -836,7 +842,7 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
             //////////////////////////////////
             dynamic_connections->fprop(previous_hidden_layer, cond_bias);
            
-            hidden_layer->getAllBias(cond_bias); 
+            hidden_layer->getAllBias(cond_bias); //**************************
 
 
             //up phase
@@ -845,7 +851,7 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
             hidden_layer->computeExpectation();
             //////////////////////////////////
 
-            previous_hidden_layer << hidden_layer->expectation;//h_{t-2} au prochain tour
+            previous_hidden_layer << hidden_layer->expectation;//h_{t-2} au prochain tour//******************************
 
             //h*_{t}
             ////////////
