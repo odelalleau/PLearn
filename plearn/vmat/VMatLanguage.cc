@@ -350,9 +350,9 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
                 in.get(); // Read the ']' character.
                 token += end_of_token + ']';
             }
-	    vector<string> parts=split(token.substr(1),":]");
+	    vector<string> parts = split(token.substr(1, token.size()-2), ":");
 
-            // fieldcopy macro type is [start:end]
+            // fieldcopy macro type is [start:end] or [start:end:vpl_code]
             // fields can be refered to as %number or @name
 	    if (parts.size() == 2 || parts.size() == 3)
             {
@@ -392,9 +392,9 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
                 if(a>b)
                     PLERROR("In copyfield macro, you have specified a start field that is after the end field. Eg : [%10:%5]");
                 if(a==-1)
-                    PLERROR("In copyfield macro, unknown field :%s",astr.c_str());
+                    PLERROR("In copyfield macro, unknown field : '%s'",astr.c_str());
                 if(b==-1)
-                    PLERROR("In copyfield macro, unknown field :%s",astr.c_str());
+                    PLERROR("In copyfield macro, unknown field : '%s'",astr.c_str());
 
                 for(int i=a;i<=b;i++)
                 {
@@ -428,7 +428,7 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
                             "are only %d fields available", a, srcfieldnames.length());
                 fieldnames.push_back(srcfieldnames[a]);
             }
-            else PLERROR("Strange fieldcopy format. e.g : [%0:%5]. Found parts %s",join(parts," ").c_str());
+            else PLERROR("Strange fieldcopy format. e.g : [%0:%5]. Found parts '%s'",join(parts," ").c_str());
         }
 
         // did we find a comment?
@@ -497,13 +497,13 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
             {
                 pos=defines.find(string("@")+colname);
                 if(pos==defines.end())
-                    PLERROR("unknown field : %s",colname.c_str());
+                    PLERROR("unknown field : '%s'",colname.c_str());
                 colname=pos->second.substr(1);
             }
             int colnum=toint(colname);
             real r=vmsource->getStringVal(colnum,str);
             if(is_missing(r))
-                PLERROR("%s : %s is not a known string for this field",token.c_str(),str.c_str());
+                PLERROR("String '%s' is not a known string for the field '%s'", str.c_str(), token.c_str());
             processed_sourcecode+=tostring(r)+" ";
         }
         else processed_sourcecode+=token + " ";
@@ -559,7 +559,7 @@ void VMatLanguage::generateCode(PStream& processed_sourcecode)
                 pos=opcodes.find(token);
                 if(pos!=opcodes.end())
                     program.append(pos->second);
-                else PLERROR("Undefined keyword : %s",token.c_str());
+                else PLERROR("Undefined keyword : '%s'",token.c_str());
             }
         }
         car=peekAfterSkipBlanks(processed_sourcecode);
@@ -612,7 +612,7 @@ void VMatLanguage::compileStream(PStream & in, vector<string>& fieldnames)
         {
             fname = string("@") + fname;
             if(defines.find(fname) != defines.end())
-                PLERROR("fieldname %s is duplicate in processed matrix", fname.c_str());
+                PLERROR("fieldname '%s' is duplicate in processed matrix", fname.c_str());
             defines[fname]=string("%")+tostring(i);
         }
     }
@@ -704,7 +704,7 @@ void VMatLanguage::staticPreprocess(PStream& in, map<string, string>& defines,
                     if(defines.find(parts[2])!=defines.end())
                         b=toint(defines[parts[2]]);
                     else
-                        PLERROR("found a undefined non-numeric boundary in multifield declaration : '%s'",parts[2].c_str());
+                        PLERROR("Found an undefined non-numeric boundary in multifield declaration : '%s'",parts[2].c_str());
                 }
 
                 for(int i=a;i<=b;i++)
@@ -875,6 +875,14 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
             pstack.push(*((float*)pptr++));
             break;
         case 1: // getfieldval
+            // Question: why is the next PLERROR line commented? Is if made
+            // obsolete by another bound check earlier in the code? Or is it
+            // temporarily disabled? If the former, please *delete* the line,
+            // together with this comment. If the latter, please reenable the
+            // line or replace this comment by one explaining what needs to be
+            // done before the line can be reenabled. (Bound checking in
+            // general is a good idea...)
+            //
             //if(*pptr > fieldvalues.width()) PLERROR("Tried to acces an out of bound field in VPL code");
             pstack.push(pfieldvalues[*pptr++]);
             break;
@@ -1185,7 +1193,7 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
             {
                 JTime next = cal->calendarTimeOnOrAfter(date);
                 if(next<0)
-                    PLERROR("VMatLanguage :: attempting 'nextincal' for date %s on "
+                    PLERROR("VMatLanguage :: attempting 'nextincal' for date '%s' on "
                             "calendar '%s' but no next-date found",
                             d.info().c_str(), cal_name.c_str());
                 else
@@ -1205,7 +1213,7 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
             {
                 JTime next = cal->calendarTimeOnOrBefore(date);
                 if(next<0)
-                    PLERROR("VMatLanguage :: attempting 'previncal' for date %s on "
+                    PLERROR("VMatLanguage :: attempting 'previncal' for date '%s' on "
                             "calendar '%s' but no previous-date found",
                             d.info().c_str(), cal_name.c_str());
                 else
@@ -1292,7 +1300,8 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
             break;
         }        
         default:
-            PLERROR("BUG IN PreproInterpretor::run while running program: invalid opcode: %d", op);
+            PLASSERT_MSG(false, "BUG IN VMatLanguage::run while running program: unexpected opcode: " +
+                         tostring(op));
         }
     }
     // copy to result vec.
