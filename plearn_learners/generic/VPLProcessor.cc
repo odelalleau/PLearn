@@ -40,6 +40,7 @@
 
 /*! \file VPLProcessor.cc */
 
+#include <sstream>
 
 #include "VPLProcessor.h"
 #include <plearn/vmat/ProcessingVMatrix.h>
@@ -66,17 +67,6 @@ PLEARN_IMPLEMENT_OBJECT(
 
 void VPLProcessor::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
-
-    // ### ex:
-    // declareOption(ol, "myoption", &VPLProcessor::myoption, OptionBase::buildoption,
-    //               "Help text describing this option");
-    // ...
-
     declareOption(ol, "filtering_prg", &VPLProcessor::filtering_prg, OptionBase::buildoption,
                   "Optional program string in VPL language to apply as filtering on the training VMat.\n"
                   "This program is to produce a single value interpreted as a boolean: only the rows for which\n"
@@ -139,7 +129,6 @@ void VPLProcessor::build_()
 
 }
 
-// ### Nothing to add here, simply calls build_
 void VPLProcessor::build()
 {
     inherited::build();
@@ -193,6 +182,9 @@ void VPLProcessor::initializeInputPrograms()
 
 }
 
+/// @todo Check if this method works according to the documentation. For
+/// example, the next to last line (VMatr processed_trainset = new ...) has 
+/// no impact.
 void VPLProcessor::setTrainingSet(VMat training_set, bool call_forget)
 {
     orig_fieldnames = training_set->fieldNames();
@@ -212,13 +204,48 @@ void VPLProcessor::setTrainingSet(VMat training_set, bool call_forget)
 
 VMat VPLProcessor::processDataSet(VMat dataset) const
 {
-    VMat filtered_dataset= dataset;
+    VMat filtered_dataset = dataset;
     PPath filtered_dataset_metadatadir = getExperimentDirectory() / "filtered_dataset.metadata";
     if(!filtering_prg.empty())
         filtered_dataset = new FilteredVMatrix(dataset, filtering_prg, filtered_dataset_metadatadir, verbosity>1,
                                                use_filtering_prg_for_repeat, repeat_id_field_name, repeat_count_field_name);
 
-    return new ProcessingVMatrix(filtered_dataset, input_prg, target_prg, weight_prg, extra_prg);
+    // Since ProcessingVMatrix produces 0 length vectors when given an empty
+    // program (which is not the behavior that VPLProcessors is documented as
+    // implementing), we need to replace each program that is an empty string
+    // by a small VPL snippet that copies all the fields for the input or
+    // target, etc.
+
+    // First compute the start of each section (input, target, etc.) in the
+    // columns of the dataset.
+    const int start_of_targets = dataset->inputsize();
+    const int start_of_weights = start_of_targets + dataset->targetsize();
+    const int start_of_extras = start_of_weights + dataset->weightsize();
+
+    // Now compute each processing_*_prg program.
+    string processing_input_prg = input_prg;
+    if (processing_input_prg.empty() && dataset->inputsize() > 0) {
+        processing_input_prg = "[%0:%" + tostring(start_of_targets-1) + "]";
+    }
+    
+    string processing_target_prg = target_prg;
+    if (processing_target_prg.empty() && dataset->targetsize() > 0) {
+        processing_target_prg = "[%" + tostring(start_of_targets) + ":%" + tostring(start_of_weights-1) + "]";
+    }
+
+    string processing_weight_prg = weight_prg;
+    if (processing_weight_prg.empty() && dataset->weightsize() > 0) {
+        processing_weight_prg = "[%" + tostring(start_of_weights) + ":%" + tostring(start_of_extras-1) + "]";
+    }
+
+    string processing_extras_prg = extra_prg;
+    if (processing_extras_prg.empty() && dataset->extrasize() > 0) {
+        processing_extras_prg = "[%" + tostring(start_of_extras) + ":END]";
+    }
+    
+    return new ProcessingVMatrix(filtered_dataset, processing_input_prg,
+                                 processing_target_prg, processing_weight_prg,
+                                 processing_extras_prg);
 }
 
 void VPLProcessor::computeOutput(const Vec& input, Vec& output) const
