@@ -157,6 +157,10 @@ public:
     // in case bpropUpdate does not do anything, make it known
     virtual bool bpropDoesNothing() { return false; }
 
+    // Allows to change the learning rate, if the derived class has one and
+    // allows to do so.
+    virtual void setLearningRate(real dynamic_learning_rate);
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
@@ -169,8 +173,6 @@ public:
 
     //! Transforms a shallow copy into a deep copy
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-
-    virtual void setLearningRate(real& dynamic_learning_rate);
 
 protected:
     //#####  Protected Member Functions  ######################################

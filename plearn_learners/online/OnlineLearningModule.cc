@@ -105,6 +105,14 @@ void OnlineLearningModule::bbpropUpdate(const Vec& input, const Vec& output,
             "'bpropUpdate'.\n");
 }
 
+void OnlineLearningModule::setLearningRate( real dynamic_learning_rate )
+{
+    PLERROR("OnlineLearningModule does not have a learning rate that can be\n"
+            "changed from outside.\n"
+            "If your derived class has one, please implement setLearningrate()"
+            " in it.\n");
+}
+
 
 void OnlineLearningModule::build()
 {
@@ -115,14 +123,6 @@ void OnlineLearningModule::build()
 void OnlineLearningModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-}
-
-void OnlineLearningModule::setLearningRate( real& dynamic_learning_rate )
-{
- PLERROR("In OnlineLearningModule.cc: method 'setLearningRate' not"
-            "implemented.\n"
-            "Please implement it in your derived class, or use"
-            "'setLearningRate'.\n");
 }
 
 void OnlineLearningModule::declareOptions(OptionList& ol)
