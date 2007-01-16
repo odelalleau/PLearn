@@ -1052,7 +1052,7 @@ void NNet::train()
         optimizer->nstages = optstage_per_lstage;
         train_stats->forget();
         optimizer->early_stop = false;
-        optimizer->optimizeN(*train_stats);
+        early_stop = optimizer->optimizeN(*train_stats);
         // optimizer->verifyGradient(1e-6); // Uncomment if you want to check your new Var.
         train_stats->finalize();
         if(verbosity>2)
