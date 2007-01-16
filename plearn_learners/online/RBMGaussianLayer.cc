@@ -67,7 +67,6 @@ RBMGaussianLayer::RBMGaussianLayer( int the_size, real the_learning_rate ) :
     sigma_is_up_to_date( false )
 {
     size = the_size;
-    units_types = string( the_size, 'q' );
     activation.resize( the_size );
     sample.resize( the_size );
     expectation.resize( the_size );
@@ -225,11 +224,6 @@ void RBMGaussianLayer::declareOptions(OptionList& ol)
 
 void RBMGaussianLayer::build_()
 {
-    if( size < 0 )
-        size = int(units_types.size());
-    if( size != (int) units_types.size() )
-        units_types = string( size, 'q' );
-
     sigma.resize( size );
     sigma_is_up_to_date = false;
 

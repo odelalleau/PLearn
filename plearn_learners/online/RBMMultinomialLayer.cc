@@ -60,7 +60,6 @@ RBMMultinomialLayer::RBMMultinomialLayer( int the_size,
     inherited( the_learning_rate )
 {
     size = the_size;
-    units_types = string( the_size, 'l' );
     activation.resize( the_size );
     sample.resize( the_size );
     expectation.resize( the_size );
@@ -231,10 +230,6 @@ void RBMMultinomialLayer::declareOptions(OptionList& ol)
 
 void RBMMultinomialLayer::build_()
 {
-    if( size < 0 )
-        size = int(units_types.size());
-    if( size != (int) units_types.size() )
-        units_types = string( size, 'l' );
 }
 
 void RBMMultinomialLayer::build()

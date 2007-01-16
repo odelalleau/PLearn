@@ -87,12 +87,8 @@ void RBMLayer::forget()
 void RBMLayer::declareOptions(OptionList& ol)
 {
     declareOption(ol, "units_types", &RBMLayer::units_types,
-                  OptionBase::learntoption,
-                  "Each character of this string describes the type of an"
-                  " up unit:\n"
-                  "  - 'l' if the energy function of this unit is linear\n"
-                  "    (binomial or multinomial unit),\n"
-                  "  - 'q' if it is quadratic (for a gaussian unit).\n");
+                  OptionBase::nosave,
+                  "Obsolete option.");
 
     declareOption(ol, "size", &RBMLayer::size,
                   OptionBase::buildoption,

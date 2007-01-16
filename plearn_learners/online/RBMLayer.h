@@ -70,10 +70,7 @@ public:
     //! Number of units
     int size;
 
-    //! Each character of this string describes the type of an up unit:
-    //!   - 'l' if the energy function of this unit is linear (binomial or
-    //!     multinomial unit),
-    //!   - 'q' if it is quadratic (for a gaussian unit)
+    //! Obsolete option, still here for script compatibility
     string units_types;
 
     //#####  Learnt Options  ##################################################
@@ -176,12 +173,6 @@ public:
 
     //! forgets everything
     virtual void forget();
-
-    //! return units_types
-    inline string getUnitsTypes()
-    {
-        return units_types;
-    }
 
     //! Set the internal bias values to rbm_bias
     virtual void getAllBias(const Vec& rbm_bias);

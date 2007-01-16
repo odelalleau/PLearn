@@ -336,7 +336,6 @@ void RBMMixedLayer::clearStats()
 
 void RBMMixedLayer::build_()
 {
-    units_types = "";
     size = 0;
     activation.resize( 0 );
     sample.resize( 0 );
@@ -353,7 +352,6 @@ void RBMMixedLayer::build_()
         init_positions[i] = size;
 
         PP<RBMLayer> cur_layer = sub_layers[i];
-        units_types += cur_layer->units_types;
         size += cur_layer->size;
 
         activation = merge( activation, cur_layer->activation );

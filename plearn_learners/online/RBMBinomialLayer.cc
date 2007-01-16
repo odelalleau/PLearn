@@ -59,7 +59,6 @@ RBMBinomialLayer::RBMBinomialLayer( int the_size, real the_learning_rate ) :
     inherited( the_learning_rate )
 {
     size = the_size;
-    units_types = string( the_size, 'l' );
     activation.resize( the_size );
     sample.resize( the_size );
     expectation.resize( the_size );
@@ -225,10 +224,6 @@ void RBMBinomialLayer::declareOptions(OptionList& ol)
 
 void RBMBinomialLayer::build_()
 {
-    if( size < 0 )
-        size = int(units_types.size());
-    if( size != (int) units_types.size() )
-        units_types = string( size, 'l' );
 }
 
 void RBMBinomialLayer::build()
