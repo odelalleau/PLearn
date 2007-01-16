@@ -894,12 +894,12 @@ Mat PLearner::computeInputOutputConfMat(VMat inputs, real probability) const
         Vec hiconf  = v.subVec(nin+2*nout, nout);
         inputs->getRow(i, invec);
         computeOutput(invec, outvec);
-        bool conf_avail = computeConfidenceFromOutput(invec, outvec, probability,
-                                                      intervals);
+        bool conf_avail = computeConfidenceFromOutput(invec, outvec,
+                                                      probability, intervals);
         if (conf_avail) {
-            for (int i=0, n=intervals.size() ; i<n ; ++i) {
-                lowconf[i] = intervals[i].first;
-                hiconf[i]  = intervals[i].second;
+            for (int j=0, n=intervals.size() ; j<n ; ++j) {
+                lowconf[j] = intervals[j].first;
+                hiconf[j]  = intervals[j].second;
             }
         }
         else {
