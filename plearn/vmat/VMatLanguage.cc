@@ -1271,15 +1271,15 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
                     vars[i][j] = pstack.pop();
             }
 
-            Vec result(result_size, 1);
+            Vec res(result_size, 1);
             int step_size = result_size;
 
-            // Accumulate variable product into "result" variable.
+            // Accumulate variable product into "res" variable.
             for (int var_index = 0; var_index < num_vars; var_index++) {
                 step_size /= vars[var_index].size();
                 for (int var_data_index = 0; var_data_index < vars[var_index].size(); var_data_index++) {
                     for (int dest_index = 0; dest_index < result_size; dest_index += step_size) {
-                        result[dest_index] *= vars[var_index][var_data_index];
+                        res[dest_index] *= vars[var_index][var_data_index];
                     }
                 }
             }
@@ -1287,7 +1287,7 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
 
             // Put the result onto the stack
             for (int i = 0; i < result_size; i++)
-                pstack.push(result[i]);
+                pstack.push(res[i]);
             break;
         }
         case 65: // thermometer
