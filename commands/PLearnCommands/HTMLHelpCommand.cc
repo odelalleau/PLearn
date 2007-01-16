@@ -390,7 +390,7 @@ void HTMLHelpCommand::helpOnClass(const string& classname, ostream& out,
             defclass = (*olIt)->optionHolderClassName(obj);
         }
         out << string("  <tr class=\"") + (index++ % 2 == 0? "even" : "odd")
-			                            + "\">" << endl
+                                        + "\">" << endl
             << "    <td>"
             << "<div class=\"opttype\">" << highlight_known_classes(quote(opttype))
             << "</div>" << endl
@@ -435,7 +435,7 @@ void HTMLHelpCommand::helpOnClass(const string& classname, ostream& out,
             if( (*entry.isa_method)(o) ) {
                 string helpurl = string("class_") + it->first + ".html";
                 out << string("  <tr class=\"") +
-					   (index++%2 == 0? "even" : "odd") + "\">" << endl
+                       (index++%2 == 0? "even" : "odd") + "\">" << endl
                     << "    <td><a href=\"" << helpurl << "\">"
                     << quote(it->first) << "</a></td><td>" << quote(e.one_line_descr)
                     << "    </td>"
@@ -459,10 +459,10 @@ void HTMLHelpCommand::helpOnClass(const string& classname, ostream& out,
     index = 0;
     while (rmm) {
         RemoteMethodMap::MethodMap::const_iterator
-            it = rmm->begin(), end = rmm->end();
-        for ( ; it != end ; ++it ) {
-            const string& method_name = it->first.first;
-            const RemoteTrampoline* t = it->second;
+            rmmIt = rmm->begin(), end = rmm->end();
+        for ( ; rmmIt != end ; ++rmmIt ) {
+            const string& method_name = rmmIt->first.first;
+            const RemoteTrampoline* t = rmmIt->second;
             PLASSERT( t );
             const RemoteMethodDoc& doc = t->documentation();
 
