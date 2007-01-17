@@ -157,7 +157,7 @@ void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
     }
 }
 
-void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias, 
+void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias,
                            const Vec& output,
                            Vec& input_gradient, Vec& rbm_bias_gradient,
                            const Vec& output_gradient)
@@ -192,7 +192,7 @@ real RBMBinomialLayer::fpropNLL(const Vec& target)
         expectation_i = expectation[i];
         if(!fast_exact_is_equal(target_i,0.0))
             ret -= target_i * pl_log(expectation_i);
-        if(!fast_exact_is_equal(target_i,1.0)) 
+        if(!fast_exact_is_equal(target_i,1.0))
             ret -= (1-target_i) * pl_log(1-expectation_i);
     }
     return ret;

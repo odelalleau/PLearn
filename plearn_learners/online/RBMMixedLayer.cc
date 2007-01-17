@@ -128,7 +128,7 @@ void RBMMixedLayer::fprop( const Vec& input, Vec& output ) const
     }
 }
 
-void RBMMixedLayer::fprop( const Vec& input, const Vec& rbm_bias, 
+void RBMMixedLayer::fprop( const Vec& input, const Vec& rbm_bias,
                            Vec& output ) const
 {
     PLASSERT( input.size() == input_size );
@@ -172,7 +172,7 @@ void RBMMixedLayer::bpropUpdate( const Vec& input, const Vec& output,
     }
 }
 
-void RBMMixedLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias, 
+void RBMMixedLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias,
                                 const Vec& output,
                                 Vec& input_gradient, Vec& rbm_bias_gradient,
                                 const Vec& output_gradient)

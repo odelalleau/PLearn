@@ -159,7 +159,7 @@ void RBMMultinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
     }
 }
 
-void RBMMultinomialLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias, 
+void RBMMultinomialLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias,
                                       const Vec& output,
                                       Vec& input_gradient, Vec& rbm_bias_gradient,
                                       const Vec& output_gradient)
@@ -190,7 +190,7 @@ real RBMMultinomialLayer::fpropNLL(const Vec& target)
     PLASSERT( target.size() == input_size );
 
     real ret = 0;
-    
+
     real target_i, expectation_i;
     for( int i=0 ; i<size ; i++ )
     {
@@ -214,7 +214,7 @@ void RBMMultinomialLayer::bpropNLL(const Vec& target, real nll, Vec bias_gradien
     real* tar = target.data();
     real* biasg = bias_gradient.data();
     for( int i=0 ; i<size ; i++ )
-        biasg[i] = tar[i] - sum_tar * exp[i];    
+        biasg[i] = tar[i] - sum_tar * exp[i];
 }
 
 void RBMMultinomialLayer::declareOptions(OptionList& ol)

@@ -128,9 +128,9 @@ public:
     //! the expectation
     virtual void fprop( const Vec& input, Vec& output ) const;
 
-    //! computes the expectation given the conditional input 
+    //! computes the expectation given the conditional input
     //! and the given bias
-    virtual void fprop( const Vec& input, const Vec& rbm_bias, 
+    virtual void fprop( const Vec& input, const Vec& rbm_bias,
                         Vec& output ) const;
 
     //! back-propagates the output gradient to the input,
@@ -140,15 +140,15 @@ public:
                              const Vec& output_gradient) = 0 ;
 
     //! back-propagates the output gradient to the input and the bias
-    virtual void bpropUpdate(const Vec& input, const Vec& rbm_bias, 
+    virtual void bpropUpdate(const Vec& input, const Vec& rbm_bias,
                              const Vec& output,
                              Vec& input_gradient, Vec& rbm_bias_gradient,
                              const Vec& output_gradient) ;
 
-    //! Computes the negative log-likelihood of target given the 
+    //! Computes the negative log-likelihood of target given the
     //! internal activations of the layer
     virtual real fpropNLL(const Vec& target);
-    
+
     //! Computes the gradient of the negative log-likelihood of target
     //! with respect to the layer's bias, given the internal activations
     virtual void bpropNLL(const Vec& target, real nll, Vec bias_gradient);
@@ -184,7 +184,7 @@ public:
     //! Computes the contrastive divergence bias with respect to the bias
     //! (or activations, which is equivalent), given the positive and
     //! negative phase values.
-    virtual void bpropCD(const Vec& pos_values, const Vec& neg_values, 
+    virtual void bpropCD(const Vec& pos_values, const Vec& neg_values,
                     Vec& bias_gradient);
 
     //#####  PLearn::Object Protocol  #########################################

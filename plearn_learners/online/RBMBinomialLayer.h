@@ -90,7 +90,7 @@ public:
     virtual void fprop( const Vec& input, Vec& output ) const;
 
     //! forward propagation with provided bias
-    virtual void fprop( const Vec& input, const Vec& rbm_bias, 
+    virtual void fprop( const Vec& input, const Vec& rbm_bias,
                         Vec& output ) const;
 
     //! back-propagates the output gradient to the input
@@ -98,15 +98,15 @@ public:
                              Vec& input_gradient, const Vec& output_gradient);
 
     //! back-propagates the output gradient to the input and the bias
-    virtual void bpropUpdate(const Vec& input, const Vec& rbm_bias, 
+    virtual void bpropUpdate(const Vec& input, const Vec& rbm_bias,
                              const Vec& output,
                              Vec& input_gradient, Vec& rbm_bias_gradient,
                              const Vec& output_gradient) ;
 
-    //! Computes the negative log-likelihood of target given the 
+    //! Computes the negative log-likelihood of target given the
     //! internal activations of the layer
     virtual real fpropNLL(const Vec& target);
-    
+
     //! Computes the gradient of the negative log-likelihood of target
     //! with respect to the layer's bias, given the internal activations
     virtual void bpropNLL(const Vec& target, real nll, Vec bias_gradient);

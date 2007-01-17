@@ -154,7 +154,7 @@ void GradNNetLayerModule::bpropUpdate(const Vec& input, const Vec& output,
 // Simply updates and propagates back gradient
 // PA - the original version of this function propagated the error to the inputs,
 // then called the above bpropUpdate() - this proved inefficient as the weight
-// matrix had to be iterated over twice. 
+// matrix had to be iterated over twice.
 // However, since we're not using blas anymore, the speedup is only when
 // compiled in optimized mode (ie debug is much slower).
 void GradNNetLayerModule::bpropUpdate(const Vec& input, const Vec& output,

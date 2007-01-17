@@ -205,7 +205,7 @@ void RBMLayer::fprop( const Vec& input, const Vec& rbm_bias,
     PLERROR("In RBMLayer::fprop(): not implemented");
 }
 
-void RBMLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias, 
+void RBMLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias,
                            const Vec& output,
                            Vec& input_gradient, Vec& rbm_bias_gradient,
                            const Vec& output_gradient)
@@ -316,7 +316,7 @@ void RBMLayer::bpropCD(Vec& bias_gradient)
         bg[i] = bps[i]/pos_count - bns[i]/neg_count;
 }
 
-void RBMLayer::bpropCD(const Vec& pos_values, const Vec& neg_values, 
+void RBMLayer::bpropCD(const Vec& pos_values, const Vec& neg_values,
                        Vec& bias_gradient)
 {
     // grad = bias_pos_stats/pos_count - bias_neg_stats/neg_count
