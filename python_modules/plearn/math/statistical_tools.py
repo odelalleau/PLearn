@@ -333,7 +333,7 @@ def ols_regression(X, Y, intercept=True):
         prediction = mmult(_X_, aug_beta)
         epsilon[ycol][where(isNotNaN(Ycol))] = Y - prediction
 
-    # Is sigma really supposed to be NxN?
+    # The estimate of the covariance matrix of the errors
     sigma = mmult(epsilon, transpose(epsilon)) / T    
 
     # if hccm is not None:
@@ -354,99 +354,10 @@ def ols_regression(X, Y, intercept=True):
         
     return alpha, beta, epsilon, sigma
 
-#####  Very First Sketch...  ################################################
 
-class LinearGMM(object):
-    """A GMM implementation assuming a linear model and a predetermined 'X'.
+#####  Builtin Tests  #######################################################
 
-    NOTE:
-    This thing is a *very first* sketch toward a more general GMM class...
-    
-    Notation:
-    
-    X (T x k), \beta \in \RSet[k], y,u \in \RSet[T]
-       y = X \beta + u
-         where E[ u u\Tr ] = \Omega (T x T)
-    
-    Instruments W (T x l), T > l, l >= k, 
-       E[ u_t | W_t ] = 0;  E[ u_t u_s | W_t W_s ] = \omega_{ts}
-    
-    The above implies that:
-       E[ W_t\Tr ( y_t - X_t \beta ) ] = 0 \forall t
-    
-    Suppose J (l x k) full rank is s.t.
-       J\Tr W\Tr (y- X\beta) = 0
-    => Orthogonality conditions!!
-    => J = (W\Tr \Omega_0 W)\inv W\Tr X
-     where the 0 subscript denotes the TRUE value of \Omega
-    
-    GMM criterion:
-    
-     Q(\beta, y)
-      = (y - X \beta)\Tr W (W\Tr \Omega_0 W)\inv W\Tr (y - X\beta)
-      = T^{-0.5} (y - X \beta)\Tr W (T\inv W\Tr \Omega_0 W)\inv W\Tr (y - X\beta) T^{-0.5}
-    
-     => Q(\beta_0, y_0) \simASY \Chi^2(l)
-    
-    \betahat_{GMM}
-        = \BETA(\Omega_0)
-        = (X\Tr W (W\Tr \Omega_0 W)\inv W\Tr X)\inv X\Tr W (W\Tr \Omega_0 W)\inv W\Tr y
-    
-    Inefficient
-      \betahat_{iGMM} = (X\Tr W \Lambda W\Tr X)\inv X\Tr W \Lambda W\Tr y
-    
-    IV with W:  \uhat
-      => Let \Omegahat = Diag(\uhat)
-      => \betahat_{FGMM} = \BETA(\Omegahat)
-    
-    \Varhat( \betahat_{FGMM} ) = (X\Tr W (W\Tr \Omegahat W)\inv W\Tr X)\inv
-    """
-
-    def __init__(self, y, X, W):
-        self.y = y
-        self.X = X
-        self.W = W
-
-        T = len(y)
-        self.T = T
-        assert X.shape[0] == T
-        assert W.shape[0] == T
-        assert W.shape[1] >= X.shape[1]
-
-        # Performing IV with W as instruments
-        Xt       = transpose(X)
-        Wt       = transpose(W)
-        WtW      = mmult(Wt, W)
-        WtW_inv  = inverse(WtW)
-        ProjW    = mmult(W, WtW_inv, Wt) 
-        XtProjW  = mmult(Xt, ProjW)
-
-        self.beta_iv = mmult(inverse(mmult(XtProjW, X)), XtProjW, y)
-
-        # The IV residuals
-        self.uhat_iv = y - mmult(X, self.beta_iv)
-        
-        # Consistent estimator of the covariance matrix of the error terms
-        Omegahat = zeros((T, T), type=Float64)
-        for t in range(T):
-            Omegahat[t,t] = self.uhat_iv[t]**2
-
-        # Feasible GMM
-        XtW         = mmult(Xt, W)
-        WtX         = transpose(XtW)
-        Lambda      = inverse( mmult(Wt, Omegahat, W) )
-        XtWLambda   = mmult(XtW, Lambda)
-        XtWLambdaWt = mmult(XtWLambda, Wt)
-
-        # This is the (feasible) GMM beta!
-        self.beta = mmult(inverse(mmult(XtWLambdaWt, X)), XtWLambdaWt, y)
-
-        # And these are the residuals
-        self.uhat = y - mmult(X, self.beta)
-
-
-
-def test_ols_regression(T, K, alpha=0.0, scale=10.0, plot=False):
+def _test_ols_regression(T, K, alpha=0.0, scale=10.0, plot=False):
     u = normal(0, 1, (T,))
     beta = range(1, K+1)
     
@@ -491,35 +402,29 @@ def test_ols_regression(T, K, alpha=0.0, scale=10.0, plot=False):
 
     return X, Y, olsR, ols, scipy
 
+class StatsHolder(dict):
+    def __init__(self, **kwargs):
+        dict.__init__(self, kwargs)
+
+    __getattr__ = dict.__getitem__
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
+
 if __name__ == "__main__":        
     from numarray.random_array import seed, random, normal
     seed(02, 25)
     
     # Setting the problem
     print "T=10, K=1, (a, b)=(50, 1)"
-    test_ols_regression(10, 1, 50.0, plot=True)
+    _test_ols_regression(10, 1, 50.0, plot=True)
 
     print
     print "T=100, K=1, (a, b)=(25, 1)"
-    test_ols_regression(100, 1, 25.0, plot=True)
+    _test_ols_regression(100, 1, 25.0, plot=True)
 
     print
     print "T=100, K=3 (a, b)=(25, 1)"
     try:
-        test_ols_regression(100, 3, 25.0)
+        _test_ols_regression(100, 3, 25.0)
     except:
         print "SciPy FAILS!"
-
-    # # Performing OLS
-    # Xt = transpose(X)
-    # XtX = mmult(Xt, X)
-    # XtY = mmult(Xt, y)
-    # beta_ols = mmult( inverse(XtX), XtY)
-    # print "Distance beta_0 and beta_ols:", matrix_distance(beta, beta_ols)
-    # 
-    # gmm = LinearGMM(y, X, X)
-    # print "Distance beta_ols and beta_IV:", matrix_distance(beta_ols, gmm.beta_iv)
-    # print "Distance beta_ols and beta_GMM:", matrix_distance(beta_ols, gmm.beta)
-    # 
-    # print "GMM residuals:"
-    # print gmm.uhat

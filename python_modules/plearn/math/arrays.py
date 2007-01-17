@@ -105,6 +105,14 @@ def lag(series, k=1, fill=(lambda shape : array([]))):
 def matrix_distance(m1, m2):
     return maximum.reduce( fabs(ravel(m1-m2)) )
 
+def matrix2vector(mat):
+    shp = shape(mat)
+    assert len(shp)==2
+    length = shp[0]*shp[1]
+
+    mat.setshape((length,))
+    return shp
+
 def mmult(*args):
     """Shorthand for matrix multiplication
 
@@ -113,7 +121,14 @@ def mmult(*args):
     function accepts as many matrices as one wants, processing multiplication
     'from left to right'.
     """
+    #mmult_shapes(*args)
     return reduce(matrixmultiply, args)
+
+def mmult_shapes(*args):
+    """For debugging purposes; print shapes."""
+    for a in args:
+        print shape(a),
+    print
 
 def rrange(start, stop, step, include_stop=False):
     """Behaves like the builtin range() function but with real arguments.
@@ -137,6 +152,35 @@ def sign(m):
     m = asarray(m)
     return zeros(shape(m))-ufunc.less(m,0)+ufunc.greater(m,0)
 
+def symmetric(m, precision=1e-6, rel_precision=1e-6):
+    return (asymmetry(m, precision, rel_precision) is None)
+    
+def asymmetry(m, precision=1e-6, rel_precision=1e-6):
+    n, nn = shape(m)
+    if n != nn:
+        return n, nn
+    for i in range(n):
+        for j in range(i+1, n):
+            if fabs(m[i,j]-m[j,i]) > max(precision, rel_precision*m[i,j]):
+                return i, j
+    return None
+
+def assert_symmetric(m, callback=None, precision=1e-6, rel_precision=1e-6):
+    asym = asymmetry(m, precision, rel_precision)
+    if asym is not None:
+        i, j = asym
+        if callback: callback()
+        raise AssertionError("Matrix is not symmetric (%d, %d):\n%s"%(i,j,m))
+
+def to_diagonal(a):
+    """Returns a diagonal matrix with elements in 'a' on the diagonal."""
+    assert len(a.shape)==1
+    n = len(a)
+    A = zeros(shape=(n,n), type=a.type())
+    for i in range(n):
+        A[i,i] = a[i]
+    return A
+
 def fast_softmax( x ):
     s = 0
     res = []
@@ -148,10 +192,9 @@ def fast_softmax( x ):
     return [ r/s for r in res ]
 
 def hasNaN(f):
-    has = sum(isNaN(f))
-    while not isinstance(has, int):
-        has = sum(has)
-    return has
+    f = ravel(f)
+    f = choose(isNaN(f), (0, 1))
+    return sum(f)
     
 def isNaN(f):
     """Return 1 where f contains NaN values, 0 elsewhere."""
@@ -192,6 +235,7 @@ if __name__ == '__main__':
     
     a = [1.0, float('NaN'), 3.0, float('NaN')]
     print a
+    print hasNaN(a)
     print replace_nans(a)
 
     print 
@@ -199,3 +243,15 @@ if __name__ == '__main__':
     print kronecker(array([1, 0]), identity(3))
     print
     print kronecker(array([[1, 2],[3, 4]]), identity(3))
+
+    print
+    print "matrix2vector"
+    a = array([[1,2,3], [4,5,6]])
+    print a
+    a_shape = matrix2vector(a)
+    print a
+    a.setshape(a_shape)
+    print a
+    
+    
+    

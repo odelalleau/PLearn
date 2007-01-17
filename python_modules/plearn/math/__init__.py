@@ -31,11 +31,11 @@
 
 # Author: Christian Dorion
 
-# Most of the content of this __init__ file has been moved to 'arrays.py'. For
-# backward comptibility, the functions defined there are forwarded
-# here. However, the 'arrays' module requires numarray... this 'try'
-# statement should make sure other stuff defined here still work even when
-# numarray is not available.
+# Most of the content of this __init__ file has been moved to
+# 'arrays.py'. For backward comptibility, the functions defined there are
+# forwarded here. However, the 'arrays' module requires numarray... this
+# 'try' statement should make sure other stuff defined here still work even
+# when numarray is not available.
 try:
     from arrays import *
 except ImportError:
