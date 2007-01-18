@@ -1,6 +1,7 @@
 import inspect, logging, operator, os, select, signal, sys, time
 
 from popen2 import Popen4
+from datetime import datetime, timedelta
 
 from plearn.utilities.ppath         import get_domain_name
 from plearn.utilities.moresh        import *
@@ -38,21 +39,17 @@ TASK_TYPE_MAP    = { 'apstat.com':       'SshTask',
                      'iro.umontreal.ca': 'ClusterTask'
                      }
 
-# Used only for clusters of type 'ssh'.
-SSH_MACHINES_MAP = { 'apstat.com': [ # 'embla',
-                                     'inari',
-                                     'inari',
-                                     'inari',
-                                     'inari',
+# Used only for clusters of type 'ssh'. Do not enter the same machine more
+# than once: use the MAX_LOADAVG map to allow for higher maximum load
+# average than the default of 2.
+SSH_MACHINES_MAP = { 'apstat.com': [ 'embla',
+                                     'inari', 
                                      'kamado',
-                                     'kamado',
-                                     'kamado',
-                                     'kamado',
-                                     # 'loki',
-                                     # 'odin',
-                                     # 'midgard',
-                                     # 'valhalla',
-                                     # 'vili'
+                                     'loki',
+                                     'odin',
+                                     'midgard',
+                                     'valhalla',
+                                     'vili'
                                      ],
 
                      'iro.umontreal.ca' : [ 'lhmm',    'lknn',    'lmfa',      'lmlp',
@@ -61,29 +58,23 @@ SSH_MACHINES_MAP = { 'apstat.com': [ # 'embla',
                                             ]                         
                      }
 
-# To override the default of 2
+# To override the default of 1
 MAX_LOADAVG = { 'inari'  : 4 ,
                 'kamado' : 4 }
 
-BUFSIZE     = 4096
-SLEEP_TIME  = 15
-LOGDIR      = None  # May be set by set_logdir()
-DOMAIN_NAME = get_domain_name()
+# Do not perform a new query for the loadavg until recently launched
+# processes are likely to have started. 
+LOADAVG_DELAY = timedelta(seconds=15)
+BUFSIZE       = 4096
+SLEEP_TIME    = 15
+LOGDIR        = None  # May be set by set_logdir()
+DOMAIN_NAME   = get_domain_name()
 
 #######  To be assigned to a subclass of TaskType when these will be declared
 Task = None
 
 #######  Module Functions  ####################################################
 
-################################################################################
-# KNOWN ISSUE: The current way of managing machines is slightly hackish
-# with regard to load average. Here we have to multiply instances of the
-# name of a machine by ist MAX_LOADAVG due the remove in getLaunchCommand()
-#
-#           self.host = self.listAvailableMachines().next()
-#           self._machines.remove( self.host )
-# 
-################################################################################
 #DBG: import traceback
 #DBG: _waitpid = os.waitpid
 #DBG: def my_waitpid(*args):
@@ -94,9 +85,7 @@ Task = None
 
 def get_ssh_machines():
     from random import shuffle
-    machines = []
-    for m in SSH_MACHINES_MAP[ DOMAIN_NAME ]:
-        machines.extend( [m]*MAX_LOADAVG.get(m,2) )        
+    machines = list( SSH_MACHINES_MAP[DOMAIN_NAME] ) # copy
     shuffle( machines )
     return machines
 
@@ -266,42 +255,83 @@ class TaskType:
 
 class SshTask( TaskType ):
 
+    Xopt = '-x'
     _machines = get_ssh_machines()
+    _loadavg  = {}
+    _available_machines = None
     
-    def listAvailableMachines( cls ):
-        for m in cls._machines:
-            max_loadavg = MAX_LOADAVG.get(m, 2)
-            
-            p = os.popen('ssh -x %s cat /proc/loadavg' % m)
-            line = p.readline()
-            loadavg = float(line.split()[1])
+    def getLoadAvg(cls, machine):
+        print "\nQuery to", machine
+        if machine in cls._loadavg:
+            # For typical PLearn/FinLearn tasks, the process begins by
+            # loading the script, creating the expdir, etc., which delays
+            # the impact of the process on the load average...
+            t, loadavg = cls._loadavg[machine]
+            cur_t  = datetime(*time.localtime()[:6])
+            print "Saved %f at %s (now %s)"%(loadavg, t, cur_t)
+            if cur_t < t+LOADAVG_DELAY:
+                return loadavg
 
+        # Query for the load average
+        print "NEW QUERY!"
+        p = os.popen('ssh -x %s cat /proc/loadavg' % machine)
+        line = p.readline()
+        return float(line.split()[0]) # Take the last minute average
+    getLoadAvg = classmethod(getLoadAvg)
+    
+    def listAvailableMachines(cls):
+        for m in cls._machines:
+            loadavg = cls.getLoadAvg(m)
+            max_loadavg = MAX_LOADAVG.get(m, 1.0)
+            print "Load %f / %f"%(loadavg, max_loadavg)
             if loadavg < max_loadavg:
+                # Register the load average *plus* one, taking in account
+                # the process we are about to launch
+                cls._loadavg[m] = datetime(*time.localtime()[:6]), loadavg+1
+                print "At %s Saving %f"%cls._loadavg[m]
+                print
                 yield m
     listAvailableMachines = classmethod(listAvailableMachines)
+
+    def nextAvailableMachine(cls):
+        # If a StopIteration exception is encountered on an already began
+        # loop, we simply have queried each machine once and shall start
+        # over. If such an exception is raise on a new loop, then no
+        # machines are currently available and we raise an
+        # EmptyTaskListError so as to wait a little while before querying
+        # again...
+        new_loop = False
+        if cls._available_machines is None:
+            cls._available_machines = cls.listAvailableMachines()            
+            new_loop = True
+
+        try:
+            return cls._available_machines.next()
+        except StopIteration:
+            cls._available_machines = None
+            if new_loop:
+                raise EmptyMachineListError
+            else:
+                return cls.nextAvailableMachine()
+    nextAvailableMachine = classmethod(nextAvailableMachine)
 
     #
     # Instance methods
     #
 
-    def getLaunchCommand( self, Xopt='-x' ):
+    def getLaunchCommand(self):
         # Get the first available machine
-        try:
-            self.host = self.listAvailableMachines().next()
-            self._machines.remove( self.host )
-        except StopIteration:
-            raise EmptyMachineListError
-
+        self.host = self.nextAvailableMachine()
         actual_command = ' '.join(['cd', os.getcwd(), ';', 'nice'] + self.argv)
         actual_command = actual_command.replace("'", "\'")
         actual_command = actual_command.replace('"', '\"')
-        return "ssh %s %s '%s'"%(self.host, Xopt, actual_command)
+        return "ssh %s %s '%s'"%(self.host, self.Xopt, actual_command)
 
     def getLogFileBaseName(self):
         return "ssh-%s-pid=%d"%(self.host, self.process.pid)
 
     def free(self):
-        self._machines.append( self.host )
+        #KNOWN ISSUE: self._machines.append( self.host )
         TaskType.free(self)
 
 class ClusterTask( TaskType ):
