@@ -261,19 +261,19 @@ class SshTask( TaskType ):
     _available_machines = None
     
     def getLoadAvg(cls, machine):
-        print "\nQuery to", machine
+        #print "\nQuery to", machine
         if machine in cls._loadavg:
             # For typical PLearn/FinLearn tasks, the process begins by
             # loading the script, creating the expdir, etc., which delays
             # the impact of the process on the load average...
             t, loadavg = cls._loadavg[machine]
             cur_t  = datetime(*time.localtime()[:6])
-            print "Saved %f at %s (now %s)"%(loadavg, t, cur_t)
+            #print "Saved %f at %s (now %s)"%(loadavg, t, cur_t)
             if cur_t < t+LOADAVG_DELAY:
                 return loadavg
 
         # Query for the load average
-        print "NEW QUERY!"
+        #print "NEW QUERY!"
         p = os.popen('ssh -x %s cat /proc/loadavg' % machine)
         line = p.readline()
         return float(line.split()[0]) # Take the last minute average
@@ -283,13 +283,13 @@ class SshTask( TaskType ):
         for m in cls._machines:
             loadavg = cls.getLoadAvg(m)
             max_loadavg = MAX_LOADAVG.get(m, 1.0)
-            print "Load %f / %f"%(loadavg, max_loadavg)
+            #print "Load %f / %f"%(loadavg, max_loadavg)
             if loadavg < max_loadavg:
                 # Register the load average *plus* one, taking in account
                 # the process we are about to launch
                 cls._loadavg[m] = datetime(*time.localtime()[:6]), loadavg+1
-                print "At %s Saving %f"%cls._loadavg[m]
-                print
+                #print "At %s Saving %f"%cls._loadavg[m]
+                #print
                 yield m
     listAvailableMachines = classmethod(listAvailableMachines)
 
