@@ -13,7 +13,7 @@ publish: publish_guides
 publish_guides:
 	scp -r *.html *_guide faq *.ps *.pdf *.txt *.jpg plearner@shell.berlios.de:/home/groups/plearn/htdocs/
 
-guides.all: installation_guide.all users_guide.all programmers_guide.all tools_guide.all faq.all
+guides.all: installation_guide.all users_guide.all programmers_guide.all tools_guide.all faq.all machine_learning.all
 
 autodoc_plearn_curses: 
 	cd html_autodoc; plearn_curses htmlhelp html_config.plearn
@@ -89,6 +89,22 @@ programmers_guide.ps: programmers_guide.dvi
 programmers_guide.pdf: programmers_guide.dvi
 	pdflatex $(PDFTEX_OPTIONS) programmers_guide
 
+
+machine_learning.all: machine_learning machine_learning.dvi machine_learning.ps machine_learning.pdf
+
+machine_learning: machine_learning.tex
+	latex2html -split 3 -show_section_numbers -local_icons machine_learning.tex
+
+machine_learning.dvi: machine_learning.tex
+	latex $(TEX_OPTIONS) machine_learning
+	latex $(TEX_OPTIONS) machine_learning
+	latex $(TEX_OPTIONS) machine_learning
+
+machine_learning.ps: machine_learning.dvi
+	dvips -Pcmps -t letter machine_learning -o
+
+machine_learning.pdf: machine_learning.dvi
+	pdflatex $(PDFTEX_OPTIONS) machine_learning
 
 
 

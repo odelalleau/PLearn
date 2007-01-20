@@ -1,0 +1,565 @@
+%% -*- mode:latex; tex-open-quote:"\\og{}"; tex-close-quote:"\\fg{}" -*-
+%%
+%%  Copyright (c) 2007 by Pascal Lamblin
+
+%%
+%%  $Id$
+
+\documentclass[11pt]{book}
+\usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
+\usepackage{ae}                 % use virtual fonts for getting good PDF
+\usepackage{url}                % support URLs properly
+\usepackage{hyperref}
+
+\addtolength{\textheight}{3.5cm}
+\addtolength{\topmargin}{-1.8cm}
+\addtolength{\textwidth}{2.5cm}
+\addtolength{\oddsidemargin}{-1cm}
+\addtolength{\evensidemargin}{-1.5cm}
+
+
+%%%%%%%%% Definitions %%%%%%%%%%%%
+\newcommand{\PLearn}{{\bf \it PLearn}}
+
+\parskip=2mm
+\parindent=0mm
+
+\title{\Huge Machine Learning with PLearn\\
+\Large How some standard (and non-standard) ML algorithms are
+implemented in PLearn, and how to play with them}
+
+\begin{document}
+
+%%%%%%%% Title Page %%%%%%%%%%
+\pagenumbering{roman}
+\thispagestyle{empty}
+
+\maketitle
+
+\pagebreak
+
+\vspace*{10cm}
+
+
+
+Copyright \copyright\ 2007 Pascal Lamblin \\
+
+Permission is granted to copy and distribute this document in any medium,
+with or without modification, provided that the following conditions are
+met:
+
+\begin{enumerate}
+\item Modified versions must give fair credit to all authors.
+\item Modified versions may not be written with the aim to discredit, misrepresent, or otherwise taint the
+    reputation of any of the above authors.
+\item Modified versions must retain the above copyright notice, and append to
+    it the names of the authors of the modifications, together with the years the
+    modifications were written.
+\item Modified versions must retain this list of conditions unaltered,
+    and may not impose any further restrictions.
+\end{enumerate}
+
+
+\pagebreak
+
+%%%%%%%%% Table of contents %%%%%%%%%%%%
+\addcontentsline{toc}{chapter}{\numberline{}Table of contents}
+\tableofcontents
+
+\cleardoublepage\pagebreak
+\pagenumbering{arabic}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter*{Introduction}
+
+The purpose of this document is to document the way some particular
+learning algorithms (like Deep Belief Networks) are implemented using
+PLearn's base classes. It is not to detail how those base classes are
+working.
+
+You should read {\it PLearn programmer's guide} first (or at least have
+it reachable), you will need it for information about PLearn's generic
+classes, especially {\tt Object} and {\tt PLearner}, but also {\tt Var}
+and {\tt OnlineLearningModule}, and for the general coding philosophy.
+
+
+\chapter{A Var-based PLearner: NNet}
+
+\chapter{Boltzmann Machines and Deep Belief Networks}
+
+The equations can be seen on
+\url{http://www.iro.umontreal.ca/~lisa/twiki/bin/view.cgi/Neurones/DBNEquations}
+if you have an account on LISA's TWiki.
+
+All the code files are located in {\tt
+\$PLEARNDIR/plearn\_learners/online}.
+
+\section{Architecture}
+
+\subsection{Restricted Boltzmann Machines}
+
+A Restricted Boltzmann Machine (RBM) is composed of two different layers
+of units, with weighted connection between them.
+
+The layers are modelled by the {\tt RBMLayer} class, while the
+connections are represented by {\tt RBMConnection}. Different
+sub-classes implement the multiple types of layers and connections.
+{\tt RBMLayer} and {\tt RBMConnection} both inherit from {\tt
+OnlineLearningModule}.
+
+An RBM can therefore be considered as a structure containing two
+instances of {\tt RBMLayer} and one of {\tt RBMConnection}, but there is
+no class modelling an RBM for the moment.
+
+\subsection{Deep Belief Networks}
+
+A Deep Belief Network (DBN) is a learning algorithm, therefore contained
+in a {\tt PLearner}, namely {\tt DeepBeliefNet}.
+
+It is composed of stacked RBMs. The units of a layer are shared between
+two RBMs, hence the need of dissociating layers and connections. A {\tt
+DeepBeliefNet} containing $n$ unit layers (including input and output
+layers) will typically contain $n$ instances of {\tt RBMLayer} and $n-1$
+instances of {\tt RBMConnection}.
+
+The training is usually done one layer at a time, each layer being
+trained as an RBM. See part \ref{DeepBeliefNet} for the detailed
+explanation.
+
+There are no functions for sampling from the learned probability
+distribution yet, they might be added at some point in time.
+
+\section{Code Components}
+
+Both classes inherit from {\tt OnlineLearningModule}, so they have
+deterministic {\tt fprop(\ldots)} and {\tt bpropUpdate(\ldots)} functions,
+that can be chained.
+
+\subsection{\tt RBMLayer}
+
+This class models a set of (usually independant) units, some of their
+intrinsic parameters, and their current state.
+
+{\tt RBMLayer} stores:
+\begin{itemize}
+    \item {\tt size}: number of units
+
+    \item {\tt bias}: vector of the units' biases
+
+    \item {\tt activation}: the value of the weighting sum of the
+    inputs, plus the bias
+
+    \item {\tt expectation}: the expected value of each unit's
+    distribution
+
+    \item {\tt sample}: a sample from the distribution
+
+    \item some flags to know what is up-to-date
+
+    \item {\tt bias\_pos\_stats} and {\tt bias\_neg\_stats}: accumulate
+    positive phase and negative phase contributions to the CD gradient
+    wrt the {\tt bias}
+
+    \item {\tt pos\_count} and {\tt neg\_count}: keep track of the
+    number of accumulated contributions
+
+    \item {\tt learning\_rate} and {\tt momentum}: control the update
+    (more hyper-parameters might be added)
+\end{itemize}
+
+The methods are:
+\begin{itemize}
+
+    \item {\tt getUnitActivation( int i, RBMConnection rbmc )}:
+    get the result of the linear transformation from {\tt rbmc},
+    and add the corresponding bias for unit {\tt i}. It calls {\tt
+    rbmc->computeProduct}.
+
+    \item {\tt getAllActivations( RBMConnection rbmc )}: same as above,
+    but for all units in the layer
+
+    \item {\tt computeExpectation()}: compute the value of {\tt
+    expectation}, given {\tt activation} (with a caching system, to
+    avoid computing twice if {\tt activation} didn't change)
+
+    \item {\tt generateSample()}: generates a sample, given the value of
+    {\tt activation}, and places it in {\tt sample}
+
+    \item {\tt accumulatePosStats( Vec pos\_values )}: accumulate
+    statistics from the positive phase
+
+\begin{verbatim}
+bias_pos_stats += pos_values;
+pos_count++;
+\end{verbatim}
+
+    \item {\tt accumulateNegStats( Vec neg\_values )}: idem with the
+    negative phase
+
+\begin{verbatim}
+bias_neg_stats += neg_values;
+neg_count++;
+\end{verbatim}
+
+    \item {\tt update()}: update the bias (and other parameters if some)
+    from accumulated statistics
+
+\begin{verbatim}
+bias -= learning_rate * (bias_pos_stats/pos_count - bias_neg_stats/neg_count)
+
+# reset
+bias_pos_stats.clear();
+bias_neg_stats.clear();
+pos_count = 0;
+neg_count = 0;
+\end{verbatim}
+\end{itemize}
+
+And from the {\tt OnlineLearningModule} interface:
+\begin{itemize}
+
+    \item {\tt fprop( Vec input, Vec output )}: {\tt input} represents
+    the output of the {\tt RBMConnection}, and {\tt output} the
+    expectation (mean-field approximation) of the layer. For an {\tt
+    RBMBinomialLayer}:
+
+\begin{verbatim}
+output = sigmoid( -(input + bias) );
+\end{verbatim}
+
+    \item {\tt bpropUpdate( Vec input, Vec output, Vec input\_grad, Vec
+    output\_grad )}: backpropagate a gradient through the layer, and
+    update the parameters ({\tt bias},\ldots) accordingly, given the
+    {\tt learning\_rate}, {\tt momentum}, etc.
+
+\end{itemize}
+
+Different types of units (binomial, Gaussian, even groups of units
+representing a multinomial distribution, etc.), so this class has
+several derived sub-classes, which may store more information (like a
+quadratic parameter, and the standard deviation for a Gaussian unit) and
+use them in the {\tt accumulate\{Pos,Neg\}Stats(\ldots)} and {\tt update()}
+methods.
+
+List of known sub-classes:
+\begin{itemize}
+
+    \item {\tt RBMBinomialLayer}: stores binomial (0 or 1) units (the
+    simplest implementation)
+
+    \item {\tt RBMMultinomialLayer}: stores a group of 0/1 units, so
+    that exactly one of them is 1 at any time
+
+    \item {\tt RBMGaussianLayer}: stores real-valued units with Gaussian
+    distributions
+
+    \item {\tt RBMTruncExpLayer}: stores real-valued units in a [0, 1]
+    range, with a truncated exponential distribution
+
+    \item {\tt RBMMixedLayer}: concatenation of several {\tt RBMLayer}
+
+\end{itemize}
+
+\subsection{RBMParameters}
+
+This class represents a linear transformation (not affine! the bias is
+in the {\tt RBMLayer}), used to compute one layer's activation given the
+other layer's value.
+
+{\tt RBMConnection} stores (and has to update):
+\begin{itemize}
+
+    \item {\tt up\_size} and {\tt down\_size}: the number of units in
+    the layers above and below (respectively)
+
+    \item {\tt input\_vec}: a pointer to its current input vector
+    (sample or expectation), and a flag to know if it is up or down
+
+    \item Something that contains the weights of the connections (can be
+    a matrix, a set of convolution filters\ldots), let's call it {\tt
+    weights}
+
+    \item {\tt weights\_pos\_stats}, {\tt weight\_neg\_stats}:
+    statistics accumulated during positive and negative (respectively)
+    phases
+
+    \item {\tt pos\_count} and {\tt neg\_count}
+
+    \item {\tt learning\_rate} and {\tt momentum}
+
+\end{itemize}
+
+The different sub-classes will store differently the parameters allowing
+to compute the linear transformation, and the statistics used to update
+those parameters (usually named {\tt [paramname]\_pos\_stats} and {\tt
+[paramname]\_neg\_stats}).
+
+The methods are:
+\begin{itemize}
+
+    \item {\tt setAsUpInput( Vec input )}: set the input vector, and
+    flag to 'up'
+
+    \item {\tt setAsDownInput( Vec input )}: same, but 'down'
+
+    \item {\tt computeProduct( int start, int length, Vec activations,
+    bool accumulate )}: compute the output activation of {\tt length}
+    units, starting from {\tt start}. These units belong to the {\em
+    above} layer if the {\tt input} was {\em down}, and to the layer
+    {\em below} if the {\tt input} was {\em up}. The output is put in
+    {\tt activations} (or added if {\tt accumulate}, not shown in the
+    code below).
+
+\begin{verbatim}
+if( up ):
+    for i=start to start+length:
+        activations[i-start] += sum_j weights(i,j) input_vec[j]
+else:
+    for j=start to start+length:
+        activations[j-start] += sum_i weights(i,j) input_vec[i]
+\end{verbatim}
+
+    \item {\tt accumulatePosStats( Vec down\_values, Vec up\_values )}:
+    in the basic case of an {\tt RBMMatrixConnection}
+
+\begin{verbatim}
+weights_pos_stats += up_values * down_values';
+pos_count++;
+\end{verbatim}
+
+    \item {\tt accumulateNegStats( Vec down\_values, Vec up\_values )}:
+    in the basic case of an {\tt RBMMatrixConnection}
+
+\begin{verbatim}
+weights_neg_stats += up_values * down_values';
+neg_count++;
+\end{verbatim}
+
+    \item {\tt update()}: update from accumulated statistics
+
+\begin{verbatim}
+weights -= learning_rate * (weights_pos_stats/pos_count - weight_neg_stats/neg_count);
+
+# reset
+weights_pos_stats.clear();
+weights_neg_stats.clear();
+pos_count = 0;
+neg_count = 0;
+\end{verbatim}
+
+    \item {\tt fprop( input, output )}: performs the linear
+    transformation on {\tt input}, and put the result in {\tt output};
+    typically
+
+\begin{verbatim}
+output = weights * input;
+\end{verbatim}
+
+\end{itemize}
+
+And from the {\tt OnlineLearningModule} interface:
+\begin{itemize}
+
+    \item {\tt bpropUpdate( input, output, input\_grad, output\_grad
+    )}: backpropagates the output gradient, and update the parameters
+    (weights, \ldots) accordingly, given the {\tt learning\_rate}, {\tt
+    momentum}, etc.
+
+\end{itemize}
+
+\begin{verbatim}
+input_grad = weights' * output_grad;
+weights -= learning_rate * output_grad * input';
+\end{verbatim}
+
+List of known subclasses, and their parameters:
+\begin{itemize}
+
+    \item {\tt RBMMatrixConnection}: {\tt Mat weights} (simple matrix
+    multiplication)
+
+    \item {\tt RBMConv2DConnection}: {\tt Mat kernel}, along with {\tt
+    int down\_image\_length, down\_image\_width, up\_image\_length,
+    up\_image\_width, kernel\_step1, kernel\_step2, kernel\_length,
+    kernel\_width} (2 dimensional convolution filters)
+
+    \item {\tt RBMMixedConnection}: {\tt TMat<RBMConnection>
+    sub\_connections} (block-matrix containing other {\tt
+    RBMConnection}, which specify a part of the global linear
+    transformation)
+
+\end{itemize}
+
+\section{Code Samples}
+
+\subsection{Propagation in an RBM}
+
+In the simple case of a Restricted Boltzmann Machine, we have two
+instances of {\tt RBMLayer} ({\tt input} and {\tt hidden}) and one of
+{\tt RBMConnection} ({\tt rbmc}) linking both of them.
+
+Getting in {\tt hidden\_exp} the expected value of the hidden layer,
+given one input sample {\tt input\_sample}, is easy:
+
+\begin{verbatim}
+input.sample << input_sample;
+rbmc.setAsDownInput( input.sample );
+hidden.getAllActivations( rbmc );
+hidden.computeExpectation();
+hidden_exp << hidden.expectation;
+\end{verbatim}
+
+If we want a sample {\tt hidden\_sample} instead, it is:
+
+\begin{verbatim}
+input.sample << input_sample;
+rbmc.setAsDownInput( input.sample );
+hidden.getAllActivations( rbmc );
+hidden.generateSample();
+hidden_sample << hidden.sample;
+\end{verbatim}
+
+\subsection{Step of Contrastive Divergence in an RBM}
+
+One step of contrastive divergence learning (with only one example, {\tt
+input\_sample}) in the same RBM would be:
+
+\begin{verbatim}
+// positive phase
+input.sample << input_sample;
+rbmc.setAsDownInput( input.sample );
+hidden.getAllActivations( rbmc );
+hidden.computeExpectation();
+hidden.generateSample();
+input.accumulatePosStats( input.sample );
+rbmc.accumulatePosStats( input.sample, hidden.expectation );
+hidden.accumulatePosStats( hidden.expectation );
+
+// down propagation
+rbmc.setAsUpInput( hidden.sample );
+input.getAllActivations( rbmc );
+input.generateSample();
+
+// negative phase
+rbmc.setAsDownInput( input.sample );
+hidden.getAllActivations( rbmc );
+hidden.computeExpectation();
+input.accumulateNegStats( input.sample );
+rbmc.accumulateNegStats( input.sample, hidden.expectation );
+hidden.accumulateNegStats( hidden.expectation );
+
+// update
+input.update();
+rbmc.update();
+hidden.update();
+\end{verbatim}
+
+{\bf Note}: it was empirically shown that the convergence is better if we
+use {\tt hidden.expectation} instead of {\tt hidden.sample} in the
+statistics.
+
+Or {\tt update(\ldots, \ldots)}
+
+\subsection{Learning in a DBN}
+
+Instead of having only one RBM, let's consider three sequential layers
+({\tt input}, {\tt hidden}, {\tt output}) and two connections:
+
+\begin{itemize}
+    \item {\tt rbmc\_ih} between {\tt input} and {\tt hidden};
+    \item {\tt rbmp\_ho} between {\tt hidden} and {\tt output}.
+\end{itemize}
+They form a (small) DBN.
+
+We first train the first RBM formed by ({\tt input}, {\tt rbmc\_ih},
+{\tt hidden}) as shown previously, ignoring the other elements. Then,
+we freeze the parameters of {\tt input} and {\tt rbmc\_ih}, and train
+the second RBM, formed by ({\tt hidden}, {\tt rbmc\_ho}, {\tt output})
+taking the output of the first one as inputs.
+
+One step of this second phase (with only one example, {\tt
+input\_sample}) will look like:
+
+\begin{verbatim}
+// propagation to hidden
+input.sample << input_sample;
+rbmc_ih.setAsDownInput( input.sample );
+hidden.getAllActivations( rbmc_ih );
+hidden.computeExpectation(); // we use mean-field approximation
+
+// positive phase
+rbmc_ho.setAsDownInput( hidden.expectation );
+output.getAllActivations( rbmc_ho );
+output.computeExpectation();
+output.generateSample();
+hidden.accumulatePosStats( hidden.expectation );
+rbmc_ho.accumulatePosStats( hidden.expectation, output.expectation );
+output.accumulatePosStats( output.expectation );
+
+// down propagation
+rbmc_ho.setAsUpInput( output.sample );
+hidden.getAllActivations( rbmc_ho );
+hidden.generateSample();
+
+// negative phase
+rbmc_ho.setAsDownInput( hidden.sample );
+output.getUnitActivations( rbmc_ho );
+output.computeExpectation();
+hidden.accumulateNegStats( hidden.sample );
+rbmc_ho.accumulateNegStats( hidden.sample, output.expectation );
+output.accumulateNegStats( output.expectation );
+
+// update
+hidden.update();
+rbmc_ho.update();
+output.update();
+\end{verbatim}
+
+\section{The {\tt DeepBeliefNet} Class}
+\label{DeepBeliefNet}
+
+
+To be continued\ldots
+
+
+
+
+
+\chapter*{License}
+
+This document is covered by the license appearing after the title page.
+
+The PLearn software library and tools described in this document are
+distributed under the following BSD-type license:
+
+\begin{verbatim}
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+
+3. The name of the authors may not be used to endorse or promote
+products derived from this software without specific prior written
+permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+\end{verbatim}
+
+
+\end{document}
+
