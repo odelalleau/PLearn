@@ -89,7 +89,10 @@ PLEARN_IMPLEMENT_OBJECT(VMatLanguage,
                         "can be in @ or % notation, with the keyword 'END' denoting the last field).\n"
                         "The fields can also be transformed with a VPL program using the syntax:\n"
                         "[field1:fieldn:vpl_code], where vpl_code can be any VPL code, for example\n"
-                        "for a 0.5 thresholding: 0.5 < 0 1 ifelse.\n"
+                        "for a 0.5 thresholding: 0.5 < 0 1 ifelse. To copy a single field, use [field].\n"
+                        "There is also a special feature available only for single field copies: if you\n"
+                        "use the syntax [field?], then VPL will not produce an error if the field cannot\n"
+                        "be found.\n"
                         "\n"
                         "Here's a real-life example of a VPL program:\n"
                         "\n"
@@ -410,6 +413,13 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
             else if(parts.size()==1)
                 // fieldcopy macro type is [field]
             {
+                bool ignore_if_missing = false;
+                if (parts[0][parts[0].size()-1] == '?') {
+                    ignore_if_missing = true;
+                    // Remove ending '?' character.
+                    parts[0] = parts[0].substr(0, parts[0].size()-1);
+                }
+                
                 string astr=parts[0].substr(1);
                 int a=-1;
                 if(parts[0][0]=='@')
@@ -420,13 +430,17 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
                 else if(parts[0][0]=='%')
                     a=toint(parts[0].substr(1));
                 else PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
-                if(a==-1)
-                    PLERROR("In copyfield macro, unknown field :%s",astr.c_str());
-                processed_sourcecode+=string("%")+tostring(a)+ " ";
-                if (a >= srcfieldnames.length())
-                    PLERROR("In VMatLanguage::preprocess - Asked field number %d, but there "
-                            "are only %d fields available", a, srcfieldnames.length());
-                fieldnames.push_back(srcfieldnames[a]);
+                if (a == -1) {
+                    if (!ignore_if_missing)
+                        PLERROR("In copyfield macro, unknown field :%s",astr.c_str());
+                }
+                else {
+                    processed_sourcecode+=string("%")+tostring(a)+ " ";
+                    if (a >= srcfieldnames.length())
+                        PLERROR("In VMatLanguage::preprocess - Asked field number %d, but there "
+                                "are only %d fields available", a, srcfieldnames.length());
+                    fieldnames.push_back(srcfieldnames[a]);
+                }
             }
             else PLERROR("Strange fieldcopy format. e.g : [%0:%5]. Found parts '%s'",join(parts," ").c_str());
         }
