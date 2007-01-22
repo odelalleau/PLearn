@@ -90,6 +90,7 @@ PTester::PTester()
        call_forget_in_run(true),
        save_test_confidence(false),
        train(true),
+       should_test(true),
        enforce_clean_expdir(true)
 {}
 
@@ -213,6 +214,13 @@ void PTester::declareOptions(OptionList& ol)
         "to load an already trained learner in the 'learner' field)");
 
     declareOption(
+        ol, "should_test", &PTester::should_test, OptionBase::buildoption,
+        "Whether to carry out the test at all. This can be used, for instance,\n"
+        "to train only (without testing) and save the learners, and test later. \n"
+        "Any test statistics that are required to be computed if 'should_test'\n"
+        "is false yield MISSING_VALUE.\n");
+    
+    declareOption(
         ol, "template_stats_collector", &PTester::template_stats_collector, OptionBase::buildoption,
         "If provided, this instance of a subclass of VecStatsCollector will be used as a template\n"
         "to build all the stats collector used during training and testing of the learner");
@@ -286,51 +294,6 @@ void PTester::declareMethods(RemoteMethodMap& rmm)
          RetDoc ("Current expdir.")));
 }
 
-// The following is no longer necessary with the declareMethod mechanism
-// (to be deleted)
-
-/**
- * void PTester::call(const string& methodname, int nargs, PStream& io)
- * {
- *     if(methodname=="perform")
- *     {
- *         if(nargs!=1) PLERROR("PTester remote method perform takes 1 argument");
- *         bool call_forget;
- *         io >> call_forget;
- *         Vec result = perform(call_forget);
- *         prepareToSendResults(io, 1);
- *         io << result;
- *         io.flush();
- *     }
- *     else if(methodname=="getStatNames")
- *     {
- *         if(nargs!=0) PLERROR("PTester remote method getStatNames takes 0 argument");
- *         TVec<string> result = getStatNames();
- *         prepareToSendResults(io, 1);
- *         io << result;
- *         io.flush();
- *     }
- *     else if(methodname=="setExperimentDirectory")
- *     {
- *         if(nargs!=1) PLERROR("PTester remote method setExperimentDirectory takes 1 argument");
- *         PPath the_expdir;
- *         io >> the_expdir;
- *         setExperimentDirectory(the_expdir);
- *         prepareToSendResults(io, 0);
- *         io.flush();
- *     }
- *     else if(methodname=="getExperimentDirectory")
- *     {
- *         if(nargs!=0) PLERROR("PTester remote method getExperimentDirectory takes 0 arguments");
- *         PPath result = getExperimentDirectory();
- *         prepareToSendResults(io, 1);
- *         io << result;
- *         io.flush();
- *     }
- *     else
- *         inherited::call(methodname, nargs, io);
- * }
- */
 
 void PTester::build_()
 {
@@ -598,72 +561,76 @@ Vec PTester::perform(bool call_forget)
             // perf_eval_costs[setnum][perf_evaluator_name][costname] will contain value
             // of the given cost returned by the given perf_evaluator on the given setnum
             TVec< map<string, map<string, real> > > perf_eval_costs(dsets.length());
-            for(int setnum=1; setnum<dsets.length(); setnum++)
-            {
-                VMat testset = dsets[setnum];
-                PP<VecStatsCollector> test_stats = stcol[setnum];
-                string setname = "test"+tostring(setnum);
-                if(is_splitdir && save_data_sets)
-                    PLearn::save(splitdir/(setname+"_set.psave"),testset);
-                VMat test_outputs;
-                VMat test_costs;
-                VMat test_confidence;
-                if (is_splitdir)
-                    force_mkdir(splitdir); // TODO Why is this done so late?
 
-                if(is_splitdir && save_test_outputs)
-                    test_outputs = new FileVMatrix(splitdir/(setname+"_outputs.pmat"),0,learner->getOutputNames());
-                    //test_outputs = new FileVMatrix(splitdir/(setname+"_outputs.pmat"),0,outputsize);
-                else if(!perf_evaluators.empty()) // we don't want to save test outputs to disk, but we need them for pef_evaluators
-                { // So let's store them in a MemoryVMatrix
-                    Mat data(testset.length(),outputsize);
-                    data.resize(0,outputsize);
-                    test_outputs = new MemoryVMatrix(data);
-                    test_outputs->declareFieldNames(learner->getOutputNames());
-                }
-
-                if(is_splitdir && save_test_costs)
-                    test_costs = new FileVMatrix(splitdir/(setname+"_costs.pmat"),0,learner->getTestCostNames());
-                    //test_costs = new FileVMatrix(splitdir/(setname+"_costs.pmat"),0,testcostsize);
-                if(is_splitdir && save_test_confidence)
-                    test_confidence = new FileVMatrix(splitdir/(setname+"_confidence.pmat"),
-                                                      0,2*outputsize);
-
-                bool reset_stats = (acc.find(setnum) == -1);
-
-                //perr << "reset_stats= " << reset_stats << endl;
-
-                if (reset_stats)
-                    test_stats->forget();
-                if (testset->length()==0)
-                    PLWARNING("PTester:: test set %s is of length 0, costs will be set to -1",setname.c_str());
-
-                // Before each test set, reset the internal state of the learner
-                learner->resetInternalState();
-
-                learner->test(testset, test_stats, test_outputs, test_costs);
-                if (reset_stats)
-                    test_stats->finalize();
-                if(is_splitdir && save_stat_collectors)
-                    PLearn::save(splitdir/(setname+"_stats.psave"),test_stats);
-
-                perf_evaluators_t::iterator it = perf_evaluators.begin();
-                perf_evaluators_t::iterator itend = perf_evaluators.end();
-                while(it!=itend)
+            // Perform the test if required
+            if (should_test) {
+                for(int setnum=1; setnum<dsets.length(); setnum++)
                 {
-                    PPath perf_eval_dir;
-                    if(is_splitdir)
-                        perf_eval_dir = splitdir/setname/("perfeval_"+it->first);
-                    Vec perf_costvals = it->second->evaluatePerformance(learner, testset, test_outputs, perf_eval_dir);
-                    TVec<string> perf_costnames = it->second->getCostNames();
-                    if(perf_costvals.length()!=perf_costnames.length())
-                        PLERROR("vector of costs returned by performance evaluator differ in size with its vector of costnames");
-                    map<string, real>& costmap = perf_eval_costs[setnum][it->first];
-                    for(int costi = 0; costi<perf_costnames.length(); costi++)
-                        costmap[perf_costnames[costi]] = perf_costvals[costi];
-                    ++it;
+                    VMat testset = dsets[setnum];
+                    PP<VecStatsCollector> test_stats = stcol[setnum];
+                    string setname = "test"+tostring(setnum);
+                    if(is_splitdir && save_data_sets)
+                        PLearn::save(splitdir/(setname+"_set.psave"),testset);
+                    VMat test_outputs;
+                    VMat test_costs;
+                    VMat test_confidence;
+                    if (is_splitdir)
+                        force_mkdir(splitdir); // TODO Why is this done so late?
+
+                    if(is_splitdir && save_test_outputs)
+                        test_outputs = new FileVMatrix(splitdir/(setname+"_outputs.pmat"),0,learner->getOutputNames());
+                    //test_outputs = new FileVMatrix(splitdir/(setname+"_outputs.pmat"),0,outputsize);
+                    else if(!perf_evaluators.empty()) // we don't want to save test outputs to disk, but we need them for pef_evaluators
+                    { // So let's store them in a MemoryVMatrix
+                        Mat data(testset.length(),outputsize);
+                        data.resize(0,outputsize);
+                        test_outputs = new MemoryVMatrix(data);
+                        test_outputs->declareFieldNames(learner->getOutputNames());
+                    }
+
+                    if(is_splitdir && save_test_costs)
+                        test_costs = new FileVMatrix(splitdir/(setname+"_costs.pmat"),0,learner->getTestCostNames());
+                    //test_costs = new FileVMatrix(splitdir/(setname+"_costs.pmat"),0,testcostsize);
+                    if(is_splitdir && save_test_confidence)
+                        test_confidence = new FileVMatrix(splitdir/(setname+"_confidence.pmat"),
+                                                          0,2*outputsize);
+
+                    bool reset_stats = (acc.find(setnum) == -1);
+
+                    //perr << "reset_stats= " << reset_stats << endl;
+
+                    if (reset_stats)
+                        test_stats->forget();
+                    if (testset->length()==0)
+                        PLWARNING("PTester:: test set %s is of length 0, costs will be set to -1",setname.c_str());
+
+                    // Before each test set, reset the internal state of the learner
+                    learner->resetInternalState();
+
+                    learner->test(testset, test_stats, test_outputs, test_costs);
+                    if (reset_stats)
+                        test_stats->finalize();
+                    if(is_splitdir && save_stat_collectors)
+                        PLearn::save(splitdir/(setname+"_stats.psave"),test_stats);
+
+                    perf_evaluators_t::iterator it = perf_evaluators.begin();
+                    perf_evaluators_t::iterator itend = perf_evaluators.end();
+                    while(it!=itend)
+                    {
+                        PPath perf_eval_dir;
+                        if(is_splitdir)
+                            perf_eval_dir = splitdir/setname/("perfeval_"+it->first);
+                        Vec perf_costvals = it->second->evaluatePerformance(learner, testset, test_outputs, perf_eval_dir);
+                        TVec<string> perf_costnames = it->second->getCostNames();
+                        if(perf_costvals.length()!=perf_costnames.length())
+                            PLERROR("vector of costs returned by performance evaluator differ in size with its vector of costnames");
+                        map<string, real>& costmap = perf_eval_costs[setnum][it->first];
+                        for(int costi = 0; costi<perf_costnames.length(); costi++)
+                            costmap[perf_costnames[costi]] = perf_costvals[costi];
+                        ++it;
+                    }
+                    computeConfidence(testset, test_confidence);
                 }
-                computeConfidence(testset, test_confidence);
             }
 
             Vec splitres(1+nstats);
@@ -671,11 +638,15 @@ Vec PTester::perform(bool call_forget)
 
             for(int k=0; k<nstats; k++)
             {
+                // If we ask for a test-set that's beyond what's currently
+                // available, OR we are asking for test-statistics in
+                // train-only mode, then the statistic is MISSING_VALUE.
                 StatSpec& sp = statspecs[k];
-                if (sp.setnum>=stcol.length())
+                if (sp.setnum>=stcol.length() ||
+                    (! should_test && sp.setnum > 0))
+                {
                     splitres[k+1] = MISSING_VALUE;
-//            PLERROR("PTester::perform, trying to access a test set (test%d) beyond the last one (test%d)",
-//                    sp.setnum, stcol.length()-1);
+                }
                 else
                 {
                     if (acc.find(sp.setnum) == -1)

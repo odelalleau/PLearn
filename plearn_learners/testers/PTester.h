@@ -102,8 +102,14 @@ public:
     /// intervals are saved in a file SETNAME_confidence.pmat (default=false)
     bool save_test_confidence;
   
-    /// whether or not to train or just test
+    /// whether or not to train or just test (see 'should_test', below)
     bool train;
+
+    /// Whether to carry out the test at all. This can be used, for instance,
+    /// to train only (without testing) and save the learners, and test later. 
+    /// Any test statistics that are required to be computed if 'should_test'
+    /// is false yield MISSING_VALUE.
+    bool should_test;
 
     /**
      *  If this option is true, the PTester ensures that the expdir does not
