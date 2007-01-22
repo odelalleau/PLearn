@@ -240,7 +240,7 @@ bool force_mkdir(const PPath& dirname)
     }
     for (int i = int(paths.size()) - 1; i >= 0; i--)
         if (!isdir(paths[i]) &&
-            PR_MkDir(paths[i].absolute().c_str(), 0775) != PR_SUCCESS)
+            PR_MkDir(paths[i].absolute().c_str(), 0777) != PR_SUCCESS)
             return false;
     return true;
 }
