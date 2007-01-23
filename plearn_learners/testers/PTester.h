@@ -102,8 +102,8 @@ public:
     /// intervals are saved in a file SETNAME_confidence.pmat (default=false)
     bool save_test_confidence;
   
-    /// whether or not to train or just test (see 'should_test', below)
-    bool train;
+    /// Whether or not to train or just test (see 'should_test', below).
+    bool should_train;
 
     /// Whether to carry out the test at all. This can be used, for instance,
     /// to train only (without testing) and save the learners, and test later. 

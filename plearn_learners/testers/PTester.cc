@@ -89,7 +89,7 @@ PTester::PTester()
        save_test_outputs(false),
        call_forget_in_run(true),
        save_test_confidence(false),
-       train(true),
+       should_train(true),
        should_test(true),
        enforce_clean_expdir(true)
 {}
@@ -209,9 +209,15 @@ void PTester::declareOptions(OptionList& ol)
         "If true, each learner to be trained will have its experiment directory set to Split#k/LearnerExpdir/");
 
     declareOption(
-        ol, "train", &PTester::train, OptionBase::buildoption,
+        ol, "should_train", &PTester::should_train, OptionBase::buildoption,
         "If true, the learners are trained, otherwise only tested (in that case it is advised\n"
         "to load an already trained learner in the 'learner' field)");
+
+    declareOption(
+        ol, "train", &PTester::should_train,
+        OptionBase::learntoption | OptionBase::nosave,
+        "DEPRECATED - This option has been renamed to 'should_train' in\n"
+        "order to make it coherent with the 'should_test' option.");
 
     declareOption(
         ol, "should_test", &PTester::should_test, OptionBase::buildoption,
@@ -527,7 +533,7 @@ Vec PTester::perform(bool call_forget)
             if(is_splitdir && save_data_sets)
                 PLearn::save(splitdir/"training_set.psave",trainset);
 
-            if(train && provide_learner_expdir)
+            if(should_train && provide_learner_expdir)
             {
                 if(is_splitdir)
                     learner->setExperimentDirectory( splitdir/"LearnerExpdir/" );
@@ -535,14 +541,14 @@ Vec PTester::perform(bool call_forget)
                     learner->setExperimentDirectory("");
             }
 
-            learner->setTrainingSet(trainset, call_forget && train);
+            learner->setTrainingSet(trainset, call_forget && should_train);
             if(dsets.size()>1)
                 learner->setValidationSet(dsets[1]);
 
             int outputsize = learner->outputsize();
 
 
-            if (train)
+            if (should_train)
             {
                 if(is_splitdir && save_initial_learners)
                     PLearn::save(splitdir/"initial_learner.psave",learner);
