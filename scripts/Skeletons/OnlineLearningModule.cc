@@ -146,6 +146,15 @@ bool DERIVEDCLASS::bpropDoesNothing()
 }
 */
 
+/////////////////////
+// setLearningRate //
+/////////////////////
+/* OPTIONAL
+void DERIVEDCLASS::setLearningRate(real dynamic_learning_rate)
+{
+}
+*/
+
 } // end of namespace PLearn
 
 

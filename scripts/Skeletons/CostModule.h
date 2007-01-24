@@ -102,6 +102,12 @@ public:
     virtual bool bpropDoesNothing();
     */
 
+    /* Optional
+       Default implementation does nothing
+    //! If this class has a learning rate (or something close to it), set it
+    virtual void setLearningRate(real dynamic_learning_rate);
+    */
+
     //! Indicates the name of the computed costs
     virtual TVec<string> name();
 
