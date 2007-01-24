@@ -41,15 +41,23 @@ import plearn.io.serialize
 
 def launch_plearn_server(command = 'plearn server', logger=None):
     if logger: logger.info('LAUNCHING PLEARN SERVER: command = '+command)                
-    to_server, from_server = os.popen2(command, 'b')
-    return RemotePLearnServer(from_server, to_server, logger)
+    ## If available, we use module "subprocess" instead of os.popen2 so that
+    ## we can have information on the child pid
+    try:
+        from subprocess import Popen, PIPE
+        p = Popen([command], shell=True, stdin=PIPE, stdout=PIPE, close_fds=True)
+        (to_server, from_server, child_pid) = (p.stdin, p.stdout, p.pid)
+    except:
+        to_server, from_server = os.popen2(command, 'b')
+        child_pid = -1
+    return RemotePLearnServer(from_server, to_server, pid=child_pid, logger=logger)
 
 def connect_to_plearn_server(hostname, port, logger=None):
     if logger: logger.info('CONNECTING TO PLEARN SERVER ON HOST '+hostname+', PORT '+str(port))                
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((hostname, port))
     io = s.makefile()
-    return RemotePLearnServer(io, io, logger)    
+    return RemotePLearnServer(io, io, logger=logger)
         
 class RemotePLearnServer:
 
@@ -73,13 +81,14 @@ class RemotePLearnServer:
         helpMethod(classname, methodname)
         """        
 
-    def __init__(self, from_server, to_server, logger=None):
+    def __init__(self, from_server, to_server, pid=-1, logger=None):
         """from_server and to_server are expected to be two file-like objects
         (supporting read, write, flush).
-        If you wish to log debugging info, pass ad logger an instance of a logging.Logger
+        If you wish to log debugging info, pass at logger an instance of a logging.Logger
         as returned for ex. by logging.getLogger()
         """
         self.io = plearn.io.serialize.PLearnIO(from_server, to_server)
+        self.pid = pid
         self.log = logger
         self.reserved_ids = []
         self.nextid = 1
@@ -99,7 +108,7 @@ class RemotePLearnServer:
 
         self.callFunction("binary")
         self.callFunction("implicit_storage",True)        
-        
+
     def set_return_lists(self, ret_lists=True):
         """If this is called with True, PLearn sequences will be
         returned as lists (rather than as arrays, which is the default
@@ -338,7 +347,13 @@ class RemotePLearnServer:
                 
     def __del__(self):
         self.close()
-        
+
+    def kill(self):
+        """Kill the process with the TERM signal."""
+        if self.pid == -1:
+            raise RuntimeError, 'The "kill" method is only available with Python 2.4 and above.'
+        os.kill(self.pid, 15)
+
 class RemotePObject:
     
     def __init__(self, serv, objid):
