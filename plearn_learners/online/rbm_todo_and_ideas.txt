@@ -5,10 +5,17 @@ To do
 
 * Implement DeepBeliefNet as a PDistribution, trained the way Hinton
   trains its network
+    -> PDistribution was a bad idea (too complicated).
+    -> It is implemented as a PLearner, in $PLEARNDIR/plearn_learners/online.
+    -> It still lacks the generating functions.
 
 * Make an OnlineLearningModule stacking RBMLayers and RBMParameters doing the
   same thing? Encapsulating DeepBeliefNet? Make DeepBeliefNet encapsulate the
   module?
+    -> Nope.
+    -> We can use ModuleStackModule if we only want to use the mean-field
+approximation.
+
 
 Questions
 =========
@@ -16,8 +23,11 @@ Questions
 * How do we initialize the weights? Is the sampling process enough to break
   the symmetry if all weights are initialized to 0? Should we initialize them
   randomly ?
+    -> Initializing to 0 can lead to sub-optimal results. Initializing
+    randomly experimentally led to better solutions.
 
-* When do we update the weights? After each sampe? At the end of a batch?
+* When do we update the weights? After each sample? At the end of a batch?
+    -> After each sample seems to be OK.
 
 * How to learn the weights V between Last layer and Previous layer, and W
   between Last layer and output/target layer (Y) if trained in a supervised
@@ -29,8 +39,15 @@ Questions
   - Learn V by contrastive divergence, but clamping Y to the true target
     during both positive and negative phases
 
-* Can we compute the predicted probability (or density?) of an input? Of the
-  label given the input? The input given the label?
+    -> Second solutions seems to work OK, but Hinton uses V unsupervisedly and
+    then fine-tunes the whole network (no pre-training of W).
+
+* Can we compute the predicted probability (or density?) of an input?
+    -> Not without sampling, or summing an exponential number of terms
+  Of the label given the input?
+    -> Yes
+  The input given the label?
+    -> Nope (see 1.)
 
 
 Ideas
@@ -40,8 +57,11 @@ Ideas
 the up (and down) layer have the same type ('l' or 'q'), because
 RBMGenericParameters has to check every unit. So we could use matrix-matrix
 products instead of n matrix-vector products.
+    -> Obsoleted by new version. RBMConnection (RBMParameter's successor) does
+    not depend on the type of the units anymore.
 
 * How to combine error gradient and likelihood gradient?
+    -> Add them with two different learning rates.
 
 * Implement global wake-sleep (on every layer at one time) learning of the
   weights ==> this would seem necessary in order to have simultaneous
@@ -49,22 +69,31 @@ products instead of n matrix-vector products.
 
 * See if we share biases (and quadratic term) of one layer between the "upper"
   and "lower" RBMParameters modules
+    -> Yes. They are now integrated into RBMLayer, which is shared between the
+    wo RBMs.
 
 * Is there a way to compute analytically the "undirected softmax" if the
   output layer has Gaussian units?
-  -> maybe if only one Gaussian, probably not otherwise
+    -> maybe if only one Gaussian, probably not otherwise
 
 * See when we should sample from a layer, and when we should compute the
   expectation. Is it a problem if some statistics during the positive phase
   are expectations, and are samples during the negative phase (or vice-versa)?
+    -> The solution that works best experimentally is:
+        v_0: expectation (or original input)
+        h_0: expectation, but initialize the Markov chain with a sample
+        v_1: sample
+        h_1: expectation
 
 * introducing temporal structure into the model:
-   - time delays in the connections
-   - recurrent connections (e.g. from layer i at t to layer i at t+1)
-   - supervised targets (and corresponding gradients) from the task of
-     predicting layer i at t+1 from layer j at t
+  - time delays in the connections
+  - recurrent connections (e.g. from layer i at t to layer i at t+1)
+  - supervised targets (and corresponding gradients) from the task of
+    predicting layer i at t+1 from layer j at t
 
+    -> See $PLEARNDIR/plearn_learners_experimental/DynamicallyLinkedRBMsModel
+    -> Still lots of things to do.
 
-
+    -> Where do we put this document?
 
 
