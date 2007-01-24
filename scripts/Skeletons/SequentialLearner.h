@@ -51,9 +51,12 @@ public:
     virtual TVec<std::string> getTrainCostNames() const;
     virtual TVec<std::string> getTestCostNames() const;
 
+    // ### If your class is not instantiatable (it has pure virtual methods)
+    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS
+    PLEARN_DECLARE_OBJECT(DERIVEDCLASS);
+
     //!  Does the necessary operations to transform a shallow copy (this)
     //!  into a deep copy by deep-copying all the members that need to be.
-    PLEARN_DECLARE_OBJECT(DERIVEDCLASS);
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };
 
