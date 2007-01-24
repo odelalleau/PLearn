@@ -191,6 +191,7 @@
 #include <plearn_learners/online/DeepBeliefNet.h>
 #include <plearn_learners/online/GradNNetLayerModule.h>
 #include <plearn_learners/online/ModulesLearner.h>
+#include <plearn_learners/online/ModuleStackModule.h>
 #include <plearn_learners/online/NLLCostModule.h>
 #include <plearn_learners/online/NLLErrModule.h>
 #include <plearn_learners/online/OnlineLearningModule.h>
