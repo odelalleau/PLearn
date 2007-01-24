@@ -53,8 +53,6 @@ namespace PLearn {
  * In order to stack layers, you can use StackedModulesModule,
  * and in order to compute several costs, you can use CombinedCostsModule.
  *
- * @todo Finish this class...
- *
  */
 class ModulesLearner : public PLearner
 {

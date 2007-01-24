@@ -209,7 +209,6 @@
 #include <plearn_learners/online/RBMTruncExpLayer.h>
 #include <plearn_learners/online/SoftmaxModule.h>
 #include <plearn_learners/online/SquaredErrorCostModule.h>
-#include <plearn_learners/online/StackedModulesModule.h>
 #include <plearn_learners/online/Subsampling2DModule.h>
 #include <plearn_learners/online/Supersampling2DModule.h>
 #include <plearn_learners/online/TanhModule.h>

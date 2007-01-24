@@ -49,6 +49,8 @@ namespace PLearn {
  * The OnlineLearningModule's are disposed like superposed layers:
  * outputs of module i are the inputs of module (i+1), the last layer is
  * the output layer.
+ *
+ * @deprecated: use ../ModuleStackModule or ../ProcessInputCostModule instead
  */
 class StackedModulesModule : public OnlineLearningModule
 {
