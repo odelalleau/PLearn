@@ -75,31 +75,17 @@ void DERIVEDCLASS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     PLERROR("DERIVEDCLASS::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
-//! given the input, compute the output (possibly resize it  appropriately)
+///////////
+// fprop //
+///////////
 void DERIVEDCLASS::fprop(const Vec& input, Vec& output) const
 {
 }
 
+/////////////////
+// bpropUpdate //
+/////////////////
 /* THIS METHOD IS OPTIONAL
-//! Adapt based on the output gradient: this method should only
-//! be called just after a corresponding fprop; it should be
-//! called with the same arguments as fprop for the first two arguments
-//! (and output should not have been modified since then).
-//! Since sub-classes are supposed to learn ONLINE, the object
-//! is 'ready-to-be-used' just after any bpropUpdate.
-//! N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS, WHICH
-//! JUST CALLS
-//!     bpropUpdate(input, output, input_gradient, output_gradient)
-//! AND IGNORES INPUT GRADIENT.
-void DERIVEDCLASS::bpropUpdate(const Vec& input, const Vec& output,
-                               const Vec& output_gradient)
-{
-}
-*/
-
-/* THIS METHOD IS OPTIONAL
-//! this version allows to obtain the input gradient as well
-//! N.B. THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
 void DERIVEDCLASS::bpropUpdate(const Vec& input, const Vec& output,
                                Vec& input_gradient,
                                const Vec& output_gradient)
@@ -107,54 +93,17 @@ void DERIVEDCLASS::bpropUpdate(const Vec& input, const Vec& output,
 }
 */
 
-//! reset the parameters to the state they would be BEFORE starting training.
-//! Note that this method is necessarily called from build().
-void DERIVEDCLASS::forget()
-{
-}
-
 /* THIS METHOD IS OPTIONAL
-//! reset the parameters to the state they would be BEFORE starting training.
-//! Note that this method is necessarily called from build().
-//! THE DEFAULT IMPLEMENTATION PROVIDED IN THE SUPER-CLASS DOES NOT DO
-//! ANYTHING.
-void DERIVEDCLASS::finalize()
+void DERIVEDCLASS::bpropUpdate(const Vec& input, const Vec& output,
+                               const Vec& output_gradient)
 {
 }
 */
 
+//////////////////
+// bbpropUpdate //
+//////////////////
 /* THIS METHOD IS OPTIONAL
-//! in case bpropUpdate does not do anything, make it known
-//! THE DEFAULT IMPLEMENTATION PROVIDED IN THE SUPER-CLASS RETURNS false;
-bool DERIVEDCLASS::bpropDoesNothing()
-{
-}
-*/
-
-/* THIS METHOD IS OPTIONAL
-//! Similar to bpropUpdate, but adapt based also on the estimation
-//! of the diagonal of the Hessian matrix, and propagates this
-//! back. If these methods are defined, you can use them INSTEAD of
-//! bpropUpdate(...)
-//! N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS, WHICH
-//! JUST CALLS
-//!     bbpropUpdate(input, output, input_gradient, output_gradient,
-//!                  in_hess, out_hess)
-//! AND IGNORES INPUT HESSIAN AND INPUT GRADIENT.
-void DERIVEDCLASS::bbpropUpdate(const Vec& input, const Vec& output,
-                                const Vec& output_gradient,
-                                const Vec& output_diag_hessian)
-{
-}
-*/
-
-/* THIS METHOD IS OPTIONAL
-//! Similar to bpropUpdate, but adapt based also on the estimation
-//! of the diagonal of the Hessian matrix, and propagates this
-//! back. If these methods are defined, you can use them INSTEAD of
-//! bpropUpdate(...)
-//! N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS, WHICH
-//! RAISES A PLERROR.
 void DERIVEDCLASS::bbpropUpdate(const Vec& input, const Vec& output,
                                 Vec& input_gradient,
                                 const Vec& output_gradient,
@@ -164,6 +113,38 @@ void DERIVEDCLASS::bbpropUpdate(const Vec& input, const Vec& output,
 }
 */
 
+/* THIS METHOD IS OPTIONAL
+void DERIVEDCLASS::bbpropUpdate(const Vec& input, const Vec& output,
+                                const Vec& output_gradient,
+                                const Vec& output_diag_hessian)
+{
+}
+*/
+
+////////////
+// forget //
+////////////
+void DERIVEDCLASS::forget()
+{
+}
+
+//////////////
+// finalize //
+//////////////
+/* THIS METHOD IS OPTIONAL
+void DERIVEDCLASS::finalize()
+{
+}
+*/
+
+//////////////////////
+// bpropDoesNothing //
+//////////////////////
+/* THIS METHOD IS OPTIONAL
+bool DERIVEDCLASS::bpropDoesNothing()
+{
+}
+*/
 
 } // end of namespace PLearn
 
