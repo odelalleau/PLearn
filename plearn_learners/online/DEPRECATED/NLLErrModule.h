@@ -47,7 +47,7 @@
 #include <plearn/base/Object.h>
 #include <plearn/math/pl_math.h>
 #include <plearn/math/TMat_maths.h>
-#include "OnlineLearningModule.h"
+#include <plearn_learners/online/OnlineLearningModule.h>
 
 namespace PLearn {
 
@@ -57,6 +57,9 @@ namespace PLearn {
  * desired 'target'. Also propagates gradient and diagonal of Hessian
  * backwards.
  *
+ * @deprecated: Use ../NLLCostModule if you only want the NLL,
+ *  or SoftmaxModule and NLLCostModule (possibly in a ProcessInputCostModule)
+ *  if you want softmax + NLL
  */
 class NLLErrModule : public OnlineLearningModule
 {

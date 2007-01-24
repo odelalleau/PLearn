@@ -193,7 +193,6 @@
 #include <plearn_learners/online/ModulesLearner.h>
 #include <plearn_learners/online/ModuleStackModule.h>
 #include <plearn_learners/online/NLLCostModule.h>
-#include <plearn_learners/online/NLLErrModule.h>
 #include <plearn_learners/online/OnlineLearningModule.h>
 #include <plearn_learners/online/ProcessInputCostModule.h>
 #include <plearn_learners/online/RBMBinomialLayer.h>
