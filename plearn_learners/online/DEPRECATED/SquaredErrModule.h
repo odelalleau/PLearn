@@ -46,13 +46,14 @@
 
 #include <plearn/base/Object.h>
 #include <plearn/math/TMat_maths.h>
-#include "OnlineLearningModule.h"
+#include <plearn_learners/online/OnlineLearningModule.h>
 
 namespace PLearn {
 
 /**
  * Squared difference (and derivatives thereof) between the target and input.
  *
+ * @deprecated: Use ../SquaredErrorCostModule instead
  */
 class SquaredErrModule : public OnlineLearningModule
 {
