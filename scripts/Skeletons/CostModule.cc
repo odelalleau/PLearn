@@ -118,9 +118,9 @@ void DERIVEDCLASS::bbpropUpdate(const Vec& input, const Vec& target, real cost)
 }
 */
 
-///////////
-// reset //
-///////////
+////////////
+// forget //
+////////////
 void DERIVEDCLASS::forget()
 {
 }
