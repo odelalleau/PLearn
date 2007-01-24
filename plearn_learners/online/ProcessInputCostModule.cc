@@ -53,7 +53,8 @@ PLEARN_IMPLEMENT_OBJECT(
     "use a ModuleStackModule as processing_module.\n"
     );
 
-ProcessInputCostModule::ProcessInputCostModule()
+ProcessInputCostModule::ProcessInputCostModule() :
+    processed_size( -1 )
 {
 }
 
@@ -123,6 +124,8 @@ void ProcessInputCostModule::fprop(const Vec& input, const Vec& target,
 {
     PLASSERT( processing_module );
     PLASSERT( cost_module );
+    PLASSERT( input.size() == input_size );
+    PLASSERT( target.size() == target_size );
 
     processing_module->fprop( input, processed_value );
     cost_module->fprop( processed_value, target, cost );
@@ -133,6 +136,8 @@ void ProcessInputCostModule::fprop(const Vec& input, const Vec& target,
 {
     PLASSERT( processing_module );
     PLASSERT( cost_module );
+    PLASSERT( input.size() == input_size );
+    PLASSERT( target.size() == target_size );
 
     processing_module->fprop( input, processed_value );
     cost_module->fprop( processed_value, target, cost );
@@ -146,6 +151,8 @@ void ProcessInputCostModule::bpropUpdate(const Vec& input, const Vec& target,
 {
     PLASSERT( processing_module );
     PLASSERT( cost_module );
+    PLASSERT( input.size() == input_size );
+    PLASSERT( target.size() == target_size );
 
     cost_module->bpropUpdate( processed_value, target, cost,
                               processed_gradient );
@@ -163,6 +170,8 @@ void ProcessInputCostModule::bbpropUpdate(const Vec& input, const Vec& target,
 {
     PLASSERT( processing_module );
     PLASSERT( cost_module );
+    PLASSERT( input.size() == input_size );
+    PLASSERT( target.size() == target_size );
 
     cost_module->bbpropUpdate( processed_value, target, cost,
                                processed_gradient, processed_diag_hessian );
