@@ -444,10 +444,6 @@ class plopt(object):
     def addCmdLineOverride(holder_name, optname, value):
         context = actualContext(plopt)
         hldr_key = (holder_name, optname)
-        if hldr_key in context.plopt_cmdline_overrides:
-            from plearn.pyplearn import PyPLearnError
-            raise PyPLearnError("Duplicate command-line value for option '%s'"%optname)
-
         # Use the 'unique' key to store command-line override's value
         context.plopt_cmdline_overrides[hldr_key] = value
     addCmdLineOverride = staticmethod(addCmdLineOverride)
