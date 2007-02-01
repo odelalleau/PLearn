@@ -249,6 +249,9 @@ VMatLanguage::declareOptions(OptionList &ol)
                   "The output fieldnames produced by the program");
     declareOption(ol, "vmsource", &VMatLanguage::vmsource, OptionBase::learntoption,
                   "The VMat that was set by setSource");
+    // XXX This is a duplicate of the already defined "srcfieldnames" option,
+    // but with OptionBase::learntoption instead of buildoption. Which one is
+    // right?
     declareOption(ol, "srcfieldnames", &VMatLanguage::srcfieldnames, OptionBase::learntoption,
                   "The fieldnames that were set by setSourceFieldNames");
     declareOption(ol, "program", &VMatLanguage::program, OptionBase::learntoption,
@@ -288,63 +291,64 @@ void VMatLanguage::clear()
 void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
                               string& processed_sourcecode, vector<string>& fieldnames)
 {
-    // pout << defines << endl;
     string token;
     size_t spos;
-    map<string,string>::iterator pos;
-    while(in)
+    map<string, string>::iterator pos;
+    while (in)
     {
         in >> token;
-        pos=defines.find(token);
+        pos = defines.find(token);
 
-        // are we sitting on a mapping declaration?
-        if(token[0]=='{')
+        // Are we sitting on a mapping declaration?
+        if (token[0] == '{')
         {
-            //skip mapping to avoid brackets conflicts with fieldcopy macro syntax
-            char car;
-            processed_sourcecode+=token;
-            // if the token is only a part of the mapping...
-            if(token.find("}")==string::npos)
+            // Skip mapping to avoid brackets conflicts with fieldcopy macro
+            // syntax
+            processed_sourcecode += token;
+            // If the token is only a part of the mapping...
+            if (token.find("}") == string::npos)
             {
-                // just eat till the end of the mapping
-                while((car=in.get())!='}' && !in.eof())
-                    processed_sourcecode+=car;
-                processed_sourcecode+="}";
+                char car;
+                // Just eat till the end of the mapping
+                while ((car = in.get()) != '}' && !in.eof())
+                    processed_sourcecode += car;
+                processed_sourcecode += "}";
             }
         }
-        // did we find a fieldName declaration?
-        // format is either :myField or :myField:a:b
-        else if(token[0]==':')
+        // Did we find a fieldName declaration? format is either :myField or
+        // :myField:a:b
+        else if (token[0] == ':')
         {
-            if(isBlank(token.substr(1)))
+            if (isBlank(token.substr(1)))
                 PLERROR("Found a ':' with no fieldname. Do not put a whitespace after the ':'");
-            vector<string> parts=split(token,":");
-            if(parts.size()==3)
+            vector<string> parts = split(token, ":");
+            if (parts.size() == 3)
             {
-                int a=toint(parts[1]);
-                int b=0;
-                // let the chance for the second interval boundary to be a "DEFINE"
-                // this is used with onehot and @myfield.ranges10.nbins
+                int a = toint(parts[1]);
+                int b = 0;
+                // Let the chance for the second interval boundary to be a "DEFINE".
+                // This is used with onehot and @myfield.ranges10.nbins
                 // ie: @myfield.onehot10 :myfieldonehot:0:@myfield.ranges10.nbins
-                if(pl_isnumber(parts[2]))
-                    b=toint(parts[2]);
+                if (pl_isnumber(parts[2]))
+                    b = toint(parts[2]);
                 else
                 {
-                    if(defines.find(parts[2])!=defines.end())
-                        b=toint(defines[parts[2]]);
+                    if (defines.find(parts[2]) != defines.end())
+                        b = toint(defines[parts[2]]);
                     else
-                        PLERROR("found a undefined non-numeric boundary in multifield declaration : '%s'",parts[2].c_str());
+                        PLERROR("found a undefined non-numeric boundary in multifield declaration : '%s'",
+                                parts[2].c_str());
                 }
 
-                for(int i=a;i<=b;i++)
-                    fieldnames.push_back(parts[0]+tostring(i));
+                for (int i = a; i <= b; i++)
+                    fieldnames.push_back(parts[0] + tostring(i));
             }
-            else if (parts.size()==1)
+            else if (parts.size() == 1)
                 fieldnames.push_back(token.substr(1));
             else PLERROR("Strange fieldname format (multiple declaration format is :label:0:10");
         }
         // Did we find a fieldcopy macro?
-        else if(token[0]=='[')
+        else if (token[0] == '[')
         {
             if (token[token.size() - 1] != ']') {
                 // First read until the brackets are closed.
@@ -366,40 +370,51 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
                 if (code_to_perform)
                     performed_code = parts[2];
 
-                int a=-1,b=-1;
+                int a=-1;
+                int b=-1;
 
-                if(parts[0][0]=='@')
+                if (parts[0][0] == '@')
                 {
-                    for(int i=0;i<srcfieldnames.length();i++)
-                        if(srcfieldnames[i]==astr){a=i;break;}
+                    for (int i = 0; i < srcfieldnames.length(); i++)
+                        if (srcfieldnames[i] == astr)
+                        {
+                            a = i;
+                            break;
+                        }
                 }
-                else if(parts[0][0]=='%')
-                    a=toint(parts[0].substr(1));
+                else if (parts[0][0] == '%')
+                    a = toint(parts[0].substr(1));
                 else if (parts[0] == "END")
                     // Keyword indicating we go till the end.
                     a = srcfieldnames.length() - 1;
-                else PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
+                else
+                    PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
 
-                if(parts[1][0]=='@')
+                if (parts[1][0] == '@')
                 {
-                    for(int i=0;i<srcfieldnames.length();i++)
-                        if(srcfieldnames[i]==bstr){b=i;break;}
+                    for (int i = 0; i < srcfieldnames.length(); i++)
+                        if (srcfieldnames[i] == bstr)
+                        {
+                            b = i;
+                            break;
+                        }
                 }
-                else if(parts[1][0]=='%')
-                    b=toint(parts[1].substr(1));
+                else if (parts[1][0] == '%')
+                    b = toint(parts[1].substr(1));
                 else if (parts[1] == "END")
                     // Keyword indicating we go till the end.
                     b = srcfieldnames.length() - 1;
-                else PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
+                else
+                    PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
 
-                if(a>b)
+                if (a > b)
                     PLERROR("In copyfield macro, you have specified a start field that is after the end field. Eg : [%10:%5]");
-                if(a==-1)
-                    PLERROR("In copyfield macro, unknown field : '%s'",astr.c_str());
-                if(b==-1)
-                    PLERROR("In copyfield macro, unknown field : '%s'",astr.c_str());
+                if (a == -1)
+                    PLERROR("In copyfield macro, unknown field : '%s'", astr.c_str());
+                if (b == -1)
+                    PLERROR("In copyfield macro, unknown field : '%s'", astr.c_str());
 
-                for(int i=a;i<=b;i++)
+                for (int i = a; i <= b; i++)
                 {
                     processed_sourcecode+=string("%")+tostring(i)+ " ";
                     if (code_to_perform)
@@ -410,7 +425,7 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
                     fieldnames.push_back(srcfieldnames[i]);
                 }
             }
-            else if(parts.size()==1)
+            else if (parts.size() == 1)
                 // fieldcopy macro type is [field]
             {
                 bool ignore_if_missing = false;
@@ -420,22 +435,28 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
                     parts[0] = parts[0].substr(0, parts[0].size()-1);
                 }
                 
-                string astr=parts[0].substr(1);
-                int a=-1;
-                if(parts[0][0]=='@')
+                string astr = parts[0].substr(1);
+                int a = -1;
+                if (parts[0][0] == '@')
                 {
-                    for(int i=0;i<srcfieldnames.length();i++)
-                        if(srcfieldnames[i]==astr){a=i;break;}
+                    for (int i = 0;i < srcfieldnames.length(); i++)
+                        if (srcfieldnames[i] == astr)
+                        {
+                            a = i;
+                            break;
+                        }
                 }
-                else if(parts[0][0]=='%')
-                    a=toint(parts[0].substr(1));
-                else PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
+                else if (parts[0][0] == '%')
+                    a = toint(parts[0].substr(1));
+                else
+                    PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
+
                 if (a == -1) {
                     if (!ignore_if_missing)
                         PLERROR("In copyfield macro, unknown field :%s",astr.c_str());
                 }
                 else {
-                    processed_sourcecode+=string("%")+tostring(a)+ " ";
+                    processed_sourcecode += string("%") + tostring(a) + " ";
                     if (a >= srcfieldnames.length())
                         PLERROR("In VMatLanguage::preprocess - Asked field number %d, but there "
                                 "are only %d fields available", a, srcfieldnames.length());
@@ -446,81 +467,92 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
         }
 
         // did we find a comment?
-        else if(token[0]=='#')
+        else if (token[0] == '#')
             skipRestOfLine(in);
 
         // include declaration
-        else if(token=="INCLUDE")
+        else if (token=="INCLUDE")
         {
             in >> token;
-            // Try to be intelligent and find out if the file belongs directly to another .?mat (the case of a
-            // stats file for example) and warn if the file is out of date
+            // Try to be intelligent and find out if the file belongs directly
+            // to another .?mat (the case of a stats file for example) and warn
+            // if the file is out of date
 
-            // Mhhh.. is this still pertinent? This "stats" and "bins" thing is semi-standard I think
+            // Mhhh.. is this still pertinent? This "stats" and "bins" thing is
+            // semi-standard I think
             size_t idx_meta  =  token.find(".metadata");
             size_t idx_stats =  token.find("stats.");
             size_t idx_bins  =  token.find("bins.");
-            if(idx_meta!=string::npos && (idx_stats!=string::npos || idx_bins!=string::npos))
+            if (idx_meta != string::npos && (idx_stats != string::npos || idx_bins != string::npos))
             {
-                string file=token.substr(0,idx_meta);
-                if(getDataSetDate(file) > mtime(token))
-                    PLWARNING("File %s seems out of date with parent matrix %s",token.c_str(),file.c_str());
+                string file = token.substr(0, idx_meta);
+                if (getDataSetDate(file) > mtime(token))
+                    PLWARNING("File %s seems out of date with parent matrix %s",
+                              token.c_str(), file.c_str());
             }
 
             PStream incfile = openFile(token, PStream::raw_ascii, "r");
             // process recursively this included file
             // **POSSIBLE DRAWBACK : defines done in this file will be used in the next recursion level
-            preprocess(incfile,defines, processed_sourcecode,fieldnames);
+            preprocess(incfile, defines, processed_sourcecode, fieldnames);
 	
         }
         // define declaration
-        else if(token=="DEFINE")
+        else if (token == "DEFINE")
         {
             in >> token;
             string str_buf;
             in.getline(str_buf);
             defines[token.c_str()] = str_buf;
         }
-        else if(pos!=defines.end())
+        else if (pos != defines.end())
         {
-            // the token is a macro (define) so we process it recursively until it's stable
-            // (necessary since the define macro can use defines recursively)
-            string oldstr=pos->second,newstr;
-            bool unstable=true;
-            while(unstable)
+            // the token is a macro (define) so we process it recursively until
+            // it's stable (necessary since the define macro can use defines
+            // recursively)
+            string oldstr = pos->second;
+            string newstr;
+            bool unstable = true;
+            while (unstable)
             {
                 PStream strm = openString(oldstr, PStream::raw_ascii);
-                newstr="";
-                preprocess(strm,defines,newstr,fieldnames);
-                if(removeblanks(oldstr)==removeblanks(newstr))
-                    unstable=false;
-                oldstr=newstr;
+                newstr = "";
+                preprocess(strm, defines, newstr, fieldnames);
+                if (removeblanks(oldstr) == removeblanks(newstr))
+                    unstable = false;
+                oldstr = newstr;
             }
-            processed_sourcecode+=newstr + " ";
+            processed_sourcecode += newstr + " ";
         }
-        // did we find a reference to a string value of a VMatrix that has overloaded getStringVal(..) e.g.:StrTableVMatrix
-        // In VPL, you can push on the stack the value of a string according to the string map of a particular column
-        // e.g. : to push value of string "WBush" from field MostSuspectAmericanPresidents, write @MostSuspectsAmericanPresidents."WBush"
-        else if ((token[0]=='@' || token[0]=='%') && token[token.length()-1]=='"' && (spos=token.find(".\""))!=string::npos)
-
+        // Did we find a reference to a string value of a VMatrix that has
+        // overloaded getStringVal(..) e.g.:StrTableVMatrix? In VPL, you can
+        // push on the stack the value of a string according to the string map
+        // of a particular column e.g. : to push value of string "WBush" from
+        // field MostSuspectAmericanPresidents, write
+        // @MostSuspectsAmericanPresidents."WBush"
+        else if ((token[0]=='@' || token[0]=='%') &&
+                 token[token.length()-1]=='"' &&
+                 (spos=token.find(".\""))!=string::npos)
         {
-            string colname=token.substr(1,spos-1);
-            string str=token.substr(spos+2,token.length()-spos-3);
-            // do we have a named field reference?
-            if(token[0]=='@')
+            string colname = token.substr(1, spos - 1);
+            const string str = token.substr(spos + 2, token.length() - spos - 3);
+            // Do we have a named field reference?
+            if (token[0]=='@')
             {
-                pos=defines.find(string("@")+colname);
-                if(pos==defines.end())
+                pos = defines.find(string("@") + colname);
+                if (pos == defines.end())
                     PLERROR("unknown field : '%s'",colname.c_str());
-                colname=pos->second.substr(1);
+                colname = pos->second.substr(1);
             }
-            int colnum=toint(colname);
-            real r=vmsource->getStringVal(colnum,str);
-            if(is_missing(r))
-                PLERROR("String '%s' is not a known string for the field '%s'", str.c_str(), token.c_str());
+            const int colnum = toint(colname);
+            const real r = vmsource->getStringVal(colnum, str);
+            if (is_missing(r))
+                PLERROR("String '%s' is not a known string for the field '%s'",
+                        str.c_str(), token.c_str());
             processed_sourcecode+=tostring(r)+" ";
         }
-        else processed_sourcecode+=token + " ";
+        else
+            processed_sourcecode += token + " ";
     }
 }
 
@@ -868,28 +900,32 @@ void VMatLanguage::build_opcodes_map()
 
 void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
 {
-    if(program.length()==0 && sourcecode!="")
+    if (program.length() == 0 && sourcecode != "")
     {
         TVec<string> outnames;
         const_cast<VMatLanguage*>(this)->compileString(sourcecode, outnames);
     }
-    real a,b,c;
-    if(srcvec.length()!=srcfieldnames.length())
+    
+    
+    if (srcvec.length()!=srcfieldnames.length())
         PLERROR("In VMatLanguage::run, srcvec should have length %d, not %d.",srcfieldnames.length(),srcvec.length());
+    
     pstack.resize(0);
     TVec<int>::iterator pptr = program.begin();
-    TVec<int>::iterator pptrend = program.end();
+    const TVec<int>::iterator pptrend = program.end();
     real* pfieldvalues = srcvec.data();
-    while(pptr!=pptrend)
+    real a,b,c;    
+
+    while (pptr != pptrend)
     {
-        int op = *pptr++;
+        const int op = *pptr++;
         switch(op)
         {
         case 0: // insertconstant
             pstack.push(*((float*)pptr++));
             break;
         case 1: // getfieldval
-            // Question: why is the next PLERROR line commented? Is if made
+            // XXX Question: why is the next PLERROR line commented? Is if made
             // obsolete by another bound check earlier in the code? Or is it
             // temporarily disabled? If the former, please *delete* the line,
             // together with this comment. If the latter, please reenable the
@@ -917,12 +953,12 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
             break;
         case 6: // onehot
         {
-            int nclasses = int(pstack.pop());
-            int index = int(pstack.pop());
-            for(int i=0; i<nclasses; i++)
-                pstack.push(i==index ?1 :0);
+            const int nclasses = int(pstack.pop());
+            const int index = int(pstack.pop());
+            for (int i = 0; i < nclasses; i++)
+                pstack.push(i == index ? 1 : 0);
+            break;
         }
-        break;
         case 7: // +
             b = pstack.pop();
             a = pstack.pop();
@@ -1056,8 +1092,8 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
             pstack.push(d.year);
             pstack.push(d.month);
             pstack.push(d.day);
+            break;
         }
-        break;
         case 36: //todate
             c = pstack.pop();
             b = pstack.pop();
@@ -1149,32 +1185,26 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
         }
         case 51: // get
         {
-            {
-                int i = int(pstack.pop());
-                if(i>=0)
-                    pstack.push(pstack[i]);
-                else
-                    pstack.push(pstack.length()+i);
-            }
+            const int i = int(pstack.pop());
+            if (i >= 0)
+                pstack.push(pstack[i]);
+            else
+                pstack.push(pstack.length() + i);
             break;
         }
         case 52: // memput
         {
-            {
-                int i = int(pstack.pop());
-                a = pstack.pop();
-                if(mem.size()<i+1)
-                    mem.resize(i+1);
-                mem[i] = a;
-            }
+            const int i = int(pstack.pop());
+            a = pstack.pop();
+            if (mem.size()<i+1)
+                mem.resize(i+1);
+            mem[i] = a;
             break;
         }
         case 53: // memget
         {
-            {
-                int i = int(pstack.pop());
-                pstack.push(mem[i]);
-            }
+            const int i = int(pstack.pop());
+            pstack.push(mem[i]);
             break;
         }
         case 54: // neg
@@ -1199,7 +1229,7 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
             break;
         case 59: // nextincal
         {
-            string cal_name = tostring(pstack.pop());
+            const string cal_name = tostring(pstack.pop());
             PDate d = float_to_date(pstack.pop());
             JTime date = d.toJulianDay();
             const Calendar* cal = Calendar::getGlobalCalendar(cal_name);
@@ -1219,7 +1249,7 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
         }
         case 60: // previncal
         {
-            string cal_name = tostring(pstack.pop());
+            const string cal_name = tostring(pstack.pop());
             PDate d = float_to_date(pstack.pop());
             JTime date = d.toJulianDay();
             const Calendar* cal = Calendar::getGlobalCalendar(cal_name);
@@ -1239,13 +1269,12 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
         }
         case 61: // gausshot
         {
-            real sigma = pstack.pop();
-            int nclasses = int(pstack.pop());
-            int index = int(pstack.pop());
-            for(int i=0; i<nclasses; i++) {
-                real diff_index = i-index;
-                real value = exp(- diff_index*diff_index / sigma);
-                pstack.push(value);
+            const real sigma = pstack.pop();
+            const int nclasses = int(pstack.pop());
+            const int index = int(pstack.pop());
+            for (int i = 0; i < nclasses; i++) {
+                const real diff_index = i - index;
+                pstack.push(exp(- diff_index*diff_index / sigma));
             }
             break;
         }
@@ -1261,10 +1290,10 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
         }
         case 64: // varproduct
         {
-            real num_vars_real = pstack.pop();
+            const real num_vars_real = pstack.pop();
             if (num_vars_real <= 0)
                 PLERROR("VMatLanguage: varproduct: num_vars must be a strictly positive number.");
-            int num_vars = (int)num_vars_real;
+            const int num_vars = (int)num_vars_real;
             if (num_vars != num_vars_real)
                 PLERROR("VMatLanguage: varproduct: num_vars must be an integer.");
             TVec<Vec> vars(num_vars);
@@ -1306,8 +1335,8 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
         }
         case 65: // thermometer
         {
-            int nclasses = int(pstack.pop());
-            int index = int(pstack.pop());
+            const int nclasses = int(pstack.pop());
+            const int index = int(pstack.pop());
             for (int i = 0; i < nclasses; i++)
                 pstack.push(i > index ? 1 : 0);
             
@@ -1318,16 +1347,14 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
                          tostring(op));
         }
     }
-    // copy to result vec.
-    //for(int i=0;i<pstack.size();i++)
-    //  cout<<pstack[i]<<" ";
-    //cout<<endl;
+
     if (pstack.length() > result.length())
         PLERROR("Parsing VMatLanguage: left with %d too many items on the stack!",
                 pstack.length()-result.length());
     if (pstack.length() < result.length())
         PLERROR("Parsing VMatLanguage: left with %d missing items on the stack!",
                 result.length()-pstack.length());
+
     pstack >> result;
 }
 
@@ -1347,10 +1374,6 @@ void VMatLanguage::setMemory(const Vec& new_mem) const
 void VMatLanguage::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-
-    // ### Call deepCopyField on all "pointer-like" fields
-    // ### that you wish to be deepCopied rather than
-    // ### shallow-copied.
 
     deepCopyField(vmsource, copies);
     deepCopyField(srcfieldnames, copies);
