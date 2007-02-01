@@ -296,13 +296,13 @@ class locate(list):
             except KeyError:
                 logging.critical("No test named %s found."%options.test_name)
 
-class meld(locate):
-    """Starts meld to compare the expected/run results directory trees.
+class diff(locate):
+    """Starts kdiff3 to compare the expected/run results directory trees.
 
-    Usage: pytest meld <test_name>
+    Usage: pytest diff <test_name>
     """
     def __init__(self, targets, options):
-        super(meld, self).__init__(targets, options)
+        super(diff, self).__init__(targets, options)
         if isinstance(self._listed, tuple):
             moresh.pushd()
             dirc = self._listed[0]
@@ -324,7 +324,8 @@ class meld(locate):
 
         expected = test.resultsDirectory(EXPECTED_RESULTS)
         run_results = test.resultsDirectory(RUN_RESULTS)
-        os.system("meld %s %s"%(expected, run_results))
+        os.system("kdiff3 %s %s"%(expected, run_results))
+        #os.system("meld %s %s"%(expected, run_results))
         
 class prune( PyTestMode ):
     """Removes all pytest directories within given test directories."""    
