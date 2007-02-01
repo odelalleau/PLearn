@@ -62,8 +62,8 @@ DeepBeliefNet::DeepBeliefNet() :
     final_cost_has_learning_rate( false ),
     nll_cost_index( -1 ),
     class_cost_index( -1 ),
-    recons_cost_index( -1 ),
-    final_cost_index( -1 )
+    final_cost_index( -1 ),
+    recons_cost_index( -1 )
 
 {
     random_gen = new PRandom();
@@ -691,12 +691,12 @@ void DeepBeliefNet::greedyStep( const Vec& input, const Vec& target, int index )
 
         // Backward pass
         real cost;
-        partial_costs[ index+1 ]->fprop( layers[ index+1 ]->expectation,
-                                         target, cost );
+        partial_costs[ index ]->fprop( layers[ index+1 ]->expectation,
+                                       target, cost );
 
-        partial_costs[ index+1 ]->bpropUpdate( layers[ index+1 ]->expectation,
-                                               target, cost,
-                                               expectation_gradients[ index+1 ]
+        partial_costs[ index ]->bpropUpdate( layers[ index+1 ]->expectation,
+                                             target, cost,
+                                             expectation_gradients[ index+1 ]
                                              );
 
         layers[ index+1 ]->bpropUpdate( layers[ index+1 ]->activation,
@@ -738,7 +738,7 @@ void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
     fill_one_hot( joint_exp.subVec( layers[ n_layers-2 ]->size, n_classes ),
                   (int) round(target[0]), 0., 1. );
 
-    if( partial_costs && partial_costs[ n_layers-1 ] )
+    if( partial_costs && partial_costs[ n_layers-2 ] )
     {
         // Deterministic forward pass
         classification_module->joint_connection->setAsDownInput(
@@ -754,10 +754,10 @@ void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
 
         // Backward pass
         real cost;
-        partial_costs[ n_layers-1 ]->fprop( layers[ n_layers-1 ]->expectation,
+        partial_costs[ n_layers-2 ]->fprop( layers[ n_layers-1 ]->expectation,
                                             target, cost );
 
-        partial_costs[ n_layers-1 ]->bpropUpdate(
+        partial_costs[ n_layers-2 ]->bpropUpdate(
             layers[ n_layers-1 ]->expectation, target, cost,
             expectation_gradients[ n_layers-1 ] );
 
