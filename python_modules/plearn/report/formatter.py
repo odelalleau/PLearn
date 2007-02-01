@@ -63,7 +63,7 @@ def twikiTable(table, headers=[], writer=DEFAULT_WRITER):
 def latexTable(table, headers=[], 
                align="", super_headers=[],
                padding=0.5, vpadding=0.0, caption="", label="",
-               fontsize="", landscape=False, writer=DEFAULT_WRITER):
+               fontsize="", landscape=False, targetpos="", writer=DEFAULT_WRITER):
     lwriter = lambda line : writer("%s\n"%line)
     if align:
         assert len(align)==len(table[0]), \
@@ -86,7 +86,7 @@ def latexTable(table, headers=[],
     if landscape:
         lwriter(r"\begin{landscape}")
         lwriter(r"\addtocounter{@inlandscapetable}{1}")
-    lwriter("\\begin{table}")
+    lwriter("\\begin{table}%s"%targetpos)
     
     lwriter("\\begin{center}")
     if fontsize:
@@ -132,6 +132,10 @@ def latexTableLine(line, writer=DEFAULT_WRITER):
         else:
             handling_multicol.append(elem)
     writer('&'.join(handling_multicol) + r"\\" + "\n")
+
+def vpaddingLine(vpadding, length):
+    vpad = r"\raisebox{%.3fcm}{\rule{0pt}{%.3fcm}}"%(-0.5*vpadding, vpadding)
+    return [vpad]+[""]*(length-1)
 
 def strictlyUpperTriangularTable(table, headers=[], format="%s"):
     """Returns a table of strings and modified headers suitable for latex/twikiTable.

@@ -79,8 +79,11 @@ class AxisLimits:
         self.max = max(limits[1], self.max)    
 
 class FigureWrapper(object):
+    instances = []
+
     def __init__(self, figsize=(12,10)):
         self.figure = getNewFigure(figsize)
+        self.instances.append(self)
 
     def addAxes(self, rect, *args, **kwargs):
         axes = self.figure.add_axes(rect, *args, **kwargs)
@@ -106,6 +109,12 @@ class FigureWrapper(object):
             for label in axes.get_yticklabels():
                 label.set_fontproperties(fp)            
 
+    def publishAll(FigureWrapper, ext='pdf', fno_start=1):
+        for fno, figure in enumerate(FigureWrapper.instances):
+            figure.publish('figure%d.%s'%(fno_start+fno,ext))
+        FigureWrapper.instances = []
+    publishAll = classmethod(publishAll)
+    
 class TwoFramesFigure(FigureWrapper):
     def __init__(self,
                  urect = [LEFT, 0.525, WIDTH, 0.375],
@@ -114,11 +123,11 @@ class TwoFramesFigure(FigureWrapper):
 
         self.urect = urect
         self.upperAxes = self.figure.add_axes(urect)
-        print self.upperAxes.get_frame()
+        #print self.upperAxes.get_frame()
 
         self.lrect = lrect
         self.lowerAxes = self.figure.add_axes(lrect)
-        print self.lowerAxes.get_frame()
+        #print self.lowerAxes.get_frame()
 
 #3 frames: impact          = self.addAxes(getWideRect(0.075, 0.250))
 #3 frames: positive_impact = self.addAxes(getWideRect(0.375, 0.250))

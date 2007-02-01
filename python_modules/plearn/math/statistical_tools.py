@@ -250,8 +250,7 @@ def as_stat_pair(*stats):
     for stat,pvalue in stats:
         assert pvalue >= 0.0 and pvalue <= 1.0, "Invalid probability %.3f"%pvalue
         pair = stat, report_significance(pvalue, "%.3f")
-        formatted.append(stacked_pair(pair, '%.2f', r'\text{\scriptsize (%s)}'))
-        #    r"$\underset{\text{(%s)}}{%.2f}$"%(pair[1], pair[0]) )
+        formatted.append(stacked_pair(pair, '%.3f', r'\text{\scriptsize (%s)}'))
     if len(formatted)==1:
         return formatted[0]
     return formatted
