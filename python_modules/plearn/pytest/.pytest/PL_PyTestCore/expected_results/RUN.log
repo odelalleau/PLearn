@@ -19,6 +19,10 @@
 #
 
 #
+#  pytest diff -h
+#
+
+#
 #  pytest disable -h
 #
 
@@ -36,10 +40,6 @@
 
 #
 #  pytest locate -h
-#
-
-#
-#  pytest meld -h
 #
 
 #
