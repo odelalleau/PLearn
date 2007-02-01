@@ -40,7 +40,7 @@ def array_columns( a, cols ):
     if isinstance( cols, int ):
         indices = [ cols ]
     elif isinstance( cols, slice ):
-        print cols
+        #print cols
         indices = range( *cols.indices(cols.stop) )
     else:
         indices = list( cols )            
