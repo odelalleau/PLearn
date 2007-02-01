@@ -247,6 +247,22 @@ CTime Calendar::getCalendarTime(JTime julian_time, bool use_lower_bound) const
     return last_calendar_time_;
 }
 
+CTime Calendar::getLastDayOfMonth(const PDate& day_of_the_month) const
+{
+    PDate last_day_of_month = day_of_the_month.lastDateOfMonth();
+    PLASSERT(day_of_the_month.month==last_day_of_month.month);
+
+    JTime jtime_ldom = last_day_of_month.toJulianDay();
+    CTime ctime_ldom = getCalendarTime(jtime_ldom);
+
+    // Was first day of the following month returned?
+    if ( timestamps_[ctime_ldom] > jtime_ldom )
+        ctime_ldom--;
+
+    PLASSERT( ctime_ldom >= 0 && timestamps_[ctime_ldom] <= jtime_ldom );
+    return ctime_ldom;
+}
+
 
 CTime Calendar::convertCalendarTime(const Calendar& source_calendar,
                                     const Calendar& dest_calendar,

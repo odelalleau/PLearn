@@ -49,6 +49,7 @@
 #include <limits.h>
 
 #include <plearn/base/Object.h>
+#include <plearn/base/PDate.h>
 #include "PRange.h"
 
 namespace PLearn {
@@ -228,6 +229,12 @@ public:
      */
     CTime getCalendarTime(JTime julian_time, bool use_lower_bound = true) const;
 
+    /**
+     * Similar to a call to getCalendarTime but ensures that the ctime returned
+     * actually is in the same month than the argument provided
+     */
+    CTime getLastDayOfMonth(const PDate& day_of_the_month) const;
+    
     /**
      *  Returns true iff julian_time is a valid timestamp. If specified,
      *  argument calendar_time will be filled with the right value if true and
