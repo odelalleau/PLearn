@@ -324,7 +324,7 @@ class diff(locate):
 
         expected = test.resultsDirectory(EXPECTED_RESULTS)
         run_results = test.resultsDirectory(RUN_RESULTS)
-        os.system("kdiff3 %s %s"%(expected, run_results))
+        os.system("kdiff3 %s %s >& /dev/null"%(expected, run_results))
         #os.system("meld %s %s"%(expected, run_results))
         
 class prune( PyTestMode ):
