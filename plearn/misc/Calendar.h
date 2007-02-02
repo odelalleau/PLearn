@@ -230,8 +230,9 @@ public:
     CTime getCalendarTime(JTime julian_time, bool use_lower_bound = true) const;
 
     /**
-     * Similar to a call to getCalendarTime but ensures that the ctime returned
-     * actually is in the same month than the argument provided
+     * Given a PDate D, returns the last calendar day in the same month than
+     * D. Note that the first or last date of the calendar are returned
+     * whenever the given month is out from the calendar boundaries...
      */
     CTime getLastDayOfMonth(const PDate& day_of_the_month) const;
     

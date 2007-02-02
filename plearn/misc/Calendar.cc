@@ -256,10 +256,12 @@ CTime Calendar::getLastDayOfMonth(const PDate& day_of_the_month) const
     CTime ctime_ldom = getCalendarTime(jtime_ldom);
 
     // Was first day of the following month returned?
-    if ( timestamps_[ctime_ldom] > jtime_ldom )
+    if ( ctime_ldom > 0 && timestamps_[ctime_ldom] > jtime_ldom )
+    {
         ctime_ldom--;
+        PLASSERT( timestamps_[ctime_ldom] <= jtime_ldom );
+    }
 
-    PLASSERT( ctime_ldom >= 0 && timestamps_[ctime_ldom] <= jtime_ldom );
     return ctime_ldom;
 }
 
