@@ -108,7 +108,7 @@ void RBMTruncExpLayer::generateSample()
         if( fabs( a_i ) <= 1e-5 )
             sample[i] = s + a_i*( s*(-1 + s)/2 );
         else
-            sample[i] = - logadd( pl_log( 1-s ), pl_log(s) - a_i );
+            sample[i] = - logadd( pl_log( 1-s ), pl_log(s) - a_i ) / a_i;
     }
 }
 
