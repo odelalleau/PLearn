@@ -1,8 +1,8 @@
 // -*- C++ -*-
 
-// NLLCostModule.cc
+// ClassErrorCostModule.cc
 //
-// Copyright (C) 2006 Pascal Lamblin
+// Copyright (C) 2007 Pascal Lamblin
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -34,100 +34,119 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file NLLCostModule.cc */
+/*! \file ClassErrorCostModule.cc */
 
 
 
-#include "NLLCostModule.h"
+#include "ClassErrorCostModule.h"
+#include <plearn/math/TMat_maths.h>
 
 namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
-    NLLCostModule,
-    "Computes the NLL, given a probability vector and the true class.",
-    "If input is the probability vector, and target the index of the true\n"
-    "class, this module computes cost = -log( input[target] ), and\n"
-    "back-propagates the gradient and diagonal of Hessian.\n");
+    ClassErrorCostModule,
+    "Multiclass classification error",
+    "If input_size > 1, outputs 0 if target == argmax(input), 1 else\n"
+    "If input_size == 1, outputs 0 if target is the closest integer to\n"
+    "input[0], 1 else.\n"
+    "There is no gradient to compute (it returns an error if you try), so if\n"
+    "you use this module inside a CombiningCostsModule, put its weight to 0.\n"
+    );
 
-NLLCostModule::NLLCostModule()
+ClassErrorCostModule::ClassErrorCostModule()
 {
     output_size = 1;
     target_size = 1;
 }
 
-void NLLCostModule::declareOptions(OptionList& ol)
+void ClassErrorCostModule::declareOptions(OptionList& ol)
 {
-    // declareOption(ol, "myoption", &NLLCostModule::myoption,
+    // declareOption(ol, "myoption", &ClassErrorCostModule::myoption,
     //               OptionBase::buildoption,
     //               "Help text describing this option");
+    // ...
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
 
-void NLLCostModule::build_()
+void ClassErrorCostModule::build_()
 {
+    PLASSERT( output_size == 1 );
+    PLASSERT( target_size == 1 );
 }
 
-// ### Nothing to add here, simply calls build_
-void NLLCostModule::build()
+void ClassErrorCostModule::build()
 {
     inherited::build();
     build_();
 }
 
 
-void NLLCostModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+void ClassErrorCostModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
+
+    // deepCopyField(trainvec, copies);
 }
 
-
-void NLLCostModule::fprop(const Vec& input, const Vec& target, Vec& cost) const
+///////////
+// fprop //
+///////////
+void ClassErrorCostModule::fprop(const Vec& input, const Vec& target,
+                                 Vec& cost) const
 {
-    PLASSERT( input.size() == input_size );
-    PLASSERT( target.size() == target_size );
     cost.resize( output_size );
-
-    int the_target = (int) round( target[0] );
-    cost[0] = -pl_log( input[ the_target ] );
+    fprop( input, target, cost[0] );
 }
 
-void NLLCostModule::bpropUpdate(const Vec& input, const Vec& target, real cost,
-                                Vec& input_gradient)
+void ClassErrorCostModule::fprop(const Vec& input, const Vec& target,
+                                 real& cost) const
 {
     PLASSERT( input.size() == input_size );
     PLASSERT( target.size() == target_size );
-    input_gradient.resize( input_size );
 
-    int the_target = (int) round( target[0] );
-    // input_gradient[ i ] = 0 if i != t,
-    // input_gradient[ t ] = -1/x[t]
-    input_gradient.clear();
-    input_gradient[ the_target ] = - 1. / input[ the_target ];
+    if( input_size == 1 ) // is target[0] the closest integer to input[0]?
+        cost = ( round(input[0]) == round(target[0]) ) ? 0. : 1.;
+    else // is target[0] equals to argmax(input)?
+        cost = ( argmax(input) == int(round(target[0])) ) ? 0. : 1.;
 }
 
-
-void NLLCostModule::bbpropUpdate(const Vec& input, const Vec& target,
-                                 real cost,
-                                 Vec& input_gradient, Vec& input_diag_hessian)
+/////////////////
+// bpropUpdate //
+/////////////////
+/*
+void ClassErrorCostModule::bpropUpdate(const Vec& input, const Vec& target,
+                                       real cost,
+                                       Vec& input_gradient)
 {
-    bpropUpdate( input, target, cost, input_gradient );
-
-    int the_target = (int) round( target[0] );
-    real input_gradient_t = input_gradient[ the_target ];
-    // input_diag_hessian[ i ] = 0 if i!=t
-    // input_diag_hessian[ t ] = 1/(x[t])^2
-    input_diag_hessian.resize( input_size );
-    input_diag_hessian.clear();
-    input_diag_hessian[ the_target ] = input_gradient_t * input_gradient_t;
 }
+*/
 
-TVec<string> NLLCostModule::name()
+////////////
+// forget //
+////////////
+void ClassErrorCostModule::forget()
 {
-    return TVec<string>(1, "NLL");
 }
+
+//////////
+// name //
+//////////
+TVec<string> ClassErrorCostModule::name()
+{
+    return TVec<string>(1, "class_error");
+}
+
+//////////////////////
+// bpropDoesNothing //
+//////////////////////
+bool ClassErrorCostModule::bpropDoesNothing()
+{
+    return true;
+}
+
 
 } // end of namespace PLearn
 
