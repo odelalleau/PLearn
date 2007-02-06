@@ -71,6 +71,7 @@ GradNNetLayerModule::GradNNetLayerModule():
 void GradNNetLayerModule::fprop(const Vec& input, Vec& output) const
 {
     int in_size = input.size();
+    output.resize( output_size );
 
     // size check
     if( in_size != input_size )
