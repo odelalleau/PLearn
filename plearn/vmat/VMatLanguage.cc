@@ -243,15 +243,10 @@ VMatLanguage::declareOptions(OptionList &ol)
 {
     declareOption(ol, "sourcecode", &VMatLanguage::sourcecode, OptionBase::buildoption,
                   "The VPL sourcecode of the program.");
-    declareOption(ol, "srcfieldnames", &VMatLanguage::srcfieldnames, OptionBase::buildoption,
-                  "The fieldnames that were set by setSourceFieldNames");
     declareOption(ol, "outputfieldnames", &VMatLanguage::outputfieldnames, OptionBase::learntoption,
                   "The output fieldnames produced by the program");
     declareOption(ol, "vmsource", &VMatLanguage::vmsource, OptionBase::learntoption,
                   "The VMat that was set by setSource");
-    // XXX This is a duplicate of the already defined "srcfieldnames" option,
-    // but with OptionBase::learntoption instead of buildoption. Which one is
-    // right?
     declareOption(ol, "srcfieldnames", &VMatLanguage::srcfieldnames, OptionBase::learntoption,
                   "The fieldnames that were set by setSourceFieldNames");
     declareOption(ol, "program", &VMatLanguage::program, OptionBase::learntoption,
