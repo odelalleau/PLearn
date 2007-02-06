@@ -102,9 +102,9 @@ void DERIVEDCLASS::bpropUpdate(const Vec& input, const Vec& target, real cost)
 }
 */
 
-/////////////////
-// bpropUpdate //
-/////////////////
+//////////////////
+// bbpropUpdate //
+//////////////////
 /* THIS METHOD IS OPTIONAL
 void DERIVEDCLASS::bbpropUpdate(const Vec& input, const Vec& target, real cost,
                                 Vec& input_gradient, Vec& input_diag_hessian)
