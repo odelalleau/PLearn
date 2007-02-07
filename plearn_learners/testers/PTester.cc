@@ -190,7 +190,7 @@ void PTester::declareOptions(OptionList& ol)
 
     declareOption(
         ol, "save_data_sets", &PTester::save_data_sets, OptionBase::buildoption,
-        "If true, the data set generated for split #k will be saved as Split#k/training_set.psave Split#k/test1_set.psave ...");
+        "If true, the data set generated for split #k will be saved as Split#k/training_set.vmat Split#k/test1_set.vmat ...");
 
     declareOption(
         ol, "save_test_outputs", &PTester::save_test_outputs, OptionBase::buildoption,
@@ -536,7 +536,7 @@ Vec PTester::perform(bool call_forget)
         if (should_train) {
             VMat trainset = dsets[0];
             if (is_splitdir && save_data_sets)
-                PLearn::save(splitdir / "training_set.psave", trainset);
+                PLearn::save(splitdir / "training_set.vmat", trainset);
             
             if (provide_learner_expdir)
             {
