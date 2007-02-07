@@ -51,8 +51,15 @@
 namespace PLearn {
 
 /**
- * This class
+ * Affine transformation module, with stochastic gradient descent updates.
  *
+ * Neural Network layer, using stochastic gradient to update neuron weights,
+ *      Output = weights * Input + bias
+ * Weights and bias are updated by online gradient descent, with learning
+ * rate possibly decreasing in 1/(1 + n_updates_done * decrease_constant).
+ * An L1 and L2 regularization penalty can be added to push weights to 0.
+ * Weights can be initialized to 0, to a given initial matrix, or randomly
+ * from a uniform distribution.
  *
  */
 class GradNNetLayerModule : public OnlineLearningModule
@@ -69,9 +76,11 @@ public:
     //! where t is the number of updates since the beginning
     real decrease_constant;
 
-    //! Optional initial weights of the neurons (bias on first column,
-    //! one row per neuron.
+    //! Optional initial weights of the neurons (one row per neuron).
     Mat init_weights;
+
+    //! Optional initial bias of the neurons.
+    Vec init_bias;
 
     //! If init_weights is not provided, the weights are initialized randomly
     //! from a uniform in [-r,r], with r = init_weights_random_scale/input_size
@@ -83,8 +92,11 @@ public:
     //! Optional (default=0) factor of L2 regularization term
     real L2_penalty_factor;
 
-    //! The weights, one neuron per line, bias first
+    //! The weights, one neuron per line
     Mat weights;
+
+    //! The bias
+    Vec bias;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -123,7 +135,6 @@ public:
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
@@ -147,8 +158,6 @@ private:
     // The rest of the private stuff goes here
     real learning_rate;
     int step_number;
-    mutable Vec bias_input;
-
 };
 
 // Declares a few other classes and functions related to this class

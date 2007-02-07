@@ -48,18 +48,19 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     GradNNetLayerModule,
-    "Neural Network layer, using stochastic gradient to update neuron weights",
-    "       Output = weights * (1,Input)\n"
-    "Weights are updated by online gradient with learning rate possibly decreasing\n"
-    "in 1/(1 + n_updates_done_up_to_now * decrease_constant).\n"
-    "An L1 and/or L2 regularization penalty can be added to push weights to 0.\n"
+    "Affine transformation module, with stochastic gradient descent updates",
+    "Neural Network layer, using stochastic gradient to update neuron weights\n"
+    "       Output = weights * Input + bias\n"
+    "Weights and bias are updated by online gradient descent, with learning\n"
+    "rate possibly decreasing in 1/(1 + n_updates_done * decrease_constant).\n"
+    "An L1 and L2 regularization penalty can be added to push weights to 0.\n"
     "Weights can be initialized to 0, to a given initial matrix, or randomly\n"
     "from a uniform distribution.\n"
     );
 
 GradNNetLayerModule::GradNNetLayerModule():
     start_learning_rate( .001 ),
-    decrease_constant( 0 ),
+    decrease_constant( 0. ),
     init_weights_random_scale( 1. ),
     L1_penalty_factor( 0. ),
     L2_penalty_factor( 0. ),
@@ -70,246 +71,178 @@ GradNNetLayerModule::GradNNetLayerModule():
 // Applies linear transformation
 void GradNNetLayerModule::fprop(const Vec& input, Vec& output) const
 {
-    int in_size = input.size();
+    PLASSERT_MSG( input.size() == input_size,
+                  "input.size() should be equal to this->input_size" );
+
     output.resize( output_size );
 
-    // size check
-    if( in_size != input_size )
-    {
-        PLERROR("GradNNetLayerModule::fprop: 'input.size()' should be equal\n"
-                " to 'input_size' (%i != %i)\n", in_size, input_size);
-    }
-
-    bias_input.subVec( 1, input_size ) << input;
-
-    product( output, weights, bias_input );
-
+    for( int i=0 ; i<output_size ; i++ )
+        output[i] = dot( weights(i), input ) + bias[i];
 }
 
+// We are not using blas routines anymore, because we would iterate several
+// times over the weight matrix.
 void GradNNetLayerModule::bpropUpdate(const Vec& input, const Vec& output,
                                       const Vec& output_gradient)
 {
-    int in_size = input.size();
-    int out_size = output.size();
-    int og_size = output_gradient.size();
+    PLASSERT_MSG( input.size() == input_size,
+                  "input.size() should be equal to this->input_size" );
+    PLASSERT_MSG( output.size() == output_size,
+                  "output.size() should be equal to this->output_size" );
+    PLASSERT_MSG( output_gradient.size() == output_size,
+                  "output_gradient.size() should be equal to this->output_size"
+                );
 
-    // size check
-    if( in_size != input_size )
+    learning_rate = start_learning_rate / (1+decrease_constant*step_number);
+
+    for( int i=0; i<output_size; i++ )
     {
-        PLERROR("GradNNetLayerModule::bpropUpdate: 'input.size()' should be"
-                " equal\n"
-                " to 'input_size' (%i != %i)\n", in_size, input_size);
-    }
-    if( out_size != output_size )
-    {
-        PLERROR("GradNNetLayerModule::bpropUpdate: 'output.size()' should be"
-                " equal\n"
-                " to 'output_size' (%i != %i)\n", out_size, output_size);
-    }
-    if( og_size != output_size )
-    {
-        PLERROR("GradNNetLayerModule::bpropUpdate: 'output_gradient.size()'"
-                " should\n"
-                " be equal to 'output_size' (%i != %i)\n",
-                og_size, output_size);
-    }
+        real og_i = output_gradient[i];
+        real* w_ = weights[i];
 
-    learning_rate = start_learning_rate / ( 1+decrease_constant*step_number);
+        real delta_L1 = learning_rate * L1_penalty_factor;
+        real delta_L2 = learning_rate * L2_penalty_factor;
+        if( delta_L2 > 1 )
+            PLWARNING("GradNNetLayerModule::bpropUpdate:\n"
+                      "learning rate = %f is too large!\n", learning_rate);
 
-    bias_input.subVec( 1,input_size ) << input;
+        bias[i] -= learning_rate * og_i;
 
-    externalProductScaleAcc( weights, output_gradient, bias_input,
-                             -learning_rate );
-
-    if (L1_penalty_factor!=0)
-    {
-        real delta = learning_rate * L1_penalty_factor;
-        for (int i=0;i<output_size;i++)
+        for( int j=0; j<input_size; j++ )
         {
-            real* Wi = weights[i]+1; // don't apply penalty on bias
-            for (int j=0;j<input_size;j++)
+            w_[j] -= learning_rate * input[j] * og_i;
+
+            if( delta_L1 > 0. )
             {
-                real Wij =  Wi[j];
-                if (Wij>delta)
-                    Wi[j] -=delta;
-                else if (Wij<-delta)
-                    Wi[j] +=delta;
+                if( w_[j] > delta_L1 )
+                    w_[j] -= delta_L1;
+                else if( w_[j] < -delta_L1 )
+                    w_[j] += delta_L1;
                 else
-                    Wi[j]=0;
+                    w_[j] = 0.;
             }
+
+            if( delta_L2 > 0. )
+                w_[j] *= (1 - delta_L2);
         }
     }
-    if (L2_penalty_factor!=0)
-    {
-        real delta = learning_rate*L2_penalty_factor;
-        if (delta>1)
-            PLWARNING("GradNNetLayerModule::bpropUpdate: learning rate = %f is too large!",learning_rate);
-        weights.subMatColumns(1,input_size) *= 1 - delta; // no weight decay on the bias
-    }
-
     step_number++;
-
 }
 
 
 // Simply updates and propagates back gradient
-// PA - the original version of this function propagated the error to the inputs,
-// then called the above bpropUpdate() - this proved inefficient as the weight
-// matrix had to be iterated over twice.
-// However, since we're not using blas anymore, the speedup is only when
-// compiled in optimized mode (ie debug is much slower).
 void GradNNetLayerModule::bpropUpdate(const Vec& input, const Vec& output,
                                       Vec& input_gradient,
                                       const Vec& output_gradient)
 {
-
-#ifdef BOUNDCHECK
-    int in_size = input.size();
-    int out_size = output.size();
-    int og_size = output_gradient.size();
-
-    // size check
-    if( in_size != input_size )
-    {
-        PLERROR("GradNNetLayerModule::bpropUpdate: 'input.size()' should be"
-                " equal\n"
-                " to 'input_size' (%i != %i)\n", in_size, input_size);
-    }
-    if( out_size != output_size )
-    {
-        PLERROR("GradNNetLayerModule::bpropUpdate: 'output.size()' should be"
-                " equal\n"
-                " to 'output_size' (%i != %i)\n", out_size, output_size);
-    }
-    if( og_size != output_size )
-    {
-        PLERROR("GradNNetLayerModule::bpropUpdate: 'output_gradient.size()'"
-                " should\n"
-                " be equal to 'output_size' (%i != %i)\n",
-                og_size, output_size);
-    }
-#endif
+    PLASSERT_MSG( input.size() == input_size,
+                  "input.size() should be equal to this->input_size" );
+    PLASSERT_MSG( output.size() == output_size,
+                  "output.size() should be equal to this->output_size" );
+    PLASSERT_MSG( output_gradient.size() == output_size,
+                  "output_gradient.size() should be equal to this->output_size"
+                );
 
     input_gradient.resize( input_size );
     input_gradient.clear();
 
-    learning_rate = start_learning_rate / ( 1+decrease_constant*step_number);
+    learning_rate = start_learning_rate / (1+decrease_constant*step_number);
 
-    bias_input.subVec( 1,input_size ) << input;
-
-    for(int i=0; i<output_size; i++)  {
-
+    for( int i=0; i<output_size; i++ )
+    {
         real og_i = output_gradient[i];
         real* w_ = weights[i];
 
-        w_[0] -= learning_rate * og_i; // * bias_input[0], ie 1
-        for(int j=0, jj=1; j<input_size; j++, jj++) {
-            input_gradient[j] += w_[jj] * og_i;
-            w_[jj] -= learning_rate * bias_input[jj] * og_i;
-        }
-    }
+        real delta_L1 = learning_rate * L1_penalty_factor;
+        real delta_L2 = learning_rate * L2_penalty_factor;
+        if( delta_L2 > 1 )
+            PLWARNING("GradNNetLayerModule::bpropUpdate:\n"
+                      "learning rate = %f is too large!\n", learning_rate);
 
-    // TODO When weight decays, combine penalties using similar loop as above!
+        bias[i] -= learning_rate * og_i;
 
-    if (L1_penalty_factor!=0)
-    {
-        real delta = learning_rate * L1_penalty_factor;
-        for (int i=0;i<output_size;i++)
+        for( int j=0; j<input_size; j++ )
         {
-            real* Wi = weights[i]+1; // don't apply penalty on bias
-            for (int j=0;j<input_size;j++)
+            input_gradient[j] += w_[j] * og_i;
+            w_[j] -= learning_rate * input[j] * og_i;
+
+            if( delta_L1 > 0. )
             {
-                real Wij =  Wi[j];
-                if (Wij>delta)
-                    Wi[j] -=delta;
-                else if (Wij<-delta)
-                    Wi[j] +=delta;
+                if( w_[j] > delta_L1 )
+                    w_[j] -= delta_L1;
+                else if( w_[j] < -delta_L1 )
+                    w_[j] += delta_L1;
                 else
-                    Wi[j]=0;
+                    w_[j] = 0.;
             }
+
+            if( delta_L2 > 0. )
+                w_[j] *= (1 - delta_L2);
         }
     }
-    if (L2_penalty_factor!=0)
-    {
-        real delta = learning_rate*L2_penalty_factor;
-        if (delta>1)
-            PLWARNING("GradNNetLayerModule::bpropUpdate: learning rate = %f is too large!",learning_rate);
-        weights.subMatColumns(1,input_size) *= 1 - delta; // no weight decay on the bias
-    }
-
     step_number++;
-
-
-
-    ///***OLD VERSION***
-    // compute input_gradient from initial weights
-    //input_gradient.resize( input_size );
-    //transposeProduct( input_gradient,
-    //                  weights.subMatColumns(1,input_size), output_gradient );
-    // do the update (and size check)
-    //bpropUpdate( input, output, output_gradient );
-    ///***OLD VERSION - END***
-
 }
-
-
 
 // Update
 void GradNNetLayerModule::bbpropUpdate(const Vec& input, const Vec& output,
                                        const Vec& output_gradient,
                                        const Vec& output_diag_hessian)
 {
-    int odh_size = output_diag_hessian.size();
-    if( odh_size != output_size )
-    {
-        PLERROR("GradNNetLayerModule::bbpropUpdate:"
-                " 'output_diag_hessian.size()'\n"
-                " should be equal to 'output_size' (%i != %i)\n",
-                odh_size, output_size);
-    }
-
+    PLASSERT_MSG( output_diag_hessian.size() == output_size,
+                  "output_diag_hessian.size() should be equal to"
+                  " this->output_size" );
     bpropUpdate( input, output, output_gradient );
-
 }
 
+/* This implementation is incorrect. Let the PLERROR defined in parent version
 // Propagates back output_gradient and output_diag_hessian
 void GradNNetLayerModule::bbpropUpdate(const Vec& input, const Vec& output,
-                              Vec&  input_gradient,
-                              const Vec& output_gradient,
-                              Vec&  input_diag_hessian,
-                              const Vec& output_diag_hessian)
+                                       Vec&  input_gradient,
+                                       const Vec& output_gradient,
+                                       Vec&  input_diag_hessian,
+                                       const Vec& output_diag_hessian)
 {
     bpropUpdate( input, output, input_gradient, output_gradient );
 }
+*/
 
-
-// Nothing to forget
+// Forget the bias and reinitialize the weights
 void GradNNetLayerModule::forget()
 {
-    weights.resize( output_size, 1+input_size );
-
-    if( init_weights.size() !=0 )
-        weights << init_weights;
-    else if (init_weights_random_scale!=0)
+    bias.resize( output_size );
+    if( init_bias.size() > 0 )
     {
-        real r = init_weights_random_scale / input_size;
-        random_gen->fill_random_uniform(weights.subMatColumns(1,input_size),
-                                        -r,r);
-        weights.subMatColumns(0,1).fill(0);
+        if( init_bias.size() != output_size )
+            PLERROR( "init_bias (%d) should have length equal to output_size (%d)",
+                     init_bias.size(), output_size );
+        bias << init_bias;
     }
     else
-        weights.fill(0);
+        bias.clear();
+
+    weights.resize( output_size, input_size );
+    if( init_weights.size() > 0 )
+    {
+        if( weights.length() != output_size || weights.width() != input_size )
+            PLERROR( "weights (%d,%d) should have size equal to (output_size, input_size) (%d,%d)",
+                     weights.length(), weights.width(),
+                     output_size, input_size );
+
+        weights << init_weights;
+    }
+    else if(init_weights_random_scale != 0. )
+    {
+        real r = init_weights_random_scale / input_size;
+        random_gen->fill_random_uniform(weights, -r, r);
+    }
+    else
+        weights.clear();
 
     learning_rate = start_learning_rate;
     step_number = 0;
-
-    bias_input.resize( 1+input_size );
-    bias_input[0] = 1;
-
 }
 
 
-// ### Nothing to add here, simply calls build_
 void GradNNetLayerModule::build()
 {
     inherited::build();
@@ -321,8 +254,9 @@ void GradNNetLayerModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField(init_weights, copies);
+    deepCopyField(init_bias, copies);
     deepCopyField(weights, copies);
-    deepCopyField(bias_input, copies);
+    deepCopyField(bias, copies);
 }
 
 void GradNNetLayerModule::declareOptions(OptionList& ol)
@@ -339,23 +273,29 @@ void GradNNetLayerModule::declareOptions(OptionList& ol)
 
     declareOption(ol, "init_weights", &GradNNetLayerModule::init_weights,
                   OptionBase::buildoption,
-                  "Optional initial weights of the neurons (bias on first column,\n"
-                  "one row per neuron. If not provided then weights are initialized\n"
-                  "according to a uniform distribution (see init_weights_random_scale)\n"
-                  "and biases are initialized to 0.\n");
+                  "Optional initial weights of the neurons (one row per neuron).\n"
+                  "If not provided then weights are initialized according to a uniform\n"
+                  "distribution (see init_weights_random_scale)\n");
 
-    declareOption(ol, "init_weights_random_scale", &GradNNetLayerModule::init_weights_random_scale,
+    declareOption(ol, "init_bias", &GradNNetLayerModule::init_bias,
+                  OptionBase::buildoption,
+                  "Optional initial bias of the neurons. If not provided, they are set to 0.\n");
+
+    declareOption(ol, "init_weights_random_scale",
+                  &GradNNetLayerModule::init_weights_random_scale,
                   OptionBase::buildoption,
                   "If init_weights is not provided, the weights are initialized randomly\n"
                   "from a uniform in [-r,r], with r = init_weights_random_scale/input_size.\n"
                   "To clear the weights initially, just set this option to 0.");
 
-    declareOption(ol, "L1_penalty_factor", &GradNNetLayerModule::L1_penalty_factor,
+    declareOption(ol, "L1_penalty_factor",
+                  &GradNNetLayerModule::L1_penalty_factor,
                   OptionBase::buildoption,
                   "Optional (default=0) factor of L1 regularization term, i.e.\n"
                   "minimize L1_penalty_factor * sum_{ij} |weights(i,j)| during training.\n");
 
-    declareOption(ol, "L2_penalty_factor", &GradNNetLayerModule::L2_penalty_factor,
+    declareOption(ol, "L2_penalty_factor",
+                  &GradNNetLayerModule::L2_penalty_factor,
                   OptionBase::buildoption,
                   "Optional (default=0) factor of L2 regularization term, i.e.\n"
                   "minimize 0.5 * L2_penalty_factor * sum_{ij} weights(i,j)^2 during training.\n");
@@ -363,8 +303,11 @@ void GradNNetLayerModule::declareOptions(OptionList& ol)
 
     declareOption(ol, "weights", &GradNNetLayerModule::weights,
                   OptionBase::learntoption,
-                  "Input weights of the neurons (bias on first column,"
-                  " one row per neuron" );
+                  "Input weights of the neurons (one row per neuron)");
+
+    declareOption(ol, "bias", &GradNNetLayerModule::bias,
+                  OptionBase::learntoption,
+                  "Bias of the neurons");
 
     inherited::declareOptions(ol);
 }
@@ -382,9 +325,12 @@ void GradNNetLayerModule::build_()
     if (init_weights.size()==0 && init_weights_random_scale!=0 && !random_gen)
         random_gen = new PRandom();
 
-    if( weights.length() != output_size || weights.width() != 1+input_size )
+    if( weights.length() != output_size
+        || weights.width() != input_size
+        || bias.size() != output_size )
+    {
         forget();
-
+    }
 }
 
 
