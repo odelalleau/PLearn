@@ -118,11 +118,13 @@ public:
                               const Vec& output_gradient,
                               const Vec& output_diag_hessian);
 
+    /* Bad implementation. Let the parent call PLERROR.
     virtual void bbpropUpdate(const Vec& input, const Vec& output,
                               Vec& input_gradient,
                               const Vec& output_gradient,
                               Vec& input_diag_hessian,
                               const Vec& output_diag_hessian);
+    */
 
     virtual void forget();
 
