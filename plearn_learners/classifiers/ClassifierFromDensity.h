@@ -66,7 +66,7 @@ public:
     bool output_log_probabilities;
     bool normalize_probabilities;
     Vec use_these_priors;
-    bool copy_estimator;
+    bool using_template_estimator;
     // ****************
     // * Constructors *
     // ****************

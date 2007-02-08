@@ -54,7 +54,7 @@ ClassifierFromDensity::ClassifierFromDensity()
     : nclasses(-1),
       output_log_probabilities(false),
       normalize_probabilities(true),
-      copy_estimator(false)
+      using_template_estimator(false)
 {}
 
 PLEARN_IMPLEMENT_OBJECT(
@@ -97,8 +97,8 @@ void ClassifierFromDensity::declareOptions(OptionList& ol)
     declareOption(ol, "log_priors", &ClassifierFromDensity::log_priors, OptionBase::learntoption,
                   "The log of the class prior probabilities");
 
-    declareOption(ol, "copy_estimator", &ClassifierFromDensity::copy_estimator, OptionBase::learntoption,
-                  "Indication that, at build time, the estimators for all classes are a copy of the first one");
+    declareOption(ol, "using_template_estimator", &ClassifierFromDensity::using_template_estimator, OptionBase::learntoption,
+                  "Indication that the estimators were originally obtained from one single template");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -118,9 +118,9 @@ void ClassifierFromDensity::build()
 ////////////
 void ClassifierFromDensity::build_()
 {
-    if(estimators.size()==1 || copy_estimator)
+    if(estimators.size()==1)
     {
-        copy_estimator = true;
+        using_template_estimator = true;
         estimators.resize(nclasses);
         for(int i=1; i<nclasses; i++)
             estimators[i] = PLearn::deepCopy(estimators[0]);
@@ -154,8 +154,12 @@ int ClassifierFromDensity::outputsize() const
 void ClassifierFromDensity::forget()
 {
     stage=0;
+    if (using_template_estimator)
+        estimators.resize(1);
     for(int c=0; c<estimators.length(); c++)
         estimators[c]->forget();
+    if (using_template_estimator)
+        build(); // Ensure the first estimator is duplicated.
 }
 
 ///////////
