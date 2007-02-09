@@ -106,11 +106,12 @@ void GradNNetLayerModule::bpropUpdate(const Vec& input, const Vec& output,
             PLWARNING("GradNNetLayerModule::bpropUpdate:\n"
                       "learning rate = %f is too large!\n", learning_rate);
 
-        bias[i] -= learning_rate * og_i;
+        real lr_og_i = learning_rate * og_i;
+        bias[i] -= lr_og_i;
 
         for( int j=0; j<input_size; j++ )
         {
-            w_[j] -= learning_rate * input[j] * og_i;
+            w_[j] -= input[j] * lr_og_i;
 
             if( delta_L1 > 0. )
             {
@@ -159,12 +160,13 @@ void GradNNetLayerModule::bpropUpdate(const Vec& input, const Vec& output,
             PLWARNING("GradNNetLayerModule::bpropUpdate:\n"
                       "learning rate = %f is too large!\n", learning_rate);
 
-        bias[i] -= learning_rate * og_i;
+        real lr_og_i = learning_rate * og_i;
+        bias[i] -= lr_og_i;
 
         for( int j=0; j<input_size; j++ )
         {
             input_gradient[j] += w_[j] * og_i;
-            w_[j] -= learning_rate * input[j] * og_i;
+            w_[j] -= input[j] * lr_og_i;
 
             if( delta_L1 > 0. )
             {
