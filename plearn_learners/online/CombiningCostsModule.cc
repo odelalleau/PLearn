@@ -97,10 +97,10 @@ void CombiningCostsModule::build_()
                  "should be equal to n_sub_costs (%d != %d).\n",
                  cost_weights.length(), n_sub_costs );
 
+    sub_costs_values.resize( n_sub_costs );
     output_size = n_sub_costs+1;
 }
 
-// ### Nothing to add here, simply calls build_
 void CombiningCostsModule::build()
 {
     inherited::build();
@@ -138,6 +138,7 @@ void CombiningCostsModule::bpropUpdate(const Vec& input, const Vec& target,
     PLASSERT( input.size() == input_size );
     PLASSERT( target.size() == target_size );
     input_gradient.resize( input_size );
+    input_gradient.clear();
 
     Vec partial_gradient;
     for( int i=0 ; i<n_sub_costs ; i++ )
@@ -171,7 +172,9 @@ void CombiningCostsModule::bbpropUpdate(const Vec& input, const Vec& target,
     PLASSERT( input.size() == input_size );
     PLASSERT( target.size() == target_size );
     input_gradient.resize( input_size );
+    input_gradient.clear();
     input_diag_hessian.resize( input_size );
+    input_diag_hessian.clear();
 
     Vec partial_gradient;
     Vec partial_diag_hessian;
@@ -196,7 +199,7 @@ void CombiningCostsModule::bbpropUpdate(const Vec& input, const Vec& target,
 }
 
 
-//! reset the parameters to the state they would be BEFORE starting training.
+//! Reset the parameters to the state they would be BEFORE starting training.
 //! Note that this method is necessarily called from build().
 void CombiningCostsModule::forget()
 {
