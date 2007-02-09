@@ -63,22 +63,34 @@ class SumOfVariable: public NaryVariable
 {
     typedef NaryVariable inherited;
 
+// protected:
 public:
-    //protected:
     VMat distr;
     Func f;
-    int nsamples;
-    int curpos; //!<  current pos in VMat 
+
+    int nsamples; //!< number of consecutive samples from the dataset distr
+                  //!< that every propagation operation will use
+
+    int curpos;   //!< position of current sample in dataset distr 
+
+    bool loop;    //!< if true, every propagation operation, before returning,
+                  //!< will set back curpos to the value it had when entering
+                  //!< the call. So that curpos will be unchanged by the call.
+
     // To avoid allocation/deallocations in fprop/bprop
     Vec input_value;
     Vec input_gradient;
     Vec output_value;
     //! Indication that sizefprop should be used on f
     bool do_sizeprop;
+
+    int beginpos;
+    int endpos;
     
 public:
     //!  protected default constructor for persistence
-    SumOfVariable() : distr(), f(), nsamples(), curpos() {}
+    SumOfVariable() : distr(), f(), nsamples(0), curpos(0), loop(false) {}
+
     //!  Sum_{inputs \in distr} f(inputs)
     SumOfVariable(VMat the_distr, Func the_f, int the_nsamples=-1, bool the_do_resizeprop=false);
     
@@ -94,7 +106,46 @@ public:
     virtual void fbprop();
     virtual void symbolicBprop();
     virtual void rfprop();
-    
+
+    VMat getDataSet() const
+    { return distr; }
+
+    void setDataSet(VMat dset)
+    {
+        if(distr.isNotNull() && distr.length()==nsamples)
+            nsamples = -1;
+        
+        distr = dset;
+        if(nsamples == -1)
+            nsamples = distr->length();
+
+        curpos = 0;
+    }
+
+    void setCurrentSamplePos(int pos)
+    { curpos = pos; }
+
+    int getCurrentSamplePos() const
+    { return curpos; }
+
+    //! This allows to control over which part of the dataset
+    //! the next propagation operation(s) will sum.
+    /** The call sets the curpos, nsamples and loop options.  Thus the next
+        propagation call will start at sample curpos=startpos and sum over
+        nsamples=n consecutive samples.  If loop (assigned the value do_loop)
+        is true, then curpos will be left unchanged by propagation calls, which
+        will thus always sum over the same nsamples samples.  If loop is
+        false however, any propagation call will move curpos by nsamples, thus
+        a subsequent propagation call will sum over the *next* nsamples (which
+        will correspond to the same smaples only if nsamples == distr.length()) **/
+
+    void setSampleRange(int startpos, int n, bool do_loop)
+    {
+        curpos = startpos;
+        nsamples = n;
+        loop = do_loop;
+    }
+
     void printInfo(bool print_gradient);
 
 protected:

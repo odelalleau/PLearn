@@ -69,7 +69,7 @@ SumOfVariable::SumOfVariable(VMat the_distr, Func the_f, int the_nsamples,bool t
     : inherited(nonInputParentsOfPath(the_f->inputs,the_f->outputs), 
                 the_f->outputs[0]->length(), 
                 the_f->outputs[0]->width()),
-      distr(the_distr), f(the_f), nsamples(the_nsamples), curpos(0),
+      distr(the_distr), f(the_f), nsamples(the_nsamples), curpos(0), loop(false),
       //input_value(the_distr->inputsize()+the_distr->targetsize()+the_distr->weightsize()), 
       //input_gradient(the_distr->inputsize()+the_distr->targetsize()+the_distr->weightsize()), 
       input_value(the_distr->width()),
@@ -90,7 +90,8 @@ SumOfVariable::build()
 void
 SumOfVariable::build_()
 {
-    if (f && distr) {
+    if (f && distr) 
+    {
         input_value.resize(distr->inputsize() + distr->targetsize() + distr->weightsize());
         input_gradient.resize(distr->inputsize() + distr->targetsize() + distr->weightsize());
         if(f->outputs.size() != 1)
@@ -116,6 +117,17 @@ SumOfVariable::declareOptions(OptionList &ol)
                   "all rows of the matrix.");
     declareOption(ol, "curpos", &SumOfVariable::curpos, OptionBase::buildoption,
                   "Current position (row) in the VMatrix we are summing over.");
+    declareOption(ol, "loop", &SumOfVariable::loop, OptionBase::buildoption,
+                  "If true, every propagation operation, before returning,\n"
+                  "will set back curpos to the value it had when entering\n"
+                  "the call. So curpos will be left unchanged by the call.\n"
+                  "This behavior corresponds to propagation operations \n"
+                  "always summing over the same nsamples (in range \n"
+                  "curpos, ..., curpos+nsamples-1) \n"
+                  "If loop is false however, any propagation call will \n"
+                  "move curpos by nsamples, thus a subsequent propagation \n"
+                  "call will sum over the *next* nsamples (which will correspond \n"
+                  "to the same saples only if nsamples == distr.length()).");
     inherited::declareOptions(ol);
 }
 
@@ -140,6 +152,8 @@ void SumOfVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void SumOfVariable::fprop()
 {
+    int orig_curpos = curpos;
+
     f->recomputeParents();
 
     if(nsamples==1)
@@ -186,6 +200,9 @@ void SumOfVariable::fprop()
         }
 #endif
     }
+
+    if(loop)
+        curpos = orig_curpos;
 }
 
 
@@ -195,8 +212,9 @@ void SumOfVariable::bprop()
 
 void SumOfVariable::fbprop()
 {
-    f->recomputeParents();
-  
+    f->recomputeParents();  
+    int orig_curpos = curpos;
+
     if(nsamples==1)
     {
         input_value.resize(distr->width());
@@ -254,6 +272,10 @@ void SumOfVariable::fbprop()
         }
 #endif
     }
+
+    if(loop)
+        curpos = orig_curpos;
+
 }
 
 
@@ -280,6 +302,8 @@ void SumOfVariable::symbolicBprop()
 
 void SumOfVariable::rfprop()
 {
+    int orig_curpos = curpos;
+
     if (rValue.length()==0) resizeRValue();
     // TODO... (we will need a rfprop() in Func)
   
@@ -320,6 +344,11 @@ void SumOfVariable::rfprop()
 //      }
 //  #endif
 //    }
+
+
+    if(loop)
+        curpos = orig_curpos;
+
 }
 
 
@@ -348,9 +377,9 @@ void SumOfVariable::printInfo(bool print_gradient)
             curpos = 0;
         f->fproppath.printInfo(print_gradient);
     }
-    cout << info() << " : " << getName() << " = " << value;
+    pout << info() << " : " << getName() << " = " << value;
     if (print_gradient) cout << " gradient=" << gradient;
-    cout << endl; 
+    pout << endl; 
 }
 
 

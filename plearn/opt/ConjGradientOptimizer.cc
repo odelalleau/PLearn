@@ -42,6 +42,7 @@
 
 #include "ConjGradientOptimizer.h"
 #include <plearn/io/pl_log.h>
+#include <plearn/var/SumOfVariable.h>
 
 namespace PLearn {
 using namespace std;
@@ -59,6 +60,9 @@ ConjGradientOptimizer::ConjGradientOptimizer()
       max_eval_per_line_search(20),
       no_negative_gamma(true),
       verbosity(0),
+      minibatch_n_samples(0),
+      minibatch_n_line_searches(3),
+      minibatch_curpos(0),
       line_search_failed(false),
       line_search_succeeded(false)
 { }
@@ -174,6 +178,20 @@ void ConjGradientOptimizer::declareOptions(OptionList& ol)
         ol, "slope_ratio", &ConjGradientOptimizer::slope_ratio,
         OptionBase::buildoption, 
         "Maximum slope ratio.");
+
+    declareOption(
+        ol, "minibatch_n_samples", &ConjGradientOptimizer::minibatch_n_samples,
+        OptionBase::buildoption, 
+        "If >0 we'll do minibatch. In minibatch mode, weight updates are based on \n"
+        "cost and gradients computed on a subset of the whole training set, made \n"
+        "of minibatch_n_samples consecutive samples. Each such subset will be used \n"
+        "to perform minibatch_n_line_searches line searches before moving to the \n"
+        "next minibatch subset.\n");
+
+    declareOption(
+        ol, "minibatch_n_line_searches", &ConjGradientOptimizer::minibatch_n_line_searches,
+        OptionBase::buildoption, 
+        "How many line searches to perform with each minibatch subset.");
 
     inherited::declareOptions(ol);
 }
@@ -424,6 +442,25 @@ void ConjGradientOptimizer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
     int stage_max = stage + nstages; // The stage to reach.
 
+    SumOfVariable* sumofvar = 0;
+    int trainsetlength = -1;
+    int minibatch_n_line_searches_left = minibatch_n_line_searches;
+    if(minibatch_n_samples>0)
+    {
+        sumofvar = dynamic_cast<SumOfVariable*>((Variable*)cost);
+        if(sumofvar)
+        {
+            trainsetlength = sumofvar->getDataSet()->length();
+            sumofvar->setSampleRange(minibatch_curpos, minibatch_n_samples, true);
+        }
+        else
+        {
+            PLWARNING("In ConjGradientOptimizer, minibatch_n_samples>0 but can't "
+                      "do minibatch since cost does not seem to be a SumOfVariable "
+                      " (the only type of variable for which minibatch is supported)");
+        }
+    }
+    
     if (stage == 0)
     {
         computeOppositeGradient(current_opp_gradient);
@@ -444,8 +481,19 @@ bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
     }
 
     for (; !early_stop && stage<stage_max; stage++) {
+
+        if(sumofvar && minibatch_n_line_searches_left==0)
+        {
+            minibatch_curpos = (minibatch_curpos+minibatch_n_samples)%trainsetlength;
+            sumofvar->setSampleRange(minibatch_curpos, minibatch_n_samples, true);
+            minibatch_n_line_searches_left = minibatch_n_line_searches;            
+        }
+
         // Make a line search along the current search direction.
         early_stop = !lineSearch();
+        if(sumofvar) // we're doing minibatch
+            --minibatch_n_line_searches_left;
+            
         // Ensure 'delta' contains the opposite gradient at the new point
         // reached after the line search.
         // Also update 'current_cost'.
@@ -490,6 +538,7 @@ void ConjGradientOptimizer::reset() {
     inherited::reset();
     line_search_failed = false;
     line_search_succeeded = false;
+    minibatch_curpos = 0;
 }
 
 ///////////////////////////

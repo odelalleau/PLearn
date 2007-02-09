@@ -66,8 +66,13 @@ public:
     bool no_negative_gamma;
     int verbosity;
 
+    int minibatch_n_samples;
+    int minibatch_n_line_searches;
+
 protected:
-  
+
+    int minibatch_curpos; // current starting sample position in dataset for minibatch 
+
     //! Bracket limit.
     real bracket_limit;
 
