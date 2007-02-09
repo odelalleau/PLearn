@@ -59,18 +59,11 @@ class ClassErrorCostModule : public CostModule
 public:
     //#####  Public Build Options  ############################################
 
-    //! ### declare public option fields (such as build options) here
-    //! Start your comments with Doxygen-compatible comments such as //!
-
 public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
-    // ### Make sure the implementation in the .cc
-    // ### initializes all fields to reasonable default values.
     ClassErrorCostModule();
-
-    // Your other public member functions go here
 
     //! Given the input and the target, compute a vector of costs
     //! (possibly resize it appropriately)
@@ -80,11 +73,17 @@ public:
     //! (of which we will compute the gradient)
     virtual void fprop(const Vec& input, const Vec& target, real& cost) const;
 
+    //! Nothing to do
+    virtual void bpropUpdate(const Vec& input, const Vec& target, real cost);
+
     /* Default implementation in super class raises a PLERROR
     //! No differentiable, so no gradient to backprop!
     virtual void bpropUpdate(const Vec& input, const Vec& target, real cost,
                              Vec& input_gradient);
     */
+
+    //! Nothing to do
+    virtual void bbpropUpdate(const Vec& input, const Vec& target, real cost);
 
     /* Optional
        N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS, WHICH
@@ -110,8 +109,6 @@ public:
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
-    // ### If your class is not instantiatable (it has pure virtual methods)
-    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT
     PLEARN_DECLARE_OBJECT(ClassErrorCostModule);
 
     // Simply calls inherited::build() then build_()
@@ -135,8 +132,6 @@ private:
 
 private:
     //#####  Private Data Members  ############################################
-
-    // The rest of the private stuff goes here
 };
 
 // Declares a few other classes and functions related to this class

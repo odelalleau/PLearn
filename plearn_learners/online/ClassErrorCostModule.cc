@@ -116,10 +116,32 @@ void ClassErrorCostModule::fprop(const Vec& input, const Vec& target,
 /////////////////
 // bpropUpdate //
 /////////////////
-/*
+void ClassErrorCostModule::bpropUpdate(const Vec& input, const Vec& target,
+                                       real cost)
+{
+}
+
+/* Not supposed to happen
 void ClassErrorCostModule::bpropUpdate(const Vec& input, const Vec& target,
                                        real cost,
                                        Vec& input_gradient)
+{
+}
+*/
+
+//////////////////
+// bbpropUpdate //
+//////////////////
+void ClassErrorCostModule::bbpropUpdate(const Vec& input, const Vec& target,
+                                        real cost)
+{
+}
+
+/* Not supposed to happen
+void ClassErrorCostModule::bbpropUpdate(const Vec& input, const Vec& target,
+                                       real cost,
+                                       Vec& input_gradient,
+                                       Vec& input_diag_hessian)
 {
 }
 */
