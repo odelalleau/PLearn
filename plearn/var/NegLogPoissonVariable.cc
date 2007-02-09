@@ -99,16 +99,24 @@ void NegLogPoissonVariable::fprop()
         real weight = 1;
         if (varray.size()>2)
             weight = varray[2]->valuedata[i];
-        real log_fact_target = pl_gammln(target+1);
+
+        static real EPSILON = 1e-8;          // Regularization
+        real log_fact_target = pl_gammln(max(target, EPSILON)+1);
 //        cost += exp(output) * weight - (output + pl_log(weight) ) * target + log_fact_target;
-        cost += exp(output) - (output + pl_log(weight)) * target / weight + log_fact_target / weight;
+
+        if (weight > 0)
+            cost += exp(output) - (output + pl_log(weight)) * target / weight +
+                    log_fact_target / weight;
     }
+    if (is_missing(cost))
+        PLERROR("NegLogPoissonVariable::fprop: encountered NaN cost");
+    
     valuedata[0] = cost;
 }
 
 void NegLogPoissonVariable::bprop()
 {
-    real gr = *gradientdata;
+    real gr = gradient[0];
     for (int i=0; i<varray[0]->size(); i++)
     {
         real output = varray[0]->valuedata[i];
@@ -116,7 +124,9 @@ void NegLogPoissonVariable::bprop()
         real weight = 1;
         if (varray.size()>2)
             weight = varray[2]->valuedata[i];
-        varray[0]->gradientdata[i] += gr* ( exp(output) - target / weight);
+
+        if (weight > 0)
+            varray[0]->gradientdata[i] += gr * ( exp(output) - target / weight);
 //        varray[0]->gradientdata[i] += gr* ( exp(output) * weight - target);
     }
 }
