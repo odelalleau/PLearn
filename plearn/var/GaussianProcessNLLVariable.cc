@@ -39,6 +39,10 @@
 #include <plearn/math/TMat_maths.h>
 #include "GaussianProcessNLLVariable.h"
 
+#ifdef USE_BLAS_SPECIALISATIONS
+#include <plearn/math/plapack.h>
+#endif
+
 namespace PLearn {
 using namespace std;
 
@@ -205,8 +209,9 @@ void GaussianProcessNLLVariable::bprop()
 }
 
 
-//#####  fbpropFragments  #####################################################
+//#####  fbpropFragments (NO LAPACK)  #########################################
 
+#ifndef USE_BLAS_SPECIALISATIONS
 void GaussianProcessNLLVariable::fbpropFragments(
     Kernel* kernel, real noise, const Mat& inputs, const Mat& targets,
     bool compute_inverse, Mat& gram, Mat& L, Mat& alpha, Mat& inv,
@@ -246,6 +251,54 @@ void GaussianProcessNLLVariable::fbpropFragments(
         alpha = alpha.subMatColumns(0, targetsize);
     }
 }
+#endif
+
+//#####  fbpropFragments (LAPACK)  ############################################
+
+#ifdef USE_BLAS_SPECIALISATIONS
+void GaussianProcessNLLVariable::fbpropFragments(
+    Kernel* kernel, real noise, const Mat& inputs, const Mat& targets,
+    bool compute_inverse, Mat& gram, Mat& L, Mat& alpha, Mat& inv,
+    Vec& tmp_chol, Mat& tmp_rhs)
+{
+    PLASSERT( kernel );
+    PLASSERT( inputs.length() == targets.length() );
+    const int trainlength = inputs.length();
+    const int targetsize  = targets.width();
+    
+    // The RHS matrix (when solving the linear system Gram*Params=RHS) is made
+    // up of two parts: the regression targets themselves, and the identity
+    // matrix if we requested them (for confidence intervals).  After solving
+    // the linear system, set the gram-inverse appropriately.
+    int rhs_width = targetsize + (compute_inverse? trainlength : 0);
+    tmp_rhs.resize(trainlength, rhs_width);
+    tmp_rhs.subMatColumns(0, targetsize) << targets;
+    if (compute_inverse) {
+        Mat rhs_identity = tmp_rhs.subMatColumns(targetsize, trainlength);
+        identityMatrix(rhs_identity);
+    }
+
+    // Compute Gram Matrix and add weight decay to diagonal
+    kernel->setDataForKernelMatrix(inputs);
+    gram.resize(trainlength, trainlength);
+    kernel->computeGramMatrix(gram);
+    addToDiagonal(gram, noise);
+
+    // Compute Cholesky decomposition and solve the linear system.  LAPACK
+    // solves in-place, but luckily we don't need either the Gram and RHS
+    // matrices after solving.  Note that for now we don't bother to create an
+    // appropriately transposed RHS (will come later).
+    lapackCholeskyDecompositionInPlace(gram);
+    lapackCholeskySolveInPlace(gram, tmp_rhs);
+    alpha = tmp_rhs;                         // LAPACK solves in-place
+    L     = gram;                            // LAPACK solves in-place
+    
+    if (compute_inverse) {
+        inv   = alpha.subMatColumns(targetsize, trainlength);
+        alpha = alpha.subMatColumns(0, targetsize);
+    }
+}
+#endif
 
 } // end of namespace PLearn
 
