@@ -77,6 +77,13 @@ extern "C" {
     void ssygvx_(int* ITYPE, char* JOBZ, char* RANGE, char* UPLO, int* N, float* A, int* LDA, float* B, int* LDB, float* VL, float* VU, int* IL, int* IU, float* ABSTOL, int* M, float* W, float* Z, int* LDZ, float* WORK, int* LWORK, int* IWORK, int* IFAIL, int* INFO);
     void dsygvx_(int* ITYPE, char* JOBZ, char* RANGE, char* UPLO, int* N, double* A, int* LDA, double* B, int* LDB, double* VL, double* VU, int* IL, int* IU, double* ABSTOL, int* M, double* W, double* Z, int* LDZ, double* WORK, int* LWORK, int* IWORK, int* IFAIL, int* INFO);
 
+    // Cholesky Decomposition
+    void spotrf_(char* UPLO, int* N, float*  A, int* LDA, int* INFO);
+    void dpotrf_(char* UPLO, int* N, double* A, int* LDA, int* INFO);
+
+    // Solve linear system given Cholesky Decomposition
+    void spotrs_(char* UPLO, int* N, int* NRHS, float*  A, int* LDA, float*  B, int* LDB, int* INFO);
+    void dpotrs_(char* UPLO, int* N, int* NRHS, double* A, int* LDA, double* B, int* LDB, int* INFO);
 }
 
 } // end of namespace PLearn

@@ -417,6 +417,123 @@ Vec constrainedLinearRegression(const Mat& Xt, const Vec& Y, real lambda)
 }
 
 
+//#####  lapackCholeskyDecompositionInPlace  ##################################
+
+void lapackCholeskyDecompositionInPlace(Mat& A, char uplo)
+{
+    if (A.width() == 0 || A.length() == 0)
+        return;
+    if (A.mod() != A.width())
+        PLERROR("lapackCholeskyDecompositionInPlace: matrix mod (%d) must equal "
+                "its width (%d)", A.mod(), A.width());
+    if (A.width() != A.length())
+        PLERROR("lapackCholeskyDecompositionInPlace: matrix width (%d) and height (%d) "
+                "must be equal", A.width(), A.length());
+
+    char lapack_uplo;
+    switch (uplo) {
+    case 'L':
+    case 'l':
+        lapack_uplo = 'U';
+        break;
+
+    case 'U':
+    case 'u':
+        lapack_uplo = 'L';
+        break;
+
+    default:
+        PLERROR("lapackCholeskyDecompositionInPlace: unrecognized character '%c' for "
+                "argument 'uplo'; valid characters are 'U' and 'L'", uplo);
+    }
+
+    real* data = A.data();
+    int N = A.width();
+    int INFO;
+
+    // call LAPACK
+    lapack_Xpotrf_(&lapack_uplo, &N, data, &N, &INFO);
+
+    if (INFO == 0)
+        return;                              // all successful
+    else if (INFO < 0)
+        PLERROR("lapackCholeskyDecompositionInPlace: implementation error; argument %d "
+                "to xPOTRF had an illegal value", -INFO);
+    else
+        PLERROR("lapackCholeskyDecompositionInPlace: error in decomposition; "
+                "leading minor of order %d is not positive definite, "
+                "and the factorization could not be completed.", INFO);
+}
+
+
+//#####  lapackCholeskySolveInPlace  ##########################################
+
+void lapackCholeskySolveInPlace(Mat& A, Mat& B, bool B_is_column_major, char uplo)
+{
+    if (A.width() == 0 || A.length() == 0 || B.width() == 0 || B.length() == 0)
+        return;
+    if (A.mod() != A.width())
+        PLERROR("lapackCholeskySolveInPlace: matrix A mod (%d) must equal "
+                "its width (%d)", A.mod(), A.width());
+    if (B.mod() != B.width())
+        PLERROR("lapackCholeskySolveInPlace: matrix B mod (%d) must equal "
+                "its width (%d)", B.mod(), B.width());
+    if (A.width() != A.length())
+        PLERROR("lapackCholeskySolveInPlace: matrix width (%d) and height (%d) "
+                "must be equal", A.width(), A.length());
+    if ((! B_is_column_major && B.length() != A.length()) ||
+        (  B_is_column_major && B.width()  != A.length()) )
+        PLERROR("lapackCholeskySolveInPlace: matrix B length (%d) is "
+                "incompatible with the dimensions of A (%d)",
+                (B_is_column_major? B.width() : B.length()), A.length());
+
+    char lapack_uplo;
+    switch (uplo) {
+    case 'L':
+    case 'l':
+        lapack_uplo = 'U';
+        break;
+
+    case 'U':
+    case 'u':
+        lapack_uplo = 'L';
+        break;
+
+    default:
+        PLERROR("lapackCholeskySolveInPlace: unrecognized character '%c' for "
+                "argument 'uplo'; valid characters are 'U' and 'L'", uplo);
+    }
+
+    // If B is not column-major, transpose it
+    Mat lapack_B;
+    if (! B_is_column_major)
+        lapack_B = transpose(B);
+    else
+        lapack_B = B;
+
+    // Prepare for call to LAPACK
+    int N    = A.width();
+    int NRHS = lapack_B.length();   // Don't forget it's transposed for lapack
+    int LDA  = A.length();
+    int LDB  = lapack_B.width();
+    int INFO;
+    real* A_data = A.data();
+    real* B_data = lapack_B.data();
+
+    // Call LAPACK
+    lapack_Xpotrs_(&lapack_uplo, &N, &NRHS, A_data, &LDA, B_data, &LDB, &INFO);
+
+    if (INFO < 0)
+        PLERROR("lapackCholeskySolvePlace: implementation error; argument %d "
+                "to xPOTRS had an illegal value", -INFO);
+    PLASSERT( INFO == 0 );
+
+    // If B was not originally column-major, transpose back result from LAPACK
+    if (! B_is_column_major)
+        transpose(lapack_B, B);
+}
+
+
 
 Mat multivariate_normal(const Vec& mu, const Mat& A, int N)
 {

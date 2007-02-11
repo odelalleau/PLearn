@@ -76,6 +76,18 @@ inline void lapack_Xsygvx_(int* ITYPE, char* JOBZ, char* RANGE, char* UPLO, int*
 inline void lapack_Xsygvx_(int* ITYPE, char* JOBZ, char* RANGE, char* UPLO, int* N, float* A, int* LDA, float* B, int* LDB, float* VL, float* VU, int* IL, int* IU, float* ABSTOL, int* M, float* W, float* Z, int* LDZ, float* WORK, int* LWORK, int* IWORK, int* IFAIL, int* INFO)
 { ssygvx_(ITYPE, JOBZ, RANGE, UPLO, N, A, LDA, B, LDB, VL, VU, IL, IU, ABSTOL, M, W, Z, LDZ, WORK, LWORK, IWORK, IFAIL, INFO); }
 
+inline void lapack_Xpotrf_(char* UPLO, int* N, float* A, int* LDA, int* INFO)
+{ spotrf_(UPLO, N, A, LDA, INFO); }
+
+inline void lapack_Xpotrf_(char* UPLO, int* N, double* A, int* LDA, int* INFO)
+{ dpotrf_(UPLO, N, A, LDA, INFO); }
+
+inline void lapack_Xpotrs_(char* UPLO, int* N, int* NRHS, float*  A, int* LDA, float*  B, int* LDB, int* INFO)
+{ spotrs_(UPLO, N, NRHS, A, LDA, B, LDB, INFO); }
+
+inline void lapack_Xpotrs_(char* UPLO, int* N, int* NRHS, double* A, int* LDA, double* B, int* LDB, int* INFO)
+{ dpotrs_(UPLO, N, NRHS, A, LDA, B, LDB, INFO); }
+
 
 //!  Computes the eigenvalues and eigenvectors of a symmetric (NxN) matrix A.
 //!  BEWARE: The content of A is destroyed by the call.
@@ -618,6 +630,36 @@ void solveTransposeLinearSystem(const Mat& A, const Mat& Y, Mat& X);
 */
 Vec constrainedLinearRegression(const Mat& Xt, const Vec& Y, real lambda=0.);
 
+
+/**
+ *  Call LAPACK to perform in-place Cholesky Decomposition of a square
+ *  SYMMETRIC matrix A.  Note that the matrix mod must equal its width in the
+ *  current implementation.  The argument uplo is a single character, which is
+ *  either 'L' if the lower-triangle should be considered (and the returned
+ *  cholesky is L * L') or 'U' if the upper-triangle should be considered (and
+ *  the returned cholesky is U' * U).  [[Implementation note: in the call to
+ *  LAPACK, we swap those letters in order to reflect the row-ordering
+ *  differences between PLearn and LAPACK.]]
+ */
+void lapackCholeskyDecompositionInPlace(Mat& A, char uplo='L');
+
+/**
+ *  Call LAPACK to solve in-place a linear system given its previously-computed
+ *  Cholesky decomposition.  The argument B contains the matrix of
+ *  right-hand-sides.  Since LAPACK is column-major, one can specify if 'B' is
+ *  ALREADY in column-major to avoid a transpose (which would otherwise be
+ *  performed automatically by this function).  The argument uplo is a single
+ *  character, which is either 'L' if the lower-triangle should be considered
+ *  (and the returned cholesky is L * L') or 'U' if the upper-triangle should
+ *  be considered (and the returned cholesky is U' * U).  [[Implementation
+ *  note: in the call to LAPACK, we swap those letters in order to reflect the
+ *  row-ordering differences between PLearn and LAPACK.]]
+ *
+ *  On return, B contains the solution matrix.  A is not modified and can be
+ *  reused in further calls to lapackCholeskySolveInPlace.
+ */
+void lapackCholeskySolveInPlace(Mat& A, Mat& B, bool B_is_column_major=false,
+                                char uplo='L');
 
 //! Compute the generalization error estimator called Generalized Cross-Validation (Craven & Wahba 1979),
 //! and the corresponding ridge regression weights in
