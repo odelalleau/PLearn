@@ -66,7 +66,7 @@ DeepBeliefNet::DeepBeliefNet() :
     recons_cost_index( -1 )
 
 {
-    random_gen = new PRandom();
+    random_gen = new PRandom( seed_ );
 }
 
 void DeepBeliefNet::declareOptions(OptionList& ol)
@@ -81,9 +81,11 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   "The decrease constant of the learning rate used during"
                   " gradient descent");
 
+    /* NOT IMPLEMENTED YET
     declareOption(ol, "grad_weight_decay", &DeepBeliefNet::grad_weight_decay,
                   OptionBase::buildoption,
                   "The weight decay used during the gradient descent");
+    */
 
     declareOption(ol, "n_classes", &DeepBeliefNet::n_classes,
                   OptionBase::buildoption,

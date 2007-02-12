@@ -73,8 +73,10 @@ public:
     //! The decrease constant of the learning rate used during gradient descent
     real grad_decrease_ct;
 
+    /* NOT IMPLEMENTED YET
     //! The weight decay used during the gradient descent
     real grad_weight_decay;
+    */
 
     //! Number of classes in the training set
     //!   - 0 means we are doing regression,
