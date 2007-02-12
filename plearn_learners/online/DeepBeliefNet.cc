@@ -55,7 +55,7 @@ DeepBeliefNet::DeepBeliefNet() :
     cd_learning_rate( 0. ),
     grad_learning_rate( 0. ),
     grad_decrease_ct( 0. ),
-    grad_weight_decay( 0. ),
+    // grad_weight_decay( 0. ),
     use_classification_cost( true ),
     n_layers( 0 ),
     final_module_has_learning_rate( false ),
