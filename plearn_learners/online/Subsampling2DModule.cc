@@ -187,11 +187,12 @@ void Subsampling2DModule::build_()
 
     // Build the learntoptions from the buildoptions
     input_images_size = input_images_length * input_images_width;
-    input_size = n_input_images * input_size;
+    input_size = n_input_images * input_images_size;
 
     output_images_length = input_images_length / kernel_length;
     output_images_width = input_images_width / kernel_width;
     output_images_size = output_images_length * output_images_width;
+    output_size = n_input_images * output_images_size;
 
     kernel_size = kernel_length * kernel_width;
 
@@ -203,6 +204,7 @@ void Subsampling2DModule::build_()
 
     input_images.resize(n_input_images);
     output_images.resize(n_input_images);
+    kernel.resize(kernel_length, kernel_width);
     input_gradients.resize(n_input_images);
     output_gradients.resize(n_input_images);
     kernel_gradient.resize(kernel_length, kernel_width);
