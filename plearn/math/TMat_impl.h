@@ -334,6 +334,82 @@ void TMat<T>::input(PStream& in) const
     }
 }
 
+template <class T>
+void TMat<T>::resizePreserve(int new_length, int new_width, int extra)
+{
+    int usage      = storage->usage();
+    int new_size   = new_length*MAX(mod(),new_width);
+    int new_offset = usage>1?offset_:0;
+    if (new_size>storage->length() || new_width>mod())
+    {
+        int extracols=0, extrarows=0;
+        if (extra>min(new_width,new_length))
+        {
+            // if width has increased, bet that it will increase again in the future,
+            // similarly for length,  so allocate the extra as extra mod
+            float l=float(length_), l1=float(new_length),
+                w=float(width_),  w1=float(new_width),
+                x=float(extra);
+            // Solve the following equations to apportion the extra 
+            // while keeping the same percentage increase in width and length:
+            //   Solve[{x+w1*l1==w2*l2,(w2/w1 - 1)/(l2/l1 - 1) == (w1/w - 1)/(l1/l - 1)},{w2,l2}]
+            // This is a quadratic system which has two solutions: {w2a,l2a} and {w2b,l2b}:
+            float w2a = 
+                w1*(-1 - l1/(l - l1) + w1/w + (l1*w1)/(l*w - l1*w) + 
+                    (2*l*(-w + w1)*x)/
+                    (2*l*l1*w*w1 - l1*l1*w*w1 - l*l1*w1*w1 + 
+                     sqrt(square(l1*l1*w*w1 - l*l1*w1*w1) + 
+                          4*l*(l - l1)*l1*w*(w - w1)*w1*(l1*w1 + x))));
+            float l2a = -(-l1*l1*w*w1 + l*l1*w1*w1 + 
+                          sqrt(square(l1*l1*w*w1 - l*l1*w1*w1) + 
+                               4*l*(l - l1)*l1*w*(w - w1)*w1*(l1*w1 + x)))/(2*l*(w - w1)*w1);
+            float w2b =w1*(-1 - l1/(l - l1) + w1/w + (l1*w1)/(l*w - l1*w) - 
+                           (2*l*(-w + w1)*x)/
+                           (-2*l*l1*w*w1 + l1*l1*w*w1 + l*l1*w1*w1 + 
+                            sqrt(square(l1*l1*w*w1 - l*l1*w1*w1) + 
+                                 4*l*(l - l1)*l1*w*(w - w1)*w1*(l1*w1 + x))));
+            float l2b = (l1*l1*w*w1 - l*l1*w1*w1 + 
+                         sqrt(square(l1*l1*w*w1 - l*l1*w1*w1) + 
+                              4*l*(l - l1)*l1*w*(w - w1)*w1*(l1*w1 + x)))/(2*l*(w - w1)*w1);
+
+            // pick one that is feasible and maximizes the mod
+            if (w2b>w2a && w2b>w1 && l2b>l1) {
+                extracols=int(ceil(w2b-w1));
+                extrarows=int(ceil(l2b-l1));
+            }
+            else if (w2a>w1 && l2a>l1) {
+                extrarows=int(ceil(l2a-l1));
+                extracols=int(ceil(w2a-w1));
+            }
+            else { // no valid solution to the system of equation, use a heuristic
+                extracols = max(0,int(ceil(sqrt(real(extra))/new_length)));
+                extrarows = max(0,int((extra+l1*w1)/(w1+extracols) - l1));
+            }
+
+        }
+        storage->resizeMat(new_length,new_width,extrarows,extracols,
+                           new_offset,mod_,length_,width_,offset_);
+        mod_ = new_width + extracols;
+    }
+    offset_ = new_offset;
+}
+
+template <class T>
+inline void TMat<T>::resizeBoundCheck(int new_length, int new_width)
+{
+    if(new_length<0 || new_width<0)
+        PLERROR("IN TMat::resize(int new_length, int new_width)\nInvalid arguments (<0)");
+}
+
+template <class T>
+void TMat<T>::resizeModError()
+{
+    PLERROR("IN TMat::resize(int new_length, int new_width) - For safety "
+            "reasons, increasing the width() beyond mod()-offset_ modulo "
+            "mod() is not allowed when the storage is shared with others");
+}
+
+
 // Deep copying
 
 template<class T>

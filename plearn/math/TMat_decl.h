@@ -180,96 +180,46 @@ public:
     TMatColRowsIterator<T> col_end(int column);
   
 
-    /*!     Resizes the matrix to a new length() and width()
-      Notice that the previous structure of the data in the matrix
-      is not preserved if you increase the width() beyond mod().
-      The underlying storage is never shrunk, and it is grown only if necessary.
-      When grown, it is grown with extra entries to anticipate further resizes.
-      If preserve_content is true then a change of mod_ triggers a COPY
-      of the old entries so that their old value remains accessed at the same indices.
-    */
+    /**
+     *  Resizes the matrix to a new length() and width().
+     *
+     *  Note that the previous structure of the data in the matrix is not
+     *  preserved if you increase the width() beyond mod().  The underlying
+     *  storage is never shrunk, and it is grown only if necessary.  When
+     *  grown, it is grown with extra entries to anticipate further resizes.
+     *  If preserve_content is true then a change of mod_ triggers a COPY of
+     *  the old entries so that their old value remains accessed at the same
+     *  indices.
+     *
+     *  This function is split into several parts: a `small' one that handles
+     *  the common cases, and a few `auxiliary' ones that perform the
+     *  heavy-lifting.  The small one is easily inlined, whereas having one
+     *  `large' resize() function would overflow the compiler inlining
+     *  threshold, yielding no inlining whatsoever.
+     */
     void resize(int new_length, int new_width, int extra=0, bool preserve_content=false)
     {
 #ifdef BOUNDCHECK
-        if(new_length<0 || new_width<0)
-            PLERROR("IN TMat::resize(int new_length, int new_width)\nInvalid arguments (<0)");
+        resizeBoundCheck(new_length, new_width);
 #endif
-        if (new_length==length_ && new_width==width_) return;
-        if(storage.isNull())
+        if (new_length==length_ && new_width==width_)
+            return;
+        else if(storage.isNull())
         {
             offset_ = 0;
             length_ = new_length;
-            width_ = new_width;
-            mod_ = new_width;
-            storage = new Storage<T>(length()*mod());
+            width_  = new_width;
+            mod_    = new_width;
+            storage = new Storage<T>(length()*mod() + extra);
         }
         else
         {
-            int usage=storage->usage();
-            if(usage>1 && new_width > mod()-offset_%mod())
-                PLERROR("IN TMat::resize(int new_length, int new_width) - For safety "
-                        "reasons, increasing the width() beyond mod()-offset_ modulo "
-                        "mod() is not allowed when the storage is shared with others");
-            if (preserve_content && size()>0)
-            {
-                int new_size = new_length*MAX(mod(),new_width);
-                int new_offset = usage>1?offset_:0;
-                if(new_size>storage->length() || new_width>mod())
-                {
-                    int extracols=0, extrarows=0;
-                    if (extra>min(new_width,new_length))
-                    {
-                        // if width has increased, bet that it will increase again in the future,
-                        // similarly for length,  so allocate the extra as extra mod
-                        float l=float(length_), l1=float(new_length),
-							  w=float(width_),  w1=float(new_width),
-							  x=float(extra);
-                        // Solve the following equations to apportion the extra 
-                        // while keeping the same percentage increase in width and length:
-                        //   Solve[{x+w1*l1==w2*l2,(w2/w1 - 1)/(l2/l1 - 1) == (w1/w - 1)/(l1/l - 1)},{w2,l2}]
-                        // This is a quadratic system which has two solutions: {w2a,l2a} and {w2b,l2b}:
-                        float w2a = 
-                            w1*(-1 - l1/(l - l1) + w1/w + (l1*w1)/(l*w - l1*w) + 
-                                (2*l*(-w + w1)*x)/
-                                (2*l*l1*w*w1 - l1*l1*w*w1 - l*l1*w1*w1 + 
-                                 sqrt(square(l1*l1*w*w1 - l*l1*w1*w1) + 
-                                      4*l*(l - l1)*l1*w*(w - w1)*w1*(l1*w1 + x))));
-                        float l2a = -(-l1*l1*w*w1 + l*l1*w1*w1 + 
-                                      sqrt(square(l1*l1*w*w1 - l*l1*w1*w1) + 
-                                           4*l*(l - l1)*l1*w*(w - w1)*w1*(l1*w1 + x)))/(2*l*(w - w1)*w1);
-                        float w2b =w1*(-1 - l1/(l - l1) + w1/w + (l1*w1)/(l*w - l1*w) - 
-                                       (2*l*(-w + w1)*x)/
-                                       (-2*l*l1*w*w1 + l1*l1*w*w1 + l*l1*w1*w1 + 
-                                        sqrt(square(l1*l1*w*w1 - l*l1*w1*w1) + 
-                                             4*l*(l - l1)*l1*w*(w - w1)*w1*(l1*w1 + x))));
-                        float l2b = (l1*l1*w*w1 - l*l1*w1*w1 + 
-                                     sqrt(square(l1*l1*w*w1 - l*l1*w1*w1) + 
-                                          4*l*(l - l1)*l1*w*(w - w1)*w1*(l1*w1 + x)))/(2*l*(w - w1)*w1);
-
-                        // pick one that is feasible and maximizes the mod
-                        if (w2b>w2a && w2b>w1 && l2b>l1)
-                        {
-                            extracols=int(ceil(w2b-w1));
-                            extrarows=int(ceil(l2b-l1));
-                        } else if (w2a>w1 && l2a>l1)
-                        {
-                            extrarows=int(ceil(l2a-l1));
-                            extracols=int(ceil(w2a-w1));
-                        } else // no valid solution to the system of equation, use a heuristic
-                        {
-                            extracols = max(0,int(ceil(sqrt(real(extra))/new_length)));
-                            extrarows = max(0,int((extra+l1*w1)/(w1+extracols) - l1));
-                        }
-
-                    }
-                    storage->resizeMat(new_length,new_width,extrarows,extracols,
-                                       new_offset,mod_,length_,width_,offset_);
-                    mod_ = new_width + extracols;
-                }
-                offset_ = new_offset;
-            }
-            else
-            {
+            int usage = storage->usage();
+            if (usage > 1 && new_width > mod()-offset_%mod())
+                resizeModError();
+            else if (preserve_content && size() > 0)
+                resizePreserve(new_length, new_width, extra);
+            else {
                 // 'new_size' takes into account the ABSOLUTELY REQUIRED size
                 // to hold the elements of the matrix.  We only resize the
                 // underlying storage when the latter is not big enough to hold
@@ -972,6 +922,15 @@ public:
         input(in); 
     }
 
+protected:
+    //! Utility function to resize a matrix while preserving contents
+    void resizePreserve(int new_length, int new_width, int extra=0);
+
+    //! Perform bound-checking on resize
+    inline void resizeBoundCheck(int new_length, int new_width);
+
+    //! Report PLERROR if we resize changing the mod with usage > 1
+    void resizeModError();
 };
 
 typedef TMat<real> Mat;
