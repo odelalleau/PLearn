@@ -621,7 +621,7 @@ void VecStatsCollector::append(const VecStatsCollector& vsc,
 
 void VecStatsCollector::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Object::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(fieldnames,               copies);
     deepCopyField(stats,                    copies);
     deepCopyField(cov,                      copies);

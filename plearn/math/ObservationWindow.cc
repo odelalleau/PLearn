@@ -135,8 +135,8 @@ ObservationWindow* ObservationWindow::deepCopy(CopiesMap& copies) const
   
     //!  Otherwise call the copy constructor to obtain a copy
     ObservationWindow* deep_copy = new ObservationWindow(*this);
-    deepCopyField(this->m_observations, copies);
-    deepCopyField(this->m_obs_weights,  copies);
+    deepCopyField(deep_copy->m_observations, copies);
+    deepCopyField(deep_copy->m_obs_weights,  copies);
 
     //!  Put the copy in the map
     copies[this] = deep_copy;
