@@ -326,6 +326,22 @@ public:
         return subv;
     }
 
+    /**
+     *  Modify the current Vec to point to a subset of itself.  This is useful
+     *  if we are handed a 'large' Vec, but only want a subset without incurring
+     *  the performance hit of a temporary object.
+     */
+    void subVecSelf(int newstart, int newlength)
+    {
+#ifdef BOUNDCHECK
+        if(newstart+newlength>length() || newlength<0)
+            PLERROR("TVec::subVecSelf(int newstart, int newlength) OUT OF BOUNDS OR <0 length()"
+                    " length()=%d; newstart=%d; newlength=%d.", length(), newstart, newlength);
+#endif
+        length_ = newlength;
+        offset_ += newstart;
+    }
+
     /*! ************
       Deep copying
       ************
