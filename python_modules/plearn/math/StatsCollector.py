@@ -141,6 +141,8 @@ class StatsCollector:
         ma_min     = ma[ma_argmin, range(width)]
         min_newpos = argmin(array([self.min, ma_min]), 0).astype('Bool')
         self.min[min_newpos]    = ma_min[min_newpos]
+        # XXX Argmin computation needs to be revised! Does not work, at least
+        # when passing array of shape (1,1).
         self.argmin[min_newpos] = ma_argmin[min_newpos] + initial_n[min_newpos]
 
         ## Update (arg)max / make sure old argmax is kept if not updated
@@ -148,6 +150,9 @@ class StatsCollector:
         ma_max     = ma[ma_argmax, range(width)]
         max_newpos = argmax(array([self.max, ma_max]), 0).astype('Bool')
         self.max[max_newpos]    = ma_max[max_newpos]
+        # XXX Argmax computation needs to be revised! Does not work, at least
+        # when passing array of shape (1,1). Also, is the use of min_newpos
+        # correct?
         self.argmax[max_newpos] = ma_argmax[max_newpos] + initial_n[min_newpos]
 
 
