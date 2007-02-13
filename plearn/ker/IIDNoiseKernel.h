@@ -40,7 +40,7 @@
 #ifndef IIDNoiseKernel_INC
 #define IIDNoiseKernel_INC
 
-#include <plearn/ker/Kernel.h>
+#include <plearn/ker/MemoryCachedKernel.h>
 
 namespace PLearn {
 
@@ -56,19 +56,39 @@ namespace PLearn {
  *  where delta_x,y is the Kronecker delta function, and sn2 is the exp of
  *  twice the 'log_noise_sigma' option.
  *
+ *  In addition to comparing the complete x and y vectors, this kernel allows
+ *  adding a Kronecker delta when there is a match in only ONE DIMENSION.  This
+ *  may be generalized in the future to allow match according to a subset of
+ *  the input variables (but is not currently done for performance reasons).
+ *  With these terms, the kernel function takes the form:
+ *
+ *    k(x,y) = delta_x,y * sn2 + \sum_i delta_x[kr(i)],y[kr(i)] * ks2[i]
+ *
+ *  where kr(i) is the i-th element of 'kronecker_indexes' (representing an
+ *  index into the input vectors), and ks2[i] is the exp of twice the value of
+ *  the i-th element of the 'log_kronecker_sigma' option.
+ *
  *  Note that to make its operations more robust when used with unconstrained
  *  optimization of hyperparameters, all hyperparameters of this kernel are
  *  specified in the log-domain.
  */
-class IIDNoiseKernel : public Kernel
+class IIDNoiseKernel : public MemoryCachedKernel
 {
-    typedef Kernel inherited;
+    typedef MemoryCachedKernel inherited;
 
 public:
     //#####  Public Build Options  ############################################
 
     //! Log of the global noise variance.  Default value=0.0
     real m_log_noise_sigma;
+
+    //! Element index in the input vectors that should be subject to additional
+    //! Kronecker delta terms
+    TVec<int> m_kronecker_indexes;
+
+    //! Log of the noise variance terms for the Kronecker deltas associated
+    //! with kronecker_indexes
+    Vec m_log_kronecker_sigma;
     
 public:
     //#####  Public Member Functions  #########################################
@@ -102,6 +122,9 @@ protected:
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
 
+    //! Derivative function with respect to kronecker_indexes[arg] hyperparameter
+    real derivKronecker(const Vec& row_i, const Vec& row_j, real K, int arg) const;
+    
 private:
     //! This does the actual building.
     void build_();

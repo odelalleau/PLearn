@@ -326,6 +326,10 @@ void Kernel::computeGramMatrix(Mat K) const
         K << gram_matrix;
         return;
     }
+    if (K.length() != data.length() || K.width() != data.length())
+        PLERROR("Kernel::computeGramMatrix: the argument matrix K should be\n"
+                "of size %d x %d (currently of size %d x %d)",
+                data.length(), data.length(), K.length(), K.width());
     int l=data->length();
     int m=K.mod();
     PP<ProgressBar> pb;

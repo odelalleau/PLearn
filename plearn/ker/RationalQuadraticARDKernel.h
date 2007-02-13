@@ -54,11 +54,11 @@ namespace PLearn {
  *  Similar to C.E. Rasmussen's GPML code (see http://www.gaussianprocess.org),
  *  this kernel is specified as:
  *
- *    k(x,y) = sf2 * [1 + (sum_i (x_i - y_i)^2 / w_i)/(2*alpha)]^(-alpha) + delta_x,y*sn2
+ *    k(x,y) = sf2 * [1 + (sum_i (x_i - y_i)^2 / w_i)/(2*alpha)]^(-alpha) + k_iid(x,y)
  *
- *  where sf2 is the exp of twice the 'log_signal_sigma' option, sn2 is the
- *  exp of twice the 'log_noise_sigma' option (added only if x==y), and w_i
- *  is exp(2*log_global_sigma + 2*log_input_sigma[i]).
+ *  where sf2 is the exp of twice the 'log_signal_sigma' option, w_i is
+ *  exp(2*log_global_sigma + 2*log_input_sigma[i]), and k_iid(x,y) is the
+ *  result of IIDNoiseKernel kernel evaluation.
  *
  *  Note that to make its operations more robust when used with unconstrained
  *  optimizaiton of hyperparameters, all hyperparameters of this kernel are
@@ -87,6 +87,15 @@ public:
     //! Compute K(x1,x2).
     virtual real evaluate(const Vec& x1, const Vec& x2) const;
 
+    //! Compute entire Gram matrix
+    virtual void computeGramMatrix(Mat K) const;
+
+    //! Compute the derivative of the Gram matrix with respect to one of the
+    //! kernel's parameters.  Analytic derivatives are implemented for this
+    //! kernel.
+    virtual void computeGramMatrixDerivative(Mat& KD, const string& kernel_param,
+                                             real epsilon=1e-6) const;
+    
 
     //#####  PLearn::Object Protocol  #########################################
 
@@ -103,6 +112,18 @@ protected:
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
 
+    //! Derivative function with respect to log_signal_sigma
+    real derivLogSignalSigma(const Vec& row_i, const Vec& row_j, real K, int arg) const;
+
+    //! Derivative function with respect to log_global_sigma
+    real derivLogGlobalSigma(const Vec& row_i, const Vec& row_j, real K, int arg) const;
+    
+    //! Derivative function with respect to log_input_sigma[arg]
+    real derivLogInputSigma(const Vec& row_i, const Vec& row_j, real K, int arg) const;
+    
+    //! Derivative function with respect to log_alpha
+    real derivLogAlpha(const Vec& row_i, const Vec& row_j, real K, int arg) const;
+    
 private:
     //! This does the actual building.
     void build_();

@@ -88,7 +88,7 @@ public:
 
     PLEARN_DECLARE_ABSTRACT_OBJECT(Kernel);
 
-    //!  ** Subclasses must overload this method **
+    //!  ** Subclasses must override this method **
     virtual real evaluate(const Vec& x1, const Vec& x2) const = 0; //!<  returns K(x1,x2) 
 
     //!  ** Subclasses may override these methods to provide efficient kernel matrix access **
@@ -169,12 +169,12 @@ public:
     virtual void computeGramMatrixDerivative(Mat& KD, const string& kernel_param,
                                              real epsilon=1e-6) const;
     
-    //!  ** Subclasses may overload these methods ** 
+    //!  ** Subclasses may override these methods ** 
     //!  They provide a generic way to set and retrieve kernel parameters
     virtual void setParameters(Vec paramvec); //!<  default version produces an error
     virtual Vec getParameters() const; //!<  default version returns an empty Vec
 
-    //!  ** Subclasses should NOT overload the following methods. The default versions are fine. **
+    //!  ** Subclasses should NOT override the following methods. The default versions are fine. **
 
     void apply(VMat m1, VMat m2, Mat& result) const; //!<  result(i,j) = K(m1(i),m2(j))
     Mat apply(VMat m1, VMat m2) const; //!<  same as above, but returns the result mat instead

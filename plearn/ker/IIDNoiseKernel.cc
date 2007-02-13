@@ -36,6 +36,7 @@
 
 /*! \file IIDNoiseKernel.cc */
 
+#include <plearn/base/lexical_cast.h>
 #include <plearn/math/TMat_maths.h>
 #include "IIDNoiseKernel.h"
 
@@ -54,6 +55,18 @@ PLEARN_IMPLEMENT_OBJECT(
     "where delta_x,y is the Kronecker delta function, and sn2 is the exp of\n"
     "twice the 'log_noise_sigma' option.\n"
     "\n"
+    "In addition to comparing the complete x and y vectors, this kernel allows\n"
+    "adding a Kronecker delta when there is a match in only ONE DIMENSION.  This\n"
+    "may be generalized in the future to allow match according to a subset of\n"
+    "the input variables (but is not currently done for performance reasons).\n"
+    "With these terms, the kernel function takes the form:\n"
+    "\n"
+    "  k(x,y) = delta_x,y * sn2 + \\sum_i delta_x[kr(i)],y[kr(i)] * ks2[i]\n"
+    "\n"
+    "where kr(i) is the i-th element of 'kronecker_indexes' (representing an\n"
+    "index into the input vectors), and ks2[i] is the exp of twice the value of\n"
+    "the i-th element of the 'log_kronecker_sigma' option.\n"
+    "\n"
     "Note that to make its operations more robust when used with unconstrained\n"
     "optimization of hyperparameters, all hyperparameters of this kernel are\n"
     "specified in the log-domain.\n"
@@ -70,10 +83,21 @@ IIDNoiseKernel::IIDNoiseKernel()
 void IIDNoiseKernel::declareOptions(OptionList& ol)
 {
     declareOption(
-        ol, "log_noise_sigma",
-        &IIDNoiseKernel::m_log_noise_sigma,
+        ol, "log_noise_sigma", &IIDNoiseKernel::m_log_noise_sigma,
         OptionBase::buildoption,
         "Log of the global noise variance.  Default value=0.0");
+
+    declareOption(
+        ol, "kronecker_indexes", &IIDNoiseKernel::m_kronecker_indexes,
+        OptionBase::buildoption,
+        "Element index in the input vectors that should be subject to additional\n"
+        "Kronecker delta terms");
+
+    declareOption(
+        ol, "log_kronecker_sigma", &IIDNoiseKernel::m_log_kronecker_sigma,
+        OptionBase::buildoption,
+        "Log of the noise variance terms for the Kronecker deltas associated\n"
+        "with kronecker_indexes");
     
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -93,17 +117,37 @@ void IIDNoiseKernel::build()
 //#####  build_  ##############################################################
 
 void IIDNoiseKernel::build_()
-{ }
+{
+    if (m_kronecker_indexes.size() != m_log_kronecker_sigma.size())
+        PLERROR("IIDNoiseKernel::build_: size of 'kronecker_indexes' (%d) "
+                "does not match that of 'log_kronecker_sigma' (%d)",
+                m_kronecker_indexes.size(), m_log_kronecker_sigma.size());
+}
 
 
 //#####  evaluate  ############################################################
 
 real IIDNoiseKernel::evaluate(const Vec& x1, const Vec& x2) const
 {
-    if (fast_is_equal(powdistance(x1,x2,2), 0.0))
-        return exp(2*m_log_noise_sigma);
-    else
-        return 0.0;
+    // if (fast_is_equal(powdistance(x1,x2,2), 0.0))
+    //     return exp(2*m_log_noise_sigma);
+    // else
+    //     return 0.0;
+
+    real value = 0.0;
+    if (x1 == x2)
+        value += exp(2*m_log_noise_sigma);
+
+    const int n = m_kronecker_indexes.size();
+    if (n > 0) {
+        int*  cur_index = m_kronecker_indexes.data();
+        real* cur_sigma = m_log_kronecker_sigma.data();
+
+        for (int i=0 ; i<n ; ++i, ++cur_index, ++cur_sigma)
+            if (fast_is_equal(x1[*cur_index], x2[*cur_index]))
+                value += exp(2 * *cur_sigma);
+    }
+    return value;
 }
 
 
@@ -112,6 +156,9 @@ real IIDNoiseKernel::evaluate(const Vec& x1, const Vec& x2) const
 void IIDNoiseKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
+
+    deepCopyField(m_kronecker_indexes,   copies);
+    deepCopyField(m_log_kronecker_sigma, copies);
 }
 
 
@@ -121,6 +168,7 @@ void IIDNoiseKernel::computeGramMatrixDerivative(Mat& KD, const string& kernel_p
                                                  real epsilon) const
 {
     static const string LNS("log_noise_sigma");
+    static const string LKS("log_kronecker_sigma[");
     if (kernel_param == LNS) {
         if (!data)
             PLERROR("Kernel::computeGramMatrixDerivative should be called only after "
@@ -137,9 +185,62 @@ void IIDNoiseKernel::computeGramMatrixDerivative(Mat& KD, const string& kernel_p
         for (int i=0 ; i<W ; ++i)
             KD(i,i) = deriv;
     }
+    else if (string_begins_with(kernel_param, LKS) &&
+             kernel_param[kernel_param.size()-1] == ']')
+    {
+        int arg = tolong(kernel_param.substr(
+                             LKS.size(), kernel_param.size() - LKS.size() - 1));
+        PLASSERT( arg < m_kronecker_indexes.size() );
+
+        computeGramMatrixDerivNV<
+            IIDNoiseKernel, &IIDNoiseKernel::derivKronecker>(KD, this, arg);
+        
+        // int W = nExamples();
+        // KD.resize(W,W);
+        // real deriv = 2*exp(2*m_log_kronecker_sigma[arg]);
+        // int index  = m_kronecker_indexes[arg];
+        // 
+        // Vec row_i;
+        // Vec row_j;
+        // int m = KD.mod();
+        // real* KDi;                           // Start of row i
+        // real* KDji;                          // Start of column i
+        // for (int i=0 ; i<W ; ++i) {
+        //     KDi = KD[i];
+        //     KDji = &KD[0][i];
+        //     dataRow(i, row_i);
+        //     real row_i_index = row_i[index];
+        //     for (int j=0 ; j<=i ; ++j, KDji += m) {
+        //         dataRow(j, row_j);
+        //         real KDij;
+        //         if (fast_is_equal(row_i_index, row_j[index]))
+        //             KDij = deriv;
+        //         else
+        //             KDij = 0.0;
+        // 
+        //         *KDi++ = KDij;
+        //         if (j < i)
+        //             *KDji = KDij;
+        //     }
+        // }
+    }
     else
         inherited::computeGramMatrixDerivative(KD, kernel_param, epsilon);
 }
+
+
+//#####  derivKronecker  ######################################################
+
+real IIDNoiseKernel::derivKronecker(const Vec& row_i, const Vec& row_j, real K,
+                                    int arg) const
+{
+    int index = m_kronecker_indexes[arg];
+    if (fast_is_equal(row_i[index], row_j[index]))
+        return 2*exp(2*m_log_kronecker_sigma[arg]);
+    else
+        return 0.0;
+}
+
 
 } // end of namespace PLearn
 
