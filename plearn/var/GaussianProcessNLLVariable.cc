@@ -192,15 +192,33 @@ void GaussianProcessNLLVariable::bprop()
         m_kernel->computeGramMatrixDerivative(m_gram_derivative,
                                               m_hyperparam_names[j]);
         for (int i=0, n=m_alpha.width() ; i<n ; ++i) {
-            Mat curalpha = m_alpha.column(i);
-            real curtrace = 0;
+            Mat curalpha_mat = m_alpha.column(i);
+            int curalpha_mod = curalpha_mat.mod();
+            real* curalpha   = curalpha_mat[0];
+            real  curtrace   = 0.0;
 
             // Sum over all rows and columns of matrix
-            for (int row=0, nrows=m_inverse_gram.length() ; row<nrows ; ++row)
-                for (int col=0, ncols=m_inverse_gram.width() ; col<ncols ; ++col)
+            real* curalpha_row = curalpha;
+            for (int row=0, nrows=m_inverse_gram.length()
+                     ; row<nrows ; ++row, curalpha_row += curalpha_mod)
+            {
+                real* p_inverse_gram    = m_inverse_gram[row];
+                real* p_gram_derivative = m_gram_derivative[row];
+                real  curalpha_row      = curalpha[row * curalpha_mod];
+                real* curalpha_col      = curalpha;
+
+                for (int col=0, ncols=m_inverse_gram.width()
+                         ; col<ncols ; ++col, curalpha_col += curalpha_mod)
+                {
                     curtrace +=
-                        (m_inverse_gram(row,col) - curalpha(row,0)*curalpha(col,0))
-                        * m_gram_derivative(row,col);
+                        (*p_inverse_gram++ - curalpha_row * *curalpha_col)
+                        * *p_gram_derivative++;
+
+                    // curtrace +=
+                    //     (m_inverse_gram(row,col) - curalpha(row,0)*curalpha(col,0))
+                    //     * m_gram_derivative(row,col);
+                }
+            }
 
             dnll_dj += curtrace / 2.0;
         }
