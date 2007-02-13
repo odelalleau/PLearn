@@ -124,9 +124,9 @@ void VPLProcessor::declareOptions(OptionList& ol)
 
 void VPLProcessor::build_()
 {
-    if(train_set.isNull() && (orig_inputsize>0 || orig_targetsize>0) ) // we're probably reloading a saved VPLProcessor
+    // We're probably reloading a saved VPLProcessor
+    if(train_set.isNull() && (orig_inputsize>0 || orig_targetsize>0) )
         initializeInputPrograms();
-
 }
 
 void VPLProcessor::build()
@@ -136,16 +136,12 @@ void VPLProcessor::build()
 }
 
 
+/// @todo Why is only input_prg deep-copied?
 void VPLProcessor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
-    // ### shallow-copied.
-
     input_prg_.makeDeepCopyFromShallowCopy(copies);
- 
 
     deepCopyField(input_prg_fieldnames, copies);
     deepCopyField(processed_input, copies);
@@ -154,7 +150,7 @@ void VPLProcessor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 int VPLProcessor::outputsize() const
 {
-    if(!input_prg.empty())
+    if (!input_prg.empty())
         return input_prg_fieldnames.length();
 
     return inputsize();
@@ -165,13 +161,15 @@ void VPLProcessor::forget()
     inherited::forget();
     stage = 0;
 }
-    
+
+/// @todo Why is this called initializeInputPrograms() and not
+/// initializePrograms()? Why is there no initialization done for
+/// fitlering_prg, target_prg, weight_prg and extra_prg?
 void VPLProcessor::initializeInputPrograms()
 {
-    if(!input_prg.empty())
+    if (!input_prg.empty())
     {
-        //input_prg_.setSourceFieldNames(orig_fieldnames.subVec(0,orig_inputsize));
-        input_prg_.setSourceFieldNames(orig_fieldnames);
+        input_prg_.setSourceFieldNames(orig_fieldnames.subVec(0,orig_inputsize));
         input_prg_.compileString(input_prg, input_prg_fieldnames);
     }
     else
@@ -194,10 +192,11 @@ void VPLProcessor::setTrainingSet(VMat training_set, bool call_forget)
 
     VMat filtered_trainset = training_set;
     PPath filtered_trainset_metadatadir = getExperimentDirectory() / "filtered_train_set.metadata";
-    if(!filtering_prg.empty())
+    if (!filtering_prg.empty())
         filtered_trainset = new FilteredVMatrix(training_set, filtering_prg, filtered_trainset_metadatadir, verbosity>1,
                                                 use_filtering_prg_for_repeat, repeat_id_field_name, repeat_count_field_name);
 
+    // XXX The next line does nothing!
     VMat processed_trainset = new ProcessingVMatrix(filtered_trainset, input_prg, target_prg, weight_prg, extra_prg);
     inherited::setTrainingSet(training_set, call_forget); // will call forget if needed
 }
@@ -206,7 +205,7 @@ VMat VPLProcessor::processDataSet(VMat dataset) const
 {
     VMat filtered_dataset = dataset;
     PPath filtered_dataset_metadatadir = getExperimentDirectory() / "filtered_dataset.metadata";
-    if(!filtering_prg.empty())
+    if (!filtering_prg.empty())
         filtered_dataset = new FilteredVMatrix(dataset, filtering_prg, filtered_dataset_metadatadir, verbosity>1,
                                                use_filtering_prg_for_repeat, repeat_id_field_name, repeat_count_field_name);
 
@@ -230,12 +229,14 @@ VMat VPLProcessor::processDataSet(VMat dataset) const
     
     string processing_target_prg = target_prg;
     if (processing_target_prg.empty() && dataset->targetsize() > 0) {
-        processing_target_prg = "[%" + tostring(start_of_targets) + ":%" + tostring(start_of_weights-1) + "]";
+        processing_target_prg = "[%" + tostring(start_of_targets) + ":%" +
+            tostring(start_of_weights-1) + "]";
     }
 
     string processing_weight_prg = weight_prg;
     if (processing_weight_prg.empty() && dataset->weightsize() > 0) {
-        processing_weight_prg = "[%" + tostring(start_of_weights) + ":%" + tostring(start_of_extras-1) + "]";
+        processing_weight_prg = "[%" + tostring(start_of_weights) + ":%" +
+            tostring(start_of_extras-1) + "]";
     }
 
     string processing_extras_prg = extra_prg;
@@ -251,8 +252,8 @@ VMat VPLProcessor::processDataSet(VMat dataset) const
 void VPLProcessor::computeOutput(const Vec& input, Vec& output) const
 {
     output.resize(outputsize());
-    Vec newinput= input;
-    if(!input_prg.empty())
+    Vec newinput = input;
+    if (!input_prg.empty())
     {
         processed_input.resize(input_prg_fieldnames.length());
         input_prg_.run(input, processed_input);
@@ -273,19 +274,21 @@ void VPLProcessor::computeOutputAndCosts(const Vec& input, const Vec& target,
 }
 
 void VPLProcessor::computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                                     const Vec& target, Vec& costs) const
+                                           const Vec& target, Vec& costs) const
 { 
     Vec nonconst_output = output; // to make the constipated compiler happy
     computeOutputAndCosts(input, target, nonconst_output, costs); 
 }
 
+/// @todo What is that outpuy_prg_ doing commented out? Is the fieldnames for
+/// the input_prg really the right thing to return for *output* names?
 TVec<string> VPLProcessor::getOutputNames() const
 {
-    if(!input_prg.empty())//output_prg_)
+    if (!input_prg.empty())//output_prg_)
         return input_prg_fieldnames;
 
     VMat trainset= getTrainingSet();
-    if(trainset==0)
+    if (trainset==0)
         PLERROR("in VPLProcessor::getOutputNames: no train set specified yet.");
 
     return trainset->inputFieldNames();
