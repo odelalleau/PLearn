@@ -213,86 +213,85 @@ int main(int argc, char** argv)
     // Please don't use double nor float
 
     real a=15;
-    cout<<"real a=15;"<<endl;
-    cout<<"%> a="<<a<<endl;
-    cout<<endl;
+    cout<<"a="<<a<<endl;
+    // Output:
+    // a=15
 
     // Vector creation
     Vec b(3);
     b[0] = 2;
     b[1] = 42;
     b[2] = 21;
-    cout<<"Vec b(3);"<<endl;
-    cout<<"b[0] = 2;"<<endl;
-    cout<<"b[1] = 42;"<<endl;
-    cout<<"b[2] = 21;"<<endl;
-    cout<<"%> b="<<b<<endl;
-    cout<<"%> b.length()="<<b.length()<<endl;
-    cout<<endl;
+    cout<<"b="<<b<<endl;
+    cout<<"b.length()="<<b.length()<<endl;
+    // Output:
+    // b=2           42          21
+    // b.length()=3
 
     // Vector manipulations:
 
     // Subvector access of the last two elements (not a copy!!!)
     Vec b3 = b.subVec(1,2);
-    cout<<"Vec b3 = b.subVec(1,2);"<<endl;
-    cout<<"%> b3="<<b3<<endl;
-    cout<<endl;
+    cout<<"b3="<<b3<<endl;
+    // Output:
+    // b3=42          21
 
     // Concatenation
     Vec b4 = concat(b,b);
-    cout<<"Vec b4 = concat(b,b);"<<endl;
-    cout<<"%> b4="<<b4<<endl;
-    cout<<endl;
+    cout<<"b4="<<b4<<endl;
+    // Output:
+    // b4=2           42          21          2           42          21
 
     // Note: "=" operator does not copy!!!
     Vec b5 = b4;
     b5[1] = 100000;
-    cout<<"Vec b5 = b4;"<<endl;
-    cout<<"b5[1] = 100000;"<<endl;
-    cout<<"%> b4="<<b4<<endl;
-    cout<<"%> b5="<<b5<<endl;
-    cout<<endl;
+    cout<<"b4="<<b4<<endl;
+    cout<<"b5="<<b5<<endl;
+    // Output:
+    // b4=2           100000      21          2           42          21
+    // b5=2           100000      21          2           42          21
+    
 
     // Copy
     b5 = b4.copy();
-    b5[1]=100001;
-    cout<<"b5 = b4.copy();"<<endl;
-    cout<<"b5[0]=100001;"<<endl;
-    cout<<"%> b4="<<b4<<endl;
-    cout<<"%> b5="<<b5<<endl;
-    cout<<endl;
+    b5[1]=1;
+    cout<<"b4="<<b4<<endl;
+    cout<<"b5="<<b5<<endl;
+    // Output:
+    // b4=2           100000      21          2           42          21
+    // b5=2           1      21          2           42          21
+
 
     // Fill in one element
     Vec b6(b4.length());
     b6.fill(3);
-    cout<<"Vec b6(b4.length());"<<endl;
-    cout<<"b6.fill(3);"<<endl;
-    cout<<"%> b6="<<b6<<endl;
-    cout<<endl;
+    cout<<"b6="<<b6<<endl;
+    // Output:
+    // b6=3           3           3           3           3           3
 
     // Fill in elements of another vector
     b6 << b4;
-    cout<<"b6 << b4;"<<endl;
-    cout<<"%> b6="<<b6<<endl;
-    cout<<endl;
+    cout<<"b6="<<b6<<endl;
+    // Output:
+    // b6=2           100000      21          2           42          21
 
     // Clear
     b6.clear();
-    cout<<"b6.clear();"<<endl;
-    cout<<"%> b6="<<b6<<endl;
-    cout<<endl;
+    cout<<"b6="<<b6<<endl;
+    // Output:
+    // b6=0           0           0           0           0           0
 
     // Resize
     b4.resize(7);
     b4[6] = 6;
-    cout<<"b4.resize(7);"<<endl;
-    cout<<"b4[6] = 6;"<<endl;
-    cout<<"%> b4="<<b4<<endl;
-    cout<<endl;
+    cout<<"b4="<<b4<<endl;
+    // Output:
+    // b4=2           100000      21          2           42          21          6
+    
     b4.resize(4);
-    cout<<"b4.resize(4);"<<endl;
-    cout<<"%> b4="<<b4<<endl;
-    cout<<endl;
+    cout<<"b4="<<b4<<endl;
+    // Output:
+    // b4=2           100000      21          2
 
 
     // Matrix creation : 
@@ -303,17 +302,17 @@ int main(int argc, char** argv)
     c(0,1)=-73.2;
     c(0,0)=78;
     c(2,1)=5.32e-2;
-    cout<<"Mat c(3,2);"<<endl;
-    cout<<"c(1,1)=1.1;"<<endl;
-    cout<<"c(1,0)=4;"<<endl;
-    cout<<"c(2,0)=5;"<<endl;
-    cout<<"c(0,1)=-73.2;"<<endl;
-    cout<<"c(0,0)=78;"<<endl;
-    cout<<"c(2,1)=5.32e-2;"<<endl;
-    cout<<"%> c=\n"<<c<<endl;
-    cout<<"%> c.length()="<<c.length()<<endl;
-    cout<<"%> c.width()="<<c.width()<<endl;
-    cout<<endl;
+    cout<<"c=\n"<<c<<endl;
+    cout<<"c.length()="<<c.length()<<endl;
+    cout<<"c.width()="<<c.width()<<endl;
+    // Output:
+    // c=
+    // 78          -73.2
+    // 4           1.1
+    // 5           0.0532
+    //
+    // c.length()=3
+    // c.width()=2
 
     // Matrix manipulation:
    
@@ -321,71 +320,102 @@ int main(int argc, char** argv)
 
     // ... of the last two rows and first column
     Mat c3 = c.subMat(1,0,2,1);
-    cout<<"Mat c3 = c.subMat(1,0,2,1);"<<endl;
-    cout<<"%> c3=\n"<<c3<<endl;
-    cout<<endl;
+    cout<<"c3=\n"<<c3<<endl;
+    // Output:
+    // c3=
+    // 4
+    // 5
 
     // ... of the second column
     Mat c4 = c.column(1);
-    cout<<"Mat c4 = c.column(1);"<<endl;
-    cout<<"%> c4=\n"<<c4<<endl;
-    cout<<endl;
+    cout<<"c4=\n"<<c4<<endl;
+    // Output:
+    // c4=
+    // -73.2
+    // 1.1
+    // 0.0532
 
     // ... of the third row
     Mat c5 = c.row(2);
-    cout<<"Mat c5 = c.row(2);"<<endl;
-    cout<<"%> c5=\n"<<c5<<endl;
-    cout<<endl;
+    cout<<"c5=\n"<<c5<<endl;
+    // Output:
+    // c5=
+    // 5           0.0532
 
     // .. of the third row, as a vector
     Vec b7 = c(2);
-    cout<<"Vec b7 = c(2);"<<endl;
-    cout<<"%> b7="<<b7<<endl;
-    cout<<endl;
+    cout<<"b7="<<b7<<endl;
+    // Output:
+    // b7=5           0.0532
 
     // Note: "=" operator does not copy!!!
     Mat c6 = c;
     c6(1,1) = 100000;
-    cout<<"Mat c6 = c;"<<endl;
-    cout<<"c6(1,1) = 100000;"<<endl;
-    cout<<"%> c=\n"<<c<<endl;
-    cout<<"%> c6=\n"<<c6<<endl;
-    cout<<endl;
+    cout<<"c=\n"<<c<<endl;
+    cout<<"c6=\n"<<c6<<endl;
+    // Output:
+    // c=
+    // 78          -73.2
+    // 4           100000
+    // 5           0.0532
+    //
+    // c6=
+    // 78          -73.2
+    // 4           100000
+    // 5           0.0532
 
     // Copy
     c6 = c.copy();
-    c6(1,1) = 100001;
-    cout<<"c6 = c.copy();"<<endl;
-    cout<<"c6(1,1) = 100001;"<<endl;
-    cout<<"%> c=\n"<<c<<endl;
-    cout<<"%> c6=\n"<<c6<<endl;
-    cout<<endl;
+    c6(1,1) = 1;
+    cout<<"c=\n"<<c<<endl;
+    cout<<"c6=\n"<<c6<<endl;
+    // Output:
+    // c=
+    // 78          -73.2
+    // 4           100000
+    // 5           0.0532
+    //
+    // c6=
+    // 78          -73.2
+    // 4           1
+    // 5           0.0532
 
     // Fill in one element
     Mat c7(c.length(),c.width());
     c7.fill(3);
-    cout<<"Mat c7(c.length(),c.width());"<<endl;
-    cout<<"c7.fill(3);"<<endl;
-    cout<<"%> c7=\n"<<c7<<endl;
-    cout<<endl;
+    cout<<"c7=\n"<<c7<<endl;
+    // Output:
+    // c7=
+    // 3           3
+    // 3           3
+    // 3           3
 
     // Fill in elements of another matrix
     c7 << c;
-    cout<<"c7 << c;"<<endl;
-    cout<<"%> c7=\n"<<c7<<endl;
-    cout<<endl;
+    cout<<"c7=\n"<<c7<<endl;
+    // Output:
+    // c7=
+    // 78          -73.2
+    // 4           100000
+    // 5           0.0532
 
     // Fill in a row of another matrix
     c7(2) << c(1);
-    cout<<"c7(2) << c(1);"<<endl;
-    cout<<"%> c7=\n"<<c7<<endl;
-    cout<<endl;
+    cout<<"c7=\n"<<c7<<endl;
+    // Output:
+    // c7=
+    // 78          -73.2
+    // 4           100000
+    // 5           0.0532
 
     // Clear
     c7.clear();
-    cout<<"c7.clear();"<<endl;
-    cout<<"%> c7=\n"<<c7<<endl;
-    cout<<endl;
+    cout<<"c7=\n"<<c7<<endl;
+    // Output:
+    // c7=
+    // 0           0
+    // 0           0
+    // 0           0
 
     // Resize
     c7.resize(4,4);
@@ -394,180 +424,27 @@ int main(int argc, char** argv)
     c7(3,1)=0.02;
     c7(3,2)=0.03;
     c7(3,3)=0.04;
-    cout<<"c7.resize(4,4);"<<endl;
-    cout<<"c7.subMat(0,2,3,2)<<c.subMat(0,0,3,2);"<<endl;
-    cout<<"c7(3,0)=0.01;"<<endl;
-    cout<<"c7(3,1)=0.02;"<<endl;
-    cout<<"c7(3,2)=0.03;"<<endl;
-    cout<<"c7(3,3)=0.04;"<<endl;
-    cout<<"%> c7=\n"<<c7<<endl;
-    cout<<endl;
+    cout<<"c7=\n"<<c7<<endl;
+    // Output:
+    // c7=
+    // 0           0           78          -73.2
+    // 0           0           4           100000
+    // 0           0           5           0.0532
+    // 0.01        0.02        0.03        0.04
+
+
     c7.resize(2,3);
-    cout<<"c7.resize(2,3);"<<endl;
-    cout<<"%> c7=\n"<<c7<<endl;
-    cout<<endl;
+    cout<<"c7=\n"<<c7<<endl;
+    // Output:
+    // c7=
+    // 0           0           78
+    // 0           0           4
 
     return 0;
 }
 
 \end{verbatim}
 
-The output of this code example is the following:
-
-\begin{verbatim}
-real a=15;
-%> a=15
-
-Vec b(3);
-b[0] = 2;
-b[1] = 42;
-b[2] = 21;
-%> b=2           42          21
-%> b.length()=3
-
-Vec b3 = b.subVec(1,2);
-%> b3=42          21
-
-Vec b4 = concat(b,b);
-%> b4=2           42          21          2           42          21
-
-Vec b5 = b4;
-b5[1] = 100000;
-%> b4=2           100000      21          2           42          21
-%> b5=2           100000      21          2           42          21
-
-b5 = b4.copy();
-b5[0]=100001;
-%> b4=2           100000      21          2           42          21
-%> b5=2           100001      21          2           42          21
-
-Vec b6(b4.length());
-b6.fill(3);
-%> b6=3           3           3           3           3           3
-
-b6 << b4;
-%> b6=2           100000      21          2           42          21
-
-b6.clear();
-%> b6=0           0           0           0           0           0
-
-b4.resize(7);
-b4[6] = 6;
-%> b4=2           100000      21          2           42          21          6
-
-b4.resize(4);
-%> b4=2           100000      21          2
-
-Mat c(3,2);
-c(1,1)=1.1;
-c(1,0)=4;
-c(2,0)=5;
-c(0,1)=-73.2;
-c(0,0)=78;
-c(2,1)=5.32e-2;
-%> c=
-78          -73.2
-4           1.1
-5           0.0532
-
-%> c.length()=3
-%> c.width()=2
-
-Mat c3 = c.subMat(1,0,2,1);
-%> c3=
-4
-5
-
-
-Mat c4 = c.column(1);
-%> c4=
--73.2
-1.1
-0.0532
-
-
-Mat c5 = c.row(2);
-%> c5=
-5           0.0532
-
-
-Vec b7 = c(2);
-%> b7=5           0.0532
-
-Mat c6 = c;
-c6(1,1) = 100000;
-%> c=
-78          -73.2
-4           100000
-5           0.0532
-
-%> c6=
-78          -73.2
-4           100000
-5           0.0532
-
-
-c6 = c.copy();
-c6(1,1) = 100001;
-%> c=
-78          -73.2
-4           100000
-5           0.0532
-
-%> c6=
-78          -73.2
-4           100001
-5           0.0532
-
-
-Mat c7(c.length(),c.width());
-c7.fill(3);
-%> c7=
-3           3
-3           3
-3           3
-
-
-c7 << c;
-%> c7=
-78          -73.2
-4           100000
-5           0.0532
-
-
-c7(2) << c(1);
-%> c7=
-78          -73.2
-4           100000
-4           100000
-
-
-c7.clear();
-%> c7=
-0           0
-0           0
-0           0
-
-
-c7.resize(4,4);
-c7.subMat(0,2,3,2)<<c.subMat(0,0,3,2);
-c7(3,0)=0.01;
-c7(3,1)=0.02;
-c7(3,2)=0.03;
-c7(3,3)=0.04;
-%> c7=
-0           0           78          -73.2
-0           0           4           100000
-0           0           5           0.0532
-0.01        0.02        0.03        0.04
-
-
-c7.resize(2,3);
-%> c7=
-0           0           78
-0           0           4
-
-\end{verbatim}
 
 For other useful methods for \texttt{TVec} and
 \texttt{TMat} and more details on their implementation,
@@ -1303,6 +1180,7 @@ set to the right values when one parameter has changed.
 
 \subsection{\label{plearner_vmat}Datasets}
 
+TODO
 
 \subsection{Testing phase}
 TODO
