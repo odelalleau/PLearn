@@ -1180,7 +1180,59 @@ set to the right values when one parameter has changed.
 
 \subsection{\label{plearner_vmat}Datasets}
 
-TODO
+In PLearn, the data structure for datasets (training, validation
+and test sets) correspond to the \texttt{VMatrix} class. 
+Conceptually, it corresponds
+to a matrix where each row is a sample
+(training or test example). The length of the \texttt{VMatrix}, that is
+the number of samples it contains, is given by the
+\texttt{length()} method. 
+
+A row is divided in three parts called the input,
+target and weight parts. Their respective sizes are given
+by the methods \texttt{inputsize()}, \texttt{targetsize()}
+and \texttt{weightsize()} of the \texttt{VMatrix} object. 
+The total width of
+the \texttt{VMatrix} is given by the method \texttt{width()} 
+and should be equal to the sum of the input, target
+and weight part sizes. The weight size should also
+be either 1 or 0, that is a sample either
+has a weight or does not.
+
+There are two ways of accessing a sample of a \texttt{VMatrix}.
+The method {\tt getRow(i, row)} can be called, where {\tt i}
+is the index of the row and {\tt row} is a {\tt Vec} which
+will be filled with the input, target and weight parts
+of the $i^{th}$ sample. The length of {\tt row}
+should already be set to the width of the {\texttt VMatrix}.
+
+Another possibility is to call
+{\tt getExample(i, input, target, weight)}, where
+{\tt input} and {\tt target} are {\tt Vec} objects and
+will be filled with the input and target parts of
+the $i^{th}$ sample. The {\tt weight} variable is a reference
+to a {\tt real}, which will be equal to the weight
+of the $i^{th}$ sample. The {\tt input} and {\tt target}
+vectors do not have to be sized according to the
+{\tt VMatrix} input and target part sizes. They
+will be resized appropriately by {\tt VMatrix}
+(this is possible since they are passed as
+references to the method).
+
+Usually, instead of manipulating {\tt VMatrix} objects,
+you will have access to a {\tt VMat} object, which
+can be seen as a pointer to a {\tt VMatrix} object
+and should be used as such. The {\tt VMat} class
+inherits from the class {\tt PP<VMatrix>}, that
+is the class of smart pointers for {\tt VMatrix} objects.
+To know more about smart pointers, see section \ref{PP}.
+
+The {\tt VMatrix} object is implemented in files
+{\tt PLearn/plearn/vmat/VMatrix.\{cc,h\}}, where
+you will find many more methods for this class.
+However, the ones that we described in this
+section will usually be sufficient for the
+implementation of a {\tt PLearner}.
 
 \subsection{Testing phase}
 TODO
