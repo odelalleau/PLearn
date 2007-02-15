@@ -228,9 +228,11 @@ void log_softmax(const TVec<T> &x, TVec<T> &y)
 //! computes y <- exp(x)
 template <class T> 
 void exp(const TVec<T>& x, TVec<T>& y)
-{  
+{
     y.resize(x.length());
     int n = x.length();
+    if (!n)
+        return;
     T* xp = x.data();
     T* yp = y.data();
     while(n--)
@@ -241,6 +243,8 @@ void exp(const TVec<T>& x, TVec<T>& y)
 template<class T> 
 T sumsquare(const TVec<T>& x)
 {
+    if (x.length() == 0)
+        return T(0);
     T* v = x.data();
     T res = square(v[0]);
     int l = x.length();
@@ -253,6 +257,8 @@ T sumsquare(const TVec<T>& x)
 template<class T> 
 T sumabs(const TVec<T>& x)
 {
+    if (x.length() == 0)
+        return T(0);
     T* v = x.data();
     T res = (T)(fabs((real)v[0]));
     int l = x.length();
@@ -265,6 +271,8 @@ T sumabs(const TVec<T>& x)
 template<class T>
 void squareElements(const TVec<T>& x)
 {
+    if (x.length() == 0)
+        return;
     T* ptr = x.data();
     int l = x.length();
     while(l--)
@@ -278,7 +286,8 @@ void squareElements(const TVec<T>& x)
 template<class T>
 void squareElements(const TMat<T>& m)
 {
-    if (m.size()==0) return;
+    if (m.size()==0)
+        return;
     if(m.isCompact()) {
         typename TMat<T>::compact_iterator it = m.compact_begin();
         typename TMat<T>::compact_iterator itend = m.compact_end();
@@ -296,7 +305,8 @@ void squareElements(const TMat<T>& m)
 template<class T> 
 T sumsquare(const TMat<T>& m)
 {  
-    if (m.size()==0) return 0;
+    if (m.size()==0)
+        return T(0);
     if(m.isCompact())
     {
         typename TMat<T>::compact_iterator it = m.compact_begin();
@@ -324,7 +334,8 @@ T sumsquare(const TMat<T>& m)
 template<class T> 
 T sumabs(const TMat<T>& m)
 {  
-    if (m.size()==0) return 0;
+    if (m.size()==0)
+        return T(0);
     if(m.isCompact())
     {
         typename TMat<T>::compact_iterator it = m.compact_begin();
@@ -382,6 +393,8 @@ inline void multiply(const TVec<T>& source1, T source2, TVec<T>& destination)
     int n=source1.length();
     if (n!=destination.length())
         destination.resize(n);
+    if (!n)
+        return;
     T* s1=source1.data();
     T* d=destination.data();
     for (int i=0;i<n;i++)
@@ -397,6 +410,8 @@ template<class T>
 T sum(const TVec<T>& vec, bool ignore_missing)
 {
     double res = 0.0;
+    if (vec.size() == 0)
+        return res;
     T* v = vec.data();
     for(int i=0; i<vec.length(); i++)
     {
@@ -412,6 +427,8 @@ template<class T>
 T sum(const TVec<T>& vec)
 {
     T res = T(0);
+    if (vec.size() == 0)
+        return res;
     T* v = vec.data();
     for(int i=0; i<vec.length(); i++)
         res += v[i];
@@ -425,6 +442,8 @@ template<class T>
 T sum_of_log(const TVec<T>& vec)
 {
     double res = 0.0;
+    if (vec.size() == 0)
+        return res;
     T* v = vec.data();
     for(int i=0; i<vec.length(); i++)
         res += pl_log(v[i]);
@@ -435,6 +454,8 @@ template<class T>
 T product(const TVec<T>& vec)
 {
     double res = 1.0;
+    if (vec.size() == 0)
+        return res;
     T* v = vec.data();
     for(int i=0; i<vec.length(); i++)
         res *= v[i];
@@ -468,6 +489,8 @@ T mean(const TVec<T>& vec, bool ignore_missing=false)
     if(vec.length()==0)
         PLERROR("IN T mean(const TVec<T>& vec) vec has zero length");
 #endif
+    if (vec.size() == 0)
+        return MISSING_VALUE;
     double res = 0.0;
     int n = 0;
     T* v = vec.data();
@@ -478,10 +501,12 @@ T mean(const TVec<T>& vec, bool ignore_missing=false)
             res += v[i];
             n++;
         }
-        else if (!ignore_missing) return MISSING_VALUE;
+        else if (!ignore_missing)
+            return MISSING_VALUE;
     }
 
-    if (n == 0) return MISSING_VALUE;
+    if (n == 0)
+        return MISSING_VALUE;
     return T(res/double(n));
 }
 
@@ -492,6 +517,8 @@ T harmonic_mean(const TVec<T>& vec, bool ignore_missing=false)
     if(vec.length()==0)
         PLERROR("IN T mean(const TVec<T>& vec) vec has zero length");
 #endif
+    if (vec.size() == 0)
+        return MISSING_VALUE;
     double res = 0.0;
     int n = 0;
     T* v = vec.data();
@@ -502,10 +529,12 @@ T harmonic_mean(const TVec<T>& vec, bool ignore_missing=false)
             res += 1.0/v[i];
             n++;
         }
-        else if (!ignore_missing) return MISSING_VALUE;
+        else if (!ignore_missing)
+            return MISSING_VALUE;
     }
 
-    if (n == 0) return MISSING_VALUE;
+    if (n == 0)
+        return MISSING_VALUE;
     return T(double(n)/res);
 }
 
