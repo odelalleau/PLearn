@@ -175,8 +175,10 @@ void IIDNoiseKernel::computeGramMatrix(Mat K) const
 
     // Prepare kronecker iteration
     int   kronecker_num     = m_kronecker_indexes.size();
-    int*  kronecker_indexes = m_kronecker_indexes.data();
-    real* kronecker_sigma   = m_kronecker_sigma.data();
+    int*  kronecker_indexes = ( kronecker_num > 0?
+                                m_kronecker_indexes.data() : 0 );
+    real* kronecker_sigma   = ( kronecker_num > 0?
+                                m_kronecker_sigma.data() : 0 );
 
     // Compute Gram Matrix
     int  l = data->length();
