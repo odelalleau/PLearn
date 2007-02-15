@@ -46,6 +46,7 @@
 
 Copyright \copyright\ 1998-2002 Pascal Vincent, Yoshua Bengio \\
 Copyright \copyright\ 2004 Martin Monperrus \\
+Copyright \copyright\ 2007 Hugo Larochelle \\
 
 Permission is granted to copy and distribute this document in any medium,
 with or without modification, provided that the following conditions are
@@ -180,10 +181,26 @@ In addition, if you wish to develop new learning algorithms, or otherwise
 
 \section{PLearn for Matrix-Vectors Operations}
 
-PLearn can be used as a kind of Matlab. The notation are more
-difficult but the efficiency is uncomparable.
+PLearn has its own vector and matrix data structures.
+The files \texttt{PLearn/plearn/math/TVec\_\{decl,math\}.h}
+contain the declaration and implementation of the
+vector class template\texttt{TVec}, and the matrix
+class template \texttt{TMat} can be found
+in files \texttt{PLearn/plearn/math/TMat\_\{decl,math\}.h}.
 
-\subsection{Creating}
+\subsection{Creation and Basic Manipulations}
+
+The PLearn vector and matrix data structures
+are easy to instantiate and
+support many useful basic operations, such
+as subvector and submatrix access.
+
+Here is a concrete example of how to use
+these data structures.
+The data type \texttt{Vec} and \texttt{Mat} refer to the \texttt{TVec<real>}
+and \texttt{TMat<real>} classes, where \texttt{real} is a macro
+corresponding either to \texttt{double} or \texttt{float}, depending
+on the compilation options used.
 
 \begin{verbatim}
 #include <plearn/math/TMat_maths.h>
@@ -196,21 +213,89 @@ int main(int argc, char** argv)
     // Please don't use double nor float
 
     real a=15;
-    cout<<a<<endl;
+    cout<<"real a=15;"<<endl;
+    cout<<"%> a="<<a<<endl;
+    cout<<endl;
 
-    // Vector creation: method 1
+    // Vector creation
     Vec b(3);
     b[0] = 2;
     b[1] = 42;
     b[2] = 21;
-    cout<<b<<endl;
+    cout<<"Vec b(3);"<<endl;
+    cout<<"b[0] = 2;"<<endl;
+    cout<<"b[1] = 42;"<<endl;
+    cout<<"b[2] = 21;"<<endl;
+    cout<<"%> b="<<b<<endl;
+    cout<<"%> b.length()="<<b.length()<<endl;
+    cout<<endl;
 
-    // Vector creation: method 2
-    Vec b2(3);
-    b2<<"5 4.2 -2";
-    cout<<b2<<endl;
+    // Vector manipulations:
 
-    // Matrix creation : method 1
+    // Subvector access of the last two elements (not a copy!!!)
+    Vec b3 = b.subVec(1,2);
+    cout<<"Vec b3 = b.subVec(1,2);"<<endl;
+    cout<<"%> b3="<<b3<<endl;
+    cout<<endl;
+
+    // Concatenation
+    Vec b4 = concat(b,b);
+    cout<<"Vec b4 = concat(b,b);"<<endl;
+    cout<<"%> b4="<<b4<<endl;
+    cout<<endl;
+
+    // Note: "=" operator does not copy!!!
+    Vec b5 = b4;
+    b5[1] = 100000;
+    cout<<"Vec b5 = b4;"<<endl;
+    cout<<"b5[1] = 100000;"<<endl;
+    cout<<"%> b4="<<b4<<endl;
+    cout<<"%> b5="<<b5<<endl;
+    cout<<endl;
+
+    // Copy
+    b5 = b4.copy();
+    b5[1]=100001;
+    cout<<"b5 = b4.copy();"<<endl;
+    cout<<"b5[0]=100001;"<<endl;
+    cout<<"%> b4="<<b4<<endl;
+    cout<<"%> b5="<<b5<<endl;
+    cout<<endl;
+
+    // Fill in one element
+    Vec b6(b4.length());
+    b6.fill(3);
+    cout<<"Vec b6(b4.length());"<<endl;
+    cout<<"b6.fill(3);"<<endl;
+    cout<<"%> b6="<<b6<<endl;
+    cout<<endl;
+
+    // Fill in elements of another vector
+    b6 << b4;
+    cout<<"b6 << b4;"<<endl;
+    cout<<"%> b6="<<b6<<endl;
+    cout<<endl;
+
+    // Clear
+    b6.clear();
+    cout<<"b6.clear();"<<endl;
+    cout<<"%> b6="<<b6<<endl;
+    cout<<endl;
+
+    // Resize
+    b4.resize(7);
+    b4[6] = 6;
+    cout<<"b4.resize(7);"<<endl;
+    cout<<"b4[6] = 6;"<<endl;
+    cout<<"%> b4="<<b4<<endl;
+    cout<<endl;
+    b4.resize(4);
+    cout<<"b4.resize(4);"<<endl;
+    cout<<"%> b4="<<b4<<endl;
+    cout<<endl;
+
+
+    // Matrix creation : 
     Mat c(3,2);
     c(1,1)=1.1;
     c(1,0)=4;
@@ -218,55 +303,330 @@ int main(int argc, char** argv)
     c(0,1)=-73.2;
     c(0,0)=78;
     c(2,1)=5.32e-2;
-    cout<<c<<endl;
+    cout<<"Mat c(3,2);"<<endl;
+    cout<<"c(1,1)=1.1;"<<endl;
+    cout<<"c(1,0)=4;"<<endl;
+    cout<<"c(2,0)=5;"<<endl;
+    cout<<"c(0,1)=-73.2;"<<endl;
+    cout<<"c(0,0)=78;"<<endl;
+    cout<<"c(2,1)=5.32e-2;"<<endl;
+    cout<<"%> c=\n"<<c<<endl;
+    cout<<"%> c.length()="<<c.length()<<endl;
+    cout<<"%> c.width()="<<c.width()<<endl;
+    cout<<endl;
 
-    // Matrix creation : method 2
-    Mat c2(3,2);
-    c2<<"2 4 2.5e-1 6 1e3 3.1"; // read matrix row by matrix row 
-    cout<<c2<<endl;
+    // Matrix manipulation:
+   
+    // Submatrix access (not a copy!!!)...
+
+    // ... of the last two rows and first column
+    Mat c3 = c.subMat(1,0,2,1);
+    cout<<"Mat c3 = c.subMat(1,0,2,1);"<<endl;
+    cout<<"%> c3=\n"<<c3<<endl;
+    cout<<endl;
+
+    // ... of the second column
+    Mat c4 = c.column(1);
+    cout<<"Mat c4 = c.column(1);"<<endl;
+    cout<<"%> c4=\n"<<c4<<endl;
+    cout<<endl;
+
+    // ... of the third row
+    Mat c5 = c.row(2);
+    cout<<"Mat c5 = c.row(2);"<<endl;
+    cout<<"%> c5=\n"<<c5<<endl;
+    cout<<endl;
+
+    // .. of the third row, as a vector
+    Vec b7 = c(2);
+    cout<<"Vec b7 = c(2);"<<endl;
+    cout<<"%> b7="<<b7<<endl;
+    cout<<endl;
+
+    // Note: "=" operator does not copy!!!
+    Mat c6 = c;
+    c6(1,1) = 100000;
+    cout<<"Mat c6 = c;"<<endl;
+    cout<<"c6(1,1) = 100000;"<<endl;
+    cout<<"%> c=\n"<<c<<endl;
+    cout<<"%> c6=\n"<<c6<<endl;
+    cout<<endl;
+
+    // Copy
+    c6 = c.copy();
+    c6(1,1) = 100001;
+    cout<<"c6 = c.copy();"<<endl;
+    cout<<"c6(1,1) = 100001;"<<endl;
+    cout<<"%> c=\n"<<c<<endl;
+    cout<<"%> c6=\n"<<c6<<endl;
+    cout<<endl;
+
+    // Fill in one element
+    Mat c7(c.length(),c.width());
+    c7.fill(3);
+    cout<<"Mat c7(c.length(),c.width());"<<endl;
+    cout<<"c7.fill(3);"<<endl;
+    cout<<"%> c7=\n"<<c7<<endl;
+    cout<<endl;
+
+    // Fill in elements of another matrix
+    c7 << c;
+    cout<<"c7 << c;"<<endl;
+    cout<<"%> c7=\n"<<c7<<endl;
+    cout<<endl;
+
+    // Fill in a row of another matrix
+    c7(2) << c(1);
+    cout<<"c7(2) << c(1);"<<endl;
+    cout<<"%> c7=\n"<<c7<<endl;
+    cout<<endl;
+
+    // Clear
+    c7.clear();
+    cout<<"c7.clear();"<<endl;
+    cout<<"%> c7=\n"<<c7<<endl;
+    cout<<endl;
+
+    // Resize
+    c7.resize(4,4);
+    c7.subMat(0,2,3,2)<<c.subMat(0,0,3,2);
+    c7(3,0)=0.01;
+    c7(3,1)=0.02;
+    c7(3,2)=0.03;
+    c7(3,3)=0.04;
+    cout<<"c7.resize(4,4);"<<endl;
+    cout<<"c7.subMat(0,2,3,2)<<c.subMat(0,0,3,2);"<<endl;
+    cout<<"c7(3,0)=0.01;"<<endl;
+    cout<<"c7(3,1)=0.02;"<<endl;
+    cout<<"c7(3,2)=0.03;"<<endl;
+    cout<<"c7(3,3)=0.04;"<<endl;
+    cout<<"%> c7=\n"<<c7<<endl;
+    cout<<endl;
+    c7.resize(2,3);
+    cout<<"c7.resize(2,3);"<<endl;
+    cout<<"%> c7=\n"<<c7<<endl;
+    cout<<endl;
 
     return 0;
 }
+
 \end{verbatim}
 
-\subsection{Manipulating}
-All the corresponding methods are in TMat\_maths\_impl.h (or should be). As of 
-date, they are not documented, so you have to have a bath in the file (methods 
-should be commented). A short example:
+The output of this code example is the following:
 
 \begin{verbatim}
-#include <plearn/math/TMat_maths.h>
-using namespace PLearn;
+real a=15;
+%> a=15
 
-int main(int argc, char** argv)
-{
-    // vector creation
-    Vec b(3);
-    b[0] = 2;
-    b[1] = 42;
-    b[2] = 21;
-    cout<<b<<endl;
+Vec b(3);
+b[0] = 2;
+b[1] = 42;
+b[2] = 21;
+%> b=2           42          21
+%> b.length()=3
 
-    // matrix creation
-    Mat c(3,2);
-    c(1,1)=1.0;
-    c(1,0)=4.0;
-    c(2,0)=5.0;
-    c(0,1)=73.0;
-    c(0,0)=78.0;
-    c(2,1)=5.0;
+Vec b3 = b.subVec(1,2);
+%> b3=42          21
+
+Vec b4 = concat(b,b);
+%> b4=2           42          21          2           42          21
+
+Vec b5 = b4;
+b5[1] = 100000;
+%> b4=2           100000      21          2           42          21
+%> b5=2           100000      21          2           42          21
+
+b5 = b4.copy();
+b5[0]=100001;
+%> b4=2           100000      21          2           42          21
+%> b5=2           100001      21          2           42          21
+
+Vec b6(b4.length());
+b6.fill(3);
+%> b6=3           3           3           3           3           3
+
+b6 << b4;
+%> b6=2           100000      21          2           42          21
+
+b6.clear();
+%> b6=0           0           0           0           0           0
+
+b4.resize(7);
+b4[6] = 6;
+%> b4=2           100000      21          2           42          21          6
+
+b4.resize(4);
+%> b4=2           100000      21          2
+
+Mat c(3,2);
+c(1,1)=1.1;
+c(1,0)=4;
+c(2,0)=5;
+c(0,1)=-73.2;
+c(0,0)=78;
+c(2,1)=5.32e-2;
+%> c=
+78          -73.2
+4           1.1
+5           0.0532
+
+%> c.length()=3
+%> c.width()=2
+
+Mat c3 = c.subMat(1,0,2,1);
+%> c3=
+4
+5
 
 
-    Vec d(2);
-    transposeProductAcc(d,c,b);
-    cout<<d<<endl;
-    return 0;
-}
+Mat c4 = c.column(1);
+%> c4=
+-73.2
+1.1
+0.0532
+
+
+Mat c5 = c.row(2);
+%> c5=
+5           0.0532
+
+
+Vec b7 = c(2);
+%> b7=5           0.0532
+
+Mat c6 = c;
+c6(1,1) = 100000;
+%> c=
+78          -73.2
+4           100000
+5           0.0532
+
+%> c6=
+78          -73.2
+4           100000
+5           0.0532
+
+
+c6 = c.copy();
+c6(1,1) = 100001;
+%> c=
+78          -73.2
+4           100000
+5           0.0532
+
+%> c6=
+78          -73.2
+4           100001
+5           0.0532
+
+
+Mat c7(c.length(),c.width());
+c7.fill(3);
+%> c7=
+3           3
+3           3
+3           3
+
+
+c7 << c;
+%> c7=
+78          -73.2
+4           100000
+5           0.0532
+
+
+c7(2) << c(1);
+%> c7=
+78          -73.2
+4           100000
+4           100000
+
+
+c7.clear();
+%> c7=
+0           0
+0           0
+0           0
+
+
+c7.resize(4,4);
+c7.subMat(0,2,3,2)<<c.subMat(0,0,3,2);
+c7(3,0)=0.01;
+c7(3,1)=0.02;
+c7(3,2)=0.03;
+c7(3,3)=0.04;
+%> c7=
+0           0           78          -73.2
+0           0           4           100000
+0           0           5           0.0532
+0.01        0.02        0.03        0.04
+
+
+c7.resize(2,3);
+%> c7=
+0           0           78
+0           0           4
+
 \end{verbatim}
 
+For other useful methods for \texttt{TVec} and
+\texttt{TMat} and more details on their implementation,
+see files \texttt{PLearn/plearn/math/TVec\_\{decl,math\}.h}
+and \texttt{PLearn/plearn/math/TMat\_\{decl,math\}.h}
+
+\subsection{Mathematical Manipulations}
+
+Though you might want to implement certain mathematical functions or operators
+yourself, many mathematical manipulations for \texttt{TVec}
+and \texttt{TMat} are already implemented in PLearn. 
+
+In \texttt{PLearn/plearn/math/TMat\_maths\_impl.h},
+many mathematical operators, such as  \texttt{+}, \texttt{-}, \texttt{*}, 
+\texttt{/}, \texttt{+=}, \texttt{-=}, \texttt{*=} and \texttt{/=} are already overloaded.
+When using \texttt{+}, \texttt{-}, \texttt{*} or
+\texttt{/}, a new vector/matrix is created as the result of the operation,
+and when using \texttt{+=}, \texttt{-=}, \texttt{*=}, \texttt{/=}, the operand on
+the left is modified and no object is created. Also, many vector/matrix products
+are implemented. Given the vector $x$ and $y$ and the matrices $A$, $B$ and $C$:
+
+\begin{itemize}
+\item \texttt{dot(x,y)} computes $x' y$
+\item \texttt{product(y,A,x)} computes $y$ such that $A x = y$
+\item \texttt{transposeProduct(y,A,x)} computes $y$ such that $A' x = y$
+\item \texttt{product(C,A,B)} computes $C$ such that $A B = C$
+\item \texttt{transposeProduct(C,A,B)} computes $C$ such that $A' B = C$
+\item \texttt{externalProduct(A,x,y)} computes $A$ such that $x y' = A$
+\end{itemize}
+
+Moreover, the functions \texttt{productAcc}, \texttt{transposeProductAcc} and \texttt{externalProductAcc}
+perform the same operations but accumulate the result of the computations in 
+the modified data structure instead of overwriting what it initially contained.
+For example, the computation of $A x + A y = z$ can be done by the following
+calls: \texttt{product(z,A,x)} followed by \texttt{productAcc(z,A,y)}.
+
+Many other standard functions can be found in \texttt{PLearn/plearn/math/TMat\_maths\_impl.h}. 
+The most popular are probably \texttt{sign}, \texttt{max}, 
+\texttt{argmax}, \texttt{min}, \texttt{argmin},
+\texttt{softmax}, \texttt{exp}, \texttt{abs}, \texttt{log}, 
+\texttt{logadd}, \texttt{sqrt}, \texttt{sigmoid} and \texttt{tanh}.
+
+When considering to implement a given mathematical function on
+vectors and matrices in PLearn, some time can be saved by first 
+looking in \texttt{PLearn/plearn/math/TMat\_maths\_impl.h} 
+in order to verify whether it has already been implemented.
+
+In \texttt{PLearn/plearn/math/TMat\_maths\_specialisation.h}, optimized
+versions of vector/matrix operators for specific data types and relying on the BLAS library
+can be found.
+Also, in \texttt{PLearn/plearn/math/plapack.h}, other specialized functions for vectors
+and matrices (matrix inverse, eigenvalue and singular value decomposition, linear system
+solver, etc.) relying on the LAPACK library can also be found.
+
+
 \subsection{Loading and saving}
-You can load and save a Mat with the following code (note that it needs an 
-include of VMat.h):
+You can load and save a Mat with the following code (VMat.h
+must be included):
+
 \begin{verbatim}
 
 #include <plearn/math/TMat_maths.h>
