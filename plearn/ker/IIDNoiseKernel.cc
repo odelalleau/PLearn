@@ -151,6 +151,74 @@ real IIDNoiseKernel::evaluate(const Vec& x1, const Vec& x2) const
 }
 
 
+//#####  computeGramMatrix  ###################################################
+
+void IIDNoiseKernel::computeGramMatrix(Mat K) const
+{
+    if (!data)
+        PLERROR("Kernel::computeGramMatrix: setDataForKernelMatrix not yet called");
+    if (!is_symmetric)
+        PLERROR("Kernel::computeGramMatrix: not supported for non-symmetric kernels");
+    if (K.length() != data.length() || K.width() != data.length())
+        PLERROR("Kernel::computeGramMatrix: the argument matrix K should be\n"
+                "of size %d x %d (currently of size %d x %d)",
+                data.length(), data.length(), K.length(), K.width());
+                
+    PLASSERT( K.size() == 0 || m_data_cache.size() > 0 );  // Ensure data cached OK
+
+    // Precompute some terms
+    real noise_sigma  = exp(2 * m_log_noise_sigma);
+    m_kronecker_sigma.resize(m_log_kronecker_sigma.size());
+    m_kronecker_sigma << m_log_kronecker_sigma;
+    m_kronecker_sigma *= 2.0;
+    exp(m_kronecker_sigma, m_kronecker_sigma);
+
+    // Prepare kronecker iteration
+    int   kronecker_num     = m_kronecker_indexes.size();
+    int*  kronecker_indexes = m_kronecker_indexes.data();
+    real* kronecker_sigma   = m_kronecker_sigma.data();
+
+    // Compute Gram Matrix
+    int  l = data->length();
+    int  m = K.mod();
+    int  cache_mod = m_data_cache.mod();
+
+    real *data_start = &m_data_cache(0,0);
+    real Kij;
+    real *Ki, *Kji;
+    real *xi = data_start;
+    
+    for (int i=0 ; i<l ; ++i, xi += cache_mod) {
+        Ki  = K[i];
+        Kji = &K[0][i];
+        real *xj = data_start;
+
+        for (int j=0; j<=i; ++j, Kji += m, xj += cache_mod) {
+            // Kernel evaluation per se
+            if (i == j)
+                Kij = noise_sigma;
+            else
+                Kij = 0.0;
+
+            // Kronecker terms
+            if (kronecker_num > 0) {
+                int*  cur_index = kronecker_indexes;
+                real* cur_sigma = kronecker_sigma;
+                
+                for (int k=0 ; k<kronecker_num ; ++k, ++cur_index, ++cur_sigma)
+                    if (fast_is_equal(xi[*cur_index], xj[*cur_index]))
+                        Kij += *cur_sigma;
+            }
+            
+            // Fill upper triangle if not on diagonal
+            *Ki++ = Kij;
+            if (j < i)
+                *Kji = Kij;
+        }
+    }
+}
+
+
 //#####  makeDeepCopyFromShallowCopy  #########################################
 
 void IIDNoiseKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
@@ -159,6 +227,7 @@ void IIDNoiseKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     deepCopyField(m_kronecker_indexes,   copies);
     deepCopyField(m_log_kronecker_sigma, copies);
+    deepCopyField(m_kronecker_sigma,     copies);
 }
 
 
@@ -231,10 +300,11 @@ void IIDNoiseKernel::computeGramMatrixDerivative(Mat& KD, const string& kernel_p
 
 //#####  derivKronecker  ######################################################
 
-real IIDNoiseKernel::derivKronecker(const Vec& row_i, const Vec& row_j, real K,
-                                    int arg) const
+real IIDNoiseKernel::derivKronecker(int i, int j, int arg, real K) const
 {
-    int index = m_kronecker_indexes[arg];
+    int index  = m_kronecker_indexes[arg];
+    Vec& row_i = *dataRow(i);
+    Vec& row_j = *dataRow(j);
     if (fast_is_equal(row_i[index], row_j[index]))
         return 2*exp(2*m_log_kronecker_sigma[arg]);
     else

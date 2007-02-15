@@ -109,6 +109,7 @@ void ARDBaseKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField(m_log_input_sigma, copies);
+    deepCopyField(m_input_sigma,     copies);
 }
 
 } // end of namespace PLearn

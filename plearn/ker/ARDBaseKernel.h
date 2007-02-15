@@ -102,6 +102,10 @@ protected:
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
 
+    //! Buffer for final input sigma (add both global and per-input terms);
+    //! Can be used by derived class.
+    mutable Vec m_input_sigma;
+    
 private:
     //! This does the actual building.
     void build_();

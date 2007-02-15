@@ -128,9 +128,17 @@ void MemoryCachedKernel::setDataForKernelMatrix(VMat the_data)
         the_data.isNotNull())
     {
         m_data_cache = the_data.toMat();
+
+        // Update row cache
+        const int N = m_data_cache.length();
+        m_row_cache.resize(N);
+        for (int i=0 ; i<N ; ++i)
+            dataRow(i, m_row_cache[i]);
     }
-    else
+    else {
         m_data_cache = Mat();
+        m_row_cache.resize(0);
+    }
 }
 
 
@@ -140,8 +148,15 @@ void MemoryCachedKernel::addDataForKernelMatrix(const Vec& newrow)
 {
     inherited::addDataForKernelMatrix(newrow);
 
-    if (m_data_cache.isNotNull())
+    if (m_data_cache.isNotNull()) {
+        const int OLD_N = m_data_cache.length();
+        PLASSERT( m_data_cache.length() == m_row_cache.size() );
         m_data_cache.appendRow(newrow);
+
+        // Update row cache
+        m_row_cache.push_back(Vec());
+        dataRow(OLD_N, m_row_cache[OLD_N]);
+    }
 }
 
 } // end of namespace PLearn

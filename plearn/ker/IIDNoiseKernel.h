@@ -102,6 +102,10 @@ public:
     //! Compute K(x1,x2).
     virtual real evaluate(const Vec& x1, const Vec& x2) const;
 
+    //! Compute the Gram Matrix.  Note that this version DOES NOT CACHE
+    //! the results, since it is usually called by derived classes.
+    virtual void computeGramMatrix(Mat K) const;
+    
     //! Directly compute the derivative with respect to hyperparameters
     //! (Faster than finite differences...)
     virtual void computeGramMatrixDerivative(Mat& KD, const string& kernel_param,
@@ -123,7 +127,11 @@ protected:
     static void declareOptions(OptionList& ol);
 
     //! Derivative function with respect to kronecker_indexes[arg] hyperparameter
-    real derivKronecker(const Vec& row_i, const Vec& row_j, real K, int arg) const;
+    real derivKronecker(int i, int j, int arg, real K) const;
+
+protected:
+    //! Buffer for exponential of m_log_kronecker_sigma
+    mutable Vec m_kronecker_sigma;
     
 private:
     //! This does the actual building.

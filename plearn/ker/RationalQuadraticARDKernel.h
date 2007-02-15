@@ -113,17 +113,24 @@ protected:
     static void declareOptions(OptionList& ol);
 
     //! Derivative function with respect to log_signal_sigma
-    real derivLogSignalSigma(const Vec& row_i, const Vec& row_j, real K, int arg) const;
+    real derivLogSignalSigma(int i, int j, int arg, real K) const;
 
     //! Derivative function with respect to log_global_sigma
-    real derivLogGlobalSigma(const Vec& row_i, const Vec& row_j, real K, int arg) const;
+    real derivLogGlobalSigma(int i, int j, int arg, real K) const;
     
     //! Derivative function with respect to log_input_sigma[arg]
-    real derivLogInputSigma(const Vec& row_i, const Vec& row_j, real K, int arg) const;
+    real derivLogInputSigma(int i, int j, int arg, real K) const;
     
     //! Derivative function with respect to log_alpha
-    real derivLogAlpha(const Vec& row_i, const Vec& row_j, real K, int arg) const;
+    real derivLogAlpha(int i, int j, int arg, real K) const;
+
+    // Compute derivative w.r.t. log_input_sigma[arg] for WHOLE MATRIX
+    void computeGramMatrixDerivLogInputSigma(Mat& KD, int arg) const;
     
+protected:
+    //! Cached version of IID noise gram matrix
+    mutable Mat m_noise_gram_cache;
+
 private:
     //! This does the actual building.
     void build_();

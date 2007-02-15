@@ -40,7 +40,10 @@
  * This file is part of the PLearn library.
  ******************************************************* */
 
+#define PL_LOG_MODULE_NAME "Kernel"
+
 #include "Kernel.h"
+#include <plearn/io/pl_log.h>
 #include <plearn/base/lexical_cast.h>
 #include <plearn/base/tostring.h>
 #include <plearn/base/ProgressBar.h>
@@ -447,6 +450,10 @@ void Kernel::computeSparseGramMatrix(TVec<Mat> K) const
 void Kernel::computeGramMatrixDerivative(Mat& KD, const string& kernel_param,
                                          real epsilon) const
 {
+    MODULE_LOG << "Computing Gram matrix derivative by finite differences "
+               << "for hyper-parameter '" << kernel_param << "'"
+               << endl;
+    
     // This function is conceptually const, but the evaluation by finite
     // differences in a generic way requires some change-options, which
     // formally require a const-away cast.

@@ -97,6 +97,9 @@ public:
     //! Update the cache if a new row is added to the data
     virtual void addDataForKernelMatrix(const Vec& newRow);
 
+    //! Return true if the cache is active after setting some data
+    bool dataCached() const { return m_data_cache.size() > 0; }
+
 
     //#####  PLearn::Object Protocol  #########################################
 
@@ -124,6 +127,13 @@ protected:
     inline void dataRow(int i, Vec& row) const;
 
     /**
+     *  Interface for derived classes: access row i of the data matrix and
+     *  return it as a POINTER to a Vec.  NOTE: this version ASSUMES that the
+     *  cache exists.  You can verify this with the dataCached() function.
+     */
+    inline Vec* dataRow(int i) const;
+
+    /**
      *  Interface to ease derived-class implementation of computeGramMatrix
      *  that avoids virtual function calls in kernel evaluation.  The
      *  computeGramMatrixNV function should be called directly by the
@@ -146,11 +156,11 @@ protected:
      *
      *  The member function is called with the following arguments:
      *
-     *  - x1  : element at row i of the data matrix
-     *  - x2  : element at row j of the data matrix
-     *  - K   : kernel value for (x1,x2); obtained from cache if available
+     *  - i   : current row i of the data matrix
+     *  - j   : current row j of the data matrix
      *  - arg : integer argument passed to the function; may be used to index
      *          into a vector of hyperparameters
+     *  - K   : kernel value for (x1,x2); obtained from cache if available
      *
      *  The last argument to computeGramMatrixDerivNV,
      *  'derivative_func_requires_K', specifies whether the derivativeFunc
@@ -160,7 +170,7 @@ protected:
      *  is called with a MISSING_VALUE for its argument K.
      */
     template <class DerivedClass,
-              real (DerivedClass::*derivativeFunc)(const Vec&, const Vec&, real, int) const>
+              real (DerivedClass::*derivativeFunc)(int, int, int, real) const>
     void computeGramMatrixDerivNV(Mat& KD, const DerivedClass* This, int arg,
                                   bool derivative_func_requires_K = true) const;
     
@@ -169,9 +179,13 @@ private:
     //! This does the actual building.
     void build_();
 
-private:
+protected:
     //! In-memory cache of the data matrix
     Mat m_data_cache;
+
+    //! Cache of vectors for each row of the data matrix; this avoids
+    //! reconstructing a Vec each time we want to access a row.
+    TVec<Vec> m_row_cache;
 };
 
 // Declares a few other classes and functions related to this class
@@ -190,6 +204,13 @@ inline void MemoryCachedKernel::dataRow(int i, Vec& row) const
         row.resize(dataInputsize());
         data->getSubRow(i, 0, row);
     }
+}
+
+inline Vec* MemoryCachedKernel::dataRow(int i) const
+{
+    // Note: ASSUME that the cache exists; will boundcheck in dbg/safeopt if
+    // not.
+    return &m_row_cache[i];
 }
 
 
@@ -251,7 +272,7 @@ void MemoryCachedKernel::computeGramMatrixNV(Mat K, const DerivedClass* This) co
 //#####  computeGramMatrixDerivNV  ############################################
 
 template <class DerivedClass,
-          real (DerivedClass::*derivativeFunc)(const Vec&, const Vec&, real, int) const>
+          real (DerivedClass::*derivativeFunc)(int, int, int, real) const>
 void MemoryCachedKernel::computeGramMatrixDerivNV(Mat& KD, const DerivedClass* This,
                                                   int arg, bool require_K) const
 {
@@ -266,7 +287,6 @@ void MemoryCachedKernel::computeGramMatrixDerivNV(Mat& KD, const DerivedClass* T
     KD.resize(W,W);
     int m=KD.mod();
     
-    Vec row_i, row_j;
     real KDij;
     real* KDi;
     real* KDji;
@@ -276,21 +296,21 @@ void MemoryCachedKernel::computeGramMatrixDerivNV(Mat& KD, const DerivedClass* T
     for (int i=0 ; i<W ; ++i) {
         KDi  = KD[i];
         KDji = &KD[0][i];
-        dataRow(i, row_i);
         if (gram_matrix_is_cached)
             Ki = gram_matrix[i];
         
         for (int j=0 ; j <= i ; ++j, KDji += m) {
-            dataRow(j, row_j);
-
             // Access the current kernel value depending on whether it's cached
             if (Ki)
                 K = *Ki++;
-            else if (require_K)
+            else if (require_K) {
+                Vec& row_i = *dataRow(i);
+                Vec& row_j = *dataRow(j);
                 K = This->DerivedClass::evaluate(row_i, row_j);
+            }
 
             // Compute and store the derivative
-            KDij   = (This->*derivativeFunc)(row_i, row_j, K, arg);
+            KDij   = (This->*derivativeFunc)(i, j, arg, K);
             *KDi++ = KDij;
             if (j < i)
                 *KDji = KDij;
