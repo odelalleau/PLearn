@@ -1310,18 +1310,28 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
             }
 
             Vec res(result_size, 1);
-            int step_size = result_size;
+            int length_of_run = 1;
+            int gap_between_runs = 1;
 
             // Accumulate variable product into "res" variable.
-            for (int var_index = 0; var_index < num_vars; var_index++) {
-                step_size /= vars[var_index].size();
-                for (int var_data_index = 0; var_data_index < vars[var_index].size(); var_data_index++) {
-                    for (int dest_index = 0; dest_index < result_size; dest_index += step_size) {
-                        res[dest_index] *= vars[var_index][var_data_index];
+            for (int var_index = num_vars - 1; var_index >= 0; var_index--) {
+                const int current_var_size = vars[var_index].size();
+                gap_between_runs *= current_var_size;
+                int start_dest_index = 0;
+
+                for (int var_data_index = 0; var_data_index < current_var_size; var_data_index++) {
+                    int dest_index = start_dest_index;
+                    while (dest_index < result_size) {
+                        int start_of_run = dest_index;
+                        while (dest_index - start_of_run < length_of_run) {
+                            res[dest_index++] *= vars[var_index][var_data_index];
+                        }
+                        dest_index += gap_between_runs - 1;
                     }
+                    start_dest_index += length_of_run;
                 }
+                length_of_run = gap_between_runs;
             }
-            PLASSERT(step_size == 1);
 
             // Put the result onto the stack
             for (int i = 0; i < result_size; i++)
