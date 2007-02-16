@@ -310,9 +310,10 @@ class SshTask( TaskType ):
         except StopIteration:
             cls._available_machines = None
             if new_loop:
-                raise EmptyMachineListError
-            else:
-                return cls.nextAvailableMachine()
+                time.sleep(3)                
+                #raise EmptyMachineListError 
+            #else:
+            return cls.nextAvailableMachine()
     nextAvailableMachine = classmethod(nextAvailableMachine)
 
     #

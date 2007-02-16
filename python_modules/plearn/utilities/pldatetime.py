@@ -10,7 +10,6 @@ def cyymmdd_to_date(x):
     cyymm,dd = divmod(cyymmdd,100)
     cyy,mm   = divmod(cyymm,100)
     yyyy = 1900+cyy
-
     return date(yyyy,mm,dd)
 
 def yyyymmdd_to_date(x):    

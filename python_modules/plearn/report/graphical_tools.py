@@ -33,15 +33,16 @@
 import pylab, os
 from plearn.report import GRID_COL, FONTSIZE, LEGEND_FONTPROP, TICK_LABEL_FONTPROP
 
-LEFT, WIDTH = 0.125, 0.8
+LEFT,   WIDTH  = 0.125, 0.800
+BOTTOM, HEIGHT = 0.100, 0.800
 LINE_COLORS = [ '#660033', 'b', 'r', 'k', "#CDBE70",
                 "#FF8C69", "#65754D", "#4d6575", "#754d65" ]
 
-__figure_counter = 0
+_figure_counter = 0
 def getNewFigure(figsize=(12,10)):
-    global __figure_counter
-    __figure_counter += 1
-    return pylab.figure(__figure_counter, figsize=figsize)
+    global _figure_counter
+    _figure_counter += 1
+    return pylab.figure(_figure_counter, figsize=figsize)
 
 def getBounds(frame):
     return [ frame.get_x(), frame.get_y(), frame.get_width(), frame.get_height() ]
@@ -51,6 +52,26 @@ def getWideRect(bottom, height):
 
 def plotZeroLine(axes, color='#666666'):
     axes.plot(axes.get_xlim(), [0,0], color=color)
+
+def same_xlim(*ax_list):
+    m, M = float('inf'), -float('inf')
+    for axes in ax_list:
+        xlim = axes.get_xlim()
+        m, M = min(m, xlim[0]), max(M, xlim[1]), 
+
+    for axes in ax_list:
+        axes.set_xlim(m, M)
+    return m, M
+
+def same_ylim(*ax_list):
+    m, M = float('inf'), -float('inf')
+    for axes in ax_list:
+        ylim = axes.get_ylim()
+        m, M = min(m, ylim[0]), max(M, ylim[1]), 
+
+    for axes in ax_list:
+        axes.set_ylim(m, M)
+    return m, M
 
 def setLegend(axes, legend_map, sorted_keys=None, loc=0):
     if not sorted_keys:
@@ -79,10 +100,13 @@ class AxisLimits:
         self.max = max(limits[1], self.max)    
 
 class FigureWrapper(object):
+    FIGSIZE = (12,10)
     instances = []
-
-    def __init__(self, figsize=(12,10)):
+    
+    def __init__(self, figsize=None):
+        if figsize is None: figsize = self.FIGSIZE
         self.figure = getNewFigure(figsize)
+        self.figno  = _figure_counter  
         self.instances.append(self)
 
     def addAxes(self, rect, *args, **kwargs):
