@@ -196,7 +196,26 @@ string removequotes(const string& s)
     }
     return s;
 }
-    
+
+//! Quote the provided string 's'
+string quote_string(const string& s)
+{
+    string quoted(s);
+        
+    // Escape the existing quotes
+    string::size_type pos = quoted.find("\"");
+    while ( pos != quoted.npos )
+    {
+        quoted.insert(pos, "\\");
+        pos = quoted.find("\"", pos+2); // +2 since the inserted char...
+    }
+
+    // Quote the string
+    quoted.insert(0, "\"");
+    quoted.insert(quoted.size(), "\"");
+    return quoted;
+}
+
 string remove_trailing_slash(const string& s)
 {
     string::size_type pos = s.length();

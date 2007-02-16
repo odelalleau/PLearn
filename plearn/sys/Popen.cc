@@ -91,11 +91,7 @@ void Popen::launch(const string& program, const vector<string>& arguments)
     string concatenated_args = program;
     for (vector<string>::const_iterator it = arguments.begin(); it != arguments.end();
          ++it)
-    {
-        concatenated_args += " '";
-        concatenated_args += *it;
-        concatenated_args += "'";
-    }
+        concatenated_args += " "+quote_string(*it);
     args[2] = concatenated_args.c_str();
     args[3] = 0;
   

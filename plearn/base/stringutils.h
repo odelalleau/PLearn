@@ -93,6 +93,9 @@ string removenewline(const string& s);
 //!  if there is none, return the string unmodified
 string removequotes(const string& s);
 
+//! Quote the provided string 's'
+string quote_string(const string& s);
+
 //!  convert a string to all lowercase
 string lowerstring(const string& s);
   
