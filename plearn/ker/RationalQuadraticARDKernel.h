@@ -127,9 +127,18 @@ protected:
     // Compute derivative w.r.t. log_input_sigma[arg] for WHOLE MATRIX
     void computeGramMatrixDerivLogInputSigma(Mat& KD, int arg) const;
     
+    // Compute derivative w.r.t. log_alpha for WHOLE MATRIX
+    void computeGramMatrixDerivLogAlpha(Mat& KD) const;
+    
 protected:
     //! Cached version of IID noise gram matrix
     mutable Mat m_noise_gram_cache;
+
+    /**
+     *  Cached version of the K / k terms, useful for computing derivatives
+     *      pow(1 + sum_wt / (2*alpha), -alpha-1)
+     */
+    mutable Mat m_pow_minus_alpha_minus_1;
 
 private:
     //! This does the actual building.

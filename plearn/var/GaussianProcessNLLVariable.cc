@@ -117,7 +117,8 @@ void GaussianProcessNLLVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(m_gram,            copies);
     deepCopyField(m_gram_derivative, copies);
     deepCopyField(m_cholesky_gram,   copies);
-    deepCopyField(m_alpha,           copies);
+    deepCopyField(m_alpha_t,         copies);
+    deepCopyField(m_alpha_buf,       copies);
     deepCopyField(m_inverse_gram,    copies);
     deepCopyField(m_cholesky_gram,   copies);
 }
@@ -136,22 +137,34 @@ void GaussianProcessNLLVariable::build_()
 }
 
 
+//#####  alpha  ###############################################################
+
+const Mat& GaussianProcessNLLVariable::alpha() const
+{
+    m_alpha_buf.resize(m_alpha_t.width(), m_alpha_t.length());
+    transpose(m_alpha_t, m_alpha_buf);
+    return m_alpha_buf;
+}
+    
+
 //#####  fprop  ###############################################################
 
 // ### computes value from varray values
 void GaussianProcessNLLVariable::fprop()
 {
     fbpropFragments(m_kernel, m_noise, m_inputs, m_targets, m_allow_bprop,
-                    m_gram, m_cholesky_gram, m_alpha, m_inverse_gram,
+                    m_gram, m_cholesky_gram, m_alpha_t, m_inverse_gram,
                     m_cholesky_tmp, m_rhs_tmp);
 
     // Assuming y is a column vector...  For multivariate targets, we
     // separately dot each column of the targets with corresponding columns of
     // alpha, and add as many of the other two terms as there are variables
     //
-    // 0.5 * y'*alpha + sum(log(diag(L))) + 0.5*n*log(2*pi)
-    const int n = m_alpha.length();
-    const int m = m_alpha.width();
+    //     0.5 * y'*alpha + sum(log(diag(L))) + 0.5*n*log(2*pi)
+    //
+    // Don't forget that alpha_t is transposed
+    const int n = m_alpha_t.width();
+    const int m = m_alpha_t.length();
 
     real logdet_log2pi = 0;
     for (int i=0 ; i<n ; ++i)
@@ -160,7 +173,7 @@ void GaussianProcessNLLVariable::fprop()
     
     real nll = 0;
     for (int i=0 ; i<m ; ++i)
-        nll += 0.5*dot(m_targets.column(i), m_alpha.column(i)) + logdet_log2pi;
+        nll += 0.5*dot(m_targets.column(i), m_alpha_t.row(i)) + logdet_log2pi;
     value[0] = nll;
 }
 
@@ -174,7 +187,7 @@ void GaussianProcessNLLVariable::bprop()
                   "GaussianProcessNLLVariable must be constructed with the option "
                   "'will_bprop'=True in order to call bprop" );
     PLASSERT( m_hyperparam_names.size() == m_hyperparam_vars.size() );
-    PLASSERT( m_alpha.length() == m_inverse_gram.width() );
+    PLASSERT( m_alpha_t.width() == m_inverse_gram.width() );
     PLASSERT( m_inverse_gram.width() == m_inverse_gram.length() );
     PLASSERT( m_kernel );
     
@@ -187,40 +200,44 @@ void GaussianProcessNLLVariable::bprop()
     // Since both the first term inside the trace and the derivative of the
     // gram matrix are symmetric square matrices, the trace is efficiently
     // computed as the sum of the elementwise product of those matrices.
+    //
+    // Don't forget that m_alpha_t is transposed.
     for (int j=0, m=m_hyperparam_names.size() ; j<m ; ++j) {
         real dnll_dj = 0;
         m_kernel->computeGramMatrixDerivative(m_gram_derivative,
                                               m_hyperparam_names[j]);
-        for (int i=0, n=m_alpha.width() ; i<n ; ++i) {
-            Mat curalpha_mat = m_alpha.column(i);
-            int curalpha_mod = curalpha_mat.mod();
-            real* curalpha   = curalpha_mat[0];
-            real  curtrace   = 0.0;
+        for (int i=0, n=m_alpha_t.length() ; i<n ; ++i) {
+            real* curalpha = m_alpha_t[i];
+            real  cur_trace = 0.0;
 
             // Sum over all rows and columns of matrix
             real* curalpha_row = curalpha;
             for (int row=0, nrows=m_inverse_gram.length()
-                     ; row<nrows ; ++row, curalpha_row += curalpha_mod)
+                     ; row<nrows ; ++row, ++curalpha_row)
             {
-                real* p_inverse_gram    = m_inverse_gram[row];
-                real* p_gram_derivative = m_gram_derivative[row];
-                real  curalpha_row      = curalpha[row * curalpha_mod];
-                real* curalpha_col      = curalpha;
+                real* p_inverse_gram     = m_inverse_gram[row];
+                real* p_gram_derivative  = m_gram_derivative[row];
+                real  curalpha_row_value = *curalpha_row;
+                real* curalpha_col       = curalpha;
+                real  row_trace          = 0.0;
 
-                for (int col=0, ncols=m_inverse_gram.width()
-                         ; col<ncols ; ++col, curalpha_col += curalpha_mod)
+                for (int col=0 ; col <= row ; ++col, ++curalpha_col)
                 {
-                    curtrace +=
-                        (*p_inverse_gram++ - curalpha_row * *curalpha_col)
+                    if (col == row)
+                        row_trace *= 2.;
+                    
+                    row_trace +=
+                        (*p_inverse_gram++ - curalpha_row_value * *curalpha_col)
                         * *p_gram_derivative++;
 
                     // curtrace +=
                     //     (m_inverse_gram(row,col) - curalpha(row,0)*curalpha(col,0))
                     //     * m_gram_derivative(row,col);
                 }
+                cur_trace += row_trace;
             }
 
-            dnll_dj += curtrace / 2.0;
+            dnll_dj += cur_trace / 2.0;
         }
         m_hyperparam_vars[j]->gradient[0] += dnll_dj * gradient[0];
     }
@@ -232,7 +249,7 @@ void GaussianProcessNLLVariable::bprop()
 #ifndef USE_BLAS_SPECIALISATIONS
 void GaussianProcessNLLVariable::fbpropFragments(
     Kernel* kernel, real noise, const Mat& inputs, const Mat& targets,
-    bool compute_inverse, Mat& gram, Mat& L, Mat& alpha, Mat& inv,
+    bool compute_inverse, Mat& gram, Mat& L, Mat& alpha_t, Mat& inv,
     Vec& tmp_chol, Mat& tmp_rhs)
 {
     PLASSERT( kernel );
@@ -259,15 +276,20 @@ void GaussianProcessNLLVariable::fbpropFragments(
     addToDiagonal(gram, noise);
 
     // Compute Cholesky decomposition and solve the linear system
-    alpha.resize(trainlength, rhs_width);
+    alpha_t.resize(trainlength, rhs_width);
     L.resize(trainlength, trainlength);
     tmp_chol.resize(trainlength);
-    solveLinearSystemByCholesky(gram, tmp_rhs, alpha, &L, &tmp_chol);
-    
+    solveLinearSystemByCholesky(gram, tmp_rhs, alpha_t, &L, &tmp_chol);
+
+    // Must return transpose here since the code has been modified to work with
+    // a transposed alpha, to better interface with lapack (much faster in the
+    // latter case to avoid superfluous transposes).
     if (compute_inverse) {
-        inv   = alpha.subMatColumns(targetsize, trainlength);
-        alpha = alpha.subMatColumns(0, targetsize);
+        inv     = alpha_t.subMatColumns(targetsize, trainlength);
+        alpha_t = transpose(alpha_t.subMatColumns(0, targetsize));
     }
+    else
+        alpha_t = transpose(alpha_t);
 }
 #endif
 
@@ -276,7 +298,7 @@ void GaussianProcessNLLVariable::fbpropFragments(
 #ifdef USE_BLAS_SPECIALISATIONS
 void GaussianProcessNLLVariable::fbpropFragments(
     Kernel* kernel, real noise, const Mat& inputs, const Mat& targets,
-    bool compute_inverse, Mat& gram, Mat& L, Mat& alpha, Mat& inv,
+    bool compute_inverse, Mat& gram, Mat& L, Mat& alpha_t, Mat& inv,
     Vec& tmp_chol, Mat& tmp_rhs)
 {
     PLASSERT( kernel );
@@ -287,12 +309,14 @@ void GaussianProcessNLLVariable::fbpropFragments(
     // The RHS matrix (when solving the linear system Gram*Params=RHS) is made
     // up of two parts: the regression targets themselves, and the identity
     // matrix if we requested them (for confidence intervals).  After solving
-    // the linear system, set the gram-inverse appropriately.
+    // the linear system, set the gram-inverse appropriately.  To interface
+    // nicely with LAPACK, we store this in a transposed format.
     int rhs_width = targetsize + (compute_inverse? trainlength : 0);
-    tmp_rhs.resize(trainlength, rhs_width);
-    tmp_rhs.subMatColumns(0, targetsize) << targets;
+    tmp_rhs.resize(rhs_width, trainlength);
+    Mat targets_submat = tmp_rhs.subMatRows(0, targetsize);
+    transpose(targets, targets_submat);
     if (compute_inverse) {
-        Mat rhs_identity = tmp_rhs.subMatColumns(targetsize, trainlength);
+        Mat rhs_identity = tmp_rhs.subMatRows(targetsize, trainlength);
         identityMatrix(rhs_identity);
     }
 
@@ -307,13 +331,13 @@ void GaussianProcessNLLVariable::fbpropFragments(
     // matrices after solving.  Note that for now we don't bother to create an
     // appropriately transposed RHS (will come later).
     lapackCholeskyDecompositionInPlace(gram);
-    lapackCholeskySolveInPlace(gram, tmp_rhs);
-    alpha = tmp_rhs;                         // LAPACK solves in-place
-    L     = gram;                            // LAPACK solves in-place
+    lapackCholeskySolveInPlace(gram, tmp_rhs, true /* column-major */);
+    alpha_t = tmp_rhs;                         // LAPACK solves in-place
+    L       = gram;                            // LAPACK solves in-place
     
     if (compute_inverse) {
-        inv   = alpha.subMatColumns(targetsize, trainlength);
-        alpha = alpha.subMatColumns(0, targetsize);
+        inv     = alpha_t.subMatRows(targetsize, trainlength);
+        alpha_t = alpha_t.subMatRows(0, targetsize);
     }
 }
 #endif

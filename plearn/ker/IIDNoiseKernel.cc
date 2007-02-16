@@ -214,8 +214,8 @@ void IIDNoiseKernel::computeGramMatrix(Mat K) const
             
             // Fill upper triangle if not on diagonal
             *Ki++ = Kij;
-            if (j < i)
-                *Kji = Kij;
+            // if (j < i)
+            //     *Kji = Kij;
         }
     }
 }
@@ -263,8 +263,10 @@ void IIDNoiseKernel::computeGramMatrixDerivative(Mat& KD, const string& kernel_p
                              LKS.size(), kernel_param.size() - LKS.size() - 1));
         PLASSERT( arg < m_kronecker_indexes.size() );
 
-        computeGramMatrixDerivNV<
-            IIDNoiseKernel, &IIDNoiseKernel::derivKronecker>(KD, this, arg);
+        computeGramMatrixDerivKronecker(KD, arg);
+        
+        // computeGramMatrixDerivNV<
+        //     IIDNoiseKernel, &IIDNoiseKernel::derivKronecker>(KD, this, arg);
         
         // int W = nExamples();
         // KD.resize(W,W);
@@ -312,6 +314,46 @@ real IIDNoiseKernel::derivKronecker(int i, int j, int arg, real K) const
     else
         return 0.0;
 }
+
+
+//#####  computeGramMatrixDerivKronecker  #####################################
+
+void IIDNoiseKernel::computeGramMatrixDerivKronecker(Mat& KD, int arg) const
+{
+    // Precompute some terms
+    real kronecker_sigma_arg = 2. * exp(2. * m_log_kronecker_sigma[arg]);
+    int index = m_kronecker_indexes[arg];
+    
+    // Compute Gram Matrix derivative w.r.t. log_kronecker_sigma[arg]
+    int  l = data->length();
+
+    // Variables that walk over the data matrix
+    int  cache_mod = m_data_cache.mod();
+    real *data_start = &m_data_cache(0,0);
+    real *xi = data_start+index;             // Iterator on data rows
+
+    // Variables that walk over the kernel derivative matrix (KD)
+    KD.resize(l,l);
+    real* KDi = KD.data();                   // Start of row i
+    real* KDij;                              // Current element on row i
+    int   KD_mod = KD.mod();
+
+    // Iterate on rows of derivative matrix
+    for (int i=0 ; i<l ; ++i, xi += cache_mod, KDi += KD_mod)
+    {
+        KDij = KDi;
+        real xi_cur = *xi;
+        real *xj  = data_start+index;        // Inner iterator on data rows
+
+        // Iterate on columns of derivative matrix
+        for (int j=0 ; j <= i ; ++j, xj += cache_mod)
+        {
+            // Set into derivative matrix
+            *KDij++ = fast_is_equal(xi_cur, *xj)? kronecker_sigma_arg : 0.0;
+        }
+    }
+}
+
 
 
 } // end of namespace PLearn

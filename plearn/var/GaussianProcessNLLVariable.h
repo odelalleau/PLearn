@@ -129,7 +129,7 @@ public:
                                 Vec& tmpch, Mat& tmprhs);
 
     //! Accessor to the last computed 'alpha' matrix in an fprop
-    const Mat& alpha() const { return m_alpha; }
+    const Mat& alpha() const;
 
     //! Accessor to the last computed gram matrix in an fprop
     const Mat& gram() const { return m_gram; }
@@ -183,9 +183,14 @@ protected:
     //! Holds the Cholesky decomposition of m_gram
     Mat m_cholesky_gram;
 
-    //! Solution of the linear system gram*alpha = targets
-    Mat m_alpha;
+    //! Solution of the linear system gram*alpha = targets.  This is actually
+    //! stored as a transpose to interface better with lapack.
+    Mat m_alpha_t;
 
+    //! Temporary buffer to hold the transpose of m_alpha_t; used for the
+    //! alpha() accessor and outside-world interface
+    mutable Mat m_alpha_buf;
+    
     //! Inverse of the Gram matrix
     Mat m_inverse_gram;
     

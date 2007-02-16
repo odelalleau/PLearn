@@ -285,21 +285,18 @@ void MemoryCachedKernel::computeGramMatrixDerivNV(Mat& KD, const DerivedClass* T
 
     int W = nExamples();
     KD.resize(W,W);
-    int m=KD.mod();
     
     real KDij;
     real* KDi;
-    real* KDji;
     real  K  = MISSING_VALUE;
     real* Ki = 0;                       // Current row of kernel matrix, if cached
 
     for (int i=0 ; i<W ; ++i) {
         KDi  = KD[i];
-        KDji = &KD[0][i];
         if (gram_matrix_is_cached)
             Ki = gram_matrix[i];
         
-        for (int j=0 ; j <= i ; ++j, KDji += m) {
+        for (int j=0 ; j <= i ; ++j) {
             // Access the current kernel value depending on whether it's cached
             if (Ki)
                 K = *Ki++;
@@ -312,8 +309,6 @@ void MemoryCachedKernel::computeGramMatrixDerivNV(Mat& KD, const DerivedClass* T
             // Compute and store the derivative
             KDij   = (This->*derivativeFunc)(i, j, arg, K);
             *KDi++ = KDij;
-            if (j < i)
-                *KDji = KDij;
         }
     }
 }

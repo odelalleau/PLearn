@@ -106,7 +106,8 @@ void RationalQuadraticARDKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(m_noise_gram_cache, copies);
+    deepCopyField(m_noise_gram_cache,        copies);
+    deepCopyField(m_pow_minus_alpha_minus_1, copies);
 }
 
 
@@ -173,6 +174,11 @@ void RationalQuadraticARDKernel::computeGramMatrix(Mat K) const
         m_input_sigma += m_log_input_sigma;
     m_input_sigma *= 2.0;
     exp(m_input_sigma, m_input_sigma);
+
+    // Prepare the cache for the pow terms
+    m_pow_minus_alpha_minus_1.resize(K.length(), K.width());
+    int   pow_cache_mod = m_pow_minus_alpha_minus_1.mod();
+    real* pow_cache_row = m_pow_minus_alpha_minus_1.data();
     
     // Compute Gram Matrix
     int  l = data->length();
@@ -181,23 +187,25 @@ void RationalQuadraticARDKernel::computeGramMatrix(Mat K) const
     int  cache_mod = m_data_cache.mod();
 
     real *data_start = &m_data_cache(0,0);
-    real Kij;
-    real *Ki, *Kji, *x1, *x2;
+    real *Ki = K[0];                         // Start of current row
+    real *Kij;                               // Current element along row
     real *input_sigma_data = m_input_sigma.data();
     real *xi = data_start;
     
-    for (int i=0 ; i<l ; ++i, xi += cache_mod) {
-        Ki  = K[i];
-        Kji = &K[0][i];
+    for (int i=0 ; i<l
+             ; ++i, xi += cache_mod, pow_cache_row+=pow_cache_mod, Ki+=m)
+    {
+        Kij = Ki;
         real *xj = data_start;
+        real *pow_cache_cur = pow_cache_row;
 
-        for (int j=0; j<=i; ++j, Kji += m, xj += cache_mod) {
+        for (int j=0; j<=i; ++j, xj += cache_mod) {
             // Kernel evaluation per se
-            x1 = xi;
-            x2 = xj;
-            real* p_inpsigma = input_sigma_data;
+            real *x1 = xi;
+            real *x2 = xj;
+            real *p_inpsigma = input_sigma_data;
             real sum_wt = 0.0;
-            int k = n;
+            int  k = n;
 
             // Use Duff's device to unroll the following loop:
             //     while (k--) {
@@ -216,13 +224,14 @@ void RationalQuadraticARDKernel::computeGramMatrix(Mat K) const
             case 1:      diff = *x1++ - *x2++; sum_wt += (diff*diff) / *p_inpsigma++;
                        } while((k -= 8) > 0);
             }
-            
-            Kij = sf2 * pow(1 + sum_wt / (2.*alpha), -alpha);
+
+            real inner_pow   = 1 + sum_wt / (2.*alpha);
+            real pow_alpha   = pow(inner_pow, -alpha);
+            real Kij_cur     = sf2 * pow_alpha;
+            *pow_cache_cur++ = Kij_cur / inner_pow;
             
             // Update kernel matrix (already pre-filled with IID noise terms)
-            *Ki++ += Kij;
-            if (j < i)
-                *Kji += Kij;
+            *Kij++ += Kij_cur;
         }
     }
     if (cache_gram_matrix) {
@@ -267,9 +276,7 @@ void RationalQuadraticARDKernel::computeGramMatrixDerivative(
         //     &RationalQuadraticARDKernel::derivLogInputSigma>(KD, this, arg);
     }
     else if (kernel_param == LAL) {
-        computeGramMatrixDerivNV<
-            RationalQuadraticARDKernel,
-            &RationalQuadraticARDKernel::derivLogAlpha>(KD, this, -1);
+        computeGramMatrixDerivLogAlpha(KD);
     }
     else
         inherited::computeGramMatrixDerivative(KD, kernel_param, epsilon);
@@ -322,13 +329,10 @@ real RationalQuadraticARDKernel::derivLogInputSigma(int i, int j, int arg, real 
     // Rederive the value of k
     Vec& row_i   = *dataRow(i);
     Vec& row_j   = *dataRow(j);
-    real alpha   = exp(m_log_alpha);
-    real noise   = m_noise_gram_cache(i,j);
-    K -= noise;
-    real k       = exp(- (pl_log(K) - 2*m_log_signal_sigma) / alpha);
+    real K_over_k= m_pow_minus_alpha_minus_1(i,j);
     real diff    = row_i[arg] - row_j[arg];
     real sq_diff = diff * diff;
-    return (K / k) * exp(-2 * (m_log_global_sigma + m_log_input_sigma[arg])) * sq_diff;
+    return K_over_k * exp(-2 * (m_log_global_sigma + m_log_input_sigma[arg])) * sq_diff;
 }
 
 
@@ -353,61 +357,108 @@ void RationalQuadraticARDKernel::computeGramMatrixDerivLogInputSigma(Mat& KD,
                                                                      int arg) const
 {
     // Precompute some terms
-    real alpha = exp(m_log_alpha);
-    real twice_log_signal_sigma = 2.*m_log_signal_sigma;
+    real input_sigma_arg = m_input_sigma[arg];
     
     // Compute Gram Matrix derivative w.r.t. log_input_sigma[arg]
     int  l = data->length();
-    int  k_mod     = gram_matrix.mod();
+
+    // Variables that walk over the data matrix
     int  cache_mod = m_data_cache.mod();
-
-    // Variables that walk over the pre-computed kernel (K) and data matrices
-    real *input_sigma_data = m_input_sigma.data();
     real *data_start = &m_data_cache(0,0);
-    real *xi = data_start;                   // Iterator on data rows
-    real *Ki = &gram_matrix(0,0);            // Current row of kernel matrix
-    real *Kij;                               // Current element of kernel matrix
+    real *xi = data_start+arg;               // Iterator on data rows
 
-    // Variables that walk over the noise cache
-    real *noise_start_row = m_noise_gram_cache.data();
-    real *cur_noise;                         // Current element of noise matrix
-    int  noise_mod = m_noise_gram_cache.mod();
+    // Variables that walk over the pow cache
+    int   pow_cache_mod = m_pow_minus_alpha_minus_1.mod();
+    real *pow_cache_row = m_pow_minus_alpha_minus_1.data();
+    real *pow_cache_cur;
     
     // Variables that walk over the kernel derivative matrix (KD)
     KD.resize(l,l);
     real* KDi = KD.data();                   // Start of row i
-    real* KDj = KD.data();                   // Start of column j
     real* KDij;                              // Current element on row i
-    real* KDji;                              // Current element on column j
     int   KD_mod = KD.mod();
 
     // Iterate on rows of derivative matrix
-    for (int i=0 ; i<l ; ++i, xi += cache_mod, Ki += k_mod,
-             KDi += KD_mod, ++KDj, noise_start_row += noise_mod)
+    for (int i=0 ; i<l ; ++i, xi += cache_mod, KDi += KD_mod,
+             pow_cache_row += pow_cache_mod)
     {
-        Kij  = Ki;
         KDij = KDi;
-        KDji = KDj;
-        real *xj  = data_start;              // Inner iterator on data rows
-        cur_noise = noise_start_row;
+        real *xj  = data_start+arg;           // Inner iterator on data rows
+        pow_cache_cur = pow_cache_row;
 
         // Iterate on columns of derivative matrix
         for (int j=0 ; j <= i
-                 ; ++j, ++Kij, KDji+=KD_mod, xj += cache_mod, ++cur_noise)
+                 ; ++j, xj += cache_mod, ++pow_cache_cur)
         {
-            real K       = *Kij - *cur_noise;
-            real k       = exp(- (pl_log(K) - twice_log_signal_sigma) / alpha);
-            real diff    = xi[arg] - xj[arg];
+            real diff    = *xi - *xj;
             real sq_diff = diff * diff;
-            real KD_cur  = (K / k) * sq_diff / input_sigma_data[arg];
-            
+            real KD_cur  = *pow_cache_cur * sq_diff / input_sigma_arg;
+
             // Set into derivative matrix
             *KDij++ = KD_cur;
-            if (j < i)
-                *KDji = KD_cur;
         }
     }
 }
+
+
+//#####  computeGramMatrixDerivLogAlpha  ######################################
+
+void RationalQuadraticARDKernel::computeGramMatrixDerivLogAlpha(Mat& KD) const
+{
+    // Precompute some terms
+    real alpha = exp(m_log_alpha);
+    
+    // Compute Gram Matrix derivative w.r.t. log_alpha
+    int  l = data->length();
+    int  k_mod     = gram_matrix.mod();
+
+    // Variables that walk over the pre-computed kernel matrix (K) 
+    real *Ki = &gram_matrix(0,0);            // Current row of kernel matrix
+    real *Kij;                               // Current element of kernel matrix
+
+    // Variables that walk over the pow cache
+    int   pow_cache_mod = m_pow_minus_alpha_minus_1.mod();
+    real *pow_cache_row = m_pow_minus_alpha_minus_1.data();
+    real *pow_cache_cur;
+
+    // Variables that walk over the noise cache
+    int   noise_cache_mod = m_noise_gram_cache.mod();
+    real *noise_cache_row = m_noise_gram_cache[0];
+    real *noise_cache_cur;
+    
+    // Variables that walk over the kernel derivative matrix (KD)
+    KD.resize(l,l);
+    real* KDi = KD.data();                   // Start of row i
+    real* KDij;                              // Current element on row i
+    int   KD_mod = KD.mod();
+
+    // Iterate on rows of derivative matrix
+    for (int i=0 ; i<l ; ++i, Ki += k_mod,
+             KDi += KD_mod, pow_cache_row += pow_cache_mod,
+             noise_cache_row += noise_cache_mod)
+    {
+        Kij  = Ki;
+        KDij = KDi;
+        pow_cache_cur   = pow_cache_row;
+        noise_cache_cur = noise_cache_row;
+
+        // Iterate on columns of derivative matrix
+        for (int j=0 ; j <= i
+                 ; ++j, ++Kij, ++noise_cache_cur, ++pow_cache_cur)
+        {
+            real K      = *Kij - *noise_cache_cur;
+            real k      = K / *pow_cache_cur;
+            real left   = -alpha * pl_log(k);
+            real num    = (k - 1) * 2. * alpha;
+            real denum  = 2. * k;
+            real KD_cur = K * (left + num / denum);
+            
+            // Set into derivative matrix
+            *KDij++ = KD_cur;
+        }
+    }
+}
+
 
 } // end of namespace PLearn
 

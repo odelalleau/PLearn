@@ -129,6 +129,9 @@ protected:
     //! Derivative function with respect to kronecker_indexes[arg] hyperparameter
     real derivKronecker(int i, int j, int arg, real K) const;
 
+    //! Derivative w.r.t kronecker_indexes[arg] for WHOLE MATRIX
+    void computeGramMatrixDerivKronecker(Mat& KD, int arg) const;
+    
 protected:
     //! Buffer for exponential of m_log_kronecker_sigma
     mutable Vec m_kronecker_sigma;
