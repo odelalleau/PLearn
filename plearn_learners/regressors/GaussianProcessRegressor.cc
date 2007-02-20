@@ -107,7 +107,8 @@ GaussianProcessRegressor::GaussianProcessRegressor()
     : m_weight_decay(0.0),
       m_include_bias(true),
       m_compute_confidence(false),
-      m_confidence_epsilon(1e-8)
+      m_confidence_epsilon(1e-8),
+      m_save_gram_matrix(false)
 { }
 
 
@@ -180,6 +181,14 @@ void GaussianProcessRegressor::declareOptions(OptionList& ol)
         OptionBase::buildoption,
         "Specification of the optimizer to use for train-time hyperparameter\n"
         "optimization.  A ConjGradientOptimizer should be an adequate choice.\n");
+
+    declareOption(
+        ol, "save_gram_matrix", &GaussianProcessRegressor::m_save_gram_matrix,
+        OptionBase::buildoption,
+        "If true, the Gram matrix is saved before undergoing Cholesky each\n"
+        "decomposition; useful for debugging if the matrix is quasi-singular.\n"
+        "It is saved in the current expdir under the names 'gram_matrix_N.pmat'\n"
+        "where N is an increasing counter.\n");
 
 
     //#####  Learnt Options  ##################################################
@@ -564,7 +573,8 @@ GaussianProcessRegressor::hyperOptimize(const Mat& inputs, const Mat& targets)
     {
         return new GaussianProcessNLLVariable(
             m_kernel, m_weight_decay, inputs, targets,
-            TVec<string>(), VarArray(), m_compute_confidence);
+            TVec<string>(), VarArray(), m_compute_confidence,
+            m_save_gram_matrix, getExperimentDirectory());
     }
 
     // Otherwise create Vars that wrap each hyperparameter
@@ -600,7 +610,7 @@ GaussianProcessRegressor::hyperOptimize(const Mat& inputs, const Mat& targets)
     // Create the cost-function variable
     PP<GaussianProcessNLLVariable> nll = new GaussianProcessNLLVariable(
         m_kernel, m_weight_decay, inputs, targets, hyperparam_names,
-        hyperparam_vars, true);
+        hyperparam_vars, true, m_save_gram_matrix, getExperimentDirectory());
     nll->setName("GaussianProcessNLLVariable");
 
     // Some logging about the initial values

@@ -72,7 +72,12 @@ class GaussianProcessNLLVariable : public NaryVariable
 public:
     //#####  Public Build Options  ############################################
 
-    // (no options)
+    //! If true, the Gram matrix is saved before undergoing Cholesky
+    //! decomposition; useful for debugging if the matrix is quasi-singular.
+    bool m_save_gram_matrix;
+
+    //! Expdir where to save the Gram Matrix, if 'save_gram_matrix' requested.
+    PPath m_expdir;
     
 public:
     //#####  Public Member Functions  #########################################
@@ -98,7 +103,9 @@ public:
                                Mat inputs, Mat targets,
                                const TVec<string>& hyperparam_names,
                                const VarArray& hyperparam_vars,
-                               bool allow_bprop = true);
+                               bool allow_bprop = true,
+                               bool save_gram_matrix = false,
+                               PPath expdir = "");
 
     
     //#####  PLearn::Variable methods #########################################
@@ -115,7 +122,9 @@ public:
      *  @param[in]  noise:    observation noise to add to the diagonal Gram matrix
      *  @param[in]  inputs:   matrix of training inputs
      *  @param[in]  targets:  matrix of training targets (may be multivariate)
-     *  @param[in]  compute_inverse: whether to compute inverse of Gram matrix
+     *  @param[in]  compute_inverse:  whether to compute inverse of Gram matrix
+     *  @param[in]  save_gram_matrix: whether to save the computed Gram matrix
+     *  @param[in]  expdir:           if saving Gram matrix, where to save it
      *  @param[out] gram:     The kernel (Gram) matrix
      *  @param[out] L:        Cholesky decomposition of the Gram matrix
      *  @param[out] alpha:    Solution to the linear system gram*alpha = targets
@@ -125,6 +134,7 @@ public:
      */
     static void fbpropFragments(Kernel* kernel, real noise, const Mat& inputs,
                                 const Mat& targets, bool compute_inverse,
+                                bool save_gram_matrix, const PPath& expdir,
                                 Mat& gram, Mat& L, Mat& alpha, Mat& inv,
                                 Vec& tmpch, Mat& tmprhs);
 

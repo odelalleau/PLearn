@@ -37,6 +37,7 @@
 /*! \file GaussianProcessNLLVariable.cc */
 
 #include <plearn/math/TMat_maths.h>
+#include <plearn/io/MatIO.h>
 #include "GaussianProcessNLLVariable.h"
 
 #ifdef USE_BLAS_SPECIALISATIONS
@@ -67,7 +68,8 @@ PLEARN_IMPLEMENT_OBJECT(
     );
 
 GaussianProcessNLLVariable::GaussianProcessNLLVariable()
-    : m_kernel(0),
+    : m_save_gram_matrix(0),
+      m_kernel(0),
       m_noise(0),
       m_allow_bprop(true)
 { }
@@ -76,8 +78,10 @@ GaussianProcessNLLVariable::GaussianProcessNLLVariable()
 GaussianProcessNLLVariable::GaussianProcessNLLVariable(
     Kernel* kernel, real noise, Mat inputs, Mat targets,
     const TVec<string>& hyperparam_names, const VarArray& hyperparam_vars,
-    bool allow_bprop)
+    bool allow_bprop, bool save_gram_matrix, PPath expdir)
     : inherited(hyperparam_vars, 1, 1),
+      m_save_gram_matrix(save_gram_matrix),
+      m_expdir(expdir),
       m_kernel(kernel),
       m_noise(noise),
       m_inputs(inputs),
@@ -125,7 +129,11 @@ void GaussianProcessNLLVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void GaussianProcessNLLVariable::declareOptions(OptionList& ol)
 {
-    // (no additional options)
+    declareOption(
+        ol, "save_gram_matrix", &GaussianProcessNLLVariable::m_save_gram_matrix,
+        OptionBase::buildoption,
+        "If true, the Gram matrix is saved before undergoing Cholesky\n"
+        "decomposition; useful for debugging if the matrix is quasi-singular.");
     
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -153,6 +161,7 @@ const Mat& GaussianProcessNLLVariable::alpha() const
 void GaussianProcessNLLVariable::fprop()
 {
     fbpropFragments(m_kernel, m_noise, m_inputs, m_targets, m_allow_bprop,
+                    m_save_gram_matrix, m_expdir,
                     m_gram, m_cholesky_gram, m_alpha_t, m_inverse_gram,
                     m_cholesky_tmp, m_rhs_tmp);
 
@@ -249,7 +258,8 @@ void GaussianProcessNLLVariable::bprop()
 #ifndef USE_BLAS_SPECIALISATIONS
 void GaussianProcessNLLVariable::fbpropFragments(
     Kernel* kernel, real noise, const Mat& inputs, const Mat& targets,
-    bool compute_inverse, Mat& gram, Mat& L, Mat& alpha_t, Mat& inv,
+    bool compute_inverse, bool save_gram_matrix, const PPath& expdir,
+    Mat& gram, Mat& L, Mat& alpha_t, Mat& inv,
     Vec& tmp_chol, Mat& tmp_rhs)
 {
     PLASSERT( kernel );
@@ -275,6 +285,14 @@ void GaussianProcessNLLVariable::fbpropFragments(
     kernel->computeGramMatrix(gram);
     addToDiagonal(gram, noise);
 
+    // Save the Gram matrix if requested
+    if (save_gram_matrix) {
+        static int counter = 1;
+        string filename = expdir / ("gram_matrix_" +
+                                    tostring(counter++) + ".pmat");
+        savePMat(filename, gram);
+    }
+
     // Compute Cholesky decomposition and solve the linear system
     alpha_t.resize(trainlength, rhs_width);
     L.resize(trainlength, trainlength);
@@ -298,7 +316,8 @@ void GaussianProcessNLLVariable::fbpropFragments(
 #ifdef USE_BLAS_SPECIALISATIONS
 void GaussianProcessNLLVariable::fbpropFragments(
     Kernel* kernel, real noise, const Mat& inputs, const Mat& targets,
-    bool compute_inverse, Mat& gram, Mat& L, Mat& alpha_t, Mat& inv,
+    bool compute_inverse, bool save_gram_matrix, const PPath& expdir,
+    Mat& gram, Mat& L, Mat& alpha_t, Mat& inv,
     Vec& tmp_chol, Mat& tmp_rhs)
 {
     PLASSERT( kernel );
@@ -325,6 +344,14 @@ void GaussianProcessNLLVariable::fbpropFragments(
     gram.resize(trainlength, trainlength);
     kernel->computeGramMatrix(gram);
     addToDiagonal(gram, noise);
+
+    // Save the Gram matrix if requested
+    if (save_gram_matrix) {
+        static int counter = 1;
+        string filename = expdir / ("gram_matrix_" +
+                                    tostring(counter++) + ".pmat");
+        savePMat(filename, gram);
+    }
 
     // Compute Cholesky decomposition and solve the linear system.  LAPACK
     // solves in-place, but luckily we don't need either the Gram and RHS

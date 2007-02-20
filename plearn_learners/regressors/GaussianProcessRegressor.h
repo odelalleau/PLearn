@@ -171,6 +171,14 @@ public:
      */
     PP<Optimizer> m_optimizer;
 
+    /**
+     *  If true, the Gram matrix is saved before undergoing Cholesky each
+     *  decomposition; useful for debugging if the matrix is quasi-singular.
+     *  It is saved in the current expdir under the names 'gram_matrix_N.pmat'
+     *  where N is an increasing counter.
+     */
+    bool m_save_gram_matrix;
+
 
 public:
     //#####  Public Member Functions  #########################################
