@@ -208,7 +208,7 @@ class TaskType:
     
     def __init__(self, argv):
         self.argv = argv
-
+        
     def launch(self, wait=False):
         """Launch process on an available machine"""
         try:
@@ -310,9 +310,7 @@ class SshTask( TaskType ):
         except StopIteration:
             cls._available_machines = None
             if new_loop:
-                time.sleep(3)                
-                #raise EmptyMachineListError 
-            #else:
+                time.sleep(SLEEP_TIME)
             return cls.nextAvailableMachine()
     nextAvailableMachine = classmethod(nextAvailableMachine)
 
@@ -324,9 +322,8 @@ class SshTask( TaskType ):
         # Get the first available machine
         self.host = self.nextAvailableMachine()
         actual_command = ' '.join(['cd', os.getcwd(), ';', 'nice'] + self.argv)
-        actual_command = actual_command.replace("'", "\'")
-        actual_command = actual_command.replace('"', '\"')
-        return "ssh %s %s '%s'"%(self.host, self.Xopt, actual_command)
+        actual_command = actual_command.replace('"', r'\"')
+        return 'ssh %s %s "%s"'%(self.host, self.Xopt, actual_command)
 
     def getLogFileBaseName(self):
         return "ssh-%s-pid=%d"%(self.host, self.process.pid)
@@ -412,6 +409,7 @@ class Dispatch( PyPLearnObject ):
             self.expdir_root = os.getcwd()
         self.__check_constant_args()
 
+        # If oracles were already provided, the ctor can lauch the tasks...
         if oracles:                    
             self.start( *oracles )
 
@@ -516,13 +514,18 @@ class Dispatch( PyPLearnObject ):
             # # Module function defined above
             # launch_task( prepend+_quoted(arguments) )
             assert Task is not None
-            task = Task(prepend+_quoted(arguments)+[";", "echo", "'Task Done.'"])
+            ##TBM?: task = Task(prepend+_quoted(arguments)+[";", "echo", "'Task Done.'"])
             if self.delay:
-                logging.info('Delayed: %s'%task.getLaunchCommand())
+                ##TBM?: 
+                cmd = ' '.join(prepend+_quoted(arguments))
+                logging.info('Delayed: %s'%cmd)
+                ##TBM?: logging.info('Delayed: %s'%task.getLaunchCommand())
                 delayed += 1
-                task.free() # Since it won't be launch, free the resources...
-                continue            
-
+                ##TBM?: task.free() # Since it won't be launch, free the resources...
+                continue
+            ##TBM?: 
+            task = Task(prepend+_quoted(arguments)+[";", "echo", "'Task Done.'"])
+            
             task.launch()
             if Task.count( ) == self.max_nmachines:
                 logging.info( "+++ Using %d machines or more; waiting..."
