@@ -76,18 +76,40 @@ inline void lapack_Xsygvx_(int* ITYPE, char* JOBZ, char* RANGE, char* UPLO, int*
 inline void lapack_Xsygvx_(int* ITYPE, char* JOBZ, char* RANGE, char* UPLO, int* N, float* A, int* LDA, float* B, int* LDB, float* VL, float* VU, int* IL, int* IU, float* ABSTOL, int* M, float* W, float* Z, int* LDZ, float* WORK, int* LWORK, int* IWORK, int* IFAIL, int* INFO)
 { ssygvx_(ITYPE, JOBZ, RANGE, UPLO, N, A, LDA, B, LDB, VL, VU, IL, IU, ABSTOL, M, W, Z, LDZ, WORK, LWORK, IWORK, IFAIL, INFO); }
 
+// Cholesky decomposition
 inline void lapack_Xpotrf_(char* UPLO, int* N, float* A, int* LDA, int* INFO)
 { spotrf_(UPLO, N, A, LDA, INFO); }
 
 inline void lapack_Xpotrf_(char* UPLO, int* N, double* A, int* LDA, int* INFO)
 { dpotrf_(UPLO, N, A, LDA, INFO); }
 
+// Solve linear system from Cholesky
 inline void lapack_Xpotrs_(char* UPLO, int* N, int* NRHS, float*  A, int* LDA, float*  B, int* LDB, int* INFO)
 { spotrs_(UPLO, N, NRHS, A, LDA, B, LDB, INFO); }
 
 inline void lapack_Xpotrs_(char* UPLO, int* N, int* NRHS, double* A, int* LDA, double* B, int* LDB, int* INFO)
 { dpotrs_(UPLO, N, NRHS, A, LDA, B, LDB, INFO); }
 
+// Expert driver for factorising and solving through Cholesky (and estimate
+// condition number, equilibrate, etc.)
+inline void lapack_Xposvx_(
+    char*   FACT, char* UPLO,  int*    N,     int*    NRHS, float* A,  int* LDA,
+    float*  AF,   int*  LDAF,  char*   EQUED, float*  S,    float* B,  int* LDB,
+    float*  X,    int*  LDX,   float*  RCOND, float*  FERR, float* BERR,
+    float*  WORK, int*  IWORK, int*    INFO)
+{
+    sposvx_(FACT, UPLO, N, NRHS, A,     LDA,  AF,   LDAF, EQUED, S,
+            B,    LDB,  X, LDX,  RCOND, FERR, BERR, WORK, IWORK, INFO);
+}
+inline void lapack_Xposvx_(
+    char*   FACT, char* UPLO,  int*    N,     int*    NRHS, double* A, int* LDA,
+    double* AF,   int*  LDAF,  char*   EQUED, double* S,    double* B, int* LDB,
+    double* X,    int*  LDX,   double* RCOND, double* FERR, double* BERR,
+    double* WORK, int*  IWORK, int*    INFO)
+{
+    dposvx_(FACT, UPLO, N, NRHS, A,     LDA,  AF,   LDAF, EQUED, S,
+            B,    LDB,  X, LDX,  RCOND, FERR, BERR, WORK, IWORK, INFO);
+}
 
 //!  Computes the eigenvalues and eigenvectors of a symmetric (NxN) matrix A.
 //!  BEWARE: The content of A is destroyed by the call.

@@ -84,6 +84,17 @@ extern "C" {
     // Solve linear system given Cholesky Decomposition
     void spotrs_(char* UPLO, int* N, int* NRHS, float*  A, int* LDA, float*  B, int* LDB, int* INFO);
     void dpotrs_(char* UPLO, int* N, int* NRHS, double* A, int* LDA, double* B, int* LDB, int* INFO);
+
+    // Expert driver for factorising and solving through Cholesky (and estimate
+    // condition number, equilibrate, etc.)
+    void sposvx_(char*   FACT, char* UPLO,  int*    N,     int*    NRHS, float* A,  int* LDA,
+                 float*  AF,   int*  LDAF,  char*   EQUED, float*  S,    float* B,  int* LDB,
+                 float*  X,    int*  LDX,   float*  RCOND, float*  FERR, float* BERR,
+                 float*  WORK, int*  IWORK, int*    INFO);
+    void dposvx_(char*   FACT, char* UPLO,  int*    N,     int*    NRHS, double* A, int* LDA,
+                 double* AF,   int*  LDAF,  char*   EQUED, double* S,    double* B, int* LDB,
+                 double* X,    int*  LDX,   double* RCOND, double* FERR, double* BERR,
+                 double* WORK, int*  IWORK, int*    INFO);
 }
 
 } // end of namespace PLearn
