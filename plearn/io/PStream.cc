@@ -50,6 +50,10 @@
 namespace PLearn {
 using namespace std;
 
+// Default format string for floats and doubles
+const char* PStream::format_float_default  = "%.8g";
+const char* PStream::format_double_default = "%.18g";
+
 // Initialization for pin, pout, ...
 
 PStream& get_pnull()
@@ -170,14 +174,20 @@ PStream::PStream()
     :inherited(0),
      inmode(plearn_ascii), 
      outmode(plearn_ascii), 
-     implicit_storage(true), compression_mode(compr_none)
+     implicit_storage(true),
+     compression_mode(compr_none),
+     format_float (format_float_default),
+     format_double(format_double_default)
 {}
 
 PStream::PStream(streambuftype* sb)
     :inherited(sb),
      inmode(plearn_ascii), 
      outmode(plearn_ascii), 
-     implicit_storage(true), compression_mode(compr_none)
+     implicit_storage(true),
+     compression_mode(compr_none),
+     format_float (format_float_default),
+     format_double(format_double_default)
 {}
 
 
@@ -186,7 +196,10 @@ PStream::PStream(istream* pin_, bool own_pin_)
     :inherited(new StdPStreamBuf(pin_,own_pin_)),
      inmode(plearn_ascii), 
      outmode(plearn_ascii),
-     implicit_storage(true), compression_mode(compr_none)
+     implicit_storage(true),
+     compression_mode(compr_none),
+     format_float (format_float_default),
+     format_double(format_double_default)
 {}
 //! ctor. from an ostream (O)
 
@@ -194,7 +207,10 @@ PStream::PStream(ostream* pout_, bool own_pout_)
     :inherited(new StdPStreamBuf(pout_,own_pout_)),
      inmode(plearn_ascii), 
      outmode(plearn_ascii),
-     implicit_storage(true), compression_mode(compr_none)
+     implicit_storage(true),
+     compression_mode(compr_none),
+     format_float (format_float_default),
+     format_double(format_double_default)
 {}
 
 //! ctor. from an iostream (IO)
@@ -202,7 +218,10 @@ PStream::PStream(iostream* pios_, bool own_pios_)
     :inherited(new StdPStreamBuf(pios_,own_pios_)),
      inmode(plearn_ascii), 
      outmode(plearn_ascii),
-     implicit_storage(true), compression_mode(compr_none)
+     implicit_storage(true),
+     compression_mode(compr_none),
+     format_float (format_float_default),
+     format_double(format_double_default)
 {}
 
 //! ctor. from an istream and an ostream (IO)
@@ -210,13 +229,15 @@ PStream::PStream(istream* pin_, ostream* pout_, bool own_pin_, bool own_pout_)
     :inherited(new StdPStreamBuf(pin_,pout_,own_pin_,own_pout_)),
      inmode(plearn_ascii), 
      outmode(plearn_ascii),
-     implicit_storage(true), compression_mode(compr_none)
+     implicit_storage(true),
+     compression_mode(compr_none),
+     format_float (format_float_default),
+     format_double(format_double_default)
 {}
 
 //! dtor.
 PStream::~PStream()
-{
-}
+{ }
 
 PStream::mode_t PStream::switchToPLearnOutMode() 
 { 
@@ -524,7 +545,7 @@ void PStream::writeAsciiNum(float x)
     }
     else
     {
-        snprintf(tmpbuf, sizeof(tmpbuf), "%.8g", x);
+        snprintf(tmpbuf, sizeof(tmpbuf), format_float, x);
         write(tmpbuf, streamsize(strlen(tmpbuf)));
     }
 }
@@ -541,7 +562,7 @@ void PStream::writeAsciiNum(double x)
     }
     else
     {
-        snprintf(tmpbuf, sizeof(tmpbuf), "%.18g", x);
+        snprintf(tmpbuf, sizeof(tmpbuf), format_double, x);
         write(tmpbuf, streamsize(strlen(tmpbuf)));
     }
 }

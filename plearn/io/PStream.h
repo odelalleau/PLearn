@@ -71,7 +71,6 @@ using namespace std;
  */
 
 class PStream : public PP<PStreamBuf>
-
 {
 public:
     //! typedef's for PStream manipulators
@@ -91,6 +90,11 @@ public:
     typedef ios ios_base;
 #endif
 
+    /**
+     *  plearn_ascii and plearn_binary are used on output to determine in which
+     *  format to write stuff.  On input however, they are equivalent, as the
+     *  right format is automatically detected.
+     */
     enum mode_t 
     {
         plearn_ascii,    //!< PLearn ascii serialization format (can be mixed with plearn_binary)
@@ -100,8 +104,6 @@ public:
         pretty_ascii     //!< Ascii pretty print (in particular for Vec and Mat, formatted output without size info)
     };
   
-    //! plearn_ascii and plearn_binary are used on output to determine in which format to write stuff.
-    //! On input however, they are equivalent, as the right format is automatically detected.
 
     //! Compression mode (mostly used by binary serialization of sequences of floats or doubles, such as TMat<real>)
     //! (Used on output only; autodetect on read).
@@ -121,8 +123,21 @@ public:
     map<void *, unsigned int> copies_map_out; //!< copies map for output
 
 private:
+    //! Buffer for some formatting operations
     static char tmpbuf[100];
-  
+
+    //! Current format string for floats
+    const char* format_float;
+
+    //! Current format string for doubles
+    const char* format_double;
+
+    //! Default format string for floats
+    static const char* format_float_default;
+
+    //! Default format string for doubles
+    static const char* format_double_default;
+    
 public:
     //! If true, then Mat and Vec will be serialized with their elements in place,
     //! If false, they will have an explicit pointer to a storage
@@ -229,8 +244,20 @@ public:
     // This operator is required for compilation under Visual C++.
     bool operator !() const
     { return !good(); }
-  
-    /******
+
+    /**
+     *  Getters/Setters for the printf format strings for writeAsciiNum for
+     *  float and double.  By default, this is "%.8g" for float, and "%.18g"
+     *  for double.  NOTE: these strings must remain accessible for the
+     *  lifetime of the PStream.  In particular, they (generally) should not
+     *  come from a string c_str().
+     */
+    const char* getFloatFormat()  const { return format_float;  }
+    const char* getDoubleFormat() const { return format_double; }
+    void setFloatFormat(const char* f)  { format_float = f;  }
+    void setDoubleFormat(const char* f) { format_double = f; }
+    
+    /**
      * The folowing methods are 'forwarded' from {i|o}stream.
      */
     inline int get() 
