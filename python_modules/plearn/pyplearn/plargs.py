@@ -896,7 +896,7 @@ class plnamespace:
         """A deep-copy driven inheritance-like mechanism.
 
         In the context of plnamespace, usual (Python) inheritance is not
-        satisfatory. Indeed, the options defined in some base class will be
+        satisfactory. Indeed, the options defined in some base class will be
         shared among subclasses. However, when one would want to subclass a
         plnamespace, it is more likely the he want the 'subclass' to have
         options 'of the same name' than the ones in the base-class but
@@ -919,9 +919,14 @@ class plnamespace:
             def __new__(metacls, clsname, bases, dic):
                 # Do not use plopt.optdict: the documentation, choices and other
                 # property would be lost...
-                optdict = dict([ (
-                    opt.getName(), opt) for opt in plopt.iterator(namespace) ])
-                dic.update( copy.deepcopy(optdict) )
+                for opt in plopt.iterator(namespace):
+                    inh_opt = copy.deepcopy(opt)
+                    inh_opt.set( opt.get() )
+                    dic[inh_opt.getName()] = inh_opt
+                    
+                #OLD: optdict = dict([ (
+                #OLD:     opt.getName(), opt) for opt in plopt.iterator(namespace) ])
+                #OLD: dic.update( copy.deepcopy(optdict) )
                 cls = META.__new__(metacls, clsname, bases, dic)
                 return cls        
         return __metaclass__
