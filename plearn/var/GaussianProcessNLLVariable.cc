@@ -36,6 +36,10 @@
 
 /*! \file GaussianProcessNLLVariable.cc */
 
+#define PL_LOG_MODULE_NAME "GaussianProcessNLLVariable"
+
+// From PLearn
+#include <plearn/io/pl_log.h>
 #include <plearn/math/TMat_maths.h>
 #include <plearn/io/MatIO.h>
 #include "GaussianProcessNLLVariable.h"
@@ -160,6 +164,12 @@ const Mat& GaussianProcessNLLVariable::alpha() const
 // ### computes value from varray values
 void GaussianProcessNLLVariable::fprop()
 {
+    logVarray(m_hyperparam_vars, "FProp current hyperparameters:", true);
+
+    // Ensure that the current hyperparameter variable values are propagated
+    // into kernel options
+    m_hyperparam_vars.fprop();
+    
     fbpropFragments(m_kernel, m_noise, m_inputs, m_targets, m_allow_bprop,
                     m_save_gram_matrix, m_expdir,
                     m_gram, m_cholesky_gram, m_alpha_t, m_inverse_gram,
@@ -293,6 +303,12 @@ void GaussianProcessNLLVariable::fbpropFragments(
         savePMat(filename, gram);
     }
 
+    // Dump a fragment of the Gram Matrix to the debug log
+    DBG_MODULE_LOG << "Gram fragment: "
+                   << gram(0,0) << ' '
+                   << gram(1,0) << ' '
+                   << gram(1,1) << endl;
+
     // Compute Cholesky decomposition and solve the linear system
     alpha_t.resize(trainlength, rhs_width);
     L.resize(trainlength, trainlength);
@@ -353,6 +369,12 @@ void GaussianProcessNLLVariable::fbpropFragments(
         savePMat(filename, gram);
     }
 
+    // Dump a fragment of the Gram Matrix to the debug log
+    DBG_MODULE_LOG << "Gram fragment: "
+                   << gram(0,0) << ' '
+                   << gram(1,0) << ' '
+                   << gram(1,1) << endl;
+
     // Compute Cholesky decomposition and solve the linear system.  LAPACK
     // solves in-place, but luckily we don't need either the Gram and RHS
     // matrices after solving.  Note that for now we don't bother to create an
@@ -368,6 +390,26 @@ void GaussianProcessNLLVariable::fbpropFragments(
     }
 }
 #endif
+
+
+//#####  logVarray  ###########################################################
+
+void GaussianProcessNLLVariable::logVarray(const VarArray& varr,
+                                           const string& title, bool debug)
+{
+    string entry = title + '\n';
+    for (int i=0, n=varr.size() ; i<n ; ++i) {
+        entry += right(varr[i]->getName(), 35) + ": " + tostring(varr[i]->value[0]);
+        if (i < n-1)
+            entry += '\n';
+    }
+    if (debug) {
+        DBG_MODULE_LOG << entry << endl;
+    }
+    else {
+        MODULE_LOG << entry << endl;
+    }
+}
 
 } // end of namespace PLearn
 

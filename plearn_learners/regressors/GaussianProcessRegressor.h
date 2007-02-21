@@ -257,12 +257,9 @@ protected:
     /// Optimize the hyperparameters if any.  Return a Variable on which
     /// train() carries out a final fprop for obtaining the final trained
     /// learner parameters.
-    PP<GaussianProcessNLLVariable> hyperOptimize(const Mat& inputs,
-                                                 const Mat& targets);
+    PP<GaussianProcessNLLVariable> hyperOptimize(
+        const Mat& inputs, const Mat& targets, VarArray& hyperparam_vars);
 
-    /// Minor utility function to dump the contents of a varray to a log
-    static void logVarray(const VarArray& varr, const string& title="");
-    
 protected:
     //#####  Protected Options  ###############################################
 

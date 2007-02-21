@@ -147,6 +147,10 @@ public:
     //! Accessor to the last computed gram matrix inverse in an fprop
     const Mat& gramInverse() const { return m_inverse_gram; }
 
+    /// Minor utility function to dump the contents of a varray to a log
+    static void logVarray(const VarArray& varr, const string& title="",
+                          bool debug=false);
+    
 
     //#####  PLearn::Object Protocol  #########################################
 

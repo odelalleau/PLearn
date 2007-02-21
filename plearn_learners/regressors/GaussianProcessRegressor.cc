@@ -346,15 +346,22 @@ void GaussianProcessRegressor::train()
     }
 
     // Optimize hyperparameters
-    PP<GaussianProcessNLLVariable> nll = hyperOptimize(m_training_inputs, targets);
+    VarArray hyperparam_vars;
+    PP<GaussianProcessNLLVariable> nll = hyperOptimize(m_training_inputs, targets,
+                                                       hyperparam_vars);
     PLASSERT( nll );
     
-    // Compute parameters
+    // Compute parameters.  Be careful to also propagate through the
+    // hyperparameter variables to ensure the latest values are correctly set
+    // into their respective kernels.
+    hyperparam_vars.fprop();
     nll->fprop();
     m_alpha = nll->alpha();
     m_gram_inverse = nll->gramInverse();
 
     // Compute train MSE, as 1/(2N) * dot(z,z), with z=K*alpha - y
+    // *** FIXME: MSE IS NOT COMPUTED CORRECTLY SINCE GRAM MATRIX IS
+    // OVERWRITTEN BY CHOLESKY DECOMPOSITION ***
     Mat residuals(m_alpha.length(), m_alpha.width());
     product(residuals, nll->gram(), m_alpha);
     residuals -= targets;
@@ -564,7 +571,8 @@ TVec<string> GaussianProcessRegressor::getTrainCostNames() const
 //#####  hyperOptimize  #######################################################
 
 PP<GaussianProcessNLLVariable>
-GaussianProcessRegressor::hyperOptimize(const Mat& inputs, const Mat& targets)
+GaussianProcessRegressor::hyperOptimize(const Mat& inputs, const Mat& targets,
+                                        VarArray& hyperparam_vars)
 {
     // If there are no hyperparameters or optimizer, just create a simple
     // variable and return it right away.
@@ -581,7 +589,7 @@ GaussianProcessRegressor::hyperOptimize(const Mat& inputs, const Mat& targets)
     const int numhyper  = m_hyperparameters.size();
     const int numinputs = ( ! m_ARD_hyperprefix_initval.first.empty() ?
                             inputsize() : 0 );
-    VarArray     hyperparam_vars (numhyper + numinputs);
+    hyperparam_vars = VarArray(numhyper + numinputs);
     TVec<string> hyperparam_names(numhyper + numinputs);
     int i;
     for (i=0 ; i<numhyper ; ++i) {
@@ -614,7 +622,8 @@ GaussianProcessRegressor::hyperOptimize(const Mat& inputs, const Mat& targets)
     nll->setName("GaussianProcessNLLVariable");
 
     // Some logging about the initial values
-    logVarray(hyperparam_vars, "Hyperparameter initial values:");
+    GaussianProcessNLLVariable::logVarray(hyperparam_vars,
+                                          "Hyperparameter initial values:");
     
     // And optimize for nstages
     m_optimizer->setToOptimize(hyperparam_vars, (Variable*)nll);
@@ -639,23 +648,9 @@ GaussianProcessRegressor::hyperOptimize(const Mat& inputs, const Mat& targets)
     pb = 0;                                  // Finish progress bar right now
 
     // Some logging about the final values
-    logVarray(hyperparam_vars, "Hyperparameter final values:");
+    GaussianProcessNLLVariable::logVarray(hyperparam_vars,
+                                          "Hyperparameter final values:");
     return nll;
-}
-
-
-//#####  logVarray  ###########################################################
-
-void GaussianProcessRegressor::logVarray(const VarArray& varr,
-                                         const string& title)
-{
-    string entry = title + '\n';
-    for (int i=0, n=varr.size() ; i<n ; ++i) {
-        entry += right(varr[i]->getName(), 35) + ": " + tostring(varr[i]->value[0]);
-        if (i < n-1)
-            entry += '\n';
-    }
-    MODULE_LOG << entry << endl; 
 }
 
 } // end of namespace PLearn
