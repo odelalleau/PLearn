@@ -371,11 +371,7 @@ PLearnService::~PLearnService()
     TVec<PP<RemotePLearnServer> > servers(available_servers.length());
     servers << available_servers;
 
-    perr << "servers to disconnect from: " << servers.length() << endl;
-
     disconnectFromServers();
-
-    perr << "start watching " << servers.length() << endl;
 
     //now, get what's remaining on the servers streams
     for(int i= 0; i < servers.length(); ++i)
@@ -386,11 +382,9 @@ PLearnService::~PLearnService()
         }
         catch(const PLearnError& e)
         {
-            perr << "one dead " << i << endl;
+            // do nothing...
         }
     }
-
-    perr << "finished watching " << endl;
 }
 
 
