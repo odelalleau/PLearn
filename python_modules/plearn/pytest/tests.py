@@ -815,7 +815,7 @@ class RunTestRoutine( ResultsRelatedRoutine ):
                 % self.test.getPath()
                 )
 
-    def start(self):        
+    def start(self):
         self.run_test(RUN_RESULTS)
     
     def status_hook(self):

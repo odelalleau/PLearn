@@ -200,9 +200,10 @@ bool PLearnServer::run()
     // forward log messages to client
     PP<PL_LogPlugin> orig_log_plugin= PL_Log::instance().getCurrentPlugin();
     PL_Log::instance().setPlugin(new PL_LogPluginServer(io));
-    // forward progress messages to client
+    // forward progress messages to client, unless the pbar plugin is null
     PP<ProgressBarPlugin> orig_pb_plugin= ProgressBar::getCurrentPlugin();
-    ProgressBar::setPlugin(new RemoteProgressBarPlugin(io));
+    if(dynamic_cast<NullProgressBarPlugin*>(static_cast<ProgressBarPlugin*>(orig_pb_plugin)) == 0)
+        ProgressBar::setPlugin(new RemoteProgressBarPlugin(io));
     // forward pout&perr to client
     PStream orig_pout= pout;
     PStream orig_perr= perr;
