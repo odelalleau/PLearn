@@ -3,6 +3,7 @@
 // RemotePLearnServer.cc
 //
 // Copyright (C) 2005 Pascal Vincent 
+// Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -42,6 +43,7 @@
 
 
 #include "RemotePLearnServer.h"
+#include "PLearnService.h"
 #include <plearn/io/pl_log.h>
 
 namespace PLearn {
@@ -80,35 +82,136 @@ void RemotePLearnServer::newObject(int objid, const string& description)
     expectResults(0);
 }
 
+int RemotePLearnServer::newObject(const Object& model)
+{ 
+    clearMaps();
+    io.write("!O "); io << model << endl;
+    int objid;
+    getResults(objid);
+    return objid;
+}
+
+int RemotePLearnServer::newObject(PP<Object> model)
+{
+    if(model.isNull())
+        PLERROR("In RemotePLearnServer::newObject model is a Null pointer");
+    return newObject(*model);
+}
+
+int RemotePLearnServer::newObject(const string& description)
+{ 
+    clearMaps();
+    io.write("!O "); 
+    io.write(description);
+    io << endl;
+    int objid;
+    getResults(objid);
+    return objid;
+}
+
+
+void RemotePLearnServer::newObjectAsync(int objid, const Object& model)
+{ 
+    clearMaps();
+    io.write("!N "); io << objid << model << endl;
+}
+
+void RemotePLearnServer::newObjectAsync(int objid, PP<Object> model)
+{
+    if(model.isNull())
+        PLERROR("In RemotePLearnServer::newObject model is a Null pointer");
+    newObjectAsync(objid, *model);
+}
+
+void RemotePLearnServer::newObjectAsync(int objid, const string& description)
+{ 
+    clearMaps();
+    io.write("!N "); io << objid; io.put(' ');
+    io.write(description);
+    io << endl;
+}
+
+void RemotePLearnServer::newObjectAsync(const Object& model)
+{ 
+    clearMaps();
+    io.write("!O "); io << model << endl;
+}
+
+void RemotePLearnServer::newObjectAsync(const PP<Object>& model)
+{
+    if(model.isNull())
+        PLERROR("In RemotePLearnServer::newObject model is a Null pointer");
+    newObjectAsync(*model);
+}
+
+void RemotePLearnServer::newObjectAsync(const string& description)
+{ 
+    clearMaps();
+    io.write("!O "); 
+    io.write(description);
+    io << endl;
+}
+
+
+
 void RemotePLearnServer::deleteObject(int objid)
 {
-    io.write("!D "); io << objid << endl;
+    deleteObjectAsync(objid);
     expectResults(0);
+}
+
+void RemotePLearnServer::deleteObjectAsync(int objid)
+{
+    io.write("!D "); io << objid << endl;
 }
 
 void RemotePLearnServer::deleteAllObjects()
 {
-    io.write("!Z "); 
-    io << endl;
-    expectResults(0);
+    deleteAllObjectsAsync();
+    getResults();
+/*
+    if(io)
+    {
+        io.write("!Z "); 
+        io << endl;
+        expectResults(0);
+    }
+    else
+        DBG_LOG << "in RemotePLearnServer::deleteAllObjects() : stream not good." << endl;
+*/
+}
+
+void RemotePLearnServer::deleteAllObjectsAsync()
+{
+    if(io)
+    {
+        io.write("!Z "); 
+        io << endl;
+    }
+    else
+        DBG_LOG << "in RemotePLearnServer::deleteAllObjectsAsync() : stream not good." << endl;
 }
 
 
 void RemotePLearnServer::expectResults(int nargs_expected)
 {
-    DBG_LOG << "RemotePLearnServer entering expectResults" << endl;
+    PLearnService& service= PLearnService::instance();
+    service.waitForResultFrom(this);
+
+    //DBG_LOG << "RemotePLearnServer entering expectResults" << endl;
     io.skipBlanksAndComments();
     int headchar = io.get();
     if(headchar!='!')
         PLERROR(" Answers from plearn server are expected to start with a !, but I received a %c",headchar);
     int command = io.get();
-    DBG_LOG << "RemotePLearnServer expectResults received command: " << (char)command << endl;
+    //DBG_LOG << "RemotePLearnServer expectResults received command: " << (char)command << endl;
     int nreturned;
     string msg;
     switch(command)
     {
     case 'R':
         io >> nreturned;
+        //DBG_LOG << "RemotePLearnServer expectResults nreturned= " << nreturned << endl;
         if(nreturned!=nargs_expected)
             PLERROR("RemotePLearnServer: expected %d return arguments, but read R %d",nargs_expected,nreturned);
         break;
@@ -123,15 +226,10 @@ void RemotePLearnServer::expectResults(int nargs_expected)
 
 RemotePLearnServer::~RemotePLearnServer()
 {
-    DBG_LOG << "ENTERING RemotePLearnServer destructor" << endl;
-    deleteAllObjects();
-    //io.write("!Q");
-    //io = 0;
-    // DBG_LOG << "RemotePLearnServer destructor: BEFORE wait" << endl;
-    // prg->wait();
-    // DBG_LOG << "RemotePLearnServer destructor: AFTER wait" << endl;
-    // PLearnService::instance().freeServer(this);
-    DBG_LOG << "LEAVING RemotePLearnServer destructor" << endl;
+    // The PLearnService is responsible for RemotePLearnServer destruction 
+
+    //DBG_LOG << "ENTERING RemotePLearnServer destructor" << endl;
+    //DBG_LOG << "LEAVING RemotePLearnServer destructor" << endl;
 }
 
 

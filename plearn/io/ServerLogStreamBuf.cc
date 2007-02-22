@@ -1,8 +1,8 @@
 // -*- C++ -*-
 
-// PLearnServer.h
+// ServerLogStreamBuf.cc
 //
-// Copyright (C) 2005 Pascal Vincent 
+// Copyright (C) 2007 Xavier Saint-Mleux, Apstat Technologies, inc.
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,78 +32,42 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id$ 
- ******************************************************* */
+// Authors: Xavier Saint-Mleux
 
-// Authors: Pascal Vincent
+/*! \file ServerLogStreamBuf.cc */
 
-/*! \file PLearnServer.h */
 
-#include <plearn/io/PStream.h>
-#include <plearn/base/Object.h>
-#include <map>
-
-#ifndef PLearnServer_INC
-#define PLearnServer_INC
-
-// Put includes here
+#include "ServerLogStreamBuf.h"
 
 namespace PLearn {
+using namespace std;
 
-// Put global function declarations here
+ServerLogStreamBuf::ServerLogStreamBuf(PStream log_, const string& module_name_, int verbosity_)
+    : PStreamBuf(false, true, 4096, 4096), 
+      log(log_), module_name(module_name_), verbosity(verbosity_)
+{}
 
-class PLearnServer
+ServerLogStreamBuf::~ServerLogStreamBuf()
 {
-private:
+    flush();
+}
 
-    static PLearnServer* instance;
+ServerLogStreamBuf::streamsize ServerLogStreamBuf::read_(char* p, streamsize n)
+{
+    PLERROR("ServerLogStreamBuf::read_ should never be used!");
+    return 0; // never reached 
+}
 
-    void callFunction(const string& name, int nargs);
-    void printHelp();
-
-protected:
-    typedef map<int, PP<Object> > ObjMap;
-
-    PStream io;
-    bool clear_maps;
-    ObjMap objmap;
-
-    virtual int findFreeObjID(const Object* obj) const;
-
-public:
-    PLearnServer(const PStream& input_output);
-    virtual ~PLearnServer();
-
-    //! Enters the server loop which listens for commands and executes them.
-    //! Returns false only if server kill command '!K' was issued
-    //! Returns true in all other cases (in particular for quit command '!Q')
-    //! In principle this call does not throw any exception (exceptions are caught 
-    //! inside the run loop and if possible transmitted to the client with a '!E' reply.)
-    bool run();
-
-    static PLearnServer* getInstance();
-
-    // The following static methods are declared as remote functions (see .cc)
-
-    //! change directory (calls chdir)
-    static void cd(const string path);
-
-    //! change the mode of the io of the PLearnServer instance to plearn_binary 
-    static void binary();
-
-    //! change the mode of the io of the PLearnServer instance to plearn_ascii
-    static void ascii();
-
-    //! change the implicit_storage mode of the io of the PLearnServer instance.
-    static void implicit_storage(bool impl_stor);
-
-};
-
-
+//! writes exactly n characters from p (unbuffered, must flush)
+void ServerLogStreamBuf::write_(const char* p, streamsize n)
+{
+    log.write("*L "); 
+    string msg(p, n);
+    log << module_name << verbosity << msg;
+    log.flush();
+}
+  
 } // end of namespace PLearn
-
-#endif
 
 
 /*

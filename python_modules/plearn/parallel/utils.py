@@ -37,7 +37,7 @@ def truncate(s, length):
     if len(s) < length:
         return s
     else:
-        return s[:length] + etc
+        return s[:length] #+ etc
     
 def string_replace(s,c,ch=''):
     """Remove any occurrences of characters in c, from string s

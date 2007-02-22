@@ -3,6 +3,7 @@
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
+// Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 //
 
 // Redistribution and use in source and binary forms, with or without
@@ -169,6 +170,91 @@ void TextProgressBarPlugin::update(ProgressBar * pb,unsigned long newpos)
 #if USING_MPI
     }
 #endif
+}
+
+
+//*************************/
+// RemoteProgressBarPlugin
+
+RemoteProgressBarPlugin::RemoteProgressBarPlugin(ostream& _out, unsigned int nticks_)
+    :TextProgressBarPlugin(_out), nticks(nticks_)
+{}
+
+RemoteProgressBarPlugin::RemoteProgressBarPlugin(PStream& _out, unsigned int nticks_)
+    :TextProgressBarPlugin(_out), nticks(nticks_)
+{}
+
+void RemoteProgressBarPlugin::addProgressBar(ProgressBar* pb)
+{ printTitle(pb); }
+
+void RemoteProgressBarPlugin::update(ProgressBar* pb, unsigned long newpos)
+{
+    // this handles the case where we reuse the same progress bar
+    if(newpos < pb->currentpos)
+    {
+        pb->currentpos=0;
+        printTitle(pb);
+    }
+    if(0 <  (int( newpos / (double(pb->maxpos) / nticks) ) -
+             int(round( pb->currentpos / (double(pb->maxpos) / nticks) ))))
+    {
+        out.write("*PU ");
+        out << reinterpret_cast<unsigned int>(pb) << newpos << endl;
+        pb->currentpos = newpos;
+    }
+}
+
+void RemoteProgressBarPlugin::printTitle(ProgressBar* pb)
+{
+    string fulltitle = string(" ") + pb->title + " (" + tostring(pb->maxpos) + ") ";
+    out.write("*PA ");
+    out << reinterpret_cast<unsigned int>(pb) << pb->maxpos << fulltitle << endl;
+}
+
+void RemoteProgressBarPlugin::killProgressBar(ProgressBar* pb)
+{
+    out.write("*PK ");
+    out << reinterpret_cast<unsigned int>(pb) << endl;
+}
+
+//*************************/
+// LineOutputProgressBarPlugin
+
+LineOutputProgressBarPlugin::LineOutputProgressBarPlugin(ostream& _out, unsigned int nticks_)
+    :TextProgressBarPlugin(_out), nticks(nticks_)
+{}
+
+LineOutputProgressBarPlugin::LineOutputProgressBarPlugin(PStream& _out, unsigned int nticks_)
+    :TextProgressBarPlugin(_out), nticks(nticks_)
+{}
+
+void LineOutputProgressBarPlugin::addProgressBar(ProgressBar* pb)
+{ out << "In progress: " << pbInfo(pb) << endl; }
+
+void LineOutputProgressBarPlugin::update(ProgressBar* pb, unsigned long newpos)
+{
+    // this handles the case where we reuse the same progress bar
+    if(newpos < pb->currentpos)
+    {
+        pb->currentpos= newpos;
+        out << "In progress: ";//to be continued...
+    }
+    else if(0 <  (int( newpos / (double(pb->maxpos) / nticks) ) -
+             int(round( pb->currentpos / (double(pb->maxpos) / nticks) ))))
+        pb->currentpos= newpos;
+    out << pbInfo(pb) << endl;
+}
+
+void LineOutputProgressBarPlugin::killProgressBar(ProgressBar* pb)
+{ out << pbInfo(pb) << " Finished" << endl; }
+
+string LineOutputProgressBarPlugin::pbInfo(ProgressBar* pb)
+{
+    unsigned int curpos= pb->currentpos,
+                 maxpos= pb->maxpos;
+    return string("[") + pb->title + "] " 
+        + tostring(curpos) + '/' + tostring(maxpos)
+        + " (" + tostring(static_cast<double>(curpos)*100.0 / static_cast<double>(maxpos)) + "%)";
 }
 
 

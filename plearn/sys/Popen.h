@@ -61,10 +61,10 @@ class Popen: public PPointable
 protected:
     //! Multi-argument variant: the arguments are passed in a vector.
     void launch(const string& command, const vector<string>&
-                commandoptions);
+                commandoptions, bool redirect_stderr= false);
     //! Full text variant. All arguments are passed together in a string.
     //! @deprecated Use the other version of launch instead.
-    void launch(const string& commandline); 
+    void launch(const string& commandline, bool redirect_stderr= false); 
 
     bool verbose;
     bool process_alive;
@@ -74,14 +74,15 @@ protected:
 public:
     PStream in; //should these be only one I/O PStream? -xsm
     PStream out;
+    PStream err;
     
     Popen(const string& command, 
-	  bool the_verbose = false) 
-    { verbose = the_verbose; launch(command); }
+	  bool the_verbose = false, bool redirect_stderr= false) 
+    { verbose = the_verbose; launch(command, redirect_stderr); }
 
     Popen(const string& command, const vector<string>& commandoptions, 
-	  bool the_verbose = false) 
-    { verbose = the_verbose; launch(command,commandoptions); }
+	  bool the_verbose = false, bool redirect_stderr= false) 
+    { verbose = the_verbose; launch(command,commandoptions, redirect_stderr); }
 
     /** Wait for process termination and return exit value.
         @note This must be called after all output from the program
@@ -102,7 +103,7 @@ public:
   The command must not be waiting for input on its standard input 
   or this call will never return.
 */
-vector<string> execute(const string& command);
+vector<string> execute(const string& command, bool redirect_stderr= false);
 
 } // end of namespace PLearn
 

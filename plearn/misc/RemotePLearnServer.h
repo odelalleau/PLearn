@@ -3,6 +3,7 @@
 // RemotePLearnServer.h
 //
 // Copyright (C) 2005 Pascal Vincent 
+// Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -48,6 +49,7 @@
 #include <plearn/io/PStream.h>
 #include <plearn/base/Object.h>
 #include <plearn/sys/Popen.h>
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 
@@ -56,11 +58,13 @@ class RemotePLearnServer: public PPointable
 {    
 private:
     friend class PLearnService;
-
     PStream io; // io communication channel with remote PLearnServer
     RemotePLearnServer(const PStream& serverio);
 
 public:
+
+
+    void killServer() { io << "!K " << endl; }
     
     //! Builds an object based on the given model on the remote server,
     //! assigning it the given id.
@@ -72,11 +76,41 @@ public:
     //! in serialised form.
     void newObject(int objid, const string& description);  
 
+    //! Builds an object based on the given model on the remote server,
+    //! returns an assigned id.
+    int newObject(const Object& model);
+    int newObject(PP<Object> model);
+    //! Builds an object on the remote server, from its description
+    //! in serialised form.
+    int newObject(const string& description);  
+    
+    //! Builds an object based on the given model on the remote server,
+    //! assigning it the given id.
+    void newObjectAsync(int objid, const Object& model);
+    void newObjectAsync(int objid, PP<Object> model);
+    //! Builds an object on the remote server, from its description
+    //! in serialised form.
+    void newObjectAsync(int objid, const string& description);  
+
+    //! Builds an object based on the given model on the remote server,
+    //! id is assigned by the server and returned.
+    void newObjectAsync(const Object& model);
+    void newObjectAsync(const PP<Object>& model);
+    //! Builds an object on the remote server, from its description
+    //! in serialised form.
+    void newObjectAsync(const string& description);  
+
     //! Deletes an object of the remote server.
     void deleteObject(int objid);
 
+    //! Deletes an object of the remote server.
+    void deleteObjectAsync(int objid);
+
     //! Deletes all objects of the remote server.
     void deleteAllObjects();
+
+    //! Deletes all objects of the remote server.
+    void deleteAllObjectsAsync();
 
     void clearMaps();
 
@@ -210,7 +244,9 @@ public:
     inline void getResults(Arg1& arg1)
     {
         expectResults(1);
+        //DBG_LOG << "RemotePLearnServer getResults(Arg1& arg1)" << endl;
         io >> arg1;
+        //DBG_LOG << "RemotePLearnServer getResults got arg1" << endl;
     }
     //! get results for a method with 2 output results
     //! These are the results for the just previously called method

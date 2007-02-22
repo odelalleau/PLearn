@@ -3,6 +3,7 @@
 // PLearnService.h
 //
 // Copyright (C) 2005 Pascal Vincent 
+// Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -48,7 +49,7 @@
 #include <plearn/io/PPath.h>
 #include <plearn/io/PStream.h>
 #include <plearn/math/TVec.h>
-// #include <map>
+#include <map>
 #include <set>
 #include <string>
 #include <plearn/misc/RemotePLearnServer.h>
@@ -69,6 +70,9 @@ private:
     TVec< PP<RemotePLearnServer> > available_servers;
     std::set< PP<RemotePLearnServer> > reserved_servers;
 
+    typedef map<RemotePLearnServer*, map<unsigned int, PP<ProgressBar> > > progress_bars_t;
+    static progress_bars_t progress_bars;
+
 public:
     friend class RemotePLearnServer;
 
@@ -85,6 +89,8 @@ public:
     void connectToServers(PPath serversfile);
 
     void disconnectFromServers();
+
+    void disconnectFromServer(PP<RemotePLearnServer> server);
 
     //! returns the number of available processing ressources
     int availableServers() const;
@@ -106,6 +112,26 @@ public:
 
     int watchServers(TVec< PP<RemotePLearnServer> > servers, int timeout=0);
 
+    typedef void (*log_callback_t)(PP<RemotePLearnServer> server, const string& module_name, int vlevel, const string& msg);
+    typedef void (*progress_callback_t)(PP<RemotePLearnServer> server, unsigned int pbar, char action, 
+                                        unsigned int pos, const string& title);
+
+    static void log_callback(PP<RemotePLearnServer> server, const string& module_name, int vlevel, const string& msg);
+    static void progress_callback(PP<RemotePLearnServer> server, unsigned int pbar, char action, 
+                                  unsigned int pos= 0, const string& title= "");
+
+    int watchServers(TVec< PP<RemotePLearnServer> > servers, 
+                     log_callback_t log_callback,
+                     progress_callback_t progress_callback);
+
+    PP<RemotePLearnServer> waitForResult(TVec< PP<RemotePLearnServer> > servers= TVec< PP<RemotePLearnServer> >(), 
+                                         log_callback_t log_callback= log_callback,
+                                         progress_callback_t progress_callback= progress_callback);
+
+    void waitForResultFrom(PP<RemotePLearnServer> from,
+                           log_callback_t log_callback= log_callback,
+                           progress_callback_t progress_callback= progress_callback);
+    
     ~PLearnService();
 };
 

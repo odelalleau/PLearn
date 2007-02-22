@@ -73,7 +73,7 @@
 #include <plearn/var/FNetLayerVariable.h>
 
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
-//#include "DisplayUtils.h"
+//#include <plearn/display/DisplayUtils.h>
 //#include "GradientOptimizer.h"
 #include "NNet.h"
 // #include <plearn/math/random.h>

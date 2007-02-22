@@ -38,6 +38,7 @@
 
 /*! \file PStreamBuf.cc */
 #include "PStreamBuf.h"
+#include <plearn/io/pl_log.h>
 
 #define PSTREAMBUF_NO_GET (-1000)
 
@@ -125,6 +126,7 @@ PStreamBuf::streamsize PStreamBuf::refill_in_buf()
 #endif
 
     inbuf_p = inbuf + ungetsize;
+    inbuf_end= inbuf_p; //buf empty until read_ finished
     streamsize n = read_(inbuf_p, inbuf_chunksize);
     inbuf_end = inbuf_p + n;
     return n;
@@ -152,25 +154,40 @@ PStreamBuf::streamsize PStreamBuf::read(char* p, streamsize n)
     if(nleft) // need some more ?
     {
         if(nleft>=inbuf_chunksize) // large block: read it directly
-            nleft -= read_(p,nleft);
+        {
+            streamsize nr= read_(p,nleft);
+            nleft-= nr;
+            p+= nr;
+            while(nleft > 0 && nr > 0) // need some more and not eof?
+            {
+                nr= read_(p,nleft);
+                nleft-= nr;
+                p+= nr;
+            }
+        }
         else // small block: read it in the buffer first
         {
             inbuf_n = refill_in_buf();
-            if(inbuf_n)
+            while(nleft > 0 && inbuf_n > 0) // need some more and not eof?
             {
                 streamsize k = nleft<inbuf_n ?nleft :inbuf_n;
                 memcpy(p,inbuf_p,k);
                 inbuf_p += k;
                 nleft -= k;
+                p+= k;
+                if(nleft > 0)
+                    inbuf_n = refill_in_buf();
             }
         }
     }
-  
+
     streamsize nread = n-nleft;
+
     if (nread > 0)
-        last_get = (unsigned char) p[nread - 1];
+        last_get = (unsigned char) p[-1];//p has advanced and now points one after the end
     else
         last_get = EOF;
+
     return nread;
 }
 

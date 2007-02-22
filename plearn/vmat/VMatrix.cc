@@ -200,6 +200,25 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
          ArgDoc ("extra_percent", "if non 0, then the box is enlarged in both ends\n"
                  "of every direction by that given percentage"),
          RetDoc ("bounding box as as a vector of (min,max) pairs")));         
+
+    declareMethod(
+        rmm, "fill", &VMatrix::fill,
+        (BodyDoc("Appends fills the VMatrix with a constant value.\n"),
+         ArgDoc ("value", "The fill value.\n")));
+
+    declareMethod(
+        rmm, "dot", &VMatrix::dot,
+        (BodyDoc("dot product between row i1 and row i2, w/ inputsize first elements."),
+         ArgDoc ("i1", "First row to consider."),
+         ArgDoc ("i2", "Second row to consider."),
+         ArgDoc ("inputsize", "nb. elements to consider."),
+         RetDoc ("dot product")));         
+
+    declareMethod(
+        rmm, "savePMAT", &VMatrix::savePMAT,
+        (BodyDoc("Saves this matrix as a .pmat file."),
+         ArgDoc ("pmatfile", "Path of the file to create.")));
+
 }
 
 

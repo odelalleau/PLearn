@@ -42,8 +42,10 @@
 
 
 #include "PrPStreamBuf.h"
+#include <plearn/base/PrUtils.h>
 #include <nspr/prio.h>
 #include <stdio.h>
+#include "PStream.h"
 
 namespace PLearn {
 using namespace std;
@@ -82,7 +84,10 @@ PrPStreamBuf::~PrPStreamBuf()
 
 PrPStreamBuf::streamsize PrPStreamBuf::read_(char* p, streamsize n)
 {
-    return PR_Read(in, p, PRInt32(n));
+    PRInt32 nr= PR_Read(in, p, PRInt32(n));
+    if(nr < 0)
+        PLERROR((string("in PrPStreamBuf::read_ : no chars read: ") + getPrErrorString()).c_str());
+    return nr;
 }
 
 //! writes exactly n characters from p (unbuffered, must flush)

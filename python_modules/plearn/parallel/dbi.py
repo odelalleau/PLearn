@@ -10,6 +10,8 @@ from configobj import ConfigObj
 from textwrap import dedent
 import pdb
 from time import sleep
+from plearn.pymake import pymake
+
 STATUS_FINISHED = 0
 STATUS_RUNNING = 1
 STATUS_WAITING = 2
@@ -128,6 +130,26 @@ class Task:
         #TODO: catch exception if value not available
         status = get_config_value(self.log_file,'STATUS')
         return int(status)
+
+    def get_stdout(self):
+        try:
+            if isinstance(self.p.stdout, file):
+                return self.p.stdout
+            else:
+                return open(self.log_file + '.out','r')
+        except:
+            pass
+        return None
+        
+    def get_stderr(self):
+        try:
+            if isinstance(self.p.stderr, file):
+                return self.p.stderr
+            else:
+                return open(self.log_file + '.err','r')
+        except:
+            pass
+        return None
 
     def get_waiting_time(self):
         # get the string representation
@@ -399,8 +421,136 @@ class DBICondor(DBIBase):
 
 
 
-def clean(self):
+    def clean(self):
         pass
+
+
+
+class SshHost:
+    def __init__(self, hostname):
+        self.hostname= hostname
+        self.lastupd= -16
+        self.getAvailability()
+        
+    def getAvailability(self):
+        # simple heuristic: mips / load
+        t= time.time()
+        if t - self.lastupd > 15: # min. 15 sec. before update
+            self.bogomips= self.getBogomips()
+            self.loadavg= self.getLoadavg()
+            self.lastupd= t
+            #print  self.hostname, self.bogomips, self.loadavg, (self.bogomips / (self.loadavg + 0.5))
+        return self.bogomips / (self.loadavg + 0.5)
+        
+    def getBogomips(self):
+        cmd= ["ssh", self.hostname ,"cat /proc/cpuinfo"]
+        p= Popen(cmd, stdout=PIPE)
+        bogomips= 0.0
+        for l in p.stdout:
+            if l.startswith('bogomips'):
+                s= l.split(' ')
+                bogomips+= float(s[-1])
+        return bogomips
+
+    def getLoadavg(self):
+        cmd= ["ssh", self.hostname,"cat /proc/loadavg"]
+        p= Popen(cmd, stdout=PIPE)
+        l= p.stdout.readline().split(' ')
+        return float(l[0])
+        
+    def addToLoadavg(self,n):
+        self.loadavg+= n
+        self.lastupd= time.time()
+
+    def __str__(self):
+        return "SshHost("+self.hostname+" <"+str(self.bogomips) \
+               +','+str(self.loadavg) +','+str(self.getAvailability()) \
+               +','+str(self.lastupd) + '>)'
+
+    def __repr__(self):
+        return str(self)
+        
+def find_all_ssh_hosts():
+    return [SshHost(h) for h in set(pymake.get_distcc_hosts())]
+
+def cmp_ssh_hosts(h1, h2):
+    return cmp(h2.getAvailability(), h1.getAvailability())
+
+class DBISsh(DBIBase):
+
+    def __init__(self, commands, **args ):
+        DBIBase.__init__(self, commands, **args)
+
+        # check if log directory exists, if not create it
+        if not os.path.exists(self.log_dir):
+            os.mkdir(self.log_dir)
+
+        # create the information about the tasks
+        for command in commands:
+            self.tasks.append(Task(command, self.log_dir, self.time_format,
+                                   self.pre_tasks, self.post_tasks))
+        self.hosts= find_all_ssh_hosts()
+        
+
+    def getHost(self):
+        self.hosts.sort(cmp= cmp_ssh_hosts)
+        #print "hosts= "
+        #for h in self.hosts: print h
+        self.hosts[0].addToLoadavg(1.0)
+        return self.hosts[0]
+    
+    def run_one_job(self, task):
+        DBIBase.run(self)
+
+        host= self.getHost()
+
+
+        cwd= os.getcwd()
+        command = "ssh " + host.hostname + " 'cd " + cwd + "; " + string.join(task.commands,';') + "'"
+        print command
+
+        task.launch_time = time.time()
+        set_config_value(task.log_file, 'SCHEDULED_TIME',
+                time.strftime(self.time_format, time.localtime(time.time())))
+        output = PIPE
+        error = PIPE
+        if int(self.file_redirect_stdout):
+            output = file(task.log_file + '.out','w')
+        if int(self.file_redirect_stderr):
+            error = file(task.log_file + '.err','w')
+        task.p = Popen(command, shell=True,stdout=output,stderr=error)
+
+    def run(self):
+        # Execute pre-batch
+        pre_batch_command = ';'.join( self.pre_batch )
+        output = PIPE
+        error = PIPE
+        if int(self.file_redirect_stdout):
+            output = file(self.log_file + '.pre_batch.out', 'w')
+        if int(self.file_redirect_stderr):
+            error = file(self.log_file + '.pre_batch.err', 'w')
+        self.pre = Popen(pre_batch_command, shell=True, stdout=output, stderr=error)
+        print 'pre_batch_command =', pre_batch_command
+
+        # Execute all Tasks (including pre_tasks and post_tasks if any)
+        print "tasks= ", self.tasks
+        for task in self.tasks:
+            self.run_one_job(task)
+
+        # Execute post-batchs
+        post_batch_command = ";".join( self.post_batch );
+        if int(self.file_redirect_stdout):
+            output = file(self.log_file + '.post_batch.out', 'w')
+        if int(self.file_redirect_stderr):
+            error = file(self.log_file + '.post_batch.err', 'w')
+        self.post = Popen(post_batch_command, shell=True, stdout=output, stderr=error)
+        print 'post_batch_command =', post_batch_command
+
+    def clean(self):
+        #TODO: delete all log files for the current batch
+        pass
+
+
 
 # creates an object of type ('DBI' + launch_system) if it exists
 def DBI(commands, launch_system):
@@ -408,7 +558,7 @@ def DBI(commands, launch_system):
         str = 'DBI'+launch_system+'(commands)'
         jobs = eval('DBI'+launch_system+'(commands)')
     except NameError:
-        print 'The launch system ',launch_system, ' does not exists. Available systems are: Cluster, bqtools and Condor'
+        print 'The launch system ',launch_system, ' does not exists. Available systems are: Cluster, Ssh, bqtools and Condor'
         sys.exit(1)
     return jobs
 

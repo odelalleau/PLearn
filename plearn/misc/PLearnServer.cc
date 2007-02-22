@@ -3,6 +3,7 @@
 // PLearnServer.cc
 //
 // Copyright (C) 2005 Pascal Vincent 
+// Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -180,7 +181,7 @@ void PLearnServer::printHelp()
              "\n"
              "Summary of currently supported functions:\n"
              "  !F cd 1 \"path\" \n\n"
-             "Advanced technical note: objects with objid>=10000 are also inserted in the stream's copies_map\n"
+             "OBSOLETE: Advanced technical note: objects with objid>=10000 are also inserted in the stream's copies_map\n"
              "so that they may be referenced as arguments to method or funtion calls, for ex as: *10001; \n"
              "\n"
         );
@@ -189,8 +190,6 @@ void PLearnServer::printHelp()
 
 bool PLearnServer::run()
 {
-    const int upper_bound_id = 10000;
-
     int obj_id;
     Object* obj;
     ObjMap::iterator found;
@@ -198,27 +197,36 @@ bool PLearnServer::run()
     int n_args; // number of input arguments to the method call
     string filepath;
 
+    // forward log messages to client
+    PP<PL_LogPlugin> orig_log_plugin= PL_Log::instance().getCurrentPlugin();
+    PL_Log::instance().setPlugin(new PL_LogPluginServer(io));
+    // forward progress messages to client
+    PP<ProgressBarPlugin> orig_pb_plugin= ProgressBar::getCurrentPlugin();
+    ProgressBar::setPlugin(new RemoteProgressBarPlugin(io));
+    // forward pout&perr to client
+    PStream orig_pout= pout;
+    PStream orig_perr= perr;
+    pout= new ServerLogStreamBuf(io, "pout");
+    perr= new ServerLogStreamBuf(io, "perr");
+
     DBG_LOG << "ENTERING PLearnServer::run()" << endl;
+
     for(;;)
     {
         if(clear_maps)
         {
             io.copies_map_in.clear();
             io.copies_map_out.clear();
-
             for (ObjMap::iterator it = objmap.begin(); it != objmap.end(); ++it)
-                if (it->first >= upper_bound_id)
-                    io.copies_map_in[it->first] = it->second;
+                io.copies_map_in[it->first] = it->second;
         }
         int c = -1;
-        do { c = io.get(); }
-        while(c!='!' && c!=EOF);
+        do 
+            c = io.get(); 
+        while(io && c!='!' && c!=EOF);
         
-        if(c==EOF)
-        {
-            // cerr << "Read EOF: quitting" << endl;
+        if(c==EOF || !io)
             return true;
-        }
         int command = io.get();
         
         try 
@@ -235,7 +243,6 @@ bool PLearnServer::run()
                 break;
 
             case 'F': // call function 
-
                 io >> method_name >> n_args;
                 callFunction(method_name, n_args);
                 io << endl;
@@ -249,6 +256,18 @@ bool PLearnServer::run()
                 objmap[obj_id] = obj;
                 Object::prepareToSendResults(io,0);
                 io << endl;  
+                DBG_LOG << "-> OBJECT CREATED." << endl;
+                break;
+
+            case 'O': // new w/o id; id is returned
+                DBG_LOG << "PLearnServer NEW OBJECT w/o ID" << endl;
+                obj = 0;
+                io >> obj;           // Read new object
+                obj_id= findFreeObjID(obj);
+                DBG_LOG << "  obj_id = " << obj_id << endl;
+                objmap[obj_id] = obj;
+                Object::prepareToSendResults(io,1);
+                io << obj_id << endl;  
                 DBG_LOG << "-> OBJECT CREATED." << endl;
                 break;
             
@@ -305,6 +324,11 @@ bool PLearnServer::run()
                 break;
 
             case 'Q': // quit
+                PL_Log::instance().setPlugin(orig_log_plugin);
+                ProgressBar::setPlugin(orig_pb_plugin);
+                pout= orig_pout;
+                perr= orig_perr;
+                io.setMode(PStream::plearn_ascii);
                 DBG_LOG << "PLearnServer QUIT" << endl;
                 // cerr << "Quitting" << endl;
                 DBG_LOG << "LEAVING PLearnServer::run()" << endl;
@@ -357,6 +381,25 @@ bool PLearnServer::run()
     DBG_LOG << "LEAVING PLearnServer::run()" << endl;
     return true;
 }
+
+int PLearnServer::findFreeObjID(const Object* obj) const
+{
+    //DUMMY method that tries to find an unused ID (LCG look-alike seeded w/ obj's address)
+    // this algorithm is not guaranteed to work... use at your own risk or modify accordingly
+    int id= reinterpret_cast<unsigned int>(obj) >> 1;
+    if(id < 0) id= -id;
+    const int maxtries= 65536;
+    int ntries= 0;
+    while(objmap.find(id) != objmap.end() && ++ntries < maxtries)
+    {
+        id= id*1664525 + 1013904223;//simple "LCG"
+        if(id < 0) id= -id;
+    }
+    if(ntries >= maxtries)
+        PLERROR("PLearnServer::findFreeObjID : can't find a suitable ID within %d tries.", maxtries);
+    return id;
+}
+
 
 } // end of namespace PLearn
 

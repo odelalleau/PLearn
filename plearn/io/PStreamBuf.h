@@ -126,6 +126,9 @@ private:
 
 public:
 
+    bool inbufEmpty() const
+    { return !(inbuf_p<inbuf_end); }
+
     bool isReadable() const
     { return is_readable; }
 
@@ -159,6 +162,8 @@ public:
             return -1;
     }
   
+    
+    //! Reads n chars, unless eof is reached or an error occurs; blocks if needed
     streamsize read(char* p, streamsize n);
 
     //! Puts the given characters back in the input buffer

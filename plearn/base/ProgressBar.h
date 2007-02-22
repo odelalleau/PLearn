@@ -3,6 +3,7 @@
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
+// Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 //
 
 // Redistribution and use in source and binary forms, with or without
@@ -77,6 +78,7 @@ public:
 //! Simple plugin for displaying text progress bar
 class TextProgressBarPlugin : public ProgressBarPlugin
 {
+protected:
     PStream out;
 public:
     virtual void addProgressBar(ProgressBar * pb);
@@ -89,6 +91,42 @@ public:
     static int width;
 };
 
+//! Similar to TextProgressBarPlugin with a different output format 
+//! so that remote servers can update progress bars on a client.
+class RemoteProgressBarPlugin : public TextProgressBarPlugin
+{
+public:
+    virtual void addProgressBar(ProgressBar* pb);
+    virtual void update(ProgressBar* pb, unsigned long newpos);
+
+    RemoteProgressBarPlugin(ostream& _out, unsigned int nticks_= 20);
+    RemoteProgressBarPlugin(PStream& _out, unsigned int nticks_= 20);
+
+    virtual void killProgressBar(ProgressBar* pb);
+
+protected:
+    void printTitle(ProgressBar* pb);
+    unsigned int nticks;
+};
+
+//! Similar to TextProgressBarPlugin with a different output format 
+//! so that updates appear on different lines of output.
+//! (for logging or when multiple progress bars are used simultaneously)
+class LineOutputProgressBarPlugin : public TextProgressBarPlugin
+{
+public:
+    virtual void addProgressBar(ProgressBar* pb);
+    virtual void update(ProgressBar* pb, unsigned long newpos);
+
+    LineOutputProgressBarPlugin(ostream& _out, unsigned int nticks_= 100);
+    LineOutputProgressBarPlugin(PStream& _out, unsigned int nticks_= 100);
+
+    virtual void killProgressBar(ProgressBar* pb);
+
+protected:
+    static string pbInfo(ProgressBar* pb);
+    unsigned int nticks;
+};
 
 //! Simpler plugin that doesn't display a progress bar at all.  Useful to
 //! disable progress bars for operations that are known to be short.

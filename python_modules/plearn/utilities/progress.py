@@ -50,5 +50,29 @@ class StdoutProgressBar(ProgressBar):
             self.pos = pos
             
 
+class LineOutputProgressBar(StdoutProgressBar):
+    
+    def __init__(self, title, n):
+        self.n = n
+        self.pos = 0
+        self.title = title
+        self.closed = False
+        titlestr = ' '+title+' ('+str(n)+') '
+        StdoutProgressBar.write('In progress: '+titlestr+'\n')
+            
+    def update(self, pos):
+        if not self.closed:
+            npoints = StdoutProgressBar.npoints
+            oldcharpos = min(npoints, int(self.pos*npoints/(self.n-1)))
+            newcharpos = min(npoints, int(pos*npoints/(self.n-1)))
+            nchars = newcharpos-oldcharpos
+            if nchars>0:
+                StdoutProgressBar.write(self.title + ': ' + str(pos) + '/' + str(self.n)
+                                        + '(' + str(float(pos)*100./float(self.n)) +'%)\n')
+            if pos>=self.n-1:
+                StdoutProgressBar.write('Finished '+self.title+': '+str(pos)+'/'+str(self.n)+' (100%)\n')
+                self.closed = True
+            self.pos = pos
+
 PBar = StdoutProgressBar
 

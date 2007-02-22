@@ -453,13 +453,13 @@ T sum_of_log(const TVec<T>& vec)
 template<class T>
 T product(const TVec<T>& vec)
 {
-    double res = 1.0;
+    T res(static_cast<T>(1.0));
     if (vec.size() == 0)
         return res;
     T* v = vec.data();
     for(int i=0; i<vec.length(); i++)
         res *= v[i];
-    return T(res);
+    return res;
 }
 
 /*

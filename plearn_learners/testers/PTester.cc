@@ -46,6 +46,8 @@
 #include <assert.h>
 #include "PTester.h"
 
+#include <plearn/misc/PLearnService.h>
+
 #include <plearn/base/stringutils.h>
 #if USING_MPI
 #include <plearn/sys/PLMPI.h>
@@ -282,6 +284,12 @@ void PTester::declareMethods(RemoteMethodMap& rmm)
          RetDoc ("Vector of test statistics corresponding to the requested statnames")));
 
     declareMethod(
+        rmm, "perform1Split", &PTester::perform1Split,
+        (BodyDoc("Performs train/test for one split, returns splitres."),
+         ArgDoc ("splitnum","Split number on which to perform train/test"),
+         RetDoc ("Vector of test statistics corresponding to the requested statnames")));
+
+    declareMethod(
         rmm, "getStatNames", &PTester::getStatNames,
         (BodyDoc("Return the statnames (potentially modified by statmask, if provided);\n"
                  "see the 'statnames' and 'statmask' options."),
@@ -405,7 +413,8 @@ void PTester::setExperimentDirectory(const PPath& the_expdir)
 /////////////
 // perform //
 /////////////
-Vec PTester::perform(bool call_forget)
+// DEPRECATED -- USE PTester::perform
+Vec PTester::oldperform(bool call_forget)
 {
     if (!learner)
         PLERROR("No learner specified for PTester.");
@@ -717,6 +726,397 @@ Vec PTester::perform(bool call_forget)
             global_result[k] = stcol[j]->getStat(statspecs[k].intstatname);
         }
     }
+
+    if (global_stats_vm)
+        global_stats_vm->appendRow(global_result);
+
+#if USING_MPI
+    if (PLMPI::rank == 0)
+#endif
+    // Perform the final commands provided in final_commands.
+    for (int i = 0; i < final_commands.length(); i++)
+    {
+        system(final_commands[i].c_str());
+    }
+
+    return global_result;
+}
+
+
+Vec PTester::perform1Split(int splitnum)
+{
+    if (!learner)
+        PLERROR("PTester::perform1Split : No learner specified for PTester.");
+    if (!splitter)
+        PLERROR("PTester::perform1Split : No splitter specified for PTester");
+
+    const int nstats = statnames_processed.length();
+
+    splitter->setDataSet(dataset);
+
+    TVec<string> testcostnames = learner->getTestCostNames();
+    TVec<string> traincostnames = learner->getTrainCostNames();
+
+    const int nsets = splitter->nSetsPerSplit();
+
+    // Stats collectors for individual sets of a split:
+    TVec< PP<VecStatsCollector> > stcol(nsets);
+    for (int setnum = 0; setnum < nsets; setnum++)
+    {
+        if (template_stats_collector)
+        {
+            CopiesMap copies;
+            stcol[setnum] = template_stats_collector->deepCopy(copies);
+        }
+        else
+            stcol[setnum] = new VecStatsCollector();
+
+        if (setnum == 0)
+            stcol[setnum]->setFieldNames(traincostnames);
+        else
+            stcol[setnum]->setFieldNames(testcostnames);
+
+        stcol[setnum]->build();
+        stcol[setnum]->forget();
+    }
+
+    PP<VecStatsCollector> train_stats = stcol[0];
+    learner->setTrainStatsCollector(train_stats);
+
+
+    // Stat specs
+    TVec<StatSpec> statspecs(nstats);
+    for(int k = 0; k < nstats; k++)
+    {
+        statspecs[k].init(statnames_processed[k]);
+    }
+
+    PPath splitdir;
+    bool is_splitdir = false;
+    if (!expdir.isEmpty())
+    {
+        splitdir = expdir / ("Split" + tostring(splitnum));
+        is_splitdir = true;
+    }
+
+    TVec<VMat> dsets = splitter->getSplit(splitnum);
+
+    if (should_train) {
+        VMat trainset = dsets[0];
+        if (is_splitdir && save_data_sets)
+            PLearn::save(splitdir / "training_set.psave", trainset);
+            
+        if (provide_learner_expdir)
+        {
+            if (is_splitdir)
+                learner->setExperimentDirectory(splitdir / "LearnerExpdir/");
+            else
+                learner->setExperimentDirectory("");
+        }
+
+        learner->setTrainingSet(trainset, should_train);
+        if (dsets.size() > 1)
+            learner->setValidationSet(dsets[1]);
+
+        if (is_splitdir && save_initial_learners)
+            PLearn::save(splitdir / "initial_learner.psave", learner);
+
+        train_stats->forget();
+        learner->train();
+        train_stats->finalize();
+
+        if (is_splitdir)
+        {
+            if (save_stat_collectors)
+                PLearn::save(splitdir / "train_stats.psave", train_stats);
+            if (save_learners)
+                PLearn::save(splitdir / "final_learner.psave", learner);
+        }
+    }
+    else
+        learner->build();
+
+    // This needs to be after the SetTrainingSet() / build() call to the
+    // learner.
+    const int outputsize = learner->outputsize();
+
+    // perf_eval_costs[setnum][perf_evaluator_name][costname] will contain value
+    // of the given cost returned by the given perf_evaluator on the given setnum
+    TVec< map<string, map<string, real> > > perf_eval_costs(dsets.length());
+
+    // Perform the test if required
+    if (should_test)
+    {
+        for (int setnum = 1; setnum < dsets.length(); setnum++)
+        {
+            VMat testset = dsets[setnum];
+            VMat test_outputs;
+            VMat test_costs;
+            VMat test_confidence;
+
+            PP<VecStatsCollector> test_stats = stcol[setnum];
+            const string setname = "test" + tostring(setnum);
+            if (is_splitdir && save_data_sets)
+                PLearn::save(splitdir / (setname + "_set.psave"), testset);
+
+            // QUESTION Why is this done so late? Can't it be moved
+            // somewhere earlier? At least before the save_data_sets?
+            if (is_splitdir)
+                force_mkdir(splitdir);
+
+            if (is_splitdir && save_test_outputs)
+                test_outputs = new FileVMatrix(splitdir / (setname + "_outputs.pmat"),
+                                               0, learner->getOutputNames());
+            else if (!perf_evaluators.empty())
+            {
+                // We don't want to save test outputs to disk, but we
+                // need them for pef_evaluators. So let's store them in
+                // a MemoryVMatrix
+                Mat data(testset.length(), outputsize);
+                data.resize(0, outputsize);
+                test_outputs = new MemoryVMatrix(data);
+                test_outputs->declareFieldNames(learner->getOutputNames());
+            }
+
+            if (is_splitdir)
+            {
+                if (save_test_costs)
+                    test_costs = new FileVMatrix(splitdir / (setname + "_costs.pmat"),
+                                                 0, learner->getTestCostNames());
+                if (save_test_confidence)
+                    test_confidence = new FileVMatrix(splitdir / (setname + "_confidence.pmat"),
+                                                      0, 2 * outputsize);
+            }
+
+            test_stats->forget();
+                    
+            if (testset->length() == 0)
+                PLWARNING("PTester:: test set %s is of length 0, costs will be set to -1",
+                          setname.c_str());
+
+            // Before each test set, reset the internal state of the learner
+            learner->resetInternalState();
+
+            learner->test(testset, test_stats, test_outputs, test_costs);
+            //if (reset_stats)
+            test_stats->finalize();
+            if (is_splitdir && save_stat_collectors)
+                PLearn::save(splitdir / (setname + "_stats.psave"), test_stats);
+
+            perf_evaluators_t::iterator it = perf_evaluators.begin();
+            const perf_evaluators_t::iterator itend = perf_evaluators.end();
+            while (it != itend)
+            {
+                PPath perf_eval_dir;
+                if (is_splitdir)
+                    perf_eval_dir = splitdir / setname / ("perfeval_" + it->first);
+                Vec perf_costvals = it->second->evaluatePerformance(learner, testset, test_outputs, perf_eval_dir);
+                TVec<string> perf_costnames = it->second->getCostNames();
+                if (perf_costvals.length()!=perf_costnames.length())
+                    PLERROR("vector of costs returned by performance evaluator differ in size with its vector of costnames");
+                map<string, real>& costmap = perf_eval_costs[setnum][it->first];
+                for (int costi = 0; costi < perf_costnames.length(); costi++)
+                    costmap[perf_costnames[costi]] = perf_costvals[costi];
+                ++it;
+            }
+            computeConfidence(testset, test_confidence);
+        }
+    }
+
+    Vec splitres(1 + nstats);
+    splitres[0] = splitnum;
+
+    for (int k = 0; k < nstats; k++)
+    {
+        // If we ask for a test-set that's beyond what's currently
+        // available, OR we are asking for test-statistics in
+        // train-only mode, then the statistic is MISSING_VALUE.
+        StatSpec& sp = statspecs[k];
+        if (sp.setnum>=stcol.length() ||
+            (! should_test && sp.setnum > 0))
+        {
+            splitres[k+1] = MISSING_VALUE;
+        }
+        else
+        {
+            string left, right;
+            split_on_first(sp.intstatname, ".",left,right);
+            if (right != "" && perf_evaluators.find(left) != perf_evaluators.end())
+            {
+                // looks like a cost from a performance evaluator
+                map<string, real>& costmap = perf_eval_costs[sp.setnum][left];
+                if (costmap.find(right) == costmap.end())
+                    PLERROR("No cost named %s appears to be returned by evaluator %s",
+                            right.c_str(), left.c_str());
+                splitres[k+1] = costmap[right];
+            }
+            else
+                // must be a cost from a stats collector
+                splitres[k+1] = stcol[sp.setnum]->getStat(sp.intstatname);
+        }
+    }
+
+    return splitres;
+}
+
+
+Vec PTester::perform(bool call_forget)
+{
+    if (!learner)
+        PLERROR("No learner specified for PTester.");
+    if (!splitter)
+        PLERROR("No splitter specified for PTester");
+
+    const int nstats = statnames_processed.length();
+    Vec global_result(nstats);
+
+    if (expdir != "")
+    {
+        if (pathexists(expdir) && enforce_clean_expdir)
+            PLERROR("Directory (or file) %s already exists.\n"
+                    "First move it out of the way.", expdir.c_str());
+        if (!force_mkdir(expdir))
+            PLERROR("In PTester Could not create experiment directory %s",expdir.c_str());
+        expdir = expdir.absolute() / "";
+
+        // Save this tester description in the expdir
+        if (save_initial_tester)
+            PLearn::save(expdir / "tester.psave", *this);
+    }
+
+    const int nsplits = splitter->nsplits();
+    if (nsplits > 1)
+        call_forget = true;
+
+    TVec<string> testcostnames = learner->getTestCostNames();
+    TVec<string> traincostnames = learner->getTrainCostNames();
+
+    // Global stats collector
+    PP<VecStatsCollector> global_statscol;
+    if (global_template_stats_collector)
+    {
+        CopiesMap copies;
+        global_statscol = global_template_stats_collector->deepCopy(copies);
+        global_statscol->build();
+        global_statscol->forget();
+    }
+    else
+        global_statscol = new VecStatsCollector();
+
+    // Stat specs
+    TVec<StatSpec> statspecs(nstats);
+    for(int k = 0; k < nstats; k++)
+    {
+        statspecs[k].init(statnames_processed[k]);
+    }
+
+    //no ACC stats for parallel perform
+    for (int k = 0; k < nstats; k++)
+        if (statspecs[k].extstat == "ACC")
+            PLERROR("ACC stats not supported anymore; please adapt PTester::perform to your needs.");
+
+
+    // The vmat in which to save global result stats specified in statnames
+    VMat global_stats_vm;
+    // The vmat in which to save per split result stats
+    VMat split_stats_vm;
+        
+    if (expdir != "" && report_stats)
+    {
+        saveStringInFile(expdir / "train_cost_names.txt", join(traincostnames, "\n") + "\n");
+        saveStringInFile(expdir / "test_cost_names.txt", join(testcostnames, "\n") + "\n");
+
+        global_stats_vm = new FileVMatrix(expdir / "global_stats.pmat",
+                                          1, nstats);
+        for (int k = 0; k < nstats; k++)
+            global_stats_vm->declareField(k, statspecs[k].statName());
+        global_stats_vm->saveFieldInfos();
+
+        split_stats_vm = new FileVMatrix(expdir / "split_stats.pmat",
+                                         0, 1 + nstats);
+        split_stats_vm->declareField(0, "splitnum");
+        for (int k = 0; k < nstats; k++)
+            split_stats_vm->declareField(k+1, statspecs[k].setname + "." + statspecs[k].intstatname);
+        split_stats_vm->saveFieldInfos();
+    }
+
+
+    PLearnService& service(PLearnService::instance());
+    TVec<PP<RemotePLearnServer> > servers= service.reserveServers(nsplits);
+    int nservers= servers.length();
+
+    if(nservers > 1)
+    {
+        map<PP<RemotePLearnServer>, int> testers_ids;
+        for (int splitnum= 0; splitnum < nservers && splitnum < nsplits; ++splitnum)
+            servers[splitnum]->newObjectAsync(*this);
+
+        int splits_called= 0;
+        //int testers_created= nservers;
+        for (int splits_done= 0; nservers > 0;)//splits_done < nsplits;)
+        {
+            PP<RemotePLearnServer> s= service.waitForResult();
+            if(testers_ids.find(s) == testers_ids.end())
+            {
+                if(splits_called < nsplits)
+                {
+                    int id;
+                    s->getResults(id);
+                    testers_ids[s]= id;
+                    s->callMethod(id, "perform1Split", splits_called);
+                    ++splits_called;
+                }
+                else
+                {
+                    s->getResults(); // tester deleted
+                    service.freeServer(s);
+                    --nservers;
+                }
+            }
+            else // get split result
+            {
+                Vec splitres;
+                s->getResults(splitres);
+                ++splits_done;
+                if (split_stats_vm)
+                {
+                    split_stats_vm->appendRow(splitres);
+                    split_stats_vm->flush();
+                }
+            
+                global_statscol->update(splitres.subVec(1, nstats));
+
+                if(splits_called < nsplits)//call for another split
+                {
+                    s->callMethod(testers_ids[s], "perform1Split", splits_called);
+                    ++splits_called;
+                }
+                else
+                {
+                    s->deleteObjectAsync(testers_ids[s]);
+                    testers_ids.erase(s);
+                }
+            }
+        }
+    }
+    else
+        for (int splitnum= 0; splitnum < nsplits; ++splitnum)
+        {
+            Vec splitres= perform1Split(splitnum);
+            
+            if (split_stats_vm)
+            {
+                split_stats_vm->appendRow(splitres);
+                split_stats_vm->flush();
+            }
+            
+            global_statscol->update(splitres.subVec(1, nstats));
+        }
+
+
+    global_statscol->finalize();
+    for (int k = 0; k < nstats; k++)
+        global_result[k] = global_statscol->getStats(k).getStat(statspecs[k].extstat);
 
     if (global_stats_vm)
         global_stats_vm->appendRow(global_result);

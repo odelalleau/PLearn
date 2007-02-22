@@ -69,6 +69,22 @@ PStream& PL_LogPluginPStream::getStream(
     return m_pstream;
 }
 
+//#####  Server Plugin Implementation  #######################################
+
+PStream& PL_LogPluginServer::getStream(
+    PStream::mode_t outmode, const string& module_name, int requested_verbosity)
+{
+    //gets everything as raw ascii, outputs it in desired format.
+    //m_pstream.setOutMode(outmode);
+    m_sstream= new ServerLogStreamBuf(m_pstream, module_name, requested_verbosity);
+    m_sstream.setOutMode(outmode);
+    //m_sstream.setOutMode(PStream::raw_ascii);
+    return m_sstream;
+}
+
+
+
+
 
 //#####  LogInterceptorPStreamBuf  ############################################
 

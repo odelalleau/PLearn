@@ -15,7 +15,7 @@ __all__ = [
     "Task",
     
     # Functions
-    "get_ssh_machines", "launch_task", "set_logdir",
+    "get_ssh_machines", "launch_task", "launch_server", "set_logdir",
 
     # Classes
     "ArgumentsOracle", "Dispatch"
@@ -91,8 +91,13 @@ def get_ssh_machines():
 
 def launch_task(argv, wait=False):
     assert Task is not None
-    task = Task( argv )
+    task = Task( argv)
     task.launch( wait )
+
+def launch_server(argv):
+    assert Task is not None
+    task = Task( argv)
+    task.launchServer()
 
 def set_logdir(logdir):
     """Instead of writing to stdout, tasks will be logged in a file within I{logdir}."""
@@ -122,6 +127,7 @@ class EmptyMachineListError( Exception ): pass
 
 class TaskType:
     _child_processes = {}
+    _launched_servers_info= []
 
     def count( cls ):
         """Return the number of uncompleted tasks."""
@@ -129,6 +135,7 @@ class TaskType:
     count = classmethod( count )
 
     def kill_all_tasks( cls ):
+        cls.kill_launched_servers()
         task_list = cls._child_processes.values()
         for task in task_list:
             try:
@@ -143,6 +150,13 @@ class TaskType:
         assert not cls._child_processes
     kill_all_tasks = classmethod(kill_all_tasks)
 
+    def kill_launched_servers( cls ):
+        for (host, port, pid) in cls._launched_servers_info:
+            cmd= "ssh %s kill %d"%(host, pid)
+            os.system(cmd)
+            logging.info("Killed process %d on %s [%s]"%(pid, host, cmd))
+    kill_launched_servers= classmethod(kill_launched_servers)
+
     def availableMachinesCount( cls ):
         """Returns the number of machines currently available for cluster job dispatch."""
         avail = 0
@@ -151,8 +165,34 @@ class TaskType:
         return avail
     availableMachinesCount = classmethod(availableMachinesCount)
 
+    def getLaunchedServersInfo( cls ):
+        """Returns a list of triples (machine, port, pid) 
+        e.g.: [('midgard', 41492, 2677),('odin', 48972, 1830)]
+        """
+        return cls._launched_servers_info
+    getLaunchedServersInfo= classmethod(getLaunchedServersInfo)
+
+    def getLaunchedServerInfo( cls, child_fd ):
+        """Reads machine name, port and pid for a launched PLearn server.
+        returns a triple (machine, port, pid)
+        e.g.: ('midgard', 41492, 2677)
+        """
+        got_info= False
+        while not got_info:
+            s= child_fd.readline()
+            if s=='':
+                print "Cannot get info from server!"
+                sys.exit()
+            ss= s.split(' ')
+            if ss[0] == "PLEARN_SERVER_TCP":
+                info= (ss[1], int(ss[2]), int(ss[3]))
+                got_info= True
+        cls._launched_servers_info+= [info]
+        return info
+    getLaunchedServerInfo= classmethod(getLaunchedServerInfo)
+
     def select( cls ):
-        """Finds, frees and returns ompleted tasks."""
+        """Finds, frees and returns completed tasks."""
         if cls.count() == 0:
             logging.debug("* Raising EmptyTaskListError")
             raise EmptyTaskListError()
@@ -209,6 +249,11 @@ class TaskType:
     def __init__(self, argv):
         self.argv = argv
         
+    def launchServer(self):
+        """Launch a PLearn server"""
+        self.launch(wait= False)
+        Task.getLaunchedServerInfo(self.process.fromchild)
+
     def launch(self, wait=False):
         """Launch process on an available machine"""
         try:
@@ -223,13 +268,14 @@ class TaskType:
                 self.logfile.write( task_signature )
 
             logging.info(task_signature)            
+            self._child_processes[ self.process.fromchild ] = self
             if wait:
                 logging.debug(
                     "* TaskType.launch() waits for process (id=%d)"%self.process.pid )
                 self.process.wait( )
                 self.free()
             else:
-                self._child_processes[ self.process.fromchild ] = self
+                #self._child_processes[ self.process.fromchild ] = self
                 logging.debug( "* children %d (%d)"
                                %(self.process.pid,len(self._child_processes)) )
                 
@@ -245,6 +291,7 @@ class TaskType:
     def free(self):
         if hasattr(self, 'process'):
             logging.debug("* Freeing task with pid=%d"%self.process.pid)
+
             Self = self.__class__._child_processes.pop(self.process.fromchild)
             assert Self == self
         
@@ -259,6 +306,7 @@ class SshTask( TaskType ):
     _machines = get_ssh_machines()
     _loadavg  = {}
     _available_machines = None
+    _max_load= 1.0
     
     def getLoadAvg(cls, machine):
         #print "\nQuery to", machine
@@ -282,7 +330,7 @@ class SshTask( TaskType ):
     def listAvailableMachines(cls):
         for m in cls._machines:
             loadavg = cls.getLoadAvg(m)
-            max_loadavg = MAX_LOADAVG.get(m, 1.0)
+            max_loadavg = MAX_LOADAVG.get(m, cls._max_load)
             #print "Load %f / %f"%(loadavg, max_loadavg)
             if loadavg < max_loadavg:
                 # Register the load average *plus* one, taking in account

@@ -189,6 +189,9 @@ public:
      *  statnames
      */
     Vec perform(bool call_forget=true);
+    Vec perform1Split(int splitnum);
+
+    Vec oldperform(bool call_forget=true);
 
     //! Transforms a shallow copy into a deep copy
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);

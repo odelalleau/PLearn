@@ -3,6 +3,7 @@
 // Poll.cc
 //
 // Copyright (C) 2005 Christian Hudon 
+// Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -43,7 +44,9 @@
 
 #include "Poll.h"
 #include <plearn/base/plerror.h>
+#include <plearn/base/PrUtils.h>
 #include <plearn/io/PrPStreamBuf.h>
+#include <plearn/math/random.h>
 
 namespace PLearn {
 using namespace std;
@@ -54,33 +57,69 @@ void Poll::setStreamsToWatch(const vector<PStream>& streams) {
 
     int i = 0;
     for (vector<PStream>::const_iterator it = streams.begin();
-         it != streams.end(); ++it, ++i) {
+         it != streams.end(); ++it, ++i) 
+    {
         PStreamBuf* st = *it;
         PrPStreamBuf* pr_st = dynamic_cast<PrPStreamBuf*>(st);
         if (!pr_st)
             PLERROR("Poll::setStreamsToWatch: only PrPStreamBuf streams supported!");
 
         m_streams_to_watch.push_back(*it);
-        m_poll_descriptors[i].fd = pr_st->out;
+        m_poll_descriptors[i].fd = pr_st->in;
         m_poll_descriptors[i].in_flags = PR_POLL_READ;
     }
+
 }
 
-int Poll::waitForEvents(int timeout) {
+int Poll::waitForEvents(int timeout, bool shuffle_events_) 
+{
     if (m_poll_descriptors.size() == 0)
         PLERROR("Poll::waitforEvents: called with no streams to watch.");
-    
+
+    shuffle_events= shuffle_events_;
+    if(shuffle_events)//shuffle index vec if necessary
+    {
+        shuffled_index= TVec<int>(0, m_poll_descriptors.size()-1, 1);
+        shuffleElements(shuffled_index);
+    }
+
     m_next_unexamined_event = 0;
-    return PR_Poll(&m_poll_descriptors[0], PRIntn(m_poll_descriptors.size()),
-                   timeout);
+
+    //first, check for non-empty buffers (ready to read)
+    int nevents= 0;
+    for(unsigned int i= 0; i < m_poll_descriptors.size(); ++i)
+        if(!m_streams_to_watch[i]->inbufEmpty())
+            ++nevents;
+
+    if(nevents > 0)//if we already have some events, poll w/ no wait
+        timeout= PR_INTERVAL_NO_WAIT;
+
+    //poll underlying streams
+    last_n_poll_events= PR_Poll(&m_poll_descriptors[0], PRIntn(m_poll_descriptors.size()), timeout);
+
+    if(last_n_poll_events < 0)
+        PLERROR((string("Poll::waitForEvents: poll error: ") + getPrErrorString()).c_str());
+
+    nevents= 0;// now count _all_ events (non-empty buffers + stream polling)
+    for(unsigned int i= 0; i < m_poll_descriptors.size(); ++i)
+        if ((last_n_poll_events > 0 
+             && m_poll_descriptors[i].out_flags & PR_POLL_READ)
+            || !m_streams_to_watch[i]->inbufEmpty())
+            ++nevents;
+
+    return nevents;
 }
 
 PStream Poll::getNextPendingEvent() {
-    while (m_next_unexamined_event < m_poll_descriptors.size()) {
-        const int i = m_next_unexamined_event++;
-        if (m_poll_descriptors[i].out_flags & PR_POLL_READ) {
+    while (m_next_unexamined_event < m_poll_descriptors.size()) 
+    {
+        int i = m_next_unexamined_event++;
+        if(shuffle_events)
+            i= shuffled_index[i];
+        if ((last_n_poll_events > 0 
+             && m_poll_descriptors[i].out_flags & PR_POLL_READ)
+            || !m_streams_to_watch[i]->inbufEmpty())
             return m_streams_to_watch[i];
-        }
     }
 
     PLERROR("Poll::getNextPendingEvent: called with no more pending events!");

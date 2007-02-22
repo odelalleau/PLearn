@@ -77,6 +77,7 @@ PStream openSocket(const string& hostname, int port,
     st.setMode(io_formatting);
   
     PRFileDesc* socket = PR_NewTCPSocket();
+
     if (!socket)
         PLERROR("openSocket: socket creation failed! (Maybe you ran out of file descriptors?)");
 
@@ -96,9 +97,10 @@ PStream openSocket(const string& hostname, int port,
         if (PR_Connect(socket, &address, PR_SecondsToInterval(timeout))
                                                                 == PR_SUCCESS)
         {
-            st = new PrPStreamBuf(socket, socket, true, true);
-            return st;
-        } else {
+            return new PrPStreamBuf(socket, socket, true, true);
+        } 
+        else 
+        {
 #ifdef BOUNDCHECK
             string ip_adr = "Unknown IP address";
             if (PR_NetAddrToString(&address, buf, sizeof(buf)) == PR_SUCCESS)

@@ -55,6 +55,7 @@
 
 // From Plearn
 #include "PStream.h"
+#include "ServerLogStreamBuf.h"
 
 namespace PLearn {
 
@@ -115,6 +116,25 @@ public:
 
 protected:
     PStream m_pstream;                       //!< Actual stream to use
+};
+
+
+/**
+ *  Server implementation of PL_LogPlugin :: outputs to client through opened socket
+ */
+class PL_LogPluginServer : public PL_LogPlugin
+{
+public:
+    PL_LogPluginServer(PStream pstream)
+        : m_pstream(pstream)
+    { }
+    
+    virtual PStream& getStream(PStream::mode_t outmode, const string& module_name,
+                               int requested_verbosity);
+
+protected:
+    PStream m_pstream;                      
+    PStream m_sstream;                      
 };
 
 

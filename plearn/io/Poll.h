@@ -3,6 +3,7 @@
 // Poll.h
 //
 // Copyright (C) 2005 Christian Hudon 
+// Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -47,7 +48,7 @@
 #include <vector>
 #include <nspr/prio.h>
 #include <plearn/io/PStream.h>
-
+#include <plearn/math/TVec.h>
 
 namespace PLearn {
 using namespace std;
@@ -61,7 +62,7 @@ class Poll {
 public:
     void setStreamsToWatch(const vector<PStream>& streams);
 
-    int waitForEvents(int timeout = 0);
+    int waitForEvents(int timeout = 0, bool shuffle_events_= false);
 
     PStream getNextPendingEvent();
 
@@ -76,6 +77,10 @@ protected:
     /** Counter used to iterate through the m_poll_descriptors
         in getNextPendingEvent */
     unsigned int m_next_unexamined_event;
+
+    int last_n_poll_events; //nb. events for the last PR_Poll; indicates wether out_flags s/b used.
+    bool shuffle_events;
+    TVec<int> shuffled_index;
 };
 
 } // end of namespace PLearn

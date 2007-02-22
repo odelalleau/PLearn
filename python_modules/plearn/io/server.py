@@ -36,6 +36,8 @@ import os, socket, string, sys
 from threading import Timer
 from thread    import interrupt_main
 
+from plearn.utilities.progress import LineOutputProgressBar
+
 from plearn.pyplearn import *
 import plearn.io.serialize
 
@@ -58,6 +60,20 @@ def connect_to_plearn_server(hostname, port, logger=None):
     s.connect((hostname, port))
     io = s.makefile()
     return RemotePLearnServer(io, io, logger=logger)
+
+
+def default_log_callback(module, vlevel, message):
+    print ("SERVER-LOG: [" + module +"] "+ str(vlevel) + ' ' + message)
+    
+def default_pbar_callback(pbars, cmd, ptr, pos, title):
+    if cmd=='A':
+        pbars[ptr]= LineOutputProgressBar(title, pos)
+    else:
+        pbars[ptr].update(pos)
+        if cmd == 'K':
+            del(pbars[ptr])
+
+
         
 class RemotePLearnServer:
 
@@ -96,6 +112,7 @@ class RemotePLearnServer:
         self.clear_maps = True
         self.dbg_dump = False
         self.closed = False
+        self.pbars= {}
 
         ## Ensure that the server is responding. Otherwise raise an error
         if not self.isAlive():
@@ -264,7 +281,39 @@ class RemotePLearnServer:
         self.clearMaps()
         self.logged_write('!M '+str(objid)+' '+methodname+' '+str(nargs)+' ')
 
+
+
+    def waitForResult(self, log_callback= default_log_callback, pbar_callback= default_pbar_callback):
+        while True:
+            self.io.skip_blanks_and_comments()
+            c = self.io.peek()
+            if c=='*': #log or progress message
+                c = self.io.get()#get '*'
+                c = self.io.get()
+                if c == 'L': # Log message
+                    module= self.io.read_string()
+                    vlevel= self.io.read_int()
+                    message= self.io.read_string()
+                    log_callback(module, vlevel, message)
+                elif c == 'P': # Progress message
+                    command= self.io.get()
+                    ptr= self.io.read_int()
+                    pos= 0
+                    title= ''
+                    if command != 'K':
+                        pos= self.io.read_int()
+                    if command == 'A':
+                        title= self.io.read_string()
+                        title= '(pb#'+str(ptr)+') '+title
+                    pbar_callback(self.pbars, command, ptr, pos, title)
+                else:
+                    raise TypeError("Expected *L or *P, but read *"+c)
+            else:
+                return
+        
+
     def getResultsCount(self):
+        self.waitForResult()
         self.io.skip_blanks_and_comments()
         c = self.io.get()
         if c!='!':
@@ -311,7 +360,7 @@ class RemotePLearnServer:
 
     def callMethod(self, objid, methodname, *args):
         self.sendMethodCallHeader(objid, methodname, len(args))
-        # print 'sending ARGS', args
+        #print 'sending ARGS', args
         self.logged_write_args(args)
 
         if self.dbg_dump:

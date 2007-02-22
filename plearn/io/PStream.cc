@@ -40,6 +40,7 @@
 #include <plearn/math/pl_math.h>
 #include <nspr/prio.h>
 #include <ctype.h>
+#include <plearn/io/pl_log.h>
 
 
 // This is probably an ugly hack to get it to work under Visual Studio.
@@ -174,20 +175,20 @@ PStream::PStream()
     :inherited(0),
      inmode(plearn_ascii), 
      outmode(plearn_ascii), 
-     implicit_storage(true),
-     compression_mode(compr_none),
      format_float (format_float_default),
-     format_double(format_double_default)
+     format_double(format_double_default),
+     implicit_storage(true),
+     compression_mode(compr_none)
 {}
 
 PStream::PStream(streambuftype* sb)
     :inherited(sb),
      inmode(plearn_ascii), 
      outmode(plearn_ascii), 
-     implicit_storage(true),
-     compression_mode(compr_none),
      format_float (format_float_default),
-     format_double(format_double_default)
+     format_double(format_double_default),
+     implicit_storage(true),
+     compression_mode(compr_none)
 {}
 
 
@@ -196,10 +197,10 @@ PStream::PStream(istream* pin_, bool own_pin_)
     :inherited(new StdPStreamBuf(pin_,own_pin_)),
      inmode(plearn_ascii), 
      outmode(plearn_ascii),
-     implicit_storage(true),
-     compression_mode(compr_none),
      format_float (format_float_default),
-     format_double(format_double_default)
+     format_double(format_double_default),
+     implicit_storage(true),
+     compression_mode(compr_none)
 {}
 //! ctor. from an ostream (O)
 
@@ -207,10 +208,10 @@ PStream::PStream(ostream* pout_, bool own_pout_)
     :inherited(new StdPStreamBuf(pout_,own_pout_)),
      inmode(plearn_ascii), 
      outmode(plearn_ascii),
-     implicit_storage(true),
-     compression_mode(compr_none),
      format_float (format_float_default),
-     format_double(format_double_default)
+     format_double(format_double_default),
+     implicit_storage(true),
+     compression_mode(compr_none)
 {}
 
 //! ctor. from an iostream (IO)
@@ -218,10 +219,10 @@ PStream::PStream(iostream* pios_, bool own_pios_)
     :inherited(new StdPStreamBuf(pios_,own_pios_)),
      inmode(plearn_ascii), 
      outmode(plearn_ascii),
-     implicit_storage(true),
-     compression_mode(compr_none),
      format_float (format_float_default),
-     format_double(format_double_default)
+     format_double(format_double_default),
+     implicit_storage(true),
+     compression_mode(compr_none)
 {}
 
 //! ctor. from an istream and an ostream (IO)
@@ -229,10 +230,10 @@ PStream::PStream(istream* pin_, ostream* pout_, bool own_pin_, bool own_pout_)
     :inherited(new StdPStreamBuf(pin_,pout_,own_pin_,own_pout_)),
      inmode(plearn_ascii), 
      outmode(plearn_ascii),
-     implicit_storage(true),
-     compression_mode(compr_none),
      format_float (format_float_default),
-     format_double(format_double_default)
+     format_double(format_double_default),
+     implicit_storage(true),
+     compression_mode(compr_none)
 {}
 
 //! dtor.
@@ -1991,7 +1992,7 @@ IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(short)
 
 //! The binread_ for float and double are special
 
-    void binread_(PStream& in, double* x, unsigned int n, unsigned char typecode)
+void binread_(PStream& in, double* x, unsigned int n, unsigned char typecode)
 { 
     if(typecode==TypeTraits<double>::little_endian_typecode())
     {

@@ -113,11 +113,22 @@ void ServerCommand::run(const vector<string>& args)
             myhostname = buf;
 #endif
 
+        PRNetAddr assigned_addr;
+        PR_InitializeNetAddr(PR_IpAddrAny, PR_htons(0), &assigned_addr);
+        st= PR_GetSockName(sock, &assigned_addr);
+        if(port==0 && st==PR_SUCCESS)
+            port= PR_ntohs(assigned_addr.inet.port);
+
         pout << "PLEARN_SERVER_TCP " << myhostname << " " << port << " " << mypid << endl;
         NORMAL_LOG << "PLEARN_SERVER STARTING IN TCP MODE ON "  << myhostname << ", PORT " << port << ", PID " << mypid << endl;
-      
+
         for (bool running = true; running; ) {
             NORMAL_LOG << "\nPLEARN_SERVER WAITING FOR CONNECTION"  << endl;
+            
+            ///***///***
+            pout << " JBL " << endl;
+            ///***///***
+
             st = PR_Listen(sock,0);
             if(st!=PR_SUCCESS)
                 PLERROR("serverCommand: listen on socket failed");
@@ -131,6 +142,10 @@ void ServerCommand::run(const vector<string>& args)
 
             PLearnServer server(io);
             running = server.run();
+            io.flush();
+            if (PR_Close(fd) != PR_SUCCESS)
+                PLERROR("ServerCommand: couldn't close client socket from %s!", buf);
+
         }
         NORMAL_LOG << "PLEARN_SERVER CLOSING SOCKET" << endl;
         if (PR_Shutdown(sock, PR_SHUTDOWN_BOTH) != PR_SUCCESS)

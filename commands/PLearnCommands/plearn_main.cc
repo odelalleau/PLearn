@@ -158,6 +158,8 @@ static string global_options( vector<string>& command_line)
         verbosity_value =
             PL_Log::vlevelFromString( command_line[verbosity_value_pos] );
     }
+    // set verbosity level now so that it is valid for the rest of global_options
+    PL_Log::instance().verbosity( verbosity_value );
 
     // Option to enable logging for the specified modules, specified as
     // --enable-logging module1,module2,module3,... i.e. as a comma-separated
@@ -235,7 +237,6 @@ static string global_options( vector<string>& command_line)
         }
     command_line.resize( cleaned ); // Truncating the end of the vector.
   
-    PL_Log::instance().verbosity( verbosity_value );
     if (no_version_pos == -1)
         output_version( );
 

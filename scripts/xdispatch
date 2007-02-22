@@ -1,0 +1,80 @@
+#!/usr/bin/python2.3
+#
+# xdispatch: dispatch utility for parallel PLearn
+#
+# Copyright 2007, Apstat Technologies, inc.
+# All rights reserved.
+
+from optparse import OptionParser
+from plearn.parallel.dispatch import *
+import tempfile
+import os
+import time
+
+#
+# Main
+#
+
+def main():
+    parser = OptionParser()
+    parser.add_option('-n', '--num-available-machines',
+                      help='Prints the number of available machines',
+                      action='store_true', default=False)
+
+    parser.add_option('-l', '--max-load', type= "float",
+                      dest= "max_load",
+                      help='Sets the default maximum load',
+                      default=2.0)
+
+    parser.add_option('-s', '--nb-servers', type="int",
+                      dest= "nb_servers",
+                      help='Number of servers to launch (maximum)',
+                      default=1)
+
+    parser.add_option('-m', '--min-nb-servers', type="int",
+                      dest= "min-nb_servers",
+                      help='Number of servers to launch (minimum)',
+                      default=1)
+
+    
+    (options, args) = parser.parse_args()
+
+    #print options
+    #print "==="
+    #print args
+
+    set_logdir('/home/saintmlx/xdispatch-log/')
+
+    Task._max_load= options.max_load
+
+    #xdispatch -l 3.0 -s 25 inslearn exp.pyplearn
+    #25x -> ssh distant_machine inslearn server 0
+    #1x  -> inslearn --servers serv_file exp.pyplearn
+
+    if options.num_available_machines:
+        print Task.availableMachinesCount()
+    elif args:
+        try:
+            plearn_command= args[0]
+            for i in xrange(options.nb_servers):
+                #launch_server( ['time',plearn_command, '--verbosity 999', 'server', '0'] )
+                launch_server( ['time',plearn_command, 'server', '0'] )
+
+            tf, fname= tempfile.mkstemp(suffix= '.plserv', prefix= '.plserv_', dir= '/tmp/')
+
+            for si in Task.getLaunchedServersInfo():
+                print si
+                os.write(tf, "%s %d %d\n"%si)
+            os.close(tf)
+
+            print "Servers listed in: ", fname
+            cmd= plearn_command + ' --servers ' + fname + ' ' + ' '.join(args[1:])
+            print cmd
+
+            os.system(cmd)
+
+        finally:
+            Task.kill_all_tasks()
+
+if __name__ == '__main__':
+    main()

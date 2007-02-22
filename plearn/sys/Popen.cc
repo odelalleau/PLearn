@@ -54,7 +54,7 @@
 namespace PLearn {
 using namespace std;
 
-void Popen::launch(const string& program, const vector<string>& arguments)
+void Popen::launch(const string& program, const vector<string>& arguments, bool redirect_stderr)
 {
     // Create pipes to communicate to/from child process.
     PRFileDesc* stdout_child;
@@ -73,10 +73,24 @@ void Popen::launch(const string& program, const vector<string>& arguments)
                 getPrErrorString().c_str());
     }
 
+    PRFileDesc* stderr_child;
+    PRFileDesc* stderr_parent;
+
+    if(redirect_stderr)
+        if (PR_CreatePipe(&stderr_child, &stderr_parent) != PR_SUCCESS) 
+        {
+            PR_Close(stderr_child);
+            PR_Close(stderr_parent);
+            PLERROR("Popen: error creating third (err) pipe pair. (%s)",
+                    getPrErrorString().c_str());
+        }
+
     // Set up redirection of stdin/stdout for the (future) child process.
     PRProcessAttr* process_attr = PR_NewProcessAttr();
     PR_ProcessAttrSetStdioRedirect(process_attr, PR_StandardInput, stdin_child);
     PR_ProcessAttrSetStdioRedirect(process_attr, PR_StandardOutput, stdout_child);
+    if(redirect_stderr)
+        PR_ProcessAttrSetStdioRedirect(process_attr, PR_StandardError, stderr_child);
 
     // Set up argument list for the CreateProcess call. args[0] shoud be the
     // name of the program. args[1]...arg[n] hold the actual arguments,
@@ -117,11 +131,15 @@ void Popen::launch(const string& program, const vector<string>& arguments)
     // Important: close unused files in the parent.
     PR_Close(stdin_child);
     PR_Close(stdout_child);
+    if(redirect_stderr)
+        PR_Close(stderr_child);
   
     delete[] args;                        
     if (!process) {
         PR_Close(stdin_parent);
         PR_Close(stdout_parent);
+        if(redirect_stderr)
+            PR_Close(stderr_parent);
         PLERROR("Popen: could not create subprocess for command '%s'. (%s)",
                 program.c_str(), getPrErrorString().c_str());
     }
@@ -130,10 +148,16 @@ void Popen::launch(const string& program, const vector<string>& arguments)
     in = new PrPStreamBuf(stdout_parent, stdin_parent);
     in.setBufferCapacities(0, 0, 0);
     out = in;
+
+    if(redirect_stderr)
+    {    
+        err= new PrPStreamBuf(stderr_parent);
+        err.setBufferCapacities(0, 0, 0);
+    }
 }
 
 
-void Popen::launch(const string& commandline)
+void Popen::launch(const string& commandline, bool redirect_stderr)
 {
     // Parse command line into individual argments
     PStream s = openString(string("[") + commandline + "]",
@@ -144,7 +168,7 @@ void Popen::launch(const string& commandline)
     const string command = command_and_args[0];
     const vector<string> args(command_and_args.begin()+1,
                               command_and_args.end());
-    launch(command, args);
+    launch(command, args, redirect_stderr);
 }
 
 
@@ -172,9 +196,9 @@ Popen::~Popen()
 }
 
   
-vector<string> execute(const string& command)
+vector<string> execute(const string& command, bool redirect_stderr)
 {
-    Popen p(command);
+    Popen p(command, redirect_stderr);
     vector<string> result;
     while(p.in)
     {
