@@ -112,7 +112,8 @@ public:
                              const Vec& output_gradient);
 
     virtual void bpropUpdate(const Vec& input, const Vec& output,
-                             Vec& input_gradient, const Vec& output_gradient);
+                             Vec& input_gradient, const Vec& output_gradient,
+                             bool accumulate=false);
 
     virtual void bbpropUpdate(const Vec& input, const Vec& output,
                               const Vec& output_gradient,

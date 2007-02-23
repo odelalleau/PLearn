@@ -126,6 +126,9 @@ public:
     //! Number of layers
     int n_layers;
 
+    //! whether to do things by stages, including fine-tuning, or on-line
+    bool online;
+
     //#####  Not Options  #####################################################
 
     //! Timer for monitoring the speed
@@ -184,6 +187,8 @@ public:
     // (PLEASE IMPLEMENT IN .cc)
     virtual TVec<std::string> getTrainCostNames() const;
 
+
+    void onlineStep( const Vec& input, const Vec& target );
 
     void greedyStep( const Vec& input, const Vec& target, int index );
 

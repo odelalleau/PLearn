@@ -137,13 +137,14 @@ public:
     //! and update the bias (and possibly the quadratic term)
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              Vec& input_gradient,
-                             const Vec& output_gradient) = 0 ;
+                             const Vec& output_gradient,
+                             bool accumulate=false) = 0 ;
 
     //! back-propagates the output gradient to the input and the bias
     virtual void bpropUpdate(const Vec& input, const Vec& rbm_bias,
                              const Vec& output,
                              Vec& input_gradient, Vec& rbm_bias_gradient,
-                             const Vec& output_gradient) ;
+                             const Vec& output_gradient);
 
     //! Computes the negative log-likelihood of target given the
     //! internal activations of the layer

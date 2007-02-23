@@ -209,8 +209,10 @@ void RBMClassificationModule::bpropUpdate(const Vec& input, const Vec& output,
 //! this version allows to obtain the input gradient as well
 void RBMClassificationModule::bpropUpdate(const Vec& input, const Vec& output,
                                           Vec& input_gradient,
-                                          const Vec& output_gradient)
+                                          const Vec& output_gradient,
+                                          bool accumulate)
 {
+    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     // size checks
     PLASSERT( input.size() == input_size );
     PLASSERT( output.size() == output_size );

@@ -120,8 +120,11 @@ public:
 
     //! this version allows to obtain the input gradient as well
     //! N.B. THE DEFAULT IMPLEMENTATION JUST RAISES A PLERROR.
+    //! The flag indicates whether the input_gradients gets
+    //! accumulated into or set with the computed derivatives.
     virtual void bpropUpdate(const Vec& input, const Vec& output,
-                             Vec& input_gradient, const Vec& output_gradient);
+                             Vec& input_gradient, const Vec& output_gradient,
+                             bool accumulate=false);
 
     //! Similar to bpropUpdate, but adapt based also on the estimation
     //! of the diagonal of the Hessian matrix, and propagates this
@@ -137,11 +140,14 @@ public:
                               const Vec& output_diag_hessian);
 
     //! this version allows to obtain the input gradient and diag_hessian
+    //! The flag indicates whether the input_gradient and input_diag_hessian gets
+    //! accumulated into or set with the computed derivatives.
     virtual void bbpropUpdate(const Vec& input, const Vec& output,
                               Vec& input_gradient,
                               const Vec& output_gradient,
                               Vec& input_diag_hessian,
-                              const Vec& output_diag_hessian);
+                              const Vec& output_diag_hessian,
+                              bool accumulate=false);
 
     //! reset the parameters to the state they would be BEFORE starting
     //! training.  Note that this method is necessarily called from

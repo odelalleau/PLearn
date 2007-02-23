@@ -87,7 +87,8 @@ public:
     //! this version is provided for compatibility with the parent class.
     virtual void bpropUpdate(const Vec& input_and_target, const Vec& output,
                              Vec& input_and_target_gradient,
-                             const Vec& output_gradient);
+                             const Vec& output_gradient,
+                             bool accumulate=false);
 
     //! Similar to bpropUpdate, but adapt based also on the estimation
     //! of the diagonal of the Hessian matrix, and propagates this back.
@@ -102,8 +103,8 @@ public:
                               Vec& input_and_target_gradient,
                               const Vec& output_gradient,
                               Vec& input_and_target_diag_hessian,
-                              const Vec& output_diag_hessian);
-
+                              const Vec& output_diag_hessian,
+                              bool accumulate=false);
     virtual void forget();
 
     //! Indicates the name of the computed costs

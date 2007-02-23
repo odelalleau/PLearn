@@ -128,8 +128,10 @@ void RBMBinomialLayer::fprop( const Vec& input, const Vec& rbm_bias,
 
 void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
                                    Vec& input_gradient,
-                                   const Vec& output_gradient)
+                                   const Vec& output_gradient,
+                                   bool accumulate)
 {
+    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     PLASSERT( input.size() == size );
     PLASSERT( output.size() == size );
     PLASSERT( output_gradient.size() == size );

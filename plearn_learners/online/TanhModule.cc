@@ -108,8 +108,11 @@ void TanhModule::bpropUpdate(const Vec& input, const Vec& output,
 
 // Simply propagates output_gradient to input_gradient
 void TanhModule::bpropUpdate(const Vec& input, const Vec& output,
-                             Vec& input_gradient, const Vec& output_gradient)
+                             Vec& input_gradient, const Vec& output_gradient,
+                             bool accumulate)
 {
+    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
+
     int in_size = input.size();
     int out_size = output.size();
     int og_size = output_gradient.size();
@@ -164,8 +167,11 @@ void TanhModule::bbpropUpdate(const Vec& input, const Vec& output,
                               Vec& input_gradient,
                               const Vec& output_gradient,
                               Vec& input_diag_hessian,
-                              const Vec& output_diag_hessian)
+                              const Vec& output_diag_hessian,
+                              bool accumulate)
 {
+    PLASSERT_MSG(!accumulate,"Implementation of bbpropUpdate cannot yet handle accumulate=false");
+
     int odh_size = output_diag_hessian.size();
 
     // size check

@@ -58,6 +58,7 @@ DeepBeliefNet::DeepBeliefNet() :
     // grad_weight_decay( 0. ),
     use_classification_cost( true ),
     n_layers( 0 ),
+    online ( false ), 
     final_module_has_learning_rate( false ),
     final_cost_has_learning_rate( false ),
     nll_cost_index( -1 ),
@@ -99,8 +100,12 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
 
     declareOption(ol, "training_schedule", &DeepBeliefNet::training_schedule,
                   OptionBase::buildoption,
-                  "Number of examples to use during each phase of learning:\n"
-                  "first the greedy phases, and then the gradient descent.\n");
+                  "Number of examples before starting each phase except the first\n"
+                  "(first the greedy phases, and then the fine-tuning phase).\n"
+                  "For example for 2 hidden layers, with 1000 examples in each\n"
+                  "greedy phase, this option should be [1000 2000] and the last\n"
+                  "nstages - 2000 examples will be used for fine-tuning.\n"
+                  "When online = true, this vector is ignored and should be empty.\n");
 
     declareOption(ol, "use_classification_cost",
                   &DeepBeliefNet::use_classification_cost,
@@ -173,6 +178,11 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   "(except the first one) of the RBM. These costs are not\n"
                   "back-propagated to previous layers.\n");
 
+    declareOption(ol, "online", &DeepBeliefNet::online,
+                  OptionBase::buildoption,
+                  "If true then all unsupervised training stages (as well as the fine-tuning stage)\n"
+                  "are done simultaneously.\n");
+
     declareOption(ol, "n_layers", &DeepBeliefNet::n_layers,
                   OptionBase::learntoption,
                   "Number of layers");
@@ -211,7 +221,7 @@ void DeepBeliefNet::build_()
     // Initialize some learnt variables
     n_layers = layers.length();
 
-    if( training_schedule.length() != n_layers-1 )
+    if( training_schedule.length() != n_layers-1  && training_schedule.length()!=0)
     {
         MODULE_LOG << "training_schedule.length() != n_layers-1, resizing and"
             " zeroing" << endl;
@@ -515,148 +525,173 @@ void DeepBeliefNet::train()
 
     PP<ProgressBar> pb;
 
+    real train_recons_error = 0.0;
+
     // clear stats of previous epoch
     train_stats->forget();
 
-    /***** initial greedy training *****/
-    for( int i=0 ; i<n_layers-1 ; i++ )
+    if (online)
+        // train all layers simultaneously AND fine-tuning as well!
     {
-        if( use_classification_cost && i == n_layers-2 )
-            break; // we will do a joint supervised learning instead
+        if( report_progress && stage < nstages )
+            pb = new ProgressBar( "Training "+classname(),
+                                  nstages - stage );
 
-        MODULE_LOG << "Training connection weights between layers " << i
-            << " and " << i+1 << endl;
+        for (int i=0; i<n_layers;i++)
+        {
+            layers[i]->setLearningRate( cd_learning_rate );
+            connections[i]->setLearningRate( cd_learning_rate );
+        }
 
-        int end_stage = min( training_schedule[i], nstages );
-
-        MODULE_LOG << "  stage = " << stage << endl;
-        MODULE_LOG << "  end_stage = " << end_stage << endl;
-        MODULE_LOG << "  cd_learning_rate = " << cd_learning_rate << endl;
-
-        if( report_progress && stage < end_stage )
-            pb = new ProgressBar( "Training layer "+tostring(i)
-                                  +" of "+classname(),
-                                  end_stage - stage );
-
-        layers[i]->setLearningRate( cd_learning_rate );
-        connections[i]->setLearningRate( cd_learning_rate );
-        layers[i+1]->setLearningRate( cd_learning_rate );
-
-        for( ; stage<end_stage ; stage++ )
+        for( ; stage<nstages; stage++)
         {
             int sample = stage % nsamples;
             train_set->getExample(sample, input, target, weight);
-            greedyStep( input, target, i );
-
+            onlineStep( input, target );
             if( pb )
-                if( i == 0 )
-                    pb->update( stage + 1 );
-                else
-                    pb->update( stage - training_schedule[i-1] + 1 );
+                pb->update( stage + 1 );
         }
     }
-
-    // possible supervised part
-    if( use_classification_cost )
+    else // by stages
     {
-        MODULE_LOG << "Training the classification module" << endl;
+        /***** initial greedy training *****/
+        for( int i=0 ; i<n_layers-1 ; i++ )
+        {
+            if( use_classification_cost && i == n_layers-2 )
+                break; // we will do a joint supervised learning instead
 
-        int end_stage = min( training_schedule[n_layers-2], nstages );
+            MODULE_LOG << "Training connection weights between layers " << i
+                       << " and " << i+1 << endl;
 
+            int end_stage = min( training_schedule[i], nstages );
+
+            MODULE_LOG << "  stage = " << stage << endl;
+            MODULE_LOG << "  end_stage = " << end_stage << endl;
+            MODULE_LOG << "  cd_learning_rate = " << cd_learning_rate << endl;
+
+            if( report_progress && stage < end_stage )
+                pb = new ProgressBar( "Training layer "+tostring(i)
+                                      +" of "+classname(),
+                                      end_stage - stage );
+
+            layers[i]->setLearningRate( cd_learning_rate );
+            connections[i]->setLearningRate( cd_learning_rate );
+            layers[i+1]->setLearningRate( cd_learning_rate );
+
+            for( ; stage<end_stage ; stage++ )
+            {
+                int sample = stage % nsamples;
+                train_set->getExample(sample, input, target, weight);
+                greedyStep( input, target, i );
+
+                if( pb )
+                    if( i == 0 )
+                        pb->update( stage + 1 );
+                    else
+                        pb->update( stage - training_schedule[i-1] + 1 );
+            }
+        }
+
+        // possible supervised part
+        if(use_classification_cost )
+        {
+            MODULE_LOG << "Training the classification module" << endl;
+
+            int end_stage = min( training_schedule[n_layers-2], nstages );
+
+            MODULE_LOG << "  stage = " << stage << endl;
+            MODULE_LOG << "  end_stage = " << end_stage << endl;
+            MODULE_LOG << "  cd_learning_rate = " << cd_learning_rate << endl;
+
+            if( report_progress && stage < end_stage )
+                pb = new ProgressBar( "Training the classification module",
+                                      end_stage - stage );
+
+            // set appropriate learning rate
+            setLearningRate( cd_learning_rate );
+
+            int previous_stage = (n_layers < 3) ? 0
+                : training_schedule[n_layers-3];
+            for( ; stage<end_stage ; stage++ )
+            {
+                int sample = stage % nsamples;
+                train_set->getExample( sample, input, target, weight );
+                jointGreedyStep( input, target );
+
+                if( pb )
+                    pb->update( stage - previous_stage + 1 );
+            }
+        }
+
+        /**** compute reconstruction error*****/
+        RBMLayer * down_layer = get_pointer(layers[0]) ;
+        RBMLayer * up_layer =  get_pointer(layers[1]) ;
+        RBMConnection * parameters = get_pointer(connections[0]);
+
+        for(int train_index = 0 ; train_index < nsamples ; train_index++)
+        {
+
+            train_set->getExample( train_index, input, target, weight );
+
+            down_layer->expectation << input;
+
+            // up
+            parameters->setAsDownInput( down_layer->expectation );
+            up_layer->getAllActivations( parameters );
+            up_layer->generateSample();
+
+            // down
+            parameters->setAsUpInput( up_layer->sample );
+
+            down_layer->getAllActivations( parameters );
+            down_layer->computeExpectation();
+            down_layer->generateSample();
+
+            //    result += powdistance( input, down_layer->expectation );
+
+            for( int i=0 ; i<input.size() ; i++ )
+                train_recons_error += (input[i] - down_layer->expectation[i])
+                    * (input[i] - down_layer->expectation[i]);
+
+        }
+
+        train_recons_error /= nsamples ;
+
+
+        /***** fine-tuning by gradient descent *****/
+        if( stage >= nstages )
+            return;
+
+        MODULE_LOG << "Fine-tuning all parameters, by gradient descent" << endl;
         MODULE_LOG << "  stage = " << stage << endl;
-        MODULE_LOG << "  end_stage = " << end_stage << endl;
-        MODULE_LOG << "  cd_learning_rate = " << cd_learning_rate << endl;
+        MODULE_LOG << "  nstages = " << nstages << endl;
+        MODULE_LOG << "  grad_learning_rate = " << grad_learning_rate << endl;
 
-        if( report_progress && stage < end_stage )
-             pb = new ProgressBar( "Training the classification module",
-                                   end_stage - stage );
+        int init_stage = stage;
+        if( report_progress && stage < nstages )
+            pb = new ProgressBar( "Fine-tuning parameters of all layers of "
+                                  + classname(),
+                                  nstages - init_stage );
 
-        // set appropriate learning rate
-        setLearningRate( cd_learning_rate );
+        setLearningRate( grad_learning_rate );
 
-        int previous_stage = (n_layers < 3) ? 0
-                                            : training_schedule[n_layers-3];
-        for( ; stage<end_stage ; stage++ )
+        int begin_sample = stage % nsamples;
+        for( ; stage<nstages ; stage++ )
         {
             int sample = stage % nsamples;
+            if( sample == begin_sample )
+                train_stats->forget();
+            if( !fast_exact_is_equal( grad_decrease_ct, 0. ) )
+                setLearningRate( grad_learning_rate
+                                 / (1. + grad_decrease_ct * (stage - init_stage) ) );
+
             train_set->getExample( sample, input, target, weight );
-            jointGreedyStep( input, target );
+            fineTuningStep( input, target, train_costs );
+            train_stats->update( train_costs );
 
             if( pb )
-                pb->update( stage - previous_stage + 1 );
+                pb->update( stage - init_stage + 1 );
         }
-    }
-
-    /**** compute reconstruction error*****/
-    real train_recons_error = 0.0;
-
-    RBMLayer * down_layer = get_pointer(layers[0]) ;
-    RBMLayer * up_layer =  get_pointer(layers[1]) ;
-    RBMConnection * parameters = get_pointer(connections[0]);
-
-    for(int train_index = 0 ; train_index < nsamples ; train_index++)
-    {
-
-        train_set->getExample( train_index, input, target, weight );
-
-          down_layer->expectation << input;
-
-          // up
-          parameters->setAsDownInput( down_layer->expectation );
-          up_layer->getAllActivations( parameters );
-          up_layer->generateSample();
-
-          // down
-          parameters->setAsUpInput( up_layer->sample );
-
-          down_layer->getAllActivations( parameters );
-          down_layer->computeExpectation();
-          down_layer->generateSample();
-
-          //    result += powdistance( input, down_layer->expectation );
-
-          for( int i=0 ; i<input.size() ; i++ )
-              train_recons_error += (input[i] - down_layer->expectation[i])
-                                  * (input[i] - down_layer->expectation[i]);
-
-    }
-
-    train_recons_error /= nsamples ;
-
-
-    /***** fine-tuning by gradient descent *****/
-    if( stage >= nstages )
-        return;
-
-    MODULE_LOG << "Fine-tuning all parameters, by gradient descent" << endl;
-    MODULE_LOG << "  stage = " << stage << endl;
-    MODULE_LOG << "  nstages = " << nstages << endl;
-    MODULE_LOG << "  grad_learning_rate = " << grad_learning_rate << endl;
-
-    int init_stage = stage;
-    if( report_progress && stage < nstages )
-        pb = new ProgressBar( "Fine-tuning parameters of all layers of "
-                              + classname(),
-                              nstages - init_stage );
-
-    setLearningRate( grad_learning_rate );
-
-    int begin_sample = stage % nsamples;
-    for( ; stage<nstages ; stage++ )
-    {
-        int sample = stage % nsamples;
-        if( sample == begin_sample )
-            train_stats->forget();
-        if( !fast_exact_is_equal( grad_decrease_ct, 0. ) )
-            setLearningRate( grad_learning_rate
-                / (1. + grad_decrease_ct * (stage - init_stage) ) );
-
-        train_set->getExample( sample, input, target, weight );
-        fineTuningStep( input, target, train_costs );
-        train_stats->update( train_costs );
-
-        if( pb )
-            pb->update( stage - init_stage + 1 );
     }
 
     //update the reconstruction error
@@ -665,6 +700,65 @@ void DeepBeliefNet::train()
     train_stats->update( train_costs ) ;
 
     train_stats->finalize();
+}
+
+void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target)
+{
+    Vec cost;
+    if (partial_costs)
+        cost.resize(n_layers);
+
+    layers[0]->expectation << input;
+    for( int i=0 ; i<n_layers-1 ; i++ )
+    {
+        // mean-field fprop from layer i to layer i+1
+        connections[i]->setAsDownInput( layers[i]->expectation );
+        layers[i+1]->getAllActivations( connections[i] );
+        layers[i+1]->computeExpectation();
+        // propagate into local cost
+        if( partial_costs && partial_costs[ i ] )
+            partial_costs[ i ]->fprop( layers[ i+1 ]->expectation,
+                                       target, cost[i] );
+
+        if( partial_costs && partial_costs[ i ] )
+        {
+            // put appropriate learning rate
+            connections[ i ]->setLearningRate( grad_learning_rate );
+            layers[ i+1 ]->setLearningRate( grad_learning_rate );
+
+            // Backward pass
+
+            partial_costs[ i ]->bpropUpdate( layers[ i+1 ]->expectation,
+                                             target, cost,
+                                             expectation_gradients[ i+1 ] );
+
+            // YB - LOUCHE: activation n'est pas vraiment l'output du connection ni l'input de layer i+1
+            // puisque c'est l'output de connection + le biais
+            layers[ i+1 ]->bpropUpdate( layers[ i+1 ]->activation, // - biais
+                                        layers[ i+1 ]->expectation,  
+                                        activation_gradients[ i+1 ],
+                                        expectation_gradients[ i+1 ] );
+
+            connections[ i ]->bpropUpdate( layers[ i ]->expectation,
+                                           layers[ i+1 ]->activation,  // - biais
+                                           expectation_gradients[ i ],
+                                           activation_gradients[ i+1 ] );
+
+            // put back old learning rate
+            connections[ i ]->setLearningRate( cd_learning_rate );
+            layers[ i+1 ]->setLearningRate( cd_learning_rate );
+
+            layers[i]->setLearningRate( cd_learning_rate );
+            connections[i]->setLearningRate( cd_learning_rate );
+        }
+
+        contrastiveDivergenceStep( layers[ i ],
+                                   connections[ i ],
+                                   layers[ i+1 ] );
+
+    }
+    // fprop in joint layer
+    
 }
 
 void DeepBeliefNet::greedyStep( const Vec& input, const Vec& target, int index )

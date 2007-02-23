@@ -134,8 +134,10 @@ void GradNNetLayerModule::bpropUpdate(const Vec& input, const Vec& output,
 // Simply updates and propagates back gradient
 void GradNNetLayerModule::bpropUpdate(const Vec& input, const Vec& output,
                                       Vec& input_gradient,
-                                      const Vec& output_gradient)
+                                      const Vec& output_gradient,
+                                      bool accumulate)
 {
+    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     PLASSERT_MSG( input.size() == input_size,
                   "input.size() should be equal to this->input_size" );
     PLASSERT_MSG( output.size() == output_size,

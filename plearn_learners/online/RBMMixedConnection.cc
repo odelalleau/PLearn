@@ -503,9 +503,11 @@ void RBMMixedConnection::computeProduct( int start, int length,
 
 //! this version allows to obtain the input gradient as well
 void RBMMixedConnection::bpropUpdate(const Vec& input, const Vec& output,
-                                      Vec& input_gradient,
-                                      const Vec& output_gradient)
+                                     Vec& input_gradient,
+                                     const Vec& output_gradient,
+                                     bool accumulate)
 {
+    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     PLASSERT( input.size() == down_size );
     PLASSERT( output.size() == up_size );
     PLASSERT( output_gradient.size() == up_size );

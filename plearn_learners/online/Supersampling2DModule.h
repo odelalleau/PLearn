@@ -135,7 +135,8 @@ public:
     //! N.B. THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              Vec& input_gradient,
-                             const Vec& output_gradient);
+                             const Vec& output_gradient,
+                             bool accumulate=false);
 
     //! Similar to bpropUpdate, but adapt based also on the estimation
     //! of the diagonal of the Hessian matrix, and propagates this
@@ -155,7 +156,8 @@ public:
                               Vec& input_gradient,
                               const Vec& output_gradient,
                               Vec& input_diag_hessian,
-                              const Vec& output_diag_hessian);
+                              const Vec& output_diag_hessian,
+                              bool accumulate=false);
 
     //! reset the parameters to the state they would be BEFORE starting
     //! training.  Note that this method is necessarily called from

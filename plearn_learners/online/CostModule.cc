@@ -137,8 +137,11 @@ void CostModule::bpropUpdate(const Vec& input, const Vec& target, real cost)
 
 void CostModule::bpropUpdate(const Vec& input_and_target, const Vec& output,
                              Vec& input_and_target_gradient,
-                             const Vec& output_gradient)
+                             const Vec& output_gradient,
+                             bool accumulate)
 {
+    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
+
     inherited::bpropUpdate( input_and_target, output,
                             input_and_target_gradient, output_gradient );
 }
@@ -176,8 +179,10 @@ void CostModule::bbpropUpdate(const Vec& input_and_target, const Vec& output,
                               Vec& input_and_target_gradient,
                               const Vec& output_gradient,
                               Vec& input_and_target_diag_hessian,
-                              const Vec& output_diag_hessian)
+                              const Vec& output_diag_hessian,
+                              bool accumulate)
 {
+    PLASSERT_MSG(!accumulate,"Implementation of bbpropUpdate cannot yet handle accumulate=false");
     inherited::bbpropUpdate( input_and_target, output,
                              input_and_target_gradient,
                              output_gradient,

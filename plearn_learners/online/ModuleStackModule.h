@@ -85,7 +85,8 @@ public:
     //! is 'ready-to-be-used' just after any bpropUpdate.
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              Vec& input_gradient,
-                             const Vec& output_gradient);
+                             const Vec& output_gradient,
+                             bool accumulate=false);
 
     //! This version does not obtain the input gradient.
     virtual void bpropUpdate(const Vec& input, const Vec& output,
@@ -99,7 +100,8 @@ public:
                               Vec& input_gradient,
                               const Vec& output_gradient,
                               Vec& input_diag_hessian,
-                              const Vec& output_diag_hessian);
+                              const Vec& output_diag_hessian,
+                              bool accumulate=false);
 
     //! This version does not obtain the input gradient and diag_hessian.
     virtual void bbpropUpdate(const Vec& input, const Vec& output,

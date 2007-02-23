@@ -428,8 +428,10 @@ void RBMConv2DConnection::computeProduct
 //! this version allows to obtain the input gradient as well
 void RBMConv2DConnection::bpropUpdate(const Vec& input, const Vec& output,
                                       Vec& input_gradient,
-                                      const Vec& output_gradient)
+                                      const Vec& output_gradient,
+                                      bool accumulate)
 {
+    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     PLASSERT( input.size() == down_size );
     PLASSERT( output.size() == up_size );
     PLASSERT( output_gradient.size() == up_size );

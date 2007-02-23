@@ -95,7 +95,8 @@ public:
 
     //! back-propagates the output gradient to the input
     virtual void bpropUpdate(const Vec& input, const Vec& output,
-                             Vec& input_gradient, const Vec& output_gradient);
+                             Vec& input_gradient, const Vec& output_gradient,
+                             bool accumulate=false);
 
     //! back-propagates the output gradient to the input and the bias
     virtual void bpropUpdate(const Vec& input, const Vec& rbm_bias,

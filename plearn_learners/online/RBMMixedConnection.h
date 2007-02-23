@@ -127,7 +127,8 @@ public:
     //! this version allows to obtain the input gradient as well
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              Vec& input_gradient,
-                             const Vec& output_gradient);
+                             const Vec& output_gradient,
+                             bool accumulate=false);
 
     //! reset the parameters to the state they would be BEFORE starting
     //! training.  Note that this method is necessarily called from

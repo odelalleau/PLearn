@@ -274,9 +274,11 @@ void Supersampling2DModule::bpropUpdate(const Vec& input, const Vec& output,
 
 //! this version allows to obtain the input gradient as well
 void Supersampling2DModule::bpropUpdate(const Vec& input, const Vec& output,
-                                      Vec& input_gradient,
-                                      const Vec& output_gradient)
+                                        Vec& input_gradient,
+                                        const Vec& output_gradient,
+                                        bool accumulate)
 {
+    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     // Check size
     if( input.size() != input_size )
         PLERROR("Supersampling2DModule::bpropUpdate: input.size() should be\n"
@@ -375,8 +377,10 @@ void Supersampling2DModule::bbpropUpdate(const Vec& input, const Vec& output,
                                          Vec& input_gradient,
                                          const Vec& output_gradient,
                                          Vec& input_diag_hessian,
-                                         const Vec& output_diag_hessian)
+                                         const Vec& output_diag_hessian,
+                                         bool accumulate)
 {
+    PLASSERT_MSG(!accumulate,"Implementation of bbpropUpdate cannot yet handle accumulate=false");
     // This version forwards the second order information, but does not
     // actually use it for the update.
 

@@ -92,8 +92,10 @@ void SoftmaxModule::fprop(const Vec& input, Vec& output) const
 
 void SoftmaxModule::bpropUpdate(const Vec& input, const Vec& output,
                                 Vec& input_gradient,
-                                const Vec& output_gradient)
+                                const Vec& output_gradient,
+                                bool accumulate)
 {
+    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     PLASSERT( input.size() == input_size );
     PLASSERT( output.size() == output_size );
     PLASSERT( output_gradient.size() == output_size );
@@ -112,11 +114,13 @@ void SoftmaxModule::forget()
 }
 
 void SoftmaxModule::bbpropUpdate(const Vec& input, const Vec& output,
-                                Vec& input_gradient,
-                                const Vec& output_gradient,
-                                Vec& input_diag_hessian,
-                                const Vec& output_diag_hessian)
+                                 Vec& input_gradient,
+                                 const Vec& output_gradient,
+                                 Vec& input_diag_hessian,
+                                 const Vec& output_diag_hessian,
+                                 bool accumulate)
 {
+    PLASSERT_MSG(!accumulate,"Implementation of bbpropUpdate cannot yet handle accumulate=false");
     PLERROR( "Not implemented yet, please come back later or complaint to"
              " lamblinp." );
 }

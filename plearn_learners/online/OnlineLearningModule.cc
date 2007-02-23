@@ -66,7 +66,8 @@ OnlineLearningModule::OnlineLearningModule() :
 
 void OnlineLearningModule::bpropUpdate(const Vec& input, const Vec& output,
                                        Vec& input_gradient,
-                                       const Vec& output_gradient)
+                                       const Vec& output_gradient,
+                                       bool accumulate)
 {
     PLERROR("In OnlineLearningModule.cc: method 'bpropUpdate' not"
             " implemented.\n"
@@ -97,7 +98,8 @@ void OnlineLearningModule::bbpropUpdate(const Vec& input, const Vec& output,
                                         Vec& input_gradient,
                                         const Vec& output_gradient,
                                         Vec& input_diag_hessian,
-                                        const Vec& output_diag_hessian)
+                                        const Vec& output_diag_hessian,
+                                        bool accumulate)
 {
     PLERROR("In OnlineLearningModule.cc: method 'bbpropUpdate' not"
             "implemented.\n"
