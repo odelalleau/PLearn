@@ -51,20 +51,21 @@ PLEARN_IMPLEMENT_OBJECT(
     "Similar to C.E. Rasmussen's GPML code (see http://www.gaussianprocess.org),\n"
     "this kernel is specified as:\n"
     "\n"
-    "  k(x,y) = sf2 * [1 + (sum_i (x_i - y_i)^2 / w_i)/(2*alpha)]^(-alpha) + k_iid(x,y)\n"
+    "  k(x,y) = sf * [1 + (sum_i (x_i - y_i)^2 / w_i)/(2*alpha)]^(-alpha) + k_iid(x,y)\n"
     "\n"
-    "where sf2 is the exp of twice the 'log_signal_sigma' option, w_i is\n"
-    "exp(2*log_global_sigma + 2*log_input_sigma[i]), and k_iid(x,y) is the\n"
-    "result of IIDNoiseKernel kernel evaluation.\n"
+    "where sf is softplus(isp_signal_sigma), w_i is softplus(isp_global_sigma +\n"
+    "isp_input_sigma[i]), and k_iid(x,y) is the result of IIDNoiseKernel kernel\n"
+    "evaluation.\n"
     "\n"
     "Note that to make its operations more robust when used with unconstrained\n"
-    "optimizaiton of hyperparameters, all hyperparameters of this kernel are\n"
-    "specified in the log-domain.\n"
+    "optimization of hyperparameters, all hyperparameters of this kernel are\n"
+    "specified in the inverse softplus domain.  See IIDNoiseKernel for more\n"
+    "explanations.\n"
     );
 
 
 RationalQuadraticARDKernel::RationalQuadraticARDKernel()
-    : m_log_alpha(0.0)
+    : m_isp_alpha(0.0)
 { }
 
 
@@ -73,10 +74,10 @@ RationalQuadraticARDKernel::RationalQuadraticARDKernel()
 void RationalQuadraticARDKernel::declareOptions(OptionList& ol)
 {
     declareOption(
-        ol, "log_alpha",
-        &RationalQuadraticARDKernel::m_log_alpha,
+        ol, "isp_alpha",
+        &RationalQuadraticARDKernel::m_isp_alpha,
         OptionBase::buildoption,
-        "Log of the alpha parameter in the rational-quadratic kernel.\n"
+        "Inverse softplus of the alpha parameter in the rational-quadratic kernel.\n"
         "Default value=0.0");
 
     // Now call the parent class' declareOptions
@@ -116,29 +117,29 @@ void RationalQuadraticARDKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 real RationalQuadraticARDKernel::evaluate(const Vec& x1, const Vec& x2) const
 {
     PLASSERT( x1.size() == x2.size() );
-    PLASSERT( !m_log_input_sigma.size() || x1.size() == m_log_input_sigma.size() );
+    PLASSERT( !m_isp_input_sigma.size() || x1.size() == m_isp_input_sigma.size() );
 
     if (x1.size() == 0)
-        return exp(2*m_log_signal_sigma) + inherited::evaluate(x1,x2);
+        return softplus(m_isp_signal_sigma) + inherited::evaluate(x1,x2);
     
     const real* px1 = x1.data();
     const real* px2 = x2.data();
-    real sf2        = exp(2*m_log_signal_sigma);
-    real alpha      = exp(m_log_alpha);
+    real sf         = softplus(m_isp_signal_sigma);
+    real alpha      = softplus(m_isp_alpha);
     real sum_wt     = 0.0;
     real sum_sqdiff = 0.0;
     
-    if (m_log_input_sigma.size() > 0) {
-        const real* pinpsig = m_log_input_sigma.data();
+    if (m_isp_input_sigma.size() > 0) {
+        const real* pinpsig = m_isp_input_sigma.data();
         for (int i=0, n=x1.size() ; i<n ; ++i) {
             real diff   = *px1++ - *px2++;
             real sqdiff = diff * diff;
             sum_sqdiff += sqdiff;
-            sum_wt     += sqdiff / exp(2*(m_log_global_sigma + *pinpsig++));
+            sum_wt     += sqdiff / softplus(m_isp_global_sigma + *pinpsig++);
         }
     }
     else {
-        real global_sigma = exp(2*m_log_global_sigma);
+        real global_sigma = softplus(m_isp_global_sigma);
         for (int i=0, n=x1.size() ; i<n ; ++i) {
             real diff   = *px1++ - *px2++;
             real sqdiff = diff * diff;
@@ -149,7 +150,7 @@ real RationalQuadraticARDKernel::evaluate(const Vec& x1, const Vec& x2) const
 
     // We add the noise covariance as well
     real noise_cov = inherited::evaluate(x1,x2);
-    return sf2 * pow(1 + sum_wt / (2.*alpha), -alpha) + noise_cov;
+    return sf * pow(1 + sum_wt / (2.*alpha), -alpha) + noise_cov;
 }
 
 
@@ -157,7 +158,7 @@ real RationalQuadraticARDKernel::evaluate(const Vec& x1, const Vec& x2) const
 
 void RationalQuadraticARDKernel::computeGramMatrix(Mat K) const
 {
-    PLASSERT( !m_log_input_sigma.size() || dataInputsize() == m_log_input_sigma.size() );
+    PLASSERT( !m_isp_input_sigma.size() || dataInputsize() == m_isp_input_sigma.size() );
     PLASSERT( K.size() == 0 || m_data_cache.size() > 0 );  // Ensure data cached OK
 
     // Compute IID noise gram matrix and save it
@@ -166,14 +167,14 @@ void RationalQuadraticARDKernel::computeGramMatrix(Mat K) const
     m_noise_gram_cache << K;
 
     // Precompute some terms
-    real sf2   = exp(2*m_log_signal_sigma);
-    real alpha = exp(m_log_alpha);
+    real sf    = softplus(m_isp_signal_sigma);
+    real alpha = softplus(m_isp_alpha);
     m_input_sigma.resize(dataInputsize());
-    m_input_sigma.fill(m_log_global_sigma);
-    if (m_log_input_sigma.size() > 0)
-        m_input_sigma += m_log_input_sigma;
-    m_input_sigma *= 2.0;
-    exp(m_input_sigma, m_input_sigma);
+    m_input_sigma.fill(m_isp_global_sigma);
+    if (m_isp_input_sigma.size() > 0)
+        m_input_sigma += m_isp_input_sigma;
+    for (int i=0, n=m_input_sigma.size() ; i<n ; ++i)
+        m_input_sigma[i] = softplus(m_input_sigma[i]);
 
     // Prepare the cache for the pow terms
     m_pow_minus_alpha_minus_1.resize(K.length(), K.width());
@@ -227,7 +228,7 @@ void RationalQuadraticARDKernel::computeGramMatrix(Mat K) const
 
             real inner_pow   = 1 + sum_wt / (2.*alpha);
             real pow_alpha   = pow(inner_pow, -alpha);
-            real Kij_cur     = sf2 * pow_alpha;
+            real Kij_cur     = sf * pow_alpha;
             *pow_cache_cur++ = Kij_cur / inner_pow;
             
             // Update kernel matrix (already pre-filled with IID noise terms)
@@ -247,36 +248,40 @@ void RationalQuadraticARDKernel::computeGramMatrix(Mat K) const
 void RationalQuadraticARDKernel::computeGramMatrixDerivative(
     Mat& KD, const string& kernel_param, real epsilon) const
 {
-    static const string LSS("log_signal_sigma");
-    static const string LGS("log_global_sigma");
-    static const string LIS("log_input_sigma[");
-    static const string LAL("log_alpha");
+    static const string ISS("isp_signal_sigma");
+    static const string IGS("isp_global_sigma");
+    static const string IIS("isp_input_sigma[");
+    static const string IAL("isp_alpha");
 
-    if (kernel_param == LSS) {
+    if (kernel_param == ISS) {
         computeGramMatrixDerivNV<
             RationalQuadraticARDKernel,
-            &RationalQuadraticARDKernel::derivLogSignalSigma>(KD, this, -1);
+            &RationalQuadraticARDKernel::derivIspSignalSigma>(KD, this, -1);
     }
-    else if (kernel_param == LGS) {
+    else if (kernel_param == IGS) {
         computeGramMatrixDerivNV<
             RationalQuadraticARDKernel,
-            &RationalQuadraticARDKernel::derivLogGlobalSigma>(KD, this, -1);
+            &RationalQuadraticARDKernel::derivIspGlobalSigma>(KD, this, -1);
     }
-    else if (string_begins_with(kernel_param, LIS) &&
+    else if (string_begins_with(kernel_param, IIS) &&
              kernel_param[kernel_param.size()-1] == ']')
     {
         int arg = tolong(kernel_param.substr(
-                             LIS.size(), kernel_param.size() - LIS.size() - 1));
-        PLASSERT( arg < m_log_input_sigma.size() );
+                             IIS.size(), kernel_param.size() - IIS.size() - 1));
+        PLASSERT( arg < m_isp_input_sigma.size() );
 
-        computeGramMatrixDerivLogInputSigma(KD, arg);
+        computeGramMatrixDerivIspInputSigma(KD, arg);
 
         // computeGramMatrixDerivNV<
         //     RationalQuadraticARDKernel,
-        //     &RationalQuadraticARDKernel::derivLogInputSigma>(KD, this, arg);
+        //     &RationalQuadraticARDKernel::derivIspInputSigma>(KD, this, arg);
     }
-    else if (kernel_param == LAL) {
-        computeGramMatrixDerivLogAlpha(KD);
+    else if (kernel_param == IAL) {
+        computeGramMatrixDerivIspAlpha(KD);
+
+        // computeGramMatrixDerivNV<
+        //     RationalQuadraticARDKernel,
+        //     &RationalQuadraticARDKernel::derivIspAlpha>(KD, this, -1);
     }
     else
         inherited::computeGramMatrixDerivative(KD, kernel_param, epsilon);
@@ -285,81 +290,86 @@ void RationalQuadraticARDKernel::computeGramMatrixDerivative(
     // Mat KD1;
     // Kernel::computeGramMatrixDerivative(KD1, kernel_param, epsilon);
     // cerr << "Kernel hyperparameter: " << kernel_param << endl;
-    // cerr << "Analytic derivative (1st row):" << endl
-    //      << KD(0) << endl
+    // cerr << "Analytic derivative (200th row):" << endl
+    //      << KD(200) << endl
     //      << "Finite differences:" << endl
-    //      << KD1(0) << endl;
+    //      << KD1(200) << endl;
 }
 
 
-//#####  derivLogSignalSigma  #################################################
+//#####  derivIspSignalSigma  #################################################
 
-real RationalQuadraticARDKernel::derivLogSignalSigma(int i, int j, int arg, real K) const
+real RationalQuadraticARDKernel::derivIspSignalSigma(int i, int j, int arg, real K) const
 {
     real noise = m_noise_gram_cache(i,j);
-    return 2*(K-noise);
+    return (K-noise)*sigmoid(m_isp_signal_sigma)/softplus(m_isp_signal_sigma);
 }
 
 
-//#####  derivLogGlobalSigma  #################################################
+//#####  derivIspGlobalSigma  #################################################
 
-real RationalQuadraticARDKernel::derivLogGlobalSigma(int i, int j, int arg, real K) const
+real RationalQuadraticARDKernel::derivIspGlobalSigma(int i, int j, int arg, real K) const
 {
     // The rational quadratic gives us:
-    //     K = exp(2*s)*k^(-alpha).
-    // Rederive the value of k
-    real alpha = exp(m_log_alpha);
+    //     K = s*k^(-alpha).
+    // Rederive the value of k == (K/s)^(-1/alpha)
+    real alpha = softplus(m_isp_alpha);
     real noise = m_noise_gram_cache(i,j);
     K -= noise;
-    real k     = exp(- (pl_log(K) - 2*m_log_signal_sigma) / alpha);
-    real inner = - (k - 1) * alpha;
-    return -0.5 * (K / k) * inner;
+    real k     = pow(K / softplus(m_isp_signal_sigma), -1. / alpha);
+    real inner = (k - 1) * alpha * sigmoid(m_isp_global_sigma) / softplus(m_isp_global_sigma);
+    return (K / k) * inner;
 }
 
 
-//#####  derivLogInputSigma  ##################################################
+//#####  derivIspInputSigma  ##################################################
 
 // This function computes the derivative element-wise.  The function actually
-// used now is computeGramMatrixDerivLogInputSigma, which computes the whole
+// used now is computeGramMatrixDerivIspInputSigma, which computes the whole
 // matrix much faster.
-real RationalQuadraticARDKernel::derivLogInputSigma(int i, int j, int arg, real K) const
+real RationalQuadraticARDKernel::derivIspInputSigma(int i, int j, int arg, real K) const
 {
     // The rational quadratic gives us:
-    //     K = exp(2*s)*k^(-alpha).
-    // Rederive the value of k
+    //     K = s*k^(-alpha).
+    // Rederive the value of k == (K/s)^(-1/alpha)
+    real alpha   = softplus(m_isp_alpha);
     Vec& row_i   = *dataRow(i);
     Vec& row_j   = *dataRow(j);
-    real K_over_k= m_pow_minus_alpha_minus_1(i,j);
+    real noise   = m_noise_gram_cache(i,j);
+    K -= noise;
+    real k       = pow(K / softplus(m_isp_signal_sigma), -1. / alpha);
     real diff    = row_i[arg] - row_j[arg];
     real sq_diff = diff * diff;
-    return K_over_k * exp(-2 * (m_log_global_sigma + m_log_input_sigma[arg])) * sq_diff;
+    real inner   = m_isp_global_sigma + m_isp_input_sigma[arg];
+    real sig_inn = sigmoid(inner);
+    real spl_inn = softplus(inner);
+    return 0.5 * (K / k) * sig_inn * sq_diff / (spl_inn * spl_inn);
 }
 
 
-//#####  derivLogAlpha  #######################################################
+//#####  derivIspAlpha  #######################################################
 
-real RationalQuadraticARDKernel::derivLogAlpha(int i, int j, int arg, real K) const
+real RationalQuadraticARDKernel::derivIspAlpha(int i, int j, int arg, real K) const
 {
-    real alpha = exp(m_log_alpha);
+    real alpha = softplus(m_isp_alpha);
     real noise = m_noise_gram_cache(i,j);
-    K -= noise;
-    real k     = exp(- (pl_log(K) - 2*m_log_signal_sigma) / alpha);
-    real left  = - alpha * pl_log(k);
-    real num   = (k - 1) * 2 * alpha;
-    real denum = 2 * k;
-    return K * (left + num / denum);
+    K         -= noise;
+    real k     = pow(K / softplus(m_isp_signal_sigma), -1. / alpha);
+    return sigmoid(m_isp_alpha) * K * (1 - pl_log(k) - 1 / k);
 }
 
 
-//#####  computeGramMatrixDerivLogInputSigma  #################################
+//#####  computeGramMatrixDerivIspInputSigma  #################################
 
-void RationalQuadraticARDKernel::computeGramMatrixDerivLogInputSigma(Mat& KD,
+void RationalQuadraticARDKernel::computeGramMatrixDerivIspInputSigma(Mat& KD,
                                                                      int arg) const
 {
     // Precompute some terms
     real input_sigma_arg = m_input_sigma[arg];
+    real input_sigma_sq  = input_sigma_arg * input_sigma_arg;
+    real input_sigmoid   = sigmoid(m_isp_global_sigma + m_isp_input_sigma[arg]);
     
-    // Compute Gram Matrix derivative w.r.t. log_input_sigma[arg]
+    // Compute Gram Matrix derivative w.r.t. isp_input_sigma[arg]
     int  l = data->length();
 
     // Variables that walk over the data matrix
@@ -392,7 +402,8 @@ void RationalQuadraticARDKernel::computeGramMatrixDerivLogInputSigma(Mat& KD,
         {
             real diff    = *xi - *xj;
             real sq_diff = diff * diff;
-            real KD_cur  = *pow_cache_cur * sq_diff / input_sigma_arg;
+            real KD_cur  = 0.5 * *pow_cache_cur *
+                           input_sigmoid * sq_diff / input_sigma_sq;
 
             // Set into derivative matrix
             *KDij++ = KD_cur;
@@ -401,16 +412,16 @@ void RationalQuadraticARDKernel::computeGramMatrixDerivLogInputSigma(Mat& KD,
 }
 
 
-//#####  computeGramMatrixDerivLogAlpha  ######################################
+//#####  computeGramMatrixDerivIspAlpha  ######################################
 
-void RationalQuadraticARDKernel::computeGramMatrixDerivLogAlpha(Mat& KD) const
+void RationalQuadraticARDKernel::computeGramMatrixDerivIspAlpha(Mat& KD) const
 {
     // Precompute some terms
-    real alpha = exp(m_log_alpha);
+    real alpha_sigmoid = sigmoid(m_isp_alpha);
     
-    // Compute Gram Matrix derivative w.r.t. log_alpha
-    int  l = data->length();
-    int  k_mod     = gram_matrix.mod();
+    // Compute Gram Matrix derivative w.r.t. isp_alpha
+    int  l     = data->length();
+    int  k_mod = gram_matrix.mod();
 
     // Variables that walk over the pre-computed kernel matrix (K) 
     real *Ki = &gram_matrix(0,0);            // Current row of kernel matrix
@@ -448,10 +459,7 @@ void RationalQuadraticARDKernel::computeGramMatrixDerivLogAlpha(Mat& KD) const
         {
             real K      = *Kij - *noise_cache_cur;
             real k      = K / *pow_cache_cur;
-            real left   = -alpha * pl_log(k);
-            real num    = (k - 1) * 2. * alpha;
-            real denum  = 2. * k;
-            real KD_cur = K * (left + num / denum);
+            real KD_cur = alpha_sigmoid * K * (1 - pl_log(k) - 1/k);
             
             // Set into derivative matrix
             *KDij++ = KD_cur;

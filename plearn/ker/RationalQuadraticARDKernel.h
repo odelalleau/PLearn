@@ -54,15 +54,16 @@ namespace PLearn {
  *  Similar to C.E. Rasmussen's GPML code (see http://www.gaussianprocess.org),
  *  this kernel is specified as:
  *
- *    k(x,y) = sf2 * [1 + (sum_i (x_i - y_i)^2 / w_i)/(2*alpha)]^(-alpha) + k_iid(x,y)
+ *    k(x,y) = sf * [1 + (sum_i (x_i - y_i)^2 / w_i)/(2*alpha)]^(-alpha) + k_iid(x,y)
  *
- *  where sf2 is the exp of twice the 'log_signal_sigma' option, w_i is
- *  exp(2*log_global_sigma + 2*log_input_sigma[i]), and k_iid(x,y) is the
- *  result of IIDNoiseKernel kernel evaluation.
+ *  where sf is softplus(isp_signal_sigma), w_i is softplus(isp_global_sigma +
+ *  isp_input_sigma[i]), and k_iid(x,y) is the result of IIDNoiseKernel kernel
+ *  evaluation.
  *
  *  Note that to make its operations more robust when used with unconstrained
- *  optimizaiton of hyperparameters, all hyperparameters of this kernel are
- *  specified in the log-domain.
+ *  optimization of hyperparameters, all hyperparameters of this kernel are
+ *  specified in the inverse softplus domain.  See IIDNoiseKernel for more
+ *  explanations.
  */
 class RationalQuadraticARDKernel : public ARDBaseKernel
 {
@@ -71,9 +72,9 @@ class RationalQuadraticARDKernel : public ARDBaseKernel
 public:
     //#####  Public Build Options  ############################################
 
-    //! Log of the alpha parameter in the rational-quadratic kernel.
+    //! Inverse softplus of the alpha parameter in the rational-quadratic kernel.
     //! Default value=0.0
-    real m_log_alpha;
+    real m_isp_alpha;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -112,23 +113,23 @@ protected:
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
 
-    //! Derivative function with respect to log_signal_sigma
-    real derivLogSignalSigma(int i, int j, int arg, real K) const;
+    //! Derivative function with respect to isp_signal_sigma
+    real derivIspSignalSigma(int i, int j, int arg, real K) const;
 
-    //! Derivative function with respect to log_global_sigma
-    real derivLogGlobalSigma(int i, int j, int arg, real K) const;
+    //! Derivative function with respect to isp_global_sigma
+    real derivIspGlobalSigma(int i, int j, int arg, real K) const;
     
-    //! Derivative function with respect to log_input_sigma[arg]
-    real derivLogInputSigma(int i, int j, int arg, real K) const;
+    //! Derivative function with respect to isp_input_sigma[arg]
+    real derivIspInputSigma(int i, int j, int arg, real K) const;
     
-    //! Derivative function with respect to log_alpha
-    real derivLogAlpha(int i, int j, int arg, real K) const;
+    //! Derivative function with respect to isp_alpha
+    real derivIspAlpha(int i, int j, int arg, real K) const;
 
-    // Compute derivative w.r.t. log_input_sigma[arg] for WHOLE MATRIX
-    void computeGramMatrixDerivLogInputSigma(Mat& KD, int arg) const;
+    // Compute derivative w.r.t. isp_input_sigma[arg] for WHOLE MATRIX
+    void computeGramMatrixDerivIspInputSigma(Mat& KD, int arg) const;
     
-    // Compute derivative w.r.t. log_alpha for WHOLE MATRIX
-    void computeGramMatrixDerivLogAlpha(Mat& KD) const;
+    // Compute derivative w.r.t. isp_alpha for WHOLE MATRIX
+    void computeGramMatrixDerivIspAlpha(Mat& KD) const;
     
 protected:
     //! Cached version of IID noise gram matrix

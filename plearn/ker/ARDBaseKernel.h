@@ -55,7 +55,8 @@ namespace PLearn {
  *
  *  Note that to make its operations more robust when used with unconstrained
  *  optimization of hyperparameters, all hyperparameters of this kernel are
- *  specified in the log-domain.
+ *  specified in the inverse softplus domain.  See IIDNoiseKernel for more
+ *  explanations.
  */
 class ARDBaseKernel : public IIDNoiseKernel
 {
@@ -64,21 +65,22 @@ class ARDBaseKernel : public IIDNoiseKernel
 public:
     //#####  Public Build Options  ############################################
 
-    //! Log of the global signal variance.  Default value=0.0
-    real m_log_signal_sigma;
+    //! Inverse softplus of the global signal variance.  Default value=0.0
+    real m_isp_signal_sigma;
 
     /**
-     *  Log of the global length-scale.  Note that if ARD is performed on
-     *  input-specific sigmas, this hyperparameter should have a fixed value
-     *  (and not be varied during the optimization).  Default value=0.0.
+     *  Inverse softplus of the global length-scale.  Note that if ARD is
+     *  performed on input-specific sigmas, this hyperparameter should have a
+     *  fixed value (and not be varied during the optimization).  Default
+     *  value=0.0.
      */
-    real m_log_global_sigma;
+    real m_isp_global_sigma;
 
     /**
      *  If specified, contain input-specific length-scales that can be
      *  individually optimized for (these are the ARD hyperparameters).
      */
-    Vec m_log_input_sigma;
+    Vec m_isp_input_sigma;
 
 public:
     //#####  Public Member Functions  #########################################

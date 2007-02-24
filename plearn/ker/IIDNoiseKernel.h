@@ -51,10 +51,10 @@ namespace PLearn {
  *  in gaussian processes (see GaussianProcessRegressor).  It represents simple
  *  i.i.d. additive noise:
  *
- *    k(x,y) = delta_x,y * sn2
+ *    k(x,y) = delta_x,y * sn
  *
- *  where delta_x,y is the Kronecker delta function, and sn2 is the exp of
- *  twice the 'log_noise_sigma' option.
+ *  where delta_x,y is the Kronecker delta function, and sn is
+ *  softplus(isp_noise_sigma), with softplus(x) = log(1+exp(x)).
  *
  *  In addition to comparing the complete x and y vectors, this kernel allows
  *  adding a Kronecker delta when there is a match in only ONE DIMENSION.  This
@@ -62,15 +62,18 @@ namespace PLearn {
  *  the input variables (but is not currently done for performance reasons).
  *  With these terms, the kernel function takes the form:
  *
- *    k(x,y) = delta_x,y * sn2 + \sum_i delta_x[kr(i)],y[kr(i)] * ks2[i]
+ *    k(x,y) = delta_x,y * sn + \sum_i delta_x[kr(i)],y[kr(i)] * ks[i]
  *
  *  where kr(i) is the i-th element of 'kronecker_indexes' (representing an
- *  index into the input vectors), and ks2[i] is the exp of twice the value of
- *  the i-th element of the 'log_kronecker_sigma' option.
+ *  index into the input vectors), and ks[i]=softplus(isp_kronecker_sigma[i]).
  *
  *  Note that to make its operations more robust when used with unconstrained
  *  optimization of hyperparameters, all hyperparameters of this kernel are
- *  specified in the log-domain.
+ *  specified in the inverse softplus domain, hence the 'isp' prefix.  This is
+ *  used in preference to the log-domain used by Rasmussen and Williams in
+ *  their implementation of gaussian processes, due to numerical stability.
+ *  (It may happen that the optimizer jumps 'too far' along one hyperparameter
+ *  and this causes the Gram matrix to become extremely ill-conditioned.)
  */
 class IIDNoiseKernel : public MemoryCachedKernel
 {
@@ -79,16 +82,16 @@ class IIDNoiseKernel : public MemoryCachedKernel
 public:
     //#####  Public Build Options  ############################################
 
-    //! Log of the global noise variance.  Default value=0.0
-    real m_log_noise_sigma;
+    //! Inverse softplus of the global noise variance.  Default value=0.0
+    real m_isp_noise_sigma;
 
     //! Element index in the input vectors that should be subject to additional
     //! Kronecker delta terms
     TVec<int> m_kronecker_indexes;
 
-    //! Log of the noise variance terms for the Kronecker deltas associated
-    //! with kronecker_indexes
-    Vec m_log_kronecker_sigma;
+    //! Inverse softplus of the noise variance terms for the Kronecker deltas
+    //! associated with kronecker_indexes
+    Vec m_isp_kronecker_sigma;
     
 public:
     //#####  Public Member Functions  #########################################
@@ -133,7 +136,7 @@ protected:
     void computeGramMatrixDerivKronecker(Mat& KD, int arg) const;
     
 protected:
-    //! Buffer for exponential of m_log_kronecker_sigma
+    //! Buffer for softplus of m_isp_kronecker_sigma
     mutable Vec m_kronecker_sigma;
     
 private:

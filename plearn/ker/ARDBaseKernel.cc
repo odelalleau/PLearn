@@ -53,12 +53,13 @@ PLEARN_IMPLEMENT_OBJECT(
     "\n"
     "Note that to make its operations more robust when used with unconstrained\n"
     "optimization of hyperparameters, all hyperparameters of this kernel are\n"
-    "specified in the log-domain.\n"
+    "specified in the inverse softplus domain.  See IIDNoiseKernel for more\n"
+    "explanations.\n"
     );
 
 ARDBaseKernel::ARDBaseKernel()
-    : m_log_signal_sigma(0.0),
-      m_log_global_sigma(0.0)
+    : m_isp_signal_sigma(0.0),
+      m_isp_global_sigma(0.0)
 { }
 
 
@@ -67,22 +68,23 @@ ARDBaseKernel::ARDBaseKernel()
 void ARDBaseKernel::declareOptions(OptionList& ol)
 {
     declareOption(
-        ol, "log_signal_sigma",
-        &ARDBaseKernel::m_log_signal_sigma,
+        ol, "isp_signal_sigma",
+        &ARDBaseKernel::m_isp_signal_sigma,
         OptionBase::buildoption,
-        "Log of the global signal variance.  Default value=0.0");
+        "Inverse softplus of the global signal variance.  Default value=0.0");
 
     declareOption(
-        ol, "log_global_sigma",
-        &ARDBaseKernel::m_log_global_sigma,
+        ol, "isp_global_sigma",
+        &ARDBaseKernel::m_isp_global_sigma,
         OptionBase::buildoption,
-        "Log of the global length-scale.  Note that if ARD is performed on\n"
-        "input-specific sigmas, this hyperparameter should have a fixed value\n"
-        "(and not be varied during the optimization).  Default value=0.0.\n");
+        "Inverse softplus of the global length-scale.  Note that if ARD is\n"
+        "performed on input-specific sigmas, this hyperparameter should have a\n"
+        "fixed value (and not be varied during the optimization).  Default\n"
+        "value=0.0.\n");
 
     declareOption(
-        ol, "log_input_sigma",
-        &ARDBaseKernel::m_log_input_sigma,
+        ol, "isp_input_sigma",
+        &ARDBaseKernel::m_isp_input_sigma,
         OptionBase::buildoption,
         "If specified, contain input-specific length-scales that can be\n"
         "individually optimized for (these are the ARD hyperparameters).\n");
@@ -108,7 +110,7 @@ void ARDBaseKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(m_log_input_sigma, copies);
+    deepCopyField(m_isp_input_sigma, copies);
     deepCopyField(m_input_sigma,     copies);
 }
 
