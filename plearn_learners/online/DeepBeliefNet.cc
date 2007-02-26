@@ -704,6 +704,7 @@ void DeepBeliefNet::train()
 
 void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target)
 {
+#if 0
     Vec cost;
     if (partial_costs)
         cost.resize(n_layers);
@@ -803,6 +804,7 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target)
 
     }
     // fprop in joint layer
+#endif
     
 }
 
