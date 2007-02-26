@@ -133,8 +133,10 @@ void CombiningCostsModule::fprop(const Vec& input, const Vec& target,
 }
 
 void CombiningCostsModule::bpropUpdate(const Vec& input, const Vec& target,
-                                       real cost, Vec& input_gradient)
+                                       real cost, Vec& input_gradient,
+                                       bool accumulate)
 {
+    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     PLASSERT( input.size() == input_size );
     PLASSERT( target.size() == target_size );
     input_gradient.resize( input_size );
@@ -167,8 +169,10 @@ void CombiningCostsModule::bpropUpdate(const Vec& input, const Vec& target,
 void CombiningCostsModule::bbpropUpdate(const Vec& input, const Vec& target,
                                         real cost,
                                         Vec& input_gradient,
-                                        Vec& input_diag_hessian)
+                                        Vec& input_diag_hessian,
+                                        bool accumulate)
 {
+    PLASSERT_MSG(!accumulate,"Implementation of bbpropUpdate cannot yet handle accumulate=false");
     PLASSERT( input.size() == input_size );
     PLASSERT( target.size() == target_size );
     input_gradient.resize( input_size );

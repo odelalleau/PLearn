@@ -79,7 +79,7 @@ public:
 
     //! Adapt based on the cost gradient, and obtain the input gradient
     virtual void bpropUpdate(const Vec& input, const Vec& target, real cost,
-                             Vec& input_gradient);
+                             Vec& input_gradient, bool accumulate=false);
 
     //! Without the input gradient
     virtual void bpropUpdate(const Vec& input, const Vec& target, real cost );
@@ -93,7 +93,8 @@ public:
     //! Similar to bpropUpdate, but adapt based also on the estimation
     //! of the diagonal of the Hessian matrix, and propagates this back.
     virtual void bbpropUpdate(const Vec& input, const Vec& target, real cost,
-                              Vec& input_gradient, Vec& input_diag_hessian );
+                              Vec& input_gradient, Vec& input_diag_hessian,
+                              bool accumulate=false);
 
     //! Without the input gradient and diag_hessian
     virtual void bbpropUpdate(const Vec& input, const Vec& target, real cost );

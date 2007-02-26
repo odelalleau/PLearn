@@ -147,8 +147,9 @@ void ProcessInputCostModule::fprop(const Vec& input, const Vec& target,
 // bpropUpdate //
 /////////////////
 void ProcessInputCostModule::bpropUpdate(const Vec& input, const Vec& target,
-                                         real cost, Vec& input_gradient)
+                                         real cost, Vec& input_gradient, bool accumulate)
 {
+    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     PLASSERT( processing_module );
     PLASSERT( cost_module );
     PLASSERT( input.size() == input_size );
@@ -166,8 +167,9 @@ void ProcessInputCostModule::bpropUpdate(const Vec& input, const Vec& target,
 /////////////////
 void ProcessInputCostModule::bbpropUpdate(const Vec& input, const Vec& target,
                                           real cost, Vec& input_gradient,
-                                          Vec& input_diag_hessian)
+                                          Vec& input_diag_hessian, bool accumulate)
 {
+    PLASSERT_MSG(!accumulate,"Implementation of bbpropUpdate cannot yet handle accumulate=false");
     PLASSERT( processing_module );
     PLASSERT( cost_module );
     PLASSERT( input.size() == input_size );

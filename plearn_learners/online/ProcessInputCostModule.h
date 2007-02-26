@@ -86,7 +86,7 @@ public:
 
     //! Adapt based on the cost, and compute input gradient to backpropagate.
     virtual void bpropUpdate(const Vec& input, const Vec& target, real cost,
-                             Vec& input_gradient);
+                             Vec& input_gradient, bool accumulate=false);
 
     /* Optional
        N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS, WHICH
@@ -103,7 +103,8 @@ public:
     //! If these methods are defined, you can use them INSTEAD of
     //! bpropUpdate(...)
     virtual void bbpropUpdate(const Vec& input, const Vec& target, real cost,
-                              Vec& input_gradient, Vec& input_diag_hessian);
+                              Vec& input_gradient, Vec& input_diag_hessian,
+                              bool accumulate=false);
 
     /* Optional
        N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS,

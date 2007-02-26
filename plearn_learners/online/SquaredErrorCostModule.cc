@@ -95,8 +95,10 @@ void SquaredErrorCostModule::fprop(const Vec& input, const Vec& target,
 
 
 void SquaredErrorCostModule::bpropUpdate(const Vec& input, const Vec& target,
-                                         real cost, Vec& input_gradient)
+                                         real cost, Vec& input_gradient, 
+                                         bool accumulate)
 {
+    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     PLASSERT( input.size() == input_size );
     PLASSERT( target.size() == target_size );
     input_gradient.resize( input_size );
@@ -110,9 +112,9 @@ void SquaredErrorCostModule::bpropUpdate(const Vec& input, const Vec& target,
 void SquaredErrorCostModule::bbpropUpdate(const Vec& input, const Vec& target,
                                           real cost,
                                           Vec& input_gradient,
-                                          Vec& input_diag_hessian)
+                                          Vec& input_diag_hessian, bool accumulate)
 {
-    bpropUpdate( input, target, cost, input_gradient );
+    bpropUpdate( input, target, cost, input_gradient, accumulate );
 
     input_diag_hessian.resize( input_size );
     input_diag_hessian.fill( 2. );

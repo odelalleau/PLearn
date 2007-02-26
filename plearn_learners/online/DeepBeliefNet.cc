@@ -180,8 +180,8 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
 
     declareOption(ol, "online", &DeepBeliefNet::online,
                   OptionBase::buildoption,
-                  "If true then all unsupervised training stages (as well as the fine-tuning stage)\n"
-                  "are done simultaneously.\n");
+                  "If true then all unsupervised training stages (as well as\n"
+                  "the fine-tuning stage) are done simultaneously.\n");
 
     declareOption(ol, "n_layers", &DeepBeliefNet::n_layers,
                   OptionBase::learntoption,
@@ -709,49 +709,94 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target)
         cost.resize(n_layers);
 
     layers[0]->expectation << input;
-    for( int i=0 ; i<n_layers-1 ; i++ )
+    for( int i=0 ; i<n_layers ; i++ )
     {
         // mean-field fprop from layer i to layer i+1
-        connections[i]->setAsDownInput( layers[i]->expectation );
-        layers[i+1]->getAllActivations( connections[i] );
+
+        Vec input;
+        if (i==n_layers-1 && use_classification_cost) // top layer is a joint layer
+        {
+            // set the input of the joint layer 
+            Vec joint_exp = joint_layer->expectation;
+            joint_exp.subVec( 0, layers[ n_layers-2 ]->size )
+                << layers[ n_layers-2 ]->expectation;
+            fill_one_hot( joint_exp.subVec( layers[ n_layers-2 ]->size, n_classes ),
+                          (int) round(target[0]), 0., 1. );
+            classification_module->joint_connection->setAsDownInput(
+                joint_layer->expectation );
+            layers[ n_layers-1 ]->getAllActivations(
+                get_pointer( classification_module->joint_connection ) );
+        }
+        else
+        {
+            connections[i]->setAsDownInput( layers[i]->expectation );
+            layers[i+1]->getAllActivations( connections[i] );
+        }
         layers[i+1]->computeExpectation();
+
         // propagate into local cost
         if( partial_costs && partial_costs[ i ] )
+        {
             partial_costs[ i ]->fprop( layers[ i+1 ]->expectation,
                                        target, cost[i] );
 
-        if( partial_costs && partial_costs[ i ] )
-        {
-            // put appropriate learning rate
-            connections[ i ]->setLearningRate( grad_learning_rate );
-            layers[ i+1 ]->setLearningRate( grad_learning_rate );
-
             // Backward pass
-
             partial_costs[ i ]->bpropUpdate( layers[ i+1 ]->expectation,
                                              target, cost,
                                              expectation_gradients[ i+1 ] );
+            // HACK: since the update will combine the gradients from all sources,
+            // weigh the gradients according to the desired learning rates
+            expectation_gradients[i+1] *= grad_learning_rate/cd_learning_rate;
+        }
+        else
+            expectation_gradients[i+1].clear();
 
-            // YB - LOUCHE: activation n'est pas vraiment l'output du connection ni l'input de layer i+1
-            // puisque c'est l'output de connection + le biais
-            layers[ i+1 ]->bpropUpdate( layers[ i+1 ]->activation, // - biais
-                                        layers[ i+1 ]->expectation,  
-                                        activation_gradients[ i+1 ],
-                                        expectation_gradients[ i+1 ] );
+        if( i==n_layers-1 && final_cost )
+        {
+            if( final_module )
+            {
+                final_module->fprop( layers[ n_layers-1 ]->expectation,
+                                     final_cost_input );
+                final_cost->fprop( final_cost_input, target, final_cost_value );
+                final_cost->bpropUpdate( final_cost_input, target,
+                                         final_cost_value[0],
+                                         final_cost_gradient );
+                // HACK: since the update will combine the gradients from all sources,
+                // weigh the gradients according to the desired learning rates
+                final_cost_gradient *= grad_learning_rate/cd_learning_rate;
+                final_module->bpropUpdate( layers[ n_layers-1 ]->expectation,
+                                           final_cost_input,
+                                           expectation_gradients[ n_layers-1 ],
+                                           final_cost_gradient );
+            }
+            else
+            {
+                final_cost->fprop( layers[ n_layers-1 ]->expectation, target,
+                                   final_cost_value );
+                final_cost->bpropUpdate( layers[ n_layers-1 ]->expectation,
+                                         target, final_cost_value[0],
+                                         expectation_gradients[ n_layers-1 ] );
+            }
 
-            connections[ i ]->bpropUpdate( layers[ i ]->expectation,
-                                           layers[ i+1 ]->activation,  // - biais
-                                           expectation_gradients[ i ],
-                                           activation_gradients[ i+1 ] );
+            train_costs[final_cost_index] = final_cost_value[0];
 
-            // put back old learning rate
-            connections[ i ]->setLearningRate( cd_learning_rate );
-            layers[ i+1 ]->setLearningRate( cd_learning_rate );
+            layers[ n_layers-1 ]->bpropUpdate( layers[ n_layers-1 ]->activation,
+                                               layers[ n_layers-1 ]->expectation,
+                                               activation_gradients[ n_layers-1 ],
+                                               expectation_gradients[ n_layers-1 ]);
 
-            layers[i]->setLearningRate( cd_learning_rate );
-            connections[i]->setLearningRate( cd_learning_rate );
+            connections[ n_layers-2 ]->bpropUpdate(
+                layers[ n_layers-2 ]->expectation,
+                layers[ n_layers-1 ]->activation,
+                expectation_gradients[ n_layers-2 ],
+                activation_gradients[ n_layers-1 ],
+                true); // accumulate into expectation_gradients[n_layers-2]
         }
 
+
+
+    }
+        
         contrastiveDivergenceStep( layers[ i ],
                                    connections[ i ],
                                    layers[ i+1 ] );

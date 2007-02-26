@@ -114,7 +114,7 @@ void CostModule::fprop(const Vec& input_and_target, Vec& output) const
 
 
 void CostModule::bpropUpdate(const Vec& input, const Vec& target, real cost,
-                             Vec& input_gradient)
+                             Vec& input_gradient, bool accumulate)
 {
     // default version, calling the bpropUpdate with inherited prototype
     Vec input_and_target( input_size + target_size );
@@ -124,7 +124,7 @@ void CostModule::bpropUpdate(const Vec& input, const Vec& target, real cost,
     Vec the_cost( 1, cost );
     Vec one( 1, 1 );
 
-    bpropUpdate( input_and_target, the_cost, input_and_target_gradient, one );
+    bpropUpdate( input_and_target, the_cost, input_and_target_gradient, one, accumulate );
 
     input_gradient = input_and_target_gradient.subVec( 0, input_size );
 }
@@ -148,7 +148,8 @@ void CostModule::bpropUpdate(const Vec& input_and_target, const Vec& output,
 
 
 void CostModule::bbpropUpdate(const Vec& input, const Vec& target, real cost,
-                              Vec& input_gradient, Vec& input_diag_hessian)
+                              Vec& input_gradient, Vec& input_diag_hessian,
+                              bool accumulate)
 {
     // default version, calling the bpropUpdate with inherited prototype
     Vec input_and_target( input_size + target_size );
@@ -162,7 +163,8 @@ void CostModule::bbpropUpdate(const Vec& input, const Vec& target, real cost,
 
     bbpropUpdate( input_and_target, the_cost,
                   input_and_target_gradient, one,
-                  input_and_target_diag_hessian, zero );
+                  input_and_target_diag_hessian, zero,
+                  accumulate );
 
     input_gradient = input_and_target_gradient.subVec( 0, input_size );
     input_diag_hessian = input_and_target_diag_hessian.subVec( 0, input_size );
