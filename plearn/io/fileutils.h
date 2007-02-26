@@ -86,6 +86,16 @@ vector<string> lsdir(const PPath& dirpath);
 //! Same as lsdir, except the returned entries are full paths.
 vector<PPath> lsdir_fullpath(const PPath& dirpath);
 
+/** Low-level cross-platform mkdir function, with the normal mkdir semantics. 
+ * Returns false if the directory could not be created (including because it
+ * already exists), and does not create intermediate directories along the way. 
+ *
+ * Contrast with the API of force_mkdir, which cannot be used in situations where
+ * race conditions matter, because of its "return true if the directory already
+ * exists" semantics.
+ */
+bool mkdir_lowlevel(const PPath& dirname);
+
 /*! Forces directory creation if it does not already exist. 
   (also creates any missing directory along its path).
   Return value indicates success (true) or failure (false).

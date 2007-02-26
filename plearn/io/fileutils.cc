@@ -223,26 +223,34 @@ vector<PPath> lsdir_fullpath(const PPath& dirpath)
 }
 
 
+bool mkdir_lowlevel(const PPath& dirname)
+{
+    return PR_MkDir(dirname.c_str(), 0777) == PR_SUCCESS;
+}
+    
+
 /////////////////
 // force_mkdir //
 /////////////////
+// If you can't spot a race condition in the previous version of this function
+// (look in the version control history), please don't change the logic used
+// here.
 bool force_mkdir(const PPath& dirname)
 {
     if (dirname.isEmpty())
         PLERROR("In force_mkdir - Parameter 'dirname' is empty");
-    if(isdir(dirname))
-        return true;
+    
     vector<PPath> paths;
     PPath path = dirname.absolute();
     while (!path.isRoot()) {
         paths.push_back(path);
         path = path.up();
     }
+
     for (int i = int(paths.size()) - 1; i >= 0; i--)
-        if (!isdir(paths[i]) &&
-            PR_MkDir(paths[i].absolute().c_str(), 0777) != PR_SUCCESS)
-            return false;
-    return true;
+        mkdir_lowlevel(paths[i].absolute());
+
+    return isdir(dirname);
 }
 
 //////////////////////////
