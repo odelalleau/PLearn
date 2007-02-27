@@ -469,7 +469,7 @@ void NNet::buildCosts(const Var& the_output, const Var& the_target, const Var& h
         {
             if (the_output->size() == 1) {
                 // Assume sigmoid output here!
-                costs[k] = cross_entropy(the_output, the_target);
+                costs[k] = stable_cross_entropy(before_transfer_func, the_target);
             } else {
                 if (output_transfer_func == "log_softmax")
                     costs[k] = -the_output[the_target];
@@ -478,7 +478,12 @@ void NNet::buildCosts(const Var& the_output, const Var& the_target, const Var& h
             }
         } 
         else if(cost_funcs[k]=="class_error")
-            costs[k] = classification_loss(the_output, the_target);
+        {
+            if (the_output->size()==1)
+                costs[k] = binary_classification_loss(the_output, the_target);
+            else
+                costs[k] = classification_loss(the_output, the_target);
+        }
         else if(cost_funcs[k]=="binary_class_error")
             costs[k] = binary_classification_loss(the_output, the_target);
         else if(cost_funcs[k]=="multiclass_error")

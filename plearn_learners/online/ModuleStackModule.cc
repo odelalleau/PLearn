@@ -113,7 +113,6 @@ void ModuleStackModule::fprop(const Vec& input, Vec& output) const
 {
     PLASSERT( n_modules > 0 );
     PLASSERT( input.size() == input_size );
-    PLASSERT( output.size() == output_size );
 
     modules[0]->fprop( input, values[0] );
     for( int i=1 ; i<n_modules-1 ; i++ )

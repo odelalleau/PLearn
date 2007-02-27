@@ -515,6 +515,15 @@ void DeepBeliefNet::train()
         nll_cost_index = train_cost_names.find(classification_cost->name()[0]);
     if ( final_cost )
         final_cost_index = train_cost_names.find(final_cost->name()[0]);
+    if ( partial_costs )
+    {
+        partial_cost_indices.resize(partial_costs.size());
+        for (int i=0;i<partial_costs.size();i++)
+            if (partial_costs[i])
+                partial_cost_indices[i] = train_cost_names.find(partial_costs[i]->name()[0] + "_" + tostring(i+1) );
+            else
+                partial_cost_indices[i] = -1;
+    }
 
     recons_cost_index = train_cost_names.find("recons_error");
 
@@ -730,8 +739,10 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
             // Backward pass
             // first time we set these gradients: do not accumulate
             partial_costs[ i ]->bpropUpdate( layers[ i+1 ]->expectation,
-                                             target, cost,
+                                             target, cost[i],
                                              expectation_gradients[ i+1 ] );
+
+            train_costs[partial_cost_indices[i]] = cost[i];
         }
         else
             expectation_gradients[i+1].clear();
@@ -1259,6 +1270,12 @@ TVec<string> DeepBeliefNet::getTestCostNames() const
 
     if( final_cost )
         cost_names.append( final_cost->name() );
+
+    if (partial_costs)
+        for (int i=0;i<n_layers-1;i++)
+            if (partial_costs[i])
+                cost_names.append( partial_costs[i]->name()[0] + "_" + tostring(i+1) );
+            
     return cost_names;
 }
 

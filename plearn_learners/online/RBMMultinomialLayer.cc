@@ -155,7 +155,7 @@ void RBMMultinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
     real* outg = output_gradient.data();
     real* ing = input_gradient.data();
     real* b = bias.data();
-    real* binc = bias_inc.data();
+    real* binc = momentum==0?0:bias_inc.data();
 
     for( int i=0 ; i<size ; i++ )
     {
