@@ -98,6 +98,8 @@ public:
     //! change the implicit_storage mode of the io of the PLearnServer instance.
     static void implicit_storage(bool impl_stor);
 
+    static void setVerbosity(int verbosity);
+
 };
 
 

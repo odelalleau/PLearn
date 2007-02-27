@@ -1,15 +1,32 @@
-#!/usr/bin/python2.3
+#!/usr/bin/env python
 #
 # xdispatch: dispatch utility for parallel PLearn
 #
 # Copyright 2007, Apstat Technologies, inc.
 # All rights reserved.
 
+# Author: Xavier Saint-Mleux
+
 from optparse import OptionParser
 from plearn.parallel.dispatch import *
 import tempfile
 import os
 import time
+
+
+usage= """
+Usage: xdispatch -s<nb_servers> [-l<max_load>] -- <plearn_command> <plearn_args>
+       Will launch nb_servers remote servers on machines with a load no
+       more than max_load for the last minute (default=1.0).
+       plearn_command is your favorite version of plearn.
+       Each server (slave) is launched like:
+         ssh <remote_host> <plearn_command> server 0
+       The master is launched like (on the local host):
+         <plearn_command> --servers <serv_file> <plearn_args>
+       where serv_file is a file that contains one line for each
+       of the running slave servers, with hostname, port and pid.
+       Once the master returns, all slaves are killed.
+"""
 
 #
 # Main
@@ -30,22 +47,12 @@ def main():
                       dest= "nb_servers",
                       help='Number of servers to launch (maximum)',
                       default=1)
-
-    parser.add_option('-m', '--min-nb-servers', type="int",
-                      dest= "min-nb_servers",
-                      help='Number of servers to launch (minimum)',
-                      default=1)
-
-    
+   
     (options, args) = parser.parse_args()
 
-    set_logdir('/home/saintmlx/xdispatch-log/')
+    set_logdir('/tmp/xdispatch-log/')
 
     Task._max_load= options.max_load
-
-    #xdispatch -l 3.0 -s 25 inslearn exp.pyplearn
-    #25x -> ssh distant_machine inslearn server 0
-    #1x  -> inslearn --servers serv_file exp.pyplearn
 
     if options.num_available_machines:
         print Task.availableMachinesCount()
@@ -53,7 +60,6 @@ def main():
         try:
             plearn_command= args[0]
             for i in xrange(options.nb_servers):
-                #launch_server( ['time',plearn_command, '--verbosity 999', 'server', '0'] )
                 launch_server( ['time',plearn_command, 'server', '0'] )
 
             tf, fname= tempfile.mkstemp(suffix= '.plserv', prefix= '.plserv_', dir= '/tmp/')
@@ -71,6 +77,8 @@ def main():
 
         finally:
             Task.kill_all_tasks()
+    else:
+        print usage
 
 if __name__ == '__main__':
     main()

@@ -100,6 +100,11 @@ void PLearnServer::implicit_storage(bool impl_stor)
     getInstance()->io.implicit_storage = impl_stor;
 }
 
+void PLearnServer::setVerbosity(int verbosity)
+{
+    PL_Log::instance().verbosity(verbosity);
+}
+
 
 BEGIN_DECLARE_REMOTE_FUNCTIONS
 
@@ -116,6 +121,10 @@ declareFunction("ascii", &PLearnServer::ascii,
 declareFunction("implicit_storage", &PLearnServer::implicit_storage,
                 (BodyDoc("change the implicit_storage mode of the io of the PLearnServer instance.\n"),
                  ArgDoc ("impl_stor", "Whether or not to use implicit_storage")));
+
+declareFunction("setVerbosity", &PLearnServer::setVerbosity,
+                (BodyDoc("change the verbosity for logs of the PLearnServer instance.\n"),
+                 ArgDoc ("verbosity", "verbosity level")));
 
 END_DECLARE_REMOTE_FUNCTIONS
 

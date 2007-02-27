@@ -126,6 +126,8 @@ void PLearnService::connectToServers(TVec< pair<string,int> > hostname_and_port)
 
         reserved_servers.insert(serv);
         serv->getResults();
+        serv->callFunction("setVerbosity", PL_Log::instance().verbosity());
+        serv->getResults();
         reserved_servers.erase(serv);
         available_servers.push(serv);
     }
