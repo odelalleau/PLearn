@@ -109,10 +109,10 @@ void OnlineLearningModule::bbpropUpdate(const Vec& input, const Vec& output,
 
 void OnlineLearningModule::setLearningRate( real dynamic_learning_rate )
 {
-    PLERROR("OnlineLearningModule does not have a learning rate that can be\n"
-            "changed from outside.\n"
-            "If your derived class has one, please implement setLearningrate()"
-            " in it.\n");
+    PLWARNING("OnlineLearningModule does not have a learning rate that can be\n"
+              "changed from outside.\n"
+              "If your derived class has one, please implement setLearningrate()"
+              " in it.\n");
 }
 
 

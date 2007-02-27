@@ -333,6 +333,7 @@ void DeepBeliefNet::build_final_cost()
     MODULE_LOG << "build_final_cost() called" << endl;
 
     final_cost_gradient.resize( final_cost->input_size );
+    final_cost->setLearningRate( grad_learning_rate );
 
     if( final_module )
     {
@@ -348,17 +349,7 @@ void DeepBeliefNet::build_final_cost()
                     "\n", n_layers-1, layers[n_layers-1]->size,
                     final_module->input_size);
 
-        Object* obj = 0;
-        OptionList::iterator it;
-        string opt_id;
-
-        // try to see if final_cost has an option named "learning_rate"
-        final_module_has_learning_rate =
-            final_cost->parseOptionName( "learning_rate", obj, it, opt_id );
-
-        final_cost_has_learning_rate = final_module &&
-            final_module->parseOptionName( "learning_rate", obj, it, opt_id );
-
+        final_module->setLearningRate( grad_learning_rate );
     }
     else
     {
@@ -368,10 +359,33 @@ void DeepBeliefNet::build_final_cost()
                     "\n", n_layers-1, layers[n_layers-1]->size,
                     final_cost->input_size);
     }
-    // TODO: check target size
+
+    // check target size and final_cost->input_size
+    if( n_classes == 0 ) // regression
+    {
+        if( final_cost->input_size != targetsize() )
+            PLERROR("DeepBeliefNet::build_final_cost() - \n"
+                    "final_cost->input_size (%d) != targetsize() (%d),\n"
+                    "although we are doing regression (n_classes == 0).\n",
+                    final_cost->input_size, targetsize());
+    }
+    else
+    {
+        if( final_cost->input_size != n_classes )
+            PLERROR("DeepBeliefNet::build_final_cost() - \n"
+                    "final_cost->input_size (%d) != n_classes (%d),\n"
+                    "although we are doing classification (n_classes != 0).\n",
+                    final_cost->input_size, n_classes);
+
+        if( targetsize() != 1 )
+            PLERROR("DeepBeliefNet::build_final_cost() - \n"
+                    "targetsize() (%d) != 1,\n"
+                    "although we are doing regression (n_classes == 0).\n",
+                    targetsize());
+    }
+
 }
 
-// ### Nothing to add here, simply calls build_
 void DeepBeliefNet::build()
 {
     inherited::build();
@@ -421,10 +435,6 @@ int DeepBeliefNet::outputsize() const
         out_size += layers[n_layers-1]->size;
 
     return out_size;
-/*
-    return (n_classes > 0) ? n_classes
-                           : targetsize();
-*/
 }
 
 void DeepBeliefNet::forget()
@@ -602,7 +612,7 @@ void DeepBeliefNet::train()
         }
 
         // possible supervised part
-        if(use_classification_cost )
+        if( use_classification_cost )
         {
             MODULE_LOG << "Training the classification module" << endl;
 
@@ -617,7 +627,10 @@ void DeepBeliefNet::train()
                                       end_stage - stage );
 
             // set appropriate learning rate
-            setLearningRate( cd_learning_rate );
+            joint_layer->setLearningRate( cd_learning_rate );
+            classification_module->joint_connection->setLearningRate(
+                cd_learning_rate );
+            layers[ n_layers-1 ]->setLearningRate( cd_learning_rate );
 
             int previous_stage = (n_layers < 3) ? 0
                 : training_schedule[n_layers-3];
@@ -903,7 +916,7 @@ void DeepBeliefNet::greedyStep( const Vec& input, const Vec& target, int index )
     PLASSERT( index < n_layers );
 
     layers[0]->expectation << input;
-    for( int i=0 ; i<index ; i++ )
+    for( int i=0 ; i<=index ; i++ )
     {
         connections[i]->setAsDownInput( layers[i]->expectation );
         layers[i+1]->getAllActivations( connections[i] );
@@ -913,11 +926,6 @@ void DeepBeliefNet::greedyStep( const Vec& input, const Vec& target, int index )
     // TODO: add another learning rate?
     if( partial_costs && partial_costs[ index ] )
     {
-        // Deterministic forward pass
-        connections[ index ]->setAsDownInput( layers[ index ]->expectation );
-        layers[ index+1 ]->getAllActivations( connections[ index ] );
-        layers[ index+1 ]->computeExpectation();
-
         // put appropriate learning rate
         connections[ index ]->setLearningRate( grad_learning_rate );
         layers[ index+1 ]->setLearningRate( grad_learning_rate );
@@ -949,7 +957,8 @@ void DeepBeliefNet::greedyStep( const Vec& input, const Vec& target, int index )
 
     contrastiveDivergenceStep( layers[ index ],
                                connections[ index ],
-                               layers[ index+1 ] );
+                               layers[ index+1 ],
+                               true );
 }
 
 void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
@@ -964,21 +973,16 @@ void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
         layers[i+1]->computeExpectation();
     }
 
-    Vec target_exp = classification_module->target_layer->expectation;
-    fill_one_hot( target_exp, (int) round(target[0]), 0., 1. );
-
     if( partial_costs && partial_costs[ n_layers-2 ] )
     {
         // Deterministic forward pass
-        classification_module->joint_connection->setAsDownInput(
-            joint_layer->expectation );
-        layers[ n_layers-1 ]->getAllActivations(
-            get_pointer( classification_module->joint_connection ) );
+        connections[ n_layers-2 ]->setAsDownInput(
+            layers[ n_layers-2 ]->expectation );
+        layers[ n_layers-1 ]->getAllActivations( connections[ n_layers-2 ] );
         layers[ n_layers-1 ]->computeExpectation();
 
         // put appropriate learning rate
-        classification_module->previous_to_last->setLearningRate(
-            grad_learning_rate );
+        connections[ n_layers-2 ]->setLearningRate( grad_learning_rate );
         layers[ n_layers-1 ]->setLearningRate( grad_learning_rate );
 
         // Backward pass
@@ -996,17 +1000,19 @@ void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
                                            expectation_gradients[ n_layers-1 ]
                                          );
 
-        classification_module->previous_to_last->bpropUpdate(
+        connections[ n_layers-2 ]->bpropUpdate(
             layers[ n_layers-2 ]->expectation,
             layers[ n_layers-1 ]->activation,
             expectation_gradients[ n_layers-2 ],
             activation_gradients[ n_layers-1 ] );
 
         // put back old learning rate
-        classification_module->previous_to_last->setLearningRate(
-            cd_learning_rate );
+        connections[ n_layers-2 ]->setLearningRate( cd_learning_rate );
         layers[ n_layers-1 ]->setLearningRate( cd_learning_rate );
     }
+
+    Vec target_exp = classification_module->target_layer->expectation;
+    fill_one_hot( target_exp, (int) round(target[0]), 0., 1. );
 
     contrastiveDivergenceStep(
         get_pointer( joint_layer ),
@@ -1271,17 +1277,19 @@ TVec<string> DeepBeliefNet::getTestCostNames() const
     if( final_cost )
         cost_names.append( final_cost->name() );
 
-    if (partial_costs)
-        for (int i=0;i<n_layers-1;i++)
-            if (partial_costs[i])
-                cost_names.append( partial_costs[i]->name()[0] + "_" + tostring(i+1) );
-            
     return cost_names;
 }
 
 TVec<string> DeepBeliefNet::getTrainCostNames() const
 {
     TVec<string> cost_names = getTestCostNames() ;
+
+    if (partial_costs)
+        for (int i=0;i<n_layers-1;i++)
+            if (partial_costs[i])
+                cost_names.append( partial_costs[i]->name()[0]
+                                   + "_" + tostring(i+1) );
+
     cost_names.append("recons_error");
     return cost_names;
 }
@@ -1304,14 +1312,6 @@ void DeepBeliefNet::setLearningRate( real the_learning_rate )
             the_learning_rate );
         joint_layer->setLearningRate( the_learning_rate );
     }
-
-    if( final_module_has_learning_rate )
-        final_cost->setOption( "learning_rate",
-                               tostring(the_learning_rate ) );
-
-    if( final_cost_has_learning_rate )
-        final_cost->setOption( "learning_rate",
-                               tostring(the_learning_rate ) );
 }
 
 

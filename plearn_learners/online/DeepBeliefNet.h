@@ -130,6 +130,7 @@ public:
     bool online;
 
     //! Wether we do a step of joint contrastive divergence on top-layer
+    //! Only used if online for the moment
     bool top_layer_joint_cd;
 
     //#####  Not Options  #####################################################
