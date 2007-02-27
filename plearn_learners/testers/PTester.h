@@ -123,6 +123,7 @@ public:
      */
     bool enforce_clean_expdir;
      
+    bool parallelize_here;
     // ****************
     // * Constructors *
     // ****************

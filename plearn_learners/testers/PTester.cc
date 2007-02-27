@@ -93,7 +93,8 @@ PTester::PTester()
        save_test_confidence(false),
        should_train(true),
        should_test(true),
-       enforce_clean_expdir(true)
+       enforce_clean_expdir(true),
+       parallelize_here(true)
 {}
 
 PLEARN_IMPLEMENT_OBJECT(
@@ -260,6 +261,10 @@ void PTester::declareOptions(OptionList& ol)
         "some precomputed results that are being generated as the model is\n"
         "loaded, so it is not empty.  In those contexts, it makes sense to allow\n"
         "this option to be false.\n");
+
+    declareOption(
+        ol, "parallelize_here", &PTester::parallelize_here, OptionBase::buildoption | OptionBase::nosave,
+        "Reserve remote servers at this level if true.");
 
     inherited::declareOptions(ol);
 }
@@ -1033,7 +1038,7 @@ Vec PTester::perform(bool call_forget)
         global_stats_vm->saveFieldInfos();
 
         split_stats_vm = new FileVMatrix(expdir / "split_stats.pmat",
-                                         0, 1 + nstats);
+                                         nsplits, 1 + nstats);
         split_stats_vm->declareField(0, "splitnum");
         for (int k = 0; k < nstats; k++)
             split_stats_vm->declareField(k+1, statspecs[k].setname + "." + statspecs[k].intstatname);
@@ -1045,9 +1050,10 @@ Vec PTester::perform(bool call_forget)
     TVec<PP<RemotePLearnServer> > servers= service.reserveServers(nsplits);
     int nservers= servers.length();
 
-    if(nservers > 1)
+    if(nservers > 1 && parallelize_here)
     {
         map<PP<RemotePLearnServer>, int> testers_ids;
+        map<PP<RemotePLearnServer>, int> splitnums;
         for (int splitnum= 0; splitnum < nservers && splitnum < nsplits; ++splitnum)
             servers[splitnum]->newObjectAsync(*this);
 
@@ -1064,6 +1070,7 @@ Vec PTester::perform(bool call_forget)
                     s->getResults(id);
                     testers_ids[s]= id;
                     s->callMethod(id, "perform1Split", splits_called);
+                    splitnums[s]= splits_called;
                     ++splits_called;
                 }
                 else
@@ -1080,7 +1087,8 @@ Vec PTester::perform(bool call_forget)
                 ++splits_done;
                 if (split_stats_vm)
                 {
-                    split_stats_vm->appendRow(splitres);
+                    split_stats_vm->putRow(splitnums[s],splitres);
+                    //split_stats_vm->appendRow(splitres);
                     split_stats_vm->flush();
                 }
             
@@ -1106,7 +1114,8 @@ Vec PTester::perform(bool call_forget)
             
             if (split_stats_vm)
             {
-                split_stats_vm->appendRow(splitres);
+                split_stats_vm->putRow(splitnum, splitres);
+                //split_stats_vm->appendRow(splitres);
                 split_stats_vm->flush();
             }
             

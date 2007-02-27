@@ -39,10 +39,6 @@ def main():
     
     (options, args) = parser.parse_args()
 
-    #print options
-    #print "==="
-    #print args
-
     set_logdir('/home/saintmlx/xdispatch-log/')
 
     Task._max_load= options.max_load

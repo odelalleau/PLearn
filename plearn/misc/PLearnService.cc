@@ -76,7 +76,7 @@ PLearnService& PLearnService::instance()
 PLearnService::PLearnService()
 {}
 
-
+map<RemotePLearnServer*, pair<string,int> > PLearnService::servers_ids;//init.
 void PLearnService::connectToServers(PPath serversfile)
 {
     PStream in = openFile(serversfile, PStream::raw_ascii, "r");
@@ -117,6 +117,8 @@ void PLearnService::connectToServers(TVec< pair<string,int> > hostname_and_port)
         
         TVec<PP<RemotePLearnServer> > ss;
         ss.push_back(serv);
+
+        servers_ids[serv]= host_port;
 
         watchServers(ss, log_callback, progress_callback);
 
@@ -390,8 +392,9 @@ PLearnService::~PLearnService()
 
 void PLearnService::log_callback(PP<RemotePLearnServer> server, const string& module_name, int vlevel, const string& msg)
 { 
-    unsigned int server_id= reinterpret_cast<unsigned int>(static_cast<RemotePLearnServer*>(server));
-    PL_LOG(vlevel) << "<From server " << server_id << "> [" << module_name << "] " << msg << flush; 
+    //unsigned int server_id= reinterpret_cast<unsigned int>(static_cast<RemotePLearnServer*>(server));
+    //unsigned int server_id= getServerID(server);
+    PL_LOG(vlevel) << "<From server " << servers_ids[server] << "> [" << module_name << "] " << msg << flush; 
 }
 
 PLearnService::progress_bars_t PLearnService::progress_bars; // init
@@ -399,7 +402,8 @@ PLearnService::progress_bars_t PLearnService::progress_bars; // init
 void PLearnService::progress_callback(PP<RemotePLearnServer> server, unsigned int pbar, char action, 
                                       unsigned int pos, const string& title)
 {
-    unsigned int server_id= reinterpret_cast<unsigned int>(static_cast<RemotePLearnServer*>(server));
+    //unsigned int server_id= reinterpret_cast<unsigned int>(static_cast<RemotePLearnServer*>(server));
+    //unsigned int server_id= getServerID(server);
     static bool need_to_set_pb_plugin= true;
     if(need_to_set_pb_plugin)
     {
@@ -413,7 +417,7 @@ void PLearnService::progress_callback(PP<RemotePLearnServer> server, unsigned in
         if(progress_bars.find(server) == progress_bars.end())
             progress_bars[server]= map<unsigned int, PP<ProgressBar> >();
         {//local environment for 'fulltitle'... silly c++ switch/case...
-            string fulltitle= string("<server#") + tostring(server_id) 
+            string fulltitle= string("<server#") + tostring(servers_ids[server]) 
                 + ":pb#" + tostring(pbar) + "> " + title;//adjust title w/server info
             progress_bars[server][pbar]= new ProgressBar(fulltitle, pos);
         }

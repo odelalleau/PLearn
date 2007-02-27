@@ -50,6 +50,7 @@
 #include <plearn/io/fileutils.h> //!< For chdir()
 #include <plearn/io/load_and_save.h>
 #include <plearn/io/pl_log.h>
+#include <plearn/math/random.h>
 
 #include <plearn/io/PyPLearnScript.h> // For smartLoadObject
 
@@ -264,7 +265,7 @@ bool PLearnServer::run()
                 DBG_LOG << "PLearnServer NEW OBJECT w/o ID" << endl;
                 obj = 0;
                 io >> obj;           // Read new object
-                obj_id= findFreeObjID(obj);
+                obj_id= findFreeObjID();
                 DBG_LOG << "  obj_id = " << obj_id << endl;
                 objmap[obj_id] = obj;
                 Object::prepareToSendResults(io,1);
@@ -383,19 +384,16 @@ bool PLearnServer::run()
     return true;
 }
 
-int PLearnServer::findFreeObjID(const Object* obj) const
+int PLearnServer::findFreeObjID() const
 {
-    //DUMMY method that tries to find an unused ID (LCG look-alike seeded w/ obj's address)
+    //DUMMY method that tries to find an unused ID
     // this algorithm is not guaranteed to work... use at your own risk or modify accordingly
-    int id= reinterpret_cast<unsigned int>(obj) >> 1;
-    if(id < 0) id= -id;
+    int id;
     const int maxtries= 65536;
     int ntries= 0;
-    while(objmap.find(id) != objmap.end() && ++ntries < maxtries)
-    {
-        id= id*1664525 + 1013904223;//simple "LCG"
-        if(id < 0) id= -id;
-    }
+    do
+        id= static_cast<int>(bounded_uniform(0,2000000000));
+    while(objmap.find(id) != objmap.end() && ++ntries < maxtries);
     if(ntries >= maxtries)
         PLERROR("PLearnServer::findFreeObjID : can't find a suitable ID within %d tries.", maxtries);
     return id;

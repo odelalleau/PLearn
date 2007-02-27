@@ -72,6 +72,7 @@ private:
 
     typedef map<RemotePLearnServer*, map<unsigned int, PP<ProgressBar> > > progress_bars_t;
     static progress_bars_t progress_bars;
+    static map<RemotePLearnServer*, pair<string,int> > servers_ids;
 
 public:
     friend class RemotePLearnServer;

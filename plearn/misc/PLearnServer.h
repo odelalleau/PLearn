@@ -69,7 +69,7 @@ protected:
     bool clear_maps;
     ObjMap objmap;
 
-    virtual int findFreeObjID(const Object* obj) const;
+    virtual int findFreeObjID() const;
 
 public:
     PLearnServer(const PStream& input_output);

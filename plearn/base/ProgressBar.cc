@@ -187,6 +187,17 @@ RemoteProgressBarPlugin::RemoteProgressBarPlugin(PStream& _out, unsigned int nti
 void RemoteProgressBarPlugin::addProgressBar(ProgressBar* pb)
 { printTitle(pb); }
 
+map<ProgressBar*, unsigned int> RemoteProgressBarPlugin::pb_ids;//init
+unsigned int RemoteProgressBarPlugin::next_pb_id= 0;//init
+
+unsigned int RemoteProgressBarPlugin::getPBarID(ProgressBar* pb)
+{
+    if(pb_ids.find(pb) == pb_ids.end())
+        pb_ids[pb]= ++next_pb_id;
+    return pb_ids[pb];
+}
+
+
 void RemoteProgressBarPlugin::update(ProgressBar* pb, unsigned long newpos)
 {
     // this handles the case where we reuse the same progress bar
@@ -199,7 +210,7 @@ void RemoteProgressBarPlugin::update(ProgressBar* pb, unsigned long newpos)
              int(round( pb->currentpos / (double(pb->maxpos) / nticks) ))))
     {
         out.write("*PU ");
-        out << reinterpret_cast<unsigned int>(pb) << newpos << endl;
+        out << getPBarID(pb) << newpos << endl;
         pb->currentpos = newpos;
     }
 }
@@ -208,13 +219,13 @@ void RemoteProgressBarPlugin::printTitle(ProgressBar* pb)
 {
     string fulltitle = string(" ") + pb->title + " (" + tostring(pb->maxpos) + ") ";
     out.write("*PA ");
-    out << reinterpret_cast<unsigned int>(pb) << pb->maxpos << fulltitle << endl;
+    out << getPBarID(pb) << pb->maxpos << fulltitle << endl;
 }
 
 void RemoteProgressBarPlugin::killProgressBar(ProgressBar* pb)
 {
     out.write("*PK ");
-    out << reinterpret_cast<unsigned int>(pb) << endl;
+    out << getPBarID(pb) << endl;
 }
 
 //*************************/

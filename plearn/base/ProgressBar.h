@@ -105,6 +105,9 @@ public:
     virtual void killProgressBar(ProgressBar* pb);
 
 protected:
+    static map<ProgressBar*, unsigned int> pb_ids;
+    static unsigned int next_pb_id;
+    static unsigned int getPBarID(ProgressBar* pb);
     void printTitle(ProgressBar* pb);
     unsigned int nticks;
 };
