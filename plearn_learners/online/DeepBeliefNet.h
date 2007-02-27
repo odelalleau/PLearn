@@ -129,6 +129,9 @@ public:
     //! whether to do things by stages, including fine-tuning, or on-line
     bool online;
 
+    //! Wether we do a step of joint contrastive divergence on top-layer
+    bool top_layer_joint_cd;
+
     //#####  Not Options  #####################################################
 
     //! Timer for monitoring the speed
@@ -262,6 +265,9 @@ protected:
 
     //! buffers bottom layer activation during onlineStep 
     mutable Vec save_layer_activation;
+
+    //! buffers bottom layer expectation during onlineStep 
+    mutable Vec save_layer_expectation;
 
     //! Does final_module exist and have a "learning_rate" option
     bool final_module_has_learning_rate;
