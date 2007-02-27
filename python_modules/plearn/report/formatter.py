@@ -267,3 +267,4 @@ def createPDF(file_name, content):
     assert os.path.exists(pdf_name), "PDF could not be created!"
     os.system("pdflatex %s >& /dev/null"%file_name)
     os.system("pdflatex %s >& /dev/null"%file_name)
+    os.system("pdflatex %s >& /dev/null"%file_name)

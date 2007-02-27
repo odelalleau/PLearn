@@ -38,6 +38,12 @@ BOTTOM, HEIGHT = 0.100, 0.800
 LINE_COLORS = [ '#660033', 'b', 'r', 'k', "#CDBE70",
                 "#FF8C69", "#65754D", "#4d6575", "#754d65" ]
 
+STYLELIST = [
+    'b-',  'g-',  'r-',  'c-',  'm-',  'k-',  'y-',
+    'b--', 'g--', 'r--', 'c--', 'm--', 'k--', 'y--',
+    'b:',  'g:',  'r:',  'c:',  'm:',  'k:',  'y:',
+    'b-.', 'g-.', 'r-.', 'c-.', 'm-.', 'k-.', 'y-.' ] * 5
+
 _figure_counter = 0
 def getNewFigure(figsize=(12,10)):
     global _figure_counter

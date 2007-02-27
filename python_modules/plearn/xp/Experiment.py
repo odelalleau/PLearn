@@ -129,11 +129,11 @@ class Experiment(PyPLearnObject):
     # PyPLearnObject's classmethod
     _by_value = classmethod( lambda cls: True )
 
-    def cache_experiments( cls, exproot=None, forget=True ):
+    def cache_experiments( cls, exproot=None, forget=True, name_key=None ):
         if exproot is None:
             roots = pyplearn.config.get_option( 'EXPERIMENTS', 'expdir_root' ).split(',')            
             for exproot in roots:
-                cls.cache_experiments( exproot=exproot, forget=False )
+                cls.cache_experiments( exproot=exproot, forget=False, name_key=name_key )
             return
 
         if cls._cached is None:
@@ -151,8 +151,13 @@ class Experiment(PyPLearnObject):
             dirlist = os.listdir( os.getcwd() )            
 
         for fname in dirlist:
-            if fname.startswith( cls._expdir_prefix ):                
-                x = cls( path = os.path.join(exproot, fname) )
+            candidate_path = os.path.join(exproot, fname)
+            candidate_infopath = os.path.join(candidate_path, cls._metainfos_fname)
+            if fname.startswith( cls._expdir_prefix ) \
+                   and os.path.exists(candidate_infopath):
+                x = cls( path = candidate_path )
+                if name_key:
+                    x.setName(x.expkey[name_key])
                 cls._cached.append( x )
         return cls._cached
     cache_experiments = classmethod( cache_experiments )
@@ -175,10 +180,11 @@ class Experiment(PyPLearnObject):
     #
     def __init__( self, **overrides ):
         PyPLearnObject.__init__( self, **overrides )
+        self._name = None
         if self.expkey is None:
             self.expkey = ExpKey( os.path.join( self.path, self._metainfos_fname ) )
 
-        # Update abspath
+        # Update abspath        
         self.abspath = os.path.abspath( self.path )
 
     def __del__(self):
@@ -205,6 +211,7 @@ class Experiment(PyPLearnObject):
                 pmat = PMat(os.path.join(self.abspath, pmat))
                 setattr(self, attr_name, pmat)
                 self._opened_pmats.append(pmat)
+        return self._opened_pmats[-1]
 
     def getKey( self, expkey = None ):
         if expkey is None:
@@ -261,3 +268,16 @@ class Experiment(PyPLearnObject):
 
     def running( self ):
         return len(self.expkey) == 0
+
+
+    ###  set/getName
+
+    def getName(self):
+        assert self._name
+        return self._name
+
+    def setName(self, name):
+        self._name = name
+        
+
+    
