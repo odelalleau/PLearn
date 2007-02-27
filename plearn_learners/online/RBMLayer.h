@@ -207,8 +207,9 @@ protected:
     Vec bias_pos_stats;
     //! Accumulates negative contribution to the gradient of bias
     Vec bias_neg_stats;
-    //! Stores the momenconst Vec& pos, const Vec& neg, tum of the gradient
+    //! Stores the momentum of the gradient
     Vec bias_inc;
+
 
     //! Count of positive examples
     int pos_count;
@@ -232,6 +233,10 @@ private:
     //#####  Private Data Members  ############################################
 
     // The rest of the private stuff goes here
+    //! Stores the computed input gradient (useful when accumulate)
+    Vec tmp_input_gradient;
+    //! Stores the computed input diag hessian (useful when accumulate)
+    Vec tmp_input_diag_hessian;
 };
 
 // Declares a few other classes and functions related to this class

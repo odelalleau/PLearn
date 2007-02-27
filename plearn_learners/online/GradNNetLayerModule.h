@@ -124,7 +124,8 @@ public:
                               Vec& input_gradient,
                               const Vec& output_gradient,
                               Vec& input_diag_hessian,
-                              const Vec& output_diag_hessian);
+                              const Vec& output_diag_hessian,
+                              bool accumulate=false);
     */
 
     virtual void forget();

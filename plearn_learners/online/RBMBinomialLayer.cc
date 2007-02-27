@@ -34,7 +34,7 @@
 
 // Authors: Pascal Lamblin & Dan Popovici
 
-/*! \file RBMPLayer.cc */
+/*! \file RBMBinomialLayer.cc */
 
 
 
@@ -116,7 +116,7 @@ void RBMBinomialLayer::fprop( const Vec& input, Vec& output ) const
 }
 
 void RBMBinomialLayer::fprop( const Vec& input, const Vec& rbm_bias,
-                      Vec& output ) const
+                              Vec& output ) const
 {
     PLASSERT( input.size() == input_size );
     PLASSERT( rbm_bias.size() == input_size );
@@ -131,38 +131,51 @@ void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
                                    const Vec& output_gradient,
                                    bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     PLASSERT( input.size() == size );
     PLASSERT( output.size() == size );
     PLASSERT( output_gradient.size() == size );
-    input_gradient.resize( size );
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradient.size() == size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+    }
+    else
+    {
+        input_gradient.resize( size );
+        input_gradient.clear();
+    }
+
+    if( momentum != 0. )
+        bias_inc.resize( size );
 
     for( int i=0 ; i<size ; i++ )
     {
         real output_i = output[i];
-        input_gradient[i] = - output_i * (1-output_i) * output_gradient[i];
-    }
+        real in_grad_i = - output_i * (1-output_i) * output_gradient[i];
+        input_gradient[i] += in_grad_i;
 
-    if( momentum == 0. )
-    {
-        // update the bias: bias -= learning_rate * input_gradient
-        multiplyAcc( bias, input_gradient, -learning_rate );
-    }
-    else
-    {
-        bias_inc.resize( size );
-        // The update rule becomes:
-        // bias_inc = momentum * bias_inc - learning_rate * input_gradient
-        // bias += bias_inc
-        multiplyScaledAdd(input_gradient, momentum, -learning_rate, bias_inc);
-        bias += bias_inc;
+        if( momentum == 0. )
+        {
+            // update the bias: bias -= learning_rate * input_gradient
+            bias[i] -= learning_rate * in_grad_i;
+        }
+        else
+        {
+            // The update rule becomes:
+            // bias_inc = momentum * bias_inc - learning_rate * input_gradient
+            // bias += bias_inc
+            bias_inc[i] = momentum * bias_inc[i] - learning_rate * in_grad_i;
+            bias[i] += bias_inc[i];
+        }
     }
 }
 
+//! TODO: add "accumulate" here
 void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias,
-                           const Vec& output,
-                           Vec& input_gradient, Vec& rbm_bias_gradient,
-                           const Vec& output_gradient)
+                                   const Vec& output,
+                                   Vec& input_gradient, Vec& rbm_bias_gradient,
+                                   const Vec& output_gradient)
 {
     PLASSERT( input.size() == size );
     PLASSERT( rbm_bias.size() == size );
@@ -177,7 +190,7 @@ void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias,
         input_gradient[i] = - output_i * (1-output_i) * output_gradient[i];
     }
 
-    rbm_bias << input_gradient;
+    rbm_bias_gradient << input_gradient;
 }
 
 real RBMBinomialLayer::fpropNLL(const Vec& target)

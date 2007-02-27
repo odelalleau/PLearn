@@ -111,8 +111,6 @@ void TanhModule::bpropUpdate(const Vec& input, const Vec& output,
                              Vec& input_gradient, const Vec& output_gradient,
                              bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
-
     int in_size = input.size();
     int out_size = output.size();
     int og_size = output_gradient.size();
@@ -135,11 +133,21 @@ void TanhModule::bpropUpdate(const Vec& input, const Vec& output,
                 og_size, output_size);
     }
 
-    input_gradient.resize( input_size );
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradient.size() == input_size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+    }
+    else
+    {
+        input_gradient.resize( input_size );
+        input_gradient.clear();
+    }
+
     for( int i=0 ; i<input_size ; i++ )
     {
         real output_i = output[i];
-        input_gradient[i] = in_scale *
+        input_gradient[i] += in_scale *
             (ex_scale - output_i*output_i/ex_scale)*output_gradient[i];
     }
 
@@ -170,8 +178,6 @@ void TanhModule::bbpropUpdate(const Vec& input, const Vec& output,
                               const Vec& output_diag_hessian,
                               bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bbpropUpdate cannot yet handle accumulate=false");
-
     int odh_size = output_diag_hessian.size();
 
     // size check
@@ -183,24 +189,33 @@ void TanhModule::bbpropUpdate(const Vec& input, const Vec& output,
                 odh_size, output_size);
     }
 
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_diag_hessian.size() == input_size,
+                      "Cannot resize input_diag_hessian AND accumulate into it"
+                    );
+    }
+    else
+    {
+        input_diag_hessian.resize( input_size );
+        input_diag_hessian.clear();
+    }
 
-    bpropUpdate( input, output, input_gradient, output_gradient );
-
-    input_diag_hessian.resize( input_size );
     for( int i=0 ; i<input_size ; i++ )
     {
         real output_i = output[i];
         real fprime_i = in_scale * (ex_scale-output_i*output_i / ex_scale);
 
         if( estimate_simpler_diag_hessian )
-            input_diag_hessian[i] =
+            input_diag_hessian[i] +=
                 fprime_i*fprime_i*output_diag_hessian[i];
         else
-            input_diag_hessian[i] =
+            input_diag_hessian[i] +=
                 fprime_i*fprime_i*output_diag_hessian[i]
                 - 2*in_scale/ex_scale*fprime_i*output_i*output_gradient[i];
     }
 
+    bpropUpdate( input, output, input_gradient, output_gradient, accumulate );
 }
 
 

@@ -212,13 +212,16 @@ void RBMClassificationModule::bpropUpdate(const Vec& input, const Vec& output,
                                           const Vec& output_gradient,
                                           bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     // size checks
     PLASSERT( input.size() == input_size );
     PLASSERT( output.size() == output_size );
     PLASSERT( output_gradient.size() == output_size );
-    input_gradient.resize( input_size );
-    input_gradient.clear();
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradient.size() == input_size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+    }
 
     // bpropUpdate in target_layer,
     // assuming target_layer->activation is up-to-date, but it should be the
@@ -249,7 +252,7 @@ void RBMClassificationModule::bpropUpdate(const Vec& input, const Vec& output,
     // at this point, the gradient can be backpropagated through
     // previous_to_last the usual way (even if output is wrong)
     previous_to_last->bpropUpdate( input, last_act,
-                                   input_gradient, d_last_act );
+                                   input_gradient, d_last_act, accumulate );
 
 }
 
@@ -273,8 +276,8 @@ void RBMClassificationModule::forget()
 //!                  in_hess, out_hess)
 //! AND IGNORES INPUT HESSIAN AND INPUT GRADIENT.
 void RBMClassificationModule::bbpropUpdate(const Vec& input, const Vec& output,
-                                const Vec& output_gradient,
-                                const Vec& output_diag_hessian)
+                                           const Vec& output_gradient,
+                                           const Vec& output_diag_hessian)
 {
 }
 */
@@ -287,10 +290,11 @@ void RBMClassificationModule::bbpropUpdate(const Vec& input, const Vec& output,
 //! N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS, WHICH
 //! RAISES A PLERROR.
 void RBMClassificationModule::bbpropUpdate(const Vec& input, const Vec& output,
-                                Vec& input_gradient,
-                                const Vec& output_gradient,
-                                Vec& input_diag_hessian,
-                                const Vec& output_diag_hessian)
+                                           Vec& input_gradient,
+                                           const Vec& output_gradient,
+                                           Vec& input_diag_hessian,
+                                           const Vec& output_diag_hessian,
+                                           bool accumulate)
 {
 }
 */

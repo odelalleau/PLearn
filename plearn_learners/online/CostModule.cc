@@ -39,6 +39,8 @@
 
 
 #include "CostModule.h"
+#include <plearn/math/TMat_maths.h>
+
 
 namespace PLearn {
 using namespace std;
@@ -124,9 +126,16 @@ void CostModule::bpropUpdate(const Vec& input, const Vec& target, real cost,
     Vec the_cost( 1, cost );
     Vec one( 1, 1 );
 
-    bpropUpdate( input_and_target, the_cost, input_and_target_gradient, one, accumulate );
+    bpropUpdate( input_and_target, the_cost, input_and_target_gradient, one );
 
-    input_gradient = input_and_target_gradient.subVec( 0, input_size );
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradient.size() == input_size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+        input_gradient += input_and_target_gradient.subVec( 0, input_size );
+    }
+    else
+        input_gradient = input_and_target_gradient.subVec( 0, input_size );
 }
 
 void CostModule::bpropUpdate(const Vec& input, const Vec& target, real cost)
@@ -140,10 +149,9 @@ void CostModule::bpropUpdate(const Vec& input_and_target, const Vec& output,
                              const Vec& output_gradient,
                              bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
-
     inherited::bpropUpdate( input_and_target, output,
-                            input_and_target_gradient, output_gradient );
+                            input_and_target_gradient, output_gradient,
+                            accumulate );
 }
 
 
@@ -166,8 +174,24 @@ void CostModule::bbpropUpdate(const Vec& input, const Vec& target, real cost,
                   input_and_target_diag_hessian, zero,
                   accumulate );
 
-    input_gradient = input_and_target_gradient.subVec( 0, input_size );
-    input_diag_hessian = input_and_target_diag_hessian.subVec( 0, input_size );
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradient.size() == input_size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+        PLASSERT_MSG( input_diag_hessian.size() == input_size,
+                      "Cannot resize input_diag_hessian AND accumulate into it"
+                    );
+
+        input_gradient += input_and_target_gradient.subVec( 0, input_size );
+        input_diag_hessian +=
+            input_and_target_diag_hessian.subVec( 0, input_size );
+    }
+    else
+    {
+        input_gradient = input_and_target_gradient.subVec( 0, input_size );
+        input_diag_hessian =
+            input_and_target_diag_hessian.subVec( 0, input_size );
+    }
 }
 
 void CostModule::bbpropUpdate(const Vec& input, const Vec& target, real cost)
@@ -184,12 +208,12 @@ void CostModule::bbpropUpdate(const Vec& input_and_target, const Vec& output,
                               const Vec& output_diag_hessian,
                               bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bbpropUpdate cannot yet handle accumulate=false");
     inherited::bbpropUpdate( input_and_target, output,
                              input_and_target_gradient,
                              output_gradient,
                              input_and_target_diag_hessian,
-                             output_diag_hessian );
+                             output_diag_hessian,
+                             accumulate );
 }
 
 void CostModule::forget()

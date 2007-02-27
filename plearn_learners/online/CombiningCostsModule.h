@@ -81,7 +81,7 @@ public:
     //! Adapt based on the output gradient: this method should only
     //! be called just after a corresponding fprop.
     virtual void bpropUpdate(const Vec& input, const Vec& target, real cost,
-                             Vec& input_gradient, bool accumulate = false);
+                             Vec& input_gradient, bool accumulate=false);
 
     //! Calls this method on the sub_costs
     virtual void bpropUpdate(const Vec& input, const Vec& target, real cost);
@@ -141,6 +141,12 @@ private:
 
     //! Stores the output values of the sub_costs
     mutable Vec sub_costs_values;
+
+    //! Stores intermediate values of the input gradient
+    mutable Vec partial_gradient;
+
+    //! Stores intermediate values of the input diagonal of Hessian
+    mutable Vec partial_diag_hessian;
 };
 
 // Declares a few other classes and functions related to this class

@@ -147,18 +147,25 @@ void ProcessInputCostModule::fprop(const Vec& input, const Vec& target,
 // bpropUpdate //
 /////////////////
 void ProcessInputCostModule::bpropUpdate(const Vec& input, const Vec& target,
-                                         real cost, Vec& input_gradient, bool accumulate)
+                                         real cost, Vec& input_gradient,
+                                         bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     PLASSERT( processing_module );
     PLASSERT( cost_module );
     PLASSERT( input.size() == input_size );
     PLASSERT( target.size() == target_size );
 
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradient.size() == input_size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+    }
+
     cost_module->bpropUpdate( processed_value, target, cost,
                               processed_gradient );
     processing_module->bpropUpdate( input, processed_value,
-                                    input_gradient, processed_gradient );
+                                    input_gradient, processed_gradient,
+                                    accumulate );
 }
 
 
@@ -167,20 +174,30 @@ void ProcessInputCostModule::bpropUpdate(const Vec& input, const Vec& target,
 /////////////////
 void ProcessInputCostModule::bbpropUpdate(const Vec& input, const Vec& target,
                                           real cost, Vec& input_gradient,
-                                          Vec& input_diag_hessian, bool accumulate)
+                                          Vec& input_diag_hessian,
+                                          bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bbpropUpdate cannot yet handle accumulate=false");
     PLASSERT( processing_module );
     PLASSERT( cost_module );
     PLASSERT( input.size() == input_size );
     PLASSERT( target.size() == target_size );
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradient.size() == input_size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+        PLASSERT_MSG( input_diag_hessian.size() == input_size,
+                      "Cannot resize input_diag_hessian AND accumulate into it"
+                    );
+    }
 
     cost_module->bbpropUpdate( processed_value, target, cost,
                                processed_gradient, processed_diag_hessian );
     processing_module->bbpropUpdate( input, processed_value,
                                      input_gradient, processed_gradient,
                                      input_diag_hessian,
-                                     processed_diag_hessian );
+                                     processed_diag_hessian,
+                                     accumulate );
 }
 
 

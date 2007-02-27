@@ -137,7 +137,6 @@ void GradNNetLayerModule::bpropUpdate(const Vec& input, const Vec& output,
                                       const Vec& output_gradient,
                                       bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     PLASSERT_MSG( input.size() == input_size,
                   "input.size() should be equal to this->input_size" );
     PLASSERT_MSG( output.size() == output_size,
@@ -146,8 +145,16 @@ void GradNNetLayerModule::bpropUpdate(const Vec& input, const Vec& output,
                   "output_gradient.size() should be equal to this->output_size"
                 );
 
-    input_gradient.resize( input_size );
-    input_gradient.clear();
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradient.size() == input_size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+    }
+    else
+    {
+        input_gradient.resize( input_size );
+        input_gradient.clear();
+    }
 
     learning_rate = start_learning_rate / (1+decrease_constant*step_number);
 
@@ -204,9 +211,10 @@ void GradNNetLayerModule::bbpropUpdate(const Vec& input, const Vec& output,
                                        Vec&  input_gradient,
                                        const Vec& output_gradient,
                                        Vec&  input_diag_hessian,
-                                       const Vec& output_diag_hessian)
+                                       const Vec& output_diag_hessian,
+                                       bool accumulate)
 {
-    bpropUpdate( input, output, input_gradient, output_gradient );
+    bpropUpdate( input, output, input_gradient, output_gradient, accumulate );
 }
 */
 

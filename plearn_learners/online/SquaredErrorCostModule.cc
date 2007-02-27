@@ -95,29 +95,51 @@ void SquaredErrorCostModule::fprop(const Vec& input, const Vec& target,
 
 
 void SquaredErrorCostModule::bpropUpdate(const Vec& input, const Vec& target,
-                                         real cost, Vec& input_gradient, 
+                                         real cost, Vec& input_gradient,
                                          bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     PLASSERT( input.size() == input_size );
     PLASSERT( target.size() == target_size );
-    input_gradient.resize( input_size );
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradient.size() == input_size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+    }
+    else
+    {
+        input_gradient.resize( input_size );
+        input_gradient.clear();
+    }
 
     // input_gradient = 2*(input - target)
-    substract( input, target, input_gradient );
-    input_gradient *= 2.0;
+    for( int i=0 ; i<input_size ; i++ )
+    {
+        input_gradient[i] += 2*(input[i] - target[i]);
+    }
 }
 
 
 void SquaredErrorCostModule::bbpropUpdate(const Vec& input, const Vec& target,
                                           real cost,
                                           Vec& input_gradient,
-                                          Vec& input_diag_hessian, bool accumulate)
+                                          Vec& input_diag_hessian,
+                                          bool accumulate)
 {
-    bpropUpdate( input, target, cost, input_gradient, accumulate );
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_diag_hessian.size() == input_size,
+                      "Cannot resize input_diag_hessian AND accumulate into it"
+                    );
+        input_diag_hessian += 2.;
+    }
+    else
+    {
+        input_diag_hessian.resize( input_size );
+        input_diag_hessian.fill( 2. );
+    }
 
-    input_diag_hessian.resize( input_size );
-    input_diag_hessian.fill( 2. );
+    bpropUpdate( input, target, cost, input_gradient, accumulate );
 }
 
 TVec<string> SquaredErrorCostModule::name()

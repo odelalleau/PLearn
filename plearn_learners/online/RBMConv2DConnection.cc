@@ -431,11 +431,17 @@ void RBMConv2DConnection::bpropUpdate(const Vec& input, const Vec& output,
                                       const Vec& output_gradient,
                                       bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     PLASSERT( input.size() == down_size );
     PLASSERT( output.size() == up_size );
     PLASSERT( output_gradient.size() == up_size );
-    input_gradient.resize( down_size );
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradient.size() == down_size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+    }
+    else
+        input_gradient.resize( down_size );
 
     down_image = input.toMat( down_image_length, down_image_width );
     up_image = output.toMat( up_image_length, up_image_width );
@@ -448,7 +454,7 @@ void RBMConv2DConnection::bpropUpdate(const Vec& input, const Vec& output,
     convolve2Dbackprop( down_image, kernel,
                         up_image_gradient, down_image_gradient,
                         kernel_gradient,
-                        kernel_step1, kernel_step2, false );
+                        kernel_step1, kernel_step2, accumulate );
 
     // kernel -= learning_rate * kernel_gradient
     multiplyAcc( kernel, kernel_gradient, -learning_rate );

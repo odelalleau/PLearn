@@ -122,9 +122,10 @@ void RBMMixedLayer::fprop( const Vec& input, Vec& output ) const
     {
         int begin = init_positions[i];
         int size_i = sub_layers[i]->size;
+        Vec sub_input = input.subVec(begin, size_i);
+        Vec sub_output = output.subVec(begin, size_i);
 
-        sub_layers[i]->fprop( input.subVec(begin, size_i), tmp );
-        output.subVec( begin, size_i ) << tmp;
+        sub_layers[i]->fprop( sub_input, sub_output );
     }
 }
 
@@ -139,10 +140,11 @@ void RBMMixedLayer::fprop( const Vec& input, const Vec& rbm_bias,
     {
         int begin = init_positions[i];
         int size_i = sub_layers[i]->size;
+        Vec sub_input = input.subVec(begin, size_i);
+        Vec sub_rbm_bias = rbm_bias.subVec(begin, size_i);
+        Vec sub_output = output.subVec(begin, size_i);
 
-        sub_layers[i]->fprop( input.subVec(begin, size_i),
-                              rbm_bias.subVec(begin,size_i), tmp );
-        output.subVec( begin, size_i ) << tmp;
+        sub_layers[i]->fprop( sub_input, sub_rbm_bias, sub_output );
     }
 }
 
@@ -152,25 +154,30 @@ void RBMMixedLayer::bpropUpdate( const Vec& input, const Vec& output,
                                  const Vec& output_gradient,
                                  bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     PLASSERT( input.size() == size );
     PLASSERT( output.size() == size );
     PLASSERT( output_gradient.size() == size );
 
-    input_gradient.resize( size );
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradient.size() == size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+    }
+    else
+        input_gradient.resize( size );
 
     for( int i=0 ; i<n_layers ; i++ )
     {
         int begin = init_positions[i];
         int size_i = sub_layers[i]->size;
+        Vec sub_input = input.subVec( begin, size_i );
+        Vec sub_output = output.subVec( begin, size_i );
+        Vec sub_input_gradient = input_gradient.subVec( begin, size_i );
+        Vec sub_output_gradient = output_gradient.subVec( begin, size_i );
 
-        sub_layers[i]->bpropUpdate( input.subVec( begin, size_i ),
-                                    output.subVec( begin, size_i ),
-                                    tmp,
-                                    output_gradient.subVec( begin, size_i ) );
-
-        // because tmp is resizeable
-        input_gradient.subVec( begin, size_i ) << tmp;
+        sub_layers[i]->bpropUpdate( sub_input, sub_output,
+                                    sub_input_gradient, sub_output_gradient,
+                                    accumulate );
     }
 }
 
@@ -191,16 +198,16 @@ void RBMMixedLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias,
     {
         int begin = init_positions[i];
         int size_i = sub_layers[i]->size;
+        Vec sub_input = input.subVec( begin, size_i );
+        Vec sub_rbm_bias = rbm_bias.subVec( begin, size_i );
+        Vec sub_output = output.subVec( begin, size_i );
+        Vec sub_input_gradient = input_gradient.subVec( begin, size_i );
+        Vec sub_rbm_bias_gradient = rbm_bias_gradient.subVec( begin, size_i);
+        Vec sub_output_gradient = output_gradient.subVec( begin, size_i );
 
-        sub_layers[i]->bpropUpdate( input.subVec( begin, size_i ),
-                                    rbm_bias.subVec( begin, size_i),
-                                    output.subVec( begin, size_i ),
-                                    tmp, tmpb,
-                                    output_gradient.subVec( begin, size_i ) );
-
-        // because tmp and tmpb is resizeable
-        input_gradient.subVec( begin, size_i ) << tmp;
-        rbm_bias_gradient.subVec( begin, size_i) << tmpb;
+        sub_layers[i]->bpropUpdate( sub_input, sub_rbm_bias, sub_output,
+                                    sub_input_gradient, sub_rbm_bias_gradient,
+                                    sub_output_gradient );
     }
 }
 
@@ -235,9 +242,10 @@ void RBMMixedLayer::bpropNLL(const Vec& target, real nll, Vec bias_gradient)
     {
         int begin = init_positions[i];
         int size_i = sub_layers[i]->size;
-        sub_layers[i]->bpropNLL( target.subVec(begin, size_i), nlls[i],
-                                 tmpb );
-        bias_gradient.subVec(begin, size_i) << tmpb;
+
+        Vec sub_target = target.subVec(begin, size_i);
+        Vec sub_bias_gradient = bias_gradient.subVec(begin, size_i);
+        sub_layers[i]->bpropNLL( sub_target, nlls[i], sub_bias_gradient );
     }
 }
 

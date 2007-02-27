@@ -92,7 +92,7 @@ public:
 
     // Your other public member functions go here
 
-    //! given the input, compute the output (possibly resize it  appropriately)
+    //! given the input, compute the output (possibly resize it appropriately)
     virtual void fprop(const Vec& input, Vec& output) const;
 
     //! Adapt based on the output gradient: this method should only
@@ -134,7 +134,8 @@ public:
     //                           Vec& input_gradient,
     //                           const Vec& output_gradient,
     //                           Vec& input_diag_hessian,
-    //                           const Vec& output_diag_hessian);
+    //                           const Vec& output_diag_hessian
+    //                           bool accumulate=false);
 
     //! reset the parameters to the state they would be BEFORE starting
     //! training.  Note that this method is necessarily called from

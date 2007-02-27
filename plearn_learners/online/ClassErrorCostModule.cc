@@ -124,7 +124,8 @@ void ClassErrorCostModule::bpropUpdate(const Vec& input, const Vec& target,
 /* Not supposed to happen
 void ClassErrorCostModule::bpropUpdate(const Vec& input, const Vec& target,
                                        real cost,
-                                       Vec& input_gradient)
+                                       Vec& input_gradient,
+                                       bool accumulate=false)
 {
 }
 */
@@ -141,7 +142,8 @@ void ClassErrorCostModule::bbpropUpdate(const Vec& input, const Vec& target,
 void ClassErrorCostModule::bbpropUpdate(const Vec& input, const Vec& target,
                                        real cost,
                                        Vec& input_gradient,
-                                       Vec& input_diag_hessian)
+                                       Vec& input_diag_hessian,
+                                       bool accumulate=false)
 {
 }
 */

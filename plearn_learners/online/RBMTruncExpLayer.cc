@@ -161,46 +161,59 @@ void RBMTruncExpLayer::bpropUpdate(const Vec& input, const Vec& output,
                                    const Vec& output_gradient,
                                    bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     PLASSERT( input.size() == size );
     PLASSERT( output.size() == size );
     PLASSERT( output_gradient.size() == size );
-    input_gradient.resize( size );
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradient.size() == size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+    }
+    else
+    {
+        input_gradient.resize( size );
+        input_gradient.clear();
+    }
+
+    if( momentum != 0. )
+        bias_inc.resize( size );
 
     // df/da = exp(a)/(1-exp(a))^2 - 1/a^2
 
     for( int i=0 ; i<size ; i++ )
     {
         real a_i = input[i] + bias[i];
+        real in_grad_i;
 
         // Polynomial approximation to avoid numerical instability
         // df/da = -1/12 + a^2/240 + O(a^4)
         if( fabs( a_i ) <= 0.01 )
         {
-            input_gradient[i] = output_gradient[i] * (
-                -1./12. + a_i * a_i / 240. );
+            in_grad_i = output_gradient[i] * ( -1./12. + a_i * a_i / 240. );
         }
         else
         {
             real ea_i = exp( a_i );
-            input_gradient[i] = output_gradient[i] * (
+            in_grad_i = output_gradient[i] * (
                 ea_i/( (1 - ea_i) * (1 - ea_i) ) + 1/(a_i * a_i) );
         }
-    }
 
-    if( momentum == 0. )
-    {
-        // update the bias: bias -= learning_rate * input_gradient
-        multiplyAcc( bias, input_gradient, -learning_rate );
-    }
-    else
-    {
-        bias_inc.resize( size );
-        // The update rule becomes:
-        // bias_inc = momentum * bias_inc - learning_rate * input_gradient
-        // bias += bias_inc
-        multiplyScaledAdd(input_gradient, momentum, -learning_rate, bias_inc);
-        bias += bias_inc;
+        input_gradient[i] += in_grad_i;
+
+        if( momentum == 0. )
+        {
+            // update the bias: bias -= learning_rate * input_gradient
+            bias[i] -= learning_rate * in_grad_i;
+        }
+        else
+        {
+            // The update rule becomes:
+            // bias_inc = momentum * bias_inc - learning_rate * input_gradient
+            // bias += bias_inc
+            bias_inc[i] = momentum * bias_inc[i] - learning_rate * in_grad_i;
+            bias[i] += bias_inc[i];
+        }
     }
 }
 

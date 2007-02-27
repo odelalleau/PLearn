@@ -97,15 +97,23 @@ void NLLCostModule::fprop(const Vec& input, const Vec& target, Vec& cost) const
 void NLLCostModule::bpropUpdate(const Vec& input, const Vec& target, real cost,
                                 Vec& input_gradient, bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     PLASSERT( input.size() == input_size );
     PLASSERT( target.size() == target_size );
-    input_gradient.resize( input_size );
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradient.size() == input_size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+    }
+    else
+    {
+        input_gradient.resize( input_size );
+        input_gradient.clear();
+    }
 
     int the_target = (int) round( target[0] );
     // input_gradient[ i ] = 0 if i != t,
     // input_gradient[ t ] = -1/x[t]
-    input_gradient.clear();
     input_gradient[ the_target ] = - 1. / input[ the_target ];
 }
 
@@ -115,16 +123,25 @@ void NLLCostModule::bbpropUpdate(const Vec& input, const Vec& target,
                                  Vec& input_gradient, Vec& input_diag_hessian,
                                  bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
-    bpropUpdate( input, target, cost, input_gradient );
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_diag_hessian.size() == input_size,
+                      "Cannot resize input_diag_hessian AND accumulate into it"
+                    );
+    }
+    else
+    {
+        input_diag_hessian.resize( input_size );
+        input_diag_hessian.clear();
+    }
 
-    int the_target = (int) round( target[0] );
-    real input_gradient_t = input_gradient[ the_target ];
     // input_diag_hessian[ i ] = 0 if i!=t
     // input_diag_hessian[ t ] = 1/(x[t])^2
-    input_diag_hessian.resize( input_size );
-    input_diag_hessian.clear();
-    input_diag_hessian[ the_target ] = input_gradient_t * input_gradient_t;
+    int the_target = (int) round( target[0] );
+    real input_t = input[ the_target ];
+    input_diag_hessian[ the_target ] += 1. / (input_t * input_t);
+
+    bpropUpdate( input, target, cost, input_gradient, accumulate );
 }
 
 TVec<string> NLLCostModule::name()

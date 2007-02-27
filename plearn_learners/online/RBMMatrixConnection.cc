@@ -276,15 +276,28 @@ void RBMMatrixConnection::computeProduct( int start, int length,
 //! this version allows to obtain the input gradient as well
 void RBMMatrixConnection::bpropUpdate(const Vec& input, const Vec& output,
                                       Vec& input_gradient,
-                                      const Vec& output_gradient)
+                                      const Vec& output_gradient,
+                                      bool accumulate)
 {
     PLASSERT( input.size() == down_size );
     PLASSERT( output.size() == up_size );
     PLASSERT( output_gradient.size() == up_size );
-    input_gradient.resize( down_size );
 
-    // input_gradient = weights' * output_gradient
-    transposeProduct( input_gradient, weights, output_gradient );
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradient.size() == down_size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+
+        // input_gradient += weights' * output_gradient
+        transposeProductAcc( input_gradient, weights, output_gradient );
+    }
+    else
+    {
+        input_gradient.resize( down_size );
+
+        // input_gradient = weights' * output_gradient
+        transposeProduct( input_gradient, weights, output_gradient );
+    }
 
     // weights -= learning_rate * output_gradient * input'
     externalProductScaleAcc( weights, output_gradient, input, -learning_rate );

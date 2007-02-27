@@ -128,63 +128,71 @@ void RBMGaussianLayer::bpropUpdate(const Vec& input, const Vec& output,
                                    const Vec& output_gradient,
                                    bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bbpropUpdate cannot yet handle accumulate=false");
     PLASSERT( input.size() == size );
     PLASSERT( output.size() == size );
     PLASSERT( output_gradient.size() == size );
-    input_gradient.resize( size );
 
-    for( int i=0 ; i<size ; ++i )
+    if( accumulate )
     {
-        real a_i = quad_coeff[i];
-        input_gradient[i] = - output_gradient[i] / (2 * a_i * a_i);
-    }
-
-    if( momentum == 0. )
-    {
-        /*
-        // update the quadratic coefficient:
-        // a_i += learning_rate * out_grad_i * (b_i + input_i) / a_i^3
-        // (or a_i += 2 * learning_rate * in_grad_i * (b_i + input_i) / a_i
-        real two_lr = 2 * learning_rate;
-        for( int i=0 ; i<size ; i++ )
-        {
-            quad_coeff[i] += two_lr * input_gradient[i] * (bias[i] + input[i])
-                                                            / quad_coeff[i];
-            if( quad_coeff[i] < min_quad_coeff )
-                quad_coeff[i] = min_quad_coeff;
-        }
-        */
-
-        // bias -= learning_rate * input_gradient
-        multiplyAcc( bias, input_gradient, -learning_rate );
+        PLASSERT_MSG( input_gradient.size() == size,
+                      "Cannot resize input_gradient AND accumulate into it" );
     }
     else
     {
+        input_gradient.resize( size );
+        input_gradient.clear();
+    }
+
+    if( momentum != 0. )
+    {
         bias_inc.resize( size );
         //quad_coeff_inc.resize( size );
+    }
 
-        /*
-        // The update rule becomes:
-        // a_inc_i = momentum * a_i_inc + learning_rate * out_grad_i
-        //                                  * (b_i + input_i) / a_i^3
-        // a_i += a_inc_i
-        real two_lr = 2 * learning_rate;
-        for( int i=0 ; i<size ; i++ )
+    // real two_lr = 2 * learning_rate;
+    for( int i=0 ; i<size ; ++i )
+    {
+        real a_i = quad_coeff[i];
+        real in_grad_i = - output_gradient[i] / (2 * a_i * a_i);
+        input_gradient[i] += in_grad_i;
+
+        if( momentum == 0. )
         {
+            // bias -= learning_rate * input_gradient
+            bias[i] -= learning_rate * in_grad_i;
+
+            /* For the moment, we do not want to change the quadratic
+               coefficient during the gradient descent phase.
+
+            // update the quadratic coefficient:
+            // a_i += learning_rate * out_grad_i * (b_i + input_i) / a_i^3
+            // (or a_i += 2 * learning_rate * in_grad_i * (b_i + input_i) / a_i
+            quad_coeff[i] += two_lr * in_grad_i * (bias[i] + input[i])
+                                                    / quad_coeff[i];
+            if( quad_coeff[i] < min_quad_coeff )
+                quad_coeff[i] = min_quad_coeff;
+            */
+        }
+        else
+        {
+            // bias_inc = momentum * bias_inc - learning_rate * input_gradient
+            // bias += bias_inc
+            bias_inc[i] = momentum * bias_inc[i] - learning_rate * in_grad_i;
+            bias[i] += bias_inc[i];
+
+            /*
+            // The update rule becomes:
+            // a_inc_i = momentum * a_i_inc + learning_rate * out_grad_i
+            //                                  * (b_i + input_i) / a_i^3
+            // a_i += a_inc_i
             quad_coeff_inc[i] += momentum * quad_coeff_inc[i]
-                + two_lr * input_gradient[i] * (bias[i] + input[i])
-                                                / quad_coeff[i];
+                + two_lr * in_grad_i * (bias[i] + input[i])
+                                         / quad_coeff[i];
             quad_coeff[i] += quad_coeff_inc[i];
             if( quad_coeff[i] < min_quad_coeff )
                 quad_coeff[i] = min_quad_coeff;
+            */
         }
-        */
-
-        // bias_inc = momentum * bias_inc - learning_rate * input_gradient
-        // bias += bias_inc
-        multiplyScaledAdd(input_gradient, momentum, -learning_rate, bias_inc);
-        bias += bias_inc;
     }
 }
 

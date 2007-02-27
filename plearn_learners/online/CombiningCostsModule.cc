@@ -136,23 +136,41 @@ void CombiningCostsModule::bpropUpdate(const Vec& input, const Vec& target,
                                        real cost, Vec& input_gradient,
                                        bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     PLASSERT( input.size() == input_size );
     PLASSERT( target.size() == target_size );
-    input_gradient.resize( input_size );
-    input_gradient.clear();
 
-    Vec partial_gradient;
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradient.size() == input_size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+    }
+    else
+    {
+        input_gradient.resize( input_size );
+        input_gradient.clear();
+    }
+
     for( int i=0 ; i<n_sub_costs ; i++ )
     {
-        if( cost_weights[i] != 0. )
+        if( cost_weights[i] == 0. )
         {
+            // Don't compute input_gradient
+            sub_costs[i]->bpropUpdate( input, target, sub_costs_values[i] );
+        }
+        else if( cost_weights[i] == 1. )
+        {
+            // Accumulate directly into input_gradient
             sub_costs[i]->bpropUpdate( input, target, sub_costs_values[i],
-                                       partial_gradient );
-            multiplyAcc( input_gradient, partial_gradient, cost_weights[i] );
+                                       input_gradient, true );
         }
         else
-            sub_costs[i]->bpropUpdate( input, target, sub_costs_values[i] );
+        {
+            // Put the result into partial_gradient, then accumulate into
+            // input_gradient with the appropriate weight
+            sub_costs[i]->bpropUpdate( input, target, sub_costs_values[i],
+                                       partial_gradient, false );
+            multiplyAcc( input_gradient, partial_gradient, cost_weights[i] );
+        }
     }
 }
 
@@ -172,23 +190,50 @@ void CombiningCostsModule::bbpropUpdate(const Vec& input, const Vec& target,
                                         Vec& input_diag_hessian,
                                         bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bbpropUpdate cannot yet handle accumulate=false");
     PLASSERT( input.size() == input_size );
     PLASSERT( target.size() == target_size );
-    input_gradient.resize( input_size );
-    input_gradient.clear();
-    input_diag_hessian.resize( input_size );
-    input_diag_hessian.clear();
 
-    Vec partial_gradient;
-    Vec partial_diag_hessian;
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradient.size() == input_size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+        PLASSERT_MSG( input_diag_hessian.size() == input_size,
+                      "Cannot resize input_diag_hessian AND accumulate into it"
+                    );
+    }
+    else
+    {
+        input_gradient.resize( input_size );
+        input_gradient.clear();
+        input_diag_hessian.resize( input_size );
+        input_diag_hessian.clear();
+    }
+
     for( int i=0 ; i<n_sub_costs ; i++ )
     {
-        sub_costs[i]->bbpropUpdate( input, target, sub_costs_values[i],
-                                    partial_gradient, partial_diag_hessian );
-        multiplyAcc( input_gradient, partial_gradient, sub_costs_values[i] );
-        multiplyAcc( input_diag_hessian, partial_diag_hessian,
-                     sub_costs_values[i] );
+        if( cost_weights[i] == 0. )
+        {
+            // Don't compute input_gradient nor input_diag_hessian
+            sub_costs[i]->bbpropUpdate( input, target, sub_costs_values[i] );
+        }
+        else if( cost_weights[i] == 1. )
+        {
+            // Accumulate directly into input_gradient and input_diag_hessian
+            sub_costs[i]->bbpropUpdate( input, target, sub_costs_values[i],
+                                        input_gradient, input_diag_hessian,
+                                        true );
+        }
+        else
+        {
+            // Put temporary results into partial_*, then multiply and add to
+            // input_*
+            sub_costs[i]->bbpropUpdate( input, target, sub_costs_values[i],
+                                        partial_gradient, partial_diag_hessian,
+                                        false );
+            multiplyAcc( input_gradient, partial_gradient, cost_weights[i] );
+            multiplyAcc( input_diag_hessian, partial_diag_hessian,
+                         cost_weights[i] );
+        }
     }
 }
 
@@ -199,7 +244,7 @@ void CombiningCostsModule::bbpropUpdate(const Vec& input, const Vec& target,
     PLASSERT( target.size() == target_size );
 
     for( int i=0 ; i<n_sub_costs ; i++ )
-        sub_costs[i]->bpropUpdate( input, target, sub_costs_values[i] );
+        sub_costs[i]->bbpropUpdate( input, target, sub_costs_values[i] );
 }
 
 

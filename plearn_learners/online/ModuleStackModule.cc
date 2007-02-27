@@ -129,22 +129,29 @@ void ModuleStackModule::bpropUpdate(const Vec& input, const Vec& output,
                                     const Vec& output_gradient,
                                     bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     PLASSERT( n_modules > 0 );
     PLASSERT( input.size() == input_size );
     PLASSERT( output.size() == output_size );
     PLASSERT( output_gradient.size() == output_size );
 
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradient.size() == input_size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+    }
+
     // bpropUpdate should be called just after the corresponding fprop,
     // so values should be up-to-date.
     modules[n_modules-1]->bpropUpdate( values[n_modules-2], output,
-                                       gradients[n_modules-2], output_gradient );
+                                       gradients[n_modules-2],
+                                       output_gradient );
 
     for( int i=n_modules-2 ; i>0 ; i-- )
         modules[i]->bpropUpdate( values[i-1], values[i],
                                  gradients[i-1], gradients[i] );
 
-    modules[0]->bpropUpdate( input, values[0], input_gradient, gradients[0] );
+    modules[0]->bpropUpdate( input, values[0], input_gradient, gradients[0],
+                             accumulate );
 }
 
 void ModuleStackModule::bpropUpdate(const Vec& input, const Vec& output,
@@ -178,12 +185,20 @@ void ModuleStackModule::bbpropUpdate(const Vec& input, const Vec& output,
                                      const Vec& output_diag_hessian,
                                      bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bbpropUpdate cannot yet handle accumulate=false");
     PLASSERT( n_modules > 0 );
     PLASSERT( input.size() == input_size );
     PLASSERT( output.size() == output_size );
     PLASSERT( output_gradient.size() == output_size );
     PLASSERT( output_diag_hessian.size() == output_size );
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradient.size() == input_size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+        PLASSERT_MSG( input_diag_hessian.size() == input_size,
+                      "Cannot resize input_diag_hessian AND accumulate into it"
+                    );
+    }
 
     // bbpropUpdate should be called just after the corresponding fprop,
     // so values should be up-to-date.
@@ -198,7 +213,8 @@ void ModuleStackModule::bbpropUpdate(const Vec& input, const Vec& output,
                                   diag_hessians[i-1], diag_hessians[i] );
 
     modules[0]->bbpropUpdate( input, values[0], input_gradient, gradients[0],
-                              input_diag_hessian, diag_hessians[0] );
+                              input_diag_hessian, diag_hessians[0],
+                              accumulate );
 }
 
 void ModuleStackModule::bbpropUpdate(const Vec& input, const Vec& output,

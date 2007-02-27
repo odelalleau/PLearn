@@ -177,7 +177,7 @@ private:
     //#####  Private Data Members  ############################################
 
     // The rest of the private stuff goes here
-    mutable Vec tmp, tmpb, nlls;
+    mutable Vec nlls;
 };
 
 // Declares a few other classes and functions related to this class

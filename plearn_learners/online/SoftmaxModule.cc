@@ -95,16 +95,29 @@ void SoftmaxModule::bpropUpdate(const Vec& input, const Vec& output,
                                 const Vec& output_gradient,
                                 bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     PLASSERT( input.size() == input_size );
     PLASSERT( output.size() == output_size );
     PLASSERT( output_gradient.size() == output_size );
-    input_gradient.resize( input_size );
 
-    // input_gradient = output_gradient * output
-    //                  - (output_gradient . output ) output
-    multiply( output_gradient, output, input_gradient );
-    multiplyAcc( input_gradient, output, -dot( output_gradient, output ) );
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradient.size() == input_size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+    }
+    else
+    {
+        input_gradient.resize( input_size );
+        input_gradient.clear();
+    }
+
+    // input_gradient[i] = output_gradient[i] * output[i]
+    //                  - (output_gradient . output ) output[i]
+    real outg_dot_out = dot( output_gradient, output );
+    for( int i=0 ; i<input_size ; i++ )
+    {
+        real in_grad_i = (output_gradient[i] - outg_dot_out) * output[i];
+        input_gradient[i] += in_grad_i;
+    }
 }
 
 //! reset the parameters to the state they would be BEFORE starting training.
@@ -120,7 +133,6 @@ void SoftmaxModule::bbpropUpdate(const Vec& input, const Vec& output,
                                  const Vec& output_diag_hessian,
                                  bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bbpropUpdate cannot yet handle accumulate=false");
     PLERROR( "Not implemented yet, please come back later or complaint to"
              " lamblinp." );
 }

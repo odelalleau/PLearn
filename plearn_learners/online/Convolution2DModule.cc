@@ -383,7 +383,6 @@ void Convolution2DModule::bpropUpdate(const Vec& input, const Vec& output,
                                       const Vec& output_gradient,
                                       bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     // Check size
     if( input.size() != input_size )
         PLERROR("Convolution2DModule::bpropUpdate: input.size() should be\n"
@@ -398,7 +397,13 @@ void Convolution2DModule::bpropUpdate(const Vec& input, const Vec& output,
                 "equal to output_size (%i != %i).\n",
                 output_gradient.size(), output_size);
 
-    input_gradient.resize(input_size);
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradient.size() == input_size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+    }
+    else
+        input_gradient.resize(input_size);
 
     // Since fprop() has just been called, we assume that input_images and
     // output_images are up-to-date
@@ -423,7 +428,7 @@ void Convolution2DModule::bpropUpdate(const Vec& input, const Vec& output,
                 convolve2Dbackprop( input_images[i], kernels(i,j),
                                     output_gradients[j],
                                     input_gradients[i], kernel_gradient,
-                                    kernel_step1, kernel_step2, false );
+                                    kernel_step1, kernel_step2, accumulate );
 
                 // kernel(i,j) -= learning_rate * kernel_gradient
                 multiplyAcc( kernels(i,j), kernel_gradient, -learning_rate );
@@ -502,8 +507,6 @@ void Convolution2DModule::bbpropUpdate(const Vec& input, const Vec& output,
                                        const Vec& output_diag_hessian,
                                        bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bbpropUpdate cannot yet handle accumulate=false");
-
     // This version forwards the second order information, but does not
     // actually use it for the update.
 
@@ -513,7 +516,15 @@ void Convolution2DModule::bbpropUpdate(const Vec& input, const Vec& output,
                 "\n"
                 "should be equal to output_size (%i != %i).\n",
                 output_diag_hessian.size(), output_size);
-    input_diag_hessian.resize(input_size);
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_diag_hessian.size() == input_size,
+                      "Cannot resize input_diag_hessian AND accumulate into it"
+                    );
+    }
+    else
+        input_diag_hessian.resize(input_size);
 
     // Make input_diag_hessians and output_diag_hessians point to the right
     // places
@@ -537,11 +548,11 @@ void Convolution2DModule::bbpropUpdate(const Vec& input, const Vec& output,
 
                 backConvolve2D( input_diag_hessians[i], squared_kernel,
                                 output_diag_hessians[j],
-                                kernel_step1, kernel_step2, false );
+                                kernel_step1, kernel_step2, accumulate );
             }
 
     // Call bpropUpdate()
-    bpropUpdate( input, output, input_gradient, output_gradient );
+    bpropUpdate( input, output, input_gradient, output_gradient, accumulate );
 }
 
 

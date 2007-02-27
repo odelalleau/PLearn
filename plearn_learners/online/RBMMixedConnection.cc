@@ -507,12 +507,20 @@ void RBMMixedConnection::bpropUpdate(const Vec& input, const Vec& output,
                                      const Vec& output_gradient,
                                      bool accumulate)
 {
-    PLASSERT_MSG(!accumulate,"Implementation of bpropUpdate cannot yet handle accumulate=false");
     PLASSERT( input.size() == down_size );
     PLASSERT( output.size() == up_size );
     PLASSERT( output_gradient.size() == up_size );
-    input_gradient.resize( down_size );
-    input_gradient.clear();
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradient.size() == down_size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+    }
+    else
+    {
+        input_gradient.resize( down_size );
+        input_gradient.clear();
+    }
 
     for( int j=0 ; j<n_down_blocks ; j++ )
     {
@@ -520,7 +528,6 @@ void RBMMixedConnection::bpropUpdate(const Vec& input, const Vec& output,
         int down_size_j = down_block_sizes[j];
         Vec sub_input = input.subVec( init_j, down_size_j );
         Vec sub_input_gradient = input_gradient.subVec( init_j, down_size_j );
-        Vec part_input_gradient( down_size_j );
 
         for( int i=0 ; i<n_up_blocks ; i++ )
         {
@@ -532,10 +539,9 @@ void RBMMixedConnection::bpropUpdate(const Vec& input, const Vec& output,
                 Vec sub_output_gradient = output_gradient.subVec( init_i,
                                                                   up_size_i );
                 sub_connections(i,j)->bpropUpdate( sub_input, sub_output,
-                                                   part_input_gradient,
-                                                   sub_output_gradient );
-
-                sub_input_gradient += part_input_gradient;
+                                                   sub_input_gradient,
+                                                   sub_output_gradient,
+                                                   true );
             }
         }
     }
