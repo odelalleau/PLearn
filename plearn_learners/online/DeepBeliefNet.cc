@@ -709,11 +709,12 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target, Vec& train_
         cost.resize(n_layers);
 
     layers[0]->expectation << input;
+    // FORWARD PHASE
     for( int i=0 ; i<n_layers-1 ; i++ )
     {
         // mean-field fprop from layer i to layer i+1
         Vec input;
-        if (i==n_layers-1 && use_classification_cost) // if top layer is a joint layer
+        if (i==n_layers-2 && use_classification_cost) // if top layer is a joint layer
         {
             // set the input of the joint layer 
             Vec joint_exp = joint_layer->expectation;
@@ -724,8 +725,10 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target, Vec& train_
             classification_module->joint_connection->setAsDownInput(
                 joint_layer->expectation );
             // this does the actual matrix-vector computation
+            // from (layer[n-2],target) to layer[n-1]
             layers[ n_layers-1 ]->getAllActivations(
                 get_pointer( classification_module->joint_connection ) );
+            // and prepares for a supervised (joint likelihood) contrastive divergence step
         }
         else
         {
@@ -735,7 +738,7 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target, Vec& train_
         }
         layers[i+1]->computeExpectation();
 
-        // propagate into local cost associated to this layer
+        // propagate into local cost associated to output of layer i+1
         if( partial_costs && partial_costs[ i ] )
         {
             partial_costs[ i ]->fprop( layers[ i+1 ]->expectation,
@@ -751,59 +754,123 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target, Vec& train_
             expectation_gradients[i+1].clear();
 
         // top layer may be connected to a final_module followed by a final_cost
-        if( i==n_layers-2 && final_cost )
+        // and / or may be used to predict class probabilities through a joint classification_module
+        if( i==n_layers-2)
         {
-            if( final_module )
+            if ( final_cost )
             {
-                final_module->fprop( layers[ n_layers-1 ]->expectation,
-                                     final_cost_input );
-                final_cost->fprop( final_cost_input, target, final_cost_value );
-                final_cost->bpropUpdate( final_cost_input, target,
-                                         final_cost_value[0],
-                                         final_cost_gradient ); //gradient on final_cost_input
-                final_module->bpropUpdate( layers[ n_layers-1 ]->expectation,
-                                           final_cost_input,
-                                           expectation_gradients[ n_layers-1 ],
-                                           final_cost_gradient, true );
+                if( final_module )
+                {
+                    final_module->fprop( layers[ n_layers-1 ]->expectation,
+                                         final_cost_input );
+                    final_cost->fprop( final_cost_input, target, final_cost_value );
+                    final_cost->bpropUpdate( final_cost_input, target,
+                                             final_cost_value[0],
+                                             final_cost_gradient ); //gradient on final_cost_input
+                    final_module->bpropUpdate( layers[ n_layers-1 ]->expectation,
+                                               final_cost_input,
+                                               expectation_gradients[ n_layers-1 ],
+                                               final_cost_gradient, true );
+                }
+                else
+                {
+                    final_cost->fprop( layers[ n_layers-1 ]->expectation, target,
+                                       final_cost_value );
+                    final_cost->bpropUpdate( layers[ n_layers-1 ]->expectation,
+                                             target, final_cost_value[0],
+                                             expectation_gradients[ n_layers-1 ],
+                                             true);
+                }
+
+                train_costs[final_cost_index] = final_cost_value[0];
+
+                layers[n_layers-1]->setLearningRate( grad_learning_rate );
+                connections[n_layers-2]->setLearningRate( grad_learning_rate );
+
+                layers[ n_layers-1 ]->bpropUpdate( layers[ n_layers-1 ]->activation,
+                                                   layers[ n_layers-1 ]->expectation,
+                                                   activation_gradients[ n_layers-1 ],
+                                                   expectation_gradients[ n_layers-1 ],
+                                                   false);
+
+                connections[ n_layers-2 ]->bpropUpdate(
+                    layers[ n_layers-2 ]->expectation,
+                    layers[ n_layers-1 ]->activation,
+                    expectation_gradients[ n_layers-2 ],
+                    activation_gradients[ n_layers-1 ],
+                    true); // accumulate into expectation_gradients[n_layers-2]
+                // because a partial cost may have already put a gradient there
             }
-            else
+        
+
+            if( use_classification_cost )
             {
-                final_cost->fprop( layers[ n_layers-1 ]->expectation, target,
-                                   final_cost_value );
-                final_cost->bpropUpdate( layers[ n_layers-1 ]->expectation,
-                                         target, final_cost_value[0],
-                                         expectation_gradients[ n_layers-1 ],
-                                         true);
+                classification_module->fprop( layers[ n_layers-2 ]->expectation,
+                                              class_output );
+                real nll_cost;
+
+                // This doesn't work. gcc bug?
+                // classification_cost->fprop( class_output, target, cost );
+                classification_cost->CostModule::fprop( class_output, target,
+                                                        nll_cost );
+
+                real class_error =
+                    ( argmax(class_output) == (int) round(target[0]) ) ? 0: 1;
+
+                train_costs[nll_cost_index] = nll_cost;
+                train_costs[class_cost_index] = class_error;
+
+                classification_cost->bpropUpdate( class_output, target, nll_cost,
+                                                  class_gradient );
+
+                classification_module->bpropUpdate( layers[ n_layers-2 ]->expectation,
+                                                    class_output,
+                                                    expectation_gradients[n_layers-2],
+                                                    class_gradient,
+                                                    true );
             }
 
-            // HACK: since the update will combine the gradients from all sources,
-            // weigh the gradients according to the desired learning rates
-            expectation_gradients[i+1] *= grad_learning_rate/cd_learning_rate;
-
-// HERE
-
-            train_costs[final_cost_index] = final_cost_value[0];
-
-            layers[ n_layers-1 ]->bpropUpdate( layers[ n_layers-1 ]->activation,
-                                               layers[ n_layers-1 ]->expectation,
-                                               activation_gradients[ n_layers-1 ],
-                                               expectation_gradients[ n_layers-1 ]);
-
-            connections[ n_layers-2 ]->bpropUpdate(
-                layers[ n_layers-2 ]->expectation,
-                layers[ n_layers-1 ]->activation,
-                expectation_gradients[ n_layers-2 ],
-                activation_gradients[ n_layers-1 ],
-                true); // accumulate into expectation_gradients[n_layers-2]
+            layers[i]->setLearningRate( cd_learning_rate );
+            layers[i+1]->setLearningRate( cd_learning_rate );
+            connections[i]->setLearningRate( cd_learning_rate );
+            contrastiveDivergenceStep( layers[ i ],
+                                       connections[ i ],
+                                       layers[ i+1 ] );
         }
 
-
-
     }
+
+    // DOWNWARD PHASE (the downward phase for top layer is already done above)
+    for( int i=n_layers-3 ; i>=0 ; i-- )
+    {
         
-    //contrastiveDivergenceStep( layers[ i ],
-    //                           connections[ i ],
-    //                           layers[ i+1 ] );
+        connections[ i ]->setLearningRate( grad_learning_rate );
+        layers[ i+1 ]->setLearningRate( grad_learning_rate );
+
+        layers[i+1]->bpropUpdate( layers[i+1]->activation,
+                                  layers[i+1]->expectation,
+                                  activation_gradients[i+1],
+                                  expectation_gradients[i+1] );
+
+        connections[i]->bpropUpdate( layers[i]->expectation,
+                                     layers[i+1]->activation,
+                                     expectation_gradients[i],
+                                     activation_gradients[i+1],
+                                     true);
+
+        // N.B. the contrastiveDivergenceStep changes the activation
+        // and expectation fields of top layer of the RBM, so it must be done last
+        layers[i]->setLearningRate( cd_learning_rate );
+        layers[i+1]->setLearningRate( cd_learning_rate );
+        connections[i]->setLearningRate( cd_learning_rate );
+        save_layer_activation.resize(layers[i]->size);
+        save_layer_activation << layers[i]->activation;
+        contrastiveDivergenceStep( layers[ i ],
+                                   connections[ i ],
+                                   layers[ i+1 ] ,
+                                   true);
+        layers[i]->activation << save_layer_activation;
+    }
 
 }
 
@@ -1036,12 +1103,16 @@ void DeepBeliefNet::fineTuningStep( const Vec& input, const Vec& target,
 void DeepBeliefNet::contrastiveDivergenceStep(
     const PP<RBMLayer>& down_layer,
     const PP<RBMConnection>& connection,
-    const PP<RBMLayer>& up_layer )
+    const PP<RBMLayer>& up_layer,
+    bool nofprop)
 {
     // positive phase
-    connection->setAsDownInput( down_layer->expectation );
-    up_layer->getAllActivations( connection );
-    up_layer->computeExpectation();
+    if (!nofprop)
+    {
+        connection->setAsDownInput( down_layer->expectation );
+        up_layer->getAllActivations( connection );
+        up_layer->computeExpectation();
+    }
     up_layer->generateSample();
 
     // accumulate positive stats using the expectation

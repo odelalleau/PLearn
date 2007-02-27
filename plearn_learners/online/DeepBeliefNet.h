@@ -199,7 +199,8 @@ public:
 
     void contrastiveDivergenceStep( const PP<RBMLayer>& down_layer,
                                     const PP<RBMConnection>& connection,
-                                    const PP<RBMLayer>& up_layer );
+                                    const PP<RBMLayer>& up_layer,
+                                    bool nofprop=false);
 
 
     // *** SUBCLASS WRITING: ***
@@ -258,6 +259,9 @@ protected:
 
     //! Stores the gradient of the cost at the input of final_cost
     mutable Vec final_cost_gradient;
+
+    //! buffers bottom layer activation during onlineStep 
+    mutable Vec save_layer_activation;
 
     //! Does final_module exist and have a "learning_rate" option
     bool final_module_has_learning_rate;
