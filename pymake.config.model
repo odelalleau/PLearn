@@ -110,7 +110,7 @@ elif platform=='darwin' :
         cpp_definitions += [ 'DARWIN', 'LITTLEENDIAN' ]
     else:
         cpp_definitions += [ 'DARWIN', 'BIGENDIAN' ]
-        compileflags += ' -fno-coalesce'
+        # compileflags += ' -fno-coalesce' # cc1plus says unrecognized commands
 elif platform=='win32' :
     cpp_definitions += [ 'WIN32', '_MINGW_', 'LITTLEENDIAN' ]
     # When using the standard Win32 Python (instead of the built-in Cygwin
