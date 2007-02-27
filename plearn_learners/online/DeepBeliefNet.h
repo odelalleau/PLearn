@@ -188,7 +188,7 @@ public:
     virtual TVec<std::string> getTrainCostNames() const;
 
 
-    void onlineStep( const Vec& input, const Vec& target );
+    void onlineStep( const Vec& input, const Vec& target, Vec& train_costs );
 
     void greedyStep( const Vec& input, const Vec& target, int index );
 

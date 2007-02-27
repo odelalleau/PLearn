@@ -547,7 +547,7 @@ void DeepBeliefNet::train()
         {
             int sample = stage % nsamples;
             train_set->getExample(sample, input, target, weight);
-            onlineStep( input, target );
+            onlineStep( input, target, train_costs );
             if( pb )
                 pb->update( stage + 1 );
         }
@@ -702,20 +702,18 @@ void DeepBeliefNet::train()
     train_stats->finalize();
 }
 
-void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target)
+void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target, Vec& train_costs)
 {
-#if 0
     Vec cost;
     if (partial_costs)
         cost.resize(n_layers);
 
     layers[0]->expectation << input;
-    for( int i=0 ; i<n_layers ; i++ )
+    for( int i=0 ; i<n_layers-1 ; i++ )
     {
         // mean-field fprop from layer i to layer i+1
-
         Vec input;
-        if (i==n_layers-1 && use_classification_cost) // top layer is a joint layer
+        if (i==n_layers-1 && use_classification_cost) // if top layer is a joint layer
         {
             // set the input of the joint layer 
             Vec joint_exp = joint_layer->expectation;
@@ -725,17 +723,19 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target)
                           (int) round(target[0]), 0., 1. );
             classification_module->joint_connection->setAsDownInput(
                 joint_layer->expectation );
+            // this does the actual matrix-vector computation
             layers[ n_layers-1 ]->getAllActivations(
                 get_pointer( classification_module->joint_connection ) );
         }
         else
         {
             connections[i]->setAsDownInput( layers[i]->expectation );
+            // this does the actual matrix-vector computation
             layers[i+1]->getAllActivations( connections[i] );
         }
         layers[i+1]->computeExpectation();
 
-        // propagate into local cost
+        // propagate into local cost associated to this layer
         if( partial_costs && partial_costs[ i ] )
         {
             partial_costs[ i ]->fprop( layers[ i+1 ]->expectation,
@@ -744,15 +744,14 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target)
             // Backward pass
             partial_costs[ i ]->bpropUpdate( layers[ i+1 ]->expectation,
                                              target, cost,
+                                             // first time we set these gradients: do not accumulate
                                              expectation_gradients[ i+1 ] );
-            // HACK: since the update will combine the gradients from all sources,
-            // weigh the gradients according to the desired learning rates
-            expectation_gradients[i+1] *= grad_learning_rate/cd_learning_rate;
         }
         else
             expectation_gradients[i+1].clear();
 
-        if( i==n_layers-1 && final_cost )
+        // top layer may be connected to a final_module followed by a final_cost
+        if( i==n_layers-2 && final_cost )
         {
             if( final_module )
             {
@@ -761,14 +760,11 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target)
                 final_cost->fprop( final_cost_input, target, final_cost_value );
                 final_cost->bpropUpdate( final_cost_input, target,
                                          final_cost_value[0],
-                                         final_cost_gradient );
-                // HACK: since the update will combine the gradients from all sources,
-                // weigh the gradients according to the desired learning rates
-                final_cost_gradient *= grad_learning_rate/cd_learning_rate;
+                                         final_cost_gradient ); //gradient on final_cost_input
                 final_module->bpropUpdate( layers[ n_layers-1 ]->expectation,
                                            final_cost_input,
                                            expectation_gradients[ n_layers-1 ],
-                                           final_cost_gradient );
+                                           final_cost_gradient, true );
             }
             else
             {
@@ -776,8 +772,15 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target)
                                    final_cost_value );
                 final_cost->bpropUpdate( layers[ n_layers-1 ]->expectation,
                                          target, final_cost_value[0],
-                                         expectation_gradients[ n_layers-1 ] );
+                                         expectation_gradients[ n_layers-1 ],
+                                         true);
             }
+
+            // HACK: since the update will combine the gradients from all sources,
+            // weigh the gradients according to the desired learning rates
+            expectation_gradients[i+1] *= grad_learning_rate/cd_learning_rate;
+
+// HERE
 
             train_costs[final_cost_index] = final_cost_value[0];
 
@@ -798,14 +801,10 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target)
 
     }
         
-        contrastiveDivergenceStep( layers[ i ],
-                                   connections[ i ],
-                                   layers[ i+1 ] );
+    //contrastiveDivergenceStep( layers[ i ],
+    //                           connections[ i ],
+    //                           layers[ i+1 ] );
 
-    }
-    // fprop in joint layer
-#endif
-    
 }
 
 void DeepBeliefNet::greedyStep( const Vec& input, const Vec& target, int index )
