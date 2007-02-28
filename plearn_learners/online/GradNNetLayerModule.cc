@@ -254,6 +254,12 @@ void GradNNetLayerModule::forget()
     step_number = 0;
 }
 
+void GradNNetLayerModule::setLearningRate( real dynamic_learning_rate )
+{
+    start_learning_rate = dynamic_learning_rate;
+    step_number = 0;
+    // learning_rate will automaticly be set in bpropUpdate()
+}
 
 void GradNNetLayerModule::build()
 {

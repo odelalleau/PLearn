@@ -130,6 +130,8 @@ public:
 
     virtual void forget();
 
+    virtual void setLearningRate(real dynamic_learning_rate);
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.

@@ -1313,6 +1313,12 @@ void DeepBeliefNet::setLearningRate( real the_learning_rate )
             the_learning_rate );
         joint_layer->setLearningRate( the_learning_rate );
     }
+
+    if( final_module )
+        final_module->setLearningRate( the_learning_rate );
+
+    if( final_cost )
+        final_cost->setLearningRate( the_learning_rate );
 }
 
 

@@ -140,8 +140,8 @@ public:
                               const Vec& output_diag_hessian);
 
     //! this version allows to obtain the input gradient and diag_hessian
-    //! The flag indicates whether the input_gradient and input_diag_hessian gets
-    //! accumulated into or set with the computed derivatives.
+    //! The flag indicates whether the input_gradient and input_diag_hessian
+    //! gets accumulated into or set with the computed derivatives.
     virtual void bbpropUpdate(const Vec& input, const Vec& output,
                               Vec& input_gradient,
                               const Vec& output_gradient,
@@ -170,8 +170,6 @@ public:
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
-    // ### If your class is not instantiatable (it has pure virtual methods)
-    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS
     PLEARN_DECLARE_ABSTRACT_OBJECT(OnlineLearningModule);
 
     // Simply calls inherited::build() then build_()
