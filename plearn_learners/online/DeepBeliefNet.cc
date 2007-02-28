@@ -275,7 +275,7 @@ void DeepBeliefNet::build_layers_and_connections()
         if( connections[i]->up_size != layers[i+1]->size )
             PLERROR("DeepBeliefNet::build_layers_and_connections() - \n"
                     "connections[%i]->up_size (%d) != layers[%i]->size (%d)."
-                    "\n", i, connections[i]->up_size, i+1, layers[i]->size);
+                    "\n", i, connections[i]->up_size, i+1, layers[i+1]->size);
 
         layers[i]->random_gen = random_gen;
         layers[i]->build();
