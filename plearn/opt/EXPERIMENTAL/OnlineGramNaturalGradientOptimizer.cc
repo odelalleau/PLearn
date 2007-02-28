@@ -270,7 +270,9 @@ void OnlineGramNaturalGradientOptimizer::gramEigenNaturalGradient()
         /*total_variance *= gamma;
         for( int i=0; i<gradients.length(); i++)   {
             Vec v = gradients(i);
-            total_variance += (1.-gamma) * sumsquare(v) / gradients.length();
+            // To reflect the new update
+            //total_variance += (1.-gamma) * sumsquare(v) / gradients.length();
+            total_variance += sumsquare(v) / gradients.length();
         }*/
 
         // Compute the gram matrix
