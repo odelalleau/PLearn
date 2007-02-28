@@ -78,6 +78,13 @@ void CombiningCostsModule::declareOptions(OptionList& ol)
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
+    
+    redeclareOption(ol, "input_size", &CombiningCostsModule::input_size,
+                    OptionBase::learntoption,
+                    "Is set to sub_costs[0]->input_size.");
+    redeclareOption(ol, "target_size", &CombiningCostsModule::target_size,
+                    OptionBase::learntoption,
+                    "Is set to sub_costs[0]->target_size.");
 }
 
 void CombiningCostsModule::build_()
@@ -96,6 +103,27 @@ void CombiningCostsModule::build_()
         PLERROR( "CombiningCostsModule::build_(): cost_weights.length()\n"
                  "should be equal to n_sub_costs (%d != %d).\n",
                  cost_weights.length(), n_sub_costs );
+
+    if(sub_costs.length() == 0)
+        PLERROR( "CombiningCostsModule::build_(): sub_costs.length()\n"
+                 "should be > 0.\n");                 
+
+    input_size = sub_costs[0]->input_size;
+    target_size = sub_costs[0]->target_size;
+    for(int i=1; i<sub_costs.length(); i++)
+    {
+        if(sub_costs[i]->input_size != input_size)
+            PLERROR( "CombiningCostsModule::build_(): sub_costs[%d]->input_size"
+                     " (%d)\n"
+                     "should be equal to %d.\n",
+                     i,sub_costs[i]->input_size, input_size);  
+
+        if(sub_costs[i]->target_size != target_size)
+            PLERROR( "CombiningCostsModule::build_(): sub_costs[%d]->target_size"
+                     " (%d)\n"
+                     "should be equal to %d.\n",
+                     i,sub_costs[i]->target_size, target_size);  
+    }
 
     sub_costs_values.resize( n_sub_costs );
     output_size = n_sub_costs+1;
