@@ -478,6 +478,7 @@ void DeepBeliefNet::train()
 {
     MODULE_LOG << "train() called " << endl;
     MODULE_LOG << "  training_schedule = " << training_schedule << endl;
+    MODULE_LOG << "stage = " << stage << ", target nstages = " << nstages << endl;
 
     // The role of the train method is to bring the learner up to
     // stage==nstages, updating train_stats with training costs measured
