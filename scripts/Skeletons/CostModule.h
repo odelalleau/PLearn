@@ -47,8 +47,9 @@ public:
     */
 
     //! Adapt based on the cost, and compute input gradient to backpropagate.
+    //! The flag indicates wether input_gradient is accumulated or set.
     virtual void bpropUpdate(const Vec& input, const Vec& target, real cost,
-                             Vec& input_gradient);
+                             Vec& input_gradient, bool accumulate=false);
 
     /* Optional
        N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS, WHICH
@@ -68,7 +69,8 @@ public:
     //! If these methods are defined, you can use them INSTEAD of
     //! bpropUpdate(...)
     virtual void bbpropUpdate(const Vec& input, const Vec& target, real cost,
-                              Vec& input_gradient, Vec& input_diag_hessian);
+                              Vec& input_gradient, Vec& input_diag_hessian,
+                              bool accumulate=false);
     */
 
     /* Optional
@@ -103,8 +105,9 @@ public:
     */
 
     /* Optional
-       Default implementation does nothing
-    //! If this class has a learning rate (or something close to it), set it
+       Default implementation prints a warning and does nothing
+    //! If this class has a learning rate (or something close to it), set it.
+    //! If not, you can redefine this method to get rid of the warning.
     virtual void setLearningRate(real dynamic_learning_rate);
     */
 

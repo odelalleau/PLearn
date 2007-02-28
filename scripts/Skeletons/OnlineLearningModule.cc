@@ -88,7 +88,8 @@ void DERIVEDCLASS::fprop(const Vec& input, Vec& output) const
 /* THIS METHOD IS OPTIONAL
 void DERIVEDCLASS::bpropUpdate(const Vec& input, const Vec& output,
                                Vec& input_gradient,
-                               const Vec& output_gradient)
+                               const Vec& output_gradient,
+                               bool accumulate)
 {
 }
 */
@@ -108,7 +109,8 @@ void DERIVEDCLASS::bbpropUpdate(const Vec& input, const Vec& output,
                                 Vec& input_gradient,
                                 const Vec& output_gradient,
                                 Vec& input_diag_hessian,
-                                const Vec& output_diag_hessian)
+                                const Vec& output_diag_hessian,
+                                bool accumulate)
 {
 }
 */

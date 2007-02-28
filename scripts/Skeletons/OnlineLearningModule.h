@@ -41,6 +41,7 @@ public:
     /* Optional
        THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
     //! Adapt based on the output gradient, and obtain the input gradient.
+    //! The flag indicates wether the input_gradient is accumulated or set.
     //! This method should only be called just after a corresponding
     //! fprop; it should be called with the same arguments as fprop
     //! for the first two arguments (and output should not have been
@@ -49,7 +50,8 @@ public:
     //! is 'ready-to-be-used' just after any bpropUpdate.
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              Vec& input_gradient,
-                             const Vec& output_gradient);
+                             const Vec& output_gradient,
+                             bool accumulate=false);
     */
 
     /* Optional
@@ -73,7 +75,8 @@ public:
                               Vec& input_gradient,
                               const Vec& output_gradient,
                               Vec& input_diag_hessian,
-                              const Vec& output_diag_hessian);
+                              const Vec& output_diag_hessian,
+                              bool accumulate=false);
     */
 
     /* Optional
@@ -111,8 +114,9 @@ public:
     */
 
     /* Optional
-       Default implementation does nothing
-    //! If this class has a learning rate (or something close to it), set it
+       Default implementation prints a warning and does nothing
+    //! If this class has a learning rate (or something close to it), set it.
+    //! If not, you can redefine this method to get rid of the warning.
     virtual void setLearningRate(real dynamic_learning_rate);
     */
 
