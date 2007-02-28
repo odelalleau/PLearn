@@ -299,10 +299,10 @@ int PLearnService::watchServers(TVec< PP<RemotePLearnServer> > servers,
                     break;
                 }
             }
+            else if(c == EOF)
+                PLERROR("Got EOF while reading a RemoteServer's io stream (connection reset by peer?).");
             else //synchronous message, return server's id
-            {
                 return the_k;
-            }
         }
         else
             PLERROR("stream returned by NextPendingEvent is none of the servers' io field. This should not happen!");

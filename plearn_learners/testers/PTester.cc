@@ -820,7 +820,7 @@ Vec PTester::perform1Split(int splitnum, bool call_forget)
                 learner->setExperimentDirectory("");
         }
 
-        learner->setTrainingSet(trainset, call_forget && should_train);
+        learner->setTrainingSet(trainset, call_forget);
         if (dsets.size() > 1)
             learner->setValidationSet(dsets[1]);
 
@@ -1051,7 +1051,7 @@ Vec PTester::perform(bool call_forget)
     TVec<PP<RemotePLearnServer> > servers= service.reserveServers(nsplits);
     int nservers= servers.length();
 
-    if(nservers > 1 && parallelize_here)
+    if(nservers > 1 && parallelize_here && (!should_train || call_forget))
     {
         map<PP<RemotePLearnServer>, int> testers_ids;
         map<PP<RemotePLearnServer>, int> splitnums;
