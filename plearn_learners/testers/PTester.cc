@@ -1097,6 +1097,7 @@ Vec PTester::perform(bool call_forget)
                 if(splits_called < nsplits)//call for another split
                 {
                     s->callMethod(testers_ids[s], "perform1Split", splits_called, call_forget);
+                    splitnums[s]= splits_called;
                     ++splits_called;
                 }
                 else
