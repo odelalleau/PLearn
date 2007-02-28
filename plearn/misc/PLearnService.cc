@@ -388,6 +388,7 @@ PLearnService::~PLearnService()
         {
             // do nothing...
         }
+
     }
 }
 
@@ -404,8 +405,6 @@ PLearnService::progress_bars_t PLearnService::progress_bars; // init
 void PLearnService::progress_callback(PP<RemotePLearnServer> server, unsigned int pbar, char action, 
                                       unsigned int pos, const string& title)
 {
-    //unsigned int server_id= reinterpret_cast<unsigned int>(static_cast<RemotePLearnServer*>(server));
-    //unsigned int server_id= getServerID(server);
     static bool need_to_set_pb_plugin= true;
     if(need_to_set_pb_plugin)
     {

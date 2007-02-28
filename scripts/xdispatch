@@ -41,12 +41,12 @@ def main():
     parser.add_option('-l', '--max-load', type= "float",
                       dest= "max_load",
                       help='Sets the default maximum load',
-                      default=2.0)
+                      default=1.0)
 
     parser.add_option('-s', '--nb-servers', type="int",
                       dest= "nb_servers",
                       help='Number of servers to launch (maximum)',
-                      default=1)
+                      default=3)
    
     (options, args) = parser.parse_args()
 

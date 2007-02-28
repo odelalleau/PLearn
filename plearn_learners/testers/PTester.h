@@ -190,7 +190,7 @@ public:
      *  statnames
      */
     Vec perform(bool call_forget=true);
-    Vec perform1Split(int splitnum);
+    Vec perform1Split(int splitnum, bool call_forget=true);
 
     Vec oldperform(bool call_forget=true);
 

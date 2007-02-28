@@ -292,6 +292,7 @@ void PTester::declareMethods(RemoteMethodMap& rmm)
         rmm, "perform1Split", &PTester::perform1Split,
         (BodyDoc("Performs train/test for one split, returns splitres."),
          ArgDoc ("splitnum","Split number on which to perform train/test"),
+         ArgDoc ("call_forget","Whether forget() should be called in setTrainingSet()."),
          RetDoc ("Vector of test statistics corresponding to the requested statnames")));
 
     declareMethod(
@@ -748,7 +749,7 @@ Vec PTester::oldperform(bool call_forget)
 }
 
 
-Vec PTester::perform1Split(int splitnum)
+Vec PTester::perform1Split(int splitnum, bool call_forget)
 {
     if (!learner)
         PLERROR("PTester::perform1Split : No learner specified for PTester.");
@@ -819,7 +820,7 @@ Vec PTester::perform1Split(int splitnum)
                 learner->setExperimentDirectory("");
         }
 
-        learner->setTrainingSet(trainset, should_train);
+        learner->setTrainingSet(trainset, call_forget && should_train);
         if (dsets.size() > 1)
             learner->setValidationSet(dsets[1]);
 
@@ -1069,7 +1070,7 @@ Vec PTester::perform(bool call_forget)
                     int id;
                     s->getResults(id);
                     testers_ids[s]= id;
-                    s->callMethod(id, "perform1Split", splits_called);
+                    s->callMethod(id, "perform1Split", splits_called, call_forget);
                     splitnums[s]= splits_called;
                     ++splits_called;
                 }
@@ -1088,7 +1089,6 @@ Vec PTester::perform(bool call_forget)
                 if (split_stats_vm)
                 {
                     split_stats_vm->putRow(splitnums[s],splitres);
-                    //split_stats_vm->appendRow(splitres);
                     split_stats_vm->flush();
                 }
             
@@ -1096,7 +1096,7 @@ Vec PTester::perform(bool call_forget)
 
                 if(splits_called < nsplits)//call for another split
                 {
-                    s->callMethod(testers_ids[s], "perform1Split", splits_called);
+                    s->callMethod(testers_ids[s], "perform1Split", splits_called, call_forget);
                     ++splits_called;
                 }
                 else
@@ -1110,12 +1110,11 @@ Vec PTester::perform(bool call_forget)
     else
         for (int splitnum= 0; splitnum < nsplits; ++splitnum)
         {
-            Vec splitres= perform1Split(splitnum);
+            Vec splitres= perform1Split(splitnum, call_forget);
             
             if (split_stats_vm)
             {
                 split_stats_vm->putRow(splitnum, splitres);
-                //split_stats_vm->appendRow(splitres);
                 split_stats_vm->flush();
             }
             
