@@ -129,6 +129,12 @@ protected:
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
 
+protected:
+    mutable Vec tmp_costs;
+    mutable Vec tmp_input_and_target;
+    mutable Vec tmp_input_and_target_gradient;
+    mutable Vec tmp_input_and_target_diag_hessian;
+
 private:
     //#####  Private Member Functions  ########################################
 

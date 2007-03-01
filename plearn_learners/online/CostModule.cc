@@ -99,10 +99,9 @@ void CostModule::fprop(const Vec& input, const Vec& target, Vec& cost) const
 //! keeps only the first cost
 void CostModule::fprop(const Vec& input, const Vec& target, real& cost) const
 {
-    Vec costs;
-    fprop( input, target, costs );
+    fprop( input, target, tmp_costs );
 
-    cost = costs[0];
+    cost = tmp_costs[0];
 }
 
 //! for compatibility with OnlineLearningModule interface
@@ -119,29 +118,33 @@ void CostModule::bpropUpdate(const Vec& input, const Vec& target, real cost,
                              Vec& input_gradient, bool accumulate)
 {
     // default version, calling the bpropUpdate with inherited prototype
-    Vec input_and_target( input_size + target_size );
-    input_and_target.subVec( 0, input_size ) << input;
-    input_and_target.subVec( input_size, target_size ) << target;
-    Vec input_and_target_gradient( input_size + target_size );
-    Vec the_cost( 1, cost );
-    Vec one( 1, 1 );
+    tmp_input_and_target.resize( input_size + target_size );
+    tmp_input_and_target.subVec( 0, input_size ) << input;
+    tmp_input_and_target.subVec( input_size, target_size ) << target;
+    tmp_input_and_target_gradient.resize( input_size + target_size );
+    tmp_costs.resize(1);
+    tmp_costs[0] = cost;
+    static const Vec one(1,1);
 
-    bpropUpdate( input_and_target, the_cost, input_and_target_gradient, one );
+    bpropUpdate( tmp_input_and_target, tmp_costs,
+                 tmp_input_and_target_gradient, one );
 
     if( accumulate )
     {
         PLASSERT_MSG( input_gradient.size() == input_size,
                       "Cannot resize input_gradient AND accumulate into it" );
-        input_gradient += input_and_target_gradient.subVec( 0, input_size );
+        input_gradient += tmp_input_and_target_gradient.subVec( 0, input_size );
     }
     else
-        input_gradient = input_and_target_gradient.subVec( 0, input_size );
+    {
+        input_gradient.resize( input_size );
+        input_gradient << tmp_input_and_target_gradient.subVec( 0, input_size );
+    }
 }
 
 void CostModule::bpropUpdate(const Vec& input, const Vec& target, real cost)
 {
-    Vec input_gradient;
-    bpropUpdate( input, target, cost, input_gradient );
+    bpropUpdate( input, target, cost, tmp_input_gradient );
 }
 
 void CostModule::bpropUpdate(const Vec& input_and_target, const Vec& output,
@@ -160,18 +163,19 @@ void CostModule::bbpropUpdate(const Vec& input, const Vec& target, real cost,
                               bool accumulate)
 {
     // default version, calling the bpropUpdate with inherited prototype
-    Vec input_and_target( input_size + target_size );
-    input_and_target.subVec( 0, input_size ) << input;
-    input_and_target.subVec( input_size, target_size ) << target;
-    Vec input_and_target_gradient( input_size + target_size );
-    Vec input_and_target_diag_hessian( input_size + target_size );
-    Vec the_cost( 1, cost );
-    Vec one( 1, 1 );
-    Vec zero( 1 );
+    tmp_input_and_target.resize( input_size + target_size );
+    tmp_input_and_target.subVec( 0, input_size ) << input;
+    tmp_input_and_target.subVec( input_size, target_size ) << target;
+    tmp_input_and_target_gradient.resize( input_size + target_size );
+    tmp_input_and_target_diag_hessian.resize( input_size + target_size );
+    tmp_costs.resize(1);
+    tmp_costs[0] = cost;
+    static const Vec one(1,1);
+    static const Vec zero(1);
 
-    bbpropUpdate( input_and_target, the_cost,
-                  input_and_target_gradient, one,
-                  input_and_target_diag_hessian, zero,
+    bbpropUpdate( tmp_input_and_target, tmp_costs,
+                  tmp_input_and_target_gradient, one,
+                  tmp_input_and_target_diag_hessian, zero,
                   accumulate );
 
     if( accumulate )
@@ -182,23 +186,24 @@ void CostModule::bbpropUpdate(const Vec& input, const Vec& target, real cost,
                       "Cannot resize input_diag_hessian AND accumulate into it"
                     );
 
-        input_gradient += input_and_target_gradient.subVec( 0, input_size );
+        input_gradient += tmp_input_and_target_gradient.subVec( 0, input_size );
         input_diag_hessian +=
-            input_and_target_diag_hessian.subVec( 0, input_size );
+            tmp_input_and_target_diag_hessian.subVec( 0, input_size );
     }
     else
     {
-        input_gradient = input_and_target_gradient.subVec( 0, input_size );
-        input_diag_hessian =
-            input_and_target_diag_hessian.subVec( 0, input_size );
+        input_gradient.resize( input_size );
+        input_diag_hessian.resize( input_size );
+        input_gradient << tmp_input_and_target_gradient.subVec( 0, input_size );
+        input_diag_hessian <<
+            tmp_input_and_target_diag_hessian.subVec( 0, input_size );
     }
 }
 
 void CostModule::bbpropUpdate(const Vec& input, const Vec& target, real cost)
 {
-    Vec input_gradient;
-    Vec input_diag_hessian;
-    bbpropUpdate( input, target, cost, input_gradient, input_diag_hessian );
+    bbpropUpdate( input, target, cost,
+                  tmp_input_gradient, tmp_input_diag_hessian );
 }
 
 void CostModule::bbpropUpdate(const Vec& input_and_target, const Vec& output,

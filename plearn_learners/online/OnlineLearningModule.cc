@@ -78,8 +78,7 @@ void OnlineLearningModule::bpropUpdate(const Vec& input, const Vec& output,
 void OnlineLearningModule::bpropUpdate(const Vec& input, const Vec& output,
                                        const Vec& output_gradient)
 {
-    Vec input_gradient(input.length());
-    bpropUpdate(input, output, input_gradient, output_gradient);
+    bpropUpdate(input, output, tmp_input_gradient, output_gradient);
 }
 
 //! Default method for bbpropUpdate functions, so that it compiles but crashes
@@ -88,10 +87,8 @@ void OnlineLearningModule::bbpropUpdate(const Vec& input, const Vec& output,
                                         const Vec& output_gradient,
                                         const Vec& output_diag_hessian)
 {
-    Vec input_gradient(input.length());
-    Vec input_diag_hessian(input.length());
-    bbpropUpdate(input, output, input_gradient, output_gradient,
-                 input_diag_hessian, output_diag_hessian);
+    bbpropUpdate(input, output, tmp_input_gradient, output_gradient,
+                 tmp_input_diag_hessian, output_diag_hessian);
 }
 
 void OnlineLearningModule::bbpropUpdate(const Vec& input, const Vec& output,
