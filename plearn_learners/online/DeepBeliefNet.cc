@@ -1201,7 +1201,7 @@ void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
         classification_module->fprop( layers[ n_layers-2 ]->expectation,
                                       output );
 
-    if( final_cost )
+    if( final_cost || ( partial_costs && partial_costs[n_layers-2] ))
     {
         connections[ n_layers-2 ]->setAsDownInput(
             layers[ n_layers-2 ]->expectation );
