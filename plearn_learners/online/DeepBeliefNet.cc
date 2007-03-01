@@ -568,6 +568,7 @@ void DeepBeliefNet::train()
             int sample = stage % nsamples;
             train_set->getExample(sample, input, target, weight);
             onlineStep( input, target, train_costs );
+            train_stats->update( train_costs );
             if( pb )
                 pb->update( stage + 1 );
         }
