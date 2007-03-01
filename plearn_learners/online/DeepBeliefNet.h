@@ -293,7 +293,7 @@ protected:
     int recons_cost_index;
 
     //! indices of the partial costs in train_costs
-    TVec<int> partial_cost_indices;
+    TVec<TVec<int> > partial_cost_indices;
 
 protected:
     //#####  Protected Member Functions  ######################################

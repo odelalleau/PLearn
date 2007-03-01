@@ -169,8 +169,9 @@ void ProcessInputCostModule::bpropUpdate(const Vec& input, const Vec& target,
 }
 
 
+
 /////////////////
-// bpropUpdate //
+// bbpropUpdate //
 /////////////////
 void ProcessInputCostModule::bbpropUpdate(const Vec& input, const Vec& target,
                                           real cost, Vec& input_gradient,

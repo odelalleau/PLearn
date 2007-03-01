@@ -531,9 +531,13 @@ void DeepBeliefNet::train()
         partial_cost_indices.resize(partial_costs.size());
         for (int i=0;i<partial_costs.size();i++)
             if (partial_costs[i])
-                partial_cost_indices[i] = train_cost_names.find(partial_costs[i]->name()[0] + "_" + tostring(i+1) );
-            else
-                partial_cost_indices[i] = -1;
+            {
+                TVec<string> names = partial_costs[i]->name();
+                partial_cost_indices[i].resize(names.length());
+                for (int j=0;j<names.length();j++)
+                    partial_cost_indices[i][j] = 
+                        train_cost_names.find( names[j] + "_" + tostring(i+1) );
+            }
     }
 
     recons_cost_index = train_cost_names.find("recons_error");
@@ -729,7 +733,7 @@ void DeepBeliefNet::train()
 void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
                                 Vec& train_costs)
 {
-    Vec cost;
+    TVec<Vec> cost;
     if (partial_costs)
         cost.resize(n_layers-1);
 
@@ -754,10 +758,11 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
             // Backward pass
             // first time we set these gradients: do not accumulate
             partial_costs[ i ]->bpropUpdate( layers[ i+1 ]->expectation,
-                                             target, cost[i],
+                                             target, cost[i][0],
                                              expectation_gradients[ i+1 ] );
 
-            train_costs[partial_cost_indices[i]] = cost[i];
+            for (int j=0;j<partial_cost_indices[i].length();j++)
+                train_costs[partial_cost_indices[i][j]] = cost[i][j];
         }
         else
             expectation_gradients[i+1].clear();
@@ -1229,11 +1234,18 @@ void DeepBeliefNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
     // TO MAKE FOR CLEANER CODE INDEPENDENT OF ORDER OF CALLING THIS
     // METHOD AND computeOutput, THIS SHOULD BE IN A REDEFINITION OF computeOutputAndCosts
     if( partial_costs )
+    {
+        Vec pcosts;
         for( int i=0 ; i<n_layers-1 ; i++ )
             // propagate into local cost associated to output of layer i+1
             if( partial_costs[ i ] )
+            {
                 partial_costs[ i ]->fprop( layers[ i+1 ]->expectation,
-                                           target, costs[partial_cost_indices[i]]);
+                                           target, pcosts);
+                for (int j=0;j<pcosts.length();j++)
+                    costs[partial_cost_indices[i][j]] = pcosts[j];
+            }
+    }
 
     if( use_classification_cost )
     {
@@ -1288,18 +1300,21 @@ TVec<string> DeepBeliefNet::getTestCostNames() const
     if( final_cost )
         cost_names.append( final_cost->name() );
 
+    if (partial_costs)
+        for (int i=0;i<n_layers-1;i++)
+            if (partial_costs[i])
+            {
+                TVec<string> names = partial_costs[i]->name();
+                for (int j=0;j<names.length();j++)
+                    cost_names.append( names[j] + "_" + tostring(i+1) );
+            }
+
     return cost_names;
 }
 
 TVec<string> DeepBeliefNet::getTrainCostNames() const
 {
     TVec<string> cost_names = getTestCostNames() ;
-
-    if (partial_costs)
-        for (int i=0;i<n_layers-1;i++)
-            if (partial_costs[i])
-                cost_names.append( partial_costs[i]->name()[0]
-                                   + "_" + tostring(i+1) );
 
     cost_names.append("recons_error");
     return cost_names;
