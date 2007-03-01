@@ -125,7 +125,10 @@ void RBMClassificationModule::build_()
 
     //! build joint_connection
     if( !joint_connection )
+    {
         joint_connection = new RBMMixedConnection();
+        joint_connection->random_gen = random_gen;
+    }
 
     joint_connection->sub_connections.resize(1,2);
     joint_connection->sub_connections(0,0) = previous_to_last;
