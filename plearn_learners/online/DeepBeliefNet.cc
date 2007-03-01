@@ -1226,6 +1226,15 @@ void DeepBeliefNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
     costs.resize( test_cost_names.length() );
     costs.fill( MISSING_VALUE );
 
+    // TO MAKE FOR CLEANER CODE INDEPENDENT OF ORDER OF CALLING THIS
+    // METHOD AND computeOutput, THIS SHOULD BE IN A REDEFINITION OF computeOutputAndCosts
+    if( partial_costs )
+        for( int i=0 ; i<n_layers-1 ; i++ )
+            // propagate into local cost associated to output of layer i+1
+            if( partial_costs[ i ] )
+                partial_costs[ i ]->fprop( layers[ i+1 ]->expectation,
+                                           target, costs[partial_cost_indices[i]]);
+
     if( use_classification_cost )
     {
         int test_nll_cost_index =
