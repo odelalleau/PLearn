@@ -802,7 +802,10 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
         }
 
         train_costs[final_cost_index] = final_cost_value[0];
+    }
 
+    if ( final_cost || (partial_costs && partial_costs[n_layers-2]) )
+    {
         layers[n_layers-1]->setLearningRate( grad_learning_rate );
         connections[n_layers-2]->setLearningRate( grad_learning_rate );
 
