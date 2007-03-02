@@ -63,7 +63,6 @@ DeepBeliefNet::DeepBeliefNet() :
     final_cost_has_learning_rate( false ),
     nll_cost_index( -1 ),
     class_cost_index( -1 ),
-    final_cost_index( -1 ),
     recons_cost_index( -1 )
 
 {
@@ -525,7 +524,12 @@ void DeepBeliefNet::train()
     if ( classification_cost )
         nll_cost_index = train_cost_names.find(classification_cost->name()[0]);
     if ( final_cost )
-        final_cost_index = train_cost_names.find(final_cost->name()[0]);
+    {
+        TVec<string> names = final_cost->name();
+        final_cost_indices.resize(names.length());
+        for (int i=0;i<names.length();i++)
+            final_cost_indices[i] = train_cost_names.find(names[i]);
+    }
     if ( partial_costs )
     {
         partial_cost_indices.resize(partial_costs.size());
@@ -801,7 +805,8 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
                                      true);
         }
 
-        train_costs[final_cost_index] = final_cost_value[0];
+        for (int j=0;j<final_cost_indices.length();j++)
+            train_costs[final_cost_indices[j]] = final_cost_value[j];
     }
 
     if ( final_cost || (partial_costs && partial_costs[n_layers-2]) )
@@ -1074,7 +1079,8 @@ void DeepBeliefNet::fineTuningStep( const Vec& input, const Vec& target,
                                      expectation_gradients[ n_layers-1 ] );
         }
 
-        train_costs[final_cost_index] = final_cost_value[0];
+        for (int j=0;j<final_cost_indices.length();j++)
+            train_costs[final_cost_indices[j]] = final_cost_value[j];
 
         layers[ n_layers-1 ]->bpropUpdate( layers[ n_layers-1 ]->activation,
                                            layers[ n_layers-1 ]->expectation,
@@ -1228,7 +1234,6 @@ void DeepBeliefNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
 
     TVec<string> test_cost_names = getTestCostNames() ;
 
-    int test_final_cost_index = -1 ;
     int test_class_cost_index = test_cost_names.find("class_error") ;
 
     costs.resize( test_cost_names.length() );
@@ -1236,20 +1241,6 @@ void DeepBeliefNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
 
     // TO MAKE FOR CLEANER CODE INDEPENDENT OF ORDER OF CALLING THIS
     // METHOD AND computeOutput, THIS SHOULD BE IN A REDEFINITION OF computeOutputAndCosts
-    if( partial_costs )
-    {
-        Vec pcosts;
-        for( int i=0 ; i<n_layers-1 ; i++ )
-            // propagate into local cost associated to output of layer i+1
-            if( partial_costs[ i ] )
-            {
-                partial_costs[ i ]->fprop( layers[ i+1 ]->expectation,
-                                           target, pcosts);
-                for (int j=0;j<pcosts.length();j++)
-                    costs[partial_cost_indices[i][j]] = pcosts[j];
-            }
-    }
-
     if( use_classification_cost )
     {
         int test_nll_cost_index =
@@ -1269,19 +1260,25 @@ void DeepBeliefNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
 
     if( final_cost )
     {
-
-        test_final_cost_index = test_cost_names.find(final_cost->name()[0]) ;
         int init = use_classification_cost ? n_classes : 0;
-        Vec final_costs;
         final_cost->fprop( output.subVec( init, output.size() - init ),
                            target, final_cost_value );
+        for (int j=0;j<final_cost_indices.length();j++)
+            costs[final_cost_indices[j]] = final_cost_value[j];
+    }
 
-        if ( final_cost_value.length() > 1 )
-            PLERROR("DeepBeliefNet::computeCostsFromOutputs needs to be fixed"
-                    "to handle final costs with more then one element") ;
-
-        costs[test_final_cost_index] = final_cost_value[0] ;
-        costs.append(final_cost_value[0]);
+    if( partial_costs )
+    {
+        Vec pcosts;
+        for( int i=0 ; i<n_layers-1 ; i++ )
+            // propagate into local cost associated to output of layer i+1
+            if( partial_costs[ i ] )
+            {
+                partial_costs[ i ]->fprop( layers[ i+1 ]->expectation,
+                                           target, pcosts);
+                for (int j=0;j<pcosts.length();j++)
+                    costs[partial_cost_indices[i][j]] = pcosts[j];
+            }
     }
 
 }

@@ -286,8 +286,8 @@ protected:
     //! Keeps the index of the CLASS cost in train_costs
     int class_cost_index;
 
-    //! Keeps the index of the final cost in train_costs
-    int final_cost_index;
+    //! Keeps the indices of the final costs in train_costs
+    TVec<int> final_cost_indices;
 
     //! Keeps the index of the reconstruction cost in train_costs
     int recons_cost_index;
