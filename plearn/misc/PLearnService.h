@@ -122,16 +122,16 @@ public:
                                   unsigned int pos= 0, const string& title= "");
 
     int watchServers(TVec< PP<RemotePLearnServer> > servers, 
-                     log_callback_t log_callback,
-                     progress_callback_t progress_callback);
+                     log_callback_t the_log_callback,
+                     progress_callback_t the_progress_callback);
 
     PP<RemotePLearnServer> waitForResult(TVec< PP<RemotePLearnServer> > servers= TVec< PP<RemotePLearnServer> >(), 
-                                         log_callback_t log_callback= log_callback,
-                                         progress_callback_t progress_callback= progress_callback);
+                                         log_callback_t the_log_callback = log_callback,
+                                         progress_callback_t the_progress_callback = progress_callback);
 
     void waitForResultFrom(PP<RemotePLearnServer> from,
-                           log_callback_t log_callback= log_callback,
-                           progress_callback_t progress_callback= progress_callback);
+                           log_callback_t the_log_callback = log_callback,
+                           progress_callback_t the_progress_callback = progress_callback);
     
     ~PLearnService();
 };

@@ -237,8 +237,8 @@ int PLearnService::watchServers(TVec< PP<RemotePLearnServer> > servers, int time
 
 
 int PLearnService::watchServers(TVec< PP<RemotePLearnServer> > servers, 
-                                log_callback_t log_callback, 
-                                progress_callback_t progress_callback)
+                                log_callback_t the_log_callback, 
+                                progress_callback_t the_progress_callback)
 {
     Poll p;
     int n = servers.size();
@@ -283,7 +283,7 @@ int PLearnService::watchServers(TVec< PP<RemotePLearnServer> > servers,
                 {
                 case 'L' : // log message
                     io >> module >> vlevel >> mesg;
-                    log_callback(servers[the_k], module, vlevel, mesg);
+                    the_log_callback(servers[the_k], module, vlevel, mesg);
                     break;
                 case 'P' : // progress message
                     c0= io.get(); // action: 'A'dd, 'U'pdate or 'K'ill
@@ -292,7 +292,7 @@ int PLearnService::watchServers(TVec< PP<RemotePLearnServer> > servers,
                         io >> pos;// Add: maxpos; Update: curpos
                     if(static_cast<char>(c0) == 'A')
                         io >> mesg;// pbar title
-                    progress_callback(servers[the_k], ptr, static_cast<char>(c0), pos, mesg);
+                    the_progress_callback(servers[the_k], ptr, static_cast<char>(c0), pos, mesg);
                     break;
                 default:
                     PLERROR("PLearnService::watchServers : Expected *L or *P, received *%c", c);
@@ -307,14 +307,19 @@ int PLearnService::watchServers(TVec< PP<RemotePLearnServer> > servers,
         else
             PLERROR("stream returned by NextPendingEvent is none of the servers' io field. This should not happen!");
     }
-    return -1;  // To make the compiler happy (never reached).
+#ifndef __INTEL_COMPILER
+    // To make the compiler happy (never reached). This is unnecessary with
+    // Intel Compiler, which detects automatically that this statement is never
+    // reached, and actually gives a warning.
+    return -1;
+#endif
 }
 
 
 
 PP<RemotePLearnServer> PLearnService::waitForResult(TVec< PP<RemotePLearnServer> > servers, 
-                                log_callback_t log_callback, 
-                                progress_callback_t progress_callback)
+                                log_callback_t the_log_callback, 
+                                progress_callback_t the_progress_callback)
 {
     int min_server= 0;
     if(servers.isEmpty())
@@ -333,7 +338,7 @@ PP<RemotePLearnServer> PLearnService::waitForResult(TVec< PP<RemotePLearnServer>
 
     //send results from reserved servers only even if polling all servers
     while(server >= 0 && server < min_server || server == servers.length())
-        server= watchServers(servers, log_callback, progress_callback);
+        server= watchServers(servers, the_log_callback, the_progress_callback);
 
     if(server < 0)
         PLERROR("in PLearnService::waitForResult : no server returned anything.");
@@ -342,12 +347,12 @@ PP<RemotePLearnServer> PLearnService::waitForResult(TVec< PP<RemotePLearnServer>
 
 
 void PLearnService::waitForResultFrom(PP<RemotePLearnServer> from,
-                                      log_callback_t log_callback,
-                                      progress_callback_t progress_callback)
+                                      log_callback_t the_log_callback,
+                                      progress_callback_t the_progress_callback)
 {
-    PP<RemotePLearnServer> server= waitForResult();
+    PP<RemotePLearnServer> server = waitForResult();
     while(server != from)
-        server= waitForResult();
+        server = waitForResult();
 }
 
 
@@ -384,7 +389,7 @@ PLearnService::~PLearnService()
         {
             for(;;) watchServers(servers, log_callback, progress_callback);
         }
-        catch(const PLearnError& e)
+        catch(const PLearnError&)
         {
             // do nothing...
         }
