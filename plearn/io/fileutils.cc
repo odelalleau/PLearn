@@ -192,7 +192,10 @@ vector<string> lsdir(const PPath& dirpath)
     }
 
     PRErrorCode e = PR_GetError();
-    if (e != PR_MAX_ERROR)
+    // The error code 'PR_NO_MORE_FILES_ERROR' can be found due to the call to
+    // 'PR_ReadDir', that sets this error when reaching the end of the
+    // directory.
+    if (e != PR_MAX_ERROR && e != PR_NO_MORE_FILES_ERROR)
         PLERROR("In lsdir: error while listing directory: %s.",
                 getPrErrorString().c_str());
 
