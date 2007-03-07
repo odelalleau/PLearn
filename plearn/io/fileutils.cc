@@ -174,6 +174,13 @@ vector<string> lsdir(const PPath& dirpath)
 {
     vector<string> list;
 
+    // Since NSPR functions do not reset the current error id when nothing goes
+    // wrong, we do it manually by setting it to the 'PR_MAX_ERROR' value,
+    // which is a placeholder for the last available error in NSPR (thus it is
+    // not a true error code by itself).
+    // This will avoid a crash triggered by an earlier error.
+    PR_SetError(PR_MAX_ERROR, 0);
+
     PRDir* d = PR_OpenDir(dirpath.absolute().c_str());
     if (!d)
         PLERROR("In lsdir: could not open directory %s",dirpath.absolute().c_str());
@@ -185,14 +192,7 @@ vector<string> lsdir(const PPath& dirpath)
     }
 
     PRErrorCode e = PR_GetError();
-    if (e != PR_NO_MORE_FILES_ERROR
-#if 1 // Workaround for NSPR bug
-        && e != 0
-        && e != PR_FILE_NOT_FOUND_ERROR
-        && e != PR_NOT_DIRECTORY_ERROR
-        && e != PR_DIRECTORY_NOT_EMPTY_ERROR
-#endif
-        )
+    if (e != PR_MAX_ERROR)
         PLERROR("In lsdir: error while listing directory: %s.",
                 getPrErrorString().c_str());
 
