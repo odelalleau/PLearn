@@ -213,7 +213,7 @@ real RBMBinomialLayer::fpropNLL(const Vec& target)
     return ret;
 }
 
-void RBMBinomialLayer::bpropNLL(const Vec& target, real nll, Vec bias_gradient)
+void RBMBinomialLayer::bpropNLL(const Vec& target, real nll, Vec& bias_gradient)
 {
     computeExpectation();
 

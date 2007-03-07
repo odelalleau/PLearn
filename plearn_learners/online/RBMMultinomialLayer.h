@@ -110,7 +110,7 @@ public:
 
     //! Computes the gradient of the negative log-likelihood of target
     //! with respect to the layer's bias, given the internal activations
-    virtual void bpropNLL(const Vec& target, real nll, Vec bias_gradient);
+    virtual void bpropNLL(const Vec& target, real nll, Vec& bias_gradient);
 
     //#####  PLearn::Object Protocol  #########################################
 

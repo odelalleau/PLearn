@@ -224,7 +224,7 @@ real RBMMultinomialLayer::fpropNLL(const Vec& target)
 }
 
 void RBMMultinomialLayer::bpropNLL(const Vec& target, real nll,
-                                   Vec bias_gradient)
+                                   Vec& bias_gradient)
 {
     computeExpectation();
 

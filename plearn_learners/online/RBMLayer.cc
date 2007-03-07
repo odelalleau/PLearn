@@ -219,7 +219,7 @@ real RBMLayer::fpropNLL(const Vec& target)
     return REAL_MAX;
 }
 
-void RBMLayer::bpropNLL(const Vec& target, real nll, Vec bias_gradient)
+void RBMLayer::bpropNLL(const Vec& target, real nll, Vec& bias_gradient)
 {
     PLERROR("In RBMLayer::bpropNLL(): not implemented");
 }
@@ -326,7 +326,7 @@ void RBMLayer::bpropCD(const Vec& pos_values, const Vec& neg_values,
     real* bns = neg_values.data();
 
     for( int i=0 ; i<size ; i++ )
-        bg[i] = bps[i]/pos_count - bns[i]/neg_count;
+        bg[i] = bps[i] - bns[i];
 }
 
 
