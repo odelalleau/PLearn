@@ -126,6 +126,10 @@ void SoftmaxModule::forget()
 {
 }
 
+void SoftmaxModule::setLearningRate(real dynamic_learning_rate)
+{
+}
+
 void SoftmaxModule::bbpropUpdate(const Vec& input, const Vec& output,
                                  Vec& input_gradient,
                                  const Vec& output_gradient,

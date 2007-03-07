@@ -85,6 +85,10 @@ public:
     //! build().
     virtual void forget();
 
+    // Allows to change the learning rate, if the derived class has one and
+    // allows to do so.
+    virtual void setLearningRate(real dynamic_learning_rate);
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
