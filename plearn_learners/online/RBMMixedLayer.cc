@@ -231,7 +231,7 @@ real RBMMixedLayer::fpropNLL(const Vec& target)
     return ret;
 }
 
-void RBMMixedLayer::bpropNLL(const Vec& target, real nll, Vec bias_gradient)
+void RBMMixedLayer::bpropNLL(const Vec& target, real nll, Vec& bias_gradient)
 {
     computeExpectation();
 
