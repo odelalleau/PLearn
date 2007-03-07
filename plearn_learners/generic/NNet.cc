@@ -808,7 +808,8 @@ void NNet::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv,
 {
 #ifdef BOUNDCHECK
     // Stable cross entropy needs the value *before* the transfer function.
-    if (cost_funcs.contains("stable_cross_entropy"))
+    if (cost_funcs.contains("stable_cross_entropy") or
+       (cost_funcs.contains("NLL") and outputsize() == 1))
         PLERROR("In NNet::computeCostsFromOutputs - Cannot directly compute stable "
                 "cross entropy from output and target");
 #endif
