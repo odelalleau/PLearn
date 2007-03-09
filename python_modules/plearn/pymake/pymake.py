@@ -2612,6 +2612,7 @@ def main( args ):
     for target in otherargs:
         configpath = get_config_path(target)
         execfile( configpath, globals() )
+
         # remove duplicates from sourcedirs
         sourcedirs = unique(sourcedirs)
 

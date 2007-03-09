@@ -791,37 +791,44 @@ PStream& operator>>(PStream& in, Object*& x)
         in.get(); // Eat '*'
         unsigned int id;
         in >> id;
-        in.skipBlanksAndCommentsAndSeparators();
+        //don't skip blanks before we need to read something else (read might block).
+        //in.skipBlanksAndCommentsAndSeparators();
         if (id==0)
             x = 0;
-        else if (in.peek() == '-') 
+        else
         {
-            in.get(); // Eat '-'
-            char cc = in.get();
-            if(cc != '>') // Eat '>'
-                PLERROR("In PStream::operator>>(Object*&)  Wrong format. "
-                        "Expecting \"*%d->\" but got \"*%d-%c\".", id, id, cc);
-            in.skipBlanksAndCommentsAndSeparators();
-            if(x)
-                in >> *x;
-            else // x is null
-                x = readObject(in, id);
-            // in.skipBlanksAndCommentsAndSeparators();
-            in.copies_map_in[id]= x;
-        } 
-        else 
-        {
-            // Find it in map and return ptr;
-            map<unsigned int, void *>::iterator it = in.copies_map_in.find(id);
-            if (it == in.copies_map_in.end())
-                PLERROR("In PStream::operator>>(Object*&) object (ptr) to be read with id='%d' "
-                        "has not been previously defined", id);
-            x= static_cast<Object *>(it->second);
+            in.skipBlanksAndCommentsAndSeparators(); 
+            if (in.peek() == '-') 
+            {
+                in.get(); // Eat '-'
+                char cc = in.get();
+                if(cc != '>') // Eat '>'
+                    PLERROR("In PStream::operator>>(Object*&)  Wrong format. "
+                            "Expecting \"*%d->\" but got \"*%d-%c\".", id, id, cc);
+                in.skipBlanksAndCommentsAndSeparators();
+                if(x)
+                    in >> *x;
+                else // x is null
+                    x = readObject(in, id);
+                //don't skip blanks before we need to read something else (read might block).
+                // in.skipBlanksAndCommentsAndSeparators();
+                in.copies_map_in[id]= x;
+            } 
+            else 
+            {
+                // Find it in map and return ptr;
+                map<unsigned int, void *>::iterator it = in.copies_map_in.find(id);
+                if (it == in.copies_map_in.end())
+                    PLERROR("In PStream::operator>>(Object*&) object (ptr) to be read with id='%d' "
+                            "has not been previously defined", id);
+                x= static_cast<Object *>(it->second);
+            }
         }
-    } 
+    }
     else
     {
         x = readObject(in);
+        //don't skip blanks before we need to read something else (read might block).
         // in.skipBlanksAndCommentsAndSeparators();
     }
 

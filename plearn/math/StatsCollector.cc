@@ -45,6 +45,7 @@
 #include "StatsCollector.h"
 #include "TMat_maths.h"
 #include "pl_erf.h"
+#include "pl_math.h"
 #include <assert.h>
 #include <plearn/io/openString.h>
 #include <plearn/math/random.h>   //!< For shuffleRows().
@@ -164,6 +165,8 @@ int sortIdComparator(const void* i1, const void* i2)
     return (d<0)?-1:(fast_exact_is_equal(d, 0) ? 0:1);
 }
 
+/**
+ * DEPRECATED: don't sort ids -xsm
 //! fix 'id' attribute of all StatCollectorCounts so that increasing ids correspond to increasing real values
 //! *** NOT TESTED YET (Julien)
 void StatsCollector::sortIds()
@@ -177,6 +180,7 @@ void StatsCollector::sortIds()
         allreals[i].second->id=i;
     delete allreals;
 }
+*/
 
 void StatsCollector::declareOptions(OptionList& ol)
 {
@@ -230,6 +234,10 @@ void StatsCollector::declareOptions(OptionList& ol)
         "well as a last element which maps FLT_MAX, so that we do not miss\n"
         "anything (remains empty if maxnvalues == 0).");
 
+    declareOption(ol, "count_ids", &StatsCollector::count_ids,
+                                OptionBase::learntoption | OptionBase::nosave,
+        "Maps an id to a count value.");
+
     declareOption(ol, "more_than_maxnvalues", &StatsCollector::more_than_maxnvalues, OptionBase::learntoption,
                   "Set to 1 when more than 'maxnvalues' are seen. This is to warn the user when computing\n"
                   "statistics that may be inaccurate when not all values are kept (e.g., LIFT).");
@@ -248,9 +256,16 @@ void StatsCollector::build_()
     // but rounded to some precision, and there would be 2 keys approx.=  FLT_MAX
     if(storeCounts() && counts.size()==0)
         counts[FLT_MAX] = StatsCollectorCounts();
+
     // If no values are kept, then we always see more than 0 values.
     if (maxnvalues == 0)
         more_than_maxnvalues = true;
+    
+    // build count_ids
+    count_ids.clear();
+    for(map<real, StatsCollectorCounts>::iterator it= counts.begin();
+        it != counts.end(); ++it)
+        count_ids[it->second.id]= it->first;
 }
 
 ///////////
@@ -320,15 +335,18 @@ void StatsCollector::update(real val, real weight)
             {
                 // Still remembering new unseen values
                 it = counts.find(val);
+
                 if(it==counts.end()) {
                     // Create a new entry.
                     // Note that doing this in a single operation is not recommended.
                     // Indeed, depending on the compiler, counts.size() may differ by 1
                     // because the [] operator may be called before or after. That's why
                     // we explicitly call counts.size() first.
-                    int id = int(counts.size()) - 1;
+                    int id = int(counts.size());
                     counts[val].id = id;
+                    count_ids[id]= val;
                 }
+
                 counts[val].n += weight;
             }
             else // We've filled up counts already
@@ -1116,6 +1134,113 @@ real StatsCollector::zpr2t() const
 {
     return 2 * zpr1t();
 }
+
+
+void StatsCollector::merge(const StatsCollector& other)
+{
+    if(storeCounts() && other.maxnvalues != -1)
+        PLERROR("Cannot merge stats collectors w/counts if 'other' stats col. has maxnvalues != -1");
+
+    if(fast_exact_is_equal(nnonmissing_,0))    // this was empty before merge
+    {
+        min_= other.min_;
+        max_= other.max_;
+        first_= other.first_;
+        last_= other.last_;
+    }
+
+    sum_+= other.sum() - first_*other.nnonmissing_;
+    double first2= first_*first_;
+    sumsquare_+= other.sumsquare() - 2.0*first_*other.sum() + first2*other.nnonmissing_;
+    double ofirst2= other.first_*other.first_;
+    double osum3= other.sumcube_ + 3.0*other.first_*other.sumsquare() 
+        - 3.0*ofirst2*other.sum() + ofirst2*other.first_*other.nnonmissing_;
+    sumcube_+= osum3 - 3.0*first_*other.sumsquare() 
+        + 3.0*first2*other.sum() - first2*first_*other.nnonmissing_;
+    double osum4= other.sumfourth_ + 4.0*other.first_*osum3 - 6.0*ofirst2*other.sumsquare() 
+        + 4.0*other.first_*ofirst2*other.sum() - ofirst2*ofirst2*other.nnonmissing_;
+    sumfourth_+= osum4 - 4.0*first_*osum3 + 6.0*first2*other.sumsquare() 
+        - 4.0*first_*first2*other.sum() + first2*first2*other.nnonmissing_;
+
+    nmissing_+= other.nmissing_;
+    nnonmissing_+= other.nnonmissing_;
+    sumsquarew_+= other.sumsquarew_;
+
+    min_= std::min(min_, other.min_);
+    max_= std::max(max_, other.max_);
+    last_= other.last_; //assume this is first and other is last.
+    sorted = false;
+
+    if (storeCounts())//now merge counts
+    {
+        
+        int nextid= 0;
+        set<real> already_merged;
+        map<real,StatsCollectorCounts>::iterator it;
+        map<real,StatsCollectorCounts>::const_iterator ito;
+        map<int, real>::const_iterator iti;
+        while(nextid < int(other.counts.size()) && (maxnvalues == -1 || int(counts.size()) <= maxnvalues))
+        {// merge counts with smallest ids until maxnvalues reached
+
+            iti= other.count_ids.find(nextid);
+            if(iti == other.count_ids.end())
+            {
+                PLWARNING("Can't find count id %d", nextid);
+                break;
+            }
+            real val= iti->second;
+            ito= other.counts.find(val);
+            if(ito == other.counts.end())
+            {
+                PLWARNING("Can't find count id %d, val %f", nextid, val);
+                break;
+            }
+
+            int newid= int(counts.size());
+
+            it= counts.find(val);
+            if(it != counts.end())
+                it->second.merge(ito->second);
+            else
+            {
+                counts[val]= ito->second;
+                counts[val].id= newid;
+                count_ids[newid]= val;
+            }
+            ++nextid;
+            already_merged.insert(val);
+        }
+
+        for(ito= other.counts.begin(); ito != other.counts.end(); ++ito)
+        {
+            real val= ito->first;
+            if(already_merged.count(val) == 0)//skip those merged earlier
+            {
+                it= counts.find(val);
+                if(it != counts.end())
+                    it->second.merge(ito->second);
+                else if(maxnvalues == -1 || int(counts.size()) <= maxnvalues)
+                {
+                    int id= int(counts.size());
+                    counts[val]= ito->second;
+                    counts[val].id= id;
+                    count_ids[id]= val;
+                }
+                else
+                {
+                    more_than_maxnvalues= true;
+                    it= counts.lower_bound(val);
+                    real weight= ito->second.n;
+                    it->second.nbelow+= ito->second.nbelow + weight;
+                    it->second.sum+= val*weight;//ito->second.sum;
+                    it->second.sumsquare+= val*val*weight;//ito->second.sumsquare;
+                }
+            }
+        }
+    }
+    if (!approximate_counts.empty()) approximate_counts.clear();
+}
+
 
 } // end of namespace PLearn
 

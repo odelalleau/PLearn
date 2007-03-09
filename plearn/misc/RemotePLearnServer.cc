@@ -55,10 +55,42 @@ RemotePLearnServer::RemotePLearnServer(const PStream& serverio)
   
 void RemotePLearnServer::clearMaps()
 {
-    io.copies_map_in.clear();
-    io.copies_map_out.clear();
+    io.clearInOutMaps();
+    // copy local object map to stream's out map
+    for(ObjMap::iterator it= objmap.begin(); it != objmap.end(); ++it)
+        io.copies_map_out[it->second]= it->first;
 }
   
+void RemotePLearnServer::link(unsigned int objid, void* obj)
+{ 
+    io.copies_map_out[obj]= objid;
+    objmap[objid]= obj; 
+    rev_objmap[obj]= objid;
+
+    DBG_LOG << "copies map: " << objmap << endl;
+}
+
+void RemotePLearnServer::unlink(unsigned int objid)
+{ 
+    ObjMap::iterator it= objmap.find(objid);
+    if(it == objmap.end())
+        PLERROR("in RemotePLearnServer::unlink : cannot unlink an object which is not linked");
+    objmap.erase(it);
+    rev_objmap.erase(it->second);
+    io.copies_map_out.erase(it->second);
+}
+
+void RemotePLearnServer::unlink(void* obj)
+{ 
+    ReverseObjMap::iterator it= rev_objmap.find(obj);
+    if(it == rev_objmap.end())
+        PLERROR("in RemotePLearnServer::unlink : cannot unlink an object which is not linked");
+    rev_objmap.erase(it);
+    objmap.erase(it->second);
+    io.copies_map_out.erase(obj);
+}
+
+
 void RemotePLearnServer::newObject(int objid, const Object& model)
 { 
     clearMaps();

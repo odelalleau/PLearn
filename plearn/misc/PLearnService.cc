@@ -135,7 +135,6 @@ void PLearnService::connectToServers(TVec< pair<string,int> > hostname_and_port)
 
 void PLearnService::disconnectFromServers()
 {
-    //available_servers = TVec< PP<RemotePLearnServer> >();
     while(available_servers.length() > 0)
         disconnectFromServer(available_servers[0]);
 }
@@ -400,8 +399,6 @@ PLearnService::~PLearnService()
 
 void PLearnService::log_callback(PP<RemotePLearnServer> server, const string& module_name, int vlevel, const string& msg)
 { 
-    //unsigned int server_id= reinterpret_cast<unsigned int>(static_cast<RemotePLearnServer*>(server));
-    //unsigned int server_id= getServerID(server);
     PL_LOG(vlevel) << "<From server " << servers_ids[server] << "> [" << module_name << "] " << msg << flush; 
 }
 
@@ -413,7 +410,9 @@ void PLearnService::progress_callback(PP<RemotePLearnServer> server, unsigned in
     static bool need_to_set_pb_plugin= true;
     if(need_to_set_pb_plugin)
     {
-        ProgressBar::setPlugin(new LineOutputProgressBarPlugin(cerr));
+        PP<ProgressBarPlugin> orig_pb_plugin= ProgressBar::getCurrentPlugin();
+        if(dynamic_cast<NullProgressBarPlugin*>(static_cast<ProgressBarPlugin*>(orig_pb_plugin)) == 0)
+            ProgressBar::setPlugin(new LineOutputProgressBarPlugin(cerr));
         need_to_set_pb_plugin= false;
     }
 

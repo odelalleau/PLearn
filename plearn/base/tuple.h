@@ -325,6 +325,55 @@ PStream& operator>>(PStream& in, tuple<T1,T2,T3,T4,T5,T6>& t)
     return in;
 }
 
+
+//! Tuples handle deepCopying by distributing it to each element
+template<typename T0>
+inline void deepCopyField(tuple<T0>& t, CopiesMap& copies)
+{
+    deepCopyField(get<0>(t), copies);
+}
+template<typename T0, typename T1>
+inline void deepCopyField(tuple<T0,T1>& t, CopiesMap& copies)
+{
+    deepCopyField(get<0>(t), copies);
+    deepCopyField(get<1>(t), copies);
+}
+template<typename T0, typename T1, typename T2>
+inline void deepCopyField(tuple<T0,T1,T2>& t, CopiesMap& copies)
+{
+    deepCopyField(get<0>(t), copies);
+    deepCopyField(get<1>(t), copies);
+    deepCopyField(get<2>(t), copies);
+}
+template<typename T0, typename T1, typename T2, typename T3>
+inline void deepCopyField(tuple<T0,T1,T2,T3>& t, CopiesMap& copies)
+{
+    deepCopyField(get<0>(t), copies);
+    deepCopyField(get<1>(t), copies);
+    deepCopyField(get<2>(t), copies);
+    deepCopyField(get<3>(t), copies);
+}
+template<typename T0, typename T1, typename T2, typename T3, typename T4>
+inline void deepCopyField(tuple<T0,T1,T2,T3,T4>& t, CopiesMap& copies)
+{
+    deepCopyField(get<0>(t), copies);
+    deepCopyField(get<1>(t), copies);
+    deepCopyField(get<2>(t), copies);
+    deepCopyField(get<3>(t), copies);
+    deepCopyField(get<4>(t), copies);
+}
+template<typename T0, typename T1, typename T2, typename T3, typename T4, typename T5>
+inline void deepCopyField(tuple<T0,T1,T2,T3,T4,T5>& t, CopiesMap& copies)
+{
+    deepCopyField(get<0>(t), copies);
+    deepCopyField(get<1>(t), copies);
+    deepCopyField(get<2>(t), copies);
+    deepCopyField(get<3>(t), copies);
+    deepCopyField(get<4>(t), copies);
+    deepCopyField(get<5>(t), copies);
+}
+
+
 } // namespace PLearn
 
 #endif //ndef pl_tuple_INC

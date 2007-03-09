@@ -6,6 +6,7 @@
 // Copyright (C) 1999-2002 Yoshua Bengio, Nicolas Chapados, Charles Dugas, Rejean Ducharme, Universite de Montreal
 // Copyright (C) 2001,2002 Francis Pieraut, Jean-Sebastien Senecal
 // Copyright (C) 2002 Frederic Morin, Xavier Saint-Mleux, Julien Keable
+// Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -147,6 +148,7 @@ public:
     /**
      *  Max number of computation servers to use in parallel with the main
      *  process.
+     *  DEPRECATED: use parallelize_here instead
      */
     int nservers; 
 
@@ -161,7 +163,19 @@ public:
      *  the correct results.  (Default="", i.e. don't save anything.)
      */
     string save_trainingset_prefix;
-  
+
+    /**
+     * Wether parallelism should be exploited at this object's level
+     */
+    bool parallelize_here;
+
+    /**
+     * For PLearner::test in parallel:
+     * if true, the master reads the testset and sends rows to the slaves;
+     * otherwise, the master sends a description of the testset to the slaves
+     */
+    bool master_sends_testset_rows;
+
 protected:
 
     /**
@@ -528,6 +542,14 @@ public:
      */
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
                       VMat testoutputs=0, VMat testcosts=0) const;
+
+    /**
+     *  "remote" test:
+     *  Performs test on testset, returns stats and optionally testoutputs and testcosts
+     */
+    virtual tuple<PP<VecStatsCollector>, VMat, VMat> rtest(VMat testset, PP<VecStatsCollector> test_stats,
+                                                      bool rtestoutputs, bool rtestcosts) const;
+    
 
     /**
      * Process a full dataset (possibly containing input,target,weight,extra

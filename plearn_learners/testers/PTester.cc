@@ -1048,11 +1048,11 @@ Vec PTester::perform(bool call_forget)
 
 
     PLearnService& service(PLearnService::instance());
-    TVec<PP<RemotePLearnServer> > servers= service.reserveServers(nsplits);
-    int nservers= servers.length();
+    int nservers= min(nsplits, service.availableServers());
 
     if(nservers > 1 && parallelize_here && (!should_train || call_forget))
     {
+        TVec<PP<RemotePLearnServer> > servers= service.reserveServers(nsplits);
         map<PP<RemotePLearnServer>, int> testers_ids;
         map<PP<RemotePLearnServer>, int> splitnums;
         for (int splitnum= 0; splitnum < nservers && splitnum < nsplits; ++splitnum)

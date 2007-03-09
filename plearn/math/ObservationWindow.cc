@@ -2,7 +2,7 @@
 // ObservationWindow.cc
 // 
 // Copyright (C) 2006 Christian Dorion
-// Copyright (C) 2006 ApStat Technologies Inc.
+// Copyright (C) 2006,2007 ApStat Technologies Inc.
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -38,11 +38,105 @@
 namespace PLearn {
 using namespace std;
 
+PLEARN_IMPLEMENT_OBJECT(
+    ObservationWindow,
+    "ONE LINE USER DESCRIPTION",
+    "MULTI LINE\nHELP FOR USERS"
+    );
+
+
 ObservationWindow::ObservationWindow(int window)
     : m_window(window)
 {
     forget();
 }
+
+
+// ### Nothing to add here, simply calls build_
+void ObservationWindow::build()
+{
+    inherited::build();
+    build_();
+}
+
+void ObservationWindow::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    inherited::makeDeepCopyFromShallowCopy(copies);
+
+    // ### Call deepCopyField on all "pointer-like" fields
+    // ### that you wish to be deepCopied rather than
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
+
+    // ### Remove this line when you have fully implemented this method.
+    //PLERROR("ObservationWindow::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+
+    deepCopyField(m_observations, copies);
+    deepCopyField(m_obs_weights,  copies);
+    deepCopyField(m_last_update_rvalue,  copies);
+
+}
+
+void ObservationWindow::declareOptions(OptionList& ol)
+{
+    // ### Declare all of this object's options here.
+    // ### For the "flags" of each option, you should typically specify
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or
+    // ### OptionBase::tuningoption. If you don't provide one of these three,
+    // ### this option will be ignored when loading values from a script.
+    // ### You can also combine flags, for example with OptionBase::nosave:
+    // ### (OptionBase::buildoption | OptionBase::nosave)
+
+    // ### ex:
+    // declareOption(ol, "myoption", &ObservationWindow::myoption,
+    //               OptionBase::buildoption,
+    //               "Help text describing this option");
+    // ...
+
+    declareOption(ol, "window", &ObservationWindow::m_window,
+                  OptionBase::buildoption,
+                  "Window length");
+
+    declareOption(ol, "nobs", &ObservationWindow::m_nobs,
+                  OptionBase::learntoption,
+                  "nb. observations");
+
+    declareOption(ol, "cursor", &ObservationWindow::m_cursor,
+                  OptionBase::learntoption | OptionBase::nosave,
+                  "cursor pos.");
+
+    declareOption(ol, "observations", &ObservationWindow::m_observations,
+                  OptionBase::learntoption | OptionBase::nosave,
+                  "the observations themselves");
+
+    declareOption(ol, "obs_weights", &ObservationWindow::m_obs_weights,
+                  OptionBase::learntoption | OptionBase::nosave,
+                  "observation weights");
+
+    declareOption(ol, "last_update_rvalue", &ObservationWindow::m_last_update_rvalue,
+                  OptionBase::learntoption | OptionBase::nosave,
+                  "last_update_rvalue");
+
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
+}
+
+void ObservationWindow::build_()
+{
+    // ### This method should do the real building of the object,
+    // ### according to set 'options', in *any* situation.
+    // ### Typical situations include:
+    // ###  - Initial building of an object from a few user-specified options
+    // ###  - Building of a "reloaded" object: i.e. from the complete set of
+    // ###    all serialised options.
+    // ###  - Updating or "re-building" of an object after a few "tuning"
+    // ###    options have been modified.
+    // ### You should assume that the parent class' build_() has already been
+    // ### called.
+}
+
+
 
 int ObservationWindow::length() const
 {
@@ -125,7 +219,7 @@ real ObservationWindow::lastWeight() const
     return m_obs_weights[last_obs];
 }
 
-
+/*
 //! Deep copying
 ObservationWindow* ObservationWindow::deepCopy(CopiesMap& copies) const
 {
@@ -144,7 +238,7 @@ ObservationWindow* ObservationWindow::deepCopy(CopiesMap& copies) const
     //!  return the completed deep_copy
     return deep_copy;
 }
-
+*/
 
 } // end of namespace PLearn
 

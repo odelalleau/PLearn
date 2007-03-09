@@ -458,12 +458,13 @@ public:
     //! Note that users should rather use the form in >> m;
     void read(PStream& in)
     {
+
         switch(in.inmode)
         {
         case PStream::raw_ascii:
         case PStream::raw_binary:
         {
-            T* ptr = data();
+            T* ptr = (length_>0 && width_>0)? data():0;
             for(int i=0; i<length_; i++, ptr+=mod_)
                 for(int j=0; j<width_; j++)
                     in >> ptr[j];
@@ -534,7 +535,7 @@ public:
                         endianswap(&w);
                     }
                     resize(l,w);
-                    T* ptr = data();
+                    T* ptr = (l>0 && w>0)? data():0;
                     for(int i=0; i<length_; i++, ptr+=mod_)                    
                         binread_(in, ptr, width_, typecode);
                 }

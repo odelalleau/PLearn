@@ -2,7 +2,7 @@
 // ObservationWindow.h
 // 
 // Copyright (C) 2006 Christian Dorion
-// Copyright (C) 2006 ApStat Technologies Inc.
+// Copyright (C) 2006,2007 ApStat Technologies Inc.
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -40,6 +40,7 @@
 #include <map>
 
 // From PLearn
+#include <plearn/base/Object.h>
 #include <plearn/base/PP.h>
 #include <plearn/base/tuple.h>
 #include <plearn/math/TVec.h>
@@ -47,8 +48,10 @@
 namespace PLearn {
 using namespace std;
 
-class ObservationWindow: public PPointable
+class ObservationWindow: public Object
 {
+    typedef Object inherited;
+
 public:    
     int m_window;
 
@@ -77,10 +80,42 @@ public:
     const Vec lastObs() const;
     real lastWeight() const;
     
+
+    //#####  PLearn::Object Protocol  #########################################
+
+    // Declares other standard object methods.
+    // ### If your class is not instantiatable (it has pure virtual methods)
+    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT
+    PLEARN_DECLARE_OBJECT(ObservationWindow);
+
+    // Simply calls inherited::build() then build_()
+    virtual void build();
+
+    //! Transforms a shallow copy into a deep copy
+    // (PLEASE IMPLEMENT IN .cc)
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+
     //! Deep copying
-    ObservationWindow* deepCopy(CopiesMap& copies) const;
+    //ObservationWindow* deepCopy(CopiesMap& copies) const;
+
+protected:
+    //#####  Protected Member Functions  ######################################
+
+    //! Declares the class options.
+    // (PLEASE IMPLEMENT IN .cc)
+    static void declareOptions(OptionList& ol);
+
+private:
+    //#####  Private Member Functions  ########################################
+
+    //! This does the actual building.
+    // (PLEASE IMPLEMENT IN .cc)
+    void build_();
+
+
 };
 
+/*
 inline PStream& operator<<(PStream& out, const ObservationWindow& win)
 {
     out << "ObservationWindow(len=" << win.length() << ", window=" << win.m_window << ")";
@@ -92,6 +127,9 @@ inline PStream& operator<<(PStream& out, const ObservationWindow* win)
     out << *win;
     return out;
 }
+*/
+
+DECLARE_OBJECT_PTR(ObservationWindow);
 
 } // end of namespace PLearn
 

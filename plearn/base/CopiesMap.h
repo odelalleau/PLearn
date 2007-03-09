@@ -46,6 +46,7 @@
 #include <utility>      //!< For pair.
 #include "plerror.h"    //!< For PLWARNING.
 
+
 //! Macro to define deep copy for types that actually do not require
 //! any deep copy (such as int, real, etc.).
 //! Since the copy constructor of an array does copy the content of
@@ -200,8 +201,6 @@ void deepCopyField(vector<T,Alloc>& c, CopiesMap& copies)
              ; it != end ; ++it)
         deepCopyField(*it, copies);
 }
-
-
 
 //#####  Fallbacks  ###########################################################
 

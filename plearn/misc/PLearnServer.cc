@@ -229,7 +229,7 @@ bool PLearnServer::run()
             io.copies_map_in.clear();
             io.copies_map_out.clear();
             for (ObjMap::iterator it = objmap.begin(); it != objmap.end(); ++it)
-                io.copies_map_in[it->first] = it->second;
+                io.copies_map_in[it->first]= it->second;
         }
         int c = -1;
         do 
@@ -312,6 +312,7 @@ bool PLearnServer::run()
                 io >> obj_id;
                 DBG_LOG << "  ojbj_id = " << obj_id << endl;
                 found = objmap.find(obj_id);
+                DBG_LOG << "objmap= " << objmap << endl;
                 if(found == objmap.end()) // unexistant obj_id
                     PLERROR("Calling a method on a non-existing object");
                 else 

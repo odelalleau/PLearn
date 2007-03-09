@@ -61,8 +61,12 @@ private:
     PStream io; // io communication channel with remote PLearnServer
     RemotePLearnServer(const PStream& serverio);
 
-public:
+    typedef map<unsigned int, void*> ObjMap;
+    ObjMap objmap;
+    typedef map<void*, unsigned int> ReverseObjMap;
+    ReverseObjMap rev_objmap;
 
+public:
 
     void killServer() { io << "!K " << endl; }
     
@@ -112,7 +116,12 @@ public:
     //! Deletes all objects of the remote server.
     void deleteAllObjectsAsync();
 
+    // object map related methods
     void clearMaps();
+    // Should link/unlink be called automatically in newObject/deleteObject ? -xsm
+    void link(unsigned int objid, void* obj);
+    void unlink(unsigned int objid);
+    void unlink(void* obj);
 
     //! Users generally won't have to call this, but rather one of the callFunction methods.
     inline void sendFunctionCallHeader(const string& function_name, int nargs)

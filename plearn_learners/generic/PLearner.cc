@@ -6,6 +6,7 @@
 // Copyright (C) 1999-2002 Yoshua Bengio, Nicolas Chapados, Charles Dugas, Rejean Ducharme, Universite de Montreal
 // Copyright (C) 2001,2002 Francis Pieraut, Jean-Sebastien Senecal
 // Copyright (C) 2002 Frederic Morin, Xavier Saint-Mleux, Julien Keable
+// Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -48,6 +49,8 @@
 #include <plearn/io/pl_log.h>
 #include <plearn/math/pl_erf.h>
 #include <plearn/vmat/FileVMatrix.h>
+#include <plearn/vmat/MemoryVMatrix.h>
+#include <plearn/vmat/RowsSubVMatrix.h>
 #include <plearn/misc/PLearnService.h>
 #include <plearn/misc/RemotePLearnServer.h>
 #include <plearn/vmat/PLearnerOutputVMatrix.h>
@@ -65,6 +68,8 @@ PLearner::PLearner()
       verbosity(1),
       nservers(0),
       save_trainingset_prefix(""),
+      parallelize_here(true),
+      master_sends_testset_rows(false),
       inputsize_(-1),
       targetsize_(-1),
       weightsize_(-1),
@@ -188,6 +193,7 @@ void PLearner::declareOptions(OptionList& ol)
 
     declareOption(
         ol, "nservers", &PLearner::nservers, OptionBase::buildoption, 
+        "DEPRECATED: use parallelize_here instead.\n"
         "Max number of computation servers to use in parallel with the main process.\n"
         "If <=0 no parallelization will occur at this level.\n");
 
@@ -203,6 +209,15 @@ void PLearner::declareOptions(OptionList& ol)
         "complex nested learner structures, and you want to ensure that\n"
         "the inner learner is getting the correct results.  (Default="",\n"
         "i.e. don't save anything.)\n");
+
+    declareOption(
+        ol, "parallelize_here", &PLearner::parallelize_here, OptionBase::buildoption | OptionBase::nosave,
+        "Reserve remote servers at this level if true.\n");
+
+    declareOption(
+        ol, "master_sends_testset_rows", &PLearner::master_sends_testset_rows, OptionBase::buildoption | OptionBase::nosave,
+        "For parallel PLearner::test : wether the master should read the testset and send rows to the slaves,\n"
+        "or send a serialized description of the testset.\n");
   
     inherited::declareOptions(ol);
 }
@@ -263,6 +278,17 @@ void PLearner::declareMethods(RemoteMethodMap& rmm)
         (BodyDoc("The role of the train method is to bring the learner up to\n"
                  "stage==nstages, updating the stats with training costs measured on-line\n"
                  "in the process.\n")));
+
+
+    declareMethod(
+        rmm, "test", &PLearner::rtest,
+        (BodyDoc("Test on a given testset and return stats, outputs and costs."),
+         ArgDoc("testset","test set"),
+         ArgDoc("test_stats","VecStatsCollector to use"),
+         ArgDoc("rtestoutputs","wether to return outputs"),
+         ArgDoc("rtestcosts","wether to return costs"),
+         RetDoc ("tuple of (stats, outputs, costs)")));
+
 
     declareMethod(
         rmm, "resetInternalState", &PLearner::resetInternalState,
@@ -763,38 +789,160 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
     Vec output(outputsize());
     Vec costs(nTestCosts());
 
-    PP<ProgressBar> pb;
-    if (report_progress) 
-        pb = new ProgressBar("Testing learner", len);
-
     if (len == 0) {
         // Empty test set: we give -1 cost arbitrarily.
         costs.fill(-1);
         test_stats->update(costs);
     }
 
-    for (int i = 0; i < len; i++)
+    PLearnService& service(PLearnService::instance());
+
+    //DUMMY: need to find a better way to calc. nservers -xsm
+    const int chunksize= 10000;//nb. rows in each chunk sent to a remote server
+    const int chunks_per_server= 10;//ideal nb. chunks per server
+    int nservers= min(len/(chunks_per_server*chunksize), service.availableServers());
+
+    if(nservers > 1 && parallelize_here && !isStatefulLearner()
+       && (!test_stats || test_stats->m_window == -1)) //VecStatsCollector does not support merge w/observation_window yet
+    {// parallel test
+        CopiesMap copies;
+        PP<VecStatsCollector> template_vsc= test_stats? test_stats->deepCopy(copies) : 0;
+        TVec<PP<RemotePLearnServer> > servers= service.reserveServers(nservers);
+        nservers= servers.length();
+        int curpos= 0;
+        int chunks_called= 0;
+        int last_chunknum= -1;
+        map<PP<RemotePLearnServer>, int> learners_ids;
+        map<PP<RemotePLearnServer>, int> chunknums;
+        map<int, PP<VecStatsCollector> > vscs;
+
+        for(int i= 0; i < nservers; ++i)
+            servers[i]->newObjectAsync(*this);
+        while(nservers > 0)
+        {
+            PP<RemotePLearnServer> s= service.waitForResult();
+            if(learners_ids.find(s) == learners_ids.end())
+            {
+                if(curpos < len) // get learner id and send first chunk to process
+                {
+                    /* step 1 (once per slave) */
+                    int id;
+                    s->getResults(id);
+                    learners_ids[s]= id;
+                    int clen= min(chunksize, testset.length()-curpos);
+                    VMat sts= new RowsSubVMatrix(testset, curpos, clen);
+                    if(master_sends_testset_rows)
+                        sts= new MemoryVMatrix(sts.toMat());
+                    else
+                    {
+                        // send testset once and for all, put it in object map of remote server
+                        int tsid= s->newObject(*testset);
+                        s->link(tsid, testset);
+                    }
+                    curpos+= clen;
+                    s->callMethod(id, "test", sts, template_vsc, 
+                                  static_cast<bool>(testoutputs), static_cast<bool>(testcosts));
+                    chunknums[s]= chunks_called;
+                    ++chunks_called;
+                }
+                else // all chunks processed, free server
+                {
+                    /* step 4 (once per slave) */
+                    s->getResults(); // learner deleted
+                    service.freeServer(s);
+                    --nservers;
+                }
+            }
+            else // get chunk result
+            {
+                PP<VecStatsCollector> vsc;
+                VMat chunkout, chunkcosts;
+
+                s->getResults(vsc, chunkout, chunkcosts);
+
+                int chunknum= chunknums[s];
+                if(curpos < len) // more chunks to do, assign one to this server
+                {
+                    /* step 2 (repeat as needed) */
+                    int clen= min(chunksize, testset.length()-curpos);
+                    VMat sts= new RowsSubVMatrix(testset, curpos, clen);
+                    if(master_sends_testset_rows)
+                        sts= new MemoryVMatrix(sts.toMat());
+                    curpos+= clen;
+                    s->callMethod(learners_ids[s], "test", sts, template_vsc, 
+                                  static_cast<bool>(testoutputs), static_cast<bool>(testcosts));
+                    chunknums[s]= chunks_called;
+                    ++chunks_called;
+                }
+                else // all chunks processed, delete learner form server
+                {
+                    /* step 3 (once per slave) */
+                    s->deleteObjectAsync(learners_ids[s]);
+                    learners_ids.erase(s);
+                }
+
+                // now merge chunk results w/ global results
+                if(test_stats)
+                {
+                    vscs[chunknum]= vsc;
+                    map<int, PP<VecStatsCollector> >::iterator it= vscs.find(last_chunknum+1);
+                    while(it != vscs.end())
+                    {
+                        ++last_chunknum;
+                        test_stats->merge(*(it->second));
+                        vscs.erase(it);
+                        it= vscs.find(last_chunknum+1);
+                    }
+                }
+
+                if(testoutputs)
+                    for(int i= 0, j= chunknum*chunksize; i < chunksize && j < len; ++i, ++j)
+                        testoutputs->forcePutRow(j, chunkout->getRowVec(i));
+                if(testcosts)
+                    for(int i= 0, j= chunknum*chunksize; i < chunksize && j < len; ++i, ++j)
+                        testcosts->forcePutRow(j, chunkcosts->getRowVec(i));
+            }
+        }
+    }
+    else // Sequential test 
     {
-        testset.getExample(i, input, target, weight);
-      
-        // Always call computeOutputAndCosts, since this is better
-        // behaved with stateful learners
-        computeOutputAndCosts(input,target,output,costs);
-      
-        if (testoutputs)
-            testoutputs->putOrAppendRow(i, output);
-
-        if (testcosts)
-            testcosts->putOrAppendRow(i, costs);
-
-        if (test_stats)
-            test_stats->update(costs, weight);
-
-        if (report_progress)
-            pb->update(i);
+        PP<ProgressBar> pb;
+        if (report_progress) 
+            pb = new ProgressBar("Testing learner", len);
+        for (int i = 0; i < len; i++)
+        {
+            testset.getExample(i, input, target, weight);
+            // Always call computeOutputAndCosts, since this is better
+            // behaved with stateful learners
+            computeOutputAndCosts(input,target,output,costs);
+            if (testoutputs) testoutputs->putOrAppendRow(i, output);
+            if (testcosts) testcosts->putOrAppendRow(i, costs);
+            if (test_stats) test_stats->update(costs, weight);
+            if (report_progress) pb->update(i);
+        }
     }
 
 }
+
+////////////////////////////////////////////////////////////////
+// test ('remote' version which returns a tuple w/ results.) //
+//////////////////////////////////////////////////////////////
+tuple<PP<VecStatsCollector>, VMat, VMat> PLearner::rtest(VMat testset, PP<VecStatsCollector> test_stats, bool rtestoutputs, bool rtestcosts) const
+{
+    VMat testoutputs= 0;
+    VMat testcosts= 0;
+    int outsize= outputsize();
+    int costsize= nTestCosts();
+    int len= testset.length();
+    if(rtestoutputs) testoutputs= new MemoryVMatrix(len, outsize);
+    if(rtestcosts) testcosts= new MemoryVMatrix(len, costsize);
+    if(test_stats && test_stats->maxnvalues > 0)
+        test_stats->maxnvalues= -1; // get all counts from a chunk
+    test(testset, test_stats, testoutputs, testcosts);
+    return make_tuple(test_stats, testoutputs, testcosts);
+}
+
+
 
 ///////////////
 // initTrain //

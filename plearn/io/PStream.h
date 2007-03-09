@@ -527,44 +527,54 @@ string pgetline(PStream& in);
 template <class T> 
 inline PStream& operator>>(PStream& in, T*& x)
 {
+
     in.skipBlanksAndCommentsAndSeparators();
     if (in.peek() == '*')
     {
         in.get(); // Eat '*'
         unsigned int id;
         in >> id;
-        in.skipBlanksAndCommentsAndSeparators();
+        //don't skip blanks before we need to read something else (read might block).
+        //in.skipBlanksAndCommentsAndSeparators();
         if (id==0)
             x = 0;
-        else if (in.peek() == '-') 
+        else
         {
-            in.get(); // Eat '-'
-            char cc = in.get();
-            if(cc != '>') // Eat '>'
-                PLERROR("In PStream::operator>>(T*&)  Wrong format.  Expecting \"*%d->\" but got \"*%d-%c\".", id, id, cc);
             in.skipBlanksAndCommentsAndSeparators();
-            if(!x)
-                x= new T();
-            in >> *x;
-            in.skipBlanksAndCommentsAndSeparators();
-            in.copies_map_in[id]= x;
-        } 
-        else 
-        {
-            // Find it in map and return ptr;
-            map<unsigned int, void *>::iterator it = in.copies_map_in.find(id);
-            if (it == in.copies_map_in.end())
-                PLERROR("In PStream::operator>>(T*&) object (ptr) to be read with id='%d' "
-                        "has not been previously defined", id);
-            x= static_cast<T *>(it->second);
+            if (in.peek() == '-') 
+            {
+                in.get(); // Eat '-'
+                char cc = in.get();
+                if(cc != '>') // Eat '>'
+                    PLERROR("In PStream::operator>>(T*&)  Wrong format.  Expecting \"*%d->\" but got \"*%d-%c\".", id, id, cc);
+                //don't skip blanks before we need to read something else (read might block).
+                //in.skipBlanksAndCommentsAndSeparators();
+                if(!x)
+                    x= new T();
+                in.skipBlanksAndCommentsAndSeparators();
+                in >> *x;
+                //don't skip blanks before we need to read something else (read might block).
+                //in.skipBlanksAndCommentsAndSeparators();
+                in.copies_map_in[id]= x;
+            } 
+            else 
+            {
+                // Find it in map and return ptr;
+                map<unsigned int, void *>::iterator it = in.copies_map_in.find(id);
+                if (it == in.copies_map_in.end())
+                    PLERROR("In PStream::operator>>(T*&) object (ptr) to be read with id='%d' "
+                            "has not been previously defined", id);
+                x= static_cast<T *>(it->second);
+            }
         }
     } 
     else
     {
         in >> *x;
-        in.skipBlanksAndCommentsAndSeparators();
+        //don't skip blanks before we need to read something else (read might block).
+        //in.skipBlanksAndCommentsAndSeparators();
     }
-
+    
     return in;
 }
 
@@ -1016,8 +1026,10 @@ void readSequence(PStream& in, SequenceType& seq)
         typename SequenceType::iterator it = seq.begin();
         while(n--)
         {
-            in >> *it; 
             in.skipBlanks();
+            in >> *it; 
+            //don't skip blanks before we need to read something else (read might block).
+            //in.skipBlanks();
             ++it;
         }
     }
@@ -1044,8 +1056,8 @@ void readSequence(PStream& in, SequenceType& seq)
         else if(c=='[') // read until ']'
         {
             in.get(); // skip '['
-            in.skipBlanksAndCommentsAndSeparators();
             seq.resize(0);
+            in.skipBlanksAndCommentsAndSeparators();
             while(in.peek()!=']' && in.peek()!=EOF && !in.eof())
             {
                 typename SequenceType::value_type x;
@@ -1065,15 +1077,18 @@ void readSequence(PStream& in, SequenceType& seq)
             c = in.get();
             if(c!='[')
                 PLERROR("Error in readSequence(SequenceType& seq), expected '[', read '%c'",c);
-            in.skipBlanksAndCommentsAndSeparators();
+            //don't skip blanks before we need to read something else (read might block).
+            //in.skipBlanksAndCommentsAndSeparators();
             seq.resize((typename SequenceType::size_type) n);
             if (n>0)
             {
                 typename SequenceType::iterator it = seq.begin();
                 while(n--)
                 {
-                    in >> *it;
                     in.skipBlanksAndCommentsAndSeparators();
+                    in >> *it;
+                    //don't skip blanks before we need to read something else (read might block).
+                    //in.skipBlanksAndCommentsAndSeparators();
                     ++it;
                 }
             }
@@ -1180,8 +1195,8 @@ void readSet(PStream& in, SetT& s)
     {
         typename SetT::value_type val;
         in >> val;
-        in.skipBlanksAndCommentsAndSeparators();
         s.insert(val);
+        in.skipBlanksAndCommentsAndSeparators();
         c = in.peek(); // do we have a ']' ?
     }
     in.get(); // eat the ']'

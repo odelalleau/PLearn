@@ -167,6 +167,9 @@ public:
     const StatsCollector& getStats(int i) const 
     { return stats[i]; }
 
+    //! returns non-const statistics for element i
+    StatsCollector& getStats(int i) { return stats[i]; }
+
     //! returns the empirical mean (sample average) vec
     Vec getMean() const {
         Vec mean;
@@ -229,6 +232,9 @@ public:
 
     const Mat& getObservations() const;
     const PP<ObservationWindow> getObservationWindow() const;
+
+    //! merges another VecStatsCollector into this one
+    virtual void merge(VecStatsCollector& other);
     
     //! Transforms a shallow copy into a deep copy
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);

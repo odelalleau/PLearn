@@ -137,7 +137,7 @@ void VecStatsCollector::declareOptions(OptionList& ol)
     declareOption(
         ol, "sum_non_missing_square_weights", &VecStatsCollector::sum_non_missing_square_weights, OptionBase::learntoption,
         "Sum of square weights for vectors with no missing value.");
-    
+  
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -617,6 +617,81 @@ void VecStatsCollector::append(const VecStatsCollector& vsc,
         sum_cross_weights        = new_sum_cross_weights;
         sum_cross_square_weights = new_sum_cross_square_weights;
     }
+}
+
+void VecStatsCollector::merge(VecStatsCollector& other)
+{
+    if(m_window > 0 || other.m_window > 0)
+        PLERROR("VecStatsCollector::merge does not support observation windows yet!");
+
+    if(fieldnames != other.fieldnames)
+        PLERROR("VecStatsCollector::merge : cannot merge VecStatsCollectors with different fieldnames.");
+
+    if(stats.size()==0)//if this one is empty, resize stats before merging
+    {
+        int n= other.stats.size();
+        stats.resize(n);
+        for(int k=0; k<n; k++)
+        {
+            // TODO It would be cool to have a simple (or automatic) mechanism
+            // to be able to specify a different value of 'maxnvalues' for each
+            // StatsCollector (e.g. when only one StatsCollector is meant to
+            // compute a lift statistics).
+            stats[k].maxnvalues          = maxnvalues;
+            stats[k].no_removal_warnings = no_removal_warnings;
+            stats[k].forget();
+        }
+        if(compute_covariance)
+        {
+            cov.resize(n,n);
+            sum_cross.resize(n,n);
+            sum_cross_weights.resize(n,n);
+            sum_cross_square_weights.resize(n,n);
+            cov.fill(0);
+            sum_cross.fill(0);
+            sum_cross_weights.fill(0);
+            sum_cross_square_weights.fill(0);
+        }      
+    }
+
+    if(stats.length() != other.stats.length())
+        PLERROR("VecStatsCollector::merge : cannot merge VecStatsCollectors with different stats length.");
+
+    for(int i= 0; i < stats.length(); ++i)
+        stats[i].merge(other.stats[i]);
+
+    if(compute_covariance)
+    {
+        for(int i= 0; i < cov.length(); ++i)
+            for(int j= 0; j < cov.width(); ++j)
+            {
+                cov(i,j)+= other.cov(i,j);
+                sum_cross(i,j)+= other.sum_cross(i,j);
+                sum_cross_weights(i,j)+= other.sum_cross_weights(i,j);
+                sum_cross_square_weights(i,j)+= other.sum_cross_square_weights(i,j);
+            }
+        sum_non_missing_weights+= other.sum_non_missing_weights;
+        sum_non_missing_square_weights+= other.sum_non_missing_square_weights;
+    }
+
+
+    /****
+     * TODO: proper merge of observation windows -xsm
+    
+    PP<ObservationWindow> oow= other.m_observation_window;
+    if((oow && oow->isFull()) || (m_observation_window && m_observation_window->isEmpty()))
+        m_observation_window= oow;
+    else if(oow && m_observation_window)
+        for(int i= 0; i < oow->length(); ++i)
+        {
+            tuple<Vec, real> outdated= m_observation_window->update(oow->getObs(i), oow->getWeight(i));
+            Vec& obs = get<0>(outdated);
+            real w = get<1>(outdated);
+            if ( obs.isNotEmpty() )
+                remove_observation(obs, w);
+        }
+    */
+
 }
 
 void VecStatsCollector::makeDeepCopyFromShallowCopy(CopiesMap& copies)

@@ -4,6 +4,7 @@
 //
 // Copyright (C) 2001,2002 Pascal Vincent
 // Copyright (C) 2005 University of Montreal
+// Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 //
 
 // Redistribution and use in source and binary forms, with or without
@@ -65,7 +66,21 @@ public:
   
     StatsCollectorCounts(): 
         n(0), nbelow(0),
-        sum(0.), sumsquare(0.),id(0) {}          
+        sum(0.), sumsquare(0.),id(0) 
+    {}          
+
+    /**
+     * merge: Merge counts from another StatsCollectorCounts
+     *        into this one.
+     */
+    virtual void merge(const StatsCollectorCounts& other)
+    {
+        //don't change id
+        n+= other.n;
+        nbelow+= other.nbelow;
+        sum+= other.sum;
+        sumsquare+= other.sumsquare;
+    }
 };
 
 typedef pair<real,StatsCollectorCounts*> PairRealSCCType;
@@ -86,10 +101,8 @@ int diff(const string& refer, const string& other,
     StatsCollectorCounts refer_sc, other_sc;
     PStream in = openString(refer, PStream::plearn_ascii);
     in >> refer_sc;
-    in.flush();
     in = openString(other, PStream::plearn_ascii);
     in >> other_sc;
-    in.flush();
     int n_diffs = 0;
     PP<OptionBase> opt_double = new Option<ObjectType, double>
         ("", 0, 0, TypeTraits<double>::name(), "", "");
@@ -157,6 +170,7 @@ public:
     bool more_than_maxnvalues;
 
     map<real, StatsCollectorCounts> counts; 
+    map<int, real> count_ids;
 
 protected:
 
@@ -295,9 +309,12 @@ public:
      */
     real pseudo_quantile(real q) const;
 
+    /**
+     * DEPRECATED: DO NOT SORT IDs -xsm
     //! fix 'id' attribute of all StatCollectorCounts so that increasing ids correspond to increasing real values
     //! *** NOT TESTED YET
     void sortIds();
+    */
 
     //! returns a mapping that maps values to a bin number
     //! (from 0 to mapping.length()-1)
@@ -330,6 +347,9 @@ public:
 
     //! Overridden to have a fancy output for raw_ascii and pretty_ascii modes.
     virtual void newwrite(PStream& out) const;
+
+    //! merge another StatsCollector into this one
+    virtual void merge(const StatsCollector& other);
 
 };
 

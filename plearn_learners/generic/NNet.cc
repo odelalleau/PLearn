@@ -1062,13 +1062,13 @@ void NNet::train()
         // optimizer->verifyGradient(1e-6); // Uncomment if you want to check your new Var.
         train_stats->finalize();
         if(verbosity>2)
-            cout << "Epoch " << stage << " train objective: " << train_stats->getMean() << endl;
+            pout << "Epoch " << stage << " train objective: " << train_stats->getMean() << endl;
         ++stage;
         if(pb)
             pb->update(stage-initial_stage);
     }
     if(verbosity>1)
-        cout << "EPOCH " << stage << " train objective: " << train_stats->getMean() << endl;
+        pout << "EPOCH " << stage << " train objective: " << train_stats->getMean() << endl;
 
     output_and_target_to_cost->recomputeParents();
     test_costf->recomputeParents();

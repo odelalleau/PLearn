@@ -359,12 +359,12 @@ void VPLPreprocessedLearner2::setTrainingSet(VMat training_set, bool call_forget
     initializeOutputPrograms();
 }
 
-
+/*
 void VPLPreprocessedLearner2::test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs, VMat testcosts) const
 {
 
     inherited::test(testset, test_stats, testoutputs, testcosts);
-
+*/
 /*
     VMat filtered_testset = testset;
     PPath filtered_testset_metadatadir = getExperimentDirectory() / "filtered_test_set.metadata";
@@ -440,7 +440,9 @@ void VPLPreprocessedLearner2::test(VMat testset, PP<VecStatsCollector> test_stat
             pb->update(i);
     }
 */
+/*
 }
+*/
 
 
 
