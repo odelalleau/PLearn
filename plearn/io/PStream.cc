@@ -4,6 +4,7 @@
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio and University of Montreal
 // Copyright (C) 2002 Frederic Morin, Xavier Saint-Mleux, Pascal Vincent
+// Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -178,7 +179,8 @@ PStream::PStream()
      format_float (format_float_default),
      format_double(format_double_default),
      implicit_storage(true),
-     compression_mode(compr_none)
+     compression_mode(compr_none),
+     remote_plearn_comm(false)
 {}
 
 PStream::PStream(streambuftype* sb)
@@ -188,7 +190,8 @@ PStream::PStream(streambuftype* sb)
      format_float (format_float_default),
      format_double(format_double_default),
      implicit_storage(true),
-     compression_mode(compr_none)
+     compression_mode(compr_none),
+     remote_plearn_comm(false)
 {}
 
 
@@ -200,7 +203,8 @@ PStream::PStream(istream* pin_, bool own_pin_)
      format_float (format_float_default),
      format_double(format_double_default),
      implicit_storage(true),
-     compression_mode(compr_none)
+     compression_mode(compr_none),
+     remote_plearn_comm(false)
 {}
 //! ctor. from an ostream (O)
 
@@ -211,7 +215,8 @@ PStream::PStream(ostream* pout_, bool own_pout_)
      format_float (format_float_default),
      format_double(format_double_default),
      implicit_storage(true),
-     compression_mode(compr_none)
+     compression_mode(compr_none),
+     remote_plearn_comm(false)
 {}
 
 //! ctor. from an iostream (IO)
@@ -222,7 +227,8 @@ PStream::PStream(iostream* pios_, bool own_pios_)
      format_float (format_float_default),
      format_double(format_double_default),
      implicit_storage(true),
-     compression_mode(compr_none)
+     compression_mode(compr_none),
+     remote_plearn_comm(false)
 {}
 
 //! ctor. from an istream and an ostream (IO)
@@ -233,7 +239,8 @@ PStream::PStream(istream* pin_, ostream* pout_, bool own_pin_, bool own_pout_)
      format_float (format_float_default),
      format_double(format_double_default),
      implicit_storage(true),
-     compression_mode(compr_none)
+     compression_mode(compr_none),
+     remote_plearn_comm(false)
 {}
 
 //! dtor.

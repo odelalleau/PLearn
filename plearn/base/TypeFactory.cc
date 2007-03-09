@@ -152,7 +152,7 @@ void displayObjectHelp(ostream& out, const string& classname)
     for( OptionList::iterator olIt = options.begin(); olIt!=options.end(); ++olIt )
     {
         OptionBase::flag_t flags = (*olIt)->flags();
-        if(flags & OptionBase::buildoption)
+        if(flags & OptionBase::buildoption && (*olIt)->level() <= OptionBase::getCurrentOptionLevel())
         {
             string descr = (*olIt)->description();
             string optname = (*olIt)->optionname();

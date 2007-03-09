@@ -4,6 +4,7 @@
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
 // Copyright (C) 2002 Frederic Morin
+// Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -118,13 +119,34 @@ public:
      */
     static const flag_t nontraversable;
 
+    /**
+     * When this flag is set, the option is transmitted between servers
+     * and clients, even if the nosave flag is also set.
+     * All options w/o nosave are transmitted by default.
+     */
+    static const flag_t remotetransmit;
 
+    /**
+     * OptionLevel: How advanced (complicated, seldom used) is this option?
+     *   Used to hide options from help text as needed, to ease readability
+     *   for a basic, normal, advanced or experimental level of use.
+     */
+    typedef unsigned int OptionLevel;
+    static const OptionLevel basic_level;
+    static const OptionLevel normal_level;
+    static const OptionLevel advanced_level;
+    static const OptionLevel experimental_level;
+    static const OptionLevel default_level; //!< default for options w/o explicit level
+
+protected:
+    static OptionLevel current_option_level_;
 protected:
     string optionname_;  //!< the name of the option
     flag_t flags_; 
     string optiontype_;  //!< the datatype of the option ("int" ...)
     string defaultval_;  //!< string representation of the default value (will be printed by optionHelp())
     string description_; //!< A description of this option
+    OptionLevel level_;  //!< Option level (low=basic, high=advanced)
 
 public:
 
@@ -132,8 +154,7 @@ public:
     //! with an informative help text. (only optionname and flags are really important)
     OptionBase(const string& optionname, flag_t flags,
                const string& optiontype, const string& defaultval, 
-               const string& description);
-
+               const string& description, const OptionLevel& level);
 
     //#####  Stream Read-Write  ###############################################
 
@@ -215,6 +236,9 @@ public:
     //! Default value accessor
     inline const string& defaultval() const { return defaultval_; }
 
+    //! Option level accessor
+    inline const OptionLevel& level() const { return level_; }
+
     //! Change the string representation of the default value.
     inline void setDefaultVal(const string& newdefaultval)
     { defaultval_ = newdefaultval; }
@@ -250,6 +274,14 @@ public:
 
     //! Comparison between two option values.
     virtual int diff(const string& refer, const string& other, PLearnDiff* diffs) const = 0;
+
+    //! get the current option level for help text
+    static const OptionLevel& getCurrentOptionLevel() { return current_option_level_; }
+    //! set the current option level for help text
+    static void setCurrentOptionLevel(const OptionLevel& l) { current_option_level_= l; }
+    //! convert string to OptionLevel
+    static OptionLevel optionLevelFromString(const string& s);
+
 };
 
 typedef std::vector< PP<OptionBase> > OptionList;

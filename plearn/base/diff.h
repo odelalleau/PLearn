@@ -152,7 +152,7 @@ int diff(const string& refer, const string& other, const Option<ObjectType, TVec
     }
     else {
         PP<OptionBase> option_elem = new Option<ObjectType, VecElementType>
-            ("", 0, 0, TypeTraits<VecElementType>::name(), "", "");
+            ("", 0, 0, TypeTraits<VecElementType>::name(), "", "", opt->level());//level could be anything here, I guess? -xsm
         string refer_i, other_i;
         // pout << "TVec of " << TypeTraits<VecElementType>::name() << endl;
         for (int i = 0; i < n; i++) {
@@ -195,7 +195,7 @@ int diff(const string& refer, const string& other, const Option<ObjectType, TMat
                     opt->optionname() + ".width");
     int n_diffs = 0;
     PP<OptionBase> option_elem = new Option<ObjectType, MatElementType>
-        ("", 0, 0, TypeTraits<MatElementType>::name(), "", "");
+        ("", 0, 0, TypeTraits<MatElementType>::name(), "", "", opt->level());//level could be anything here, I guess? -xsm
     string refer_ij, other_ij;
     for (int i = 0; i < n; i++)
         for (int j = 0; j < w; j++) {
@@ -229,7 +229,7 @@ int diff(const string& refer, const string& other, const Option<ObjectType,
     in >> other_map;
     in.flush();
     PP<OptionBase> option_elem = new Option<ObjectType, MapElementType>
-        ("", 0, 0, TypeTraits<MapElementType>::name(), "", "");
+        ("", 0, 0, TypeTraits<MapElementType>::name(), "", "", opt->level());//level could be anything here, I guess? -xsm
     string refer_i, other_i;
     typename map<MapKeyType, MapElementType>::iterator it_refer;
     typename map<MapKeyType, MapElementType>::iterator it_other;
@@ -291,7 +291,7 @@ int diff(const string& refer, const string& other, const Option<ObjectType,
      */
     // Now deal with different keys.
     PP<OptionBase> option_key = new Option<ObjectType, MapKeyType>
-        ("", 0, 0, TypeTraits<MapKeyType>::name(), "", "");
+        ("", 0, 0, TypeTraits<MapKeyType>::name(), "", "", opt->level());//level could be anything here, I guess? -xsm
     bool save_diffs_backup;
     setSaveDiffs(diffs, false, &save_diffs_backup);
     for (int i = 0; i < missing_in_other.length(); i++) {

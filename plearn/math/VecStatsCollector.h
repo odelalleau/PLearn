@@ -3,6 +3,7 @@
 // 
 // Copyright (C) 2002 Pascal Vincent
 // Copyright (C) 2005 Université de Montréal
+// Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -229,6 +230,9 @@ public:
     //! a block-diagonal covariance matrix is computed.
     void append(const VecStatsCollector& vsc, const string fieldname_prefix="",
                 const TVec<string>& new_fieldnames = TVec<string>() );
+
+    //! sets the size of the observation window
+    virtual void setWindowSize(int sz);
 
     const Mat& getObservations() const;
     const PP<ObservationWindow> getObservationWindow() const;

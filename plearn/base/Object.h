@@ -5,6 +5,7 @@
 // Copyright (C) 1999-2005 Pascal Vincent and Yoshua Bengio
 // Copyright (C) 2002 Frederic Morin
 // Copyright (C) 1999-2005 University of Montreal
+// Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -423,7 +424,7 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
                  const Option<ObjectType, CLASSTYPE>* opt, PLearnDiff* diffs)           \
         {                                                                               \
             PP<OptionBase> new_opt = new Option<ObjectType, PP<CLASSTYPE> >             \
-                (opt->optionname(), 0, 0, "", "", "");                                  \
+                (opt->optionname(), 0, 0, "", "", "", opt->level());                    \
             return new_opt->diff(refer, other, diffs);                                  \
         }                                                                               \
         DECLARE_SPECIALIZED_DIFF_CLASS(CLASSTYPE)                                       \
@@ -684,7 +685,7 @@ public:
                          string& option_index) const;
 
     /**
-     *  Rreturns a string of the names of all options to save.
+     *  Returns a string of the names of all options to save.
      *  (optionnames are to be separated by a space, and must be supported by
      *  writeOptionVal)
      *
@@ -692,6 +693,12 @@ public:
      *          separated by spaces.
      */
     virtual string getOptionsToSave() const;
+
+    /**
+     *  Returns a string of the names of all options to transmit when
+     *  talking to remote PLearn hosts (see getOptionsToSave())
+     */
+    virtual string getOptionsToRemoteTransmit() const;
 
     /**
      *  Set an option (a data field) into an object.  This is a generic method

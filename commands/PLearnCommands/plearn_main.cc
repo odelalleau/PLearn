@@ -161,6 +161,16 @@ static string global_options( vector<string>& command_line)
     // set verbosity level now so that it is valid for the rest of global_options
     PL_Log::instance().verbosity( verbosity_value );
 
+    int option_level_pos= findpos(command_line, "--option-level");
+    int option_level_value_pos= -1;
+    if (option_level_pos != -1)
+    {
+        option_level_value_pos= option_level_pos+1;
+        if(option_level_value_pos >= argc)
+            PLERROR("Option --option-level must be followed by an OptionLevel.");
+        OptionBase::setCurrentOptionLevel(OptionBase::optionLevelFromString(command_line[option_level_value_pos]));
+    }
+
     // Option to enable logging for the specified modules, specified as
     // --enable-logging module1,module2,module3,... i.e. as a comma-separated
     // list of modules (without spaces).  Special keywords __ALL__ and __NONE__
@@ -220,7 +230,9 @@ static string global_options( vector<string>& command_line)
              c != global_calendar_pos        &&
              c != global_calendar_value_pos  &&
              c != servers_pos                &&
-             c != serversfile_pos
+             c != serversfile_pos            &&
+             c != option_level_pos           &&
+             c != option_level_value_pos
             )
         {
             if ( the_command == "" )

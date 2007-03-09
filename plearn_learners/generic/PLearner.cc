@@ -802,8 +802,7 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
     const int chunks_per_server= 10;//ideal nb. chunks per server
     int nservers= min(len/(chunks_per_server*chunksize), service.availableServers());
 
-    if(nservers > 1 && parallelize_here && !isStatefulLearner()
-       && (!test_stats || test_stats->m_window == -1)) //VecStatsCollector does not support merge w/observation_window yet
+    if(nservers > 1 && parallelize_here && !isStatefulLearner())
     {// parallel test
         CopiesMap copies;
         PP<VecStatsCollector> template_vsc= test_stats? test_stats->deepCopy(copies) : 0;
@@ -936,8 +935,12 @@ tuple<PP<VecStatsCollector>, VMat, VMat> PLearner::rtest(VMat testset, PP<VecSta
     int len= testset.length();
     if(rtestoutputs) testoutputs= new MemoryVMatrix(len, outsize);
     if(rtestcosts) testcosts= new MemoryVMatrix(len, costsize);
-    if(test_stats && test_stats->maxnvalues > 0)
-        test_stats->maxnvalues= -1; // get all counts from a chunk
+    if(test_stats)
+    {
+        if(test_stats->maxnvalues > 0) test_stats->maxnvalues= -1; // get all counts from a chunk
+        if(test_stats->m_window == -1 || test_stats->m_window > 0)
+            test_stats->setWindowSize(-2); // get all observations
+    }
     test(testset, test_stats, testoutputs, testcosts);
     return make_tuple(test_stats, testoutputs, testcosts);
 }

@@ -4,6 +4,7 @@
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
 // Copyright (C) 2002 Frederic Morin
+// Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -419,6 +420,21 @@ string Object::getOptionsToSave() const
 }
 
 
+//#####  Object::getOptionsToRemoteTransmit  ############################################
+string Object::getOptionsToRemoteTransmit() const
+{
+    string res = "";
+    OptionList& options = getOptionList();
+  
+    for( OptionList::iterator it = options.begin(); it!=options.end(); ++it )
+    {
+        OptionBase::flag_t flags = (*it)->flags();
+        if(!(flags & OptionBase::nosave) || flags & OptionBase::remotetransmit)
+            res += (*it)->optionname() + " ";
+    }
+    return res;
+}
+
 //#####  Object::newread  #####################################################
 
 void Object::newread(PStream &in)
@@ -517,9 +533,13 @@ void Object::newread(PStream &in)
 
 //#####  Object::newwrite  ####################################################
 
-void Object::newwrite(PStream &out) const
+void Object::newwrite(PStream& out) const
 {
-    vector<string> optnames = split(getOptionsToSave());
+    vector<string> optnames= split(
+        out.remote_plearn_comm?
+        getOptionsToRemoteTransmit():
+        getOptionsToSave());
+
     out.write(classname());
     out.write("(\n");
     for (size_t i = 0; i < optnames.size(); ++i) 

@@ -4,6 +4,7 @@
 //
 // Copyright (C) 2001,2002 Pascal Vincent
 // Copyright (C) 2005 University of Montreal
+// Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 //
 
 // Redistribution and use in source and binary forms, with or without

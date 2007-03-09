@@ -2,7 +2,8 @@
 // ObservationWindow.cc
 // 
 // Copyright (C) 2006 Christian Dorion
-// Copyright (C) 2006,2007 ApStat Technologies Inc.
+// Copyright (C) 2006 ApStat Technologies Inc.
+// Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -46,7 +47,7 @@ PLEARN_IMPLEMENT_OBJECT(
 
 
 ObservationWindow::ObservationWindow(int window)
-    : m_window(window)
+    : m_window(window), unlimited_size(window == -2)
 {
     forget();
 }
@@ -103,19 +104,19 @@ void ObservationWindow::declareOptions(OptionList& ol)
                   "nb. observations");
 
     declareOption(ol, "cursor", &ObservationWindow::m_cursor,
-                  OptionBase::learntoption | OptionBase::nosave,
+                  OptionBase::learntoption | OptionBase::nosave | OptionBase::remotetransmit,
                   "cursor pos.");
 
     declareOption(ol, "observations", &ObservationWindow::m_observations,
-                  OptionBase::learntoption | OptionBase::nosave,
+                  OptionBase::learntoption | OptionBase::nosave | OptionBase::remotetransmit,
                   "the observations themselves");
 
     declareOption(ol, "obs_weights", &ObservationWindow::m_obs_weights,
-                  OptionBase::learntoption | OptionBase::nosave,
+                  OptionBase::learntoption | OptionBase::nosave | OptionBase::remotetransmit,
                   "observation weights");
 
     declareOption(ol, "last_update_rvalue", &ObservationWindow::m_last_update_rvalue,
-                  OptionBase::learntoption | OptionBase::nosave,
+                  OptionBase::learntoption | OptionBase::nosave | OptionBase::remotetransmit,
                   "last_update_rvalue");
 
     // Now call the parent class' declareOptions
@@ -147,7 +148,10 @@ void ObservationWindow::forget()
 {
     m_nobs = 0;
     m_cursor = 0;
-    m_observations.resize(m_window, 0);
+    if(unlimited_size)
+        m_window= 0;
+    else if(m_window >= 0)
+        m_observations.resize(m_window, 0);
     m_observations.resize(0, 0);                
 }
 
@@ -157,7 +161,8 @@ ObservationWindow::update(const Vec& obs, real weight/*=1.0*/)
     Vec outdated;
     real outdated_weight = 0.0;
     
-    m_nobs++;        
+    ++m_nobs;
+    if(unlimited_size) m_window= m_nobs;
     m_observations.resize(MIN(m_nobs,m_window), obs.size());
     m_obs_weights.resize(MIN(m_nobs,m_window));
     if (m_nobs > m_window)

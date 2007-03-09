@@ -398,7 +398,7 @@ template <class T>
 inline void TMat<T>::resizeBoundCheck(int new_length, int new_width)
 {
     if(new_length<0 || new_width<0)
-        PLERROR("IN TMat::resize(int new_length, int new_width)\nInvalid arguments (<0)");
+        PLERROR("IN TMat::resize(int new_length, int new_width)\nInvalid arguments (%d, %d)", new_length, new_width);
 }
 
 template <class T>

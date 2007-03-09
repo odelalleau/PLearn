@@ -3,6 +3,7 @@
 // 
 // Copyright (C) 2002 Pascal Vincent
 // Copyright (C) 2005 University of Montreal
+// Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -91,10 +92,10 @@ void VecStatsCollector::declareOptions(OptionList& ol)
         ol, "window", &VecStatsCollector::m_window,
         OptionBase::buildoption,
         "If positive, the window restricts the stats computed by this"
-        "FinVecStatsCollector to the last 'window' observations. This uses the\n"
+        "VecStatsCollector to the last 'window' observations. This uses the\n"
         "VecStatsCollector::remove_observation mechanism.\n"
-        "\n"
-        "Default: -1 (all observations are considered)." );
+        "Default: -1 (all observations are considered);\n"
+        " -2 means all observations kept in an ObservationWindow\n");
 
     declareOption(
         ol, "no_removal_warnings", &VecStatsCollector::no_removal_warnings,
@@ -137,6 +138,11 @@ void VecStatsCollector::declareOptions(OptionList& ol)
     declareOption(
         ol, "sum_non_missing_square_weights", &VecStatsCollector::sum_non_missing_square_weights, OptionBase::learntoption,
         "Sum of square weights for vectors with no missing value.");
+
+    declareOption(
+        ol, "observation_window", &VecStatsCollector::m_observation_window, 
+        OptionBase::learntoption | OptionBase::nosave | OptionBase::remotetransmit,
+        "The observation window itself.");
   
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -275,12 +281,12 @@ void VecStatsCollector::update(const Vec& x, real weight)
     }
     
     // Window mechanism
-    if (m_window > 0)
+    if (m_window > 0 || m_window == -2)
     {
         tuple<Vec, real> outdated = m_observation_window->update(x, weight);
         Vec& obs = get<0>(outdated);
         real w = get<1>(outdated);
-        if ( obs.isNotEmpty() )
+        if(obs.isNotEmpty() && m_window > 0)
             remove_observation(obs, w);
     }
 }
@@ -364,7 +370,7 @@ void VecStatsCollector::update(const Mat& m, const Vec& weights)
 
 void VecStatsCollector::build_()
 {
-    if (m_window > 0)
+    if(!m_observation_window && (m_window > 0 || m_window == -2))
         m_observation_window = new ObservationWindow(m_window);
 }
 
@@ -385,9 +391,28 @@ void VecStatsCollector::forget()
     sum_non_missing_square_weights = 0;
 
     // Window mechanism
-    if ( m_window > 0 )
+    if (m_window > 0 || m_window == -2)
         m_observation_window->forget();
 }
+
+void VecStatsCollector::setWindowSize(int sz)
+{
+    m_window= sz;
+    if(m_window > 0 || m_window == -2)
+    {
+        if(!m_observation_window)
+            m_observation_window = new ObservationWindow(m_window);
+        else
+        {
+            if(sz == -2)
+                m_observation_window->unlimited_size= true;
+            m_observation_window->m_window= sz;
+            m_observation_window->forget();
+        }
+    }
+
+}
+
 
 void VecStatsCollector::finalize()
 {
@@ -621,11 +646,8 @@ void VecStatsCollector::append(const VecStatsCollector& vsc,
 
 void VecStatsCollector::merge(VecStatsCollector& other)
 {
-    if(m_window > 0 || other.m_window > 0)
-        PLERROR("VecStatsCollector::merge does not support observation windows yet!");
-
-    if(fieldnames != other.fieldnames)
-        PLERROR("VecStatsCollector::merge : cannot merge VecStatsCollectors with different fieldnames.");
+    PLASSERT_MSG(fieldnames == other.fieldnames,
+                 "VecStatsCollector::merge : cannot merge VecStatsCollectors with different fieldnames.");
 
     if(stats.size()==0)//if this one is empty, resize stats before merging
     {
@@ -654,8 +676,18 @@ void VecStatsCollector::merge(VecStatsCollector& other)
         }      
     }
 
-    if(stats.length() != other.stats.length())
-        PLERROR("VecStatsCollector::merge : cannot merge VecStatsCollectors with different stats length.");
+    PLASSERT_MSG(stats.length() == other.stats.length(),
+                 "VecStatsCollector::merge : cannot merge VecStatsCollectors with different stats length.");
+
+    if(m_window != 0 || other.m_window != 0)
+    {
+        PLASSERT_MSG(m_window != 0 && other.m_window != 0,
+                     "VecStatsCollector::merge : either none or both should have an observation window");
+        PP<ObservationWindow> oow= other.m_observation_window;
+        for(int i= 0; i < oow->length(); ++i)
+            update(oow->getObs(i), oow->getWeight(i));
+        return; // avoid extra indentation
+    }
 
     for(int i= 0; i < stats.length(); ++i)
         stats[i].merge(other.stats[i]);
@@ -673,24 +705,6 @@ void VecStatsCollector::merge(VecStatsCollector& other)
         sum_non_missing_weights+= other.sum_non_missing_weights;
         sum_non_missing_square_weights+= other.sum_non_missing_square_weights;
     }
-
-
-    /****
-     * TODO: proper merge of observation windows -xsm
-    
-    PP<ObservationWindow> oow= other.m_observation_window;
-    if((oow && oow->isFull()) || (m_observation_window && m_observation_window->isEmpty()))
-        m_observation_window= oow;
-    else if(oow && m_observation_window)
-        for(int i= 0; i < oow->length(); ++i)
-        {
-            tuple<Vec, real> outdated= m_observation_window->update(oow->getObs(i), oow->getWeight(i));
-            Vec& obs = get<0>(outdated);
-            real w = get<1>(outdated);
-            if ( obs.isNotEmpty() )
-                remove_observation(obs, w);
-        }
-    */
 
 }
 

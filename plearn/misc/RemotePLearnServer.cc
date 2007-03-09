@@ -51,7 +51,9 @@ using namespace std;
 
 RemotePLearnServer::RemotePLearnServer(const PStream& serverio)
     :io(serverio)
-{}
+{
+    io.remote_plearn_comm= true;
+}
   
 void RemotePLearnServer::clearMaps()
 {
@@ -258,10 +260,10 @@ void RemotePLearnServer::expectResults(int nargs_expected)
 
 RemotePLearnServer::~RemotePLearnServer()
 {
-    // The PLearnService is responsible for RemotePLearnServer destruction 
-
-    //DBG_LOG << "ENTERING RemotePLearnServer destructor" << endl;
-    //DBG_LOG << "LEAVING RemotePLearnServer destructor" << endl;
+    // The PLearnService is responsible for most of RemotePLearnServer destruction 
+    DBG_LOG << "ENTERING RemotePLearnServer destructor" << endl;
+    io.remote_plearn_comm= false;
+    DBG_LOG << "LEAVING RemotePLearnServer destructor" << endl;
 }
 
 

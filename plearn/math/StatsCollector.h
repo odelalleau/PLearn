@@ -105,9 +105,9 @@ int diff(const string& refer, const string& other,
     in >> other_sc;
     int n_diffs = 0;
     PP<OptionBase> opt_double = new Option<ObjectType, double>
-        ("", 0, 0, TypeTraits<double>::name(), "", "");
+        ("", 0, 0, TypeTraits<double>::name(), "", "", opt->level());
     PP<OptionBase> opt_int = new Option<ObjectType, int>
-        ("", 0, 0, TypeTraits<int>::name(), "", "");
+        ("", 0, 0, TypeTraits<int>::name(), "", "", opt->level());
     opt_double->setOptionName(opt->optionname() + ".n");
     n_diffs +=  opt_double->diff(tostring(refer_sc.n),
                                  tostring(other_sc.n), diffs);

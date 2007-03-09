@@ -4,6 +4,7 @@
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio and University of Montreal
 // Copyright (C) 2002 Frederic Morin, Xavier Saint-Mleux, Pascal Vincent
+// Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -142,8 +143,14 @@ public:
     //! If true, then Mat and Vec will be serialized with their elements in place,
     //! If false, they will have an explicit pointer to a storage
     bool implicit_storage;
+
     //! Determines the way data is compressed, if any.
     compr_mode_t compression_mode;
+
+    //! Should be true if this stream is used to communicate 
+    //! with a remote PLearn host.  Will serialize options
+    //! accordingly.
+    bool remote_plearn_comm;
 
 public:  
 

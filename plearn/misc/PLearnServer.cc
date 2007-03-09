@@ -64,6 +64,7 @@ PLearnServer* PLearnServer::instance = 0;
 PLearnServer::PLearnServer(const PStream& input_output)
     :io(input_output), clear_maps(true)
 {
+    io.remote_plearn_comm= true;
     if(instance!=0)
         PLERROR("An instance of PLearnServer already exists");
     instance = this;
@@ -71,6 +72,7 @@ PLearnServer::PLearnServer(const PStream& input_output)
 
 PLearnServer::~PLearnServer()
 {
+    io.remote_plearn_comm= false;
     instance = 0;
 }
 

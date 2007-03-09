@@ -2,7 +2,8 @@
 // ObservationWindow.h
 // 
 // Copyright (C) 2006 Christian Dorion
-// Copyright (C) 2006,2007 ApStat Technologies Inc.
+// Copyright (C) 2006 ApStat Technologies Inc.
+// Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -59,10 +60,11 @@ public:
     int m_cursor;
     Mat m_observations;
     Vec m_obs_weights;    
+    bool unlimited_size;
 
     tuple<Vec, real> m_last_update_rvalue;
     
-    ObservationWindow(int window=-1);
+    ObservationWindow(int window=-1);// -2 means unlimited size
 
     //! Returns the current length (not m_window!).
     int  length () const;

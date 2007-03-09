@@ -4,6 +4,7 @@
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
 // Copyright (C) 2002 Frederic Morin
+// Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -42,6 +43,7 @@
 
 #include "OptionBase.h"
 #include "Object.h"
+#include <plearn/base/stringutils.h>
 
 namespace PLearn {
 using namespace std;
@@ -52,14 +54,21 @@ const OptionBase::flag_t OptionBase::tuningoption     = 1 << 2;
 const OptionBase::flag_t OptionBase::nosave           = 1 << 3; 
 const OptionBase::flag_t OptionBase::nonparentable    = 1 << 4;
 const OptionBase::flag_t OptionBase::nontraversable   = 1 << 5;
+const OptionBase::flag_t OptionBase::remotetransmit   = 1 << 6;
 
+const OptionBase::OptionLevel OptionBase::basic_level= 200;
+const OptionBase::OptionLevel OptionBase::normal_level= 400;
+const OptionBase::OptionLevel OptionBase::advanced_level= 800;
+const OptionBase::OptionLevel OptionBase::experimental_level= 9999;
+const OptionBase::OptionLevel OptionBase::default_level= OptionBase::normal_level;
+OptionBase::OptionLevel OptionBase::current_option_level_= OptionBase::default_level;
 
 OptionBase::OptionBase(const string& optionname, flag_t flags,
                        const string& optiontype, const string& defaultval, 
-                       const string& description)
+                       const string& description, const OptionLevel& level)
     : optionname_(optionname), flags_(flags), 
       optiontype_(optiontype), defaultval_(defaultval),
-      description_(description)
+      description_(description), level_(level)
 {
     if (optionname.size() > 0 && optionname[0] == '_' )
         PLERROR("OptionBase::OptionBase: options should not start with an underscore: '%s'",
@@ -111,6 +120,7 @@ vector<string> OptionBase::flagStrings() const
         flag_map[nosave        ] = "nosave";
         flag_map[nonparentable ] = "nonparentable";
         flag_map[nontraversable] = "nontraversable";
+        flag_map[remotetransmit] = "remotetransmit";
         initialized = true;
     }
 
@@ -131,6 +141,24 @@ vector<string> OptionBase::flagStrings() const
                 optiontype().c_str(), curflags);
     
     return fs;
+}
+
+
+
+OptionBase::OptionLevel OptionBase::optionLevelFromString(const string& s)
+{
+    static map<string, OptionLevel> olevels;
+    if(olevels.size() == 0)
+    {
+        olevels["basic"]= basic_level;
+        olevels["normal"]= normal_level;
+        olevels["advanced"]= advanced_level;
+        olevels["experimental"]= experimental_level;
+    }
+    map<string, OptionLevel>::iterator it= olevels.find(s);
+    if(it != olevels.end())
+        return it->second;
+    return (OptionLevel)toint(s);
 }
 
     
