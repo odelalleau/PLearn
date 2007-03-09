@@ -1,2 +1,2 @@
-__REVISION__ = AP4497.PL5798
+__REVISION__ = "PL6723"
 data                                          = PLEARNDIR:examples/data/test_suite/gauss_1D_100pt.amat
