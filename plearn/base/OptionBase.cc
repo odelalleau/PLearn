@@ -44,6 +44,7 @@
 #include "OptionBase.h"
 #include "Object.h"
 #include <plearn/base/stringutils.h>
+#include <plearn/base/tostring.h>
 
 namespace PLearn {
 using namespace std;
@@ -60,6 +61,7 @@ const OptionBase::OptionLevel OptionBase::basic_level= 200;
 const OptionBase::OptionLevel OptionBase::normal_level= 400;
 const OptionBase::OptionLevel OptionBase::advanced_level= 800;
 const OptionBase::OptionLevel OptionBase::experimental_level= 9999;
+const OptionBase::OptionLevel OptionBase::deprecated_level= 99999999;
 const OptionBase::OptionLevel OptionBase::default_level= OptionBase::normal_level;
 OptionBase::OptionLevel OptionBase::current_option_level_= OptionBase::default_level;
 
@@ -70,6 +72,10 @@ OptionBase::OptionBase(const string& optionname, flag_t flags,
       optiontype_(optiontype), defaultval_(defaultval),
       description_(description), level_(level)
 {
+/*
+    if(defaultval_ != "")
+        PLERROR("DEFAULT VAL: '%s'", defaultval_.c_str());
+*/
     if (optionname.size() > 0 && optionname[0] == '_' )
         PLERROR("OptionBase::OptionBase: options should not start with an underscore: '%s'",
                 optionname.c_str());
@@ -144,21 +150,36 @@ vector<string> OptionBase::flagStrings() const
 }
 
 
-
+OptionBase::StrToLevelMap OptionBase::str_to_level; //!< init.
 OptionBase::OptionLevel OptionBase::optionLevelFromString(const string& s)
 {
-    static map<string, OptionLevel> olevels;
-    if(olevels.size() == 0)
+    if(str_to_level.size() == 0)
     {
-        olevels["basic"]= basic_level;
-        olevels["normal"]= normal_level;
-        olevels["advanced"]= advanced_level;
-        olevels["experimental"]= experimental_level;
+        str_to_level["basic"]= basic_level;
+        str_to_level["normal"]= normal_level;
+        str_to_level["advanced"]= advanced_level;
+        str_to_level["experimental"]= experimental_level;
+        str_to_level["deprecated"]= deprecated_level;
     }
-    map<string, OptionLevel>::iterator it= olevels.find(s);
-    if(it != olevels.end())
-        return it->second;
+    StrToLevelMap::iterator it= str_to_level.find(lowerstring(s));
+    if(it != str_to_level.end()) return it->second;
     return (OptionLevel)toint(s);
+}
+
+OptionBase::LevelToStrMap OptionBase::level_to_str; //!< init.
+string OptionBase::optionLevelToString(const OptionLevel& l)
+{
+    if(level_to_str.size() == 0)
+    {
+        if(str_to_level.size() == 0) 
+            optionLevelFromString("0");//populate str_to_level
+        for(StrToLevelMap::iterator it= str_to_level.begin();
+            it != str_to_level.end(); ++it)
+            level_to_str[it->second]= it->first;
+    }
+    LevelToStrMap::iterator it= level_to_str.find(l);
+    if(it != level_to_str.end()) return it->second;
+    return tostring(l);
 }
 
     

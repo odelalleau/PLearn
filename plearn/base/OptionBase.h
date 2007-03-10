@@ -132,14 +132,21 @@ public:
      *   for a basic, normal, advanced or experimental level of use.
      */
     typedef unsigned int OptionLevel;
-    static const OptionLevel basic_level;
-    static const OptionLevel normal_level;
-    static const OptionLevel advanced_level;
-    static const OptionLevel experimental_level;
+    static const OptionLevel basic_level; //!< mandatory options
+    static const OptionLevel normal_level; //!< simple, useful options
+    static const OptionLevel advanced_level; //!< useful but seldom used
+    static const OptionLevel experimental_level; //!< only a few people understand those
+    static const OptionLevel deprecated_level; //!< should not be used anymore
     static const OptionLevel default_level; //!< default for options w/o explicit level
 
 protected:
     static OptionLevel current_option_level_;
+
+    typedef map<string, OptionLevel> StrToLevelMap;
+    typedef map<OptionLevel, string> LevelToStrMap;
+    static StrToLevelMap str_to_level;
+    static LevelToStrMap level_to_str;
+
 protected:
     string optionname_;  //!< the name of the option
     flag_t flags_; 
@@ -238,6 +245,8 @@ public:
 
     //! Option level accessor
     inline const OptionLevel& level() const { return level_; }
+    //! Option level as a string
+    inline string levelString() const { return optionLevelToString(level()); }
 
     //! Change the string representation of the default value.
     inline void setDefaultVal(const string& newdefaultval)
@@ -281,6 +290,8 @@ public:
     static void setCurrentOptionLevel(const OptionLevel& l) { current_option_level_= l; }
     //! convert string to OptionLevel
     static OptionLevel optionLevelFromString(const string& s);
+    //! convert OptionLevel to string
+    static string optionLevelToString(const OptionLevel& l);
 
 };
 

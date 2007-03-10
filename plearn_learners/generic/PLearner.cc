@@ -195,7 +195,8 @@ void PLearner::declareOptions(OptionList& ol)
         ol, "nservers", &PLearner::nservers, OptionBase::buildoption, 
         "DEPRECATED: use parallelize_here instead.\n"
         "Max number of computation servers to use in parallel with the main process.\n"
-        "If <=0 no parallelization will occur at this level.\n");
+        "If <=0 no parallelization will occur at this level.\n",
+        "", OptionBase::deprecated_level);
 
     declareOption(
         ol, "save_trainingset_prefix", &PLearner::save_trainingset_prefix,
@@ -211,13 +212,15 @@ void PLearner::declareOptions(OptionList& ol)
         "i.e. don't save anything.)\n");
 
     declareOption(
-        ol, "parallelize_here", &PLearner::parallelize_here, OptionBase::buildoption | OptionBase::nosave,
+        ol, "parallelize_here", &PLearner::parallelize_here, 
+        OptionBase::buildoption | OptionBase::nosave,
         "Reserve remote servers at this level if true.\n");
 
     declareOption(
-        ol, "master_sends_testset_rows", &PLearner::master_sends_testset_rows, OptionBase::buildoption | OptionBase::nosave,
-        "For parallel PLearner::test : wether the master should read the testset and send rows to the slaves,\n"
-        "or send a serialized description of the testset.\n");
+        ol, "master_sends_testset_rows", &PLearner::master_sends_testset_rows, 
+        OptionBase::buildoption | OptionBase::nosave,
+        "For parallel PLearner::test : wether the master should read the testset and\n"
+        "send rows to the slaves, or send a serialized description of the testset.\n");
   
     inherited::declareOptions(ol);
 }

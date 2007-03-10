@@ -69,6 +69,9 @@ public:
         sum(0.), sumsquare(0.),id(0) 
     {}          
 
+    //to keep some compilers quiet:
+    virtual ~StatsCollectorCounts() {}
+    
     /**
      * merge: Merge counts from another StatsCollectorCounts
      *        into this one.

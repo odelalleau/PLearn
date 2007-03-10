@@ -66,7 +66,9 @@ void TypeFactory::register_type(const string& type_name,
 void TypeFactory::registerType(const TypeMapEntry& entry)
 {
     type_map_.insert( pair<string,TypeMapEntry>(entry.type_name, entry) );
-    //cout << "register type " << type_name << endl;
+    //cout << "register type " << entry.type_name << "... " << flush;
+    //entry.getoptionlist_method();
+    //cout << "done." << endl;
 }
 
 void TypeFactory::unregisterType(const string& type_name)
@@ -152,11 +154,13 @@ void displayObjectHelp(ostream& out, const string& classname)
     for( OptionList::iterator olIt = options.begin(); olIt!=options.end(); ++olIt )
     {
         OptionBase::flag_t flags = (*olIt)->flags();
-        if(flags & OptionBase::buildoption && (*olIt)->level() <= OptionBase::getCurrentOptionLevel())
+        if(flags & OptionBase::buildoption 
+           && (*olIt)->level() <= OptionBase::getCurrentOptionLevel())
         {
             string descr = (*olIt)->description();
             string optname = (*olIt)->optionname();
             string opttype = (*olIt)->optiontype();
+            string optlevel = (*olIt)->levelString();
             string defaultval = "?";
             if(obj) // it's an instantiable class
             {
@@ -166,6 +170,7 @@ void displayObjectHelp(ostream& out, const string& classname)
             }
             // string holderclass = (*olIt)->optionHolderClassName(this);
             out << addprefix("# ", opttype + ": " + descr);
+            out << addprefix("# ", "*OptionLevel: " + optlevel);
             out << optname + " = " + defaultval + " ;\n\n";
         }
     }
