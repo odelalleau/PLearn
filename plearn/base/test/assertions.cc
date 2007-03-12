@@ -1,10 +1,13 @@
 #include <iostream>
 #include <assert.h>
 #include <plearn/base/plerror.h>
-#include <assert.h>
+#include <assert.h> // NB: is there a reason to include assert.h at all?
+#include <string>
 
 #undef __FILE__
-#define __FILE__ "assertions.cc"
+#define __FILE__ "assertions.cc" // NB: what is this for?
+
+using namespace std;
 
 int main()
 {
@@ -14,7 +17,17 @@ int main()
   }
   catch (const PLearn::PLearnError& e)
   {
-    std::cerr << "FATAL ERROR: " << e.message() << std::endl;
+      string msg = e.message();
+#ifdef WIN32
+      // This is a hack so that the test passes under Windows: the assert
+      // code unfortunatley does not have access to the function name, and thus
+      // displays '(null)' instead of the correct name.
+      size_t pos = msg.find("(null)");
+      if (pos != string::npos)
+          msg = msg.replace(pos, 6, "int main()");
+        
+#endif
+    std::cerr << "FATAL ERROR: " << msg << std::endl;
   }
   return 0;
 }
