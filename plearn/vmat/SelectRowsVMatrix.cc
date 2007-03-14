@@ -145,15 +145,6 @@ void SelectRowsVMatrix::declareOptions(OptionList &ol)
     redeclareOption(ol, "width", &SelectRowsVMatrix::width_,
                     OptionBase::nosave, "Not used.");
 
-    redeclareOption(ol, "inputsize", &SelectRowsVMatrix::inputsize_,
-                    OptionBase::nosave, "Not used.");
-
-    redeclareOption(ol, "targetsize", &SelectRowsVMatrix::targetsize_,
-                    OptionBase::nosave, "Not used.");
-
-    redeclareOption(ol, "weightsize", &SelectRowsVMatrix::weightsize_,
-                    OptionBase::nosave, "Not used.");
-
 }
 
 void SelectRowsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
