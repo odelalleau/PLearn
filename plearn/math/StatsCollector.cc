@@ -147,13 +147,20 @@ PLEARN_IMPLEMENT_OBJECT(
   
 
 StatsCollector::StatsCollector(int the_maxnvalues)
-    : maxnvalues(the_maxnvalues), no_removal_warnings(false),
-      nmissing_(0.), nnonmissing_(0.), 
+    : epsilon(0.0),
+      maxnvalues(the_maxnvalues),
+      no_removal_warnings(false),
+      nmissing_(0.),
+      nnonmissing_(0.), 
       sumsquarew_(0.),
-      sum_(0.), sumsquare_(0.),
-      sumcube_(0.), sumfourth_(0.),
-      min_(MISSING_VALUE), max_(MISSING_VALUE),
-      first_(MISSING_VALUE), last_(MISSING_VALUE),
+      sum_(0.),
+      sumsquare_(0.),
+      sumcube_(0.),
+      sumfourth_(0.),
+      min_(MISSING_VALUE),
+      max_(MISSING_VALUE),
+      first_(MISSING_VALUE),
+      last_(MISSING_VALUE),
       more_than_maxnvalues(false),
       sorted(false)
 {
@@ -187,61 +194,108 @@ void StatsCollector::declareOptions(OptionList& ol)
 {
     // buid options
 
-    declareOption(ol, "maxnvalues", &StatsCollector::maxnvalues, 
-                                    OptionBase::buildoption,
+    declareOption(
+        ol, "epsilon", &StatsCollector::epsilon,
+        OptionBase::buildoption,
+        "Small regularizing value to be added to the variance (V) estimator (and\n"
+        "indirectly, to standard deviation (STDDEV)).  This permits dividing by\n"
+        "the standard deviation to perform a normalization, without fearing a\n"
+        "division by zero.  Forwarded from the option of the same name in\n"
+        "VecStatsCollector if this StatsCollector belong in one.\n");
+    
+    declareOption(
+        ol, "maxnvalues", &StatsCollector::maxnvalues, 
+        OptionBase::buildoption,
         "Maximum number of different values to keep track of in counts.\n"
         "If -1, we will keep track of all different values.\n"
         "If 0, we will only keep track of global statistics.\n");
 
-    declareOption( ol, "no_removal_warnings", &StatsCollector::no_removal_warnings,
-                   OptionBase::buildoption,
-                   "If the remove_observation mecanism is used and the removed\n"
-                   "value is equal to one of last_, min_ or max_, the default\n"
-                   "behavior is to warn the user.\n"
-                   "\n"
-                   "If one want to disable this feature, he may set\n"
-                   "no_removal_warnings to true.\n"
-                   "\n"
-                   "Default: false (0)." );
+    declareOption(
+        ol, "no_removal_warnings", &StatsCollector::no_removal_warnings,
+        OptionBase::buildoption,
+        "If the remove_observation mecanism is used and the removed\n"
+        "value is equal to one of last_, min_ or max_, the default\n"
+        "behavior is to warn the user.\n"
+        "\n"
+        "If one want to disable this feature, he may set\n"
+        "no_removal_warnings to true.\n"
+        "\n"
+        "Default: false (0)." );
 
 
     // learnt options
-    declareOption(ol, "nmissing_", &StatsCollector::nmissing_, OptionBase::learntoption,
-                  "number of missing values");
-    declareOption(ol, "nnonmissing_", &StatsCollector::nnonmissing_, OptionBase::learntoption,
-                  "number of non missing value ");
-    declareOption(ol, "sumsquarew_", &StatsCollector::sumsquarew_, OptionBase::learntoption,
-                  "sum of square of all weights");
-    declareOption(ol, "sum_", &StatsCollector::sum_, OptionBase::learntoption,
-                  "sum of all (values-first_observation)");
-    declareOption(ol, "sumsquare_", &StatsCollector::sumsquare_, OptionBase::learntoption,
-                  "sum of square of all (values-first_observation)");
-    declareOption(ol, "sumcube_", &StatsCollector::sumcube_, OptionBase::learntoption,
-                  "sum of cube of all (values-first_observation)");
-    declareOption(ol, "sumfourth_", &StatsCollector::sumfourth_, OptionBase::learntoption,
-                  "sum of fourth power of all (values-first_observation)");
-    declareOption(ol, "min_", &StatsCollector::min_, OptionBase::learntoption,
-                  "the min");
-    declareOption(ol, "max_", &StatsCollector::max_, OptionBase::learntoption,
-                  "the max");
-    declareOption(ol, "first_", &StatsCollector::first_, OptionBase::learntoption,
-                  "first encountered observation");
-    declareOption(ol, "last_", &StatsCollector::last_, OptionBase::learntoption,
-                  "last encountered observation");
+    declareOption(
+        ol, "nmissing_", &StatsCollector::nmissing_,
+        OptionBase::learntoption,
+        "number of missing values");
+    
+    declareOption(
+        ol, "nnonmissing_", &StatsCollector::nnonmissing_,
+        OptionBase::learntoption,
+        "number of non missing value ");
+    
+    declareOption(
+        ol, "sumsquarew_", &StatsCollector::sumsquarew_,
+        OptionBase::learntoption,
+        "sum of square of all weights");
+    
+    declareOption(
+        ol, "sum_", &StatsCollector::sum_,
+        OptionBase::learntoption,
+        "sum of all (values-first_observation)");
+    
+    declareOption(
+        ol, "sumsquare_", &StatsCollector::sumsquare_,
+        OptionBase::learntoption,
+        "sum of square of all (values-first_observation)");
+    
+    declareOption(
+        ol, "sumcube_", &StatsCollector::sumcube_,
+        OptionBase::learntoption,
+        "sum of cube of all (values-first_observation)");
+    
+    declareOption(
+        ol, "sumfourth_", &StatsCollector::sumfourth_,
+        OptionBase::learntoption,
+        "sum of fourth power of all (values-first_observation)");
+    
+    declareOption(
+        ol, "min_", &StatsCollector::min_,
+        OptionBase::learntoption,
+        "the min");
+    
+    declareOption(
+        ol, "max_", &StatsCollector::max_,
+        OptionBase::learntoption,
+        "the max");
+    
+    declareOption(
+        ol, "first_", &StatsCollector::first_,
+        OptionBase::learntoption,
+        "first encountered observation");
+    
+    declareOption(
+        ol, "last_", &StatsCollector::last_,
+        OptionBase::learntoption,
+        "last encountered observation");
 
-    declareOption(ol, "counts", &StatsCollector::counts,
-                                OptionBase::learntoption,
+    declareOption(
+        ol, "counts", &StatsCollector::counts,
+        OptionBase::learntoption,
         "Will contain up to 'maxnvalues' values and associated counts, as\n"
         "well as a last element which maps FLT_MAX, so that we do not miss\n"
         "anything (remains empty if maxnvalues == 0).");
 
-    declareOption(ol, "count_ids", &StatsCollector::count_ids,
-                                OptionBase::learntoption | OptionBase::nosave,
+    declareOption(
+        ol, "count_ids", &StatsCollector::count_ids,
+        OptionBase::learntoption | OptionBase::nosave,
         "Maps an id to a count value.");
 
-    declareOption(ol, "more_than_maxnvalues", &StatsCollector::more_than_maxnvalues, OptionBase::learntoption,
-                  "Set to 1 when more than 'maxnvalues' are seen. This is to warn the user when computing\n"
-                  "statistics that may be inaccurate when not all values are kept (e.g., LIFT).");
+    declareOption(
+        ol, "more_than_maxnvalues", &StatsCollector::more_than_maxnvalues,
+        OptionBase::learntoption,
+        "Set to 1 when more than 'maxnvalues' are seen. This is to warn the user when computing\n"
+        "statistics that may be inaccurate when not all values are kept (e.g., LIFT).");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);

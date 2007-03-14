@@ -85,8 +85,10 @@ void VecStatsCollector::declareOptions(OptionList& ol)
 
     declareOption(
         ol, "epsilon", &VecStatsCollector::epsilon, OptionBase::buildoption,
-        "Optional regularization to *add* to the variance vector "
-        "(used *only* in getVariance, getCovariance and getStdDev).");
+        "Small regularizing value to be added to the covariance matrix\n"
+        "estimator, and forwarded to the enclosed vector of StatsCollector.\n"
+        "This permits dividing by the standard deviation to perform a\n"
+        "normalization, without fearing a division by zero.\n");
 
     declareOption(
         ol, "window", &VecStatsCollector::m_window,
@@ -225,6 +227,7 @@ void VecStatsCollector::update(const Vec& x, real weight)
             // to be able to specify a different value of 'maxnvalues' for each
             // StatsCollector (e.g. when only one StatsCollector is meant to
             // compute a lift statistics).
+            stats[k].epsilon             = epsilon;
             stats[k].maxnvalues          = maxnvalues;
             stats[k].no_removal_warnings = no_removal_warnings;
             stats[k].forget();

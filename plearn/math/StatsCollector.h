@@ -143,6 +143,20 @@ public:
 
     // ** Build options **
 
+    /**
+     *  Small regularizing value to be added to the variance (V) estimator (and
+     *  indirectly, to standard deviation (STDDEV)).  This permits dividing by
+     *  the standard deviation to perform a normalization, without fearing a
+     *  division by zero.  Forwarded from the option of the same name in
+     *  VecStatsCollector if this StatsCollector belong in one.
+     */
+    double epsilon;
+
+    /**
+     *  Maximum number of different values to keep track of in counts.
+     *  If -1, we will keep track of all different values.
+     *  If 0, we will only keep track of global statistics.
+     */
     int maxnvalues; 
 
     /**
@@ -214,7 +228,8 @@ public:
     real sumsquarew() const             { return sumsquarew_; }
     real sum() const                    { return real(sum_+nnonmissing_*first_); }
     //real sumsquare() const { return real(sumsquare_); }
-    real sumsquare() const              { return real(sumsquare_+2*first_*sum()-first_*first_*nnonmissing_); }
+    real sumsquare() const              { return real(sumsquare_+2*first_*sum() -
+                                                      first_*first_*nnonmissing_); }
     real min() const                    { return min_; }
     real max() const                    { return max_; }
     real range() const                  { return max_ - min_; }
@@ -224,7 +239,9 @@ public:
     //! to 1, it reduces to the traditional (n-1) coefficient.
     //! The estimator is unbiased under the assumption that the weights are fixed
     //! and the samples are i.i.d. according to a Gaussian distribution.
-    real variance() const               { return real((sumsquare_ - square(sum_)/nnonmissing_)/(nnonmissing_ - sumsquarew_/nnonmissing_)); }
+    real variance() const               { return real((sumsquare_ - square(sum_)/nnonmissing_)/
+                                                      (nnonmissing_ - sumsquarew_/nnonmissing_))
+                                              + epsilon; }
     real stddev() const                 { return sqrt(variance()); }
     real skewness() const;
     real kurtosis() const;

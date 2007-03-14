@@ -66,7 +66,12 @@ public:
     //! Should we compute and keep X'.X ?  (default false)
     bool compute_covariance;
 
-    //! See .cc for help.
+    /**
+     *  Small regularizing value to be added to the covariance matrix
+     *  estimator, and forwarded to the enclosed vector of StatsCollector.
+     *  This permits dividing by the standard deviation to perform a
+     *  normalization, without fearing a division by zero.
+     */
     double epsilon;
 
     /**
