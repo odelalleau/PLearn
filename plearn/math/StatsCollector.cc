@@ -307,6 +307,8 @@ void StatsCollector::update(real val, real weight)
 {
     if(is_missing(val))
         nmissing_ += weight;
+    else if (isinf(val))
+        PLERROR("Updating a StatsCollector with an 'inf'.");
     else
     {
         //sum_ += val * weight;
