@@ -370,9 +370,16 @@ python-tk, python-gtk2, python-gtkhtml2} \\
 Then edit your .cshrc or .bashrc and 
 \begin{itemize}
 \item Set the {\tt PLEARNDIR} environment variable to the path of your PLearn directory. 
-(csh ex: \verb!setenv PLEARNDIR ${HOME}/PLearn!)
+\begin{itemize}
+\item csh ex: \verb!setenv PLEARNDIR ${HOME}/PLearn!
+\item bash ex: \verb!export PLEARNDIR=${HOME}/PLearn!
+\end{itemize}
 \item Append \verb!$PLEARNDIR/scripts! and \verb!$PLEARNDIR/commands! to your path.
 \item Append \verb!$PLEARNDIR/python_modules! to your \verb!PYTHONPATH!
+\begin{itemize}
+\item csh ex: \verb!setenv PYTHONPATH $PLEARNDIR/python_modules!
+\item bash ex: \verb!export PYTHONPATH=$PLEARNDIR/python_modules!
+\end{itemize}
 \item Restart your shell for these changes to take effect.
 \end{itemize}
 
@@ -387,7 +394,7 @@ compile, and what to link (including optional libraries), and is able to
 run parallel compilation on several machines.  It is easily
 customizable.
 
-The compiling commands are:
+The compiling commands for the version with the minimum number of dependencies are:
 \begin{verbatim}
 cd PLearn/commands/
 pymake -noblas plearn_noblas.cc
@@ -396,9 +403,30 @@ pymake -noblas plearn_noblas.cc
 If it doesn't work, you may have to adapt the configuration file to your system
 (PLearn/.pymake/config)
 
-If it does work, you can try to \verb!pymake plearn_lapack.cc! or even
-\verb!pymake plearn_curses.cc!
+If it does work, you can try with more dependencies to have more fonctionality with the commands \verb!pymake plearn_lapack.cc!, \verb!pymake plearn\_curses.cc! or even \verb!pymake plearn_python.cc!
 
+\subsection{Parallel compilation}
+
+\verb!pymake! support the compilation on multiple computer for faster 
+compilation. The list of host is in a file in the directory ~/.pymake/. To know the name of the file run the compile command wanted. It will give you a line that look like this: \verb!(create a linux-i386.hosts file in your .pymake directory to list hosts for parallel compilation.)! In this exemple, the file is \verb!linux-i386.hosts!.
+On this file, you must put one host by line and those hosts most be of the same architecture that the one who start the compilation. If you want the computer that start the compilation to participate in the compiling, it must be included in the file.
+
+\subsection{Compilation Mode}
+
+The default compilation mode is in debug mode. To use other mode, add it as a paramater to the compilation line like this: \verb!pymake -opt plearn_curses.cc!.
+Here is the list of compilation mode:
+\begin{itemize}
+\item dbg: debug mode (default)
+\item -opt: optimized
+\item -pintel: parallelized for intel compiler
+\item -safeopt: safe optimized mode (includes bound checking)
+\item safeoptdbg: safe optimized mode (includes bound checking), w/ debug info
+\item -checkopt: some variation on optimized mode
+\item -gprof: optimized mode with profiler support (-pg)
+\item -optdbggprof: optimized mode with profiler support WITH DEBUGGING (-pg)
+\item -safegprof: safe optimized mode with profiler support (-pg)',
+\item -genericvc++: 'Generic compilation options for Visual C++: the debug/opt options are actually set directly in the .vcproj project file',
+\end{itemize}
 
 \section{Installation on Mac OS X}
 
@@ -465,8 +493,8 @@ defined in the new shell.
 From within your PLearn directory run {\tt ./setup}. This should create a
 {\tt .plearn} sub-directory in your home directory, that will contain some
 configuration files.
-
-The compiling commands are:
+The compiling commands for the version with the minimum number of dependencies \
+are:
 \begin{verbatim}
 cd PLearn/commands/
 pymake -noblas plearn_noblas.cc
@@ -475,9 +503,13 @@ pymake -noblas plearn_noblas.cc
 If it doesn't work, you may have to adapt the configuration file to your system
 (PLearn/.pymake/config)
 
-If it does work, you can try to \verb!pymake plearn_lapack.cc! or even
-\verb!pymake plearn_curses.cc!
+If it does work, you can try with more dependencies to have more fonctionality \
+with the commands \verb!pymake plearn_lapack.cc!, \verb!pymake plearn_curses.cc!\
+ or even \verb!pymake plearn_python.cc!
 
+To clean all the file generated during the compilation do \verb!pymake -clean!.
+
+If you modify one file and want to recompile, to speed up the linking, you can use the \verb!-tmp! option. This options will use only the localhost for compilation and move file in the /tmp folder. This will speed up compilation when the file are on the network.
 \section{Installation on Windows with cygwin}
 \label{sec:windows}
 
