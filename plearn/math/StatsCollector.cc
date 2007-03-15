@@ -361,10 +361,13 @@ void StatsCollector::update(real val, real weight)
 {
     if(is_missing(val))
         nmissing_ += weight;
-    else if (isinf(val))
-        PLERROR("Updating a StatsCollector with an 'inf'.");
     else
     {
+        // Updating with an inf produces a warning for now -- many tests still
+        // rely on this behavior, although it should be deprecated
+        if (isinf(val))
+            PLWARNING("Updating a StatsCollector with an 'inf'; check for a division by zero");
+        
         //sum_ += val * weight;
         //sumsquare_ += val*val * weight;
         last_ = val;
