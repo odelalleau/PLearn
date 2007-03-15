@@ -57,6 +57,7 @@ DeepBeliefNet::DeepBeliefNet() :
     grad_decrease_ct( 0. ),
     // grad_weight_decay( 0. ),
     use_classification_cost( true ),
+    reconstruct_layerwise( false ),
     n_layers( 0 ),
     online ( false ),
     final_module_has_learning_rate( false ),
@@ -114,6 +115,17 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   " a better\n"
                   "approximation (undirected softmax) than layer-wise"
                   " mean-field.\n");
+
+    declareOption(ol, "reconstruct_layerwise",
+                  &DeepBeliefNet::reconstruct_layerwise,
+                  OptionBase::buildoption,
+                  "Minimize reconstruction error of each layer as an auto-encoder.\n"
+                  "This is done using cross-entropy between actual and reconstructed.\n"
+                  "This option automatically adds the following cost names:\n"
+                  "   layerwise_reconstruction_error (sum over all layers)\n"
+                  "   layer1_reconstruction_error (only layer 1)\n"
+                  "   layer2_reconstruction_error (only layer 2)\n"
+                  "   etc.\n");
 
     declareOption(ol, "layers", &DeepBeliefNet::layers,
                   OptionBase::buildoption,
@@ -743,11 +755,10 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
 
     layers[0]->expectation << input;
     // FORWARD PHASE
+    Vec layer_input;
     for( int i=0 ; i<n_layers-1 ; i++ )
     {
         // mean-field fprop from layer i to layer i+1
-        Vec input;
-
         connections[i]->setAsDownInput( layers[i]->expectation );
         // this does the actual matrix-vector computation
         layers[i+1]->getAllActivations( connections[i] );
@@ -770,6 +781,22 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
         }
         else
             expectation_gradients[i+1].clear();
+/*
+        if( reconstruct_layerwise )
+        {
+            // layer_input, reconstruction_cost_indices
+            layer_input.resize(layers[i]->size);
+            layer_input << layers[i]->expectation; // fpropNLL writes in expectation
+            connections[i]->setAsUpInput( layers[i+1]->expectation );
+            layers[i]->getAllActivations( connections[i] );
+            real rc = train_costs[reconstruction_cost_indices[i+1]] 
+                = layer[i]->fpropNLL( layer_input ); // or use a NLLCostModule::fprop
+            train_costs[reconstruction_cost_indices[0]] +=
+                train_costs[reconstruction_cost_indices[i+1]];
+            ... layers[i]->bpropNLL( layer_input, rc, bias_gradient );
+            layers[i]->expectation << layer_input;
+        }
+*/
     }
 
     // top layer may be connected to a final_module followed by a

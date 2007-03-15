@@ -94,6 +94,15 @@ public:
     //! approximation (undirected softmax) than layer-wise mean-field.
     bool use_classification_cost;
 
+    //! Minimize reconstruction error of each layer as an auto-encoder.
+    //! This is done using cross-entropy between actual and reconstructed.
+    //! This option automatically adds the following cost names:
+    //! layerwise_reconstruction_error (sum over all layers)
+    //!   layer1_reconstruction_error (only layer 1)
+    //!   layer2_reconstruction_error (only layer 2)
+    //!   etc.
+    bool reconstruct_layerwise;
+
     //! The layers of units in the network
     TVec< PP<RBMLayer> > layers;
 

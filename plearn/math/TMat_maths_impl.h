@@ -2711,21 +2711,32 @@ void diagonalizedFactorsProduct(TMat<T>& result, const TMat<T>& U, const TVec<T>
     int n2=U.width();
     int n3=V.width();
     T *r_ij = result.data();
-    for (int i=0;i<n1;i++)
-    {
-        T *u_i = U[i];
-        for (int j=0;j<n3;j++,r_ij++)
+    if (accumulate)
+        for (int i=0;i<n1;i++)
         {
-            T* d_k = d.data();
-            T res=0;
-            for (int k=0;k<n2;k++,d_k++)
-                res += *d_k * u_i[k] * V(k,j);
-            if (accumulate)
+            T *u_i = U[i];
+            for (int j=0;j<n3;j++,r_ij++)
+            {
+                T* d_k = d.data();
+                T res=0;
+                for (int k=0;k<n2;k++,d_k++)
+                    res += *d_k * u_i[k] * V(k,j);
                 *r_ij += res;
-            else
-                *r_ij = res;
+            }
         }
-    }
+    else
+        for (int i=0;i<n1;i++)
+        {
+            T *u_i = U[i];
+            for (int j=0;j<n3;j++,r_ij++)
+            {
+                T* d_k = d.data();
+                T res=0;
+                for (int k=0;k<n2;k++,d_k++)
+                    res += *d_k * u_i[k] * V(k,j);
+                *r_ij = res;
+            }
+        }
 }
 
 //! GIVEN that res(i,j) = sum_k U_{ik} d_k V_{kj}, and given dC/dres, U,d and V, accumulate
