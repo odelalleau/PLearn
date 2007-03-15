@@ -69,7 +69,10 @@ public:
 
     //! learning rate decay factor
     real lrate_decay;
-    
+
+    //! update the parameters only so often
+    int minibatch_size;
+
     //! natural gradient estimator for neurons
     //! (if 0 then do not correct the gradient on neurons)
     PP<NatGradEstimator> neurons_natgrad;
@@ -185,9 +188,16 @@ protected:
     // (PLEASE IMPLEMENT IN .cc)
     static void declareOptions(OptionList& ol);
 
-    void onlineStep( const Vec& input, const Vec& target, Vec& train_costs, real example_weight );
+    //! one minibatch training step for the (input,target) pair
+    void onlineStep( const Mat& input, const Mat& target, Mat& train_costs, Vec example_weights );
 
-    void fpropNet(const Vec& input) const;
+    //! compute network top-layer output given input
+    //! (note that log-probabilities are computed for classification tasks, output_type=NLL)
+    void fpropNet(const Mat& input) const;
+
+    //! compute train costs given the network top-layer output
+    //! and write into neuron_gradients_per_layer[n_layers-2], gradient on pre-non-linearity activation
+    void fbpropLoss(const Mat& output, const Mat& target, const Vec& example_weights, Mat& train_costs) const;
 
 private:
     //#####  Private Member Functions  ########################################
@@ -201,10 +211,12 @@ private:
 
     // The rest of the private stuff goes here
 
-    Vec neuron_gradients;
-    TVec<Vec> neuron_gradients_per_layer; // pointing into neuron_gradients
-    mutable TVec<Vec> neuron_outputs_per_layer; 
-    
+    Mat neuron_gradients; // one row per example of a minibatch, has concatenation of layer 0, layer 1, ... gradients.
+    TVec<Mat> neuron_gradients_per_layer; // pointing into neuron_gradients (one row per example of a minibatch)
+    mutable TVec<Mat> neuron_outputs_per_layer;  // same structure
+    Mat targets; // one target row per example in a minibatch
+    Vec example_weights; // one element per example in a minibatch
+    Mat train_costs; // one row per example in a minibatch
 };
 
 // Declares a few other classes and functions related to this class

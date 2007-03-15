@@ -58,6 +58,7 @@ NatGradNNet::NatGradNNet()
     : noutputs(-1),
       init_lrate(0.01),
       lrate_decay(0),
+      minibatch_size(1),
       output_type("NLL"),
       n_layers(-1)
 {
@@ -97,6 +98,10 @@ void NatGradNNet::declareOptions(OptionList& ol)
     declareOption(ol, "lrate_decay", &NatGradNNet::lrate_decay,
                   OptionBase::buildoption,
                   "Learning rate decay factor\n");
+
+    declareOption(ol, "minibatch_size", &NatGradNNet::minibatch_size,
+                  OptionBase::buildoption,
+                  "Update the parameters only so often (number of examples).\n");
 
     declareOption(ol, "neurons_natgrad", &NatGradNNet::neurons_natgrad,
                   OptionBase::buildoption,
@@ -174,15 +179,19 @@ void NatGradNNet::build_()
             params_natgrad_per_neuron[i] = PLearn::deepCopy(params_natgrad_template);
         
     }
-    neuron_gradients.resize(n_neurons);
-    neuron_outputs_per_layer.resize(n_layers-1);
-    neuron_gradients_per_layer.resize(n_layers-1);
-    for (int i=0,k=0;i<n_layers-1;k+=layer_sizes[i+1],i++)
+    neuron_gradients.resize(minibatch_size,n_neurons);
+    neuron_outputs_per_layer.resize(n_layers); // layer 0 = input
+    neuron_gradients_per_layer.resize(n_layers); // layer 0 not used
+    neuron_outputs_per_layer[0].resize(minibatch_size,layer_sizes[0]);
+    for (int i=1,k=0;i<n_layers;k+=layer_sizes[i],i++)
     {
-        neuron_outputs_per_layer[i].resize(layer_sizes[i+1]);
-        neuron_gradients_per_layer[i] = neuron_gradients.subVec(k,layer_sizes[i+1]);
+        neuron_outputs_per_layer[i].resize(minibatch_size,layer_sizes[i]);
+        neuron_gradients_per_layer[i] = 
+            neuron_gradients.subMatColumns(k,layer_sizes[i]);
     }
-
+    example_weights.resize(minibatch_size);
+    TVec<string> train_cost_names = getTrainCostNames() ;
+    train_costs.resize(minibatch_size,train_cost_names.length() );
 }
 
 // ### Nothing to add here, simply calls build_
@@ -204,9 +213,10 @@ void NatGradNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(params_natgrad_per_neuron, copies);
     deepCopyField(full_natgrad, copies);
     deepCopyField(layer_sizes, copies);
-/*    deepCopyField(, copies);
-    deepCopyField(, copies);
-    deepCopyField(, copies);
+    deepCopyField(targets, copies);
+    deepCopyField(example_weights, copies);
+    deepCopyField(train_costs, copies);
+/*
     deepCopyField(, copies);
     deepCopyField(, copies);
 */
@@ -235,11 +245,7 @@ void NatGradNNet::forget()
 
 void NatGradNNet::train()
 {
-    static Vec input;  
-    static Vec target; 
-    input.resize(inputsize());    // the train_set's inputsize()
-    target.resize(targetsize());  // the train_set's targetsize()
-    real example_weight;
+    targets.resize(minibatch_size,targetsize());  // the train_set's targetsize()
 
     if(!train_set)
         PLERROR("In NNet::train, you did not setTrainingSet");
@@ -247,8 +253,6 @@ void NatGradNNet::train()
     if(!train_stats)
         setTrainStatsCollector(new VecStatsCollector());
 
-    TVec<string> train_cost_names = getTrainCostNames() ;
-    Vec train_costs( train_cost_names.length() );
     train_costs.fill(MISSING_VALUE) ;
 
     train_stats->forget();
@@ -263,9 +267,17 @@ void NatGradNNet::train()
     for( ; stage<nstages; stage++)
     {
         int sample = stage % nsamples;
-        train_set->getExample(sample, input, target, example_weight);
-        onlineStep( input, target, train_costs, example_weight );
-        train_stats->update( train_costs );
+        int b = sample % minibatch_size;
+        Vec input = neuron_outputs_per_layer[0](b);
+        Vec target = targets(b);
+        train_set->getExample(sample, input, target, example_weights[b]);
+        if (b+1==minibatch_size)
+        {
+            onlineStep( neuron_outputs_per_layer[0], targets, 
+                        train_costs, example_weights );
+            for (int i=0;i<minibatch_size;i++)
+                train_stats->update( train_costs(b) );
+        }
         if( pb )
             pb->update( stage + 1 );
     }
@@ -273,68 +285,95 @@ void NatGradNNet::train()
     train_stats->finalize(); // finalize statistics for this epoch
 }
 
-void NatGradNNet::onlineStep(const Vec& input, const Vec& target,
-                             Vec& train_costs, real example_weight)
+void NatGradNNet::onlineStep(const Mat& input, const Mat& targets,
+                             Mat& train_costs, Vec example_weights)
 {
     fpropNet(input);
-    
+    fbpropLoss(neuron_outputs_per_layer[n_layers-2],targets,example_weights,train_costs);
+    for (int i=n_layers-2;i>0;i--)
+    {
+    }
 }
 
 void NatGradNNet::computeOutput(const Vec& input, Vec& output) const
 {
-    fpropNet(input);
-    if (output_type=="NLL")
-    {
-        if (outputsize()>1)
-            softmax(neuron_outputs_per_layer[n_layers-1],output);
-        // keep pre-softmax output in last layer output to allow for numerically more stable gradient computation
-        else
-            compute_sigmoid(neuron_outputs_per_layer[n_layers-1],output);
-    } // else (MSE) do nothing, linear outputs
+    fpropNet(input.toMat(1,inputsize()));
+    output << neuron_outputs_per_layer[n_layers-1](0);
 }
 
-void NatGradNNet::fpropNet(const Vec& input) const
+//! compute (pre-final-non-linearity) network top-layer output given input
+void NatGradNNet::fpropNet(const Mat& input) const
 {
+    int n_examples = input.length();
+    PLASSERT_MSG(n_examples<=minibatch_size,"NatGradNNet::fpropNet: nb input vectors treated should be <= minibatch_size\n");
+    Mat prev_layer = (n_examples==minibatch_size)?neuron_outputs_per_layer[0]:neuron_outputs_per_layer[0].subMatRows(0,n_examples);
     for (int i=0;i<n_layers-1;i++)
     {
-        Vec& layer_i= neuron_outputs_per_layer[i];
-        layer_i << biases[i];
-        productAcc(layer_i,weights[i],(i==0)?input:neuron_outputs_per_layer[i-1]);
+        Mat next_layer = (n_examples==minibatch_size)?neuron_outputs_per_layer[i+1]:neuron_outputs_per_layer[i+1].subMatRows(0,n_examples);
+        for (int k=0;k<n_examples;k++)
+            next_layer(k) << biases[k];
+        // try to use BLAS
+        productScaleAcc(next_layer, prev_layer, false, weights[i], true, 1, 1);
         if (i<n_layers-1)
-            compute_tanh(layer_i,layer_i);
+            for (int k=0;k<n_examples;k++)
+            {
+                Vec L=next_layer(k);
+                compute_tanh(L,L);
+            }
+        else
+            for (int k=0;k<n_examples;k++)
+            {
+                Vec L=next_layer(k);
+                log_softmax(L,L);
+            }
+        prev_layer = next_layer;
+    }
+}
+
+//! compute train costs given the (pre-final-non-linearity) network top-layer output
+void NatGradNNet::fbpropLoss(const Mat& output, const Mat& target, const Vec& example_weight, Mat& costs) const
+{
+    int n_examples = output.length();
+    Mat out_grad = (n_examples==minibatch_size)?neuron_gradients_per_layer[0]:neuron_gradients_per_layer[0].subMatRows(0,n_examples);
+    if (output_type=="NLL")
+    {
+        for (int i=0;i<n_examples;i++)
+        {
+            int target_class = int(round(target(i,0)));
+            Vec outp = output(i);
+            Vec grad = out_grad(i);
+            exp(outp,grad); // map log-prob to prob
+            costs(i,0) = outp[target_class];
+            costs(i,1) = (target_class == argmax(outp))?0:1;
+            grad[target_class]-=1;
+            if (example_weight[i]!=1.0)
+                costs(i,0) *= example_weight[i];
+        }
+    }
+    else // if (output_type=="MSE")
+    {
+        substract(output,target,out_grad);
+        for (int i=0;i<n_examples;i++)
+        {
+            costs(i,0) = pownorm(out_grad(i));
+            if (example_weight[i]!=1.0)
+            {
+                out_grad(i) *= example_weight[i];
+                costs(i,0) *= example_weight[i];
+            }
+        }
     }
 }
 
 void NatGradNNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
                                            const Vec& target, Vec& costs) const
 {
-    // Compute the costs from *already* computed output.
-    if (output_type=="NLL")
-    {
-        int target_class = int(round(target[0]));
-        real p=0;
-        if (outputsize()>1)
-        {
-            p=output[target_class];
-            costs[1] = (target_class == argmax(output))?0:1;
-        }
-        else 
-        {
-            p = (target_class==1)?output[0]:1-output[0];
-            costs[1] = target_class>0? output[0]<0.5: output[0]>=0.5;
-        }
-        if (p!=0)
-            costs[0] = -pl_log(p);
-        else
-        {
-            costs[0] = 1e10;
-            PLWARNING("NatGradNNet: do something better to handle near 0 probabilities...");
-        }
-    }
-    else // if (output_type=="MSE")
-    {
-        costs[0] = powdistance(output,target);
-    }
+    Vec w(1);
+    w[0]=1;
+    Mat outputM = output.toMat(1,output.length());
+    Mat targetM = target.toMat(1,output.length());
+    Mat costsM = costs.toMat(1,costs.length());
+    fbpropLoss(outputM,targetM,w,costsM);
 }
 
 TVec<string> NatGradNNet::getTestCostNames() const
