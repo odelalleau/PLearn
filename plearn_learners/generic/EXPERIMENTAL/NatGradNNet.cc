@@ -137,26 +137,34 @@ void NatGradNNet::declareOptions(OptionList& ol)
 
 void NatGradNNet::build_()
 {
-    if (noutputs<0)
+    if (output_type=="MSE")
     {
-        if (output_type=="MSE")
-            noutputs = targetsize_;
-        else if (output_type=="NLL")
+        if (noutputs<0) noutputs = targetsize_;
+        else PLASSERT_MSG(noutputs==targetsize_,"NatGradNNet: noutputs should be -1 or match data's targetsize");
+    }
+    else if (output_type=="NLL")
+    {
+        if (noutputs<0)
             PLERROR("NatGradNNet: if output_type=NLL (classification), one \n"
                     "should provide noutputs = number of classes, or possibly\n"
                     "1 when 2 classes\n");
-        else PLERROR("NatGradNNet: output_type should be NLL or MSE\n");
     }
+    else PLERROR("NatGradNNet: output_type should be NLL or MSE\n");
+
     n_layers = hidden_layer_sizes.length()+2;
     layer_sizes.resize(n_layers);
     layer_sizes.subVec(1,n_layers-2) << hidden_layer_sizes;
     layer_sizes[0]=inputsize_;
     layer_sizes[n_layers-1]=noutputs;
     layer_params.resize(n_layers-1);
+    biases.resize(n_layers-1);
+    weights.resize(n_layers-1);
     int n_neurons=0;
     for (int i=0;i<n_layers-1;i++)
     {
         layer_params[i].resize(layer_sizes[i+1],layer_sizes[i]+1);
+        biases[i]=layer_params[i].subMatColumns(0,1);
+        weights[i]=layer_params[i].subMatColumns(1,layer_sizes[i]);
         n_neurons+=layer_sizes[i+1];
     }
     if (params_natgrad_template)
@@ -189,14 +197,19 @@ void NatGradNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields
-    // ### that you wish to be deepCopied rather than
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("NatGradNNet::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    deepCopyField(hidden_layer_sizes, copies);
+    deepCopyField(layer_params, copies);
+    deepCopyField(neurons_natgrad, copies);
+    deepCopyField(params_natgrad_template, copies);
+    deepCopyField(params_natgrad_per_neuron, copies);
+    deepCopyField(full_natgrad, copies);
+    deepCopyField(layer_sizes, copies);
+/*    deepCopyField(, copies);
+    deepCopyField(, copies);
+    deepCopyField(, copies);
+    deepCopyField(, copies);
+    deepCopyField(, copies);
+*/
 }
 
 
@@ -210,65 +223,118 @@ void NatGradNNet::forget()
     //! (Re-)initialize the PLearner in its fresh state (that state may depend
     //! on the 'seed' option) and sets 'stage' back to 0 (this is the stage of
     //! a fresh learner!)
-    /*!
-      A typical forget() method should do the following:
-      - call inherited::forget() to initialize its random number generator
-        with the 'seed' option
-      - initialize the learner's parameters, using this random generator
-      - stage = 0
-    */
     inherited::forget();
+    for (int i=0;i<n_layers-1;i++)
+    {
+        real delta = 1/sqrt(real(layer_sizes[i]));
+        random_gen->fill_random_uniform(weights[i],-delta,delta);
+        biases[i].clear();
+    }
+    stage = 0;
 }
 
 void NatGradNNet::train()
 {
-    // The role of the train method is to bring the learner up to
-    // stage==nstages, updating train_stats with training costs measured
-    // on-line in the process.
-
-    /* TYPICAL CODE:
-
-    static Vec input;  // static so we don't reallocate memory each time...
-    static Vec target; // (but be careful that static means shared!)
+    static Vec input;  
+    static Vec target; 
     input.resize(inputsize());    // the train_set's inputsize()
     target.resize(targetsize());  // the train_set's targetsize()
-    real weight;
+    real example_weight;
 
-    // This generic PLearner method does a number of standard stuff useful for
-    // (almost) any learner, and return 'false' if no training should take
-    // place. See PLearner.h for more details.
-    if (!initTrain())
-        return;
+    if(!train_set)
+        PLERROR("In NNet::train, you did not setTrainingSet");
+    
+    if(!train_stats)
+        setTrainStatsCollector(new VecStatsCollector());
 
-    while(stage<nstages)
+    TVec<string> train_cost_names = getTrainCostNames() ;
+    Vec train_costs( train_cost_names.length() );
+    train_costs.fill(MISSING_VALUE) ;
+
+    train_stats->forget();
+
+    PP<ProgressBar> pb;
+    if( report_progress && stage < nstages )
+        pb = new ProgressBar( "Training "+classname(),
+                              nstages - stage );
+
+    int nsamples = train_set->length();
+
+    for( ; stage<nstages; stage++)
     {
-        // clear statistics of previous epoch
-        train_stats->forget();
-
-        //... train for 1 stage, and update train_stats,
-        // using train_set->getExample(input, target, weight)
-        // and train_stats->update(train_costs)
-
-        ++stage;
-        train_stats->finalize(); // finalize statistics for this epoch
+        int sample = stage % nsamples;
+        train_set->getExample(sample, input, target, example_weight);
+        onlineStep( input, target, train_costs, example_weight );
+        train_stats->update( train_costs );
+        if( pb )
+            pb->update( stage + 1 );
     }
-    */
+
+    train_stats->finalize(); // finalize statistics for this epoch
 }
 
+void NatGradNNet::onlineStep(const Vec& input, const Vec& target,
+                             Vec& train_costs, real example_weight)
+{
+    fpropNet(input);
+    
+}
 
 void NatGradNNet::computeOutput(const Vec& input, Vec& output) const
 {
-    // Compute the output from the input.
-    // int nout = outputsize();
-    // output.resize(nout);
-    // ...
+    fpropNet(input);
+    if (output_type=="NLL")
+    {
+        if (outputsize()>1)
+            softmax(neuron_outputs_per_layer[n_layers-1],output);
+        // keep pre-softmax output in last layer output to allow for numerically more stable gradient computation
+        else
+            compute_sigmoid(neuron_outputs_per_layer[n_layers-1],output);
+    } // else (MSE) do nothing, linear outputs
+}
+
+void NatGradNNet::fpropNet(const Vec& input) const
+{
+    for (int i=0;i<n_layers-1;i++)
+    {
+        Vec& layer_i= neuron_outputs_per_layer[i];
+        layer_i << biases[i];
+        productAcc(layer_i,weights[i],(i==0)?input:neuron_outputs_per_layer[i-1]);
+        if (i<n_layers-1)
+            compute_tanh(layer_i,layer_i);
+    }
 }
 
 void NatGradNNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
                                            const Vec& target, Vec& costs) const
 {
-// Compute the costs from *already* computed output.
-// ...
+    // Compute the costs from *already* computed output.
+    if (output_type=="NLL")
+    {
+        int target_class = int(round(target[0]));
+        real p=0;
+        if (outputsize()>1)
+        {
+            p=output[target_class];
+            costs[1] = (target_class == argmax(output))?0:1;
+        }
+        else 
+        {
+            p = (target_class==1)?output[0]:1-output[0];
+            costs[1] = target_class>0? output[0]<0.5: output[0]>=0.5;
+        }
+        if (p!=0)
+            costs[0] = -pl_log(p);
+        else
+        {
+            costs[0] = 1e10;
+            PLWARNING("NatGradNNet: do something better to handle near 0 probabilities...");
+        }
+    }
+    else // if (output_type=="MSE")
+    {
+        costs[0] = powdistance(output,target);
+    }
 }
 
 TVec<string> NatGradNNet::getTestCostNames() const

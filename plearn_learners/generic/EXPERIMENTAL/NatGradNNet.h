@@ -174,12 +174,20 @@ protected:
     //! layer sizes (derived from hidden_layer_sizes, inputsize_ and outputsize_)
     TVec<int> layer_sizes;
 
+    //! pointers into the layer_params
+    TVec<Mat> biases;
+    TVec<Mat> weights;
+
 protected:
     //#####  Protected Member Functions  ######################################
 
     //! Declares the class options.
     // (PLEASE IMPLEMENT IN .cc)
     static void declareOptions(OptionList& ol);
+
+    void onlineStep( const Vec& input, const Vec& target, Vec& train_costs, real example_weight );
+
+    void fpropNet(const Vec& input) const;
 
 private:
     //#####  Private Member Functions  ########################################
@@ -195,7 +203,7 @@ private:
 
     Vec neuron_gradients;
     TVec<Vec> neuron_gradients_per_layer; // pointing into neuron_gradients
-    TVec<Vec> neuron_outputs_per_layer; 
+    mutable TVec<Vec> neuron_outputs_per_layer; 
     
 };
 
