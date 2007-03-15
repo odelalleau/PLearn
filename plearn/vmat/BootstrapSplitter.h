@@ -74,6 +74,7 @@ public:
     // ### declare public option fields (such as build options) here
     real frac;
     int n_splits;
+    bool allow_repetitions;
 
     // ****************
     // * Constructors *

@@ -249,6 +249,8 @@ void Plide::run(const vector<string>& args)
     m_python->inject("helpClasses",       this, &Plide::helpClasses);
     m_python->inject("helpOnCommand",     this, &Plide::helpOnCommand);
     m_python->inject("helpOnClass",       this, &Plide::helpOnClass);
+    m_python->inject("setOptionLevel",    this, &Plide::setOptionLevel);
+    m_python->inject("toggleOptionFlag",  this, &Plide::toggleOptionFlag);
     m_python->inject("precisOnClass",     this, &Plide::precisOnClass);
     m_python->inject("loggingControl",    this, &Plide::loggingControl);
 
@@ -424,6 +426,25 @@ PythonObjectWrapper Plide::helpOnClass(const TVec<PythonObjectWrapper>& args) co
     m_help_command->helpOnClass(args[0].as<string>(), os, m_help_config);
     return os.str();
 }
+
+PythonObjectWrapper Plide::setOptionLevel(const TVec<PythonObjectWrapper>& args) const
+{
+    if (args.size() != 1)
+        PLERROR("%sExpecting 1 argument; got %d", __FUNCTION__, args.size());
+    OptionBase::OptionLevel desired_level = args[0].as<OptionBase::OptionLevel>();
+    OptionBase::setCurrentOptionLevel(desired_level);
+    return PythonObjectWrapper();
+}
+
+PythonObjectWrapper Plide::toggleOptionFlag(const TVec<PythonObjectWrapper>& args) const
+{
+    if (args.size() != 1)
+        PLERROR("%sExpecting 1 argument; got %d", __FUNCTION__, args.size());
+    OptionBase::flag_t flag_to_toggle = args[0].as<OptionBase::flag_t>();
+    OptionBase::setCurrentFlags(OptionBase::getCurrentFlags() ^ flag_to_toggle);
+    return PythonObjectWrapper();
+}
+
 
 PythonObjectWrapper Plide::precisOnClass(const TVec<PythonObjectWrapper>& args) const
 {

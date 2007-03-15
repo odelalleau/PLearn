@@ -76,7 +76,7 @@ def main():
             os.close(tf)
 
             print "Servers listed in: ", fname
-            cmd= plearn_command + ' --servers ' + fname + ' ' + ' '.join(args[1:])
+            cmd= 'time nice ' + plearn_command + ' --servers ' + fname + ' ' + ' '.join(args[1:])
             print cmd
 
             # call the master w/ all options plus a list of slave servers

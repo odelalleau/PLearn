@@ -55,6 +55,7 @@
 #include "PLearnCommandRegistry.h"
 #include "plearn_main.h"                     // For version_string
 #include "HTMLHelpCommand.h"
+#include <plearn/base/tostring.h>
 
 namespace PLearn {
 using namespace std;
@@ -289,7 +290,8 @@ void HTMLHelpCommand::helpClasses(ostream& os, const HTMLHelpConfig* config)
             end = TypeFactory::instance().getTypeMap().end()
             ; it != end ; ++it)
     {
-        string helpurl = string("class_") + it->first + ".html";
+        string helpurl = string("class_") + it->first + ".html?level=" 
+            + tostring(OptionBase::getCurrentOptionLevel());
         string helphtml = "<a href=\"" + helpurl + "\">" + it->first + "</a>";
         os << string("  <tr class=\"") + (i++%2 == 0? "even" : "odd") + "\">" << endl
            << "    <td>" + helphtml + "</td>" << endl
@@ -304,6 +306,38 @@ void HTMLHelpCommand::helpClasses(ostream& os, const HTMLHelpConfig* config)
 
 
 //#####  HelpOnClass  #######################################################
+
+string HTMLHelpCommand::flagsAndLevelHeading(const string& classname) const
+{
+    string str= "<div class=\"levelnav\">";
+/*
+ * Don't display option flags for now
+    str+= "OptionFlags:";
+    const OptionBase::StrToFlagMap& flag_map= OptionBase::getStrToFlagMap();
+    for(OptionBase::StrToFlagMap::const_iterator it= flag_map.begin();
+        it != flag_map.end(); ++it)
+    {
+        str+= "<a href=\"toggle_flag_" + tostring(it->second) + "\">";
+        str+= it->second & OptionBase::getCurrentFlags() ? "[+]" : "[-]";
+        str+= it->first + "</a>";
+    }
+    str+= "<nbsp><nbsp><nbsp><nbsp>";
+*/
+    str+= "OptionLevel:";
+    const OptionBase::LevelToStrMap& lev_map= OptionBase::getLevelToStrMap();
+    for(OptionBase::LevelToStrMap::const_iterator it= lev_map.begin();
+        it != lev_map.end(); ++it)
+    {
+        if(it->first == OptionBase::getCurrentOptionLevel())
+            str+= "<b>" + it->second + "</b>";
+        else
+            str+= "<a href=\"class_" + classname + ".html?level=" 
+                + tostring(it->first) + "\">" + it->second + "</a>";
+    }
+    str+= "</div>";
+    return str;
+}
+
 
 void HTMLHelpCommand::helpOnClass(const string& classname)
 {
@@ -329,12 +363,15 @@ void HTMLHelpCommand::helpOnClass(const string& classname, ostream& out,
     const TypeMapEntry& entry = it->second;
     Object* obj = 0;
 
+    out << flagsAndLevelHeading(classname);
+
     // Determine list of parent classes and print it out as crumbtrail
     TVec<string> parents = parent_classes(classname);
     out << "<div class=\"crumbtrail\">";
     for (int i=0, n=parents.size() ; i<n ; ++i) {
         if (i < n-1)
-            out << "<a href=\"class_" + parents[i] + ".html\">"
+            out << "<a href=\"class_" + parents[i] + ".html?level="
+                + tostring(OptionBase::getCurrentOptionLevel()) + "\">"
                 << parents[i] << "</a>&nbsp;&gt; ";
         else
             out << parents[i];
@@ -376,12 +413,16 @@ void HTMLHelpCommand::helpOnClass(const string& classname, ostream& out,
         string descr    = (*olIt)->description();
         string optname  = (*olIt)->optionname();
         string opttype  = (*olIt)->optiontype();
+        string optlevel = (*olIt)->levelString();
         string defclass = "";
         string defaultval = "?";
 
         // Determine the flag rendering
         string flag_string = join((*olIt)->flagStrings(), " | ");
-    
+
+        if((*olIt)->level() > OptionBase::getCurrentOptionLevel()
+            || 0 == ((*olIt)->flags() & OptionBase::getCurrentFlags()))
+            continue;
         if(obj) // it's an instantiable class
         {
             defaultval = (*olIt)->defaultval(); 
@@ -398,6 +439,7 @@ void HTMLHelpCommand::helpOnClass(const string& classname, ostream& out,
         if (defaultval != "?")
             out << "    <div class=\"optvalue\">= " << quote(defaultval) << "</div>" << endl;
         out << "    <div class=\"opttype\"><i>(" << flag_string << ")</i></div>" << endl;
+        out << "    <div class=\"optlevel\"><i>(OptionLevel: " << optlevel << ")</i></div>" << endl;
         out << "    </td>" << endl;
         if (removeblanks(descr) == "")
             descr = "(no description)";
@@ -433,7 +475,8 @@ void HTMLHelpCommand::helpOnClass(const string& classname, ostream& out,
         {
             Object* o = (*e.constructor)();
             if( (*entry.isa_method)(o) ) {
-                string helpurl = string("class_") + it->first + ".html";
+                string helpurl = string("class_") + it->first + ".html"
+                    + "?level=" + tostring(OptionBase::getCurrentOptionLevel());
                 out << string("  <tr class=\"") +
                        (index++%2 == 0? "even" : "odd") + "\">" << endl
                     << "    <td><a href=\"" << helpurl << "\">"
@@ -595,7 +638,9 @@ string HTMLHelpCommand::highlight_known_classes(string typestr) const
       
             // ensure we only match whole words with the regular expression
             const boost::regex e("\\<" + tokens[i] + "\\>");
-            const string repl_str("<a href=\"class_$&.html\">$&</a>");
+            const string repl_str("<a href=\"class_$&.html\\?level="
+                                  + tostring(OptionBase::getCurrentOptionLevel()) 
+                                  +"\">$&</a>");
             typestr = regex_replace(typestr, e, repl_str, boost::match_default | boost::format_default);
         }
     }

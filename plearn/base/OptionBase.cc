@@ -56,10 +56,18 @@ const OptionBase::flag_t OptionBase::nosave           = 1 << 3;
 const OptionBase::flag_t OptionBase::nonparentable    = 1 << 4;
 const OptionBase::flag_t OptionBase::nontraversable   = 1 << 5;
 const OptionBase::flag_t OptionBase::remotetransmit   = 1 << 6;
+OptionBase::flag_t OptionBase::current_flags_= (OptionBase::buildoption 
+                                                | OptionBase::learntoption 
+                                                | OptionBase::tuningoption
+                                                | OptionBase::nosave
+                                                | OptionBase::nonparentable
+                                                | OptionBase::nontraversable
+                                                | OptionBase::remotetransmit);
 
-const OptionBase::OptionLevel OptionBase::basic_level= 200;
-const OptionBase::OptionLevel OptionBase::normal_level= 400;
-const OptionBase::OptionLevel OptionBase::advanced_level= 800;
+const OptionBase::OptionLevel OptionBase::basic_level= 100;
+const OptionBase::OptionLevel OptionBase::normal_level= 200;
+const OptionBase::OptionLevel OptionBase::advanced_level= 400;
+const OptionBase::OptionLevel OptionBase::expert_level= 800;
 const OptionBase::OptionLevel OptionBase::experimental_level= 9999;
 const OptionBase::OptionLevel OptionBase::deprecated_level= 99999999;
 const OptionBase::OptionLevel OptionBase::default_level= OptionBase::normal_level;
@@ -111,26 +119,42 @@ void OptionBase::writeAtIndex(const Object*, PStream&, const string&) const
             "of type '%s'", optionname().c_str(), optiontype().c_str());
 }
 
+OptionBase::StrToFlagMap OptionBase::str_to_flag; //!< init.
+const OptionBase::StrToFlagMap& OptionBase::getStrToFlagMap()
+{
+    if(str_to_flag.size() == 0)
+    {
+        getFlagToStrMap();//make sure it is filled
+        for(FlagToStrMap::iterator it= flag_to_str.begin();
+            it != flag_to_str.end(); ++it)
+            str_to_flag[it->second]= it->first;
+    }
+    return str_to_flag;
+}
 
+OptionBase::FlagToStrMap OptionBase::flag_to_str; //!< init.
+const OptionBase::FlagToStrMap& OptionBase::getFlagToStrMap()
+{
+    if (flag_to_str.size() == 0) 
+    {
+        flag_to_str[buildoption   ] = "buildoption";
+        flag_to_str[learntoption  ] = "learntoption";
+        flag_to_str[tuningoption  ] = "tuningoption";
+        flag_to_str[nosave        ] = "nosave";
+        flag_to_str[nonparentable ] = "nonparentable";
+        flag_to_str[nontraversable] = "nontraversable";
+        flag_to_str[remotetransmit] = "remotetransmit";
+    }
+    return flag_to_str;
+}
 vector<string> OptionBase::flagStrings() const
 {
     flag_t curflags = flags();
     vector<string> fs;
 
-    static bool initialized = false;
-    static map<flag_t, string> flag_map;
-    if (! initialized) {
-        flag_map[buildoption   ] = "buildoption";
-        flag_map[learntoption  ] = "learntoption";
-        flag_map[tuningoption  ] = "tuningoption";
-        flag_map[nosave        ] = "nosave";
-        flag_map[nonparentable ] = "nonparentable";
-        flag_map[nontraversable] = "nontraversable";
-        flag_map[remotetransmit] = "remotetransmit";
-        initialized = true;
-    }
+    const FlagToStrMap& flag_map= getFlagToStrMap();
 
-    for (map<flag_t, string>::const_iterator it = flag_map.begin(),
+    for (FlagToStrMap::const_iterator it = flag_map.begin(),
              end = flag_map.end() ; it != end ; ++it)
     {
         // As we process each option, turn it off in temporary copy of flags to
@@ -151,32 +175,44 @@ vector<string> OptionBase::flagStrings() const
 
 
 OptionBase::StrToLevelMap OptionBase::str_to_level; //!< init.
-OptionBase::OptionLevel OptionBase::optionLevelFromString(const string& s)
+const OptionBase::StrToLevelMap& OptionBase::getStrToLevelMap()
 {
     if(str_to_level.size() == 0)
     {
         str_to_level["basic"]= basic_level;
         str_to_level["normal"]= normal_level;
         str_to_level["advanced"]= advanced_level;
+        str_to_level["expert"]= expert_level;
         str_to_level["experimental"]= experimental_level;
         str_to_level["deprecated"]= deprecated_level;
     }
+    return str_to_level;
+}
+
+OptionBase::OptionLevel OptionBase::optionLevelFromString(const string& s)
+{
+    getStrToLevelMap();//make sure it is filled
     StrToLevelMap::iterator it= str_to_level.find(lowerstring(s));
     if(it != str_to_level.end()) return it->second;
     return (OptionLevel)toint(s);
 }
 
 OptionBase::LevelToStrMap OptionBase::level_to_str; //!< init.
-string OptionBase::optionLevelToString(const OptionLevel& l)
+const OptionBase::LevelToStrMap& OptionBase::getLevelToStrMap()
 {
     if(level_to_str.size() == 0)
     {
-        if(str_to_level.size() == 0) 
-            optionLevelFromString("0");//populate str_to_level
+        getStrToLevelMap();//make sure it is filled
         for(StrToLevelMap::iterator it= str_to_level.begin();
             it != str_to_level.end(); ++it)
             level_to_str[it->second]= it->first;
     }
+    return level_to_str;
+}
+
+string OptionBase::optionLevelToString(const OptionLevel& l)
+{
+    getLevelToStrMap();//make sure it is filled
     LevelToStrMap::iterator it= level_to_str.find(l);
     if(it != level_to_str.end()) return it->second;
     return tostring(l);

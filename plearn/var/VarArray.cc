@@ -1182,7 +1182,8 @@ void operator<<(VarArray& ar, const Array<Vec>& values)
         Vec& ar_v = ar[k]->value;
         Vec& v = values[k];
         if(ar_v.size() != v.size())
-            PLERROR("In operator<<(VarArray&, const Array<Vec>&) sizes of vector %d differ (in VarArray:%d, in Array<Vec>:%d)",ar_v.size(),v.size());
+            PLERROR("In operator<<(VarArray&, const Array<Vec>&) sizes of var array and vector differ.  "
+                    "(VarArray length:%d, in Array<Vec>, Vec length:%d)",ar_v.size(),v.size());
         ar_v << v;
     }
 }
@@ -1197,7 +1198,8 @@ void operator>>(VarArray& ar, const Array<Vec>& values)
         Vec& ar_v = ar[k]->value;
         Vec& v = values[k];
         if(ar_v.size() != v.size())
-            PLERROR("In operator<<(VarArray&, const Array<Vec>&) sizes of vector %d differ (in VarArray:%d, in Array<Vec>:%d)",ar_v.size(),v.size());
+            PLERROR("In operator<<(VarArray&, const Array<Vec>&) sizes of var array and vector differ.  "
+                    "(VarArray length:%d, in Array<Vec>, Vec length:%d)",ar_v.size(),v.size());
         ar_v >> v;
     }
 }

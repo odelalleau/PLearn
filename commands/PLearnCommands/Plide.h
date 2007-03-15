@@ -95,6 +95,10 @@ public:
     
     //! Generate documentation for a given class
     PythonObjectWrapper helpOnClass(const TVec<PythonObjectWrapper>& args) const;
+    //! Option level for class help
+    PythonObjectWrapper setOptionLevel(const TVec<PythonObjectWrapper>& args) const;
+    //! Toggle flags to display for class help
+    PythonObjectWrapper toggleOptionFlag(const TVec<PythonObjectWrapper>& args) const;
 
     //! Generate the short (one-line) documentation for a given class, as well
     //! as the list of all BUILD options it supports.  This is returned as a pair
@@ -105,7 +109,6 @@ public:
     //! 1) Desired verbosity level (integer)
     //! 2) List of module names to activate in named logging (list of strings)
     PythonObjectWrapper loggingControl(const TVec<PythonObjectWrapper>& args) const;
-    
 
     //#####  Work Executors  ##################################################
 

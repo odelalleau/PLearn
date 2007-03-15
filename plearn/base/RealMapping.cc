@@ -337,8 +337,10 @@ void RealMapping::read(PStream& in)
             real val0, val;
             in >> val0 >> ws;
             r= RealRange('[', val0, val0, ']');
-            if(in.get()!='-' || in.get()!='>')
-                PLERROR("Expecting -> after range specification ( range syntax example : ]100 200] -> 10 )");
+            char c0= in.get();
+            char c1= in.get();
+            if(c0!='-' || c1!='>')
+                PLERROR("Expecting '->' in mapping (syntax example : '100 -> 10') got '%c%c' instead",c0,c1);
             in >> val;
             addMapping(r,val);	    
         }

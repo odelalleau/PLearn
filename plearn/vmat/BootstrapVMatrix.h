@@ -65,6 +65,7 @@ public:
     long own_seed;
     long seed;
     bool shuffle;
+    bool allow_repetitions;
 
 public:
 
@@ -73,7 +74,8 @@ public:
 
     //! Construct a boostrap of another VMatrix.
     //! Note: 'the_seed' sets the new 'own_seed' option, not the old 'seed' one.
-    BootstrapVMatrix(VMat m, real frac, bool shuffle = false, long the_seed = -2);
+    BootstrapVMatrix(VMat m, real frac, bool shuffle = false, long the_seed = -2,
+                     bool allow_rep= false);
 
     PLEARN_DECLARE_OBJECT(BootstrapVMatrix);
 

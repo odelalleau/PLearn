@@ -48,7 +48,8 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(BootstrapVMatrix,
                         "A VMatrix that sees a bootstrap subset of its parent VMatrix.",
                         "It means that a random sample of the source will be taken.\n"
-                        "Note that this is not a real bootstrap since a sample can only appear once."
+                        "[THE FOLLOWING LINE IS NOT TRUE ANYMORE (see allow_repetitions):\n"
+                        "Note that this is not a real bootstrap since a sample can only appear once.]"
     );
 
 //////////////////////
@@ -60,17 +61,19 @@ BootstrapVMatrix::BootstrapVMatrix():
     n_elems(-1),
     own_seed(-2), // -2 = hack value while 'seed' is still there
     seed(0),
-    shuffle(false)
+    shuffle(false),
+    allow_repetitions(false)
 {}
 
 BootstrapVMatrix::BootstrapVMatrix(VMat m, real the_frac, bool the_shuffle,
-                                   long the_seed):
+                                   long the_seed, bool allow_rep):
     rgen(new PRandom()),
     frac(the_frac),
     n_elems(-1),
     own_seed(the_seed),
     seed(0),
-    shuffle(the_shuffle)
+    shuffle(the_shuffle),
+    allow_repetitions(allow_rep)
 {
     this->source = m;
     build();
@@ -97,6 +100,11 @@ void BootstrapVMatrix::declareOptions(OptionList &ol)
                   "DEPRECATED: The random generator seed (-1 = initialized from clock, 0 = no initialization).\n"
                   "Warning: this is a global seed that may affect other PLearn objects.");
 
+    declareOption(ol, "allow_repetitions", &BootstrapVMatrix::allow_repetitions, 
+                  OptionBase::buildoption,
+                  "Wether examples should be allowed to appear each more than once.",
+                  "", OptionBase::advanced_level);
+
     inherited::declareOptions(ol);
 
     // Hide the 'indices' option, because it will be overridden at build time.
@@ -118,6 +126,17 @@ void BootstrapVMatrix::build()
 ////////////
 void BootstrapVMatrix::build_()
 {
+    if(allow_repetitions)
+    {
+        int l= source.length();
+        indices.resize(l);
+        for(int i= 0; i < l; ++i)
+            indices[i]= rgen->uniform_multinomial_sample(l);
+        // Because we changed the indices, a rebuild may be needed.
+        inherited::build();
+        return;//avoid extra indentation
+    }
+
     if (source) {
         indices = TVec<int>(0, source.length()-1, 1); // Range-vector
         if (seed != 0)

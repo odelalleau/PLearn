@@ -76,7 +76,7 @@ class PlideHelp( object ):
         self.view.show_all()
 
         plide_main.w_help_scrolledwindow.add(self.view)
-
+        
     def define_injected( inj ):
         """Simply transmits the 'injected' pseudo-module to this module.
         """
@@ -92,7 +92,7 @@ class PlideHelp( object ):
     def link_clicked( self, doc, uri ):
         """Callback that's invoked when HTML widget reports that a link has
         been clicked by the user.
-        """
+        """       
         self.display_page(uri)
 
     def display_page( self, uri, doc = None ):
@@ -103,6 +103,7 @@ class PlideHelp( object ):
             self.back_pages.append(self.cur_page)
         self.cur_page  = uri
         self.fwd_pages = []
+        
         title = self.update_doc_from_uri(uri)
         self.update_title(title)
 
@@ -138,6 +139,18 @@ class PlideHelp( object ):
         """
         if doc is None:
             doc = self.doc
+
+        # params
+        posparams= uri.find('?')
+        poslev= uri.find("level=", posparams)
+        if poslev != -1:
+            posend= uri.find(";",poslev)
+            if posend == -1:
+                posend= len(uri)
+            injected.setOptionLevel(int(uri[poslev+6:posend]))
+        if posparams != -1:
+            # get rid of params here
+            uri= uri[:posparams]
 
         html  = ""
         title = ""

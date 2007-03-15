@@ -135,17 +135,24 @@ public:
     static const OptionLevel basic_level; //!< mandatory options
     static const OptionLevel normal_level; //!< simple, useful options
     static const OptionLevel advanced_level; //!< useful but seldom used
+    static const OptionLevel expert_level; //!< more than advanced, not experimental
     static const OptionLevel experimental_level; //!< only a few people understand those
     static const OptionLevel deprecated_level; //!< should not be used anymore
     static const OptionLevel default_level; //!< default for options w/o explicit level
 
-protected:
-    static OptionLevel current_option_level_;
-
     typedef map<string, OptionLevel> StrToLevelMap;
     typedef map<OptionLevel, string> LevelToStrMap;
+    typedef map<string, flag_t> StrToFlagMap;
+    typedef map<flag_t, string> FlagToStrMap;
+protected:
+    static OptionLevel current_option_level_;
     static StrToLevelMap str_to_level;
     static LevelToStrMap level_to_str;
+
+    //! to toggle display of options by option flags
+    static flag_t current_flags_;
+    static StrToFlagMap str_to_flag;
+    static FlagToStrMap flag_to_str;
 
 protected:
     string optionname_;  //!< the name of the option
@@ -288,10 +295,23 @@ public:
     static const OptionLevel& getCurrentOptionLevel() { return current_option_level_; }
     //! set the current option level for help text
     static void setCurrentOptionLevel(const OptionLevel& l) { current_option_level_= l; }
+    //! Get map (name->level) of all option levels
+    static const StrToLevelMap& getStrToLevelMap();
+    //! Get map (level->) of all option levels
+    static const LevelToStrMap& getLevelToStrMap();
     //! convert string to OptionLevel
     static OptionLevel optionLevelFromString(const string& s);
     //! convert OptionLevel to string
     static string optionLevelToString(const OptionLevel& l);
+
+    //! get the current option level for help text
+    static const flag_t& getCurrentFlags() { return current_flags_; }
+    //! set the current option level for help text
+    static void setCurrentFlags(const flag_t& f) { current_flags_= f; }
+    //! Get map (name->flag) of all possible flags
+    static const StrToFlagMap& getStrToFlagMap();
+    //! Get map (flag->name) of all possible flags
+    static const FlagToStrMap& getFlagToStrMap();
 
 };
 

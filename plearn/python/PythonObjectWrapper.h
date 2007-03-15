@@ -149,6 +149,12 @@ struct ConvertFromPyObject<int>
 };
 
 template <>
+struct ConvertFromPyObject<unsigned int>
+{
+    static int convert(PyObject*, bool print_traceback);
+};
+
+template <>
 struct ConvertFromPyObject<long>
 {
     static long convert(PyObject*, bool print_traceback);

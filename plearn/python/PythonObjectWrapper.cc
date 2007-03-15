@@ -94,6 +94,14 @@ int ConvertFromPyObject<int>::convert(PyObject* pyobj, bool print_traceback)
     return int(PyInt_AS_LONG(pyobj));
 }
 
+int ConvertFromPyObject<unsigned int>::convert(PyObject* pyobj, bool print_traceback)
+{
+    PLASSERT( pyobj );
+    if (! PyInt_Check(pyobj))
+        PLPythonConversionError("ConvertFromPyObject<unsigned int>", pyobj, print_traceback);
+    return static_cast<unsigned int>(PyInt_AsUnsignedLongMask(pyobj));
+}
+
 long ConvertFromPyObject<long>::convert(PyObject* pyobj, bool print_traceback)
 {
     PLASSERT( pyobj );

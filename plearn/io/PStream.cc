@@ -728,6 +728,12 @@ void PStream::readAsciiNum(double &x)
         opposite = true;
         c = get();
     }
+    else if (c == '+') // skip + sign
+        c = get();
+
+    bool E_seen= false;
+    bool sign_seen= false;
+    bool dot_seen= false;
 
     switch(c)
     {
@@ -753,8 +759,14 @@ void PStream::readAsciiNum(double &x)
             PLERROR(error_msg);
         break ; 
     default:
-        while(isdigit(c) || c=='-' || c=='+' || c=='.' || c=='e' || c=='E')
+        while(isdigit(c) 
+              || ((c=='e' || c=='E') && !E_seen) //only one E
+              || ((c=='-' || c=='+') && E_seen && !sign_seen)//one sign, after E 
+              || (c=='.' && !E_seen && !dot_seen))//one dot, before E
         {
+            if(c=='e' || c=='E') E_seen= true;
+            if(c=='+' || c=='-') sign_seen= true;
+            if(c=='.') dot_seen= true;
             tmpbuf[l++] = c;
             c = get();
         }

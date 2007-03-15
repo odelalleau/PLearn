@@ -841,7 +841,7 @@ class PLearnWorkQueue( object ):
 
 #####  C++ Functional Interface  ############################################
 
-# global plide_main_window
+#global plide_main_window
 plide_main_window = None
 
 def StartPlide(argv = []):

@@ -816,6 +816,7 @@ void NNet::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv,
         PLERROR("In NNet::computeCostsFromOutputs - Cannot directly compute stable "
                 "cross entropy from output and target");
 #endif
+    costsv.resize(nTestCosts());
     output_and_target_to_cost->fprop(outputv&targetv, costsv); 
 }
 
@@ -977,17 +978,9 @@ extern void varDeepCopyField(Var& field, CopiesMap& copies);
 /////////////////////////////////
 void NNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
+
     inherited::makeDeepCopyFromShallowCopy(copies);
-    varDeepCopyField(input, copies);
-    varDeepCopyField(target, copies);
-    varDeepCopyField(sampleweight, copies);
-    varDeepCopyField(w1, copies);
-    varDeepCopyField(w2, copies);
-    varDeepCopyField(wout, copies);
-    varDeepCopyField(outbias, copies);
-    varDeepCopyField(wdirect, copies);
-    varDeepCopyField(wrec, copies);
-    varDeepCopyField(hidden_layer, copies);
+    // protected:
     varDeepCopyField(rbf_centers, copies);
     varDeepCopyField(rbf_sigmas, copies);
     varDeepCopyField(junk_prob, copies);
@@ -1000,11 +993,23 @@ void NNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     varDeepCopyField(test_costs, copies);
     deepCopyField(invars, copies);
     deepCopyField(params, copies);
+    // public:
     deepCopyField(paramsvalues, copies);
+    varDeepCopyField(input, copies);
+    varDeepCopyField(target, copies);
+    varDeepCopyField(sampleweight, copies);
+    varDeepCopyField(w1, copies);
+    varDeepCopyField(w2, copies);
+    varDeepCopyField(wout, copies);
+    varDeepCopyField(outbias, copies);
+    varDeepCopyField(wdirect, copies);
+    varDeepCopyField(wrec, copies);
+    varDeepCopyField(hidden_layer, copies);
     deepCopyField(f, copies);
     deepCopyField(test_costf, copies);
     deepCopyField(output_and_target_to_cost, copies);
     varDeepCopyField(first_hidden_layer, copies);
+    deepCopyField(cost_funcs, copies);
     deepCopyField(optimizer, copies);
 }
 
