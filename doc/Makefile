@@ -123,6 +123,25 @@ tools_guide.ps: tools_guide.dvi
 tools_guide.pdf: tools_guide.tex
 	pdflatex $(PDFTEX_OPTIONS) tools_guide
 
+tutonly.all: tutonly tutonly.dvi tutonly.ps tutonly.pdf
+
+tutonly: tutonly.tex
+	latex2html -split 3 -show_section_numbers -local_icons tutonly.tex
+
+tutonly.dvi: tutonly.tex
+	latex $(TEX_OPTIONS) tutonly
+	latex $(TEX_OPTIONS) tutonly
+
+tutonly.ps: tutonly.dvi
+	dvips -Pcmps -t letter tutonly -o
+
+tutonly.pdf: tutonly.tex
+	pdflatex $(PDFTEX_OPTIONS) tutonly
 
 api.html:
 	pldoc        
+
+clean:
+	rm -rf *.aux *.dvi *.ps *.log *.out *.toc *.backup *~ 
+	rm -rf users_guide tutonly tools_guide programmers_guide machine_learning installation_guide faq 
+	rm -rf faq.pdf tutonly.pdf tools_guide.pdf machine_learning.pdf programmers_guide.pdf users_guide.pdf
