@@ -403,6 +403,12 @@ inline int ipow(int x, int p)
 inline real sigmoid(real x)
 { return (real)0.5*(tanh(0.5*x)+1.); }
 
+//! to avoid 0 or 1 probability, work in the log-domain
+inline real log_sigmoid(real x)
+{
+    return -softplus(-x);
+}
+
 //!  "hard" version of the sigmoid, i.e. the indicator function that
 //!  is 1 if its argument is STRICTLY positive, and 0 otherwise
 inline real is_positive(real x) { return x>0? 1 : 0; }

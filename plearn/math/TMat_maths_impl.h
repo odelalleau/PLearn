@@ -1231,6 +1231,20 @@ void compute_sigmoid(const TVec<T>& src, const TVec<T>& dest)
 }
 
 template<class T>
+void log_sigmoid(const TVec<T>& src, const TVec<T>& dest)
+{
+#ifdef BOUNDCHECK
+    if(src.length()!=dest.length())
+        PLERROR("In sigmoid, src and dest vectors must have the same length");
+#endif
+    T* ps = src.data();
+    T* pd = dest.data();
+    int n = src.length();
+    for(int i=0; i<n; i++)
+        *pd++ = log_sigmoid(*ps++);
+}
+
+template<class T>
 inline TVec<T> sigmoid(const TVec<T>& src)
 { TVec<T> dest(src.length()); compute_sigmoid(src,dest); return dest; }
 
