@@ -188,12 +188,12 @@ protected:
     // (PLEASE IMPLEMENT IN .cc)
     static void declareOptions(OptionList& ol);
 
-    //! one minibatch training step for the (input,target) pair
-    void onlineStep(int t, const Mat& input, const Mat& target, Mat& train_costs, Vec example_weights);
+    //! one minibatch training step
+    void onlineStep(int t, const Mat& targets, Mat& train_costs, Vec example_weights);
 
-    //! compute network top-layer output given input
+    //! compute a minibatch of size n_examples network top-layer output given layer 0 output (= network input)
     //! (note that log-probabilities are computed for classification tasks, output_type=NLL)
-    void fpropNet(const Mat& input) const;
+    void fpropNet(int n_examples) const;
 
     //! compute train costs given the network top-layer output
     //! and write into neuron_gradients_per_layer[n_layers-2], gradient on pre-non-linearity activation
@@ -211,9 +211,15 @@ private:
 
     // The rest of the private stuff goes here
 
+    Vec all_params; // all the parameters in one vector
+    Vec all_params_delta; // update direction
+    Vec all_params_gradient; // all the parameter gradients in one vector
+    TVec<Mat> layer_params_gradient;
+    TVec<Vec> layer_params_delta;
     Mat neuron_gradients; // one row per example of a minibatch, has concatenation of layer 0, layer 1, ... gradients.
     TVec<Mat> neuron_gradients_per_layer; // pointing into neuron_gradients (one row per example of a minibatch)
     mutable TVec<Mat> neuron_outputs_per_layer;  // same structure
+    mutable TVec<Mat> neuron_extended_outputs_per_layer;  // with 1's in the first pseudo-neuron, for doing biases
     Mat targets; // one target row per example in a minibatch
     Vec example_weights; // one element per example in a minibatch
     Mat train_costs; // one row per example in a minibatch
