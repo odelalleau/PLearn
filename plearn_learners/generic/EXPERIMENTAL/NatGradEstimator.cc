@@ -186,6 +186,10 @@ void NatGradEstimator::declareOptions(OptionList& ol)
     declareOption(ol, "gamma", &NatGradEstimator::gamma,
                   OptionBase::buildoption,
                   "Forgetting factor in moving average estimator of covariance. 0<gamma<1.\n");
+    declareOption(ol, "amari_version", &NatGradEstimator::amari_version,
+                  OptionBase::buildoption,
+                  "Instead of our tricks, use the formula Ginv <-- (1+eps) Ginv - eps Ginv g g' Ginv\n"
+                  "to estimate the inverse of the covariance matrix, and multiply it with g at each step.\n");
     declareOption(ol, "verbosity", &NatGradEstimator::verbosity,
                   OptionBase::buildoption,
                   "Verbosity level\n");
@@ -230,15 +234,15 @@ void NatGradEstimator::init()
         PLASSERT_MSG(gamma<1 && gamma>0, "NatGradEstimator::init(), gamma should be < 1 and >0");
         Ut.resize(n_eigen,n_dim);
         Vt.resize(n_eigen+1,n_eigen+cov_minibatch_size);
-        Vkt = Vt.subMat(0,n_eigen,0,n_eigen);
+        Vkt = Vt.subMat(0,0,n_eigen,n_eigen);
         Vbt = Vt.subMat(0,n_eigen,n_eigen,cov_minibatch_size);
         E.resize(n_eigen+1);
         D = E.subVec(0,n_eigen);
         M.resize(n_eigen + cov_minibatch_size, n_eigen + cov_minibatch_size);
-        M11=M.subMat(0,n_eigen,0,n_eigen);
+        M11=M.subMat(0,0,n_eigen,n_eigen);
         M12=M.subMat(0,n_eigen,n_eigen,cov_minibatch_size);
-        M21=M.subMat(n_eigen,cov_minibatch_size,0,n_eigen);
-        M22=M.subMat(n_eigen,cov_minibatch_size,n_eigen,cov_minibatch_size);
+        M21=M.subMat(n_eigen,0,cov_minibatch_size,n_eigen);
+        M22=M.subMat(n_eigen,n_eigen,cov_minibatch_size,cov_minibatch_size);
         Gt.resize(cov_minibatch_size, n_dim);
         initial_v.resize(cov_minibatch_size, n_dim);
         tmp_v.resize(n_dim);
@@ -293,6 +297,8 @@ void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
     }
 
     // iterate on v to solve linear system
+    if (verbosity>0)
+        cout << "start inversion iterations" << endl;
     for (int j=0;j<inversion_n_iterations;j++)
     {
         multiply(v, (1 - gamma*alpha),tmp_v);
@@ -352,7 +358,7 @@ void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
         diagonalizedFactorsProduct(newUt,Vkt,sqrtD,Ut,true);
         Ut << newUt;
     }
-    
+    previous_t = t;
 }
 
 } // end of namespace PLearn

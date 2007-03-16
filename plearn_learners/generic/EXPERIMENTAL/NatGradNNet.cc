@@ -337,8 +337,6 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
         {
             productScaleAcc(layer_params_gradient[i-1],neuron_gradients_per_layer[i],true,
                             neuron_extended_outputs_per_layer[i-1],false,1,0);
-            (*full_natgrad)(t/minibatch_size,all_params_gradient,all_params_delta); // compute update direction by natural gradient
-            multiplyAcc(all_params,all_params_delta,-lrate); // update
         }
         else if (params_natgrad_template)
         {
@@ -348,6 +346,11 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
             // compute gradient on weights and update them
             productScaleAcc(layer_params[i-1],neuron_gradients_per_layer[i],true,
                             neuron_extended_outputs_per_layer[i-1],false,lrate,1);
+    }
+    if (full_natgrad) 
+    {
+        (*full_natgrad)(t/minibatch_size,all_params_gradient,all_params_delta); // compute update direction by natural gradient
+        multiplyAcc(all_params,all_params_delta,-lrate); // update
     }
 }
 
@@ -365,7 +368,7 @@ void NatGradNNet::fpropNet(int n_examples) const
     for (int i=0;i<n_layers-1;i++)
     {
         Mat prev_layer = neuron_extended_outputs_per_layer[i];
-        Mat next_layer = neuron_extended_outputs_per_layer[i+1];
+        Mat next_layer = neuron_outputs_per_layer[i+1];
         if (n_examples!=minibatch_size)
         {
             prev_layer = prev_layer.subMatRows(0,n_examples);
