@@ -189,7 +189,7 @@ protected:
     static void declareOptions(OptionList& ol);
 
     //! one minibatch training step for the (input,target) pair
-    void onlineStep( const Mat& input, const Mat& target, Mat& train_costs, Vec example_weights );
+    void onlineStep(int t, const Mat& input, const Mat& target, Mat& train_costs, Vec example_weights);
 
     //! compute network top-layer output given input
     //! (note that log-probabilities are computed for classification tasks, output_type=NLL)

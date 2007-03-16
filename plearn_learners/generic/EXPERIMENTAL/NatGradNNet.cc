@@ -169,7 +169,7 @@ void NatGradNNet::build_()
     {
         layer_params[i].resize(layer_sizes[i+1],layer_sizes[i]+1);
         biases[i]=layer_params[i].subMatColumns(0,1);
-        weights[i]=layer_params[i].subMatColumns(1,layer_sizes[i]);
+        weights[i]=layer_params[i].subMatColumns(1,layer_sizes[i]); // weights[0] from layer 0 to layer 1
         n_neurons+=layer_sizes[i+1];
     }
     if (params_natgrad_template)
@@ -180,7 +180,7 @@ void NatGradNNet::build_()
         
     }
     neuron_gradients.resize(minibatch_size,n_neurons);
-    neuron_outputs_per_layer.resize(n_layers); // layer 0 = input
+    neuron_outputs_per_layer.resize(n_layers); // layer 0 = input, layer n_layers-1 = output
     neuron_gradients_per_layer.resize(n_layers); // layer 0 not used
     neuron_outputs_per_layer[0].resize(minibatch_size,layer_sizes[0]);
     for (int i=1,k=0;i<n_layers;k+=layer_sizes[i],i++)
@@ -271,10 +271,10 @@ void NatGradNNet::train()
         Vec input = neuron_outputs_per_layer[0](b);
         Vec target = targets(b);
         train_set->getExample(sample, input, target, example_weights[b]);
-        if (b+1==minibatch_size)
+        if (b+1==minibatch_size) // do also special end-case || stage+1==nstages)
         {
-            onlineStep( neuron_outputs_per_layer[0], targets, 
-                        train_costs, example_weights );
+            onlineStep(stage, neuron_outputs_per_layer[0], targets, 
+                       train_costs, example_weights );
             for (int i=0;i<minibatch_size;i++)
                 train_stats->update( train_costs(b) );
         }
@@ -285,13 +285,23 @@ void NatGradNNet::train()
     train_stats->finalize(); // finalize statistics for this epoch
 }
 
-void NatGradNNet::onlineStep(const Mat& input, const Mat& targets,
+void NatGradNNet::onlineStep(int t, const Mat& input, const Mat& targets,
                              Mat& train_costs, Vec example_weights)
 {
+    real lrate = init_lrate/(1 + t*lrate_decay);
     fpropNet(input);
-    fbpropLoss(neuron_outputs_per_layer[n_layers-2],targets,example_weights,train_costs);
-    for (int i=n_layers-2;i>0;i--)
+    fbpropLoss(neuron_outputs_per_layer[n_layers-1],targets,example_weights,train_costs);
+    for (int i=n_layers-1;i>0;i--)
     {
+        // here neuron_gradients_per_layer[i] contains the gradient on activations (weighted sums)
+        //      (minibatch_size x layer_size[i])
+        // try to use BLAS
+        if (i>1) // compute gradient on previous layer
+            productScaleAcc(neuron_gradients_per_layer[i-1],neuron_gradients_per_layer[i],false,
+                            weights[i-1],false,1,0);
+        // compute gradient on weights and update them
+        productScaleAcc(weights[i-1],neuron_gradients_per_layer[i],true,
+                        neuron_outputs_per_layer[i-1],false,lrate,1);
     }
 }
 
@@ -334,7 +344,9 @@ void NatGradNNet::fpropNet(const Mat& input) const
 void NatGradNNet::fbpropLoss(const Mat& output, const Mat& target, const Vec& example_weight, Mat& costs) const
 {
     int n_examples = output.length();
-    Mat out_grad = (n_examples==minibatch_size)?neuron_gradients_per_layer[0]:neuron_gradients_per_layer[0].subMatRows(0,n_examples);
+    Mat out_grad = neuron_gradients_per_layer[n_layers-1];
+    if (n_examples!=minibatch_size)
+        out_grad = out_grad.subMatRows(0,n_examples);
     if (output_type=="NLL")
     {
         for (int i=0;i<n_examples;i++)
