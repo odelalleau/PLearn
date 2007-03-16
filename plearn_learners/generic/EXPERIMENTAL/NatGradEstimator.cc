@@ -183,6 +183,9 @@ void NatGradEstimator::declareOptions(OptionList& ol)
     declareOption(ol, "use_double_init", &NatGradEstimator::use_double_init,
                   OptionBase::buildoption,
                   "wether to use the u0 and its correction for initialization the inversion iteration\n");
+    declareOption(ol, "gamma", &NatGradEstimator::gamma,
+                  OptionBase::buildoption,
+                  "Forgetting factor in moving average estimator of covariance. 0<gamma<1.\n");
     declareOption(ol, "verbosity", &NatGradEstimator::verbosity,
                   OptionBase::buildoption,
                   "Verbosity level\n");
@@ -200,9 +203,6 @@ void NatGradEstimator::declareOptions(OptionList& ol)
     declareOption(ol, "sigma", &NatGradEstimator::sigma,
                   OptionBase::learntoption,
                   "Estimated value for the minor eigenvalues of the gradients covariance matrix\n");
-    declareOption(ol, "gamma", &NatGradEstimator::gamma,
-                  OptionBase::learntoption,
-                  "Forgetting factor in moving average estimator of covariance. 0<gamma<1.\n");
     declareOption(ol, "Gt", &NatGradEstimator::Gt,
                   OptionBase::learntoption,
                   "Collected gradients during a minibatch\n");

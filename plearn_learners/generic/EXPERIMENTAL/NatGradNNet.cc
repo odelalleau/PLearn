@@ -142,6 +142,9 @@ void NatGradNNet::declareOptions(OptionList& ol)
 
 void NatGradNNet::build_()
 {
+    if (!train_set)
+        return;
+    inputsize_ = train_set->inputsize();
     if (output_type=="MSE")
     {
         if (noutputs<0) noutputs = targetsize_;
@@ -272,6 +275,9 @@ void NatGradNNet::forget()
 
 void NatGradNNet::train()
 {
+    if (inputsize_<0)
+        build();
+
     targets.resize(minibatch_size,targetsize());  // the train_set's targetsize()
 
     if(!train_set)
@@ -336,6 +342,8 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
         }
         else if (params_natgrad_template)
         {
+            // To Be DONE
+
         } else // just regular stochastic gradient
             // compute gradient on weights and update them
             productScaleAcc(layer_params[i-1],neuron_gradients_per_layer[i],true,
