@@ -49,53 +49,19 @@ PLEARN_IMPLEMENT_OBJECT(
     "Convert a sequence of gradients into covariance-corrected (natural gradient) directions.\n",
     "The algorithm used for converting a sequence of n-dimensional gradients g_t\n"
     "into covariance-corrected update directions v_t is the following:\n\n"
-    "init():\n"
-    "  initialize U = Id(k,n)\n"
-    "  initialize D = lambda Id(k,k), diag matrix stored as a vector\n"
-    "  initialize sigma = 0\n"
-    "\n"
     "operator(int t, Vec g, Vec v): (reads g and writes v)\n"
     "    i = t%b   /* denoting b = cov_minibatch_size */\n"
-    "    G_{.i} = g /* = gradient for example t = i-th column of matrix G */\n"
-    "    if t<b \n"
-    "        v0_i = g / (lambda + ||g||^2)\n"
-    "        v = v0_i\n"
-    "    else /* denoting k = n_eigen */ \n"
-    "        v0_i = (g gamma/sigma + sum_{j=1}^k (1/D_j - gamma/sigma) U_{.j} U_{.j}' g)  /* = inv(C) g */ \n"
-    "        u0_i = v0_i / ( gamma + v0_i' g / (i+1))\n"
-    "        v = u0_i  - (1/(i+1)) sum_{j=1}^{i-1} v0_j G_{.j}' u0_i / (gamma + v0_j'G_{.j}/(i+1)) \n"
-    "    for j = 1 to inversion_n_iterations\n"
-    "       v = (1 - gamma alpha) v + alpha v0_i - (alpha/i) sum_{r=0}^i v0_r G_{.r}' v\n"
-    "    v *= (1 - gamma^{t/b})/(1 - gamma)\n"
-    "    if i+1==b  /* recompute eigen-decomposition: */\n"
-    "       M = [gamma D    (gamma/b)^{1/2} sqrt(D) U' G;  (gamma/b)^{1/2} G' U sqrt(D)    G'G/b] /* = Gram matrix */\n"
-    "       (V,E) = leading_eigendecomposition(M,k)\n"
-    "       U = ([U sqrt(D)   G] V E^{-1/2} /* = k-principal e-vec of C */\n"
-    "       D = E /* = k principal e-val of C */\n"
-    "       sigma = {(k+1)th e-value of M}/gamma \n"
-    "               /* = heuristic value for lower e-values of C */\n"
+    "    extend X by a (k+i)-th column \gamma^{\frac{-i}{2}} g\n"
+    "    extend G by a (k+i)-th column and row, with G_{k+i,.}=X'_{k+1,.} X\n"
+    "      and idem for the symmetric sub-column\n"
+    "    extend vectors r and a by (k+i)-th element, r_{k+i-1}=0, r_{k+i}=\gamma^{\frac{-i}{2}}\n"
+    "    Solve linear system (G + \gamma^{-k} \lambda I) a = r in a\n"
+    "    v = X a\n"
+    "    if i+1==b\n"
+    "       (V,D) = leading_eigendecomposition(G,k)\n"
+    "       U = X V\n"
     "\n\n"
-    "This is derived from the following considerations:\n"
-    "  - let the covariance estimator at the beginning of minibatch t/b be C. We have its\n"
-    "    eigen-decomposition in principal e-vectors U, principal e-values D, and lower e-values=sigma.\n"
-    "  - at the end of the minibatch it is B + GG'/b\n"
-    "    where B is C with the upper eigenvalues reduced by a factor gamma.\n"
-    "  - this introduces a scaling factor (1-gamma)/(1-gamma^{t/b}) which is scaled out of\n"
-    "    the v's on last line of above pseudo-code\n"
-    "  - to obtain the eigen-decomposition efficiently, we rewrite B* + GG' in Gram matrix form\n"
-    "    where B* ignores the lower eigenvalues of B, i.e. B* = gamma U D U'. Hence\n"
-    "    B* + GG' = [sqrt(gamma) U sqrt(D)    G]' [sqrt(gamma) U sqrt(D)   G],\n"
-    "    but this matrix has the same eigenvalues as M = [sqrt(gamma) U sqrt(D)    G] [sqrt(gamma) U sqrt(D)    G]'\n"
-    "    and the eigenvectors of B*  + GG' can be recovered from above formula.\n"
-    "  - To regularize B* + GG', we threshold the lower eigenvalues and set them to the (k+1)-th eigenvalue.\n"
-    "  - on the i-th gradient g_i of the minibatch we would like to solve\n"
-    "           (B + (1/i)sum_{k=1}^i g_k g_k') v_i = g_i\n"
-    "  - we do this iteratively using as initial estimator of v_i: v_i^0 = inv(F) g_i\n"
-    "    where F is C with the lower eigenvalues boosted by a factor 1/gamma, and \n"
-    "    each iteration has the form:\n"
-    "            v_i <-- v_i + alpha inv(F) (g_i - (B + (1/i)sum_{k=1}^i g_k g_k') v_i)\n"
-    "    which can be simplified into\n"
-    "            v_i <-- (1 - alpha gamma) v_i + alpha v_i^0 - alpha/i sum_{k=1}^i v_k^0 g_k' v_i \n"
+    "See technical report 'A new insight on the natural gradient' for justifications\n"
     );
 
 NatGradEstimator::NatGradEstimator()
@@ -103,13 +69,9 @@ NatGradEstimator::NatGradEstimator()
     : cov_minibatch_size(10),
       lambda(1),
       n_eigen(10),
-      alpha(0.1),
-      gamma(0.9),
-      inversion_n_iterations(5),
+      gamma(0.99),
       n_dim(-1),
-      use_double_init(true),
       verbosity(0),
-      sigma(0),
       previous_t(-1)
 {
     build();
@@ -131,21 +93,14 @@ void NatGradEstimator::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     // ### shallow-copied.
     // ### ex:
     deepCopyField(Ut, copies);
-    deepCopyField(E, copies);
     deepCopyField(D, copies);
-    deepCopyField(Gt, copies);
-    deepCopyField(initial_v, copies);
-    deepCopyField(tmp_v, copies);
-    deepCopyField(M, copies);
-    deepCopyField(M11, copies);
-    deepCopyField(M12, copies);
-    deepCopyField(M21, copies);
-    deepCopyField(M22, copies);
+    deepCopyField(Xt, copies);
+    deepCopyField(G, copies);
+    deepCopyField(r, copies);
     deepCopyField(Vt, copies);
     deepCopyField(Vkt, copies);
-    deepCopyField(Vbt, copies);
-    deepCopyField(newUt, copies);
-    deepCopyField(vg, copies);
+    deepCopyField(A, copies);
+    deepCopyField(pivots, copies);
 }
 
 void NatGradEstimator::declareOptions(OptionList& ol)
@@ -173,16 +128,6 @@ void NatGradEstimator::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Number of principal eigenvectors of the covariance matrix\n"
                   "that are kept in its approximation.\n");
-    declareOption(ol, "alpha", &NatGradEstimator::alpha,
-                  OptionBase::buildoption,
-                  "Learning rate of the inversion iterations.\n");
-    declareOption(ol, "inversion_n_iterations", &NatGradEstimator::inversion_n_iterations,
-                  OptionBase::buildoption,
-                  "Number of iterations of numerical approximation algorithm for\n"
-                  "solving the system inverse(cov) v = g\n");
-    declareOption(ol, "use_double_init", &NatGradEstimator::use_double_init,
-                  OptionBase::buildoption,
-                  "wether to use the u0 and its correction for initialization the inversion iteration\n");
     declareOption(ol, "gamma", &NatGradEstimator::gamma,
                   OptionBase::buildoption,
                   "Forgetting factor in moving average estimator of covariance. 0<gamma<1.\n");
@@ -199,23 +144,18 @@ void NatGradEstimator::declareOptions(OptionList& ol)
                   "Number of dimensions of the gradient vectors\n");
     declareOption(ol, "Ut", &NatGradEstimator::Ut,
                   OptionBase::learntoption,
-                  "Estimated principal eigenvectors of the gradients covariance matrix\n"
+                  "Estimated scaled principal eigenvectors of the gradients covariance matrix\n"
                   "(stored in the rows of Ut)\n");
-    declareOption(ol, "E", &NatGradEstimator::E,
+    declareOption(ol, "G", &NatGradEstimator::G,
                   OptionBase::learntoption,
-                  "Estimated principal eigenvalues of the gradients covariance matrix\n");
-    declareOption(ol, "sigma", &NatGradEstimator::sigma,
-                  OptionBase::learntoption,
-                  "Estimated value for the minor eigenvalues of the gradients covariance matrix\n");
-    declareOption(ol, "Gt", &NatGradEstimator::Gt,
-                  OptionBase::learntoption,
-                  "Collected gradients during a minibatch\n");
+                  "Gram matrix growing during a minibatch\n");
     declareOption(ol, "previous_t", &NatGradEstimator::previous_t,
                   OptionBase::learntoption,
                   "Value of t at previous call of operator()\n");
-    declareOption(ol, "initial_v", &NatGradEstimator::initial_v,
+    declareOption(ol, "Xt", &NatGradEstimator::Xt,
                   OptionBase::learntoption,
-                  "Initial v for the g's of the current minibatch\n");
+                  "contains in its rows the scaled eigenvectors and g's\n"
+                  "seen since the beginning of the minibatch.\n");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -234,20 +174,13 @@ void NatGradEstimator::init()
         PLASSERT_MSG(gamma<1 && gamma>0, "NatGradEstimator::init(), gamma should be < 1 and >0");
         Ut.resize(n_eigen,n_dim);
         Vt.resize(n_eigen+1,n_eigen+cov_minibatch_size);
-        Vkt = Vt.subMat(0,0,n_eigen,n_eigen);
-        Vbt = Vt.subMat(0,n_eigen,n_eigen,cov_minibatch_size);
-        E.resize(n_eigen+1);
-        D = E.subVec(0,n_eigen);
-        M.resize(n_eigen + cov_minibatch_size, n_eigen + cov_minibatch_size);
-        M11=M.subMat(0,0,n_eigen,n_eigen);
-        M12=M.subMat(0,n_eigen,n_eigen,cov_minibatch_size);
-        M21=M.subMat(n_eigen,0,cov_minibatch_size,n_eigen);
-        M22=M.subMat(n_eigen,n_eigen,cov_minibatch_size,cov_minibatch_size);
-        Gt.resize(cov_minibatch_size, n_dim);
-        initial_v.resize(cov_minibatch_size, n_dim);
-        tmp_v.resize(n_dim);
-        newUt.resize(n_eigen,n_dim);
-        vg.resize(cov_minibatch_size);
+        Vkt = Vt.subMatRows(0,n_eigen);
+        D.resize(n_eigen+1);
+        G.resize(n_eigen + cov_minibatch_size, n_eigen + cov_minibatch_size);
+        G.clear();
+        Xt.resize(n_eigen+cov_minibatch_size, n_dim);
+        Xt.clear();
+        r.resize(n_eigen);
     }
 }
 
@@ -263,100 +196,45 @@ void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
         init();
     }
     int i = t % cov_minibatch_size;
-    Vec v0 = initial_v(i);
-    Gt(i) << g;
+    int n = i+cov_minibatch_size;
+    Xt.resize(n+1,n_dim);
+    Vec newX = Xt(n);
+    real rn = pow(gamma,-0.5*i);
+    multiply(g,rn,newX);
+    G.resize(n+1,n+1);
+    Vec newG=G(n);
+    product(newG,Xt,newX);
+    G.column(n) << newG;
+    r.resize(n+1);
+    r.clear();
+    r[n] = rn;
+    // solve linear system (G + \gamma^{-k} \lambda I) a = r
+    pivots.resize(n);
+    A << G;
+    real coef = rn*rn*lambda;
+    for (int i=0;i<=n;i++)
+        A(i,i) += coef;
+    Mat r_row = r.toMat(1,n+1);
+    int status = lapackSolveLinearSystem(A,r_row,pivots);
+    if (status!=0)
+        PLWARNING("NatGradEstimator: lapackSolveLinearSystem returned %d\n:",status);
+    // solution is in r
+    transposeProduct(v, Xt, r);
 
-    // initialize v0
-    v0 << g;
-    if (t<cov_minibatch_size)
-    {
-        v0 *= 1.0/(lambda + pownorm(g));
-        v << v0;
-    }
-    else
-    {
-        real oos = gamma/sigma;
-        real ooip1 = 1.0/(i+1.0);
-        v0 *= oos;
-        // v0 = g*gamma/sigma + sum_j (1/D_j - gamma/sigma Uj Uj' g
-        for (int j=0;j<n_eigen;j++)
-        {
-            Vec Uj = Ut(j);
-            multiplyAcc(v0, Uj, (1/D[j] - oos) * dot(Uj,g));
-        }
-        if (use_double_init)
-        {
-            vg[i] = dot(v0,g);
-            multiply(v0,1.0/(gamma + vg[i]*ooip1),tmp_v); // tmp_v == u0_i here
-            v << tmp_v;
-            for (int j=0;j<i;j++)
-                multiplyAcc(v, initial_v(j), -ooip1*dot(Gt(j),tmp_v)/(gamma + vg[j]*ooip1));
-        }
-        else
-            v << v0;
-    }
-
-    // iterate on v to solve linear system
-    if (verbosity>0)
-        cout << "start inversion iterations" << endl;
-    for (int j=0;j<inversion_n_iterations;j++)
-    {
-        multiply(v, (1 - gamma*alpha),tmp_v);
-        multiplyAcc(tmp_v, v0, alpha);
-        for (int r=0;r<=i;r++)
-            multiplyAcc(tmp_v, initial_v(r), -alpha/(i+1)*dot(Gt(r),v));
-        v << tmp_v;
-        // verify that we get an improvement
-        if (verbosity>0)
-        {
-            // compute (B + (1/i)sum_{k=1}^i g_k g_k') v_i            
-            //        =(U (gamma D -sigma I) U' + sigma I + (1/i)sum_{k=1}^i g_k g_k') v_i            
-            multiply(v,sigma,tmp_v);
-            for (int j=0;j<n_eigen;j++)
-            {
-                Vec Uj = Ut(j);
-                multiplyAcc(tmp_v,Uj,(gamma*D[j]-sigma)*dot(Uj,v));
-            }
-            for (int j=0;j<=i;j++)
-            {
-                Vec Gj = Gt(j);
-                multiplyAcc(tmp_v,Gj,dot(Gj,v)/(i+1));
-            }
-            // result is in tmp_v. Compare with g_i
-            real gnorm = dot(g,g);
-            real enorm = dot(tmp_v,tmp_v);
-            real angle = acos(dot(tmp_v,g)/sqrt(gnorm*enorm))*360/(2*3.14159);
-            real err = L2distance(g,tmp_v);
-            cout << "linear system distance=" << err << ", angle="<<angle<<", norm ratio="<<enorm/gnorm<<endl;
-        }
-    }
-    
-    // normalize back v, to take into account scaling up of C due to gamma iteration
-    v *= (1 - pow(gamma,real(t/cov_minibatch_size)))/(1 - gamma);
     // recompute the eigen-decomposition
     if (i+1==cov_minibatch_size)
     {
-        // build Gram matrix M, by blocks [M11 M12; M21 M22]
-        M11.clear();
-        for (int j=0;j<n_eigen;j++)
-            M11(j,j) = gamma*D[j];
-        productTranspose(M12,Ut,Gt);
-        real gob=gamma/cov_minibatch_size;
-        for (int j=0;j<n_eigen;j++)
-            M12(j) *= sqrt(D[j]*gob);
-        transpose(M12,M21);
-        productTranspose(M22,Gt,Gt);
-        M22 *= 1.0/cov_minibatch_size;
-
-        // get eigen-decomposition, with one more eigen-x than necessary to set sigma
-        eigenVecOfSymmMat(M,n_eigen+1,E,Vt);
+        // get eigen-decomposition, with one more eigen-x than necessary to check if coherent with lambda
+        eigenVecOfSymmMat(G,n_eigen+1,D,Vt);
         
-        // convert eigenvectors Vt of M into eigenvectors U of C
-        product(newUt,Vbt,Gt);
-        Vec sqrtD = tmp_v.subVec(0,n_eigen);
-        compute_sqrt(D,sqrtD);
-        diagonalizedFactorsProduct(newUt,Vkt,sqrtD,Ut,true);
-        Ut << newUt;
+        // convert eigenvectors Vt of G into eigenvectors U of C
+        product(Ut,Vkt,Xt);
+
+        // prepare for next minibatch
+        Xt.resize(n_eigen,n_dim);
+        Xt << Ut;
+        G.resize(n_eigen,n_eigen);
+        productTranspose(G,Ut,Ut);
     }
     previous_t = t;
 }
@@ -374,4 +252,5 @@ void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
   fill-column:79
   End:
 */
+
 // vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

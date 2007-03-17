@@ -72,11 +72,20 @@ public:
     //! number of eigenvectors-eigenvalues that is preserved of the covariance matrix
     int n_eigen;
 
+    //! learning rate of the inversion iterations
+    real alpha;
+
     //! forgetting factor in moving average estimator of covariance
     real gamma;
 
+    //! number of iterations for approaching the solution of inv(C) v_t = g_t
+    int inversion_n_iterations;
+
     //! number of input dimensions (size of g_t or v_t)
     int n_dim;
+
+    //! wether to use the u0 and its correction for initialization the inversion iteration
+    bool use_double_init;
 
     //! verbosity level, track improvement, spectrum, etgc.
     int verbosity;
@@ -128,16 +137,24 @@ protected:
     Mat Ut; // dimension = n_eigen x n_dim
 
     //! k principal eigenvalues of the estimated covariance matrix
-    Vec D; 
+    Vec D; // subvector of E
 
-    //! contains in its rows the scaled eigenvectors and g's seen since the beginning of the minibatch
-    Mat Xt;
+    //! eigenvalues of the Gram matrix
+    Vec E;
 
-    //! Gram matrix = X' X = Xt Xt'
-    Mat G; 
+    //! eigenvalue attributed to the non-principal eigenvectors
+    real sigma;
+
+    //! gradient vectors collected during the minibatch, in each row of Gt
+    Mat Gt; // dimension = cov_minibatch_size x n_dim
 
     //! previous value of t
     int previous_t;
+
+    //! initial v's for the gradients in this minibatch
+    Mat initial_v;
+    //! vg[i] = initial_v[i] . Gt[i]
+    Vec vg;
 
 protected:
     //#####  Protected Member Functions  ######################################
@@ -158,22 +175,17 @@ private:
 
     // The rest of the private stuff goes here
 
-    Vec r; //! rhs of linear system (G + gamma^{-i} lambda I) a = r
-    Mat Vt;
-    Mat Vkt; //! sub-matrix of Vt with first n_eigen eigen-vectors
-    Mat A; // matrix for linear system solving
-    TVec<int> pivots; // pivots for linear system solving
-    /*
     //! temporary buffer
     Vec tmp_v;
     //! Gram matrix, of dimension (k + minibatch_size, k + minibatch_size)
     //! and its sub-matrices
     Mat M, M11, M12, M21, M22;
     //! k+1 eigenvectors of the Gram matrix (in the rows)
+    Mat Vt;
+    Mat Vkt; //! sub-matrix of Vt with first n_eigen elements of each eigen-vector
     Mat Vbt; //! sub-matrix of Vt with last cov_minibatch_size elements of each eigen-vector
     //! temp for new value of Ut
     Mat newUt;
-    */
 };
 
 // Declares a few other classes and functions related to this class
