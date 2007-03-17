@@ -238,10 +238,13 @@ void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
         // convert eigenvectors Vt of G into eigenvectors U of C
         product(Ut,Vkt,Xt);
         Ut *= 1.0/rn;
+        D *= 1.0/rn2;
+        for (int j=0;j<n_eigen;j++) 
+            if (D[j]<1e-10)
+                PLWARNING("NatGradEstimator: very small eigenvalue %d = %g\n",j,D[j]);
         if (verbosity>0) // verifier Ut U = D/
         {
             static Mat Dmat;
-            D *= 1.0/rn2;
             cout << "eigenvalues = " << D << endl;
             if (verbosity>2)
             {
@@ -256,7 +259,9 @@ void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
         Xt.resize(n_eigen,n_dim);
         Xt << Ut;
         G.resize(n_eigen,n_eigen);
-        productTranspose(G,Ut,Ut);
+        G.clear();
+        for (int j=0;j<n_eigen;j++)
+            G(j,j) = D[j];
     }
     previous_t = t;
 }
