@@ -345,7 +345,7 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
         } else // just regular stochastic gradient
             // compute gradient on weights and update them
             productScaleAcc(layer_params[i-1],neuron_gradients_per_layer[i],true,
-                            neuron_extended_outputs_per_layer[i-1],false,lrate,1);
+                            neuron_extended_outputs_per_layer[i-1],false,-lrate,1);
     }
     if (full_natgrad) 
     {
@@ -375,9 +375,9 @@ void NatGradNNet::fpropNet(int n_examples) const
             next_layer = next_layer.subMatRows(0,n_examples);
         }
         // try to use BLAS for the expensive operation
-        productScaleAcc(next_layer, prev_layer, false, layer_params[i], true, 1, 1);
+        productScaleAcc(next_layer, prev_layer, false, layer_params[i], true, 1, 0);
         // compute layer's output non-linearity
-        if (i<n_layers-1)
+        if (i+1<n_layers-1)
             for (int k=0;k<n_examples;k++)
             {
                 Vec L=next_layer(k);
@@ -407,7 +407,7 @@ void NatGradNNet::fbpropLoss(const Mat& output, const Mat& target, const Vec& ex
             Vec outp = output(i);
             Vec grad = out_grad(i);
             exp(outp,grad); // map log-prob to prob
-            costs(i,0) = outp[target_class];
+            costs(i,0) = -outp[target_class];
             costs(i,1) = (target_class == argmax(outp))?0:1;
             grad[target_class]-=1;
             if (example_weight[i]!=1.0)
