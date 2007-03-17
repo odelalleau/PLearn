@@ -213,7 +213,9 @@ void NatGradNNet::build_()
     }
     example_weights.resize(minibatch_size);
     TVec<string> train_cost_names = getTrainCostNames() ;
-    train_costs.resize(minibatch_size,train_cost_names.length() );
+    train_costs.resize(minibatch_size,train_cost_names.length()-1 );
+
+    Profiler::activate();
 }
 
 // ### Nothing to add here, simply calls build_
@@ -291,10 +293,16 @@ void NatGradNNet::train()
     train_stats->forget();
 
     PP<ProgressBar> pb;
+
+    Profiler::reset("training");
+    Profiler::start("training");
     if( report_progress && stage < nstages )
         pb = new ProgressBar( "Training "+classname(),
                               nstages - stage );
 
+    Vec costs_plus_time(train_costs.width()+1);
+    costs_plus_time[train_costs.width()] = MISSING_VALUE;
+    Vec costs = costs_plus_time.subVec(0,train_costs.width());
     int nsamples = train_set->length();
 
     for( ; stage<nstages; stage++)
@@ -308,12 +316,21 @@ void NatGradNNet::train()
         {
             onlineStep(stage, targets, train_costs, example_weights );
             for (int i=0;i<minibatch_size;i++)
-                train_stats->update( train_costs(b) );
+            {
+                costs << train_costs(b);
+                train_stats->update( costs_plus_time );
+                
+            }
         }
         if( pb )
             pb->update( stage + 1 );
     }
-
+    Profiler::end("training");
+    Profiler::report(cout);
+    const Profiler::Stats& stats = Profiler::getStats("training");
+    costs.fill(MISSING_VALUE);
+    costs_plus_time[train_costs.width()] = stats.user_duration+stats.system_duration;
+    train_stats->update( costs_plus_time );
     train_stats->finalize(); // finalize statistics for this epoch
 }
 
@@ -337,6 +354,7 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
         {
             productScaleAcc(layer_params_gradient[i-1],neuron_gradients_per_layer[i],true,
                             neuron_extended_outputs_per_layer[i-1],false,1,0);
+            layer_params_gradient[i-1] *= 1.0/minibatch_size; // use the MEAN gradient
         }
         else if (params_natgrad_template)
         {
@@ -345,7 +363,7 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
         } else // just regular stochastic gradient
             // compute gradient on weights and update them
             productScaleAcc(layer_params[i-1],neuron_gradients_per_layer[i],true,
-                            neuron_extended_outputs_per_layer[i-1],false,-lrate,1);
+                            neuron_extended_outputs_per_layer[i-1],false,-lrate/minibatch_size,1); // mean gradient
     }
     if (full_natgrad) 
     {
@@ -459,7 +477,9 @@ TVec<string> NatGradNNet::getTestCostNames() const
 
 TVec<string> NatGradNNet::getTrainCostNames() const
 {
-    return getTestCostNames();
+    TVec<string> costs = getTestCostNames();
+    costs.append("CPU");
+    return costs;
 }
 
 

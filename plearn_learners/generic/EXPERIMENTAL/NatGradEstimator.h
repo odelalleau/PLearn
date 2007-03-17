@@ -81,6 +81,8 @@ public:
     //! verbosity level, track improvement, spectrum, etgc.
     int verbosity;
 
+    bool renormalize;
+
     //! use the formula Ginv <-- (1+eps) Ginv - eps Ginv g g' Ginv
     //! to estimate the inverse of the covariance matrix
     bool amari_version;

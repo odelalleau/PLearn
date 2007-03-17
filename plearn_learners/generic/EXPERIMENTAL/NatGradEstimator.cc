@@ -51,15 +51,15 @@ PLEARN_IMPLEMENT_OBJECT(
     "into covariance-corrected update directions v_t is the following:\n\n"
     "operator(int t, Vec g, Vec v): (reads g and writes v)\n"
     "    i = t%b   /* denoting b = cov_minibatch_size */\n"
-    "    extend X by a (k+i)-th column \gamma^{\frac{-i}{2}} g\n"
+    "    extend X by a (k+i)-th column gamma^{\frac{-i}{2}} g\n"
     "    extend G by a (k+i)-th column and row, with G_{k+i,.}=X'_{k+1,.} X\n"
     "      and idem for the symmetric sub-column\n"
-    "    extend vectors r and a by (k+i)-th element, r_{k+i-1}=0, r_{k+i}=\gamma^{\frac{-i}{2}}\n"
-    "    Solve linear system (G + \gamma^{-k} \lambda I) a = r in a\n"
-    "    v = X a\n"
+    "    extend vectors r and a by (k+i)-th element, r_{k+i-1}=0, r_{k+i}=gamma^{\frac{-i}{2}}\n"
+    "    Solve linear system (G + gamma^{-k} lambda I) a = r in a\n"
+    "    v = X a (1 - gamma)/(1 - gamma^t)\n"
     "    if i+1==b\n"
     "       (V,D) = leading_eigendecomposition(G,k)\n"
-    "       U = X V\n"
+    "       U = gamma^{b/2} X V\n"
     "\n\n"
     "See technical report 'A new insight on the natural gradient' for justifications\n"
     );
@@ -72,6 +72,7 @@ NatGradEstimator::NatGradEstimator()
       gamma(0.99),
       n_dim(-1),
       verbosity(0),
+      renormalize(true),
       previous_t(-1)
 {
     build();
@@ -138,6 +139,9 @@ void NatGradEstimator::declareOptions(OptionList& ol)
     declareOption(ol, "verbosity", &NatGradEstimator::verbosity,
                   OptionBase::buildoption,
                   "Verbosity level\n");
+    declareOption(ol, "renormalize", &NatGradEstimator::renormalize,
+                  OptionBase::buildoption,
+                  "Wether to renormalize z wrt scaling that gamma produces\n");
 
     declareOption(ol, "n_dim", &NatGradEstimator::n_dim,
                   OptionBase::learntoption,
@@ -177,13 +181,13 @@ void NatGradEstimator::init()
         Vkt = Vt.subMatRows(0,n_eigen);
         D.resize(n_eigen+1);
         G.resize(n_eigen + cov_minibatch_size, n_eigen + cov_minibatch_size);
+        A.resize(n_eigen + cov_minibatch_size, n_eigen + cov_minibatch_size);
         G.clear();
         Xt.resize(n_eigen+cov_minibatch_size, n_dim);
         Xt.clear();
         r.resize(n_eigen);
     }
 }
-
 void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
 {
     if (t!=0)
@@ -196,10 +200,10 @@ void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
         init();
     }
     int i = t % cov_minibatch_size;
-    int n = i+cov_minibatch_size;
+    int n = n_eigen+i;
     Xt.resize(n+1,n_dim);
     Vec newX = Xt(n);
-    real rn = pow(gamma,-0.5*i);
+    real rn = pow(gamma,-0.5*(i+1));
     multiply(g,rn,newX);
     G.resize(n+1,n+1);
     Vec newG=G(n);
@@ -210,8 +214,10 @@ void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
     r[n] = rn;
     // solve linear system (G + \gamma^{-k} \lambda I) a = r
     pivots.resize(n);
+    A.resize(n+1,n+1);
     A << G;
-    real coef = rn*rn*lambda;
+    real rn2 = rn*rn;
+    real coef = rn2*lambda;
     for (int i=0;i<=n;i++)
         A(i,i) += coef;
     Mat r_row = r.toMat(1,n+1);
@@ -220,6 +226,8 @@ void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
         PLWARNING("NatGradEstimator: lapackSolveLinearSystem returned %d\n:",status);
     // solution is in r
     transposeProduct(v, Xt, r);
+    if (renormalize)
+        v*=(1 - pow(gamma,real(t+1)))/(1 - gamma);
 
     // recompute the eigen-decomposition
     if (i+1==cov_minibatch_size)
@@ -229,7 +237,21 @@ void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
         
         // convert eigenvectors Vt of G into eigenvectors U of C
         product(Ut,Vkt,Xt);
-
+        Ut *= 1.0/rn;
+        if (verbosity>0) // verifier Ut U = D/
+        {
+            static Mat Dmat;
+            D *= 1.0/rn2;
+            cout << "eigenvalues = " << D << endl;
+            if (verbosity>2)
+            {
+                Dmat.resize(n_eigen,n_eigen);
+                productTranspose(Dmat,Ut,Ut);
+                for (int j=0;j<n_eigen;j++) 
+                    Dmat(j,j)-=D[j];
+                cout << "norm(U' U - D)/(n_eigen*n_eigen) = " << sumsquare(Dmat.toVec())/n_eigen << endl;
+            }
+        }
         // prepare for next minibatch
         Xt.resize(n_eigen,n_dim);
         Xt << Ut;

@@ -42,6 +42,7 @@
 
 #include <plearn_learners/generic/PLearner.h>
 #include <plearn_learners/generic/EXPERIMENTAL/NatGradEstimator.h>
+#include <plearn/sys/Profiler.h>
 
 namespace PLearn {
 
