@@ -46,6 +46,7 @@
 #define PRandom_INC
 
 #include <plearn/base/Object.h>
+#include <plearn/math/TMat_maths.h>          // sum()
 #include <boost/random/exponential_distribution.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/normal_distribution.hpp>
@@ -245,10 +246,13 @@ public:
     real binom_sample(real pp, int n = 1);
     */
 
-    //! Return a random deviate from a discrete distribution given explicitely in the
-    //! 'distribution' vector. The returned value is an index in 'distribution'.
-    //! Elements of 'distribution' must sum to 1.
+    /**
+     *  Return a random deviate from a discrete distribution given explicitely
+     *  in the 'distribution' vector. The returned value is an index in
+     *  'distribution'.  Elements of 'distribution' must sum to 1.
+     */
     int multinomial_sample(const Vec& distribution);
+
     //! Return an integer between 0 and n-1 with equal probabilities.
     inline int uniform_multinomial_sample(int n)
     { return int(n * this->uniform_sample()); }
@@ -256,48 +260,119 @@ public:
     //! Return a sample from a binomial, given the expectation 'pp'
     int binomial_sample(real pp);
 
-    //! Randomly shuffle the entries of a vector.
+    //! Randomly shuffle the entries of a vector (random permutation)
     template<class T>
-    void shuffleElements(const TVec<T>& vec) {
-        if (vec.isEmpty())
-            return;
-        T* v = vec.data();
-        T tmp;
-        int n = vec.length();
-        for (int i = 0; i < vec.length(); i++) {
-            int j = i + this->uniform_multinomial_sample(n - i);
-            tmp = v[i];
-            v[i] = v[j];
-            v[j] = tmp;
-        }
-    }
+    void shuffleElements(const TVec<T>& vec);
+
+    /**
+     *  Return a weighted random permutation of the entries of a vector.  The
+     *  'weights' cause some elements to be picked first.  It is not necessary
+     *  for them to be normalized (the function takes care of it).  If desired,
+     *  only the first N elements of the permutation may be returned (faster).
+     */
+    template <class T>
+    TVec<T> weightedShuffleElements(const TVec<T>& vec, const Vec& weights,
+                                    int number_to_keep = -1 /* all by default */);
 
     //! Randomly shuffle the rows of a matrix.
     template<class T>
-    void shuffleRows(const TMat<T>& mat) {
-        int n = mat.length();
-        for (int i = 0; i < n; i++) {
-            int j = i + int(uniform_sample() * (n - i));
-            mat.swapRows(i,j);
-        }
-    }
+    void shuffleRows(const TMat<T>& mat);
+
 
     /*** Static methods ***/
 
-    //! Return a pointer to a common PRandom object accessible from any PLearn
-    //! code.
-    //! There are two common PRandom objects: one whose seed was given by the CPU
-    //! time (no argument, or 'random_seed' set to true), and another whose seed
-    //! is fixed at compilation time ('random_seed' set to false).
-    //! The latter can be useful to get reproducible results.
-    //! For safety, it is not possible to change their seed.
+    /**
+     *  Return a pointer to a common PRandom object accessible from any PLearn
+     *  code.  There are two common PRandom objects: one whose seed was given
+     *  by the CPU time (no argument, or 'random_seed' set to true), and
+     *  another whose seed is fixed at compilation time ('random_seed' set to
+     *  false).  The latter can be useful to get reproducible results.  For
+     *  safety, it is not possible to change their seed.
+     */
     static PP<PRandom> common(bool random_seed = true);
-
 };
 
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(PRandom);
-  
+
+
+//#####  shuffleElements Implementation  ######################################
+
+template<class T>
+void PRandom::shuffleElements(const TVec<T>& vec)
+{
+    if (vec.isEmpty())
+        return;
+    T* v = vec.data();
+    T tmp;
+    int n = vec.length();
+    for (int i = 0; i < vec.length(); i++) {
+        int j = i + this->uniform_multinomial_sample(n - i);
+        tmp = v[i];
+        v[i] = v[j];
+        v[j] = tmp;
+    }
+}
+
+
+//#####  weightedShuffleElements Implementation  ##############################
+
+template <class T>
+TVec<T> PRandom::weightedShuffleElements(const TVec<T>& vec, const Vec& weights,
+                                         int number_to_keep)
+{
+    PLASSERT( vec.size() == weights.size() );
+    if (number_to_keep < 0)
+        number_to_keep = vec.size();
+
+    Vec w = weights.copy();
+    TVec<T> r(number_to_keep);
+
+    // Normalize the weights
+    real s = sum(w);
+    w /= s;
+
+    // The algorithm is fairly simple-minded and is O(N^2), so be careful: we
+    // pick the first element according to a multinomial distribution given by
+    // the weights.  Then we set the probability of that element to 0 and
+    // renormalize the weights.  We pick the second element according to the
+    // new distribution, and so forth.
+    for (int i=0 ; i<number_to_keep ; ++i) {
+        int j = this->multinomial_sample(w);
+        r[i] = vec[j];
+
+        // Set its weight to zero and renormalize.  To keep numerical
+        // precision, every 20 time-steps we do a full renormalization (and not
+        // only an incremental one).
+        if (i % 20 == 0) {
+            w[j] = 0;
+            real s = sum(w);
+            w /= s;
+        }
+        else {
+            real old_w = w[j];
+            w[j] = 0;
+            w /= (1. - old_w); // New sum of weights is 1 minus what we took out
+        }
+    }
+    
+    return r;
+}
+
+
+//#####  shuffleRows Implementation  ##########################################
+
+template<class T>
+void PRandom::shuffleRows(const TMat<T>& mat)
+{
+    int n = mat.length();
+    for (int i = 0; i < n; i++) {
+        int j = i + int(this->uniform_sample() * (n - i));
+        mat.swapRows(i,j);
+    }
+}
+
+
 } // end of namespace PLearn
 
 #endif
