@@ -92,6 +92,8 @@ public:
     //! type of output cost: "NLL" for classification problems, "MSE" for regression
     string output_type;
 
+    int verbosity;
+
 public:
     //#####  Public Member Functions  #########################################
 

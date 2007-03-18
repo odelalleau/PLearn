@@ -224,6 +224,8 @@ void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
     int status = lapackSolveLinearSystem(A,r_row,pivots);
     if (status!=0)
         PLWARNING("NatGradEstimator: lapackSolveLinearSystem returned %d\n:",status);
+    if (verbosity>0 && i%(cov_minibatch_size/3)==0)
+        cout << "solution r = " << r << endl;
     // solution is in r
     transposeProduct(v, Xt, r);
     if (renormalize)

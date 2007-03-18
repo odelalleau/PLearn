@@ -60,6 +60,7 @@ NatGradNNet::NatGradNNet()
       lrate_decay(0),
       minibatch_size(1),
       output_type("NLL"),
+      verbosity(0),
       n_layers(-1)
 {
     random_gen = new PRandom();
@@ -70,6 +71,10 @@ void NatGradNNet::declareOptions(OptionList& ol)
     declareOption(ol, "noutputs", &NatGradNNet::noutputs,
                   OptionBase::buildoption,
                   "Number of outputs of the neural network, which can be derived from  output_type and targetsize_\n");
+
+    declareOption(ol, "verbosity", &NatGradNNet::verbosity,
+                  OptionBase::buildoption,
+                  "Verbosity level\n");
 
     declareOption(ol, "n_layers", &NatGradNNet::n_layers,
                   OptionBase::learntoption,
@@ -159,6 +164,9 @@ void NatGradNNet::build_()
     }
     else PLERROR("NatGradNNet: output_type should be NLL or MSE\n");
 
+    
+    while (hidden_layer_sizes[hidden_layer_sizes.length()-1]==0)
+        hidden_layer_sizes.resize(hidden_layer_sizes.length()-1);
     n_layers = hidden_layer_sizes.length()+2;
     layer_sizes.resize(n_layers);
     layer_sizes.subVec(1,n_layers-2) << hidden_layer_sizes;
@@ -326,7 +334,8 @@ void NatGradNNet::train()
             pb->update( stage + 1 );
     }
     Profiler::end("training");
-    Profiler::report(cout);
+    if (verbosity>0)
+        Profiler::report(cout);
     const Profiler::Stats& stats = Profiler::getStats("training");
     costs.fill(MISSING_VALUE);
     costs_plus_time[train_costs.width()] = stats.user_duration+stats.system_duration;
@@ -347,8 +356,20 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
         //      (minibatch_size x layer_size[i])
         // try to use BLAS
         if (i>1) // compute gradient on previous layer
-            productScaleAcc(neuron_gradients_per_layer[i-1],neuron_gradients_per_layer[i],false,
+        {
+            Mat previous_neurons_gradient = neuron_gradients_per_layer[i-1];
+            Mat previous_neurons_output = neuron_outputs_per_layer[i-1];
+            productScaleAcc(previous_neurons_gradient,neuron_gradients_per_layer[i],false,
                             weights[i-1],false,1,0);
+            
+            for (int j=0;j<previous_neurons_gradient.length();j++)
+            {
+                real* grad = previous_neurons_gradient[j];
+                real* out = previous_neurons_output[j];
+                for (int k=0;k<previous_neurons_gradient.width();k++,out++)
+                    grad[k] *= (1 - *out * *out); // gradient through tanh derivative
+            }
+        }
         // compute gradient on parameters, possibly update them
         if (full_natgrad) 
         {
@@ -362,14 +383,31 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
 
         } else // just regular stochastic gradient
             // compute gradient on weights and update them
-            productScaleAcc(layer_params[i-1],neuron_gradients_per_layer[i],true,
-                            neuron_extended_outputs_per_layer[i-1],false,-lrate/minibatch_size,1); // mean gradient
+        {
+            if (verbosity>0)
+            {
+                if (verbosity>1)
+                    layer_params_gradient[i-1].clear();
+                productScaleAcc(layer_params_gradient[i-1],neuron_gradients_per_layer[i],true,
+                                neuron_extended_outputs_per_layer[i-1],false,1./minibatch_size,0); // mean gradient
+            }
+            else
+                productScaleAcc(layer_params[i-1],neuron_gradients_per_layer[i],true,
+                                neuron_extended_outputs_per_layer[i-1],false,-lrate/minibatch_size,1); // mean gradient
+        }
     }
     if (full_natgrad) 
     {
         (*full_natgrad)(t/minibatch_size,all_params_gradient,all_params_delta); // compute update direction by natural gradient
         multiplyAcc(all_params,all_params_delta,-lrate); // update
     }
+    else if (verbosity>0)
+    {
+        if ((t/minibatch_size)%10==0) 
+            cout << "gradient norm = " << norm(all_params_gradient) << endl;
+        multiplyAcc(all_params,all_params_gradient,-lrate); // update
+    }
+        
 }
 
 void NatGradNNet::computeOutput(const Vec& input, Vec& output) const
