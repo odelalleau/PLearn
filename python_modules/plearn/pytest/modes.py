@@ -74,7 +74,7 @@ class PyTestMode(Mode):
                                     default=True )
 
         testing_options.add_option( '--hosts', 
-                                    help='The maximum nuber of hosts to use simultaneously.',
+                                    help='The maximum number of hosts to use simultaneously.',
                                     default=10 )
 
         testing_options.add_option( '--pymake-compile',
