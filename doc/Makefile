@@ -19,14 +19,17 @@ autodoc_plearn_curses:
 	cd html_autodoc; plearn_curses htmlhelp html_config.plearn
 	cd html_autodoc/doc; ln -s ../plearn.css .; cp ../plearn.jpg .;	cp ../background.png .
 
+doxygen:
+	doxygen Doxyfile3
+
 doxygen-full:
-	doxygen Doxygen
+	doxygen Doxyfile
 
 doxygen-no-dot:
-	doxygen Doxygen2
+	doxygen Doxyfile2
 
 doxygen-no-source:
-	doxygen Doxygen3
+	doxygen Doxyfile3
 
 TEX_INTERACTION_MODE=nonstopmode
 TEX_OPTIONS=--interaction $(TEX_INTERACTION_MODE)
