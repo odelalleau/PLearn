@@ -146,18 +146,20 @@ Pascal
 
 \section{Developer CVS access}
 
-If you are going to contribute to PLearn on SourceForge
-(\url{http://www.sourceforge.net}):
+If you are going to contribute to PLearn on Berlios
+(\url{http://www.berlios.de}):
 \begin{itemize}
-\item If you don't have one already, create a SourceForge account for yourself
-\item Send me ({\tt plearner@users.sourceforge.net}) your account login,
+\item If you don't have one already, create a Berlios account for yourself
+\item Send me ({\tt plearner@users.berlios.de}) your account login,
 so that I can add you to the developer list.
 \item Make sure the {\tt CVS\_RSH} environment variable is set to
 {\tt ssh} in your .cshrc or .bashrc
-\item Check-out PLearn as follows:
+\item Check-out PLearn as follows(Don't forget to change USERNAME to your username):
 \begin{verbatim}
-cvs -d :ext:your_sourceforge_login@cvs.sourceforge.net:/cvsroot/plearn co PLearn
+svn checkout svn+ssh://USERNAME@svn.berlios.de/svnroot/repos/plearn/trunk PLearn
+
 \end{verbatim}
+\item the current devellopment is on Belios, but in the past Sourceforge was used.
 \end{itemize}
 
 \fi
