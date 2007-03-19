@@ -164,7 +164,7 @@ const Mat& GaussianProcessNLLVariable::alpha() const
 // ### computes value from varray values
 void GaussianProcessNLLVariable::fprop()
 {
-    logVarray(m_hyperparam_vars, "FProp current hyperparameters:", true);
+    // logVarray(m_hyperparam_vars, "FProp current hyperparameters:", true);
 
     // Ensure that the current hyperparameter variable values are propagated
     // into kernel options
