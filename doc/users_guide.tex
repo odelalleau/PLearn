@@ -335,6 +335,7 @@ plearn 0.92.0  (Jun 21 2005 12:04:50)
 inputsize: 1
 targetsize: 1
 weightsize: 0
+extrasize: 0
 
 
 valhalla:~/PLearn/examples/Tutorial> plearn vmat fields 1d_reg.amat
@@ -368,7 +369,7 @@ plearn 0.92.0  (Jun 21 2005 12:04:50)
 \end{verbatim}
 
 If you want to browse the data matrix interactively, you can use the
-command \verb!plearn vmat view 1d_reg.amat! (This is most useful for huge data sets\ldots)
+command \verb!plearn vmat view 1d_reg.amat! (This is most useful for huge data sets\ldots. \verb!plearn! need to be compiled with \verb!curse!.)
 
 You can also see the points graphically by using the \verb!pyplot! script
 \verb!pyplot plot_2d 1d_reg.amat!
@@ -698,7 +699,7 @@ valhalla:~/PLearn/examples/Tutorial> pyplot 2d_density spiral.vmat parzen.plearn
 
 \section{A classification example}
 
-See the older tutorial.
+See the older tutorial.\ref{oldtut}
 
 Note that we can make a classification data set by issuing
 \begin{verbatim}
@@ -707,7 +708,6 @@ pypoints 2d_classif.amat
 
 \section{Running a Full Experiment: PTester}
 
-\iffalse
 
 The class \verb|PTester| is used to wrap the action of running a complete
 experiment in a single runnable \verb|PLearn| object.  The goals of this
@@ -732,7 +732,7 @@ Figure~\ref{fig:ptesteroverall}.
 
 \begin{figure}
   \centering
-  \resizebox{0.85\textwidth}{!}{\includegraphics{Figures/PTesterOverall.jpg}}
+  \resizebox{0.85\textwidth}{!}{\includegraphics{Figures/PTesterOverall}}
   \caption{Relationship among the classes taking part in the experiment run
     by PTester.  The PLearner must actually be an instance of a class
     derived from PLearner; likewise, the Splitter must be an instance of a
@@ -749,7 +749,7 @@ Figure~\ref{fig:ptesterprocess}.
 
 \begin{figure}
   \centering
-  \resizebox{0.85\textwidth}{!}{\includegraphics{Figures/PTesterProcess.jpg}}
+  \resizebox{0.85\textwidth}{!}{\includegraphics{Figures/PTesterProcess}}
   \caption{Process Underlying PTester}
   \label{fig:ptesterprocess}
 \end{figure}
@@ -772,14 +772,13 @@ pretty much guarantees uniqueness of the name.
 
 (See the \verb|.pyplearn| tutorial.)
 
-\fi
 
 \section{Python Preprocessing}
 
 See the {\bf pyplearn tutorial}
 
 \chapter{Older Tutorial}
-
+\label{oldtut}
 \include{tutorial}
 
 
