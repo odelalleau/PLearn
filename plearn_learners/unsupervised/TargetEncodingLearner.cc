@@ -71,7 +71,7 @@ void TargetEncodingLearner::declareOptions(OptionList& ol)
                   OptionBase::learntoption,
                   "Learnt encodings for the trainset.\n");
 
-    declareOption(ol, "encode_col", &TargetEncodingLearner::encodings,
+    declareOption(ol, "encode_col", &TargetEncodingLearner::encode_col,
                   OptionBase::learntoption,
                   "Wether each col. should be encoded.\n");
 
@@ -271,6 +271,15 @@ TVec<string> TargetEncodingLearner::getOutputNames() const
 {
     return sublearner->getOutputNames();
 }
+
+void TargetEncodingLearner::setTrainingSet(VMat training_set, bool call_forget)
+{
+    // temporarly set sublearner's train set (reset in train())
+    if(sublearner)
+        sublearner->setTrainingSet(training_set, call_forget);
+    inherited::setTrainingSet(training_set, call_forget);
+}
+
 
 } // end of namespace PLearn
 

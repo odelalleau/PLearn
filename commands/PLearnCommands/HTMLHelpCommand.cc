@@ -56,6 +56,7 @@
 #include "plearn_main.h"                     // For version_string
 #include "HTMLHelpCommand.h"
 #include <plearn/base/tostring.h>
+#include <plearn/base/HelpSystem.h>
 
 namespace PLearn {
 using namespace std;

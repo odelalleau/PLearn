@@ -74,7 +74,9 @@ public:
     TVec<bool> encode_col;
     TVec<real> defaults;
     real mean; // weighted mean of targets
+    
     bool encodings_learnt;
+
 
 public:
     //#####  Public Member Functions  #########################################
@@ -157,6 +159,9 @@ public:
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     virtual void setExperimentDirectory(const PPath& the_expdir);
+
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+
 
 protected:
     //#####  Protected Options  ###############################################

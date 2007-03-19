@@ -502,7 +502,7 @@ int PLearner::inputsize() const
 int PLearner::targetsize() const 
 { 
     if(targetsize_ == -1) 
-        PLERROR("In PLearner::targetsize - 'targetsize_' is -1, either no training set has beeen specified or its sizes were not set properly");
+        PLERROR("In PLearner::targetsize (%s)- 'targetsize_' is -1, either no training set has beeen specified or its sizes were not set properly", this->classname().c_str());
     return targetsize_; 
 }
 
