@@ -45,6 +45,7 @@
 #define BootstrapSplitter_INC
 
 #include "Splitter.h"
+#include <plearn/math/PRandom.h>
 
 namespace PLearn {
 using namespace std;
@@ -75,6 +76,8 @@ public:
     real frac;
     int n_splits;
     bool allow_repetitions;
+    int seed;
+    PP<PRandom> rgen;
 
     // ****************
     // * Constructors *

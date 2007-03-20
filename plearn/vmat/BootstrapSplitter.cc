@@ -48,7 +48,9 @@ BootstrapSplitter::BootstrapSplitter()
     :Splitter(),
      frac(0.6667),
      n_splits(0),
-     allow_repetitions(false)
+     allow_repetitions(false),
+     seed(0),
+     rgen(new PRandom(seed))
     /* ### Initialise all fields to their default value */
 {
 }
@@ -75,6 +77,10 @@ void BootstrapSplitter::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Allows each row to appear more than once per split.");
 
+    declareOption(ol, "seed", &BootstrapSplitter::seed, 
+                  OptionBase::buildoption,
+                  "Allows each row to appear more than once per split.");
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -93,9 +99,9 @@ void BootstrapSplitter::build_()
         bootstrapped_sets.resize(n_splits,1);
         for (int i = 0; i < n_splits; i++) {
             // Construct a new bootstrap sample from the dataset.
-            
-            // FIXME: 'seed' param should not be -2; see [and fix] BootstrapVMatrix.
-            bootstrapped_sets(i,0) = new BootstrapVMatrix(dataset,frac,-2,allow_repetitions);
+            PP<PRandom> vmat_rgen= rgen->split();
+            bootstrapped_sets(i,0) = 
+                new BootstrapVMatrix(dataset,frac,vmat_rgen,allow_repetitions);
         }
     } else {
         bootstrapped_sets.resize(0,0);

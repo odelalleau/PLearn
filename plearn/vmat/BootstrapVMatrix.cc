@@ -56,7 +56,7 @@ PLEARN_IMPLEMENT_OBJECT(BootstrapVMatrix,
 // BootstrapVMatrix //
 //////////////////////
 BootstrapVMatrix::BootstrapVMatrix():
-    rgen(new PRandom()),
+    rgen(0),
     frac(0.6667),
     n_elems(-1),
     own_seed(-2), // -2 = hack value while 'seed' is still there
@@ -67,10 +67,26 @@ BootstrapVMatrix::BootstrapVMatrix():
 
 BootstrapVMatrix::BootstrapVMatrix(VMat m, real the_frac, bool the_shuffle,
                                    long the_seed, bool allow_rep):
-    rgen(new PRandom()),
+    rgen(0),
     frac(the_frac),
     n_elems(-1),
     own_seed(the_seed),
+    seed(0),
+    shuffle(the_shuffle),
+    allow_repetitions(allow_rep)
+{
+    this->source = m;
+    build();
+}
+
+BootstrapVMatrix::BootstrapVMatrix(VMat m, real the_frac, 
+                                   PP<PRandom> rgen_,
+                                   bool the_shuffle,
+                                   bool allow_rep):
+    rgen(rgen_),
+    frac(the_frac),
+    n_elems(-1),
+    own_seed(0),
     seed(0),
     shuffle(the_shuffle),
     allow_repetitions(allow_rep)
@@ -98,12 +114,18 @@ void BootstrapVMatrix::declareOptions(OptionList &ol)
 
     declareOption(ol, "seed", &BootstrapVMatrix::seed, OptionBase::buildoption,
                   "DEPRECATED: The random generator seed (-1 = initialized from clock, 0 = no initialization).\n"
-                  "Warning: this is a global seed that may affect other PLearn objects.");
+                  "Warning: this is a global seed that may affect other PLearn objects.",
+                  "", OptionBase::deprecated_level);
 
     declareOption(ol, "allow_repetitions", &BootstrapVMatrix::allow_repetitions, 
                   OptionBase::buildoption,
                   "Wether examples should be allowed to appear each more than once.",
                   "", OptionBase::advanced_level);
+
+    declareOption(ol, "rgen", &BootstrapVMatrix::rgen, 
+                  OptionBase::buildoption,
+                  "Random generator to use.\n"
+                  "N.B. use EITHER this or a seed, not both.");
 
     inherited::declareOptions(ol);
 
@@ -126,24 +148,27 @@ void BootstrapVMatrix::build()
 ////////////
 void BootstrapVMatrix::build_()
 {
-    if(allow_repetitions)
+    if (source) 
     {
-        int l= source.length();
-        indices.resize(l);
-        for(int i= 0; i < l; ++i)
-            indices[i]= rgen->uniform_multinomial_sample(l);
-        // Because we changed the indices, a rebuild may be needed.
-        inherited::build();
-        return;//avoid extra indentation
-    }
-
-    if (source) {
-        indices = TVec<int>(0, source.length()-1, 1); // Range-vector
+        if(rgen)
+        {
+            if(own_seed != 0 || own_seed == -2 && seed != 0 )
+                PLERROR("PRandom::build_ : cannot specify both an rgen and a seed.");
+        }
+        else
+            rgen= new PRandom(own_seed);
+        
+        ///***///***///*** ===>
+        // what follows should not exist anymore
         if (seed != 0)
             own_seed = -2;
-        if (own_seed == -2) {
-            PLDEPRECATED("In BootstrapVMatrix::build_ - You are using the deprecated option 'seed', "
-                         "the 'own_seed' option (the one you should use) will thus be ignored");
+        if (own_seed == -2) 
+        {
+            //PLDEPRECATED("In BootstrapVMatrix::build_ - You are using the deprecated option 'seed', "
+            //             "the 'own_seed' option (the one you should use) will thus be ignored");
+            PLERROR("In BootstrapVMatrix::build_ - You are using the deprecated option 'seed', "
+                    "which is not supported anymore. "
+                    "The 'own_seed' option is the one you should use.");
             if (seed == -1)
                 PLearn::seed();
             else if (seed > 0)
@@ -151,14 +176,28 @@ void BootstrapVMatrix::build_()
             else if (seed != 0)
                 PLERROR("In BootstrapVMatrix::build_ - The seed must be either -1 or >= 0");
             shuffleElements(indices);
-        } else {
-            rgen->manual_seed(own_seed);
-            rgen->shuffleElements(indices);
+        } 
+        // what precedes should not exist anymore
+        ///***///***///*** <===
+
+        int l= source.length();
+        int nsamp= (n_elems >= 0) ? n_elems : int(round(frac*l));
+        if(allow_repetitions)
+        {
+            indices.resize(nsamp);
+            for(int i= 0; i < nsamp; ++i)
+                indices[i]= rgen->uniform_multinomial_sample(l);
         }
-        int n = (n_elems >= 0) ? n_elems : int(round(frac * source.length()));
-        indices = indices.subVec(0, n);
-        if (!shuffle)
-            sortElements(indices);
+        else
+        {
+            indices = TVec<int>(0, l-1, 1); // Range-vector
+            rgen->shuffleElements(indices);
+            indices = indices.subVec(0, nsamp);
+            if (!shuffle) sortElements(indices);
+        }
+
+        //perr << indices << endl;
+
         // Because we changed the indices, a rebuild may be needed.
         inherited::build();
     }

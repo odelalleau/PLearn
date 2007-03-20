@@ -362,6 +362,28 @@ real PRandom::uniform_sample() {
     return real((*uniform_01)());
 }
 
+
+
+/////////////
+// newRGen //
+/////////////
+PP<PRandom> PRandom::split()
+{
+    // Draw twice from underlying rgen, 
+    // just in case it outputs its state
+    // directly... (any better ideas?)
+    int s;
+    do
+    {
+        //no need for a specific distribution
+        s= rgen() + rgen();
+        if(s < 0) s= -s;
+    } while(s == 0);
+
+    return new PRandom(s);
+}
+
+
 ///////
 // ~ //
 ///////
@@ -394,3 +416,4 @@ PRandom::~PRandom() {
   End:
 */
 // vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :
+        

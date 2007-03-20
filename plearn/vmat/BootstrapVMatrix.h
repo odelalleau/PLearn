@@ -52,14 +52,13 @@ class BootstrapVMatrix: public SelectRowsVMatrix
 {
     typedef SelectRowsVMatrix inherited;
 
-protected:
+public:
+
+    //! Public build options
 
     //! Random number generator for shuffling the data.
     PP<PRandom> rgen;
 
-public:
-
-    //! Public build options
     real frac;
     int n_elems;
     long own_seed;
@@ -75,6 +74,11 @@ public:
     //! Construct a boostrap of another VMatrix.
     //! Note: 'the_seed' sets the new 'own_seed' option, not the old 'seed' one.
     BootstrapVMatrix(VMat m, real frac, bool shuffle = false, long the_seed = -2,
+                     bool allow_rep= false);
+
+    //! Constructor which takes an rgen instead of a seed
+    BootstrapVMatrix(VMat m, real frac, PP<PRandom> rgen_,
+                     bool shuffle = false,
                      bool allow_rep= false);
 
     PLEARN_DECLARE_OBJECT(BootstrapVMatrix);

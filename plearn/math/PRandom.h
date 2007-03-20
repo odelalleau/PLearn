@@ -83,7 +83,7 @@ protected:
     boost::uniform_01<boost::mt19937>* uniform_01;
 
     //! The actual seed used by the random number generator.
-	boost::uint32_t the_seed;
+    boost::uint32_t the_seed;
     
     // *********************
     // * protected options *
@@ -132,7 +132,7 @@ public:
     boost::uniform_01<boost::mt19937>*        get_uniform_01()               const
     { return uniform_01; }
 	
-	boost::uint32_t get_the_seed()   const { return the_seed; }
+    boost::uint32_t get_the_seed()   const { return the_seed; }
     long            get_fixed_seed() const { return fixed_seed; }
     long            get_seed()       const { return seed_; }
 
@@ -278,6 +278,9 @@ public:
     template<class T>
     void shuffleRows(const TMat<T>& mat);
 
+    //! Return a newly allocated PRandom from this one;
+    //! The new PRandom is seeded with this one's output.
+    PP<PRandom> split();
 
     /*** Static methods ***/
 
