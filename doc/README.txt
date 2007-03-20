@@ -3,19 +3,19 @@ tools.
 
 Here is a description of the files in the directory:
  
-installation_guide.tex: an installation guide.
+installation_guide.tex: an installation guide
 
-programmers_guide.tex: a guide for people who want to modify plearn
+programmers_guide.tex: a guide for people who want to modify PLearn
 
-tools_guide.tex: an incomplete guide of some tool that will help people who program plearn
+tools_guide.tex: a guide of some tools that will help people who program with PLearn
 
-tutonly.tex: Is the old tutorial (include tutorial.tex)
+tutonly.tex: old tutorial (includes tutorial.tex)
 
-tutorial.tex: Is an older tutorial that need to be included in another file to generate others file. It is included in tutonly.tex and users_guides.tex
+tutorial.tex: older tutorial that needs to be included in another file to generate other file (included in tutonly.tex and users_guides.tex)
 
-users_guide.tex: hava a small tutorial and include the old turial.
+users_guide.tex: has a small tutorial and includes the old tutorial
 
-index.html: the web page at plearn.org
+index.html: the web page at http://plearn.org
 
-Doxyfile, Doxyfile2, Doxyfile3: config file for doxygen
+Doxyfile, Doxyfile2, Doxyfile3: configuration files for doxygen
 
