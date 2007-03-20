@@ -65,8 +65,11 @@ public:
     VMat(const VMat& d);
     VMat(const Mat& datamat); //!<  Convenience constructor: will use an MemoryVMatrix built from datamat
 
-    int length() const { return ptr->length(); } //! The number of rows in the matrix
-    int width() const { return ptr->width(); } //!< The number of columns in the matrix
+    //! Return the number of rows in the matrix.
+    int length() const { return ptr->length(); }
+
+    //! Return the number of columns in the matrix.
+    int width() const { return ptr->width(); }
 
     string fieldName(int fieldindex) const
     { return ptr->fieldName(fieldindex); }
