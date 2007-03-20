@@ -46,11 +46,11 @@ using namespace std;
 /** BootstrapVMatrix **/
 
 PLEARN_IMPLEMENT_OBJECT(BootstrapVMatrix,
-                        "A VMatrix that sees a bootstrap subset of its parent VMatrix.",
-                        "It means that a random sample of the source will be taken.\n"
-                        "[THE FOLLOWING LINE IS NOT TRUE ANYMORE (see allow_repetitions):\n"
-                        "Note that this is not a real bootstrap since a sample can only appear once.]"
-    );
+        "A VMatrix that sees a bootstrap subset of its parent VMatrix.",
+        "It means that a random sample of the source will be taken. Samples\n"
+        "may or may not be repeated depending on the value of the option\n"
+        "'allow_repetitions'"
+);
 
 //////////////////////
 // BootstrapVMatrix //
