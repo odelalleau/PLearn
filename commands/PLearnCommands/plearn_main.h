@@ -36,6 +36,18 @@
  * $Id$
  ******************************************************* */
 
+/*! \mainpage My Personal Index Page
+ *
+ * Voir le site "www.plearn.org" pour des guides.
+ * 
+ * \section intro_sec Introduction
+ *
+ * This is the introduction. 
+ *
+ * \subsection step1 Step 1: Opening the box
+ *  
+ * etc...
+ */
 #include <string>
 
 #ifndef plearn_main_INC
