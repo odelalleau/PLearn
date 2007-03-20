@@ -47,6 +47,7 @@
 #include <plearn/db/getDataSet.h>
 #include <plearn/io/load_and_save.h>
 #include <plearn/io/openString.h>
+#include <plearn/io/PyPLearnScript.h>       //!< For smartLoadObject(..)
 #include <plearn/base/lexical_cast.h>
 
 namespace PLearn {
@@ -121,8 +122,8 @@ void LearnerCommand::train(const string& learner_spec_file,
 //////////
 void LearnerCommand::test(const string& trained_learner_file, const string& testset_spec, const string& stats_file, const string& outputs_file, const string& costs_file)
 {
-    PP<PLearner> learner;
-    PLearn::load(trained_learner_file,learner);
+    PP<PLearner> learner =
+        (PLearner*) smartLoadObject(trained_learner_file);
     VMat testset = getDataSet(testset_spec);
     int l = testset.length();
     VMat testoutputs;
@@ -146,8 +147,8 @@ void LearnerCommand::test(const string& trained_learner_file, const string& test
 /////////////////////
 void LearnerCommand::compute_outputs(const string& trained_learner_file, const string& test_inputs_spec, const string& outputs_file)
 {
-    PP<PLearner> learner;
-    PLearn::load(trained_learner_file,learner);
+    PP<PLearner> learner =
+        (PLearner*) smartLoadObject(trained_learner_file);
     VMat testinputs = getDataSet(test_inputs_spec);
     int l = testinputs.length();
     VMat testoutputs = new FileVMatrix(outputs_file,l,learner->getOutputNames());
