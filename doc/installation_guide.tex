@@ -348,6 +348,9 @@ directives such as, for ex:
 
 \chapter{Installing PLearn}
 
+The installation of PLearn consist of three phases: installing the dependensys of PLearn, configuring the environnement and we finish with the compilation of PLearn. The compilation is done with pymake witch use python. To have more information on pymake do: \verb!pymake help!.
+
+The first section discuss the installation on linux, the second on Mac OS X, the third on windows with cygwin.
 \section{Installation on Linux}
 
 \subsection{PLearn setup and compilation}
@@ -366,6 +369,10 @@ Recommended (python and graphics related):
 {\tt ipython, python-matplotlib, 
 python-numarray, python-numpy, mayavi, python2.4-dev,
 python-tk, python-gtk2, python-gtkhtml2} \\
+
+You can use the following command under an Ubuntu (probably other derivative of Debian) to install the required packages: \verb!sudo apt-get install g++ python2.4 python libnspr4 libnspr-dev libboost-dev libboost-regex1.33.1 libboost-regex-dev libboost-graph1.33.1 libboost-graph-dev!.
+The following command for the strongly suggested packages: \verb! sudo apt-get install libncurses5 libncurses5-dev refblas3 lapack3 lapack3-dev!.
+And the following command for the recommanded packages:\verb!sudo apt-get install ipython python-matplotlib python-numarray python-numpy mayavi python2.4-dev python-tk python-gtk2 python-gtkhtml2!. The package that are alreay installed won't be reinstalled.
 
 Then edit your .cshrc or .bashrc and 
 \begin{itemize}
