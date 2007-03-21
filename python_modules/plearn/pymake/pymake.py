@@ -289,14 +289,25 @@ def local_filepath(filepath):
     return os.path.normpath(local_ofiles_base_path + '/' + filepath)
 
 def copyfile_verbose(src, dst):
-    print ("[ COPYING\t" + src + "\n  -->\t\t" + dst + " ]")
+    if verbose>=2:
+        print ("[ COPYING\t" + src + "\n  -->\t\t" + dst + " ]")
     shutil.copy2(src, dst)
 
+def mkdirs_public(path):
+    """
+    Creates all non-existing directories in path
+    and sets rights for full access by anybody
+    """
+    if os.path.exists(path): return
+    dir= os.path.dirname(path)
+    mkdirs_public(dir) #create parent if needed
+    os.mkdir(path)
+    os.chmod(path, S_IRWXU | S_IRWXG | S_IRWXO)
+    
 def copy_ofile_locally(f):
     lf= local_filepath(f)
     ldir= os.path.dirname(lf)
-    if not os.path.isdir(ldir):
-        os.makedirs(ldir)
+    mkdirs_public(ldir)
     copyfile_verbose(f, lf)
 
 def get_ofiles_to_copy(executables_to_link):
