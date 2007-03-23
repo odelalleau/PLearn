@@ -1203,7 +1203,7 @@ void compute_log(const TVec<T>& src, const TVec<T>& dest)
     if(src.length()!=dest.length())
         PLERROR("In log, src and dest vectors must have the same length");
 #endif
-    if (sec.size() > 0 && dest.size() > 0) {
+    if (src.size() > 0 && dest.size() > 0) {
         T* ps = src.data();
         T* pd = dest.data();
         int n = src.length();
