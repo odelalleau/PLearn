@@ -48,6 +48,7 @@
 #define TMat_maths_impl_H
 
 #include <algorithm>
+#include <limits>
 
 namespace PLearn {
 using namespace std;
@@ -58,15 +59,16 @@ TVec<T> sign(const TVec<T>& vec)
     int len = vec.length();
 
     TVec<T> sign_( len );
-    T*  v   = vec.data();
-    T*  s   = sign_.data();
-
-    while(--len >= 0)
-    {
-        *s = sign( *v );
-        v++; s++; 
+    if (len > 0) {
+        T*  v   = vec.data();
+        T*  s   = sign_.data();
+        
+        while(--len >= 0)
+        {
+            *s = sign( *v );
+            v++; s++; 
+        }
     }
-  
     return sign_;
 }
 
@@ -74,12 +76,14 @@ template <class T>
 void compute_sign(const TVec<T>& vec, const TVec<T>& dest)
 {
     int len = vec.length();
-    T*  v   = vec.data();
-    T*  s   = dest.data();
-    while(--len >= 0)
-    {
-        *s = sign( *v );
-        v++; s++; 
+    if (len > 0) {
+        T*  v   = vec.data();
+        T*  s   = dest.data();
+        while(--len >= 0)
+        {
+            *s = sign( *v );
+            v++; s++; 
+        }
     }
 }
 
@@ -110,15 +114,17 @@ real one_against_all_hinge_loss(const TVec<T>& output,
                                 const int target)
 {
     int N = output.length();
-    T*  o = output.data();
     T total_hinge_loss = 0;
-    while(--N >= 0)
-    {
-        if (N==target)
-            total_hinge_loss += hinge_loss(*o,1);
-        else
-            total_hinge_loss += hinge_loss(*o,-1);
-        o++;
+    if (N > 0) {
+        T*  o = output.data();
+        while(--N >= 0)
+        {
+            if (N==target)
+                total_hinge_loss += hinge_loss(*o,1);
+            else
+                total_hinge_loss += hinge_loss(*o,-1);
+            o++;
+        }
     }
     return total_hinge_loss;
 }
@@ -134,44 +140,28 @@ void one_against_all_hinge_loss_bprop(const TVec<T>& output,
 {
     int N = output.length();
     d_output.resize(N);
-    T*  o = output.data();
-    T*  d_o = d_output.data();
-    //MNT old buggy code (opposite numbering of outputs):
-    /*while(--N >= 0)
-      {
-      if (N==target)
-      *d_o = d_hinge_loss(*o,1);
-      else
-      *d_o = d_hinge_loss(*o,-1);
-      o++; d_o++;
-      }
-    */
-    for( int i = 0; i < N; i++ ) {
-        if ( i == target )
-            *d_o = d_hinge_loss( *o, 1 );
-        else
-            *d_o = d_hinge_loss( *o, -1 );
-        o++; d_o++;
+    if (N > 0) {
+        T*  o = output.data();
+        T*  d_o = d_output.data();
+        //MNT old buggy code (opposite numbering of outputs):
+        /*while(--N >= 0)
+          {
+          if (N==target)
+          *d_o = d_hinge_loss(*o,1);
+          else
+          *d_o = d_hinge_loss(*o,-1);
+          o++; d_o++;
+          }
+        */
+        for( int i = 0; i < N; i++ ) {
+            if ( i == target )
+                *d_o = d_hinge_loss( *o, 1 );
+            else
+                *d_o = d_hinge_loss( *o, -1 );
+            o++;
+            d_o++;
+        }
     }
-}
-
-template <class T> 
-T max(const TVec<T>& vec)
-{
-#ifdef BOUNDCHECK
-    if(vec.length()==0)
-        PLERROR("IN max(const NumericVec& vec) TVec has zero length()");
-#endif
-    T* pv = vec.data();
-    T maxval = *pv++;
-    int n = vec.length();
-    while(--n)
-    {
-        if(*pv>maxval)
-            maxval = *pv;
-        ++pv;
-    }
-    return maxval;
 }
 
 //! y = softmax(x)
@@ -364,6 +354,8 @@ void doubleCentering(const TMat<T>& mat, TVec<T>& avg, TMat<T>& res, T scale=T(1
 {
     T moy = mean(avg);
     int n=avg.length();
+    if (!n)
+        return;
     T* a = avg.data();
     if (scale==T(1))
         for (int i=0;i<n;i++)
@@ -564,6 +556,8 @@ T avgdev(const TVec<T>& vec, T meanval, bool ignore_missing = false)
 #endif
     double res = 0.0;
     int n = 0;
+    if (vec.size() == 0)
+        return MISSING_VALUE;
     T* v = vec.data();
     for(int i=0; i<vec.length(); i++)
         if (!is_missing(v[i]))
@@ -586,6 +580,8 @@ T geometric_mean(const TVec<T>& vec)
     if(vec.length()==0)
         PLERROR("IN T geometric_mean(const TVec<T>& vec) vec has zero length");
 #endif
+    if (vec.size() == 0)
+        return MISSING_VALUE;
     double res = 0.0;
     T* v = vec.data();
     for(int i=0; i<vec.length(); i++)
@@ -606,6 +602,8 @@ T weighted_mean(const TVec<T>& vec, const TVec<T>& weights, bool ignore_missing=
     if(vec.length()!=weights.length() || vec.length() == 0)
         PLERROR("IN T weighted_mean(const TVec<T>& vec, const TVec<T>& weights) vec and weights must have equal (non-zero) lengths");
 #endif
+    if (vec.size() == 0)
+        return MISSING_VALUE;
     double res = 0.0;
     T sum_weights = 0.0;
     T* v = vec.data();
@@ -633,6 +631,8 @@ T variance(const TVec<T>& vec, T meanval, bool ignore_missing=false)
     if(vec.length()<=1)
         PLERROR("IN T variance(const TVec<T>& vec, T meanval) vec length must be more than one");
 #endif
+    if (vec.size() == 0)
+        return MISSING_VALUE;
     double res = 0.0;
     T* v = vec.data();
     int n = 0;
@@ -661,9 +661,11 @@ T covariance(const TVec<T>& vec1, const TVec<T>& vec2, T mean1, T mean2)
         PLERROR("IN T covariance(const TVec<T>& vec1, const TVec<T>& vec2, T mean1, T mean2) vec1's length must be more than one");
     if(vec2.length()<=1)
         PLERROR("IN T covariance(const TVec<T>& vec1, const TVec<T>& vec2, T mean1, T mean2) vec2's length must be more than one");
-#endif
     if(vec1.length() != vec2.length())
         PLERROR("IN T covariance(const TVec<T>& vec1, const TVec<T>& vec2, T mean1, T mean2) the lengths of vec1 and vec2 must be same");
+#endif
+    if (vec1.size() == 0 || vec2.size() == 0)
+        return MISSING_VALUE;
     int length = vec1.length();
     double res = 0.0;
     T* v1 = vec1.data();
@@ -683,6 +685,8 @@ T weighted_variance(const TVec<T>& vec, const TVec<T>& weights, T no_weighted_me
     if(vec.length()!=weights.length() || vec.length()==0)
         PLERROR("IN T weighted_variance(const TVec<T>& vec, const TVec<T>& weights, T no_weighted_mean, T weighted_mean) vec and weights must have equal (non-zero) lengths");
 #endif
+    if (vec.size() == 0)
+        return MISSING_VALUE;
     double res = 0.0;
     T* v = vec.data();
     T* w = weights.data();
@@ -710,6 +714,27 @@ TVec<T> histogram(const TVec<T>& vec, T minval, T maxval, int nbins)
 }
 
 
+template <class T> 
+T max(const TVec<T>& vec)
+{
+#ifdef BOUNDCHECK
+    if(vec.length()==0)
+        PLERROR("IN max(const NumericVec& vec) TVec has zero length()");
+#endif
+    int n = vec.length();
+    if (!n)
+        return std::numeric_limits<T>::min();
+    T* pv = vec.data();
+    T maxval = *pv++;
+    while(--n)
+    {
+        if(*pv>maxval)
+            maxval = *pv;
+        ++pv;
+    }
+    return maxval;
+}
+
 template<class T>
 T min(const TVec<T>& vec)
 {
@@ -717,6 +742,8 @@ T min(const TVec<T>& vec)
     if(vec.length()==0)
         PLERROR("IN T min(const TVec<T>& vec) vec has zero length");
 #endif
+    if (vec.size() == 0)
+        return std::numeric_limits<T>::max();
     T* v = vec.data();
     T minval = v[0];
     for(int i=1; i<vec.length(); i++)
@@ -732,6 +759,8 @@ T maxabs(const TVec<T>& vec)
     if(vec.length()==0)
         PLERROR("IN T maxabs(const TVec<T>& vec) vec has zero length");
 #endif
+    if (vec.size() == 0)
+        return std::numeric_limits<T>::min();
     T* v = vec.data();
     T maxval = fabs(v[0]);
     for(int i=1; i<vec.length(); i++)
@@ -743,24 +772,6 @@ T maxabs(const TVec<T>& vec)
     return maxval;
 }
 
-// template<class T>
-// T minabs(const TVec<T>& vec)
-// {
-//   #ifdef BOUNDCHECK
-//   if(vec.length()==0)
-//     PLERROR("IN T minabs(const TVec<T>& vec) vec has zero length");
-//   #endif
-//   T* v = vec.data();
-//   T minval = fabs(v[0]);
-//   for(int i=1; i<vec.length(); i++)
-//     {
-//       T a=fabs(v[i]);
-//       if(a<minval)
-//         minval = a;
-//     }
-//   return minval;
-// }
-
 template<class T>
 T minabs(const TVec<T>& vec, int index = int())
 {
@@ -768,6 +779,8 @@ T minabs(const TVec<T>& vec, int index = int())
     if(vec.length()==0)
         PLERROR("IN T minabs(const TVec<T>& vec) vec has zero length");
 #endif
+    if (vec.size() == 0)
+        return std::numeric_limits<T>::max();
     T* v = vec.data();
     T minval = fabs(v[0]);
     for(int i=1; i<vec.length(); i++)
@@ -889,6 +902,8 @@ template<class T>
 T pownorm(const TVec<T>& vec, double n)
 {
     double result = 0.0;
+    if (vec.size() == 0)
+        return result;
     T* v = vec.data();
     if(n==1.0)
     {
@@ -1023,37 +1038,39 @@ T weighted_powdistance(const TVec<T>& vec1, const TVec<T>& vec2, double n, const
         PLERROR("In weighted_powdistance: vec1, vec2 and weights vector should have the same length");
 #endif
     T result = 0.0;
-    T* v1 = vec1.data();
-    T* v2 = vec2.data();
-    T* w = weights.data();
-    int length = vec1.length();
-    if(n==1.0) // L1 distance
-    {
-        for(int i=0; i<length; i++)
+    if (vec1.size() > 0 && vec2.size() > 0 && weights.size() > 0) {
+        T* v1 = vec1.data();
+        T* v2 = vec2.data();
+        T* w = weights.data();
+        int length = vec1.length();
+        if(n==1.0) // L1 distance
         {
-            T diff = w[i]*(v1[i]-v2[i]);
-            if(diff>=0)
-                result += diff;
-            else
-                result -= diff;
+            for(int i=0; i<length; i++)
+            {
+                T diff = w[i]*(v1[i]-v2[i]);
+                if(diff>=0)
+                    result += diff;
+                else
+                    result -= diff;
+            }
         }
-    }
-    else if(n==2.0)
-    {
-        for(int i=0; i<length; i++)
+        else if(n==2.0)
         {
-            T diff = w[i]*(v1[i]-v2[i]);
-            result += diff*diff;
+            for(int i=0; i<length; i++)
+            {
+                T diff = w[i]*(v1[i]-v2[i]);
+                result += diff*diff;
+            }
         }
-    }
-    else
-    {
-        for(int i=0; i<length; i++)
+        else
         {
-            T diff = w[i]*(v1[i]-v2[i]);
-            if(diff<0)
-                diff = -diff;
-            result += mypow(diff,n);
+            for(int i=0; i<length; i++)
+            {
+                T diff = w[i]*(v1[i]-v2[i]);
+                if(diff<0)
+                    diff = -diff;
+                result += mypow(diff,n);
+            }
         }
     }
     return result;
@@ -1071,22 +1088,104 @@ T weighted_distance(const TVec<T>& vec1, const TVec<T>& vec2, double n, const TV
 }
 
 
+//!  element-wise +
+template<class T>
+inline void operator+=(const TVec<T>& vec1, const TVec<T>& vec2)
+{
+#ifdef BOUNDCHECK
+    if(vec1.size() != vec2.size())
+        PLERROR("In operator+=, vec1 and vec2 vectors must have the same length");
+#endif
+    if (vec1.size() > 0 && vec2.size() > 0) {
+        T* v1 = vec1.data();
+        T* v2 = vec2.data();
+        int l = vec1.length();
+        for(int i=0; i<l; i++)
+            *v1++ += *v2++;
+    }
+}
+
+template<class T>
+void operator+=(const TVec<T>& vec, T scalar)
+{
+    if (vec.size() > 0) {
+        T* v = vec.data();
+        for(int i=0; i<vec.length(); i++)
+            v[i] += scalar;
+    }
+}
+
+template<class T>
+TVec<T> operator-(const TVec<T>& vec)
+{
+    if (vec.size() > 0) {
+        TVec<T> opposite(vec.length());
+        T *v=vec.data();
+        T *o=opposite.data();
+        for (int i=0;i<vec.length();i++)
+            o[i] = - v[i];
+        return opposite;
+    }
+}
+
 template<class T>
 void operator-=(const TVec<T>& vec1, const TVec<T>& vec2)
 {
-    T* v1 = vec1.data();
-    T* v2 = vec2.data();
-    for(int i=0; i<vec1.length(); i++)
-        v1[i] -= v2[i];
+#ifdef BOUNDCHECK
+    if(vec1.size() != vec2.size())
+        PLERROR("In operator-=, vec1 and vec2 vectors must have the same length");
+#endif
+    if (vec1.size() > 0 && vec2.size() > 0) {
+        T* v1 = vec1.data();
+        T* v2 = vec2.data();
+        for(int i=0; i<vec1.length(); i++)
+            v1[i] -= v2[i];
+    }
 }
+
+template<class T>
+void operator-=(const TVec<T>& vec, T scalar)
+{ vec += -scalar; }
 
 template<class T>
 void operator*=(const TVec<T>& vec1, const TVec<T>& vec2)
 {
-    T* v1 = vec1.data();
-    T* v2 = vec2.data();
-    for(int i=0; i<vec1.length(); i++)
-        v1[i] *= v2[i];
+#ifdef BOUNDCHECK
+    if(vec1.size() != vec2.size())
+        PLERROR("In operator*=, vec1 and vec2 vectors must have the same length");
+#endif
+    if (vec1.size() > 0 && vec2.size() > 0) {
+        T* v1 = vec1.data();
+        T* v2 = vec2.data();
+        for(int i=0; i<vec1.length(); i++)
+            v1[i] *= v2[i];
+    }
+}
+
+template<class T>
+void operator*=(const TVec<T>& vec, T factor)
+{
+    if (vec.size() > 0) {
+        T* p = vec.data();
+        int l = vec.length();
+        for (int i=0;i<l;i++) 
+            *p++ *= factor;
+    }
+}
+
+template<class T>
+void operator/=(const TVec<T>& vec1, const TVec<T>& vec2)
+{
+#ifdef BOUNDCHECK
+    if(vec1.size() != vec2.size())
+        PLERROR("In operator/=, vec1 and vec2 vectors must have the same length");
+#endif
+    if (vec1.size() > 0 && vec2.size() > 0) {
+        T* v1 = vec1.data();
+        T* v2 = vec2.data();
+        for(int i=0; i<vec1.length(); i++)
+            v1[i] /= v2[i];
+    }
 }
 
 template<class T>
@@ -1104,11 +1203,13 @@ void compute_log(const TVec<T>& src, const TVec<T>& dest)
     if(src.length()!=dest.length())
         PLERROR("In log, src and dest vectors must have the same length");
 #endif
-    T* ps = src.data();
-    T* pd = dest.data();
-    int n = src.length();
-    for(int i=0; i<n; i++)
-        *pd++ = pl_log(*ps++);
+    if (sec.size() > 0 && dest.size() > 0) {
+        T* ps = src.data();
+        T* pd = dest.data();
+        int n = src.length();
+        for(int i=0; i<n; i++)
+            *pd++ = pl_log(*ps++);
+    }
 }
 
 template<class T>
@@ -1122,11 +1223,13 @@ void compute_sqrt(const TVec<T>& src, const TVec<T>& dest)
     if(src.length()!=dest.length())
         PLERROR("In sqrt, src and dest vectors must have the same length");
 #endif
-    T* ps = src.data();
-    T* pd = dest.data();
-    int n = src.length();
-    for(int i=0; i<n; i++)
-        *pd++ = sqrt(*ps++);
+    if (src.size() > 0 && dest.size() > 0) {
+        T* ps = src.data();
+        T* pd = dest.data();
+        int n = src.length();
+        for(int i=0; i<n; i++)
+            *pd++ = sqrt(*ps++);
+    }
 }
 
 template<class T>
@@ -1140,25 +1243,18 @@ void compute_safelog(const TVec<T>& src, const TVec<T>& dest)
     if(src.length()!=dest.length())
         PLERROR("In safelog, src and dest vectors must have the same length");
 #endif
-    T* ps = src.data();
-    T* pd = dest.data();
-    int n = src.length();
-    for(int i=0; i<n; i++)
-        *pd++ = safelog(*ps++);
+    if (src.size() > 0 && dest.size() > 0) {
+        T* ps = src.data();
+        T* pd = dest.data();
+        int n = src.length();
+        for(int i=0; i<n; i++)
+            *pd++ = safelog(*ps++);
+    }
 }
 
 template<class T>
 inline TVec<T> safelog(const TVec<T>& src)
 { TVec<T> dest(src.length()); compute_safelog(src,dest); return dest; }
-
-template<class T>
-void operator/=(const TVec<T>& vec1, const TVec<T>& vec2)
-{
-    T* v1 = vec1.data();
-    T* v2 = vec2.data();
-    for(int i=0; i<vec1.length(); i++)
-        v1[i] /= v2[i];
-}
 
 template<class T>
 void compute_tanh(const TVec<T>& src, const TVec<T>& dest)
@@ -1167,11 +1263,13 @@ void compute_tanh(const TVec<T>& src, const TVec<T>& dest)
     if(src.length()!=dest.length())
         PLERROR("In tanh, src and dest vectors must have the same length");
 #endif
-    T* ps = src.data();
-    T* pd = dest.data();
-    int n = src.length();
-    for(int i=0; i<n; i++)
-        *pd++ = tanh(*ps++);
+    if (src.size() > 0 && dest.size() > 0) {
+        T* ps = src.data();
+        T* pd = dest.data();
+        int n = src.length();
+        for(int i=0; i<n; i++)
+            *pd++ = tanh(*ps++);
+    }
 }
 
 template<class T>
@@ -1181,15 +1279,17 @@ void bprop_tanh(const TVec<T>& tanh_x, const TVec<T>& d_tanh_x, TVec<T>& d_x)
     if(tanh_x.length()!=d_tanh_x.length())
         PLERROR("In bprop_tanh, src and dest vectors must have the same length");
 #endif
-    int n = tanh_x.length();
-    if (n != d_x.length()) d_x.resize(n);
-    T* y = tanh_x.data();
-    T* dy = d_tanh_x.data();
-    T* dx = d_x.data();
-    for(int i=0; i<n; i++)
-    {
-        real yi = *y++;
-        *dx++ = *dy++ * (1 - yi*yi);
+    if (tanh_x.size() > 0 && d_tanh_x.size() > 0 && d_x.size() > 0) {
+        int n = tanh_x.length();
+        if (n != d_x.length()) d_x.resize(n);
+        T* y = tanh_x.data();
+        T* dy = d_tanh_x.data();
+        T* dx = d_x.data();
+        for(int i=0; i<n; i++)
+        {
+            real yi = *y++;
+            *dx++ = *dy++ * (1 - yi*yi);
+        }
     }
 }
 
@@ -1205,11 +1305,13 @@ void compute_fasttanh(const TVec<T>& src, const TVec<T>& dest)
     if(src.length()!=dest.length())
         PLERROR("In fasttanh, src and dest vectors must have the same length");
 #endif
-    T* ps = src.data();
-    T* pd = dest.data();
-    int n = src.length();
-    for(int i=0; i<n; i++)
-        *pd++ = fasttanh(*ps++);
+    if (src.size() > 0 && dest.size() > 0) {
+        T* ps = src.data();
+        T* pd = dest.data();
+        int n = src.length();
+        for(int i=0; i<n; i++)
+            *pd++ = fasttanh(*ps++);
+    }
 }
 
 template<class T>
@@ -1223,11 +1325,13 @@ void compute_sigmoid(const TVec<T>& src, const TVec<T>& dest)
     if(src.length()!=dest.length())
         PLERROR("In sigmoid, src and dest vectors must have the same length");
 #endif
-    T* ps = src.data();
-    T* pd = dest.data();
-    int n = src.length();
-    for(int i=0; i<n; i++)
-        *pd++ = sigmoid(*ps++);
+    if (src.size() > 0 && dest.size() > 0) {
+        T* ps = src.data();
+        T* pd = dest.data();
+        int n = src.length();
+        for(int i=0; i<n; i++)
+            *pd++ = sigmoid(*ps++);
+    }
 }
 
 template<class T>
@@ -1237,11 +1341,13 @@ void log_sigmoid(const TVec<T>& src, const TVec<T>& dest)
     if(src.length()!=dest.length())
         PLERROR("In sigmoid, src and dest vectors must have the same length");
 #endif
-    T* ps = src.data();
-    T* pd = dest.data();
-    int n = src.length();
-    for(int i=0; i<n; i++)
-        *pd++ = log_sigmoid(*ps++);
+    if (src.size() > 0 && dest.size() > 0) {
+        T* ps = src.data();
+        T* pd = dest.data();
+        int n = src.length();
+        for(int i=0; i<n; i++)
+            *pd++ = log_sigmoid(*ps++);
+    }
 }
 
 template<class T>
@@ -1256,11 +1362,13 @@ void compute_fastsigmoid(const TVec<T>& src, const TVec<T>& dest)
     if(src.length()!=dest.length())
         PLERROR("In fastsigmoid, src and dest vectors must have the same length");
 #endif
-    T* ps = src.data();
-    T* pd = dest.data();
-    int n = src.length();
-    for(int i=0; i<n; i++)
-        *pd++ = fastsigmoid(*ps++);
+    if (src.size() > 0 && dest.size() > 0) {
+        T* ps = src.data();
+        T* pd = dest.data();
+        int n = src.length();
+        for(int i=0; i<n; i++)
+            *pd++ = fastsigmoid(*ps++);
+    }
 }
 
 template<class T>
@@ -1274,11 +1382,13 @@ void compute_inverse_sigmoid(const TVec<T>& src, const TVec<T>& dest)
     if(src.length()!=dest.length())
         PLERROR("In inverse_sigmoid, src and dest vectors must have the same length");
 #endif
-    T* ps = src.data();
-    T* pd = dest.data();
-    int n = src.length();
-    for(int i=0; i<n; i++)
-        *pd++ = inverse_sigmoid(*ps++);
+    if (src.size() > 0 && dest.size() > 0) {
+        T* ps = src.data();
+        T* pd = dest.data();
+        int n = src.length();
+        for(int i=0; i<n; i++)
+            *pd++ = inverse_sigmoid(*ps++);
+    }
 }
 
 template<class T>
@@ -1289,52 +1399,35 @@ inline TVec<T> inverse_sigmoid(const TVec<T>& src)
 template<class T>
 void negateElements(const TVec<T>& vec)
 {
-    T* v = vec.data();
-    for(int i=0; i<vec.length(); i++)
-        v[i] = -v[i];
+    if (vec.size() > 0) {
+        T* v = vec.data();
+        for(int i=0; i<vec.length(); i++)
+            v[i] = -v[i];
+    }
 }
 
 template<class T>
 void invertElements(const TVec<T>& vec)
 {
-    T* v = vec.data();
-    for(int i=0; i<vec.length(); i++)
-        v[i] = 1.0/v[i];
+    if (vec.size() > 0) {
+        T* v = vec.data();
+        for(int i=0; i<vec.length(); i++)
+            v[i] = 1.0/v[i];
+    }
 }
 
 template<class T>
 TVec<T> inverted(const TVec<T>& vec)
 {
     TVec<T> ret(vec.length());
-    T* v = vec.data();
-    for(int i=0; i<vec.length(); i++)
-        ret[i] = 1.0/v[i];
+    if (vec.size() > 0) {
+        T* v = vec.data();
+        for(int i=0; i<vec.length(); i++)
+            ret[i] = 1.0/v[i];
+    }
     return ret;
 }
 
-
-template<class T>
-void operator+=(const TVec<T>& vec, T scalar)
-{
-    T* v = vec.data();
-    for(int i=0; i<vec.length(); i++)
-        v[i] += scalar;
-}
-
-template<class T>
-void operator-=(const TVec<T>& vec, T scalar)
-{ vec += -scalar; }
-
-template<class T>
-TVec<T> operator-(TVec<T> vec)
-{
-    TVec<T> opposite(vec.length());
-    T *v=vec.data();
-    T *o=opposite.data();
-    for (int i=0;i<vec.length();i++)
-        o[i] = - v[i];
-    return opposite;
-}
 
 template<class T>
 T dot(const TVec<T>& vec1, const TVec<T>& vec2)
@@ -1343,12 +1436,13 @@ T dot(const TVec<T>& vec1, const TVec<T>& vec2)
     if(vec1.length()!=vec2.length())
         PLERROR("In T operator*(const TVec<T>& vec1, const TVec<T>& vec2) (dot product) the 2 vecs must have the same length.");
 #endif
-
     T res = 0;
-    T* v1 = vec1.data();
-    T* v2 = vec2.data();
-    for(int i=0; i<vec1.length(); i++)
-        res += v1[i]*v2[i];
+    if (vec1.size() > 0 && vec2.size() > 0) {
+        T* v1 = vec1.data();
+        T* v2 = vec2.data();
+        for(int i=0; i<vec1.length(); i++)
+            res += v1[i]*v2[i];
+    }
     return res;
 }
 
@@ -1364,12 +1458,13 @@ V dot(const TVec<T>& vec1, const TVec<U>& vec2)
     if(vec1.length()!=vec2.length())
         PLERROR("In T operator*(const TVec<T>& vec1, const TVec<T>& vec2) (dot product) the 2 vecs must have the same length.");
 #endif
-
     V res = 0;
-    T* v1 = vec1.data();
-    U* v2 = vec2.data();
-    for(int i=0; i<vec1.length(); i++)
-        res += v1[i]*v2[i];
+    if (vec1.size() > 0 && vec2.size() > 0) {
+        T* v1 = vec1.data();
+        U* v2 = vec2.data();
+        for(int i=0; i<vec1.length(); i++)
+            res += v1[i]*v2[i];
+    }
     return res;
 }
 
@@ -1382,17 +1477,19 @@ T dot(const TMat<T>& m1, const TMat<T>& m2)
 #endif
 
     T res = 0;
-    T* v1 = m1.data();
-    T* v2 = m2.data();
-    if (m1.isCompact() && m2.isCompact())
-        for(int i=0; i<m1.size(); i++)
-            res += v1[i]*v2[i];
-    else
-    {
-        TMatElementIterator<T> p1 = m1.begin();
-        TMatElementIterator<T> p2 = m2.begin();
-        for (int i=0; i<m1.size(); i++,++p1,++p2)
-            res += *p1 * *p2;
+    if (m1.size() > 0 && m2.size() > 0) {
+        T* v1 = m1.data();
+        T* v2 = m2.data();
+        if (m1.isCompact() && m2.isCompact())
+            for(int i=0; i<m1.size(); i++)
+                res += v1[i]*v2[i];
+        else
+        {
+            TMatElementIterator<T> p1 = m1.begin();
+            TMatElementIterator<T> p2 = m2.begin();
+            for (int i=0; i<m1.size(); i++,++p1,++p2)
+                res += *p1 * *p2;
+        }
     }
     return res;
 }
@@ -1499,10 +1596,12 @@ TVec<T> operator/(T v1, const TVec<T>& v2)
 {
     int n=v2.length();
     TVec<T> v(n);
-    T* s2=v2.data();
-    T* d=v.data();
-    for (int i=0;i<n;i++)
-        d[i] = v1/s2[i];
+    if (v2.size() > 0) {
+        T* s2=v2.data();
+        T* d=v.data();
+        for (int i=0;i<n;i++)
+            d[i] = v1/s2[i];
+    }
     return v;
 }
 
@@ -1595,11 +1694,17 @@ TVec<T> square(const TVec<T>& vec)
 template<class T>
 void square(TVec<T>& result, const TVec<T>& vec)
 {
+#ifdef BOUNDCHECK
+    if (result.size() != vec.size())
+        PLERROR("In square, 'result' and 'vec' must have the same size");
+#endif
     int n = vec.length();
-    T* v = vec.data();
-    T* r = result.data();
-    for(int i=0; i<n; i++)
-        r[i] = v[i]*v[i];
+    if (n > 0) {
+        T* v = vec.data();
+        T* r = result.data();
+        for(int i=0; i<n; i++)
+            r[i] = v[i]*v[i];
+    }
 }
 
 template<class T>
@@ -1607,10 +1712,12 @@ TVec<T> squareroot(const TVec<T>& vec)
 {
     int n = vec.length();
     TVec<T> result(n);
-    T* v = vec.data();
-    T* r = result.data();
-    for(int i=0; i<n; i++)
+    if (n > 0) {
+        T* v = vec.data();
+        T* r = result.data();
+        for(int i=0; i<n; i++)
         r[i] = sqrt(v[i]);
+    }
     return result;
 }
 
@@ -1620,13 +1727,15 @@ TVec<T> remove_missing(const TVec<T>& vec)
     int n = vec.length();
     int n_non_missing = 0;
     TVec<T> result(n);
-    T* v = vec.data();
-    T* r = result.data();
-    for(int i=0; i<n; i++) {
-        if (!is_missing(v[i]))
-            r[n_non_missing++] = v[i];
+    if (n > 0) {
+        T* v = vec.data();
+        T* r = result.data();
+        for(int i=0; i<n; i++) {
+            if (!is_missing(v[i]))
+                r[n_non_missing++] = v[i];
+        }
+        result.resize(n_non_missing);
     }
-    result.resize(n_non_missing);
     return result;
 }
 
@@ -1648,10 +1757,12 @@ void apply(const TVec<T>& source, TVec<U>& destination, U (*func)(T))
     if (n!=destination.length())
         PLERROR("apply: source(%d) and destination(%d) TVec<T>'s must have same length",
                 n,destination.length());
-    T* s = source.data();
-    U* d = destination.data();
-    for(int i=0; i<n; i++)
-        d[i]=func(s[i]);
+    if (n > 0) {
+        T* s = source.data();
+        U* d = destination.data();
+        for(int i=0; i<n; i++)
+            d[i]=func(s[i]);
+    }
 }
 
 //! Transform a vector of T and a vector of U into a vector of V,
@@ -1663,11 +1774,13 @@ void apply(const TVec<T>& src1,const TVec<U>& src2, TVec<V>& dest,
     int n=src1.length();
     if (n!=dest.length() || n!=src2.length())
         PLERROR("apply: src1, src2 and destination TVec<T>'s must have same length");
-    T* s1 = src1.data();
-    U* s2 = src2.data();
-    V* d = dest.data();
-    for(int i=0; i<n; i++)
-        d[i]=func(s1[i],s2[i]);
+    if (n > 0) {
+        T* s1 = src1.data();
+        U* s2 = src2.data();
+        V* d = dest.data();
+        for(int i=0; i<n; i++)
+            d[i]=func(s1[i],s2[i]);
+    }
 }
 
 
@@ -1683,11 +1796,13 @@ void multiply(const TVec<T>& source1, const TVec<T>& source2, TVec<T>& destinati
                 n,source2.length());
     if (n!=destination.length())
         destination.resize(n);
-    T* s1=source1.data();
-    T* s2=source2.data();
-    T* d=destination.data();
-    for (int i=0;i<n;i++)
-        d[i] = s1[i]*s2[i];
+    if (n > 0) {
+        T* s1=source1.data();
+        T* s2=source2.data();
+        T* d=destination.data();
+        for (int i=0;i<n;i++)
+            d[i] = s1[i]*s2[i];
+    }
 }
 
 // destination[i] = source1[i] + source2[i]*source3
@@ -1701,11 +1816,13 @@ void multiplyAdd(const TVec<T>& source1, const TVec<T>& source2,
                 n,source2.length());
     if (n!=destination.length())
         destination.resize(n);
-    T* s1=source1.data();
-    T* s2=source2.data();
-    T* d=destination.data();
-    for (int i=0;i<n;i++)
-        d[i] = s1[i]+s2[i]*source3;
+    if (n > 0) {
+        T* s1=source1.data();
+        T* s2=source2.data();
+        T* d=destination.data();
+        for (int i=0;i<n;i++)
+            d[i] = s1[i]+s2[i]*source3;
+    }
 }
 
 // destination[i] = a*destination[i] + b*source[i]
@@ -1716,10 +1833,12 @@ void multiplyScaledAdd(const TVec<T>& source, T a, T b, const TVec<T>& destinati
     if (n!=destination.length())
         PLERROR("multiply: source and destination (l=%d and %d) must have same length",
                 n,destination.length());
-    T* s=source.data();
-    T* d=destination.data();
-    for (int i=0;i<n;i++)
-        d[i] = a*d[i] + b*s[i];
+    if (n > 0) {
+        T* s=source.data();
+        T* d=destination.data();
+        for (int i=0;i<n;i++)
+            d[i] = a*d[i] + b*s[i];
+    }
 }
 
 // destination[i] = source1[i]+source2[i]
@@ -1732,11 +1851,13 @@ void add(const TVec<T>& source1, const TVec<T>& source2, TVec<T>& destination)
                 n,source2.length());
     if (n!=destination.length())
         destination.resize(n);
-    T* s1=source1.data();
-    T* s2=source2.data();
-    T* d=destination.data();
-    for (int i=0;i<n;i++)
-        d[i] = s1[i]+s2[i];
+    if (n > 0) {
+        T* s1=source1.data();
+        T* s2=source2.data();
+        T* d=destination.data();
+        for (int i=0;i<n;i++)
+            d[i] = s1[i]+s2[i];
+    }
 }
 
 // destination[i] = source1[i]+source2
@@ -1746,10 +1867,12 @@ void add(const TVec<T>& source1, T source2, TVec<T>& destination)
     int n=source1.length();
     if (n!=destination.length())
         destination.resize(n);
-    T* s1=source1.data();
-    T* d=destination.data();
-    for (int i=0;i<n;i++)
-        d[i] = s1[i]+source2;
+    if (n > 0) {
+        T* s1=source1.data();
+        T* d=destination.data();
+        for (int i=0;i<n;i++)
+            d[i] = s1[i]+source2;
+    }
 }
 
 template<class T>
@@ -1766,11 +1889,13 @@ void substract(const TVec<T>& source1, const TVec<T>& source2, TVec<T>& destinat
                 n,source2.length());
     if (n!=destination.length())
         destination.resize(n);
-    T* s1=source1.data();
-    T* s2=source2.data();
-    T* d=destination.data();
-    for (int i=0;i<n;i++)
-        d[i] = s1[i]-s2[i];
+    if (n > 0) {
+        T* s1=source1.data();
+        T* s2=source2.data();
+        T* d=destination.data();
+        for (int i=0;i<n;i++)
+            d[i] = s1[i]-s2[i];
+    }
 }
 
 // destination[i] += source1[i]-source2[i]
@@ -1783,11 +1908,13 @@ void substractAcc(const TVec<T>& source1, const TVec<T>& source2, TVec<T>& desti
                 n,source2.length());
     if (n!=destination.length())
         destination.resize(n);
-    T* s1=source1.data();
-    T* s2=source2.data();
-    T* d=destination.data();
-    for (int i=0;i<n;i++)
-        d[i] += s1[i]-s2[i];
+    if (n > 0) {
+        T* s1=source1.data();
+        T* s2=source2.data();
+        T* d=destination.data();
+        for (int i=0;i<n;i++)
+            d[i] += s1[i]-s2[i];
+    }
 }
 
 // destination[i] = source1-source2[i]
@@ -1797,10 +1924,12 @@ void substract(T source1, const TVec<T>& source2, TVec<T>& destination)
   int n=source2.length();
   if (n!=destination.length())
     destination.resize(n);
-  T* s2=source2.data();
-  T* d=destination.data();
-  for (int i=0;i<n;i++)
-    d[i] = source1-s2[i];
+  if (n > 0) {
+      T* s2=source2.data();
+      T* d=destination.data();
+      for (int i=0;i<n;i++)
+          d[i] = source1-s2[i];
+  }
 }
 
 template<class T>
@@ -1817,11 +1946,13 @@ void divide(const TVec<T>& source1, const TVec<T>& source2, TVec<T>& destination
                 n,source2.length());
     if (n!=destination.length())
         destination.resize(n);
-    T* s1=source1.data();
-    T* s2=source2.data();
-    T* d=destination.data();
-    for (int i=0;i<n;i++)
-        d[i] = s1[i]/s2[i];
+    if (n > 0) {
+        T* s1=source1.data();
+        T* s2=source2.data();
+        T* d=destination.data();
+        for (int i=0;i<n;i++)
+            d[i] = s1[i]/s2[i];
+    }
 }
 
 // destination[i] = source1/source2[i]
@@ -1831,10 +1962,12 @@ void divide(T source1, const TVec<T>& source2, TVec<T>& destination)
     int n=source2.length();
     if (n!=destination.length())
         destination.resize(n);
-    T* s2=source2.data();
-    T* d=destination.data();
-    for (int i=0;i<n;i++)
-        d[i] = source1/s2[i];
+    if (n > 0) {
+        T* s2=source2.data();
+        T* d=destination.data();
+        for (int i=0;i<n;i++)
+            d[i] = source1/s2[i];
+    }
 }
 
 // destination[i] = max(source1[i],source2[i])
@@ -1847,11 +1980,13 @@ void max(const TVec<T>& source1, const TVec<T>& source2, TVec<T>& destination)
                 n,source2.length());
     if (n!=destination.length())
         destination.resize(n);
-    T* s1=source1.data();
-    T* s2=source2.data();
-    T* d=destination.data();
-    for (int i=0;i<n;i++)
-        d[i] = MAX(s1[i],s2[i]);
+    if (n > 0) {
+        T* s1=source1.data();
+        T* s2=source2.data();
+        T* d=destination.data();
+        for (int i=0;i<n;i++)
+            d[i] = MAX(s1[i],s2[i]);
+    }
 }
 
 // destination[i] = max(source1[i],source2)
@@ -1861,10 +1996,12 @@ void max(const TVec<T>& source1, T source2, TVec<T>& destination)
     int n=source1.length();
     if (n!=destination.length())
         destination.resize(n);
-    T* s1=source1.data();
-    T* d=destination.data();
-    for (int i=0;i<n;i++)
-        d[i] = MAX(s1[i],source2);
+    if (n > 0) {
+        T* s1=source1.data();
+        T* d=destination.data();
+        for (int i=0;i<n;i++)
+            d[i] = MAX(s1[i],source2);
+    }
 }
 
 
@@ -1878,11 +2015,13 @@ void min(const TVec<T>& source1, const TVec<T>& source2, TVec<T>& destination)
                 n,source2.length());
     if (n!=destination.length())
         destination.resize(n);
-    T* s1=source1.data();
-    T* s2=source2.data();
-    T* d=destination.data();
-    for (int i=0;i<n;i++)
-        d[i] = MIN(s1[i],s2[i]);
+    if (n > 0) {
+        T* s1=source1.data();
+        T* s2=source2.data();
+        T* d=destination.data();
+        for (int i=0;i<n;i++)
+            d[i] = MIN(s1[i],s2[i]);
+    }
 }
 
 // destination[i] = min(source1[i],source2)
@@ -1892,10 +2031,12 @@ void min(const TVec<T>& source1, T source2, TVec<T>& destination)
     int n=source1.length();
     if (n!=destination.length())
         destination.resize(n);
-    T* s1=source1.data();
-    T* d=destination.data();
-    for (int i=0;i<n;i++)
-        d[i] = MIN(s1[i],source2);
+    if (n > 0) {
+        T* s1=source1.data();
+        T* d=destination.data();
+        for (int i=0;i<n;i++)
+            d[i] = MIN(s1[i],source2);
+    }
 }
 
 
@@ -1939,6 +2080,8 @@ template<class T>
 TVec<T> nonZeroIndices(TVec<T> v)
 {
     int n=v.length();
+    if (!n)
+        return TVec<T>();
     TVec<T> indices(n);
     int ni=0;
     T* val = v.data();
@@ -1955,6 +2098,8 @@ template<class T>
 TVec<T> nonZeroIndices(TVec<bool> v)
 {
     int n=v.length();
+    if (!n)
+        return TVec<T>();
     TVec<T> indices(n);
     int ni=0;
     bool* val = v.data();
@@ -1990,92 +2135,105 @@ void complement_indices(TVec<T>& indices, int n,
 template<class T>
 void equals(const TVec<T>& src, T v, TVec<T>& dest)
 {
-    T* s=src.data();
-    T* d=dest.data();
     int n=src.length();
 #ifdef BOUNDCHECK
     if (n!=dest.length())
         PLERROR("equals(TVec<T>(%d),T,TVec<T>(%d)) args of unequal lengths",
                 n,dest.length());
 #endif
-    for (int i=0;i<n;i++)
-        if (s[i]==v) d[i]=1.0; else d[i]=0.0;
+    if (n > 0) {
+        T* s=src.data();
+        T* d=dest.data();
+        for (int i=0;i<n;i++)
+            if (s[i]==v) d[i]=1.0; else d[i]=0.0;
+    }
 }
 
 // dest[i] = 1 if first[i] > second[i], 0 otherwise
 template<class T>
 void isLargerThan(const TVec<T>& first, const TVec<T>& second, TVec<T>& dest)
 {
-    T* f=first.data();
-    T* s=second.data();
-    T* d=dest.data();
     int n=first.length();
     if(n!=second.length() || n!=dest.length())
         PLERROR("isLargerThan(TVec<T>(%d), TVec<T>(%d), TVec<T>(%d)) args of unequal length", 
                 n, second.length(), dest.length());
-    for (int i=0; i<n; i++)
-        d[i] = f[i] > s[i];
+    if (n > 0) {
+        T* f=first.data();
+        T* s=second.data();
+        T* d=dest.data();
+        for (int i=0; i<n; i++)
+            d[i] = f[i] > s[i];
+    }
 }
 
 // dest[i] = 1 if first[i] >= second[i], 0 otherwise
 template<class T>
 void isLargerThanOrEqualTo(const TVec<T>& first, const TVec<T>& second, TVec<T>& dest)
 {
-    T* f=first.data();
-    T* s=second.data();
-    T* d=dest.data();
     int n=first.length();
     if(n!=second.length() || n!=dest.length())
         PLERROR("isLargerThan(TVec<T>(%d), TVec<T>(%d), TVec<T>(%d)) args of unequal length", 
                 n, second.length(), dest.length());
-    for (int i=0; i<n; i++)
-        d[i] = f[i] >= s[i];
+    if (n > 0) {
+        T* f=first.data();
+        T* s=second.data();
+        T* d=dest.data();
+        for (int i=0; i<n; i++)
+            d[i] = f[i] >= s[i];
+    }
 }
 
 // dest[i] = 1 if first[i] < second[i], 0 otherwise
 template<class T>
 void isSmallerThan(const TVec<T>& first, const TVec<T>& second, TVec<T>& dest)
 {
-    T* f=first.data();
-    T* s=second.data();
-    T* d=dest.data();
     int n=first.length();
     if(n!=second.length() || n!=dest.length())
         PLERROR("isLargerThan(TVec<T>(%d), TVec<T>(%d), TVec<T>(%d)) args of unequal length", 
                 n, second.length(), dest.length());
-    for (int i=0; i<n; i++)
-        d[i] = f[i] < s[i];
+    if (n > 0) {
+        T* f=first.data();
+        T* s=second.data();
+        T* d=dest.data();
+        for (int i=0; i<n; i++)
+            d[i] = f[i] < s[i];
+    }
 }
   
 // dest[i] = 1 if first[i] <= second[i], 0 otherwise
 template<class T>
 void isSmallerThanOrEqualTo(const TVec<T>& first, const TVec<T>& second, TVec<T>& dest)
 {
-    T* f=first.data();
-    T* s=second.data();
-    T* d=dest.data();
     int n=first.length();
     if(n!=second.length() || n!=dest.length())
         PLERROR("isLargerThan(TVec<T>(%d), TVec<T>(%d), TVec<T>(%d)) args of unequal length", 
                 n, second.length(), dest.length());
-    for (int i=0; i<n; i++)
-        d[i] = f[i] <= s[i];
+    if (n > 0) {
+        T* f=first.data();
+        T* s=second.data();
+        T* d=dest.data();
+        for (int i=0; i<n; i++)
+            d[i] = f[i] <= s[i];
+    }
 }
 
 // dest[i] = if_vec[i] ? then_vec[i] : else_vec[i];
 template<class T>
-void ifThenElse(const TVec<T>& if_vec, const TVec<T>& then_vec, const TVec<T>& else_vec, TVec<T>& dest)
+void ifThenElse(const TVec<T>& if_vec, const TVec<T>& then_vec,
+                const TVec<T>& else_vec, TVec<T>& dest)
 {
-    T* i_=if_vec.data();
-    T* t_=then_vec.data();
-    T* e_=else_vec.data();
-    T* d_=dest.data();  
     int n=if_vec.length(); 
-    if (n!=then_vec.length() || n!=else_vec.length())
+    if (n!=then_vec.length() || n!=else_vec.length() || n!=dest_vec.length())
         PLERROR("ifThenElse(TVec<T>(%d), TVec<T>(%d), TVec<T>(%d), TVec<T>(%d)) args of unequal lengths", 
                 n, then_vec.length(), else_vec.length(), dest.length());
-    for (int i=0;i<n;i++)
-        d_[i] = i_[i] ? t_[i] : e_[i];
+    if (n > 0) {
+        T* i_=if_vec.data();
+        T* t_=then_vec.data();
+        T* e_=else_vec.data();
+        T* d_=dest.data();  
+        for (int i=0;i<n;i++)
+            d_[i] = i_[i] ? t_[i] : e_[i];
+    }
 }
 
 // returns the number of times that src[i] == value
@@ -2084,10 +2242,12 @@ int vec_counts(const TVec<T>& src, T value)
 {
     int len = src.length();
     int n = 0;
-    T *p = src.data();
-    for (int i=0; i<len; i++, p++)
-        if (*p == value)
-            n++;
+    if (len > 0) {
+        T *p = src.data();
+        for (int i=0; i<len; i++, p++)
+            if (*p == value)
+                n++;
+    }
     return n;
 }
 
@@ -2096,10 +2256,12 @@ template<class T>
 int vec_find(const TVec<T>& src, T f)
 {
     int len = src.length();
-    T *p = src.data();
-    for (int i=0; i<len; i++, p++)
-        if (*p == f)
-            return(i);
+    if (len > 0) {
+        T *p = src.data();
+        for (int i=0; i<len; i++, p++)
+            if (*p == f)
+                return(i);
+    }
     return -1;
 }
 
@@ -2311,26 +2473,6 @@ void projectOnOrthogonalSubspace(const TVec<T>& vec, const TMat<T>& orthonormal_
         T dp = dot(vec,vi);
         multiplyAcc(vec, vi,-dp);
     }
-}
-
-template<class T>
-void operator*=(const TVec<T>& vec, T factor)
-{
-    T* p = vec.data();
-    int l = vec.length();
-    for (int i=0;i<l;i++) 
-        *p++ *= factor;
-}
-
-//!  element-wise +
-template<class T>
-inline void operator+=(const TVec<T>& vec1, const TVec<T>& vec2)
-{
-    T* v1 = vec1.data();
-    T* v2 = vec2.data();
-    int l = vec1.length();
-    for(int i=0; i<l; i++)
-        *v1++ += *v2++;
 }
 
 
