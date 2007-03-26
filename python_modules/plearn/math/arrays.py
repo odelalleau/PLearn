@@ -208,6 +208,9 @@ def isNotNaN(f):
 def replace_nans(a, with=0.0):
     return choose(isNotNaN(a), (with, a))
 
+def average(x, axis=0):
+    return sum(x,axis) / len(x)
+
 if __name__ == '__main__':
     a = array(range(10))
     print "lag(%s): %s"%(a, lag(a))
