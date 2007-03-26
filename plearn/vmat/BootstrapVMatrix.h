@@ -72,12 +72,12 @@ public:
     BootstrapVMatrix();
 
     //! Construct a boostrap of another VMatrix.
-    //! Note: 'the_seed' sets the new 'own_seed' option, not the old 'seed' one.
-    BootstrapVMatrix(VMat m, real frac, bool shuffle = false, long the_seed = -2,
+    BootstrapVMatrix(VMat m, real frac, bool shuffle = false,
+                     long the_seed = 1827,
                      bool allow_rep= false);
 
-    //! Constructor which takes an rgen instead of a seed
-    BootstrapVMatrix(VMat m, real frac, PP<PRandom> rgen_,
+    //! Constructor which takes directly a PRandom object instead of a seed.
+    BootstrapVMatrix(VMat m, real frac, PP<PRandom> the_rgen,
                      bool shuffle = false,
                      bool allow_rep= false);
 

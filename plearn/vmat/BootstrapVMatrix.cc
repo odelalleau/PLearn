@@ -56,22 +56,22 @@ PLEARN_IMPLEMENT_OBJECT(BootstrapVMatrix,
 // BootstrapVMatrix //
 //////////////////////
 BootstrapVMatrix::BootstrapVMatrix():
-    rgen(0),
+    rgen(new PRandom()),
     frac(0.6667),
     n_elems(-1),
-    own_seed(-2), // -2 = hack value while 'seed' is still there
-    seed(0),
+    own_seed(-3), // Temporary hack value to detect use of deprecated option.
+    seed(1827),   // Default fixed seed value (safer than time-dependent).
     shuffle(false),
     allow_repetitions(false)
 {}
 
 BootstrapVMatrix::BootstrapVMatrix(VMat m, real the_frac, bool the_shuffle,
                                    long the_seed, bool allow_rep):
-    rgen(0),
+    rgen(new PRandom()),
     frac(the_frac),
     n_elems(-1),
-    own_seed(the_seed),
-    seed(0),
+    own_seed(-3),
+    seed(the_seed),
     shuffle(the_shuffle),
     allow_repetitions(allow_rep)
 {
@@ -80,17 +80,21 @@ BootstrapVMatrix::BootstrapVMatrix(VMat m, real the_frac, bool the_shuffle,
 }
 
 BootstrapVMatrix::BootstrapVMatrix(VMat m, real the_frac, 
-                                   PP<PRandom> rgen_,
+                                   PP<PRandom> the_rgen,
                                    bool the_shuffle,
                                    bool allow_rep):
-    rgen(rgen_),
+    rgen(the_rgen),
     frac(the_frac),
     n_elems(-1),
-    own_seed(0),
-    seed(0),
+    own_seed(-3),
     shuffle(the_shuffle),
     allow_repetitions(allow_rep)
 {
+    PLASSERT( the_rgen );
+    // We obtain the seed value that was actually used to initialize the Boost
+    // random number generator, to ensure this VMat is always the same after
+    // consecutive builds.
+    seed = long(the_rgen->get_the_seed());
     this->source = m;
     build();
 }
@@ -109,23 +113,18 @@ void BootstrapVMatrix::declareOptions(OptionList &ol)
     declareOption(ol, "n_elems", &BootstrapVMatrix::n_elems, OptionBase::buildoption,
                   "The absolute number of elements we keep (will override 'frac' if provided).");
 
-    declareOption(ol, "own_seed", &BootstrapVMatrix::own_seed, OptionBase::buildoption,
-                  "The random generator seed (-1 = initialized from clock, 0 = no initialization).");
-
     declareOption(ol, "seed", &BootstrapVMatrix::seed, OptionBase::buildoption,
-                  "DEPRECATED: The random generator seed (-1 = initialized from clock, 0 = no initialization).\n"
-                  "Warning: this is a global seed that may affect other PLearn objects.",
-                  "", OptionBase::deprecated_level);
+        "Random generator seed (-1 = from clock and 0 = no initialization).");
 
     declareOption(ol, "allow_repetitions", &BootstrapVMatrix::allow_repetitions, 
                   OptionBase::buildoption,
                   "Wether examples should be allowed to appear each more than once.",
                   "", OptionBase::advanced_level);
 
-    declareOption(ol, "rgen", &BootstrapVMatrix::rgen, 
-                  OptionBase::buildoption,
-                  "Random generator to use.\n"
-                  "N.B. use EITHER this or a seed, not both.");
+    declareOption(ol, "own_seed", &BootstrapVMatrix::own_seed,
+                  (OptionBase::learntoption | OptionBase::nosave),
+        "DEPRECATED: old random generator seed",
+        "", OptionBase::deprecated_level);
 
     inherited::declareOptions(ol);
 
@@ -150,36 +149,19 @@ void BootstrapVMatrix::build_()
 {
     if (source) 
     {
-        if(rgen)
-        {
-            if(own_seed != 0 || own_seed == -2 && seed != 0 )
-                PLERROR("PRandom::build_ : cannot specify both an rgen and a seed.");
+        // Ensure we are not using the deprecated 'own_seed' option.
+        if (own_seed != -3) {
+            PLDEPRECATED("In BootstrapVMatrix::build_ - The 'own_seed' option "
+                    "is deprecated: please use 'seed' instead");
+            PLASSERT( seed == 0 ); // Old default value for 'seed' was 0.
+            seed = own_seed;
+            own_seed = -3;
         }
-        else
-            rgen= new PRandom(own_seed);
-        
-        ///***///***///*** ===>
-        // what follows should not exist anymore
-        if (seed != 0)
-            own_seed = -2;
-        if (own_seed == -2) 
-        {
-            //PLDEPRECATED("In BootstrapVMatrix::build_ - You are using the deprecated option 'seed', "
-            //             "the 'own_seed' option (the one you should use) will thus be ignored");
-            PLERROR("In BootstrapVMatrix::build_ - You are using the deprecated option 'seed', "
-                    "which is not supported anymore. "
-                    "The 'own_seed' option is the one you should use.");
-            if (seed == -1)
-                PLearn::seed();
-            else if (seed > 0)
-                manual_seed(seed);
-            else if (seed != 0)
-                PLERROR("In BootstrapVMatrix::build_ - The seed must be either -1 or >= 0");
-            shuffleElements(indices);
-        } 
-        // what precedes should not exist anymore
-        ///***///***///*** <===
 
+        // Initialize RNG.
+        rgen->manual_seed(seed);
+
+        // Create bootstrap sample.
         int l= source.length();
         int nsamp= (n_elems >= 0) ? n_elems : int(round(frac*l));
         if(allow_repetitions)
@@ -195,8 +177,6 @@ void BootstrapVMatrix::build_()
             indices = indices.subVec(0, nsamp);
             if (!shuffle) sortElements(indices);
         }
-
-        //perr << indices << endl;
 
         // Because we changed the indices, a rebuild may be needed.
         inherited::build();
