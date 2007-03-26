@@ -104,7 +104,9 @@ typedef map<int, string> map_int_string;
 
 //! Types that do not require deep copy.
 NODEEPCOPY(double)
+NODEEPCOPY(const double)
 NODEEPCOPY(float)
+NODEEPCOPY(const float)
 NODEEPCOPY(int)
 NODEEPCOPY(const int)
 NODEEPCOPY(const string)
