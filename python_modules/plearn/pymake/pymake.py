@@ -56,11 +56,19 @@ def printusage():
     print 'Usage: pymake [options] <list of targets, files or directories>'
     print 'Where targets are .cc file names or base names or directories'
     print 'And options are a combination of the following: '
-    for choice in options_choices:
-        print ' * One of ' + string.join(map(lambda s: '-'+s, choice),', ') + ' (default is -' + choice[0] + ') where:'
-        for item in choice:
-            print '   -'+item + ': ' + pymake_options_defs[item].description
+    print
+    if len(options_choices)==0:
+        print 'Do "pymake -getoptions" to print the options from the configuration file.'
+    else:
+        print 'Options from the configuration file'
+        for choice in options_choices:
+            print ' * One of ' + string.join(map(lambda s: '-'+s, choice),', ') + ' (default is -' + choice[0] + ') where:'
+            for item in choice:
+                print '   -'+item + ': ' + pymake_options_defs[item].description
+    print
+    print 'Options from pymake:'
     print """
+    
 Options specifying the type of compiled file to produce:
   -dll: create a dll instead of an executable file.
         It probably works ONLY on Windows with MinGW installed.
@@ -123,6 +131,7 @@ instead perform various operations. These special options are:
          directory called <target>.dist, and create there a Makefile that is
          able to compile and link the target.
   -help: display this help message.
+  -getoptions: print the specific options for the target
   -vcproj: a Visual Studio project file (.vcproj) for the target will be
            created.
 
@@ -2597,6 +2606,16 @@ def main( args ):
 
     if 'help' in optionargs:
         printusage()
+        sys.exit()
+        
+    if 'getoptions' in optionargs:
+        print "IN GETOPTIONS!!!!!!!!!!!"
+        for target in otherargs:
+
+            configpath = get_config_path(target)
+            execfile( configpath, globals() )
+            printusage()
+            
         sys.exit()
 
     if 'vcproj' in optionargs:
