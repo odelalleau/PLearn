@@ -373,7 +373,8 @@ void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, in
             }
             else 
             {
-                PLERROR("In loadAscii - Not enough elements in row %d", i);
+                PLERROR("In loadAscii - Not enough elements in row %d: found "
+                        "%d, but expected %d", i, j, width);
             }
         }
     }
