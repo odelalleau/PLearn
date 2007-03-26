@@ -34,7 +34,7 @@ import warnings
 from plearn.pyplearn.context   import actualContext
 from plearn.utilities          import toolkit
 from plearn.utilities.pobject  import PObject
-from plearn.utilities.metaprog import public_attributes
+#from plearn.utilities.metaprog import public_attributes
 from plearn.utilities.Bindings import Bindings
 
 try:

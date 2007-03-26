@@ -43,7 +43,7 @@ from plearn.pyplearn.plearn_repr import PLearnRepr
 from plearn.pyplearn.plearn_repr import plearn_repr
 from plearn.pyplearn.PyPLearnObject import PyPLearnObject, PyPLearnList, PLOption
 
-from plearn.utilities.metaprog import public_attribute_predicate
+#from plearn.utilities.metaprog import public_attribute_predicate
 
 #######  Helper functions  ####################################################
 
