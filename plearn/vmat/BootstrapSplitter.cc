@@ -49,8 +49,8 @@ BootstrapSplitter::BootstrapSplitter()
      frac(0.6667),
      n_splits(0),
      allow_repetitions(false),
-     seed(0),
-     rgen(new PRandom(seed))
+     seed(1827),
+     rgen(new PRandom())
     /* ### Initialise all fields to their default value */
 {
 }
@@ -95,6 +95,7 @@ void BootstrapSplitter::build_()
     // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
     // ### You should assume that the parent class' build_() has already been called.
     if (dataset) {
+        rgen->manual_seed(seed);
         bootstrapped_sets.resize(0,0); // First clear the current sets.
         bootstrapped_sets.resize(n_splits,1);
         for (int i = 0; i < n_splits; i++) {
