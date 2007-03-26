@@ -2223,7 +2223,7 @@ void ifThenElse(const TVec<T>& if_vec, const TVec<T>& then_vec,
                 const TVec<T>& else_vec, TVec<T>& dest)
 {
     int n=if_vec.length(); 
-    if (n!=then_vec.length() || n!=else_vec.length() || n!=dest_vec.length())
+    if (n!=then_vec.length() || n!=else_vec.length() || n!=dest.length())
         PLERROR("ifThenElse(TVec<T>(%d), TVec<T>(%d), TVec<T>(%d), TVec<T>(%d)) args of unequal lengths", 
                 n, then_vec.length(), else_vec.length(), dest.length());
     if (n > 0) {
