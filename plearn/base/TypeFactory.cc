@@ -128,13 +128,13 @@ void displayObjectHelp(ostream& out, const string& classname)
     const TypeMapEntry& entry = it->second;
     Object* obj = 0;
 
-    out << "****************************************************************** \n"
-        << "** " << classname << "\n"
-        << "****************************************************************** \n" << endl;
+    out << "################################################################## \n"
+        << "## " << classname << "\n"
+        << "################################################################## \n" << endl;
 
     // Display basic help
-    out << entry.one_line_descr << endl << endl;
-    out << entry.multi_line_help << endl << endl;
+    out << "## " << entry.one_line_descr << endl << endl;
+    out << "## " << entry.multi_line_help << endl << endl;
 
     if(entry.constructor) // it's an instantiable class
         obj = (*entry.constructor)();
@@ -143,10 +143,10 @@ void displayObjectHelp(ostream& out, const string& classname)
             << "(default values for build options can only be displayed for instantiable classes, \n"
             << " so you'll only see question marks here.)\n" << endl;
       
-    out << "****************************************************************** \n"
-        << "**                         Build Options                        ** \n"
-        << "** (including those inherited from parent and ancestor classes) ** \n"
-        << "****************************************************************** \n" << endl;
+    out << "################################################################## \n"
+        << "##                         Build Options                        ## \n"
+        << "## (including those inherited from parent and ancestor classes) ## \n"
+        << "################################################################## \n" << endl;
 
     out << classname + "( \n";
     OptionList& options = (*entry.getoptionlist_method)();    
@@ -179,10 +179,10 @@ void displayObjectHelp(ostream& out, const string& classname)
     if(obj)
         delete obj;
 
-    out << "****************************************************************** \n"
-        << "** Subclasses of " << classname << " \n"
-        << "** (only those that can be instantiated) \n"
-        << "****************************************************************** \n" << endl;
+    out << "################################################################## \n"
+        << "## Subclasses of " << classname << " \n"
+        << "# (only those that can be instantiated) \n"
+        << "################################################################## \n" << endl;
     for(it = type_map.begin(); it!=itend; ++it)
     {
         // cerr << "Attempting to instantiate: " << it->first << endl;
@@ -192,14 +192,14 @@ void displayObjectHelp(ostream& out, const string& classname)
             Object* o = (*e.constructor)();
             if( (*entry.isa_method)(o) ) {
                 out.width(30);
-                out << it->first << " - " << e.one_line_descr << endl;
+                out <<"## " << it->first << " - " << e.one_line_descr << endl;
             }
             if(o)
                 delete o;
         }
     }
 
-    out << "\n\n------------------------------------------------------------------ \n" << endl;
+    out << "\n\n################################################################## \n" << endl;
 
 }
 
