@@ -108,11 +108,17 @@ void NatGradNNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Update the parameters only so often (number of examples).\n");
 
-    declareOption(ol, "neurons_natgrad", &NatGradNNet::neurons_natgrad,
+    declareOption(ol, "neurons_natgrad_template", &NatGradNNet::neurons_natgrad_template,
                   OptionBase::buildoption,
-                  "Optional NatGradEstimator for the neurons gradient.\n"
+                  "Optional template NatGradEstimator for the neurons gradient.\n"
                   "If not provided, then the natural gradient correction\n"
                   "on the neurons gradient is not performed.\n");
+
+    declareOption(ol, "neurons_natgrad_per_layer", 
+                  &NatGradNNet::neurons_natgrad_per_layer,
+                  OptionBase::learntoption,
+                  "Vector of NatGradEstimator objects for the gradient on the neurons of each layer.\n"
+                  "They are copies of the neuron_natgrad_template provided by the user.\n");
 
     declareOption(ol, "params_natgrad_template", 
                   &NatGradNNet::params_natgrad_template,
@@ -187,7 +193,10 @@ void NatGradNNet::build_()
     all_params.resize(n_params);
     all_params_gradient.resize(n_params);
     all_params_delta.resize(n_params);
-    for (int i=0,p=0;i<n_layers-1;i++)
+    neuron_params.resize(n_neurons);
+    neuron_params_delta.resize(n_neurons);
+    neuron_params_gradient.resize(n_neurons);
+    for (int i=0,k=0,p=0;i<n_layers-1;i++)
     {
         int np=layer_sizes[i+1]*(1+layer_sizes[i]);
         layer_params[i]=all_params.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
@@ -195,6 +204,12 @@ void NatGradNNet::build_()
         weights[i]=layer_params[i].subMatColumns(1,layer_sizes[i]); // weights[0] from layer 0 to layer 1
         layer_params_gradient[i]=all_params_gradient.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
         layer_params_delta[i]=all_params_delta.subVec(p,np);
+        for (int j=0;j<layer_sizes[i+1];j++,k++)
+        {
+            neuron_params[k]=all_params.subVec(p,1+layer_sizes[i]);
+            neuron_params_delta[k]=all_params_delta.subVec(p,1+layer_sizes[i]);
+            neuron_params_gradient[k]=all_params_gradient.subVec(p,1+layer_sizes[i]);
+        }
         p+=np;
     }
     if (params_natgrad_template)
@@ -202,7 +217,12 @@ void NatGradNNet::build_()
         params_natgrad_per_neuron.resize(n_neurons);
         for (int i=0;i<n_neurons;i++)
             params_natgrad_per_neuron[i] = PLearn::deepCopy(params_natgrad_template);
-        
+    }
+    if (neurons_natgrad_template && neurons_natgrad_per_layer.length()==0)
+    {
+        neurons_natgrad_per_layer.resize(n_layers); // 0 not used
+        for (int i=1;i<n_layers;i++) // no need for correcting input layer
+            neurons_natgrad_per_layer[i] = PLearn::deepCopy(neurons_natgrad_template);
     }
     neuron_gradients.resize(minibatch_size,n_neurons);
     neuron_outputs_per_layer.resize(n_layers); // layer 0 = input, layer n_layers-1 = output
@@ -240,7 +260,8 @@ void NatGradNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     deepCopyField(hidden_layer_sizes, copies);
     deepCopyField(layer_params, copies);
-    deepCopyField(neurons_natgrad, copies);
+    deepCopyField(neurons_natgrad_template, copies);
+    deepCopyField(neurons_natgrad_per_layer, copies);
     deepCopyField(params_natgrad_template, copies);
     deepCopyField(params_natgrad_per_neuron, copies);
     deepCopyField(full_natgrad, copies);
@@ -256,6 +277,9 @@ void NatGradNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(neuron_gradients, copies);
     deepCopyField(neuron_gradients_per_layer, copies);
     deepCopyField(all_params_delta, copies);
+    deepCopyField(neuron_params, copies);
+    deepCopyField(neuron_params_gradient, copies);
+    deepCopyField(neuron_params_delta, copies);
     deepCopyField(layer_params_delta, copies);
 /*
     deepCopyField(, copies);
@@ -316,7 +340,7 @@ void NatGradNNet::train()
     for( ; stage<nstages; stage++)
     {
         int sample = stage % nsamples;
-        int b = sample % minibatch_size;
+        int b = stage % minibatch_size;
         Vec input = neuron_outputs_per_layer[0](b);
         Vec target = targets(b);
         train_set->getExample(sample, input, target, example_weights[b]);
@@ -354,14 +378,27 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
     {
         // here neuron_gradients_per_layer[i] contains the gradient on activations (weighted sums)
         //      (minibatch_size x layer_size[i])
-        // try to use BLAS
+
+        Mat previous_neurons_gradient = neuron_gradients_per_layer[i-1];
+        Mat previous_neurons_output = neuron_outputs_per_layer[i-1];
+        // optionally correct the gradient on neurons using their covariance
+        if (neurons_natgrad_per_layer[i])
+        {
+            static Vec tmp;
+            tmp.resize(layer_sizes[i]);
+            for (int k=0;k<minibatch_size;k++)
+            {
+                Vec g_k = neuron_gradients_per_layer[i](k);
+                (*neurons_natgrad_per_layer[i])(t-minibatch_size+1+k,g_k,tmp);
+                g_k << tmp;
+            }
+        }
         if (i>1) // compute gradient on previous layer
         {
-            Mat previous_neurons_gradient = neuron_gradients_per_layer[i-1];
-            Mat previous_neurons_output = neuron_outputs_per_layer[i-1];
+            // propagate gradients
             productScaleAcc(previous_neurons_gradient,neuron_gradients_per_layer[i],false,
                             weights[i-1],false,1,0);
-            
+            // propagate through tanh non-linearity
             for (int j=0;j<previous_neurons_gradient.length();j++)
             {
                 real* grad = previous_neurons_gradient[j];
@@ -371,35 +408,29 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
             }
         }
         // compute gradient on parameters, possibly update them
-        if (full_natgrad) 
+        if (full_natgrad || params_natgrad_template) 
         {
             productScaleAcc(layer_params_gradient[i-1],neuron_gradients_per_layer[i],true,
                             neuron_extended_outputs_per_layer[i-1],false,1,0);
             layer_params_gradient[i-1] *= 1.0/minibatch_size; // use the MEAN gradient
-        }
-        else if (params_natgrad_template)
-        {
-            // To Be DONE
-
         } else // just regular stochastic gradient
-            // compute gradient on weights and update them
-        {
-            if (verbosity>0)
-            {
-                if (verbosity>1)
-                    layer_params_gradient[i-1].clear();
-                productScaleAcc(layer_params_gradient[i-1],neuron_gradients_per_layer[i],true,
-                                neuron_extended_outputs_per_layer[i-1],false,1./minibatch_size,0); // mean gradient
-            }
-            else
-                productScaleAcc(layer_params[i-1],neuron_gradients_per_layer[i],true,
-                                neuron_extended_outputs_per_layer[i-1],false,-lrate/minibatch_size,1); // mean gradient
-        }
+            // compute gradient on weights and update them in one go (more efficient)
+            productScaleAcc(layer_params[i-1],neuron_gradients_per_layer[i],true,
+                            neuron_extended_outputs_per_layer[i-1],false,
+                            -lrate/minibatch_size,1); // mean gradient
     }
     if (full_natgrad) 
     {
         (*full_natgrad)(t/minibatch_size,all_params_gradient,all_params_delta); // compute update direction by natural gradient
         multiplyAcc(all_params,all_params_delta,-lrate); // update
+    } else if (params_natgrad_template)
+    {
+        for (int i=0;i<params_natgrad_per_neuron.length();i++)
+        {
+            NatGradEstimator& neuron_natgrad = *(params_natgrad_per_neuron[i]);
+            neuron_natgrad(t/minibatch_size,neuron_params_gradient[i],neuron_params_delta[i]); // compute update direction by natural gradient
+            multiplyAcc(neuron_params[i],neuron_params_delta[i],-lrate); // update
+        }
     }
     else if (verbosity>0)
     {

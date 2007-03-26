@@ -76,7 +76,8 @@ public:
 
     //! natural gradient estimator for neurons
     //! (if 0 then do not correct the gradient on neurons)
-    PP<NatGradEstimator> neurons_natgrad;
+    PP<NatGradEstimator> neurons_natgrad_template;
+    TVec<PP<NatGradEstimator> > neurons_natgrad_per_layer;
 
     //! natural gradient estimator for the parameters within each neuron
     //! (if 0 then do not correct the gradient on each neuron weight)
@@ -219,6 +220,9 @@ private:
     Vec all_params_gradient; // all the parameter gradients in one vector
     TVec<Mat> layer_params_gradient;
     TVec<Vec> layer_params_delta;
+    TVec<Vec> neuron_params; // params of each neuron (pointing in all_params)
+    TVec<Vec> neuron_params_delta; // params_delta of each neuron (pointing in all_params_delta)
+    TVec<Vec> neuron_params_gradient; // params_delta of each neuron (pointing in all_params_gradient)
     Mat neuron_gradients; // one row per example of a minibatch, has concatenation of layer 0, layer 1, ... gradients.
     TVec<Mat> neuron_gradients_per_layer; // pointing into neuron_gradients (one row per example of a minibatch)
     mutable TVec<Mat> neuron_outputs_per_layer;  // same structure
