@@ -276,6 +276,7 @@ void NNet::declareOptions(OptionList& ol)
         "  - \"conf_rated_adaboost_cost\" (for confidence rated Adaboost)\n"
         "  - \"gradient_adaboost_cost\" (also for confidence rated Adaboost)\n"
         "  - \"poisson_nll\"\n"
+        "  - \"L1\"\n"
         "The FIRST function of the list will be used as \n"
         "the objective function to optimize \n"
         "(possibly with an added weight decay penalty) \n");
@@ -461,14 +462,14 @@ void NNet::buildCosts(const Var& the_output, const Var& the_target, const Var& h
         PLERROR("In NNet::buildCosts - Empty cost_funcs : must at least specify the cost function to optimize!");
     costs.resize(ncosts);
 
-    for(int k=0; k<ncosts; k++)
+    for (int k=0; k<ncosts; k++)
     {
         // create costfuncs and apply individual weights if weightpart > 1
-        if(cost_funcs[k]=="mse")
+        if (cost_funcs[k]=="mse")
             costs[k]= sumsquare(the_output-the_target);
-        else if(cost_funcs[k]=="mse_onehot")
+        else if (cost_funcs[k]=="mse_onehot")
             costs[k] = onehot_squared_loss(the_output, the_target);
-        else if(cost_funcs[k]=="NLL") 
+        else if (cost_funcs[k]=="NLL") 
         {
             if (the_output->size() == 1) {
                 // Assume sigmoid output here!
@@ -480,22 +481,19 @@ void NNet::buildCosts(const Var& the_output, const Var& the_target, const Var& h
                     costs[k] = neg_log_pi(the_output, the_target);
             }
         } 
-        else if(cost_funcs[k]=="class_error")
+        else if (cost_funcs[k]=="class_error")
         {
             if (the_output->size()==1)
                 costs[k] = binary_classification_loss(the_output, the_target);
             else
                 costs[k] = classification_loss(the_output, the_target);
         }
-        else if(cost_funcs[k]=="binary_class_error")
+        else if (cost_funcs[k]=="binary_class_error")
             costs[k] = binary_classification_loss(the_output, the_target);
-        else if(cost_funcs[k]=="multiclass_error")
+        else if (cost_funcs[k]=="multiclass_error")
             costs[k] = multiclass_loss(the_output, the_target);
-        else if(cost_funcs[k]=="cross_entropy")
+        else if (cost_funcs[k]=="cross_entropy")
             costs[k] = cross_entropy(the_output, the_target);
-//        else if(cost_funcs[k]=="scaled_cross_entropy") {
-//            costs[k] = cross_entropy(the_output, the_target, true);
-//        } 
         else if(cost_funcs[k]=="conf_rated_adaboost_cost")
         {
             if(output_transfer_func != "sigmoid")
@@ -504,7 +502,7 @@ void NNet::buildCosts(const Var& the_output, const Var& the_target, const Var& h
             params.append(alpha_adaboost);
             costs[k] = conf_rated_adaboost_cost(the_output, the_target, alpha_adaboost);
         }
-        else if(cost_funcs[k]=="gradient_adaboost_cost")
+        else if (cost_funcs[k]=="gradient_adaboost_cost")
         {
             if(output_transfer_func != "sigmoid")
                 PLWARNING("In NNet:buildCosts(): gradient_adaboost_cost expects an output in (0,1)");
@@ -529,9 +527,11 @@ void NNet::buildCosts(const Var& the_output, const Var& the_target, const Var& h
             if (weightsize()>0)
                 the_varray.push_back(sampleweight);
             costs[k] = neglogpoissonvariable(the_varray);
-        }        
-        else  // Assume we got a Variable name and its options
-        {
+        }
+        else if (cost_funcs[k] == "L1")
+            costs[k] = sumabs(the_output - the_target);
+        else {
+            // Assume we got a Variable name and its options                
             costs[k]= dynamic_cast<Variable*>(newObject(cost_funcs[k]));
             if(costs[k].isNull())
                 PLERROR("In NNet::build_()  unknown cost_func option: %s",cost_funcs[k].c_str());
@@ -539,9 +539,8 @@ void NNet::buildCosts(const Var& the_output, const Var& the_target, const Var& h
             costs[k]->build();
         }
 
-        // take into account the sampleweight
-        //if(sampleweight)
-        //  costs[k]= costs[k] * sampleweight; // NO, because this is taken into account (more properly) in stats->update
+        // We don't need to take into account the sampleweight, because it is
+        // taken care of in stats->update.
     }
 
 
