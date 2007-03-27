@@ -470,7 +470,7 @@ void NatGradNNet::fpropNet(int n_examples) const
                 Vec L=next_layer(k);
                 compute_tanh(L,L);
             }
-        else
+        else if (output_type=="MSE")
             for (int k=0;k<n_examples;k++)
             {
                 Vec L=next_layer(k);
