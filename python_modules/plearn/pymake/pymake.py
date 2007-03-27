@@ -58,7 +58,7 @@ def printusage():
     print 'And options are a combination of the following: '
     print
     if len(options_choices)==0:
-        print 'Do "pymake -getoptions" to print the options from the configuration file.'
+        print 'Do "pymake -getoptions <list of targets, files or directories>" to print the options from the configuration file.'
     else:
         print 'Options from the configuration file'
         for choice in options_choices:
@@ -2609,7 +2609,9 @@ def main( args ):
         sys.exit()
         
     if 'getoptions' in optionargs:
-        print "IN GETOPTIONS!!!!!!!!!!!"
+        if len(otherargs)==0:
+            print 'Usage of this options "pymake -getoptions <list of targets, files or directories>"'
+            sys.exit()
         for target in otherargs:
 
             configpath = get_config_path(target)
