@@ -209,7 +209,8 @@ def replace_nans(a, with=0.0):
     return choose(isNotNaN(a), (with, a))
 
 def average(x, axis=0):
-    return sum(x,axis) / len(x)
+    arrx = array(x)
+    return sum(arrx,axis) / arrx.shape[axis]
 
 if __name__ == '__main__':
     a = array(range(10))
