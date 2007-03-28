@@ -1,5 +1,6 @@
 // -*- C++ -*-
 
+
 // DynamicallyLinkedRBMsModel.h
 //
 // Copyright (C) 2006 Stanislas Lauly
@@ -35,6 +36,7 @@
 // Authors: Pascal Lamblin
 
 /*! \file DynamicallyLinkedRBMsModel.h */
+
 
 
 #ifndef DynamicallyLinkedRBMsModel_INC
@@ -78,6 +80,9 @@ public:
     //! Number of epochs for dynamic phase
     int dynamic_nstages;
 
+    //! Number of epochs for fine tuning phase
+    int fine_tuning_nstages;
+
     //! The visible layer of the RBMs
     PP<RBMLayer> visible_layer;
 
@@ -87,6 +92,10 @@ public:
     //! OnlineLearningModule corresponding to dynamic links
     //! between RBMs' hidden layers
     PP<OnlineLearningModule> dynamic_connections;
+
+    //! Copy OnlineLearningModule corresponding to dynamic links
+    //! between RBMs' hidden layers
+    PP<OnlineLearningModule> dynamic_connections_copy;
 
     //! The weights of the connections between the RBM visible and hidden layers
     PP<RBMConnection> connections;
@@ -164,6 +173,8 @@ public:
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
                       VMat testoutputs=0, VMat testcosts=0) const;
 
+    
+
 
     // *** SUBCLASS WRITING: ***
     // While in general not necessary, in case of particular needs
@@ -217,6 +228,9 @@ protected:
     //! Store a copy of the positive phase values
     mutable Vec pos_down_values;
     mutable Vec pos_up_values;
+
+    //! Parameter of the dynamic connection
+    mutable Vec alpha;
 
 protected:
     //#####  Protected Member Functions  ######################################

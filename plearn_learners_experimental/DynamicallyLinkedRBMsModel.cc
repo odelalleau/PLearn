@@ -57,6 +57,7 @@ DynamicallyLinkedRBMsModel::DynamicallyLinkedRBMsModel() :
     fine_tuning_learning_rate( 0.01 ),
     rbm_nstages( 1 ),
     dynamic_nstages( 1 ),
+    fine_tuning_nstages( -1 ),
     visible_size( -1 )
 {
     random_gen = new PRandom();
@@ -86,6 +87,10 @@ void DynamicallyLinkedRBMsModel::declareOptions(OptionList& ol)
     declareOption(ol, "dynamic_nstages", &DynamicallyLinkedRBMsModel::dynamic_nstages,
                   OptionBase::buildoption,
                   "Number of epochs for dynamic phase");
+
+    declareOption(ol, "fine_tuning_nstages", &DynamicallyLinkedRBMsModel::fine_tuning_nstages,
+                  OptionBase::buildoption,
+                  "Number of epochs for fine tuning phase");
 
     declareOption(ol, "visible_layer", &DynamicallyLinkedRBMsModel::visible_layer,
                   OptionBase::buildoption,
@@ -160,6 +165,8 @@ void DynamicallyLinkedRBMsModel::build_()
             PLERROR("DynamicallyLinkedRBMsModel::build_(): hidden_layer->size "
                 "must be > 0");
 
+        //cond_bias.resize(hidden_layer->size);
+
         pos_down_values.resize(visible_size);
         pos_up_values.resize(hidden_layer->size);
         hidden_layer_target.resize(hidden_layer->size);
@@ -201,10 +208,26 @@ void DynamicallyLinkedRBMsModel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField(visible_layer, copies);
+    deepCopyField( hidden_layer , copies);
+    deepCopyField( dynamic_connections , copies);
+    deepCopyField( dynamic_connections_copy , copies);
+    deepCopyField( connections , copies);
+    deepCopyField( symbol_sizes , copies);
+    deepCopyField(cond_bias , copies);
+    deepCopyField(bias_gradient , copies);
+    deepCopyField( hidden_layer_target , copies);
+    deepCopyField( input_gradient , copies);
+    deepCopyField(previous_input , copies);
+    deepCopyField(previous_hidden_layer , copies);
+    deepCopyField(hidden_layer_sample , copies);
+    deepCopyField(pos_down_values , copies);
+    deepCopyField(pos_up_values , copies);
+    deepCopyField(alpha , copies);
+
     // deepCopyField(, copies);
 
-    PLERROR("DynamicallyLinkedRBMsModel::makeDeepCopyFromShallowCopy(): "
-        "not implemented yet");
+    /* PLERROR("DynamicallyLinkedRBMsModel::makeDeepCopyFromShallowCopy(): "
+       "not implemented yet");*/
 }
 
 
@@ -271,6 +294,10 @@ void DynamicallyLinkedRBMsModel::train()
         train_stats->finalize(); // finalize statistics for this epoch
     }
     */
+
+    if(fine_tuning_nstages >= 0){   
+        nstages = rbm_nstages + dynamic_nstages + fine_tuning_nstages;
+    }
 
     if(visible_size < 0)
         PLERROR("DynamicallyLinkedRBMsModel::train(): \n"
@@ -407,6 +434,16 @@ void DynamicallyLinkedRBMsModel::train()
         }
 
     }
+
+
+    //Make a copy of the dynamique phase
+    CopiesMap map;
+
+    dynamic_connections_copy = dynamic_connections->deepCopy(map);
+
+
+
+    //alpha = Vec(hidden_layer->size,1);
 
     /***** fine-tuning *****/
     if( stage >= nstages )
@@ -856,6 +893,7 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
             //h*_{t}
             ////////////
             dynamic_connections->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
+            //dynamic_connections_copy->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
             hidden_layer->expectation_is_up_to_date = false;
             hidden_layer->computeExpectation();//h_{t}
             ///////////
@@ -867,6 +905,7 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
         {
             previous_hidden_layer.clear();//h_{t-1}
             dynamic_connections->fprop(previous_hidden_layer,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
+            //dynamic_connections_copy->fprop(previous_hidden_layer,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
             hidden_layer->expectation_is_up_to_date = false;
             hidden_layer->computeExpectation();//h_{t}
 
