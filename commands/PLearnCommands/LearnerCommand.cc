@@ -100,18 +100,18 @@ LearnerCommand::LearnerCommand():
 ///////////
 // train //
 ///////////
-void LearnerCommand::train(const string& learner_spec_file,
-                           const string& trainset_spec,
-                           const string& save_learner_file,
+void LearnerCommand::train(const PPath& learner_spec_file,
+                           const PPath& trainset_spec,
+                           const PPath& save_learner_file,
                            bool no_forget)
 {
     PP<PLearner> learner;
     string learner_spec = readFileAndMacroProcess(learner_spec_file);
     PStream in = openString(learner_spec, PStream::plearn_ascii);
     in >> learner;
-    if (learner==NULL)
-        PLERROR("This file can't be correctly parsed (syntaxe error?): %s",
-                learner_spec_file.c_str());
+    if (learner.isNull())
+        PLERROR("This file cannot be correctly parsed (syntax error?): %s",
+                learner_spec_file.absolute().c_str());
     VMat trainset = getDataSet(trainset_spec);
     PP<VecStatsCollector> train_stats = new VecStatsCollector();
     learner->setTrainStatsCollector(train_stats);

@@ -61,9 +61,9 @@ public:
 
     virtual void run(const vector<string>& args);
 
-    static void train(const string& learner_spec_file,
-                      const string& trainset_spec,
-                      const string& save_learner_file,
+    static void train(const PPath& learner_spec_file,
+                      const PPath& trainset_spec,
+                      const PPath& save_learner_file,
                       bool no_forget = false);
 
     static void test(const string& trained_learner_file, const string& testset_spec, const string& stats_file, const string& outputs_file, const string& costs_file);
