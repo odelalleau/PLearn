@@ -382,7 +382,7 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
         Mat previous_neurons_gradient = neuron_gradients_per_layer[i-1];
         Mat previous_neurons_output = neuron_outputs_per_layer[i-1];
         // optionally correct the gradient on neurons using their covariance
-        if (neurons_natgrad_per_layer[i])
+        if (neurons_natgrad_template)
         {
             static Vec tmp;
             tmp.resize(layer_sizes[i]);
