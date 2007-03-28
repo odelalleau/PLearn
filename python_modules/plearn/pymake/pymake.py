@@ -55,12 +55,14 @@ except ImportError:
 def printusage():
     print 'Usage: pymake [options] <list of targets, files or directories>'
     print 'Where targets are .cc file names or base names or directories'
-    print 'And options are a combination of the following: '
+    print 'And options are a combination of the following:'
     print
+    print 'Options from the configuration file:'
     if len(options_choices)==0:
-        print 'Do "pymake -getoptions <list of targets, files or directories>" to print the options from the configuration file.'
+        print
+        print 'Do "pymake -getoptions <list of targets, files or directories>"'
+        print 'to print target-specific options read from the configuration file.'
     else:
-        print 'Options from the configuration file'
         for choice in options_choices:
             print ' * One of ' + string.join(map(lambda s: '-'+s, choice),', ') + ' (default is -' + choice[0] + ') where:'
             for item in choice:
@@ -2610,7 +2612,7 @@ def main( args ):
         
     if 'getoptions' in optionargs:
         if len(otherargs)==0:
-            print 'Usage of this options "pymake -getoptions <list of targets, files or directories>"'
+            print 'Usage of "-getoptions" is: pymake -getoptions <list of targets, files or directories>'
             sys.exit()
         for target in otherargs:
 
