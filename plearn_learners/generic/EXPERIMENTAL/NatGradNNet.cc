@@ -432,13 +432,6 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
             multiplyAcc(neuron_params[i],neuron_params_delta[i],-lrate); // update
         }
     }
-    else if (verbosity>0)
-    {
-        if ((t/minibatch_size)%10==0) 
-            cout << "gradient norm = " << norm(all_params_gradient) << endl;
-        multiplyAcc(all_params,all_params_gradient,-lrate); // update
-    }
-        
 }
 
 void NatGradNNet::computeOutput(const Vec& input, Vec& output) const
@@ -470,7 +463,7 @@ void NatGradNNet::fpropNet(int n_examples) const
                 Vec L=next_layer(k);
                 compute_tanh(L,L);
             }
-        else if (output_type=="MSE")
+        else if (output_type=="NLL")
             for (int k=0;k<n_examples;k++)
             {
                 Vec L=next_layer(k);
