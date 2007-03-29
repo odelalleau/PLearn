@@ -47,27 +47,91 @@ using namespace std;
 
 
 
-PLEARN_IMPLEMENT_OBJECT(PolynomialKernel, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(PolynomialKernel,
+        "Polynomial kernel.",
+        "Compute K(x,y) = (1 + beta * <x,y>)^n."
+);
 
-real PolynomialKernel::evaluate(const Vec& x1, const Vec& x2) const
-{ return evaluateFromDot(dot(x1,x2)); }
+//////////////////////
+// PolynomialKernel //
+//////////////////////
+PolynomialKernel::PolynomialKernel():
+    n(2),
+    beta(1)
+{}
 
-real PolynomialKernel::evaluate_i_j(int i, int j) const
-{ return evaluateFromDot(data->dot(i,j)); }
+PolynomialKernel::PolynomialKernel(int degree, real the_beta,
+                                   bool call_build_):
+    inherited(true, call_build_),
+    n(degree),
+    beta(the_beta)
+{
+    if (call_build_)
+        build_();
+}
 
-real PolynomialKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const 
-{ return evaluateFromDot(data->dot(i,x)); } 
-
-real PolynomialKernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) const
-{ return evaluateFromDot(data->dot(i,x)); } 
-
+////////////////////
+// declareOptions //
+////////////////////
 void PolynomialKernel::declareOptions(OptionList &ol)
 {
     declareOption(ol, "n", &PolynomialKernel::n, OptionBase::buildoption,
-                  "TODO: Some comments");
+                  "Degree of the kernel.");
+
     declareOption(ol, "beta", &PolynomialKernel::beta, OptionBase::buildoption,
-                  "TODO: Some comments");
+                  "Scaling coefficient for the dot product.");
+
+    // Declare options inherited from parent class.
     inherited::declareOptions(ol);
+}
+
+
+///////////
+// build //
+///////////
+void PolynomialKernel::build()
+{
+    inherited::build();
+    build_();
+}
+
+////////////
+// build_ //
+////////////
+void PolynomialKernel::build_()
+{
+    PLASSERT(n >= 1 && beta > 0);
+}
+
+//////////////
+// evaluate //
+//////////////
+real PolynomialKernel::evaluate(const Vec& x1, const Vec& x2) const
+{ return evaluateFromDot(dot(x1,x2)); }
+
+//////////////////
+// evaluate_i_j //
+//////////////////
+real PolynomialKernel::evaluate_i_j(int i, int j) const
+{ return evaluateFromDot(data->dot(i,j)); }
+
+//////////////////
+// evaluate_i_x //
+//////////////////
+real PolynomialKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const 
+{ return evaluateFromDot(data->dot(i,x)); } 
+
+//////////////////
+// evaluate_x_i //
+//////////////////
+real PolynomialKernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) const
+{ return evaluateFromDot(data->dot(i,x)); } 
+
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void PolynomialKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies) {
+    inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 } // end of namespace PLearn

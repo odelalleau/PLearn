@@ -48,35 +48,56 @@
 namespace PLearn {
 using namespace std;
 
-
-
-//!  returns (beta*dot(x1,x2)+1)^n
 class PolynomialKernel: public Kernel
 {
     typedef Kernel inherited;
 
 public:
-    int n; //!<  degree of polynomial
-    real beta; //!<  a normalization constant for numerical stability
+
+    int n;
+    real beta;
+
 public:
-    PolynomialKernel()
-        : n(), beta() {}
-    PolynomialKernel(int degree, real the_beta=1.0)
-        : n(degree), beta(the_beta) {}
+
+    //! Default constructor.
+    PolynomialKernel();
+
+    //! Convenient constructor.
+    PolynomialKernel(int the_n, real the_beta = 1.0, bool call_build_ = true);
 
     PLEARN_DECLARE_OBJECT(PolynomialKernel);
 
-    inline real evaluateFromDot(real dot_product) const
-    { return ipow(beta*dot_product+1.0, n); }
+    // Kernel methods.
 
     virtual real evaluate(const Vec& x1, const Vec& x2) const; 
-    virtual real evaluate_i_j(int i, int j) const; //!<  returns evaluate(data(i),data(j))
-    virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const; //!<  returns evaluate(data(i),x)
-    virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const; //!<  returns evaluate(x,data(i))
+    virtual real evaluate_i_j(int i, int j) const;
+    virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const;
+    virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
+
+    // Object methods.
+
+    // Simply calls inherited::build() then build_().
+    virtual void build();
+
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
-    //!  recognized options are "n"  and "beta"
+
+    //! Evaluate kernel value from the value of the dot product.
+    inline real evaluateFromDot(real dot_product) const
+    {
+        return ipow(beta*dot_product + 1.0, n);
+    }
+
+    //! Declares the class options.
     static void declareOptions(OptionList &ol);  
+
+private:
+
+    //! This does the actual building.
+    void build_();
+
 };
 
 DECLARE_OBJECT_PTR(PolynomialKernel);
