@@ -63,18 +63,22 @@ Kernel::~Kernel() {}
 ////////////
 // Kernel //
 ////////////
-Kernel::Kernel(bool is__symmetric)
-    : lock_xi(false),
-      lock_xj(false),
-      lock_k_xi_x(false),
-      data_inputsize(-1),
-      gram_matrix_is_cached(false),
-      sparse_gram_matrix_is_cached(false),
-      n_examples(-1),
-      cache_gram_matrix(false),
-      is_symmetric(is__symmetric),
-      report_progress(0)
-{}
+Kernel::Kernel(bool is__symmetric, bool call_build_):
+    inherited(call_build_),
+    lock_xi(false),
+    lock_xj(false),
+    lock_k_xi_x(false),
+    data_inputsize(-1),
+    gram_matrix_is_cached(false),
+    sparse_gram_matrix_is_cached(false),
+    n_examples(-1),
+    cache_gram_matrix(false),
+    is_symmetric(is__symmetric),
+    report_progress(0)
+{
+    if (call_build_)
+        build_();
+}
 
 ////////////////////
 // declareOptions //

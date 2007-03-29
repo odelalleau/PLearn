@@ -84,7 +84,7 @@ public:
     VMat specify_dataset;
 
     //! Constructor.
-    Kernel(bool is__symmetric = true);
+    Kernel(bool is__symmetric = true, bool call_build_ = false);
 
     PLEARN_DECLARE_ABSTRACT_OBJECT(Kernel);
 
