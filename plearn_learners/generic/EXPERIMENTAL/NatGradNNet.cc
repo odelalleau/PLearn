@@ -362,7 +362,7 @@ void NatGradNNet::train()
         Profiler::report(cout);
     const Profiler::Stats& stats = Profiler::getStats("training");
     costs.fill(MISSING_VALUE);
-    costs_plus_time[train_costs.width()] = stats.user_duration+stats.system_duration;
+    costs_plus_time[train_costs.width()] = (stats.user_duration+stats.system_duration)/60.0;
     train_stats->update( costs_plus_time );
     train_stats->finalize(); // finalize statistics for this epoch
 }
@@ -382,7 +382,7 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
         Mat previous_neurons_gradient = neuron_gradients_per_layer[i-1];
         Mat previous_neurons_output = neuron_outputs_per_layer[i-1];
         // optionally correct the gradient on neurons using their covariance
-        if (neurons_natgrad_template)
+        if (neurons_natgrad_template && neurons_natgrad_per_layer[i])
         {
             static Vec tmp;
             tmp.resize(layer_sizes[i]);
