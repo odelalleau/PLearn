@@ -914,7 +914,7 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
     }
     else // Sequential test 
     {
-#else
+#endif
         PP<ProgressBar> pb;
         if (report_progress) 
             pb = new ProgressBar("Testing learner", len);
@@ -929,7 +929,6 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
             if (test_stats) test_stats->update(costs, weight);
             if (report_progress) pb->update(i);
         }
-#endif
 #ifndef BUGGED_SERVER
     }
 #endif
