@@ -46,7 +46,9 @@
 #include <assert.h>
 #include "PTester.h"
 
+#ifndef BUGGED_SERVER
 #include <plearn/misc/PLearnService.h>
+#endif
 
 #include <plearn/base/stringutils.h>
 #if USING_MPI
@@ -1046,7 +1048,7 @@ Vec PTester::perform(bool call_forget)
         split_stats_vm->saveFieldInfos();
     }
 
-
+#ifndef BUGGED_SERVER
     PLearnService& service(PLearnService::instance());
     int nservers= min(nsplits, service.availableServers());
 
@@ -1109,6 +1111,7 @@ Vec PTester::perform(bool call_forget)
         }
     }
     else
+#endif
         for (int splitnum= 0; splitnum < nsplits; ++splitnum)
         {
             Vec splitres= perform1Split(splitnum, call_forget);

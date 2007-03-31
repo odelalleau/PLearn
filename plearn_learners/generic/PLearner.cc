@@ -51,8 +51,10 @@
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/vmat/MemoryVMatrix.h>
 #include <plearn/vmat/RowsSubVMatrix.h>
+#ifndef BUGGED_SERVER
 #include <plearn/misc/PLearnService.h>
 #include <plearn/misc/RemotePLearnServer.h>
+#endif
 #include <plearn/vmat/PLearnerOutputVMatrix.h>
 
 namespace PLearn {
@@ -686,12 +688,14 @@ void PLearner::use(VMat testset, VMat outputs) const
     int l = testset.length();
     int w = testset.width();
 
+#ifndef BUGGED_SERVER
     TVec< PP<RemotePLearnServer> > servers;
     if(nservers>0)
         servers = PLearnService::instance().reserveServers(nservers);
 
     if(servers.length()==0) 
     { // sequential code      
+#endif
         Vec input;
         Vec target;
         real weight;
@@ -709,6 +713,7 @@ void PLearner::use(VMat testset, VMat outputs) const
             if(pb)
                 pb->update(i);
         }
+#ifndef BUGGED_SERVER
     }
     else // parallel code
     {
@@ -752,6 +757,7 @@ void PLearner::use(VMat testset, VMat outputs) const
         if(send_i!=l || receive_i!=l)
             PLERROR("In PLearn::use parallel execution failed to complete successfully.");
     }
+#endif
 }
 
 VMat PLearner::processDataSet(VMat dataset) const
@@ -797,7 +803,7 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
         costs.fill(-1);
         test_stats->update(costs);
     }
-
+#ifndef BUGGED_SERVER
     PLearnService& service(PLearnService::instance());
 
     //DUMMY: need to find a better way to calc. nservers -xsm
@@ -908,6 +914,7 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
     }
     else // Sequential test 
     {
+#else
         PP<ProgressBar> pb;
         if (report_progress) 
             pb = new ProgressBar("Testing learner", len);
@@ -922,7 +929,10 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
             if (test_stats) test_stats->update(costs, weight);
             if (report_progress) pb->update(i);
         }
+#endif
+#ifndef BUGGED_SERVER
     }
+#endif
 
 }
 

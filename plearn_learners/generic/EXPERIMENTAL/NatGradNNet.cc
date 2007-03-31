@@ -350,7 +350,9 @@ void NatGradNNet::train()
         int b = stage % minibatch_size;
         Vec input = neuron_outputs_per_layer[0](b);
         Vec target = targets(b);
+        Profiler::start("getting_data");
         train_set->getExample(sample, input, target, example_weights[b]);
+        Profiler::end("getting_data");
         if (b+1==minibatch_size) // do also special end-case || stage+1==nstages)
         {
             onlineStep(stage, targets, train_costs, example_weights );
@@ -381,7 +383,7 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
                              Mat& train_costs, Vec example_weights)
 {
     // mean gradient over minibatch_size examples has less variance, can afford larger learning rate
-    real lrate = sqrt(minibatch_size)*init_lrate/(1 + t*lrate_decay);
+    real lrate = sqrt(real(minibatch_size))*init_lrate/(1 + t*lrate_decay);
     PLASSERT(targets.length()==minibatch_size && train_costs.length()==minibatch_size && example_weights.length()==minibatch_size);
     fpropNet(minibatch_size);
     fbpropLoss(neuron_outputs_per_layer[n_layers-1],targets,example_weights,train_costs);
