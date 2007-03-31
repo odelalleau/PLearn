@@ -224,12 +224,26 @@ void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
     int status = lapackSolveLinearSystem(A,r_row,pivots);
     if (status!=0)
         PLWARNING("NatGradEstimator: lapackSolveLinearSystem returned %d\n:",status);
-    if (verbosity>0 && i%(cov_minibatch_size/3)==0)
+    if (verbosity>1 && i%(cov_minibatch_size/3)==0)
         cout << "solution r = " << r << endl;
     // solution is in r
     transposeProduct(v, Xt, r);
     if (renormalize)
         v*=(1 - pow(gamma,real(t+1)))/(1 - gamma);
+        //v/=(1 - pow(gamma,real(t+1)))/(1 - gamma);
+/*    {
+        real gnorm = dot(g,g);
+        real vnorm = dot(v,v);
+        g*=sqrt(vnorm/gnorm);
+    }
+*/
+    if (verbosity>0 && i%(cov_minibatch_size/2)==0)
+    {
+        real gnorm = dot(g,g);
+        real vnorm = dot(v,v);
+        real angle = acos(dot(v,g)/sqrt(gnorm*vnorm))*360/(2*3.14159);
+        cout << "angle(g,v)="<<angle<<", norm ratio="<<vnorm/gnorm<<endl;
+    }
 
     // recompute the eigen-decomposition
     if (i+1==cov_minibatch_size)

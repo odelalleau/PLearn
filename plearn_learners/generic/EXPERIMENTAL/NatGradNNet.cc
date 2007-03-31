@@ -61,7 +61,8 @@ NatGradNNet::NatGradNNet()
       minibatch_size(1),
       output_type("NLL"),
       verbosity(0),
-      n_layers(-1)
+      n_layers(-1),
+      cumulative_training_time(0)
 {
     random_gen = new PRandom();
 }
@@ -89,6 +90,10 @@ void NatGradNNet::declareOptions(OptionList& ol)
     declareOption(ol, "layer_sizes", &NatGradNNet::layer_sizes,
                   OptionBase::learntoption,
                   "Derived from hidden_layer_sizes, inputsize_ and noutputs\n");
+
+    declareOption(ol, "cumulative_training_time", &NatGradNNet::cumulative_training_time,
+                  OptionBase::learntoption,
+                  "Cumulative training time since age=0, in seconds.\n");
 
     declareOption(ol, "layer_params", &NatGradNNet::layer_params,
                   OptionBase::learntoption,
@@ -209,8 +214,8 @@ void NatGradNNet::build_()
             neuron_params[k]=all_params.subVec(p,1+layer_sizes[i]);
             neuron_params_delta[k]=all_params_delta.subVec(p,1+layer_sizes[i]);
             neuron_params_gradient[k]=all_params_gradient.subVec(p,1+layer_sizes[i]);
+            p+=1+layer_sizes[i];
         }
-        p+=np;
     }
     if (params_natgrad_template)
     {
@@ -241,7 +246,7 @@ void NatGradNNet::build_()
     }
     example_weights.resize(minibatch_size);
     TVec<string> train_cost_names = getTrainCostNames() ;
-    train_costs.resize(minibatch_size,train_cost_names.length()-1 );
+    train_costs.resize(minibatch_size,train_cost_names.length()-2 );
 
     Profiler::activate();
 }
@@ -305,6 +310,7 @@ void NatGradNNet::forget()
         biases[i].clear();
     }
     stage = 0;
+    cumulative_training_time=0;
 }
 
 void NatGradNNet::train()
@@ -332,8 +338,9 @@ void NatGradNNet::train()
         pb = new ProgressBar( "Training "+classname(),
                               nstages - stage );
 
-    Vec costs_plus_time(train_costs.width()+1);
+    Vec costs_plus_time(train_costs.width()+2);
     costs_plus_time[train_costs.width()] = MISSING_VALUE;
+    costs_plus_time[train_costs.width()+1] = MISSING_VALUE;
     Vec costs = costs_plus_time.subVec(0,train_costs.width());
     int nsamples = train_set->length();
 
@@ -362,7 +369,10 @@ void NatGradNNet::train()
         Profiler::report(cout);
     const Profiler::Stats& stats = Profiler::getStats("training");
     costs.fill(MISSING_VALUE);
-    costs_plus_time[train_costs.width()] = (stats.user_duration+stats.system_duration)/60.0;
+    real cpu_time = (stats.user_duration+stats.system_duration)/60.0;
+    cumulative_training_time += cpu_time;
+    costs_plus_time[train_costs.width()] = cpu_time;
+    costs_plus_time[train_costs.width()+1] = cumulative_training_time;
     train_stats->update( costs_plus_time );
     train_stats->finalize(); // finalize statistics for this epoch
 }
@@ -370,7 +380,8 @@ void NatGradNNet::train()
 void NatGradNNet::onlineStep(int t, const Mat& targets,
                              Mat& train_costs, Vec example_weights)
 {
-    real lrate = init_lrate/(1 + t*lrate_decay);
+    // mean gradient over minibatch_size examples has less variance, can afford larger learning rate
+    real lrate = sqrt(minibatch_size)*init_lrate/(1 + t*lrate_decay);
     PLASSERT(targets.length()==minibatch_size && train_costs.length()==minibatch_size && example_weights.length()==minibatch_size);
     fpropNet(minibatch_size);
     fbpropLoss(neuron_outputs_per_layer[n_layers-1],targets,example_weights,train_costs);
@@ -417,7 +428,7 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
             // compute gradient on weights and update them in one go (more efficient)
             productScaleAcc(layer_params[i-1],neuron_gradients_per_layer[i],true,
                             neuron_extended_outputs_per_layer[i-1],false,
-                            -lrate/minibatch_size,1); // mean gradient
+                            -lrate/minibatch_size,1); // mean gradient, has less variance, can afford larger learning rate
     }
     if (full_natgrad) 
     {
@@ -540,7 +551,8 @@ TVec<string> NatGradNNet::getTestCostNames() const
 TVec<string> NatGradNNet::getTrainCostNames() const
 {
     TVec<string> costs = getTestCostNames();
-    costs.append("CPU");
+    costs.append("train_seconds");
+    costs.append("cum_train_seconds");
     return costs;
 }
 

@@ -185,6 +185,8 @@ protected:
     TVec<Mat> biases;
     TVec<Mat> weights;
 
+    real cumulative_training_time;
+
 protected:
     //#####  Protected Member Functions  ######################################
 
