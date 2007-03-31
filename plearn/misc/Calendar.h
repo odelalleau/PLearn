@@ -251,9 +251,12 @@ public:
     //! the specified day, or MIN_TIME if no such day exist.
     JTime calendarTimeOnOrBefore(JTime julian_time) const;  
   
-    //! Return the subset of dates of this calendar that that are between
-    //! the given lower and upper times (both endpoints are included in the
-    //! the subset).
+    /**
+     *  Return the subset of dates of this calendar that that are between
+     *  the given lower and upper times (both endpoints are included in the
+     *  the subset).  Warning: a subVec into the original timestamps is
+     *  returned -- a full copy of the vector is not made.
+     */
     PCalendar clamp(JTime lower, JTime upper);
 
 

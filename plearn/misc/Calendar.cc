@@ -390,14 +390,12 @@ PCalendar Calendar::calendarDiff(const Calendar* cal, const JTimeVec& to_remove)
 
 PCalendar Calendar::clamp(JTime lower, JTime upper)
 {
-    PCalendar clamped = new Calendar;
+    CTime lower_ctime = getCalendarTime(lower, /* use_lower_bound= */ true);
+    CTime upper_ctime = getCalendarTime(upper, /* use_lower_bound= */ false);
 
-    CTime t = 0;
-    for (; t < size() && getTime(t) < lower ; ++t);
-    for (; t < size() && getTime(t) <= upper ; ++t)
-        clamped->timestamps_.append(getTime(t));
-
-    return clamped;
+    JTimeVec new_timestamps = timestamps_.subVec(lower_ctime,
+                                                 upper_ctime - lower_ctime + 1);
+    return new Calendar(new_timestamps);
 }
 
 
