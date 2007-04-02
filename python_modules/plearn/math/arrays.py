@@ -212,6 +212,12 @@ def average(x, axis=0):
     arrx = array(x)
     return sum(arrx,axis) / arrx.shape[axis]
 
+def any(x):
+    return logical_or.reduce(ravel(x))
+
+def all(x):
+    return logical_and.reduce(ravel(x))
+
 if __name__ == '__main__':
     a = array(range(10))
     print "lag(%s): %s"%(a, lag(a))
