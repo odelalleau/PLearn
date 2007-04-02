@@ -77,19 +77,11 @@ public:
      */
     string m_initial_value;
 
-    /**
-     *  If true, the contents ('value') of the variable is assumed to be the
-     *  log of the contents of the mirrored object option.  This can be useful
-     *  when performing unconstrained optimization on the variable, but the
-     *  option values should remain positive.
-     */
-    bool m_log_variable;
-    
 public:
     //!  Default constructor for persistence
     ObjectOptionVariable();
     ObjectOptionVariable(PP<Object> root, const string& option_name,
-                         const string& initial_value="", bool log_variable=false);
+                         const string& initial_value="");
 
     
     //#####  PLearn::Object Protocol  #########################################

@@ -60,19 +60,17 @@ PLEARN_IMPLEMENT_OBJECT(
     "a changeOption on the object.\n");
 
 ObjectOptionVariable::ObjectOptionVariable()
-    : m_log_variable(false),
-      m_final_object(0),
+    : m_final_object(0),
       m_option_type(OptionTypeUnknown),
       m_option_int(0),
       m_index(-1)
 { }
 
 ObjectOptionVariable::ObjectOptionVariable(PP<Object> root, const string& option_name,
-                                           const string& initial_value, bool log_variable)
+                                           const string& initial_value)
     : m_root(root),
       m_option_name(option_name),
       m_initial_value(initial_value),
-      m_log_variable(log_variable),
       m_final_object(0),
       m_option_type(OptionTypeUnknown),
       m_option_int(0),
@@ -159,22 +157,32 @@ void ObjectOptionVariable::build_()
     case OptionTypeVec:
         // Assume row vector
         PLASSERT( m_option_vec );
-        inherited::resize(1, m_option_vec->size());
-        value << *m_option_vec;
+        if (m_index < 0 || m_option_vec->size() == 0) {
+            inherited::resize(1, m_option_vec->size());
+            value << *m_option_vec;
+        }
+        else {
+            inherited::resize(1,1);
+            value[0] = (*m_option_vec)[m_index];
+        }
         break;
         
     case OptionTypeMat:
+        // Indexing works for ROWS in the case of matrices
         PLASSERT( m_option_mat );
-        inherited::resize(m_option_mat->length(), m_option_mat->width());
-        matValue << *m_option_mat;
+        if (m_index < 0 || m_option_mat->length() == 0) {
+            inherited::resize(m_option_mat->length(), m_option_mat->width());
+            matValue << *m_option_mat;
+        }
+        else {
+            inherited::resize(1, m_option_mat->width());
+            value << (*m_option_mat)(m_index);
+        }
         break;
 
     default:
         PLASSERT( false );
     }
-
-    if (m_log_variable)
-        compute_log(value, value);
 }
 
 void ObjectOptionVariable::build()
@@ -197,37 +205,38 @@ void ObjectOptionVariable::fprop()
     // Depending on the type of the option, set the proper contents of the option.
     switch (m_option_type) {
     case OptionTypeInt:
+    {
         PLASSERT( m_option_int );
-        if (m_log_variable)
-            *m_option_int = int(exp(value[0]));
-        else
-            *m_option_int = int(value[0]);
+        *m_option_int = int(value[0]);
         break;
+    }
 
     case OptionTypeReal:
+    {
         PLASSERT( m_option_real );
-        if (m_log_variable)
-            *m_option_real = exp(value[0]);
-        else
-            *m_option_real = value[0];
+        *m_option_real = value[0];
         break;
+    }
 
     case OptionTypeVec:
+    {
         PLASSERT( m_option_vec );
-        if (m_log_variable)
-            exp(value, *m_option_vec);
-        else
+        if (m_index < 0)
             *m_option_vec << value;
+        else
+            (*m_option_vec)[m_index] = value[0];
         break;
+    }
 
     case OptionTypeMat:
+    {
         PLASSERT( m_option_mat );
-        *m_option_mat << matValue;
-        if (m_log_variable) {
-            Vec option_vec = m_option_mat->toVec();
-            exp(option_vec, option_vec);
-        }
+        if (m_index < 0)
+            *m_option_mat << matValue;
+        else
+            (*m_option_mat)(m_index)<< value;
         break;
+    }
 
     default:
         PLASSERT( false );
