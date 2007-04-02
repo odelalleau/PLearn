@@ -56,8 +56,18 @@ using namespace std;
 ostream* error_stream = &cerr;
 
 #define ERROR_MSG_SIZE 1024
-
 #ifndef USER_SUPPLIED_ERROR
+void errormsg2(const char* filename,const int linenumber,const char* msg, ...){
+    va_list args;
+    va_start(args,msg);
+    char message[ERROR_MSG_SIZE];
+    
+    snprintf(message, ERROR_MSG_SIZE, "In file: \"%s\" at line %d\n", filename, linenumber);
+    PLASSERT(ERROR_MSG_SIZE>=strlen(message)+strlen(msg));
+    strcat(message,msg);
+    errormsg(message, args);
+
+}
 void errormsg(const char* msg, ...)
 {
     va_list args;

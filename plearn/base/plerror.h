@@ -57,10 +57,12 @@ namespace PLearn {
 extern ostream* error_stream;
 #endif
 
-#define PLERROR   errormsg
+#define PLERROR(...)   errormsg2(__FILE__,__LINE__,__VA_ARGS__)
+//#define PLERROR   errormsg //Use if the compiler don't like variadic macros
 #define PLWARNING warningmsg
 #define PLDEPRECATED deprecationmsg
 
+void errormsg2(const char* filename,const int linenumber,const char* msg, ...);
 void errormsg(const char* msg, ...);
 void warningmsg(const char* msg, ...);
 void deprecationmsg(const char* msg, ...);
