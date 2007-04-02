@@ -432,14 +432,14 @@ pymakeOption( name = 'g++',
               description = 'compiling with g++, with no MPI support',
               compiler = 'g++',
               compileroptions = '-Wno-deprecated '+pedantic_mode+'-Wno-long-long -ftemplate-depth-100 ' \
-                      + gcc_opt_options + ' -Wno-variadic-macros',
+                      + gcc_opt_options,
               cpp_definitions = ['USING_MPI=0'],
               linker = 'g++' )
 
 pymakeOption( name = 'g++3',
               description = 'compiling with g++3 (version 3.0), with no MPI support',
               compiler = 'g++3',
-              compileroptions = '-Wno-deprecated '+pedantic_mode+'-ftemplate-depth-100' + ' -Wno-variadic-macros',
+              compileroptions = '-Wno-deprecated '+pedantic_mode+'-ftemplate-depth-100',
               cpp_definitions = ['USING_MPI=0'],
               linker = 'g++3' )
 
@@ -449,7 +449,7 @@ pymakeOption( name = 'g++no-cygwin',
               compiler = 'g++',
               compileroptions = '-Wno-deprecated '+pedantic_mode \
                               + '-Wno-long-long -ftemplate-depth-100 '\
-                              + '-mno-cygwin' + ' -Wno-variadic-macros',
+                              + '-mno-cygwin',
               cpp_definitions = ['USING_MPI=0', '_MINGW_'],
               linker = 'g++ -mno-cygwin' )
 
