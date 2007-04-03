@@ -71,6 +71,9 @@ public:
     //! learning rate decay factor
     real lrate_decay;
 
+    //! scaling factor of the learning rate for the output layer
+    real output_layer_lrate_scale;
+
     //! update the parameters only so often
     int minibatch_size;
 

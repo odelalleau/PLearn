@@ -269,7 +269,8 @@ elif domain_name.endswith('.ms'):
     optionargs += [ 'python24' ]
     python_version = '2.4'
     python_lib_root = '/opt/python2.4/lib'
-    linkeroptions_tail += '-lgcc_eh -lunwind -lcprts'
+    #linkeroptions_tail += '-lgcc_eh -lunwind -lcprts'
+    linkeroptions_tail += '-lunwind -lcprts'
 
 elif domain_name.endswith('.rqchp.qc.ca'):
     numpy_includedirs   = [ '/usr/network.ALTIX/python-2.4.1/include' ]
@@ -473,6 +474,7 @@ pymakeOption( name = 'icc8',   # For C++, it is actually icpc
               # Disable some warnings:
               compiler = 'icpc -w1 -wd981 -wd383 -wd869 -wd444 -wd810 -wd1418 -wd654 -wd279',
               cpp_definitions = ['USING_MPI=0'],
+              compileroptions = '-DBUGGED_SERVER ',
               linker = 'icpc  '
               )
 

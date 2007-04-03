@@ -50,7 +50,9 @@
 #include <plearn/io/pl_log.h>
 #include <plearn/math/random.h>
 #include <plearn/misc/Calendar.h>
+#ifndef BUGGED_SERVER
 #include <plearn/misc/PLearnService.h>
+#endif
 #include <plearn/vmat/VMat.h>
 
 #if USING_MPI
@@ -202,6 +204,7 @@ static string global_options( vector<string>& command_line)
     // Option for parallel processing through PLearnService
     int servers_pos = findpos(command_line, "--servers");
     int serversfile_pos = -1;
+#ifndef BUGGED_SERVER
     if (servers_pos != -1)
     {
         serversfile_pos = servers_pos+1;
@@ -210,6 +213,7 @@ static string global_options( vector<string>& command_line)
         string serversfile = command_line[serversfile_pos];
         PLearnService::instance().connectToServers(serversfile);
     }
+#endif
   
     // The following removes the options from the command line. It also
     // parses the plearn command as being the first non-optional argument on

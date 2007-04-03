@@ -58,6 +58,7 @@ NatGradNNet::NatGradNNet()
     : noutputs(-1),
       init_lrate(0.01),
       lrate_decay(0),
+      output_layer_lrate_scale(1),
       minibatch_size(1),
       output_type("NLL"),
       verbosity(0),
@@ -108,6 +109,11 @@ void NatGradNNet::declareOptions(OptionList& ol)
     declareOption(ol, "lrate_decay", &NatGradNNet::lrate_decay,
                   OptionBase::buildoption,
                   "Learning rate decay factor\n");
+
+    declareOption(ol, "output_layer_lrate_scale", &NatGradNNet::output_layer_lrate_scale,
+                  OptionBase::buildoption,
+                  "Scaling factor of the learning rate for the output layer. Values less than 1"
+                  "mean that the output layer parameters have a smaller learning rate than the others.\n");
 
     declareOption(ol, "minibatch_size", &NatGradNNet::minibatch_size,
                   OptionBase::buildoption,
@@ -394,6 +400,7 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
 
         Mat previous_neurons_gradient = neuron_gradients_per_layer[i-1];
         Mat previous_neurons_output = neuron_outputs_per_layer[i-1];
+        real layer_lrate_factor = (i==n_layers-1)?output_layer_lrate_scale:1;
         // optionally correct the gradient on neurons using their covariance
         if (neurons_natgrad_template && neurons_natgrad_per_layer[i])
         {
@@ -430,11 +437,13 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
             // compute gradient on weights and update them in one go (more efficient)
             productScaleAcc(layer_params[i-1],neuron_gradients_per_layer[i],true,
                             neuron_extended_outputs_per_layer[i-1],false,
-                            -lrate/minibatch_size,1); // mean gradient, has less variance, can afford larger learning rate
+                            -layer_lrate_factor*lrate/minibatch_size,1); // mean gradient, has less variance, can afford larger learning rate
     }
-    if (full_natgrad) 
+    if (full_natgrad)
     {
         (*full_natgrad)(t/minibatch_size,all_params_gradient,all_params_delta); // compute update direction by natural gradient
+        if (output_layer_lrate_scale!=1.0)
+            layer_params_delta[n_layers-2] *= output_layer_lrate_scale; // scale output layer's learning rate 
         multiplyAcc(all_params,all_params_delta,-lrate); // update
     } else if (params_natgrad_template)
     {
@@ -442,8 +451,10 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
         {
             NatGradEstimator& neuron_natgrad = *(params_natgrad_per_neuron[i]);
             neuron_natgrad(t/minibatch_size,neuron_params_gradient[i],neuron_params_delta[i]); // compute update direction by natural gradient
-            multiplyAcc(neuron_params[i],neuron_params_delta[i],-lrate); // update
         }
+        if (output_layer_lrate_scale!=1.0)
+            layer_params_delta[n_layers-2] *= output_layer_lrate_scale; // scale output layer's learning rate 
+        multiplyAcc(all_params,all_params_delta,-lrate); // update
     }
 }
 
