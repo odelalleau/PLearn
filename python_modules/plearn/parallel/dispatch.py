@@ -217,7 +217,8 @@ class TaskType:
             logging.debug("* select.select() returned list of len=%d"%len(iwtd))
             for fromchild in iwtd:
                 ready = cls._child_processes[fromchild]
-                read_str = ready.process.fromchild.read(BUFSIZE)
+                read_str = ready.process.fromchild.read()
+                #read_str = ready.process.fromchild.read(BUFSIZE)
                 if hasattr(ready, 'logfile'):
                     ready.logfile.write(read_str)
 
@@ -261,6 +262,9 @@ class TaskType:
 
             # Always using no wait to get the process id...
             self.process = Popen4(command)
+            flags = fcntl.fcntl(self.process.fromchild, fcntl.F_GETFL)
+            fcntl.fcntl(self.process.fromchild, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+
             task_signature = "[%s]"%command
             if LOGDIR and os.path.isdir(LOGDIR):
                 filepath = os.path.join(LOGDIR, self.getLogFileBaseName())
@@ -329,7 +333,11 @@ class SshTask( TaskType ):
     
     def listAvailableMachines(cls):
         for m in cls._machines:
-            loadavg = cls.getLoadAvg(m)
+            try:
+                loadavg = cls.getLoadAvg(m)
+            except Exception:
+                continue # Machine is rebooting, shut down, ...
+
             max_loadavg = MAX_LOADAVG.get(m, cls._max_load)
             #print "Load %f / %f"%(loadavg, max_loadavg)
             if loadavg < max_loadavg:
