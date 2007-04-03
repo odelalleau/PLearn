@@ -83,12 +83,15 @@ void BaggingLearner::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void BaggingLearner::build_()
-{
-    if(splitter) splitter->build();
-    if(template_learner) template_learner->build();
-}
+{}
 
+///////////
+// build //
+///////////
 void BaggingLearner::build()
 {
     inherited::build();
@@ -148,11 +151,13 @@ void BaggingLearner::train()
     // sequential train
     for(int i= 0; i < nbags; ++i)
     {
-        PLearner& l= *learners[i];
-        l.setTrainingSet(splitter->getSplit(i)[0]);
-        l.train();
+        PP<PLearner> l = learners[i];
+        l->setTrainingSet(splitter->getSplit(i)[0]);
+        l->train();
     }
 
+    stage++;
+    PLASSERT( stage == 1 );
 }
 
 void BaggingLearner::computeOutput(const Vec& input, Vec& output) const
@@ -215,21 +220,36 @@ TVec<string> BaggingLearner::getTrainCostNames() const
     return template_learner->getTrainCostNames();
 }
 
+////////////////
+// nTestCosts //
+////////////////
 int BaggingLearner::nTestCosts() const
 {
     PLASSERT(template_learner);
     return template_learner->nTestCosts();
 }
+
+/////////////////
+// nTrainCosts //
+/////////////////
 int BaggingLearner::nTrainCosts() const
 {
     PLASSERT(template_learner);
     return template_learner->nTrainCosts();
 }
+
+////////////////////////
+// resetInternalState //
+////////////////////////
 void BaggingLearner::resetInternalState()
 {
     for(int i= 0; i < learners.length(); ++i)
-        learners[i]->forget();
+        learners[i]->resetInternalState();
 }
+
+///////////////////////
+// isStatefulLearner //
+///////////////////////
 bool BaggingLearner::isStatefulLearner() const
 {
     PLASSERT(template_learner);
