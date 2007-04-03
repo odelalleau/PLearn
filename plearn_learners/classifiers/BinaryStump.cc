@@ -131,16 +131,21 @@ BinaryStump::BinaryStump()
 }
 
 PLEARN_IMPLEMENT_OBJECT(BinaryStump, "Binary stump classifier", 
-                        "This algorithm finds the most accurate binary stumps that classifies to a certain tag (0 or 1)\n"
-                        "every points that have a certain feature (coordinate) higher than a learned threshold.\n"
-                        "The tag, feature and threshold are chosen to minimize the weighted error or classification.\n"
-                        "Only the first target is considered, the others are ignored.\n");
+                        "This algorithm finds the most accurate binary stump\n"
+                        "that classifies to a certain tag (0 or 1)\n"
+                        "every points that have a certain feature (coordinate)\n"
+                        "higher than a learned threshold.\n"
+                        "The tag, feature and threshold are chosen to minimize\n"
+                        "the weighted classification error.\n"
+                        "Only the first target is considered, the others are \n"
+                        "ignored.\n");
 
 void BinaryStump::declareOptions(OptionList& ol)
 {
     declareOption(ol, "feature", &BinaryStump::feature, OptionBase::learntoption,
                   "Feature tested by the stump");
-    declareOption(ol, "threshold", &BinaryStump::threshold, OptionBase::learntoption,
+    declareOption(ol, "threshold", &BinaryStump::threshold, 
+                  OptionBase::learntoption,
                   "Threshold for decision");
     declareOption(ol, "tag", &BinaryStump::tag, OptionBase::learntoption,
                   "Tag assigned when feature is lower than the threshold");
@@ -225,7 +230,6 @@ void BinaryStump::train()
     real best_error = 0;
 
     {
-
         real w_sum_1 = 0;
         real w_sum_error = 0;
         real w_sum = 0;
@@ -360,7 +364,8 @@ void BinaryStump::computeCostsFromOutputs(const Vec& input, const Vec& output,
 
     if(!fast_exact_is_equal(target[0], 0) &&
        !fast_exact_is_equal(target[0], 1))
-        PLERROR("In BinaryStump:computeCostsFromOutputs() : target should be either 1 or 0");
+        PLERROR("In BinaryStump:computeCostsFromOutputs() : "
+                "target should be either 1 or 0");
 
     costs[0] = !fast_exact_is_equal(output[0], target[0]); 
 }                                
