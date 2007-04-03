@@ -48,12 +48,10 @@
 namespace PLearn {
 using namespace std;
 
-// cost[i] = -1*signed_target[i]*signe_output[i]
-// where cost is a column vector and
-// where signed_target and signed_output is inferred from target as follows.
-// target must be in (0,1).
-// signed_target[i] = target[i]*2-1 and
-// signed_output[i] = output*[i]2-1
+//! Cost for weak learner in MarginBoost version of AdaBoost
+//! Cost for a weak learner used in the functional gradient descent view of
+//! boosting on a margin-based loss function. See "Functional Gradient 
+//! Techniques for Combining Hypotheses" by Mason et al.
 class GradientAdaboostCostVariable: public BinaryVariable
 {
     typedef BinaryVariable inherited;

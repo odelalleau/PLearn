@@ -50,8 +50,9 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     ConfRatedAdaboostCostVariable,
-    "Cost used for confidence-rated Adaboost ",
-    "NO HELP");
+    "Cost used for Confidence-rated Adaboost ",
+    "See \"Improved Boosting Algorithms Using Confidence-rated Predictions\" by\n"
+    "Schapire and Singer.");
 
 ////////////////////////////////////
 // ConfRatedAdaboostCostVariable //

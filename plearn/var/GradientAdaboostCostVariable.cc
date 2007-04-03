@@ -50,9 +50,10 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     GradientAdaboostCostVariable,
-    "Compute sigmoid of its first input, and then computes the negative "
-    "cross-entropy cost",
-    "NO HELP");
+    "Cost for weak learner in MarginBoost version of AdaBoost",
+    "Cost for a weak learner used in the functional gradient descent view of\n"
+    "boosting on a margin-based loss function. See \"Functional Gradient \n"
+    "Techniques for Combining Hypotheses\" by Mason et al.");
 
 ////////////////////////////////////
 // GradientAdaboostCostVariable //

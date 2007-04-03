@@ -48,12 +48,6 @@
 namespace PLearn {
 using namespace std;
 
-// cost[i] = exp(- alpha*signed_target[i]*signed_output[i])
-// where cost is a column vector and
-// where signed_target and signed_output is inferred from target as follows.
-// target must be in (0,1).
-// signed_target[i] = target[i]*2-1 and 
-// signed_output[i] = 2*output[i]-1
 class ConfRatedAdaboostCostVariable: public NaryVariable
 {
     typedef NaryVariable inherited;
