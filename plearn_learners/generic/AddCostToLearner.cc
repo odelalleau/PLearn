@@ -236,6 +236,7 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
 {
     int n_original_costs = learner_->nTestCosts();
     // We give only costs.subVec to the sub-learner because it may want to resize it.
+    costs.resize(nTestCosts());
     Vec sub_costs = costs.subVec(0, n_original_costs);
     int target_length = target.length();
     if (compute_costs_on_bags) {
