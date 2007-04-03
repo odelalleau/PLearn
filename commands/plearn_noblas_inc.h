@@ -135,7 +135,6 @@
  ************/
 
 // Classifiers
-#include <plearn_learners/meta/AdaBoost.h>
 #include <plearn_learners/classifiers/BinaryStump.h>
 #include <plearn_learners/classifiers/ClassifierFromConditionalPDistribution.h>
 #include <plearn_learners/classifiers/ClassifierFromDensity.h>
@@ -160,6 +159,9 @@
 
 // Hyper
 #include <plearn_learners/hyper/HyperLearner.h>
+
+// Meta
+#include <plearn_learners/meta/BaggingLearner.h>
 
 // Regressors
 #include <plearn_learners/regressors/ConstantRegressor.h>
@@ -217,6 +219,7 @@
  * Splitter *
  ************/
 #include <plearn/vmat/BinSplitter.h>
+#include <plearn/vmat/BootstrapSplitter.h>
 #include <plearn/vmat/ClassSeparationSplitter.h>
 #include <plearn/vmat/ConcatSetsSplitter.h>
 #include <plearn/vmat/DBSplitter.h>
