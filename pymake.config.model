@@ -246,8 +246,8 @@ linkeroptions_tail = ''
 ### find a better way to know where to find the libraries.
 ### TODO Should find a way to automatically find python version ?
 if domain_name.endswith('iro.umontreal.ca'):
+    optionargs += [ 'python24' ]
     python_version = '2.4'
-    cpp_definitions += [ 'PL_PYTHON_VERSION=240' ]
     python_lib_root = '/usr/lib'
     if platform == 'cygwin':
         numpy_includedirs = [ ]
@@ -266,30 +266,36 @@ if domain_name.endswith('iro.umontreal.ca'):
 elif domain_name.endswith('.ms'):
     numpy_includedirs = [ '/opt/python2.4/include' ]
     numpy_site_packages = join(homedir, '../delallea/local/lib/python2.4/site-packages/numarray -lutil')
+    optionargs += [ 'python24' ]
     python_version = '2.4'
-    cpp_definitions += [ 'PL_PYTHON_VERSION=240' ]
     python_lib_root = '/opt/python2.4/lib'
     linkeroptions_tail += '-lgcc_eh -lunwind -lcprts'
 
 elif domain_name.endswith('.rqchp.qc.ca'):
     numpy_includedirs   = [ '/usr/network.ALTIX/python-2.4.1/include' ]
     numpy_site_packages = join(homedir, '../delallea/local/lib/python2.4/site-packages/numarray -lutil')
+    optionargs += [ 'python24' ]
     python_version = '2.4'
-    cpp_definitions += [ 'PL_PYTHON_VERSION=240' ]
     python_lib_root = '/usr/network.ALTIX/python-2.4.1/lib'
     linkeroptions_tail += '-lcprts -lifcore -lcxa' # -lunwind -lguide' # -lguide_stats -lifcoremt -lifport -limf -lipr'
 elif platform=='darwin':
+    optionargs += [ 'python'+python_version[0]+python_version[2] ]
     python_version = sys.version[0:3]
     # numpy_includedirs   = [ '/usr/network.ALTIX/python-2.4.1/include' ]
-    cpp_definitions += [ 'PL_PYTHON_VERSION='+python_version[0]+python_version[2]+'0' ]
     python_lib_root = '/sw/lib'
     numpy_site_packages = '/sw/lib/python'+python_version+'/site-packages/numarray' 
     numpy_includedirs   = [ '/sw/include/python'+python_version]
 else:
-    numpy_includedirs   = []
-    numpy_site_packages = '/usr/lib/python2.3/site-packages/numarray' 
-    python_version = '2.3'
+    if 'python24' in optionargs:
+        python_version = '2.4'
+    elif 'python25' in optionargs:
+        python_version = '2.5'
+    else:
+        python_version = '2.3'
+
     python_lib_root = '/usr/lib'
+    numpy_site_packages = '/usr/lib/python'+python_version+'/site-packages/numarray'
+    numpy_includedirs   = [ '/usr/include/python'+python_version]
 
 if platform!='darwin':
     optionalLibrary( name = 'python',
@@ -409,6 +415,7 @@ options_choices = [
   [ 'double', 'float' ],
   
   # [ 'throwerrors', 'exiterrors' ],
+  #[ 'python23', 'python24', 'python25' ],
   
   [ 'blas', 'p3blas','p4blas','athlonblas','pentiumblas', 'mammouthblas',
     'noblas', 'veclib', 'scs'],
@@ -591,6 +598,23 @@ pymakeOption( name = 'double',
               cpp_definitions = ['USEDOUBLE'] )
 
 cpp_variables += ['USEFLOAT', 'USEDOUBLE']
+
+
+#####  Python version  ######################################################
+
+pymakeOption( name = 'python23',
+              description = 'the installed version of python is 2.3.X',
+              cpp_definitions = ['PL_PYTHON_VERSION=230'])
+
+pymakeOption( name = 'python24',
+              description = 'the installed version of python is 2.4.X',
+              cpp_definitions = ['PL_PYTHON_VERSION=240'] )
+pymakeOption( name = 'python25',
+              description = 'the installed version of python is 2.5.X',
+              cpp_definitions = ['PL_PYTHON_VERSION=250'] )
+
+cpp_variables += ['PL_PYTHON_VERSION=250','PL_PYTHON_VERSION=240','PL_PYTHON_VERSION=230']
+
 
 
 #####  Error Behavior  ######################################################
