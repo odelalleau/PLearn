@@ -175,8 +175,9 @@ void BootstrapVMatrix::build_()
             indices = TVec<int>(0, l-1, 1); // Range-vector
             rgen->shuffleElements(indices);
             indices = indices.subVec(0, nsamp);
-            if (!shuffle) sortElements(indices);
         }
+        if (!shuffle)
+            sortElements(indices);
 
         // Because we changed the indices, a rebuild may be needed.
         inherited::build();
