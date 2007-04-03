@@ -547,8 +547,12 @@ void PLearner::forget()
 {
     if (random_gen && seed_ != 0)
         random_gen->manual_seed(seed_);
+    stage = 0;
 }
 
+////////////////
+// nTestCosts //
+////////////////
 int PLearner::nTestCosts() const 
 { 
     if(n_test_costs_<0)
@@ -556,6 +560,9 @@ int PLearner::nTestCosts() const
     return n_test_costs_;
 }
 
+/////////////////
+// nTrainCosts //
+/////////////////
 int PLearner::nTrainCosts() const 
 { 
     if(n_train_costs_<0)
