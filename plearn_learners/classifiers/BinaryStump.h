@@ -73,6 +73,8 @@ public:
     // * public build options *
     // ************************
 
+    bool one_hot_output;
+
 
     // ****************
     // * Constructors *

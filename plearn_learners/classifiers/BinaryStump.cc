@@ -121,14 +121,15 @@ void qsort_vec(TVec< pair<int, real> > v, TVec< pair<int,int> > buffer)
 
 }
 
-BinaryStump::BinaryStump() 
-/* ### Initialize all fields to their default value here */
-{
-    feature = 0;
-    tag = 0;
-    threshold = 0;
-    // build_();
-}
+/////////////////
+// BinaryStump //
+/////////////////
+BinaryStump::BinaryStump():
+    feature(0),
+    tag(0),
+    threshold(0),
+    one_hot_output(false)
+{}
 
 PLEARN_IMPLEMENT_OBJECT(BinaryStump, "Binary stump classifier", 
                         "This algorithm finds the most accurate binary stump\n"
@@ -140,13 +141,23 @@ PLEARN_IMPLEMENT_OBJECT(BinaryStump, "Binary stump classifier",
                         "Only the first target is considered, the others are \n"
                         "ignored.\n");
 
+////////////////////
+// declareOptions //
+////////////////////
 void BinaryStump::declareOptions(OptionList& ol)
 {
+    declareOption(ol, "one_hot_output", &BinaryStump::one_hot_output,
+                  OptionBase::buildoption,
+        "If set to 1, the output will be a two-dimensional one-hot vector\n"
+        "instead of just a single number.");
+
     declareOption(ol, "feature", &BinaryStump::feature, OptionBase::learntoption,
                   "Feature tested by the stump");
+
     declareOption(ol, "threshold", &BinaryStump::threshold, 
                   OptionBase::learntoption,
                   "Threshold for decision");
+
     declareOption(ol, "tag", &BinaryStump::tag, OptionBase::learntoption,
                   "Tag assigned when feature is lower than the threshold");
 
@@ -162,17 +173,29 @@ void BinaryStump::build()
 }
 
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void BinaryStump::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 
+////////////////
+// outputsize //
+////////////////
 int BinaryStump::outputsize() const
 {
-    return 1;
+    if (one_hot_output)
+        return 2;
+    else
+        return 1;
 }
 
+////////////
+// forget //
+////////////
 void BinaryStump::forget()
 {
     stage = 0;
@@ -181,6 +204,9 @@ void BinaryStump::forget()
     threshold = 0;
 }
     
+///////////
+// train //
+///////////
 void BinaryStump::train()
 {
 
@@ -350,38 +376,55 @@ void BinaryStump::train()
 }
 
 
+///////////////////
+// computeOutput //
+///////////////////
 void BinaryStump::computeOutput(const Vec& input, Vec& output) const
 {
     output.resize(outputsize());
-    if(input[feature] < threshold) output[0] = tag;
-    else output[0] = 1-tag;
+    int predict = input[feature] < threshold ? tag : 1 - tag;
+    if (one_hot_output) {
+        output[predict] = 1;
+        output[1 - predict] = 0;
+    } else
+        output[0] = predict;
 }    
 
+/////////////////////////////
+// computeCostsFromOutputs //
+/////////////////////////////
 void BinaryStump::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                           const Vec& target, Vec& costs) const
 {
-    costs.resize(outputsize());
+    costs.resize(1);
 
     if(!fast_exact_is_equal(target[0], 0) &&
        !fast_exact_is_equal(target[0], 1))
         PLERROR("In BinaryStump:computeCostsFromOutputs() : "
                 "target should be either 1 or 0");
 
-    costs[0] = !fast_exact_is_equal(output[0], target[0]); 
+    real predict = one_hot_output ? argmin(output) : output[0];
+    costs[0] = !is_equal(predict, target[0]); 
 }                                
 
+//////////////////////
+// getTestCostNames //
+//////////////////////
 TVec<string> BinaryStump::getTestCostNames() const
 {
     return getTrainCostNames();
 }
 
+///////////////////////
+// getTrainCostNames //
+///////////////////////
 TVec<string> BinaryStump::getTrainCostNames() const
 {
-    TVec<string> costs(1);
-    costs[0] = "binary_class_error";
+    static TVec<string> costs;
+    if (costs.isEmpty())
+        costs.append("binary_class_error");
     return costs;
 }
-
 
 } // end of namespace PLearn
 
