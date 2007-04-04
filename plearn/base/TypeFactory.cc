@@ -134,14 +134,24 @@ void displayObjectHelp(ostream& out, const string& classname)
 
     // Display basic help
     out << "## " << entry.one_line_descr << endl << endl;
-    out << "## " << entry.multi_line_help << endl << endl;
+
+    string tmpstr;
+    for(uint i=0;i<entry.multi_line_help.size();i++){
+        if(entry.multi_line_help.at(i)!='\n'){
+            tmpstr.append(1,entry.multi_line_help.at(i));
+        }
+        else
+            tmpstr.append("\n## ");
+    }
+
+    out << "## " << tmpstr << endl << endl;
 
     if(entry.constructor) // it's an instantiable class
         obj = (*entry.constructor)();
     else
-        out << "Note: " << classname << " is a base-class with pure virtual methods that cannot be instantiated directly.\n" 
-            << "(default values for build options can only be displayed for instantiable classes, \n"
-            << " so you'll only see question marks here.)\n" << endl;
+        out << "## Note: " << classname << " is a base-class with pure virtual methods that cannot be instantiated directly.\n" 
+            << "## (default values for build options can only be displayed for instantiable classes, \n"
+            << "## so you'll only see question marks here.)\n" << endl;
       
     out << "################################################################## \n"
         << "##                         Build Options                        ## \n"
