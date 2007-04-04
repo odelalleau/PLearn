@@ -71,6 +71,9 @@ protected:
 
     //! Vector of weak learners learned from boosting
     TVec< PP<PLearner> > weak_learners;
+
+    //! Indication that a weak learner with 0 training error has been found
+    bool found_zero_error_weak_learner;
   
 public:
 
@@ -96,10 +99,10 @@ public:
     // whether to compute training error during training
     bool compute_training_error;
 
-    // use more refined training criterion when weak classifier is soft
+    // use Pseudo-loss Adaboost
     bool pseudo_loss_adaboost;
 
-    // use confidence-rated adaboost
+    // use Confidence-rated adaboost
     bool conf_rated_adaboost;
 
     // use resampling (vs weighting) to train the underlying classifier
