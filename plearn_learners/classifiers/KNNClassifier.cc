@@ -270,7 +270,7 @@ void KNNClassifier::computeOutput(const Vec& input, Vec& output) const
 void KNNClassifier::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                             const Vec& target, Vec& costs) const
 {
-    PLASSERT( costs.size() == 2 );
+    costs.resize(nTestCosts());
     int sel_class = argmax(output);
     costs[0] = sel_class != int(target[0]);
     costs[1] = -pl_log(output[int(target[0])]);
