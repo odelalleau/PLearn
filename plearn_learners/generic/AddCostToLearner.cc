@@ -116,15 +116,23 @@ void AddCostToLearner::declareOptions(OptionList& ol)
                   "be trained without the bag information (see SumOverBagsVariable for info on bags).");
 
     declareOption(ol, "costs", &AddCostToLearner::costs, OptionBase::buildoption,
-                  "The costs to be added:\n"
-                  " - 'class_error': 1 if (t != o), 0 otherwise\n"
-                  " - 'binary_class_error': same as class error with output = (o > 0.5)\n"
-                  " - 'lift_output': to compute the lift cost (for the positive class)\n"
-                  " - 'opposite_lift_output': to compute the lift cost (for the negative) class\n"
-                  " - 'cross_entropy': t*log(o) + (1-t)*log(1-o)\n"
-                  " - 'mse': the mean squared error (o - t)^2\n"
-                  " - 'squared_norm_reconstruction_error': | ||i||^2 - ||o||^2 |\n"
-        );
+        "The costs to be added:\n"
+        " - 'class_error': classification error. If the sub-learner's output\n"
+        "   has the same length as the target vector, then they are compared\n"
+        "   component-wise. Otherwise, the target must be a one-dimensional\n"
+        "   vector (an integer corresponding to the class), and the output\n"
+        "   from the sub-learner is interpreted as a vector of weights for\n"
+        "   each class."
+        " - 'binary_class_error': classification error for a one-dimensional\n"
+        "   target that must be either 0 or 1. The output must also be one-\n"
+        "   dimensional, and is interpreted as the predicted probability for\n"
+        "   class 1 (thus class 1 is chosen when the output is > 0.5)\n"
+        " - 'lift_output': to compute the lift cost (for the positive class)\n"
+        " - 'opposite_lift_output': to compute the lift cost (for the negative) class\n"
+        " - 'cross_entropy': t*log(o) + (1-t)*log(1-o)\n"
+        " - 'mse': the mean squared error (o - t)^2\n"
+        " - 'squared_norm_reconstruction_error': | ||i||^2 - ||o||^2 |\n"
+    );
 
     declareOption(ol, "force_output_to_target_interval", &AddCostToLearner::force_output_to_target_interval, OptionBase::buildoption,
                   "If set to 1 and 'rescale_output' is also set to 1, then the scaled output\n"
@@ -425,25 +433,29 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
         } else if (c == "class_error") {
             int output_length = sub_learner_output.length();
             bool good = true;
-            if (fast_exact_is_equal(output_length, target_length)) {
+            if (output_length == target_length) {
                 for (int k = 0; k < desired_target.length(); k++)
-                    if (!fast_exact_is_equal(desired_target[k],
-                                             sub_learner_output[k])) {
+                    if (!is_equal(desired_target[k],
+                                  sub_learner_output[k])) {
                         good = false;
                         break;
                     }
             } else if (target_length == 1) {
                 // We assume the target is a number between 0 and c-1, and the output
                 // is a vector of length c giving the weight for each class.
-                good = (argmax(sub_learner_output) == int(desired_target[0]));
+                good = is_equal(argmax(sub_learner_output), desired_target[0]);
+            } else {
+                PLERROR("In AddCostToLearner::computeCostsFromOutputs - Wrong "
+                        "output and/or target for the 'class_error' cost");
             }
-            costs[ind_cost] = real(!good);
+            costs[ind_cost] = good ? 0 : 1;
         } else if (c == "binary_class_error") {
             PLASSERT( target_length == 1 );
             real t = desired_target[0];
             PLASSERT( fast_exact_is_equal(t, 0) || fast_exact_is_equal(t, 1));
-            costs[ind_cost] = real((sub_learner_output[0] > 0.5) ==
-                                   fast_exact_is_equal(t,0));
+            PLASSERT( sub_learner_output.length() == 1 );
+            real predict = sub_learner_output[0] > 0.5 ? 1 : 0;
+            costs[ind_cost] = is_equal(t, predict) ? 0 : 1;
         } else if (c == "mse") {
             costs[ind_cost] = powdistance(desired_target, sub_learner_output);
         } else if (c == "squared_norm_reconstruction_error") {
