@@ -328,7 +328,9 @@ string HelpSystem::helpOnClass(const string& classname)
 
     // Display basic help
     s+= "## " + entry.one_line_descr + "\n\n";
-    s+= "## " + entry.multi_line_help + "\n\n";
+    string ml_help = "# " + entry.multi_line_help;
+    search_replace(ml_help, "\n", "\n# ");
+    s+= ml_help + "\n\n";
 
     if(entry.constructor) // it's an instantiable class
         obj = (*entry.constructor)();
