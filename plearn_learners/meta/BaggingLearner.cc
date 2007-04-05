@@ -49,8 +49,13 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     BaggingLearner,
-    "Learner that trains several sub-learners on 'bags'",
-    "Learner that trains several sub-learners on 'bags'... (TODO: more txt)");
+    "Performs bagging on several sub-learners.",
+    "Bagging consists in training several sub-learners (all obtained by a\n"
+    "copy of the provided 'template_learner') on different subsets of the\n"
+    "training data, then aggregating their outputs in order to make a test\n"
+    "prediction (the way outputs are aggregated is governed by the 'stats'\n"
+    "option).\n"
+);
 
 BaggingLearner::BaggingLearner(PP<Splitter> splitter_, 
                                PP<PLearner> template_learner_,
@@ -68,25 +73,26 @@ BaggingLearner::BaggingLearner(PP<Splitter> splitter_,
 void BaggingLearner::declareOptions(OptionList& ol)
 {
     declareOption(ol, "splitter", &BaggingLearner::splitter,
-                  OptionBase::buildoption,
-                  "Splitter used to get bags(=splits)",
-                  "", OptionBase::basic_level);
+        OptionBase::buildoption,
+        "Splitter used to get bags. In each split, only the first set is\n"
+        "used (as the training set for a bag). A typical splitter used in\n"
+        "bagging is a BootstrapSplitter.", "", OptionBase::basic_level);
 
     declareOption(ol, "template_learner", &BaggingLearner::template_learner,
-                  OptionBase::buildoption,
-                  "Template for all sub-learners; deep-copied once for each bag",
-                  "", OptionBase::basic_level);
+        OptionBase::buildoption,
+        "Template for all sub-learners; deep-copied once for each bag.",
+        "", OptionBase::basic_level);
 
     declareOption(ol, "stats", &BaggingLearner::stats,
-                  OptionBase::buildoption,
-                  "Functions used to combine outputs from all learners.\n"
-                  "\t- 'A' = Average\n",
-                  "", OptionBase::basic_level);
+        OptionBase::buildoption,
+        "Statistics used to combine outputs from all learners. You can use\n"
+        "any statistic that can be computed by a StatsCollector.", "",
+        OptionBase::basic_level);
 
     declareOption(ol, "exclude_extremes", &BaggingLearner::exclude_extremes,
                   OptionBase::buildoption,
                   "If >0, sub-learners outputs are sorted and the exclude_extremes "
-                  "highest and lowest are excluded");
+                  "highest and lowest are excluded.");
                   
     declareOption(ol, "output_sub_outputs", &BaggingLearner::output_sub_outputs,
                   OptionBase::buildoption,
@@ -94,7 +100,7 @@ void BaggingLearner::declareOptions(OptionList& ol)
                   
     declareOption(ol, "learners", &BaggingLearner::learners,
                   OptionBase::learntoption,
-                  "Trained sub-learners");
+                  "Trained sub-learners.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -115,14 +121,26 @@ void BaggingLearner::build()
     build_();
 }
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void BaggingLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-    deepCopyField(splitter, copies);
+    deepCopyField(splitter,         copies);
     deepCopyField(template_learner, copies);
-    deepCopyField(learners, copies);
+    deepCopyField(stats,            copies);
+    deepCopyField(learners,         copies);
+    deepCopyField(learners_outputs, copies);
+    deepCopyField(outputs,          copies);
+    deepCopyField(learner_costs,    copies);
+    deepCopyField(last_test_input,  copies);
+    // TODO Do we need to deep-copy stcol?
 }
 
+////////////////
+// outputsize //
+////////////////
 int BaggingLearner::outputsize() const
 { 
     PLASSERT(template_learner);
@@ -133,6 +151,9 @@ int BaggingLearner::outputsize() const
     return sz;
 }
 
+////////////
+// forget //
+////////////
 void BaggingLearner::forget()
 {
     for(int i= 0; i < learners.length(); ++i)
@@ -140,6 +161,9 @@ void BaggingLearner::forget()
     inherited::forget();
 }
 
+///////////
+// train //
+///////////
 void BaggingLearner::train()
 {
     PLASSERT(train_set);
@@ -261,6 +285,9 @@ void BaggingLearner::train()
     PLASSERT( stage == 1 );
 }
 
+///////////////////
+// computeOutput //
+///////////////////
 void BaggingLearner::computeOutput(const Vec& input, Vec& output) const
 {
     int nout = outputsize();
@@ -314,6 +341,9 @@ void BaggingLearner::computeOutput(const Vec& input, Vec& output) const
                 output[i++]= learners_outputs(j,k);
 }
 
+/////////////////////////////
+// computeCostsFromOutputs //
+/////////////////////////////
 void BaggingLearner::computeCostsFromOutputs(const Vec& input, const Vec& output,
                                              const Vec& target, Vec& costs) const
 {
@@ -335,6 +365,9 @@ void BaggingLearner::computeCostsFromOutputs(const Vec& input, const Vec& output
 
 }
 
+//////////////////////
+// getTestCostNames //
+//////////////////////
 TVec<string> BaggingLearner::getTestCostNames() const
 {
     PLASSERT(splitter);
@@ -350,6 +383,9 @@ TVec<string> BaggingLearner::getTestCostNames() const
     return costnames;
 }
 
+///////////////////////
+// getTrainCostNames //
+///////////////////////
 TVec<string> BaggingLearner::getTrainCostNames() const
 {
     return TVec<string>(); // for now
@@ -391,6 +427,9 @@ bool BaggingLearner::isStatefulLearner() const
     return template_learner->isStatefulLearner();
 }
 
+////////////////////
+// setTrainingSet //
+////////////////////
 void BaggingLearner::setTrainingSet(VMat training_set, bool call_forget)
 {
     PLASSERT(template_learner);
@@ -400,6 +439,9 @@ void BaggingLearner::setTrainingSet(VMat training_set, bool call_forget)
     inherited::setTrainingSet(training_set, call_forget);
 }
 
+////////////////////
+// getOutputNames //
+////////////////////
 TVec<string> BaggingLearner::getOutputNames() const
 {
     PLASSERT(template_learner);
