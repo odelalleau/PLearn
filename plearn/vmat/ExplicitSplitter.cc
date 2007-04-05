@@ -43,28 +43,40 @@
 namespace PLearn {
 using namespace std;
 
+//////////////////////
+// ExplicitSplitter //
+//////////////////////
 ExplicitSplitter::ExplicitSplitter()
-    :Splitter()
 {}
 
+PLEARN_IMPLEMENT_OBJECT(ExplicitSplitter,
+    "Splitter whose sets are explicitely given.",
+    "ExplicitSplitter allows one to define a splitter by providing directly\n"
+    "the datasets for each split, as a matrix of VMatrices.\n"
+    "This splitter thus ignores the 'dataset' received from setDataSet(..).\n"
+);
 
-PLEARN_IMPLEMENT_OBJECT(ExplicitSplitter, "ONE LINE DESCR",
-                        "ExplicitSplitter allows you to define a 'splitter' by giving explicitly the datasets for each split\n"
-                        "as a matrix VMatrices.\n"
-                        "(This splitter in effect ignores the 'dataset' it is given with setDataSet) \n");
-
+////////////////////
+// declareOptions //
+////////////////////
 void ExplicitSplitter::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "splitsets", &ExplicitSplitter::splitsets, OptionBase::buildoption,
-                  "This is a matrix of VMat giving explicitly the datasets for each split.");
+    declareOption(ol, "splitsets", &ExplicitSplitter::splitsets,
+        OptionBase::buildoption,
+       "The i-th row of this matrix contains the sets for the i-th split.");
+
     inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void ExplicitSplitter::build_()
-{
-}
+{}
 
-// ### Nothing to add here, simply calls build_
+///////////
+// build //
+///////////
 void ExplicitSplitter::build()
 {
     inherited::build();
