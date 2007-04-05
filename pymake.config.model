@@ -615,9 +615,6 @@ pymakeOption( name = 'python25',
               description = 'the installed version of python is 2.5.X',
               cpp_definitions = ['PL_PYTHON_VERSION=250'] )
 
-cpp_variables += ['PL_PYTHON_VERSION=250','PL_PYTHON_VERSION=240','PL_PYTHON_VERSION=230']
-
-
 
 #####  Error Behavior  ######################################################
 
