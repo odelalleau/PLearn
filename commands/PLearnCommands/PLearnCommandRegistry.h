@@ -56,14 +56,25 @@ class PLearnCommandRegistry
     // Minor help for the HTML helper here...
     friend class HTMLHelpCommand;
 
-protected:
+public:// public so that the command map can be read
     typedef map<string, PLearnCommand*> command_map;
+
+protected:
 
     //! Issues a "bad command" message
     static void badcommand(const string& commandname);
 
+    //! Returns a reference to the unique command map
+    static command_map& commands();
  
 public:
+
+    //! Returns a const reference to the unique command map
+    inline static const command_map& allCommands() 
+    { return commands(); }
+
+    //! Returns the PLearnCommand with the given name, or error
+    static PLearnCommand* getCommand(const string& commandname);
 
     //! registers a command
     static void do_register(PLearnCommand* command);
@@ -72,20 +83,18 @@ public:
     static bool is_registered(const string& commandname);
   
     //! prints a list of all commands with their one-line summary
-    static void print_command_summary(ostream& out);
+    //static void print_command_summary(ostream& out);
 
     //! run the given (registered) command with the given arguments
     static void run(const string& commandname, const vector<string>& args);
   
     //! prints out detailed help for the given command on the given stream
-    static void help(const string& commandname, ostream& out);
+    //static void help(const string& commandname, ostream& out);
 
     //! This constructor will simply register the given PLearnCommand
     inline PLearnCommandRegistry(PLearnCommand* plcommand)
     { do_register(plcommand); }
   
-    //! Returns a reference to the unique command map
-    static command_map& commands();
 };
   
 

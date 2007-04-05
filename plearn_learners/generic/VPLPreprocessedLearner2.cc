@@ -482,10 +482,8 @@ void VPLPreprocessedLearner2::computeOutputAndCosts(const Vec& input, const Vec&
     }
 
     PLASSERT( learner_ );
-    int ilen = input.length();
-    int tlen = target.length();
-    PLASSERT(ilen==inputsize());
-    PLASSERT(tlen==targetsize());
+    PLASSERT(input.length()==inputsize());
+    PLASSERT(target.length()==targetsize());
 
     Vec newinput = input;
     if(!input_prg.empty())//input_prg_)

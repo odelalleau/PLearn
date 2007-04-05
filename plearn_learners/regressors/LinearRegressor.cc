@@ -260,7 +260,8 @@ void LinearRegressor::train()
                              weight_decay, weights, 
                              !recompute_XXXY, XtX, XtY,
                              sum_squared_y, outputwise_sum_squared_Y,
-                             true, verbosity, cholesky, include_bias?1:0);
+                             true, report_progress?verbosity:0, 
+                             cholesky, include_bias?1:0);
     }
     else if (train_set->weightsize()==1)
     {
@@ -269,7 +270,8 @@ void LinearRegressor::train()
                                      train_set.subMatColumns(inputsize()+targetsize(),1),
                                      weight_decay, weights,
                                      !recompute_XXXY, XtX, XtY, sum_squared_y, outputwise_sum_squared_Y,
-                                     sum_gammas, true, verbosity, cholesky, include_bias?1:0);
+                                     sum_gammas, true, report_progress?verbosity:0, 
+                                     cholesky, include_bias?1:0);
     }
     else
         PLERROR("LinearRegressor: expected dataset's weightsize to be either 1 or 0, got %d\n",

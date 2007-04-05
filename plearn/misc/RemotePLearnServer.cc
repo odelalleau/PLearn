@@ -204,16 +204,6 @@ void RemotePLearnServer::deleteAllObjects()
 {
     deleteAllObjectsAsync();
     getResults();
-/*
-    if(io)
-    {
-        io.write("!Z "); 
-        io << endl;
-        expectResults(0);
-    }
-    else
-        DBG_LOG << "in RemotePLearnServer::deleteAllObjects() : stream not good." << endl;
-*/
 }
 
 void RemotePLearnServer::deleteAllObjectsAsync()
@@ -252,7 +242,11 @@ void RemotePLearnServer::expectResults(int nargs_expected)
         break;
     case 'E':
         io >> msg;
-        PLERROR(msg.c_str());
+        {
+            pair<string, int> id= PLearnService::getId(this);
+            PLERROR("From server %s %d : %s", id.first.c_str(), id.second, 
+                    msg.c_str());
+        }
         break;
     default:
         PLERROR("RemotePLearnServer: expected R (return command), but read %c ????",command);

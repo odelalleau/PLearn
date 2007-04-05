@@ -113,6 +113,16 @@ string version_string()
     return s;
 }
 
+
+BEGIN_DECLARE_REMOTE_FUNCTIONS
+
+    declareFunction("versionString", &version_string,
+                    (BodyDoc("Returns PLearn version as a string.\n"),
+                     RetDoc ("version string")));
+
+END_DECLARE_REMOTE_FUNCTIONS
+
+
 static void set_global_calendars(string command_line_option)
 {
     // Assume command-line-option of the form

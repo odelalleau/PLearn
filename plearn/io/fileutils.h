@@ -204,7 +204,8 @@ void saveStringInFile(const PPath& filepath, const string& text);
 //! entry in the map (the DEFINE macro will be discarded).
 //! Also every $INCLUDE{filepath} will be replaced in place by the text of
 //! the file it includes
-string readAndMacroProcess(PStream& in, map<string, string>& variables);
+string readAndMacroProcess(PStream& in, map<string, string>& variables, 
+                           bool skip_comments= true);
 
 /*! Given a filename, generates the standard PLearn variables FILEPATH,
   DIRPATH, FILENAME, FILEBASE, FILEEXT, DATE, TIME and DATETIME and

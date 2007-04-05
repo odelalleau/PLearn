@@ -56,6 +56,7 @@
 #include <plearn/db/getDataSet.h>
 #include <plearn/display/Gnuplot.h>
 #include <plearn/io/openFile.h>
+#include <plearn/base/HelpSystem.h>
 
 namespace PLearn {
 using namespace std;
@@ -490,8 +491,9 @@ int vmatmain(int argc, char** argv)
             "all matrix file formats. Type 'vmat help dataset' to see what other\n"
             "<dataset> strings are available." << endl;
 #endif
-
-        PLearnCommandRegistry::help("vmat", cout);
+        
+        //PLearnCommandRegistry::help("vmat", cout);
+        pout << HelpSystem::helpOnCommand("vmat") << flush;
         exit(0);
     }
 

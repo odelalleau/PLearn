@@ -339,6 +339,9 @@ public:
         return *this;
     }
 
+    //! Reads ultil eof, returns whole contents as a string
+    string readAll();
+
     //! Reads the next character and launches a PLERROR if it is different from
     //! expect.
     void readExpected(char expect);

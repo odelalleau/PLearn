@@ -114,6 +114,8 @@ TypeFactory& TypeFactory::instance()
 
 //#####  displayObjectHelp  ###################################################
 
+// DEPRECATED: use HelpSystem instead
+/*
 void displayObjectHelp(ostream& out, const string& classname)
 {
     const TypeMap& type_map = TypeFactory::instance().getTypeMap();
@@ -212,7 +214,7 @@ void displayObjectHelp(ostream& out, const string& classname)
     out << "\n\n################################################################## \n" << endl;
 
 }
-
+*/
 
 
 } // end of namespace PLearn

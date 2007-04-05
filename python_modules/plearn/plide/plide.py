@@ -98,7 +98,7 @@ class PlideMain( GladeAppWindow ):
 
     PlideVersion = "0.01"
 
-    def __init__( self, *args, **kwargs ):
+    def __init__( self, streams_to_watch= {}, *args, **kwargs ):
         GladeAppWindow.__init__(self, gladeFile())
 
         ## Forward injected to imported Plide modules
@@ -119,7 +119,7 @@ class PlideMain( GladeAppWindow ):
         welcome_text = kwargs.get("welcome_text",
                                   "<b>Welcome to Plide %s!</b>" % self.PlideVersion)
         self.status_display(welcome_text, has_markup=True)
-        self.setup_stdouterr_redirect()
+        self.setup_stdouterr_redirect(streams_to_watch)
         
         ## Set up help system
         injected.helpResourcesPath(helpResourcesPath())
@@ -164,7 +164,7 @@ class PlideMain( GladeAppWindow ):
             if help_context:
                 self.help_viewer.display_page(help_context)
             
-    def setup_stdouterr_redirect( self ):
+    def setup_stdouterr_redirect( self, streams_to_watch= {} ):
         """Redirect standard output and error to be sent to the log pane
         instead of the console.
         """
@@ -193,18 +193,21 @@ class PlideMain( GladeAppWindow ):
         fcntl.fcntl(self.stdout_read, fcntl.F_SETFL, out_flags | os.O_NONBLOCK)
         fcntl.fcntl(self.stderr_read, fcntl.F_SETFL, err_flags | os.O_NONBLOCK)
 
+        streams_to_watch.update({ self.stdout_read:'stdout',
+                                  self.stderr_read:'stderr' })
+
         def callback( fd, cb_condition ):
             # print >>raw_stderr, "log_updater: got stuff on fd", fd, \
             #       "with condition", cb_condition
             raw_stderr.flush()
             data = os.read(fd,65536)
 
-            kind = { self.stdout_read:'stdout', self.stderr_read:'stderr' }.get(fd,'')
+            kind = streams_to_watch.get(fd,'')
             self.log_display(data, kind)
             return True                 # Ensure it's called again!
         
-        gobject.io_add_watch(self.stdout_read, gobject.IO_IN, callback)
-        gobject.io_add_watch(self.stderr_read, gobject.IO_IN, callback)
+        for s in streams_to_watch:
+            gobject.io_add_watch(s, gobject.IO_IN, callback)
 
     def setup_statusbar( self ):
         """Arrange the status bar area to contain both a status line and a progress bar.
@@ -651,7 +654,7 @@ class PlideMain( GladeAppWindow ):
                 options_holder.pyplearn_actualize()
             else:
                 ## FIXME: Generate a brand-new expdir (minor hack)
-                plargs._parse_(["expdir="+generateExpdir()])
+                plargs.parse(["expdir="+generateExpdir()])
                 
             expdir = plargs.expdir
             plearn_script = eval('str(PyPLearnScript( main() ))', script_env)
@@ -844,9 +847,9 @@ class PLearnWorkQueue( object ):
 #global plide_main_window
 plide_main_window = None
 
-def StartPlide(argv = []):
+def StartPlide(argv = [], streams_to_watch= {}):
     global plide_main_window
-    plide_main_window = PlideMain()
+    plide_main_window = PlideMain(streams_to_watch)
 
     ## Consider each file passed as command-line argument and create a tab
     ## to view it.
@@ -909,15 +912,43 @@ def ProgressUpdate( progress_id, fraction ):
 
 #####  Standalone Running  ##################################################
 
+from plearn.io.server import *
+
+class Poubelle(RemotePLearnServer):
+    """
+    Patch to test standalone running while 'slave' mode still exists.
+    """
+    def __init__(self):
+        command= 'plearn server'
+        self.errstm= None
+        try:
+            from subprocess import Popen, PIPE
+            p= Popen([command], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
+            (to_server, from_server, child_pid) = (p.stdin, p.stdout, p.pid)
+            self.errstm= p.stderr
+        except:
+            to_server, from_server = os.popen2(command, 'b')
+            child_pid = -1
+        RemotePLearnServer.__init__(self,from_server, to_server, pid=child_pid)
+
+
+    def getAllClassnames(self): return self.listClasses()
+    def helpResourcesPath(self,path): return self.setResourcesPathHTML(path)
+    def helpIndex(self): return self.helpIndexHTML()
+    def helpClasses(self): return self.helpClassesHTML()
+    def helpCommands(self): return self.helpCommandsHTML()
+    def helpOnCommand(self, command): return self.helpOnCommandHTML(command)
+    def helpOnClass(self, classname): return self.helpOnClassHTML(classname)
+
 if __name__ == "__main__":
-    class Poubelle:
-        def __getattr__(self, attr): return None
+    #class Poubelle:
+    #    def __getattr__(self, attr): return None
 
     global plide_main_window
     global injected
     injected = Poubelle()
     
-    StartPlide()
+    StartPlide(streams_to_watch= {injected.errstm.fileno(): 'injected-stderr'})
     # print >>sys.stderr, "Random stuff to stderr"
     # print >>sys.stdout, "Random stuff to stdout"
     # sys.stderr.flush()

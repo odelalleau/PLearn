@@ -52,6 +52,11 @@ def main():
                       dest= "nb_servers",
                       help='Number of servers to launch (maximum)',
                       default=3)
+
+    parser.add_option('-t', '--nb-servers-per-server', type="int",
+                      dest= "nb_servers2",
+                      help='Number of servers to launch per server (maximum)',
+                      default=1)
    
     (options, args) = parser.parse_args()
 
@@ -66,7 +71,12 @@ def main():
             plearn_command= args[0]
             # launch slaves with the desired plearn executable
             for i in xrange(options.nb_servers):
-                launch_server( ['time',plearn_command, 'server', '0'] )
+                if options.nb_servers2 < 2:
+                    launch_server( ['time',plearn_command, 'server', '0'] )
+                else:
+                    launch_server( ['xdispatch', '-s'+str(options.nb_servers2),
+                                    '--', plearn_command, 'server', '0'] )
+
 
             # temp file for the list of slaves (host, port, pid)
             tf, fname= tempfile.mkstemp(suffix= '.plserv', prefix= '.plserv_', dir= '/tmp/')

@@ -16,10 +16,31 @@ def print_global_map():
 Setting the string:   'This string should survive within the Python environment'
 Read back the string: 'This string should survive within the Python environment'
 Trying to read back from second snippet:
-Caught Python Exception: 'Encountered Python Exception
-Exception Type: exceptions.NameError
-Exception Value: global name 'buf' is not defined
-Traceback: <traceback object at 0x[memory_address]>'
+Caught Python Exception: 'NameError
+Python 2.3.5: /usr/bin/python
+
+
+A problem occurred in a Python script.  Here is the sequence of
+function calls leading up to the error, in the order they occurred.
+
+ <string> in get_value()
+
+NameError: global name 'buf' is not defined
+    __doc__ = 'Name not found globally.'
+    __getitem__ = <bound method NameError.__getitem__ of <exceptions.NameError instance>>
+    __init__ = <bound method NameError.__init__ of <exceptions.NameError instance>>
+    __module__ = 'exceptions'
+    __str__ = <bound method NameError.__str__ of <exceptions.NameError instance>>
+    args = ("global name 'buf' is not defined",)
+
+The above is a description of an error in a Python program.  Here is
+the original traceback:
+
+Traceback (most recent call last):
+  File "<string>", line 12, in get_value
+NameError: global name 'buf' is not defined
+
+'
 Associated 'some_global_map' with: {Oui: 16, bon: 512, est: 64, et: 256, il: 32, juste: 128}
 Read back from Python environment: {Oui: 16, bon: 512, est: 64, et: 256, il: 32, juste: 128}
 Printing some_global_map within Python: {'Oui': 16L, 'est': 64L, 'juste': 128L, 'il': 32L, 'bon': 512L, 'et': 256L}

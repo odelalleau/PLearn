@@ -43,12 +43,12 @@ TASK_TYPE_MAP    = { 'apstat.com':       'SshTask',
 # than once: use the MAX_LOADAVG map to allow for higher maximum load
 # average than the default of 2.
 SSH_MACHINES_MAP = { 'apstat.com': [ 'embla',
+                                     'valhalla',
                                      'inari', 
                                      'kamado',
                                      'loki',
                                      'odin',
                                      'midgard',
-                                     'valhalla',
                                      'vili'
                                      ],
 
@@ -59,8 +59,8 @@ SSH_MACHINES_MAP = { 'apstat.com': [ 'embla',
                      }
 
 # To override the default of 1
-MAX_LOADAVG = { 'inari'  : 4 ,
-                'kamado' : 4 }
+MAX_LOADAVG = { 'inari'     : 4 ,
+                'kamado'    : 4 }
 
 # Do not perform a new query for the loadavg until recently launched
 # processes are likely to have started. 
@@ -338,7 +338,7 @@ class SshTask( TaskType ):
             except Exception:
                 continue # Machine is rebooting, shut down, ...
 
-            max_loadavg = MAX_LOADAVG.get(m, cls._max_load)
+            max_loadavg = MAX_LOADAVG.get(m, 1.)*cls._max_load
             #print "Load %f / %f"%(loadavg, max_loadavg)
             if loadavg < max_loadavg:
                 # Register the load average *plus* one, taking in account

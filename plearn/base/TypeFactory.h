@@ -180,7 +180,7 @@ public:
 
 
 //! Will display the help message for an object of the given classname
-void displayObjectHelp(ostream& out, const string& classname);
+//void displayObjectHelp(ostream& out, const string& classname); //!< DEPRECATED: use HelpSystem
 
 
 } // end of namespace PLearn

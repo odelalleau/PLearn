@@ -48,6 +48,7 @@
 #include <plearn/io/fileutils.h>
 #include <plearn/io/openFile.h>
 #include <plearn/misc/Calendar.h>
+#include <plearn/math/pl_erf.h>
 
 namespace PLearn {
 using namespace std;
@@ -186,7 +187,8 @@ PLEARN_IMPLEMENT_OBJECT(VMatLanguage,
                         " _ sumabs         : v0 v1 v2 ... vn  -->  sum_i |vi|\n"
                         "                    (no pop, and starts from the beginning of the stack)\n"
                         " _ varproduct     : a0 a1 ... an n+1 b0 b1 ... bm m+1 ... num_vars -> res0 ..."
-                        "                    (product of encoded variables)"
+                        "                    (product of encoded variables)\n"
+                        " _ erf            : a     -->  erf(a)    ; the error function erf\n"
     );
 
 //////////////////
@@ -890,6 +892,7 @@ void VMatLanguage::build_opcodes_map()
         opcodes["cos"]  = 63;   // a -> cos(a)
         opcodes["varproduct"] = 64; // a0 a1 ... an n+1 b0 b1 ... bm m+1 ... num_vars -> res0 ... (product of encoded variables)
         opcodes["thermometer"] = 65; // index nclasses -> thermometer encoding
+        opcodes["erf"] = 66;
     }
 }
 
@@ -1347,6 +1350,9 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
             
             break;
         }        
+        case 66: // erf
+            pstack.push(pl_erf(pstack.pop()));
+            break;
         default:
             PLASSERT_MSG(false, "BUG IN VMatLanguage::run while running program: unexpected opcode: " +
                          tostring(op));

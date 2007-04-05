@@ -233,7 +233,6 @@ Plide::Plide()
 
 const char* plide_code = "from plearn.plide.plide import *\n" ;
 
-
 //! The actual implementation of the 'Plide' command
 void Plide::run(const vector<string>& args)
 {
@@ -355,6 +354,8 @@ PythonObjectWrapper Plide::getAllClassnames(const TVec<PythonObjectWrapper>& arg
 
 PythonObjectWrapper Plide::helpResourcesPath(const TVec<PythonObjectWrapper>& args)
 {
+// DEPRECATED: see HelpSystem
+/*
     if (args.size() != 1)
         PLERROR("%sExpecting 1 argument; got %d", __FUNCTION__, args.size());
 
@@ -369,6 +370,7 @@ PythonObjectWrapper Plide::helpResourcesPath(const TVec<PythonObjectWrapper>& ar
     if (! m_help_command)
         PLERROR("%sThe PLearn command 'HTMLHelpCommand' must be linked into "
                 "the executable in order to use the Plide help system.", __FUNCTION__);
+*/
     return PythonObjectWrapper();
 }
 

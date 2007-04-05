@@ -51,8 +51,8 @@
 #include <plearn/io/load_and_save.h>
 #include <plearn/io/pl_log.h>
 #include <plearn/math/random.h>
-
 #include <plearn/io/PyPLearnScript.h> // For smartLoadObject
+#include <plearn/io/ServerLogStreamBuf.h> 
 
 namespace PLearn {
 using namespace std;
@@ -102,11 +102,16 @@ void PLearnServer::implicit_storage(bool impl_stor)
     getInstance()->io.implicit_storage = impl_stor;
 }
 
-void PLearnServer::setVerbosity(int verbosity)
+void PLearnServer::loggingControl(int vlevel, TVec<string> modules)
 {
-    PL_Log::instance().verbosity(verbosity);
+    PL_Log::instance().verbosity(vlevel);
+    PL_Log::instance().enableNamedLogging(modules);
 }
 
+void PLearnServer::setOptionLevel(const OptionBase::OptionLevel& level)
+{
+    OptionBase::setCurrentOptionLevel(level);
+}
 
 BEGIN_DECLARE_REMOTE_FUNCTIONS
 
@@ -124,9 +129,14 @@ declareFunction("implicit_storage", &PLearnServer::implicit_storage,
                 (BodyDoc("change the implicit_storage mode of the io of the PLearnServer instance.\n"),
                  ArgDoc ("impl_stor", "Whether or not to use implicit_storage")));
 
-declareFunction("setVerbosity", &PLearnServer::setVerbosity,
-                (BodyDoc("change the verbosity for logs of the PLearnServer instance.\n"),
-                 ArgDoc ("verbosity", "verbosity level")));
+declareFunction("loggingControl", &PLearnServer::loggingControl,
+                (BodyDoc("Set current logging level and modules.\n"),
+                 ArgDoc ("vlevel","the verbosity level"),
+                 ArgDoc ("modules","list of modules names to log")));
+
+declareFunction("setOptionLevel", &PLearnServer::setOptionLevel,
+                (BodyDoc("Set current option level.\n"),
+                 ArgDoc ("level","option level")));
 
 END_DECLARE_REMOTE_FUNCTIONS
 
@@ -200,6 +210,7 @@ void PLearnServer::printHelp()
     io << endl;
 }
 
+
 bool PLearnServer::run()
 {
     int obj_id;
@@ -219,8 +230,8 @@ bool PLearnServer::run()
     // forward pout&perr to client
     PStream orig_pout= pout;
     PStream orig_perr= perr;
-    pout= new ServerLogStreamBuf(io, "pout");
-    perr= new ServerLogStreamBuf(io, "perr");
+    pout= new ServerLogStreamBuf(io, "pout", VLEVEL_NORMAL);
+    perr= new ServerLogStreamBuf(io, "perr", VLEVEL_NORMAL);
 
     DBG_LOG << "ENTERING PLearnServer::run()" << endl;
 
@@ -315,6 +326,7 @@ bool PLearnServer::run()
                 DBG_LOG << "  ojbj_id = " << obj_id << endl;
                 found = objmap.find(obj_id);
                 DBG_LOG << "objmap= " << objmap << endl;
+                DBG_LOG << "cmo= " << io.copies_map_out << endl;
                 if(found == objmap.end()) // unexistant obj_id
                     PLERROR("Calling a method on a non-existing object");
                 else 

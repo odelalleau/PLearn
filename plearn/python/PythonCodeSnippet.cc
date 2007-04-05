@@ -473,6 +473,40 @@ void PythonCodeSnippet::handlePythonErrors() const
     PythonGlobalInterpreterLock gil;         // For thread-safety
     if (PyErr_Occurred()) {
         if (m_remap_python_exceptions) {
+
+            // format using cgitb, throw as PythonError (PLearnError)
+            PyObject *exception, *v, *traceback;
+            PyErr_Fetch(&exception, &v, &traceback);
+            PyErr_NormalizeException(&exception, &v, &traceback);
+            
+            //PyObject* tbstr= PyString_FromString("cgitb");
+            PyObject* tbstr= PyString_FromString("plearn.utilities.pltraceback");
+            PyObject* tbmod= PyImport_Import(tbstr);
+            Py_XDECREF(tbstr);
+            if(!tbmod)
+                throw PythonException("PythonCodeSnippet::handlePythonErrors : "
+                                      "Unable to import cgitb module.");
+            PyObject* tbdict= PyModule_GetDict(tbmod);
+            Py_XDECREF(tbmod);
+            PyObject* formatFunc= PyDict_GetItemString(tbdict, "text");
+            if(!formatFunc)
+                throw PythonException("PythonCodeSnippet::handlePythonErrors : "
+                                      "Can't find cgitb.text");
+            PyObject* args= Py_BuildValue("((OOO))", exception, v, traceback);
+            if(!args)
+                throw PythonException("PythonCodeSnippet::handlePythonErrors : "
+                                      "Can't build args for cgitb.text");
+            PyObject* pystr= PyObject_CallObject(formatFunc, args);
+            Py_XDECREF(args);
+            if(!pystr)
+                throw PythonException("PythonCodeSnippet::handlePythonErrors : "
+                                      "call to cgitb.text failed");
+            string str= PyString_AsString(pystr);
+            Py_XDECREF(pystr);
+            
+            throw PythonException(str);
+
+/*
             PyObject *ptype = 0, *pvalue = 0, *ptraceback = 0;
             PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 
@@ -491,8 +525,14 @@ void PythonCodeSnippet::handlePythonErrors() const
                 msg += string("\nException Type: ") + PyString_AsString(ptype_str);
             if (pvalue_str)
                 msg += string("\nException Value: ") + PyString_AsString(pvalue_str);
+            char* ptraceback_as_str= 0;
             if (ptraceback_str)
-                msg += string("\nTraceback: ") + PyString_AsString(ptraceback_str);
+            {
+                ptraceback_as_str= PyTraceback_AsString(ptraceback_str);
+                //msg += string("\nTraceback: ") + PyString_AsString(ptraceback_str);
+                msg += string("\nTraceback: ") + ptraceback_as_str;
+                PyMem_Free(ptraceback_as_str);
+            }
 
             Py_XDECREF(ptype);
             Py_XDECREF(pvalue);
@@ -502,6 +542,7 @@ void PythonCodeSnippet::handlePythonErrors() const
             Py_XDECREF(ptraceback_str);
 
             throw PythonException(msg);
+*/
         }
         else {
             PyErr_Print();

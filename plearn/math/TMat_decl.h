@@ -633,7 +633,8 @@ public:
     {
 #ifdef BOUNDCHECK
         if(rowstart<0 || newlength<0 || rowstart+newlength>length())
-            PLERROR("TMat::subMatRows(int rowstart, int newlength) OUT OF BOUNDS");
+            PLERROR("TMat::subMatRows(int rowstart, int newlength) OUT OF BOUNDS"
+                    "length=%d, rowstart=%d, newlength=%d", length(), rowstart, newlength);
 #endif
         TMat<T> subm = *this;
         subm.length_ = newlength;

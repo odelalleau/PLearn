@@ -93,7 +93,9 @@ class PlideHelp( object ):
         """Callback that's invoked when HTML widget reports that a link has
         been clicked by the user.
         """       
+        #self.plide_main.cursor_hourglass()
         self.display_page(uri)
+        #self.plide_main.cursor_normal()
 
     def display_page( self, uri, doc = None ):
         """Take the current page to the back list, clear the forward list,
@@ -108,20 +110,24 @@ class PlideHelp( object ):
         self.update_title(title)
 
     def go_back( self, widget ):
+        #self.plide_main.cursor_hourglass()
         if self.back_pages:
             if self.cur_page:
                 self.fwd_pages.append(self.cur_page)
             self.cur_page = self.back_pages.pop()
             title = self.update_doc_from_uri(self.cur_page)
             self.update_title(title)
+        #self.plide_main.cursor_normal()
 
     def go_forward( self, widget ):
+        #self.plide_main.cursor_hourglass()
         if self.fwd_pages:
             if self.cur_page:
                 self.back_pages.append(self.cur_page)
             self.cur_page = self.fwd_pages.pop()
             title = self.update_doc_from_uri(self.cur_page)
             self.update_title(title)
+        #self.plide_main.cursor_normal()
 
     def update_title( self, new_title ):
         """Update the title label, and shade/unshade back-forward controls
@@ -137,6 +143,7 @@ class PlideHelp( object ):
         back-forward history or updates to the title.  Return the new page
         title.
         """
+      
         if doc is None:
             doc = self.doc
 
@@ -158,13 +165,17 @@ class PlideHelp( object ):
             html  = injected.helpIndex()
             title = "Help Index"
 
-        elif uri == "class_index.html":
+        elif uri == "class_index.html" or  uri == "classes_index.html":
             html  = injected.helpClasses()
             title = "Class Index"
 
-        elif uri == "command_index.html":
+        elif uri == "command_index.html" or uri == "commands_index.html":
             html  = injected.helpCommands()
             title = "Command Index"
+
+        elif uri == "functions_index.html":
+            html  = injected.helpFunctionsHTML()
+            title = "Function Index"
 
         elif uri.startswith("command_") and uri.endswith(".html"):
             command = uri[8:-5]         # Drop prefix and suffix

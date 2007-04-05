@@ -676,8 +676,9 @@ class plargs(object):
         context = actualContext(plargs)
         for statement in args:
             assert isinstance(statement, str), statement
-            
+
             option, value = statement.split('=', 1)
+
             option = option.strip()
             value  = value.strip()
 

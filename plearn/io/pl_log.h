@@ -55,7 +55,6 @@
 
 // From Plearn
 #include "PStream.h"
-#include "ServerLogStreamBuf.h"
 
 namespace PLearn {
 

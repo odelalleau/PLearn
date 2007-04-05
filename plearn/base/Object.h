@@ -174,7 +174,7 @@ using namespace std;
         static bool _isa_(const Object* o);                     \
         virtual CLASSTYPE* deepCopy(CopiesMap &copies) const;   \
         static void _static_initialize_();                      \
-        static StaticInitializer _static_initializer_
+        static StaticInitializer _static_initializer_           
 
 #define PLEARN_IMPLEMENT_ABSTRACT_OBJECT(CLASSTYPE, ONELINEDESCR, MULTILINEHELP)                \
         string CLASSTYPE::_classname_()                                                         \

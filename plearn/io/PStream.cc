@@ -265,6 +265,25 @@ PStream::mode_t PStream::switchToPLearnOutMode()
     return oldmode;
 }
 
+
+/////////////
+// readAll //
+/////////////
+
+string PStream::readAll()
+{
+    const int bufsz= 4096;
+    char buf[bufsz];
+    string s= "";
+    int nread= ptr->read(buf, bufsz);
+    while(nread > 0)
+    {
+        s.append(buf, nread);
+        nread= ptr->read(buf, bufsz);
+    }
+    return s;
+}
+
 //////////////////
 // readExpected //
 //////////////////

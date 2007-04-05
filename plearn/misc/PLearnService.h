@@ -133,6 +133,8 @@ public:
                            log_callback_t the_log_callback = log_callback,
                            progress_callback_t the_progress_callback = progress_callback);
     
+    static pair<string, int> getId(RemotePLearnServer* server) { return servers_ids[server]; }
+
     ~PLearnService();
 };
 

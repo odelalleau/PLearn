@@ -38,12 +38,13 @@
 
 /*! \file HelpCommand.cc */
 #include "HelpCommand.h"
+
 #include <iostream>
 #include <plearn/db/getDataSet.h>
 #include <plearn/base/general.h>        //!< For prgname().
 #include <plearn/base/stringutils.h>
-#include <plearn/base/TypeFactory.h>    //!< For displayObjectHelp().
 #include <plearn/io/fileutils.h>        //!< For isfile().
+
 #include <plearn/base/HelpSystem.h>
 
 namespace PLearn {
@@ -104,8 +105,7 @@ void HelpCommand::helpCommands()
          << "  % " + prgname()  + " command_name command_arguments \n" << endl;
 
     pout << "Available commands are: " << endl;
-    PLearnCommandRegistry::print_command_summary(cout); // TODO Change to pout.
-    pout << endl;
+    pout << HelpSystem::helpCommands() << endl;
 
     pout << "For more details on a specific command, type: \n" 
          << "  % " << prgname() << " help <command_name> \n"
@@ -130,22 +130,22 @@ void HelpCommand::helpAboutScript(const string& fname)
 void HelpCommand::run(const vector<string>& args)
 {
     if(args.size()==0)
-        helpOverview();
+        helpOverview();//TODO: move to HelpSystem
     else
     {
         string about = args[0];
         if(extract_extension(about)==".plearn") // help is asked about a plearn script
-            helpAboutScript(about);
+            helpAboutScript(about);//TODO: move to HelpSystem
         if(about=="scripts")
-            helpScripts();
+            helpScripts();//TODO: move to HelpSystem
         else if(about=="commands")
             helpCommands();
         else if(about=="datasets")
-            helpDatasets();
+            helpDatasets();//TODO: move to HelpSystem
         else if(PLearnCommandRegistry::is_registered(about))
-            PLearnCommandRegistry::help(about, cout); // TODO Change to pout.
+            pout << HelpSystem::helpOnCommand(about) << flush;
         else 
-            displayObjectHelp(cout, about);   // TODO Change to pout.
+            pout << HelpSystem::helpOnClass(about) << flush;
     }
 }
 

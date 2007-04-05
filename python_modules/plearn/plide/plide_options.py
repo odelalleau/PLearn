@@ -109,7 +109,8 @@ class PyPLearnOptionsHolder( object ):
         #     plarg_defaults, 'Global Configuration Options'))
 
         ## Look at all options in plargs_namespace
-        for clsname,cls in plargs_namespace._subclasses.iteritems():
+        #for clsname,cls in plargs_namespace._subclasses.iteritems():
+        for clsname,cls in plnamespace._subclasses.iteritems():
             short_doc = toolkit_doc(cls, 0).rstrip('.')
             full_doc  = toolkit_doc(cls, 1, "\n")
             group = PyPLearnOptionsGroup(clsname, public_members(cls).keys(),
@@ -123,11 +124,11 @@ class PyPLearnOptionsHolder( object ):
         handles logging control.
         """
         ## Generate a brand-new expdir
-        plargs._parse_(["expdir="+generateExpdir()])
+        plargs.parse(["expdir="+generateExpdir()])
         
         ## Apply the manual overrides
         if self.option_overrides:
-            plargs._parse_(self.option_overrides)
+            plargs.parse(self.option_overrides)
 
         verbosity_map = { 0:0, 1:1, 2:5, 3:10, 4:500 }
         verbosity = verbosity_map.get(self.log_verbosity, 5)

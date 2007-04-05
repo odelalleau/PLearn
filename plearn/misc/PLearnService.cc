@@ -127,7 +127,9 @@ void PLearnService::connectToServers(TVec< pair<string,int> > hostname_and_port)
 
         reserved_servers.insert(serv);
         serv->getResults();
-        serv->callFunction("setVerbosity", PL_Log::instance().verbosity());
+        serv->callFunction("loggingControl", 
+                           PL_Log::instance().verbosity(),
+                           PL_Log::instance().namedLogging());
         serv->getResults();
         reserved_servers.erase(serv);
         available_servers.push(serv);
@@ -375,7 +377,7 @@ void PLearnService::waitForResultFrom(PP<RemotePLearnServer> from,
 PLearnService::~PLearnService()
 {
     if(reserved_servers.size() != 0)
-        PLERROR("PLearnService::~PLearnService : some servers are still reserved; free them first.");
+        PLWARNING("PLearnService::~PLearnService : some servers are still reserved; free them first.");
 
     TVec<PP<RemotePLearnServer> > servers(available_servers.length());
     servers << available_servers;

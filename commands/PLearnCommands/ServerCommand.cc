@@ -49,6 +49,7 @@
 #include <plearn/io/pl_log.h>
 #include <plearn/io/PrPStreamBuf.h>
 #include <plearn/base/tostring.h>
+#include <plearn/base/PrUtils.h>
 #include <nspr/prio.h>
 #include <nspr/prerror.h>
 #include <nspr/prnetdb.h>
@@ -102,7 +103,8 @@ void ServerCommand::run(const vector<string>& args)
 
         // Allow reuse of the socket immediately after the server shuts down
         PRSocketOptionData socket_option_data;
-        socket_option_data.value.reuse_addr = PR_SockOpt_Reuseaddr;
+        socket_option_data.option = PR_SockOpt_Reuseaddr;
+        socket_option_data.value.reuse_addr = PR_TRUE;
         PR_SetSocketOption(sock, &socket_option_data);
 
         string myhostname = "UNKNOWN_HOSTNAME";
@@ -135,7 +137,8 @@ void ServerCommand::run(const vector<string>& args)
             PRNetAddr addr;
             PRFileDesc* fd = PR_Accept(sock, &addr, PR_INTERVAL_NO_TIMEOUT);
             if(fd==0)
-                PLERROR("ServerCommand: accept returned 0, error code is: %d",PR_GetError());
+                PLERROR("ServerCommand: accept returned 0, error code is: %d : %s",
+                        PR_GetError(), getPrErrorString().c_str());
             st = PR_NetAddrToString(&addr, buf, sizeof(buf));
             NORMAL_LOG << "PLEARN_SERVER CONNECTION_FROM "  << buf << endl;
             PStream io(new PrPStreamBuf(fd,fd,true,true));

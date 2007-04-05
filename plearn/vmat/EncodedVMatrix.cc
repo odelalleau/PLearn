@@ -152,7 +152,6 @@ void EncodedVMatrix::build()
 /////////////////////////////////
 void EncodedVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    PLERROR("EncodedVMatrix::makeDeepCopyFromShallowCopy fully implemented?");
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(encodings, copies);
     deepCopyField(defaults, copies);

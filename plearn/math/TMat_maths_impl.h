@@ -1126,6 +1126,7 @@ TVec<T> operator-(const TVec<T>& vec)
             o[i] = - v[i];
         return opposite;
     }
+    return TVec<T>();
 }
 
 template<class T>

@@ -104,8 +104,8 @@ void BootstrapSplitter::build_()
             // Note: indices in the bootstrapped sets are sorted, so that
             // access may be faster (e.g. when reading large data from disk).
             bootstrapped_sets(i,0) = 
-                new BootstrapVMatrix(dataset, frac, vmat_rgen, false,
-                                     allow_repetitions);
+                new BootstrapVMatrix(dataset,frac,vmat_rgen, 
+                                     false, allow_repetitions);
         }
     } else {
         bootstrapped_sets.resize(0,0);

@@ -50,6 +50,7 @@
 #include <plearn/base/stringutils.h>
 #include <plearn/io/StringPStreamBuf.h>
 #include "pl_log.h"
+#include "ServerLogStreamBuf.h"
 
 namespace PLearn {
 using namespace std;

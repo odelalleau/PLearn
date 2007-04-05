@@ -38,6 +38,11 @@
 
 
 #include "BaggingLearner.h"
+#include <plearn/base/tostring.h>
+#include <plearn/base/ProgressBar.h>
+#include <plearn/misc/PLearnService.h>
+#include <plearn/misc/RemotePLearnServer.h>
+#include <plearn/vmat/MemoryVMatrix.h>
 
 namespace PLearn {
 using namespace std;
@@ -49,10 +54,14 @@ PLEARN_IMPLEMENT_OBJECT(
 
 BaggingLearner::BaggingLearner(PP<Splitter> splitter_, 
                                PP<PLearner> template_learner_,
-                               char reduce_func_)
+                               TVec<string> stats_,
+                               int exclude_extremes_,
+                               bool output_sub_outputs_)
     :splitter(splitter_),
      template_learner(template_learner_),
-     reduce_func(reduce_func_)
+     stats(stats_),
+     exclude_extremes(exclude_extremes_),
+     output_sub_outputs(output_sub_outputs_)
 {
 }
 
@@ -68,16 +77,24 @@ void BaggingLearner::declareOptions(OptionList& ol)
                   "Template for all sub-learners; deep-copied once for each bag",
                   "", OptionBase::basic_level);
 
-    declareOption(ol, "reduce_func", &BaggingLearner::reduce_func,
+    declareOption(ol, "stats", &BaggingLearner::stats,
                   OptionBase::buildoption,
-                  "Function used to combine outputs from all learners.\n"
+                  "Functions used to combine outputs from all learners.\n"
                   "\t- 'A' = Average\n",
                   "", OptionBase::basic_level);
 
+    declareOption(ol, "exclude_extremes", &BaggingLearner::exclude_extremes,
+                  OptionBase::buildoption,
+                  "If >0, sub-learners outputs are sorted and the exclude_extremes "
+                  "highest and lowest are excluded");
+                  
+    declareOption(ol, "output_sub_outputs", &BaggingLearner::output_sub_outputs,
+                  OptionBase::buildoption,
+                  "Wether computeOutput should append sub-learners outputs to output.");
+                  
     declareOption(ol, "learners", &BaggingLearner::learners,
                   OptionBase::learntoption,
-                  "Trained sub-learners",
-                  "", OptionBase::basic_level);
+                  "Trained sub-learners");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -107,8 +124,13 @@ void BaggingLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 }
 
 int BaggingLearner::outputsize() const
-{
-    return template_learner->outputsize();
+{ 
+    PLASSERT(template_learner);
+    PLASSERT(splitter);
+    int sz= template_learner->outputsize() * stats.length(); 
+    if(output_sub_outputs)
+        sz+= template_learner->outputsize() * splitter->nsplits();
+    return sz;
 }
 
 void BaggingLearner::forget()
@@ -145,7 +167,85 @@ void BaggingLearner::train()
         {
             CopiesMap c;
             learners[i]= template_learner->deepCopy(c);
+            learners[i]->report_progress= false;
         }
+    }
+
+    PP<ProgressBar> pb= 0;
+    if(report_progress)
+        pb= new ProgressBar("BaggingLearner::train",nbags);
+
+    PLearnService& service(PLearnService::instance());
+    int nservers= min(nbags, service.availableServers());
+
+    if(nservers > 1 && parallelize_here)//parallel train
+    {
+        TVec<PP<RemotePLearnServer> > servers= service.reserveServers(nservers);
+        nservers= servers.length();
+
+        map<PP<RemotePLearnServer>, int> learners_ids;
+        map<PP<RemotePLearnServer>, int> bagnums;
+        map<PP<RemotePLearnServer>, int> step;
+
+        for(int i= 0; i < nservers; ++i)
+        {
+            RemotePLearnServer* s= servers[i];
+            int id= s->newObject(*learners[i]);
+            VMat sts= splitter->getSplit(i)[0];
+            if(master_sends_testset_rows)
+                sts= new MemoryVMatrix(sts.toMat());
+            s->callMethod(id, "setTrainingSet", sts, true);
+            learners_ids[s]= id;
+            bagnums[s]= i;
+            step[s]= 1;
+        }
+
+        int lastbag= nservers-1;
+        int ndone= 0;
+
+        while(nservers > 0)
+        {
+            PP<RemotePLearnServer> s= service.waitForResult();
+            switch(step[s])
+            {
+            case 1: 
+                DBG_LOG << "** get setTrainingSet result" << endl;
+                s->getResults();//from setTrainingSet
+                s->callMethod(learners_ids[s], "train");
+                step[s]= 2;
+                break;
+            case 2:
+                DBG_LOG << "** get train result" << endl;
+                s->getResults();//from train
+                if(pb) pb->update(++ndone);
+                s->callMethod(learners_ids[s], "getObject");
+                step[s]= 3;
+                break;
+            case 3:
+                DBG_LOG << "** get getObject result" << endl;
+                s->getResults(learners[bagnums[s]]);//from getObject
+                s->deleteObject(learners_ids[s]);
+                if(++lastbag < nbags)
+                {
+                    int id= s->newObject(*learners[lastbag]);
+                    VMat sts= splitter->getSplit(lastbag)[0];
+                    if(master_sends_testset_rows)
+                        sts= new MemoryVMatrix(sts.toMat());
+                    s->callMethod(id, "setTrainingSet", sts, true);
+                    learners_ids[s]= id;
+                    bagnums[s]= lastbag;
+                    step[s]= 1;
+                }
+                else
+                {
+                    service.freeServer(s);
+                    --nservers;
+                }
+                break;
+            }
+        }
+
+        return; // avoid extra indentation
     }
 
     // sequential train
@@ -154,6 +254,7 @@ void BaggingLearner::train()
         PP<PLearner> l = learners[i];
         l->setTrainingSet(splitter->getSplit(i)[0]);
         l->train();
+        if(pb) pb->update(i);
     }
 
     stage++;
@@ -164,60 +265,94 @@ void BaggingLearner::computeOutput(const Vec& input, Vec& output) const
 {
     int nout = outputsize();
     output.resize(nout);
-    output.fill(0.);
     int nlearners= learners.size();
-    static TVec<Vec> learners_outputs(nlearners);//don't realloc every time
+    PLASSERT(template_learner);
+    int sub_nout = template_learner->outputsize();
+    learners_outputs.resize(nlearners, sub_nout);
+
+    last_test_input.resize(input.size());
+    last_test_input << input;//save it, to test in computeCostsFromOutputs
 
     for(int i= 0; i < nlearners; ++i)
-        learners[i]->computeOutput(input, learners_outputs[i]);
-
-    switch(reduce_func)
     {
-    case 'A':
-        for(int i= 0; i < nlearners; ++i)
-            for(int j= 0; j < nout; ++j)
-                output[j]+= learners_outputs[i][j];
-        for(int j= 0; j < nout; ++j)
-            output[j]/= nlearners;
-        break;
-    default:
-        PLERROR("BaggingLearner::computeOutput : reduce_func '%c' unknown.",
-                reduce_func);
+        Vec outp= learners_outputs(i);
+        learners[i]->computeOutput(input, outp);
     }
+
+    if(exclude_extremes > 0)
+    {
+        outputs.resize(nlearners, sub_nout);
+        outputs << learners_outputs;
+        //exclude highest and lowest n predictions for each output
+        int nexcl= 2*exclude_extremes;
+        if(nlearners <= nexcl)
+            PLERROR("BaggingLearner::computeOutput : Cannot exclude all outputs! "
+                    "nlearners=%d, exclude_extremes=%d",nlearners,exclude_extremes);
+        // sort all in place, one output at a time
+        for(int j= 0; j < sub_nout; ++j)
+            sortElements(outputs.column(j).toVec());
+        // exclude from both ends
+        outputs= outputs.subMatRows(exclude_extremes, outputs.length()-nexcl);
+        nlearners-= nexcl;
+    }
+    else 
+        outputs= learners_outputs;
+
+    stcol.forget();
+    for(int i= 0; i < outputs.length(); ++i)
+        stcol.update(outputs(i));
+    
+    int i= 0;
+    for(int j= 0; j < stcol.size(); ++j)
+        for(TVec<string>::iterator it= stats.begin();
+            it != stats.end(); ++it)
+            output[i++]= stcol.getStats(j).getStat(*it);
+
+    if(output_sub_outputs)
+        for(int j= 0; j < nlearners; ++j)
+            for(int k= 0; k < sub_nout; ++k)
+                output[i++]= learners_outputs(j,k);
 }
 
 void BaggingLearner::computeCostsFromOutputs(const Vec& input, const Vec& output,
-                                           const Vec& target, Vec& costs) const
+                                             const Vec& target, Vec& costs) const
 {
-    // FIXME: for now, costs are the average of underlying learners' costs
-    //        BUT the name of those costs is the same... (misleading)
+    if(input != last_test_input)
+        PLERROR("BaggingLearner::computeCostsFromOutputs has to be called "
+                "right after computeOutput, with the same input.");
+    
     int nlearners= learners.size();
-    TVec<Vec> learners_costs(nlearners);
-    int ncosts= nTestCosts();
-    costs.resize(ncosts);
-    costs.fill(0.);
+    costs.resize(nTestCosts());
+    int k= 0;
     for(int i= 0; i < nlearners; ++i)
-        learners[i]->computeCostsFromOutputs(input, output, target, 
-                                             learners_costs[i]);
-    for(int i= 0; i < nlearners; ++i)
-        for(int j= 0; j < ncosts; ++j)
-            costs[j]+= learners_costs[i][j];
-    for(int i= 0; i < ncosts; ++i)
-        costs[i]/= nlearners;
+    {
+        Vec subcosts;
+        learners[i]->computeCostsFromOutputs(input, learners_outputs(i),
+                                             target, subcosts);
+        for(int j= 0; j < subcosts.length(); ++j)
+            costs[k++]= subcosts[j];
+    }
+
 }
 
 TVec<string> BaggingLearner::getTestCostNames() const
 {
+    PLASSERT(splitter);
     PLASSERT(template_learner);
-    PLWARNING("BaggingLearner::getTestCostNames() : the test costs are actually the mean of test costs for all learners (bags).");
-    return template_learner->getTestCostNames();
+    int nbags= splitter->nsplits();
+    TVec<string> subcosts= template_learner->getTestCostNames();
+    TVec<string> costnames(nTestCosts());
+    int nsubcosts= subcosts.length();
+    int k= 0;
+    for(int i= 0; i < nbags; ++i)
+        for(int j= 0; j < nsubcosts; ++j)
+            costnames[k++]= string("learner")+tostring(i)+"."+subcosts[j];
+    return costnames;
 }
 
 TVec<string> BaggingLearner::getTrainCostNames() const
 {
-    PLASSERT(template_learner);
-    PLWARNING("BaggingLearner::getTrainCostNames() : the train costs are actually the mean of train costs for all learners (bags).");
-    return template_learner->getTrainCostNames();
+    return TVec<string>(); // for now
 }
 
 ////////////////
@@ -225,8 +360,9 @@ TVec<string> BaggingLearner::getTrainCostNames() const
 ////////////////
 int BaggingLearner::nTestCosts() const
 {
+    PLASSERT(splitter);
     PLASSERT(template_learner);
-    return template_learner->nTestCosts();
+    return splitter->nsplits()*template_learner->nTestCosts();
 }
 
 /////////////////
@@ -234,8 +370,7 @@ int BaggingLearner::nTestCosts() const
 /////////////////
 int BaggingLearner::nTrainCosts() const
 {
-    PLASSERT(template_learner);
-    return template_learner->nTrainCosts();
+    return 0;
 }
 
 ////////////////////////
@@ -264,6 +399,24 @@ void BaggingLearner::setTrainingSet(VMat training_set, bool call_forget)
     template_learner->setTrainingSet(training_set, call_forget);
     inherited::setTrainingSet(training_set, call_forget);
 }
+
+TVec<string> BaggingLearner::getOutputNames() const
+{
+    PLASSERT(template_learner);
+    PLASSERT(splitter);
+    TVec<string> suboutputnames= template_learner->getOutputNames();
+    TVec<string> outputnames= addStatNames(suboutputnames);
+    if(output_sub_outputs)
+    {
+        int nbags= splitter->nsplits();
+        int nsout= suboutputnames.length();
+        for(int i= 0; i < nbags; ++i)
+            for(int j= 0; j < nsout; ++j)
+                outputnames.append(string("learner")+tostring(i)+"."+suboutputnames[j]);
+    }
+    return outputnames;
+}
+
 
 
 } // end of namespace PLearn

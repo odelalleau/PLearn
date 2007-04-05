@@ -810,14 +810,20 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
         costs.fill(-1);
         test_stats->update(costs);
     }
+
+
+    PP<ProgressBar> pb;
+    if (report_progress) 
+        pb = new ProgressBar("Testing learner", len);
+
 #ifndef BUGGED_SERVER
     PLearnService& service(PLearnService::instance());
 
     //DUMMY: need to find a better way to calc. nservers -xsm
-    const int chunksize= 10000;//nb. rows in each chunk sent to a remote server
-    const int chunks_per_server= 10;//ideal nb. chunks per server
+    const int chunksize= 2500;//nb. rows in each chunk sent to a remote server
+    const int chunks_per_server= 3;//ideal nb. chunks per server
     int nservers= min(len/(chunks_per_server*chunksize), service.availableServers());
-
+    
     if(nservers > 1 && parallelize_here && !isStatefulLearner())
     {// parallel test
         CopiesMap copies;
@@ -830,9 +836,15 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
         map<PP<RemotePLearnServer>, int> learners_ids;
         map<PP<RemotePLearnServer>, int> chunknums;
         map<int, PP<VecStatsCollector> > vscs;
+        map<PP<RemotePLearnServer>, int> chunkszs;
+        int rowsdone= 0;
 
+        bool rep_prog= report_progress;
+        const_cast<bool&>(report_progress)= false;//servers dont report progress
         for(int i= 0; i < nservers; ++i)
             servers[i]->newObjectAsync(*this);
+        const_cast<bool&>(report_progress)= rep_prog;
+
         while(nservers > 0)
         {
             PP<RemotePLearnServer> s= service.waitForResult();
@@ -845,6 +857,7 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
                     s->getResults(id);
                     learners_ids[s]= id;
                     int clen= min(chunksize, testset.length()-curpos);
+                    chunkszs[s]= clen;
                     VMat sts= new RowsSubVMatrix(testset, curpos, clen);
                     if(master_sends_testset_rows)
                         sts= new MemoryVMatrix(sts.toMat());
@@ -864,6 +877,7 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
                 {
                     /* step 4 (once per slave) */
                     s->getResults(); // learner deleted
+                    s->unlink(testset);
                     service.freeServer(s);
                     --nservers;
                 }
@@ -875,11 +889,15 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
 
                 s->getResults(vsc, chunkout, chunkcosts);
 
+                rowsdone+= chunkszs[s];
+                if(report_progress) pb->update(rowsdone);
+
                 int chunknum= chunknums[s];
                 if(curpos < len) // more chunks to do, assign one to this server
                 {
                     /* step 2 (repeat as needed) */
                     int clen= min(chunksize, testset.length()-curpos);
+                    chunkszs[s]= clen;
                     VMat sts= new RowsSubVMatrix(testset, curpos, clen);
                     if(master_sends_testset_rows)
                         sts= new MemoryVMatrix(sts.toMat());
@@ -922,9 +940,7 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
     else // Sequential test 
     {
 #endif
-        PP<ProgressBar> pb;
-        if (report_progress) 
-            pb = new ProgressBar("Testing learner", len);
+
         for (int i = 0; i < len; i++)
         {
             testset.getExample(i, input, target, weight);

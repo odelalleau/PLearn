@@ -341,10 +341,8 @@ void VPLCombinedLearner::computeOutputAndCosts(const Vec& input, const Vec& targ
     output.resize(outputsize());
     costs.resize(nTestCosts());
 
-    int ilen = input.length();
-    int tlen = target.length();
-    PLASSERT(ilen==inputsize());
-    PLASSERT(tlen==targetsize());
+    PLASSERT(input.length()==inputsize());
+    PLASSERT(target.length()==targetsize());
 
     output.resize(outputsize());
     int nlearners = sublearners_.length();    

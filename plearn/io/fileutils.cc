@@ -690,7 +690,7 @@ string readFileAndMacroProcess(const PPath& filepath, map<string, string>& varia
 /////////////////////////
 // readAndMacroProcess //
 /////////////////////////
-string readAndMacroProcess(PStream& in, map<string, string>& variables)
+string readAndMacroProcess(PStream& in, map<string, string>& variables, bool skip_comments)
 {
     string text; // the processed text to return
     bool inside_a_quoted_string=false; // inside a quoted string we don't skip characters following a #
@@ -702,11 +702,10 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
         if (last_c!='\\' && c=='"') // we find either the beginning or end of a quoted string
             inside_a_quoted_string = !inside_a_quoted_string; // flip status
 
-        if(!inside_a_quoted_string && c=='#')  // It's a comment: skip rest of line
-        {
+        if(!inside_a_quoted_string && c=='#' && skip_comments)
+            // It's a comment: skip rest of line
             while(c!=EOF && c!='\n' && c!='\r')
                 c = in.get();
-        }
 
         if(c==EOF)
             break;

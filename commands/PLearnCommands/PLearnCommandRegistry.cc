@@ -40,6 +40,8 @@
 #include "PLearnCommandRegistry.h"
 #include <iostream>
 #include <vector>
+#include <plearn/base/HelpSystem.h>
+#include <plearn/io/PStream.h>
 
 namespace PLearn {
 using namespace std;
@@ -50,13 +52,13 @@ PLearnCommandRegistry::command_map& PLearnCommandRegistry::commands()
     return commands_;
 }
 
-
 void PLearnCommandRegistry::do_register(PLearnCommand* command)
 { commands()[command->name] = command; }
 
 bool PLearnCommandRegistry::is_registered(const string& commandname)
 { return commands().find(commandname)!=commands().end(); }
-  
+
+/*  
 void PLearnCommandRegistry::print_command_summary(ostream& out)
 {
     command_map::iterator it = commands().begin();
@@ -68,14 +70,16 @@ void PLearnCommandRegistry::print_command_summary(ostream& out)
     }
     out << endl;
 }
+*/
 
 //! Issues a "bad command" message
 void PLearnCommandRegistry::badcommand(const string& commandname)
 {
-    cerr << "No '" << commandname << "' command available." << endl;
-    cerr << "Available commands are: " << endl;
-    print_command_summary(cerr);
-    cerr << "You can get more help for any of these commands by invoking the help command" << endl;
+    perr << "No '" << commandname << "' command available." << endl;
+    perr << "Available commands are: " << endl;
+    //print_command_summary(cerr);
+    perr << HelpSystem::helpCommands() << flush;
+    perr << "You can get more help for any of these commands by invoking the help command" << endl;
 }
 
 void PLearnCommandRegistry::run(const string& commandname, const vector<string>& args)
@@ -86,7 +90,16 @@ void PLearnCommandRegistry::run(const string& commandname, const vector<string>&
     else
         it->second->run(args);
 }
-  
+
+PLearnCommand* PLearnCommandRegistry::getCommand(const string& commandname)
+{
+    command_map::iterator it = commands().find(commandname);
+    if(it==commands().end()) badcommand(commandname);
+    return it->second;
+}
+
+
+/*  
 void PLearnCommandRegistry::help(const string& commandname, ostream& out)
 { 
     command_map::iterator it = commands().find(commandname);
@@ -99,6 +112,7 @@ void PLearnCommandRegistry::help(const string& commandname, ostream& out)
         out << it->second->helpmsg << endl;        
     }
 }
+*/
 
 } // end of namespace PLearn
 

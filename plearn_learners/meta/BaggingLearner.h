@@ -57,15 +57,23 @@ public:
 
     PP<Splitter> splitter; //!< splitter used to get bags(=splits)
     PP<PLearner> template_learner; //!< to deep-copy once for each bag
-    char reduce_func; //!< function used to combine outputs from all learners
-    
+    //! functions used to combine outputs from all learners
+    TVec<string> stats;
+    //! for computeOutput: remove the highest and lowest 
+    //! outputs before averaging (nb. to exclude at each end)
+    int exclude_extremes; 
+    //! Wether computeOutput should append sub-learners outputs to output.
+    bool output_sub_outputs;
+
 public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
     BaggingLearner(PP<Splitter> splitter_= 0, 
                    PP<PLearner> template_learner_= 0,
-                   char reduce_func_= 'A');
+                   TVec<string> stats_= TVec<string>(1,"E"),
+                   int exclude_extremes_= 0,
+                   bool output_sub_outputs_= false);
 
     //#####  PLearner Member Functions  #######################################
     virtual int outputsize() const;
@@ -89,6 +97,8 @@ public:
     virtual bool isStatefulLearner() const;
 
     virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+
+    virtual TVec<string> getOutputNames() const;
 
     //#####  PLearn::Object Protocol  #########################################
     PLEARN_DECLARE_OBJECT(BaggingLearner);
@@ -115,7 +125,25 @@ private:
 private:
     //#####  Private Data Members  ############################################
 
-    // The rest of the private stuff goes here
+protected:
+    mutable VecStatsCollector stcol;
+    mutable Mat learners_outputs;
+    mutable Mat outputs;
+    mutable Vec learner_costs;
+    mutable Vec last_test_input;
+
+
+    TVec<string> addStatNames(const TVec<string>& names) const
+    {
+        TVec<string> outputnames;
+        for(TVec<string>::iterator it= names.begin(); it != names.end(); ++it)
+            for(TVec<string>::const_iterator jt= stats.begin();
+                jt != stats.end(); ++jt)
+                outputnames.push_back(*jt + '[' + *it + ']');
+        return outputnames;
+    }
+
+
 };
 
 // Declares a few other classes and functions related to this class
