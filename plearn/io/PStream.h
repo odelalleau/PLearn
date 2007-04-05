@@ -339,7 +339,7 @@ public:
         return *this;
     }
 
-    //! Reads ultil eof, returns whole contents as a string
+    //! Reads until an EOF is found, and returns the whole content as a string.
     string readAll();
 
     //! Reads the next character and launches a PLERROR if it is different from
