@@ -178,9 +178,16 @@ void InterfunctionXchgTest::perform()
         // differ from one computer to another, causing the test to fail.
         boost::regex memory_adr("0x[abcdef0123456789]{6,}",
                                 boost::regex::perl|boost::regex::icase);
-        string msg_without_adr = regex_replace(exception_msg, memory_adr,
-                                               "0x[memory_address]");
-        cout << "Caught Python Exception: '" << msg_without_adr << "'" << endl;
+        string msg_without_sys_dependent_data =
+            regex_replace(exception_msg, memory_adr,
+                    "0x[memory_address]");
+        boost::regex python_ver("Python 2\\.[0-9]\\.[0-9]",
+                                boost::regex::perl|boost::regex::icase);
+        msg_without_sys_dependent_data =
+            regex_replace(msg_without_sys_dependent_data, python_ver,
+                    "Python 2.X.Y");
+        cout << "Caught Python Exception: '" << msg_without_sys_dependent_data
+             << "'" << endl;
     }
     catch (const PLearnError& e) {
         cout << "Caught PLearn Exception: '" << e.message() << "'" << endl;
