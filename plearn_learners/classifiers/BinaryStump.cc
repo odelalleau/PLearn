@@ -43,6 +43,9 @@
 
 #include "BinaryStump.h"
 
+#define PL_LOG_MODULE_NAME "BinaryStump"
+#include <plearn/io/pl_log.h>
+
 namespace PLearn {
 using namespace std;
 
@@ -284,13 +287,13 @@ void BinaryStump::train()
 
         // We choose as the first stump to consider, the stump that classifies
         // in the most frequent class
-        // every points which have their first coordonate greater than
-        // the smallest value for this coordonate in the training set MINUS ONE.
+        // every points which have their first coordinate greater than
+        // the smallest value for this coordinate in the training set MINUS ONE.
         // This approximatly corresponds to classify any points to the most
         // frequent class.
 
         feature = 0;
-        threshold = sf[0].second-1; 
+        threshold = sf[0].second-1;  // TODO Why? (done below already?)
         PP<ProgressBar> pb;
         if(report_progress)
             pb = new ProgressBar("Finding best stump",inputsize()*sf.length());
@@ -315,8 +318,11 @@ void BinaryStump::train()
             //for(int i=0; i<sf.length();i++)
             qsort_vec(sf,buffer);
       
-            if(d==0) // initialize threshold
+            if(d==0) { // initialize threshold
                 threshold = sf[0].second-1; 
+                DBG_MODULE_LOG << "Initializing threshold <- " << threshold <<
+                    endl;
+            }
 
             real w_sum_l_1 = 0;
             real w_sum_l = 0;
@@ -351,15 +357,22 @@ void BinaryStump::train()
                 }
       
                 // We choose the first stump that minimizes the
-                // weighted error
-
-                if(best_error > c_w_sum_error)
+                // weighted error.
+                if (best_error > c_w_sum_error)
                 {
                     best_error = c_w_sum_error;
           
                     tag = w_sum_error_1 > w_sum - w_sum_error_1 ? 0 : 1;
                     threshold = (f1+f2)/2;
+                    DBG_MODULE_LOG << "Updating treshold <- " << threshold <<
+                        " (c_w_sum_error = " << c_w_sum_error <<
+                        ", best_error = " << best_error << ")" << endl;
+
                     feature = d;
+                } else {
+                    DBG_MODULE_LOG << "No update (c_w_sum_error = " <<
+                        c_w_sum_error << ", best_error = " << best_error << ")"
+                        << endl;
                 }
             }
             prog++;
