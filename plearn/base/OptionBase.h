@@ -133,7 +133,6 @@ public:
      */
     typedef unsigned int OptionLevel;
     static const OptionLevel basic_level; //!< mandatory options
-    static const OptionLevel normal_level; //!< simple, useful options
     static const OptionLevel advanced_level; //!< useful but seldom used
     static const OptionLevel expert_level; //!< more than advanced, not experimental
     static const OptionLevel experimental_level; //!< only a few people understand those

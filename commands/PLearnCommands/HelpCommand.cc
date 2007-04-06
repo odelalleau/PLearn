@@ -134,6 +134,11 @@ void HelpCommand::run(const vector<string>& args)
     else
     {
         string about = args[0];
+        
+        if(args.size() > 1)//is option level present?
+            OptionBase::setCurrentOptionLevel(
+                OptionBase::optionLevelFromString(args[1]));
+
         if(extract_extension(about)==".plearn") // help is asked about a plearn script
             helpAboutScript(about);//TODO: move to HelpSystem
         if(about=="scripts")

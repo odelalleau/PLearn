@@ -64,13 +64,12 @@ OptionBase::flag_t OptionBase::current_flags_= (OptionBase::buildoption
                                                 | OptionBase::nontraversable
                                                 | OptionBase::remotetransmit);
 
-const OptionBase::OptionLevel OptionBase::basic_level= 100;
-const OptionBase::OptionLevel OptionBase::normal_level= 200;
+const OptionBase::OptionLevel OptionBase::basic_level= 200;
 const OptionBase::OptionLevel OptionBase::advanced_level= 400;
 const OptionBase::OptionLevel OptionBase::expert_level= 800;
 const OptionBase::OptionLevel OptionBase::experimental_level= 9999;
 const OptionBase::OptionLevel OptionBase::deprecated_level= 99999999;
-const OptionBase::OptionLevel OptionBase::default_level= OptionBase::normal_level;
+const OptionBase::OptionLevel OptionBase::default_level= OptionBase::basic_level;
 OptionBase::OptionLevel OptionBase::current_option_level_= OptionBase::default_level;
 
 OptionBase::OptionBase(const string& optionname, flag_t flags,
@@ -180,7 +179,6 @@ const OptionBase::StrToLevelMap& OptionBase::getStrToLevelMap()
     if(str_to_level.size() == 0)
     {
         str_to_level["basic"]= basic_level;
-        str_to_level["normal"]= normal_level;
         str_to_level["advanced"]= advanced_level;
         str_to_level["expert"]= expert_level;
         str_to_level["experimental"]= experimental_level;

@@ -292,14 +292,14 @@ void NNet::declareOptions(OptionList& ol)
         "A user-specified NAry Var that computes the output of the first hidden layer\n"
         "from the network input vector and a set of parameters. Its first argument should\n"
         "be the network input and the remaining arguments the tunable parameters.\n",
-        "", OptionBase::advanced_level);
+        OptionBase::advanced_level);
 
     declareOption(
         ol, "first_hidden_layer_is_output",
         &NNet::first_hidden_layer_is_output, OptionBase::buildoption,
         "If true and a 'first_hidden_layer' Var is provided, then this layer\n"
         "will be considered as the NNet output before transfer function.",
-        "", OptionBase::advanced_level);
+        OptionBase::advanced_level);
 
     declareOption(
         ol, "n_non_params_in_first_hidden_layer",
@@ -308,7 +308,7 @@ void NNet::declareOptions(OptionList& ol)
         "Number of elements in the 'varray' option of 'first_hidden_layer'\n"
         "that are not updated parameters (assumed to be the last elements in\n"
         "'varray').",
-        "", OptionBase::advanced_level);
+        OptionBase::advanced_level);
 
     declareOption(
         ol, "transpose_first_hidden_layer",
@@ -316,7 +316,7 @@ void NNet::declareOptions(OptionList& ol)
         OptionBase::buildoption, 
         "If true and the 'first_hidden_layer' option is set, this layer will\n"
         "be transposed, and the input variable given to this layer will also\n"
-        "be transposed.", "", OptionBase::advanced_level);
+        "be transposed.", OptionBase::advanced_level);
 
     declareOption(
         ol, "margin", &NNet::margin, OptionBase::buildoption, 

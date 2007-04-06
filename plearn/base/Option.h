@@ -215,8 +215,8 @@ inline void declareOption(OptionList& ol,                      //!< list to whic
                           OptionType ObjectType::* member_ptr, //!< &YourClass::your_field
                           OptionBase::flag_t flags,            //!< see the flags in OptionBase
                           const string& description,           //!< a description of the option
-                          const string& defaultval="",         //!< default value for this option, as set by the default constructor
-                          const OptionBase::OptionLevel level= OptionBase::default_level) //!< Option level (see OptionBase)
+                          const OptionBase::OptionLevel level= OptionBase::default_level, //!< Option level (see OptionBase)
+                          const string& defaultval="")         //!< default value for this option, as set by the default constructor
 {
     ol.push_back(new Option<ObjectType, OptionType>(optionname, member_ptr, flags, 
                                                     TypeTraits<OptionType>::name(), 
@@ -230,8 +230,8 @@ inline void declareOption(OptionList& ol,
                           OptionType* ObjectType::* member_ptr,
                           OptionBase::flag_t flags,
                           const string& description,
-                          const string& defaultval="",
-                          const OptionBase::OptionLevel level= OptionBase::default_level)
+                          const OptionBase::OptionLevel level= OptionBase::default_level,
+                          const string& defaultval="")
 {
     ol.push_back(new Option<ObjectType, OptionType *>(optionname, member_ptr, flags,
                                                       TypeTraits<OptionType *>::name(), 
@@ -245,8 +245,8 @@ inline void declareOption(OptionList& ol,
                           TVec<VecElementType> ObjectType::* member_ptr,
                           OptionBase::flag_t flags,
                           const string& description,
-                          const string& defaultval="",
-                          const OptionBase::OptionLevel level= OptionBase::default_level)
+                          const OptionBase::OptionLevel level= OptionBase::default_level,
+                          const string& defaultval="")
 {
     ol.push_back(new TVecOption<ObjectType, VecElementType>(
                      optionname, member_ptr, flags,
@@ -263,8 +263,8 @@ inline void redeclareOption(OptionList& ol,                      //!< the list t
                             OptionType ObjectType::* member_ptr, //!< &YourClass::your_field
                             OptionBase::flag_t flags,            //! see the flags in OptionBase
                             const string& description,           //!< a description of the option
-                            const string& defaultval="",         //!< default value for this option, as set by the default constructor
-                            const OptionBase::OptionLevel level= OptionBase::default_level) //!< Option level (see OptionBase)
+                            const OptionBase::OptionLevel level= OptionBase::default_level, //!< Option level (see OptionBase)
+                            const string& defaultval="")         //!< default value for this option, as set by the default constructor
 {
     bool found = false;
     for (OptionList::iterator it = ol.begin(); !found && it != ol.end(); it++) {
@@ -289,8 +289,8 @@ inline void redeclareOption(OptionList& ol,                      //!< the list t
                             OptionType* ObjectType::* member_ptr,//!< &YourClass::your_field
                             OptionBase::flag_t flags,            //! see the flags in OptionBase
                             const string& description,           //!< a description of the option
-                            const string& defaultval="",         //!< default value for this option, as set by the default constructor
-                            const OptionBase::OptionLevel level= OptionBase::default_level) //!< Option level (see OptionBase)
+                            const OptionBase::OptionLevel level= OptionBase::default_level, //!< Option level (see OptionBase)
+                            const string& defaultval="")         //!< default value for this option, as set by the default constructor
 {
     bool found = false;
     for (OptionList::iterator it = ol.begin(); !found && it != ol.end(); it++) {
@@ -315,8 +315,8 @@ inline void redeclareOption(OptionList& ol,
                             TVec<VecElementType> ObjectType::* member_ptr,
                             OptionBase::flag_t flags,
                             const string& description,
-                            const string& defaultval="",
-                            const OptionBase::OptionLevel level= OptionBase::default_level)
+                            const OptionBase::OptionLevel level= OptionBase::default_level,
+                            const string& defaultval="")
 {
     bool found = false;
     for (OptionList::iterator it = ol.begin(); !found && it != ol.end(); it++) {

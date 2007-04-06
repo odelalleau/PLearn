@@ -53,9 +53,9 @@ namespace PLearn {
 using namespace std;
 
 AdaBoost::AdaBoost()
-    : found_zero_error_weak_learner(0),
-      sum_voting_weights(0.0), 
+    : sum_voting_weights(0.0), 
       initial_sum_weights(0.0),
+      found_zero_error_weak_learner(0),
       target_error(0.5), 
       output_threshold(0.5), 
       compute_training_error(1), 

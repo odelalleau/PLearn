@@ -119,12 +119,12 @@ void BootstrapVMatrix::declareOptions(OptionList &ol)
     declareOption(ol, "allow_repetitions", &BootstrapVMatrix::allow_repetitions, 
                   OptionBase::buildoption,
                   "Wether examples should be allowed to appear each more than once.",
-                  "", OptionBase::advanced_level);
+                  OptionBase::advanced_level);
 
     declareOption(ol, "own_seed", &BootstrapVMatrix::own_seed,
                   (OptionBase::learntoption | OptionBase::nosave),
-        "DEPRECATED: old random generator seed",
-        "", OptionBase::deprecated_level);
+                  "DEPRECATED: old random generator seed",
+                  OptionBase::deprecated_level);
 
     inherited::declareOptions(ol);
 

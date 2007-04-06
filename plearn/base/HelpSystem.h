@@ -158,6 +158,16 @@ struct HelpSystem // more or less a namespace
      //! Returns the list of build options for the class with the given name
     static vector<string> listBuildOptions(const string& classname);
 
+     //! Returns the list of all options for the class with the given name
+    static vector<pair<OptionBase::OptionLevel, string> > 
+    listClassOptionsWithLevels(const string& classname,
+                               const OptionBase::flag_t& flags= 
+                               OptionBase::getCurrentFlags());
+
+     //! Returns the list of build options for the class with the given name
+    static vector<pair<OptionBase::OptionLevel, string> > 
+    listBuildOptionsWithLevels(const string& classname);
+
      //! Returns the list of options for the class with the given name, as text
     static string helpClassOptions(const string& classname);
 

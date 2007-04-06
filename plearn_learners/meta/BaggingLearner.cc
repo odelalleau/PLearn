@@ -76,17 +76,17 @@ void BaggingLearner::declareOptions(OptionList& ol)
         OptionBase::buildoption,
         "Splitter used to get bags. In each split, only the first set is\n"
         "used (as the training set for a bag). A typical splitter used in\n"
-        "bagging is a BootstrapSplitter.", "", OptionBase::basic_level);
+        "bagging is a BootstrapSplitter.", OptionBase::basic_level);
 
     declareOption(ol, "template_learner", &BaggingLearner::template_learner,
-        OptionBase::buildoption,
-        "Template for all sub-learners; deep-copied once for each bag.",
-        "", OptionBase::basic_level);
+                  OptionBase::buildoption,
+                  "Template for all sub-learners; deep-copied once for each bag.",
+                  OptionBase::basic_level);
 
     declareOption(ol, "stats", &BaggingLearner::stats,
         OptionBase::buildoption,
         "Statistics used to combine outputs from all learners. You can use\n"
-        "any statistic that can be computed by a StatsCollector.", "",
+        "any statistic that can be computed by a StatsCollector.",
         OptionBase::basic_level);
 
     declareOption(ol, "exclude_extremes", &BaggingLearner::exclude_extremes,

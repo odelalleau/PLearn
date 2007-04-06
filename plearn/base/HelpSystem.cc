@@ -34,6 +34,8 @@
 
 #include "HelpSystem.h"
 
+#include <algorithm>
+
 #include "stringutils.h"    //!< For addprefix.
 #include "tostring.h"
 #include <plearn/misc/HTMLUtils.h>
@@ -355,12 +357,12 @@ string HelpSystem::helpOnClass(const string& classname)
         "# (only those that can be instantiated) \n"
         "################################################################## \n\n";
     s+= addprefix("# ", helpDerivedClasses(classname));
-
+/*
     s+= "\n\n################################################################## \n";
     s+= "## Remote-callable methods of " + classname + " \n"
         "################################################################## \n\n";
     s+= addprefix("# ", helpMethods(classname));
-
+*/
     s+= "\n\n################################################################## \n\n";
 
     return s;
@@ -533,33 +535,77 @@ pair<string, vector<string> > HelpSystem::precisOnClass(const string& classname)
 
 vector<string> HelpSystem::listClassOptions(const string& classname)
 {
-    const TypeMapEntry& e= TypeFactory::instance().getTypeMapEntry(classname);
-    OptionList& optlist= (*e.getoptionlist_method)();
-    int nopts= optlist.size();
-    vector<string> options(nopts);
-    for(int i= 0; i < nopts; ++i) options[i]= optlist[i]->optionname();
-    return options;
+    vector<pair<OptionBase::OptionLevel, string> > optswl=
+        listClassOptionsWithLevels(classname);
+    int nopts= optswl.size();
+    vector<string> opts(nopts);
+    for(int i= 0; i < nopts; ++i)
+        opts[i]= optswl[i].second;
+    return opts;
 }
 
 vector<string> HelpSystem::listBuildOptions(const string& classname)
 {
+    vector<pair<OptionBase::OptionLevel, string> > optswl=
+        listBuildOptionsWithLevels(classname);
+    int nopts= optswl.size();
+    vector<string> opts(nopts);
+    for(int i= 0; i < nopts; ++i)
+        opts[i]= optswl[i].second;
+    return opts;
+}
+
+vector<pair<OptionBase::OptionLevel, string> >
+HelpSystem::listClassOptionsWithLevels(const string& classname, 
+                                       const OptionBase::flag_t& flags)
+{
     const TypeMapEntry& e= TypeFactory::instance().getTypeMapEntry(classname);
     OptionList& optlist= (*e.getoptionlist_method)();
-    vector<string> options;
-    for(OptionList::iterator it= optlist.begin();
-        it != optlist.end(); ++it)
-        if((*it)->flags() & OptionBase::buildoption)
-            options.push_back((*it)->optionname());
+    int nopts= optlist.size();
+    vector<pair<OptionBase::OptionLevel, string> > options;
+    for(int i= 0; i < nopts; ++i)
+        if(optlist[i]->flags() & flags)
+            options.push_back(make_pair(optlist[i]->level(), 
+                                        optlist[i]->optionname()));
     return options;
 }
+
+vector<pair<OptionBase::OptionLevel, string> >
+HelpSystem::listBuildOptionsWithLevels(const string& classname)
+{ return listClassOptionsWithLevels(classname, OptionBase::buildoption); }
 
 string HelpSystem::helpClassOptions(const string& classname)
 {
     string s= "";
-    vector<string> options= listClassOptions(classname);
-    for(vector<string>::iterator it= options.begin();
-        it != options.end(); ++it)
-        s+= helpOnOption(classname, *it) + '\n';
+    vector<pair<OptionBase::OptionLevel, string> > options= 
+        listClassOptionsWithLevels(classname);
+    sort(options.begin(), options.end());
+    OptionBase::OptionLevel lvl= 0;
+    OptionBase::OptionLevel curlvl= OptionBase::getCurrentOptionLevel();
+    int nbeyond= 0;
+    for(vector<pair<OptionBase::OptionLevel, string> >::iterator 
+            it= options.begin(); it != options.end(); ++it)
+    {
+        if(lvl != it->first)
+        {
+            lvl= it->first;
+            if(lvl <= curlvl)
+                s+= "##############################\n"
+                    "# Options for level " 
+                    + OptionBase::optionLevelToString(lvl) 
+                    + "\n\n";
+        }
+        if(lvl <= curlvl)
+            s+= helpOnOption(classname, it->second) + '\n';
+        else
+            ++nbeyond;
+    }
+    if(nbeyond > 0)
+        s+= "##############################\n"
+            "# " + tostring(nbeyond)
+            + " hidden options beyond level "
+            + OptionBase::optionLevelToString(curlvl)
+            + "\n\n";
     return s;
 }
 
@@ -571,7 +617,7 @@ string HelpSystem::helpOnOption(const string& classname, const string& optionnam
     if(flags & OptionBase::buildoption 
        && opt->level() <= OptionBase::getCurrentOptionLevel())
         s+= addprefix("# ", opt->optiontype() + ": " + opt->description())
-            + addprefix("# ", "*OptionLevel: " + opt->levelString())
+            //+ addprefix("# ", "*OptionLevel: " + opt->levelString())
             + opt->optionname() + " = " 
             + getOptionDefaultVal(classname, optionname) + " ;\n\n";
 
