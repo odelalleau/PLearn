@@ -514,7 +514,8 @@ void NatGradNNet::fpropNet(int n_examples, bool during_training) const
         }
         // try to use BLAS for the expensive operation
         productScaleAcc(next_layer, prev_layer, false, 
-                        during_training?layer_params[i]:layer_mparams[i], 
+                        (during_training || params_averaging_coeff==1.0)?
+                        layer_params[i]:layer_mparams[i], 
                         true, 1, 0);
         // compute layer's output non-linearity
         if (i+1<n_layers-1)
