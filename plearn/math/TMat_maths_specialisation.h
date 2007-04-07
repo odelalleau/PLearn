@@ -415,26 +415,13 @@ inline void productScaleAcc(const TVec<float>& y, const TMat<float>& A, bool tra
     }
 #endif
 
-/*    int one = 1;
+      int one = 1;
       char trans = transposeA ?'N' :'T';
       int lda = A.mod();
       int m = A.width();
       int n = A.length();
-      static int ndbg=0;
 
-      extern bool debug_;
-      if (debug_ && ndbg<3)
-      {
-      cout << "A=" << A << " * " << x << " ==> " << y << endl;
-      ndbg++;
-      }
       sgemv_(&trans, &m, &n, &alpha, A.data(), &lda, x.data(), &one, &beta, y.data(), &one);
-      if (debug_ && ndbg<3)
-      {
-      cout << "A=" << A << " * " << x << " ==> " << y << endl;
-      ndbg++;
-      }
-*/
 }
 
 //! A <- A + alpha x.y'
