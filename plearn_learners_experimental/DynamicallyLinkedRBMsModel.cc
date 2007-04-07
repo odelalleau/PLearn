@@ -111,6 +111,11 @@ void DynamicallyLinkedRBMsModel::declareOptions(OptionList& ol)
                   "OnlineLearningModule corresponding to dynamic links "
                   "between RBMs' hidden layers");
 
+    declareOption(ol, "visible_connections", &DynamicallyLinkedRBMsModel::visible_connections,
+                  OptionBase::buildoption,
+                  "OnlineLearningModule corresponding to dynamic links "
+                  "between RBMs' visible layers");
+
     /*
     declareOption(ol, "", &DynamicallyLinkedRBMsModel::,
                   OptionBase::learntoption,
@@ -171,6 +176,9 @@ void DynamicallyLinkedRBMsModel::build_()
         pos_up_values.resize(hidden_layer->size);
         hidden_layer_target.resize(hidden_layer->size);
         hidden_layer_sample.resize(hidden_layer->size);
+        visible_layer_sample.resize(visible_size);
+        previous_hidden_layer.resize(hidden_layer->size);
+        previous_visible_layer.resize(visible_size);
 
         visible_layer->size = visible_size;
 
@@ -180,17 +188,22 @@ void DynamicallyLinkedRBMsModel::build_()
         dynamic_connections->input_size = hidden_layer->size;
         dynamic_connections->output_size = hidden_layer->size;
 
+        visible_connections->input_size = visible_size;
+        visible_connections->output_size = visible_size;
+
         // Set random generators
         visible_layer->random_gen = random_gen;
         hidden_layer->random_gen = random_gen;
         connections->random_gen = random_gen;
         dynamic_connections->random_gen = random_gen;
+        visible_connections->random_gen = random_gen;
 
         // Build components
         visible_layer->build();
         hidden_layer->build();
         connections->build();
         dynamic_connections->build();
+        visible_connections->build();
     }
 
 }
@@ -211,15 +224,20 @@ void DynamicallyLinkedRBMsModel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField( hidden_layer , copies);
     deepCopyField( dynamic_connections , copies);
     deepCopyField( dynamic_connections_copy , copies);
+    deepCopyField( visible_connections , copies);
     deepCopyField( connections , copies);
     deepCopyField( symbol_sizes , copies);
     deepCopyField(cond_bias , copies);
+    deepCopyField(visi_cond_bias , copies);
     deepCopyField(bias_gradient , copies);
+    deepCopyField(visi_bias_gradient , copies);
     deepCopyField( hidden_layer_target , copies);
     deepCopyField( input_gradient , copies);
     deepCopyField(previous_input , copies);
     deepCopyField(previous_hidden_layer , copies);
+    deepCopyField(previous_visible_layer , copies);
     deepCopyField(hidden_layer_sample , copies);
+    deepCopyField(visible_layer_sample , copies);
     deepCopyField(pos_down_values , copies);
     deepCopyField(pos_up_values , copies);
     deepCopyField(alpha , copies);
@@ -255,6 +273,7 @@ void DynamicallyLinkedRBMsModel::forget()
     hidden_layer->forget();
     connections->forget();
     dynamic_connections->forget();
+    visible_connections->forget();
 
     stage = 0;
 }
@@ -351,8 +370,23 @@ void DynamicallyLinkedRBMsModel::train()
                     continue;
 
                 clamp_visible_units(input);
-                
+//                if(sample == 0)
+//                {
+//                    cout << "Pre rbm_update" << endl;
+//                    cout << "connection=" << dynamic_cast<RBMMatrixConnection*>((RBMConnection *)connections)->weights << endl;
+//                    cout << "visible_bias=" << visible_layer->bias << endl;
+//                    cout << "hidden_bias=" << hidden_layer->bias << endl;
+//                }
                 mean_cost += rbm_update();
+//                if(sample == 0)
+//                {
+//                    cout << "Post rbm_update" << endl;
+//                    cout << "hidden->expectation" << hidden_layer->expectation << endl;
+//                    cout << "visible->expectation" << visible_layer->expectation << endl;
+//                    cout << "connection=" << dynamic_cast<RBMMatrixConnection*>((RBMConnection *)connections)->weights << endl;
+//                    cout << "visible_bias=" << visible_layer->bias << endl;
+//                    cout << "hidden_bias=" << hidden_layer->bias << endl;
+//                }
             }
 
             if( pb )
@@ -389,7 +423,9 @@ void DynamicallyLinkedRBMsModel::train()
                                   end_stage - init_stage );
 
         previous_hidden_layer.resize(hidden_layer->size);
+        previous_visible_layer.resize(visible_layer->size);
         dynamic_connections->setLearningRate( dynamic_learning_rate );
+        visible_connections->setLearningRate( dynamic_learning_rate );
         real mean_cost = 0;
         while(stage < end_stage)
         {
@@ -398,18 +434,23 @@ void DynamicallyLinkedRBMsModel::train()
                 if(sample > 0)
                 {
                     previous_hidden_layer << hidden_layer_sample;
+                    previous_visible_layer << visible_layer_sample;
                     // ** or **
                     // hidden_layer->generateSample();
                     // previous_hidden_layer << hidden_layer->sample;
                 }
                 else
+                {
                     previous_hidden_layer.clear();
+                    previous_visible_layer.clear();
+                }
 
                 train_set->getExample(sample, input, target, weight);
 
                 if(train_set->getString(sample,0) == "<oov>")
                 {
                     hidden_layer_sample.clear();
+                    visible_layer_sample.clear();
                     continue;
                 }
             
@@ -433,14 +474,15 @@ void DynamicallyLinkedRBMsModel::train()
             pb = 0;
         }
 
+        //Make a copy of the dynamique phase
+        CopiesMap map;
+        dynamic_connections_copy = dynamic_connections->deepCopy(map);
+
+
     }
 
 
-    //Make a copy of the dynamique phase
-    CopiesMap map;
-
-    dynamic_connections_copy = dynamic_connections->deepCopy(map);
-
+    //cout << dynamic_connections_copy->weights << endl;
 
 
     //alpha = Vec(hidden_layer->size,1);
@@ -514,6 +556,10 @@ void DynamicallyLinkedRBMsModel::train()
         }
 
     }
+
+    //cout << dynamic_connections->weights - dynamic_connections_copy->weights<< endl;
+
+
 
     train_stats->finalize();
 }
@@ -595,7 +641,7 @@ real DynamicallyLinkedRBMsModel::rbm_update()
     
     connections->update( 
         pos_down_values, pos_up_values, visible_layer->sample
-        , hidden_layer->sample ); // ... of connections between layers.
+        , hidden_layer->expectation  ); // ... of connections between layers.
     
     // Compute reconstruction error
     
@@ -603,7 +649,9 @@ real DynamicallyLinkedRBMsModel::rbm_update()
 
     visible_layer->getAllActivations( connections );
 
+    
     visible_layer->computeExpectation();
+    
     
     return visible_layer->fpropNLL(pos_down_values);
    
@@ -611,6 +659,8 @@ real DynamicallyLinkedRBMsModel::rbm_update()
 
 real DynamicallyLinkedRBMsModel::dynamic_connections_update()
 {
+    
+
     // Obtain target hidden_layer h_t
     connections->setAsDownInput(visible_layer->expectation);
     hidden_layer->getAllActivations(connections);
@@ -621,27 +671,52 @@ real DynamicallyLinkedRBMsModel::dynamic_connections_update()
     
     // Use "previous_hidden_layer" field and "dynamic_connections" module 
     // to set bias of "hidden_layer"
-
     dynamic_connections->fprop(previous_hidden_layer,hidden_layer->activation);
-    // hidden_layer->activation *= alpha;
     hidden_layer->expectation_is_up_to_date = false;
     hidden_layer->computeExpectation();
+
+    
 
     // Ask "hidden_layer" for maximum likelyhood gradient on bias
     real nll = hidden_layer->fpropNLL(hidden_layer_target);
     hidden_layer->bpropNLL(hidden_layer_target, nll, bias_gradient);
 
-    // bpropUpdate through dynamic_connections
-    // real delta = 0;
-    // for(int i=0; i<hidden_layer->size; i++)
-    //    delta -= dynamic_learning_rate * bias_gradient[i] * hidden_layer->activation[i]/alpha;
-    // bias_gradient *= alpha;
-    // alpha += delta;
+   
     dynamic_connections->bpropUpdate(previous_hidden_layer,
                                      hidden_layer->activation,
                                      input_gradient, bias_gradient);
 
-    return nll;
+
+
+
+
+
+
+
+    //////////////////// VISIBLE DYNAMIC CONNECTION
+
+    visible_layer_sample << visible_layer->expectation;
+
+    // Use "previous_visible_layer" field and "visible_connections" module 
+    // to set bias of "visible_layer"
+   
+    visible_connections->fprop(previous_visible_layer,visible_layer->activation);
+    visible_layer->expectation_is_not_up_to_date();
+    visible_layer->computeExpectation();
+
+    
+
+    // Ask "visible_layer" for maximum likelyhood gradient on bias
+    real nll_visi = visible_layer->fpropNLL(visible_layer_sample);
+    visible_layer->bpropNLL(visible_layer_sample, nll_visi, visi_bias_gradient);
+
+
+    visible_connections->bpropUpdate(previous_visible_layer,
+                                     visible_layer->activation,
+                                     input_gradient, visi_bias_gradient);
+
+
+    return nll_visi;
 }
 
 real DynamicallyLinkedRBMsModel::fine_tuning_update()
@@ -748,7 +823,7 @@ real DynamicallyLinkedRBMsModel::fine_tuning_update()
     
     connections->update( 
         pos_down_values, pos_up_values, visible_layer->sample
-        , hidden_layer->sample ); // ... of connections between layers.
+        , hidden_layer->expectation ); // ... of connections between layers.
 
     //cout << ((PLearn::PP<PLearn::GradNNetLayerModule>)dynamic_connections)->weights << endl;
 
@@ -831,6 +906,8 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
     int len = testset.length();
     Vec input;
     Vec target;
+    Vec bias_tempo;
+    Vec visi_bias_tempo;
     real weight;
 
     Vec output(outputsize());
@@ -878,10 +955,13 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
             //h*_{t-1}
             //////////////////////////////////
             dynamic_connections->fprop(previous_hidden_layer, cond_bias);
-           
             hidden_layer->getAllBias(cond_bias); //**************************
 
-
+            //v*_{t-1} VISIBLE DYNAMIC CONNECTION
+            //////////////////////////////////
+            visible_connections->fprop(previous_input, visi_cond_bias);
+            visible_layer->getAllBias(visi_cond_bias); //**************************
+            
             //up phase
             connections->setAsDownInput( previous_input );
             hidden_layer->getAllActivations( connections );
@@ -889,6 +969,7 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
             //////////////////////////////////
 
             previous_hidden_layer << hidden_layer->expectation;//h_{t-2} au prochain tour//******************************
+            
 
             //h*_{t}
             ////////////
@@ -905,12 +986,31 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
         {
             previous_hidden_layer.clear();//h_{t-1}
             dynamic_connections->fprop(previous_hidden_layer,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
+
             //dynamic_connections_copy->fprop(previous_hidden_layer,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
             hidden_layer->expectation_is_up_to_date = false;
             hidden_layer->computeExpectation();//h_{t}
 
             previous_input.resize(visible_layer->size);
             previous_input << visible_layer->expectation;
+
+            bias_tempo.resize(hidden_layer->bias.length());
+            bias_tempo << hidden_layer->bias;
+
+
+
+
+            /////////VISIBLE DYNAMIC CONNECTION
+            previous_visible_layer.clear();//v_{t-1}
+            visible_connections->fprop(previous_visible_layer,visible_layer->activation);//conection entre v_{t-1} et v_{t}
+
+            visible_layer->expectation_is_not_up_to_date();
+            visible_layer->computeExpectation();//v_{t}
+
+            visi_bias_tempo.resize(visible_layer->bias.length());
+            visi_bias_tempo << visible_layer->bias;
+
+            
             begin++;
         }
 
@@ -936,8 +1036,9 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
 
         costs[0] = visible_layer->fpropNLL(previous_input) / inputsize() ;
 
-
-
+       
+        hidden_layer->getAllBias(bias_tempo); 
+        visible_layer->getAllBias(visi_bias_tempo); 
 
         // costs[0] = 0; //nll/nb_de_temps_par_mesure
 

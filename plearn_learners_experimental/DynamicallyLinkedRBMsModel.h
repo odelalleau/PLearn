@@ -91,11 +91,15 @@ public:
 
     //! OnlineLearningModule corresponding to dynamic links
     //! between RBMs' hidden layers
-    PP<OnlineLearningModule> dynamic_connections;
+    PP<GradNNetLayerModule> dynamic_connections;
+
+    //! OnlineLearningModule corresponding to dynamic links
+    //! between RBMs' visible layers
+    PP<GradNNetLayerModule> visible_connections;
 
     //! Copy OnlineLearningModule corresponding to dynamic links
     //! between RBMs' hidden layers
-    PP<OnlineLearningModule> dynamic_connections_copy;
+    PP<GradNNetLayerModule> dynamic_connections_copy;
 
     //! The weights of the connections between the RBM visible and hidden layers
     PP<RBMConnection> connections;
@@ -207,8 +211,14 @@ protected:
     //! Stores conditional bias
     mutable Vec cond_bias;
 
+    //! Stores visible conditional bias
+    mutable Vec visi_cond_bias;
+
     //! Stores bias gradient
     mutable Vec bias_gradient;
+
+     //! Stores bias gradient
+    mutable Vec visi_bias_gradient;
 
     //! Stores hidden layer target in dynamic learning phase
     mutable Vec hidden_layer_target;
@@ -222,8 +232,14 @@ protected:
     //! Stores previous hidden layer value
     mutable Vec previous_hidden_layer;
 
+    //! Stores previous visible layer value
+    mutable Vec previous_visible_layer;
+
     //! Stores a sample from the hidden layer
     mutable Vec hidden_layer_sample;
+
+    //! Stores a sample from the visible layer
+    mutable Vec visible_layer_sample;
 
     //! Store a copy of the positive phase values
     mutable Vec pos_down_values;
