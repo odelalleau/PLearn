@@ -110,13 +110,13 @@ long ConvertFromPyObject<long>::convert(PyObject* pyobj, bool print_traceback)
     return PyLong_AsLong(pyobj);
 }
 
-double ConvertFromPyObject<double>::convert(PyObject* pyobj, bool print_traceback)
+real ConvertFromPyObject<real>::convert(PyObject* pyobj, bool print_traceback)
 {
     PLASSERT( pyobj );
     if (! PyFloat_Check(pyobj))
-        PLPythonConversionError("ConvertFromPyObject<double>", pyobj,
+        PLPythonConversionError("ConvertFromPyObject<real>", pyobj,
                                 print_traceback);
-    return PyFloat_AS_DOUBLE(pyobj);
+    return (real)PyFloat_AS_DOUBLE(pyobj);
 }
 
 string ConvertFromPyObject<string>::convert(PyObject* pyobj, bool print_traceback)
@@ -133,7 +133,7 @@ void ConvertFromPyObject<Vec>::convert(PyObject* pyobj, Vec& v, bool print_trace
     // NA_InputArray possibly creates a well-behaved temporary (i.e. not
     // discontinuous is memory)
     PLASSERT( pyobj );
-    PyArrayObject* pyarr = NA_InputArray(pyobj, tFloat64, NUM_C_ARRAY);
+    PyArrayObject* pyarr = NA_InputArray(pyobj, tReal, NUM_C_ARRAY);
     if (! pyarr)
         PLPythonConversionError("ConvertFromPyObject<Vec>", pyobj, print_traceback);
     if (pyarr->nd != 1)
@@ -141,7 +141,7 @@ void ConvertFromPyObject<Vec>::convert(PyObject* pyobj, Vec& v, bool print_trace
                 "should be 1; got %d", pyarr->nd);
 
     v.resize(pyarr->dimensions[0]);
-    v.copyFrom((double*)(NA_OFFSETDATA(pyarr)), pyarr->dimensions[0]);
+    v.copyFrom((real*)(NA_OFFSETDATA(pyarr)), pyarr->dimensions[0]);
     Py_XDECREF(pyarr);
 }
 
@@ -157,7 +157,7 @@ void ConvertFromPyObject<Mat>::convert(PyObject* pyobj, Mat& m, bool print_trace
     // NA_InputArray possibly creates a well-behaved temporary (i.e. not
     // discontinuous is memory)
     PLASSERT( pyobj );
-    PyArrayObject* pyarr = NA_InputArray(pyobj, tFloat64, NUM_C_ARRAY);
+    PyArrayObject* pyarr = NA_InputArray(pyobj, tReal, NUM_C_ARRAY);
     if (! pyarr)
         PLPythonConversionError("ConvertFromPyObject<Mat>", pyobj, print_traceback);
     if (pyarr->nd != 2)
@@ -165,7 +165,7 @@ void ConvertFromPyObject<Mat>::convert(PyObject* pyobj, Mat& m, bool print_trace
                 "should be 2; got %d", pyarr->nd);
 
     m.resize(pyarr->dimensions[0], pyarr->dimensions[1]);
-    m.toVec().copyFrom((double*)(NA_OFFSETDATA(pyarr)),
+    m.toVec().copyFrom((real*)(NA_OFFSETDATA(pyarr)),
                        pyarr->dimensions[0] * pyarr->dimensions[1]);
     Py_XDECREF(pyarr);
 }
@@ -247,9 +247,9 @@ PyObject* PythonObjectWrapper::newPyObject(const Vec& data)
 {
     PyArrayObject* pyarr = 0;
     if (data.isNull() || data.isEmpty())
-        pyarr = NA_NewArray(NULL, tFloat64, 1, 0);
+        pyarr = NA_NewArray(NULL, tReal, 1, 0);
     else
-        pyarr = NA_NewArray(data.data(), tFloat64, 1, data.size());
+        pyarr = NA_NewArray(data.data(), tReal, 1, data.size());
         
     return (PyObject*)pyarr;
 }
@@ -258,9 +258,9 @@ PyObject* PythonObjectWrapper::newPyObject(const Mat& data)
 {
     PyArrayObject* pyarr = 0;
     if (data.isNull() || data.isEmpty())
-        pyarr = NA_NewArray(NULL, tFloat64, 2, data.length(), data.width());
+        pyarr = NA_NewArray(NULL, tReal, 2, data.length(), data.width());
     else if (data.mod() == data.width())
-        pyarr = NA_NewArray(data.data(), tFloat64, 2, data.length(), data.width());
+        pyarr = NA_NewArray(data.data(), tReal, 2, data.length(), data.width());
     else {
         // static PyObject* NA_NewAll( int ndim, maybelong *shape, NumarrayType
         // type, void *buffer, maybelong byteoffset, maybelong bytestride, int
@@ -278,13 +278,13 @@ PyObject* PythonObjectWrapper::newPyObject(const Mat& data)
         // maybelong shape[2];
         // shape[0] = data.length();
         // shape[1] = data.width();
-        // pyarr = NA_NewAll(2, shape, tFloat64, data.data(), 0, data.mod()*sizeof(double),
+        // pyarr = NA_NewAll(2, shape, tReal, data.data(), 0, data.mod()*sizeof(real),
         //                   NA_ByteOrder(), 1, 1);
 
         // NOTE (NC) -- I could not get the above function to work; for now,
         // simply copy the matrix to new storage before converting to Python.
         Mat new_data = data.copy();
-        pyarr = NA_NewArray(new_data.data(), tFloat64, 2,
+        pyarr = NA_NewArray(new_data.data(), tReal, 2,
                             new_data.length(), new_data.width());
     }
 

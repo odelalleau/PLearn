@@ -58,6 +58,11 @@
 #include <plearn/vmat/VMat.h>
 #include <plearn/base/tostring.h>
 
+#ifdef USEFLOAT
+#define tReal tFloat32
+#else
+#define tReal tFloat64
+#endif
 
 namespace PLearn {
 
@@ -161,9 +166,9 @@ struct ConvertFromPyObject<long>
 };
 
 template <>
-struct ConvertFromPyObject<double>
+struct ConvertFromPyObject<real>
 {
-    static double convert(PyObject*, bool print_traceback);
+    static real convert(PyObject*, bool print_traceback);
 };
 
 template <>
