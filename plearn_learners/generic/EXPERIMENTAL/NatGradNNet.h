@@ -64,6 +64,13 @@ public:
     //! layer_params[i] is a matrix of dimension layer_sizes[i+1] x (layer_sizes[i]+1)
     //! containing the neuron biases in its first column.
     TVec<Mat> layer_params;
+    //! mean layer_params, averaged over past updates (moving average)
+    TVec<Mat> layer_mparams;
+
+    //! mparams <-- (1-params_averaging_coeff)mparams + params_averaging_coeff*params
+    real params_averaging_coeff;
+    //! how often (in terms of minibatches, i.e. weight updates) do we perform the above?
+    int params_averaging_freq;
 
     //! initial learning rate
     real init_lrate;
@@ -202,7 +209,7 @@ protected:
 
     //! compute a minibatch of size n_examples network top-layer output given layer 0 output (= network input)
     //! (note that log-probabilities are computed for classification tasks, output_type=NLL)
-    void fpropNet(int n_examples) const;
+    void fpropNet(int n_examples, bool during_training) const;
 
     //! compute train costs given the network top-layer output
     //! and write into neuron_gradients_per_layer[n_layers-2], gradient on pre-non-linearity activation
@@ -223,6 +230,7 @@ private:
     Vec all_params; // all the parameters in one vector
     Vec all_params_delta; // update direction
     Vec all_params_gradient; // all the parameter gradients in one vector
+    Vec all_mparams; // mean parameters (moving-averaged over past values)
     TVec<Mat> layer_params_gradient;
     TVec<Vec> layer_params_delta;
     TVec<Vec> neuron_params; // params of each neuron (pointing in all_params)

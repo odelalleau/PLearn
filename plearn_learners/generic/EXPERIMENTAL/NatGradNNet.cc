@@ -56,6 +56,8 @@ PLEARN_IMPLEMENT_OBJECT(
 
 NatGradNNet::NatGradNNet()
     : noutputs(-1),
+      params_averaging_coeff(1.0),
+      params_averaging_freq(5),
       init_lrate(0.01),
       lrate_decay(0),
       output_layer_lrate_scale(1),
@@ -98,9 +100,29 @@ void NatGradNNet::declareOptions(OptionList& ol)
 
     declareOption(ol, "layer_params", &NatGradNNet::layer_params,
                   OptionBase::learntoption,
-                  "Parameters for each layer, organized as follows: layer_params[i] \n"
+                  "Training parameters for each layer, organized as follows: layer_params[i] \n"
                   "is a matrix of dimension layer_sizes[i+1] x (layer_sizes[i]+1)\n"
                   "containing the neuron biases in its first column.\n");
+
+    declareOption(ol, "layer_mparams", &NatGradNNet::layer_mparams,
+                  OptionBase::learntoption,
+                  "Test parameters for each layer, organized like layer_params.\n"
+                  "This is a moving average of layer_params, computed with\n"
+                  "coefficient params_averaging_coeff. Thus the mparams are\n"
+                  "a smoothed version of the params, and they are used only\n"
+                  "during testing.\n");
+
+    declareOption(ol, "params_averaging_coeff", &NatGradNNet::params_averaging_coeff,
+                  OptionBase::buildoption,
+                  "Coefficient used to control how fast we forget old parameters\n"
+                  "in the moving average performed as follows:\n"
+                  "mparams <-- (1-params_averaging_coeff)mparams + params_averaging_coeff*params\n");
+
+    declareOption(ol, "params_averaging_freq", &NatGradNNet::params_averaging_freq,
+                  OptionBase::buildoption,
+                  "How often (in terms of number of minibatches, i.e. weight updates)\n"
+                  "do we perform the moving average update calculation\n"
+                  "mparams <-- (1-params_averaging_coeff)mparams + params_averaging_coeff*params\n");
 
     declareOption(ol, "init_lrate", &NatGradNNet::init_lrate,
                   OptionBase::buildoption,
@@ -190,6 +212,7 @@ void NatGradNNet::build_()
     layer_sizes[0]=inputsize_;
     layer_sizes[n_layers-1]=noutputs;
     layer_params.resize(n_layers-1);
+    layer_mparams.resize(n_layers-1);
     layer_params_delta.resize(n_layers-1);
     layer_params_gradient.resize(n_layers-1);
     biases.resize(n_layers-1);
@@ -202,6 +225,7 @@ void NatGradNNet::build_()
         n_params+=layer_sizes[i+1]*(1+layer_sizes[i]);
     }
     all_params.resize(n_params);
+    all_mparams.resize(n_params);
     all_params_gradient.resize(n_params);
     all_params_delta.resize(n_params);
     neuron_params.resize(n_neurons);
@@ -211,6 +235,7 @@ void NatGradNNet::build_()
     {
         int np=layer_sizes[i+1]*(1+layer_sizes[i]);
         layer_params[i]=all_params.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
+        layer_mparams[i]=all_mparams.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
         biases[i]=layer_params[i].subMatColumns(0,1);
         weights[i]=layer_params[i].subMatColumns(1,layer_sizes[i]); // weights[0] from layer 0 to layer 1
         layer_params_gradient[i]=all_params_gradient.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
@@ -271,6 +296,7 @@ void NatGradNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     deepCopyField(hidden_layer_sizes, copies);
     deepCopyField(layer_params, copies);
+    deepCopyField(layer_mparams, copies);
     deepCopyField(neurons_natgrad_template, copies);
     deepCopyField(neurons_natgrad_per_layer, copies);
     deepCopyField(params_natgrad_template, copies);
@@ -283,6 +309,7 @@ void NatGradNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(neuron_outputs_per_layer, copies);
     deepCopyField(neuron_extended_outputs_per_layer, copies);
     deepCopyField(all_params, copies);
+    deepCopyField(all_mparams, copies);
     deepCopyField(all_params_gradient, copies);
     deepCopyField(layer_params_gradient, copies);
     deepCopyField(neuron_gradients, copies);
@@ -317,6 +344,8 @@ void NatGradNNet::forget()
     }
     stage = 0;
     cumulative_training_time=0;
+    if (params_averaging_coeff!=1.0)
+        all_mparams << all_params;
 }
 
 void NatGradNNet::train()
@@ -369,6 +398,11 @@ void NatGradNNet::train()
                 
             }
         }
+        if (params_averaging_coeff!=1.0 && 
+            b==minibatch_size-1 && 
+            (stage+1)%(minibatch_size*params_averaging_freq)==0)
+            multiplyScaledAdd(all_params, 1-params_averaging_coeff,
+                              params_averaging_coeff, all_mparams);
         if( pb )
             pb->update( stage + 1 );
     }
@@ -391,7 +425,7 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
     // mean gradient over minibatch_size examples has less variance, can afford larger learning rate
     real lrate = sqrt(real(minibatch_size))*init_lrate/(1 + t*lrate_decay);
     PLASSERT(targets.length()==minibatch_size && train_costs.length()==minibatch_size && example_weights.length()==minibatch_size);
-    fpropNet(minibatch_size);
+    fpropNet(minibatch_size,true);
     fbpropLoss(neuron_outputs_per_layer[n_layers-1],targets,example_weights,train_costs);
     for (int i=n_layers-1;i>0;i--)
     {
@@ -461,12 +495,12 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
 void NatGradNNet::computeOutput(const Vec& input, Vec& output) const
 {
     neuron_outputs_per_layer[0](0) << input;
-    fpropNet(1);
+    fpropNet(1,false);
     output << neuron_outputs_per_layer[n_layers-1](0);
 }
 
 //! compute (pre-final-non-linearity) network top-layer output given input
-void NatGradNNet::fpropNet(int n_examples) const
+void NatGradNNet::fpropNet(int n_examples, bool during_training) const
 {
     PLASSERT_MSG(n_examples<=minibatch_size,"NatGradNNet::fpropNet: nb input vectors treated should be <= minibatch_size\n");
     for (int i=0;i<n_layers-1;i++)
@@ -479,7 +513,9 @@ void NatGradNNet::fpropNet(int n_examples) const
             next_layer = next_layer.subMatRows(0,n_examples);
         }
         // try to use BLAS for the expensive operation
-        productScaleAcc(next_layer, prev_layer, false, layer_params[i], true, 1, 0);
+        productScaleAcc(next_layer, prev_layer, false, 
+                        during_training?layer_params[i]:layer_mparams[i], 
+                        true, 1, 0);
         // compute layer's output non-linearity
         if (i+1<n_layers-1)
             for (int k=0;k<n_examples;k++)
