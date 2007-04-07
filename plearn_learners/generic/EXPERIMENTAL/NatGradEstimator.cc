@@ -203,7 +203,7 @@ void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
     int n = n_eigen+i;
     Xt.resize(n+1,n_dim);
     Vec newX = Xt(n);
-    real rn = pow(gamma,-0.5*(i+1));
+    real rn = pow(gamma,real(-0.5*(i+1)));
     multiply(g,rn,newX);
     G.resize(n+1,n+1);
     Vec newG=G(n);

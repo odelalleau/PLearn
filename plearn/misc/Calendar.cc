@@ -435,12 +435,12 @@ void Calendar::remote_setGlobalCalendar(string calendar_name, Vec calendar_dates
 }
 
 
-Vec Calendar::remote_getGlobalCalendar(string calendar_name)
+JTimeVec Calendar::remote_getGlobalCalendar(string calendar_name)
 {
     const Calendar* cal = getGlobalCalendar(calendar_name);
     if (! cal) {
         PLERROR("Global calendar '%s' not found", calendar_name.c_str());
-        return Vec();                        //!< Shut up compiler
+        return JTimeVec();                        //!< Shut up compiler
     }
     else
         return cal->timestamps_;

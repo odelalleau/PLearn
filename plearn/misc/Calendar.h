@@ -305,7 +305,7 @@ public:
     //#####  Remote-Callables  ################################################
     
     void remote_setGlobalCalendar(string calendar_name, Vec calendar_dates);
-    Vec remote_getGlobalCalendar(string calendar_name);
+    JTimeVec remote_getGlobalCalendar(string calendar_name);
 };
 
 // Declares a few other classes and functions related to this class
