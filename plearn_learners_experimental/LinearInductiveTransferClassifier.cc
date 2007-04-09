@@ -115,7 +115,9 @@ void LinearInductiveTransferClassifier::declareOptions(OptionList& ol)
                   "Model type. Choose between:\n"
                   " - \"discriminative\"             (multiclass classifier)\n"
                   " - \"discriminative_1_vs_all\"    (1 vs all multitask classier)\n"
-                  " - \"generative\"                 (gaussian classifier)\n");
+                  " - \"generative\"                 (gaussian input)\n"
+                  " - \"generative_0-1\"             ([0,1] input)\n"
+        );
     declareOption(ol, "penalty_type", &LinearInductiveTransferClassifier::penalty_type,
                   OptionBase::buildoption,
                   "Penalty to use on the weights (for weight and bias decay).\n"
@@ -206,7 +208,13 @@ void LinearInductiveTransferClassifier::build_()
             weights =vconcat(-product(exp(s),square(weights)) & weights); // Making sure that the scaling factor is going to be positive
             output = affine_transform(input, weights);
         }
-        else
+        else if(model_type == "generative_0-1")
+        {
+            PLERROR("Not implemented yet");
+            //weights = vconcat(columnSum(log(A/(exp(A)-1))) & weights);
+            //output = affine_transform(input, weights);
+        }
+        else if(model_type == "generative")
         {
             weights =vconcat(-columnSum(square(weights)/transpose(duplicateRow(s,noutputs))) & 2*weights/transpose(duplicateRow(s,noutputs)));
             if(targetsize() == 1)
@@ -214,6 +222,8 @@ void LinearInductiveTransferClassifier::build_()
             else
                 output = exp(affine_transform(input, weights) - duplicateRow(dot(transpose(input)/s,input),noutputs))+REAL_EPSILON;
         }
+        else
+            PLERROR("In LinearInductiveTransferClassifier::build_(): model_type %s is not valid", model_type.c_str());
 
         Var sup_output;
         Var new_output;
@@ -287,7 +297,7 @@ void LinearInductiveTransferClassifier::build_()
         }
 
         // Build costs
-        if(model_type == "discriminative" || model_type == "discriminative_1_vs_all")
+        if(model_type == "discriminative" || model_type == "discriminative_1_vs_all" || model_type == "generative_0-1")
         {
             if(model_type == "discriminative")
             {
@@ -314,7 +324,7 @@ void LinearInductiveTransferClassifier::build_()
                 else
                 {
                     costs[0] = stable_cross_entropy(sup_output, sup_target, true);
-                    costs[1] = transpose(lift_output(sigmoid(sup_output), sup_target));
+                    costs[1] = transpose(lift_output(sigmoid(sup_output)+0.001, sup_target));
                 }
                 if(targetsize() == 1)
                 {
@@ -323,6 +333,33 @@ void LinearInductiveTransferClassifier::build_()
                     else
                         new_costs[0] = stable_cross_entropy(new_output, onehot(noutputs,new_target));
                     new_costs[1] = classification_loss(sigmoid(new_output), new_target);
+                }
+                else
+                {
+                    new_costs.resize(costs.length());
+                    for(int i=0; i<new_costs.length(); i++)
+                        new_costs[i] = costs[i];
+                }
+            }
+            if(model_type == "generative_0-1")
+            {
+                costs.resize(2);
+                new_costs.resize(2);
+                if(targetsize() == 1)
+                {
+                    costs[0] = sup_output;
+                    costs[1] = classification_loss(sigmoid(sup_output), sup_target);
+                }
+                else
+                {
+                    PLERROR("In LinearInductiveTransferClassifier::build_(): can't use generative_0-1 model with targetsize() != 1");
+                    costs[0] = sup_output;
+                    costs[1] = transpose(lift_output(sigmoid(exp(sup_output)+REAL_EPSILON), sup_target));
+                }
+                if(targetsize() == 1)
+                {
+                    new_costs[0] = new_output;
+                    new_costs[1] = classification_loss(new_output, new_target);
                 }
                 else
                 {
@@ -437,6 +474,8 @@ void LinearInductiveTransferClassifier::makeDeepCopyFromShallowCopy(CopiesMap& c
     deepCopyField(f, copies);
     deepCopyField(test_costf, copies);
     deepCopyField(output_and_target_to_cost, copies);
+    deepCopyField(sup_test_costf, copies);
+    deepCopyField(sup_output_and_target_to_cost, copies);
 
     varDeepCopyField(A, copies);
     varDeepCopyField(s, copies);
@@ -490,7 +529,7 @@ void LinearInductiveTransferClassifier::train()
     if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
         build();
     
-    if(model_type == "discriminative" || model_type == "discriminative_1_vs_all")
+    if(model_type == "discriminative" || model_type == "discriminative_1_vs_all" || model_type == "generative_0-1")
     {
         // number of samples seen by optimizer before each optimizer update
         int nsamples = batch_size>0 ? batch_size : l;
@@ -501,7 +540,7 @@ void LinearInductiveTransferClassifier::train()
             optimizer->setToOptimize(params, totalcost);  
             optimizer->build();
         }
-        else PLERROR("DeepFeatureExtractor::train can't train without setting an optimizer first!");
+        else PLERROR("LinearInductiveTransferClassifier::train can't train without setting an optimizer first!");
 
         // number of optimizer stages corresponding to one learner stage (one epoch)
         int optstage_per_lstage = l/nsamples;
@@ -697,6 +736,10 @@ void LinearInductiveTransferClassifier::computeOutputAndCosts(const Vec& inputv,
                 break;
         if(i>= targetv.length())
             PLERROR("In LinearInductiveTransferClassifier::computeCostsFromOutputs(): all targets are missing, can't compute cost");
+        //for(int j=i+1; j<targetv.length(); j++)
+        //    if(!is_missing(targetv[j]))
+        //        PLERROR("In LinearInductiveTransferClassifier::computeCostsFromOutputs(): there should be only one non-missing target");
+        //cout << "i=" << i << " ";
         if(model_type == "generative")
             costsv[costsv.length()-1] = costsv[i];
         else
@@ -709,9 +752,9 @@ void LinearInductiveTransferClassifier::computeOutputAndCosts(const Vec& inputv,
 TVec<string> LinearInductiveTransferClassifier::getTestCostNames() const
 {
     TVec<string> costs_str;
-    if(model_type == "discriminative" || model_type == "discriminative_1_vs_all")
+    if(model_type == "discriminative" || model_type == "discriminative_1_vs_all" || model_type == "generative_0-1")
     {
-        if(model_type == "discriminative")
+        if(model_type == "discriminative" || model_type == "generative_0-1")
         {
             costs_str.resize(2);
             costs_str[0] = "NLL";
