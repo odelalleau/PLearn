@@ -123,7 +123,7 @@ void IIDNoiseKernel::build_()
 {
     if (m_kronecker_indexes.size() != m_isp_kronecker_sigma.size())
         PLERROR("IIDNoiseKernel::build_: size of 'kronecker_indexes' (%d) "
-                "does not match that of 'iso_kronecker_sigma' (%d)",
+                "does not match that of 'isp_kronecker_sigma' (%d)",
                 m_kronecker_indexes.size(), m_isp_kronecker_sigma.size());
 }
 
@@ -133,8 +133,8 @@ void IIDNoiseKernel::build_()
 real IIDNoiseKernel::evaluate(const Vec& x1, const Vec& x2) const
 {
     real value = 0.0;
-    if (x1 == x2)
-        value += softplus(m_isp_noise_sigma);
+    // if (x1 == x2)
+    //     value += softplus(m_isp_noise_sigma);
 
     const int n = m_kronecker_indexes.size();
     if (n > 0) {
