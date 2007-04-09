@@ -148,7 +148,7 @@ public:
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy.
-    virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     // Declares other standard object methods.
     // If your class is not instantiatable (it has pure virtual methods)

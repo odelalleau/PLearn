@@ -125,7 +125,7 @@ public:
 
   //! Transforms a shallow copy into a deep copy
   // (PLEASE IMPLEMENT IN .cc)
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 /*
   MeshFace& operator=( const MeshFace& f );

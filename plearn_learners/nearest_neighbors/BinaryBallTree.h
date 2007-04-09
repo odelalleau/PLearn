@@ -106,7 +106,7 @@ public:
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
-    virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     virtual void setFirstChild( const BinBallTree& first_child );
 
