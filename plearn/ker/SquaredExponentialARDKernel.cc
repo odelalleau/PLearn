@@ -2,7 +2,7 @@
 
 // SquaredExponentialARDKernel.cc
 //
-// Copyright (C) 2006 Nicolas Chapados
+// Copyright (C) 2006-2007 Nicolas Chapados
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -55,15 +55,16 @@ PLEARN_IMPLEMENT_OBJECT(
     "Similar to C.E. Rasmussen's GPML code (see http://www.gaussianprocess.org),\n"
     "this kernel function is specified as:\n"
     "\n"
-    "  k(x,y) = sf2 * exp(- 0.5 * (sum_i (x_i - y_i)^2 / w_i)) + delta_x,y*sn2\n"
+    "  k(x,y) = sf * exp(- 0.5 * (sum_i (x_i - y_i)^2 / w_i)) + k_iid(x,y)\n"
     "\n"
-    "where sf2 is the exp of the 'log_signal_sigma' option, sn2 is the exp of\n"
-    "the 'log_noise_sigma' option (added only if x==y), and w_i is\n"
-    "exp(log_global_sigma + log_input_sigma[i]).\n"
+    "where sf is softplus(isp_signal_sigma), w_i is softplus(isp_global_sigma +\n"
+    "isp_input_sigma[i]), and k_iid(x,y) is the result of the IIDNoiseKernel\n"
+    "kernel evaluation.\n"
     "\n"
     "Note that to make its operations more robust when used with unconstrained\n"
     "optimization of hyperparameters, all hyperparameters of this kernel are\n"
-    "specified in the log-domain.\n"
+    "specified in the inverse softplus domain.  See IIDNoiseKernel for more\n"
+    "explanations.\n"
     );
 
 
@@ -102,92 +103,116 @@ void SquaredExponentialARDKernel::build_()
 real SquaredExponentialARDKernel::evaluate(const Vec& x1, const Vec& x2) const
 {
     PLASSERT( x1.size() == x2.size() );
-    PLASSERT( !m_log_input_sigma.size() || x1.size() == m_log_input_sigma.size() );
+    PLASSERT( !m_isp_input_sigma.size() || x1.size() == m_isp_input_sigma.size() );
 
     if (x1.size() == 0)
-        return exp(2*m_log_signal_sigma) + exp(2*m_log_noise_sigma);
+        return softplus(m_isp_signal_sigma) + inherited::evaluate(x1,x2);
     
     const real* px1 = x1.data();
     const real* px2 = x2.data();
-    real expval = 0.0;
-    real sum_sqdiff = 0.0;
+    real sf         = softplus(m_isp_signal_sigma);
+    real expval     = 0.0;
     
-    if (m_log_input_sigma.size() > 0) {
-        const real* pinpsig = m_log_input_sigma.data();
+    if (m_isp_input_sigma.size() > 0) {
+        const real* pinpsig = m_isp_input_sigma.data();
         for (int i=0, n=x1.size() ; i<n ; ++i) {
             real diff   = *px1++ - *px2++;
             real sqdiff = diff * diff;
-            sum_sqdiff += sqdiff;
-            expval     += sqdiff / exp(2*(m_log_global_sigma + *pinpsig++));
+            expval     += sqdiff / softplus(m_isp_global_sigma + *pinpsig++);
         }
     }
     else {
-        real global_sigma = exp(2*m_log_global_sigma);
+        real global_sigma = softplus(m_isp_global_sigma);
         for (int i=0, n=x1.size() ; i<n ; ++i) {
             real diff   = *px1++ - *px2++;
             real sqdiff = diff * diff;
-            sum_sqdiff += sqdiff;
             expval     += sqdiff / global_sigma;
         }
     }
 
-    // We add a noise variance only if x and y are equal (within machine tolerance)
-    real noise_cov = 0.0;
-    if (is_equal(sum_sqdiff, 0))
-        noise_cov = exp(2*m_log_noise_sigma);
-    return exp(2*m_log_signal_sigma + -0.5 * expval) + noise_cov;
+    // EXPERIMENTAL: Multiply noise_cov by kernel value if we have kronecker
+    // terms, otherwise disregard noise_cov
+    // real noise_cov = ( m_kronecker_indexes.size() > 0?
+    //                    inherited::evaluate(x1,x2) : 1.0 );
+    // return sf * exp(-0.5 * expval) * noise_cov;
+
+    real noise_cov = inherited::evaluate(x1,x2);
+    return sf * exp(-0.5 * expval) + noise_cov;
 }
 
 
-//#####  computeGramMatrixDerivative  #########################################
+//#####  computeGramMatrix  ###################################################
 
-/**
-void SquaredExponentialARDKernel::computeGramMatrixDerivative(
-    Mat& KD, const string& kernel_param, real epsilon) const
+void SquaredExponentialARDKernel::computeGramMatrix(Mat K) const
 {
-    static const string LSV = "log_signal_sigma";
-    static const string LNV = "log_noise_sigma";
-    static const string LGS = "log_global_sigma";
-    static const string LIS = "log_input_sigma[";
+    PLASSERT( !m_isp_input_sigma.size() || dataInputsize() == m_isp_input_sigma.size() );
+    PLASSERT( K.size() == 0 || m_data_cache.size() > 0 );  // Ensure data cached OK
 
-    const int W = nExamples();
-    KD.resize(W,W);
-    const int mod = KD.mod();
-    real* KDij;
-    real* KDji;
+    // Compute IID noise gram matrix
+    inherited::computeGramMatrix(K);
 
-    // log_signal_sigma
-    if (kernel_param == LSV) {
+    // Precompute some terms
+    real sf    = softplus(m_isp_signal_sigma);
+    m_input_sigma.resize(dataInputsize());
+    m_input_sigma.fill(m_isp_global_sigma);
+    if (m_isp_input_sigma.size() > 0)
+        m_input_sigma += m_isp_input_sigma;
+    for (int i=0, n=m_input_sigma.size() ; i<n ; ++i)
+        m_input_sigma[i] = softplus(m_input_sigma[i]);
 
-    }
+    // Compute Gram Matrix
+    int  l = data->length();
+    int  m = K.mod();
+    int  n = dataInputsize();
+    int  cache_mod = m_data_cache.mod();
 
-    // log_noise_sigma
-    else if (kernel_param == LNV) {
-        for (int i=0 ; i<W ; ++i) {
-            KDij = KD[i];
-            KDji = &KD[0][i];
-            for (int j=0 ; j<i ; ++j, Kji += m) {
-                // Below main diagonal, we have to check if x_i == x_j
-                
+    real *data_start = &m_data_cache(0,0);
+    real *Ki = K[0];                         // Start of current row
+    real *Kij;                               // Current element along row
+    real *input_sigma_data = m_input_sigma.data();
+    real *xi = data_start;
+    
+    for (int i=0 ; i<l ; ++i, xi += cache_mod, Ki+=m)
+    {
+        Kij = Ki;
+        real *xj = data_start;
+
+        for (int j=0; j<=i; ++j, xj += cache_mod) {
+            // Kernel evaluation per se
+            real *x1 = xi;
+            real *x2 = xj;
+            real *p_inpsigma = input_sigma_data;
+            real sum_wt = 0.0;
+            int  k = n;
+
+            // Use Duff's device to unroll the following loop:
+            //     while (k--) {
+            //         real diff = *x1++ - *x2++;
+            //         sum_wt += (diff * diff) / *p_inpsigma++;
+            //     }
+            real diff;
+            switch (k % 8) {
+            case 0: do { diff = *x1++ - *x2++; sum_wt += (diff*diff) / *p_inpsigma++;
+            case 7:      diff = *x1++ - *x2++; sum_wt += (diff*diff) / *p_inpsigma++;
+            case 6:      diff = *x1++ - *x2++; sum_wt += (diff*diff) / *p_inpsigma++;
+            case 5:      diff = *x1++ - *x2++; sum_wt += (diff*diff) / *p_inpsigma++;
+            case 4:      diff = *x1++ - *x2++; sum_wt += (diff*diff) / *p_inpsigma++;
+            case 3:      diff = *x1++ - *x2++; sum_wt += (diff*diff) / *p_inpsigma++;
+            case 2:      diff = *x1++ - *x2++; sum_wt += (diff*diff) / *p_inpsigma++;
+            case 1:      diff = *x1++ - *x2++; sum_wt += (diff*diff) / *p_inpsigma++;
+                       } while((k -= 8) > 0);
             }
+
+            // Update kernel matrix (already pre-filled with IID noise terms)
+            *Kij++ += sf * exp(-0.5 * sum_wt);
         }
-        
     }
-
-    // log_global_sigma
-    else if (kernel_param == LGS) {
-
+    if (cache_gram_matrix) {
+        gram_matrix.resize(l,l);
+        gram_matrix << K;
+        gram_matrix_is_cached = true;
     }
-
-    // log_input_sigma
-    else if (kernel_param.substr(0,16) == LIS) {
-
-    }
-    else
-        PLERROR("SquaredExponentialARDKernel::computeGramMatrixDerivative: "
-                "unknown hyperparameter '%s'", kernel_param.c_str());
 }
-*/
 
 
 //#####  makeDeepCopyFromShallowCopy  #########################################

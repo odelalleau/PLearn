@@ -2,7 +2,7 @@
 
 // SquaredExponentialARDKernel.h
 //
-// Copyright (C) 2006 Nicolas Chapados
+// Copyright (C) 2006-2007 Nicolas Chapados
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -58,15 +58,16 @@ namespace PLearn {
  *  Similar to C.E. Rasmussen's GPML code (see http://www.gaussianprocess.org),
  *  this kernel function is specified as:
  *
- *    k(x,y) = sf2 * exp(- 0.5 * (sum_i (x_i - y_i)^2 / w_i)) + delta_x,y*sn2
+ *    k(x,y) = sf * exp(- 0.5 * (sum_i (x_i - y_i)^2 / w_i)) + k_iid(x,y)
  *
- *  where sf2 is the exp of the 'log_signal_sigma' option, sn2 is the exp of
- *  the 'log_noise_sigma' option (added only if x==y), and w_i is
- *  exp(log_global_sigma + log_input_sigma[i]).
+ *  where sf is softplus(isp_signal_sigma), w_i is softplus(isp_global_sigma +
+ *  isp_input_sigma[i]), and k_iid(x,y) is the result of the IIDNoiseKernel
+ *  kernel evaluation.
  *
  *  Note that to make its operations more robust when used with unconstrained
  *  optimization of hyperparameters, all hyperparameters of this kernel are
- *  specified in the log-domain.
+ *  specified in the inverse softplus domain.  See IIDNoiseKernel for more
+ *  explanations.
  */
 class SquaredExponentialARDKernel : public ARDBaseKernel
 {
@@ -89,6 +90,9 @@ public:
     //! Compute K(x1,x2).
     virtual real evaluate(const Vec& x1, const Vec& x2) const;
 
+    //! Compute the Gram Matrix.
+    virtual void computeGramMatrix(Mat K) const;
+    
     //! Directly compute the derivative with respect to hyperparameters
     //! (Faster than finite differences...)
     // virtual void computeGramMatrixDerivative(Mat& KD, const string& kernel_param,

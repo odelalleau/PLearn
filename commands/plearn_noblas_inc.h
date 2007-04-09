@@ -111,7 +111,7 @@
 #include <plearn/ker/NegOutputCostFunction.h>
 #include <plearn/ker/PolynomialKernel.h>
 #include <plearn/ker/RationalQuadraticARDKernel.h>
-// #include <plearn/ker/SquaredExponentialARDKernel.h>
+#include <plearn/ker/SquaredExponentialARDKernel.h>
 #include <plearn/ker/ThresholdedKernel.h>
 #include <plearn/ker/VMatKernel.h>
 
