@@ -77,6 +77,12 @@ protected:
 
 DECLARE_OBJECT_PTR(PlusColumnVariable);
 
+inline Var plusColumn(Var v1, Var v2)
+{ 
+    return new PlusColumnVariable(v1,v2); 
+}
+
+
 } // end of namespace PLearn
 
 #endif 
