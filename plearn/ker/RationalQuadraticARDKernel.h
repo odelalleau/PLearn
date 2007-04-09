@@ -2,7 +2,7 @@
 
 // RationalQuadraticARDKernel.h
 //
-// Copyright (C) 2006 Nicolas Chapados
+// Copyright (C) 2006-2007 Nicolas Chapados
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -57,8 +57,8 @@ namespace PLearn {
  *    k(x,y) = sf * [1 + (sum_i (x_i - y_i)^2 / w_i)/(2*alpha)]^(-alpha) + k_iid(x,y)
  *
  *  where sf is softplus(isp_signal_sigma), w_i is softplus(isp_global_sigma +
- *  isp_input_sigma[i]), and k_iid(x,y) is the result of IIDNoiseKernel kernel
- *  evaluation.
+ *  isp_input_sigma[i]), and k_iid(x,y) is the result of the IIDNoiseKernel
+ *  kernel evaluation.
  *
  *  Note that to make its operations more robust when used with unconstrained
  *  optimization of hyperparameters, all hyperparameters of this kernel are
