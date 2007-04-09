@@ -2,7 +2,7 @@
 
 // RationalQuadraticARDKernel.cc
 //
-// Copyright (C) 2006 Nicolas Chapados
+// Copyright (C) 2006-2007 Nicolas Chapados
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
