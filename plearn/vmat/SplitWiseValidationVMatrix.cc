@@ -53,7 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(
     );
 
 SplitWiseValidationVMatrix::SplitWiseValidationVMatrix()
-    : validation_error_column(-1)
+    : validation_error_column(-1), add_column_average(false)
 {}
 
 void SplitWiseValidationVMatrix::getNewRow(int i, const Vec& v) const
@@ -74,6 +74,9 @@ void SplitWiseValidationVMatrix::declareOptions(OptionList& ol)
                   "Number of splits to consider, starting from the first one.\n"
                   "If < 0, then all splits are considered (based on the number\n"
                   "of splits of the first expdir).");
+    declareOption(ol, "add_column_average", &SplitWiseValidationVMatrix::add_column_average,
+                  OptionBase::buildoption,
+                  "Indication that the average of the columns should be added.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -96,6 +99,11 @@ void SplitWiseValidationVMatrix::build_()
             data.resize(nsplits,stats_i.width());
             data.fill(REAL_MAX);
         }
+        if(stats_i.length() <nsplits)
+        {
+            PLWARNING("In SplitWiseValidationVMatrix::build_(): split_stats_ppaths[%d]=%s does not have enough splits, it will be ignored", i, split_stats_ppaths[i].c_str());
+            continue;
+        }
         for(int j=0; j<nsplits; j++)
         {
             if(data(j,validation_error_column) > stats_i(j,validation_error_column))
@@ -105,6 +113,18 @@ void SplitWiseValidationVMatrix::build_()
     
     length_ = data.length();
     width_ = data.width();
+    if(add_column_average)
+    {
+        data.resize(data.length()+1, data.width());
+        data(data.length()-1).fill(0);
+        length_++;
+        for(int i=0; i<data.width(); i++)
+        {
+            for(int j=0; j<data.length()-1; j++)
+                data(data.length()-1,i) += data(j,i);
+            data(data.length()-1,i) = data(data.length()-1,i)/(data.length()-1);
+        }
+    }
 }
 
 // ### Nothing to add here, simply calls build_

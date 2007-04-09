@@ -66,6 +66,9 @@ public:
     //! Number of splits to consider, starting from the first one
     int nsplits;
 
+    //! Indication that the average of the columns should be added
+    bool add_column_average;
+
 public:
     //#####  Public Member Functions  #########################################
 
