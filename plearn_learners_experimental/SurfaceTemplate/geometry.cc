@@ -67,7 +67,7 @@ Vec anglesFromRotationMatrix( const Mat& rot )
         angle[0] = -atan2( rot(0,1), rot(1,1) );
     }
 
-    return( angle * ( 180.0 / Pi ) );
+    return( angle * ( real(180.0) / real(Pi) ) );
 }
 
 Mat rotationMatrixFromAngles( real rx, real ry, real rz )

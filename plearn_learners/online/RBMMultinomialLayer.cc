@@ -91,7 +91,7 @@ void RBMMultinomialLayer::generateSample()
     computeExpectation();
 
     int i = random_gen->multinomial_sample( expectation );
-    fill_one_hot( sample, i, 0., 1. );
+    fill_one_hot( sample, i, real(0.), real(1.) );
 }
 
 void RBMMultinomialLayer::computeExpectation()

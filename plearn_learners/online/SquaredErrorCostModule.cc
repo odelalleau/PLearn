@@ -131,7 +131,7 @@ void SquaredErrorCostModule::bbpropUpdate(const Vec& input, const Vec& target,
         PLASSERT_MSG( input_diag_hessian.size() == input_size,
                       "Cannot resize input_diag_hessian AND accumulate into it"
                     );
-        input_diag_hessian += 2.;
+        input_diag_hessian += real(2.);
     }
     else
     {

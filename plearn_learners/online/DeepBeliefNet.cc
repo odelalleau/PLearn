@@ -886,7 +886,7 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
         {
             // set the input of the joint layer
             Vec target_exp = classification_module->target_layer->expectation;
-            fill_one_hot( target_exp, (int) round(target[0]), 0., 1. );
+            fill_one_hot( target_exp, (int) round(target[0]), real(0.), real(1.) );
 
             joint_layer->setLearningRate( cd_learning_rate );
             layers[ n_layers-1 ]->setLearningRate( cd_learning_rate );
@@ -1054,7 +1054,7 @@ void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
     }
 
     Vec target_exp = classification_module->target_layer->expectation;
-    fill_one_hot( target_exp, (int) round(target[0]), 0., 1. );
+    fill_one_hot( target_exp, (int) round(target[0]), real(0.), real(1.) );
 
     contrastiveDivergenceStep(
         get_pointer( joint_layer ),

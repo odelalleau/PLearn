@@ -712,7 +712,7 @@ void BallTreeNearestNeighbors::BallKNN(
      priority_queue< pair<real,int> >& q, BinBallTree node,
      const Vec& t, real& d2_sofar, real d2_pivot, const int k ) const
 {
-    real d_minp = max( sqrt(d2_pivot) - node->radius, 0.0 );
+    real d_minp = max( sqrt(d2_pivot) - node->radius, real(0.0) );
 #ifdef DEBUG_CHECK_NAN
     if (isnan(d_minp))
         PLERROR("BallTreeNearestNeighbors::BallKNN: d_minp is NaN");

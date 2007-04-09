@@ -595,7 +595,7 @@ void LinearInductiveTransferClassifier::train()
                 }
                 else
                 {
-                    diffSquareMultiplyAcc(s->value,weights,input,1.0);
+                    diffSquareMultiplyAcc(s->value,weights,input,real(1.0));
                     sum++;
                 }
             }
@@ -612,7 +612,7 @@ void LinearInductiveTransferClassifier::train()
                         }
                         else
                         {
-                            diffSquareMultiplyAcc(s->value,weights,input,1.0);
+                            diffSquareMultiplyAcc(s->value,weights,input,real(1.0));
                             sum++;
                         }
                     }

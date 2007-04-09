@@ -150,7 +150,7 @@ real RationalQuadraticARDKernel::evaluate(const Vec& x1, const Vec& x2) const
 
     // We add the noise covariance as well
     real noise_cov = inherited::evaluate(x1,x2);
-    return sf * pow(1 + sum_wt / (2.*alpha), -alpha) + noise_cov;
+    return sf * pow(1 + sum_wt / (real(2.)*alpha), -alpha) + noise_cov;
 }
 
 
@@ -316,7 +316,7 @@ real RationalQuadraticARDKernel::derivIspGlobalSigma(int i, int j, int arg, real
     real alpha = softplus(m_isp_alpha);
     real noise = m_noise_gram_cache(i,j);
     K -= noise;
-    real k     = pow(K / softplus(m_isp_signal_sigma), -1. / alpha);
+    real k     = pow(K / softplus(m_isp_signal_sigma), real(-1.) / alpha);
     real inner = (k - 1) * alpha * sigmoid(m_isp_global_sigma) / softplus(m_isp_global_sigma);
     return (K / k) * inner;
 }
@@ -337,7 +337,7 @@ real RationalQuadraticARDKernel::derivIspInputSigma(int i, int j, int arg, real 
     Vec& row_j   = *dataRow(j);
     real noise   = m_noise_gram_cache(i,j);
     K -= noise;
-    real k       = pow(K / softplus(m_isp_signal_sigma), -1. / alpha);
+    real k       = pow(K / softplus(m_isp_signal_sigma), real(-1.) / alpha);
     real diff    = row_i[arg] - row_j[arg];
     real sq_diff = diff * diff;
     real inner   = m_isp_global_sigma + m_isp_input_sigma[arg];
@@ -354,7 +354,7 @@ real RationalQuadraticARDKernel::derivIspAlpha(int i, int j, int arg, real K) co
     real alpha = softplus(m_isp_alpha);
     real noise = m_noise_gram_cache(i,j);
     K         -= noise;
-    real k     = pow(K / softplus(m_isp_signal_sigma), -1. / alpha);
+    real k     = pow(K / softplus(m_isp_signal_sigma), real(-1.) / alpha);
     return sigmoid(m_isp_alpha) * K * (1 - pl_log(k) - 1 / k);
 }
 

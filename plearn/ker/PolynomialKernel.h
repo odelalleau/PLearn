@@ -87,7 +87,7 @@ protected:
     //! Evaluate kernel value from the value of the dot product.
     inline real evaluateFromDot(real dot_product) const
     {
-        return ipow(beta*dot_product + 1.0, n);
+        return ipow(beta*dot_product + real(1.0), n);
     }
 
     //! Declares the class options.

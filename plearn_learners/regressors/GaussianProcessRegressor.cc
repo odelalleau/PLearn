@@ -427,7 +427,7 @@ void GaussianProcessRegressor::computeCostsFromOutputs(const Vec& input, const V
         real nll = 0;
         for (int i=0, n=output.size() ; i<n ; ++i) {
             real sigma = m_intervals[i].second - m_intervals[i].first;
-            sigma = max(sigma, 1e-15);        // Very minor regularization
+            sigma = max(sigma, real(1e-15));        // Very minor regularization
             real diff = target[i] - output[i];
             nll += diff*diff / (2.*sigma*sigma) + pl_log(sigma) + LN_2PI_OVER_2;
         }
@@ -461,7 +461,7 @@ bool GaussianProcessRegressor::computeConfidenceFromOutput(
     m_gram_inverse_product.resize(m_kernel_evaluations.size());
     product(m_gram_inverse_product, m_gram_inverse, m_kernel_evaluations);
     real sigma_reductor = dot(m_gram_inverse_product, m_kernel_evaluations);
-    real sigma = sqrt(max(0., base_sigma_sq - sigma_reductor + m_confidence_epsilon));
+    real sigma = sqrt(max(real(0.), base_sigma_sq - sigma_reductor + m_confidence_epsilon));
 
     // two-tailed
     const real multiplier = gauss_01_quantile((1+probability)/2);
@@ -544,7 +544,7 @@ void GaussianProcessRegressor::computeOutputCovMat(
     // As a preventive measure, never output negative variance, even though
     // this does not garantee the non-negative-definiteness of the matrix
     for (int i=0 ; i<N ; ++i)
-        covmat(i,i) = max(0.0, covmat(i,i) + m_confidence_epsilon);
+        covmat(i,i) = max(real(0.0), covmat(i,i) + m_confidence_epsilon);
 }
 
 
