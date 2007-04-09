@@ -77,7 +77,7 @@ extern void varDeepCopyField(Var& field, CopiesMap& copies);
 
 void UnaryVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Variable::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     //deepCopyField(input, copies);
     varDeepCopyField(input, copies); // a cause d'une bug du compilateur
 }

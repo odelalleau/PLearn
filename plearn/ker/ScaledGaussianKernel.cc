@@ -50,7 +50,7 @@ PLEARN_IMPLEMENT_OBJECT(ScaledGaussianKernel, "ONE LINE DESCR", "NO HELP");
 
 void ScaledGaussianKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Kernel::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(phi, copies);
 }
 

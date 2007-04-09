@@ -88,20 +88,11 @@ MatRowVariable::recomputeSize(int& l, int& w) const
     w = 1;
 }
 
-
-
-
-
-
-
-
 void MatRowVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    UnaryVariable::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(m, copies);
 }
-
-
 
 void MatRowVariable::fprop()
 {  value << m(int(input->value[0])); }

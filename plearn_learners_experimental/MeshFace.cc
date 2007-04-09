@@ -104,7 +104,7 @@ void MeshFace::build()
   build_();
 }
 
-void MeshFace::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void MeshFace::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

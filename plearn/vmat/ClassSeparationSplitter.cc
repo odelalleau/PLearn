@@ -128,7 +128,7 @@ void ClassSeparationSplitter::build()
 
 void ClassSeparationSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Splitter::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField(classes, copies);
     deepCopyField(random_gen, copies);

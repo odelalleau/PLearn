@@ -172,7 +172,7 @@ void ReIndexedTargetVariable::rfprop()
 
 void ReIndexedTargetVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    BinaryVariable::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(source, copies);
     deepCopyField(row, copies);
     deepCopyField(values, copies);

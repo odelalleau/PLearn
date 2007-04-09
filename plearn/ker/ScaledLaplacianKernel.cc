@@ -50,7 +50,7 @@ PLEARN_IMPLEMENT_OBJECT(ScaledLaplacianKernel, "ONE LINE DESCR", "NO HELP");
 
 void ScaledLaplacianKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Kernel::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(phi, copies);
 }
 

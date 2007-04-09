@@ -186,7 +186,7 @@ void Function::build()
 
 void Function::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Object::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(inputs, copies);
     deepCopyField(outputs, copies);
     deepCopyField(fproppath, copies);

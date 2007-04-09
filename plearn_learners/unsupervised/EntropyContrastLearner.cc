@@ -389,7 +389,7 @@ void EntropyContrastLearner::build()
 }
 
 
-void EntropyContrastLearner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void EntropyContrastLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 

@@ -70,7 +70,7 @@ void LogSumVariable::recomputeSize(int& l, int& w) const
 
 void LogSumVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    UnaryVariable::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(input_softmax, copies);
 }
 

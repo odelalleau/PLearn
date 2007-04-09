@@ -113,7 +113,7 @@ void MultiTaskSeparationSplitter::build()
 
 void MultiTaskSeparationSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Splitter::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField(tasks, copies);
     deepCopyField(random_gen, copies);

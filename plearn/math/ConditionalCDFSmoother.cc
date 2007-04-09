@@ -82,7 +82,7 @@ void ConditionalCDFSmoother::build()
 
 void ConditionalCDFSmoother::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Object::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(prior_cdf, copies);
 }
 

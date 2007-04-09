@@ -48,7 +48,7 @@ void Molecule::build()
   build_();
 }
 
-void Molecule::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void Molecule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

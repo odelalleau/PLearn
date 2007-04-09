@@ -57,7 +57,7 @@ NegKernel::declareOptions(OptionList &ol)
 
 void NegKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Kernel::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(ker, copies);
 }
 

@@ -425,7 +425,7 @@ void MultiTargetOneHotVMatrix::getNewRow(int i, const Vec& v) const
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void MultiTargetOneHotVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void MultiTargetOneHotVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(data, copies);

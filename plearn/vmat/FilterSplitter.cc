@@ -97,7 +97,7 @@ void FilterSplitter::build()
 
 void FilterSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Splitter::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(filters, copies);
 }
 

@@ -100,7 +100,7 @@ void ScaledConditionalCDFSmoother::build()
 
 void ScaledConditionalCDFSmoother::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Object::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 

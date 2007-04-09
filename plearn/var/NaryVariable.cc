@@ -68,7 +68,7 @@ void NaryVariable::declareOptions(OptionList& ol)
 
 void NaryVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Variable::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(varray, copies);
     //for(int i=0; i<varray.size(); i++)
     //  deepCopyField(varray[i], copies);

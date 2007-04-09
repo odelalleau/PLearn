@@ -118,7 +118,7 @@ extern void varDeepCopyField(Var& field, CopiesMap& copies);
 
 void BinaryVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Variable::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     //deepCopyField(input1, copies);
     varDeepCopyField(input1, copies);
     //deepCopyField(input2, copies);

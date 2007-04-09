@@ -116,7 +116,7 @@ extern void varDeepCopyField(Var& field, CopiesMap& copies);
 
 void MatrixElementsVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    NaryVariable::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     varDeepCopyField(i, copies);
     varDeepCopyField(j, copies);
     varDeepCopyField(expression, copies);

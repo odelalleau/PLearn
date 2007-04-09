@@ -268,7 +268,7 @@ TVec<string> OptimizeOptionOracle::generateNextTrial(const TVec<string>& older_t
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void OptimizeOptionOracle::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void OptimizeOptionOracle::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 

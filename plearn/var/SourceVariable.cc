@@ -67,7 +67,7 @@ SourceVariable::SourceVariable(const Mat& m)
 
 void SourceVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Variable::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(rows_to_update, copies);
 }
 

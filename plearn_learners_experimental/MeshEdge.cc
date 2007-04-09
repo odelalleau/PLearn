@@ -99,7 +99,7 @@ void MeshEdge::build()
   build_();
 }
 
-void MeshEdge::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void MeshEdge::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 }

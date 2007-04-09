@@ -103,7 +103,7 @@ void MeshVertex::build()
   build_();
 }
 
-void MeshVertex::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void MeshVertex::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

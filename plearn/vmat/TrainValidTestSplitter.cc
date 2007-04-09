@@ -171,7 +171,7 @@ TVec<VMat> TrainValidTestSplitter::getSplit(int k)
 /////////////////////////////////
 void TrainValidTestSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Splitter::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
     // ### Call deepCopyField on all "pointer-like" fields
     // ### that you wish to be deepCopied rather than

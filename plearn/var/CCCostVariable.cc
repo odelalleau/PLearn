@@ -119,7 +119,7 @@ void CCCostVariable::recomputeSize(int& l, int& w) const
 
 void CCCostVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    NaryVariable::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(distr, copies);
     deepCopyField(f_error, copies);
     deepCopyField(f_candidate, copies);

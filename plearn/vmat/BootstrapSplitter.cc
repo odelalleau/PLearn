@@ -123,7 +123,7 @@ void BootstrapSplitter::build()
 /////////////////////////////////
 void BootstrapSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Splitter::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(bootstrapped_sets, copies);
     deepCopyField(rgen,              copies);
 }

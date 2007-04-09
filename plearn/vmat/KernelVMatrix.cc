@@ -101,18 +101,18 @@ KernelVMatrix::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-/*
-  IMPLEMENT_NAME_AND_DEEPCOPY(KernelVMatrix);
-  void KernelVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
-  {
-  Kernel::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(source1, copies);
-  deepCopyField(source2, copies);
-  deepCopyField(ker, copies);
-  deepCopyField(input1, copies);
-  deepCopyField(input2, copies);
-  }
-*/
+
+//  IMPLEMENT_NAME_AND_DEEPCOPY(KernelVMatrix);
+void KernelVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(source1, copies);
+    deepCopyField(source2, copies);
+    deepCopyField(ker, copies);
+    deepCopyField(input1, copies);
+    deepCopyField(input2, copies);
+}
+
 
 real KernelVMatrix::get(int i, int j) const
 {

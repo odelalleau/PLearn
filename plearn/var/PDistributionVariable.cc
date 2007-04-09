@@ -93,7 +93,7 @@ void PDistributionVariable::build_()
 
 void PDistributionVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Variable::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(dist, copies);
 }
 

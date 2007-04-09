@@ -130,7 +130,7 @@ extern void varDeepCopyField(Var& field, CopiesMap& copies);
 
 void UnfoldedSumOfVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    NaryVariable::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     varDeepCopyField(input_matrix, copies);
     varDeepCopyField(bag_size, copies);
     deepCopyField(f, copies);

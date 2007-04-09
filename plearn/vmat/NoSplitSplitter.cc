@@ -103,7 +103,7 @@ void NoSplitSplitter::build_()
 /////////////////////////////////
 void NoSplitSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Splitter::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
     // ### Call deepCopyField on all "pointer-like" fields
     // ### that you wish to be deepCopied rather than

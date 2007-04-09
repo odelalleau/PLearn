@@ -133,7 +133,7 @@ void UnfoldedFuncVariable::recomputeSize(int& l, int& w) const
 
 void UnfoldedFuncVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    NaryVariable::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(input_matrix, copies);
     deepCopyField(f, copies);
     deepCopyField(inputs, copies);

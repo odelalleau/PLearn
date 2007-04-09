@@ -107,7 +107,7 @@ void MatrixSumOfVariable::recomputeSize(int& l, int& w) const
 
 void MatrixSumOfVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    NaryVariable::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(distr, copies);
     deepCopyField(f, copies);
 }

@@ -162,7 +162,7 @@ TVec<VMat> ToBagSplitter::getSplit(int k)
 /////////////////////////////////
 void ToBagSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Splitter::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField(bags_index, copies);
     deepCopyField(sub_splitter, copies);

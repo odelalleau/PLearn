@@ -99,7 +99,7 @@ void Correspondence::build()
   build_();
 }
 
-void Correspondence::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void Correspondence::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

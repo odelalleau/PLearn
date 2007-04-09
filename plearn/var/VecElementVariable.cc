@@ -84,7 +84,7 @@ void VecElementVariable::recomputeSize(int& l, int& w) const
 
 void VecElementVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    UnaryVariable::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(v, copies);
 }
 

@@ -50,7 +50,7 @@ PLEARN_IMPLEMENT_OBJECT(WeightedCostFunction, "ONE LINE DESCR", "NO HELP");
 
 void WeightedCostFunction::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Kernel::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(costfunc, copies);
 }
 

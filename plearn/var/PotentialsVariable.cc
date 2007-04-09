@@ -122,7 +122,7 @@ void PotentialsVariable::recomputeSize(int& l, int& w) const
 
 void PotentialsVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    NaryVariable::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     
     varDeepCopyField(output, copies);
     varDeepCopyField(comp_input, copies);

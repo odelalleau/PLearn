@@ -397,7 +397,7 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Variable,
 
 void Variable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Object::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(value, copies);
     deepCopyField(gradient, copies);
     deepCopyField(matValue, copies);

@@ -71,7 +71,7 @@ void PrecomputedKernel::build()
 
 void PrecomputedKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Kernel::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(ker, copies);
     deepCopyField(precomputedK, copies);
 }

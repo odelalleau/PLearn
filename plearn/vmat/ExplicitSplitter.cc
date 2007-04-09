@@ -85,7 +85,7 @@ void ExplicitSplitter::build()
 
 void ExplicitSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Splitter::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(splitsets, copies);
 }
 

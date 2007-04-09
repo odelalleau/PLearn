@@ -73,7 +73,7 @@ void SetOption::build()
 
 void SetOption::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Object::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 void SetOption::apply(PP<Object> obj, const map<string, string>& aliases)

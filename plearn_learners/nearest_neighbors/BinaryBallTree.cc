@@ -127,7 +127,7 @@ BinaryBallTree* BinaryBallTree::getParent()
     return this->parent;
 }
 
-void BinaryBallTree::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void BinaryBallTree::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 

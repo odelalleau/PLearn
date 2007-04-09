@@ -72,7 +72,7 @@ void ArgminOfVariable::recomputeSize(int& l, int& w) const
 
 void ArgminOfVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    NaryVariable::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(inputs, copies);
     deepCopyField(expression, copies);
     deepCopyField(values_of_v, copies);

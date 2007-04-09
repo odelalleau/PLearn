@@ -95,7 +95,7 @@ void MeshGraph::build()
   build_();
 }
 
-void MeshGraph::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void MeshGraph::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

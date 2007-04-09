@@ -83,7 +83,7 @@ public:
     virtual void build();
 
     //DECLARE_NAME_AND_DEEPCOPY(KernelVMatrix);
-    //virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
     virtual real get(int i, int j) const;
     virtual void getSubRow(int i, int j, Vec v) const;
 private:

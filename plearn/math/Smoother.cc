@@ -93,7 +93,7 @@ void Smoother::build()
 
 void Smoother::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Object::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
     // ### Call deepCopyField on all "pointer-like" fields 
     // ### that you wish to be deepCopied rather than 

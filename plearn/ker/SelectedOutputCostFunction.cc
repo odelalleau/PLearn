@@ -51,7 +51,7 @@ PLEARN_IMPLEMENT_OBJECT(SelectedOutputCostFunction, "ONE LINE DESCR", "NO HELP")
 
 void SelectedOutputCostFunction::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Kernel::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(costfunc, copies);
 }
 

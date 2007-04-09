@@ -991,7 +991,7 @@ real ICP::weightOracle( int, Vec, int, Vec )
   return real(1);
 }
 
-void ICP::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void ICP::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

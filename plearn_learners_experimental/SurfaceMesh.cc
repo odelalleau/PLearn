@@ -129,7 +129,7 @@ void SurfaceMesh::build()
   build_();
 }
 
-void SurfaceMesh::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void SurfaceMesh::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

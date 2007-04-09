@@ -78,7 +78,7 @@ void KMeansClustering::build()
 }
 
 
-void KMeansClustering::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void KMeansClustering::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(clusters_, copies);

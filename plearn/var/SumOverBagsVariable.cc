@@ -198,7 +198,7 @@ void SumOverBagsVariable::recomputeSize(int& l, int& w) const
 /////////////////////////////////
 void SumOverBagsVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    NaryVariable::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(vmat, copies);
     deepCopyField(f, copies);
     deepCopyField(output_value, copies);

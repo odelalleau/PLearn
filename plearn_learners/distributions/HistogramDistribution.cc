@@ -187,7 +187,7 @@ void HistogramDistribution::computeOutput(const Vec& input, Vec& output)
 
 void HistogramDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    PLearner::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField(bin_positions, copies);
     deepCopyField(bin_density, copies);

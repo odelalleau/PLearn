@@ -112,7 +112,7 @@ void ConcatOfVariable::recomputeSize(int& l, int& w) const
 
 void ConcatOfVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    NaryVariable::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(distr, copies);
     deepCopyField(f, copies);
     deepCopyField(input_value, copies);

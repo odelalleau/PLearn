@@ -93,7 +93,7 @@ void RowOfVariable::recomputeSize(int& l, int& w) const
 
 void RowOfVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    UnaryVariable::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(distr, copies);
 }
 

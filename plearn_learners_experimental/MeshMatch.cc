@@ -119,7 +119,7 @@ void MeshMatch::build()
   build_();
 }
 
-void MeshMatch::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void MeshMatch::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

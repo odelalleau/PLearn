@@ -50,7 +50,7 @@ PLEARN_IMPLEMENT_OBJECT(ScaledGeneralizedDistanceRBFKernel, "ONE LINE DESCR", "N
 
 void ScaledGeneralizedDistanceRBFKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    Kernel::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(phi, copies);
     deepCopyField(a, copies);
 }

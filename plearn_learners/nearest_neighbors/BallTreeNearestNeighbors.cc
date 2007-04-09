@@ -143,7 +143,7 @@ void BallTreeNearestNeighbors::build()
 }
 
 
-void BallTreeNearestNeighbors::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void BallTreeNearestNeighbors::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
