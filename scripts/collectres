@@ -1,0 +1,119 @@
+#!/usr/bin/env python
+
+# pymake
+# Copyright (C) 2001 Pascal Vincent
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#
+#   1. Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#
+#   2. Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#
+#   3. The name of the authors may not be used to endorse or promote
+#      products derived from this software without specific prior written
+#      permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+#  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+#  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+#  NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+#  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#  This file is part of the PLearn library. For more information on the PLearn
+#  library, go to the PLearn Web site at www.plearn.org
+
+import sys,string
+from plearn.vmat.PMat import *
+
+def selectres(loc_specs,a):
+  res = []
+  loc_mode = loc_specs[0]
+  if loc_mode=="pos":
+     row=int(loc_specs[1])
+     i=2
+     while len(loc_specs[i:])>0:
+       res.append(a[row,int(loc_specs[i])])
+       i+=1
+  else:
+    raise ValueError("Invalid <location-spec> mode, expected 'pos', 'mincol', or 'col', got "+loc_mode)    
+  return res
+
+def getres(loc_specs,filenames):
+  all_results = []
+  for filename in filenames:
+    try:
+      file_res = selectres(loc_specs,
+                           load_pmat_as_array(filename))
+      all_results.append([file_res,filename])
+    except ValueError,v:
+      print >>sys.stderr, "caught ValueError exception!"
+      print >>sys.stderr, v
+  return all_results
+
+def compare_res(x,y):
+  if x[0][0]<y[0][0]:
+    return -1
+  else:
+    return 1
+  
+def outputres(f,mode,results):
+  if mode=="min":
+    minval = 1e36
+    minfile = ""
+    selected = []
+    for res in results:
+      print res
+      val = res[0][0]
+      if val<minval:
+        minval=val
+        minfile=res[1]
+        selected=res[0]
+    for v in selected:
+      f.write(str(v)+" ")
+    f.write(minfile+"\n")
+  elif mode=="sort":
+    results.sort(compare_res)
+    for res in results:
+      for v in res[0]:
+        f.write(str(v)+" ")
+      f.write(res[1]+"\n")
+  elif mode=="plot":
+    pass
+  else:
+    raise ValueError("Invalid <spec> mode, expected 'min', 'sort', or 'plot', got "+mode)
+
+
+if __name__=='__main__':
+  args = sys.argv[:]
+  if len(args)==1:
+    print "Usage: collectres <output> <spec> <file1.pmat> <file2.pmat> ..."
+    print 
+    print "The <spec> can be the following:"
+    print '  "min <location-spec>" : identify the mininum of <location-spec> over the <file*.pmat>' 
+    print '  "sort <location-spec>" : make a sorted table of all the values at each <location-spec> over the <file*.pmat>' 
+    print '  "plot <location-spec> " : make a plot of all the values at <location-spec> over the <file*.pmat>' 
+    print "where <location-spec> can be the following:"
+    print '  "pos <row> <col0> [<col1> <col2>...]": keep only the value at positions (<row> <col0>) (<row> <col1>) ... in each pmat, and the first value may be used to minimize over files in the min command'
+    print '  "mincol <mcol> [<col1> <col2>...] ": keep only the minimum value in <mcol> of each pmat, keeping track of the <coli> values at that row'
+    print '  "col <column-nb>[<minrow> <maxrow>]": this is used with the plot command, to specify a column to plot, optionally from <minrow> to <maxrow> row inclusively'
+    sys.exit(1)
+  output = args[1]
+  filenames = args[3:]
+  speclist = string.split(args[2])
+  mode = speclist[0]
+  f=open(output,"w")
+  f.write("# "+args[0]+" "+output+" "+'"'+args[2]+'" ')
+  for file in filenames:
+    f.write(file+" ")
+  f.write("\n")
+  outputres(f,mode,getres(speclist[1:],filenames))
+  f.flush()
