@@ -234,7 +234,8 @@ def __plearn_repr( obj, indent_level, inner_repr = plearn_repr ):
         return str(obj)
 
     elif isinstance(obj, str):
-        return '"%s"' % obj.replace('"', r'\"') # toolkit.quote( obj )
+        # escape backslashes, then double quotes
+        return '"%s"' % obj.replace('\\','\\\\').replace('"', r'\"') 
 
     elif isinstance(obj, list):
         elem_format = lambda elem: inner_repr( elem, indent_level+1 )
