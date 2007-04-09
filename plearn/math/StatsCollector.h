@@ -263,6 +263,7 @@ public:
     //! must be the average fraction of positive examples in the dataset (= n+ / n).
     real lift(int k, int& n_pos_in_k, int n_pos_in_k_minus_1 = -1, real pos_fraction = -1) const;
     real nips_lift() const;   //!< NIPS_LIFT statistic (see help).
+    real mean_lift() const;   //!< MEAN_LIFT statistic (see help).
     real prbp() const;        //!< PRBP statistic (see help).
     //! discrete distribution mode
     real dmode() const;

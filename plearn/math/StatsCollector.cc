@@ -103,6 +103,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "  - IQR          -  The interquartile range, i.e. PSEUDOQ(0.75) - PSEUDOQ(0.25)\n"
     "  - PRR          -  The pseudo robust range, i.e. PSEUDOQ(0.99) - PSEUDOQ(0.01)\n"
     "  - LIFT(f)      -  Lift computed at fraction f (0 <= f <= 1)\n"
+    "  - MEAN_LIFT    -  Area under lift curve, normalized by the number of examples\n"
     "  - NIPS_LIFT    -  Area under lift curve as computed in NIPS'2004 challenge\n"
     "  - PRBP         -  Precision / Recall Breakeven Point = value of precision and recall\n"
     "                    when they both are equal (computed for the positive class)\n"
@@ -124,6 +125,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "      that the formulas on the web site and in the python script are different).\n"
     "  - LIFT(f) actually returns - 100 * LIFT(f), so that lower means better, and it is\n"
     "    scaled by 100, as it is common practice.\n"
+    "  - MEAN_LIFT actually returns -1 * MEAN_LIFT, so that lower means better.\n"
     "  - The comments about the LIFT also apply to the BRPB statistic.\n"
     "  - The skewness and kurtosis are computed in terms of UNCENTERED ACCUMULATORS,\n"
     "    i.e. sum{(x-a)^n}, where a is the first observation encountered, and n is some integer\n"
@@ -947,6 +949,7 @@ real StatsCollector::getStat(const string& statname) const
         statistics["IQR"]         = STATFUN(&StatsCollector::iqr);
         statistics["PRR"]         = STATFUN(&StatsCollector::prr);
         statistics["NIPS_LIFT"]   = STATFUN(&StatsCollector::nips_lift);
+        statistics["MEAN_LIFT"]   = STATFUN(&StatsCollector::mean_lift);
         statistics["PRBP"]        = STATFUN(&StatsCollector::prbp);
         statistics["DMODE"]       = STATFUN(&StatsCollector::dmode);
         init = true;
@@ -1092,6 +1095,27 @@ real StatsCollector::nips_lift() const
     real max_performance = 0.5 * (1 / pos_fraction - 1) * (pos_fraction + 1) + 1;
     result = (max_performance - result) / max_performance;
     return result;
+}
+
+///////////////
+// mean_lift //
+///////////////
+real StatsCollector::mean_lift() const
+{
+    if (more_than_maxnvalues)
+        PLWARNING("In StatsCollector::nips_lift - You need to increase "
+                  "'maxnvalues' (or set it to -1) to get an accurate "
+                  "statistic");
+    if (!sorted)
+        sort_values_by_magnitude();
+    real n_total = real(sorted_values.length());
+    real pos_fraction = int(round(PLearn::sum(sorted_values.column(1)))) / n_total;
+    int n_pos_in_k_minus_1 = -1;
+    real result = 0;
+    for (int k = 0; k < sorted_values.length(); k++)
+        result += lift(k + 1, n_pos_in_k_minus_1, n_pos_in_k_minus_1, pos_fraction);
+    result /= n_total;
+    return -result;
 }
 
 //////////
