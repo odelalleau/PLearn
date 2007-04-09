@@ -33,16 +33,37 @@
 
 import sys,string
 from plearn.vmat.PMat import *
+from numarray import *
 
 def selectres(loc_specs,a):
   res = []
   loc_mode = loc_specs[0]
   if loc_mode=="pos":
-     row=int(loc_specs[1])
-     i=2
-     while len(loc_specs[i:])>0:
-       res.append(a[row,int(loc_specs[i])])
-       i+=1
+    row=int(loc_specs[1])
+    i=2
+    while len(loc_specs[i:])>0:
+      res.append(a[row,int(loc_specs[i])])
+      i+=1
+  elif loc_mode=="mincol":
+    mcol = int(loc_specs[1])
+    mrow = argmin(a[:,mcol])
+    print "found min row = ",mrow," for col ",mcol,", with value=",a[mrow,mcol]
+    i=1
+    while len(loc_specs[i:])>0:
+      res.append(a[mrow,int(loc_specs[i])])
+      i+=1
+  elif loc_mode=="cols":
+    minrow = int(loc_specs[1])
+    maxrow = int(loc_specs[2])
+    if maxrow<0:
+      maxrow = a.shape[0]+maxrow
+    maxrow += 1
+    i=3
+    res = zeros([maxrow-minrow,len(loc_specs[i:])])
+    while len(loc_specs[i:])>0:
+      res[:,i-3]=a[minrow:maxrow,int(loc_specs[i])]
+      i+=1
+    print res.shape
   else:
     raise ValueError("Invalid <location-spec> mode, expected 'pos', 'mincol', or 'col', got "+loc_mode)    
   return res
@@ -87,7 +108,11 @@ def outputres(f,mode,results):
         f.write(str(v)+" ")
       f.write(res[1]+"\n")
   elif mode=="plot":
-    pass
+    arrays = []
+    for res in results:
+      arrays.append(res[0])
+    a = concatenate(arrays,1)
+    f.write(array_str(a))
   else:
     raise ValueError("Invalid <spec> mode, expected 'min', 'sort', or 'plot', got "+mode)
 
@@ -100,11 +125,11 @@ if __name__=='__main__':
     print "The <spec> can be the following:"
     print '  "min <location-spec>" : identify the mininum of <location-spec> over the <file*.pmat>' 
     print '  "sort <location-spec>" : make a sorted table of all the values at each <location-spec> over the <file*.pmat>' 
-    print '  "plot <location-spec> " : make a plot of all the values at <location-spec> over the <file*.pmat>' 
+    print '  "plot <location-spec> " : make a smarplot file for plotting of all the values at <location-spec> over the <file*.pmat>' 
     print "where <location-spec> can be the following:"
     print '  "pos <row> <col0> [<col1> <col2>...]": keep only the value at positions (<row> <col0>) (<row> <col1>) ... in each pmat, and the first value may be used to minimize over files in the min command'
-    print '  "mincol <mcol> [<col1> <col2>...] ": keep only the minimum value in <mcol> of each pmat, keeping track of the <coli> values at that row'
-    print '  "col <column-nb>[<minrow> <maxrow>]": this is used with the plot command, to specify a column to plot, optionally from <minrow> to <maxrow> row inclusively'
+    print '  "mincol <mcol> [<col1> <col2>...] ": keep only the minimum value in <mcol> of each pmat, keeping track of the <coli> values at the selected row'
+    print '  "cols <minrow> <maxrow> <column-nb> <column-nb>...": this is used with the plot command, to specify a column to plot, optionally from <minrow> to <maxrow> (-1 means mat.length-1) row inclusively'
     sys.exit(1)
   output = args[1]
   filenames = args[3:]
