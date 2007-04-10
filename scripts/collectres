@@ -31,6 +31,8 @@
 #  This file is part of the PLearn library. For more information on the PLearn
 #  library, go to the PLearn Web site at www.plearn.org
 
+# see main below for help on using this script
+
 import sys,string
 from plearn.vmat.PMat import *
 from numarray import *
@@ -53,17 +55,22 @@ def selectres(loc_specs,a):
       res.append(a[mrow,int(loc_specs[i])])
       i+=1
   elif loc_mode=="cols":
-    minrow = int(loc_specs[1])
-    maxrow = int(loc_specs[2])
+    minrow = int(loc_specs[3])
+    maxrow = int(loc_specs[4])
     if maxrow<0:
       maxrow = a.shape[0]+maxrow
     maxrow += 1
-    i=3
-    res = zeros([maxrow-minrow,len(loc_specs[i:])])
+    i=5
+    b=[]
+    res = zeros([maxrow-minrow,0])
     while len(loc_specs[i:])>0:
-      res[:,i-3]=a[minrow:maxrow,int(loc_specs[i])]
-      i+=1
-    print res.shape
+      col = int(loc_specs[i])
+      if col<0:
+        b = array(range(minrow,maxrow))
+      else:
+        b=a[minrow:maxrow,col].copy()
+      res=concatenate([res,b.resize([maxrow-minrow,1])],1)
+      i+=2 # skip the column name
   else:
     raise ValueError("Invalid <location-spec> mode, expected 'pos', 'mincol', or 'col', got "+loc_mode)    
   return res
@@ -85,8 +92,42 @@ def compare_res(x,y):
     return -1
   else:
     return 1
-  
-def outputres(f,mode,results):
+
+def write_array(f,a):
+  rows=a.shape[0]
+  cols=a.shape[1]
+  for r in range(0,rows):
+    for c in range(0,cols):
+      f.write(str(a[r,c])+" ")
+    f.write("\n")
+
+def sublist(liste,indices):
+  subliste=[]
+  l=len(liste)
+  for index in indices:
+    if index<l:
+      subliste.append(liste[index])
+    
+def distinct_experiment_names(filenames):
+  splitted_filenames = map(lambda fname: string.split(fname,"-"), filenames)
+  distinct_parts = []
+  not_finished = True
+  lengths = map(len,splitted_filenames)
+  len0 = lengths[0]
+  maxlen = max(lengths)
+  minlen = min(lengths)
+  for i in range(0,minlen):
+    all_equal=True
+    for splitted_filename in splitted_filenames[1:]:
+      if splitted_filename[i]!=splitted_filenames[0][i]:
+        all_equal=False
+        break
+    if not all_equal:
+      distinct_parts.append(i)
+  distinct_parts.append(range(minlen,maxlen))
+  return map(lambda sname: string.join(sublist(sname,distinct_parts),"-"),splitted_filenames)
+
+def outputres(f,mode,speclist,results):
   if mode=="min":
     minval = 1e36
     minfile = ""
@@ -108,11 +149,34 @@ def outputres(f,mode,results):
         f.write(str(v)+" ")
       f.write(res[1]+"\n")
   elif mode=="plot":
+    # "plot cols <xlabel> <ylabel> <minrow> <maxrow> <x> <col1> <name1> <col2> <name2> ..." : make a smartplot file with <col1> as y-columns (with legend label <namei>), <x> as x-column (-1 means use the row indices). Axes are labeled <xlabel> and <ylabel>. Use rows from <minrow> to <maxrow> (-1 means last) row inclusively.'
+    #
+    # build the gnuplot command in the smartplot file header
+    filenames = map(lambda res: res[1], results) # collect the filenames from the results list
+    distinct_expnames = distinct_experiment_names(filenames) # keep only the option=value parts that are distinct among experiments
+    f.write('# to set y on log-scale insert this at the beginning below: set logscale y;\n')
+    # speclist has the elements: cols <xlabel> <ylabel> <minrow> <maxrow> <x> <col1> <name1> <col2> <name2> ...
+    f.write('#: set xlabel "'+speclist[1]+'"; set ylabel "'+speclist[2]+'"; plot ')
+    ncoln=len(speclist)-6 
+    ncol=int(ncol/2)
+    if ncol*2!=ncoln:
+      ValueError("Invalid plot <spec>: there should be one <name> per <col> to plot")
+    ncol+=1 # add 1 for <x>, now this is the number of columns per experiment
+    j = 0
+    for expname in distinct_expnames:
+      for i in range(0,ncol-1):
+        name = speclist[6+i*2+1]
+        f.write('@ using '+str(1+j*ncol)+':'+str(1+j*ncol+i)+' with lines t "'+name+'~'+expname'"')
+        if (i+2)<len(speclist):
+          f.write(",")
+    f.write("\n")
+    # concatenate vertically all the results from each experiment into one big array
     arrays = []
     for res in results:
       arrays.append(res[0])
     a = concatenate(arrays,1)
-    f.write(array_str(a))
+    # write the array to file, without any []
+    write_array(f,a)
   else:
     raise ValueError("Invalid <spec> mode, expected 'min', 'sort', or 'plot', got "+mode)
 
@@ -125,11 +189,10 @@ if __name__=='__main__':
     print "The <spec> can be the following:"
     print '  "min <location-spec>" : identify the mininum of <location-spec> over the <file*.pmat>' 
     print '  "sort <location-spec>" : make a sorted table of all the values at each <location-spec> over the <file*.pmat>' 
-    print '  "plot <location-spec> " : make a smarplot file for plotting of all the values at <location-spec> over the <file*.pmat>' 
+    print '  "plot cols <xlabel> <ylabel> <minrow> <maxrow> <x> <col1> <name1> <col2> <name2> ..." : make a smartplot file with <col1> as y-columns (with legend label <namei>), <x> as x-column (-1 means use the row indices). Axes are labeled <xlabel> and <ylabel>. Use rows from <minrow> to <maxrow> (-1 means last) row inclusively.'
     print "where <location-spec> can be the following:"
     print '  "pos <row> <col0> [<col1> <col2>...]": keep only the value at positions (<row> <col0>) (<row> <col1>) ... in each pmat, and the first value may be used to minimize over files in the min command'
     print '  "mincol <mcol> [<col1> <col2>...] ": keep only the minimum value in <mcol> of each pmat, keeping track of the <coli> values at the selected row'
-    print '  "cols <minrow> <maxrow> <column-nb> <column-nb>...": this is used with the plot command, to specify a column to plot, optionally from <minrow> to <maxrow> (-1 means mat.length-1) row inclusively'
     sys.exit(1)
   output = args[1]
   filenames = args[3:]
@@ -140,5 +203,5 @@ if __name__=='__main__':
   for file in filenames:
     f.write(file+" ")
   f.write("\n")
-  outputres(f,mode,getres(speclist[1:],filenames))
+  outputres(f,mode,speclist[1:],getres(speclist[1:],filenames))
   f.flush()
