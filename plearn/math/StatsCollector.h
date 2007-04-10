@@ -263,30 +263,17 @@ public:
     //! must be the average fraction of positive examples in the dataset (= n+ / n).
     real lift(int k, int& n_pos_in_k, int n_pos_in_k_minus_1 = -1, real pos_fraction = -1) const;
     real nips_lift() const;   //!< NIPS_LIFT statistic (see help).
-    real mean_lift() const;   //!< MEAN_LIFT statistic (see help).
+    //! MEAN_LIFT statistic (see help).
+    //! If provided, 'pos_fraction' is filled with the fraction of positive
+    //! examples seen in the updates so far.
+    real mean_lift(real* pos_fraction = NULL) const;
     real prbp() const;        //!< PRBP statistic (see help).
     //! discrete distribution mode
     real dmode() const;
     Vec dmodes() const;
 
-    //! currently understood statnames are :
-    //!   - E (mean)
-    //!   - V (variance)
-    //!   - STDDEV, STDERROR
-    //!   - MIN, MAX
-    //!   - SUM, SUMSQ
-    //!   - FIRST, LAST
-    //!   - N, NMISSING, NNONMISING
-    //!   - SHARPERATIO
-    //!   - EoverSKEW
-    //!   - EoverKURT
-    //!   - ZSTAT, PZ
-    //!   - PSEUDOQ(q)    (q is a fraction between 0 and 1)
-    //!   - IQR           (inter-quartile range)
-    //!   - PRR           (pseudo robust range)
-    //!   - SKEW          (skewness == E(X-mu)^3 / sigma^3)
-    //!   - KURT          (kurtosis == E(X-mu)^4 / sigma^4 - 3)
-    //!   - DMODE         (discrete distribution mode)
+    //! Compute a given statistic.
+    //! Currently understood statnames are listed in the class help.
     real getStat(const string& statname) const;
 
     //! simply calls inherited::build() then build_()

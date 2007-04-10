@@ -1079,19 +1079,8 @@ real StatsCollector::lift(int k, int& n_pos_in_k, int n_pos_in_k_minus_1, real p
 ///////////////
 real StatsCollector::nips_lift() const
 {
-    if (more_than_maxnvalues)
-        PLWARNING("In StatsCollector::nips_lift - You need to increase "
-                  "'maxnvalues' (or set it to -1) to get an accurate "
-                  "statistic");
-    if (!sorted)
-        sort_values_by_magnitude();
-    real n_total = real(sorted_values.length());
-    real pos_fraction = int(round(PLearn::sum(sorted_values.column(1)))) / n_total;
-    int n_pos_in_k_minus_1 = -1;
-    real result = 0;
-    for (int k = 0; k < sorted_values.length(); k++)
-        result += lift(k + 1, n_pos_in_k_minus_1, n_pos_in_k_minus_1, pos_fraction);
-    result /= n_total;
+    real pos_fraction;
+    real result = - mean_lift(&pos_fraction);
     real max_performance = 0.5 * (1 / pos_fraction - 1) * (pos_fraction + 1) + 1;
     result = (max_performance - result) / max_performance;
     return result;
@@ -1100,20 +1089,22 @@ real StatsCollector::nips_lift() const
 ///////////////
 // mean_lift //
 ///////////////
-real StatsCollector::mean_lift() const
+real StatsCollector::mean_lift(real* pos_fraction) const
 {
     if (more_than_maxnvalues)
-        PLWARNING("In StatsCollector::nips_lift - You need to increase "
+        PLWARNING("In StatsCollector::mean_lift - You need to increase "
                   "'maxnvalues' (or set it to -1) to get an accurate "
                   "statistic");
     if (!sorted)
         sort_values_by_magnitude();
     real n_total = real(sorted_values.length());
-    real pos_fraction = int(round(PLearn::sum(sorted_values.column(1)))) / n_total;
+    real pos_f = int(round(PLearn::sum(sorted_values.column(1)))) / n_total;
+    if (pos_fraction)
+        *pos_fraction = pos_f;
     int n_pos_in_k_minus_1 = -1;
     real result = 0;
     for (int k = 0; k < sorted_values.length(); k++)
-        result += lift(k + 1, n_pos_in_k_minus_1, n_pos_in_k_minus_1, pos_fraction);
+        result += lift(k + 1, n_pos_in_k_minus_1, n_pos_in_k_minus_1, pos_f);
     result /= n_total;
     return -result;
 }
