@@ -32,6 +32,25 @@
 #  library, go to the PLearn Web site at www.plearn.org
 
 # see main below for help on using this script
+#
+# Here is an example of use:
+#
+# First I found what were the best results for two competing algorithms
+# using a collectres sort command:
+#
+#   collectres letter-sgrad-best-valid-NLL "sort mincol 6 5 4 3" exp/letter-sgrad-*/Split0/LearnerExpdir/Strat0results.pmat
+#
+#   collectres letter-NatGradBlock-best-valid-NLL "sort mincol 6 5 4 3" exp/letter-NatGradBlock-*/Split0/LearnerExpdir/Strat0results.pmat
+#
+# Then I copy-pasted the names of the best experiment directories into a collectres plot command
+# to display their error curves:
+#
+#   collectres letter-sgrad-vs-BlockNatGrad-best-valid-NLL-plot "plot cols cpu-sec NLL 0 99 8 6 valid-NLL" exp/letter-sgrad-nout=26-nh1=400-nh2=400-nh3=0-slr=0.01-dc=0-n_train_it=1600001-epoch=16000-seed=2-minibatch=1-20070405:002553/Split0/LearnerExpdir/Strat0results.pmat exp/letter-natgradblockO-nout=26-nh1=400-nh2=400-nh3=0-slr=1e-5-dc=1e-6-n_train_it=1600001-epoch=16000-seed=1-minibatch=30-cov_minibatch=10-lambda=.03-k=3-gamma=.995-ren=1-ngv=0-20070401:220403/Split0/LearnerExpdir/Strat0results.pmat
+#
+# Finally I could display the curves (after possibly editing the gnuplot command in the output file) using
+#
+#   smartplot letter-sgrad-vs-BlockNatGrad-best-valid-NLL-plot.eps letter-sgrad-vs-BlockNatGrad-best-valid-NLL-plot
+#    
 
 import sys,string
 from plearn.vmat.PMat import *
