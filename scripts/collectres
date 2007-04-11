@@ -104,15 +104,6 @@ def write_array(f,a):
       f.write(str(a[r,c])+" ")
     f.write("\n")
 
-def sublist(liste,indices):
-  subliste=[]
-  l=len(liste)
-  for index in indices:
-    if index<l:
-      subliste.append(liste[index])
-  # print "sublist(",liste,",",indices,")=",subliste
-  return subliste
-    
 def distinct_experiment_names(filenames):
   splitted_filenames = map(lambda fname: string.split(fname.replace("/","-"),"-"), filenames)
   distinct_names = []
@@ -187,15 +178,29 @@ def outputres(f,mode,speclist,results):
 if __name__=='__main__':
   args = sys.argv[:]
   if len(args)==1:
-    print "Usage: collectres <output> <spec> <file1.pmat> <file2.pmat> ..."
+    print "Usage: collectres <outputfile> <spec> <file1.pmat> <file2.pmat> ..."
     print 
     print "The <spec> can be the following:"
-    print '  "min <location-spec>" : identify the mininum of <location-spec> over the <file*.pmat>' 
-    print '  "sort <location-spec>" : make a sorted table of all the values at each <location-spec> over the <file*.pmat>' 
-    print '  "plot cols <xlabel> <ylabel> <minrow> <maxrow> <x> <col1> <name1> <col2> <name2> ..." : make a smartplot file with <col1> as y-columns (with legend label <namei>), <x> as x-column (-1 means use the row indices). Axes are labeled <xlabel> and <ylabel>. Use rows from <minrow> to <maxrow> (-1 means last) row inclusively.'
-    print "where <location-spec> can be the following:"
-    print '  "pos <row> <col0> [<col1> <col2>...]": keep only the value at positions (<row> <col0>) (<row> <col1>) ... in each pmat, and the first value may be used to minimize over files in the min command'
-    print '  "mincol <mcol> [<col1> <col2>...] ": keep only the minimum value in <mcol> of each pmat, keeping track of the <coli> values at the selected row'
+    print '  "min <location-spec>" : identify the mininum of <location-spec> over the <file*.pmat>'
+    print '                          prints the values of the selected <location-spec> and the name'
+    print '                          of the minimizing <file.pmat> in the <outputfile>.'
+    print '  "sort <location-spec>" : make a sorted table of all the values at each <location-spec>'
+    print '                           over the <file*.pmat>. The output format is similar to "min" but'
+    print '                           it outputs the selected values for all the pmat files, sorted'
+    print '                           by the first value in the <location-spec>.'
+    print '  "plot cols <xlabel> <ylabel> <minrow> <maxrow> <x> <col1> <name1> <col2> <name2> ..." :'
+    print '                          make a smartplot file (see PLearn/scripts/smartplot) with column with'
+    print '                          indices <col1> in <fileX.pmat> as y-columns (with legend label <namei>),'
+    print '                          column with index <x> as x-column (or -1 for the row indices).'
+    print '                          Axes are labeled <xlabel> and <ylabel>. Use rows from <minrow> to <maxrow>'
+    print '                          row inclusively (<maxrow> = -1 means last row).'
+    print 
+    print "In the above, <location-spec> can be the following:"
+    print '  "pos <row> <col0> [<col1> <col2>...]": keep only the values at positions'
+    print '                          (<row> <col0>) (<row> <col1>) ... in each pmat file, and the first value'
+    print '                          may be used to minimize over files in the min command.'
+    print '  "mincol <mcol> [<col1> <col2>...] ": keep only the minimum value in colun <mcol> of each pmat,'
+    print '                          keeping track at the same time of the <coli> values at the min-selected row.'
     sys.exit(1)
   output = args[1]
   filenames = args[3:]
