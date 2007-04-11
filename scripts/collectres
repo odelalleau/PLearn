@@ -70,7 +70,10 @@ def selectres(loc_specs,a):
       else:
         b=a[minrow:maxrow,col].copy()
       res=concatenate([res,b.resize([maxrow-minrow,1])],1)
-      i+=2 # skip the column name
+      if i==5:
+        i=6
+      else:
+        i+=2 # skip the column name
   else:
     raise ValueError("Invalid <location-spec> mode, expected 'pos', 'mincol', or 'col', got "+loc_mode)    
   return res
@@ -107,25 +110,24 @@ def sublist(liste,indices):
   for index in indices:
     if index<l:
       subliste.append(liste[index])
+  # print "sublist(",liste,",",indices,")=",subliste
+  return subliste
     
 def distinct_experiment_names(filenames):
-  splitted_filenames = map(lambda fname: string.split(fname,"-"), filenames)
-  distinct_parts = []
-  not_finished = True
-  lengths = map(len,splitted_filenames)
-  len0 = lengths[0]
-  maxlen = max(lengths)
-  minlen = min(lengths)
-  for i in range(0,minlen):
-    all_equal=True
-    for splitted_filename in splitted_filenames[1:]:
-      if splitted_filename[i]!=splitted_filenames[0][i]:
-        all_equal=False
-        break
-    if not all_equal:
-      distinct_parts.append(i)
-  distinct_parts.append(range(minlen,maxlen))
-  return map(lambda sname: string.join(sublist(sname,distinct_parts),"-"),splitted_filenames)
+  splitted_filenames = map(lambda fname: string.split(fname.replace("/","-"),"-"), filenames)
+  distinct_names = []
+  for splitted_filename in splitted_filenames:
+    different_parts = []
+    for part in splitted_filename:
+      everywhere=True
+      for other_splitted_filename in splitted_filenames:
+        if not part in other_splitted_filename:
+          everywhere=False
+          break
+      if not everywhere:
+        different_parts.append(part)
+    distinct_names.append(string.join(different_parts,"-"))
+  return distinct_names
 
 def outputres(f,mode,speclist,results):
   if mode=="min":
@@ -158,7 +160,7 @@ def outputres(f,mode,speclist,results):
     # speclist has the elements: cols <xlabel> <ylabel> <minrow> <maxrow> <x> <col1> <name1> <col2> <name2> ...
     f.write('#: set xlabel "'+speclist[1]+'"; set ylabel "'+speclist[2]+'"; plot ')
     ncoln=len(speclist)-6 
-    ncol=int(ncol/2)
+    ncol=int(ncoln/2)
     if ncol*2!=ncoln:
       ValueError("Invalid plot <spec>: there should be one <name> per <col> to plot")
     ncol+=1 # add 1 for <x>, now this is the number of columns per experiment
@@ -166,9 +168,10 @@ def outputres(f,mode,speclist,results):
     for expname in distinct_expnames:
       for i in range(0,ncol-1):
         name = speclist[6+i*2+1]
-        f.write('@ using '+str(1+j*ncol)+':'+str(1+j*ncol+i)+' with lines t "'+name+'~'+expname'"')
-        if (i+2)<len(speclist):
+        f.write('@ using '+str(1+j*ncol)+':'+str(2+j*ncol+i)+' with lines t "'+name+'~'+expname+'"')
+        if (i+2)<ncol:
           f.write(",")
+      j=j+1
     f.write("\n")
     # concatenate vertically all the results from each experiment into one big array
     arrays = []
