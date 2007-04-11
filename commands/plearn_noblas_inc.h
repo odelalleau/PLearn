@@ -108,10 +108,12 @@
 #include <plearn/ker/EpanechnikovKernel.h>
 #include <plearn/ker/GaussianKernel.h>
 #include <plearn/ker/GeodesicDistanceKernel.h>
+#include <plearn/ker/IIDNoiseKernel.h>
 #include <plearn/ker/NegOutputCostFunction.h>
 #include <plearn/ker/PolynomialKernel.h>
 #include <plearn/ker/RationalQuadraticARDKernel.h>
 #include <plearn/ker/SquaredExponentialARDKernel.h>
+#include <plearn/ker/SummationKernel.h>
 #include <plearn/ker/ThresholdedKernel.h>
 #include <plearn/ker/VMatKernel.h>
 
