@@ -760,8 +760,6 @@ Vec PTester::perform1Split(int splitnum, bool call_forget)
 
     const int nstats = statnames_processed.length();
 
-    splitter->setDataSet(dataset);
-
     TVec<string> testcostnames = learner->getTestCostNames();
     TVec<string> traincostnames = learner->getTrainCostNames();
 
@@ -991,6 +989,8 @@ Vec PTester::perform(bool call_forget)
         if (save_initial_tester)
             PLearn::save(expdir / "tester.psave", *this);
     }
+
+    splitter->setDataSet(dataset);
 
     const int nsplits = splitter->nsplits();
     if (nsplits > 1)

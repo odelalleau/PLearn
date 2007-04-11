@@ -60,6 +60,16 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
     "A splitter is an essential part of a PTester.\n"
     );
 
+void Splitter::declareOptions(OptionList& ol)
+{
+    declareOption(ol,"dataset", &Splitter::dataset,
+                  OptionBase::buildoption | OptionBase::nosave 
+                  | OptionBase::remotetransmit,
+                  "Dataset to split.");
+  
+    inherited::declareOptions(ol);
+}
+
 void Splitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     deepCopyField(dataset, copies);

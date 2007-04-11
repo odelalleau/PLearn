@@ -97,6 +97,9 @@ public:
     //! Transforms a shallow copy into a deep copy
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
+protected:    
+    //! Declares the class options.
+    static void declareOptions(OptionList& ol);
 };
 
 // Declares a few other classes and functions related to this class
