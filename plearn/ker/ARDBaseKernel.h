@@ -2,7 +2,7 @@
 
 // ARDBaseKernel.h
 //
-// Copyright (C) 2006 Nicolas Chapados
+// Copyright (C) 2006-2007 Nicolas Chapados
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -40,7 +40,7 @@
 #ifndef ARDBaseKernel_INC
 #define ARDBaseKernel_INC
 
-#include <plearn/ker/IIDNoiseKernel.h>
+#include <plearn/ker/KroneckerBaseKernel.h>
 
 namespace PLearn {
 
@@ -55,12 +55,15 @@ namespace PLearn {
  *
  *  Note that to make its operations more robust when used with unconstrained
  *  optimization of hyperparameters, all hyperparameters of this kernel are
- *  specified in the inverse softplus domain.  See IIDNoiseKernel for more
- *  explanations.
+ *  specified in the inverse softplus domain, hence the 'isp' prefix.  This is
+ *  used in preference to the log-domain used by Rasmussen and Williams in
+ *  their implementation of gaussian processes, due to numerical stability.
+ *  (It may happen that the optimizer jumps 'too far' along one hyperparameter
+ *  and this causes the Gram matrix to become extremely ill-conditioned.)
  */
-class ARDBaseKernel : public IIDNoiseKernel
+class ARDBaseKernel : public KroneckerBaseKernel
 {
-    typedef IIDNoiseKernel inherited;
+    typedef KroneckerBaseKernel inherited;
 
 public:
     //#####  Public Build Options  ############################################

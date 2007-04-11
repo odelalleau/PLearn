@@ -58,11 +58,30 @@ namespace PLearn {
  *  Similar to C.E. Rasmussen's GPML code (see http://www.gaussianprocess.org),
  *  this kernel function is specified as:
  *
- *    k(x,y) = sf * exp(- 0.5 * (sum_i (x_i - y_i)^2 / w_i)) + k_iid(x,y)
+ *    k(x,y) = sf * exp(- 0.5 * (sum_i (x_i - y_i)^2 / w_i)) * k_kron(x,y)
  *
  *  where sf is softplus(isp_signal_sigma), w_i is softplus(isp_global_sigma +
- *  isp_input_sigma[i]), and k_iid(x,y) is the result of the IIDNoiseKernel
- *  kernel evaluation.
+ *  isp_input_sigma[i]), and k_kron(x,y) is the result of the
+ *  KroneckerBaseKernel evaluation, or 1.0 if there are no Kronecker terms.
+ *  Note that since the Kronecker terms are incorporated multiplicatively, the
+ *  very presence of the term associated to this kernel can be gated by the
+ *  value of some input variable(s) (that are incorporated within one or more
+ *  Kronecker terms).
+ *
+ *  The current version of this class DOES NOT ALLOW differentiating the Kernel
+ *  matrix with respect to the Kronecker hyperparameters.  These parameters are
+ *  redundant due to the presence of the global sf above; they should be set to
+ *  1.0 and left untouched by hyperoptimization.
+ *
+ *  Note that contrarily to previous versions that incorporated IID noise and
+ *  Kronecker terms ADDITIVELY, this version does not add any noise at all (and
+ *  as explained above incorporates the Kronecker terms multiplicatively).  For
+ *  best results, especially with moderately noisy data, IT IS IMPERATIVE to
+ *  use whis kernel within a SummationKernel in conjunction with an
+ *  IIDNoiseKernel, as follows (e.g. within a GaussianProcessRegressor):
+ *
+ *      kernel = SummationKernel(terms = [ SquaredExponentialARDKernel(),
+ *                                         IIDNoiseKernel() ] )
  *
  *  Note that to make its operations more robust when used with unconstrained
  *  optimization of hyperparameters, all hyperparameters of this kernel are
@@ -95,8 +114,8 @@ public:
     
     //! Directly compute the derivative with respect to hyperparameters
     //! (Faster than finite differences...)
-    // virtual void computeGramMatrixDerivative(Mat& KD, const string& kernel_param,
-    //                                          real epsilon=1e-6) const;
+    virtual void computeGramMatrixDerivative(Mat& KD, const string& kernel_param,
+                                             real epsilon=1e-6) const;
     
 
     //#####  PLearn::Object Protocol  #########################################
@@ -113,6 +132,19 @@ public:
 protected:
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
+
+    //! Derivative function with respect to isp_signal_sigma
+    real derivIspSignalSigma(int i, int j, int arg, real K) const;
+
+    //! Derivative function with respect to isp_global_sigma
+    real derivIspGlobalSigma(int i, int j, int arg, real K) const;
+    
+    // Compute derivative w.r.t. isp_input_sigma[arg] for WHOLE MATRIX
+    void computeGramMatrixDerivIspInputSigma(Mat& KD, int arg) const;
+    
+protected:
+    //! Cached version of Kronecker gram matrix
+    mutable Mat m_kron_gram_cache;
 
 private:
     //! This does the actual building.

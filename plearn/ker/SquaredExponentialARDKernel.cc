@@ -55,11 +55,30 @@ PLEARN_IMPLEMENT_OBJECT(
     "Similar to C.E. Rasmussen's GPML code (see http://www.gaussianprocess.org),\n"
     "this kernel function is specified as:\n"
     "\n"
-    "  k(x,y) = sf * exp(- 0.5 * (sum_i (x_i - y_i)^2 / w_i)) + k_iid(x,y)\n"
+    "  k(x,y) = sf * exp(- 0.5 * (sum_i (x_i - y_i)^2 / w_i)) * k_kron(x,y)\n"
     "\n"
     "where sf is softplus(isp_signal_sigma), w_i is softplus(isp_global_sigma +\n"
-    "isp_input_sigma[i]), and k_iid(x,y) is the result of the IIDNoiseKernel\n"
-    "kernel evaluation.\n"
+    "isp_input_sigma[i]), and k_kron(x,y) is the result of the\n"
+    "KroneckerBaseKernel evaluation, or 1.0 if there are no Kronecker terms.\n"
+    "Note that since the Kronecker terms are incorporated multiplicatively, the\n"
+    "very presence of the term associated to this kernel can be gated by the\n"
+    "value of some input variable(s) (that are incorporated within one or more\n"
+    "Kronecker terms).\n"
+    "\n"
+    "The current version of this class DOES NOT ALLOW differentiating the Kernel\n"
+    "matrix with respect to the Kronecker hyperparameters.  These parameters are\n"
+    "redundant due to the presence of the global sf above; they should be set to\n"
+    "1.0 and left untouched by hyperoptimization.\n"
+    "\n"
+    "Note that contrarily to previous versions that incorporated IID noise and\n"
+    "Kronecker terms ADDITIVELY, this version does not add any noise at all (and\n"
+    "as explained above incorporates the Kronecker terms multiplicatively).  For\n"
+    "best results, especially with moderately noisy data, IT IS IMPERATIVE to\n"
+    "use whis kernel within a SummationKernel in conjunction with an\n"
+    "IIDNoiseKernel, as follows (e.g. within a GaussianProcessRegressor):\n"
+    "\n"
+    "    kernel = SummationKernel(terms = [ SquaredExponentialARDKernel(),\n"
+    "                                       IIDNoiseKernel() ] )\n"
     "\n"
     "Note that to make its operations more robust when used with unconstrained\n"
     "optimization of hyperparameters, all hyperparameters of this kernel are\n"
@@ -95,6 +114,8 @@ void SquaredExponentialARDKernel::build()
 
 void SquaredExponentialARDKernel::build_()
 {
+    // Ensure that we multiply in Kronecker terms
+    inherited::m_default_value = 1.0;
 }
 
 
@@ -105,8 +126,12 @@ real SquaredExponentialARDKernel::evaluate(const Vec& x1, const Vec& x2) const
     PLASSERT( x1.size() == x2.size() );
     PLASSERT( !m_isp_input_sigma.size() || x1.size() == m_isp_input_sigma.size() );
 
+    real gating_term = inherited::evaluate(x1,x2);
+    if (fast_is_equal(gating_term, 0.0))
+        return 0.0;
+    
     if (x1.size() == 0)
-        return softplus(m_isp_signal_sigma) + inherited::evaluate(x1,x2);
+        return softplus(m_isp_signal_sigma) * gating_term;
     
     const real* px1 = x1.data();
     const real* px2 = x2.data();
@@ -130,14 +155,8 @@ real SquaredExponentialARDKernel::evaluate(const Vec& x1, const Vec& x2) const
         }
     }
 
-    // EXPERIMENTAL: Multiply noise_cov by kernel value if we have kronecker
-    // terms, otherwise disregard noise_cov
-    // real noise_cov = ( m_kronecker_indexes.size() > 0?
-    //                    inherited::evaluate(x1,x2) : 1.0 );
-    // return sf * exp(-0.5 * expval) * noise_cov;
-
-    real noise_cov = inherited::evaluate(x1,x2);
-    return sf * exp(-0.5 * expval) + noise_cov;
+    // Gate by Kronecker term
+    return sf * exp(-0.5 * expval) * gating_term;
 }
 
 
@@ -148,8 +167,10 @@ void SquaredExponentialARDKernel::computeGramMatrix(Mat K) const
     PLASSERT( !m_isp_input_sigma.size() || dataInputsize() == m_isp_input_sigma.size() );
     PLASSERT( K.size() == 0 || m_data_cache.size() > 0 );  // Ensure data cached OK
 
-    // Compute IID noise gram matrix
+    // Compute Kronecker gram matrix and save it
     inherited::computeGramMatrix(K);
+    m_kron_gram_cache.resize(K.length(), K.width());
+    m_kron_gram_cache << K;
 
     // Precompute some terms
     real sf    = softplus(m_isp_signal_sigma);
@@ -203,8 +224,10 @@ void SquaredExponentialARDKernel::computeGramMatrix(Mat K) const
                        } while((k -= 8) > 0);
             }
 
-            // Update kernel matrix (already pre-filled with IID noise terms)
-            *Kij++ += sf * exp(-0.5 * sum_wt);
+            // Multiplicatively update kernel matrix (already pre-filled with
+            // Kronecker terms, or 1.0 if no Kronecker terms, as per build_).
+            real Kij_cur = *Kij * sf * exp(-0.5 * sum_wt);
+            *Kij++ = Kij_cur;
         }
     }
     if (cache_gram_matrix) {
@@ -215,11 +238,125 @@ void SquaredExponentialARDKernel::computeGramMatrix(Mat K) const
 }
 
 
+//#####  computeGramMatrixDerivative  #########################################
+
+void SquaredExponentialARDKernel::computeGramMatrixDerivative(
+    Mat& KD, const string& kernel_param, real epsilon) const
+{
+    static const string ISS("isp_signal_sigma");
+    static const string IGS("isp_global_sigma");
+    static const string IIS("isp_input_sigma[");
+
+    if (kernel_param == ISS) {
+        computeGramMatrixDerivNV<
+            SquaredExponentialARDKernel,
+            &SquaredExponentialARDKernel::derivIspSignalSigma>(KD, this, -1);
+    }
+    else if (kernel_param == IGS) {
+        computeGramMatrixDerivNV<
+            SquaredExponentialARDKernel,
+            &SquaredExponentialARDKernel::derivIspGlobalSigma>(KD, this, -1);
+    }
+    else if (string_begins_with(kernel_param, IIS) &&
+             kernel_param[kernel_param.size()-1] == ']')
+    {
+        int arg = tolong(kernel_param.substr(
+                             IIS.size(), kernel_param.size() - IIS.size() - 1));
+        PLASSERT( arg < m_isp_input_sigma.size() );
+
+        computeGramMatrixDerivIspInputSigma(KD, arg);
+
+    }
+    else
+        inherited::computeGramMatrixDerivative(KD, kernel_param, epsilon);
+}
+
+
+//#####  derivIspSignalSigma  #################################################
+
+real SquaredExponentialARDKernel::derivIspSignalSigma(int i, int j, int arg, real K) const
+{
+    return K*sigmoid(m_isp_signal_sigma)/softplus(m_isp_signal_sigma);
+}
+
+
+//#####  derivIspGlobalSigma  #################################################
+
+real SquaredExponentialARDKernel::derivIspGlobalSigma(int i, int j, int arg, real K) const
+{
+    if (fast_is_equal(K,0.))
+        return 0.;
+
+    // The norm term inside the exponential may be accessed as Log(K/(sf*kron))
+    real kron  = m_kron_gram_cache(i,j);
+    real inner = pl_log(K / (kron * softplus(m_isp_signal_sigma)));
+    return K * inner * sigmoid(m_isp_global_sigma) / softplus(m_isp_global_sigma);
+
+    // Note: in the above expression for 'inner' there is the implicit
+    // assumption that the input_sigma[i] are zero, which allows the
+    // sigmoid/softplus term to be factored out of the norm summation.
+}
+
+
+//#####  computeGramMatrixDerivIspInputSigma  #################################
+
+void SquaredExponentialARDKernel::computeGramMatrixDerivIspInputSigma(Mat& KD,
+                                                                      int arg) const
+{
+    // Precompute some terms
+    real input_sigma_arg = m_input_sigma[arg];
+    real input_sigma_sq  = input_sigma_arg * input_sigma_arg;
+    real input_sigmoid   = sigmoid(m_isp_global_sigma + m_isp_input_sigma[arg]);
+    
+    // Compute Gram Matrix derivative w.r.t. isp_input_sigma[arg]
+    int  l = data->length();
+
+    // Variables that walk over the data matrix
+    int  cache_mod = m_data_cache.mod();
+    real *data_start = &m_data_cache(0,0);
+    real *xi = data_start+arg;               // Iterator on data rows
+
+    // Variables that walk over the gram cache
+    int   gram_cache_mod = gram_matrix.mod();
+    real *gram_cache_row = gram_matrix.data();
+    real *gram_cache_cur;
+    
+    // Variables that walk over the kernel derivative matrix (KD)
+    KD.resize(l,l);
+    real* KDi = KD.data();                   // Start of row i
+    real* KDij;                              // Current element on row i
+    int   KD_mod = KD.mod();
+
+    // Iterate on rows of derivative matrix
+    for (int i=0 ; i<l ; ++i, xi += cache_mod, KDi += KD_mod,
+             gram_cache_row += gram_cache_mod)
+    {
+        KDij = KDi;
+        real *xj  = data_start+arg;           // Inner iterator on data rows
+        gram_cache_cur = gram_cache_row;
+
+        // Iterate on columns of derivative matrix
+        for (int j=0 ; j <= i
+                 ; ++j, xj += cache_mod, ++gram_cache_cur)
+        {
+            real diff    = *xi - *xj;
+            real sq_diff = diff * diff;
+            real KD_cur  = 0.5 * *gram_cache_cur *
+                           input_sigmoid * sq_diff / input_sigma_sq;
+
+            // Set into derivative matrix
+            *KDij++ = KD_cur;
+        }
+    }
+}
+
+
 //#####  makeDeepCopyFromShallowCopy  #########################################
 
 void SquaredExponentialARDKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(m_kron_gram_cache, copies);
 }
 
 } // end of namespace PLearn

@@ -51,13 +51,32 @@ PLEARN_IMPLEMENT_OBJECT(
     "Similar to C.E. Rasmussen's GPML code (see http://www.gaussianprocess.org),\n"
     "this kernel is specified as:\n"
     "\n"
-    "  k(x,y) = sf * [1 + (sum_i (x_i - y_i)^2 / w_i)/(2*alpha)]^(-alpha) + k_iid(x,y)\n"
+    "  k(x,y) = sf * [1 + (sum_i (x_i - y_i)^2 / w_i)/(2*alpha)]^(-alpha) * k_kron(x,y)\n"
     "\n"
     "where sf is softplus(isp_signal_sigma), w_i is softplus(isp_global_sigma +\n"
-    "isp_input_sigma[i]), and k_iid(x,y) is the result of IIDNoiseKernel kernel\n"
-    "evaluation.\n"
+    "isp_input_sigma[i]), and k_kron(x,y) is the result of the\n"
+    "KroneckerBaseKernel evaluation, or 1.0 if there are no Kronecker terms.\n"
+    "Note that since the Kronecker terms are incorporated multiplicatively, the\n"
+    "very presence of the term associated to this kernel can be gated by the\n"
+    "value of some input variable(s) (that are incorporated within one or more\n"
+    "Kronecker terms).\n"
     "\n"
-    "Note that to make its operations more robust when used with unconstrained\n"
+    "The current version of this class DOES NOT PROPERLY SUPPORT having both\n"
+    "isp_global_sigma and isp_input_sigma[i] be non-zero (and simultaneously\n"
+    "optimizing with respect to both classes of hyperparameters).  The contrary\n"
+    "situation will yield inconsistent behavior.\n"
+    "\n"
+    "Note that contrarily to previous versions that incorporated IID noise and\n"
+    "Kronecker terms ADDITIVELY, this version does not add any noise at all (and\n"
+    "as explained above incorporates the Kronecker terms multiplicatively).  For\n"
+    "best results, especially with moderately noisy data, IT IS IMPERATIVE to\n"
+    "use whis kernel within a SummationKernel in conjunction with an\n"
+    "IIDNoiseKernel, as follows (e.g. within a GaussianProcessRegressor):\n"
+    "\n"
+    "    kernel = SummationKernel(terms = [ RationalQuadraticARDKernel(),\n"
+    "                                       IIDNoiseKernel() ] )\n"
+    "\n"
+    "In order to make its operations more robust when used with unconstrained\n"
     "optimization of hyperparameters, all hyperparameters of this kernel are\n"
     "specified in the inverse softplus domain.  See IIDNoiseKernel for more\n"
     "explanations.\n"
@@ -98,7 +117,10 @@ void RationalQuadraticARDKernel::build()
 //#####  build_  ##############################################################
 
 void RationalQuadraticARDKernel::build_()
-{ }
+{
+    // Ensure that we multiply in Kronecker terms
+    inherited::m_default_value = 1.0;
+}
 
 
 //#####  makeDeepCopyFromShallowCopy  #########################################
@@ -106,8 +128,6 @@ void RationalQuadraticARDKernel::build_()
 void RationalQuadraticARDKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-
-    deepCopyField(m_noise_gram_cache,        copies);
     deepCopyField(m_pow_minus_alpha_minus_1, copies);
 }
 
@@ -119,8 +139,12 @@ real RationalQuadraticARDKernel::evaluate(const Vec& x1, const Vec& x2) const
     PLASSERT( x1.size() == x2.size() );
     PLASSERT( !m_isp_input_sigma.size() || x1.size() == m_isp_input_sigma.size() );
 
+    real gating_term = inherited::evaluate(x1,x2);
+    if (fast_is_equal(gating_term, 0.0))
+        return 0.0;
+    
     if (x1.size() == 0)
-        return softplus(m_isp_signal_sigma) + inherited::evaluate(x1,x2);
+        return softplus(m_isp_signal_sigma) * gating_term;
     
     const real* px1 = x1.data();
     const real* px2 = x2.data();
@@ -148,9 +172,8 @@ real RationalQuadraticARDKernel::evaluate(const Vec& x1, const Vec& x2) const
         }
     }
 
-    // We add the noise covariance as well
-    real noise_cov = inherited::evaluate(x1,x2);
-    return sf * pow(1 + sum_wt / (real(2.)*alpha), -alpha) + noise_cov;
+    // Gate by Kronecker term
+    return sf * pow(1 + sum_wt / (real(2.)*alpha), -alpha) * gating_term;
 }
 
 
@@ -161,10 +184,8 @@ void RationalQuadraticARDKernel::computeGramMatrix(Mat K) const
     PLASSERT( !m_isp_input_sigma.size() || dataInputsize() == m_isp_input_sigma.size() );
     PLASSERT( K.size() == 0 || m_data_cache.size() > 0 );  // Ensure data cached OK
 
-    // Compute IID noise gram matrix and save it
+    // Compute Kronecker gram matrix.  No need to cache it.
     inherited::computeGramMatrix(K);
-    m_noise_gram_cache.resize(K.length(), K.width());
-    m_noise_gram_cache << K;
 
     // Precompute some terms
     real sf    = softplus(m_isp_signal_sigma);
@@ -200,6 +221,7 @@ void RationalQuadraticARDKernel::computeGramMatrix(Mat K) const
         real *xj = data_start;
         real *pow_cache_cur = pow_cache_row;
 
+        // This whole loop can be optimized further when a Kronecker term is 0
         for (int j=0; j<=i; ++j, xj += cache_mod) {
             // Kernel evaluation per se
             real *x1 = xi;
@@ -226,13 +248,13 @@ void RationalQuadraticARDKernel::computeGramMatrix(Mat K) const
                        } while((k -= 8) > 0);
             }
 
+            // Multiplicatively update kernel matrix (already pre-filled with
+            // Kronecker terms, or 1.0 if no Kronecker terms, as per build_).
             real inner_pow   = 1 + sum_wt / (2.*alpha);
             real pow_alpha   = pow(inner_pow, -alpha);
-            real Kij_cur     = sf * pow_alpha;
+            real Kij_cur     = *Kij * sf * pow_alpha;       // Mind *Kij here
             *pow_cache_cur++ = Kij_cur / inner_pow;
-            
-            // Update kernel matrix (already pre-filled with IID noise terms)
-            *Kij++ += Kij_cur;
+            *Kij++           = Kij_cur;
         }
     }
     if (cache_gram_matrix) {
@@ -301,8 +323,7 @@ void RationalQuadraticARDKernel::computeGramMatrixDerivative(
 
 real RationalQuadraticARDKernel::derivIspSignalSigma(int i, int j, int arg, real K) const
 {
-    real noise = m_noise_gram_cache(i,j);
-    return (K-noise)*sigmoid(m_isp_signal_sigma)/softplus(m_isp_signal_sigma);
+    return K*sigmoid(m_isp_signal_sigma)/softplus(m_isp_signal_sigma);
 }
 
 
@@ -311,14 +332,18 @@ real RationalQuadraticARDKernel::derivIspSignalSigma(int i, int j, int arg, real
 real RationalQuadraticARDKernel::derivIspGlobalSigma(int i, int j, int arg, real K) const
 {
     // The rational quadratic gives us:
-    //     K = s*k^(-alpha).
-    // Rederive the value of k == (K/s)^(-1/alpha)
+    //     K = s * k^(-alpha) * kron
+    // where kron is 0 or 1.  Rederive the value of k == (K/s)^(-1/alpha)
+    if (fast_is_equal(K, 0.))
+        return 0.;
     real alpha = softplus(m_isp_alpha);
-    real noise = m_noise_gram_cache(i,j);
-    K -= noise;
     real k     = pow(K / softplus(m_isp_signal_sigma), real(-1.) / alpha);
     real inner = (k - 1) * alpha * sigmoid(m_isp_global_sigma) / softplus(m_isp_global_sigma);
     return (K / k) * inner;
+
+    // Note: in the above expression for 'inner' there is the implicit
+    // assumption that the input_sigma[i] are zero, which allows the
+    // sigmoid/softplus term to be factored out of the norm summation.
 }
 
 
@@ -330,13 +355,13 @@ real RationalQuadraticARDKernel::derivIspGlobalSigma(int i, int j, int arg, real
 real RationalQuadraticARDKernel::derivIspInputSigma(int i, int j, int arg, real K) const
 {
     // The rational quadratic gives us:
-    //     K = s*k^(-alpha).
-    // Rederive the value of k == (K/s)^(-1/alpha)
+    //     K = s * k^(-alpha) * kron
+    // where kron is 0 or 1.  Rederive the value of k == (K/s)^(-1/alpha)
+    if (fast_is_equal(K, 0.))
+        return 0.;
     real alpha   = softplus(m_isp_alpha);
     Vec& row_i   = *dataRow(i);
     Vec& row_j   = *dataRow(j);
-    real noise   = m_noise_gram_cache(i,j);
-    K -= noise;
     real k       = pow(K / softplus(m_isp_signal_sigma), real(-1.) / alpha);
     real diff    = row_i[arg] - row_j[arg];
     real sq_diff = diff * diff;
@@ -351,9 +376,12 @@ real RationalQuadraticARDKernel::derivIspInputSigma(int i, int j, int arg, real 
 
 real RationalQuadraticARDKernel::derivIspAlpha(int i, int j, int arg, real K) const
 {
+    // The rational quadratic gives us:
+    //     K = s * k^(-alpha) * kron
+    // where kron is 0 or 1.  Rederive the value of k == (K/s)^(-1/alpha)
+    if (fast_is_equal(K, 0.))
+        return 0.;
     real alpha = softplus(m_isp_alpha);
-    real noise = m_noise_gram_cache(i,j);
-    K         -= noise;
     real k     = pow(K / softplus(m_isp_signal_sigma), real(-1.) / alpha);
     return sigmoid(m_isp_alpha) * K * (1 - pl_log(k) - 1 / k);
 }
@@ -432,11 +460,6 @@ void RationalQuadraticARDKernel::computeGramMatrixDerivIspAlpha(Mat& KD) const
     real *pow_cache_row = m_pow_minus_alpha_minus_1.data();
     real *pow_cache_cur;
 
-    // Variables that walk over the noise cache
-    int   noise_cache_mod = m_noise_gram_cache.mod();
-    real *noise_cache_row = m_noise_gram_cache[0];
-    real *noise_cache_cur;
-    
     // Variables that walk over the kernel derivative matrix (KD)
     KD.resize(l,l);
     real* KDi = KD.data();                   // Start of row i
@@ -445,24 +468,26 @@ void RationalQuadraticARDKernel::computeGramMatrixDerivIspAlpha(Mat& KD) const
 
     // Iterate on rows of derivative matrix
     for (int i=0 ; i<l ; ++i, Ki += k_mod,
-             KDi += KD_mod, pow_cache_row += pow_cache_mod,
-             noise_cache_row += noise_cache_mod)
+             KDi += KD_mod, pow_cache_row += pow_cache_mod)
     {
         Kij  = Ki;
         KDij = KDi;
         pow_cache_cur   = pow_cache_row;
-        noise_cache_cur = noise_cache_row;
 
         // Iterate on columns of derivative matrix
-        for (int j=0 ; j <= i
-                 ; ++j, ++Kij, ++noise_cache_cur, ++pow_cache_cur)
+        for (int j=0 ; j <= i ; ++j, ++Kij, ++pow_cache_cur)
         {
-            real K      = *Kij - *noise_cache_cur;
-            real k      = K / *pow_cache_cur;
-            real KD_cur = alpha_sigmoid * K * (1 - pl_log(k) - 1/k);
+            real pow_cur = *pow_cache_cur;
+            if (fast_is_equal(pow_cur, 0)) 
+                *KDij++ = 0.;
+            else {
+                real K      = *Kij;
+                real k      = K / pow_cur;
+                real KD_cur = alpha_sigmoid * K * (1 - pl_log(k) - 1/k);
             
-            // Set into derivative matrix
-            *KDij++ = KD_cur;
+                // Set into derivative matrix
+                *KDij++ = KD_cur;
+            }
         }
     }
 }

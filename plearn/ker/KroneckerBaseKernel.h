@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// SummationKernel.h
+// KroneckerBaseKernel.h
 //
 // Copyright (C) 2007 Nicolas Chapados
 //
@@ -34,78 +34,73 @@
 
 // Authors: Nicolas Chapados
 
-/*! \file SummationKernel.h */
+/*! \file KroneckerBaseKernel.h */
 
 
-#ifndef SummationKernel_INC
-#define SummationKernel_INC
+#ifndef KroneckerBaseKernel_INC
+#define KroneckerBaseKernel_INC
 
-#include <plearn/ker/Kernel.h>
+#include <plearn/ker/MemoryCachedKernel.h>
 
 namespace PLearn {
 
 /**
- *  Kernel computing the sum of other kernels
+ *  Base class for kernels that make use of Kronecker terms
  *
- *  This kernel computes the summation of several subkernel objects.  It can
- *  also chop up parts of its input vector and send it to each kernel (so that
- *  each kernel can operate on a subset of the variables).
+ *  This kernel allows the specification of product a of Kronecker delta terms
+ *  when there is a match of VALUE in ONE DIMENSION.  (This may be generalized
+ *  in the future to allow match according to a subset of the input variables,
+ *  but is not currently done for performance reasons).  With these terms, the
+ *  kernel function takes the form:
+ *
+ *    k(x,y) = \product_i delta_x[kr(i)],y[kr(i)]
+ *
+ *  where kr(i) is the i-th element of 'kronecker_indexes' (representing an
+ *  index into the input vectors).  Derived classes can either integrate these
+ *  terms additively (e.g. KroneckerBaseKernel) or multiplicatively
+ *  (e.g. ARDBaseKernel and derived classes).  Note that this class does not
+ *  provide any hyperparameter associated with this product; an hyperparameter
+ *  may be included by derived classes as required.  (Currently, only
+ *  IIDNoiseKernel needs one; in other kernels, this is absorbed by the global
+ *  function noise hyperparameter).
+ *
+ *  The basic idea for Kronecker terms is to selectively build in parts of a
+ *  covariance function based on matches in the value of some input variables.
+ *  They are useful in conjunction with a "covariance function builder" such as
+ *  SummationKernel.
  */
-class SummationKernel : public Kernel
+class KroneckerBaseKernel : public MemoryCachedKernel
 {
-    typedef Kernel inherited;
+    typedef MemoryCachedKernel inherited;
 
 public:
     //#####  Public Build Options  ############################################
 
-    /**
-     *  Individual kernels to add to produce the final result.  The
-     *  hyperparameters of kernel i can be accesed under the option names
-     *  'terms[i].hyperparam' for, e.g. GaussianProcessRegressor.
-     */
-    TVec<Ker> m_terms;
-
-    /**
-     *  Optionally, one can specify which of individual input variables should
-     *  be routed to each kernel.  The format is as a vector of vectors: for
-     *  each kernel in 'terms', one must list the INDEXES in the original input
-     *  vector(zero-based) that should be passed to that kernel.  If a list of
-     *  indexes is empty for a given kernel, it means that the COMPLETE input
-     *  vector should be passed to the kernel.
-     */
-    TVec< TVec<int> > m_input_indexes;
+    //! Element index in the input vectors that should be subject to additional
+    //! Kronecker delta terms
+    TVec<int> m_kronecker_indexes;
 
 public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
-    SummationKernel();
+    KroneckerBaseKernel();
 
 
     //#####  Kernel Member Functions  #########################################
 
-    //! Distribute to terms (sub-kernels) in the summation, subsetting if required
-    virtual void setDataForKernelMatrix(VMat the_data);
-
-    //! Distribute to terms (sub-kernels) in the summation, subsetting if required
-    virtual void addDataForKernelMatrix(const Vec& newRow);
-
     //! Compute K(x1,x2).
     virtual real evaluate(const Vec& x1, const Vec& x2) const;
 
-    //! Compute the Gram Matrix by calling subkernels computeGramMatrix
+    //! Compute the Gram Matrix.  Note that this version DOES NOT CACHE
+    //! the results, since it is usually called by derived classes.
     virtual void computeGramMatrix(Mat K) const;
-    
-    //! Directly compute the derivative with respect to hyperparameters
-    //! (Faster than finite differences...)
-    virtual void computeGramMatrixDerivative(Mat& KD, const string& kernel_param,
-                                             real epsilon=1e-6) const;
     
 
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
-    PLEARN_DECLARE_OBJECT(SummationKernel);
+    PLEARN_DECLARE_OBJECT(KroneckerBaseKernel);
 
     // Simply calls inherited::build() then build_()
     virtual void build();
@@ -114,13 +109,14 @@ public:
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
-    //! Input buffers for kernel evaluation in cases where subsetting is needed
-    TVec<Vec> m_input_buf1;
-    TVec<Vec> m_input_buf2;
-
-    //! Temporary buffer for Gram matrix accumulation
-    mutable Mat m_gram_buf;
-
+    /**
+     *  Value to be used for kernel evaluation if there are no kronecker terms.
+     *  This is initialized to zero.  A derived class may set it to (e.g.) 1.0
+     *  be be sure that the default value is filled to something that can be
+     *  used multiplicatively, even when there are no Kronecker terms.
+     */
+    mutable real m_default_value;
+    
 protected:
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
@@ -131,7 +127,7 @@ private:
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(SummationKernel);
+DECLARE_OBJECT_PTR(KroneckerBaseKernel);
 
 } // end of namespace PLearn
 

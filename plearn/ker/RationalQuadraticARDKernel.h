@@ -54,13 +54,32 @@ namespace PLearn {
  *  Similar to C.E. Rasmussen's GPML code (see http://www.gaussianprocess.org),
  *  this kernel is specified as:
  *
- *    k(x,y) = sf * [1 + (sum_i (x_i - y_i)^2 / w_i)/(2*alpha)]^(-alpha) + k_iid(x,y)
+ *    k(x,y) = sf * [1 + (sum_i (x_i - y_i)^2 / w_i)/(2*alpha)]^(-alpha) * k_kron(x,y)
  *
  *  where sf is softplus(isp_signal_sigma), w_i is softplus(isp_global_sigma +
- *  isp_input_sigma[i]), and k_iid(x,y) is the result of the IIDNoiseKernel
- *  kernel evaluation.
+ *  isp_input_sigma[i]), and k_kron(x,y) is the result of the
+ *  KroneckerBaseKernel evaluation, or 1.0 if there are no Kronecker terms.
+ *  Note that since the Kronecker terms are incorporated multiplicatively, the
+ *  very presence of the term associated to this kernel can be gated by the
+ *  value of some input variable(s) (that are incorporated within one or more
+ *  Kronecker terms).
  *
- *  Note that to make its operations more robust when used with unconstrained
+ *  The current version of this class DOES NOT PROPERLY SUPPORT having both
+ *  isp_global_sigma and isp_input_sigma[i] be non-zero (and simultaneously
+ *  optimizing with respect to both classes of hyperparameters).  The contrary
+ *  situation will yield inconsistent behavior.
+ *
+ *  Note that contrarily to previous versions that incorporated IID noise and
+ *  Kronecker terms ADDITIVELY, this version does not add any noise at all (and
+ *  as explained above incorporates the Kronecker terms multiplicatively).  For
+ *  best results, especially with moderately noisy data, IT IS IMPERATIVE to
+ *  use whis kernel within a SummationKernel in conjunction with an
+ *  IIDNoiseKernel, as follows (e.g. within a GaussianProcessRegressor):
+ *
+ *      kernel = SummationKernel(terms = [ RationalQuadraticARDKernel(),
+ *                                         IIDNoiseKernel() ] )
+ *
+ *  In order to make its operations more robust when used with unconstrained
  *  optimization of hyperparameters, all hyperparameters of this kernel are
  *  specified in the inverse softplus domain.  See IIDNoiseKernel for more
  *  explanations.
@@ -132,12 +151,12 @@ protected:
     void computeGramMatrixDerivIspAlpha(Mat& KD) const;
     
 protected:
-    //! Cached version of IID noise gram matrix
-    mutable Mat m_noise_gram_cache;
-
     /**
-     *  Cached version of the K / k terms, useful for computing derivatives
-     *      pow(1 + sum_wt / (2*alpha), -alpha-1)
+     *  Cached version of the K / k terms, namely:
+     *
+     *      pow(1 + sum_wt / (2*alpha), -alpha-1) * sf * kron
+     *
+     *  This is useful for computing derivatives,
      */
     mutable Mat m_pow_minus_alpha_minus_1;
 

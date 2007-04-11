@@ -2,7 +2,7 @@
 
 // IIDNoiseKernel.h
 //
-// Copyright (C) 2006 Nicolas Chapados
+// Copyright (C) 2006-2007 Nicolas Chapados
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -40,7 +40,7 @@
 #ifndef IIDNoiseKernel_INC
 #define IIDNoiseKernel_INC
 
-#include <plearn/ker/MemoryCachedKernel.h>
+#include <plearn/ker/KroneckerBaseKernel.h>
 
 namespace PLearn {
 
@@ -49,49 +49,45 @@ namespace PLearn {
  *
  *  This Kernel is typically used as a base class for covariance functions used
  *  in gaussian processes (see GaussianProcessRegressor).  It represents simple
- *  i.i.d. additive noise:
+ *  i.i.d. additive noise that applies to 'identical training cases' i and j:
  *
- *    k(x,y) = delta_x,y * sn
+ *    k(D_i,D_j) = delta_i,j * sn
  *
- *  where delta_x,y is the Kronecker delta function, and sn is
- *  softplus(isp_noise_sigma), with softplus(x) = log(1+exp(x)).
+ *  where D_i and D_j are elements from the current data set (established by
+ *  the setDataForKernelMatrix function), delta_i,j is the Kronecker delta
+ *  function, and sn is softplus(isp_noise_sigma), with softplus(x) =
+ *  log(1+exp(x)).  Note that 'identity' is not equivalent to 'vector
+ *  equality': in particular, at test-time, this noise is NEVER added.
+ *  Currently, two vectors are considered identical if and only if they are the
+ *  SAME ROW of the current data set, and hence the noise term is added only at
+ *  TRAIN-TIME across the diagonal of the Gram matrix (when the
+ *  computeGramMatrix() function is called).  This is why at test-time, no such
+ *  noise term is added.  The idea (see the book "Gaussian Processes for
+ *  Machine Learning" by Rasmussen and Williams for details) is that
+ *  observation noise only applies when A SPECIFIC OBSERVATION is drawn from
+ *  the GP distribution: if we sample a new point at the same x, we will get a
+ *  different realization for the noise, and hence the correlation between the
+ *  two noise realizations is zero.  This class can only be sure that two
+ *  observations are "identical" when they are presented all at once through
+ *  the data matrix.
  *
- *  In addition to comparing the complete x and y vectors, this kernel allows
- *  adding a Kronecker delta when there is a match in only ONE DIMENSION.  This
- *  may be generalized in the future to allow match according to a subset of
- *  the input variables (but is not currently done for performance reasons).
- *  With these terms, the kernel function takes the form:
- *
- *    k(x,y) = delta_x,y * sn + \sum_i delta_x[kr(i)],y[kr(i)] * ks[i]
- *
- *  where kr(i) is the i-th element of 'kronecker_indexes' (representing an
- *  index into the input vectors), and ks[i]=softplus(isp_kronecker_sigma[i]).
- *
- *  Note that to make its operations more robust when used with unconstrained
- *  optimization of hyperparameters, all hyperparameters of this kernel are
- *  specified in the inverse softplus domain, hence the 'isp' prefix.  This is
- *  used in preference to the log-domain used by Rasmussen and Williams in
- *  their implementation of gaussian processes, due to numerical stability.
- *  (It may happen that the optimizer jumps 'too far' along one hyperparameter
- *  and this causes the Gram matrix to become extremely ill-conditioned.)
+ *  The Kronecker terms computed by the base class are ADDDED to the noise 
+ *  computed by this kernel (at test-time also).
  */
-class IIDNoiseKernel : public MemoryCachedKernel
+class IIDNoiseKernel : public KroneckerBaseKernel
 {
-    typedef MemoryCachedKernel inherited;
+    typedef KroneckerBaseKernel inherited;
 
 public:
     //#####  Public Build Options  ############################################
 
-    //! Inverse softplus of the global noise variance.  Default value=0.0
+    //! Inverse softplus of the global noise variance.  Default value=-100.0
+    //! (very close to zero after we take softplus).
     real m_isp_noise_sigma;
-
-    //! Element index in the input vectors that should be subject to additional
-    //! Kronecker delta terms
-    TVec<int> m_kronecker_indexes;
-
-    //! Inverse softplus of the noise variance terms for the Kronecker deltas
-    //! associated with kronecker_indexes
-    Vec m_isp_kronecker_sigma;
+    
+    //! Inverse softplus of the noise variance term for the product of
+    //! Kronecker deltas associated with kronecker_indexes, if specified.
+    real m_isp_kronecker_sigma;
     
 public:
     //#####  Public Member Functions  #########################################
@@ -129,15 +125,9 @@ protected:
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
 
-    //! Derivative function with respect to kronecker_indexes[arg] hyperparameter
-    real derivKronecker(int i, int j, int arg, real K) const;
-
-    //! Derivative w.r.t kronecker_indexes[arg] for WHOLE MATRIX
-    void computeGramMatrixDerivKronecker(Mat& KD, int arg) const;
-    
-protected:
-    //! Buffer for softplus of m_isp_kronecker_sigma
-    mutable Vec m_kronecker_sigma;
+    //! Compute the derivative of the Gram matrix with respect to the Kronecker
+    //! sigma
+    void computeGramMatrixDerivKronecker(Mat& KD) const;
     
 private:
     //! This does the actual building.

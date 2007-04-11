@@ -36,7 +36,9 @@
 
 /*! \file SummationKernel.cc */
 
-
+#include <plearn/base/stringutils.h>
+#include <plearn/base/lexical_cast.h>
+#include <plearn/vmat/SelectColumnsVMatrix.h>
 #include "SummationKernel.h"
 
 namespace PLearn {
@@ -121,6 +123,40 @@ void SummationKernel::build_()
 }
 
 
+//#####  setDataForKernelMatrix  ##############################################
+
+void SummationKernel::setDataForKernelMatrix(VMat the_data)
+{
+    inherited::setDataForKernelMatrix(the_data);
+    bool split_inputs = m_input_indexes.size() > 0;
+    for (int i=0, n=m_terms.size() ; i<n ; ++i) {
+        if (split_inputs && m_input_indexes[i].size() > 0) {
+            VMat sub_inputs = new SelectColumnsVMatrix(the_data, m_input_indexes[i]);
+            m_terms[i]->setDataForKernelMatrix(sub_inputs);
+        }
+        else
+            m_terms[i]->setDataForKernelMatrix(the_data);
+    }
+}
+
+
+//#####  addDataForKernelMatrix  ##############################################
+
+void SummationKernel::addDataForKernelMatrix(const Vec& newRow)
+{
+    inherited::addDataForKernelMatrix(newRow);
+    bool split_inputs = m_input_indexes.size() > 0;
+    for (int i=0, n=m_terms.size() ; i<n ; ++i) {
+        if (split_inputs && m_input_indexes[i].size() > 0) {
+            selectElements(newRow, m_input_indexes[i], m_input_buf1[i]);
+            m_terms[i]->addDataForKernelMatrix(m_input_buf1[i]);
+        }
+        else
+            m_terms[i]->addDataForKernelMatrix(newRow);
+    }
+}
+
+
 //#####  evaluate  ############################################################
 
 real SummationKernel::evaluate(const Vec& x1, const Vec& x2) const
@@ -141,6 +177,61 @@ real SummationKernel::evaluate(const Vec& x1, const Vec& x2) const
 }
 
 
+//#####  computeGramMatrix  ###################################################
+
+void SummationKernel::computeGramMatrix(Mat K) const
+{
+    // Assume that K has the right size; will have error in subkernels
+    // evaluation if not the right size in any case.
+    m_gram_buf.resize(K.width(), K.length());
+
+    for (int i=0, n=m_terms.size() ; i<n ; ++i) {
+        if (i==0)
+            m_terms[i]->computeGramMatrix(K);
+        else {
+            m_terms[i]->computeGramMatrix(m_gram_buf);
+            K += m_gram_buf;
+        }
+    }
+}
+
+
+//#####  computeGramMatrixDerivative  #########################################
+void SummationKernel::computeGramMatrixDerivative(
+    Mat& KD, const string& kernel_param, real epsilon) const
+{
+    // Find which term we want to compute the derivative for
+    if (string_begins_with(kernel_param, "terms[")) {
+        string::size_type rest = kernel_param.find("].");
+        if (rest == string::npos)
+            PLERROR("%s: malformed hyperparameter name for computing derivative '%s'",
+                    __FUNCTION__, kernel_param.c_str());
+
+        string sub_param  = kernel_param.substr(rest+2);
+        string term_index = kernel_param.substr(6,rest-6); // len("terms[") == 6
+        int i = lexical_cast<int>(term_index);
+        if (i < 0 || i >= m_terms.size())
+            PLERROR("%s: out of bounds access to term %d when computing derivative\n"
+                    "for kernel parameter '%d'; only %d terms (0..%d) are available\n"
+                    "in the SummationKernel", __FUNCTION__, i, kernel_param.c_str(),
+                    m_terms.size(), m_terms.size()-1);
+        
+        m_terms[i]->computeGramMatrixDerivative(KD, sub_param, epsilon);
+    }
+    else
+        inherited::computeGramMatrixDerivative(KD, kernel_param, epsilon);
+
+    // Compare against finite differences
+    // Mat KD1;
+    // Kernel::computeGramMatrixDerivative(KD1, kernel_param, epsilon);
+    // cerr << "Kernel hyperparameter: " << kernel_param << endl;
+    // cerr << "Analytic derivative (200th row):" << endl
+    //      << KD(200) << endl
+    //      << "Finite differences:" << endl
+    //      << KD1(200) << endl;
+}
+
+
 //#####  makeDeepCopyFromShallowCopy  #########################################
 
 void SummationKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
@@ -151,6 +242,7 @@ void SummationKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(m_input_indexes,  copies);
     deepCopyField(m_input_buf1,     copies);
     deepCopyField(m_input_buf2,     copies);
+    deepCopyField(m_gram_buf,       copies);
 }
 
 } // end of namespace PLearn

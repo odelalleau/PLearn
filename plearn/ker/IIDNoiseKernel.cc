@@ -2,7 +2,7 @@
 
 // IIDNoiseKernel.cc
 //
-// Copyright (C) 2006 Nicolas Chapados
+// Copyright (C) 2006-2007 Nicolas Chapados
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -48,36 +48,36 @@ PLEARN_IMPLEMENT_OBJECT(
     "Kernel representing independent and identically-distributed observation noise",
     "This Kernel is typically used as a base class for covariance functions used\n"
     "in gaussian processes (see GaussianProcessRegressor).  It represents simple\n"
-    "i.i.d. additive noise:\n"
+    "i.i.d. additive noise that applies to 'identical training cases' i and j:\n"
     "\n"
-    "  k(x,y) = delta_x,y * sn\n"
+    "  k(D_i,D_j) = delta_i,j * sn\n"
     "\n"
-    "where delta_x,y is the Kronecker delta function, and sn is\n"
-    "softplus(isp_noise_sigma), with softplus(x) = log(1+exp(x)).\n"
+    "where D_i and D_j are elements from the current data set (established by\n"
+    "the setDataForKernelMatrix function), delta_i,j is the Kronecker delta\n"
+    "function, and sn is softplus(isp_noise_sigma), with softplus(x) =\n"
+    "log(1+exp(x)).  Note that 'identity' is not equivalent to 'vector\n"
+    "equality': in particular, at test-time, this noise is NEVER added.\n"
+    "Currently, two vectors are considered identical if and only if they are the\n"
+    "SAME ROW of the current data set, and hence the noise term is added only at\n"
+    "TRAIN-TIME across the diagonal of the Gram matrix (when the\n"
+    "computeGramMatrix() function is called).  This is why at test-time, no such\n"
+    "noise term is added.  The idea (see the book \"Gaussian Processes for\n"
+    "Machine Learning\" by Rasmussen and Williams for details) is that\n"
+    "observation noise only applies when A SPECIFIC OBSERVATION is drawn from\n"
+    "the GP distribution: if we sample a new point at the same x, we will get a\n"
+    "different realization for the noise, and hence the correlation between the\n"
+    "two noise realizations is zero.  This class can only be sure that two\n"
+    "observations are \"identical\" when they are presented all at once through\n"
+    "the data matrix.\n"
     "\n"
-    "In addition to comparing the complete x and y vectors, this kernel allows\n"
-    "adding a Kronecker delta when there is a match in only ONE DIMENSION.  This\n"
-    "may be generalized in the future to allow match according to a subset of\n"
-    "the input variables (but is not currently done for performance reasons).\n"
-    "With these terms, the kernel function takes the form:\n"
-    "\n"
-    "  k(x,y) = delta_x,y * sn + \\sum_i delta_x[kr(i)],y[kr(i)] * ks[i]\n"
-    "\n"
-    "where kr(i) is the i-th element of 'kronecker_indexes' (representing an\n"
-    "index into the input vectors), and ks[i]=softplus(isp_kronecker_sigma[i]).\n"
-    "\n"
-    "Note that to make its operations more robust when used with unconstrained\n"
-    "optimization of hyperparameters, all hyperparameters of this kernel are\n"
-    "specified in the inverse softplus domain, hence the 'isp' prefix.  This is\n"
-    "used in preference to the log-domain used by Rasmussen and Williams in\n"
-    "their implementation of gaussian processes, due to numerical stability.\n"
-    "(It may happen that the optimizer jumps 'too far' along one hyperparameter\n"
-    "and this causes the Gram matrix to become extremely ill-conditioned.)\n"
+    "The Kronecker terms computed by the base class are ADDDED to the noise\n"
+    "computed by this kernel (at test-time also).\n"
     );
 
 
 IIDNoiseKernel::IIDNoiseKernel()
-    : m_isp_noise_sigma(0.0)
+    : m_isp_noise_sigma(-100.0), /* very close to zero... */
+      m_isp_kronecker_sigma(100.0)
 { }
 
 
@@ -88,19 +88,14 @@ void IIDNoiseKernel::declareOptions(OptionList& ol)
     declareOption(
         ol, "isp_noise_sigma", &IIDNoiseKernel::m_isp_noise_sigma,
         OptionBase::buildoption,
-        "Inverse softplus of the global noise variance.  Default value=0.0");
-
-    declareOption(
-        ol, "kronecker_indexes", &IIDNoiseKernel::m_kronecker_indexes,
-        OptionBase::buildoption,
-        "Element index in the input vectors that should be subject to additional\n"
-        "Kronecker delta terms");
+        "Inverse softplus of the global noise variance.  Default value=-100.0\n"
+        "(very close to zero after we take softplus).");
 
     declareOption(
         ol, "isp_kronecker_sigma", &IIDNoiseKernel::m_isp_kronecker_sigma,
         OptionBase::buildoption,
-        "Inverse softplus of the noise variance terms for the Kronecker deltas\n"
-        "associated with kronecker_indexes");
+        "Inverse softplus of the noise variance term for the product of\n"
+        "Kronecker deltas associated with kronecker_indexes, if specified.");
     
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -120,32 +115,14 @@ void IIDNoiseKernel::build()
 //#####  build_  ##############################################################
 
 void IIDNoiseKernel::build_()
-{
-    if (m_kronecker_indexes.size() != m_isp_kronecker_sigma.size())
-        PLERROR("IIDNoiseKernel::build_: size of 'kronecker_indexes' (%d) "
-                "does not match that of 'isp_kronecker_sigma' (%d)",
-                m_kronecker_indexes.size(), m_isp_kronecker_sigma.size());
-}
+{ }
 
 
 //#####  evaluate  ############################################################
 
 real IIDNoiseKernel::evaluate(const Vec& x1, const Vec& x2) const
 {
-    real value = 0.0;
-    // if (x1 == x2)
-    //     value += softplus(m_isp_noise_sigma);
-
-    const int n = m_kronecker_indexes.size();
-    if (n > 0) {
-        int*  cur_index = m_kronecker_indexes.data();
-        real* cur_sigma = m_isp_kronecker_sigma.data();
-
-        for (int i=0 ; i<n ; ++i, ++cur_index, ++cur_sigma)
-            if (fast_is_equal(x1[*cur_index], x2[*cur_index]))
-                value += softplus(*cur_sigma);
-    }
-    return value;
+    return softplus(m_isp_kronecker_sigma) * inherited::evaluate(x1,x2);
 }
 
 
@@ -162,55 +139,26 @@ void IIDNoiseKernel::computeGramMatrix(Mat K) const
                 "of size %d x %d (currently of size %d x %d)",
                 data.length(), data.length(), K.length(), K.width());
                 
-    PLASSERT( K.size() == 0 || m_data_cache.size() > 0 );  // Ensure data cached OK
-
-    // Precompute some terms
-    real noise_sigma  = softplus(m_isp_noise_sigma);
-    m_kronecker_sigma.resize(m_isp_kronecker_sigma.size());
-    for (int i=0, n=m_isp_kronecker_sigma.size() ; i<n ; ++i)
-        m_kronecker_sigma[i] = softplus(m_isp_kronecker_sigma[i]);
-
-    // Prepare kronecker iteration
-    int   kronecker_num     = m_kronecker_indexes.size();
-    int*  kronecker_indexes = ( kronecker_num > 0?
-                                m_kronecker_indexes.data() : 0 );
-    real* kronecker_sigma   = ( kronecker_num > 0?
-                                m_kronecker_sigma.data() : 0 );
-
-    // Compute Gram Matrix
-    int  l = data->length();
-    int  m = K.mod();
-    int  cache_mod = m_data_cache.mod();
-
-    real *data_start = &m_data_cache(0,0);
-    real Kij;
-    real *Ki, *Kji;
-    real *xi = data_start;
+    // Compute Kronecker gram matrix. Multiply by kronecker sigma if there were
+    // any Kronecker terms.
+    inherited::computeGramMatrix(K);
+    if (m_kronecker_indexes.size() > 0)
+        K *= softplus(m_isp_kronecker_sigma);
     
-    for (int i=0 ; i<l ; ++i, xi += cache_mod) {
-        Ki  = K[i];
-        Kji = &K[0][i];
-        real *xj = data_start;
+    // Add iid noise contribution
+    real noise_sigma = softplus(m_isp_noise_sigma);
+    int  l   = data->length();
+    int  m   = K.mod() + 1;               // Mind the +1 to go along diagonal
+    real *Ki = K[0];
+    
+    for (int i=0 ; i<l ; ++i, Ki += m) {
+        *Ki += noise_sigma;
+    }
 
-        for (int j=0; j<=i; ++j, Kji += m, xj += cache_mod) {
-            // Kernel evaluation per se
-            if (i == j)
-                Kij = noise_sigma;
-            else
-                Kij = 0.0;
-
-            // Kronecker terms
-            if (kronecker_num > 0) {
-                int*  cur_index = kronecker_indexes;
-                real* cur_sigma = kronecker_sigma;
-                
-                for (int k=0 ; k<kronecker_num ; ++k, ++cur_index, ++cur_sigma)
-                    if (fast_is_equal(xi[*cur_index], xj[*cur_index]))
-                        Kij += *cur_sigma;
-            }
-            
-            *Ki++ = Kij;
-        }
+    if (cache_gram_matrix) {
+        gram_matrix.resize(l,l);
+        gram_matrix << K;
+        gram_matrix_is_cached = true;
     }
 }
 
@@ -220,10 +168,6 @@ void IIDNoiseKernel::computeGramMatrix(Mat K) const
 void IIDNoiseKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-
-    deepCopyField(m_kronecker_indexes,   copies);
-    deepCopyField(m_isp_kronecker_sigma, copies);
-    deepCopyField(m_kronecker_sigma,     copies);
 }
 
 
@@ -233,17 +177,13 @@ void IIDNoiseKernel::computeGramMatrixDerivative(Mat& KD, const string& kernel_p
                                                  real epsilon) const
 {
     static const string INS("isp_noise_sigma");
-    static const string IKS("isp_kronecker_sigma[");
+    static const string IKS("isp_kronecker_sigma");
 
     if (kernel_param == INS) {
         if (!data)
             PLERROR("Kernel::computeGramMatrixDerivative should be called only after "
                     "setDataForKernelMatrix");
 
-        // For efficiency reasons, we only accumulate a derivative on the
-        // diagonal of the kernel matrix, even if two training examples happen
-        // to be EXACTLY identical.  (May change in the future if this turns
-        // out to be a problem).
         int W = nExamples();
         KD.resize(W,W);
         KD.fill(0.0);
@@ -251,73 +191,37 @@ void IIDNoiseKernel::computeGramMatrixDerivative(Mat& KD, const string& kernel_p
         for (int i=0 ; i<W ; ++i)
             KD(i,i) = deriv;
     }
-    else if (string_begins_with(kernel_param, IKS) &&
-             kernel_param[kernel_param.size()-1] == ']')
-    {
-        int arg = tolong(kernel_param.substr(
-                             IKS.size(), kernel_param.size() - IKS.size() - 1));
-        PLASSERT( arg < m_kronecker_indexes.size() );
-
-        computeGramMatrixDerivKronecker(KD, arg);
+    else if (kernel_param == IKS) {
+        computeGramMatrixDerivKronecker(KD);
     }
     else
         inherited::computeGramMatrixDerivative(KD, kernel_param, epsilon);
 }
 
 
-//#####  derivKronecker  ######################################################
-
-real IIDNoiseKernel::derivKronecker(int i, int j, int arg, real K) const
-{
-    int index  = m_kronecker_indexes[arg];
-    Vec& row_i = *dataRow(i);
-    Vec& row_j = *dataRow(j);
-    if (fast_is_equal(row_i[index], row_j[index]))
-        return sigmoid(m_isp_kronecker_sigma[arg]);
-    else
-        return 0.0;
-}
-
-
 //#####  computeGramMatrixDerivKronecker  #####################################
 
-void IIDNoiseKernel::computeGramMatrixDerivKronecker(Mat& KD, int arg) const
+void IIDNoiseKernel::computeGramMatrixDerivKronecker(Mat& KD) const
 {
-    // Precompute some terms
-    real kronecker_sigma_arg = sigmoid(m_isp_kronecker_sigma[arg]);
-    int index = m_kronecker_indexes[arg];
-    
-    // Compute Gram Matrix derivative w.r.t. isp_kronecker_sigma[arg]
-    int  l = data->length();
+    // From the cached version of the Gram matrix, this function is easily
+    // implemented: we first copy the Gram to the KD matrix, subtract the IID
+    // noise contribution from the main diagonal, and multiply the remaining
+    // matrix (made up of 0/1 elements) by the derivative of the kronecker
+    // sigma hyperparameter.
 
-    // Variables that walk over the data matrix
-    int  cache_mod = m_data_cache.mod();
-    real *data_start = &m_data_cache(0,0);
-    real *xi = data_start+index;             // Iterator on data rows
-
-    // Variables that walk over the kernel derivative matrix (KD)
+    int l = data->length();
     KD.resize(l,l);
-    real* KDi = KD.data();                   // Start of row i
-    real* KDij;                              // Current element on row i
-    int   KD_mod = KD.mod();
+    PLASSERT_MSG(gram_matrix.width() == l && gram_matrix.length() == l,
+                 "To compute the derivative with respect to 'isp_kronecker_sigma',\n"
+                 "the Gram matrix must be precomputed and cached in IIDNoiseKernel.");
+    
+    KD << gram_matrix;
+    real noise_sigma = softplus(m_isp_noise_sigma);
+    for (int i=0 ; i<l ; ++i)
+        KD(i,i) -= noise_sigma;
 
-    // Iterate on rows of derivative matrix
-    for (int i=0 ; i<l ; ++i, xi += cache_mod, KDi += KD_mod)
-    {
-        KDij = KDi;
-        real xi_cur = *xi;
-        real *xj  = data_start+index;        // Inner iterator on data rows
-
-        // Iterate on columns of derivative matrix
-        for (int j=0 ; j <= i ; ++j, xj += cache_mod)
-        {
-            // Set into derivative matrix
-            *KDij++ = fast_is_equal(xi_cur, *xj)? kronecker_sigma_arg : 0.0;
-        }
-    }
+    KD *= sigmoid(m_isp_kronecker_sigma) / softplus(m_isp_kronecker_sigma);
 }
-
-
 
 } // end of namespace PLearn
 
