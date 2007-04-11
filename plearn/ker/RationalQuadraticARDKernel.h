@@ -144,6 +144,9 @@ protected:
     //! Derivative function with respect to isp_alpha
     real derivIspAlpha(int i, int j, int arg, real K) const;
 
+    // Compute derivative w.r.t. isp_signal_sigma for WHOLE MATRIX
+    void computeGramMatrixDerivIspSignalSigma(Mat& KD) const;
+    
     // Compute derivative w.r.t. isp_input_sigma[arg] for WHOLE MATRIX
     void computeGramMatrixDerivIspInputSigma(Mat& KD, int arg) const;
     

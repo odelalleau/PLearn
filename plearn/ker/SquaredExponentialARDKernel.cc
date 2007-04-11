@@ -167,10 +167,8 @@ void SquaredExponentialARDKernel::computeGramMatrix(Mat K) const
     PLASSERT( !m_isp_input_sigma.size() || dataInputsize() == m_isp_input_sigma.size() );
     PLASSERT( K.size() == 0 || m_data_cache.size() > 0 );  // Ensure data cached OK
 
-    // Compute Kronecker gram matrix and save it
+    // Compute Kronecker gram matrix
     inherited::computeGramMatrix(K);
-    m_kron_gram_cache.resize(K.length(), K.width());
-    m_kron_gram_cache << K;
 
     // Precompute some terms
     real sf    = softplus(m_isp_signal_sigma);
@@ -248,9 +246,11 @@ void SquaredExponentialARDKernel::computeGramMatrixDerivative(
     static const string IIS("isp_input_sigma[");
 
     if (kernel_param == ISS) {
-        computeGramMatrixDerivNV<
-            SquaredExponentialARDKernel,
-            &SquaredExponentialARDKernel::derivIspSignalSigma>(KD, this, -1);
+        computeGramMatrixDerivIspSignalSigma(KD);
+        
+        // computeGramMatrixDerivNV<
+        //     SquaredExponentialARDKernel,
+        //     &SquaredExponentialARDKernel::derivIspSignalSigma>(KD, this, -1);
     }
     else if (kernel_param == IGS) {
         computeGramMatrixDerivNV<
@@ -276,6 +276,7 @@ void SquaredExponentialARDKernel::computeGramMatrixDerivative(
 
 real SquaredExponentialARDKernel::derivIspSignalSigma(int i, int j, int arg, real K) const
 {
+    // (No longer used; see computeGramMatrixDerivIspInputSigma below)
     return K*sigmoid(m_isp_signal_sigma)/softplus(m_isp_signal_sigma);
 }
 
@@ -287,14 +288,29 @@ real SquaredExponentialARDKernel::derivIspGlobalSigma(int i, int j, int arg, rea
     if (fast_is_equal(K,0.))
         return 0.;
 
-    // The norm term inside the exponential may be accessed as Log(K/(sf*kron))
-    real kron  = m_kron_gram_cache(i,j);
-    real inner = pl_log(K / (kron * softplus(m_isp_signal_sigma)));
-    return K * inner * sigmoid(m_isp_global_sigma) / softplus(m_isp_global_sigma);
+    // The norm term inside the exponential may be accessed as Log(K/sf)
+    real inner = pl_log(K / softplus(m_isp_signal_sigma));
+    return - K * inner * sigmoid(m_isp_global_sigma) / softplus(m_isp_global_sigma);
 
     // Note: in the above expression for 'inner' there is the implicit
     // assumption that the input_sigma[i] are zero, which allows the
     // sigmoid/softplus term to be factored out of the norm summation.
+}
+
+
+//#####  computeGramMatrixDerivIspSignalSigma  ################################
+
+void SquaredExponentialARDKernel::computeGramMatrixDerivIspSignalSigma(Mat& KD) const
+{
+    int l = data->length();
+    KD.resize(l,l);
+    PLASSERT_MSG(
+        gram_matrix.width() == l && gram_matrix.length() == l,
+        "To compute the derivative with respect to 'isp_signal_sigma', the\n"
+        "Gram matrix must be precomputed and cached in SquaredExponentialARDKernel.");
+    
+    KD << gram_matrix;
+    KD *= sigmoid(m_isp_signal_sigma)/softplus(m_isp_signal_sigma);
 }
 
 
@@ -310,6 +326,10 @@ void SquaredExponentialARDKernel::computeGramMatrixDerivIspInputSigma(Mat& KD,
     
     // Compute Gram Matrix derivative w.r.t. isp_input_sigma[arg]
     int  l = data->length();
+    PLASSERT_MSG(
+        gram_matrix.width() == l && gram_matrix.length() == l,
+        "To compute the derivative with respect to 'isp_input_sigma[i]', the\n"
+        "Gram matrix must be precomputed and cached in SquaredExponentialARDKernel.");
 
     // Variables that walk over the data matrix
     int  cache_mod = m_data_cache.mod();
@@ -356,7 +376,6 @@ void SquaredExponentialARDKernel::computeGramMatrixDerivIspInputSigma(Mat& KD,
 void SquaredExponentialARDKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-    deepCopyField(m_kron_gram_cache, copies);
 }
 
 } // end of namespace PLearn

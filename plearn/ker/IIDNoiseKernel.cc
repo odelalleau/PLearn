@@ -77,7 +77,7 @@ PLEARN_IMPLEMENT_OBJECT(
 
 IIDNoiseKernel::IIDNoiseKernel()
     : m_isp_noise_sigma(-100.0), /* very close to zero... */
-      m_isp_kronecker_sigma(100.0)
+      m_isp_kronecker_sigma(-100.0)
 { }
 
 

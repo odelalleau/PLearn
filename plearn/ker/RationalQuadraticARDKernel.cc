@@ -276,9 +276,11 @@ void RationalQuadraticARDKernel::computeGramMatrixDerivative(
     static const string IAL("isp_alpha");
 
     if (kernel_param == ISS) {
-        computeGramMatrixDerivNV<
-            RationalQuadraticARDKernel,
-            &RationalQuadraticARDKernel::derivIspSignalSigma>(KD, this, -1);
+        computeGramMatrixDerivIspSignalSigma(KD);
+
+        // computeGramMatrixDerivNV<
+        //     RationalQuadraticARDKernel,
+        //     &RationalQuadraticARDKernel::derivIspSignalSigma>(KD, this, -1);
     }
     else if (kernel_param == IGS) {
         computeGramMatrixDerivNV<
@@ -387,6 +389,22 @@ real RationalQuadraticARDKernel::derivIspAlpha(int i, int j, int arg, real K) co
 }
 
 
+//#####  computeGramMatrixDerivIspSignalSigma  ################################
+
+void RationalQuadraticARDKernel::computeGramMatrixDerivIspSignalSigma(Mat& KD) const
+{
+    int l = data->length();
+    KD.resize(l,l);
+    PLASSERT_MSG(
+        gram_matrix.width() == l && gram_matrix.length() == l,
+        "To compute the derivative with respect to 'isp_signal_sigma', the\n"
+        "Gram matrix must be precomputed and cached in SquaredExponentialARDKernel.");
+    
+    KD << gram_matrix;
+    KD *= sigmoid(m_isp_signal_sigma)/softplus(m_isp_signal_sigma);
+}
+
+
 //#####  computeGramMatrixDerivIspInputSigma  #################################
 
 void RationalQuadraticARDKernel::computeGramMatrixDerivIspInputSigma(Mat& KD,
@@ -449,9 +467,13 @@ void RationalQuadraticARDKernel::computeGramMatrixDerivIspAlpha(Mat& KD) const
     
     // Compute Gram Matrix derivative w.r.t. isp_alpha
     int  l     = data->length();
-    int  k_mod = gram_matrix.mod();
+    PLASSERT_MSG(
+        gram_matrix.width() == l && gram_matrix.length() == l,
+        "To compute the derivative with respect to 'isp_alpha', the\n"
+        "Gram matrix must be precomputed and cached in RationalQuadraticARDKernel.");
 
     // Variables that walk over the pre-computed kernel matrix (K) 
+    int  k_mod = gram_matrix.mod();
     real *Ki = &gram_matrix(0,0);            // Current row of kernel matrix
     real *Kij;                               // Current element of kernel matrix
 

@@ -139,13 +139,12 @@ protected:
     //! Derivative function with respect to isp_global_sigma
     real derivIspGlobalSigma(int i, int j, int arg, real K) const;
     
+    // Compute derivative w.r.t. isp_signal_sigma for WHOLE MATRIX
+    void computeGramMatrixDerivIspSignalSigma(Mat& KD) const;
+    
     // Compute derivative w.r.t. isp_input_sigma[arg] for WHOLE MATRIX
     void computeGramMatrixDerivIspInputSigma(Mat& KD, int arg) const;
     
-protected:
-    //! Cached version of Kronecker gram matrix
-    mutable Mat m_kron_gram_cache;
-
 private:
     //! This does the actual building.
     void build_();
