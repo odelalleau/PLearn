@@ -175,11 +175,12 @@ def outputres(f,mode,speclist,results):
       ValueError("Invalid plot <spec>: there should be one <name> per <col> to plot")
     ncol+=1 # add 1 for <x>, now this is the number of columns per experiment
     j = 0
+    nexp = len(distinct_expnames)
     for expname in distinct_expnames:
       for i in range(0,ncol-1):
         name = speclist[6+i*2+1]
         f.write('@ using '+str(1+j*ncol)+':'+str(2+j*ncol+i)+' with lines t "'+name+'~'+expname+'"')
-        if (i+2)<ncol:
+        if j<nexp-1:
           f.write(",")
       j=j+1
     f.write("\n")
