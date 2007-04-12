@@ -177,6 +177,24 @@ real SummationKernel::evaluate(const Vec& x1, const Vec& x2) const
 }
 
 
+//#####  evaluate_i_x  ########################################################
+
+real SummationKernel::evaluate_i_x(int j, const Vec& x, real) const
+{
+    real kernel_value = 0.0;
+    bool split_inputs = m_input_indexes.size() > 0;
+    for (int i=0, n=m_terms.size() ; i<n ; ++i) {
+        if (split_inputs && m_input_indexes[i].size() > 0) {
+            selectElements(x, m_input_indexes[i], m_input_buf1[i]);
+            kernel_value += m_terms[i]->evaluate_i_x(j, m_input_buf1[i]);
+        }
+        else
+            kernel_value += m_terms[i]->evaluate_i_x(j, x);
+    }
+    return kernel_value;
+}
+
+
 //#####  computeGramMatrix  ###################################################
 
 void SummationKernel::computeGramMatrix(Mat K) const

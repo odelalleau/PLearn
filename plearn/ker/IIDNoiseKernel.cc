@@ -122,7 +122,22 @@ void IIDNoiseKernel::build_()
 
 real IIDNoiseKernel::evaluate(const Vec& x1, const Vec& x2) const
 {
-    return softplus(m_isp_kronecker_sigma) * inherited::evaluate(x1,x2);
+    // Assume that if x1 and x2 are identical, they are actually the same
+    // instance of a data point.  This should not be called to compare a train
+    // point against a test point (use evaluate_i_x for this purpose).
+    return (x1 == x2? softplus(m_isp_noise_sigma) : 0.0) +
+        softplus(m_isp_kronecker_sigma) * inherited::evaluate(x1,x2);
+}
+
+
+//#####  evaluate_i_x  ########################################################
+
+real IIDNoiseKernel::evaluate_i_x(int i, const Vec& x, real) const
+{
+    // Noise component is ZERO between a test and any train example
+    Vec* train_row = dataRow(i);
+    PLASSERT( train_row );
+    return softplus(m_isp_kronecker_sigma) * inherited::evaluate(*train_row, x);
 }
 
 

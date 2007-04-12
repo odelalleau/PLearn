@@ -98,9 +98,12 @@ public:
 
     //#####  Kernel Member Functions  #########################################
 
-    //! Compute K(x1,x2).
+    //! Compute K(x1,x2).  This DOES include noise if x1 == x2.
     virtual real evaluate(const Vec& x1, const Vec& x2) const;
 
+    //! Always zero by independence
+    virtual real evaluate_i_x(int i, const Vec& x, real) const;
+    
     //! Compute the Gram Matrix.  Note that this version DOES NOT CACHE
     //! the results, since it is usually called by derived classes.
     virtual void computeGramMatrix(Mat K) const;

@@ -93,6 +93,9 @@ public:
     //! Compute K(x1,x2).
     virtual real evaluate(const Vec& x1, const Vec& x2) const;
 
+    //! Evaluate a test example x against a train example given by its index
+    virtual real evaluate_i_x(int i, const Vec& x, real) const;
+    
     //! Compute the Gram Matrix by calling subkernels computeGramMatrix
     virtual void computeGramMatrix(Mat K) const;
     
