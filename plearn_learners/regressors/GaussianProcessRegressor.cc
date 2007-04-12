@@ -2,7 +2,7 @@
 
 // GaussianProcessRegressor.cc
 //
-// Copyright (C) 2006 Nicolas Chapados 
+// Copyright (C) 2006-2007 Nicolas Chapados 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -232,7 +232,7 @@ void GaussianProcessRegressor::build_()
                 m_kernel->classname().c_str());
     
     // If we are reloading the model, set the training inputs into the kernel
-    if (m_training_inputs)
+    if (m_training_inputs.size() > 0)
         m_kernel->setDataForKernelMatrix(m_training_inputs);
 
     // If we specified hyperparameters without an optimizer, complain.
@@ -380,7 +380,7 @@ void GaussianProcessRegressor::train()
 
 void GaussianProcessRegressor::computeOutput(const Vec& input, Vec& output) const
 {
-    PLASSERT( m_kernel && m_alpha.isNotNull() && m_training_inputs );
+    PLASSERT( m_kernel && m_alpha.isNotNull() && m_training_inputs.size() > 0 );
     PLASSERT( m_alpha.width()  == output.size() );
     PLASSERT( m_alpha.length() == m_training_inputs.length() );
     PLASSERT( input.size()     == m_training_inputs.width()  );
@@ -393,7 +393,7 @@ void GaussianProcessRegressor::computeOutput(const Vec& input, Vec& output) cons
 void GaussianProcessRegressor::computeOutputAux(
     const Vec& input, Vec& output, Vec& kernel_evaluations) const
 {
-    m_kernel->evaluate_all_x_i(input, kernel_evaluations);
+    m_kernel->evaluate_all_i_x(input, kernel_evaluations);
 
     // Finally compute k(x,x_i) * (M + \lambda I)^-1 y
     product(Mat(1, output.size(), output),
@@ -479,7 +479,7 @@ bool GaussianProcessRegressor::computeConfidenceFromOutput(
 void GaussianProcessRegressor::computeOutputCovMat(
     const Mat& inputs, Mat& outputs, TVec<Mat>& covariance_matrices) const
 {
-    PLASSERT( m_kernel && m_alpha.isNotNull() && m_training_inputs );
+    PLASSERT( m_kernel && m_alpha.isNotNull() && m_training_inputs.size() > 0 );
     PLASSERT( m_alpha.width()  == outputsize() );
     PLASSERT( m_alpha.length() == m_training_inputs.length() );
     PLASSERT( inputs.width()   == m_training_inputs.width()  );

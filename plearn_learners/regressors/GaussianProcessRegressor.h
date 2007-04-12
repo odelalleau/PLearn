@@ -285,7 +285,7 @@ protected:
     
     /// Saved version of the training set inputs, which must be kept along for
     /// carrying out kernel evaluations with the test point
-    VMat m_training_inputs;
+    Mat m_training_inputs;
 
     /// Buffer for kernel evaluations at test time
     mutable Vec m_kernel_evaluations;
