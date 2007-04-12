@@ -125,13 +125,18 @@ def latexTable(table, headers=[],
         lwriter(r"\end{landscape}")
 
 def latexTableLine(line, writer=DEFAULT_WRITER):
+    endl = r"\\"
     handling_multicol = [] # For \multicolumn...
     for elem in line: 
         if elem is None:
-            assert handling_multicol and handling_multicol[-1].find("multicol") != -1
+            assert handling_multicol \
+                and ( handling_multicol[-1].find("multicol") != -1
+                      or handling_multicol[-1].find("hline") != -1 )
+        elif elem == "NOENDL":
+            endl = ""
         else:
-            handling_multicol.append(elem)
-    writer('&'.join(handling_multicol) + r"\\" + "\n")
+            handling_multicol.append(elem)            
+    writer('&'.join(handling_multicol) + endl + "\n")
 
 def vpaddingLine(vpadding, length):
     vpad = r"\raisebox{%.3fcm}{\rule{0pt}{%.3fcm}}"%(-0.5*vpadding, vpadding)
@@ -265,6 +270,5 @@ def createPDF(file_name, content):
     os.system("rm -f %s"%pdf_name)
     os.system("pdflatex -interaction=nonstopmode %s >& /dev/null"%file_name)
     assert os.path.exists(pdf_name), "PDF could not be created!"
-    os.system("pdflatex %s >& /dev/null"%file_name)
     os.system("pdflatex %s >& /dev/null"%file_name)
     os.system("pdflatex %s >& /dev/null"%file_name)

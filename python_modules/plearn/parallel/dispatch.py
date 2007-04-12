@@ -1,4 +1,4 @@
-import inspect, logging, operator, os, select, signal, sys, time
+import fcntl, inspect, logging, operator, os, select, signal, sys, time
 
 from popen2 import Popen4
 from datetime import datetime, timedelta

@@ -193,6 +193,8 @@ def fast_softmax( x ):
 
 def hasNaN(f):
     f = ravel(f)
+    if len(f)==0:
+        return False
     f = choose(isNaN(f), (0, 1))
     return sum(f)
     
