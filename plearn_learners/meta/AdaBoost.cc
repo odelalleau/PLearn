@@ -153,7 +153,7 @@ void AdaBoost::declareOptions(OptionList& ol)
     declareOption(ol, "weight_by_resampling", &AdaBoost::weight_by_resampling,
                   OptionBase::buildoption,
                   "Whether to train the weak learner using resampling"
-                  "to represent the weighting\n"
+                  " to represent the weighting\n"
                   "given to examples. If false then give these weights "
                   "explicitly in the training set\n"
                   "of the weak learner (note that some learners can accomodate "
@@ -163,7 +163,7 @@ void AdaBoost::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "To interpret the output of the learner as a class, it is "
                   "compared to this\n"
-                  "threshold: class 1 if greather than output_threshold, class "
+                  "threshold: class 1 if greater than output_threshold, class "
                   "0 otherwise.\n");
 
     declareOption(ol, "provide_learner_expdir", &AdaBoost::provide_learner_expdir,
