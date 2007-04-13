@@ -163,6 +163,7 @@
 #include <plearn_learners/hyper/HyperLearner.h>
 
 // Meta
+#include <plearn_learners/meta/AdaBoost.h>
 #include <plearn_learners/meta/BaggingLearner.h>
 
 // Regressors
