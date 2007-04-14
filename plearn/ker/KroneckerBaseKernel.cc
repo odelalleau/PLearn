@@ -177,6 +177,19 @@ void KroneckerBaseKernel::computeGramMatrix(Mat K) const
 }
 
 
+//#####  softplusFloor  #######################################################
+
+real KroneckerBaseKernel::softplusFloor(real& value, real floor)
+{
+    real sp = softplus(value);
+    if (sp < floor) {
+        value = pl_log(exp(floor)-1);           // inverse soft-plus
+        return floor;
+    }
+    return sp;
+}
+
+
 //#####  makeDeepCopyFromShallowCopy  #########################################
 
 void KroneckerBaseKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)

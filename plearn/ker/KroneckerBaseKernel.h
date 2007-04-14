@@ -121,6 +121,15 @@ protected:
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
 
+    /**
+     *  Utility function for derived classes: return the softplus of its
+     *  argument, but if the softplus would fall below the given floor, then
+     *  return the floor AND MODIFY the original argument to represent the
+     *  inverse softplus of the floor.  This allows preventing some variables
+     *  from getting too small during optimization.
+     */
+    static real softplusFloor(real& value, real floor=1e-6);
+
 private:
     //! This does the actual building.
     void build_();

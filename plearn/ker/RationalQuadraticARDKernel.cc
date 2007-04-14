@@ -187,16 +187,21 @@ void RationalQuadraticARDKernel::computeGramMatrix(Mat K) const
     // Compute Kronecker gram matrix.  No need to cache it.
     inherited::computeGramMatrix(K);
 
-    // Precompute some terms
+    // Precompute some terms. Make sure that the alpha and input sigmas don't
+    // get too small
     real sf    = softplus(m_isp_signal_sigma);
-    real alpha = softplus(m_isp_alpha);
+    real alpha = softplusFloor(m_isp_alpha, 1e-6);
     m_input_sigma.resize(dataInputsize());
-    m_input_sigma.fill(m_isp_global_sigma);
-    if (m_isp_input_sigma.size() > 0)
-        m_input_sigma += m_isp_input_sigma;
-    for (int i=0, n=m_input_sigma.size() ; i<n ; ++i)
+    softplusFloor(m_isp_global_sigma, 1e-6);
+    m_input_sigma.fill(m_isp_global_sigma);  // Still in ISP domain
+    for (int i=0, n=m_input_sigma.size() ; i<n ; ++i) {
+        if (m_isp_input_sigma.size() > 0) {
+            softplusFloor(m_isp_input_sigma[i], 1e-6);
+            m_input_sigma[i] += m_isp_input_sigma[i];
+        }
         m_input_sigma[i] = softplus(m_input_sigma[i]);
-
+    }
+    
     // Prepare the cache for the pow terms
     m_pow_minus_alpha_minus_1.resize(K.length(), K.width());
     int   pow_cache_mod = m_pow_minus_alpha_minus_1.mod();

@@ -93,7 +93,7 @@ public:
 
     //! Inverse softplus of the alpha parameter in the rational-quadratic kernel.
     //! Default value=0.0
-    real m_isp_alpha;
+    mutable real m_isp_alpha;
 
 public:
     //#####  Public Member Functions  #########################################

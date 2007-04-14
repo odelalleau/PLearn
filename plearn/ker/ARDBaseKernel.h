@@ -77,13 +77,13 @@ public:
      *  fixed value (and not be varied during the optimization).  Default
      *  value=0.0.
      */
-    real m_isp_global_sigma;
+    mutable real m_isp_global_sigma;
 
     /**
      *  If specified, contain input-specific length-scales that can be
      *  individually optimized for (these are the ARD hyperparameters).
      */
-    Vec m_isp_input_sigma;
+    mutable Vec m_isp_input_sigma;
 
 public:
     //#####  Public Member Functions  #########################################

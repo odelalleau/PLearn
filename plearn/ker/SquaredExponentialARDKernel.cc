@@ -170,14 +170,19 @@ void SquaredExponentialARDKernel::computeGramMatrix(Mat K) const
     // Compute Kronecker gram matrix
     inherited::computeGramMatrix(K);
 
-    // Precompute some terms
+    // Precompute some terms. Make sure that the input sigmas don't get too
+    // small
     real sf    = softplus(m_isp_signal_sigma);
     m_input_sigma.resize(dataInputsize());
-    m_input_sigma.fill(m_isp_global_sigma);
-    if (m_isp_input_sigma.size() > 0)
-        m_input_sigma += m_isp_input_sigma;
-    for (int i=0, n=m_input_sigma.size() ; i<n ; ++i)
+    softplusFloor(m_isp_global_sigma, 1e-6);
+    m_input_sigma.fill(m_isp_global_sigma);  // Still in ISP domain
+    for (int i=0, n=m_input_sigma.size() ; i<n ; ++i) {
+        if (m_isp_input_sigma.size() > 0) {
+            softplusFloor(m_isp_input_sigma[i], 1e-6);
+            m_input_sigma[i] += m_isp_input_sigma[i];
+        }
         m_input_sigma[i] = softplus(m_input_sigma[i]);
+    }
 
     // Compute Gram Matrix
     int  l = data->length();
