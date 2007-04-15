@@ -1,0 +1,32 @@
+#!/bin/bash
+#Script that compile a target multiple time with different compilation option
+#To differenciate the different target we create hardlink to the original file
+#Exemple: multipymake plearn -float -double
+#         This will create the hard link: plearn-float.cc and plearn-double.cc
+#         This will execute pymake -float -link plearn-float.cc and
+#                           pymake -double -link plearn-double.cc
+#Exemple2: multipymake plearn "-float -opt" "-double -opt"
+#         This will create the hard link: plearn-float.cc and plearn-double.cc
+#         This will execute pymake -float -opt -link plearn-float.cc and
+#                           pymake -double -opt -link plearn-double.cc
+
+if [ $# -ge 3 ]; then
+    BASEPROG=$1
+    shift
+    EXT=$@
+else
+    echo "Usage: $0 <base_prog> <List of parameter> ..."
+ fi
+ALL=" -link "
+
+for i in "${EXT[@]}";
+  do
+  ln ${BASEPROG}.cc ${BASEPROG}${i}.cc
+done
+
+for i in "${EXT[@]}";
+  do
+  echo -n "Compiling ${BASEPROG}${i}.cc..."
+  pymake $i $ALL ${BASEPROG}${i}.cc &>/dev/null|| ( echo "Build failed for $i"; exit)
+  echo "Ended with status: $?"
+done
