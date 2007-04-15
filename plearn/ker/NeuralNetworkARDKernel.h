@@ -1,8 +1,8 @@
 // -*- C++ -*-
 
-// RationalQuadraticARDKernel.h
+// NeuralNetworkARDKernel.h
 //
-// Copyright (C) 2006-2007 Nicolas Chapados
+// Copyright (C) 2007 Nicolas Chapados
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -34,67 +34,63 @@
 
 // Authors: Nicolas Chapados
 
-/*! \file RationalQuadraticARDKernel.h */
+/*! \file NeuralNetworkARDKernel.h */
 
 
-#ifndef RationalQuadraticARDKernel_INC
-#define RationalQuadraticARDKernel_INC
+#ifndef NeuralNetworkARDKernel_INC
+#define NeuralNetworkARDKernel_INC
 
 #include <plearn/ker/ARDBaseKernel.h>
 
 namespace PLearn {
 
 /**
- *  Rational-Quadratic kernel that can be used for Automatic Relevance
+ *  Neural network kernel that can be used for Automatic Relevance
  *  Determination
  *
- *  This kernel can be interpreted as an infinite mixture of
- *  SquaredExponentialARDKernel (with different characteristic length-scales),
- *  allowing a greater variety of "interesting" functions to be generated.
- *  Similar to C.E. Rasmussen's GPML code (see http://www.gaussianprocess.org),
- *  this kernel is specified as:
+ *  This kernel is designed to be used within a GaussianProcessRegressor.  It
+ *  is similar to the "arcsin" kernel of C.E. Rasmussen's GPML code (see
+ *  http://www.gaussianprocess.org), but can be used with full Automatic
+ *  Relevance Determination (ARD).  It takes the form:
  *
- *    k(x,y) = sf * [1 + (sum_i (x_i - y_i)^2 / w_i)/(2*alpha)]^(-alpha) * k_kron(x,y)
+ *    k(x,y) = sf * asin(2*x*P*y / sqrt((1+2*x*P*x)*(1+2*y*P*y))) * k_kron(x,y)
  *
- *  where sf is softplus(isp_signal_sigma), w_i is softplus(isp_global_sigma +
- *  isp_input_sigma[i]), and k_kron(x,y) is the result of the
- *  KroneckerBaseKernel evaluation, or 1.0 if there are no Kronecker terms.
- *  Note that since the Kronecker terms are incorporated multiplicatively, the
- *  very presence of the term associated to this kernel can be gated by the
- *  value of some input variable(s) (that are incorporated within one or more
- *  Kronecker terms).
+ *  where sf is softplus(isp_signal_sigma), P is softplus(isp_global_sigma +
+ *  isp_input_sigma[i])^-2 times the unit matrix, where the x and y vectors on
+ *  the right-hand-side have an extra bias (1.0) added in front.  (Note that if
+ *  ARD is desired, the number of elements provided for isp_input_sigma must be
+ *  ONE MORE than the number of inputs, and the first element of the
+ *  isp_input_sigma vector corresponds to this bias).  Also note that in
+ *  keeping with Rasmussen and Williams, we raise these elements to the -2
+ *  power, so these hyperparameters can be interpreted as true length-scales.
+ *  The last factor k_kron(x,y) is the result of the KroneckerBaseKernel
+ *  evaluation, or 1.0 if there are no Kronecker terms.  Note that since the
+ *  Kronecker terms are incorporated multiplicatively, the very presence of the
+ *  term associated to this kernel can be gated by the value of some input
+ *  variable(s) (that are incorporated within one or more Kronecker terms).
  *
- *  Note that contrarily to previous versions that incorporated IID noise and
- *  Kronecker terms ADDITIVELY, this version does not add any noise at all (and
- *  as explained above incorporates the Kronecker terms multiplicatively).  For
- *  best results, especially with moderately noisy data, IT IS IMPERATIVE to
- *  use whis kernel within a SummationKernel in conjunction with an
- *  IIDNoiseKernel, as follows (e.g. within a GaussianProcessRegressor):
+ *  See SquaredExponentialARDKernel for more information about using this
+ *  kernel within a SummationKernel in order to add IID noise to the examples.
  *
- *      kernel = SummationKernel(terms = [ RationalQuadraticARDKernel(),
- *                                         IIDNoiseKernel() ] )
- *
- *  In order to make its operations more robust when used with unconstrained
+ *  Note that to make its operations more robust when used with unconstrained
  *  optimization of hyperparameters, all hyperparameters of this kernel are
  *  specified in the inverse softplus domain.  See IIDNoiseKernel for more
  *  explanations.
  */
-class RationalQuadraticARDKernel : public ARDBaseKernel
+class NeuralNetworkARDKernel : public ARDBaseKernel
 {
     typedef ARDBaseKernel inherited;
 
 public:
     //#####  Public Build Options  ############################################
 
-    //! Inverse softplus of the alpha parameter in the rational-quadratic kernel.
-    //! Default value=0.0
-    mutable real m_isp_alpha;
-
+    // (No new options other than those inherited)
+    
 public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
-    RationalQuadraticARDKernel();
+    NeuralNetworkARDKernel();
 
 
     //#####  Kernel Member Functions  #########################################
@@ -102,12 +98,11 @@ public:
     //! Compute K(x1,x2).
     virtual real evaluate(const Vec& x1, const Vec& x2) const;
 
-    //! Compute entire Gram matrix
+    //! Compute the Gram Matrix.
     virtual void computeGramMatrix(Mat K) const;
-
-    //! Compute the derivative of the Gram matrix with respect to one of the
-    //! kernel's parameters.  Analytic derivatives are implemented for this
-    //! kernel.
+    
+    //! Directly compute the derivative with respect to hyperparameters;
+    //! for now, this mostly maps to finite differences
     virtual void computeGramMatrixDerivative(Mat& KD, const string& kernel_param,
                                              real epsilon=1e-6) const;
     
@@ -115,7 +110,7 @@ public:
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
-    PLEARN_DECLARE_OBJECT(RationalQuadraticARDKernel);
+    PLEARN_DECLARE_OBJECT(NeuralNetworkARDKernel);
 
     // Simply calls inherited::build() then build_()
     virtual void build();
@@ -127,44 +122,22 @@ protected:
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
 
-    //! Derivative function with respect to isp_signal_sigma
-    real derivIspSignalSigma(int i, int j, int arg, real K) const;
-
     //! Derivative function with respect to isp_global_sigma
     real derivIspGlobalSigma(int i, int j, int arg, real K) const;
     
-    //! Derivative function with respect to isp_input_sigma[arg]
-    real derivIspInputSigma(int i, int j, int arg, real K) const;
-    
-    //! Derivative function with respect to isp_alpha
-    real derivIspAlpha(int i, int j, int arg, real K) const;
-
     // Compute derivative w.r.t. isp_signal_sigma for WHOLE MATRIX
     void computeGramMatrixDerivIspSignalSigma(Mat& KD) const;
     
     // Compute derivative w.r.t. isp_input_sigma[arg] for WHOLE MATRIX
     void computeGramMatrixDerivIspInputSigma(Mat& KD, int arg) const;
     
-    // Compute derivative w.r.t. isp_alpha for WHOLE MATRIX
-    void computeGramMatrixDerivIspAlpha(Mat& KD) const;
-    
-protected:
-    /**
-     *  Cached version of the K / k terms, namely:
-     *
-     *      pow(1 + sum_wt / (2*alpha), -alpha-1) * sf * kron
-     *
-     *  This is useful for computing derivatives,
-     */
-    mutable Mat m_pow_minus_alpha_minus_1;
-
 private:
     //! This does the actual building.
     void build_();
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(RationalQuadraticARDKernel);
+DECLARE_OBJECT_PTR(NeuralNetworkARDKernel);
 
 } // end of namespace PLearn
 

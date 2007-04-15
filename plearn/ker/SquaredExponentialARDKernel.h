@@ -68,11 +68,6 @@ namespace PLearn {
  *  value of some input variable(s) (that are incorporated within one or more
  *  Kronecker terms).
  *
- *  The current version of this class DOES NOT ALLOW differentiating the Kernel
- *  matrix with respect to the Kronecker hyperparameters.  These parameters are
- *  redundant due to the presence of the global sf above; they should be set to
- *  1.0 and left untouched by hyperoptimization.
- *
  *  Note that contrarily to previous versions that incorporated IID noise and
  *  Kronecker terms ADDITIVELY, this version does not add any noise at all (and
  *  as explained above incorporates the Kronecker terms multiplicatively).  For

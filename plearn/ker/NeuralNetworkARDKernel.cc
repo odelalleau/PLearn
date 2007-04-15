@@ -1,8 +1,8 @@
 // -*- C++ -*-
 
-// SquaredExponentialARDKernel.cc
+// NeuralNetworkARDKernel.cc
 //
-// Copyright (C) 2006-2007 Nicolas Chapados
+// Copyright (C) 2007 Nicolas Chapados
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -34,46 +34,40 @@
 
 // Authors: Nicolas Chapados
 
-/*! \file SquaredExponentialARDKernel.cc */
+/*! \file NeuralNetworkARDKernel.cc */
 
 
-#include "SquaredExponentialARDKernel.h"
+#include "NeuralNetworkARDKernel.h"
 
 namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
-    SquaredExponentialARDKernel,
-    "Squared-Exponential kernel that can be used for Automatic Relevance Determination",
-    "This is a variant of the GaussianKernel (a.k.a. Radial Basis Function)\n"
-    "that provides a different length-scale parameter for each input variable.\n"
-    "When used in conjunction with GaussianProcessRegressor, this kernel may be\n"
-    "used for Automatic Relevance Determination (ARD), a procedure wherein the\n"
-    "significance of each input variable for the prediction task is found\n"
-    "automatically through numerical optimization.\n"
+    NeuralNetworkARDKernel,
+    "Neural network kernel that can be used for Automatic Relevance Determination",
+    "This kernel is designed to be used within a GaussianProcessRegressor.  It\n"
+    "is similar to the \"arcsin\" kernel of C.E. Rasmussen's GPML code (see\n"
+    "http://www.gaussianprocess.org), but can be used with full Automatic\n"
+    "Relevance Determination (ARD).  It takes the form:\n"
     "\n"
-    "Similar to C.E. Rasmussen's GPML code (see http://www.gaussianprocess.org),\n"
-    "this kernel function is specified as:\n"
+    "  k(x,y) = sf * asin(2*x*P*y / sqrt((1+2*x*P*x)*(1+2*y*P*y))) * k_kron(x,y)\n"
     "\n"
-    "  k(x,y) = sf * exp(- 0.5 * (sum_i (x_i - y_i)^2 / w_i)) * k_kron(x,y)\n"
+    "where sf is softplus(isp_signal_sigma), P is softplus(isp_global_sigma +\n"
+    "isp_input_sigma[i])^-2 times the unit matrix, where the x and y vectors on\n"
+    "the right-hand-side have an extra bias (1.0) added in front.  (Note that if\n"
+    "ARD is desired, the number of elements provided for isp_input_sigma must be\n"
+    "ONE MORE than the number of inputs, and the first element of the\n"
+    "isp_input_sigma vector corresponds to this bias).  Also note that in\n"
+    "keeping with Rasmussen and Williams, we raise these elements to the -2\n"
+    "power, so these hyperparameters can be interpreted as true length-scales.\n"
+    "The last factor k_kron(x,y) is the result of the KroneckerBaseKernel\n"
+    "evaluation, or 1.0 if there are no Kronecker terms.  Note that since the\n"
+    "Kronecker terms are incorporated multiplicatively, the very presence of the\n"
+    "term associated to this kernel can be gated by the value of some input\n"
+    "variable(s) (that are incorporated within one or more Kronecker terms).\n"
     "\n"
-    "where sf is softplus(isp_signal_sigma), w_i is softplus(isp_global_sigma +\n"
-    "isp_input_sigma[i]), and k_kron(x,y) is the result of the\n"
-    "KroneckerBaseKernel evaluation, or 1.0 if there are no Kronecker terms.\n"
-    "Note that since the Kronecker terms are incorporated multiplicatively, the\n"
-    "very presence of the term associated to this kernel can be gated by the\n"
-    "value of some input variable(s) (that are incorporated within one or more\n"
-    "Kronecker terms).\n"
-    "\n"
-    "Note that contrarily to previous versions that incorporated IID noise and\n"
-    "Kronecker terms ADDITIVELY, this version does not add any noise at all (and\n"
-    "as explained above incorporates the Kronecker terms multiplicatively).  For\n"
-    "best results, especially with moderately noisy data, IT IS IMPERATIVE to\n"
-    "use whis kernel within a SummationKernel in conjunction with an\n"
-    "IIDNoiseKernel, as follows (e.g. within a GaussianProcessRegressor):\n"
-    "\n"
-    "    kernel = SummationKernel(terms = [ SquaredExponentialARDKernel(),\n"
-    "                                       IIDNoiseKernel() ] )\n"
+    "See SquaredExponentialARDKernel for more information about using this\n"
+    "kernel within a SummationKernel in order to add IID noise to the examples.\n"
     "\n"
     "Note that to make its operations more robust when used with unconstrained\n"
     "optimization of hyperparameters, all hyperparameters of this kernel are\n"
@@ -82,13 +76,13 @@ PLEARN_IMPLEMENT_OBJECT(
     );
 
 
-SquaredExponentialARDKernel::SquaredExponentialARDKernel()
+NeuralNetworkARDKernel::NeuralNetworkARDKernel()
 { }
 
 
 //#####  declareOptions  ######################################################
 
-void SquaredExponentialARDKernel::declareOptions(OptionList& ol)
+void NeuralNetworkARDKernel::declareOptions(OptionList& ol)
 {
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -97,7 +91,7 @@ void SquaredExponentialARDKernel::declareOptions(OptionList& ol)
 
 //#####  build  ###############################################################
 
-void SquaredExponentialARDKernel::build()
+void NeuralNetworkARDKernel::build()
 {
     // ### Nothing to add here, simply calls build_
     inherited::build();
@@ -107,7 +101,7 @@ void SquaredExponentialARDKernel::build()
 
 //#####  build_  ##############################################################
 
-void SquaredExponentialARDKernel::build_()
+void NeuralNetworkARDKernel::build_()
 {
     // Ensure that we multiply in Kronecker terms
     inherited::m_default_value = 1.0;
@@ -116,50 +110,77 @@ void SquaredExponentialARDKernel::build_()
 
 //#####  evaluate  ############################################################
 
-real SquaredExponentialARDKernel::evaluate(const Vec& x1, const Vec& x2) const
+real NeuralNetworkARDKernel::evaluate(const Vec& x1, const Vec& x2) const
 {
     PLASSERT( x1.size() == x2.size() );
-    PLASSERT( !m_isp_input_sigma.size() || x1.size() == m_isp_input_sigma.size() );
+    PLASSERT( !m_isp_input_sigma.size() || x1.size()+1 == m_isp_input_sigma.size() );
 
     real gating_term = inherited::evaluate(x1,x2);
-    if (fast_is_equal(gating_term, 0.0))
+    if (fast_is_equal(gating_term, 0.0) || x1.size() == 0)
         return 0.0;
-    
-    if (x1.size() == 0)
-        return softplus(m_isp_signal_sigma) * gating_term;
     
     const real* px1 = x1.data();
     const real* px2 = x2.data();
     real sf         = softplus(m_isp_signal_sigma);
-    real expval     = 0.0;
+    real dot_x1_x1;
+    real dot_x2_x2;
+    real dot_x1_x2;
     
     if (m_isp_input_sigma.size() > 0) {
         const real* pinpsig = m_isp_input_sigma.data();
-        for (int i=0, n=x1.size() ; i<n ; ++i) {
-            real diff   = *px1++ - *px2++;
-            real sqdiff = diff * diff;
-            expval     += sqdiff / softplus(m_isp_global_sigma + *pinpsig++);
+        real sigma = softplus(*pinpsig++);
+        sigma *= sigma;
+        sigma  = 2. / sigma;
+
+        // Handle bias
+        dot_x1_x1 = dot_x2_x2 = dot_x1_x2 = sigma;
+ 
+        for (int i=0, n=x1.size() ; i<n ; ++i, ++px1, ++px2) {
+            sigma  = softplus(*pinpsig++);
+            sigma *= sigma;
+            sigma  = 2. / sigma;
+
+            dot_x1_x2 += *px1 * *px2 * sigma;
+            dot_x1_x1 += *px1 * *px1 * sigma;
+            dot_x2_x2 += *px2 * *px2 * sigma;
         }
     }
     else {
         real global_sigma = softplus(m_isp_global_sigma);
-        for (int i=0, n=x1.size() ; i<n ; ++i) {
-            real diff   = *px1++ - *px2++;
-            real sqdiff = diff * diff;
-            expval     += sqdiff / global_sigma;
+        global_sigma *= global_sigma;
+        global_sigma  = 2. / global_sigma;
+
+        // Handle bias for x1 and x2
+        dot_x1_x1 = dot_x2_x2 = dot_x1_x2 = 1;
+        
+        for (int i=0, n=x1.size() ; i<n ; ++i, ++px1, ++px2) {
+            dot_x1_x2 += *px1 * *px2;
+            dot_x1_x1 += *px1 * *px1;
+            dot_x2_x2 += *px2 * *px2;
         }
+        dot_x1_x2 *= global_sigma;
+        dot_x1_x1 *= global_sigma;
+        dot_x2_x2 *= global_sigma;
     }
 
     // Gate by Kronecker term
-    return sf * exp(-0.5 * expval) * gating_term;
+    return sf * asin(dot_x1_x2 / sqrt((1 + dot_x1_x1) * (1 + dot_x2_x2))) * gating_term;
 }
 
 
 //#####  computeGramMatrix  ###################################################
 
-void SquaredExponentialARDKernel::computeGramMatrix(Mat K) const
+#define DUFF_DOTLOOP                            \
+        sigma = *p_inpsigma++;                  \
+        dot_x1_x2 += *x1 * *x2 * sigma;         \
+        dot_x1_x1 += *x1 * *x1 * sigma;         \
+        dot_x2_x2 += *x2 * *x2 * sigma;         \
+        ++x1;                                   \
+        ++x2;
+
+void NeuralNetworkARDKernel::computeGramMatrix(Mat K) const
 {
-    PLASSERT( !m_isp_input_sigma.size() || dataInputsize() == m_isp_input_sigma.size() );
+    PLASSERT( !m_isp_input_sigma.size() || dataInputsize()+1 == m_isp_input_sigma.size() );
     PLASSERT( K.size() == 0 || m_data_cache.size() > 0 );  // Ensure data cached OK
 
     // Compute Kronecker gram matrix
@@ -167,8 +188,8 @@ void SquaredExponentialARDKernel::computeGramMatrix(Mat K) const
 
     // Precompute some terms. Make sure that the input sigmas don't get too
     // small
-    real sf    = softplus(m_isp_signal_sigma);
-    m_input_sigma.resize(dataInputsize());
+    real sf = softplus(m_isp_signal_sigma);
+    m_input_sigma.resize(dataInputsize() + 1);
     softplusFloor(m_isp_global_sigma, 1e-6);
     m_input_sigma.fill(m_isp_global_sigma);  // Still in ISP domain
     for (int i=0, n=m_input_sigma.size() ; i<n ; ++i) {
@@ -176,7 +197,9 @@ void SquaredExponentialARDKernel::computeGramMatrix(Mat K) const
             softplusFloor(m_isp_input_sigma[i], 1e-6);
             m_input_sigma[i] += m_isp_input_sigma[i];
         }
-        m_input_sigma[i] = softplus(m_input_sigma[i]);
+        m_input_sigma[i]  = softplus(m_input_sigma[i]);
+        m_input_sigma[i] *= m_input_sigma[i];
+        m_input_sigma[i]  = 2. / m_input_sigma[i];
     }
 
     // Compute Gram Matrix
@@ -201,30 +224,28 @@ void SquaredExponentialARDKernel::computeGramMatrix(Mat K) const
             real *x1 = xi;
             real *x2 = xj;
             real *p_inpsigma = input_sigma_data;
-            real sum_wt = 0.0;
             int  k = n;
 
-            // Use Duff's device to unroll the following loop:
-            //     while (k--) {
-            //         real diff = *x1++ - *x2++;
-            //         sum_wt += (diff * diff) / *p_inpsigma++;
-            //     }
-            real diff;
+            // Handle the bias for x1 and x2
+            real sigma     = *p_inpsigma++;
+            real dot_x1_x1 = sigma;
+            real dot_x2_x2 = sigma;
+            real dot_x1_x2 = sigma;
+
             switch (k % 8) {
-            case 0: do { diff = *x1++ - *x2++; sum_wt += (diff*diff) / *p_inpsigma++;
-            case 7:      diff = *x1++ - *x2++; sum_wt += (diff*diff) / *p_inpsigma++;
-            case 6:      diff = *x1++ - *x2++; sum_wt += (diff*diff) / *p_inpsigma++;
-            case 5:      diff = *x1++ - *x2++; sum_wt += (diff*diff) / *p_inpsigma++;
-            case 4:      diff = *x1++ - *x2++; sum_wt += (diff*diff) / *p_inpsigma++;
-            case 3:      diff = *x1++ - *x2++; sum_wt += (diff*diff) / *p_inpsigma++;
-            case 2:      diff = *x1++ - *x2++; sum_wt += (diff*diff) / *p_inpsigma++;
-            case 1:      diff = *x1++ - *x2++; sum_wt += (diff*diff) / *p_inpsigma++;
-                       } while((k -= 8) > 0);
+            case 0: do {  DUFF_DOTLOOP
+            case 7:       DUFF_DOTLOOP
+            case 6:       DUFF_DOTLOOP
+            case 5:       DUFF_DOTLOOP
+            case 4:       DUFF_DOTLOOP
+            case 3:       DUFF_DOTLOOP
+            case 2:       DUFF_DOTLOOP
+            case 1:       DUFF_DOTLOOP  } while((k -= 8) > 0);
             }
 
             // Multiplicatively update kernel matrix (already pre-filled with
             // Kronecker terms, or 1.0 if no Kronecker terms, as per build_).
-            real Kij_cur = *Kij * sf * exp(-0.5 * sum_wt);
+            real Kij_cur = *Kij * sf * asin(dot_x1_x2 / sqrt((1 + dot_x1_x1) * (1 + dot_x2_x2)));
             *Kij++ = Kij_cur;
         }
     }
@@ -238,7 +259,7 @@ void SquaredExponentialARDKernel::computeGramMatrix(Mat K) const
 
 //#####  computeGramMatrixDerivative  #########################################
 
-void SquaredExponentialARDKernel::computeGramMatrixDerivative(
+void NeuralNetworkARDKernel::computeGramMatrixDerivative(
     Mat& KD, const string& kernel_param, real epsilon) const
 {
     static const string ISS("isp_signal_sigma");
@@ -247,43 +268,30 @@ void SquaredExponentialARDKernel::computeGramMatrixDerivative(
 
     if (kernel_param == ISS) {
         computeGramMatrixDerivIspSignalSigma(KD);
-        
-        // computeGramMatrixDerivNV<
-        //     SquaredExponentialARDKernel,
-        //     &SquaredExponentialARDKernel::derivIspSignalSigma>(KD, this, -1);
     }
-    else if (kernel_param == IGS) {
-        computeGramMatrixDerivNV<
-            SquaredExponentialARDKernel,
-            &SquaredExponentialARDKernel::derivIspGlobalSigma>(KD, this, -1);
-    }
-    else if (string_begins_with(kernel_param, IIS) &&
-             kernel_param[kernel_param.size()-1] == ']')
-    {
-        int arg = tolong(kernel_param.substr(
-                             IIS.size(), kernel_param.size() - IIS.size() - 1));
-        PLASSERT( arg < m_isp_input_sigma.size() );
-
-        computeGramMatrixDerivIspInputSigma(KD, arg);
-
-    }
+    // else if (kernel_param == IGS) {
+    //     computeGramMatrixDerivNV<
+    //         NeuralNetworkARDKernel,
+    //         &NeuralNetworkARDKernel::derivIspGlobalSigma>(KD, this, -1);
+    // }
+    // else if (string_begins_with(kernel_param, IIS) &&
+    //          kernel_param[kernel_param.size()-1] == ']')
+    // {
+    //     int arg = tolong(kernel_param.substr(
+    //                          IIS.size(), kernel_param.size() - IIS.size() - 1));
+    //     PLASSERT( arg < m_isp_input_sigma.size() );
+    // 
+    //     computeGramMatrixDerivIspInputSigma(KD, arg);
+    // 
+    // }
     else
         inherited::computeGramMatrixDerivative(KD, kernel_param, epsilon);
 }
 
 
-//#####  derivIspSignalSigma  #################################################
-
-real SquaredExponentialARDKernel::derivIspSignalSigma(int i, int j, int arg, real K) const
-{
-    // (No longer used; see computeGramMatrixDerivIspInputSigma below)
-    return K*sigmoid(m_isp_signal_sigma)/softplus(m_isp_signal_sigma);
-}
-
-
 //#####  derivIspGlobalSigma  #################################################
 
-real SquaredExponentialARDKernel::derivIspGlobalSigma(int i, int j, int arg, real K) const
+real NeuralNetworkARDKernel::derivIspGlobalSigma(int i, int j, int arg, real K) const
 {
     if (fast_is_equal(K,0.))
         return 0.;
@@ -300,14 +308,14 @@ real SquaredExponentialARDKernel::derivIspGlobalSigma(int i, int j, int arg, rea
 
 //#####  computeGramMatrixDerivIspSignalSigma  ################################
 
-void SquaredExponentialARDKernel::computeGramMatrixDerivIspSignalSigma(Mat& KD) const
+void NeuralNetworkARDKernel::computeGramMatrixDerivIspSignalSigma(Mat& KD) const
 {
     int l = data->length();
     KD.resize(l,l);
     PLASSERT_MSG(
         gram_matrix.width() == l && gram_matrix.length() == l,
         "To compute the derivative with respect to 'isp_signal_sigma', the\n"
-        "Gram matrix must be precomputed and cached in SquaredExponentialARDKernel.");
+        "Gram matrix must be precomputed and cached in NeuralNetworkARDKernel.");
     
     KD << gram_matrix;
     KD *= sigmoid(m_isp_signal_sigma)/softplus(m_isp_signal_sigma);
@@ -316,7 +324,7 @@ void SquaredExponentialARDKernel::computeGramMatrixDerivIspSignalSigma(Mat& KD) 
 
 //#####  computeGramMatrixDerivIspInputSigma  #################################
 
-void SquaredExponentialARDKernel::computeGramMatrixDerivIspInputSigma(Mat& KD,
+void NeuralNetworkARDKernel::computeGramMatrixDerivIspInputSigma(Mat& KD,
                                                                       int arg) const
 {
     // Precompute some terms
@@ -329,7 +337,7 @@ void SquaredExponentialARDKernel::computeGramMatrixDerivIspInputSigma(Mat& KD,
     PLASSERT_MSG(
         gram_matrix.width() == l && gram_matrix.length() == l,
         "To compute the derivative with respect to 'isp_input_sigma[i]', the\n"
-        "Gram matrix must be precomputed and cached in SquaredExponentialARDKernel.");
+        "Gram matrix must be precomputed and cached in NeuralNetworkARDKernel.");
 
     // Variables that walk over the data matrix
     int  cache_mod = m_data_cache.mod();
@@ -373,7 +381,7 @@ void SquaredExponentialARDKernel::computeGramMatrixDerivIspInputSigma(Mat& KD,
 
 //#####  makeDeepCopyFromShallowCopy  #########################################
 
-void SquaredExponentialARDKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+void NeuralNetworkARDKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 }
