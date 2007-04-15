@@ -6,6 +6,7 @@
 #         This will execute pymake -float -link plearn-float.cc and
 #                           pymake -double -link plearn-double.cc
 #Exemple2: multipymake plearn "-float -opt" "-double -opt"
+#!!Do not work, must remove space from name
 #         This will create the hard link: plearn-float.cc and plearn-double.cc
 #         This will execute pymake -float -opt -link plearn-float.cc and
 #                           pymake -double -opt -link plearn-double.cc
@@ -13,20 +14,21 @@
 if [ $# -ge 3 ]; then
     BASEPROG=$1
     shift
-    EXT=$@
 else
     echo "Usage: $0 <base_prog> <List of parameter> ..."
  fi
 ALL=" -link "
 
-for i in "${EXT[@]}";
+for i in "$@";
   do
-  ln ${BASEPROG}.cc ${BASEPROG}${i}.cc
+  iname=${i//\ /_}
+  ln ${BASEPROG}.cc ${BASEPROG}${iname}.cc
 done
 
-for i in "${EXT[@]}";
+for i in "$@";
   do
+  iname=${i//\ /_}
   echo -n "Compiling ${BASEPROG}${i}.cc..."
-  pymake $i $ALL ${BASEPROG}${i}.cc &>/dev/null|| ( echo "Build failed for $i"; exit)
+  pymake $i $ALL ${BASEPROG}${iname}.cc &>/dev/null|| ( echo "Build failed for $i"; exit)
   echo "Ended with status: $?"
 done
