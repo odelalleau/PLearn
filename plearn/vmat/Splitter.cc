@@ -72,6 +72,7 @@ void Splitter::declareOptions(OptionList& ol)
 
 void Splitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(dataset, copies);
 }
 
