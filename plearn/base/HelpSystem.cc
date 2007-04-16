@@ -329,18 +329,19 @@ string HelpSystem::helpOnClass(const string& classname)
     s+= "################################################################## \n\n";
 
     // Display basic help
-    s+= "## " + entry.one_line_descr + "\n\n";
-    string ml_help = "# " + entry.multi_line_help;
-    search_replace(ml_help, "\n", "\n# ");
-    s+= ml_help + "\n\n";
+    s+= addprefix("# ", entry.one_line_descr) + "\n\n";
+    s+= addprefix("# ", entry.multi_line_help) + "\n\n";
 
     if(entry.constructor) // it's an instantiable class
         obj = (*entry.constructor)();
-    else
-        s+= "Note: " + classname 
+    else {
+        string virtual_help =
+            "Note: " + classname 
             + " is a base-class with pure virtual methods that cannot be instantiated directly.\n" 
             "(default values for build options can only be displayed for instantiable classes, \n"
             " so you'll only see question marks here.)\n\n";
+        s += addprefix("# ", virtual_help);
+    }
       
     s+= "################################################################## \n"
         "##                         Build Options                        ## \n"
