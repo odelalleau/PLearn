@@ -11,11 +11,12 @@
 #         This will execute pymake -float -opt -link plearn-float.cc and
 #                           pymake -double -opt -link plearn-double.cc
 
-if [ $# -ge 3 ]; then
+if [ $# -ge 2 ]; then
     BASEPROG=$1
     shift
 else
     echo "Usage: $0 <base_prog> <List of parameter> ..."
+    exit
  fi
 ALL=" -link "
 
