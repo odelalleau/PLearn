@@ -49,7 +49,6 @@ using namespace std;
 /**
  * Stores and learns the parameters between two linear layers of an RBM.
  *
- * @todo: yes
  */
 class RBMMatrixConnection: public RBMConnection
 {
