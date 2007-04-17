@@ -62,22 +62,38 @@ PLearnCommandRegistry RunCommand::reg_(new RunCommand);
 //! The actual implementation of the 'RunCommand' command 
 void RunCommand::run(const vector<string>& args)
 {
-    string scriptfile = args[0];
-    if (!isfile(scriptfile))
-        PLERROR("Non-existent script file: %s\n",scriptfile.c_str());
+    const vector<string>* the_args = &args;
+    vector<string> args_augmented;
+    PPath scriptfile = args[0];
+    if (!isfile(scriptfile)) {
+        // There is no file with this exact name. Maybe there are parameters
+        // appended to the name?
+        string base;
+        map<string, string> params;
+        parseBaseAndParameters(scriptfile, base, params);
+        if (!isfile(base))
+            PLERROR("Non-existent script file: %s\n",scriptfile.c_str());
+        // Add new arguments.
+        args_augmented = args;
+        map<string, string>::const_iterator it = params.begin();
+        for (; it != params.end(); it++)
+            args_augmented.push_back(it->first + "=" + it->second);
+        the_args = &args_augmented;
+        scriptfile = base;
+    }
 
-    const string extension = extract_extension(scriptfile);
+    string extension = scriptfile.extension();
     string script;
 
     PP<PyPLearnScript> pyplearn_script;
     PStream in;
 
-    if (extension == ".pyplearn")
+    if (extension == "pyplearn")
     {
         // Make a copy of args with the first argument (the name of the script)
         // removed, leaving the first argument to the script at index 0.
-        vector<string> pyplearn_args(args.size()-1);
-        copy(args.begin() + 1, args.end(), pyplearn_args.begin());
+        vector<string> pyplearn_args(the_args->size()-1);
+        copy(the_args->begin() + 1, the_args->end(), pyplearn_args.begin());
     
         pyplearn_script = PyPLearnScript::process(scriptfile, pyplearn_args);
         script          = pyplearn_script->getScript();
@@ -90,13 +106,13 @@ void RunCommand::run(const vector<string>& args)
 
         in = openString( script, PStream::plearn_ascii );
     }
-    else if(extension==".plearn")  // perform plearn macro expansion
+    else if(extension=="plearn")  // perform plearn macro expansion
     {
         map<string, string> vars;
         // populate vars with the arguments passed on the command line
-        for (unsigned int i=1; i<args.size(); i++)
+        for (unsigned int i=1; i<the_args->size(); i++)
         {
-            string option = args[i];
+            string option = (*the_args)[i];
             // Skip --foo command-lines options.
             if (option.size() < 2 || option.substr(0, 2) != "--")
             {
@@ -108,7 +124,7 @@ void RunCommand::run(const vector<string>& args)
         script = readFileAndMacroProcess(scriptfile, vars);
         in = openString( script, PStream::plearn_ascii );
     }
-    else if(extension==".psave") // do not perform plearn macro expansion
+    else if(extension=="psave") // do not perform plearn macro expansion
     {
         in = openFile(scriptfile, PStream::plearn_ascii);
     }
