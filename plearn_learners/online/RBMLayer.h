@@ -176,13 +176,13 @@ public:
     virtual void forget();
 
     //! Set the internal bias values to rbm_bias
-    virtual void getAllBias(const Vec& rbm_bias);
+    virtual void setAllBias(const Vec& rbm_bias);
 
-    //! Computes the contrastive divergence bias with respect to the bias
-    //! (or activations, which is equivalent)
+    //! Computes the contrastive divergence gradient with respect to the bias
+    //! (or activations, which is equivalent).
     virtual void bpropCD(Vec& bias_gradient);
 
-    //! Computes the contrastive divergence bias with respect to the bias
+    //! Computes the contrastive divergence gradient with respect to the bias
     //! (or activations, which is equivalent), given the positive and
     //! negative phase values.
     virtual void bpropCD(const Vec& pos_values, const Vec& neg_values,
@@ -232,11 +232,6 @@ private:
 private:
     //#####  Private Data Members  ############################################
 
-    // The rest of the private stuff goes here
-    //! Stores the computed input gradient (useful when accumulate)
-    Vec tmp_input_gradient;
-    //! Stores the computed input diag hessian (useful when accumulate)
-    Vec tmp_input_diag_hessian;
 };
 
 // Declares a few other classes and functions related to this class
