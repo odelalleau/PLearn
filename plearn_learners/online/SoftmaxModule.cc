@@ -46,36 +46,52 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     SoftmaxModule,
-    "Computes the softmax function on a vector",
-    "");
+    "Computes the softmax function on a vector.",
+    ""
+);
 
+///////////////////
+// SoftmaxModule //
+///////////////////
 SoftmaxModule::SoftmaxModule()
-{
-}
+{}
 
+////////////////////
+// declareOptions //
+////////////////////
 void SoftmaxModule::declareOptions(OptionList& ol)
 {
-    // declareOption(ol, "myoption", &SoftmaxModule::myoption,
-    //               OptionBase::buildoption,
-    //               "Help text describing this option");
-
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
+
+    // Hide unused options.
+
+    declareOption(ol, "output_size", &SoftmaxModule::output_size,
+            OptionBase::nosave,
+            "Set at build time.");
+
 }
 
+////////////
+// build_ //
+////////////
 void SoftmaxModule::build_()
 {
     output_size = input_size;
 }
 
-// ### Nothing to add here, simply calls build_
+///////////
+// build //
+///////////
 void SoftmaxModule::build()
 {
     inherited::build();
     build_();
 }
 
-
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void SoftmaxModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
@@ -120,16 +136,23 @@ void SoftmaxModule::bpropUpdate(const Vec& input, const Vec& output,
     }
 }
 
-//! reset the parameters to the state they would be BEFORE starting training.
-//! Note that this method is necessarily called from build().
+////////////
+// forget //
+////////////
 void SoftmaxModule::forget()
 {
 }
 
+/////////////////////
+// setLearningRate //
+/////////////////////
 void SoftmaxModule::setLearningRate(real dynamic_learning_rate)
 {
 }
 
+//////////////////
+// bbpropUpdate //
+//////////////////
 void SoftmaxModule::bbpropUpdate(const Vec& input, const Vec& output,
                                  Vec& input_gradient,
                                  const Vec& output_gradient,
@@ -137,7 +160,7 @@ void SoftmaxModule::bbpropUpdate(const Vec& input, const Vec& output,
                                  const Vec& output_diag_hessian,
                                  bool accumulate)
 {
-    PLERROR( "Not implemented yet, please come back later or complaint to"
+    PLERROR( "Not implemented yet, please come back later or complain to"
              " lamblinp." );
 }
 
