@@ -48,7 +48,6 @@ using namespace std;
 /**
  * Layer in an RBM formed with binomial units
  *
- * @todo: yes
  */
 class RBMBinomialLayer: public RBMLayer
 {

@@ -47,7 +47,7 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     RBMBinomialLayer,
-    "Layer in an RBM formed with binomial units",
+    "Layer in an RBM formed with binomial units.",
     "");
 
 RBMBinomialLayer::RBMBinomialLayer( real the_learning_rate ) :
