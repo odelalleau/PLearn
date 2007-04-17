@@ -63,7 +63,7 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
 void Splitter::declareOptions(OptionList& ol)
 {
     declareOption(ol,"dataset", &Splitter::dataset,
-                  OptionBase::buildoption | OptionBase::nosave 
+                  OptionBase::learntoption | OptionBase::nosave 
                   | OptionBase::remotetransmit,
                   "Dataset to split.");
   
