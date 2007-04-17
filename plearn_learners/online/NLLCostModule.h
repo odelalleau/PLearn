@@ -90,6 +90,9 @@ public:
     {
     }
 
+    //! Overridden to do nothing (in particular, no warning).
+    virtual void setLearningRate(real dynamic_learning_rate) {}
+
     //! Indicates the name of the computed costs
     virtual TVec<string> name();
 

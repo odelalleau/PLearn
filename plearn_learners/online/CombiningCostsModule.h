@@ -95,6 +95,9 @@ public:
     //! Calls this method on the sub_costs
     virtual void bbpropUpdate(const Vec& input, const Vec& target, real cost);
 
+    //! Overridden to do nothing (no warning message in particular).
+    virtual void setLearningRate(real dynamic_learning_rate) {}
+
     //! reset the parameters to the state they would be BEFORE starting
     //! training.  Note that this method is necessarily called from
     //! build().
