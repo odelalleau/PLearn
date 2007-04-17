@@ -147,13 +147,13 @@ void RBMLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(activation, copies);
-    deepCopyField(sample, copies);
-    deepCopyField(expectation, copies);
-    deepCopyField(bias, copies);
+    deepCopyField(bias,           copies);
+    deepCopyField(activation,     copies);
+    deepCopyField(sample,         copies);
+    deepCopyField(expectation,    copies);
     deepCopyField(bias_pos_stats, copies);
     deepCopyField(bias_neg_stats, copies);
-    deepCopyField(bias_inc, copies);
+    deepCopyField(bias_inc,       copies);
 }
 
 
@@ -274,6 +274,9 @@ void RBMLayer::update()
     clearStats();
 }
 
+////////////
+// update //
+////////////
 void RBMLayer::update( const Vec& pos_values, const Vec& neg_values)
 {
     // bias -= learning_rate * (pos_values - neg_values)
@@ -298,12 +301,18 @@ void RBMLayer::update( const Vec& pos_values, const Vec& neg_values)
     }
 }
 
-void RBMLayer::getAllBias(const Vec& rbm_bias)
+////////////////
+// setAllBias //
+////////////////
+void RBMLayer::setAllBias(const Vec& rbm_bias)
 {
     PLASSERT( rbm_bias.size() == size );
     bias << rbm_bias;
 }
 
+/////////////
+// bpropCD //
+/////////////
 void RBMLayer::bpropCD(Vec& bias_gradient)
 {
     // grad = bias_pos_stats/pos_count - bias_neg_stats/neg_count
