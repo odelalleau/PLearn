@@ -51,6 +51,9 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
     "Virtual class for the linear transformation between two layers of an RBM",
     "");
 
+///////////////////
+// RBMConnection //
+///////////////////
 RBMConnection::RBMConnection( real the_learning_rate ) :
     learning_rate(the_learning_rate),
     momentum(0.),
@@ -62,15 +65,18 @@ RBMConnection::RBMConnection( real the_learning_rate ) :
 {
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void RBMConnection::declareOptions(OptionList& ol)
 {
     declareOption(ol, "down_size", &RBMConnection::down_size,
                   OptionBase::buildoption,
-                  "The size of the up layer");
+                  "Number of units in down layer.");
 
     declareOption(ol, "up_size", &RBMConnection::up_size,
                   OptionBase::buildoption,
-                  "The size of the up layer");
+                  "Number of units in up layer.");
 
     declareOption(ol, "learning_rate", &RBMConnection::learning_rate,
                   OptionBase::buildoption,
@@ -104,6 +110,9 @@ void RBMConnection::declareOptions(OptionList& ol)
                     "Equals to up_size");
 }
 
+////////////
+// build_ //
+////////////
 void RBMConnection::build_()
 {
     string im = lowerstring( initialization_method );
@@ -129,6 +138,9 @@ void RBMConnection::build_()
         output_size = up_size;
 }
 
+///////////
+// build //
+///////////
 void RBMConnection::build()
 {
     inherited::build();
@@ -136,6 +148,9 @@ void RBMConnection::build()
 }
 
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void RBMConnection::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
@@ -143,16 +158,25 @@ void RBMConnection::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(input_vec, copies);
 }
 
+/////////////////////
+// setLearningRate //
+/////////////////////
 void RBMConnection::setLearningRate( real the_learning_rate )
 {
     learning_rate = the_learning_rate;
 }
 
+/////////////////
+// setMomentum //
+/////////////////
 void RBMConnection::setMomentum( real the_momentum )
 {
     momentum = the_momentum;
 }
 
+//////////////////
+// setAsUpInput //
+//////////////////
 void RBMConnection::setAsUpInput( const Vec& input ) const
 {
     PLASSERT( input.size() == up_size );
@@ -160,6 +184,9 @@ void RBMConnection::setAsUpInput( const Vec& input ) const
     going_up = false;
 }
 
+////////////////////
+// setAsDownInput //
+////////////////////
 void RBMConnection::setAsDownInput( const Vec& input ) const
 {
     PLASSERT( input.size() == down_size );
@@ -167,6 +194,9 @@ void RBMConnection::setAsDownInput( const Vec& input ) const
     going_up = true;
 }
 
+////////////
+// update //
+////////////
 void RBMConnection::update( const Vec& pos_down_values,
                             const Vec& pos_up_values,
                             const Vec& neg_down_values,
@@ -178,7 +208,9 @@ void RBMConnection::update( const Vec& pos_down_values,
     update();
 }
 
-//! given the input, compute the output (possibly resize it  appropriately)
+///////////
+// fprop //
+///////////
 void RBMConnection::fprop(const Vec& input, Vec& output) const
 {
     // propagates the activations.
