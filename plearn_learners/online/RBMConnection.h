@@ -52,7 +52,6 @@ class RBMLayer;
 /**
  * Virtual class for the parameters between two layers of an RBM.
  *
- * @todo: yes
  */
 class RBMConnection: public OnlineLearningModule
 {
@@ -76,10 +75,10 @@ public:
 
     //#####  Not Options  #####################################################
 
-    //! Number of units on down layer
+    //! Number of units in down layer.
     int down_size;
 
-    //! Number of units on up layer
+    //! Number of units in up layer.
     int up_size;
 
 public:
@@ -96,10 +95,14 @@ public:
     //! Sets the momentum
     virtual void setMomentum( real the_momentum );
 
-    //! Sets input_vec to input, and going_up to false
+    //! Sets input_vec to input, and going_up to false.
+    //! Note that no data copy is made, so input should not be modified
+    //! afterwards.
     virtual void setAsUpInput( const Vec& input ) const;
 
     //! Sets input_vec to input, and going_up to true
+    //! Note that no data copy is made, so input should not be modified
+    //! afterwards.
     virtual void setAsDownInput( const Vec& input ) const;
 
     //! Accumulates positive phase statistics to *_pos_stats
