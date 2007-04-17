@@ -91,6 +91,9 @@ void OnlineLearningModule::bbpropUpdate(const Vec& input, const Vec& output,
                  tmp_input_diag_hessian, output_diag_hessian);
 }
 
+//////////////////
+// bbpropUpdate //
+//////////////////
 void OnlineLearningModule::bbpropUpdate(const Vec& input, const Vec& output,
                                         Vec& input_gradient,
                                         const Vec& output_gradient,
@@ -104,26 +107,41 @@ void OnlineLearningModule::bbpropUpdate(const Vec& input, const Vec& output,
             "'bpropUpdate'.\n");
 }
 
+/////////////////////
+// setLearningRate //
+/////////////////////
 void OnlineLearningModule::setLearningRate( real dynamic_learning_rate )
 {
-    PLWARNING("OnlineLearningModule does not have a learning rate that can be\n"
-              "changed from outside.\n"
-              "If your derived class has one, please implement setLearningrate()"
-              " in it.\n");
+    PLWARNING("In OnlineLearningModule::setLearningRate - The derived class "
+            "(%s) does not have a learning rate that can be changed from "
+            "outside. If it should have one, please implement setLearningRate "
+            "in it", classname().c_str());
 }
 
 
+///////////
+// build //
+///////////
 void OnlineLearningModule::build()
 {
     inherited::build();
     build_();
 }
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void OnlineLearningModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(random_gen,             copies);
+    deepCopyField(tmp_input_gradient,     copies);
+    deepCopyField(tmp_input_diag_hessian, copies);
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void OnlineLearningModule::declareOptions(OptionList& ol)
 {
     declareOption(ol, "input_size", &OnlineLearningModule::input_size,
