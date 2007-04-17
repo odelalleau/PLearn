@@ -59,9 +59,6 @@ namespace PLearn {
  *      information about how the input should also have changed
  *      (i.e. input gradient)
  *
- * @todo write all Object methods, compile, and test somehow
- *
- * @deprecated
  */
 class OnlineLearningModule : public Object
 {
@@ -69,9 +66,6 @@ class OnlineLearningModule : public Object
 
 public:
     //#####  Public Build Options  ############################################
-
-    //! ### declare public option fields (such as build options) here
-    //! Start your comments with Doxygen-compatible comments such as //!
 
     //! input size
     int input_size;
@@ -103,7 +97,7 @@ public:
 
     // Your other public member functions go here
 
-    //! given the input, compute the output (possibly resize it  appropriately)
+    //! given the input, compute the output (possibly resize it appropriately)
     virtual void fprop(const Vec& input, Vec& output) const = 0;
 
     //! Adapt based on the output gradient: this method should only
