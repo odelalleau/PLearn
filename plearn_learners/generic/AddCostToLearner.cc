@@ -122,14 +122,15 @@ void AddCostToLearner::declareOptions(OptionList& ol)
         "   component-wise. Otherwise, the target must be a one-dimensional\n"
         "   vector (an integer corresponding to the class), and the output\n"
         "   from the sub-learner is interpreted as a vector of weights for\n"
-        "   each class."
+        "   each class.\n"
         " - 'binary_class_error': classification error for a one-dimensional\n"
         "   target that must be either 0 or 1. The output must also be one-\n"
         "   dimensional, and is interpreted as the predicted probability for\n"
         "   class 1 (thus class 1 is chosen when the output is > 0.5)\n"
         " - 'lift_output': to compute the lift cost (for the positive class)\n"
         " - 'opposite_lift_output': to compute the lift cost (for the negative) class\n"
-        " - 'cross_entropy': t*log(o) + (1-t)*log(1-o)\n"
+        " - 'cross_entropy': -t*log(o) - (1-t)*log(1-o)\n"
+        " - 'NLL': -log(o[t])\n"
         " - 'mse': the mean squared error (o - t)^2\n"
         " - 'squared_norm_reconstruction_error': | ||i||^2 - ||o||^2 |\n"
     );
@@ -227,6 +228,10 @@ void AddCostToLearner::build_()
         } else if (c == "squared_norm_reconstruction_error") {
         } else if (c == "class_error") {
         } else if (c == "binary_class_error") {
+        } else if (c == "NLL") {
+            // Output should be in [0,1].
+            output_min = max(output_min, real(0));
+            output_max = min(output_max, real(1));
         } else {
             PLERROR("In AddCostToLearner::build_ - Invalid cost requested (make sure you are using the new costs syntax)");
         }
@@ -430,6 +435,15 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
 #endif
             cross_entropy_prop.fprop();
             costs[ind_cost] = cross_entropy_var->valuedata[0];
+        } else if (c == "NLL") {
+            PLASSERT_MSG(fast_exact_is_equal(desired_target[0],
+                        round(desired_target[0])), "The target must be an "
+                    "integer");
+            int class_target = int(round(desired_target[0]));
+            PLASSERT_MSG(class_target < sub_learner_output.length(),
+                    "The sub learner output must have a size equal to the "
+                    "number of classes");
+            costs[ind_cost] = - pl_log(sub_learner_output[class_target]);
         } else if (c == "class_error") {
             int output_length = sub_learner_output.length();
             bool good = true;
