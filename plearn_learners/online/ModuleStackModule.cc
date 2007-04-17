@@ -56,12 +56,11 @@ ModuleStackModule::ModuleStackModule() :
 {
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void ModuleStackModule::declareOptions(OptionList& ol)
 {
-    // declareOption(ol, "", &ModuleStackModule::,
-    //               OptionBase::buildoption,
-    //               "");
-
     declareOption(ol, "modules", &ModuleStackModule::modules,
                   OptionBase::buildoption,
                   "The underlying modules");
@@ -72,8 +71,22 @@ void ModuleStackModule::declareOptions(OptionList& ol)
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
+
+    // Hide unused options.
+
+    redeclareOption(ol, "input_size", &ModuleStackModule::input_size,
+            OptionBase::nosave,
+            "Set at build time.");
+
+    redeclareOption(ol, "output_size", &ModuleStackModule::output_size,
+            OptionBase::nosave,
+            "Set at build time.");
+
 }
 
+////////////
+// build_ //
+////////////
 void ModuleStackModule::build_()
 {
     // TODO: Do something with the random generator?
@@ -88,10 +101,15 @@ void ModuleStackModule::build_()
 
         input_size = modules[0]->input_size;
         output_size = modules[n_modules-1]->output_size;
+    } else {
+        input_size = -1;
+        output_size = -1;
     }
 }
 
-// ### Nothing to add here, simply calls build_
+///////////
+// build //
+///////////
 void ModuleStackModule::build()
 {
     inherited::build();
