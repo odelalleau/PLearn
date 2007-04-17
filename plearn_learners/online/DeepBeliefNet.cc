@@ -47,8 +47,8 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     DeepBeliefNet,
-    "Neural net, learned layer-wise in a greedy fashion",
-    "This version support different unit types, different connection types,\n"
+    "Neural network, learned layer-wise in a greedy fashion.",
+    "This version supports different unit types, different connection types,\n"
     "and different cost functions, including the NLL in classification.\n");
 
 DeepBeliefNet::DeepBeliefNet() :
@@ -56,6 +56,7 @@ DeepBeliefNet::DeepBeliefNet() :
     grad_learning_rate( 0. ),
     grad_decrease_ct( 0. ),
     // grad_weight_decay( 0. ),
+    n_classes(-1),
     use_classification_cost( true ),
     reconstruct_layerwise( false ),
     n_layers( 0 ),
@@ -90,7 +91,7 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
 
     declareOption(ol, "n_classes", &DeepBeliefNet::n_classes,
                   OptionBase::buildoption,
-                  "Number of classes in the training set\n"
+                  "Number of classes in the training set:\n"
                   "  - 0 means we are doing regression,\n"
                   "  - 1 means we have two classes, but only one output,\n"
                   "  - 2 means we also have two classes, but two outputs"
@@ -236,7 +237,11 @@ void DeepBeliefNet::build_()
     MODULE_LOG << "build_() called" << endl;
 
     // Initialize some learnt variables
-    n_layers = layers.length();
+    if (layers.isEmpty())
+        PLERROR("In DeepBeliefNet::build_ - You must provide at least one RBM "
+                "layer through the 'layers' option");
+    else
+        n_layers = layers.length();
 
     if( training_schedule.length() != n_layers-1  && !online )
     {
@@ -298,8 +303,11 @@ void DeepBeliefNet::build_layers_and_connections()
         expectation_gradients[i].resize( layers[i]->size );
     }
     layers[n_layers-1]->random_gen = random_gen;
-    activation_gradients[n_layers-1].resize( layers[n_layers-1]->size );
-    expectation_gradients[n_layers-1].resize( layers[n_layers-1]->size );
+    int last_layer_size = layers[n_layers-1]->size;
+    PLASSERT_MSG(last_layer_size >= 0,
+                 "Size of last layer must be non-negative");
+    activation_gradients[n_layers-1].resize(last_layer_size);
+    expectation_gradients[n_layers-1].resize(last_layer_size);
 }
 
 void DeepBeliefNet::build_classification_cost()
@@ -316,6 +324,9 @@ void DeepBeliefNet::build_classification_cost()
     target_layer->size = n_classes;
     target_layer->random_gen = random_gen;
     target_layer->build();
+
+    PLASSERT_MSG(n_layers >= 2, "You must specify at least two layers (the "
+            "input layer and one hidden layer)");
 
     classification_module = new RBMClassificationModule();
     classification_module->previous_to_last = connections[n_layers-2];
@@ -343,19 +354,22 @@ void DeepBeliefNet::build_final_cost()
 {
     MODULE_LOG << "build_final_cost() called" << endl;
 
+    PLASSERT_MSG(final_cost->input_size >= 0, "The input size of the final "
+            "cost must be non-negative");
+
     final_cost_gradient.resize( final_cost->input_size );
     final_cost->setLearningRate( grad_learning_rate );
 
     if( final_module )
     {
         if( layers[n_layers-1]->size != final_module->input_size )
-            PLERROR("DeepBeliefNet::build_final_cost() - \n"
+            PLERROR("DeepBeliefNet::build_final_cost() - "
                     "layers[%i]->size (%d) != final_module->input_size (%d)."
                     "\n", n_layers-1, layers[n_layers-1]->size,
                     final_module->input_size);
 
         if( final_module->output_size != final_cost->input_size )
-            PLERROR("DeepBeliefNet::build_final_cost() - \n"
+            PLERROR("DeepBeliefNet::build_final_cost() - "
                     "final_module->output_size (%d) != final_cost->input_size."
                     "\n", n_layers-1, layers[n_layers-1]->size,
                     final_module->input_size);
@@ -365,7 +379,7 @@ void DeepBeliefNet::build_final_cost()
     else
     {
         if( layers[n_layers-1]->size != final_cost->input_size )
-            PLERROR("DeepBeliefNet::build_final_cost() - \n"
+            PLERROR("DeepBeliefNet::build_final_cost() - "
                     "layers[%i]->size (%d) != final_cost->input_size (%d)."
                     "\n", n_layers-1, layers[n_layers-1]->size,
                     final_cost->input_size);
@@ -375,65 +389,75 @@ void DeepBeliefNet::build_final_cost()
     if( n_classes == 0 ) // regression
     {
         if( final_cost->input_size != targetsize() )
-            PLERROR("DeepBeliefNet::build_final_cost() - \n"
-                    "final_cost->input_size (%d) != targetsize() (%d),\n"
+            PLERROR("DeepBeliefNet::build_final_cost() - "
+                    "final_cost->input_size (%d) != targetsize() (%d), "
                     "although we are doing regression (n_classes == 0).\n",
                     final_cost->input_size, targetsize());
     }
     else
     {
         if( final_cost->input_size != n_classes )
-            PLERROR("DeepBeliefNet::build_final_cost() - \n"
-                    "final_cost->input_size (%d) != n_classes (%d),\n"
+            PLERROR("DeepBeliefNet::build_final_cost() - "
+                    "final_cost->input_size (%d) != n_classes (%d), "
                     "although we are doing classification (n_classes != 0).\n",
                     final_cost->input_size, n_classes);
 
-        if( targetsize() != 1 )
-            PLERROR("DeepBeliefNet::build_final_cost() - \n"
-                    "targetsize() (%d) != 1,\n"
-                    "although we are doing regression (n_classes == 0).\n",
+        if( targetsize_ >= 0 && targetsize() != 1 )
+            PLERROR("DeepBeliefNet::build_final_cost() - "
+                    "targetsize() (%d) != 1, "
+                    "although we are doing classification (n_classes != 0).\n",
                     targetsize());
     }
 
 }
 
+///////////
+// build //
+///////////
 void DeepBeliefNet::build()
 {
     inherited::build();
     build_();
 }
 
-
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // deepCopyField(, copies);
-
-    deepCopyField(training_schedule, copies);
-    deepCopyField(layers, copies);
-    deepCopyField(connections, copies);
-    deepCopyField(final_module, copies);
-    deepCopyField(final_cost, copies);
-    deepCopyField(partial_costs, copies);
-    deepCopyField(classification_module, copies);
-    deepCopyField(timer, copies);
-    deepCopyField(classification_cost, copies);
-    deepCopyField(joint_layer, copies);
-    deepCopyField(activation_gradients, copies);
-    deepCopyField(expectation_gradients, copies);
-    deepCopyField(final_cost_input, copies);
-    deepCopyField(final_cost_value, copies);
-    deepCopyField(final_cost_output, copies);
-    deepCopyField(class_output, copies);
-    deepCopyField(class_gradient, copies);
-    deepCopyField(final_cost_gradient, copies);
-    deepCopyField(pos_down_values, copies);
-    deepCopyField(pos_up_values, copies);
-
+    deepCopyField(training_schedule,        copies);
+    deepCopyField(layers,                   copies);
+    deepCopyField(connections,              copies);
+    deepCopyField(final_module,             copies);
+    deepCopyField(final_cost,               copies);
+    deepCopyField(partial_costs,            copies);
+    deepCopyField(classification_module,    copies);
+    deepCopyField(timer,                    copies);
+    deepCopyField(classification_cost,      copies);
+    deepCopyField(joint_layer,              copies);
+    deepCopyField(activation_gradients,     copies);
+    deepCopyField(expectation_gradients,    copies);
+    deepCopyField(final_cost_input,         copies);
+    deepCopyField(final_cost_value,         copies);
+    deepCopyField(final_cost_output,        copies);
+    deepCopyField(class_output,             copies);
+    deepCopyField(class_gradient,           copies);
+    deepCopyField(class_input_gradient,     copies);
+    deepCopyField(final_cost_gradient,      copies);
+    deepCopyField(save_layer_activation,    copies);
+    deepCopyField(save_layer_expectation,   copies);
+    deepCopyField(pos_down_values,          copies);
+    deepCopyField(pos_up_values,            copies);
+    deepCopyField(final_cost_indices,       copies);
+    deepCopyField(partial_cost_indices,     copies);
 }
 
 
+////////////////
+// outputsize //
+////////////////
 int DeepBeliefNet::outputsize() const
 {
     int out_size = 0;
