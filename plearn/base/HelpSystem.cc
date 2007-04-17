@@ -337,9 +337,10 @@ string HelpSystem::helpOnClass(const string& classname)
     else {
         string virtual_help =
             "Note: " + classname 
-            + " is a base-class with pure virtual methods that cannot be instantiated directly.\n" 
-            "(default values for build options can only be displayed for instantiable classes, \n"
-            " so you'll only see question marks here.)\n\n";
+            + " is a base-class with pure virtual methods that\n"
+            "cannot be instantiated directly (default values for build options\n"
+            "can only be displayed for instantiable classes, so you will only\n"
+            "see question marks here).\n\n";
         s += addprefix("# ", virtual_help);
     }
       
