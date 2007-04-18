@@ -51,9 +51,13 @@ PLEARN_IMPLEMENT_OBJECT(
     "This version supports different unit types, different connection types,\n"
     "and different cost functions, including the NLL in classification.\n");
 
+///////////////////
+// DeepBeliefNet //
+///////////////////
 DeepBeliefNet::DeepBeliefNet() :
     cd_learning_rate( 0. ),
     grad_learning_rate( 0. ),
+    batch_size(1),
     grad_decrease_ct( 0. ),
     // grad_weight_decay( 0. ),
     n_classes(-1),
@@ -61,16 +65,19 @@ DeepBeliefNet::DeepBeliefNet() :
     reconstruct_layerwise( false ),
     n_layers( 0 ),
     online ( false ),
+    minibatch_size(0),
     final_module_has_learning_rate( false ),
     final_cost_has_learning_rate( false ),
     nll_cost_index( -1 ),
     class_cost_index( -1 ),
     recons_cost_index( -1 )
-
 {
     random_gen = new PRandom( seed_ );
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void DeepBeliefNet::declareOptions(OptionList& ol)
 {
     declareOption(ol, "cd_learning_rate", &DeepBeliefNet::cd_learning_rate,
@@ -82,6 +89,10 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "The decrease constant of the learning rate used during"
                   " gradient descent");
+
+    declareOption(ol, "batch_size", &DeepBeliefNet::batch_size,
+                  OptionBase::buildoption,
+        "Training batch size (1=stochastic learning, 0=full batch learning).");
 
     /* NOT IMPLEMENTED YET
     declareOption(ol, "grad_weight_decay", &DeepBeliefNet::grad_weight_decay,
@@ -205,6 +216,10 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   OptionBase::learntoption,
                   "Number of layers");
 
+    declareOption(ol, "minibatch_size", &DeepBeliefNet::minibatch_size,
+                  OptionBase::learntoption,
+                  "Size of a mini-batch.");
+
     /*
     declareOption(ol, "n_final_costs", &DeepBeliefNet::n_final_costs,
                   OptionBase::learntoption,
@@ -221,18 +236,12 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void DeepBeliefNet::build_()
 {
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation.
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of
-    // ###    all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning"
-    // ###    options have been modified.
-    // ### You should assume that the parent class' build_() has already been
-    // ### called.
+    PLASSERT( batch_size >= 0 );
 
     MODULE_LOG << "build_() called" << endl;
 
@@ -266,6 +275,9 @@ void DeepBeliefNet::build_()
     // build_costs(); /* ? */
 }
 
+//////////////////////////////////
+// build_layers_and_connections //
+//////////////////////////////////
 void DeepBeliefNet::build_layers_and_connections()
 {
     MODULE_LOG << "build_layers_and_connections() called" << endl;
@@ -279,7 +291,9 @@ void DeepBeliefNet::build_layers_and_connections()
         PLASSERT( layers[0]->size == inputsize() );
 
     activation_gradients.resize( n_layers );
+    activations_gradients.resize( n_layers );
     expectation_gradients.resize( n_layers );
+    expectations_gradients.resize( n_layers );
 
     for( int i=0 ; i<n_layers-1 ; i++ )
     {
@@ -310,9 +324,16 @@ void DeepBeliefNet::build_layers_and_connections()
     expectation_gradients[n_layers-1].resize(last_layer_size);
 }
 
+///////////////////////////////
+// build_classification_cost //
+///////////////////////////////
 void DeepBeliefNet::build_classification_cost()
 {
     MODULE_LOG << "build_classification_cost() called" << endl;
+
+    PLASSERT_MSG(batch_size == 1, "DeepBeliefNet::build_classification_cost - "
+            "This method has not been verified yet for minibatch "
+            "compatibility");
 
     PP<RBMMatrixConnection> last_to_target = new RBMMatrixConnection();
     last_to_target->up_size = layers[n_layers-1]->size;
@@ -350,6 +371,9 @@ void DeepBeliefNet::build_classification_cost()
     joint_layer->build();
 }
 
+//////////////////////
+// build_final_cost //
+//////////////////////
 void DeepBeliefNet::build_final_cost()
 {
     MODULE_LOG << "build_final_cost() called" << endl;
@@ -425,6 +449,8 @@ void DeepBeliefNet::build()
 /////////////////////////////////
 void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
+    // TODO Add missing fields.
+
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField(training_schedule,        copies);
@@ -446,6 +472,7 @@ void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(class_gradient,           copies);
     deepCopyField(class_input_gradient,     copies);
     deepCopyField(final_cost_gradient,      copies);
+    deepCopyField(final_cost_gradients,     copies);
     deepCopyField(save_layer_activation,    copies);
     deepCopyField(save_layer_expectation,   copies);
     deepCopyField(pos_down_values,          copies);
@@ -472,18 +499,11 @@ int DeepBeliefNet::outputsize() const
     return out_size;
 }
 
+////////////
+// forget //
+////////////
 void DeepBeliefNet::forget()
 {
-    //! (Re-)initialize the PLearner in its fresh state (that state may depend
-    //! on the 'seed' option) and sets 'stage' back to 0 (this is the stage of
-    //! a fresh learner!)
-    /*!
-      A typical forget() method should do the following:
-      - call inherited::forget() to initialize its random number generator
-        with the 'seed' option
-      - initialize the learner's parameters, using this random generator
-      - stage = 0
-    */
     inherited::forget();
 
     for( int i=0 ; i<n_layers-1 ; i++ )
@@ -505,55 +525,48 @@ void DeepBeliefNet::forget()
         for( int i=0 ; i<n_layers-1 ; i++ )
             if( partial_costs[i] )
                 partial_costs[i]->forget();
-
-    stage = 0;
 }
 
+///////////
+// train //
+///////////
 void DeepBeliefNet::train()
 {
     MODULE_LOG << "train() called " << endl;
     MODULE_LOG << "  training_schedule = " << training_schedule << endl;
     MODULE_LOG << "stage = " << stage << ", target nstages = " << nstages << endl;
 
-    // The role of the train method is to bring the learner up to
-    // stage==nstages, updating train_stats with training costs measured
-    // on-line in the process.
-
-    /* TYPICAL CODE:
-
-    static Vec input;  // static so we don't reallocate memory each time...
-    static Vec target; // (but be careful that static means shared!)
-    input.resize(inputsize());    // the train_set's inputsize()
-    target.resize(targetsize());  // the train_set's targetsize()
-    real weight;
-
-    // This generic PLearner method does a number of standard stuff useful for
-    // (almost) any learner, and return 'false' if no training should take
-    // place. See PLearner.h for more details.
-    if (!initTrain())
-        return;
-
-    while(stage<nstages)
-    {
-        // clear statistics of previous epoch
-        train_stats->forget();
-
-        //... train for 1 stage, and update train_stats,
-        // using train_set->getExample(input, target, weight)
-        // and train_stats->update(train_costs)
-
-        ++stage;
-        train_stats->finalize(); // finalize statistics for this epoch
+    PLASSERT( train_set );
+    if (stage == 0) {
+        // Training set-dependent initialization.
+        minibatch_size = batch_size > 0 ? batch_size : train_set->length();
+        for (int i = 0 ; i < n_layers; i++) {
+            activations_gradients[i].resize(minibatch_size, layers[i]->size);
+            expectation_gradients[i].resize(minibatch_size, layers[i]->size);
+        }
+        if (final_cost)
+            final_cost_gradients.resize(minibatch_size, final_cost->input_size);
     }
-    */
+
+    layers[n_layers-1]->random_gen = random_gen;
+    int last_layer_size = layers[n_layers-1]->size;
+    PLASSERT_MSG(last_layer_size >= 0,
+                 "Size of last layer must be non-negative");
+    activation_gradients[n_layers-1].resize(last_layer_size);
+    expectation_gradients[n_layers-1].resize(last_layer_size);
 
     Vec input( inputsize() );
     Vec target( targetsize() );
     real weight; // unused
+    Mat inputs(minibatch_size, inputsize());
+    Mat targets(minibatch_size, targetsize());
+    Vec weights;
 
     TVec<string> train_cost_names = getTrainCostNames() ;
     Vec train_costs( train_cost_names.length() );
+    Mat train_costs_m(minibatch_size, train_cost_names.length());
     train_costs.fill(MISSING_VALUE) ;
+    train_costs_m.fill(MISSING_VALUE);
 
     //give the indexes the right values
 
@@ -603,6 +616,9 @@ void DeepBeliefNet::train()
     if (online)
         // train all layers simultaneously AND fine-tuning as well!
     {
+        PLASSERT_MSG(batch_size == 1, "Online mode not implemented for "
+                "mini-batch learning yet");
+
         if( report_progress && stage < nstages )
             pb = new ProgressBar( "Training "+classname(),
                                   nstages - stage );
@@ -645,9 +661,15 @@ void DeepBeliefNet::train()
 
             for( ; stage<end_stage ; stage++ )
             {
-                int sample = stage % nsamples;
-                train_set->getExample(sample, input, target, weight);
-                greedyStep( input, target, i );
+                int sample_start = (stage * minibatch_size) % nsamples;
+                if (batch_size > 1) {
+                    train_set->getExamples(sample_start, minibatch_size,
+                            inputs, targets, weights);
+                    greedyStep( inputs, targets, i );
+                } else {
+                    train_set->getExample(sample_start, input, target, weight);
+                    greedyStep( input, target, i );
+                }
 
                 if( pb )
                     if( i == 0 )
@@ -660,6 +682,9 @@ void DeepBeliefNet::train()
         // possible supervised part
         if( use_classification_cost )
         {
+            PLASSERT_MSG(batch_size == 1, "'use_classification_cost' code not "
+                    "verified with mini-batch learning yet");
+
             MODULE_LOG << "Training the classification module" << endl;
 
             int end_stage = min( training_schedule[n_layers-2], nstages );
@@ -692,10 +717,12 @@ void DeepBeliefNet::train()
         }
 
         /**** compute reconstruction error*****/
-        RBMLayer * down_layer = get_pointer(layers[0]) ;
-        RBMLayer * up_layer =  get_pointer(layers[1]) ;
-        RBMConnection * parameters = get_pointer(connections[0]);
+        PP<RBMLayer> down_layer = get_pointer(layers[0]) ;
+        PP<RBMLayer> up_layer =  get_pointer(layers[1]) ;
+        PP<RBMConnection> parameters = get_pointer(connections[0]);
 
+        // TODO Do we really want to systematically compute this reconstruction
+        // error?
         for(int train_index = 0 ; train_index < nsamples ; train_index++)
         {
 
@@ -743,19 +770,30 @@ void DeepBeliefNet::train()
 
         setLearningRate( grad_learning_rate );
 
-        int begin_sample = stage % nsamples;
+        train_stats->forget();
+        bool update_stats = false;
         for( ; stage<nstages ; stage++ )
         {
-            int sample = stage % nsamples;
-            if( sample == begin_sample )
-                train_stats->forget();
+            int sample_start = (stage * minibatch_size) % nsamples;
+            // Only update train statistics for the last 'epoch', i.e. last
+            // 'nsamples' seen.
+            update_stats = update_stats ||
+                stage >= (nstages - nsamples / minibatch_size);
+
             if( !fast_exact_is_equal( grad_decrease_ct, 0. ) )
                 setLearningRate( grad_learning_rate
                                  / (1. + grad_decrease_ct * (stage - init_stage) ) );
 
-            train_set->getExample( sample, input, target, weight );
-            fineTuningStep( input, target, train_costs );
-            train_stats->update( train_costs );
+            if (minibatch_size > 1) {
+                train_set->getExamples(sample_start, minibatch_size, inputs,
+                        targets, weights);
+                fineTuningStep(inputs, targets, train_costs);
+            } else {
+                train_set->getExample( sample_start, input, target, weight );
+                fineTuningStep( input, target, train_costs );
+            }
+            if (update_stats)
+                train_stats->update( train_costs );
 
             if( pb )
                 pb->update( stage - init_stage + 1 );
@@ -768,8 +806,13 @@ void DeepBeliefNet::train()
     train_stats->update( train_costs ) ;
 
     train_stats->finalize();
+
+    // TODO Conversion to mini-batch: CONTINUE HERE
 }
 
+////////////////
+// onlineStep //
+////////////////
 void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
                                 Vec& train_costs)
 {
@@ -831,29 +874,57 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
     {
         if( final_module )
         {
-            final_module->fprop( layers[ n_layers-1 ]->expectation,
-                                 final_cost_input );
-            final_cost->fprop( final_cost_input, target,
-                               final_cost_value );
-            final_cost->bpropUpdate( final_cost_input, target,
-                                     final_cost_value[0],
-                                     final_cost_gradient );
+            /*
+            if (minibatch_size > 1) {
+                final_module->fprop( layers[ n_layers-1 ]->expectations,
+                        final_cost_inputs );
+                final_cost->fprop( final_cost_inputs, targets,
+                        final_cost_values );
+                final_cost->bpropUpdate(final_cost_inputs, targets,
+                        final_cost_values.column(0),
+                        final_cost_gradients );
 
-            final_module->bpropUpdate(
-                                      layers[ n_layers-1 ]->expectation,
-                                      final_cost_input,
-                                      expectation_gradients[ n_layers-1 ],
-                                      final_cost_gradient, true );
+                final_module->bpropUpdate(
+                        layers[ n_layers-1 ]->expectations,
+                        final_cost_inputs,
+                        expectations_gradients[ n_layers-1 ],
+                        final_cost_gradients, true );
+            } else {*/
+                final_module->fprop( layers[ n_layers-1 ]->expectation,
+                        final_cost_input );
+                final_cost->fprop( final_cost_input, target,
+                        final_cost_value );
+                final_cost->bpropUpdate( final_cost_input, target,
+                        final_cost_value[0],
+                        final_cost_gradient );
+
+                final_module->bpropUpdate(
+                        layers[ n_layers-1 ]->expectation,
+                        final_cost_input,
+                        expectation_gradients[ n_layers-1 ],
+                        final_cost_gradient, true );
+            //}
         }
         else
         {
-            final_cost->fprop( layers[ n_layers-1 ]->expectation,
-                               target,
-                               final_cost_value );
-            final_cost->bpropUpdate( layers[ n_layers-1 ]->expectation,
-                                     target, final_cost_value[0],
-                                     expectation_gradients[n_layers-1],
-                                     true);
+            /*
+            if (minibatch_size > 1) {
+                final_cost->fprop( layers[ n_layers-1 ]->expectations,
+                        targets,
+                        final_cost_values );
+                final_cost->bpropUpdate( layers[ n_layers-1 ]->expectations,
+                        targets, final_cost_values.column(0),
+                        expectations_gradients[n_layers-1],
+                        true);
+            } else {*/
+                final_cost->fprop( layers[ n_layers-1 ]->expectation,
+                        target,
+                        final_cost_value );
+                final_cost->bpropUpdate( layers[ n_layers-1 ]->expectation,
+                        target, final_cost_value[0],
+                        expectation_gradients[n_layers-1],
+                        true);
+            //}
         }
 
         for (int j=0;j<final_cost_indices.length();j++)

@@ -70,6 +70,8 @@ public:
     //! The learning rate used during the gradient descent
     real grad_learning_rate;
 
+    int batch_size;
+
     //! The decrease constant of the learning rate used during gradient descent
     real grad_decrease_ct;
 
@@ -205,10 +207,21 @@ public:
 
     void greedyStep( const Vec& input, const Vec& target, int index );
 
+    //! TODO Document and implement.
+    void greedyStep( const Mat& inputs, const Mat& targets, int index ) {
+        PLASSERT(false);
+    }
+
     void jointGreedyStep( const Vec& input, const Vec& target );
 
     void fineTuningStep( const Vec& input, const Vec& target,
                          Vec& train_costs );
+
+    //! TODO Document and implement.
+    void fineTuningStep( const Mat& inputs, const Mat& targets,
+                         Vec& train_costs ) {
+        PLASSERT(false);
+    }
 
     void contrastiveDivergenceStep( const PP<RBMLayer>& down_layer,
                                     const PP<RBMConnection>& connection,
@@ -247,23 +260,29 @@ public:
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
+
+    int minibatch_size;
+    
     //#####  Not Options  #####################################################
 
     //! Stores the gradient of the cost wrt the activations
     //! (at the input of the layers)
     mutable TVec<Vec> activation_gradients;
+    mutable TVec<Mat> activations_gradients; //!< For mini-batch.
 
     //! Stores the gradient of the cost wrt the expectations
     //! (at the output of the layers)
     mutable TVec<Vec> expectation_gradients;
+    mutable TVec<Mat> expectations_gradients; //!< For mini-batch.
 
-    //!
     mutable Vec final_cost_input;
+    mutable Mat final_cost_inputs; //!< For mini-batch.
 
     mutable Vec final_cost_value;
+    mutable Vec final_cost_values; //!< For mini-batch.
 
     mutable Vec final_cost_output;
-    //!
+
     mutable Vec class_output;
 
     mutable Vec class_gradient;
@@ -272,6 +291,7 @@ protected:
 
     //! Stores the gradient of the cost at the input of final_cost
     mutable Vec final_cost_gradient;
+    mutable Mat final_cost_gradients; //!< For mini-batch.
 
     //! buffers bottom layer activation during onlineStep 
     mutable Vec save_layer_activation;
