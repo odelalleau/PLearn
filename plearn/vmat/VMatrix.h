@@ -436,6 +436,12 @@ public:
      */
     virtual void getExample(int i, Vec& input, Vec& target, real& weight);
 
+    //! Obtain a subset of 'length' examples, starting from 'i_start'.
+    //! The 'extra' matrix is provided as a pointer so that it can be omitted
+    //! without significant overhead.
+    void getExamples(int i_start, int length, Mat& inputs, Mat& targets,
+                     Vec& weights, Mat* extra = NULL);
+
     /**
      *  Complements the getExample method, fetching the the extrasize_ "extra"
      *  fields expected to appear after the input, target and weight fields

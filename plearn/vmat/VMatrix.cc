@@ -511,6 +511,32 @@ void VMatrix::getExample(int i, Vec& input, Vec& target, real& weight)
         weight = get(i,inputsize_+targetsize_);
 }
 
+/////////////////
+// getExamples //
+/////////////////
+void VMatrix::getExamples(int i_start, int length, Mat& inputs, Mat& targets,
+                          Vec& weights, Mat* extras)
+{
+    inputs.resize(length, inputsize());
+    targets.resize(length, targetsize());
+    weights.resize(length);
+    if (extras)
+        extras->resize(length, extrasize());
+    Vec input, target, extra;
+    for (int k = 0; k < length; k++) {
+        input = inputs(k);
+        target = targets(k);
+        getExample(i_start + k, input, target, weights[k]);
+        if (extras) {
+            extra = (*extras)(k);
+            getExtra(i_start + k, extra);
+        }
+    }
+}
+
+//////////////
+// getExtra //
+//////////////
 void VMatrix::getExtra(int i, Vec& extra)
 {
     if(inputsize_<0 || targetsize_<0 || weightsize_<0 || extrasize_<0)
