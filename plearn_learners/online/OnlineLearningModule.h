@@ -99,6 +99,7 @@ public:
 
     //! given the input, compute the output (possibly resize it appropriately)
     virtual void fprop(const Vec& input, Vec& output) const = 0;
+    virtual void fprop(const Mat& input, Mat& output) const;
 
     //! Adapt based on the output gradient: this method should only
     //! be called just after a corresponding fprop; it should be
@@ -111,6 +112,8 @@ public:
     //! AND IGNORES INPUT GRADIENT.
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              const Vec& output_gradient);
+    virtual void bpropUpdate(const Mat& input, const Mat& output,
+                             const Mat& output_gradient);
 
     //! this version allows to obtain the input gradient as well
     //! N.B. THE DEFAULT IMPLEMENTATION JUST RAISES A PLERROR.
@@ -118,6 +121,9 @@ public:
     //! accumulated into or set with the computed derivatives.
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              Vec& input_gradient, const Vec& output_gradient,
+                             bool accumulate=false);
+    virtual void bpropUpdate(const Mat& input, const Mat& output,
+                             Mat& input_gradient, const Mat& output_gradient,
                              bool accumulate=false);
 
     //! Similar to bpropUpdate, but adapt based also on the estimation
@@ -181,6 +187,7 @@ protected:
 protected:
     // Also used in CostModule for instance
     mutable Vec tmp_input_gradient;
+    mutable Mat tmpm_input_gradient;
     mutable Vec tmp_input_diag_hessian;
 
 
