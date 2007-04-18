@@ -152,27 +152,22 @@ public:
     //! Computes the negative log-likelihood of target given the
     //! internal activations of the layer
     virtual real fpropNLL(const Vec& target);
-    virtual real fpropNLL(const Mat& target);
 
     //! Computes the gradient of the negative log-likelihood of target
     //! with respect to the layer's bias, given the internal activations
     virtual void bpropNLL(const Vec& target, real nll, Vec& bias_gradient);
-    virtual void bpropNLL(const Mat& target, real nll, Mat& bias_gradient);
 
     //! Accumulates positive phase statistics
     virtual void accumulatePosStats( const Vec& pos_values );
-    virtual void accumulatePosStats( const Mat& pos_values );
 
     //! Accumulates negative phase statistics
     virtual void accumulateNegStats( const Vec& neg_values );
-    virtual void accumulateNegStats( const Mat& neg_values );
 
     //! Update parameters according to accumulated statistics
     virtual void update();
 
     //! Update parameters according to one pair of vectors
     virtual void update( const Vec& pos_values, const Vec& neg_values );
-    virtual void update( const Mat& pos_values, const Mat& neg_values );
 
     //! resets activations, sample and expectation fields
     virtual void reset();
