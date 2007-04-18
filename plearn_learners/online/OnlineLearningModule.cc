@@ -180,6 +180,7 @@ void OnlineLearningModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(random_gen,             copies);
     deepCopyField(tmp_input_gradient,     copies);
+    deepCopyField(tmpm_input_gradient,    copies);
     deepCopyField(tmp_input_diag_hessian, copies);
 }
 
