@@ -149,8 +149,11 @@ void RBMLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     deepCopyField(bias,           copies);
     deepCopyField(activation,     copies);
+    deepCopyField(activations,    copies);
     deepCopyField(sample,         copies);
+    deepCopyField(samples,        copies);
     deepCopyField(expectation,    copies);
+    deepCopyField(expectations,   copies);
     deepCopyField(bias_pos_stats, copies);
     deepCopyField(bias_neg_stats, copies);
     deepCopyField(bias_inc,       copies);
