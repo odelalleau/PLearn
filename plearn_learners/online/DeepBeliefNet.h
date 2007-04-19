@@ -207,22 +207,20 @@ public:
 
     void greedyStep( const Vec& input, const Vec& target, int index );
 
-    //! TODO Document and implement.
-    void greedyStep( const Mat& inputs, const Mat& targets, int index ) {
-        PLASSERT(false);
-    }
+    //! Greedy step with mini-batches.
+    void greedyStep(const Mat& inputs, const Mat& targets, int index);
 
     void jointGreedyStep( const Vec& input, const Vec& target );
 
     void fineTuningStep( const Vec& input, const Vec& target,
                          Vec& train_costs );
 
-    //! TODO Document and implement.
+    //! Fine tuning step with mini-batches.
     void fineTuningStep( const Mat& inputs, const Mat& targets,
-                         Vec& train_costs ) {
-        PLASSERT(false);
-    }
+                         Mat& train_costs );
 
+    //! Perform a step of contrastive divergence, assuming that
+    //! down_layer->expectation(s) is set.
     void contrastiveDivergenceStep( const PP<RBMLayer>& down_layer,
                                     const PP<RBMConnection>& connection,
                                     const PP<RBMLayer>& up_layer,
@@ -279,7 +277,7 @@ protected:
     mutable Mat final_cost_inputs; //!< For mini-batch.
 
     mutable Vec final_cost_value;
-    mutable Vec final_cost_values; //!< For mini-batch.
+    mutable Mat final_cost_values; //!< For mini-batch.
 
     mutable Vec final_cost_output;
 
@@ -306,8 +304,10 @@ protected:
     bool final_cost_has_learning_rate;
 
     //! Store a copy of the positive phase values
-    mutable Vec pos_down_values;
-    mutable Vec pos_up_values;
+    mutable Vec pos_down_val;
+    mutable Vec pos_up_val;
+    mutable Mat pos_down_vals;
+    mutable Mat pos_up_vals;
 
     //! Keeps the index of the NLL cost in train_costs
     int nll_cost_index;

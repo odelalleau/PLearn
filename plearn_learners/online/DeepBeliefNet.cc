@@ -475,8 +475,8 @@ void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(final_cost_gradients,     copies);
     deepCopyField(save_layer_activation,    copies);
     deepCopyField(save_layer_expectation,   copies);
-    deepCopyField(pos_down_values,          copies);
-    deepCopyField(pos_up_values,            copies);
+    deepCopyField(pos_down_val,          copies);
+    deepCopyField(pos_up_val,            copies);
     deepCopyField(final_cost_indices,       copies);
     deepCopyField(partial_cost_indices,     copies);
 }
@@ -787,13 +787,17 @@ void DeepBeliefNet::train()
             if (minibatch_size > 1) {
                 train_set->getExamples(sample_start, minibatch_size, inputs,
                         targets, weights);
-                fineTuningStep(inputs, targets, train_costs);
+                fineTuningStep(inputs, targets, train_costs_m);
             } else {
                 train_set->getExample( sample_start, input, target, weight );
                 fineTuningStep( input, target, train_costs );
             }
             if (update_stats)
-                train_stats->update( train_costs );
+                if (minibatch_size > 1)
+                    for (int k = 0; k < minibatch_size; k++)
+                        train_stats->update(train_costs_m(k));
+                else
+                    train_stats->update( train_costs );
 
             if( pb )
                 pb->update( stage - init_stage + 1 );
@@ -807,7 +811,6 @@ void DeepBeliefNet::train()
 
     train_stats->finalize();
 
-    // TODO Conversion to mini-batch: CONTINUE HERE
 }
 
 ////////////////
@@ -816,6 +819,8 @@ void DeepBeliefNet::train()
 void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
                                 Vec& train_costs)
 {
+    PLASSERT_MSG(batch_size == 1, "Not implemented for mini-batches");
+
     TVec<Vec> cost;
     if (partial_costs)
         cost.resize(n_layers-1);
@@ -1048,6 +1053,9 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
 
 }
 
+////////////////
+// greedyStep //
+////////////////
 void DeepBeliefNet::greedyStep( const Vec& input, const Vec& target, int index )
 {
     PLASSERT( index < n_layers );
@@ -1098,9 +1106,69 @@ void DeepBeliefNet::greedyStep( const Vec& input, const Vec& target, int index )
                                true );
 }
 
+/////////////////
+// greedySteps //
+/////////////////
+void DeepBeliefNet::greedyStep( const Mat& inputs, const Mat& targets, int index )
+{
+    PLASSERT( index < n_layers );
+
+    layers[0]->expectations << inputs;
+    for( int i=0 ; i<=index ; i++ )
+    {
+        connections[i]->setAsDownInputs( layers[i]->expectations );
+        layers[i+1]->getAllActivations( connections[i] );
+        layers[i+1]->computeExpectation(); // TODO Ensure it fills expectations
+    }
+
+    // TODO: add another learning rate?
+    if( partial_costs && partial_costs[ index ] )
+    {
+        PLASSERT_MSG(batch_size == 1, "Not implemented for mini-batches");
+        /*
+        // put appropriate learning rate
+        connections[ index ]->setLearningRate( grad_learning_rate );
+        layers[ index+1 ]->setLearningRate( grad_learning_rate );
+
+        // Backward pass
+        real cost;
+        partial_costs[ index ]->fprop( layers[ index+1 ]->expectation,
+                                       target, cost );
+
+        partial_costs[ index ]->bpropUpdate( layers[ index+1 ]->expectation,
+                                             target, cost,
+                                             expectation_gradients[ index+1 ]
+                                             );
+
+        layers[ index+1 ]->bpropUpdate( layers[ index+1 ]->activation,
+                                        layers[ index+1 ]->expectation,
+                                        activation_gradients[ index+1 ],
+                                        expectation_gradients[ index+1 ] );
+
+        connections[ index ]->bpropUpdate( layers[ index ]->expectation,
+                                           layers[ index+1 ]->activation,
+                                           expectation_gradients[ index ],
+                                           activation_gradients[ index+1 ] );
+
+        // put back old learning rate
+        connections[ index ]->setLearningRate( cd_learning_rate );
+        layers[ index+1 ]->setLearningRate( cd_learning_rate );
+        */
+    }
+
+    contrastiveDivergenceStep( layers[ index ],
+                               connections[ index ],
+                               layers[ index+1 ],
+                               true );
+}
+
+/////////////////////
+// jointGreedyStep //
+/////////////////////
 void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
 {
     PLASSERT( joint_layer );
+    PLASSERT_MSG(batch_size == 1, "Not implemented for mini-batches");
 
     layers[0]->expectation << input;
     for( int i=0 ; i<n_layers-2 ; i++ )
@@ -1157,6 +1225,9 @@ void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
         layers[ n_layers-1 ] );
 }
 
+////////////////////
+// fineTuningStep //
+////////////////////
 void DeepBeliefNet::fineTuningStep( const Vec& input, const Vec& target,
                                     Vec& train_costs )
 {
@@ -1217,7 +1288,7 @@ void DeepBeliefNet::fineTuningStep( const Vec& input, const Vec& target,
             activation_gradients[ n_layers-1 ] );
     }
     else  {
-        expectation_gradients[ n_layers-2 ]->clear();
+        expectation_gradients[ n_layers-2 ].clear();
     }
 
     if( use_classification_cost )
@@ -1263,53 +1334,216 @@ void DeepBeliefNet::fineTuningStep( const Vec& input, const Vec& target,
     }
 }
 
-// assumes that down_layer->expectation is set
+////////////////////
+// fineTuningStep //
+////////////////////
+void DeepBeliefNet::fineTuningStep(const Mat& inputs, const Mat& targets,
+                                   Mat& train_costs )
+{
+    final_cost_values.resize(0, 0);
+    // fprop
+    layers[0]->expectations << inputs;
+    for( int i=0 ; i<n_layers-2 ; i++ )
+    {
+        connections[i]->setAsDownInputs( layers[i]->expectations );
+        layers[i+1]->getAllActivations( connections[i] );
+        layers[i+1]->computeExpectation(); // TODO Ensure it fills expectations
+    }
+
+    if( final_cost )
+    {
+        connections[ n_layers-2 ]->setAsDownInputs(
+            layers[ n_layers-2 ]->expectations );
+        // TODO Also ensure getAllActivations fills everything.
+        layers[ n_layers-1 ]->getAllActivations( connections[ n_layers-2 ] );
+        layers[ n_layers-1 ]->computeExpectation();
+
+        if( final_module )
+        {
+            final_module->fprop( layers[ n_layers-1 ]->expectations,
+                                 final_cost_inputs );
+            final_cost->fprop( final_cost_inputs, targets, final_cost_values );
+
+            Mat optimized_costs = final_cost_values.column(0);
+            final_cost->bpropUpdate( final_cost_inputs, targets,
+                                     optimized_costs,
+                                     final_cost_gradients );
+            final_module->bpropUpdate( layers[ n_layers-1 ]->expectations,
+                                       final_cost_inputs,
+                                       expectations_gradients[ n_layers-1 ],
+                                       final_cost_gradients );
+        }
+        else
+        {
+            final_cost->fprop( layers[ n_layers-1 ]->expectations, targets,
+                               final_cost_values );
+
+            Mat optimized_costs = final_cost_values.column(0);
+            final_cost->bpropUpdate( layers[ n_layers-1 ]->expectations,
+                                     targets, optimized_costs,
+                                     expectations_gradients[ n_layers-1 ] );
+        }
+
+        for (int k = 0; k < minibatch_size; k++)
+            for (int j=0;j<final_cost_indices.length();j++)
+                train_costs(k, final_cost_indices[j]) =
+                    final_cost_values(k, j);
+
+        layers[ n_layers-1 ]->bpropUpdate( layers[ n_layers-1 ]->activations,
+                                           layers[ n_layers-1 ]->expectations,
+                                           activations_gradients[ n_layers-1 ],
+                                           expectations_gradients[ n_layers-1 ]
+                                         );
+
+        connections[ n_layers-2 ]->bpropUpdate(
+            layers[ n_layers-2 ]->expectations,
+            layers[ n_layers-1 ]->activations,
+            expectations_gradients[ n_layers-2 ],
+            activations_gradients[ n_layers-1 ] );
+    }
+    else  {
+        expectations_gradients[ n_layers-2 ].clear();
+    }
+
+    if( use_classification_cost )
+    {
+        PLASSERT_MSG(batch_size == 1, "Not implemented for mini-batches");
+        /*
+        classification_module->fprop( layers[ n_layers-2 ]->expectation,
+                                      class_output );
+        real nll_cost;
+
+        // This doesn't work. gcc bug?
+        // classification_cost->fprop( class_output, target, cost );
+        classification_cost->CostModule::fprop( class_output, target,
+                                                nll_cost );
+
+        real class_error =
+            ( argmax(class_output) == (int) round(target[0]) ) ? 0
+                                                               : 1;
+
+        train_costs[nll_cost_index] = nll_cost;
+        train_costs[class_cost_index] = class_error;
+
+        classification_cost->bpropUpdate( class_output, target, nll_cost,
+                                          class_gradient );
+
+        classification_module->bpropUpdate( layers[ n_layers-2 ]->expectation,
+                                            class_output,
+                                            class_input_gradient,
+                                            class_gradient );
+
+        expectation_gradients[n_layers-2] += class_input_gradient;
+        */
+    }
+
+    for( int i=n_layers-2 ; i>0 ; i-- )
+    {
+        layers[i]->bpropUpdate( layers[i]->activations,
+                                layers[i]->expectations,
+                                activations_gradients[i],
+                                expectations_gradients[i] );
+
+        connections[i-1]->bpropUpdate( layers[i-1]->expectations,
+                                       layers[i]->activations,
+                                       expectations_gradients[i-1],
+                                       activations_gradients[i] );
+    }
+}
+
+///////////////////////////////
+// contrastiveDivergenceStep //
+///////////////////////////////
 void DeepBeliefNet::contrastiveDivergenceStep(
     const PP<RBMLayer>& down_layer,
     const PP<RBMConnection>& connection,
     const PP<RBMLayer>& up_layer,
     bool nofprop)
 {
+    bool mbatch = minibatch_size > 1;
+
     // positive phase
     if (!nofprop)
     {
-        connection->setAsDownInput( down_layer->expectation );
+        if (mbatch)
+            connection->setAsDownInputs( down_layer->expectations );
+        else
+            connection->setAsDownInput( down_layer->expectation );
         up_layer->getAllActivations( connection );
         up_layer->computeExpectation();
     }
-    up_layer->generateSample();
 
-    // accumulate positive stats using the expectation
-    // we deep-copy because the value will change during negative phase
-    pos_down_values.resize( down_layer->size );
-    pos_up_values.resize( up_layer->size );
+    if (mbatch) {
+        up_layer->generateSamples(minibatch_size);
 
-    pos_down_values << down_layer->expectation;
-    pos_up_values << up_layer->expectation;
+        // accumulate positive stats using the expectation
+        // we deep-copy because the value will change during negative phase
+        pos_down_vals.resize(minibatch_size, down_layer->size);
+        pos_up_vals.resize(minibatch_size, up_layer->size);
 
-    // down propagation, starting from a sample of up_layer
-    connection->setAsUpInput( up_layer->sample );
+        pos_down_vals << down_layer->expectations;
+        pos_up_vals << up_layer->expectations;
+
+        // down propagation, starting from a sample of up_layer
+        connection->setAsUpInputs( up_layer->samples );
+    } else {
+        up_layer->generateSample();
+
+        // accumulate positive stats using the expectation
+        // we deep-copy because the value will change during negative phase
+        pos_down_val.resize( down_layer->size );
+        pos_up_val.resize( up_layer->size );
+
+        pos_down_val << down_layer->expectation;
+        pos_up_val << up_layer->expectation;
+
+        // down propagation, starting from a sample of up_layer
+        connection->setAsUpInput( up_layer->sample );
+    }
+
     down_layer->getAllActivations( connection );
-    down_layer->generateSample();
+    if (mbatch) {
+        down_layer->generateSamples(minibatch_size);
+        // negative phase
+        connection->setAsDownInputs( down_layer->samples );
+    } else {
+        down_layer->generateSample();
+        // negative phase
+        connection->setAsDownInput( down_layer->sample );
+    }
 
-    // negative phase
-    connection->setAsDownInput( down_layer->sample );
     up_layer->getAllActivations( connection );
     up_layer->computeExpectation();
 
-    // accumulate negative stats
-    // no need to deep-copy because the values won't change before update
-    Vec neg_down_values = down_layer->sample;
-    Vec neg_up_values = up_layer->expectation;
+    if (mbatch) {
+        // accumulate negative stats
+        // no need to deep-copy because the values won't change before update
+        Mat neg_down_vals = down_layer->samples;
+        Mat neg_up_vals = up_layer->expectations;
 
-    // update
-    down_layer->update( pos_down_values, neg_down_values );
-    connection->update( pos_down_values, pos_up_values,
-                        neg_down_values, neg_up_values );
-    up_layer->update( pos_up_values, neg_up_values );
+        // update
+        down_layer->update( pos_down_vals, neg_down_vals );
+        connection->update( pos_down_vals, pos_up_vals,
+                neg_down_vals, neg_up_vals );
+        up_layer->update( pos_up_vals, neg_up_vals );
+    } else {
+        // accumulate negative stats
+        // no need to deep-copy because the values won't change before update
+        Vec neg_down_val = down_layer->sample;
+        Vec neg_up_val = up_layer->expectation;
+
+        // update
+        down_layer->update( pos_down_val, neg_down_val );
+        connection->update( pos_down_val, pos_up_val,
+                neg_down_val, neg_up_val );
+        up_layer->update( pos_up_val, neg_up_val );
+    }
 }
 
 
+///////////////////
+// computeOutput //
+///////////////////
 void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
 {
     // Compute the output from the input.
