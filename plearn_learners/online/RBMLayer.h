@@ -124,6 +124,11 @@ public:
     //! generate a sample, and update the sample field
     virtual void generateSample() = 0 ;
 
+    //! Generate a given number of samples, stored in the 'samples' field.
+    void generateSamples(int n_samples) {
+        PLASSERT(false);
+    }
+
     //! compute the expectation
     virtual void computeExpectation() = 0 ;
 
@@ -142,6 +147,13 @@ public:
                              Vec& input_gradient,
                              const Vec& output_gradient,
                              bool accumulate=false) = 0 ;
+
+    virtual void bpropUpdate(const Mat& inputs, const Mat& outputs,
+                             Mat& input_gradients,
+                             const Mat& output_gradients,
+                             bool accumulate=false) {
+        PLASSERT( false );
+    }
 
     //! back-propagates the output gradient to the input and the bias
     virtual void bpropUpdate(const Vec& input, const Vec& rbm_bias,
@@ -168,6 +180,11 @@ public:
 
     //! Update parameters according to one pair of vectors
     virtual void update( const Vec& pos_values, const Vec& neg_values );
+
+    // TODO Implement (in sub-classes too).
+    virtual void update( const Mat& pos_values, const Mat& neg_values ) {
+        PLASSERT( false );
+    }
 
     //! resets activations, sample and expectation fields
     virtual void reset();
