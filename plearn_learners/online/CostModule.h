@@ -71,8 +71,15 @@ public:
     //! given the input and target, compute the main output (cost)
     virtual void fprop(const Vec& input, const Vec& target, real& cost ) const;
 
+
     //! this version allows for several costs
     virtual void fprop(const Vec& input, const Vec& target, Vec& cost ) const;
+
+    // TODO Document and implement (sub-classes too).
+    virtual void fprop(const Mat& inputs, const Mat& targets, Mat& costs ) const
+    {
+        PLASSERT( false );
+    }
 
     //! this version is provided for compatibility with the parent class
     virtual void fprop(const Vec& input_and_target, Vec& output) const;
@@ -89,6 +96,16 @@ public:
                              Vec& input_and_target_gradient,
                              const Vec& output_gradient,
                              bool accumulate=false);
+
+
+    // TODO Had to override to compile, this is weird.
+    virtual void bpropUpdate(const Mat& input, const Mat& output,
+                             Mat& input_gradient, const Mat& output_gradient,
+                             bool accumulate=false) 
+    {
+        inherited::bpropUpdate(input, output, input_gradient, output_gradient,
+                accumulate);
+    }
 
     //! Similar to bpropUpdate, but adapt based also on the estimation
     //! of the diagonal of the Hessian matrix, and propagates this back.
