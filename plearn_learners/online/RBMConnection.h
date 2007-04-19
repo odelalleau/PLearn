@@ -100,10 +100,21 @@ public:
     //! afterwards.
     virtual void setAsUpInput( const Vec& input ) const;
 
+    // TODO Implement, document, add to subclasses.
+    virtual void setAsUpInputs( const Mat& inputs ) const
+    {
+        PLASSERT( false );
+    }
+
     //! Sets input_vec to input, and going_up to true
     //! Note that no data copy is made, so input should not be modified
     //! afterwards.
     virtual void setAsDownInput( const Vec& input ) const;
+
+    // TODO Implement, document, add to subclasses.
+    virtual void setAsDownInputs( const Mat& inputs ) const {
+        PLASSERT( false );
+    }
 
     //! Accumulates positive phase statistics to *_pos_stats
     virtual void accumulatePosStats( const Vec& down_values,
@@ -123,6 +134,15 @@ public:
                          const Vec& pos_up_values,
                          const Vec& neg_down_values,
                          const Vec& neg_up_values);
+
+    // TODO Implement (in sub-classes too).
+    virtual void update( const Mat& pos_down_values,
+                         const Mat& pos_up_values,
+                         const Mat& neg_down_values,
+                         const Mat& neg_up_values)
+    {
+        PLASSERT( false );
+    }
 
     //! Clear all information accumulated during stats
     virtual void clearStats() = 0;
