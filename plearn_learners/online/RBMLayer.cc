@@ -56,6 +56,7 @@ RBMLayer::RBMLayer( real the_learning_rate ) :
     momentum(0.),
     size(-1),
     expectation_is_up_to_date(false),
+    expectations_are_up_to_date(false),
     pos_count(0),
     neg_count(0)
 {
@@ -67,6 +68,7 @@ void RBMLayer::reset()
     sample.clear();
     expectation.clear();
     expectation_is_up_to_date = false;
+    expectations_are_up_to_date = false;
 }
 
 void RBMLayer::clearStats()
@@ -130,6 +132,7 @@ void RBMLayer::build_()
     sample.resize( size );
     expectation.resize( size );
     expectation_is_up_to_date = false;
+    expectations_are_up_to_date = false;
 
     bias.resize( size );
     bias_pos_stats.resize( size );
@@ -177,18 +180,41 @@ void RBMLayer::getUnitActivation( int i, PP<RBMConnection> rbmc, int offset )
     rbmc->computeProduct( i+offset, 1, act );
     act[0] += bias[i];
     expectation_is_up_to_date = false;
+    expectations_are_up_to_date = false;
 }
 
-void RBMLayer::getAllActivations( PP<RBMConnection> rbmc, int offset )
+///////////////////////
+// getAllActivations //
+///////////////////////
+void RBMLayer::getAllActivations( PP<RBMConnection> rbmc, int offset,
+                                  bool minibatch)
 {
-    rbmc->computeProduct( offset, size, activation );
-    activation += bias;
+    if (minibatch) {
+        rbmc->computeProducts( offset, size, activations );
+        activations += bias;
+    } else {
+        rbmc->computeProduct( offset, size, activation );
+        activation += bias;
+    }
     expectation_is_up_to_date = false;
+    expectations_are_up_to_date = false;
 }
 
-// unefficient
+
+/////////////////////
+// getExpectations //
+/////////////////////
+Mat& RBMLayer::getExpectations() {
+    return this->expectations;
+}
+
+///////////
+// fprop //
+///////////
 void RBMLayer::fprop( const Vec& input, Vec& output ) const
 {
+    // Note: inefficient.
+
     // Yes it's ugly, blame the const plague
     RBMLayer* This = const_cast<RBMLayer*>(this);
 
@@ -198,6 +224,7 @@ void RBMLayer::fprop( const Vec& input, Vec& output ) const
     This->activation << input;
     This->activation += bias;
     This->expectation_is_up_to_date = false;
+    This->expectations_are_up_to_date = false;
 
     output << This->expectation;
 }
@@ -227,18 +254,27 @@ void RBMLayer::bpropNLL(const Vec& target, real nll, Vec& bias_gradient)
     PLERROR("In RBMLayer::bpropNLL(): not implemented");
 }
 
+////////////////////////
+// accumulatePosStats //
+////////////////////////
 void RBMLayer::accumulatePosStats( const Vec& pos_values )
 {
     bias_pos_stats += pos_values;
     pos_count++;
 }
 
+////////////////////////
+// accumulateNegStats //
+////////////////////////
 void RBMLayer::accumulateNegStats( const Vec& neg_values )
 {
     bias_neg_stats += neg_values;
     neg_count++;
 }
 
+////////////
+// update //
+////////////
 void RBMLayer::update()
 {
     // bias -= learning_rate * (bias_pos_stats/pos_count
@@ -311,6 +347,15 @@ void RBMLayer::setAllBias(const Vec& rbm_bias)
 {
     PLASSERT( rbm_bias.size() == size );
     bias << rbm_bias;
+}
+
+/////////////////////
+// setExpectations //
+/////////////////////
+void RBMLayer::setExpectations(const Mat& the_expectations)
+{
+    expectations.resize(the_expectations.length(), the_expectations.width());
+    expectations << the_expectations;
 }
 
 /////////////

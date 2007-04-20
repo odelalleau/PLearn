@@ -90,13 +90,14 @@ public:
 
     //! Contains the expected value of the random variable in this layer
     Vec expectation;
-    Mat expectations; // for mini-batch operations
 
     //! flags that expectation was computed based on most recently computed
     //! value of activation
     bool expectation_is_up_to_date;
 
-
+    //! Indicate whether expectations were computed based on most recently
+    //! computed values of activations.
+    bool expectations_are_up_to_date;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -112,6 +113,12 @@ public:
     //! Sets the momentum
     virtual void setMomentum( real the_momentum );
 
+    //! Copy the given expectations in the 'expectations' matrix.
+    void setExpectations(const Mat& the_expectations);
+
+    //! Accessor to the 'expectations' matrix.
+    Mat& getExpectations();
+
     //! Uses "rbmc" to compute the activation of unit "i" of this layer.
     //! This activation is computed by the "i+offset"-th unit of "rbmc"
     virtual void getUnitActivation( int i, PP<RBMConnection> rbmc,
@@ -119,18 +126,20 @@ public:
 
     //! Uses "rbmc" to obtain the activations of all units in this layer.
     //! Unit 0 of this layer corresponds to unit "offset" of "rbmc".
-    virtual void getAllActivations( PP<RBMConnection> rbmc, int offset=0 );
+    virtual void getAllActivations( PP<RBMConnection> rbmc, int offset = 0,
+                                    bool minibatch = false);
 
     //! generate a sample, and update the sample field
     virtual void generateSample() = 0 ;
 
-    //! Generate a given number of samples, stored in the 'samples' field.
-    void generateSamples(int n_samples) {
-        PLASSERT(false);
-    }
+    //! Generate a mini-batch set of samples.
+    virtual void generateSamples() = 0;
 
-    //! compute the expectation
+    //! Compute expectation.
     virtual void computeExpectation() = 0 ;
+
+    //! Compute expectations (mini-batch).
+    virtual void computeExpectations() = 0 ;
 
     //! Adds the bias to input, consider this as the activation, then compute
     //! the expectation
@@ -236,6 +245,9 @@ protected:
     //! Count of negative examples
     int neg_count;
 
+    //! Expectations for mini-batch operations.
+    //! It is protected to encourage the use of accessors.
+    Mat expectations;
 
 protected:
     //#####  Protected Member Functions  ######################################

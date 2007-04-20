@@ -78,6 +78,9 @@ void RBMMixedLayer::setMomentum( real the_momentum )
 }
 
 
+///////////////////////
+// getUnitActivation //
+///////////////////////
 void RBMMixedLayer::getUnitActivation( int i, PP<RBMConnection> rbmc,
                                        int offset )
 {
@@ -87,14 +90,21 @@ void RBMMixedLayer::getUnitActivation( int i, PP<RBMConnection> rbmc,
     sub_layers[j]->expectation_is_up_to_date = false;
 }
 
-void RBMMixedLayer::getAllActivations( PP<RBMConnection> rbmc, int offset )
+///////////////////////
+// getAllActivations //
+///////////////////////
+void RBMMixedLayer::getAllActivations( PP<RBMConnection> rbmc, int offset,
+                                       bool minibatch )
 {
-    inherited::getAllActivations( rbmc, offset );
+    inherited::getAllActivations( rbmc, offset, minibatch );
     for( int i=0 ; i<n_layers ; i++ )
         sub_layers[i]->expectation_is_up_to_date = false;
 }
 
 
+////////////////////
+// generateSample //
+////////////////////
 void RBMMixedLayer::generateSample()
 {
     for( int i=0 ; i<n_layers ; i++ )

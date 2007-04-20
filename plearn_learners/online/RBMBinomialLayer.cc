@@ -67,26 +67,9 @@ RBMBinomialLayer::RBMBinomialLayer( int the_size, real the_learning_rate ) :
     bias_neg_stats.resize( the_size );
 }
 
-/*
-//! Uses "rbmp" to obtain the activations of unit "i" of this layer.
-//! This activation vector is computed by the "i+offset"-th unit of "rbmp"
-void RBMBinomialLayer::getUnitActivations( int i, PP<RBMParameters> rbmp,
-                                           int offset )
-{
-    Vec activation = activations.subVec( i, 1 );
-    rbmp->computeUnitActivations( i+offset, 1, activation );
-    expectation_is_up_to_date = false;
-}
-
-//! Uses "rbmp" to obtain the activations of all units in this layer.
-//! Unit 0 of this layer corresponds to unit "offset" of "rbmp".
-void RBMBinomialLayer::getAllActivations( PP<RBMParameters> rbmp, int offset )
-{
-    rbmp->computeUnitActivations( offset, size, activations );
-    expectation_is_up_to_date = false;
-}
-*/
-
+////////////////////
+// generateSample //
+////////////////////
 void RBMBinomialLayer::generateSample()
 {
     computeExpectation();
@@ -95,6 +78,23 @@ void RBMBinomialLayer::generateSample()
         sample[i] = random_gen->binomial_sample( expectation[i] );
 }
 
+/////////////////////
+// generateSamples //
+/////////////////////
+void RBMBinomialLayer::generateSamples()
+{
+    computeExpectations();
+    int mbatch_size = expectations.length();
+    samples.resize(mbatch_size, size);
+
+    for (int k = 0; k < mbatch_size; k++)
+        for (int i=0 ; i<size ; i++)
+            samples(k, i) = random_gen->binomial_sample( expectations(k, i) );
+}
+
+////////////////////////
+// computeExpectation //
+////////////////////////
 void RBMBinomialLayer::computeExpectation()
 {
     if( expectation_is_up_to_date )
@@ -106,6 +106,26 @@ void RBMBinomialLayer::computeExpectation()
     expectation_is_up_to_date = true;
 }
 
+/////////////////////////
+// computeExpectations //
+/////////////////////////
+void RBMBinomialLayer::computeExpectations()
+{
+    if( expectations_are_up_to_date )
+        return;
+
+    int mbatch_size = activations.length();
+    expectations.resize(mbatch_size, size);
+    for (int k = 0; k < mbatch_size; k++)
+        for (int i = 0 ; i < size ; i++)
+            expectations(k, i) = sigmoid(-activations(k, i));
+
+    expectations_are_up_to_date = true;
+}
+
+///////////
+// fprop //
+///////////
 void RBMBinomialLayer::fprop( const Vec& input, Vec& output ) const
 {
     PLASSERT( input.size() == input_size );

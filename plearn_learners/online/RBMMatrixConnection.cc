@@ -230,6 +230,9 @@ void RBMMatrixConnection::update( const Vec& pos_down_values, // v_0
     }
 }
 
+////////////////
+// clearStats //
+////////////////
 void RBMMatrixConnection::clearStats()
 {
     weights_pos_stats.clear();
@@ -239,6 +242,9 @@ void RBMMatrixConnection::clearStats()
     neg_count = 0;
 }
 
+////////////////////
+// computeProduct //
+////////////////////
 void RBMMatrixConnection::computeProduct( int start, int length,
                                           const Vec& activations,
                                           bool accumulate ) const
@@ -273,7 +279,46 @@ void RBMMatrixConnection::computeProduct( int start, int length,
     }
 }
 
-//! this version allows to obtain the input gradient as well
+/////////////////////
+// computeProducts //
+/////////////////////
+void RBMMatrixConnection::computeProducts(int start, int length,
+                                          Mat& activations,
+                                          bool accumulate ) const
+{
+    activations.resize(inputs_mat.length(), length);
+    if( going_up )
+    {
+        PLASSERT( start+length <= up_size );
+        // activations(k, i-start) += sum_j weights(i,j) inputs_mat(k, j)
+
+        if( accumulate )
+            productTransposeAcc(activations,
+                    inputs_mat,
+                    weights.subMatRows(start,length));
+        else
+            productTranspose(activations,
+                    inputs_mat,
+                    weights.subMatRows(start,length));
+    }
+    else
+    {
+        PLASSERT( start+length <= down_size );
+        // activations(k, i-start) += sum_j weights(j,i) inputs_mat(k, j)
+        if( accumulate )
+            transposeProductAcc( activations,
+                                 weights.subMatColumns(start,length),
+                                 inputs_mat );
+        else
+            transposeProduct( activations,
+                              weights.subMatColumns(start,length),
+                              inputs_mat );
+    }
+}
+
+/////////////////
+// bpropUpdate //
+/////////////////
 void RBMMatrixConnection::bpropUpdate(const Vec& input, const Vec& output,
                                       Vec& input_gradient,
                                       const Vec& output_gradient,

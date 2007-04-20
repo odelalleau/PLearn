@@ -70,23 +70,14 @@ public:
     RBMGaussianLayer( int the_size, real the_learning_rate=0. );
 
 
-    // Your other public member functions go here
-/*
-    //! Uses "rbmp" to obtain the activations of unit "i" of this layer.
-    //! This activation vector is computed by the "i+offset"-th unit of "rbmp"
-    virtual void getUnitActivations( int i, PP<RBMParameters> rbmp,
-                                     int offset=0 );
-
-    //! Uses "rbmp" to obtain the activations of all units in this layer.
-    //! Unit 0 of this layer corresponds to unit "offset" of "rbmp".
-    virtual void getAllActivations( PP<RBMParameters> rbmp, int offset=0 ) ;
-*/
-
     //! compute a sample, and update the sample field
     virtual void generateSample() ;
 
     //! compute the expectation
     virtual void computeExpectation() ;
+
+    //! Not implemented.
+    virtual void computeExpectations() { PLASSERT( false ); }
 
     //! compute the standard deviation
     virtual void computeStdDeviation() ;

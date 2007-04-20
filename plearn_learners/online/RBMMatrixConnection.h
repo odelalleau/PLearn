@@ -109,6 +109,11 @@ public:
                                  const Vec& activations,
                                  bool accumulate=false ) const;
 
+    //! Same as 'computeProduct' but for mini-batches.
+    virtual void computeProducts(int start, int length,
+                                 Mat& activations,
+                                 bool accumulate=false ) const;
+
     //! Adapt based on the output gradient: this method should only
     //! be called just after a corresponding fprop; it should be
     //! called with the same arguments as fprop for the first two arguments

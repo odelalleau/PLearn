@@ -156,6 +156,7 @@ void RBMConnection::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField(input_vec, copies);
+    PLASSERT_MSG(false, "Not fully implemented");
 }
 
 /////////////////////
@@ -184,6 +185,16 @@ void RBMConnection::setAsUpInput( const Vec& input ) const
     going_up = false;
 }
 
+///////////////////
+// setAsUpInputs //
+///////////////////
+void RBMConnection::setAsUpInputs( const Mat& inputs ) const
+{
+    PLASSERT( inputs.width() == up_size );
+    inputs_mat = inputs;
+    going_up = false;
+}
+
 ////////////////////
 // setAsDownInput //
 ////////////////////
@@ -191,6 +202,16 @@ void RBMConnection::setAsDownInput( const Vec& input ) const
 {
     PLASSERT( input.size() == down_size );
     input_vec = input;
+    going_up = true;
+}
+
+/////////////////////
+// setAsDownInputs //
+/////////////////////
+void RBMConnection::setAsDownInputs( const Mat& inputs ) const
+{
+    PLASSERT( inputs.width() == down_size );
+    inputs_mat = inputs;
     going_up = true;
 }
 

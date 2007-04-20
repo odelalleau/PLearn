@@ -95,26 +95,25 @@ public:
     //! Sets the momentum
     virtual void setMomentum( real the_momentum );
 
-    //! Sets input_vec to input, and going_up to false.
-    //! Note that no data copy is made, so input should not be modified
+    //! Sets 'input_vec' to 'input', and 'going_up' to false.
+    //! Note that no data copy is made, so 'input' should not be modified
     //! afterwards.
     virtual void setAsUpInput( const Vec& input ) const;
 
-    // TODO Implement, document, add to subclasses.
-    virtual void setAsUpInputs( const Mat& inputs ) const
-    {
-        PLASSERT( false );
-    }
+    //! Set 'inputs_mat' to 'inputs', and 'going_up' to false.
+    //! Note that no data copy is made, so 'inputs' should not be modified
+    //! afterwards.
+    virtual void setAsUpInputs( const Mat& inputs ) const;
 
-    //! Sets input_vec to input, and going_up to true
-    //! Note that no data copy is made, so input should not be modified
+    //! Sets 'input_vec' to 'input', and 'going_up' to true.
+    //! Note that no data copy is made, so 'input' should not be modified
     //! afterwards.
     virtual void setAsDownInput( const Vec& input ) const;
 
-    // TODO Implement, document, add to subclasses.
-    virtual void setAsDownInputs( const Mat& inputs ) const {
-        PLASSERT( false );
-    }
+    //! Set 'inputs_mat' to 'inputs', and 'going_up' to true.
+    //! Note that no data copy is made, so 'inputs' should not be modified
+    //! afterwards.
+    virtual void setAsDownInputs( const Mat& inputs ) const;
 
     //! Accumulates positive phase statistics to *_pos_stats
     virtual void accumulatePosStats( const Vec& down_values,
@@ -154,6 +153,11 @@ public:
                                  const Vec& activations,
                                  bool accumulate=false ) const = 0;
 
+    //! Same as 'computeProduct' but for mini-batches.
+    virtual void computeProducts(int start, int length,
+                                 Mat& activations,
+                                 bool accumulate=false ) const = 0;
+
     //! given the input, compute the output (possibly resize it  appropriately)
     virtual void fprop(const Vec& input, Vec& output) const;
 
@@ -182,14 +186,18 @@ public:
 protected:
     //#####  Not Options  #####################################################
 
-    //! Points to current input vector
+    //! Pointer to current input vector.
     mutable Vec input_vec;
+
+    //! Pointer to current inputs matrix.
+    mutable Mat inputs_mat;
 
     //! Tells if input_vec comes from down (true) or up (false)
     mutable bool going_up;
 
     //! Number of examples accumulated in *_pos_stats
     int pos_count;
+
     //! Number of examples accumulated in *_neg_stats
     int neg_count;
 

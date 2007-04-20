@@ -84,13 +84,20 @@ public:
 
     //! Uses "rbmc" to obtain the activations of all units in this layer.
     //! Unit 0 of this layer corresponds to unit "offset" of "rbmc".
-    virtual void getAllActivations( PP<RBMConnection> rbmc, int offset=0 );
+    virtual void getAllActivations( PP<RBMConnection> rbmc, int offset=0,
+                                    bool minibatch = false );
 
     //! compute a sample, and update the sample field
     virtual void generateSample() ;
 
+    //! Not implemented.
+    virtual void generateSamples() { PLASSERT( false ); }
+
     //! compute the expectation
     virtual void computeExpectation() ;
+
+    //! Not implemented.
+    virtual void computeExpectations() { PLASSERT( false ); }
 
     //! forward propagation
     virtual void fprop( const Vec& input, Vec& output ) const;

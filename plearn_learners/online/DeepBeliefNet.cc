@@ -661,16 +661,19 @@ void DeepBeliefNet::train()
 
             for( ; stage<end_stage ; stage++ )
             {
-                int sample_start = (stage * minibatch_size) % nsamples;
-                if (batch_size > 1) {
-                    train_set->getExamples(sample_start, minibatch_size,
-                            inputs, targets, weights);
-                    greedyStep( inputs, targets, i );
-                } else {
-                    train_set->getExample(sample_start, input, target, weight);
-                    greedyStep( input, target, i );
-                }
+                // Do a step every 'minibatch_size' examples.
+                if (stage % minibatch_size == 0) {
+                    int sample_start = stage % nsamples;
+                    if (batch_size > 1) {
+                        train_set->getExamples(sample_start, minibatch_size,
+                                inputs, targets, weights);
+                        greedyStep( inputs, targets, i );
+                    } else {
+                        train_set->getExample(sample_start, input, target, weight);
+                        greedyStep( input, target, i );
+                    }
 
+                }
                 if( pb )
                     if( i == 0 )
                         pb->update( stage + 1 );
@@ -726,6 +729,8 @@ void DeepBeliefNet::train()
         for(int train_index = 0 ; train_index < nsamples ; train_index++)
         {
 
+            PLASSERT_MSG(batch_size == 1, "Not implemented for mini-batches");
+
             train_set->getExample( train_index, input, target, weight );
 
             down_layer->expectation << input;
@@ -774,31 +779,33 @@ void DeepBeliefNet::train()
         bool update_stats = false;
         for( ; stage<nstages ; stage++ )
         {
-            int sample_start = (stage * minibatch_size) % nsamples;
-            // Only update train statistics for the last 'epoch', i.e. last
-            // 'nsamples' seen.
-            update_stats = update_stats ||
-                stage >= (nstages - nsamples / minibatch_size);
+            // Update every 'minibatch_size' samples.
+            if (stage % minibatch_size == 0) {
+                int sample_start = stage % nsamples;
+                // Only update train statistics for the last 'epoch', i.e. last
+                // 'nsamples' seen.
+                update_stats = update_stats || stage >= nstages - nsamples;
 
-            if( !fast_exact_is_equal( grad_decrease_ct, 0. ) )
-                setLearningRate( grad_learning_rate
-                                 / (1. + grad_decrease_ct * (stage - init_stage) ) );
+                if( !fast_exact_is_equal( grad_decrease_ct, 0. ) )
+                    setLearningRate( grad_learning_rate
+                            / (1. + grad_decrease_ct * (stage - init_stage) ) );
 
-            if (minibatch_size > 1) {
-                train_set->getExamples(sample_start, minibatch_size, inputs,
-                        targets, weights);
-                fineTuningStep(inputs, targets, train_costs_m);
-            } else {
-                train_set->getExample( sample_start, input, target, weight );
-                fineTuningStep( input, target, train_costs );
+                if (minibatch_size > 1) {
+                    train_set->getExamples(sample_start, minibatch_size, inputs,
+                            targets, weights);
+                    fineTuningStep(inputs, targets, train_costs_m);
+                } else {
+                    train_set->getExample( sample_start, input, target, weight );
+                    fineTuningStep( input, target, train_costs );
+                }
+                if (update_stats)
+                    if (minibatch_size > 1)
+                        for (int k = 0; k < minibatch_size; k++)
+                            train_stats->update(train_costs_m(k));
+                    else
+                        train_stats->update( train_costs );
+
             }
-            if (update_stats)
-                if (minibatch_size > 1)
-                    for (int k = 0; k < minibatch_size; k++)
-                        train_stats->update(train_costs_m(k));
-                else
-                    train_stats->update( train_costs );
-
             if( pb )
                 pb->update( stage - init_stage + 1 );
         }
@@ -881,7 +888,7 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
         {
             /*
             if (minibatch_size > 1) {
-                final_module->fprop( layers[ n_layers-1 ]->expectations,
+                final_module->fprop( layers[ n_layers-1 ]->getExpectations(),
                         final_cost_inputs );
                 final_cost->fprop( final_cost_inputs, targets,
                         final_cost_values );
@@ -890,7 +897,7 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
                         final_cost_gradients );
 
                 final_module->bpropUpdate(
-                        layers[ n_layers-1 ]->expectations,
+                        layers[ n_layers-1 ]->getExpectations(),
                         final_cost_inputs,
                         expectations_gradients[ n_layers-1 ],
                         final_cost_gradients, true );
@@ -914,10 +921,10 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
         {
             /*
             if (minibatch_size > 1) {
-                final_cost->fprop( layers[ n_layers-1 ]->expectations,
+                final_cost->fprop( layers[ n_layers-1 ]->getExpectations(),
                         targets,
                         final_cost_values );
-                final_cost->bpropUpdate( layers[ n_layers-1 ]->expectations,
+                final_cost->bpropUpdate( layers[ n_layers-1 ]->getExpectations(),
                         targets, final_cost_values.column(0),
                         expectations_gradients[n_layers-1],
                         true);
@@ -1113,12 +1120,12 @@ void DeepBeliefNet::greedyStep( const Mat& inputs, const Mat& targets, int index
 {
     PLASSERT( index < n_layers );
 
-    layers[0]->expectations << inputs;
+    layers[0]->setExpectations(inputs);
     for( int i=0 ; i<=index ; i++ )
     {
-        connections[i]->setAsDownInputs( layers[i]->expectations );
-        layers[i+1]->getAllActivations( connections[i] );
-        layers[i+1]->computeExpectation(); // TODO Ensure it fills expectations
+        connections[i]->setAsDownInputs( layers[i]->getExpectations() );
+        layers[i+1]->getAllActivations( connections[i], 0, true );
+        layers[i+1]->computeExpectations();
     }
 
     // TODO: add another learning rate?
@@ -1342,25 +1349,26 @@ void DeepBeliefNet::fineTuningStep(const Mat& inputs, const Mat& targets,
 {
     final_cost_values.resize(0, 0);
     // fprop
-    layers[0]->expectations << inputs;
+    layers[0]->getExpectations() << inputs;
     for( int i=0 ; i<n_layers-2 ; i++ )
     {
-        connections[i]->setAsDownInputs( layers[i]->expectations );
-        layers[i+1]->getAllActivations( connections[i] );
-        layers[i+1]->computeExpectation(); // TODO Ensure it fills expectations
+        connections[i]->setAsDownInputs( layers[i]->getExpectations() );
+        layers[i+1]->getAllActivations( connections[i], 0, true );
+        layers[i+1]->computeExpectations();
     }
 
     if( final_cost )
     {
         connections[ n_layers-2 ]->setAsDownInputs(
-            layers[ n_layers-2 ]->expectations );
+            layers[ n_layers-2 ]->getExpectations() );
         // TODO Also ensure getAllActivations fills everything.
-        layers[ n_layers-1 ]->getAllActivations( connections[ n_layers-2 ] );
-        layers[ n_layers-1 ]->computeExpectation();
+        layers[ n_layers-1 ]->getAllActivations(connections[n_layers-2],
+                                                0, true);
+        layers[ n_layers-1 ]->computeExpectations();
 
         if( final_module )
         {
-            final_module->fprop( layers[ n_layers-1 ]->expectations,
+            final_module->fprop( layers[ n_layers-1 ]->getExpectations(),
                                  final_cost_inputs );
             final_cost->fprop( final_cost_inputs, targets, final_cost_values );
 
@@ -1368,18 +1376,18 @@ void DeepBeliefNet::fineTuningStep(const Mat& inputs, const Mat& targets,
             final_cost->bpropUpdate( final_cost_inputs, targets,
                                      optimized_costs,
                                      final_cost_gradients );
-            final_module->bpropUpdate( layers[ n_layers-1 ]->expectations,
+            final_module->bpropUpdate( layers[ n_layers-1 ]->getExpectations(),
                                        final_cost_inputs,
                                        expectations_gradients[ n_layers-1 ],
                                        final_cost_gradients );
         }
         else
         {
-            final_cost->fprop( layers[ n_layers-1 ]->expectations, targets,
+            final_cost->fprop( layers[ n_layers-1 ]->getExpectations(), targets,
                                final_cost_values );
 
             Mat optimized_costs = final_cost_values.column(0);
-            final_cost->bpropUpdate( layers[ n_layers-1 ]->expectations,
+            final_cost->bpropUpdate( layers[ n_layers-1 ]->getExpectations(),
                                      targets, optimized_costs,
                                      expectations_gradients[ n_layers-1 ] );
         }
@@ -1390,13 +1398,13 @@ void DeepBeliefNet::fineTuningStep(const Mat& inputs, const Mat& targets,
                     final_cost_values(k, j);
 
         layers[ n_layers-1 ]->bpropUpdate( layers[ n_layers-1 ]->activations,
-                                           layers[ n_layers-1 ]->expectations,
+                                           layers[ n_layers-1 ]->getExpectations(),
                                            activations_gradients[ n_layers-1 ],
                                            expectations_gradients[ n_layers-1 ]
                                          );
 
         connections[ n_layers-2 ]->bpropUpdate(
-            layers[ n_layers-2 ]->expectations,
+            layers[ n_layers-2 ]->getExpectations(),
             layers[ n_layers-1 ]->activations,
             expectations_gradients[ n_layers-2 ],
             activations_gradients[ n_layers-1 ] );
@@ -1440,11 +1448,11 @@ void DeepBeliefNet::fineTuningStep(const Mat& inputs, const Mat& targets,
     for( int i=n_layers-2 ; i>0 ; i-- )
     {
         layers[i]->bpropUpdate( layers[i]->activations,
-                                layers[i]->expectations,
+                                layers[i]->getExpectations(),
                                 activations_gradients[i],
                                 expectations_gradients[i] );
 
-        connections[i-1]->bpropUpdate( layers[i-1]->expectations,
+        connections[i-1]->bpropUpdate( layers[i-1]->getExpectations(),
                                        layers[i]->activations,
                                        expectations_gradients[i-1],
                                        activations_gradients[i] );
@@ -1465,27 +1473,36 @@ void DeepBeliefNet::contrastiveDivergenceStep(
     // positive phase
     if (!nofprop)
     {
-        if (mbatch)
-            connection->setAsDownInputs( down_layer->expectations );
-        else
+        if (mbatch) {
+            connection->setAsDownInputs( down_layer->getExpectations() );
+            up_layer->getAllActivations( connection, 0, true );
+            up_layer->computeExpectations();
+        } else {
             connection->setAsDownInput( down_layer->expectation );
-        up_layer->getAllActivations( connection );
-        up_layer->computeExpectation();
+            up_layer->getAllActivations( connection );
+            up_layer->computeExpectation();
+        }
     }
 
     if (mbatch) {
-        up_layer->generateSamples(minibatch_size);
+        up_layer->generateSamples();
 
         // accumulate positive stats using the expectation
         // we deep-copy because the value will change during negative phase
         pos_down_vals.resize(minibatch_size, down_layer->size);
         pos_up_vals.resize(minibatch_size, up_layer->size);
 
-        pos_down_vals << down_layer->expectations;
-        pos_up_vals << up_layer->expectations;
+        pos_down_vals << down_layer->getExpectations();
+        pos_up_vals << up_layer->getExpectations();
 
         // down propagation, starting from a sample of up_layer
         connection->setAsUpInputs( up_layer->samples );
+
+        down_layer->getAllActivations( connection, 0, true );
+
+        down_layer->generateSamples();
+        // negative phase
+        connection->setAsDownInputs( down_layer->samples );
     } else {
         up_layer->generateSample();
 
@@ -1499,27 +1516,25 @@ void DeepBeliefNet::contrastiveDivergenceStep(
 
         // down propagation, starting from a sample of up_layer
         connection->setAsUpInput( up_layer->sample );
-    }
 
-    down_layer->getAllActivations( connection );
-    if (mbatch) {
-        down_layer->generateSamples(minibatch_size);
-        // negative phase
-        connection->setAsDownInputs( down_layer->samples );
-    } else {
+        down_layer->getAllActivations( connection );
+
         down_layer->generateSample();
         // negative phase
         connection->setAsDownInput( down_layer->sample );
     }
 
-    up_layer->getAllActivations( connection );
-    up_layer->computeExpectation();
+    up_layer->getAllActivations( connection, 0, mbatch );
+    if (mbatch)
+        up_layer->computeExpectations();
+    else
+        up_layer->computeExpectation();
 
     if (mbatch) {
         // accumulate negative stats
         // no need to deep-copy because the values won't change before update
         Mat neg_down_vals = down_layer->samples;
-        Mat neg_up_vals = up_layer->expectations;
+        Mat neg_up_vals = up_layer->getExpectations();
 
         // update
         down_layer->update( pos_down_vals, neg_down_vals );
