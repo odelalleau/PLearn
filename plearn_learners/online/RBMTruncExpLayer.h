@@ -72,6 +72,10 @@ public:
     //! generate a sample, and update the sample field
     virtual void generateSample() ;
 
+    virtual void generateSamples() {
+        PLASSERT( false ); // Not implemented.
+    }
+
     //! compute the expectation
     virtual void computeExpectation() ;
 

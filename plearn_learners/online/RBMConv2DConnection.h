@@ -134,6 +134,13 @@ public:
                                  const Vec& activations,
                                  bool accumulate=false ) const;
 
+    virtual void computeProducts(int start, int length,
+                                 Mat& activations,
+                                 bool accumulate=false ) const
+    {
+        PLASSERT( false ); // Not implemented.
+    }
+
     //! Adapt based on the output gradient: this method should only
     //! be called just after a corresponding fprop; it should be
     //! called with the same arguments as fprop for the first two arguments
