@@ -419,7 +419,7 @@ options_choices = [
   [ 'python23', 'python24', 'python25' ],
   
   [ 'blas', 'p3blas','p4blas','athlonblas','pentiumblas', 'mammouthblas',
-    'noblas', 'veclib', 'scs', 'goto' ],
+    'noblas', 'veclib', 'scs', 'goto', 'lisa' ],
   
   [ 'logging=dbg', 'logging=mand', 'logging=imp', 'logging=normal', 'logging=extreme' ]
 ]
@@ -688,6 +688,14 @@ pymakeOption( name = 'goto',
               description = 'compilation and linking using GOTO for BLAS',
               cpp_definitions = ['USE_BLAS_SPECIALISATIONS'],
               linkeroptions = '-L' + libdir +'goto -llapack -lgoto -lgfortran'
+              )
+
+## We must link again the static version of lapack as the dynamic version is linked again the default version of blas
+## and we don't want to link again it. Also, we must remove fonction from lapack as some of them are also in GOTO
+pymakeOption( name = 'lisa',
+              description = 'compilation and linking using GOTO for BLAS',
+              cpp_definitions = ['USE_BLAS_SPECIALISATIONS'],
+              linkeroptions = '-L' + libdir +'goto /u/lisa/local/'+target_platform+'/lib/lapack_for_goto.a  -lgoto -lpthread -lgfortran -lg2c'
               )
 
 cpp_variables += ['USE_BLAS_SPECIALISATIONS']
