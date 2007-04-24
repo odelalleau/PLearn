@@ -71,15 +71,15 @@ public:
     //! given the input and target, compute the main output (cost)
     virtual void fprop(const Vec& input, const Vec& target, real& cost ) const;
 
+    //! Mini-batch version.
+    virtual void fprop(const Mat& inputs, const Mat& targets, Vec& costs );
 
     //! this version allows for several costs
     virtual void fprop(const Vec& input, const Vec& target, Vec& cost ) const;
 
-    // TODO Document and implement (sub-classes too).
-    virtual void fprop(const Mat& inputs, const Mat& targets, Mat& costs ) const
-    {
-        PLASSERT( false );
-    }
+    //! Mini-batch version with several costs..
+    virtual void fprop(const Mat& inputs, const Mat& targets, Mat& costs)
+        const;
 
     //! this version is provided for compatibility with the parent class
     virtual void fprop(const Vec& input_and_target, Vec& output) const;
@@ -88,8 +88,20 @@ public:
     virtual void bpropUpdate(const Vec& input, const Vec& target, real cost,
                              Vec& input_gradient, bool accumulate=false);
 
+    //! Adapt based on the mini-batch cost gradient, and obtain the mini-batch
+    //! input gradient.
+    virtual void bpropUpdate(const Mat& inputs, const Mat& targets,
+            const Vec& costs, Mat& input_gradients, bool accumulate = false)
+    {
+        PLERROR("bpropUpdate on mini-batches not implemented in class %s",
+                classname().c_str());
+    }
+
     //! Without the input gradient
     virtual void bpropUpdate(const Vec& input, const Vec& target, real cost );
+
+    virtual void bpropUpdate(const Mat& inputs, const Mat& targets,
+            const Vec& costs);
 
     //! this version is provided for compatibility with the parent class.
     virtual void bpropUpdate(const Vec& input_and_target, const Vec& output,
@@ -151,6 +163,8 @@ protected:
     mutable Vec tmp_input_and_target;
     mutable Vec tmp_input_and_target_gradient;
     mutable Vec tmp_input_and_target_diag_hessian;
+    Mat tmp_costs_mat;
+    Mat tmp_input_gradients;
 
 private:
     //#####  Private Member Functions  ########################################

@@ -83,12 +83,25 @@ void CostModule::build()
 }
 
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void CostModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
+
+    deepCopyField(tmp_costs,                            copies);
+    deepCopyField(tmp_input_and_target,                 copies);
+    deepCopyField(tmp_input_and_target_gradient,        copies);
+    deepCopyField(tmp_input_and_target_diag_hessian,    copies);
+    deepCopyField(tmp_costs_mat,                        copies);
+    deepCopyField(tmp_input_gradients,                  copies);
 }
 
 
+///////////
+// fprop //
+///////////
 void CostModule::fprop(const Vec& input, const Vec& target, Vec& cost) const
 {
     PLERROR("CostModule::fprop(const Vec& input, const Vec& target, Vec& cost)"
@@ -96,12 +109,36 @@ void CostModule::fprop(const Vec& input, const Vec& target, Vec& cost) const
             "is not implemented. You have to implement it in your class.\n");
 }
 
-//! keeps only the first cost
+void CostModule::fprop(const Mat& inputs, const Mat& targets, Mat& costs) const
+{
+    //PLWARNING("CostModule::fprop - Not implemented for class %s",
+    //       classname().c_str());
+    // Default (possibly inefficient) implementation.
+    costs.resize(inputs.length(), output_size);
+    Vec input, target, cost;
+    for (int i = 0; i < inputs.length(); i++) {
+        input = inputs(i);
+        target = targets(i);
+        cost = costs(i);
+        this->fprop(input, target, cost);
+    }
+}
+
 void CostModule::fprop(const Vec& input, const Vec& target, real& cost) const
 {
+    // Keep only the first cost.
     fprop( input, target, tmp_costs );
-
     cost = tmp_costs[0];
+}
+
+void CostModule::fprop(const Mat& inputs, const Mat& targets, Vec& costs)
+{
+    //PLWARNING("In CostModule::fprop - Using default (possibly inefficient) "
+    //        "implementation for class %s", classname().c_str());
+    // Keep only the first cost.
+    tmp_costs_mat.resize(inputs.length(), output_size);
+    fprop(inputs, targets, tmp_costs_mat);
+    costs << tmp_costs_mat.column(0);
 }
 
 //! for compatibility with OnlineLearningModule interface
@@ -114,6 +151,9 @@ void CostModule::fprop(const Vec& input_and_target, Vec& output) const
 }
 
 
+/////////////////
+// bpropUpdate //
+/////////////////
 void CostModule::bpropUpdate(const Vec& input, const Vec& target, real cost,
                              Vec& input_gradient, bool accumulate)
 {
@@ -145,6 +185,14 @@ void CostModule::bpropUpdate(const Vec& input, const Vec& target, real cost,
 void CostModule::bpropUpdate(const Vec& input, const Vec& target, real cost)
 {
     bpropUpdate( input, target, cost, tmp_input_gradient );
+}
+
+void CostModule::bpropUpdate(const Mat& inputs, const Mat& targets,
+        const Vec& costs)
+{
+    PLWARNING("In CostModule::bpropUpdate - Using default (possibly "
+        "inefficient) version for class %s", classname().c_str());
+    bpropUpdate( inputs, targets, costs, tmp_input_gradients );
 }
 
 void CostModule::bpropUpdate(const Vec& input_and_target, const Vec& output,
