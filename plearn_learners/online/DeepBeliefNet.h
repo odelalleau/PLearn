@@ -309,6 +309,9 @@ protected:
     mutable Mat pos_down_vals;
     mutable Mat pos_up_vals;
 
+    //! Used to store the costs optimized by the final cost module.
+    Vec optimized_costs;
+
     //! Keeps the index of the NLL cost in train_costs
     int nll_cost_index;
 

@@ -449,8 +449,6 @@ void DeepBeliefNet::build()
 /////////////////////////////////
 void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    // TODO Add missing fields.
-
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField(training_schedule,        copies);
@@ -464,9 +462,13 @@ void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(classification_cost,      copies);
     deepCopyField(joint_layer,              copies);
     deepCopyField(activation_gradients,     copies);
+    deepCopyField(activations_gradients,    copies);
     deepCopyField(expectation_gradients,    copies);
+    deepCopyField(expectations_gradients,   copies);
     deepCopyField(final_cost_input,         copies);
+    deepCopyField(final_cost_inputs,        copies);
     deepCopyField(final_cost_value,         copies);
+    deepCopyField(final_cost_values,        copies);
     deepCopyField(final_cost_output,        copies);
     deepCopyField(class_output,             copies);
     deepCopyField(class_gradient,           copies);
@@ -475,8 +477,11 @@ void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(final_cost_gradients,     copies);
     deepCopyField(save_layer_activation,    copies);
     deepCopyField(save_layer_expectation,   copies);
-    deepCopyField(pos_down_val,          copies);
-    deepCopyField(pos_up_val,            copies);
+    deepCopyField(pos_down_val,             copies);
+    deepCopyField(pos_up_val,               copies);
+    deepCopyField(pos_down_vals,            copies);
+    deepCopyField(pos_up_vals,              copies);
+    deepCopyField(optimized_costs,          copies);
     deepCopyField(final_cost_indices,       copies);
     deepCopyField(partial_cost_indices,     copies);
 }
@@ -546,6 +551,7 @@ void DeepBeliefNet::train()
         }
         if (final_cost)
             final_cost_gradients.resize(minibatch_size, final_cost->input_size);
+        optimized_costs.resize(minibatch_size);
     }
 
     layers[n_layers-1]->random_gen = random_gen;
@@ -666,7 +672,7 @@ void DeepBeliefNet::train()
                     int sample_start = stage % nsamples;
                     if (batch_size > 1) {
                         train_set->getExamples(sample_start, minibatch_size,
-                                inputs, targets, weights);
+                                inputs, targets, weights, NULL, true);
                         greedyStep( inputs, targets, i );
                     } else {
                         train_set->getExample(sample_start, input, target, weight);
@@ -726,6 +732,8 @@ void DeepBeliefNet::train()
 
         // TODO Do we really want to systematically compute this reconstruction
         // error?
+
+        if (batch_size == 1) {
         for(int train_index = 0 ; train_index < nsamples ; train_index++)
         {
 
@@ -756,6 +764,10 @@ void DeepBeliefNet::train()
         }
 
         train_recons_error /= nsamples ;
+        } else {
+            // Currently do not compute reconstruction error with mini-batches.
+            train_recons_error = MISSING_VALUE;
+        }
 
 
         /***** fine-tuning by gradient descent *****/
@@ -792,7 +804,7 @@ void DeepBeliefNet::train()
 
                 if (minibatch_size > 1) {
                     train_set->getExamples(sample_start, minibatch_size, inputs,
-                            targets, weights);
+                            targets, weights, NULL, true);
                     fineTuningStep(inputs, targets, train_costs_m);
                 } else {
                     train_set->getExample( sample_start, input, target, weight );
@@ -1341,9 +1353,6 @@ void DeepBeliefNet::fineTuningStep( const Vec& input, const Vec& target,
     }
 }
 
-////////////////////
-// fineTuningStep //
-////////////////////
 void DeepBeliefNet::fineTuningStep(const Mat& inputs, const Mat& targets,
                                    Mat& train_costs )
 {
@@ -1368,11 +1377,14 @@ void DeepBeliefNet::fineTuningStep(const Mat& inputs, const Mat& targets,
 
         if( final_module )
         {
+            final_cost_inputs.resize(minibatch_size,
+                                     final_module->output_size);
             final_module->fprop( layers[ n_layers-1 ]->getExpectations(),
                                  final_cost_inputs );
             final_cost->fprop( final_cost_inputs, targets, final_cost_values );
 
-            Mat optimized_costs = final_cost_values.column(0);
+            // TODO This extra memory copy is annoying: how can we avoid it?
+            optimized_costs << final_cost_values.column(0);
             final_cost->bpropUpdate( final_cost_inputs, targets,
                                      optimized_costs,
                                      final_cost_gradients );
@@ -1386,7 +1398,7 @@ void DeepBeliefNet::fineTuningStep(const Mat& inputs, const Mat& targets,
             final_cost->fprop( layers[ n_layers-1 ]->getExpectations(), targets,
                                final_cost_values );
 
-            Mat optimized_costs = final_cost_values.column(0);
+            optimized_costs << final_cost_values.column(0);
             final_cost->bpropUpdate( layers[ n_layers-1 ]->getExpectations(),
                                      targets, optimized_costs,
                                      expectations_gradients[ n_layers-1 ] );
@@ -1415,7 +1427,8 @@ void DeepBeliefNet::fineTuningStep(const Mat& inputs, const Mat& targets,
 
     if( use_classification_cost )
     {
-        PLASSERT_MSG(batch_size == 1, "Not implemented for mini-batches");
+        PLERROR("DeepBeliefNet::fineTuningStep - Not implemented for "
+                "mini-batches");
         /*
         classification_module->fprop( layers[ n_layers-2 ]->expectation,
                                       class_output );
