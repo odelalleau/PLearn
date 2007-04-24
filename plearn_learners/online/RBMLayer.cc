@@ -120,6 +120,9 @@ void RBMLayer::declareOptions(OptionList& ol)
                     "output_size = size");
 }
 
+////////////
+// build_ //
+////////////
 void RBMLayer::build_()
 {
     if( size <= 0 )
@@ -139,6 +142,9 @@ void RBMLayer::build_()
     bias_neg_stats.resize( size );
 }
 
+///////////
+// build //
+///////////
 void RBMLayer::build()
 {
     inherited::build();
@@ -146,6 +152,9 @@ void RBMLayer::build()
 }
 
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void RBMLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
@@ -156,10 +165,11 @@ void RBMLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(sample,         copies);
     deepCopyField(samples,        copies);
     deepCopyField(expectation,    copies);
-    deepCopyField(expectations,   copies);
     deepCopyField(bias_pos_stats, copies);
     deepCopyField(bias_neg_stats, copies);
     deepCopyField(bias_inc,       copies);
+    deepCopyField(ones,           copies);
+    deepCopyField(expectations,   copies);
 }
 
 
@@ -174,6 +184,9 @@ void RBMLayer::setMomentum( real the_momentum )
 }
 
 
+///////////////////////
+// getUnitActivation //
+///////////////////////
 void RBMLayer::getUnitActivation( int i, PP<RBMConnection> rbmc, int offset )
 {
     Vec act = activation.subVec(i,1);
@@ -313,9 +326,6 @@ void RBMLayer::update()
     clearStats();
 }
 
-////////////
-// update //
-////////////
 void RBMLayer::update( const Vec& pos_values, const Vec& neg_values)
 {
     // bias -= learning_rate * (pos_values - neg_values)
@@ -337,6 +347,38 @@ void RBMLayer::update( const Vec& pos_values, const Vec& neg_values)
             binc[i] = momentum*binc[i] + learning_rate*( nv[i] - pv[i] );
             b[i] += binc[i];
         }
+    }
+}
+
+void RBMLayer::update( const Mat& pos_values, const Mat& neg_values)
+{
+    // bias -= learning_rate * (pos_values - neg_values)
+
+    if (ones.length() < pos_values.length()) {
+        ones.resize(pos_values.length());
+        ones.fill(1);
+    } else if (ones.length() > pos_values.length())
+        // No need to fill with ones since we are only shrinking the vector.
+        ones.resize(pos_values.length());
+
+
+    if( momentum == 0. )
+    {
+        productScaleAcc(bias, pos_values, true, ones, -learning_rate, 1);
+        productScaleAcc(bias, neg_values, true, ones,  learning_rate, 1);
+    }
+    else
+    {
+        PLERROR("RBMLayer::update - Not implemented yet");
+        /*
+        bias_inc.resize( size );
+        real* binc = bias_inc.data();
+        for( int i=0 ; i<size ; i++ )
+        {
+            binc[i] = momentum*binc[i] + learning_rate*( nv[i] - pv[i] );
+            b[i] += binc[i];
+        }
+        */
     }
 }
 

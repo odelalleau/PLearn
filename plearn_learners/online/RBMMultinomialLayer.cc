@@ -114,6 +114,9 @@ void RBMMultinomialLayer::fprop( const Vec& input, Vec& output ) const
     softmaxMinus( input+bias, output );
 }
 
+///////////
+// fprop //
+///////////
 void RBMMultinomialLayer::fprop( const Vec& input, const Vec& rbm_bias,
                                  Vec& output ) const
 {
@@ -125,6 +128,9 @@ void RBMMultinomialLayer::fprop( const Vec& input, const Vec& rbm_bias,
     softmaxMinus( input+rbm_bias, output );
 }
 
+/////////////////
+// bpropUpdate //
+/////////////////
 void RBMMultinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
                                       Vec& input_gradient,
                                       const Vec& output_gradient,
@@ -178,6 +184,66 @@ void RBMMultinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
     }
 }
 
+void RBMMultinomialLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
+        Mat& input_gradients,
+        const Mat& output_gradients,
+        bool accumulate)
+{
+    PLASSERT( inputs.width() == size );
+    PLASSERT( outputs.width() == size );
+    PLASSERT( output_gradients.width() == size );
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradients.width() == size &&
+                input_gradients.length() == inputs.length(),
+                "Cannot resize input_gradient and accumulate into it." );
+    }
+    else
+    {
+        input_gradients.resize(inputs.length(), size);
+        input_gradients.fill(0);
+    }
+
+    PLERROR("In RBMMultinomialLayer::bpropUpdate - Not yet fully implemented "
+            "for mini-batches");
+
+    /*
+
+    if( momentum != 0. )
+        bias_inc.resize( size );
+
+    // input_gradient[i] =
+    //      (output_gradient . output - output_gradient[i] ) output[i]
+    real outg_dot_out = dot( output_gradient, output );
+    real* out = output.data();
+    real* outg = output_gradient.data();
+    real* ing = input_gradient.data();
+    real* b = bias.data();
+    real* binc = momentum==0?0:bias_inc.data();
+
+    for( int i=0 ; i<size ; i++ )
+    {
+        real ing_i = (outg_dot_out - outg[i]) * out[i];
+        ing[i] += ing_i;
+
+        if( momentum == 0. )
+        {
+            // update the bias: bias -= learning_rate * input_gradient
+            b[i] -= learning_rate * ing_i;
+        }
+        else
+        {
+            // The update rule becomes:
+            // bias_inc = momentum * bias_inc - learning_rate * input_gradient
+            // bias += bias_inc
+            binc[i] = momentum * binc[i] - learning_rate * ing_i;
+            b[i] += binc[i];
+        }
+    }
+    */
+}
+
 //! TODO: add "accumulate" here
 void RBMMultinomialLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias,
                                       const Vec& output,
@@ -204,6 +270,9 @@ void RBMMultinomialLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias,
     rbm_bias_gradient << input_gradient;
 }
 
+//////////////
+// fpropNLL //
+//////////////
 real RBMMultinomialLayer::fpropNLL(const Vec& target)
 {
     computeExpectation();

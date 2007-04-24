@@ -97,6 +97,12 @@ public:
                              Vec& input_gradient, Vec& rbm_bias_gradient,
                              const Vec& output_gradient) ;
 
+    //! Back-propagate the output gradient to the input, and update parameters.
+    virtual void bpropUpdate(const Mat& inputs, const Mat& outputs,
+                             Mat& input_gradients,
+                             const Mat& output_gradients,
+                             bool accumulate = false);
+
     //! Computes the negative log-likelihood of target given the
     //! internal activations of the layer
     virtual real fpropNLL(const Vec& target);

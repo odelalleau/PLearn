@@ -84,6 +84,9 @@ void NLLCostModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 }
 
 
+///////////
+// fprop //
+///////////
 void NLLCostModule::fprop(const Vec& input, const Vec& target, Vec& cost) const
 {
     PLASSERT( input.size() == input_size );
@@ -94,6 +97,9 @@ void NLLCostModule::fprop(const Vec& input, const Vec& target, Vec& cost) const
     cost[0] = -pl_log( input[ the_target ] );
 }
 
+/////////////////
+// bpropUpdate //
+/////////////////
 void NLLCostModule::bpropUpdate(const Vec& input, const Vec& target, real cost,
                                 Vec& input_gradient, bool accumulate)
 {
@@ -115,8 +121,35 @@ void NLLCostModule::bpropUpdate(const Vec& input, const Vec& target, real cost,
     // input_gradient[ i ] = 0 if i != t,
     // input_gradient[ t ] = -1/x[t]
     input_gradient[ the_target ] = - 1. / input[ the_target ];
+    // TODO Is that a bug with accumulate?
 }
 
+void NLLCostModule::bpropUpdate(const Mat& inputs, const Mat& targets,
+        const Vec& costs, Mat& input_gradients, bool accumulate)
+{
+    PLASSERT( inputs.width() == input_size );
+    PLASSERT( targets.width() == target_size );
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradients.width() == input_size &&
+                input_gradients.length() == inputs.length(),
+                "Cannot resize input_gradients and accumulate into it" );
+    }
+    else
+    {
+        input_gradients.resize(inputs.length(), input_size );
+        input_gradients.clear();
+    }
+
+    // input_gradient[ i ] = 0 if i != t,
+    // input_gradient[ t ] = -1/x[t]
+    for (int i = 0; i < inputs.length(); i++) {
+        int the_target = (int) round( targets(i, 0) );
+        input_gradients(i, the_target) = - 1. / inputs(i, the_target);
+        // TODO Is that a bug with accumulate?
+    }
+}
 
 void NLLCostModule::bbpropUpdate(const Vec& input, const Vec& target,
                                  real cost,

@@ -157,12 +157,11 @@ public:
                              const Vec& output_gradient,
                              bool accumulate=false) = 0 ;
 
+    //! Back-propagate the output gradient to the input, and update parameters.
     virtual void bpropUpdate(const Mat& inputs, const Mat& outputs,
                              Mat& input_gradients,
                              const Mat& output_gradients,
-                             bool accumulate=false) {
-        PLASSERT( false );
-    }
+                             bool accumulate=false) = 0;
 
     //! back-propagates the output gradient to the input and the bias
     virtual void bpropUpdate(const Vec& input, const Vec& rbm_bias,
@@ -190,10 +189,8 @@ public:
     //! Update parameters according to one pair of vectors
     virtual void update( const Vec& pos_values, const Vec& neg_values );
 
-    // TODO Implement (in sub-classes too).
-    virtual void update( const Mat& pos_values, const Mat& neg_values ) {
-        PLASSERT( false );
-    }
+    //! Update parameters according to one pair of matrices.
+    virtual void update( const Mat& pos_values, const Mat& neg_values );
 
     //! resets activations, sample and expectation fields
     virtual void reset();
@@ -239,6 +236,9 @@ protected:
     //! Stores the momentum of the gradient
     Vec bias_inc;
 
+    //! A vector containing only ones, used to compute efficiently mini-batch
+    //! updates.
+    Vec ones;
 
     //! Count of positive examples
     int pos_count;

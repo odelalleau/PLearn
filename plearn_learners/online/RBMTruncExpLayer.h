@@ -90,6 +90,15 @@ public:
                              Vec& input_gradient, const Vec& output_gradient,
                              bool accumulate=false);
 
+    //! Back-propagate the output gradient to the input, and update parameters.
+    virtual void bpropUpdate(const Mat& inputs, const Mat& outputs,
+                             Mat& input_gradients,
+                             const Mat& output_gradients,
+                             bool accumulate = false)
+    {
+        PLASSERT_MSG(false, "Not implemented");
+    }
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.

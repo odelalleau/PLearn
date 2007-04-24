@@ -95,6 +95,15 @@ public:
                              Vec& input_gradient, const Vec& output_gradient,
                              bool accumulate=false);
 
+    //! Back-propagate the output gradient to the input, and update parameters.
+    virtual void bpropUpdate(const Mat& inputs, const Mat& outputs,
+                             Mat& input_gradients,
+                             const Mat& output_gradients,
+                             bool accumulate = false)
+    {
+        PLASSERT_MSG(false, "Not implemented");
+    }
+
     //! Accumulates positive phase statistics
     virtual void accumulatePosStats( const Vec& pos_values );
 
@@ -106,6 +115,12 @@ public:
 
     //! Update parameters according to one pair of vectors
     virtual void update( const Vec& pos_values, const Vec& neg_values );
+
+    //! Not implemented.
+    virtual void update( const Mat& pos_values, const Mat& neg_values )
+    {
+        PLASSERT_MSG(false, "Not implemented");
+    }
 
     //! resets activations, sample, expectation and sigma fields
     virtual void reset();

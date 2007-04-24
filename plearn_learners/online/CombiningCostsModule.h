@@ -78,10 +78,18 @@ public:
     //! given the input and target, compute the cost
     virtual void fprop(const Vec& input, const Vec& target, Vec& cost) const;
 
+    //! Overridden from parent class.
+    virtual void fprop(const Mat& inputs, const Mat& targets, Mat& costs)
+        const;
+
     //! Adapt based on the output gradient: this method should only
     //! be called just after a corresponding fprop.
     virtual void bpropUpdate(const Vec& input, const Vec& target, real cost,
                              Vec& input_gradient, bool accumulate=false);
+
+    //! Overridden.
+    virtual void bpropUpdate(const Mat& inputs, const Mat& targets,
+            const Vec& costs, Mat& input_gradients, bool accumulate = false);
 
     //! Calls this method on the sub_costs
     virtual void bpropUpdate(const Vec& input, const Vec& target, real cost);
@@ -145,8 +153,15 @@ private:
     //! Stores the output values of the sub_costs
     mutable Vec sub_costs_values;
 
+    //! Stores mini-batch outputs values of sub costs.
+    mutable Mat sub_costs_mbatch_values;
+
     //! Stores intermediate values of the input gradient
     mutable Vec partial_gradient;
+
+    //! Used to store intermediate values of input gradient in mini-batch
+    //! setting.
+    Mat partial_gradients;
 
     //! Stores intermediate values of the input diagonal of Hessian
     mutable Vec partial_diag_hessian;

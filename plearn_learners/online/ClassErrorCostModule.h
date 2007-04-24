@@ -69,6 +69,10 @@ public:
     //! (possibly resize it appropriately)
     virtual void fprop(const Vec& input, const Vec& target, Vec& cost) const;
 
+    //! Overridden from parent class.
+    virtual void fprop(const Mat& inputs, const Mat& targets, Mat& costs)
+        const;
+
     //! Given the input and the target, compute only the first cost
     //! (of which we will compute the gradient)
     virtual void fprop(const Vec& input, const Vec& target, real& cost) const;
@@ -76,7 +80,7 @@ public:
     //! Nothing to do
     virtual void bpropUpdate(const Vec& input, const Vec& target, real cost);
 
-    /* Default implementation in super class raises a PLERROR
+    /*
     //! No differentiable, so no gradient to backprop!
     virtual void bpropUpdate(const Vec& input, const Vec& target, real cost,
                              Vec& input_gradient);
@@ -84,6 +88,10 @@ public:
 
     //! Nothing to do
     virtual void bbpropUpdate(const Vec& input, const Vec& target, real cost);
+
+    virtual void bpropUpdate(const Mat& inputs, const Mat& targets,
+            const Vec& costs)
+    {}
 
     /* Optional
        N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS, WHICH

@@ -74,10 +74,13 @@ public:
     virtual void bpropUpdate(const Vec& input, const Vec& target, real cost,
                              Vec& input_gradient, bool accumulate=false);
 
+    //! Overridden.
+    virtual void bpropUpdate(const Mat& inputs, const Mat& targets,
+            const Vec& costs, Mat& input_gradients, bool accumulate = false);
+
     //! Does nothing
     virtual void bpropUpdate(const Vec& input, const Vec& target, real cost)
-    {
-    }
+    {}
 
     //! Similar to bpropUpdate, but adapt based also on the estimation
     //! of the diagonal of the Hessian matrix, and propagates this back.
@@ -87,8 +90,7 @@ public:
 
     //! Does nothing
     virtual void bbpropUpdate(const Vec& input, const Vec& target, real cost)
-    {
-    }
+    {}
 
     //! Overridden to do nothing (in particular, no warning).
     virtual void setLearningRate(real dynamic_learning_rate) {}

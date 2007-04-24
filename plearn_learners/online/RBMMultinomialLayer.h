@@ -93,6 +93,12 @@ public:
                              Vec& input_gradient, const Vec& output_gradient,
                              bool accumulate=false);
 
+    //! Back-propagate the output gradient to the input, and update parameters.
+    virtual void bpropUpdate(const Mat& inputs, const Mat& outputs,
+                             Mat& input_gradients,
+                             const Mat& output_gradients,
+                             bool accumulate = false);
+
     //! back-propagates the output gradient to the input and the bias
     virtual void bpropUpdate(const Vec& input, const Vec& rbm_bias,
                              const Vec& output,

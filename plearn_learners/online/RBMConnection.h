@@ -115,14 +115,19 @@ public:
     //! afterwards.
     virtual void setAsDownInputs( const Mat& inputs ) const;
 
-    //! Accumulates positive phase statistics to *_pos_stats
+    //! Accumulates positive phase statistics to *_pos_stats.
     virtual void accumulatePosStats( const Vec& down_values,
                                      const Vec& up_values ) = 0;
 
-    //! Accumulates negative phase statistics to *_neg_stats
+    virtual void accumulatePosStats( const Mat& down_values,
+                                     const Mat& up_values ) = 0;
+
+    //! Accumulates negative phase statistics to *_neg_stats.
     virtual void accumulateNegStats( const Vec& down_values,
                                      const Vec& up_values ) = 0;
 
+    virtual void accumulateNegStats( const Mat& down_values,
+                                     const Mat& up_values ) = 0;
 
     //! Updates parameters according to contrastive divergence gradient
     virtual void update() = 0;
@@ -134,14 +139,12 @@ public:
                          const Vec& neg_down_values,
                          const Vec& neg_up_values);
 
-    // TODO Implement (in sub-classes too).
+    //! Updates parameters according to contrastive divergence gradient,
+    //! not using the statistics but explicit matrix values.
     virtual void update( const Mat& pos_down_values,
                          const Mat& pos_up_values,
                          const Mat& neg_down_values,
-                         const Mat& neg_up_values)
-    {
-        PLASSERT( false );
-    }
+                         const Mat& neg_up_values);
 
     //! Clear all information accumulated during stats
     virtual void clearStats() = 0;

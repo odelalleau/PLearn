@@ -229,6 +229,17 @@ void RBMConnection::update( const Vec& pos_down_values,
     update();
 }
 
+void RBMConnection::update( const Mat& pos_down_values,
+                            const Mat& pos_up_values,
+                            const Mat& neg_down_values,
+                            const Mat& neg_up_values)
+{
+    // Not-so-efficient implementation.
+    accumulatePosStats( pos_down_values, pos_up_values );
+    accumulateNegStats( neg_down_values, neg_up_values );
+    update();
+}
+
 ///////////
 // fprop //
 ///////////

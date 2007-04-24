@@ -146,6 +146,9 @@ void RBMBinomialLayer::fprop( const Vec& input, const Vec& rbm_bias,
         output[i] = sigmoid( -input[i] - rbm_bias[i]);
 }
 
+/////////////////
+// bpropUpdate //
+/////////////////
 void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
                                    Vec& input_gradient,
                                    const Vec& output_gradient,
@@ -190,6 +193,57 @@ void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
         }
     }
 }
+
+void RBMBinomialLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
+        Mat& input_gradients,
+        const Mat& output_gradients,
+        bool accumulate)
+{
+    PLASSERT( inputs.width() == size );
+    PLASSERT( outputs.width() == size );
+    PLASSERT( output_gradients.width() == size );
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradients.width() == size &&
+                input_gradients.length() == inputs.length(),
+                "Cannot resize input_gradients and accumulate into it" );
+    }
+    else
+    {
+        input_gradients.resize(inputs.length(), size);
+        input_gradients.fill(0);
+    }
+
+    if( momentum != 0. )
+        bias_inc.resize( size );
+
+    for( int i=0 ; i<size ; i++ )
+    {
+        for (int j = 0; j < inputs.length(); j++) {
+            real output_i = outputs(j, i);
+            real in_grad_i = -output_i * (1-output_i) * output_gradients(j, i);
+            input_gradients(j, i) += in_grad_i;
+
+            if( momentum == 0. )
+            {
+                // update the bias: bias -= learning_rate * input_gradient
+                bias[i] -= learning_rate * in_grad_i;
+            }
+            else
+            {
+                PLERROR("In RBMBinomialLayer:bpropUpdate - Not implemented for "
+                        "momentum with mini-batches");
+                // The update rule becomes:
+                // bias_inc = momentum * bias_inc - learning_rate * input_gradient
+                // bias += bias_inc
+                bias_inc[i] = momentum * bias_inc[i] - learning_rate * in_grad_i;
+                bias[i] += bias_inc[i];
+            }
+        }
+    }
+}
+
 
 //! TODO: add "accumulate" here
 void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias,

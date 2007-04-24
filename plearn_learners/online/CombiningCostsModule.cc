@@ -129,6 +129,9 @@ void CombiningCostsModule::build_()
     output_size = n_sub_costs+1;
 }
 
+///////////
+// build //
+///////////
 void CombiningCostsModule::build()
 {
     inherited::build();
@@ -136,16 +139,25 @@ void CombiningCostsModule::build()
 }
 
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void CombiningCostsModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(sub_costs, copies);
-    deepCopyField(cost_weights, copies);
-    deepCopyField(sub_costs_values, copies);
+    deepCopyField(sub_costs,            copies);
+    deepCopyField(cost_weights,         copies);
+    deepCopyField(sub_costs_values,     copies);
+    deepCopyField(sub_costs_mbatch_values, copies);
+    deepCopyField(partial_gradient,     copies);
+    deepCopyField(partial_diag_hessian, copies);
 }
 
 
+///////////
+// fprop //
+///////////
 void CombiningCostsModule::fprop(const Vec& input, const Vec& target,
                                  Vec& cost) const
 {
@@ -160,6 +172,34 @@ void CombiningCostsModule::fprop(const Vec& input, const Vec& target,
     cost.subVec( 1, n_sub_costs ) << sub_costs_values;
 }
 
+void CombiningCostsModule::fprop(const Mat& inputs, const Mat& targets,
+                                 Mat& costs) const
+{
+    PLASSERT( inputs.width() == input_size );
+    PLASSERT( targets.width() == target_size );
+    costs.resize(inputs.length(), output_size);
+
+    Mat final_cost = costs.column(0);
+    final_cost.fill(0);
+    Mat other_costs = costs.subMatColumns(1, n_sub_costs);
+    sub_costs_mbatch_values.resize(n_sub_costs, inputs.length());
+    for( int i=0 ; i<n_sub_costs ; i++ ) {
+        Vec sub_costs_i = sub_costs_mbatch_values(i);
+        sub_costs[i]->fprop(inputs, targets, sub_costs_i);
+        Mat first_sub_cost = sub_costs_i.toMat(sub_costs_i.length(), 1);
+
+        // final_cost += weight_i * cost_i
+        multiplyAcc(final_cost, first_sub_cost, cost_weights[i]);
+
+        // Fill the rest of the costs matrix.
+        other_costs.column(i) << first_sub_cost;
+    }
+}
+
+
+/////////////////
+// bpropUpdate //
+/////////////////
 void CombiningCostsModule::bpropUpdate(const Vec& input, const Vec& target,
                                        real cost, Vec& input_gradient,
                                        bool accumulate)
@@ -201,6 +241,53 @@ void CombiningCostsModule::bpropUpdate(const Vec& input, const Vec& target,
         }
     }
 }
+
+void CombiningCostsModule::bpropUpdate(const Mat& inputs, const Mat& targets,
+        const Vec& costs, Mat& input_gradients, bool accumulate)
+{
+    PLASSERT( inputs.width() == input_size );
+    PLASSERT( targets.width() == target_size );
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradients.width() == input_size &&
+                      input_gradients.length() == inputs.length(),
+                      "Cannot resize input_gradients and accumulate into it" );
+    }
+    else
+    {
+        input_gradients.resize(inputs.length(), input_size );
+        input_gradients.clear();
+    }
+
+
+    Vec sub;
+    for( int i=0 ; i<n_sub_costs ; i++ )
+    {
+        sub = sub_costs_mbatch_values(i);
+        if( cost_weights[i] == 0. )
+        {
+            // Do not compute input_gradients.
+            sub_costs[i]->bpropUpdate( inputs, targets, sub );
+        }
+        else if( cost_weights[i] == 1. )
+        {
+            // Accumulate directly into input_gradients.
+
+            sub_costs[i]->bpropUpdate( inputs, targets, sub, input_gradients,
+                    true );
+        }
+        else
+        {
+            // Put the result into partial_gradients, then accumulate into
+            // input_gradients with the appropriate weight.
+            sub_costs[i]->bpropUpdate( inputs, targets, sub, partial_gradients,
+                    false);
+            multiplyAcc( input_gradients, partial_gradients, cost_weights[i] );
+        }
+    }
+}
+
 
 void CombiningCostsModule::bpropUpdate(const Vec& input, const Vec& target,
                                        real cost)

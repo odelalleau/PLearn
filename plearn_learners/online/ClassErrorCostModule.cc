@@ -113,6 +113,13 @@ void ClassErrorCostModule::fprop(const Vec& input, const Vec& target,
         cost = ( argmax(input) == int(round(target[0])) ) ? 0. : 1.;
 }
 
+void ClassErrorCostModule::fprop(const Mat& inputs, const Mat& targets,
+                                 Mat& costs) const
+{
+    for (int i = 0; i < inputs.length(); i++)
+        fprop(inputs(i), targets(i), costs(i, 0));
+}
+
 /////////////////
 // bpropUpdate //
 /////////////////

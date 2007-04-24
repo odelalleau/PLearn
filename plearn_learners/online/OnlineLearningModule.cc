@@ -64,9 +64,12 @@ OnlineLearningModule::OnlineLearningModule() :
 {
 }
 
-//! default inefficient implementation of mini-batch fprop
+///////////
+// fprop //
+///////////
 void OnlineLearningModule::fprop(const Mat& input, Mat& output) const
 {
+    // Default (inefficient) implementation of mini-batch fprop.
     int n=input.length();
 #ifdef BOUNDCHECK
     if (n!=output.length())
@@ -80,6 +83,9 @@ void OnlineLearningModule::fprop(const Mat& input, Mat& output) const
     }
 }
 
+/////////////////
+// bpropUpdate //
+/////////////////
 void OnlineLearningModule::bpropUpdate(const Vec& input, const Vec& output,
                                        Vec& input_gradient,
                                        const Vec& output_gradient,
@@ -87,8 +93,8 @@ void OnlineLearningModule::bpropUpdate(const Vec& input, const Vec& output,
 {
     PLERROR("In OnlineLearningModule.cc: method 'bpropUpdate' not"
             " implemented.\n"
-            "Please implement it in your derived class or don't call"
-            " bpropUpdate.\n");
+            "Please implement it in your derived class (%s) or do not call"
+            " bpropUpdate.", classname().c_str());
 }
 
 void OnlineLearningModule::bpropUpdate(const Vec& input, const Vec& output,

@@ -61,6 +61,9 @@ RBMMixedLayer::RBMMixedLayer( TVec< PP<RBMLayer> > the_sub_layers ) :
 }
 
 
+/////////////////////
+// setLearningRate //
+/////////////////////
 void RBMMixedLayer::setLearningRate( real the_learning_rate )
 {
     inherited::setLearningRate( the_learning_rate );
@@ -69,6 +72,9 @@ void RBMMixedLayer::setLearningRate( real the_learning_rate )
         sub_layers[i]->setLearningRate( the_learning_rate );
 }
 
+/////////////////
+// setMomentum //
+/////////////////
 void RBMMixedLayer::setMomentum( real the_momentum )
 {
     inherited::setMomentum( the_momentum );
@@ -111,6 +117,9 @@ void RBMMixedLayer::generateSample()
         sub_layers[i]->generateSample();
 }
 
+////////////////////////
+// computeExpectation //
+////////////////////////
 void RBMMixedLayer::computeExpectation()
 {
     if( expectation_is_up_to_date )
@@ -159,6 +168,9 @@ void RBMMixedLayer::fprop( const Vec& input, const Vec& rbm_bias,
 }
 
 
+/////////////////
+// bpropUpdate //
+/////////////////
 void RBMMixedLayer::bpropUpdate( const Vec& input, const Vec& output,
                                  Vec& input_gradient,
                                  const Vec& output_gradient,
@@ -175,6 +187,7 @@ void RBMMixedLayer::bpropUpdate( const Vec& input, const Vec& output,
     }
     else
         input_gradient.resize( size );
+    // TODO Should we clear the input gradient here?
 
     for( int i=0 ; i<n_layers ; i++ )
     {
@@ -188,6 +201,42 @@ void RBMMixedLayer::bpropUpdate( const Vec& input, const Vec& output,
         sub_layers[i]->bpropUpdate( sub_input, sub_output,
                                     sub_input_gradient, sub_output_gradient,
                                     accumulate );
+    }
+}
+
+void RBMMixedLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
+        Mat& input_gradients,
+        const Mat& output_gradients,
+        bool accumulate)
+{
+    PLASSERT( inputs.width() == size );
+    PLASSERT( outputs.width() == size );
+    PLASSERT( output_gradients.width() == size );
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradients.width() == size &&
+                input_gradients.length() == inputs.length(),
+                "Cannot resize input_gradients and accumulate into it" );
+    }
+    else
+        input_gradients.resize(inputs.length(), size);
+    // TODO Should we clear the input gradient here?
+
+    for( int i=0 ; i<n_layers ; i++ )
+    {
+        int begin = init_positions[i];
+        int size_i = sub_layers[i]->size;
+        Mat sub_inputs = inputs.subMatColumns( begin, size_i );
+        Mat sub_outputs = outputs.subMatColumns( begin, size_i );
+        Mat sub_input_gradients =
+            input_gradients.subMatColumns( begin, size_i );
+        Mat sub_output_gradients =
+            output_gradients.subMatColumns( begin, size_i );
+
+        sub_layers[i]->bpropUpdate( sub_inputs, sub_outputs,
+                sub_input_gradients, sub_output_gradients,
+                accumulate );
     }
 }
 

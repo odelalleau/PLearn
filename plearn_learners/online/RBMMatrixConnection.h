@@ -85,9 +85,21 @@ public:
     virtual void accumulatePosStats( const Vec& down_values,
                                      const Vec& up_values );
 
+    virtual void accumulatePosStats( const Mat& down_values,
+                                     const Mat& up_values )
+    {
+        PLASSERT_MSG( false, "Not implemented" );
+    }
+
     //! Accumulates negative phase statistics to *_neg_stats
     virtual void accumulateNegStats( const Vec& down_values,
                                      const Vec& up_values );
+
+    virtual void accumulateNegStats( const Mat& down_values,
+                                     const Mat& up_values )
+    {
+        PLASSERT_MSG( false, "Not implemented" );
+    }
 
     //! Updates parameters according to contrastive divergence gradient
     virtual void update();
@@ -98,6 +110,12 @@ public:
                          const Vec& pos_up_values,
                          const Vec& neg_down_values,
                          const Vec& neg_up_values );
+
+    //! Not implemented.
+    virtual void update( const Mat& pos_down_values,
+                         const Mat& pos_up_values,
+                         const Mat& neg_down_values,
+                         const Mat& neg_up_values);
 
     //! Clear all information accumulated during stats
     virtual void clearStats();

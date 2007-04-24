@@ -117,6 +117,9 @@ void RBMMatrixConnection::accumulatePosStats( const Vec& down_values,
     pos_count++;
 }
 
+////////////////////////
+// accumulateNegStats //
+////////////////////////
 void RBMMatrixConnection::accumulateNegStats( const Vec& down_values,
                                               const Vec& up_values )
 {
@@ -126,6 +129,9 @@ void RBMMatrixConnection::accumulateNegStats( const Vec& down_values,
     neg_count++;
 }
 
+////////////
+// update //
+////////////
 void RBMMatrixConnection::update()
 {
     // updates parameters
@@ -230,6 +236,54 @@ void RBMMatrixConnection::update( const Vec& pos_down_values, // v_0
     }
 }
 
+void RBMMatrixConnection::update( const Mat& pos_down_values, // v_0
+                                  const Mat& pos_up_values,   // h_0
+                                  const Mat& neg_down_values, // v_1
+                                  const Mat& neg_up_values )  // h_1
+{
+    // weights -= learning_rate * ( h_0 v_0' - h_1 v_1' );
+    // or:
+    // weights[i][j] += learning_rate * (h_1[i] v_1[j] - h_0[i] v_0[j]);
+
+    PLASSERT( pos_up_values.width() == weights.length() );
+    PLASSERT( neg_up_values.width() == weights.length() );
+    PLASSERT( pos_down_values.width() == weights.width() );
+    PLASSERT( neg_down_values.width() == weights.width() );
+
+    if( momentum == 0. )
+    {
+        productScaleAcc(weights, pos_up_values, true, pos_down_values, false,
+                -learning_rate, 1);
+
+        productScaleAcc(weights, neg_up_values, true, neg_down_values, false,
+                learning_rate, 1);
+    }
+    else
+    {
+        PLERROR("RBMMatrixConnection::update - Not implemented");
+        /*
+        // ensure that weights_inc has the right size
+        weights_inc.resize( l, w );
+
+        // The update rule becomes:
+        // weights_inc = momentum * weights_inc
+        //               - learning_rate * ( h_0 v_0' - h_1 v_1' );
+        // weights += weights_inc;
+
+        real* winc_i = weights_inc.data();
+        int winc_mod = weights_inc.mod();
+        for( int i=0 ; i<l ; i++, w_i += w_mod, winc_i += winc_mod,
+                             puv_i++, nuv_i++ )
+            for( int j=0 ; j<w ; j++ )
+            {
+                winc_i[j] = momentum * winc_i[j]
+                    + learning_rate * (*nuv_i * ndv[j] - *puv_i * pdv[j]);
+                w_i[j] += winc_i[j];
+            }
+         */
+    }
+}
+
 ////////////////
 // clearStats //
 ////////////////
@@ -306,13 +360,13 @@ void RBMMatrixConnection::computeProducts(int start, int length,
         PLASSERT( start+length <= down_size );
         // activations(k, i-start) += sum_j weights(j,i) inputs_mat(k, j)
         if( accumulate )
-            transposeProductAcc( activations,
-                                 weights.subMatColumns(start,length),
-                                 inputs_mat );
+            productAcc(activations,
+                    inputs_mat,
+                    weights.subMatColumns(start,length) );
         else
-            transposeProduct( activations,
-                              weights.subMatColumns(start,length),
-                              inputs_mat );
+            product(activations,
+                    inputs_mat,
+                    weights.subMatColumns(start,length) );
     }
 }
 
