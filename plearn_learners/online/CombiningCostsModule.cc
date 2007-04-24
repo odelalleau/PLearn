@@ -146,12 +146,13 @@ void CombiningCostsModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(sub_costs,            copies);
-    deepCopyField(cost_weights,         copies);
-    deepCopyField(sub_costs_values,     copies);
-    deepCopyField(sub_costs_mbatch_values, copies);
-    deepCopyField(partial_gradient,     copies);
-    deepCopyField(partial_diag_hessian, copies);
+    deepCopyField(sub_costs,                copies);
+    deepCopyField(cost_weights,             copies);
+    deepCopyField(sub_costs_values,         copies);
+    deepCopyField(sub_costs_mbatch_values,  copies);
+    deepCopyField(partial_gradient,         copies);
+    deepCopyField(partial_gradients,        copies);
+    deepCopyField(partial_diag_hessian,     copies);
 }
 
 
