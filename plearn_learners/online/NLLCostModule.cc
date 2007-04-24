@@ -120,8 +120,7 @@ void NLLCostModule::bpropUpdate(const Vec& input, const Vec& target, real cost,
     int the_target = (int) round( target[0] );
     // input_gradient[ i ] = 0 if i != t,
     // input_gradient[ t ] = -1/x[t]
-    input_gradient[ the_target ] = - 1. / input[ the_target ];
-    // TODO Is that a bug with accumulate?
+    input_gradient[ the_target ] -= 1. / input[ the_target ];
 }
 
 void NLLCostModule::bpropUpdate(const Mat& inputs, const Mat& targets,
@@ -146,8 +145,7 @@ void NLLCostModule::bpropUpdate(const Mat& inputs, const Mat& targets,
     // input_gradient[ t ] = -1/x[t]
     for (int i = 0; i < inputs.length(); i++) {
         int the_target = (int) round( targets(i, 0) );
-        input_gradients(i, the_target) = - 1. / inputs(i, the_target);
-        // TODO Is that a bug with accumulate?
+        input_gradients(i, the_target) -= 1. / inputs(i, the_target);
     }
 }
 
