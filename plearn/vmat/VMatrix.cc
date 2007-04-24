@@ -515,7 +515,7 @@ void VMatrix::getExample(int i, Vec& input, Vec& target, real& weight)
 // getExamples //
 /////////////////
 void VMatrix::getExamples(int i_start, int length, Mat& inputs, Mat& targets,
-                          Vec& weights, Mat* extras)
+                          Vec& weights, Mat* extras, bool allow_circular)
 {
     inputs.resize(length, inputsize());
     targets.resize(length, targetsize());
@@ -523,13 +523,19 @@ void VMatrix::getExamples(int i_start, int length, Mat& inputs, Mat& targets,
     if (extras)
         extras->resize(length, extrasize());
     Vec input, target, extra;
+    int total_length = this->length();
+    PLASSERT( i_start < total_length );
     for (int k = 0; k < length; k++) {
         input = inputs(k);
         target = targets(k);
-        getExample(i_start + k, input, target, weights[k]);
+        int idx = i_start + k;
+        if (allow_circular)
+            idx %= total_length;
+        PLASSERT( idx >= 0 && idx < total_length );
+        getExample(idx, input, target, weights[k]);
         if (extras) {
             extra = (*extras)(k);
-            getExtra(i_start + k, extra);
+            getExtra(idx, extra);
         }
     }
 }

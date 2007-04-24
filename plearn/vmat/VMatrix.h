@@ -439,8 +439,13 @@ public:
     //! Obtain a subset of 'length' examples, starting from 'i_start'.
     //! The 'extra' matrix is provided as a pointer so that it can be omitted
     //! without significant overhead.
+    //! If the 'allow_circular' boolean parameter is set to 'true', then one
+    //! may ask for a subset that goes beyond this VMat's length: in such a
+    //! case, the rest of the subset will be filled with data found at the
+    //! beginning of this VMat.
     void getExamples(int i_start, int length, Mat& inputs, Mat& targets,
-                     Vec& weights, Mat* extra = NULL);
+                     Vec& weights, Mat* extra = NULL,
+                     bool allow_circular = false);
 
     /**
      *  Complements the getExample method, fetching the the extrasize_ "extra"
