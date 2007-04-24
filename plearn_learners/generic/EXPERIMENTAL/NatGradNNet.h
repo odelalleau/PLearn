@@ -103,6 +103,30 @@ public:
     //! type of output cost: "NLL" for classification problems, "MSE" for regression
     string output_type;
 
+    //! 0 does not scale the learning rate
+    //! 1 scales it by 1 / the nb of inputs of the neuron
+    //! 2 scales it by 1 / sqrt(the nb of inputs of the neuron)
+    //! etc.
+    real input_size_lrate_normalization_power;
+
+    //! scale the learning rate in different neurons by a factor
+    //! taken randomly as follows: choose integer n uniformly between 
+    //! lrate_scale_factor_min_power and lrate_scale_factor_max_power
+    //! inclusively, and then scale learning rate by lrate_scale_factor^n.
+    real lrate_scale_factor;
+    int lrate_scale_factor_max_power;
+    int lrate_scale_factor_min_power;
+
+    //! Let each neuron self-adjust its bias and scaling factor of its activations
+    //! so that the mean and standard deviation of the activations reach 
+    //! the target_mean_activation and target_stdev_activation.
+    bool self_adjusted_scaling_and_bias;
+    real target_mean_activation;
+    real target_stdev_activation;
+    // the mean and variance of the activations is estimated by a moving
+    // average with this coefficient (near 0 for very slow averaging)
+    real activation_statistics_moving_average_coefficient;
+
     int verbosity;
 
 public:
@@ -193,8 +217,10 @@ protected:
 
     //! pointers into the layer_params
     TVec<Mat> biases;
-    TVec<Mat> weights;
-
+    TVec<Mat> weights,mweights;
+    TVec<Vec> activations_scaling; // output = tanh(activations_scaling[layer][neuron] * (biases[layer][neuron] + weights[layer]*input[layer-1])
+    TVec<Vec> mean_activations;
+    TVec<Vec> var_activations;
     real cumulative_training_time;
 
 protected:
