@@ -186,8 +186,9 @@ void RBMMixedLayer::bpropUpdate( const Vec& input, const Vec& output,
                       "Cannot resize input_gradient AND accumulate into it" );
     }
     else
+        // Note that, by construction of 'size', the whole gradient vector
+        // should be cleared in the calls to sub_layers->bpropUpdate(..) below.
         input_gradient.resize( size );
-    // TODO Should we clear the input gradient here?
 
     for( int i=0 ; i<n_layers ; i++ )
     {
@@ -220,8 +221,9 @@ void RBMMixedLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
                 "Cannot resize input_gradients and accumulate into it" );
     }
     else
+        // Note that, by construction of 'size', the whole gradient vector
+        // should be cleared in the calls to sub_layers->bpropUpdate(..) below.
         input_gradients.resize(inputs.length(), size);
-    // TODO Should we clear the input gradient here?
 
     for( int i=0 ; i<n_layers ; i++ )
     {
