@@ -22,23 +22,25 @@
 //#include <iostream>
 //using namespace std;
 
+#if defined(CXGEMM) || defined(COMPARE)
 /* Host implementation of a simple version of sgemm */
-static void simple_xgemm(int n, real alpha, const real *A, const real *B,
-                         real beta, real *C)
+static void c_xgemm(int M, int N, int K, const real alpha, const real *A, 
+		  const real *B, const real beta, real *C)
 {
-    int i;
-    int j;
-    int k;
-    for (i = 0; i < n; ++i) {
-        for (j = 0; j < n; ++j) {
-            float prod = 0;
-            for (k = 0; k < n; ++k) {
-                prod += A[k * n + i] * B[j * n + k];
-            }
-            C[j * n + i] = alpha * prod + beta * C[j * n + i];
-        }
+  int i;
+  int j;
+  int k;
+  for (i = 0; i < M; ++i) {
+    for (j = 0; j < N; ++j) {
+      float prod = 0;
+      for (k = 0; k < K; ++k) {
+	prod += A[i * K + k] * B[k * N + j];
+      }
+      C[i * N + j] = alpha * prod + beta * C[i * N + j];
     }
+  }
 }
+#endif
 /* Main */
 int main(int argc, char** argv)
 {    
@@ -139,7 +141,7 @@ int main(int argc, char** argv)
 #ifdef COMPARE
     /* Performs operation using plain C code */
     for (int i=0;i<NBITER;i++)
-      simple_xgemm(N, alpha, h_A, h_B, beta, h_C);
+      c_xgemm(M,N,K, alpha, h_A, h_B, beta, h_C);
     h_C_ref = h_C;
     /* Allocate host memory for reading back the result from device memory */
     h_C = (float*)malloc(NC * sizeof(h_C[0]));
@@ -151,7 +153,9 @@ int main(int argc, char** argv)
 #ifdef NVIDIA
     /* Performs operation using cublas */
     for (int i=0;i<NBITER;i++)
-      cublasSgemm('n', 'n', M, N, K, alpha, d_A, M, d_B, K, beta, d_C, K);
+      //We must Change the order of the parameter as cublas take
+      //matrix as colomn major and C matrix is row major
+      cublasSgemm('n', 'n', N, M, K, alpha, d_B, N, d_A, K, beta, d_C, N);
 
     status = cublasGetError();
     if (status != CUBLAS_STATUS_SUCCESS) {
@@ -166,10 +170,10 @@ int main(int argc, char** argv)
     }
 #elif defined( CXGEMM )
     for (int i=0;i<NBITER;i++)
-      simple_xgemm(N, alpha, h_A, h_B, beta, h_C);
+      c_xgemm(M,N,K, alpha, h_A, h_B, beta, h_C);
 #else
     for (int i=0;i<NBITER;i++)
-      cblas_xgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M,N,K, 1.0, h_A, K, h_B, N, 0.0, h_C, N);
+      cblas_xgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M,N,K, alpha, h_A, K, h_B, N, beta, h_C, N);
 #endif
 #ifdef COMPARE
     /* Check result against reference */
