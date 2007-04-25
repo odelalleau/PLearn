@@ -521,7 +521,7 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
             for (int k=0;k<minibatch_size;k++)
             {
                 Vec g=next_neurons_gradient(k);
-                g*=activations_scaling[i]; // pass gradient through scaling
+                g*=activations_scaling[i-1]; // pass gradient through scaling
             }
         if (input_size_lrate_normalization_power==-1)
             layer_lrate_factor /= (sumsquare(neuron_extended_outputs_per_layer[i-1])/minibatch_size);
@@ -607,7 +607,7 @@ void NatGradNNet::fpropNet(int n_examples, bool during_training) const
     PLASSERT_MSG(n_examples<=minibatch_size,"NatGradNNet::fpropNet: nb input vectors treated should be <= minibatch_size\n");
     for (int i=0;i<n_layers-1;i++)
     {
-        Mat prev_layer = self_adjusted_scaling_and_bias?
+        Mat prev_layer = (self_adjusted_scaling_and_bias && i+1<n_layers-1)?
             neuron_outputs_per_layer[i]:neuron_extended_outputs_per_layer[i];
         Mat next_layer = neuron_outputs_per_layer[i+1];
         if (n_examples!=minibatch_size)
