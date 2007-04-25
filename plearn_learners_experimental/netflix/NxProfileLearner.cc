@@ -189,49 +189,52 @@ void NxProfileLearner::train()
     // clear statistics of previous epoch
     train_stats->forget();
 
-    PP<ProgressBar> pb;
-    if( report_progress && stage < nstages )
-        pb = new ProgressBar( "Training "+classname(), nstages-stage);
 
     while(stage<nstages)
     {
-        train_set->getExample(stage%nsamples, input, target, weight);
-
-        PLASSERT( (input[0]>=0) && (input[0]<n_films) && (input[1]>=0) && (input[1]<n_users) );
-
-        // save a function call by not using the functions
-        // We're using squared error cost, but dropping the 2 and taking the
-        // negative already
-        error = target[0] - dot( f_profiles((int)input[0]), u_profiles((int)input[1]) );
-
-    /*cout << " f " << filmProfileID << " " << f_profiles(filmProfileID) << endl;
-    cout << " u " << userProfileID << " " << u_profiles(userProfileID) << endl;
-    cout << "error " << error << endl;*/
-
+        PP<ProgressBar> pb;
+        if( report_progress )
+            pb = new ProgressBar( "Training "+classname(), nsamples);
+        
         lr = slr/(1.0 + stage*dc);
-        // Not quite exact. Should do exact (copy the f_profiles entry)? 
-        // Or perhaps alternate based on stage parity?
-        f_profiles((int)input[0]) += lr * error * u_profiles((int)input[1]);
-        u_profiles((int)input[1]) += lr * error * f_profiles((int)input[0]);
 
-        // TODO add regularization
-/*        real delta_L2 = learning_rate * L2_penalty_factor;
-        if( delta_L2 > 1 )
-            PLWARNING("GradNNetLayerModule::bpropUpdate:\n"
+        for(int i=0; i<nsamples; i++)   {
+            train_set->getExample(i, input, target, weight);
+
+            PLASSERT( (input[0]>=0) && (input[0]<n_films) && (input[1]>=0) && (input[1]<n_users) );
+
+            // save a function call by not using the functions
+            // We're using squared error cost, but dropping the 2 and taking the
+            // negative already
+            error = target[0] - dot( f_profiles((int)input[0]), u_profiles((int)input[1]) );
+
+        /*cout << " f " << filmProfileID << " " << f_profiles(filmProfileID) << endl;
+        cout << " u " << userProfileID << " " << u_profiles(userProfileID) << endl;
+        cout << "error " << error << endl;*/
+
+            // Not quite exact. Should do exact (copy the f_profiles entry)? 
+            // Or perhaps alternate based on stage parity?
+            f_profiles((int)input[0]) += lr * error * u_profiles((int)input[1]);
+            u_profiles((int)input[1]) += lr * error * f_profiles((int)input[0]);
+
+            // TODO add regularization
+    /*        real delta_L2 = learning_rate * L2_penalty_factor;
+            if( delta_L2 > 1 )
+                PLWARNING("GradNNetLayerModule::bpropUpdate:\n"
                       "learning rate = %f is too large!\n", learning_rate);
 
-          if( delta_L2 > 0. )
-                w_[j] *= (1 - delta_L2);
-
-
+              if( delta_L2 > 0. )
+                    w_[j] *= (1 - delta_L2);
 */
-        //train_stats->update(train_costs)
+            //train_stats->update(train_costs)
+            if( pb )
+                pb->update(i);
+
+        }
         ++stage;
-        if( pb )
-            pb->update( stage );
+        train_stats->finalize(); // finalize statistics for this epoch
     }
 
-    train_stats->finalize(); // finalize statistics for this epoch
 
 }
 
