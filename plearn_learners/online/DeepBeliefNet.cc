@@ -42,6 +42,8 @@
 
 #include "DeepBeliefNet.h"
 
+#define minibatch_hack 0 // Do we force the minibatch setting? (debug hack)
+
 namespace PLearn {
 using namespace std;
 
@@ -670,7 +672,7 @@ void DeepBeliefNet::train()
                 // Do a step every 'minibatch_size' examples.
                 if (stage % minibatch_size == 0) {
                     int sample_start = stage % nsamples;
-                    if (batch_size > 1) {
+                    if (batch_size > 1 || minibatch_hack) {
                         train_set->getExamples(sample_start, minibatch_size,
                                 inputs, targets, weights, NULL, true);
                         greedyStep( inputs, targets, i );
@@ -802,7 +804,7 @@ void DeepBeliefNet::train()
                     setLearningRate( grad_learning_rate
                             / (1. + grad_decrease_ct * (stage - init_stage) ) );
 
-                if (minibatch_size > 1) {
+                if (minibatch_size > 1 || minibatch_hack) {
                     train_set->getExamples(sample_start, minibatch_size, inputs,
                             targets, weights, NULL, true);
                     fineTuningStep(inputs, targets, train_costs_m);
@@ -811,7 +813,7 @@ void DeepBeliefNet::train()
                     fineTuningStep( input, target, train_costs );
                 }
                 if (update_stats)
-                    if (minibatch_size > 1)
+                    if (minibatch_size > 1 || minibatch_hack)
                         for (int k = 0; k < minibatch_size; k++)
                             train_stats->update(train_costs_m(k));
                     else
@@ -898,22 +900,6 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
     {
         if( final_module )
         {
-            /*
-            if (minibatch_size > 1) {
-                final_module->fprop( layers[ n_layers-1 ]->getExpectations(),
-                        final_cost_inputs );
-                final_cost->fprop( final_cost_inputs, targets,
-                        final_cost_values );
-                final_cost->bpropUpdate(final_cost_inputs, targets,
-                        final_cost_values.column(0),
-                        final_cost_gradients );
-
-                final_module->bpropUpdate(
-                        layers[ n_layers-1 ]->getExpectations(),
-                        final_cost_inputs,
-                        expectations_gradients[ n_layers-1 ],
-                        final_cost_gradients, true );
-            } else {*/
                 final_module->fprop( layers[ n_layers-1 ]->expectation,
                         final_cost_input );
                 final_cost->fprop( final_cost_input, target,
@@ -927,20 +913,9 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
                         final_cost_input,
                         expectation_gradients[ n_layers-1 ],
                         final_cost_gradient, true );
-            //}
         }
         else
         {
-            /*
-            if (minibatch_size > 1) {
-                final_cost->fprop( layers[ n_layers-1 ]->getExpectations(),
-                        targets,
-                        final_cost_values );
-                final_cost->bpropUpdate( layers[ n_layers-1 ]->getExpectations(),
-                        targets, final_cost_values.column(0),
-                        expectations_gradients[n_layers-1],
-                        true);
-            } else {*/
                 final_cost->fprop( layers[ n_layers-1 ]->expectation,
                         target,
                         final_cost_value );
@@ -948,7 +923,6 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
                         target, final_cost_value[0],
                         expectation_gradients[n_layers-1],
                         true);
-            //}
         }
 
         for (int j=0;j<final_cost_indices.length();j++)
@@ -1481,7 +1455,7 @@ void DeepBeliefNet::contrastiveDivergenceStep(
     const PP<RBMLayer>& up_layer,
     bool nofprop)
 {
-    bool mbatch = minibatch_size > 1;
+    bool mbatch = minibatch_size > 1 || minibatch_hack;
 
     // positive phase
     if (!nofprop)
