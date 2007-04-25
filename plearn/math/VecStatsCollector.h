@@ -84,6 +84,20 @@ public:
     int m_window;
 
     /**
+     * How to deal with update vectors containing NaNs with respect to the
+     * window mechanism.
+     *
+     *  0 - Do not check for NaNs (all updates are accounted in the window)
+     *  1 - If *all* entries of the update vector are NaNs, do not account for
+     *      that observation in the window.
+     *  2 - If *any* entries of the update vector are NaNs, do not account for
+     *      that observation in the window.
+     *
+     *  Default: 0
+     */
+    int m_window_nan_code;
+    
+    /**
      * If the remove_observation mecanism is used and the removed
      * value is equal to one of first_, last_, min_ or max_, the default
      * behavior is to warn the user.
@@ -132,6 +146,9 @@ public:
     //! updates the statistics when seeing x
     //! The weight applies to all elements of x
     virtual void update(const Vec& x, real weight = 1.0);
+
+    //! Handling m_window_nan_code 
+    bool shouldUpdateWindow(const Vec& x);
 
     /*! 
      * Update statistics as if the vectorial observation x

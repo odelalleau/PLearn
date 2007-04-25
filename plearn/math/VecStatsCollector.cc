@@ -52,6 +52,7 @@ VecStatsCollector::VecStatsCollector()
       compute_covariance(false),
       epsilon(0.0),
       m_window(-1),
+      m_window_nan_code(0),
       no_removal_warnings(false), // Window mechanism
       sum_non_missing_weights(0),
       sum_non_missing_square_weights(0)
@@ -93,12 +94,26 @@ void VecStatsCollector::declareOptions(OptionList& ol)
     declareOption(
         ol, "window", &VecStatsCollector::m_window,
         OptionBase::buildoption,
-        "If positive, the window restricts the stats computed by this"
+        "If positive, the window restricts the stats computed by this\n"
         "VecStatsCollector to the last 'window' observations. This uses the\n"
         "VecStatsCollector::remove_observation mechanism.\n"
         "Default: -1 (all observations are considered);\n"
         " -2 means all observations kept in an ObservationWindow\n");
-
+    
+    declareOption(
+        ol, "window_nan_code", &VecStatsCollector::m_window_nan_code,
+        OptionBase::buildoption,
+        "How to deal with update vectors containing NaNs with respect to the\n"
+        "window mechanism.\n"
+        "\n"
+        " 0 - Do not check for NaNs (all updates are accounted in the window)\n"
+        " 1 - If *all* entries of the update vector are NaNs, do not account for\n"
+        "     that observation in the window.\n"
+        " 2 - If *any* entries of the update vector are NaNs, do not account for\n"
+        "     that observation in the window.\n"
+        "\n"
+        " Default: 0" );
+ 
     declareOption(
         ol, "no_removal_warnings", &VecStatsCollector::no_removal_warnings,
         OptionBase::buildoption,
@@ -284,7 +299,7 @@ void VecStatsCollector::update(const Vec& x, real weight)
     }
     
     // Window mechanism
-    if (m_window > 0 || m_window == -2)
+    if ( (m_window > 0 || m_window == -2) && shouldUpdateWindow(x) )
     {
         tuple<Vec, real> outdated = m_observation_window->update(x, weight);
         Vec& obs = get<0>(outdated);
@@ -294,6 +309,25 @@ void VecStatsCollector::update(const Vec& x, real weight)
     }
 }
 
+bool VecStatsCollector::shouldUpdateWindow(const Vec& x)
+{
+    // Avoid dealing with missings if not necessary
+    if ( m_window_nan_code > 0 )
+    {
+        int count = 0;
+        Vec::iterator it = x.begin();
+        Vec::iterator itend = x.end();
+        for(; it!=itend; ++it)
+            if(is_missing(*it))
+                count++;
+        
+        if ( (m_window_nan_code == 1 && count == x.length())
+             || (m_window_nan_code == 2 && count > 0) )
+            return false;
+    }
+    return true;
+}
+    
 ////////////////////////
 // remove_observation //
 ////////////////////////
@@ -375,6 +409,8 @@ void VecStatsCollector::build_()
 {
     if(!m_observation_window && (m_window > 0 || m_window == -2))
         m_observation_window = new ObservationWindow(m_window);
+    if( m_window_nan_code < 0 || m_window_nan_code > 2 )
+        PLERROR("The 'window_nan_code' option can only take values 0, 1 or 2.");
 }
 
 void VecStatsCollector::build()
