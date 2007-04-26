@@ -9,6 +9,8 @@ constrain_limit = 0.100000000000000006 ;
 max_extrapolate = 3 ;
 max_eval_per_line_search = 20 ;
 slope_ratio = 10 ;
+minibatch_n_samples = 0 ;
+minibatch_n_line_searches = 3 ;
 nstages = 12  )
 ;
 D = 2 ;
