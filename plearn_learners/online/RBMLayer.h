@@ -186,6 +186,9 @@ public:
     //! Update parameters according to accumulated statistics
     virtual void update();
 
+    //! Updates parameters according to the given gradient
+    virtual void update( const Vec& grad );
+
     //! Update parameters according to one pair of vectors
     virtual void update( const Vec& pos_values, const Vec& neg_values );
 

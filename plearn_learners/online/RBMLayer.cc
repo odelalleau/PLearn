@@ -67,6 +67,7 @@ void RBMLayer::reset()
     activation.clear();
     sample.clear();
     expectation.clear();
+    bias_inc.clear();
     expectation_is_up_to_date = false;
     expectations_are_up_to_date = false;
 }
@@ -324,6 +325,30 @@ void RBMLayer::update()
     }
 
     clearStats();
+}
+
+void RBMLayer::update( const Vec& grad )
+{   
+    real* b = bias.data();
+    real* gb = grad.data();
+    real* binc = momentum==0?0:bias_inc.data();
+
+    for( int i=0 ; i<size ; i++ )
+    {
+        if( momentum == 0. )
+        {
+            // update the bias: bias -= learning_rate * input_gradient
+            b[i] -= learning_rate * gb[i];
+        }
+        else
+        {
+            // The update rule becomes:
+            // bias_inc = momentum * bias_inc - learning_rate * input_gradient
+            // bias += bias_inc
+            binc[i] = momentum * binc[i] - learning_rate * gb[i];
+            b[i] += binc[i];
+        }
+    }
 }
 
 void RBMLayer::update( const Vec& pos_values, const Vec& neg_values)
