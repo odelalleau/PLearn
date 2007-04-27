@@ -209,12 +209,14 @@
 #include <plearn_learners/online/RBMGaussianLayer.h>
 #include <plearn_learners/online/RBMLayer.h>
 #include <plearn_learners/online/RBMMatrixConnection.h>
+#include <plearn_learners/online/RBMMatrixTransposeConnection.h>
 #include <plearn_learners/online/RBMMixedConnection.h>
 #include <plearn_learners/online/RBMMixedLayer.h>
 #include <plearn_learners/online/RBMMultinomialLayer.h>
 #include <plearn_learners/online/RBMTruncExpLayer.h>
 #include <plearn_learners/online/SoftmaxModule.h>
 #include <plearn_learners/online/SquaredErrorCostModule.h>
+#include <plearn_learners/online/StackedAutoassociatorsNet.h>
 #include <plearn_learners/online/Subsampling2DModule.h>
 #include <plearn_learners/online/Supersampling2DModule.h>
 #include <plearn_learners/online/TanhModule.h>
