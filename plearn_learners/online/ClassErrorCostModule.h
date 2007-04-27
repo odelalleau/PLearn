@@ -106,6 +106,8 @@ public:
     //! build().
     virtual void forget();
 
+    //! Does nothing (there isn't a learning rate in this class)
+    virtual void setLearningRate(real dynamic_learning_rate) {}
 
     //! In case bpropUpdate does not do anything, make it known
     virtual bool bpropDoesNothing();

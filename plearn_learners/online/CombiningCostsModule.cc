@@ -372,6 +372,13 @@ void CombiningCostsModule::forget()
         sub_costs[i]->forget();
 }
 
+//! Sets the sub_costs' learning rates
+void CombiningCostsModule::setLearningRate(real dynamic_learning_rate)
+{
+    for( int i=0 ; i<n_sub_costs ; i++ )
+        sub_costs[i]->setLearningRate(dynamic_learning_rate);
+}
+
 //! reset the parameters to the state they would be BEFORE starting training.
 //! Note that this method is necessarily called from build().
 void CombiningCostsModule::finalize()
