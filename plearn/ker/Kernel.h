@@ -174,18 +174,20 @@ public:
     virtual void setParameters(Vec paramvec); //!<  default version produces an error
     virtual Vec getParameters() const; //!<  default version returns an empty Vec
 
+    //! Fill k_xi_x with K(x_i, x), for all i from istart to istart + k_xi_x.length() - 1.
+    virtual void evaluate_all_i_x(const Vec& x, const Vec& k_xi_x,
+                                  real squared_norm_of_x=-1, int istart = 0) const;
+
+    //! Fill k_x_xi with K(x, x_i), for all i from istart to istart + k_x_xi.length() - 1.
+    virtual void evaluate_all_x_i(const Vec& x, const Vec& k_x_xi,
+                                  real squared_norm_of_x=-1, int istart = 0) const;
+
     //!  ** Subclasses should NOT override the following methods. The default versions are fine. **
 
     void apply(VMat m1, VMat m2, Mat& result) const; //!<  result(i,j) = K(m1(i),m2(j))
     Mat apply(VMat m1, VMat m2) const; //!<  same as above, but returns the result mat instead
     void apply(VMat m, const Vec& x, Vec& result) const; //!<  result[i]=K(m[i],x)
     void apply(Vec x, VMat m, Vec& result) const; //!<  result[i]=K(x,m[i])
-
-    //! Fill k_xi_x with K(x_i, x), for all i from istart to istart + k_xi_x.length() - 1.
-    void evaluate_all_i_x(const Vec& x, const Vec& k_xi_x, real squared_norm_of_x=-1, int istart = 0) const;
-
-    //! Fill k_x_xi with K(x, x_i), for all i from istart to istart + k_x_xi.length() - 1.
-    void evaluate_all_x_i(const Vec& x, const Vec& k_x_xi, real squared_norm_of_x=-1, int istart = 0) const;
 
     inline real operator()(const Vec& x1, const Vec& x2) const
     {

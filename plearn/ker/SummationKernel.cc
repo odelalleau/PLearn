@@ -195,6 +195,27 @@ real SummationKernel::evaluate_i_x(int j, const Vec& x, real) const
 }
 
 
+//#####  evaluate_all_i_x  ####################################################
+
+void SummationKernel::evaluate_all_i_x(const Vec& x, const Vec& k_xi_x,
+                                       real sq_norm_of_x, int istart) const
+{
+    k_xi_x.fill(0.0);
+    m_eval_buf.resize(k_xi_x.size());
+    bool split_inputs = m_input_indexes.size() > 0;
+    for (int i=0, n=m_terms.size() ; i<n ; ++i) {
+        // Note: if we slice x, we cannot rely on sq_norm_of_x any more...
+        if (split_inputs && m_input_indexes[i].size() > 0) {
+            selectElements(x, m_input_indexes[i], m_input_buf1[i]);
+            m_terms[i]->evaluate_all_i_x(m_input_buf1[i], m_eval_buf, -1, istart);
+        }
+        else
+            m_terms[i]->evaluate_all_i_x(x, m_eval_buf, sq_norm_of_x, istart);
+
+        k_xi_x += m_eval_buf;
+    }
+}
+
 //#####  computeGramMatrix  ###################################################
 
 void SummationKernel::computeGramMatrix(Mat K) const

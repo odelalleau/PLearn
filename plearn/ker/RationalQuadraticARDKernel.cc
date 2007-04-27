@@ -146,14 +146,12 @@ real RationalQuadraticARDKernel::evaluate(const Vec& x1, const Vec& x2) const
     real sf         = softplus(m_isp_signal_sigma);
     real alpha      = softplus(m_isp_alpha);
     real sum_wt     = 0.0;
-    real sum_sqdiff = 0.0;
     
     if (m_isp_input_sigma.size() > 0) {
         const real* pinpsig = m_isp_input_sigma.data();
         for (int i=0, n=x1.size() ; i<n ; ++i) {
             real diff   = *px1++ - *px2++;
             real sqdiff = diff * diff;
-            sum_sqdiff += sqdiff;
             sum_wt     += sqdiff / softplus(m_isp_global_sigma + *pinpsig++);
         }
     }
@@ -162,13 +160,58 @@ real RationalQuadraticARDKernel::evaluate(const Vec& x1, const Vec& x2) const
         for (int i=0, n=x1.size() ; i<n ; ++i) {
             real diff   = *px1++ - *px2++;
             real sqdiff = diff * diff;
-            sum_sqdiff += sqdiff;
             sum_wt     += sqdiff / global_sigma;
         }
     }
 
     // Gate by Kronecker term
     return sf * pow(1 + sum_wt / (real(2.)*alpha), -alpha) * gating_term;
+}
+
+
+//#####  evaluate_all_i_x  ####################################################
+
+void RationalQuadraticARDKernel::evaluate_all_i_x(const Vec& x1, const Vec& k_xi_x,
+                                                  real , int istart) const
+{
+    if (x1.size() == 0) {
+        k_xi_x.fill(0.0);
+        return;
+    }
+ 
+    // Precompute some terms
+    real sf    = softplus(m_isp_signal_sigma);
+    real alpha = softplus(m_isp_alpha);
+    m_input_sigma.resize(dataInputsize());
+    for (int i=0, n=m_input_sigma.size() ; i<n ; ++i)
+        m_input_sigma[i] = softplus(m_isp_global_sigma + m_isp_input_sigma[i]);
+    
+    const real* px1_start = x1.data();
+    const real* pinpsig_start = m_input_sigma.data();
+    int i_max = min(istart + k_xi_x.size(), data->length());
+    int j = 0;
+    for (int i=istart ; i<i_max ; ++i, ++j) {
+        Vec* train_row = dataRow(i);
+        const real* px2 = train_row->data();
+        const real* px1 = px1_start;
+    
+        real gating_term = inherited::evaluate(x1,*train_row);
+        if (fast_is_equal(gating_term, 0.0)) {
+            k_xi_x[j] = 0.0;
+            continue;
+        }
+    
+        real sum_wt     = 0.0;
+        const real* pinpsig = pinpsig_start;
+        for (int i=0, n=x1.size() ; i<n ; ++i) {
+            real diff   = *px1++ - *px2++;
+            real sqdiff = diff * diff;
+            sum_wt     += sqdiff / *pinpsig++;
+        }
+
+        // Gate by Kronecker term
+        k_xi_x[j] = sf * pow(1 + sum_wt / (real(2.)*alpha), -alpha) * gating_term;
+    }
 }
 
 

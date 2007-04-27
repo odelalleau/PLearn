@@ -134,10 +134,28 @@ real IIDNoiseKernel::evaluate(const Vec& x1, const Vec& x2) const
 
 real IIDNoiseKernel::evaluate_i_x(int i, const Vec& x, real) const
 {
-    // Noise component is ZERO between a test and any train example
+    // Noise component is ZERO between a test and any train example.
+    // Just compute the Kronecker part is not necessarily zero
     Vec* train_row = dataRow(i);
     PLASSERT( train_row );
     return softplus(m_isp_kronecker_sigma) * inherited::evaluate(*train_row, x);
+}
+
+
+//#####  evaluate_all_i_x  ####################################################
+
+void IIDNoiseKernel::evaluate_all_i_x(const Vec& x, const Vec& k_xi_x,
+                                      real, int istart) const
+{
+    // Noise component is ZERO between a test and any train example
+    k_xi_x.fill(0.0);
+    real kronecker_sigma = softplus(m_isp_kronecker_sigma);
+    int i_max = min(istart + k_xi_x.size(), data->length());
+    int j = 0;
+    for (int i=istart ; i<i_max ; ++i, ++j) {
+        Vec* train_row = dataRow(i);
+        k_xi_x[j] = kronecker_sigma * inherited::evaluate(*train_row, x);
+    }
 }
 
 

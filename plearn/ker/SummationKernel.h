@@ -96,6 +96,11 @@ public:
     //! Evaluate a test example x against a train example given by its index
     virtual real evaluate_i_x(int i, const Vec& x, real) const;
     
+    //! Fill k_xi_x with K(x_i, x), for all i from
+    //! istart to istart + k_xi_x.length() - 1.
+    virtual void evaluate_all_i_x(const Vec& x, const Vec& k_xi_x,
+                                  real squared_norm_of_x=-1, int istart = 0) const;
+
     //! Compute the Gram Matrix by calling subkernels computeGramMatrix
     virtual void computeGramMatrix(Mat K) const;
     
@@ -121,6 +126,9 @@ protected:
     TVec<Vec> m_input_buf1;
     TVec<Vec> m_input_buf2;
 
+    //! Temporary buffer for kernel evaluation on all training dataset
+    mutable Vec m_eval_buf;
+    
     //! Temporary buffer for Gram matrix accumulation
     mutable Mat m_gram_buf;
 

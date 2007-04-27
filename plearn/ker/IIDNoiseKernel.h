@@ -104,6 +104,11 @@ public:
     //! Always zero by independence
     virtual real evaluate_i_x(int i, const Vec& x, real) const;
     
+    //! Fill k_xi_x with K(x_i, x), for all i from
+    //! istart to istart + k_xi_x.length() - 1.
+    virtual void evaluate_all_i_x(const Vec& x, const Vec& k_xi_x,
+                                  real squared_norm_of_x=-1, int istart = 0) const;
+
     //! Compute the Gram Matrix.  Note that this version DOES NOT CACHE
     //! the results, since it is usually called by derived classes.
     virtual void computeGramMatrix(Mat K) const;
