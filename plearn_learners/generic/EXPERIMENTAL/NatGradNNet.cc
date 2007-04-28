@@ -649,10 +649,18 @@ void NatGradNNet::fpropNet(int n_examples, bool during_training) const
                             *m = (1-activation_statistics_moving_average_coefficient) * *m
                                 + activation_statistics_moving_average_coefficient * *a;
                             *b = target_mean_activation - *m;
-                            if (*v<1e6)
+                            if (*v<100*target_stdev_activation*target_stdev_activation)
                                 *s = target_stdev_activation/sqrt(*v);
-                            else
-                                PLWARNING("NatGradNNet::fpropNet: activation variance >= 1e6!\n");
+                            else // rescale the weights and the statistics for that neuron
+                            {
+                                real rescale_factor = target_stdev_activation/sqrt(*v);
+                                Vec w = weights[i](j);
+                                w *= rescale_factor;
+                                *b *= rescale_factor;
+                                *s = 1;
+                                *m *= rescale_factor;
+                                *v *= rescale_factor*rescale_factor;
+                            }
                         }
                         *a = tanh((*a + *b) * *s);
                     }

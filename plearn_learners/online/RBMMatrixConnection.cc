@@ -260,7 +260,7 @@ void RBMMatrixConnection::update( const Mat& pos_down_values, // v_0
     }
     else
     {
-        PLERROR("RBMMatrixConnection::update - Not implemented");
+        PLERROR("RBMMatrixConnection::update minibatch with momentum - Not implemented");
         /*
         // ensure that weights_inc has the right size
         weights_inc.resize( l, w );

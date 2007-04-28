@@ -1526,7 +1526,7 @@ void DeepBeliefNet::contrastiveDivergenceStep(
         // update
         down_layer->update( pos_down_vals, neg_down_vals );
         connection->update( pos_down_vals, pos_up_vals,
-                neg_down_vals, neg_up_vals );
+                            neg_down_vals, neg_up_vals );
         up_layer->update( pos_up_vals, neg_up_vals );
     } else {
         // accumulate negative stats

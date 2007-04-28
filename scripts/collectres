@@ -56,6 +56,9 @@ import sys,string
 from plearn.vmat.PMat import *
 from numarray import *
 
+# should probably be an option
+separator = "_"
+
 def selectres(loc_specs,a):
   res = []
   loc_mode = loc_specs[0]
@@ -124,7 +127,7 @@ def write_array(f,a):
     f.write("\n")
 
 def distinct_experiment_names(filenames):
-  splitted_filenames = map(lambda fname: string.split(fname.replace("/","-"),"-"), filenames)
+  splitted_filenames = map(lambda fname: string.split(fname.replace("/",separator),separator), filenames)
   distinct_names = []
   for splitted_filename in splitted_filenames:
     different_parts = []
@@ -136,7 +139,7 @@ def distinct_experiment_names(filenames):
           break
       if not everywhere:
         different_parts.append(part)
-    distinct_names.append(string.join(different_parts,"-"))
+    distinct_names.append(string.join(different_parts,separator))
   return distinct_names
 
 def outputres(f,mode,speclist,results):
