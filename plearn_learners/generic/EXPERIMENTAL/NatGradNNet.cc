@@ -71,6 +71,8 @@ NatGradNNet::NatGradNNet()
       target_mean_activation(-4), // 
       target_stdev_activation(3), // 2.5% of the time we are above 1
       verbosity(0),
+      //corr_profiling_start(0), 
+      //corr_profiling_end(0),
       n_layers(-1),
       cumulative_training_time(0)
 {
@@ -172,11 +174,19 @@ void NatGradNNet::declareOptions(OptionList& ol)
                   "It is replicated in the params_natgrad vector, for each neuron\n"
                   "If not provided, then the neuron-specific natural gradient estimator is not used.\n");
 
-    declareOption(ol, "params_natgrad_per_neuron", 
-                  &NatGradNNet::params_natgrad_per_neuron,
-                  OptionBase::learntoption,
-                  "Vector of NatGradEstimator objects for the gradient of the parameters inside each neuron\n"
-                  "They are copies of the params_natgrad_template provided by the user\n");
+    declareOption(ol, "params_natgrad_per_input_template",
+                  &NatGradNNet::params_natgrad_per_input_template,
+                  OptionBase::buildoption,
+                  "Optional template NatGradEstimator object for the gradient of the parameters of the first layer\n"
+                  "grouped based upon their input. It is replicated in the params_natgrad_per_group vector, for each group.\n"
+                  "If provided, overides the params_natgrad_template for the parameters of the first layer.\n");
+
+    declareOption(ol, "params_natgrad_per_group", 
+                    &NatGradNNet::params_natgrad_per_group,
+                    OptionBase::learntoption,
+                    "Vector of NatGradEstimator objects for the gradient inside groups of parameters.\n"
+                    "They are copies of the params_natgrad_template and params_natgrad_per_input_template\n"
+                    "templates provided by the user.\n");
 
     declareOption(ol, "full_natgrad", &NatGradNNet::full_natgrad,
                   OptionBase::buildoption,
@@ -184,7 +194,6 @@ void NatGradNNet::declareOptions(OptionList& ol)
                   "This should not be set if neurons_natgrad or params_natgrad_template\n"
                   "is provided. If none of the NatGradEstimators is provided, then\n"
                   "regular stochastic gradient is performed.\n");
-
 
     declareOption(ol, "output_type", 
                   &NatGradNNet::output_type,
@@ -246,6 +255,18 @@ void NatGradNNet::declareOptions(OptionList& ol)
                   "   xbar <-- coefficient * xbar + (1-coefficient) x\n"
                   "where x could be the activation or its square\n");
 
+    //declareOption(ol, "corr_profiling_start",
+    //              &NatGradNNet::corr_profiling_start,
+    //              OptionBase::buildoption,
+    //              "Stage to start the profiling of the gradients' and the\n"
+    //              "natural gradients' correlation.\n");
+
+    //declareOption(ol, "corr_profiling_end",
+    //              &NatGradNNet::corr_profiling_end,
+    //              OptionBase::buildoption,
+    //              "Stage to end the profiling of the gradients' and the\n"
+    //              "natural gradients' correlations.\n");
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -298,35 +319,70 @@ void NatGradNNet::build_()
     all_mparams.resize(n_params);
     all_params_gradient.resize(n_params);
     all_params_delta.resize(n_params);
-    neuron_params.resize(n_neurons);
-    neuron_params_delta.resize(n_neurons);
-    neuron_params_gradient.resize(n_neurons);
+
+    // depending on how parameters are grouped on the first layer
+    int n_groups = params_natgrad_per_input_template ? (n_neurons-layer_sizes[1]+layer_sizes[0]+1) : n_neurons;
+    group_params.resize(n_groups);
+    group_params_delta.resize(n_groups);
+    group_params_gradient.resize(n_groups);
+
     for (int i=0,k=0,p=0;i<n_layers-1;i++)
     {
         int np=layer_sizes[i+1]*(1+layer_sizes[i]);
-        layer_params[i]=all_params.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
-        layer_mparams[i]=all_mparams.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
-        biases[i]=layer_params[i].subMatColumns(0,1);
-        weights[i]=layer_params[i].subMatColumns(1,layer_sizes[i]); // weights[0] from layer 0 to layer 1
-        mweights[i]=layer_mparams[i].subMatColumns(1,layer_sizes[i]); // weights[0] from layer 0 to layer 1
+        // First layer has natural gradient applied on groups of parameters
+        // linked to the same input -> parameters must be stored TRANSPOSED!
+        if( i==0 && params_natgrad_per_input_template ) {
+            layer_params[i]=all_params.subVec(p,np).toMat(layer_sizes[i]+1,layer_sizes[i+1]);
+            layer_mparams[i]=all_mparams.subVec(p,np).toMat(layer_sizes[i]+1,layer_sizes[i+1]);
+            biases[i]=layer_params[i].subMatRows(0,1);
+            weights[i]=layer_params[i].subMatRows(1,layer_sizes[i]); //weights[0] from layer 0 to layer 1
+            mweights[i]=layer_mparams[i].subMatRows(1,layer_sizes[i]); //weights[0] from layer 0 to layer 1
+            layer_params_gradient[i]=all_params_gradient.subVec(p,np).toMat(layer_sizes[i]+1,layer_sizes[i+1]);
+            layer_params_delta[i]=all_params_delta.subVec(p,np);
+            for (int j=0;j<layer_sizes[i]+1;j++,k++)   // include a bias input 
+            {
+                group_params[k]=all_params.subVec(p,layer_sizes[i+1]);
+                group_params_delta[k]=all_params_delta.subVec(p,layer_sizes[i+1]);
+                group_params_gradient[k]=all_params_gradient.subVec(p,layer_sizes[i+1]);
+                p+=layer_sizes[i+1];
+            }
+        // Usual parameter storage
+        }   else    {
+            layer_params[i]=all_params.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
+            layer_mparams[i]=all_mparams.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
+            biases[i]=layer_params[i].subMatColumns(0,1);
+            weights[i]=layer_params[i].subMatColumns(1,layer_sizes[i]); // weights[0] from layer 0 to layer 1
+            mweights[i]=layer_mparams[i].subMatColumns(1,layer_sizes[i]); // weights[0] from layer 0 to layer 1
+            layer_params_gradient[i]=all_params_gradient.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
+            layer_params_delta[i]=all_params_delta.subVec(p,np);
+            for (int j=0;j<layer_sizes[i+1];j++,k++)
+            {
+                group_params[k]=all_params.subVec(p,1+layer_sizes[i]);
+                group_params_delta[k]=all_params_delta.subVec(p,1+layer_sizes[i]);
+                group_params_gradient[k]=all_params_gradient.subVec(p,1+layer_sizes[i]);
+                p+=1+layer_sizes[i];
+            }
+        }
         activations_scaling[i].resize(layer_sizes[i+1]);
-        layer_params_gradient[i]=all_params_gradient.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
-        layer_params_delta[i]=all_params_delta.subVec(p,np);
         mean_activations[i].resize(layer_sizes[i+1]);
         var_activations[i].resize(layer_sizes[i+1]);
-        for (int j=0;j<layer_sizes[i+1];j++,k++)
-        {
-            neuron_params[k]=all_params.subVec(p,1+layer_sizes[i]);
-            neuron_params_delta[k]=all_params_delta.subVec(p,1+layer_sizes[i]);
-            neuron_params_gradient[k]=all_params_gradient.subVec(p,1+layer_sizes[i]);
-            p+=1+layer_sizes[i];
-        }
     }
-    if (params_natgrad_template)
+    if (params_natgrad_template || params_natgrad_per_input_template)
     {
-        params_natgrad_per_neuron.resize(n_neurons);
-        for (int i=0;i<n_neurons;i++)
-            params_natgrad_per_neuron[i] = PLearn::deepCopy(params_natgrad_template);
+        int n_input_groups=0;
+        int n_neuron_groups=0;
+        if(params_natgrad_template)
+            n_neuron_groups = n_neurons;
+        if( params_natgrad_per_input_template ) {
+            n_input_groups = layer_sizes[0]+1;
+            if(params_natgrad_template) // override first layer groups if present
+                n_neuron_groups -= layer_sizes[1];
+        }
+        params_natgrad_per_group.resize(n_input_groups+n_neuron_groups);
+        for (int i=0;i<n_input_groups;i++)
+            params_natgrad_per_group[i] = PLearn::deepCopy(params_natgrad_per_input_template);
+        for (int i=n_input_groups; i<n_input_groups+n_neuron_groups;i++)
+            params_natgrad_per_group[i] = PLearn::deepCopy(params_natgrad_template);
     }
     if (neurons_natgrad_template && neurons_natgrad_per_layer.length()==0)
     {
@@ -354,6 +410,31 @@ void NatGradNNet::build_()
     train_costs.resize(minibatch_size,train_cost_names.length()-2 );
 
     Profiler::activate();
+
+    // Gradient correlation profiling
+    //if( corr_profiling_start != corr_profiling_end )  {
+    //    PLASSERT( (0<=corr_profiling_start) && (corr_profiling_start<corr_profiling_end) );
+    //    cout << "n_params " << n_params << endl;
+    //    // Build the names.
+    //    stringstream ss_suffix;
+    //    for (int i=0;i<n_layers;i++)    {
+    //        ss_suffix << "_" << layer_sizes[i];
+    //    }
+    //    ss_suffix << "_stages_" << corr_profiling_start << "_" << corr_profiling_end;
+    //    string str_gc_name = "gCcorr" + ss_suffix.str();
+    //    string str_ngc_name;
+    //    if( full_natgrad )  {
+    //        str_ngc_name = "ngCcorr_full" + ss_suffix.str();
+    //    }   else if (params_natgrad_template)   {
+    //        str_ngc_name = "ngCcorr_params" + ss_suffix.str();
+    //    }
+    //    // Build the profilers.
+    //    g_corrprof = new CorrelationProfiler( n_params, str_gc_name);
+    //    g_corrprof->build();
+    //    ng_corrprof = new CorrelationProfiler( n_params, str_ngc_name);
+    //    ng_corrprof->build();
+    //}
+
 }
 
 // ### Nothing to add here, simply calls build_
@@ -378,7 +459,8 @@ void NatGradNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(neurons_natgrad_template, copies);
     deepCopyField(neurons_natgrad_per_layer, copies);
     deepCopyField(params_natgrad_template, copies);
-    deepCopyField(params_natgrad_per_neuron, copies);
+    deepCopyField(params_natgrad_per_input_template, copies);
+    deepCopyField(params_natgrad_per_group, copies);
     deepCopyField(full_natgrad, copies);
     deepCopyField(layer_sizes, copies);
     deepCopyField(targets, copies);
@@ -393,9 +475,9 @@ void NatGradNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(neuron_gradients, copies);
     deepCopyField(neuron_gradients_per_layer, copies);
     deepCopyField(all_params_delta, copies);
-    deepCopyField(neuron_params, copies);
-    deepCopyField(neuron_params_gradient, copies);
-    deepCopyField(neuron_params_delta, copies);
+    deepCopyField(group_params, copies);
+    deepCopyField(group_params_gradient, copies);
+    deepCopyField(group_params_delta, copies);
     deepCopyField(layer_params_delta, copies);
 /*
     deepCopyField(, copies);
@@ -431,6 +513,7 @@ void NatGradNNet::forget()
 
 void NatGradNNet::train()
 {
+
     if (inputsize_<0)
         build();
 
@@ -498,6 +581,14 @@ void NatGradNNet::train()
     costs_plus_time[train_costs.width()+1] = cumulative_training_time;
     train_stats->update( costs_plus_time );
     train_stats->finalize(); // finalize statistics for this epoch
+
+    // profiling gradient correlation
+    //if( g_corrprof )    {
+    //    PLASSERT( corr_profiling_end <= nstages );
+    //    g_corrprof->printAndReset();
+    //    ng_corrprof->printAndReset();
+    //}
+
 }
 
 void NatGradNNet::onlineStep(int t, const Mat& targets,
@@ -563,9 +654,16 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
             }
         }
         // compute gradient on parameters, possibly update them
-        if (full_natgrad || params_natgrad_template) 
+        if (full_natgrad || params_natgrad_template || params_natgrad_per_input_template) 
         {
-            productScaleAcc(layer_params_gradient[i-1],next_neurons_gradient,true,
+//alternate
+            if( params_natgrad_per_input_template && i==1 ) // parameters are transposed
+                productScaleAcc(layer_params_gradient[i-1],
+                            neuron_extended_outputs_per_layer[i-1], true,
+                            next_neurons_gradient, false, 
+                            1, 0);                          
+            else
+                productScaleAcc(layer_params_gradient[i-1],next_neurons_gradient,true,
                             neuron_extended_outputs_per_layer[i-1],false,1,0);
             layer_params_gradient[i-1] *= 1.0/minibatch_size; // use the MEAN gradient
         } else // just regular stochastic gradient
@@ -579,19 +677,33 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
     {
         (*full_natgrad)(t/minibatch_size,all_params_gradient,all_params_delta); // compute update direction by natural gradient
         if (output_layer_lrate_scale!=1.0)
-            layer_params_delta[n_layers-2] *= output_layer_lrate_scale; // scale output layer's learning rate 
+            layer_params_delta[n_layers-2] *= output_layer_lrate_scale; // scale output layer's learning rate
         multiplyAcc(all_params,all_params_delta,-lrate); // update
-    } else if (params_natgrad_template)
+        // Hack to apply batch gradient even in this case (used for profiling
+        // the gradient correlations)
+        //if (output_layer_lrate_scale!=1.0)
+        //      layer_params_gradient[n_layers-2] *= output_layer_lrate_scale; // scale output layer's learning rate
+        //  multiplyAcc(all_params,all_params_gradient,-lrate); // update
+
+    } else if (params_natgrad_template || params_natgrad_per_input_template)
     {
-        for (int i=0;i<params_natgrad_per_neuron.length();i++)
+        for (int i=0;i<params_natgrad_per_group.length();i++)
         {
-            NatGradEstimator& neuron_natgrad = *(params_natgrad_per_neuron[i]);
-            neuron_natgrad(t/minibatch_size,neuron_params_gradient[i],neuron_params_delta[i]); // compute update direction by natural gradient
+            NatGradEstimator& neuron_natgrad = *(params_natgrad_per_group[i]);
+            neuron_natgrad(t/minibatch_size,group_params_gradient[i],group_params_delta[i]); // compute update direction by natural gradient
         }
+//alternate
         if (output_layer_lrate_scale!=1.0)
             layer_params_delta[n_layers-2] *= output_layer_lrate_scale; // scale output layer's learning rate 
         multiplyAcc(all_params,all_params_delta,-lrate); // update
     }
+
+    // profiling gradient correlation
+    //if( (t>=corr_profiling_start) && (t<=corr_profiling_end) && g_corrprof )    {
+    //    (*g_corrprof)(all_params_gradient);
+    //    (*ng_corrprof)(all_params_delta);
+    //}
+
 }
 
 void NatGradNNet::computeOutput(const Vec& input, Vec& output) const
@@ -615,17 +727,23 @@ void NatGradNNet::fpropNet(int n_examples, bool during_training) const
             prev_layer = prev_layer.subMatRows(0,n_examples);
             next_layer = next_layer.subMatRows(0,n_examples);
         }
+//alternate
+        // Are the input weights transposed? (because of ...)
+        bool tw = true;
+        if( params_natgrad_per_input_template && i==0 )
+            tw = false;
+
         // try to use BLAS for the expensive operation
         if (self_adjusted_scaling_and_bias && i+1<n_layers-1)
             productScaleAcc(next_layer, prev_layer, false, 
                             (during_training || params_averaging_coeff==1.0)?
                             weights[i]:mweights[i], 
-                            true, 1, 0);
+                            tw, 1, 0);
         else
             productScaleAcc(next_layer, prev_layer, false, 
                             (during_training || params_averaging_coeff==1.0)?
                             layer_params[i]:layer_mparams[i], 
-                            true, 1, 0);
+                            tw, 1, 0);
         // compute layer's output non-linearity
         if (i+1<n_layers-1)
             for (int k=0;k<n_examples;k++)

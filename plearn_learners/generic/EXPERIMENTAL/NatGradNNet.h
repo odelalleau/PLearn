@@ -43,6 +43,7 @@
 #include <plearn_learners/generic/PLearner.h>
 #include <plearn_learners/generic/NatGradEstimator.h>
 #include <plearn/sys/Profiler.h>
+//#include "CorrelationProfiler.h"
 
 namespace PLearn {
 
@@ -92,8 +93,17 @@ public:
     //! natural gradient estimator for the parameters within each neuron
     //! (if 0 then do not correct the gradient on each neuron weight)
     PP<NatGradEstimator> params_natgrad_template;
-    //! the above template is used the user to specifiy all the elements of the vector below
-    TVec<PP<NatGradEstimator> > params_natgrad_per_neuron;
+    //! natural gradient estimator solely for the parameters of the first
+    //! layer. If present, performs over groups of parameters related to the
+    //! same input (this includes the additional bias input).
+    //! Has precedence over params_natgrad_template, ie if present, there is
+    //! no natural gradient performed on the groups of a neuron's parameters:
+    //! params_natgrad_template is not applied for the first hidden layer's
+    //! parameters). 
+    PP<NatGradEstimator> params_natgrad_per_input_template;
+
+    //! the above templates are used by the user to specifiy all the elements of the vector below
+    TVec<PP<NatGradEstimator> > params_natgrad_per_group;
 
     //! optionally, if neurons_natgrad==0 and params_natgrad_template==0, one can
     //! have regular stochastic gradient descent, or full-covariance natural gradient
@@ -128,6 +138,9 @@ public:
     real activation_statistics_moving_average_coefficient;
 
     int verbosity;
+
+    //! Stages for profiling the correlation between the gradients' elements
+    //int corr_profiling_start, corr_profiling_end;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -259,9 +272,9 @@ private:
     Vec all_mparams; // mean parameters (moving-averaged over past values)
     TVec<Mat> layer_params_gradient;
     TVec<Vec> layer_params_delta;
-    TVec<Vec> neuron_params; // params of each neuron (pointing in all_params)
-    TVec<Vec> neuron_params_delta; // params_delta of each neuron (pointing in all_params_delta)
-    TVec<Vec> neuron_params_gradient; // params_delta of each neuron (pointing in all_params_gradient)
+    TVec<Vec> group_params; // params of each group (pointing in all_params)
+    TVec<Vec> group_params_delta; // params_delta of each group (pointing in all_params_delta)
+    TVec<Vec> group_params_gradient; // params_delta of each group (pointing in all_params_gradient)
     Mat neuron_gradients; // one row per example of a minibatch, has concatenation of layer 0, layer 1, ... gradients.
     TVec<Mat> neuron_gradients_per_layer; // pointing into neuron_gradients (one row per example of a minibatch)
     mutable TVec<Mat> neuron_outputs_per_layer;  // same structure
@@ -269,6 +282,8 @@ private:
     Mat targets; // one target row per example in a minibatch
     Vec example_weights; // one element per example in a minibatch
     Mat train_costs; // one row per example in a minibatch
+
+    //PP<CorrelationProfiler> g_corrprof, ng_corrprof;    // for optional gradient correlation profiling
 };
 
 // Declares a few other classes and functions related to this class
