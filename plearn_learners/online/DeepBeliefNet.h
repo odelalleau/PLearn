@@ -140,6 +140,17 @@ public:
     //! whether to do things by stages, including fine-tuning, or on-line
     bool online;
 
+    // Coefficient between 0 and 1. If non-zero, run a background Gibbs chain and use 
+    // the visible-hidden statistics to contribute in the negative phase update
+    // (in proportion background_gibbs_update_ratio wrt the contrastive divergence
+    // negative phase statistics). If = 1, then do not perform any contrastive
+    // divergence negative phase (use only the Gibbs chain statistics).
+    real background_gibbs_update_ratio;
+    // negative chain statistics are forgotten at this rate (a value of 0
+    // would only use the current sample, a value of .99 would use 1% of
+    // the new sample and 99% of the old statistics).
+    real gibbs_chain_statistics_forgetting_factor;
+
     //! Wether we do a step of joint contrastive divergence on top-layer
     //! Only used if online for the moment
     bool top_layer_joint_cd;
@@ -308,6 +319,10 @@ protected:
     mutable Vec pos_up_val;
     mutable Mat pos_down_vals;
     mutable Mat pos_up_vals;
+    
+    //! Store the state of the Gibbs chain for each RBM
+    mutable TVec<Mat> gibbs_up_state;
+    mutable TVec<Mat> gibbs_down_state;
 
     //! Used to store the costs optimized by the final cost module.
     Vec optimized_costs;

@@ -67,6 +67,8 @@ DeepBeliefNet::DeepBeliefNet() :
     reconstruct_layerwise( false ),
     n_layers( 0 ),
     online ( false ),
+    background_gibbs_update_ratio(0),
+    gibbs_chain_statistics_forgetting_factor(0.999),
     minibatch_size(0),
     final_module_has_learning_rate( false ),
     final_cost_has_learning_rate( false ),
@@ -208,6 +210,21 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   "If true then all unsupervised training stages (as well as\n"
                   "the fine-tuning stage) are done simultaneously.\n");
 
+    declareOption(ol, "background_gibbs_update_ratio", &DeepBeliefNet::background_gibbs_update_ratio,
+                  OptionBase::buildoption,
+                  "Coefficient between 0 and 1. If non-zero, run a background Gibbs chain and use\n"
+                  "the visible-hidden statistics to contribute in the negative phase update\n"
+                  "(in proportion background_gibbs_update_ratio wrt the contrastive divergence\n"
+                  "negative phase statistics). If = 1, then do not perform any contrastive\n"
+                  "divergence negative phase (use only the Gibbs chain statistics).\n");
+
+    declareOption(ol, "gibbs_chain_statistics_forgetting_factor", 
+                  &DeepBeliefNet::gibbs_chain_statistics_forgetting_factor,
+                  OptionBase::buildoption,
+                  "Negative chain statistics are forgotten at this rate (a value of 0\n"
+                  "would only use the current sample, a value of .99 would use 1% of\n"
+                  "the current sample and 99% of the old statistics).\n");
+
     declareOption(ol, "top_layer_joint_cd", &DeepBeliefNet::top_layer_joint_cd,
                   OptionBase::buildoption,
                   "Wether we do a step of joint contrastive divergence on"
@@ -296,6 +313,8 @@ void DeepBeliefNet::build_layers_and_connections()
     activations_gradients.resize( n_layers );
     expectation_gradients.resize( n_layers );
     expectations_gradients.resize( n_layers );
+    gibbs_up_state.resize( n_layers-1 );
+    gibbs_down_state.resize( n_layers-1 );
 
     for( int i=0 ; i<n_layers-1 ; i++ )
     {
@@ -483,6 +502,8 @@ void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(pos_up_val,               copies);
     deepCopyField(pos_down_vals,            copies);
     deepCopyField(pos_up_vals,              copies);
+    deepCopyField(gibbs_up_state,           copies);
+    deepCopyField(gibbs_down_state,           copies);
     deepCopyField(optimized_costs,          copies);
     deepCopyField(final_cost_indices,       copies);
     deepCopyField(partial_cost_indices,     copies);
@@ -550,6 +571,12 @@ void DeepBeliefNet::train()
         for (int i = 0 ; i < n_layers; i++) {
             activations_gradients[i].resize(minibatch_size, layers[i]->size);
             expectation_gradients[i].resize(minibatch_size, layers[i]->size);
+
+            if (background_gibbs_update_ratio>0)
+            {
+                gibbs_up_state[i].resize(minibatch_size, layers[i]->size);
+                gibbs_down_state[i].resize(minibatch_size, layers[i]->size);
+            }
         }
         if (final_cost)
             final_cost_gradients.resize(minibatch_size, final_cost->input_size);
@@ -1472,8 +1499,6 @@ void DeepBeliefNet::contrastiveDivergenceStep(
     }
 
     if (mbatch) {
-        up_layer->generateSamples();
-
         // accumulate positive stats using the expectation
         // we deep-copy because the value will change during negative phase
         pos_down_vals.resize(minibatch_size, down_layer->size);
@@ -1483,13 +1508,36 @@ void DeepBeliefNet::contrastiveDivergenceStep(
         pos_up_vals << up_layer->getExpectations();
 
         // down propagation, starting from a sample of up_layer
-        connection->setAsUpInputs( up_layer->samples );
+        if (background_gibbs_update_ratio<1) 
+        {
+            // then do some contrastive divergence, o/w only background Gibbs
+            up_layer->generateSamples();
+            connection->setAsUpInputs( up_layer->samples );
+            down_layer->getAllActivations( connection, 0, true );
+            down_layer->generateSamples();
+            // negative phase
+            connection->setAsDownInputs( down_layer->samples );
+            up_layer->getAllActivations( connection, 0, mbatch );
+            up_layer->computeExpectations();
 
-        down_layer->getAllActivations( connection, 0, true );
+            // accumulate negative stats
+            // no need to deep-copy because the values won't change before update
+            Mat neg_down_vals = down_layer->samples;
+            Mat neg_up_vals = up_layer->getExpectations();
 
-        down_layer->generateSamples();
-        // negative phase
-        connection->setAsDownInputs( down_layer->samples );
+            // update
+            if (background_gibbs_update_ratio==0)
+            {
+                down_layer->update( pos_down_vals, neg_down_vals );
+                connection->update( pos_down_vals, pos_up_vals,
+                                    neg_down_vals, neg_up_vals );
+                up_layer->update( pos_up_vals, neg_up_vals );
+            }
+        }
+        // 
+        if (background_gibbs_update_ratio>0) 
+        {
+        }
     } else {
         up_layer->generateSample();
 
@@ -1509,26 +1557,8 @@ void DeepBeliefNet::contrastiveDivergenceStep(
         down_layer->generateSample();
         // negative phase
         connection->setAsDownInput( down_layer->sample );
-    }
-
-    up_layer->getAllActivations( connection, 0, mbatch );
-    if (mbatch)
-        up_layer->computeExpectations();
-    else
+        up_layer->getAllActivations( connection, 0, mbatch );
         up_layer->computeExpectation();
-
-    if (mbatch) {
-        // accumulate negative stats
-        // no need to deep-copy because the values won't change before update
-        Mat neg_down_vals = down_layer->samples;
-        Mat neg_up_vals = up_layer->getExpectations();
-
-        // update
-        down_layer->update( pos_down_vals, neg_down_vals );
-        connection->update( pos_down_vals, pos_up_vals,
-                            neg_down_vals, neg_up_vals );
-        up_layer->update( pos_up_vals, neg_up_vals );
-    } else {
         // accumulate negative stats
         // no need to deep-copy because the values won't change before update
         Vec neg_down_val = down_layer->sample;
