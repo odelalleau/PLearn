@@ -239,6 +239,10 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   OptionBase::learntoption,
                   "Size of a mini-batch.");
 
+    declareOption(ol, "gibbs_down_state", &DeepBeliefNet::gibbs_down_state,
+                  OptionBase::learntoption,
+                  "State of visible units of RBMs at each layer in background Gibbs chain.");
+
     /*
     declareOption(ol, "n_final_costs", &DeepBeliefNet::n_final_costs,
                   OptionBase::learntoption,
@@ -313,7 +317,6 @@ void DeepBeliefNet::build_layers_and_connections()
     activations_gradients.resize( n_layers );
     expectation_gradients.resize( n_layers );
     expectations_gradients.resize( n_layers );
-    gibbs_up_state.resize( n_layers-1 );
     gibbs_down_state.resize( n_layers-1 );
 
     for( int i=0 ; i<n_layers-1 ; i++ )
@@ -500,10 +503,9 @@ void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(save_layer_expectation,   copies);
     deepCopyField(pos_down_val,             copies);
     deepCopyField(pos_up_val,               copies);
-    deepCopyField(pos_down_vals,            copies);
-    deepCopyField(pos_up_vals,              copies);
-    deepCopyField(gibbs_up_state,           copies);
-    deepCopyField(gibbs_down_state,           copies);
+    deepCopyField(cd_neg_up_vals,           copies);
+    deepCopyField(cd_neg_down_vals,         copies);
+    deepCopyField(gibbs_down_state,         copies);
     deepCopyField(optimized_costs,          copies);
     deepCopyField(final_cost_indices,       copies);
     deepCopyField(partial_cost_indices,     copies);
@@ -573,10 +575,7 @@ void DeepBeliefNet::train()
             expectation_gradients[i].resize(minibatch_size, layers[i]->size);
 
             if (background_gibbs_update_ratio>0)
-            {
-                gibbs_up_state[i].resize(minibatch_size, layers[i]->size);
                 gibbs_down_state[i].resize(minibatch_size, layers[i]->size);
-            }
         }
         if (final_cost)
             final_cost_gradients.resize(minibatch_size, final_cost->input_size);
@@ -1021,7 +1020,7 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
             contrastiveDivergenceStep(
                 get_pointer(joint_layer),
                 get_pointer(classification_module->joint_connection),
-                layers[ n_layers-1 ] );
+                layers[ n_layers-1 ], n_layers-2);
 
             layers[ n_layers-2 ]->activation << save_layer_activation;
             layers[ n_layers-2 ]->expectation << save_layer_expectation;
@@ -1063,7 +1062,7 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
         contrastiveDivergenceStep( layers[ i ],
                                    connections[ i ],
                                    layers[ i+1 ] ,
-                                   true);
+                                   i, true);
         if( i > 0 )
         {
             layers[i]->activation << save_layer_activation;
@@ -1123,7 +1122,7 @@ void DeepBeliefNet::greedyStep( const Vec& input, const Vec& target, int index )
     contrastiveDivergenceStep( layers[ index ],
                                connections[ index ],
                                layers[ index+1 ],
-                               true );
+                               index, true);
 }
 
 /////////////////
@@ -1179,7 +1178,7 @@ void DeepBeliefNet::greedyStep( const Mat& inputs, const Mat& targets, int index
     contrastiveDivergenceStep( layers[ index ],
                                connections[ index ],
                                layers[ index+1 ],
-                               true );
+                               index, true);
 }
 
 /////////////////////
@@ -1242,7 +1241,7 @@ void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
     contrastiveDivergenceStep(
         get_pointer( joint_layer ),
         get_pointer( classification_module->joint_connection ),
-        layers[ n_layers-1 ] );
+        layers[ n_layers-1 ], n_layers-2);
 }
 
 ////////////////////
@@ -1480,7 +1479,7 @@ void DeepBeliefNet::contrastiveDivergenceStep(
     const PP<RBMLayer>& down_layer,
     const PP<RBMConnection>& connection,
     const PP<RBMLayer>& up_layer,
-    bool nofprop)
+    int layer_index, bool nofprop)
 {
     bool mbatch = minibatch_size > 1 || minibatch_hack;
 
@@ -1509,8 +1508,8 @@ void DeepBeliefNet::contrastiveDivergenceStep(
 
         // down propagation, starting from a sample of up_layer
         if (background_gibbs_update_ratio<1) 
-        {
             // then do some contrastive divergence, o/w only background Gibbs
+        {
             up_layer->generateSamples();
             connection->setAsUpInputs( up_layer->samples );
             down_layer->getAllActivations( connection, 0, true );
@@ -1525,18 +1524,68 @@ void DeepBeliefNet::contrastiveDivergenceStep(
             Mat neg_down_vals = down_layer->samples;
             Mat neg_up_vals = up_layer->getExpectations();
 
-            // update
             if (background_gibbs_update_ratio==0)
+            // update here only if there is ONLY contrastive divergence
             {
                 down_layer->update( pos_down_vals, neg_down_vals );
                 connection->update( pos_down_vals, pos_up_vals,
                                     neg_down_vals, neg_up_vals );
                 up_layer->update( pos_up_vals, neg_up_vals );
             }
+            else
+            {
+                connection->accumulatePosStats(pos_down_vals,pos_up_vals);
+                cd_neg_down_vals.resize(minibatch_size, down_layer->size);
+                cd_neg_up_vals.resize(minibatch_size, up_layer->size);
+                cd_neg_down_vals << neg_down_vals;
+                cd_neg_up_vals << neg_up_vals;
+            }
         }
         // 
         if (background_gibbs_update_ratio>0) 
         {
+            Mat down_state = gibbs_down_state[layer_index];
+
+            // sample up state given down state
+            connection->setAsDownInputs(down_state);
+            up_layer->getAllActivations(connection, 0, true);
+            up_layer->computeExpectations();
+            up_layer->generateSamples();
+
+            // update using the down_state and up_layer->expectations for moving average in negative phase
+            // (and optionally 
+            if (background_gibbs_update_ratio<1)
+            {
+                down_layer->updateCDandGibbs(pos_down_vals,cd_neg_down_vals,
+                                             down_state,
+                                             background_gibbs_update_ratio,
+                                             gibbs_chain_statistics_forgetting_factor);
+                connection->updateCDandGibbs(pos_down_vals,pos_up_vals,
+                                             cd_neg_down_vals, cd_neg_up_vals,
+                                             down_state,
+                                             up_layer->getExpectations(),
+                                             background_gibbs_update_ratio,
+                                             gibbs_chain_statistics_forgetting_factor);
+                up_layer->updateCDandGibbs(pos_up_vals,cd_neg_up_vals,
+                                           up_layer->getExpectations(),
+                                           background_gibbs_update_ratio,
+                                           gibbs_chain_statistics_forgetting_factor);
+            }
+            else
+            {
+                down_layer->updateGibbs(pos_down_vals,down_state,
+                                        gibbs_chain_statistics_forgetting_factor);
+                connection->updateGibbs(pos_down_vals,pos_up_vals,down_state,
+                                        up_layer->getExpectations(),
+                                        gibbs_chain_statistics_forgetting_factor);
+                up_layer->updateGibbs(pos_up_vals,up_layer->getExpectations(),
+                                        gibbs_chain_statistics_forgetting_factor);
+            }
+            // sample down state given up state, to prepare for next time
+            connection->setAsUpInputs(up_layer->samples);
+            down_layer->getAllActivations(connection, 0, true);
+            down_layer->generateSamples();
+            down_state << down_layer->samples;
         }
     } else {
         up_layer->generateSample();

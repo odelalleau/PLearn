@@ -235,6 +235,7 @@ public:
     void contrastiveDivergenceStep( const PP<RBMLayer>& down_layer,
                                     const PP<RBMConnection>& connection,
                                     const PP<RBMLayer>& up_layer,
+                                    int layer_index,
                                     bool nofprop=false);
 
 
@@ -319,9 +320,10 @@ protected:
     mutable Vec pos_up_val;
     mutable Mat pos_down_vals;
     mutable Mat pos_up_vals;
+    mutable Mat cd_neg_down_vals;
+    mutable Mat cd_neg_up_vals;
     
     //! Store the state of the Gibbs chain for each RBM
-    mutable TVec<Mat> gibbs_up_state;
     mutable TVec<Mat> gibbs_down_state;
 
     //! Used to store the costs optimized by the final cost module.

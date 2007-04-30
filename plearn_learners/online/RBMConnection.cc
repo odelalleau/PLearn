@@ -240,6 +240,38 @@ void RBMConnection::update( const Mat& pos_down_values,
     update();
 }
 
+// neg_stats <-- gibbs_chain_statistics_forgetting_factor * neg_stats
+//              +(1-gibbs_chain_statistics_forgetting_factor)
+//               * gibbs_neg_up_values'*gibbs_neg_down_values
+// delta w = lrate * ( pos_up_values'*pos_down_values
+//                  - ( background_gibbs_update_ratio*neg_stats
+//                     +(1-background_gibbs_update_ratio)
+//                      * cd_neg_up_values'*cd_neg_down_values))
+void RBMConnection::updateCDandGibbs( const Mat& pos_down_values,
+                                      const Mat& pos_up_values,
+                                      const Mat& cd_neg_down_values,
+                                      const Mat& cd_neg_up_values,
+                                      const Mat& gibbs_neg_down_values,
+                                      const Mat& gibbs_neg_up_values,
+                                      real background_gibbs_update_ratio,
+                                      real gibbs_chain_statistics_forgetting_factor)
+{
+    PLASSERT_MSG(false, "Not implemented by subclass!");
+}
+
+// neg_stats <-- gibbs_chain_statistics_forgetting_factor * neg_stats
+//              +(1-gibbs_chain_statistics_forgetting_factor)
+//               * gibbs_neg_up_values'*gibbs_neg_down_values
+// delta w = lrate * ( pos_up_values'*pos_down_values - neg_stats )
+void RBMConnection::updateGibbs( const Mat& pos_down_values,
+                                 const Mat& pos_up_values,
+                                 const Mat& gibbs_neg_down_values,
+                                 const Mat& gibbs_neg_up_values,
+                                 real gibbs_chain_statistics_forgetting_factor)
+{
+    PLASSERT_MSG(false, "Not implemented by subclass!");
+}
+
 ///////////
 // fprop //
 ///////////

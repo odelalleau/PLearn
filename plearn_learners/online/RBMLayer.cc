@@ -407,6 +407,33 @@ void RBMLayer::update( const Mat& pos_values, const Mat& neg_values)
     }
 }
 
+// neg_stats <-- gibbs_chain_statistics_forgetting_factor * neg_stats
+//              +(1-gibbs_chain_statistics_forgetting_factor)
+//               * gibbs_neg_values
+// delta w = lrate * ( pos_values
+//                  - ( background_gibbs_update_ratio*neg_stats
+//                     +(1-background_gibbs_update_ratio)
+//                      * cd_neg_values ) )
+void RBMLayer::updateCDandGibbs( const Mat& pos_values,
+                                 const Mat& cd_neg_values,
+                                 const Mat& gibbs_neg_values,
+                                 real background_gibbs_update_ratio,
+                                 real gibbs_chain_statistics_forgetting_factor)
+{
+    PLASSERT_MSG(false, "Not implemented by subclass!");
+}
+
+// neg_stats <-- gibbs_chain_statistics_forgetting_factor * neg_stats
+//              +(1-gibbs_chain_statistics_forgetting_factor)
+//               * gibbs_neg_values
+// delta w = lrate * ( pos_values - neg_stats )
+void RBMLayer::updateGibbs( const Mat& pos_values,
+                            const Mat& gibbs_neg_values,
+                            real gibbs_chain_statistics_forgetting_factor)
+{
+    PLASSERT_MSG(false, "Not implemented by subclass!");
+}
+
 ////////////////
 // setAllBias //
 ////////////////

@@ -195,6 +195,28 @@ public:
     //! Update parameters according to one pair of matrices.
     virtual void update( const Mat& pos_values, const Mat& neg_values );
 
+    // neg_stats <-- gibbs_chain_statistics_forgetting_factor * neg_stats
+    //              +(1-gibbs_chain_statistics_forgetting_factor)
+    //               * gibbs_neg_values
+    // delta w = lrate * ( pos_values
+    //                  - ( background_gibbs_update_ratio*neg_stats
+    //                     +(1-background_gibbs_update_ratio)
+    //                      * cd_neg_values ) )
+    virtual void updateCDandGibbs( const Mat& pos_values,
+                                   const Mat& cd_neg_values,
+                                   const Mat& gibbs_neg_values,
+                                   real background_gibbs_update_ratio,
+                                   real gibbs_chain_statistics_forgetting_factor);
+
+    // neg_stats <-- gibbs_chain_statistics_forgetting_factor * neg_stats
+    //              +(1-gibbs_chain_statistics_forgetting_factor)
+    //               * gibbs_neg_values
+    // delta w = lrate * ( pos_values - neg_stats )
+    virtual void updateGibbs( const Mat& pos_values,
+                              const Mat& gibbs_neg_values,
+                              real gibbs_chain_statistics_forgetting_factor);
+
+
     //! resets activations, sample and expectation fields
     virtual void reset();
 
