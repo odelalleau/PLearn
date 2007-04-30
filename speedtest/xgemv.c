@@ -155,7 +155,7 @@ int main(int argc, char** argv)
     for (int i=0;i<NBITER;i++)
       //We must Change the order of the parameter as cublas take
       //matrix as colomn major and C matrix is row major?????
-      cublasSgemv('n', 'n', N, M, alpha, d_X, N, d_A, K, beta, d_Y, N);
+      cublasSgemv('t', N, M, alpha, d_A, N, d_X, 1, beta, d_Y, 1);
 
     status = cublasGetError();
     if (status != CUBLAS_STATUS_SUCCESS) {
@@ -175,15 +175,7 @@ int main(int argc, char** argv)
     for (int i=0;i<NBITER;i++)
       cblas_xgemv(CblasRowMajor, CblasNoTrans, M,N, alpha, h_A, N, h_X, 1, beta, h_Y, 1);
 #endif
-    /*    for (int i = 0; i < NA; ++i) printf("%f,",h_A[i]);
-    printf(")\n");
-    for (int i = 0; i < NX; ++i) printf("%f,",h_X[i]);
-    printf(")\n");
-    for (int i = 0; i < NY; ++i) printf("%f,",h_Y[i]);
-    printf(")\n");*/
 #ifdef COMPARE
-    /*    for (int i = 0; i < NY; ++i) printf("%f,",h_Y_ref[i]);
-	  printf(")\n");*/
     /* Check result against reference */
     error_norm = 0;
     ref_norm = 0;
@@ -201,7 +193,7 @@ int main(int argc, char** argv)
     printf( "Test %s\n", (error_norm / ref_norm < 1e-6f) ? "PASSED" : "FAILED");
 #endif
 
-    /*    printf("Matrix A:\n");
+    /*printf("Matrix A:\n");
     for(int i=0;i<NA;i++)
       printf("%f,",h_A[i]);
     printf("\nArray X:\n");
@@ -210,13 +202,16 @@ int main(int argc, char** argv)
     printf("\nArray Y:\n");
     for(int i=0;i<NY;i++)
       printf("%f,",h_Y[i]);
-    printf("\n");
+    printf("\nArray Y_ref:\n");
     */
     /* Memory clean up */
     free(h_A);
     free(h_X);
     free(h_Y);
 #ifdef COMPARE
+    /*for(int i=0;i<NY;i++)
+      printf("%f,",h_Y_ref[i]);
+      printf("\n");*/
     free(h_Y_ref);
 #endif
 #ifdef NVIDIA
@@ -225,12 +220,12 @@ int main(int argc, char** argv)
         fprintf (stderr, "!!!! memory free error (A)\n");
         return EXIT_FAILURE;
     }
-    status = cublasFree(d_B);
+    status = cublasFree(d_X);
     if (status != CUBLAS_STATUS_SUCCESS) {
         fprintf (stderr, "!!!! memory free error (B)\n");
         return EXIT_FAILURE;
     }
-    status = cublasFree(d_C);
+    status = cublasFree(d_Y);
     if (status != CUBLAS_STATUS_SUCCESS) {
         fprintf (stderr, "!!!! memory free error (C)\n");
         return EXIT_FAILURE;
