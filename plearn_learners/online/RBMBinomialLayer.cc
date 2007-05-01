@@ -218,9 +218,9 @@ void RBMBinomialLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
     if( momentum != 0. )
         bias_inc.resize( size );
 
-    for( int i=0 ; i<size ; i++ )
-    {
-        for (int j = 0; j < inputs.length(); j++) {
+    for (int j = 0; j < inputs.length(); j++) {
+        for( int i=0 ; i<size ; i++ )
+        {
             real output_i = outputs(j, i);
             real in_grad_i = -output_i * (1-output_i) * output_gradients(j, i);
             input_gradients(j, i) += in_grad_i;
