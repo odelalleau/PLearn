@@ -572,7 +572,7 @@ void DeepBeliefNet::train()
         minibatch_size = batch_size > 0 ? batch_size : train_set->length();
         for (int i = 0 ; i < n_layers; i++) {
             activations_gradients[i].resize(minibatch_size, layers[i]->size);
-            expectation_gradients[i].resize(minibatch_size, layers[i]->size);
+            expectations_gradients[i].resize(minibatch_size, layers[i]->size);
 
             if (background_gibbs_update_ratio>0)
                 gibbs_down_state[i].resize(minibatch_size, layers[i]->size);
