@@ -449,7 +449,9 @@ void GradNNetLayerModule::build_()
                 " neurons).\n", output_size);
 
     if (init_weights.size()==0 && init_weights_random_scale!=0 && !random_gen)
-        random_gen = new PRandom();
+        // Default random number generator uses a fixed seed to ensure
+        // reproducible experiments.
+        random_gen = new PRandom(1827);
 
     if( weights.length() != output_size
         || weights.width() != input_size
