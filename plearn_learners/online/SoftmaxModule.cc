@@ -97,7 +97,9 @@ void SoftmaxModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
-//! given the input, compute the output (possibly resize it  appropriately)
+///////////
+// fprop //
+///////////
 void SoftmaxModule::fprop(const Vec& input, Vec& output) const
 {
     PLASSERT( input.size() == input_size );
@@ -106,6 +108,18 @@ void SoftmaxModule::fprop(const Vec& input, Vec& output) const
     softmax( input, output );
 }
 
+void SoftmaxModule::fprop(const Mat& inputs, Mat& outputs)
+{
+    PLASSERT( inputs.width() == input_size );
+    int n = inputs.length();
+    outputs.resize(n, output_size );
+    for (int i = 0; i < n; i++)
+        softmax(inputs(i), outputs(i));
+}
+
+/////////////////
+// bpropUpdate //
+/////////////////
 void SoftmaxModule::bpropUpdate(const Vec& input, const Vec& output,
                                 Vec& input_gradient,
                                 const Vec& output_gradient,
@@ -133,6 +147,37 @@ void SoftmaxModule::bpropUpdate(const Vec& input, const Vec& output,
     {
         real in_grad_i = (output_gradient[i] - outg_dot_out) * output[i];
         input_gradient[i] += in_grad_i;
+    }
+}
+
+void SoftmaxModule::bpropUpdate(const Mat& inputs, const Mat& outputs,
+                             Mat& input_gradients,
+                             const Mat& output_gradients,
+                             bool accumulate)
+{
+    PLASSERT( inputs.width() == input_size );
+    PLASSERT( outputs.width() == output_size );
+    PLASSERT( output_gradients.width() == output_size );
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradients.width() == input_size &&
+                input_gradients.length() == inputs.length(),
+                "Cannot resize input_gradients and accumulate into it" );
+    }
+    else
+    {
+        input_gradients.resize(inputs.length(), input_size);
+        input_gradients.fill(0);
+    }
+
+    for (int j = 0; j < inputs.length(); j++) {
+        // input_gradient[i] = output_gradient[i] * output[i]
+        //                  - (output_gradient . output ) output[i]
+        real outg_dot_out = dot(output_gradients(j), outputs(j));
+        for( int i=0 ; i<input_size ; i++ )
+            input_gradients(j, i) +=
+                (output_gradients(j, i) - outg_dot_out) * outputs(j, i);
     }
 }
 

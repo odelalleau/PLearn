@@ -66,12 +66,20 @@ public:
     //! given the input, compute the output (possibly resize it  appropriately)
     virtual void fprop(const Vec& input, Vec& output) const;
 
+    //! Overridden.
+    virtual void fprop(const Mat& inputs, Mat& outputs);
+
     //! this version allows to obtain the input gradient as well
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              Vec& input_gradient,
                              const Vec& output_gradient,
                              bool accumulate=false);
 
+    virtual void bpropUpdate(const Mat& inputs, const Mat& outputs,
+                             Mat& input_gradients,
+                             const Mat& output_gradients,
+                             bool accumulate = false);
+    
     //! this version allows to obtain the input gradient and diag_hessian
     virtual void bbpropUpdate(const Vec& input, const Vec& output,
                               Vec& input_gradient,
