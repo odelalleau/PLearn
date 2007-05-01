@@ -67,20 +67,13 @@ OnlineLearningModule::OnlineLearningModule() :
 ///////////
 // fprop //
 ///////////
-void OnlineLearningModule::fprop(const Mat& input, Mat& output) const
+void OnlineLearningModule::fprop(const Mat& inputs, Mat& outputs)
 {
-    // Default (inefficient) implementation of mini-batch fprop.
-    int n=input.length();
-#ifdef BOUNDCHECK
-    if (n!=output.length())
-        PLERROR("OnlineLearningModule::fprop for matrices: inconsistent lengths of argument matrices\n");
-#endif
-    for (int i=0;i<n;i++)
-    {
-        Vec input_i = input(i);
-        Vec output_i = output(i);
-        fprop(input_i,output_i);
-    }
+    PLERROR("In OnlineLearningModule::fprop - The mini-batch version of "
+            "'fprop' for class '%s' is not implemented. Implementation is "
+            "required out of safety, to ensure a subsequent call to "
+            "'bpropUpdate' can use the correctly updated data",
+            classname().c_str());
 }
 
 /////////////////
@@ -103,36 +96,28 @@ void OnlineLearningModule::bpropUpdate(const Vec& input, const Vec& output,
     bpropUpdate(input, output, tmp_input_gradient, output_gradient);
 }
 
-void OnlineLearningModule::bpropUpdate(const Mat& input, const Mat& output,
-                                       Mat& input_gradient,
-                                       const Mat& output_gradient,
+void OnlineLearningModule::bpropUpdate(const Mat& inputs, const Mat& outputs,
+                                       Mat& input_gradients,
+                                       const Mat& output_gradients,
                                        bool accumulate)
 {
-    int n=input.length();
-#ifdef BOUNDCHECK
-    if (n!=output.length() || n!=output_gradient.length())
-        PLERROR("OnlineLearningModule::bpropUpdate for matrices: inconsistent lengths of argument matrices\n");
-#endif
-    if (n!=input_gradient.length())
-        input_gradient.resize(n,input.width());
-    for (int i=0;i<n;i++)
-    {
-        Vec input_i = input(i);
-        Vec output_i = output(i);
-        Vec input_gradient_i = input_gradient(i);
-        Vec output_gradient_i = output_gradient(i);
-        bpropUpdate(input_i,output_i,input_gradient_i,output_gradient_i,accumulate);
-    }
+    PLERROR("In OnlineLearningModule::bpropUpdate - The mini-batch version of "
+            "'bpropUpdate' for class '%s' is not implemented. Implementation "
+            "is required since this method must be called immediately after "
+            "a 'fprop'", classname().c_str());
 }
 
-void OnlineLearningModule::bpropUpdate(const Mat& input, const Mat& output,
-                                       const Mat& output_gradient)
+void OnlineLearningModule::bpropUpdate(const Mat& inputs, const Mat& outputs,
+                                       const Mat& output_gradients)
 {
-    bpropUpdate(input, output, tmpm_input_gradient, output_gradient);
+    bpropUpdate(inputs, outputs, tmpm_input_gradient, output_gradients);
 }
 
-//! Default method for bbpropUpdate functions, so that it compiles but crashes
-//! if not implemented but used.
+//////////////////
+// bbpropUpdate //
+//////////////////
+// Default implementations compile but crash at run-time if not implemented in
+// sub-classes.
 void OnlineLearningModule::bbpropUpdate(const Vec& input, const Vec& output,
                                         const Vec& output_gradient,
                                         const Vec& output_diag_hessian)
@@ -141,9 +126,6 @@ void OnlineLearningModule::bbpropUpdate(const Vec& input, const Vec& output,
                  tmp_input_diag_hessian, output_diag_hessian);
 }
 
-//////////////////
-// bbpropUpdate //
-//////////////////
 void OnlineLearningModule::bbpropUpdate(const Vec& input, const Vec& output,
                                         Vec& input_gradient,
                                         const Vec& output_gradient,
