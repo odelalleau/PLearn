@@ -42,6 +42,7 @@
 
 
 #include "GradNNetLayerModule.h"
+#include <plearn/math/TMat_maths.h>
 
 namespace PLearn {
 using namespace std;
@@ -58,6 +59,9 @@ PLEARN_IMPLEMENT_OBJECT(
     "from a uniform distribution.\n"
     );
 
+/////////////////////////
+// GradNNetLayerModule //
+/////////////////////////
 GradNNetLayerModule::GradNNetLayerModule():
     start_learning_rate( .001 ),
     decrease_constant( 0. ),
@@ -65,10 +69,11 @@ GradNNetLayerModule::GradNNetLayerModule():
     L1_penalty_factor( 0. ),
     L2_penalty_factor( 0. ),
     step_number( 0 )
-{
-}
+{}
 
-// Applies linear transformation
+///////////
+// fprop //
+///////////
 void GradNNetLayerModule::fprop(const Vec& input, Vec& output) const
 {
     PLASSERT_MSG( input.size() == input_size,
@@ -76,10 +81,26 @@ void GradNNetLayerModule::fprop(const Vec& input, Vec& output) const
 
     output.resize( output_size );
 
+    // Applies linear transformation
     for( int i=0 ; i<output_size ; i++ )
         output[i] = dot( weights(i), input ) + bias[i];
 }
 
+void GradNNetLayerModule::fprop(const Mat& inputs, Mat& outputs)
+{
+    PLASSERT( inputs.width() == input_size );
+    int n = inputs.length();
+    outputs.resize(n, output_size);
+    productTranspose(outputs, inputs, weights);
+
+    // Add bias.
+    resizeOnes(n);
+    externalProductScaleAcc(outputs, ones, bias, 1);
+}
+
+/////////////////
+// bpropUpdate //
+/////////////////
 // We are not using blas routines anymore, because we would iterate several
 // times over the weight matrix.
 void GradNNetLayerModule::bpropUpdate(const Vec& input, const Vec& output,
@@ -111,6 +132,9 @@ void GradNNetLayerModule::bpropUpdate(const Vec& input, const Vec& output,
 
         for( int j=0; j<input_size; j++ )
         {
+            if( delta_L2 > 0. )
+                w_[j] *= (1 - delta_L2);
+
             w_[j] -= input[j] * lr_og_i;
 
             if( delta_L1 > 0. )
@@ -123,8 +147,6 @@ void GradNNetLayerModule::bpropUpdate(const Vec& input, const Vec& output,
                     w_[j] = 0.;
             }
 
-            if( delta_L2 > 0. )
-                w_[j] *= (1 - delta_L2);
         }
     }
     step_number++;
@@ -175,6 +197,10 @@ void GradNNetLayerModule::bpropUpdate(const Vec& input, const Vec& output,
         for( int j=0; j<input_size; j++ )
         {
             input_gradient[j] += w_[j] * og_i;
+
+            if( delta_L2 > 0. )
+                w_[j] *= (1 - delta_L2);
+
             w_[j] -= input[j] * lr_og_i;
 
             if( delta_L1 > 0. )
@@ -187,14 +213,80 @@ void GradNNetLayerModule::bpropUpdate(const Vec& input, const Vec& output,
                     w_[j] = 0.;
             }
 
-            if( delta_L2 > 0. )
-                w_[j] *= (1 - delta_L2);
         }
     }
     step_number++;
 }
 
-// Update
+void GradNNetLayerModule::bpropUpdate(const Mat& inputs, const Mat& outputs,
+        Mat& input_gradients,
+        const Mat& output_gradients,
+        bool accumulate)
+{
+    PLASSERT( inputs.width() == input_size );
+    PLASSERT( outputs.width() == output_size );
+    PLASSERT( output_gradients.width() == output_size );
+
+    int n = inputs.length();
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradients.width() == input_size &&
+                input_gradients.length() == n,
+                "Cannot resize input_gradients and accumulate into it" );
+    }
+    else
+    {
+        input_gradients.resize(n, input_size);
+        input_gradients.fill(0);
+    }
+
+    learning_rate = start_learning_rate / (1+decrease_constant*step_number);
+    real avg_lr = learning_rate / n; // To obtain an average on a mini-batch.
+
+    // With L2 regularization, weights are scaled by a coefficient equal to
+    // 1 - learning rate * penalty.
+    real l2_scaling =
+        L2_penalty_factor > 0 ? 1 - learning_rate * L2_penalty_factor
+                              : 1;
+    PLASSERT_MSG(l2_scaling > 0, "Learning rate too large");
+
+    // Compute input gradient.
+    productAcc(input_gradients, output_gradients, weights);
+
+    // Update bias.
+    resizeOnes(n);
+    productScaleAcc(bias, output_gradients, true, ones, -avg_lr, 1);
+
+    // Update weights.
+    productScaleAcc(weights, output_gradients, true, inputs, false,
+            -avg_lr, l2_scaling);
+
+    // Apply L1 penalty if needed (note: this is not very efficient).
+    if (L1_penalty_factor > 0) {
+        real delta_L1 = learning_rate * L1_penalty_factor;
+        for( int i=0; i<output_size; i++ )
+        {
+            real* w_ = weights[i];
+            for( int j=0; j<input_size; j++ )
+            {
+                real& w_ij = w_[j];
+                if( w_ij > delta_L1 )
+                    w_ij -= delta_L1;
+                else if( w_ij < -delta_L1 )
+                    w_ij += delta_L1;
+                else
+                    w_ij = 0.;
+            }
+        }
+    }
+    step_number += n;
+}
+    
+
+//////////////////
+// bbpropUpdate //
+//////////////////
 void GradNNetLayerModule::bbpropUpdate(const Vec& input, const Vec& output,
                                        const Vec& output_gradient,
                                        const Vec& output_diag_hessian)
@@ -218,6 +310,9 @@ void GradNNetLayerModule::bbpropUpdate(const Vec& input, const Vec& output,
 }
 */
 
+////////////
+// forget //
+////////////
 // Forget the bias and reinitialize the weights
 void GradNNetLayerModule::forget()
 {
@@ -258,25 +353,35 @@ void GradNNetLayerModule::setLearningRate( real dynamic_learning_rate )
 {
     start_learning_rate = dynamic_learning_rate;
     step_number = 0;
-    // learning_rate will automaticly be set in bpropUpdate()
+    // learning_rate will automatically be set in bpropUpdate()
 }
 
+///////////
+// build //
+///////////
 void GradNNetLayerModule::build()
 {
     inherited::build();
     build_();
 }
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void GradNNetLayerModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField(init_weights, copies);
-    deepCopyField(init_bias, copies);
-    deepCopyField(weights, copies);
-    deepCopyField(bias, copies);
+    deepCopyField(init_bias,    copies);
+    deepCopyField(weights,      copies);
+    deepCopyField(bias,         copies);
+    deepCopyField(ones,         copies);
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void GradNNetLayerModule::declareOptions(OptionList& ol)
 {
     declareOption(ol, "start_learning_rate",
@@ -330,6 +435,9 @@ void GradNNetLayerModule::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void GradNNetLayerModule::build_()
 {
     if( input_size < 0 ) // has not been initialized
@@ -351,6 +459,17 @@ void GradNNetLayerModule::build_()
     }
 }
 
+////////////////
+// resizeOnes //
+////////////////
+void GradNNetLayerModule::resizeOnes(int n)
+{
+    if (ones.length() < n) {
+        ones.resize(n);
+        ones.fill(1);
+    } else if (ones.length() > n)
+        ones.resize(n);
+}
 
 
 

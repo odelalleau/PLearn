@@ -108,6 +108,9 @@ public:
 
     virtual void fprop(const Vec& input, Vec& output) const;
 
+    //! Overridden.
+    virtual void fprop(const Mat& inputs, Mat& outputs);
+
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              const Vec& output_gradient);
 
@@ -115,6 +118,11 @@ public:
                              Vec& input_gradient, const Vec& output_gradient,
                              bool accumulate=false);
 
+    virtual void bpropUpdate(const Mat& inputs, const Mat& outputs,
+                             Mat& input_gradients,
+                             const Mat& output_gradients,
+                             bool accumulate = false);
+    
     virtual void bbpropUpdate(const Vec& input, const Vec& output,
                               const Vec& output_gradient,
                               const Vec& output_diag_hessian);
@@ -144,6 +152,10 @@ public:
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
+
+    //! A vector filled with all ones.
+    Vec ones;
+    
     //#####  Protected Options  ###############################################
 
 protected:
@@ -157,6 +169,9 @@ private:
 
     //! This does the actual building.
     void build_();
+
+    //! Resize vector 'ones'.
+    void resizeOnes(int n);
 
 private:
     //#####  Private Data Members  ############################################
