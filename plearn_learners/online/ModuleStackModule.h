@@ -76,6 +76,9 @@ public:
     //! given the input, compute the output (possibly resize it  appropriately)
     virtual void fprop(const Vec& input, Vec& output) const;
 
+    //! Overridden.
+    virtual void fprop(const Mat& inputs, Mat& outputs);
+
     //! Adapt based on the output gradient, and obtain the input gradient.
     //! This method should only be called just after a corresponding
     //! fprop; it should be called with the same arguments as fprop
@@ -88,6 +91,11 @@ public:
                              const Vec& output_gradient,
                              bool accumulate=false);
 
+    virtual void bpropUpdate(const Mat& inputs, const Mat& outputs,
+                             Mat& input_gradients,
+                             const Mat& output_gradients,
+                             bool accumulate = false);
+    
     //! This version does not obtain the input gradient.
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              const Vec& output_gradient);
@@ -164,6 +172,10 @@ private:
     mutable TVec<Vec> values;
     mutable TVec<Vec> gradients;
     mutable TVec<Vec> diag_hessians;
+
+    //! Mini-batch versions.
+    TVec<Mat> values_m;
+    TVec<Mat> gradients_m;
 };
 
 // Declares a few other classes and functions related to this class

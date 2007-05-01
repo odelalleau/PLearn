@@ -98,6 +98,8 @@ void ModuleStackModule::build_()
         values.resize( n_modules-1 );
         gradients.resize( n_modules-1 );
         diag_hessians.resize( n_modules-1 );
+        values_m.resize(n_modules - 1);
+        gradients_m.resize(n_modules - 1);
 
         input_size = modules[0]->input_size;
         output_size = modules[n_modules-1]->output_size;
@@ -117,11 +119,19 @@ void ModuleStackModule::build()
 }
 
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void ModuleStackModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(modules, copies);
+    deepCopyField(modules,          copies);
+    deepCopyField(values,           copies);
+    deepCopyField(gradients,        copies);
+    deepCopyField(diag_hessians,    copies);
+    deepCopyField(values_m,         copies);
+    deepCopyField(gradients_m,      copies);
 }
 
 ///////////
@@ -129,13 +139,24 @@ void ModuleStackModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ///////////
 void ModuleStackModule::fprop(const Vec& input, Vec& output) const
 {
-    PLASSERT( n_modules > 0 );
+    PLASSERT( n_modules >= 2 );
     PLASSERT( input.size() == input_size );
 
     modules[0]->fprop( input, values[0] );
     for( int i=1 ; i<n_modules-1 ; i++ )
         modules[i]->fprop( values[i-1], values[i] );
     modules[n_modules-1]->fprop( values[n_modules-2], output );
+}
+
+void ModuleStackModule::fprop(const Mat& inputs, Mat& outputs)
+{
+    PLASSERT( n_modules >= 2 );
+    PLASSERT( inputs.width() == input_size );
+
+    modules[0]->fprop( inputs, values_m[0] );
+    for( int i=1 ; i<n_modules-1 ; i++ )
+        modules[i]->fprop( values_m[i-1], values_m[i] );
+    modules[n_modules-1]->fprop( values_m[n_modules-2], outputs );
 }
 
 /////////////////
@@ -146,7 +167,7 @@ void ModuleStackModule::bpropUpdate(const Vec& input, const Vec& output,
                                     const Vec& output_gradient,
                                     bool accumulate)
 {
-    PLASSERT( n_modules > 0 );
+    PLASSERT( n_modules >= 2 );
     PLASSERT( input.size() == input_size );
     PLASSERT( output.size() == output_size );
     PLASSERT( output_gradient.size() == output_size );
@@ -169,6 +190,38 @@ void ModuleStackModule::bpropUpdate(const Vec& input, const Vec& output,
 
     modules[0]->bpropUpdate( input, values[0], input_gradient, gradients[0],
                              accumulate );
+}
+
+void ModuleStackModule::bpropUpdate(const Mat& inputs, const Mat& outputs,
+        Mat& input_gradients,
+        const Mat& output_gradients,
+        bool accumulate)
+{
+    PLASSERT( n_modules >= 2 );
+    PLASSERT( inputs.width() == input_size );
+    PLASSERT( outputs.width() == output_size );
+    PLASSERT( output_gradients.width() == output_size );
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradients.width() == input_size &&
+                input_gradients.length() == inputs.length(),
+                "Cannot resize input_gradients and accumulate into it" );
+    } else
+        input_gradients.resize(inputs.length(), input_size);
+
+    // bpropUpdate should be called just after the corresponding fprop,
+    // so 'values_m' should be up-to-date.
+    modules[n_modules-1]->bpropUpdate( values_m[n_modules-2], outputs,
+                                       gradients_m[n_modules-2],
+                                       output_gradients );
+
+    for( int i=n_modules-2 ; i>0 ; i-- )
+        modules[i]->bpropUpdate( values_m[i-1], values_m[i],
+                                 gradients_m[i-1], gradients_m[i] );
+
+    modules[0]->bpropUpdate( inputs, values_m[0], input_gradients, gradients_m[0],
+            accumulate );
 }
 
 void ModuleStackModule::bpropUpdate(const Vec& input, const Vec& output,
