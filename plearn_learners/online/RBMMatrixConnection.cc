@@ -458,8 +458,41 @@ void RBMMatrixConnection::bpropUpdate(const Vec& input, const Vec& output,
     externalProductScaleAcc( weights, output_gradient, input, -learning_rate );
 }
 
-//! reset the parameters to the state they would be BEFORE starting training.
-//! Note that this method is necessarily called from build().
+void RBMMatrixConnection::bpropUpdate(const Mat& inputs, const Mat& outputs,
+                             Mat& input_gradients,
+                             const Mat& output_gradients,
+                             bool accumulate)
+{
+    PLASSERT( inputs.width() == down_size );
+    PLASSERT( outputs.width() == up_size );
+    PLASSERT( output_gradients.width() == up_size );
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradients.width() == down_size &&
+                      input_gradients.length() == inputs.length(),
+                      "Cannot resize input_gradients and accumulate into it" );
+
+        // input_gradients += output_gradient * weights
+        productAcc(input_gradients, output_gradients, weights);
+    }
+    else
+    {
+        input_gradients.resize(inputs.length(), down_size);
+        // input_gradients = output_gradient * weights
+        product(input_gradients, output_gradients, weights);
+    }
+
+    // weights -= learning_rate/n * output_gradients' * inputs
+    productScaleAcc(weights, output_gradients, true, inputs, false,
+            -learning_rate / inputs.length(), 1);
+}
+ 
+////////////
+// forget //
+////////////
+// Reset the parameters to the state they would be BEFORE starting training.
+// Note that this method is necessarily called from build().
 void RBMMatrixConnection::forget()
 {
     if( initialization_method == "zero" )
