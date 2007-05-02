@@ -59,17 +59,19 @@ PLEARN_IMPLEMENT_OBJECT(
 DeepBeliefNet::DeepBeliefNet() :
     cd_learning_rate( 0. ),
     grad_learning_rate( 0. ),
-    batch_size(1),
+    batch_size( 1 ),
     grad_decrease_ct( 0. ),
     // grad_weight_decay( 0. ),
-    n_classes(-1),
+    n_classes( -1 ),
     use_classification_cost( true ),
     reconstruct_layerwise( false ),
     n_layers( 0 ),
     online ( false ),
     background_gibbs_update_ratio(0),
     gibbs_chain_statistics_forgetting_factor(0.999),
-    minibatch_size(0),
+    gibbs_chain_reinit_freq( INT_MAX ),
+    minibatch_size( 0 ),
+    initialize_gibbs_chain( false ),
     final_module_has_learning_rate( false ),
     final_cost_has_learning_rate( false ),
     nll_cost_index( -1 ),
@@ -126,11 +128,11 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
     declareOption(ol, "use_classification_cost",
                   &DeepBeliefNet::use_classification_cost,
                   OptionBase::buildoption,
-                  "If the first cost function is the NLL in classification,\n"
-                  "pre-trained with CD, and using the last *two* layers to get"
-                  " a better\n"
-                  "approximation (undirected softmax) than layer-wise"
-                  " mean-field.\n");
+                  "Put the class target as an extra input of the top-level RBM\n"
+                  "and compute and maximize conditional class probability in that\n"
+                  "top layer (probability of the correct class given the other input\n"
+                  "of the top-level RBM, which is the output of the rest of the network.\n"
+                  "This only makes sense if a classification_module is provided.\n");
 
     declareOption(ol, "reconstruct_layerwise",
                   &DeepBeliefNet::reconstruct_layerwise,
@@ -145,7 +147,7 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
 
     declareOption(ol, "layers", &DeepBeliefNet::layers,
                   OptionBase::buildoption,
-                  "The layers of units in the network");
+                  "The layers of units in the network (including the input layer).");
 
     declareOption(ol, "connections", &DeepBeliefNet::connections,
                   OptionBase::buildoption,
@@ -156,7 +158,6 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   OptionBase::learntoption,
                   "The module computing the class probabilities (if"
                   " use_classification_cost)\n"
-                  " on top of classification_module.\n"
                   );
 
     declareOption(ol, "classification_cost",
@@ -224,6 +225,13 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   "Negative chain statistics are forgotten at this rate (a value of 0\n"
                   "would only use the current sample, a value of .99 would use 1% of\n"
                   "the current sample and 99% of the old statistics).\n");
+
+    declareOption(ol, "gibbs_chain_reinit_freq",
+                  &DeepBeliefNet::gibbs_chain_reinit_freq,
+                  OptionBase::buildoption,
+                  "After how many training examples to re-initialize the Gibbs chains.\n"
+                  "If == INT_MAX, the default value of this option, then NEVER\n"
+                  "re-initialize except at the beginning, when stage==0.\n");
 
     declareOption(ol, "top_layer_joint_cd", &DeepBeliefNet::top_layer_joint_cd,
                   OptionBase::buildoption,
@@ -819,6 +827,7 @@ void DeepBeliefNet::train()
         bool update_stats = false;
         for( ; stage<nstages ; stage++ )
         {
+            initialize_gibbs_chain=(stage%gibbs_chain_reinit_freq==0);
             // Update every 'minibatch_size' samples.
             if (stage % minibatch_size == 0) {
                 int sample_start = stage % nsamples;
@@ -1546,10 +1555,24 @@ void DeepBeliefNet::contrastiveDivergenceStep(
         {
             Mat down_state = gibbs_down_state[layer_index];
 
-            // sample up state given down state
-            connection->setAsDownInputs(down_state);
-            up_layer->getAllActivations(connection, 0, true);
-            up_layer->computeExpectations();
+            if (initialize_gibbs_chain) // initializing or re-initializing the chain
+            {
+                if (background_gibbs_update_ratio==1) // if <1 just use the CD state
+                {
+                    up_layer->generateSamples();
+                    connection->setAsUpInputs(up_layer->samples);
+                    down_layer->getAllActivations(connection, 0, true);
+                    down_layer->generateSamples();
+                }
+                initialize_gibbs_chain=false;
+            }
+            else 
+            {
+                // sample up state given down state
+                connection->setAsDownInputs(down_state);
+                up_layer->getAllActivations(connection, 0, true);
+                up_layer->computeExpectations();
+            }
             up_layer->generateSamples();
 
             // update using the down_state and up_layer->expectations for moving average in negative phase
@@ -1557,12 +1580,12 @@ void DeepBeliefNet::contrastiveDivergenceStep(
             if (background_gibbs_update_ratio<1)
             {
                 down_layer->updateCDandGibbs(pos_down_vals,cd_neg_down_vals,
-                                             down_state,
+                                             down_layer->samples,
                                              background_gibbs_update_ratio,
                                              gibbs_chain_statistics_forgetting_factor);
                 connection->updateCDandGibbs(pos_down_vals,pos_up_vals,
                                              cd_neg_down_vals, cd_neg_up_vals,
-                                             down_state,
+                                             down_layer->samples,
                                              up_layer->getExpectations(),
                                              background_gibbs_update_ratio,
                                              gibbs_chain_statistics_forgetting_factor);
@@ -1573,9 +1596,9 @@ void DeepBeliefNet::contrastiveDivergenceStep(
             }
             else
             {
-                down_layer->updateGibbs(pos_down_vals,down_state,
+                down_layer->updateGibbs(pos_down_vals,down_layer->samples,
                                         gibbs_chain_statistics_forgetting_factor);
-                connection->updateGibbs(pos_down_vals,pos_up_vals,down_state,
+                connection->updateGibbs(pos_down_vals,pos_up_vals,down_layer->samples,
                                         up_layer->getExpectations(),
                                         gibbs_chain_statistics_forgetting_factor);
                 up_layer->updateGibbs(pos_up_vals,up_layer->getExpectations(),

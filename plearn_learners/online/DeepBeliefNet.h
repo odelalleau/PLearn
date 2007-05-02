@@ -155,6 +155,10 @@ public:
     //! Only used if online for the moment
     bool top_layer_joint_cd;
 
+    //! after how many examples should we re-initialize the Gibbs chains
+    //! (if == INT_MAX, the default then NEVER re-initialize except when stage==0)
+    int gibbs_chain_reinit_freq;
+
     //#####  Not Options  #####################################################
 
     //! Timer for monitoring the speed
@@ -274,6 +278,9 @@ protected:
     int minibatch_size;
     
     //#####  Not Options  #####################################################
+
+    // whether to re-initialize Gibbs chain next time around
+    bool initialize_gibbs_chain;
 
     //! Stores the gradient of the cost wrt the activations
     //! (at the input of the layers)
