@@ -274,7 +274,7 @@ void NxProfileLearner::train()
             f_grad = error * u_profiles((int)input[1]);
             u_grad = error * f_profiles((int)input[0]);
 
-            // Update the parameters
+/*            // Update the parameters
             if( !ngest_films )  {
                 f_profiles((int)input[0]) += lr * f_grad;
             }   else    {
@@ -298,7 +298,7 @@ void NxProfileLearner::train()
                 // perform parameter update
                 u_profiles((int)input[1]) += lr * u_natgrad;
             }
-
+*/
             // L1 regularization
             if( L1_penalty_factor != 0. )    {
                 for( int d=0; d<profile_dim; d++ )  {
