@@ -407,8 +407,16 @@ void VecStatsCollector::update(const Mat& m, const Vec& weights)
 
 void VecStatsCollector::build_()
 {
-    if(!m_observation_window && (m_window > 0 || m_window == -2))
-        m_observation_window = new ObservationWindow(m_window);
+    if(m_window > 0 || m_window == -2)
+    {
+        if ( m_observation_window.isNull() )
+            m_observation_window = new ObservationWindow(m_window);
+        else {
+            m_observation_window->m_window = m_window;
+            m_observation_window->forget();
+        }
+    }
+
     if( m_window_nan_code < 0 || m_window_nan_code > 2 )
         PLERROR("The 'window_nan_code' option can only take values 0, 1 or 2.");
 }
