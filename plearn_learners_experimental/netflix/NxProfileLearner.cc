@@ -93,12 +93,14 @@ void NxProfileLearner::declareOptions(OptionList& ol)
                   &NxProfileLearner::L1_penalty_factor,
                   OptionBase::buildoption,
                   "Optional (default=0) factor of L1 regularization term, i.e.\n"
-                  "minimize L1_penalty_factor * sum_{ij} |weights(i,j)| during training.\n");
+                  "minimize L1_penalty_factor * sum_{ij} |weights(i,j)| during training.\n"
+                  "Gets multiplied by the learning rate.");
     declareOption(ol, "L2_penalty_factor",
                   &NxProfileLearner::L2_penalty_factor,
                   OptionBase::buildoption,
                   "Optional (default=0) factor of L2 regularization term, i.e.\n"
-                  "minimize 0.5 * L2_penalty_factor * sum_{ij} weights(i,j)^2 during training.\n");
+                  "minimize 0.5 * L2_penalty_factor * sum_{ij} weights(i,j)^2 during training.\n"
+                  "Gets multiplied by the learning rate.");
 
     declareOption(ol, "ngest_films",
                   &NxProfileLearner::ngest_films,
@@ -298,21 +300,23 @@ void NxProfileLearner::train()
             }
 
             // L1 regularization
-            for( int d=0; d<profile_dim; d++ )  {
-                // films
-                if( f_profiles((int)input[0], d) > L1_delta )
-                    f_profiles((int)input[0], d) -= L1_delta;
-                else if( f_profiles((int)input[0], d) < -L1_delta )
-                    f_profiles((int)input[0], d) += L1_delta;
-                else
-                    f_profiles((int)input[0], d) = 0.;
-                // users
-                if( u_profiles((int)input[1], d) > L1_delta )
-                    u_profiles((int)input[1], d) -= L1_delta;
-                else if( u_profiles((int)input[1], d) < -L1_delta )
-                    u_profiles((int)input[1], d) += L1_delta;
-                else
-                    u_profiles((int)input[1], d) = 0.;
+            if( L1_penalty_factor != 0. )    {
+                for( int d=0; d<profile_dim; d++ )  {
+                    // films
+                    if( f_profiles((int)input[0], d) > L1_delta )
+                        f_profiles((int)input[0], d) -= L1_delta;
+                    else if( f_profiles((int)input[0], d) < -L1_delta )
+                        f_profiles((int)input[0], d) += L1_delta;
+                    else
+                        f_profiles((int)input[0], d) = 0.;
+                    // users
+                    if( u_profiles((int)input[1], d) > L1_delta )
+                        u_profiles((int)input[1], d) -= L1_delta;
+                    else if( u_profiles((int)input[1], d) < -L1_delta )
+                        u_profiles((int)input[1], d) += L1_delta;
+                    else
+                        u_profiles((int)input[1], d) = 0.;
+                }
             }
 
             // L2 regularization
