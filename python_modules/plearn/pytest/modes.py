@@ -132,7 +132,7 @@ class PyTestMode(Mode):
         # Sanity check
         if hasattr( options, 'recursive' ) and options.recursive:
             targets = ppath.exempt_of_subdirectories( targets )
-
+            
         # Parses PyTest's config files if the mode requires it.
         if self.requires_config_parsing():
             ignored_directories = []
@@ -189,7 +189,19 @@ class PyTestMode(Mode):
 
     def restrictions(self):
         """Default --test-name and --category management."""
+        tnames = []
         if hasattr(self.options, 'test_name') and self.options.test_name:
+            tnames = self.options.test_name.split(',')
+
+        # If some target is not a directory, most likely it is a test name
+        targets = self.targets[:]
+        for target in targets:
+            if not os.path.isdir(target):
+                tnames.append(target)
+                self.targets.remove(target)
+
+        self.options.test_name = ",".join(tnames)                        
+        if self.options.test_name:
             Test.restrictTo(self.options.test_name)
 
         elif hasattr(self.options, 'category'):
