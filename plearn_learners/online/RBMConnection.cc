@@ -156,7 +156,7 @@ void RBMConnection::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField(input_vec, copies);
-    PLASSERT_MSG(false, "Not fully implemented");
+    deepCopyField(inputs_mat, copies);
 }
 
 /////////////////////
