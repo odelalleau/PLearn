@@ -1,0 +1,225 @@
+*1 ->HyperLearner(
+tester = *2 ->PTester(
+expdir = "" ;
+dataset = *3 ->MemoryVMatrix(
+data = 2  3  [ 
+1 	0 	0 	
+0 	1 	1 	
+]
+;
+source = *0 ;
+fieldnames = []
+;
+writable = 0 ;
+length = 2 ;
+width = 3 ;
+inputsize = 2 ;
+targetsize = 1 ;
+weightsize = 0 ;
+extrasize = 0 ;
+metadatadir = ""  )
+;
+splitter = *4 ->FractionSplitter(
+round_to_closest = 0 ;
+splits = 1  2  [ 
+(0 , 1 )	(0 , 1 )	
+]
+ )
+;
+statnames = 4 [ "E[train.E[NLL]]" "E[train.E[class_error]]" "E[test.E[NLL]]" "E[test.E[class_error]]" ] ;
+statmask = []
+;
+learner = *5 ->DeepBeliefNet(
+cd_learning_rate = 0.0100000000000000002 ;
+grad_learning_rate = 0.100000000000000006 ;
+batch_size = 1 ;
+n_classes = 2 ;
+training_schedule = 1 [ 500 ] ;
+use_classification_cost = 1 ;
+reconstruct_layerwise = 0 ;
+layers = 2 [ *6 ->RBMBinomialLayer(
+size = 2 ;
+learning_rate = 0.100000000000000006 ;
+momentum = 0 ;
+bias = 2 [ -0.109999999999999987 -0.0899999999999999967 ] ;
+input_size = 2 ;
+output_size = 2 ;
+estimate_simpler_diag_hessian = 0 ;
+expdir = "" ;
+random_gen = *7 ->PRandom(
+seed = 1827 ;
+fixed_seed = 0  )
+ )
+*8 ->RBMBinomialLayer(
+size = 2 ;
+learning_rate = 0.100000000000000006 ;
+momentum = 0 ;
+bias = 2 [ 0.0129429440449826925 0.0351844537817680852 ] ;
+input_size = 2 ;
+output_size = 2 ;
+estimate_simpler_diag_hessian = 0 ;
+expdir = "" ;
+random_gen = *7   )
+] ;
+connections = 1 [ *9 ->RBMMatrixConnection(
+weights = 2  2  [ 
+-0.724163850324076375 	0.91839444980870133 	
+0.78098851102786726 	-0.700802243309484374 	
+]
+;
+down_size = 2 ;
+up_size = 2 ;
+learning_rate = 0.100000000000000006 ;
+momentum = 0 ;
+initialization_method = "uniform_sqrt" ;
+input_size = 2 ;
+output_size = 2 ;
+estimate_simpler_diag_hessian = 0 ;
+expdir = "" ;
+random_gen = *7   )
+] ;
+classification_module = *10 ->RBMClassificationModule(
+previous_to_last = *9  ;
+last_layer = *8  ;
+last_to_target = *11 ->RBMMatrixConnection(
+weights = 2  2  [ 
+-0.847908208583354139 	0.63244501176485346 	
+0.355295316639817116 	-0.89403942428362182 	
+]
+;
+down_size = 2 ;
+up_size = 2 ;
+learning_rate = 0.100000000000000006 ;
+momentum = 0 ;
+initialization_method = "uniform_sqrt" ;
+input_size = 2 ;
+output_size = 2 ;
+estimate_simpler_diag_hessian = 0 ;
+expdir = "" ;
+random_gen = *7   )
+;
+target_layer = *12 ->RBMMultinomialLayer(
+size = 2 ;
+learning_rate = 0.100000000000000006 ;
+momentum = 0 ;
+bias = 2 [ -0.00278832381473579412 0.00278832381473579543 ] ;
+input_size = 2 ;
+output_size = 2 ;
+estimate_simpler_diag_hessian = 0 ;
+expdir = "" ;
+random_gen = *7   )
+;
+joint_connection = *13 ->RBMMixedConnection(
+sub_connections = 1  2  [ 
+*9  	*11  	
+]
+;
+up_init_positions = 1 [ 0 ] ;
+down_init_positions = 2 [ 0 2 ] ;
+n_up_blocks = 1 ;
+n_down_blocks = 2 ;
+down_size = 4 ;
+up_size = 2 ;
+learning_rate = 0.100000000000000006 ;
+momentum = 0 ;
+input_size = 4 ;
+output_size = 2 ;
+estimate_simpler_diag_hessian = 0 ;
+expdir = "" ;
+random_gen = *7   )
+;
+last_size = 2 ;
+input_size = 2 ;
+output_size = 2 ;
+estimate_simpler_diag_hessian = 0 ;
+expdir = "" ;
+random_gen = *7   )
+;
+final_module = *0 ;
+final_cost = *0 ;
+partial_costs = []
+;
+online = 0 ;
+background_gibbs_update_ratio = 0 ;
+gibbs_chain_statistics_forgetting_factor = 0.998999999999999999 ;
+top_layer_joint_cd = 0 ;
+n_layers = 2 ;
+minibatch_size = 1 ;
+gibbs_down_state = 1 [ 0  0  [ 
+]
+] ;
+seed = 1827 ;
+stage = 502 ;
+n_examples = 2 ;
+inputsize = 2 ;
+targetsize = 1 ;
+weightsize = 0 ;
+forget_when_training_set_changes = 0 ;
+nstages = 502 ;
+report_progress = 1 ;
+verbosity = 1 ;
+nservers = 0 ;
+save_trainingset_prefix = ""  )
+;
+perf_evaluators = {};
+report_stats = 1 ;
+save_initial_tester = 1 ;
+save_stat_collectors = 1 ;
+save_learners = 1 ;
+save_initial_learners = 0 ;
+save_data_sets = 0 ;
+save_test_outputs = 1 ;
+call_forget_in_run = 1 ;
+save_test_costs = 1 ;
+provide_learner_expdir = 0 ;
+should_train = 1 ;
+should_test = 1 ;
+template_stats_collector = *0 ;
+global_template_stats_collector = *0 ;
+final_commands = []
+;
+save_test_confidence = 0 ;
+enforce_clean_expdir = 1  )
+;
+option_fields = 1 [ "nstages" ] ;
+dont_restart_upon_change = 1 [ "nstages" ] ;
+strategy = 1 [ *14 ->HyperOptimize(
+which_cost = "1" ;
+min_n_trials = 0 ;
+oracle = *15 ->EarlyStoppingOracle(
+option = "nstages" ;
+values = []
+;
+range = 3 [ 0 701 2 ] ;
+min_value = -3.4028234663852886e+38 ;
+max_value = 3.4028234663852886e+38 ;
+max_degradation = 3.4028234663852886e+38 ;
+relative_max_degradation = -1 ;
+min_improvement = -3.4028234663852886e+38 ;
+relative_min_improvement = -1 ;
+max_degraded_steps = 701 ;
+min_n_steps = 0  )
+;
+provide_tester_expdir = 0 ;
+sub_strategy = []
+;
+rerun_after_sub = 0 ;
+provide_sub_expdir = 1 ;
+splitter = *0  )
+] ;
+provide_strategy_expdir = 1 ;
+save_final_learner = 1 ;
+learner = *5  ;
+provide_learner_expdir = 0 ;
+expdir_append = "" ;
+stage = 1 ;
+n_examples = 2 ;
+inputsize = 2 ;
+targetsize = 1 ;
+weightsize = 0 ;
+forget_when_training_set_changes = 0 ;
+nstages = 1 ;
+report_progress = 1 ;
+verbosity = 1 ;
+nservers = 0 ;
+save_trainingset_prefix = ""  )

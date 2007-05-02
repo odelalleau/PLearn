@@ -1,0 +1,91 @@
+*1 ->VecStatsCollector(
+maxnvalues = 0 ;
+fieldnames = 4 [ "E[train.E[NLL]]" "E[train.E[class_error]]" "E[test.E[NLL]]" "E[test.E[class_error]]" ] ;
+compute_covariance = 0 ;
+epsilon = 0 ;
+window = -1 ;
+window_nan_code = 0 ;
+no_removal_warnings = 0 ;
+stats = 4 [ StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 1 ;
+sumsquarew_ = 1 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+sumcube_ = 0 ;
+sumfourth_ = 0 ;
+min_ = 0.508731869987489316 ;
+max_ = 0.508731869987489316 ;
+first_ = 0.508731869987489316 ;
+last_ = 0.508731869987489316 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 1 ;
+sumsquarew_ = 1 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+sumcube_ = 0 ;
+sumfourth_ = 0 ;
+min_ = 0 ;
+max_ = 0 ;
+first_ = 0 ;
+last_ = 0 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 1 ;
+sumsquarew_ = 1 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+sumcube_ = 0 ;
+sumfourth_ = 0 ;
+min_ = 0.478084660444396681 ;
+max_ = 0.478084660444396681 ;
+first_ = 0.478084660444396681 ;
+last_ = 0.478084660444396681 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 1 ;
+sumsquarew_ = 1 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+sumcube_ = 0 ;
+sumfourth_ = 0 ;
+min_ = 0 ;
+max_ = 0 ;
+first_ = 0 ;
+last_ = 0 ;
+counts = {};
+more_than_maxnvalues = 1  )
+] ;
+cov = 0  0  [ 
+]
+;
+sum_cross = 0  0  [ 
+]
+;
+sum_cross_weights = 0  0  [ 
+]
+;
+sum_cross_square_weights = 0  0  [ 
+]
+;
+sum_non_missing_weights = 0 ;
+sum_non_missing_square_weights = 0  )

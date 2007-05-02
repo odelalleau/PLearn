@@ -1,0 +1,86 @@
+*13 -> PTester(
+    dataset = *1 -> MemoryVMatrix(
+        data = 2 3 [
+                1,
+                0,
+                0,
+                0,
+                1,
+                1
+                ],
+        inputsize = 2,
+        targetsize = 1,
+        weightsize = 0
+        ),
+    expdir = "expdir",
+    learner = *11 -> HyperLearner(
+        dont_restart_upon_change = [ "nstages" ],
+        learner = *6 -> DeepBeliefNet(
+            cd_learning_rate = 0.01,
+            connections = [
+                *3 -> RBMMatrixConnection(
+                    down_size = 2,
+                    random_gen = *2 -> PRandom( seed = 1827 ),
+                    up_size = 2
+                    )
+                ],
+            forget_when_training_set_changes = 0,
+            grad_learning_rate = 0.1,
+            layers = [
+                *4 -> RBMBinomialLayer( size = 2 ),
+                *5 -> RBMBinomialLayer( size = 2 )
+                ],
+            n_classes = 2,
+            nstages = 700,
+            report_progress = 1,
+            training_schedule = [ 500 ],
+            use_classification_cost = 1
+            ),
+        option_fields = [ "nstages" ],
+        provide_strategy_expdir = 1,
+        report_progress = 1,
+        strategy = [
+            *8 -> HyperOptimize(
+                oracle = *7 -> EarlyStoppingOracle(
+                    max_degraded_steps = 701,
+                    option = "nstages",
+                    range = [
+                        0,
+                        701,
+                        2
+                        ]
+                    ),
+                which_cost = 1
+                )
+            ],
+        tester = *10 -> PTester(
+            save_initial_tester = 1,
+            save_test_costs = 1,
+            save_test_outputs = 1,
+            splitter = *9 -> FractionSplitter(
+                splits = 1 2 [
+                        (0, 1),
+                        (0, 1)
+                        ]
+                ),
+            statnames = [
+                "E[train.E[NLL]]",
+                "E[train.E[class_error]]",
+                "E[test.E[NLL]]",
+                "E[test.E[class_error]]"
+                ]
+            )
+        ),
+    provide_learner_expdir = 1,
+    save_initial_tester = 1,
+    save_learners = 1,
+    save_test_costs = 1,
+    save_test_outputs = 1,
+    splitter = *12 -> NoSplitSplitter( ),
+    statnames = [
+        "E[train.E[E[train.E[NLL]]]]",
+        "E[train.E[E[train.E[class_error]]]]",
+        "E[train.E[E[test.E[NLL]]]]",
+        "E[train.E[E[test.E[class_error]]]]"
+        ]
+    )

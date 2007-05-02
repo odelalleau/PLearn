@@ -1,0 +1,104 @@
+import os.path
+from plearn.pyplearn import *
+
+input_size = 2
+hidden_size = 2
+n_classes = 2
+cd_learning_rate = 0.1
+grad_learning_rate = 0.2
+n_epochs_cd = 500
+n_epochs_grad = 200
+
+random_gen = pl.PRandom( seed = 1827 )
+
+dataset = pl.MemoryVMatrix(
+        data = TMat( 2, 3, [
+            1, 0, 0,
+            0, 1, 1
+            ] ),
+        inputsize = input_size,
+        targetsize = 1,
+        weightsize = 0
+        )
+
+layers = [
+    pl.RBMBinomialLayer( size = input_size ),
+    pl.RBMBinomialLayer( size = hidden_size )
+    ]
+
+connections = [
+    pl.RBMMatrixConnection(
+            down_size = input_size,
+            up_size = hidden_size,
+            random_gen = random_gen
+            )
+    ]
+
+learner = pl.DeepBeliefNet(
+        cd_learning_rate = 0.01,
+        grad_learning_rate = 0.1,
+        training_schedule = [ n_epochs_cd ],
+        nstages = n_epochs_cd + n_epochs_grad,
+        n_classes = n_classes,
+        use_classification_cost = 1,
+        layers = layers,
+        connections = connections,
+        forget_when_training_set_changes = 0,
+        report_progress = 1
+        )
+
+tester = pl.PTester(
+        splitter = pl.FractionSplitter(
+            splits = TMat(1,2,[ (0,1), (0,1) ])
+            ),
+        statnames = [
+            'E[train.E[NLL]]',
+            'E[train.E[class_error]]',
+            'E[test.E[NLL]]',
+            'E[test.E[class_error]]'
+            ],
+        save_initial_tester = 1,
+        save_test_costs = 1,
+        save_test_outputs = 1
+        )
+
+hyper_learner = pl.HyperLearner(
+        tester = tester,
+        learner = learner,
+        option_fields = [ 'nstages' ],
+        dont_restart_upon_change = [ 'nstages' ],
+        provide_strategy_expdir = 1,
+        strategy = [
+            pl.HyperOptimize(
+                which_cost = 1,
+                oracle = pl.EarlyStoppingOracle(
+                    option = 'nstages',
+                    range = [ 0, n_epochs_cd+n_epochs_grad+1, 2 ],
+                    max_degraded_steps = n_epochs_cd+n_epochs_grad+1
+                    )
+                )
+            ],
+        report_progress = 1
+        )
+
+hyper_tester = pl.PTester(
+        learner = hyper_learner,
+        dataset = dataset,
+        splitter = pl.NoSplitSplitter(),
+        statnames = [
+            'E[train.E[E[train.E[NLL]]]]',
+            'E[train.E[E[train.E[class_error]]]]',
+            'E[train.E[E[test.E[NLL]]]]',
+            'E[train.E[E[test.E[class_error]]]]'
+            ],
+        provide_learner_expdir = 1,
+        expdir = 'expdir',
+        save_initial_tester = 1,
+        save_test_costs = 1,
+        save_test_outputs = 1,
+        save_learners = 1
+        )
+
+def main():
+    return hyper_tester
+

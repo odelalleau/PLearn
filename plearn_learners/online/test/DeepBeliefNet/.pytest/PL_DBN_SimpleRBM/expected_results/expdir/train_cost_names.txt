@@ -1,0 +1,4 @@
+E[train.E[NLL]]
+E[train.E[class_error]]
+E[test.E[NLL]]
+E[test.E[class_error]]
