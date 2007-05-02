@@ -136,6 +136,9 @@ public:
     //! Disable profiling
     static void disactivate() { active=false; }
 
+    //! Return activation status
+    static bool isActive() { return active; }
+    
     //!  Start recording time for named piece of code
 #ifdef PROFILE
     static void start(const string& name_of_piece_of_code);
