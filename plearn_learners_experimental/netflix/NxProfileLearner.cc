@@ -50,6 +50,8 @@ PLEARN_IMPLEMENT_OBJECT(
 NxProfileLearner::NxProfileLearner()    :   profile_dim(1),
                                             slr(0.0),
                                             dc(0.0),
+                                            L1_penalty_factor(0.0),
+                                            L2_penalty_factor(0.0),
                                             n_films(17770),
                                             n_users(480189)
 /* ### Initialize all fields to their default value here */
@@ -87,6 +89,28 @@ void NxProfileLearner::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Learning rate decrease constant.");
 
+    declareOption(ol, "L1_penalty_factor",
+                  &NxProfileLearner::L1_penalty_factor,
+                  OptionBase::buildoption,
+                  "Optional (default=0) factor of L1 regularization term, i.e.\n"
+                  "minimize L1_penalty_factor * sum_{ij} |weights(i,j)| during training.\n");
+    declareOption(ol, "L2_penalty_factor",
+                  &NxProfileLearner::L2_penalty_factor,
+                  OptionBase::buildoption,
+                  "Optional (default=0) factor of L2 regularization term, i.e.\n"
+                  "minimize 0.5 * L2_penalty_factor * sum_{ij} weights(i,j)^2 during training.\n");
+
+    declareOption(ol, "ngest_films",
+                  &NxProfileLearner::ngest_films,
+                  OptionBase::buildoption,
+                  "Optional NatGradEstimator object for the gradients on the parameters OF ALL USERS!\n"
+                  "NOT A TEMPLATE!");
+
+    declareOption(ol, "ngest_users",
+                  &NxProfileLearner::ngest_users,
+                  OptionBase::buildoption,
+                  "Optional NatGradEstimator object for the gradients on the parameters OF ALL FILMS!\n"
+                  "NOT A TEMPLATE!");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -110,6 +134,16 @@ void NxProfileLearner::build_()
 
     cout << "build()" << endl;
 
+    if( L1_penalty_factor < 0. )
+        PLWARNING("NxProfileLearner::build:\n"
+                    "L1_penalty_factor is negative!\n", slr);
+    if( L2_penalty_factor < 0. )
+        PLWARNING("NxProfileLearner::build:\n"
+                    "L2_penalty_factor is negative!\n", slr);
+    if( (slr*L2_penalty_factor) > 1. )
+        PLWARNING("NxProfileLearner::build:\n"
+                    "slr = %f is too large for L2_penalty_factor!\n", slr);
+
     f_profiles.resize(n_films, profile_dim);     //! matrix of film profiles (n_films*profile_dim)
     u_profiles.resize(n_users, profile_dim);     //! matrix of user profiles (n_users*profile_dim)
 
@@ -128,6 +162,8 @@ void NxProfileLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
+    deepCopyField(ngest_films, copies);
+    deepCopyField(ngest_users, copies);
     deepCopyField(f_profiles, copies);
     deepCopyField(u_profiles, copies);
 
@@ -179,6 +215,19 @@ void NxProfileLearner::train()
     target.resize(targetsize());  // the train_set's targetsize()
     real weight, error, lr;
 
+    static Vec f_grad, f_natgrad; 
+    static Vec u_grad, u_natgrad;
+    f_grad.resize(profile_dim);
+    f_natgrad.resize(profile_dim);
+    u_grad.resize(profile_dim);
+    u_natgrad.resize(profile_dim);
+
+    // indexes for natural gradient estimator calls
+    // Since calls must have continuous 't's, and we exceed the int limit
+    // we need to do some hacking
+    static int ngf_idx=0;
+    static int ngu_idx=0;
+
     // This generic PLearner method does a number of standard stuff useful for
     // (almost) any learner, and return 'false' if no training should take
     // place. See PLearner.h for more details.
@@ -195,37 +244,83 @@ void NxProfileLearner::train()
         PP<ProgressBar> pb;
         if( report_progress )
             pb = new ProgressBar( "Training "+classname(), nsamples);
-        
+
+        // TODO In case minibarches are used, remember to modify in the case of
+        // natural gradient updates.        
         lr = slr/(1.0 + stage*dc);
+        real L1_delta = lr * L1_penalty_factor;
+        real L2_scaling = 1. - lr * L2_penalty_factor;
 
         for(int i=0; i<nsamples; i++)   {
             train_set->getExample(i, input, target, weight);
 
             PLASSERT( (input[0]>=0) && (input[0]<n_films) && (input[1]>=0) && (input[1]<n_users) );
 
-            // save a function call by not using the functions
-            // We're using squared error cost, but dropping the 2 and taking the
-            // negative already
+            // Save a function call by not using the functions (computeOutput,
+            // etc.). Also, we're using squared error cost, but dropping the 2 and taking
+            // the negative already.
             error = target[0] - dot( f_profiles((int)input[0]), u_profiles((int)input[1]) );
 
-        /*cout << " f " << filmProfileID << " " << f_profiles(filmProfileID) << endl;
-        cout << " u " << userProfileID << " " << u_profiles(userProfileID) << endl;
-        cout << "error " << error << endl;*/
+            // WHAT FOLLOWS SHOULD PROBABLY BE MADE MORE EFFICIENT
+            // examples:
+            // - for normal gradient multiply lr and error (2 scalars) 
+            // before multiplying the vector
+            // - Consider operating on the vector's elements
+            //- Use the updated film parameters in the user's update
 
-            // Not quite exact. Should do exact (copy the f_profiles entry)? 
-            // Or perhaps alternate based on stage parity?
-            f_profiles((int)input[0]) += lr * error * u_profiles((int)input[1]);
-            u_profiles((int)input[1]) += lr * error * f_profiles((int)input[0]);
+            // the gradients
+            f_grad = error * u_profiles((int)input[1]);
+            u_grad = error * f_profiles((int)input[0]);
 
-            // TODO add regularization
-    /*        real delta_L2 = learning_rate * L2_penalty_factor;
-            if( delta_L2 > 1 )
-                PLWARNING("GradNNetLayerModule::bpropUpdate:\n"
-                      "learning rate = %f is too large!\n", learning_rate);
+            // Update the parameters
+            if( !ngest_films )  {
+                f_profiles((int)input[0]) += lr * f_grad;
+            }   else    {
+                (*ngest_films)( ngf_idx, f_grad, f_natgrad );
+                // do index shananigans
+                ngf_idx++;
+                ngf_idx = ngf_idx%ngest_films->cov_minibatch_size + ngest_films->cov_minibatch_size;
+                ngest_films->previous_t = ngf_idx-1;
+                // perform parameter update
+                f_profiles((int)input[0]) += lr * f_natgrad;
+            }
 
-              if( delta_L2 > 0. )
-                    w_[j] *= (1 - delta_L2);
-*/
+            if( !ngest_users )  {
+                u_profiles((int)input[1]) += lr * u_grad;
+            }   else    {
+                (*ngest_users)( ngu_idx, u_grad, u_natgrad );
+                // do index shananigans
+                ngu_idx++;
+                ngu_idx = ngu_idx%ngest_users->cov_minibatch_size + ngest_users->cov_minibatch_size;
+                ngest_users->previous_t = ngu_idx-1;
+                // perform parameter update
+                u_profiles((int)input[1]) += lr * u_natgrad;
+            }
+
+            // L1 regularization
+            for( int d=0; d<profile_dim; d++ )  {
+                // films
+                if( f_profiles((int)input[0], d) > L1_delta )
+                    f_profiles((int)input[0], d) -= L1_delta;
+                else if( f_profiles((int)input[0], d) < -L1_delta )
+                    f_profiles((int)input[0], d) += L1_delta;
+                else
+                    f_profiles((int)input[0], d) = 0.;
+                // users
+                if( u_profiles((int)input[1], d) > L1_delta )
+                    u_profiles((int)input[1], d) -= L1_delta;
+                else if( u_profiles((int)input[1], d) < -L1_delta )
+                    u_profiles((int)input[1], d) += L1_delta;
+                else
+                    u_profiles((int)input[1], d) = 0.;
+            }
+
+            // L2 regularization
+            if( L2_penalty_factor != 0. )    {
+                f_profiles((int)input[0]) *= L2_scaling;
+                u_profiles((int)input[1]) *= L2_scaling;
+            }
+
             //train_stats->update(train_costs)
             if( pb )
                 pb->update(i);

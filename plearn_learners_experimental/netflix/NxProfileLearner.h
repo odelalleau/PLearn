@@ -41,6 +41,7 @@
 #define NxProfileLearner_INC
 
 #include <plearn_learners/generic/PLearner.h>
+#include <plearn_learners/generic/NatGradEstimator.h>
 
 namespace PLearn {
 
@@ -67,6 +68,22 @@ public:
     int profile_dim;    //! dimension of the profiles to be learnt
     real slr;           //! start learning rate
     real dc;            //! learning rate decrease constant
+
+    real L1_penalty_factor;
+    real L2_penalty_factor;
+
+    //! *Natural gradient* 
+    //! For now we use 2 estimators: 1 for films and one for users.
+    //! We also treat each user/film gradient as if it were on the same parameters,
+    //! ie, feed all user gradients to the same estimator.
+
+    //! Natural gradient estimator for the film parameters.
+    //! (if 0 then do not use natural gradient)
+    PP<NatGradEstimator> ngest_films;
+
+    //! Natural gradient estimator for the user parameters.
+    //! (if 0 then do not use natural gradient)
+    PP<NatGradEstimator> ngest_users;
 
     //#####  Public NOT Options  ##############################################
 
