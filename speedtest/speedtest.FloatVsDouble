@@ -1,0 +1,22 @@
+#!/bin/bash
+#nb experience executed=size(PROGEXT)*size(SIZE)
+BP=$1 #BASEPROG
+export OMP_NUM_THREADS=1
+SIZE=( 100 200 400 800 1023 1024 )
+TITLE="Comparaison of execution speed of float vs double program on $HOSTNAME"
+RESFILE=RES/floatvsdouble_${HOSTNAME%.iro.umontreal.ca}_${BP//.\//_}
+APPENDRESULT="NO" #"YES" append result to old one, "NO" erase old result
+
+function f(){
+#param1 time prog
+#param2 experiance prog
+#param3 complexity
+
+#$1 $2 ${PLEARNDIR}/speedtest3/sgrad.plearn task=letter_memvmat nout=26 nh1=$3 nh2=$3 nh3=$3 slr=1e-1 dc=0 n=16001 epoch=16000 seed=1 mbs=10 
+$1 $2 $3 $3 $3 1000
+}
+
+source speedtest
+exit
+
+

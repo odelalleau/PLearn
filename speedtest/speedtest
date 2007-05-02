@@ -1,0 +1,132 @@
+#!/bin/bash
+#nb experience executed=size(PROGEXT)*size(SIZE)
+BP=$1 #BASEPROG
+if [ "x$SIZE" == "x" -o "x$TITLE" == "x" -o "x$RESFILE" == "x" -o "x$APPENDRESULT" == "x" ]; then
+    echo "You should not call '$0' directly! See speedtest.general on how to call this script!"
+    exit
+fi
+
+if [ $# -eq 0 ]; then
+    echo "USAGE: $0 <baseprog> [<ext1> ... <extN>]"
+    exit
+else
+    BP=$1 #BASEPROG
+    shift
+    for p in "$@"
+      do
+      PROGEXT=( "${PROGEXT[@]}" $p )
+    done
+fi
+
+if [ "x${PROGEXT[0]}" == "x" ];then
+    PROG=${BP}
+else
+    for p in "${PROGEXT[@]}"
+      do
+      PROG=( "${PROG[@]}" ${BP}$p )
+    done
+fi
+
+for p in "${PROG[@]}"
+do
+  `which $p &> /dev/null`
+  SUCCESS=$?
+  if [ ! -e "$p" -a $SUCCESS != 0 ];then
+      echo "Programme '$p' do not existe"
+      exit
+  fi
+  unset SUCCESS
+done
+
+if [ `dirname $RESFILE` != "." ]; then
+    mkdir -p `dirname $RESFILE`
+fi
+
+#date +%s
+###
+### execute the test
+###
+
+DATAFILE=${RESFILE}.data
+LOGFILE=${RESFILE}.log
+PLOTFILE=${RESFILE}.plot
+PNGFILE=${RESFILE}.png
+touch ${DATAFILE}
+touch ${LOGFILE}
+touch $PLOTFILE
+
+if [ ! $APPENDRESULT == "YES" ]; then
+    echo -n ""  > ${DATAFILE}
+    echo -n ""  > ${LOGFILE}
+fi
+
+echo "BP: $BP"
+echo "PROGEXT: ${PROGEXT[@]}"
+echo "PROG: ${PROG[@]}"
+echo "SIZE: ${SIZE[@]}"
+echo "RESFILE: $RESFILE"
+echo "APPENDRESULT: $APPENDRESULT"
+echo -n "#SIZE " >> ${DATAFILE}
+for p in "${PROG[@]}"
+  do
+  echo -n "$p " >> ${DATAFILE}
+done
+echo "" >> ${DATAFILE}
+for i in "${SIZE[@]}"
+  do
+  echo -n "$i " >> ${DATAFILE}
+  touch ${DATAFILE}.tmp
+  for p in "${PROG[@]}"
+    do
+    date
+    echo -n "" > ${DATAFILE}.tmp
+    echo -n "Executing ${p} with size of ${i} " >> ${LOGFILE}
+    echo -n "Executing ${p} with size of ${i} ..."
+    f "/usr/bin/time -o${DATAFILE}.tmp -a -f %e" "$p" "$i" >> ${LOGFILE} 2>>${LOGFILE}
+    read time < ${DATAFILE}.tmp
+    echo -n "$time " >> ${DATAFILE}
+    echo "Ended"
+    echo "Ended">>${LOGFILE}
+  done
+  echo "" >> ${DATAFILE}
+done
+rm -f ${DATAFILE}.tmp
+###
+### generate the plot file
+###
+
+echo "set terminal png
+set output \"${PNGFILE}\"
+#unset logscale; set logscale y
+set style line 1 lt 3 lw 1
+set title \"${TITLE}\"
+set xlabel \"Problem size(matrice size, vector size,...)\"
+set ylabel \"time (s)\"
+set key left
+#set nokey"  > ${PLOTFILE}
+p="${PROG[0]}"
+echo "plot '${DATAFILE}' using 1:2 with linespoints t '${PROG[0]}'\\" >> ${PLOTFILE}
+i=2
+for p in "${PROG[@]}"
+  do
+  if [ "$p" != "${PROG[0]}" ]; then
+      i=$((i+1))
+      echo ", '${DATAFILE}' using 1:$i with linespoints t '$p'\\"  >> ${PLOTFILE}
+  fi
+done
+echo "#" >> ${PLOTFILE}
+echo "#pause -1 'Hit return to exit: '" >> ${PLOTFILE}
+
+gnuplot ${PLOTFILE}
+
+echo "RESFILE: $RESFILE"
+echo "PLOTFILE: $PLOTFILE"
+echo "DATAFILE: $DATAFILE"
+echo "LOGFILE: $LOGFILE"
+echo "PNG: $PNGFILE"
+
+#      set multiplot;                          # get into multiplot mode
+#      set size 1,0.5;  
+#      set origin 0.0,0.5;   plot sin(x); 
+#      set origin 0.0,0.0;   plot cos(x)
+#      unset multiplot                         # exit multiplot mode

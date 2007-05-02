@@ -1,0 +1,102 @@
+#! /bin/bash
+#nb experience executed=size(NBTHREADS)*size(PROGEXT)*size(SIZE)
+if [ $# -lt 1 ]; then
+    echo "USAGE: $0 <baseprog> [<ext1> ... <extN>]"
+    exit
+else
+    BP=$1 #BASEPROG
+fi
+
+#SIZE=( 600 800 1000 1200 1500 2000 ) # 800 1000 )
+SIZE=( 1000 )
+NBTHREADS=( 1 2 4 8 16 ) 
+TITLE="Comparaison of wall execution time for different number of thread for ${BP} on $HOSTNAME"
+RESFILE=RES/nbthread_${HOSTNAME%.iro.umontreal.ca}_${BP//.\//_}
+APPENDRESULT="NO" #"YES" append result to old one, "NO" erase old result
+
+
+function f(){
+#param1 time prog
+#param2 experiance prog
+#param3 complexity
+#param4 Value of OMP_NUM_THREADS
+if [ "x$4" != "x" ]; then
+    echo OMP_NUM_THREADS=$4
+    export OMP_NUM_THREADS=$4
+fi
+#$1 $2 ${PLEARNDIR}/speedtest3/sgrad.plearn task=letter_memvmat nout=26 nh1=$3 nh2=$3 nh3=$3 slr=1e-1 dc=0 n=16001 epoch=16000 seed=1 mbs=10 
+$1 $2 $3 $3 $3 1000
+}
+
+source speedtest
+exit
+
+#date +%s
+###
+### execute the test
+###
+for p in "${PROG[@]}"
+  do
+  pname=${p//.\//_}
+  touch ${RESFILE}_${pname}
+  touch ${RESFILE}_${pname}.log
+  touch ${RESFILE}_${pname}.res
+  if [ $APPENDRESULT == "YES" ]; then
+      echo "Will append result to old result"
+  else
+      echo "Erase old result"
+      echo ""  > ${RESFILE}_${pname}
+      echo ""  > ${RESFILE}_${pname}.log
+      echo ""  > ${RESFILE}_${pname}.res
+  fi
+  for t in "${NBTHREADS[@]}"
+    do
+    echo "# ${t} threads" >> ${RESFILE}_${pname}.res
+    for i in "${SIZE[@]}"
+      do
+      echo -n "$i " >> ${RESFILE}_${pname}.res
+      echo -n "Executing prog ${p} with size of ${i} with ${t} threads" >> ${RESFILE}_${pname}.log
+      echo -n "Executing prog ${p} with size of ${i} with ${t} threads..."
+      f "/usr/bin/time -o${RESFILE}_${pname}.res -a -f %e" "$p" "$i" $t >> ${RESFILE}_${pname}.log 2>>${RESFILE}_${pname}.log
+      echo "Ended"
+      done
+    echo "" >> ${RESFILE}_${pname}.res
+    echo "" >> ${RESFILE}_${pname}.res
+  done
+done
+###
+### generate the plot file
+###
+touch $RESFILE
+
+echo "set terminal png
+set output \"${RESFILE}.png\"
+#unset logscale; set logscale y
+set style line 1 lt 3 lw 1
+set title \"${TITLE}\"
+set xlabel \"Problem size(matrice size, vector size,...)\"
+set ylabel \"time (s)\"
+#set nokey"  > $RESFILE
+echo "plot '${RESFILE}_${PROG[0]//.\//_}.res' i 0 with linespoints t '${PROG[0]}_${NBTHREADS[0]}'\\" >> $RESFILE
+index=1
+for p in "${PROG[@]}"
+  do
+  pname=${p//.\//_}
+  if [ "$p" == "${PROG[0]}" ]; then
+      index=1
+  else
+      index=0
+  fi
+
+  for t in "${NBTHREADS[@]}"
+    do
+    if [ "$p" != "${PROG[0]}" -o "$t" != "${NBTHREADS[0]}" ]; then
+	echo ", '${RESFILE}_${pname}.res' i $index with linespoints t '${p}_${t}'\\"  >> $RESFILE
+	index=$(( $index + 1 ))
+    fi
+  done
+done
+echo "#" >> $RESFILE
+echo "#pause -1 'Hit return to exit: '" >> $RESFILE
+
+gnuplot $RESFILE

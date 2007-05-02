@@ -1,0 +1,25 @@
+#!/bin/bash
+#You can use the script multipymake to compile different version of PLearn
+#nb experience executed=size(PROGEXT)*size(SIZE)
+BP=$1 #BASEPROG
+export OMP_NUM_THREADS=1
+#SIZE=( 95 96 191 192 287 288 383 384 479 480 575 576 671 672 766 767 863 864 959 960 1055 1056 )
+SIZE=( 127 128 255 256 511 512 1023 1024 )
+#SIZE=( 96 192 288 384 480 576 672 767 864 960 1056 )
+#SIZE=( 95 191 287 383 479 575 671 766 863 959 1055 )
+#SIZE=( 768 100 500 1000 1500 )
+#SIZE=( 50 100 150 200 300 )
+
+TITLE="Comparison of execution time of different programme on $HOSTNAME"
+RESFILE=RES/blascompare_${HOSTNAME%.iro.umontreal.ca}_${BP//.\//_}
+APPENDRESULT="NO" #"YES" append result to old one, otherwise we erase old results
+
+function f(){
+#param1 time prog
+#param2 experiance prog
+#param3 complexity
+
+$1 $2 $3 $3 10000
+}
+
+source speedtest

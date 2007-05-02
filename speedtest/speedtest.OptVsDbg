@@ -1,0 +1,19 @@
+#!/bin/bash
+#trap 'echo "Control-C disabled."' SIGINT
+BP=$1 #BASEPROG
+export OMP_NUM_THREADS=1
+SIZE=( 100 200 400 )
+PROGEXT=( -opt -dbg -safeopt -checkopt -opt64 )
+TITLE="Compare different compilation optimisation flags with default blas on $HOSTNAME"
+RESFILE=RES/optcompare_${HOSTNAME%.iro.umontreal.ca}_${BP//.\//_}
+APPENDRESULT="NO" #"YES" append result to old one, "NO" erase old result
+
+function f(){
+#param1 time prog
+#param2 experiance prog
+#param3 complexity
+
+$1 $2 ${PLEARNDIR}/speedtest3/sgrad.plearn task=letter_memvmat nout=26 nh1=$3 nh2=$3 nh3=$3 slr=1e-1 dc=0 n=16001 epoch=16000 seed=1 mbs=10 
+}
+
+source speedtest
