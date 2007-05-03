@@ -220,6 +220,8 @@ public:
 
     void onlineStep( const Vec& input, const Vec& target, Vec& train_costs );
 
+    void onlineStep( const Mat& inputs, const Mat& targets, Mat& train_costs );
+
     void greedyStep( const Vec& input, const Vec& target, int index );
 
     //! Greedy step with mini-batches.
@@ -313,8 +315,12 @@ protected:
     //! buffers bottom layer activation during onlineStep 
     mutable Vec save_layer_activation;
 
+    Mat save_layer_activations; //!< For mini-batches.
+
     //! buffers bottom layer expectation during onlineStep 
     mutable Vec save_layer_expectation;
+
+    Mat save_layer_expectations; //!< For mini-batches.
 
     //! Does final_module exist and have a "learning_rate" option
     bool final_module_has_learning_rate;

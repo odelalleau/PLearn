@@ -510,6 +510,8 @@ void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(final_cost_gradients,     copies);
     deepCopyField(save_layer_activation,    copies);
     deepCopyField(save_layer_expectation,   copies);
+    deepCopyField(save_layer_activations,   copies);
+    deepCopyField(save_layer_expectations,  copies);
     deepCopyField(pos_down_val,             copies);
     deepCopyField(pos_up_val,               copies);
     deepCopyField(cd_neg_up_vals,           copies);
@@ -656,26 +658,31 @@ void DeepBeliefNet::train()
     train_stats->forget();
 
     if (online)
-        // train all layers simultaneously AND fine-tuning as well!
     {
-        PLASSERT_MSG(batch_size == 1, "Online mode not implemented for "
-                "mini-batch learning yet");
-
+        // Train all layers simultaneously AND fine-tuning as well!
         if( report_progress && stage < nstages )
             pb = new ProgressBar( "Training "+classname(),
                                   nstages - stage );
 
         for( ; stage<nstages; stage++)
         {
-            int sample = stage % nsamples;
-            train_set->getExample(sample, input, target, weight);
-            onlineStep( input, target, train_costs );
-            train_stats->update( train_costs );
+            // Do a step every 'minibatch_size' examples.
+            if (stage % minibatch_size == 0) {
+                int sample_start = stage % nsamples;
+                if (batch_size > 1 || minibatch_hack) {
+                    train_set->getExamples(sample_start, minibatch_size,
+                            inputs, targets, weights, NULL, true);
+                    onlineStep( inputs, targets, train_costs_m );
+                } else {
+                    train_set->getExample(sample_start, input, target, weight);
+                    onlineStep( input, target, train_costs );
+                }
+            }
             if( pb )
                 pb->update( stage + 1 );
         }
     }
-    else // by stages
+    else // Greedy learning, one layer at a time.
     {
         /***** initial greedy training *****/
         for( int i=0 ; i<n_layers-1 ; i++ )
@@ -834,7 +841,7 @@ void DeepBeliefNet::train()
 void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
                                 Vec& train_costs)
 {
-    PLASSERT_MSG(batch_size == 1, "Not implemented for mini-batches");
+    PLASSERT(batch_size == 1);
 
     TVec<Vec> cost;
     if (partial_costs)
@@ -842,7 +849,7 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
 
     layers[0]->expectation << input;
     // FORWARD PHASE
-    Vec layer_input;
+    //Vec layer_input;
     for( int i=0 ; i<n_layers-1 ; i++ )
     {
         // mean-field fprop from layer i to layer i+1
@@ -1035,6 +1042,232 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
         {
             layers[i]->activation << save_layer_activation;
             layers[i]->expectation << save_layer_expectation;
+        }
+    }
+
+}
+
+void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
+                               Mat& train_costs)
+{
+    // TODO Can we avoid this memory allocation?
+    TVec<Mat> cost;
+    Vec optimized_cost;
+    if (partial_costs) {
+        cost.resize(n_layers-1);
+        optimized_cost.resize(inputs.length());
+    }
+
+    layers[0]->setExpectations(inputs);
+    // FORWARD PHASE
+    //Vec layer_input;
+    for( int i=0 ; i<n_layers-1 ; i++ )
+    {
+        // mean-field fprop from layer i to layer i+1
+        connections[i]->setAsDownInputs( layers[i]->getExpectations() );
+        // this does the actual matrix-vector computation
+        layers[i+1]->getAllActivations( connections[i] );
+        layers[i+1]->computeExpectations();
+
+        // propagate into local cost associated to output of layer i+1
+        if( partial_costs && partial_costs[ i ] )
+        {
+            partial_costs[ i ]->fprop( layers[ i+1 ]->getExpectations(),
+                                       targets, cost[i] );
+
+            // Backward pass
+            // first time we set these gradients: do not accumulate
+            optimized_cost << cost[i].column(0); // TODO Can we optimize?
+            partial_costs[ i ]->bpropUpdate( layers[ i+1 ]->getExpectations(),
+                                             targets, optimized_cost,
+                                             expectations_gradients[ i+1 ] );
+
+            for (int k = 0; k < inputs.length(); k++)
+                for (int j=0;j<partial_cost_indices[i].length();j++)
+                    train_costs(k, partial_cost_indices[i][j]) = cost[i](k, j);
+        }
+        else
+            expectations_gradients[i+1].clear();
+/* TODO Remove if not used? Or implement if we want to do it?
+        if( reconstruct_layerwise )
+        {
+            // layer_input, reconstruction_cost_indices
+            layer_input.resize(layers[i]->size);
+            layer_input << layers[i]->expectation; // fpropNLL writes in expectation
+            connections[i]->setAsUpInput( layers[i+1]->expectation );
+            layers[i]->getAllActivations( connections[i] );
+            real rc = train_costs[reconstruction_cost_indices[i+1]] 
+                = layer[i]->fpropNLL( layer_input ); // or use a NLLCostModule::fprop
+            train_costs[reconstruction_cost_indices[0]] +=
+                train_costs[reconstruction_cost_indices[i+1]];
+            ... layers[i]->bpropNLL( layer_input, rc, bias_gradient );
+            layers[i]->expectation << layer_input;
+        }
+*/
+    }
+
+    // top layer may be connected to a final_module followed by a
+    // final_cost and / or may be used to predict class probabilities
+    // through a joint classification_module
+
+    if ( final_cost )
+    {
+        if( final_module )
+        {
+                final_module->fprop( layers[ n_layers-1 ]->getExpectations(),
+                        final_cost_inputs );
+                final_cost->fprop( final_cost_inputs, targets,
+                        final_cost_values );
+                optimized_cost << final_cost_values.column(0); // TODO optimize
+                final_cost->bpropUpdate( final_cost_inputs, targets,
+                        optimized_cost,
+                        final_cost_gradients );
+
+                final_module->bpropUpdate(
+                        layers[ n_layers-1 ]->getExpectations(),
+                        final_cost_inputs,
+                        expectations_gradients[ n_layers-1 ],
+                        final_cost_gradients, true );
+        }
+        else
+        {
+                final_cost->fprop( layers[ n_layers-1 ]->getExpectations(),
+                        targets,
+                        final_cost_values );
+                optimized_cost << final_cost_values.column(0); // TODO optimize
+                final_cost->bpropUpdate( layers[n_layers-1]->getExpectations(),
+                        targets, optimized_cost,
+                        expectations_gradients[n_layers-1],
+                        true);
+        }
+
+        for (int k = 0; k < inputs.length(); k++)
+            for (int j=0;j<final_cost_indices.length();j++)
+                train_costs(k, final_cost_indices[j]) = final_cost_values(k, j);
+    }
+
+    if ( final_cost || (partial_costs && partial_costs[n_layers-2]) )
+    {
+        layers[n_layers-1]->setLearningRate( grad_learning_rate );
+        connections[n_layers-2]->setLearningRate( grad_learning_rate );
+
+        layers[ n_layers-1 ]->bpropUpdate(
+                layers[ n_layers-1 ]->activations,
+                layers[ n_layers-1 ]->getExpectations(),
+                activations_gradients[ n_layers-1 ],
+                expectations_gradients[ n_layers-1 ],
+                false);
+
+        connections[ n_layers-2 ]->bpropUpdate(
+                layers[ n_layers-2 ]->getExpectations(),
+                layers[ n_layers-1 ]->activations,
+                expectations_gradients[ n_layers-2 ],
+                activations_gradients[ n_layers-1 ],
+                true);
+        // accumulate into expectations_gradients[n_layers-2]
+        // because a partial cost may have already put a gradient there
+    }
+
+    if( use_classification_cost )
+    {
+        PLERROR("In DeepBeliefNet::onlineStep - 'use_classification_cost' not "
+                "implemented for mini-batches");
+
+        /*
+        classification_module->fprop( layers[ n_layers-2 ]->expectation,
+                                      class_output );
+        real nll_cost;
+
+        // This doesn't work. gcc bug?
+        // classification_cost->fprop( class_output, target, cost );
+        classification_cost->CostModule::fprop( class_output, target,
+                                                nll_cost );
+
+        real class_error =
+            ( argmax(class_output) == (int) round(target[0]) ) ? 0: 1;
+
+        train_costs[nll_cost_index] = nll_cost;
+        train_costs[class_cost_index] = class_error;
+
+        classification_cost->bpropUpdate( class_output, target, nll_cost,
+                                          class_gradient );
+
+        classification_module->bpropUpdate( layers[ n_layers-2 ]->expectation,
+                                            class_output,
+                                            expectation_gradients[n_layers-2],
+                                            class_gradient,
+                                            true );
+        if( top_layer_joint_cd )
+        {
+            // set the input of the joint layer
+            Vec target_exp = classification_module->target_layer->expectation;
+            fill_one_hot( target_exp, (int) round(target[0]), real(0.), real(1.) );
+
+            joint_layer->setLearningRate( cd_learning_rate );
+            layers[ n_layers-1 ]->setLearningRate( cd_learning_rate );
+            classification_module->joint_connection->setLearningRate(
+                cd_learning_rate );
+
+            save_layer_activation.resize(layers[ n_layers-2 ]->size);
+            save_layer_activation << layers[ n_layers-2 ]->activation;
+            save_layer_expectation.resize(layers[ n_layers-2 ]->size);
+            save_layer_expectation << layers[ n_layers-2 ]->expectation;
+
+            contrastiveDivergenceStep(
+                get_pointer(joint_layer),
+                get_pointer(classification_module->joint_connection),
+                layers[ n_layers-1 ], n_layers-2);
+
+            layers[ n_layers-2 ]->activation << save_layer_activation;
+            layers[ n_layers-2 ]->expectation << save_layer_expectation;
+        }
+        */
+    }
+
+
+    // DOWNWARD PHASE (the downward phase for top layer is already done above)
+    for( int i=n_layers-3 ; i>=0 ; i-- )
+    {
+        connections[ i ]->setLearningRate( grad_learning_rate );
+        layers[ i+1 ]->setLearningRate( grad_learning_rate );
+
+        layers[i+1]->bpropUpdate( layers[i+1]->activations,
+                                  layers[i+1]->getExpectations(),
+                                  activations_gradients[i+1],
+                                  expectations_gradients[i+1] );
+
+        connections[i]->bpropUpdate( layers[i]->getExpectations(),
+                                     layers[i+1]->activations,
+                                     expectations_gradients[i],
+                                     activations_gradients[i+1],
+                                     true);
+
+        // N.B. the contrastiveDivergenceStep changes the activation and
+        // expectation fields of top layer of the RBM, so it must be
+        // done last
+        layers[i]->setLearningRate( cd_learning_rate );
+        layers[i+1]->setLearningRate( cd_learning_rate );
+        connections[i]->setLearningRate( cd_learning_rate );
+
+        if( i > 0 )
+        {
+            const Mat& source_act = layers[i]->activations;
+            save_layer_activations.resize(source_act.length(),
+                                          source_act.width());
+            save_layer_activation << source_act;
+            const Mat& source_exp = layers[i]->getExpectations();
+            save_layer_expectation.resize(source_exp.length(),
+                                          source_exp.width());
+            save_layer_expectation << source_exp;
+        }
+        contrastiveDivergenceStep( layers[ i ],
+                                   connections[ i ],
+                                   layers[ i+1 ] ,
+                                   i, true);
+        if( i > 0 )
+        {
+            layers[i]->activations << save_layer_activations;
+            layers[i]->getExpectations() << save_layer_expectations;
         }
     }
 
