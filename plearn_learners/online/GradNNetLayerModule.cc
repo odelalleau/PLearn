@@ -95,7 +95,7 @@ void GradNNetLayerModule::fprop(const Mat& inputs, Mat& outputs)
 
     // Add bias.
     resizeOnes(n);
-    externalProductScaleAcc(outputs, ones, bias, 1);
+    externalProductScaleAcc(outputs, ones, bias, 1.);
 }
 
 /////////////////
@@ -256,7 +256,7 @@ void GradNNetLayerModule::bpropUpdate(const Mat& inputs, const Mat& outputs,
 
     // Update bias.
     resizeOnes(n);
-    productScaleAcc(bias, output_gradients, true, ones, -avg_lr, 1);
+    productScaleAcc(bias, output_gradients, true, ones, -avg_lr, 1.);
 
     // Update weights.
     productScaleAcc(weights, output_gradients, true, inputs, false,

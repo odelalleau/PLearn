@@ -253,10 +253,10 @@ void RBMMatrixConnection::update( const Mat& pos_down_values, // v_0
     if( momentum == 0. )
     {
         productScaleAcc(weights, pos_up_values, true, pos_down_values, false,
-                -learning_rate, 1);
+                -learning_rate, 1.);
 
         productScaleAcc(weights, neg_up_values, true, neg_down_values, false,
-                learning_rate, 1);
+                learning_rate, 1.);
     }
     else
     {
@@ -309,13 +309,13 @@ void RBMMatrixConnection::updateCDandGibbs( const Mat& pos_down_values,
     //                       * cd_neg_up_values'*cd_neg_down_values))
     productScaleAcc(weights,
                     pos_up_values, true,
-                    pos_down_values, false,-learning_rate,1);
+                    pos_down_values, false,-learning_rate,1.);
     multiplyAcc(weights, weights_neg_stats,
                 learning_rate*background_gibbs_update_ratio);
     productScaleAcc(weights,
                     cd_neg_up_values, true,
                     cd_neg_down_values, false,
-                    learning_rate*(1-background_gibbs_update_ratio),1);
+                    learning_rate*(1-background_gibbs_update_ratio),1.);
 }
 
 void RBMMatrixConnection::updateGibbs( const Mat& pos_down_values,
@@ -336,7 +336,7 @@ void RBMMatrixConnection::updateGibbs( const Mat& pos_down_values,
     // delta w = -lrate * ( pos_up_values'*pos_down_values - neg_stats )
     productScaleAcc(weights,
                     pos_up_values, true,
-                    pos_down_values, false,-learning_rate,1);
+                    pos_down_values, false,-learning_rate,1.);
     multiplyAcc(weights, weights_neg_stats,learning_rate);
 }
 
@@ -485,7 +485,7 @@ void RBMMatrixConnection::bpropUpdate(const Mat& inputs, const Mat& outputs,
 
     // weights -= learning_rate/n * output_gradients' * inputs
     productScaleAcc(weights, output_gradients, true, inputs, false,
-            -learning_rate / inputs.length(), 1);
+            -learning_rate / inputs.length(), 1.);
 }
  
 ////////////
