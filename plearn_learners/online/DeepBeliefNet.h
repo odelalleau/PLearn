@@ -223,7 +223,7 @@ public:
     void greedyStep( const Vec& input, const Vec& target, int index );
 
     //! Greedy step with mini-batches.
-    void greedyStep(const Mat& inputs, const Mat& targets, int index);
+    void greedyStep(const Mat& inputs, const Mat& targets, int index, Mat& train_costs_m);
 
     void jointGreedyStep( const Vec& input, const Vec& target );
 
@@ -346,10 +346,12 @@ protected:
     TVec<int> final_cost_indices;
 
     //! Keeps the index of the reconstruction cost in train_costs
-    int recons_cost_index;
+    mutable int reconstruction_cost_index;
 
     //! indices of the partial costs in train_costs
     TVec<TVec<int> > partial_cost_indices;
+
+    Vec reconstruction_costs;
 
 protected:
     //#####  Protected Member Functions  ######################################

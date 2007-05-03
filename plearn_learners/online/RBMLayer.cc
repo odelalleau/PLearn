@@ -263,6 +263,12 @@ real RBMLayer::fpropNLL(const Vec& target)
     return REAL_MAX;
 }
 
+real RBMLayer::fpropNLL(const Mat& target)
+{
+    PLERROR("In RBMLayer::fpropNLL(): not implemented");
+    return REAL_MAX;
+}
+
 void RBMLayer::bpropNLL(const Vec& target, real nll, Vec& bias_gradient)
 {
     PLERROR("In RBMLayer::bpropNLL(): not implemented");

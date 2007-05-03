@@ -76,7 +76,7 @@ DeepBeliefNet::DeepBeliefNet() :
     final_cost_has_learning_rate( false ),
     nll_cost_index( -1 ),
     class_cost_index( -1 ),
-    recons_cost_index( -1 )
+    reconstruction_cost_index( -1 )
 {
     random_gen = new PRandom( seed_ );
 }
@@ -137,7 +137,7 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
     declareOption(ol, "reconstruct_layerwise",
                   &DeepBeliefNet::reconstruct_layerwise,
                   OptionBase::buildoption,
-                  "Minimize reconstruction error of each layer as an auto-encoder.\n"
+                  "Compute reconstruction error of each layer as an auto-encoder.\n"
                   "This is done using cross-entropy between actual and reconstructed.\n"
                   "This option automatically adds the following cost names:\n"
                   "   layerwise_reconstruction_error (sum over all layers)\n"
@@ -304,6 +304,7 @@ void DeepBeliefNet::build_()
         build_final_cost();
 
     // build_costs(); /* ? */
+    reconstruction_costs.resize(reconstruct_layerwise?n_layers-1:0);
 }
 
 //////////////////////////////////
@@ -635,7 +636,8 @@ void DeepBeliefNet::train()
             }
     }
 
-    recons_cost_index = train_cost_names.find("recons_error");
+    if ( reconstruct_layerwise)
+        reconstruction_cost_index = train_cost_names.find("layerwise_reconstruction_error");
 
     class_cost_index = train_cost_names.find("class_error");
 
@@ -649,8 +651,6 @@ void DeepBeliefNet::train()
     }
 
     PP<ProgressBar> pb;
-
-    real train_recons_error = 0.0;
 
     // clear stats of previous epoch
     train_stats->forget();
@@ -686,6 +686,7 @@ void DeepBeliefNet::train()
             MODULE_LOG << "Training connection weights between layers " << i
                        << " and " << i+1 << endl;
 
+            int first_stage = stage;
             int end_stage = min( training_schedule[i], nstages );
 
             MODULE_LOG << "  stage = " << stage << endl;
@@ -695,7 +696,7 @@ void DeepBeliefNet::train()
             if( report_progress && stage < end_stage )
                 pb = new ProgressBar( "Training layer "+tostring(i)
                                       +" of "+classname(),
-                                      end_stage - stage );
+                                      end_stage - first_stage);
 
             layers[i]->setLearningRate( cd_learning_rate );
             connections[i]->setLearningRate( cd_learning_rate );
@@ -709,7 +710,14 @@ void DeepBeliefNet::train()
                     if (batch_size > 1 || minibatch_hack) {
                         train_set->getExamples(sample_start, minibatch_size,
                                 inputs, targets, weights, NULL, true);
-                        greedyStep( inputs, targets, i );
+                        if (reconstruct_layerwise)
+                        {
+                            train_costs_m.fill(MISSING_VALUE);
+                            train_costs_m.column(reconstruction_cost_index).clear();
+                        }
+                        greedyStep( inputs, targets, i , train_costs_m);
+                        for (int k = 0; k < minibatch_size; k++)
+                            train_stats->update(train_costs_m(k));
                     } else {
                         train_set->getExample(sample_start, input, target, weight);
                         greedyStep( input, target, i );
@@ -717,10 +725,10 @@ void DeepBeliefNet::train()
 
                 }
                 if( pb )
-                    if( i == 0 )
-                        pb->update( stage + 1 );
+                    pb->update( stage - first_stage + 1 );
+/*                    if( i == 0 )
                     else
-                        pb->update( stage - training_schedule[i-1] + 1 );
+                    pb->update( stage - training_schedule[i-1] + 1 ); */
             }
         }
 
@@ -759,50 +767,6 @@ void DeepBeliefNet::train()
                 if( pb )
                     pb->update( stage - previous_stage + 1 );
             }
-        }
-
-        /**** compute reconstruction error*****/
-        PP<RBMLayer> down_layer = get_pointer(layers[0]) ;
-        PP<RBMLayer> up_layer =  get_pointer(layers[1]) ;
-        PP<RBMConnection> parameters = get_pointer(connections[0]);
-
-        // TODO Do we really want to systematically compute this reconstruction
-        // error?
-
-        if (batch_size == 1) {
-        for(int train_index = 0 ; train_index < nsamples ; train_index++)
-        {
-
-            PLASSERT_MSG(batch_size == 1, "Not implemented for mini-batches");
-
-            train_set->getExample( train_index, input, target, weight );
-
-            down_layer->expectation << input;
-
-            // up
-            parameters->setAsDownInput( down_layer->expectation );
-            up_layer->getAllActivations( parameters );
-            up_layer->generateSample();
-
-            // down
-            parameters->setAsUpInput( up_layer->sample );
-
-            down_layer->getAllActivations( parameters );
-            down_layer->computeExpectation();
-            down_layer->generateSample();
-
-            //    result += powdistance( input, down_layer->expectation );
-
-            for( int i=0 ; i<input.size() ; i++ )
-                train_recons_error += (input[i] - down_layer->expectation[i])
-                    * (input[i] - down_layer->expectation[i]);
-
-        }
-
-        train_recons_error /= nsamples ;
-        } else {
-            // Currently do not compute reconstruction error with mini-batches.
-            train_recons_error = MISSING_VALUE;
         }
 
 
@@ -859,11 +823,6 @@ void DeepBeliefNet::train()
                 pb->update( stage - init_stage + 1 );
         }
     }
-
-    //update the reconstruction error
-    train_costs.fill( MISSING_VALUE );
-    train_costs[recons_cost_index] = train_recons_error;
-    train_stats->update( train_costs ) ;
 
     train_stats->finalize();
 
@@ -1137,7 +1096,7 @@ void DeepBeliefNet::greedyStep( const Vec& input, const Vec& target, int index )
 /////////////////
 // greedySteps //
 /////////////////
-void DeepBeliefNet::greedyStep( const Mat& inputs, const Mat& targets, int index )
+void DeepBeliefNet::greedyStep( const Mat& inputs, const Mat& targets, int index, Mat& train_costs_m )
 {
     PLASSERT( index < n_layers );
 
@@ -1188,6 +1147,18 @@ void DeepBeliefNet::greedyStep( const Mat& inputs, const Mat& targets, int index
                                connections[ index ],
                                layers[ index+1 ],
                                index, true);
+
+    if (reconstruct_layerwise)
+    {
+        connections[index]->setAsUpInputs(layers[index+1]->getExpectations());
+        layers[index]->getAllActivations(connections[index], 0, true);
+        for (int i=0;i<inputs.length();i++)
+        {
+            real rc = train_costs_m(i,reconstruction_cost_index+index+1)
+                = layers[index]->fpropNLL( inputs(i) ); 
+            train_costs_m(i,reconstruction_cost_index) += rc;
+        }
+    }
 }
 
 /////////////////////
@@ -1655,11 +1626,21 @@ void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
 
     // fprop
     layers[0]->expectation << input;
+    reconstruction_costs[0]=0;
     for( int i=0 ; i<n_layers-2 ; i++ )
     {
         connections[i]->setAsDownInput( layers[i]->expectation );
         layers[i+1]->getAllActivations( connections[i] );
         layers[i+1]->computeExpectation();
+
+        if (reconstruct_layerwise)
+        {
+            Vec layer_input = layers[i]->expectation.copy();
+            connections[i]->setAsUpInputs(layers[i+1]->getExpectations());
+            layers[i]->getAllActivations(connections[i]);
+            real rc = reconstruction_costs[i+1] = layers[i]->fpropNLL( layer_input ); 
+            reconstruction_costs[0] += rc;
+        }
     }
 
 
@@ -1741,6 +1722,10 @@ void DeepBeliefNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
             }
     }
 
+    if (reconstruct_layerwise)
+        costs.subVec(reconstruction_cost_index,reconstruction_costs.length()) 
+            << reconstruction_costs;
+
 }
 
 TVec<string> DeepBeliefNet::getTestCostNames() const
@@ -1769,14 +1754,20 @@ TVec<string> DeepBeliefNet::getTestCostNames() const
                     cost_names.append( names[j] + "_" + tostring(i+1) );
             }
 
+    if (reconstruct_layerwise)
+    {
+        reconstruction_cost_index = cost_names.length();
+        cost_names.append("layerwise_reconstruction_error");
+        for (int i=0;i<n_layers-1;i++)
+            cost_names.append("layer"+tostring(i+1)+"_reconstruction_error");
+    }
+
     return cost_names;
 }
 
 TVec<string> DeepBeliefNet::getTrainCostNames() const
 {
     TVec<string> cost_names = getTestCostNames() ;
-
-    cost_names.append("recons_error");
     return cost_names;
 }
 

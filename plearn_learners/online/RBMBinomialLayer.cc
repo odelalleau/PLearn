@@ -287,6 +287,18 @@ real RBMBinomialLayer::fpropNLL(const Vec& target)
     return ret;
 }
 
+real RBMBinomialLayer::fpropNLL(const Mat& target)
+{
+    computeExpectations();
+
+    PLASSERT( target.width() == input_size );
+
+    real total_nll=0;
+    for (int i=0;i<target.length();i++)
+        total_nll += fpropNLL(target(i));
+    return total_nll;
+}
+
 void RBMBinomialLayer::bpropNLL(const Vec& target, real nll, Vec& bias_gradient)
 {
     computeExpectation();
