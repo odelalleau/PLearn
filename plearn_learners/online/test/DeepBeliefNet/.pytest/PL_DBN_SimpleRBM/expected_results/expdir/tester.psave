@@ -151,6 +151,7 @@ partial_costs = []
 online = 0 ;
 background_gibbs_update_ratio = 0 ;
 gibbs_chain_statistics_forgetting_factor = 0.998999999999999999 ;
+gibbs_chain_reinit_freq = 2147483647 ;
 top_layer_joint_cd = 0 ;
 n_layers = 2 ;
 minibatch_size = 0 ;

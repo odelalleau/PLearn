@@ -1,2 +1,2 @@
-__REVISION__ = "PL6966"
+__REVISION__ = "PL6972"
 

@@ -10,7 +10,7 @@ layers = 2 [ *1 ->RBMBinomialLayer(
 size = 2 ;
 learning_rate = 0.100000000000000006 ;
 momentum = 0 ;
-bias = 2 [ -0.109999999999999987 -0.0899999999999999967 ] ;
+bias = 2 [ -0.0199999999999999969 -0.0700000000000000067 ] ;
 input_size = 2 ;
 output_size = 2 ;
 estimate_simpler_diag_hessian = 0 ;
@@ -23,7 +23,7 @@ fixed_seed = 0  )
 size = 2 ;
 learning_rate = 0.100000000000000006 ;
 momentum = 0 ;
-bias = 2 [ 0.0129429440449826925 0.0351844537817680852 ] ;
+bias = 2 [ 0.00757250002733412739 0.0342440432822939539 ] ;
 input_size = 2 ;
 output_size = 2 ;
 estimate_simpler_diag_hessian = 0 ;
@@ -32,8 +32,8 @@ random_gen = *2   )
 ] ;
 connections = 1 [ *4 ->RBMMatrixConnection(
 weights = 2  2  [ 
--0.724163850324076375 	0.91839444980870133 	
-0.78098851102786726 	-0.700802243309484374 	
+-0.69538425199246523 	0.915628708497199906 	
+0.848444093925266651 	-0.694737462742028522 	
 ]
 ;
 down_size = 2 ;
@@ -52,8 +52,8 @@ previous_to_last = *4  ;
 last_layer = *3  ;
 last_to_target = *6 ->RBMMatrixConnection(
 weights = 2  2  [ 
--0.847908208583354139 	0.63244501176485346 	
-0.355295316639817116 	-0.89403942428362182 	
+-0.85711824791163882 	0.636284607075489062 	
+0.3429839777713799 	-0.882668495914658013 	
 ]
 ;
 down_size = 2 ;
@@ -71,7 +71,7 @@ target_layer = *7 ->RBMMultinomialLayer(
 size = 2 ;
 learning_rate = 0.100000000000000006 ;
 momentum = 0 ;
-bias = 2 [ -0.00278832381473579412 0.00278832381473579543 ] ;
+bias = 2 [ -0.0285183939211435533 0.0285183939211435464 ] ;
 input_size = 2 ;
 output_size = 2 ;
 estimate_simpler_diag_hessian = 0 ;
@@ -111,6 +111,7 @@ partial_costs = []
 online = 0 ;
 background_gibbs_update_ratio = 0 ;
 gibbs_chain_statistics_forgetting_factor = 0.998999999999999999 ;
+gibbs_chain_reinit_freq = 2147483647 ;
 top_layer_joint_cd = 0 ;
 n_layers = 2 ;
 minibatch_size = 1 ;
