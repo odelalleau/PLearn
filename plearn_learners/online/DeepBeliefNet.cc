@@ -1052,10 +1052,9 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
 {
     // TODO Can we avoid this memory allocation?
     TVec<Mat> cost;
-    Vec optimized_cost;
+    Vec optimized_cost(inputs.length());
     if (partial_costs) {
         cost.resize(n_layers-1);
-        optimized_cost.resize(inputs.length());
     }
 
     layers[0]->setExpectations(inputs);
@@ -1066,7 +1065,7 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
         // mean-field fprop from layer i to layer i+1
         connections[i]->setAsDownInputs( layers[i]->getExpectations() );
         // this does the actual matrix-vector computation
-        layers[i+1]->getAllActivations( connections[i] );
+        layers[i+1]->getAllActivations( connections[i], 0, true );
         layers[i+1]->computeExpectations();
 
         // propagate into local cost associated to output of layer i+1
