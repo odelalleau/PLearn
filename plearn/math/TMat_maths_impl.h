@@ -4959,6 +4959,7 @@ int argmax(const TMat<T>& m)
   e.g. yielding the sum of each row in the result.
 */
 
+// singlecolumn[i] = sum_j mat(j,i)
 template<class T>
 void rowSum(const TMat<T>& mat, const TMat<T>& singlecolumn)
 {
@@ -4968,6 +4969,18 @@ void rowSum(const TMat<T>& mat, const TMat<T>& singlecolumn)
 #endif
     for(int i=0; i<mat.length(); i++)
         singlecolumn(i,0) = sum(mat(i));
+}
+
+// singlecolumn[i] += sum_j mat(j,i)
+template<class T>
+void rowSumAcc(const TMat<T>& mat, const TMat<T>& singlecolumn)
+{
+#ifdef BOUNDCHECK
+    if(singlecolumn.length()!=mat.length() || singlecolumn.width() != 1)
+        PLERROR("IN void rowSum(const TMat<T>& mat, TMat<T>& singlecolumn) singlecolumn must be a mat.length() x 1 matrix");
+#endif
+    for(int i=0; i<mat.length(); i++)
+        singlecolumn(i,0) += sum(mat(i));
 }
 
 

@@ -367,7 +367,7 @@ void StatsCollector::update(real val, real weight)
     {
         // Updating with an inf produces a warning for now -- many tests still
         // rely on this behavior, although it should be deprecated
-        if (isinf(val))
+        if (val!=0 && isinf(val)) // sometimes isinf(val) returns non-zero when val==0!!!
             PLWARNING("Updating a StatsCollector with an 'inf'; check for a division by zero");
         
         //sum_ += val * weight;
