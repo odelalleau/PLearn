@@ -427,7 +427,7 @@ void LinearRegressor::computeResidualsVariance(const Vec&
     resid_variance.resize(ntargets);
     for (int i=0; i<ntargets; ++i) {
         b << weights.column(i);
-        product(XtX, b, XtXb);
+        product(XtXb, XtX, b);
         resid_variance[i] =
             (outputwise_sum_squared_Y[i] - dot(b,XtXb)) / (N-ninputs);
     }

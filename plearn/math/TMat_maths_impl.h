@@ -3327,6 +3327,7 @@ void makeItSymmetric(const TMat<T>& mat, T max_dif)
         PLWARNING("At void makeItSymmetric, the maximum difference %f is not affordable\n", max_dif);
 }
 
+/* DEPRECATED, use product(TVec, TMat, TVec) instead
 // y[i] = sum_j A[i,j] x[j]
 
 template<class T>
@@ -3348,6 +3349,7 @@ void product(const TMat<T>& mat, const TVec<T>& x, TVec<T>& y)
         y_[i]=yi;
     }
 }
+*/
 
 // result[i,j] = sum_k m1[i,k] * m2[k,j]
 template<class T>
