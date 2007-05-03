@@ -76,6 +76,7 @@ DeepBeliefNet::DeepBeliefNet() :
     final_cost_has_learning_rate( false ),
     nll_cost_index( -1 ),
     class_cost_index( -1 ),
+    final_cost_index( -1 ),
     reconstruction_cost_index( -1 )
 {
     random_gen = new PRandom( seed_ );
@@ -293,18 +294,83 @@ void DeepBeliefNet::build_()
 
     build_layers_and_connections();
 
+    build_costs();
+}
+
+/////////////////
+// build_costs //
+/////////////////
+void DeepBeliefNet::build_costs()
+{
+    cost_names.resize(0);
+    int current_index = 0;
+
     // build the classification module, its cost and the joint layer
     if( use_classification_cost )
     {
         PLASSERT( n_classes >= 2 );
         build_classification_cost();
+
+        cost_names.append("NLL");
+        nll_cost_index = current_index;
+        current_index++;
+
+        cost_names.append("class_error");
+        class_cost_index = current_index;
+        current_index++;
     }
 
     if( final_cost )
+    {
         build_final_cost();
 
-    // build_costs(); /* ? */
-    reconstruction_costs.resize(reconstruct_layerwise?n_layers-1:0);
+        TVec<string> final_names = final_cost->name();
+        int n_final_costs = final_names.length();
+
+        for( int i=0; i<n_final_costs; i++ )
+            cost_names.append("final." + final_names[i]);
+
+        final_cost_index = current_index;
+        current_index += n_final_costs;
+    }
+
+    if( partial_costs )
+    {
+        int n_partial_costs = partial_costs.length();
+        partial_costs_indices.resize(n_partial_costs);
+
+        for( int i=0; i<n_partial_costs; i++ )
+            if( partial_costs[i] )
+            {
+                TVec<string> names = partial_costs[i]->name();
+                int n_partial_costs_i = names.length();
+                for( int j=0; j<n_partial_costs_i; j++ )
+                    cost_names.append("partial"+tostring(i)+"."+names[j]);
+                partial_costs_indices[i] = current_index;
+                current_index += n_partial_costs_i;
+            }
+            else
+                partial_costs_indices[i] = -1;
+    }
+    else
+        partial_costs_indices.resize(0);
+
+    if( reconstruct_layerwise )
+    {
+        reconstruction_costs.resize(n_layers-1);
+
+        cost_names.append("layerwise_reconstruction_error");
+        reconstruction_cost_index = current_index;
+        current_index++;
+
+        for( int i=0; i<n_layers-1; i++ )
+            cost_names.append("layer"+tostring(i)+".reconstruction_error");
+        current_index += n_layers-1;
+    }
+    else
+        reconstruction_costs.resize(0);
+
+    PLASSERT( current_index == cost_names.length() );
 }
 
 //////////////////////////////////
@@ -518,8 +584,7 @@ void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(cd_neg_down_vals,         copies);
     deepCopyField(gibbs_down_state,         copies);
     deepCopyField(optimized_costs,          copies);
-    deepCopyField(final_cost_indices,       copies);
-    deepCopyField(partial_cost_indices,     copies);
+    deepCopyField(partial_costs_indices,    copies);
 }
 
 
@@ -612,37 +677,6 @@ void DeepBeliefNet::train()
     Mat train_costs_m(minibatch_size, train_cost_names.length());
     train_costs.fill(MISSING_VALUE) ;
     train_costs_m.fill(MISSING_VALUE);
-
-    //give the indexes the right values
-
-    if ( classification_cost )
-        nll_cost_index = train_cost_names.find(classification_cost->name()[0]);
-    if ( final_cost )
-    {
-        TVec<string> names = final_cost->name();
-        final_cost_indices.resize(names.length());
-        for (int i=0;i<names.length();i++)
-            final_cost_indices[i] = train_cost_names.find(names[i]);
-    }
-    if ( partial_costs )
-    {
-        partial_cost_indices.resize(partial_costs.size());
-        for (int i=0;i<partial_costs.size();i++)
-            if (partial_costs[i])
-            {
-                TVec<string> names = partial_costs[i]->name();
-                partial_cost_indices[i].resize(names.length());
-                for (int j=0;j<names.length();j++)
-                    partial_cost_indices[i][j] = 
-                        train_cost_names.find( names[j] + "_" + tostring(i+1) );
-            }
-    }
-
-    if ( reconstruct_layerwise)
-        reconstruction_cost_index = train_cost_names.find("layerwise_reconstruction_error");
-
-    class_cost_index = train_cost_names.find("class_error");
-
 
     int nsamples = train_set->length();
 
@@ -867,8 +901,8 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
                                              target, cost[i][0],
                                              expectation_gradients[ i+1 ] );
 
-            for (int j=0;j<partial_cost_indices[i].length();j++)
-                train_costs[partial_cost_indices[i][j]] = cost[i][j];
+            train_costs.subVec(partial_costs_indices[i], cost[i].length())
+                << cost[i];
         }
         else
             expectation_gradients[i+1].clear();
@@ -907,8 +941,8 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
                         true);
         }
 
-        for (int j=0;j<final_cost_indices.length();j++)
-            train_costs[final_cost_indices[j]] = final_cost_value[j];
+        train_costs.subVec(final_cost_index, final_cost_value.length())
+            << final_cost_value;
     }
 
     if ( final_cost || (partial_costs && partial_costs[n_layers-2]) )
@@ -1062,9 +1096,8 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
                                              targets, optimized_cost,
                                              expectations_gradients[ i+1 ] );
 
-            for (int k = 0; k < inputs.length(); k++)
-                for (int j=0;j<partial_cost_indices[i].length();j++)
-                    train_costs(k, partial_cost_indices[i][j]) = cost[i](k, j);
+            train_costs.subMatColumns(partial_costs_indices[i], cost[i].width())
+                << cost[i];
         }
         else
             expectations_gradients[i+1].clear();
@@ -1105,9 +1138,8 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
                         true);
         }
 
-        for (int k = 0; k < inputs.length(); k++)
-            for (int j=0;j<final_cost_indices.length();j++)
-                train_costs(k, final_cost_indices[j]) = final_cost_values(k, j);
+        train_costs.subMatColumns(final_cost_index, final_cost_values.width())
+            << final_cost_values;
     }
 
     if ( final_cost || (partial_costs && partial_costs[n_layers-2]) )
@@ -1469,8 +1501,8 @@ void DeepBeliefNet::fineTuningStep( const Vec& input, const Vec& target,
                                      expectation_gradients[ n_layers-1 ] );
         }
 
-        for (int j=0;j<final_cost_indices.length();j++)
-            train_costs[final_cost_indices[j]] = final_cost_value[j];
+        train_costs.subVec(final_cost_index, final_cost_value.length())
+            << final_cost_value;
 
         layers[ n_layers-1 ]->bpropUpdate( layers[ n_layers-1 ]->activation,
                                            layers[ n_layers-1 ]->expectation,
@@ -1582,10 +1614,8 @@ void DeepBeliefNet::fineTuningStep(const Mat& inputs, const Mat& targets,
                                      expectations_gradients[ n_layers-1 ] );
         }
 
-        for (int k = 0; k < minibatch_size; k++)
-            for (int j=0;j<final_cost_indices.length();j++)
-                train_costs(k, final_cost_indices[j]) =
-                    final_cost_values(k, j);
+        train_costs.subMatColumns(final_cost_index, final_cost_values.width())
+            << final_cost_values;
 
         layers[ n_layers-1 ]->bpropUpdate( layers[ n_layers-1 ]->activations,
                                            layers[ n_layers-1 ]->getExpectations(),
@@ -1895,31 +1925,19 @@ void DeepBeliefNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
                                            const Vec& target, Vec& costs) const
 {
     // Compute the costs from *already* computed output.
-
-    TVec<string> test_cost_names = getTestCostNames() ;
-
-    int test_class_cost_index = test_cost_names.find("class_error") ;
-
-    costs.resize( test_cost_names.length() );
+    costs.resize( cost_names.length() );
     costs.fill( MISSING_VALUE );
 
     // TO MAKE FOR CLEANER CODE INDEPENDENT OF ORDER OF CALLING THIS
     // METHOD AND computeOutput, THIS SHOULD BE IN A REDEFINITION OF computeOutputAndCosts
     if( use_classification_cost )
     {
-        int test_nll_cost_index =
-            test_cost_names.find(classification_cost->name()[0]) ;
-        real nll_cost;
         classification_cost->CostModule::fprop( output.subVec(0, n_classes),
-                target, nll_cost );
+                target, costs[nll_cost_index] );
 
-        real class_error =
+        costs[class_cost_index] =
             (argmax(output.subVec(0, n_classes)) == (int) round(target[0]))? 0
             : 1;
-        if ( test_nll_cost_index != -1 )
-            costs[test_nll_cost_index] = nll_cost;
-        if ( test_class_cost_index != -1 )
-            costs[test_class_cost_index] = class_error;
     }
 
     if( final_cost )
@@ -1927,8 +1945,9 @@ void DeepBeliefNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
         int init = use_classification_cost ? n_classes : 0;
         final_cost->fprop( output.subVec( init, output.size() - init ),
                            target, final_cost_value );
-        for (int j=0;j<final_cost_indices.length();j++)
-            costs[final_cost_indices[j]] = final_cost_value[j];
+
+        costs.subVec(final_cost_index, final_cost_value.length())
+            << final_cost_value;
     }
 
     if( partial_costs )
@@ -1940,13 +1959,14 @@ void DeepBeliefNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
             {
                 partial_costs[ i ]->fprop( layers[ i+1 ]->expectation,
                                            target, pcosts);
-                for (int j=0;j<pcosts.length();j++)
-                    costs[partial_cost_indices[i][j]] = pcosts[j];
+
+                costs.subVec(partial_costs_indices[i], pcosts.length())
+                    << pcosts;
             }
     }
 
     if (reconstruct_layerwise)
-        costs.subVec(reconstruction_cost_index,reconstruction_costs.length()) 
+        costs.subVec(reconstruction_cost_index, reconstruction_costs.length())
             << reconstruction_costs;
 
 }
@@ -1957,40 +1977,11 @@ TVec<string> DeepBeliefNet::getTestCostNames() const
     // (these may or may not be exactly the same as what's returned by
     // getTrainCostNames).
 
-    TVec<string> cost_names;
-
-    if( use_classification_cost )
-    {
-        cost_names.append( classification_cost->name() );
-        cost_names.append( "class_error" );
-    }
-
-    if( final_cost )
-        cost_names.append( final_cost->name() );
-
-    if (partial_costs)
-        for (int i=0;i<n_layers-1;i++)
-            if (partial_costs[i])
-            {
-                TVec<string> names = partial_costs[i]->name();
-                for (int j=0;j<names.length();j++)
-                    cost_names.append( names[j] + "_" + tostring(i+1) );
-            }
-
-    if (reconstruct_layerwise)
-    {
-        reconstruction_cost_index = cost_names.length();
-        cost_names.append("layerwise_reconstruction_error");
-        for (int i=0;i<n_layers-1;i++)
-            cost_names.append("layer"+tostring(i+1)+"_reconstruction_error");
-    }
-
     return cost_names;
 }
 
 TVec<string> DeepBeliefNet::getTrainCostNames() const
 {
-    TVec<string> cost_names = getTestCostNames() ;
     return cost_names;
 }
 

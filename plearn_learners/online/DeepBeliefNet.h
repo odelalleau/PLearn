@@ -137,15 +137,21 @@ public:
     //! Number of layers
     int n_layers;
 
+    //! The computed cost names
+    TVec<string> cost_names;
+
     //! whether to do things by stages, including fine-tuning, or on-line
     bool online;
 
-    // Coefficient between 0 and 1. If non-zero, run a background Gibbs chain and use 
-    // the visible-hidden statistics to contribute in the negative phase update
-    // (in proportion background_gibbs_update_ratio wrt the contrastive divergence
-    // negative phase statistics). If = 1, then do not perform any contrastive
-    // divergence negative phase (use only the Gibbs chain statistics).
+    // Coefficient between 0 and 1. If non-zero, run a background
+    // Gibbs chain and use the visible-hidden statistics to
+    // contribute in the negative phase update (in proportion
+    // background_gibbs_update_ratio wrt the contrastive divergence
+    // negative phase statistics). If = 1, then do not perform any
+    // contrastive divergence negative phase (use only the Gibbs chain
+    // statistics).
     real background_gibbs_update_ratio;
+
     // negative chain statistics are forgotten at this rate (a value of 0
     // would only use the current sample, a value of .99 would use 1% of
     // the new sample and 99% of the old statistics).
@@ -156,7 +162,8 @@ public:
     bool top_layer_joint_cd;
 
     //! after how many examples should we re-initialize the Gibbs chains
-    //! (if == INT_MAX, the default then NEVER re-initialize except when stage==0)
+    //! (if == INT_MAX, the default then NEVER re-initialize except when
+    //! stage==0)
     int gibbs_chain_reinit_freq;
 
     //#####  Not Options  #####################################################
@@ -278,7 +285,7 @@ public:
 protected:
 
     int minibatch_size;
-    
+
     //#####  Not Options  #####################################################
 
     // whether to re-initialize Gibbs chain next time around
@@ -335,29 +342,30 @@ protected:
     mutable Mat pos_up_vals;
     mutable Mat cd_neg_down_vals;
     mutable Mat cd_neg_up_vals;
-    
+
     //! Store the state of the Gibbs chain for each RBM
     mutable TVec<Mat> gibbs_down_state;
 
     //! Used to store the costs optimized by the final cost module.
     Vec optimized_costs;
 
+    //! Stores reconstruction costs
+    mutable Vec reconstruction_costs;
+
     //! Keeps the index of the NLL cost in train_costs
     int nll_cost_index;
 
-    //! Keeps the index of the CLASS cost in train_costs
+    //! Keeps the index of the class_error cost in train_costs
     int class_cost_index;
 
-    //! Keeps the indices of the final costs in train_costs
-    TVec<int> final_cost_indices;
+    //! Keeps the beginning index of the final costs in train_costs
+    int final_cost_index;
 
-    //! Keeps the index of the reconstruction cost in train_costs
-    mutable int reconstruction_cost_index;
+    //! Keeps the beginning indices of the partial costs in train_costs
+    TVec<int> partial_costs_indices;
 
-    //! indices of the partial costs in train_costs
-    TVec<TVec<int> > partial_cost_indices;
-
-    Vec reconstruction_costs;
+    //! Keeps the beginning index of the reconstruction costs in train_costs
+    int reconstruction_cost_index;
 
     mutable Vec layer_input;
     mutable Mat layer_inputs;
@@ -375,6 +383,8 @@ private:
     void build_();
 
     void build_layers_and_connections();
+
+    void build_costs();
 
     void build_classification_cost();
 
