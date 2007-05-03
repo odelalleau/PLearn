@@ -2826,51 +2826,17 @@ void transposeProductScaleAcc(const TVec<T>& result, const TMat<T>& m,
     }
 }
 
+/* Obsolete? Uncomment if needed
 //!  result[i] += alpha * sum_j m[j,i] * v[j]
+// For compatibility
 template <class T>
 void transposeProductAcc(const TVec<T>& result, const TMat<T>& m, const TVec<T>& v, T alpha)
 {
-    int l=m.length();
-    int w=m.width();
-    if (l!=v.length() || w!=result.length())
-        PLERROR("TVec::transposeProductAcc(TMat,TVec), incompatible arguments %dx%d' times %d -> %d",
-                m.length(),m.width(), v.length(),result.length());
-    T* vecdata = result.data();
-    T* vp = v.data();
-    T* mp = m.data();
-    int deltam = m.mod()-m.width();
-    for (int j=0;j<l;j++)
-    {
-        T vj = *vp++;
-    
-        /*
-          T* rp = vecdata;
-          for (int i=0;i<w;i++)
-          *rp++ += vj * *mp++;
-          mp += deltam;
-        */
-    
-        if(vj!=0)
-        {
-            if(vj==1)
-            {
-                T* rp = vecdata;
-                for (int i=0;i<w;i++)
-                    *rp++ += alpha * *mp++;
-                mp += deltam;
-            }
-            else
-            {
-                T* rp = vecdata;
-                for (int i=0;i<w;i++)
-                    *rp++ += alpha * vj * *mp++;
-                mp += deltam;
-            }
-        }
-        else mp += w + deltam;
-    }
+    transposeProductAcc(result, m, v, alpha, 1.);
 }
+*/
 
+/* Obsolete? Uncomment if needed
 template <class T>
 void compressedTransposeProductAcc(const TVec<T>& result, const TMat<T>& m, char* comprbufvec)
 {
@@ -2924,6 +2890,7 @@ void compressedTransposeProductAcc(const TVec<T>& result, const TMat<T>& m, char
     if(l!=0)
         PLERROR("In compressed_dot_product : l is not 0 at exit of function, wrong data?");
 }
+*/
 
 //! return the matrix with elements (i,j) = sum_k U_{ik} d_k V_{kj}
 template<class T>
