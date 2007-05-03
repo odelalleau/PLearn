@@ -2689,6 +2689,46 @@ void productAcc(const TVec<T>& vec, const TMat<T>& m, const TVec<T>& v)
     }
 }
 
+//!  vec[i] = alpha * sum_j m[i,j] * v[j] + beta * v[i]
+//! (Will use the transpose of m if transpose_m is true)
+template <class T>
+void productScaleAcc(const TVec<T>& vec, const TMat<T>& m, bool transpose_m,
+                     const TVec<T>& v, T alpha, T beta)
+{
+    if (transpose_m)
+        transposeProductScaleAcc(vec, m, v, alpha, beta);
+    else
+        productScaleAcc(vec, m, v, alpha, beta);
+}
+
+//!  vec[i] = alpha * sum_j m[i,j] * v[j] + beta * v[i]
+template <class T>
+void productScaleAcc(const TVec<T>& vec, const TMat<T>& m, const TVec<T>& v,
+                     T alpha, T beta)
+{
+    int l = m.length();
+    int w = m.width();
+#ifdef BOUNDCHECK
+    if (w!=v.length() || l!=vec.length())
+        PLERROR("productScaleAcc(TVec,TMat,TVec), incompatible arguments %dx%d times %d -> %d",
+                m.length(),m.width(), v.length(),vec.length());
+#endif
+    T* rp = vec.data();
+    T* mp = m.data();
+    T* vdata = v.data();
+    int deltam = m.mod()-m.width();
+    for (int i=0;i<l;i++)
+    {
+        T *vp = vdata;
+        T s = 0;
+        for (int j=0;j<w;j++)
+            s += *mp++ * *vp++;
+        *rp = alpha * s + beta * (*rp);
+        ++rp;
+        mp += deltam;
+    }
+}
+
 //! result[i] = sum_j m[j,i] * v[j]
 //! Equivalently: rowvec(result) = rowvec(v) . m
 //! Equivalently: columnvec(result) = transpose(m).columnvec(v)
@@ -2753,6 +2793,36 @@ void transposeProductAcc(const TVec<T>& result, const TMat<T>& m, const TVec<T>&
             }
         }
         else mp += w + deltam;
+    }
+}
+
+//!  result[i] = alpha * sum_j m[j,i] * v[j] + beta * result[i]
+template <class T>
+void transposeProductScaleAcc(const TVec<T>& result, const TMat<T>& m,
+                              const TVec<T>& v, T alpha, T beta)
+{
+    int l=m.length();
+    int w=m.width();
+    if (l!=v.length() || w!=result.length())
+        PLERROR("transposeProductScaleAcc(TVec,TMat,TVec), incompatible arguments %dx%d' times %d -> %d",
+                m.length(),m.width(), v.length(),result.length());
+    T* vecdata = result.data();
+    T* vp = v.data();
+    T* mp = m.data();
+    int deltam = m.mod()-m.width();
+
+    T* rp = vecdata;
+    // initial scaling
+    for (int i=0;i<w;i++)
+        *rp++ *= beta;
+
+    for (int j=0;j<l;j++)
+    {
+        T vj = *vp++;
+        rp = vecdata;
+        for (int i=0;i<w;i++)
+            *rp++ += alpha * vj * *mp++;
+        mp += deltam;
     }
 }
 
@@ -3366,6 +3436,55 @@ void productAcc(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m2)
     }
 }
 
+// mat[i,j] = alpha sum_k m1[i,k] * m2[k,j] + beta mat[i,j]
+// ( Will use the transpose of m1 and/or m2 instead,
+// if you set the corresponding flags to true)
+template<class T>
+void productScaleAcc(const TMat<T>& mat,
+                     const TMat<T>& m1, bool transpose_m1,
+                     const TMat<T>& m2, bool transpose_m2,
+                     T alpha, T beta)
+{
+    if (transpose_m1)
+        if (transpose_m2) // transpose_m1 && transpose_m2
+           transposeTransposeProductScaleAcc(mat, m1, m2, alpha, beta);
+        else // transpose_m1 && !transpose_m2
+            transposeProductScaleAcc(mat, m1, m2, alpha, beta);
+    else
+        if (transpose_m2) // !transpose_m1 && transpose_m2
+            productTransposeScaleAcc(mat, m1, m2, alpha, beta);
+        else // !transpose_m1 && !transpose_m2
+            productScaleAcc(mat, m1, m2, alpha, beta);
+}
+
+// mat[i,j] = alpha * sum_k m1[i,k] * m2[k,j] + beta * mat[i,j]
+template<class T>
+void productScaleAcc(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m2,
+                     T alpha, T beta)
+{
+#ifdef BOUNDCHECK
+    if (m1.width()!=m2.length() || mat.length()!=m1.length() || mat.width()!=m2.width())
+        PLERROR("productScaleAcc(Mat,Mat,Mat), incompatible arguments %dx%d= %dx%d times %dx%d",
+                mat.length(),mat.width(),m1.length(),m1.width(), m2.length(),m2.width());
+#endif
+    int n=m1.length();
+    int m=m1.width();
+    int l=m2.width();
+    for (int i=0;i<n;i++)
+    {
+        const T* m1i = m1[i];
+        T* mi = mat[i];
+        for (int j=0;j<l;j++)
+        {
+            T s=0;
+            T* m2kj = m2.data()+j;
+            for (int k=0;k<m;k++,m2kj+=m2.mod())
+                s += m1i[k] * (*m2kj);
+            mi[j] = alpha * s + beta * mi[j];
+        }
+    }
+}
+
 // result[i,j] += sum_k m1[i,k] * m2[k,j]^2
 template<class T>
 void product2Acc(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m2)
@@ -3682,6 +3801,34 @@ void productTransposeAcc(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m
     }
 }
 
+// mat[i,j] = alpha * sum_k m1[i,k] * m2[j,k] + beta * mat[i,j]
+template<class T>
+void productTransposeScaleAcc(const TMat<T>& mat, const TMat<T>& m1,
+                              const TMat<T>& m2, T alpha, T beta)
+{
+#ifdef BOUNDCHECK
+    if (m1.width()!=m2.width() || mat.length()!=m1.length() || mat.width()!=m2.length())
+        PLERROR("productTransposeScaleAcc(Mat,Mat,Mat), incompatible arguments %dx%d= %dx%d times %dx%d'",
+                mat.length(),mat.width(),m1.length(),m1.width(), m2.length(),m2.width());
+#endif
+    int n=m1.length();
+    int m=m1.width();
+    int l=m2.length();
+    for (int i=0;i<n;i++)
+    {
+        const T* m1i = m1[i];
+        T* mi = mat[i];
+        for (int j=0;j<l;j++)
+        {
+            T s=0;
+            const T* m2j = m2[j];
+            for (int k=0;k<m;k++)
+                s += m1i[k] * m2j[k];
+            mi[j] = alpha * s + beta * mi[j];
+        }
+    }
+}
+
 // result[i,j] += sum_k m1[i,k] * m2[j,k]^2
 template<class T>
 void product2TransposeAcc(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m2)
@@ -3828,6 +3975,39 @@ void transposeProductAcc(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m
     }
 }
 
+// mat[i,j] = alpha * sum_k m1[k,i] * m2[k,j] + beta * mat[i,j]
+template<class T>
+void transposeProductScaleAcc(const TMat<T>& mat, const TMat<T>& m1,
+                              const TMat<T>& m2, T alpha, T beta)
+{
+    int n=m1.width();
+    int m=m1.length();
+    int l=m2.width();
+#ifdef BOUNDCHECK
+    if (m!=m2.length() || mat.length()!=n || mat.width()!=l)
+        PLERROR("transposeProductScaleAcc(Mat,Mat,Mat), incompatible arguments "
+                "%dx%d' times %dx%d into %dx%d",
+                m1.length(),m1.width(), m2.length(),m2.width(), mat.length(), mat.width());
+#endif
+    for (int i=0;i<n;i++)
+    {
+        T* m1ki = m1.data()+i;
+        T* mi = mat[i];
+
+        // initial scaling
+        for (int j=0;j<l;j++)
+            mi[j] *= beta;
+
+        for (int k=0;k<m;k++,m1ki+=m1.mod())
+        {
+            const T* m2k = m2[k];
+            T m1_ki = *m1ki;
+            for (int j=0;j<l;j++)
+                mi[j] += alpha * m1_ki * m2k[j];
+        }
+    }
+}
+
 // result[i,j] += sum_k m1[k,i] * m2[k,j]^2
 template<class T>
 void transposeProduct2Acc(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m2)
@@ -3908,6 +4088,33 @@ void transposeTransposeProductAcc(const TMat<T>& mat, const TMat<T>& m1, const T
             for (int k=0;k<m;k++,m1ki+=m1.mod())
                 s += (*m1ki) * m2j[k];
             mi[j] += s;
+        }
+    }
+}
+
+// mat[i,j] = alpha * sum_k m1[k,i] * m2[j,k] + beta * mat[i,j]
+template<class T>
+void transposeTransposeProductScaleAcc(const TMat<T>& mat, const TMat<T>& m1,
+                                       const TMat<T>& m2, T alpha, T beta)
+{
+    if (m1.length()!=m2.width())
+        PLERROR("transposeTransposeProductScaleAcc(Mat,Mat,Mat), incompatible arguments %dx%d' times %dx%d",
+                m1.length(),m1.width(), m2.length(),m2.width());
+    int n=m1.width();
+    int m=m1.length();
+    int l=m2.width();
+    for (int i=0;i<n;i++)
+    {
+        T* m1ki0 = m1.data()+i;
+        T* mi = mat[i];
+        for (int j=0;j<l;j++)
+        {
+            T s=0;
+            const T* m2j = m2[j];
+            T* m1ki = m1ki0;
+            for (int k=0;k<m;k++,m1ki+=m1.mod())
+                s += (*m1ki) * m2j[k];
+            mi[j] = alpha * s + beta * mi[j];
         }
     }
 }
