@@ -1626,7 +1626,10 @@ void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
 
     // fprop
     layers[0]->expectation << input;
-    reconstruction_costs[0]=0;
+
+    if(reconstruct_layerwise)
+        reconstruction_costs[0]=0;
+
     for( int i=0 ; i<n_layers-2 ; i++ )
     {
         connections[i]->setAsDownInput( layers[i]->expectation );
