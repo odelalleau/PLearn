@@ -359,6 +359,9 @@ protected:
 
     Vec reconstruction_costs;
 
+    mutable Vec layer_input;
+    mutable Mat layer_inputs;
+
 protected:
     //#####  Protected Member Functions  ######################################
 

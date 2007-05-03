@@ -106,7 +106,7 @@ public:
     //! Computes the negative log-likelihood of target given the
     //! internal activations of the layer
     virtual real fpropNLL(const Vec& target);
-    virtual real fpropNLL(const Mat& target);
+    virtual void fpropNLL(const Mat& target, Mat costs_column);
 
     //! Computes the gradient of the negative log-likelihood of target
     //! with respect to the layer's bias, given the internal activations

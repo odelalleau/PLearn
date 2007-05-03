@@ -717,11 +717,7 @@ void DeepBeliefNet::train()
                     if (batch_size > 1 || minibatch_hack) {
                         train_set->getExamples(sample_start, minibatch_size,
                                 inputs, targets, weights, NULL, true);
-                        if (reconstruct_layerwise)
-                        {
-                            train_costs_m.fill(MISSING_VALUE);
-                            train_costs_m.column(reconstruction_cost_index).clear();
-                        }
+                        train_costs_m.fill(MISSING_VALUE);
                         greedyStep( inputs, targets, i , train_costs_m);
                         for (int k = 0; k < minibatch_size; k++)
                             train_stats->update(train_costs_m(k));
@@ -813,6 +809,7 @@ void DeepBeliefNet::train()
                 if (minibatch_size > 1 || minibatch_hack) {
                     train_set->getExamples(sample_start, minibatch_size, inputs,
                             targets, weights, NULL, true);
+                    train_costs_m.fill(MISSING_VALUE);
                     fineTuningStep(inputs, targets, train_costs_m);
                 } else {
                     train_set->getExample( sample_start, input, target, weight );
@@ -875,22 +872,6 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
         }
         else
             expectation_gradients[i+1].clear();
-/*
-        if( reconstruct_layerwise )
-        {
-            // layer_input, reconstruction_cost_indices
-            layer_input.resize(layers[i]->size);
-            layer_input << layers[i]->expectation; // fpropNLL writes in expectation
-            connections[i]->setAsUpInput( layers[i+1]->expectation );
-            layers[i]->getAllActivations( connections[i] );
-            real rc = train_costs[reconstruction_cost_indices[i+1]] 
-                = layer[i]->fpropNLL( layer_input ); // or use a NLLCostModule::fprop
-            train_costs[reconstruction_cost_indices[0]] +=
-                train_costs[reconstruction_cost_indices[i+1]];
-            ... layers[i]->bpropNLL( layer_input, rc, bias_gradient );
-            layers[i]->expectation << layer_input;
-        }
-*/
     }
 
     // top layer may be connected to a final_module followed by a
@@ -1087,22 +1068,6 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
         }
         else
             expectations_gradients[i+1].clear();
-/* TODO Remove if not used? Or implement if we want to do it?
-        if( reconstruct_layerwise )
-        {
-            // layer_input, reconstruction_cost_indices
-            layer_input.resize(layers[i]->size);
-            layer_input << layers[i]->expectation; // fpropNLL writes in expectation
-            connections[i]->setAsUpInput( layers[i+1]->expectation );
-            layers[i]->getAllActivations( connections[i] );
-            real rc = train_costs[reconstruction_cost_indices[i+1]] 
-                = layer[i]->fpropNLL( layer_input ); // or use a NLLCostModule::fprop
-            train_costs[reconstruction_cost_indices[0]] +=
-                train_costs[reconstruction_cost_indices[i+1]];
-            ... layers[i]->bpropNLL( layer_input, rc, bias_gradient );
-            layers[i]->expectation << layer_input;
-        }
-*/
     }
 
     // top layer may be connected to a final_module followed by a
@@ -1384,12 +1349,13 @@ void DeepBeliefNet::greedyStep( const Mat& inputs, const Mat& targets, int index
     {
         connections[index]->setAsUpInputs(layers[index+1]->getExpectations());
         layers[index]->getAllActivations(connections[index], 0, true);
-        for (int i=0;i<inputs.length();i++)
-        {
-            real rc = train_costs_m(i,reconstruction_cost_index+index+1)
-                = layers[index]->fpropNLL( inputs(i) ); 
-            train_costs_m(i,reconstruction_cost_index) += rc;
-        }
+        layers[index]->computeExpectations();
+        layers[index]->fpropNLL(inputs, train_costs_m.column(reconstruction_cost_index+index+1));
+        Mat rc = train_costs_m.column(reconstruction_cost_index);
+        if (rc.hasMissing())
+            rc << train_costs_m.column(reconstruction_cost_index+index+1);
+        else
+            rc += train_costs_m.column(reconstruction_cost_index+index+1);
     }
 }
 
@@ -1682,6 +1648,26 @@ void DeepBeliefNet::fineTuningStep(const Mat& inputs, const Mat& targets,
                                        expectations_gradients[i-1],
                                        activations_gradients[i] );
     }
+
+    // do it AFTER the bprop to avoid interfering with activations used in bprop
+    // (and do not worry that the weights have changed a bit)
+    if (reconstruct_layerwise)
+    {
+        Mat rc = train_costs.column(reconstruction_cost_index);
+        rc.clear();
+        for( int index=0 ; index<n_layers-2 ; index++ )
+        {
+            layer_inputs.resize(minibatch_size,layers[index]->size);
+            layer_inputs << layers[index]->getExpectations();
+            connections[index]->setAsUpInputs(layers[index+1]->getExpectations());
+            layers[index]->getAllActivations(connections[index], 0, true);
+            layers[index]->computeExpectations();
+            layers[index]->fpropNLL(layer_inputs, train_costs.column(reconstruction_cost_index+index+1));
+            rc += train_costs.column(reconstruction_cost_index+index+1);
+        }
+    }
+
+
 }
 
 ///////////////////////////////
@@ -1870,9 +1856,11 @@ void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
 
         if (reconstruct_layerwise)
         {
-            Vec layer_input = layers[i]->expectation.copy();
-            connections[i]->setAsUpInputs(layers[i+1]->getExpectations());
+            layer_input.resize(layers[i]->size);
+            layer_input << layers[i]->expectation;
+            connections[i]->setAsUpInput(layers[i+1]->expectation);
             layers[i]->getAllActivations(connections[i]);
+            layers[i]->computeExpectation();
             real rc = reconstruction_costs[i+1] = layers[i]->fpropNLL( layer_input ); 
             reconstruction_costs[0] += rc;
         }

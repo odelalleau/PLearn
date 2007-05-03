@@ -287,16 +287,26 @@ real RBMBinomialLayer::fpropNLL(const Vec& target)
     return ret;
 }
 
-real RBMBinomialLayer::fpropNLL(const Mat& target)
+void RBMBinomialLayer::fpropNLL(const Mat& targets, Mat costs_column)
 {
     computeExpectations();
 
-    PLASSERT( target.width() == input_size );
+    PLASSERT( targets.width() == input_size );
 
-    real total_nll=0;
-    for (int i=0;i<target.length();i++)
-        total_nll += fpropNLL(target(i));
-    return total_nll;
+    for (int k=0;k<targets.length();k++) // loop over minibatch
+    {
+        real nll = 0;
+        real* output = expectations[k];
+        real* target = targets[k];
+        for( int i=0 ; i<size ; i++ ) // loop over outputs
+        {
+            if(!fast_exact_is_equal(target[i],0.0))
+                nll -= target[i] * pl_log(output[i]);
+            if(!fast_exact_is_equal(target[i],1.0))
+                nll -= (1-target[i]) * pl_log(1-output[i]);
+        }
+        costs_column(k,0) = nll;
+    }
 }
 
 void RBMBinomialLayer::bpropNLL(const Vec& target, real nll, Vec& bias_gradient)
