@@ -5,18 +5,18 @@
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -27,14 +27,14 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
 
- 
 
-/* *******************************************************      
+
+/* *******************************************************
  * $Id$
  * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
  * This file is part of the PLearn library.
@@ -73,18 +73,18 @@ using namespace std;
 // copy //
 //////////
 inline real* copy(real* first, real* last, real* dest)
-{ 
-    int n = last - first; 
+{
+    int n = last - first;
     int one = 1;
     BLAS_COPY(&n, first, &one, dest, &one);
-    return dest + n; 
+    return dest + n;
 }
 */
 
 /////////////////
 // multiplyAcc //
 /////////////////
-// vec += x * scale
+//! vec += x * scale
 inline void multiplyAcc(const Vec& vec, const Vec& x, real scale)
 {
     int n = vec.length();
@@ -185,9 +185,13 @@ inline void swapRows(const Mat& mat, int i, int j)
 /////////////////////
 // productScaleAcc //
 /////////////////////
-//  C = alpha A.B + beta C
-// ( Will use the transpose of A and/or B instead, if you set the corresponding flags to true)
-inline void productScaleAcc(const TMat<double>& C, const TMat<double>& A, bool transposeA, const TMat<double>& B, bool transposeB, double alpha, double beta)
+//! C = alpha A.B + beta C
+// (Will use the transpose of A and/or B instead, if you set the corresponding
+// flags to true)
+inline void productScaleAcc(const TMat<double>& C,
+                            const TMat<double>& A, bool transposeA,
+                            const TMat<double>& B, bool transposeB,
+                            double alpha, double beta)
 {
 #ifdef BOUNDCHECK
     int l2;
@@ -225,9 +229,10 @@ inline void productScaleAcc(const TMat<double>& C, const TMat<double>& A, bool t
 
 #ifdef BOUNDCHECK
     if (w1!=l2 || C.length()!=l1 || C.width()!=w2)
-        PLERROR("productScaleAcc, incompatible arguments (%dx%d) <- %s(%dx%d) . %s(%dx%d)",
-                C.length(), C.width(), 
-                transposeA?"transpose":"", A.length(), A.width(), 
+        PLERROR("productScaleAcc, incompatible arguments:\n"
+                "(%dx%d) <- %s(%dx%d) . %s(%dx%d)",
+                C.length(), C.width(),
+                transposeA?"transpose":"", A.length(), A.width(),
                 transposeB?"transpose":"", B.length(), B.width());
 #endif
 
@@ -244,22 +249,30 @@ inline void productScaleAcc(const TMat<double>& C, const TMat<double>& A, bool t
         return;
     }
 
-    dgemm_(&transb, &transa, &w2, &l1, &w1, &alpha, B.data(), &ldb, A.data(), &lda, &beta, C.data(), &ldc);
+    dgemm_(&transb, &transa, &w2, &l1, &w1, &alpha, B.data(), &ldb, A.data(),
+           &lda, &beta, C.data(), &ldc);
 }
 
-//! y <- alpha A.x + beta y   (will use the transposed of A instead if tranposeA is true)
-inline void productScaleAcc(const TVec<double>& y, const TMat<double>& A, bool transposeA, const TVec<double>& x, double alpha, double beta)
+//! y <- alpha A.x + beta y 
+// (will use the transposed of A instead if tranposeA is true)
+inline void productScaleAcc(const TVec<double>& y,
+                            const TMat<double>& A, bool transposeA,
+                            const TVec<double>& x, double alpha, double beta)
 {
 #ifdef BOUNDCHECK
     if(!transposeA)
     {
         if(A.length()!=y.length() || A.width()!=x.length())
-            PLERROR("productScaleAcc, incompatible arguments Vec(%d) <- Mat(%d,%d) . Vec(%d)", y.length(), A.length(), A.width(), x.length());
+            PLERROR("productScaleAcc, incompatible arguments:\n"
+                    "Vec(%d) <- Mat(%d,%d) . Vec(%d)",
+                    y.length(), A.length(), A.width(), x.length());
     }
     else
     {
         if(A.length()!=x.length() || A.width()!=y.length())
-            PLERROR("productScaleAcc, incompatible arguments Vec(%d) <- Mat(%d,%d)' . Vec(%d)", y.length(), A.length(), A.width(), x.length());
+            PLERROR("productScaleAcc, incompatible arguments:\n"
+                    "Vec(%d) <- Mat(%d,%d)' . Vec(%d)",
+                    y.length(), A.length(), A.width(), x.length());
     }
 #endif
 
@@ -278,15 +291,20 @@ inline void productScaleAcc(const TVec<double>& y, const TMat<double>& A, bool t
         return;
     }
 
-    dgemv_(&trans, &m, &n, &alpha, A.data(), &lda, x.data(), &one, &beta, y.data(), &one);
+    dgemv_(&trans, &m, &n, &alpha, A.data(), &lda, x.data(), &one, &beta,
+           y.data(), &one);
 }
 
 //! A <- A + alpha x.y'
-inline void externalProductScaleAcc(const TMat<double>& A, const TVec<double>& x, const TVec<double>& y, double alpha)
+inline void externalProductScaleAcc(const TMat<double>& A,
+                                    const TVec<double>& x,
+                                    const TVec<double>& y, double alpha)
 {
 #ifdef BOUNDCHECK
     if(A.length()!=x.length() || A.width()!=y.length())
-        PLERROR("In externalProductScaleAcc, incompatible dimensions: Mat(%d,%d) <- Vec(%d).Vec(%d)'",A.length(), A.width(), x.length(), y.length());
+        PLERROR("In externalProductScaleAcc, incompatible dimensions:\n"
+                "Mat(%d,%d) <- Vec(%d).Vec(%d)'",
+                A.length(), A.width(), x.length(), y.length());
 #endif
     int one = 1;
     int lda = A.mod();
@@ -299,23 +317,29 @@ inline void externalProductScaleAcc(const TMat<double>& A, const TVec<double>& x
     dger_(&m, &n, &alpha, y.data(), &one, x.data(), &one, A.data(), &lda);
 }
 
-inline void externalProductAcc(const TMat<double>& A, const TVec<double>& x, const TVec<double>& y)
+inline void externalProductAcc(const TMat<double>& A,
+                               const TVec<double>& x,
+                               const TVec<double>& y)
 { externalProductScaleAcc(A, x, y, 1.); }
 
-inline void product(const TVec<double>& vec, const TMat<double>& m, const TVec<double>& v)
+inline void product(const TVec<double>& vec, const TMat<double>& m,
+                    const TVec<double>& v)
 { productScaleAcc(vec, m, false, v, 1., 0.); }
 
-inline void productAcc(const TVec<double>& vec, const TMat<double>& m, const TVec<double>& v)
+inline void productAcc(const TVec<double>& vec, const TMat<double>& m,
+                       const TVec<double>& v)
 { productScaleAcc(vec, m, false, v, 1., 1.); }
 
 inline void productScaleAcc(const TVec<double>& vec, const TMat<double>& m,
                             const TVec<double>& v, double alpha, double beta)
 { productScaleAcc(vec, m, false, v, alpha, beta); }
 
-inline void transposeProduct(const TVec<double>& vec, const TMat<double>& m, const TVec<double>& v)
+inline void transposeProduct(const TVec<double>& vec, const TMat<double>& m,
+                             const TVec<double>& v)
 { productScaleAcc(vec, m, true, v, 1., 0.); }
 
-inline void transposeProductAcc(const TVec<double>& vec, const TMat<double>& m, const TVec<double>& v)
+inline void transposeProductAcc(const TVec<double>& vec, const TMat<double>& m,
+                                const TVec<double>& v)
 { productScaleAcc(vec, m, true, v, 1., 1.); }
 
 inline void transposeProductScaleAcc(const TVec<double>& vec,
@@ -324,19 +348,25 @@ inline void transposeProductScaleAcc(const TVec<double>& vec,
                                      double alpha, double beta)
 { productScaleAcc(vec, m, true, v, alpha, beta); }
 
-inline void product(const TMat<double>& mat, const TMat<double>& m1, const TMat<double>& m2)
+inline void product(const TMat<double>& mat, const TMat<double>& m1,
+                    const TMat<double>& m2)
 { productScaleAcc(mat, m1, false, m2, false, 1., 0.); }
 
-inline void transposeTransposeProduct(const TMat<double>& mat, const TMat<double>& m1, const TMat<double>& m2)
+inline void transposeTransposeProduct(const TMat<double>& mat,
+                                      const TMat<double>& m1,
+                                      const TMat<double>& m2)
 { productScaleAcc(mat, m1, true, m2, true, 1., 0.); }
 
-inline void transposeProduct(const TMat<double>& mat, const TMat<double>& m1, const TMat<double>& m2)
+inline void transposeProduct(const TMat<double>& mat, const TMat<double>& m1,
+                             const TMat<double>& m2)
 { productScaleAcc(mat, m1, true, m2, false, 1., 0.); }
 
-inline void productTranspose(const TMat<double>& mat, const TMat<double>& m1, const TMat<double>& m2)
+inline void productTranspose(const TMat<double>& mat, const TMat<double>& m1,
+                             const TMat<double>& m2)
 { productScaleAcc(mat, m1, false, m2, true, 1., 0.); }
 
-inline void productAcc(const TMat<double>& mat, const TMat<double>& m1, const TMat<double>& m2)
+inline void productAcc(const TMat<double>& mat, const TMat<double>& m1,
+                       const TMat<double>& m2)
 { productScaleAcc(mat, m1, false, m2, false, 1., 1.); }
 
 inline void productScaleAcc(const TMat<double>& mat,
@@ -344,7 +374,9 @@ inline void productScaleAcc(const TMat<double>& mat,
                             double alpha, double beta)
 { productScaleAcc(mat, m1, false, m2, false, alpha, beta); }
 
-inline void transposeTransposeProductAcc(const TMat<double>& mat, const TMat<double>& m1, const TMat<double>& m2)
+inline void transposeTransposeProductAcc(const TMat<double>& mat,
+                                         const TMat<double>& m1,
+                                         const TMat<double>& m2)
 { productScaleAcc(mat, m1, true, m2, true, 1., 1.); }
 
 inline void transposeTransposeProductScaleAcc(const TMat<double>& mat,
@@ -353,7 +385,9 @@ inline void transposeTransposeProductScaleAcc(const TMat<double>& mat,
                                               double alpha, double beta)
 { productScaleAcc(mat, m1, true, m2, true, alpha, beta); }
 
-inline void transposeProductAcc(const TMat<double>& mat, const TMat<double>& m1, const TMat<double>& m2)
+inline void transposeProductAcc(const TMat<double>& mat,
+                                const TMat<double>& m1,
+                                const TMat<double>& m2)
 { productScaleAcc(mat, m1, true, m2, false, 1., 1.); }
 
 inline void transposeProductScaleAcc(const TMat<double>& mat,
@@ -362,7 +396,9 @@ inline void transposeProductScaleAcc(const TMat<double>& mat,
                                      double alpha, double beta)
 { productScaleAcc(mat, m1, true, m2, false, alpha, beta); }
 
-inline void productTransposeAcc(const TMat<double>& mat, const TMat<double>& m1, const TMat<double>& m2)
+inline void productTransposeAcc(const TMat<double>& mat,
+                                const TMat<double>& m1,
+                                const TMat<double>& m2)
 { productScaleAcc(mat, m1, false, m2, true, 1., 1.); }
 
 inline void productTransposeScaleAcc(const TMat<double>& mat,
@@ -376,9 +412,13 @@ inline void productTransposeScaleAcc(const TMat<double>& mat,
 // float
 
 
-//  C = alpha A.B + beta C
-// ( Will use the transpose of A and/or B instead, if you set the corresponding flags to true)
-inline void productScaleAcc(const TMat<float>& C, const TMat<float>& A, bool transposeA, const TMat<float>& B, bool transposeB, float alpha, float beta)
+//! C = alpha A.B + beta C
+// (Will use the transpose of A and/or B instead, if you set the corresponding
+// flags to true)
+inline void productScaleAcc(const TMat<float>& C,
+                            const TMat<float>& A, bool transposeA,
+                            const TMat<float>& B, bool transposeB,
+                            float alpha, float beta)
 {
 #ifdef BOUNDCHECK
     int l2;
@@ -416,9 +456,10 @@ inline void productScaleAcc(const TMat<float>& C, const TMat<float>& A, bool tra
 
 #ifdef BOUNDCHECK
     if (w1!=l2 || C.length()!=l1 || C.width()!=w2)
-        PLERROR("productScaleAcc, incompatible arguments (%dx%d) <- %s(%dx%d) . %s(%dx%d)",
-                C.length(), C.width(), 
-                transposeA?"transpose":"", A.length(), A.width(), 
+        PLERROR("productScaleAcc, incompatible arguments:\n"
+                "(%dx%d) <- %s(%dx%d) . %s(%dx%d)",
+                C.length(), C.width(),
+                transposeA?"transpose":"", A.length(), A.width(),
                 transposeB?"transpose":"", B.length(), B.width());
 #endif
 
@@ -429,22 +470,30 @@ inline void productScaleAcc(const TMat<float>& C, const TMat<float>& A, bool tra
     if (A.isNull() || B.isNull() || C.isNull()) // Size zero ; don't bother
         return;                                 // with actual calculation
 
-    sgemm_(&transb, &transa, &w2, &l1, &w1, &alpha, B.data(), &ldb, A.data(), &lda, &beta, C.data(), &ldc);
+    sgemm_(&transb, &transa, &w2, &l1, &w1, &alpha, B.data(), &ldb, A.data(),
+           &lda, &beta, C.data(), &ldc);
 }
 
-//! y <- alpha A.x + beta y   (will use the transposed of A instead if tranposeA is true)
-inline void productScaleAcc(const TVec<float>& y, const TMat<float>& A, bool transposeA, const TVec<float>& x, float alpha, float beta)
+//! y <- alpha A.x + beta y
+// (will use the transposed of A instead if tranposeA is true)
+inline void productScaleAcc(const TVec<float>& y,
+                            const TMat<float>& A, bool transposeA,
+                            const TVec<float>& x, float alpha, float beta)
 {
 #ifdef BOUNDCHECK
     if(!transposeA)
     {
         if(A.length()!=y.length() || A.width()!=x.length())
-            PLERROR("productScaleAcc, incompatible arguments Vec(%d) <- Mat(%d,%d) . Vec(%d)", y.length(), A.length(), A.width(), x.length());
+            PLERROR("productScaleAcc, incompatible arguments:\n"
+                    "Vec(%d) <- Mat(%d,%d) . Vec(%d)",
+                    y.length(), A.length(), A.width(), x.length());
     }
     else
     {
         if(A.length()!=x.length() || A.width()!=y.length())
-            PLERROR("productScaleAcc, incompatible arguments Vec(%d) <- Mat(%d,%d)' . Vec(%d)", y.length(), A.length(), A.width(), x.length());
+            PLERROR("productScaleAcc, incompatible arguments:\n"
+                    "Vec(%d) <- Mat(%d,%d)' . Vec(%d)",
+                    y.length(), A.length(), A.width(), x.length());
     }
 #endif
 
@@ -454,15 +503,19 @@ inline void productScaleAcc(const TVec<float>& y, const TMat<float>& A, bool tra
       int m = A.width();
       int n = A.length();
 
-      sgemv_(&trans, &m, &n, &alpha, A.data(), &lda, x.data(), &one, &beta, y.data(), &one);
+      sgemv_(&trans, &m, &n, &alpha, A.data(), &lda, x.data(), &one, &beta,
+             y.data(), &one);
 }
 
 //! A <- A + alpha x.y'
-inline void externalProductScaleAcc(const TMat<float>& A, const TVec<float>& x, const TVec<float>& y, float alpha)
+inline void externalProductScaleAcc(const TMat<float>& A, const TVec<float>& x,
+                                    const TVec<float>& y, float alpha)
 {
 #ifdef BOUNDCHECK
     if(A.length()!=x.length() || A.width()!=y.length())
-        PLERROR("In externalProductScaleAcc, incompatible dimensions: Mat(%d,%d) <- Vec(%d).Vec(%d)'",A.length(), A.width(), x.length(), y.length());
+        PLERROR("In externalProductScaleAcc, incompatible dimensions:\n"
+                "Mat(%d,%d) <- Vec(%d).Vec(%d)'",
+                A.length(), A.width(), x.length(), y.length());
 #endif
     int one = 1;
     int lda = A.mod();
@@ -475,23 +528,28 @@ inline void externalProductScaleAcc(const TMat<float>& A, const TVec<float>& x, 
     sger_(&m, &n, &alpha, y.data(), &one, x.data(), &one, A.data(), &lda);
 }
 
-inline void externalProductAcc(const TMat<float>& A, const TVec<float>& x, const TVec<float>& y)
+inline void externalProductAcc(const TMat<float>& A, const TVec<float>& x,
+                               const TVec<float>& y)
 { externalProductScaleAcc(A, x, y, 1.); }
 
-inline void product(const TVec<float>& vec, const TMat<float>& m, const TVec<float>& v)
+inline void product(const TVec<float>& vec, const TMat<float>& m,
+                    const TVec<float>& v)
 { productScaleAcc(vec, m, false, v, 1., 0.); }
 
-inline void productAcc(const TVec<float>& vec, const TMat<float>& m, const TVec<float>& v)
+inline void productAcc(const TVec<float>& vec, const TMat<float>& m,
+                       const TVec<float>& v)
 { productScaleAcc(vec, m, false, v, 1., 1.); }
 
 inline void productScaleAcc(const TVec<float>& vec, const TMat<float>& m,
                             const TVec<float>& v, float alpha, float beta)
 { productScaleAcc(vec, m, false, v, alpha, beta); }
 
-inline void transposeProduct(const TVec<float>& vec, const TMat<float>& m, const TVec<float>& v)
+inline void transposeProduct(const TVec<float>& vec, const TMat<float>& m,
+                             const TVec<float>& v)
 { productScaleAcc(vec, m, true, v, 1., 0.); }
 
-inline void transposeProductAcc(const TVec<float>& vec, const TMat<float>& m, const TVec<float>& v)
+inline void transposeProductAcc(const TVec<float>& vec, const TMat<float>& m,
+                                const TVec<float>& v)
 { productScaleAcc(vec, m, true, v, 1., 1.); }
 
 inline void transposeProductScaleAcc(const TVec<float>& vec,
@@ -500,19 +558,25 @@ inline void transposeProductScaleAcc(const TVec<float>& vec,
                                      float alpha, float beta)
 { productScaleAcc(vec, m, true, v, alpha, beta); }
 
-inline void product(const TMat<float>& mat, const TMat<float>& m1, const TMat<float>& m2)
+inline void product(const TMat<float>& mat, const TMat<float>& m1,
+                    const TMat<float>& m2)
 { productScaleAcc(mat, m1, false, m2, false, 1., 0.); }
 
-inline void transposeTransposeProduct(const TMat<float>& mat, const TMat<float>& m1, const TMat<float>& m2)
+inline void transposeTransposeProduct(const TMat<float>& mat,
+                                      const TMat<float>& m1,
+                                      const TMat<float>& m2)
 { productScaleAcc(mat, m1, true, m2, true, 1., 0.); }
 
-inline void transposeProduct(const TMat<float>& mat, const TMat<float>& m1, const TMat<float>& m2)
+inline void transposeProduct(const TMat<float>& mat, const TMat<float>& m1,
+                             const TMat<float>& m2)
 { productScaleAcc(mat, m1, true, m2, false, 1., 0.); }
 
-inline void productTranspose(const TMat<float>& mat, const TMat<float>& m1, const TMat<float>& m2)
+inline void productTranspose(const TMat<float>& mat, const TMat<float>& m1,
+                             const TMat<float>& m2)
 { productScaleAcc(mat, m1, false, m2, true, 1., 0.); }
 
-inline void productAcc(const TMat<float>& mat, const TMat<float>& m1, const TMat<float>& m2)
+inline void productAcc(const TMat<float>& mat, const TMat<float>& m1,
+                       const TMat<float>& m2)
 { productScaleAcc(mat, m1, false, m2, false, 1., 1.); }
 
 inline void productScaleAcc(const TMat<float>& mat,
@@ -520,7 +584,9 @@ inline void productScaleAcc(const TMat<float>& mat,
                             float alpha, float beta)
 { productScaleAcc(mat, m1, false, m2, false, alpha, beta); }
 
-inline void transposeTransposeProductAcc(const TMat<float>& mat, const TMat<float>& m1, const TMat<float>& m2)
+inline void transposeTransposeProductAcc(const TMat<float>& mat,
+                                         const TMat<float>& m1,
+                                         const TMat<float>& m2)
 { productScaleAcc(mat, m1, true, m2, true, 1., 1.); }
 
 inline void transposeTransposeProductScaleAcc(const TMat<float>& mat,
@@ -529,7 +595,8 @@ inline void transposeTransposeProductScaleAcc(const TMat<float>& mat,
                                               float alpha, float beta)
 { productScaleAcc(mat, m1, true, m2, true, alpha, beta); }
 
-inline void transposeProductAcc(const TMat<float>& mat, const TMat<float>& m1, const TMat<float>& m2)
+inline void transposeProductAcc(const TMat<float>& mat, const TMat<float>& m1,
+                                const TMat<float>& m2)
 { productScaleAcc(mat, m1, true, m2, false, 1., 1.); }
 
 inline void transposeProductScaleAcc(const TMat<float>& mat,
@@ -538,7 +605,8 @@ inline void transposeProductScaleAcc(const TMat<float>& mat,
                                      float alpha, float beta)
 { productScaleAcc(mat, m1, true, m2, false, alpha, beta); }
 
-inline void productTransposeAcc(const TMat<float>& mat, const TMat<float>& m1, const TMat<float>& m2)
+inline void productTransposeAcc(const TMat<float>& mat, const TMat<float>& m1,
+                                const TMat<float>& m2)
 { productScaleAcc(mat, m1, false, m2, true, 1., 1.); }
 
 inline void productTransposeScaleAcc(const TMat<float>& mat,
@@ -686,7 +754,7 @@ inline void bprop_update_layer(real* dy, real* x, real* dx, real* w,
 #endif
 #endif
 }
-	
+
 } // end of namespace PLearn
 
 #endif
