@@ -89,8 +89,6 @@ void ModuleStackModule::declareOptions(OptionList& ol)
 ////////////
 void ModuleStackModule::build_()
 {
-    // TODO: Do something with the random generator?
-
     n_modules = modules.length();
 
     if( n_modules > 0 )
@@ -103,10 +101,21 @@ void ModuleStackModule::build_()
 
         input_size = modules[0]->input_size;
         output_size = modules[n_modules-1]->output_size;
-    } else {
+    }
+    else
+    {
         input_size = -1;
         output_size = -1;
     }
+
+    // If we have a random_gen and some modules do not, share it with them
+    if( random_gen )
+        for( int i=0; i<n_modules; i++ )
+            if( !(modules[i]->random_gen) )
+            {
+                modules[i]->random_gen = random_gen;
+                modules[i]->forget();
+            }
 }
 
 ///////////

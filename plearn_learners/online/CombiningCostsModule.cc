@@ -127,6 +127,17 @@ void CombiningCostsModule::build_()
 
     sub_costs_values.resize( n_sub_costs );
     output_size = n_sub_costs+1;
+
+    // If we have a random_gen and some sub_costs do not, share it with them
+    if( random_gen )
+        for( int i=0; i<sub_costs.length(); i++ )
+        {
+            if( !(sub_costs[i]->random_gen) )
+            {
+                sub_costs[i]->random_gen = random_gen;
+                sub_costs[i]->forget();
+            }
+        }
 }
 
 ///////////

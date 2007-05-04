@@ -437,7 +437,12 @@ void RBMMixedLayer::build_()
         if( momentum >= 0. )
             sub_layers[i]->setMomentum( momentum );
 
-        sub_layers[i]->random_gen = random_gen;
+        // If we have a random_gen and sub_layers[i] does not, share it
+        if( random_gen && !(sub_layers[i]->random_gen) )
+        {
+            sub_layers[i]->random_gen = random_gen;
+            sub_layers[i]->forget();
+        }
     }
 }
 

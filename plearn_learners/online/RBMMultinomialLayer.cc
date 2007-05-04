@@ -88,6 +88,9 @@ void RBMMultinomialLayer::getAllActivations( PP<RBMParameters> rbmp,
 
 void RBMMultinomialLayer::generateSample()
 {
+    PLASSERT_MSG(random_gen,
+                 "random_gen should be initialized before generating samples");
+
     computeExpectation();
 
     int i = random_gen->multinomial_sample( expectation );

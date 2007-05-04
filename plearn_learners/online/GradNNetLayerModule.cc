@@ -316,6 +316,9 @@ void GradNNetLayerModule::bbpropUpdate(const Vec& input, const Vec& output,
 // Forget the bias and reinitialize the weights
 void GradNNetLayerModule::forget()
 {
+    learning_rate = start_learning_rate;
+    step_number = 0;
+
     bias.resize( output_size );
     if( init_bias.size() > 0 )
     {
@@ -339,14 +342,17 @@ void GradNNetLayerModule::forget()
     }
     else if(init_weights_random_scale != 0. )
     {
+        if( !random_gen )
+        {
+            PLWARNING( "GradNNetLayerModule: cannot forget() without"
+                       " random_gen" );
+            return;
+        }
         real r = init_weights_random_scale / input_size;
         random_gen->fill_random_uniform(weights, -r, r);
     }
     else
         weights.clear();
-
-    learning_rate = start_learning_rate;
-    step_number = 0;
 }
 
 void GradNNetLayerModule::setLearningRate( real dynamic_learning_rate )
@@ -447,11 +453,6 @@ void GradNNetLayerModule::build_()
         PLERROR("GradNNetLayerModule::build_: 'output_size' is < 0 (%i),\n"
                 " you should set it to a positive integer (the number of"
                 " neurons).\n", output_size);
-
-    if (init_weights.size()==0 && init_weights_random_scale!=0 && !random_gen)
-        // Default random number generator uses a fixed seed to ensure
-        // reproducible experiments.
-        random_gen = new PRandom(1827);
 
     if( weights.length() != output_size
         || weights.width() != input_size

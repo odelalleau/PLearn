@@ -79,7 +79,7 @@ DeepBeliefNet::DeepBeliefNet() :
     final_cost_index( -1 ),
     reconstruction_cost_index( -1 )
 {
-    random_gen = new PRandom( seed_ );
+    random_gen = new PRandom();
 }
 
 ////////////////////
@@ -361,6 +361,14 @@ void DeepBeliefNet::build_costs()
                     cost_names.append("partial"+tostring(i)+"."+names[j]);
                 partial_costs_indices[i] = current_index;
                 current_index += n_partial_costs_i;
+
+                // Share random_gen with partial_costs[i], unless it already
+                // has one
+                if( !(partial_costs[i]->random_gen) )
+                {
+                    partial_costs[i]->random_gen = random_gen;
+                    partial_costs[i]->forget();
+                }
             }
             else
                 partial_costs_indices[i] = -1;
@@ -419,16 +427,27 @@ void DeepBeliefNet::build_layers_and_connections()
                     "connections[%i]->up_size (%d) != layers[%i]->size (%d)."
                     "\n", i, connections[i]->up_size, i+1, layers[i+1]->size);
 
-        layers[i]->random_gen = random_gen;
-        layers[i]->build();
-
-        connections[i]->random_gen = random_gen;
-        connections[i]->build();
+        // Assign random_gen to layers[i] and connections[i], unless they
+        // already have one
+        if( !(layers[i]->random_gen) )
+        {
+            layers[i]->random_gen = random_gen;
+            layers[i]->forget();
+        }
+        if( !(connections[i]->random_gen) )
+        {
+            connections[i]->random_gen = random_gen;
+            connections[i]->forget();
+        }
 
         activation_gradients[i].resize( layers[i]->size );
         expectation_gradients[i].resize( layers[i]->size );
     }
-    layers[n_layers-1]->random_gen = random_gen;
+    if( !(layers[n_layers-1]->random_gen) )
+    {
+        layers[n_layers-1]->random_gen = random_gen;
+        layers[n_layers-1]->forget();
+    }
     int last_layer_size = layers[n_layers-1]->size;
     PLASSERT_MSG(last_layer_size >= 0,
                  "Size of last layer must be non-negative");
@@ -511,6 +530,13 @@ void DeepBeliefNet::build_final_cost()
                     final_module->input_size);
 
         final_module->setLearningRate( grad_learning_rate );
+
+        // Share random_gen with final_module, unless it already has one
+        if( !(final_module->random_gen) )
+        {
+            final_module->random_gen = random_gen;
+            final_module->forget();
+        }
     }
     else
     {
@@ -545,6 +571,12 @@ void DeepBeliefNet::build_final_cost()
                     targetsize());
     }
 
+    // Share random_gen with final_cost, unless it already has one
+    if( !(final_cost->random_gen) )
+    {
+        final_cost->random_gen = random_gen;
+        final_cost->forget();
+    }
 }
 
 ///////////
@@ -686,12 +718,15 @@ void DeepBeliefNet::train()
         optimized_costs.resize(minibatch_size);
     }
 
+    /* Why is it here???????
+       it's copy-pasted from build_()!!!!
     layers[n_layers-1]->random_gen = random_gen;
     int last_layer_size = layers[n_layers-1]->size;
     PLASSERT_MSG(last_layer_size >= 0,
                  "Size of last layer must be non-negative");
     activation_gradients[n_layers-1].resize(last_layer_size);
     expectation_gradients[n_layers-1].resize(last_layer_size);
+    */
 
     Vec input( inputsize() );
     Vec target( targetsize() );

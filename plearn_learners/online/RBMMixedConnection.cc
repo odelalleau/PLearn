@@ -152,7 +152,8 @@ void RBMMixedConnection::build_()
         col_of.append( TVec<int>( down_block_sizes[j], j ) );
     }
 
-    // assign random generator, learning rate and momentum to sub_connections
+    // Assign learning rate and momentum to sub_connections
+    // If we have a random_gen and they do not, share it with them
     for( int i=0 ; i<n_up_blocks ; i++ )
         for( int j=0 ; j<n_down_blocks ; j++ )
         {
@@ -164,7 +165,11 @@ void RBMMixedConnection::build_()
                 if( momentum >= 0. )
                     sub_connections(i,j)->setMomentum( momentum );
 
-                sub_connections(i,j)->random_gen = random_gen;
+                if( random_gen && !(sub_connections(i,j)->random_gen) )
+                {
+                    sub_connections(i,j)->random_gen = random_gen;
+                    sub_connections(i,j)->forget();
+                }
             }
         }
 

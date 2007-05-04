@@ -190,9 +190,6 @@ void Supersampling2DModule::build_()
     scale.resize(n_input_images);
     bias.resize(n_input_images);
 
-    if( !random_gen )
-        random_gen = new PRandom();
-
     input_images.resize(n_input_images);
     output_images.resize(n_input_images);
     input_gradients.resize(n_input_images);
@@ -334,9 +331,16 @@ void Supersampling2DModule::bpropUpdate(const Vec& input, const Vec& output,
 //! Note that this method is necessarily called from build().
 void Supersampling2DModule::forget()
 {
+    bias.clear();
+
+    if( !random_gen )
+    {
+        PLWARNING( "Supersampling2DModule: cannot forget() without random_gen"
+                   );
+        return;
+    }
     real scale_factor = 1./(kernel_length*kernel_width);
     random_gen->fill_random_uniform( scale, -scale_factor, scale_factor );
-    bias.clear();
 }
 
 /* THIS METHOD IS OPTIONAL

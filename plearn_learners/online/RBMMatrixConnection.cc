@@ -495,12 +495,17 @@ void RBMMatrixConnection::bpropUpdate(const Mat& inputs, const Mat& outputs,
 // Note that this method is necessarily called from build().
 void RBMMatrixConnection::forget()
 {
+    clearStats();
     if( initialization_method == "zero" )
         weights.clear();
     else
     {
         if( !random_gen )
-            random_gen = new PRandom();
+        {
+            PLWARNING( "RBMMatrixConnection: cannot forget() without"
+                       " random_gen" );
+            return;
+        }
 
         real d = 1. / max( down_size, up_size );
         if( initialization_method == "uniform_sqrt" )
@@ -508,7 +513,6 @@ void RBMMatrixConnection::forget()
 
         random_gen->fill_random_uniform( weights, -d, d );
     }
-    clearStats();
 }
 
 

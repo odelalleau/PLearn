@@ -89,12 +89,24 @@ void ProcessInputCostModule::build_()
     {
         input_size = processing_module->input_size;
         processed_size = processing_module->output_size;
+        // If we have a random_gen and processing_module does not, share it
+        if( random_gen && !(processing_module->random_gen) )
+        {
+            processing_module->random_gen = random_gen;
+            processing_module->forget();
+        }
     }
 
     if( cost_module )
     {
         output_size = cost_module->output_size;
         target_size = cost_module->target_size;
+        // If we have a random_gen and cost_module does not, share it
+        if( random_gen && !(cost_module->random_gen) )
+        {
+            cost_module->random_gen = random_gen;
+            cost_module->forget();
+        }
     }
 
     if( processing_module && cost_module )

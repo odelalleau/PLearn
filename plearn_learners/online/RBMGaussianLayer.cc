@@ -77,6 +77,9 @@ RBMGaussianLayer::RBMGaussianLayer( int the_size, real the_learning_rate ) :
 
 void RBMGaussianLayer::generateSample()
 {
+    PLASSERT_MSG(random_gen,
+                 "random_gen should be initialized before generating samples");
+
     computeExpectation();
     computeStdDeviation();
     for( int i=0 ; i<size ; i++ )

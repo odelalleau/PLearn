@@ -72,6 +72,9 @@ RBMBinomialLayer::RBMBinomialLayer( int the_size, real the_learning_rate ) :
 ////////////////////
 void RBMBinomialLayer::generateSample()
 {
+    PLASSERT_MSG(random_gen,
+                 "random_gen should be initialized before generating samples");
+
     computeExpectation();
 
     for( int i=0 ; i<size ; i++ )
@@ -83,6 +86,9 @@ void RBMBinomialLayer::generateSample()
 /////////////////////
 void RBMBinomialLayer::generateSamples()
 {
+    PLASSERT_MSG(random_gen,
+                 "random_gen should be initialized before generating samples");
+
     computeExpectations();
     int mbatch_size = expectations.length();
     samples.resize(mbatch_size, size);

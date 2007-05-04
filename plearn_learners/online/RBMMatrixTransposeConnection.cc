@@ -75,13 +75,16 @@ void RBMMatrixTransposeConnection::declareOptions(OptionList& ol)
 
 void RBMMatrixTransposeConnection::build_()
 {
-    
     if( !rbm_matrix_connection )
         PLERROR("In RBMMatrixTransposeConnection::build_(): "
             "rbm_matrix_connection needs to be provided.");
 
-
-    rbm_matrix_connection->build();
+    // If we have a random_gen and rbm_matrix_connection does not, share it
+    if( random_gen && !(rbm_matrix_connection->random_gen) )
+    {
+        rbm_matrix_connection->random_gen = random_gen;
+        rbm_matrix_connection->forget();
+    }
     weights = rbm_matrix_connection->weights;
     down_size = rbm_matrix_connection->up_size;
     up_size = rbm_matrix_connection->down_size;

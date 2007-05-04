@@ -464,12 +464,17 @@ void RBMConv2DConnection::bpropUpdate(const Vec& input, const Vec& output,
 //! Note that this method is necessarily called from build().
 void RBMConv2DConnection::forget()
 {
+    clearStats();
     if( initialization_method == "zero" )
         kernel.clear();
     else
     {
         if( !random_gen )
-            random_gen = new PRandom();
+        {
+            PLWARNING( "RBMConv2DConnection: cannot forget() without"
+                       " random_gen" );
+            return;
+        }
 
         real d = 1. / max( down_size, up_size );
         if( initialization_method == "uniform_sqrt" )
@@ -477,8 +482,6 @@ void RBMConv2DConnection::forget()
 
         random_gen->fill_random_uniform( kernel, -d, d );
     }
-
-    clearStats();
 }
 
 

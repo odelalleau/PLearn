@@ -125,15 +125,42 @@ void RBMClassificationModule::build_()
 
     //! build joint_connection
     if( !joint_connection )
-    {
         joint_connection = new RBMMixedConnection();
-        joint_connection->random_gen = random_gen;
-    }
 
     joint_connection->sub_connections.resize(1,2);
     joint_connection->sub_connections(0,0) = previous_to_last;
     joint_connection->sub_connections(0,1) = last_to_target;
     joint_connection->build();
+
+    // If we have a random_gen, share it with the ones who do not
+    if( random_gen )
+    {
+        if( !(previous_to_last->random_gen) )
+        {
+            previous_to_last->random_gen = random_gen;
+            previous_to_last->forget();
+        }
+        if( !(last_layer->random_gen) )
+        {
+            last_layer->random_gen = random_gen;
+            last_layer->forget();
+        }
+        if( !(last_to_target->random_gen) )
+        {
+            last_to_target->random_gen = random_gen;
+            last_to_target->forget();
+        }
+        if( !(target_layer->random_gen) )
+        {
+            target_layer->random_gen = random_gen;
+            target_layer->forget();
+        }
+        if( !(joint_connection->random_gen) )
+        {
+            joint_connection->random_gen = random_gen;
+            joint_connection->forget();
+        }
+    }
 }
 
 // ### Nothing to add here, simply calls build_

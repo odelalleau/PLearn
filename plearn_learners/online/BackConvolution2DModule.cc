@@ -241,9 +241,6 @@ void BackConvolution2DModule::build_()
         connection_matrix.fill(1);
     }
 
-    if( !random_gen )
-        random_gen = new PRandom();
-
     build_kernels();
 
     input_images.resize(n_input_images);
@@ -438,7 +435,16 @@ void BackConvolution2DModule::bpropUpdate(const Vec& input, const Vec& output,
 //! Note that this method is necessarily called from build().
 void BackConvolution2DModule::forget()
 {
+    bias.clear();
+    if( !random_gen )
+    {
+        PLWARNING( "BackConvolution2DModule: cannot forget() without"
+                   " random_gen" );
+        return;
+    }
+
     real scale_factor = 1./(kernel_length*kernel_width);
+    kernels.resize( n_input_images, n_output_images );
     for( int i=0 ; i<n_input_images ; i++ )
         for( int j=0 ; j<n_output_images ; j++ )
         {
@@ -452,7 +458,6 @@ void BackConvolution2DModule::forget()
                                                  scale_factor );
             }
         }
-    bias.clear();
 }
 
 /* THIS METHOD IS OPTIONAL

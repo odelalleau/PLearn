@@ -89,6 +89,9 @@ void RBMTruncExpLayer::getAllActivations( PP<RBMParameters> rbmp, int offset )
 
 void RBMTruncExpLayer::generateSample()
 {
+    PLASSERT_MSG(random_gen,
+                 "random_gen should be initialized before generating samples");
+
     /* The cumulative is :
      * C(U) = P(u<U | x) = (1 - exp(-U a)) / (1 - exp(-a)) if 0 < U < 1,
      *        0 if U <= 0 and

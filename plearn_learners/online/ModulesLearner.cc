@@ -100,11 +100,17 @@ void ModulesLearner::build_()
     else
         cost->estimate_simpler_diag_hessian = true;
 
-    // initialize random generator from seed
-    random_gen->manual_seed( seed_ );
-
-    module->random_gen = random_gen;
-    cost->random_gen = random_gen;
+    // Assign random_gen to module and cost, unless they already have one
+    if( !(module->random_gen) )
+    {
+        module->random_gen = random_gen;
+        module->forget();
+    }
+    if( !(cost->random_gen) )
+    {
+        cost->random_gen = random_gen;
+        cost->forget();
+    }
 
     // if train_set is not set, we don't know inputsize nor targetsize
     if( inputsize_ >= 0 ) // we don't use inputsize() because it crashes if <0
