@@ -1,4 +1,4 @@
-*13 -> PTester(
+*15 -> PTester(
     dataset = *1 -> MemoryVMatrix(
         data = 2 3 [
                 1,
@@ -13,8 +13,11 @@
         weightsize = 0
         ),
     expdir = "expdir",
-    learner = *11 -> HyperLearner(
-        dont_restart_upon_change = [ "nstages" ],
+    learner = *13 -> HyperLearner(
+        dont_restart_upon_change = [
+            "training_schedule[0]",
+            "training_schedule[1]"
+            ],
         learner = *6 -> DeepBeliefNet(
             cd_learning_rate = 0.01,
             connections = [
@@ -31,9 +34,11 @@
                 *5 -> RBMBinomialLayer( size = 2 )
                 ],
             n_classes = 2,
-            nstages = 700,
             report_progress = 1,
-            training_schedule = [ 500 ],
+            training_schedule = [
+                0,
+                0
+                ],
             use_classification_cost = 1
             ),
         option_fields = [ "nstages" ],
@@ -42,22 +47,34 @@
         strategy = [
             *8 -> HyperOptimize(
                 oracle = *7 -> EarlyStoppingOracle(
-                    max_degraded_steps = 701,
-                    option = "nstages",
+                    max_degraded_steps = 501,
+                    option = "training_schedule[0]",
                     range = [
                         0,
-                        701,
+                        501,
                         2
                         ]
                     ),
-                which_cost = 1
+                which_cost = 2
+                ),
+            *10 -> HyperOptimize(
+                oracle = *9 -> EarlyStoppingOracle(
+                    max_degraded_steps = 201,
+                    option = "training_schedule[1]",
+                    range = [
+                        2,
+                        201,
+                        2
+                        ]
+                    ),
+                which_cost = 2
                 )
             ],
-        tester = *10 -> PTester(
+        tester = *12 -> PTester(
             save_initial_tester = 1,
             save_test_costs = 1,
             save_test_outputs = 1,
-            splitter = *9 -> FractionSplitter(
+            splitter = *11 -> FractionSplitter(
                 splits = 1 2 [
                         (0, 1),
                         (0, 1)
@@ -76,7 +93,7 @@
     save_learners = 1,
     save_test_costs = 1,
     save_test_outputs = 1,
-    splitter = *12 -> NoSplitSplitter( ),
+    splitter = *14 -> NoSplitSplitter( ),
     statnames = [
         "E[train.E[E[train.E[NLL]]]]",
         "E[train.E[E[train.E[class_error]]]]",

@@ -1,0 +1,7 @@
+_trial_	0
+_objective_	0
+nstages	0
+E[train.E[NLL]]	0
+E[train.E[class_error]]	0
+E[test.E[NLL]]	0
+E[test.E[class_error]]	0

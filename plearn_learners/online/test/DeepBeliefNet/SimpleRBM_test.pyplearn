@@ -37,8 +37,7 @@ connections = [
 learner = pl.DeepBeliefNet(
         cd_learning_rate = 0.01,
         grad_learning_rate = 0.1,
-        training_schedule = [ n_epochs_cd ],
-        nstages = n_epochs_cd + n_epochs_grad,
+        training_schedule = [ 0, 0 ],
         n_classes = n_classes,
         use_classification_cost = 1,
         layers = layers,
@@ -49,7 +48,7 @@ learner = pl.DeepBeliefNet(
 
 tester = pl.PTester(
         splitter = pl.FractionSplitter(
-            splits = TMat(1,2,[ (0,1), (0,1) ])
+            splits = TMat(1, 2, [ (0,1), (0,1) ])
             ),
         statnames = [
             'E[train.E[NLL]]',
@@ -66,15 +65,26 @@ hyper_learner = pl.HyperLearner(
         tester = tester,
         learner = learner,
         option_fields = [ 'nstages' ],
-        dont_restart_upon_change = [ 'nstages' ],
+        dont_restart_upon_change = [
+            'training_schedule[0]',
+            'training_schedule[1]'
+            ],
         provide_strategy_expdir = 1,
         strategy = [
             pl.HyperOptimize(
-                which_cost = 1,
+                which_cost = 2,
                 oracle = pl.EarlyStoppingOracle(
-                    option = 'nstages',
-                    range = [ 0, n_epochs_cd+n_epochs_grad+1, 2 ],
-                    max_degraded_steps = n_epochs_cd+n_epochs_grad+1
+                    option = 'training_schedule[0]',
+                    range = [ 0, n_epochs_cd+1, 2 ],
+                    max_degraded_steps = n_epochs_cd+1
+                    )
+                ),
+            pl.HyperOptimize(
+                which_cost = 2,
+                oracle = pl.EarlyStoppingOracle(
+                    option = 'training_schedule[1]',
+                    range = [ 2, n_epochs_grad+1, 2 ],
+                    max_degraded_steps = n_epochs_grad+1
                     )
                 )
             ],
