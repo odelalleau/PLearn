@@ -1397,7 +1397,8 @@ void DeepBeliefNet::greedyStep( const Mat& inputs, const Mat& targets, int index
     // TODO: add another learning rate?
     if( partial_costs && partial_costs[ index ] )
     {
-        PLASSERT_MSG(batch_size == 1, "Not implemented for mini-batches");
+        PLERROR("In DeepBeliefNet::greedyStep - Partial costs not implemented "
+                "for mini-batches");
         /*
         // put appropriate learning rate
         connections[ index ]->setLearningRate( grad_learning_rate );
