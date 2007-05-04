@@ -219,12 +219,23 @@ void ProcessInputCostModule::bbpropUpdate(const Vec& input, const Vec& target,
 ////////////
 void ProcessInputCostModule::forget()
 {
-    processing_module->forget();
-    cost_module->forget();
-
     processed_value.clear();
     processed_gradient.clear();
     processed_diag_hessian.clear();
+
+    if( !random_gen )
+    {
+        PLWARNING("CombiningCostsModule: cannot forget() without random_gen");
+        return;
+    }
+
+    // Ensures processing_module and cost_module can forget
+    if( !(processing_module->random_gen) )
+        processing_module->random_gen = random_gen;
+    processing_module->forget();
+    if( !(cost_module->random_gen) )
+        cost_module->random_gen = random_gen;
+    cost_module->forget();
 }
 
 //////////

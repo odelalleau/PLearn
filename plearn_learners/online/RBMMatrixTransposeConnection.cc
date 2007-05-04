@@ -350,8 +350,16 @@ void RBMMatrixTransposeConnection::bpropUpdate(const Vec& input,
 //! Note that this method is necessarily called from build().
 void RBMMatrixTransposeConnection::forget()
 {
-    rbm_matrix_connection->forget();
     clearStats();
+    if( !random_gen )
+    {
+        PLWARNING("RBMMatrixTransposeConnection: cannot forget() without"
+                  " random_gen");
+        return;
+    }
+    if( !(rbm_matrix_connection->random_gen) )
+        rbm_matrix_connection->random_gen = random_gen;
+    rbm_matrix_connection->forget();
 }
 
 

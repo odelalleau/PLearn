@@ -379,8 +379,18 @@ void CombiningCostsModule::bbpropUpdate(const Vec& input, const Vec& target,
 //! Note that this method is necessarily called from build().
 void CombiningCostsModule::forget()
 {
+    if( !random_gen )
+    {
+        PLWARNING("CombiningCostsModule: cannot forget() without random_gen");
+        return;
+    }
     for( int i=0 ; i<n_sub_costs ; i++ )
+    {
+        // Ensure sub_costs[i] can forget
+        if( !(sub_costs[i]->random_gen) )
+            sub_costs[i]->random_gen = random_gen;
         sub_costs[i]->forget();
+    }
 }
 
 //! Sets the sub_costs' learning rates

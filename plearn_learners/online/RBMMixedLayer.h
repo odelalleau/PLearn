@@ -155,6 +155,9 @@ public:
     //! resets the statistics and counts
     virtual void clearStats();
 
+    //! forgets everything
+    virtual void forget();
+
 
     //#####  PLearn::Object Protocol  #########################################
 

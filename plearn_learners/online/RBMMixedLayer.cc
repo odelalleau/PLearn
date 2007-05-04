@@ -405,6 +405,22 @@ void RBMMixedLayer::clearStats()
     neg_count = 0;
 }
 
+void RBMMixedLayer::forget()
+{
+    inherited::forget();
+    if( !random_gen )
+    {
+        PLWARNING("RBMMixedLayer: cannot forget() without random_gen");
+        return;
+    }
+    for( int i=0; i<n_layers; i++ )
+    {
+        if( !(sub_layers[i]->random_gen) )
+            sub_layers[i]->random_gen = random_gen;
+        sub_layers[i]->forget();
+    }
+}
+
 void RBMMixedLayer::build_()
 {
     size = 0;

@@ -327,12 +327,22 @@ void ModuleStackModule::bbpropUpdate(const Vec& input, const Vec& output,
 ////////////
 void ModuleStackModule::forget()
 {
-    for( int i=0 ; i<n_modules ; i++ )
-        modules[i]->forget();
-
     values.clear();
     gradients.clear();
     diag_hessians.clear();
+
+    if( !random_gen )
+    {
+        PLWARNING("ModuleStackModule: cannot forget() without random_gen");
+        return;
+    }
+    for( int i=0 ; i<n_modules ; i++ )
+    {
+        // Ensure modules[i] can forget
+        if( !(modules[i]->random_gen) )
+            modules[i]->random_gen = random_gen;
+        modules[i]->forget();
+    }
 }
 
 //////////////

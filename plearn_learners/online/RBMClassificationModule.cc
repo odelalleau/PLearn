@@ -290,8 +290,21 @@ void RBMClassificationModule::bpropUpdate(const Vec& input, const Vec& output,
 //! Note that this method is necessarily called from build().
 void RBMClassificationModule::forget()
 {
+    if( !random_gen )
+    {
+        PLWARNING("RBMClassificationModule: cannot forget() without"
+                  " random_gen");
+        return;
+    }
+
+    if( !(previous_to_last->random_gen) )
+        previous_to_last->random_gen = random_gen;
     previous_to_last->forget();
+    if( !(last_to_target->random_gen) )
+        last_to_target->random_gen = random_gen;
     last_to_target->forget();
+    if( !(joint_connection->random_gen) )
+        joint_connection->random_gen = random_gen;
     joint_connection->forget();
 }
 

@@ -556,12 +556,21 @@ void RBMMixedConnection::bpropUpdate(const Vec& input, const Vec& output,
 //! Note that this method is necessarily called from build().
 void RBMMixedConnection::forget()
 {
+    clearStats();
+
+    if( !random_gen )
+    {
+        PLWARNING("RBMMixedConnection: cannot forget() without random_gen");
+        return;
+    }
     for( int i=0 ; i<n_up_blocks ; i++ )
         for( int j=0 ; j<n_down_blocks ; j++ )
             if( sub_connections(i,j) )
+            {
+                if( !(sub_connections(i,j)->random_gen) )
+                    sub_connections(i,j)->random_gen = random_gen;
                 sub_connections(i,j)->forget();
-
-    clearStats();
+            }
 }
 
 
