@@ -1381,7 +1381,6 @@ void DeepBeliefNet::greedyStep( const Mat& inputs, const Mat& targets, int index
     {
         connections[index]->setAsUpInputs(layers[index+1]->getExpectations());
         layers[index]->getAllActivations(connections[index], 0, true);
-        layers[index]->computeExpectations();
         layers[index]->fpropNLL(inputs, train_costs_m.column(reconstruction_cost_index+index+1));
         Mat rc = train_costs_m.column(reconstruction_cost_index);
         if (rc.hasMissing())
@@ -1691,7 +1690,6 @@ void DeepBeliefNet::fineTuningStep(const Mat& inputs, const Mat& targets,
             layer_inputs << layers[index]->getExpectations();
             connections[index]->setAsUpInputs(layers[index+1]->getExpectations());
             layers[index]->getAllActivations(connections[index], 0, true);
-            layers[index]->computeExpectations();
             layers[index]->fpropNLL(layer_inputs, train_costs.column(reconstruction_cost_index+index+1));
             rc += train_costs.column(reconstruction_cost_index+index+1);
         }
@@ -1890,7 +1888,6 @@ void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
             layer_input << layers[i]->expectation;
             connections[i]->setAsUpInput(layers[i+1]->expectation);
             layers[i]->getAllActivations(connections[i]);
-            layers[i]->computeExpectation();
             real rc = reconstruction_costs[i+1] = layers[i]->fpropNLL( layer_input ); 
             reconstruction_costs[0] += rc;
         }
@@ -1917,6 +1914,16 @@ void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
         else
         {
             output.append( layers[ n_layers-1 ]->expectation );
+        }
+
+        if (reconstruct_layerwise)
+        {
+            layer_input.resize(layers[n_layers-2]->size);
+            layer_input << layers[n_layers-2]->expectation;
+            connections[n_layers-2]->setAsUpInput(layers[n_layers-1]->expectation);
+            layers[n_layers-2]->getAllActivations(connections[n_layers-2]);
+            real rc = reconstruction_costs[n_layers-1] = layers[n_layers-2]->fpropNLL( layer_input ); 
+            reconstruction_costs[0] += rc;
         }
     }
 }
