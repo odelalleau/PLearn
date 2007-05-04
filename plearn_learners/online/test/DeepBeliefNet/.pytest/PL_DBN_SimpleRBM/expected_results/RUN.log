@@ -12,7 +12,7 @@ Logging enabled for modules: DeepBeliefNet, RBMClassificationModule
 [DeepBeliefNet]   training_schedule = 0 0 
 [DeepBeliefNet]   cumulative_schedule = 0 0 0 
 [DeepBeliefNet] stage = 0, target nstages = 0
- WARNING: In PLearner::trainingCheck (called by 'DeepBeliefNet') - The learner is already trained
+ WARNING: In PLearner::initTrain (called by 'DeepBeliefNet') - The learner is already trained
 [DeepBeliefNet] train() aborted
 [DeepBeliefNet] train() called 
 [DeepBeliefNet]   training_schedule = 2 0 
