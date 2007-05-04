@@ -77,6 +77,8 @@ void RBMBinomialLayer::generateSample()
 
     computeExpectation();
 
+    //random_gen->manual_seed(123456);
+
     for( int i=0 ; i<size ; i++ )
         sample[i] = random_gen->binomial_sample( expectation[i] );
 }
@@ -93,9 +95,11 @@ void RBMBinomialLayer::generateSamples()
     int mbatch_size = expectations.length();
     samples.resize(mbatch_size, size);
 
-    for (int k = 0; k < mbatch_size; k++)
+    for (int k = 0; k < mbatch_size; k++) {
+        //random_gen->manual_seed(123456);
         for (int i=0 ; i<size ; i++)
             samples(k, i) = random_gen->binomial_sample( expectations(k, i) );
+    }
 }
 
 ////////////////////////
@@ -224,6 +228,11 @@ void RBMBinomialLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
     if( momentum != 0. )
         bias_inc.resize( size );
 
+    // TODO Can we do this more efficiently? (using BLAS)
+
+    // We use the average gradient over the mini-batch.
+    real avg_lr = learning_rate / inputs.length();
+
     for (int j = 0; j < inputs.length(); j++) {
         for( int i=0 ; i<size ; i++ )
         {
@@ -234,7 +243,7 @@ void RBMBinomialLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
             if( momentum == 0. )
             {
                 // update the bias: bias -= learning_rate * input_gradient
-                bias[i] -= learning_rate * in_grad_i;
+                bias[i] -= avg_lr * in_grad_i;
             }
             else
             {
