@@ -269,20 +269,24 @@ void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias,
 
 real RBMBinomialLayer::fpropNLL(const Vec& target)
 {
-    computeExpectation();
-
     PLASSERT( target.size() == input_size );
 
     real ret = 0;
-    real target_i, expectation_i;
+    real target_i, activation_i;
     for( int i=0 ; i<size ; i++ )
     {
         target_i = target[i];
-        expectation_i = expectation[i];
+        activation_i = activation[i];
         if(!fast_exact_is_equal(target_i,0.0))
-            ret -= target_i * pl_log(expectation_i);
+            // nll -= target[i] * pl_log(expectations[i]); 
+            // but it is numerically unstable, so use instead
+            // log (1/(1+exp(-x))) = -log(1+exp(-x)) = -softplus(-x)
+            ret += target_i * softplus(-activation_i);
         if(!fast_exact_is_equal(target_i,1.0))
-            ret -= (1-target_i) * pl_log(1-expectation_i);
+            // ret -= (1-target_i) * pl_log(1-expectation_i);
+            // log (1 - 1/(1+exp(-x))) = log(exp(-x)/(1+exp(-x))) = 
+            //                         = -x -log(1+exp(-x)) = -x-softplus(-x)
+            ret += target_i * (activation_i + softplus(-activation_i));
     }
     return ret;
 }
@@ -296,14 +300,21 @@ void RBMBinomialLayer::fpropNLL(const Mat& targets, Mat costs_column)
     for (int k=0;k<targets.length();k++) // loop over minibatch
     {
         real nll = 0;
-        real* output = expectations[k];
+        real* activation = activations[k];
         real* target = targets[k];
         for( int i=0 ; i<size ; i++ ) // loop over outputs
         {
             if(!fast_exact_is_equal(target[i],0.0))
-                nll -= target[i] * pl_log(output[i]);
+                // nll -= target[i] * pl_log(expectations[i]); 
+                // but it is numerically unstable, so use instead
+                // log (1/(1+exp(-x))) = -log(1+exp(-x)) = -softplus(-x)
+                nll += target[i] * softplus(-activation[i]);
             if(!fast_exact_is_equal(target[i],1.0))
-                nll -= (1-target[i]) * pl_log(1-output[i]);
+                // nll -= (1-target[i]) * pl_log(1-output[i]);
+                // log (1 - 1/(1+exp(-x))) = log(exp(-x)/(1+exp(-x))) = 
+                //                         = -x -log(1+exp(-x)) = -x-softplus(-x)
+                nll += target[i] * (activation[i]+softplus(activation[i]));
+
         }
         costs_column(k,0) = nll;
     }
