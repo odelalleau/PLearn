@@ -280,8 +280,8 @@ elif domain_name.endswith('.rqchp.qc.ca'):
     python_lib_root = '/usr/network.ALTIX/python-2.4.1/lib'
     linkeroptions_tail += '-lcprts -lifcore -lcxa' # -lunwind -lguide' # -lguide_stats -lifcoremt -lifport -limf -lipr'
 elif platform=='darwin':
-    optionargs += [ 'python'+python_version[0]+python_version[2] ]
     python_version = sys.version[0:3]
+    optionargs += [ 'python'+python_version[0]+python_version[2] ]
     # numpy_includedirs   = [ '/usr/network.ALTIX/python-2.4.1/include' ]
     python_lib_root = '/sw/lib'
     numpy_site_packages = '/sw/lib/python'+python_version+'/site-packages/numarray' 
