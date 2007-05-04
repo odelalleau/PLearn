@@ -264,10 +264,10 @@ void SummationKernel::computeGramMatrixDerivative(
     // Mat KD1;
     // Kernel::computeGramMatrixDerivative(KD1, kernel_param, epsilon);
     // cerr << "Kernel hyperparameter: " << kernel_param << endl;
-    // cerr << "Analytic derivative (200th row):" << endl
-    //      << KD(200) << endl
+    // cerr << "Analytic derivative (15th row):" << endl
+    //      << KD(15) << endl
     //      << "Finite differences:" << endl
-    //      << KD1(200) << endl;
+    //      << KD1(15) << endl;
 }
 
 
