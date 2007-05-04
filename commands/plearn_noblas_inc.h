@@ -165,7 +165,7 @@
 
 // Meta
 #include <plearn_learners/meta/AdaBoost.h>
-#include <plearn_learners/meta/BaggingLearner.h>
+// won't compile on the mammouth: <plearn_learners/meta/BaggingLearner.h>
 
 // Regressors
 #include <plearn_learners/regressors/ConstantRegressor.h>
