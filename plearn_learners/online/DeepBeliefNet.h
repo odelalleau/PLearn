@@ -367,6 +367,9 @@ protected:
     //! Keeps the beginning index of the reconstruction costs in train_costs
     int reconstruction_cost_index;
 
+    //! Cumulative training schedule
+    TVec<int> cumulative_schedule;
+
     mutable Vec layer_input;
     mutable Mat layer_inputs;
 

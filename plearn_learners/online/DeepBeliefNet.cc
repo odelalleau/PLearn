@@ -119,11 +119,11 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
 
     declareOption(ol, "training_schedule", &DeepBeliefNet::training_schedule,
                   OptionBase::buildoption,
-                  "Number of examples before starting each phase except the first\n"
-                  "(first the greedy phases, and then the fine-tuning phase).\n"
+                  "Number of examples to use during each phase of learning:\n"
+                  "first the greedy phases, and then the fine-tuning phase.\n"
                   "For example for 2 hidden layers, with 1000 examples in each\n"
-                  "greedy phase, this option should be [1000 2000] and the last\n"
-                  "nstages - 2000 examples will be used for fine-tuning.\n"
+                  "greedy phase, and 500 in the fine-tuning phase, this option\n"
+                  "should be [1000 1000 500], and nstages will be set to 2500.\n"
                   "When online = true, this vector is ignored and should be empty.\n");
 
     declareOption(ol, "use_classification_cost",
@@ -132,8 +132,7 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   "Put the class target as an extra input of the top-level RBM\n"
                   "and compute and maximize conditional class probability in that\n"
                   "top layer (probability of the correct class given the other input\n"
-                  "of the top-level RBM, which is the output of the rest of the network.\n"
-                  "This only makes sense if a classification_module is provided.\n");
+                  "of the top-level RBM, which is the output of the rest of the network.\n");
 
     declareOption(ol, "reconstruct_layerwise",
                   &DeepBeliefNet::reconstruct_layerwise,
@@ -284,12 +283,26 @@ void DeepBeliefNet::build_()
     else
         n_layers = layers.length();
 
-    if( training_schedule.length() != n_layers-1  && !online )
+    if( !online )
     {
-        MODULE_LOG << "training_schedule.length() != n_layers-1, resizing and"
-            " zeroing" << endl;
-        training_schedule.resize( n_layers-1 );
-        training_schedule.fill( 0 );
+        if( training_schedule.length() != n_layers )
+        {
+            MODULE_LOG << "training_schedule.length() != n_layers,"
+               << " resizing and zeroing" << endl;
+            training_schedule.resize( n_layers );
+            training_schedule.fill( 0 );
+        }
+
+        cumulative_schedule.resize( n_layers+1 );
+        cumulative_schedule[0] = 0;
+        for( int i=0 ; i<n_layers ; i++ )
+        {
+            cumulative_schedule[i+1] = cumulative_schedule[i] +
+                training_schedule[i];
+        }
+
+        // nstages is the total number of previously seen examples
+        nstages = cumulative_schedule[n_layers];
     }
 
     build_layers_and_connections();
@@ -585,6 +598,7 @@ void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(gibbs_down_state,         copies);
     deepCopyField(optimized_costs,          copies);
     deepCopyField(partial_costs_indices,    copies);
+    deepCopyField(cumulative_schedule,      copies);
 }
 
 
@@ -639,8 +653,22 @@ void DeepBeliefNet::forget()
 void DeepBeliefNet::train()
 {
     MODULE_LOG << "train() called " << endl;
+
+    if (!online)
+    {
+        // Enforce values of cumulative_schedule and nstages,
+        // because build_() might not be called if we change training_schedule
+        // inside a HyperLearner
+        for( int i=0 ; i<n_layers ; i++ )
+            cumulative_schedule[i+1] = cumulative_schedule[i] +
+                training_schedule[i];
+        nstages = cumulative_schedule[n_layers];
+    }
+
     MODULE_LOG << "  training_schedule = " << training_schedule << endl;
-    MODULE_LOG << "stage = " << stage << ", target nstages = " << nstages << endl;
+    MODULE_LOG << "  cumulative_schedule = " << cumulative_schedule << endl;
+    MODULE_LOG << "stage = " << stage
+        << ", target nstages = " << nstages << endl;
 
     PLASSERT( train_set );
     if (stage == 0) {
@@ -727,8 +755,7 @@ void DeepBeliefNet::train()
             MODULE_LOG << "Training connection weights between layers " << i
                        << " and " << i+1 << endl;
 
-            int first_stage = stage;
-            int end_stage = min( training_schedule[i], nstages );
+            int end_stage = cumulative_schedule[i+1];
 
             MODULE_LOG << "  stage = " << stage << endl;
             MODULE_LOG << "  end_stage = " << end_stage << endl;
@@ -737,7 +764,7 @@ void DeepBeliefNet::train()
             if( report_progress && stage < end_stage )
                 pb = new ProgressBar( "Training layer "+tostring(i)
                                       +" of "+classname(),
-                                      end_stage - first_stage);
+                                      end_stage - stage );
 
             layers[i]->setLearningRate( cd_learning_rate );
             connections[i]->setLearningRate( cd_learning_rate );
@@ -762,10 +789,7 @@ void DeepBeliefNet::train()
 
                 }
                 if( pb )
-                    pb->update( stage - first_stage + 1 );
-/*                    if( i == 0 )
-                    else
-                    pb->update( stage - training_schedule[i-1] + 1 ); */
+                    pb->update( stage - cumulative_schedule[i] + 1 );
             }
         }
 
@@ -777,7 +801,7 @@ void DeepBeliefNet::train()
 
             MODULE_LOG << "Training the classification module" << endl;
 
-            int end_stage = min( training_schedule[n_layers-2], nstages );
+            int end_stage = cumulative_schedule[n_layers-1];
 
             MODULE_LOG << "  stage = " << stage << endl;
             MODULE_LOG << "  end_stage = " << end_stage << endl;
@@ -793,8 +817,7 @@ void DeepBeliefNet::train()
                 cd_learning_rate );
             layers[ n_layers-1 ]->setLearningRate( cd_learning_rate );
 
-            int previous_stage = (n_layers < 3) ? 0
-                : training_schedule[n_layers-3];
+            int previous_stage = cumulative_schedule[n_layers-2];
             for( ; stage<end_stage ; stage++ )
             {
                 int sample = stage % nsamples;
@@ -810,7 +833,6 @@ void DeepBeliefNet::train()
         /***** fine-tuning by gradient descent *****/
         if( stage >= nstages )
             return;
-
         MODULE_LOG << "Fine-tuning all parameters, by gradient descent" << endl;
         MODULE_LOG << "  stage = " << stage << endl;
         MODULE_LOG << "  nstages = " << nstages << endl;
