@@ -384,18 +384,22 @@ void RBMLayer::update( const Mat& pos_values, const Mat& neg_values)
 {
     // bias -= learning_rate * (pos_values - neg_values)
 
-    if (ones.length() < pos_values.length()) {
-        ones.resize(pos_values.length());
+    int n = pos_values.length();
+    if (ones.length() < n) {
+        ones.resize(n);
         ones.fill(1);
-    } else if (ones.length() > pos_values.length())
+    } else if (ones.length() > n)
         // No need to fill with ones since we are only shrinking the vector.
-        ones.resize(pos_values.length());
+        ones.resize(n);
 
+
+    // We take the average gradient over the mini-batch.
+    real avg_lr = learning_rate / n;
 
     if( momentum == 0. )
     {
-        productScaleAcc(bias, pos_values, true, ones, -learning_rate, 1.);
-        productScaleAcc(bias, neg_values, true, ones,  learning_rate, 1.);
+        productScaleAcc(bias, pos_values, true, ones, -avg_lr, 1.);
+        productScaleAcc(bias, neg_values, true, ones,  avg_lr, 1.);
     }
     else
     {
@@ -412,6 +416,9 @@ void RBMLayer::update( const Mat& pos_values, const Mat& neg_values)
     }
 }
 
+//////////////////////
+// updateCDandGibbs //
+//////////////////////
 // neg_stats <-- gibbs_chain_statistics_forgetting_factor * neg_stats
 //              +(1-gibbs_chain_statistics_forgetting_factor)
 //               * gibbs_neg_values
@@ -428,6 +435,9 @@ void RBMLayer::updateCDandGibbs( const Mat& pos_values,
     PLASSERT_MSG(false, "Not implemented by subclass!");
 }
 
+/////////////////
+// updateGibbs //
+/////////////////
 // neg_stats <-- gibbs_chain_statistics_forgetting_factor * neg_stats
 //              +(1-gibbs_chain_statistics_forgetting_factor)
 //               * gibbs_neg_values
