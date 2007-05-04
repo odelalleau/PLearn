@@ -64,7 +64,8 @@ StackedAutoassociatorsNet::StackedAutoassociatorsNet() :
     final_module_has_learning_rate( false ),
     final_cost_has_learning_rate( false )
 {
-    random_gen = new PRandom( seed_ );
+    // random_gen will be initialized in PLearner::build_()
+    random_gen = new PRandom();
     nstages = 0;
 }
 
@@ -294,21 +295,34 @@ void StackedAutoassociatorsNet::build_layers_and_connections()
                     "%d.\n",
                     i, layers[i]->size);
 
-        layers[i]->random_gen = random_gen;
-        layers[i]->build();
+        if( !(layers[i]->random_gen) )
+        {
+            layers[i]->random_gen = random_gen;
+            layers[i]->forget();
+        }
 
-        connections[i]->random_gen = random_gen;
-        connections[i]->build();
+        if( !(connections[i]->random_gen) )
+        {
+            connections[i]->random_gen = random_gen;
+            connections[i]->forget();
+        }
 
-        reconstruction_connections[i]->random_gen = random_gen;
-        reconstruction_connections[i]->build();
+        if( !(reconstruction_connections[i]->random_gen) )
+        {
+            reconstruction_connections[i]->random_gen = random_gen;
+            reconstruction_connections[i]->forget();
+        }
 
         activations[i].resize( layers[i]->size );
         expectations[i].resize( layers[i]->size );
         activation_gradients[i].resize( layers[i]->size );
         expectation_gradients[i].resize( layers[i]->size );
     }
-    layers[n_layers-1]->random_gen = random_gen;
+    if( !(layers[n_layers-1]->random_gen) )
+    {
+        layers[n_layers-1]->random_gen = random_gen;
+        layers[n_layers-1]->forget();
+    }
     activations[n_layers-1].resize( layers[n_layers-1]->size );
     expectations[n_layers-1].resize( layers[n_layers-1]->size );
     activation_gradients[n_layers-1].resize( layers[n_layers-1]->size );
