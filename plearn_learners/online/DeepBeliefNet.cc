@@ -287,8 +287,8 @@ void DeepBeliefNet::build_()
     {
         if( training_schedule.length() != n_layers )
         {
-            MODULE_LOG << "training_schedule.length() != n_layers,"
-               << " resizing and zeroing" << endl;
+            PLWARNING("In DeepBeliefNet::build_ - training_schedule.length() "
+                    "!= n_layers, resizing and zeroing");
             training_schedule.resize( n_layers );
             training_schedule.fill( 0 );
         }
