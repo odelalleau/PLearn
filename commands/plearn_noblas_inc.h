@@ -109,6 +109,7 @@
 #include <plearn/ker/GaussianKernel.h>
 #include <plearn/ker/GeodesicDistanceKernel.h>
 #include <plearn/ker/IIDNoiseKernel.h>
+#include <plearn/ker/LinearARDKernel.h>
 #include <plearn/ker/NegOutputCostFunction.h>
 #include <plearn/ker/NeuralNetworkARDKernel.h>
 #include <plearn/ker/PolynomialKernel.h>
