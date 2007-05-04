@@ -6,10 +6,8 @@ hidden_size = 2
 n_classes = 2
 cd_learning_rate = 0.1
 grad_learning_rate = 0.2
-n_epochs_cd = 500
-n_epochs_grad = 200
-
-random_gen = pl.PRandom( seed = 1827 )
+n_epochs_cd = 20
+n_epochs_grad = 10
 
 dataset = pl.MemoryVMatrix(
         data = TMat( 2, 3, [
@@ -29,8 +27,7 @@ layers = [
 connections = [
     pl.RBMMatrixConnection(
             down_size = input_size,
-            up_size = hidden_size,
-            random_gen = random_gen
+            up_size = hidden_size
             )
     ]
 

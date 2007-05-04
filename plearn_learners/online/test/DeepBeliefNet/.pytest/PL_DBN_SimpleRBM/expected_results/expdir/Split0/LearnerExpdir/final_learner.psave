@@ -3,14 +3,14 @@ cd_learning_rate = 0.0100000000000000002 ;
 grad_learning_rate = 0.100000000000000006 ;
 batch_size = 1 ;
 n_classes = 2 ;
-training_schedule = 2 [ 500 200 ] ;
+training_schedule = 2 [ 18 10 ] ;
 use_classification_cost = 1 ;
 reconstruct_layerwise = 0 ;
 layers = 2 [ *1 ->RBMBinomialLayer(
 size = 2 ;
 learning_rate = 0.100000000000000006 ;
 momentum = 0 ;
-bias = 2 [ -0.0199999999999999969 -0.0700000000000000067 ] ;
+bias = 2 [ -0.0299999999999999989 0 ] ;
 input_size = 2 ;
 output_size = 2 ;
 estimate_simpler_diag_hessian = 0 ;
@@ -23,7 +23,7 @@ fixed_seed = 0  )
 size = 2 ;
 learning_rate = 0.100000000000000006 ;
 momentum = 0 ;
-bias = 2 [ 0.0184590041176110851 0.0895609675177923836 ] ;
+bias = 2 [ 0.00746183420346141837 0.00401358957022955078 ] ;
 input_size = 2 ;
 output_size = 2 ;
 estimate_simpler_diag_hessian = 0 ;
@@ -32,8 +32,8 @@ random_gen = *2   )
 ] ;
 connections = 1 [ *4 ->RBMMatrixConnection(
 weights = 2  2  [ 
--1.59837331928657034 	1.8295042798815826 	
-1.73212799618271029 	-1.52310444076397178 	
+-0.247752783231626278 	0.590442976497255634 	
+0.489552741554161119 	-0.317583248355345849 	
 ]
 ;
 down_size = 2 ;
@@ -52,8 +52,8 @@ previous_to_last = *4  ;
 last_layer = *3  ;
 last_to_target = *6 ->RBMMatrixConnection(
 weights = 2  2  [ 
--1.77816311555289408 	1.56821597880702068 	
-1.34585893926292788 	-1.83022653317070905 	
+-0.58309332149676929 	0.362149014836746885 	
+0.117267655399388632 	-0.687182627254732004 	
 ]
 ;
 down_size = 2 ;
@@ -71,7 +71,7 @@ target_layer = *7 ->RBMMultinomialLayer(
 size = 2 ;
 learning_rate = 0.100000000000000006 ;
 momentum = 0 ;
-bias = 2 [ 0.0346088417820661493 -0.0346088417820665101 ] ;
+bias = 2 [ 0.0324754185935069162 -0.0324754185935069509 ] ;
 input_size = 2 ;
 output_size = 2 ;
 estimate_simpler_diag_hessian = 0 ;
@@ -119,13 +119,13 @@ gibbs_down_state = 1 [ 0  0  [
 ]
 ] ;
 seed = 1827 ;
-stage = 700 ;
+stage = 28 ;
 n_examples = 2 ;
 inputsize = 2 ;
 targetsize = 1 ;
 weightsize = 0 ;
 forget_when_training_set_changes = 0 ;
-nstages = 700 ;
+nstages = 28 ;
 report_progress = 1 ;
 verbosity = 1 ;
 nservers = 0 ;

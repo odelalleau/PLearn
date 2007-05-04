@@ -72,8 +72,8 @@ random_gen = *8   )
 ] ;
 connections = 1 [ *10 ->RBMMatrixConnection(
 weights = 2  2  [ 
--0.560455637071321955 	0.444593612352269352 	
-0.660992724240852536 	-0.608576095398922656 	
+0.211616747512905684 	0.21566475046848535 	
+0.59211590021607885 	0.667132771633056398 	
 ]
 ;
 down_size = 2 ;
@@ -92,8 +92,8 @@ previous_to_last = *10  ;
 last_layer = *9  ;
 last_to_target = *12 ->RBMMatrixConnection(
 weights = 2  2  [ 
--0.560455637071321955 	0.444593612352269352 	
-0.660992724240852536 	-0.608576095398922656 	
+-0.166376995329432703 	0.522222782976989097 	
+0.449826313170107683 	-0.266489754613600693 	
 ]
 ;
 down_size = 2 ;
@@ -200,14 +200,14 @@ oracle = *16 ->EarlyStoppingOracle(
 option = "training_schedule[0]" ;
 values = []
 ;
-range = 3 [ 0 501 2 ] ;
+range = 3 [ 0 21 2 ] ;
 min_value = -3.4028234663852886e+38 ;
 max_value = 3.4028234663852886e+38 ;
 max_degradation = 3.4028234663852886e+38 ;
 relative_max_degradation = -1 ;
 min_improvement = -3.4028234663852886e+38 ;
 relative_min_improvement = -1 ;
-max_degraded_steps = 501 ;
+max_degraded_steps = 21 ;
 min_n_steps = 0  )
 ;
 provide_tester_expdir = 0 ;
@@ -223,14 +223,14 @@ oracle = *18 ->EarlyStoppingOracle(
 option = "training_schedule[1]" ;
 values = []
 ;
-range = 3 [ 2 201 2 ] ;
+range = 3 [ 2 11 2 ] ;
 min_value = -3.4028234663852886e+38 ;
 max_value = 3.4028234663852886e+38 ;
 max_degradation = 3.4028234663852886e+38 ;
 relative_max_degradation = -1 ;
 min_improvement = -3.4028234663852886e+38 ;
 relative_min_improvement = -1 ;
-max_degraded_steps = 201 ;
+max_degraded_steps = 11 ;
 min_n_steps = 0  )
 ;
 provide_tester_expdir = 0 ;
