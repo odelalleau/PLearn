@@ -252,11 +252,14 @@ void RBMMatrixConnection::update( const Mat& pos_down_values, // v_0
 
     if( momentum == 0. )
     {
+        // We use the average gradient over a mini-batch.
+        real avg_lr = learning_rate / pos_down_values.length();
+
         productScaleAcc(weights, pos_up_values, true, pos_down_values, false,
-                -learning_rate, 1.);
+                -avg_lr, 1.);
 
         productScaleAcc(weights, neg_up_values, true, neg_down_values, false,
-                learning_rate, 1.);
+                avg_lr, 1.);
     }
     else
     {
