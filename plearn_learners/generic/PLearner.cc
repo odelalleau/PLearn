@@ -987,7 +987,7 @@ tuple<PP<VecStatsCollector>, VMat, VMat> PLearner::rtest(VMat testset, PP<VecSta
 ///////////////
 bool PLearner::initTrain()
 {
-    string warn_msg = "In PLearner::trainingCheck (called by '" +
+    string warn_msg = "In PLearner::initTrain (called by '" +
         this->classname() + "') - ";
     
     // Check 'nstages' is valid.
