@@ -3,7 +3,7 @@ cd_learning_rate = 0.0100000000000000002 ;
 grad_learning_rate = 0.100000000000000006 ;
 batch_size = 1 ;
 n_classes = 2 ;
-training_schedule = 2 [ 18 10 ] ;
+training_schedule = 2 [ 20 10 ] ;
 use_classification_cost = 1 ;
 reconstruct_layerwise = 0 ;
 layers = 2 [ *1 ->RBMBinomialLayer(
@@ -119,13 +119,13 @@ gibbs_down_state = 1 [ 0  0  [
 ]
 ] ;
 seed = 1827 ;
-stage = 28 ;
+stage = 30 ;
 n_examples = 2 ;
 inputsize = 2 ;
 targetsize = 1 ;
 weightsize = 0 ;
 forget_when_training_set_changes = 0 ;
-nstages = 28 ;
+nstages = 30 ;
 report_progress = 1 ;
 verbosity = 1 ;
 nservers = 0 ;

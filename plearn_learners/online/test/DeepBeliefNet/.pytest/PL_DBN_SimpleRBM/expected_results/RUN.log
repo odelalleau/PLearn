@@ -9,148 +9,128 @@ Logging enabled for modules: DeepBeliefNet, RBMClassificationModule
 [DeepBeliefNet] build_classification_cost() called
 [RBMClassificationModule] build_() called
 [DeepBeliefNet] train() called 
-[DeepBeliefNet]   training_schedule = 0 0 
-[DeepBeliefNet]   cumulative_schedule = 0 0 0 
+[DeepBeliefNet]   training_schedule = 20 10 
+[DeepBeliefNet]   cumulative_schedule = 0 20 30 
 [DeepBeliefNet] stage = 0, target nstages = 0
  WARNING: In PLearner::initTrain (called by 'DeepBeliefNet') - The learner is already trained
 [DeepBeliefNet] train() aborted
 [DeepBeliefNet] train() called 
-[DeepBeliefNet]   training_schedule = 2 0 
-[DeepBeliefNet]   cumulative_schedule = 0 2 2 
+[DeepBeliefNet]   training_schedule = 20 10 
+[DeepBeliefNet]   cumulative_schedule = 0 20 30 
 [DeepBeliefNet] stage = 0, target nstages = 2
 [DeepBeliefNet] Training the classification module
 [DeepBeliefNet]   stage = 0
 [DeepBeliefNet]   end_stage = 2
 [DeepBeliefNet]   cd_learning_rate = 0.0100000000000000002
 [DeepBeliefNet] train() called 
-[DeepBeliefNet]   training_schedule = 4 0 
-[DeepBeliefNet]   cumulative_schedule = 0 4 4 
+[DeepBeliefNet]   training_schedule = 20 10 
+[DeepBeliefNet]   cumulative_schedule = 0 20 30 
 [DeepBeliefNet] stage = 2, target nstages = 4
 [DeepBeliefNet] Training the classification module
 [DeepBeliefNet]   stage = 2
 [DeepBeliefNet]   end_stage = 4
 [DeepBeliefNet]   cd_learning_rate = 0.0100000000000000002
 [DeepBeliefNet] train() called 
-[DeepBeliefNet]   training_schedule = 6 0 
-[DeepBeliefNet]   cumulative_schedule = 0 6 6 
+[DeepBeliefNet]   training_schedule = 20 10 
+[DeepBeliefNet]   cumulative_schedule = 0 20 30 
 [DeepBeliefNet] stage = 4, target nstages = 6
 [DeepBeliefNet] Training the classification module
 [DeepBeliefNet]   stage = 4
 [DeepBeliefNet]   end_stage = 6
 [DeepBeliefNet]   cd_learning_rate = 0.0100000000000000002
 [DeepBeliefNet] train() called 
-[DeepBeliefNet]   training_schedule = 8 0 
-[DeepBeliefNet]   cumulative_schedule = 0 8 8 
+[DeepBeliefNet]   training_schedule = 20 10 
+[DeepBeliefNet]   cumulative_schedule = 0 20 30 
 [DeepBeliefNet] stage = 6, target nstages = 8
 [DeepBeliefNet] Training the classification module
 [DeepBeliefNet]   stage = 6
 [DeepBeliefNet]   end_stage = 8
 [DeepBeliefNet]   cd_learning_rate = 0.0100000000000000002
 [DeepBeliefNet] train() called 
-[DeepBeliefNet]   training_schedule = 10 0 
-[DeepBeliefNet]   cumulative_schedule = 0 10 10 
+[DeepBeliefNet]   training_schedule = 20 10 
+[DeepBeliefNet]   cumulative_schedule = 0 20 30 
 [DeepBeliefNet] stage = 8, target nstages = 10
 [DeepBeliefNet] Training the classification module
 [DeepBeliefNet]   stage = 8
 [DeepBeliefNet]   end_stage = 10
 [DeepBeliefNet]   cd_learning_rate = 0.0100000000000000002
 [DeepBeliefNet] train() called 
-[DeepBeliefNet]   training_schedule = 12 0 
-[DeepBeliefNet]   cumulative_schedule = 0 12 12 
+[DeepBeliefNet]   training_schedule = 20 10 
+[DeepBeliefNet]   cumulative_schedule = 0 20 30 
 [DeepBeliefNet] stage = 10, target nstages = 12
 [DeepBeliefNet] Training the classification module
 [DeepBeliefNet]   stage = 10
 [DeepBeliefNet]   end_stage = 12
 [DeepBeliefNet]   cd_learning_rate = 0.0100000000000000002
 [DeepBeliefNet] train() called 
-[DeepBeliefNet]   training_schedule = 14 0 
-[DeepBeliefNet]   cumulative_schedule = 0 14 14 
+[DeepBeliefNet]   training_schedule = 20 10 
+[DeepBeliefNet]   cumulative_schedule = 0 20 30 
 [DeepBeliefNet] stage = 12, target nstages = 14
 [DeepBeliefNet] Training the classification module
 [DeepBeliefNet]   stage = 12
 [DeepBeliefNet]   end_stage = 14
 [DeepBeliefNet]   cd_learning_rate = 0.0100000000000000002
 [DeepBeliefNet] train() called 
-[DeepBeliefNet]   training_schedule = 16 0 
-[DeepBeliefNet]   cumulative_schedule = 0 16 16 
+[DeepBeliefNet]   training_schedule = 20 10 
+[DeepBeliefNet]   cumulative_schedule = 0 20 30 
 [DeepBeliefNet] stage = 14, target nstages = 16
 [DeepBeliefNet] Training the classification module
 [DeepBeliefNet]   stage = 14
 [DeepBeliefNet]   end_stage = 16
 [DeepBeliefNet]   cd_learning_rate = 0.0100000000000000002
 [DeepBeliefNet] train() called 
-[DeepBeliefNet]   training_schedule = 18 0 
-[DeepBeliefNet]   cumulative_schedule = 0 18 18 
+[DeepBeliefNet]   training_schedule = 20 10 
+[DeepBeliefNet]   cumulative_schedule = 0 20 30 
 [DeepBeliefNet] stage = 16, target nstages = 18
 [DeepBeliefNet] Training the classification module
 [DeepBeliefNet]   stage = 16
 [DeepBeliefNet]   end_stage = 18
 [DeepBeliefNet]   cd_learning_rate = 0.0100000000000000002
 [DeepBeliefNet] train() called 
-[DeepBeliefNet]   training_schedule = 20 0 
-[DeepBeliefNet]   cumulative_schedule = 0 20 20 
+[DeepBeliefNet]   training_schedule = 20 10 
+[DeepBeliefNet]   cumulative_schedule = 0 20 30 
 [DeepBeliefNet] stage = 18, target nstages = 20
 [DeepBeliefNet] Training the classification module
 [DeepBeliefNet]   stage = 18
 [DeepBeliefNet]   end_stage = 20
 [DeepBeliefNet]   cd_learning_rate = 0.0100000000000000002
 [DeepBeliefNet] train() called 
-[DeepBeliefNet]   training_schedule = 18 2 
-[DeepBeliefNet]   cumulative_schedule = 0 18 20 
-[DeepBeliefNet] stage = 18, target nstages = 20
-[DeepBeliefNet] Training the classification module
-[DeepBeliefNet]   stage = 18
-[DeepBeliefNet]   end_stage = 18
-[DeepBeliefNet]   cd_learning_rate = 0.0100000000000000002
-[DeepBeliefNet] Fine-tuning all parameters, by gradient descent
-[DeepBeliefNet]   stage = 18
-[DeepBeliefNet]   nstages = 20
-[DeepBeliefNet]   grad_learning_rate = 0.100000000000000006
-[DeepBeliefNet] train() called 
-[DeepBeliefNet]   training_schedule = 18 4 
-[DeepBeliefNet]   cumulative_schedule = 0 18 22 
+[DeepBeliefNet]   training_schedule = 20 10 
+[DeepBeliefNet]   cumulative_schedule = 0 20 30 
 [DeepBeliefNet] stage = 20, target nstages = 22
-[DeepBeliefNet] Training the classification module
-[DeepBeliefNet]   stage = 20
-[DeepBeliefNet]   end_stage = 18
-[DeepBeliefNet]   cd_learning_rate = 0.0100000000000000002
 [DeepBeliefNet] Fine-tuning all parameters, by gradient descent
 [DeepBeliefNet]   stage = 20
-[DeepBeliefNet]   nstages = 22
+[DeepBeliefNet]   end_stage = 22
 [DeepBeliefNet]   grad_learning_rate = 0.100000000000000006
 [DeepBeliefNet] train() called 
-[DeepBeliefNet]   training_schedule = 18 6 
-[DeepBeliefNet]   cumulative_schedule = 0 18 24 
+[DeepBeliefNet]   training_schedule = 20 10 
+[DeepBeliefNet]   cumulative_schedule = 0 20 30 
 [DeepBeliefNet] stage = 22, target nstages = 24
-[DeepBeliefNet] Training the classification module
-[DeepBeliefNet]   stage = 22
-[DeepBeliefNet]   end_stage = 18
-[DeepBeliefNet]   cd_learning_rate = 0.0100000000000000002
 [DeepBeliefNet] Fine-tuning all parameters, by gradient descent
 [DeepBeliefNet]   stage = 22
-[DeepBeliefNet]   nstages = 24
+[DeepBeliefNet]   end_stage = 24
 [DeepBeliefNet]   grad_learning_rate = 0.100000000000000006
 [DeepBeliefNet] train() called 
-[DeepBeliefNet]   training_schedule = 18 8 
-[DeepBeliefNet]   cumulative_schedule = 0 18 26 
+[DeepBeliefNet]   training_schedule = 20 10 
+[DeepBeliefNet]   cumulative_schedule = 0 20 30 
 [DeepBeliefNet] stage = 24, target nstages = 26
-[DeepBeliefNet] Training the classification module
-[DeepBeliefNet]   stage = 24
-[DeepBeliefNet]   end_stage = 18
-[DeepBeliefNet]   cd_learning_rate = 0.0100000000000000002
 [DeepBeliefNet] Fine-tuning all parameters, by gradient descent
 [DeepBeliefNet]   stage = 24
-[DeepBeliefNet]   nstages = 26
+[DeepBeliefNet]   end_stage = 26
 [DeepBeliefNet]   grad_learning_rate = 0.100000000000000006
 [DeepBeliefNet] train() called 
-[DeepBeliefNet]   training_schedule = 18 10 
-[DeepBeliefNet]   cumulative_schedule = 0 18 28 
+[DeepBeliefNet]   training_schedule = 20 10 
+[DeepBeliefNet]   cumulative_schedule = 0 20 30 
 [DeepBeliefNet] stage = 26, target nstages = 28
-[DeepBeliefNet] Training the classification module
-[DeepBeliefNet]   stage = 26
-[DeepBeliefNet]   end_stage = 18
-[DeepBeliefNet]   cd_learning_rate = 0.0100000000000000002
 [DeepBeliefNet] Fine-tuning all parameters, by gradient descent
 [DeepBeliefNet]   stage = 26
-[DeepBeliefNet]   nstages = 28
+[DeepBeliefNet]   end_stage = 28
+[DeepBeliefNet]   grad_learning_rate = 0.100000000000000006
+[DeepBeliefNet] train() called 
+[DeepBeliefNet]   training_schedule = 20 10 
+[DeepBeliefNet]   cumulative_schedule = 0 20 30 
+[DeepBeliefNet] stage = 28, target nstages = 30
+[DeepBeliefNet] Fine-tuning all parameters, by gradient descent
+[DeepBeliefNet]   stage = 28
+[DeepBeliefNet]   end_stage = 30
 [DeepBeliefNet]   grad_learning_rate = 0.100000000000000006

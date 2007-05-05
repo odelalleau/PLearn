@@ -88,7 +88,12 @@ public:
     int n_classes;
 
     //! Number of examples to use during each phase of learning:
-    //! first the greedy phases, and then the gradient descent
+    //! first the greedy phases, and then the fine-tuning phase.
+    //! However, the learning will stop as soon as we reach nstages.
+    //! For example for 2 hidden layers, with 1000 examples in each
+    //! greedy phase, and 500 in the fine-tuning phase, this option
+    //! should be [1000 1000 500], and nstages should be at least 2500.
+    //! When online = true, this vector is ignored and should be empty.
     TVec<int> training_schedule;
 
     //! If the first cost function is the NLL in classification,
@@ -100,8 +105,8 @@ public:
     //! This is done using cross-entropy between actual and reconstructed.
     //! This option automatically adds the following cost names:
     //! layerwise_reconstruction_error (sum over all layers)
-    //!   layer1_reconstruction_error (only layer 1)
-    //!   layer2_reconstruction_error (only layer 2)
+    //!   layer0.reconstruction_error (only layers[0])
+    //!   layer1.reconstruction_error (only layers[1])
     //!   etc.
     bool reconstruct_layerwise;
 

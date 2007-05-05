@@ -34,7 +34,7 @@ cd_learning_rate = 0.0100000000000000002 ;
 grad_learning_rate = 0.100000000000000006 ;
 batch_size = 1 ;
 n_classes = 2 ;
-training_schedule = 2 [ 18 10 ] ;
+training_schedule = 2 [ 20 10 ] ;
 use_classification_cost = 1 ;
 reconstruct_layerwise = 0 ;
 layers = 2 [ *6 ->RBMBinomialLayer(
@@ -150,13 +150,13 @@ gibbs_down_state = 1 [ 0  0  [
 ]
 ] ;
 seed = 1827 ;
-stage = 28 ;
+stage = 30 ;
 n_examples = 2 ;
 inputsize = 2 ;
 targetsize = 1 ;
 weightsize = 0 ;
 forget_when_training_set_changes = 0 ;
-nstages = 28 ;
+nstages = 30 ;
 report_progress = 1 ;
 verbosity = 1 ;
 nservers = 0 ;
@@ -183,45 +183,22 @@ save_test_confidence = 0 ;
 enforce_clean_expdir = 1  )
 ;
 option_fields = 1 [ "nstages" ] ;
-dont_restart_upon_change = 2 [ "training_schedule[0]" "training_schedule[1]" ] ;
-strategy = 2 [ *14 ->HyperOptimize(
+dont_restart_upon_change = 1 [ "nstages" ] ;
+strategy = 1 [ *14 ->HyperOptimize(
 which_cost = "2" ;
 min_n_trials = 0 ;
 oracle = *15 ->EarlyStoppingOracle(
-option = "training_schedule[0]" ;
+option = "nstages" ;
 values = []
 ;
-range = 3 [ 0 21 2 ] ;
+range = 3 [ 0 31 2 ] ;
 min_value = -3.4028234663852886e+38 ;
 max_value = 3.4028234663852886e+38 ;
 max_degradation = 3.4028234663852886e+38 ;
 relative_max_degradation = -1 ;
 min_improvement = -3.4028234663852886e+38 ;
 relative_min_improvement = -1 ;
-max_degraded_steps = 21 ;
-min_n_steps = 0  )
-;
-provide_tester_expdir = 0 ;
-sub_strategy = []
-;
-rerun_after_sub = 0 ;
-provide_sub_expdir = 1 ;
-splitter = *0  )
-*16 ->HyperOptimize(
-which_cost = "2" ;
-min_n_trials = 0 ;
-oracle = *17 ->EarlyStoppingOracle(
-option = "training_schedule[1]" ;
-values = []
-;
-range = 3 [ 2 11 2 ] ;
-min_value = -3.4028234663852886e+38 ;
-max_value = 3.4028234663852886e+38 ;
-max_degradation = 3.4028234663852886e+38 ;
-relative_max_degradation = -1 ;
-min_improvement = -3.4028234663852886e+38 ;
-relative_min_improvement = -1 ;
-max_degraded_steps = 11 ;
+max_degraded_steps = 31 ;
 min_n_steps = 0  )
 ;
 provide_tester_expdir = 0 ;
