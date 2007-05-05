@@ -328,7 +328,7 @@ void RBMBinomialLayer::fpropNLL(const Mat& targets, Mat costs_column)
                 // nll -= (1-target[i]) * pl_log(1-output[i]);
                 // log (1 - 1/(1+exp(-x))) = log(exp(-x)/(1+exp(-x))) = 
                 //                         = -x -log(1+exp(-x)) = -x-softplus(-x)
-                nll += target[i] * (activation[i]+softplus(activation[i]));
+                nll += target[i] * (activation[i]+softplus(-activation[i]));
 
         }
         costs_column(k,0) = nll;
