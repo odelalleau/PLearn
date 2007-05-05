@@ -376,7 +376,7 @@ void DeepBeliefNet::build_costs()
 
     if( reconstruct_layerwise )
     {
-        reconstruction_costs.resize(n_layers-1);
+        reconstruction_costs.resize(n_layers);
 
         cost_names.append("layerwise_reconstruction_error");
         reconstruction_cost_index = current_index;
@@ -800,6 +800,8 @@ void DeepBeliefNet::train()
                         train_set->getExamples(sample_start, minibatch_size,
                                 inputs, targets, weights, NULL, true);
                         train_costs_m.fill(MISSING_VALUE);
+                        if (reconstruct_layerwise)
+                            train_costs_m.column(reconstruction_cost_index).clear();
                         greedyStep( inputs, targets, i , train_costs_m);
                         for (int k = 0; k < minibatch_size; k++)
                             train_stats->update(train_costs_m(k));
@@ -1415,22 +1417,23 @@ void DeepBeliefNet::greedyStep( const Mat& inputs, const Mat& targets, int index
         */
     }
 
+    if (reconstruct_layerwise)
+    {
+        layer_inputs.resize(minibatch_size,layers[index]->size);
+        layer_inputs << layers[index]->getExpectations(); // we will perturb these, so save them
+        connections[index]->setAsUpInputs(layers[index+1]->getExpectations());
+        layers[index]->getAllActivations(connections[index], 0, true);
+        layers[index]->fpropNLL(inputs, train_costs_m.column(reconstruction_cost_index+index+1));
+        Mat rc = train_costs_m.column(reconstruction_cost_index);
+        rc += train_costs_m.column(reconstruction_cost_index+index+1);
+        layers[index]->setExpectations(layer_inputs); // and restore them here
+    }
+
     contrastiveDivergenceStep( layers[ index ],
                                connections[ index ],
                                layers[ index+1 ],
                                index, true);
 
-    if (reconstruct_layerwise)
-    {
-        connections[index]->setAsUpInputs(layers[index+1]->getExpectations());
-        layers[index]->getAllActivations(connections[index], 0, true);
-        layers[index]->fpropNLL(inputs, train_costs_m.column(reconstruction_cost_index+index+1));
-        Mat rc = train_costs_m.column(reconstruction_cost_index);
-        if (rc.hasMissing())
-            rc << train_costs_m.column(reconstruction_cost_index+index+1);
-        else
-            rc += train_costs_m.column(reconstruction_cost_index+index+1);
-    }
 }
 
 /////////////////////
@@ -1720,12 +1723,13 @@ void DeepBeliefNet::fineTuningStep(const Mat& inputs, const Mat& targets,
     }
 
     // do it AFTER the bprop to avoid interfering with activations used in bprop
-    // (and do not worry that the weights have changed a bit)
+    // (and do not worry that the weights have changed a bit). This is incoherent
+    // with the current implementation in the greedy stage.
     if (reconstruct_layerwise)
     {
         Mat rc = train_costs.column(reconstruction_cost_index);
         rc.clear();
-        for( int index=0 ; index<n_layers-2 ; index++ )
+        for( int index=0 ; index<n_layers-1 ; index++ )
         {
             layer_inputs.resize(minibatch_size,layers[index]->size);
             layer_inputs << layers[index]->getExpectations();
