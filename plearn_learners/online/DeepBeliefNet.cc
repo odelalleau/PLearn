@@ -220,7 +220,7 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   "negative phase statistics). If = 1, then do not perform any contrastive\n"
                   "divergence negative phase (use only the Gibbs chain statistics).\n");
 
-    declareOption(ol, "gibbs_chain_statistics_forgetting_factor", 
+    declareOption(ol, "gibbs_chain_statistics_forgetting_factor",
                   &DeepBeliefNet::gibbs_chain_statistics_forgetting_factor,
                   OptionBase::buildoption,
                   "Negative chain statistics are forgotten at this rate (a value of 0\n"
@@ -614,7 +614,6 @@ void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(final_cost_output,        copies);
     deepCopyField(class_output,             copies);
     deepCopyField(class_gradient,           copies);
-    deepCopyField(class_input_gradient,     copies);
     deepCopyField(final_cost_gradient,      copies);
     deepCopyField(final_cost_gradients,     copies);
     deepCopyField(save_layer_activation,    copies);
@@ -1586,10 +1585,9 @@ void DeepBeliefNet::fineTuningStep( const Vec& input, const Vec& target,
 
         classification_module->bpropUpdate( layers[ n_layers-2 ]->expectation,
                                             class_output,
-                                            class_input_gradient,
-                                            class_gradient );
-
-        expectation_gradients[n_layers-2] += class_input_gradient;
+                                            expectation_gradients[n_layers-2],
+                                            class_gradient,
+                                            true );
     }
 
     for( int i=n_layers-2 ; i>0 ; i-- )
@@ -1702,10 +1700,9 @@ void DeepBeliefNet::fineTuningStep(const Mat& inputs, const Mat& targets,
 
         classification_module->bpropUpdate( layers[ n_layers-2 ]->expectation,
                                             class_output,
-                                            class_input_gradient,
-                                            class_gradient );
-
-        expectation_gradients[n_layers-2] += class_input_gradient;
+                                            expectation_gradients[n_layers-2],
+                                            class_gradient,
+                                            true );
         */
     }
 
@@ -1777,7 +1774,7 @@ void DeepBeliefNet::contrastiveDivergenceStep(
         pos_up_vals << up_layer->getExpectations();
 
         // down propagation, starting from a sample of up_layer
-        if (background_gibbs_update_ratio<1) 
+        if (background_gibbs_update_ratio<1)
             // then do some contrastive divergence, o/w only background Gibbs
         {
             up_layer->generateSamples();
@@ -1811,8 +1808,8 @@ void DeepBeliefNet::contrastiveDivergenceStep(
                 cd_neg_up_vals << neg_up_vals;
             }
         }
-        // 
-        if (background_gibbs_update_ratio>0) 
+        //
+        if (background_gibbs_update_ratio>0)
         {
             Mat down_state = gibbs_down_state[layer_index];
 
@@ -1827,7 +1824,7 @@ void DeepBeliefNet::contrastiveDivergenceStep(
                 }
                 initialize_gibbs_chain=false;
             }
-            else 
+            else
             {
                 // sample up state given down state
                 connection->setAsDownInputs(down_state);
@@ -1837,7 +1834,7 @@ void DeepBeliefNet::contrastiveDivergenceStep(
             up_layer->generateSamples();
 
             // update using the down_state and up_layer->expectations for moving average in negative phase
-            // (and optionally 
+            // (and optionally
             if (background_gibbs_update_ratio<1)
             {
                 down_layer->updateCDandGibbs(pos_down_vals,cd_neg_down_vals,
@@ -1932,7 +1929,7 @@ void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
             layer_input << layers[i]->expectation;
             connections[i]->setAsUpInput(layers[i+1]->expectation);
             layers[i]->getAllActivations(connections[i]);
-            real rc = reconstruction_costs[i+1] = layers[i]->fpropNLL( layer_input ); 
+            real rc = reconstruction_costs[i+1] = layers[i]->fpropNLL( layer_input );
             reconstruction_costs[0] += rc;
         }
     }
@@ -1966,7 +1963,7 @@ void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
             layer_input << layers[n_layers-2]->expectation;
             connections[n_layers-2]->setAsUpInput(layers[n_layers-1]->expectation);
             layers[n_layers-2]->getAllActivations(connections[n_layers-2]);
-            real rc = reconstruction_costs[n_layers-1] = layers[n_layers-2]->fpropNLL( layer_input ); 
+            real rc = reconstruction_costs[n_layers-1] = layers[n_layers-2]->fpropNLL( layer_input );
             reconstruction_costs[0] += rc;
         }
     }
