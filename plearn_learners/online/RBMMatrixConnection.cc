@@ -318,7 +318,7 @@ void RBMMatrixConnection::updateCDandGibbs( const Mat& pos_down_values,
     productScaleAcc(weights,
                     cd_neg_up_values, true,
                     cd_neg_down_values, false,
-                    learning_rate*(1-background_gibbs_update_ratio),1.);
+                    -learning_rate*(1-background_gibbs_update_ratio),1.);
 }
 
 void RBMMatrixConnection::updateGibbs( const Mat& pos_down_values,

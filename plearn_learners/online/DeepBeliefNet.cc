@@ -705,7 +705,7 @@ void DeepBeliefNet::train()
             activations_gradients[i].resize(minibatch_size, layers[i]->size);
             expectations_gradients[i].resize(minibatch_size, layers[i]->size);
 
-            if (background_gibbs_update_ratio>0)
+            if (background_gibbs_update_ratio>0 && i<n_layers-1)
                 gibbs_down_state[i].resize(minibatch_size, layers[i]->size);
         }
         if (final_cost)
@@ -748,6 +748,7 @@ void DeepBeliefNet::train()
 
         for( ; stage<nstages; stage++)
         {
+            initialize_gibbs_chain=(stage%gibbs_chain_reinit_freq==0);
             // Do a step every 'minibatch_size' examples.
             if (stage % minibatch_size == 0) {
                 int sample_start = stage % nsamples;
@@ -793,6 +794,7 @@ void DeepBeliefNet::train()
 
             for( ; stage<end_stage ; stage++ )
             {
+                initialize_gibbs_chain=(stage%gibbs_chain_reinit_freq==0);
                 // Do a step every 'minibatch_size' examples.
                 if (stage % minibatch_size == 0) {
                     int sample_start = stage % nsamples;
@@ -841,6 +843,7 @@ void DeepBeliefNet::train()
             int previous_stage = cumulative_schedule[n_layers-2];
             for( ; stage<end_stage ; stage++ )
             {
+                initialize_gibbs_chain=(stage%gibbs_chain_reinit_freq==0);
                 int sample = stage % nsamples;
                 train_set->getExample( sample, input, target, weight );
                 jointGreedyStep( input, target );
@@ -872,7 +875,7 @@ void DeepBeliefNet::train()
         bool update_stats = false;
         for( ; stage<end_stage ; stage++ )
         {
-            initialize_gibbs_chain=(stage%gibbs_chain_reinit_freq==0);
+
             // Update every 'minibatch_size' samples.
             if (stage % minibatch_size == 0) {
                 int sample_start = stage % nsamples;
@@ -1423,7 +1426,7 @@ void DeepBeliefNet::greedyStep( const Mat& inputs, const Mat& targets, int index
         layer_inputs << layers[index]->getExpectations(); // we will perturb these, so save them
         connections[index]->setAsUpInputs(layers[index+1]->getExpectations());
         layers[index]->getAllActivations(connections[index], 0, true);
-        layers[index]->fpropNLL(inputs, train_costs_m.column(reconstruction_cost_index+index+1));
+        layers[index]->fpropNLL(layer_inputs, train_costs_m.column(reconstruction_cost_index+index+1));
         Mat rc = train_costs_m.column(reconstruction_cost_index);
         rc += train_costs_m.column(reconstruction_cost_index+index+1);
         layers[index]->setExpectations(layer_inputs); // and restore them here

@@ -419,34 +419,58 @@ void RBMLayer::update( const Mat& pos_values, const Mat& neg_values)
 //////////////////////
 // updateCDandGibbs //
 //////////////////////
-// neg_stats <-- gibbs_chain_statistics_forgetting_factor * neg_stats
-//              +(1-gibbs_chain_statistics_forgetting_factor)
-//               * gibbs_neg_values
-// delta w = lrate * ( pos_values
-//                  - ( background_gibbs_update_ratio*neg_stats
-//                     +(1-background_gibbs_update_ratio)
-//                      * cd_neg_values ) )
 void RBMLayer::updateCDandGibbs( const Mat& pos_values,
                                  const Mat& cd_neg_values,
                                  const Mat& gibbs_neg_values,
                                  real background_gibbs_update_ratio,
                                  real gibbs_chain_statistics_forgetting_factor)
 {
-    PLASSERT_MSG(false, "Not implemented by subclass!");
+    PLASSERT(pos_values.width()==size);
+    PLASSERT(cd_neg_values.width()==size);
+    PLASSERT(gibbs_neg_values.width()==size);
+    int minibatch_size=gibbs_neg_values.length();
+    PLASSERT(pos_values.length()==minibatch_size);
+    PLASSERT(cd_neg_values.length()==minibatch_size);
+
+    // neg_stats <-- gibbs_chain_statistics_forgetting_factor * neg_stats
+    //              +(1-gibbs_chain_statistics_forgetting_factor)
+    //               * sumoverrows(gibbs_neg_values)
+    tmp.resize(size);
+    columnSum(gibbs_neg_values,tmp);
+    multiplyScaledAdd(tmp,gibbs_chain_statistics_forgetting_factor,
+                      (1-gibbs_chain_statistics_forgetting_factor),bias_neg_stats);
+    // delta w = -lrate * ( sumoverrows(pos_values)
+    //                   - ( background_gibbs_update_ratio*neg_stats
+    //                      +(1-background_gibbs_update_ratio)
+    //                       * sumoverrows(cd_neg_values) ) )
+    columnSum(pos_values,tmp);
+    multiplyAcc(bias, tmp, -learning_rate);
+    multiplyAcc(bias,bias_neg_stats,learning_rate*background_gibbs_update_ratio);
+    columnSum(cd_neg_values, tmp);
+    multiplyAcc(bias, tmp, -learning_rate*(1-background_gibbs_update_ratio));
 }
 
 /////////////////
 // updateGibbs //
 /////////////////
-// neg_stats <-- gibbs_chain_statistics_forgetting_factor * neg_stats
-//              +(1-gibbs_chain_statistics_forgetting_factor)
-//               * gibbs_neg_values
-// delta w = lrate * ( pos_values - neg_stats )
 void RBMLayer::updateGibbs( const Mat& pos_values,
                             const Mat& gibbs_neg_values,
                             real gibbs_chain_statistics_forgetting_factor)
 {
-    PLASSERT_MSG(false, "Not implemented by subclass!");
+    PLASSERT(pos_values.width()==size);
+    PLASSERT(gibbs_neg_values.width()==size);
+    PLASSERT(pos_values.length()==gibbs_neg_values.length());
+    // neg_stats <-- gibbs_chain_statistics_forgetting_factor * neg_stats
+    //              +(1-gibbs_chain_statistics_forgetting_factor)
+    //               * sumoverrows(gibbs_neg_values)
+    tmp.resize(size);
+    columnSum(gibbs_neg_values,tmp);
+    multiplyScaledAdd(tmp,gibbs_chain_statistics_forgetting_factor,
+                      (1-gibbs_chain_statistics_forgetting_factor),bias_neg_stats);
+    // delta w = -lrate * ( sumoverrows(pos_values - neg_stats ) )
+    columnSum(pos_values,tmp);
+    multiplyAcc(bias, tmp, -learning_rate);
+    multiplyAcc(bias,bias_neg_stats,learning_rate);
 }
 
 ////////////////
