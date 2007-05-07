@@ -171,6 +171,7 @@ void RBMLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(bias_inc,       copies);
     deepCopyField(ones,           copies);
     deepCopyField(expectations,   copies);
+    deepCopyField(tmp,            copies);
 }
 
 

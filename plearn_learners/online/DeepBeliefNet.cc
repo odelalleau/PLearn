@@ -600,6 +600,7 @@ void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(final_cost,               copies);
     deepCopyField(partial_costs,            copies);
     deepCopyField(classification_module,    copies);
+    deepCopyField(cost_names,               copies);
     deepCopyField(timer,                    copies);
     deepCopyField(classification_cost,      copies);
     deepCopyField(joint_layer,              copies);
@@ -626,8 +627,11 @@ void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(cd_neg_down_vals,         copies);
     deepCopyField(gibbs_down_state,         copies);
     deepCopyField(optimized_costs,          copies);
+    deepCopyField(reconstruction_costs,     copies);
     deepCopyField(partial_costs_indices,    copies);
     deepCopyField(cumulative_schedule,      copies);
+    deepCopyField(layer_input,              copies);
+    deepCopyField(layer_inputs,             copies);
 }
 
 
