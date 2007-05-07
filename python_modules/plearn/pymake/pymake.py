@@ -986,8 +986,9 @@ def sequential_link(executables_to_link, linkname):
             print '   '+string.join(failures,'\n   ')
             return 1
         else:
-            print 'Waiting for NFS to catch up...'
-            ccfile.nfs_wait_for_all_linkable_ofiles()
+            if not local_compilation:
+                print 'Waiting for NFS to catch up...'
+                ccfile.nfs_wait_for_all_linkable_ofiles()
             if local_ofiles:
                 copy_ofiles_locally(executables_to_link)
             if verbose>=2:
