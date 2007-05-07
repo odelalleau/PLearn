@@ -91,8 +91,9 @@ Options that will not affect the final compiled file:
   -force: force recompilation of all necessary files,
           even if they are up to date.
   -link: force relinking of the target, even if it is up to date.
-  -local: do not use parallel compilation, even if there is a
-          .pymake/<platform>.hosts file.
+  -local[=nb proc]: do not use parallel compilation, even if there is a
+          .pymake/<platform>.hosts file. Will compile with nb_proc
+          (default is 1) process on the local computer
   -local_ofiles: use parallel compilation, but copy all .o files
                  to /tmp/.pymake/local_ofiles/... prior to linking;
                  target is created locally and then copied to its
@@ -2503,13 +2504,21 @@ def main( args ):
         force_link = 0;
 
     # do we want to do everything locally?
-    if 'local' in optionargs:
-        local_compilation = 1
-        optionargs.remove('local')
-    elif platform == 'win32':
+    if platform == 'win32':
         local_compilation = 1 # in windows, we ALWAYS work locally
     else:
         local_compilation = 0
+    for option in optionargs:
+        if option.count('local', 0, 5)==1:
+            local_compilation = 1
+            optionargs.remove(option)
+            if (option != 'local'):
+                if (option[5] != '='):
+                    print 'Syntax for \'-local\' option is \'-local=<directory>\', but' \
+                          ' read \'' + option + '\': one processor will be used'
+                    nprocesses_per_processor=1
+                else:
+                    nprocesses_per_processor=int(option[6:])
 
     if 'local_ofiles' in optionargs:
         local_ofiles = 1
@@ -2542,7 +2551,11 @@ def main( args ):
                     objsdir = option[4:]
                 optionargs.remove(option)
                 optionargs.append('tmp')
-        elif option[0] == 'v':
+
+    # I do multiple for on optionarfs, as their is a bug that make that not all
+    # elements of optionsargs are computed
+    for option in optionargs:
+        if option[0] == 'v':
             remove_verbosity_option = True
             if option == 'v' or option == 'v1' or option == 'v0':
                 verbose = 1
