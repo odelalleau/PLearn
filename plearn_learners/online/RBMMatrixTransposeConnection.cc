@@ -89,6 +89,11 @@ void RBMMatrixTransposeConnection::build_()
     down_size = rbm_matrix_connection->up_size;
     up_size = rbm_matrix_connection->down_size;
 
+    // For compatibility with OnlineLearningModule inherited functions
+    input_size = down_size;
+    output_size = up_size;
+
+
     weights_pos_stats.resize( down_size, up_size );
     weights_neg_stats.resize( down_size, up_size );
 
