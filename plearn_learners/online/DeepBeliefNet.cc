@@ -674,7 +674,7 @@ void DeepBeliefNet::forget()
     if( final_cost )
         final_cost->forget();
 
-    if( partial_costs )
+    if( !partial_costs.isEmpty() )
         for( int i=0 ; i<n_layers-1 ; i++ )
             if( partial_costs[i] )
                 partial_costs[i]->forget();
@@ -926,7 +926,7 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
     PLASSERT(batch_size == 1);
 
     TVec<Vec> cost;
-    if (partial_costs)
+    if (!partial_costs.isEmpty())
         cost.resize(n_layers-1);
 
     layers[0]->expectation << input;
@@ -941,7 +941,7 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
         layers[i+1]->computeExpectation();
 
         // propagate into local cost associated to output of layer i+1
-        if( partial_costs && partial_costs[ i ] )
+        if( !partial_costs.isEmpty() && partial_costs[ i ] )
         {
             partial_costs[ i ]->fprop( layers[ i+1 ]->expectation,
                                        target, cost[i] );
@@ -996,7 +996,7 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
             << final_cost_value;
     }
 
-    if ( final_cost || (partial_costs && partial_costs[n_layers-2]) )
+    if (final_cost || (!partial_costs.isEmpty() && partial_costs[n_layers-2]))
     {
         layers[n_layers-1]->setLearningRate( grad_learning_rate );
         connections[n_layers-2]->setLearningRate( grad_learning_rate );
@@ -1193,7 +1193,7 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
             << final_cost_values;
     }
 
-    if ( final_cost || (partial_costs && partial_costs[n_layers-2]) )
+    if (final_cost || (!partial_costs.isEmpty() && partial_costs[n_layers-2]))
     {
         layers[n_layers-1]->setLearningRate( grad_learning_rate );
         connections[n_layers-2]->setLearningRate( grad_learning_rate );
@@ -1336,7 +1336,7 @@ void DeepBeliefNet::greedyStep( const Vec& input, const Vec& target, int index )
     }
 
     // TODO: add another learning rate?
-    if( partial_costs && partial_costs[ index ] )
+    if( !partial_costs.isEmpty() && partial_costs[ index ] )
     {
         // put appropriate learning rate
         connections[ index ]->setLearningRate( grad_learning_rate );
@@ -1389,39 +1389,35 @@ void DeepBeliefNet::greedyStep( const Mat& inputs, const Mat& targets, int index
     }
 
     // TODO: add another learning rate?
-    if( partial_costs && partial_costs[ index ] )
+    if( !partial_costs.isEmpty() && partial_costs[ index ] )
     {
-        PLERROR("In DeepBeliefNet::greedyStep - Partial costs not implemented "
-                "for mini-batches");
-        /*
         // put appropriate learning rate
         connections[ index ]->setLearningRate( grad_learning_rate );
         layers[ index+1 ]->setLearningRate( grad_learning_rate );
 
         // Backward pass
-        real cost;
-        partial_costs[ index ]->fprop( layers[ index+1 ]->expectation,
-                                       target, cost );
+        Vec costs;
+        partial_costs[ index ]->fprop( layers[ index+1 ]->getExpectations(),
+                                       targets, costs );
 
-        partial_costs[ index ]->bpropUpdate( layers[ index+1 ]->expectation,
-                                             target, cost,
-                                             expectation_gradients[ index+1 ]
-                                             );
+        partial_costs[ index ]->bpropUpdate(layers[index+1]->getExpectations(),
+                targets, costs,
+                expectations_gradients[ index+1 ]
+                );
 
-        layers[ index+1 ]->bpropUpdate( layers[ index+1 ]->activation,
-                                        layers[ index+1 ]->expectation,
-                                        activation_gradients[ index+1 ],
-                                        expectation_gradients[ index+1 ] );
+        layers[ index+1 ]->bpropUpdate( layers[ index+1 ]->activations,
+                                        layers[ index+1 ]->getExpectations(),
+                                        activations_gradients[ index+1 ],
+                                        expectations_gradients[ index+1 ] );
 
-        connections[ index ]->bpropUpdate( layers[ index ]->expectation,
-                                           layers[ index+1 ]->activation,
-                                           expectation_gradients[ index ],
-                                           activation_gradients[ index+1 ] );
+        connections[ index ]->bpropUpdate( layers[ index ]->getExpectations(),
+                                           layers[ index+1 ]->activations,
+                                           expectations_gradients[ index ],
+                                           activations_gradients[ index+1 ] );
 
         // put back old learning rate
         connections[ index ]->setLearningRate( cd_learning_rate );
         layers[ index+1 ]->setLearningRate( cd_learning_rate );
-        */
     }
 
     if (reconstruct_layerwise)
@@ -1459,7 +1455,7 @@ void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
         layers[i+1]->computeExpectation();
     }
 
-    if( partial_costs && partial_costs[ n_layers-2 ] )
+    if( !partial_costs.isEmpty() && partial_costs[ n_layers-2 ] )
     {
         // Deterministic forward pass
         connections[ n_layers-2 ]->setAsDownInput(
@@ -1950,7 +1946,7 @@ void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
         classification_module->fprop( layers[ n_layers-2 ]->expectation,
                                       output );
 
-    if( final_cost || ( partial_costs && partial_costs[n_layers-2] ))
+    if( final_cost || (!partial_costs.isEmpty() && partial_costs[n_layers-2] ))
     {
         connections[ n_layers-2 ]->setAsDownInput(
             layers[ n_layers-2 ]->expectation );
@@ -2009,7 +2005,7 @@ void DeepBeliefNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
             << final_cost_value;
     }
 
-    if( partial_costs )
+    if( !partial_costs.isEmpty() )
     {
         Vec pcosts;
         for( int i=0 ; i<n_layers-1 ; i++ )
