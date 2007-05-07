@@ -1,0 +1,147 @@
+from plearn.pyplearn import *
+
+global_lr = 1e-2
+n_units = 100
+input_size = 2  # Dataset inputsize.
+n_classes = 2
+greedy_1 = 1000
+greedy_all = 1000
+use_class_cost = 0
+
+cd_lr = global_lr
+conn_lr = global_lr
+nnet_lr = global_lr
+rbm_lr = global_lr
+grad_lr = global_lr
+nstage_tot = greedy_1 + greedy_all
+
+dataset = pl.MemoryVMatrix(
+        data = TMat( 4, 3, [
+            1, 0, 0,
+            0, 1, 0,
+            1, 1, 1,
+            0, 0, 1
+            ] ),
+        inputsize = input_size,
+        targetsize = 1,
+        weightsize = 0
+        )
+
+ptesters = []
+
+for batch_size in [ 1, 3 ]:
+    for online in [ 0, 1 ]:
+        dbn = pl.DeepBeliefNet( 
+            cd_learning_rate = cd_lr,
+            batch_size = batch_size,
+            connections = [
+                pl.RBMMatrixConnection( 
+                    down_size = input_size,
+                    learning_rate = conn_lr,
+                    up_size = n_units,
+                    random_gen = pl.PRandom( seed = 1827 )
+                )
+            ],
+        
+            final_cost =
+                pl.CombiningCostsModule( 
+                    cost_weights = [ 1, 0 ],
+                    sub_costs = [
+                        pl.NLLCostModule( 
+                            input_size = n_classes,
+                            output_size = 1,
+                            target_size = 1
+                        ),
+        
+                        pl.ClassErrorCostModule( 
+                            input_size = 2,
+                            output_size = 1,
+                            target_size = 1
+                        )
+        
+                    ]
+                ),
+        
+        
+            final_module = 
+                pl.ModuleStackModule( 
+                    estimate_simpler_diag_hessian = 0,
+                    modules = [
+                        pl.GradNNetLayerModule( 
+                            input_size = n_units,
+                            output_size = 2,
+                            start_learning_rate = nnet_lr,
+                            random_gen = pl.PRandom( seed = 1827 )
+                        ),
+        
+                        pl.SoftmaxModule( 
+                            input_size = 2
+                        )
+                    ],
+                ),
+        
+            grad_learning_rate = grad_lr,
+        
+            layers = [
+                pl.RBMBinomialLayer( 
+                    learning_rate = rbm_lr,
+                    size = input_size
+                ),
+        
+                pl.RBMBinomialLayer( 
+                    learning_rate = rbm_lr,
+                    size = n_units
+                )
+            ],
+        
+        
+            n_classes = 2,
+        
+            nstages = nstage_tot,
+        
+            online = online,
+        
+            partial_costs = [
+                pl.NLLCostModule( 
+                    input_size = n_units,
+                    output_size = 1,
+                    target_size = 1
+                )
+            ],
+        
+            reconstruct_layerwise = 0,
+        
+            training_schedule = [ greedy_1, greedy_all ],
+        
+            use_classification_cost = use_class_cost
+        
+        )
+        ptesters.append(
+                pl.PTester(
+
+                    dataset = dataset,
+                    expdir = "expdir-dbn-%s-%s" % (batch_size, online),
+                    learner = dbn,
+                    provide_learner_expdir = 0,
+                    report_stats = 1,
+                    save_initial_tester = 0,
+                    save_learners = 1,
+                    save_stat_collectors = 0,
+                    save_test_outputs = 0,
+                    splitter =
+                        pl.ExplicitSplitter( 
+                            splitsets = TMat(1, 2, [ dataset, dataset ])
+                        ),
+                    statnames = [
+                        "E[test1.E[final.NLL]]",
+                        "E[test1.E[final.class_error]]"
+                    ]
+                )
+            )
+        
+def main():
+    return pl.RunObject(
+            objects     = ptesters,
+            run_objects = True
+            )
+
