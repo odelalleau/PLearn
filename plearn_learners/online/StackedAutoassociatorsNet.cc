@@ -336,6 +336,13 @@ void StackedAutoassociatorsNet::build_costs()
     final_cost_gradient.resize( final_cost->input_size );
     final_cost->setLearningRate( fine_tuning_learning_rate );
 
+    if( !(final_cost->random_gen) )
+    {
+        final_cost->random_gen = random_gen;
+        final_cost->forget();
+    }
+
+
     if( !final_module )
         PLERROR("StackedAutoassociatorsNet::build_costs() - \n"
                 "final_module should be provided.\n");
@@ -351,6 +358,13 @@ void StackedAutoassociatorsNet::build_costs()
                 final_module->input_size);
 
     final_module->setLearningRate( fine_tuning_learning_rate );
+
+    if( !(final_module->random_gen) )
+    {
+        final_module->random_gen = random_gen;
+        final_module->forget();
+    }
+
 
     if(targetsize_ != 1)
         PLERROR("StackedAutoassociatorsNet::build_costs() - \n"
@@ -374,6 +388,12 @@ void StackedAutoassociatorsNet::build_costs()
             else
                 partial_costs_positions[i] = partial_costs_positions[i-1]
                     + partial_costs[i-1]->name().length();
+
+            if( !(partial_costs[i]->random_gen) )
+            {
+                partial_costs[i]->random_gen = random_gen;
+                partial_costs[i]->forget();
+            }
         }
     }
 }
