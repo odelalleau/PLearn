@@ -138,6 +138,7 @@ void CostModule::fprop(const Mat& inputs, const Mat& targets, Vec& costs)
     // Keep only the first cost.
     tmp_costs_mat.resize(inputs.length(), output_size);
     fprop(inputs, targets, tmp_costs_mat);
+    costs.resize(tmp_costs_mat.length());
     costs << tmp_costs_mat.column(0);
 }
 
