@@ -183,7 +183,7 @@ def outputres(f,mode,speclist,results):
       for i in range(0,ncol-1):
         name = speclist[6+i*2+1]
         f.write('@ using '+str(1+j*ncol)+':'+str(2+j*ncol+i)+' with lines t "'+name+'~'+expname+'"')
-        if j<nexp-1:
+        if j<nexp-1 or i<ncol-2:
           f.write(",")
       j=j+1
     f.write("\n")
