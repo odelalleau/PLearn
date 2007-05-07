@@ -2509,23 +2509,23 @@ def main( args ):
         local_compilation = 1 # in windows, we ALWAYS work locally
     else:
         local_compilation = 0
-    for option in optionargs:
-        if option.count('local', 0, 5)==1:
-            local_compilation = 1
-            optionargs.remove(option)
-            if (option != 'local'):
-                if (option[5] != '='):
-                    print 'Syntax for \'-local\' option is \'-local=<directory>\', but' \
-                          ' read \'' + option + '\': one processor will be used'
-                    nprocesses_per_processor=1
-                else:
-                    nprocesses_per_processor=int(option[6:])
 
     if 'local_ofiles' in optionargs:
         local_ofiles = 1
         optionargs.remove('local_ofiles')
     else:
         local_ofiles = 0
+    for option in optionargs:
+        if option.count('local', 0, 5)==1:
+            local_compilation = 1
+            optionargs.remove(option)
+            if (option != 'local'):
+                if (option[5] != '='):
+                    print 'Syntax for \'-local\' option is \'-local=<nb_proc>\', but' \
+                          ' read \'' + option + '\': one processor will be used'
+                    nprocesses_per_processor=1
+                else:
+                    nprocesses_per_processor=int(option[6:])
 
     local_ofiles_base_path= '/tmp/.pymake/local_ofiles/' # could add an option for that...
 
