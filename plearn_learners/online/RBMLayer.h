@@ -211,8 +211,8 @@ public:
 
     // neg_stats <-- gibbs_chain_statistics_forgetting_factor * neg_stats
     //              +(1-gibbs_chain_statistics_forgetting_factor)
-    //               * gibbs_neg_values
-    // delta w = -lrate * ( pos_values - neg_stats )
+    //               * \sum_i gibbs_neg_values_i / minibatch_size
+    // delta bias = -lrate * \sum_i (pos_values_i - neg_stats) / minibatch_size
     virtual void updateGibbs( const Mat& pos_values,
                               const Mat& gibbs_neg_values,
                               real gibbs_chain_statistics_forgetting_factor);
