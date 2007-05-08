@@ -297,49 +297,63 @@ void RBMMatrixConnection::updateCDandGibbs( const Mat& pos_down_values,
                                             real background_gibbs_update_ratio,
                                             real gibbs_chain_statistics_forgetting_factor)
 {
+    real normalize_factor = 1.0/pos_down_values.length();
     // neg_stats <-- gibbs_chain_statistics_forgetting_factor * neg_stats
     //              +(1-gibbs_chain_statistics_forgetting_factor)
-    //               * gibbs_neg_up_values'*gibbs_neg_down_values
-    productScaleAcc(weights_neg_stats,
-                    gibbs_neg_up_values,true,
-                    gibbs_neg_down_values,false,
-                    (1-gibbs_chain_statistics_forgetting_factor),
-                    gibbs_chain_statistics_forgetting_factor);
+    //               * gibbs_neg_up_values'*gibbs_neg_down_values/minibatch_size
+    if (neg_count==0)
+        productScaleAcc(weights_neg_stats,
+                        gibbs_neg_up_values,true,
+                        gibbs_neg_down_values,false,normalize_factor,0);
+    else
+        productScaleAcc(weights_neg_stats,
+                        gibbs_neg_up_values,true,
+                        gibbs_neg_down_values,false,
+                        normalize_factor*(1-gibbs_chain_statistics_forgetting_factor),
+                        gibbs_chain_statistics_forgetting_factor);
+    neg_count++;
 
     // delta w = -lrate * ( pos_up_values'*pos_down_values
     //                   - ( background_gibbs_update_ratio*neg_stats
     //                      +(1-background_gibbs_update_ratio)
-    //                       * cd_neg_up_values'*cd_neg_down_values))
+    //                       * cd_neg_up_values'*cd_neg_down_values/minibatch_size))
     productScaleAcc(weights,
                     pos_up_values, true,
-                    pos_down_values, false,-learning_rate,1.);
+                    pos_down_values, false,-learning_rate*normalize_factor,1.);
     multiplyAcc(weights, weights_neg_stats,
                 learning_rate*background_gibbs_update_ratio);
     productScaleAcc(weights,
                     cd_neg_up_values, true,
                     cd_neg_down_values, false,
-                    -learning_rate*(1-background_gibbs_update_ratio),1.);
+                    learning_rate*(1-background_gibbs_update_ratio)*normalize_factor,1.);
 }
 
 void RBMMatrixConnection::updateGibbs( const Mat& pos_down_values,
-                                 const Mat& pos_up_values,
-                                 const Mat& gibbs_neg_down_values,
-                                 const Mat& gibbs_neg_up_values,
-                                 real gibbs_chain_statistics_forgetting_factor)
+                                       const Mat& pos_up_values,
+                                       const Mat& gibbs_neg_down_values,
+                                       const Mat& gibbs_neg_up_values,
+                                       real gibbs_chain_statistics_forgetting_factor)
 {
+    real normalize_factor = 1.0/pos_down_values.length();
     // neg_stats <-- gibbs_chain_statistics_forgetting_factor * neg_stats
     //              +(1-gibbs_chain_statistics_forgetting_factor)
     //               * gibbs_neg_up_values'*gibbs_neg_down_values
-    productScaleAcc(weights_neg_stats,
-                    gibbs_neg_up_values,true,
-                    gibbs_neg_down_values,false,
-                    (1-gibbs_chain_statistics_forgetting_factor),
-                    gibbs_chain_statistics_forgetting_factor);
+    if (neg_count==0)
+        productScaleAcc(weights_neg_stats,
+                        gibbs_neg_up_values,true,
+                        gibbs_neg_down_values,false,normalize_factor,0);
+    else
+        productScaleAcc(weights_neg_stats,
+                        gibbs_neg_up_values,true,
+                        gibbs_neg_down_values,false,
+                        normalize_factor*(1-gibbs_chain_statistics_forgetting_factor),
+                        gibbs_chain_statistics_forgetting_factor);
+    neg_count++;
 
-    // delta w = -lrate * ( pos_up_values'*pos_down_values - neg_stats )
+    // delta w = -lrate * ( pos_up_values'*pos_down_values/minibatch_size - neg_stats )
     productScaleAcc(weights,
                     pos_up_values, true,
-                    pos_down_values, false,-learning_rate,1.);
+                    pos_down_values, false,-learning_rate*normalize_factor,1.);
     multiplyAcc(weights, weights_neg_stats,learning_rate);
 }
 

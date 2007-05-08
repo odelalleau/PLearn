@@ -432,23 +432,30 @@ void RBMLayer::updateCDandGibbs( const Mat& pos_values,
     int minibatch_size=gibbs_neg_values.length();
     PLASSERT(pos_values.length()==minibatch_size);
     PLASSERT(cd_neg_values.length()==minibatch_size);
+    real normalize_factor=1.0/minibatch_size;
 
     // neg_stats <-- gibbs_chain_statistics_forgetting_factor * neg_stats
     //              +(1-gibbs_chain_statistics_forgetting_factor)
     //               * sumoverrows(gibbs_neg_values)
     tmp.resize(size);
     columnSum(gibbs_neg_values,tmp);
-    multiplyScaledAdd(tmp,gibbs_chain_statistics_forgetting_factor,
-                      (1-gibbs_chain_statistics_forgetting_factor),bias_neg_stats);
+    if (neg_count==0)
+        multiply(tmp,normalize_factor,bias_neg_stats);
+    else
+        multiplyScaledAdd(tmp,gibbs_chain_statistics_forgetting_factor,
+                          normalize_factor*(1-gibbs_chain_statistics_forgetting_factor),
+                          bias_neg_stats);
+    neg_count++;
+
     // delta w = -lrate * ( sumoverrows(pos_values)
     //                   - ( background_gibbs_update_ratio*neg_stats
     //                      +(1-background_gibbs_update_ratio)
     //                       * sumoverrows(cd_neg_values) ) )
     columnSum(pos_values,tmp);
-    multiplyAcc(bias, tmp, -learning_rate);
+    multiplyAcc(bias, tmp, -learning_rate*normalize_factor);
     multiplyAcc(bias,bias_neg_stats,learning_rate*background_gibbs_update_ratio);
     columnSum(cd_neg_values, tmp);
-    multiplyAcc(bias, tmp, -learning_rate*(1-background_gibbs_update_ratio));
+    multiplyAcc(bias, tmp, learning_rate*(1-background_gibbs_update_ratio)*normalize_factor);
 }
 
 /////////////////
@@ -458,19 +465,27 @@ void RBMLayer::updateGibbs( const Mat& pos_values,
                             const Mat& gibbs_neg_values,
                             real gibbs_chain_statistics_forgetting_factor)
 {
+    int minibatch_size = pos_values.length();
     PLASSERT(pos_values.width()==size);
     PLASSERT(gibbs_neg_values.width()==size);
-    PLASSERT(pos_values.length()==gibbs_neg_values.length());
+    PLASSERT(minibatch_size==gibbs_neg_values.length());
     // neg_stats <-- gibbs_chain_statistics_forgetting_factor * neg_stats
     //              +(1-gibbs_chain_statistics_forgetting_factor)
-    //               * sumoverrows(gibbs_neg_values)
+    //               * meanoverrows(gibbs_neg_values)
     tmp.resize(size);
+    real normalize_factor=1.0/minibatch_size;
     columnSum(gibbs_neg_values,tmp);
-    multiplyScaledAdd(tmp,gibbs_chain_statistics_forgetting_factor,
-                      (1-gibbs_chain_statistics_forgetting_factor),bias_neg_stats);
-    // delta w = -lrate * ( sumoverrows(pos_values - neg_stats ) )
+    if (neg_count==0)
+        multiply(tmp,normalize_factor,bias_neg_stats);
+    else // bias_neg_stats <-- tmp*(1-gibbs_chain_statistics_forgetting_factor)/minibatch_size 
+        //                    +gibbs_chain_statistics_forgetting_factor*bias_neg_stats
+        multiplyScaledAdd(tmp,gibbs_chain_statistics_forgetting_factor,
+                          normalize_factor*(1-gibbs_chain_statistics_forgetting_factor),
+                          bias_neg_stats);
+    neg_count++;
+    // delta w = -lrate * ( meanoverrows(pos_values) - neg_stats ) 
     columnSum(pos_values,tmp);
-    multiplyAcc(bias, tmp, -learning_rate);
+    multiplyAcc(bias, tmp, -learning_rate*normalize_factor);
     multiplyAcc(bias,bias_neg_stats,learning_rate);
 }
 
