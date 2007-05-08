@@ -220,7 +220,9 @@ public:
                                      real probability,
                                      TVec< pair<real,real> >& intervals) const;
 
-    /// Compute the posterior mean and covariance matrix of a set of inputs
+    /// Compute the posterior mean and covariance matrix of a set of inputs.
+    /// Note that if any of the inputs contains a missing value (NaN), then
+    /// the whole covariance matrix is NaN (in the current implementation).
     virtual void computeOutputCovMat(const Mat& inputs, Mat& outputs,
                                      TVec<Mat>& covariance_matrices) const;
     

@@ -393,6 +393,12 @@ void GaussianProcessRegressor::computeOutput(const Vec& input, Vec& output) cons
 void GaussianProcessRegressor::computeOutputAux(
     const Vec& input, Vec& output, Vec& kernel_evaluations) const
 {
+    if (input.hasMissing()) {
+        output.fill(MISSING_VALUE);
+        kernel_evaluations.fill(MISSING_VALUE);
+        return;
+    }
+    
     m_kernel->evaluate_all_i_x(input, kernel_evaluations);
 
     // Finally compute k(x,x_i) * (M + \lambda I)^-1 y
@@ -501,17 +507,26 @@ void GaussianProcessRegressor::computeOutputCovMat(
     // Start by computing the matrix of kernel evaluations between the train
     // and test outputs, and compute the output
     m_gram_traintest_inputs.resize(N, T);
+    bool has_missings = false;
     for (int i=0 ; i<N ; ++i) {
         Vec cur_traintest_kereval = m_gram_traintest_inputs(i);
         Vec cur_output = outputs(i);
         computeOutputAux(inputs(i), cur_output, cur_traintest_kereval);
+        has_missings = has_missings || inputs(i).hasMissing();
+    }
+
+    // If any missings found in the inputs, don't bother with with computing a
+    // covariance matrix
+    if (has_missings) {
+        covmat.fill(MISSING_VALUE);
+        return;
     }
 
     // Next compute the kernel evaluations between the test inputs; more or
     // less lifted from Kernel.cc ==> must see with Olivier how to better
     // factor this code
     Mat& K = covmat;
-    K.resize(N,N);
+    PLASSERT( K.width() == N && K.length() == N );
     const int mod = K.mod();
     real Kij;
     real* Ki;
