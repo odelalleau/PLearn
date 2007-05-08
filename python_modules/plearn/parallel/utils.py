@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import sys,time,random,md5,glob,string
+import sys,time,random,md5,glob,string,socket,os
 from configobj import ConfigObj
 
 
@@ -49,6 +49,48 @@ def string_replace(s,c,ch=''):
 
 def create_eval_command(function_name , args):
     return function_name +"('" +  string.join(args,"','") + "')"
+
+def get_platform():
+    platform = sys.platform
+    if platform=='linux2':
+        linux_type = os.uname()[4]
+        if linux_type == 'ppc':
+            platform = 'linux-ppc'
+        elif linux_type =='x86_64':
+            platform = 'linux-x86_64'
+        else:
+            platform = 'linux-i386'
+    return platform
+
+def get_condor_platform():
+    platform = sys.platform
+    if platform=='linux2':
+        linux_type = os.uname()[4]
+        if linux_type == 'ppc':
+            platform = 'linux-ppc'
+        elif linux_type =='x86_64':
+            platform = 'X86_64'
+        else:
+            platform = 'INTEL'
+    return platform
+
+def get_plearndir():
+    dir = os.environ['PLEARNDIR']
+    #    if platform=='win32':
+    #        homedir = 'R:/'
+    return dir
+        
+def get_homedir():
+    homedir = os.environ['HOME']
+    return homedir
+
+def get_username():
+    username = os.environ['USER']    
+    return username
+
+def get_hostname():
+    myhostname = socket.gethostname()
+    return myhostname
 
 if __name__ == '__main__':
     #    cmd = sys.argv[1] +"('" +  string.join(sys.argv[2:],"','") + "')"

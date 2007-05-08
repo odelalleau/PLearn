@@ -1,16 +1,19 @@
+#! /usr/bin/env python
 import sys
 import os
 import getopt
 import re
 import string
 import time
+import traceback
+import shutil
 from subprocess import Popen,PIPE
 from utils import *
 from configobj import ConfigObj
 from textwrap import dedent
 import pdb
 from time import sleep
-from plearn.pymake import pymake
+#from plearn.pymake import pymake
 
 STATUS_FINISHED = 0
 STATUS_RUNNING = 1
@@ -355,7 +358,50 @@ class DBICondor(DBIBase):
         # create the information about the tasks
 #        args['temp_dir'] = self.temp_dir
         for command in commands:
-            self.tasks.append(Task(command, self.log_dir, self.time_format,
+            pos = string.find(command,' ')
+            if pos>=0:
+                c = command[0:pos]
+                c2 = command[pos:]
+            else:
+                c=command
+                c2=""
+
+                # We will execute the command on the specified architecture
+                # if it is specified. If the executable exist for both
+                # architecture we execute on both. Otherwise we execute on the
+                # same architecture as the architecture of the launch computer
+            self.cplat = get_condor_platform()
+            if c.endswith('.INTEL'):
+                self.targetcondorplatform='INTEL'
+                self.targetplatform='linux-i386'
+                newcommand=command
+            elif c.endswith('.X86_64'):
+                self.targetcondorplatform='X86_64'
+                self.targetplatform='linux-x86_64'
+                newcommand=command
+            elif os.path.exists(c+".INTEL") and os.path.exists(c+".X86_64"):
+                self.targetcondorplatform='BOTH'
+                self.targetplatform='BOTH'
+                newcommand=command #TODO:get the good data
+                print 'ERROR: executing on 32 and 64 bits is NOT currently implemented'
+                sys.exit(100)
+            elif self.cplat=="INTEL" and os.path.exists(c+".INTEL"):
+                self.targetcondorplatform='INTEL'
+                self.targetplatform='linux-i386'
+                newcommand=c+".INTEL"+c2
+            elif self.cplat=="X86_64" and os.path.exists(c+".X86_64"):
+                self.targetcondorplatform='X86_64'
+                self.targetplatform='linux-x86_64'
+                newcommand=c+".X86_64"+c2
+            else:
+                self.targetcondorplatform=self.cplat
+                if self.cplat=='INTEL':
+                    self.targetplatform='linux-i386'
+                else:
+                    self.targetplatform='linux-x86_64'
+                newcommand=command
+
+            self.tasks.append(Task(newcommand, self.log_dir, self.time_format,
                                    self.pre_tasks, self.post_tasks,args))
 
             #keeps a list of the temporary files created, so that they can be deleted at will            
@@ -371,27 +417,54 @@ class DBICondor(DBIBase):
 
         param_dat.write( dedent('''\
                 #!/bin/bash
-                %s''' %(';'.join(task.commands))))
+                %s''' %(';\n'.join(task.commands))))
+        param_dat.close()
+        
 
         condor_file = task.unique_id + ".condor"
         self.temp_files.append(condor_file)
         condor_dat = open( condor_file, 'w' )
-        condor_dat.write( dedent('''\
-                executable = ./launch.sh
-                arguments = sh %s
-                universe = vanilla
-                requirements = (Arch == "X86_64")
-                output         = main.out
-                error          = main.error
-                log            = main.log
-                environment    = LD_LIBRARY_PATH=/cluster/diro/home/lisa/local/linux-x86_64/lib/python2.4/site-packages/numarray:/cluster/diro/home/lisa/local/linux-x86_64/lib:/usr/local/lib:/cluster/diro/home/lisa/local/linux-x86_64/lib32;PATH=/cluster/diro/home/lisa/PLearn/scripts:/soft/lisa/linux/bin:/u/lisa/local/linux-x86_64/bin:/u/popovicd/PLearn/commands:/u/popovicd/PLearn/scripts:/Scripts:/commands:/u/popovicd/Scripts:/soft/diro/share/moe/bin-i4lx:/u/lamblinp/code/usr/bin:/u/popovicd/PLearn:/u/popovicd/PLearn/scripts:/u/popovicd/PLearn/commands:/u/popovicd/projects/apstatsoft:/u/popovicd/projects/apstatsoft/scripts:/u/popovicd/projects/apstatsoft/commands:/usr/kerberos/bin:/u/popovicd/GNUstep/Tools:/usr/GNUstep/Local/Tools:/usr/GNUstep/System/Tools:/usr/local/bin:/bin:/usr/bin:/usr/X11R6/bin:/opt/diro/bin:/u/lisa/local/linux-i386/bin;PYTHONPATH=/cluster/diro/home/lisa/PLearn/python_modules:/cluster/diro/home/lisa/local/linux-x86_64/lib/python2.4/site-packages:/u/lisa/local/linux-x86_64/lib/python2.3/site-packages:/u/lisa/local/linux-x86_64/lib/python2.2/site-packages:/u/lisa/local/linux-x86_64/lib/python2.4/site-packages/vtk_python:/u/lisa/local/linux-x86_64/lib/python2.3/site-packages/Numeric:/u/popovicd/PLearn/python_modules:/u/popovicd/projects/apstatsoft/python_modules:
-                queue
 
-                ''' % (condor_data) ) )
+        u=get_username()
+        tcplat=self.targetcondorplatform
+        tplat=self.targetplatform
+        condor_dat.write( dedent('''\
+                executable     = ./launch.sh
+                arguments      = sh %s
+                universe       = vanilla
+                requirements   = (Arch == "%s")
+                output         = main.%s.%s.out
+                error          = main.%s.%s.error
+                log            = main.%s.log
+                environment    = LD_LIBRARY_PATH=/u/lisa/local/byhost/%s/lib:/u/lisa/local/%s/lib:/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages/numarray:/cluster/diro/home/lisa/local/%s/lib:/cluster/diro/home/lisa/local/%s/lib32:/cluster/diro/home/lisa/lib:/usr/local/lib:/soft/lisa/linux/lib;\
+                PATH=/cluster/diro/home/lisa/PLearn/scripts:/soft/lisa/linux/bin:/u/lisa/local/%s/bin:/u/%s/PLearn/commands:/u/%s/PLearn/scripts:/Scripts:/commands:/u/%s/Scripts:/soft/diro/share/moe/bin-i4lx:/u/lamblinp/code/usr/bin:/u/%s/PLearn:/u/%s/PLearn/scripts:/u/%s/PLearn/commands:/usr/kerberos/bin:/usr/GNUstep/System/Tools:/usr/local/bin:/bin:/usr/bin:/usr/X11R6/bin:/opt/diro/bin:/u/lisa/local/linux-i386/bin;\
+                PYTHONPATH=/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages:/cluster/diro/home/lisa/local/%s/lib/python2.3/site-packages:/cluster/diro/home/lisa/local/%s/lib/python2.2/site-packages:/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages/vtk_python:/cluster/diro/home/lisa/local/%s/lib/python2.3/site-packages/Numeric:/u/%s/PLearn/python_modules:/u/%s/projects/apstatsoft/python_modules:/cluster/diro/home/lisa/local/%s/lib/python2.3/site-packages:/cluster/diro/home/lisa/local/%s/lib/python2.2/site-packages:/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages/vtk_python:/cluster/diro/home/lisa/local/%s/lib/python2.3/site-packages/Numeric:/u/%s/PLearn/python_modules:
+                #getenv         = True
+                queue
+                ''' % (condor_data, tcplat,tcplat,task.unique_id,tcplat,task.unique_id,tcplat,get_hostname(),tplat,tplat,tplat,tplat,tplat,u,u,u,u,u,u,tplat,tplat,tplat,tplat,tplat,u,u,tplat,tplat,tplat,tplat,u)) )
 #                preBatch = ''' + pre_batch_command + '''
 #                postBatch = ''' + post_batch_command +'''
         condor_dat.close()
+                #environment    = LD_LIBRARY_PATH=/u/lisa/local/byhost/%s/lib:/u/lisa/local/%s/lib:/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages/numarray:/cluster/diro/home/lisa/local/%s/lib:/usr/local/lib:/cluster/diro/home/lisa/local/%s/lib32:/soft/lisa/linux/lib;PATH=/cluster/diro/home/lisa/PLearn/scripts:/soft/lisa/linux/bin:/u/lisa/local/%s/bin:/u/%s/PLearn/commands:/u/%s/PLearn/scripts:/Scripts:/commands:/u/%s/Scripts:/soft/diro/share/moe/bin-i4lx:/u/lamblinp/code/usr/bin:/u/%s/PLearn:/u/%s/PLearn/scripts:/u/%s/PLearn/commands:/u/%s/projects/apstatsoft:/u/%s/projects/apstatsoft/scripts:/u/%s/projects/apstatsoft/commands:/usr/kerberos/bin:/u/%s/GNUstep/Tools:/usr/GNUstep/Local/Tools:/usr/GNUstep/System/Tools:/usr/local/bin:/bin:/usr/bin:/usr/X11R6/bin:/opt/diro/bin:/u/lisa/local/linux-i386/bin;PYTHONPATH=/cluster/diro/home/lisa/PLearn/python_modules:/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages:/u/lisa/local/%s/lib/python2.3/site-packages:/u/lisa/local/%s/lib/python2.2/site-packages:/u/lisa/local/%s/lib/python2.4/site-packages/vtk_python:/u/lisa/local/%s/lib/python2.3/site-packages/Numeric:/u/%s/PLearn/python_modules:/u/%s/projects/apstatsoft/python_modules:
 
+        if not os.path.exists('launch.sh'):
+            launch_file = open('launch.sh','w')
+            launch_file.write(dedent('''\
+            #!/bin/sh
+            PROGRAM=$1
+            shift
+            $PROGRAM $@'''))
+            launch_file.close()
+            os.chmod('launch.sh',0755)
+
+        if not os.path.exists('utils.py'):
+            shutil.copy( get_plearndir()+'/python_modules/plearn/parallel/utils.py', '.')
+            os.chmod('utils.py',0755)
+
+        if not os.path.exists('configobj.py'):
+            shutil.copy( get_plearndir()+'/python_modules/plearn/parallel/configobj.py', '.')
+            os.chmod('configobj.py',0755)
+                                    
         # Launch bqsubmit
         output = PIPE
         error = PIPE
@@ -399,7 +472,7 @@ class DBICondor(DBIBase):
             output = file(self.log_file + '.out', 'w')
         if int(self.file_redirect_stderr):
             error = file(self.log_file + '.err', 'w')
-        self.p = Popen( 'condor_submit '+ condor_file, shell=True, stdout=output, stderr=error)
+        self.p = Popen( 'condor_submit '+ condor_file, shell=True) , stdout=output, stderr=error)
 
 
     def clean(self):
@@ -479,6 +552,8 @@ def cmp_ssh_hosts(h1, h2):
 class DBISsh(DBIBase):
 
     def __init__(self, commands, **args ):
+        print "WARNING: The SSH DBI is not fully implemented!"
+        print "Use at your own risk!"
         DBIBase.__init__(self, commands, **args)
 
         # check if log directory exists, if not create it
@@ -559,15 +634,18 @@ def DBI(commands, launch_system):
         jobs = eval('DBI'+launch_system+'(commands)')
     except NameError:
         print 'The launch system ',launch_system, ' does not exists. Available systems are: Cluster, Ssh, bqtools and Condor'
+        traceback.print_exc()
         sys.exit(1)
     return jobs
 
 def main():
     #    jobs = DBICluster(['ls','sleep 2'])
     jobs = DBI([
-   './plearn dbn.pyplearn n_epochs_grad=250 n_hidden=25 grad_learning_rate=0.05 n_epochs_cd=0 cd_learning_rate=0.00001 unique_id=x25 recons_file=r.txt',
-   './plearn dbn.pyplearn n_epochs_grad=250 n_hidden=35 grad_learning_rate=0.05 n_epochs_cd=0 cd_learning_rate=0.00001 unique_id=x35 recons_file=r.txt'
-   ],'Condor')
+        'plearn_exp ${PLEARNDIR}/speedtest/sgrad.plearn task=letter_memvmat nout=26 nh1=100 nh2=100 nh3=100 slr=1e-1 dc=0 n=16001 epoch=16000 seed=1 mbs=10',
+        'plearn_exp ${PLEARNDIR}/speedtest/sgrad.plearn task=letter_memvmat nout=26 nh1=100 nh2=100 nh3=100 slr=1e-1 dc=0 n=16001 epoch=16000 seed=1 mbs=20'
+        #   './plearn dbn.pyplearn n_epochs_grad=250 n_hidden=25 grad_learning_rate=0.05 n_epochs_cd=0 cd_learning_rate=0.00001 unique_id=x25 recons_file=r.txt',
+        #   './plearn dbn.pyplearn n_epochs_grad=250 n_hidden=35 grad_learning_rate=0.05 n_epochs_cd=0 cd_learning_rate=0.00001 unique_id=x35 recons_file=r.txt'
+        ],'Ssh')
     jobs.run()
 #    jobs.clean()
 
