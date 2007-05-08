@@ -472,7 +472,7 @@ class DBICondor(DBIBase):
             output = file(self.log_file + '.out', 'w')
         if int(self.file_redirect_stderr):
             error = file(self.log_file + '.err', 'w')
-        self.p = Popen( 'condor_submit '+ condor_file, shell=True) , stdout=output, stderr=error)
+        self.p = Popen( 'condor_submit '+ condor_file, shell=True , stdout=output, stderr=error)
 
 
     def clean(self):
