@@ -1835,8 +1835,12 @@ void DeepBeliefNet::contrastiveDivergenceStep(
             // sample up state given down state
             connection->setAsDownInputs(down_state);
             up_layer->getAllActivations(connection, 0, true);
-            up_layer->computeExpectations();
             up_layer->generateSamples();
+
+            // sample down state given up state, to prepare for next time
+            connection->setAsUpInputs(up_layer->samples);
+            down_layer->getAllActivations(connection, 0, true);
+            down_layer->generateSamples();
 
             // update using the down_state and up_layer->expectations for moving average in negative phase
             // (and optionally
@@ -1867,10 +1871,8 @@ void DeepBeliefNet::contrastiveDivergenceStep(
                 up_layer->updateGibbs(pos_up_vals,up_layer->getExpectations(),
                                         gibbs_chain_statistics_forgetting_factor);
             }
-            // sample down state given up state, to prepare for next time
-            connection->setAsUpInputs(up_layer->samples);
-            down_layer->getAllActivations(connection, 0, true);
-            down_layer->generateSamples();
+
+            // Save Gibbs chain's state.
             down_state << down_layer->samples;
         }
     } else {
