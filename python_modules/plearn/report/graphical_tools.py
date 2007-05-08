@@ -57,7 +57,7 @@ def getWideRect(bottom, height):
     return [ LEFT, bottom, WIDTH, height ]
 
 def plotZeroLine(axes, color='#666666'):
-    axes.plot(axes.get_xlim(), [0,0], color=color)
+    axes.axhline(y=0, color=color)
 
 def same_xlim(*ax_list):
     m, M = float('inf'), -float('inf')
@@ -83,7 +83,7 @@ def setLegend(axes, legend_map, sorted_keys=None, loc=0):
     if not sorted_keys:
         sorted_keys = legend_map.keys(); sorted_keys.sort()
     values = [ legend_map[k] for k in sorted_keys ]
-    legend = axes.legend(values, sorted_keys, loc=loc, shadow=True)
+    legend = axes.legend(values, sorted_keys, loc=loc, shadow=False)
     legend.set_zorder(100)
 
 class Struct(dict):
