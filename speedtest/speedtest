@@ -12,18 +12,15 @@ if [ $# -eq 0 ]; then
 else
     BP=$1 #BASEPROG
     shift
-    for p in "$@"
-      do
-      PROGEXT=( "${PROGEXT[@]}" $p )
-    done
+    # $@ contains the programme extention
 fi
 
-if [ "x${PROGEXT[0]}" == "x" ];then
+if [ "$1" == "" ];then
     PROG=${BP}
 else
-    for p in "${PROGEXT[@]}"
+    for p in "${@}"
       do
-      PROG=( "${PROG[@]}" ${BP}$p )
+      PROG=( "${PROG[@]}" "${BP}${p/\ /_}" )
     done
 fi
 
@@ -61,8 +58,10 @@ if [ ! $APPENDRESULT == "YES" ]; then
 fi
 
 echo "BP: $BP"
-echo "PROGEXT: ${PROGEXT[@]}"
-echo "PROG: ${PROG[@]}"
+for p in "${PROG[@]}"
+do
+  echo "PROG::$p"
+done
 echo "SIZE: ${SIZE[@]}"
 echo "RESFILE: $RESFILE"
 echo "APPENDRESULT: $APPENDRESULT"
@@ -85,8 +84,8 @@ for i in "${SIZE[@]}"
     f "/usr/bin/time -o${DATAFILE}.tmp -a -f %e" "$p" "$i" >> ${LOGFILE} 2>>${LOGFILE}
     read time < ${DATAFILE}.tmp
     echo -n "$time " >> ${DATAFILE}
-    echo "Ended"
-    echo "Ended">>${LOGFILE}
+    echo "Ended in $time"
+    echo "Ended in $time">>${LOGFILE}
   done
   echo "" >> ${DATAFILE}
 done
