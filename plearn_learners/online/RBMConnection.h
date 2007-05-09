@@ -159,8 +159,7 @@ public:
                                    const Mat& cd_neg_up_values,
                                    const Mat& gibbs_neg_down_values,
                                    const Mat& gibbs_neg_up_values,
-                                   real background_gibbs_update_ratio,
-                                   real gibbs_chain_statistics_forgetting_factor);
+                                   real background_gibbs_update_ratio);
 
     // neg_stats <-- gibbs_chain_statistics_forgetting_factor * neg_stats
     //              +(1-gibbs_chain_statistics_forgetting_factor)
@@ -169,8 +168,7 @@ public:
     virtual void updateGibbs( const Mat& pos_down_values,
                               const Mat& pos_up_values,
                               const Mat& gibbs_neg_down_values,
-                              const Mat& gibbs_neg_up_values,
-                              real gibbs_chain_statistics_forgetting_factor);
+                              const Mat& gibbs_neg_up_values);
 
     //! Clear all information accumulated during stats
     virtual void clearStats() = 0;

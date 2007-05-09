@@ -47,7 +47,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "Trains an OnlineLearningModule wrt the cost of a CostModule.",
     "The CostModule provides the output gradient to train the\n"
     "OnlineLearningModule.\n"
-    "In order to stack layers, you can use StackedModulesModule,\n"
+    "In order to stack layers, you can use ModuleStackModule,\n"
     "and in order to compute several costs, you can use CombinedCostsModule.\n"
     );
 

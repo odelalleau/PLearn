@@ -73,10 +73,21 @@ public:
     //! Obsolete option, still here for script compatibility
     string units_types;
 
+    //! gibbs stuff options
+    real delta_ma_param; // by how much to adapt the parameter of the moving average coefficients
+    real stationarity_statistic_threshold; // threshold on the z-statistic for stationarity
+
     //#####  Learnt Options  ##################################################
 
     // stores the bias of the unit
     Vec bias;
+
+    //! stuff used for Gibbs chain methods only
+    real fast_mean, slow_mean;
+    real gibbs_fast_ma_coefficient, gibbs_fast_ma_param; // fast_ma_coefficient = sigmoid(fast_ma_param)
+    real gibbs_slow_ma_coefficient, gibbs_slow_ma_param; // slow_ma_coefficient = sigmoid(slow_ma_param)
+    real var_of_value;
+    real sum_fast2, sum_slow2, sum_slowfast;
 
     //#####  Not Options  #####################################################
 
@@ -206,17 +217,14 @@ public:
     virtual void updateCDandGibbs( const Mat& pos_values,
                                    const Mat& cd_neg_values,
                                    const Mat& gibbs_neg_values,
-                                   real background_gibbs_update_ratio,
-                                   real gibbs_chain_statistics_forgetting_factor);
+                                   real background_gibbs_update_ratio );
 
     // neg_stats <-- gibbs_chain_statistics_forgetting_factor * neg_stats
     //              +(1-gibbs_chain_statistics_forgetting_factor)
     //               * \sum_i gibbs_neg_values_i / minibatch_size
     // delta bias = -lrate * \sum_i (pos_values_i - neg_stats) / minibatch_size
     virtual void updateGibbs( const Mat& pos_values,
-                              const Mat& gibbs_neg_values,
-                              real gibbs_chain_statistics_forgetting_factor);
-
+                              const Mat& gibbs_neg_values );
 
     //! resets activations, sample and expectation fields
     virtual void reset();

@@ -157,11 +157,6 @@ public:
     // statistics).
     real background_gibbs_update_ratio;
 
-    // negative chain statistics are forgotten at this rate (a value of 0
-    // would only use the current sample, a value of .99 would use 1% of
-    // the new sample and 99% of the old statistics).
-    real gibbs_chain_statistics_forgetting_factor;
-
     //! Wether we do a step of joint contrastive divergence on top-layer
     //! Only used if online for the moment
     bool top_layer_joint_cd;

@@ -68,7 +68,6 @@ DeepBeliefNet::DeepBeliefNet() :
     n_layers( 0 ),
     online ( false ),
     background_gibbs_update_ratio(0),
-    gibbs_chain_statistics_forgetting_factor(0.999),
     gibbs_chain_reinit_freq( INT_MAX ),
     minibatch_size( 0 ),
     initialize_gibbs_chain( false ),
@@ -219,13 +218,6 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   "(in proportion background_gibbs_update_ratio wrt the contrastive divergence\n"
                   "negative phase statistics). If = 1, then do not perform any contrastive\n"
                   "divergence negative phase (use only the Gibbs chain statistics).\n");
-
-    declareOption(ol, "gibbs_chain_statistics_forgetting_factor",
-                  &DeepBeliefNet::gibbs_chain_statistics_forgetting_factor,
-                  OptionBase::buildoption,
-                  "Negative chain statistics are forgotten at this rate (a value of 0\n"
-                  "would only use the current sample, a value of .99 would use 1% of\n"
-                  "the current sample and 99% of the old statistics).\n");
 
     declareOption(ol, "gibbs_chain_reinit_freq",
                   &DeepBeliefNet::gibbs_chain_reinit_freq,
@@ -1848,28 +1840,22 @@ void DeepBeliefNet::contrastiveDivergenceStep(
             {
                 down_layer->updateCDandGibbs(pos_down_vals,cd_neg_down_vals,
                                              down_state,
-                                             background_gibbs_update_ratio,
-                                             gibbs_chain_statistics_forgetting_factor);
+                                             background_gibbs_update_ratio);
                 connection->updateCDandGibbs(pos_down_vals,pos_up_vals,
                                              cd_neg_down_vals, cd_neg_up_vals,
                                              down_state,
                                              up_layer->getExpectations(),
-                                             background_gibbs_update_ratio,
-                                             gibbs_chain_statistics_forgetting_factor);
+                                             background_gibbs_update_ratio);
                 up_layer->updateCDandGibbs(pos_up_vals,cd_neg_up_vals,
                                            up_layer->getExpectations(),
-                                           background_gibbs_update_ratio,
-                                           gibbs_chain_statistics_forgetting_factor);
+                                           background_gibbs_update_ratio);
             }
             else
             {
-                down_layer->updateGibbs(pos_down_vals,down_state,
-                                        gibbs_chain_statistics_forgetting_factor);
+                down_layer->updateGibbs(pos_down_vals,down_state);
                 connection->updateGibbs(pos_down_vals,pos_up_vals,down_state,
-                                        up_layer->getExpectations(),
-                                        gibbs_chain_statistics_forgetting_factor);
-                up_layer->updateGibbs(pos_up_vals,up_layer->getExpectations(),
-                                        gibbs_chain_statistics_forgetting_factor);
+                                        up_layer->getExpectations());
+                up_layer->updateGibbs(pos_up_vals,up_layer->getExpectations());
             }
 
             // Save Gibbs chain's state.

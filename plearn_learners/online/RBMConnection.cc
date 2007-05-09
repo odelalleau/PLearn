@@ -253,8 +253,7 @@ void RBMConnection::updateCDandGibbs( const Mat& pos_down_values,
                                       const Mat& cd_neg_up_values,
                                       const Mat& gibbs_neg_down_values,
                                       const Mat& gibbs_neg_up_values,
-                                      real background_gibbs_update_ratio,
-                                      real gibbs_chain_statistics_forgetting_factor)
+                                      real background_gibbs_update_ratio)
 {
     PLASSERT_MSG(false, "Not implemented by subclass!");
 }
@@ -266,8 +265,7 @@ void RBMConnection::updateCDandGibbs( const Mat& pos_down_values,
 void RBMConnection::updateGibbs( const Mat& pos_down_values,
                                  const Mat& pos_up_values,
                                  const Mat& gibbs_neg_down_values,
-                                 const Mat& gibbs_neg_up_values,
-                                 real gibbs_chain_statistics_forgetting_factor)
+                                 const Mat& gibbs_neg_up_values)
 {
     PLASSERT_MSG(false, "Not implemented by subclass!");
 }

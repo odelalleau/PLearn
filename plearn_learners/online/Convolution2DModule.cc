@@ -428,7 +428,7 @@ void Convolution2DModule::bpropUpdate(const Vec& input, const Vec& output,
                                     kernel_step1, kernel_step2, accumulate );
 
                 // kernel(i,j) -= learning_rate * kernel_gradient
-                multiplyAcc( kernels(i,j), kernel_gradient, -learning_rate );
+                multiplyAcc( kernels(i,j), kernel_gradient, -learning_rate ); // could be more efficiently done within the convolve2Dbackprop
             }
         bias[j] -= learning_rate * sum( output_gradients[j] );
     }
