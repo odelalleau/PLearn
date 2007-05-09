@@ -1842,6 +1842,25 @@ void multiplyScaledAdd(const TVec<T>& source, T a, T b, const TVec<T>& destinati
     }
 }
 
+// destination[i,j] = a*destination[i,j] + b*source[i,j]
+template<class T>
+void multiplyScaledAdd(const TMat<T>& source, T a, T b, const TMat<T>& destination)
+{
+    int n=source.length();
+    int m=source.width();
+    if (n!=destination.length() || m!=destination.width())
+        PLERROR("multiply: source and destination must have same dimensions");
+    if (n > 0) {
+        int sm=source.mod();
+        int dm=destination.mod();
+        T* s=source.data();
+        T* d=destination.data();
+        for (int i=0;i<n;i++,s+=sm,d+=dm)
+            for (int j=0;j<m;j++)
+                d[j] = a*d[j] + b*s[j];
+    }
+}
+
 // destination[i] = source1[i]+source2[i]
 template<class T>
 void add(const TVec<T>& source1, const TVec<T>& source2, TVec<T>& destination)
