@@ -42,6 +42,7 @@
 
 #define PL_LOG_MODULE_NAME "HTMLHelpCommand"
 
+#include <plearn/base/Object.h>
 #include <time.h>
 #include <fstream>
 #include <set>
@@ -49,7 +50,6 @@
 
 #include <plearn/base/general.h>
 #include <plearn/base/TypeFactory.h>
-#include <plearn/base/Object.h>
 #include <plearn/base/stringutils.h>
 #include <plearn/io/pl_log.h>
 #include "PLearnCommandRegistry.h"

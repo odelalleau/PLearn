@@ -48,6 +48,7 @@
 
 // From PLearn
 #include "PP.h"
+
 #include "RemoteTrampoline.h"
 
 namespace PLearn {

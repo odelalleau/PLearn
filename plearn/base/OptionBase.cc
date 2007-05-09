@@ -41,8 +41,8 @@
  * This file is part of the PLearn library.
  ******************************************************* */
 
-#include "OptionBase.h"
 #include "Object.h"
+#include "OptionBase.h"
 #include <plearn/base/stringutils.h>
 #include <plearn/base/tostring.h>
 

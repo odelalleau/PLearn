@@ -37,12 +37,10 @@
  * This file is part of the PLearn library.
  ******************************************************* */
 
-
-/*! \file PLearnLibrary/PLearnCore/Object.h */
-
 #ifndef PLearnCommand_INC
 #define PLearnCommand_INC
 
+#include <plearn/base/Object.h>
 #include <string>
 #include <vector>
 

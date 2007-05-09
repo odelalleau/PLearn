@@ -56,6 +56,7 @@
 #include <plearn/misc/RemotePLearnServer.h>
 #endif
 #include <plearn/vmat/PLearnerOutputVMatrix.h>
+#include <plearn/base/RemoteDeclareMethod.h>
 
 namespace PLearn {
 using namespace std;

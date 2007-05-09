@@ -35,6 +35,7 @@
  * $Id$
  ******************************************************* */
 
+#include <plearn/base/Object.h>
 #include <plearn/base/Array.h>
 #include <plearn/vmat/VMat.h>
 

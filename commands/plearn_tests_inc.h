@@ -75,6 +75,7 @@
 #include <plearn/vmat/test/IndexedVMatrixTest.h>
 #include <plearn/vmat/test/RowBufferedVMatrixTest.h>
 
+#include <plearn/python/test/InstanceSnippetTest.h>
 // Some other minimal includes to be able to run tests.
 
 /***********

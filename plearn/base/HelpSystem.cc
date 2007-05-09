@@ -32,6 +32,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
+#include <plearn/base/Object.h>
 #include "HelpSystem.h"
 
 #include <algorithm>
@@ -50,7 +51,7 @@
 #include <plearn/base/RemoteMethodDoc.h>
 #include <plearn/base/RemoteMethodMap.h>
 #include <commands/PLearnCommands/PLearnCommandRegistry.h>
-#include <plearn/base/Object.h>
+//#include <plearn/base/Object.h>
 
 
 namespace PLearn {
@@ -326,6 +327,7 @@ string HelpSystem::helpOnClass(const string& classname)
     string s= "################################################################## \n";
     s+= "## " + classname + "\n";
     s+= "## " + helpClassParents(classname) + '\n';
+    s+= "## declared in file '" + entry.declaring_file.canonical() + "'\n";
     s+= "################################################################## \n\n";
 
     // Display basic help
@@ -407,7 +409,9 @@ string HelpSystem::helpOnClassHTML(const string& classname)
     const TypeMapEntry& entry= TypeFactory::instance().getTypeMapEntry(classname);
     s+= "<div class=\"classname\">" + HTMLUtils::quote(classname) + "</div>\n"
         "<div class=\"classdescr\">" 
-        + HTMLUtils::quote(entry.one_line_descr) + "</div>\n"
+        + HTMLUtils::quote(entry.one_line_descr) 
+        + " (declared in '" + HTMLUtils::quote(entry.declaring_file.canonical()) 
+        + "')</div>\n"
         "<div class=\"classhelp\">" 
         + HTMLUtils::quote_format_and_highlight(entry.multi_line_help) 
         + "</div>\n";

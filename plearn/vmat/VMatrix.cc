@@ -51,6 +51,7 @@
 #include <plearn/io/fileutils.h>     //!< For isfile()
 #include <plearn/io/load_and_save.h>
 #include <plearn/math/random.h>      //!< For uniform_multinomial_sample()
+#include <plearn/base/RemoteDeclareMethod.h>
 
 namespace PLearn {
 using namespace std;

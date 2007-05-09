@@ -41,8 +41,8 @@
 /*! \file VMat_operations.cc */
 
 
-#include "VMat_operations.h"
 #include "VMat.h"
+#include "VMat_operations.h"
 #include <plearn/math/random.h>
 #include <plearn/io/TmpFilenames.h>
 #include <plearn/io/IntVecFile.h>

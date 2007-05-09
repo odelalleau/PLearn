@@ -40,8 +40,8 @@
 
 /*! \file WPLS.cc */
 
-#include <plearn/math/plapack.h>
 #include "WPLS.h"
+#include <plearn/math/plapack.h>
 #include <plearn/vmat/ShiftAndRescaleVMatrix.h>
 #include <plearn/vmat/SubVMatrix.h>
 #include <plearn/math/TMat_maths.h>    //!< For dist.

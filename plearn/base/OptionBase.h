@@ -47,6 +47,10 @@
 #ifndef OptionBase_INC
 #define OptionBase_INC
 
+#ifdef PL_PYTHON_VERSION 
+#include <plearn/python/PythonObjectWrapper.h>
+#endif //def PL_PYTHON_VERSION 
+
 #include <plearn/io/pl_io.h>
 #include "PP.h"
 #include <plearn/io/PStream.h>        //!< For PStream.
@@ -222,6 +226,12 @@ public:
     //! Can be used with the optiontype() accessor to cast to an appropriate
     //! type.  Should be used sparingly and only when absolutely necessary.
     virtual const void* getAsVoidPtr(const Object* o) const = 0;
+
+#ifdef PL_PYTHON_VERSION 
+    //! Return the option as a python object
+    virtual PythonObjectWrapper getAsPythonObject(Object* o) const = 0;
+    virtual PythonObjectWrapper getAsPythonObject(const Object* o) const = 0;
+#endif //def PL_PYTHON_VERSION 
 
 
     //#####  Option Information  ##############################################

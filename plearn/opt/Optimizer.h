@@ -40,15 +40,13 @@
  * This file is part of the PLearn library.
  ******************************************************* */
 
-/*! \file PLearnLibrary/PLearnCore/Optimizer.h */
-
 #ifndef OPTIMIZER_INC
 #define OPTIMIZER_INC
 
+#include <plearn/base/Object.h>
 #include <plearn/var/Func.h>
 #include <plearn/math/Mat.h>
 #include <plearn/measure/Measurer.h>
-#include <plearn/base/Object.h>
 #include <plearn/math/VecStatsCollector.h>
 #include <plearn/vmat/VMat.h>
 

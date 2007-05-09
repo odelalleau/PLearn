@@ -45,6 +45,7 @@
 #ifndef PLearnService_INC
 #define PLearnService_INC
 
+#include <plearn/misc/RemotePLearnServer.h>
 #include <plearn/base/PP.h>
 #include <plearn/io/PPath.h>
 #include <plearn/io/PStream.h>
@@ -52,7 +53,6 @@
 #include <map>
 #include <set>
 #include <string>
-#include <plearn/misc/RemotePLearnServer.h>
 
 namespace PLearn {
 

@@ -361,6 +361,119 @@ Vec HyperOptimize::optimize()
 
     return best_results;
 }
+/*
+void HyperOptimize::launchTest(int trialnum, PP<RemotePLearnServer> server,
+                               map<PP<RemotePLearnServer>, int>& testers_ids)
+{
+    PP<PTester> tester= hlearner->tester;
+
+    string testerexpdir= "";
+    if(expdir!="" && provide_tester_expdir)
+        testerexpdir = expdir / ("Trials"+tostring(trialnum)) / "";
+    tester->setExperimentDirectory(testerexpdir);
+
+    PP<Splitter> default_splitter = tester->splitter;
+    if(splitter)  // set our own splitter
+        tester->splitter = splitter;
+
+    int id= testers_ids[server];
+    if(id > 0) server->deleteObject(id);// delete prev. tester
+    id= server->newObject(tester);// send new tester
+    testers_ids[server]= id;
+    tester->splitter= default_splitter;// restore default splitter
+
+    server->callMethod(id, "perform", false);
+}
+
+Vec HyperOptimize::parOptimize()
+{
+    real best_objective = REAL_MAX;
+    Vec best_results;
+    PP<PLearner> best_learner;
+
+    TVec<string> option_names;
+    option_names = oracle->getOptionNames();
+
+    TVec<string> option_vals = oracle->generateFirstTrial();
+    if (option_vals.size() != option_names.size())
+        PLERROR("HyperOptimize::optimize: the number of option values (%d) "
+                "does not match the number of option names (%d)",
+                option_vals.size(), option_names.size());
+
+    int trialnum = 0;
+
+    which_cost_pos= getResultNames().find(which_cost);
+    if(which_cost_pos < 0)
+        which_cost_pos= toint(which_cost);
+
+    PLearnService& service(PLearnService::instance());
+    int nservers= service.availableServers();
+    TVec<PP<RemotePLearnServer> > servers= service.reserveServers(nservers);
+    nservers= servers.length();
+    map<PP<RemotePLearnServer>, int> testers_ids;
+    map<PP<RemotePLearnServer>, int> trialnums;
+    for(int i= 0; i < nservers; ++i)
+        testers_ids[servers[i]]= -1;//init.
+    int nworking= 0;
+
+    Vec results;
+    bool finished= false;
+    while(!finished)
+    {
+        map<PP<RemotePLearnServer>, int>::iterator it= testers_ids.find(-1);
+        if(option_vals && it != testers_ids.end())
+        {
+            hlearner->setLearnerOptions(option_names, option_vals);
+            launchTest(trialnum, it->first, testers_ids);
+            ++nworking;
+            trialnums[it->first]= trialnum;
+            ++trialnum;
+            option_vals= 0;
+        }
+        else if(nworking > 0)
+        {
+            PP<RemotePLearnServer> s= service.waitForResult();
+            s->getResults(results);
+            --nworking;
+            testers_ids[s]= -1;
+            reportResult(trialnums[s], results);
+            real objective= results[which_cost_pos];
+
+            option_vals= oracle->generateNextTrial(option_vals,objective);
+            
+            if(!is_missing(objective) &&
+               (objective < best_objective || best_results.length()==0) && (trialnum>=min_n_trials || !option_vals))
+            {
+                best_objective = objective;
+                best_results = results;
+                CopiesMap copies;
+                best_learner = NULL;
+                best_learner = hlearner->getLearner()->deepCopy(copies);
+            }
+        }
+        else
+            finished= true;
+    }
+
+    // Detect the case where no trials at all were performed!
+    if (trialnum == 0)
+        PLWARNING("In HyperOptimize::optimize - No trials at all were completed;\n"
+                  "perhaps the oracle settings are wrong?");
+
+    // revert to best_learner
+    hlearner->setLearner(best_learner);
+
+    if (best_results.isEmpty())
+        // This could happen for instance if all results are NaN.
+        PLWARNING("In HyperOptimize::optimize - Could not find a best result, something "
+                  "must be wrong");
+    else
+        // report best result again, if not empty
+        reportResult(-1,best_results);
+
+    return best_results;
+}
+*/
 
 void HyperOptimize::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {

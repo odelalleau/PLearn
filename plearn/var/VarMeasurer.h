@@ -43,8 +43,8 @@
 #ifndef VARMEASURER_INC
 #define VARMEASURER_INC
 
-#include <plearn/measure/Measurer.h>
 #include "Var.h"
+#include <plearn/measure/Measurer.h>
 
 namespace PLearn {
 using namespace std;

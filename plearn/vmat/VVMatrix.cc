@@ -37,6 +37,7 @@
  * This file is part of the PLearn library.
  ******************************************************* */
 
+#include <plearn/base/Object.h>
 #include <plearn/db/getDataSet.h>
 #include <plearn/io/IntVecFile.h>
 #include <plearn/math/random.h>

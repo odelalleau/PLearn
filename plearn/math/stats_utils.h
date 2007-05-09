@@ -43,8 +43,8 @@
 #ifndef stats_utils_INC
 #define stats_utils_INC
 
-#include "Mat.h"
 #include <plearn/vmat/VMat.h>
+#include "Mat.h"
 
 namespace PLearn {
 using namespace std;

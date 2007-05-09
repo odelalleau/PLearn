@@ -40,13 +40,14 @@
 
 /*! \file ObjectGraphIterator.cc */
 
+#include <plearn/base/Object.h>
 #include <algorithm>
 #include <assert.h>
 #include <deque>
 #include <set>
 
 #include "ObjectGraphIterator.h"
-#include <plearn/base/Object.h>
+//#include <plearn/base/Object.h>
 #include <plearn/base/OptionBase.h>
 #include <plearn/base/TypeFactory.h>
 

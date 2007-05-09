@@ -123,6 +123,20 @@ public:
     virtual const void* getAsVoidPtr(const Object* o) const
     { return &(dynamic_cast<const ObjectType*>(o)->*ptr); }
     
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper getAsPythonObject(Object* o) const 
+    { 
+        return PythonObjectWrapper(*(OptionType*)getAsVoidPtr(o),
+                                   PythonObjectWrapper::transfer_ownership); 
+    }
+    virtual PythonObjectWrapper getAsPythonObject(const Object* o) const 
+    { 
+        return PythonObjectWrapper(*(OptionType*)getAsVoidPtr(o),
+                                   PythonObjectWrapper::transfer_ownership); 
+
+    }
+#endif //def PL_PYTHON_VERSION 
+
     virtual string optionHolderClassName(const Object* o) const
     { return dynamic_cast<const ObjectType*>(o)->ObjectType::_classname_(); }
 

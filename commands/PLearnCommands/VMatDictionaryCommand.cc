@@ -41,6 +41,7 @@
 #include <plearn/vmat/DictionaryVMatrix.h>
 #include <plearn/db/getDataSet.h>
 #include <plearn/io/load_and_save.h>
+#include <plearn/vmat/VMat.h>
 
 namespace PLearn {
 using namespace std;

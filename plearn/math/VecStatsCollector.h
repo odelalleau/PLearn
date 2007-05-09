@@ -41,11 +41,12 @@
 #ifndef VecStatsCollector_INC
 #define VecStatsCollector_INC
 
+#include <plearn/base/Object.h>
+
 // From C++ stdlib
 #include <map>
 
 // From PLearn
-#include <plearn/base/Object.h>
 #include "StatsCollector.h"
 #include "ObservationWindow.h"
 

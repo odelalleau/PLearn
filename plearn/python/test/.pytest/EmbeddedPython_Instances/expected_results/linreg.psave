@@ -1,0 +1,27 @@
+LinearRegressor(
+include_bias = 1 ;
+cholesky = 1 ;
+weight_decay = 0 ;
+output_learned_weights = 0 ;
+weights = 5  1  [ 
+2.19604273868088962 	
+-1.04154089689183138 	
+-39.5718681295575294 	
+16.8024504629067799 	
+4.35269550398104066 	
+]
+;
+AIC = -16.4363107085968032 ;
+BIC = -17.9386235608166196 ;
+resid_variance = 1 [ -3.91810317523777485e-09 ] ;
+stage = 0 ;
+n_examples = 3 ;
+inputsize = 4 ;
+targetsize = 1 ;
+weightsize = 0 ;
+forget_when_training_set_changes = 0 ;
+nstages = 1 ;
+report_progress = 1 ;
+verbosity = 1 ;
+nservers = 0 ;
+save_trainingset_prefix = ""  )

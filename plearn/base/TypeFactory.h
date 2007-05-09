@@ -41,12 +41,14 @@
 #include <map>
 #include "OptionBase.h"
 #include "RemoteMethodMap.h"
+#include <plearn/io/PPath.h>
 
 namespace PLearn {
 using std::string;
 
 // Predeclarations
 class Object;
+class RemoteMethodMap;
 
 //!  Typedef for the "new instance" function type, which returns a
 //!  default-initialized Object
@@ -93,6 +95,9 @@ public:
 
     //! Detailed documentation for users
     string multi_line_help;
+
+    //! Filename where this type (class) is declared (i.e. to include)
+    PPath declaring_file;
   
     TypeMapEntry(const string& the_type_name, 
                  const string& the_parent_class="", 
@@ -101,7 +106,8 @@ public:
                  GET_REMOTE_METHODS the_get_remote_methods = 0,
                  ISA_METHOD the_isa_method=0,
                  const string& the_one_line_descr = "",
-                 const string& the_multi_line_help = "")
+                 const string& the_multi_line_help = "",
+                 const PPath& the_declaring_file= PPath(""))
         : type_name(the_type_name),
           parent_class(the_parent_class),
           constructor(the_constructor), 
@@ -109,7 +115,8 @@ public:
           get_remote_methods(the_get_remote_methods),
           isa_method(the_isa_method),
           one_line_descr(the_one_line_descr),
-          multi_line_help(the_multi_line_help)
+          multi_line_help(the_multi_line_help),
+          declaring_file(the_declaring_file)
     { }
 };
 
@@ -147,7 +154,8 @@ public:
                               GET_REMOTE_METHODS get_remote_methods,
                               ISA_METHOD isa_method,
                               const string& one_line_descr,
-                              const string& multi_line_help);  
+                              const string& multi_line_help,
+                              const PPath& declaring_file);
 
     //! Register a type
     void registerType(const TypeMapEntry& entry);

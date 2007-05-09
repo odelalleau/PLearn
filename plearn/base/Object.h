@@ -47,6 +47,9 @@
 #ifndef Object_INC
 #define Object_INC
 
+// Python stuff must be included first
+#include <plearn/python/PythonIncludes.h>
+
 #include <map>
 #include <string>
 #include "PP.h"
@@ -88,7 +91,9 @@ using namespace std;
         static  bool _isa_(const Object* o);                    \
         virtual CLASSTYPE* deepCopy(CopiesMap &copies) const;   \
         static  void _static_initialize_();                     \
-        static  StaticInitializer _static_initializer_
+        static  StaticInitializer _static_initializer_;         \
+        static  const PPath& declaringFile()                    \
+               { static PPath df= __FILE__; return df;}
 
 #define PLEARN_IMPLEMENT_OBJECT(CLASSTYPE, ONELINEDESCR, MULTILINEHELP)                         \
         string CLASSTYPE::_classname_()                                                         \
@@ -161,7 +166,8 @@ using namespace std;
                                        &CLASSTYPE::_getRemoteMethodMap_,                        \
                                        &CLASSTYPE::_isa_,                                       \
                                        ONELINEDESCR,                                            \
-                                       MULTILINEHELP);                                          \
+                                       MULTILINEHELP,                                           \
+                                       CLASSTYPE::declaringFile());                             \
         }                                                                                       \
         StaticInitializer CLASSTYPE::_static_initializer_(&CLASSTYPE::_static_initialize_)
 
@@ -174,7 +180,9 @@ using namespace std;
         static bool _isa_(const Object* o);                     \
         virtual CLASSTYPE* deepCopy(CopiesMap &copies) const;   \
         static void _static_initialize_();                      \
-        static StaticInitializer _static_initializer_           
+        static StaticInitializer _static_initializer_;          \
+        static  const PPath& declaringFile()                   \
+               { static PPath df= __FILE__; return df;}
 
 #define PLEARN_IMPLEMENT_ABSTRACT_OBJECT(CLASSTYPE, ONELINEDESCR, MULTILINEHELP)                \
         string CLASSTYPE::_classname_()                                                         \
@@ -222,7 +230,8 @@ using namespace std;
                                        &CLASSTYPE::_getRemoteMethodMap_,                        \
                                        &CLASSTYPE::_isa_,                                       \
                                        ONELINEDESCR,                                            \
-                                       MULTILINEHELP  );                                        \
+                                       MULTILINEHELP,                                           \
+                                       CLASSTYPE::declaringFile());                             \
         }                                                                                       \
         StaticInitializer CLASSTYPE::_static_initializer_(&CLASSTYPE::_static_initialize_)
 
@@ -265,7 +274,8 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
         static  bool _isa_(const Object* o);                                                    \
         virtual CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >* deepCopy(CopiesMap &copies) const;    \
         static  void _static_initialize_();                                                     \
-        static  StaticInitializer _static_initializer_;
+        static  StaticInitializer _static_initializer_;                                         \
+        static  const PPath& declaringFile() { static PPath df= __FILE__; return df;}
 
 #define PLEARN_IMPLEMENT_TEMPLATE_OBJECT(CLASSTYPE, ONELINEDESCR, MULTILINEHELP)                \
         template < TEMPLATE_DEF_ ## CLASSTYPE >                                                 \
@@ -349,7 +359,8 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
                 &CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_getRemoteMethodMap_,                \
                 &CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_isa_,                               \
                 ONELINEDESCR,                                                                   \
-                MULTILINEHELP);                                                                 \
+                MULTILINEHELP,                                                                  \
+                CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::declaringFile());                     \
         }                                                                                       \
         template < TEMPLATE_DEF_ ## CLASSTYPE >                                                 \
         StaticInitializer CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::                            \
@@ -623,6 +634,10 @@ public:
      */
     virtual string info() const; 
 
+    /**
+     * Returns a string representation of the object
+     */
+    virtual string asString() const; 
 
     //#####  Options-Related Functions  #######################################
     

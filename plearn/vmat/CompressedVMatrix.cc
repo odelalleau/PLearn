@@ -38,8 +38,8 @@
  * $Id$
  ******************************************************* */
 
-#include <plearn/math/VecCompressor.h>
 #include "CompressedVMatrix.h"
+#include <plearn/math/VecCompressor.h>
 
 namespace PLearn {
 using namespace std;

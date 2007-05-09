@@ -33,21 +33,16 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-
- 
-
 /* *******************************************************      
  * $Id$
  * AUTHORS: Pascal Vincent & Yoshua Bengio
  * This file is part of the PLearn library.
  ******************************************************* */
 
-
-/*! \file PLearnLibrary/PLearnCore/Func.h */
-
 #ifndef FUNCTION_INC
 #define FUNCTION_INC
 
+#include <plearn/base/Object.h>
 #include <plearn/base/general.h>
 #include <plearn/base/PP.h>
 #include <plearn/math/TMat.h>

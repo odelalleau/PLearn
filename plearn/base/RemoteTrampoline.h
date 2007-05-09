@@ -40,6 +40,12 @@
 #ifndef RemoteTrampoline_INC
 #define RemoteTrampoline_INC
 
+// Python includes must come first (if needed)
+#ifdef PL_PYTHON_VERSION 
+#include <plearn/python/PythonObjectWrapper.h>
+#endif //def PL_PYTHON_VERSION
+
+
 // From C++ stdlib
 #include <string>
 
@@ -124,6 +130,13 @@ struct RemoteTrampoline : public PPointable
      *  argument is ignored (and should be passed 0 by convention). 
      */
     virtual void call(Object* instance, int nargs, PStream& io) const = 0;
+
+#ifdef PL_PYTHON_VERSION 
+    //! call from python
+    virtual PythonObjectWrapper call(Object* instance, 
+                                     const TVec<PythonObjectWrapper>& args) const = 0;
+#endif //def PL_PYTHON_VERSION 
+
 
     //! Check that the number of arguments is O.K. or PLERROR
     void checkNargs(int nargs, int expected_nargs) const;
@@ -240,6 +253,15 @@ struct RemoteTrampoline_0 : public RemoteTrampoline
         sendRemoteMethodResult(io, r);
     }
 
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* instance, const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(R) r = (as<T>(instance)->*m_method)();
+        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership) ;
+    }
+#endif //def PL_PYTHON_VERSION 
+
 protected:
     MethodType m_method;
 };
@@ -267,6 +289,15 @@ struct RemoteTrampoline_0<T,void> : public RemoteTrampoline
         (as<T>(instance)->*m_method)();
         sendRemoteMethodVoidResult(io);
     }
+
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* instance, const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        (as<T>(instance)->*m_method)();
+        return PythonObjectWrapper(PythonObjectWrapper::transfer_ownership);//None
+    }
+#endif //def PL_PYTHON_VERSION 
 
 protected:
     MethodType m_method;
@@ -301,6 +332,16 @@ struct RemoteTrampoline_1 : public RemoteTrampoline
         sendRemoteMethodResult(io, r);
     }
 
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* instance, const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        TRAMPOLINE_TYPE(R) r= (as<T>(instance)->*m_method)(a1);
+        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+    }
+#endif //def PL_PYTHON_VERSION 
+
 protected:
     MethodType m_method;
 };
@@ -330,6 +371,16 @@ struct RemoteTrampoline_1<T,void,A1> : public RemoteTrampoline
         (as<T>(instance)->*m_method)(a1);
         sendRemoteMethodVoidResult(io);
     }
+
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* instance, const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        (as<T>(instance)->*m_method)(a1);
+        return PythonObjectWrapper(PythonObjectWrapper::transfer_ownership);//None
+    }
+#endif //def PL_PYTHON_VERSION 
 
 protected:
     MethodType m_method;
@@ -365,6 +416,17 @@ struct RemoteTrampoline_2 : public RemoteTrampoline
         sendRemoteMethodResult(io, r);
     }
 
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* instance, const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
+        TRAMPOLINE_TYPE(R) r= (as<T>(instance)->*m_method)(a1,a2);
+        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+    }
+#endif //def PL_PYTHON_VERSION 
+
 protected:
     MethodType m_method;
 };
@@ -395,6 +457,17 @@ struct RemoteTrampoline_2<T,void,A1,A2> : public RemoteTrampoline
         (as<T>(instance)->*m_method)(a1,a2);
         sendRemoteMethodVoidResult(io);
     }
+
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* instance, const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
+        (as<T>(instance)->*m_method)(a1,a2);
+        return PythonObjectWrapper(PythonObjectWrapper::transfer_ownership);//None
+    }
+#endif //def PL_PYTHON_VERSION 
 
 protected:
     MethodType m_method;
@@ -431,6 +504,18 @@ struct RemoteTrampoline_3 : public RemoteTrampoline
         sendRemoteMethodResult(io, r);
     }
 
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* instance, const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
+        TRAMPOLINE_TYPE(A3) a3= args[2].as<TRAMPOLINE_TYPE(A3)>();
+        TRAMPOLINE_TYPE(R) r= (as<T>(instance)->*m_method)(a1,a2,a3);
+        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+    }
+#endif //def PL_PYTHON_VERSION 
+
 protected:
     MethodType m_method;
 };
@@ -462,6 +547,18 @@ struct RemoteTrampoline_3<T,void,A1,A2,A3> : public RemoteTrampoline
         (as<T>(instance)->*m_method)(a1,a2,a3);
         sendRemoteMethodVoidResult(io);
     }
+
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* instance, const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
+        TRAMPOLINE_TYPE(A3) a3= args[2].as<TRAMPOLINE_TYPE(A3)>();
+        (as<T>(instance)->*m_method)(a1,a2,a3);
+        return PythonObjectWrapper(PythonObjectWrapper::transfer_ownership);//None
+    }
+#endif //def PL_PYTHON_VERSION 
 
 protected:
     MethodType m_method;
@@ -500,6 +597,19 @@ struct RemoteTrampoline_4 : public RemoteTrampoline
         sendRemoteMethodResult(io, r);
     }
 
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* instance, const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
+        TRAMPOLINE_TYPE(A3) a3= args[2].as<TRAMPOLINE_TYPE(A3)>();
+        TRAMPOLINE_TYPE(A4) a4= args[3].as<TRAMPOLINE_TYPE(A4)>();
+        TRAMPOLINE_TYPE(R) r= (as<T>(instance)->*m_method)(a1,a2,a3,a4);
+        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+    }
+#endif //def PL_PYTHON_VERSION 
+
 protected:
     MethodType m_method;
 };
@@ -533,6 +643,19 @@ struct RemoteTrampoline_4<T,void,A1,A2,A3,A4> : public RemoteTrampoline
         (as<T>(instance)->*m_method)(a1,a2,a3,a4);
         sendRemoteMethodVoidResult(io);
     }
+
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* instance, const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
+        TRAMPOLINE_TYPE(A3) a3= args[2].as<TRAMPOLINE_TYPE(A3)>();
+        TRAMPOLINE_TYPE(A4) a4= args[3].as<TRAMPOLINE_TYPE(A4)>();
+        (as<T>(instance)->*m_method)(a1,a2,a3,a4);
+        return PythonObjectWrapper(PythonObjectWrapper::transfer_ownership);//None
+    }
+#endif //def PL_PYTHON_VERSION 
 
 protected:
     MethodType m_method;
@@ -572,6 +695,20 @@ struct RemoteTrampoline_5 : public RemoteTrampoline
         sendRemoteMethodResult(io, r);
     }
 
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* instance, const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
+        TRAMPOLINE_TYPE(A3) a3= args[2].as<TRAMPOLINE_TYPE(A3)>();
+        TRAMPOLINE_TYPE(A4) a4= args[3].as<TRAMPOLINE_TYPE(A4)>();
+        TRAMPOLINE_TYPE(A5) a5= args[4].as<TRAMPOLINE_TYPE(A5)>();
+        TRAMPOLINE_TYPE(R) r= (as<T>(instance)->*m_method)(a1,a2,a3,a4,a5);
+        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+    }
+#endif //def PL_PYTHON_VERSION 
+
 protected:
     MethodType m_method;
 };
@@ -606,6 +743,20 @@ struct RemoteTrampoline_5<T,void,A1,A2,A3,A4,A5> : public RemoteTrampoline
         (as<T>(instance)->*m_method)(a1,a2,a3,a4,a5);
         sendRemoteMethodVoidResult(io);
     }
+
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* instance, const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
+        TRAMPOLINE_TYPE(A3) a3= args[2].as<TRAMPOLINE_TYPE(A3)>();
+        TRAMPOLINE_TYPE(A4) a4= args[3].as<TRAMPOLINE_TYPE(A4)>();
+        TRAMPOLINE_TYPE(A5) a5= args[4].as<TRAMPOLINE_TYPE(A5)>();
+        (as<T>(instance)->*m_method)(a1,a2,a3,a4,a5);
+        return PythonObjectWrapper(PythonObjectWrapper::transfer_ownership);//None
+    }
+#endif //def PL_PYTHON_VERSION 
 
 protected:
     MethodType m_method;
@@ -646,6 +797,21 @@ struct RemoteTrampoline_6 : public RemoteTrampoline
         sendRemoteMethodResult(io, r);
     }
 
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* instance, const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
+        TRAMPOLINE_TYPE(A3) a3= args[2].as<TRAMPOLINE_TYPE(A3)>();
+        TRAMPOLINE_TYPE(A4) a4= args[3].as<TRAMPOLINE_TYPE(A4)>();
+        TRAMPOLINE_TYPE(A5) a5= args[4].as<TRAMPOLINE_TYPE(A5)>();
+        TRAMPOLINE_TYPE(A6) a6= args[5].as<TRAMPOLINE_TYPE(A6)>();
+        TRAMPOLINE_TYPE(R) r= (as<T>(instance)->*m_method)(a1,a2,a3,a4,a5,a6);
+        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+    }
+#endif //def PL_PYTHON_VERSION 
+
 protected:
     MethodType m_method;
 };
@@ -681,6 +847,21 @@ struct RemoteTrampoline_6<T,void,A1,A2,A3,A4,A5,A6> : public RemoteTrampoline
         (as<T>(instance)->*m_method)(a1,a2,a3,a4,a5,a6);
         sendRemoteMethodVoidResult(io);
     }
+
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* instance, const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
+        TRAMPOLINE_TYPE(A3) a3= args[2].as<TRAMPOLINE_TYPE(A3)>();
+        TRAMPOLINE_TYPE(A4) a4= args[3].as<TRAMPOLINE_TYPE(A4)>();
+        TRAMPOLINE_TYPE(A5) a5= args[4].as<TRAMPOLINE_TYPE(A5)>();
+        TRAMPOLINE_TYPE(A6) a6= args[5].as<TRAMPOLINE_TYPE(A6)>();
+        (as<T>(instance)->*m_method)(a1,a2,a3,a4,a5,a6);
+        return PythonObjectWrapper(PythonObjectWrapper::transfer_ownership);//None
+    }
+#endif //def PL_PYTHON_VERSION 
 
 protected:
     MethodType m_method;
@@ -720,6 +901,16 @@ struct FRemoteTrampoline_0 : public RemoteTrampoline
         sendRemoteMethodResult(io, r);
     }
 
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* nullinstance, 
+                                     const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(R) r= (*m_function)();
+        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+    }
+#endif //def PL_PYTHON_VERSION 
+
 protected:
     FunctionType m_function;
 };
@@ -746,6 +937,16 @@ struct FRemoteTrampoline_0<void> : public RemoteTrampoline
         (*m_function)();
         sendRemoteMethodVoidResult(io);
     }
+
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* nullinstance, 
+                                     const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        (*m_function)();
+        return PythonObjectWrapper(PythonObjectWrapper::transfer_ownership);//None
+    }
+#endif //def PL_PYTHON_VERSION 
 
 protected:
     FunctionType m_function;
@@ -780,6 +981,17 @@ struct FRemoteTrampoline_1 : public RemoteTrampoline
         sendRemoteMethodResult(io, r);
     }
 
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* nullinstance, 
+                                     const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        TRAMPOLINE_TYPE(R) r= (*m_function)(a1);
+        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+    }
+#endif //def PL_PYTHON_VERSION 
+
 protected:
     FunctionType m_function;
 };
@@ -809,6 +1021,17 @@ struct FRemoteTrampoline_1<void,A1> : public RemoteTrampoline
         (*m_function)(a1);
         sendRemoteMethodVoidResult(io);
     }
+
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* nullinstance, 
+                                     const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        (*m_function)(a1);
+        return PythonObjectWrapper(PythonObjectWrapper::transfer_ownership);//None
+    }
+#endif //def PL_PYTHON_VERSION 
 
 protected:
     FunctionType m_function;
@@ -844,6 +1067,18 @@ struct FRemoteTrampoline_2 : public RemoteTrampoline
         sendRemoteMethodResult(io, r);
     }
 
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* nullinstance, 
+                                     const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
+        TRAMPOLINE_TYPE(R) r= (*m_function)(a1,a2);
+        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+    }
+#endif //def PL_PYTHON_VERSION 
+
 protected:
     FunctionType m_function;
 };
@@ -874,6 +1109,18 @@ struct FRemoteTrampoline_2<void,A1,A2> : public RemoteTrampoline
         (*m_function)(a1,a2);
         sendRemoteMethodVoidResult(io);
     }
+
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* nullinstance, 
+                                     const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
+        (*m_function)(a1,a2);
+        return PythonObjectWrapper(PythonObjectWrapper::transfer_ownership);//None
+    }
+#endif //def PL_PYTHON_VERSION 
 
 protected:
     FunctionType m_function;
@@ -910,6 +1157,19 @@ struct FRemoteTrampoline_3 : public RemoteTrampoline
         sendRemoteMethodResult(io, r);
     }
 
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* nullinstance, 
+                                     const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
+        TRAMPOLINE_TYPE(A3) a3= args[2].as<TRAMPOLINE_TYPE(A3)>();
+        TRAMPOLINE_TYPE(R) r= (*m_function)(a1,a2,a3);
+        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+    }
+#endif //def PL_PYTHON_VERSION 
+
 protected:
     FunctionType m_function;
 };
@@ -941,6 +1201,19 @@ struct FRemoteTrampoline_3<void,A1,A2,A3> : public RemoteTrampoline
         (*m_function)(a1,a2,a3);
         sendRemoteMethodVoidResult(io);
     }
+
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* nullinstance, 
+                                     const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
+        TRAMPOLINE_TYPE(A3) a3= args[2].as<TRAMPOLINE_TYPE(A3)>();
+        (*m_function)(a1,a2,a3);
+        return PythonObjectWrapper(PythonObjectWrapper::transfer_ownership);//None
+    }
+#endif //def PL_PYTHON_VERSION 
 
 protected:
     FunctionType m_function;
@@ -979,6 +1252,20 @@ struct FRemoteTrampoline_4 : public RemoteTrampoline
         sendRemoteMethodResult(io, r);
     }
 
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* nullinstance, 
+                                     const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
+        TRAMPOLINE_TYPE(A3) a3= args[2].as<TRAMPOLINE_TYPE(A3)>();
+        TRAMPOLINE_TYPE(A4) a4= args[3].as<TRAMPOLINE_TYPE(A4)>();
+        TRAMPOLINE_TYPE(R) r= (*m_function)(a1,a2,a3,a4);
+        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+    }
+#endif //def PL_PYTHON_VERSION 
+
 protected:
     FunctionType m_function;
 };
@@ -1012,6 +1299,20 @@ struct FRemoteTrampoline_4<void,A1,A2,A3,A4> : public RemoteTrampoline
         (*m_function)(a1,a2,a3,a4);
         sendRemoteMethodVoidResult(io);
     }
+
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* nullinstance, 
+                                     const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
+        TRAMPOLINE_TYPE(A3) a3= args[2].as<TRAMPOLINE_TYPE(A3)>();
+        TRAMPOLINE_TYPE(A4) a4= args[3].as<TRAMPOLINE_TYPE(A4)>();
+        (*m_function)(a1,a2,a3,a4);
+        return PythonObjectWrapper(PythonObjectWrapper::transfer_ownership);//None
+    }
+#endif //def PL_PYTHON_VERSION 
 
 protected:
     FunctionType m_function;
@@ -1051,6 +1352,21 @@ struct FRemoteTrampoline_5 : public RemoteTrampoline
         sendRemoteMethodResult(io, r);
     }
 
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* nullinstance, 
+                                     const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
+        TRAMPOLINE_TYPE(A3) a3= args[2].as<TRAMPOLINE_TYPE(A3)>();
+        TRAMPOLINE_TYPE(A4) a4= args[3].as<TRAMPOLINE_TYPE(A4)>();
+        TRAMPOLINE_TYPE(A5) a5= args[4].as<TRAMPOLINE_TYPE(A5)>();
+        TRAMPOLINE_TYPE(R) r= (*m_function)(a1,a2,a3,a4,a5);
+        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+    }
+#endif //def PL_PYTHON_VERSION 
+
 protected:
     FunctionType m_function;
 };
@@ -1085,6 +1401,21 @@ struct FRemoteTrampoline_5<void,A1,A2,A3,A4,A5> : public RemoteTrampoline
         (*m_function)(a1,a2,a3,a4,a5);
         sendRemoteMethodVoidResult(io);
     }
+
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* nullinstance, 
+                                     const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
+        TRAMPOLINE_TYPE(A3) a3= args[2].as<TRAMPOLINE_TYPE(A3)>();
+        TRAMPOLINE_TYPE(A4) a4= args[3].as<TRAMPOLINE_TYPE(A4)>();
+        TRAMPOLINE_TYPE(A5) a5= args[4].as<TRAMPOLINE_TYPE(A5)>();
+        (*m_function)(a1,a2,a3,a4,a5);
+        return PythonObjectWrapper(PythonObjectWrapper::transfer_ownership);//None
+    }
+#endif //def PL_PYTHON_VERSION 
 
 protected:
     FunctionType m_function;
@@ -1125,6 +1456,22 @@ struct FRemoteTrampoline_6 : public RemoteTrampoline
         sendRemoteMethodResult(io, r);
     }
 
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* nullinstance, 
+                                     const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
+        TRAMPOLINE_TYPE(A3) a3= args[2].as<TRAMPOLINE_TYPE(A3)>();
+        TRAMPOLINE_TYPE(A4) a4= args[3].as<TRAMPOLINE_TYPE(A4)>();
+        TRAMPOLINE_TYPE(A5) a5= args[4].as<TRAMPOLINE_TYPE(A5)>();
+        TRAMPOLINE_TYPE(A6) a6= args[5].as<TRAMPOLINE_TYPE(A6)>();
+        TRAMPOLINE_TYPE(R) r= (*m_function)(a1,a2,a3,a4,a5,a6);
+        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+    }
+#endif //def PL_PYTHON_VERSION 
+
 protected:
     FunctionType m_function;
 };
@@ -1161,33 +1508,25 @@ struct FRemoteTrampoline_6<void,A1,A2,A3,A4,A5,A6> : public RemoteTrampoline
         sendRemoteMethodVoidResult(io);
     }
 
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper call(Object* nullinstance, 
+                                     const TVec<PythonObjectWrapper>& args) const
+    {
+        checkNargs(args.size(), expected_nargs);
+        TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
+        TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
+        TRAMPOLINE_TYPE(A3) a3= args[2].as<TRAMPOLINE_TYPE(A3)>();
+        TRAMPOLINE_TYPE(A4) a4= args[3].as<TRAMPOLINE_TYPE(A4)>();
+        TRAMPOLINE_TYPE(A5) a5= args[4].as<TRAMPOLINE_TYPE(A5)>();
+        TRAMPOLINE_TYPE(A6) a6= args[5].as<TRAMPOLINE_TYPE(A6)>();
+        (*m_function)(a1,a2,a3,a4,a5,a6);
+        return PythonObjectWrapper(PythonObjectWrapper::transfer_ownership);//None
+    }
+#endif //def PL_PYTHON_VERSION 
+
 protected:
     FunctionType m_function;
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 } // end of namespace PLearn
 

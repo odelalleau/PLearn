@@ -36,9 +36,9 @@
 
 /*! \file KroneckerBaseKernel.cc */
 
+#include "KroneckerBaseKernel.h"
 #include <plearn/base/lexical_cast.h>
 #include <plearn/math/TMat_maths.h>
-#include "KroneckerBaseKernel.h"
 
 namespace PLearn {
 using namespace std;

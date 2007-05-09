@@ -49,7 +49,8 @@ void TypeFactory::register_type(const string& type_name,
                                 GET_REMOTE_METHODS get_remote_methods,
                                 ISA_METHOD isa_method,
                                 const string& one_line_descr,
-                                const string& multi_line_help)
+                                const string& multi_line_help,
+                                const PPath& declaring_file)
 {
     TypeMapEntry entry(type_name, 
                        parent_class, 
@@ -58,7 +59,8 @@ void TypeFactory::register_type(const string& type_name,
                        get_remote_methods,
                        isa_method,
                        one_line_descr,
-                       multi_line_help);
+                       multi_line_help,
+                       declaring_file);
 
     instance().registerType(entry);
 }

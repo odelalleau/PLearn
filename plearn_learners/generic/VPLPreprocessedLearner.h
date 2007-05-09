@@ -63,10 +63,10 @@ protected:
     // *********************
 
     // ### declare protected option fields (such as learnt parameters) here
-    VMatLanguage row_prg;
-    VMatLanguage input_prg;
-    VMatLanguage output_prg;
-    VMatLanguage costs_prg;
+    PP<VMatLanguage> row_prg;
+    PP<VMatLanguage> input_prg;
+    PP<VMatLanguage> output_prg;
+    PP<VMatLanguage> costs_prg;
 
     TVec<string> row_prg_fieldnames; 
     TVec<string> input_prg_fieldnames;

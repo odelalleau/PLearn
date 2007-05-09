@@ -1,0 +1,479 @@
+ WARNING: Cholesky decomposition would fail: add 1.79937e-16 to diagonal
+ WARNING: Cholesky decomposition would fail: add 4.15126e-12 to diagonal
+use result= [[ 144.90670482]
+ [ 418.68662628]]
+include_bias <type 'bool'> True
+cholesky <type 'bool'> True
+weight_decay <type 'float'> 0.0
+output_learned_weights <type 'bool'> False
+weights <class 'numarray.numarraycore.NumArray'> [[  2.19604274]
+ [ -1.0415409 ]
+ [-39.57186813]
+ [ 16.80245046]
+ [  4.3526955 ]]
+AIC <type 'float'> -16.4363107086
+BIC <type 'float'> -17.9386235608
+resid_variance <class 'numarray.numarraycore.NumArray'> [ -3.91810318e-09]
+expdir <type 'str'> 
+seed <type 'long'> 1827
+stage <type 'int'> 0
+n_examples <type 'int'> 3
+inputsize <type 'int'> 4
+targetsize <type 'int'> 1
+weightsize <type 'int'> 0
+forget_when_training_set_changes <type 'bool'> False
+nstages <type 'int'> 1
+report_progress <type 'bool'> True
+verbosity <type 'int'> 1
+nservers <type 'int'> 0
+save_trainingset_prefix <type 'str'> 
+parallelize_here <type 'bool'> True
+master_sends_testset_rows <type 'bool'> False
+*1 ->LinearRegressor(
+include_bias = 1 ;
+cholesky = 1 ;
+weight_decay = 0 ;
+output_learned_weights = 0 ;
+weights = 5  1  [ 
+2.19604273868088962 	
+-1.04154089689183138 	
+-39.5718681295575294 	
+16.8024504629067799 	
+4.35269550398104066 	
+]
+;
+AIC = -16.4363107085968032 ;
+BIC = -17.9386235608166196 ;
+resid_variance = 1 [ -3.91810317523777485e-09 ] ;
+stage = 0 ;
+n_examples = 3 ;
+inputsize = 4 ;
+targetsize = 1 ;
+weightsize = 0 ;
+forget_when_training_set_changes = 0 ;
+nstages = 1 ;
+report_progress = 1 ;
+verbosity = 1 ;
+nservers = 0 ;
+save_trainingset_prefix = ""  )
+expdir <type 'str'> 
+dataset <class 'numarray.numarraycore.NumArray'> []
+splitter <class 'TrainTestSplitter'> *1 ->TrainTestSplitter(
+append_train = 0 ;
+calc_with_pct = 1 ;
+test_fraction = 0 ;
+test_fraction_abs = 0 ;
+shuffle_seed = -1  )
+statnames <type 'list'> []
+statmask <type 'list'> []
+learner <class 'LinearRegressor'> *1 ->LinearRegressor(
+include_bias = 1 ;
+cholesky = 1 ;
+weight_decay = 0 ;
+output_learned_weights = 0 ;
+weights = 5  1  [ 
+2.19604273868088962 	
+-1.04154089689183138 	
+-39.5718681295575294 	
+16.8024504629067799 	
+4.35269550398104066 	
+]
+;
+AIC = -16.4363107085968032 ;
+BIC = -17.9386235608166196 ;
+resid_variance = 1 [ -3.91810317523777485e-09 ] ;
+stage = 0 ;
+n_examples = 3 ;
+inputsize = 4 ;
+targetsize = 1 ;
+weightsize = 0 ;
+forget_when_training_set_changes = 0 ;
+nstages = 1999 ;
+report_progress = 1 ;
+verbosity = 1 ;
+nservers = 0 ;
+save_trainingset_prefix = ""  )
+perf_evaluators <type 'dict'> {}
+report_stats <type 'bool'> True
+save_initial_tester <type 'bool'> True
+save_stat_collectors <type 'bool'> True
+save_learners <type 'bool'> True
+save_initial_learners <type 'bool'> False
+save_data_sets <type 'bool'> False
+save_test_outputs <type 'bool'> False
+call_forget_in_run <type 'bool'> True
+save_test_costs <type 'bool'> False
+provide_learner_expdir <type 'bool'> False
+should_train <type 'bool'> True
+train <type 'bool'> True
+should_test <type 'bool'> True
+template_stats_collector <type 'NoneType'> None
+global_template_stats_collector <type 'NoneType'> None
+final_commands <type 'list'> ['allo', 'allo']
+save_test_confidence <type 'bool'> False
+enforce_clean_expdir <type 'bool'> True
+parallelize_here <type 'bool'> True
+*1 ->PTester(
+expdir = "" ;
+dataset = *0 ;
+splitter = *2 ->TrainTestSplitter(
+append_train = 0 ;
+calc_with_pct = 1 ;
+test_fraction = 0 ;
+test_fraction_abs = 0 ;
+shuffle_seed = -1  )
+;
+statnames = []
+;
+statmask = []
+;
+learner = *3 ->LinearRegressor(
+include_bias = 1 ;
+cholesky = 1 ;
+weight_decay = 0 ;
+output_learned_weights = 0 ;
+weights = 5  1  [ 
+2.19604273868088962 	
+-1.04154089689183138 	
+-39.5718681295575294 	
+16.8024504629067799 	
+4.35269550398104066 	
+]
+;
+AIC = -16.4363107085968032 ;
+BIC = -17.9386235608166196 ;
+resid_variance = 1 [ -3.91810317523777485e-09 ] ;
+stage = 0 ;
+n_examples = 3 ;
+inputsize = 4 ;
+targetsize = 1 ;
+weightsize = 0 ;
+forget_when_training_set_changes = 0 ;
+nstages = 1999 ;
+report_progress = 1 ;
+verbosity = 1 ;
+nservers = 0 ;
+save_trainingset_prefix = ""  )
+;
+perf_evaluators = {};
+report_stats = 1 ;
+save_initial_tester = 1 ;
+save_stat_collectors = 1 ;
+save_learners = 1 ;
+save_initial_learners = 0 ;
+save_data_sets = 0 ;
+save_test_outputs = 0 ;
+call_forget_in_run = 1 ;
+save_test_costs = 0 ;
+provide_learner_expdir = 0 ;
+should_train = 1 ;
+should_test = 1 ;
+template_stats_collector = *0 ;
+global_template_stats_collector = *0 ;
+final_commands = 2 [ "allo" "allo" ] ;
+save_test_confidence = 0 ;
+enforce_clean_expdir = 1  )
+recTest	1900
+testRec 1900
+recTest	1800
+testRec 1800
+recTest	1700
+testRec 1700
+recTest	1600
+testRec 1600
+recTest	1500
+testRec 1500
+recTest	1400
+testRec 1400
+recTest	1300
+testRec 1300
+recTest	1200
+testRec 1200
+recTest	1100
+testRec 1100
+recTest	1000
+testRec 1000
+recTest	900
+testRec 900
+recTest	800
+testRec 800
+recTest	700
+testRec 700
+recTest	600
+testRec 600
+recTest	500
+testRec 500
+recTest	400
+testRec 400
+recTest	300
+testRec 300
+recTest	200
+testRec 200
+recTest	100
+testRec 100
+recTest	0
+FINI! []
+recTest2	1900	nrefs=102
+testRec2 1900
+recTest2	1800	nrefs=202
+testRec2 1800
+recTest2	1700	nrefs=302
+testRec2 1700
+recTest2	1600	nrefs=402
+testRec2 1600
+recTest2	1500	nrefs=502
+testRec2 1500
+recTest2	1400	nrefs=602
+testRec2 1400
+recTest2	1300	nrefs=702
+testRec2 1300
+recTest2	1200	nrefs=802
+testRec2 1200
+recTest2	1100	nrefs=902
+testRec2 1100
+recTest2	1000	nrefs=1002
+testRec2 1000
+recTest2	900	nrefs=1102
+testRec2 900
+recTest2	800	nrefs=1202
+testRec2 800
+recTest2	700	nrefs=1302
+testRec2 700
+recTest2	600	nrefs=1402
+testRec2 600
+recTest2	500	nrefs=1502
+testRec2 500
+recTest2	400	nrefs=1602
+testRec2 400
+recTest2	300	nrefs=1702
+testRec2 300
+recTest2	200	nrefs=1802
+testRec2 200
+recTest2	100	nrefs=1902
+testRec2 100
+recTest2	0	nrefs=2002
+FINI!2 []
+testRecCrash 3
+recTestCrash	2
+testRecCrash 1
+recTestCrash	0
+FINI! []
+[INTENDED ERROR] Caught Python Exception: 'Exception
+Python 2.X.Y: /usr/bin/python
+
+
+A problem occurred in a Python script.  Here is the sequence of
+function calls leading up to the error, in the order they occurred.
+
+ test_embedded_code_snippet.py in testRecCrash(self=<plearn.pybridge.test_embedded_code_snippet.Machin object>, n=3)
+   68             print "testRecCrash",n
+   69             sys.stdout.flush()
+   70             self.recTestCrash(n-1)
+   71 
+   72     def fini(self):
+
+Exception: Exception
+Python 2.X.Y: /usr/bin/python
+
+
+A problem occurred in a Python script.  Here is the sequence of
+function calls leading up to the error, in the order they occurred.
+
+ test_embedded_code_snippet.py in testRecCrash(self=<plearn.pybridge.test_embedded_code_snippet.Machin object>, n=1)
+   68             print "testRecCrash",n
+   69             sys.stdout.flush()
+   70             self.recTestCrash(n-1)
+   71 
+   72     def fini(self):
+
+Exception: RuntimeError
+Python 2.X.Y: /usr/bin/python
+
+
+A problem occurred in a Python script.  Here is the sequence of
+function calls leading up to the error, in the order they occurred.
+
+ test_embedded_code_snippet.py in testRecCrash(self=<plearn.pybridge.test_embedded_code_snippet.Machin object>, n=-1)
+   64             print 'FINI!', gc.garbage
+   65             sys.stdout.flush()
+   66             raise RuntimeError, 'Crash on purpose: test'
+   67         else:
+   68             print "testRecCrash",n
+
+RuntimeError: Crash on purpose: test
+    __doc__ = 'Unspecified run-time error.'
+    __getitem__ = <bound method RuntimeError.__getitem__ of <exceptions.RuntimeError instance>>
+    __init__ = <bound method RuntimeError.__init__ of <exceptions.RuntimeError instance>>
+    __module__ = 'exceptions'
+    __str__ = <bound method RuntimeError.__str__ of <exceptions.RuntimeError instance>>
+    args = ('Crash on purpose: test',)
+
+The above is a description of an error in a Python program.  Here is
+the original traceback:
+
+Traceback (most recent call last):
+  File "/home/saintmlx/PLearn/python_modules/plearn/pybridge/test_embedded_code_snippet.py", line 66, in testRecCrash
+    raise RuntimeError, 'Crash on purpose: test'
+RuntimeError: Crash on purpose: test
+
+Error while calling function 'testRecCrash' with 1 params.
+    __doc__ = 'Common base class for all exceptions.'
+    __getitem__ = <bound method Exception.__getitem__ of <exceptions.Exception instance>>
+    __init__ = <bound method Exception.__init__ of <exceptions.Exception instance>>
+    __module__ = 'exceptions'
+    __str__ = <bound method Exception.__str__ of <exceptions.Exception instance>>
+    args = ("RuntimeError\nPython 2.X.Y: /usr/bin/python\n\n\nA p...le calling function 'testRecCrash' with 1 params.",)
+
+The above is a description of an error in a Python program.  Here is
+the original traceback:
+
+Traceback (most recent call last):
+  File "/home/saintmlx/PLearn/python_modules/plearn/pybridge/test_embedded_code_snippet.py", line 70, in testRecCrash
+    self.recTestCrash(n-1)
+Exception: RuntimeError
+Python 2.X.Y: /usr/bin/python
+
+
+A problem occurred in a Python script.  Here is the sequence of
+function calls leading up to the error, in the order they occurred.
+
+ test_embedded_code_snippet.py in testRecCrash(self=<plearn.pybridge.test_embedded_code_snippet.Machin object>, n=-1)
+   64             print 'FINI!', gc.garbage
+   65             sys.stdout.flush()
+   66             raise RuntimeError, 'Crash on purpose: test'
+   67         else:
+   68             print "testRecCrash",n
+
+RuntimeError: Crash on purpose: test
+    __doc__ = 'Unspecified run-time error.'
+    __getitem__ = <bound method RuntimeError.__getitem__ of <exceptions.RuntimeError instance>>
+    __init__ = <bound method RuntimeError.__init__ of <exceptions.RuntimeError instance>>
+    __module__ = 'exceptions'
+    __str__ = <bound method RuntimeError.__str__ of <exceptions.RuntimeError instance>>
+    args = ('Crash on purpose: test',)
+
+The above is a description of an error in a Python program.  Here is
+the original traceback:
+
+Traceback (most recent call last):
+  File "/home/saintmlx/PLearn/python_modules/plearn/pybridge/test_embedded_code_snippet.py", line 66, in testRecCrash
+    raise RuntimeError, 'Crash on purpose: test'
+RuntimeError: Crash on purpose: test
+
+Error while calling function 'testRecCrash' with 1 params.
+
+Error while calling function 'testRecCrash' with 1 params.
+    __doc__ = 'Common base class for all exceptions.'
+    __getitem__ = <bound method Exception.__getitem__ of <exceptions.Exception instance>>
+    __init__ = <bound method Exception.__init__ of <exceptions.Exception instance>>
+    __module__ = 'exceptions'
+    __str__ = <bound method Exception.__str__ of <exceptions.Exception instance>>
+    args = ("Exception\nPython 2.X.Y: /usr/bin/python\n\n\nA prob...le calling function 'testRecCrash' with 1 params.",)
+
+The above is a description of an error in a Python program.  Here is
+the original traceback:
+
+Traceback (most recent call last):
+  File "/home/saintmlx/PLearn/python_modules/plearn/pybridge/test_embedded_code_snippet.py", line 70, in testRecCrash
+    self.recTestCrash(n-1)
+Exception: Exception
+Python 2.X.Y: /usr/bin/python
+
+
+A problem occurred in a Python script.  Here is the sequence of
+function calls leading up to the error, in the order they occurred.
+
+ test_embedded_code_snippet.py in testRecCrash(self=<plearn.pybridge.test_embedded_code_snippet.Machin object>, n=1)
+   68             print "testRecCrash",n
+   69             sys.stdout.flush()
+   70             self.recTestCrash(n-1)
+   71 
+   72     def fini(self):
+
+Exception: RuntimeError
+Python 2.X.Y: /usr/bin/python
+
+
+A problem occurred in a Python script.  Here is the sequence of
+function calls leading up to the error, in the order they occurred.
+
+ test_embedded_code_snippet.py in testRecCrash(self=<plearn.pybridge.test_embedded_code_snippet.Machin object>, n=-1)
+   64             print 'FINI!', gc.garbage
+   65             sys.stdout.flush()
+   66             raise RuntimeError, 'Crash on purpose: test'
+   67         else:
+   68             print "testRecCrash",n
+
+RuntimeError: Crash on purpose: test
+    __doc__ = 'Unspecified run-time error.'
+    __getitem__ = <bound method RuntimeError.__getitem__ of <exceptions.RuntimeError instance>>
+    __init__ = <bound method RuntimeError.__init__ of <exceptions.RuntimeError instance>>
+    __module__ = 'exceptions'
+    __str__ = <bound method RuntimeError.__str__ of <exceptions.RuntimeError instance>>
+    args = ('Crash on purpose: test',)
+
+The above is a description of an error in a Python program.  Here is
+the original traceback:
+
+Traceback (most recent call last):
+  File "/home/saintmlx/PLearn/python_modules/plearn/pybridge/test_embedded_code_snippet.py", line 66, in testRecCrash
+    raise RuntimeError, 'Crash on purpose: test'
+RuntimeError: Crash on purpose: test
+
+Error while calling function 'testRecCrash' with 1 params.
+    __doc__ = 'Common base class for all exceptions.'
+    __getitem__ = <bound method Exception.__getitem__ of <exceptions.Exception instance>>
+    __init__ = <bound method Exception.__init__ of <exceptions.Exception instance>>
+    __module__ = 'exceptions'
+    __str__ = <bound method Exception.__str__ of <exceptions.Exception instance>>
+    args = ("RuntimeError\nPython 2.X.Y: /usr/bin/python\n\n\nA p...le calling function 'testRecCrash' with 1 params.",)
+
+The above is a description of an error in a Python program.  Here is
+the original traceback:
+
+Traceback (most recent call last):
+  File "/home/saintmlx/PLearn/python_modules/plearn/pybridge/test_embedded_code_snippet.py", line 70, in testRecCrash
+    self.recTestCrash(n-1)
+Exception: RuntimeError
+Python 2.X.Y: /usr/bin/python
+
+
+A problem occurred in a Python script.  Here is the sequence of
+function calls leading up to the error, in the order they occurred.
+
+ test_embedded_code_snippet.py in testRecCrash(self=<plearn.pybridge.test_embedded_code_snippet.Machin object>, n=-1)
+   64             print 'FINI!', gc.garbage
+   65             sys.stdout.flush()
+   66             raise RuntimeError, 'Crash on purpose: test'
+   67         else:
+   68             print "testRecCrash",n
+
+RuntimeError: Crash on purpose: test
+    __doc__ = 'Unspecified run-time error.'
+    __getitem__ = <bound method RuntimeError.__getitem__ of <exceptions.RuntimeError instance>>
+    __init__ = <bound method RuntimeError.__init__ of <exceptions.RuntimeError instance>>
+    __module__ = 'exceptions'
+    __str__ = <bound method RuntimeError.__str__ of <exceptions.RuntimeError instance>>
+    args = ('Crash on purpose: test',)
+
+The above is a description of an error in a Python program.  Here is
+the original traceback:
+
+Traceback (most recent call last):
+  File "/home/saintmlx/PLearn/python_modules/plearn/pybridge/test_embedded_code_snippet.py", line 66, in testRecCrash
+    raise RuntimeError, 'Crash on purpose: test'
+RuntimeError: Crash on purpose: test
+
+Error while calling function 'testRecCrash' with 1 params.
+
+Error while calling function 'testRecCrash' with 1 params.
+
+Error while calling function 'testRecCrash' with 1 params.'
+refs0: 1
+refs1: 1
+nrefs 1010 1
+self 12
+learner 0
+testRec 0
+recTest 2
+1010 1

@@ -38,6 +38,8 @@
 /*! \file HTMLUtils.cc */
 
 
+#include <plearn/base/Object.h>
+
 #include "HTMLUtils.h"
 
 #include <plearn/base/stringutils.h>

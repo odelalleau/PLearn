@@ -45,6 +45,7 @@
 #include <plearn/base/PDate.h>
 #include <plearn/math/TMat_sort.h>
 #include <set>
+#include <plearn/base/RemoteDeclareMethod.h>
 
 namespace PLearn {
 using namespace std;

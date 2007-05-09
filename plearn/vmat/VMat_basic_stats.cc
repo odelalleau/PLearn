@@ -41,7 +41,7 @@
 
 /*! \file VMat_basic_stats.cc */
 
-
+#include <plearn/base/Object.h>
 #include "VMat_basic_stats.h"
 //#include "VMat.h"
 #include "MemoryVMatrix.h"

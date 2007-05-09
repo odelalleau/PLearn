@@ -38,9 +38,9 @@
  ******************************************************* */
 
 /*! \file VMatCommand.cc */
+#include <plearn/misc/vmatmain.h>
 #include "VMatCommand.h"
 #include <plearn/db/getDataSet.h>
-#include <plearn/misc/vmatmain.h>
 #include <plearn/base/lexical_cast.h>
 
 namespace PLearn {

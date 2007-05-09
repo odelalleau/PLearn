@@ -40,8 +40,8 @@
 
 /*! \file KNNVMatrix.cc */
 
-#include <plearn/base/tostring.h>
 #include <plearn/ker/DistanceKernel.h>
+#include <plearn/base/tostring.h>
 #include "KNNVMatrix.h"
 #include "SelectRowsVMatrix.h"
 #include "SubVMatrix.h"

@@ -44,8 +44,8 @@
 #ifndef Variable_INC
 #define Variable_INC
 
-#include <plearn/math/TMat.h>
 #include <plearn/base/Object.h>
+#include <plearn/math/TMat.h>
 
 namespace PLearn {
 using namespace std;

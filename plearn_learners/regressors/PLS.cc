@@ -43,6 +43,7 @@
 #define PL_LOG_MODULE_NAME "PLS"
 
 // From PLearn
+#include "PLS.h"
 #include <plearn/io/pl_log.h>
 #include <plearn/math/TMat_maths.h>    //!< For dist.
 #include <plearn/math/pl_erf.h>
@@ -50,7 +51,6 @@
 #include <plearn/vmat/ShiftAndRescaleVMatrix.h>
 #include <plearn/vmat/SubVMatrix.h>
 #include <plearn/vmat/VMat_linalg.h>
-#include "PLS.h"
 
 namespace PLearn {
 using namespace std;

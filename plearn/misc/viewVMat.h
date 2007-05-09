@@ -38,8 +38,8 @@
 #ifndef viewVMat_INC
 #define viewVMat_INC
 
-#include <string>
 #include <plearn/vmat/VMat.h>
+#include <string>
 
 namespace PLearn {
 using namespace std;

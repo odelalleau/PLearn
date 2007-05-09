@@ -45,6 +45,7 @@
 #include <plearn/vmat/MemoryVMatrix.h>
 #include <assert.h>
 #include "PTester.h"
+#include <plearn/base/RemoteDeclareMethod.h>
 
 #ifndef BUGGED_SERVER
 #include <plearn/misc/PLearnService.h>

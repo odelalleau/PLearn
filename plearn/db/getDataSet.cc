@@ -41,6 +41,7 @@
  * This file is part of the PLearn library.
  ******************************************************* */
 
+#include <plearn/base/Object.h>
 #include "getDataSet.h"
 #include <plearn/io/MatIO.h>              //!< For loadAsciiSingleBinaryDescriptor().
 

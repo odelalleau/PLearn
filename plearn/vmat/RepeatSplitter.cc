@@ -38,8 +38,8 @@
 
 /*! \file RepeatSplitter.cc */
 
-#include <plearn/math/random.h>
 #include "RepeatSplitter.h"
+#include <plearn/math/random.h>
 #include "SelectRowsVMatrix.h"
 
 namespace PLearn {

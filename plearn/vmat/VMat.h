@@ -47,11 +47,11 @@
 #ifndef VMat_INC
 #define VMat_INC
 
+#include "VMatrix.h"
 //#include <cstdlib>
 #include <plearn/base/PP.h>
 #include <plearn/math/TMat.h>
 //#include "VMField.h"
-#include "VMatrix.h"
 #include "VVec.h"
 
 namespace PLearn {

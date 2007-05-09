@@ -41,6 +41,7 @@
 /*! \file VMat_computeStats.cc */
 
 
+#include <plearn/base/Object.h>
 #include "VMat_computeStats.h"
 #include <plearn/vmat/VMat.h>
 #include <plearn/math/StatsCollector.h>

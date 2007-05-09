@@ -59,6 +59,8 @@
 #include <plearn_learners/misc/Grapher.h>
 #include <plearn_learners/misc/VariableSelectionWithDirectedGradientDescent.h>
 #include <plearn_learners/testers/PTester.h>
+#include <plearn/misc/HTMLHelpGenerator.h>
+
 
 /***********
  * Command *
@@ -79,7 +81,7 @@
 #include <commands/PLearnCommands/TestDependencyCommand.h>
 
 // * extra stuff from Boost to generate help *
-#include <commands/PLearnCommands/HTMLHelpCommand.h>
+#include <commands/PLearnCommands/HTMLHelpCommand.h>//<! DEPRECATED (will disappear soon)
 
 //#include <commands/PLearnCommands/TxtmatCommand.h>
 

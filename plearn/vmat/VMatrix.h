@@ -44,6 +44,7 @@
 #define VMatrix_INC
 
 //#include <cstdlib>
+#include <plearn/base/Object.h>
 #include <map>
 #include <plearn/base/PP.h>
 #include <plearn/math/TMat.h>

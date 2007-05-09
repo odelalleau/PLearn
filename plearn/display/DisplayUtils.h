@@ -49,10 +49,10 @@
 #ifndef DISPLAYUTILS_INC
 #define DISPLAYUTILS_INC
 
+#include <plearn_learners/generic/PLearner.h>
 #include "GhostScript.h"
 #include <plearn/math/Mat.h>
 #include "Gnuplot.h"
-#include <plearn_learners/generic/PLearner.h>
 #include <plearn/var/Func.h>
 
 namespace PLearn {

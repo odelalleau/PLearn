@@ -52,6 +52,8 @@
  *  library includes are carried out.  (Python.h plays hacks with some macros)
  */
 
+#ifdef PL_PYTHON_VERSION
+
 // Under Windows with Microsoft Visual Studio in debug mode, _DEBUG is defined
 // resulting in a dependence on the python24_d.lib library file. To get rid of
 // this, we undefine _DEBUG before including the python headers.
@@ -60,9 +62,11 @@
 #undef _DEBUG
 #endif
 
+/* allow to be undefined
 #ifndef PL_PYTHON_VERSION
 #  define PL_PYTHON_VERSION 230
 #endif
+*/
 
 #if PL_PYTHON_VERSION >= 240
 
@@ -79,9 +83,10 @@
 #include <python2.3/numarray/libnumarray.h>
 
 #else
-
+/*
+// it is not an error not to include python
 #  error "PL_PYTHON_VERSION should be defined to one of: 230, 240"
-
+*/
 #endif
 
 // Redefine _DEBUG if needed (see above).
@@ -97,6 +102,8 @@
 // defined it.
 //
 #undef HAVE_LONG_LONG
+
+#endif //def PL_PYTHON_VERSION
 
 
 /*

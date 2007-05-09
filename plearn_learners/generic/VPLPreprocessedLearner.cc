@@ -163,14 +163,16 @@ void VPLPreprocessedLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     deepCopyField(learner_, copies);    
 
-    // deepCopyField(row_prg, copies);
-    // deepCopyField(input_prg, copies);
-    // deepCopyField(output_prg, copies);
-    // deepCopyField(costs_prg, copies);
+    deepCopyField(row_prg, copies);
+    deepCopyField(input_prg, copies);
+    deepCopyField(output_prg, copies);
+    deepCopyField(costs_prg, copies);
+/*
     row_prg.makeDeepCopyFromShallowCopy(copies);
     input_prg.makeDeepCopyFromShallowCopy(copies);
     output_prg.makeDeepCopyFromShallowCopy(copies);
     costs_prg.makeDeepCopyFromShallowCopy(copies);
+*/
  
     deepCopyField(row_prg_fieldnames, copies); 
     deepCopyField(input_prg_fieldnames, copies);
@@ -199,7 +201,7 @@ void VPLPreprocessedLearner::setTrainStatsCollector(PP<VecStatsCollector> statsc
 
 int VPLPreprocessedLearner::outputsize() const
 {
-    if(output_prg)
+    if(output_prg && *output_prg)
         return output_prg_fieldnames.length();
     else
     {
@@ -233,10 +235,12 @@ void VPLPreprocessedLearner::setTrainingSet(VMat training_set, bool call_forget)
 {
     PLASSERT( learner_ );
 
+    if(!row_prg) 
+        row_prg= new VMatLanguage();
     if(trainset_preproc!="")
     {
-        row_prg.setSource(training_set);
-        row_prg.compileString(trainset_preproc, row_prg_fieldnames);
+        row_prg->setSource(training_set);
+        row_prg->compileString(trainset_preproc, row_prg_fieldnames);
         int newinputsize = row_prg_fieldnames.length()-(newtargetsize+newweightsize+newextrasize);
         VMat processed_trainset = new ProcessingVMatrix(training_set, trainset_preproc);
         processed_trainset->defineSizes(newinputsize,newtargetsize,newweightsize,newextrasize);
@@ -244,7 +248,7 @@ void VPLPreprocessedLearner::setTrainingSet(VMat training_set, bool call_forget)
     }
     else
     {
-        row_prg.clear();
+        row_prg->clear();
         row_prg_fieldnames.resize(0);
         learner_->setTrainingSet(training_set, false);
     }
@@ -255,42 +259,48 @@ void VPLPreprocessedLearner::setTrainingSet(VMat training_set, bool call_forget)
         learner_->build();
     inherited::setTrainingSet(training_set, call_forget); // will call forget if needed
 
+    if(!input_prg) 
+        input_prg= new VMatLanguage();
     if(input_preproc!="")
     {
         int insize = training_set->inputsize();
         TVec<string> infieldnames = training_set->fieldNames().subVec(0,insize);
-        input_prg.setSourceFieldNames(infieldnames);
-        input_prg.compileString(input_preproc, input_prg_fieldnames);
+        input_prg->setSourceFieldNames(infieldnames);
+        input_prg->compileString(input_preproc, input_prg_fieldnames);
     }
     else
     {
-        input_prg.clear();
+        input_prg->clear();
         input_prg_fieldnames.resize(0);
     }
 
+    if(!output_prg) 
+        output_prg= new VMatLanguage();
     if(output_postproc!="")
     {
         int outsize = learner_->outputsize();
         TVec<string> outfieldnames(outsize);
         for(int k=0; k<outsize; k++)
             outfieldnames[k] = "output"+tostring(k);
-        output_prg.setSourceFieldNames(outfieldnames);
-        output_prg.compileString(output_postproc, output_prg_fieldnames);
+        output_prg->setSourceFieldNames(outfieldnames);
+        output_prg->compileString(output_postproc, output_prg_fieldnames);
     }
     else
     {
-        output_prg.clear();
+        output_prg->clear();
         output_prg_fieldnames.resize(0);
     }
 
+    if(!costs_prg) 
+        costs_prg= new VMatLanguage();
     if(costs_postproc!="")
     {
-        costs_prg.setSourceFieldNames(learner_->getTestCostNames());
-        costs_prg.compileString(costs_postproc, costs_prg_fieldnames);
+        costs_prg->setSourceFieldNames(learner_->getTestCostNames());
+        costs_prg->compileString(costs_postproc, costs_prg_fieldnames);
     }
     else
     {
-        costs_prg.clear();
+        costs_prg->clear();
         costs_prg_fieldnames.resize(0);
     }
 }
@@ -301,19 +311,19 @@ void VPLPreprocessedLearner::computeOutput(const Vec& input, Vec& output) const
     PLASSERT( learner_ );
     output.resize(outputsize());
     Vec newinput = input;
-    if(input_prg)
+    if(input_prg && *input_prg)
     {
         processed_input.resize(input_prg_fieldnames.length());
-        input_prg.run(input, processed_input);
+        input_prg->run(input, processed_input);
         newinput = processed_input;
     }
 
-    if(output_prg)
+    if(output_prg && *output_prg)
     {
         learner_->computeOutput(newinput, pre_output);
-        output_prg.setMemory(input);           // Put original input vector
+        output_prg->setMemory(input);           // Put original input vector
         // as context for output postproc
-        output_prg.run(pre_output, output);
+        output_prg->run(pre_output, output);
     }
     else
         learner_->computeOutput(newinput, output);
@@ -332,7 +342,7 @@ void VPLPreprocessedLearner::computeOutputAndCosts(const Vec& input, const Vec& 
     PLASSERT(ilen==inputsize());
     PLASSERT(tlen==targetsize());
 
-    if(row_prg)
+    if(row_prg && *row_prg)
     {
         row.resize(ilen+tlen);
         row.subVec(0,ilen) << input;
@@ -342,7 +352,7 @@ void VPLPreprocessedLearner::computeOutputAndCosts(const Vec& input, const Vec& 
 
         int newrowsize = row_prg_fieldnames.length();
         processed_row.resize(newrowsize);
-        row_prg.run(row, processed_row);
+        row_prg->run(row, processed_row);
         int newinputsize = newrowsize-(newtargetsize+newweightsize+newextrasize);
         Vec processed_input = processed_row.subVec(0,newinputsize);
         Vec processed_target = processed_row.subVec(newinputsize,newtargetsize);
@@ -351,16 +361,16 @@ void VPLPreprocessedLearner::computeOutputAndCosts(const Vec& input, const Vec& 
     else
         learner_->computeOutputAndCosts(input, target, pre_output, pre_costs);
 
-    if(output_prg) {
-        output_prg.setMemory(input);           // Put original input vector
+    if(output_prg && *output_prg) {
+        output_prg->setMemory(input);           // Put original input vector
         // as context for output postproc
-        output_prg.run(pre_output, output);
+        output_prg->run(pre_output, output);
     }
     else
         output << pre_output;
 
-    if(costs_prg)
-        costs_prg.run(pre_costs, costs);
+    if(costs_prg && *costs_prg)
+        costs_prg->run(pre_costs, costs);
     else
         costs << pre_costs;
 }
@@ -383,15 +393,15 @@ bool VPLPreprocessedLearner::computeConfidenceFromOutput(
 
     PLASSERT( learner_ );
     Vec newinput = input;
-    if(input_prg)
+    if(input_prg && *input_prg)
     {
         processed_input.resize(input_prg_fieldnames.length());
-        input_prg.run(input, processed_input);
+        input_prg->run(input, processed_input);
         newinput = processed_input;
     }
 
     bool status = false;
-    if(!output_prg) // output is already the output of the underlying learner
+    if(!output_prg || !(*output_prg)) // output is already the output of the underlying learner
         status = learner_->computeConfidenceFromOutput(newinput, output, probability, intervals);
     else // must recompute the output of underlying learner, and post-process returned intervals
     {
@@ -420,12 +430,12 @@ bool VPLPreprocessedLearner::computeConfidenceFromOutput(
             Vec post_high(d); // postprocessed high
 
             // Put original input vector as context for output postproc
-            output_prg.setMemory(input);
-            output_prg.run(low, post_low);
+            output_prg->setMemory(input);
+            output_prg->run(low, post_low);
 
             // Put original input vector as context for output postproc
-            output_prg.setMemory(input);
-            output_prg.run(high, post_high);
+            output_prg->setMemory(input);
+            output_prg->run(high, post_high);
 
             // Now copy post_low and post_high to intervals
             intervals.resize(d);
@@ -438,7 +448,7 @@ bool VPLPreprocessedLearner::computeConfidenceFromOutput(
 
 TVec<string> VPLPreprocessedLearner::getOutputNames() const
 {
-    if(output_prg)
+    if(output_prg && *output_prg)
         return output_prg_fieldnames;
     else
         return learner_->getOutputNames();
@@ -447,7 +457,7 @@ TVec<string> VPLPreprocessedLearner::getOutputNames() const
 
 TVec<string> VPLPreprocessedLearner::getTestCostNames() const
 {
-    if(costs_prg)
+    if(costs_prg && *costs_prg)
         return costs_prg_fieldnames;
     else
         return learner_->getTestCostNames();

@@ -44,9 +44,9 @@
 #ifndef PyPLearnScript_INC
 #define PyPLearnScript_INC
 
+#include <plearn/base/Object.h>
 #include <plearn/io/PPath.h>
 #include <plearn/io/openString.h>
-#include <plearn/base/Object.h>
 
 namespace PLearn {
 

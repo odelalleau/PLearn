@@ -36,9 +36,9 @@
 
 /*! \file IIDNoiseKernel.cc */
 
+#include "IIDNoiseKernel.h"
 #include <plearn/base/lexical_cast.h>
 #include <plearn/math/TMat_maths.h>
-#include "IIDNoiseKernel.h"
 
 namespace PLearn {
 using namespace std;

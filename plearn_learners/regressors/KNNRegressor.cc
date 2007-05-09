@@ -40,6 +40,7 @@
 
 /*! \file KNNRegressor.cc */
 
+#include "KNNRegressor.h"
 #include <assert.h>
 #include <math.h>
 
@@ -47,7 +48,6 @@
 #include <plearn/math/TMat_maths.h>
 #include <plearn_learners/nearest_neighbors/ExhaustiveNearestNeighbors.h>
 #include <plearn/ker/EpanechnikovKernel.h>
-#include "KNNRegressor.h"
 
 namespace PLearn {
 using namespace std;

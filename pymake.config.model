@@ -416,7 +416,7 @@ options_choices = [
   [ 'double', 'float' ],
   
   # [ 'throwerrors', 'exiterrors' ],
-  [ 'python23', 'python24', 'python25' ],
+  [ 'python23', 'python24', 'python25', 'nopython' ],
   
   [ 'blas', 'p3blas','p4blas','athlonblas','pentiumblas', 'mammouthblas',
     'noblas', 'veclib', 'scs', 'goto', 'lisa' ],
@@ -614,7 +614,10 @@ pymakeOption( name = 'python24',
 pymakeOption( name = 'python25',
               description = 'the installed version of python is 2.5.X',
               cpp_definitions = ['PL_PYTHON_VERSION=250'] )
+pymakeOption( name = 'nopython',
+              description = 'compile w/o python')
 
+cpp_variables += ['PL_PYTHON_VERSION']
 
 #####  Error Behavior  ######################################################
 

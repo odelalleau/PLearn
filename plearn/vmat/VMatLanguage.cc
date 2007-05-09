@@ -1400,16 +1400,16 @@ void VMatLanguage::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void  PreprocessingVMatrix::getNewRow(int i, const Vec& v) const
 {
-    program.run(i,v);
+    program->run(i,v);
 }
 
 PLEARN_IMPLEMENT_OBJECT(PreprocessingVMatrix, "DEPRECATED: use ProcessingVMatrix instead", "NO HELP");
 
 
 PreprocessingVMatrix::PreprocessingVMatrix(VMat the_source, const string& program_string)
-    : source(the_source), program(the_source)
+    : source(the_source), program(new VMatLanguage(the_source))
 {
-    program.compileString(program_string,fieldnames);
+    program->compileString(program_string,fieldnames);
     build();
 }
 

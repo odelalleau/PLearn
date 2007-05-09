@@ -42,8 +42,8 @@
  * This file is part of the PLearn library.
  ******************************************************* */
 
-#include <plearn/base/stringutils.h>
 #include "StatsCollector.h"
+#include <plearn/base/stringutils.h>
 #include "TMat_maths.h"
 #include "pl_erf.h"
 #include "pl_math.h"

@@ -56,9 +56,6 @@
 namespace PLearn {
 using namespace std;
 
-// Forward declaration.
-class PythonCodeSnippet;
-
 //! VMat of text files, encoded  with Dictionaries,
 //! The lines of the text files that are empty are ommited. If no Dictionary
 //! objects are given by the user, then new Dictionary objects

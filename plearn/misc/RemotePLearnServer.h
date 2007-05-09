@@ -45,9 +45,9 @@
 #ifndef RemotePLearnServer_INC
 #define RemotePLearnServer_INC
 
+#include <plearn/base/Object.h>
 #include <plearn/base/PP.h>
 #include <plearn/io/PStream.h>
-#include <plearn/base/Object.h>
 #include <plearn/sys/Popen.h>
 #include <plearn/io/pl_log.h>
 

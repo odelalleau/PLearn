@@ -156,6 +156,12 @@ protected:
     void reportResult(int trialnum,  const Vec& results);
     Vec runTest(int trialnum);
 
+/*    
+    //! for parallel optimize
+    void launchTest(int trialnum, PP<RemotePLearnServer> server,
+                    map<PP<RemotePLearnServer>, int>& testers_ids);
+*/
+
 public:
 
     //! Sets the expdir and calls createResultsMat.

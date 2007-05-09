@@ -173,7 +173,7 @@ class PreprocessingVMatrix: public RowBufferedVMatrix
 
 protected:
     VMat source;
-    VMatLanguage program;
+    PP<VMatLanguage> program;
     Vec sourcevec;
     vector<string> fieldnames;
 

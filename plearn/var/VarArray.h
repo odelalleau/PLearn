@@ -46,9 +46,9 @@
 #ifndef VARARRAY_INC
 #define VARARRAY_INC
 
+#include "Variable.h"
 #include <plearn/base/general.h>
 #include <plearn/base/Array.h>
-#include "Variable.h"
 
 namespace PLearn {
 using namespace std;

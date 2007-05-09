@@ -42,6 +42,7 @@
 
 
 // From PLearn
+#include <plearn/base/Object.h>
 #include <plearn/base/ProgressBar.h>
 #include "VMat_linalg.h"
 #include <plearn/math/TMat_maths.h>

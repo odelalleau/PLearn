@@ -49,7 +49,7 @@
 #include <plearn/io/openFile.h>
 #include <plearn/io/openString.h>
 #include "TypeFactory.h"
-
+#include "RemoteDeclareMethod.h"
 #include <algorithm>
 
 namespace PLearn {
@@ -136,6 +136,14 @@ string Object::info() const
     return classname();
 }
 
+string Object::asString() const
+{
+    string s;
+    PStream out= openString(s, PStream::plearn_ascii, "w");
+    out << this;
+    out.flush();
+    return removeblanks(s);
+}
 
 //#####  Option-Manipulation Functions  #######################################
 
@@ -618,6 +626,23 @@ namespace {
 			instance->writeOptionVal(io, optionname);
 			io.flush();
 		}
+
+#ifdef PL_PYTHON_VERSION 
+                virtual PythonObjectWrapper call(Object* instance, 
+                                                 const TVec<PythonObjectWrapper>& args) const
+                {
+                    checkNargs(args.size(), 1);
+                    string optionname= args[0];
+                    OptionList &options= instance->getOptionList();
+                    for (OptionList::iterator it= options.begin(); 
+                         it != options.end(); ++it)
+                        if ((*it)->optionname() == optionname)
+                            return (*it)->getAsPythonObject(instance);
+                    PLERROR("in ObjectTrampolineGetOption::call (python ver.) : "
+                            "unknown option: '%s'", optionname.c_str());
+                    return PythonObjectWrapper();//gcc: shut up!
+                }
+#endif //def PL_PYTHON_VERSION 
 	};
 
 	struct ObjectTrampolineGetObject : public RemoteTrampoline
@@ -633,6 +658,17 @@ namespace {
 			io << *instance;
 			io.flush();
 		}
+
+#ifdef PL_PYTHON_VERSION 
+                virtual PythonObjectWrapper call(Object* instance, 
+                                                 const TVec<PythonObjectWrapper>& args) const
+                {
+			checkNargs(args.size(), 0);
+                        return PythonObjectWrapper(instance,
+                                                   PythonObjectWrapper::transfer_ownership);
+                }
+#endif //def PL_PYTHON_VERSION 
+
 	};
 
 } // End of anonymous namespace.
@@ -650,6 +686,10 @@ void Object::declareMethods(RemoteMethodMap& rmm)
                    ArgDoc ("option_name", "Name of the option to get"),
                    RetDoc ("Object option in string form, or exception if "
                            "the option does not exist.")));
+
+    declareMethod(rmm, "asString", &Object::asString,
+                  (BodyDoc("Returns a string representation of this object."),
+                   RetDoc ("string representation of the object")));
 
     declareMethod(rmm, "run", &Object::run,
                   (BodyDoc("Run the given object, if it is runnable; "
@@ -692,7 +732,7 @@ void Object::declareMethods(RemoteMethodMap& rmm)
 
 void Object::run()
 {
-    PLERROR("Not a runnable Object");
+    PLERROR("%s::run() : Not a runnable Object", this->classname().c_str());
 }
 
 void Object::oldread(istream& in)

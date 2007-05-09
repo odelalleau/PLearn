@@ -54,6 +54,7 @@
 #include <plearn/misc/PLearnService.h>
 #endif
 #include <plearn/vmat/VMat.h>
+#include <plearn/base/RemoteDeclareMethod.h>
 
 #if USING_MPI
 #include <plearn/sys/PLMPI.h>

@@ -44,6 +44,7 @@
 #define PythonCodeSnippet_INC
 
 // Python stuff must be included first
+#include <plearn/python/PythonGlobalInterpreterLock.h>
 #include <plearn/python/PythonObjectWrapper.h>
 
 // Boost stuff
@@ -145,6 +146,12 @@ public:
      *  output to stderr and a PLERROR is raised.  Default=false
      */
     bool m_remap_python_exceptions;
+
+    //! parameters to the python ctor
+    map<string, string> m_instance_params;
+
+    //! the python object instance
+    PythonObjectWrapper m_instance;
     
 public:
     //! Default constructor.  Note that "build" IS NOT CALLED from the
@@ -298,13 +305,15 @@ public:
     //! Transforms a shallow copy into a deep copy
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
+    virtual void run();
+
 protected: 
     //! Declares this class' options
     static void declareOptions(OptionList& ol);
 
     //! Compile a code block into a new environment and return it.
     //! Call PLERROR if the code contains an error.
-    PythonObjectWrapper compileGlobalCode(const string& code) const;
+    PythonObjectWrapper compileGlobalCode(const string& code); //const;
 
     void setCurrentSnippet(const long& handle) const;
     void resetCurrentSnippet() const;
@@ -312,7 +321,7 @@ protected:
     //! If no Python error, do nothing.  If an error occurred, convert the
     //! Python Exception into a C++ exception if required, or otherwise print a
     //! traceback and abort
-    void handlePythonErrors() const;
+    void handlePythonErrors(const string& extramsg= "") const;
 
     //! This is the trampoline function actually called by Python
     static PyObject* pythonTrampoline(PyObject* self, PyObject* args);
@@ -325,10 +334,12 @@ protected:
 protected:
     //! The Python handle for *this* instance
     long m_handle;
-    
+
+public:    
     //! Compiled Python code module and global environment
     PythonObjectWrapper m_compiled_code;
 
+protected:
     //! Functions to be injected into the compiled Python code
     PObjectPool<StandaloneFunction> m_injected_functions;
 
@@ -352,6 +363,11 @@ PythonObjectWrapper
 PythonCodeSnippet::invoke(const char* function_name,
                           const T& arg1) const
 {
+    TVec<PythonObjectWrapper> args(1);
+    args[0]= arg1;
+    return invoke(function_name, args);
+/*
+
     PythonGlobalInterpreterLock gil;         // For thread-safety
     PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
                                            function_name);
@@ -387,6 +403,7 @@ PythonCodeSnippet::invoke(const char* function_name,
     }
 
     return PythonObjectWrapper(return_value);
+*/
 }
 
 
@@ -396,6 +413,11 @@ PythonCodeSnippet::invoke(const char* function_name,
                           const T& arg1,
                           const U& arg2) const
 {
+    TVec<PythonObjectWrapper> args(2);
+    args[0]= arg1;
+    args[1]= arg2;
+    return invoke(function_name, args);
+/*
     PythonGlobalInterpreterLock gil;         // For thread-safety
     PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
                                            function_name);
@@ -433,6 +455,7 @@ PythonCodeSnippet::invoke(const char* function_name,
                 function_name);
 
     return PythonObjectWrapper(return_value);
+*/
 }
 
 
@@ -443,6 +466,13 @@ PythonCodeSnippet::invoke(const char* function_name,
                           const U& arg2,
                           const V& arg3) const
 {
+    TVec<PythonObjectWrapper> args(3);
+    args[0]= arg1;
+    args[1]= arg2;
+    args[2]= arg3;
+    return invoke(function_name, args);
+
+/*
     PythonGlobalInterpreterLock gil;         // For thread-safety
     PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
                                            function_name);
@@ -483,6 +513,7 @@ PythonCodeSnippet::invoke(const char* function_name,
                 function_name);
 
     return PythonObjectWrapper(return_value);
+*/
 }
 
 
@@ -494,6 +525,13 @@ PythonCodeSnippet::invoke(const char* function_name,
                           const V& arg3,
                           const W& arg4) const
 {
+    TVec<PythonObjectWrapper> args(4);
+    args[0]= arg1;
+    args[1]= arg2;
+    args[2]= arg3;
+    args[3]= arg4;
+    return invoke(function_name, args);
+/*
     PythonGlobalInterpreterLock gil;         // For thread-safety
     PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
                                            function_name);
@@ -537,6 +575,7 @@ PythonCodeSnippet::invoke(const char* function_name,
                 function_name);
 
     return PythonObjectWrapper(return_value);
+*/
 }
 
 template <class T, class U, class V, class W, class X>
@@ -548,6 +587,14 @@ PythonCodeSnippet::invoke(const char* function_name,
                           const W& arg4,
                           const X& arg5) const
 {
+    TVec<PythonObjectWrapper> args(5);
+    args[0]= arg1;
+    args[1]= arg2;
+    args[2]= arg3;
+    args[3]= arg4;
+    args[4]= arg5;
+    return invoke(function_name, args);
+/*
     PythonGlobalInterpreterLock gil;         // For thread-safety
     PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
                                            function_name);
@@ -594,6 +641,7 @@ PythonCodeSnippet::invoke(const char* function_name,
                 function_name);
 
     return PythonObjectWrapper(return_value);
+*/
 }
 
 template <class T, class U, class V, class W, class X, class Y>
@@ -606,6 +654,15 @@ PythonCodeSnippet::invoke(const char* function_name,
                           const X& arg5,
                           const Y& arg6) const
 {
+    TVec<PythonObjectWrapper> args(6);
+    args[0]= arg1;
+    args[1]= arg2;
+    args[2]= arg3;
+    args[3]= arg4;
+    args[4]= arg5;
+    args[5]= arg6;
+    return invoke(function_name, args);
+/*
     PythonGlobalInterpreterLock gil;         // For thread-safety
     PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
                                            function_name);
@@ -656,6 +713,7 @@ PythonCodeSnippet::invoke(const char* function_name,
                 function_name);
 
     return PythonObjectWrapper(return_value);
+*/
 }
 
 
@@ -670,6 +728,16 @@ PythonCodeSnippet::invoke(const char* function_name,
                           const Y& arg6,
                           const Z& arg7) const
 {
+    TVec<PythonObjectWrapper> args(7);
+    args[0]= arg1;
+    args[1]= arg2;
+    args[2]= arg3;
+    args[3]= arg4;
+    args[4]= arg5;
+    args[5]= arg6;
+    args[6]= arg7;
+    return invoke(function_name, args);
+/*
     PythonGlobalInterpreterLock gil;         // For thread-safety
     PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
                                            function_name);
@@ -723,6 +791,7 @@ PythonCodeSnippet::invoke(const char* function_name,
                 function_name);
 
     return PythonObjectWrapper(return_value);
+*/
 }
 
 

@@ -43,9 +43,9 @@
 #ifndef StatsCollector_INC
 #define StatsCollector_INC
 
+#include <plearn/base/Object.h>
 #include <string>
 #include <plearn/base/general.h>
-#include <plearn/base/Object.h>
 #include <plearn/base/RealMapping.h>
 #include "TMat.h"
 

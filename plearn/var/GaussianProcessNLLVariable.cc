@@ -39,10 +39,10 @@
 #define PL_LOG_MODULE_NAME "GaussianProcessNLLVariable"
 
 // From PLearn
+#include "GaussianProcessNLLVariable.h"
 #include <plearn/io/pl_log.h>
 #include <plearn/math/TMat_maths.h>
 #include <plearn/io/MatIO.h>
-#include "GaussianProcessNLLVariable.h"
 
 #ifdef USE_BLAS_SPECIALISATIONS
 #include <plearn/math/plapack.h>
