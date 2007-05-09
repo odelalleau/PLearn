@@ -49,10 +49,15 @@ PLEARN_IMPLEMENT_OBJECT(
     "Stores and learns the parameters between two linear layers of an RBM",
     "If a sub_connection is not present, it will be treated as a 0 matrix");
 
+////////////////////////
+// RBMMixedConnection //
+////////////////////////
 RBMMixedConnection::RBMMixedConnection()
-{
-}
+{}
 
+////////////////////
+// declareOptions //
+////////////////////
 void RBMMixedConnection::declareOptions(OptionList& ol)
 {
     declareOption(ol, "sub_connections", &RBMMixedConnection::sub_connections,
@@ -94,6 +99,9 @@ void RBMMixedConnection::declareOptions(OptionList& ol)
                     "initialization_method is useless here.");
 }
 
+////////////
+// build_ //
+////////////
 void RBMMixedConnection::build_()
 {
     up_size = 0;
@@ -178,6 +186,9 @@ void RBMMixedConnection::build_()
     output_size = up_size;
 }
 
+///////////
+// build //
+///////////
 void RBMMixedConnection::build()
 {
     inherited::build();
@@ -185,18 +196,26 @@ void RBMMixedConnection::build()
 }
 
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void RBMMixedConnection::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(sub_connections, copies);
-    deepCopyField(up_init_positions, copies);
-    deepCopyField(down_init_positions, copies);
-    deepCopyField(row_of, copies);
-    deepCopyField(col_of, copies);
+    deepCopyField(sub_connections,      copies);
+    deepCopyField(up_init_positions,    copies);
+    deepCopyField(up_block_sizes,       copies);
+    deepCopyField(down_init_positions,  copies);
+    deepCopyField(down_block_sizes,     copies);
+    deepCopyField(row_of,               copies);
+    deepCopyField(col_of,               copies);
 }
 
 
+/////////////////////
+// setLearningRate //
+/////////////////////
 void RBMMixedConnection::setLearningRate( real the_learning_rate )
 {
     inherited::setLearningRate( the_learning_rate );
@@ -207,6 +226,9 @@ void RBMMixedConnection::setLearningRate( real the_learning_rate )
                 sub_connections(i,j)->setLearningRate( the_learning_rate );
 }
 
+/////////////////
+// setMomentum //
+/////////////////
 void RBMMixedConnection::setMomentum( real the_momentum )
 {
     inherited::setMomentum( the_momentum );
@@ -217,6 +239,9 @@ void RBMMixedConnection::setMomentum( real the_momentum )
                 sub_connections(i,j)->setMomentum( the_momentum );
 }
 
+//////////////////
+// setAsUpInput //
+//////////////////
 void RBMMixedConnection::setAsUpInput( const Vec& input ) const
 {
     inherited::setAsUpInput( input );
