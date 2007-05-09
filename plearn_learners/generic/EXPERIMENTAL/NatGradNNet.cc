@@ -38,6 +38,7 @@
 
 
 #include "NatGradNNet.h"
+#include <plearn/math/pl_erf.h>
 
 namespace PLearn {
 using namespace std;
@@ -73,6 +74,12 @@ NatGradNNet::NatGradNNet()
       verbosity(0),
       //corr_profiling_start(0), 
       //corr_profiling_end(0),
+      use_pvgrad(false),
+      pv_initial_stepsize(1e-6),
+      pv_acceleration(2),
+      pv_min_samples(2),
+      pv_required_confidence(0.80),
+      pv_random_sample_step(false),
       n_layers(-1),
       cumulative_training_time(0)
 {
@@ -267,6 +274,42 @@ void NatGradNNet::declareOptions(OptionList& ol)
     //              "Stage to end the profiling of the gradients' and the\n"
     //              "natural gradients' correlations.\n");
 
+    declareOption(ol, "use_pvgrad",
+                  &NatGradNNet::use_pvgrad,
+                  OptionBase::buildoption,
+                  "Use Pascal Vincent's gradient technique.\n"
+                  "All options specific to this technique start with pv_...\n"
+                  "This is currently very experimental. Current code is \n"
+                  "NOT YET optimised for speed (nor supports minibatch).");
+
+    declareOption(ol, "pv_initial_stepsize",
+                  &NatGradNNet::pv_initial_stepsize,
+                  OptionBase::buildoption,
+                  "Initial size of steps in parameter space");
+
+    declareOption(ol, "pv_acceleration",
+                  &NatGradNNet::pv_acceleration,
+                  OptionBase::buildoption,
+                  "Coefficient by which to multiply/divide the step sizes");
+
+    declareOption(ol, "pv_min_samples",
+                  &NatGradNNet::pv_min_samples,
+                  OptionBase::buildoption,
+                  "PV's minimum number of samples to estimate gradient sign.\n"
+                  "This should at least be 2.");
+
+    declareOption(ol, "pv_required_confidence",
+                  &NatGradNNet::pv_required_confidence,
+                  OptionBase::buildoption,
+                  "Minimum required confidence (probability of being positive or negative) for taking a step.");
+
+    declareOption(ol, "pv_random_sample_step",
+                  &NatGradNNet::pv_random_sample_step,
+                  OptionBase::buildoption,
+                  "If this is set to true, then we will randomly choose the step sign\n"
+                  "for each parameter based on the estimated probability of it being\n"
+                  "positive or negative.");
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -290,6 +333,9 @@ void NatGradNNet::build_()
     }
     else PLERROR("NatGradNNet: output_type should be NLL or MSE\n");
 
+
+    if(use_pvgrad && minibatch_size!=1)
+        PLERROR("PV's gradient technique (triggered by use_pvgrad): support for minibatch not yet implemented (must have minibatch_size=1)");
     
     while (hidden_layer_sizes[hidden_layer_sizes.length()-1]==0)
         hidden_layer_sizes.resize(hidden_layer_sizes.length()-1);
@@ -479,6 +525,12 @@ void NatGradNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(group_params_gradient, copies);
     deepCopyField(group_params_delta, copies);
     deepCopyField(layer_params_delta, copies);
+
+    deepCopyField(pv_gradstats, copies);
+    deepCopyField(pv_stepsizes, copies);
+    deepCopyField(pv_stepsigns, copies);
+
+
 /*
     deepCopyField(, copies);
 */
@@ -509,6 +561,17 @@ void NatGradNNet::forget()
     cumulative_training_time=0;
     if (params_averaging_coeff!=1.0)
         all_mparams << all_params;
+    
+    if(use_pvgrad)
+    {
+        pv_gradstats.forget();
+        int n = all_params.length();
+        pv_stepsizes.resize(n);
+        pv_stepsizes.fill(pv_initial_stepsize);
+        pv_stepsigns.resize(n);
+        pv_stepsigns.fill(true);
+    }
+
 }
 
 void NatGradNNet::train()
@@ -654,14 +717,19 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
             }
         }
         // compute gradient on parameters, possibly update them
-        if (full_natgrad || params_natgrad_template || params_natgrad_per_input_template) 
+        if (use_pvgrad)
+        {
+            productScaleAcc(layer_params_gradient[i-1],next_neurons_gradient,true,
+                            neuron_extended_outputs_per_layer[i-1],false,1,0);
+        }
+        else if (full_natgrad || params_natgrad_template || params_natgrad_per_input_template) 
         {
 //alternate
             if( params_natgrad_per_input_template && i==1 ) // parameters are transposed
                 productScaleAcc(layer_params_gradient[i-1],
                             neuron_extended_outputs_per_layer[i-1], true,
                             next_neurons_gradient, false, 
-                            1, 0);                          
+                            1, 0);
             else
                 productScaleAcc(layer_params_gradient[i-1],next_neurons_gradient,true,
                             neuron_extended_outputs_per_layer[i-1],false,1,0);
@@ -673,7 +741,11 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
                             neuron_extended_outputs_per_layer[i-1],false,
                             -layer_lrate_factor*lrate/minibatch_size,1);
     }
-    if (full_natgrad)
+    if (use_pvgrad)
+    {
+        pvGradUpdate();
+    }
+    else if (full_natgrad)
     {
         (*full_natgrad)(t/minibatch_size,all_params_gradient,all_params_delta); // compute update direction by natural gradient
         if (output_layer_lrate_scale!=1.0)
@@ -704,6 +776,60 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
     //    (*ng_corrprof)(all_params_delta);
     //}
 
+}
+
+void NatGradNNet::pvGradUpdate()
+{
+    int n = all_params_gradient.length();
+    if(pv_stepsizes.length()==0)
+    {
+        pv_stepsizes.resize(n);
+        pv_stepsizes.fill(pv_initial_stepsize);
+        pv_stepsigns.resize(n);
+        pv_stepsigns.fill(true);
+    }
+    pv_gradstats.update(all_params_gradient);
+    real pv_deceleration = 1.0/pv_acceleration;
+    for(int k=0; k<n; k++)
+    {
+        StatsCollector& st = pv_gradstats.getStats(k);
+        int n = (int)st.nnonmissing();
+        if(n>pv_min_samples)
+        {
+            real m = st.mean();
+            real e = st.stderror();
+            real prob_pos = gauss_01_cum(m/e);
+            real prob_neg = 1.-prob_pos;
+            if(!pv_random_sample_step)
+            {
+                if(prob_pos>=pv_required_confidence)
+                {
+                    all_params[k] += pv_stepsizes[k];
+                    pv_stepsizes[k] *= (pv_stepsigns[k]?pv_acceleration:pv_deceleration);
+                    pv_stepsigns[k] = true;
+                    st.forget();
+                }
+                else if(prob_neg>=pv_required_confidence)
+                {
+                    all_params[k] -= pv_stepsizes[k];
+                    pv_stepsizes[k] *= ((!pv_stepsigns[k])?pv_acceleration:pv_deceleration);
+                    pv_stepsigns[k] = false;
+                    st.forget();
+                }
+            }
+            else  // random sample update direction (sign)
+            {
+                bool ispos = (random_gen->binomial_sample(prob_pos)>0);
+                if(ispos) // picked positive
+                    all_params[k] += pv_stepsizes[k];
+                else  // picked negative
+                    all_params[k] -= pv_stepsizes[k];
+                pv_stepsizes[k] *= (pv_stepsigns[k]==ispos) ?pv_acceleration :pv_deceleration;
+                pv_stepsigns[k] = ispos;
+                st.forget();
+            }
+        }
+    }
 }
 
 void NatGradNNet::computeOutput(const Vec& input, Vec& output) const

@@ -143,6 +143,41 @@ public:
     //int corr_profiling_start, corr_profiling_end;
 
 public:
+    //*************************************************************
+    //*** Members used for Pascal Vincent's gradient technique  ***
+
+    //! Use Pascal's gradient 
+    bool use_pvgrad;
+
+    //! Initial size of steps in parameter space
+    real pv_initial_stepsize;
+
+    //! Coefficient by which to multiply/divide the step sizes  
+    real pv_acceleration;
+
+    //! PV's gradient minimum number of samples to estimate confidence
+    int pv_min_samples;
+
+    //! Minimum required confidence (probability of being positive or negative) for taking a step. 
+    real pv_required_confidence;
+
+    //! If this is set to true, then we will randomly choose the step sign for
+    // each parameter based on the estimated probability of it being positive or
+    // negative.
+    bool pv_random_sample_step;
+    
+
+protected:
+    //! accumulated statistics of gradients on each parameter.
+    VecStatsCollector pv_gradstats;
+
+    //! The step size (absolute value) to be taken for each parameter.
+    Vec pv_stepsizes;
+
+    //! Indicates whether the previous step was positive (true) or negative (false)
+    TVec<bool> pv_stepsigns;
+
+public:
     //#####  Public Member Functions  #########################################
 
     NatGradNNet();
@@ -253,6 +288,9 @@ protected:
     //! compute train costs given the network top-layer output
     //! and write into neuron_gradients_per_layer[n_layers-2], gradient on pre-non-linearity activation
     void fbpropLoss(const Mat& output, const Mat& target, const Vec& example_weights, Mat& train_costs) const;
+
+    //! gradient computation and weight update in Pascal Vincent's gradient technique
+    void pvGradUpdate();
 
 private:
     //#####  Private Member Functions  ########################################
