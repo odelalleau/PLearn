@@ -156,7 +156,7 @@ void InstanceSnippetTest::perform()
     {
         zz1.invoke("testRecCrash", 3);
     }
-    catch(const PLearnError& e)
+    catch(const PythonException& e)
     {
         string exception_msg = e.message();
         // Remove memory addresses from the exception message, as they may
@@ -171,6 +171,11 @@ void InstanceSnippetTest::perform()
         msg_without_sys_dependent_data =
             regex_replace(msg_without_sys_dependent_data, python_ver,
                     "Python 2.X.Y");
+        boost::regex plearn_path("(/[a-zA-Z0-9_-]+)+/PLearn/",
+                                boost::regex::perl);
+        msg_without_sys_dependent_data =
+            regex_replace(msg_without_sys_dependent_data, plearn_path,
+                    "PLEARNDIR:");
         pout << "[INTENDED ERROR] Caught Python Exception: '" 
              << msg_without_sys_dependent_data
              << "'" << endl;

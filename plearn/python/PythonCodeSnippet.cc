@@ -350,6 +350,7 @@ PythonCodeSnippet::invoke(const char* function_name,
         }
         
         return_value = PyObject_CallObject(pFunc, pArgs);
+
         Py_DECREF(pArgs);
         if (! return_value)
             handlePythonErrors(string("Error while calling function '")
