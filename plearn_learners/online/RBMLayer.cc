@@ -273,6 +273,9 @@ void RBMLayer::fprop( const Vec& input, Vec& output ) const
     This->expectation_is_up_to_date = false;
     This->expectations_are_up_to_date = false;
 
+    PLERROR("In RBMLayer::fprop - The code seems buggy (no expectation seems"
+            " to be computed), someone should check this out");
+
     output << This->expectation;
 }
 
