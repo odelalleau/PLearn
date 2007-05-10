@@ -400,7 +400,10 @@ void Convolution2DModule::bpropUpdate(const Vec& input, const Vec& output,
                       "Cannot resize input_gradient AND accumulate into it" );
     }
     else
+    {
         input_gradient.resize(input_size);
+        input_gradient.clear();
+    }
 
     // Since fprop() has just been called, we assume that input_images and
     // output_images are up-to-date
@@ -422,10 +425,11 @@ void Convolution2DModule::bpropUpdate(const Vec& input, const Vec& output,
         for( int i=0 ; i<n_input_images ; i++ )
             if( connection_matrix(i,j) != 0 )
             {
+                kernel_gradient.clear();
                 convolve2Dbackprop( input_images[i], kernels(i,j),
                                     output_gradients[j],
                                     input_gradients[i], kernel_gradient,
-                                    kernel_step1, kernel_step2, accumulate );
+                                    kernel_step1, kernel_step2, true );
 
                 // kernel(i,j) -= learning_rate * kernel_gradient
                 multiplyAcc( kernels(i,j), kernel_gradient, -learning_rate ); // could be more efficiently done within the convolve2Dbackprop
@@ -446,7 +450,7 @@ void Convolution2DModule::forget()
         return;
     }
 
-    real scale_factor = 1./(kernel_length*kernel_width);
+    real scale_factor = 1./(kernel_length*kernel_width*n_input_images);
     kernels.resize( n_input_images, n_output_images );
     for( int i=0 ; i<n_input_images ; i++ )
         for( int j=0 ; j<n_output_images ; j++ )
@@ -526,7 +530,10 @@ void Convolution2DModule::bbpropUpdate(const Vec& input, const Vec& output,
                     );
     }
     else
+    {
         input_diag_hessian.resize(input_size);
+        input_diag_hessian.clear();
+    }
 
     // Make input_diag_hessians and output_diag_hessians point to the right
     // places
@@ -550,7 +557,7 @@ void Convolution2DModule::bbpropUpdate(const Vec& input, const Vec& output,
 
                 backConvolve2D( input_diag_hessians[i], squared_kernel,
                                 output_diag_hessians[j],
-                                kernel_step1, kernel_step2, accumulate );
+                                kernel_step1, kernel_step2, true );
             }
 
     // Call bpropUpdate()
