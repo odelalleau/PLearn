@@ -371,28 +371,30 @@ class DBICondor(DBIBase):
                 # architecture we execute on both. Otherwise we execute on the
                 # same architecture as the architecture of the launch computer
             self.cplat = get_condor_platform()
-            if c.endswith('.INTEL'):
+            if c.endswith('.32'):
                 self.targetcondorplatform='INTEL'
                 self.targetplatform='linux-i386'
                 newcommand=command
-            elif c.endswith('.X86_64'):
+            elif c.endswith('.64'):
                 self.targetcondorplatform='X86_64'
                 self.targetplatform='linux-x86_64'
                 newcommand=command
-            elif os.path.exists(c+".INTEL") and os.path.exists(c+".X86_64"):
+            elif os.path.exists(c+".32") and os.path.exists(c+".64"):
                 self.targetcondorplatform='BOTH'
-                self.targetplatform='BOTH'
-                newcommand=command #TODO:get the good data
-                print 'ERROR: executing on 32 and 64 bits is NOT currently implemented'
-                sys.exit(100)
-            elif self.cplat=="INTEL" and os.path.exists(c+".INTEL"):
+                self.targetplatform='linux-i386'
+                #newcommand=c+".32"+c2
+                newcommand='if [ $1 == "INTEL" ]; then\n'
+                newcommand+='  '+c+'.32'+c2+'\n'
+                newcommand+='else\n'
+                newcommand+='  '+c+".64"+c2+'\nfi'
+            elif self.cplat=="INTEL" and os.path.exists(c+".32"):
                 self.targetcondorplatform='INTEL'
                 self.targetplatform='linux-i386'
-                newcommand=c+".INTEL"+c2
-            elif self.cplat=="X86_64" and os.path.exists(c+".X86_64"):
+                newcommand=c+".32"+c2
+            elif self.cplat=="X86_64" and os.path.exists(c+".64"):
                 self.targetcondorplatform='X86_64'
                 self.targetplatform='linux-x86_64'
-                newcommand=c+".X86_64"+c2
+                newcommand=c+".64"+c2
             else:
                 self.targetcondorplatform=self.cplat
                 if self.cplat=='INTEL':
@@ -400,7 +402,7 @@ class DBICondor(DBIBase):
                 else:
                     self.targetplatform='linux-x86_64'
                 newcommand=command
-
+            
             self.tasks.append(Task(newcommand, self.log_dir, self.time_format,
                                    self.pre_tasks, self.post_tasks,args))
 
@@ -417,7 +419,7 @@ class DBICondor(DBIBase):
 
         param_dat.write( dedent('''\
                 #!/bin/bash
-                %s''' %(';\n'.join(task.commands))))
+                %s''' %('\n'.join(task.commands))))
         param_dat.close()
         
 
@@ -426,43 +428,61 @@ class DBICondor(DBIBase):
         condor_dat = open( condor_file, 'w' )
 
         u=get_username()
-        tcplat=self.targetcondorplatform
+        if self.targetcondorplatform == 'BOTH':
+            tcplat1="INTEL"
+            tcplat2="X86_64"
+        elif self.targetcondorplatform == 'INTEL':
+            tcplat1="INTEL"
+            tcplat2="INTEL"
+        elif self.targetcondorplatform == 'X86_64':
+            tcplat1="X86_64"
+            tcplat2="X86_64"
         tplat=self.targetplatform
         condor_dat.write( dedent('''\
                 executable     = ./launch.sh
-                arguments      = sh %s
+                arguments      = sh %s $$(Arch) 
                 universe       = vanilla
-                requirements   = (Arch == "%s")
+                requirements   = (Arch == "%s")||(Arch == "%s")  
                 output         = main.%s.%s.out
                 error          = main.%s.%s.error
                 log            = main.%s.log
-                environment    = LD_LIBRARY_PATH=/u/lisa/local/byhost/%s/lib:/u/lisa/local/%s/lib:/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages/numarray:/cluster/diro/home/lisa/local/%s/lib:/cluster/diro/home/lisa/local/%s/lib32:/cluster/diro/home/lisa/lib:/usr/local/lib:/soft/lisa/linux/lib;\
+                environment    = LD_LIBRARY_PATH=/u/lisa/local/byhost/%s/lib:/u/lisa/local/%s/lib:/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages/numarray:/cluster/diro/home/lisa/local/%s/lib:/u/lisa/local/%s/lib:/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages/numarray:/cluster/diro/home/lisa/local/%s/lib:/cluster/diro/home/lisa/lib:/usr/local/lib:/soft/lisa/linux/lib;\
                 PATH=/cluster/diro/home/lisa/PLearn/scripts:/soft/lisa/linux/bin:/u/lisa/local/%s/bin:/u/%s/PLearn/commands:/u/%s/PLearn/scripts:/Scripts:/commands:/u/%s/Scripts:/soft/diro/share/moe/bin-i4lx:/u/lamblinp/code/usr/bin:/u/%s/PLearn:/u/%s/PLearn/scripts:/u/%s/PLearn/commands:/usr/kerberos/bin:/usr/GNUstep/System/Tools:/usr/local/bin:/bin:/usr/bin:/usr/X11R6/bin:/opt/diro/bin:/u/lisa/local/linux-i386/bin;\
-                PYTHONPATH=/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages:/cluster/diro/home/lisa/local/%s/lib/python2.3/site-packages:/cluster/diro/home/lisa/local/%s/lib/python2.2/site-packages:/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages/vtk_python:/cluster/diro/home/lisa/local/%s/lib/python2.3/site-packages/Numeric:/u/%s/PLearn/python_modules:/u/%s/projects/apstatsoft/python_modules:/cluster/diro/home/lisa/local/%s/lib/python2.3/site-packages:/cluster/diro/home/lisa/local/%s/lib/python2.2/site-packages:/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages/vtk_python:/cluster/diro/home/lisa/local/%s/lib/python2.3/site-packages/Numeric:/u/%s/PLearn/python_modules:
+                PYTHONPATH=/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages:/cluster/diro/home/lisa/local/%s/lib/python2.3/site-packages:/cluster/diro/home/lisa/local/%s/lib/python2.2/site-packages:/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages/vtk_python:/cluster/diro/home/lisa/local/%s/lib/python2.3/site-packages/Numeric:/u/%s/PLearn/python_modules:/u/%s/projects/apstatsoft/python_modules:/u/%s/PLearn/python_modules;
                 #getenv         = True
                 queue
-                ''' % (condor_data, tcplat,tcplat,task.unique_id,tcplat,task.unique_id,tcplat,get_hostname(),tplat,tplat,tplat,tplat,tplat,u,u,u,u,u,u,tplat,tplat,tplat,tplat,tplat,u,u,tplat,tplat,tplat,tplat,u)) )
+                ''' % (condor_data, tcplat1,tcplat2,tcplat1,task.unique_id,tcplat1,task.unique_id,tcplat1,get_hostname(),'linux-x86_64','linux-x86_64','linux-x86_64','linux-i386','linux-i386','linux-i386',tplat,u,u,u,u,u,u,tplat,tplat,tplat,tplat,tplat,u,u,u)) )
 #                preBatch = ''' + pre_batch_command + '''
 #                postBatch = ''' + post_batch_command +'''
         condor_dat.close()
                 #environment    = LD_LIBRARY_PATH=/u/lisa/local/byhost/%s/lib:/u/lisa/local/%s/lib:/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages/numarray:/cluster/diro/home/lisa/local/%s/lib:/usr/local/lib:/cluster/diro/home/lisa/local/%s/lib32:/soft/lisa/linux/lib;PATH=/cluster/diro/home/lisa/PLearn/scripts:/soft/lisa/linux/bin:/u/lisa/local/%s/bin:/u/%s/PLearn/commands:/u/%s/PLearn/scripts:/Scripts:/commands:/u/%s/Scripts:/soft/diro/share/moe/bin-i4lx:/u/lamblinp/code/usr/bin:/u/%s/PLearn:/u/%s/PLearn/scripts:/u/%s/PLearn/commands:/u/%s/projects/apstatsoft:/u/%s/projects/apstatsoft/scripts:/u/%s/projects/apstatsoft/commands:/usr/kerberos/bin:/u/%s/GNUstep/Tools:/usr/GNUstep/Local/Tools:/usr/GNUstep/System/Tools:/usr/local/bin:/bin:/usr/bin:/usr/X11R6/bin:/opt/diro/bin:/u/lisa/local/linux-i386/bin;PYTHONPATH=/cluster/diro/home/lisa/PLearn/python_modules:/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages:/u/lisa/local/%s/lib/python2.3/site-packages:/u/lisa/local/%s/lib/python2.2/site-packages:/u/lisa/local/%s/lib/python2.4/site-packages/vtk_python:/u/lisa/local/%s/lib/python2.3/site-packages/Numeric:/u/%s/PLearn/python_modules:/u/%s/projects/apstatsoft/python_modules:
 
         if not os.path.exists('launch.sh'):
+            self.temp_files.append('launch.sh')
             launch_file = open('launch.sh','w')
             launch_file.write(dedent('''\
             #!/bin/sh
             PROGRAM=$1
             shift
+            echo -n "Executing on "
+            hostname
+            echo "PATH: $PATH"
+            echo "PYTHONPATH: $PYTHONPATH"
+            echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+            which python            
+            echo ${PROGRAM} $@
             $PROGRAM $@'''))
             launch_file.close()
             os.chmod('launch.sh',0755)
 
         if not os.path.exists('utils.py'):
-            shutil.copy( get_plearndir()+'/python_modules/plearn/parallel/utils.py', '.')
+            shutil.copy( get_plearndir()+
+                         '/python_modules/plearn/parallel/utils.py', '.')
             os.chmod('utils.py',0755)
 
         if not os.path.exists('configobj.py'):
-            shutil.copy( get_plearndir()+'/python_modules/plearn/parallel/configobj.py', '.')
+            shutil.copy( get_plearndir()+
+                         '/python_modules/plearn/parallel/configobj.py', '.')
             os.chmod('configobj.py',0755)
                                     
         # Launch bqsubmit
