@@ -44,7 +44,7 @@
 #ifndef diff_INC
 #define diff_INC
 
-#include <plearn/base/Object.h>
+//#include <plearn/base/Object.h>
 #include <map>
 #include <string>
 #include <plearn/base/OptionBase.h>
