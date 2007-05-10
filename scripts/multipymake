@@ -10,26 +10,64 @@
 #         This will create the hard link: plearn-float.cc and plearn-double.cc
 #         This will execute pymake -float -opt -link plearn-float.cc and
 #                           pymake -double -opt -link plearn-double.cc
+if [ ${HOSTNAME} == "paralisa.iro.umontreal.ca" ]; then
+    nbproc=8
+elif [ ${HOSTNAME} == "boltzmann.iro.umontreal.ca" ];then
+    nbproc=4
+else
+    nbproc=1
+fi
+PYMAKEFLAGS=""
+
+for param in "$@"
+do
+  if [ $1 == "-force" ]; then
+      PYMAKEFLAGS="${PYMAKEFLAGS=} -force"
+      shift
+  elif [ $1 == "-local" ]; then
+      PYMAKEFLAGS="${PYMAKEFLAGS=} -local=${nbproc}"
+      shift
+  elif [ $1 == "-v" -o $1 == "-v" ]; then
+      PYMAKEFLAGS="${PYMAKEFLAGS=} -v"
+      shift
+  elif [ $1 == "-vv" -o $1 == "-v2" ]; then
+      PYMAKEFLAGS="${PYMAKEFLAGS=} -vv"
+      shift
+  elif [ $1 == "-vvv" -o $1 == "-v3" ]; then
+      PYMAKEFLAGS="${PYMAKEFLAGS=} -vvv"
+      shift
+  elif [ $1 == "-vvvv" -o $1 == "-v4" ]; then
+      PYMAKEFLAGS="${PYMAKEFLAGS=} -vvvv"
+      shift
+  fi  
+  
+done
 
 if [ $# -ge 2 ]; then
     BASEPROG=$1
     shift
 else
-    echo "Usage: $0 <base_prog> <List of parameter> ..."
+    echo "Usage: $0 [options...] <base_prog> <List of parameter> ..."
+    echo "  Options can be: -force, -local, -v, -v1, -vv, -v2, -vvv, -v3, -vvvv, -v4"
     exit
- fi
-ALL=" -link "
+fi
+
+if [ ! -e ${BASEPROG%.cc}.cc ]; then
+    echo "ERROR: The file '${BASEPROG%.cc}.cc' do not exist!"
+fi
 
 for i in "$@";
   do
   iname=${i//\ /_}
-  ln ${BASEPROG}.cc ${BASEPROG}${iname}.cc
+  if [ ! -e ${BASEPROG}${iname}.cc ]; then
+      ln ${BASEPROG}.cc ${BASEPROG}${iname}.cc
+  fi
 done
 
 for i in "$@";
   do
   iname=${i//\ /_}
-  echo -n "Compiling ${BASEPROG}${i}.cc..."
-  pymake $i $ALL ${BASEPROG}${iname}.cc &>/dev/null|| ( echo "Build failed for $i"; exit)
+  echo "Compiling \"${BASEPROG}${i}.cc\" with command: pymake $i ${PYMAKEFLAGS} ${BASEPROG}${iname}.cc"
+  pymake $i ${PYMAKEFLAGS} ${BASEPROG}${iname}.cc || ( echo "Build failed for $i"; exit)
   echo "Ended with status: $?"
 done
