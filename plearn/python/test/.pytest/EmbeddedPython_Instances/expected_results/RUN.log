@@ -312,7 +312,7 @@ The above is a description of an error in a Python program.  Here is
 the original traceback:
 
 Traceback (most recent call last):
-  File "PLEARNDIR:python_modules/plearn/pybridge/test_embedded_code_snippet.py", line 66, in testRecCrash
+  File "PLEARN_PYTHON_PATH:plearn/pybridge/test_embedded_code_snippet.py", line 66, in testRecCrash
     raise RuntimeError, 'Crash on purpose: test'
 RuntimeError: Crash on purpose: test
 
@@ -328,7 +328,7 @@ The above is a description of an error in a Python program.  Here is
 the original traceback:
 
 Traceback (most recent call last):
-  File "PLEARNDIR:python_modules/plearn/pybridge/test_embedded_code_snippet.py", line 70, in testRecCrash
+  File "PLEARN_PYTHON_PATH:plearn/pybridge/test_embedded_code_snippet.py", line 70, in testRecCrash
     self.recTestCrash(n-1)
 Exception: RuntimeError
 Python 2.X.Y: /usr/bin/python
@@ -356,7 +356,7 @@ The above is a description of an error in a Python program.  Here is
 the original traceback:
 
 Traceback (most recent call last):
-  File "PLEARNDIR:python_modules/plearn/pybridge/test_embedded_code_snippet.py", line 66, in testRecCrash
+  File "PLEARN_PYTHON_PATH:plearn/pybridge/test_embedded_code_snippet.py", line 66, in testRecCrash
     raise RuntimeError, 'Crash on purpose: test'
 RuntimeError: Crash on purpose: test
 
@@ -374,7 +374,7 @@ The above is a description of an error in a Python program.  Here is
 the original traceback:
 
 Traceback (most recent call last):
-  File "PLEARNDIR:python_modules/plearn/pybridge/test_embedded_code_snippet.py", line 70, in testRecCrash
+  File "PLEARN_PYTHON_PATH:plearn/pybridge/test_embedded_code_snippet.py", line 70, in testRecCrash
     self.recTestCrash(n-1)
 Exception: Exception
 Python 2.X.Y: /usr/bin/python
@@ -416,7 +416,7 @@ The above is a description of an error in a Python program.  Here is
 the original traceback:
 
 Traceback (most recent call last):
-  File "PLEARNDIR:python_modules/plearn/pybridge/test_embedded_code_snippet.py", line 66, in testRecCrash
+  File "PLEARN_PYTHON_PATH:plearn/pybridge/test_embedded_code_snippet.py", line 66, in testRecCrash
     raise RuntimeError, 'Crash on purpose: test'
 RuntimeError: Crash on purpose: test
 
@@ -432,7 +432,7 @@ The above is a description of an error in a Python program.  Here is
 the original traceback:
 
 Traceback (most recent call last):
-  File "PLEARNDIR:python_modules/plearn/pybridge/test_embedded_code_snippet.py", line 70, in testRecCrash
+  File "PLEARN_PYTHON_PATH:plearn/pybridge/test_embedded_code_snippet.py", line 70, in testRecCrash
     self.recTestCrash(n-1)
 Exception: RuntimeError
 Python 2.X.Y: /usr/bin/python
@@ -460,7 +460,7 @@ The above is a description of an error in a Python program.  Here is
 the original traceback:
 
 Traceback (most recent call last):
-  File "PLEARNDIR:python_modules/plearn/pybridge/test_embedded_code_snippet.py", line 66, in testRecCrash
+  File "PLEARN_PYTHON_PATH:plearn/pybridge/test_embedded_code_snippet.py", line 66, in testRecCrash
     raise RuntimeError, 'Crash on purpose: test'
 RuntimeError: Crash on purpose: test
 

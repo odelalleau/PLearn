@@ -171,11 +171,11 @@ void InstanceSnippetTest::perform()
         msg_without_sys_dependent_data =
             regex_replace(msg_without_sys_dependent_data, python_ver,
                     "Python 2.X.Y");
-        boost::regex plearn_path("(/[a-zA-Z0-9_-]+)+/PLearn/",
+        boost::regex plearn_path("(/[a-zA-Z0-9_-]+)+/python_modules/",
                                 boost::regex::perl);
         msg_without_sys_dependent_data =
             regex_replace(msg_without_sys_dependent_data, plearn_path,
-                    "PLEARNDIR:");
+                    "PLEARN_PYTHON_PATH:");
         pout << "[INTENDED ERROR] Caught Python Exception: '" 
              << msg_without_sys_dependent_data
              << "'" << endl;
