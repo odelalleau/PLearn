@@ -50,6 +50,8 @@ layers = 2 [ *7 ->RBMBinomialLayer(
 size = 2 ;
 learning_rate = 0 ;
 momentum = 0 ;
+delta_ma_param = 0.100000000000000006 ;
+stationarity_statistic_threshold = 2 ;
 bias = 2 [ 0 0 ] ;
 input_size = 2 ;
 output_size = 2 ;
@@ -63,6 +65,8 @@ fixed_seed = 0  )
 size = 2 ;
 learning_rate = 0 ;
 momentum = 0 ;
+delta_ma_param = 0.100000000000000006 ;
+stationarity_statistic_threshold = 2 ;
 bias = 2 [ 0 0 ] ;
 input_size = 2 ;
 output_size = 2 ;
@@ -72,10 +76,12 @@ random_gen = *8   )
 ] ;
 connections = 1 [ *10 ->RBMMatrixConnection(
 weights = 2  2  [ 
-0.211616747512905684 	0.21566475046848535 	
-0.59211590021607885 	0.667132771633056398 	
+0.211616747512905712 	0.215664750468485322 	
+0.59211590021607885 	0.667132771633056509 	
 ]
 ;
+delta_ma_param = 0.100000000000000006 ;
+stationarity_statistic_threshold = 2 ;
 down_size = 2 ;
 up_size = 2 ;
 learning_rate = 0 ;
@@ -92,10 +98,12 @@ previous_to_last = *10  ;
 last_layer = *9  ;
 last_to_target = *12 ->RBMMatrixConnection(
 weights = 2  2  [ 
--0.166376995329432703 	0.522222782976989097 	
-0.449826313170107683 	-0.266489754613600693 	
+-0.166376995329432731 	0.522222782976989097 	
+0.449826313170107572 	-0.266489754613600693 	
 ]
 ;
+delta_ma_param = 0.100000000000000006 ;
+stationarity_statistic_threshold = 2 ;
 down_size = 2 ;
 up_size = 2 ;
 learning_rate = 0 ;
@@ -111,6 +119,8 @@ target_layer = *13 ->RBMMultinomialLayer(
 size = 2 ;
 learning_rate = 0 ;
 momentum = 0 ;
+delta_ma_param = 0.100000000000000006 ;
+stationarity_statistic_threshold = 2 ;
 bias = 2 [ 0 0 ] ;
 input_size = 2 ;
 output_size = 2 ;
@@ -150,7 +160,6 @@ partial_costs = []
 ;
 online = 0 ;
 background_gibbs_update_ratio = 0 ;
-gibbs_chain_statistics_forgetting_factor = 0.998999999999999999 ;
 gibbs_chain_reinit_freq = 2147483647 ;
 top_layer_joint_cd = 0 ;
 n_layers = 2 ;
