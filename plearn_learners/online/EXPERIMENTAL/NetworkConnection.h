@@ -41,19 +41,10 @@
 #define NetworkConnection_INC
 
 #include <plearn/base/Object.h>
+#include <plearn_learners/online/OnlineLearningModule.h>
 
 namespace PLearn {
 
-/**
- * The first sentence should be a BRIEF DESCRIPTION of what the class does.
- * Place the rest of the class programmer documentation here.  Doxygen supports
- * Javadoc-style comments.  See http://www.doxygen.org/manual.html
- *
- * @todo Write class to-do's here if there are any.
- *
- * @deprecated Write deprecated stuff here if there is any.  Indicate what else
- * should be used instead.
- */
 class NetworkConnection : public Object
 {
     typedef Object inherited;

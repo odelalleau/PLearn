@@ -59,7 +59,7 @@ NetworkConnection::NetworkConnection(
         PP<OnlineLearningModule> the_src_module,
         const string& the_src_port,
         PP<OnlineLearningModule> the_dest_module,
-        const string& dest_port,
+        const string& the_dest_port,
         bool call_build_):
 
     inherited(call_build_),
