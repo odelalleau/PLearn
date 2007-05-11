@@ -71,6 +71,30 @@ class PLearnRepr:
     def plearn_repr(self, indent_level, inner_repr):
         return self.reprstring
 
+class PLChar:
+    """Since Python does not have a base type corresponding to a single char,
+    this class is used to allow for pypleanr script to specify a char value."""
+
+    def __init__(self, c):
+        """c specifies the char value, either as a string of length 1, or as an integer containing the ascii code of the character."""
+        if isinstance(c, str):
+            if(len(c)!=1):
+                raise TypeError('A PLChar can be constructed with a string of lenth 1, but not of length '+`len(c)`)
+            self.char = c
+        elif isinstance(c, PLChar):
+            self.char = c.char
+        else:
+            self.char = chr(c)
+
+    def plearn_repr(self, indent_level, inner_repr):
+        return "'"+self.char+"'"
+
+    def __str__(self):
+        return self.char
+
+    def __repr__(self):
+        return "PLChar('"+self.char+"')"
+
 #
 #  Helper classes
 #
