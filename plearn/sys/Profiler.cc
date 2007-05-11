@@ -163,6 +163,26 @@ void Profiler::report(ostream& out)
     }
 }
 
+// output a report on the output stream, giving
+// the wall time statistics recorded for each of the named pieces of code
+void Profiler::reportwall(ostream& out)
+{
+    map<string,Profiler::Stats>::iterator it =  
+        codes_statistics.begin(), end =  codes_statistics.end();
+
+    out << "*** PLearn::Profiler Wall Report ***" << endl;
+    out << "Ticks per second : " << ticksPerSecond() <<endl;
+    for ( ; it!=end ; ++it)
+    {
+        out << endl << "For " << it->first << " :" << endl;
+        Profiler::Stats& stats = it->second;
+        out << "Frequency of occurence   = " << stats.frequency_of_occurence << endl;
+        out << "Wall duration   (ticks)  = " << stats.wall_duration << endl;
+
+        double avg_wall = (double)stats.wall_duration/stats.frequency_of_occurence;
+        out << "Average wall   duration  = " << avg_wall << endl;
+    }
+}
 
 } // end of namespace PLearn
 

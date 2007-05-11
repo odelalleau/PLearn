@@ -174,6 +174,9 @@ public:
     //!  the statistics recorded for each of the named pieces of codes.
     static void report(ostream& out);
 
+    //!  Output a report on the output stream, giving the
+    //!  wall time statistics recorded for each of the named pieces of codes.
+    static void reportwall(ostream& out);
 
 protected:
     static map<string,Stats> codes_statistics;
