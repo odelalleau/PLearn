@@ -131,8 +131,11 @@ class Program(core.PyTestObject):
         logging.debug("Creating program using compiler %s with compile_options '%s'."%(self.compiler, self.compile_options))
 
         if self.cmdline_compile_options and self.compiler == "pymake":
-            config_options = [ opt.replace("-", "")
-                               for opt in self.compile_options.split() ]
+            config_options = []
+            if self.compile_options:
+                config_options = [ opt.replace("-", "")
+                                   for opt in self.compile_options.split() ]
+            
             cmdline_options = self.cmdline_compile_options.split(",")
 
             options = list( sets.Set(config_options+cmdline_options) )
