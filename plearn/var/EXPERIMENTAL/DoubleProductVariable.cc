@@ -2,7 +2,7 @@
 
 // DoubleProductVariable.cc
 //
-// Copyright (C) 2007 Simon Lemieux
+// Copyright (C) 2007 Simon Lemieux, Pascal Vincent
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Simon Lemieux
+// Authors: Simon Lemieux, Pascal Vincent
 
 /*! \file DoubleProductVariable.cc */
 

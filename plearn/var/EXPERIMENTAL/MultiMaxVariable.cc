@@ -2,7 +2,7 @@
 
 // MultiMaxVariable.cc
 //
-// Copyright (C) 2007 Simon Lemieux
+// Copyright (C) 2007 Simon Lemieux, Pascal Vincent
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Simon Lemieux
+// Authors: Simon Lemieux, Pascal Vincent
 
 /*! \file MultiMaxVariable.cc */
 
@@ -51,49 +51,31 @@ PLEARN_IMPLEMENT_OBJECT(
     );
 
 
-// constructor from input variable and parameters
+//! Constructor
 MultiMaxVariable::MultiMaxVariable(Variable* input, TVec<int> groupsizes, char computation_type)
-// ### replace with actual parameters
     : inherited(input, input->length(), input->width()),
       groupsizes(groupsizes),
       computation_type(computation_type)
-
-//    parameter(the_parameter),
-//    ...
 {
-//TODO : enlever les deux lignes suivantes
-//     this->groupsizes = groupsizes;
-//     this->computation_type = computation_type;
-
-   // ### You may (or not) want to call build_() to finish building the
-   // ### object
-
-    int sum =0;
-    for(int i=0; i<groupsizes.length(); i++)
-        sum += groupsizes[i];
-
-    if(sum != input->width())
-        PLERROR("invalid groupsizes in MultiMaxVariable");
+    build_();
 }
 
 
-MultiMaxVariable::MultiMaxVariable(Variable* input, int groupsizes, char computation_type)
-    : inherited(input, input->length(), input->width()),
-      computation_type(computation_type)
-{
-    if(input->width()%groupsizes !=0)
-        PLERROR("invalid groupsizes in MultiMaxVariable");    
 
-    TVec<int> vec(input->width()/groupsizes, groupsizes);
-    this->groupsizes = vec;
+
+MultiMaxVariable::MultiMaxVariable(Variable* input, int groupsize, char computation_type)
+    : inherited(input, input->length(), input->width()),
+      computation_type(computation_type),
+      groupsize(groupsize)
+{
+    build_();
 }
 
 void MultiMaxVariable::recomputeSize(int& l, int& w) const
 {
-    // ### usual code to put here is:
         if (input) {
-            l = input->length(); // the computed length of this Var
-            w = input->width() ; // the computed width
+            l = input->length();
+            w = input->width() ;
         } else
             l = w = 0;
 }
@@ -251,6 +233,10 @@ void MultiMaxVariable::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "this telles how to \"divide\" our diffrents inputs\nex: groupsizes = [1,2,3] says we divide our output like this :\n[x1],[x2,x3],[x4,x5,x6] and apply a maximum algorithm on each group separately");
 
+    declareOption(ol, "groupsize", &MultiMaxVariable::groupsize,
+                  OptionBase::buildoption,
+                  "");
+
     declareOption(ol, "computation_type", &MultiMaxVariable::computation_type,
                   OptionBase::buildoption,
                   "specifies what maximum algorithm should be used on our groups\n\'S\' = Softmax\n\'L\' = Log(Softmax)\n\'H\' = Hardmax*value\n\'h\' = hardmax\n\'R\' = random_Softmax*value\n\'r\' = random_Softmax");
@@ -271,13 +257,31 @@ void MultiMaxVariable::build_()
     // ###    options have been modified.
     // ### You should assume that the parent class' build_() has already been
     // ### called.
+    
+    if (groupsizes.length() <= 0)
+    {
+        if (groupsize <= 0)
+            PLERROR("Groupsize(s) not specified or invalid in MultiMaxVariable");    
+        if (input->width() % groupsize != 0)
+            PLERROR("Invalid groupsize in MultiMaxVariable");
+
+        TVec<int> vec(input->width()/groupsize, groupsize);
+        groupsizes = vec;
+    }
+    else
+    {
+        int sum = 0;
+        for(int i=0; i<groupsizes.length(); i++)
+            sum += groupsizes[i];       
+        if(sum != input->width())
+            PLERROR("Invalid groupsizes in MultiMaxVariable");    
+    }
 }
+
 
 ////////////////
 // some utils //
 ////////////////
-
-
 
 void MultiMaxVariable::softmax_range(Vec &x, Vec &y, int start, int length)
 {

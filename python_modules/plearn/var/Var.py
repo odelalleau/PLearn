@@ -30,20 +30,58 @@
 ##
 ## Authors: Pascal Vincent
 
+from plearn.pyplearn import *
+from plearn.pyplearn.plearn_repr import plearn_repr, format_list_elements
 
 class Var:
 
-    def __init__(self, plvar):
-        self.v = plvar
+    def __init__(self, l, w=1):
+        if isinstance(l,int):
+            self.v = pl.SourceVariable(build_length=l,
+                                       build_width=w)
+        else: # assume parameter l is a pl. plvar
+            self.v = l
 
     def sigmoid(self):
         return Var(pl.SigmoidVariable(input=self.v))
 
+    def plearn_repr( self, indent_level=0, inner_repr=plearn_repr ):
+        # asking for plearn_repr could be to send specification over
+        # to another prg so that will open the .pmat
+        # So we make sure data is flushed to disk.
+        return self.v.plearn_repr(indent_level, inner_repr)
 
-def reconstructionCost(hidden, input, W):
-    return hidden.matrixTransposeProduct(W).dot(input).neg()
+    def probabilityPairs(self, min, max):
+        return Var(pl.ProbabilityPairsVariable(input=self.v, min=min, max=max))
 
+    def matrixProduct(self, W):
+        pass
+        # return Var(pl.MatrixProductVariable(self.v, W)
 
+    def doubleProduct(self, W, M):
+        return Var(pl.DoubleProductVariable(x=self.v, w=W, m=M))
+
+    def dot(self, input):
+        return Var(pl.DotProductVariable(input1=self, input2=input))
+
+    def multiMax(self, igs, computation_type):        
+        return Var(pl.MultiMaxVariable(input=self.v, groupsize=igs, computation_type=PLChar(computation_type)))
+
+    def multiSoftMax(self, igs):        
+        return self.multiMax(igs, 'S')
+
+    def multiLogSoftMax(self, igs):
+        return self.multiMax(igs, 'L')
+
+    def transposeDoubleProduct(self, W, M):
+        return Var(pl.TranposedDoubleProductVariable(w=W, m=M, h=self.v))
+
+    def __neg__(self):
+        return Var(pl.NegateElementsVariable(input=self.v))
+    
+    
+
+    
 # RLayer stands for reconstruciton hidden layer
 
 def addSigmoidRLayer(input, nh):
@@ -54,7 +92,7 @@ def addSigmoidRLayer(input, nh):
     cost = -hidden.matrixTransposeProduct(W).log_sigmoid().dot(input)
     return (hidden, cost, W)
 
-def addMultiSoftmaxRLayer(input, ing, igs, ong, ogs, tighed=true, use_double_product=false):
+def addMultiSoftmaxRLayer(input, ing, igs, ong, ogs, tighed=True, use_double_product=True):
     """ing is the input's number of groups
     igs is the input's group size
     ong is the output's number of groups
@@ -65,54 +103,24 @@ def addMultiSoftmaxRLayer(input, ing, igs, ong, ogs, tighed=true, use_double_pro
     Returns a triple (hidden, params, reonstruction_cost)"""
     if not use_double_product:
         W = Var(ing*igs,ong*ogs)
-        hidden = input.matrixProduct(W).multiSoftMax(ong, ogs)
+        hidden = input.matrixProduct(W).multiSoftMax(ogs)
         if tighed:
-            cost = -hidden.matrixTransposeProduct(W).multiLogSoftMax(ing,igs).dot(input)
+            cost = -hidden.matrixTransposeProduct(W).multiLogSoftMax(igs).dot(input)
             return hidden, cost, W
         else:
             Wr = Var(ong*ogs, ing*igs)
-            cost = -hidden.matrixProduct(Wr).multiLogSoftMax(ing,igs)
+            cost = -hidden.matrixProduct(Wr).multiLogSoftMax(igs)
             return hidden, cost, (W, Wr)
 
     else: # use double product
         M = Var(ing*igs, ong)
         W = Var(ing*igs, ogs)
-        hidden = input.doubleProduct(W,M).multiSoftMax(ong, ogs)
+        hidden = input.doubleProduct(W,M).multiSoftMax(ogs)
         if tighed:
-            cost = -hidden.transposeDoubleProduct(W,M).multiLogSoftMax(ing,igs).dot(input)
+            cost = -hidden.transposeDoubleProduct(W,M).multiLogSoftMax(igs).dot(input)
             return hidden, cost, (W,M)
         else:
             Mr = Var()
             Wr = Var()
-n1=100, g1=4
-n2=50, g2=8
-n3=10, g3=25
-n4=1,  g4=10
+            
 
-d=400
-input = Var(1,d)
-W1 = Var(n1*g1,d)
-h1 = input.matrixProduct(W1)
-W2 = Var(n2*g2,n1*g1)
-h2 = h1.matrixProduct(W2)
-W3 = Var(n3*g3,n2*g2)
-h3 = h2.matrixProduct(W3)
-W4 = Var(n4*g4,n3*g3)
-h4 = h3.matrixProduct(W4)
-
-xr = reconstructionCost(h1, x, W1)
-h1r = reconstructionCost(h2, h1, W2)
-h2r = reconstructionCost(h3, h2, W3)
-h3r = reconstructionCost(h4, h3, W4)
-
-
-parameters = [ Var() for ]
-W1 = Var(10,25)
-W2 = Var(3,2)
-
-
-
-
-learner = pl.DeepAutoAssociatorLeanrer(
-    
-    )

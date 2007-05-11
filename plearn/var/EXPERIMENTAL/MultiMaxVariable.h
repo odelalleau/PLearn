@@ -2,7 +2,7 @@
 
 // MultiMaxVariable.h
 //
-// Copyright (C) 2007 Simon Lemieux
+// Copyright (C) 2007 Simon Lemieux, Pascal Vincent
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Simon Lemieux
+// Authors: Simon Lemieux, Pascal Vincent
 
 /*! \file MultiMaxVariable.h */
 
@@ -48,10 +48,15 @@ using namespace std;
 /*! * MultiMaxVariable * */
 
 /**
- * The first sentence should be a BRIEF DESCRIPTION of what the class does.
- * Place the rest of the class programmer documentation here.  Doxygen supports
- * Javadoc-style comments.  See http://www.doxygen.org/manual.html
+ * This variables computes a max functions (softmax, log-softmax, hardmax, etc., determined by the field computation_type) 
+ * on subvectors of the input, which lenght is defined by the field groupsizes.
+ * 
+ * ex :
+ * if groupsizes = [1,2,3], and computation_type = 'S' (for softmax), and the input vector [1,2,3,4,5,6],
+ * the result will be [softmax([1]), softmax([2,3]), softmax([4,5,6])]
  *
+ *  note : in that example matValue.width() of the variable must be 1+2+3=6
+ * 
  * @todo Write class to-do's here if there are any.
  *
  * @deprecated Write deprecated stuff here if there is any.  Indicate what else
@@ -72,18 +77,16 @@ public:
 // les sizes ont du sens... ou sinon valider qqpart ailleurs que la somme des
 // groupsize's donne bien le width de la variable
     TVec<int> groupsizes;
-    /*computation type :
-      'H' = ...
-      'h' = ...
-      ...
-    */
     char computation_type;
+    int groupsize;
+
 public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor, usually does nothing
     MultiMaxVariable()
-        :computation_type('S') 
+        :computation_type('S'),
+         groupsize(-1)
     {}
 
 

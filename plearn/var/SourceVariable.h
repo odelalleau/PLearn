@@ -53,8 +53,21 @@ class SourceVariable: public Variable
     typedef Variable inherited;
 
 public:
+    // build options
+    int build_length;
+    int build_width;
+
+private:
+    void build_();
+public:
+    virtual void build();
+
+protected:
+    static void declareOptions(OptionList & ol);
+
+public:
     //!  Default constructor for persistence
-    SourceVariable() {}
+    SourceVariable(): build_length(-1), build_width(-1) {}
     SourceVariable(int thelength, int thewidth);
     SourceVariable(const Vec& v, bool vertical=true);
     SourceVariable(const Mat& m);

@@ -54,16 +54,54 @@ PLEARN_IMPLEMENT_OBJECT(
 );
 
 SourceVariable::SourceVariable(int thelength, int thewidth)
-    : inherited(thelength,thewidth)
+    : inherited(thelength,thewidth),
+      build_length(thelength),
+      build_width(thewidth)
 {}
 
 SourceVariable::SourceVariable(const Vec& v, bool vertical)
     : inherited(vertical ?v.toMat(v.length(),1) :v.toMat(1,v.length()))
-{}
+{
+    build_length = length();
+    build_width = width();
+}
 
 SourceVariable::SourceVariable(const Mat& m)
-    : inherited(m)
+    : inherited(m),
+      build_length(m.length()),
+      build_width(m.width())
 {}
+
+void SourceVariable::declareOptions(OptionList& ol)
+{
+    declareOption(ol, "build_length", &SourceVariable::build_length, OptionBase::buildoption, 
+                  "The initial length for the variable");
+
+    declareOption(ol, "build_width", &SourceVariable::build_width, OptionBase::buildoption, 
+                  "The initial width for the variable");
+
+    inherited::declareOptions(ol);
+}
+
+
+////////////
+// build_ //
+////////////
+void SourceVariable::build_()
+{ 
+    if(build_length>0 && build_width>0)
+        resize(build_length, build_width);
+}
+
+///////////
+// build //
+///////////
+void SourceVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
 
 void SourceVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
