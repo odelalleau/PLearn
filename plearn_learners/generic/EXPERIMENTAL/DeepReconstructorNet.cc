@@ -149,7 +149,7 @@ void DeepReconstructorNet::initializeParams(bool set_seed)
 
     VarArray params = getAllParams();
     for(int i=0; i<params.length(); i++)
-        ((PP<SourceVariable>)params[i])->randomInitialize(random_gen);
+        dynamic_cast<SourceVariable*>((Variable*)params[i])->randomInitialize(random_gen);
 }
 
 VarArray DeepReconstructorNet::getAllParams()
