@@ -77,14 +77,16 @@ class PyTestMode(Mode):
                                     help='The maximum number of hosts to use simultaneously.',
                                     default=10 )
 
-        testing_options.add_option( '--pymake-compile',
-                                    default="dbg",
-                                    choices=Program.pymake_opt_options,
-                                    help="Changes the *default* compilation flag used by pymake (dbg) "
-                                    "for the one provided. DO NOT preceed the option name by a dash, "
-                                    "i.e. use '--pymake-compile opt' and not '--pymake-compile -opt'. "
-                                    "Note that if the tests is already specified with one of the "
-                                    "above compile options, that compile option will remain unchanged." )
+        testing_options.add_option( '--pymake-compile-options', default="",
+            help="The default behavior of tests being compiled with Pymake is to "
+                "forward their 'compile_options' to Pymake. This command line "
+                "option can be used to add flags to the compilation process. DO "
+                "NOT preceed the option(s) name by a dash. If you want to provide many "
+                "flags, provide a CSV list of flags, e.g. \n"
+                "    --pymake-compile-options safeopt,fastmath \n"
+                "For now, it is the user's responsability to ensure that the options "
+                "provided here do not clash with the ones potentially provided "
+                "through the tests' option 'compile_options'.")
         
         return testing_options
     testing_options = classmethod( testing_options )
@@ -717,8 +719,9 @@ class RoutineBasedMode(PyTestMode):
     #  Instance methods
     #    
     def __init__( self, targets, options ):
-        logging.debug("--pymake-compile (=%s) option forwarded to Program."%options.pymake_compile)
-        Program.pymake_opt_override = options.pymake_compile
+        logging.debug("--pymake-compile-options (=%s) option forwarded to Program."
+                      % options.pymake_compile_options)
+        Program.cmdline_compile_options = options.pymake_compile_options
 
         # The option had to be forwarded to Program *before* calling the
         # inherited ctor since Program instances are instanciated there...

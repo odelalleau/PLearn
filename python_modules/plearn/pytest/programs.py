@@ -1,4 +1,4 @@
-import logging, os, sys
+import logging, os, sets, sys
 from plearn.utilities import ppath
 from plearn.utilities import moresh
 from plearn.utilities import toolkit
@@ -76,20 +76,6 @@ def plcommand(command_name):
 
     return command_path
 
-#SING: def Singleton(SuperMeta):
-#SING:     class _Singleton(SuperMeta):
-#SING:         def __init__(self, *args):
-#SING:             type.__init__(self, *args)
-#SING:             self._singletons = {}
-#SING:     
-#SING:         def __call__(self, **overrides):
-#SING:             signature = self._signature(**overrides)
-#SING:             if not signature in self._singletons:
-#SING:                 overrides['_signature'] = signature
-#SING:                 self._singletons[signature] = type.__call__(self, **overrides)
-#SING:             return self._singletons[signature]
-#SING:     return _Singleton
-
 class Program(core.PyTestObject):
 
     #######  Options  #############################################################
@@ -99,21 +85,6 @@ class Program(core.PyTestObject):
     compile_options = PLOption(None)
     no_plearn_options = PLOption(False)
 
-    #######  Program instances are singletons  ####################################
-
-    #SING: __metaclass__ = Singleton(core.PyTestObject.__metaclass__)
-    def _signature(cls, **overrides):
-        options = dict([ (opt, None) for opt in cls.class_options() ])
-        options.update(overrides)                
-        if options['compiler'] is None:
-            signature = options['name']
-        else:
-            if options['compile_options'] == "":                
-                options['compile_options'] = None
-            signature =\
-                "%(name)s__compiler_%(compiler)s__options_%(compile_options)s"%options
-        return signature.replace(' ', '_')
-    _signature = classmethod(_signature)
 
     #######  Class Variables  #####################################################
 
@@ -127,10 +98,8 @@ class Program(core.PyTestObject):
     # If True, no compilations done; assume old executables are valid
     compilation_disabled = False
 
-    # Special pymake hacks --- see hackCompileOptions()
-    pymake_opt_options = [ 'dbg', 'opt', 'pintel', 'gprof',
-                           'safegprof', 'safeopt', 'safeoptdbg', 'checkopt' ]
-    pymake_opt_override = "dbg"
+    # Special pymake hack --- see handleCompileOptions()
+    cmdline_compile_options = ""
 
 
     #######  Instance Methods  ####################################################
@@ -138,14 +107,15 @@ class Program(core.PyTestObject):
     def __init__(self, **overrides):
         core.PyTestObject.__init__(self, **overrides)
         assert self.name is not None
-        assert self.compiler is not None or self.compile_options is None
-        logging.debug("Creating program using compiler %s with compile_options '%s'."%(self.compiler, self.compile_options))
 
-        # Methods are called even if messages are not logged
+        # Some command line options can modify the default values for those...
+        self.handleCompileOptions()
+
+        # Methods are called even if messages are not logged...
+        ##  The getProgramPath() method call is required here so as to
+        ##  initialize the '_program_path' and '__is_global' members
         logging.debug("\nProgram: "+self.getProgramPath())
 
-        #SING: internal_exec_path = self.getInternalExecPath(overrides.pop('_signature'))
-        #CLS:  internal_exec_path = self.getInternalExecPath(self._signature(**overrides))
         internal_exec_path = self.getInternalExecPath(self.__signature())
         logging.debug("Internal Exec Path: %s"%internal_exec_path)
         if self.isCompilable():
@@ -155,12 +125,29 @@ class Program(core.PyTestObject):
             self.__log_file_path = internal_exec_path+'.log'
         logging.debug("Program instance: %s\n"%repr(self))
 
+    def handleCompileOptions(self):        
+        assert self.compiler is not None or self.compile_options is None, \
+            "One cannot provide compile options without providing a compiler..."
+        logging.debug("Creating program using compiler %s with compile_options '%s'."%(self.compiler, self.compile_options))
+
+        if self.cmdline_compile_options and self.compiler == "pymake":
+            config_options = [ opt.replace("-", "")
+                               for opt in self.compile_options.split() ]
+            cmdline_options = self.cmdline_compile_options.split(",")
+
+            options = list( sets.Set(config_options+cmdline_options) )
+            options = " -".join([""]+options).strip()
+
+            logging.debug("Test %s: Using compile options '%s' instead of '%s'...",
+                          self.name, self.compile_options, options)
+            self.compile_options = options
+            
     def __signature(self):
         if self.compiler is None:
             signature = self.name
         else:
             if self.compile_options == "":
-                self.compile_options = None                
+                self.compile_options = None
             signature = "%s__compiler_%s__options_%s"%(
                 self.name, self.compiler, self.compile_options)
         signature = signature.replace('-', '') # Compile options...
@@ -238,10 +225,6 @@ class Program(core.PyTestObject):
         moresh.pushd(targetdir)
         logging.debug("\nIn %s:"%os.getcwd())
         
-#       compile_cmd = "%s %s %s -link-target %s > %s" \
-#           % (self.compiler, self.compile_options,
-#              self.getProgramPath(), self.getInternalExecPath(), log_fname)
- 
         if sys.platform == 'win32':
             # We assume the compiler is pymake.
             if self.compiler != "pymake":
@@ -319,30 +302,9 @@ class Program(core.PyTestObject):
             try:
                 self._program_path = find_global_program(self.name)
                 self.__is_global = True                
-                if self.compiler is not None:
-                    self.hackCompileOptions()                        
             except core.PyTestUsageError, neither_global:
                 raise core.PyTestUsageError("%s %s"%(not_local, neither_global))
         return self._program_path
-
-    def hackCompileOptions(self):
-        assert self.compiler
-        if self.compile_options is None: self.compile_options = ''
-            
-        if self.compiler == "pymake" and self.pymake_opt_override!="dbg":
-            try:
-                actual_options = self.compile_options.split()
-                logging.debug("- actual_options: %s"%actual_options)
-                if actual_options:
-                    for opt_option in self.pymake_opt_options:
-                        assert ('-%s'%opt_option) not in actual_options, opt_option
-
-                # No AssertionError raised
-                self.compile_options = ' '.join(
-                    ['-%s'%self.pymake_opt_override, self.compile_options])
-
-            except AssertionError, opt_option:
-                logging.debug("+ pytest.config provided '-%s' prevails"%opt_option)    
 
     def invoke(self, arguments, logfname):
         if self.isPLearnCommand() and not self.no_plearn_options:            
@@ -411,7 +373,7 @@ if __name__ == "__main__":
     print Program(name="simplenet", compiler="pymake", compile_options="-safeopt")
 
     print "\nOpt hack:"
-    Program.pymake_opt_override = 'opt'
+    Program.cmdline_compile_options = 'opt'
     plearn_tests = Program(name="plearn_tests", compiler="pymake")
     print plearn_tests
     print Program(name="plearn_tests", compiler="pymake", compile_options='-dbg')
