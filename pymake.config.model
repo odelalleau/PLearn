@@ -703,7 +703,9 @@ pymakeOption( name = 'goto',
 pymakeOption( name = 'lisa',
               description = 'compilation and linking using GOTO for BLAS',
               cpp_definitions = ['USE_BLAS_SPECIALISATIONS'],
-              linkeroptions = '-L' + libdir +'goto /u/lisa/local/'+target_platform+'/lib/lapack_for_goto.a  -lgoto -lpthread -lgfortran -lg2c'
+              linkeroptions = '-L' + libdir +'goto -llapack -lgoto -lgfortran'
+              #lapack_for_goto.a is currently bugged
+              #linkeroptions = '-L' + libdir +'goto /u/lisa/local/'+target_platform+'/lib/lapack_for_goto.a  -lgoto -lpthread -lgfortran -lg2c'
               )
 
 cpp_variables += ['USE_BLAS_SPECIALISATIONS']
