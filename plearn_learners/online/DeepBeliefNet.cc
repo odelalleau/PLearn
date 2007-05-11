@@ -750,7 +750,10 @@ void DeepBeliefNet::train()
                 int sample_start = stage % nsamples;
                 if (batch_size > 1 || minibatch_hack) {
                     train_set->getExamples(sample_start, minibatch_size,
-                            inputs, targets, weights, NULL, true);
+                                           inputs, targets, weights, NULL, true);
+                    train_costs_m.fill(MISSING_VALUE);
+                    if (reconstruct_layerwise)
+                        train_costs_m.column(reconstruction_cost_index).clear();
                     onlineStep( inputs, targets, train_costs_m );
                 } else {
                     train_set->getExample(sample_start, input, target, weight);
@@ -1103,6 +1106,8 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
         }
     }
 
+
+
 }
 
 void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
@@ -1263,6 +1268,12 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
         */
     }
 
+    Mat rc;
+    if (reconstruct_layerwise)
+    {
+        rc = train_costs.column(reconstruction_cost_index);
+        rc.clear();
+    }
 
     // DOWNWARD PHASE (the downward phase for top layer is already done above)
     for( int i=n_layers-3 ; i>=0 ; i-- )
@@ -1299,6 +1310,16 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
                                           source_exp.width());
             save_layer_expectation << source_exp;
         }
+
+        if (reconstruct_layerwise)
+        {
+            connections[i]->setAsUpInputs(layers[i+1]->getExpectations());
+            layers[i]->getAllActivations(connections[i], 0, true);
+            layers[i]->fpropNLL(save_layer_expectations, 
+                                train_costs.column(reconstruction_cost_index+i+1));
+            rc += train_costs.column(reconstruction_cost_index+i+1);
+        }
+
         contrastiveDivergenceStep( layers[ i ],
                                    connections[ i ],
                                    layers[ i+1 ] ,

@@ -57,23 +57,26 @@ class RBMMatrixConnection: public RBMConnection
 public:
     //#####  Public Build Options  ############################################
 
-    //! gibbs stuff options
-    real delta_ma_param; // by how much to adapt the parameter of the moving average coefficients
-    real stationarity_statistic_threshold; // threshold on the z-statistic for stationarity
+    //! background gibbs chain options
+    //! each element of this vector is a number of updates after which
+    //! the moving average coefficient is incremented (by incrementing
+    //! its inverse sigmoid by gibbs_ma_increment). After the last
+    //! increase has been made, the moving average coefficient stays constant.
+    Vec gibbs_ma_schedule;
+    real gibbs_ma_increment;
+    real gibbs_initial_ma_coefficient;
 
     //#####  Learned Options  #################################################
 
     //! Matrix containing unit-to-unit weights (output_size × input_size)
     Mat weights;
 
-    //! stuff used for Gibbs chain methods only
-    real fast_mean, slow_mean;
-    real gibbs_fast_ma_coefficient, gibbs_fast_ma_param; // fast_ma_coefficient = sigmoid(fast_ma_param)
-    real gibbs_slow_ma_coefficient, gibbs_slow_ma_param; // slow_ma_coefficient = sigmoid(slow_ma_param)
-    real var_of_value;
-    real sum_fast2, sum_slow2, sum_slowfast;
+    //! used for Gibbs chain methods only
+    real gibbs_ma_coefficient; 
+
 
     //#####  Not Options  #####################################################
+
 
     //! Accumulates positive contribution to the weights' gradient
     Mat weights_pos_stats;

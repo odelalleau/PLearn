@@ -118,7 +118,6 @@ void RBMMatrixConnectionNatGrad::update( const Mat& pos_down_values, // v_0
     {
         // We use the average gradient over a mini-batch.
         real mbnorm = 1. / pos_down_values.length();
-
         productScaleAcc(weights_gradient, pos_up_values, true, pos_down_values, false,
                         mbnorm, 0);
         productScaleAcc(weights_gradient, neg_up_values, true, neg_down_values, false,

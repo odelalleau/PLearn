@@ -55,12 +55,8 @@ RBMLayer::RBMLayer( real the_learning_rate ) :
     learning_rate(the_learning_rate),
     momentum(0.),
     size(-1),
-    delta_ma_param(0.1),
-    stationarity_statistic_threshold(2),
-    fast_mean(0), slow_mean(0),
-    gibbs_fast_ma_coefficient(0), gibbs_fast_ma_param(0),
-    gibbs_slow_ma_coefficient(0), gibbs_slow_ma_param(0),
-    var_of_value(0),sum_fast2(0),sum_slow2(0),sum_slowfast(0),
+    gibbs_ma_increment(0.1),
+    gibbs_initial_ma_coefficient(0.1),
     expectation_is_up_to_date(false),
     expectations_are_up_to_date(false),
     pos_count(0),
@@ -84,14 +80,7 @@ void RBMLayer::clearStats()
     bias_neg_stats.clear();
     pos_count = 0;
     neg_count = 0;
-    gibbs_fast_ma_param = -1;
-    gibbs_slow_ma_param = 0;
-    gibbs_fast_ma_coefficient = sigmoid(gibbs_fast_ma_param);
-    gibbs_slow_ma_coefficient = sigmoid(gibbs_slow_ma_param);
-    var_of_value = 0.25;
-    sum_fast2 = (1 - gibbs_fast_ma_coefficient)*(1 - gibbs_fast_ma_coefficient);
-    sum_slow2 = (1 - gibbs_slow_ma_coefficient)*(1 - gibbs_slow_ma_coefficient);
-    sum_slowfast = (1 - gibbs_slow_ma_coefficient)*(1 - gibbs_fast_ma_coefficient);
+    gibbs_ma_coefficient = gibbs_initial_ma_coefficient;
 }
 
 void RBMLayer::forget()
@@ -119,23 +108,21 @@ void RBMLayer::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Momentum.");
 
-    declareOption(ol, "delta_ma_param", &RBMLayer::delta_ma_param,
+    declareOption(ol, "gibbs_ma_schedule", &RBMLayer::gibbs_ma_schedule,
                   OptionBase::buildoption,
-                  "This option is used only when the background Gibbs is computed (i.e. update*Gibbs() is called).\n"
-                  "delta_ma_param is the increment in the parameters that control the moving average coefficients\n"
-                  "used to detect non-stationarity in the negative phase activity statistics.\n"
-                  "The moving average coefficient are obtained by sigmoid(parameter).\n"
-                  "Two moving averages are kept, a slow one and a fast one. When their\n"
-                  "difference is statistically significant the moving averages are slowed down.\n");
+                  "Each element of this vector is a number of updates after which\n"
+                  "the moving average coefficient is incremented (by incrementing\n"
+                  "its inverse sigmoid by gibbs_ma_increment). After the last\n"
+                  "increase has been made, the moving average coefficient stays constant.\n");
 
-    declareOption(ol, "stationarity_statistic_threshold", &RBMLayer::stationarity_statistic_threshold,
+    declareOption(ol, "gibbs_ma_increment", &RBMLayer::gibbs_ma_increment,
                   OptionBase::buildoption,
-                  "This option is used only when the background Gibbs is computed (i.e. update*Gibbs() is called).\n"
-                  "When the absolute value of the difference of the slow mean and the fast mean\n"
-                  "divided by the standard deviation of this difference is above this threshold,\n"
-                  "the moving averages are slowed down by increasing their parameter by delta_ma_param.\n"
-                  "When this stastitic is less than half the threshold, the moving averages are accelerated\n"
-                  "by decreasing their parameter by delta_ma_param.\n");
+                  "The increment in the inverse sigmoid of the moving average coefficient\n"
+                  "to apply after the number of updates reaches an element of the gibbs_ma_schedule.\n");
+
+    declareOption(ol, "gibbs_initial_ma_coefficient", &RBMLayer::gibbs_initial_ma_coefficient,
+                  OptionBase::buildoption,
+                  "Initial moving average coefficient for the negative phase statistics in the Gibbs chain.\n");
 
     declareOption(ol, "bias", &RBMLayer::bias,
                   OptionBase::learntoption,
@@ -476,8 +463,8 @@ void RBMLayer::updateCDandGibbs( const Mat& pos_values,
     if (neg_count==0)
         multiply(tmp,normalize_factor,bias_neg_stats);
     else
-        multiplyScaledAdd(tmp,gibbs_slow_ma_coefficient,
-                          normalize_factor*(1-gibbs_slow_ma_coefficient),
+        multiplyScaledAdd(tmp,gibbs_ma_coefficient,
+                          normalize_factor*(1-gibbs_ma_coefficient),
                           bias_neg_stats);
     neg_count++;
 
@@ -512,50 +499,21 @@ void RBMLayer::updateGibbs( const Mat& pos_values,
         multiply(tmp,normalize_factor,bias_neg_stats);
     else // bias_neg_stats <-- tmp*(1-gibbs_chain_statistics_forgetting_factor)/minibatch_size 
         //                    +gibbs_chain_statistics_forgetting_factor*bias_neg_stats
-        multiplyScaledAdd(tmp,gibbs_slow_ma_coefficient,
-                          normalize_factor*(1-gibbs_slow_ma_coefficient),
+        multiplyScaledAdd(tmp,gibbs_ma_coefficient,
+                          normalize_factor*(1-gibbs_ma_coefficient),
                           bias_neg_stats);
     neg_count++;
 
-    // update gibbs chain statistics for checking when to change the ma_coefficient
+    bool increase_ma=false;
+    for (int i=0;i<gibbs_ma_schedule.length();i++)
+        if (gibbs_ma_schedule[i]==neg_count*minibatch_size)
+        {
+            increase_ma=true;
+            break;
+        }
+    if (increase_ma)
+        gibbs_ma_coefficient = sigmoid(gibbs_ma_increment + inverse_sigmoid(gibbs_ma_coefficient));
 
-    // this is the statistic that summarizes what is happening in one minibatch (we could use something else)
-    real value = sum(tmp)*normalize_factor/size; 
-    // fast moving average of the value
-    fast_mean = gibbs_fast_ma_coefficient*fast_mean + (1-gibbs_fast_ma_coefficient)*value;
-    // slow moving average of the value
-    slow_mean = gibbs_slow_ma_coefficient*fast_mean + (1-gibbs_slow_ma_coefficient)*value;
-    // moving average estimator of the variance of the value
-    var_of_value = gibbs_slow_ma_coefficient*var_of_value + (1-gibbs_slow_ma_coefficient)*(value-slow_mean)*(value-slow_mean);
-    // now construct moving sums in order to compute Var(fast_mean-slow_mean)
-    sum_fast2 = gibbs_fast_ma_coefficient*gibbs_fast_ma_coefficient*sum_fast2 + 
-        (1-gibbs_fast_ma_coefficient)*(1-gibbs_fast_ma_coefficient);
-    sum_slow2 = gibbs_slow_ma_coefficient*gibbs_slow_ma_coefficient*sum_slow2 + 
-        (1-gibbs_slow_ma_coefficient)*(1-gibbs_slow_ma_coefficient);
-    sum_slowfast = gibbs_slow_ma_coefficient*gibbs_fast_ma_coefficient*sum_slowfast + 
-        (1-gibbs_slow_ma_coefficient)*(1-gibbs_fast_ma_coefficient);
-    // this is Var(fast_mean-slow_mean):
-    real var_of_mean_difference = var_of_value * (sum_fast2 + sum_slow2 - 2*sum_slowfast);
-    if (var_of_mean_difference>0)
-    {
-        real stationarity_statistic = fabs(fast_mean - slow_mean)/sqrt(var_of_mean_difference);
-        if (stationarity_statistic>stationarity_statistic_threshold) // things are changing too fast
-        {
-            gibbs_fast_ma_param-=delta_ma_param;
-            gibbs_slow_ma_param-=delta_ma_param;
-            gibbs_fast_ma_coefficient = sigmoid(gibbs_fast_ma_param);
-            gibbs_slow_ma_coefficient = sigmoid(gibbs_slow_ma_param);
-        }
-        else if (stationarity_statistic<0.5*stationarity_statistic_threshold // things are not changing fast enough...
-                 && gibbs_slow_ma_param <10) // but there is not point in going TOO slow
-        {
-            gibbs_fast_ma_param+=delta_ma_param;
-            gibbs_slow_ma_param+=delta_ma_param;
-            gibbs_fast_ma_coefficient = sigmoid(gibbs_fast_ma_param);
-            gibbs_slow_ma_coefficient = sigmoid(gibbs_slow_ma_param);
-        }
-    }
-    else PLWARNING("non-positive variance?");
     
     // delta w = -lrate * ( meanoverrows(pos_values) - neg_stats ) 
     columnSum(pos_values,tmp);

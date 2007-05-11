@@ -44,6 +44,8 @@
 namespace PLearn {
 using namespace std;
 
+// bool save_G=false;
+
 PLEARN_IMPLEMENT_OBJECT(
     NatGradEstimator,
     "Convert a sequence of gradients into covariance-corrected (natural gradient) directions.\n",
@@ -125,6 +127,9 @@ void NatGradEstimator::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Initial variance. The first covariance is assumed to be\n"
                   "lambda times the identity. Default = 1.\n");
+    declareOption(ol, "regularizer", &NatGradEstimator::lambda,
+                  OptionBase::buildoption,
+                  "Proxy for option lambda (different name to avoid python problems).\n");
     declareOption(ol, "n_eigen", &NatGradEstimator::n_eigen,
                   OptionBase::buildoption,
                   "Number of principal eigenvectors of the covariance matrix\n"
@@ -141,7 +146,7 @@ void NatGradEstimator::declareOptions(OptionList& ol)
                   "Verbosity level\n");
     declareOption(ol, "renormalize", &NatGradEstimator::renormalize,
                   OptionBase::buildoption,
-                  "Wether to renormalize z wrt scaling that gamma produces\n");
+                  "Whether to renormalize z wrt scaling that gamma produces\n");
 
     declareOption(ol, "n_dim", &NatGradEstimator::n_dim,
                   OptionBase::learntoption,
@@ -186,6 +191,8 @@ void NatGradEstimator::init()
         Xt.resize(n_eigen+cov_minibatch_size, n_dim);
         Xt.clear();
         r.resize(n_eigen);
+        for (int j=0;j<n_eigen;j++)
+            G(j,j) = lambda;
     }
 }
 void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
@@ -249,6 +256,8 @@ void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
     if (i+1==cov_minibatch_size)
     {
         // get eigen-decomposition, with one more eigen-x than necessary to check if coherent with lambda
+        //if (save_G)
+        //    saveAscii("G.amat",G);
         eigenVecOfSymmMat(G,n_eigen+1,D,Vt);
         
         // convert eigenvectors Vt of G into eigenvectors U of C
