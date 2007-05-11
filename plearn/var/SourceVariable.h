@@ -44,6 +44,7 @@
 #define SourceVariable_INC
 
 #include "VarArray.h"
+#include <plearn/math/PRandom.h>
 
 namespace PLearn {
 using namespace std;
@@ -57,6 +58,16 @@ public:
     int build_length;
     int build_width;
 
+    //! Type of random generation to use: 
+    //!  'U': uniform(random_a, random_b)
+    //!  'N': normal(mean = random_a, variance = random_b)
+    char random_type;
+
+    real random_a;
+    real random_b;
+
+    bool random_clear_first_row;
+
 private:
     void build_();
 public:
@@ -67,7 +78,7 @@ protected:
 
 public:
     //!  Default constructor for persistence
-    SourceVariable(): build_length(-1), build_width(-1) {}
+    SourceVariable(): build_length(-1), build_width(-1), random_type('F'), random_a(0.), random_b(1.), random_clear_first_row(0) {}
     SourceVariable(int thelength, int thewidth);
     SourceVariable(const Vec& v, bool vertical=true);
     SourceVariable(const Mat& m);
@@ -81,6 +92,9 @@ public:
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
     PLEARN_DECLARE_OBJECT(SourceVariable);
   
+    //! Initializes the value of this variable from the given generator,
+    //! according to options     
+    virtual void randomInitialize(PP<PRandom> random_gen);
   
     virtual void fprop();
     virtual void bprop();

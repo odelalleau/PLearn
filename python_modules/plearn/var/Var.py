@@ -35,10 +35,14 @@ from plearn.pyplearn.plearn_repr import plearn_repr, format_list_elements
 
 class Var:
 
-    def __init__(self, l, w=1):
+    def __init__(self, l, w=1, random_type='F', random_a=0., random_b=1., random_clear_first_row=False):
         if isinstance(l,int):
             self.v = pl.SourceVariable(build_length=l,
-                                       build_width=w)
+                                       build_width=w,
+                                       random_type=PLChar(random_type),
+                                       random_a=random_a,
+                                       random_b=random_b,
+                                       random_clear_first_row=random_clear_first_row)
         else: # assume parameter l is a pl. plvar
             self.v = l
 
@@ -59,7 +63,7 @@ class Var:
         # return Var(pl.MatrixProductVariable(self.v, W)
 
     def doubleProduct(self, W, M):
-        return Var(pl.DoubleProductVariable(x=self.v, w=W, m=M))
+        return Var(pl.DoubleProductVariable(varray=[self.v, W, M]))
 
     def dot(self, input):
         return Var(pl.DotProductVariable(input1=self, input2=input))
@@ -74,7 +78,7 @@ class Var:
         return self.multiMax(igs, 'L')
 
     def transposeDoubleProduct(self, W, M):
-        return Var(pl.TranposedDoubleProductVariable(w=W, m=M, h=self.v))
+        return Var(pl.TransposedDoubleProductVariable(varray=[W, M, self.v]))
 
     def __neg__(self):
         return Var(pl.NegateElementsVariable(input=self.v))
@@ -113,8 +117,8 @@ def addMultiSoftmaxRLayer(input, ing, igs, ong, ogs, tighed=True, use_double_pro
             return hidden, cost, (W, Wr)
 
     else: # use double product
-        M = Var(ing*igs, ong)
-        W = Var(ing*igs, ogs)
+        M = Var(ing*igs, ong, 'U', -1/ing/igs, 1/ing/igs, False)
+        W = Var(ing*igs, ogs, 'U', -1/ing/igs, 1/ing/igs, False)
         hidden = input.doubleProduct(W,M).multiSoftMax(ogs)
         if tighed:
             cost = -hidden.transposeDoubleProduct(W,M).multiLogSoftMax(igs).dot(input)

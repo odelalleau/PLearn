@@ -80,6 +80,18 @@ void SourceVariable::declareOptions(OptionList& ol)
     declareOption(ol, "build_width", &SourceVariable::build_width, OptionBase::buildoption, 
                   "The initial width for the variable");
 
+    declareOption(ol, "random_type", &SourceVariable::random_type, OptionBase::buildoption, 
+                  "Type of random generation to use : 'F' = fill with random_a, 'U' = uniform, 'N' = normal");
+
+    declareOption(ol, "random_a", &SourceVariable::random_a, OptionBase::buildoption, 
+                  "A first parameter for random generation");
+
+    declareOption(ol, "random_b", &SourceVariable::random_b, OptionBase::buildoption, 
+                  "A second parameter for random generation");
+
+    declareOption(ol, "random_clear_first_row", &SourceVariable::random_clear_first_row, OptionBase::buildoption, 
+                  "Indicates if we assign 0 to the elements of the first row when doing random generation");
+
     inherited::declareOptions(ol);
 }
 
@@ -159,6 +171,30 @@ void SourceVariable::buildPath(VarArray& proppath)
         //cout<<"add:"<<this->getName()<<endl;
         proppath.append(Var(this));
         clearMark();
+    }
+}
+
+
+void SourceVariable::randomInitialize(PP<PRandom> random_gen)
+{
+    Mat values = matValue;
+    if(random_clear_first_row)
+        values = values.subMatRows(1, values.length()-1);
+
+    switch (random_type)
+    {
+    case 'F':
+        values.fill(random_a);
+        break;
+    case 'U':
+        random_gen->fill_random_uniform(values, random_a, random_b);
+        break;
+    case 'N':
+        random_gen->fill_random_normal(values, random_a, random_b);
+        break;
+    default :
+        PLERROR("Invalid random_type in SourceVariable");
+        break;
     }
 }
 

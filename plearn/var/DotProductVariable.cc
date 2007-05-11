@@ -73,7 +73,9 @@ void
 DotProductVariable::build_()
 {
     if(input1 && input2 && (input1->nelems() != input2->nelems()))
-        PLERROR("IN DotProductVariable input1 and input2 must have the same number of elements");
+        PLERROR("IN DotProductVariable input1 and input2 must have the "
+                "same number of elements: %dx%d != %dx%d", 
+                input1->length(), input1->width(), input2->length(), input2->width());
 }
 
 void DotProductVariable::recomputeSize(int& l, int& w) const
