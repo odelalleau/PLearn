@@ -76,7 +76,10 @@ DeepBeliefNet::DeepBeliefNet() :
     nll_cost_index( -1 ),
     class_cost_index( -1 ),
     final_cost_index( -1 ),
-    reconstruction_cost_index( -1 )
+    reconstruction_cost_index( -1 ),
+    cpu_time_cost_index ( -1 ),
+    cumulative_time_cost_index ( -1 ),
+    cumulative_training_time( 0 )
 {
     random_gen = new PRandom();
 }
@@ -244,6 +247,11 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   OptionBase::learntoption,
                   "State of visible units of RBMs at each layer in background Gibbs chain.");
 
+    declareOption(ol, "cumulative_training_time", &DeepBeliefNet::cumulative_training_time,
+                  OptionBase::learntoption,
+                  "Cumulative training time since age=0, in seconds.\n");
+
+
     /*
     declareOption(ol, "n_final_costs", &DeepBeliefNet::n_final_costs,
                   OptionBase::learntoption,
@@ -296,6 +304,9 @@ void DeepBeliefNet::build_()
     }
 
     build_layers_and_connections();
+
+    // Activate the profiler
+    Profiler::activate();
 
     build_costs();
 }
@@ -380,6 +391,14 @@ void DeepBeliefNet::build_costs()
     }
     else
         reconstruction_costs.resize(0);
+
+
+    cost_names.append("cpu_time");
+    cost_names.append("cumulative_cpu_time");
+    cpu_time_cost_index = current_index;
+    current_index++;
+    cumulative_time_cost_index = current_index;
+    current_index++;
 
     PLASSERT( current_index == cost_names.length() );
 }
@@ -670,6 +689,8 @@ void DeepBeliefNet::forget()
         for( int i=0 ; i<n_layers-1 ; i++ )
             if( partial_costs[i] )
                 partial_costs[i]->forget();
+
+    cumulative_training_time=0;
 }
 
 ///////////
@@ -731,6 +752,10 @@ void DeepBeliefNet::train()
     }
 
     PP<ProgressBar> pb;
+
+    // Start the actual time counting
+    Profiler::reset("training");
+    Profiler::start("training");
 
     // clear stats of previous epoch
     train_stats->forget();
@@ -908,6 +933,22 @@ void DeepBeliefNet::train()
         }
     }
 
+    Profiler::end("training");
+    // The report is pretty informative and therefore quite verbose.
+    if (verbosity > 1)
+        Profiler::report(cout);
+
+    const Profiler::Stats& stats = Profiler::getStats("training");
+    real ticksPerSec = Profiler::ticksPerSecond();
+    real cpu_time = (stats.user_duration+stats.system_duration)/ticksPerSec;
+    cumulative_training_time += cpu_time;
+
+    if (verbosity > 1)
+        cout << "The cumulative time spent in train() up until now is " << cumulative_training_time << " cpu seconds" << endl;
+
+    train_costs_m.column(cpu_time_cost_index).fill(cpu_time);
+    train_costs_m.column(cumulative_time_cost_index).fill(cumulative_training_time);
+    train_stats->update( train_costs_m );
     train_stats->finalize();
 
 }

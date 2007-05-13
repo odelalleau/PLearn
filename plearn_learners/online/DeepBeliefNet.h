@@ -49,6 +49,7 @@
 #include "RBMMixedLayer.h"
 #include "RBMConnection.h"
 #include <plearn/misc/PTimer.h>
+#include <plearn/sys/Profiler.h>
 
 namespace PLearn {
 
@@ -364,6 +365,15 @@ protected:
 
     //! Keeps the beginning index of the reconstruction costs in train_costs
     int reconstruction_cost_index;
+
+    //! Index of the cpu time cost (per each call of train())
+    int cpu_time_cost_index;
+
+    //! The index of the cumulative training time cost 
+    int cumulative_time_cost_index;
+
+    //! Holds the total training (cpu)time
+    real cumulative_training_time;
 
     //! Cumulative training schedule
     TVec<int> cumulative_schedule;
