@@ -179,26 +179,33 @@ void RBMLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(bias,           copies);
-    deepCopyField(activation,     copies);
-    deepCopyField(activations,    copies);
-    deepCopyField(sample,         copies);
-    deepCopyField(samples,        copies);
-    deepCopyField(expectation,    copies);
-    deepCopyField(bias_pos_stats, copies);
-    deepCopyField(bias_neg_stats, copies);
-    deepCopyField(bias_inc,       copies);
-    deepCopyField(ones,           copies);
-    deepCopyField(expectations,   copies);
-    deepCopyField(tmp,            copies);
+    deepCopyField(gibbs_ma_schedule,    copies);
+    deepCopyField(bias,                 copies);
+    deepCopyField(activation,           copies);
+    deepCopyField(activations,          copies);
+    deepCopyField(sample,               copies);
+    deepCopyField(samples,              copies);
+    deepCopyField(expectation,          copies);
+    deepCopyField(bias_pos_stats,       copies);
+    deepCopyField(bias_neg_stats,       copies);
+    deepCopyField(bias_inc,             copies);
+    deepCopyField(ones,                 copies);
+    deepCopyField(expectations,         copies);
+    deepCopyField(tmp,                  copies);
 }
 
 
+/////////////////////
+// setLearningRate //
+/////////////////////
 void RBMLayer::setLearningRate( real the_learning_rate )
 {
     learning_rate = the_learning_rate;
 }
 
+/////////////////
+// setMomentum //
+/////////////////
 void RBMLayer::setMomentum( real the_momentum )
 {
     momentum = the_momentum;
