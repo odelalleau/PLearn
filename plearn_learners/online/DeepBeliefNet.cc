@@ -77,9 +77,11 @@ DeepBeliefNet::DeepBeliefNet() :
     class_cost_index( -1 ),
     final_cost_index( -1 ),
     reconstruction_cost_index( -1 ),
-    cpu_time_cost_index ( -1 ),
-    cumulative_time_cost_index ( -1 ),
-    cumulative_training_time( 0 )
+    training_cpu_time_cost_index ( -1 ),
+    cumulative_training_time_cost_index ( -1 ),
+    cumulative_testing_time_cost_index ( -1 ),
+    cumulative_training_time( 0 ),
+    cumulative_testing_time( 0 )
 {
     random_gen = new PRandom();
 }
@@ -251,6 +253,10 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   OptionBase::learntoption | OptionBase::nosave,
                   "Cumulative training time since age=0, in seconds.\n");
 
+    declareOption(ol, "cumulative_testing_time", &DeepBeliefNet::cumulative_testing_time,
+                  OptionBase::learntoption | OptionBase::nosave,
+                  "Cumulative testing time since age=0, in seconds.\n");
+
 
     /*
     declareOption(ol, "n_final_costs", &DeepBeliefNet::n_final_costs,
@@ -394,10 +400,14 @@ void DeepBeliefNet::build_costs()
 
 
     cost_names.append("cpu_time");
-    cost_names.append("cumulative_cpu_time");
-    cpu_time_cost_index = current_index;
+    cost_names.append("cumulative_train_time");
+    cost_names.append("cumulative_test_time");
+
+    training_cpu_time_cost_index = current_index;
     current_index++;
-    cumulative_time_cost_index = current_index;
+    cumulative_training_time_cost_index = current_index;
+    current_index++;
+    cumulative_testing_time_cost_index = current_index;
     current_index++;
 
     PLASSERT( current_index == cost_names.length() );
@@ -690,7 +700,8 @@ void DeepBeliefNet::forget()
             if( partial_costs[i] )
                 partial_costs[i]->forget();
 
-    cumulative_training_time=0;
+    cumulative_training_time = 0;
+    cumulative_testing_time = 0;
 }
 
 ///////////
@@ -946,8 +957,8 @@ void DeepBeliefNet::train()
     if (verbosity > 1)
         cout << "The cumulative time spent in train() up until now is " << cumulative_training_time << " cpu seconds" << endl;
 
-    train_costs_m.column(cpu_time_cost_index).fill(cpu_time);
-    train_costs_m.column(cumulative_time_cost_index).fill(cumulative_training_time);
+    train_costs_m.column(training_cpu_time_cost_index).fill(cpu_time);
+    train_costs_m.column(cumulative_training_time_cost_index).fill(cumulative_training_time);
     train_stats->update( train_costs_m );
     train_stats->finalize();
 
@@ -1963,6 +1974,7 @@ void DeepBeliefNet::contrastiveDivergenceStep(
 ///////////////////
 void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
 {
+
     // Compute the output from the input.
     output.resize(0);
 
@@ -2022,11 +2034,13 @@ void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
             reconstruction_costs[0] += rc;
         }
     }
+
 }
 
 void DeepBeliefNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
                                            const Vec& target, Vec& costs) const
 {
+
     // Compute the costs from *already* computed output.
     costs.resize( cost_names.length() );
     costs.fill( MISSING_VALUE );
@@ -2073,6 +2087,51 @@ void DeepBeliefNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
             << reconstruction_costs;
 
 }
+
+void DeepBeliefNet::test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs, VMat testcosts) const
+{
+
+    //  Re-implementing simply because we want to measure the time it takes to
+    //  do the testing. The reset is there for two purposes:
+    //  1. to have fine-grained statistics at each call of test()
+    //  2. to be able to have a more meaningful cumulative_testing_time
+    //
+    //  BIG Nota Bene:
+    //  Get the statistics by E[testN.E[cumulative_test_time], where N is the
+    //  index of the last split that you're testing.
+    //  E[testN-1.E[cumulative_test_time] will basically be the cumulative test
+    //  time until (and including) the N-1th split! So it's a pretty
+    //  meaningless number (more or less).
+      
+    Profiler::reset("testing");
+    Profiler::start("testing");
+
+    inherited::test(testset, test_stats, testoutputs, testcosts);
+
+    Profiler::end("testing");
+
+    const Profiler::Stats& stats = Profiler::getStats("testing");
+
+    real ticksPerSec = Profiler::ticksPerSecond();
+    real cpu_time = (stats.user_duration+stats.system_duration)/ticksPerSec;
+    cumulative_testing_time += cpu_time;
+
+    if (testcosts)
+        // if it is used (usually not) testcosts is a VMat that is of size
+        // nexamples x ncosts. The last column will have missing values.
+        // We just need to put a value in one of the rows of that column.
+        testcosts->put(0,cumulative_testing_time_cost_index,cumulative_testing_time);
+
+    if (test_stats) {
+        // Here we simply update the corresponding stat index
+        Vec test_time_stats(test_stats->length(), MISSING_VALUE);
+        test_time_stats[cumulative_testing_time_cost_index] =
+            cumulative_testing_time;
+        test_stats->update(test_time_stats);
+        test_stats->finalize();
+    }
+}
+
 
 TVec<string> DeepBeliefNet::getTestCostNames() const
 {

@@ -206,6 +206,10 @@ public:
     // (PLEASE IMPLEMENT IN .cc)
     virtual void train();
 
+    //! Re-implementation of the PLearner test() for profiling purposes
+    virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
+                      VMat testoutputs=0, VMat testcosts=0) const;
+
     //! Computes the output from the input.
     // (PLEASE IMPLEMENT IN .cc)
     virtual void computeOutput(const Vec& input, Vec& output) const;
@@ -367,13 +371,19 @@ protected:
     int reconstruction_cost_index;
 
     //! Index of the cpu time cost (per each call of train())
-    int cpu_time_cost_index;
+    int training_cpu_time_cost_index;
 
     //! The index of the cumulative training time cost 
-    int cumulative_time_cost_index;
+    int cumulative_training_time_cost_index;
+
+    //! The index of the cumulative testing time cost
+    int cumulative_testing_time_cost_index;
 
     //! Holds the total training (cpu)time
     real cumulative_training_time;
+
+    //! Holds the total testing (cpu)time 
+    mutable real cumulative_testing_time;
 
     //! Cumulative training schedule
     TVec<int> cumulative_schedule;
