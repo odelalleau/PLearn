@@ -49,7 +49,8 @@ PLEARN_IMPLEMENT_OBJECT(
     "inheriting from OnlineLearningModule.\n"
 );
 
-NetworkConnection::NetworkConnection()
+NetworkConnection::NetworkConnection():
+    propagate_gradient(true)
 {}
 
 ///////////////////////
@@ -60,13 +61,15 @@ NetworkConnection::NetworkConnection(
         const string& the_src_port,
         PP<OnlineLearningModule> the_dest_module,
         const string& the_dest_port,
+        bool the_propagate_gradient,
         bool call_build_):
 
     inherited(call_build_),
     src_module(the_src_module),
     src_port(the_src_port),
     dest_module(the_dest_module),
-    dest_port(the_dest_port)
+    dest_port(the_dest_port),
+    propagate_gradient(the_propagate_gradient)
 {
     if (call_build_)
         build_();
@@ -115,6 +118,12 @@ void NetworkConnection::declareOptions(OptionList& ol)
     declareOption(ol, "dest_port", &NetworkConnection::dest_port,
                   OptionBase::buildoption,
         "Destination module's port.");
+
+    declareOption(ol, "propagate_gradient",
+                  &NetworkConnection::propagate_gradient,
+                  OptionBase::buildoption,
+        "Whether or not the destination should propagate its gradient to the\n"
+        "source.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);

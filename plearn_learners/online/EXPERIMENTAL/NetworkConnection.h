@@ -56,6 +56,7 @@ public:
     string src_port;
     PP<OnlineLearningModule> dest_module;
     string dest_port;
+    bool propagate_gradient;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -66,7 +67,8 @@ public:
     NetworkConnection(PP<OnlineLearningModule> the_src_module,
                       const string& the_src_port,
                       PP<OnlineLearningModule> the_dest_module,
-                      const string& dest_port,
+                      const string& the_dest_port,
+                      bool the_propagate_gradient,
                       bool call_build_ = true);
 
     // Your other public member functions go here
