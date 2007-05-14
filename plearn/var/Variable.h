@@ -158,7 +158,7 @@ public:
   
 public:
     Variable(int thelength, int thewidth, bool call_build_ = true);
-    Variable(const Mat& m);  //!<  this variable's value and m will be views of the same data
+    Variable(const Mat& m, bool call_build_ = true);  //!<  this variable's value and m will be views of the same data
 
     int length() const { return matValue.length(); }
     int width() const { return matValue.width(); }

@@ -195,7 +195,7 @@ Variable::Variable(int thelength, int thewidth, bool call_build_):
         build_();
 }
 
-Variable::Variable(const Mat& m)
+Variable::Variable(const Mat& m, bool call_build_)
     :varnum(++nvars), marked(false), varname(""),  
      allows_partial_update(false), gradient_status(0),
      matValue(m), matGradient(m.length(),m.width()), 
@@ -214,6 +214,8 @@ Variable::Variable(const Mat& m)
         gradientdata = gradient.data();
     else
         gradientdata = 0;
+    if (call_build_)
+        build_();
 }
 
 // shallow copy (same as default copy constructor, except varnum is set to ++nvars.

@@ -66,7 +66,7 @@ SourceVariable::SourceVariable():
 {}
 
 SourceVariable::SourceVariable(int thelength, int thewidth, bool call_build_):
-    inherited(thelength, thewidth, call_build_)
+    inherited(thelength, thewidth, call_build_),
     build_length(-1),
     build_width(-1),
     random_type("none"),
@@ -80,7 +80,7 @@ SourceVariable::SourceVariable(int thelength, int thewidth, bool call_build_):
 
 SourceVariable::SourceVariable(const Vec& v, bool vertical, bool call_build_):
     inherited(vertical ?v.toMat(v.length(),1) :v.toMat(1,v.length()),
-              call_build_)
+              call_build_),
     build_length(-1),
     build_width(-1),
     random_type("none"),
