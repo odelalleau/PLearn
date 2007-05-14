@@ -44,16 +44,6 @@
 
 namespace PLearn {
 
-/**
- * The first sentence should be a BRIEF DESCRIPTION of what the class does.
- * Place the rest of the class programmer documentation here.  Doxygen supports
- * Javadoc-style comments.  See http://www.doxygen.org/manual.html
- *
- * @todo Write class to-do's here if there are any.
- *
- * @deprecated Write deprecated stuff here if there is any.  Indicate what else
- * should be used instead.
- */
 class IdentityModule : public OnlineLearningModule
 {
     typedef OnlineLearningModule inherited;
@@ -67,7 +57,7 @@ public:
     //! Default constructor
     // ### Make sure the implementation in the .cc
     // ### initializes all fields to reasonable default values.
-    IdentityModule(bool call_build_ = false);
+    IdentityModule();
 
     // Your other public member functions go here
 

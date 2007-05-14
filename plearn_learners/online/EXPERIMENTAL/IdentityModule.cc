@@ -45,16 +45,12 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     IdentityModule,
-    "Module whose output is a single matrix.",
+    "Module that simply replicates its input.",
     ""
 );
 
-IdentityModule::IdentityModule(bool call_build_):
-    inherited(call_build_)
-{
-    if (call_build_)
-        build_();
-}
+IdentityModule::IdentityModule()
+{}
 
 ////////////////////
 // declareOptions //
@@ -68,10 +64,6 @@ void IdentityModule::declareOptions(OptionList& ol)
     // ### this option will be ignored when loading values from a script.
     // ### You can also combine flags, for example with OptionBase::nosave:
     // ### (OptionBase::buildoption | OptionBase::nosave)
-
-    declareOption(ol, "data", &IdentityModule::data,
-                  OptionBase::buildoption,
-        "The matrix seen by this module.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -124,7 +116,8 @@ void IdentityModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ///////////
 void IdentityModule::fprop(const Vec& input, Vec& output) const
 {
-    PLERROR("In IdentityModule::fprop - Not implemented");
+    output.resize(input.length());
+    output << input;
 }
 
 /////////////////
@@ -185,14 +178,6 @@ void IdentityModule::finalize()
 }
 */
 
-/////////////
-// getData //
-/////////////
-Mat& IdentityModule::getData()
-{
-    return this->data;
-}
-
 //////////////////////
 // bpropDoesNothing //
 //////////////////////
@@ -210,15 +195,6 @@ void IdentityModule::setLearningRate(real dynamic_learning_rate)
 {
 }
 */
-
-/////////////
-// setData //
-/////////////
-void IdentityModule::setData(const Mat& the_data)
-{
-    this->data = the_data;
-}
-
 
 } // end of namespace PLearn
 
