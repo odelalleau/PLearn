@@ -53,35 +53,78 @@ PLEARN_IMPLEMENT_OBJECT(
     ""
 );
 
-SourceVariable::SourceVariable(int thelength, int thewidth)
-    : inherited(thelength,thewidth),
-      build_length(thelength),
-      build_width(thewidth)
+////////////////////
+// SourceVariable //
+////////////////////
+SourceVariable::SourceVariable():
+    build_length(-1),
+    build_width(-1),
+    random_type("none"),
+    random_a(0.),
+    random_b(1.),
+    random_clear_first_row(0)
 {}
 
-SourceVariable::SourceVariable(const Vec& v, bool vertical)
-    : inherited(vertical ?v.toMat(v.length(),1) :v.toMat(1,v.length()))
+SourceVariable::SourceVariable(int thelength, int thewidth, bool call_build_):
+    inherited(thelength, thewidth, call_build_)
+    build_length(-1),
+    build_width(-1),
+    random_type("none"),
+    random_a(0.),
+    random_b(1.),
+    random_clear_first_row(0)
 {
-    build_length = length();
-    build_width = width();
+    if (call_build_)
+        build_();
 }
 
-SourceVariable::SourceVariable(const Mat& m)
-    : inherited(m),
-      build_length(m.length()),
-      build_width(m.width())
-{}
+SourceVariable::SourceVariable(const Vec& v, bool vertical, bool call_build_):
+    inherited(vertical ?v.toMat(v.length(),1) :v.toMat(1,v.length()),
+              call_build_)
+    build_length(-1),
+    build_width(-1),
+    random_type("none"),
+    random_a(0.),
+    random_b(1.),
+    random_clear_first_row(0)
+{
+    if (call_build_)
+        build_();
+}
 
+SourceVariable::SourceVariable(const Mat& m, bool call_build_):
+    inherited(m, call_build_),
+    build_length(-1),
+    build_width(-1),
+    random_type("none"),
+    random_a(0.),
+    random_b(1.),
+    random_clear_first_row(0)
+{
+    if (call_build_)
+        build_();
+}
+
+////////////////////
+// declareOptions //
+////////////////////
 void SourceVariable::declareOptions(OptionList& ol)
 {
     declareOption(ol, "build_length", &SourceVariable::build_length, OptionBase::buildoption, 
-                  "The initial length for the variable");
+                  "Forced value of the variable's length.");
 
     declareOption(ol, "build_width", &SourceVariable::build_width, OptionBase::buildoption, 
-                  "The initial width for the variable");
+                  "Forced value of the variable's width.");
 
     declareOption(ol, "random_type", &SourceVariable::random_type, OptionBase::buildoption, 
-                  "Type of random generation to use : 'F' = fill with random_a, 'U' = uniform, 'N' = normal");
+                  "Type of random generation to use:\n"
+                  " - none    = no random initialization\n"
+                  " - fill    = fill with 'random_a'\n"
+                  " - uniform = uniform distribution in [random_a, random_b]\n"
+                  " - normal  = normal distribution with mean 'random_a' and\n"
+                  "             standard deviation 'random_b'\n"
+        "Note that the variable is not filled randomly at build time: random\n"
+        "generation requires an explicit call to randomInitialize(..).");
 
     declareOption(ol, "random_a", &SourceVariable::random_a, OptionBase::buildoption, 
                   "A first parameter for random generation");
@@ -90,7 +133,8 @@ void SourceVariable::declareOptions(OptionList& ol)
                   "A second parameter for random generation");
 
     declareOption(ol, "random_clear_first_row", &SourceVariable::random_clear_first_row, OptionBase::buildoption, 
-                  "Indicates if we assign 0 to the elements of the first row when doing random generation");
+                  "Indicates if we assign 0 to the elements of the first "
+                  "row when doing random generation");
 
     inherited::declareOptions(ol);
 }
@@ -174,27 +218,24 @@ void SourceVariable::buildPath(VarArray& proppath)
     }
 }
 
-
+//////////////////////
+// randomInitialize //
+//////////////////////
 void SourceVariable::randomInitialize(PP<PRandom> random_gen)
 {
     Mat values = matValue;
     if(random_clear_first_row)
         values = values.subMatRows(1, values.length()-1);
 
-    switch (random_type)
-    {
-    case 'F':
+    if (random_type == "fill") {
         values.fill(random_a);
-        break;
-    case 'U':
+    } else if (random_type == "uniform") {
         random_gen->fill_random_uniform(values, random_a, random_b);
-        break;
-    case 'N':
+    } else if (random_type == "normal") {
         random_gen->fill_random_normal(values, random_a, random_b);
-        break;
-    default :
-        PLERROR("Invalid random_type in SourceVariable");
-        break;
+    } else {
+        PLERROR("In SourceVariable::randomInitialize - Invalid value for "
+                "'random_type': %s", random_type.c_str());
     }
 }
 

@@ -58,10 +58,7 @@ public:
     int build_length;
     int build_width;
 
-    //! Type of random generation to use: 
-    //!  'U': uniform(random_a, random_b)
-    //!  'N': normal(mean = random_a, variance = random_b)
-    char random_type;
+    string random_type;
 
     real random_a;
     real random_b;
@@ -77,11 +74,11 @@ protected:
     static void declareOptions(OptionList & ol);
 
 public:
-    //!  Default constructor for persistence
-    SourceVariable(): build_length(-1), build_width(-1), random_type('F'), random_a(0.), random_b(1.), random_clear_first_row(0) {}
-    SourceVariable(int thelength, int thewidth);
-    SourceVariable(const Vec& v, bool vertical=true);
-    SourceVariable(const Mat& m);
+    //! Default constructor for persistence.
+    SourceVariable();
+    SourceVariable(int thelength, int thewidth, bool call_build_ = true);
+    SourceVariable(const Vec& v, bool vertical=true, bool call_build_ = true);
+    SourceVariable(const Mat& m, bool call_build_ = true);
 
     virtual void setParents(const VarArray& parents)
     { PLERROR("In Variable::setParents  trying to set parents of a SourceVariable..."); }
