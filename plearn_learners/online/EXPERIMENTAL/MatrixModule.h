@@ -83,6 +83,7 @@ public:
     //! given the input, compute the output (possibly resize it  appropriately)
     virtual void fprop(const Vec& input, Vec& output) const;
 
+
     /* Optional
        THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
     //! Adapt based on the output gradient, and obtain the input gradient.
@@ -165,6 +166,21 @@ public:
     virtual void setLearningRate(real dynamic_learning_rate);
     */
 
+    //! If provided, the matrix value is used to fill 'data'.
+    //! If not provided, it is filled with 'data'.
+    virtual void fprop(const TVec<Mat*>& ports_value);
+
+    //! If provided, the gradient is used to update 'data'.
+    //! If not provided, the gradient is filled with ones.
+    virtual void bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                const TVec<Mat*>& ports_gradient);
+
+    //! Overridden.
+    virtual const TVec<string>& getPorts();
+
+    //! Overridden.
+    virtual const TMat<int>& getPortSizes();
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
@@ -177,7 +193,6 @@ public:
 
     //! Transforms a shallow copy into a deep copy
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-
 
 protected:
     //#####  Protected Member Functions  ######################################

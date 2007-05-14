@@ -39,6 +39,7 @@
 
 
 #include "MatrixModule.h"
+#include <plearn/math/TMat_maths.h>
 
 namespace PLearn {
 using namespace std;
@@ -49,6 +50,9 @@ PLEARN_IMPLEMENT_OBJECT(
     ""
 );
 
+//////////////////
+// MatrixModule //
+//////////////////
 MatrixModule::MatrixModule(bool call_build_):
     inherited(call_build_)
 {
@@ -94,11 +98,33 @@ void MatrixModule::build_()
     // ### called.
 }
 
-// ### Nothing to add here, simply calls build_
+///////////
+// build //
+///////////
 void MatrixModule::build()
 {
     inherited::build();
     build_();
+}
+
+////////////////////
+// bpropAccUpdate //
+////////////////////
+void MatrixModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                  const TVec<Mat*>& ports_gradient)
+{
+    PLASSERT( ports_gradient.length() == 1 );
+    Mat* grad = ports_gradient[0];
+    if (!grad)
+        return;
+    if (grad->isEmpty()) {
+        // Accumulate ones into gradient.
+        grad->resize(data.length(), data.width());
+        *grad += real(1);
+    } else {
+        PLERROR("In MatrixModule::bpropAccUpdate - Update of the underlying "
+                "data matrix is not yet implemented");
+    }
 }
 
 
@@ -125,6 +151,23 @@ void MatrixModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 void MatrixModule::fprop(const Vec& input, Vec& output) const
 {
     PLERROR("In MatrixModule::fprop - Not implemented");
+}
+
+void MatrixModule::fprop(const TVec<Mat*>& ports_value)
+{
+    PLASSERT( ports_value.length() == 1 );
+    Mat* mat = ports_value[0];
+    if (!mat)
+        return;
+    if (mat->isEmpty()) {
+        // We want to query the value of the matrix.
+        mat->resize(data.length(), data.width());
+        *mat << data;
+    } else {
+        // We want to store the value of the matrix.
+        data.resize(mat->length(), mat->width());
+        data << *mat;
+    }
 }
 
 /////////////////
@@ -174,6 +217,27 @@ void MatrixModule::bbpropUpdate(const Vec& input, const Vec& output,
 void MatrixModule::forget()
 {
     // Nothing to forget.
+}
+
+//////////////
+// getPorts //
+//////////////
+const TVec<string>& MatrixModule::getPorts()
+{
+    static TVec<string> ports;
+    if (ports.isEmpty())
+        ports.append("data");
+    return ports;
+}
+
+//////////////////
+// getPortSizes //
+//////////////////
+const TMat<int>& MatrixModule::getPortSizes() {
+    port_sizes.resize(1, 2);
+    port_sizes(0, 0) = data.length();
+    port_sizes(0, 1) = data.width();
+    return port_sizes;
 }
 
 //////////////
