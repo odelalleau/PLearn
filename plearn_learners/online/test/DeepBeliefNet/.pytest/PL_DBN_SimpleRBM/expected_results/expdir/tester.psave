@@ -50,8 +50,10 @@ layers = 2 [ *7 ->RBMBinomialLayer(
 size = 2 ;
 learning_rate = 0 ;
 momentum = 0 ;
-delta_ma_param = 0.100000000000000006 ;
-stationarity_statistic_threshold = 2 ;
+gibbs_ma_schedule = []
+;
+gibbs_ma_increment = 0.100000000000000006 ;
+gibbs_initial_ma_coefficient = 0.100000000000000006 ;
 bias = 2 [ 0 0 ] ;
 input_size = 2 ;
 output_size = 2 ;
@@ -65,8 +67,10 @@ fixed_seed = 0  )
 size = 2 ;
 learning_rate = 0 ;
 momentum = 0 ;
-delta_ma_param = 0.100000000000000006 ;
-stationarity_statistic_threshold = 2 ;
+gibbs_ma_schedule = []
+;
+gibbs_ma_increment = 0.100000000000000006 ;
+gibbs_initial_ma_coefficient = 0.100000000000000006 ;
 bias = 2 [ 0 0 ] ;
 input_size = 2 ;
 output_size = 2 ;
@@ -80,8 +84,10 @@ weights = 2  2  [
 0.59211590021607885 	0.667132771633056509 	
 ]
 ;
-delta_ma_param = 0.100000000000000006 ;
-stationarity_statistic_threshold = 2 ;
+gibbs_ma_schedule = []
+;
+gibbs_ma_increment = 0.100000000000000006 ;
+gibbs_initial_ma_coefficient = 0.100000000000000006 ;
 down_size = 2 ;
 up_size = 2 ;
 learning_rate = 0 ;
@@ -102,8 +108,10 @@ weights = 2  2  [
 0.449826313170107572 	-0.266489754613600693 	
 ]
 ;
-delta_ma_param = 0.100000000000000006 ;
-stationarity_statistic_threshold = 2 ;
+gibbs_ma_schedule = []
+;
+gibbs_ma_increment = 0.100000000000000006 ;
+gibbs_initial_ma_coefficient = 0.100000000000000006 ;
 down_size = 2 ;
 up_size = 2 ;
 learning_rate = 0 ;
@@ -119,8 +127,10 @@ target_layer = *13 ->RBMMultinomialLayer(
 size = 2 ;
 learning_rate = 0 ;
 momentum = 0 ;
-delta_ma_param = 0.100000000000000006 ;
-stationarity_statistic_threshold = 2 ;
+gibbs_ma_schedule = []
+;
+gibbs_ma_increment = 0.100000000000000006 ;
+gibbs_initial_ma_coefficient = 0.100000000000000006 ;
 bias = 2 [ 0 0 ] ;
 input_size = 2 ;
 output_size = 2 ;

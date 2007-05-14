@@ -1,2 +1,4 @@
 NLL
 class_error
+cpu_time
+cumulative_cpu_time
