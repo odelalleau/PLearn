@@ -248,7 +248,7 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   "State of visible units of RBMs at each layer in background Gibbs chain.");
 
     declareOption(ol, "cumulative_training_time", &DeepBeliefNet::cumulative_training_time,
-                  OptionBase::learntoption,
+                  OptionBase::learntoption | OptionBase::nosave,
                   "Cumulative training time since age=0, in seconds.\n");
 
 
