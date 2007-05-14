@@ -638,7 +638,8 @@ void NatGradNNet::train()
         Profiler::report(cout);
     const Profiler::Stats& stats = Profiler::getStats("training");
     costs.fill(MISSING_VALUE);
-    real cpu_time = (stats.user_duration+stats.system_duration)/60.0;
+    real ticksPerSec = Profiler::ticksPerSecond();
+    real cpu_time = (stats.user_duration+stats.system_duration)/ticksPerSec;
     cumulative_training_time += cpu_time;
     costs_plus_time[train_costs.width()] = cpu_time;
     costs_plus_time[train_costs.width()+1] = cumulative_training_time;
