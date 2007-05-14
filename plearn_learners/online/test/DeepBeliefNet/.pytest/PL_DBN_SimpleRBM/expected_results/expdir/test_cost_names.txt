@@ -1,4 +1,5 @@
 NLL
 class_error
 cpu_time
-cumulative_cpu_time
+cumulative_train_time
+cumulative_test_time

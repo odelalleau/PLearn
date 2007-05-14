@@ -241,7 +241,6 @@ minibatch_size = 1 ;
 gibbs_down_state = 1 [ 0  0  [ 
 ]
 ] ;
-cumulative_training_time = 0.110000000000000001 ;
 seed = 1827 ;
 stage = 2000 ;
 n_examples = 4 ;
