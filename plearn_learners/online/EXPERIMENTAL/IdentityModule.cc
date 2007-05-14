@@ -120,6 +120,30 @@ void IdentityModule::fprop(const Vec& input, Vec& output) const
     output << input;
 }
 
+void IdentityModule::fprop(const Mat& inputs, Mat& outputs) {
+    outputs.resize(inputs.length(), inputs.width());
+    outputs << inputs;
+}
+
+////////////////////
+// bpropAccUpdate //
+////////////////////
+void IdentityModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                    const TVec<Mat*>& ports_gradient)
+{
+    // Deal with 'standard case' only.
+    PLASSERT( ports_gradient.length() == 2 );
+    Mat* input_grad = ports_gradient[0];
+    Mat* output_grad = ports_gradient[1];
+    if (!input_grad)
+        return;
+    PLASSERT( output_grad && !output_grad->isEmpty() &&
+              input_grad->isEmpty() );
+    PLASSERT( input_grad->width() == output_grad->width() );
+    input_grad->resize(output_grad->length(), input_grad->width());
+    *input_grad += *output_grad;
+}
+
 /////////////////
 // bpropUpdate //
 /////////////////

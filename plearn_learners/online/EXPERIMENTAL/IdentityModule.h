@@ -64,6 +64,14 @@ public:
     //! given the input, compute the output (possibly resize it  appropriately)
     virtual void fprop(const Vec& input, Vec& output) const;
 
+    //! Mini-batch fprop.
+    //! Default implementation raises an error.
+    virtual void fprop(const Mat& inputs, Mat& outputs);
+
+    virtual void bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                const TVec<Mat*>& ports_gradient);
+
+
     /* Optional
        THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
     //! Adapt based on the output gradient, and obtain the input gradient.
