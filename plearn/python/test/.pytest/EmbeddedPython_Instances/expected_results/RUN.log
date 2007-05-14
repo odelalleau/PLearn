@@ -272,7 +272,7 @@ function calls leading up to the error, in the order they occurred.
    71 
    72     def fini(self):
 
-Exception: Exception
+Exception: PLearn Error: Exception
 Python 2.X.Y: /usr/bin/python
 
 
@@ -286,7 +286,7 @@ function calls leading up to the error, in the order they occurred.
    71 
    72     def fini(self):
 
-Exception: RuntimeError
+Exception: PLearn Error: RuntimeError
 Python 2.X.Y: /usr/bin/python
 
 
@@ -322,7 +322,7 @@ Error while calling function 'testRecCrash' with 1 params.
     __init__ = <bound method Exception.__init__ of <exceptions.Exception instance>>
     __module__ = 'exceptions'
     __str__ = <bound method Exception.__str__ of <exceptions.Exception instance>>
-    args = ("RuntimeError\nPython 2.X.Y: /usr/bin/python\n\n\nA p...le calling function 'testRecCrash' with 1 params.",)
+    args = ("PLearn Error: RuntimeError\nPython 2.X.Y: /usr/bi...le calling function 'testRecCrash' with 1 params.",)
 
 The above is a description of an error in a Python program.  Here is
 the original traceback:
@@ -330,7 +330,7 @@ the original traceback:
 Traceback (most recent call last):
   File "PLEARN_PYTHON_PATH:plearn/pybridge/test_embedded_code_snippet.py", line 70, in testRecCrash
     self.recTestCrash(n-1)
-Exception: RuntimeError
+Exception: PLearn Error: RuntimeError
 Python 2.X.Y: /usr/bin/python
 
 
@@ -368,7 +368,7 @@ Error while calling function 'testRecCrash' with 1 params.
     __init__ = <bound method Exception.__init__ of <exceptions.Exception instance>>
     __module__ = 'exceptions'
     __str__ = <bound method Exception.__str__ of <exceptions.Exception instance>>
-    args = ("Exception\nPython 2.X.Y: /usr/bin/python\n\n\nA prob...le calling function 'testRecCrash' with 1 params.",)
+    args = ("PLearn Error: Exception\nPython 2.X.Y: /usr/bin/p...le calling function 'testRecCrash' with 1 params.",)
 
 The above is a description of an error in a Python program.  Here is
 the original traceback:
@@ -376,7 +376,7 @@ the original traceback:
 Traceback (most recent call last):
   File "PLEARN_PYTHON_PATH:plearn/pybridge/test_embedded_code_snippet.py", line 70, in testRecCrash
     self.recTestCrash(n-1)
-Exception: Exception
+Exception: PLearn Error: Exception
 Python 2.X.Y: /usr/bin/python
 
 
@@ -390,7 +390,7 @@ function calls leading up to the error, in the order they occurred.
    71 
    72     def fini(self):
 
-Exception: RuntimeError
+Exception: PLearn Error: RuntimeError
 Python 2.X.Y: /usr/bin/python
 
 
@@ -426,7 +426,7 @@ Error while calling function 'testRecCrash' with 1 params.
     __init__ = <bound method Exception.__init__ of <exceptions.Exception instance>>
     __module__ = 'exceptions'
     __str__ = <bound method Exception.__str__ of <exceptions.Exception instance>>
-    args = ("RuntimeError\nPython 2.X.Y: /usr/bin/python\n\n\nA p...le calling function 'testRecCrash' with 1 params.",)
+    args = ("PLearn Error: RuntimeError\nPython 2.X.Y: /usr/bi...le calling function 'testRecCrash' with 1 params.",)
 
 The above is a description of an error in a Python program.  Here is
 the original traceback:
@@ -434,7 +434,7 @@ the original traceback:
 Traceback (most recent call last):
   File "PLEARN_PYTHON_PATH:plearn/pybridge/test_embedded_code_snippet.py", line 70, in testRecCrash
     self.recTestCrash(n-1)
-Exception: RuntimeError
+Exception: PLearn Error: RuntimeError
 Python 2.X.Y: /usr/bin/python
 
 
@@ -472,7 +472,7 @@ Error while calling function 'testRecCrash' with 1 params.'
 refs0: 1
 refs1: 1
 nrefs 1010 1
-self 12
+self 3
 learner 0
 testRec 0
 recTest 2

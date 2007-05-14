@@ -296,9 +296,13 @@ PythonCodeSnippet::invoke(const char* function_name) const
 
         return_value = PyObject_CallObject(pFunc, NULL);
         if (! return_value)
+        {
+            if(instance_method) 
+                Py_DECREF(pFunc);
             handlePythonErrors(string("Error while calling function '")
                                + function_name
                                + "' with no params.");
+        }
 
         resetCurrentSnippet();
     }
@@ -353,22 +357,27 @@ PythonCodeSnippet::invoke(const char* function_name,
 
         Py_DECREF(pArgs);
         if (! return_value)
+        {
+            if(instance_method) 
+                Py_DECREF(pFunc);
             handlePythonErrors(string("Error while calling function '")
                                + function_name
                                + "' with " 
                                + tostring(args.length())
                                + " params.");
-
+        }
         resetCurrentSnippet();        
     }
     else
     {
-        if(instance_method) Py_DECREF(pFunc);
+        if(instance_method) 
+            Py_DECREF(pFunc);
         PLERROR("PythonCodeSnippet::invoke: cannot call function '%s'",
                 function_name);
     }
 
-    if(instance_method) Py_DECREF(pFunc);
+    if(instance_method) 
+        Py_DECREF(pFunc);
     return PythonObjectWrapper(return_value);
 }
 
@@ -389,8 +398,9 @@ PyObject* PythonCodeSnippet::pythonTrampoline(PyObject* self, PyObject* args)
         int size = PyTuple_GET_SIZE(args);
         TVec<PythonObjectWrapper> args_tvec(size);
         for (int i=0 ; i<size ; ++i) {
-            args_tvec[i] = PythonObjectWrapper(PyTuple_GET_ITEM(args,i),
-                                               PythonObjectWrapper::transfer_ownership);
+            args_tvec[i] = 
+                PythonObjectWrapper(PyTuple_GET_ITEM(args,i),
+                                    PythonObjectWrapper::transfer_ownership);
         }
         
         // Now get the void* stored within the PyCObject of self
@@ -399,18 +409,18 @@ PyObject* PythonCodeSnippet::pythonTrampoline(PyObject* self, PyObject* args)
         PythonObjectWrapper returned_value = (*func)(args_tvec);
         PyObject* to_return = returned_value.getPyObject();
         Py_XINCREF(to_return);
-
         return to_return;
     }
-
     // Catch PLERROR and such
     catch (const PLearnError& e) {
-        PyErr_SetString(PyExc_Exception, e.message().c_str());
+        PyErr_SetString(PyExc_Exception, 
+                        (string("PLearn Error: ")+e.message()).c_str());
         return NULL;
     }
     // Catch C++ stdlib exceptions
     catch (const std::exception& e) {
-        PyErr_SetString(PyExc_Exception, e.what());
+        PyErr_SetString(PyExc_Exception, 
+                        (string("C++ stdlib error: ")+e.what()).c_str());
         return NULL;
     }
     // Catch any other unexpected exceptions
@@ -699,6 +709,11 @@ void PythonCodeSnippet::handlePythonErrors(const string& extramsg) const
             string str= PyString_AsString(pystr);
             Py_XDECREF(pystr);
             
+            PyErr_Clear();
+
+            Py_XDECREF(exception);
+            Py_XDECREF(v);
+            Py_XDECREF(traceback);
             throw PythonException(str+extramsg);
         }
         else {
