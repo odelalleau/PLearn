@@ -93,7 +93,7 @@ public:
     //#####  Public Member Fun ctions  #########################################
 
     //! Default constructor
-    OnlineLearningModule();
+    OnlineLearningModule(bool call_build_ = false);
 
     //! given the input, compute the output (possibly resize it appropriately)
     virtual void fprop(const Vec& input, Vec& output) const = 0;
@@ -101,6 +101,20 @@ public:
     //! Mini-batch fprop.
     //! Default implementation raises an error.
     virtual void fprop(const Mat& inputs, Mat& outputs);
+
+    //! Perform a fprop step.
+    //! Each Mat* pointer in the 'ports_value' vector can be one of:
+    //! - a full matrix: this is data that is provided to the module, and can
+    //!                  be used to compute other ports' values
+    //! - an empty matrix: this is what we want to compute
+    //! - a NULL pointer: this is data that is not available, but whose value
+    //!                   does not need to be returned (or even computed)
+    //! The default version will either:
+    //! - call the mini-batch versions of standard fprop if 'ports_value' has
+    //!   size 2, with the first value being provided (and the second being
+    //!   the desired output)
+    //! - crash otherwise
+    virtual void fprop(const TVec<Mat*>& ports_value);
 
     //! Adapt based on the output gradient: this method should only
     //! be called just after a corresponding fprop; it should be
@@ -115,6 +129,34 @@ public:
                              const Vec& output_gradient);
     virtual void bpropUpdate(const Mat& inputs, const Mat& outputs,
                              const Mat& output_gradients);
+
+    //! Perform a back propagation step (also updating parameters according to
+    //! the provided gradient). It must be called immediately after a 'fprop'.
+    //! The first argument is the same list as the one provided to the 'fprop'
+    //! method.
+    //! Each Mat* pointer in the 'ports_gradient' vector can be one of:
+    //! - a full matrix  : this is the gradient that is provided to the module,
+    //!                    and can be used to compute other ports' gradient.
+    //! - an empty matrix: this is a gradient we want to compute and accumulate
+    //!                    into. This matrix must have length 0 and a width
+    //!                    equal to the width of the corresponding matrix in
+    //!                    the 'ports_value' vector (we can thus accumulate
+    //!                    gradients using PLearn's ability to keep intact
+    //!                    stored values when resizing a matrix' length).
+    //! - a NULL pointer : this is a gradient that is not available, but does
+    //!                    not need to be returned (or even computed).
+    //! The default version tries to use the standard mini-batch bpropUpdate
+    //! method, when possible.
+    virtual void bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                const TVec<Mat*>& ports_gradient);
+
+    //! Same as 'bpropAccUpdate', except that gradients are not accumulated.
+    //! This method just calls 'bpropAccUpdate' after properly resizing and
+    //! clearing the gradient matrices that need to be computed.
+    //! Contrary to 'bpropAccUpdate', the empty matrices (those we want to
+    //! compute) need not have the correct width, since we resize them here.
+    void bpropUpdate(const TVec<Mat*>& ports_value,
+                     const TVec<Mat*>& ports_gradient);
 
     //! this version allows to obtain the input gradient as well
     //! N.B. THE DEFAULT IMPLEMENTATION JUST RAISES A PLERROR.
@@ -168,6 +210,48 @@ public:
     // allows to do so.
     virtual void setLearningRate(real dynamic_learning_rate);
 
+    //! Return the list of ports in the module.
+    //! The default implementation returns a pair ("input", "output") to handle
+    //! the most common case.
+    virtual const TVec<string>& getPorts();
+
+    //! Return the size of all ports, in the form of a two-column matrix, where
+    //! each row represents a port, and the two numbers on a row are
+    //! respectively its length and its width (with -1 representing an
+    //! undefined or variable value).
+    //! The default value fills this matrix with:
+    //!     - in the first column (lengths): -1
+    //!     - in the second column (widths):
+    //!         - -1 if nPorts() != 2
+    //!         - 'input_size' for the first row and 'output_size' for the
+    //!           second row if nPorts() == 2 (also assuming the port names
+    //!           are respectively 'input' and 'output')
+    virtual const TMat<int>& getPortSizes();
+
+    //! Return the width of a specific port.
+    int getPortWidth(const string& port);
+
+    //! Return the length of a specific port.
+    int getPortLength(const string& port);
+
+    //! Return the number of ports in the module.
+    int nPorts();
+
+    //! Return the index (as in the list of ports returned by getPorts()) of
+    //! a given port.
+    //! If 'port' does not exist, -1 is returned.
+    int getPortIndex(const string& port);
+
+    //! Return name of the i-th port.
+    string getPortName(int i);
+
+    //! Return a list of strings, that represents the description of the values
+    //! taken by a given port: the i-th string is the name for the i-th column
+    //! value computed in 'port'.
+    //! The default version returns [ "port_name_1", ..., "port_name_n" ] where
+    //! 'port_name' is the name of the port, and 'n' its size.
+    virtual TVec<string> getPortDescription(const string& port);
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
@@ -186,6 +270,10 @@ protected:
     static void declareOptions(OptionList& ol);
 
 protected:
+
+    //! Used to store the size of each port (may be used in sub-classes).
+    TMat<int> port_sizes;
+    
     // Also used in CostModule for instance
     mutable Vec tmp_input_gradient;
     mutable Mat tmpm_input_gradient;

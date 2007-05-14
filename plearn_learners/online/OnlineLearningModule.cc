@@ -57,11 +57,17 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
     "    (i.e. input gradient)\n"
     );
 
-OnlineLearningModule::OnlineLearningModule() :
+//////////////////////////
+// OnlineLearningModule //
+//////////////////////////
+OnlineLearningModule::OnlineLearningModule(bool call_build_):
+    inherited(call_build_),
     input_size(-1),
     output_size(-1),
     estimate_simpler_diag_hessian( false )
 {
+    if (call_build_)
+        build_();
 }
 
 ///////////
@@ -75,6 +81,55 @@ void OnlineLearningModule::fprop(const Mat& inputs, Mat& outputs)
             "'bpropUpdate' can use the correctly updated data",
             classname().c_str());
 }
+
+void OnlineLearningModule::fprop(const TVec<Mat*>& ports_value)
+{
+    PLASSERT( ports_value.length() == nPorts() );
+    if (ports_value.length() == 2)
+    {
+        Mat* m1 = ports_value[0];
+        Mat* m2 = ports_value[1];
+        if (m1 && m2 && !m1->isEmpty() && m2->isEmpty()) {
+            // We can re-use previous code for standard mini-batch fprop.
+            fprop(*m1, *m2);
+            return;
+        }
+    }
+    PLERROR("In OnlineLearningModule::fprop - Not implemented for class "
+            "'%s'", classname().c_str());
+}
+
+////////////////////
+// bpropAccUpdate //
+////////////////////
+void OnlineLearningModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                          const TVec<Mat*>& ports_gradient)
+{
+    if (ports_gradient.length() == 2) {
+        Mat* input_grad = ports_gradient[0];
+        Mat* output_grad = ports_gradient[1];
+        if (output_grad && !output_grad->isEmpty() &&
+             (!input_grad || input_grad->isEmpty()))
+        {
+            // We can try to re-use the standard mini-batch bpropUpdate method.
+            if (!input_grad) {
+                // We are not interested in the input gradient: use a dummy
+                // matrix to store it.
+                input_grad = &tmpm_input_gradient;
+            }
+            Mat* input_val = ports_value[0];
+            Mat* output_val = ports_value[1];
+            PLASSERT( input_val && output_val );
+            input_grad->resize(input_val->length(), input_val->width());
+            bpropUpdate(*input_val, *output_val, *input_grad, *output_grad,
+                        true);
+            return;
+        }
+    }
+    PLERROR("In OnlineLearningModule::bpropAccUpdate - Not implemented for "
+            "class '%s'", classname().c_str());
+}
+
 
 /////////////////
 // bpropUpdate //
@@ -111,6 +166,26 @@ void OnlineLearningModule::bpropUpdate(const Mat& inputs, const Mat& outputs,
                                        const Mat& output_gradients)
 {
     bpropUpdate(inputs, outputs, tmpm_input_gradient, output_gradients);
+}
+
+void OnlineLearningModule::bpropUpdate(const TVec<Mat*>& ports_value,
+                                       const TVec<Mat*>& ports_gradient)
+{
+    for (int i = 0; i < ports_gradient.length(); i++) {
+        Mat* grad = ports_gradient[i];
+        if (grad && grad->isEmpty()) {
+            // This gradient must be computed (= cleared + accumulated).
+            Mat* val = ports_value[i];
+            if (!val)
+                PLERROR("In OnlineLearningModule::bpropUpdate - Cannot compute"
+                        " the gradient of a port whose value is not available,"
+                        " since we cannot easily know its size");
+            grad->resize(val->length(), val->width());
+            grad->fill(0); // Clear the gradient.
+            grad->resize(0, grad->width()); // So it is accumulated later.
+        }
+    }
+    bpropAccUpdate(ports_value, ports_gradient);
 }
 
 //////////////////
@@ -167,6 +242,7 @@ void OnlineLearningModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(random_gen,             copies);
+    deepCopyField(port_sizes,             copies);
     deepCopyField(tmp_input_gradient,     copies);
     deepCopyField(tmpm_input_gradient,    copies);
     deepCopyField(tmp_input_diag_hessian, copies);
@@ -214,10 +290,101 @@ void OnlineLearningModule::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void OnlineLearningModule::build_()
+{}
+
+////////////////////////
+// getPortDescription //
+////////////////////////
+TVec<string> OnlineLearningModule::getPortDescription(const string& port)
 {
+    static TVec< TVec<string> > default_descr;
+    if (default_descr.isEmpty())
+        default_descr.resize(nPorts());
+    int idx = getPortIndex(port);
+    TVec<string>& descr = default_descr[idx];
+    int desired_size = getPortWidth(port);
+    if (descr.length() != desired_size) {
+        descr.resize(desired_size);
+        for (int i = 0; i < desired_size; i++)
+            descr[i] = port + "_" + tostring(i);
+    }
+    return descr;
 }
 
+//////////////////
+// getPortIndex //
+//////////////////
+int OnlineLearningModule::getPortIndex(const string& port)
+{
+    return getPorts().find(port);
+}
+
+/////////////////
+// getPortName //
+/////////////////
+string OnlineLearningModule::getPortName(int i)
+{
+    return getPorts()[i];
+}
+
+//////////////
+// getPorts //
+//////////////
+const TVec<string>& OnlineLearningModule::getPorts() {
+    static TVec<string> default_ports;
+    if (default_ports.isEmpty()) {
+        default_ports.append("input");
+        default_ports.append("output");
+    }
+    return default_ports;
+}
+
+//////////////////
+// getPortSizes //
+//////////////////
+const TMat<int>& OnlineLearningModule::getPortSizes() {
+    int n_ports = nPorts();
+    if (port_sizes.length() != n_ports) {
+        port_sizes.resize(n_ports, 2);
+        port_sizes.fill(-1);
+        if (n_ports == 2) {
+            PLASSERT( getPorts()[0] == "input" && getPorts()[1] == "output" );
+            port_sizes(0, 1) = input_size;
+            port_sizes(1, 1) = output_size;
+        }
+    }
+    return port_sizes;
+}
+
+///////////////////
+// getPortLength //
+///////////////////
+int OnlineLearningModule::getPortLength(const string& port)
+{
+    PLASSERT( getPortIndex(port) >= 0 );
+    return getPortSizes()(getPortIndex(port), 0);
+}
+
+//////////////////
+// getPortWidth //
+//////////////////
+int OnlineLearningModule::getPortWidth(const string& port)
+{
+    PLASSERT( getPortIndex(port) >= 0 );
+    return getPortSizes()(getPortIndex(port), 1);
+}
+
+////////////
+// nPorts //
+////////////
+int OnlineLearningModule::nPorts()
+{
+    return getPorts().length();
+}
 
 
 } // end of namespace PLearn
