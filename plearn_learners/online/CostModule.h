@@ -140,6 +140,21 @@ public:
     //! Indicates the name of the computed costs
     virtual TVec<string> name();
 
+    //! Overridden so that the default ports being returned are "prediction",
+    //! "target" and "cost".
+    virtual const TVec<string>& getPorts();
+
+    //! Overridden so that the default behavior returns proper widths for the
+    //! 'prediction', 'target' and 'cost' ports.
+    virtual const TMat<int>& getPortSizes();
+
+    //! Overridden to try to use the standard mini-batch fprop when possible.
+    virtual void fprop(const TVec<Mat*>& ports_value);
+
+    //! Overridden to try to use the standard mini-batch bprop when possible.
+    virtual void bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                const TVec<Mat*>& ports_gradient);
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.

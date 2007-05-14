@@ -98,6 +98,43 @@ void CostModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(tmp_input_gradients,                  copies);
 }
 
+////////////////////
+// bpropAccUpdate //
+////////////////////
+void CostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                const TVec<Mat*>& ports_gradient)
+{
+    if (ports_gradient.length() == 3) {
+        Mat* pred_grad = ports_gradient[0];
+        Mat* target_grad = ports_gradient[1];
+        Mat* cost_grad = ports_gradient[2];
+        if (pred_grad && !target_grad && cost_grad &&
+            pred_grad->isEmpty() && !cost_grad->isEmpty())
+        {
+            // We can probably use the standard mini-batch bpropUpdate.
+            PLASSERT( cost_grad->width() == 1 );
+#ifdef BOUNDCHECK
+            // The gradient on the cost must be one if we want to re-use
+            // exactly the existing code.
+            for (int i = 0; i < cost_grad->length(); i++) {
+                PLASSERT( fast_exact_is_equal((*cost_grad)(i, 0), 1) );
+            }
+#endif
+            Mat* cost_val = ports_value[2];
+            PLASSERT_MSG( cost_val && cost_val->mod() == 1,
+                    "Cannot see 'cost_val' as a Vec");
+            Vec costs = cost_val->toVec();
+            Mat* pred_val = ports_value[0];
+            Mat* target_val = ports_value[1];
+            PLASSERT( pred_val && target_val );
+            pred_grad->resize(pred_val->length(), pred_val->width());
+            bpropUpdate(*pred_val, *target_val, costs, *pred_grad, true);
+            return;
+        }
+    }
+    // Try to use the parent's default method.
+    inherited::bpropAccUpdate(ports_value, ports_gradient);
+}
 
 ///////////
 // fprop //
@@ -151,6 +188,57 @@ void CostModule::fprop(const Vec& input_and_target, Vec& output) const
            output );
 }
 
+void CostModule::fprop(const TVec<Mat*>& ports_value)
+{
+    PLASSERT( ports_value.length() == nPorts() );
+    if (ports_value.length() == 3) {
+        Mat* prediction = ports_value[0];
+        Mat* target = ports_value[1];
+        Mat* cost = ports_value[2];
+        if (prediction && target && cost &&
+            !prediction->isEmpty() && !target->isEmpty() && cost->isEmpty())
+        {
+            // Standard fprop: (prediction, target) -> cost
+            fprop(*prediction, *target, *cost);
+            return;
+        }
+    }
+    // Default version does not work: try to re-use the parent's default fprop.
+    inherited::fprop(ports_value);
+}
+
+//////////////
+// getPorts //
+//////////////
+const TVec<string>& CostModule::getPorts() {
+    static TVec<string> default_ports;
+    if (default_ports.isEmpty()) {
+        default_ports.append("prediction");
+        default_ports.append("target");
+        default_ports.append("cost");
+    }
+    return default_ports;
+}
+
+//////////////////
+// getPortSizes //
+//////////////////
+const TMat<int>& CostModule::getPortSizes() {
+    int n_ports = nPorts();
+    if (port_sizes.length() != n_ports) {
+        port_sizes.resize(n_ports, 2);
+        port_sizes.fill(-1);
+        if (n_ports == 3) {
+            PLASSERT( getPorts()[0] == "prediction" &&
+                      getPorts()[1] == "target"     &&
+                      getPorts()[2] == "cost" );
+            port_sizes(0, 1) = input_size;
+            port_sizes(1, 1) = target_size;
+            port_sizes(2, 1) = output_size;
+        }
+    }
+    return port_sizes;
+}
 
 /////////////////
 // bpropUpdate //
