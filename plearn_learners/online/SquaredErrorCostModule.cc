@@ -83,6 +83,9 @@ void SquaredErrorCostModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 }
 
 
+///////////
+// fprop //
+///////////
 void SquaredErrorCostModule::fprop(const Vec& input, const Vec& target,
                                    Vec& cost) const
 {
@@ -94,6 +97,9 @@ void SquaredErrorCostModule::fprop(const Vec& input, const Vec& target,
 }
 
 
+/////////////////
+// bpropUpdate //
+/////////////////
 void SquaredErrorCostModule::bpropUpdate(const Vec& input, const Vec& target,
                                          real cost, Vec& input_gradient,
                                          bool accumulate)
@@ -119,7 +125,36 @@ void SquaredErrorCostModule::bpropUpdate(const Vec& input, const Vec& target,
     }
 }
 
+void SquaredErrorCostModule::bpropUpdate(const Mat& inputs, const Mat& targets,
+            const Vec& costs, Mat& input_gradients, bool accumulate)
+{
+    PLASSERT( inputs.width() == input_size );
+    PLASSERT( targets.width() == target_size );
 
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradients.width() == input_size &&
+                      input_gradients.length() == inputs.length(),
+                      "Cannot resize input_gradient AND accumulate into it" );
+    }
+    else
+    {
+        input_gradients.resize( inputs.length(), input_size );
+        input_gradients.fill(0);
+    }
+
+    // input_gradient = 2*(input - target)
+    // TODO This is a dumb unefficient implementation, for testing purpose.
+    for (int k = 0; k < inputs.length(); k++)
+        for( int i=0 ; i<input_size ; i++ )
+        {
+            input_gradients(k, i) += 2*(inputs(k, i) - targets(k, i));
+        }
+}
+
+//////////////////
+// bbpropUpdate //
+//////////////////
 void SquaredErrorCostModule::bbpropUpdate(const Vec& input, const Vec& target,
                                           real cost,
                                           Vec& input_gradient,

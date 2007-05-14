@@ -71,6 +71,9 @@ public:
     virtual void bpropUpdate(const Vec& input, const Vec& target, real cost,
                              Vec& input_gradient, bool accumulate=false);
 
+    virtual void bpropUpdate(const Mat& inputs, const Mat& targets,
+            const Vec& costs, Mat& input_gradients, bool accumulate = false);
+
     //! Does nothing
     virtual void bpropUpdate(const Vec& input, const Vec& target, real cost)
     {
