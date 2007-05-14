@@ -2,3 +2,5 @@ final.combined_cost
 final.NLL
 final.class_error
 partial0.NLL
+cpu_time
+cumulative_cpu_time
