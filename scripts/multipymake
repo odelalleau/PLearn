@@ -6,10 +6,14 @@
 #         This will execute pymake -float -link plearn-float.cc and
 #                           pymake -double -link plearn-double.cc
 #Exemple2: multipymake plearn "-float -opt" "-double -opt"
-#!!Do not work, must remove space from name
-#         This will create the hard link: plearn-float.cc and plearn-double.cc
-#         This will execute pymake -float -opt -link plearn-float.cc and
-#                           pymake -double -opt -link plearn-double.cc
+#         This will create the hard link: plearn-float_-opt.cc and plearn-double_-opt.cc
+#         This will execute pymake -float -opt -link plearn-float_-opt.cc and
+#                           pymake -double -opt -link plearn-double_-opt.cc
+#Exemple3: multipymake -local -vv plearn "-float -opt" "-double -opt"
+#         This will create the hard link: plearn-float_-opt.cc and plearn-double_-opt.cc
+#         This will execute pymake -local -vv -float -opt -link plearn-float_-opt.cc and
+#                           pymake -local -vv -double -opt -link plearn-double_-opt.cc
+
 if [ ${HOSTNAME} == "paralisa.iro.umontreal.ca" ]; then
     nbproc=8
 elif [ ${HOSTNAME} == "boltzmann.iro.umontreal.ca" ];then
@@ -21,34 +25,26 @@ PYMAKEFLAGS=""
 
 for param in "$@"
 do
-  if [ $1 == "-force" ]; then
-      PYMAKEFLAGS="${PYMAKEFLAGS=} -force"
+  if [ $1 == "-local" ]; then
+      PYMAKEFLAGS=( "${PYMAKEFLAGS[@]}" "-local=$nbproc" )
+      shift      
+  elif [ ${1:0:1} == "-" ]; then
+      PYMAKEFLAGS=( "${PYMAKEFLAGS[@]}" "$1" )
       shift
-  elif [ $1 == "-local" ]; then
-      PYMAKEFLAGS="${PYMAKEFLAGS=} -local=${nbproc}"
-      shift
-  elif [ $1 == "-v" -o $1 == "-v" ]; then
-      PYMAKEFLAGS="${PYMAKEFLAGS=} -v"
-      shift
-  elif [ $1 == "-vv" -o $1 == "-v2" ]; then
-      PYMAKEFLAGS="${PYMAKEFLAGS=} -vv"
-      shift
-  elif [ $1 == "-vvv" -o $1 == "-v3" ]; then
-      PYMAKEFLAGS="${PYMAKEFLAGS=} -vvv"
-      shift
-  elif [ $1 == "-vvvv" -o $1 == "-v4" ]; then
-      PYMAKEFLAGS="${PYMAKEFLAGS=} -vvvv"
-      shift
+  else
+      break
   fi  
-  
 done
+
+echo "PYMAKEFLAGS: ${PYMAKEFLAGS[@]}"
 
 if [ $# -ge 2 ]; then
     BASEPROG=$1
     shift
 else
     echo "Usage: $0 [options...] <base_prog> <List of parameter> ..."
-    echo "  Options can be: -force, -local, -v, -v1, -vv, -v2, -vvv, -v3, -vvvv, -v4"
+    echo "  Options are parameter passed to pymake for all compilation run"
+    echo "  Options must start by - (ex: -force, -local, -v, -v1) "
     exit
 fi
 
@@ -62,12 +58,14 @@ for i in "$@";
   if [ ! -e ${BASEPROG}${iname}.cc ]; then
       ln ${BASEPROG}.cc ${BASEPROG}${iname}.cc
   fi
+  echo "Will compile: ${BASEPROG}${iname}.cc"
 done
 
 for i in "$@";
   do
   iname=${i//\ /_}
-  echo "Compiling \"${BASEPROG}${i}.cc\" with command: pymake $i ${PYMAKEFLAGS} ${BASEPROG}${iname}.cc"
-  pymake $i ${PYMAKEFLAGS} ${BASEPROG}${iname}.cc || ( echo "Build failed for $i"; exit)
+  echo "Compiling \"${BASEPROG}${iname}.cc\" with command:"
+  echo " pymake $i ${PYMAKEFLAGS[@]} ${BASEPROG}${iname}.cc"
+  pymake $i ${PYMAKEFLAGS[@]} ${BASEPROG}${iname}.cc || ( echo "Build failed for $i"; exit)
   echo "Ended with status: $?"
 done
