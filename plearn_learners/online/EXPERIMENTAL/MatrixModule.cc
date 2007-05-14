@@ -77,6 +77,10 @@ void MatrixModule::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
         "The matrix seen by this module.");
 
+    declareOption(ol, "data_gradient", &MatrixModule::data_gradient,
+                  OptionBase::buildoption,
+        "The gradient w.r.t. 'data'. If not provided, is assumed to be 0.");
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -85,18 +89,7 @@ void MatrixModule::declareOptions(OptionList& ol)
 // build_ //
 ////////////
 void MatrixModule::build_()
-{
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation.
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of
-    // ###    all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning"
-    // ###    options have been modified.
-    // ### You should assume that the parent class' build_() has already been
-    // ### called.
-}
+{}
 
 ///////////
 // build //
@@ -118,10 +111,17 @@ void MatrixModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     if (!grad)
         return;
     if (grad->isEmpty()) {
-        // Accumulate ones into gradient.
+        // Accumulate 'data_gradient' into gradient (if there actually is a
+        // gradient).
         grad->resize(data.length(), data.width());
-        *grad += real(1);
+        if (!data_gradient.isEmpty()) {
+            PLASSERT( data.length() == data_gradient.length() &&
+                      data.width()  == data_gradient.width() );
+            *grad += data_gradient;
+        }
     } else {
+        data_gradient.resize(grad->length(), grad->width());
+        data_gradient << *grad;
         PLERROR("In MatrixModule::bpropAccUpdate - Update of the underlying "
                 "data matrix is not yet implemented");
     }
@@ -265,6 +265,15 @@ bool MatrixModule::bpropDoesNothing()
 {
 }
 */
+
+///////////////////
+// setGradientTo //
+///////////////////
+void MatrixModule::setGradientTo(real g)
+{
+    data_gradient.resize(data.length(), data.width());
+    data_gradient.fill(g);
+}
 
 /////////////////////
 // setLearningRate //

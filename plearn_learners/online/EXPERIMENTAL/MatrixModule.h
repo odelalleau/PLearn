@@ -62,6 +62,7 @@ public:
     //#####  Public Build Options  ############################################
 
     Mat data;
+    Mat data_gradient;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -167,11 +168,12 @@ public:
     */
 
     //! If provided, the matrix value is used to fill 'data'.
-    //! If not provided, it is filled with 'data'.
+    //! If required, it is filled with 'data'.
     virtual void fprop(const TVec<Mat*>& ports_value);
 
-    //! If provided, the gradient is used to update 'data'.
-    //! If not provided, the gradient is filled with ones.
+    //! If provided, the gradient is used to update 'data' (and fill
+    //! 'data_gradient').
+    //! If required, it is filled with 'gradient'.
     virtual void bpropAccUpdate(const TVec<Mat*>& ports_value,
                                 const TVec<Mat*>& ports_gradient);
 
@@ -180,6 +182,11 @@ public:
 
     //! Overridden.
     virtual const TMat<int>& getPortSizes();
+
+    //! Set the gradient w.r.t. 'data' to the provided constant value 'g'.
+    //! The result is that 'data_gradient' is resized to the same size as 'data'
+    //! and filled with 'g'.
+    void setGradientTo(real g);
 
     //#####  PLearn::Object Protocol  #########################################
 

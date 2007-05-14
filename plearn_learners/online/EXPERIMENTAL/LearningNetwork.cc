@@ -472,6 +472,12 @@ void LearningNetwork::trainingStep(const Mat& inputs, const Mat& targets,
         }
     }
 
+    // Initialize cost gradients to 1.
+    // Note that we may not need to re-do it at every iteration, but this is so
+    // cheap it should not impact performance.
+    if (cost_module)
+        store_costs->setGradientTo(1);
+
     // Backpropagate gradient to optimize parameters.
     for (int i = 0; i < bprop_path.length(); i++) {
         PP<OnlineLearningModule> module = all_modules[bprop_path[i]];
