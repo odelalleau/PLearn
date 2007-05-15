@@ -169,7 +169,7 @@ public:
 
 protected:
     //! accumulated statistics of gradients on each parameter.
-    VecStatsCollector pv_gradstats;
+    PP<VecStatsCollector> pv_gradstats;
 
     //! The step size (absolute value) to be taken for each parameter.
     Vec pv_stepsizes;

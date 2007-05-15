@@ -80,6 +80,7 @@ NatGradNNet::NatGradNNet()
       pv_min_samples(2),
       pv_required_confidence(0.80),
       pv_random_sample_step(false),
+      pv_gradstats(new VecStatsCollector()),
       n_layers(-1),
       cumulative_training_time(0)
 {
@@ -564,7 +565,7 @@ void NatGradNNet::forget()
     
     if(use_pvgrad)
     {
-        pv_gradstats.forget();
+        pv_gradstats->forget();
         int n = all_params.length();
         pv_stepsizes.resize(n);
         pv_stepsizes.fill(pv_initial_stepsize);
@@ -801,11 +802,11 @@ void NatGradNNet::pvGradUpdate()
         pv_stepsigns.resize(n);
         pv_stepsigns.fill(true);
     }
-    pv_gradstats.update(all_params_gradient);
+    pv_gradstats->update(all_params_gradient);
     real pv_deceleration = 1.0/pv_acceleration;
     for(int k=0; k<n; k++)
     {
-        StatsCollector& st = pv_gradstats.getStats(k);
+        StatsCollector& st = pv_gradstats->getStats(k);
         int n = (int)st.nnonmissing();
         if(n>pv_min_samples)
         {
