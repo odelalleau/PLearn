@@ -154,6 +154,22 @@ public:
     static inline void end(const string& name_of_piece_of_code) { } 
 #endif
 
+    //!  Start recording time for named piece of code if PL_PROFILE is set
+#ifdef PROFILE
+    static void pl_profile_start(const string& name_of_piece_of_code);
+#else
+    static inline void pl_profile_start(const string& name_of_piece_of_code) {}
+#endif
+
+    //!  End recording time for named piece of code, and increment
+    //!  frequency of occurence and total duration of this piece of code.
+    //!  if PL_PROFILE is set
+#ifdef PROFILE
+    static void pl_profile_end(const string& name_of_piece_of_code);
+#else
+    static inline void pl_profile_end(const string& name_of_piece_of_code) { } 
+#endif
+
     //! Return the number of clock ticks per second on this computer.
 #ifdef PROFILE
     static long ticksPerSecond() { return sysconf(_SC_CLK_TCK); }

@@ -596,6 +596,7 @@ void NatGradNNet::train()
 
     Profiler::reset("training");
     Profiler::start("training");
+    Profiler::pl_profile_start("Totaltraining");
     if( report_progress && stage < nstages )
         pb = new ProgressBar( "Training "+classname(),
                               nstages - stage );
@@ -612,9 +613,9 @@ void NatGradNNet::train()
         int b = stage % minibatch_size;
         Vec input = neuron_outputs_per_layer[0](b);
         Vec target = targets(b);
-        Profiler::start("getting_data");
+        Profiler::pl_profile_start("getting_data");
         train_set->getExample(sample, input, target, example_weights[b]);
-        Profiler::end("getting_data");
+        Profiler::pl_profile_end("getting_data");
         if (b+1==minibatch_size) // do also special end-case || stage+1==nstages)
         {
             onlineStep(stage, targets, train_costs, example_weights );
@@ -634,6 +635,7 @@ void NatGradNNet::train()
             pb->update( stage + 1 );
     }
     Profiler::end("training");
+    Profiler::pl_profile_end("Totaltraining");
     if (verbosity>0)
         Profiler::report(cout);
     const Profiler::Stats& stats = Profiler::getStats("training");
@@ -706,8 +708,10 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
         if (i>1) // compute gradient on previous layer
         {
             // propagate gradients
+            Profiler::pl_profile_start("ProducScaleAccOnlineStep");
             productScaleAcc(previous_neurons_gradient,next_neurons_gradient,false,
                             weights[i-1],false,1,0);
+            Profiler::pl_profile_end("ProducScaleAccOnlineStep");
             // propagate through tanh non-linearity
             for (int j=0;j<previous_neurons_gradient.length();j++)
             {
@@ -726,21 +730,29 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
         else if (full_natgrad || params_natgrad_template || params_natgrad_per_input_template) 
         {
 //alternate
-            if( params_natgrad_per_input_template && i==1 ) // parameters are transposed
+            if( params_natgrad_per_input_template && i==1 ){ // parameters are transposed
+                Profiler::pl_profile_start("ProducScaleAccOnlineStep");
                 productScaleAcc(layer_params_gradient[i-1],
                             neuron_extended_outputs_per_layer[i-1], true,
                             next_neurons_gradient, false, 
                             1, 0);
-            else
+                Profiler::pl_profile_end("ProducScaleAccOnlineStep");
+            }else{
+                Profiler::pl_profile_start("ProducScaleAccOnlineStep");
                 productScaleAcc(layer_params_gradient[i-1],next_neurons_gradient,true,
                             neuron_extended_outputs_per_layer[i-1],false,1,0);
+                Profiler::pl_profile_end("ProducScaleAccOnlineStep");
+            }
             layer_params_gradient[i-1] *= 1.0/minibatch_size; // use the MEAN gradient
-        } else // just regular stochastic gradient
+        } else {// just regular stochastic gradient
             // compute gradient on weights and update them in one go (more efficient)
             // mean gradient has less variance, can afford larger learning rate
+            Profiler::pl_profile_start("ProducScaleAccOnlineStep");
             productScaleAcc(layer_params[i-1],next_neurons_gradient,true,
                             neuron_extended_outputs_per_layer[i-1],false,
                             -layer_lrate_factor*lrate/minibatch_size,1);
+            Profiler::pl_profile_end("ProducScaleAccOnlineStep");
+        }
     }
     if (use_pvgrad)
     {
@@ -835,9 +847,11 @@ void NatGradNNet::pvGradUpdate()
 
 void NatGradNNet::computeOutput(const Vec& input, Vec& output) const
 {
+    Profiler::pl_profile_start("computeOutput");
     neuron_outputs_per_layer[0](0) << input;
     fpropNet(1,false);
     output << neuron_outputs_per_layer[n_layers-1](0);
+    Profiler::pl_profile_end("computeOutput");
 }
 
 //! compute (pre-final-non-linearity) network top-layer output given input
@@ -861,16 +875,33 @@ void NatGradNNet::fpropNet(int n_examples, bool during_training) const
             tw = false;
 
         // try to use BLAS for the expensive operation
-        if (self_adjusted_scaling_and_bias && i+1<n_layers-1)
+        if (self_adjusted_scaling_and_bias && i+1<n_layers-1){
+            if (during_training)
+                Profiler::pl_profile_start("ProducScaleAccFpropTrain");
+            else
+                Profiler::pl_profile_start("ProducScaleAccFpropNoTrain");
             productScaleAcc(next_layer, prev_layer, false, 
                             (during_training || params_averaging_coeff==1.0)?
                             weights[i]:mweights[i], 
                             tw, 1, 0);
-        else
+            if (during_training)
+                Profiler::pl_profile_end("ProducScaleAccFpropTrain");
+            else
+                Profiler::pl_profile_end("ProducScaleAcccFpropNoTrain");
+        }else{
+            if (during_training)
+                Profiler::pl_profile_start("ProducScaleAccFpropTrain");
+            else
+                Profiler::pl_profile_start("ProducScaleAcccFpropNoTrain");
             productScaleAcc(next_layer, prev_layer, false, 
                             (during_training || params_averaging_coeff==1.0)?
                             layer_params[i]:layer_mparams[i], 
                             tw, 1, 0);
+            if (during_training)
+                Profiler::pl_profile_end("ProducScaleAccFpropTrain");
+            else
+                Profiler::pl_profile_end("ProducScaleAcccFpropNoTrain");
+        }
         // compute layer's output non-linearity
         if (i+1<n_layers-1)
             for (int k=0;k<n_examples;k++)
@@ -907,17 +938,24 @@ void NatGradNNet::fpropNet(int n_examples, bool during_training) const
                                 *v *= rescale_factor*rescale_factor;
                             }
                         }
+                        Profiler::pl_profile_start("activation function");
                         *a = tanh((*a + *b) * *s);
+                        Profiler::pl_profile_end("activation function");
                     }
                 }
-                else
+                else{
+                    Profiler::pl_profile_start("activation function");
                     compute_tanh(L,L);
+                    Profiler::pl_profile_end("activation function");
+                }
             }
         else if (output_type=="NLL")
             for (int k=0;k<n_examples;k++)
             {
                 Vec L=next_layer(k);
+                Profiler::pl_profile_start("activation function");
                 log_softmax(L,L);
+                Profiler::pl_profile_end("activation function");
             }
     }
 }

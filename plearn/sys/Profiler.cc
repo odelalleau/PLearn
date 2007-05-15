@@ -112,8 +112,26 @@ void Profiler::end(const string& name_of_piece_of_code)
         stats.system_duration += system_duration;
     }
 }
+
+// start recording time for named piece of code if PL_PROFILE is set
+#ifdef PL_PROFILE  
+void Profiler::pl_profile_start(const string& name_of_piece_of_code){
+        Profiler::start(name_of_piece_of_code);}
+#else
+void inline Profiler::pl_profile_start(const string& name_of_piece_of_code){}
 #endif
 
+// end recording time for named piece of code, and increment
+// frequency of occurence and total duration of this piece of code.
+// if PL_PROFILE is set
+#ifdef PL_PROFILE  
+void Profiler::pl_profile_end(const string& name_of_piece_of_code){
+        Profiler::end(name_of_piece_of_code);}
+#else
+void inline Profiler::pl_profile_start(const string& name_of_piece_of_code){}
+#endif
+
+#endif
 
 //! Return the statistics related to a piece of code.  This is useful
 //! for aggregators that collect and report a number of statistics
