@@ -445,6 +445,7 @@ void RBMMatrixConnection::computeProducts(int start, int length,
                                           Mat& activations,
                                           bool accumulate ) const
 {
+    PLASSERT( activations.width() == length );
     activations.resize(inputs_mat.length(), length);
     if( going_up )
     {
@@ -555,6 +556,8 @@ void RBMMatrixConnection::forget()
                        " random_gen" );
             return;
         }
+
+        //random_gen->manual_seed(1827);
 
         real d = 1. / max( down_size, up_size );
         if( initialization_method == "uniform_sqrt" )
