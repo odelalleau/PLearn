@@ -257,6 +257,27 @@ void RBMMixedConnection::setAsUpInput( const Vec& input ) const
     }
 }
 
+///////////////////
+// setAsUpInputs //
+///////////////////
+void RBMMixedConnection::setAsUpInputs( const Mat& inputs ) const
+{
+    inherited::setAsUpInputs( inputs );
+
+    for( int i=0 ; i<n_up_blocks ; i++ )
+    {
+        Mat sub_inputs = input.subMatColumns( up_init_positions[i],
+                                              up_block_sizes[i] );
+
+        for( int j=0 ; j<n_down_blocks ; j++ )
+            if( sub_connections(i,j) )
+                sub_connections(i,j)->setAsUpInputs( sub_inputs );
+    }
+}
+
+////////////////////
+// setAsDownInput //
+////////////////////
 void RBMMixedConnection::setAsDownInput( const Vec& input ) const
 {
     inherited::setAsDownInput( input );
@@ -272,6 +293,25 @@ void RBMMixedConnection::setAsDownInput( const Vec& input ) const
     }
 }
 
+/////////////////////
+// setAsDownInputs //
+/////////////////////
+void RBMMixedConnection::setAsDownInputs( const Mat& inputs ) const
+{
+    inherited::setAsDownInputs( inputs );
+
+    for( int j=0 ; j<n_down_blocks ; j++ )
+    {
+        Mat sub_inputs = inputs.subMatColumns( down_init_positions[j],
+                                               down_block_sizes[j] );
+
+        for( int i=0 ; i<n_up_blocks ; i++ )
+            if( sub_connections(i,j) )
+                sub_connections(i,j)->setAsDownInputs( sub_inputs );
+    }
+}
+
+// Vec version
 void RBMMixedConnection::accumulatePosStats( const Vec& down_values,
                                              const Vec& up_values )
 {
@@ -355,6 +395,40 @@ void RBMMixedConnection::update( const Vec& pos_down_values, // v_0
                                                                   down_length );
                 Vec sub_neg_down_values = neg_down_values.subVec( down_begin,
                                                                   down_length );
+
+                sub_connections(i,j)->update( sub_pos_down_values,
+                                              sub_pos_up_values,
+                                              sub_neg_down_values,
+                                              sub_neg_up_values );
+            }
+        }
+    }
+}
+
+// Mat (mini-batch) version
+void RBMMixedConnection::update( const Mat& pos_down_values, // v_0
+                                 const Mat& pos_up_values,   // h_0
+                                 const Mat& neg_down_values, // v_1
+                                 const Mat& neg_up_values )  // h_1
+{
+    for( int i=0 ; i<n_up_blocks ; i++ )
+    {
+        int up_begin = up_init_positions[i];
+        int up_length = up_block_sizes[i];
+        Mat sub_pos_up_values = pos_up_values.subMatColumns( up_begin,
+                                                             up_length );
+        Mat sub_neg_up_values = neg_up_values.subMatColumns( up_begin,
+                                                             up_length );
+        for( int j=0 ; j<n_down_blocks ; j++ )
+        {
+            if( sub_connections(i,j) )
+            {
+                int down_begin = down_init_positions[j];
+                int down_length = sub_connections(i,j)->down_size;
+                Mat sub_pos_down_values =
+                    pos_down_values.subMatColumns( down_begin, down_length );
+                Mat sub_neg_down_values =
+                    neg_down_values.subMatColumns( down_begin, down_length );
 
                 sub_connections(i,j)->update( sub_pos_down_values,
                                               sub_pos_up_values,
@@ -524,6 +598,167 @@ void RBMMixedConnection::computeProduct( int start, int length,
                 if( sub_connections(i,end_col) )
                 {
                     sub_connections(i,end_col)->computeProduct(
+                        0, len_in_end_col, sub_activations, true );
+                }
+            }
+        }
+    }
+}
+
+// Mat (mini-batch) version
+void RBMMixedConnection::computeProducts( int start, int length,
+                                          Mat& activations,
+                                          bool accumulate ) const
+{
+    PLASSERT( activations.width() == length );
+    activations.resize(inputs_mat.length(), length);
+
+    if( !accumulate )
+        activations.subMatColumns( start, length ).clear();
+
+    if( going_up )
+    {
+        PLASSERT( start+length <= up_size );
+
+        int init_row = row_of[start];
+        int end_row = row_of[start+length-1];
+
+        if( init_row == end_row )
+        {
+            int start_in_row = start - up_init_positions[init_row];
+
+            for( int j=0 ; j<n_down_blocks ; j++ )
+            {
+                if( sub_connections(init_row,j) )
+                {
+                    sub_connections(init_row,j)->computeProducts(
+                        start_in_row, length, activations, true );
+                }
+            }
+        }
+        else
+        {
+            // partial computation on init_row
+            int start_in_init_row = start - up_init_positions[init_row];
+            int len_in_init_row = up_init_positions[init_row+1]
+                                    - start_in_init_row;
+            int cur_pos = 0;
+
+            Mat sub_activations = activations.subMatColumns( cur_pos,
+                                                             len_in_init_row );
+            cur_pos += len_in_init_row;
+            for( int j=0 ; j<n_down_blocks ; j++ )
+            {
+                if( sub_connections(init_row,j) )
+                {
+                    sub_connections(init_row,j)->computeProducts(
+                        start_in_init_row, len_in_init_row,
+                        sub_activations, true );
+                }
+            }
+
+            // full computation for init_row < i < end_row
+            for( int i=init_row+1 ; i<end_row ; i++ )
+            {
+                int up_size_i = up_block_sizes[i];
+                sub_activations = activations.subMatColumns( cur_pos,
+                                                             up_size_i );
+                cur_pos += up_size_i;
+                for( int j=0 ; j<n_down_blocks ; j++ )
+                {
+                    if( sub_connections(i,j) )
+                    {
+                        sub_connections(i,j)->computeProducts(
+                            0, up_size_i, sub_activations, true );
+                    }
+                }
+
+            }
+
+            // partial computation on end_row
+            int len_in_end_row = start+length - up_init_positions[end_row];
+            sub_activations = activations.subMatColumns( cur_pos,
+                                                         len_in_end_row );
+            cur_pos += len_in_end_row;
+            for( int j=0 ; j<n_down_blocks ; j++ )
+            {
+                if( sub_connections(end_row,j) )
+                {
+                    sub_connections(end_row,j)->computeProducts(
+                        0, len_in_end_row, sub_activations, true );
+                }
+            }
+        }
+    }
+    else
+    {
+        PLASSERT( start+length <= down_size );
+
+        int init_col = col_of[start];
+        int end_col = col_of[start+length-1];
+
+        if( init_col == end_col )
+        {
+            int start_in_col = start - down_init_positions[init_col];
+
+            for( int i=0 ; i<n_up_blocks ; i++ )
+            {
+                if( sub_connections(i,init_col) )
+                {
+                    sub_connections(i,init_col)->computeProducts(
+                        start_in_col, length, activations, true );
+                }
+            }
+        }
+        else
+        {
+            // partial computation on init_col
+            int start_in_init_col = start - down_init_positions[init_col];
+            int len_in_init_col = down_init_positions[init_col+1]
+                                    - start_in_init_col;
+            int cur_pos = 0;
+
+            Mat sub_activations = activations.subMatColumns( cur_pos,
+                                                             len_in_init_col );
+            cur_pos += len_in_init_col;
+            for( int i=0 ; i<n_up_blocks ; i++ )
+            {
+                if( sub_connections(i,init_col) )
+                {
+                    sub_connections(i,init_col)->computeProducts(
+                        start_in_init_col, len_in_init_col,
+                        sub_activations, true );
+                }
+            }
+
+            // full computation for init_col < j < end_col
+            for( int j=init_col+1 ; j<end_col ; j++ )
+            {
+                int down_size_j = down_block_sizes[j];
+                sub_activations = activations.subMatColumns( cur_pos,
+                                                             down_size_j );
+                cur_pos += down_size_j;
+                for( int i=0 ; i<n_up_blocks ; i++ )
+                {
+                    if( sub_connections(i,j) )
+                    {
+                        sub_connections(i,j)->computeProducts(
+                            0, down_size_j, sub_activations, true );
+                    }
+                }
+
+            }
+
+            // partial computation on end_row
+            int len_in_end_col = start+length - down_init_positions[end_col];
+            sub_activations = activations.subMatColumns( cur_pos,
+                                                         len_in_end_col );
+            cur_pos += len_in_end_col;
+            for( int i=0 ; i<n_up_blocks ; i++ )
+            {
+                if( sub_connections(i,end_col) )
+                {
+                    sub_connections(i,end_col)->computeProducts(
                         0, len_in_end_col, sub_activations, true );
                 }
             }

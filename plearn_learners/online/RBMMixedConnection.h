@@ -83,13 +83,9 @@ public:
     virtual void setAsUpInput( const Vec& input ) const;
     virtual void setAsDownInput( const Vec& input ) const;
 
-    virtual void setAsUpInputs( const Mat& inputs ) const {
-        PLASSERT( false ); // Not implemented.
-    }
+    virtual void setAsUpInputs( const Mat& inputs ) const;
 
-    virtual void setAsDownInputs( const Mat& input ) const {
-        PLASSERT( false ); // Not implemented.
-    }
+    virtual void setAsDownInputs( const Mat& input ) const:
 
     //! Accumulates positive phase statistics to *_pos_stats
     virtual void accumulatePosStats( const Vec& down_values,
@@ -125,10 +121,7 @@ public:
     virtual void update( const Mat& pos_down_values,
                          const Mat& pos_up_values,
                          const Mat& neg_down_values,
-                         const Mat& neg_up_values)
-    {
-        PLASSERT_MSG( false, "Not implemented" );
-    }
+                         const Mat& neg_up_values);
 
     //! Clear all information accumulated during stats
     virtual void clearStats();
@@ -143,10 +136,7 @@ public:
     //! Same as 'computeProduct' but for mini-batches.
     virtual void computeProducts(int start, int length,
                                  Mat& activations,
-                                 bool accumulate=false ) const
-    {
-        PLASSERT( false ); // Not implemented.
-    }
+                                 bool accumulate=false ) const;
 
     //! Adapt based on the output gradient: this method should only
     //! be called just after a corresponding fprop; it should be
