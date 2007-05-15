@@ -158,12 +158,9 @@ public:
     virtual bool bpropDoesNothing();
     */
 
-    /* Optional
-       Default implementation prints a warning and does nothing
-    //! If this class has a learning rate (or something close to it), set it.
-    //! If not, you can redefine this method to get rid of the warning.
+    //! Throws an error (please use explicitely the two different kinds of
+    //! learning rates available here).
     virtual void setLearningRate(real dynamic_learning_rate);
-    */
 
     //! Overridden.
     virtual void fprop(const TVec<Mat*>& ports_value);
@@ -201,6 +198,9 @@ protected:
     Mat visible_exp_grad;
 
     //#####  Protected Member Functions  ######################################
+
+    //! Forward the given learning rate to all elements of this module.
+    void setAllLearningRates(real lr);
 
     //! Declares the class options.
     static void declareOptions(OptionList& ol);

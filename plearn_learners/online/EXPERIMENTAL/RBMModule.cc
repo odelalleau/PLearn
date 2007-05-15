@@ -104,14 +104,8 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     if (hidden_grad && !hidden_grad->isEmpty() &&
             (!visible_grad || visible_grad->isEmpty()))
     {
-        if (cd_learning_rate > 0) {
-            PLERROR("In RBMModule::bpropAccUpdate - Contrastive Divergence "
-                    "not implemented yet");
-        }
         if (grad_learning_rate > 0) {
-            hidden_layer->setLearningRate(grad_learning_rate);
-            visible_layer->setLearningRate(grad_learning_rate);
-            connection->setLearningRate(grad_learning_rate);
+            setAllLearningRates(grad_learning_rate);
             Mat* hidden_out = ports_value[1];
             Mat* hidden_act = ports_value[2];
             PLASSERT( hidden_out && hidden_act );
@@ -137,6 +131,31 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             connection->bpropUpdate(
                     *visible_out, *hidden_act, *store_visible_grad,
                     hidden_act_grad, true);
+        }
+        if (cd_learning_rate > 0) {
+            setAllLearningRates(cd_learning_rate);
+            // Perform a step of contrastive divergence.
+            PLASSERT( ports_value.length() == nPorts() );
+            Mat* visible_exp = ports_value[0];
+            Mat* hidden_exp = ports_value[1];
+            PLASSERT( visible_exp && hidden_exp );
+            // Generate hidden samples.
+            hidden_layer->setExpectations(*hidden_exp);
+            hidden_layer->generateSamples();
+            // Generate visible samples.
+            connection->setAsUpInputs(hidden_layer->samples);
+            visible_layer->getAllActivations(connection, 0, true);
+            visible_layer->generateSamples();
+            // (Negative phase) compute corresponding hidden expectations.
+            connection->setAsDownInputs(visible_layer->samples);
+            hidden_layer->getAllActivations(connection, 0, true);
+            hidden_layer->computeExpectations();
+            // Perform update.
+            visible_layer->update(*visible_exp, visible_layer->samples);
+            connection->update(*visible_exp, *hidden_exp,
+                               visible_layer->samples,
+                               hidden_layer->getExpectations());
+            hidden_layer->update(*hidden_exp, hidden_layer->getExpectations());
         }
     } else
         PLERROR("In RBMModule::bpropAccUpdate - Only hidden -> visible "
@@ -334,14 +353,26 @@ bool RBMModule::bpropDoesNothing()
 }
 */
 
+/////////////////////////
+// setAllLearningRates //
+/////////////////////////
+void RBMModule::setAllLearningRates(real lr)
+{
+    hidden_layer->setLearningRate(lr);
+    visible_layer->setLearningRate(lr);
+    connection->setLearningRate(lr);
+}
+
 /////////////////////
 // setLearningRate //
 /////////////////////
-/* OPTIONAL
 void RBMModule::setLearningRate(real dynamic_learning_rate)
 {
+    // Out of safety, force the user to go through the two different learning
+    // rate. May need to be removed if it causes unwanted crashes.
+    PLERROR("In RBMModule::setLearningRate - Do not use this method, instead "
+            "explicitely use 'cd_learning_rate' and 'grad_learning_rate'");
 }
-*/
 
 } // end of namespace PLearn
 
