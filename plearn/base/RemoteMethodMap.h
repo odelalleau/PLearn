@@ -156,6 +156,9 @@ public:
     //! or return the string "** No method named ... **"
     string getMethodHelpText(const string& methodname, int arity=-1) const;
     
+    //! Get the method map itself
+    const MethodMap& getMap() const
+    { return m_methods; }
 
 protected:
     MethodMap m_methods;                     //!< Set of methods at this level

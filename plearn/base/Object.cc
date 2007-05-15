@@ -945,6 +945,18 @@ void callFunction(const string& funcname, int nargs, PStream& io)
             }
 */
 
+
+BEGIN_DECLARE_REMOTE_FUNCTIONS
+
+    declareFunction("newObject", &newObject,
+                    (BodyDoc("Returns PLearn object from a string description.\n"),
+                     ArgDoc("representation", 
+                            "the string representation of the object"),
+                     RetDoc ("newly created object")));
+
+END_DECLARE_REMOTE_FUNCTIONS
+
+
 } // end of namespace PLearn
 
 
