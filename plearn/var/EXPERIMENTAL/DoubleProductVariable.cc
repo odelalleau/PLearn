@@ -47,81 +47,23 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(
     DoubleProductVariable,
     "ONE LINE USER DESCRIPTION",
-    "MULTI LINE\nHELP FOR USERS"
-    );
-
-//DoubleProductVariable::DoubleProductVariable()
-    /* ### Initialize all fields to their default value */
-//{
-    // ### You may (or not) want to call build_() to finish building the object
-    // ### (doing so assumes the parent classes' build_() have been called too
-    // ### in the parent classes' constructors, something that you must ensure)
-//}
-
-// constructors from input variables.
-// NaryVariable constructor (inherited) takes a VarArray as argument.
-// You can either construct from a VarArray (if the number of parent Var is not
-// fixed, for instance), or construct a VarArray from Var by operator &:
-// input1 & input2 & input3. You can also do both, uncomment what you prefer.
-
-// DoubleProductVariable::DoubleProductVariable(const VarArray& vararray)
-// ### replace with actual parameters
-//  : inherited(vararray, this_variable_length, this_variable_width),
-//    parameter(default_value),
-//    ...
-// {
-//     // ### You may (or not) want to call build_() to finish building the
-//     // ### object
-// }
+    "Let X,W and M be the inputs, nw the length of W and d their width (they all have the same width)"
+    " \nThen output(n,i+j*nw) = sum_k{X(n,k)*W(i,k)*M(j,k)}");
 
 DoubleProductVariable::DoubleProductVariable(Var& x, Var& w, Var& m)
-// ### replace with actual parameters
     : inherited(x & w & m, x.length(), w.length()*m.length())
-//    parameter(default_value),
-//    ...
 {
-    // ### You may (or not) want to call build_() to finish building the
-    // ### object
+    build_();
 }
 
-// constructor from input variable and parameters
-// DoubleProductVariable::DoubleProductVariable(const VarArray& vararray
-//                            param_type the_parameter, ...)
-// ### replace with actual parameters
-//  : inherited(vararray, this_variable_length, this_variable_width),
-//    parameter(the_parameter),
-//    ...
-// {
-//     // ### You may (or not) want to call build_() to finish building the
-//     // ### object
-// }
 
-// constructor from input variable and parameters
-// DoubleProductVariable::DoubleProductVariable(Var input1, Var input2,
-//                            Var input3, ...,
-//                            param_type the_parameter, ...)
-// ### replace with actual parameters
-//  : inherited(input1 & input2 & input3 & ...,
-//              this_variable_length, this_variable_width),
-//    parameter(the_parameter),
-//    ...
-// {
-//     // ### You may (or not) want to call build_() to finish building the
-//     // ### object
-// }
-
-
-//TODO : VÉRIFIER QUE CEST OK
 void DoubleProductVariable::recomputeSize(int& l, int& w) const
-{
-    // ### usual code to put here is:
-    
+{   
         if (varray.size() > 0) {
             l = varray[0].length() ; // the computed length of this Var
             w = varray[1].length()*varray[2].length(); // the computed width
         } else
-            l = w = 0;
-    
+            l = w = 0;    
 }
 
 // ### computes value from varray values
@@ -141,7 +83,6 @@ void DoubleProductVariable::fprop()
         for(int i=0; i<nw; i++)        
             for(int j=0; j<nm; j++)
             {
-//TODO :vérifier que cest bien nw et pas nm
                 matValue(n,i+j*nw) = 0.;
                 for(int k=0; k<d; k++)
                     matValue(n,i+j*nw) += x(n,k)*w(i,k)*m(j,k);
@@ -168,10 +109,8 @@ void DoubleProductVariable::bprop()
         for(int i=0 ;i<nw; i++)
             for(int j=0; j<nm; j++)
             {
-                //on est à S[n, i+j*nw]
                 for(int k=0; k<d; k++)
-                {
-                    //TODO : vérifier que cest bien nw et pas nw dans la(les) ligne(s) suivante(s)
+                {             
                     x_grad(n,k) += s_grad(n,i+j*nw)*w(i,k)*m(j,k);
                     w_grad(i,k) += s_grad(n,i+j*nw)*x(n,k)*m(j,k);
                     m_grad(j,k) += s_grad(n,i+j*nw)*x(n,k)*w(i,k);
@@ -240,6 +179,9 @@ void DoubleProductVariable::build_()
     // ###    options have been modified.
     // ### You should assume that the parent class' build_() has already been
     // ### called.
+   
+    if (varW().width() != varX().width() || varW().width() != varM().width())
+        PLERROR("All input matrix widths must be equal in DoubleProductVariable");
 }
 
 

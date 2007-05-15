@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// TransposedDoubleProductVariable.h
+// LogSoftSoftMaxVariable.h
 //
 // Copyright (C) 2007 Simon Lemieux, Pascal Vincent
 //
@@ -34,31 +34,30 @@
 
 // Authors: Simon Lemieux, Pascal Vincent
 
-/*! \file TransposedDoubleProductVariable.h */
+/*! \file LogSoftSoftMaxVariable.h */
 
 
-#ifndef TransposedDoubleProductVariable_INC
-#define TransposedDoubleProductVariable_INC
+#ifndef LogSoftSoftMaxVariable_INC
+#define LogSoftSoftMaxVariable_INC
 
-#include <plearn/var/NaryVariable.h>
+#include <plearn/var/BinaryVariable.h>
 
 namespace PLearn {
 using namespace std;
 
-/*! * TransposedDoubleProductVariable * */
+/*! * LogSoftSoftMaxVariable * */
 
 /**
- * Let W, M and H be the inputs and nw the length of W. Then output(n,k) = sum_i{ sum_j { W(i,k)*M(j,k)*H(n,i+j*nw) } }
- *
+ * Log of SoftSoftMaxVariable (see SoftSoftMaxVariable for more details)
  *
  * @todo Write class to-do's here if there are any.
  *
  * @deprecated Write deprecated stuff here if there is any.  Indicate what else
  * should be used instead.
  */
-class TransposedDoubleProductVariable : public NaryVariable
+class LogSoftSoftMaxVariable : public BinaryVariable
 {
-    typedef NaryVariable inherited;
+    typedef BinaryVariable inherited;
 
 public:
     //#####  Public Build Options  ############################################
@@ -70,22 +69,16 @@ public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor, usually does nothing
-    TransposedDoubleProductVariable();
+    LogSoftSoftMaxVariable(){}
 
-    //! Constructor initializing from input variables
-    TransposedDoubleProductVariable(Var w, Var m, Var h);
-
-
-    //easy access to input
-    Var& varW() { return varray[0]; }
-    Var& varM() { return varray[1]; } 
-    Var& varH() { return varray[2]; }
-
+    //! Constructor initializing from two input variables
+    // ### Make sure the implementation in the .cc calls inherited constructor
+    // ### and initializes all fields with reasonable default values.
+    LogSoftSoftMaxVariable(Variable* input1, Variable* input2);
 
     // Your other public member functions go here
 
     //#####  PLearn::Variable methods #########################################
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void recomputeSize(int& l, int& w) const;
     virtual void fprop();
     virtual void bprop();
@@ -100,7 +93,7 @@ public:
     // Declares other standard object methods.
     // ### If your class is not instantiatable (it has pure virtual methods)
     // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT
-    PLEARN_DECLARE_OBJECT(TransposedDoubleProductVariable);
+    PLEARN_DECLARE_OBJECT(LogSoftSoftMaxVariable);
 
     // Simply calls inherited::build() then build_()
     virtual void build();
@@ -136,23 +129,15 @@ private:
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(TransposedDoubleProductVariable);
+DECLARE_OBJECT_PTR(LogSoftSoftMaxVariable);
 
-// ### Put here a convenient method for building your variable from other
-// ### existing ones, or a VarArray.
+// ### Put here a convenient method for building your variable from two
+// ### existing ones.
 // ### e.g., if your class is TotoVariable, with two parameters foo_type foo
-// ### and bar_type bar, you could write, depending on your constructor:
-// inline Var toto(Var v1, Var v2, Var v3,
+// ### and bar_type bar, you could write:
+// inline Var toto(Var v1, Var v2,
 //                 foo_type foo=default_foo, bar_type bar=default_bar)
-// { return new TotoVariable(v1, v2, v3, foo, bar); }
-// ### or:
-// inline Var toto(Var v1, Var v2, v3
-//                 foo_type foo=default_foo, bar_type bar=default_bar)
-// { return new TotoVariable(v1 & v2 & v3, foo, bar); }
-// ### or:
-// inline Var toto(const VarArray& varray, foo_type foo=default_foo,
-//                 bar_type bar=default_bar)
-// { return new TotoVariable( varray, foo, bar); }
+// { return new TotoVariable(v1, v2, foo, bar); }
 
 } // end of namespace PLearn
 

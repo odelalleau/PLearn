@@ -71,30 +71,15 @@ public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor, usually does nothing
-    DoubleProductVariable(){}
+    DoubleProductVariable() {}
 
     //! Constructor initializing from input variables
-    // NaryVariable constructor (inherited) takes a VarArray as
-    // argument.  You can either construct from a VarArray (if the
-    // number of parent Var is not fixed, for instance), or construct
-    // a VarArray from Var by operator &: input1 & input2 &
-    // input3. You can also do both, uncomment what you prefer.
-
-    // ### Make sure the implementation in the .cc calls inherited constructor
-    // ### and initializes all fields with reasonable default values.
-    // DoubleProductVariable(const VarArray& vararray);
     DoubleProductVariable(Var& input1, Var& input2, Var& input3);
 
-    // ### If your class has parameters, you probably want a constructor that
-    // ### initializes them
-    // DoubleProductVariable(Var input1, Var input2,
-    //              param_type the_parameter, ...);
-
-    // ### If your parent variables are a meaning and you want to be able to
-    // ### access them easily, you can add functions like:
-    // Var& First() { return varray[0]; }
-    // Var& Second() { return varray[1]; }
-    // ...
+    // For clear and easy access
+    Var& varX() { return varray[0]; }
+    Var& varW() { return varray[1]; }
+    Var& varM() { return varray[2]; }
 
     // Your other public member functions go here
 

@@ -46,81 +46,28 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     TransposedDoubleProductVariable,
-    "ONE LINE USER DESCRIPTION",
+    "Let W, M and H be the inputs and nw the length of W. Then output(n,k) = sum_i{ sum_j { W(i,k)*M(j,k)*H(n,i+j*nw) } }",
     "MULTI LINE\nHELP FOR USERS"
     );
 
 TransposedDoubleProductVariable::TransposedDoubleProductVariable()
-    /* ### Initialize all fields to their default value */
-{
-    // ### You may (or not) want to call build_() to finish building the object
-    // ### (doing so assumes the parent classes' build_() have been called too
-    // ### in the parent classes' constructors, something that you must ensure)
-}
-
-// constructors from input variables.
-// NaryVariable constructor (inherited) takes a VarArray as argument.
-// You can either construct from a VarArray (if the number of parent Var is not
-// fixed, for instance), or construct a VarArray from Var by operator &:
-// input1 & input2 & input3. You can also do both, uncomment what you prefer.
-
-// TransposedDoubleProductVariable::TransposedDoubleProductVariable(const VarArray& vararray)
-// ### replace with actual parameters
-//  : inherited(vararray, this_variable_length, this_variable_width),
-//    parameter(default_value),
-//    ...
-// {
-//     // ### You may (or not) want to call build_() to finish building the
-//     // ### object
-// }
+{}
 
 TransposedDoubleProductVariable::TransposedDoubleProductVariable(Var w, Var m, Var h)
-
-// ### replace with actual parameters
     : inherited(w & m & h, h.length(), w.width())
-//    parameter(default_value),
-//    ...
 {
-//     // ### You may (or not) want to call build_() to finish building the
-//     // ### object
+    build_();
 }
 
-// constructor from input variable and parameters
-// TransposedDoubleProductVariable::TransposedDoubleProductVariable(const VarArray& vararray
-//                            param_type the_parameter, ...)
-// ### replace with actual parameters
-//  : inherited(vararray, this_variable_length, this_variable_width),
-//    parameter(the_parameter),
-//    ...
-// {
-//     // ### You may (or not) want to call build_() to finish building the
-//     // ### object
-// }
-
-// constructor from input variable and parameters
-// TransposedDoubleProductVariable::TransposedDoubleProductVariable(Var input1, Var input2,
-//                            Var input3, ...,
-//                            param_type the_parameter, ...)
-// ### replace with actual parameters
-//  : inherited(input1 & input2 & input3 & ...,
-//              this_variable_length, this_variable_width),
-//    parameter(the_parameter),
-//    ...
-// {
-//     // ### You may (or not) want to call build_() to finish building the
-//     // ### object
-// }
 
 void TransposedDoubleProductVariable::recomputeSize(int& l, int& w) const
 {
-    // ### usual code to put here is:
     
         if (varray.size() > 0) {
               l = varray[2].length(); // the computed length of this Var
-             w = varray[0].length(); // the computed width
+             w = varray[0].width(); // the computed width
         } else
             l = w = 0;
-    
 }
 
 // ### computes value from varray values
@@ -235,6 +182,13 @@ void TransposedDoubleProductVariable::build_()
     // ###    options have been modified.
     // ### You should assume that the parent class' build_() has already been
     // ### called.
+
+    if (varH().width() != varW().length()*varM().length())
+        PLERROR("The width of matrix H incompatible with lengths of matrix W and M in TranposedDoubleProductVariable");
+    if (varM().width() != varW().width())
+        PLERROR("Matrix W and M must have the same width in TranposedDoubleProduct");
+
+
 }
 
 

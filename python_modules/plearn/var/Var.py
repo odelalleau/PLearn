@@ -117,11 +117,13 @@ def addMultiSoftmaxRLayer(input, ing, igs, ong, ogs, tighed=True, use_double_pro
             return hidden, cost, (W, Wr)
 
     else: # use double product
-        M = Var(ing*igs, ong, 'U', -1/ing/igs, 1/ing/igs, False)
-        W = Var(ing*igs, ogs, 'U', -1/ing/igs, 1/ing/igs, False)
+       # M = Var(ing*igs, ong, 'U', -1/ing/igs, 1/ing/igs, False)
+       # W = Var(ing*igs, ogs, 'U', -1/ing/igs, 1/ing/igs, False)
+        M = Var(ong, ing*igs, 'U', -1/ing/igs, 1/ing/igs, False)
+        W = Var(ogs, ing*igs, 'U', -1/ing/igs, 1/ing/igs, False)
         hidden = input.doubleProduct(W,M).multiSoftMax(ogs)
         if tighed:
-            cost = -hidden.transposeDoubleProduct(W,M).multiLogSoftMax(igs).dot(input)
+            cost = -hidden.transposeDoubleProduct(W,M).multiLogSoftMax(igs).dot(input)            
             return hidden, cost, (W,M)
         else:
             Mr = Var()

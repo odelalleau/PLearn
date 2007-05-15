@@ -46,9 +46,15 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     MultiMaxVariable,
-    "ONE LINE USER DESCRIPTION",
-    "MULTI LINE\nHELP FOR USERS"
-    );
+    "Different max variables done on separate groups of the input",
+"This variables computes a max functions (softmax, log-softmax, hardmax, etc., determined by the field computation_type)" 
+"\non subvectors of the input, which lengths are defined by the field groupsizes (or groupsize if all the groups will have the same size)." 
+"\n"
+"\nex :"
+"\nif groupsizes = [1,2,3], and computation_type = 'S' (for softmax), and the input vector [1,2,3,4,5,6],"
+"\nthe result will be [softmax([1]), softmax([2,3]), softmax([4,5,6])]"
+"\n"
+"\nnote : in that example matValue.width() of the variable must be 1+2+3=6" );
 
 
 //! Constructor
@@ -59,8 +65,6 @@ MultiMaxVariable::MultiMaxVariable(Variable* input, TVec<int> groupsizes, char c
 {
     build_();
 }
-
-
 
 
 MultiMaxVariable::MultiMaxVariable(Variable* input, int groupsize, char computation_type)
@@ -209,13 +213,9 @@ void MultiMaxVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     // ### that you wish to be deepCopied rather than
     // ### shallow-copied.
     // ### ex:
-    // deepCopyField(trainvec, copies);
-
+    deepCopyField(groupsizes, copies);
     // ### If you want to deepCopy a Var field:
-    // varDeepCopyField(somevariable, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("MultiMaxVariable::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // varDeepCopyField(somevariable, copies);   
 }
 
 void MultiMaxVariable::declareOptions(OptionList& ol)
@@ -231,11 +231,11 @@ void MultiMaxVariable::declareOptions(OptionList& ol)
     // ### ex:
     declareOption(ol, "groupsizes", &MultiMaxVariable::groupsizes,
                   OptionBase::buildoption,
-                  "this telles how to \"divide\" our diffrents inputs\nex: groupsizes = [1,2,3] says we divide our output like this :\n[x1],[x2,x3],[x4,x5,x6] and apply a maximum algorithm on each group separately");
+                  "this tells how to \"divide\" our diffrents inputs\nex: groupsizes = [1,2,3] says we divide our output like this :\n[x1],[x2,x3],[x4,x5,x6] and apply a maximum algorithm on each group separately");
 
     declareOption(ol, "groupsize", &MultiMaxVariable::groupsize,
                   OptionBase::buildoption,
-                  "");
+                  "shortcut if you want all groupsizes to be equals, for example if you set the value of this option to be 3, it will make groupsizes = [3,3,...,3]");
 
     declareOption(ol, "computation_type", &MultiMaxVariable::computation_type,
                   OptionBase::buildoption,

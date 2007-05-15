@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// ProbabilityPairsVariable.cc
+// SoftSoftMaxVariable.cc
 //
 // Copyright (C) 2007 Simon Lemieux, Pascal Vincent
 //
@@ -34,94 +34,102 @@
 
 // Authors: Simon Lemieux, Pascal Vincent
 
-/*! \file ProbabilityPairsVariable.cc */
+/*! \file SoftSoftMaxVariable.cc */
 
 
-#include "ProbabilityPairsVariable.h"
+#include "SoftSoftMaxVariable.h"
 
 namespace PLearn {
 using namespace std;
 
-/** ProbabilityPairsVariable **/
+/** SoftSoftMaxVariable **/
 
 PLEARN_IMPLEMENT_OBJECT(
-    ProbabilityPairsVariable,
-    " Let define f(x) = (x-min)/(max-min) for min<=x<=max, then this variable is defined by [x1,x2,...,xn]  |->  [ f(x1), 1-f(x1), f(x2), 1-f(x2), ... , f(xn), 1-f(xn) ]",
-    "MULTI LINE\nHELP FOR USERS"
+    SoftSoftMaxVariable,
+    "Kind of softmax variable",
+    "Let X:=input1, A:=input2\nThen output(n,k) = exp(X(n,k))/(sum_j{exp[X(n,j)+A(k,j)]})"
     );
 
-ProbabilityPairsVariable::ProbabilityPairsVariable()
-    : min(0.), max(1.)
-{}
 
-ProbabilityPairsVariable::ProbabilityPairsVariable(Variable* input, real min, real max)
-    : inherited(input, input->length(), input->width()*2),
-      max(max),min(min)
-
+// constructor from input variables.
+SoftSoftMaxVariable::SoftSoftMaxVariable(Variable* input1, Variable* input2)
+    : inherited(input1, input2, input1->length(), input1->width())
 {
     build_();
 }
 
-ProbabilityPairsVariable::ProbabilityPairsVariable(Variable* input, real max)
-    :inherited(input, input->length(), input->width()*2),
-     min(0.), max(max)
-{
-    build_();
-}
 
-ProbabilityPairsVariable::ProbabilityPairsVariable(Variable* input)
-    :inherited(input, input->length(), input->width()*2),
-     min(0.), max(1.)
+void SoftSoftMaxVariable::recomputeSize(int& l, int& w) const
 {
-    build_();
-}
+    // ### usual code to put here is:
 
-void ProbabilityPairsVariable::recomputeSize(int& l, int& w) const
-{   
-        if (input) {
-            l = input->length(); // the computed length of this Var
-            w = input->width()*2; // the computed width
+        if (input1) {
+            l = input1->length(); // the computed length of this Var
+            w = input1->width(); // the computed width
         } else
             l = w = 0;
 }
 
-// ### computes value from input's value
-void ProbabilityPairsVariable::fprop()
+// ### computes value from input1 and input2 values
+void SoftSoftMaxVariable::fprop()
 {
-    real prob;
-    for(int n=0; n<input->length(); n++)
-        for(int i=0; i<input->width(); i++)
+    Mat X = input1->matValue,
+        A = input2->matValue;
+
+    real sum;
+
+    for (int n=0; n<X.length(); n++)    
+        for (int k=0; k<X.width(); k++)
         {
-            prob = (input->matValue(n,i)-min)/(max-min);
-            matValue(n,2*i) = prob;
-            matValue(n,2*i+1) = 1.-prob;
-        }
+            sum=0;
+            for (int i=0; i<X.width(); i++)
+                sum += safeexp(X(n,i) + A(k,i));
+            matValue(n,k) = safeexp(X(n,k))/sum;
+        }    
 }
 
-// ### computes input's gradient from gradient
-void ProbabilityPairsVariable::bprop()
+// ### computes input1 and input2 gradients from gradient
+void SoftSoftMaxVariable::bprop()
 {
-    for(int n=0; n<length(); n++)
-        for(int i=0; i<input->width(); i++)
-        {
-            input->matGradient(n,i) += 1./(max-min)*(matGradient(n,2*i) - matGradient(n,2*i+1));
-        }
+    Mat X = input1->matValue,
+        A = input2->matValue,
+        grad_X = input1->matGradient,
+        grad_A = input2->matGradient;
+
+    real temp;
+
+    //chacun des exemples de X
+    for (int n=0; n<X.length(); n++)
+        //chaque coordonné dun exemple //correspond au gradient
+        for (int k=0; k<X.width(); k++)
+            //même exemple, coordonnée aussi // correspond à un exemple
+            for (int j=0; j<X.width(); j++)
+            {
+                temp = matGradient(n,j)*matValue(n,j)*matValue(n,j)*safeexp(X(n,k)+A(j,k))/safeexp(X(n,j));
+
+                if(k==j)
+                    grad_X(n,k) += matGradient(n,j)*matValue(n,k)*(1.-matValue(n,k));
+                else
+                    grad_X(n,k) -= temp;                    
+                                                                                            
+                grad_A(j,k) -= temp;
+            }
 }
 
 // ### You can implement these methods:
-// void ProbabilityPairsVariable::bbprop() {}
-// void ProbabilityPairsVariable::symbolicBprop() {}
-// void ProbabilityPairsVariable::rfprop() {}
+// void SoftSoftMaxVariable::bbprop() {}
+// void SoftSoftMaxVariable::symbolicBprop() {}
+// void SoftSoftMaxVariable::rfprop() {}
 
 
 // ### Nothing to add here, simply calls build_
-void ProbabilityPairsVariable::build()
+void SoftSoftMaxVariable::build()
 {
     inherited::build();
     build_();
 }
 
-void ProbabilityPairsVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+void SoftSoftMaxVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
@@ -135,10 +143,10 @@ void ProbabilityPairsVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     // varDeepCopyField(somevariable, copies);
 
     // ### Remove this line when you have fully implemented this method.
-    PLERROR("ProbabilityPairsVariable::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    PLERROR("SoftSoftMaxVariable::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
-void ProbabilityPairsVariable::declareOptions(OptionList& ol)
+void SoftSoftMaxVariable::declareOptions(OptionList& ol)
 {
     // ### Declare all of this object's options here.
     // ### For the "flags" of each option, you should typically specify
@@ -148,22 +156,17 @@ void ProbabilityPairsVariable::declareOptions(OptionList& ol)
     // ### You can also combine flags, for example with OptionBase::nosave:
     // ### (OptionBase::buildoption | OptionBase::nosave)
 
-    
-    declareOption(ol, "min", &ProbabilityPairsVariable::min,
-                  OptionBase::buildoption,
-                  "The lower bound a value of the input should be. It will be used to calculate the corresponding probability of each input.");
-
-    declareOption(ol, "max", &ProbabilityPairsVariable::max,
-                  OptionBase::buildoption,
-                  "analog to min");
-
-    
+    // ### ex:
+    // declareOption(ol, "myoption", &SoftSoftMaxVariable::myoption,
+    //               OptionBase::buildoption,
+    //               "Help text describing this option");
+    // ...
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
 
-void ProbabilityPairsVariable::build_()
+void SoftSoftMaxVariable::build_()
 {
     // ### This method should do the real building of the object,
     // ### according to set 'options', in *any* situation.
@@ -175,6 +178,9 @@ void ProbabilityPairsVariable::build_()
     // ###    options have been modified.
     // ### You should assume that the parent class' build_() has already been
     // ### called.
+
+    if (input2.length() != input1.width() || input2.width() != input1.width())
+        PLERROR("Length and width of input2 must be equal to width of input1 in SoftSoftMaxVariable");
 }
 
 

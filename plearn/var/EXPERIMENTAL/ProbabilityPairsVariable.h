@@ -2,7 +2,7 @@
 
 // ProbabilityPairsVariable.h
 //
-// Copyright (C) 2007 Simon Lemieux
+// Copyright (C) 2007 Simon Lemieux, Pascal Vincent
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Simon Lemieux
+// Authors: Simon Lemieux, Pascal Vincent
 
 /*! \file ProbabilityPairsVariable.h */
 
@@ -48,9 +48,10 @@ using namespace std;
 /*! * ProbabilityPairsVariable * */
 
 /**
- * The first sentence should be a BRIEF DESCRIPTION of what the class does.
- * Place the rest of the class programmer documentation here.  Doxygen supports
- * Javadoc-style comments.  See http://www.doxygen.org/manual.html
+ *  Let define f(x) = (x-min)/(max-min) for min<=x<=max, then this variable is defined by [x1,x2,...,xn]  |->  [ f(x1), 1-f(x1), f(x2), 1-f(x2), ... , f(xn), 1-f(xn) ]
+ *  
+ *  This can seen as pairs of probabilities 
+ *
  *
  * @todo Write class to-do's here if there are any.
  *
@@ -67,19 +68,19 @@ public:
     //! ### declare public option fields (such as build options) here
     //! Start your comments with Doxygen-compatible comments such as //!
 
-    
-    //! same as min but for upper bound
-    real max;
 
     //! the lower bound a value of the input should be
     //! it will be used to calculate the corresponding probability of each input
     real min;
+    
+    //! same as min but for upper bound
+    real max;
 
 public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor, usually does nothing
-    ProbabilityPairsVariable() {}
+    ProbabilityPairsVariable();
 
 
     // ### If your class has parameters, you probably want a constructor that
