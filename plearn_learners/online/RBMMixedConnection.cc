@@ -266,8 +266,8 @@ void RBMMixedConnection::setAsUpInputs( const Mat& inputs ) const
 
     for( int i=0 ; i<n_up_blocks ; i++ )
     {
-        Mat sub_inputs = input.subMatColumns( up_init_positions[i],
-                                              up_block_sizes[i] );
+        Mat sub_inputs = inputs.subMatColumns( up_init_positions[i],
+                                               up_block_sizes[i] );
 
         for( int j=0 ; j<n_down_blocks ; j++ )
             if( sub_connections(i,j) )

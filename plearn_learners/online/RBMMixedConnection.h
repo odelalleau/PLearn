@@ -85,7 +85,7 @@ public:
 
     virtual void setAsUpInputs( const Mat& inputs ) const;
 
-    virtual void setAsDownInputs( const Mat& input ) const:
+    virtual void setAsDownInputs( const Mat& input ) const;
 
     //! Accumulates positive phase statistics to *_pos_stats
     virtual void accumulatePosStats( const Vec& down_values,
