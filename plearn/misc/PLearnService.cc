@@ -49,7 +49,6 @@
 #include <plearn/io/pl_log.h>
 #include <plearn/io/Poll.h>
 
-#ifndef BUGGED_SERVER
 namespace PLearn {
 using namespace std;
 
@@ -444,7 +443,6 @@ void PLearnService::progress_callback(PP<RemotePLearnServer> server, unsigned in
 
 
 } // end of namespace PLearn
-#endif
 
 
 /*

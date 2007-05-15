@@ -42,7 +42,6 @@
 /*! \file RemotePLearnServer.cc */
 
 
-#ifndef BUGGED_SERVER
 #include "RemotePLearnServer.h"
 #include "PLearnService.h"
 #include <plearn/io/pl_log.h>
@@ -263,7 +262,6 @@ RemotePLearnServer::~RemotePLearnServer()
 
 
 } // end of namespace PLearn
-#endif
 
 
 /*

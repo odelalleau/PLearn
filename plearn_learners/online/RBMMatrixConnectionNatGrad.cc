@@ -114,7 +114,7 @@ void RBMMatrixConnectionNatGrad::update( const Mat& pos_down_values, // v_0
     PLASSERT( neg_up_values.width() == weights.length() );
     PLASSERT( pos_down_values.width() == weights.width() );
     PLASSERT( neg_down_values.width() == weights.width() );
-    if( momentum == 0. )
+    if( momentum == real(0.) )
     {
         // We use the average gradient over a mini-batch.
         real mbnorm = 1. / pos_down_values.length();

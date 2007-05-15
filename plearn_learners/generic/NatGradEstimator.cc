@@ -225,8 +225,8 @@ void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
     A << G;
     real rn2 = rn*rn;
     real coef = rn2*lambda;
-    for (int i=0;i<=n;i++)
-        A(i,i) += coef;
+    for (int j=0;j<=n;j++)
+        A(j,j) += coef;
     Mat r_row = r.toMat(1,n+1);
     int status = lapackSolveLinearSystem(A,r_row,pivots);
     if (status!=0)
