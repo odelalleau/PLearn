@@ -5,8 +5,8 @@ export OMP_NUM_THREADS=1
 SIZE=( 100 200 400 )
 PROGEXT=( -opt -dbg -safeopt -checkopt -opt64 )
 TITLE="Compare different compilation optimisation flags with default blas on $HOSTNAME"
-RESFILE=RES/optcompare_${HOSTNAME%.iro.umontreal.ca}_${BP//.\//_}
-APPENDRESULT="NO" #"YES" append result to old one, "NO" erase old result
+DATE=`date +%s`
+RESFILE=RES/optcompare_${HOSTNAME%.iro.umontreal.ca}_${BP//.\//_}_${DATE}
 
 function f(){
 #param1 time prog

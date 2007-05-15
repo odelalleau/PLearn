@@ -1,0 +1,10 @@
+
+ShiftAndRescaleVMatrix(
+ automatic = 1
+ underlying_vmat = AutoVMatrix(
+  specification = "PLEARNDIR:speedtest/letter.amat"
+  inputsize = 16
+  targetsize = 1
+  weightsize = 0
+  )
+)

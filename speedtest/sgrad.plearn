@@ -1,0 +1,121 @@
+# ARGUMENTS:
+# task = prefix of ${task}_{train,valid,test}.vmat files)
+# nout = nb outputs (= nb classes)
+# nh1 = nb hidden in 1st hidden layer (can be 0 for absent layer)
+# nh2 = nb hidden in 2nd hidden layer (can be 0 for absent layer)
+# nh3  = nb hidden in 3rd hidden layer (can be 0 for absent layer)
+# slr = initial learning rate
+# dc = learning rate decay factor
+# n = number of online training iterations (examples to see)
+# epoch = number of examples forming an "epoch" (when to save model, compute error)
+# seed = random generator seed
+# mbs = nnet minibatch size
+#
+$DEFINE{learner}{sgrad}
+$DEFINE{results}{results_task=${task}_learner=${learner}}
+$DEFINE{var_names_plearner}{learner nout nh1 init_lrate lrate_decay n_train_it epoch seed}
+$DEFINE{var_values_plearner}{${learner} ${nout} ${nh1} ${nh2} ${nh3} ${slr} ${dc} ${n} ${epoch} ${seed} ${mbs}}
+$DEFINE{expdir_plearner}{${learner}-nout=${nout}-nh1=${nh1}-slr=${slr}-dc=${dc}-n_train_it=${n}-epoch=${epoch}-seed=${seed}}
+$DEFINE{expdir}{exp/${task}-${expdir_plearner}-${DATETIME}}
+#$DEFINE{expdir}{exp/${task}}
+$EVALUATE{expdir}
+
+ShellScript(
+  shell_commands = [ "mkdir -p ${expdir}" 
+                     "cp ${learner}.plearn ${expdir}"
+                   ]
+)
+
+PTester(
+
+ learner = 
+  HyperLearner(
+
+   tester = PTester(
+
+    splitter =  ExplicitSplitter(
+      splitsets = 1 1 [
+        *1->AutoVMatrix( specification = "${task}_train.vmat" )
+        ]
+      )
+    statnames = [ "E[train.E[train_seconds]]" "E[train.E[cum_train_seconds]]"
+                ]
+    save_learners = 0
+    save_initial_tester = 0
+    provide_learner_expdir = 1
+    )
+
+  option_fields = [ "nstages" ]
+
+  dont_restart_upon_change = [ "nstages" ]
+
+  learner = 
+  NatGradNNet(
+    seed = ${seed}
+    noutputs = ${nout}
+    hidden_layer_sizes = [${nh1} ${nh2} ${nh3}]
+    output_type = "NLL"
+    nstages = 0
+    init_lrate = ${slr}
+    lrate_decay = ${dc}
+    minibatch_size = ${mbs}
+    verbosity=1
+    report_progress = 0
+   )
+  
+  strategy = [
+        HyperOptimize(
+          which_cost = 1
+          oracle =
+          EarlyStoppingOracle(
+            option = "nstages"
+            range = [ ${epoch} ${n} ${epoch} ]
+            max_degraded_steps = ${n}
+            )
+          provide_tester_expdir = 1
+          sub_strategy = [
+            ]
+          )
+        
+        ]
+  provide_strategy_expdir = 1
+  save_final_learner = 0
+  )
+
+ splitter = ExplicitSplitter(
+      splitsets = 1 2 [
+        *1->AutoVMatrix( specification = "${task}_train.vmat" )
+        AutoVMatrix( specification = "${task}_valid.vmat" )
+        ]
+   )
+
+ statnames = [
+   "E[test1.E[NLL]]" # valid
+   "E[test1.E[class_error]]" # valid
+   "E[train.E[E[train.E[train_seconds]]]]"
+   "E[train.E[E[train.E[cum_train_seconds]]]]"
+   ]
+ 
+ save_test_outputs = 0  ;
+ save_test_costs = 0;
+ save_learners = 0 ;
+ save_initial_tester = 0;
+
+ provide_learner_expdir = 1;
+
+ expdir = "${expdir}"
+
+  final_commands = [
+        "echo \"makeresults ${results} ${expdir}/global_stats.pmat plearner ${var_names_plearner} ; appendresults ${expdir} ${results}.amat ${task} ${var_values_plearner} \" > ${expdir}/compile_results"
+        "chmod a+x ${expdir}/compile_results"
+    ]
+#    "makeresults ${results} ${expdir}/global_stats.pmat plearner ${var_names_plearner}"
+#    "appendresults ${expdir} ${results}.amat ${task} ${var_values_plearner}"
+#    ]
+# puis faire
+#  find -name "compile_results" -exec \{} \; ; find -name "compile_results" -exec rm -f \{} \;  
+# pour compiler tous les resultats
+
+ enforce_clean_expdir = 0
+
+); # end of PTester

@@ -4,8 +4,9 @@ BP=$1 #BASEPROG
 export OMP_NUM_THREADS=1
 SIZE=( 100 200 400 800 1023 1024 )
 TITLE="Comparaison of execution speed of float vs double program on $HOSTNAME"
-RESFILE=RES/floatvsdouble_${HOSTNAME%.iro.umontreal.ca}_${BP//.\//_}
-APPENDRESULT="NO" #"YES" append result to old one, "NO" erase old result
+DATE=`date +%s`
+RESFILE=RES/floatvsdouble_${HOSTNAME%.iro.umontreal.ca}_${BP//.\//_}_${DATE}
+
 
 function f(){
 #param1 time prog

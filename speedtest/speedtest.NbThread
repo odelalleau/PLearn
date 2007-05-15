@@ -11,8 +11,8 @@ fi
 SIZE=( 1000 )
 NBTHREADS=( 1 2 4 8 16 ) 
 TITLE="Comparaison of wall execution time for different number of thread for ${BP} on $HOSTNAME"
-RESFILE=RES/nbthread_${HOSTNAME%.iro.umontreal.ca}_${BP//.\//_}
-APPENDRESULT="NO" #"YES" append result to old one, "NO" erase old result
+DATE=`date +%s`
+RESFILE=RES/nbthread_${HOSTNAME%.iro.umontreal.ca}_${BP//.\//_}_${DATE}
 
 
 function f(){
@@ -41,14 +41,9 @@ for p in "${PROG[@]}"
   touch ${RESFILE}_${pname}
   touch ${RESFILE}_${pname}.log
   touch ${RESFILE}_${pname}.res
-  if [ $APPENDRESULT == "YES" ]; then
-      echo "Will append result to old result"
-  else
-      echo "Erase old result"
-      echo ""  > ${RESFILE}_${pname}
-      echo ""  > ${RESFILE}_${pname}.log
-      echo ""  > ${RESFILE}_${pname}.res
-  fi
+  echo ""  > ${RESFILE}_${pname}
+  echo ""  > ${RESFILE}_${pname}.log
+  echo ""  > ${RESFILE}_${pname}.res
   for t in "${NBTHREADS[@]}"
     do
     echo "# ${t} threads" >> ${RESFILE}_${pname}.res

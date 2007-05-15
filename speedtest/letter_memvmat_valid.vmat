@@ -1,0 +1,10 @@
+MemoryVMatrix(
+source = SubVMatrix(
+  source=SubVMatrix( 
+    metadatadir = "HOME:tmp/letter.metadata"
+    length=2000
+    istart=16000
+    source = AutoVMatrix(  specification = "PLEARNDIR:speedtest/norm_letter.vmat" )
+  )
+)
+)
