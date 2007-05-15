@@ -93,6 +93,7 @@ void RBMBinomialLayer::generateSamples()
 
     computeExpectations();
     int mbatch_size = expectations.length();
+    PLASSERT( samples.width() == size );
     samples.resize(mbatch_size, size);
 
     for (int k = 0; k < mbatch_size; k++) {
@@ -125,6 +126,7 @@ void RBMBinomialLayer::computeExpectations()
         return;
 
     int mbatch_size = activations.length();
+    PLASSERT( expectations.width() == size );
     expectations.resize(mbatch_size, size);
     for (int k = 0; k < mbatch_size; k++)
         for (int i = 0 ; i < size ; i++)
