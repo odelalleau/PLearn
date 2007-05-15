@@ -704,6 +704,9 @@ void Object::declareMethods(RemoteMethodMap& rmm)
                            "- \"plearn_binary\": use the PLearn binary format, which can be\n"
                            "  more efficient for large objects\n")));
 
+    declareMethod(rmm, "build", &Object::build,
+                  (BodyDoc("Build newly created object (after setting options).\n")));
+
     rmm.insert(
         "getOption", 1,
         new ObjectTrampolineGetOption(

@@ -107,7 +107,7 @@ inline void operator<<(const TVec<T>& m1, const TVec<T>& m2)
 {
 #ifdef BOUNDCHECK
     if(m1.size()!=m2.size())
-        PLERROR("In operator<<(m1,m2) the 2 matrices must have the same number of elements (%d != %d)", m1.size(), m2.size());
+        PLERROR("In operator<<(v1,v2) the 2 TVecs must have the same number of elements (%d != %d)", m1.size(), m2.size());
 #endif
     if (m1.isNotEmpty())
         copy(m2.begin(), m2.end(), m1.begin());

@@ -170,12 +170,7 @@ Object* ConvertFromPyObject<Object*>::convert(PyObject* pyobj, bool print_traceb
     Py_DECREF(cptr);
     return obj;
 }
-/*
-Object& ConvertFromPyObject<Object&>::convert(PyObject* pyobj, bool print_traceback)
-{
-    return *ConvertFromPyObject<Object*>::convert(pyobj, print_traceback);
-}
-*/
+
 void ConvertFromPyObject<Vec>::convert(PyObject* pyobj, Vec& v, bool print_traceback)
 {
     // NA_InputArray possibly creates a well-behaved temporary (i.e. not
@@ -227,9 +222,17 @@ Mat ConvertFromPyObject<Mat>::convert(PyObject* pyobj, bool print_traceback)
 
 VMat ConvertFromPyObject<VMat>::convert(PyObject* pyobj, bool print_traceback)
 {
-    Mat m;
-    ConvertFromPyObject<Mat>::convert(pyobj, m, print_traceback);
-    return m;
+    try
+    {
+        return static_cast<VMatrix*>(
+            ConvertFromPyObject<Object*>::convert(pyobj, print_traceback));
+    }
+    catch(...)
+    {
+        Mat m;
+        ConvertFromPyObject<Mat>::convert(pyobj, m, print_traceback);
+        return m;
+    }
 }
 
 
@@ -377,15 +380,16 @@ PyObject* PythonObjectWrapper::python_del(PyObject* self, PyObject* args)
         PLERROR("in PythonObjectWrapper::python_del : "
                 "deleting obj. for which no python class exists!");
     --clit->second.nref;
+
+    /*
+    //don't delete python classes
     if(0 == clit->second.nref)
     {
-        //perr << "*#*#*# python class " << classname << " deleted" << endl;
         m_pypl_classes.erase(classname);//cleanup
     }
+    */
 
     obj->unref();//python no longer references this obj.
-
-    //perr << "**** Python object deleted! " << (void*)obj << '/' << (void*)args_tvec[0] << endl;
 
     m_wrapped_objects.erase(obj);
     return PythonObjectWrapper().getPyObject();//None
@@ -494,8 +498,6 @@ PyObject* PythonObjectWrapper::newPyObject(const Object* x)
             + classname + "(WrappedPLearnObject):\n"
             "\tpass\n\n";
 
-        //pout << "** creating python class " << classname << endl;
-
         PyRun_String(derivcode.c_str(), Py_file_input, pyenv, pyenv);
         env= PythonObjectWrapper(pyenv, transfer_ownership).as<env_t>();
         clit= env.find(classname);
@@ -599,8 +601,6 @@ PyObject* PythonObjectWrapper::newPyObject(const Object* x)
     x->ref();
 
     m_wrapped_objects[x]= the_obj;
-
-    //pout << "** python instance of " << (void*)x << " is " << (void*)the_obj << endl;
 
     return the_obj;
 }

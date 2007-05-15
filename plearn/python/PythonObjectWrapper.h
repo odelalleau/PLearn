@@ -59,6 +59,7 @@
 #include <plearn/base/tostring.h>
 #include <plearn/base/PMemPool.h>
 #include <plearn/base/TypeTraits.h>
+#include <plearn/base/tuple.h>
 
 #ifdef USEFLOAT
 #define tReal tFloat32
@@ -436,6 +437,22 @@ public:
     //! Generic PP: wrap pointed object
     template <class T>
     static PyObject* newPyObject(const PP<T>&);
+    
+    //! tuples (1 to 7 elts.)
+    template <class T>
+    static PyObject* newPyObject(const tuple<T>&);
+    template <class T, class U>
+    static PyObject* newPyObject(const tuple<T, U>&);
+    template <class T, class U, class V>
+    static PyObject* newPyObject(const tuple<T, U, V>&);
+    template <class T, class U, class V, class W>
+    static PyObject* newPyObject(const tuple<T, U, V, W>&);
+    template <class T, class U, class V, class W, class X>
+    static PyObject* newPyObject(const tuple<T, U, V, W, X>&);
+    template <class T, class U, class V, class W, class X, class Y>
+    static PyObject* newPyObject(const tuple<T, U, V, W, X, Y>&);
+    template <class T, class U, class V, class W, class X, class Y, class Z>
+    static PyObject* newPyObject(const tuple<T, U, V, W, X, Y, Z>&);
 
     //! Generic vector: create a Python list of those objects recursively
     template <class T>
@@ -681,6 +698,83 @@ PyObject* PythonObjectWrapper::newPyObject(const std::pair<T,U>& data)
     PyObject* newtuple = PyTuple_New(2);
     PyTuple_SET_ITEM(newtuple, 0, newPyObject(data.first));
     PyTuple_SET_ITEM(newtuple, 1, newPyObject(data.second));
+    return newtuple;
+}
+
+template <class T>
+PyObject* PythonObjectWrapper::newPyObject(const tuple<T>& data)
+{
+    PyObject* newtuple= PyTuple_New(1);
+    PyTuple_SET_ITEM(newtuple, 0, newPyObject(get<0>(data)));
+    return newtuple;
+}
+
+template <class T, class U>
+PyObject* PythonObjectWrapper::newPyObject(const tuple<T, U>& data)
+{
+    PyObject* newtuple= PyTuple_New(2);
+    PyTuple_SET_ITEM(newtuple, 0, newPyObject(get<0>(data)));
+    PyTuple_SET_ITEM(newtuple, 1, newPyObject(get<1>(data)));
+    return newtuple;
+}
+
+template <class T, class U, class V>
+PyObject* PythonObjectWrapper::newPyObject(const tuple<T, U, V>& data)
+{
+    PyObject* newtuple= PyTuple_New(3);
+    PyTuple_SET_ITEM(newtuple, 0, newPyObject(get<0>(data)));
+    PyTuple_SET_ITEM(newtuple, 1, newPyObject(get<1>(data)));
+    PyTuple_SET_ITEM(newtuple, 2, newPyObject(get<2>(data)));
+    return newtuple;
+}
+
+template <class T, class U, class V, class W>
+PyObject* PythonObjectWrapper::newPyObject(const tuple<T, U, V, W>& data)
+{
+    PyObject* newtuple= PyTuple_New(4);
+    PyTuple_SET_ITEM(newtuple, 0, newPyObject(get<0>(data)));
+    PyTuple_SET_ITEM(newtuple, 1, newPyObject(get<1>(data)));
+    PyTuple_SET_ITEM(newtuple, 2, newPyObject(get<2>(data)));
+    PyTuple_SET_ITEM(newtuple, 3, newPyObject(get<3>(data)));
+    return newtuple;
+}
+
+template <class T, class U, class V, class W, class X>
+PyObject* PythonObjectWrapper::newPyObject(const tuple<T, U, V, W, X>& data)
+{
+    PyObject* newtuple= PyTuple_New(5);
+    PyTuple_SET_ITEM(newtuple, 0, newPyObject(get<0>(data)));
+    PyTuple_SET_ITEM(newtuple, 1, newPyObject(get<1>(data)));
+    PyTuple_SET_ITEM(newtuple, 2, newPyObject(get<2>(data)));
+    PyTuple_SET_ITEM(newtuple, 3, newPyObject(get<3>(data)));
+    PyTuple_SET_ITEM(newtuple, 4, newPyObject(get<4>(data)));
+    return newtuple;
+}
+
+template <class T, class U, class V, class W, class X, class Y>
+PyObject* PythonObjectWrapper::newPyObject(const tuple<T, U, V, W, X, Y>& data)
+{
+    PyObject* newtuple= PyTuple_New(6);
+    PyTuple_SET_ITEM(newtuple, 0, newPyObject(get<0>(data)));
+    PyTuple_SET_ITEM(newtuple, 1, newPyObject(get<1>(data)));
+    PyTuple_SET_ITEM(newtuple, 2, newPyObject(get<2>(data)));
+    PyTuple_SET_ITEM(newtuple, 3, newPyObject(get<3>(data)));
+    PyTuple_SET_ITEM(newtuple, 4, newPyObject(get<4>(data)));
+    PyTuple_SET_ITEM(newtuple, 5, newPyObject(get<5>(data)));
+    return newtuple;
+}
+
+template <class T, class U, class V, class W, class X, class Y, class Z>
+PyObject* PythonObjectWrapper::newPyObject(const tuple<T, U, V, W, X, Y, Z>& data)
+{
+    PyObject* newtuple= PyTuple_New(7);
+    PyTuple_SET_ITEM(newtuple, 0, newPyObject(get<0>(data)));
+    PyTuple_SET_ITEM(newtuple, 1, newPyObject(get<1>(data)));
+    PyTuple_SET_ITEM(newtuple, 2, newPyObject(get<2>(data)));
+    PyTuple_SET_ITEM(newtuple, 3, newPyObject(get<3>(data)));
+    PyTuple_SET_ITEM(newtuple, 4, newPyObject(get<4>(data)));
+    PyTuple_SET_ITEM(newtuple, 5, newPyObject(get<5>(data)));
+    PyTuple_SET_ITEM(newtuple, 6, newPyObject(get<6>(data)));
     return newtuple;
 }
 

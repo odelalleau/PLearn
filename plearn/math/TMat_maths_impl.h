@@ -966,7 +966,8 @@ T powdistance(const TVec<T>& vec1, const TVec<T>& vec2, double n,
     static T result, diff;
 #ifdef BOUNDCHECK
     if(vec1.length() != vec2.length())
-        PLERROR("In weighted_powdistance: vec1, vec2 should have the same length");
+        PLERROR("In weighted_powdistance: vec1, vec2 should have the same length (%d!=%d)",
+                vec1.length(), vec2.length());
 #endif
     int length = vec1.length();
     if (length == 0)

@@ -40,6 +40,6 @@ class pl:
                 obj= newObject(name+'()')
                 for k in kwargs.keys():
                     obj.__setattr__(k, kwargs[k])
+                obj.build()
                 return obj
-
             return newObj

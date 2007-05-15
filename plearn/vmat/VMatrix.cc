@@ -176,6 +176,11 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
         rmm, "declareFieldNames", &VMatrix::declareFieldNames,
         (BodyDoc("Declares the field names.\n"),
          ArgDoc ("fnames", "TVec of field names.\n")));
+
+    declareMethod(
+        rmm, "fieldNames", &VMatrix::fieldNames,
+        (BodyDoc("Returns the field names.\n"),
+         RetDoc ("TVec of field names.\n")));
     
     declareMethod(
         rmm, "appendRow", &VMatrix::appendRow,
