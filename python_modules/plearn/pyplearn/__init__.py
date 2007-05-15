@@ -156,7 +156,11 @@ def TMat( *args ):
        2. A representation wrapper for other types.
 
     @param args: Arguments may be a list of list or a (I{nrows}, I{ncols},
-    I{content}) tuple where I{content} must be a list of length I{nrows*ncols}.
+    I{content}) tuple where I{content} must be a list of length
+    I{nrows*ncols}. If no arguments are provided, then this function can't
+    assert whether or not one desires a Mat (i.e. TMat<real>); it thus
+    returns an empty wrapper TMat (which cannot be modified in the pyplearn
+    script).
 
     @returns: PyPLearn's TMat representation
     @rtype: A numarray or L{ __TMat} wrapper
@@ -165,6 +169,11 @@ def TMat( *args ):
     
     nargs   = len(args)
     is_real = lambda r: isinstance( r, int   ) or isinstance( r, float )
+
+    # Will return an empty TMat
+    if nargs == 0:
+        args = [ 0, 0, [] ]
+        nargs = 3
     
     # Support for a list of lists
     if nargs == 1:
@@ -175,9 +184,9 @@ def TMat( *args ):
             ncols = len( mat[0] )
 
         # TMat< real >: Will return a numarray
-        if nrows == 0 or is_real( mat[0][0] ):
+        if nrows > 0 and is_real( mat[0][0] ):
             return numarray.array( mat )
-        content = reduce( lambda v1, v2: v1+v2, mat )
+        content = reduce( lambda v1, v2: v1+v2, mat, [] )
 
 
     # Support for (length, width, content) tuples
@@ -188,7 +197,7 @@ def TMat( *args ):
         assert nrows*ncols == len(content)
 
         # TMat< real >: Will return a numarray
-        if nrows==0 or is_real( content[0] ):
+        if nrows > 0 and is_real( content[0] ):
             mat = []
             i = 0
             while i < nrows:
@@ -426,4 +435,8 @@ if __name__ == "__main__":
     print plearn_repr(c)
     print "---"
     print
-    
+
+    print "Three ways of creating an empty TMat"
+    print plearn_repr( TMat() )
+    print plearn_repr( TMat([]) )
+    print plearn_repr( TMat(0, 0, []) )
