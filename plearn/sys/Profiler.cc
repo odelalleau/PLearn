@@ -128,7 +128,7 @@ void inline Profiler::pl_profile_start(const string& name_of_piece_of_code){}
 void Profiler::pl_profile_end(const string& name_of_piece_of_code){
         Profiler::end(name_of_piece_of_code);}
 #else
-void inline Profiler::pl_profile_start(const string& name_of_piece_of_code){}
+void inline Profiler::pl_profile_end(const string& name_of_piece_of_code){}
 #endif
 
 #endif
