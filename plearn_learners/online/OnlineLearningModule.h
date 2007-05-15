@@ -131,9 +131,13 @@ public:
                              const Mat& output_gradients);
 
     //! Perform a back propagation step (also updating parameters according to
-    //! the provided gradient). It must be called immediately after a 'fprop'.
-    //! The first argument is the same list as the one provided to the 'fprop'
-    //! method.
+    //! the provided gradient).
+    //! The matrices in 'ports_value' must be the same as the ones given in a
+    //! previous call to 'fprop' (and thus they should in particular contain
+    //! the result of the fprop computation). However, they are not necessarily
+    //! the same as the ones given in the LAST call to 'fprop': if there is a
+    //! need to store an internal module state, this should be done using a
+    //! specific port to store this state.
     //! Each Mat* pointer in the 'ports_gradient' vector can be one of:
     //! - a full matrix  : this is the gradient that is provided to the module,
     //!                    and can be used to compute other ports' gradient.
