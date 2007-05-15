@@ -812,6 +812,57 @@ void RBMMixedConnection::bpropUpdate(const Vec& input, const Vec& output,
     }
 }
 
+void RBMMixedConnection::bpropUpdate(const Mat& inputs, const Mat& outputs,
+                                     Mat& input_gradients,
+                                     const Mat& output_gradients,
+                                     bool accumulate)
+{
+    PLASSERT( inputs.width() == down_size );
+    PLASSERT( outputs.width() == up_size );
+    PLASSERT( output_gradients.width() == up_size );
+
+    int batch_size = inputs.length();
+    PLASSERT( outputs.length() == batch_size );
+    PLASSERT( output_gradients.length() == batch_size );
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradients.width() == down_size &&
+                      input_gradients.length() == batch_size,
+                      "Cannot resize input_gradients AND accumulate into it" );
+    }
+    else
+    {
+        input_gradients.resize( batch_size, down_size );
+        input_gradients.clear();
+    }
+
+    for( int j=0 ; j<n_down_blocks ; j++ )
+    {
+        int init_j = down_init_positions[j];
+        int down_size_j = down_block_sizes[j];
+        Mat sub_inputs = inputs.subMatColumns( init_j, down_size_j );
+        Mat sub_input_gradients = input_gradients.subMatColumns( init_j,
+                                                                 down_size_j );
+
+        for( int i=0 ; i<n_up_blocks ; i++ )
+        {
+            if( sub_connections(i,j) )
+            {
+                int init_i = up_init_positions[i];
+                int up_size_i = up_block_sizes[i];
+                Mat sub_outputs = outputs.subMatColumns( init_i, up_size_i );
+                Mat sub_output_gradients =
+                    output_gradients.subMatColumns( init_i, up_size_i );
+                sub_connections(i,j)->bpropUpdate( sub_inputs, sub_outputs,
+                                                   sub_input_gradients,
+                                                   sub_output_gradients,
+                                                   true );
+            }
+        }
+    }
+}
+
 //! reset the parameters to the state they would be BEFORE starting training.
 //! Note that this method is necessarily called from build().
 void RBMMixedConnection::forget()
