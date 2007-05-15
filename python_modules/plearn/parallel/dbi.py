@@ -465,16 +465,18 @@ class DBICondor(DBIBase):
                 executable     = %s/launch.sh
                 arguments      = sh %s $$(Arch) 
                 universe       = vanilla
-                requirements   = (Arch == "%s")||(Arch == "%s")  
+                requirements   = (Arch == "%s")||(Arch == "%s")
+                #requirements   =  (Cpus == 2)
+                #requirements   =  (Machine == paralisa.iro.umontreal.ca)
                 output         = main.%s.%s.out
                 error          = main.%s.%s.error
                 log            = main.%s.log
                 environment    = LD_LIBRARY_PATH=/u/lisa/local/byhost/%s/lib:/u/lisa/local/%s/lib:/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages/numarray:/cluster/diro/home/lisa/local/%s/lib:/u/lisa/local/%s/lib:/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages/numarray:/cluster/diro/home/lisa/local/%s/lib:/cluster/diro/home/lisa/lib:/usr/local/lib:/soft/lisa/linux/lib;\
                 PATH=/cluster/diro/home/lisa/PLearn/scripts:/soft/lisa/linux/bin:/u/lisa/local/%s/bin:/u/%s/PLearn/commands:/u/%s/PLearn/scripts:/Scripts:/commands:/u/%s/Scripts:/soft/diro/share/moe/bin-i4lx:/u/lamblinp/code/usr/bin:/u/%s/PLearn:/u/%s/PLearn/scripts:/u/%s/PLearn/commands:/usr/kerberos/bin:/usr/GNUstep/System/Tools:/usr/local/bin:/bin:/usr/bin:/usr/X11R6/bin:/opt/diro/bin:/u/lisa/local/linux-i386/bin;\
-                PYTHONPATH=/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages:/cluster/diro/home/lisa/local/%s/lib/python2.3/site-packages:/cluster/diro/home/lisa/local/%s/lib/python2.2/site-packages:/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages/vtk_python:/cluster/diro/home/lisa/local/%s/lib/python2.3/site-packages/Numeric:/u/%s/PLearn/python_modules:/u/%s/projects/apstatsoft/python_modules:/u/%s/PLearn/python_modules;
+                PYTHONPATH=/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages:/cluster/diro/home/lisa/local/%s/lib/python2.3/site-packages:/cluster/diro/home/lisa/local/%s/lib/python2.2/site-packages:/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages/vtk_python:/cluster/diro/home/lisa/local/%s/lib/python2.3/site-packages/Numeric:/cluster/diro/home/lisa/PLearn/python_modules:/u/%s/PLearn/python_modules:/u/%s/projects/apstatsoft/python_modules;
                 #getenv         = True
                 queue
-                ''' % (self.tmp_dir,condor_data, tcplat1,tcplat2,tcplat1,task.unique_id,tcplat1,task.unique_id,tcplat1,get_hostname(),'linux-x86_64','linux-x86_64','linux-x86_64','linux-i386','linux-i386','linux-i386',tplat,u,u,u,u,u,u,tplat,tplat,tplat,tplat,tplat,u,u,u)) )
+                ''' % (self.tmp_dir,condor_data, tcplat1,tcplat2,tcplat1,task.unique_id,tcplat1,task.unique_id,tcplat1,get_hostname(),'linux-x86_64','linux-x86_64','linux-x86_64','linux-i386','linux-i386','linux-i386',tplat,u,u,u,u,u,u,tplat,tplat,tplat,tplat,tplat,u,u)) )
 #                preBatch = ''' + pre_batch_command + '''
 #                postBatch = ''' + post_batch_command +'''
         condor_dat.close()
@@ -493,7 +495,9 @@ class DBICondor(DBIBase):
             echo "PATH: $PATH"
             echo "PYTHONPATH: $PYTHONPATH"
             echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
-            which python            
+            which python
+            echo -n Python version
+            python -V
             echo ${PROGRAM} $@
             $PROGRAM $@'''))
             launch_dat.close()
