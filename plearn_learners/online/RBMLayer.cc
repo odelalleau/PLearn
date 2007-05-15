@@ -152,8 +152,11 @@ void RBMLayer::build_()
     output_size = size;
 
     activation.resize( size );
+    activations.resize( 0, size );
     sample.resize( size );
+    samples.resize( 0, size );
     expectation.resize( size );
+    expectations.resize( 0, size );
     expectation_is_up_to_date = false;
     expectations_are_up_to_date = false;
 
