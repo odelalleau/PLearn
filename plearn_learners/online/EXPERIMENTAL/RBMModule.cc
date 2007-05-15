@@ -266,6 +266,25 @@ void RBMModule::bbpropUpdate(const Vec& input, const Vec& output,
 ////////////
 void RBMModule::forget()
 {
+    PLASSERT( hidden_layer && visible_layer && connection );
+    hidden_layer->forget();
+    visible_layer->forget();
+    connection->forget();
+    if (hidden_layer && !hidden_layer->random_gen) {
+        hidden_layer->random_gen = random_gen;
+        hidden_layer->build();
+    }
+    if (visible_layer && !visible_layer->random_gen) {
+        visible_layer->random_gen = random_gen;
+        visible_layer->build();
+    }
+    if (connection && !connection->random_gen) {
+        connection->random_gen = random_gen;
+        connection->build();
+    }
+    hidden_layer->forget();
+    visible_layer->forget();
+    connection->forget();
 }
 
 //////////////
