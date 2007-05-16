@@ -155,7 +155,7 @@ public:
 #endif
 
     //!  Start recording time for named piece of code if PL_PROFILE is set
-#ifdef PROFILE
+#if defined(PROFILE) && defined(PL_PROFILE)
     static void pl_profile_start(const string& name_of_piece_of_code);
 #else
     static inline void pl_profile_start(const string& name_of_piece_of_code) {}
@@ -164,7 +164,7 @@ public:
     //!  End recording time for named piece of code, and increment
     //!  frequency of occurence and total duration of this piece of code.
     //!  if PL_PROFILE is set
-#ifdef PROFILE
+#if defined(PROFILE) && defined(PL_PROFILE)
     static void pl_profile_end(const string& name_of_piece_of_code);
 #else
     static inline void pl_profile_end(const string& name_of_piece_of_code) { } 
