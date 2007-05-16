@@ -188,6 +188,7 @@ void DoubleProductVariable::build_()
 } // end of namespace PLearn
 
 
+
 /*
   Local Variables:
   mode:c++

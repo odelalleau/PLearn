@@ -59,8 +59,13 @@ class Var:
         return Var(pl.ProbabilityPairsVariable(input=self.v, min=min, max=max))
 
     def matrixProduct(self, W):
-        pass
-        # return Var(pl.MatrixProductVariable(self.v, W)
+        return Var(pl.ProductVariable(self.v, W))
+
+    def matrixTransposeProduct(self, W):
+        return Var(pl.TransposeProductVariable(self.v, W))
+
+    def affineTransform(self, W):
+        return Var(pl.AffineTransformVariable(self.v, W))
 
     def doubleProduct(self, W, M):
         return Var(pl.DoubleProductVariable(varray=[self.v, W, M]))
@@ -88,45 +93,78 @@ class Var:
     
 # RLayer stands for reconstruciton hidden layer
 
-def addSigmoidRLayer(input, nh):
+def addSigmoidRLayer(input, iw, ow):
     """Returns a triple (hidden, reconstruciton_cost, params)"""
-    ni = input.size()
-    W = Var(ni,nh)
-    hidden = input.matrixProduct(W).sigmoid()
+    W = Var(1+iw,ow)
+    hidden = input.affineTransform(W).sigmoid()
     cost = -hidden.matrixTransposeProduct(W).log_sigmoid().dot(input)
     return (hidden, cost, W)
 
-def addMultiSoftmaxRLayer(input, ing, igs, ong, ogs, tighed=True, use_double_product=True):
-    """ing is the input's number of groups
-    igs is the input's group size
-    ong is the output's number of groups
-    ogs is the output's group size
-    If tighed is true we will use the transpose of the recognition weight matrix for reconstruction
-    If use_double_product is false we'll use a regular weight matrix.
-    If it's true, we'll use the decomposition as a 
-    Returns a triple (hidden, params, reonstruction_cost)"""
-    if not use_double_product:
-        W = Var(ing*igs,ong*ogs)
-        hidden = input.matrixProduct(W).multiSoftMax(ogs)
-        if tighed:
-            cost = -hidden.matrixTransposeProduct(W).multiLogSoftMax(igs).dot(input)
-            return hidden, cost, W
-        else:
-            Wr = Var(ong*ogs, ing*igs)
-            cost = -hidden.matrixProduct(Wr).multiLogSoftMax(igs)
-            return hidden, cost, (W, Wr)
 
-    else: # use double product
-       # M = Var(ing*igs, ong, 'U', -1/ing/igs, 1/ing/igs, False)
-       # W = Var(ing*igs, ogs, 'U', -1/ing/igs, 1/ing/igs, False)
-        M = Var(ong, ing*igs, 'U', -1/ing/igs, 1/ing/igs, False)
-        W = Var(ogs, ing*igs, 'U', -1/ing/igs, 1/ing/igs, False)
-        hidden = input.doubleProduct(W,M).multiSoftMax(ogs)
-        if tighed:
-            cost = -hidden.transposeDoubleProduct(W,M).multiLogSoftMax(igs).dot(input)            
-            return hidden, cost, (W,M)
-        else:
-            Mr = Var()
-            Wr = Var()
+
+
+def addMultiSoftMaxDoubleProductTighedRLayer(input, iw, igs, ow, ogs):
+    """iw is the input's width
+    igs is the input's group size
+    ow and ogs analog but for output"""
+    M = Var(ow/ogs, iw, 'U', -1/iw, 1/iw, False)
+    W = Var(ogs, iw, 'U', -1/iw, 1/iw, False)
+    hidden = input.doubleProduct(W,M).multiSoftMax(ogs)
+    cost = -hidden.transposeDoubleProduct(W,M).multiLogSoftMax(igs).dot(input)            
+    return hidden, cost, (W,M)
+
+def addMultiSoftMaxDoubleProductNotTighedRLayer(input, iw, igs, ow, ogs):
+    return 1,2,3
+
+def addMultiSoftMaxSimpleProductTighedRLayer(input, iw, igs, ow, ogs):
+    W = Var(iw, ow)
+    hidden = input.matrixProduct(W).multiSoftMax(ogs)
+    cost = -hidden.matrixTransposeProduct(W).multiLogSoftMax(igs).dot(input)
+    return hidden, cost, W
+
+def addMultiSoftMaxSimpleProductNotTighedRLayer(input, iw, igs, ow, ogs):
+    W = Var(iw,ow)
+    hidden = input.matrixProduct(W).multiSoftMax(ogs)
+    Wr = Var(ow, iw)
+    cost = -hidden.matrixProduct(Wr).multiLogSoftMax(igs)
+    return hidden, cost, (W, Wr)
+
+
+
+
+
+
+## def addMultiSoftmaxRLayer(input, ing, igs, ong, ogs, tighed=True, use_double_product=True):
+##     """ing is the input's number of groups
+##     igs is the input's group size
+##     ong is the output's number of groups
+##     ogs is the output's group size
+##     If tighed is true we will use the transpose of the recognition weight matrix for reconstruction
+##     If use_double_product is false we'll use a regular weight matrix.
+##     If it's true, we'll use the decomposition as a 
+##     Returns a triple (hidden, params, reonstruction_cost)"""
+##     if not use_double_product:
+##         W = Var(ing*igs,ong*ogs)
+##         hidden = input.matrixProduct(W).multiSoftMax(ogs)
+##         if tighed:
+##             cost = -hidden.matrixTransposeProduct(W).multiLogSoftMax(igs).dot(input)
+##             return hidden, cost, W
+##         else:
+##             Wr = Var(ong*ogs, ing*igs)
+##             cost = -hidden.matrixProduct(Wr).multiLogSoftMax(igs)
+##             return hidden, cost, (W, Wr)
+
+##     else: # use double product
+##        # M = Var(ing*igs, ong, 'U', -1/ing/igs, 1/ing/igs, False)
+##        # W = Var(ing*igs, ogs, 'U', -1/ing/igs, 1/ing/igs, False)
+##         M = Var(ong, ing*igs, 'U', -1/ing/igs, 1/ing/igs, False)
+##         W = Var(ogs, ing*igs, 'U', -1/ing/igs, 1/ing/igs, False)
+##         hidden = input.doubleProduct(W,M).multiSoftMax(ogs)
+##         if tighed:
+##             cost = -hidden.transposeDoubleProduct(W,M).multiLogSoftMax(igs).dot(input)            
+##             return hidden, cost, (W,M)
+##         else:
+##             Mr = Var()
+##             Wr = Var()
             
 
