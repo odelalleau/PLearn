@@ -1115,10 +1115,12 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
         }
     }
 
-
-    // DOWNWARD PHASE (the downward phase for top layer is already done above)
-    for( int i=n_layers-3 ; i>=0 ; i-- )
+    // DOWNWARD PHASE (the downward phase for top layer is already done above,
+    // except for the contrastive divergence step in the case where either
+    // 'use_classification_cost' or 'top_layer_joint_cd' is false).
+    for( int i=n_layers-2 ; i>=0 ; i-- )
     {
+        if (i <= n_layers - 3) {
         connections[ i ]->setLearningRate( grad_learning_rate );
         layers[ i+1 ]->setLearningRate( grad_learning_rate );
 
@@ -1132,6 +1134,10 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
                                      expectation_gradients[i],
                                      activation_gradients[i+1],
                                      true);
+        }
+
+        if (i <= n_layers - 3 || !use_classification_cost ||
+                                 !top_layer_joint_cd) {
 
         // N.B. the contrastiveDivergenceStep changes the activation and
         // expectation fields of top layer of the RBM, so it must be
@@ -1155,6 +1161,7 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
         {
             layers[i]->activation << save_layer_activation;
             layers[i]->expectation << save_layer_expectation;
+        }
         }
     }
 
@@ -1327,9 +1334,13 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
         rc.clear();
     }
 
-    // DOWNWARD PHASE (the downward phase for top layer is already done above)
-    for( int i=n_layers-3 ; i>=0 ; i-- )
+    // DOWNWARD PHASE (the downward phase for top layer is already done above,
+    // except for the contrastive divergence step in the case where either
+    // 'use_classification_cost' or 'top_layer_joint_cd' is false).
+
+    for( int i=n_layers-2 ; i>=0 ; i-- )
     {
+        if (i <= n_layers - 3) {
         connections[ i ]->setLearningRate( grad_learning_rate );
         layers[ i+1 ]->setLearningRate( grad_learning_rate );
 
@@ -1343,6 +1354,11 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
                                      expectations_gradients[i],
                                      activations_gradients[i+1],
                                      true);
+
+        }
+
+        if (i <= n_layers - 3 || !use_classification_cost ||
+                !top_layer_joint_cd) {
 
         // N.B. the contrastiveDivergenceStep changes the activation and
         // expectation fields of top layer of the RBM, so it must be
@@ -1381,6 +1397,7 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
         {
             layers[i]->activations << save_layer_activations;
             layers[i]->getExpectations() << save_layer_expectations;
+        }
         }
     }
 
