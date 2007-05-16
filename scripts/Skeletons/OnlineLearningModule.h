@@ -40,6 +40,12 @@ public:
 
     /* Optional
        THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
+    //! Given a batch of inputs, compute the outputs
+    virtual void fprop(const Mat& inputs, Mat& outputs);
+    */
+
+    /* Optional
+       THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
     //! Adapt based on the output gradient, and obtain the input gradient.
     //! The flag indicates wether the input_gradient is accumulated or set.
     //! This method should only be called just after a corresponding
@@ -52,6 +58,12 @@ public:
                              Vec& input_gradient,
                              const Vec& output_gradient,
                              bool accumulate=false);
+
+    //! Batch version
+    virtual void bpropUpdate(const Mat& inputs, const Mat& outputs,
+                             Mat& input_gradients,
+                             const Mat& output_gradients,
+                             bool accumulate=false);
     */
 
     /* Optional
@@ -62,6 +74,10 @@ public:
     //! This version does not obtain the input gradient.
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              const Vec& output_gradient);
+
+    //! Batch version
+    virtual void bpropUpdate(const Mat& inputs, const Mat& outputs,
+                             const Mat& output_gradients);
     */
 
     /* Optional

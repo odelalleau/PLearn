@@ -9,7 +9,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "ONE LINE DESCRIPTION",
     "MULTI-LINE \nHELP");
 
-DERIVEDCLASS::DERIVEDCLASS() :
+DERIVEDCLASS::DERIVEDCLASS()
 /* ### Initialize all fields to their default value here */
 {
     // ...
@@ -82,6 +82,12 @@ void DERIVEDCLASS::fprop(const Vec& input, Vec& output) const
 {
 }
 
+/* THIS METHOD IS OPTIONAL
+void DERIVEDCLASS::fprop(const Mat& inputs, Mat& outputs)
+{
+}
+*/
+
 /////////////////
 // bpropUpdate //
 /////////////////
@@ -95,8 +101,24 @@ void DERIVEDCLASS::bpropUpdate(const Vec& input, const Vec& output,
 */
 
 /* THIS METHOD IS OPTIONAL
+void DERIVEDCLASS::bpropUpdate(const Mat& inputs, const Mat& outputs,
+                               Mat& input_gradients,
+                               const Mat& output_gradients,
+                               bool accumulate=false)
+{
+}
+*/
+
+/* THIS METHOD IS OPTIONAL
 void DERIVEDCLASS::bpropUpdate(const Vec& input, const Vec& output,
                                const Vec& output_gradient)
+{
+}
+*/
+
+/* THIS METHOD IS OPTIONAL
+void DERIVEDCLASS::bpropUpdate(const Mat& inputs, const Mat& outputs,
+                               const Mat& output_gradients)
 {
 }
 */
