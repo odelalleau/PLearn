@@ -222,17 +222,13 @@ Mat ConvertFromPyObject<Mat>::convert(PyObject* pyobj, bool print_traceback)
 
 VMat ConvertFromPyObject<VMat>::convert(PyObject* pyobj, bool print_traceback)
 {
-    try
-    {
+    PLASSERT(pyobj);
+    if(PyObject_HasAttrString(pyobj, "_cptr"))
         return static_cast<VMatrix*>(
             ConvertFromPyObject<Object*>::convert(pyobj, print_traceback));
-    }
-    catch(...)
-    {
-        Mat m;
-        ConvertFromPyObject<Mat>::convert(pyobj, m, print_traceback);
-        return m;
-    }
+    Mat m;
+    ConvertFromPyObject<Mat>::convert(pyobj, m, print_traceback);
+    return m;
 }
 
 
@@ -381,13 +377,11 @@ PyObject* PythonObjectWrapper::python_del(PyObject* self, PyObject* args)
                 "deleting obj. for which no python class exists!");
     --clit->second.nref;
 
-    /*
-    //don't delete python classes
+    // TODO: avoid deleting class
     if(0 == clit->second.nref)
     {
         m_pypl_classes.erase(classname);//cleanup
     }
-    */
 
     obj->unref();//python no longer references this obj.
 
