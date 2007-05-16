@@ -415,16 +415,18 @@ void LinearRegressor::computeResidualsVariance(const Vec&
     // vector, and X is the matrix of regressors.  From this point, use the
     // fact that an estimator of sigma is given by
     //
-    //   sigma = e'e / (N-K),
+    //   sigma_squared = e'e / (N-K),
     //
     // where N is the size of the training set and K is the extended input
-    // size.
+    // size (i.e. the length of the b vector).
     const int ninputs  = weights.length();
     const int ntargets = weights.width();
     const int N = train_set.length();
+    
     Vec b(ninputs);
     Vec XtXb(ninputs);
     resid_variance.resize(ntargets);
+    
     for (int i=0; i<ntargets; ++i) {
         b << weights.column(i);
         product(XtXb, XtX, b);
