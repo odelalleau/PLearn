@@ -41,6 +41,7 @@
 #include <plearn/io/pl_log.h>
 
 #include "LearningNetwork.h"
+#include <plearn_learners/online/EXPERIMENTAL/NullModule.h>
 
 namespace PLearn {
 using namespace std;
@@ -224,9 +225,17 @@ void LearningNetwork::build_()
         inputs_needed[dest]++;
         compute_input_of[src].append(dest);
         map<string, PP<NetworkConnection> >& in_conn = in_connections[dest];
-        if (in_conn.find(connection->dest_port) != in_conn.end())
-            PLERROR("In LearningNetwork::build_ - A port may have only one "
-                    "incoming connection");
+        if (in_conn.find(connection->dest_port) != in_conn.end()) {
+            // The port has more than one incoming connection. Currently, we
+            // only allow this to happen if the module is a NullModule (this is
+            // for safety). If in the future we want more modules to allow
+            // multiple incoming connections, we may get rid of this error.
+            NullModule* test = dynamic_cast<NullModule*>(
+                    get_pointer(connection->dest_module));
+            if (!test)
+                PLERROR("In LearningNetwork::build_ - A port may have only one "
+                        "incoming connection");
+        }
         in_conn[connection->dest_port] = connection;
         out_connections[src][connection->src_port].append(connection);
     }
