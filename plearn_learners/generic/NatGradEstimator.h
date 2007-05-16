@@ -140,6 +140,7 @@ protected:
 
     //! previous value of t
     int previous_t;
+    int first_t; // value of t when operator() is called first
 
 protected:
     //#####  Protected Member Functions  ######################################

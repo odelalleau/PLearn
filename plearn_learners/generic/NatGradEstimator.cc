@@ -75,7 +75,8 @@ NatGradEstimator::NatGradEstimator()
       n_dim(-1),
       verbosity(0),
       renormalize(true),
-      previous_t(-1)
+      previous_t(-1),
+      first_t(-1)
 {
     build();
 }
@@ -161,6 +162,9 @@ void NatGradEstimator::declareOptions(OptionList& ol)
     declareOption(ol, "previous_t", &NatGradEstimator::previous_t,
                   OptionBase::learntoption,
                   "Value of t at previous call of operator()\n");
+    declareOption(ol, "first_t", &NatGradEstimator::first_t,
+                  OptionBase::learntoption,
+                  "Value of t when operator() is first called\n");
     declareOption(ol, "Xt", &NatGradEstimator::Xt,
                   OptionBase::learntoption,
                   "contains in its rows the scaled eigenvectors and g's\n"
@@ -193,18 +197,21 @@ void NatGradEstimator::init()
         r.resize(n_eigen);
         for (int j=0;j<n_eigen;j++)
             G(j,j) = lambda;
+        first_t=-1;
+        previous_t=-1;
     }
 }
 void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
 {
-    if (t!=0)
+    if (previous_t>=0)
         PLASSERT_MSG(t==previous_t+1, "NatGradEstimator() should be called sequentially!");
     if  (n_dim<0) 
     {
-        PLASSERT_MSG(t==0, "The first call to NatGradEstimator() should be with t=0\n");
         n_dim = g.length();
         v.resize(n_dim);
         init();
+        previous_t=t-1;
+        first_t=t;
     }
     int i = t % cov_minibatch_size;
     int n = n_eigen+i;

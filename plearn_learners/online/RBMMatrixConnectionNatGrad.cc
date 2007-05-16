@@ -169,7 +169,7 @@ void RBMMatrixConnectionNatGrad::bpropUpdate(const Mat& inputs,
         (*bp_natgrad[i])(pos_count,weights_gradient(i),natural_gradient);
         multiplyAcc(weights(i),natural_gradient,-learning_rate);
     }
-    neg_count++;
+    pos_count++;
 }
  
 
