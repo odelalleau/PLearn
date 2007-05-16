@@ -1341,63 +1341,64 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
     for( int i=n_layers-2 ; i>=0 ; i-- )
     {
         if (i <= n_layers - 3) {
-        connections[ i ]->setLearningRate( grad_learning_rate );
-        layers[ i+1 ]->setLearningRate( grad_learning_rate );
+            connections[ i ]->setLearningRate( grad_learning_rate );
+            layers[ i+1 ]->setLearningRate( grad_learning_rate );
 
-        layers[i+1]->bpropUpdate( layers[i+1]->activations,
-                                  layers[i+1]->getExpectations(),
-                                  activations_gradients[i+1],
-                                  expectations_gradients[i+1] );
+            layers[i+1]->bpropUpdate( layers[i+1]->activations,
+                                      layers[i+1]->getExpectations(),
+                                      activations_gradients[i+1],
+                                      expectations_gradients[i+1] );
 
-        connections[i]->bpropUpdate( layers[i]->getExpectations(),
-                                     layers[i+1]->activations,
-                                     expectations_gradients[i],
-                                     activations_gradients[i+1],
-                                     true);
+            connections[i]->bpropUpdate( layers[i]->getExpectations(),
+                                         layers[i+1]->activations,
+                                         expectations_gradients[i],
+                                         activations_gradients[i+1],
+                                         true);
 
         }
 
         if (i <= n_layers - 3 || !use_classification_cost ||
-                !top_layer_joint_cd) {
-
-        // N.B. the contrastiveDivergenceStep changes the activation and
-        // expectation fields of top layer of the RBM, so it must be
-        // done last
-        layers[i]->setLearningRate( cd_learning_rate );
-        layers[i+1]->setLearningRate( cd_learning_rate );
-        connections[i]->setLearningRate( cd_learning_rate );
-
-        if( i > 0 )
+                !top_layer_joint_cd)
         {
-            const Mat& source_act = layers[i]->activations;
-            save_layer_activations.resize(source_act.length(),
-                                          source_act.width());
-            save_layer_activations << source_act;
-            const Mat& source_exp = layers[i]->getExpectations();
-            save_layer_expectations.resize(source_exp.length(),
-                                          source_exp.width());
-            save_layer_expectations << source_exp;
-        }
 
-        if (reconstruct_layerwise)
-        {
-            connections[i]->setAsUpInputs(layers[i+1]->getExpectations());
-            layers[i]->getAllActivations(connections[i], 0, true);
-            layers[i]->fpropNLL(
-                save_layer_expectations,
-                train_costs.column(reconstruction_cost_index+i+1));
-            rc += train_costs.column(reconstruction_cost_index+i+1);
-        }
+            // N.B. the contrastiveDivergenceStep changes the activation and
+            // expectation fields of top layer of the RBM, so it must be
+            // done last
+            layers[i]->setLearningRate( cd_learning_rate );
+            layers[i+1]->setLearningRate( cd_learning_rate );
+            connections[i]->setLearningRate( cd_learning_rate );
 
-        contrastiveDivergenceStep( layers[ i ],
-                                   connections[ i ],
-                                   layers[ i+1 ] ,
-                                   i, true);
-        if( i > 0 )
-        {
-            layers[i]->activations << save_layer_activations;
-            layers[i]->getExpectations() << save_layer_expectations;
-        }
+            if( i > 0 )
+            {
+                const Mat& source_act = layers[i]->activations;
+                save_layer_activations.resize(source_act.length(),
+                                              source_act.width());
+                save_layer_activations << source_act;
+                const Mat& source_exp = layers[i]->getExpectations();
+                save_layer_expectations.resize(source_exp.length(),
+                                               source_exp.width());
+                save_layer_expectations << source_exp;
+            }
+
+            if (reconstruct_layerwise)
+            {
+                connections[i]->setAsUpInputs(layers[i+1]->getExpectations());
+                layers[i]->getAllActivations(connections[i], 0, true);
+                layers[i]->fpropNLL(
+                        save_layer_expectations,
+                        train_costs.column(reconstruction_cost_index+i+1));
+                rc += train_costs.column(reconstruction_cost_index+i+1);
+            }
+
+            contrastiveDivergenceStep( layers[ i ],
+                                       connections[ i ],
+                                       layers[ i+1 ] ,
+                                       i, true);
+            if( i > 0 )
+            {
+                layers[i]->activations << save_layer_activations;
+                layers[i]->getExpectations() << save_layer_expectations;
+            }
         }
     }
 
