@@ -522,67 +522,67 @@ void RBMMixedLayer::forget()
 void RBMMixedLayer::build_()
 {
     size = 0;
-    activation.resize( 0 );
-    activations.resize( batch_size, 0 );
-    sample.resize( 0 );
-    samples.resize( batch_size, 0 );
-    expectation.resize( 0 );
-    expectations.resize( batch_size, 0 );
-    expectation_is_up_to_date = false;
-    bias.resize( 0 );
-    layer_of_unit.resize( 0 );
-
     n_layers = sub_layers.size();
-    init_positions.resize( n_layers );
+    init_positions.resize(n_layers);
 
-    for( int i=0 ; i<n_layers ; i++ )
+    // Fill init_positions
+    for( int i = 0; i < n_layers; i++ )
     {
-        int init_pos = size;
         init_positions[i] = size;
+        size += sub_layers[i]->size;
+    }
 
-        PP<RBMLayer> cur_layer = sub_layers[i];
-        size += cur_layer->size;
-        layer_of_unit.append( TVec<int>( cur_layer->size, i ) );
+    // Resize
+    layer_of_unit.resize( size );
 
-        activation.append( cur_layer->activation );
-        cur_layer->activation = activation.subVec( init_pos, cur_layer->size );
-        activations.resize( batch_size, size );
-        cur_layer->activations = activations.subMatColumns( init_pos,
-                                                            cur_layer->size );
+    activation.resize( size );
+    activations.resize( batch_size, size );
 
-        sample.append( cur_layer->sample );
-        cur_layer->sample = sample.subVec( init_pos, cur_layer->size );
-        samples.resize( batch_size, size );
-        cur_layer->samples = samples.subMatColumns( init_pos,
-                                                    cur_layer->size );
+    sample.resize( size );
+    samples.resize( batch_size, size );
 
-        expectation.append( cur_layer->expectation );
-        cur_layer->expectation = expectation.subVec( init_pos,
-                                                     cur_layer->size );
-        expectations.resize( batch_size, size );
-        cur_layer->getExpectations() =
-            expectations.subMatColumns( init_pos, cur_layer->size );
+    expectation.resize( size );
+    expectations.resize( batch_size, size );
 
-        bias.append( cur_layer->bias );
-        cur_layer->bias = bias.subVec( init_pos, cur_layer->size );
+    bias.resize( size );
 
-        cur_layer->setBatchSize( batch_size );
+    // Second loop, to initialize activation, expectation, etc.
+    for( int i = 0; i < n_layers; i++ )
+    {
+        int init_pos = init_positions[i];
+        PP<RBMLayer> layer = sub_layers[i];
+        int layer_size = layer->size;
 
-        // We changed fields of cur_layer, so we need to rebuild it (especially
+        layer_of_unit.subVec(init_pos, layer_size).fill(i);
+        layer->batch_size = batch_size;
+
+        layer->activation = activation.subVec(init_pos, layer_size);
+        layer->activations = activations.subMatColumns(init_pos, layer_size);
+
+        layer->sample = sample.subVec(init_pos, layer_size);
+        layer->samples = samples.subMatColumns(init_pos, layer_size);
+
+        layer->expectation = expectation.subVec(init_pos, layer_size);
+        layer->getExpectations() = expectations.subMatColumns(init_pos,
+                                                              layer_size);
+
+        layer->bias = bias.subVec(init_pos, layer_size);
+
+        // We changed fields of layer, so we need to rebuild it (especially
         // if it is another RBMMixedLayer)
-        cur_layer->build();
+        layer->build();
 
         if( learning_rate >= 0. )
-            cur_layer->setLearningRate( learning_rate );
+            layer->setLearningRate( learning_rate );
 
         if( momentum >= 0. )
-            cur_layer->setMomentum( momentum );
+            layer->setMomentum( momentum );
 
         // If we have a random_gen and sub_layers[i] does not, share it
         if( random_gen && !(sub_layers[i]->random_gen) )
         {
-            cur_layer->random_gen = random_gen;
-            cur_layer->forget();
+            layer->random_gen = random_gen;
+            layer->forget();
         }
     }
 }
