@@ -77,8 +77,6 @@ void RBMBinomialLayer::generateSample()
 
     computeExpectation();
 
-    //random_gen->manual_seed(123456);
-
     for( int i=0 ; i<size ; i++ )
         sample[i] = random_gen->binomial_sample( expectation[i] );
 }
@@ -92,12 +90,9 @@ void RBMBinomialLayer::generateSamples()
                  "random_gen should be initialized before generating samples");
 
     computeExpectations();
-    int mbatch_size = expectations.length();
-    PLASSERT( samples.width() == size );
-    samples.resize(mbatch_size, size);
+    PLASSERT( samples.width() == size && samples.length() == batch_size );
 
-    for (int k = 0; k < mbatch_size; k++) {
-        //random_gen->manual_seed(123456);
+    for (int k = 0; k < batch_size; k++) {
         for (int i=0 ; i<size ; i++)
             samples(k, i) = random_gen->binomial_sample( expectations(k, i) );
     }
@@ -125,10 +120,9 @@ void RBMBinomialLayer::computeExpectations()
     if( expectations_are_up_to_date )
         return;
 
-    int mbatch_size = activations.length();
-    PLASSERT( expectations.width() == size );
-    expectations.resize(mbatch_size, size);
-    for (int k = 0; k < mbatch_size; k++)
+    PLASSERT( expectations.width() == size
+              && expectations.length() == batch_size );
+    for (int k = 0; k < batch_size; k++)
         for (int i = 0 ; i < size ; i++)
             expectations(k, i) = sigmoid(-activations(k, i));
 
@@ -145,6 +139,17 @@ void RBMBinomialLayer::fprop( const Vec& input, Vec& output ) const
 
     for( int i=0 ; i<size ; i++ )
         output[i] = sigmoid( -input[i] - bias[i] );
+}
+
+void RBMBinomialLayer::fprop( const Mat& inputs, Mat& outputs ) const
+{
+    int mbatch_size = inputs.length();
+    PLASSERT( inputs.width() == size );
+    outputs.resize( mbatch_size, size );
+
+    for( int k = 0; k < mbatch_size; k++ )
+        for( int i = 0; i < size; i++ )
+            outputs(k,i) = sigmoid( -inputs(k,i) - bias[i] );
 }
 
 void RBMBinomialLayer::fprop( const Vec& input, const Vec& rbm_bias,
@@ -207,24 +212,28 @@ void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
 }
 
 void RBMBinomialLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
-        Mat& input_gradients,
-        const Mat& output_gradients,
-        bool accumulate)
+                                   Mat& input_gradients,
+                                   const Mat& output_gradients,
+                                   bool accumulate)
 {
     PLASSERT( inputs.width() == size );
     PLASSERT( outputs.width() == size );
     PLASSERT( output_gradients.width() == size );
 
+    int batch_size = inputs.length();
+    PLASSERT( outputs.length() == batch_size );
+    PLASSERT( output_gradients.length() == batch_size );
+
     if( accumulate )
     {
         PLASSERT_MSG( input_gradients.width() == size &&
-                input_gradients.length() == inputs.length(),
+                input_gradients.length() == batch_size,
                 "Cannot resize input_gradients and accumulate into it" );
     }
     else
     {
-        input_gradients.resize(inputs.length(), size);
-        input_gradients.fill(0);
+        input_gradients.resize(batch_size, size);
+        input_gradients.clear();
     }
 
     if( momentum != 0. )
@@ -235,7 +244,8 @@ void RBMBinomialLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
     // We use the average gradient over the mini-batch.
     real avg_lr = learning_rate / inputs.length();
 
-    for (int j = 0; j < inputs.length(); j++) {
+    for (int j = 0; j < batch_size; j++)
+    {
         for( int i=0 ; i<size ; i++ )
         {
             real output_i = outputs(j, i);
@@ -309,13 +319,16 @@ real RBMBinomialLayer::fpropNLL(const Vec& target)
     return ret;
 }
 
-void RBMBinomialLayer::fpropNLL(const Mat& targets, Mat costs_column)
+void RBMBinomialLayer::fpropNLL(const Mat& targets, const Mat& costs_column)
 {
     computeExpectations();
 
     PLASSERT( targets.width() == input_size );
+    PLASSERT( targets.length() == batch_size );
+    PLASSERT( costs_column.width() == 1 );
+    PLASSERT( costs_column.length() == batch_size );
 
-    for (int k=0;k<targets.length();k++) // loop over minibatch
+    for (int k=0;k<batch_size;k++) // loop over minibatch
     {
         real nll = 0;
         real* activation = activations[k];

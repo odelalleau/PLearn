@@ -76,6 +76,9 @@ public:
     //! Sets the momentum, also in the sub_layers
     virtual void setMomentum( real the_momentum );
 
+    //! Sets batch_size and resize activations, expectations, and samples
+    virtual void setBatchSize( int the_batch_size );
+
     // Your other public member functions go here
     //! Uses "rbmc" to compute the activation of unit "i" of this layer.
     //! This activation is computed by the "i+offset"-th unit of "rbmc"
@@ -88,19 +91,22 @@ public:
                                     bool minibatch = false );
 
     //! compute a sample, and update the sample field
-    virtual void generateSample() ;
+    virtual void generateSample();
 
-    //! Not implemented.
-    virtual void generateSamples() { PLASSERT( false ); }
+    //! generate activations.length() samples
+    virtual void generateSamples();
 
     //! compute the expectation
-    virtual void computeExpectation() ;
+    virtual void computeExpectation();
 
-    //! Not implemented.
-    virtual void computeExpectations() { PLASSERT( false ); }
+    //! compute the expectations according to activations
+    virtual void computeExpectations();
 
     //! forward propagation
     virtual void fprop( const Vec& input, Vec& output ) const;
+
+    //! Batch forward propagation
+    virtual void fprop( const Mat& inputs, Mat& outputs ) const;
 
     //! forward propagation with provided bias
     virtual void fprop( const Vec& input, const Vec& rbm_bias,
@@ -127,6 +133,9 @@ public:
     //! internal activations of the layer
     virtual real fpropNLL(const Vec& target);
 
+    //! Batch fpropNLL
+    virtual void fpropNLL(const Mat& targets, const Mat& costs_column);
+
     //! Computes the gradient of the negative log-likelihood of target
     //! with respect to the layer's bias, given the internal activations
     virtual void bpropNLL(const Vec& target, real nll, Vec& bias_gradient);
@@ -143,11 +152,8 @@ public:
     //! Update parameters according to one pair of vectors
     virtual void update( const Vec& pos_values, const Vec& neg_values );
 
-    //! Not implemented.
-    virtual void update( const Mat& pos_values, const Mat& neg_values )
-    {
-        PLASSERT_MSG(false, "Not implemented");
-    }
+    //! Update parameters according to several pairs of vectors
+    virtual void update( const Mat& pos_values, const Mat& neg_values );
 
     //! resets activations, sample and expectation fields
     virtual void reset();
@@ -200,6 +206,7 @@ private:
 
     // The rest of the private stuff goes here
     mutable Vec nlls;
+    mutable Mat mat_nlls;
 };
 
 // Declares a few other classes and functions related to this class

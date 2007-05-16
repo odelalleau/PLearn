@@ -57,6 +57,7 @@ RBMLayer::RBMLayer( real the_learning_rate ) :
     size(-1),
     gibbs_ma_increment(0.1),
     gibbs_initial_ma_coefficient(0.1),
+    batch_size(0),
     expectation_is_up_to_date(false),
     expectations_are_up_to_date(false),
     pos_count(0),
@@ -214,6 +215,20 @@ void RBMLayer::setMomentum( real the_momentum )
     momentum = the_momentum;
 }
 
+//////////////////
+// setBatchSize //
+//////////////////
+void RBMLayer::setBatchSize( int the_batch_size )
+{
+    batch_size = the_batch_size;
+    PLASSERT( activations.width() == size );
+    activations.resize( batch_size, size );
+    PLASSERT( expectations.width() == size );
+    expectations.resize( batch_size, size );
+    PLASSERT( samples.width() == size );
+    samples.resize( batch_size, size );
+}
+
 
 ///////////////////////
 // getUnitActivation //
@@ -236,6 +251,7 @@ void RBMLayer::getAllActivations( PP<RBMConnection> rbmc, int offset,
     if (minibatch) {
         rbmc->computeProducts( offset, size, activations );
         activations += bias;
+        setBatchSize(activations.length());
     } else {
         rbmc->computeProduct( offset, size, activation );
         activation += bias;
@@ -296,7 +312,7 @@ real RBMLayer::fpropNLL(const Vec& target)
     return REAL_MAX;
 }
 
-void RBMLayer::fpropNLL(const Mat& target, Mat costs_column)
+void RBMLayer::fpropNLL(const Mat& targets, const Mat& costs_column)
 {
     PLERROR("In RBMLayer::fpropNLL(): not implemented");
 }
@@ -366,7 +382,7 @@ void RBMLayer::update()
 }
 
 void RBMLayer::update( const Vec& grad )
-{   
+{
     real* b = bias.data();
     real* gb = grad.data();
     real* binc = momentum==0?0:bias_inc.data();
@@ -418,6 +434,7 @@ void RBMLayer::update( const Mat& pos_values, const Mat& neg_values)
     // bias -= learning_rate * (pos_values - neg_values)
 
     int n = pos_values.length();
+    PLASSERT( neg_values.length() == n );
     if (ones.length() < n) {
         ones.resize(n);
         ones.fill(1);
@@ -524,7 +541,7 @@ void RBMLayer::updateGibbs( const Mat& pos_values,
     if (increase_ma)
         gibbs_ma_coefficient = sigmoid(gibbs_ma_increment + inverse_sigmoid(gibbs_ma_coefficient));
 
-    
+
     // delta w = -lrate * ( meanoverrows(pos_values) - neg_stats ) 
     columnSum(pos_values,tmp);
     multiplyAcc(bias, tmp, -learning_rate*normalize_factor);
@@ -545,7 +562,8 @@ void RBMLayer::setAllBias(const Vec& rbm_bias)
 /////////////////////
 void RBMLayer::setExpectations(const Mat& the_expectations)
 {
-    expectations.resize(the_expectations.length(), the_expectations.width());
+    batch_size = the_expectations.length();
+    setBatchSize( batch_size );
     expectations << the_expectations;
 }
 

@@ -83,6 +83,15 @@ void RBMMixedLayer::setMomentum( real the_momentum )
         sub_layers[i]->setMomentum( the_momentum );
 }
 
+//////////////////
+// setBatchSize //
+//////////////////
+void RBMMixedLayer::setBatchSize( int the_batch_size )
+{
+    inherited::setBatchSize( the_batch_size );
+    for( int i = 0; i < n_layers; i++ )
+        sub_layers[i]->setBatchSize( the_batch_size );
+}
 
 ///////////////////////
 // getUnitActivation //
@@ -104,7 +113,12 @@ void RBMMixedLayer::getAllActivations( PP<RBMConnection> rbmc, int offset,
 {
     inherited::getAllActivations( rbmc, offset, minibatch );
     for( int i=0 ; i<n_layers ; i++ )
-        sub_layers[i]->expectation_is_up_to_date = false;
+    {
+        if( minibatch )
+            sub_layers[i]->expectations_are_up_to_date = false;
+        else
+            sub_layers[i]->expectation_is_up_to_date = false;
+    }
 }
 
 
@@ -115,6 +129,15 @@ void RBMMixedLayer::generateSample()
 {
     for( int i=0 ; i<n_layers ; i++ )
         sub_layers[i]->generateSample();
+}
+
+////////////////////
+// generateSample //
+////////////////////
+void RBMMixedLayer::generateSamples()
+{
+    for( int i=0 ; i<n_layers ; i++ )
+        sub_layers[i]->generateSamples();
 }
 
 ////////////////////////
@@ -131,7 +154,23 @@ void RBMMixedLayer::computeExpectation()
     expectation_is_up_to_date = true;
 }
 
+/////////////////////////
+// computeExpectations //
+/////////////////////////
+void RBMMixedLayer::computeExpectations()
+{
+    if( expectations_are_up_to_date )
+        return;
 
+    for( int i=0 ; i < n_layers ; i++ )
+        sub_layers[i]->computeExpectations();
+
+    expectations_are_up_to_date = true;
+}
+
+///////////
+// fprop //
+///////////
 void RBMMixedLayer::fprop( const Vec& input, Vec& output ) const
 {
     PLASSERT( input.size() == input_size );
@@ -145,6 +184,28 @@ void RBMMixedLayer::fprop( const Vec& input, Vec& output ) const
         Vec sub_output = output.subVec(begin, size_i);
 
         sub_layers[i]->fprop( sub_input, sub_output );
+    }
+}
+
+///////////
+// fprop //
+///////////
+void RBMMixedLayer::fprop( const Mat& inputs, Mat& outputs ) const
+{
+    int mbatch_size = inputs.length();
+    PLASSERT( inputs.width() == size );
+    outputs.resize( mbatch_size, size );
+
+    for( int i=0 ; i<n_layers ; i++ )
+    {
+        int begin = init_positions[i];
+        int size_i = sub_layers[i]->size;
+        Mat sub_inputs = inputs.subMatColumns(begin, size_i);
+        Mat sub_outputs = outputs.subMatColumns(begin, size_i);
+
+        // GCC bug? This doesn't work:
+        // sub_layers[i]->fprop( sub_inputs, sub_outputs );
+        sub_layers[i]->OnlineLearningModule::fprop( sub_inputs, sub_outputs );
     }
 }
 
@@ -206,24 +267,28 @@ void RBMMixedLayer::bpropUpdate( const Vec& input, const Vec& output,
 }
 
 void RBMMixedLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
-        Mat& input_gradients,
-        const Mat& output_gradients,
-        bool accumulate)
+                                Mat& input_gradients,
+                                const Mat& output_gradients,
+                                bool accumulate)
 {
     PLASSERT( inputs.width() == size );
     PLASSERT( outputs.width() == size );
     PLASSERT( output_gradients.width() == size );
 
+    int batch_size = inputs.length();
+    PLASSERT( outputs.length() == batch_size );
+    PLASSERT( output_gradients.length() == batch_size );
+
     if( accumulate )
     {
         PLASSERT_MSG( input_gradients.width() == size &&
-                input_gradients.length() == inputs.length(),
+                input_gradients.length() == batch_size,
                 "Cannot resize input_gradients and accumulate into it" );
     }
     else
         // Note that, by construction of 'size', the whole gradient vector
         // should be cleared in the calls to sub_layers->bpropUpdate(..) below.
-        input_gradients.resize(inputs.length(), size);
+        input_gradients.resize(batch_size, size);
 
     for( int i=0 ; i<n_layers ; i++ )
     {
@@ -290,6 +355,26 @@ real RBMMixedLayer::fpropNLL(const Vec& target)
         ret += nlli;
     }
     return ret;
+}
+
+void RBMMixedLayer::fpropNLL(const Mat& targets, const Mat& costs_column)
+{
+    computeExpectation();
+
+    PLASSERT( targets.width() == input_size );
+    PLASSERT( targets.length() == batch_size );
+    PLASSERT( costs_column.width() == 1 );
+    PLASSERT( costs_column.length() == batch_size );
+
+    costs_column.clear();
+    mat_nlls.resize(batch_size, n_layers);
+    for( int i=0 ; i<n_layers ; i++ )
+    {
+        int begin = init_positions[i];
+        int size_i = sub_layers[i]->size;
+        sub_layers[i]->fpropNLL( targets.subMatColumns(begin, size_i),
+                                 mat_nlls.column(i) );
+    }
 }
 
 void RBMMixedLayer::bpropNLL(const Vec& target, real nll, Vec& bias_gradient)
@@ -388,6 +473,19 @@ void RBMMixedLayer::update( const Vec& pos_values, const Vec& neg_values )
     }
 }
 
+void RBMMixedLayer::update( const Mat& pos_values, const Mat& neg_values )
+{
+    for( int i=0 ; i<n_layers ; i++ )
+    {
+        int begin = init_positions[i];
+        int size_i = sub_layers[i]->size;
+        Mat sub_pos_values = pos_values.subMatColumns( begin, size_i );
+        Mat sub_neg_values = neg_values.subMatColumns( begin, size_i );
+
+        sub_layers[i]->update( sub_pos_values, sub_neg_values );
+    }
+}
+
 void RBMMixedLayer::reset()
 {
     for( int i=0 ; i<n_layers ; i++ )
@@ -425,8 +523,11 @@ void RBMMixedLayer::build_()
 {
     size = 0;
     activation.resize( 0 );
+    activations.resize( batch_size, 0 );
     sample.resize( 0 );
+    samples.resize( batch_size, 0 );
     expectation.resize( 0 );
+    expectations.resize( batch_size, 0 );
     expectation_is_up_to_date = false;
     bias.resize( 0 );
     layer_of_unit.resize( 0 );
@@ -436,28 +537,52 @@ void RBMMixedLayer::build_()
 
     for( int i=0 ; i<n_layers ; i++ )
     {
+        int init_pos = size;
         init_positions[i] = size;
 
         PP<RBMLayer> cur_layer = sub_layers[i];
         size += cur_layer->size;
-
-        activation = merge( activation, cur_layer->activation );
-        sample = merge( sample, cur_layer->sample );
-        expectation = merge( expectation, cur_layer->expectation );
-        bias = merge( bias, cur_layer->bias );
         layer_of_unit.append( TVec<int>( cur_layer->size, i ) );
 
+        activation.append( cur_layer->activation );
+        cur_layer->activation = activation.subVec( init_pos, cur_layer->size );
+        activations.resize( batch_size, size );
+        cur_layer->activations = activations.subMatColumns( init_pos,
+                                                            cur_layer->size );
+
+        sample.append( cur_layer->sample );
+        cur_layer->sample = sample.subVec( init_pos, cur_layer->size );
+        samples.resize( batch_size, size );
+        cur_layer->samples = samples.subMatColumns( init_pos,
+                                                    cur_layer->size );
+
+        expectation.append( cur_layer->expectation );
+        cur_layer->expectation = expectation.subVec( init_pos,
+                                                     cur_layer->size );
+        expectations.resize( batch_size, size );
+        cur_layer->getExpectations() =
+            expectations.subMatColumns( init_pos, cur_layer->size );
+
+        bias.append( cur_layer->bias );
+        cur_layer->bias = bias.subVec( init_pos, cur_layer->size );
+
+        cur_layer->setBatchSize( batch_size );
+
+        // We changed fields of cur_layer, so we need to rebuild it (especially
+        // if it is another RBMMixedLayer)
+        cur_layer->build();
+
         if( learning_rate >= 0. )
-            sub_layers[i]->setLearningRate( learning_rate );
+            cur_layer->setLearningRate( learning_rate );
 
         if( momentum >= 0. )
-            sub_layers[i]->setMomentum( momentum );
+            cur_layer->setMomentum( momentum );
 
         // If we have a random_gen and sub_layers[i] does not, share it
         if( random_gen && !(sub_layers[i]->random_gen) )
         {
-            sub_layers[i]->random_gen = random_gen;
-            sub_layers[i]->forget();
+            cur_layer->random_gen = random_gen;
+            cur_layer->forget();
         }
     }
 }

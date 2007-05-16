@@ -88,9 +88,12 @@ public:
     Vec bias;
 
     //! used for Gibbs chain methods only
-    real gibbs_ma_coefficient; 
+    real gibbs_ma_coefficient;
 
     //#####  Not Options  #####################################################
+
+    //! Size of batches when using mini-batch
+    int batch_size;
 
     //! activation value: \sum Wx + b
     Vec activation;
@@ -98,7 +101,7 @@ public:
 
     //! Contains a sample of the random variable in this layer
     Vec sample;
-    Mat samples;  
+    Mat samples;
 
     //! Contains the expected value of the random variable in this layer
     Vec expectation;
@@ -124,6 +127,9 @@ public:
 
     //! Sets the momentum
     virtual void setMomentum( real the_momentum );
+
+    //! Sets batch_size and resize activations, expectations, and samples
+    virtual void setBatchSize( int the_batch_size );
 
     //! Copy the given expectations in the 'expectations' matrix.
     void setExpectations(const Mat& the_expectations);
@@ -184,7 +190,7 @@ public:
     //! Computes the negative log-likelihood of target given the
     //! internal activations of the layer
     virtual real fpropNLL(const Vec& target);
-    virtual void fpropNLL(const Mat& target, Mat costs_column);
+    virtual void fpropNLL(const Mat& targets, const Mat& costs_column);
 
     //! Computes the gradient of the negative log-likelihood of target
     //! with respect to the layer's bias, given the internal activations

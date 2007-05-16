@@ -1367,8 +1367,9 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
         {
             connections[i]->setAsUpInputs(layers[i+1]->getExpectations());
             layers[i]->getAllActivations(connections[i], 0, true);
-            layers[i]->fpropNLL(save_layer_expectations, 
-                                train_costs.column(reconstruction_cost_index+i+1));
+            layers[i]->fpropNLL(
+                save_layer_expectations,
+                train_costs.column(reconstruction_cost_index+i+1));
             rc += train_costs.column(reconstruction_cost_index+i+1);
         }
 
