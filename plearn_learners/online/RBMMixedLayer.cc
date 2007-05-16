@@ -598,9 +598,11 @@ void RBMMixedLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(sub_layers, copies);
-    deepCopyField(init_positions, copies);
-    deepCopyField(layer_of_unit, copies);
+    deepCopyField(sub_layers,       copies);
+    deepCopyField(init_positions,   copies);
+    deepCopyField(layer_of_unit     copies);
+    deepCopyField(nlls,             copies);
+    deepCopyField(mat_nlls,         copies);
 }
 
 
