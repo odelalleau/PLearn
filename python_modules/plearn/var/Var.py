@@ -33,18 +33,25 @@
 from plearn.pyplearn import *
 from plearn.pyplearn.plearn_repr import plearn_repr, format_list_elements
 
-class Var:
+def Var(l, w=1, random_type='F', random_a=0., random_b=1., random_clear_first_row=False):
+    if isinstance(l, Variable):
+        return l;
+    elif isinstance(l,int):
+        return Variable(pl.SourceVariable(build_length=l,
+                                          build_width=w,
+                                          random_type=PLChar(random_type),
+                                          random_a=random_a,
+                                          random_b=random_b,
+                                          random_clear_first_row=random_clear_first_row))
+    else: # assume parameter l is a pl. plvar
+        return Variable(l)
 
-    def __init__(self, l, w=1, random_type='F', random_a=0., random_b=1., random_clear_first_row=False):
-        if isinstance(l,int):
-            self.v = pl.SourceVariable(build_length=l,
-                                       build_width=w,
-                                       random_type=PLChar(random_type),
-                                       random_a=random_a,
-                                       random_b=random_b,
-                                       random_clear_first_row=random_clear_first_row)
-        else: # assume parameter l is a pl. plvar
-            self.v = l
+    
+class Variable:
+
+    def __init__(self, plvar):
+        # parameter must be a pl. subclass of Variable
+        self.v = plvar
 
     def sigmoid(self):
         return Var(pl.SigmoidVariable(input=self.v))
@@ -103,7 +110,7 @@ def addSigmoidRLayer(input, iw, ow):
 
 
 
-def addMultiSoftMaxDoubleProductTighedRLayer(input, iw, igs, ow, ogs):
+def addMultiSoftMaxDoubleProductTiedRLayer(input, iw, igs, ow, ogs):
     """iw is the input's width
     igs is the input's group size
     ow and ogs analog but for output"""
@@ -113,16 +120,16 @@ def addMultiSoftMaxDoubleProductTighedRLayer(input, iw, igs, ow, ogs):
     cost = -hidden.transposeDoubleProduct(W,M).multiLogSoftMax(igs).dot(input)            
     return hidden, cost, (W,M)
 
-def addMultiSoftMaxDoubleProductNotTighedRLayer(input, iw, igs, ow, ogs):
+def addMultiSoftMaxDoubleProductNotTiedRLayer(input, iw, igs, ow, ogs):
     return 1,2,3
 
-def addMultiSoftMaxSimpleProductTighedRLayer(input, iw, igs, ow, ogs):
+def addMultiSoftMaxSimpleProductTiedRLayer(input, iw, igs, ow, ogs):
     W = Var(iw, ow)
     hidden = input.matrixProduct(W).multiSoftMax(ogs)
     cost = -hidden.matrixTransposeProduct(W).multiLogSoftMax(igs).dot(input)
     return hidden, cost, W
 
-def addMultiSoftMaxSimpleProductNotTighedRLayer(input, iw, igs, ow, ogs):
+def addMultiSoftMaxSimpleProductNotTiedRLayer(input, iw, igs, ow, ogs):
     W = Var(iw,ow)
     hidden = input.matrixProduct(W).multiSoftMax(ogs)
     Wr = Var(ow, iw)
@@ -134,19 +141,19 @@ def addMultiSoftMaxSimpleProductNotTighedRLayer(input, iw, igs, ow, ogs):
 
 
 
-## def addMultiSoftmaxRLayer(input, ing, igs, ong, ogs, tighed=True, use_double_product=True):
+## def addMultiSoftmaxRLayer(input, ing, igs, ong, ogs, tied=True, use_double_product=True):
 ##     """ing is the input's number of groups
 ##     igs is the input's group size
 ##     ong is the output's number of groups
 ##     ogs is the output's group size
-##     If tighed is true we will use the transpose of the recognition weight matrix for reconstruction
+##     If tied is true we will use the transpose of the recognition weight matrix for reconstruction
 ##     If use_double_product is false we'll use a regular weight matrix.
 ##     If it's true, we'll use the decomposition as a 
 ##     Returns a triple (hidden, params, reonstruction_cost)"""
 ##     if not use_double_product:
 ##         W = Var(ing*igs,ong*ogs)
 ##         hidden = input.matrixProduct(W).multiSoftMax(ogs)
-##         if tighed:
+##         if tied:
 ##             cost = -hidden.matrixTransposeProduct(W).multiLogSoftMax(igs).dot(input)
 ##             return hidden, cost, W
 ##         else:
@@ -160,7 +167,7 @@ def addMultiSoftMaxSimpleProductNotTighedRLayer(input, iw, igs, ow, ogs):
 ##         M = Var(ong, ing*igs, 'U', -1/ing/igs, 1/ing/igs, False)
 ##         W = Var(ogs, ing*igs, 'U', -1/ing/igs, 1/ing/igs, False)
 ##         hidden = input.doubleProduct(W,M).multiSoftMax(ogs)
-##         if tighed:
+##         if tied:
 ##             cost = -hidden.transposeDoubleProduct(W,M).multiLogSoftMax(igs).dot(input)            
 ##             return hidden, cost, (W,M)
 ##         else:

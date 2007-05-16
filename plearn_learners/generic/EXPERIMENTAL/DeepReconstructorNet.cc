@@ -38,6 +38,7 @@
 
 
 #include "DeepReconstructorNet.h"
+#include <plearn/display/DisplayUtils.h> ////////// to remove
 
 namespace PLearn {
 using namespace std;
@@ -72,9 +73,9 @@ void DeepReconstructorNet::declareOptions(OptionList& ol)
     // ### (OptionBase::buildoption | OptionBase::nosave)
 
     
-    declareOption(ol, "schedule", &DeepReconstructorNet::schedule,
+    declareOption(ol, "training_schedule", &DeepReconstructorNet::training_schedule,
                   OptionBase::buildoption,
-                  "schedule[k] conatins the number of nstages to run the optimizer for the training of the hidden layer taking layer k as input (k=0 corresponds to input layer).");
+                  "training_schedule[k] conatins the number of epochs for the training of the hidden layer taking layer k as input (k=0 corresponds to input layer).");
 
     declareOption(ol, "layers", &DeepReconstructorNet::layers,
                   OptionBase::buildoption,
@@ -256,16 +257,33 @@ void DeepReconstructorNet::buildHiddenLayerOutputs(int which_input_layer, VMat i
 
 void DeepReconstructorNet::trainHiddenLayer(int which_input_layer, VMat inputs)
 {
+    int l = train_set->length();
+    int nepochs = training_schedule[which_input_layer];
+    perr << "\n\n*********************************************" << endl;
+    perr << "*** Training layer " << which_input_layer << " for " << nepochs << " epochs " << endl;
+    perr << "*** each epoch has " << l << " examples and " << l/minibatch_size << " optimizer stages (updates)" << endl;
     Func f(layers[which_input_layer], reconstruction_costs[which_input_layer]);
+    displayVarGraph(reconstruction_costs[which_input_layer]);
+    // displayVarGraph(fproppath,true, 333, "ffpp", false);
     Var totalcost = sumOf(inputs, f, minibatch_size);
     VarArray params = totalcost->parents();
     reconstruction_optimizer->setToOptimize(params, totalcost);
     reconstruction_optimizer->reset();
     VecStatsCollector st;
-    reconstruction_optimizer->nstages = schedule[which_input_layer];
-    reconstruction_optimizer->optimizeN(st);
+    real prev_mean = -1;
+    for(int n=0; n<nepochs; n++)
+    {
+        st.forget();
+        reconstruction_optimizer->nstages = l/minibatch_size;
+        reconstruction_optimizer->optimizeN(st);
+        const StatsCollector& s = st.getStats(0);
+        real m = s.mean();
+        perr << "Epoch " << n << " mean error: " << m << " +- " << s.stderror() << endl;
+        if(prev_mean>0)
+            perr << "Relative improvement: " << ((prev_mean-m)/prev_mean)*100 << endl;
+        prev_mean = m;
+    }
 }
-
 
 
 void DeepReconstructorNet::computeOutput(const Vec& input, Vec& output) const

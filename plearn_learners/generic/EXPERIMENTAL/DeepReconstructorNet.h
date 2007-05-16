@@ -70,12 +70,12 @@ public:
     //! Start your comments with Doxygen-compatible comments such as //!
     
 
-    //! schedule[k] conatins the number of nstages to run the optimizer for the
+    //! training_schedule[k] conatins the number of nstages to run the optimizer for the
     //! training of the hidden layer taking layer k as input (k=0 corresponds to
     //! input layer).
 
-    TVec<int> schedule;
-  
+    TVec<int> training_schedule;
+
     // layers[0] is the input variable
     // last layer is final output layer
     TVec<Var> layers;
