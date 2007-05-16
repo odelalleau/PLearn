@@ -1372,11 +1372,11 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
             const Mat& source_act = layers[i]->activations;
             save_layer_activations.resize(source_act.length(),
                                           source_act.width());
-            save_layer_activation << source_act;
+            save_layer_activations << source_act;
             const Mat& source_exp = layers[i]->getExpectations();
-            save_layer_expectation.resize(source_exp.length(),
+            save_layer_expectations.resize(source_exp.length(),
                                           source_exp.width());
-            save_layer_expectation << source_exp;
+            save_layer_expectations << source_exp;
         }
 
         if (reconstruct_layerwise)
