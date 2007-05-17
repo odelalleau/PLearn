@@ -50,29 +50,43 @@ class NetworkConnection : public Object
     typedef Object inherited;
 
 public:
+
     //#####  Public Build Options  ############################################
 
-    PP<OnlineLearningModule> src_module;
-    string src_port;
-    PP<OnlineLearningModule> dest_module;
-    string dest_port;
+    string source;
+    string destination;
     bool propagate_gradient;
 
 public:
     //#####  Public Member Functions  #########################################
 
-    //! Default constructor
+    //! Default constructor.
     NetworkConnection();
 
-    NetworkConnection(PP<OnlineLearningModule> the_src_module,
-                      const string& the_src_port,
-                      PP<OnlineLearningModule> the_dest_module,
-                      const string& the_dest_port,
-                      bool the_propagate_gradient,
-                      bool call_build_ = true);
+    //! Convenience constructor.
+    NetworkConnection(const string& the_source, const string& the_destination,
+                      bool the_propagate_gradient, bool call_build_ = true);
 
-    // Your other public member functions go here
+    //! Initialize the connection using the list of modules provided as a map
+    //! from modules' names to pointers to the modules themselves.
+    //! The goal of the initialization is to properly set the 'src_module',
+    //! 'src_port', 'dst_module' and 'dst_port' fields.
+    void initialize(map<string, PP<OnlineLearningModule> >& modules);
 
+    //! Declares the class options.
+    static void declareOptions(OptionList& ol);
+
+    //! Return the source module.
+    PP<OnlineLearningModule> getSourceModule();
+
+    //! Return the source port.
+    const string& getSourcePort();
+
+    //! Return the destination module.
+    PP<OnlineLearningModule> getDestinationModule();
+
+    //! Return the destination port.
+    const string& getDestinationPort();
 
     //#####  PLearn::Object Protocol  #########################################
 
@@ -89,23 +103,28 @@ public:
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
-    //#####  Protected Options  ###############################################
 
-    // ### Declare protected option fields (such as learned parameters) here
-    // ...
+    //! Source module.
+    PP<OnlineLearningModule> src_module;
+
+    //! Source port.
+    string src_port;
+
+    //! Destination module.
+    PP<OnlineLearningModule> dst_module;
+
+    //! Destination port.
+    string dst_port;
+    
+    //#####  Protected Options  ###############################################
 
 protected:
     //#####  Protected Member Functions  ######################################
-
-    //! Declares the class options.
-    // (PLEASE IMPLEMENT IN .cc)
-    static void declareOptions(OptionList& ol);
 
 private:
     //#####  Private Member Functions  ########################################
 
     //! This does the actual building.
-    // (PLEASE IMPLEMENT IN .cc)
     void build_();
 
 private:

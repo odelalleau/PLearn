@@ -49,6 +49,9 @@ PLEARN_IMPLEMENT_OBJECT(
     "inheriting from OnlineLearningModule.\n"
 );
 
+///////////////////////
+// NetworkConnection //
+///////////////////////
 NetworkConnection::NetworkConnection():
     propagate_gradient(true)
 {}
@@ -56,19 +59,13 @@ NetworkConnection::NetworkConnection():
 ///////////////////////
 // NetworkConnection //
 ///////////////////////
-NetworkConnection::NetworkConnection(
-        PP<OnlineLearningModule> the_src_module,
-        const string& the_src_port,
-        PP<OnlineLearningModule> the_dest_module,
-        const string& the_dest_port,
-        bool the_propagate_gradient,
-        bool call_build_):
-
+NetworkConnection::NetworkConnection(const string& the_source,
+                                     const string& the_destination,
+                                     bool the_propagate_gradient,
+                                     bool call_build_):
     inherited(call_build_),
-    src_module(the_src_module),
-    src_port(the_src_port),
-    dest_module(the_dest_module),
-    dest_port(the_dest_port),
+    source(the_source),
+    destination(the_destination),
     propagate_gradient(the_propagate_gradient)
 {
     if (call_build_)
@@ -84,6 +81,41 @@ void NetworkConnection::build()
     build_();
 }
 
+////////////////
+// initialize //
+////////////////
+void NetworkConnection::initialize(map<string, PP<OnlineLearningModule> >& modules)
+{
+    TVec<string> specs;
+    specs.append(source);
+    specs.append(destination);
+    for (int i = 0; i < specs.length(); i++) {
+        const string& spec = specs[i];
+        size_t dot_pos = spec.find('.');
+        if (dot_pos == string::npos)
+            PLERROR("In NetworkConnection::initialize - Could not find a dot "
+                    "in the port specification '%s'", spec.c_str());
+        string module_name = spec.substr(0, dot_pos);
+        if (modules.find(module_name) == modules.end())
+            PLERROR("In NetworkConnection::initialize - Could not find a "
+                    "module named '%s'", module_name.c_str());
+        PP<OnlineLearningModule> module = modules[module_name];
+        string port = spec.substr(dot_pos + 1);
+        if (i == 0) {
+            src_module = module;
+            src_port = port;
+        } else {
+            PLASSERT( i == 1 );
+            dst_module = module;
+            dst_port = port;
+        }
+    }
+
+}
+
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void NetworkConnection::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
@@ -103,21 +135,13 @@ void NetworkConnection::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////////
 void NetworkConnection::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "src_module", &NetworkConnection::src_module,
+    declareOption(ol, "source", &NetworkConnection::source,
                   OptionBase::buildoption,
-        "Source module.");
+        "Source of the connection (of the form 'module.port').");
 
-    declareOption(ol, "src_port", &NetworkConnection::src_port,
+    declareOption(ol, "destination", &NetworkConnection::destination,
                   OptionBase::buildoption,
-        "Source module's port.");
-
-    declareOption(ol, "dest_module", &NetworkConnection::dest_module,
-                  OptionBase::buildoption,
-        "Destination module.");
-
-    declareOption(ol, "dest_port", &NetworkConnection::dest_port,
-                  OptionBase::buildoption,
-        "Destination module's port.");
+        "Destination of the connection (of the form 'module.port').");
 
     declareOption(ol, "propagate_gradient",
                   &NetworkConnection::propagate_gradient,
@@ -129,20 +153,52 @@ void NetworkConnection::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void NetworkConnection::build_()
 {
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation.
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of
-    // ###    all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning"
-    // ###    options have been modified.
-    // ### You should assume that the parent class' build_() has already been
-    // ### called.
 }
 
+//////////////////////////
+// getDestinationModule //
+//////////////////////////
+PP<OnlineLearningModule> NetworkConnection::getDestinationModule()
+{
+    PLASSERT_MSG( dst_module, "getDestinationModule() cannot be called before "
+            "the connection is initialized");
+    return dst_module;
+}
+
+////////////////////////
+// getDestinationPort //
+////////////////////////
+const string& NetworkConnection::getDestinationPort()
+{
+    PLASSERT_MSG( !dst_port.empty(), "getDestinationPort() cannot be called "
+            "before the connection is initialized");
+    return dst_port;
+}
+
+/////////////////////
+// getSourceModule //
+/////////////////////
+PP<OnlineLearningModule> NetworkConnection::getSourceModule()
+{
+    PLASSERT_MSG( src_module, "getSourceModule() cannot be called before the "
+            "connection is initialized");
+    return src_module;
+}
+
+///////////////////
+// getSourcePort //
+///////////////////
+const string& NetworkConnection::getSourcePort()
+{
+    PLASSERT_MSG( !src_port.empty(), "getSourcePort() cannot be called before "
+            "the connection is initialized");
+    return src_port;
+}
 
 } // end of namespace PLearn
 
