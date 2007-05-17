@@ -160,35 +160,35 @@ void LearningNetwork::build_()
     // Add connections corresponding to the input, target, weight, output and
     // cost data.
     if (input_module) {
-        store_inputs = new MatrixModule("store_inputs");
+        store_inputs = new MatrixModule("store_inputs", true);
         all_modules.append(get_pointer(store_inputs));
         all_connections.append(new NetworkConnection(
                     get_pointer(store_inputs), "data",
                     input_module, input_port, false));
     }
     if (target_module) {
-        store_targets = new MatrixModule("store_targets");
+        store_targets = new MatrixModule("store_targets", true);
         all_modules.append(get_pointer(store_targets));
         all_connections.append(new NetworkConnection(
                     get_pointer(store_targets), "data",
                     target_module, target_port, false));
     }
     if (weight_module) {
-        store_weights = new MatrixModule("store_weights");
+        store_weights = new MatrixModule("store_weights", true);
         all_modules.append(get_pointer(store_weights));
         all_connections.append(new NetworkConnection(
                     get_pointer(store_weights), "data",
                     weight_module, weight_port, false));
     }
     if (output_module) {
-        store_outputs = new MatrixModule("store_outputs");
+        store_outputs = new MatrixModule("store_outputs", true);
         all_modules.append(get_pointer(store_outputs));
         all_connections.append(new NetworkConnection(
                     output_module, output_port,
                     get_pointer(store_outputs), "data", false));
     }
     if (cost_module) {
-        store_costs = new MatrixModule("store_costs");
+        store_costs = new MatrixModule("store_costs", true);
         all_modules.append(get_pointer(store_costs));
         all_connections.append(new NetworkConnection(
                     cost_module, cost_port,
