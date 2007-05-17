@@ -52,30 +52,28 @@ PLEARN_IMPLEMENT_OBJECT(
     "A module that encapsulates a whole network of underlying modules.",
     "The network is defined by the list of modules, and the list of\n"
     "connections between these modules.\n"
-    "The network's ports are given through the 'ports' option.\n"
+    "The network's ports are given through the 'ports' option. A typical\n"
+    "value for 'ports' would be for instance something like:\n"
+    "   [ \"input\"  \"rbm.visible\"\n"
+    "     \"target\" \"nll.target\"\n"
+    "     \"output\" \"rbm.hidden\"\n"
+    "     \"cost\"   \"nll.cost\"\n"
+    "   ]\n"
+    "which means this module has four ports (input, target, output and cost)\n"
+    "which redirect to specific ports of modules in the network.\n"
 );
 
 ///////////////////
 // NetworkModule //
 ///////////////////
-NetworkModule::NetworkModule():
-    ports(TMat<string>(0, 2))
-{
-}
+NetworkModule::NetworkModule()
+{}
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void NetworkModule::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here.
-    // ### For the "flags" of each option, you should typically specify
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or
-    // ### OptionBase::tuningoption. If you don't provide one of these three,
-    // ### this option will be ignored when loading values from a script.
-    // ### You can also combine flags, for example with OptionBase::nosave:
-    // ### (OptionBase::buildoption | OptionBase::nosave)
-
     declareOption(ol, "modules", &NetworkModule::modules,
                   OptionBase::buildoption,
        "List of modules contained in the network.");
@@ -86,9 +84,10 @@ void NetworkModule::declareOptions(OptionList& ol)
 
     declareOption(ol, "ports", &NetworkModule::ports,
                   OptionBase::buildoption,
-       "A two-column matrix, where each row is a pair ('P', 'M.N') with 'M'\n"
-       "the name of an underlying module, 'N' one of its ports, and 'P' the\n"
-       "name under which the NetworkModule sees this port.");
+       "A sequence of pairs of strings, where each pair is of the form\n"
+       "('P', 'M.N') with 'M' the name of an underlying module, 'N' one of\n"
+       "its ports, and 'P' the name under which the NetworkModule sees this\n"
+       "port. See the class help for an example.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -300,7 +299,7 @@ void NetworkModule::build_()
         module_to_index[modules[i]] = i;
     
     // Analyze the list of ports.
-    PLASSERT( ports.width() == 2 );
+    PLASSERT( ports.length() % 2 == 0 );
     // The 'port_correspondances' lists, for each module, the correspondances
     // between the modules' ports and the ports of the NetworkModule.
     TVec< TMat<int> > port_correspondances(modules.length());
@@ -309,11 +308,12 @@ void NetworkModule::build_()
     TVec<int> new_row(2);
     all_ports.resize(0);
     port_sizes.resize(0, 2);
-    port_descriptions.resize(ports.length());
-    for (int i = 0; i < ports.length(); i++) {
-        const string& new_name = ports(i, 0);
+    int n_ports = ports.length() / 2;
+    port_descriptions.resize(n_ports);
+    for (int i = 0; i < n_ports; i++) {
+        const string& new_name = ports[2*i];
         all_ports.append(new_name);
-        const string& old_name = ports(i, 1);
+        const string& old_name = ports[2*i + 1];
         size_t dot_pos = old_name.find('.');
         PLASSERT( dot_pos != string::npos );
         string old_module_name = old_name.substr(0, dot_pos);
@@ -397,7 +397,7 @@ void NetworkModule::build_()
                 fprop_toplug.append(port_correspondances[i]);
                 // Compute the list of matrices that must be provided to this
                 // module when doing a fprop and bprop.
-                TVec<string> ports = modules[i]->getPorts();
+                TVec<string> mod_ports = modules[i]->getPorts();
                 map<string, PP<NetworkConnection> >& in_conn =
                     in_connections[i];
                 map<string, TVec< PP<NetworkConnection> > >& out_conn =
@@ -406,13 +406,13 @@ void NetworkModule::build_()
                 TVec<int> bprop_tores;
                 TVec<Mat*> fprop_mats;
                 TVec<Mat*> bprop_mats;
-                for (int j = 0; j < ports.length(); j++) {
-                    if (in_conn.find(ports[j]) != in_conn.end()) {
+                for (int j = 0; j < mod_ports.length(); j++) {
+                    if (in_conn.find(mod_ports[j]) != in_conn.end()) {
                         // This port has an incoming connection: it is thus an
                         // input, and the corresponding matrices for storing
                         // its value and gradient are found by looking at the
                         // source port of the connection.
-                        PP<NetworkConnection> conn = in_conn[ports[j]];
+                        PP<NetworkConnection> conn = in_conn[mod_ports[j]];
                         int src_mod = module_to_index[conn->getSourceModule()];
                         int path_index = module_index_to_path_index[src_mod];
                         int port_index = conn->getSourceModule()->getPortIndex(
@@ -427,8 +427,8 @@ void NetworkModule::build_()
                             bprop_mats.append(bprop_data[b_idx][port_index]);
                             bprop_tores.append(j);
                         }
-                        PLASSERT( out_conn.find(ports[j]) == out_conn.end() );
-                    } else if (out_conn.find(ports[j]) != out_conn.end()) {
+                        PLASSERT( out_conn.find(mod_ports[j]) == out_conn.end() );
+                    } else if (out_conn.find(mod_ports[j]) != out_conn.end()) {
                         // This port has (at least) one outgoing connection: it
                         // is thus an output, and it must be provided with
                         // matrices to store its value (and gradient if the
@@ -444,7 +444,7 @@ void NetworkModule::build_()
                         // gradient to this port.
                         bool must_store_grad = false;
                         const TVec< PP<NetworkConnection> >& out_j =
-                            out_conn[ports[j]];
+                            out_conn[mod_ports[j]];
                         for (int k = 0; k < out_j.length(); k++)
                             if (out_j[k]->propagate_gradient) {
                                 must_store_grad = true;

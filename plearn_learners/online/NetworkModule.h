@@ -55,7 +55,7 @@ public:
     TVec< PP<OnlineLearningModule> > modules;
     TVec< PP<NetworkConnection> > connections;
 
-    TMat<string> ports;
+    TVec<string> ports;
 
 public:
     //#####  Public Member Functions  #########################################
