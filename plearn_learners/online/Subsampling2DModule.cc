@@ -325,6 +325,7 @@ void Subsampling2DModule::bpropUpdate(const Vec& input, const Vec& output,
     for( int i=0 ; i<n_input_images ; i++ )
     {
         kernel.fill( scale[i] );
+        kernel_gradient.clear();
         convolve2Dbackprop( input_images[i], kernel,
                             output_gradients[i],
                             input_gradients[i], kernel_gradient,

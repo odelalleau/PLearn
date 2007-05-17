@@ -316,6 +316,7 @@ void Supersampling2DModule::bpropUpdate(const Vec& input, const Vec& output,
     for( int i=0 ; i<n_input_images ; i++ )
     {
         kernel.fill( scale[i] );
+        kernel_gradient.clear();
         backConvolve2Dbackprop( kernel, input_images[i],
                                 input_gradients[i],
                                 output_gradients[i], kernel_gradient,
