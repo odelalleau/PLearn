@@ -142,12 +142,12 @@ void Subsampling2DModule::declareOptions(OptionList& ol)
     redeclareOption(ol, "input_size", &Subsampling2DModule::input_size,
                     OptionBase::learntoption,
                     "Size of the input, computed from n_input_images,\n"
-                    "n_input_length and n_input_width.\n");
+                    "input_images_length and input_images_width.\n");
 
     redeclareOption(ol, "output_size", &Subsampling2DModule::output_size,
                     OptionBase::learntoption,
                     "Size of the output, computed from n_output_images,\n"
-                    "n_output_length and n_output_width.\n");
+                    "output_images_length and output_images_width.\n");
 }
 
 void Subsampling2DModule::build_()
@@ -334,6 +334,7 @@ void Subsampling2DModule::bpropUpdate(const Vec& input, const Vec& output,
         scale[i] -= learning_rate * sum( kernel_gradient );
         bias[i] -= learning_rate * sum( output_gradients[i] );
     }
+    step_number++;
 }
 
 //! reset the parameters to the state they would be BEFORE starting training.

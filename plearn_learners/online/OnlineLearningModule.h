@@ -97,7 +97,7 @@ public:
 
     //! given the input, compute the output (possibly resize it appropriately)
     virtual void fprop(const Vec& input, Vec& output) const = 0;
-    
+
     //! Mini-batch fprop.
     //! Default implementation raises an error.
     virtual void fprop(const Mat& inputs, Mat& outputs);
@@ -127,6 +127,8 @@ public:
     //! AND IGNORES INPUT GRADIENT.
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              const Vec& output_gradient);
+
+    //! Batch version
     virtual void bpropUpdate(const Mat& inputs, const Mat& outputs,
                              const Mat& output_gradients);
 
@@ -277,7 +279,7 @@ protected:
 
     //! Used to store the size of each port (may be used in sub-classes).
     TMat<int> port_sizes;
-    
+
     // Also used in CostModule for instance
     mutable Vec tmp_input_gradient;
     mutable Mat tmpm_input_gradient;
