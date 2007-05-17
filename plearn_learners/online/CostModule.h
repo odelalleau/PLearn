@@ -148,6 +148,10 @@ public:
     //! 'prediction', 'target' and 'cost' ports.
     virtual const TMat<int>& getPortSizes();
 
+    //! Overridden so that the default behavior returns the name of the costs
+    //! for the 'cost' port.
+    virtual TVec<string> getPortDescription(const string& port);
+
     //! Overridden to try to use the standard mini-batch fprop when possible.
     virtual void fprop(const TVec<Mat*>& ports_value);
 

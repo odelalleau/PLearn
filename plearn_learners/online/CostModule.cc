@@ -207,6 +207,17 @@ void CostModule::fprop(const TVec<Mat*>& ports_value)
     inherited::fprop(ports_value);
 }
 
+////////////////////////
+// getPortDescription //
+////////////////////////
+TVec<string> CostModule::getPortDescription(const string& port)
+{
+    if (port == "cost")
+        return name();
+    else
+        return inherited::getPortDescription(port);
+}
+
 //////////////
 // getPorts //
 //////////////
