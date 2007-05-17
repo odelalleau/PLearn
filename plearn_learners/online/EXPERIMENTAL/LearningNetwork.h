@@ -44,6 +44,7 @@
 #include <plearn_learners/online/OnlineLearningModule.h>
 #include <plearn_learners/online/EXPERIMENTAL/MatrixModule.h>
 #include <plearn_learners/online/NetworkConnection.h>
+#include <plearn_learners/online/NetworkModule.h>
 
 namespace PLearn {
 
@@ -64,20 +65,7 @@ class LearningNetwork : public PLearner
 public:
     //#####  Public Build Options  ############################################
 
-    TVec< PP<OnlineLearningModule> > modules;
-    TVec< PP<NetworkConnection> > connections;
-
-    PP<OnlineLearningModule> input_module;
-    PP<OnlineLearningModule> target_module;
-    PP<OnlineLearningModule> weight_module;
-    PP<OnlineLearningModule> output_module;
-    PP<OnlineLearningModule> cost_module;
-
-    string input_port;
-    string target_port;
-    string weight_port;
-    string output_port;
-    string cost_port;
+    PP<OnlineLearningModule> module;
 
     int batch_size;
 
@@ -173,48 +161,14 @@ protected:
     //! fprop step.
     PP<MatrixModule> store_costs;
 
-    //! Contains all modules (i.e. those in the 'modules' list, and the modules
-    //! storing the inputs, targets, etc).
-    TVec< PP<OnlineLearningModule> > all_modules;
+    //! The network consisting of the optimized module and the additional
+    //! modules described above.
+    PP<NetworkModule> network;
 
-    //! Contains all connections (i.e. those in the 'connections' list, and
-    //! those added to connect the modules storing the inputs, targets, etc).
-    TVec< PP<NetworkConnection> > all_connections;
+    //! The list of (null) pointers to matrices being given as argument to the
+    //! network's fprop and bpropAccUpdate methods.
+    TVec<Mat*> null_pointers;
 
-    //! Ordered list of modules used when doing a fprop (the integer values
-    //! correspond to indices in 'all_modules').
-    TVec<int> fprop_path;
-
-    //! Ordered list of modules used when doing a bprop (the integer values
-    //! correspond to indices in 'all_modules').
-    TVec<int> bprop_path;
-
-    //! The i-th element is the list of Mat* pointers being provided to the
-    //! i-th module in a fprop step.
-    TVec< TVec<Mat*> > fprop_data;
-
-    //! The i-the elment is the list of matrices that need to be resized to
-    //! empty matrices prior to calling fprop() on the i-th module in a fprop
-    //! step.
-    //! The resizing is needed to ensure we correctly compute the desired
-    //! outputs.
-    TVec< TVec<int> > fprop_toresize;
-    
-    //! The i-th element is the list of Mat* pointers being provided to the
-    //! i-th module in a bprop step.
-    TVec< TVec<Mat*> > bprop_data;
-
-    //! The i-th element is the list of matrices that need to be resized to
-    //! empty matrices prior to calling bpropUpdate() on the i-th module in a
-    //! bprop step.
-    //! The resizing is needed to ensure we correctly compute the desired
-    //! gradients.
-    TVec< TVec<int> > bprop_toresize;
-
-    //! A list of all matrices used to store the various computation results in
-    //! the network (i.e. the outputs of each module).
-    TVec<Mat> all_mats;
-    
     //#####  Protected Options  ###############################################
 
     int mbatch_size;

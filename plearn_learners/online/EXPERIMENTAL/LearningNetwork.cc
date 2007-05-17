@@ -72,53 +72,10 @@ LearningNetwork::LearningNetwork():
 ////////////////////
 void LearningNetwork::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "modules", &LearningNetwork::modules,
+    declareOption(ol, "module", &LearningNetwork::module,
                   OptionBase::buildoption,
-       "List of modules contained in the network.");
-
-    declareOption(ol, "connections", &LearningNetwork::connections,
-                  OptionBase::buildoption,
-       "List of connections between modules.");
-
-    declareOption(ol, "input_module", &LearningNetwork::input_module,
-                  OptionBase::buildoption,
-        "Module that uses the samples' inputs.");
-
-    declareOption(ol, "input_port", &LearningNetwork::input_port,
-                  OptionBase::buildoption,
-       "Port of 'input_module' that is filled with the samples' inputs.");
-
-    declareOption(ol, "target_module", &LearningNetwork::target_module,
-                  OptionBase::buildoption,
-        "Module that uses the samples' targets.");
-
-    declareOption(ol, "target_port", &LearningNetwork::target_port,
-                  OptionBase::buildoption,
-       "Port of 'target_module' that is filled with the samples' targets.");
-
-    declareOption(ol, "weight_module", &LearningNetwork::weight_module,
-                  OptionBase::buildoption,
-        "Module that uses the samples' weights.");
-
-    declareOption(ol, "weight_port", &LearningNetwork::weight_port,
-                  OptionBase::buildoption,
-       "Port of 'weight_module' that is filled with the samples' weights.");
-
-    declareOption(ol, "output_module", &LearningNetwork::output_module,
-                  OptionBase::buildoption,
-        "Module that computes the network's output.");
-
-    declareOption(ol, "output_port", &LearningNetwork::output_port,
-                  OptionBase::buildoption,
-       "Port of 'output_module' that contains the network's output");
-
-    declareOption(ol, "cost_module", &LearningNetwork::cost_module,
-                  OptionBase::buildoption,
-        "Module that computes the network's cost.");
-
-    declareOption(ol, "cost_port", &LearningNetwork::cost_port,
-                  OptionBase::buildoption,
-       "Port of 'cost_module' that contains the network's cost");
+       "The module being optimized. This module should typically have some\n"
+       "ports named 'input', 'target', 'weight', 'output' and 'cost'.");
 
     declareOption(ol, "batch_size", &LearningNetwork::batch_size,
                   OptionBase::buildoption,
@@ -139,223 +96,82 @@ void LearningNetwork::declareOptions(OptionList& ol)
 ////////////
 void LearningNetwork::build_()
 {
-    // Forward random number generator to underlying modules.
-    for (int i = 0; i < modules.length(); i++)
-        if (!modules[i]->random_gen) {
-            modules[i]->random_gen = random_gen;
-            // Currently we call forget, since it ensures the module is
-            // correctly initialized and also will propagate the random number
-            // generator to its own sub-modules. However, this is not very
-            // intuitive, and a better solution may be found.
-            modules[i]->forget();
-        }
+    if (!module)
+        // Cannot do anything without an underlying module.
+        return;
 
-    // Initialize 'all_modules' and 'all_connections' with copies of
-    // respectively 'modules' and 'connections'.
-    all_modules.resize(modules.length());
-    all_modules << modules;
-    all_connections.resize(connections.length());
-    all_connections << connections;
-    
-    // Add connections corresponding to the input, target, weight, output and
-    // cost data.
-    if (input_module) {
+    // Forward random number generator to underlying module.
+    if (!module->random_gen) {
+        module->random_gen = random_gen;
+        // Currently we call forget, since it ensures the module is
+        // correctly initialized and also will propagate the random number
+        // generator to its own sub-modules. However, this is not very
+        // intuitive, and a better solution may be found.
+        module->forget();
+    }
+
+    // Create a new NetworkModule that connects the ports of the underlying
+    // module to simple MatrixModules that will provide/store data.
+    const TVec<string>& ports = module->getPorts();
+    TVec< PP<OnlineLearningModule> > all_modules;
+    all_modules.append(module);
+    TVec< PP<NetworkConnection> > all_connections;
+
+    if (ports.find("input") >= 0) {
         store_inputs = new MatrixModule("store_inputs", true);
         all_modules.append(get_pointer(store_inputs));
         all_connections.append(new NetworkConnection(
                     get_pointer(store_inputs), "data",
-                    input_module, input_port, false));
-    }
-    if (target_module) {
+                    module, "input", false));
+    } else
+        store_inputs = NULL;
+
+    if (ports.find("target") >= 0) {
         store_targets = new MatrixModule("store_targets", true);
         all_modules.append(get_pointer(store_targets));
         all_connections.append(new NetworkConnection(
                     get_pointer(store_targets), "data",
-                    target_module, target_port, false));
-    }
-    if (weight_module) {
+                    module, "target", false));
+    } else
+        store_targets = NULL;
+
+    if (ports.find("weight") >= 0) {
         store_weights = new MatrixModule("store_weights", true);
         all_modules.append(get_pointer(store_weights));
         all_connections.append(new NetworkConnection(
                     get_pointer(store_weights), "data",
-                    weight_module, weight_port, false));
-    }
-    if (output_module) {
+                    module, "weight", false));
+    } else
+        store_weights = NULL;
+
+    if (ports.find("output") >= 0) {
         store_outputs = new MatrixModule("store_outputs", true);
         all_modules.append(get_pointer(store_outputs));
         all_connections.append(new NetworkConnection(
-                    output_module, output_port,
+                    module, "output",
                     get_pointer(store_outputs), "data", false));
-    }
-    if (cost_module) {
+    } else
+        store_outputs = NULL;
+
+    if (ports.find("cost") >= 0) {
         store_costs = new MatrixModule("store_costs", true);
         all_modules.append(get_pointer(store_costs));
+        // Note that this is the only connection that propagates the gradient.
         all_connections.append(new NetworkConnection(
-                    cost_module, cost_port,
+                    module, "cost",
                     get_pointer(store_costs), "data", true));
-    }
+    } else
+        store_costs = NULL;
 
-    // First create a dictionary of all_modules.
-    map<string, PP<OnlineLearningModule> > name_to_module;
-    for (int i = 0; i < all_modules.length(); i++) {
-        string module = all_modules[i]->name;
-        if (name_to_module.find(module) != name_to_module.end()) {
-            // There is already a module with the same name. For safety
-            // reasons, we make it point to a NULL pointer to ensure we do not
-            // accidentally use the wrong module.
-            name_to_module[module] = NULL;
-        } else
-            name_to_module[module] = all_modules[i];
-    }
+    network = new NetworkModule();
+    network->modules = all_modules;
+    network->connections = all_connections;
+    network->build();
 
-    // Initialize connections.
-    for (int i = 0; i < all_connections.length(); i++)
-        all_connections[i]->initialize(name_to_module);
-
-    // Construct fprop and bprop paths from the list of modules and
-    // connections.
-    // First preprocess some convenience data structures from the list of
-    // connections.
-    // 'module_to_index' maps module pointers to their corresponding index in
-    // the 'all_modules' list.
-    map<const OnlineLearningModule*, int> module_to_index;
-    for (int i = 0; i < all_modules.length(); i++)
-        module_to_index[all_modules[i]] = i;
-    // The i-th element of 'in_connections' maps each port in the i-th module
-    // to the connection that has it as destination (there may be only one).
-    TVec< map<string, PP<NetworkConnection> > > in_connections;
-    in_connections.resize(all_modules.length());
-    // The i-th element of 'out_connections' maps each port in the i-th module
-    // to the connections that have it as source (there may be many).
-    TVec< map<string, TVec< PP<NetworkConnection> > > > out_connections;
-    out_connections.resize(all_modules.length());
-    // The 'inputs_needed' vector contains the number of inputs that must be
-    // fed to a module before it can compute a fprop.
-    TVec<int> inputs_needed(all_modules.length(), 0);
-    // The 'compute_input_of' list gives, for each module M, the indices of
-    // other modules that take an output of M as input.
-    TVec< TVec<int> > compute_input_of(all_modules.length());
-    for (int i = 0; i < all_connections.length(); i++) {
-        PP<NetworkConnection> connection = all_connections[i];
-        int src = module_to_index[connection->getSourceModule()];
-        int dest = module_to_index[connection->getDestinationModule()];
-        inputs_needed[dest]++;
-        compute_input_of[src].append(dest);
-        map<string, PP<NetworkConnection> >& in_conn = in_connections[dest];
-        if (in_conn.find(connection->getDestinationPort()) != in_conn.end()) {
-            // The port has more than one incoming connection. Currently, we
-            // only allow this to happen if the module is a NullModule (this is
-            // for safety). If in the future we want more modules to allow
-            // multiple incoming connections, we may get rid of this error.
-            NullModule* test = dynamic_cast<NullModule*>(
-                    get_pointer(connection->getDestinationModule()));
-            if (!test)
-                PLERROR("In LearningNetwork::build_ - A port may have only one "
-                        "incoming connection");
-        }
-        in_conn[connection->getDestinationPort()] = connection;
-        out_connections[src][connection->getSourcePort()].append(connection);
-    }
-
-    // The fprop and bprop paths can now be computed.
-    fprop_path.resize(0);
-    bprop_path.resize(all_modules.length());
-    bprop_path.fill(-1);
-    TVec<bool> is_done(all_modules.length(), false);
-    fprop_data.resize(0);
-    bprop_data.resize(all_modules.length());
-    all_mats.resize(0);
-    fprop_toresize.resize(0);
-    bprop_toresize.resize(all_modules.length());
-    // A vector that stores the index of a module in the fprop path.
-    TVec<int> module_index_to_path_index(all_modules.length(), -1);
-    while (is_done.find(false) >= 0) {
-        for (int i = 0; i < all_modules.length(); i++) {
-            if (!is_done[i] && inputs_needed[i] == 0) {
-                for (int j = 0; j < compute_input_of[i].length(); j++)
-                    inputs_needed[compute_input_of[i][j]]--;
-                // Compute the list of matrices that must be provided to this
-                // module when doing a fprop and bprop.
-                TVec<string> ports = all_modules[i]->getPorts();
-                map<string, PP<NetworkConnection> >& in_conn =
-                    in_connections[i];
-                map<string, TVec< PP<NetworkConnection> > >& out_conn =
-                    out_connections[i];
-                TVec<int> fprop_tores;
-                TVec<int> bprop_tores;
-                TVec<Mat*> fprop_mats;
-                TVec<Mat*> bprop_mats;
-                for (int j = 0; j < ports.length(); j++) {
-                    if (in_conn.find(ports[j]) != in_conn.end()) {
-                        // This port has an incoming connection: it is thus an
-                        // input, and the corresponding matrices for storing
-                        // its value and gradient are found by looking at the
-                        // source port of the connection.
-                        PP<NetworkConnection> conn = in_conn[ports[j]];
-                        int src_mod = module_to_index[conn->getSourceModule()];
-                        int path_index = module_index_to_path_index[src_mod];
-                        int port_index = conn->getSourceModule()->getPortIndex(
-                                conn->getSourcePort());
-                        fprop_mats.append(fprop_data[path_index][port_index]);
-                        if (!conn->propagate_gradient)
-                            // This connection does not propagate the gradient,
-                            // and thus we do not want to accumulate it.
-                            bprop_mats.append(NULL);
-                        else {
-                            int b_idx = all_modules.length() - 1 - path_index;
-                            bprop_mats.append(bprop_data[b_idx][port_index]);
-                            bprop_tores.append(j);
-                        }
-                        PLASSERT( out_conn.find(ports[j]) == out_conn.end() );
-                    } else if (out_conn.find(ports[j]) != out_conn.end()) {
-                        // This port has (at least) one outgoing connection: it
-                        // is thus an output, and it must be provided with
-                        // matrices to store its value (and gradient if the
-                        // connection propagates it).
-                        all_mats.append(Mat());
-                        Mat* new_mat = &all_mats.lastElement();
-                        fprop_mats.append(new_mat);
-                        fprop_tores.append(j);
-                        // Ensure there exists a connection propagating the
-                        // gradient to this port.
-                        bool must_store_grad = false;
-                        const TVec< PP<NetworkConnection> >& out_j =
-                            out_conn[ports[j]];
-                        for (int k = 0; k < out_j.length(); k++)
-                            if (out_j[k]->propagate_gradient) {
-                                must_store_grad = true;
-                                break;
-                            }
-                        if (must_store_grad) {
-                            all_mats.append(Mat());
-                            new_mat = &all_mats.lastElement();
-                            bprop_mats.append(new_mat);
-                        } else
-                            // No connection propagating gradient to this port.
-                            bprop_mats.append(NULL);
-                    } else {
-                        // This port is not used (we do not provide its value,
-                        // and we do not care about obtaining it).
-                        fprop_mats.append(NULL);
-                        bprop_mats.append(NULL);
-                    }
-                }
-                module_index_to_path_index[i] = fprop_path.length();
-                // Update fprop path.
-                fprop_data.append(fprop_mats);
-                fprop_toresize.append(fprop_tores);
-                fprop_path.append(i);
-                // Update bprop path.
-                int bprop_idx = bprop_path.length() - fprop_path.length();
-                bprop_data[bprop_idx] = bprop_mats;
-                bprop_toresize[bprop_idx] = bprop_tores;
-                bprop_path[bprop_idx] = i;
-
-                is_done[i] = true;
-            }
-        }
-    }
-    PLASSERT( module_index_to_path_index.find(-1) == -1 );
+    // Initialize the list of null pointers to provided for forward and
+    // backward propagation.
+    null_pointers.resize(module->nPorts());
+    null_pointers.fill(NULL);
 }
 
 ///////////
@@ -374,8 +190,6 @@ void LearningNetwork::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(output_module, copies);
-
     // ### Remove this line when you have fully implemented this method.
     PLERROR("LearningNetwork::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
@@ -385,8 +199,8 @@ void LearningNetwork::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////
 int LearningNetwork::outputsize() const
 {
-    PLASSERT( output_module );
-    return output_module->getPortWidth(output_port);
+    PLASSERT( module && store_outputs );
+    return module->getPortWidth("output");
 }
 
 ////////////
@@ -396,9 +210,8 @@ void LearningNetwork::forget()
 {
     inherited::forget();
 
-    // All modules should forget too.
-    for (int i = 0; i < modules.length(); i++)
-        modules[i]->forget();
+    if (module)
+        module->forget();
 
     mbatch_size = -1;
 }
@@ -417,7 +230,7 @@ void LearningNetwork::train()
             mbatch_size = train_set->length();
         else
             mbatch_size = batch_size;
-        if (train_set->weightsize() >= 1 && !weight_module)
+        if (train_set->weightsize() >= 1 && !store_weights)
             PLWARNING("In LearningNetwork::train - The training set contains "
                     "weights, but the network is not using them");
     }
@@ -456,73 +269,24 @@ void LearningNetwork::trainingStep(const Mat& inputs, const Mat& targets,
 {
     // Fill in the provided batch values (only if they are actually used by the
     // network).
-    if (input_module)
+    if (store_inputs)
         store_inputs->setData(inputs);
-    if (target_module)
+    if (store_targets)
         store_targets->setData(targets);
-    if (weight_module)
+    if (store_weights)
         store_weights->setData(weights.toMat(weights.length(), 1));
 
-    // Propagate up.
-    for (int i = 0; i < fprop_path.length(); i++) {
-        PP<OnlineLearningModule> module = all_modules[fprop_path[i]];
-        DBG_MODULE_LOG << "FPROP: " << module->classname() << endl;
-        // First resize some data matrices, so that the outputs are properly
-        // computed.
-        const TVec<int>& toresize = fprop_toresize[i];
-        for (int j = 0; j < toresize.length(); j++) {
-            DBG_MODULE_LOG << "  out = " << module->getPortName(toresize[j])
-                           << endl;
-            fprop_data[i][toresize[j]]->resize(0, 0);
-        }
-        module->fprop(fprop_data[i]);
-    }
-
-    // Clear gradients.
-    PLASSERT( fprop_path.length() == bprop_path.length() );
-    for (int i = 0; i < bprop_path.length(); i++) {
-        const TVec<int>& toresize = bprop_toresize[i];
-        const TVec<Mat*>& f_data = fprop_data[fprop_data.length() - 1 - i];
-        for (int j = 0; j < toresize.length(); j++) {
-            if (j == 0) {
-                DBG_MODULE_LOG << "CLEAR: " <<
-                    all_modules[bprop_path[i]]->classname() << endl;
-            }
-            int mat_idx = toresize[j];
-            DBG_MODULE_LOG << "  grad = " <<
-                all_modules[bprop_path[i]]->getPortName(mat_idx) << endl;
-            Mat* mat_toresize = bprop_data[i][mat_idx];
-            Mat* mat_tpl = f_data[mat_idx];
-            mat_toresize->resize(mat_tpl->length(), mat_tpl->width());
-            mat_toresize->fill(0);
-        }
-    }
+    // Forward propagation.
+    network->fprop(null_pointers);
 
     // Initialize cost gradients to 1.
     // Note that we may not need to re-do it at every iteration, but this is so
     // cheap it should not impact performance.
-    if (cost_module)
+    if (store_costs)
         store_costs->setGradientTo(1);
 
-    // Backpropagate gradient to optimize parameters.
-    for (int i = 0; i < bprop_path.length(); i++) {
-        PP<OnlineLearningModule> module = all_modules[bprop_path[i]];
-        DBG_MODULE_LOG << "BPROP: " << module->classname() << endl;
-        // First resize some gradient matrices, so that the gradient is
-        // properly computed.
-        const TVec<int>& toresize = bprop_toresize[i];
-        for (int j = 0; j < toresize.length(); j++) {
-            int mat_idx = toresize[j];
-            DBG_MODULE_LOG << "  grad = " << module->getPortName(mat_idx)
-                           << endl;
-            Mat* mat_toresize = bprop_data[i][mat_idx];
-            PLASSERT( mat_toresize->width() > 0 );
-            mat_toresize->resize(0, mat_toresize->width());
-        }
-        // Then perform the bpropUpdate step.
-        module->bpropAccUpdate(
-                fprop_data[fprop_data.length() - 1 - i], bprop_data[i]);
-    }
+    // Backpropagation.
+    network->bpropAccUpdate(null_pointers, null_pointers);
 }
 
 ///////////////////////////
@@ -531,30 +295,21 @@ void LearningNetwork::trainingStep(const Mat& inputs, const Mat& targets,
 void LearningNetwork::computeOutputAndCosts(const Vec& input, const Vec& target,
                                             Vec& output, Vec& costs) const
 {
-    if (input_module)
+    static Mat one;
+    if (store_inputs)
         store_inputs->setData(input.toMat(1, input.length()));
-    if (target_module)
+    if (store_targets)
         store_targets->setData(target.toMat(1, target.length()));
-    if (weight_module)
-        // Should fill store_weights with 1, but this is not a priority.
-        PLERROR("In LearningNetwork::computeOutputAndCosts - Not implemented "
-                "with 'weight_module'");
-
-    // Propagate up.
-    // TODO Code duplicated with code in train. This is bad!
-    for (int i = 0; i < fprop_path.length(); i++) {
-        PP<OnlineLearningModule> module = all_modules[fprop_path[i]];
-        DBG_MODULE_LOG << "FPROP: " << module->classname() << endl;
-        // First resize some data matrices, so that the outputs are properly
-        // computed.
-        const TVec<int>& toresize = fprop_toresize[i];
-        for (int j = 0; j < toresize.length(); j++) {
-            DBG_MODULE_LOG << "  out = " << module->getPortName(toresize[j])
-                           << endl;
-            fprop_data[i][toresize[j]]->resize(0, 0);
+    if (store_weights) {
+        if (one.isEmpty()) {
+            one.resize(1, 1);
+            one(0, 0) = 1;
         }
-        module->fprop(fprop_data[i]);
+        store_weights->setData(one);
     }
+
+    // Forward propagation.
+    network->fprop(null_pointers);
 
     // Store output.
     PLASSERT( store_outputs );
@@ -606,10 +361,10 @@ void LearningNetwork::computeCostsFromOutputs(const Vec& input, const Vec& outpu
 //////////////////////
 TVec<string> LearningNetwork::getTestCostNames() const
 {
-    if (!cost_module)
+    if (!store_costs)
         return TVec<string>();
     else
-        return cost_module->getPortDescription(cost_port);
+        return module->getPortDescription("cost");
 }
 
 ///////////////////////
