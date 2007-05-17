@@ -149,6 +149,9 @@ protected:
 
     //! The list of ports, computed from the 'ports' option.
     TVec<string> all_ports;
+
+    //! The description of each port, obtained from the underlying modules.
+    TVec< TVec<string> > port_descriptions;
     
     //#####  Protected Member Functions  ######################################
 

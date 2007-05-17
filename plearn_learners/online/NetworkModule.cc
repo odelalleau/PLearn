@@ -122,7 +122,7 @@ void NetworkModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             mat_toresize->resize(mat_tpl->length(), mat_tpl->width());
             mat_toresize->fill(0);
         }
-        const TMat<int>& f_toplug = fprop_toplug[fprop_path[fprop_idx]];
+        const TMat<int>& f_toplug = fprop_toplug[fprop_idx];
         for (int j = 0; j < f_toplug.length(); j++) {
             int mod_idx = f_toplug(j, 1);
             Mat* current = bprop_data[i][mod_idx];
@@ -175,34 +175,48 @@ void NetworkModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
 
         // Plug in the matrices provided as parameters of this method.
         int fprop_idx = fprop_data.length() - 1 - i;
-        const TMat<int>& f_toplug = fprop_toplug[fprop_path[fprop_idx]];
+        const TVec<Mat*> f_data = fprop_data[fprop_idx];
+        const TMat<int>& f_toplug = fprop_toplug[fprop_idx];
         for (int j = 0; j < f_toplug.length(); j++) {
             int this_idx = f_toplug(j, 0);
-            Mat* provided = ports_gradient[this_idx];
-            if (!provided)
-                // Nothing more to do.
-                continue;
             int mod_idx = f_toplug(j, 1);
-            Mat* current = b_data[mod_idx];
-            if (!current) {
-                // We can directly plug in the provided matrix. Since this
-                // gradient was not used, it means it should be an output, and
-                // thus an empty matrix.
-                PLASSERT( provided->isEmpty() );
-                b_data[mod_idx] = provided;
-            } else {
-                if (!provided->isEmpty()) {
-                    PLASSERT( !current->isEmpty() );
-                    // This gradient is some external gradient we are provided
-                    // with. It has already been added in the step where we
-                    // reset (see above), thus there is nothing more to do.
-                    // TODO Note that it may be cleaner to actually add it here
-                    // to simplify the code above.
+            Mat* provided = ports_gradient[this_idx];
+            if (provided) {
+                Mat* current = b_data[mod_idx];
+                if (!current) {
+                    // We can directly plug in the provided matrix.
+                    b_data[mod_idx] = provided;
                 } else {
-                    PLASSERT( current->isEmpty() );
-                    // This gradient must be computed, but is already computed
-                    // somewhere here. We will copy it after the update step.
-                    PLASSERT( false); // This should not happen (see above).
+                    if (!provided->isEmpty()) {
+                        PLASSERT( !current->isEmpty() );
+                        // This gradient is some external gradient we are
+                        // provided with. It has already been added in the step
+                        // where we reset (see above), thus there is nothing
+                        // more to do.  TODO Note that it may be cleaner to
+                        // actually add it here to simplify the code above.
+                    } else {
+                        PLASSERT( current->isEmpty() );
+                        // This gradient must be computed, but is already
+                        // computed somewhere here. We will copy it after the
+                        // update step.
+                        PLASSERT( false); // This should not happen (cf. above)
+                    }
+                }
+            }
+            // Same for the fprop data since it is also given in argument.
+            Mat* f_provided = ports_value[this_idx];
+            if (f_provided) {
+                Mat* f_current = f_data[mod_idx];
+                if (!f_current)
+                    f_data[mod_idx] = f_provided;
+                else {
+                    // 'f_provided' is thus the result of the computation, that
+                    // was copied from the value of 'f_current' at fprop time.
+                    // We must fill in 'f_current' with this value (once again,
+                    // this is not best for efficiency).
+                    f_current->resize(f_provided->length(),
+                                      f_provided->width());
+                    *f_current << *f_provided;
                 }
             }
         }
@@ -211,25 +225,31 @@ void NetworkModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         module->bpropAccUpdate(
                 fprop_data[fprop_data.length() - 1 - i], bprop_data[i]);
 
-        // Restore the bprop_data parameters.
+        // Restore the 'bprop_data' and 'fprop_data' parameters.
         for (int j = 0; j < f_toplug.length(); j++) {
             int this_idx = f_toplug(j, 0);
-            Mat* provided = ports_gradient[this_idx];
-            if (!provided)
-                // Nothing more to do.
-                continue;
             int mod_idx = f_toplug(j, 1);
-            Mat* current = b_data[mod_idx];
-            if (!current)
-                // Nothing to do either.
-                continue;
-            if (provided == current)
-                // They are the same matrices: this means there used to be a
-                // NULL matrix before.
-                b_data[mod_idx] = NULL;
-            else {
-                // This should never happen.
-                PLASSERT( false );
+            Mat* provided = ports_gradient[this_idx];
+            if (provided) {
+                Mat* current = b_data[mod_idx];
+                PLASSERT_MSG(current, "This should not happen: if we are "
+                        "provided with a matrix, it should have been plugged "
+                        "in here");
+                if (provided == current)
+                    // They are the same matrices: this means there used to be
+                    // a NULL matrix before.
+                    b_data[mod_idx] = NULL;
+                else {
+                    // This should never happen.
+                    PLASSERT( false );
+                }
+            }
+            Mat* f_provided = ports_value[this_idx];
+            if (f_provided) {
+                Mat* f_current = f_data[mod_idx];
+                if (f_current == f_provided)
+                    // This used to be a null pointer, that must be restored.
+                    f_data[mod_idx] = NULL;
             }
         }
     }
@@ -289,6 +309,7 @@ void NetworkModule::build_()
     TVec<int> new_row(2);
     all_ports.resize(0);
     port_sizes.resize(0, 2);
+    port_descriptions.resize(ports.length());
     for (int i = 0; i < ports.length(); i++) {
         const string& new_name = ports(i, 0);
         all_ports.append(new_name);
@@ -306,6 +327,7 @@ void NetworkModule::build_()
         new_row[0] = old_module->getPortLength(old_module_port);
         new_row[1] = old_module->getPortWidth(old_module_port);
         port_sizes.appendRow(new_row);
+        port_descriptions[i] = old_module->getPortDescription(old_module_port);
     }
 
     // The i-th element of 'in_connections' maps each port in the i-th module
@@ -351,10 +373,18 @@ void NetworkModule::build_()
     TVec<bool> is_done(modules.length(), false);
     fprop_data.resize(0);
     bprop_data.resize(modules.length());
-    all_mats.resize(0);
     fprop_toresize.resize(0);
     bprop_toresize.resize(modules.length());
     fprop_toplug.resize(0);
+    // This is getting a little hackish here... If not enough memory is
+    // allocated to store the work matrices, then when appending a new Mat to
+    // 'all_mats', we will have to create a new Storage and copy previous data.
+    // The problem is then that the pointers in 'fprop_data' and 'bprop_data'
+    // will become invalid. So an easy fix is to allocate enough memory to
+    // ensure we never have to resize the Storage later.
+    int max_n_mats = 1000;
+    all_mats.resize(max_n_mats);
+    all_mats.resize(0);
     // A vector that stores the index of a module in the fprop path.
     TVec<int> module_index_to_path_index(modules.length(), -1);
     while (is_done.find(false) >= 0) {
@@ -404,6 +434,9 @@ void NetworkModule::build_()
                         // matrices to store its value (and gradient if the
                         // connection propagates it).
                         all_mats.append(Mat());
+                        if (all_mats.length() > max_n_mats)
+                            PLERROR("In NetworkModule::build_ - Will need to "
+                                    "increase 'max_n_mats'");
                         Mat* new_mat = &all_mats.lastElement();
                         fprop_mats.append(new_mat);
                         fprop_tores.append(j);
@@ -419,6 +452,9 @@ void NetworkModule::build_()
                             }
                         if (must_store_grad) {
                             all_mats.append(Mat());
+                            if (all_mats.length() > max_n_mats)
+                                PLERROR("In NetworkModule::build_ - Will need "
+                                        "to increase 'max_n_mats'");
                             new_mat = &all_mats.lastElement();
                             bprop_mats.append(new_mat);
                         } else
@@ -454,7 +490,15 @@ void NetworkModule::build_()
 ////////////
 void NetworkModule::forget()
 {
-    PLERROR("In NetworkModule::forget - Must be implemented");
+    // Forward forget to the underlying modules, and provide them with a random
+    // number generator if needed.
+    for (int i = 0; i < modules.length(); i++) {
+        if (!modules[i]->random_gen) {
+            modules[i]->random_gen = random_gen;
+            modules[i]->build();
+        }
+        modules[i]->forget();
+    }
 }
 
 ///////////
@@ -539,6 +583,14 @@ void NetworkModule::fprop(const TVec<Mat*>& ports_value) {
             }
         }
     }
+}
+
+////////////////////////
+// getPortDescription //
+////////////////////////
+TVec<string> NetworkModule::getPortDescription(const string& port)
+{
+    return port_descriptions[getPortIndex(port)];
 }
 
 //////////////
