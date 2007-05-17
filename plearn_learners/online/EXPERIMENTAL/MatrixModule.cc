@@ -53,8 +53,9 @@ PLEARN_IMPLEMENT_OBJECT(
 //////////////////
 // MatrixModule //
 //////////////////
-MatrixModule::MatrixModule(bool call_build_):
-    inherited(call_build_)
+MatrixModule::MatrixModule(const string& the_name, bool call_build_):
+    inherited(the_name.empty() && call_build_ ? classname() : the_name,
+              call_build_)
 {
     if (call_build_)
         build_();

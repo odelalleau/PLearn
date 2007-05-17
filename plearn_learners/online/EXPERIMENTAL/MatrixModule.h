@@ -67,10 +67,11 @@ public:
 public:
     //#####  Public Member Functions  #########################################
 
-    //! Default constructor
-    // ### Make sure the implementation in the .cc
-    // ### initializes all fields to reasonable default values.
-    MatrixModule(bool call_build_ = false);
+    //! Default constructor.
+    //! If 'the_name' is empty, and 'call_build_' is true, then the name is set
+    //! to the name of this class (otherwise it is kept to an empty string, and
+    //! it will be properly initialized at build time).
+    MatrixModule(const string& the_name = "", bool call_build_ = false);
 
     // Your other public member functions go here
 
