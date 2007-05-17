@@ -250,6 +250,7 @@ void OnlineLearningModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(random_gen,             copies);
     deepCopyField(port_sizes,             copies);
+    deepCopyField(port_descriptions,      copies);
     deepCopyField(tmp_input_gradient,     copies);
     deepCopyField(tmpm_input_gradient,    copies);
     deepCopyField(tmp_input_diag_hessian, copies);
@@ -315,11 +316,9 @@ void OnlineLearningModule::build_()
 ////////////////////////
 TVec<string> OnlineLearningModule::getPortDescription(const string& port)
 {
-    static TVec< TVec<string> > default_descr;
-    if (default_descr.isEmpty())
-        default_descr.resize(nPorts());
+    port_descriptions.resize(nPorts());
     int idx = getPortIndex(port);
-    TVec<string>& descr = default_descr[idx];
+    TVec<string>& descr = port_descriptions[idx];
     int desired_size = getPortWidth(port);
     if (descr.length() != desired_size) {
         descr.resize(desired_size);

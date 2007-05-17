@@ -286,6 +286,10 @@ protected:
     //! Used to store the size of each port (may be used in sub-classes).
     TMat<int> port_sizes;
 
+    //! Used to store the description of each port (may be used in
+    //! sub-classes).
+    TVec< TVec<string> > port_descriptions;
+
     // Also used in CostModule for instance
     mutable Vec tmp_input_gradient;
     mutable Mat tmpm_input_gradient;
