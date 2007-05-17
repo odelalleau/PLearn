@@ -200,9 +200,12 @@
 #include <plearn_learners/online/CostModule.h>
 #include <plearn_learners/online/DeepBeliefNet.h>
 #include <plearn_learners/online/GradNNetLayerModule.h>
+#include <plearn_learners/online/MatrixModule.h>
 #include <plearn_learners/online/MaxSubsampling2DModule.h>
+#include <plearn_learners/online/ModuleLearner.h>
 #include <plearn_learners/online/ModulesLearner.h>
 #include <plearn_learners/online/ModuleStackModule.h>
+#include <plearn_learners/online/NetworkModule.h>
 #include <plearn_learners/online/NLLCostModule.h>
 #include <plearn_learners/online/OnlineLearningModule.h>
 #include <plearn_learners/online/ProcessInputCostModule.h>
@@ -217,6 +220,7 @@
 #include <plearn_learners/online/RBMMatrixTransposeConnection.h>
 #include <plearn_learners/online/RBMMixedConnection.h>
 #include <plearn_learners/online/RBMMixedLayer.h>
+#include <plearn_learners/online/RBMModule.h>
 #include <plearn_learners/online/RBMMultinomialLayer.h>
 #include <plearn_learners/online/RBMTruncExpLayer.h>
 #include <plearn_learners/online/SoftmaxModule.h>
