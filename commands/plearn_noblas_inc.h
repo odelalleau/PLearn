@@ -200,6 +200,7 @@
 #include <plearn_learners/online/CostModule.h>
 #include <plearn_learners/online/DeepBeliefNet.h>
 #include <plearn_learners/online/GradNNetLayerModule.h>
+#include <plearn_learners/online/MaxSubsampling2DModule.h>
 #include <plearn_learners/online/ModulesLearner.h>
 #include <plearn_learners/online/ModuleStackModule.h>
 #include <plearn_learners/online/NLLCostModule.h>
