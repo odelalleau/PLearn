@@ -333,7 +333,7 @@ const TVec<string>& RBMModule::getPorts()
 // getPortsSizes //
 ///////////////////
 const TMat<int>& RBMModule::getPortSizes() {
-    port_sizes.resize(2, 2);
+    port_sizes.resize(nPorts(), 2);
     port_sizes.fill(-1);
     if (visible_layer)
         port_sizes(0, 1) = visible_layer->size;
