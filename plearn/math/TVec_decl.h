@@ -852,21 +852,6 @@ TVec<T> concat(const TVec<T>& v1, const TVec<T>& v2, const TVec<T>& v3);
 template<class T>
 TVec<T> concat(const TVec<T>& v1, const TVec<T>& v2, const TVec<T>& v3, const TVec<T>& v4);
 
-//! returns a TVec from which v1 and v2 are subVec.
-template <class T>
-inline TVec<T> merge(TVec<T>& v1, TVec<T>& v2)
-{
-    int size1 = v1.size();
-    int size2 = v2.size();
-
-    TVec<T> result = v1;
-    result.resize( size1 + size2 );
-    result.subVec( size1, size2 ) << v2;
-    v2 = result.subVec( size1, size2 );
-
-    return result;
-}
-
 } // end of namespace PLearn
 
 
