@@ -492,6 +492,7 @@ class DBICondor(DBIBase):
             shift
             echo -n "Executing on "
             HOSTNAME=`hostname`
+            HOST=${HOSTNAME}
             echo ${HOSTNAME}
             export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/cluster/diro/home/lisa/local/byhost/${HOSTNAME}/lib:/cluster/diro/home/lisa/local/byhost/${HOSTNAME}/lib32
             echo "PATH: $PATH"
