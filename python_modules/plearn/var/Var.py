@@ -33,25 +33,24 @@
 from plearn.pyplearn import *
 from plearn.pyplearn.plearn_repr import plearn_repr, format_list_elements
 
-def Var(l, w=1, random_type='F', random_a=0., random_b=1., random_clear_first_row=False):
-    if isinstance(l, Variable):
-        return l;
-    elif isinstance(l,int):
-        return Variable(pl.SourceVariable(build_length=l,
-                                          build_width=w,
-                                          random_type=PLChar(random_type),
-                                          random_a=random_a,
-                                          random_b=random_b,
-                                          random_clear_first_row=random_clear_first_row))
-    else: # assume parameter l is a pl. plvar
-        return Variable(l)
-
     
-class Variable:
+class Var:
 
-    def __init__(self, plvar):
-        # parameter must be a pl. subclass of Variable
-        self.v = plvar
+    def __init__(self, l, w=1, random_type="none", random_a=0., random_b=1., random_clear_first_row=False):
+        if isinstance(l, Var):
+            self.v = l.v
+        elif isinstance(l,int):
+            self.v = pl.SourceVariable(build_length=l,
+                                       build_width=w,
+                                       random_type=random_type,
+                                       random_a=random_a,
+                                       random_b=random_b,
+                                       random_clear_first_row=random_clear_first_row)
+        else: # assume parameter l is a pl. plvar
+            self.v = l
+
+    def _serial_number(self):
+        return self.v._serial_number()
 
     def sigmoid(self):
         return Var(pl.SigmoidVariable(input=self.v))
@@ -92,6 +91,15 @@ class Variable:
     def transposeDoubleProduct(self, W, M):
         return Var(pl.TransposedDoubleProductVariable(varray=[W, M, self.v]))
 
+    def square(self):
+        return Var(pl.SquareVariable(input=self.v))
+
+    def __add__(self, other):
+        return Var(pl.PlusVariable(input1=self.v, input2=other.v))
+
+    def __sub__(self, other):
+        return Var(pl.MinusVariable(input1=self.v,input2=other.v))
+
     def __neg__(self):
         return Var(pl.NegateElementsVariable(input=self.v))
     
@@ -114,8 +122,8 @@ def addMultiSoftMaxDoubleProductTiedRLayer(input, iw, igs, ow, ogs):
     """iw is the input's width
     igs is the input's group size
     ow and ogs analog but for output"""
-    M = Var(ow/ogs, iw, 'U', -1/iw, 1/iw, False)
-    W = Var(ogs, iw, 'U', -1/iw, 1/iw, False)
+    M = Var(ow/ogs, iw, "uniform", -1/iw, 1/iw, False)
+    W = Var(ogs, iw, "uniform", -1/iw, 1/iw, False)
     hidden = input.doubleProduct(W,M).multiSoftMax(ogs)
     cost = -hidden.transposeDoubleProduct(W,M).multiLogSoftMax(igs).dot(input)            
     return hidden, cost, (W,M)
@@ -162,10 +170,10 @@ def addMultiSoftMaxSimpleProductNotTiedRLayer(input, iw, igs, ow, ogs):
 ##             return hidden, cost, (W, Wr)
 
 ##     else: # use double product
-##        # M = Var(ing*igs, ong, 'U', -1/ing/igs, 1/ing/igs, False)
-##        # W = Var(ing*igs, ogs, 'U', -1/ing/igs, 1/ing/igs, False)
-##         M = Var(ong, ing*igs, 'U', -1/ing/igs, 1/ing/igs, False)
-##         W = Var(ogs, ing*igs, 'U', -1/ing/igs, 1/ing/igs, False)
+##        # M = Var(ing*igs, ong, "uniform", -1/ing/igs, 1/ing/igs, False)
+##        # W = Var(ing*igs, ogs, "uniform", -1/ing/igs, 1/ing/igs, False)
+##         M = Var(ong, ing*igs, "uniform", -1/ing/igs, 1/ing/igs, False)
+##         W = Var(ogs, ing*igs, "uniform", -1/ing/igs, 1/ing/igs, False)
 ##         hidden = input.doubleProduct(W,M).multiSoftMax(ogs)
 ##         if tied:
 ##             cost = -hidden.transposeDoubleProduct(W,M).multiLogSoftMax(igs).dot(input)            

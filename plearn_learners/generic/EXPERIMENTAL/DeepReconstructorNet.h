@@ -89,6 +89,10 @@ public:
     Var target;
     Var supervised_cost;
 
+    Var fullcost;
+    
+    VarArray parameters;
+
     int minibatch_size;
 
 
@@ -152,10 +156,8 @@ public:
     virtual TVec<std::string> getTrainCostNames() const;
 
 
-    virtual void initializeParams(bool set_seed);
-    virtual VarArray getAllParams();
-
-    
+    virtual void initializeParams(bool set_seed=true);
+   
 
 
     // *** SUBCLASS WRITING: ***

@@ -38,7 +38,8 @@
 
 
 #include "DeepReconstructorNet.h"
-#include <plearn/display/DisplayUtils.h> ////////// to remove
+#include <plearn/display/DisplayUtils.h> 
+#include <plearn/var/Var_operators.h>
 
 namespace PLearn {
 using namespace std;
@@ -134,30 +135,38 @@ void DeepReconstructorNet::build_()
         compute_layer[k] = Func(layers[k], layers[k+1]);
     compute_output = Func(layers[0], layers[nlayers-1]);
     nout = layers[nlayers-1]->size();
+
+    if(supervised_cost.isNull())
+        PLERROR("You must provide a supervised_cost");
+    fullcost = supervised_cost;
+    int n_rec_costs = reconstruction_costs.length();
+    for(int k=0; k<n_rec_costs; k++)
+        fullcost = fullcost + reconstruction_costs[k];
+    displayVarGraph(fullcost);
+    Var input = layers[0];
+    Func f(input&target, fullcost);
+    parameters = f->parameters;
 }
 
 // ### Nothing to add here, simply calls build_
 void DeepReconstructorNet::build()
 {
+    if(random_gen.isNull())
+        random_gen = new PRandom();
     inherited::build();
     build_();
 }
 
 void DeepReconstructorNet::initializeParams(bool set_seed)
 {
+    perr << "Initializing parameters..." << endl;
     if (set_seed && seed_ != 0)
         random_gen->manual_seed(seed_);
 
-    VarArray params = getAllParams();
-    for(int i=0; i<params.length(); i++)
-        dynamic_cast<SourceVariable*>((Variable*)params[i])->randomInitialize(random_gen);
+    for(int i=0; i<parameters.length(); i++)
+        dynamic_cast<SourceVariable*>((Variable*)parameters[i])->randomInitialize(random_gen);
 }
 
-VarArray DeepReconstructorNet::getAllParams()
-{
-    PLERROR("Not implemented yet");
-    return VarArray();
-}
 
 void DeepReconstructorNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
@@ -194,8 +203,9 @@ void DeepReconstructorNet::forget()
         with the 'seed' option
       - initialize the learner's parameters, using this random generator
       - stage = 0
-    */
+    */    
     inherited::forget();
+    initializeParams();    
 }
 
 void DeepReconstructorNet::train()
@@ -213,7 +223,11 @@ void DeepReconstructorNet::train()
     PPath outmatfname = expdir/"outmat";
 
     int nreconstructions = reconstruction_costs.length();
-    VMat dset = train_set;
+    int insize = train_set->inputsize();
+    VMat dset = train_set.subMatColumns(0,insize);
+
+    // hack...
+    dset = dset.subMatRows(0,100);
     for(int k=0; k<nreconstructions; k++)
     {
         trainHiddenLayer(k, dset);
@@ -257,7 +271,7 @@ void DeepReconstructorNet::buildHiddenLayerOutputs(int which_input_layer, VMat i
 
 void DeepReconstructorNet::trainHiddenLayer(int which_input_layer, VMat inputs)
 {
-    int l = train_set->length();
+    int l = inputs->length();
     int nepochs = training_schedule[which_input_layer];
     perr << "\n\n*********************************************" << endl;
     perr << "*** Training layer " << which_input_layer << " for " << nepochs << " epochs " << endl;
