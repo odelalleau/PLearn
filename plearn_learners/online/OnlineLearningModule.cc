@@ -60,14 +60,21 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
 //////////////////////////
 // OnlineLearningModule //
 //////////////////////////
-OnlineLearningModule::OnlineLearningModule(bool call_build_):
+OnlineLearningModule::OnlineLearningModule(const string& the_name,
+                                           bool call_build_):
     inherited(call_build_),
     input_size(-1),
     output_size(-1),
-    estimate_simpler_diag_hessian( false )
+    name(the_name),
+    estimate_simpler_diag_hessian(false)
 {
-    if (call_build_)
+    if (call_build_) {
+        if (the_name.empty())
+            PLERROR("In OnlineLearningModule::OnlineLearningModule - You "
+                    "cannot create a new OnlineLearningModule with an empty "
+                    "name and call build within the constructor itself");
         build_();
+    }
 }
 
 ///////////
@@ -261,6 +268,10 @@ void OnlineLearningModule::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Size of the output");
 
+    declareOption(ol, "name", &OnlineLearningModule::name,
+                  OptionBase::buildoption,
+        "Name of the module (if not provided, the class name is used).");
+
     declareOption(ol, "estimate_simpler_diag_hessian",
                   &OnlineLearningModule::estimate_simpler_diag_hessian,
                   OptionBase::buildoption,
@@ -294,7 +305,10 @@ void OnlineLearningModule::declareOptions(OptionList& ol)
 // build_ //
 ////////////
 void OnlineLearningModule::build_()
-{}
+{
+    if (name.empty())
+        name = classname();
+}
 
 ////////////////////////
 // getPortDescription //

@@ -73,6 +73,8 @@ public:
     //! output size
     int output_size;
 
+    string name;
+
     //! compute simpler estimation of diagonal of the input Hessian matrix,
     //! using only the first (positive) part in:
     //! d²C/dx² ~= d²C/dy² (dy/dx)² [+ dC/dy d²y/dx²]
@@ -92,8 +94,12 @@ public:
 public:
     //#####  Public Member Fun ctions  #########################################
 
-    //! Default constructor
-    OnlineLearningModule(bool call_build_ = false);
+    //! Default constructor.
+    //! For safety, an error is raised if 'the_name' is empty and 'call_build_'
+    //! is true, since the default value of 'name' should be the class name,
+    //! and it is not available in the constructor.
+    OnlineLearningModule(const string& the_name = "",
+                         bool call_build_ = false);
 
     //! given the input, compute the output (possibly resize it appropriately)
     virtual void fprop(const Vec& input, Vec& output) const = 0;
