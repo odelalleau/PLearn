@@ -836,7 +836,7 @@ T maxabs(const TVec<T>& vec, int& argmax)
         return std::numeric_limits<T>::min();
     }
     T* pv = vec.data();
-    T maxval = *pv++;
+    T maxval = fabs(*pv++);
     argmax = 0;
     for (int i=1; i<vec.length(); i++,pv++)
     {
@@ -888,7 +888,7 @@ T minabs(const TVec<T>& vec, int& argmin)
         return std::numeric_limits<T>::max();
     }
     T* pv = vec.data();
-    T minval = *pv++;
+    T minval = fabs(*pv++);
     argmin = 0;
     for (int i=1; i<vec.length(); i++,pv++)
     {
@@ -5048,10 +5048,10 @@ T minabs(const TMat<T>& mat)
 {
 #ifdef BOUNDCHECK
     if(mat.length()==0 || mat.width()==0)
-        PLERROR("IN T maxabs(const TMat<T>& mat) mat has 0 size");
+        PLERROR("IN T minabs(const TMat<T>& mat) mat has 0 size");
 #endif
     T* m_i = mat.data();
-    double minval = m_i[0];
+    double minval = fabs(m_i[0]);
     for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
         for(int j=0; j<mat.width(); j++)
         {
@@ -5069,7 +5069,7 @@ T minabs(const TMat<T>& mat, int& min_i, int& min_j)
     PLASSERT(mat.size() != 0);
 
     T* m_i = mat.data();
-    double minval = m_i[0];
+    double minval = fabs(m_i[0]);
     min_i = 0;
     min_j = 0;
     for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
@@ -5095,7 +5095,7 @@ T maxabs(const TMat<T>& mat)
         PLERROR("IN T maxabs(const TMat<T>& mat) mat has 0 size");
 #endif
     T* m_i = mat.data();
-    double maxval = m_i[0];
+    double maxval = fabs(m_i[0]);
     for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
         for(int j=0; j<mat.width(); j++)
         {
@@ -5113,7 +5113,7 @@ T maxabs(const TMat<T>& mat, int& max_i, int& max_j)
     PLASSERT(mat.size() != 0);
 
     T* m_i = mat.data();
-    double maxval = m_i[0];
+    double maxval = fabs(m_i[0]);
     max_i = 0;
     max_j = 0;
     for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
