@@ -714,6 +714,7 @@ TVec<T> histogram(const TVec<T>& vec, T minval, T maxval, int nbins)
 }
 
 
+//! Returns the maximum
 template <class T>
 T max(const TVec<T>& vec)
 {
@@ -735,6 +736,31 @@ T max(const TVec<T>& vec)
     return maxval;
 }
 
+//! Returns the maximum and computes its index
+template <class T>
+T max(const TVec<T>& vec, int& argmax)
+{
+    PLASSERT(vec.length() != 0);
+
+    int n = vec.length();
+    if (n == 0)
+    {
+        argmax = -1;
+        return std::numeric_limits<T>::min();
+    }
+    T* pv = vec.data();
+    T maxval = *pv++;
+    argmax = 0;
+    for (int i=1; i<vec.length(); i++,pv++)
+        if (*pv>maxval)
+        {
+            maxval = *pv;
+            argmax = i;
+        }
+    return maxval;
+}
+
+//! Returns the minimum
 template<class T>
 T min(const TVec<T>& vec)
 {
@@ -752,6 +778,31 @@ T min(const TVec<T>& vec)
     return minval;
 }
 
+//! Returns the minimum and computes its index
+template <class T>
+T min(const TVec<T>& vec, int& argmin)
+{
+    PLASSERT(vec.length() != 0);
+
+    int n = vec.length();
+    if (n == 0)
+    {
+        argmin = -1;
+        return std::numeric_limits<T>::max();
+    }
+    T* pv = vec.data();
+    T minval = *pv++;
+    argmin = 0;
+    for (int i=1; i<vec.length(); i++,pv++)
+        if (*pv<minval)
+        {
+            minval = *pv;
+            argmin = i;
+        }
+    return minval;
+}
+
+//! Returns the maximum in absolute value
 template<class T>
 T maxabs(const TVec<T>& vec)
 {
@@ -772,8 +823,36 @@ T maxabs(const TVec<T>& vec)
     return maxval;
 }
 
+//! Returns the maximum in absolute value and compute its index
+template <class T>
+T maxabs(const TVec<T>& vec, int& argmax)
+{
+    PLASSERT(vec.length() != 0);
+
+    int n = vec.length();
+    if (n == 0)
+    {
+        argmax = -1;
+        return std::numeric_limits<T>::min();
+    }
+    T* pv = vec.data();
+    T maxval = *pv++;
+    argmax = 0;
+    for (int i=1; i<vec.length(); i++,pv++)
+    {
+        T a = fabs(*pv);
+        if (a>maxval)
+        {
+            maxval = a;
+            argmax = i;
+        }
+    }
+    return maxval;
+}
+
+//! Returns the minimum in absolute value
 template<class T>
-T minabs(const TVec<T>& vec, int index = int())
+T minabs(const TVec<T>& vec)
 {
 #ifdef BOUNDCHECK
     if(vec.length()==0)
@@ -796,6 +875,32 @@ T minabs(const TVec<T>& vec, int index = int())
     return minval;
 }
 
+//! Returns the minimum in absolute value and compute its index
+template <class T>
+T minabs(const TVec<T>& vec, int& argmin)
+{
+    PLASSERT(vec.length() != 0);
+
+    int n = vec.length();
+    if (n == 0)
+    {
+        argmin = -1;
+        return std::numeric_limits<T>::max();
+    }
+    T* pv = vec.data();
+    T minval = *pv++;
+    argmin = 0;
+    for (int i=1; i<vec.length(); i++,pv++)
+    {
+        T a = fabs(*pv);
+        if (a<minval)
+        {
+            minval = a;
+            argmin = i;
+        }
+    }
+    return minval;
+}
 
 template<class T>
 int argmax(const TVec<T>& vec)
@@ -4861,6 +4966,7 @@ T correlation(const TVec<T>& x, const TVec<T>& y)
     return (n*s_xy - s_x*s_y)/sqrt((n*s_x2 - s_x*s_x)*(n*s_y2 - s_y*s_y));
 }
 
+//! Returns the minimum
 template<class T>
 T min(const TMat<T>& mat)
 {
@@ -4877,6 +4983,28 @@ T min(const TMat<T>& mat)
     return minval;
 }
 
+//! Returns the minimum and computes its position
+template<class T>
+T min(const TMat<T>& mat, int& min_i, int& min_j)
+{
+    PLASSERT(mat.size() != 0);
+
+    T* m_i = mat.data();
+    double minval = m_i[0];
+    min_i = 0;
+    min_j = 0;
+    for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
+        for(int j=0; j<mat.width(); j++)
+            if(m_i[j]<minval)
+            {
+                minval = m_i[j];
+                min_i = i;
+                min_j = j;
+            }
+    return minval;
+}
+
+//! Returns the maximum
 template<class T>
 T max(const TMat<T>& mat)
 {
@@ -4893,6 +5021,72 @@ T max(const TMat<T>& mat)
     return maxval;
 }
 
+//! Returns the maximum and computes its position
+template<class T>
+T max(const TMat<T>& mat, int& max_i, int& max_j)
+{
+    PLASSERT(mat.size() != 0);
+
+    T* m_i = mat.data();
+    double maxval = m_i[0];
+    max_i = 0;
+    max_j = 0;
+    for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
+        for(int j=0; j<mat.width(); j++)
+            if(m_i[j]>maxval)
+            {
+                maxval = m_i[j];
+                max_i = i;
+                max_j = j;
+            }
+    return maxval;
+}
+
+//! Returns the minimum in absolute value
+template<class T>
+T minabs(const TMat<T>& mat)
+{
+#ifdef BOUNDCHECK
+    if(mat.length()==0 || mat.width()==0)
+        PLERROR("IN T maxabs(const TMat<T>& mat) mat has 0 size");
+#endif
+    T* m_i = mat.data();
+    double minval = m_i[0];
+    for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
+        for(int j=0; j<mat.width(); j++)
+        {
+            T a=fabs(m_i[j]);
+            if(a<minval)
+                minval = a;
+        }
+    return minval;
+}
+
+//! Returns the minimum in absolute value and computes its position
+template<class T>
+T minabs(const TMat<T>& mat, int& min_i, int& min_j)
+{
+    PLASSERT(mat.size() != 0);
+
+    T* m_i = mat.data();
+    double minval = m_i[0];
+    min_i = 0;
+    min_j = 0;
+    for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
+        for(int j=0; j<mat.width(); j++)
+        {
+            T a = fabs(m_i[j]);
+            if(a<minval)
+            {
+                minval = a;
+                min_i = i;
+                min_j = j;
+            }
+        }
+    return minval;
+}
+
+//! Returns the maximum in absolute value
 template<class T>
 T maxabs(const TMat<T>& mat)
 {
@@ -4908,6 +5102,30 @@ T maxabs(const TMat<T>& mat)
             T a=fabs(m_i[j]);
             if(a>maxval)
                 maxval = a;
+        }
+    return maxval;
+}
+
+//! Returns the maximum in absolute value and computes its position
+template<class T>
+T maxabs(const TMat<T>& mat, int& max_i, int& max_j)
+{
+    PLASSERT(mat.size() != 0);
+
+    T* m_i = mat.data();
+    double maxval = m_i[0];
+    max_i = 0;
+    max_j = 0;
+    for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
+        for(int j=0; j<mat.width(); j++)
+        {
+            T a = fabs(m_i[j]);
+            if(a>maxval)
+            {
+                maxval = a;
+                max_i = i;
+                max_j = j;
+            }
         }
     return maxval;
 }
