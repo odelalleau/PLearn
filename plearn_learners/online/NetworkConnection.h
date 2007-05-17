@@ -63,8 +63,14 @@ public:
     //! Default constructor.
     NetworkConnection();
 
-    //! Convenience constructor.
+    //! Convenience constructors.
     NetworkConnection(const string& the_source, const string& the_destination,
+                      bool the_propagate_gradient, bool call_build_ = true);
+
+    NetworkConnection(PP<OnlineLearningModule> the_src_module,
+                      const string& the_src_port,
+                      PP<OnlineLearningModule> the_dst_module,
+                      const string& the_dst_port,
                       bool the_propagate_gradient, bool call_build_ = true);
 
     //! Initialize the connection using the list of modules provided as a map

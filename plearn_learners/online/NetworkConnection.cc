@@ -72,6 +72,26 @@ NetworkConnection::NetworkConnection(const string& the_source,
         build_();
 }
 
+NetworkConnection::NetworkConnection(
+                      PP<OnlineLearningModule> the_src_module,
+                      const string& the_src_port,
+                      PP<OnlineLearningModule> the_dst_module,
+                      const string& the_dst_port,
+                      bool the_propagate_gradient, bool call_build_):
+    inherited(call_build_),
+    propagate_gradient(the_propagate_gradient),
+    src_module(the_src_module),
+    src_port(the_src_port),
+    dst_module(the_dst_module),
+    dst_port(the_dst_port)
+{
+    PLASSERT( the_src_module && the_dst_module );
+    source = the_src_module->name + "." + the_src_port;
+    destination = the_dst_module->name + "." + the_dst_port;
+    if (call_build_)
+        build_();
+}
+
 ///////////
 // build //
 ///////////
