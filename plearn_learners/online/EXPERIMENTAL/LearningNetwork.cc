@@ -41,7 +41,7 @@
 #include <plearn/io/pl_log.h>
 
 #include "LearningNetwork.h"
-#include <plearn_learners/online/EXPERIMENTAL/NullModule.h>
+#include <plearn_learners/online/NullModule.h>
 
 namespace PLearn {
 using namespace std;
@@ -160,40 +160,57 @@ void LearningNetwork::build_()
     // Add connections corresponding to the input, target, weight, output and
     // cost data.
     if (input_module) {
-        store_inputs = new MatrixModule(true);
+        store_inputs = new MatrixModule("store_inputs");
         all_modules.append(get_pointer(store_inputs));
         all_connections.append(new NetworkConnection(
                     get_pointer(store_inputs), "data",
                     input_module, input_port, false));
     }
     if (target_module) {
-        store_targets = new MatrixModule(true);
+        store_targets = new MatrixModule("store_targets");
         all_modules.append(get_pointer(store_targets));
         all_connections.append(new NetworkConnection(
                     get_pointer(store_targets), "data",
                     target_module, target_port, false));
     }
     if (weight_module) {
-        store_weights = new MatrixModule(true);
+        store_weights = new MatrixModule("store_weights");
         all_modules.append(get_pointer(store_weights));
         all_connections.append(new NetworkConnection(
                     get_pointer(store_weights), "data",
                     weight_module, weight_port, false));
     }
     if (output_module) {
-        store_outputs = new MatrixModule(true);
+        store_outputs = new MatrixModule("store_outputs");
         all_modules.append(get_pointer(store_outputs));
         all_connections.append(new NetworkConnection(
                     output_module, output_port,
                     get_pointer(store_outputs), "data", false));
     }
     if (cost_module) {
-        store_costs = new MatrixModule(true);
+        store_costs = new MatrixModule("store_costs");
         all_modules.append(get_pointer(store_costs));
         all_connections.append(new NetworkConnection(
                     cost_module, cost_port,
                     get_pointer(store_costs), "data", true));
     }
+
+    // First create a dictionary of all_modules.
+    map<string, PP<OnlineLearningModule> > name_to_module;
+    for (int i = 0; i < all_modules.length(); i++) {
+        string module = all_modules[i]->name;
+        if (name_to_module.find(module) != name_to_module.end()) {
+            // There is already a module with the same name. For safety
+            // reasons, we make it point to a NULL pointer to ensure we do not
+            // accidentally use the wrong module.
+            name_to_module[module] = NULL;
+        } else
+            name_to_module[module] = all_modules[i];
+    }
+
+    // Initialize connections.
+    for (int i = 0; i < all_connections.length(); i++)
+        all_connections[i]->initialize(name_to_module);
 
     // Construct fprop and bprop paths from the list of modules and
     // connections.
@@ -220,24 +237,24 @@ void LearningNetwork::build_()
     TVec< TVec<int> > compute_input_of(all_modules.length());
     for (int i = 0; i < all_connections.length(); i++) {
         PP<NetworkConnection> connection = all_connections[i];
-        int src = module_to_index[connection->src_module];
-        int dest = module_to_index[connection->dest_module];
+        int src = module_to_index[connection->getSourceModule()];
+        int dest = module_to_index[connection->getDestinationModule()];
         inputs_needed[dest]++;
         compute_input_of[src].append(dest);
         map<string, PP<NetworkConnection> >& in_conn = in_connections[dest];
-        if (in_conn.find(connection->dest_port) != in_conn.end()) {
+        if (in_conn.find(connection->getDestinationPort()) != in_conn.end()) {
             // The port has more than one incoming connection. Currently, we
             // only allow this to happen if the module is a NullModule (this is
             // for safety). If in the future we want more modules to allow
             // multiple incoming connections, we may get rid of this error.
             NullModule* test = dynamic_cast<NullModule*>(
-                    get_pointer(connection->dest_module));
+                    get_pointer(connection->getDestinationModule()));
             if (!test)
                 PLERROR("In LearningNetwork::build_ - A port may have only one "
                         "incoming connection");
         }
-        in_conn[connection->dest_port] = connection;
-        out_connections[src][connection->src_port].append(connection);
+        in_conn[connection->getDestinationPort()] = connection;
+        out_connections[src][connection->getSourcePort()].append(connection);
     }
 
     // The fprop and bprop paths can now be computed.
@@ -275,10 +292,10 @@ void LearningNetwork::build_()
                         // its value and gradient are found by looking at the
                         // source port of the connection.
                         PP<NetworkConnection> conn = in_conn[ports[j]];
-                        int src_mod = module_to_index[conn->src_module];
+                        int src_mod = module_to_index[conn->getSourceModule()];
                         int path_index = module_index_to_path_index[src_mod];
-                        int port_index = conn->src_module->getPortIndex(
-                                conn->src_port);
+                        int port_index = conn->getSourceModule()->getPortIndex(
+                                conn->getSourcePort());
                         fprop_mats.append(fprop_data[path_index][port_index]);
                         if (!conn->propagate_gradient)
                             // This connection does not propagate the gradient,

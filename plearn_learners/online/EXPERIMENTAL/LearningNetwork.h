@@ -43,7 +43,7 @@
 #include <plearn_learners/generic/PLearner.h>
 #include <plearn_learners/online/OnlineLearningModule.h>
 #include <plearn_learners/online/EXPERIMENTAL/MatrixModule.h>
-#include <plearn_learners/online/EXPERIMENTAL/NetworkConnection.h>
+#include <plearn_learners/online/NetworkConnection.h>
 
 namespace PLearn {
 
