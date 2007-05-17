@@ -86,7 +86,7 @@ foreach my $arg (@ARGV) {
 #    print "Root = ", $ARGV[$i],
 #    "\tArglist = (", join(",",@{$repl[$i]}),")\n";
 #}
-$ScriptName="$command_name".".expended";
+$ScriptName="lauchdbi.py";
 open(SCRIPT,">$ScriptName");
 print SCRIPT "#! /usr/bin/env python\n".
     "from plearn.parallel.dbi import DBI\n".
