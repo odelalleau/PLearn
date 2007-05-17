@@ -483,7 +483,16 @@ class DBICondor(DBIBase):
                 #environment    = LD_LIBRARY_PATH=/u/lisa/local/byhost/%s/lib:/u/lisa/local/%s/lib:/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages/numarray:/cluster/diro/home/lisa/local/%s/lib:/usr/local/lib:/cluster/diro/home/lisa/local/%s/lib32:/soft/lisa/linux/lib;PATH=/cluster/diro/home/lisa/PLearn/scripts:/soft/lisa/linux/bin:/u/lisa/local/%s/bin:/u/%s/PLearn/commands:/u/%s/PLearn/scripts:/Scripts:/commands:/u/%s/Scripts:/soft/diro/share/moe/bin-i4lx:/u/lamblinp/code/usr/bin:/u/%s/PLearn:/u/%s/PLearn/scripts:/u/%s/PLearn/commands:/u/%s/projects/apstatsoft:/u/%s/projects/apstatsoft/scripts:/u/%s/projects/apstatsoft/commands:/usr/kerberos/bin:/u/%s/GNUstep/Tools:/usr/GNUstep/Local/Tools:/usr/GNUstep/System/Tools:/usr/local/bin:/bin:/usr/bin:/usr/X11R6/bin:/opt/diro/bin:/u/lisa/local/linux-i386/bin;PYTHONPATH=/cluster/diro/home/lisa/PLearn/python_modules:/cluster/diro/home/lisa/local/%s/lib/python2.4/site-packages:/u/lisa/local/%s/lib/python2.3/site-packages:/u/lisa/local/%s/lib/python2.2/site-packages:/u/lisa/local/%s/lib/python2.4/site-packages/vtk_python:/u/lisa/local/%s/lib/python2.3/site-packages/Numeric:/u/%s/PLearn/python_modules:/u/%s/projects/apstatsoft/python_modules:
 
         launch_file = os.path.join(self.tmp_dir, 'launch.sh')
-        if not os.path.exists(launch_file):
+        dbi_file=get_plearndir()+'/python_modules/plearn/parallel/dbi.py'
+        if not os.path.exists(dbi_file):
+            print 'WARNING: Can\' locate dbi.py file. Meaby the file "'+launch_file+'" is not up to date!'
+
+        mtimel=os.stat(launch_file)[8]
+        mtimed=os.stat(dbi_file)[8]
+        if mtimed>mtimel:
+            print 'WARNING: We overwrite the file "'+launch_file+'" with a new version. Update it to your need!'
+        
+        if not os.path.exists(launch_file) or mtimed>mtimel:            
             self.temp_files.append(launch_file)
             launch_dat = open(launch_file,'w')
             launch_dat.write(dedent('''\
