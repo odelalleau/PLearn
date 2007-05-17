@@ -490,11 +490,10 @@ class DBICondor(DBIBase):
             #!/bin/sh
             PROGRAM=$1
             shift
-            echo -n "Executing on "
-            HOSTNAME=`hostname`
-            HOST=${HOSTNAME}
-            echo ${HOSTNAME}
+            export HOSTNAME=`hostname`
+            export HOST=${HOSTNAME}
             export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/cluster/diro/home/lisa/local/byhost/${HOSTNAME}/lib:/cluster/diro/home/lisa/local/byhost/${HOSTNAME}/lib32
+            echo -n "Executing on ${HOSTNAME}"
             echo "PATH: $PATH"
             echo "PYTHONPATH: $PYTHONPATH"
             echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
