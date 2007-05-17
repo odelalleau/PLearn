@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// LearningNetwork.h
+// ModuleLearner.h
 //
 // Copyright (C) 2007 Olivier Delalleau
 //
@@ -34,11 +34,11 @@
 
 // Authors: Olivier Delalleau
 
-/*! \file LearningNetwork.h */
+/*! \file ModuleLearner.h */
 
 
-#ifndef LearningNetwork_INC
-#define LearningNetwork_INC
+#ifndef ModuleLearner_INC
+#define ModuleLearner_INC
 
 #include <plearn_learners/generic/PLearner.h>
 #include <plearn_learners/online/OnlineLearningModule.h>
@@ -58,7 +58,7 @@ namespace PLearn {
  * @deprecated Write deprecated stuff here if there is any.  Indicate what else
  * should be used instead.
  */
-class LearningNetwork : public PLearner
+class ModuleLearner : public PLearner
 {
     typedef PLearner inherited;
 
@@ -73,7 +73,7 @@ public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
-    LearningNetwork();
+    ModuleLearner();
 
     //#####  PLearner Member Functions  #######################################
 
@@ -133,7 +133,7 @@ public:
     // Declares other standard object methods.
     // ### If your class is not instantiatable (it has pure virtual methods)
     // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS
-    PLEARN_DECLARE_OBJECT(LearningNetwork);
+    PLEARN_DECLARE_OBJECT(ModuleLearner);
 
     // Simply calls inherited::build() then build_()
     virtual void build();
@@ -197,7 +197,7 @@ private:
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(LearningNetwork);
+DECLARE_OBJECT_PTR(ModuleLearner);
 
 } // end of namespace PLearn
 

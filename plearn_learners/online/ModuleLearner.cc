@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// LearningNetwork.cc
+// ModuleLearner.cc
 //
 // Copyright (C) 2007 Olivier Delalleau
 //
@@ -34,20 +34,20 @@
 
 // Authors: Olivier Delalleau
 
-/*! \file LearningNetwork.cc */
+/*! \file ModuleLearner.cc */
 
 
-#define PL_LOG_MODULE_NAME "LearningNetwork"
+#define PL_LOG_MODULE_NAME "ModuleLearner"
 #include <plearn/io/pl_log.h>
 
-#include "LearningNetwork.h"
+#include "ModuleLearner.h"
 #include <plearn_learners/online/NullModule.h>
 
 namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
-    LearningNetwork,
+    ModuleLearner,
     "Flexible network structure that can be optimized to learn some task(s).",
     "This network is made of several blocks, called 'modules' (deriving from\n"
     "the OnlineLearningModule class), connected together so as to be able to\n"
@@ -58,9 +58,9 @@ PLEARN_IMPLEMENT_OBJECT(
 );
 
 /////////////////////
-// LearningNetwork //
+// ModuleLearner //
 /////////////////////
-LearningNetwork::LearningNetwork():
+ModuleLearner::ModuleLearner():
     batch_size(1),
     mbatch_size(-1)
 {
@@ -70,19 +70,19 @@ LearningNetwork::LearningNetwork():
 ////////////////////
 // declareOptions //
 ////////////////////
-void LearningNetwork::declareOptions(OptionList& ol)
+void ModuleLearner::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "module", &LearningNetwork::module,
+    declareOption(ol, "module", &ModuleLearner::module,
                   OptionBase::buildoption,
        "The module being optimized. This module should typically have some\n"
        "ports named 'input', 'target', 'weight', 'output' and 'cost'.");
 
-    declareOption(ol, "batch_size", &LearningNetwork::batch_size,
+    declareOption(ol, "batch_size", &ModuleLearner::batch_size,
                   OptionBase::buildoption,
        "Number of samples fed to the network at each iteration of learning.\n"
        "Use '0' for full batch learning.");
 
-    declareOption(ol, "mbatch_size", &LearningNetwork::mbatch_size,
+    declareOption(ol, "mbatch_size", &ModuleLearner::mbatch_size,
                   OptionBase::learntoption,
        "Same as 'batch_size', except when 'batch_size' is set to 0, this\n"
        "option takes the value of the size of the training set.");
@@ -94,7 +94,7 @@ void LearningNetwork::declareOptions(OptionList& ol)
 ////////////
 // build_ //
 ////////////
-void LearningNetwork::build_()
+void ModuleLearner::build_()
 {
     if (!module)
         // Cannot do anything without an underlying module.
@@ -177,7 +177,7 @@ void LearningNetwork::build_()
 ///////////
 // build //
 ///////////
-void LearningNetwork::build()
+void ModuleLearner::build()
 {
     inherited::build();
     build_();
@@ -186,18 +186,18 @@ void LearningNetwork::build()
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void LearningNetwork::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+void ModuleLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     // ### Remove this line when you have fully implemented this method.
-    PLERROR("LearningNetwork::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    PLERROR("ModuleLearner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 ////////////////
 // outputsize //
 ////////////////
-int LearningNetwork::outputsize() const
+int ModuleLearner::outputsize() const
 {
     PLASSERT( module && store_outputs );
     return module->getPortWidth("output");
@@ -206,7 +206,7 @@ int LearningNetwork::outputsize() const
 ////////////
 // forget //
 ////////////
-void LearningNetwork::forget()
+void ModuleLearner::forget()
 {
     inherited::forget();
 
@@ -219,7 +219,7 @@ void LearningNetwork::forget()
 ///////////
 // train //
 ///////////
-void LearningNetwork::train()
+void ModuleLearner::train()
 {
     if (!initTrain())
         return;
@@ -231,7 +231,7 @@ void LearningNetwork::train()
         else
             mbatch_size = batch_size;
         if (train_set->weightsize() >= 1 && !store_weights)
-            PLWARNING("In LearningNetwork::train - The training set contains "
+            PLWARNING("In ModuleLearner::train - The training set contains "
                     "weights, but the network is not using them");
     }
 
@@ -256,7 +256,7 @@ void LearningNetwork::train()
             pb->update(stage - stage_init);
     }
     if (stage != nstages)
-        PLWARNING("In LearningNetwork::train - The network was trained for "
+        PLWARNING("In ModuleLearner::train - The network was trained for "
                 "only %d stages (instead of nstages = %d, which is not a "
                 "multiple of batch_size = %d", stage, nstages, batch_size);
 }
@@ -264,7 +264,7 @@ void LearningNetwork::train()
 //////////////////
 // trainingStep //
 //////////////////
-void LearningNetwork::trainingStep(const Mat& inputs, const Mat& targets,
+void ModuleLearner::trainingStep(const Mat& inputs, const Mat& targets,
                       const Vec& weights)
 {
     // Fill in the provided batch values (only if they are actually used by the
@@ -292,7 +292,7 @@ void LearningNetwork::trainingStep(const Mat& inputs, const Mat& targets,
 ///////////////////////////
 // computeOutputAndCosts //
 ///////////////////////////
-void LearningNetwork::computeOutputAndCosts(const Vec& input, const Vec& target,
+void ModuleLearner::computeOutputAndCosts(const Vec& input, const Vec& target,
                                             Vec& output, Vec& costs) const
 {
     static Mat one;
@@ -329,7 +329,7 @@ void LearningNetwork::computeOutputAndCosts(const Vec& input, const Vec& target,
 ///////////////////
 // computeOutput //
 ///////////////////
-void LearningNetwork::computeOutput(const Vec& input, Vec& output) const
+void ModuleLearner::computeOutput(const Vec& input, Vec& output) const
 {
     // Unefficient implementation.
     Vec target(targetsize(), MISSING_VALUE);
@@ -340,7 +340,7 @@ void LearningNetwork::computeOutput(const Vec& input, Vec& output) const
 /////////////////////////////
 // computeCostsFromOutputs //
 /////////////////////////////
-void LearningNetwork::computeCostsFromOutputs(const Vec& input, const Vec& output,
+void ModuleLearner::computeCostsFromOutputs(const Vec& input, const Vec& output,
                                            const Vec& target, Vec& costs) const
 {
     // Unefficient implementation (recompute the output too).
@@ -359,7 +359,7 @@ void LearningNetwork::computeCostsFromOutputs(const Vec& input, const Vec& outpu
 //////////////////////
 // getTestCostNames //
 //////////////////////
-TVec<string> LearningNetwork::getTestCostNames() const
+TVec<string> ModuleLearner::getTestCostNames() const
 {
     if (!store_costs)
         return TVec<string>();
@@ -370,7 +370,7 @@ TVec<string> LearningNetwork::getTestCostNames() const
 ///////////////////////
 // getTrainCostNames //
 ///////////////////////
-TVec<string> LearningNetwork::getTrainCostNames() const
+TVec<string> ModuleLearner::getTrainCostNames() const
 {
     // No training cost computed.
     return TVec<string>();
