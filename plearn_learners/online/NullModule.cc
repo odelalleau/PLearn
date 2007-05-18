@@ -53,8 +53,14 @@ PLEARN_IMPLEMENT_OBJECT(
     "not actually used.\n"
 );
 
-NullModule::NullModule()
+////////////////
+// NullModule //
+////////////////
+NullModule::NullModule(const string& name, bool call_build_):
+    inherited(name.empty() ? classname() : name, call_build_)
 {
+    if (call_build_)
+        build_();
 }
 
 void NullModule::declareOptions(OptionList& ol)

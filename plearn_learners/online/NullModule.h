@@ -67,10 +67,8 @@ public:
 public:
     //#####  Public Member Functions  #########################################
 
-    //! Default constructor
-    // ### Make sure the implementation in the .cc
-    // ### initializes all fields to reasonable default values.
-    NullModule();
+    //! Constructor.
+    NullModule(const string& name = "", bool call_build_ = true);
 
     // Your other public member functions go here
 
