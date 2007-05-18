@@ -57,6 +57,8 @@ public:
 
     TVec<string> ports;
 
+    bool save_states;
+
 public:
     //#####  Public Member Functions  #########################################
 
@@ -104,7 +106,14 @@ public:
 
 
 protected:
-    
+
+    //! List of all modules, i.e. the modules in the 'modules' option, possibly
+    //! completed with an additional NullModule to save states when the
+    //! 'save_states' option is true.
+    TVec< PP<OnlineLearningModule> > all_modules;
+
+    //! Similar to 'all_modules', but for connections in the network.
+    TVec< PP<NetworkConnection> > all_connections;
 
     //! Ordered list of modules used when doing a fprop (the integer values
     //! correspond to indices in 'modules').

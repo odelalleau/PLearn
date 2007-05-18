@@ -169,7 +169,7 @@ public:
     virtual void bpropAccUpdate(const TVec<Mat*>& ports_value,
                                 const TVec<Mat*>& ports_gradient);
 
-    //! The ports are "visible", "hidden" and "hidden_activations".
+    //! The ports are "visible", "hidden" and "hidden_activations.state".
     virtual const TVec<string>& getPorts();
 
     //! The ports' sizes are given by the corresponding RBM layers.

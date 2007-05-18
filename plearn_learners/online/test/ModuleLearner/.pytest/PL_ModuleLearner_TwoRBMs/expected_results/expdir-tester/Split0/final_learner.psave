@@ -1,6 +1,6 @@
 *1 ->ModuleLearner(
 module = *2 ->NetworkModule(
-modules = 6 [ *3 ->RBMModule(
+modules = 5 [ *3 ->RBMModule(
 visible_layer = *4 ->RBMBinomialLayer(
 size = 5 ;
 learning_rate = 0.00100000000000000002 ;
@@ -273,42 +273,26 @@ name = "softmax" ;
 estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;
 random_gen = *5   )
-*15 ->NullModule(
-input_size = -1 ;
-output_size = -1 ;
-name = "dev" ;
-estimate_simpler_diag_hessian = 0 ;
-expdir = "" ;
-random_gen = *5   )
 ] ;
-connections = 6 [ *16 ->NetworkConnection(
+connections = 4 [ *15 ->NetworkConnection(
 source = "rbm_1.hidden" ;
 destination = "rbm_2.visible" ;
 propagate_gradient = 1  )
-*17 ->NetworkConnection(
+*16 ->NetworkConnection(
 source = "rbm_2.hidden" ;
 destination = "affine_net.input" ;
 propagate_gradient = 1  )
-*18 ->NetworkConnection(
+*17 ->NetworkConnection(
 source = "affine_net.output" ;
 destination = "softmax.input" ;
 propagate_gradient = 1  )
-*19 ->NetworkConnection(
+*18 ->NetworkConnection(
 source = "softmax.output" ;
 destination = "nll.prediction" ;
 propagate_gradient = 1  )
-*20 ->NetworkConnection(
-source = "rbm_2.hidden_activations" ;
-destination = "dev.null" ;
-propagate_gradient = 0  )
-*21 ->NetworkConnection(
-source = "rbm_1.hidden_activations" ;
-destination = "dev.null" ;
-propagate_gradient = 0  )
 ] ;
 ports = 8 [ "input" "rbm_1.visible" "target" "nll.target" "output" "affine_net.output" "cost" "nll.cost" ] ;
-input_size = -1 ;
-output_size = -1 ;
+save_states = 1 ;
 name = "NetworkModule" ;
 estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;

@@ -74,8 +74,6 @@ PTester(
                             output_size = ${n_classes}
                         )
 
-                        NullModule( name = "dev" )
-
                     ]
 
                     connections = [
@@ -99,17 +97,6 @@ PTester(
                             destination = "nll.prediction"
                         )
 
-                        NetworkConnection( 
-                            source = "rbm_2.hidden_activations"
-                            destination = "dev.null"
-                            propagate_gradient = 0
-                        )
-
-                        NetworkConnection( 
-                            source = "rbm_1.hidden_activations"
-                            destination = "dev.null"
-                            propagate_gradient = 0
-                        )
                     ]
 
                     ports = [

@@ -324,7 +324,7 @@ const TVec<string>& RBMModule::getPorts()
     if (ports.isEmpty()) {
         ports.append("visible");
         ports.append("hidden");
-        ports.append("hidden_activations");
+        ports.append("hidden_activations.state");
     }
     return ports;
 }

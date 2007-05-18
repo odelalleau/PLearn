@@ -66,7 +66,8 @@ PLEARN_IMPLEMENT_OBJECT(
 ///////////////////
 // NetworkModule //
 ///////////////////
-NetworkModule::NetworkModule()
+NetworkModule::NetworkModule():
+    save_states(true)
 {}
 
 ////////////////////
@@ -89,8 +90,25 @@ void NetworkModule::declareOptions(OptionList& ol)
        "its ports, and 'P' the name under which the NetworkModule sees this\n"
        "port. See the class help for an example.");
 
+    declareOption(ol, "save_states", &NetworkModule::save_states,
+                  OptionBase::buildoption,
+       "If set to 1, then any port of an underlying module whose name ends\n"
+       "with 'state' will be automatically saved, even if it has no incoming\n"
+       "or outgoing connection.");
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
+
+    // Hide unused parent options.
+
+    redeclareOption(ol, "input_size", &NetworkModule::input_size,
+                    OptionBase::nosave,
+                    "Not used.");
+
+    redeclareOption(ol, "output_size", &NetworkModule::output_size,
+                    OptionBase::nosave,
+                    "Not used.");
+
 }
 
 ////////////////////
@@ -111,11 +129,11 @@ void NetworkModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         for (int j = 0; j < toresize.length(); j++) {
             if (j == 0) {
                 DBG_MODULE_LOG << "CLEAR: " <<
-                    modules[bprop_path[i]]->classname() << endl;
+                    all_modules[bprop_path[i]]->classname() << endl;
             }
             int mat_idx = toresize[j];
             DBG_MODULE_LOG << "  grad = " <<
-                modules[bprop_path[i]]->getPortName(mat_idx) << endl;
+                all_modules[bprop_path[i]]->getPortName(mat_idx) << endl;
             Mat* mat_toresize = bprop_data[i][mat_idx];
             Mat* mat_tpl = f_data[mat_idx];
             mat_toresize->resize(mat_tpl->length(), mat_tpl->width());
@@ -157,7 +175,7 @@ void NetworkModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
 
     // Backpropagate gradient and update parameters.
     for (int i = 0; i < bprop_path.length(); i++) {
-        PP<OnlineLearningModule> module = modules[bprop_path[i]];
+        PP<OnlineLearningModule> module = all_modules[bprop_path[i]];
         DBG_MODULE_LOG << "BPROP: " << module->name << endl;
         // First resize some gradient matrices, so that the gradient is
         // properly computed.
@@ -269,41 +287,86 @@ void NetworkModule::build()
 ////////////
 void NetworkModule::build_()
 {
+    // Initialize the 'all_modules' and 'all_connections' lists.
+    all_modules.resize(modules.length());
+    all_modules << modules;
+    all_connections.resize(connections.length());
+    all_connections << connections;
+    if (save_states) {
+        // Ensure all ports which are states are correctly saved.
+        // This is done by adding connections to a NullModule in order to force
+        // them being saved.
+        for (int i = 0; i < modules.length(); i++) {
+            const TVec<string>& mod_ports = modules[i]->getPorts();
+            for (int j = 0; j < mod_ports.length(); j++) {
+                const string& port = mod_ports[j];
+                if (port.size() >= 5 &&
+                    port.substr(port.size() - 5) == "state")
+                {
+                    // Look for either an incoming or outgoing connection.
+                    string port_name = modules[i]->name + "." + port;
+                    bool has_a_connection = false;
+                    for (int k = 0; k < connections.length(); k++)
+                        if (connections[k]->destination == port_name ||
+                            connections[k]->source == port_name)
+                        {
+                            has_a_connection = true;
+                            break;
+                        }
+                    if (!has_a_connection) {
+                        PP<OnlineLearningModule> null;
+                        if (all_modules.length() == modules.length()) {
+                            // No null module added yet.
+                            null = new NullModule("_null_");
+                            all_modules.append(null);
+                        } else {
+                            PLASSERT( all_modules.length() == 
+                                        modules.length() + 1 );
+                            null = all_modules.lastElement();
+                        }
+                        all_connections.append( new NetworkConnection(
+                                    modules[i], port, null, "_null_", false));
+                    }
+                }
+            }
+        }
+    }
+    
     // Construct fprop and bprop paths from the list of modules and
     // connections.
 
     // First create a dictionary of modules.
     map<string, PP<OnlineLearningModule> > name_to_module;
-    for (int i = 0; i < modules.length(); i++) {
-        string module = modules[i]->name;
+    for (int i = 0; i < all_modules.length(); i++) {
+        string module = all_modules[i]->name;
         if (name_to_module.find(module) != name_to_module.end()) {
             // There is already a module with the same name. For safety
             // reasons, we make it point to a NULL pointer to ensure we do not
             // accidentally use the wrong module.
             name_to_module[module] = NULL;
         } else
-            name_to_module[module] = modules[i];
+            name_to_module[module] = all_modules[i];
     }
 
     // Initialize connections.
-    for (int i = 0; i < connections.length(); i++)
-        connections[i]->initialize(name_to_module);
+    for (int i = 0; i < all_connections.length(); i++)
+        all_connections[i]->initialize(name_to_module);
 
     // Preprocess some convenience data structures from the list of
     // connections.
 
     // 'module_to_index' maps module pointers to their corresponding index in
-    // the 'modules' list.
+    // the 'all_modules' list.
     map<const OnlineLearningModule*, int> module_to_index;
-    for (int i = 0; i < modules.length(); i++)
-        module_to_index[modules[i]] = i;
+    for (int i = 0; i < all_modules.length(); i++)
+        module_to_index[all_modules[i]] = i;
     
     // Analyze the list of ports.
     PLASSERT( ports.length() % 2 == 0 );
     // The 'port_correspondances' lists, for each module, the correspondances
     // between the modules' ports and the ports of the NetworkModule.
-    TVec< TMat<int> > port_correspondances(modules.length());
-    for (int i = 0; i < modules.length(); i++)
+    TVec< TMat<int> > port_correspondances(all_modules.length());
+    for (int i = 0; i < all_modules.length(); i++)
         port_correspondances[i].resize(0, 2);
     TVec<int> new_row(2);
     all_ports.resize(0);
@@ -333,19 +396,19 @@ void NetworkModule::build_()
     // The i-th element of 'in_connections' maps each port in the i-th module
     // to the connection that has it as destination (there may be only one).
     TVec< map<string, PP<NetworkConnection> > > in_connections;
-    in_connections.resize(modules.length());
+    in_connections.resize(all_modules.length());
     // The i-th element of 'out_connections' maps each port in the i-th module
     // to the connections that have it as source (there may be many).
     TVec< map<string, TVec< PP<NetworkConnection> > > > out_connections;
-    out_connections.resize(modules.length());
+    out_connections.resize(all_modules.length());
     // The 'inputs_needed' vector contains the number of inputs that must be
     // fed to a module before it can compute a fprop.
-    TVec<int> inputs_needed(modules.length(), 0);
+    TVec<int> inputs_needed(all_modules.length(), 0);
     // The 'compute_input_of' list gives, for each module M, the indices of
     // other modules that take an output of M as input.
-    TVec< TVec<int> > compute_input_of(modules.length());
-    for (int i = 0; i < connections.length(); i++) {
-        PP<NetworkConnection> connection = connections[i];
+    TVec< TVec<int> > compute_input_of(all_modules.length());
+    for (int i = 0; i < all_connections.length(); i++) {
+        PP<NetworkConnection> connection = all_connections[i];
         int src = module_to_index[connection->getSourceModule()];
         int dest = module_to_index[connection->getDestinationModule()];
         inputs_needed[dest]++;
@@ -368,13 +431,13 @@ void NetworkModule::build_()
 
     // The fprop and bprop paths can now be computed.
     fprop_path.resize(0);
-    bprop_path.resize(modules.length());
+    bprop_path.resize(all_modules.length());
     bprop_path.fill(-1);
-    TVec<bool> is_done(modules.length(), false);
+    TVec<bool> is_done(all_modules.length(), false);
     fprop_data.resize(0);
-    bprop_data.resize(modules.length());
+    bprop_data.resize(all_modules.length());
     fprop_toresize.resize(0);
-    bprop_toresize.resize(modules.length());
+    bprop_toresize.resize(all_modules.length());
     fprop_toplug.resize(0);
     // This is getting a little hackish here... If not enough memory is
     // allocated to store the work matrices, then when appending a new Mat to
@@ -386,9 +449,9 @@ void NetworkModule::build_()
     all_mats.resize(max_n_mats);
     all_mats.resize(0);
     // A vector that stores the index of a module in the fprop path.
-    TVec<int> module_index_to_path_index(modules.length(), -1);
+    TVec<int> module_index_to_path_index(all_modules.length(), -1);
     while (is_done.find(false) >= 0) {
-        for (int i = 0; i < modules.length(); i++) {
+        for (int i = 0; i < all_modules.length(); i++) {
             if (!is_done[i] && inputs_needed[i] == 0) {
                 for (int j = 0; j < compute_input_of[i].length(); j++)
                     inputs_needed[compute_input_of[i][j]]--;
@@ -397,7 +460,7 @@ void NetworkModule::build_()
                 fprop_toplug.append(port_correspondances[i]);
                 // Compute the list of matrices that must be provided to this
                 // module when doing a fprop and bprop.
-                TVec<string> mod_ports = modules[i]->getPorts();
+                TVec<string> mod_ports = all_modules[i]->getPorts();
                 map<string, PP<NetworkConnection> >& in_conn =
                     in_connections[i];
                 map<string, TVec< PP<NetworkConnection> > >& out_conn =
@@ -423,7 +486,7 @@ void NetworkModule::build_()
                             // and thus we do not want to accumulate it.
                             bprop_mats.append(NULL);
                         else {
-                            int b_idx = modules.length() - 1 - path_index;
+                            int b_idx = all_modules.length() - 1 - path_index;
                             bprop_mats.append(bprop_data[b_idx][port_index]);
                             bprop_tores.append(j);
                         }
@@ -492,12 +555,12 @@ void NetworkModule::forget()
 {
     // Forward forget to the underlying modules, and provide them with a random
     // number generator if needed.
-    for (int i = 0; i < modules.length(); i++) {
-        if (!modules[i]->random_gen) {
-            modules[i]->random_gen = random_gen;
-            modules[i]->build();
+    for (int i = 0; i < all_modules.length(); i++) {
+        if (!all_modules[i]->random_gen) {
+            all_modules[i]->random_gen = random_gen;
+            all_modules[i]->build();
         }
-        modules[i]->forget();
+        all_modules[i]->forget();
     }
 }
 
@@ -512,7 +575,7 @@ void NetworkModule::fprop(const Vec& input, Vec& output) const
 
 void NetworkModule::fprop(const TVec<Mat*>& ports_value) {
     for (int i = 0; i < fprop_path.length(); i++) {
-        PP<OnlineLearningModule> module = modules[fprop_path[i]];
+        PP<OnlineLearningModule> module = all_modules[fprop_path[i]];
         DBG_MODULE_LOG << "FPROP: " << module->name << endl;
 
         // First resize some data matrices, so that the outputs are properly
