@@ -8,9 +8,6 @@ $DEFINE{targetsize}{1}
 
 PTester( 
     expdir = "${expdir}"
-    final_commands = [
-        "plearn vmat cat ${expdir}/global_stats.pmat"
-    ]
     learner =
         ModuleLearner( 
             module =
