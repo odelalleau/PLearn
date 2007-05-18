@@ -1,3 +1,6 @@
+# Network architecture consisting in two RBMs stacked together, followed by an
+# affine transformation for classification.
+
 $DEFINE{expdir}{expdir-tester}
 $EVALUATE{expdir}
 
