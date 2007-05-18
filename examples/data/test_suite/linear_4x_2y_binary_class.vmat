@@ -1,0 +1,19 @@
+# Dummy binary classification problem derived from the 'linear_4x_2y' dataset.
+# The sign of the last column (y2) is the target, while the first five columns
+# (x1 -> x4 and y1) are the inputs.
+# Also, the five inputs are processed through a sigmoid to ensure they are
+# between 0 and 1.
+
+MemoryVMatrix(
+    source =
+        ProcessingVMatrix(
+            source =
+                AutoVMatrix(
+                    filename = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.amat"
+                )
+            prg = "[@x1:@y1:sigmoid] @y2 0 < 0 1 ifelse :target"
+            inputsize = 5
+            targetsize = 1
+            weightsize = 0
+        )
+)
