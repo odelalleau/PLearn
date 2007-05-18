@@ -64,10 +64,13 @@ def selectres(loc_specs,a):
   loc_mode = loc_specs[0]
   if loc_mode=="pos":
     row=int(loc_specs[1])
+    if row<0:
+      row = max(0,a.shape[0]+row)
     i=2
-    while len(loc_specs[i:])>0:
-      res.append(a[row,int(loc_specs[i])])
-      i+=1
+    if row<a.shape[0]:
+      while len(loc_specs[i:])>0:
+        res.append(a[row,int(loc_specs[i])])
+        i+=1
   elif loc_mode=="mincol":
     mcol = int(loc_specs[1])
     mrow = argmin(a[:,mcol])
@@ -118,10 +121,13 @@ def getres(loc_specs,filenames):
   return all_results
 
 def compare_res(x,y):
-  if x[0][0]<y[0][0]:
-    return -1
+  if len(x)>0 and len(y)>0 and len(x[0])>0 and len(y[0])>0:
+    if x[0][0]<y[0][0]:
+      return -1
+    else:
+      return 1
   else:
-    return 1
+    return 0
 
 def write_array(f,a):
   rows=a.shape[0]
@@ -196,6 +202,9 @@ def outputres(f,mode,speclist,results):
     arrays = []
     for res in results:
       arrays.append(res[0])
+    # extend the shorter arrays with NaNs
+    maxlen = max([a.shape[0] for a in arrays])
+    arrays = [concatenate([a,resize(array([[float("NaN")]]),(maxlen-a.shape[0],a.shape[1]))],0) for a in arrays]
     a = concatenate(arrays,1)
     # write the array to file, without any []
     write_array(f,a)
@@ -227,6 +236,7 @@ if __name__=='__main__':
     print '  pos <row> <col0> [<col1> <col2>...] : keep only the values at positions'
     print '                          (<row> <col0>) (<row> <col1>) ... in each pmat file, and the first value'
     print '                          may be used to minimize over files in the min command.'
+    print '                          A negative <row> value is relative to the end (-1 = last row).'
     print '  mincol <mcol> [<col1> <col2>...] : keep only the minimum value in colun <mcol> of each pmat,'
     print '                          keeping track at the same time of the <coli> values at the min-selected row.'
     sys.exit(1)
