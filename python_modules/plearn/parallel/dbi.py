@@ -378,6 +378,10 @@ class DBICondor(DBIBase):
                 c=command
                 c2=""
 
+            # We use the absolute path so that we don't have corner case as with ./ 
+            c = os.path.normpath(os.path.join(os.getcwd(), c))
+            command = c + c2
+            
                 # We will execute the command on the specified architecture
                 # if it is specified. If the executable exist for both
                 # architecture we execute on both. Otherwise we execute on the
