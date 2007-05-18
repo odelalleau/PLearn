@@ -144,6 +144,8 @@ public:
 
 protected:
 
+    //! YB NOTE: MAYBE WE DO NOT NEED store_* to be MatrixModules, just Mat?
+
     //! Simple module used to initialize the network's inputs.
     PP<MatrixModule> store_inputs;
 

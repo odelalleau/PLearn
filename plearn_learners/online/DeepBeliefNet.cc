@@ -98,8 +98,12 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
 
     declareOption(ol, "grad_learning_rate", &DeepBeliefNet::grad_learning_rate,
                   OptionBase::buildoption,
+                  "The learning rate used during gradient descent");
+
+    declareOption(ol, "grad_decrease_ct", &DeepBeliefNet::grad_decrease_ct,
+                  OptionBase::buildoption,
                   "The decrease constant of the learning rate used during"
-                  " gradient descent");
+                  "gradient descent");
 
     declareOption(ol, "batch_size", &DeepBeliefNet::batch_size,
                   OptionBase::buildoption,
