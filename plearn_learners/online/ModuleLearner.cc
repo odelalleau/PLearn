@@ -48,13 +48,16 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     ModuleLearner,
-    "Flexible network structure that can be optimized to learn some task(s).",
-    "This network is made of several blocks, called 'modules' (deriving from\n"
-    "the OnlineLearningModule class), connected together so as to be able to\n"
-    "propagate information through the network.\n"
-    "Typically, during training, (input, target) pairs are fed to the\n"
-    "network and a cost is optimized. The trained network can later be used\n"
-    "to make predictions on new test points.\n"
+    "A PLearner that contains a single OnlineLearningModule.\n",
+    "That module should have ports named 'input', 'target', 'weight', 'output' and 'cost'.\n"
+    "For example one can use a NetworkModule, which has such ports.\n"
+    "The input and target from the training VMatrix are plugged on the 'input' and 'target'\n"
+    "ports, and the output (for ComputeOutput) and cost (for ComputeOutputAndCost and\n"
+    "for training) are obtained from the 'output' and 'cost' ports.\n"
+    "During training gradient is propagated from the cost and the bpropUpdate()\n"
+    "method of the module is called (possibly one mini-batch of examples at a time)\n"
+    "so as to update the internal parameters of the module. During ComputeOutput,\n"
+    "it is not necessary to provide a target in order to obtain an output.\n"
 );
 
 /////////////////////
