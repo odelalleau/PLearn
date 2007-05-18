@@ -68,7 +68,14 @@
 #endif
 */
 
-#if PL_PYTHON_VERSION >= 240
+#if PL_PYTHON_VERSION >= 250
+
+#include <python2.5/Python.h>
+#include <python2.5/compile.h>  // define PyCodeObject
+#include <python2.5/eval.h>     // for accessing PyEval_EvalCode: not included by default
+#include <python2.5/numarray/libnumarray.h>
+
+#elif PL_PYTHON_VERSION >= 240
 
 #include <python2.4/Python.h>
 #include <python2.4/compile.h>  // define PyCodeObject
@@ -85,7 +92,7 @@
 #else
 /*
 // it is not an error not to include python
-#  error "PL_PYTHON_VERSION should be defined to one of: 230, 240"
+#  error "PL_PYTHON_VERSION should be defined to one of: 230, 240, 250"
 */
 #endif
 

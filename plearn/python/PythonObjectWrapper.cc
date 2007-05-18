@@ -343,7 +343,10 @@ PyObject* PythonObjectWrapper::trampoline(PyObject* self, PyObject* args)
     //call, catch and send any errors to python
     try
     {
-        return tramp->call(obj, args_tvec).getPyObject();
+        PythonObjectWrapper returned_value= tramp->call(obj, args_tvec);
+        PyObject* to_return= returned_value.getPyObject();
+        Py_XINCREF(to_return);
+        return to_return;
     }
     catch(const PLearnError& e) 
     {
@@ -386,7 +389,8 @@ PyObject* PythonObjectWrapper::python_del(PyObject* self, PyObject* args)
     obj->unref();//python no longer references this obj.
 
     m_wrapped_objects.erase(obj);
-    return PythonObjectWrapper().getPyObject();//None
+
+    return newPyObject();//None
 }
 
 //#####  newPyObject  #########################################################

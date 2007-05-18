@@ -398,7 +398,7 @@ PyObject* PythonCodeSnippet::pythonTrampoline(PyObject* self, PyObject* args)
         int size = PyTuple_GET_SIZE(args);
         TVec<PythonObjectWrapper> args_tvec(size);
         for (int i=0 ; i<size ; ++i) {
-            args_tvec[i] = 
+            args_tvec[i]= 
                 PythonObjectWrapper(PyTuple_GET_ITEM(args,i),
                                     PythonObjectWrapper::transfer_ownership);
         }
