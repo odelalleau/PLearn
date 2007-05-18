@@ -496,14 +496,17 @@ void PLearner::setTrainStatsCollector(PP<VecStatsCollector> statscol)
 int PLearner::inputsize() const
 { 
     if (inputsize_<0)
-        PLERROR("Must specify a training set before calling PLearner::inputsize()"); 
+        PLERROR("Must specify a training set before calling PLearner::inputsize()"
+                " (or use a training set with a valid inputsize)"); 
     return inputsize_; 
 }
 
 int PLearner::targetsize() const 
 { 
     if(targetsize_ == -1) 
-        PLERROR("In PLearner::targetsize (%s)- 'targetsize_' is -1, either no training set has beeen specified or its sizes were not set properly", this->classname().c_str());
+        PLERROR("In PLearner::targetsize (%s)- 'targetsize_' is -1,"
+                " either no training set has beeen specified or its sizes"
+                " were not set properly", this->classname().c_str());
     return targetsize_; 
 }
 

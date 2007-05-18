@@ -20,6 +20,11 @@ class Machin(EmbeddedCodeSnippet):
                           [36,1,0,45,121],
                           [55,0,1,32,101]],
                          False)
+        #ds= [[0,1,0,1,100],
+        #     [8,0,1,3,200],
+        #     [0,5,1,2,300],
+        #     [1,1,1,-1,400]]
+        #l.setTrainingSet(ds, False)
         l.inputsize= 4
         l.targetsize= 1
         l.weightsize= 0

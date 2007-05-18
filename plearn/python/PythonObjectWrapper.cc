@@ -318,7 +318,7 @@ PyObject* PythonObjectWrapper::trampoline(PyObject* self, PyObject* args)
     PythonGlobalInterpreterLock gil;         // For thread-safety
 
     //get object and trampoline from self
-    PythonObjectWrapper s(self, transfer_ownership);
+    PythonObjectWrapper s(self);
 
     //perr << "refcnt self= " << self->ob_refcnt << endl;
 
@@ -333,8 +333,7 @@ PyObject* PythonObjectWrapper::trampoline(PyObject* self, PyObject* args)
     TVec<PythonObjectWrapper> args_tvec(size);
     for(int i= 0; i < size; ++i) 
         args_tvec[i]= 
-            PythonObjectWrapper(PyTuple_GET_ITEM(args,i),
-                                PythonObjectWrapper::transfer_ownership);
+            PythonObjectWrapper(PyTuple_GET_ITEM(args,i));
 
     // separate self from other params.
     Object* obj= args_tvec[0];
@@ -370,8 +369,9 @@ PyObject* PythonObjectWrapper::trampoline(PyObject* self, PyObject* args)
 PyObject* PythonObjectWrapper::python_del(PyObject* self, PyObject* args)
 {
     TVec<PyObject*> args_tvec= 
-        PythonObjectWrapper(args, transfer_ownership).as<TVec<PyObject*> >();
-    Object* obj= PythonObjectWrapper(args_tvec[0], transfer_ownership);
+        PythonObjectWrapper(args).as<TVec<PyObject*> >();
+
+    Object* obj= PythonObjectWrapper(args_tvec[0]);
 
     string classname= obj->classname();
     pypl_classes_t::iterator clit= m_pypl_classes.find(classname);
@@ -413,7 +413,8 @@ PyMethodDef PythonObjectWrapper::m_unref_method_def;
 PyObject* PythonObjectWrapper::newPyObject(const Object* x)
 {
     // void ptr becomes None
-    if(!x) return newPyObject();
+    if(!x) 
+        return newPyObject();
 
     PythonGlobalInterpreterLock gil;         // For thread-safety
 
@@ -434,7 +435,8 @@ PyObject* PythonObjectWrapper::newPyObject(const Object* x)
         "import *\n";
     PyObject* pyenv= PyDict_New();
     PyDict_SetItemString(pyenv, "__builtins__", PyEval_GetBuiltins());
-    PyRun_String(importcode.c_str(), Py_file_input, pyenv, pyenv);
+    PyObject* res= PyRun_String(importcode.c_str(), Py_file_input, pyenv, pyenv);
+    Py_DECREF(res);
     if (PyErr_Occurred()) 
     {
         Py_DECREF(pyenv);
@@ -496,7 +498,9 @@ PyObject* PythonObjectWrapper::newPyObject(const Object* x)
             + classname + "(WrappedPLearnObject):\n"
             "\tpass\n\n";
 
-        PyRun_String(derivcode.c_str(), Py_file_input, pyenv, pyenv);
+        PyObject* res= PyRun_String(derivcode.c_str(), 
+                                    Py_file_input, pyenv, pyenv);
+        Py_XDECREF(res);
         env= PythonObjectWrapper(pyenv, transfer_ownership).as<env_t>();
         clit= env.find(classname);
         if(clit == env.end())
@@ -619,6 +623,11 @@ PyObject* PythonObjectWrapper::newPyObject(const bool& x)
 PyObject* PythonObjectWrapper::newPyObject(const int& x)
 {
     return PyInt_FromLong(long(x));
+}
+
+PyObject* PythonObjectWrapper::newPyObject(const unsigned int& x)
+{
+    return PyLong_FromUnsignedLong(static_cast<unsigned long>(x));
 }
     
 PyObject* PythonObjectWrapper::newPyObject(const long& x)

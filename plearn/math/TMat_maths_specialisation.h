@@ -311,8 +311,9 @@ inline void externalProductScaleAcc(const TMat<double>& A,
     int m = A.width();
     int n = A.length();
 
-    if (A.isNull() || x.isNull() || y.isNull()) // Size zero ; don't bother
-        return;                                 // with actual calculation
+    if (A.isNull() || x.isNull() || y.isNull()  // Size zero ; don't bother
+        || m == 0 || n == 0)                    // with actual calculation
+        return;
 
     dger_(&m, &n, &alpha, y.data(), &one, x.data(), &one, A.data(), &lda);
 }

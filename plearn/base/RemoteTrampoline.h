@@ -258,7 +258,7 @@ struct RemoteTrampoline_0 : public RemoteTrampoline
     {
         checkNargs(args.size(), expected_nargs);
         TRAMPOLINE_TYPE(R) r = (as<T>(instance)->*m_method)();
-        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership) ;
+        return PythonObjectWrapper(r) ;
     }
 #endif //def PL_PYTHON_VERSION 
 
@@ -338,7 +338,7 @@ struct RemoteTrampoline_1 : public RemoteTrampoline
         checkNargs(args.size(), expected_nargs);
         TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
         TRAMPOLINE_TYPE(R) r= (as<T>(instance)->*m_method)(a1);
-        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+        return PythonObjectWrapper(r);
     }
 #endif //def PL_PYTHON_VERSION 
 
@@ -423,7 +423,7 @@ struct RemoteTrampoline_2 : public RemoteTrampoline
         TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
         TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
         TRAMPOLINE_TYPE(R) r= (as<T>(instance)->*m_method)(a1,a2);
-        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+        return PythonObjectWrapper(r);
     }
 #endif //def PL_PYTHON_VERSION 
 
@@ -512,7 +512,7 @@ struct RemoteTrampoline_3 : public RemoteTrampoline
         TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
         TRAMPOLINE_TYPE(A3) a3= args[2].as<TRAMPOLINE_TYPE(A3)>();
         TRAMPOLINE_TYPE(R) r= (as<T>(instance)->*m_method)(a1,a2,a3);
-        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+        return PythonObjectWrapper(r);
     }
 #endif //def PL_PYTHON_VERSION 
 
@@ -606,7 +606,7 @@ struct RemoteTrampoline_4 : public RemoteTrampoline
         TRAMPOLINE_TYPE(A3) a3= args[2].as<TRAMPOLINE_TYPE(A3)>();
         TRAMPOLINE_TYPE(A4) a4= args[3].as<TRAMPOLINE_TYPE(A4)>();
         TRAMPOLINE_TYPE(R) r= (as<T>(instance)->*m_method)(a1,a2,a3,a4);
-        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+        return PythonObjectWrapper(r);
     }
 #endif //def PL_PYTHON_VERSION 
 
@@ -705,7 +705,7 @@ struct RemoteTrampoline_5 : public RemoteTrampoline
         TRAMPOLINE_TYPE(A4) a4= args[3].as<TRAMPOLINE_TYPE(A4)>();
         TRAMPOLINE_TYPE(A5) a5= args[4].as<TRAMPOLINE_TYPE(A5)>();
         TRAMPOLINE_TYPE(R) r= (as<T>(instance)->*m_method)(a1,a2,a3,a4,a5);
-        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+        return PythonObjectWrapper(r);
     }
 #endif //def PL_PYTHON_VERSION 
 
@@ -808,7 +808,7 @@ struct RemoteTrampoline_6 : public RemoteTrampoline
         TRAMPOLINE_TYPE(A5) a5= args[4].as<TRAMPOLINE_TYPE(A5)>();
         TRAMPOLINE_TYPE(A6) a6= args[5].as<TRAMPOLINE_TYPE(A6)>();
         TRAMPOLINE_TYPE(R) r= (as<T>(instance)->*m_method)(a1,a2,a3,a4,a5,a6);
-        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+        return PythonObjectWrapper(r);
     }
 #endif //def PL_PYTHON_VERSION 
 
@@ -907,7 +907,7 @@ struct FRemoteTrampoline_0 : public RemoteTrampoline
     {
         checkNargs(args.size(), expected_nargs);
         TRAMPOLINE_TYPE(R) r= (*m_function)();
-        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+        return PythonObjectWrapper(r);
     }
 #endif //def PL_PYTHON_VERSION 
 
@@ -988,7 +988,7 @@ struct FRemoteTrampoline_1 : public RemoteTrampoline
         checkNargs(args.size(), expected_nargs);
         TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
         TRAMPOLINE_TYPE(R) r= (*m_function)(a1);
-        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+        return PythonObjectWrapper(r);
     }
 #endif //def PL_PYTHON_VERSION 
 
@@ -1075,7 +1075,7 @@ struct FRemoteTrampoline_2 : public RemoteTrampoline
         TRAMPOLINE_TYPE(A1) a1= args[0].as<TRAMPOLINE_TYPE(A1)>();
         TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
         TRAMPOLINE_TYPE(R) r= (*m_function)(a1,a2);
-        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+        return PythonObjectWrapper(r);
     }
 #endif //def PL_PYTHON_VERSION 
 
@@ -1166,7 +1166,7 @@ struct FRemoteTrampoline_3 : public RemoteTrampoline
         TRAMPOLINE_TYPE(A2) a2= args[1].as<TRAMPOLINE_TYPE(A2)>();
         TRAMPOLINE_TYPE(A3) a3= args[2].as<TRAMPOLINE_TYPE(A3)>();
         TRAMPOLINE_TYPE(R) r= (*m_function)(a1,a2,a3);
-        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+        return PythonObjectWrapper(r);
     }
 #endif //def PL_PYTHON_VERSION 
 
@@ -1262,7 +1262,7 @@ struct FRemoteTrampoline_4 : public RemoteTrampoline
         TRAMPOLINE_TYPE(A3) a3= args[2].as<TRAMPOLINE_TYPE(A3)>();
         TRAMPOLINE_TYPE(A4) a4= args[3].as<TRAMPOLINE_TYPE(A4)>();
         TRAMPOLINE_TYPE(R) r= (*m_function)(a1,a2,a3,a4);
-        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+        return PythonObjectWrapper(r);
     }
 #endif //def PL_PYTHON_VERSION 
 
@@ -1363,7 +1363,7 @@ struct FRemoteTrampoline_5 : public RemoteTrampoline
         TRAMPOLINE_TYPE(A4) a4= args[3].as<TRAMPOLINE_TYPE(A4)>();
         TRAMPOLINE_TYPE(A5) a5= args[4].as<TRAMPOLINE_TYPE(A5)>();
         TRAMPOLINE_TYPE(R) r= (*m_function)(a1,a2,a3,a4,a5);
-        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+        return PythonObjectWrapper(r);
     }
 #endif //def PL_PYTHON_VERSION 
 
@@ -1468,7 +1468,7 @@ struct FRemoteTrampoline_6 : public RemoteTrampoline
         TRAMPOLINE_TYPE(A5) a5= args[4].as<TRAMPOLINE_TYPE(A5)>();
         TRAMPOLINE_TYPE(A6) a6= args[5].as<TRAMPOLINE_TYPE(A6)>();
         TRAMPOLINE_TYPE(R) r= (*m_function)(a1,a2,a3,a4,a5,a6);
-        return PythonObjectWrapper(r, PythonObjectWrapper::transfer_ownership);
+        return PythonObjectWrapper(r);
     }
 #endif //def PL_PYTHON_VERSION 
 

@@ -412,6 +412,7 @@ public:
     static PyObject* newPyObject(const bool& x);
     
     static PyObject* newPyObject(const int& x);
+    static PyObject* newPyObject(const unsigned int& x);
     
     static PyObject* newPyObject(const long& x);
     

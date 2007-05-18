@@ -399,8 +399,7 @@ PyObject* PythonCodeSnippet::pythonTrampoline(PyObject* self, PyObject* args)
         TVec<PythonObjectWrapper> args_tvec(size);
         for (int i=0 ; i<size ; ++i) {
             args_tvec[i]= 
-                PythonObjectWrapper(PyTuple_GET_ITEM(args,i),
-                                    PythonObjectWrapper::transfer_ownership);
+                PythonObjectWrapper(PyTuple_GET_ITEM(args,i));
         }
         
         // Now get the void* stored within the PyCObject of self
@@ -514,9 +513,10 @@ PythonObjectWrapper PythonCodeSnippet::compileGlobalCode(const string& code) //c
 #else
         const string& code_copy = code;
 #endif
-        PyRun_String((code_copy+extracode).c_str(),
-                     Py_file_input /* exec code block */,
-                     globals, globals);
+        PyObject* res= PyRun_String((code_copy+extracode).c_str(),
+                                   Py_file_input /* exec code block */,
+                                   globals, globals);
+        Py_XDECREF(res);
         if (PyErr_Occurred()) {
             Py_XDECREF(globals);
             PyErr_Print();
@@ -636,9 +636,12 @@ void PythonCodeSnippet::setCurrentSnippet(const long& handle) const
     
     char set_current_snippet[100];
     sprintf(set_current_snippet, SetCurrentSnippetVar, handle);    
-    PyRun_String(set_current_snippet, Py_file_input /* exec code block */,
-                 m_compiled_code.getPyObject(), m_compiled_code.getPyObject());
-
+    PyObject* res= PyRun_String(set_current_snippet, 
+                                Py_file_input /* exec code block */,
+                                m_compiled_code.getPyObject(), 
+                                m_compiled_code.getPyObject());
+    
+    Py_XDECREF(res);
     if (PyErr_Occurred()) {
         Py_XDECREF(m_compiled_code.getPyObject());
         PyErr_Print();
@@ -651,9 +654,11 @@ void PythonCodeSnippet::resetCurrentSnippet() const
 {
     PythonGlobalInterpreterLock gil;         // For thread-safety
     
-    PyRun_String(ResetCurrentSnippetVar, Py_file_input /* exec code block */,
-                 m_compiled_code.getPyObject(), m_compiled_code.getPyObject());
-
+    PyObject* res= PyRun_String(ResetCurrentSnippetVar, 
+                                Py_file_input /* exec code block */,
+                                m_compiled_code.getPyObject(), 
+                                m_compiled_code.getPyObject());
+    Py_XDECREF(res);
     if (PyErr_Occurred()) {
         Py_XDECREF(m_compiled_code.getPyObject());
         PyErr_Print();

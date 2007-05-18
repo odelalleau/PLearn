@@ -6,6 +6,7 @@
 #include <plearn/base/plerror.h>
 #include <plearn/base/stringutils.h>
 #include <plearn/base/tostring.h>  
+#include <plearn/base/RemoteDeclareMethod.h>  
 
 #if defined(WIN32) && defined(_MSC_VER)
 // unistd.h is not available under Microsoft Visual Studio, and some function
@@ -57,6 +58,18 @@ size_t getProcessDataMemory()
     }
     return memory_size;
 }
+
+BEGIN_DECLARE_REMOTE_FUNCTIONS
+
+    declareFunction("getSystemTotalMemory", &getSystemTotalMemory,
+                    (BodyDoc("Return the total memory installed in the system in bytes."),
+                     RetDoc ("Memory size")));
+
+    declareFunction("getProcessDataMemory", &getProcessDataMemory,
+                    (BodyDoc("Return the total data memory used by the current process in bytes."),
+                     RetDoc ("Used memory size")));
+
+END_DECLARE_REMOTE_FUNCTIONS
 
 } // end of namespace PLearn
 
