@@ -37,6 +37,7 @@
 using namespace PLearn;
 using namespace std;
 
+// Trampoline for global PLearn 'remote' functions
 PyObject* tramp(PyObject* self, PyObject* args)
 {
   RemoteTrampoline* t= 
@@ -47,7 +48,10 @@ PyObject* tramp(PyObject* self, PyObject* args)
     as.push_back(PythonObjectWrapper(PyTuple_GET_ITEM(args, i)));
   try
     {
-      return t->call(0, as);
+        PythonObjectWrapper returned_value= t->call(0, as);
+        PyObject* to_return= returned_value.getPyObject();
+        Py_XINCREF(to_return);
+        return to_return;
     }
   catch(const PLearnError& e) 
     {
@@ -67,10 +71,12 @@ PyObject* tramp(PyObject* self, PyObject* args)
     }
 }
 
+// the global funcs (storage never reclaimed)
 static PObjectPool<PyMethodDef> pyfuncs(50);
 
-PyMODINIT_FUNC
-initplext(void)
+// Init func for plext python module.
+// init module, then inject global funcs
+PyMODINIT_FUNC initplext()
 {
   PyObject* plext= Py_InitModule("plext", NULL);
 
@@ -95,9 +101,25 @@ initplext(void)
 	PyCFunction_NewEx(py_method, self, plext);
 	    
       if(pyfunc) 
-	PyObject_SetAttrString(plext, py_method->ml_name, pyfunc);
+	PyObject_SetAttrString(plext, 
+			       py_method->ml_name, 
+			       pyfunc);
       else
-	PLERROR("Cannot inject PLearn global function %s into python.",
+	PLERROR("Cannot inject PLearn global function "
+		"'%s' into python.",
 		py_method->ml_name);
     }
 }
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :
