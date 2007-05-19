@@ -534,7 +534,8 @@ cpp_variables += ['USING_MPI']
 pymakeOption( name = 'dbg',
               description = 'debug mode',
               compileroptions = '-Wall -g -O0',
-              cpp_definitions = ['BOUNDCHECK','Py_DEBUG'] )
+              cpp_definitions = ['BOUNDCHECK'] )
+              #cpp_definitions = ['BOUNDCHECK','Py_DEBUG'] )
 
 pymakeOption( name = 'opt',
               description = 'optimized for intel compiler',
@@ -591,7 +592,8 @@ pymakeOption( name = 'genericvc++',
               # - does this bring copyright issues?
               linkeroptions = '-lgcc')
 
-cpp_variables += ['BOUNDCHECK', 'NDEBUG', 'Py_DEBUG']
+#cpp_variables += ['BOUNDCHECK', 'NDEBUG', 'Py_DEBUG']
+cpp_variables += ['BOUNDCHECK', 'NDEBUG']
 
 
 #####  Floating-Point Number Representation  ################################
