@@ -53,6 +53,7 @@
 #include <plearn/base/plerror.h>
 #include <plearn/vmat/VMat.h>
 #include <plearn/base/RemoteTrampoline.h>
+#include <plearn/base/HelpSystem.h>
 
 namespace PLearn {
 using namespace std;
@@ -462,7 +463,8 @@ PyObject* PythonObjectWrapper::newPyObject(const Object* x)
         py_method->ml_name  = "unref";
         py_method->ml_meth  = python_del;
         py_method->ml_flags = METH_VARARGS;
-        py_method->ml_doc   = "injected-unref-function-from-PythonObjectWrapper";
+        py_method->ml_doc   = "Injected unref function from PythonObjectWrapper; "
+            "DO NOT USE THIS FUNCTION! IT MAY DEALLOCATE THE PLEARN OBJECT!";
         
         PyObject* py_funcobj= PyCFunction_NewEx(py_method, NULL, NULL);
         PyObject* py_methobj= PyMethod_New(py_funcobj, NULL, wrapper);
@@ -533,6 +535,7 @@ PyObject* PythonObjectWrapper::newPyObject(const Object* x)
 
         m_pypl_classes.insert(
             make_pair(classname, PLPyClass(the_pyclass, meth_def_pool)));
+        TVec<string>& methods_help= m_pypl_classes.find(classname)->second.methods_help;
 
         while(methods)
         {
@@ -547,7 +550,10 @@ PyObject* PythonObjectWrapper::newPyObject(const Object* x)
                 py_method->ml_name  = const_cast<char*>(it->first.first.c_str());
                 py_method->ml_meth  = trampoline;
                 py_method->ml_flags = METH_VARARGS;
-                py_method->ml_doc   = "injected-function-from-PythonObjectWrapper";
+                methods_help.push_back(HelpSystem::helpOnMethod(classname,
+                                                                it->first.first.c_str(),
+                                                                it->first.second));
+                py_method->ml_doc   = const_cast<char*>(methods_help.last().c_str());
     
                 PyObject* py_funcobj= PyCFunction_NewEx(py_method, tramp, NULL);
 

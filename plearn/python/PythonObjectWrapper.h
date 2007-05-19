@@ -505,10 +505,12 @@ protected:
                   PP<PObjectPool<PyMethodDef> >& methods_)
             :pyclass(pyclass_),
              methods(methods_),
+             methods_help(0),
              nref(1)
         {}
         PyObject* pyclass;
         PP<PObjectPool<PyMethodDef> > methods;
+        TVec<string> methods_help;
         int nref;
     };
 

@@ -33,6 +33,7 @@
 
 #include <plearn/python/PythonIncludes.h>
 #include <commands/plearn_full_inc.h>
+#include <plearn/base/HelpSystem.h>
 
 using namespace PLearn;
 using namespace std;
@@ -73,6 +74,7 @@ PyObject* tramp(PyObject* self, PyObject* args)
 
 // the global funcs (storage never reclaimed)
 static PObjectPool<PyMethodDef> pyfuncs(50);
+static TVec<string> funcs_help;
 
 // Init func for plext python module.
 // init module, then inject global funcs
@@ -95,7 +97,10 @@ PyMODINIT_FUNC initplext()
 	const_cast<char*>(it->first.first.c_str());
       py_method->ml_meth= tramp;
       py_method->ml_flags= METH_VARARGS;
-      py_method->ml_doc= "PLearn function";
+      funcs_help.push_back(
+          HelpSystem::helpOnFunction(it->first.first.c_str(), 
+                                     it->first.second));
+      py_method->ml_doc= const_cast<char*>(funcs_help.last().c_str());
     
       PyObject* pyfunc= 
 	PyCFunction_NewEx(py_method, self, plext);
