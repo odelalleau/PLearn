@@ -29,9 +29,8 @@
 #
 #  This file is part of the PLearn library. For more information on the PLearn
 #  library, go to the PLearn Web site at www.plearn.org
-
-
 from plearn.pyext.plext import *
+from plearn.pyplearn.plargs import *
 
 class pl:
     class __metaclass__(type):
@@ -43,3 +42,24 @@ class pl:
                 obj.build()
                 return obj
             return newObj
+
+# Enact the use of plargs: the current behavior is to consider as a plargs
+# any command-line argument that contains a '=' char and to neglect all
+# others
+plargs.parse([ arg for arg in sys.argv if arg.find('=') != -1 ])
+
+if __name__ == "__main__":
+    class A(plargs):
+        T = plopt(0)
+
+    class B(plnamespace):
+        T = plopt(1)
+
+    print sys.argv[1:]
+    print A.T
+    print B.T
+        
+    # python __init__.py T=10 B.T=25
+    # ['T=10', 'B.T=25']
+    # 10
+    # 25
