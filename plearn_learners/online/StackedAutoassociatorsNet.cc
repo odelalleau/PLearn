@@ -58,6 +58,7 @@ StackedAutoassociatorsNet::StackedAutoassociatorsNet() :
     fine_tuning_learning_rate( 0. ),
     fine_tuning_decrease_ct( 0. ),
     l1_neuron_decay( 0. ),
+    l1_neuron_decay_center( 0 ),
     compute_all_test_costs( false ),
     n_layers( 0 ),
     currently_trained_layer( 0 ),
@@ -104,6 +105,13 @@ void StackedAutoassociatorsNet::declareOptions(OptionList& ol)
                   " L1 penalty weight on the hidden layers, to encourage "
                   "sparsity during\n"
                   "the greedy unsupervised phases.\n");
+
+    declareOption(ol, "l1_neuron_decay_center", 
+                  &StackedAutoassociatorsNet::l1_neuron_decay_center,
+                  OptionBase::buildoption,
+                  "Value around which the L1 penalty should be centered, i.e.\n"
+                  "   L1(h) = | h - l1_neuron_decay_center |\n"
+                  "where h are the values of the neurons.\n");
 
     declareOption(ol, "training_schedule", 
                   &StackedAutoassociatorsNet::training_schedule,
@@ -201,7 +209,7 @@ void StackedAutoassociatorsNet::build_()
 
     MODULE_LOG << "build_() called" << endl;
 
-    if(train_set)
+    if(inputsize_ > 0 && targetsize_ > 0)
     {
         // Initialize some learnt variables
         n_layers = layers.length();
@@ -673,9 +681,9 @@ void StackedAutoassociatorsNet::greedyStep( const Vec& input, const Vec& target,
         int len = expectations[ index + 1 ].length();
         for(int i=0; i<len; i++)
         {
-            if(*hid > 0)
+            if(*hid > l1_neuron_decay_center)
                 *grad -= l1_neuron_decay;
-            else if(*hid < 0)
+            else if(*hid < l1_neuron_decay_center)
                 *grad += l1_neuron_decay;
             hid++;
             grad++;

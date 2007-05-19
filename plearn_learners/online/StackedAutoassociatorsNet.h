@@ -87,6 +87,11 @@ public:
     //! the greedy unsupervised phases
     real l1_neuron_decay;
 
+    //! Value around which the L1 penalty should be centered, i.e.
+    //!    L1(h) = | h - l1_neuron_decay_center |
+    //! where h is the value of the neurons.
+    real l1_neuron_decay_center;
+
     //! Number of examples to use during each phase of learning:
     //! first the greedy phases, and then the gradient descent.
     //! Unlike for DeepBeliefNet, these numbers should not be
