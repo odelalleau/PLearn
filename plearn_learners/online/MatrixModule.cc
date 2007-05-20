@@ -136,14 +136,8 @@ void MatrixModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields
-    // ### that you wish to be deepCopied rather than
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("MatrixModule::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    deepCopyField(data, copies);
+    deepCopyField(data_gradient, copies);
 }
 
 ///////////

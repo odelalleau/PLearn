@@ -88,7 +88,7 @@ void NetworkModule::declareOptions(OptionList& ol)
        "A sequence of pairs of strings, where each pair is of the form\n"
        "('P', 'M.N') with 'M' the name of an underlying module, 'N' one of\n"
        "its ports, and 'P' the name under which the NetworkModule sees this\n"
-       "port. See the class help for an example.");
+       "port. See the class help for an example with the correct syntax.");
 
     declareOption(ol, "save_states", &NetworkModule::save_states,
                   OptionBase::buildoption,
@@ -679,14 +679,21 @@ void NetworkModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields
-    // ### that you wish to be deepCopied rather than
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("NetworkModule::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    deepCopyField(modules, copies);
+    deepCopyField(connections, copies);
+    deepCopyField(ports, copies);
+    deepCopyField(all_modules, copies);
+    deepCopyField(all_connections, copies);
+    deepCopyField(fprop_path, copies);
+    deepCopyField(bprop_path, copies);
+    deepCopyField(fprop_data, copies);
+    deepCopyField(fprop_toresize, copies);
+    deepCopyField(fprop_toplug, copies);
+    deepCopyField(bprop_data, copies);
+    deepCopyField(bprop_toresize, copies);
+    deepCopyField(all_mats, copies);
+    deepCopyField(all_ports, copies);
+    deepCopyField(port_descriptions, copies);
 }
 
 

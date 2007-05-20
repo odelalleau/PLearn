@@ -46,7 +46,11 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(
     RBMModule,
     "A Restricted Boltzmann Machine.",
-    ""
+    "An RBM contains a 'visible_layer', a 'hidden_layer' (both instances of a subclass\n"
+    "of RBMLayer) and a 'connection' (an instance of a subclass of RBMConnection).\n"
+    "It has two ports: the 'visible' port and the 'hidden' port.\n"
+    "The RBM can be trained by gradient descent (wrt to gradients provided on\n"
+    "the 'hidden' port) or by contrastive divergence.\n"
 );
 
 ///////////////
@@ -192,14 +196,9 @@ void RBMModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields
-    // ### that you wish to be deepCopied rather than
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("RBMModule::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    deepCopyField(hidden_layer, copies);
+    deepCopyField(visible_layer, copies);
+    deepCopyField(connection, copies);
 }
 
 ///////////

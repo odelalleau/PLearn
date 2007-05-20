@@ -82,12 +82,13 @@ void ModuleLearner::declareOptions(OptionList& ol)
 
     declareOption(ol, "batch_size", &ModuleLearner::batch_size,
                   OptionBase::buildoption,
-       "Number of samples fed to the network at each iteration of learning.\n"
+       "User-specified number of samples fed to the network at each iteration of learning.\n"
        "Use '0' for full batch learning.");
 
     declareOption(ol, "mbatch_size", &ModuleLearner::mbatch_size,
                   OptionBase::learntoption,
-       "Same as 'batch_size', except when 'batch_size' is set to 0, this\n"
+       "Effective 'batch_size': it takes the same value as 'batch_size'\n"
+       "except when 'batch_size' is set to 0, and this\n"
        "option takes the value of the size of the training set.");
 
     // Now call the parent class' declareOptions
@@ -192,9 +193,15 @@ void ModuleLearner::build()
 void ModuleLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("ModuleLearner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    deepCopyField(module,             copies);
+    deepCopyField(store_inputs,       copies);
+    deepCopyField(store_targets,      copies);
+    deepCopyField(store_weights,      copies);
+    deepCopyField(store_outputs,      copies);
+    deepCopyField(store_costs,        copies);
+    deepCopyField(network,            copies);
+    # does not compile right now
+    #deepCopyField(null_pointers,      copies);
 }
 
 ////////////////
