@@ -102,10 +102,12 @@ public:
                          bool call_build_ = false);
 
     //! given the input, compute the output (possibly resize it appropriately)
-    virtual void fprop(const Vec& input, Vec& output) const = 0;
+    //! SOON TO BE DEPRECATED, USE fprop(const TVec<Mat*>& ports_value)
+    virtual void fprop(const Vec& input, Vec& output) const;
 
     //! Mini-batch fprop.
     //! Default implementation raises an error.
+    //! SOON TO BE DEPRECATED, USE fprop(const TVec<Mat*>& ports_value)
     virtual void fprop(const Mat& inputs, Mat& outputs);
 
     //! Perform a fprop step.
@@ -122,6 +124,8 @@ public:
     //! - crash otherwise
     virtual void fprop(const TVec<Mat*>& ports_value);
 
+    //! SOON TO BE DEPRECATED, USE bpropAccUpdate(const TVec<Mat*>& ports_value,
+    //!                                           const TVec<Mat*>& ports_gradient)
     //! Adapt based on the output gradient: this method should only
     //! be called just after a corresponding fprop; it should be
     //! called with the same arguments as fprop for the first two arguments
@@ -134,6 +138,8 @@ public:
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              const Vec& output_gradient);
 
+    //! SOON TO BE DEPRECATED, USE bpropAccUpdate(const TVec<Mat*>& ports_value,
+    //!                                           const TVec<Mat*>& ports_gradient)
     //! Batch version
     virtual void bpropUpdate(const Mat& inputs, const Mat& outputs,
                              const Mat& output_gradients);
@@ -170,6 +176,8 @@ public:
     void bpropUpdate(const TVec<Mat*>& ports_value,
                      const TVec<Mat*>& ports_gradient);
 
+    //! SOON TO BE DEPRECATED, USE bpropAccUpdate(const TVec<Mat*>& ports_value,
+    //!                                           const TVec<Mat*>& ports_gradient)
     //! this version allows to obtain the input gradient as well
     //! N.B. THE DEFAULT IMPLEMENTATION JUST RAISES A PLERROR.
     //! The flag indicates whether the input_gradients gets
@@ -177,6 +185,8 @@ public:
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              Vec& input_gradient, const Vec& output_gradient,
                              bool accumulate=false);
+    //! SOON TO BE DEPRECATED, USE bpropAccUpdate(const TVec<Mat*>& ports_value,
+    //!                                           const TVec<Mat*>& ports_gradient)
     virtual void bpropUpdate(const Mat& inputs, const Mat& outputs,
                              Mat& input_gradients, const Mat& output_gradients,
                              bool accumulate=false);

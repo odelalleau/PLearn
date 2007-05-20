@@ -1,4 +1,4 @@
-// -*- C++ -*-
+/ -*- C++ -*-
 
 // OnlineLearningModule.cc
 //
@@ -87,6 +87,11 @@ void OnlineLearningModule::fprop(const Mat& inputs, Mat& outputs)
             "required out of safety, to ensure a subsequent call to "
             "'bpropUpdate' can use the correctly updated data",
             classname().c_str());
+}
+
+void OnlineLearningModule::fprop(const Vec& inputs, Vec& outputs)
+{
+    PLERROR("In OnlineLearningModule::fprop - This variant is deprecated, use fprop(ports_value)\n");
 }
 
 void OnlineLearningModule::fprop(const TVec<Mat*>& ports_value)
