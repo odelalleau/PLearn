@@ -89,7 +89,7 @@ void OnlineLearningModule::fprop(const Mat& inputs, Mat& outputs)
             classname().c_str());
 }
 
-void OnlineLearningModule::fprop(const Vec& inputs, Vec& outputs)
+void OnlineLearningModule::fprop(const Vec& inputs, Vec& outputs) const
 {
     PLERROR("In OnlineLearningModule::fprop - This variant is deprecated, use fprop(ports_value)\n");
 }
