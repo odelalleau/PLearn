@@ -35,6 +35,44 @@ public:
 
     // Your other public member functions go here
 
+    //! Perform a fprop step.
+    //! Each Mat* pointer in the 'ports_value' vector can be one of:
+    //! - a full matrix: this is data that is provided to the module, and can
+    //!                  be used to compute other ports' values
+    //! - an empty matrix: this is what we want to compute
+    //! - a NULL pointer: this is data that is not available, but whose value
+    //!                   does not need to be returned (or even computed)
+    //! The default version will either:
+    //! - call the mini-batch versions of standard fprop if 'ports_value' has
+    //!   size 2, with the first value being provided (and the second being
+    //!   the desired output)
+    //! - crash otherwise
+    void fprop(const TVec<Mat*>& ports_value);
+
+    //! Perform a back propagation step (also updating parameters according to
+    //! the provided gradient).
+    //! The matrices in 'ports_value' must be the same as the ones given in a
+    //! previous call to 'fprop' (and thus they should in particular contain
+    //! the result of the fprop computation). However, they are not necessarily
+    //! the same as the ones given in the LAST call to 'fprop': if there is a
+    //! need to store an internal module state, this should be done using a
+    //! specific port to store this state.
+    //! Each Mat* pointer in the 'ports_gradient' vector can be one of:
+    //! - a full matrix  : this is the gradient that is provided to the module,
+    //!                    and can be used to compute other ports' gradient.
+    //! - an empty matrix: this is a gradient we want to compute and accumulate
+    //!                    into. This matrix must have length 0 and a width
+    //!                    equal to the width of the corresponding matrix in
+    //!                    the 'ports_value' vector (we can thus accumulate
+    //!                    gradients using PLearn's ability to keep intact
+    //!                    stored values when resizing a matrix' length).
+    //! - a NULL pointer : this is a gradient that is not available, but does
+    //!                    not need to be returned (or even computed).
+    //! The default version tries to use the standard mini-batch bpropUpdate
+    //! method, when possible.
+    virtual void bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                const TVec<Mat*>& ports_gradient);
+
     /* Optional
 
     //! given the input, compute the output (possibly resize it  appropriately)

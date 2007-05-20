@@ -81,11 +81,12 @@ void DERIVEDCLASS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 void DERIVEDCLASS::fprop(const TVec<Mat*>& ports_value)
 {
     PLASSERT( ports_value.length() == nPorts() );
-    // check which ports are input (ports_value[i] && !ports_value[i]->isEmpty)
-    // which ports are output (ports_value[i] && ports_value[i]->isEmpty)
+    // check which ports are input (ports_value[i] && !ports_value[i]->isEmpty())
+    // which ports are output (ports_value[i] && ports_value[i]->isEmpty())
     // and which ports are ignored (!ports_value[i]).
     // If that combination of (input,output,ignored) is feasible by this class
     // then perform the corresponding computation. Otherwise launch the error below.
+    // See the comment in the header file for more information.
     PLERROR("In DERIVEDCLASS::fprop - Not implemented for class "
             "'%s'", classname().c_str());
 }
@@ -99,8 +100,8 @@ void DERIVEDCLASS::bpropAccUpdate(const TVec<Mat*>& ports_value,
                                           const TVec<Mat*>& ports_gradient)
 {
     PLASSERT( ports_value.length() == nPorts() && ports_gradient.length() == nPorts());
-    // check which ports are input (ports_value[i] && !ports_value[i]->isEmpty)
-    // which ports are output (ports_value[i] && ports_value[i]->isEmpty)
+    // check which ports are input (ports_value[i] && !ports_value[i]->isEmpty())
+    // which ports are output (ports_value[i] && ports_value[i]->isEmpty())
     // and which ports are ignored (!ports_value[i]).
     // A similar logic applies to ports_gradients (to know whether gradient
     // is coming into the module of coming from the module through a given ports_gradient[i]).
@@ -110,7 +111,8 @@ void DERIVEDCLASS::bpropAccUpdate(const TVec<Mat*>& ports_value,
     // or it should be null (no gradient is propagated from that output port).
     // If that combination of (input,output,ignored) is feasible by this class
     // then perform the corresponding computation. Otherwise launch the error below.
-    PLERROR("In DERIVEDCLASS::fprop - Not implemented for class "
+    // See the comment in the header file for more information.
+    PLERROR("In DERIVEDCLASS::bpropAccUpdate - this configuration of ports not implemented for class "
             "'%s'", classname().c_str());
 }
 
@@ -121,8 +123,8 @@ void DERIVEDCLASS::bpropUpdate(const TVec<Mat*>& ports_value,
                                        const TVec<Mat*>& ports_gradient)
 {
     PLASSERT( ports_value.length() == nPorts() && ports_gradient.length() == nPorts());
-    // check which ports are input (ports_value[i] && !ports_value[i]->isEmpty)
-    // which ports are output (ports_value[i] && ports_value[i]->isEmpty)
+    // check which ports are input (ports_value[i] && !ports_value[i]->isEmpty())
+    // which ports are output (ports_value[i] && ports_value[i]->isEmpty())
     // and which ports are ignored (!ports_value[i]).
     // A similar logic applies to ports_gradients (to know whether gradient
     // is coming into the module of coming from the module through a given ports_gradient[i]).
@@ -131,7 +133,7 @@ void DERIVEDCLASS::bpropUpdate(const TVec<Mat*>& ports_value,
     // (when that gradient is to be propagated inside and to the input ports)
     // If that combination of (input,output,ignored) is feasible by this class
     // then perform the corresponding computation. Otherwise launch the error below.
-    PLERROR("In DERIVEDCLASS::fprop - Not implemented for class "
+    PLERROR("In DERIVEDCLASS::bpropUpdate - this configuration of ports not implemented for class "
             "'%s'", classname().c_str());
 }
 */
