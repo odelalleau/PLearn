@@ -35,17 +35,20 @@ public:
 
     // Your other public member functions go here
 
+    /* Optional
+
     //! given the input, compute the output (possibly resize it  appropriately)
+    //! SOON TO BE DEPRECATED, USE fprop(const TVec<Mat*>& ports_value)
     virtual void fprop(const Vec& input, Vec& output) const;
 
-    /* Optional
-       THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
     //! Given a batch of inputs, compute the outputs
+    //! SOON TO BE DEPRECATED, USE fprop(const TVec<Mat*>& ports_value)
     virtual void fprop(const Mat& inputs, Mat& outputs);
     */
 
     /* Optional
-       THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
+    //! SOON TO BE DEPRECATED, USE bpropAccUpdate(const TVec<Mat*>& ports_value,
+    //!                                           const TVec<Mat*>& ports_gradient)
     //! Adapt based on the output gradient, and obtain the input gradient.
     //! The flag indicates wether the input_gradient is accumulated or set.
     //! This method should only be called just after a corresponding
@@ -60,6 +63,8 @@ public:
                              bool accumulate=false);
 
     //! Batch version
+    //! SOON TO BE DEPRECATED, USE bpropAccUpdate(const TVec<Mat*>& ports_value,
+    //!                                           const TVec<Mat*>& ports_gradient)
     virtual void bpropUpdate(const Mat& inputs, const Mat& outputs,
                              Mat& input_gradients,
                              const Mat& output_gradients,
@@ -67,6 +72,8 @@ public:
     */
 
     /* Optional
+    //! SOON TO BE DEPRECATED, USE bpropAccUpdate(const TVec<Mat*>& ports_value,
+    //!                                           const TVec<Mat*>& ports_gradient)
        A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS, WHICH
        JUST CALLS
             bpropUpdate(input, output, input_gradient, output_gradient)
@@ -76,6 +83,8 @@ public:
                              const Vec& output_gradient);
 
     //! Batch version
+    //! SOON TO BE DEPRECATED, USE bpropAccUpdate(const TVec<Mat*>& ports_value,
+    //!                                           const TVec<Mat*>& ports_gradient)
     virtual void bpropUpdate(const Mat& inputs, const Mat& outputs,
                              const Mat& output_gradients);
     */
@@ -134,6 +143,50 @@ public:
     //! If this class has a learning rate (or something close to it), set it.
     //! If not, you can redefine this method to get rid of the warning.
     virtual void setLearningRate(real dynamic_learning_rate);
+    */
+
+    //! Return the list of ports in the module.
+    //! The default implementation returns a pair ("input", "output") to handle
+    //! the most common case.
+    virtual const TVec<string>& getPorts();
+
+    //! Return the size of all ports, in the form of a two-column matrix, where
+    //! each row represents a port, and the two numbers on a row are
+    //! respectively its length and its width (with -1 representing an
+    //! undefined or variable value).
+    //! The default value fills this matrix with:
+    //!     - in the first column (lengths): -1
+    //!     - in the second column (widths):
+    //!         - -1 if nPorts() != 2
+    //!         - 'input_size' for the first row and 'output_size' for the
+    //!           second row if nPorts() == 2 (also assuming the port names
+    //!           are respectively 'input' and 'output')
+    virtual const TMat<int>& getPortSizes();
+
+    /* Optional
+    //! Return the width of a specific port.
+    int getPortWidth(const string& port);
+
+    //! Return the length of a specific port.
+    int getPortLength(const string& port);
+
+    //! Return the number of ports in the module.
+    int nPorts();
+
+    //! Return the index (as in the list of ports returned by getPorts()) of
+    //! a given port.
+    //! If 'port' does not exist, -1 is returned.
+    int getPortIndex(const string& port);
+
+    //! Return name of the i-th port.
+    string getPortName(int i);
+
+    //! Return a list of strings, that represents the description of the values
+    //! taken by a given port: the i-th string is the name for the i-th column
+    //! value computed in 'port'.
+    //! The default version returns [ "port_name_1", ..., "port_name_n" ] where
+    //! 'port_name' is the name of the port, and 'n' its size.
+    virtual TVec<string> getPortDescription(const string& port);
     */
 
     //#####  PLearn::Object Protocol  #########################################

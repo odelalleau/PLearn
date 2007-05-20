@@ -78,70 +78,61 @@ void DERIVEDCLASS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ///////////
 // fprop //
 ///////////
-void DERIVEDCLASS::fprop(const Vec& input, Vec& output) const
+void DERIVEDCLASS::fprop(const TVec<Mat*>& ports_value)
 {
+    PLASSERT( ports_value.length() == nPorts() );
+    // check which ports are input (ports_value[i] && !ports_value[i]->isEmpty)
+    // which ports are output (ports_value[i] && ports_value[i]->isEmpty)
+    // and which ports are ignored (!ports_value[i]).
+    // If that combination of (input,output,ignored) is feasible by this class
+    // then perform the corresponding computation. Otherwise launch the error below.
+    PLERROR("In DERIVEDCLASS::fprop - Not implemented for class "
+            "'%s'", classname().c_str());
 }
-
-/* THIS METHOD IS OPTIONAL
-void DERIVEDCLASS::fprop(const Mat& inputs, Mat& outputs)
-{
-}
-*/
 
 /////////////////
 // bpropUpdate //
 /////////////////
-/* THIS METHOD IS OPTIONAL
-void DERIVEDCLASS::bpropUpdate(const Vec& input, const Vec& output,
-                               Vec& input_gradient,
-                               const Vec& output_gradient,
-                               bool accumulate)
+
+
+void DERIVEDCLASS::bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                          const TVec<Mat*>& ports_gradient)
 {
+    PLASSERT( ports_value.length() == nPorts() && ports_gradient.length() == nPorts());
+    // check which ports are input (ports_value[i] && !ports_value[i]->isEmpty)
+    // which ports are output (ports_value[i] && ports_value[i]->isEmpty)
+    // and which ports are ignored (!ports_value[i]).
+    // A similar logic applies to ports_gradients (to know whether gradient
+    // is coming into the module of coming from the module through a given ports_gradient[i]).
+    // An input port_value should correspond to an outgoing port_gradient,
+    // an output port_value could either correspond to an incoming port_gradient
+    // (when that gradient is to be propagated inside and to the input ports)
+    // or it should be null (no gradient is propagated from that output port).
+    // If that combination of (input,output,ignored) is feasible by this class
+    // then perform the corresponding computation. Otherwise launch the error below.
+    PLERROR("In DERIVEDCLASS::fprop - Not implemented for class "
+            "'%s'", classname().c_str());
 }
-*/
 
 /* THIS METHOD IS OPTIONAL
-void DERIVEDCLASS::bpropUpdate(const Mat& inputs, const Mat& outputs,
-                               Mat& input_gradients,
-                               const Mat& output_gradients,
-                               bool accumulate=false)
+// This version is similar to bpropAccUpdate but it does not accumulate
+// in the input ports gradient 
+void DERIVEDCLASS::bpropUpdate(const TVec<Mat*>& ports_value,
+                                       const TVec<Mat*>& ports_gradient)
 {
-}
-*/
-
-/* THIS METHOD IS OPTIONAL
-void DERIVEDCLASS::bpropUpdate(const Vec& input, const Vec& output,
-                               const Vec& output_gradient)
-{
-}
-*/
-
-/* THIS METHOD IS OPTIONAL
-void DERIVEDCLASS::bpropUpdate(const Mat& inputs, const Mat& outputs,
-                               const Mat& output_gradients)
-{
-}
-*/
-
-//////////////////
-// bbpropUpdate //
-//////////////////
-/* THIS METHOD IS OPTIONAL
-void DERIVEDCLASS::bbpropUpdate(const Vec& input, const Vec& output,
-                                Vec& input_gradient,
-                                const Vec& output_gradient,
-                                Vec& input_diag_hessian,
-                                const Vec& output_diag_hessian,
-                                bool accumulate)
-{
-}
-*/
-
-/* THIS METHOD IS OPTIONAL
-void DERIVEDCLASS::bbpropUpdate(const Vec& input, const Vec& output,
-                                const Vec& output_gradient,
-                                const Vec& output_diag_hessian)
-{
+    PLASSERT( ports_value.length() == nPorts() && ports_gradient.length() == nPorts());
+    // check which ports are input (ports_value[i] && !ports_value[i]->isEmpty)
+    // which ports are output (ports_value[i] && ports_value[i]->isEmpty)
+    // and which ports are ignored (!ports_value[i]).
+    // A similar logic applies to ports_gradients (to know whether gradient
+    // is coming into the module of coming from the module through a given ports_gradient[i]).
+    // An input port_value should correspond to an outgoing port_gradient,
+    // an output port_value could either correspond to an incoming port_gradient
+    // (when that gradient is to be propagated inside and to the input ports)
+    // If that combination of (input,output,ignored) is feasible by this class
+    // then perform the corresponding computation. Otherwise launch the error below.
+    PLERROR("In DERIVEDCLASS::fprop - Not implemented for class "
+            "'%s'", classname().c_str());
 }
 */
 
@@ -165,6 +156,7 @@ void DERIVEDCLASS::finalize()
 // bpropDoesNothing //
 //////////////////////
 /* THIS METHOD IS OPTIONAL
+// the default implementation returns false
 bool DERIVEDCLASS::bpropDoesNothing()
 {
 }
@@ -174,12 +166,88 @@ bool DERIVEDCLASS::bpropDoesNothing()
 // setLearningRate //
 /////////////////////
 /* OPTIONAL
+// The default implementation raises a warning and does not do anything.
 void DERIVEDCLASS::setLearningRate(real dynamic_learning_rate)
 {
 }
 */
 
-} // end of namespace PLearn
+////////////////////////
+// getPortDescription //
+////////////////////////
+/* OPTIONAL
+// The default implementation is probably appropriate
+TVec<string> DERIVEDCLASS::getPortDescription(const string& port)
+{
+} 
+*/
+
+//////////////////
+// getPortIndex //
+//////////////////
+/* OPTIONAL
+// The default implementation is probably appropriate
+int DERIVEDCLASS::getPortIndex(const string& port)
+{
+}
+*/
+
+/////////////////
+// getPortName //
+/////////////////
+/* OPTIONAL
+// The default implementation is probably appropriate
+string DERIVEDCLASS::getPortName(int i)
+{
+}
+*/
+
+//////////////
+// getPorts //
+//////////////
+const TVec<string>& DERIVEDCLASS::getPorts() {
+}
+
+//////////////////
+// getPortSizes //
+//////////////////
+const TMat<int>& DERIVEDCLASS::getPortSizes() {
+}
+
+///////////////////
+// getPortLength //
+///////////////////
+/* OPTIONAL
+// The default implementation is probably appropriate
+int DERIVEDCLASS::getPortLength(const string& port)
+{
+    PLASSERT( getPortIndex(port) >= 0 );
+    return getPortSizes()(getPortIndex(port), 0);
+}
+*/
+
+//////////////////
+// getPortWidth //
+//////////////////
+/* OPTIONAL
+// The default implementation is probably appropriate
+int DERIVEDCLASS::getPortWidth(const string& port)
+{
+}
+*/
+
+////////////
+// nPorts //
+////////////
+/* OPTIONAL
+// The default implementation is probably appropriate
+int DERIVEDCLASS::nPorts()
+{
+}
+*/
+
+}
+// end of namespace PLearn
 
 
 /*
