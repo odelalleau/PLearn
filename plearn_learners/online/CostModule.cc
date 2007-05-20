@@ -112,7 +112,7 @@ void CostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             pred_grad->isEmpty() && !cost_grad->isEmpty())
         {
             // We can probably use the standard mini-batch bpropUpdate.
-            PLASSERT( cost_grad->width() == 1 );
+            // PLASSERT( cost_grad->width() == 1 );
 #ifdef BOUNDCHECK
             // The gradient on the cost must be one if we want to re-use
             // exactly the existing code.
@@ -121,9 +121,8 @@ void CostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             }
 #endif
             Mat* cost_val = ports_value[2];
-            PLASSERT_MSG( cost_val && cost_val->mod() == 1,
-                    "Cannot see 'cost_val' as a Vec");
-            Vec costs = cost_val->toVec();
+            Vec costs(cost_val->length());
+            costs << cost_val->column(0);
             Mat* pred_val = ports_value[0];
             Mat* target_val = ports_value[1];
             PLASSERT( pred_val && target_val );
