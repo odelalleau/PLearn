@@ -128,7 +128,7 @@ struct ConvertFromPyObject<int>
 template <>
 struct ConvertFromPyObject<unsigned int>
 {
-    static int convert(PyObject*, bool print_traceback);
+    static unsigned int convert(PyObject*, bool print_traceback);
 };
 
 template <>
@@ -136,6 +136,13 @@ struct ConvertFromPyObject<long>
 {
     static long convert(PyObject*, bool print_traceback);
 };
+
+template <>
+struct ConvertFromPyObject<unsigned long>
+{
+    static unsigned long convert(PyObject*, bool print_traceback);
+};
+
 
 template <>
 struct ConvertFromPyObject<real>
@@ -415,6 +422,7 @@ public:
     static PyObject* newPyObject(const unsigned int& x);
     
     static PyObject* newPyObject(const long& x);
+    static PyObject* newPyObject(const unsigned long& x);
     
     static PyObject* newPyObject(const double& x);
 

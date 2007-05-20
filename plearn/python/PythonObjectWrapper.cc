@@ -105,7 +105,7 @@ int ConvertFromPyObject<int>::convert(PyObject* pyobj, bool print_traceback)
     return int(PyInt_AS_LONG(pyobj));
 }
 
-int ConvertFromPyObject<unsigned int>::convert(PyObject* pyobj, bool print_traceback)
+unsigned int ConvertFromPyObject<unsigned int>::convert(PyObject* pyobj, bool print_traceback)
 {
     PLASSERT( pyobj );
     if (! PyInt_Check(pyobj))
@@ -119,6 +119,14 @@ long ConvertFromPyObject<long>::convert(PyObject* pyobj, bool print_traceback)
     if (! PyLong_Check(pyobj))
         PLPythonConversionError("ConvertFromPyObject<long>", pyobj, print_traceback);
     return PyLong_AsLong(pyobj);
+}
+
+unsigned long ConvertFromPyObject<unsigned long>::convert(PyObject* pyobj, bool print_traceback)
+{
+    PLASSERT( pyobj );
+    if (! PyInt_Check(pyobj))
+        PLPythonConversionError("ConvertFromPyObject<unsigned long>", pyobj, print_traceback);
+    return PyInt_AsUnsignedLongMask(pyobj);
 }
 
 real ConvertFromPyObject<real>::convert(PyObject* pyobj, bool print_traceback)
@@ -639,6 +647,11 @@ PyObject* PythonObjectWrapper::newPyObject(const unsigned int& x)
 PyObject* PythonObjectWrapper::newPyObject(const long& x)
 {
     return PyLong_FromLong(x);
+}
+
+PyObject* PythonObjectWrapper::newPyObject(const unsigned long& x)
+{
+    return PyLong_FromUnsignedLong(x);
 }
     
 PyObject* PythonObjectWrapper::newPyObject(const double& x)

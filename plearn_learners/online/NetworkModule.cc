@@ -686,10 +686,10 @@ void NetworkModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(all_connections, copies);
     deepCopyField(fprop_path, copies);
     deepCopyField(bprop_path, copies);
-    #deepCopyField(fprop_data, copies);
+//    #deepCopyField(fprop_data, copies);
     deepCopyField(fprop_toresize, copies);
     deepCopyField(fprop_toplug, copies);
-    #deepCopyField(bprop_data, copies);
+//    #deepCopyField(bprop_data, copies);
     deepCopyField(bprop_toresize, copies);
     deepCopyField(all_mats, copies);
     deepCopyField(all_ports, copies);

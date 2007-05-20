@@ -82,7 +82,7 @@ string RemoteMethodDoc::getFullHelpText() const
         {
             txt += arg->m_argument_name + " : " 
                 +  *argtype + "\n"
-                +  arg->m_doc + "\n";
+                +  '\t' + arg->m_doc + "\n";
         }
     }
     txt += "RETURNS: ";

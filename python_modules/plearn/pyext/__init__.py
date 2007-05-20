@@ -29,8 +29,11 @@
 #
 #  This file is part of the PLearn library. For more information on the PLearn
 #  library, go to the PLearn Web site at www.plearn.org
+
 from plearn.pyext.plext import *
 from plearn.pyplearn.plargs import *
+
+print versionString()
 
 class pl:
     class __metaclass__(type):
