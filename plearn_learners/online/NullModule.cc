@@ -120,7 +120,7 @@ void NullModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     // deepCopyField(trainvec, copies);
 
     // ### Remove this line when you have fully implemented this method.
-    PLERROR("NullModule::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    //PLERROR("NullModule::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 ///////////

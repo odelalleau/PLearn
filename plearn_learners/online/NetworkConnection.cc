@@ -146,8 +146,8 @@ void NetworkConnection::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     // ### ex:
     // deepCopyField(trainvec, copies);
 
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("NetworkConnection::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    deepCopyField(src_module, copies);
+    deepCopyField(dst_module, copies);
 }
 
 ////////////////////
