@@ -866,6 +866,24 @@ template<class T>
 void loadPMat(const string& filename, TMat<float>& mat)
 { PLERROR("loadPMat only implemented for float and double"); }
 
+inline void deepCopyField(Mat*& field, CopiesMap& copies)
+{
+    if (field)
+    {
+        CopiesMap::iterator it = copies.find(field);
+        if (it != copies.end())                
+            field = static_cast<Mat*>(it->second);
+        else
+        {
+            Mat* newM = new Mat; 
+            (*newM) = field->deepCopy(copies);
+            copies[field] = newM;
+            field = newM;
+        }
+    }
+}
+
+
 //!  Read and Write from C++ stream:
 //!  write saves length() and width(), and read resizes accordingly
 

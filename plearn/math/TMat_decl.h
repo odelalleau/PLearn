@@ -937,6 +937,7 @@ protected:
 
 typedef TMat<real> Mat;
 
+inline void deepCopyField(Mat*& field, CopiesMap& copies);
 
 // Type traits (especially type "names" for displaying optionHelp() )
 
