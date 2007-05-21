@@ -392,6 +392,10 @@ void RBMBinomialLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
+real RBMBinomialLayer::energy(const Vec& unit_values) const
+{
+    return dot(unit_values,bias);
+}
 
 } // end of namespace PLearn
 

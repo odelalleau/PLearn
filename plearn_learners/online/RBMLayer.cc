@@ -595,7 +595,11 @@ void RBMLayer::bpropCD(const Vec& pos_values, const Vec& neg_values,
         bg[i] = bps[i] - bns[i];
 }
 
-
+real RBMLayer::energy(const Vec& unit_values) const
+{
+    PLERROR("RBMLayer::energy(Vec) not implemented in subclass %s\n",classname().c_str());
+    return 0;
+}
 
 } // end of namespace PLearn
 

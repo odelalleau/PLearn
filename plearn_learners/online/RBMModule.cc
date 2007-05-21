@@ -256,16 +256,81 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     Mat* hidden_act = ports_value[2];
     Mat* visible_sample = ports_value[3];
     Mat* hidden_sample = ports_value[4];
-
+    Mat* energy = ports_value[5];
+    bool hidden_activations_are_computed=false;
+    bool visible_activations_are_computed=false;
+    if (energy) 
+    {
+        PLASSERT_MSG( energy->isEmpty(), 
+                      "RBMModule: the energy port can only be an output port\n" );
+        if (visible && !visible->isEmpty() &&
+            hidden && !hidden->isEmpty()) 
+            // we know x and h: energy(h,x) = b'x + c'h + h'Wx
+            //  = visible_layer->energy(x) + hidden_layer->energy(h) + dot(h,hidden_layer->activation)
+        {
+            energy->resize(visible->length(),1);
+            energy->clear();
+            for (int i=0;i<visible->length();i++)
+            {
+                connection->setAsDownInputs(*visible);
+                hidden_layer->getAllActivations(connection, 0, true);
+                hidden_activations_are_computed=true;
+                (*energy)(i,0) = visible_layer->energy((*visible)(i)) + 
+                    hidden_layer->energy((*hidden)(i)) + 
+                    dot((*hidden)(i),hidden_layer->activations(i));
+            }
+        } else if (visible && !visible->isEmpty()) 
+            // we know x: free energy = -log sum_h e^{-energy(h,x)}
+            //                        = b'x + sum_i log sigmoid(-c_i - W_i'x)
+            //                        = visible_layer->energy(x) + sum_i log hidden_layer->expectation[i]
+            // or more robustly,      = visible_layer->energy(x) - sum_i softplus(-hidden_layer->activation[i])
+        {
+            energy->resize(visible->length(),1);
+            energy->clear();
+            for (int i=0;i<visible->length();i++)
+            {
+                connection->setAsDownInputs(*visible);
+                hidden_layer->getAllActivations(connection, 0, true);
+                hidden_activations_are_computed=true;
+                (*energy)(i,0) = visible_layer->energy((*visible)(i));
+                for (int j=0;j<hidden_layer->size;j++)
+                    (*energy)(i,0) += softplus(hidden_layer->activations(i,j));
+            }
+        }
+        else if (hidden && !hidden->isEmpty())
+            // we know h: free energy = -log sum_x e^{-energy(h,x)}
+            //                        = c'h + sum_i log sigmoid(-b_i - W_{.i}'h)
+            //                        = hidden_layer->energy(h) + sum_i log visible_layer->expectation[i]
+            // or more robustly,      = hidden_layer->energy(h) - sum_i softplus(-visible_layer->activation[i])
+        {
+            energy->resize(visible->length(),1);
+            energy->clear();
+            for (int i=0;i<hidden->length();i++)
+            {
+                connection->setAsUpInputs(*hidden);
+                visible_layer->getAllActivations(connection, 0, true);
+                visible_activations_are_computed=true; 
+                (*energy)(i,0) = hidden_layer->energy((*hidden)(i));
+                for (int j=0;j<visible_layer->size;j++)
+                    (*energy)(i,0) += softplus(visible_layer->activations(i,j));
+            }
+        }
+        else 
+            PLERROR("RBMModule: unknown configuration to compute energy (currently\n"
+                    "only possible if at least visible or hidden are provided).\n");
+    }
     // we are given the visible units and we want to compute the hidden
     // activation and/or the hidden expectation
     if ( visible && !visible->isEmpty() &&
          ((hidden && hidden->isEmpty() ) ||
           (hidden_act && hidden_act->isEmpty())) )
     {
-        // visible_layer->setExpectations(*visible);
-        connection->setAsDownInputs(*visible); // visible_layer->getExpectations());
-        hidden_layer->getAllActivations(connection, 0, true);
+        if (!hidden_activations_are_computed)
+        {
+            connection->setAsDownInputs(*visible); 
+            hidden_layer->getAllActivations(connection, 0, true);
+            hidden_activations_are_computed=true;
+        }
         if (hidden_act) {
             // Also store hidden layer activations.
             PLASSERT( hidden_act->isEmpty() );
@@ -373,6 +438,7 @@ const TVec<string>& RBMModule::getPorts()
         ports.append("hidden_activations.state");
         ports.append("visible_sample");
         ports.append("hidden_sample");
+        ports.append("energy");
     }
     return ports;
 }

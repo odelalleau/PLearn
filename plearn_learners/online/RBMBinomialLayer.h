@@ -115,6 +115,9 @@ public:
     //! with respect to the layer's bias, given the internal activations
     virtual void bpropNLL(const Vec& target, real nll, Vec& bias_gradient);
 
+    //! compute bias' unit_values
+    virtual real energy(const Vec& unit_values) const;
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.

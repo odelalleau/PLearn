@@ -255,6 +255,8 @@ public:
     virtual void bpropCD(const Vec& pos_values, const Vec& neg_values,
                     Vec& bias_gradient);
 
+    virtual real energy(const Vec& unit_values) const;
+    
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
