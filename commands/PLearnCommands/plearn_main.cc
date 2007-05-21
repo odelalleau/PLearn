@@ -112,6 +112,14 @@ string version_string()
     return s;
 }
 
+void setVersion(int major_version, int minor_version, int fixlevel)
+{
+    // Copy the version variables to private namespace (i.e. static variables)
+    // to make them available to other callers.
+    plearn_major_version = major_version;
+    plearn_minor_version = minor_version;
+    plearn_fixlevel      = fixlevel;
+}
 
 BEGIN_DECLARE_REMOTE_FUNCTIONS
 
@@ -291,11 +299,7 @@ int plearn_main( int argc, char** argv,
     Profiler::activate();
 #endif
 
-    // Copy the version variables to private namespace (i.e. static variables)
-    // to make them available to other callers.
-    plearn_major_version = major_version;
-    plearn_minor_version = minor_version;
-    plearn_fixlevel      = fixlevel;
+    setVersion(major_version, minor_version, fixlevel);
 
     // Establish the terminate handler that's called in situations of
     // double-fault.

@@ -1,8 +1,8 @@
 // -*- C++ -*-
 
-// plearn_main.h
-// Copyright (C) 2002 Pascal Vincent
-//
+// PythonExtension.h
+// Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
+
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -31,37 +31,18 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
+#ifndef PythonExtension_INC
+#define PythonExtension_INC
 
-/* *******************************************************      
- * $Id$
- ******************************************************* */
-
-/*! \mainpage My Personal Index Page
- *
- * Voir le site "www.plearn.org" pour des guides.
- * 
- * \section intro_sec Introduction
- *
- * This is the introduction. 
- *
- * \subsection step1 Step 1: Opening the box
- *  
- * etc...
- */
-#include <string>
-
-#ifndef plearn_main_INC
-#define plearn_main_INC
+#include <plearn/python/PythonIncludes.h>
 
 namespace PLearn {
 
-int plearn_main( int argc, char** argv, 
-                 int major_version = -1, int minor_version = -1, int fixlevel = -1);
+// Trampoline for global PLearn 'remote' functions
+  PyObject* pythonGlobalFuncTramp(PyObject* self, PyObject* args);
 
-// Return the version string associated with the current executable
-std::string version_string();
-
-void setVersion(int major_version, int minor_version, int fixlevel);
+// Init func for python module.
+  void initPythonExtensionModule(char* module_name);
 
 } // end of namespace PLearn
 

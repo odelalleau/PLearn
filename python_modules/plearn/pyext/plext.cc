@@ -31,89 +31,16 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-#include <plearn/python/PythonIncludes.h>
+#include <plearn/python/PythonExtension.h>
 #include <commands/plearn_full_inc.h>
-#include <plearn/base/HelpSystem.h>
+#include <commands/PLearnCommands/plearn_main.h>
 
 using namespace PLearn;
-using namespace std;
 
-// Trampoline for global PLearn 'remote' functions
-PyObject* tramp(PyObject* self, PyObject* args)
-{
-  RemoteTrampoline* t= 
-    static_cast<RemoteTrampoline*>(PyCObject_AsVoidPtr(self));
-  int nas= PyTuple_GET_SIZE(args);
-  TVec<PythonObjectWrapper> as;
-  for(int i= 0; i < nas; ++i)
-    as.push_back(PythonObjectWrapper(PyTuple_GET_ITEM(args, i)));
-  try
-    {
-        PythonObjectWrapper returned_value= t->call(0, as);
-        PyObject* to_return= returned_value.getPyObject();
-        Py_XINCREF(to_return);
-        return to_return;
-    }
-  catch(const PLearnError& e) 
-    {
-      PyErr_SetString(PyExc_Exception, e.message().c_str());
-      return 0;
-    }
-  catch(const std::exception& e) 
-    {
-      PyErr_SetString(PyExc_Exception, e.what());
-      return 0;
-    }
-  catch(...) 
-    {
-      PyErr_SetString(PyExc_Exception,
-		      "PLearn: Caught unknown C++ exception");
-      return 0;
-    }
-}
-
-// the global funcs (storage never reclaimed)
-static PObjectPool<PyMethodDef> pyfuncs(50);
-static TVec<string> funcs_help;
-
-// Init func for plext python module.
-// init module, then inject global funcs
 PyMODINIT_FUNC initplext()
 {
-  PyObject* plext= Py_InitModule("plext", NULL);
-
-  const RemoteMethodMap::MethodMap& global_funcs= 
-    getGlobalFunctionMap().getMap();
-
-  for(RemoteMethodMap::MethodMap::const_iterator it=
-	global_funcs.begin();
-      it != global_funcs.end(); ++it)
-    {
-      PyObject* self= 
-	PyCObject_FromVoidPtr(it->second, NULL);
-    
-      PyMethodDef* py_method= pyfuncs.allocate();
-      py_method->ml_name= 
-	const_cast<char*>(it->first.first.c_str());
-      py_method->ml_meth= tramp;
-      py_method->ml_flags= METH_VARARGS;
-      funcs_help.push_back(
-          HelpSystem::helpOnFunction(it->first.first.c_str(), 
-                                     it->first.second));
-      py_method->ml_doc= const_cast<char*>(funcs_help.last().c_str());
-    
-      PyObject* pyfunc= 
-	PyCFunction_NewEx(py_method, self, plext);
-	    
-      if(pyfunc) 
-	PyObject_SetAttrString(plext, 
-			       py_method->ml_name, 
-			       pyfunc);
-      else
-	PLERROR("Cannot inject PLearn global function "
-		"'%s' into python.",
-		py_method->ml_name);
-    }
+    setVersion(0,92,0);
+    initPythonExtensionModule("plext");
 }
 
 
