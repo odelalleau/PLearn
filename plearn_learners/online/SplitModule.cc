@@ -139,7 +139,8 @@ void SplitModule::fprop(const TVec<Mat*>& ports_value)
             int width = up_port_sizes[i];
             if (ports_value[i+1])
             {
-                PLASSERT_MSG(!ports_value[i+1]->isEmpty(),"In SplitModule, when the down_port is an input, the up_ports should either be outputs or not connected.\n");
+                PLASSERT_MSG(ports_value[i+1]->isEmpty(),"In SplitModule, when the down_port is an input, the up_ports should either be outputs or not connected.\n");
+                ports_value[i+1]->resize(input.length(),width);
                 *ports_value[i+1] << input.subMatColumns(start,width);
             }
             start += width;
@@ -149,10 +150,13 @@ void SplitModule::fprop(const TVec<Mat*>& ports_value)
     {
         int start=0;
         Mat& output = *ports_value[0];
+        // hacky check so that the resize does not fail
+        PLASSERT_MSG(ports_value[1] && !ports_value[1]->isEmpty(), "In SplitModule, when the down_port is an output, all up_ports should be connected.\n");
+        output.resize(ports_value[1]->length(),input_size);
         for (int i=0;i<up_port_sizes.length();i++)
         {
             int width = up_port_sizes[i];
-            PLASSERT_MSG(ports_value[i+1], "In SplitModule, when the down_port is an output, all up_ports should be connected.\n");
+            PLASSERT_MSG(ports_value[i+1] && !ports_value[i+1]->isEmpty(), "In SplitModule, when the down_port is an output, all up_ports should be connected.\n");
             output.subMatColumns(start,width) << *ports_value[i+1];
             start += width;
         }
@@ -172,8 +176,7 @@ void SplitModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
 {
     PLASSERT( ports_value.length() == nPorts() && ports_gradient.length() == nPorts());
     PLASSERT_MSG( up_port_sizes.length()>0, "SplitModule should have up_port_sizes specified with length>0");
-    PLASSERT_MSG( ports_gradient[0], "SplitModule's down_port should always be connected.\n");
-    if (ports_gradient[0]->isEmpty()) // the down_port is an input, do a backprop on SPLIT
+    if (ports_gradient[0] && ports_gradient[0]->isEmpty()) // the down_port is an input, do a backprop on SPLIT
     {
         int start=0;
         Mat& input_gradient = *ports_gradient[0];
@@ -182,27 +185,41 @@ void SplitModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             int width = up_port_sizes[i];
             if (ports_gradient[i+1])
             {
-                PLASSERT_MSG(!ports_gradient[i+1]->isEmpty(),"In SplitModule, when the down_port is an input, the up_ports should either be outputs or not connected.\n");
+                PLASSERT_MSG(ports_gradient[i+1]->isEmpty(),"In SplitModule, when the down_port is an input, the up_ports should either be outputs or not connected.\n");
+                input_gradient.resize(ports_gradient[i+1]->length(),width);
                 input_gradient.subMatColumns(start,width) += *ports_value[i+1];
             }
             start += width;
         }
         return;
-    } else // the down_port is an output, do a CONCATENATE
+    } 
+    bool one_of_the_up_ports_wants_a_gradient = false;
+    for (int i=0;i<up_port_sizes.length();i++)
+        if (ports_gradient[i+1] && ports_gradient[i+1]->isEmpty())
+        {
+            one_of_the_up_ports_wants_a_gradient = true;
+            break;
+        }
+    if (one_of_the_up_ports_wants_a_gradient)
+    // the down_port is an output, do a CONCATENATE
     {
         int start=0;
         Mat& output_gradient = *ports_gradient[0];
+
         for (int i=0;i<up_port_sizes.length();i++)
         {
             int width = up_port_sizes[i];
-            PLASSERT_MSG(ports_gradient[i+1], "In SplitModule, when the down_port is an output, all up_ports should be connected.\n");
-            (*ports_gradient[i+1]) += output_gradient.subMatColumns(start,width);
+            if (ports_gradient[i+1] && ports_gradient[i+1]->isEmpty()) 
+            {
+                ports_gradient[i+1]->resize(output_gradient.length(),width);
+                (*ports_gradient[i+1]) += output_gradient.subMatColumns(start,width);
+            }
             start += width;
         }
         return;
     }
-    PLERROR("In SplitModule::fprop - This cofiguration of ports not implemented for class "
-            "'%s'", classname().c_str());
+    //PLERROR("In SplitModule::fprop - This configuration of ports not implemented for class "
+    //       "'%s'", classname().c_str());
 }
 
 ////////////////////////
@@ -239,7 +256,6 @@ string SplitModule::getPortName(int i)
 // getPorts //
 //////////////
 const TVec<string>& SplitModule::getPorts() {
-    static TVec<string> port_names;
     if (port_names.isEmpty())
     {
         port_names.resize(nPorts());
@@ -253,7 +269,6 @@ const TVec<string>& SplitModule::getPorts() {
 // getPortSizes //
 //////////////////
 const TMat<int>& SplitModule::getPortSizes() {
-    static TMat<int> sizes;
     if (sizes.isEmpty())
     { 
         sizes.resize(nPorts(),2);

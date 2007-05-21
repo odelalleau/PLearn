@@ -67,7 +67,7 @@ public:
     string down_port_name;
     TVec<int> up_port_sizes;
     TVec<string> up_port_names;
-    
+     
 public:
     //#####  Public Member Functions  #########################################
 
@@ -198,6 +198,10 @@ private:
     //#####  Private Data Members  ############################################
 
     // The rest of the private stuff goes here
+
+    TVec<string> port_names;
+    TMat<int> sizes;
+
 };
 
 // Declares a few other classes and functions related to this class
