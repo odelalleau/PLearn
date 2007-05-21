@@ -224,6 +224,7 @@
 #include <plearn_learners/online/RBMMultinomialLayer.h>
 #include <plearn_learners/online/RBMTruncExpLayer.h>
 #include <plearn_learners/online/SoftmaxModule.h>
+#include <plearn_learners/online/SplitModule.h>
 #include <plearn_learners/online/SquaredErrorCostModule.h>
 #include <plearn_learners/online/StackedAutoassociatorsNet.h>
 #include <plearn_learners/online/Subsampling2DModule.h>
