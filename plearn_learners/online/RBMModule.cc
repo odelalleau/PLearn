@@ -92,6 +92,30 @@ void RBMModule::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
         "Learning rate for the constrastive divergence step.");
 
+    declareOption(ol, "min_n_Gibbs_steps", &RBMModule::min_n_Gibbs_steps,
+                  OptionBase::buildoption,
+                  "Used in generative mode (when visible_sample or hidden_sample is requested)\n"
+                  "when one has to sample from the joint or a marginal of visible and hidden,\n"
+                  "and thus a Gibbs chain has to be run. This option gives the minimum number\n"
+                  "of Gibbs steps to perform in the chain before outputting a sample.\n");
+
+    declareOption(ol, "n_Gibbs_steps_per_generated_sample", 
+                  &RBMModule::n_Gibbs_steps_per_generated_sample,
+                  OptionBase::buildoption,
+                  "Used in generative mode (when visible_sample or hidden_sample is requested)\n"
+                  "when one has to sample from the joint or a marginal of visible and hidden,\n"
+                  "This option gives the number of steps to run in the Gibbs chain between\n"
+                  "consecutive generated samples that are produced in output of the fprop method.\n"
+                  "By default this is equal to min_n_Gibbs_steps.\n");
+
+    declareOption(ol, "Gibbs_step", 
+                  &RBMModule::Gibbs_step,
+                  OptionBase::learntoption,
+                  "Used in generative mode (when visible_sample or hidden_sample is requested)\n"
+                  "when one has to sample from the joint or a marginal of visible and hidden,\n"
+                  "Keeps track of the number of steps that have been ran since the beginning\n"
+                  "of the chain.\n");
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -215,69 +239,78 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     Mat* visible = ports_value[0];
     Mat* hidden = ports_value[1];
     Mat* hidden_act = ports_value[2];
-    if ( visible && hidden &&
-         !visible->isEmpty() && hidden->isEmpty() )
+    Mat* visible_sample = ports_value[3];
+    Mat* hidden_sample = ports_value[4];
+    if ( visible && !visible->isEmpty() &&
+         ((hidden && hidden->isEmpty() ) ||
+          (hidden_act && hidden_act->isEmpty())) )
     {
-        visible_layer->setExpectations(*visible);
-        connection->setAsDownInputs(visible_layer->getExpectations());
+        // visible_layer->setExpectations(*visible);
+        connection->setAsDownInputs(*visible); // visible_layer->getExpectations());
         hidden_layer->getAllActivations(connection, 0, true);
-        if (hidden_act) {
+        if (hidden_act && hidden_act->isEmpty()) {
             // Also store hidden layer activations.
             PLASSERT( hidden_act->isEmpty() );
             const Mat& to_store = hidden_layer->activations;
             hidden_act->resize(to_store.length(), to_store.width());
             *hidden_act << to_store;
         }
-        hidden_layer->computeExpectations();
-        Mat& hidden_out = hidden_layer->getExpectations();
-        hidden->resize(hidden_out.length(), hidden_out.width());
-        *hidden << hidden_out;
-    } else {
-        PLERROR("In RBMModule::fprop - Only bottom-up fprop is currently "
-                "implemented" );
-    }
+        if (hidden && hidden->isEmpty()) {
+            hidden_layer->computeExpectations();
+            Mat& hidden_out = hidden_layer->getExpectations();
+            hidden->resize(hidden_out.length(), hidden_out.width());
+            *hidden << hidden_out;
+        }
+        return;
+    } 
+    if ((visible_sample && visible_sample->isEmpty()) // it is asked to sample the visible units
+        || (hidden_sample && hidden_sample->isEmpty())) // or to sample the hidden units
+    {
+        if (hidden && !hidden->isEmpty()) // sample visible conditionally on hidden
+        {
+            connection->setAsUpInputs(*hidden);
+            visible_layer->getAllActivations(connection, 0, true);
+            visible_layer->generateSamples();
+            visible_sample->resize(visible_layer->samples.length(),visible_layer->samples.width());
+            *visible_sample << visible_layer->samples;
+        }
+        else // sample unconditionally: Gibbs sample after k steps
+        {
+            if (visible && !visible->isEmpty()) // if an input is provided, start the chain from it
+            {
+                Gibbs_step = 0;
+                visible_layer->samples << *visible;
+            }
+            // else we might want to restore as a separate "state" the last visible_layer->samples,
+            // (copied elsewhere) in case the RBM is used to something else than sampling 
+            // in between calls to this fprop-for-sampling.
+            int min_n = min(Gibbs_step+n_Gibbs_steps_per_generated_sample,
+                            min_n_Gibbs_steps);
+            for (;Gibbs_step<min_n;Gibbs_step++)
+            {
+                connection->setAsDownInputs(visible_layer->samples);
+                hidden_layer->getAllActivations(connection, 0, true);
+                hidden_layer->generateSamples();
+                connection->setAsUpInputs(hidden_layer->samples);
+                visible_layer->getAllActivations(connection, 0, true);
+                visible_layer->generateSamples();
+            }
+            if (visible_sample && visible_sample->isEmpty()) // provide sample of the visible units
+            {
+                visible_sample->resize(visible_layer->samples.length(),
+                                       visible_layer->samples.width());
+                *visible_sample << visible_layer->samples;
+            }
+            if (hidden_sample && hidden_sample->isEmpty()) // provide sample of the hidden units
+            {
+                hidden_sample->resize(hidden_layer->samples.length(),
+                                      hidden_layer->samples.width());
+                *hidden_sample << hidden_layer->samples;
+            }
+        }        
+    } 
+    PLERROR("In RBMModule::fprop - Unknown port configuration");
 }
-
-/////////////////
-// bpropUpdate //
-/////////////////
-/* THIS METHOD IS OPTIONAL
-void RBMModule::bpropUpdate(const Vec& input, const Vec& output,
-                               Vec& input_gradient,
-                               const Vec& output_gradient,
-                               bool accumulate)
-{
-}
-*/
-
-/* THIS METHOD IS OPTIONAL
-void RBMModule::bpropUpdate(const Vec& input, const Vec& output,
-                               const Vec& output_gradient)
-{
-}
-*/
-
-//////////////////
-// bbpropUpdate //
-//////////////////
-/* THIS METHOD IS OPTIONAL
-void RBMModule::bbpropUpdate(const Vec& input, const Vec& output,
-                                Vec& input_gradient,
-                                const Vec& output_gradient,
-                                Vec& input_diag_hessian,
-                                const Vec& output_diag_hessian,
-                                bool accumulate)
-{
-}
-*/
-
-/* THIS METHOD IS OPTIONAL
-void RBMModule::bbpropUpdate(const Vec& input, const Vec& output,
-                                const Vec& output_gradient,
-                                const Vec& output_diag_hessian)
-{
-}
-*/
 
 ////////////
 // forget //
@@ -306,15 +339,6 @@ void RBMModule::forget()
 }
 
 //////////////
-// finalize //
-//////////////
-/* THIS METHOD IS OPTIONAL
-void RBMModule::finalize()
-{
-}
-*/
-
-//////////////
 // getPorts //
 //////////////
 const TVec<string>& RBMModule::getPorts()
@@ -324,6 +348,8 @@ const TVec<string>& RBMModule::getPorts()
         ports.append("visible");
         ports.append("hidden");
         ports.append("hidden_activations.state");
+        ports.append("visible_sample");
+        ports.append("hidden_sample");
     }
     return ports;
 }
@@ -334,11 +360,14 @@ const TVec<string>& RBMModule::getPorts()
 const TMat<int>& RBMModule::getPortSizes() {
     port_sizes.resize(nPorts(), 2);
     port_sizes.fill(-1);
-    if (visible_layer)
+    if (visible_layer) {
         port_sizes(0, 1) = visible_layer->size;
+        port_sizes(3, 1) = visible_layer->size;
+    }
     if (hidden_layer) {
         port_sizes(1, 1) = hidden_layer->size;
         port_sizes(2, 1) = hidden_layer->size;
+        port_sizes(4, 1) = hidden_layer->size;
     }
     return port_sizes;
 }

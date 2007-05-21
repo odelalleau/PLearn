@@ -69,7 +69,14 @@ public:
 
     real cd_learning_rate;
     real grad_learning_rate;
-    
+    //! used to generate samples from the RBM
+    int min_n_Gibbs_steps; 
+    int n_Gibbs_steps_per_generated_sample;
+
+    //#####  Public Learnt Options  ############################################
+    //! used to generate samples from the RBM
+    int Gibbs_step;
+
 public:
     //#####  Public Member Functions  #########################################
 
