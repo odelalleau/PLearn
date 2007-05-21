@@ -201,6 +201,19 @@ void RBMModule::build_()
         PLWARNING("In RBMModule::build_ - Both 'cd_learning_rate' and "
                 "'grad_learning_rate' are set to 0, the RBM will not learn "
                 "much");
+
+    // buid port_sizes
+    port_sizes.resize(nPorts(), 2);
+    port_sizes.fill(-1);
+    if (visible_layer) {
+        port_sizes(0, 1) = visible_layer->size;
+        port_sizes(3, 1) = visible_layer->size;
+    }
+    if (hidden_layer) {
+        port_sizes(1, 1) = hidden_layer->size;
+        port_sizes(2, 1) = hidden_layer->size;
+        port_sizes(4, 1) = hidden_layer->size;
+    }
 }
 
 ///////////
@@ -243,6 +256,9 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     Mat* hidden_act = ports_value[2];
     Mat* visible_sample = ports_value[3];
     Mat* hidden_sample = ports_value[4];
+
+    // we are given the visible units and we want to compute the hidden
+    // activation and/or the hidden expectation
     if ( visible && !visible->isEmpty() &&
          ((hidden && hidden->isEmpty() ) ||
           (hidden_act && hidden_act->isEmpty())) )
@@ -364,18 +380,8 @@ const TVec<string>& RBMModule::getPorts()
 ///////////////////
 // getPortsSizes //
 ///////////////////
-const TMat<int>& RBMModule::getPortSizes() {
-    port_sizes.resize(nPorts(), 2);
-    port_sizes.fill(-1);
-    if (visible_layer) {
-        port_sizes(0, 1) = visible_layer->size;
-        port_sizes(3, 1) = visible_layer->size;
-    }
-    if (hidden_layer) {
-        port_sizes(1, 1) = hidden_layer->size;
-        port_sizes(2, 1) = hidden_layer->size;
-        port_sizes(4, 1) = hidden_layer->size;
-    }
+const TMat<int>& RBMModule::getPortSizes()
+{
     return port_sizes;
 }
 
