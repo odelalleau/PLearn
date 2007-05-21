@@ -2,7 +2,7 @@
 
 // NatGradEstimator.h
 //
-// Copyright (C) 2007 yoshua Bengio
+// Copyright (C) 2007 Yoshua Bengio
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: yoshua Bengio
+// Authors: Yoshua Bengio
 
 /*! \file NatGradEstimator.h */
 
@@ -42,21 +42,20 @@
 
 #include <plearn/base/Object.h>
 #include <plearn/math/TMat_impl.h>
+#include <plearn_learners/generic/GradientCorrector.h>
 
 namespace PLearn {
 
 /**
- * Class used for converting a sequence of n-dimensional gradients g_t
+ * GradientCorrector subclass used for converting a sequence of n-dimensional gradients g_t
  * into covariance-corrected update directions v_t, approximating
  *     v_t = inv(C_t) g_t,
  * with C_t = gamma C_{t-1} + g_t g_t'.
  * 
- * There is a main method, the operator(), which takes a g_t and fills v_t.
- * The process can be initialized by init(). 
  */
-class NatGradEstimator : public Object
+class NatGradEstimator : public GradientCorrector
 {
-    typedef Object inherited;
+    typedef GradientCorrector inherited;
 
 public:
     //#####  Public Build Options  ############################################
@@ -75,12 +74,6 @@ public:
     //! forgetting factor in moving average estimator of covariance
     real gamma;
 
-    //! number of input dimensions (size of g_t or v_t)
-    int n_dim;
-
-    //! verbosity level, track improvement, spectrum, etgc.
-    int verbosity;
-
     bool renormalize;
 
     //! use the formula Ginv <-- (1+eps) Ginv - eps Ginv g g' Ginv
@@ -95,17 +88,19 @@ public:
     // ### initializes all fields to reasonable default values.
     NatGradEstimator();
 
+    virtual void build();
+
     // Your other public member functions go here
 
     //! initialize the object to start collecting covariance statistics from fresh
-    void init();
+    virtual void init();
 
     //! main method of this class: reads from the gradient "g" field
     //! and writes into the "v" field an estimator of inv(cov) g.
     //! The argument is an index over examples, which is used to
     //! know when cycling through a minibatch. The statistics on
     //! the covariance are updated.
-    void operator()(int t, const Vec& g, Vec v);
+    virtual void operator()(int t, const Vec& g, Vec v);
 
     //#####  PLearn::Object Protocol  #########################################
 
@@ -113,9 +108,6 @@ public:
     // ### If your class is not instantiatable (it has pure virtual methods)
     // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT
     PLEARN_DECLARE_OBJECT(NatGradEstimator);
-
-    // Simply calls inherited::build() then build_()
-    virtual void build();
 
     //! Transforms a shallow copy into a deep copy
     // (PLEASE IMPLEMENT IN .cc)
@@ -152,10 +144,6 @@ protected:
 private:
     //#####  Private Member Functions  ########################################
 
-    //! This does the actual building.
-    // (PLEASE IMPLEMENT IN .cc)
-    void build_();
-
 private:
     //#####  Private Data Members  ############################################
 
@@ -166,17 +154,6 @@ private:
     Mat Vkt; //! sub-matrix of Vt with first n_eigen eigen-vectors
     Mat A; // matrix for linear system solving
     TVec<int> pivots; // pivots for linear system solving
-    /*
-    //! temporary buffer
-    Vec tmp_v;
-    //! Gram matrix, of dimension (k + minibatch_size, k + minibatch_size)
-    //! and its sub-matrices
-    Mat M, M11, M12, M21, M22;
-    //! k+1 eigenvectors of the Gram matrix (in the rows)
-    Mat Vbt; //! sub-matrix of Vt with last cov_minibatch_size elements of each eigen-vector
-    //! temp for new value of Ut
-    Mat newUt;
-    */
 };
 
 // Declares a few other classes and functions related to this class

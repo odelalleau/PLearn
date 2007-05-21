@@ -41,7 +41,7 @@
 #define NatGradNNet_INC
 
 #include <plearn_learners/generic/PLearner.h>
-#include <plearn_learners/generic/NatGradEstimator.h>
+#include <plearn_learners/generic/GradientCorrector.h>
 #include <plearn/sys/Profiler.h>
 //#include "CorrelationProfiler.h"
 
@@ -87,12 +87,12 @@ public:
 
     //! natural gradient estimator for neurons
     //! (if 0 then do not correct the gradient on neurons)
-    PP<NatGradEstimator> neurons_natgrad_template;
-    TVec<PP<NatGradEstimator> > neurons_natgrad_per_layer;
+    PP<GradientCorrector> neurons_natgrad_template;
+    TVec<PP<GradientCorrector> > neurons_natgrad_per_layer;
 
     //! natural gradient estimator for the parameters within each neuron
     //! (if 0 then do not correct the gradient on each neuron weight)
-    PP<NatGradEstimator> params_natgrad_template;
+    PP<GradientCorrector> params_natgrad_template;
     //! natural gradient estimator solely for the parameters of the first
     //! layer. If present, performs over groups of parameters related to the
     //! same input (this includes the additional bias input).
@@ -100,15 +100,15 @@ public:
     //! no natural gradient performed on the groups of a neuron's parameters:
     //! params_natgrad_template is not applied for the first hidden layer's
     //! parameters). 
-    PP<NatGradEstimator> params_natgrad_per_input_template;
+    PP<GradientCorrector> params_natgrad_per_input_template;
 
     //! the above templates are used by the user to specifiy all the elements of the vector below
-    TVec<PP<NatGradEstimator> > params_natgrad_per_group;
+    TVec<PP<GradientCorrector> > params_natgrad_per_group;
 
     //! optionally, if neurons_natgrad==0 and params_natgrad_template==0, one can
     //! have regular stochastic gradient descent, or full-covariance natural gradient
     //! using the natural gradient estimator below
-    PP<NatGradEstimator> full_natgrad;
+    PP<GradientCorrector> full_natgrad;
 
     //! type of output cost: "NLL" for classification problems, "MSE" for regression
     string output_type;

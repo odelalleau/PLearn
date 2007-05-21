@@ -2,7 +2,7 @@
 
 // NatGradEstimator.cc
 //
-// Copyright (C) 2007 yoshua Bengio
+// Copyright (C) 2007 Yoshua Bengio
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: yoshua Bengio
+// Authors: Yoshua Bengio
 
 /*! \file NatGradEstimator.cc */
 
@@ -48,7 +48,8 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     NatGradEstimator,
-    "Convert a sequence of gradients into covariance-corrected (natural gradient) directions.\n",
+    "Subclass of GradientCorrector that computes an online natural gradient update direction.\n",
+    "Convert a sequence of gradients into covariance-corrected (natural gradient) directions.\n"
     "The algorithm used for converting a sequence of n-dimensional gradients g_t\n"
     "into covariance-corrected update directions v_t is the following:\n\n"
     "operator(int t, Vec g, Vec v): (reads g and writes v)\n"
@@ -72,8 +73,6 @@ NatGradEstimator::NatGradEstimator()
       lambda(1),
       n_eigen(10),
       gamma(0.99),
-      n_dim(-1),
-      verbosity(0),
       renormalize(true),
       previous_t(-1),
       first_t(-1)
@@ -85,17 +84,13 @@ NatGradEstimator::NatGradEstimator()
 void NatGradEstimator::build()
 {
     inherited::build();
-    build_();
+    init();
 }
 
 void NatGradEstimator::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields
-    // ### that you wish to be deepCopied rather than
-    // ### shallow-copied.
-    // ### ex:
     deepCopyField(Ut, copies);
     deepCopyField(D, copies);
     deepCopyField(Xt, copies);
@@ -149,9 +144,6 @@ void NatGradEstimator::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Whether to renormalize z wrt scaling that gamma produces\n");
 
-    declareOption(ol, "n_dim", &NatGradEstimator::n_dim,
-                  OptionBase::learntoption,
-                  "Number of dimensions of the gradient vectors\n");
     declareOption(ol, "Ut", &NatGradEstimator::Ut,
                   OptionBase::learntoption,
                   "Estimated scaled principal eigenvectors of the gradients covariance matrix\n"
@@ -172,11 +164,6 @@ void NatGradEstimator::declareOptions(OptionList& ol)
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
-}
-
-void NatGradEstimator::build_()
-{
-    init();
 }
 
 void NatGradEstimator::init()

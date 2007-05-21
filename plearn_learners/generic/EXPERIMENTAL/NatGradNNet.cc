@@ -49,7 +49,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "A separate covariance matrix is estimated for the gradients associated with the\n"
     "the input weights of each neuron, and a covariance matrix between the gradients\n"
     "on the neurons is also computed. These are combined to obtained an adjusted gradient\n"
-    "on all the parameters. The class NatGradEstimator embodies the adjustment algorithm.\n"
+    "on all the parameters. The class GradientCorrector embodies the adjustment algorithm.\n"
     "Users may specify different options for the estimator that is used for correcting\n"
     "the neurons gradients and for the estimator that is used for correcting the\n"
     "parameters gradients (separately for each neuron).\n"
@@ -165,42 +165,42 @@ void NatGradNNet::declareOptions(OptionList& ol)
 
     declareOption(ol, "neurons_natgrad_template", &NatGradNNet::neurons_natgrad_template,
                   OptionBase::buildoption,
-                  "Optional template NatGradEstimator for the neurons gradient.\n"
+                  "Optional template GradientCorrector for the neurons gradient.\n"
                   "If not provided, then the natural gradient correction\n"
                   "on the neurons gradient is not performed.\n");
 
     declareOption(ol, "neurons_natgrad_per_layer", 
                   &NatGradNNet::neurons_natgrad_per_layer,
                   OptionBase::learntoption,
-                  "Vector of NatGradEstimator objects for the gradient on the neurons of each layer.\n"
+                  "Vector of GradientCorrector objects for the gradient on the neurons of each layer.\n"
                   "They are copies of the neuron_natgrad_template provided by the user.\n");
 
     declareOption(ol, "params_natgrad_template", 
                   &NatGradNNet::params_natgrad_template,
                   OptionBase::buildoption,
-                  "Optional template NatGradEstimator object for the gradient of the parameters inside each neuron\n"
+                  "Optional template GradientCorrector object for the gradient of the parameters inside each neuron\n"
                   "It is replicated in the params_natgrad vector, for each neuron\n"
                   "If not provided, then the neuron-specific natural gradient estimator is not used.\n");
 
     declareOption(ol, "params_natgrad_per_input_template",
                   &NatGradNNet::params_natgrad_per_input_template,
                   OptionBase::buildoption,
-                  "Optional template NatGradEstimator object for the gradient of the parameters of the first layer\n"
+                  "Optional template GradientCorrector object for the gradient of the parameters of the first layer\n"
                   "grouped based upon their input. It is replicated in the params_natgrad_per_group vector, for each group.\n"
                   "If provided, overides the params_natgrad_template for the parameters of the first layer.\n");
 
     declareOption(ol, "params_natgrad_per_group", 
                     &NatGradNNet::params_natgrad_per_group,
                     OptionBase::learntoption,
-                    "Vector of NatGradEstimator objects for the gradient inside groups of parameters.\n"
+                    "Vector of GradientCorrector objects for the gradient inside groups of parameters.\n"
                     "They are copies of the params_natgrad_template and params_natgrad_per_input_template\n"
                     "templates provided by the user.\n");
 
     declareOption(ol, "full_natgrad", &NatGradNNet::full_natgrad,
                   OptionBase::buildoption,
-                  "NatGradEstimator for all the parameter gradients simultaneously.\n"
+                  "GradientCorrector for all the parameter gradients simultaneously.\n"
                   "This should not be set if neurons_natgrad or params_natgrad_template\n"
-                  "is provided. If none of the NatGradEstimators is provided, then\n"
+                  "is provided. If none of the GradientCorrectors is provided, then\n"
                   "regular stochastic gradient is performed.\n");
 
     declareOption(ol, "output_type", 
@@ -338,7 +338,7 @@ void NatGradNNet::build_()
     if(use_pvgrad && minibatch_size!=1)
         PLERROR("PV's gradient technique (triggered by use_pvgrad): support for minibatch not yet implemented (must have minibatch_size=1)");
     
-    while (hidden_layer_sizes[hidden_layer_sizes.length()-1]==0)
+    while (hidden_layer_sizes.length()>0 && hidden_layer_sizes[hidden_layer_sizes.length()-1]==0)
         hidden_layer_sizes.resize(hidden_layer_sizes.length()-1);
     n_layers = hidden_layer_sizes.length()+2;
     layer_sizes.resize(n_layers);
@@ -775,7 +775,7 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
     {
         for (int i=0;i<params_natgrad_per_group.length();i++)
         {
-            NatGradEstimator& neuron_natgrad = *(params_natgrad_per_group[i]);
+            GradientCorrector& neuron_natgrad = *(params_natgrad_per_group[i]);
             neuron_natgrad(t/minibatch_size,group_params_gradient[i],group_params_delta[i]); // compute update direction by natural gradient
         }
 //alternate
