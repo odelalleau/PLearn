@@ -104,17 +104,27 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
     "on a dataset.\n"
     );
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void PLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-    deepCopyField(tmp_output, copies);
-    // TODO What's wrong with this?
-    deepCopyField(train_set, copies);
-    deepCopyField(validation_set, copies);
-    deepCopyField(train_stats, copies);
-    deepCopyField(random_gen, copies);
+    deepCopyField(tmp_output,       copies);
+    deepCopyField(train_set,        copies);
+    deepCopyField(validation_set,   copies);
+    deepCopyField(train_stats,      copies);
+    deepCopyField(random_gen,       copies);
+    deepCopyField(b_inputs,         copies);
+    deepCopyField(b_targets,        copies);
+    deepCopyField(b_outputs,        copies);
+    deepCopyField(b_costs,          copies);
+    deepCopyField(b_weights,        copies);
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void PLearner::declareOptions(OptionList& ol)
 {
     declareOption(
@@ -229,11 +239,14 @@ void PLearner::declareOptions(OptionList& ol)
         OptionBase::buildoption,
         "Size of minibatches used during testing to take advantage\n"
         "of efficient (possibly parallelized) implementations when\n"
-        "multiple exemples are processed at once. \n");
+        "multiple examples are processed at once. \n");
 
     inherited::declareOptions(ol);
 }
 
+////////////////////
+// declareMethods //
+////////////////////
 void PLearner::declareMethods(RemoteMethodMap& rmm)
 {
     // Insert a backpointer to remote methods; note that this
