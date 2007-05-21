@@ -875,10 +875,22 @@ inline void deepCopyField(Mat*& field, CopiesMap& copies)
             field = static_cast<Mat*>(it->second);
         else
         {
+            // Throw an error. The reason is that:
+            // - if the Mat* pointer points to a matrix that has already been
+            // deep-copied, I am unsure whether 'copies' contains the correct
+            // pointer, thus we may end up here even though we should reuse the
+            // previous deep copy,
+            // - if the Mat* pointer points to a matrix that has not been deep
+            // copied yet, then when that matrix is deep copied it will not
+            // actually be the same as the matrix we may create here.
+            PLERROR("In deepCopyField(Mat*& field, CopiesMap& copies) - You "
+                    "cannot deep copy a Mat* directly.");
+            /* Old code.
             Mat* newM = new Mat; 
             (*newM) = field->deepCopy(copies);
             copies[field] = newM;
             field = newM;
+            */
         }
     }
 }
