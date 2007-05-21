@@ -96,6 +96,7 @@ void CostModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(tmp_input_and_target_diag_hessian,    copies);
     deepCopyField(tmp_costs_mat,                        copies);
     deepCopyField(tmp_input_gradients,                  copies);
+    deepCopyField(store_costs,                          copies);
 }
 
 ////////////////////
@@ -108,6 +109,10 @@ void CostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         Mat* pred_grad = ports_gradient[0];
         Mat* target_grad = ports_gradient[1];
         Mat* cost_grad = ports_gradient[2];
+        if (!pred_grad && !target_grad && !cost_grad) {
+            // No gradient is being asked or provided at all.
+            return;
+        }
         if (pred_grad && !target_grad && cost_grad &&
             pred_grad->isEmpty() && !cost_grad->isEmpty())
         {
@@ -117,17 +122,20 @@ void CostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             // The gradient on the cost must be one if we want to re-use
             // exactly the existing code.
             for (int i = 0; i < cost_grad->length(); i++) {
-                PLASSERT( fast_exact_is_equal((*cost_grad)(i, 0), 1) );
+                for (int j = 0; j < cost_grad->width(); j++) {
+                    PLASSERT( fast_exact_is_equal((*cost_grad)(i, j), 1) );
+                }
             }
 #endif
             Mat* cost_val = ports_value[2];
-            Vec costs(cost_val->length());
-            costs << cost_val->column(0);
+            PLASSERT( cost_val );
+            store_costs.resize(cost_val->length());
+            store_costs << cost_val->column(0);
             Mat* pred_val = ports_value[0];
             Mat* target_val = ports_value[1];
             PLASSERT( pred_val && target_val );
             pred_grad->resize(pred_val->length(), pred_val->width());
-            bpropUpdate(*pred_val, *target_val, costs, *pred_grad, true);
+            bpropUpdate(*pred_val, *target_val, store_costs, *pred_grad, true);
             return;
         }
     }
