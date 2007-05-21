@@ -200,7 +200,6 @@ void ModuleLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(store_outputs,      copies);
     deepCopyField(store_costs,        copies);
     deepCopyField(network,            copies);
-    // does not compile right now
     deepCopyField(null_pointers,      copies);
 }
 
