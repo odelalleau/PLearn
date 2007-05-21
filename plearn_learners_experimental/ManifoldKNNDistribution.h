@@ -73,6 +73,11 @@ public:
     //! to the estimated covariance matrix.
     real min_sigma_square;
 
+    //! Indication that the estimation of the manifold tangent vectors
+    //! should be made around the knn_manifold neighbors' mean vector,
+    //! not around the test point.
+    bool center_around_manifold_neighbors;
+
 public:
     //#####  Public Member Functions  #########################################
 
@@ -151,6 +156,8 @@ protected:
     mutable Vec S;
     //! Projection on the local tangent vectors
     mutable Vec eig_vectors_projection;
+    //! Mean vector of neighbors
+    mutable Vec neighbors_mean;
 
 protected:
     //#####  Protected Member Functions  ######################################

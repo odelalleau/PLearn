@@ -55,7 +55,8 @@ PLEARN_IMPLEMENT_OBJECT(
 /////////////////////////////
 ManifoldKNNDistribution::ManifoldKNNDistribution()
     : manifold_dimensionality(5),
-      min_sigma_square(1e-5)
+      min_sigma_square(1e-5),
+      center_around_manifold_neighbors(false)
 {}
 
 ////////////////////
@@ -85,6 +86,14 @@ void ManifoldKNNDistribution::declareOptions(OptionList& ol)
                   "Minimum variance in all directions on the manifold. This value"
                   "is added\n"
                   "to the estimated covariance matrix.");
+
+    declareOption(ol, "center_around_manifold_neighbors", 
+                  &ManifoldKNNDistribution::center_around_manifold_neighbors,
+                  OptionBase::buildoption,
+                  "Indication that the estimation of the manifold tangent vectors\n"
+                  "should be made around the knn_manifold neighbors' mean vector,\n"
+                  "not around the test point."
+                  );
 
     // Now call the parent class' declareOptions().
     inherited::declareOptions(ol);
@@ -129,6 +138,7 @@ void ManifoldKNNDistribution::build_()
         Ut.resize(inputsize_,inputsize_);
         V.resize(knn_manifold->num_neighbors,knn_manifold->num_neighbors);
         eig_vectors_projection.resize(manifold_dimensionality);
+        neighbors_mean.resize(inputsize_);
     }
 
     if(train_set)
@@ -175,7 +185,7 @@ void ManifoldKNNDistribution::generate(Vec& y) const
 real ManifoldKNNDistribution::log_density(const Vec& y) const
 {
     computeLocalPrincipalComponents(y,eig_values,eig_vectors);
-    
+
     // Find volume of ellipsoid defined by eig_values, eig_vectors and
     // min_sigma_square that covers all the nearest_neighbors found by knn_density
     knn_density->computeOutput(y,nearest_neighbors_density_vec);
@@ -205,7 +215,7 @@ real ManifoldKNNDistribution::log_density(const Vec& y) const
     log_vol += (inputsize_-manifold_dimensionality)*0.5*pl_log(min_sigma_square);
     log_vol += 0.5*inputsize_*pl_log(Pi) - pl_gammln(0.5*inputsize_+1);
     
-    return pl_log(knn_density->num_neighbors)-pl_log(n_examples)-log_vol;
+    return pl_log((real)knn_density->num_neighbors)-pl_log((real)n_examples)-log_vol;
 }
 
 /////////////////////////////////
@@ -227,7 +237,7 @@ void ManifoldKNNDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(V, copies);
     deepCopyField(S, copies);
     deepCopyField(eig_vectors_projection, copies);
-
+    deepCopyField(neighbors_mean,copies);
 }
 
 ////////////////////
@@ -267,7 +277,14 @@ void ManifoldKNNDistribution::computeLocalPrincipalComponents(const Vec& x,
     knn_manifold->computeOutput(x,nearest_neighbors_manifold_vec);
     nearest_neighbors_manifold = 
         nearest_neighbors_manifold_vec.toMat(knn_manifold->num_neighbors,inputsize_);
-    nearest_neighbors_manifold -= x;
+
+    if(center_around_manifold_neighbors)
+    {
+        columnMean(nearest_neighbors_manifold,neighbors_mean);
+        nearest_neighbors_manifold -= neighbors_mean;
+    }
+    else
+        nearest_neighbors_manifold -= x;
     
     // Compute principal components
     // N.B. this is the SVD of F'
