@@ -435,7 +435,9 @@ void NetworkModule::build_()
     bprop_path.fill(-1);
     TVec<bool> is_done(all_modules.length(), false);
     fprop_data.resize(0);
+    fprop_data_idx.resize(0);
     bprop_data.resize(all_modules.length());
+    bprop_data_idx.resize(all_modules.length());
     fprop_toresize.resize(0);
     bprop_toresize.resize(all_modules.length());
     fprop_toplug.resize(0);
@@ -469,6 +471,8 @@ void NetworkModule::build_()
                 TVec<int> bprop_tores;
                 TVec<Mat*> fprop_mats;
                 TVec<Mat*> bprop_mats;
+                TVec<int> fprop_mats_idx;
+                TVec<int> bprop_mats_idx;
                 for (int j = 0; j < mod_ports.length(); j++) {
                     if (in_conn.find(mod_ports[j]) != in_conn.end()) {
                         // This port has an incoming connection: it is thus an
@@ -481,13 +485,18 @@ void NetworkModule::build_()
                         int port_index = conn->getSourceModule()->getPortIndex(
                                 conn->getSourcePort());
                         fprop_mats.append(fprop_data[path_index][port_index]);
-                        if (!conn->propagate_gradient)
+                        fprop_mats_idx.append(
+                                fprop_data_idx[path_index][port_index]);
+                        if (!conn->propagate_gradient) {
                             // This connection does not propagate the gradient,
                             // and thus we do not want to accumulate it.
                             bprop_mats.append(NULL);
-                        else {
+                            bprop_mats_idx.append(-1);
+                        } else {
                             int b_idx = all_modules.length() - 1 - path_index;
                             bprop_mats.append(bprop_data[b_idx][port_index]);
+                            bprop_mats_idx.append(
+                                    bprop_data_idx[b_idx][port_index]);
                             bprop_tores.append(j);
                         }
                         PLASSERT( out_conn.find(mod_ports[j]) == out_conn.end() );
@@ -502,6 +511,7 @@ void NetworkModule::build_()
                                     "increase 'max_n_mats'");
                         Mat* new_mat = &all_mats.lastElement();
                         fprop_mats.append(new_mat);
+                        fprop_mats_idx.append(all_mats.length() - 1);
                         fprop_tores.append(j);
                         // Ensure there exists a connection propagating the
                         // gradient to this port.
@@ -520,24 +530,33 @@ void NetworkModule::build_()
                                         "to increase 'max_n_mats'");
                             new_mat = &all_mats.lastElement();
                             bprop_mats.append(new_mat);
-                        } else
+                            bprop_mats_idx.append(all_mats.length() - 1);
+                        } else {
                             // No connection propagating gradient to this port.
                             bprop_mats.append(NULL);
+                            bprop_mats_idx.append(-1);
+                        }
                     } else {
                         // This port is not used (we do not provide its value,
                         // and we do not care about obtaining it).
                         fprop_mats.append(NULL);
                         bprop_mats.append(NULL);
+                        fprop_mats_idx.append(-1);
+                        bprop_mats_idx.append(-1);
                     }
                 }
                 module_index_to_path_index[i] = fprop_path.length();
                 // Update fprop path.
+                PLASSERT( fprop_mats.length() == fprop_mats_idx.length() );
                 fprop_data.append(fprop_mats);
+                fprop_data_idx.append(fprop_mats_idx);
                 fprop_toresize.append(fprop_tores);
                 fprop_path.append(i);
                 // Update bprop path.
+                PLASSERT( bprop_mats_idx.length() == bprop_mats.length() );
                 int bprop_idx = bprop_path.length() - fprop_path.length();
                 bprop_data[bprop_idx] = bprop_mats;
+                bprop_data_idx[bprop_idx] = bprop_mats_idx;
                 bprop_toresize[bprop_idx] = bprop_tores;
                 bprop_path[bprop_idx] = i;
 
@@ -686,14 +705,42 @@ void NetworkModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(all_connections, copies);
     deepCopyField(fprop_path, copies);
     deepCopyField(bprop_path, copies);
-    deepCopyField(fprop_data, copies);
+    deepCopyField(fprop_data_idx, copies);
     deepCopyField(fprop_toresize, copies);
     deepCopyField(fprop_toplug, copies);
-    deepCopyField(bprop_data, copies);
+    deepCopyField(bprop_data_idx, copies);
     deepCopyField(bprop_toresize, copies);
     deepCopyField(all_mats, copies);
     deepCopyField(all_ports, copies);
     deepCopyField(port_descriptions, copies);
+
+    // Special code to handle the deep copy of 'fprop_data' and 'bprop_data'.
+    // A better way may exist to do this!
+    fprop_data = TVec< TVec<Mat*> >(fprop_data.length());
+    bprop_data = TVec< TVec<Mat*> >(bprop_data.length());
+    PLASSERT( fprop_data.length() == bprop_data.length() );
+    for (int i = 0; i < fprop_data.length(); i++) {
+        TVec<Mat*>& fdata = fprop_data[i];
+        TVec<Mat*>& bdata = bprop_data[i];
+        const TVec<int>& fdata_idx = fprop_data_idx[i];
+        const TVec<int>& bdata_idx = bprop_data_idx[i];
+        fdata.resize(fdata_idx.length());
+        bdata.resize(bdata_idx.length());
+        for (int k = 0; k < fdata_idx.length(); k++) {
+            int idx = fdata_idx[k];
+            if (idx == -1)
+                fdata[k] = NULL;
+            else
+                fdata[k] = &all_mats[idx];
+        }
+        for (int k = 0; k < bdata_idx.length(); k++) {
+            int idx = bdata_idx[k];
+            if (idx == -1)
+                bdata[k] = NULL;
+            else
+                bdata[k] = &all_mats[idx];
+        }
+    }
 }
 
 

@@ -127,6 +127,10 @@ protected:
     //! i-th module in a fprop step.
     TVec< TVec<Mat*> > fprop_data;
 
+    //! Same as 'fprop_data', but the integer is the index of the matrix in the
+    //! 'all_mats' vector. This is used to properly deep copy this object.
+    TVec< TVec<int> > fprop_data_idx;
+
     //! The i-th element is the list of matrices that need to be resized to
     //! empty matrices prior to calling fprop() on the i-th module in a fprop
     //! step.
@@ -144,6 +148,10 @@ protected:
     //! The i-th element is the list of Mat* pointers being provided to the
     //! i-th module in a bprop step.
     TVec< TVec<Mat*> > bprop_data;
+
+    //! Same as 'bprop_data', but the integer is the index of the matrix in the
+    //! 'all_mats' vector. This is used to properly deep copy this object.
+    TVec< TVec<int> > bprop_data_idx;
 
     //! The i-th element is the list of matrices that need to be resized to
     //! empty matrices prior to calling bpropUpdate() on the i-th module in a
