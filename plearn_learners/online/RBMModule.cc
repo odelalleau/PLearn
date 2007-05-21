@@ -250,19 +250,22 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         // visible_layer->setExpectations(*visible);
         connection->setAsDownInputs(*visible); // visible_layer->getExpectations());
         hidden_layer->getAllActivations(connection, 0, true);
-        if (hidden_act && hidden_act->isEmpty()) {
+        if (hidden_act) {
             // Also store hidden layer activations.
             PLASSERT( hidden_act->isEmpty() );
             const Mat& to_store = hidden_layer->activations;
             hidden_act->resize(to_store.length(), to_store.width());
             *hidden_act << to_store;
         }
-        if (hidden && hidden->isEmpty()) {
+        if (hidden) {
+            PLASSERT( hidden->isEmpty() );
             hidden_layer->computeExpectations();
             Mat& hidden_out = hidden_layer->getExpectations();
             hidden->resize(hidden_out.length(), hidden_out.width());
             *hidden << hidden_out;
         }
+        // Since we return below, the other ports must be unused.
+        PLASSERT( !visible_sample && !hidden_sample );
         return;
     } 
     if ((visible_sample && visible_sample->isEmpty()) // it is asked to sample the visible units
@@ -311,6 +314,8 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             }
         }        
     } 
+    // Remark: the code above probably has not been tested, since the PLERROR
+    // will systematically be reached.
     PLERROR("In RBMModule::fprop - Unknown port configuration");
 }
 
