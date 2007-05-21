@@ -184,6 +184,7 @@ protected:
     mutable Vec tmp_input_and_target_diag_hessian;
     Mat tmp_costs_mat;
     Mat tmp_input_gradients;
+    Vec store_costs; //!< Used to store costs temporarily.
 
 private:
     //#####  Private Member Functions  ########################################
