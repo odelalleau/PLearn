@@ -75,15 +75,6 @@ Vec* newVecArray(int n, int the_length)
     return varray;
 }
 
-
-/*
-  template <>
-  void deepCopyField(Vec& field, CopiesMap& copies)
-  {
-  field.makeDeepCopyFromShallowCopy(copies);
-  }
-*/
-
 Mat* newMatArray(int n)
 {
     return new Mat[n];
@@ -153,14 +144,6 @@ Mat unitmatrix(int n)
         m(i,i) = 1.0;
     return m;
 }
-
-/*
-  template <>
-  void deepCopyField(Mat& field, CopiesMap& copies)
-  {
-  field.makeDeepCopyFromShallowCopy(copies);
-  }
-*/
 
 } // end of namespace PLearn
 
