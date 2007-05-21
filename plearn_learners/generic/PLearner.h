@@ -153,6 +153,13 @@ public:
     int nservers; 
 
     /**
+     *  Size of minibatches used during testing to take advantage
+     *  of efficient (possibly parallelized) implementations when
+     *  multiple exemples are processed at once. 
+     */
+    int test_minibatch_size;
+
+    /**
      *  Whether the training set should be saved upon a call to
      *  setTrainingSet().  The saved file is put in the learner's expdir
      *  (assuming there is one) and has the form "<prefix>_trainset_XXX.pmat"
@@ -429,7 +436,11 @@ public:
      *  This should be defined in subclasses to compute the output from the
      *  input.
      */
-    virtual void computeOutput(const Vec& input, Vec& output) const =0;
+    virtual void computeOutput(const Vec& input, Vec& output) const;
+    //! if it is more efficient to compute multipe outputs simultaneously,
+    //! it can be advantageous to define the latter instead, in which
+    //! each row of the matrices is associated with one example.
+    virtual void computeOutputs(const Mat& input, Mat& output) const;
 
     /**
      *  *** SUBCLASS WRITING: ***
@@ -451,6 +462,9 @@ public:
      */
     virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
                                        Vec& output, Vec& costs) const;
+    //! minibatch version of computeOutputAndCosts
+    virtual void computeOutputsAndCosts(const Mat& input, const Mat& target,
+                                        Mat& output, Mat& costs) const;
 
     /**
      *  Default calls computeOutputAndCosts.  This may be overridden if there
@@ -646,6 +660,9 @@ private:
     tuple<Mat, TVec<Mat> > remote_computeOutputCovMat(const Mat& inputs) const;
     void remote_batchComputeOutputAndConfidence(VMat inputs, real probability,
                                                 string pmat_fname) const;
+protected:
+    mutable Mat b_inputs, b_targets, b_outputs, b_costs;
+    mutable Vec b_weights;
     
 public:
     PLEARN_DECLARE_ABSTRACT_OBJECT(PLearner);

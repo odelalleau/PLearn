@@ -68,6 +68,7 @@ PLearner::PLearner()
       report_progress(true),
       verbosity(1),
       nservers(0),
+      test_minibatch_size(1000),
       save_trainingset_prefix(""),
       parallelize_here(true),
       master_sends_testset_rows(false),
@@ -223,6 +224,13 @@ void PLearner::declareOptions(OptionList& ol)
         "For parallel PLearner::test : wether the master should read the testset and\n"
         "send rows to the slaves, or send a serialized description of the testset.\n");
   
+    declareOption(
+        ol, "test_minibatch_size", &PLearner::test_minibatch_size,
+        OptionBase::buildoption,
+        "Size of minibatches used during testing to take advantage\n"
+        "of efficient (possibly parallelized) implementations when\n"
+        "multiple exemples are processed at once. \n");
+
     inherited::declareOptions(ol);
 }
 
@@ -307,6 +315,13 @@ void PLearner::declareMethods(RemoteMethodMap& rmm)
          RetDoc ("Computed output (will have width outputsize)")));
 
     declareMethod(
+        rmm, "computeOutputs", &PLearner::computeOutputs,
+        (BodyDoc("On a trained learner, this computes the output from the input, one\n"
+                 "batch of examples at a time (one example per row of the arg. matrices.\n"),
+         ArgDoc ("inputs", "Input matrix (batch_size x inputsize)"),
+         ArgDoc ("outputs", "Resulting output matrix (batch_size x outputsize)")));
+
+    declareMethod(
         rmm, "use", &PLearner::remote_use,
         (BodyDoc("Compute the output of a trained learner on every row of an\n"
                  "input VMatrix.  The outputs are stored in a .pmat matrix\n"
@@ -347,6 +362,18 @@ void PLearner::declareMethods(RemoteMethodMap& rmm)
          ArgDoc ("target", "Target vector (for cost computation)"),
          RetDoc ("- Vec containing output \n"
                  "- Vec containing cost")));
+
+    declareMethod(
+        rmm, "computeOutputsAndCosts", &PLearner::computeOutputsAndCosts,
+        (BodyDoc("Compute both the output from the input, and the costs associated\n"
+                 "with the desired target.  The computed costs\n"
+                 "are returned in the order given by getTestCostNames()\n"
+                 "This variant computes the outputs and the costs simultaneously\n"
+                 "for a whole batch of examples (rows of the argument matrices)\n"),
+         ArgDoc ("inputs", "Input matrix (batch_size x inputsize)"),
+         ArgDoc ("targets", "Target matrix (batch_size x targetsize)"),
+         ArgDoc ("outputs", "Resulting output matrix (batch_size x outputsize)"),
+         ArgDoc ("costs", "Resulting costs matrix (batch_size x costsize)")));
 
     declareMethod(
         rmm, "computeCostsFromOutputs", &PLearner::remote_computeCostsFromOutputs,
@@ -936,19 +963,94 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
     }
     else // Sequential test 
     {
-        for (int i = 0; i < len; i++)
+        if (test_minibatch_size==1)
         {
-            testset.getExample(i, input, target, weight);
-            // Always call computeOutputAndCosts, since this is better
-            // behaved with stateful learners
-            computeOutputAndCosts(input,target,output,costs);
-            if (testoutputs) testoutputs->putOrAppendRow(i, output);
-            if (testcosts) testcosts->putOrAppendRow(i, costs);
-            if (test_stats) test_stats->update(costs, weight);
-            if (report_progress) pb->update(i);
+            for (int i = 0; i < len; i++)
+            {
+                testset.getExample(i, input, target, weight);
+                // Always call computeOutputAndCosts, since this is better
+                // behaved with stateful learners
+                computeOutputAndCosts(input,target,output,costs);
+                if (testoutputs) testoutputs->putOrAppendRow(i, output);
+                if (testcosts) testcosts->putOrAppendRow(i, costs);
+                if (test_stats) test_stats->update(costs, weight);
+                if (report_progress) pb->update(i);
+            }
+        } else
+        {
+            int n_batches = len/test_minibatch_size, i=0;
+            b_inputs.resize(test_minibatch_size,inputsize());
+            b_outputs.resize(test_minibatch_size,outputsize());
+            b_costs.resize(test_minibatch_size,costs.length());
+            b_targets.resize(test_minibatch_size,targetsize());
+            b_weights.resize(test_minibatch_size);
+            for (int b=0;b<n_batches;b++,i+=test_minibatch_size)
+            {
+                testset->getExamples(i,test_minibatch_size,b_inputs,b_targets,b_weights);
+                computeOutputsAndCosts(b_inputs,b_targets,b_outputs,b_costs);
+                for (int j=0;j<test_minibatch_size;j++)
+                {
+                    if (testoutputs) testoutputs->putOrAppendRow(i+j, b_outputs(j));
+                    if (testcosts) testcosts->putOrAppendRow(i+j, b_costs(j));
+                    if (test_stats) test_stats->update(b_costs(j), b_weights[j]);
+                    if (report_progress) pb->update(i+j);
+                }
+            }
+            if (i<len)
+            {
+                b_inputs.resize(len-i,inputsize());
+                b_outputs.resize(len-i,outputsize());
+                b_costs.resize(len-i,costs.length());
+                b_targets.resize(len-i,targetsize());
+                b_weights.resize(len-i);
+                testset->getExamples(i,len-i,b_inputs,b_targets,b_weights);
+                computeOutputsAndCosts(b_inputs,b_targets,b_outputs,b_costs);
+                for (int j=0;j<len-i;j++)
+                {
+                    if (testoutputs) testoutputs->putOrAppendRow(i+j, b_outputs(j));
+                    if (testcosts) testcosts->putOrAppendRow(i+j, b_costs(j));
+                    if (test_stats) test_stats->update(b_costs(j), b_weights[j]);
+                    if (report_progress) pb->update(i+j);
+                }
+            }
         }
     }
 }
+
+void PLearner::computeOutput(const Vec& input, Vec& output) const
+{
+    PLERROR("PLearner::computeOutput(Vec,Vec) not implemented in subclass %s\n",classname().c_str());
+}
+void PLearner::computeOutputs(const Mat& input, Mat& output) const
+{
+    // inefficient default implementation
+    int n=input.length();
+    PLASSERT(output.length()==n);
+    for (int i=0;i<n;i++)
+    {
+        Vec in_i = input(i);
+        Vec out_i = output(i); 
+        computeOutput(in_i,out_i);
+    }
+}
+void PLearner::computeOutputsAndCosts(const Mat& input, const Mat& target, 
+                                      Mat& output, Mat& costs) const
+{
+    // inefficient default implementation
+    int n=input.length();
+    PLASSERT(target.length()==n);
+    output.resize(n,outputsize());
+    costs.resize(n,nTestCosts());
+    for (int i=0;i<n;i++)
+    {
+        Vec in_i = input(i);
+        Vec out_i = output(i); 
+        Vec target_i = target(i);
+        Vec c_i = costs(i);
+        computeOutputAndCosts(in_i,target_i,out_i,c_i);
+    }
+}
+
 
 ////////////////////////////////////////////////////////////////
 // test ('remote' version which returns a tuple w/ results.) //
