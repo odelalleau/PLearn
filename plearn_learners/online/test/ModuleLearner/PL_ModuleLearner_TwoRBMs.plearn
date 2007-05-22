@@ -64,17 +64,28 @@ PTester(
                             start_learning_rate = ${grad_lr}
                         )
 
-                        NLLCostModule( 
-                            name = "nll"
-                            input_size = ${n_classes}
-                            output_size = 1
-                            target_size = 1
-                        )
-
                         SoftmaxModule(
                             name = "softmax"
                             input_size = ${n_classes}
                             output_size = ${n_classes}
+                        )
+
+                        CombiningCostsModule( 
+                            name = "costs"
+                            cost_weights = [1 0]
+                            sub_costs = [
+
+                                NLLCostModule( 
+                                    name = "nll"
+                                    input_size = ${n_classes}
+                                )
+
+                                ClassErrorCostModule(
+                                    name = "class_error"
+                                    input_size = ${n_classes}
+                                )
+
+                            ]
                         )
 
                     ]
@@ -97,16 +108,16 @@ PTester(
 
                         NetworkConnection( 
                             source = "softmax.output"
-                            destination = "nll.prediction"
+                            destination = "costs.prediction"
                         )
 
                     ]
 
                     ports = [
                         "input"     "rbm_1.visible"
-                        "target"    "nll.target"
+                        "target"    "costs.target"
                         "output"    "affine_net.output"
-                        "cost"      "nll.cost"
+                        "cost"      "costs.cost"
                     ]
                 )
 
@@ -133,6 +144,7 @@ PTester(
         );
     statnames = [
         "E[test1.E[NLL]]"
+        "E[test1.E[class_error]]"
     ]
 
 )

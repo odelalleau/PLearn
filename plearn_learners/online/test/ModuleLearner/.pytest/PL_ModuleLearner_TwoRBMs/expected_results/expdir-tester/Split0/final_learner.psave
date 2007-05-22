@@ -66,8 +66,13 @@ estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;
 random_gen = *5   )
 ;
+reconstruction_connection = *0 ;
 grad_learning_rate = 0.0100000000000000002 ;
 cd_learning_rate = 0.00100000000000000002 ;
+n_Gibbs_steps_CD = 1 ;
+min_n_Gibbs_steps = 0 ;
+n_Gibbs_steps_per_generated_sample = 0 ;
+Gibbs_step = 0 ;
 input_size = -1 ;
 output_size = -1 ;
 name = "rbm_1" ;
@@ -227,8 +232,13 @@ estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;
 random_gen = *5   )
 ;
+reconstruction_connection = *0 ;
 grad_learning_rate = 0.0100000000000000002 ;
 cd_learning_rate = 0.00100000000000000002 ;
+n_Gibbs_steps_CD = 1 ;
+min_n_Gibbs_steps = 0 ;
+n_Gibbs_steps_per_generated_sample = 0 ;
+Gibbs_step = 0 ;
 input_size = -1 ;
 output_size = -1 ;
 name = "rbm_2" ;
@@ -258,7 +268,15 @@ name = "affine_net" ;
 estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;
 random_gen = *5   )
-*13 ->NLLCostModule(
+*13 ->SoftmaxModule(
+input_size = 2 ;
+output_size = 2 ;
+name = "softmax" ;
+estimate_simpler_diag_hessian = 0 ;
+expdir = "" ;
+random_gen = *5   )
+*14 ->CombiningCostsModule(
+sub_costs = 2 [ *15 ->NLLCostModule(
 target_size = 1 ;
 input_size = 2 ;
 output_size = 1 ;
@@ -266,32 +284,43 @@ name = "nll" ;
 estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;
 random_gen = *5   )
-*14 ->SoftmaxModule(
+*16 ->ClassErrorCostModule(
+target_size = 1 ;
 input_size = 2 ;
-output_size = 2 ;
-name = "softmax" ;
+output_size = 1 ;
+name = "class_error" ;
 estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;
 random_gen = *5   )
 ] ;
-connections = 4 [ *15 ->NetworkConnection(
+cost_weights = 2 [ 1 0 ] ;
+n_sub_costs = 2 ;
+target_size = 1 ;
+input_size = 2 ;
+output_size = 3 ;
+name = "costs" ;
+estimate_simpler_diag_hessian = 0 ;
+expdir = "" ;
+random_gen = *5   )
+] ;
+connections = 4 [ *17 ->NetworkConnection(
 source = "rbm_1.hidden" ;
 destination = "rbm_2.visible" ;
 propagate_gradient = 1  )
-*16 ->NetworkConnection(
+*18 ->NetworkConnection(
 source = "rbm_2.hidden" ;
 destination = "affine_net.input" ;
 propagate_gradient = 1  )
-*17 ->NetworkConnection(
+*19 ->NetworkConnection(
 source = "affine_net.output" ;
 destination = "softmax.input" ;
 propagate_gradient = 1  )
-*18 ->NetworkConnection(
+*20 ->NetworkConnection(
 source = "softmax.output" ;
-destination = "nll.prediction" ;
+destination = "costs.prediction" ;
 propagate_gradient = 1  )
 ] ;
-ports = 8 [ "input" "rbm_1.visible" "target" "nll.target" "output" "affine_net.output" "cost" "nll.cost" ] ;
+ports = 8 [ "input" "rbm_1.visible" "target" "costs.target" "output" "affine_net.output" "cost" "costs.cost" ] ;
 save_states = 1 ;
 name = "NetworkModule" ;
 estimate_simpler_diag_hessian = 0 ;
@@ -311,4 +340,5 @@ nstages = 1001 ;
 report_progress = 1 ;
 verbosity = 1 ;
 nservers = 0 ;
-save_trainingset_prefix = ""  )
+save_trainingset_prefix = "" ;
+test_minibatch_size = 1000  )
