@@ -365,6 +365,20 @@ void RBMBinomialLayer::bpropNLL(const Vec& target, real nll, Vec& bias_gradient)
     }
 }
 
+void RBMBinomialLayer::bpropNLL(const Mat& targets, const Mat& costs_column,
+                                Mat& bias_gradients)
+{
+    computeExpectations();
+
+    PLASSERT( targets.width() == input_size );
+    PLASSERT( targets.length() == batch_size );
+    PLASSERT( costs_column.width() == 1 );
+    PLASSERT( costs_column.length() == batch_size );
+    bias_gradients.resize( batch_size, size );
+
+    substract(targets,expectations,bias_gradients);
+}
+
 void RBMBinomialLayer::declareOptions(OptionList& ol)
 {
 /*

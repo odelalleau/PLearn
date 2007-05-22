@@ -322,6 +322,12 @@ void RBMLayer::bpropNLL(const Vec& target, real nll, Vec& bias_gradient)
     PLERROR("In RBMLayer::bpropNLL(): not implemented");
 }
 
+void RBMLayer::bpropNLL(const Mat& targets,  const Mat& costs_column, 
+                        Mat& bias_gradients)
+{
+    PLERROR("In RBMLayer::bpropNLL(): not implemented");
+}
+
 ////////////////////////
 // accumulatePosStats //
 ////////////////////////

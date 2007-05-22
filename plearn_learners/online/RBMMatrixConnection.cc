@@ -60,7 +60,7 @@ void RBMMatrixConnection::declareOptions(OptionList& ol)
 {
     declareOption(ol, "weights", &RBMMatrixConnection::weights,
                   OptionBase::learntoption,
-                  "Matrix containing unit-to-unit weights (up_size ×"
+                  "Matrix containing unit-to-unit weights (up_size  x"
                   " down_size)");
 
     declareOption(ol, "gibbs_ma_schedule", &RBMMatrixConnection::gibbs_ma_schedule,
@@ -476,6 +476,24 @@ void RBMMatrixConnection::computeProducts(int start, int length,
     }
 }
 
+///////////
+// fprop //
+///////////
+void RBMMatrixConnection::fprop(const Vec& input, const Mat& rbm_weights, 
+                          Vec& output) const
+{
+    product( output, rbm_weights, input );
+}
+
+///////////////////
+// setAllWeights //
+///////////////////
+void RBMMatrixConnection::setAllWeights(const Mat& rbm_weights)
+{
+    weights << rbm_weights;
+}
+
+
 /////////////////
 // bpropUpdate //
 /////////////////
@@ -537,7 +555,93 @@ void RBMMatrixConnection::bpropUpdate(const Mat& inputs, const Mat& outputs,
     productScaleAcc(weights, output_gradients, true, inputs, false,
             -learning_rate / inputs.length(), 1.);
 }
+
+void RBMMatrixConnection::bpropUpdate(const Vec& input, const Mat& rbm_weights,
+                                      const Vec& output,
+                                      Vec& input_gradient, 
+                                      Mat& rbm_weights_gradient,
+                                      const Vec& output_gradient,
+                                      bool accumulate)
+{
+    PLASSERT( input.size() == down_size );
+    PLASSERT( output.size() == up_size );
+    PLASSERT( output_gradient.size() == up_size );
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradient.size() == down_size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+
+        // input_gradient += rbm_weights' * output_gradient
+        transposeProductAcc( input_gradient, rbm_weights, output_gradient );
+
+        // rbm_weights_gradient += output_gradient' * input
+        externalProductAcc( rbm_weights_gradient, output_gradient, 
+                            input);
+
+    }
+    else
+    {
+        input_gradient.resize( down_size );
+
+        // input_gradient = rbm_weights' * output_gradient
+        transposeProduct( input_gradient, rbm_weights, output_gradient );
+
+        // rbm_weights_gradient = output_gradient' * input
+        externalProduct( rbm_weights_gradient, output_gradient, 
+                         input);
+    }
+
+}
+
  
+/////////////
+// bpropCD //
+/////////////
+void RBMMatrixConnection::bpropCD(Mat& weights_gradient)
+{
+    int l = weights_gradient.length();
+    int w = weights_gradient.width();
+
+    real* w_i = weights_gradient.data();
+    real* wps_i = weights_pos_stats.data();
+    real* wns_i = weights_neg_stats.data();
+    int w_mod = weights_gradient.mod();
+    int wps_mod = weights_pos_stats.mod();
+    int wns_mod = weights_neg_stats.mod();
+    
+    for( int i=0 ; i<l ; i++, w_i+=w_mod, wps_i+=wps_mod, wns_i+=wns_mod )
+        for( int j=0 ; j<w ; j++ )
+            w_i[j] = wps_i[j]/pos_count - wns_i[j]/neg_count;
+}
+
+// Instead of using the statistics, we assume we have only one markov chain
+// runned and we update the parameters from the first 4 values of the chain
+void RBMMatrixConnection::bpropCD( const Vec& pos_down_values, // v_0
+                                   const Vec& pos_up_values,   // h_0
+                                   const Vec& neg_down_values, // v_1
+                                   const Vec& neg_up_values, // h_1
+                                   Mat& weights_gradient) 
+{
+    int l = weights.length();
+    int w = weights.width();
+    PLASSERT( pos_up_values.length() == l );
+    PLASSERT( neg_up_values.length() == l );
+    PLASSERT( pos_down_values.length() == w );
+    PLASSERT( neg_down_values.length() == w );
+
+    real* w_i = weights_gradient.data();
+    real* puv_i = pos_up_values.data();
+    real* nuv_i = neg_up_values.data();
+    real* pdv = pos_down_values.data();
+    real* ndv = neg_down_values.data();
+    int w_mod = weights_gradient.mod();
+
+    for( int i=0 ; i<l ; i++, w_i += w_mod, puv_i++, nuv_i++ )
+        for( int j=0 ; j<w ; j++ )
+            w_i[j] =  *puv_i * pdv[j] - *nuv_i * ndv[j] ;
+}
+
 ////////////
 // forget //
 ////////////

@@ -66,9 +66,15 @@ public:
     PP<RBMLayer> hidden_layer;
     PP<RBMLayer> visible_layer;
     PP<RBMConnection> connection;
+    PP<RBMConnection> reconstruction_connection;
 
     real cd_learning_rate;
     real grad_learning_rate;
+
+    //! Number of Gibbs sampling steps in negative phase 
+    //! of contrastive divergence.
+    int n_Gibbs_steps_CD;
+
     //! used to generate samples from the RBM
     int min_n_Gibbs_steps; 
     int n_Gibbs_steps_per_generated_sample;
@@ -198,11 +204,20 @@ public:
 
 protected:
 
+    //! Used to store gradient w.r.t. expectations of the hidden layer.
+    Mat hidden_exp_grad;
+
     //! Used to store gradient w.r.t. activations of the hidden layer.
     Mat hidden_act_grad;
 
     //! Used to store gradient w.r.t. expectations of the visible layer.
     Mat visible_exp_grad;
+
+    //! Used to store gradient w.r.t. activations of the visible layer.
+    Mat visible_act_grad;
+
+    //! Used to store gradient w.r.t. bias of visible layer
+    Vec visible_bias_grad;
 
     //#####  Protected Member Functions  ######################################
 

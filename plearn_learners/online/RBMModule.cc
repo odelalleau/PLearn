@@ -58,7 +58,8 @@ PLEARN_IMPLEMENT_OBJECT(
 ///////////////
 RBMModule::RBMModule():
     cd_learning_rate(0),
-    grad_learning_rate(0)
+    grad_learning_rate(0),
+    n_Gibbs_steps_CD(1)
 {
 }
 
@@ -84,6 +85,11 @@ void RBMModule::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
         "Connection between the visible and hidden layers.");
 
+    declareOption(ol, "reconstruction_connection", 
+                  &RBMModule::reconstruction_connection,
+                  OptionBase::buildoption,
+        "Reconstuction connection between the hidden and visible layers.");
+
     declareOption(ol, "grad_learning_rate", &RBMModule::grad_learning_rate,
                   OptionBase::buildoption,
         "Learning rate for the gradient descent step.");
@@ -91,6 +97,12 @@ void RBMModule::declareOptions(OptionList& ol)
     declareOption(ol, "cd_learning_rate", &RBMModule::cd_learning_rate,
                   OptionBase::buildoption,
         "Learning rate for the constrastive divergence step.");
+
+    declareOption(ol, "n_Gibbs_steps_CD", 
+                  &RBMModule::n_Gibbs_steps_CD,
+                  OptionBase::buildoption,
+                  "Number of Gibbs sampling steps in negative phase of "
+                  "contrastive divergence.");
 
     declareOption(ol, "min_n_Gibbs_steps", &RBMModule::min_n_Gibbs_steps,
                   OptionBase::buildoption,
@@ -129,9 +141,15 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     PLASSERT( ports_gradient.length() == nPorts() );
     Mat* visible_grad = ports_gradient[0];
     Mat* hidden_grad = ports_gradient[1];
+    Mat* reconstruction_error_grad = 0;
+    if(reconstruction_connection)
+        reconstruction_error_grad = ports_gradient[8];
+
+    bool bprop_performed = false;
     if (hidden_grad && !hidden_grad->isEmpty() &&
             (!visible_grad || visible_grad->isEmpty()))
     {
+        bprop_performed = true;
         if (grad_learning_rate > 0) {
             setAllLearningRates(grad_learning_rate);
             Mat* hidden_out = ports_value[1];
@@ -169,25 +187,96 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             PLASSERT( visible_exp && hidden_exp );
             // Generate hidden samples.
             hidden_layer->setExpectations(*hidden_exp);
-            hidden_layer->generateSamples();
-            // Generate visible samples.
-            connection->setAsUpInputs(hidden_layer->samples);
-            visible_layer->getAllActivations(connection, 0, true);
-            visible_layer->generateSamples();
-            // (Negative phase) compute corresponding hidden expectations.
-            connection->setAsDownInputs(visible_layer->samples);
-            hidden_layer->getAllActivations(connection, 0, true);
-            hidden_layer->computeExpectations();
-            // Perform update.
-            visible_layer->update(*visible_exp, visible_layer->samples);
-            connection->update(*visible_exp, *hidden_exp,
-                               visible_layer->samples,
-                               hidden_layer->getExpectations());
-            hidden_layer->update(*hidden_exp, hidden_layer->getExpectations());
+            for( int i=0; i<n_Gibbs_steps_CD; i++)
+            {
+                hidden_layer->generateSamples();
+                // (Negative phase) Generate visible samples.
+                connection->setAsUpInputs(hidden_layer->samples);
+                visible_layer->getAllActivations(connection, 0, true);
+                visible_layer->generateSamples();
+                // compute corresponding hidden expectations.
+                connection->setAsDownInputs(visible_layer->samples);
+                hidden_layer->getAllActivations(connection, 0, true);
+                hidden_layer->computeExpectations();
+            }
+             // Perform update.
+             visible_layer->update(*visible_exp, visible_layer->samples);
+             connection->update(*visible_exp, *hidden_exp,
+                                visible_layer->samples,
+                                hidden_layer->getExpectations());
+             hidden_layer->update(*hidden_exp, hidden_layer->getExpectations());
         }
-    } else
-        PLERROR("In RBMModule::bpropAccUpdate - Only hidden -> visible "
-                "back propagation is currently implemented");
+    } 
+
+    if (reconstruction_error_grad && !reconstruction_error_grad->isEmpty()
+        && ( !visible_grad || visible_grad->isEmpty() ) ) {
+        bprop_performed = true;
+        setAllLearningRates(grad_learning_rate);
+        PLASSERT( reconstruction_connection != 0 );
+        // Perform gradient descent on Autoassociator reconstruction cost
+        PLASSERT( ports_value.length() == nPorts() );
+        Mat* visible_exp = ports_value[0];
+        Mat* hidden_exp = ports_value[1];
+        Mat* hidden_act = ports_value[2];
+        Mat* visible_reconstruction = ports_value[6];
+        Mat* visible_reconstruction_activations = ports_value[7];
+        Mat* reconstruction_error = ports_value[8];
+        PLASSERT( hidden_exp != 0 );
+        PLASSERT( visible_exp  && hidden_act &&
+                  visible_reconstruction && visible_reconstruction_activations &&
+                  reconstruction_error);
+        // Backprop reconstruction gradient
+
+        // Must change visible_layer's expectation
+        visible_layer->getExpectations() << *visible_reconstruction;
+        visible_layer->bpropNLL(*visible_exp,*reconstruction_error,
+                                visible_act_grad);
+
+        // Combine with incoming gradient
+        PLASSERT( (*reconstruction_error_grad).width() == 1 );
+        real* m_i = visible_act_grad.data();
+        real* vv;
+        for(int i=0; i<visible_act_grad.length(); 
+            i++, m_i+=visible_act_grad.mod())
+        {
+            vv = (*reconstruction_error_grad).data();
+            for(int j=0; j<visible_act_grad.width(); 
+                j++, vv += (*reconstruction_error_grad).mod())
+                m_i[j] *= *vv;
+        }
+
+        // Visible bias update
+        columnSum(visible_act_grad,visible_bias_grad);
+        visible_layer->update(visible_bias_grad);
+        // Reconstruction connection update
+        reconstruction_connection->bpropUpdate(
+            *hidden_exp, *visible_reconstruction_activations,
+            hidden_exp_grad, visible_act_grad, false);
+        // Hidden layer bias update
+        hidden_layer->bpropUpdate(*hidden_act,
+                                  *hidden_exp, hidden_act_grad,
+                                  hidden_exp_grad, false);
+        // Connection update
+        if(visible_grad)
+        {
+            PLASSERT( visible_grad->width() == visible_layer->size );
+            connection->bpropUpdate(
+                *visible_exp, *hidden_act,
+                *visible_grad, hidden_act_grad, true);
+        }
+        else
+        {
+            visible_exp_grad.resize(reconstruction_error_grad->length(),
+                                       visible_layer->size);        
+            connection->bpropUpdate(
+                *visible_exp, *hidden_act,
+                visible_exp_grad, hidden_act_grad, true);
+        }
+    }
+
+    if(!bprop_performed)
+        PLERROR("In RBMModule::bpropAccUpdate - could not perform back "
+                "propagation given gradient ports");
 }
 
 ////////////
@@ -198,9 +287,11 @@ void RBMModule::build_()
     PLASSERT( cd_learning_rate >= 0 && grad_learning_rate >= 0 );
     if (fast_exact_is_equal(cd_learning_rate, 0) &&
         fast_exact_is_equal(grad_learning_rate, 0) )
-        PLWARNING("In RBMModule::build_ - Both 'cd_learning_rate' and "
-                "'grad_learning_rate' are set to 0, the RBM will not learn "
-                "much");
+        PLWARNING("In RBMModule::build_ - 'cd_learning_rate' and "
+                  "'grad_learning_rate' are set to 0, the RBM will not learn "
+                  "much");
+    if(visible_layer)
+        visible_bias_grad.resize(visible_layer->size);
 
     // buid port_sizes
     port_sizes.resize(nPorts(), 2);
@@ -238,6 +329,13 @@ void RBMModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(connection,       copies);
     deepCopyField(hidden_act_grad,  copies);
     deepCopyField(visible_exp_grad, copies);
+    deepCopyField(reconstruction_connection, copies);
+
+    deepCopyField(hidden_exp_grad, copies);
+    deepCopyField(hidden_act_grad, copies);
+    deepCopyField(visible_exp_grad, copies);
+    deepCopyField(visible_act_grad, copies);
+    deepCopyField(visible_bias_grad, copies);
 }
 
 ///////////
@@ -257,8 +355,19 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     Mat* visible_sample = ports_value[3];
     Mat* hidden_sample = ports_value[4];
     Mat* energy = ports_value[5];
+    Mat* visible_reconstruction = 0;
+    Mat* visible_reconstruction_activations = 0;
+    Mat* reconstruction_error = 0;
+    if(reconstruction_connection)
+    {
+        visible_reconstruction = ports_value[6];
+        visible_reconstruction_activations = ports_value[7];
+        reconstruction_error = ports_value[8];
+    }
+    bool hidden_expectations_are_computed=false;
     bool hidden_activations_are_computed=false;
     bool visible_activations_are_computed=false;
+
     if (energy) 
     {
         PLASSERT_MSG( energy->isEmpty(), 
@@ -331,7 +440,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             hidden_layer->getAllActivations(connection, 0, true);
             hidden_activations_are_computed=true;
         }
-        if (hidden_act) {
+        if (hidden_activations_are_computed && hidden_act) {
             // Also store hidden layer activations.
             PLASSERT( hidden_act->isEmpty() );
             const Mat& to_store = hidden_layer->activations;
@@ -341,17 +450,18 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         if (hidden) {
             PLASSERT( hidden->isEmpty() );
             hidden_layer->computeExpectations();
+            hidden_expectations_are_computed=true;
             Mat& hidden_out = hidden_layer->getExpectations();
             hidden->resize(hidden_out.length(), hidden_out.width());
             *hidden << hidden_out;
         }
         // Since we return below, the other ports must be unused.
-        PLASSERT( !visible_sample && !hidden_sample );
-        return;
+        //PLASSERT( !visible_sample && !hidden_sample );
     } 
     if ((visible_sample && visible_sample->isEmpty()) // it is asked to sample the visible units
         || (hidden_sample && hidden_sample->isEmpty())) // or to sample the hidden units
     {
+        PLWARNING("In RBMModule::fprop - sampling in RBMModule has not been tested");
         if (hidden && !hidden->isEmpty()) // sample visible conditionally on hidden
         {
             connection->setAsUpInputs(*hidden);
@@ -394,10 +504,63 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                 *hidden_sample << hidden_layer->samples;
             }
         }        
-    } 
+    }
+    if ( visible && !visible->isEmpty() && 
+         ( ( visible_reconstruction && visible_reconstruction->isEmpty() ) || 
+           ( visible_reconstruction_activations && 
+             visible_reconstruction_activations->isEmpty() ) ||
+           ( reconstruction_error && reconstruction_error->isEmpty() ) ) ) 
+    {        
+        // Autoassociator reconstruction cost
+        PLASSERT( ports_value.length() == nPorts() );
+        if (!hidden_activations_are_computed)
+        {
+            connection->setAsDownInputs(*visible); 
+            hidden_layer->getAllActivations(connection, 0, true);
+            hidden_activations_are_computed=true;
+        }
+        if(!hidden_expectations_are_computed)
+        {
+            hidden_layer->computeExpectations();
+            hidden_expectations_are_computed=true;
+        }
+        // Don't need to verify is they are asked in a port, this was done previously
+        
+        reconstruction_connection->setAsDownInputs(hidden_layer->getExpectations());
+        visible_layer->getAllActivations(
+            reconstruction_connection, 0, true);
+        if(visible_reconstruction_activations)
+        {
+            PLASSERT( visible_reconstruction_activations->isEmpty() );
+            const Mat& to_store = visible_layer->activations;
+            visible_reconstruction_activations->resize(to_store.length(), 
+                                                       to_store.width());
+            *visible_reconstruction_activations << to_store;
+        }
+        if (visible_reconstruction || reconstruction_error)
+        {        
+            visible_layer->computeExpectations();
+            if(visible_reconstruction)
+            {
+                PLASSERT( visible_reconstruction->isEmpty() );
+                const Mat& to_store = visible_layer->getExpectations();
+                visible_reconstruction->resize(to_store.length(), 
+                                                           to_store.width());
+                *visible_reconstruction << to_store;
+            }
+            if(reconstruction_error)
+            {
+                PLASSERT( reconstruction_error->isEmpty() );
+                reconstruction_error->resize(visible->length(),1);
+                visible_layer->fpropNLL(*visible,
+                                        *reconstruction_error);
+            }
+        }
+    }
+
     // Remark: the code above probably has not been tested, since the PLERROR
     // will systematically be reached.
-    PLERROR("In RBMModule::fprop - Unknown port configuration");
+    //PLERROR("In RBMModule::fprop - Unknown port configuration");
 }
 
 ////////////
@@ -439,6 +602,12 @@ const TVec<string>& RBMModule::getPorts()
         ports.append("visible_sample");
         ports.append("hidden_sample");
         ports.append("energy");
+        if(reconstruction_connection)
+        {
+            ports.append("visible_reconstruction.state");
+            ports.append("visible_reconstruction_activations.state");
+            ports.append("reconstruction_error.state");
+        }
     }
     return ports;
 }
@@ -448,6 +617,7 @@ const TVec<string>& RBMModule::getPorts()
 ///////////////////
 const TMat<int>& RBMModule::getPortSizes()
 {
+    //port_sizes(3,1) = 1;
     return port_sizes;
 }
 
@@ -468,6 +638,8 @@ void RBMModule::setAllLearningRates(real lr)
     hidden_layer->setLearningRate(lr);
     visible_layer->setLearningRate(lr);
     connection->setLearningRate(lr);
+    if(reconstruction_connection)
+        reconstruction_connection->setLearningRate(lr);
 }
 
 /////////////////////

@@ -295,6 +295,33 @@ real RBMMultinomialLayer::fpropNLL(const Vec& target)
     return ret;
 }
 
+void RBMMultinomialLayer::fpropNLL(const Mat& targets, const Mat& costs_column)
+{
+    computeExpectations();
+
+    PLASSERT( targets.width() == input_size );
+    PLASSERT( targets.length() == batch_size );
+    PLASSERT( costs_column.width() == 1 );
+    PLASSERT( costs_column.length() == batch_size );
+
+    real target_i, expectation_i;
+    for (int k=0;k<batch_size;k++) // loop over minibatch
+    {
+        real nll = 0;
+        //real* activation = activations[k];
+        real* expectation = expectations[k];
+        real* target = targets[k];
+        for( int i=0 ; i<size ; i++ )
+        {
+            target_i = target[i];
+            expectation_i = expectation[i];
+            if(!fast_exact_is_equal(target_i,0.0))
+                nll -= target_i * pl_log(expectation_i);
+        }
+        costs_column(k,0) = nll;
+    }
+}
+
 void RBMMultinomialLayer::bpropNLL(const Vec& target, real nll,
                                    Vec& bias_gradient)
 {
@@ -309,6 +336,28 @@ void RBMMultinomialLayer::bpropNLL(const Vec& target, real nll,
     real* biasg = bias_gradient.data();
     for( int i=0 ; i<size ; i++ )
         biasg[i] = tar[i] - sum_tar * exp[i];
+}
+
+void RBMMultinomialLayer::bpropNLL(const Mat& targets, const Mat& costs_column,
+                                Mat& bias_gradients)
+{
+    computeExpectations();
+
+    PLASSERT( targets.width() == input_size );
+    PLASSERT( targets.length() == batch_size );
+    PLASSERT( costs_column.width() == 1 );
+    PLASSERT( costs_column.length() == batch_size );
+    bias_gradients.resize( batch_size, size );
+
+    for (int k=0;k<batch_size;k++) // loop over minibatch
+    {        
+        real sum_tar = sum( targets(k) );
+        real* exp = expectations[k];
+        real* tar = targets[k];
+        real* biasg = bias_gradients[k];
+        for( int i=0 ; i<size ; i++ )
+            biasg[i] = tar[i] - sum_tar * exp[i];
+    }
 }
 
 void RBMMultinomialLayer::declareOptions(OptionList& ol)

@@ -68,7 +68,7 @@ public:
 
     //#####  Learned Options  #################################################
 
-    //! Matrix containing unit-to-unit weights (output_size × input_size)
+    //! Matrix containing unit-to-unit weights (output_size Ã input_size)
     Mat weights;
 
     //! used for Gibbs chain methods only
@@ -183,6 +183,14 @@ public:
     // virtual void bpropUpdate(const Vec& input, const Vec& output,
     //                          const Vec& output_gradient);
 
+    //! given the input and the conneciton weights, 
+    //! compute the output (possibly resize it  appropriately)
+    virtual void fprop(const Vec& input, const Mat& rbm_weights,
+                       Vec& output) const;
+
+    //! set the internal weight values to rbm_weights (copy)
+    virtual void setAllWeights(const Mat& rbm_weights);
+
     //! this version allows to obtain the input gradient as well
     //! N.B. THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
     virtual void bpropUpdate(const Vec& input, const Vec& output,
@@ -194,6 +202,26 @@ public:
                              Mat& input_gradients,
                              const Mat& output_gradients,
                              bool accumulate = false);
+
+    //! back-propagates the output gradient to the input and the weights
+    //! (the weights are not updated)
+    virtual void bpropUpdate(const Vec& input, const Mat& rbm_weights,
+                             const Vec& output,
+                             Vec& input_gradient, Mat& rbm_weights_gradient,
+                             const Vec& output_gradient,
+                             bool accumulate = false);
+
+    //! Computes the contrastive divergence gradient with respect to the weights
+    //! It should be noted that bpropCD does not call clearstats().
+    virtual void bpropCD(Mat& weights_gradient);
+    
+    //! Computes the contrastive divergence gradient with respect to the weights
+    //! given the positive and negative phase values.
+    virtual void bpropCD(const Vec& pos_down_values,
+                         const Vec& pos_up_values,
+                         const Vec& neg_down_values,
+                         const Vec& neg_up_values,
+                         Mat& weights_gradient);
 
     //! reset the parameters to the state they would be BEFORE starting
     //! training.  Note that this method is necessarily called from
