@@ -91,11 +91,9 @@ void DERIVEDCLASS::fprop(const TVec<Mat*>& ports_value)
             "'%s'", classname().c_str());
 }
 
-/////////////////
-// bpropUpdate //
-/////////////////
-
-
+////////////////////
+// bpropAccUpdate //
+////////////////////
 void DERIVEDCLASS::bpropAccUpdate(const TVec<Mat*>& ports_value,
                                           const TVec<Mat*>& ports_gradient)
 {
@@ -115,28 +113,6 @@ void DERIVEDCLASS::bpropAccUpdate(const TVec<Mat*>& ports_value,
     PLERROR("In DERIVEDCLASS::bpropAccUpdate - this configuration of ports not implemented for class "
             "'%s'", classname().c_str());
 }
-
-/* THIS METHOD IS OPTIONAL
-// This version is similar to bpropAccUpdate but it does not accumulate
-// in the input ports gradient 
-void DERIVEDCLASS::bpropUpdate(const TVec<Mat*>& ports_value,
-                                       const TVec<Mat*>& ports_gradient)
-{
-    PLASSERT( ports_value.length() == nPorts() && ports_gradient.length() == nPorts());
-    // check which ports are input (ports_value[i] && !ports_value[i]->isEmpty())
-    // which ports are output (ports_value[i] && ports_value[i]->isEmpty())
-    // and which ports are ignored (!ports_value[i]).
-    // A similar logic applies to ports_gradients (to know whether gradient
-    // is coming into the module of coming from the module through a given ports_gradient[i]).
-    // An input port_value should correspond to an outgoing port_gradient,
-    // an output port_value could either correspond to an incoming port_gradient
-    // (when that gradient is to be propagated inside and to the input ports)
-    // If that combination of (input,output,ignored) is feasible by this class
-    // then perform the corresponding computation. Otherwise launch the error below.
-    PLERROR("In DERIVEDCLASS::bpropUpdate - this configuration of ports not implemented for class "
-            "'%s'", classname().c_str());
-}
-*/
 
 ////////////
 // forget //
