@@ -68,7 +68,7 @@ public:
     virtual TVec<std::string> getTestCostNames() const;
 
     //! Returns the names of the objective costs that the train method computes
-    //! and  for which it updates the VecStatsCollector train_stats.
+    //! and for which it updates the VecStatsCollector train_stats.
     // (PLEASE IMPLEMENT IN .cc)
     virtual TVec<std::string> getTrainCostNames() const;
 
