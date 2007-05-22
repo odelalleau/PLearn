@@ -44,35 +44,21 @@
 
 namespace PLearn {
 
-/**
- * The first sentence should be a BRIEF DESCRIPTION of what the class does.
- * Place the rest of the class programmer documentation here.  Doxygen supports
- * Javadoc-style comments.  See http://www.doxygen.org/manual.html
- *
- * @todo Write class to-do's here if there are any.
- *
- * @deprecated Write deprecated stuff here if there is any.  Indicate what else
- * should be used instead.
- */
 class ForwardModule : public OnlineLearningModule
 {
     typedef OnlineLearningModule inherited;
 
 public:
+
     //#####  Public Build Options  ############################################
 
-    //! ### declare public option fields (such as build options) here
-    //! Start your comments with Doxygen-compatible comments such as //!
-    
-    PP<OnlineLearningModule> module;
-    string name;
+    TVec< PP<OnlineLearningModule> > modules;
+    string forward_to;
 
 public:
     //#####  Public Member Functions  #########################################
 
-    //! Default constructor
-    // ### Make sure the implementation in the .cc
-    // ### initializes all fields to reasonable default values.
+    //! Constructor.
     ForwardModule(const string& the_name = "", bool call_build_ = false);
 
     // Your other public member functions go here
@@ -115,11 +101,6 @@ public:
     virtual void bpropAccUpdate(const TVec<Mat*>& ports_value,
                                 const TVec<Mat*>& ports_gradient);
 
-
-    virtual void bpropUpdate(const TVec<Mat*>& ports_value,
-                             const TVec<Mat*>& ports_gradient);
-
-
     //! Reset the parameters to the state they would be BEFORE starting
     //! training.  Note that this method is necessarily called from
     //! build().
@@ -156,23 +137,6 @@ public:
     //!           are respectively 'input' and 'output')
     virtual const TMat<int>& getPortSizes();
 
-    //! Return the width of a specific port.
-    int getPortWidth(const string& port);
-
-    //! Return the length of a specific port.
-    int getPortLength(const string& port);
-
-    //! Return the number of ports in the module.
-    int nPorts();
-
-    //! Return the index (as in the list of ports returned by getPorts()) of
-    //! a given port.
-    //! If 'port' does not exist, -1 is returned.
-    int getPortIndex(const string& port);
-
-    //! Return name of the i-th port.
-    string getPortName(int i);
-
     //! Return a list of strings, that represents the description of the values
     //! taken by a given port: the i-th string is the name for the i-th column
     //! value computed in 'port'.
@@ -195,6 +159,10 @@ public:
 
 
 protected:
+
+    //! Index of the module currently being used in the 'modules' list.
+    int current;
+    
     //#####  Protected Member Functions  ######################################
 
     //! Declares the class options.

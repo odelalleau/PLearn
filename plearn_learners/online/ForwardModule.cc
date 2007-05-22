@@ -45,16 +45,18 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     ForwardModule,
-    "Module to refer to a module that may be used in different places of a network.",
-    "Module to refer to a module that may be used in different places of a network.\n"
-    "This wrapper allows to duplicate a same module in a network.");
+    "Module that simply forwards all calls to an underlying module.",
+    "The underlying module may be chosen among a list of different modules,\n"
+    "through the option 'forward_to'.\n"
+);
 
 ///////////////////
 // ForwardModule //
 ///////////////////
 ForwardModule::ForwardModule(const string& the_name, bool call_build_):
-               inherited(the_name.empty() && call_build_ ? classname() : the_name,
-                         call_build_)
+    inherited(the_name.empty() && call_build_ ? classname() : the_name,
+              call_build_),
+    current(-1)
 {
     if (call_build_)
         build_();
@@ -63,21 +65,42 @@ ForwardModule::ForwardModule(const string& the_name, bool call_build_):
 void ForwardModule::declareOptions(OptionList& ol)
 {
 
-    declareOption(ol, "module", &ForwardModule::module,
+    declareOption(ol, "modules", &ForwardModule::modules,
                   OptionBase::buildoption,
-        "The module pointed by this module.");
+        "The list of modules that can be used to forward calls.");
+
+    declareOption(ol, "forward_to", &ForwardModule::forward_to,
+                  OptionBase::buildoption,
+        "Name of the module currently being used. If empty, the first module\n"
+        "in 'modules' will be used.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 
 }
 
+////////////
+// build_ //
+////////////
 void ForwardModule::build_()
 {
-    module->build();
+    current = -1;
+    if (forward_to.empty())
+        current = 0;
+    else {
+        for (int i = 0; i < modules.length(); i++) {
+            if (modules[i]->name == forward_to) {
+                current = i;
+                break;
+            }
+        }
+    }
+    PLCHECK( current >= 0 );
 }
 
-// ### Nothing to add here, simply calls build_
+///////////
+// build //
+///////////
 void ForwardModule::build()
 {
     inherited::build();
@@ -85,11 +108,14 @@ void ForwardModule::build()
 }
 
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void ForwardModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(module,	copies);
+    deepCopyField(modules, copies);
 }
 
 ///////////
@@ -97,40 +123,24 @@ void ForwardModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ///////////
 void ForwardModule::fprop(const TVec<Mat*>& ports_value)
 {
-    //PLASSERT( ports_value.length() == module->nPorts() );
- 
-    module->fprop(ports_value);
+    modules[current]->fprop(ports_value);
 }
 
-/////////////////
-// bpropUpdate //
-/////////////////
-
-
+////////////////////
+// bpropAccUpdate //
+////////////////////
 void ForwardModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
-                                          const TVec<Mat*>& ports_gradient)
+                                   const TVec<Mat*>& ports_gradient)
 {
-    //PLASSERT( ports_value.length() == module->nPorts() && ports_gradient.length() == module->nPorts());
-	    
-    module->bpropAccUpdate(ports_value, ports_gradient);
-	    
+    modules[current]->bpropAccUpdate(ports_value, ports_gradient);
 }
-
-// This version is similar to bpropAccUpdate but it does not accumulate
-// in the input ports gradient 
-void ForwardModule::bpropUpdate(const TVec<Mat*>& ports_value,
-                                       const TVec<Mat*>& ports_gradient)
-{
-    module->bpropUpdate(ports_value, ports_gradient);
-}
-
 
 ////////////
 // forget //
 ////////////
 void ForwardModule::forget()
 {
-     module->forget();
+     modules[current]->forget();
 }
 
 //////////////
@@ -138,102 +148,39 @@ void ForwardModule::forget()
 //////////////
 void ForwardModule::finalize()
 {
-     module->finalize();
+     modules[current]->finalize();
 }
-
 
 //////////////////////
 // bpropDoesNothing //
 //////////////////////
-// the default implementation returns false
 bool ForwardModule::bpropDoesNothing()
 {
-     return module->bpropDoesNothing();
+     return modules[current]->bpropDoesNothing();
 }
-
 
 /////////////////////
 // setLearningRate //
 /////////////////////
-// The default implementation raises a warning and does not do anything.
 void ForwardModule::setLearningRate(real dynamic_learning_rate)
 {
-     module->setLearningRate(dynamic_learning_rate);
+     modules[current]->setLearningRate(dynamic_learning_rate);
 }
-
 
 ////////////////////////
 // getPortDescription //
 ////////////////////////
-// The default implementation is probably appropriate
 TVec<string> ForwardModule::getPortDescription(const string& port)
 {
-    return module->getPortDescription(port);
+    return modules[current]->getPortDescription(port);
 } 
-
-//////////////////
-// getPortIndex //
-//////////////////
-// The default implementation is probably appropriate
-int ForwardModule::getPortIndex(const string& port)
-{
-    return module->getPortIndex(port);
-}
-
-
-/////////////////
-// getPortName //
-/////////////////
-// The default implementation is probably appropriate
-string ForwardModule::getPortName(int i)
-{
-       return module->getPortName(i);
-}
-
 
 //////////////
 // getPorts //
 //////////////
 const TVec<string>& ForwardModule::getPorts() {
-      return module->getPorts();
+      return modules[current]->getPorts();
 }
-
-//////////////////
-// getPortSizes //
-//////////////////
-const TMat<int>& ForwardModule::getPortSizes() {
-      return module->getPortSizes();
-}
-  
-
-///////////////////
-// getPortLength //
-///////////////////
-// The default implementation is probably appropriate
-int ForwardModule::getPortLength(const string& port)
-{
-    return module->getPortLength(port);
-}
-
-
-//////////////////
-// getPortWidth //
-//////////////////
-// The default implementation is probably appropriate
-int ForwardModule::getPortWidth(const string& port)
-{
-    return module->getPortWidth(port);
-}
-
-////////////
-// nPorts //
-////////////
-// The default implementation is probably appropriate
-int ForwardModule::nPorts()
-{
-    return module->nPorts();
-}
-
 
 }
 // end of namespace PLearn
