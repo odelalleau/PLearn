@@ -202,6 +202,7 @@ void ModuleLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(store_costs,        copies);
     deepCopyField(network,            copies);
     deepCopyField(null_pointers,      copies);
+    deepCopyField(all_ones,           copies);
 }
 
 ////////////////
@@ -305,16 +306,13 @@ void ModuleLearner::trainingStep(const Mat& inputs, const Mat& targets,
 void ModuleLearner::computeOutputAndCosts(const Vec& input, const Vec& target,
                                             Vec& output, Vec& costs) const
 {
-    static Mat one;
     if (store_inputs)
         store_inputs->setData(input.toMat(1, input.length()));
     if (store_targets)
         store_targets->setData(target.toMat(1, target.length()));
     if (store_weights) {
-        if (one.isEmpty()) {
-            one.resize(1, 1);
-            one(0, 0) = 1;
-        }
+        all_ones.resize(1, 1);
+        all_ones(0, 0) = 1;
         store_weights->setData(one);
     }
 
@@ -348,9 +346,11 @@ void ModuleLearner::computeOutputsAndCosts(const Mat& input, const Mat& target,
     if (store_targets)
         store_targets->setData(target);
     if (store_weights) {
-        one.resize(input.length(), 1);
-        one.fill(1.0);
-        store_weights->setData(one);
+        if (all_ones.width() != 1 || all_ones.length() != input.length()) {
+            all_ones.resize(input.length(), 1);
+            all_ones.fill(1.0);
+        }
+        store_weights->setData(all_ones);
     }
     PLASSERT( store_outputs );
     // make the store_output temporarily point to output
