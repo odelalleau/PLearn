@@ -160,67 +160,21 @@ TVec<string> DERIVEDCLASS::getPortDescription(const string& port)
 } 
 */
 
-//////////////////
-// getPortIndex //
-//////////////////
-/* OPTIONAL
-// The default implementation is probably appropriate
-int DERIVEDCLASS::getPortIndex(const string& port)
-{
-}
-*/
-
-/////////////////
-// getPortName //
-/////////////////
-/* OPTIONAL
-// The default implementation is probably appropriate
-string DERIVEDCLASS::getPortName(int i)
-{
-}
-*/
-
 //////////////
 // getPorts //
 //////////////
 const TVec<string>& DERIVEDCLASS::getPorts() {
+    // If this is a simple module with only an 'input' and 'output' port, one
+    // may simply use:
+    //     return inherited::getPorts();
+    PLERROR("In DERIVEDCLASS::getPorts - Not implemented");
 }
 
 //////////////////
 // getPortSizes //
 //////////////////
+/* Optional
 const TMat<int>& DERIVEDCLASS::getPortSizes() {
-}
-
-///////////////////
-// getPortLength //
-///////////////////
-/* OPTIONAL
-// The default implementation is probably appropriate
-int DERIVEDCLASS::getPortLength(const string& port)
-{
-    PLASSERT( getPortIndex(port) >= 0 );
-    return getPortSizes()(getPortIndex(port), 0);
-}
-*/
-
-//////////////////
-// getPortWidth //
-//////////////////
-/* OPTIONAL
-// The default implementation is probably appropriate
-int DERIVEDCLASS::getPortWidth(const string& port)
-{
-}
-*/
-
-////////////
-// nPorts //
-////////////
-/* OPTIONAL
-// The default implementation is probably appropriate
-int DERIVEDCLASS::nPorts()
-{
 }
 */
 

@@ -188,6 +188,7 @@ public:
     //! the most common case.
     virtual const TVec<string>& getPorts();
 
+    /* Optional
     //! Return the size of all ports, in the form of a two-column matrix, where
     //! each row represents a port, and the two numbers on a row are
     //! respectively its length and its width (with -1 representing an
@@ -200,24 +201,6 @@ public:
     //!           second row if nPorts() == 2 (also assuming the port names
     //!           are respectively 'input' and 'output')
     virtual const TMat<int>& getPortSizes();
-
-    /* Optional
-    //! Return the width of a specific port.
-    int getPortWidth(const string& port);
-
-    //! Return the length of a specific port.
-    int getPortLength(const string& port);
-
-    //! Return the number of ports in the module.
-    int nPorts();
-
-    //! Return the index (as in the list of ports returned by getPorts()) of
-    //! a given port.
-    //! If 'port' does not exist, -1 is returned.
-    int getPortIndex(const string& port);
-
-    //! Return name of the i-th port.
-    string getPortName(int i);
 
     //! Return a list of strings, that represents the description of the values
     //! taken by a given port: the i-th string is the name for the i-th column
