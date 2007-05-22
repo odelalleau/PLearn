@@ -36,7 +36,7 @@
 
 if (scalar(@ARGV) == 0) {
     die <<EOUSAGE
-Usage: dbidispatch <command-template>
+Usage: dbidispatch [--req="CONDOR_REQUIREMENT"]<command-template>
 Dispatches jobs on Condor with dbi.py.  
 
 where <command-template> is interpreted as follows: the first argument
@@ -71,6 +71,12 @@ is equivalent to:
 EOUSAGE
 }
 
+if (substr($ARGV[0],0,6) eq "--req=") {
+    $REQ = substr($ARGV[0],6);
+    shift;
+} else {
+    $REQ = "";
+}
 $command_name = shift;
 ### Find replacement lists in the arguments
 my @repl = ();
@@ -117,8 +123,16 @@ while ($idx[$#idx] < scalar(@{$repl[$#idx]})) {
     print SCRIPT "'$cmdstr',\n";
     
 }
-print SCRIPT "   ],'Condor')\n".
+
+print SCRIPT "   ],'Condor'";
+
+if ($REQ ne "") {
+    print SCRIPT ", requirements=\"$REQ\"";
+}
+
+print SCRIPT ")\n".
     "jobs.run() \n";
+
 close(SCRIPT);
 system("chmod +x $ScriptName");
 system("./$ScriptName");

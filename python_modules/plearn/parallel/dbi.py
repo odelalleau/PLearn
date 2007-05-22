@@ -62,7 +62,9 @@ class DBIBase:
         # Initialize the namespace
         for key in args.keys():
             self.__dict__[key] = args[key]
-
+        if not 'requirements' in args.keys():
+            self.requirements = ''
+        
         # If some arguments aren't lists, put them in a list
         if not isinstance(commands, list):
             commands = [commands]
@@ -453,32 +455,32 @@ class DBICondor(DBIBase):
         condor_file = os.path.join(self.tmp_dir, task.unique_id + ".condor")
         self.temp_files.append(condor_file)
         condor_dat = open( condor_file, 'w' )
-
+        
+        req=""
         u=get_username()
         if self.targetcondorplatform == 'BOTH':
-            tcplat1="INTEL"
-            tcplat2="X86_64"
+            req="((Arch == \"INTEL\")||(Arch == \"X86_64\"))"
         elif self.targetcondorplatform == 'INTEL':
-            tcplat1="INTEL"
-            tcplat2="INTEL"
+            req="(Arch == \"INTEL\")"
         elif self.targetcondorplatform == 'X86_64':
-            tcplat1="X86_64"
-            tcplat2="X86_64"
+            req="(Arch == \"X86_64\")"
+            
+
         tplat=self.targetplatform
+
+        if self.requirements != "":
+            req = req+'&&('+self.requirements+')'
+
         condor_dat.write( dedent('''\
                 executable     = %s/launch.sh
                 arguments      = sh %s $$(Arch) 
                 universe       = vanilla
-                requirements   = (Arch == "%s")||(Arch == "%s")
-                #requirements   =  (Cpus == 2)
-                #requirements   =  (Machine == paralisa.iro.umontreal.ca)
+                requirements   = %s
                 output         = main.%s.%s.out
                 error          = main.%s.%s.error
                 log            = main.%s.log
-#                environment    = 
-                #getenv         = True
                 queue
-                ''' % (self.tmp_dir,condor_data, tcplat1,tcplat2,tcplat1,task.unique_id,tcplat1,task.unique_id,tcplat1)))
+                ''' % (self.tmp_dir,condor_data,req,self.targetcondorplatform,task.unique_id,self.targetcondorplatform,task.unique_id,self.targetcondorplatform)))
 #                preBatch = ''' + pre_batch_command + '''
 #                postBatch = ''' + post_batch_command +'''
         condor_dat.close()
@@ -695,10 +697,9 @@ class DBISsh(DBIBase):
 
 
 # creates an object of type ('DBI' + launch_system) if it exists
-def DBI(commands, launch_system):
+def DBI(commands, launch_system, **args):
     try:
-        str = 'DBI'+launch_system+'(commands)'
-        jobs = eval('DBI'+launch_system+'(commands)')
+        jobs = eval('DBI'+launch_system+'(commands,**args)')
     except NameError:
         print 'The launch system ',launch_system, ' does not exists. Available systems are: Cluster, Ssh, bqtools and Condor'
         traceback.print_exc()
