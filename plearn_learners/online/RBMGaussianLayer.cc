@@ -86,6 +86,22 @@ void RBMGaussianLayer::generateSample()
         sample[i] = random_gen->gaussian_mu_sigma( expectation[i], sigma[i] );
 }
 
+void RBMGaussianLayer::generateSamples()
+{
+    PLASSERT_MSG(random_gen,
+                 "random_gen should be initialized before generating samples");
+
+    computeExpectations();
+    computeStdDeviation();
+    PLASSERT( samples.width() == size && samples.length() == batch_size );
+
+    for (int k = 0; k < batch_size; k++) {
+        for (int i=0 ; i<size ; i++)
+            samples(k, i) = random_gen->gaussian_mu_sigma( expectations(k, i), sigma[i] );
+    }
+}
+
+
 void RBMGaussianLayer::computeExpectation()
 {
     if( expectation_is_up_to_date )
@@ -101,6 +117,25 @@ void RBMGaussianLayer::computeExpectation()
     expectation_is_up_to_date = true;
 }
 
+void RBMGaussianLayer::computeExpectations()
+{
+    if( expectations_are_up_to_date )
+        return;
+
+    PLASSERT( expectations.width() == size
+              && expectations.length() == batch_size );
+
+    for (int k = 0; k < batch_size; k++)
+        for (int i = 0 ; i < size ; i++)
+            {
+                real a_i = quad_coeff[i];
+                expectations(k, i) = -activations(k, i) / (2 * a_i * a_i) ;
+            }
+
+    expectations_are_up_to_date = true;
+}
+
+
 void RBMGaussianLayer::computeStdDeviation()
 {
     if( sigma_is_up_to_date )
@@ -112,7 +147,6 @@ void RBMGaussianLayer::computeStdDeviation()
 
     sigma_is_up_to_date = true;
 }
-
 
 void RBMGaussianLayer::fprop( const Vec& input, Vec& output ) const
 {
