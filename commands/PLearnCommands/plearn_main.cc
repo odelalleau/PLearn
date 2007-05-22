@@ -297,6 +297,7 @@ int plearn_main( int argc, char** argv,
 {
 #ifdef PL_PROFILE    
     Profiler::activate();
+    Profiler::start("Prog");
 #endif
 
     setVersion(major_version, minor_version, fixlevel);
@@ -343,10 +344,12 @@ int plearn_main( int argc, char** argv,
              << "(ex: out-of-memory when allocating a matrix)" << endl;
         EXIT_CODE = 2;
     }
- 
-#ifdef PL_PROFILE    
+
+#ifdef PL_PROFILE
+    Profiler::end("Prog");
     Profiler::disactivate();
     Profiler::report(cerr);
+    Profiler::reportwall(cerr);
 #endif
     return EXIT_CODE;
 }
