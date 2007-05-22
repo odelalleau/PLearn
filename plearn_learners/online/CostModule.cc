@@ -117,7 +117,11 @@ void CostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             pred_grad->isEmpty() && !cost_grad->isEmpty())
         {
             // We can probably use the standard mini-batch bpropUpdate.
-            // PLASSERT( cost_grad->width() == 1 );
+            // Currently we allow this only in the case where a single cost is
+            // computed. This is because the bpropUpdate method in CostModule
+            // takes only the value of the first cost as parameter, and we may
+            // need the value of all costs.
+            PLASSERT( cost_grad->width() == 1 );
 #ifdef BOUNDCHECK
             // The gradient on the cost must be one if we want to re-use
             // exactly the existing code.
@@ -254,7 +258,7 @@ const TMat<int>& CostModule::getPortSizes() {
     if (port_sizes.length() != n_ports) {
         port_sizes.resize(n_ports, 2);
         port_sizes.fill(-1);
-        if (n_ports == 3) {
+        if (n_ports >= 3) {
             PLASSERT( getPorts()[0] == "prediction" &&
                       getPorts()[1] == "target"     &&
                       getPorts()[2] == "cost" );
