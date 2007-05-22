@@ -98,7 +98,7 @@ report_progress = 1 ;
 verbosity = 1 ;
 nservers = 0 ;
 save_trainingset_prefix = "" ;
-test_minibatch_size = 1000  )
+test_minibatch_size = 1  )
 
 !R 1 1 [ 14.9482509617851225 ] 
 !R 1 1 [ 14.4446958356332527 ] 
