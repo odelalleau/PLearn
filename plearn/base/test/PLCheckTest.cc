@@ -99,6 +99,11 @@ void PLCheckTest::perform()
     int ein = 1;
     int stein = 12;
 
+// PLCHECK uses __FILE__ variable in its message, but we want the test
+// to have the same output, regardless of the absolute path of this file
+#undef __FILE__
+#define __FILE__ "PLCheckTest.cc"
+
     PLCHECK( one == ein );
     PLCHECK_MSG( ein == stein, "ein != stein" );
 }
