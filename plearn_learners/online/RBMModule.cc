@@ -327,8 +327,6 @@ void RBMModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(hidden_layer,     copies);
     deepCopyField(visible_layer,    copies);
     deepCopyField(connection,       copies);
-    deepCopyField(hidden_act_grad,  copies);
-    deepCopyField(visible_exp_grad, copies);
     deepCopyField(reconstruction_connection, copies);
 
     deepCopyField(hidden_exp_grad, copies);
