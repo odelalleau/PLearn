@@ -129,13 +129,21 @@ void CostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
 #endif
             Mat* cost_val = ports_value[2];
             PLASSERT( cost_val );
-            store_costs.resize(cost_val->length());
-            store_costs << cost_val->column(0);
+            Vec costs_vec;
+            if (cost_val->mod() == 1) {
+                // We can view the cost column matrix as a vector.
+                costs_vec = cost_val->toVec();
+            } else {
+                // We need to make a copy of the cost.
+                store_costs.resize(cost_val->length());
+                store_costs << cost_val->column(0);
+                costs_vec = store_costs;
+            }
             Mat* pred_val = ports_value[0];
             Mat* target_val = ports_value[1];
             PLASSERT( pred_val && target_val );
             pred_grad->resize(pred_val->length(), pred_val->width());
-            bpropUpdate(*pred_val, *target_val, store_costs, *pred_grad, true);
+            bpropUpdate(*pred_val, *target_val, costs_vec, *pred_grad, true);
             return;
         }
     }
