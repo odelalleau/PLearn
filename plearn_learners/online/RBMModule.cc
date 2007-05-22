@@ -305,6 +305,15 @@ void RBMModule::build_()
         port_sizes(2, 1) = hidden_layer->size;
         port_sizes(4, 1) = hidden_layer->size;
     }
+    port_sizes(5,1) = 1;
+    if(reconstruction_connection)
+    {
+        if (visible_layer) {
+            port_sizes(6,1) = visible_layer->size;
+            port_sizes(7,1) = visible_layer->size;
+        }
+        port_sizes(8,1) = 1;
+    }
 }
 
 ///////////
