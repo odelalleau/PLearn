@@ -195,7 +195,7 @@ protected:
 private:
 
     //! Matrix that contains only ones (used to fill weights at test time).
-    Mat all_ones;
+    mutable Mat all_ones;
     
     //#####  Private Member Functions  ########################################
 

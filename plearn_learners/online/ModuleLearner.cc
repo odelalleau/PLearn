@@ -313,7 +313,7 @@ void ModuleLearner::computeOutputAndCosts(const Vec& input, const Vec& target,
     if (store_weights) {
         all_ones.resize(1, 1);
         all_ones(0, 0) = 1;
-        store_weights->setData(one);
+        store_weights->setData(all_ones);
     }
 
     // Forward propagation.
