@@ -166,6 +166,20 @@ void pl_assert_fail(const char* expr, const char* file, unsigned line,
             message.c_str());
 }
 
+
+void pl_check_fail(const char* expr, const char* file, unsigned line,
+                   const char* function, const string& message)
+{
+    PLERROR("Check failed: %s\n"
+            "Function: %s\n"
+            "    File: %s\n"
+            "    Line: %d"
+            "%s%s",
+            expr, function, file, line,
+            (!message.empty()? "\n Message: " : ""),
+            message.c_str());
+}
+
 } // end of namespace PLearn
 
 
