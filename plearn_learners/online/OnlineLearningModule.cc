@@ -369,8 +369,7 @@ const TMat<int>& OnlineLearningModule::getPortSizes() {
     if (port_sizes.length() != n_ports) {
         port_sizes.resize(n_ports, 2);
         port_sizes.fill(-1);
-        if (n_ports == 2) {
-            PLASSERT( getPorts()[0] == "input" && getPorts()[1] == "output" );
+        if (n_ports >= 2) {
             port_sizes(0, 1) = input_size;
             port_sizes(1, 1) = output_size;
         }

@@ -244,10 +244,9 @@ public:
     //! The default value fills this matrix with:
     //!     - in the first column (lengths): -1
     //!     - in the second column (widths):
-    //!         - -1 if nPorts() != 2
+    //!         - -1 if nPorts() < 2
     //!         - 'input_size' for the first row and 'output_size' for the
-    //!           second row if nPorts() == 2 (also assuming the port names
-    //!           are respectively 'input' and 'output')
+    //!           second row if nPorts() >= 2
     virtual const TMat<int>& getPortSizes();
 
     //! Return the width of a specific port.
