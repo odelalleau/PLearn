@@ -506,14 +506,16 @@ class DBICondor(DBIBase):
             PROGRAM=$1
             shift
             source /cluster/diro/home/lisa/.local.condor
-            echo "Executing on ${HOSTNAME}"
-            echo "PATH: $PATH"
-            echo "PYTHONPATH: $PYTHONPATH"
-            echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
-            which python
-            echo -n Python version
-            python -V
-            echo ${PROGRAM} $@
+            echo "Executing on ${HOSTNAME}" 1>&2
+            echo "PATH: $PATH" 1>&2
+            echo "PYTHONPATH: $PYTHONPATH" 1>&2
+            echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH" 1>&2
+            which python 1>&2
+            echo -n python version: 1>&2
+            python -V 1>&2
+            echo -n /usr/bin/python version: 1>&2
+            /usr/bin/python -V 1>&2
+            echo ${PROGRAM} $@ 1>&2
             $PROGRAM $@'''))
             launch_dat.close()
             os.chmod(launch_file, 0755)
