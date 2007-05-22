@@ -193,6 +193,10 @@ protected:
                       const Vec& weights);
 
 private:
+
+    //! Matrix that contains only ones (used to fill weights at test time).
+    Mat all_ones;
+    
     //#####  Private Member Functions  ########################################
 
     //! This does the actual building.
