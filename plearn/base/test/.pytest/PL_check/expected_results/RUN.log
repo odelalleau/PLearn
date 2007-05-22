@@ -1,0 +1,5 @@
+FATAL ERROR: Check failed: ein == stein
+Function: virtual void PLearn::PLCheckTest::perform()
+    File: /u/lamblinp/code/PLearn/plearn/base/test/PLCheckTest.cc
+    Line: 103
+ Message: ein != stein
