@@ -51,13 +51,20 @@ PLEARN_IMPLEMENT_OBJECT(
     "back-propagated gradient will be a weighted sum of the modules'"
     " gradients.\n"
     "The first output is the weighted sum of the cost, the following ones\n"
-    "are the original costs.\n");
+    "are the original costs.\n"
+);
 
+//////////////////////////
+// CombiningCostsModule //
+//////////////////////////
 CombiningCostsModule::CombiningCostsModule() :
     n_sub_costs( 0 )
 {
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void CombiningCostsModule::declareOptions(OptionList& ol)
 {
     declareOption(ol, "sub_costs", &CombiningCostsModule::sub_costs,
@@ -72,10 +79,6 @@ void CombiningCostsModule::declareOptions(OptionList& ol)
                   OptionBase::learntoption,
                   "Number of sub_costs");
 
-    // declareOption(ol, "", &CombiningCostsModule::,
-    //               OptionBase::buildoption,
-    //               "");
-
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
     
@@ -87,6 +90,9 @@ void CombiningCostsModule::declareOptions(OptionList& ol)
                     "Is set to sub_costs[0]->target_size.");
 }
 
+////////////
+// build_ //
+////////////
 void CombiningCostsModule::build_()
 {
     n_sub_costs = sub_costs.length();
@@ -208,6 +214,45 @@ void CombiningCostsModule::fprop(const Mat& inputs, const Mat& targets,
     }
 }
 
+////////////////////
+// bpropAccUpdate //
+////////////////////
+void CombiningCostsModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                          const TVec<Mat*>& ports_gradient)
+{
+    Mat* inputs = ports_value[0];
+    Mat* targets = ports_value[1];
+    Mat* costs = ports_value[2];
+    PLASSERT( costs && costs->width() == n_sub_costs + 1 );
+    Mat* input_gradients = ports_gradient[0];
+    PLASSERT( input_gradients && input_gradients->isEmpty() &&
+              input_gradients->width() > 0 );
+    input_gradients->resize(inputs->length(), input_gradients->width());
+    sub_costs_values.resize(costs->length());
+    for( int i=0 ; i<n_sub_costs ; i++ )
+    {
+        sub_costs_values << costs->column(i + 1);
+        if (fast_exact_is_equal(cost_weights[i], 0))
+        {
+            // Do not compute input_gradients.
+            sub_costs[i]->bpropUpdate( *inputs, *targets, sub_costs_values);
+        }
+        else if (fast_exact_is_equal(cost_weights[i], 1))
+        {
+            // Accumulate directly into input_gradients.
+            sub_costs[i]->bpropUpdate(*inputs, *targets, sub_costs_values,
+                                      *input_gradients, true);
+        }
+        else
+        {
+            // Put the result into partial_gradients, then accumulate into
+            // input_gradients with the appropriate weight.
+            sub_costs[i]->bpropUpdate(*inputs, *targets, sub_costs_values,
+                                      partial_gradients, false);
+            multiplyAcc(*input_gradients, partial_gradients, cost_weights[i]);
+        }
+    }
+}
 
 /////////////////
 // bpropUpdate //
@@ -311,6 +356,9 @@ void CombiningCostsModule::bpropUpdate(const Vec& input, const Vec& target,
         sub_costs[i]->bpropUpdate( input, target, sub_costs_values[i] );
 }
 
+//////////////////
+// bbpropUpdate //
+//////////////////
 void CombiningCostsModule::bbpropUpdate(const Vec& input, const Vec& target,
                                         real cost,
                                         Vec& input_gradient,
@@ -375,8 +423,9 @@ void CombiningCostsModule::bbpropUpdate(const Vec& input, const Vec& target,
 }
 
 
-//! Reset the parameters to the state they would be BEFORE starting training.
-//! Note that this method is necessarily called from build().
+////////////
+// forget //
+////////////
 void CombiningCostsModule::forget()
 {
     if( !random_gen )
@@ -393,6 +442,9 @@ void CombiningCostsModule::forget()
     }
 }
 
+/////////////////////
+// setLearningRate //
+/////////////////////
 //! Sets the sub_costs' learning rates
 void CombiningCostsModule::setLearningRate(real dynamic_learning_rate)
 {
@@ -400,6 +452,9 @@ void CombiningCostsModule::setLearningRate(real dynamic_learning_rate)
         sub_costs[i]->setLearningRate(dynamic_learning_rate);
 }
 
+//////////////
+// finalize //
+//////////////
 //! reset the parameters to the state they would be BEFORE starting training.
 //! Note that this method is necessarily called from build().
 void CombiningCostsModule::finalize()

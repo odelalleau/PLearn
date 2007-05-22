@@ -75,6 +75,10 @@ public:
 
     // Your other public member functions go here
 
+    //! Overridden so that sub-costs values can be taken into account.
+    virtual void bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                const TVec<Mat*>& ports_gradient);
+
     //! given the input and target, compute the cost
     virtual void fprop(const Vec& input, const Vec& target, Vec& cost) const;
 
