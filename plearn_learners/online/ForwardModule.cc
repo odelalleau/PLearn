@@ -62,6 +62,9 @@ ForwardModule::ForwardModule(const string& the_name, bool call_build_):
         build_();
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void ForwardModule::declareOptions(OptionList& ol)
 {
 
@@ -180,6 +183,14 @@ TVec<string> ForwardModule::getPortDescription(const string& port)
 //////////////
 const TVec<string>& ForwardModule::getPorts() {
       return modules[current]->getPorts();
+}
+
+//////////////////
+// getPortSizes //
+//////////////////
+const TMat<int>& ForwardModule::getPortSizes()
+{
+    return modules[current]->getPortSizes();
 }
 
 }
