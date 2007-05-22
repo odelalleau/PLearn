@@ -73,16 +73,13 @@ public:
     //! compute a sample, and update the sample field
     virtual void generateSample() ;
 
-    virtual void generateSamples()
-    {
-        PLASSERT( false ); // Not implemented.
-    }
+    virtual void generateSamples() ;
 
     //! compute the expectation
     virtual void computeExpectation() ;
 
-    //! Not implemented.
-    virtual void computeExpectations() { PLASSERT( false ); }
+    //! compute the batch expectation
+    virtual void computeExpectations() ;
 
     //! compute the standard deviation
     virtual void computeStdDeviation() ;
