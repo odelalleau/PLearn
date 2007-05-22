@@ -68,7 +68,7 @@ PLearner::PLearner()
       report_progress(true),
       verbosity(1),
       nservers(0),
-      test_minibatch_size(1000),
+      test_minibatch_size(1),
       save_trainingset_prefix(""),
       parallelize_here(true),
       master_sends_testset_rows(false),
