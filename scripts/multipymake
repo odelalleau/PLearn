@@ -50,6 +50,7 @@ fi
 
 if [ ! -e ${BASEPROG%.cc}.cc ]; then
     echo "ERROR: The file '${BASEPROG%.cc}.cc' do not exist!"
+    exit
 fi
 
 for i in "$@";
