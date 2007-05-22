@@ -118,6 +118,12 @@ public:
     // some of the following methods:
     virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
                                        Vec& output, Vec& costs) const;
+
+    //! minibatch version of computeOutputAndCosts
+    virtual void computeOutputsAndCosts(const Mat& input, const Mat& target,
+                                        Mat& output, Mat& costs) const;
+
+
     // virtual void computeCostsOnly(const Vec& input, const Vec& target,
     //                               Vec& costs) const;
     // virtual void test(VMat testset, PP<VecStatsCollector> test_stats,

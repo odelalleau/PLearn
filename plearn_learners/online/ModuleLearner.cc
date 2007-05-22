@@ -68,6 +68,7 @@ ModuleLearner::ModuleLearner():
     mbatch_size(-1)
 {
     random_gen = new PRandom();
+    test_minibatch_size = 1000;
 }
 
 ////////////////////
@@ -333,6 +334,43 @@ void ModuleLearner::computeOutputAndCosts(const Vec& input, const Vec& target,
     PLASSERT( net_cost.length() == 1 );
     costs.resize(net_cost.width());
     costs << net_cost;
+}
+
+///////////////////////////
+// computeOutputsAndCosts //
+///////////////////////////
+void ModuleLearner::computeOutputsAndCosts(const Mat& input, const Mat& target,
+                                           Mat& output, Mat& costs) const
+{
+    static Mat one;
+    if (store_inputs)
+        store_inputs->setData(input);
+    if (store_targets)
+        store_targets->setData(target);
+    if (store_weights) {
+        one.resize(input.length(), 1);
+        one.fill(1.0);
+        store_weights->setData(one);
+    }
+    PLASSERT( store_outputs );
+    // make the store_output temporarily point to output
+    Mat& net_out = store_outputs->getData();
+    Mat old_net_out = net_out;
+    output.resize(input.length(),outputsize());
+    net_out = output;
+    PLASSERT( store_costs );
+    // make the store_costs temporarily point to costs
+    Mat& net_cost = store_costs->getData();
+    Mat old_net_cost = net_cost;
+    costs.resize(input.length(),module->getPortWidth("cost"));
+    net_cost = costs;
+    
+    // Forward propagation.
+    network->fprop(null_pointers);
+
+    // restore output_store.
+    net_out = old_net_out;
+    net_cost = old_net_cost;
 }
 
 ///////////////////
