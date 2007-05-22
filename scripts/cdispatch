@@ -74,9 +74,12 @@ EOUSAGE
 if (substr($ARGV[0],0,6) eq "--req=") {
     $REQ = substr($ARGV[0],6);
     shift;
+} elsif (substr($ARGV[0],0,1) eq '-'){
+    die "Unknow parameter $ARGV[0]\n";
 } else {
     $REQ = "";
 }
+
 $command_name = shift;
 ### Find replacement lists in the arguments
 my @repl = ();
@@ -98,30 +101,35 @@ print SCRIPT "#! /usr/bin/env python\n".
     "from plearn.parallel.dbi import DBI\n".
     "jobs = DBI([\n";
 my @idx = (0) x @ARGV;
-while ($idx[$#idx] < scalar(@{$repl[$#idx]})) {
-    ### Compute current argument list
-    my @curargs;
-    for (my $i=0; $i < scalar(@idx); ++$i) {
-        my $arg = $ARGV[$i];
-        if ($arg =~ /{{.*}}/) {
-            my $value = ($repl[$i])->[$idx[$i]];
-            $arg =~ s/{{.*}}/$value/;
-        }
-        push @curargs, $arg;
-    }
-    ### Two passes are necessary to properly increment
-    for (my $i=0; $i < scalar(@idx); ++$i) {
-        $idx[$i]++;
-        last if $idx[$i] < scalar(@{$repl[$i]}) || $i == $#idx;
-        $idx[$i] = 0;
-    }
 
-
-    ### There are two distinct steps: command creation and command execution
-    ### Command creation depending on cluster or direct launch:
-    $cmdstr = "$command_name " . join(" ",@curargs);
-    print SCRIPT "'$cmdstr',\n";
-    
+if(scalar(@ARGV) == 0){
+    print SCRIPT "'$command_name'\n";
+} else {
+    while ($idx[$#idx] < scalar(@{$repl[$#idx]})) {
+	### Compute current argument list
+	my @curargs;
+	for (my $i=0; $i < scalar(@idx); ++$i) {
+	    my $arg = $ARGV[$i];
+	    if ($arg =~ /{{.*}}/) {
+		my $value = ($repl[$i])->[$idx[$i]];
+		$arg =~ s/{{.*}}/$value/;
+	    }
+	    push @curargs, $arg;
+	}
+	### Two passes are necessary to properly increment
+	for (my $i=0; $i < scalar(@idx); ++$i) {
+	    $idx[$i]++;
+	    last if $idx[$i] < scalar(@{$repl[$i]}) || $i == $#idx;
+	    $idx[$i] = 0;
+	}
+	
+	
+	###There are two distinct steps: command creation and command execution
+	### Command creation depending on cluster or direct launch:
+	$cmdstr = "$command_name " . join(" ",@curargs);
+	print SCRIPT "'$cmdstr',\n";
+	
+    }
 }
 
 print SCRIPT "   ],'Condor'";
@@ -135,4 +143,5 @@ print SCRIPT ")\n".
 
 close(SCRIPT);
 system("chmod +x $ScriptName");
+print "Launching newly created script $ScriptName\n";
 system("./$ScriptName");
