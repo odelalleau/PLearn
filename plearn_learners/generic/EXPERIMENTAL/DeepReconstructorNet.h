@@ -163,6 +163,7 @@ public:
     //! Returns the matValue of the parameter variable with the given name
     Mat getParameterValue(const string& varname);
 
+    TVec<string> listParameterNames();
 
     // *** SUBCLASS WRITING: ***
     // While in general not necessary, in case of particular needs
@@ -206,6 +207,7 @@ protected:
     //! Declares the class options.
     // (PLEASE IMPLEMENT IN .cc)
     static void declareOptions(OptionList& ol);
+    static void declareMethods(RemoteMethodMap& rmm);
 
     void trainHiddenLayer(int which_input_layer, VMat inputs);
     void buildHiddenLayerOutputs(int which_input_layer, VMat inputs, VMat outputs);

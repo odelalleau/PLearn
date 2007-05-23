@@ -120,6 +120,18 @@ void DeepReconstructorNet::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
+void DeepReconstructorNet::declareMethods(RemoteMethodMap& rmm)
+{
+    rmm.inherited(inherited::_getRemoteMethodMap_());
+
+    declareMethod(rmm,
+                  "getParameterValue",
+                  &DeepReconstructorNet::getParameterValue,
+                  (BodyDoc("Returns the matValue of the parameter variable with the given name"),
+                   ArgDoc("varname", "name of the variable searched for"),
+                   RetDoc("Returns the value of the parameter as a Mat")));
+}
+
 void DeepReconstructorNet::build_()
 {
     // ### This method should do the real building of the object,
@@ -348,6 +360,14 @@ TVec<string> DeepReconstructorNet::getTrainCostNames() const
     return todo;
 }
 
+Mat DeepReconstructorNet::getParameterValue(const string& varname)
+{
+    for(int i=0; i<parameters.length(); i++)
+        if(parameters[i]->getName() == varname)
+            return parameters[i]->matValue;
+    PLERROR("There is no parameter  named %s", varname.c_str());
+    return Mat(0,0);
+}
 
 } // end of namespace PLearn
 
