@@ -1,5 +1,7 @@
  WARNING: RBMMatrixConnection: cannot forget() without random_gen
  WARNING: RBMMatrixConnection: cannot forget() without random_gen
  WARNING: GradNNetLayerModule: cannot forget() without random_gen
- WARNING: RBMMatrixConnection: cannot forget() without random_gen
- WARNING: RBMMatrixConnection: cannot forget() without random_gen
+FATAL ERROR: Problem while attempting to read value of option "learner" of a "PTester":
+ Problem while attempting to read value of option "module" of a "ModuleLearner":
+ Problem while attempting to read value of option "modules" of a "NetworkModule":
+ TypeFactory: requested type "ArgmaxModule" is not registered in type map.

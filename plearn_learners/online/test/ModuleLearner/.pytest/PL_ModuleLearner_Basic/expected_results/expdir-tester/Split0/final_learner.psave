@@ -40,8 +40,7 @@ destination = "mse.prediction" ;
 propagate_gradient = 1  )
 ] ;
 ports = 8 [ "input" "affine_net.input" "target" "mse.target" "output" "affine_net.output" "cost" "mse.cost" ] ;
-input_size = -1 ;
-output_size = -1 ;
+save_states = 1 ;
 name = "NetworkModule" ;
 estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;
@@ -60,4 +59,5 @@ nstages = 1000 ;
 report_progress = 1 ;
 verbosity = 1 ;
 nservers = 0 ;
-save_trainingset_prefix = ""  )
+save_trainingset_prefix = "" ;
+test_minibatch_size = 1000  )

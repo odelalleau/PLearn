@@ -101,12 +101,12 @@ PTester(
 
                     connections = [
                         NetworkConnection( 
-                            source = "rbm_1.hidden"
+                            source = "rbm_1.hidden.state"
                             destination = "rbm_2.visible"
                         )
 
                         NetworkConnection( 
-                            source = "rbm_2.hidden"
+                            source = "rbm_2.hidden.state"
                             destination = "affine_net.input"
                         )
                        

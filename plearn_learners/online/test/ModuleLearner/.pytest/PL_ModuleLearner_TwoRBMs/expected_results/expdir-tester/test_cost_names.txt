@@ -1,4 +1,0 @@
-combined_cost
-NLL
-class_error
-mse

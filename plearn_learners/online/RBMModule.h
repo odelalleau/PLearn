@@ -71,6 +71,8 @@ public:
     real cd_learning_rate;
     real grad_learning_rate;
 
+    bool compute_contrastive_divergence;
+
     //! Number of Gibbs sampling steps in negative phase 
     //! of contrastive divergence.
     int n_Gibbs_steps_CD;
@@ -218,6 +220,9 @@ protected:
 
     //! Used to store gradient w.r.t. bias of visible layer
     Vec visible_bias_grad;
+
+    //! names of the ports
+    TVec<string> ports;
 
     //#####  Protected Member Functions  ######################################
 
