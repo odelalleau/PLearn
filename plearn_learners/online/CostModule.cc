@@ -109,8 +109,9 @@ void CostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         Mat* pred_grad = ports_gradient[0];
         Mat* target_grad = ports_gradient[1];
         Mat* cost_grad = ports_gradient[2];
-        if (!pred_grad && !target_grad && !cost_grad) {
-            // No gradient is being asked or provided at all.
+        if (!pred_grad && !target_grad) {
+            // No gradient is being asked.
+            checkProp(ports_gradient);
             return;
         }
         if (pred_grad && !target_grad && cost_grad &&
@@ -148,6 +149,7 @@ void CostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             PLASSERT( pred_val && target_val );
             pred_grad->resize(pred_val->length(), pred_val->width());
             bpropUpdate(*pred_val, *target_val, costs_vec, *pred_grad, true);
+            checkProp(ports_gradient);
             return;
         }
     }
