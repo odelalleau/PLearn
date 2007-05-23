@@ -337,6 +337,7 @@ TVec<string> OnlineLearningModule::getPortDescription(const string& port)
     int idx = getPortIndex(port);
     TVec<string>& descr = port_descriptions[idx];
     int desired_size = getPortWidth(port);
+    PLCHECK_MSG( desired_size >= 0, "Port width must be defined" );
     if (descr.length() != desired_size) {
         descr.resize(desired_size);
         for (int i = 0; i < desired_size; i++)
