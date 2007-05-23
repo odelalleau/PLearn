@@ -59,6 +59,9 @@ public:
 
     int batch_size;
     TVec<string> cost_ports;
+    TVec<string> input_ports;
+    TVec<string> target_ports;
+    TVec<string> weight_ports;
 
 public:
     //#####  Public Member Functions  #########################################

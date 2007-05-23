@@ -49,16 +49,18 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(
     ModuleLearner,
     "A PLearner that contains a single OnlineLearningModule.\n",
-    "That module should have ports named 'input', 'target', 'weight' and\n"
-    "'output', and other ports that compute costs and are given in the\n"
-    "'cost_ports' option (the default behavior is to use a single 'cost'\n"
-    "port).\n"
-    "For example one can use a NetworkModule, which has such ports.\n"
+    "That module should have ports that can be fed with the input, target\n"
+    "and weight of an example (defined by the 'input_ports', 'target_ports'\n"
+    "and 'weight_ports' options), ports that compute costs (defined by the\n"
+    "'cost_ports' option), and a port named 'output' that computes the\n"
+    "output of this learner.\n"
     "\n"
-    "The input and target from the training VMatrix are plugged on the\n"
-    "'input' and 'target' ports, and the output (for ComputeOutput) and\n"
-    "cost (for ComputeOutputAndCost and for training) are obtained from the\n"
-    "'output' port and the ports defined by the 'cost_ports' option.\n"
+    "For example one can use a NetworkModule, which can define such ports.\n"
+    "\n"
+    "The input and target from the training VMatrix are plugged on their\n"
+    "corresponding ports, and the output (for ComputeOutput) and cost (for\n"
+    "ComputeOutputAndCost and for training) are obtained from the 'output'\n"
+    "port and the ports defined by the 'cost_ports' option.\n"
     "\n"
     "During training gradient is propagated from the costs and the bpropUpdate()\n"
     "method of the module is called (possibly one mini-batch of examples at a time)\n"
@@ -72,6 +74,10 @@ PLEARN_IMPLEMENT_OBJECT(
 ModuleLearner::ModuleLearner():
     batch_size(1),
     cost_ports(TVec<string>(1, "cost")),
+    input_ports(TVec<string>(1, "input")),
+    target_ports(TVec<string>(1, "target")),
+    // Note: many learners do not use weights, thus the default behavior is not
+    // to have a 'weight' port in 'weight_ports'.
     mbatch_size(-1)
 {
     random_gen = new PRandom();
@@ -85,8 +91,7 @@ void ModuleLearner::declareOptions(OptionList& ol)
 {
     declareOption(ol, "module", &ModuleLearner::module,
                   OptionBase::buildoption,
-       "The module being optimized. This module should typically have some\n"
-       "ports named 'input', 'target', 'weight', 'output' and 'cost'.");
+       "The module being optimized.");
 
     declareOption(ol, "batch_size", &ModuleLearner::batch_size,
                   OptionBase::buildoption,
@@ -96,6 +101,18 @@ void ModuleLearner::declareOptions(OptionList& ol)
     declareOption(ol, "cost_ports", &ModuleLearner::cost_ports,
                   OptionBase::buildoption,
        "List of ports that contain costs being optimized.");
+
+    declareOption(ol, "input_ports", &ModuleLearner::input_ports,
+                  OptionBase::buildoption,
+       "List of ports that take the input part of a sample as input.");
+
+    declareOption(ol, "target_ports", &ModuleLearner::target_ports,
+                  OptionBase::buildoption,
+       "List of ports that take the target part of a sample as input.");
+
+    declareOption(ol, "weight_ports", &ModuleLearner::weight_ports,
+                  OptionBase::buildoption,
+       "List of ports that take the weight part of a sample as input.");
 
     declareOption(ol, "mbatch_size", &ModuleLearner::mbatch_size,
                   OptionBase::learntoption,
@@ -132,33 +149,37 @@ void ModuleLearner::build_()
     TVec< PP<OnlineLearningModule> > all_modules;
     all_modules.append(module);
     TVec< PP<NetworkConnection> > all_connections;
+    store_inputs = store_targets = store_weights = NULL;
 
-    if (ports.find("input") >= 0) {
-        store_inputs = new MatrixModule("store_inputs", true);
-        all_modules.append(get_pointer(store_inputs));
+    for (int i = 0; i < input_ports.length(); i++) {
+        if (!store_inputs) {
+            store_inputs = new MatrixModule("store_inputs", true);
+            all_modules.append(get_pointer(store_inputs));
+        }
         all_connections.append(new NetworkConnection(
                     get_pointer(store_inputs), "data",
-                    module, "input", false));
-    } else
-        store_inputs = NULL;
+                    module, input_ports[i], false));
+    }
 
-    if (ports.find("target") >= 0) {
-        store_targets = new MatrixModule("store_targets", true);
-        all_modules.append(get_pointer(store_targets));
+    for (int i = 0; i < target_ports.length(); i++) {
+        if (!store_targets) {
+            store_targets = new MatrixModule("store_targets", true);
+            all_modules.append(get_pointer(store_targets));
+        }
         all_connections.append(new NetworkConnection(
                     get_pointer(store_targets), "data",
-                    module, "target", false));
-    } else
-        store_targets = NULL;
+                    module, target_ports[i], false));
+    }
 
-    if (ports.find("weight") >= 0) {
-        store_weights = new MatrixModule("store_weights", true);
-        all_modules.append(get_pointer(store_weights));
+    for (int i = 0; i < weight_ports.length(); i++) {
+        if (!store_weights) {
+            store_weights = new MatrixModule("store_weights", true);
+            all_modules.append(get_pointer(store_weights));
+        }
         all_connections.append(new NetworkConnection(
                     get_pointer(store_weights), "data",
-                    module, "weight", false));
-    } else
-        store_weights = NULL;
+                    module, weight_ports[i], false));
+    }
 
     if (ports.find("output") >= 0) {
         store_outputs = new MatrixModule("store_outputs", true);
@@ -211,6 +232,9 @@ void ModuleLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(module,             copies);
     deepCopyField(cost_ports,         copies);
+    deepCopyField(input_ports,        copies);
+    deepCopyField(target_ports,       copies);
+    deepCopyField(weight_ports,       copies);
     deepCopyField(store_inputs,       copies);
     deepCopyField(store_targets,      copies);
     deepCopyField(store_weights,      copies);
