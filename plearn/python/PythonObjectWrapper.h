@@ -641,7 +641,7 @@ std::pair<T,U> ConvertFromPyObject< std::pair<T,U> >::convert(PyObject* pyobj,
     p.first = ConvertFromPyObject<T>::convert(first, print_traceback);
 
     PyObject* second = PyTuple_GET_ITEM(pyobj, 1);
-    p.second = ConvertFromPyObject<T>::convert(second, print_traceback);
+    p.second = ConvertFromPyObject<U>::convert(second, print_traceback);
 
     return p;
 }
