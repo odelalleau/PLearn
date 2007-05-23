@@ -343,6 +343,10 @@ void NetworkModule::build_()
             // There is already a module with the same name. For safety
             // reasons, we make it point to a NULL pointer to ensure we do not
             // accidentally use the wrong module.
+            PLWARNING("In NetworkModule::build_ - There are two modules with "
+                    "the same name '%s': any connection attempting to use "
+                    "one of these modules will probably crash",
+                    module.c_str());
             name_to_module[module] = NULL;
         } else
             name_to_module[module] = all_modules[i];
@@ -499,7 +503,10 @@ void NetworkModule::build_()
                                     bprop_data_idx[b_idx][port_index]);
                             bprop_tores.append(j);
                         }
-                        PLASSERT( out_conn.find(mod_ports[j]) == out_conn.end() );
+                        PLASSERT_MSG(
+                                out_conn.find(mod_ports[j]) == out_conn.end(),
+                                "A port with an incoming connection cannot "
+                                "also have an outgoing connection" );
                     } else if (out_conn.find(mod_ports[j]) != out_conn.end()) {
                         // This port has (at least) one outgoing connection: it
                         // is thus an output, and it must be provided with
