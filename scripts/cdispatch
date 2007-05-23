@@ -72,7 +72,11 @@ is equivalent to:
 
 The optional parameter '--test' make that cdispatch generate the file $ScriptName, but do not execute it. That way you can see what cdispatch generate.
 
-The optional parameter '--req="CONDOR_REQUIREMENT"' make that cdispatch send additional option to DBI that will be used to generate addtional requirement for condor. CONDOR_REQUIREMENT must follow the syntax of requirement for condor.
+The optional parameter '--req="CONDOR_REQUIREMENT"' make that cdispatch send additional option to DBI that will be used to generate addtional requirement for condor. CONDOR_REQUIREMENT must follow the syntax of requirement for condor with one exception. The symbol '"' must be escaped 3 times! So the requirement (Machine == "computer.example.com") must be writed like that:
+
+cdispatch "--req=Machine\\\"computer.example.com\\\""
+
+
 EOUSAGE
 }
 
@@ -112,9 +116,10 @@ print SCRIPT "#! /usr/bin/env python\n".
     "from plearn.parallel.dbi import DBI\n".
     "jobs = DBI([\n";
 my @idx = (0) x @ARGV;
-
+$nbcommand=0;
 if(scalar(@ARGV) == 0){
     print SCRIPT "'$command_name'\n";
+    $nbcommand=1;
 } else {
     while ($idx[$#idx] < scalar(@{$repl[$#idx]})) {
 	### Compute current argument list
@@ -139,24 +144,31 @@ if(scalar(@ARGV) == 0){
 	### Command creation depending on cluster or direct launch:
 	$cmdstr = "$command_name " . join(" ",@curargs);
 	print SCRIPT "'$cmdstr',\n";
-	
+	$nbcommand+=1;
     }
 }
-
 print SCRIPT "   ],'Condor'";
 
 if ($REQ ne "") {
     print SCRIPT ", requirements=\"$REQ\"";
 }
 
+if ($TEST) {
+    print SCRIPT ", test=True";
+}
+
 print SCRIPT ")\n".
-    "jobs.run() \n";
+    "jobs.run() \n".
+    "# There is $nbcommand command in the script\n";
 
 close(SCRIPT);
 system("chmod +x $ScriptName");
+
+print "We generated $nbcommand command in the file $ScriptName\n";
+
 if ($TEST){
-    print "Created but no lauched script $ScriptName\n";
+    print "The script $ScriptName was not launched\n";
 } else {
-    print "Launching newly created script $ScriptName\n";
+    print "Launching the script $ScriptName\n";
     system("./$ScriptName");
 }

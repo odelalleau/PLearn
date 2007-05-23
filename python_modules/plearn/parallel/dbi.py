@@ -60,11 +60,11 @@ class DBIBase:
         self.file_redirect_stderr = 0
 
         # Initialize the namespace
+        self.requirements = ''
+        self.test = False
         for key in args.keys():
             self.__dict__[key] = args[key]
-        if not 'requirements' in args.keys():
-            self.requirements = ''
-        
+
         # If some arguments aren't lists, put them in a list
         if not isinstance(commands, list):
             commands = [commands]
@@ -541,9 +541,12 @@ class DBICondor(DBIBase):
             output = file(self.log_file + '.out', 'w')
         if int(self.file_redirect_stderr):
             error = file(self.log_file + '.err', 'w')
-        print "Executing: condor_submit " + condor_file
-        self.p = Popen( 'condor_submit '+ condor_file, shell=True , stdout=output, stderr=error)
 
+        if self.test == False:
+            print "Executing: condor_submit " + condor_file
+            self.p = Popen( 'condor_submit '+ condor_file, shell=True , stdout=output, stderr=error)
+        else:
+            print "Created condor file: " + condor_file
 
     def clean(self):
                 
