@@ -153,6 +153,20 @@ void Object::setOption(const string& optionname, const string& value)
     readOptionVal(in, optionname);
 }
 
+#ifdef PL_PYTHON_VERSION 
+void Object::setOptionFromPython(const string& optionname, const PythonObjectWrapper& value)
+{
+    OptionList &options= getOptionList();
+    for(OptionList::iterator it= options.begin(); 
+        it != options.end(); ++it)
+        if((*it)->optionname() == optionname)
+        {
+            (*it)->setFromPythonObject(this, value);
+            return;
+        }
+}
+#endif //def PL_PYTHON_VERSION 
+
 string Object::getOption(const string &optionname) const
 { 
     string s;
@@ -706,6 +720,12 @@ void Object::declareMethods(RemoteMethodMap& rmm)
 
     declareMethod(rmm, "build", &Object::build,
                   (BodyDoc("Build newly created object (after setting options).\n")));
+
+
+    declareMethod(rmm, "setOptionFromPython", &Object::setOptionFromPython,
+                  (BodyDoc("Change an option within the object from a PythonObjectWrapper"),
+                   ArgDoc("optionname", "The name of the option to change."),
+                   ArgDoc("value","the new value from python")));
 
     rmm.insert(
         "getOption", 1,

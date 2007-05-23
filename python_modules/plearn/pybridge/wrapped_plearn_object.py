@@ -6,7 +6,7 @@ class WrappedPLearnObject(object):
     
     def __setattr__(self, attr, val):
         if attr != '_optionnames' and attr in self._optionnames:
-            self.changeOptions({attr: str(val)})
+            self.setOptionFromPython(attr, val)
         else:
             object.__setattr__(self, attr, val)
 

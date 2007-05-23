@@ -132,10 +132,15 @@ unsigned long ConvertFromPyObject<unsigned long>::convert(PyObject* pyobj, bool 
 real ConvertFromPyObject<real>::convert(PyObject* pyobj, bool print_traceback)
 {
     PLASSERT( pyobj );
-    if (! PyFloat_Check(pyobj))
-        PLPythonConversionError("ConvertFromPyObject<real>", pyobj,
-                                print_traceback);
-    return (real)PyFloat_AS_DOUBLE(pyobj);
+    if(PyFloat_Check(pyobj))
+        return (real)PyFloat_AS_DOUBLE(pyobj);
+    if(PyLong_Check(pyobj))
+        return (real)PyLong_AsDouble(pyobj);
+    if(PyInt_Check(pyobj))
+        return (real)PyInt_AS_LONG(pyobj);
+    PLPythonConversionError("ConvertFromPyObject<real>", pyobj,
+                            print_traceback);
+    return 0;//shut up compiler
 }
 
 string ConvertFromPyObject<string>::convert(PyObject* pyobj, bool print_traceback)
@@ -240,6 +245,11 @@ VMat ConvertFromPyObject<VMat>::convert(PyObject* pyobj, bool print_traceback)
     return m;
 }
 
+PythonObjectWrapper ConvertFromPyObject<PythonObjectWrapper>::convert(PyObject* pyobj, bool print_traceback)
+{
+    PLASSERT(pyobj);
+    return PythonObjectWrapper(pyobj);
+}
 
 //#####  Constructors+Destructors  ############################################
 PythonObjectWrapper::PythonObjectWrapper(OwnershipMode o,
@@ -732,6 +742,11 @@ PyObject* PythonObjectWrapper::newPyObject(const PythonObjectWrapper& pow)
     return pow.m_object;
 }
 
+PStream& operator>>(PStream& in, PythonObjectWrapper& v)
+{
+    PLERROR("Attempting to read a PythonObjectWrapper from a stream : not supported");
+    return in;
+}
 
 } // end of namespace PLearn
 

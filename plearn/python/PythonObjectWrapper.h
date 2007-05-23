@@ -205,6 +205,13 @@ struct ConvertFromPyObject<VMat>
     static VMat convert(PyObject*, bool print_traceback);
 };
 
+template <>
+struct ConvertFromPyObject<PythonObjectWrapper>
+{
+    static PythonObjectWrapper convert(PyObject*, bool print_traceback);
+};
+
+
 template <typename T>
 struct ConvertFromPyObject<PP<T> >
 {
@@ -807,6 +814,8 @@ PyObject* PythonObjectWrapper::newPyObject(const std::map<T,U>* data)
         return newPyObject();
 }
 
+PStream& operator>>(PStream& in, PythonObjectWrapper& v);
+DECLARE_TYPE_TRAITS(PythonObjectWrapper);
 
 } // end of namespace PLearn
 

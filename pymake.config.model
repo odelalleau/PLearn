@@ -416,7 +416,7 @@ options_choices = [
     'purify', 'quantify', 'vc++' ],
   
   [ 'dbg', 'opt', 'pintel', 'gprof', 'optdbggprof', 'safegprof',
-    'safeopt', 'safeoptdbg', 'checkopt', 'genericvc++' ],
+    'safeopt', 'safeoptdbg', 'checkopt', 'genericvc++', 'pydbg' ],
   
   [ 'double', 'float' ],
   
@@ -546,7 +546,6 @@ pymakeOption( name = 'dbg',
               description = 'debug mode',
               compileroptions = '-Wall -g -O0',
               cpp_definitions = ['BOUNDCHECK'] )
-              #cpp_definitions = ['BOUNDCHECK','Py_DEBUG'] )
 
 pymakeOption( name = 'opt',
               description = 'optimized for intel compiler',
@@ -603,8 +602,12 @@ pymakeOption( name = 'genericvc++',
               # - does this bring copyright issues?
               linkeroptions = '-lgcc')
 
-#cpp_variables += ['BOUNDCHECK', 'NDEBUG', 'Py_DEBUG']
-cpp_variables += ['BOUNDCHECK', 'NDEBUG']
+pymakeOption( name = 'pydbg',
+              description = 'debug mode for linking w/ debug python library',
+              compileroptions = '-Wall -g -O0',
+              cpp_definitions = ['BOUNDCHECK','Py_DEBUG'] )
+
+cpp_variables += ['BOUNDCHECK', 'NDEBUG', 'Py_DEBUG']
 
 
 #####  Floating-Point Number Representation  ################################

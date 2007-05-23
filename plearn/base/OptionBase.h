@@ -231,8 +231,9 @@ public:
     //! Return the option as a python object
     virtual PythonObjectWrapper getAsPythonObject(Object* o) const = 0;
     virtual PythonObjectWrapper getAsPythonObject(const Object* o) const = 0;
+    virtual void setFromPythonObject(Object* o, 
+                                     const PythonObjectWrapper& v) const= 0;
 #endif //def PL_PYTHON_VERSION 
-
 
     //#####  Option Information  ##############################################
 

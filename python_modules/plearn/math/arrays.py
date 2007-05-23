@@ -207,8 +207,8 @@ def isNotNaN(f):
     """Return 0 where f contains NaN values, 1 elsewhere."""
     return ufunc.equal(isNaN(f), 0.0)
 
-def replace_nans(a, with=0.0):
-    return choose(isNotNaN(a), (with, a))
+def replace_nans(a, repl_with=0.0):
+    return choose(isNotNaN(a), (repl_with, a))
 
 def average(x, axis=0):
     arrx = array(x)

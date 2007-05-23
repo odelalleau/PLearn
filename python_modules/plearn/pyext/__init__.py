@@ -32,6 +32,8 @@
 
 from plearn.pyext.plext import *
 from plearn.pyplearn.plargs import *
+import cgitb
+cgitb.enable(format='PLearn')
 
 print versionString()
 

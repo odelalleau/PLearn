@@ -735,6 +735,10 @@ public:
      */
     void setOption(const string& optionname, const string& value);
 
+#ifdef PL_PYTHON_VERSION 
+    void setOptionFromPython(const string& optionname, const PythonObjectWrapper& value);
+#endif //def PL_PYTHON_VERSION 
+
     /**
      *  Return the string representation of an object's option (data field).
      *  This is a generic method to be able to retrieve the value of an
