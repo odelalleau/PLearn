@@ -95,7 +95,13 @@ void CombiningCostsModule::declareOptions(OptionList& ol)
 ////////////
 void CombiningCostsModule::build_()
 {
+    
     n_sub_costs = sub_costs.length();
+    if( n_sub_costs == 0 )
+    {   
+        PLWARNING("In CombiningCostsModule::build_ - sub_costs is empty (length 0)");
+        return;
+    }
 
     // Default value: sub_cost[0] has weight 1, the other ones have weight 0.
     if( cost_weights.length() == 0 )
