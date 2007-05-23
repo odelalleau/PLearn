@@ -48,16 +48,6 @@
 
 namespace PLearn {
 
-/**
- * The first sentence should be a BRIEF DESCRIPTION of what the class does.
- * Place the rest of the class programmer documentation here.  Doxygen supports
- * Javadoc-style comments.  See http://www.doxygen.org/manual.html
- *
- * @todo Write class to-do's here if there are any.
- *
- * @deprecated Write deprecated stuff here if there is any.  Indicate what else
- * should be used instead.
- */
 class ModuleLearner : public PLearner
 {
     typedef PLearner inherited;
@@ -68,6 +58,7 @@ public:
     PP<OnlineLearningModule> module;
 
     int batch_size;
+    TVec<string> cost_ports;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -89,26 +80,21 @@ public:
     //! The role of the train method is to bring the learner up to
     //! stage==nstages, updating the train_stats collector with training costs
     //! measured on-line in the process.
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void train();
 
     //! Computes the output from the input.
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void computeOutput(const Vec& input, Vec& output) const;
 
     //! Computes the costs from already computed output.
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
                                          const Vec& target, Vec& costs) const;
 
     //! Returns the names of the costs computed by computeCostsFromOutpus (and
     //! thus the test method).
-    // (PLEASE IMPLEMENT IN .cc)
     virtual TVec<std::string> getTestCostNames() const;
 
     //! Returns the names of the objective costs that the train method computes
-    //! and  for which it updates the VecStatsCollector train_stats.
-    // (PLEASE IMPLEMENT IN .cc)
+    //! and for which it updates the VecStatsCollector train_stats.
     virtual TVec<std::string> getTrainCostNames() const;
 
 
@@ -165,9 +151,9 @@ protected:
     //! fprop step.
     PP<MatrixModule> store_outputs;
 
-    //! Simple module that will contain the network's costs at the end of a
+    //! Simple modules that will contain the network's costs at the end of a
     //! fprop step.
-    PP<MatrixModule> store_costs;
+    TVec< PP<MatrixModule> > store_costs;
 
     //! The network consisting of the optimized module and the additional
     //! modules described above.

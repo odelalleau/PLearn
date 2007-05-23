@@ -49,12 +49,18 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(
     ModuleLearner,
     "A PLearner that contains a single OnlineLearningModule.\n",
-    "That module should have ports named 'input', 'target', 'weight', 'output' and 'cost'.\n"
+    "That module should have ports named 'input', 'target', 'weight' and\n"
+    "'output', and other ports that compute costs and are given in the\n"
+    "'cost_ports' option (the default behavior is to use a single 'cost'\n"
+    "port).\n"
     "For example one can use a NetworkModule, which has such ports.\n"
-    "The input and target from the training VMatrix are plugged on the 'input' and 'target'\n"
-    "ports, and the output (for ComputeOutput) and cost (for ComputeOutputAndCost and\n"
-    "for training) are obtained from the 'output' and 'cost' ports.\n"
-    "During training gradient is propagated from the cost and the bpropUpdate()\n"
+    "\n"
+    "The input and target from the training VMatrix are plugged on the\n"
+    "'input' and 'target' ports, and the output (for ComputeOutput) and\n"
+    "cost (for ComputeOutputAndCost and for training) are obtained from the\n"
+    "'output' port and the ports defined by the 'cost_ports' option.\n"
+    "\n"
+    "During training gradient is propagated from the costs and the bpropUpdate()\n"
     "method of the module is called (possibly one mini-batch of examples at a time)\n"
     "so as to update the internal parameters of the module. During ComputeOutput,\n"
     "it is not necessary to provide a target in order to obtain an output.\n"
@@ -65,6 +71,7 @@ PLEARN_IMPLEMENT_OBJECT(
 /////////////////////
 ModuleLearner::ModuleLearner():
     batch_size(1),
+    cost_ports(TVec<string>(1, "cost")),
     mbatch_size(-1)
 {
     random_gen = new PRandom();
@@ -85,6 +92,10 @@ void ModuleLearner::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
        "User-specified number of samples fed to the network at each iteration of learning.\n"
        "Use '0' for full batch learning.");
+
+    declareOption(ol, "cost_ports", &ModuleLearner::cost_ports,
+                  OptionBase::buildoption,
+       "List of ports that contain costs being optimized.");
 
     declareOption(ol, "mbatch_size", &ModuleLearner::mbatch_size,
                   OptionBase::learntoption,
@@ -158,23 +169,27 @@ void ModuleLearner::build_()
     } else
         store_outputs = NULL;
 
-    if (ports.find("cost") >= 0) {
-        store_costs = new MatrixModule("store_costs", true);
-        all_modules.append(get_pointer(store_costs));
-        // Note that this is the only connection that propagates the gradient.
+    store_costs.resize(0);
+    for (int i = 0; i < cost_ports.length(); i++) {
+        const string& cost_port = cost_ports[i];
+        PLCHECK( ports.find(cost_port) >= 0 );
+        PP<MatrixModule> store = new MatrixModule("store_costs_" + tostring(i),
+                                                  true);
+        all_modules.append(get_pointer(store));
+        // Note that these connections do propagate the gradient.
         all_connections.append(new NetworkConnection(
-                    module, "cost",
-                    get_pointer(store_costs), "data", true));
-    } else
-        store_costs = NULL;
+                    module, cost_port,
+                    get_pointer(store), "data", true));
+        store_costs.append(store);
+    }
 
     network = new NetworkModule();
     network->modules = all_modules;
     network->connections = all_connections;
     network->build();
 
-    // Initialize the list of null pointers to provided for forward and
-    // backward propagation.
+    // Initialize the list of null pointers used for forward and backward
+    // propagation.
     null_pointers.resize(module->nPorts());
     null_pointers.fill(NULL);
 }
@@ -195,6 +210,7 @@ void ModuleLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(module,             copies);
+    deepCopyField(cost_ports,         copies);
     deepCopyField(store_inputs,       copies);
     deepCopyField(store_targets,      copies);
     deepCopyField(store_weights,      copies);
@@ -293,8 +309,8 @@ void ModuleLearner::trainingStep(const Mat& inputs, const Mat& targets,
     // Initialize cost gradients to 1.
     // Note that we may not need to re-do it at every iteration, but this is so
     // cheap it should not impact performance.
-    if (store_costs)
-        store_costs->setGradientTo(1);
+    for (int i = 0; i < store_costs.length(); i++)
+        store_costs[i]->setGradientTo(1);
 
     // Backpropagation.
     network->bpropAccUpdate(null_pointers, null_pointers);
@@ -327,11 +343,12 @@ void ModuleLearner::computeOutputAndCosts(const Vec& input, const Vec& target,
     output << net_out;
 
     // Store costs.
-    PLASSERT( store_costs );
-    const Mat& net_cost = store_costs->getData();
-    PLASSERT( net_cost.length() == 1 );
-    costs.resize(net_cost.width());
-    costs << net_cost;
+    costs.resize(0);
+    for (int i = 0; i < store_costs.length(); i++) {
+        const Mat& cost_i = store_costs[i]->getData();
+        PLASSERT( cost_i.length() == 1 );
+        costs.append(cost_i(0));
+    }
 }
 
 ///////////////////////////
@@ -358,19 +375,29 @@ void ModuleLearner::computeOutputsAndCosts(const Mat& input, const Mat& target,
     Mat old_net_out = net_out;
     output.resize(input.length(),outputsize());
     net_out = output;
-    PLASSERT( store_costs );
-    // make the store_costs temporarily point to costs
-    Mat& net_cost = store_costs->getData();
-    Mat old_net_cost = net_cost;
-    costs.resize(input.length(),module->getPortWidth("cost"));
-    net_cost = costs;
-    
+
     // Forward propagation.
     network->fprop(null_pointers);
 
-    // restore output_store.
+    // Restore output_store.
     net_out = old_net_out;
-    net_cost = old_net_cost;
+
+    // Copy costs.
+    // Note that a more efficient implementation may be done when only one cost
+    // is computed (see code in previous version).
+    // First compute total size.
+    int cost_size = 0;
+    for (int i = 0; i < store_costs.length(); i++)
+        cost_size += store_costs[i]->getData().width();
+    // Then resize the 'costs' matrix and fill it.
+    costs.resize(input.length(), cost_size);
+    int cost_idx = 0;
+    for (int i = 0; i < store_costs.length(); i++) {
+        const Mat& cost_i = store_costs[i]->getData();
+        PLASSERT( cost_i.length() == costs.length() );
+        costs.subMatColumns(cost_idx, cost_i.width()) << cost_i;
+        cost_idx += cost_i.width();
+    }
 }
 
 ///////////////////
@@ -408,10 +435,10 @@ void ModuleLearner::computeCostsFromOutputs(const Vec& input, const Vec& output,
 //////////////////////
 TVec<string> ModuleLearner::getTestCostNames() const
 {
-    if (!store_costs)
-        return TVec<string>();
-    else
-        return module->getPortDescription("cost");
+    TVec<string> cost_names;
+    for (int i = 0; i < cost_ports.length(); i++)
+        cost_names.append(module->getPortDescription(cost_ports[i]));
+    return cost_names;
 }
 
 ///////////////////////
@@ -419,10 +446,9 @@ TVec<string> ModuleLearner::getTestCostNames() const
 ///////////////////////
 TVec<string> ModuleLearner::getTrainCostNames() const
 {
-    // No training cost computed.
+    // No training cost is currently computed.
     return TVec<string>();
 }
-
 
 } // end of namespace PLearn
 
