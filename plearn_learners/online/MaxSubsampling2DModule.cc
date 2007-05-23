@@ -2,7 +2,7 @@
 
 // MaxSubsampling2DModule.cc
 //
-// Copyright (C) 2006 Pascal Lamblin
+// Copyright (C) 2007 Pascal Lamblin
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -41,18 +41,16 @@
 #include <plearn/io/pl_log.h>
 
 #include "MaxSubsampling2DModule.h"
-#include <plearn/math/convolutions.h>
-#include <plearn/math/TMat_maths.h>
 
 namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     MaxSubsampling2DModule,
-    "Apply convolution filters on (possibly multiple) 2D inputs (images)",
+    "Reduce the size of the 2D images by taking the max value of nearby pixels",
     "");
 
-MaxSubsampling2DModule::MaxSubsampling2DModule() :
+MaxSubsampling2DModule::MaxSubsampling2DModule():
     n_input_images(1),
     input_images_length(-1),
     input_images_width(-1),
@@ -67,10 +65,6 @@ MaxSubsampling2DModule::MaxSubsampling2DModule() :
 
 void MaxSubsampling2DModule::declareOptions(OptionList& ol)
 {
-    // declareOption(ol, "myoption", &MaxSubsampling2DModule::myoption,
-    //               OptionBase::buildoption,
-    //               "Help text describing this option");
-
     declareOption(ol, "n_input_images",
                   &MaxSubsampling2DModule::n_input_images,
                   OptionBase::buildoption,
@@ -89,13 +83,11 @@ void MaxSubsampling2DModule::declareOptions(OptionList& ol)
 
     declareOption(ol, "kernel_length", &MaxSubsampling2DModule::kernel_length,
                   OptionBase::buildoption,
-                  "Length of the areas to maximize over"
-                  );
+                  "Length of the areas to maximize over");
 
     declareOption(ol, "kernel_width", &MaxSubsampling2DModule::kernel_width,
                   OptionBase::buildoption,
-                  "Width of the areas to maximize over"
-                  );
+                  "Width of the areas to maximize over");
 
     declareOption(ol, "output_images_length",
                   &MaxSubsampling2DModule::output_images_length,
@@ -107,78 +99,64 @@ void MaxSubsampling2DModule::declareOptions(OptionList& ol)
                   OptionBase::learntoption,
                   "Width of the output images");
 
+    // declareOption(ol, "", &MaxSubsampling2DModule::,
+    //               OptionBase::buildoption,
+    //               "");
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 
-    // Redeclare some of the parent's options as learntoptions
-    redeclareOption(ol, "input_size", &MaxSubsampling2DModule::input_size,
-                    OptionBase::learntoption,
-                    "Size of the input, computed from n_input_images,\n"
-                    "input_images_length and input_images_width.\n");
 
-    redeclareOption(ol, "output_size", &MaxSubsampling2DModule::output_size,
-                    OptionBase::learntoption,
-                    "Size of the output, computed from n_input_images,\n"
-                    "output_images_length and output_images_width.\n");
+    redeclareOption(ol, "input_size", &MaxSubsampling2DModule::input_size,
+                  OptionBase::learntoption,
+                  "Size of the input, computed from n_input_images,\n"
+                  "input_images_length and input_images_width.\n");
+
+    declareOption(ol, "output_size", &MaxSubsampling2DModule::output_size,
+                  OptionBase::learntoption,
+                  "Size of the output, computed from n_input_images,\n"
+                  "output_images_length and output_images_width.\n");
+
 }
 
 void MaxSubsampling2DModule::build_()
 {
     MODULE_LOG << "build_() called" << endl;
 
-    // Verify the parameters
-    if( n_input_images < 1 )
-        PLERROR("MaxSubsampling2DModule::build_: 'n_input_images' < 1 (%i).\n",
-                n_input_images);
-
-    if( input_images_length < 0 )
-        PLERROR("MaxSubsampling2DModule::build_: 'input_images_length'<0 (%i).\n",
-                input_images_length);
-
-    if( input_images_width < 0 )
-        PLERROR("MaxSubsampling2DModule::build_: 'input_images_width'<0 (%i).\n",
-                input_images_width);
-
-    if( kernel_length < 0 )
-        PLERROR("MaxSubsampling2DModule::build_: 'kernel_length'<0 (%i).\n",
-                kernel_length);
-
-    if( kernel_width < 0 )
-        PLERROR("MaxSubsampling2DModule::build_: 'kernel_width'<0 (%i).\n",
-                kernel_width);
-
-    if( input_images_length % kernel_length != 0 )
-        PLERROR("MaxSubsampling2DModule::build_: input_images_length (%i)\n"
-                "should be a multiple of kernel_length (%i).\n",
-                input_images_length, kernel_length);
-
-    if( input_images_width % kernel_width != 0 )
-        PLERROR("MaxSubsampling2DModule::build_: input_images_width (%i)\n"
-                "should be a multiple of kernel_width (%i).\n",
-                input_images_width, kernel_width);
-
     // Build the learntoptions from the buildoptions
     input_images_size = input_images_length * input_images_width;
     input_size = n_input_images * input_images_size;
+
+    PLCHECK( n_input_images > 0 );
+    PLCHECK( input_images_length > 0 );
+    PLCHECK( input_images_width > 0 );
+    PLCHECK( kernel_length > 0 );
+    PLCHECK( kernel_width > 0 );
+    PLCHECK_MSG( input_images_length % kernel_length == 0,
+                 "input_images_length should be a multiple of kernel_length" );
+    PLCHECK_MSG( input_images_width % kernel_width == 0,
+                 "input_images_width should be a multiple of kernel_width" );
 
     output_images_length = input_images_length / kernel_length;
     output_images_width = input_images_width / kernel_width;
     output_images_size = output_images_length * output_images_width;
     output_size = n_input_images * output_images_size;
 
-    input_images.resize(n_input_images);
-    output_images.resize(n_input_images);
-    input_gradients.resize(n_input_images);
-    output_gradients.resize(n_input_images);
+    // build ports
+    ports.resize(3);
+    ports[0] = "input";
+    ports[1] = "output";
+    ports[2] = "argmax.state";
 
-    all_max_indices.resize(output_size);
-    max_indices.resize(n_input_images);
-    for( int i = 0; i < n_input_images; i++ )
-        max_indices[i] =
-            all_max_indices.subVec(i*output_images_size, output_images_size)
-                .toMat(output_images_length, output_images_width);
+    // build port_sizes
+    port_sizes.resize(nPorts(), 2);
+    port_sizes.column(0).fill(-1);
+    port_sizes(0, 1) = input_size;
+    port_sizes(1, 1) = output_size;
+    port_sizes(2, 1) = output_size;
 }
 
+// ### Nothing to add here, simply calls build_
 void MaxSubsampling2DModule::build()
 {
     inherited::build();
@@ -190,183 +168,265 @@ void MaxSubsampling2DModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(input_images, copies);
-    deepCopyField(output_images, copies);
-    deepCopyField(input_gradients, copies);
-    deepCopyField(output_gradients, copies);
-    deepCopyField(all_max_indices, copies);
-    deepCopyField(max_indices, copies);
+    deepCopyField(ports, copies);
 }
 
-//! given the input, compute the output (possibly resize it  appropriately)
-void MaxSubsampling2DModule::fprop(const Vec& input, Vec& output) const
+///////////
+// fprop //
+///////////
+void MaxSubsampling2DModule::fprop(const TVec<Mat*>& ports_value)
 {
-    // Check size
-    if( input.size() != input_size )
-        PLERROR("MaxSubsampling2DModule::fprop: input.size() should be equal to\n"
-                "input_size (%i != %i).\n", input.size(), input_size);
-    output.resize(output_size);
+    PLASSERT( ports_value.length() == nPorts() );
+    // check which ports are input
+    // (ports_value[i] && !ports_value[i]->isEmpty())
+    // which ports are output (ports_value[i] && ports_value[i]->isEmpty())
+    // and which ports are ignored (!ports_value[i]).
+    // If that combination of (input,output,ignored) is feasible by this class
+    // then perform the corresponding computation. Otherwise launch the error
+    // below. See the comment in the header file for more information.
 
-    // Make input_images and output_images point to the right places
-    for( int l=0 ; l<n_input_images ; l++ )
+    Mat* input = ports_value[0];
+    Mat* output = ports_value[1];
+    Mat* argmax = ports_value[2];
+
+    if( input && !input->isEmpty()
+        && output && output->isEmpty()
+        && argmax && argmax->isEmpty() )
     {
-        input_images[l] =
-            input.subVec(l*input_images_size, input_images_size)
-                .toMat( input_images_length, input_images_width );
+        PLASSERT( input->width() == port_sizes(0,1) );
+        PLASSERT( output->width() == port_sizes(1,1) );
+        PLASSERT( argmax->width() == port_sizes(2,1) );
 
-        output_images[l] =
-            output.subVec(l*output_images_size, output_images_size)
-                .toMat( output_images_length, output_images_width );
-    }
+        int batch_size = input->length();
+        output->resize(batch_size, port_sizes(1,1));
+        argmax->resize(batch_size, port_sizes(2,1));
 
-    // Compute the values of the output_images
-    for( int l=0 ; l<n_input_images ; l++ )
-        for( int i=0; i<output_images_length; i++ )
-            for( int j=0; j<output_images_width; j++ )
+        for( int k=0; k<batch_size; k++ )
+            for( int l=0; l<n_input_images; l++ )
             {
-                int min_i, min_j;
-                output_images[l](i,j) = max(
-                    input_images[l].subMat(i*kernel_length, j*kernel_width,
-                                           kernel_length, kernel_width),
-                    min_i, min_j );
-                max_indices[l](i,j) = min_i*input_images_width + min_j;
+                Mat input_image_kl = (*input)(k)
+                    .subVec(l*input_images_size, input_images_size)
+                    .toMat(input_images_length, input_images_width);
+                Mat output_image_kl = (*output)(k)
+                    .subVec(l*output_images_size, output_images_size)
+                    .toMat(output_images_length, output_images_width);
+                Mat argmax_kl = (*argmax)(k)
+                    .subVec(l*output_images_size, output_images_size)
+                    .toMat(output_images_length, output_images_width);
+
+                for( int i=0; i<output_images_length; i++ )
+                    for( int j=0; j<output_images_width; j++ )
+                    {
+                        int argmax_i, argmax_j;
+                        output_image_kl(i,j) = max(
+                            input_image_kl.subMat(i*kernel_length,
+                                                   j*kernel_width,
+                                                   kernel_length,
+                                                   kernel_width),
+                            argmax_i, argmax_j );
+                        argmax_kl(i,j) = argmax_i*input_images_width+argmax_j;
+                    }
             }
-}
-
-/* THIS METHOD IS OPTIONAL
-//! Adapt based on the output gradient: this method should only
-//! be called just after a corresponding fprop; it should be
-//! called with the same arguments as fprop for the first two arguments
-//! (and output should not have been modified since then).
-//! Since sub-classes are supposed to learn ONLINE, the object
-//! is 'ready-to-be-used' just after any bpropUpdate.
-//! N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS, WHICH
-//! JUST CALLS
-//!     bpropUpdate(input, output, input_gradient, output_gradient)
-//! AND IGNORES INPUT GRADIENT.
-void MaxSubsampling2DModule::bpropUpdate(const Vec& input, const Vec& output,
-                               const Vec& output_gradient)
-{
-}
-*/
-
-//! this version allows to obtain the input gradient as well
-void MaxSubsampling2DModule::bpropUpdate(const Vec& input, const Vec& output,
-                                         Vec& input_gradient,
-                                         const Vec& output_gradient,
-                                         bool accumulate)
-{
-    // Check size
-    if( input.size() != input_size )
-        PLERROR("MaxSubsampling2DModule::bpropUpdate: input.size() should be\n"
-                "equal to input_size (%i != %i).\n", input.size(), input_size);
-    if( output.size() != output_size )
-        PLERROR("MaxSubsampling2DModule::bpropUpdate: output.size() should be\n"
-                "equal to output_size (%i != %i).\n",
-                output.size(), output_size);
-    if( output_gradient.size() != output_size )
-        PLERROR("MaxSubsampling2DModule::bpropUpdate: output_gradient.size()"
-                " should be\n"
-                "equal to output_size (%i != %i).\n",
-                output_gradient.size(), output_size);
-
-    if( accumulate )
-    {
-        PLASSERT_MSG( input_gradient.size() == input_size,
-                      "Cannot resize input_gradient AND accumulate into it" );
     }
     else
-    {
-        input_gradient.resize(input_size);
-        input_gradient.clear();
-    }
-
-    // Since fprop() has just been called, we assume that input_images,
-    // output_images and gradient are up-to-date
-    // Make input_gradients and output_gradients point to the right places
-    for( int l=0 ; l<n_input_images ; l++ )
-    {
-        input_gradients[l] =
-            input_gradient.subVec(l*input_images_size, input_images_size)
-                .toMat( input_images_length, input_images_width );
-
-        output_gradients[l] =
-            output_gradient.subVec(l*output_images_size, output_images_size)
-                .toMat( output_images_length, output_images_width );
-    }
-
-    // Do the actual bprop and update
-    for( int l=0 ; l<n_input_images ; l++ )
-        for( int i=0; i<output_images_length; i++ )
-            for( int j=0; j<output_images_width; j++ )
-            {
-                Mat input_grad_zone =
-                    input_gradients[l].subMat(i*kernel_length, j*kernel_width,
-                                              kernel_length, kernel_width);
-                input_grad_zone.data()[ max_indices[l](i,j) ] =
-                    output_gradients[l](i,j);
-            }
+        PLCHECK_MSG( false, "Unknown port configuration" );
 }
 
-//! reset the parameters to the state they would be BEFORE starting training.
-//! Note that this method is necessarily called from build().
+/////////////////
+// bpropUpdate //
+/////////////////
+
+
+void MaxSubsampling2DModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                            const TVec<Mat*>& ports_gradient)
+{
+    PLASSERT( ports_value.length() == nPorts()
+              && ports_gradient.length() == nPorts());
+    // check which ports are input
+    // (ports_value[i] && !ports_value[i]->isEmpty())
+    // which ports are output (ports_value[i] && ports_value[i]->isEmpty())
+    // and which ports are ignored (!ports_value[i]).
+    // A similar logic applies to ports_gradients (to know whether gradient
+    // is coming into the module of coming from the module through a given
+    // ports_gradient[i]).
+    // An input port_value should correspond to an outgoing port_gradient,
+    // an output port_value could either correspond to an incoming
+    // port_gradient (when that gradient is to be propagated inside and to the
+    // input ports) or it should be null (no gradient is propagated from that
+    // output port).
+
+    Mat* input = ports_value[0];
+    Mat* output = ports_value[1];
+    Mat* argmax = ports_value[2];
+    Mat* input_grad = ports_gradient[0];
+    Mat* output_grad = ports_gradient[1];
+    Mat* argmax_grad = ports_gradient[2];
+
+    // If we want input_grad and we have output_grad
+    if( input_grad && input_grad->isEmpty()
+        && output_grad && !output_grad->isEmpty() )
+    {
+        PLASSERT( !argmax_grad );
+
+        PLASSERT( input->width() == port_sizes(0,1) );
+        PLASSERT( output->width() == port_sizes(1,1) );
+        PLASSERT( argmax->width() == port_sizes(2,1) );
+        PLASSERT( input_grad->width() == port_sizes(0,1) );
+        PLASSERT( output_grad->width() == port_sizes(1,1) );
+
+        int batch_size = input->length();
+        PLASSERT( output->length() == batch_size );
+        PLASSERT( argmax->length() == batch_size );
+        PLASSERT( output_grad->length() == batch_size );
+
+        input_grad->resize(batch_size, port_sizes(0,1));
+
+        for( int k=0; k<batch_size; k++ )
+            for( int l=0; l<n_input_images; l++ )
+            {
+                Mat input_grad_image_kl = (*input_grad)(k)
+                    .subVec(l*input_images_size, input_images_size)
+                    .toMat(input_images_length, input_images_width);
+                Mat output_grad_image_kl = (*output_grad)(k)
+                    .subVec(l*output_images_size, output_images_size)
+                    .toMat(output_images_length, output_images_width);
+                Mat argmax_kl = (*argmax)(k)
+                    .subVec(l*output_images_size, output_images_size)
+                    .toMat(output_images_length, output_images_width);
+
+                for( int i=0; i<output_images_length; i++ )
+                    for( int j=0; j<output_images_width; j++ )
+                    {
+                        Mat input_grad_zone = input_grad_image_kl
+                            .subMat(i*kernel_length, j*kernel_width,
+                                    kernel_length, kernel_width);
+
+                        int argmax = (int) round(argmax_kl(i,j));
+                        input_grad_zone.data()[argmax] =
+                            output_grad_image_kl(i,j);
+                    }
+            }
+    }
+    else
+        PLERROR("In MaxSubsampling2DModule::bpropAccUpdate - this configuration of ports not implemented for class "
+            "'%s'", classname().c_str());
+}
+
+
+////////////
+// forget //
+////////////
 void MaxSubsampling2DModule::forget()
 {
-    all_max_indices.clear();
 }
 
+//////////////
+// finalize //
+//////////////
 /* THIS METHOD IS OPTIONAL
-//! reset the parameters to the state they would be BEFORE starting training.
-//! Note that this method is necessarily called from build().
-//! THE DEFAULT IMPLEMENTATION PROVIDED IN THE SUPER-CLASS DOES NOT DO
-//! ANYTHING.
 void MaxSubsampling2DModule::finalize()
 {
 }
 */
 
+//////////////////////
+// bpropDoesNothing //
+//////////////////////
 /* THIS METHOD IS OPTIONAL
-//! in case bpropUpdate does not do anything, make it known
-//! THE DEFAULT IMPLEMENTATION PROVIDED IN THE SUPER-CLASS RETURNS false;
+// the default implementation returns false
 bool MaxSubsampling2DModule::bpropDoesNothing()
 {
 }
 */
 
-/* THIS METHOD IS OPTIONAL
-//! Similar to bpropUpdate, but adapt based also on the estimation
-//! of the diagonal of the Hessian matrix, and propagates this
-//! back. If these methods are defined, you can use them INSTEAD of
-//! bpropUpdate(...)
-//! N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS, WHICH
-//! JUST CALLS
-//!     bbpropUpdate(input, output, input_gradient, output_gradient,
-//!                  in_hess, out_hess)
-//! AND IGNORES INPUT HESSIAN AND INPUT GRADIENT.
-void MaxSubsampling2DModule::bbpropUpdate(const Vec& input, const Vec& output,
-                                const Vec& output_gradient,
-                                const Vec& output_diag_hessian)
+/////////////////////
+// setLearningRate //
+/////////////////////
+void MaxSubsampling2DModule::setLearningRate(real dynamic_learning_rate)
+{
+    // Do nothing.
+}
+
+////////////////////////
+// getPortDescription //
+////////////////////////
+/* OPTIONAL
+// The default implementation is probably appropriate
+TVec<string> MaxSubsampling2DModule::getPortDescription(const string& port)
 {
 }
 */
 
-/* NOT IMPLEMENTED
-//! Similar to bpropUpdate, but adapt based also on the estimation
-//! of the diagonal of the Hessian matrix, and propagates this
-//! back. If these methods are defined, you can use them INSTEAD of
-//! bpropUpdate(...)
-void MaxSubsampling2DModule::bbpropUpdate(const Vec& input, const Vec& output,
-                                       Vec& input_gradient,
-                                       const Vec& output_gradient,
-                                       Vec& input_diag_hessian,
-                                       const Vec& output_diag_hessian,
-                                       bool accumulate)
+//////////////////
+// getPortIndex //
+//////////////////
+/* OPTIONAL
+// The default implementation is probably appropriate
+int MaxSubsampling2DModule::getPortIndex(const string& port)
 {
 }
 */
 
+/////////////////
+// getPortName //
+/////////////////
+/* OPTIONAL
+// The default implementation is probably appropriate
+string MaxSubsampling2DModule::getPortName(int i)
+{
+}
+*/
 
-} // end of namespace PLearn
+//////////////
+// getPorts //
+//////////////
+const TVec<string>& MaxSubsampling2DModule::getPorts()
+{
+    return ports;
+}
+
+//////////////////
+// getPortSizes //
+//////////////////
+const TMat<int>& MaxSubsampling2DModule::getPortSizes()
+{
+    return port_sizes;
+}
+
+///////////////////
+// getPortLength //
+///////////////////
+/* OPTIONAL
+// The default implementation is probably appropriate
+int MaxSubsampling2DModule::getPortLength(const string& port)
+{
+    PLASSERT( getPortIndex(port) >= 0 );
+    return getPortSizes()(getPortIndex(port), 0);
+}
+*/
+
+//////////////////
+// getPortWidth //
+//////////////////
+/* OPTIONAL
+// The default implementation is probably appropriate
+int MaxSubsampling2DModule::getPortWidth(const string& port)
+{
+}
+*/
+
+////////////
+// nPorts //
+////////////
+/* OPTIONAL
+// The default implementation is probably appropriate
+int MaxSubsampling2DModule::nPorts()
+{
+}
+*/
+
+}
+// end of namespace PLearn
 
 
 /*

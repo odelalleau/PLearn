@@ -2,7 +2,7 @@
 
 // MaxSubsampling2DModule.h
 //
-// Copyright (C) 2006 Pascal Lamblin
+// Copyright (C) 2007 Pascal Lamblin
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -87,6 +87,7 @@ public:
     int output_images_size;
 
 
+
 public:
     //#####  Public Member Functions  #########################################
 
@@ -97,67 +98,97 @@ public:
 
     // Your other public member functions go here
 
-    //! given the input, compute the output (possibly resize it  appropriately)
-    virtual void fprop(const Vec& input, Vec& output) const;
+    //! Perform a fprop step.
+    //! Each Mat* pointer in the 'ports_value' vector can be one of:
+    //! - a full matrix: this is data that is provided to the module, and can
+    //!                  be used to compute other ports' values
+    //! - an empty matrix: this is what we want to compute
+    //! - a NULL pointer: this is data that is not available, but whose value
+    //!                   does not need to be returned (or even computed)
+    //! The default version will either:
+    //! - call the mini-batch versions of standard fprop if 'ports_value' has
+    //!   size 2, with the first value being provided (and the second being
+    //!   the desired output)
+    //! - crash otherwise
+    void fprop(const TVec<Mat*>& ports_value);
 
-    //! Adapt based on the output gradient: this method should only
-    //! be called just after a corresponding fprop; it should be
-    //! called with the same arguments as fprop for the first two arguments
-    //! (and output should not have been modified since then).
-    //! Since sub-classes are supposed to learn ONLINE, the object
-    //! is 'ready-to-be-used' just after any bpropUpdate.
-    //! N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS, WHICH
-    //! JUST CALLS
-    //!     bpropUpdate(input, output, input_gradient, output_gradient)
-    //! AND IGNORES INPUT GRADIENT.
-    // virtual void bpropUpdate(const Vec& input, const Vec& output,
-    //                          const Vec& output_gradient);
+    //! Perform a back propagation step (also updating parameters according to
+    //! the provided gradient).
+    //! The matrices in 'ports_value' must be the same as the ones given in a
+    //! previous call to 'fprop' (and thus they should in particular contain
+    //! the result of the fprop computation). However, they are not necessarily
+    //! the same as the ones given in the LAST call to 'fprop': if there is a
+    //! need to store an internal module state, this should be done using a
+    //! specific port to store this state.
+    //! Each Mat* pointer in the 'ports_gradient' vector can be one of:
+    //! - a full matrix  : this is the gradient that is provided to the module,
+    //!                    and can be used to compute other ports' gradient.
+    //! - an empty matrix: this is a gradient we want to compute and accumulate
+    //!                    into. This matrix must have length 0 and a width
+    //!                    equal to the width of the corresponding matrix in
+    //!                    the 'ports_value' vector (we can thus accumulate
+    //!                    gradients using PLearn's ability to keep intact
+    //!                    stored values when resizing a matrix' length).
+    //! - a NULL pointer : this is a gradient that is not available, but does
+    //!                    not need to be returned (or even computed).
+    //! The default version tries to use the standard mini-batch bpropUpdate
+    //! method, when possible.
+    virtual void bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                const TVec<Mat*>& ports_gradient);
 
-    //! this version allows to obtain the input gradient as well
-    //! N.B. THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
-    virtual void bpropUpdate(const Vec& input, const Vec& output,
-                             Vec& input_gradient,
-                             const Vec& output_gradient,
-                             bool accumulate=false);
 
-    //! Similar to bpropUpdate, but adapt based also on the estimation
-    //! of the diagonal of the Hessian matrix, and propagates this
-    //! back. If these methods are defined, you can use them INSTEAD of
-    //! bpropUpdate(...)
-    //! N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS,
-    //! WHICH JUST CALLS
-    //!     bbpropUpdate(input, output, input_gradient, output_gradient,
-    //!                  out_hess, in_hess)
-    //! AND IGNORES INPUT HESSIAN AND INPUT GRADIENT.
-    // virtual void bbpropUpdate(const Vec& input, const Vec& output,
-    //                           const Vec& output_gradient,
-    //                           const Vec& output_diag_hessian);
-
-    /*
-    //! this version allows to obtain the input gradient and diag_hessian
-    virtual void bbpropUpdate(const Vec& input, const Vec& output,
-                              Vec& input_gradient,
-                              const Vec& output_gradient,
-                              Vec& input_diag_hessian,
-                              const Vec& output_diag_hessian,
-                              bool accumulate=false);
-    */
-
-    //! reset the parameters to the state they would be BEFORE starting
+    //! Reset the parameters to the state they would be BEFORE starting
     //! training.  Note that this method is necessarily called from
     //! build().
     virtual void forget();
 
+    //! If this class has a learning rate (or something close to it), set it.
+    //! If not, you can redefine this method to get rid of the warning.
+    virtual void setLearningRate(real dynamic_learning_rate);
 
-    //! optionally perform some processing after training, or after a
-    //! series of fprop/bpropUpdate calls to prepare the model for truly
-    //! out-of-sample operation.  THE DEFAULT IMPLEMENTATION PROVIDED IN
-    //! THE SUPER-CLASS DOES NOT DO ANYTHING.
-    // virtual void finalize();
+    //! Return the list of ports in the module.
+    //! The default implementation returns a pair ("input", "output") to handle
+    //! the most common case.
+    virtual const TVec<string>& getPorts();
 
-    //! in case bpropUpdate does not do anything, make it known
-    //! THE DEFAULT IMPLEMENTATION PROVIDED IN THE SUPER-CLASS RETURNS false;
-    // virtual bool bpropDoesNothing();
+    //! Return the size of all ports, in the form of a two-column matrix, where
+    //! each row represents a port, and the two numbers on a row are
+    //! respectively its length and its width (with -1 representing an
+    //! undefined or variable value).
+    //! The default value fills this matrix with:
+    //!     - in the first column (lengths): -1
+    //!     - in the second column (widths):
+    //!         - -1 if nPorts() != 2
+    //!         - 'input_size' for the first row and 'output_size' for the
+    //!           second row if nPorts() == 2 (also assuming the port names
+    //!           are respectively 'input' and 'output')
+    virtual const TMat<int>& getPortSizes();
+
+    /* Optional
+    //! Return the width of a specific port.
+    int getPortWidth(const string& port);
+
+    //! Return the length of a specific port.
+    int getPortLength(const string& port);
+
+    //! Return the number of ports in the module.
+    int nPorts();
+
+    //! Return the index (as in the list of ports returned by getPorts()) of
+    //! a given port.
+    //! If 'port' does not exist, -1 is returned.
+    int getPortIndex(const string& port);
+
+    //! Return name of the i-th port.
+    string getPortName(int i);
+
+    //! Return a list of strings, that represents the description of the values
+    //! taken by a given port: the i-th string is the name for the i-th column
+    //! value computed in 'port'.
+    //! The default version returns [ "port_name_1", ..., "port_name_n" ] where
+    //! 'port_name' is the name of the port, and 'n' its size.
+    virtual TVec<string> getPortDescription(const string& port);
+    */
 
     //#####  PLearn::Object Protocol  #########################################
 
@@ -188,19 +219,10 @@ private:
 private:
     //#####  Private Data Members  ############################################
 
-    // The Mat they contain will point to sub-parts of input and output vectors
-    // and gradients, for more convenience
-    TVec<Mat> input_images;
-    TVec<Mat> output_images;
-    TVec<Mat> input_gradients;
-    TVec<Mat> output_gradients;
-    TVec<Mat> input_diag_hessians;
-    TVec<Mat> output_diag_hessians;
+    // The rest of the private stuff goes here
 
-    // Stores the index of the max within the pooling zone (i*mod + j)
-    TVec<int> all_max_indices;
-    TVec< TMat<int> > max_indices;
-
+    //! The name of the ports
+    TVec<string> ports;
 };
 
 // Declares a few other classes and functions related to this class

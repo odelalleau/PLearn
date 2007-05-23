@@ -1,0 +1,32 @@
+from plearn.pyplearn import *
+
+test_parameters = [
+    #(batch_size, n_input_images, ii_length, ii_width, k_length, k_width)
+    (1, 1, 1, 1, 1, 1),
+    (1, 1, 2, 2, 2, 2),
+    (1, 1, 4, 4, 2, 2),
+    (1, 1, 6, 4, 2, 2),
+    (2, 2, 6, 4, 3, 2),
+    (3, 2, 9, 8, 3, 2)
+    ]
+
+tests = [
+    pl.MaxSubsamplingTest(
+            batch_size = batch_size,
+            n_input_images = n_input_images,
+            input_images_width = input_images_width,
+            input_images_length = input_images_length,
+            kernel_length = kernel_length,
+            kernel_width = kernel_width,
+            save_path = 'test_' + str(i) + '.psave'
+            )
+    for (batch_size, n_input_images, input_images_width, input_images_length, \
+            kernel_width, kernel_length), i
+    in zip(test_parameters, range(len(test_parameters)))
+    ]
+
+def main():
+    return pl.RunObject(
+            objects = tests,
+            run_objects = True
+            )
