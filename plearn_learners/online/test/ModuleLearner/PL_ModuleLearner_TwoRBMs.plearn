@@ -88,6 +88,15 @@ PTester(
                             ]
                         )
 
+                        ArgmaxModule(
+                            name = "argmax_class"
+                        )
+
+                        SquaredErrorCostModule(
+                            name = "mse"
+                            input_size = 1 # The predicted class index.
+                        )
+
                     ]
 
                     connections = [
@@ -111,15 +120,31 @@ PTester(
                             destination = "costs.prediction"
                         )
 
+                        NetworkConnection( 
+                            source = "affine_net.output"
+                            destination = "argmax_class.input"
+                            propagate_gradient = 0
+                        )
+
+                        NetworkConnection( 
+                            source = "argmax_class.output"
+                            destination = "mse.prediction"
+                            propagate_gradient = 0
+                        )
                     ]
 
                     ports = [
                         "input"     "rbm_1.visible"
-                        "target"    "costs.target"
+                        "target_1"  "costs.target"
+                        "target_2"  "mse.target"
                         "output"    "affine_net.output"
-                        "cost"      "costs.cost"
+                        "cost_1"    "costs.cost"
+                        "cost_2"    "mse.cost"
                     ]
                 )
+
+                cost_ports = [ "cost_1" "cost_2" ]
+                target_ports = [ "target_1" "target_2" ]
 
                 batch_size = ${batch_size}
                 nstages = ${nstages}
@@ -145,6 +170,7 @@ PTester(
     statnames = [
         "E[test1.E[NLL]]"
         "E[test1.E[class_error]]"
+        "E[test1.E[mse]]"
     ]
 
 )

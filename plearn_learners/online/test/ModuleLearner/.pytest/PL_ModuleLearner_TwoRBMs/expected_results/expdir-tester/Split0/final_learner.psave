@@ -1,6 +1,6 @@
 *1 ->ModuleLearner(
 module = *2 ->NetworkModule(
-modules = 5 [ *3 ->RBMModule(
+modules = 7 [ *3 ->RBMModule(
 visible_layer = *4 ->RBMBinomialLayer(
 size = 5 ;
 learning_rate = 0.00100000000000000002 ;
@@ -302,25 +302,48 @@ name = "costs" ;
 estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;
 random_gen = *5   )
+*17 ->ArgmaxModule(
+input_size = -1 ;
+output_size = 1 ;
+name = "argmax_class" ;
+estimate_simpler_diag_hessian = 0 ;
+expdir = "" ;
+random_gen = *5   )
+*18 ->SquaredErrorCostModule(
+target_size = 1 ;
+input_size = 1 ;
+output_size = 1 ;
+name = "mse" ;
+estimate_simpler_diag_hessian = 0 ;
+expdir = "" ;
+random_gen = *5   )
 ] ;
-connections = 4 [ *17 ->NetworkConnection(
+connections = 6 [ *19 ->NetworkConnection(
 source = "rbm_1.hidden" ;
 destination = "rbm_2.visible" ;
 propagate_gradient = 1  )
-*18 ->NetworkConnection(
+*20 ->NetworkConnection(
 source = "rbm_2.hidden" ;
 destination = "affine_net.input" ;
 propagate_gradient = 1  )
-*19 ->NetworkConnection(
+*21 ->NetworkConnection(
 source = "affine_net.output" ;
 destination = "softmax.input" ;
 propagate_gradient = 1  )
-*20 ->NetworkConnection(
+*22 ->NetworkConnection(
 source = "softmax.output" ;
 destination = "costs.prediction" ;
 propagate_gradient = 1  )
+*23 ->NetworkConnection(
+source = "affine_net.output" ;
+destination = "argmax_class.input" ;
+propagate_gradient = 0  )
+*24 ->NetworkConnection(
+source = "argmax_class.output" ;
+destination = "mse.prediction" ;
+propagate_gradient = 0  )
 ] ;
-ports = 8 [ "input" "rbm_1.visible" "target" "costs.target" "output" "affine_net.output" "cost" "costs.cost" ] ;
+ports = 12 [ "input" "rbm_1.visible" "target_1" "costs.target" "target_2" "mse.target" "output" "affine_net.output" "cost_1" "costs.cost" "cost_2" "mse.cost" ] ;
 save_states = 1 ;
 name = "NetworkModule" ;
 estimate_simpler_diag_hessian = 0 ;
@@ -328,6 +351,11 @@ expdir = "" ;
 random_gen = *5   )
 ;
 batch_size = 11 ;
+cost_ports = 2 [ "cost_1" "cost_2" ] ;
+input_ports = 1 [ "input" ] ;
+target_ports = 2 [ "target_1" "target_2" ] ;
+weight_ports = []
+;
 mbatch_size = 11 ;
 seed = 1827 ;
 stage = 1001 ;
