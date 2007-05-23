@@ -104,11 +104,12 @@ void OnlineLearningModule::fprop(const TVec<Mat*>& ports_value)
         if (m1 && m2 && !m1->isEmpty() && m2->isEmpty()) {
             // We can re-use previous code for standard mini-batch fprop.
             fprop(*m1, *m2);
+            checkProp(ports_value);
             return;
         }
     }
-    PLERROR("In OnlineLearningModule::fprop - Not implemented for class "
-            "'%s'", classname().c_str());
+    PLERROR("In OnlineLearningModule::fprop - Port configuration not "
+            "implemented for class '%s'", classname().c_str());
 }
 
 ////////////////////
@@ -135,11 +136,12 @@ void OnlineLearningModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             input_grad->resize(input_val->length(), input_val->width());
             bpropUpdate(*input_val, *output_val, *input_grad, *output_grad,
                         true);
+            checkProp(ports_gradient);
             return;
         }
     }
-    PLERROR("In OnlineLearningModule::bpropAccUpdate - Not implemented for "
-            "class '%s'", classname().c_str());
+    PLERROR("In OnlineLearningModule::bpropAccUpdate - Port configuration "
+            "not implemented for class '%s'", classname().c_str());
 }
 
 
@@ -314,6 +316,16 @@ void OnlineLearningModule::build_()
 {
     if (name.empty())
         name = classname();
+}
+
+///////////////
+// checkProp //
+///////////////
+void OnlineLearningModule::checkProp(const TVec<Mat*>& ports_data)
+{
+    for (int i = 0; i < ports_data.length(); i++) {
+        PLCHECK( !ports_data[i] || !ports_data[i]->isEmpty() );
+    }
 }
 
 ////////////////////////

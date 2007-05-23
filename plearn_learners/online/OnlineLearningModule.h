@@ -273,6 +273,12 @@ public:
     //! 'port_name' is the name of the port, and 'n' its size.
     virtual TVec<string> getPortDescription(const string& port);
 
+    //! This method may be called at the end of the 'fprop' or 'bpropAccUpdate'
+    //! methods (respectively with 'ports_value' or 'ports_gradient' as
+    //! argument) in order to ensure all required ports have been properly
+    //! computed (otherwise, an error is thrown).
+    void checkProp(const TVec<Mat*>& ports_data);
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.

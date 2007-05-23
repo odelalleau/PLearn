@@ -89,6 +89,9 @@ void DERIVEDCLASS::fprop(const TVec<Mat*>& ports_value)
     // See the comment in the header file for more information.
     PLERROR("In DERIVEDCLASS::fprop - Not implemented for class "
             "'%s'", classname().c_str());
+
+    // Ensure all required ports have been computed.
+    checkProp(ports_value);
 }
 
 ////////////////////
@@ -112,6 +115,9 @@ void DERIVEDCLASS::bpropAccUpdate(const TVec<Mat*>& ports_value,
     // See the comment in the header file for more information.
     PLERROR("In DERIVEDCLASS::bpropAccUpdate - this configuration of ports not implemented for class "
             "'%s'", classname().c_str());
+
+    // Ensure all required gradients have been computed.
+    checkProp(ports_gradient);
 }
 
 ////////////
