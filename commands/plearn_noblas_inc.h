@@ -193,6 +193,7 @@
 #include <plearn_learners_experimental/DeepFeatureExtractorNNet.h>
 
 // Online
+#include <plearn_learners/online/ArgmaxModule.h>
 #include <plearn_learners/online/BackConvolution2DModule.h>
 #include <plearn_learners/online/ClassErrorCostModule.h>
 #include <plearn_learners/online/CombiningCostsModule.h>
