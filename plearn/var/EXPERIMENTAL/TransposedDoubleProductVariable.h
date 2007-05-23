@@ -73,13 +73,14 @@ public:
     TransposedDoubleProductVariable();
 
     //! Constructor initializing from input variables
-    TransposedDoubleProductVariable(Var w, Var m, Var h);
+    TransposedDoubleProductVariable(Var h, Var w, Var m);
 
 
     //easy access to input
-    Var& varW() { return varray[0]; }
-    Var& varM() { return varray[1]; } 
-    Var& varH() { return varray[2]; }
+    Var& varH() { return varray[0]; }
+    Var& varW() { return varray[1]; }
+    Var& varM() { return varray[2]; } 
+
 
 
     // Your other public member functions go here

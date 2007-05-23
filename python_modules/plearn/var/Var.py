@@ -36,7 +36,7 @@ from plearn.pyplearn.plearn_repr import plearn_repr, format_list_elements
     
 class Var:
 
-    def __init__(self, l, w=1, random_type="none", random_a=0., random_b=1., random_clear_first_row=False):
+    def __init__(self, l, w=1, random_type="none", random_a=0., random_b=1., random_clear_first_row=False, varname=""):
         if isinstance(l, Var):
             self.v = l.v
         elif isinstance(l,int):
@@ -45,7 +45,8 @@ class Var:
                                        random_type=random_type,
                                        random_a=random_a,
                                        random_b=random_b,
-                                       random_clear_first_row=random_clear_first_row)
+                                       random_clear_first_row=random_clear_first_row,
+                                       varname=varname)
         else: # assume parameter l is a pl. plvar
             self.v = l
 
@@ -89,7 +90,7 @@ class Var:
         return self.multiMax(igs, 'L')
 
     def transposeDoubleProduct(self, W, M):
-        return Var(pl.TransposedDoubleProductVariable(varray=[W, M, self.v]))
+        return Var(pl.TransposedDoubleProductVariable(varray=[self.v, W, M]))
 
     def square(self):
         return Var(pl.SquareVariable(input=self.v))
@@ -118,12 +119,12 @@ def addSigmoidRLayer(input, iw, ow):
 
 
 
-def addMultiSoftMaxDoubleProductTiedRLayer(input, iw, igs, ow, ogs):
+def addMultiSoftMaxDoubleProductTiedRLayer(input, iw, igs, ow, ogs, basename=""):
     """iw is the input's width
     igs is the input's group size
     ow and ogs analog but for output"""
-    M = Var(ow/ogs, iw, "uniform", -1/iw, 1/iw, False)
-    W = Var(ogs, iw, "uniform", -1/iw, 1/iw, False)
+    M = Var(ow/ogs, iw, "uniform", -1/iw, 1/iw, False, varname=basename+"_M")
+    W = Var(ogs, iw, "uniform", -1/iw, 1/iw, False, varname=basename+"_W")
     hidden = input.doubleProduct(W,M).multiSoftMax(ogs)
     cost = -hidden.transposeDoubleProduct(W,M).multiLogSoftMax(igs).dot(input)            
     return hidden, cost, (W,M)

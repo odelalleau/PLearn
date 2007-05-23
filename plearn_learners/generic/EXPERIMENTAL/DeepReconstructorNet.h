@@ -76,6 +76,8 @@ public:
 
     TVec<int> training_schedule;
 
+    real good_improvement_rate;
+
     // layers[0] is the input variable
     // last layer is final output layer
     TVec<Var> layers;
@@ -157,7 +159,9 @@ public:
 
 
     virtual void initializeParams(bool set_seed=true);
-   
+
+    //! Returns the matValue of the parameter variable with the given name
+    Mat getParameterValue(const string& varname);
 
 
     // *** SUBCLASS WRITING: ***

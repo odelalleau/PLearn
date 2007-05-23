@@ -110,6 +110,10 @@ void DeepReconstructorNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "");
 
+    declareOption(ol, "good_improvement_rate", &DeepReconstructorNet::good_improvement_rate,
+                  OptionBase::buildoption,
+                  "");
+
     
     
     // Now call the parent class' declareOptions
@@ -142,10 +146,11 @@ void DeepReconstructorNet::build_()
     int n_rec_costs = reconstruction_costs.length();
     for(int k=0; k<n_rec_costs; k++)
         fullcost = fullcost + reconstruction_costs[k];
-    displayVarGraph(fullcost);
+    //displayVarGraph(fullcost);
     Var input = layers[0];
     Func f(input&target, fullcost);
     parameters = f->parameters;
+    outmat.resize(n_rec_costs);
 }
 
 // ### Nothing to add here, simply calls build_
@@ -227,13 +232,14 @@ void DeepReconstructorNet::train()
     VMat dset = train_set.subMatColumns(0,insize);
 
     // hack...
-    dset = dset.subMatRows(0,100);
+    dset = dset.subMatRows(0,10);
     for(int k=0; k<nreconstructions; k++)
     {
         trainHiddenLayer(k, dset);
         int width = layers[k+1].width();
-        outmat[k] = new FileVMatrix(outmatfname+tostring(k),0,width);
-        buildHiddenLayerOutputs(0, dset, outmat[k]);
+        outmat[k] = new FileVMatrix(outmatfname+tostring(k)+".pmat",0,width);
+        outmat[k]->defineSizes(width,0);
+        buildHiddenLayerOutputs(k, dset, outmat[k]);
         dset = outmat[k];
     }    
 
@@ -277,7 +283,7 @@ void DeepReconstructorNet::trainHiddenLayer(int which_input_layer, VMat inputs)
     perr << "*** Training layer " << which_input_layer << " for " << nepochs << " epochs " << endl;
     perr << "*** each epoch has " << l << " examples and " << l/minibatch_size << " optimizer stages (updates)" << endl;
     Func f(layers[which_input_layer], reconstruction_costs[which_input_layer]);
-    displayVarGraph(reconstruction_costs[which_input_layer]);
+    //displayVarGraph(reconstruction_costs[which_input_layer]);
     // displayVarGraph(fproppath,true, 333, "ffpp", false);
     Var totalcost = sumOf(inputs, f, minibatch_size);
     VarArray params = totalcost->parents();
@@ -285,7 +291,8 @@ void DeepReconstructorNet::trainHiddenLayer(int which_input_layer, VMat inputs)
     reconstruction_optimizer->reset();
     VecStatsCollector st;
     real prev_mean = -1;
-    for(int n=0; n<nepochs; n++)
+    real relative_improvement = good_improvement_rate;
+    for(int n=0; n<nepochs && relative_improvement >= good_improvement_rate; n++)
     {
         st.forget();
         reconstruction_optimizer->nstages = l/minibatch_size;
@@ -294,7 +301,10 @@ void DeepReconstructorNet::trainHiddenLayer(int which_input_layer, VMat inputs)
         real m = s.mean();
         perr << "Epoch " << n << " mean error: " << m << " +- " << s.stderror() << endl;
         if(prev_mean>0)
-            perr << "Relative improvement: " << ((prev_mean-m)/prev_mean)*100 << endl;
+        {
+            relative_improvement = ((prev_mean-m)/prev_mean)*100;
+            perr << "Relative improvement: " << relative_improvement << " %"<< endl;
+        }
         prev_mean = m;
     }
 }

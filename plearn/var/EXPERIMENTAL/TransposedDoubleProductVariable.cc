@@ -46,26 +46,27 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     TransposedDoubleProductVariable,
-    "Let W, M and H be the inputs and nw the length of W. Then output(n,k) = sum_i{ sum_j { W(i,k)*M(j,k)*H(n,i+j*nw) } }",
+    "Let H, W and M be the inputs and nw the length of W. Then output(n,k) = sum_i{ sum_j { W(i,k)*M(j,k)*H(n,i+j*nw) } }",
     "MULTI LINE\nHELP FOR USERS"
     );
 
 TransposedDoubleProductVariable::TransposedDoubleProductVariable()
 {}
 
-TransposedDoubleProductVariable::TransposedDoubleProductVariable(Var w, Var m, Var h)
-    : inherited(w & m & h, h.length(), w.width())
+TransposedDoubleProductVariable::TransposedDoubleProductVariable(Var h, Var w, Var m)
+    : inherited(h & w & m, h.length(), w.width())
 {
     build_();
 }
 
 
 void TransposedDoubleProductVariable::recomputeSize(int& l, int& w) const
-{
-    
+{    
         if (varray.size() > 0) {
-              l = varray[2].length(); // the computed length of this Var
-             w = varray[0].width(); // the computed width
+            // l = varH()->length(); // the computed length of this Var
+            //w = varW()->width(); // the computed width
+            l = varray[0].length();
+            w = varray[1].width();
         } else
             l = w = 0;
 }
@@ -117,7 +118,6 @@ void TransposedDoubleProductVariable::bprop()
                     m_grad(j,k) += x_grad(n,k)*w(i,k)*h(n,i+j*nw);
                     h_grad(n,i+j*nw) += x_grad(n,k)*w(i,k)*m(j,k);
                 }
-
 }
 
 // ### You can implement these methods:
@@ -184,7 +184,7 @@ void TransposedDoubleProductVariable::build_()
     // ### called.
 
     if (varH().width() != varW().length()*varM().length())
-        PLERROR("The width of matrix H incompatible with lengths of matrix W and M in TranposedDoubleProductVariable");
+        PLERROR("The width of matrix H is incompatible with the lengths of matrix W and M in TranposedDoubleProductVariable");
     if (varM().width() != varW().width())
         PLERROR("Matrix W and M must have the same width in TranposedDoubleProduct");
 
