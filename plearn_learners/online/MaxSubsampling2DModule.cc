@@ -108,14 +108,14 @@ void MaxSubsampling2DModule::declareOptions(OptionList& ol)
 
 
     redeclareOption(ol, "input_size", &MaxSubsampling2DModule::input_size,
-                  OptionBase::learntoption,
-                  "Size of the input, computed from n_input_images,\n"
-                  "input_images_length and input_images_width.\n");
+                    OptionBase::learntoption,
+                    "Size of the input, computed from n_input_images,\n"
+                    "input_images_length and input_images_width.\n");
 
-    declareOption(ol, "output_size", &MaxSubsampling2DModule::output_size,
-                  OptionBase::learntoption,
-                  "Size of the output, computed from n_input_images,\n"
-                  "output_images_length and output_images_width.\n");
+    redeclareOption(ol, "output_size", &MaxSubsampling2DModule::output_size,
+                    OptionBase::learntoption,
+                    "Size of the output, computed from n_input_images,\n"
+                    "output_images_length and output_images_width.\n");
 
 }
 
