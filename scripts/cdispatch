@@ -34,9 +34,11 @@
 ## This file is part of the PLearn library. For more information on the PLearn
 ## library, go to the PLearn Web site at www.plearn.org
 
+$ScriptName="lauchdbi.py";
+
 if (scalar(@ARGV) == 0) {
     die <<EOUSAGE
-Usage: dbidispatch [--req="CONDOR_REQUIREMENT"]<command-template>
+Usage: dbidispatch [--test] [--req="CONDOR_REQUIREMENT"]<command-template>
 Dispatches jobs on Condor with dbi.py.  
 
 where <command-template> is interpreted as follows: the first argument
@@ -68,7 +70,17 @@ is equivalent to:
   aplearn myscript.plearn numhidden=25 wd=0.01
   aplearn myscript.plearn numhidden=25 wd=0.001
 
+The optional parameter '--test' make that cdispatch generate the file $ScriptName, but do not execute it. That way you can see what cdispatch generate.
+
+The optional parameter '--req="CONDOR_REQUIREMENT"' make that cdispatch send additional option to DBI that will be used to generate addtional requirement for condor. CONDOR_REQUIREMENT must follow the syntax of requirement for condor.
 EOUSAGE
+}
+
+if ($ARGV[0] eq "--test") {
+    $TEST = 1;
+    shift;
+}else {
+    $TEST = 0;
 }
 
 if (substr($ARGV[0],0,6) eq "--req=") {
@@ -95,7 +107,6 @@ foreach my $arg (@ARGV) {
 #    print "Root = ", $ARGV[$i],
 #    "\tArglist = (", join(",",@{$repl[$i]}),")\n";
 #}
-$ScriptName="lauchdbi.py";
 open(SCRIPT,">$ScriptName");
 print SCRIPT "#! /usr/bin/env python\n".
     "from plearn.parallel.dbi import DBI\n".
@@ -143,5 +154,9 @@ print SCRIPT ")\n".
 
 close(SCRIPT);
 system("chmod +x $ScriptName");
-print "Launching newly created script $ScriptName\n";
-system("./$ScriptName");
+if ($TEST){
+    print "Created but no lauched script $ScriptName\n";
+} else {
+    print "Launching newly created script $ScriptName\n";
+    system("./$ScriptName");
+}
