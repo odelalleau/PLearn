@@ -347,6 +347,74 @@ void RBMConv2DConnection::update( const Vec& pos_down_values, // v_0
     }
 }
 
+void RBMConv2DConnection::update( const Mat& pos_down_values, // v_0
+                                  const Mat& pos_up_values,   // h_0
+                                  const Mat& neg_down_values, // v_1
+                                  const Mat& neg_up_values )  // h_1
+{
+    PLASSERT( pos_up_values.width() == up_size );
+    PLASSERT( neg_up_values.width() == up_size );
+    PLASSERT( pos_down_values.width() == down_size );
+    PLASSERT( neg_down_values.width() == down_size );
+
+    int batch_size = pos_down_values.length();
+    PLASSERT( pos_up_values.length() == batch_size );
+    PLASSERT( neg_down_values.length() == batch_size );
+    PLASSERT( neg_up_values.length() == batch_size );
+
+    /*  for i=0 to up_image_length:
+     *   for j=0 to up_image_width:
+     *     for l=0 to kernel_length:
+     *       for m=0 to kernel_width:
+     *         kernel_neg_stats(l,m) -= learning_rate *
+     *           ( pos_down_image(step1*i+l,step2*j+m) * pos_up_image(i,j)
+     *             - neg_down_image(step1*i+l,step2*j+m) * neg_up_image(i,j) )
+     */
+
+    if( momentum == 0. )
+    {
+        for( int b=0; b<batch_size; b++ )
+        {
+            real* puv = pos_up_values(b).data();
+            real* nuv = neg_up_values(b).data();
+            real* pdv = pos_down_values(b).data();
+            real* ndv = neg_down_values(b).data();
+            int k_mod = kernel.mod();
+
+            for( int i=0; i<up_image_length;
+                 i++,
+                 puv+=up_image_width,
+                 nuv+=up_image_width,
+                 pdv+=kernel_step1*down_image_width,
+                 ndv+=kernel_step1*down_image_width )
+            {
+                // copies to iterate over columns
+                real* pdv1 = pdv;
+                real* ndv1 = ndv;
+                for( int j=0; j<up_image_width; j++,
+                                                pdv1+=kernel_step2,
+                                                ndv1+=kernel_step2 )
+                {
+                    real* k = kernel.data();
+                    real* pdv2 = pdv1; // copy to iterate over sub-rows
+                    real* ndv2 = ndv1;
+                    real puv_ij = puv[j];
+                    real nuv_ij = nuv[j];
+                    for( int l=0; l<kernel_length; l++, k+=k_mod,
+                                                   pdv2+=down_image_width,
+                                                   ndv2+=down_image_width )
+                        for( int m=0; m<kernel_width; m++ )
+                            k[m] += learning_rate *
+                                (ndv2[m] * nuv_ij - pdv2[m] * puv_ij);
+                }
+            }
+        }
+    }
+    else
+        PLCHECK_MSG(false,
+                    "mini-batch and momentum don't work together yet");
+}
+
 void RBMConv2DConnection::clearStats()
 {
     kernel_pos_stats.clear();
@@ -425,6 +493,55 @@ void RBMConv2DConnection::computeProduct
     }
 }
 
+void RBMConv2DConnection::computeProducts(int start, int length,
+                                          Mat& activations,
+                                          bool accumulate) const
+{
+    PLASSERT( activations.width() == length );
+    int batch_size = inputs_mat.length();
+    activations.resize( batch_size, length);
+    if( going_up )
+    {
+        PLASSERT( start+length <= up_size );
+        // usual case
+        if( start == 0 && length == up_size )
+            for( int k=0; k<batch_size; k++ )
+            {
+                up_image = activations(k)
+                    .toMat(up_image_length, up_image_width);
+                down_image = inputs_mat(k)
+                    .toMat(down_image_length, down_image_width);
+
+                convolve2D(down_image, kernel, up_image,
+                           kernel_step1, kernel_step2, accumulate);
+            }
+        else
+            PLCHECK_MSG(false,
+                        "Unusual case of use (start!=0 or length!=up_size)\n"
+                        "not implemented yet.");
+    }
+    else
+    {
+        PLASSERT( start+length <= down_size );
+        // usual case
+        if( start == 0 && length == down_size )
+            for( int k=0; k<batch_size; k++ )
+            {
+                up_image = inputs_mat(k)
+                    .toMat(up_image_length, up_image_width);
+                down_image = activations(k)
+                    .toMat(down_image_length, down_image_width);
+
+                backConvolve2D(down_image, kernel, up_image,
+                               kernel_step1, kernel_step2, accumulate);
+            }
+        else
+            PLCHECK_MSG(false,
+                        "Unusual case of use (start!=0 or length!=down_size)\n"
+                        "not implemented yet.");
+    }
+}
+
 //! this version allows to obtain the input gradient as well
 void RBMConv2DConnection::bpropUpdate(const Vec& input, const Vec& output,
                                       Vec& input_gradient,
@@ -460,6 +577,51 @@ void RBMConv2DConnection::bpropUpdate(const Vec& input, const Vec& output,
     multiplyAcc( kernel, kernel_gradient, -learning_rate );
 }
 
+void RBMConv2DConnection::bpropUpdate(const Mat& inputs, const Mat& outputs,
+                                      Mat& input_gradients,
+                                      const Mat& output_gradients,
+                                      bool accumulate)
+{
+    PLASSERT( inputs.width() == down_size );
+    PLASSERT( outputs.width() == up_size );
+    PLASSERT( output_gradients.width() == up_size );
+
+    int batch_size = inputs.length();
+    PLASSERT( outputs.length() == batch_size );
+    PLASSERT( output_gradients.length() == batch_size );
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradients.width() == down_size &&
+                      input_gradients.length() == batch_size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+    }
+    else
+    {
+        input_gradients.resize(batch_size, down_size);
+        input_gradients.clear();
+    }
+
+    kernel_gradient.clear();
+    for( int k=0; k<batch_size; k++ )
+    {
+        down_image = inputs(k).toMat( down_image_length, down_image_width );
+        up_image = outputs(k).toMat( up_image_length, up_image_width );
+        down_image_gradient = input_gradients(k)
+            .toMat( down_image_length, down_image_width );
+        up_image_gradient = output_gradients(k)
+            .toMat( up_image_length, up_image_width );
+
+        // update input_gradient and kernel_gradient
+        convolve2Dbackprop( down_image, kernel,
+                            up_image_gradient, down_image_gradient,
+                            kernel_gradient,
+                            kernel_step1, kernel_step2, true );
+    }
+
+    // kernel -= learning_rate/n * kernel_gradient
+    multiplyAcc( kernel, kernel_gradient, -learning_rate/batch_size );
+}
 //! reset the parameters to the state they would be BEFORE starting training.
 //! Note that this method is necessarily called from build().
 void RBMConv2DConnection::forget()

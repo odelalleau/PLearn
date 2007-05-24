@@ -136,14 +136,10 @@ public:
                          const Vec& neg_down_values,
                          const Vec& neg_up_values );
 
-    //! Not implemented.
     virtual void update( const Mat& pos_down_values,
                          const Mat& pos_up_values,
                          const Mat& neg_down_values,
-                         const Mat& neg_up_values)
-    {
-        PLASSERT_MSG( false, "Not implemented" );
-    }
+                         const Mat& neg_up_values );
 
     //! Clear all information accumulated during stats
     virtual void clearStats();
@@ -157,10 +153,7 @@ public:
 
     virtual void computeProducts(int start, int length,
                                  Mat& activations,
-                                 bool accumulate=false ) const
-    {
-        PLASSERT( false ); // Not implemented.
-    }
+                                 bool accumulate=false ) const;
 
     //! Adapt based on the output gradient: this method should only
     //! be called just after a corresponding fprop; it should be
@@ -180,6 +173,11 @@ public:
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              Vec& input_gradient,
                              const Vec& output_gradient,
+                             bool accumulate=false);
+
+    virtual void bpropUpdate(const Mat& inputs, const Mat& outputs,
+                             Mat& input_gradients,
+                             const Mat& output_gradients,
                              bool accumulate=false);
 
     //! reset the parameters to the state they would be BEFORE starting
