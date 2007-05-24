@@ -722,10 +722,12 @@ void Object::declareMethods(RemoteMethodMap& rmm)
                   (BodyDoc("Build newly created object (after setting options).\n")));
 
 
+#ifdef PL_PYTHON_VERSION 
     declareMethod(rmm, "setOptionFromPython", &Object::setOptionFromPython,
                   (BodyDoc("Change an option within the object from a PythonObjectWrapper"),
                    ArgDoc("optionname", "The name of the option to change."),
                    ArgDoc("value","the new value from python")));
+#endif //def PL_PYTHON_VERSION 
 
     rmm.insert(
         "getOption", 1,
