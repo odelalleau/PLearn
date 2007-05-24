@@ -70,6 +70,8 @@ protected:
     //! Whether an expdir should be set into the child tester
     bool provide_tester_expdir;
 
+    bool call_forget;
+
     // ****************
     // * Constructors *
     // ****************

@@ -47,58 +47,77 @@
 namespace PLearn {
 using namespace std;
 
-HyperRetrain::HyperRetrain()
-    : provide_tester_expdir(false)
-{
-}
+HyperRetrain::HyperRetrain():
+    provide_tester_expdir(false),
+    call_forget(true)
+{}
 
 PLEARN_IMPLEMENT_OBJECT(
     HyperRetrain,
-    "HyperCommand to retrain a learner with a new splitter without changing hyperparameters",
-    "This is useful as a last command in an HyperOptimization chain in order\n"
-    "to retrain the current \"best\" learner with the entire training+validation\n"
-    "sets.");
+    "Retrain a learner without changing its hyperparameters.",
+    "It is possible to specify a new splitter in order for instance to\n"
+    "retrain the current best learner on the entire (train + valid) dataset\n"
+    "at the end of hyper-parameter optimization. This can be done by setting\n"
+    "the 'splitter' option to something like:\n"
+    "   splitter = FractionSplitter(splits = 1 1 [0:1])\n"
+    "\n"
+    "One may also provide no splitter, and just continue training the\n"
+    "learner by setting the 'call_forget' option to false (this can be\n"
+    "useful after using a HyperSetOption to modify the learner's options).\n"
+);
 
+////////////////////
+// declareOptions //
+////////////////////
 void HyperRetrain::declareOptions(OptionList& ol)
 {
     declareOption(ol, "splitter", &HyperRetrain::splitter,
                   OptionBase::buildoption,
-                  "Splitter to use for retraining.  For example, in order to\n"
-                  "retrain on entire dataset, one can use the following:\n"
-                  "  splitter = FractionSplitter(splits = 1 1 [0:1]); ");
+        "Splitter to use for (re)training. If not provided, the current\n"
+        "splitter will be used.");
 
-    declareOption(ol, "provide_tester_expdir", &HyperRetrain::provide_tester_expdir,
+    declareOption(ol, "provide_tester_expdir",
+                  &HyperRetrain::provide_tester_expdir,
                   OptionBase::buildoption,
-                  "should the tester be provided with an expdir for retraining");
+        "Should the tester be provided with an expdir for retraining.");
+
+    declareOption(ol, "call_forget", &HyperRetrain::call_forget,
+                  OptionBase::buildoption,
+        "Whether to call forget() before training. Note that even if set to\n"
+        "0, forget() might be called in setTrainingSet(..) if a new splitter\n"
+        "is provided.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void HyperRetrain::build_()
-{
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation.
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-    // ### You should assume that the parent class' build_() has already been called.
-}
+{}
 
-// ### Nothing to add here, simply calls build_
+///////////
+// build //
+///////////
 void HyperRetrain::build()
 {
     inherited::build();
     build_();
 }
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void HyperRetrain::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(splitter, copies);
 }
 
+//////////////
+// optimize //
+//////////////
 Vec HyperRetrain::optimize()
 {
     PP<PTester> tester = hlearner->tester;
@@ -109,19 +128,20 @@ Vec HyperRetrain::optimize()
     tester->setExperimentDirectory(testerexpdir);
 
     PP<Splitter> default_splitter = tester->splitter;
-    if (splitter.isNull())
-        PLERROR("HyperRetrain::optimize: a new splitter must be set inside "
-                "HyperRetrain.  \nFor example: "
-                "splitter = FractionSplitter(splits = 1 1 [0:1]);");
-    tester->splitter = splitter;
 
-    Vec results = tester->perform(true);
+    if (!splitter.isNull())
+        tester->splitter = splitter;
+
+    Vec results = tester->perform(call_forget);
 
     // restore default splitter
     tester->splitter = default_splitter;
     return results;
 }
 
+////////////////////
+// getResultNames //
+////////////////////
 TVec<string> HyperRetrain::getResultNames() const
 {
     return hlearner->tester->getStatNames();
