@@ -94,10 +94,14 @@ void computeMean                (const VMat& d, Vec& meanvec);
 void computeMeanAndVariance     (const VMat& d, Vec& meanvec, Vec& variancevec, double epsilon=0.0);
 void computeMeanAndStddev       (const VMat& d, Vec& meanvec, Vec& stddevvec,   double epsilon=0.0);
 void computeMeanAndCovar        (const VMat& d, Vec& meanvec, Mat& covarmat,    double epsilon=0.0);
+//! Computes covariance matrix given mean mu.
+void computeCovar               (const VMat& d, const Vec& mu, Mat& covarmat,    double epsilon=0.0);
 void computeWeightedMean        (const Vec& weights, const VMat& d, Vec& meanvec);
 void computeWeightedMeanAndCovar(const Vec& weights, const VMat& d,
                                  Vec& meanvec, Mat& covarmat, double epsilon=0.0);
 void computeInputMean           (const VMat& d, Vec& meanvec);
+//! Computes covariance matrix given mean mu.
+void computeInputCovar(const VMat& d, const Vec& mu, Mat& covarmat, double epsilon=0.0);
 void computeInputMeanAndCovar   (const VMat& d, Vec& meanvec, Mat& covarmat, double epsilon=0.0);
 void computeInputMeanAndVariance(const VMat& d, Vec& meanvec, Vec& var,      double epsilon=0.0);
 void computeInputMeanAndStddev  (const VMat& d, Vec& meanvec, Vec& stddev,   double epsilon=0.0);

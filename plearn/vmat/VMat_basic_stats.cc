@@ -469,27 +469,49 @@ void computeMeanAndCovar(const VMat& d, Vec& meanvec, Mat& covarmat, double epsi
     */
 }
 
-/* // two pass version
-   void computeMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat)
-   {
-   int w = d->width();
-   int l = d->length();
-   computeMean(d, meanvec);
-   covarmat.resize(w,w);
-   covarmat.clear();
-   Vec samplevec(w);
-   Vec diffvec(w);
-   Mat sqdiffmat(w,w);
-   for(int i=0; i<l; i++)
-   {
-   d->getRow(i,samplevec);
-   substract(samplevec,meanvec,diffvec);
-   externalProduct(sqdiffmat, diffvec,diffvec);
-   covarmat += sqdiffmat;
-   }
-   covarmat /= l-1;
-   }
-*/
+void computeCovar(const VMat& d, const Vec& mu, Mat& covarmat, double epsilon)
+{
+    int w = d->width();
+    int l = d->length();
+    covarmat.resize(w,w);
+    covarmat.clear();
+    Vec samplevec(w);
+    Vec diffvec(w);
+    Mat sqdiffmat(w,w);
+    for(int i=0; i<l; i++)
+    {
+        d->getRow(i,samplevec);
+        samplevec -= mu;
+        externalProductAcc(covarmat, samplevec, samplevec);
+    }
+    covarmat /= l-1;
+    addToDiagonal(covarmat, epsilon);
+}
+
+void computeInputCovar(const VMat& d, const Vec& mu, Mat& covarmat, double epsilon)
+{
+    PLASSERT( d->inputsize() >= 0 );
+    int w = d->inputsize();
+    int l = d->length();
+    covarmat.resize(w,w);
+    covarmat.clear();
+    Vec input(w);
+    Vec target;
+    real weight;
+    Vec diffvec(w);
+    Mat sqdiffmat(w,w);
+    double weightsum = 0;
+    for(int i=0; i<l; i++)
+    {
+        d->getExample(i, input, target, weight);
+        input -= mu;
+        externalProductScaleAcc(covarmat, input, input, weight);
+        weightsum += weight;
+    }
+    covarmat *= 1./weightsum;
+    addToDiagonal(covarmat, epsilon);
+}
+
 
 //////////////////////////
 // computeMeanAndStddev //
