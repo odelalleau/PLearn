@@ -50,11 +50,15 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
     OnlineLearningModule,
     "Learn to map inputs to outputs, online, using caller-provided gradients.",
     "This pure virtual class (i.e. an interface) can basically do two things:\n"
-    "  * map an input to an output\n"
+    "  * map its inputs to its outputs\n"
     "  * modify itself when told in what direction the output should have \n"
     "    changed (i.e. output gradient),  while optionally giving back the \n"
     "    information about how the input should also have changed \n"
     "    (i.e. input gradient)\n"
+    "The main methods are fprop methods (which maps inputs to outputs) and bprop\n"
+    "methods (which map outputs gradients into inputs gradients and update internal\n"
+    "parameters). Changes to options should not occur between an fprop and\n"
+    "the corresponding bprop.\n"
     );
 
 //////////////////////////
