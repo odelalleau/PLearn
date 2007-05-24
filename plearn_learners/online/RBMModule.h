@@ -89,13 +89,11 @@ public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
-    // ### Make sure the implementation in the .cc
-    // ### initializes all fields to reasonable default values.
     RBMModule();
 
     // Your other public member functions go here
 
-    //! given the input, compute the output (possibly resize it  appropriately)
+    //! given the input, compute the output (possibly resize it appropriately)
     virtual void fprop(const Vec& input, Vec& output) const;
 
     /* Optional
