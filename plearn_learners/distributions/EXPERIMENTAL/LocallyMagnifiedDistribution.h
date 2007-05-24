@@ -78,16 +78,16 @@ public:
     // * public build options *
     // ************************
     int mode;
-    int nneighbors;
+    real computation_neighbors;
 
-    bool use_rank_weighting;
-    //! The kernel that will be used to locally weigh the samples
     Ker weighting_kernel;
+    char kernel_adapt_width_mode;
 
     //! The distribution that will be trained with local weights
-    PP<PDistribution> localdistr;
+    mutable PP<PDistribution> localdistr;
+    bool fix_localdistr_center;
 
-    int width_neighbor;
+    real width_neighbors;
     real width_factor;
     string width_optionname;
 
@@ -113,6 +113,10 @@ protected:
     //! Declare this class' options.
     // ### Please implement in .cc.
     static void declareOptions(OptionList& ol);
+
+    int getActualNComputationNeighbors() const;
+    int getActualNWidthNeighbors() const;
+    double trainLocalDistrAndEvaluateLogDensity(VMat local_trainset, Vec y) const;
 
 public:
 
