@@ -91,20 +91,20 @@ void computeRowMean             (const VMat& d, Vec& meanvec);
 //! *input* part of a VMat, and weighted statistics can be obtained directly
 //! using the weights in the VMat.
 void computeMean                (const VMat& d, Vec& meanvec);
-void computeMeanAndVariance     (const VMat& d, Vec& meanvec, Vec& variancevec, double epsilon=0.0);
-void computeMeanAndStddev       (const VMat& d, Vec& meanvec, Vec& stddevvec,   double epsilon=0.0);
-void computeMeanAndCovar        (const VMat& d, Vec& meanvec, Mat& covarmat,    double epsilon=0.0);
+void computeMeanAndVariance     (const VMat& d, Vec& meanvec, Vec& variancevec, real epsilon=0.0);
+void computeMeanAndStddev       (const VMat& d, Vec& meanvec, Vec& stddevvec,   real epsilon=0.0);
+void computeMeanAndCovar        (const VMat& d, Vec& meanvec, Mat& covarmat,    real epsilon=0.0);
 //! Computes covariance matrix given mean mu.
-void computeCovar               (const VMat& d, const Vec& mu, Mat& covarmat,    double epsilon=0.0);
+void computeCovar               (const VMat& d, const Vec& mu, Mat& covarmat,    real epsilon=0.0);
 void computeWeightedMean        (const Vec& weights, const VMat& d, Vec& meanvec);
 void computeWeightedMeanAndCovar(const Vec& weights, const VMat& d,
-                                 Vec& meanvec, Mat& covarmat, double epsilon=0.0);
+                                 Vec& meanvec, Mat& covarmat, real epsilon=0.0);
 void computeInputMean           (const VMat& d, Vec& meanvec);
 //! Computes covariance matrix given mean mu.
-void computeInputCovar(const VMat& d, const Vec& mu, Mat& covarmat, double epsilon=0.0);
-void computeInputMeanAndCovar   (const VMat& d, Vec& meanvec, Mat& covarmat, double epsilon=0.0);
-void computeInputMeanAndVariance(const VMat& d, Vec& meanvec, Vec& var,      double epsilon=0.0);
-void computeInputMeanAndStddev  (const VMat& d, Vec& meanvec, Vec& stddev,   double epsilon=0.0);
+void computeInputCovar(const VMat& d, const Vec& mu, Mat& covarmat, real epsilon=0.0);
+void computeInputMeanAndCovar   (const VMat& d, Vec& meanvec, Mat& covarmat, real epsilon=0.0);
+void computeInputMeanAndVariance(const VMat& d, Vec& meanvec, Vec& var,      real epsilon=0.0);
+void computeInputMeanAndStddev  (const VMat& d, Vec& meanvec, Vec& stddev,   real epsilon=0.0);
 
 void autocorrelation_function(const VMat& data, Mat& acf);
 
