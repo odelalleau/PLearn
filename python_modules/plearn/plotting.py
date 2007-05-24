@@ -33,8 +33,7 @@
 # Author: Pascal Vincent
 
 # from array import *
-from numarray import *
-from mayavi.tools import imv
+import numarray
 
 import string
 import matplotlib
@@ -43,7 +42,11 @@ import matplotlib
 #matplotlib.use('GTK')
   
 from pylab import *
+from numarray import *
+from mayavi.tools import imv
+
 from plearn.vmat.PMat import *
+
 
 threshold = 0
 
@@ -71,12 +74,13 @@ def xyscores_to_winner_and_margin(xyscores):
 
 def regular_xyval_to_2d_grid_values(xyval):
     """Returns (grid_values, x0, y0, deltax, deltay)"""
-    xyval = array(xyval)
+    xyval = numarray.array(xyval)
     n = len(xyval)
     x = xyval[:,0]
     y = xyval[:,1]
     values = xyval[:,2:].copy()
-    valsize = size(values,1)
+    # print "type(values)",type(values)
+    valsize = numarray.size(values,1)
     x0 = x[0]
     y0 = y[0]
 
@@ -90,7 +94,9 @@ def regular_xyval_to_2d_grid_values(xyval):
         nx = n // ny
         # print 'A) nx,ny:',nx,ny
         values.shape = (nx,ny,valsize)
-        values = transpose(values,(1,0,2))
+        # print "A type(values)",type(values)
+        values = numarray.transpose(values,(1,0,2))
+        # print "B type(values)",type(values)
     elif y[1]==y0:
         deltax = x[1]-x[0]
         while y[k]==y0:
@@ -100,11 +106,27 @@ def regular_xyval_to_2d_grid_values(xyval):
         ny = n // nx
         # print 'B) nx,ny:',nx,ny
         values.shape = (ny,nx,valsize)
-        values = transpose(values,(1,0,2))
+        # print "C type(values)",type(values)
+        values = numarray.transpose(values,(1,0,2))
+        # print "D type(values)",type(values)
     else:
         raise ValueError("Strange: x[1]!=x0 and y[1]!=y0 this doesn't look like a regular grid...")
+
+    print 'In regular_xyval_to_2d_grid_values: ', type(xyval), type(values)
     return values, x0, y0, deltax, deltay
 
+
+def divide_by_mean_magnitude(xymagnitude):
+    mag = xymagnitude[:,2]
+    meanval = mag.mean()
+    mag *= 1./meanval
+    return meanval
+
+def divide_by_max_magnitude(xymagnitude):
+    mag = xymagnitude[:,2]
+    maxval = mag.max()
+    mag *= 1./maxval
+    return maxval
 
 def transform_magnitude_into_covered_percentage(xymagnitude):
     magnitudes = []
@@ -121,9 +143,11 @@ def transform_magnitude_into_covered_percentage(xymagnitude):
         row[0] = cum
     for mag,i in magnitudes:
         xymagnitude[i][-1] = mag/cum
+    return cum
         
 def imshow_xymagnitude(regular_xymagnitude, interpolation='nearest', cmap = cm.jet):
     grid_values, x0, y0, deltax, deltay = regular_xyval_to_2d_grid_values(regular_xymagnitude)
+    # print 'In imshow_xymagnitude: ', type(regular_xymagnitude), type(grid_values)
     imshow_2d_grid_values(grid_values, x0, y0, deltax, deltay, interpolation, cm.jet)
     
 def imshow_xyrgb(regular_xyrgb, interpolation='nearest'):
@@ -143,34 +167,57 @@ def xy_winner_magnitude_to_xyrgb(xy_winner_margin):
     for x,y,w,m in xy_winner_margin:
         res.append([x,y]+classcolor(w,m))
     return res
+
+def xymagnitude_to_x_y_grid(regular_xymagnitude):
+    gridvalues, x0, y0, deltax, deltay = regular_xyval_to_2d_grid_values(regular_xymagnitude)
+    nx = numarray.size(gridvalues,0)
+    ny = numarray.size(gridvalues,1)
+    gridvalues = numarray.reshape(gridvalues,(nx,ny))
+    x = numarray.arange(x0,x0+nx*deltax-1e-6,deltax)
+    y = numarray.arange(y0,y0+ny*deltay-1e-6,deltay)
+    # print "x = ",x
+    # print "y = ",y
+    # print "z = ",gridvalues
+    # print "type(x) = ",type(x)
+    # print "type(y) = ",type(y)
+    # print "type(z) = ",type(gridvalues)
+    # imv.view(gridvalues)
+    return x, y, gridvalues
     
 def surfplot_xymagnitude(regular_xymagnitude):
-    gridvalues, x0, y0, deltax, deltay = regular_xyval_to_2d_grid_values(regular_xymagnitude)
-    nx = size(gridvalues,0)
-    ny = size(gridvalues,1)
-    gridvalues = reshape(gridvalues,(nx,ny))
-    x = arange(x0,x0+nx*deltax-1e-6,deltax)
-    y = arange(y0,y0+ny*deltay-1e-6,deltay)
+    x,y,gridvalues = xymagnitude_to_x_y_grid(regular_xymagnitude)
     imv.surf(x, y, gridvalues)
 
+def contour_xymagnitude(regular_xymagnitude):
+    x,y,gridvalues = xymagnitude_to_x_y_grid(regular_xymagnitude)
+    clabel(contour(x, y, gridvalues))
+    
+def contourf_xymagnitude(regular_xymagnitude):
+    x,y,gridvalues = xymagnitude_to_x_y_grid(regular_xymagnitude)
+    contourf(x, y, gridvalues)
+    colorbar()
 
 def imshow_2d_grid_rgb(gridrgb, x0, y0, deltax, deltay, interpolation='nearest', cmap = cm.jet):
-    nx = size(gridrgb,0)
-    ny = size(gridrgb,1)
+    nx = numarray.size(gridrgb,0)
+    ny = numarray.size(gridrgb,1)
     extent = (x0-.5*deltax, x0+nx*deltax, y0-.5*deltay, y0+ny*deltay)
-     # gridrgb = reshape(gridrgb,(nx,ny))
+    # gridrgb = numarray.reshape(gridrgb,(nx,ny))
     # print 'SHAPE:',gridrgb.shape
     # print 'gridrgb:', gridrgb
     imshow(gridrgb, cmap=cmap, origin='lower', extent=extent, interpolation=interpolation)
+    colorbar()
+
 
 def imshow_2d_grid_values(gridvalues, x0, y0, deltax, deltay, interpolation='nearest', cmap = cm.jet):
-    nx = size(gridvalues,0)
-    ny = size(gridvalues,1)
+    nx = numarray.size(gridvalues,0)
+    ny = numarray.size(gridvalues,1)
     extent = (x0-.5*deltax, x0+nx*deltax, y0-.5*deltay, y0+ny*deltay)
-    gridvalues = reshape(gridvalues,(nx,ny))
+    print 'gridval type', type(gridvalues)
+    gridvalues = numarray.reshape(gridvalues,(nx,ny))
     # print 'SHAPE:',gridvalues.shape
     # print 'gridvalues:', gridvalues
     imshow(gridvalues, cmap=cmap, origin='lower', extent=extent, interpolation=interpolation)
+    colorbar()
 
 def plot_2d_points(pointlist, style='bo'):
     x, y = zip(*pointlist)

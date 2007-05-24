@@ -113,11 +113,22 @@ elif task == '2d_density':
         pl.RegularGridVMatrix(coordstart=[pair[0] for pair in bbox],
                               coordend=[pair[1] for pair in bbox],
                               dimensions = nsamples))
-    transform_magnitude_into_covered_percentage(xymagnitude)
-    # print 'xymagnitude.shape = ',xymagnitude.shape
+
+    # cummagnitude = transform_magnitude_into_covered_percentage(xymagnitude)
+    # print "Sum of magnitudes = ", cummagnitude
+
+    # contour_xymagnitude(xymagnitude)
+    contourf_xymagnitude(xymagnitude)
+    plot_2d_points(data,'ko')
+
+    figure()
     imshow_xymagnitude(xymagnitude)
     plot_2d_points(data,'ko')
+
     show()
+
+    maxmagnitude = divide_by_max_magnitude(xymagnitude)
+    print "Dividing by max magnitude = ", maxmagnitude
     surfplot_xymagnitude(xymagnitude)
     raw_input()
 
