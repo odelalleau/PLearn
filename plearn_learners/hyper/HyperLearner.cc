@@ -241,6 +241,9 @@ void HyperLearner::forget()
     stage = 0;
 }
 
+////////////
+// build_ //
+////////////
 void HyperLearner::build_()
 {
     // ### This method should do the real building of the object,
@@ -252,13 +255,16 @@ void HyperLearner::build_()
     // ### You should assume that the parent class' build_() has already been called.
 
     // Set the Tester's learner to point to the same as the HyperLearner's learner
+    PLASSERT( tester );
     tester->learner = learner_;
 
     for(int commandnum=0; commandnum<strategy.length(); commandnum++)
         strategy[commandnum]->setHyperLearner(this);
 }
 
-// ### Nothing to add here, simply calls build_
+///////////
+// build //
+///////////
 void HyperLearner::build()
 {
     inherited::build();
