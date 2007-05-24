@@ -194,8 +194,6 @@ void MaxSubsampling2DModule::fprop(const TVec<Mat*>& ports_value)
         && argmax && argmax->isEmpty() )
     {
         PLASSERT( input->width() == port_sizes(0,1) );
-        PLASSERT( output->width() == port_sizes(1,1) );
-        PLASSERT( argmax->width() == port_sizes(2,1) );
 
         int batch_size = input->length();
         output->resize(batch_size, port_sizes(1,1));
