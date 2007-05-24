@@ -502,21 +502,24 @@ class DBICondor(DBIBase):
             self.temp_files.append(launch_file)
             launch_dat = open(launch_file,'w')
             launch_dat.write(dedent('''\
-            #!/bin/sh
-            PROGRAM=$1
-            shift
-            source /cluster/diro/home/lisa/.local.condor
-            echo "Executing on ${HOSTNAME}" 1>&2
-            echo "PATH: $PATH" 1>&2
-            echo "PYTHONPATH: $PYTHONPATH" 1>&2
-            echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH" 1>&2
-            which python 1>&2
-            echo -n python version: 1>&2
-            python -V 1>&2
-            echo -n /usr/bin/python version: 1>&2
-            /usr/bin/python -V 1>&2
-            echo ${PROGRAM} $@ 1>&2
-            $PROGRAM $@'''))
+                #!/bin/sh
+                PROGRAM=$1
+                shift
+                source /cluster/diro/home/lisa/.local.condor\n'''))
+            if None != os.getenv("CONDOR_LOCAL_SOURCE"):
+                launch_dat.write('source ' + os.getenv("CONDOR_LOCAL_SOURCE") + '\n')
+            launch_dat.write(dedent('''\
+                    echo "Executing on ${HOSTNAME}" 1>&2
+                    echo "PATH: $PATH" 1>&2
+                    echo "PYTHONPATH: $PYTHONPATH" 1>&2
+                    echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH" 1>&2
+                    which python 1>&2
+                    echo -n python version: 1>&2
+                    python -V 1>&2
+                    echo -n /usr/bin/python version: 1>&2
+                    /usr/bin/python -V 1>&2
+                    echo ${PROGRAM} $@ 1>&2
+                    $PROGRAM $@'''))
             launch_dat.close()
             os.chmod(launch_file, 0755)
 
