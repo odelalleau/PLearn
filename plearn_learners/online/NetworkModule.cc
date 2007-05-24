@@ -331,6 +331,17 @@ void NetworkModule::build_()
             }
         }
     }
+
+    // Forward random number generator to all underlying modules.
+    if (random_gen) {
+        for (int i = 0; i < all_modules.length(); i++) {
+            if (!all_modules[i]->random_gen) {
+                all_modules[i]->random_gen = random_gen;
+                all_modules[i]->build();
+                all_modules[i]->forget();
+            }
+        }
+    }
     
     // Construct fprop and bprop paths from the list of modules and
     // connections.
@@ -579,13 +590,9 @@ void NetworkModule::build_()
 ////////////
 void NetworkModule::forget()
 {
-    // Forward forget to the underlying modules, and provide them with a random
-    // number generator if needed.
+    // Forward forget to the underlying modules.
     for (int i = 0; i < all_modules.length(); i++) {
-        if (!all_modules[i]->random_gen) {
-            all_modules[i]->random_gen = random_gen;
-            all_modules[i]->build();
-        }
+        PLASSERT( all_modules[i]->random_gen );
         all_modules[i]->forget();
     }
 }
