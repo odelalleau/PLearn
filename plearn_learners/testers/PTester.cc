@@ -417,9 +417,9 @@ void PTester::setExperimentDirectory(const PPath& the_expdir)
     expdir = the_expdir / "";
 }
 
-/////////////
-// perform //
-/////////////
+////////////////
+// oldperform //
+////////////////
 // DEPRECATED -- USE PTester::perform
 Vec PTester::oldperform(bool call_forget)
 {
