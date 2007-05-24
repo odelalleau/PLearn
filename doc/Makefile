@@ -11,7 +11,7 @@ publish: publish_guides
 	scp -r html_autodoc python_modules_html plearner@shell.berlios.de:/home/groups/plearn/htdocs/
 
 publish_guides:
-	scp -r *.html *_guide faq *.ps *.pdf *.txt *.jpg plearner@shell.berlios.de:/home/groups/plearn/htdocs/
+	scp -r *.html *_guide machine_learning faq *.ps *.pdf *.txt *.jpg plearner@shell.berlios.de:/home/groups/plearn/htdocs/
 
 guides.all: installation_guide.all users_guide.all programmers_guide.all tools_guide.all faq.all machine_learning.all
 
