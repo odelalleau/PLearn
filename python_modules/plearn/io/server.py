@@ -91,11 +91,16 @@ class RemotePLearnServer:
         
         listFunctions()
         listFunctionPrototypes()
-        helpFunction(functionname)
+        helpOnFunction(functionname, arity)
+        helpClasses()
+        helpOnClass(classname)
         listMethods(classname)
         listMethodPrototypes(classname)
-        helpMethod(classname, methodname)
-        """        
+        helpOnMethod(classname, methodname, arity)
+        listClassOptions(classname)
+        helpOnOption(classname, optionname)
+        helpClassParents(classname)
+        """
 
     def __init__(self, from_server, to_server, pid=-1, logger=None):
         """from_server and to_server are expected to be two file-like objects
