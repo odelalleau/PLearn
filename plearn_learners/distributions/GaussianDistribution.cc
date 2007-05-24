@@ -82,6 +82,7 @@ void GaussianDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(mu, copies);
     deepCopyField(eigenvalues, copies);
     deepCopyField(eigenvectors, copies);
+    deepCopyField(given_mu, copies);
 }
 
 
