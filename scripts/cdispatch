@@ -35,9 +35,9 @@
 ## library, go to the PLearn Web site at www.plearn.org
 
 $ScriptName="lauchdbi.py";
-$ShortHelp='Usage: dbidispatch [--help|-h] [--test] [--file=FILEPATH] [--req="CONDOR_REQUIREMENT"]<command-template>'."\n";
+$ShortHelp='Usage: cdispatch [--help|-h] [--test] [--file=FILEPATH] [--req="CONDOR_REQUIREMENT"]<command-template>'."\n";
 $LongHelp=<<EOUSAGE;
-Usage: dbidispatch [--test] [--file=FILEPATH] [--req="CONDOR_REQUIREMENT"]<command-template>
+Usage: cdispatch [--test] [--file=FILEPATH] [--req="CONDOR_REQUIREMENT"]<command-template>
 Dispatches jobs on Condor with dbi.py.  
 
 where <command-template> is interpreted as follows: the first argument
