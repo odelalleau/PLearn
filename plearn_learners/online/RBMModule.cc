@@ -40,6 +40,9 @@
 
 #include "RBMModule.h"
 
+#define PL_LOG_MODULE_NAME "RBMModule"
+#include <plearn/io/pl_log.h>
+
 namespace PLearn {
 using namespace std;
 
@@ -663,6 +666,8 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     } 
 
     if (cd_learning_rate > 0) {
+        EXTREME_MODULE_LOG << "Performing contrastive divergence step in RBM '"
+                           << name << "'" << endl;
         // Perform a step of contrastive divergence.
         PLASSERT( visible && !visible->isEmpty() );
             int mbs = visible->length();
@@ -785,6 +790,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
 ////////////
 void RBMModule::forget()
 {
+    DBG_MODULE_LOG << "Forgetting RBMModule '" << name << "'" << endl;
     PLASSERT( hidden_layer && visible_layer && connection );
     hidden_layer->forget();
     visible_layer->forget();
