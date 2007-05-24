@@ -184,7 +184,7 @@ void RBMModule::build_()
     addportname("visible_sample");
     addportname("hidden_sample");
     addportname("energy");
-    // addportname("bias"); port to be added in the near future, to do conditional RBMs
+    addportname("bias"); 
     if(reconstruction_connection)
     {
         addportname("visible_reconstruction.state");
@@ -620,15 +620,16 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                                const TVec<Mat*>& ports_gradient)
 {
     PLASSERT( ports_gradient.length() == nPorts() );
-    Mat* visible_grad = ports_gradient[0];
-    Mat* hidden_grad = ports_gradient[1];
-    Mat* visible = ports_value[0];
-    Mat* hidden = ports_value[1];
-    Mat* hidden_act = ports_value[2];
+    Mat* visible_grad = ports_gradient[portname2index("visible")];
+    Mat* hidden_grad = ports_gradient[portname2index("hidden.state")];
+    Mat* visible = ports_value[portname2index("visible")];
+    Mat* hidden = ports_value[portname2index("hidden.state")];
+    Mat* hidden_act = ports_value[portname2index("hidden_activations.state")];
     Mat* reconstruction_error_grad = 0;
     
     if(reconstruction_connection)
-        reconstruction_error_grad = ports_gradient[8];
+        reconstruction_error_grad = 
+            ports_gradient[portname2index("reconstruction_error.state")];
 
     if (visible && !visible->isEmpty() && 
         (hidden_grad && !hidden_grad->isEmpty() &&
@@ -642,7 +643,6 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             hidden_layer->bpropUpdate(
                     *hidden_act, *hidden, hidden_act_grad, *hidden_grad,
                     false);
-            Mat* visible_out = ports_value[0];
             // Compute gradient w.r.t. expectations of the visible layer (=
             // inputs).
             Mat* store_visible_grad = NULL;
@@ -657,7 +657,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             }
             store_visible_grad->resize(mbs,visible_layer->size);
             connection->bpropUpdate(
-                    *visible_out, *hidden_act, *store_visible_grad,
+                    *visible, *hidden_act, *store_visible_grad,
                     hidden_act_grad, true);
         }
     } 
@@ -669,9 +669,9 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             setAllLearningRates(cd_learning_rate);
             PLASSERT( ports_value.length() == nPorts() );
             Mat* negative_phase_visible_samples = 
-                compute_contrastive_divergence?ports_value[reconstruction_connection?10:7]:0;
+                compute_contrastive_divergence?ports_value[portname2index("negative_phase_visible_samples.state")]:0;
             Mat* negative_phase_hidden_expectations = 
-                compute_contrastive_divergence?ports_value[reconstruction_connection?11:8]:0;
+                compute_contrastive_divergence?ports_value[portname2index("negative_phase_hidden_expectations.state")]:0;
             PLASSERT( visible && hidden );
             if (!negative_phase_visible_samples || negative_phase_visible_samples->isEmpty())
             {
@@ -720,11 +720,9 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         PLASSERT( reconstruction_connection != 0 );
         // Perform gradient descent on Autoassociator reconstruction cost
         PLASSERT( ports_value.length() == nPorts() );
-        Mat* hidden = ports_value[1];
-        Mat* hidden_act = ports_value[2];
-        Mat* visible_reconstruction = ports_value[6];
-        Mat* visible_reconstruction_activations = ports_value[7];
-        Mat* reconstruction_error = ports_value[8];
+        Mat* visible_reconstruction = ports_value[portname2index("visible_reconstruction.state")];
+        Mat* visible_reconstruction_activations = ports_value[portname2index("visible_reconstruction_activations.state")];
+        Mat* reconstruction_error = ports_value[portname2index("reconstruction_error.state")];
         PLASSERT( hidden != 0 );
         PLASSERT( visible  && hidden_act &&
                   visible_reconstruction && visible_reconstruction_activations &&
