@@ -61,14 +61,15 @@ public:
     PLEARN_DECLARE_OBJECT(HyperSetOption);
 
 protected:
-    //! Name of option to set
+
     string option_name;
 
-    //! (Constant) value of option to set
     string option_value;
 
-    //! List of pairs option_name : option_value
-    TVec< pair<string,string> > options;
+    TVec< pair<string, string> > options;
+
+    bool call_build;
+
 
     // ****************
     // * Constructors *

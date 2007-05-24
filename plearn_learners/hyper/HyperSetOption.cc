@@ -43,60 +43,82 @@
 #include "HyperSetOption.h"
 #include "HyperLearner.h"
 
+#define PL_LOG_MODULE_NAME "HyperSetOption"
+#include <plearn/io/pl_log.h>
+
 namespace PLearn {
 using namespace std;
 
-HyperSetOption::HyperSetOption()
-{
-}
-
 PLEARN_IMPLEMENT_OBJECT(
     HyperSetOption,
-    "HyperCommand to set an object option during HyperOptimization",
-    "");
+    "HyperCommand to set an object option during HyperOptimization.",
+    ""
+);
 
+////////////////////
+// HyperSetOption //
+////////////////////
+HyperSetOption::HyperSetOption():
+    call_build(false)
+{}
+
+////////////////////
+// declareOptions //
+////////////////////
 void HyperSetOption::declareOptions(OptionList& ol)
 {
+    // TODO Deprecated 'option_name' and 'option_value'.
+
     declareOption(ol, "option_name", &HyperSetOption::option_name,
                   OptionBase::buildoption,
-                  "Name of single option to set");
+                  "Name of a single option to set.");
 
     declareOption(ol, "option_value", &HyperSetOption::option_value,
                   OptionBase::buildoption,
-                  "Value of option to set");
+                  "Value 'option_name' should be set to.");
 
     declareOption(ol, "options", &HyperSetOption::options,
                   OptionBase::buildoption,
-                  "List of pairs  \"optionname\":\"optionvalue\"  to set");
+        "List of pairs \"optionname\":\"optionvalue\" to set.");
+
+    declareOption(ol, "call_build", &HyperSetOption::call_build,
+                  OptionBase::buildoption,
+        "If set to 1, then the learner and its sub-objects will be re-built\n"
+        "if (and only if) one of their options has been changed, or an\n"
+        "option of one of their sub-objects has been changed.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void HyperSetOption::build_()
 {
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation.
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-    // ### You should assume that the parent class' build_() has already been called.
 }
 
-// ### Nothing to add here, simply calls build_
+///////////
+// build //
+///////////
 void HyperSetOption::build()
 {
     inherited::build();
     build_();
 }
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void HyperSetOption::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(options, copies);
 }
 
+//////////////
+// optimize //
+//////////////
 Vec HyperSetOption::optimize()
 {
     TVec<string> names, values;
@@ -109,9 +131,82 @@ Vec HyperSetOption::optimize()
         values.push_back(options[i].second);
     }
     hlearner->setLearnerOptions(names, values);
+
+    if (call_build && !names.isEmpty()) {
+        // Call build on all objects affected by the changes.
+        // We need to ensure this is done in the correct order.
+        // Map each object that needs to be built to its parent.
+        map<Object*, Object*> parent;
+        // Map each object that needs to be built to the number of its children
+        // that have to be built first.
+        map<Object*, int> n_children_must_build;
+        // Build the above maps.
+        for (int i = 0; i < names.length(); i++) {
+            string option = names[i];
+            Object* object = hlearner->getLearner();
+            Object* previous_object = NULL;
+            while (true) {
+                // Update maps if necessary.
+                if (parent.find(object) == parent.end()) {
+                    parent[object] = previous_object;
+                    if (previous_object)
+                        n_children_must_build[previous_object]++;
+                }
+                if (n_children_must_build.find(object) ==
+                        n_children_must_build.end())
+                    n_children_must_build[object] = 0;
+                // Continue to next object.
+                size_t dot_pos = option.find('.');
+                if (dot_pos == string::npos)
+                    break;
+                string sub_object_opt = option.substr(0, dot_pos);
+                OptionList& options = object->getOptionList();
+                for (OptionList::iterator it = options.begin();
+                    it != options.end(); ++it)
+                {
+                    if ((*it)->optionname() == sub_object_opt) {
+                        previous_object = object;
+                        object = (*it)->getAsObject(object);
+                        break;
+                    }
+                }
+                option = option.substr(dot_pos + 1);
+            }
+        }
+        // Build objects in the correct order.
+        bool finished = false;
+        size_t count_builds = 0;
+        while (!finished) {
+            finished = true;
+            map<Object*, int>::iterator it = n_children_must_build.begin();
+            for (; it != n_children_must_build.end(); it++) {
+                if (it->second == 0) {
+                    // This object is ready to be built.
+                    DBG_MODULE_LOG << "Building a " << it->first->classname()
+                                   << endl;
+                    it->first->build();
+                    it->second = -1;
+                    finished = false;
+                    Object* parent_obj = parent[it->first];
+                    if (parent_obj) {
+                        PLASSERT( n_children_must_build.find(parent_obj) !=
+                                  n_children_must_build.end() );
+                        n_children_must_build[parent_obj]--;
+                    }
+                    count_builds++;
+                }
+            }
+        }
+        PLASSERT( count_builds == n_children_must_build.size() );
+        DBG_MODULE_LOG << "All necessary builds performed" << endl;
+    }
+
     return Vec();
 }
 
+////////////////////
+// getResultNames //
+////////////////////
 TVec<string> HyperSetOption::getResultNames() const
 {
     return TVec<string>();
