@@ -150,6 +150,31 @@ void RBMModule::build_()
     if(visible_layer)
         visible_bias_grad.resize(visible_layer->size);
 
+    // Forward random generator to underlying modules.
+    if (random_gen) {
+        if (hidden_layer && !hidden_layer->random_gen) {
+            hidden_layer->random_gen = random_gen;
+            hidden_layer->build();
+            hidden_layer->forget();
+        }
+        if (visible_layer && !visible_layer->random_gen) {
+            visible_layer->random_gen = random_gen;
+            visible_layer->build();
+            visible_layer->forget();
+        }
+        if (connection && !connection->random_gen) {
+            connection->random_gen = random_gen;
+            connection->build();
+            connection->forget();
+        }
+        if (reconstruction_connection &&
+                !reconstruction_connection->random_gen) {
+            reconstruction_connection->random_gen = random_gen;
+            reconstruction_connection->build();
+            reconstruction_connection->forget();
+        }
+    }
+
     // buid ports and port_sizes
 
     ports.resize(0);
@@ -558,13 +583,10 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     if(reconstruction_connection)
         reconstruction_error_grad = ports_gradient[8];
 
-    bool bprop_performed = false;
     if (visible && !visible->isEmpty() && 
         (hidden_grad && !hidden_grad->isEmpty() &&
-         (!visible_grad || visible_grad->isEmpty())
-         || cd_learning_rate>0))
+         (!visible_grad || visible_grad->isEmpty())))
     {
-        bprop_performed = true;
         int mbs = visible->length();
         if (grad_learning_rate > 0) {
             setAllLearningRates(grad_learning_rate);
@@ -591,9 +613,13 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                     *visible_out, *hidden_act, *store_visible_grad,
                     hidden_act_grad, true);
         }
-        if (cd_learning_rate > 0) {
+    } 
+
+    if (cd_learning_rate > 0) {
+        // Perform a step of contrastive divergence.
+        PLASSERT( visible && !visible->isEmpty() );
+            int mbs = visible->length();
             setAllLearningRates(cd_learning_rate);
-            // Perform a step of contrastive divergence.
             PLASSERT( ports_value.length() == nPorts() );
             Mat* negative_phase_visible_samples = 
                 compute_contrastive_divergence?ports_value[reconstruction_connection?10:7]:0;
@@ -639,12 +665,10 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                                *negative_phase_visible_samples,
                                *negative_phase_hidden_expectations);
             hidden_layer->update(*hidden, *negative_phase_hidden_expectations);
-        }
-    } 
+    }
 
     if (reconstruction_error_grad && !reconstruction_error_grad->isEmpty()
         && ( !visible_grad || visible_grad->isEmpty() ) ) {
-        bprop_performed = true;
         setAllLearningRates(grad_learning_rate);
         PLASSERT( reconstruction_connection != 0 );
         // Perform gradient descent on Autoassociator reconstruction cost
@@ -708,9 +732,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         }
     }
 
-    if(!bprop_performed)
-        PLERROR("In RBMModule::bpropAccUpdate - could not perform back "
-                "propagation given gradient ports");
+    checkProp(ports_gradient);
 }
 
 ////////////
@@ -722,21 +744,8 @@ void RBMModule::forget()
     hidden_layer->forget();
     visible_layer->forget();
     connection->forget();
-    if (hidden_layer && !hidden_layer->random_gen) {
-        hidden_layer->random_gen = random_gen;
-        hidden_layer->build();
-    }
-    if (visible_layer && !visible_layer->random_gen) {
-        visible_layer->random_gen = random_gen;
-        visible_layer->build();
-    }
-    if (connection && !connection->random_gen) {
-        connection->random_gen = random_gen;
-        connection->build();
-    }
-    hidden_layer->forget();
-    visible_layer->forget();
-    connection->forget();
+    if (reconstruction_connection)
+        reconstruction_connection->forget();
 }
 
 //////////////
