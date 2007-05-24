@@ -54,6 +54,7 @@ public:
 
     TVec< PP<OnlineLearningModule> > modules;
     string forward_to;
+    bool forget_all;
 
 public:
     //#####  Public Member Functions  #########################################

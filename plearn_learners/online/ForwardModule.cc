@@ -56,6 +56,7 @@ PLEARN_IMPLEMENT_OBJECT(
 ForwardModule::ForwardModule(const string& the_name, bool call_build_):
     inherited(the_name.empty() && call_build_ ? classname() : the_name,
               call_build_),
+    forget_all(true),
     current(-1)
 {
     if (call_build_)
@@ -76,6 +77,12 @@ void ForwardModule::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
         "Name of the module currently being used. If empty, the first module\n"
         "in 'modules' will be used.");
+
+    declareOption(ol, "forget_all", &ForwardModule::forget_all,
+                  OptionBase::buildoption,
+        "If set to 1, then the forget() method will call forget() on all\n"
+        "modules. Otherwise, only the current module pointed by 'forward_to'\n"
+        "will be forgotten.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -99,6 +106,19 @@ void ForwardModule::build_()
         }
     }
     PLCHECK( current >= 0 );
+
+    // Forward random number generator to all underlying modules. Note that we
+    // need to forward it to all modules because we call forget().
+    if (random_gen) {
+        for (int i = 0; i < modules.length(); i++) {
+            PP<OnlineLearningModule> mod = modules[i];
+            if (!mod->random_gen) {
+                mod->random_gen = random_gen;
+                mod->build();
+                mod->forget();
+            }
+        }
+    }
 }
 
 ///////////
@@ -143,7 +163,11 @@ void ForwardModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
 ////////////
 void ForwardModule::forget()
 {
-     modules[current]->forget();
+    if (forget_all) {
+        for (int i = 0; i < modules.length(); i++)
+            modules[i]->forget();
+    } else
+        modules[current]->forget();
 }
 
 //////////////
