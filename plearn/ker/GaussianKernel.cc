@@ -51,8 +51,10 @@ using namespace std;
 // ** GaussianKernel **
 
 PLEARN_IMPLEMENT_OBJECT(GaussianKernel,
-                        "The good old Gaussian kernel: exp(-||x-y||^2 / sigma^2).",
-                        "");
+                        "The good old Gaussian kernel: K(x,y) = exp(-||x-y||^2 / sigma^2).",
+                        "Note that this is not the proper normal density (but has the same 'shape')\n"
+                        "In particular it's not properly normalized. If you want the usual, properly\n"
+                        "normalized Gaussian density, consider using GaussianDensityKernel instead");
 
 ////////////////////
 // GaussianKernel //
