@@ -137,7 +137,7 @@ void NetworkModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             Mat* mat_toresize = bprop_data[i][mat_idx];
             Mat* mat_tpl = f_data[mat_idx];
             mat_toresize->resize(mat_tpl->length(), mat_tpl->width());
-            mat_toresize->fill(0);
+            mat_toresize->clear();
         }
         const TMat<int>& f_toplug = fprop_toplug[fprop_idx];
         for (int j = 0; j < f_toplug.length(); j++) {
