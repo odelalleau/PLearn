@@ -1,7 +1,7 @@
 $DEFINE{DENSITY_ESTIMATOR}
 { ParzenWindow( 
     # double: Spherical variance parameter
-    sigma_square = .15;
+    sigma_square = .20;
 
     # int: Number of Gaussians in the mixture.
     L = 1  ;
