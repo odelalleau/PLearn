@@ -46,7 +46,9 @@ namespace PLearn {
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT(GaussianDensityKernel, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(GaussianDensityKernel, 
+                        "The normal density with variance sigma^2: K(x,y) = 1/Z exp(-1/2 ||x-y||^2 / sigma^2) with Z = (2Pi)^(d/2) sigma^d", 
+                        "");
 
 real GaussianDensityKernel::evaluate(const Vec& x1, const Vec& x2) const
 { return exp(-real(0.5)*powdistance(x1, x2, real(2.0))/(sigma*sigma) - x1.length()*(0.5*Log2Pi + log(sigma))); }
