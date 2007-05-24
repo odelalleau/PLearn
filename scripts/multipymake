@@ -3,16 +3,16 @@
 #To differenciate the different target we create hardlink to the original file
 #Exemple: multipymake plearn -float -double
 #         This will create the hard link: plearn-float.cc and plearn-double.cc
-#         This will execute pymake -float -link plearn-float.cc and
-#                           pymake -double -link plearn-double.cc
+#         This will execute pymake -float plearn-float.cc and
+#                           pymake -double plearn-double.cc
 #Exemple2: multipymake plearn "-float -opt" "-double -opt"
 #         This will create the hard link: plearn-float_-opt.cc and plearn-double_-opt.cc
-#         This will execute pymake -float -opt -link plearn-float_-opt.cc and
-#                           pymake -double -opt -link plearn-double_-opt.cc
+#         This will execute pymake -float -opt plearn-float_-opt.cc and
+#                           pymake -double -opt plearn-double_-opt.cc
 #Exemple3: multipymake -local -vv plearn "-float -opt" "-double -opt"
 #         This will create the hard link: plearn-float_-opt.cc and plearn-double_-opt.cc
-#         This will execute pymake -local -vv -float -opt -link plearn-float_-opt.cc and
-#                           pymake -local -vv -double -opt -link plearn-double_-opt.cc
+#         This will execute pymake -local -vv -float -opt plearn-float_-opt.cc and
+#                           pymake -local -vv -double -opt plearn-double_-opt.cc
 
 if [ ${HOSTNAME} == "paralisa.iro.umontreal.ca" ]; then
     nbproc=8
