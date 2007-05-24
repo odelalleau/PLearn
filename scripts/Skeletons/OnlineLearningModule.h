@@ -75,7 +75,7 @@ public:
 
     /* Optional
 
-    //! given the input, compute the output (possibly resize it  appropriately)
+    //! Given the input, compute the output (possibly resize it appropriately)
     //! SOON TO BE DEPRECATED, USE fprop(const TVec<Mat*>& ports_value)
     virtual void fprop(const Vec& input, Vec& output) const;
 
