@@ -2,32 +2,45 @@ LocallyMagnifiedDistribution(
 # int: Output computation mode
 mode = 0;
 
-# int: If <=0 we use all training points (with an appropriate weight).
-# If >0 we consider only that many neighbors of the test point;
+# double: This indicates to how many neighbors we should restrict ourselves for the computations.
 # (it's equivalent to giving all other data points a weight of 0)
-nneighbors = 20;
+# If <=0 we use all training points (with an appropriate weight).
+# If >1 we consider only that many neighbors of the test point;
+# If between 0 and 1, it's considered a coefficient by which to multiply
+# the square root of the numbder of training points, to yield the actual 
+# number of computation neighbors used
+computation_neighbors = 20;
 
-# bool: If true, then we ignore the weighting_kernel, and ascribe weight 1/k to the neighbors
-# where k is the index of the neighbor from 1 to nneighbors
-use_rank_weighting = 0  ;
-
-# Ker: The magnifying kernel that will be used to locally weigh the samples
-# If it is left null, and use_rank_weighting is false, then all
-# nneighbors will receive a weight of 1
+# Ker: The magnifying kernel that will be used to locally weigh the samples.
+# If it is left null then all computation_neighbors will receive a weight of 1
 weighting_kernel = GaussianKernel(sigma=0.1) ;
 
-# int: If width_neighbor>0, kernel width is set to be the distance to the width_neighbor'th neighbor times the width_factor (Euclidean distance neighbors for now)
-# If width_neighbor==0, kernel is left as specified upon construction
-width_neighbor = 3;
+# char: This controls how we adapt the width of the kernel to the local neighborhood of the test point.
+# ' ' means leave width unchanged
+# 'A' means set the width to width_factor times the average distance to the neighbors determined by width_neighborss.
+# 'M' means set the width to width_faactor times the maximum distance to the neighbors determined by width_neighborss.
+kernel_adapt_width_mode = 'A';
 
-# double: Only used if width_neighbor>0 (see width_neighbor)
-width_factor = 1;
+# double: Only used if width_neighbors>0 (see width_neighbors)
+width_factor = 0.5;
 
-# string: Only used if width_neighbor>0. The name of the option in the weighting kernel that should be used to set or modifiy its width
+# double: width_neighbors tells how many neighbors to consider to determine the kernel width.
+# (see kernel_adapt_width_mode) 
+# If width_neighbors>1 we consider that many neighbors.
+# If width_neighbors>=0 and <=1 it's considered a coefficient by which to multiply
+# the square root of the numbder of training points, to yield the actual 
+# number of neighbors used
+width_neighbors = 1;
+
+# string: Only used if kernel_adapt_width_mode!=' '. The name of the option in the weighting kernel that should be used to set or modifiy its width
 width_optionname = "sigma"  ;
 
-# PP< PDistribution >: The distribution that will be trained with local weights obtained from the magnifying kernel
+# PP< PDistribution >: The kind of distribution that will be trained with local weights obtained from the magnifying kernel.
+# If left unspecified (null), it will be set to GaussianDistribution by default.
 localdistr = GaussianDistribution(k=2, gamma=1e-6, use_last_eig=0);
+
+# bool: If true, and localdistr is GaussianDistribution, then the mu of the localdistr will be forced to be the given test point.
+fix_localdistr_center = 1;
 
 # string: Defines what will be given in output. This is a string where the
 # characters have the following meaning:
