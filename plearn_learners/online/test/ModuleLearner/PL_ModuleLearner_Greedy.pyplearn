@@ -1,0 +1,185 @@
+# Greedy training of a deep belief net:
+# 1. Train a single RBM
+# 2. Train a second RBM on top of the first one
+# 3. Train an affine layer (with fine-tuning of the whole network)
+
+from plearn.pyplearn import pl
+
+cd_lr = 1e-3    # Contrastive divergence learning rate
+grad_lr = 1e-3  # Fine-tuning learning rate
+inputsize = 5
+targetsize = 1
+n_classes = 2
+batch_size = 10
+greedy_nstages = 1000 # Number of samples per greedy step.
+fine_tuning_nstages = 2000 # Number of samples for fine-tuning step.
+
+rbm_sizes = [ 15, 20 ] # Size of the 'hidden' layer of each RBM.
+
+n_rbms = len(rbm_sizes) # Number of RBMs
+
+def ifthenelse(cond, val_then, val_else):
+    # Similar to the 'cond ? val_then : val_else' C syntax.
+    if cond:
+        return val_then
+    else:
+        return val_else
+
+def rbm(cd_learning_rate, grad_learning_rate, visible_size, hidden_size, name):
+    # Return a standard binomial RBM.
+    return pl.RBMModule(
+            name = name,
+            cd_learning_rate = cd_learning_rate,
+            grad_learning_rate = grad_learning_rate,
+            visible_layer = pl.RBMBinomialLayer(size = visible_size),
+            hidden_layer = pl.RBMBinomialLayer(size = hidden_size),
+            connection = pl.RBMMatrixConnection(
+                down_size = visible_size,
+                up_size = hidden_size))
+
+def connection(src, dst, propagate_gradient = True):
+    return pl.NetworkConnection(
+            source = src,
+            destination = dst,
+            propagate_gradient = propagate_gradient)
+
+layer_sizes = [ inputsize ] + rbm_sizes
+
+rbms = [ rbm(cd_lr, grad_lr, layer_sizes[k], layer_sizes[k + 1],
+             'rbm_%s' % k ) for k in range(n_rbms) ]
+
+affine_net = pl.GradNNetLayerModule(
+        name = 'affine_net',
+        input_size = rbm_sizes[-1],
+        output_size = n_classes,
+        start_learning_rate = grad_lr)
+
+softmax = pl.SoftmaxModule(
+        name = 'softmax',
+        input_size = n_classes)
+
+nll = pl.NLLCostModule(
+        name = 'nll',
+        input_size = n_classes)
+
+networks = []
+
+# Create networks corresponding to the addition of each new RBM.
+for i in range(n_rbms):
+    networks.append(
+            pl.NetworkModule(
+                name = 'network_%s' % i,
+                modules = rbms[0:i + 1],
+                connections = [
+                    connection('rbm_%s.hidden.state' % k,
+                               'rbm_%s.visible' % (k+1),
+                               False) \
+                    for k in range(i)
+                ],
+                ports = [
+                'input', 'rbm_0.visible',
+                'output', 'rbm_%s.hidden.state' % i
+                ]))
+
+
+# Create 'fine-tuning' network.
+networks.append(
+        pl.NetworkModule(
+            name = 'network_%s' % n_rbms,
+            modules = rbms + [ affine_net, softmax, nll ],
+            connections =
+                [
+                    connection('rbm_%s.hidden.state' % k,
+                               'rbm_%s.visible' % (k+1))
+                    for k in range(n_rbms - 1)
+                ] + [
+                    connection('rbm_%s.hidden.state' % (n_rbms - 1), 'affine_net.input'),
+                    connection('affine_net.output', 'softmax.input'),
+                    connection('softmax.output', 'nll.prediction')
+                ],
+            ports = [
+                'input', 'rbm_0.visible',
+                'output', 'affine_net.output',
+                'target', 'nll.target',
+                'cost', 'nll.cost'
+            ]))
+
+# Module that encapsulates all networks, and forward calls to a single one,
+# depending on the stage of optimization.
+# Note that it is important to start with the 'final' network, so that the
+# learner's test cost names are readily available.
+network = pl.ForwardModule(
+        name = 'network',
+        modules = networks,
+        forward_to = 'network_%s' % n_rbms)
+
+learner = pl.ModuleLearner(
+    module = network,
+    batch_size = batch_size)
+
+dataset = pl.AutoVMatrix(
+    filename = 'PLEARNDIR:examples/data/test_suite/linear_4x_2y_binary_class.vmat',
+    inputsize = inputsize,
+    targetsize = targetsize,
+    weightsize = 0)
+
+splitter = pl.ExplicitSplitter(
+        splitsets = TMat(1, 2, [ dataset, dataset ]))
+
+hyper = pl.HyperLearner(
+        dont_restart_upon_change = \
+            [ 'module.forward_to', 'nstages', 'cost_ports', 'target_ports' ] + \
+            [ 'module.modules[%s].modules[%s].cd_learning_rate' % (i, i - 1) for i in range(1, n_rbms + 1) ],
+        learner = learner,
+        save_final_learner = 0,
+        option_fields = [ 'nstages' ],
+        strategy = \
+            # We use 'reduce' to concatenate all pairs of (HyperSetOption, HyperRetrain)
+            # within a single list.
+            reduce(lambda x,y : x + y,
+        [
+            [ pl.HyperSetOption(
+                  call_build = 1,
+                  options = [
+                      ('module.forward_to', 'network_%s' % i),
+                      ('nstages', str(greedy_nstages * (i + 1))),
+                      ('cost_ports', '[]'),
+                      ('target_ports', '[]')
+                  ] + ifthenelse( # Set CD learning rate of previous RBM to 0.
+                      i >= 1,
+                      [ ('module.modules[%s].modules[%s].cd_learning_rate' % (i, i-1), '0')],
+                      [])),
+              pl.HyperRetrain( call_forget = False )
+            ]
+            for i in range(n_rbms)
+        ]) + \
+        [
+            pl.HyperSetOption(
+                call_build = 1,
+                options = [
+                    ('module.forward_to', 'network_%s' % n_rbms),
+                    ('nstages', str(greedy_nstages * n_rbms + fine_tuning_nstages)),
+                    ('cost_ports', '[ "cost" ]'),
+                    ('target_ports', '[ "target" ]'),
+                    ('module.modules[%s].modules[%s].cd_learning_rate' % (n_rbms, n_rbms-1), '0')
+                ]),
+            pl.HyperRetrain( call_forget = False )
+        ],
+        tester = pl.PTester(splitter = splitter)
+        )
+
+tester = pl.PTester(
+    expdir = 'expdir-tester',
+    learner = hyper,
+    report_stats = 1,
+    save_initial_tester = 0,
+    save_learners = 1,
+    save_stat_collectors = 0,
+    save_test_outputs = 0,
+    provide_learner_expdir = 0,
+    splitter = splitter,
+    statnames = [ 'E[test1.E[NLL]]' ])
+
+def main():
+    return tester
+
