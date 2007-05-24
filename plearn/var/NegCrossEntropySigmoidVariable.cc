@@ -62,15 +62,32 @@ NegCrossEntropySigmoidVariable::NegCrossEntropySigmoidVariable(Variable* netout,
     build_();
 }
 
-void
-NegCrossEntropySigmoidVariable::build()
+////////////////////
+// declareOptions //
+////////////////////
+void NegCrossEntropySigmoidVariable::declareOptions(OptionList& ol)
+{
+    declareOption(ol, "regularizer", &NegCrossEntropySigmoidVariable::regularizer, OptionBase::buildoption, 
+                  "If > 0, will modify the cost function to: \n"
+                  "(1-t)(r*log(o)+(1-r)*log(1-o)) + t*(r*log(1-o)+(1-r)*log(o)) \n"
+                  "(t = target, o = output, r = regularizer = a small value)\n");
+
+    declareOption(ol, "ignore_missing", &NegCrossEntropySigmoidVariable::ignore_missing, OptionBase::buildoption, 
+                  "Indication that missing targets should be ignored");
+
+    inherited::declareOptions(ol);
+}
+
+///////////
+// build //
+///////////
+void NegCrossEntropySigmoidVariable::build()
 {
     inherited::build();
     build_();
 }
 
-void
-NegCrossEntropySigmoidVariable::build_()
+void NegCrossEntropySigmoidVariable::build_()
 {
     if (input1 && input2) {
         // input1 and input2 are (respectively) netout and target from constructor

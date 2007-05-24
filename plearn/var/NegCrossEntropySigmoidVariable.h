@@ -63,8 +63,10 @@ protected:
   
 public:
     //!  Default constructor for persistence
-    NegCrossEntropySigmoidVariable() : ignore_missing(false) {}
-    NegCrossEntropySigmoidVariable(Variable* netout, Variable* target, real regularizer_ = 0.0, bool ignore_missing_ = false);
+    NegCrossEntropySigmoidVariable() 
+        : regularizer(0.0), ignore_missing(false) {}
+
+    NegCrossEntropySigmoidVariable(Variable* netout, Variable* target, real regularizer_ = 0, bool ignore_missing_ = false);
 
     PLEARN_DECLARE_OBJECT(NegCrossEntropySigmoidVariable);
 
@@ -77,6 +79,8 @@ public:
     void setRegularizer(real r);
 
 protected:
+    static void declareOptions(OptionList & ol);
+
     void build_();
 };
 
