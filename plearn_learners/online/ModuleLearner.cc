@@ -136,10 +136,7 @@ void ModuleLearner::build_()
     // Forward random number generator to underlying module.
     if (!module->random_gen) {
         module->random_gen = random_gen;
-        // Currently we call forget, since it ensures the module is
-        // correctly initialized and also will propagate the random number
-        // generator to its own sub-modules. However, this is not very
-        // intuitive, and a better solution may be found.
+        module->build();
         module->forget();
     }
 
