@@ -426,7 +426,8 @@ options_choices = [
   [ 'blas', 'p3blas','p4blas','athlonblas','pentiumblas', 'mammouthblas',
     'noblas', 'veclib', 'scs', 'goto', 'lisa' ],
   
-  [ 'logging=dbg', 'logging=mand', 'logging=imp', 'logging=normal', 'logging=extreme' ],
+  [ 'logging=dbg', 'logging=mand', 'logging=imp', 'logging=normal',
+    'logging=extreme', 'logging=dbg-profile' ],
 
   [ 'exe', 'so' ]
 ]
@@ -754,8 +755,12 @@ pymakeOption( name            = 'logging=extreme',
               description     = 'Compile-time enable EXTREME (or better) log messages',
               cpp_definitions = ['PL_LOG_VERBOSITY=500'] )
 
-cpp_variables += ['PL_LOG_VERBOSITY']
+pymakeOption( name            = 'logging=dbg-profile',
+              description     = 'Compile-time enable DEBUG (or better) and profiling with PL_PROFILE log messages',
+              cpp_definitions = ['PL_LOG_VERBOSITY=10', 'PL_PROFILE']
+              )
 
+cpp_variables += ['PL_LOG_VERBOSITY', 'PL_PROFILE']
 
 #####  Network Setup  #######################################################
 
